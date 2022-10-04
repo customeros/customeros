@@ -1,5 +1,5 @@
 
-# Openline:  The Open Source CustomerOS
+# Openline:  The Open Source customerOS
 [![Twitter Follow](https://img.shields.io/twitter/follow/openlineAI?style=social)](https://twitter.com/OpenlineAI)
 
 Openline makes it easy to get a complete 360-degree view of your customers.  We bring together behavioral, demographic, transactional, conversational, and social data to give you the most comprehensive view of your customer relationship.  
