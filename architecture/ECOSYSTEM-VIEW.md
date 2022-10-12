@@ -1,0 +1,1 @@
+![alt text](https://github.com/openline-ai/openline-customer-os/tree/main/architecture/images/customer-os-eco-system-view.png)
