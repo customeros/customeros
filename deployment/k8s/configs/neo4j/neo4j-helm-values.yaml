@@ -1,0 +1,12 @@
+neo4j:
+  resources:
+    cpu: "0.5"
+    memory: "2Gi"
+  password: "StrongLocalPa$$"
+
+volumes:
+  data:
+    mode: defaultStorageClass
+    defaultStorageClass:
+      requests:
+        storage: 5Gi
