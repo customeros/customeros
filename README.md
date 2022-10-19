@@ -24,10 +24,11 @@
   </p>
   <p>
     <sub>
-      Built with ❤︎ by
+      Built with ❤︎ by the
       <a href="https://openline.ai">
         Openline
       </a>
+      community!
     </sub>
   </p>
 </div>
@@ -75,10 +76,11 @@ TBD
 - This repo is licensed under [Apache 2.0][apache2], with the exception of the ee directory (if applicable).
 - Premium features (contained in the ee directory) require an Openline Enterprise license.  See our [pricing page][pricing] for more details.
 
-[slack]: https://join.slack.com/t/openline-ai/shared_invite/zt-1i6umaw6c-aaap4VwvGHeoJ1zz~ngCKQ
-[docs]: https://openline.ai
-[careers]: https://openline.ai
+
 [apache2]: https://www.apache.org/licenses/LICENSE-2.0
-[pricing]: https://openline.ai/pricing
+[careers]: https://openline.ai
 [customerOS-repo]: https://github.com/openline-ai/openline-customer-os/
+[docs]: https://openline.ai
+[pricing]: https://openline.ai/pricing
+[slack]: https://join.slack.com/t/openline-ai/shared_invite/zt-1i6umaw6c-aaap4VwvGHeoJ1zz~ngCKQ
 [twitter]: https://twitter.com/OpenlineAI
