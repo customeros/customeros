@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
 	"time"
 )
 
@@ -16,7 +17,10 @@ type StorageDB struct {
 func NewDBConn(host, port, name, user, pass string, maxConn, maxIdleConn, connMaxLifetime int) (*StorageDB, error) {
 	connectString := fmt.Sprintf("host=%s port=%s dbname=%s user=%s password=%s ", host, port, name, user, pass)
 	storageDB := new(StorageDB)
-	gormdb, err := gorm.Open(postgres.Open(connectString), &gorm.Config{AllowGlobalUpdate: true})
+	gormdb, err := gorm.Open(postgres.Open(connectString), &gorm.Config{
+		AllowGlobalUpdate: true,
+		Logger:            logger.Default.LogMode(logger.Info),
+	})
 	if err != nil {
 		return nil, err
 	}

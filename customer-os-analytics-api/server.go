@@ -3,12 +3,13 @@ package main
 import (
 	common "github.com.openline-ai.customer-os-analytics-api/common"
 	"github.com.openline-ai.customer-os-analytics-api/config"
+	"github.com.openline-ai.customer-os-analytics-api/dataloader"
+	"github.com.openline-ai.customer-os-analytics-api/graph/resolver"
 	"github.com.openline-ai.customer-os-analytics-api/repository"
 	"github.com/gin-gonic/gin"
 	"log"
 	"os"
 
-	"github.com.openline-ai.customer-os-analytics-api/graph"
 	"github.com.openline-ai.customer-os-analytics-api/graph/generated"
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/playground"
@@ -33,15 +34,20 @@ func InitDB() (db *config.StorageDB, err error) {
 
 // Defining the Graphql handler
 func graphqlHandler(db *config.StorageDB) gin.HandlerFunc {
+	// instantiate repository handler
 	repositoryHandler := repository.InitRepositories(db.GormDB)
-
+	// instantiate graph resolver
+	graphResolver := resolver.NewResolver(repositoryHandler)
+	// make a data loader
+	loader := dataloader.NewDataLoader(repositoryHandler)
+	// make a custom context
 	customCtx := &common.CustomContext{}
+	// create query handler
+	srv := handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: graphResolver}))
+	// wrap the query handler with middleware to inject dataloader
+	dataloaderSrv := dataloader.Middleware(loader, srv)
 
-	srv := handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &graph.Resolver{
-		RepositoryHandler: repositoryHandler,
-	}}))
-
-	h := common.CreateContext(customCtx, srv)
+	h := common.CreateContext(customCtx, dataloaderSrv)
 
 	return func(c *gin.Context) {
 		h.ServeHTTP(c.Writer, c.Request)

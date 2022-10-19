@@ -1,0 +1,20 @@
+# GraphQL schema example
+#
+# https://gqlgen.com/getting-started/
+
+type Application {
+    id: ID!
+    platform: String!
+    name: String!
+    trackerName: String!
+    sessions: [AppSession!]!
+}
+
+type AppSession {
+    id: ID!
+}
+
+type Query {
+    application(id: ID): Application!
+    applications: [Application!]!
+}
