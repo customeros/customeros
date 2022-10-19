@@ -19,7 +19,7 @@
   </p>
   <p>
 
-[![contributions welcome](https://img.shields.io/badge/contributions-welcome-brightgreen?logo=github)](/) [![license](https://img.shields.io/badge/license-Apache%202-blue)][apache2] [![stars](https://img.shields.io/github/stars/openline-ai/openline-customer-os?style=social)](/) [![twitter](https://img.shields.io/twitter/follow/openlineAI?style=social)](https://twitter.com/OpenlineAI) [![slack](https://img.shields.io/badge/slack-community-blueviolet.svg?logo=slack)][slack]
+[![contributions welcome](https://img.shields.io/badge/contributions-welcome-brightgreen?logo=github)][customerOS-repo] [![license](https://img.shields.io/badge/license-Apache%202-blue)][apache2] [![stars](https://img.shields.io/github/stars/openline-ai/openline-customer-os?style=social)][customerOS-repo] [![twitter](https://img.shields.io/twitter/follow/openlineAI?style=social)][twitter] [![slack](https://img.shields.io/badge/slack-community-blueviolet.svg?logo=slack)][slack]
 
   </p>
   <p>
@@ -80,3 +80,5 @@ TBD
 [careers]: https://openline.ai
 [apache2]: https://www.apache.org/licenses/LICENSE-2.0
 [pricing]: https://openline.ai/pricing
+[customerOS-repo]: https://github.com/openline-ai/openline-customer-os/
+[twitter]: https://twitter.com/OpenlineAI
