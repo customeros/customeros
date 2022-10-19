@@ -4,8 +4,8 @@ import (
 	common "github.com.openline-ai.customer-os-analytics-api/common"
 	"github.com.openline-ai.customer-os-analytics-api/config"
 	"github.com.openline-ai.customer-os-analytics-api/repository"
+	"github.com/gin-gonic/gin"
 	"log"
-	"net/http"
 	"os"
 
 	"github.com.openline-ai.customer-os-analytics-api/graph"
@@ -31,15 +31,8 @@ func InitDB() (db *config.StorageDB, err error) {
 	return
 }
 
-func main() {
-	port := os.Getenv("PORT")
-	if port == "" {
-		port = defaultPort
-	}
-
-	db, _ := InitDB()
-	defer db.SqlDB.Close()
-
+// Defining the Graphql handler
+func graphqlHandler(db *config.StorageDB) gin.HandlerFunc {
 	repositoryHandler := repository.InitRepositories(db.GormDB)
 
 	customCtx := &common.CustomContext{}
@@ -48,9 +41,28 @@ func main() {
 		RepositoryHandler: repositoryHandler,
 	}}))
 
-	http.Handle("/", playground.Handler("GraphQL playground", "/query"))
-	http.Handle("/query", common.CreateContext(customCtx, srv))
+	h := common.CreateContext(customCtx, srv)
 
-	log.Printf("connect to http://localhost:%s/ for GraphQL playground", port)
-	log.Fatal(http.ListenAndServe(":"+port, nil))
+	return func(c *gin.Context) {
+		h.ServeHTTP(c.Writer, c.Request)
+	}
+}
+
+// Defining the Playground handler
+func playgroundHandler() gin.HandlerFunc {
+	h := playground.Handler("GraphQL", "/query")
+
+	return func(c *gin.Context) {
+		h.ServeHTTP(c.Writer, c.Request)
+	}
+}
+
+func main() {
+	db, _ := InitDB()
+	defer db.SqlDB.Close()
+
+	r := gin.Default()
+	r.POST("/query", graphqlHandler(db))
+	r.GET("/", playgroundHandler())
+	r.Run()
 }
