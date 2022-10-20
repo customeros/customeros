@@ -27,4 +27,4 @@ If applicable, add screenshots to help explain your problem.
 Add any other context about the problem here.
 
 
-**Thank you for your bug report!  We ❤️ squashing 🪲
+Thank you for your bug report!  We ❤️ squashing 🪲
