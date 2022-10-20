@@ -17,7 +17,11 @@ What types of changes does your code introduce?  _Put an `x` in the boxes that a
 
 ## Screenshots or links to design files
 
-If this is a front end change, please include screenshots that show the change &/or Figma reference files.
+Does this change impact front end code?
+
+- [ ] No
+- [ ] Yes (please include screenshots or Figma files)
+
 
 ## Checklist
 
@@ -30,4 +34,3 @@ If this is a front end change, please include screenshots that show the change &
 
 ## Additional context
 
-Anything else the reviewers should know.
