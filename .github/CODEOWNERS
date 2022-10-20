@@ -2,7 +2,7 @@
 * @alexopenline @edifirut @xvasi
 
 # javascript code owners
-*.js @edifirut @Meskat
+*.js @edifirut @xvasi
 
 # documentation owners
 *.md @jontyk @mattbr0wn
