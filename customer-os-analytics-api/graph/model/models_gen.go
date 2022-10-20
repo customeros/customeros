@@ -16,12 +16,20 @@ type PagedResult interface {
 }
 
 type AppSession struct {
-	ID         string    `json:"id"`
-	Country    string    `json:"country"`
-	Region     string    `json:"region"`
-	City       string    `json:"city"`
-	AccessedAt time.Time `json:"accessedAt"`
-	EndedAt    time.Time `json:"endedAt"`
+	ID             string    `json:"id"`
+	Country        string    `json:"country"`
+	Region         string    `json:"region"`
+	City           string    `json:"city"`
+	ReferrerSource string    `json:"referrerSource"`
+	UtmCampaign    string    `json:"utmCampaign"`
+	UtmContent     string    `json:"utmContent"`
+	UtmMedium      string    `json:"utmMedium"`
+	UtmSource      string    `json:"utmSource"`
+	UtmNetwork     string    `json:"utmNetwork"`
+	UtmTerm        string    `json:"utmTerm"`
+	StartedAt      time.Time `json:"startedAt"`
+	EndedAt        time.Time `json:"endedAt"`
+	EngagedTime    int       `json:"engagedTime"`
 }
 
 type AppSessionsDataFilter struct {
@@ -54,20 +62,34 @@ type TimeFilter struct {
 type AppSessionField string
 
 const (
-	AppSessionFieldCountry AppSessionField = "COUNTRY"
-	AppSessionFieldCity    AppSessionField = "CITY"
-	AppSessionFieldRegion  AppSessionField = "REGION"
+	AppSessionFieldCountry        AppSessionField = "COUNTRY"
+	AppSessionFieldCity           AppSessionField = "CITY"
+	AppSessionFieldRegion         AppSessionField = "REGION"
+	AppSessionFieldReferrerSource AppSessionField = "REFERRER_SOURCE"
+	AppSessionFieldUtmCampaign    AppSessionField = "UTM_CAMPAIGN"
+	AppSessionFieldUtmContent     AppSessionField = "UTM_CONTENT"
+	AppSessionFieldUtmMedium      AppSessionField = "UTM_MEDIUM"
+	AppSessionFieldUtmSource      AppSessionField = "UTM_SOURCE"
+	AppSessionFieldUtmNetwork     AppSessionField = "UTM_NETWORK"
+	AppSessionFieldUtmTerm        AppSessionField = "UTM_TERM"
 )
 
 var AllAppSessionField = []AppSessionField{
 	AppSessionFieldCountry,
 	AppSessionFieldCity,
 	AppSessionFieldRegion,
+	AppSessionFieldReferrerSource,
+	AppSessionFieldUtmCampaign,
+	AppSessionFieldUtmContent,
+	AppSessionFieldUtmMedium,
+	AppSessionFieldUtmSource,
+	AppSessionFieldUtmNetwork,
+	AppSessionFieldUtmTerm,
 }
 
 func (e AppSessionField) IsValid() bool {
 	switch e {
-	case AppSessionFieldCountry, AppSessionFieldCity, AppSessionFieldRegion:
+	case AppSessionFieldCountry, AppSessionFieldCity, AppSessionFieldRegion, AppSessionFieldReferrerSource, AppSessionFieldUtmCampaign, AppSessionFieldUtmContent, AppSessionFieldUtmMedium, AppSessionFieldUtmSource, AppSessionFieldUtmNetwork, AppSessionFieldUtmTerm:
 		return true
 	}
 	return false

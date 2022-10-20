@@ -18,6 +18,13 @@ enum AppSessionField {
     COUNTRY
     CITY
     REGION
+    REFERRER_SOURCE
+    UTM_CAMPAIGN
+    UTM_CONTENT
+    UTM_MEDIUM
+    UTM_SOURCE
+    UTM_NETWORK
+    UTM_TERM
 }
 
 input TimeFilter {

@@ -17,8 +17,16 @@ type AppSession {
     country: String!
     region: String!
     city: String!
-    accessedAt: Time!
+    referrerSource: String!
+    utmCampaign: String!
+    utmContent: String!
+    utmMedium: String!
+    utmSource: String!
+    utmNetwork: String!
+    utmTerm: String!
+    startedAt: Time!
     endedAt: Time!
+    engagedTime: Int!
     #    deviceName: String
     #    os: String
     #    osWithVersion: String
@@ -30,13 +38,9 @@ type AppSession {
     #    referrerUrlScheme: String
     #    referrerUrlPath: String
     #    referrerMedium: String
-    #    referrerSource: String
     #    firstPageUrlPath: String
     #    lastPageUrlPath: String
-    #    utmCampaign: String
-    #    utmContent: String
-    #    utmMedium: String
-    #    utmSource: String
+
 }
 
 type Query {

@@ -46,12 +46,20 @@ type DirectiveRoot struct {
 
 type ComplexityRoot struct {
 	AppSession struct {
-		AccessedAt func(childComplexity int) int
-		City       func(childComplexity int) int
-		Country    func(childComplexity int) int
-		EndedAt    func(childComplexity int) int
-		ID         func(childComplexity int) int
-		Region     func(childComplexity int) int
+		City           func(childComplexity int) int
+		Country        func(childComplexity int) int
+		EndedAt        func(childComplexity int) int
+		EngagedTime    func(childComplexity int) int
+		ID             func(childComplexity int) int
+		ReferrerSource func(childComplexity int) int
+		Region         func(childComplexity int) int
+		StartedAt      func(childComplexity int) int
+		UtmCampaign    func(childComplexity int) int
+		UtmContent     func(childComplexity int) int
+		UtmMedium      func(childComplexity int) int
+		UtmNetwork     func(childComplexity int) int
+		UtmSource      func(childComplexity int) int
+		UtmTerm        func(childComplexity int) int
 	}
 
 	AppSessionsPage struct {
@@ -97,13 +105,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 	_ = ec
 	switch typeName + "." + field {
 
-	case "AppSession.accessedAt":
-		if e.complexity.AppSession.AccessedAt == nil {
-			break
-		}
-
-		return e.complexity.AppSession.AccessedAt(childComplexity), true
-
 	case "AppSession.city":
 		if e.complexity.AppSession.City == nil {
 			break
@@ -125,6 +126,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.AppSession.EndedAt(childComplexity), true
 
+	case "AppSession.engagedTime":
+		if e.complexity.AppSession.EngagedTime == nil {
+			break
+		}
+
+		return e.complexity.AppSession.EngagedTime(childComplexity), true
+
 	case "AppSession.id":
 		if e.complexity.AppSession.ID == nil {
 			break
@@ -132,12 +140,68 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.AppSession.ID(childComplexity), true
 
+	case "AppSession.referrerSource":
+		if e.complexity.AppSession.ReferrerSource == nil {
+			break
+		}
+
+		return e.complexity.AppSession.ReferrerSource(childComplexity), true
+
 	case "AppSession.region":
 		if e.complexity.AppSession.Region == nil {
 			break
 		}
 
 		return e.complexity.AppSession.Region(childComplexity), true
+
+	case "AppSession.startedAt":
+		if e.complexity.AppSession.StartedAt == nil {
+			break
+		}
+
+		return e.complexity.AppSession.StartedAt(childComplexity), true
+
+	case "AppSession.utmCampaign":
+		if e.complexity.AppSession.UtmCampaign == nil {
+			break
+		}
+
+		return e.complexity.AppSession.UtmCampaign(childComplexity), true
+
+	case "AppSession.utmContent":
+		if e.complexity.AppSession.UtmContent == nil {
+			break
+		}
+
+		return e.complexity.AppSession.UtmContent(childComplexity), true
+
+	case "AppSession.utmMedium":
+		if e.complexity.AppSession.UtmMedium == nil {
+			break
+		}
+
+		return e.complexity.AppSession.UtmMedium(childComplexity), true
+
+	case "AppSession.utmNetwork":
+		if e.complexity.AppSession.UtmNetwork == nil {
+			break
+		}
+
+		return e.complexity.AppSession.UtmNetwork(childComplexity), true
+
+	case "AppSession.utmSource":
+		if e.complexity.AppSession.UtmSource == nil {
+			break
+		}
+
+		return e.complexity.AppSession.UtmSource(childComplexity), true
+
+	case "AppSession.utmTerm":
+		if e.complexity.AppSession.UtmTerm == nil {
+			break
+		}
+
+		return e.complexity.AppSession.UtmTerm(childComplexity), true
 
 	case "AppSessionsPage.content":
 		if e.complexity.AppSessionsPage.Content == nil {
@@ -295,11 +359,18 @@ enum AppSessionField {
     COUNTRY
     CITY
     REGION
+    REFERRER_SOURCE
+    UTM_CAMPAIGN
+    UTM_CONTENT
+    UTM_MEDIUM
+    UTM_SOURCE
+    UTM_NETWORK
+    UTM_TERM
 }
 
 input TimeFilter {
     timePeriod: TimePeriod!
-    #    applicable only if time period is CUSTOM
+    #    applicable only if time period is CUSTOM, DAILY & MONTHLY
     from: Time
     #    applicable only if time period is CUSTOM
     to: Time
@@ -341,8 +412,16 @@ type AppSession {
     country: String!
     region: String!
     city: String!
-    accessedAt: Time!
+    referrerSource: String!
+    utmCampaign: String!
+    utmContent: String!
+    utmMedium: String!
+    utmSource: String!
+    utmNetwork: String!
+    utmTerm: String!
+    startedAt: Time!
     endedAt: Time!
+    engagedTime: Int!
     #    deviceName: String
     #    os: String
     #    osWithVersion: String
@@ -354,13 +433,9 @@ type AppSession {
     #    referrerUrlScheme: String
     #    referrerUrlPath: String
     #    referrerMedium: String
-    #    referrerSource: String
     #    firstPageUrlPath: String
     #    lastPageUrlPath: String
-    #    utmCampaign: String
-    #    utmContent: String
-    #    utmMedium: String
-    #    utmSource: String
+
 }
 
 type Query {
@@ -654,8 +729,8 @@ func (ec *executionContext) fieldContext_AppSession_city(ctx context.Context, fi
 	return fc, nil
 }
 
-func (ec *executionContext) _AppSession_accessedAt(ctx context.Context, field graphql.CollectedField, obj *model.AppSession) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_AppSession_accessedAt(ctx, field)
+func (ec *executionContext) _AppSession_referrerSource(ctx context.Context, field graphql.CollectedField, obj *model.AppSession) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_AppSession_referrerSource(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -668,7 +743,315 @@ func (ec *executionContext) _AppSession_accessedAt(ctx context.Context, field gr
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.AccessedAt, nil
+		return obj.ReferrerSource, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_AppSession_referrerSource(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AppSession",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AppSession_utmCampaign(ctx context.Context, field graphql.CollectedField, obj *model.AppSession) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_AppSession_utmCampaign(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.UtmCampaign, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_AppSession_utmCampaign(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AppSession",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AppSession_utmContent(ctx context.Context, field graphql.CollectedField, obj *model.AppSession) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_AppSession_utmContent(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.UtmContent, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_AppSession_utmContent(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AppSession",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AppSession_utmMedium(ctx context.Context, field graphql.CollectedField, obj *model.AppSession) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_AppSession_utmMedium(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.UtmMedium, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_AppSession_utmMedium(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AppSession",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AppSession_utmSource(ctx context.Context, field graphql.CollectedField, obj *model.AppSession) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_AppSession_utmSource(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.UtmSource, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_AppSession_utmSource(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AppSession",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AppSession_utmNetwork(ctx context.Context, field graphql.CollectedField, obj *model.AppSession) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_AppSession_utmNetwork(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.UtmNetwork, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_AppSession_utmNetwork(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AppSession",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AppSession_utmTerm(ctx context.Context, field graphql.CollectedField, obj *model.AppSession) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_AppSession_utmTerm(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.UtmTerm, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_AppSession_utmTerm(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AppSession",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AppSession_startedAt(ctx context.Context, field graphql.CollectedField, obj *model.AppSession) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_AppSession_startedAt(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.StartedAt, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -685,7 +1068,7 @@ func (ec *executionContext) _AppSession_accessedAt(ctx context.Context, field gr
 	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_AppSession_accessedAt(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_AppSession_startedAt(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "AppSession",
 		Field:      field,
@@ -742,6 +1125,50 @@ func (ec *executionContext) fieldContext_AppSession_endedAt(ctx context.Context,
 	return fc, nil
 }
 
+func (ec *executionContext) _AppSession_engagedTime(ctx context.Context, field graphql.CollectedField, obj *model.AppSession) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_AppSession_engagedTime(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.EngagedTime, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_AppSession_engagedTime(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AppSession",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _AppSessionsPage_content(ctx context.Context, field graphql.CollectedField, obj *model.AppSessionsPage) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_AppSessionsPage_content(ctx, field)
 	if err != nil {
@@ -789,10 +1216,26 @@ func (ec *executionContext) fieldContext_AppSessionsPage_content(ctx context.Con
 				return ec.fieldContext_AppSession_region(ctx, field)
 			case "city":
 				return ec.fieldContext_AppSession_city(ctx, field)
-			case "accessedAt":
-				return ec.fieldContext_AppSession_accessedAt(ctx, field)
+			case "referrerSource":
+				return ec.fieldContext_AppSession_referrerSource(ctx, field)
+			case "utmCampaign":
+				return ec.fieldContext_AppSession_utmCampaign(ctx, field)
+			case "utmContent":
+				return ec.fieldContext_AppSession_utmContent(ctx, field)
+			case "utmMedium":
+				return ec.fieldContext_AppSession_utmMedium(ctx, field)
+			case "utmSource":
+				return ec.fieldContext_AppSession_utmSource(ctx, field)
+			case "utmNetwork":
+				return ec.fieldContext_AppSession_utmNetwork(ctx, field)
+			case "utmTerm":
+				return ec.fieldContext_AppSession_utmTerm(ctx, field)
+			case "startedAt":
+				return ec.fieldContext_AppSession_startedAt(ctx, field)
 			case "endedAt":
 				return ec.fieldContext_AppSession_endedAt(ctx, field)
+			case "engagedTime":
+				return ec.fieldContext_AppSession_engagedTime(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type AppSession", field.Name)
 		},
@@ -3338,9 +3781,58 @@ func (ec *executionContext) _AppSession(ctx context.Context, sel ast.SelectionSe
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
-		case "accessedAt":
+		case "referrerSource":
 
-			out.Values[i] = ec._AppSession_accessedAt(ctx, field, obj)
+			out.Values[i] = ec._AppSession_referrerSource(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "utmCampaign":
+
+			out.Values[i] = ec._AppSession_utmCampaign(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "utmContent":
+
+			out.Values[i] = ec._AppSession_utmContent(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "utmMedium":
+
+			out.Values[i] = ec._AppSession_utmMedium(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "utmSource":
+
+			out.Values[i] = ec._AppSession_utmSource(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "utmNetwork":
+
+			out.Values[i] = ec._AppSession_utmNetwork(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "utmTerm":
+
+			out.Values[i] = ec._AppSession_utmTerm(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "startedAt":
+
+			out.Values[i] = ec._AppSession_startedAt(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
 				invalids++
@@ -3348,6 +3840,13 @@ func (ec *executionContext) _AppSession(ctx context.Context, sel ast.SelectionSe
 		case "endedAt":
 
 			out.Values[i] = ec._AppSession_endedAt(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "engagedTime":
+
+			out.Values[i] = ec._AppSession_engagedTime(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
 				invalids++
