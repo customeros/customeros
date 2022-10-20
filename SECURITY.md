@@ -43,3 +43,9 @@ We always recommend using the latest version of Openline customerOS to ensure yo
 Please report security vulnerabilities to hello@openline.ai.
 
 We currently do not operate a bug bounty program, but we will generously reward you with merch for any actionable security vulnerabilities found.
+
+
+[apache2]: https://www.apache.org/licenses/LICENSE-2.0
+[customerOS-repo]: https://github.com/openline-ai/openline-customer-os/
+[slack]: https://join.slack.com/t/openline-ai/shared_invite/zt-1i6umaw6c-aaap4VwvGHeoJ1zz~ngCKQ
+[twitter]: https://twitter.com/OpenlineAI
