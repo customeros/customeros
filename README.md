@@ -64,8 +64,8 @@ TBD
 
 ## 💪 Contributions
 
-- We love contributions big or small!  Please check out our guide on how to get started.
-- Not sure where to start?  Book a free, no-pressure, no-commitment call with the team to discuss the best way to get involved.
+- We love contributions big or small!  Please check out our [guide on how to get started][contributions].
+- Not sure where to start?  [Book a free, no-pressure, no-commitment call][call] with the team to discuss the best way to get involved.
 
 ## 🙋‍♀️ We're Hiring!
 
@@ -78,7 +78,9 @@ TBD
 
 
 [apache2]: https://www.apache.org/licenses/LICENSE-2.0
+[call]: https://meetings-eu1.hubspot.com/matt2/customer-demos
 [careers]: https://openline.ai
+[contributions]: https://github.com/openline-ai/community/blob/main/README.md
 [customerOS-repo]: https://github.com/openline-ai/openline-customer-os/
 [docs]: https://openline.ai
 [pricing]: https://openline.ai/pricing
