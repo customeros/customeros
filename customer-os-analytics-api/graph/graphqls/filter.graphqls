@@ -22,7 +22,7 @@ enum AppSessionField {
 
 input TimeFilter {
     timePeriod: TimePeriod!
-    #    applicable only if time period is CUSTOM
+    #    applicable only if time period is CUSTOM, DAILY & MONTHLY
     from: Time
     #    applicable only if time period is CUSTOM
     to: Time
