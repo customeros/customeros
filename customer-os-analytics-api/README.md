@@ -69,7 +69,7 @@
 
        go mod tidy
 
-2. Generate graphql generate models
+2. Generate graphql models
 
        go run github.com/99designs/gqlgen generate
 
