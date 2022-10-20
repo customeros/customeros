@@ -1,0 +1,61 @@
+{
+  "files": [
+    "README.md"
+  ],
+  "imageSize": 100,
+  "commit": false,
+  "commitConvention": "angular",
+  "contributors": [
+    {
+      "login": "mattbr0wn",
+      "name": "Matt Brown",
+      "avatar_url": "https://avatars.githubusercontent.com/u/113338429?v=4",
+      "profile": "https://github.com/mattbr0wn",
+      "contributions": [
+        "doc"
+      ]
+    },
+    {
+      "login": "xvasi",
+      "name": "Vasi Coscotin",
+      "avatar_url": "https://avatars.githubusercontent.com/u/88987042?v=4",
+      "profile": "http://openline.ai",
+      "contributions": [
+        "doc"
+      ]
+    },
+    {
+      "login": "alexopenline",
+      "name": "alexopenline",
+      "avatar_url": "https://avatars.githubusercontent.com/u/95470380?v=4",
+      "profile": "https://github.com/alexopenline",
+      "contributions": [
+        "code"
+      ]
+    },
+    {
+      "login": "edifirut",
+      "name": "edifirut",
+      "avatar_url": "https://avatars.githubusercontent.com/u/108661145?v=4",
+      "profile": "https://github.com/edifirut",
+      "contributions": [
+        "infra"
+      ]
+    },
+    {
+      "login": "jontyk",
+      "name": "Jonty Knox",
+      "avatar_url": "https://avatars.githubusercontent.com/u/81759836?v=4",
+      "profile": "https://github.com/jontyk",
+      "contributions": [
+        "review"
+      ]
+    }
+  ],
+  "contributorsPerLine": 7,
+  "skipCi": true,
+  "repoType": "github",
+  "repoHost": "https://github.com",
+  "projectName": "openline-customer-os",
+  "projectOwner": "openline-ai"
+}
