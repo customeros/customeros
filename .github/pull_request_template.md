@@ -9,6 +9,10 @@
 
 👉 *Stay up-to-date with Openline coding conventions for a smoother review.*
 
+## Linked issues
+
+<!-- Add links to issues that were worked as part of this PR. -->
+
 ## How did you test this code?
 
 <!-- Briefly describe the steps you took. -->
