@@ -15,8 +15,9 @@ What types of changes does your code introduce?  _Put an `x` in the boxes that a
 - [ ] Documentation Update (if none of the other choices apply)
 - [ ] Other (please describe below)
 
-<!-- If there are frontend changes, please include screenshots. -->
-<!-- If a reference design was involved, include a link to the relevant Figma frame! -->
+## Screenshots or links to design files
+
+If this is a front end change, please include screenshots that show the change &/or Figma reference files.
 
 ## Checklist
 
