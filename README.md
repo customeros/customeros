@@ -22,7 +22,14 @@
   </p>
   <p>
 
-[![contributions welcome](https://img.shields.io/badge/contributions-welcome-brightgreen?logo=github)][customerOS-repo] [![license](https://img.shields.io/badge/license-Apache%202-blue)][apache2] [![stars](https://img.shields.io/github/stars/openline-ai/openline-customer-os?style=social)][customerOS-repo] [![twitter](https://img.shields.io/twitter/follow/openlineAI?style=social)][twitter] [![slack](https://img.shields.io/badge/slack-community-blueviolet.svg?logo=slack)][slack]
+[![contributions welcome](https://img.shields.io/badge/contributions-welcome-brightgreen?logo=github)][customerOS-repo] 
+[![license](https://img.shields.io/badge/license-Apache%202-blue)][apache2] 
+[![stars](https://img.shields.io/github/stars/openline-ai/openline-customer-os?style=social)][customerOS-repo] 
+<!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
+[![All Contributors](https://img.shields.io/badge/all_contributors-13-orange.svg?style=flat-square)](#contributors)
+<!-- ALL-CONTRIBUTORS-BADGE:END -->
+[![twitter](https://img.shields.io/twitter/follow/openlineAI?style=social)][twitter] 
+[![slack](https://img.shields.io/badge/slack-community-blueviolet.svg?logo=slack)][slack]
 
   </p>
   <p>
@@ -70,9 +77,18 @@ TBD
 - We love contributions big or small!  Please check out our [guide on how to get started][contributions].
 - Not sure where to start?  [Book a free, no-pressure, no-commitment call][call] with the team to discuss the best way to get involved.
 
-## 🙋‍♀️ We're Hiring!
+## ✨ Contributors
 
-- Come help us make Openline even better!  [We’re growing fast][careers], and would love to have you.
+A massive thank you goes out to all these wonderful people ([emoji key][emoji]):
+
+<!-- ALL-CONTRIBUTORS-LIST:START - Do not remove or modify this section -->
+<!-- prettier-ignore-start -->
+<!-- markdownlint-disable -->
+
+<!-- markdownlint-restore -->
+<!-- prettier-ignore-end -->
+
+<!-- ALL-CONTRIBUTORS-LIST:END -->
 
 ## 🪪 License
 
@@ -86,6 +102,7 @@ TBD
 [contributions]: https://github.com/openline-ai/community/blob/main/README.md
 [customerOS-repo]: https://github.com/openline-ai/openline-customer-os/
 [docs]: https://openline.ai
+[emoji]: https://allcontributors.org/docs/en/emoji-key
 [pricing]: https://openline.ai/pricing
 [slack]: https://join.slack.com/t/openline-ai/shared_invite/zt-1i6umaw6c-aaap4VwvGHeoJ1zz~ngCKQ
 [twitter]: https://twitter.com/OpenlineAI
