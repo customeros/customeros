@@ -64,7 +64,7 @@ type ComplexityRoot struct {
 		ID          func(childComplexity int) int
 		Name        func(childComplexity int) int
 		Platform    func(childComplexity int) int
-		Sessions    func(childComplexity int, dataFilter []*model.AppSessionsDataFilter, pageFilter *model.PageFilter) int
+		Sessions    func(childComplexity int, timeFilter model.TimeFilter, dataFilter []*model.AppSessionsDataFilter, paginationFilter *model.PaginationFilter) int
 		TrackerName func(childComplexity int) int
 	}
 
@@ -75,7 +75,7 @@ type ComplexityRoot struct {
 }
 
 type ApplicationResolver interface {
-	Sessions(ctx context.Context, obj *model.Application, dataFilter []*model.AppSessionsDataFilter, pageFilter *model.PageFilter) (*model.AppSessionsPage, error)
+	Sessions(ctx context.Context, obj *model.Application, timeFilter model.TimeFilter, dataFilter []*model.AppSessionsDataFilter, paginationFilter *model.PaginationFilter) (*model.AppSessionsPage, error)
 }
 type QueryResolver interface {
 	Application(ctx context.Context, id *string) (*model.Application, error)
@@ -191,7 +191,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Application.Sessions(childComplexity, args["dataFilter"].([]*model.AppSessionsDataFilter), args["pageFilter"].(*model.PageFilter)), true
+		return e.complexity.Application.Sessions(childComplexity, args["timeFilter"].(model.TimeFilter), args["dataFilter"].([]*model.AppSessionsDataFilter), args["paginationFilter"].(*model.PaginationFilter)), true
 
 	case "Application.trackerName":
 		if e.complexity.Application.TrackerName == nil {
@@ -228,7 +228,8 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 	ec := executionContext{rc, e}
 	inputUnmarshalMap := graphql.BuildUnmarshalerMap(
 		ec.unmarshalInputAppSessionsDataFilter,
-		ec.unmarshalInputPageFilter,
+		ec.unmarshalInputPaginationFilter,
+		ec.unmarshalInputTimeFilter,
 	)
 	first := true
 
@@ -274,14 +275,9 @@ func (ec *executionContext) introspectType(name string) (*introspection.Type, er
 }
 
 var sources = []*ast.Source{
-	{Name: "../graphqls/filter.graphqls", Input: `input PageFilter {
+	{Name: "../graphqls/filter.graphqls", Input: `input PaginationFilter {
     page: Int!
     limit: Int!
-}
-
-enum Operation {
-    EQUALS
-    CONTAINS
 }
 
 input AppSessionsDataFilter {
@@ -290,12 +286,38 @@ input AppSessionsDataFilter {
     Value: String!
 }
 
+enum Operation {
+    EQUALS
+    CONTAINS
+}
+
 enum AppSessionField {
     COUNTRY
     CITY
     REGION
 }
-`, BuiltIn: false},
+
+input TimeFilter {
+    timePeriod: TimePeriod!
+    #    applicable only if time period is CUSTOM
+    from: Time
+    #    applicable only if time period is CUSTOM
+    to: Time
+}
+
+enum TimePeriod {
+    TODAY
+    LAST_HOUR
+    LAST_24_HOURS
+    LAST_7_DAYS
+    LAST_30_DAYS
+    MONTH_TO_DATE
+    YEAR_TO_DATE
+    DAILY
+    MONTHLY
+    ALL_TIME
+    CUSTOM
+}`, BuiltIn: false},
 	{Name: "../graphqls/interfaces.graphqls", Input: `interface PagedResult {
     totalPages: Int!
     totalElements: Int64!
@@ -305,7 +327,7 @@ enum AppSessionField {
     platform: String!
     name: String!
     trackerName: String!
-    sessions(dataFilter: [AppSessionsDataFilter], pageFilter: PageFilter): AppSessionsPage!
+    sessions(timeFilter: TimeFilter!, dataFilter: [AppSessionsDataFilter], paginationFilter: PaginationFilter): AppSessionsPage!
 }
 
 type AppSessionsPage implements PagedResult {
@@ -358,24 +380,33 @@ var parsedSchema = gqlparser.MustLoadSchema(sources...)
 func (ec *executionContext) field_Application_sessions_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 []*model.AppSessionsDataFilter
+	var arg0 model.TimeFilter
+	if tmp, ok := rawArgs["timeFilter"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("timeFilter"))
+		arg0, err = ec.unmarshalNTimeFilter2githubᚗcomᚗopenlineᚑaiᚗcustomerᚑosᚑanalyticsᚑapiᚋgraphᚋmodelᚐTimeFilter(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["timeFilter"] = arg0
+	var arg1 []*model.AppSessionsDataFilter
 	if tmp, ok := rawArgs["dataFilter"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("dataFilter"))
-		arg0, err = ec.unmarshalOAppSessionsDataFilter2ᚕᚖgithubᚗcomᚗopenlineᚑaiᚗcustomerᚑosᚑanalyticsᚑapiᚋgraphᚋmodelᚐAppSessionsDataFilter(ctx, tmp)
+		arg1, err = ec.unmarshalOAppSessionsDataFilter2ᚕᚖgithubᚗcomᚗopenlineᚑaiᚗcustomerᚑosᚑanalyticsᚑapiᚋgraphᚋmodelᚐAppSessionsDataFilter(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["dataFilter"] = arg0
-	var arg1 *model.PageFilter
-	if tmp, ok := rawArgs["pageFilter"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("pageFilter"))
-		arg1, err = ec.unmarshalOPageFilter2ᚖgithubᚗcomᚗopenlineᚑaiᚗcustomerᚑosᚑanalyticsᚑapiᚋgraphᚋmodelᚐPageFilter(ctx, tmp)
+	args["dataFilter"] = arg1
+	var arg2 *model.PaginationFilter
+	if tmp, ok := rawArgs["paginationFilter"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("paginationFilter"))
+		arg2, err = ec.unmarshalOPaginationFilter2ᚖgithubᚗcomᚗopenlineᚑaiᚗcustomerᚑosᚑanalyticsᚑapiᚋgraphᚋmodelᚐPaginationFilter(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["pageFilter"] = arg1
+	args["paginationFilter"] = arg2
 	return args, nil
 }
 
@@ -1047,7 +1078,7 @@ func (ec *executionContext) _Application_sessions(ctx context.Context, field gra
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Application().Sessions(rctx, obj, fc.Args["dataFilter"].([]*model.AppSessionsDataFilter), fc.Args["pageFilter"].(*model.PageFilter))
+		return ec.resolvers.Application().Sessions(rctx, obj, fc.Args["timeFilter"].(model.TimeFilter), fc.Args["dataFilter"].([]*model.AppSessionsDataFilter), fc.Args["paginationFilter"].(*model.PaginationFilter))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -3165,8 +3196,8 @@ func (ec *executionContext) unmarshalInputAppSessionsDataFilter(ctx context.Cont
 	return it, nil
 }
 
-func (ec *executionContext) unmarshalInputPageFilter(ctx context.Context, obj interface{}) (model.PageFilter, error) {
-	var it model.PageFilter
+func (ec *executionContext) unmarshalInputPaginationFilter(ctx context.Context, obj interface{}) (model.PaginationFilter, error) {
+	var it model.PaginationFilter
 	asMap := map[string]interface{}{}
 	for k, v := range obj.(map[string]interface{}) {
 		asMap[k] = v
@@ -3192,6 +3223,50 @@ func (ec *executionContext) unmarshalInputPageFilter(ctx context.Context, obj in
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("limit"))
 			it.Limit, err = ec.unmarshalNInt2int(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputTimeFilter(ctx context.Context, obj interface{}) (model.TimeFilter, error) {
+	var it model.TimeFilter
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"timePeriod", "from", "to"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "timePeriod":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("timePeriod"))
+			it.TimePeriod, err = ec.unmarshalNTimePeriod2githubᚗcomᚗopenlineᚑaiᚗcustomerᚑosᚑanalyticsᚑapiᚋgraphᚋmodelᚐTimePeriod(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "from":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("from"))
+			it.From, err = ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "to":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("to"))
+			it.To, err = ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -4041,6 +4116,21 @@ func (ec *executionContext) marshalNTime2timeᚐTime(ctx context.Context, sel as
 	return res
 }
 
+func (ec *executionContext) unmarshalNTimeFilter2githubᚗcomᚗopenlineᚑaiᚗcustomerᚑosᚑanalyticsᚑapiᚋgraphᚋmodelᚐTimeFilter(ctx context.Context, v interface{}) (model.TimeFilter, error) {
+	res, err := ec.unmarshalInputTimeFilter(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalNTimePeriod2githubᚗcomᚗopenlineᚑaiᚗcustomerᚑosᚑanalyticsᚑapiᚋgraphᚋmodelᚐTimePeriod(ctx context.Context, v interface{}) (model.TimePeriod, error) {
+	var res model.TimePeriod
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNTimePeriod2githubᚗcomᚗopenlineᚑaiᚗcustomerᚑosᚑanalyticsᚑapiᚋgraphᚋmodelᚐTimePeriod(ctx context.Context, sel ast.SelectionSet, v model.TimePeriod) graphql.Marshaler {
+	return v
+}
+
 func (ec *executionContext) marshalN__Directive2githubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐDirective(ctx context.Context, sel ast.SelectionSet, v introspection.Directive) graphql.Marshaler {
 	return ec.___Directive(ctx, sel, &v)
 }
@@ -4364,11 +4454,11 @@ func (ec *executionContext) marshalOID2ᚖstring(ctx context.Context, sel ast.Se
 	return res
 }
 
-func (ec *executionContext) unmarshalOPageFilter2ᚖgithubᚗcomᚗopenlineᚑaiᚗcustomerᚑosᚑanalyticsᚑapiᚋgraphᚋmodelᚐPageFilter(ctx context.Context, v interface{}) (*model.PageFilter, error) {
+func (ec *executionContext) unmarshalOPaginationFilter2ᚖgithubᚗcomᚗopenlineᚑaiᚗcustomerᚑosᚑanalyticsᚑapiᚋgraphᚋmodelᚐPaginationFilter(ctx context.Context, v interface{}) (*model.PaginationFilter, error) {
 	if v == nil {
 		return nil, nil
 	}
-	res, err := ec.unmarshalInputPageFilter(ctx, v)
+	res, err := ec.unmarshalInputPaginationFilter(ctx, v)
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
@@ -4385,6 +4475,22 @@ func (ec *executionContext) marshalOString2ᚖstring(ctx context.Context, sel as
 		return graphql.Null
 	}
 	res := graphql.MarshalString(*v)
+	return res
+}
+
+func (ec *executionContext) unmarshalOTime2ᚖtimeᚐTime(ctx context.Context, v interface{}) (*time.Time, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := graphql.UnmarshalTime(v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOTime2ᚖtimeᚐTime(ctx context.Context, sel ast.SelectionSet, v *time.Time) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	res := graphql.MarshalTime(*v)
 	return res
 }
 

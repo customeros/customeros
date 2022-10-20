@@ -12,15 +12,16 @@ type SessionsRepo struct {
 }
 
 type SessionsRepository interface {
-	FindAllByApplication(appIdentifier entity.ApplicationUniqueIdentifier, dataFilter []*model.AppSessionsDataFilter, page int, limit int) helper.QueryResult
+	FindAllByApplication(appIdentifier entity.ApplicationUniqueIdentifier, timeFilter model.TimeFilter,
+		dataFilter []*model.AppSessionsDataFilter, page int, limit int) helper.QueryResult
 }
 
 func NewSessionsRepo(db *gorm.DB) *SessionsRepo {
 	return &SessionsRepo{db: db}
 }
 
-func (r *SessionsRepo) FindAllByApplication(appIdentifier entity.ApplicationUniqueIdentifier, dataFilter []*model.AppSessionsDataFilter,
-	page int, limit int) helper.QueryResult {
+func (r *SessionsRepo) FindAllByApplication(appIdentifier entity.ApplicationUniqueIdentifier, timeFilter model.TimeFilter,
+	dataFilter []*model.AppSessionsDataFilter, page int, limit int) helper.QueryResult {
 
 	var sessions entity.SessionEntities
 
@@ -37,6 +38,8 @@ func (r *SessionsRepo) FindAllByApplication(appIdentifier entity.ApplicationUniq
 			find = helper.AddDataFilter(columnNameForField(value.Field), value.Action, value.Value, find)
 		}
 	}
+
+	find = helper.AddTimeFilter(timeFilter, "end_tstamp", find)
 
 	err := find.Scopes(helper.Paginate(sessions, &pagination, find)).
 		Order("start_tstamp DESC").

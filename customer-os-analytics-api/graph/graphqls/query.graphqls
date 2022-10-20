@@ -3,7 +3,7 @@ type Application {
     platform: String!
     name: String!
     trackerName: String!
-    sessions(dataFilter: [AppSessionsDataFilter], pageFilter: PageFilter): AppSessionsPage!
+    sessions(timeFilter: TimeFilter!, dataFilter: [AppSessionsDataFilter], paginationFilter: PaginationFilter): AppSessionsPage!
 }
 
 type AppSessionsPage implements PagedResult {

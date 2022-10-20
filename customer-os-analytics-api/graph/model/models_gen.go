@@ -40,9 +40,15 @@ func (AppSessionsPage) IsPagedResult()               {}
 func (this AppSessionsPage) GetTotalPages() int      { return this.TotalPages }
 func (this AppSessionsPage) GetTotalElements() int64 { return this.TotalElements }
 
-type PageFilter struct {
+type PaginationFilter struct {
 	Page  int `json:"page"`
 	Limit int `json:"limit"`
+}
+
+type TimeFilter struct {
+	TimePeriod TimePeriod `json:"timePeriod"`
+	From       *time.Time `json:"from"`
+	To         *time.Time `json:"to"`
 }
 
 type AppSessionField string
@@ -126,5 +132,64 @@ func (e *Operation) UnmarshalGQL(v interface{}) error {
 }
 
 func (e Operation) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+type TimePeriod string
+
+const (
+	TimePeriodToday       TimePeriod = "TODAY"
+	TimePeriodLastHour    TimePeriod = "LAST_HOUR"
+	TimePeriodLast24Hours TimePeriod = "LAST_24_HOURS"
+	TimePeriodLast7Days   TimePeriod = "LAST_7_DAYS"
+	TimePeriodLast30Days  TimePeriod = "LAST_30_DAYS"
+	TimePeriodMonthToDate TimePeriod = "MONTH_TO_DATE"
+	TimePeriodYearToDate  TimePeriod = "YEAR_TO_DATE"
+	TimePeriodDaily       TimePeriod = "DAILY"
+	TimePeriodMonthly     TimePeriod = "MONTHLY"
+	TimePeriodAllTime     TimePeriod = "ALL_TIME"
+	TimePeriodCustom      TimePeriod = "CUSTOM"
+)
+
+var AllTimePeriod = []TimePeriod{
+	TimePeriodToday,
+	TimePeriodLastHour,
+	TimePeriodLast24Hours,
+	TimePeriodLast7Days,
+	TimePeriodLast30Days,
+	TimePeriodMonthToDate,
+	TimePeriodYearToDate,
+	TimePeriodDaily,
+	TimePeriodMonthly,
+	TimePeriodAllTime,
+	TimePeriodCustom,
+}
+
+func (e TimePeriod) IsValid() bool {
+	switch e {
+	case TimePeriodToday, TimePeriodLastHour, TimePeriodLast24Hours, TimePeriodLast7Days, TimePeriodLast30Days, TimePeriodMonthToDate, TimePeriodYearToDate, TimePeriodDaily, TimePeriodMonthly, TimePeriodAllTime, TimePeriodCustom:
+		return true
+	}
+	return false
+}
+
+func (e TimePeriod) String() string {
+	return string(e)
+}
+
+func (e *TimePeriod) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = TimePeriod(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid TimePeriod", str)
+	}
+	return nil
+}
+
+func (e TimePeriod) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
 }

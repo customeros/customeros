@@ -21,3 +21,14 @@ func AddDataFilter(column string, action model.Operation, value string, db *gorm
 	}
 	return db
 }
+
+func AddTimeFilter(timeFilter model.TimeFilter, column string, db *gorm.DB) *gorm.DB {
+
+	whereQueryFrom := fmt.Sprintf("%s >= ?", column)
+	db = db.Where(whereQueryFrom, TimeFilterFromValue(timeFilter))
+
+	whereQueryTo := fmt.Sprintf("%s <= ?", column)
+	db = db.Where(whereQueryTo, TimeFilterToValue(timeFilter))
+
+	return db
+}
