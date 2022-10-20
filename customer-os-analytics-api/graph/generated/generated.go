@@ -10,6 +10,7 @@ import (
 	"strconv"
 	"sync"
 	"sync/atomic"
+	"time"
 
 	"github.com.openline-ai.customer-os-analytics-api/graph/model"
 	"github.com/99designs/gqlgen/graphql"
@@ -45,17 +46,25 @@ type DirectiveRoot struct {
 
 type ComplexityRoot struct {
 	AppSession struct {
-		City    func(childComplexity int) int
-		Country func(childComplexity int) int
-		ID      func(childComplexity int) int
-		Region  func(childComplexity int) int
+		AccessedAt func(childComplexity int) int
+		City       func(childComplexity int) int
+		Country    func(childComplexity int) int
+		EndedAt    func(childComplexity int) int
+		ID         func(childComplexity int) int
+		Region     func(childComplexity int) int
+	}
+
+	AppSessionsPage struct {
+		Content       func(childComplexity int) int
+		TotalElements func(childComplexity int) int
+		TotalPages    func(childComplexity int) int
 	}
 
 	Application struct {
 		ID          func(childComplexity int) int
 		Name        func(childComplexity int) int
 		Platform    func(childComplexity int) int
-		Sessions    func(childComplexity int) int
+		Sessions    func(childComplexity int, pageFilter *model.PageFilter) int
 		TrackerName func(childComplexity int) int
 	}
 
@@ -66,7 +75,7 @@ type ComplexityRoot struct {
 }
 
 type ApplicationResolver interface {
-	Sessions(ctx context.Context, obj *model.Application) ([]*model.AppSession, error)
+	Sessions(ctx context.Context, obj *model.Application, pageFilter *model.PageFilter) (*model.AppSessionsPage, error)
 }
 type QueryResolver interface {
 	Application(ctx context.Context, id *string) (*model.Application, error)
@@ -88,6 +97,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 	_ = ec
 	switch typeName + "." + field {
 
+	case "AppSession.accessedAt":
+		if e.complexity.AppSession.AccessedAt == nil {
+			break
+		}
+
+		return e.complexity.AppSession.AccessedAt(childComplexity), true
+
 	case "AppSession.city":
 		if e.complexity.AppSession.City == nil {
 			break
@@ -102,6 +118,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.AppSession.Country(childComplexity), true
 
+	case "AppSession.endedAt":
+		if e.complexity.AppSession.EndedAt == nil {
+			break
+		}
+
+		return e.complexity.AppSession.EndedAt(childComplexity), true
+
 	case "AppSession.id":
 		if e.complexity.AppSession.ID == nil {
 			break
@@ -115,6 +138,27 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.AppSession.Region(childComplexity), true
+
+	case "AppSessionsPage.content":
+		if e.complexity.AppSessionsPage.Content == nil {
+			break
+		}
+
+		return e.complexity.AppSessionsPage.Content(childComplexity), true
+
+	case "AppSessionsPage.totalElements":
+		if e.complexity.AppSessionsPage.TotalElements == nil {
+			break
+		}
+
+		return e.complexity.AppSessionsPage.TotalElements(childComplexity), true
+
+	case "AppSessionsPage.totalPages":
+		if e.complexity.AppSessionsPage.TotalPages == nil {
+			break
+		}
+
+		return e.complexity.AppSessionsPage.TotalPages(childComplexity), true
 
 	case "Application.id":
 		if e.complexity.Application.ID == nil {
@@ -142,7 +186,12 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		return e.complexity.Application.Sessions(childComplexity), true
+		args, err := ec.field_Application_sessions_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Application.Sessions(childComplexity, args["pageFilter"].(*model.PageFilter)), true
 
 	case "Application.trackerName":
 		if e.complexity.Application.TrackerName == nil {
@@ -177,7 +226,9 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 	rc := graphql.GetOperationContext(ctx)
 	ec := executionContext{rc, e}
-	inputUnmarshalMap := graphql.BuildUnmarshalerMap()
+	inputUnmarshalMap := graphql.BuildUnmarshalerMap(
+		ec.unmarshalInputPageFilter,
+	)
 	first := true
 
 	switch rc.Operation.Operation {
@@ -226,12 +277,26 @@ var sources = []*ast.Source{
 #
 # https://gqlgen.com/getting-started/
 
+scalar Time
+scalar Int64
+
 type Application {
     id: ID!
     platform: String!
     name: String!
     trackerName: String!
-    sessions: [AppSession!]!
+    sessions(pageFilter: PageFilter): AppSessionsPage!
+}
+
+input PageFilter {
+    page: Int!
+    limit: Int!
+}
+
+type AppSessionsPage {
+    content: [AppSession!]!
+    totalPages: Int!
+    totalElements: Int64!
 }
 
 type AppSession {
@@ -239,6 +304,8 @@ type AppSession {
     country: String!
     region: String!
     city: String!
+    accessedAt: Time!
+    endedAt: Time!
 #    deviceName: String
 #    os: String
 #    osWithVersion: String
@@ -269,6 +336,21 @@ var parsedSchema = gqlparser.MustLoadSchema(sources...)
 // endregion ************************** generated!.gotpl **************************
 
 // region    ***************************** args.gotpl *****************************
+
+func (ec *executionContext) field_Application_sessions_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 *model.PageFilter
+	if tmp, ok := rawArgs["pageFilter"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("pageFilter"))
+		arg0, err = ec.unmarshalOPageFilter2ᚖgithubᚗcomᚗopenlineᚑaiᚗcustomerᚑosᚑanalyticsᚑapiᚋgraphᚋmodelᚐPageFilter(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["pageFilter"] = arg0
+	return args, nil
+}
 
 func (ec *executionContext) field_Query___type_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
@@ -514,6 +596,240 @@ func (ec *executionContext) fieldContext_AppSession_city(ctx context.Context, fi
 	return fc, nil
 }
 
+func (ec *executionContext) _AppSession_accessedAt(ctx context.Context, field graphql.CollectedField, obj *model.AppSession) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_AppSession_accessedAt(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.AccessedAt, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(time.Time)
+	fc.Result = res
+	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_AppSession_accessedAt(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AppSession",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AppSession_endedAt(ctx context.Context, field graphql.CollectedField, obj *model.AppSession) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_AppSession_endedAt(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.EndedAt, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(time.Time)
+	fc.Result = res
+	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_AppSession_endedAt(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AppSession",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AppSessionsPage_content(ctx context.Context, field graphql.CollectedField, obj *model.AppSessionsPage) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_AppSessionsPage_content(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Content, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.AppSession)
+	fc.Result = res
+	return ec.marshalNAppSession2ᚕᚖgithubᚗcomᚗopenlineᚑaiᚗcustomerᚑosᚑanalyticsᚑapiᚋgraphᚋmodelᚐAppSessionᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_AppSessionsPage_content(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AppSessionsPage",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_AppSession_id(ctx, field)
+			case "country":
+				return ec.fieldContext_AppSession_country(ctx, field)
+			case "region":
+				return ec.fieldContext_AppSession_region(ctx, field)
+			case "city":
+				return ec.fieldContext_AppSession_city(ctx, field)
+			case "accessedAt":
+				return ec.fieldContext_AppSession_accessedAt(ctx, field)
+			case "endedAt":
+				return ec.fieldContext_AppSession_endedAt(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type AppSession", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AppSessionsPage_totalPages(ctx context.Context, field graphql.CollectedField, obj *model.AppSessionsPage) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_AppSessionsPage_totalPages(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.TotalPages, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_AppSessionsPage_totalPages(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AppSessionsPage",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AppSessionsPage_totalElements(ctx context.Context, field graphql.CollectedField, obj *model.AppSessionsPage) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_AppSessionsPage_totalElements(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.TotalElements, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int64)
+	fc.Result = res
+	return ec.marshalNInt642int64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_AppSessionsPage_totalElements(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AppSessionsPage",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int64 does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Application_id(ctx context.Context, field graphql.CollectedField, obj *model.Application) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Application_id(ctx, field)
 	if err != nil {
@@ -704,7 +1020,7 @@ func (ec *executionContext) _Application_sessions(ctx context.Context, field gra
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Application().Sessions(rctx, obj)
+		return ec.resolvers.Application().Sessions(rctx, obj, fc.Args["pageFilter"].(*model.PageFilter))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -716,9 +1032,9 @@ func (ec *executionContext) _Application_sessions(ctx context.Context, field gra
 		}
 		return graphql.Null
 	}
-	res := resTmp.([]*model.AppSession)
+	res := resTmp.(*model.AppSessionsPage)
 	fc.Result = res
-	return ec.marshalNAppSession2ᚕᚖgithubᚗcomᚗopenlineᚑaiᚗcustomerᚑosᚑanalyticsᚑapiᚋgraphᚋmodelᚐAppSessionᚄ(ctx, field.Selections, res)
+	return ec.marshalNAppSessionsPage2ᚖgithubᚗcomᚗopenlineᚑaiᚗcustomerᚑosᚑanalyticsᚑapiᚋgraphᚋmodelᚐAppSessionsPage(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Application_sessions(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -729,17 +1045,26 @@ func (ec *executionContext) fieldContext_Application_sessions(ctx context.Contex
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
-			case "id":
-				return ec.fieldContext_AppSession_id(ctx, field)
-			case "country":
-				return ec.fieldContext_AppSession_country(ctx, field)
-			case "region":
-				return ec.fieldContext_AppSession_region(ctx, field)
-			case "city":
-				return ec.fieldContext_AppSession_city(ctx, field)
+			case "content":
+				return ec.fieldContext_AppSessionsPage_content(ctx, field)
+			case "totalPages":
+				return ec.fieldContext_AppSessionsPage_totalPages(ctx, field)
+			case "totalElements":
+				return ec.fieldContext_AppSessionsPage_totalElements(ctx, field)
 			}
-			return nil, fmt.Errorf("no field named %q was found under type AppSession", field.Name)
+			return nil, fmt.Errorf("no field named %q was found under type AppSessionsPage", field.Name)
 		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Application_sessions_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
 	}
 	return fc, nil
 }
@@ -2769,6 +3094,42 @@ func (ec *executionContext) fieldContext___Type_specifiedByURL(ctx context.Conte
 
 // region    **************************** input.gotpl *****************************
 
+func (ec *executionContext) unmarshalInputPageFilter(ctx context.Context, obj interface{}) (model.PageFilter, error) {
+	var it model.PageFilter
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"page", "limit"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "page":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("page"))
+			it.Page, err = ec.unmarshalNInt2int(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "limit":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("limit"))
+			it.Limit, err = ec.unmarshalNInt2int(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
 // endregion **************************** input.gotpl *****************************
 
 // region    ************************** interface.gotpl ***************************
@@ -2811,6 +3172,62 @@ func (ec *executionContext) _AppSession(ctx context.Context, sel ast.SelectionSe
 		case "city":
 
 			out.Values[i] = ec._AppSession_city(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "accessedAt":
+
+			out.Values[i] = ec._AppSession_accessedAt(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "endedAt":
+
+			out.Values[i] = ec._AppSession_endedAt(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var appSessionsPageImplementors = []string{"AppSessionsPage"}
+
+func (ec *executionContext) _AppSessionsPage(ctx context.Context, sel ast.SelectionSet, obj *model.AppSessionsPage) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, appSessionsPageImplementors)
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("AppSessionsPage")
+		case "content":
+
+			out.Values[i] = ec._AppSessionsPage_content(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "totalPages":
+
+			out.Values[i] = ec._AppSessionsPage_totalPages(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "totalElements":
+
+			out.Values[i] = ec._AppSessionsPage_totalElements(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
 				invalids++
@@ -3355,6 +3772,20 @@ func (ec *executionContext) marshalNAppSession2ᚖgithubᚗcomᚗopenlineᚑai�
 	return ec._AppSession(ctx, sel, v)
 }
 
+func (ec *executionContext) marshalNAppSessionsPage2githubᚗcomᚗopenlineᚑaiᚗcustomerᚑosᚑanalyticsᚑapiᚋgraphᚋmodelᚐAppSessionsPage(ctx context.Context, sel ast.SelectionSet, v model.AppSessionsPage) graphql.Marshaler {
+	return ec._AppSessionsPage(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNAppSessionsPage2ᚖgithubᚗcomᚗopenlineᚑaiᚗcustomerᚑosᚑanalyticsᚑapiᚋgraphᚋmodelᚐAppSessionsPage(ctx context.Context, sel ast.SelectionSet, v *model.AppSessionsPage) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._AppSessionsPage(ctx, sel, v)
+}
+
 func (ec *executionContext) marshalNApplication2githubᚗcomᚗopenlineᚑaiᚗcustomerᚑosᚑanalyticsᚑapiᚋgraphᚋmodelᚐApplication(ctx context.Context, sel ast.SelectionSet, v model.Application) graphql.Marshaler {
 	return ec._Application(ctx, sel, &v)
 }
@@ -3443,6 +3874,36 @@ func (ec *executionContext) marshalNID2string(ctx context.Context, sel ast.Selec
 	return res
 }
 
+func (ec *executionContext) unmarshalNInt2int(ctx context.Context, v interface{}) (int, error) {
+	res, err := graphql.UnmarshalInt(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNInt2int(ctx context.Context, sel ast.SelectionSet, v int) graphql.Marshaler {
+	res := graphql.MarshalInt(v)
+	if res == graphql.Null {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+	}
+	return res
+}
+
+func (ec *executionContext) unmarshalNInt642int64(ctx context.Context, v interface{}) (int64, error) {
+	res, err := graphql.UnmarshalInt64(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNInt642int64(ctx context.Context, sel ast.SelectionSet, v int64) graphql.Marshaler {
+	res := graphql.MarshalInt64(v)
+	if res == graphql.Null {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+	}
+	return res
+}
+
 func (ec *executionContext) unmarshalNString2string(ctx context.Context, v interface{}) (string, error) {
 	res, err := graphql.UnmarshalString(v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -3450,6 +3911,21 @@ func (ec *executionContext) unmarshalNString2string(ctx context.Context, v inter
 
 func (ec *executionContext) marshalNString2string(ctx context.Context, sel ast.SelectionSet, v string) graphql.Marshaler {
 	res := graphql.MarshalString(v)
+	if res == graphql.Null {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+	}
+	return res
+}
+
+func (ec *executionContext) unmarshalNTime2timeᚐTime(ctx context.Context, v interface{}) (time.Time, error) {
+	res, err := graphql.UnmarshalTime(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNTime2timeᚐTime(ctx context.Context, sel ast.SelectionSet, v time.Time) graphql.Marshaler {
+	res := graphql.MarshalTime(v)
 	if res == graphql.Null {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -3751,6 +4227,14 @@ func (ec *executionContext) marshalOID2ᚖstring(ctx context.Context, sel ast.Se
 	}
 	res := graphql.MarshalID(*v)
 	return res
+}
+
+func (ec *executionContext) unmarshalOPageFilter2ᚖgithubᚗcomᚗopenlineᚑaiᚗcustomerᚑosᚑanalyticsᚑapiᚋgraphᚋmodelᚐPageFilter(ctx context.Context, v interface{}) (*model.PageFilter, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalInputPageFilter(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) unmarshalOString2ᚖstring(ctx context.Context, v interface{}) (*string, error) {

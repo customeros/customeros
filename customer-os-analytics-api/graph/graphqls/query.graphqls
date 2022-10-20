@@ -2,12 +2,26 @@
 #
 # https://gqlgen.com/getting-started/
 
+scalar Time
+scalar Int64
+
 type Application {
     id: ID!
     platform: String!
     name: String!
     trackerName: String!
-    sessions: [AppSession!]!
+    sessions(pageFilter: PageFilter): AppSessionsPage!
+}
+
+input PageFilter {
+    page: Int!
+    limit: Int!
+}
+
+type AppSessionsPage {
+    content: [AppSession!]!
+    totalPages: Int!
+    totalElements: Int64!
 }
 
 type AppSession {
@@ -15,6 +29,8 @@ type AppSession {
     country: String!
     region: String!
     city: String!
+    accessedAt: Time!
+    endedAt: Time!
 #    deviceName: String
 #    os: String
 #    osWithVersion: String

@@ -2,9 +2,26 @@
 
 package model
 
+import (
+	"time"
+)
+
 type AppSession struct {
-	ID      string `json:"id"`
-	Country string `json:"country"`
-	Region  string `json:"region"`
-	City    string `json:"city"`
+	ID         string    `json:"id"`
+	Country    string    `json:"country"`
+	Region     string    `json:"region"`
+	City       string    `json:"city"`
+	AccessedAt time.Time `json:"accessedAt"`
+	EndedAt    time.Time `json:"endedAt"`
+}
+
+type AppSessionsPage struct {
+	Content       []*AppSession `json:"content"`
+	TotalPages    int           `json:"totalPages"`
+	TotalElements int64         `json:"totalElements"`
+}
+
+type PageFilter struct {
+	Page  int `json:"page"`
+	Limit int `json:"limit"`
 }
