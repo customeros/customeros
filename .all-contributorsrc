@@ -23,6 +23,15 @@
       "contributions": [
         "doc"
       ]
+    },
+    {
+      "login": "alexopenline",
+      "name": "alexopenline",
+      "avatar_url": "https://avatars.githubusercontent.com/u/95470380?v=4",
+      "profile": "https://github.com/alexopenline",
+      "contributions": [
+        "code"
+      ]
     }
   ],
   "contributorsPerLine": 7,
