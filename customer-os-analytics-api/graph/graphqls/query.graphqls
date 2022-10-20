@@ -12,6 +12,27 @@ type Application {
 
 type AppSession {
     id: ID!
+    country: String!
+    region: String!
+    city: String!
+#    deviceName: String
+#    os: String
+#    osWithVersion: String
+#    browser: String
+#    browserWithVersion: String
+#    channel: String
+#    referrerUrlHost: String
+#    referrerPage: String
+#    referrerUrlScheme: String
+#    referrerUrlPath: String
+#    referrerMedium: String
+#    referrerSource: String
+#    firstPageUrlPath: String
+#    lastPageUrlPath: String
+#    utmCampaign: String
+#    utmContent: String
+#    utmMedium: String
+#    utmSource: String
 }
 
 type Query {

@@ -5,6 +5,7 @@ package resolver
 
 import (
 	"context"
+
 	"github.com.openline-ai.customer-os-analytics-api/graph/generated"
 	"github.com.openline-ai.customer-os-analytics-api/graph/model"
 	"github.com.openline-ai.customer-os-analytics-api/mapper"

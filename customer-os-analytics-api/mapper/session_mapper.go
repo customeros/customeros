@@ -15,6 +15,9 @@ func MapSessions(sessionEntities *entity.SessionEntities) []*model.AppSession {
 
 func MapSession(sessionEntity *entity.SessionEntity) *model.AppSession {
 	return &model.AppSession{
-		ID: sessionEntity.ID,
+		ID:      sessionEntity.ID,
+		Country: sessionEntity.Country,
+		Region:  sessionEntity.Region,
+		City:    sessionEntity.City,
 	}
 }

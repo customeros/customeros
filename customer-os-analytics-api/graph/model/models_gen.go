@@ -3,5 +3,8 @@
 package model
 
 type AppSession struct {
-	ID string `json:"id"`
+	ID      string `json:"id"`
+	Country string `json:"country"`
+	Region  string `json:"region"`
+	City    string `json:"city"`
 }
