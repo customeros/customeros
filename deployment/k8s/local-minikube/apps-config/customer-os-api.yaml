@@ -1,25 +1,35 @@
 apiVersion: apps/v1
-kind: Deployment
+kind: Deployment                 # Type of Kubernetes resource
 metadata:
-  labels:
-    app.kubernetes.io/name: load-balancer-customer-os-api
-  name: customer-os-api
+  name: customer-os-api           # Name of the Kubernetes resource
 spec:
-  replicas: 1
+  replicas: 1                    # Number of pods to run at any given time
   selector:
     matchLabels:
-      app.kubernetes.io/name: load-balancer-customer-os-api
-  template:
+      app: customer-os-api        # This deployment applies to any Pods matching the specified label
+  template:                      # This deployment will create a set of pods using the configurations in this template
     metadata:
-      labels:
-        app.kubernetes.io/name: load-balancer-customer-os-api
-    spec:
+      labels:                    # The labels that will be applied to all of the pods in this deployment
+        app: customer-os-api
+    spec:                        # Spec for the container which will run in the Pod
       containers:
-        - image:  docker.io/library/customer-os-api:latest
+        - image: docker.io/library/customer-os-api:latest
           name: customer-os-api
           imagePullPolicy: Never
           ports:
-            - containerPort: 1010
-          env:
-            - name: CUSTOMER_OS_API_PORT
-              value: "1010"
+            - containerPort: 1010  # Should match the port number that the Go application listens on
+          livenessProbe:           # To check the health of the Pod
+            httpGet:
+              path: /health
+              port: 1010
+              scheme: HTTP
+            initialDelaySeconds: 5
+            periodSeconds: 15
+            timeoutSeconds: 5
+          readinessProbe:          # To check if the Pod is ready to serve traffic or not
+            httpGet:
+              path: /readiness
+              port: 1010
+              scheme: HTTP
+            initialDelaySeconds: 5
+            timeoutSeconds: 1

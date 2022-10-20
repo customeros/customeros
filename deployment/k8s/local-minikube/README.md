@@ -46,8 +46,11 @@ helm repo add bitnami https://charts.bitnami.com/bitnami
 
 
 # Start on local dev env
--> TODO link to deploy-local-laptop.sh
-
+Go to $CUSTOMER_OS_HOME/deployment/k8s/local-minikube
+and execute :
+0-mac-install-prerequisites.sh
+1-deploy-customer-os-base-infrastructure-local.sh
+2-build-deploy-customer-os-local-images.sh
 
 # Port FWD
 ```
