@@ -1,0 +1,43 @@
+input PaginationFilter {
+    page: Int!
+    limit: Int!
+}
+
+input AppSessionsDataFilter {
+    Field: AppSessionField!
+    Action: Operation!
+    Value: String!
+}
+
+enum Operation {
+    EQUALS
+    CONTAINS
+}
+
+enum AppSessionField {
+    COUNTRY
+    CITY
+    REGION
+}
+
+input TimeFilter {
+    timePeriod: TimePeriod!
+    #    applicable only if time period is CUSTOM
+    from: Time
+    #    applicable only if time period is CUSTOM
+    to: Time
+}
+
+enum TimePeriod {
+    TODAY
+    LAST_HOUR
+    LAST_24_HOURS
+    LAST_7_DAYS
+    LAST_30_DAYS
+    MONTH_TO_DATE
+    YEAR_TO_DATE
+    DAILY
+    MONTHLY
+    ALL_TIME
+    CUSTOM
+}

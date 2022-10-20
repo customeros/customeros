@@ -16,8 +16,9 @@ func MapApplications(applicationEntities *entity.ApplicationEntities) []*model.A
 func MapApplication(applicationEntity *entity.ApplicationEntity) *model.Application {
 	return &model.Application{
 		ID:          applicationEntity.ID,
-		Name:        applicationEntity.Name,
+		Name:        applicationEntity.AppId,
 		TrackerName: applicationEntity.TrackerName,
 		Platform:    applicationEntity.Platform,
+		Tenant:      applicationEntity.Tenant,
 	}
 }
