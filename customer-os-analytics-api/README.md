@@ -40,9 +40,29 @@
 
 ## 🤝 Dependencies
 
-This module is uses:
-- [gorm][gorm]
-- [gqlgen][gqlgen]
+1.  Install [gorm][gorm]
+
+    ```
+    go get -u gorm.io/gorm
+    ```
+      
+2. Install [gqlgen][gqlgen]
+   
+   *Initialize a new go module*
+
+   ```
+   mkdir example
+   cd example
+   go mod init example
+   ```
+   
+   *Add `github.com/99designs/gqlgen` to your project’s `tools.go`*
+   
+   ```
+   printf '// +build tools\npackage tools\nimport (_ "github.com/99designs/gqlgen"\n _ "github.com/99designs/gqlgen/graphql/introspection")' | gofmt > tools.go
+
+   go mod tidy
+   ```
 
 ## 🚀 Quick start
 
