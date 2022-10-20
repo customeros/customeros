@@ -1,0 +1,25 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app.kubernetes.io/name: load-balancer-customer-os-api
+  name: customer-os-api
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: load-balancer-customer-os-api
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: load-balancer-customer-os-api
+    spec:
+      containers:
+        - image:  docker.io/library/customer-os-api:latest
+          name: customer-os-api
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 1010
+          env:
+            - name: CUSTOMER_OS_API_PORT
+              value: "1010"
