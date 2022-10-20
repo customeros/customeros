@@ -1,0 +1,21 @@
+input PageFilter {
+    page: Int!
+    limit: Int!
+}
+
+enum Operation {
+    EQUALS
+    CONTAINS
+}
+
+input AppSessionsDataFilter {
+    Field: AppSessionField!
+    Action: Operation!
+    Value: String!
+}
+
+enum AppSessionField {
+    COUNTRY
+    CITY
+    REGION
+}

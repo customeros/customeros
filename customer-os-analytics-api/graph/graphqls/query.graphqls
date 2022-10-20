@@ -1,24 +1,12 @@
-# GraphQL schema example
-#
-# https://gqlgen.com/getting-started/
-
-scalar Time
-scalar Int64
-
 type Application {
     id: ID!
     platform: String!
     name: String!
     trackerName: String!
-    sessions(pageFilter: PageFilter): AppSessionsPage!
+    sessions(dataFilter: [AppSessionsDataFilter], pageFilter: PageFilter): AppSessionsPage!
 }
 
-input PageFilter {
-    page: Int!
-    limit: Int!
-}
-
-type AppSessionsPage {
+type AppSessionsPage implements PagedResult {
     content: [AppSession!]!
     totalPages: Int!
     totalElements: Int64!
@@ -31,24 +19,24 @@ type AppSession {
     city: String!
     accessedAt: Time!
     endedAt: Time!
-#    deviceName: String
-#    os: String
-#    osWithVersion: String
-#    browser: String
-#    browserWithVersion: String
-#    channel: String
-#    referrerUrlHost: String
-#    referrerPage: String
-#    referrerUrlScheme: String
-#    referrerUrlPath: String
-#    referrerMedium: String
-#    referrerSource: String
-#    firstPageUrlPath: String
-#    lastPageUrlPath: String
-#    utmCampaign: String
-#    utmContent: String
-#    utmMedium: String
-#    utmSource: String
+    #    deviceName: String
+    #    os: String
+    #    osWithVersion: String
+    #    browser: String
+    #    browserWithVersion: String
+    #    channel: String
+    #    referrerUrlHost: String
+    #    referrerPage: String
+    #    referrerUrlScheme: String
+    #    referrerUrlPath: String
+    #    referrerMedium: String
+    #    referrerSource: String
+    #    firstPageUrlPath: String
+    #    lastPageUrlPath: String
+    #    utmCampaign: String
+    #    utmContent: String
+    #    utmMedium: String
+    #    utmSource: String
 }
 
 type Query {

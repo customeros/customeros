@@ -64,7 +64,7 @@ type ComplexityRoot struct {
 		ID          func(childComplexity int) int
 		Name        func(childComplexity int) int
 		Platform    func(childComplexity int) int
-		Sessions    func(childComplexity int, pageFilter *model.PageFilter) int
+		Sessions    func(childComplexity int, dataFilter []*model.AppSessionsDataFilter, pageFilter *model.PageFilter) int
 		TrackerName func(childComplexity int) int
 	}
 
@@ -75,7 +75,7 @@ type ComplexityRoot struct {
 }
 
 type ApplicationResolver interface {
-	Sessions(ctx context.Context, obj *model.Application, pageFilter *model.PageFilter) (*model.AppSessionsPage, error)
+	Sessions(ctx context.Context, obj *model.Application, dataFilter []*model.AppSessionsDataFilter, pageFilter *model.PageFilter) (*model.AppSessionsPage, error)
 }
 type QueryResolver interface {
 	Application(ctx context.Context, id *string) (*model.Application, error)
@@ -191,7 +191,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Application.Sessions(childComplexity, args["pageFilter"].(*model.PageFilter)), true
+		return e.complexity.Application.Sessions(childComplexity, args["dataFilter"].([]*model.AppSessionsDataFilter), args["pageFilter"].(*model.PageFilter)), true
 
 	case "Application.trackerName":
 		if e.complexity.Application.TrackerName == nil {
@@ -227,6 +227,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 	rc := graphql.GetOperationContext(ctx)
 	ec := executionContext{rc, e}
 	inputUnmarshalMap := graphql.BuildUnmarshalerMap(
+		ec.unmarshalInputAppSessionsDataFilter,
 		ec.unmarshalInputPageFilter,
 	)
 	first := true
@@ -273,27 +274,41 @@ func (ec *executionContext) introspectType(name string) (*introspection.Type, er
 }
 
 var sources = []*ast.Source{
-	{Name: "../graphqls/query.graphqls", Input: `# GraphQL schema example
-#
-# https://gqlgen.com/getting-started/
-
-scalar Time
-scalar Int64
-
-type Application {
-    id: ID!
-    platform: String!
-    name: String!
-    trackerName: String!
-    sessions(pageFilter: PageFilter): AppSessionsPage!
-}
-
-input PageFilter {
+	{Name: "../graphqls/filter.graphqls", Input: `input PageFilter {
     page: Int!
     limit: Int!
 }
 
-type AppSessionsPage {
+enum Operation {
+    EQUALS
+    CONTAINS
+}
+
+input AppSessionsDataFilter {
+    Field: AppSessionField!
+    Action: Operation!
+    Value: String!
+}
+
+enum AppSessionField {
+    COUNTRY
+    CITY
+    REGION
+}
+`, BuiltIn: false},
+	{Name: "../graphqls/interfaces.graphqls", Input: `interface PagedResult {
+    totalPages: Int!
+    totalElements: Int64!
+}`, BuiltIn: false},
+	{Name: "../graphqls/query.graphqls", Input: `type Application {
+    id: ID!
+    platform: String!
+    name: String!
+    trackerName: String!
+    sessions(dataFilter: [AppSessionsDataFilter], pageFilter: PageFilter): AppSessionsPage!
+}
+
+type AppSessionsPage implements PagedResult {
     content: [AppSession!]!
     totalPages: Int!
     totalElements: Int64!
@@ -306,30 +321,33 @@ type AppSession {
     city: String!
     accessedAt: Time!
     endedAt: Time!
-#    deviceName: String
-#    os: String
-#    osWithVersion: String
-#    browser: String
-#    browserWithVersion: String
-#    channel: String
-#    referrerUrlHost: String
-#    referrerPage: String
-#    referrerUrlScheme: String
-#    referrerUrlPath: String
-#    referrerMedium: String
-#    referrerSource: String
-#    firstPageUrlPath: String
-#    lastPageUrlPath: String
-#    utmCampaign: String
-#    utmContent: String
-#    utmMedium: String
-#    utmSource: String
+    #    deviceName: String
+    #    os: String
+    #    osWithVersion: String
+    #    browser: String
+    #    browserWithVersion: String
+    #    channel: String
+    #    referrerUrlHost: String
+    #    referrerPage: String
+    #    referrerUrlScheme: String
+    #    referrerUrlPath: String
+    #    referrerMedium: String
+    #    referrerSource: String
+    #    firstPageUrlPath: String
+    #    lastPageUrlPath: String
+    #    utmCampaign: String
+    #    utmContent: String
+    #    utmMedium: String
+    #    utmSource: String
 }
 
 type Query {
     application(id: ID): Application!
     applications: [Application!]!
 }`, BuiltIn: false},
+	{Name: "../graphqls/scalar.graphqls", Input: `scalar Time
+scalar Int64
+`, BuiltIn: false},
 }
 var parsedSchema = gqlparser.MustLoadSchema(sources...)
 
@@ -340,15 +358,24 @@ var parsedSchema = gqlparser.MustLoadSchema(sources...)
 func (ec *executionContext) field_Application_sessions_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 *model.PageFilter
-	if tmp, ok := rawArgs["pageFilter"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("pageFilter"))
-		arg0, err = ec.unmarshalOPageFilter2ᚖgithubᚗcomᚗopenlineᚑaiᚗcustomerᚑosᚑanalyticsᚑapiᚋgraphᚋmodelᚐPageFilter(ctx, tmp)
+	var arg0 []*model.AppSessionsDataFilter
+	if tmp, ok := rawArgs["dataFilter"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("dataFilter"))
+		arg0, err = ec.unmarshalOAppSessionsDataFilter2ᚕᚖgithubᚗcomᚗopenlineᚑaiᚗcustomerᚑosᚑanalyticsᚑapiᚋgraphᚋmodelᚐAppSessionsDataFilter(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["pageFilter"] = arg0
+	args["dataFilter"] = arg0
+	var arg1 *model.PageFilter
+	if tmp, ok := rawArgs["pageFilter"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("pageFilter"))
+		arg1, err = ec.unmarshalOPageFilter2ᚖgithubᚗcomᚗopenlineᚑaiᚗcustomerᚑosᚑanalyticsᚑapiᚋgraphᚋmodelᚐPageFilter(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["pageFilter"] = arg1
 	return args, nil
 }
 
@@ -1020,7 +1047,7 @@ func (ec *executionContext) _Application_sessions(ctx context.Context, field gra
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Application().Sessions(rctx, obj, fc.Args["pageFilter"].(*model.PageFilter))
+		return ec.resolvers.Application().Sessions(rctx, obj, fc.Args["dataFilter"].([]*model.AppSessionsDataFilter), fc.Args["pageFilter"].(*model.PageFilter))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -3094,6 +3121,50 @@ func (ec *executionContext) fieldContext___Type_specifiedByURL(ctx context.Conte
 
 // region    **************************** input.gotpl *****************************
 
+func (ec *executionContext) unmarshalInputAppSessionsDataFilter(ctx context.Context, obj interface{}) (model.AppSessionsDataFilter, error) {
+	var it model.AppSessionsDataFilter
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"Field", "Action", "Value"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "Field":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("Field"))
+			it.Field, err = ec.unmarshalNAppSessionField2githubᚗcomᚗopenlineᚑaiᚗcustomerᚑosᚑanalyticsᚑapiᚋgraphᚋmodelᚐAppSessionField(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "Action":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("Action"))
+			it.Action, err = ec.unmarshalNOperation2githubᚗcomᚗopenlineᚑaiᚗcustomerᚑosᚑanalyticsᚑapiᚋgraphᚋmodelᚐOperation(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "Value":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("Value"))
+			it.Value, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputPageFilter(ctx context.Context, obj interface{}) (model.PageFilter, error) {
 	var it model.PageFilter
 	asMap := map[string]interface{}{}
@@ -3133,6 +3204,22 @@ func (ec *executionContext) unmarshalInputPageFilter(ctx context.Context, obj in
 // endregion **************************** input.gotpl *****************************
 
 // region    ************************** interface.gotpl ***************************
+
+func (ec *executionContext) _PagedResult(ctx context.Context, sel ast.SelectionSet, obj model.PagedResult) graphql.Marshaler {
+	switch obj := (obj).(type) {
+	case nil:
+		return graphql.Null
+	case model.AppSessionsPage:
+		return ec._AppSessionsPage(ctx, sel, &obj)
+	case *model.AppSessionsPage:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._AppSessionsPage(ctx, sel, obj)
+	default:
+		panic(fmt.Errorf("unexpected type %T", obj))
+	}
+}
 
 // endregion ************************** interface.gotpl ***************************
 
@@ -3201,7 +3288,7 @@ func (ec *executionContext) _AppSession(ctx context.Context, sel ast.SelectionSe
 	return out
 }
 
-var appSessionsPageImplementors = []string{"AppSessionsPage"}
+var appSessionsPageImplementors = []string{"AppSessionsPage", "PagedResult"}
 
 func (ec *executionContext) _AppSessionsPage(ctx context.Context, sel ast.SelectionSet, obj *model.AppSessionsPage) graphql.Marshaler {
 	fields := graphql.CollectFields(ec.OperationContext, sel, appSessionsPageImplementors)
@@ -3772,6 +3859,16 @@ func (ec *executionContext) marshalNAppSession2ᚖgithubᚗcomᚗopenlineᚑai�
 	return ec._AppSession(ctx, sel, v)
 }
 
+func (ec *executionContext) unmarshalNAppSessionField2githubᚗcomᚗopenlineᚑaiᚗcustomerᚑosᚑanalyticsᚑapiᚋgraphᚋmodelᚐAppSessionField(ctx context.Context, v interface{}) (model.AppSessionField, error) {
+	var res model.AppSessionField
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNAppSessionField2githubᚗcomᚗopenlineᚑaiᚗcustomerᚑosᚑanalyticsᚑapiᚋgraphᚋmodelᚐAppSessionField(ctx context.Context, sel ast.SelectionSet, v model.AppSessionField) graphql.Marshaler {
+	return v
+}
+
 func (ec *executionContext) marshalNAppSessionsPage2githubᚗcomᚗopenlineᚑaiᚗcustomerᚑosᚑanalyticsᚑapiᚋgraphᚋmodelᚐAppSessionsPage(ctx context.Context, sel ast.SelectionSet, v model.AppSessionsPage) graphql.Marshaler {
 	return ec._AppSessionsPage(ctx, sel, &v)
 }
@@ -3902,6 +3999,16 @@ func (ec *executionContext) marshalNInt642int64(ctx context.Context, sel ast.Sel
 		}
 	}
 	return res
+}
+
+func (ec *executionContext) unmarshalNOperation2githubᚗcomᚗopenlineᚑaiᚗcustomerᚑosᚑanalyticsᚑapiᚋgraphᚋmodelᚐOperation(ctx context.Context, v interface{}) (model.Operation, error) {
+	var res model.Operation
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNOperation2githubᚗcomᚗopenlineᚑaiᚗcustomerᚑosᚑanalyticsᚑapiᚋgraphᚋmodelᚐOperation(ctx context.Context, sel ast.SelectionSet, v model.Operation) graphql.Marshaler {
+	return v
 }
 
 func (ec *executionContext) unmarshalNString2string(ctx context.Context, v interface{}) (string, error) {
@@ -4185,6 +4292,34 @@ func (ec *executionContext) marshalN__TypeKind2string(ctx context.Context, sel a
 		}
 	}
 	return res
+}
+
+func (ec *executionContext) unmarshalOAppSessionsDataFilter2ᚕᚖgithubᚗcomᚗopenlineᚑaiᚗcustomerᚑosᚑanalyticsᚑapiᚋgraphᚋmodelᚐAppSessionsDataFilter(ctx context.Context, v interface{}) ([]*model.AppSessionsDataFilter, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var vSlice []interface{}
+	if v != nil {
+		vSlice = graphql.CoerceList(v)
+	}
+	var err error
+	res := make([]*model.AppSessionsDataFilter, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalOAppSessionsDataFilter2ᚖgithubᚗcomᚗopenlineᚑaiᚗcustomerᚑosᚑanalyticsᚑapiᚋgraphᚋmodelᚐAppSessionsDataFilter(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
+func (ec *executionContext) unmarshalOAppSessionsDataFilter2ᚖgithubᚗcomᚗopenlineᚑaiᚗcustomerᚑosᚑanalyticsᚑapiᚋgraphᚋmodelᚐAppSessionsDataFilter(ctx context.Context, v interface{}) (*model.AppSessionsDataFilter, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalInputAppSessionsDataFilter(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) unmarshalOBoolean2bool(ctx context.Context, v interface{}) (bool, error) {

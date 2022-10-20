@@ -14,13 +14,15 @@ import (
 )
 
 // Sessions is the resolver for the sessions field.
-func (r *applicationResolver) Sessions(ctx context.Context, obj *model.Application, pageFilter *model.PageFilter) (*model.AppSessionsPage, error) {
+func (r *applicationResolver) Sessions(ctx context.Context, obj *model.Application, dataFilter []*model.AppSessionsDataFilter, pageFilter *model.PageFilter) (*model.AppSessionsPage, error) {
 	operationResult := r.RepositoryHandler.SessionsRepo.FindAllByApplication(entity.ApplicationUniqueIdentifier{
 		Tenant:      obj.Tenant,
 		AppId:       obj.Name,
 		TrackerName: obj.TrackerName,
-	}, pageFilter.Page, pageFilter.Limit)
+	}, dataFilter, pageFilter.Page, pageFilter.Limit)
+
 	paginatedResult := operationResult.Result.(*helper.Pagination)
+
 	return &model.AppSessionsPage{
 		Content:       mapper.MapSessions(paginatedResult.Rows.(*entity.SessionEntities)),
 		TotalPages:    paginatedResult.TotalPages,

@@ -2,6 +2,12 @@ package entity
 
 import "time"
 
+const (
+	SessionColumnName_Country    string = "geo_country"
+	SessionColumnName_City       string = "geo_city"
+	SessionColumnName_RegionName string = "geo_region_name"
+)
+
 type SessionEntity struct {
 	ID          string    `gorm:"column:domain_sessionid;type:varchar(128);NOT NULL" json:"sessionId" binding:"required"`
 	AppId       string    `gorm:"column:app_id;type:varchar(255);NOT NULL" json:"appName" binding:"required"`

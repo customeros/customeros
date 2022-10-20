@@ -3,8 +3,17 @@
 package model
 
 import (
+	"fmt"
+	"io"
+	"strconv"
 	"time"
 )
+
+type PagedResult interface {
+	IsPagedResult()
+	GetTotalPages() int
+	GetTotalElements() int64
+}
 
 type AppSession struct {
 	ID         string    `json:"id"`
@@ -15,13 +24,107 @@ type AppSession struct {
 	EndedAt    time.Time `json:"endedAt"`
 }
 
+type AppSessionsDataFilter struct {
+	Field  AppSessionField `json:"Field"`
+	Action Operation       `json:"Action"`
+	Value  string          `json:"Value"`
+}
+
 type AppSessionsPage struct {
 	Content       []*AppSession `json:"content"`
 	TotalPages    int           `json:"totalPages"`
 	TotalElements int64         `json:"totalElements"`
 }
 
+func (AppSessionsPage) IsPagedResult()               {}
+func (this AppSessionsPage) GetTotalPages() int      { return this.TotalPages }
+func (this AppSessionsPage) GetTotalElements() int64 { return this.TotalElements }
+
 type PageFilter struct {
 	Page  int `json:"page"`
 	Limit int `json:"limit"`
+}
+
+type AppSessionField string
+
+const (
+	AppSessionFieldCountry AppSessionField = "COUNTRY"
+	AppSessionFieldCity    AppSessionField = "CITY"
+	AppSessionFieldRegion  AppSessionField = "REGION"
+)
+
+var AllAppSessionField = []AppSessionField{
+	AppSessionFieldCountry,
+	AppSessionFieldCity,
+	AppSessionFieldRegion,
+}
+
+func (e AppSessionField) IsValid() bool {
+	switch e {
+	case AppSessionFieldCountry, AppSessionFieldCity, AppSessionFieldRegion:
+		return true
+	}
+	return false
+}
+
+func (e AppSessionField) String() string {
+	return string(e)
+}
+
+func (e *AppSessionField) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = AppSessionField(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid AppSessionField", str)
+	}
+	return nil
+}
+
+func (e AppSessionField) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+type Operation string
+
+const (
+	OperationEquals   Operation = "EQUALS"
+	OperationContains Operation = "CONTAINS"
+)
+
+var AllOperation = []Operation{
+	OperationEquals,
+	OperationContains,
+}
+
+func (e Operation) IsValid() bool {
+	switch e {
+	case OperationEquals, OperationContains:
+		return true
+	}
+	return false
+}
+
+func (e Operation) String() string {
+	return string(e)
+}
+
+func (e *Operation) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = Operation(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid Operation", str)
+	}
+	return nil
+}
+
+func (e Operation) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
 }
