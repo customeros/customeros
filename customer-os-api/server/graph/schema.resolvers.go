@@ -6,14 +6,24 @@ package graph
 import (
 	"context"
 	"fmt"
+	"math/rand"
 
 	"github.com/openline-ai/openline-customer-os/customer-os-api/graph/generated"
 	"github.com/openline-ai/openline-customer-os/customer-os-api/graph/model"
 )
 
+var customers []*model.Customer
+
 // CreateCustomer is the resolver for the createCustomer field.
 func (r *mutationResolver) CreateCustomer(ctx context.Context, input model.NewCustomer) (*model.Customer, error) {
-	panic(fmt.Errorf("not implemented: CreateCustomer - createCustomer"))
+	var customer = model.Customer{
+		ID:   fmt.Sprintf("%d%s", rand.Uint32(), ""),
+		Name: input.Name,
+	}
+
+	customers = append(customers, &customer)
+
+	return &customer, nil
 }
 
 // CreateContact is the resolver for the createContact field.
@@ -23,7 +33,7 @@ func (r *mutationResolver) CreateContact(ctx context.Context, input model.NewCon
 
 // Customers is the resolver for the customers field.
 func (r *queryResolver) Customers(ctx context.Context) ([]*model.Customer, error) {
-	panic(fmt.Errorf("not implemented: Customers - customers"))
+	return customers[0:len(customers)], nil
 }
 
 // Contacts is the resolver for the contacts field.
