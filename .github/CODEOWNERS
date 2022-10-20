@@ -1,0 +1,8 @@
+# global code owners
+* @alexopenline @edifirut @xvasi
+
+# javascript code owners
+*.js @edifirut @xvasi
+
+# documentation owners
+*.md @jontyk @mattbr0wn
