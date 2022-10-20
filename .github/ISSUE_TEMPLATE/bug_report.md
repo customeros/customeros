@@ -2,7 +2,7 @@
 name: Bug report
 about: Something not working as expected?  Let us look into it.
 title: ''
-labels: bug
+labels: bug, performance
 assignees: alexopenline, edifirut, xvasi
 
 ---
