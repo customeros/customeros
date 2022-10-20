@@ -82,6 +82,7 @@ A massive thank you goes out to all these wonderful people ([emoji key][emoji]):
   <tbody>
     <tr>
       <td align="center"><a href="https://github.com/mattbr0wn"><img src="https://avatars.githubusercontent.com/u/113338429?v=4?s=100" width="100px;" alt="Matt Brown"/><br /><sub><b>Matt Brown</b></sub></a><br /><a href="https://github.com/openline-ai/openline-customer-os/commits?author=mattbr0wn" title="Documentation">📖</a></td>
+      <td align="center"><a href="http://openline.ai"><img src="https://avatars.githubusercontent.com/u/88987042?v=4?s=100" width="100px;" alt="Vasi Coscotin"/><br /><sub><b>Vasi Coscotin</b></sub></a><br /><a href="https://github.com/openline-ai/openline-customer-os/commits?author=xvasi" title="Documentation">📖</a></td>
     </tr>
   </tbody>
 </table>
