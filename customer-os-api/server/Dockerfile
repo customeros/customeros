@@ -12,7 +12,6 @@ COPY . ./
 
 RUN go build -o /go/bin/app
 
-
 FROM alpine:3.14
 COPY --chown=65534:65534 --from=builder /go/bin/app .
 USER 65534

@@ -8,6 +8,13 @@
 
 # Install Prerequisites 
 
+Set Customer OS home env variable by running :
+```
+export CUSTOMER_OS_HOME=~/[path to the checked out folder]/openline-customer-os
+```
+or added to .zprofile for Mac or .bashrc for linux
+
+
 TODO create script to install Prerequisites
 
 ### Brew
