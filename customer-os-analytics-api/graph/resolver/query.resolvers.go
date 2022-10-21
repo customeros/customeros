@@ -38,7 +38,7 @@ func (r *applicationResolver) Sessions(ctx context.Context, obj *model.Applicati
 
 // Application is the resolver for the application field.
 func (r *queryResolver) Application(ctx context.Context, id *string) (*model.Application, error) {
-	operationResult := r.RepositoryHandler.AppInfoRepo.FindOneById(*id)
+	operationResult := r.RepositoryHandler.AppInfoRepo.FindOneById(ctx, *id)
 	if operationResult.Result == nil {
 		return nil, nil
 	}
@@ -48,7 +48,7 @@ func (r *queryResolver) Application(ctx context.Context, id *string) (*model.App
 
 // Applications is the resolver for the applications field.
 func (r *queryResolver) Applications(ctx context.Context) ([]*model.Application, error) {
-	operationResult := r.RepositoryHandler.AppInfoRepo.FindAll()
+	operationResult := r.RepositoryHandler.AppInfoRepo.FindAll(ctx)
 	return mapper.MapApplications(operationResult.Result.(*entity.ApplicationEntities)), nil
 }
 
