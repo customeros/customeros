@@ -40,27 +40,24 @@
 
 ## 🤝 Dependencies
 
-1.  Install [gorm][gorm]
+1.   [gorm][gorm] - ORM library
 
-    ```
-    go get -u gorm.io/gorm
-    ```
+      ```    
+      go get -u gorm.io/gorm
+      ``` 
       
-2. Install [gqlgen][gqlgen]
+2.  [gqlgen][gqlgen] - Type-safe GraphQL for Go
    
-   *Initialize a new go module*
+      *Generate models from schema:*
 
-   ```
-   mkdir example
-   cd example
-   go mod init example
-   ```
-   
-   *Add `github.com/99designs/gqlgen` to your project’s `tools.go`*
-   
-   ```
-   printf '// +build tools\npackage tools\nimport (_ "github.com/99designs/gqlgen"\n _ "github.com/99designs/gqlgen/graphql/introspection")' | gofmt > tools.go
-   ```
+      ```
+      go generate ./...
+      ```
+   3. [gin](https://github.com/gin-gonic/gin) - Web framework for Go
+
+      ``` 
+      go get -u github.com/gin-gonic/gin
+      ```
 
 ## 🚀 Quick start
 
