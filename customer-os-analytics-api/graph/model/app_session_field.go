@@ -27,6 +27,16 @@ func (f *AppSessionField) GetColumnName() string {
 		return entity.SessionColumnName_UtmSource
 	case AppSessionFieldUtmTerm.String():
 		return entity.SessionColumnName_UtmTerm
+	case AppSessionFieldDeviceBrand.String():
+		return entity.SessionColumnName_DeviceBrand
+	case AppSessionFieldDeviceName.String():
+		return entity.SessionColumnName_DeviceName
+	case AppSessionFieldDeviceClass.String():
+		return entity.SessionColumnName_DeviceClass
+	case AppSessionFieldAgentName.String():
+		return entity.SessionColumnName_AgentName
+	case AppSessionFieldAgentVersion.String():
+		return entity.SessionColumnName_AgentVersion
 	default:
 		panic(fmt.Errorf("unexpected field %s", f.String()))
 	}

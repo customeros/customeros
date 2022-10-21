@@ -28,6 +28,13 @@ func MapSession(sessionEntity *entity.SessionEntity) *model.AppSession {
 		UtmSource:   sessionEntity.UtmSource,
 		UtmTerm:     sessionEntity.UtmTerm,
 
+		DeviceBrand: sessionEntity.DeviceBrand,
+		DeviceName:  sessionEntity.DeviceName,
+		DeviceClass: sessionEntity.DeviceClass,
+
+		AgentName:    sessionEntity.AgentName,
+		AgentVersion: sessionEntity.AgentVersion,
+
 		StartedAt:   sessionEntity.Start,
 		EndedAt:     sessionEntity.End,
 		EngagedTime: sessionEntity.EngagedTime,

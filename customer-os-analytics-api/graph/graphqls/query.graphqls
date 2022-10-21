@@ -24,15 +24,16 @@ type AppSession {
     utmSource: String!
     utmNetwork: String!
     utmTerm: String!
+    deviceName: String!
+    deviceBrand: String!
+    deviceClass: String!
+    agentName: String!
+    agentVersion: String!
     startedAt: Time!
     endedAt: Time!
     engagedTime: Int!
-    #    deviceName: String
     #    os: String
     #    osWithVersion: String
-    #    browser: String
-    #    browserWithVersion: String
-    #    channel: String
     #    referrerUrlHost: String
     #    referrerPage: String
     #    referrerUrlScheme: String

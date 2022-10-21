@@ -13,6 +13,11 @@ const (
 	SessionColumnName_UtmSource      string = "mkt_source"
 	SessionColumnName_UtmNetwork     string = "mkt_network"
 	SessionColumnName_UtmTerm        string = "mkt_term"
+	SessionColumnName_DeviceName     string = "device_name"
+	SessionColumnName_DeviceBrand    string = "device_brand"
+	SessionColumnName_DeviceClass    string = "device_class"
+	SessionColumnName_AgentName      string = "agent_name"
+	SessionColumnName_AgentVersion   string = "agent_version_major"
 )
 
 type SessionEntity struct {
@@ -30,6 +35,11 @@ type SessionEntity struct {
 	UtmSource      string    `gorm:"column:mkt_source"`
 	UtmNetwork     string    `gorm:"column:mkt_network"`
 	UtmTerm        string    `gorm:"column:mkt_term"`
+	DeviceBrand    string    `gorm:"column:device_brand"`
+	DeviceName     string    `gorm:"column:device_name"`
+	DeviceClass    string    `gorm:"column:device_class"`
+	AgentName      string    `gorm:"column:agent_name"`
+	AgentVersion   string    `gorm:"column:agent_version_major"`
 	Start          time.Time `gorm:"column:start_tstamp"`
 	End            time.Time `gorm:"column:end_tstamp"`
 	EngagedTime    int       `gorm:"column:engaged_time_in_s"`

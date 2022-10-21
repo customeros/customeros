@@ -25,6 +25,11 @@ enum AppSessionField {
     UTM_SOURCE
     UTM_NETWORK
     UTM_TERM
+    DEVICE_NAME
+    DEVICE_BRAND
+    DEVICE_CLASS
+    AGENT_NAME
+    AGENT_VERSION
 }
 
 input TimeFilter {

@@ -27,6 +27,11 @@ type AppSession struct {
 	UtmSource      string    `json:"utmSource"`
 	UtmNetwork     string    `json:"utmNetwork"`
 	UtmTerm        string    `json:"utmTerm"`
+	DeviceName     string    `json:"deviceName"`
+	DeviceBrand    string    `json:"deviceBrand"`
+	DeviceClass    string    `json:"deviceClass"`
+	AgentName      string    `json:"agentName"`
+	AgentVersion   string    `json:"agentVersion"`
 	StartedAt      time.Time `json:"startedAt"`
 	EndedAt        time.Time `json:"endedAt"`
 	EngagedTime    int       `json:"engagedTime"`
@@ -72,6 +77,11 @@ const (
 	AppSessionFieldUtmSource      AppSessionField = "UTM_SOURCE"
 	AppSessionFieldUtmNetwork     AppSessionField = "UTM_NETWORK"
 	AppSessionFieldUtmTerm        AppSessionField = "UTM_TERM"
+	AppSessionFieldDeviceName     AppSessionField = "DEVICE_NAME"
+	AppSessionFieldDeviceBrand    AppSessionField = "DEVICE_BRAND"
+	AppSessionFieldDeviceClass    AppSessionField = "DEVICE_CLASS"
+	AppSessionFieldAgentName      AppSessionField = "AGENT_NAME"
+	AppSessionFieldAgentVersion   AppSessionField = "AGENT_VERSION"
 )
 
 var AllAppSessionField = []AppSessionField{
@@ -85,11 +95,16 @@ var AllAppSessionField = []AppSessionField{
 	AppSessionFieldUtmSource,
 	AppSessionFieldUtmNetwork,
 	AppSessionFieldUtmTerm,
+	AppSessionFieldDeviceName,
+	AppSessionFieldDeviceBrand,
+	AppSessionFieldDeviceClass,
+	AppSessionFieldAgentName,
+	AppSessionFieldAgentVersion,
 }
 
 func (e AppSessionField) IsValid() bool {
 	switch e {
-	case AppSessionFieldCountry, AppSessionFieldCity, AppSessionFieldRegion, AppSessionFieldReferrerSource, AppSessionFieldUtmCampaign, AppSessionFieldUtmContent, AppSessionFieldUtmMedium, AppSessionFieldUtmSource, AppSessionFieldUtmNetwork, AppSessionFieldUtmTerm:
+	case AppSessionFieldCountry, AppSessionFieldCity, AppSessionFieldRegion, AppSessionFieldReferrerSource, AppSessionFieldUtmCampaign, AppSessionFieldUtmContent, AppSessionFieldUtmMedium, AppSessionFieldUtmSource, AppSessionFieldUtmNetwork, AppSessionFieldUtmTerm, AppSessionFieldDeviceName, AppSessionFieldDeviceBrand, AppSessionFieldDeviceClass, AppSessionFieldAgentName, AppSessionFieldAgentVersion:
 		return true
 	}
 	return false
