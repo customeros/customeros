@@ -71,7 +71,7 @@
 
 2. Generate graphql models
 
-       go run github.com/99designs/gqlgen generate
+       go generate ./...
 
 3. Set environment variables for DB connection:
    1. DB_HOST

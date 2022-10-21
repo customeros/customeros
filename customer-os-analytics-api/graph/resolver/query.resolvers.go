@@ -6,12 +6,18 @@ package resolver
 import (
 	"context"
 
+	"github.com.openline-ai.customer-os-analytics-api/dataloader"
 	"github.com.openline-ai.customer-os-analytics-api/graph/generated"
 	"github.com.openline-ai.customer-os-analytics-api/graph/model"
 	"github.com.openline-ai.customer-os-analytics-api/mapper"
 	"github.com.openline-ai.customer-os-analytics-api/repository/entity"
 	"github.com.openline-ai.customer-os-analytics-api/repository/helper"
 )
+
+// PageViews is the resolver for the pageViews field.
+func (r *appSessionResolver) PageViews(ctx context.Context, obj *model.AppSession) ([]*model.PageView, error) {
+	return dataloader.For(ctx).GetPageViewsForSession(ctx, obj.ID)
+}
 
 // Sessions is the resolver for the sessions field.
 func (r *applicationResolver) Sessions(ctx context.Context, obj *model.Application, timeFilter model.TimeFilter, dataFilter []*model.AppSessionsDataFilter, paginationFilter *model.PaginationFilter) (*model.AppSessionsPage, error) {
@@ -46,11 +52,15 @@ func (r *queryResolver) Applications(ctx context.Context) ([]*model.Application,
 	return mapper.MapApplications(operationResult.Result.(*entity.ApplicationEntities)), nil
 }
 
+// AppSession returns generated.AppSessionResolver implementation.
+func (r *Resolver) AppSession() generated.AppSessionResolver { return &appSessionResolver{r} }
+
 // Application returns generated.ApplicationResolver implementation.
 func (r *Resolver) Application() generated.ApplicationResolver { return &applicationResolver{r} }
 
 // Query returns generated.QueryResolver implementation.
 func (r *Resolver) Query() generated.QueryResolver { return &queryResolver{r} }
 
+type appSessionResolver struct{ *Resolver }
 type applicationResolver struct{ *Resolver }
 type queryResolver struct{ *Resolver }

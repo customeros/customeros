@@ -16,30 +16,31 @@ type PagedResult interface {
 }
 
 type AppSession struct {
-	ID              string    `json:"id"`
-	Country         string    `json:"country"`
-	Region          string    `json:"region"`
-	City            string    `json:"city"`
-	ReferrerSource  string    `json:"referrerSource"`
-	UtmCampaign     string    `json:"utmCampaign"`
-	UtmContent      string    `json:"utmContent"`
-	UtmMedium       string    `json:"utmMedium"`
-	UtmSource       string    `json:"utmSource"`
-	UtmNetwork      string    `json:"utmNetwork"`
-	UtmTerm         string    `json:"utmTerm"`
-	DeviceName      string    `json:"deviceName"`
-	DeviceBrand     string    `json:"deviceBrand"`
-	DeviceClass     string    `json:"deviceClass"`
-	AgentName       string    `json:"agentName"`
-	AgentVersion    string    `json:"agentVersion"`
-	OperatingSystem string    `json:"operatingSystem"`
-	OsVersionMajor  string    `json:"osVersionMajor"`
-	OsVersionMinor  string    `json:"osVersionMinor"`
-	FirstPagePath   string    `json:"firstPagePath"`
-	LastPagePath    string    `json:"lastPagePath"`
-	StartedAt       time.Time `json:"startedAt"`
-	EndedAt         time.Time `json:"endedAt"`
-	EngagedTime     int       `json:"engagedTime"`
+	ID              string      `json:"id"`
+	Country         string      `json:"country"`
+	Region          string      `json:"region"`
+	City            string      `json:"city"`
+	ReferrerSource  string      `json:"referrerSource"`
+	UtmCampaign     string      `json:"utmCampaign"`
+	UtmContent      string      `json:"utmContent"`
+	UtmMedium       string      `json:"utmMedium"`
+	UtmSource       string      `json:"utmSource"`
+	UtmNetwork      string      `json:"utmNetwork"`
+	UtmTerm         string      `json:"utmTerm"`
+	DeviceName      string      `json:"deviceName"`
+	DeviceBrand     string      `json:"deviceBrand"`
+	DeviceClass     string      `json:"deviceClass"`
+	AgentName       string      `json:"agentName"`
+	AgentVersion    string      `json:"agentVersion"`
+	OperatingSystem string      `json:"operatingSystem"`
+	OsVersionMajor  string      `json:"osVersionMajor"`
+	OsVersionMinor  string      `json:"osVersionMinor"`
+	FirstPagePath   string      `json:"firstPagePath"`
+	LastPagePath    string      `json:"lastPagePath"`
+	StartedAt       time.Time   `json:"startedAt"`
+	EndedAt         time.Time   `json:"endedAt"`
+	EngagedTime     int         `json:"engagedTime"`
+	PageViews       []*PageView `json:"pageViews"`
 }
 
 type AppSessionsDataFilter struct {

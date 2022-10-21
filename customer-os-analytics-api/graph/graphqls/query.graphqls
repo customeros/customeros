@@ -1,9 +1,17 @@
+# build-in directive by Gqlgen
+directive @goField(forceResolver: Boolean, name: String) on FIELD_DEFINITION | INPUT_FIELD_DEFINITION
+
+type Query {
+    application(id: ID): Application!
+    applications: [Application!]!
+}
+
 type Application {
     id: ID!
     platform: String!
     name: String!
     trackerName: String!
-    sessions(timeFilter: TimeFilter!, dataFilter: [AppSessionsDataFilter], paginationFilter: PaginationFilter): AppSessionsPage!
+    sessions(timeFilter: TimeFilter!, dataFilter: [AppSessionsDataFilter], paginationFilter: PaginationFilter): AppSessionsPage! @goField(forceResolver: true)
 }
 
 type AppSessionsPage implements PagedResult {
@@ -37,18 +45,13 @@ type AppSession {
     startedAt: Time!
     endedAt: Time!
     engagedTime: Int!
-    #    os: String
-    #    osWithVersion: String
-    #    referrerUrlHost: String
-    #    referrerPage: String
-    #    referrerUrlScheme: String
-    #    referrerUrlPath: String
-    #    referrerMedium: String
-
-
+    pageViews: [PageView!]! @goField(forceResolver: true)
 }
 
-type Query {
-    application(id: ID): Application!
-    applications: [Application!]!
+type PageView {
+    id: ID!
+    path: String!
+    title: String!
+    order: Int!
+    engagedTime: Int!
 }

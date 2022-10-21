@@ -37,6 +37,7 @@ type Config struct {
 }
 
 type ResolverRoot interface {
+	AppSession() AppSessionResolver
 	Application() ApplicationResolver
 	Query() QueryResolver
 }
@@ -61,6 +62,7 @@ type ComplexityRoot struct {
 		OperatingSystem func(childComplexity int) int
 		OsVersionMajor  func(childComplexity int) int
 		OsVersionMinor  func(childComplexity int) int
+		PageViews       func(childComplexity int) int
 		ReferrerSource  func(childComplexity int) int
 		Region          func(childComplexity int) int
 		StartedAt       func(childComplexity int) int
@@ -86,12 +88,23 @@ type ComplexityRoot struct {
 		TrackerName func(childComplexity int) int
 	}
 
+	PageView struct {
+		EngagedTime func(childComplexity int) int
+		ID          func(childComplexity int) int
+		Order       func(childComplexity int) int
+		Path        func(childComplexity int) int
+		Title       func(childComplexity int) int
+	}
+
 	Query struct {
 		Application  func(childComplexity int, id *string) int
 		Applications func(childComplexity int) int
 	}
 }
 
+type AppSessionResolver interface {
+	PageViews(ctx context.Context, obj *model.AppSession) ([]*model.PageView, error)
+}
 type ApplicationResolver interface {
 	Sessions(ctx context.Context, obj *model.Application, timeFilter model.TimeFilter, dataFilter []*model.AppSessionsDataFilter, paginationFilter *model.PaginationFilter) (*model.AppSessionsPage, error)
 }
@@ -220,6 +233,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.AppSession.OsVersionMinor(childComplexity), true
 
+	case "AppSession.pageViews":
+		if e.complexity.AppSession.PageViews == nil {
+			break
+		}
+
+		return e.complexity.AppSession.PageViews(childComplexity), true
+
 	case "AppSession.referrerSource":
 		if e.complexity.AppSession.ReferrerSource == nil {
 			break
@@ -343,6 +363,41 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Application.TrackerName(childComplexity), true
+
+	case "PageView.engagedTime":
+		if e.complexity.PageView.EngagedTime == nil {
+			break
+		}
+
+		return e.complexity.PageView.EngagedTime(childComplexity), true
+
+	case "PageView.id":
+		if e.complexity.PageView.ID == nil {
+			break
+		}
+
+		return e.complexity.PageView.ID(childComplexity), true
+
+	case "PageView.order":
+		if e.complexity.PageView.Order == nil {
+			break
+		}
+
+		return e.complexity.PageView.Order(childComplexity), true
+
+	case "PageView.path":
+		if e.complexity.PageView.Path == nil {
+			break
+		}
+
+		return e.complexity.PageView.Path(childComplexity), true
+
+	case "PageView.title":
+		if e.complexity.PageView.Title == nil {
+			break
+		}
+
+		return e.complexity.PageView.Title(childComplexity), true
 
 	case "Query.application":
 		if e.complexity.Query.Application == nil {
@@ -483,12 +538,20 @@ enum TimePeriod {
     totalPages: Int!
     totalElements: Int64!
 }`, BuiltIn: false},
-	{Name: "../graphqls/query.graphqls", Input: `type Application {
+	{Name: "../graphqls/query.graphqls", Input: `# build-in directive by Gqlgen
+directive @goField(forceResolver: Boolean, name: String) on FIELD_DEFINITION | INPUT_FIELD_DEFINITION
+
+type Query {
+    application(id: ID): Application!
+    applications: [Application!]!
+}
+
+type Application {
     id: ID!
     platform: String!
     name: String!
     trackerName: String!
-    sessions(timeFilter: TimeFilter!, dataFilter: [AppSessionsDataFilter], paginationFilter: PaginationFilter): AppSessionsPage!
+    sessions(timeFilter: TimeFilter!, dataFilter: [AppSessionsDataFilter], paginationFilter: PaginationFilter): AppSessionsPage! @goField(forceResolver: true)
 }
 
 type AppSessionsPage implements PagedResult {
@@ -522,20 +585,15 @@ type AppSession {
     startedAt: Time!
     endedAt: Time!
     engagedTime: Int!
-    #    os: String
-    #    osWithVersion: String
-    #    referrerUrlHost: String
-    #    referrerPage: String
-    #    referrerUrlScheme: String
-    #    referrerUrlPath: String
-    #    referrerMedium: String
-
-
+    pageViews: [PageView!]! @goField(forceResolver: true)
 }
 
-type Query {
-    application(id: ID): Application!
-    applications: [Application!]!
+type PageView {
+    id: ID!
+    path: String!
+    title: String!
+    order: Int!
+    engagedTime: Int!
 }`, BuiltIn: false},
 	{Name: "../graphqls/scalar.graphqls", Input: `scalar Time
 scalar Int64
@@ -1704,6 +1762,62 @@ func (ec *executionContext) fieldContext_AppSession_engagedTime(ctx context.Cont
 	return fc, nil
 }
 
+func (ec *executionContext) _AppSession_pageViews(ctx context.Context, field graphql.CollectedField, obj *model.AppSession) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_AppSession_pageViews(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.AppSession().PageViews(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.PageView)
+	fc.Result = res
+	return ec.marshalNPageView2ᚕᚖgithubᚗcomᚗopenlineᚑaiᚗcustomerᚑosᚑanalyticsᚑapiᚋgraphᚋmodelᚐPageViewᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_AppSession_pageViews(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AppSession",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_PageView_id(ctx, field)
+			case "path":
+				return ec.fieldContext_PageView_path(ctx, field)
+			case "title":
+				return ec.fieldContext_PageView_title(ctx, field)
+			case "order":
+				return ec.fieldContext_PageView_order(ctx, field)
+			case "engagedTime":
+				return ec.fieldContext_PageView_engagedTime(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type PageView", field.Name)
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _AppSessionsPage_content(ctx context.Context, field graphql.CollectedField, obj *model.AppSessionsPage) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_AppSessionsPage_content(ctx, field)
 	if err != nil {
@@ -1791,6 +1905,8 @@ func (ec *executionContext) fieldContext_AppSessionsPage_content(ctx context.Con
 				return ec.fieldContext_AppSession_endedAt(ctx, field)
 			case "engagedTime":
 				return ec.fieldContext_AppSession_engagedTime(ctx, field)
+			case "pageViews":
+				return ec.fieldContext_AppSession_pageViews(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type AppSession", field.Name)
 		},
@@ -2121,6 +2237,226 @@ func (ec *executionContext) fieldContext_Application_sessions(ctx context.Contex
 	if fc.Args, err = ec.field_Application_sessions_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PageView_id(ctx context.Context, field graphql.CollectedField, obj *model.PageView) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_PageView_id(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNID2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_PageView_id(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PageView",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PageView_path(ctx context.Context, field graphql.CollectedField, obj *model.PageView) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_PageView_path(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Path, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_PageView_path(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PageView",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PageView_title(ctx context.Context, field graphql.CollectedField, obj *model.PageView) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_PageView_title(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Title, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_PageView_title(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PageView",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PageView_order(ctx context.Context, field graphql.CollectedField, obj *model.PageView) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_PageView_order(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Order, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_PageView_order(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PageView",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PageView_engagedTime(ctx context.Context, field graphql.CollectedField, obj *model.PageView) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_PageView_engagedTime(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.EngagedTime, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_PageView_engagedTime(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PageView",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
 	}
 	return fc, nil
 }
@@ -4313,169 +4649,189 @@ func (ec *executionContext) _AppSession(ctx context.Context, sel ast.SelectionSe
 			out.Values[i] = ec._AppSession_id(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "country":
 
 			out.Values[i] = ec._AppSession_country(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "region":
 
 			out.Values[i] = ec._AppSession_region(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "city":
 
 			out.Values[i] = ec._AppSession_city(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "referrerSource":
 
 			out.Values[i] = ec._AppSession_referrerSource(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "utmCampaign":
 
 			out.Values[i] = ec._AppSession_utmCampaign(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "utmContent":
 
 			out.Values[i] = ec._AppSession_utmContent(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "utmMedium":
 
 			out.Values[i] = ec._AppSession_utmMedium(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "utmSource":
 
 			out.Values[i] = ec._AppSession_utmSource(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "utmNetwork":
 
 			out.Values[i] = ec._AppSession_utmNetwork(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "utmTerm":
 
 			out.Values[i] = ec._AppSession_utmTerm(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "deviceName":
 
 			out.Values[i] = ec._AppSession_deviceName(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "deviceBrand":
 
 			out.Values[i] = ec._AppSession_deviceBrand(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "deviceClass":
 
 			out.Values[i] = ec._AppSession_deviceClass(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "agentName":
 
 			out.Values[i] = ec._AppSession_agentName(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "agentVersion":
 
 			out.Values[i] = ec._AppSession_agentVersion(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "operatingSystem":
 
 			out.Values[i] = ec._AppSession_operatingSystem(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "osVersionMajor":
 
 			out.Values[i] = ec._AppSession_osVersionMajor(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "osVersionMinor":
 
 			out.Values[i] = ec._AppSession_osVersionMinor(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "firstPagePath":
 
 			out.Values[i] = ec._AppSession_firstPagePath(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "lastPagePath":
 
 			out.Values[i] = ec._AppSession_lastPagePath(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "startedAt":
 
 			out.Values[i] = ec._AppSession_startedAt(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "endedAt":
 
 			out.Values[i] = ec._AppSession_endedAt(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "engagedTime":
 
 			out.Values[i] = ec._AppSession_engagedTime(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
+		case "pageViews":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._AppSession_pageViews(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -4587,6 +4943,62 @@ func (ec *executionContext) _Application(ctx context.Context, sel ast.SelectionS
 				return innerFunc(ctx)
 
 			})
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var pageViewImplementors = []string{"PageView"}
+
+func (ec *executionContext) _PageView(ctx context.Context, sel ast.SelectionSet, obj *model.PageView) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, pageViewImplementors)
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("PageView")
+		case "id":
+
+			out.Values[i] = ec._PageView_id(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "path":
+
+			out.Values[i] = ec._PageView_path(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "title":
+
+			out.Values[i] = ec._PageView_title(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "order":
+
+			out.Values[i] = ec._PageView_order(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "engagedTime":
+
+			out.Values[i] = ec._PageView_engagedTime(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -5208,6 +5620,60 @@ func (ec *executionContext) unmarshalNOperation2githubᚗcomᚗopenlineᚑaiᚗc
 
 func (ec *executionContext) marshalNOperation2githubᚗcomᚗopenlineᚑaiᚗcustomerᚑosᚑanalyticsᚑapiᚋgraphᚋmodelᚐOperation(ctx context.Context, sel ast.SelectionSet, v model.Operation) graphql.Marshaler {
 	return v
+}
+
+func (ec *executionContext) marshalNPageView2ᚕᚖgithubᚗcomᚗopenlineᚑaiᚗcustomerᚑosᚑanalyticsᚑapiᚋgraphᚋmodelᚐPageViewᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.PageView) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNPageView2ᚖgithubᚗcomᚗopenlineᚑaiᚗcustomerᚑosᚑanalyticsᚑapiᚋgraphᚋmodelᚐPageView(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNPageView2ᚖgithubᚗcomᚗopenlineᚑaiᚗcustomerᚑosᚑanalyticsᚑapiᚋgraphᚋmodelᚐPageView(ctx context.Context, sel ast.SelectionSet, v *model.PageView) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._PageView(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalNString2string(ctx context.Context, v interface{}) (string, error) {
