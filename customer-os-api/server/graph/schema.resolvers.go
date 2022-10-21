@@ -13,6 +13,7 @@ import (
 )
 
 var customers []*model.Customer
+var contacts []*model.Contact
 
 // CreateCustomer is the resolver for the createCustomer field.
 func (r *mutationResolver) CreateCustomer(ctx context.Context, input model.NewCustomer) (*model.Customer, error) {
@@ -28,7 +29,20 @@ func (r *mutationResolver) CreateCustomer(ctx context.Context, input model.NewCu
 
 // CreateContact is the resolver for the createContact field.
 func (r *mutationResolver) CreateContact(ctx context.Context, input model.NewContact) (*model.Contact, error) {
-	panic(fmt.Errorf("not implemented: CreateContact - createContact"))
+	var contact = model.Contact{
+		ID:          fmt.Sprintf("%d%s", rand.Uint32(), ""),
+		FirstName:   input.FirstName,
+		LastName:    input.LastName,
+		MiddleName:  input.MiddleName,
+		Comments:    input.Comments,
+		PhoneNumber: input.PhoneNumber,
+		Email:       input.Email,
+		Address:     input.Address,
+	}
+
+	contacts = append(contacts, &contact)
+
+	return &contact, nil
 }
 
 // Customers is the resolver for the customers field.
@@ -38,7 +52,7 @@ func (r *queryResolver) Customers(ctx context.Context) ([]*model.Customer, error
 
 // Contacts is the resolver for the contacts field.
 func (r *queryResolver) Contacts(ctx context.Context) ([]*model.Contact, error) {
-	panic(fmt.Errorf("not implemented: Contacts - contacts"))
+	return contacts[0:len(contacts)], nil
 }
 
 // Mutation returns generated.MutationResolver implementation.
