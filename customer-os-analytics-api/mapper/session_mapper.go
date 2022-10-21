@@ -35,6 +35,13 @@ func MapSession(sessionEntity *entity.SessionEntity) *model.AppSession {
 		AgentName:    sessionEntity.AgentName,
 		AgentVersion: sessionEntity.AgentVersion,
 
+		OperatingSystem: sessionEntity.OsFamily,
+		OsVersionMajor:  sessionEntity.OsVersionMajor,
+		OsVersionMinor:  sessionEntity.OsVersionMinor,
+
+		FirstPagePath: sessionEntity.FirstPagePath,
+		LastPagePath:  sessionEntity.LastPagePath,
+
 		StartedAt:   sessionEntity.Start,
 		EndedAt:     sessionEntity.End,
 		EngagedTime: sessionEntity.EngagedTime,

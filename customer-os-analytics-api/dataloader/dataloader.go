@@ -9,6 +9,8 @@ import (
 	"net/http"
 )
 
+// FIXME alexb to be implemented
+
 type ctxKey string
 
 const (
@@ -19,7 +21,6 @@ type DataLoader struct {
 	userLoader *dataloader.Loader
 }
 
-// FIXME alexb to be implemented
 // GetSessions wraps the Sessions dataloader for efficient retrieval by AppId
 func (i *DataLoader) GetSessions(ctx context.Context, userID string) (*model.AppSession, error) {
 	thunk := i.userLoader.Load(ctx, gopher_dataloader.StringKey(userID))

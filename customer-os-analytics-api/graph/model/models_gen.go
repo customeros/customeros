@@ -16,25 +16,30 @@ type PagedResult interface {
 }
 
 type AppSession struct {
-	ID             string    `json:"id"`
-	Country        string    `json:"country"`
-	Region         string    `json:"region"`
-	City           string    `json:"city"`
-	ReferrerSource string    `json:"referrerSource"`
-	UtmCampaign    string    `json:"utmCampaign"`
-	UtmContent     string    `json:"utmContent"`
-	UtmMedium      string    `json:"utmMedium"`
-	UtmSource      string    `json:"utmSource"`
-	UtmNetwork     string    `json:"utmNetwork"`
-	UtmTerm        string    `json:"utmTerm"`
-	DeviceName     string    `json:"deviceName"`
-	DeviceBrand    string    `json:"deviceBrand"`
-	DeviceClass    string    `json:"deviceClass"`
-	AgentName      string    `json:"agentName"`
-	AgentVersion   string    `json:"agentVersion"`
-	StartedAt      time.Time `json:"startedAt"`
-	EndedAt        time.Time `json:"endedAt"`
-	EngagedTime    int       `json:"engagedTime"`
+	ID              string    `json:"id"`
+	Country         string    `json:"country"`
+	Region          string    `json:"region"`
+	City            string    `json:"city"`
+	ReferrerSource  string    `json:"referrerSource"`
+	UtmCampaign     string    `json:"utmCampaign"`
+	UtmContent      string    `json:"utmContent"`
+	UtmMedium       string    `json:"utmMedium"`
+	UtmSource       string    `json:"utmSource"`
+	UtmNetwork      string    `json:"utmNetwork"`
+	UtmTerm         string    `json:"utmTerm"`
+	DeviceName      string    `json:"deviceName"`
+	DeviceBrand     string    `json:"deviceBrand"`
+	DeviceClass     string    `json:"deviceClass"`
+	AgentName       string    `json:"agentName"`
+	AgentVersion    string    `json:"agentVersion"`
+	OperatingSystem string    `json:"operatingSystem"`
+	OsVersionMajor  string    `json:"osVersionMajor"`
+	OsVersionMinor  string    `json:"osVersionMinor"`
+	FirstPagePath   string    `json:"firstPagePath"`
+	LastPagePath    string    `json:"lastPagePath"`
+	StartedAt       time.Time `json:"startedAt"`
+	EndedAt         time.Time `json:"endedAt"`
+	EngagedTime     int       `json:"engagedTime"`
 }
 
 type AppSessionsDataFilter struct {
@@ -67,21 +72,26 @@ type TimeFilter struct {
 type AppSessionField string
 
 const (
-	AppSessionFieldCountry        AppSessionField = "COUNTRY"
-	AppSessionFieldCity           AppSessionField = "CITY"
-	AppSessionFieldRegion         AppSessionField = "REGION"
-	AppSessionFieldReferrerSource AppSessionField = "REFERRER_SOURCE"
-	AppSessionFieldUtmCampaign    AppSessionField = "UTM_CAMPAIGN"
-	AppSessionFieldUtmContent     AppSessionField = "UTM_CONTENT"
-	AppSessionFieldUtmMedium      AppSessionField = "UTM_MEDIUM"
-	AppSessionFieldUtmSource      AppSessionField = "UTM_SOURCE"
-	AppSessionFieldUtmNetwork     AppSessionField = "UTM_NETWORK"
-	AppSessionFieldUtmTerm        AppSessionField = "UTM_TERM"
-	AppSessionFieldDeviceName     AppSessionField = "DEVICE_NAME"
-	AppSessionFieldDeviceBrand    AppSessionField = "DEVICE_BRAND"
-	AppSessionFieldDeviceClass    AppSessionField = "DEVICE_CLASS"
-	AppSessionFieldAgentName      AppSessionField = "AGENT_NAME"
-	AppSessionFieldAgentVersion   AppSessionField = "AGENT_VERSION"
+	AppSessionFieldCountry         AppSessionField = "COUNTRY"
+	AppSessionFieldCity            AppSessionField = "CITY"
+	AppSessionFieldRegion          AppSessionField = "REGION"
+	AppSessionFieldReferrerSource  AppSessionField = "REFERRER_SOURCE"
+	AppSessionFieldUtmCampaign     AppSessionField = "UTM_CAMPAIGN"
+	AppSessionFieldUtmContent      AppSessionField = "UTM_CONTENT"
+	AppSessionFieldUtmMedium       AppSessionField = "UTM_MEDIUM"
+	AppSessionFieldUtmSource       AppSessionField = "UTM_SOURCE"
+	AppSessionFieldUtmNetwork      AppSessionField = "UTM_NETWORK"
+	AppSessionFieldUtmTerm         AppSessionField = "UTM_TERM"
+	AppSessionFieldDeviceName      AppSessionField = "DEVICE_NAME"
+	AppSessionFieldDeviceBrand     AppSessionField = "DEVICE_BRAND"
+	AppSessionFieldDeviceClass     AppSessionField = "DEVICE_CLASS"
+	AppSessionFieldAgentName       AppSessionField = "AGENT_NAME"
+	AppSessionFieldAgentVersion    AppSessionField = "AGENT_VERSION"
+	AppSessionFieldOperatingSystem AppSessionField = "OPERATING_SYSTEM"
+	AppSessionFieldOsVersionMajor  AppSessionField = "OS_VERSION_MAJOR"
+	AppSessionFieldOsVersionMinor  AppSessionField = "OS_VERSION_MINOR"
+	AppSessionFieldFirstPage       AppSessionField = "FIRST_PAGE"
+	AppSessionFieldLastPage        AppSessionField = "LAST_PAGE"
 )
 
 var AllAppSessionField = []AppSessionField{
@@ -100,11 +110,16 @@ var AllAppSessionField = []AppSessionField{
 	AppSessionFieldDeviceClass,
 	AppSessionFieldAgentName,
 	AppSessionFieldAgentVersion,
+	AppSessionFieldOperatingSystem,
+	AppSessionFieldOsVersionMajor,
+	AppSessionFieldOsVersionMinor,
+	AppSessionFieldFirstPage,
+	AppSessionFieldLastPage,
 }
 
 func (e AppSessionField) IsValid() bool {
 	switch e {
-	case AppSessionFieldCountry, AppSessionFieldCity, AppSessionFieldRegion, AppSessionFieldReferrerSource, AppSessionFieldUtmCampaign, AppSessionFieldUtmContent, AppSessionFieldUtmMedium, AppSessionFieldUtmSource, AppSessionFieldUtmNetwork, AppSessionFieldUtmTerm, AppSessionFieldDeviceName, AppSessionFieldDeviceBrand, AppSessionFieldDeviceClass, AppSessionFieldAgentName, AppSessionFieldAgentVersion:
+	case AppSessionFieldCountry, AppSessionFieldCity, AppSessionFieldRegion, AppSessionFieldReferrerSource, AppSessionFieldUtmCampaign, AppSessionFieldUtmContent, AppSessionFieldUtmMedium, AppSessionFieldUtmSource, AppSessionFieldUtmNetwork, AppSessionFieldUtmTerm, AppSessionFieldDeviceName, AppSessionFieldDeviceBrand, AppSessionFieldDeviceClass, AppSessionFieldAgentName, AppSessionFieldAgentVersion, AppSessionFieldOperatingSystem, AppSessionFieldOsVersionMajor, AppSessionFieldOsVersionMinor, AppSessionFieldFirstPage, AppSessionFieldLastPage:
 		return true
 	}
 	return false

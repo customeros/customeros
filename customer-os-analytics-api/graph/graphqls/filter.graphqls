@@ -30,6 +30,11 @@ enum AppSessionField {
     DEVICE_CLASS
     AGENT_NAME
     AGENT_VERSION
+    OPERATING_SYSTEM
+    OS_VERSION_MAJOR
+    OS_VERSION_MINOR
+    FIRST_PAGE
+    LAST_PAGE
 }
 
 input TimeFilter {

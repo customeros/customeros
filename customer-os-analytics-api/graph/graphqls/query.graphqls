@@ -29,6 +29,11 @@ type AppSession {
     deviceClass: String!
     agentName: String!
     agentVersion: String!
+    operatingSystem: String!
+    osVersionMajor: String!
+    osVersionMinor: String!
+    firstPagePath: String!
+    lastPagePath: String!
     startedAt: Time!
     endedAt: Time!
     engagedTime: Int!
@@ -39,8 +44,7 @@ type AppSession {
     #    referrerUrlScheme: String
     #    referrerUrlPath: String
     #    referrerMedium: String
-    #    firstPageUrlPath: String
-    #    lastPageUrlPath: String
+
 
 }
 

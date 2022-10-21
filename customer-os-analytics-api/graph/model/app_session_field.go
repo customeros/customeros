@@ -37,6 +37,16 @@ func (f *AppSessionField) GetColumnName() string {
 		return entity.SessionColumnName_AgentName
 	case AppSessionFieldAgentVersion.String():
 		return entity.SessionColumnName_AgentVersion
+	case AppSessionFieldOperatingSystem.String():
+		return entity.SessionColumnName_OsFamily
+	case AppSessionFieldOsVersionMajor.String():
+		return entity.SessionColumnName_OsVersionMajor
+	case AppSessionFieldOsVersionMinor.String():
+		return entity.SessionColumnName_OsVersionMinor
+	case AppSessionFieldFirstPage.String():
+		return entity.SessionColumnName_FirstPagePath
+	case AppSessionFieldLastPage.String():
+		return entity.SessionColumnName_LastPagePath
 	default:
 		panic(fmt.Errorf("unexpected field %s", f.String()))
 	}

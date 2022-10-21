@@ -18,6 +18,11 @@ const (
 	SessionColumnName_DeviceClass    string = "device_class"
 	SessionColumnName_AgentName      string = "agent_name"
 	SessionColumnName_AgentVersion   string = "agent_version_major"
+	SessionColumnName_OsFamily       string = "os_family"
+	SessionColumnName_OsVersionMajor string = "os_major"
+	SessionColumnName_OsVersionMinor string = "os_minor"
+	SessionColumnName_FirstPagePath  string = "first_page_urlpath"
+	SessionColumnName_LastPagePath   string = "last_page_urlpath"
 )
 
 type SessionEntity struct {
@@ -40,6 +45,11 @@ type SessionEntity struct {
 	DeviceClass    string    `gorm:"column:device_class"`
 	AgentName      string    `gorm:"column:agent_name"`
 	AgentVersion   string    `gorm:"column:agent_version_major"`
+	OsFamily       string    `gorm:"column:os_family"`
+	OsVersionMajor string    `gorm:"column:os_major"`
+	OsVersionMinor string    `gorm:"column:os_minor"`
+	FirstPagePath  string    `gorm:"column:first_page_urlpath"`
+	LastPagePath   string    `gorm:"column:last_page_urlpath"`
 	Start          time.Time `gorm:"column:start_tstamp"`
 	End            time.Time `gorm:"column:end_tstamp"`
 	EngagedTime    int       `gorm:"column:engaged_time_in_s"`

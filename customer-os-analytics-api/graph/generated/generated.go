@@ -46,25 +46,30 @@ type DirectiveRoot struct {
 
 type ComplexityRoot struct {
 	AppSession struct {
-		AgentName      func(childComplexity int) int
-		AgentVersion   func(childComplexity int) int
-		City           func(childComplexity int) int
-		Country        func(childComplexity int) int
-		DeviceBrand    func(childComplexity int) int
-		DeviceClass    func(childComplexity int) int
-		DeviceName     func(childComplexity int) int
-		EndedAt        func(childComplexity int) int
-		EngagedTime    func(childComplexity int) int
-		ID             func(childComplexity int) int
-		ReferrerSource func(childComplexity int) int
-		Region         func(childComplexity int) int
-		StartedAt      func(childComplexity int) int
-		UtmCampaign    func(childComplexity int) int
-		UtmContent     func(childComplexity int) int
-		UtmMedium      func(childComplexity int) int
-		UtmNetwork     func(childComplexity int) int
-		UtmSource      func(childComplexity int) int
-		UtmTerm        func(childComplexity int) int
+		AgentName       func(childComplexity int) int
+		AgentVersion    func(childComplexity int) int
+		City            func(childComplexity int) int
+		Country         func(childComplexity int) int
+		DeviceBrand     func(childComplexity int) int
+		DeviceClass     func(childComplexity int) int
+		DeviceName      func(childComplexity int) int
+		EndedAt         func(childComplexity int) int
+		EngagedTime     func(childComplexity int) int
+		FirstPagePath   func(childComplexity int) int
+		ID              func(childComplexity int) int
+		LastPagePath    func(childComplexity int) int
+		OperatingSystem func(childComplexity int) int
+		OsVersionMajor  func(childComplexity int) int
+		OsVersionMinor  func(childComplexity int) int
+		ReferrerSource  func(childComplexity int) int
+		Region          func(childComplexity int) int
+		StartedAt       func(childComplexity int) int
+		UtmCampaign     func(childComplexity int) int
+		UtmContent      func(childComplexity int) int
+		UtmMedium       func(childComplexity int) int
+		UtmNetwork      func(childComplexity int) int
+		UtmSource       func(childComplexity int) int
+		UtmTerm         func(childComplexity int) int
 	}
 
 	AppSessionsPage struct {
@@ -173,12 +178,47 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.AppSession.EngagedTime(childComplexity), true
 
+	case "AppSession.firstPagePath":
+		if e.complexity.AppSession.FirstPagePath == nil {
+			break
+		}
+
+		return e.complexity.AppSession.FirstPagePath(childComplexity), true
+
 	case "AppSession.id":
 		if e.complexity.AppSession.ID == nil {
 			break
 		}
 
 		return e.complexity.AppSession.ID(childComplexity), true
+
+	case "AppSession.lastPagePath":
+		if e.complexity.AppSession.LastPagePath == nil {
+			break
+		}
+
+		return e.complexity.AppSession.LastPagePath(childComplexity), true
+
+	case "AppSession.operatingSystem":
+		if e.complexity.AppSession.OperatingSystem == nil {
+			break
+		}
+
+		return e.complexity.AppSession.OperatingSystem(childComplexity), true
+
+	case "AppSession.osVersionMajor":
+		if e.complexity.AppSession.OsVersionMajor == nil {
+			break
+		}
+
+		return e.complexity.AppSession.OsVersionMajor(childComplexity), true
+
+	case "AppSession.osVersionMinor":
+		if e.complexity.AppSession.OsVersionMinor == nil {
+			break
+		}
+
+		return e.complexity.AppSession.OsVersionMinor(childComplexity), true
 
 	case "AppSession.referrerSource":
 		if e.complexity.AppSession.ReferrerSource == nil {
@@ -411,6 +451,11 @@ enum AppSessionField {
     DEVICE_CLASS
     AGENT_NAME
     AGENT_VERSION
+    OPERATING_SYSTEM
+    OS_VERSION_MAJOR
+    OS_VERSION_MINOR
+    FIRST_PAGE
+    LAST_PAGE
 }
 
 input TimeFilter {
@@ -469,6 +514,11 @@ type AppSession {
     deviceClass: String!
     agentName: String!
     agentVersion: String!
+    operatingSystem: String!
+    osVersionMajor: String!
+    osVersionMinor: String!
+    firstPagePath: String!
+    lastPagePath: String!
     startedAt: Time!
     endedAt: Time!
     engagedTime: Int!
@@ -479,8 +529,7 @@ type AppSession {
     #    referrerUrlScheme: String
     #    referrerUrlPath: String
     #    referrerMedium: String
-    #    firstPageUrlPath: String
-    #    lastPageUrlPath: String
+
 
 }
 
@@ -1303,6 +1352,226 @@ func (ec *executionContext) fieldContext_AppSession_agentVersion(ctx context.Con
 	return fc, nil
 }
 
+func (ec *executionContext) _AppSession_operatingSystem(ctx context.Context, field graphql.CollectedField, obj *model.AppSession) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_AppSession_operatingSystem(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.OperatingSystem, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_AppSession_operatingSystem(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AppSession",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AppSession_osVersionMajor(ctx context.Context, field graphql.CollectedField, obj *model.AppSession) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_AppSession_osVersionMajor(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.OsVersionMajor, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_AppSession_osVersionMajor(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AppSession",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AppSession_osVersionMinor(ctx context.Context, field graphql.CollectedField, obj *model.AppSession) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_AppSession_osVersionMinor(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.OsVersionMinor, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_AppSession_osVersionMinor(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AppSession",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AppSession_firstPagePath(ctx context.Context, field graphql.CollectedField, obj *model.AppSession) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_AppSession_firstPagePath(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.FirstPagePath, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_AppSession_firstPagePath(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AppSession",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AppSession_lastPagePath(ctx context.Context, field graphql.CollectedField, obj *model.AppSession) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_AppSession_lastPagePath(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.LastPagePath, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_AppSession_lastPagePath(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AppSession",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _AppSession_startedAt(ctx context.Context, field graphql.CollectedField, obj *model.AppSession) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_AppSession_startedAt(ctx, field)
 	if err != nil {
@@ -1506,6 +1775,16 @@ func (ec *executionContext) fieldContext_AppSessionsPage_content(ctx context.Con
 				return ec.fieldContext_AppSession_agentName(ctx, field)
 			case "agentVersion":
 				return ec.fieldContext_AppSession_agentVersion(ctx, field)
+			case "operatingSystem":
+				return ec.fieldContext_AppSession_operatingSystem(ctx, field)
+			case "osVersionMajor":
+				return ec.fieldContext_AppSession_osVersionMajor(ctx, field)
+			case "osVersionMinor":
+				return ec.fieldContext_AppSession_osVersionMinor(ctx, field)
+			case "firstPagePath":
+				return ec.fieldContext_AppSession_firstPagePath(ctx, field)
+			case "lastPagePath":
+				return ec.fieldContext_AppSession_lastPagePath(ctx, field)
 			case "startedAt":
 				return ec.fieldContext_AppSession_startedAt(ctx, field)
 			case "endedAt":
@@ -4137,6 +4416,41 @@ func (ec *executionContext) _AppSession(ctx context.Context, sel ast.SelectionSe
 		case "agentVersion":
 
 			out.Values[i] = ec._AppSession_agentVersion(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "operatingSystem":
+
+			out.Values[i] = ec._AppSession_operatingSystem(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "osVersionMajor":
+
+			out.Values[i] = ec._AppSession_osVersionMajor(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "osVersionMinor":
+
+			out.Values[i] = ec._AppSession_osVersionMinor(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "firstPagePath":
+
+			out.Values[i] = ec._AppSession_firstPagePath(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "lastPagePath":
+
+			out.Values[i] = ec._AppSession_lastPagePath(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
 				invalids++
