@@ -1,9 +1,17 @@
+# build-in directive by Gqlgen
+directive @goField(forceResolver: Boolean, name: String) on FIELD_DEFINITION | INPUT_FIELD_DEFINITION
+
+type Query {
+    application(id: ID): Application!
+    applications: [Application!]!
+}
+
 type Application {
     id: ID!
     platform: String!
     name: String!
     trackerName: String!
-    sessions(timeFilter: TimeFilter!, dataFilter: [AppSessionsDataFilter], paginationFilter: PaginationFilter): AppSessionsPage!
+    sessions(timeFilter: TimeFilter!, dataFilter: [AppSessionsDataFilter], paginationFilter: PaginationFilter): AppSessionsPage! @goField(forceResolver: true)
 }
 
 type AppSessionsPage implements PagedResult {
@@ -17,29 +25,33 @@ type AppSession {
     country: String!
     region: String!
     city: String!
-    accessedAt: Time!
+    referrerSource: String!
+    utmCampaign: String!
+    utmContent: String!
+    utmMedium: String!
+    utmSource: String!
+    utmNetwork: String!
+    utmTerm: String!
+    deviceName: String!
+    deviceBrand: String!
+    deviceClass: String!
+    agentName: String!
+    agentVersion: String!
+    operatingSystem: String!
+    osVersionMajor: String!
+    osVersionMinor: String!
+    firstPagePath: String!
+    lastPagePath: String!
+    startedAt: Time!
     endedAt: Time!
-    #    deviceName: String
-    #    os: String
-    #    osWithVersion: String
-    #    browser: String
-    #    browserWithVersion: String
-    #    channel: String
-    #    referrerUrlHost: String
-    #    referrerPage: String
-    #    referrerUrlScheme: String
-    #    referrerUrlPath: String
-    #    referrerMedium: String
-    #    referrerSource: String
-    #    firstPageUrlPath: String
-    #    lastPageUrlPath: String
-    #    utmCampaign: String
-    #    utmContent: String
-    #    utmMedium: String
-    #    utmSource: String
+    engagedTime: Int!
+    pageViews: [PageView!]! @goField(forceResolver: true)
 }
 
-type Query {
-    application(id: ID): Application!
-    applications: [Application!]!
+type PageView {
+    id: ID!
+    path: String!
+    title: String!
+    order: Int!
+    engagedTime: Int!
 }

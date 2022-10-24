@@ -18,11 +18,28 @@ enum AppSessionField {
     COUNTRY
     CITY
     REGION
+    REFERRER_SOURCE
+    UTM_CAMPAIGN
+    UTM_CONTENT
+    UTM_MEDIUM
+    UTM_SOURCE
+    UTM_NETWORK
+    UTM_TERM
+    DEVICE_NAME
+    DEVICE_BRAND
+    DEVICE_CLASS
+    AGENT_NAME
+    AGENT_VERSION
+    OPERATING_SYSTEM
+    OS_VERSION_MAJOR
+    OS_VERSION_MINOR
+    FIRST_PAGE
+    LAST_PAGE
 }
 
 input TimeFilter {
     timePeriod: TimePeriod!
-    #    applicable only if time period is CUSTOM
+    #    applicable only if time period is CUSTOM, DAILY & MONTHLY
     from: Time
     #    applicable only if time period is CUSTOM
     to: Time

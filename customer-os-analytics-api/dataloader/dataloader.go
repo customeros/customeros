@@ -2,99 +2,94 @@ package dataloader
 
 import (
 	"context"
+	"fmt"
 	"github.com.openline-ai.customer-os-analytics-api/graph/model"
+	"github.com.openline-ai.customer-os-analytics-api/mapper"
 	"github.com.openline-ai.customer-os-analytics-api/repository"
+	"github.com.openline-ai.customer-os-analytics-api/repository/entity"
 	"github.com/graph-gophers/dataloader"
 	gopher_dataloader "github.com/graph-gophers/dataloader"
 	"net/http"
 )
 
-type ctxKey string
+type loadersString string
 
-const (
-	loadersKey = ctxKey("dataloaders")
-)
+const loadersKey = loadersString("dataloaders")
 
-type DataLoader struct {
-	userLoader *dataloader.Loader
+type Loaders struct {
+	PageViewsBySessionId *dataloader.Loader
 }
 
-// FIXME alexb to be implemented
-// GetSessions wraps the Sessions dataloader for efficient retrieval by AppId
-func (i *DataLoader) GetSessions(ctx context.Context, userID string) (*model.AppSession, error) {
-	thunk := i.userLoader.Load(ctx, gopher_dataloader.StringKey(userID))
+type pageViewsBatcher struct {
+	repo repository.PageViewRepository
+}
+
+func (i *Loaders) GetPageViewsForSession(ctx context.Context, sessionId string) ([]*model.PageView, error) {
+	thunk := i.PageViewsBySessionId.Load(ctx, gopher_dataloader.StringKey(sessionId))
 	result, err := thunk()
 	if err != nil {
 		return nil, err
 	}
-	return result.(*model.AppSession), nil
+	return result.([]*model.PageView), nil
 }
 
 // NewDataLoader returns the instantiated Loaders struct for use in a request
-func NewDataLoader(repositoryHandler *repository.RepositoryHandler) *DataLoader {
-	// instantiate the user dataloader
-	users := &userBatcher{repositoryHandler: repositoryHandler}
-	// return the DataLoader
-	return &DataLoader{
-		userLoader: dataloader.NewBatchedLoader(users.get),
+func NewDataLoader(repositoryHandler *repository.RepositoryHandler) *Loaders {
+	pageViews := &pageViewsBatcher{repo: repositoryHandler.PageViewRepo}
+	return &Loaders{
+		PageViewsBySessionId: dataloader.NewBatchedLoader(pageViews.get),
 	}
 }
 
-// Middleware injects a DataLoader into the request context so it can be
-// used later in the schema resolvers
-func Middleware(loader *DataLoader, next http.Handler) http.Handler {
+// Middleware injects a DataLoader into the request context, so it can be used later in the schema resolvers
+func Middleware(loaders *Loaders, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		nextCtx := context.WithValue(r.Context(), loadersKey, loader)
+		nextCtx := context.WithValue(r.Context(), loadersKey, loaders)
 		r = r.WithContext(nextCtx)
 		next.ServeHTTP(w, r)
 	})
 }
 
 // For returns the dataloader for a given context
-func For(ctx context.Context) *DataLoader {
-	return ctx.Value(loadersKey).(*DataLoader)
+func For(ctx context.Context) *Loaders {
+	return ctx.Value(loadersKey).(*Loaders)
 }
 
-// userBatcher wraps storage and provides a "get" method for the user dataloader
-type userBatcher struct {
-	repositoryHandler *repository.RepositoryHandler
-}
+func (b *pageViewsBatcher) get(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
+	var sessionIDs []string
+	// create a map for remembering the order of keys passed in
+	keyOrder := make(map[string]int, len(keys))
+	for ix, key := range keys {
+		sessionIDs = append(sessionIDs, key.String())
+		keyOrder[key.String()] = ix
+	}
 
-// get implements the dataloader for finding many users by Id and returns
-// them in the order requested
-func (u *userBatcher) get(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
-	//fmt.Printf("dataloader.userBatcher.get, users: [%s]\n", strings.Join(keys.Keys(), ","))
-	//// create a map for remembering the order of keys passed in
-	//keyOrder := make(map[string]int, len(keys))
-	//// collect the keys to search for
-	//var userIDs []string
-	//for ix, key := range keys {
-	//	userIDs = append(userIDs, key.String())
-	//	keyOrder[key.String()] = ix
-	//}
-	//// search for those users
-	//dbRecords, err := u.db.GetUsers(ctx, userIDs)
-	//// if DB error, return
-	//if err != nil {
-	//	return []*dataloader.Result{{Data: nil, Error: err}}
-	//}
-	//// construct an output array of dataloader results
-	//results := make([]*dataloader.Result, len(keys))
-	//// enumerate records, put into output
-	//for _, record := range dbRecords {
-	//	ix, ok := keyOrder[record.ID]
-	//	// if found, remove from index lookup map so we know elements were found
-	//	if ok {
-	//		results[ix] = &dataloader.Result{Data: record, Error: nil}
-	//		delete(keyOrder, record.ID)
-	//	}
-	//}
-	//// fill array positions with errors where not found in DB
-	//for userID, ix := range keyOrder {
-	//	err := fmt.Errorf("user not found %s", userID)
-	//	results[ix] = &dataloader.Result{Data: nil, Error: err}
-	//}
-	//// return results
-	//return results
-	return nil
+	queryResult := b.repo.GetAllBySessionIds(sessionIDs)
+
+	if queryResult.Error != nil {
+		return []*dataloader.Result{{Data: nil, Error: queryResult.Error}}
+	}
+
+	pageViews := mapper.MapPageViews(queryResult.Result.(*entity.PageViewEntities))
+	pageViesBySessionId := map[string][]*model.PageView{}
+	for _, val := range pageViews {
+		pageViesBySessionId[val.SessionId] = append(pageViesBySessionId[val.SessionId], val)
+	}
+
+	// construct an output array of dataloader results
+	results := make([]*dataloader.Result, len(keys))
+	for sessionId, record := range pageViesBySessionId {
+		ix, ok := keyOrder[sessionId]
+		if ok {
+			results[ix] = &dataloader.Result{Data: record, Error: nil}
+			delete(keyOrder, sessionId)
+		}
+	}
+	// fill array positions with errors where not found in DB
+	for sessionId, ix := range keyOrder {
+		err := fmt.Errorf("page views not found %s", sessionId)
+		results[ix] = &dataloader.Result{Data: nil, Error: err}
+	}
+
+	return results
 }

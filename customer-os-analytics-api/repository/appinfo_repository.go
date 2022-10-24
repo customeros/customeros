@@ -1,6 +1,8 @@
 package repository
 
 import (
+	"context"
+	"github.com.openline-ai.customer-os-analytics-api/common"
 	"github.com.openline-ai.customer-os-analytics-api/repository/entity"
 	"github.com.openline-ai.customer-os-analytics-api/repository/helper"
 	"gorm.io/gorm"
@@ -10,22 +12,19 @@ type AppInfoRepo struct {
 	db *gorm.DB
 }
 
-// FIXME alexb replace with authentication
-var tenant = "openline"
-
 type AppInfoRepository interface {
-	FindAll() helper.QueryResult
-	FindOneById(id string) helper.QueryResult
+	FindAll(ctx context.Context) helper.QueryResult
+	FindOneById(ctx context.Context, id string) helper.QueryResult
 }
 
 func NewAppInfoRepo(db *gorm.DB) *AppInfoRepo {
 	return &AppInfoRepo{db: db}
 }
 
-func (r *AppInfoRepo) FindAll() helper.QueryResult {
+func (r *AppInfoRepo) FindAll(ctx context.Context) helper.QueryResult {
 	var applications entity.ApplicationEntities
 
-	err := r.db.Where(&entity.ApplicationEntity{Tenant: tenant}).Find(&applications).Error
+	err := r.db.Where(&entity.ApplicationEntity{Tenant: common.GetContext(ctx).Tenant}).Find(&applications).Error
 
 	if err != nil {
 		return helper.QueryResult{Error: err}
@@ -34,10 +33,10 @@ func (r *AppInfoRepo) FindAll() helper.QueryResult {
 	return helper.QueryResult{Result: &applications}
 }
 
-func (r *AppInfoRepo) FindOneById(id string) helper.QueryResult {
+func (r *AppInfoRepo) FindOneById(ctx context.Context, id string) helper.QueryResult {
 	var application entity.ApplicationEntity
 
-	err := r.db.Where(&entity.ApplicationEntity{ID: id, Tenant: tenant}).Take(&application).Error
+	err := r.db.Where(&entity.ApplicationEntity{ID: id, Tenant: common.GetContext(ctx).Tenant}).Take(&application).Error
 
 	if err != nil {
 		return helper.QueryResult{Error: err}

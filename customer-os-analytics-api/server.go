@@ -41,7 +41,9 @@ func graphqlHandler(db *config.StorageDB) gin.HandlerFunc {
 	// make a data loader
 	loader := dataloader.NewDataLoader(repositoryHandler)
 	// make a custom context
-	customCtx := &common.CustomContext{}
+	customCtx := &common.CustomContext{
+		Tenant: "openline", // FIXME alexb replace with authentication
+	}
 	// create query handler
 	srv := handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: graphResolver}))
 	// wrap the query handler with middleware to inject dataloader

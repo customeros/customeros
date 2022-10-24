@@ -1,0 +1,26 @@
+# Please see the documentation for all configuration options:
+# https://docs.github.com/github/administering-a-repository/configuration-options-for-dependency-updates
+
+version: 2
+updates:
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      # Check for updates to GitHub Actions every week
+      interval: "weekly"
+      day: "sunday"
+    open-pull-requests-limit: 5
+
+  - package-ecosystem: "gomod"
+    directory: "/customer-os-analytics-api"
+    schedule:
+      interval: "daily"
+      time: "07:00"
+    open-pull-requests-limit: 3
+    labels:
+      - "gomod"
+      - "dependencies"
+      - "analytics-api"
+    pull-request-branch-name:
+      separator: "-"
+    rebase-strategy: "auto"

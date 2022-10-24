@@ -7,15 +7,13 @@ import (
 type RepositoryHandler struct {
 	AppInfoRepo  AppInfoRepository
 	SessionsRepo SessionsRepository
+	PageViewRepo PageViewRepository
 }
 
 func InitRepositories(db *gorm.DB) *RepositoryHandler {
-
-	appInfoRepo := NewAppInfoRepo(db)
-	sessionsRepo := NewSessionsRepo(db)
-
 	return &RepositoryHandler{
-		AppInfoRepo:  appInfoRepo,
-		SessionsRepo: sessionsRepo,
+		AppInfoRepo:  NewAppInfoRepo(db),
+		SessionsRepo: NewSessionsRepo(db),
+		PageViewRepo: NewPageViewRepo(db),
 	}
 }

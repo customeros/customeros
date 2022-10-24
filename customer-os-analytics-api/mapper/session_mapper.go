@@ -15,11 +15,35 @@ func MapSessions(sessionEntities *entity.SessionEntities) []*model.AppSession {
 
 func MapSession(sessionEntity *entity.SessionEntity) *model.AppSession {
 	return &model.AppSession{
-		ID:         sessionEntity.ID,
-		Country:    sessionEntity.Country,
-		Region:     sessionEntity.Region,
-		City:       sessionEntity.City,
-		AccessedAt: sessionEntity.Start,
-		EndedAt:    sessionEntity.End,
+		ID:             sessionEntity.ID,
+		Country:        sessionEntity.Country,
+		Region:         sessionEntity.Region,
+		City:           sessionEntity.City,
+		ReferrerSource: sessionEntity.ReferrerSource,
+
+		UtmCampaign: sessionEntity.UtmCampaign,
+		UtmContent:  sessionEntity.UtmContent,
+		UtmMedium:   sessionEntity.UtmMedium,
+		UtmNetwork:  sessionEntity.UtmNetwork,
+		UtmSource:   sessionEntity.UtmSource,
+		UtmTerm:     sessionEntity.UtmTerm,
+
+		DeviceBrand: sessionEntity.DeviceBrand,
+		DeviceName:  sessionEntity.DeviceName,
+		DeviceClass: sessionEntity.DeviceClass,
+
+		AgentName:    sessionEntity.AgentName,
+		AgentVersion: sessionEntity.AgentVersion,
+
+		OperatingSystem: sessionEntity.OsFamily,
+		OsVersionMajor:  sessionEntity.OsVersionMajor,
+		OsVersionMinor:  sessionEntity.OsVersionMinor,
+
+		FirstPagePath: sessionEntity.FirstPagePath,
+		LastPagePath:  sessionEntity.LastPagePath,
+
+		StartedAt:   sessionEntity.Start,
+		EndedAt:     sessionEntity.End,
+		EngagedTime: sessionEntity.EngagedTime,
 	}
 }

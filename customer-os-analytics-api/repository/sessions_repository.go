@@ -35,7 +35,7 @@ func (r *SessionsRepo) FindAllByApplication(appIdentifier entity.ApplicationUniq
 
 	if dataFilter != nil {
 		for _, value := range dataFilter {
-			find = helper.AddDataFilter(columnNameForField(value.Field), value.Action, value.Value, find)
+			find = helper.AddDataFilter(value.Field.GetColumnName(), value.Action, value.Value, find)
 		}
 	}
 
@@ -53,17 +53,4 @@ func (r *SessionsRepo) FindAllByApplication(appIdentifier entity.ApplicationUniq
 	pagination.Rows = &sessions
 
 	return helper.QueryResult{Result: &pagination}
-}
-
-func columnNameForField(field model.AppSessionField) string {
-	switch field {
-	case model.AppSessionFieldCountry:
-		return entity.SessionColumnName_Country
-	case model.AppSessionFieldCity:
-		return entity.SessionColumnName_City
-	case model.AppSessionFieldRegion:
-		return entity.SessionColumnName_RegionName
-	default:
-		return ""
-	}
 }
