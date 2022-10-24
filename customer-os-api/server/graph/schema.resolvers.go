@@ -12,32 +12,19 @@ import (
 	"github.com/openline-ai/openline-customer-os/customer-os-api/graph/model"
 )
 
-var customers []*model.Customer
 var contacts []*model.Contact
 
-// CreateCustomer is the resolver for the createCustomer field.
-func (r *mutationResolver) CreateCustomer(ctx context.Context, input model.NewCustomer) (*model.Customer, error) {
-	var customer = model.Customer{
-		ID:   fmt.Sprintf("%d%s", rand.Uint32(), ""),
-		Name: input.Name,
-	}
-
-	customers = append(customers, &customer)
-
-	return &customer, nil
-}
-
 // CreateContact is the resolver for the createContact field.
-func (r *mutationResolver) CreateContact(ctx context.Context, input model.NewContact) (*model.Contact, error) {
+func (r *mutationResolver) CreateContact(ctx context.Context, request model.ContactRequest) (*model.Contact, error) {
 	var contact = model.Contact{
 		ID:          fmt.Sprintf("%d%s", rand.Uint32(), ""),
-		FirstName:   input.FirstName,
-		LastName:    input.LastName,
-		MiddleName:  input.MiddleName,
-		Comments:    input.Comments,
-		PhoneNumber: input.PhoneNumber,
-		Email:       input.Email,
-		Address:     input.Address,
+		FirstName:   request.FirstName,
+		LastName:    request.LastName,
+		MiddleName:  request.MiddleName,
+		Comments:    request.Comments,
+		PhoneNumber: request.PhoneNumber,
+		Email:       request.Email,
+		Address:     request.Address,
 	}
 
 	contacts = append(contacts, &contact)
@@ -45,9 +32,9 @@ func (r *mutationResolver) CreateContact(ctx context.Context, input model.NewCon
 	return &contact, nil
 }
 
-// Customers is the resolver for the customers field.
-func (r *queryResolver) Customers(ctx context.Context) ([]*model.Customer, error) {
-	return customers[0:len(customers)], nil
+// UpdateContact is the resolver for the updateContact field.
+func (r *mutationResolver) UpdateContact(ctx context.Context, id string, request model.ContactRequest) (*model.Contact, error) {
+	panic(fmt.Errorf("not implemented: UpdateContact - updateContact"))
 }
 
 // Contacts is the resolver for the contacts field.
@@ -70,9 +57,3 @@ type queryResolver struct{ *Resolver }
 //   - When renaming or deleting a resolver the old code will be put in here. You can safely delete
 //     it when you're done.
 //   - You have helper methods in this file. Move them out to keep these resolver files clean.
-func (r *mutationResolver) CreateTodo(ctx context.Context, input model.Customer) (*model.Customer, error) {
-	panic(fmt.Errorf("not implemented: CreateCustomer - createCustomer"))
-}
-func (r *queryResolver) Todos(ctx context.Context) ([]*model.Customer, error) {
-	panic(fmt.Errorf("not implemented: Customers - customers"))
-}

@@ -1,22 +1,8 @@
 """
-Customer - an entity that represents one or many end users of the system managed by CustomerOS
-"""
-type Customer {
-  id: ID!
-  name: String!
-  contacts: [Contact]
-}
-
-input NewCustomer {
-  name: String!
-}
-
-"""
 Contact - represents one person that can be contacted for a Customer. In B2C
 """
 type Contact {
   id: ID!
-  customer: Customer
   first_name: String
   last_name: String
   middle_name: String
@@ -27,12 +13,10 @@ type Contact {
 }
 
 type Query {
-  customers: [Customer!]!
   contacts: [Contact!]!
 }
 
-input NewContact {
-  customerId: String
+input ContactRequest {
   first_name: String
   last_name: String
   middle_name: String
@@ -43,8 +27,8 @@ input NewContact {
 }
 
 type Mutation {
-  createCustomer(input: NewCustomer!):Customer
-  createContact(input: NewContact!): Contact!
+  createContact(request: ContactRequest!): Contact!
+  updateContact(id: ID!, request: ContactRequest!): Contact!
 }
 
 
