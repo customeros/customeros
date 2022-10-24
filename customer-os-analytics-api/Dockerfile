@@ -17,5 +17,5 @@ COPY --chown=65534:65534 --from=builder /go/bin/app .
 COPY --chown=65534:65534 --from=builder /app/.env .
 USER 65534
 
-EXPOSE 8000
+EXPOSE 8080
 ENTRYPOINT [ "./app" ]
