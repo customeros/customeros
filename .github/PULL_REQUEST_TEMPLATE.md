@@ -1,6 +1,6 @@
 ## Proposed changes
 
-Describe the big picture of your changes here.  If it fixes a bug or resolves a feature request, be sure to link that issue!
+_Describe the big picture of your changes here.  If it fixes a bug or resolves a feature request, be sure to link that issue!_
 
 ## Changes
 
