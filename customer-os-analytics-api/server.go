@@ -6,7 +6,9 @@ import (
 	"github.com.openline-ai.customer-os-analytics-api/dataloader"
 	"github.com.openline-ai.customer-os-analytics-api/graph/resolver"
 	"github.com.openline-ai.customer-os-analytics-api/repository"
+	"github.com/caarlos0/env/v6"
 	"github.com/gin-gonic/gin"
+	"github.com/joho/godotenv"
 	"log"
 	"os"
 
@@ -15,18 +17,31 @@ import (
 	"github.com/99designs/gqlgen/graphql/playground"
 )
 
-const defaultPort = "8080"
+const defaultApiPort = "8080"
 
-func InitDB() (db *config.StorageDB, err error) {
+type Config struct {
+	Db struct {
+		Host            string `env:"DB_HOST,required"`
+		Port            string `env:"DB_PORT" envDefault:"5432"`
+		Pwd             string `env:"DB_PWD,unset"`
+		Name            string `env:"DB_NAME,required"`
+		User            string `env:"DB_USER,required"`
+		MaxConn         int    `env:"DB_MAX_CONN"`
+		MaxIdleConn     int    `env:"DB_MAX_IDLE_CONN"`
+		ConnMaxLifetime int    `env:"DB_CONN_MAX_LIFETIME"`
+	}
+}
+
+func InitDB(cfg *Config) (db *config.StorageDB, err error) {
 	if db, err = config.NewDBConn(
-		os.Getenv("DB_HOST"),
-		os.Getenv("DB_PORT"),
-		os.Getenv("DB_NAME"),
-		os.Getenv("DB_USER"),
-		os.Getenv("DB_PWD"),
-		100,
-		10,
-		0); err != nil {
+		cfg.Db.Host,
+		cfg.Db.Port,
+		cfg.Db.Name,
+		cfg.Db.User,
+		cfg.Db.Pwd,
+		cfg.Db.MaxConn,
+		cfg.Db.MaxIdleConn,
+		cfg.Db.ConnMaxLifetime); err != nil {
 		log.Fatalf("Coud not open db connection: %s", err.Error())
 	}
 	return
@@ -66,11 +81,31 @@ func playgroundHandler() gin.HandlerFunc {
 }
 
 func main() {
-	db, _ := InitDB()
+	cfg := loadConfiguration()
+
+	db, _ := InitDB(cfg)
 	defer db.SqlDB.Close()
 
 	r := gin.Default()
 	r.POST("/query", graphqlHandler(db))
 	r.GET("/", playgroundHandler())
-	r.Run()
+
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = defaultApiPort
+	}
+	r.Run(":" + port)
+}
+
+func loadConfiguration() *Config {
+	if err := godotenv.Load(); err != nil {
+		log.Println("[WARNING] Error loading .env file")
+	}
+
+	cfg := Config{}
+	if err := env.Parse(&cfg); err != nil {
+		log.Printf("%+v\n", err)
+	}
+
+	return &cfg
 }
