@@ -10,9 +10,9 @@ import (
 // It serves as dependency injection for your app, add any dependencies you require here.
 
 type Resolver struct {
-	RepositoryHandler *repository.RepositoryHandler
+	RepositoryContainer *repository.RepositoryContainer
 }
 
-func NewResolver(repositoryHandler *repository.RepositoryHandler) *Resolver {
-	return &Resolver{RepositoryHandler: repositoryHandler}
+func NewResolver(repositoryContainer *repository.RepositoryContainer) *Resolver {
+	return &Resolver{RepositoryContainer: repositoryContainer}
 }

@@ -35,11 +35,11 @@ func InitDB() (db *config.StorageDB, err error) {
 // Defining the Graphql handler
 func graphqlHandler(db *config.StorageDB) gin.HandlerFunc {
 	// instantiate repository handler
-	repositoryHandler := repository.InitRepositories(db.GormDB)
+	repositoryContainer := repository.InitRepositories(db.GormDB)
 	// instantiate graph resolver
-	graphResolver := resolver.NewResolver(repositoryHandler)
+	graphResolver := resolver.NewResolver(repositoryContainer)
 	// make a data loader
-	loader := dataloader.NewDataLoader(repositoryHandler)
+	loader := dataloader.NewDataLoader(repositoryContainer)
 	// make a custom context
 	customCtx := &common.CustomContext{
 		Tenant: "openline", // FIXME alexb replace with authentication
