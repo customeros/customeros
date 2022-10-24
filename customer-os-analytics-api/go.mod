@@ -6,7 +6,7 @@ require (
 	github.com/99designs/gqlgen v0.17.20
 	github.com/gin-gonic/gin v1.8.1
 	github.com/graph-gophers/dataloader v5.0.0+incompatible
-	github.com/stretchr/testify v1.8.0
+	github.com/stretchr/testify v1.8.1
 	github.com/swaggo/swag v1.8.7
 	github.com/vektah/gqlparser/v2 v2.5.1
 	gorm.io/driver/postgres v1.4.5
