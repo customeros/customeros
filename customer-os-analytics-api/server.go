@@ -15,7 +15,7 @@ import (
 	"github.com/99designs/gqlgen/graphql/playground"
 )
 
-const defaultPort = "8080"
+const defaultApiPort = "8080"
 
 func InitDB() (db *config.StorageDB, err error) {
 	if db, err = config.NewDBConn(
@@ -72,5 +72,11 @@ func main() {
 	r := gin.Default()
 	r.POST("/query", graphqlHandler(db))
 	r.GET("/", playgroundHandler())
-	r.Run()
+
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = defaultApiPort
+	}
+
+	r.Run(":" + port)
 }
