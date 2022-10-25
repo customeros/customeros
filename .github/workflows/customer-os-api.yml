@@ -16,7 +16,7 @@ permissions:
 
 defaults:
   run:
-    working-directory: customer-os-api
+    working-directory: customer-os-api/server
 
 jobs:
   build:
@@ -30,10 +30,10 @@ jobs:
           go-version: 1.19
 
       - name: Build
-        run: go build -v
+        run: go build ./server/ -v
 
       - name: Test
-        run: go test ./... -v
+        run: go test ./server/... -v
 
   publish:
     name: publish image
