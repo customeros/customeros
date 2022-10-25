@@ -1,0 +1,20 @@
+- page_view_id: page-1
+  domain_sessionid: session-1
+  page_view_in_session_index: 1
+  engaged_time_in_s: 10
+  page_urlpath: path-1
+  page_title: title-1
+
+- page_view_id: page-2
+  domain_sessionid: session-1
+  page_view_in_session_index: 2
+  engaged_time_in_s: 20
+  page_urlpath: path-2
+  page_title: title-2
+
+- page_view_id: page-3
+  domain_sessionid: session-2
+  page_view_in_session_index: 1
+  engaged_time_in_s: 30
+  page_urlpath: path-3
+  page_title: title-3

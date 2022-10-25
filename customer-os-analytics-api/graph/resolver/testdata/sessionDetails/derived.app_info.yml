@@ -1,0 +1,6 @@
+- id: "1"
+  platform: web
+  app_id: public_app
+  name_tracker: public_app_tracker
+  updated_on: RAW=NOW()
+  tenant: openline

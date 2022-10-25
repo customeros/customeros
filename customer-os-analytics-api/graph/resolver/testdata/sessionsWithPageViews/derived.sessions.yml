@@ -1,0 +1,11 @@
+- domain_sessionid: session-1
+  app_id: public_app
+  name_tracker: public_app_tracker
+  tenant: openline
+  end_tstamp: RAW=NOW()
+
+- domain_sessionid: session-2
+  app_id: public_app
+  name_tracker: public_app_tracker
+  tenant: openline
+  end_tstamp: RAW=NOW()

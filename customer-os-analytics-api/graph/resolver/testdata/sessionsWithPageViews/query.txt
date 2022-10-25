@@ -1,0 +1,18 @@
+query {
+  application(id: "1") {
+    sessions(timeFilter: {timePeriod: ALL_TIME}) {
+      content {
+        id
+        pageViews {
+          id
+          title
+          path
+          engagedTime
+          order
+        }
+      }
+      totalPages
+      totalElements
+    }
+  }
+}
