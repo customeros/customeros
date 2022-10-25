@@ -48,5 +48,10 @@ func main() {
 		port = customerOSApiPort
 	}
 
+	port2 := os.Getenv("PORT")
+	if port2 == "" {
+		port2 = customerOSApiPort
+	}
+
 	r.Run(":" + port)
 }
