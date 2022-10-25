@@ -30,10 +30,10 @@ jobs:
           go-version: 1.19
 
       - name: Build
-        run: go build ./server/ -v
+        run: go build -v
 
       - name: Test
-        run: go test ./server/... -v
+        run: go test ./... -v
 
   publish:
     name: publish image
@@ -62,7 +62,7 @@ jobs:
       - name: Push Docker image
         uses: docker/build-push-action@v3
         with:
-          context: customer-os-api/server/.
+          context: .
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
