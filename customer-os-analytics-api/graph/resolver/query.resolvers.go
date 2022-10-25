@@ -21,7 +21,7 @@ func (r *appSessionResolver) PageViews(ctx context.Context, obj *model.AppSessio
 
 // Sessions is the resolver for the sessions field.
 func (r *applicationResolver) Sessions(ctx context.Context, obj *model.Application, timeFilter model.TimeFilter, dataFilter []*model.AppSessionsDataFilter, paginationFilter *model.PaginationFilter) (*model.AppSessionsPage, error) {
-	operationResult := r.RepositoryHandler.SessionsRepo.FindAllByApplication(entity.ApplicationUniqueIdentifier{
+	operationResult := r.RepositoryContainer.SessionsRepo.FindAllByApplication(entity.ApplicationUniqueIdentifier{
 		Tenant:      obj.Tenant,
 		AppId:       obj.Name,
 		TrackerName: obj.TrackerName,
@@ -38,7 +38,7 @@ func (r *applicationResolver) Sessions(ctx context.Context, obj *model.Applicati
 
 // Application is the resolver for the application field.
 func (r *queryResolver) Application(ctx context.Context, id *string) (*model.Application, error) {
-	operationResult := r.RepositoryHandler.AppInfoRepo.FindOneById(ctx, *id)
+	operationResult := r.RepositoryContainer.AppInfoRepo.FindOneById(ctx, *id)
 	if operationResult.Result == nil {
 		return nil, nil
 	}
@@ -48,7 +48,7 @@ func (r *queryResolver) Application(ctx context.Context, id *string) (*model.App
 
 // Applications is the resolver for the applications field.
 func (r *queryResolver) Applications(ctx context.Context) ([]*model.Application, error) {
-	operationResult := r.RepositoryHandler.AppInfoRepo.FindAll(ctx)
+	operationResult := r.RepositoryContainer.AppInfoRepo.FindAll(ctx)
 	return mapper.MapApplications(operationResult.Result.(*entity.ApplicationEntities)), nil
 }
 

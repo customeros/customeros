@@ -34,8 +34,8 @@ func (i *Loaders) GetPageViewsForSession(ctx context.Context, sessionId string) 
 }
 
 // NewDataLoader returns the instantiated Loaders struct for use in a request
-func NewDataLoader(repositoryHandler *repository.RepositoryHandler) *Loaders {
-	pageViews := &pageViewsBatcher{repo: repositoryHandler.PageViewRepo}
+func NewDataLoader(repositoryContainer *repository.RepositoryContainer) *Loaders {
+	pageViews := &pageViewsBatcher{repo: repositoryContainer.PageViewRepo}
 	return &Loaders{
 		PageViewsBySessionId: dataloader.NewBatchedLoader(pageViews.get),
 	}
