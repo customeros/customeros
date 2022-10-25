@@ -7,7 +7,7 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}/analytics-api
+  IMAGE_NAME: ${{ github.repository }}/customer-os-api
 
 permissions:
   contents: read
@@ -62,7 +62,7 @@ jobs:
       - name: Push Docker image
         uses: docker/build-push-action@v3
         with:
-          context: customer-os-analytics-api/.
+          context: customer-os-api/server/.
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
