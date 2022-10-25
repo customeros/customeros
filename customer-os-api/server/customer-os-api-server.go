@@ -44,7 +44,6 @@ func main() {
 	r.GET("/", playgroundHandler())
 
 	port := os.Getenv("PORT")
-	port2 := os.Getenv("PORT")
 	if port == "" {
 		port = customerOSApiPort
 	}
