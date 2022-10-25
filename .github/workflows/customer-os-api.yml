@@ -1,7 +1,9 @@
 name: Build and publish customer-os-api
 
 on:
-  push
+  push:
+    paths:
+      - customer-os-api/**
 
 env:
   REGISTRY: ghcr.io
