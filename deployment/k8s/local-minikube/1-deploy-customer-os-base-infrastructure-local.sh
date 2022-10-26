@@ -1,4 +1,4 @@
-#! /bin/sh
+#! /bin/bash
 
 MINIKUBE_STATUS=$(minikube status)
 MINIKUBE_STARTED_STATUS_TEXT='Running'
