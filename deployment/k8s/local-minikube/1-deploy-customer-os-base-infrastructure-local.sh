@@ -24,15 +24,9 @@ if [[ $(kubectl get namespaces) == *"$NAMESPACE_NAME"* ]];
 fi
 
 #Adding helm repos :
-helm repo add hashicorp https://helm.releases.hashicorp.com
 helm repo add bitnami https://charts.bitnami.com/bitnami
 helm repo add neo4j https://helm.neo4j.com/neo4j
 helm repo update
-
-
-#install consul
-helm install --values "../configs/consul/helm-consul-values.yaml" consul hashicorp/consul --namespace $NAMESPACE_NAME
-wait
 
 #install postgresql
 kubectl apply -f ../configs/postgresql/postgresql-presistent-volume.yaml --namespace $NAMESPACE_NAME

@@ -40,7 +40,6 @@ brew install helm
 
 ### Helm repositories dependencies  
 ```
-helm repo add hashicorp https://helm.releases.hashicorp.com
 helm repo add bitnami https://charts.bitnami.com/bitnami
 ```
 
@@ -54,9 +53,6 @@ and execute :
 
 # Port FWD
 ```
-#Consul UI
-kubectl port-forward consul-server-0 --namespace openline-development 8500:8500
-
 #PostgreSQL DB
 kubectl port-forward --namespace openline-development svc/postgresql-customer-os-dev 5432:5432
 ```
