@@ -6,6 +6,7 @@ require (
 	github.com/99designs/gqlgen v0.17.20
 	github.com/gin-contrib/cors v1.4.0
 	github.com/gin-gonic/gin v1.8.1
+	github.com/neo4j/neo4j-go-driver/v4 v4.4.4
 	github.com/vektah/gqlparser/v2 v2.5.1
 )
 

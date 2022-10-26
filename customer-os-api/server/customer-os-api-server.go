@@ -3,6 +3,9 @@ package main
 import (
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+	model2 "github.com/openline-ai/openline-customer-os/customer-os-api/model"
+	"github.com/openline-ai/openline-customer-os/customer-os-api/service"
+	"net/http"
 	"os"
 
 	"github.com/99designs/gqlgen/graphql/handler"
@@ -42,6 +45,9 @@ func main() {
 
 	r.POST("/query", graphqlHandler())
 	r.GET("/", playgroundHandler())
+	r.GET("/health", healthCheckHandler)
+	r.GET("/readiness", healthCheckHandler)
+	r.GET("/testDB", testDb)
 
 	port := os.Getenv("PORT")
 	if port == "" {
@@ -49,4 +55,28 @@ func main() {
 	}
 
 	r.Run(":" + port)
+}
+
+func testDb(c *gin.Context) {
+	contact := model2.ContactDB{
+		FirstName:   "Test",
+		LastName:    "mata",
+		Label:       "asdasdasd",
+		ContactType: "WTF",
+	}
+	aNewSavedContact, err := service.NewContactService().Create(contact)
+
+	if err != nil {
+		c.JSON(http.StatusOK, gin.H{
+			"wtf_message": err,
+		})
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"wtf_message": aNewSavedContact,
+	})
+}
+
+func healthCheckHandler(c *gin.Context) {
+	c.JSON(200, gin.H{"status": "OK"})
 }
