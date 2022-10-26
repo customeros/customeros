@@ -1,14 +1,17 @@
 package main
 
 import (
+	"context"
 	common "github.com.openline-ai.customer-os-analytics-api/common"
 	"github.com.openline-ai.customer-os-analytics-api/config"
 	"github.com.openline-ai.customer-os-analytics-api/dataloader"
 	"github.com.openline-ai.customer-os-analytics-api/graph/resolver"
 	"github.com.openline-ai.customer-os-analytics-api/repository"
+	"github.com/99designs/gqlgen/graphql"
 	"github.com/caarlos0/env/v6"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
+	"github.com/vektah/gqlparser/v2/gqlerror"
 	"log"
 	"os"
 
@@ -59,8 +62,18 @@ func graphqlHandler(db *config.StorageDB) gin.HandlerFunc {
 	customCtx := &common.CustomContext{
 		Tenant: "openline", // FIXME alexb replace with authentication
 	}
+
 	// create query handler
 	srv := handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: graphResolver}))
+	srv.SetRecoverFunc(func(ctx context.Context, err interface{}) error {
+		return gqlerror.Errorf("Internal server error!")
+	})
+	srv.SetErrorPresenter(func(ctx context.Context, e error) *gqlerror.Error {
+		err := graphql.DefaultErrorPresenter(ctx, e)
+		// Error hook place, Returned error can be customized. Check https://gqlgen.com/reference/errors/
+		return err
+	})
+
 	// wrap the query handler with middleware to inject dataloader
 	dataloaderSrv := dataloader.Middleware(loader, srv)
 
