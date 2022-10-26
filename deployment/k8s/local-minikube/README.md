@@ -58,5 +58,12 @@ and execute :
 kubectl port-forward consul-server-0 --namespace openline-development 8500:8500
 
 #PostgreSQL DB
-kubectl port-forward --namespace default svc/postgresql-dev 5432:5432
+kubectl port-forward --namespace openline-development svc/postgresql-customer-os-dev 5432:5432
 ```
+
+or run the script
+```
+./port-forwarding.sh
+```
+
+
