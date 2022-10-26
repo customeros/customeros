@@ -6,30 +6,33 @@ package graph
 import (
 	"context"
 	"fmt"
-	"math/rand"
+	"github.com/openline-ai/openline-customer-os/customer-os-api/entity"
+	"github.com/openline-ai/openline-customer-os/customer-os-api/service"
 
 	"github.com/openline-ai/openline-customer-os/customer-os-api/graph/generated"
 	"github.com/openline-ai/openline-customer-os/customer-os-api/graph/model"
 )
 
-var contacts []*model.Contact
-
 // CreateContact is the resolver for the createContact field.
 func (r *mutationResolver) CreateContact(ctx context.Context, request model.ContactRequest) (*model.Contact, error) {
-	var contact = model.Contact{
-		ID:          fmt.Sprintf("%d%s", rand.Uint32(), ""),
-		FirstName:   request.FirstName,
-		LastName:    request.LastName,
-		MiddleName:  request.MiddleName,
-		Comments:    request.Comments,
-		PhoneNumber: request.PhoneNumber,
-		Email:       request.Email,
-		Address:     request.Address,
+
+	contactNode := entity.ContactNode{
+		FirstName:   *request.FirstName,
+		LastName:    *request.LastName,
+		Label:       *request.Label,
+		ContactType: *request.ContactType,
 	}
 
-	contacts = append(contacts, &contact)
+	contactNodeCreated, _ := service.NewContactService().Create(contactNode)
 
-	return &contact, nil
+	contactCreatedResponse := model.Contact{
+		ID:          contactNodeCreated.Id,
+		FirstName:   &contactNodeCreated.FirstName,
+		LastName:    &contactNodeCreated.LastName,
+		Label:       &contactNodeCreated.Label,
+		ContactType: &contactNodeCreated.ContactType,
+	}
+	return &contactCreatedResponse, nil
 }
 
 // UpdateContact is the resolver for the updateContact field.
@@ -57,3 +60,4 @@ type queryResolver struct{ *Resolver }
 //   - When renaming or deleting a resolver the old code will be put in here. You can safely delete
 //     it when you're done.
 //   - You have helper methods in this file. Move them out to keep these resolver files clean.
+var contacts []*model.Contact

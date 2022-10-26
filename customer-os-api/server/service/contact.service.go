@@ -3,13 +3,13 @@ package service
 import (
 	"github.com/mitchellh/mapstructure"
 	"github.com/neo4j/neo4j-go-driver/v4/neo4j"
-	"github.com/openline-ai/openline-customer-os/customer-os-api/model"
+	"github.com/openline-ai/openline-customer-os/customer-os-api/entity"
 )
 
 type ContactService interface {
-	FindAll() ([]model.ContactDB, error)
-	FindAllByName(name string) ([]model.ContactDB, error)
-	Create(contact model.ContactDB) (*model.ContactDB, error)
+	FindAll() ([]entity.ContactNode, error)
+	FindAllByName(name string) ([]entity.ContactNode, error)
+	Create(contact entity.ContactNode) (entity.ContactNode, error)
 }
 
 type neo4jContactService struct {
@@ -19,12 +19,12 @@ func NewContactService() ContactService {
 	return &neo4jContactService{}
 }
 
-func (cs *neo4jContactService) Create(aContact model.ContactDB) (*model.ContactDB, error) {
-	contact := model.ContactDB{}
+func (cs *neo4jContactService) Create(aContact entity.ContactNode) (entity.ContactNode, error) {
+	contact := entity.ContactNode{}
 	driver, err := neo4j.NewDriver("neo4j://neo4j-customer-os.openline-development.svc.cluster.local:7687",
 		neo4j.BasicAuth("neo4j", "StrongLocalPa$$", ""))
 	if err != nil {
-		return &contact, err
+		return contact, err
 	}
 	defer driver.Close()
 
@@ -33,7 +33,7 @@ func (cs *neo4jContactService) Create(aContact model.ContactDB) (*model.ContactD
 
 	result, err := session.WriteTransaction(func(tx neo4j.Transaction) (interface{}, error) {
 		result, err := tx.Run(`
-			CREATE (c:ContactDB {
+			CREATE (c:ContactNode {
 				  id: randomUuid(),
 				  firstName: $firstName,
 				  lastName: $lastName,
@@ -57,7 +57,7 @@ func (cs *neo4jContactService) Create(aContact model.ContactDB) (*model.ContactD
 		return contact, nil
 	})
 	if err != nil {
-		return &contact, err
+		return contact, err
 	}
 
 	contactData := result.(map[string]interface{})
@@ -65,17 +65,17 @@ func (cs *neo4jContactService) Create(aContact model.ContactDB) (*model.ContactD
 	mapstructure.Decode(contactData, &contact)
 
 	if err != nil {
-		return &contact, err
+		return contact, err
 	}
-	return &contact, err
+	return contact, err
 }
 
-func (cs *neo4jContactService) FindAll() ([]model.ContactDB, error) {
+func (cs *neo4jContactService) FindAll() ([]entity.ContactNode, error) {
 	//TODO implement me
 	panic("implement me")
 }
 
-func (n neo4jContactService) FindAllByName(name string) ([]model.ContactDB, error) {
+func (n neo4jContactService) FindAllByName(name string) ([]entity.ContactNode, error) {
 	//TODO implement me
 	panic("implement me")
 }

@@ -45,14 +45,11 @@ type DirectiveRoot struct {
 
 type ComplexityRoot struct {
 	Contact struct {
-		Address     func(childComplexity int) int
-		Comments    func(childComplexity int) int
-		Email       func(childComplexity int) int
+		ContactType func(childComplexity int) int
 		FirstName   func(childComplexity int) int
 		ID          func(childComplexity int) int
+		Label       func(childComplexity int) int
 		LastName    func(childComplexity int) int
-		MiddleName  func(childComplexity int) int
-		PhoneNumber func(childComplexity int) int
 	}
 
 	Mutation struct {
@@ -88,61 +85,40 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 	_ = ec
 	switch typeName + "." + field {
 
-	case "ContactDB.address":
-		if e.complexity.Contact.Address == nil {
+	case "Contact.contact_type":
+		if e.complexity.Contact.ContactType == nil {
 			break
 		}
 
-		return e.complexity.Contact.Address(childComplexity), true
+		return e.complexity.Contact.ContactType(childComplexity), true
 
-	case "ContactDB.comments":
-		if e.complexity.Contact.Comments == nil {
-			break
-		}
-
-		return e.complexity.Contact.Comments(childComplexity), true
-
-	case "ContactDB.email":
-		if e.complexity.Contact.Email == nil {
-			break
-		}
-
-		return e.complexity.Contact.Email(childComplexity), true
-
-	case "ContactDB.first_name":
+	case "Contact.first_name":
 		if e.complexity.Contact.FirstName == nil {
 			break
 		}
 
 		return e.complexity.Contact.FirstName(childComplexity), true
 
-	case "ContactDB.id":
+	case "Contact.id":
 		if e.complexity.Contact.ID == nil {
 			break
 		}
 
 		return e.complexity.Contact.ID(childComplexity), true
 
-	case "ContactDB.last_name":
+	case "Contact.label":
+		if e.complexity.Contact.Label == nil {
+			break
+		}
+
+		return e.complexity.Contact.Label(childComplexity), true
+
+	case "Contact.last_name":
 		if e.complexity.Contact.LastName == nil {
 			break
 		}
 
 		return e.complexity.Contact.LastName(childComplexity), true
-
-	case "ContactDB.middle_name":
-		if e.complexity.Contact.MiddleName == nil {
-			break
-		}
-
-		return e.complexity.Contact.MiddleName(childComplexity), true
-
-	case "ContactDB.phone_number":
-		if e.complexity.Contact.PhoneNumber == nil {
-			break
-		}
-
-		return e.complexity.Contact.PhoneNumber(childComplexity), true
 
 	case "Mutation.createContact":
 		if e.complexity.Mutation.CreateContact == nil {
@@ -245,36 +221,30 @@ func (ec *executionContext) introspectType(name string) (*introspection.Type, er
 
 var sources = []*ast.Source{
 	{Name: "../schema.graphqls", Input: `"""
-ContactDB - represents one person that can be contacted for a Customer. In B2C
+Contact - represents one person that can be contacted for a Customer. In B2C
 """
-type ContactDB {
+type Contact {
   id: ID!
   first_name: String
   last_name: String
-  middle_name: String
-  comments: String
-  phone_number: String
-  email: String
-  address: String
+  label: String
+  contact_type: String
 }
 
 type Query {
-  contacts: [ContactDB!]!
+  contacts: [Contact!]!
 }
 
 input ContactRequest {
   first_name: String
   last_name: String
-  middle_name: String
-  comments: String
-  phone_number: String
-  email: String
-  address: String
+  label: String
+  contact_type: String
 }
 
 type Mutation {
-  createContact(request: ContactRequest!): ContactDB!
-  updateContact(id: ID!, request: ContactRequest!): ContactDB!
+  createContact(request: ContactRequest!): Contact!
+  updateContact(id: ID!, request: ContactRequest!): Contact!
 }
 
 
@@ -411,7 +381,7 @@ func (ec *executionContext) _Contact_id(ctx context.Context, field graphql.Colle
 
 func (ec *executionContext) fieldContext_Contact_id(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
-		Object:     "ContactDB",
+		Object:     "Contact",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -452,7 +422,7 @@ func (ec *executionContext) _Contact_first_name(ctx context.Context, field graph
 
 func (ec *executionContext) fieldContext_Contact_first_name(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
-		Object:     "ContactDB",
+		Object:     "Contact",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -493,7 +463,7 @@ func (ec *executionContext) _Contact_last_name(ctx context.Context, field graphq
 
 func (ec *executionContext) fieldContext_Contact_last_name(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
-		Object:     "ContactDB",
+		Object:     "Contact",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -504,8 +474,8 @@ func (ec *executionContext) fieldContext_Contact_last_name(ctx context.Context, 
 	return fc, nil
 }
 
-func (ec *executionContext) _Contact_middle_name(ctx context.Context, field graphql.CollectedField, obj *model.Contact) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Contact_middle_name(ctx, field)
+func (ec *executionContext) _Contact_label(ctx context.Context, field graphql.CollectedField, obj *model.Contact) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Contact_label(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -518,7 +488,7 @@ func (ec *executionContext) _Contact_middle_name(ctx context.Context, field grap
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.MiddleName, nil
+		return obj.Label, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -532,9 +502,9 @@ func (ec *executionContext) _Contact_middle_name(ctx context.Context, field grap
 	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Contact_middle_name(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Contact_label(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
-		Object:     "ContactDB",
+		Object:     "Contact",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -545,8 +515,8 @@ func (ec *executionContext) fieldContext_Contact_middle_name(ctx context.Context
 	return fc, nil
 }
 
-func (ec *executionContext) _Contact_comments(ctx context.Context, field graphql.CollectedField, obj *model.Contact) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Contact_comments(ctx, field)
+func (ec *executionContext) _Contact_contact_type(ctx context.Context, field graphql.CollectedField, obj *model.Contact) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Contact_contact_type(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -559,7 +529,7 @@ func (ec *executionContext) _Contact_comments(ctx context.Context, field graphql
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Comments, nil
+		return obj.ContactType, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -573,132 +543,9 @@ func (ec *executionContext) _Contact_comments(ctx context.Context, field graphql
 	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Contact_comments(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Contact_contact_type(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
-		Object:     "ContactDB",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Contact_phone_number(ctx context.Context, field graphql.CollectedField, obj *model.Contact) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Contact_phone_number(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.PhoneNumber, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*string)
-	fc.Result = res
-	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Contact_phone_number(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "ContactDB",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Contact_email(ctx context.Context, field graphql.CollectedField, obj *model.Contact) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Contact_email(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Email, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*string)
-	fc.Result = res
-	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Contact_email(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "ContactDB",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Contact_address(ctx context.Context, field graphql.CollectedField, obj *model.Contact) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Contact_address(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Address, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*string)
-	fc.Result = res
-	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Contact_address(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "ContactDB",
+		Object:     "Contact",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -754,18 +601,12 @@ func (ec *executionContext) fieldContext_Mutation_createContact(ctx context.Cont
 				return ec.fieldContext_Contact_first_name(ctx, field)
 			case "last_name":
 				return ec.fieldContext_Contact_last_name(ctx, field)
-			case "middle_name":
-				return ec.fieldContext_Contact_middle_name(ctx, field)
-			case "comments":
-				return ec.fieldContext_Contact_comments(ctx, field)
-			case "phone_number":
-				return ec.fieldContext_Contact_phone_number(ctx, field)
-			case "email":
-				return ec.fieldContext_Contact_email(ctx, field)
-			case "address":
-				return ec.fieldContext_Contact_address(ctx, field)
+			case "label":
+				return ec.fieldContext_Contact_label(ctx, field)
+			case "contact_type":
+				return ec.fieldContext_Contact_contact_type(ctx, field)
 			}
-			return nil, fmt.Errorf("no field named %q was found under type ContactDB", field.Name)
+			return nil, fmt.Errorf("no field named %q was found under type Contact", field.Name)
 		},
 	}
 	defer func() {
@@ -827,18 +668,12 @@ func (ec *executionContext) fieldContext_Mutation_updateContact(ctx context.Cont
 				return ec.fieldContext_Contact_first_name(ctx, field)
 			case "last_name":
 				return ec.fieldContext_Contact_last_name(ctx, field)
-			case "middle_name":
-				return ec.fieldContext_Contact_middle_name(ctx, field)
-			case "comments":
-				return ec.fieldContext_Contact_comments(ctx, field)
-			case "phone_number":
-				return ec.fieldContext_Contact_phone_number(ctx, field)
-			case "email":
-				return ec.fieldContext_Contact_email(ctx, field)
-			case "address":
-				return ec.fieldContext_Contact_address(ctx, field)
+			case "label":
+				return ec.fieldContext_Contact_label(ctx, field)
+			case "contact_type":
+				return ec.fieldContext_Contact_contact_type(ctx, field)
 			}
-			return nil, fmt.Errorf("no field named %q was found under type ContactDB", field.Name)
+			return nil, fmt.Errorf("no field named %q was found under type Contact", field.Name)
 		},
 	}
 	defer func() {
@@ -900,18 +735,12 @@ func (ec *executionContext) fieldContext_Query_contacts(ctx context.Context, fie
 				return ec.fieldContext_Contact_first_name(ctx, field)
 			case "last_name":
 				return ec.fieldContext_Contact_last_name(ctx, field)
-			case "middle_name":
-				return ec.fieldContext_Contact_middle_name(ctx, field)
-			case "comments":
-				return ec.fieldContext_Contact_comments(ctx, field)
-			case "phone_number":
-				return ec.fieldContext_Contact_phone_number(ctx, field)
-			case "email":
-				return ec.fieldContext_Contact_email(ctx, field)
-			case "address":
-				return ec.fieldContext_Contact_address(ctx, field)
+			case "label":
+				return ec.fieldContext_Contact_label(ctx, field)
+			case "contact_type":
+				return ec.fieldContext_Contact_contact_type(ctx, field)
 			}
-			return nil, fmt.Errorf("no field named %q was found under type ContactDB", field.Name)
+			return nil, fmt.Errorf("no field named %q was found under type Contact", field.Name)
 		},
 	}
 	return fc, nil
@@ -2826,7 +2655,7 @@ func (ec *executionContext) unmarshalInputContactRequest(ctx context.Context, ob
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"first_name", "last_name", "middle_name", "comments", "phone_number", "email", "address"}
+	fieldsInOrder := [...]string{"first_name", "last_name", "label", "contact_type"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -2849,43 +2678,19 @@ func (ec *executionContext) unmarshalInputContactRequest(ctx context.Context, ob
 			if err != nil {
 				return it, err
 			}
-		case "middle_name":
+		case "label":
 			var err error
 
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("middle_name"))
-			it.MiddleName, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("label"))
+			it.Label, err = ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
 				return it, err
 			}
-		case "comments":
+		case "contact_type":
 			var err error
 
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("comments"))
-			it.Comments, err = ec.unmarshalOString2ᚖstring(ctx, v)
-			if err != nil {
-				return it, err
-			}
-		case "phone_number":
-			var err error
-
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("phone_number"))
-			it.PhoneNumber, err = ec.unmarshalOString2ᚖstring(ctx, v)
-			if err != nil {
-				return it, err
-			}
-		case "email":
-			var err error
-
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("email"))
-			it.Email, err = ec.unmarshalOString2ᚖstring(ctx, v)
-			if err != nil {
-				return it, err
-			}
-		case "address":
-			var err error
-
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("address"))
-			it.Address, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("contact_type"))
+			it.ContactType, err = ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -2903,7 +2708,7 @@ func (ec *executionContext) unmarshalInputContactRequest(ctx context.Context, ob
 
 // region    **************************** object.gotpl ****************************
 
-var contactImplementors = []string{"ContactDB"}
+var contactImplementors = []string{"Contact"}
 
 func (ec *executionContext) _Contact(ctx context.Context, sel ast.SelectionSet, obj *model.Contact) graphql.Marshaler {
 	fields := graphql.CollectFields(ec.OperationContext, sel, contactImplementors)
@@ -2912,7 +2717,7 @@ func (ec *executionContext) _Contact(ctx context.Context, sel ast.SelectionSet, 
 	for i, field := range fields {
 		switch field.Name {
 		case "__typename":
-			out.Values[i] = graphql.MarshalString("ContactDB")
+			out.Values[i] = graphql.MarshalString("Contact")
 		case "id":
 
 			out.Values[i] = ec._Contact_id(ctx, field, obj)
@@ -2928,25 +2733,13 @@ func (ec *executionContext) _Contact(ctx context.Context, sel ast.SelectionSet, 
 
 			out.Values[i] = ec._Contact_last_name(ctx, field, obj)
 
-		case "middle_name":
+		case "label":
 
-			out.Values[i] = ec._Contact_middle_name(ctx, field, obj)
+			out.Values[i] = ec._Contact_label(ctx, field, obj)
 
-		case "comments":
+		case "contact_type":
 
-			out.Values[i] = ec._Contact_comments(ctx, field, obj)
-
-		case "phone_number":
-
-			out.Values[i] = ec._Contact_phone_number(ctx, field, obj)
-
-		case "email":
-
-			out.Values[i] = ec._Contact_email(ctx, field, obj)
-
-		case "address":
-
-			out.Values[i] = ec._Contact_address(ctx, field, obj)
+			out.Values[i] = ec._Contact_contact_type(ctx, field, obj)
 
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))

@@ -3,7 +3,7 @@ package main
 import (
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
-	model2 "github.com/openline-ai/openline-customer-os/customer-os-api/model"
+	model2 "github.com/openline-ai/openline-customer-os/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/customer-os-api/service"
 	"net/http"
 	"os"
@@ -58,7 +58,7 @@ func main() {
 }
 
 func testDb(c *gin.Context) {
-	contact := model2.ContactDB{
+	contact := model2.ContactNode{
 		FirstName:   "Test",
 		LastName:    "mata",
 		Label:       "asdasdasd",

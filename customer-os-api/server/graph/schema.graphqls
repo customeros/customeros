@@ -5,11 +5,8 @@ type Contact {
   id: ID!
   first_name: String
   last_name: String
-  middle_name: String
-  comments: String
-  phone_number: String
-  email: String
-  address: String
+  label: String
+  contact_type: String
 }
 
 type Query {
@@ -19,11 +16,8 @@ type Query {
 input ContactRequest {
   first_name: String
   last_name: String
-  middle_name: String
-  comments: String
-  phone_number: String
-  email: String
-  address: String
+  label: String
+  contact_type: String
 }
 
 type Mutation {
