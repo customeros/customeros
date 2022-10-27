@@ -34,10 +34,7 @@ func (s *contactWithContactGroupRelationshipService) AddContactToGroup(contactId
 				"groupId":   groupId,
 			})
 
-		if err != nil {
-			return false, err
-		}
-		return true, nil
+		return true, err
 	})
 	if err != nil {
 		return false, err
@@ -62,10 +59,7 @@ func (s *contactWithContactGroupRelationshipService) RemoveContactFromGroup(cont
 				"groupId":   groupId,
 			})
 
-		if err != nil {
-			return false, err
-		}
-		return true, nil
+		return true, err
 	})
 	if err != nil {
 		return false, err

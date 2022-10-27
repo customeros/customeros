@@ -3,4 +3,5 @@ type Query {
   contacts: [Contact!]!
 
   contactGroups: [ContactGroup!]!
+#  TODO list contacts in contact group
 }
