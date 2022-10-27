@@ -1,13 +1,15 @@
 package service
 
-import "github.com/openline-ai/openline-customer-os/customer-os-api/config"
+import (
+	"github.com/neo4j/neo4j-go-driver/v4/neo4j"
+)
 
 type ServiceContainer struct {
 	ContactService ContactService
 }
 
-func InitServices(cfg *config.Config) *ServiceContainer {
+func InitServices(driver *neo4j.Driver) *ServiceContainer {
 	return &ServiceContainer{
-		ContactService: NewContactService(cfg),
+		ContactService: NewContactService(driver),
 	}
 }

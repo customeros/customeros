@@ -3,7 +3,6 @@ package service
 import (
 	"github.com/mitchellh/mapstructure"
 	"github.com/neo4j/neo4j-go-driver/v4/neo4j"
-	"github.com/openline-ai/openline-customer-os/customer-os-api/config"
 	"github.com/openline-ai/openline-customer-os/customer-os-api/entity"
 )
 
@@ -14,24 +13,20 @@ type ContactService interface {
 }
 
 type neo4jContactService struct {
-	cfg *config.Config
+	driver *neo4j.Driver
 }
 
-func NewContactService(cfg *config.Config) ContactService {
+func NewContactService(driver *neo4j.Driver) ContactService {
 	return &neo4jContactService{
-		cfg: cfg,
+		driver: driver,
 	}
 }
 
 func (cs *neo4jContactService) Create(aContact entity.ContactNode) (entity.ContactNode, error) {
 	contact := entity.ContactNode{}
-	driver, err := neo4j.NewDriver(cs.cfg.Neo4j.Target, neo4j.BasicAuth(cs.cfg.Neo4j.User, cs.cfg.Neo4j.Pwd, cs.cfg.Neo4j.Realm))
-	if err != nil {
-		return contact, err
-	}
-	defer driver.Close()
 
-	session := driver.NewSession(neo4j.SessionConfig{AccessMode: neo4j.AccessModeWrite})
+	session := (*cs.driver).NewSession(neo4j.SessionConfig{AccessMode: neo4j.AccessModeWrite})
+
 	defer session.Close()
 
 	result, err := session.WriteTransaction(func(tx neo4j.Transaction) (interface{}, error) {
@@ -75,12 +70,11 @@ func (cs *neo4jContactService) Create(aContact entity.ContactNode) (entity.Conta
 
 func (cs *neo4jContactService) FindAll() ([]entity.ContactNode, error) {
 
-	driver, err := neo4j.NewDriver(cs.cfg.Neo4j.Target, neo4j.BasicAuth(cs.cfg.Neo4j.User, cs.cfg.Neo4j.Pwd, cs.cfg.Neo4j.Realm))
 	// Open a new Session
-	session := driver.NewSession(neo4j.SessionConfig{})
+	session := (*cs.driver).NewSession(neo4j.SessionConfig{})
 
 	// Close the session once this function has completed
-	defer driver.Close()
+	defer (*cs.driver).Close()
 
 	// Execute a query in a new Read Transaction
 	results, err := session.ReadTransaction(func(tx neo4j.Transaction) (interface{}, error) {

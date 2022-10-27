@@ -7,6 +7,7 @@ import (
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
+	"github.com/neo4j/neo4j-go-driver/v4/neo4j"
 	"github.com/openline-ai/openline-customer-os/customer-os-api/config"
 	"github.com/openline-ai/openline-customer-os/customer-os-api/graph/generated"
 	"github.com/openline-ai/openline-customer-os/customer-os-api/graph/resolver"
@@ -16,9 +17,8 @@ import (
 
 const customerOSApiPort = "1010"
 
-func graphqlHandler(cfg *config.Config) gin.HandlerFunc {
-
-	serviceContainer := service.InitServices(cfg)
+func graphqlHandler(driver neo4j.Driver) gin.HandlerFunc {
+	serviceContainer := service.InitServices(&driver)
 	// instantiate graph resolver
 	graphResolver := resolver.NewResolver(serviceContainer)
 
@@ -40,14 +40,20 @@ func playgroundHandler() gin.HandlerFunc {
 
 func main() {
 	cfg := loadConfiguration()
+	neo4jDriver, err := config.NewDriver(cfg)
+	if err != nil {
+		log.Fatalf("Could not establish connection with neo4j: %v", cfg.Neo4j.Target)
+	}
+	defer neo4jDriver.Close()
+
 	// Setting up Gin
 	r := gin.Default()
 
-	config := cors.DefaultConfig()
-	config.AllowOrigins = []string{"http://localhost:3000"}
-	r.Use(cors.New(config))
+	corsConfig := cors.DefaultConfig()
+	corsConfig.AllowOrigins = []string{"http://localhost:3000"}
+	r.Use(cors.New(corsConfig))
 
-	r.POST("/query", graphqlHandler(cfg))
+	r.POST("/query", graphqlHandler(neo4jDriver))
 	r.GET("/", playgroundHandler())
 	r.GET("/health", healthCheckHandler)
 	r.GET("/readiness", healthCheckHandler)
