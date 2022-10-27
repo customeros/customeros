@@ -1,4 +1,6 @@
 type Query {
   contact(id: ID!) :Contact!
   contacts: [Contact!]!
+
+  contactGroups: [ContactGroup!]!
 }

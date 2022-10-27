@@ -1,0 +1,10 @@
+type ContactGroup {
+    id: ID!
+    name: String!
+}
+
+input ContactGroupInput {
+    name: String!
+}
+
+
