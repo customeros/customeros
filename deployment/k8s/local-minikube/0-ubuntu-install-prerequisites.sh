@@ -10,7 +10,6 @@ if [ ! -f "/etc/apt/sources.list.d/docker.list" ]; then
 fi
 sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin
 sudo usermod -aG docker $(whoami)
-exec su -l $USER
 wget -O /tmp/minikube_latest.deb https://storage.googleapis.com/minikube/releases/latest/minikube_latest_amd64.deb
 sudo apt install -y /tmp/minikube_latest.deb
 sudo snap install kubectl --classic
