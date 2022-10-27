@@ -1,23 +1,28 @@
 package main
 
 import (
-	"github.com/gin-contrib/cors"
-	"github.com/gin-gonic/gin"
-	model2 "github.com/openline-ai/openline-customer-os/customer-os-api/entity"
-	"github.com/openline-ai/openline-customer-os/customer-os-api/graph/resolver"
-	"github.com/openline-ai/openline-customer-os/customer-os-api/service"
-	"net/http"
-	"os"
-
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/playground"
+	"github.com/caarlos0/env/v6"
+	"github.com/gin-contrib/cors"
+	"github.com/gin-gonic/gin"
+	"github.com/joho/godotenv"
+	"github.com/openline-ai/openline-customer-os/customer-os-api/config"
 	"github.com/openline-ai/openline-customer-os/customer-os-api/graph/generated"
+	"github.com/openline-ai/openline-customer-os/customer-os-api/graph/resolver"
+	"github.com/openline-ai/openline-customer-os/customer-os-api/service"
+	"log"
 )
 
 const customerOSApiPort = "1010"
 
-func graphqlHandler() gin.HandlerFunc {
-	h := handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &resolver.Resolver{}}))
+func graphqlHandler(cfg *config.Config) gin.HandlerFunc {
+
+	serviceContainer := service.InitServices(cfg)
+	// instantiate graph resolver
+	graphResolver := resolver.NewResolver(serviceContainer)
+
+	h := handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: graphResolver}))
 
 	return func(c *gin.Context) {
 		h.ServeHTTP(c.Writer, c.Request)
@@ -34,6 +39,7 @@ func playgroundHandler() gin.HandlerFunc {
 }
 
 func main() {
+	cfg := loadConfiguration()
 	// Setting up Gin
 	r := gin.Default()
 
@@ -41,13 +47,12 @@ func main() {
 	config.AllowOrigins = []string{"http://localhost:3000"}
 	r.Use(cors.New(config))
 
-	r.POST("/query", graphqlHandler())
+	r.POST("/query", graphqlHandler(cfg))
 	r.GET("/", playgroundHandler())
 	r.GET("/health", healthCheckHandler)
 	r.GET("/readiness", healthCheckHandler)
-	r.GET("/testDB", testDb)
 
-	port := os.Getenv("PORT")
+	port := cfg.ApiPort
 	if port == "" {
 		port = customerOSApiPort
 	}
@@ -55,24 +60,17 @@ func main() {
 	r.Run(":" + port)
 }
 
-func testDb(c *gin.Context) {
-	contact := model2.ContactNode{
-		FirstName:   "Test",
-		LastName:    "mata",
-		Label:       "asdasdasd",
-		ContactType: "WTF",
-	}
-	aNewSavedContact, err := service.NewContactService().Create(contact)
-
-	if err != nil {
-		c.JSON(http.StatusOK, gin.H{
-			"wtf_message": err,
-		})
+func loadConfiguration() *config.Config {
+	if err := godotenv.Load(); err != nil {
+		log.Println("[WARNING] Error loading .env file")
 	}
 
-	c.JSON(http.StatusOK, gin.H{
-		"wtf_message": aNewSavedContact,
-	})
+	cfg := config.Config{}
+	if err := env.Parse(&cfg); err != nil {
+		log.Printf("%+v\n", err)
+	}
+
+	return &cfg
 }
 
 func healthCheckHandler(c *gin.Context) {

@@ -3,6 +3,7 @@ package service
 import (
 	"github.com/mitchellh/mapstructure"
 	"github.com/neo4j/neo4j-go-driver/v4/neo4j"
+	"github.com/openline-ai/openline-customer-os/customer-os-api/config"
 	"github.com/openline-ai/openline-customer-os/customer-os-api/entity"
 )
 
@@ -13,16 +14,18 @@ type ContactService interface {
 }
 
 type neo4jContactService struct {
+	cfg *config.Config
 }
 
-func NewContactService() ContactService {
-	return &neo4jContactService{}
+func NewContactService(cfg *config.Config) ContactService {
+	return &neo4jContactService{
+		cfg: cfg,
+	}
 }
 
 func (cs *neo4jContactService) Create(aContact entity.ContactNode) (entity.ContactNode, error) {
 	contact := entity.ContactNode{}
-	driver, err := neo4j.NewDriver("neo4j://neo4j-customer-os.openline-development.svc.cluster.local:7687",
-		neo4j.BasicAuth("neo4j", "StrongLocalPa$$", ""))
+	driver, err := neo4j.NewDriver(cs.cfg.Neo4j.Target, neo4j.BasicAuth(cs.cfg.Neo4j.User, cs.cfg.Neo4j.Pwd, cs.cfg.Neo4j.Realm))
 	if err != nil {
 		return contact, err
 	}
@@ -72,8 +75,7 @@ func (cs *neo4jContactService) Create(aContact entity.ContactNode) (entity.Conta
 
 func (cs *neo4jContactService) FindAll() ([]entity.ContactNode, error) {
 
-	driver, err := neo4j.NewDriver("neo4j://neo4j-customer-os.openline-development.svc.cluster.local:7687",
-		neo4j.BasicAuth("neo4j", "StrongLocalPa$$", ""))
+	driver, err := neo4j.NewDriver(cs.cfg.Neo4j.Target, neo4j.BasicAuth(cs.cfg.Neo4j.User, cs.cfg.Neo4j.Pwd, cs.cfg.Neo4j.Realm))
 	// Open a new Session
 	session := driver.NewSession(neo4j.SessionConfig{})
 

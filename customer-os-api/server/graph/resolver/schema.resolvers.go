@@ -10,7 +10,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/customer-os-api/graph/generated"
 	"github.com/openline-ai/openline-customer-os/customer-os-api/graph/model"
-	"github.com/openline-ai/openline-customer-os/customer-os-api/service"
 )
 
 // CreateContact is the resolver for the createContact field.
@@ -22,7 +21,7 @@ func (r *mutationResolver) CreateContact(ctx context.Context, request model.Cont
 		ContactType: *request.ContactType,
 	}
 
-	contactNodeCreated, _ := service.NewContactService().Create(contactNode)
+	contactNodeCreated, _ := r.ServiceContainer.ContactService.Create(contactNode)
 
 	contactCreatedResponse := model.Contact{
 		ID:          contactNodeCreated.Id,
@@ -41,7 +40,7 @@ func (r *mutationResolver) UpdateContact(ctx context.Context, id string, request
 
 // Contacts is the resolver for the contacts field.
 func (r *queryResolver) Contacts(ctx context.Context) ([]*model.Contact, error) {
-	contacts, _ := service.NewContactService().FindAll()
+	contacts, _ := r.ServiceContainer.ContactService.FindAll()
 	return contactsDtoFromNodes(contacts), nil
 }
 
