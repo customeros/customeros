@@ -16,5 +16,5 @@ func NewContact(id string, firstName string, lastName string, label string, cont
 }
 
 func (contact ContactNode) ToString() string {
-	return fmt.Sprintf("id: %s\nfirstName: %s", contact.Id, contact.FirstName)
+	return fmt.Sprintf("id: %s\nfirstName: %s\nlastName: %s", contact.Id, contact.FirstName, contact.LastName)
 }
