@@ -5,6 +5,7 @@ package resolver
 
 import (
 	"context"
+	"github.com/99designs/gqlgen/graphql"
 
 	"github.com.openline-ai.customer-os-analytics-api/dataloader"
 	"github.com.openline-ai.customer-os-analytics-api/graph/generated"
@@ -40,6 +41,7 @@ func (r *applicationResolver) Sessions(ctx context.Context, obj *model.Applicati
 func (r *queryResolver) Application(ctx context.Context, id *string) (*model.Application, error) {
 	operationResult := r.RepositoryContainer.AppInfoRepo.FindOneById(ctx, *id)
 	if operationResult.Result == nil {
+		graphql.AddErrorf(ctx, "Application with id %s not found", *id)
 		return nil, nil
 	}
 

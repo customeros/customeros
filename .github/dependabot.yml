@@ -6,7 +6,6 @@ updates:
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
-      # Check for updates to GitHub Actions every week
       interval: "weekly"
       day: "sunday"
     open-pull-requests-limit: 5
@@ -21,6 +20,20 @@ updates:
       - "gomod"
       - "dependencies"
       - "analytics-api"
+    pull-request-branch-name:
+      separator: "-"
+    rebase-strategy: "auto"
+
+  - package-ecosystem: "gomod"
+    directory: "/customer-os-api"
+    schedule:
+      interval: "daily"
+      time: "07:00"
+    open-pull-requests-limit: 3
+    labels:
+      - "gomod"
+      - "dependencies"
+      - "customer-os-api"
     pull-request-branch-name:
       separator: "-"
     rebase-strategy: "auto"
