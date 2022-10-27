@@ -63,7 +63,7 @@ func (s *contactService) Create(newContact *entity.ContactNode) (*entity.Contact
 }
 
 func (s *contactService) FindContactById(id string) (*entity.ContactNode, error) {
-	session := (*s.driver).NewSession(neo4j.SessionConfig{AccessMode: neo4j.AccessModeWrite})
+	session := (*s.driver).NewSession(neo4j.SessionConfig{AccessMode: neo4j.AccessModeRead})
 	defer session.Close()
 
 	queryResult, err := session.ReadTransaction(func(tx neo4j.Transaction) (interface{}, error) {
@@ -92,7 +92,7 @@ func (s *contactService) FindContactById(id string) (*entity.ContactNode, error)
 }
 
 func (s *contactService) FindAll() (*entity.ContactNodes, error) {
-	session := (*s.driver).NewSession(neo4j.SessionConfig{AccessMode: neo4j.AccessModeWrite})
+	session := (*s.driver).NewSession(neo4j.SessionConfig{AccessMode: neo4j.AccessModeRead})
 	defer session.Close()
 
 	queryResult, err := session.ReadTransaction(func(tx neo4j.Transaction) (interface{}, error) {

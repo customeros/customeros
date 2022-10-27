@@ -5,13 +5,15 @@ import (
 )
 
 type ServiceContainer struct {
-	ContactService      ContactService
-	ContactGroupService ContactGroupService
+	ContactService                             ContactService
+	ContactGroupService                        ContactGroupService
+	ContactWithContactGroupRelationshipService ContactWithContactGroupRelationshipService
 }
 
 func InitServices(driver *neo4j.Driver) *ServiceContainer {
 	return &ServiceContainer{
 		ContactService:      NewContactService(driver),
 		ContactGroupService: NewContactGroupService(driver),
+		ContactWithContactGroupRelationshipService: NewContactWithContactGroupRelationshipService(driver),
 	}
 }
