@@ -4,9 +4,9 @@ type Mutation {
     removeContactFromGroup(contactId : ID!, groupId: ID!): BooleanResult!
 
     createContactGroup(input: ContactGroupInput!): ContactGroup!
+    deleteContactGroupAndUnlinkAllContacts(id :ID!): BooleanResult!
     #  TODO implement
     #  updateContact(id: ID!, request: ContactInput!): Contact!
-    #  deleteContactGroupAndUnlinkAllContacts // delete group and unlink all contacts from the group. Contacts are not removed
 }
 
 

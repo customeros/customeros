@@ -12,6 +12,7 @@ import (
 type ContactGroupService interface {
 	Create(contactGroup *entity.ContactGroupNode) (*entity.ContactGroupNode, error)
 	FindAll() (*entity.ContactGroupNodes, error)
+	Delete(id string) (bool, error)
 }
 
 type contactGroupService struct {
@@ -79,4 +80,28 @@ func (s *contactGroupService) FindAll() (*entity.ContactGroupNodes, error) {
 	}
 
 	return &contactGroups, nil
+}
+
+func (s *contactGroupService) Delete(id string) (bool, error) {
+	session := (*s.driver).NewSession(neo4j.SessionConfig{AccessMode: neo4j.AccessModeWrite})
+	defer session.Close()
+
+	queryResult, err := session.WriteTransaction(func(tx neo4j.Transaction) (interface{}, error) {
+		_, err := tx.Run(`
+			MATCH (c:Contact), (g:ContactGroup {id:$groupId})
+			MATCH (c)-[r1:BELONGS_TO]->(g)
+			MATCH (g)-[r2:CONTAINS]->(c)
+            DELETE r1, r2, g
+			`,
+			map[string]interface{}{
+				"groupId": id,
+			})
+
+		return true, err
+	})
+	if err != nil {
+		return false, err
+	}
+
+	return queryResult.(bool), nil
 }

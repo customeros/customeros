@@ -5,6 +5,7 @@ package resolver
 
 import (
 	"context"
+
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/openline-ai/openline-customer-os/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/customer-os-api/graph/generated"
@@ -28,9 +29,7 @@ func (r *mutationResolver) AddContactToGroup(ctx context.Context, contactID stri
 	result, err := r.ServiceContainer.ContactWithContactGroupRelationshipService.AddContactToGroup(contactID, groupID)
 	if err != nil {
 		graphql.AddErrorf(ctx, "Could not add contact to group")
-		return &model.BooleanResult{
-			Result: false,
-		}, err
+		return nil, err
 	}
 	return &model.BooleanResult{
 		Result: result,
@@ -42,9 +41,7 @@ func (r *mutationResolver) RemoveContactFromGroup(ctx context.Context, contactID
 	result, err := r.ServiceContainer.ContactWithContactGroupRelationshipService.RemoveContactFromGroup(contactID, groupID)
 	if err != nil {
 		graphql.AddErrorf(ctx, "Could not remove contact from group")
-		return &model.BooleanResult{
-			Result: false,
-		}, err
+		return nil, err
 	}
 	return &model.BooleanResult{
 		Result: result,
@@ -62,6 +59,18 @@ func (r *mutationResolver) CreateContactGroup(ctx context.Context, input model.C
 	}
 
 	return mapper.MapEntityToContactGroup(contactGroupNodeCreated), nil
+}
+
+// DeleteContactGroupAndUnlinkAllContacts is the resolver for the deleteContactGroupAndUnlinkAllContacts field.
+func (r *mutationResolver) DeleteContactGroupAndUnlinkAllContacts(ctx context.Context, id string) (*model.BooleanResult, error) {
+	result, err := r.ServiceContainer.ContactGroupService.Delete(id)
+	if err != nil {
+		graphql.AddErrorf(ctx, "Could not delete contact group %s", id)
+		return nil, err
+	}
+	return &model.BooleanResult{
+		Result: result,
+	}, nil
 }
 
 // Mutation returns generated.MutationResolver implementation.
