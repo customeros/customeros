@@ -1,4 +1,4 @@
-package graph
+package resolver
 
 // This file will be automatically regenerated based on the schema, any resolver implementations
 // will be copied through when generating and any unknown code will be moved to the end.
@@ -6,16 +6,15 @@ package graph
 import (
 	"context"
 	"fmt"
-	"github.com/openline-ai/openline-customer-os/customer-os-api/entity"
-	"github.com/openline-ai/openline-customer-os/customer-os-api/service"
 
+	"github.com/openline-ai/openline-customer-os/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/customer-os-api/graph/generated"
 	"github.com/openline-ai/openline-customer-os/customer-os-api/graph/model"
+	"github.com/openline-ai/openline-customer-os/customer-os-api/service"
 )
 
 // CreateContact is the resolver for the createContact field.
 func (r *mutationResolver) CreateContact(ctx context.Context, request model.ContactRequest) (*model.Contact, error) {
-
 	contactNode := entity.ContactNode{
 		FirstName:   *request.FirstName,
 		LastName:    *request.LastName,
@@ -46,21 +45,6 @@ func (r *queryResolver) Contacts(ctx context.Context) ([]*model.Contact, error) 
 	return contactsDtoFromNodes(contacts), nil
 }
 
-func contactsDtoFromNodes(nodes []entity.ContactNode) []*model.Contact {
-	contacts := make([]*model.Contact, 0, len(nodes))
-	for _, node := range nodes {
-		contact := model.Contact{
-			ID:          node.Id,
-			FirstName:   &node.FirstName,
-			LastName:    &node.LastName,
-			Label:       &node.Label,
-			ContactType: &node.ContactType,
-		}
-		contacts = append(contacts, &contact)
-	}
-	return contacts
-}
-
 // Mutation returns generated.MutationResolver implementation.
 func (r *Resolver) Mutation() generated.MutationResolver { return &mutationResolver{r} }
 
@@ -76,4 +60,19 @@ type queryResolver struct{ *Resolver }
 //   - When renaming or deleting a resolver the old code will be put in here. You can safely delete
 //     it when you're done.
 //   - You have helper methods in this file. Move them out to keep these resolver files clean.
+func contactsDtoFromNodes(nodes []entity.ContactNode) []*model.Contact {
+	contacts := make([]*model.Contact, 0, len(nodes))
+	for _, node := range nodes {
+		contact := model.Contact{
+			ID:          node.Id,
+			FirstName:   &node.FirstName,
+			LastName:    &node.LastName,
+			Label:       &node.Label,
+			ContactType: &node.ContactType,
+		}
+		contacts = append(contacts, &contact)
+	}
+	return contacts
+}
+
 var contacts []*model.Contact

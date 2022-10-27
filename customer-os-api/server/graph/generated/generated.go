@@ -220,7 +220,7 @@ func (ec *executionContext) introspectType(name string) (*introspection.Type, er
 }
 
 var sources = []*ast.Source{
-	{Name: "../schema.graphqls", Input: `"""
+	{Name: "../schemas/schema.graphqls", Input: `"""
 Contact - represents one person that can be contacted for a Customer. In B2C
 """
 type Contact {
