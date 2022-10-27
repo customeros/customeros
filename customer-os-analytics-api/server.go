@@ -102,6 +102,7 @@ func main() {
 	r := gin.Default()
 	r.POST("/query", graphqlHandler(db))
 	r.GET("/", playgroundHandler())
+	r.GET("/health", healthCheckHandler)
 
 	port := os.Getenv("PORT")
 	if port == "" {
@@ -121,4 +122,8 @@ func loadConfiguration() *Config {
 	}
 
 	return &cfg
+}
+
+func healthCheckHandler(c *gin.Context) {
+	c.JSON(200, gin.H{"status": "OK"})
 }
