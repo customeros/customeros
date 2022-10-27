@@ -16,6 +16,15 @@ type Contact struct {
 	ContactType *string   `json:"contactType"`
 }
 
+type ContactGroup struct {
+	ID   string `json:"id"`
+	Name string `json:"name"`
+}
+
+type ContactGroupInput struct {
+	Name string `json:"name"`
+}
+
 type ContactInput struct {
 	FirstName   string  `json:"firstName"`
 	LastName    string  `json:"lastName"`

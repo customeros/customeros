@@ -17,7 +17,7 @@ func (r *queryResolver) Contact(ctx context.Context, id string) (*model.Contact,
 	contactEntity, err := r.ServiceContainer.ContactService.FindContactById(id)
 	if err != nil || contactEntity == nil {
 		graphql.AddErrorf(ctx, "Contact with id %s not found", id)
-		return nil, nil
+		return nil, err
 	}
 	return mapper.MapEntityToContact(contactEntity), nil
 }
@@ -26,6 +26,12 @@ func (r *queryResolver) Contact(ctx context.Context, id string) (*model.Contact,
 func (r *queryResolver) Contacts(ctx context.Context) ([]*model.Contact, error) {
 	contactEntities, err := r.ServiceContainer.ContactService.FindAll()
 	return mapper.MapEntitiesToContacts(contactEntities), err
+}
+
+// ContactGroups is the resolver for the contactGroups field.
+func (r *queryResolver) ContactGroups(ctx context.Context) ([]*model.ContactGroup, error) {
+	contactGroupEntities, err := r.ServiceContainer.ContactGroupService.FindAll()
+	return mapper.MapEntitiesToContactGroups(contactGroupEntities), err
 }
 
 // Query returns generated.QueryResolver implementation.

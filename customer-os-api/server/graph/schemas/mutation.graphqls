@@ -1,7 +1,12 @@
 type Mutation {
   createContact(input: ContactInput!): Contact!
-#  alexb implement me
+
+  createContactGroup(name: String!): ContactGroup!
+#  TODO implement
 #  updateContact(id: ID!, request: ContactInput!): Contact!
+#  deleteContactGroupAndUnlinkAllContacts // delete group and unlink all contacts from the group. Contacts are not removed
+#  addContactToGroup
+#  removeContactFromGroup
 }
 
 

@@ -15,17 +15,17 @@ type ContactService interface {
 	FindAll() (*entity.ContactNodes, error)
 }
 
-type neo4jContactService struct {
+type contactService struct {
 	driver *neo4j.Driver
 }
 
 func NewContactService(driver *neo4j.Driver) ContactService {
-	return &neo4jContactService{
+	return &contactService{
 		driver: driver,
 	}
 }
 
-func (s *neo4jContactService) Create(newContact *entity.ContactNode) (*entity.ContactNode, error) {
+func (s *contactService) Create(newContact *entity.ContactNode) (*entity.ContactNode, error) {
 	session := (*s.driver).NewSession(neo4j.SessionConfig{AccessMode: neo4j.AccessModeWrite})
 	defer session.Close()
 
@@ -62,7 +62,7 @@ func (s *neo4jContactService) Create(newContact *entity.ContactNode) (*entity.Co
 	return &contact, nil
 }
 
-func (s *neo4jContactService) FindContactById(id string) (*entity.ContactNode, error) {
+func (s *contactService) FindContactById(id string) (*entity.ContactNode, error) {
 	session := (*s.driver).NewSession(neo4j.SessionConfig{AccessMode: neo4j.AccessModeWrite})
 	defer session.Close()
 
@@ -91,7 +91,7 @@ func (s *neo4jContactService) FindContactById(id string) (*entity.ContactNode, e
 	return &contact, nil
 }
 
-func (s *neo4jContactService) FindAll() (*entity.ContactNodes, error) {
+func (s *contactService) FindAll() (*entity.ContactNodes, error) {
 	session := (*s.driver).NewSession(neo4j.SessionConfig{AccessMode: neo4j.AccessModeWrite})
 	defer session.Close()
 
