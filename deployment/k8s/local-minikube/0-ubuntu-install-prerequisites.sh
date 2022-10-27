@@ -12,5 +12,5 @@ sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-compose-plu
 sudo usermod -aG docker $(whoami)
 wget -O /tmp/minikube_latest.deb https://storage.googleapis.com/minikube/releases/latest/minikube_latest_amd64.deb
 sudo apt install -y /tmp/minikube_latest.deb
-curl -O /tmp/kubectl "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+curl -O /tmp/kubectl "https://dl.k8s.io/release/v1.25.3/bin/linux/amd64/kubectl"
 sudo install -o root -g root -m 0755 /tmp/kubectl /usr/local/bin/kubectl
