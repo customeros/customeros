@@ -71,8 +71,43 @@ func (cs *neo4jContactService) Create(aContact entity.ContactNode) (entity.Conta
 }
 
 func (cs *neo4jContactService) FindAll() ([]entity.ContactNode, error) {
-	//TODO implement me
-	panic("implement me")
+
+	driver, err := neo4j.NewDriver("neo4j://neo4j-customer-os.openline-development.svc.cluster.local:7687",
+		neo4j.BasicAuth("neo4j", "StrongLocalPa$$", ""))
+	// Open a new Session
+	session := driver.NewSession(neo4j.SessionConfig{})
+
+	// Close the session once this function has completed
+	defer driver.Close()
+
+	// Execute a query in a new Read Transaction
+	results, err := session.ReadTransaction(func(tx neo4j.Transaction) (interface{}, error) {
+		// Get an array of IDs for the User's favorite movies
+
+		// Retrieve a list of movies
+
+		result, err := tx.Run("MATCH (c:Contact) RETURN c { .* } AS contact", map[string]interface{}{})
+		if err != nil {
+			return nil, err
+		}
+
+		// Get a list of Movies from the Result
+		records, err := result.Collect()
+		if err != nil {
+			return nil, err
+		}
+		var results []map[string]interface{}
+		for _, record := range records {
+			person, _ := record.Get("contact")
+			results = append(results, person.(map[string]interface{}))
+		}
+		return results, nil
+	})
+
+	if err != nil {
+		return nil, err
+	}
+	return results.([]entity.ContactNode), nil
 }
 
 func (n neo4jContactService) FindAllByName(name string) ([]entity.ContactNode, error) {

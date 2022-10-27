@@ -42,7 +42,23 @@ func (r *mutationResolver) UpdateContact(ctx context.Context, id string, request
 
 // Contacts is the resolver for the contacts field.
 func (r *queryResolver) Contacts(ctx context.Context) ([]*model.Contact, error) {
-	return contacts[0:len(contacts)], nil
+	contacts, _ := service.NewContactService().FindAll()
+	return contactsDtoFromNodes(contacts), nil
+}
+
+func contactsDtoFromNodes(nodes []entity.ContactNode) []*model.Contact {
+	contacts := make([]*model.Contact, 0, len(nodes))
+	for _, node := range nodes {
+		contact := model.Contact{
+			ID:          node.Id,
+			FirstName:   &node.FirstName,
+			LastName:    &node.LastName,
+			Label:       &node.Label,
+			ContactType: &node.ContactType,
+		}
+		contacts = append(contacts, &contact)
+	}
+	return contacts
 }
 
 // Mutation returns generated.MutationResolver implementation.
