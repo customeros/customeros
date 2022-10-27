@@ -1,0 +1,30 @@
+query {
+  application(id: "1") {
+    sessions(timeFilter: {timePeriod: ALL_TIME}) {
+      content {
+        id
+        country
+        city
+        region
+        referrerSource
+        utmTerm
+        utmMedium
+        utmSource
+        utmContent
+        utmNetwork
+        utmCampaign
+        deviceName
+        deviceBrand
+        deviceClass
+        agentName
+        agentVersion
+        operatingSystem
+        osVersionMajor
+        osVersionMinor
+      	firstPagePath
+        lastPagePath
+        engagedTime
+      }
+    }
+  }
+}

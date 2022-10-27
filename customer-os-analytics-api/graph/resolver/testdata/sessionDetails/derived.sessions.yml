@@ -1,0 +1,27 @@
+- domain_sessionid: session-1
+  app_id: public_app
+  name_tracker: public_app_tracker
+  tenant: openline
+  geo_country: Some Country
+  geo_city: The City
+  geo_region_name: Region
+  refr_source: Google
+  mkt_campaign: utm campaign
+  mkt_content: utm content
+  mkt_medium: utm medium
+  mkt_source: utm source
+  mkt_network: utm network
+  mkt_term: utm term
+  device_brand: Apple
+  device_name: Iphone
+  device_class: Mobile
+  agent_name: Chrome
+  agent_version_major: "106"
+  os_family: Mac
+  os_major: "10"
+  os_minor: "15"
+  first_page_urlpath: /first/page
+  last_page_urlpath: /last/page
+  start_tstamp: 2022-01-01 00:00:00
+  end_tstamp: 2022-01-01 01:00:00
+  engaged_time_in_s: 1000

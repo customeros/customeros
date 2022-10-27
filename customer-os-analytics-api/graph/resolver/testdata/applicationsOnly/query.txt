@@ -1,0 +1,8 @@
+{
+  applications {
+    id
+    name
+    trackerName
+    platform
+  }
+}
