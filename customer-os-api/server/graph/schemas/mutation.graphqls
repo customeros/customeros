@@ -1,6 +1,7 @@
 type Mutation {
   createContact(input: ContactInput!): Contact!
-#  updateContact(id: ID!, request: ContactRequest!): Contact!
+#  alexb implement me
+#  updateContact(id: ID!, request: ContactInput!): Contact!
 }
 
 

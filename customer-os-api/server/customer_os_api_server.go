@@ -1,6 +1,8 @@
 package main
 
 import (
+	"context"
+	"github.com/99designs/gqlgen/graphql"
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/playground"
 	"github.com/caarlos0/env/v6"
@@ -12,6 +14,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/customer-os-api/graph/generated"
 	"github.com/openline-ai/openline-customer-os/customer-os-api/graph/resolver"
 	"github.com/openline-ai/openline-customer-os/customer-os-api/service"
+	"github.com/vektah/gqlparser/v2/gqlerror"
 	"log"
 )
 
@@ -22,10 +25,19 @@ func graphqlHandler(driver neo4j.Driver) gin.HandlerFunc {
 	// instantiate graph resolver
 	graphResolver := resolver.NewResolver(serviceContainer)
 
-	h := handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: graphResolver}))
+	srv := handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: graphResolver}))
+
+	srv.SetRecoverFunc(func(ctx context.Context, err interface{}) error {
+		return gqlerror.Errorf("Internal server error!")
+	})
+	srv.SetErrorPresenter(func(ctx context.Context, e error) *gqlerror.Error {
+		err := graphql.DefaultErrorPresenter(ctx, e)
+		// Error hook place, Returned error can be customized. Check https://gqlgen.com/reference/errors/
+		return err
+	})
 
 	return func(c *gin.Context) {
-		h.ServeHTTP(c.Writer, c.Request)
+		srv.ServeHTTP(c.Writer, c.Request)
 	}
 }
 

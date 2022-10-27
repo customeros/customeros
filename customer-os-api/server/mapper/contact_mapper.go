@@ -14,7 +14,7 @@ func MapContactInputToEntity(input model.ContactInput) *entity.ContactNode {
 	}
 }
 
-func MapEntityToContact(contact entity.ContactNode) *model.Contact {
+func MapEntityToContact(contact *entity.ContactNode) *model.Contact {
 	return &model.Contact{
 		ID:          contact.Id,
 		FirstName:   contact.FirstName,

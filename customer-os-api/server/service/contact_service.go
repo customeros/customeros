@@ -3,13 +3,15 @@ package service
 import (
 	"github.com/mitchellh/mapstructure"
 	"github.com/neo4j/neo4j-go-driver/v4/neo4j"
+	"github.com/neo4j/neo4j-go-driver/v4/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/customer-os-api/entity"
+	"github.com/openline-ai/openline-customer-os/customer-os-api/utils"
 )
 
 type ContactService interface {
-	Create(contact *entity.ContactNode) (entity.ContactNode, error)
+	Create(contact *entity.ContactNode) (*entity.ContactNode, error)
 	FindAll() ([]entity.ContactNode, error)
-	FindAllByName(name string) ([]entity.ContactNode, error)
+	FindContactById(id string) (*entity.ContactNode, error)
 }
 
 type neo4jContactService struct {
@@ -22,9 +24,7 @@ func NewContactService(driver *neo4j.Driver) ContactService {
 	}
 }
 
-func (s *neo4jContactService) Create(newContact *entity.ContactNode) (entity.ContactNode, error) {
-	contact := entity.ContactNode{}
-
+func (s *neo4jContactService) Create(newContact *entity.ContactNode) (*entity.ContactNode, error) {
 	session := (*s.driver).NewSession(neo4j.SessionConfig{AccessMode: neo4j.AccessModeWrite})
 	defer session.Close()
 
@@ -52,12 +52,42 @@ func (s *neo4jContactService) Create(newContact *entity.ContactNode) (entity.Con
 		return record.Values[0], nil
 	})
 	if err != nil {
-		return contact, err
+		return nil, err
 	}
-
+	contact := entity.ContactNode{}
 	mapstructure.Decode(result.(map[string]interface{}), &contact)
 
-	return contact, nil
+	return &contact, nil
+}
+
+func (s *neo4jContactService) FindContactById(id string) (*entity.ContactNode, error) {
+	session := (*s.driver).NewSession(neo4j.SessionConfig{AccessMode: neo4j.AccessModeWrite})
+	defer session.Close()
+
+	result, err := session.ReadTransaction(func(tx neo4j.Transaction) (interface{}, error) {
+		result, err := tx.Run(`
+			MATCH (c:Contact) WHERE c.id=$id RETURN c`,
+			map[string]interface{}{
+				"id": id,
+			})
+
+		record, err := result.Single()
+		if err != nil {
+			return nil, err
+		}
+		return record.Values[0], nil
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	contact := entity.ContactNode{}
+	err = mapstructure.Decode(utils.GetPropsFromNode(result.(dbtype.Node)), &contact)
+	if err != nil {
+		return nil, err
+	}
+
+	return &contact, nil
 }
 
 func (cs *neo4jContactService) FindAll() ([]entity.ContactNode, error) {
@@ -96,9 +126,4 @@ func (cs *neo4jContactService) FindAll() ([]entity.ContactNode, error) {
 		return nil, err
 	}
 	return results.([]entity.ContactNode), nil
-}
-
-func (n *neo4jContactService) FindAllByName(name string) ([]entity.ContactNode, error) {
-	//TODO implement me
-	panic("implement me")
 }

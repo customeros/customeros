@@ -17,7 +17,7 @@ func (r *mutationResolver) CreateContact(ctx context.Context, input model.Contac
 	contactNodeCreated, err := r.ServiceContainer.ContactService.Create(mapper.MapContactInputToEntity(input))
 	if err != nil {
 		graphql.AddErrorf(ctx, "Failed to create contact %s %s", input.FirstName, input.LastName)
-		return nil, nil
+		return nil, err
 	}
 
 	return mapper.MapEntityToContact(contactNodeCreated), nil

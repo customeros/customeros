@@ -1,3 +1,5 @@
 type Query {
+  contact(id: ID!) :Contact!
+  #  alexb implement me
   contacts: [Contact!]!
 }
