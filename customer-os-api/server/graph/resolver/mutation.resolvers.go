@@ -25,7 +25,7 @@ func (r *mutationResolver) CreateContact(ctx context.Context, input model.Contac
 
 // AddContactToGroup is the resolver for the addContactToGroup field.
 func (r *mutationResolver) AddContactToGroup(ctx context.Context, contactID string, groupID string) (*model.BooleanResult, error) {
-	bool, err := r.ServiceContainer.ContactWithContactGroupRelationshipService.AddContactToGroup(contactID, groupID)
+	result, err := r.ServiceContainer.ContactWithContactGroupRelationshipService.AddContactToGroup(contactID, groupID)
 	if err != nil {
 		graphql.AddErrorf(ctx, "Could not add contact to group")
 		return &model.BooleanResult{
@@ -33,7 +33,21 @@ func (r *mutationResolver) AddContactToGroup(ctx context.Context, contactID stri
 		}, err
 	}
 	return &model.BooleanResult{
-		Result: bool,
+		Result: result,
+	}, nil
+}
+
+// RemoveContactFromGroup is the resolver for the removeContactFromGroup field.
+func (r *mutationResolver) RemoveContactFromGroup(ctx context.Context, contactID string, groupID string) (*model.BooleanResult, error) {
+	result, err := r.ServiceContainer.ContactWithContactGroupRelationshipService.RemoveContactFromGroup(contactID, groupID)
+	if err != nil {
+		graphql.AddErrorf(ctx, "Could not remove contact from group")
+		return &model.BooleanResult{
+			Result: false,
+		}, err
+	}
+	return &model.BooleanResult{
+		Result: result,
 	}, nil
 }
 

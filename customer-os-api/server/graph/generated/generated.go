@@ -64,9 +64,10 @@ type ComplexityRoot struct {
 	}
 
 	Mutation struct {
-		AddContactToGroup  func(childComplexity int, contactID string, groupID string) int
-		CreateContact      func(childComplexity int, input model.ContactInput) int
-		CreateContactGroup func(childComplexity int, input model.ContactGroupInput) int
+		AddContactToGroup      func(childComplexity int, contactID string, groupID string) int
+		CreateContact          func(childComplexity int, input model.ContactInput) int
+		CreateContactGroup     func(childComplexity int, input model.ContactGroupInput) int
+		RemoveContactFromGroup func(childComplexity int, contactID string, groupID string) int
 	}
 
 	Query struct {
@@ -79,6 +80,7 @@ type ComplexityRoot struct {
 type MutationResolver interface {
 	CreateContact(ctx context.Context, input model.ContactInput) (*model.Contact, error)
 	AddContactToGroup(ctx context.Context, contactID string, groupID string) (*model.BooleanResult, error)
+	RemoveContactFromGroup(ctx context.Context, contactID string, groupID string) (*model.BooleanResult, error)
 	CreateContactGroup(ctx context.Context, input model.ContactGroupInput) (*model.ContactGroup, error)
 }
 type QueryResolver interface {
@@ -200,6 +202,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.CreateContactGroup(childComplexity, args["input"].(model.ContactGroupInput)), true
+
+	case "Mutation.removeContactFromGroup":
+		if e.complexity.Mutation.RemoveContactFromGroup == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_removeContactFromGroup_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.RemoveContactFromGroup(childComplexity, args["contactId"].(string), args["groupId"].(string)), true
 
 	case "Query.contact":
 		if e.complexity.Query.Contact == nil {
@@ -334,12 +348,12 @@ directive @goField(forceResolver: Boolean, name: String) on FIELD_DEFINITION | I
 	{Name: "../schemas/mutation.graphqls", Input: `type Mutation {
     createContact(input: ContactInput!): Contact!
     addContactToGroup(contactId : ID!, groupId: ID!): BooleanResult!
+    removeContactFromGroup(contactId : ID!, groupId: ID!): BooleanResult!
 
     createContactGroup(input: ContactGroupInput!): ContactGroup!
     #  TODO implement
     #  updateContact(id: ID!, request: ContactInput!): Contact!
     #  deleteContactGroupAndUnlinkAllContacts // delete group and unlink all contacts from the group. Contacts are not removed
-    #  removeContactFromGroup
 }
 
 
@@ -414,6 +428,30 @@ func (ec *executionContext) field_Mutation_createContact_args(ctx context.Contex
 		}
 	}
 	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_removeContactFromGroup_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["contactId"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("contactId"))
+		arg0, err = ec.unmarshalNID2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["contactId"] = arg0
+	var arg1 string
+	if tmp, ok := rawArgs["groupId"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("groupId"))
+		arg1, err = ec.unmarshalNID2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["groupId"] = arg1
 	return args, nil
 }
 
@@ -997,6 +1035,65 @@ func (ec *executionContext) fieldContext_Mutation_addContactToGroup(ctx context.
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Mutation_addContactToGroup_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_removeContactFromGroup(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_removeContactFromGroup(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().RemoveContactFromGroup(rctx, fc.Args["contactId"].(string), fc.Args["groupId"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.BooleanResult)
+	fc.Result = res
+	return ec.marshalNBooleanResult2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐBooleanResult(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_removeContactFromGroup(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "result":
+				return ec.fieldContext_BooleanResult_result(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type BooleanResult", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_removeContactFromGroup_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return
 	}
@@ -3383,6 +3480,15 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_addContactToGroup(ctx, field)
+			})
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "removeContactFromGroup":
+
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_removeContactFromGroup(ctx, field)
 			})
 
 			if out.Values[i] == graphql.Null {
