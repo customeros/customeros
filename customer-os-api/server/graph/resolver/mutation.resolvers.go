@@ -5,7 +5,6 @@ package resolver
 
 import (
 	"context"
-
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/openline-ai/openline-customer-os/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/customer-os-api/graph/generated"
@@ -24,13 +23,27 @@ func (r *mutationResolver) CreateContact(ctx context.Context, input model.Contac
 	return mapper.MapEntityToContact(contactNodeCreated), nil
 }
 
+// AddContactToGroup is the resolver for the addContactToGroup field.
+func (r *mutationResolver) AddContactToGroup(ctx context.Context, contactID string, groupID string) (*model.BooleanResult, error) {
+	bool, err := r.ServiceContainer.ContactWithContactGroupRelationshipService.AddContactToGroup(contactID, groupID)
+	if err != nil {
+		graphql.AddErrorf(ctx, "Could not add contact to group")
+		return &model.BooleanResult{
+			Result: false,
+		}, err
+	}
+	return &model.BooleanResult{
+		Result: bool,
+	}, nil
+}
+
 // CreateContactGroup is the resolver for the createContactGroup field.
-func (r *mutationResolver) CreateContactGroup(ctx context.Context, name string) (*model.ContactGroup, error) {
+func (r *mutationResolver) CreateContactGroup(ctx context.Context, input model.ContactGroupInput) (*model.ContactGroup, error) {
 	contactGroupNodeCreated, err := r.ServiceContainer.ContactGroupService.Create(&entity.ContactGroupNode{
-		Name: name,
+		Name: input.Name,
 	})
 	if err != nil {
-		graphql.AddErrorf(ctx, "Failed to create contact group %s", name)
+		graphql.AddErrorf(ctx, "Failed to create contact group %s", input.Name)
 		return nil, err
 	}
 

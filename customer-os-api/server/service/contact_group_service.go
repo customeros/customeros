@@ -55,7 +55,7 @@ func (s *contactGroupService) Create(newContactGroup *entity.ContactGroupNode) (
 }
 
 func (s *contactGroupService) FindAll() (*entity.ContactGroupNodes, error) {
-	session := (*s.driver).NewSession(neo4j.SessionConfig{AccessMode: neo4j.AccessModeWrite})
+	session := (*s.driver).NewSession(neo4j.SessionConfig{AccessMode: neo4j.AccessModeRead})
 	defer session.Close()
 
 	queryResult, err := session.ReadTransaction(func(tx neo4j.Transaction) (interface{}, error) {

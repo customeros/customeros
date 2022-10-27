@@ -1,12 +1,12 @@
 type Mutation {
-  createContact(input: ContactInput!): Contact!
+    createContact(input: ContactInput!): Contact!
+    addContactToGroup(contactId : ID!, groupId: ID!): BooleanResult!
 
-  createContactGroup(name: String!): ContactGroup!
-#  TODO implement
-#  updateContact(id: ID!, request: ContactInput!): Contact!
-#  deleteContactGroupAndUnlinkAllContacts // delete group and unlink all contacts from the group. Contacts are not removed
-#  addContactToGroup
-#  removeContactFromGroup
+    createContactGroup(input: ContactGroupInput!): ContactGroup!
+    #  TODO implement
+    #  updateContact(id: ID!, request: ContactInput!): Contact!
+    #  deleteContactGroupAndUnlinkAllContacts // delete group and unlink all contacts from the group. Contacts are not removed
+    #  removeContactFromGroup
 }
 
 

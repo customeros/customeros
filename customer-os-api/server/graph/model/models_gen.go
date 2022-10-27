@@ -6,6 +6,10 @@ import (
 	"time"
 )
 
+type BooleanResult struct {
+	Result bool `json:"result"`
+}
+
 // Contact - represents one person that can be contacted for a Customer. In B2C
 type Contact struct {
 	ID          string    `json:"id"`
