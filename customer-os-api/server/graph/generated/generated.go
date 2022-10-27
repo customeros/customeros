@@ -249,9 +249,7 @@ input ContactInput {
 
 `, BuiltIn: false},
 	{Name: "../schemas/query.graphqls", Input: `type Query {
-#  alexb implement me
   contact(id: ID!) :Contact!
-  #  alexb implement me
   contacts: [Contact!]!
 }`, BuiltIn: false},
 }

@@ -5,11 +5,11 @@ package resolver
 
 import (
 	"context"
-	"github.com/99designs/gqlgen/graphql"
-	"github.com/openline-ai/openline-customer-os/customer-os-api/mapper"
 
+	"github.com/99designs/gqlgen/graphql"
 	"github.com/openline-ai/openline-customer-os/customer-os-api/graph/generated"
 	"github.com/openline-ai/openline-customer-os/customer-os-api/graph/model"
+	"github.com/openline-ai/openline-customer-os/customer-os-api/mapper"
 )
 
 // Contact is the resolver for the contact field.
@@ -24,9 +24,8 @@ func (r *queryResolver) Contact(ctx context.Context, id string) (*model.Contact,
 
 // Contacts is the resolver for the contacts field.
 func (r *queryResolver) Contacts(ctx context.Context) ([]*model.Contact, error) {
-	//contacts, _ := r.ServiceContainer.ContactService.FindAll()
-	//return contactsDtoFromNodes(contacts), nil
-	return nil, nil
+	contactEntities, err := r.ServiceContainer.ContactService.FindAll()
+	return mapper.MapEntitiesToContacts(contactEntities), err
 }
 
 // Query returns generated.QueryResolver implementation.

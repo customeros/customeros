@@ -23,3 +23,11 @@ func MapEntityToContact(contact *entity.ContactNode) *model.Contact {
 		ContactType: &contact.ContactType,
 	}
 }
+
+func MapEntitiesToContacts(contactEntities *entity.ContactNodes) []*model.Contact {
+	var contacts []*model.Contact
+	for _, contactEntity := range *contactEntities {
+		contacts = append(contacts, MapEntityToContact(&contactEntity))
+	}
+	return contacts
+}

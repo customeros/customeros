@@ -3,6 +3,7 @@ package service
 import (
 	"github.com/mitchellh/mapstructure"
 	"github.com/neo4j/neo4j-go-driver/v4/neo4j"
+	"github.com/neo4j/neo4j-go-driver/v4/neo4j/db"
 	"github.com/neo4j/neo4j-go-driver/v4/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/customer-os-api/utils"
@@ -10,8 +11,8 @@ import (
 
 type ContactService interface {
 	Create(contact *entity.ContactNode) (*entity.ContactNode, error)
-	FindAll() ([]entity.ContactNode, error)
 	FindContactById(id string) (*entity.ContactNode, error)
+	FindAll() (*entity.ContactNodes, error)
 }
 
 type neo4jContactService struct {
@@ -28,7 +29,7 @@ func (s *neo4jContactService) Create(newContact *entity.ContactNode) (*entity.Co
 	session := (*s.driver).NewSession(neo4j.SessionConfig{AccessMode: neo4j.AccessModeWrite})
 	defer session.Close()
 
-	result, err := session.WriteTransaction(func(tx neo4j.Transaction) (interface{}, error) {
+	queryResult, err := session.WriteTransaction(func(tx neo4j.Transaction) (interface{}, error) {
 		result, err := tx.Run(`
 			CREATE (c:Contact {
 				  id: randomUUID(),
@@ -55,7 +56,7 @@ func (s *neo4jContactService) Create(newContact *entity.ContactNode) (*entity.Co
 		return nil, err
 	}
 	contact := entity.ContactNode{}
-	mapstructure.Decode(result.(map[string]interface{}), &contact)
+	mapstructure.Decode(queryResult.(map[string]interface{}), &contact)
 
 	return &contact, nil
 }
@@ -64,13 +65,12 @@ func (s *neo4jContactService) FindContactById(id string) (*entity.ContactNode, e
 	session := (*s.driver).NewSession(neo4j.SessionConfig{AccessMode: neo4j.AccessModeWrite})
 	defer session.Close()
 
-	result, err := session.ReadTransaction(func(tx neo4j.Transaction) (interface{}, error) {
+	queryResult, err := session.ReadTransaction(func(tx neo4j.Transaction) (interface{}, error) {
 		result, err := tx.Run(`
 			MATCH (c:Contact) WHERE c.id=$id RETURN c`,
 			map[string]interface{}{
 				"id": id,
 			})
-
 		record, err := result.Single()
 		if err != nil {
 			return nil, err
@@ -82,7 +82,7 @@ func (s *neo4jContactService) FindContactById(id string) (*entity.ContactNode, e
 	}
 
 	contact := entity.ContactNode{}
-	err = mapstructure.Decode(utils.GetPropsFromNode(result.(dbtype.Node)), &contact)
+	err = mapstructure.Decode(utils.GetPropsFromNode(queryResult.(dbtype.Node)), &contact)
 	if err != nil {
 		return nil, err
 	}
@@ -90,40 +90,29 @@ func (s *neo4jContactService) FindContactById(id string) (*entity.ContactNode, e
 	return &contact, nil
 }
 
-func (cs *neo4jContactService) FindAll() ([]entity.ContactNode, error) {
+func (s *neo4jContactService) FindAll() (*entity.ContactNodes, error) {
+	session := (*s.driver).NewSession(neo4j.SessionConfig{AccessMode: neo4j.AccessModeWrite})
+	defer session.Close()
 
-	// Open a new Session
-	session := (*cs.driver).NewSession(neo4j.SessionConfig{})
-
-	// Close the session once this function has completed
-	defer (*cs.driver).Close()
-
-	// Execute a query in a new Read Transaction
-	results, err := session.ReadTransaction(func(tx neo4j.Transaction) (interface{}, error) {
-		// Get an array of IDs for the User's favorite movies
-
-		// Retrieve a list of movies
-
-		result, err := tx.Run("MATCH (c:Contact) RETURN c { .* } AS contact", map[string]interface{}{})
-		if err != nil {
-			return nil, err
-		}
-
-		// Get a list of Movies from the Result
+	queryResult, err := session.ReadTransaction(func(tx neo4j.Transaction) (interface{}, error) {
+		result, err := tx.Run(`MATCH (c:Contact) RETURN c`, map[string]interface{}{})
 		records, err := result.Collect()
 		if err != nil {
 			return nil, err
 		}
-		var results []map[string]interface{}
-		for _, record := range records {
-			person, _ := record.Get("contact")
-			results = append(results, person.(map[string]interface{}))
-		}
-		return results, nil
+		return records, nil
 	})
-
 	if err != nil {
 		return nil, err
 	}
-	return results.([]entity.ContactNode), nil
+
+	contacts := entity.ContactNodes{}
+
+	for _, dbRecord := range queryResult.([]*db.Record) {
+		contact := entity.ContactNode{}
+		mapstructure.Decode(utils.GetPropsFromNode(dbRecord.Values[0].(dbtype.Node)), &contact)
+		contacts = append(contacts, contact)
+	}
+
+	return &contacts, nil
 }
