@@ -54,7 +54,7 @@ func main() {
 	cfg := loadConfiguration()
 	neo4jDriver, err := config.NewDriver(cfg)
 	if err != nil {
-		log.Fatalf("Could not establish connection with neo4j at: %v, error:", cfg.Neo4j.Target, err.Error())
+		log.Fatalf("Could not establish connection with neo4j at: %v, error: %v", cfg.Neo4j.Target, err.Error())
 	}
 	defer neo4jDriver.Close()
 
