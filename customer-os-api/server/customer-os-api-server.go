@@ -17,8 +17,6 @@ import (
 const customerOSApiPort = "1010"
 
 func graphqlHandler() gin.HandlerFunc {
-	// NewExecutableSchema and Config are in the generated.go file
-	// Resolver is in the resolver.go file
 	h := handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &resolver.Resolver{}}))
 
 	return func(c *gin.Context) {

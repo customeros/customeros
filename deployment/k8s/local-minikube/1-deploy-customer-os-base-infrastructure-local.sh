@@ -36,3 +36,5 @@ helm install --values "../configs/postgresql/postgresql-values.yaml" postgresql-
 wait
 
 helm install neo4j-customer-os neo4j/neo4j-standalone --set volumes.data.mode=defaultStorageClass -f ../configs/neo4j/neo4j-helm-values.yaml --namespace $NAMESPACE_NAME
+
+echo "Completed."
