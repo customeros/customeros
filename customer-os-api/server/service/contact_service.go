@@ -36,9 +36,10 @@ func (s *neo4jContactService) Create(newContact *entity.ContactNode) (*entity.Co
 				  firstName: $firstName,
 				  lastName: $lastName,
 				  label: $label,
-				  contactType: $contactType
+				  contactType: $contactType,
+                  createdAt :datetime({timezone: 'UTC'})
 			})
-			RETURN c { .id, .firstName, .lastName, .label, .contactType } as c`,
+			RETURN c`,
 			map[string]interface{}{
 				"firstName":   newContact.FirstName,
 				"lastName":    newContact.LastName,
@@ -56,7 +57,7 @@ func (s *neo4jContactService) Create(newContact *entity.ContactNode) (*entity.Co
 		return nil, err
 	}
 	contact := entity.ContactNode{}
-	mapstructure.Decode(queryResult.(map[string]interface{}), &contact)
+	mapstructure.Decode(utils.GetPropsFromNode(queryResult.(dbtype.Node)), &contact)
 
 	return &contact, nil
 }

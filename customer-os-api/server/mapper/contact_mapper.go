@@ -21,6 +21,7 @@ func MapEntityToContact(contact *entity.ContactNode) *model.Contact {
 		LastName:    contact.LastName,
 		Label:       &contact.Label,
 		ContactType: &contact.ContactType,
+		CreatedAt:   contact.CreatedAt,
 	}
 }
 
