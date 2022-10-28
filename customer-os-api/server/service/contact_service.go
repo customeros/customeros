@@ -36,6 +36,7 @@ func (s *contactService) Create(newContact *entity.ContactNode) (*entity.Contact
 				  firstName: $firstName,
 				  lastName: $lastName,
 				  label: $label,
+				  companyName: $companyName,
 				  contactType: $contactType,
                   createdAt :datetime({timezone: 'UTC'})
 			})
@@ -45,6 +46,7 @@ func (s *contactService) Create(newContact *entity.ContactNode) (*entity.Contact
 				"lastName":    newContact.LastName,
 				"label":       newContact.Label,
 				"contactType": newContact.ContactType,
+				"companyName": newContact.CompanyName,
 			})
 
 		record, err := result.Single()
