@@ -65,7 +65,9 @@ func (s *contactGroupService) FindAll(ctx context.Context) (*entity.ContactGroup
 	defer session.Close()
 
 	queryResult, err := session.ReadTransaction(func(tx neo4j.Transaction) (interface{}, error) {
-		result, err := tx.Run(`MATCH (g:ContactGroup) RETURN g`, map[string]interface{}{})
+		result, err := tx.Run(`MATCH (g:ContactGroup)--(:Tenant {name:$tenant}) RETURN g`, map[string]interface{}{
+			"tenant": common.GetContext(ctx).Tenant,
+		})
 		records, err := result.Collect()
 		if err != nil {
 			return nil, err
@@ -93,13 +95,14 @@ func (s *contactGroupService) Delete(ctx context.Context, id string) (bool, erro
 
 	queryResult, err := session.WriteTransaction(func(tx neo4j.Transaction) (interface{}, error) {
 		_, err := tx.Run(`
-			MATCH (c:Contact), (g:ContactGroup {id:$groupId})
+			MATCH (c:Contact), (g:ContactGroup {id:$groupId})-[r0:BELONGS_TO]->(:Tenant {name:$tenant})
 			OPTIONAL MATCH (c)-[r1:BELONGS_TO]->(g)
 			OPTIONAL MATCH (g)-[r2:CONTAINS]->(c)
-            DELETE r1, r2, g
+            DELETE r0, r1, r2, g
 			`,
 			map[string]interface{}{
 				"groupId": id,
+				"tenant":  common.GetContext(ctx).Tenant,
 			})
 
 		return true, err
@@ -116,8 +119,10 @@ func (s *contactGroupService) FindAllForContact(ctx context.Context, contact *mo
 	defer session.Close()
 
 	queryResult, err := session.ReadTransaction(func(tx neo4j.Transaction) (interface{}, error) {
-		result, err := tx.Run(`MATCH (g:ContactGroup)<--(c:Contact {id:$id}) RETURN g`,
-			map[string]interface{}{"id": contact.ID})
+		result, err := tx.Run(`MATCH (:Tenant {name:$tenant})<--(g:ContactGroup)<--(c:Contact {id:$id}) RETURN g`,
+			map[string]interface{}{
+				"id":     contact.ID,
+				"tenant": common.GetContext(ctx).Tenant})
 		records, err := result.Collect()
 		if err != nil {
 			return nil, err
