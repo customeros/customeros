@@ -10,6 +10,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 	"github.com/neo4j/neo4j-go-driver/v4/neo4j"
+	"github.com/openline-ai/openline-customer-os/customer-os-api/common"
 	"github.com/openline-ai/openline-customer-os/customer-os-api/config"
 	"github.com/openline-ai/openline-customer-os/customer-os-api/graph/generated"
 	"github.com/openline-ai/openline-customer-os/customer-os-api/graph/resolver"
@@ -36,8 +37,13 @@ func graphqlHandler(driver neo4j.Driver) gin.HandlerFunc {
 		return err
 	})
 
+	customCtx := &common.CustomContext{
+		Tenant: "openline", // TODO replace with tenant from authentication
+	}
+	h := common.CreateContext(customCtx, srv)
+
 	return func(c *gin.Context) {
-		srv.ServeHTTP(c.Writer, c.Request)
+		h.ServeHTTP(c.Writer, c.Request)
 	}
 }
 
