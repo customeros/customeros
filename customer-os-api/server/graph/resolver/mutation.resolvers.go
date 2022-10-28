@@ -50,7 +50,7 @@ func (r *mutationResolver) RemoveContactFromGroup(ctx context.Context, contactID
 
 // CreateContactGroup is the resolver for the createContactGroup field.
 func (r *mutationResolver) CreateContactGroup(ctx context.Context, input model.ContactGroupInput) (*model.ContactGroup, error) {
-	contactGroupNodeCreated, err := r.ServiceContainer.ContactGroupService.Create(&entity.ContactGroupNode{
+	contactGroupNodeCreated, err := r.ServiceContainer.ContactGroupService.Create(ctx, &entity.ContactGroupNode{
 		Name: input.Name,
 	})
 	if err != nil {
@@ -63,7 +63,7 @@ func (r *mutationResolver) CreateContactGroup(ctx context.Context, input model.C
 
 // DeleteContactGroupAndUnlinkAllContacts is the resolver for the deleteContactGroupAndUnlinkAllContacts field.
 func (r *mutationResolver) DeleteContactGroupAndUnlinkAllContacts(ctx context.Context, id string) (*model.BooleanResult, error) {
-	result, err := r.ServiceContainer.ContactGroupService.Delete(id)
+	result, err := r.ServiceContainer.ContactGroupService.Delete(ctx, id)
 	if err != nil {
 		graphql.AddErrorf(ctx, "Could not delete contact group %s", id)
 		return nil, err

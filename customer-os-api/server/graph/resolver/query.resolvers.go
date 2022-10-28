@@ -30,7 +30,7 @@ func (r *queryResolver) Contacts(ctx context.Context) ([]*model.Contact, error) 
 
 // ContactGroups is the resolver for the contactGroups field.
 func (r *queryResolver) ContactGroups(ctx context.Context) ([]*model.ContactGroup, error) {
-	contactGroupEntities, err := r.ServiceContainer.ContactGroupService.FindAll()
+	contactGroupEntities, err := r.ServiceContainer.ContactGroupService.FindAll(ctx)
 	return mapper.MapEntitiesToContactGroups(contactGroupEntities), err
 }
 

@@ -13,7 +13,7 @@ import (
 
 // Groups is the resolver for the groups field.
 func (r *contactResolver) Groups(ctx context.Context, obj *model.Contact) ([]*model.ContactGroup, error) {
-	contactGroupEntities, err := r.ServiceContainer.ContactGroupService.FindAllForContact(obj)
+	contactGroupEntities, err := r.ServiceContainer.ContactGroupService.FindAllForContact(ctx, obj)
 	return mapper.MapEntitiesToContactGroups(contactGroupEntities), err
 }
 
