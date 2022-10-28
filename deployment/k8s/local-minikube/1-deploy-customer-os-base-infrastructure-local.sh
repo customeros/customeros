@@ -1,18 +1,6 @@
 #! /bin/bash
 
-MINIKUBE_STATUS=$(minikube status)
-MINIKUBE_STARTED_STATUS_TEXT='Running'
-if [[ "$MINIKUBE_STATUS" == *"$MINIKUBE_STARTED_STATUS_TEXT"* ]];
-  then
-     echo " --- Minikube already started --- "
-  else
-     eval $(minikube docker-env)
-     minikube start &
-     wait
-fi
-
-
-NAMESPACE_NAME="openline-development"
+NAMESPACE_NAME="openline"
 
 if [[ $(kubectl get namespaces) == *"$NAMESPACE_NAME"* ]];
   then

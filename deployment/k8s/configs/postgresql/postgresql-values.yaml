@@ -1,16 +1,16 @@
 # define default database user, name, and password for PostgreSQL deployment
 auth:
   enablePostgresUser: true
-  postgresPassword: "LocalStrongPassword"
-  username: "openline-customer-os-admin"
-  password: "your-strong-local-password-34234234324532"
-  database: "ol-customer-os-rds"
+  postgresPassword: "password"
+  username: "openline"
+  password: "password"
+  database: "openline"
 
 # The postgresql helm chart deployment will be using PVC postgresql-data-claim
 primary:
   persistence:
     enabled: true
-    existingClaim: "postgresql-customer-os-data-claim"
+    existingClaim: "efs-postgresql-claim"
 
 volumePermissions:
   enabled: true
