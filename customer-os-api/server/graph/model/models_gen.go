@@ -12,12 +12,13 @@ type BooleanResult struct {
 
 // Contact - represents one person that can be contacted for a Customer. In B2C
 type Contact struct {
-	ID          string    `json:"id"`
-	FirstName   string    `json:"firstName"`
-	LastName    string    `json:"lastName"`
-	CreatedAt   time.Time `json:"createdAt"`
-	Label       *string   `json:"label"`
-	ContactType *string   `json:"contactType"`
+	ID          string          `json:"id"`
+	FirstName   string          `json:"firstName"`
+	LastName    string          `json:"lastName"`
+	CreatedAt   time.Time       `json:"createdAt"`
+	Label       *string         `json:"label"`
+	ContactType *string         `json:"contactType"`
+	Groups      []*ContactGroup `json:"groups"`
 }
 
 type ContactGroup struct {

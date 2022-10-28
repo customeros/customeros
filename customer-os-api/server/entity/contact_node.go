@@ -12,6 +12,7 @@ type ContactNode struct {
 	Label       string
 	ContactType string
 	CreatedAt   time.Time
+	Groups      ContactGroupNodes
 }
 
 func (contact ContactNode) ToString() string {

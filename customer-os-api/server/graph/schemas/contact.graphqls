@@ -8,6 +8,7 @@ type Contact {
     createdAt: Time!
     label: String
     contactType: String
+    groups: [ContactGroup!]! @goField(forceResolver: true)
 }
 
 input ContactInput {

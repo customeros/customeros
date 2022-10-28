@@ -37,6 +37,7 @@ type Config struct {
 }
 
 type ResolverRoot interface {
+	Contact() ContactResolver
 	Mutation() MutationResolver
 	Query() QueryResolver
 }
@@ -53,6 +54,7 @@ type ComplexityRoot struct {
 		ContactType func(childComplexity int) int
 		CreatedAt   func(childComplexity int) int
 		FirstName   func(childComplexity int) int
+		Groups      func(childComplexity int) int
 		ID          func(childComplexity int) int
 		Label       func(childComplexity int) int
 		LastName    func(childComplexity int) int
@@ -78,6 +80,9 @@ type ComplexityRoot struct {
 	}
 }
 
+type ContactResolver interface {
+	Groups(ctx context.Context, obj *model.Contact) ([]*model.ContactGroup, error)
+}
 type MutationResolver interface {
 	CreateContact(ctx context.Context, input model.ContactInput) (*model.Contact, error)
 	AddContactToGroup(ctx context.Context, contactID string, groupID string) (*model.BooleanResult, error)
@@ -133,6 +138,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Contact.FirstName(childComplexity), true
+
+	case "Contact.groups":
+		if e.complexity.Contact.Groups == nil {
+			break
+		}
+
+		return e.complexity.Contact.Groups(childComplexity), true
 
 	case "Contact.id":
 		if e.complexity.Contact.ID == nil {
@@ -335,6 +347,7 @@ type Contact {
     createdAt: Time!
     label: String
     contactType: String
+    groups: [ContactGroup!]! @goField(forceResolver: true)
 }
 
 input ContactInput {
@@ -855,6 +868,56 @@ func (ec *executionContext) fieldContext_Contact_contactType(ctx context.Context
 	return fc, nil
 }
 
+func (ec *executionContext) _Contact_groups(ctx context.Context, field graphql.CollectedField, obj *model.Contact) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Contact_groups(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Contact().Groups(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.ContactGroup)
+	fc.Result = res
+	return ec.marshalNContactGroup2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐContactGroupᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Contact_groups(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Contact",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_ContactGroup_id(ctx, field)
+			case "name":
+				return ec.fieldContext_ContactGroup_name(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type ContactGroup", field.Name)
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _ContactGroup_id(ctx context.Context, field graphql.CollectedField, obj *model.ContactGroup) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_ContactGroup_id(ctx, field)
 	if err != nil {
@@ -994,6 +1057,8 @@ func (ec *executionContext) fieldContext_Mutation_createContact(ctx context.Cont
 				return ec.fieldContext_Contact_label(ctx, field)
 			case "contactType":
 				return ec.fieldContext_Contact_contactType(ctx, field)
+			case "groups":
+				return ec.fieldContext_Contact_groups(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Contact", field.Name)
 		},
@@ -1301,6 +1366,8 @@ func (ec *executionContext) fieldContext_Query_contact(ctx context.Context, fiel
 				return ec.fieldContext_Contact_label(ctx, field)
 			case "contactType":
 				return ec.fieldContext_Contact_contactType(ctx, field)
+			case "groups":
+				return ec.fieldContext_Contact_groups(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Contact", field.Name)
 		},
@@ -1370,6 +1437,8 @@ func (ec *executionContext) fieldContext_Query_contacts(ctx context.Context, fie
 				return ec.fieldContext_Contact_label(ctx, field)
 			case "contactType":
 				return ec.fieldContext_Contact_contactType(ctx, field)
+			case "groups":
+				return ec.fieldContext_Contact_groups(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Contact", field.Name)
 		},
@@ -3460,28 +3529,28 @@ func (ec *executionContext) _Contact(ctx context.Context, sel ast.SelectionSet, 
 			out.Values[i] = ec._Contact_id(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "firstName":
 
 			out.Values[i] = ec._Contact_firstName(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "lastName":
 
 			out.Values[i] = ec._Contact_lastName(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "createdAt":
 
 			out.Values[i] = ec._Contact_createdAt(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "label":
 
@@ -3491,6 +3560,26 @@ func (ec *executionContext) _Contact(ctx context.Context, sel ast.SelectionSet, 
 
 			out.Values[i] = ec._Contact_contactType(ctx, field, obj)
 
+		case "groups":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Contact_groups(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
