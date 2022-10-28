@@ -51,6 +51,7 @@ type ComplexityRoot struct {
 	}
 
 	Contact struct {
+		CompanyName func(childComplexity int) int
 		ContactType func(childComplexity int) int
 		CreatedAt   func(childComplexity int) int
 		FirstName   func(childComplexity int) int
@@ -117,6 +118,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.BooleanResult.Result(childComplexity), true
+
+	case "Contact.companyName":
+		if e.complexity.Contact.CompanyName == nil {
+			break
+		}
+
+		return e.complexity.Contact.CompanyName(childComplexity), true
 
 	case "Contact.contactType":
 		if e.complexity.Contact.ContactType == nil {
@@ -346,6 +354,7 @@ type Contact {
     lastName: String!
     createdAt: Time!
     label: String
+    companyName: String
     contactType: String
     groups: [ContactGroup!]! @goField(forceResolver: true)
 }
@@ -354,6 +363,7 @@ input ContactInput {
     firstName: String!
     lastName: String!
     label: String
+    companyName: String
     contactType: String
 }
 
@@ -380,7 +390,8 @@ directive @goField(forceResolver: Boolean, name: String) on FIELD_DEFINITION | I
     createContactGroup(input: ContactGroupInput!): ContactGroup!
     deleteContactGroupAndUnlinkAllContacts(id :ID!): BooleanResult!
     #  TODO implement
-    #  updateContact(id: ID!, request: ContactInput!): Contact!
+    #  updateContact(input: ContactUpdateInput!): Contact!
+    #  updateContactGroup(input: ContactGroupUpdateInput!): Contact!
 }
 
 
@@ -827,6 +838,47 @@ func (ec *executionContext) fieldContext_Contact_label(ctx context.Context, fiel
 	return fc, nil
 }
 
+func (ec *executionContext) _Contact_companyName(ctx context.Context, field graphql.CollectedField, obj *model.Contact) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Contact_companyName(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.CompanyName, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Contact_companyName(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Contact",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Contact_contactType(ctx context.Context, field graphql.CollectedField, obj *model.Contact) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Contact_contactType(ctx, field)
 	if err != nil {
@@ -1055,6 +1107,8 @@ func (ec *executionContext) fieldContext_Mutation_createContact(ctx context.Cont
 				return ec.fieldContext_Contact_createdAt(ctx, field)
 			case "label":
 				return ec.fieldContext_Contact_label(ctx, field)
+			case "companyName":
+				return ec.fieldContext_Contact_companyName(ctx, field)
 			case "contactType":
 				return ec.fieldContext_Contact_contactType(ctx, field)
 			case "groups":
@@ -1364,6 +1418,8 @@ func (ec *executionContext) fieldContext_Query_contact(ctx context.Context, fiel
 				return ec.fieldContext_Contact_createdAt(ctx, field)
 			case "label":
 				return ec.fieldContext_Contact_label(ctx, field)
+			case "companyName":
+				return ec.fieldContext_Contact_companyName(ctx, field)
 			case "contactType":
 				return ec.fieldContext_Contact_contactType(ctx, field)
 			case "groups":
@@ -1435,6 +1491,8 @@ func (ec *executionContext) fieldContext_Query_contacts(ctx context.Context, fie
 				return ec.fieldContext_Contact_createdAt(ctx, field)
 			case "label":
 				return ec.fieldContext_Contact_label(ctx, field)
+			case "companyName":
+				return ec.fieldContext_Contact_companyName(ctx, field)
 			case "contactType":
 				return ec.fieldContext_Contact_contactType(ctx, field)
 			case "groups":
@@ -3433,7 +3491,7 @@ func (ec *executionContext) unmarshalInputContactInput(ctx context.Context, obj 
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"firstName", "lastName", "label", "contactType"}
+	fieldsInOrder := [...]string{"firstName", "lastName", "label", "companyName", "contactType"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -3461,6 +3519,14 @@ func (ec *executionContext) unmarshalInputContactInput(ctx context.Context, obj 
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("label"))
 			it.Label, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "companyName":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("companyName"))
+			it.CompanyName, err = ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -3555,6 +3621,10 @@ func (ec *executionContext) _Contact(ctx context.Context, sel ast.SelectionSet, 
 		case "label":
 
 			out.Values[i] = ec._Contact_label(ctx, field, obj)
+
+		case "companyName":
+
+			out.Values[i] = ec._Contact_companyName(ctx, field, obj)
 
 		case "contactType":
 

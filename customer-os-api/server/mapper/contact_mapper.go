@@ -10,17 +10,22 @@ func MapContactInputToEntity(input model.ContactInput) *entity.ContactNode {
 		FirstName:   input.FirstName,
 		LastName:    input.LastName,
 		Label:       *input.Label,
+		CompanyName: *input.CompanyName,
 		ContactType: *input.ContactType,
 	}
 }
 
 func MapEntityToContact(contact *entity.ContactNode) *model.Contact {
+	var label = contact.Label
+	var company = contact.CompanyName
+	var contactType = contact.ContactType
 	return &model.Contact{
 		ID:          contact.Id,
 		FirstName:   contact.FirstName,
 		LastName:    contact.LastName,
-		Label:       &contact.Label,
-		ContactType: &contact.ContactType,
+		Label:       &label,
+		CompanyName: &company,
+		ContactType: &contactType,
 		CreatedAt:   contact.CreatedAt,
 	}
 }

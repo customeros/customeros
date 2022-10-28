@@ -10,6 +10,7 @@ type ContactNode struct {
 	FirstName   string
 	LastName    string
 	Label       string
+	CompanyName string
 	ContactType string
 	CreatedAt   time.Time
 	Groups      ContactGroupNodes
