@@ -6,6 +6,7 @@ import (
 	"github.com/neo4j/neo4j-go-driver/v4/neo4j/db"
 	"github.com/neo4j/neo4j-go-driver/v4/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/customer-os-api/entity"
+	"github.com/openline-ai/openline-customer-os/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/customer-os-api/utils"
 )
 
@@ -13,6 +14,7 @@ type ContactGroupService interface {
 	Create(contactGroup *entity.ContactGroupNode) (*entity.ContactGroupNode, error)
 	FindAll() (*entity.ContactGroupNodes, error)
 	Delete(id string) (bool, error)
+	FindAllForContact(contact *model.Contact) (*entity.ContactGroupNodes, error)
 }
 
 type contactGroupService struct {
@@ -104,4 +106,32 @@ func (s *contactGroupService) Delete(id string) (bool, error) {
 	}
 
 	return queryResult.(bool), nil
+}
+
+func (s *contactGroupService) FindAllForContact(contact *model.Contact) (*entity.ContactGroupNodes, error) {
+	session := (*s.driver).NewSession(neo4j.SessionConfig{AccessMode: neo4j.AccessModeRead})
+	defer session.Close()
+
+	queryResult, err := session.ReadTransaction(func(tx neo4j.Transaction) (interface{}, error) {
+		result, err := tx.Run(`MATCH (g:ContactGroup)<--(c:Contact {id:$id}) RETURN g`,
+			map[string]interface{}{"id": contact.ID})
+		records, err := result.Collect()
+		if err != nil {
+			return nil, err
+		}
+		return records, nil
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	contactGroups := entity.ContactGroupNodes{}
+
+	for _, dbRecord := range queryResult.([]*db.Record) {
+		contactGroup := entity.ContactGroupNode{}
+		mapstructure.Decode(utils.GetPropsFromNode(dbRecord.Values[0].(dbtype.Node)), &contactGroup)
+		contactGroups = append(contactGroups, contactGroup)
+	}
+
+	return &contactGroups, nil
 }

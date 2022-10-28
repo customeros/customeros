@@ -33,7 +33,6 @@ func (s *contactWithContactGroupRelationshipService) AddContactToGroup(contactId
 				"contactId": contactId,
 				"groupId":   groupId,
 			})
-
 		return true, err
 	})
 	if err != nil {
