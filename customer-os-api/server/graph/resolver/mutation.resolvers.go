@@ -15,7 +15,7 @@ import (
 
 // CreateContact is the resolver for the createContact field.
 func (r *mutationResolver) CreateContact(ctx context.Context, input model.ContactInput) (*model.Contact, error) {
-	contactNodeCreated, err := r.ServiceContainer.ContactService.Create(mapper.MapContactInputToEntity(input))
+	contactNodeCreated, err := r.ServiceContainer.ContactService.Create(ctx, mapper.MapContactInputToEntity(input))
 	if err != nil {
 		graphql.AddErrorf(ctx, "Failed to create contact %s %s", input.FirstName, input.LastName)
 		return nil, err
@@ -26,7 +26,7 @@ func (r *mutationResolver) CreateContact(ctx context.Context, input model.Contac
 
 // AddContactToGroup is the resolver for the addContactToGroup field.
 func (r *mutationResolver) AddContactToGroup(ctx context.Context, contactID string, groupID string) (*model.BooleanResult, error) {
-	result, err := r.ServiceContainer.ContactWithContactGroupRelationshipService.AddContactToGroup(contactID, groupID)
+	result, err := r.ServiceContainer.ContactWithContactGroupRelationshipService.AddContactToGroup(ctx, contactID, groupID)
 	if err != nil {
 		graphql.AddErrorf(ctx, "Could not add contact to group")
 		return nil, err
@@ -38,7 +38,7 @@ func (r *mutationResolver) AddContactToGroup(ctx context.Context, contactID stri
 
 // RemoveContactFromGroup is the resolver for the removeContactFromGroup field.
 func (r *mutationResolver) RemoveContactFromGroup(ctx context.Context, contactID string, groupID string) (*model.BooleanResult, error) {
-	result, err := r.ServiceContainer.ContactWithContactGroupRelationshipService.RemoveContactFromGroup(contactID, groupID)
+	result, err := r.ServiceContainer.ContactWithContactGroupRelationshipService.RemoveContactFromGroup(ctx, contactID, groupID)
 	if err != nil {
 		graphql.AddErrorf(ctx, "Could not remove contact from group")
 		return nil, err
