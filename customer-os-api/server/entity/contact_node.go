@@ -1,6 +1,9 @@
 package entity
 
-import "fmt"
+import (
+	"fmt"
+	"time"
+)
 
 type ContactNode struct {
 	Id          string
@@ -8,6 +11,7 @@ type ContactNode struct {
 	LastName    string
 	Label       string
 	ContactType string
+	CreatedAt   time.Time
 }
 
 func (contact ContactNode) ToString() string {

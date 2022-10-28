@@ -10,6 +10,7 @@ import (
 	"strconv"
 	"sync"
 	"sync/atomic"
+	"time"
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/99designs/gqlgen/graphql/introspection"
@@ -46,6 +47,7 @@ type DirectiveRoot struct {
 type ComplexityRoot struct {
 	Contact struct {
 		ContactType func(childComplexity int) int
+		CreatedAt   func(childComplexity int) int
 		FirstName   func(childComplexity int) int
 		ID          func(childComplexity int) int
 		Label       func(childComplexity int) int
@@ -91,6 +93,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Contact.ContactType(childComplexity), true
+
+	case "Contact.createdAt":
+		if e.complexity.Contact.CreatedAt == nil {
+			break
+		}
+
+		return e.complexity.Contact.CreatedAt(childComplexity), true
 
 	case "Contact.firstName":
 		if e.complexity.Contact.FirstName == nil {
@@ -227,6 +236,7 @@ type Contact {
     id: ID!
     firstName: String!
     lastName: String!
+    createdAt: Time!
     label: String
     contactType: String
 }
@@ -240,6 +250,8 @@ input ContactInput {
 
 
 `, BuiltIn: false},
+	{Name: "../schemas/directive.graphqls", Input: `# build-in directive by Gqlgen
+directive @goField(forceResolver: Boolean, name: String) on FIELD_DEFINITION | INPUT_FIELD_DEFINITION`, BuiltIn: false},
 	{Name: "../schemas/mutation.graphqls", Input: `type Mutation {
   createContact(input: ContactInput!): Contact!
 #  alexb implement me
@@ -252,6 +264,9 @@ input ContactInput {
   contact(id: ID!) :Contact!
   contacts: [Contact!]!
 }`, BuiltIn: false},
+	{Name: "../schemas/scalar.graphqls", Input: `scalar Time
+scalar Int64
+`, BuiltIn: false},
 }
 var parsedSchema = gqlparser.MustLoadSchema(sources...)
 
@@ -474,6 +489,50 @@ func (ec *executionContext) fieldContext_Contact_lastName(ctx context.Context, f
 	return fc, nil
 }
 
+func (ec *executionContext) _Contact_createdAt(ctx context.Context, field graphql.CollectedField, obj *model.Contact) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Contact_createdAt(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.CreatedAt, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(time.Time)
+	fc.Result = res
+	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Contact_createdAt(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Contact",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Contact_label(ctx context.Context, field graphql.CollectedField, obj *model.Contact) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Contact_label(ctx, field)
 	if err != nil {
@@ -601,6 +660,8 @@ func (ec *executionContext) fieldContext_Mutation_createContact(ctx context.Cont
 				return ec.fieldContext_Contact_firstName(ctx, field)
 			case "lastName":
 				return ec.fieldContext_Contact_lastName(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Contact_createdAt(ctx, field)
 			case "label":
 				return ec.fieldContext_Contact_label(ctx, field)
 			case "contactType":
@@ -668,6 +729,8 @@ func (ec *executionContext) fieldContext_Query_contact(ctx context.Context, fiel
 				return ec.fieldContext_Contact_firstName(ctx, field)
 			case "lastName":
 				return ec.fieldContext_Contact_lastName(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Contact_createdAt(ctx, field)
 			case "label":
 				return ec.fieldContext_Contact_label(ctx, field)
 			case "contactType":
@@ -735,6 +798,8 @@ func (ec *executionContext) fieldContext_Query_contacts(ctx context.Context, fie
 				return ec.fieldContext_Contact_firstName(ctx, field)
 			case "lastName":
 				return ec.fieldContext_Contact_lastName(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Contact_createdAt(ctx, field)
 			case "label":
 				return ec.fieldContext_Contact_label(ctx, field)
 			case "contactType":
@@ -2739,6 +2804,13 @@ func (ec *executionContext) _Contact(ctx context.Context, sel ast.SelectionSet, 
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
+		case "createdAt":
+
+			out.Values[i] = ec._Contact_createdAt(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		case "label":
 
 			out.Values[i] = ec._Contact_label(ctx, field, obj)
@@ -3303,6 +3375,21 @@ func (ec *executionContext) unmarshalNString2string(ctx context.Context, v inter
 
 func (ec *executionContext) marshalNString2string(ctx context.Context, sel ast.SelectionSet, v string) graphql.Marshaler {
 	res := graphql.MarshalString(v)
+	if res == graphql.Null {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+	}
+	return res
+}
+
+func (ec *executionContext) unmarshalNTime2timeᚐTime(ctx context.Context, v interface{}) (time.Time, error) {
+	res, err := graphql.UnmarshalTime(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNTime2timeᚐTime(ctx context.Context, sel ast.SelectionSet, v time.Time) graphql.Marshaler {
+	res := graphql.MarshalTime(v)
 	if res == graphql.Null {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")

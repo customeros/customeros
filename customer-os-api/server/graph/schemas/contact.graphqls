@@ -5,6 +5,7 @@ type Contact {
     id: ID!
     firstName: String!
     lastName: String!
+    createdAt: Time!
     label: String
     contactType: String
 }
