@@ -95,10 +95,8 @@ func (s *contactGroupService) Delete(ctx context.Context, id string) (bool, erro
 
 	queryResult, err := session.WriteTransaction(func(tx neo4j.Transaction) (interface{}, error) {
 		_, err := tx.Run(`
-			MATCH (c:Contact), (g:ContactGroup {id:$groupId})-[r0:BELONGS_TO]->(:Tenant {name:$tenant})
-			OPTIONAL MATCH (c)-[r1:BELONGS_TO]->(g)
-			OPTIONAL MATCH (g)-[r2:CONTAINS]->(c)
-            DELETE r0, r1, r2, g
+			MATCH (g:ContactGroup {id:$groupId})--(:Tenant {name:$tenant})
+            DETACH DELETE g
 			`,
 			map[string]interface{}{
 				"groupId": id,
