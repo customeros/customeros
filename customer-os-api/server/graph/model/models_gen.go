@@ -5,21 +5,15 @@ package model
 // Contact - represents one person that can be contacted for a Customer. In B2C
 type Contact struct {
 	ID          string  `json:"id"`
-	FirstName   *string `json:"first_name"`
-	LastName    *string `json:"last_name"`
-	MiddleName  *string `json:"middle_name"`
-	Comments    *string `json:"comments"`
-	PhoneNumber *string `json:"phone_number"`
-	Email       *string `json:"email"`
-	Address     *string `json:"address"`
+	FirstName   string  `json:"firstName"`
+	LastName    string  `json:"lastName"`
+	Label       *string `json:"label"`
+	ContactType *string `json:"contactType"`
 }
 
-type ContactRequest struct {
-	FirstName   *string `json:"first_name"`
-	LastName    *string `json:"last_name"`
-	MiddleName  *string `json:"middle_name"`
-	Comments    *string `json:"comments"`
-	PhoneNumber *string `json:"phone_number"`
-	Email       *string `json:"email"`
-	Address     *string `json:"address"`
+type ContactInput struct {
+	FirstName   string  `json:"firstName"`
+	LastName    string  `json:"lastName"`
+	Label       *string `json:"label"`
+	ContactType *string `json:"contactType"`
 }

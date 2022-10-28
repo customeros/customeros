@@ -22,20 +22,7 @@ import (
 
 const defaultApiPort = "8080"
 
-type Config struct {
-	Db struct {
-		Host            string `env:"DB_HOST,required"`
-		Port            string `env:"DB_PORT" envDefault:"5432"`
-		Pwd             string `env:"DB_PWD,unset"`
-		Name            string `env:"DB_NAME,required"`
-		User            string `env:"DB_USER,required"`
-		MaxConn         int    `env:"DB_MAX_CONN"`
-		MaxIdleConn     int    `env:"DB_MAX_IDLE_CONN"`
-		ConnMaxLifetime int    `env:"DB_CONN_MAX_LIFETIME"`
-	}
-}
-
-func InitDB(cfg *Config) (db *config.StorageDB, err error) {
+func InitDB(cfg *config.Config) (db *config.StorageDB, err error) {
 	if db, err = config.NewDBConn(
 		cfg.Db.Host,
 		cfg.Db.Port,
@@ -102,6 +89,7 @@ func main() {
 	r := gin.Default()
 	r.POST("/query", graphqlHandler(db))
 	r.GET("/", playgroundHandler())
+	r.GET("/health", healthCheckHandler)
 
 	port := os.Getenv("PORT")
 	if port == "" {
@@ -110,15 +98,19 @@ func main() {
 	r.Run(":" + port)
 }
 
-func loadConfiguration() *Config {
+func loadConfiguration() *config.Config {
 	if err := godotenv.Load(); err != nil {
 		log.Println("[WARNING] Error loading .env file")
 	}
 
-	cfg := Config{}
+	cfg := config.Config{}
 	if err := env.Parse(&cfg); err != nil {
 		log.Printf("%+v\n", err)
 	}
 
 	return &cfg
+}
+
+func healthCheckHandler(c *gin.Context) {
+	c.JSON(200, gin.H{"status": "OK"})
 }

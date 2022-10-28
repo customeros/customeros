@@ -35,4 +35,6 @@ kubectl apply -f ../configs/postgresql/postgresql-persistent-volume-claim.yaml -
 helm install --values "../configs/postgresql/postgresql-values.yaml" postgresql-customer-os-dev bitnami/postgresql --namespace $NAMESPACE_NAME
 wait
 
-helm install neo4j-customer-os-dev neo4j/neo4j-standalone --set volumes.data.mode=defaultStorageClass -f ../configs/neo4j/neo4j-helm-values.yaml --namespace $NAMESPACE_NAME
+helm install neo4j-customer-os neo4j/neo4j-standalone --set volumes.data.mode=defaultStorageClass -f ../configs/neo4j/neo4j-helm-values.yaml --namespace $NAMESPACE_NAME
+
+echo "Completed."

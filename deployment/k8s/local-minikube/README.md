@@ -56,8 +56,12 @@ and execute :
 #PostgreSQL DB
 kubectl port-forward --namespace openline-development svc/postgresql-customer-os-dev 5432:5432
 ```
+```
+#Neo4j DB
+kubectl port-forward --namespace openline-development svc/neo4j-customer-os 7687:7687
+```
 
-or run the script
+or run the script for both DBs
 ```
 ./port-forwarding.sh
 ```

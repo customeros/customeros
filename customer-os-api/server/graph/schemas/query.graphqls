@@ -1,0 +1,4 @@
+type Query {
+  contact(id: ID!) :Contact!
+  contacts: [Contact!]!
+}
