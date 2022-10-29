@@ -9,5 +9,3 @@ input TextCustomFieldInput {
     name: String!
     value: String!
 }
-
-
