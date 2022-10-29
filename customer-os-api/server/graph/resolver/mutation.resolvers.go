@@ -5,7 +5,6 @@ package resolver
 
 import (
 	"context"
-
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/openline-ai/openline-customer-os/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/customer-os-api/graph/generated"
@@ -46,6 +45,16 @@ func (r *mutationResolver) RemoveContactFromGroup(ctx context.Context, contactID
 	return &model.BooleanResult{
 		Result: result,
 	}, nil
+}
+
+// MergeTextCustomFieldToContact is the resolver for the mergeTextCustomFieldToContact field.
+func (r *mutationResolver) MergeTextCustomFieldToContact(ctx context.Context, contactID string, input model.TextCustomFieldInput) (*model.TextCustomField, error) {
+	result, err := r.ServiceContainer.TextCustomFieldService.MergeTextCustomFieldToContact(ctx, contactID, mapper.MapTextCustomFieldInputToEntity(input))
+	if err != nil {
+		graphql.AddErrorf(ctx, "Could not add custom field %s to contact %s", input.Name, contactID)
+		return nil, err
+	}
+	return mapper.MapEntityToTextCustomField(result), nil
 }
 
 // CreateContactGroup is the resolver for the createContactGroup field.

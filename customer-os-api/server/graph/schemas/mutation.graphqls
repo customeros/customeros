@@ -3,6 +3,8 @@ type Mutation {
     addContactToGroup(contactId : ID!, groupId: ID!): BooleanResult!
     removeContactFromGroup(contactId : ID!, groupId: ID!): BooleanResult!
 
+    mergeTextCustomFieldToContact(contactId : ID!, input: TextCustomFieldInput!): TextCustomField!
+
     createContactGroup(input: ContactGroupInput!): ContactGroup!
     deleteContactGroupAndUnlinkAllContacts(id :ID!): BooleanResult!
     #  TODO implement

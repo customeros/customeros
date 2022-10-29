@@ -67,7 +67,7 @@ func createContactInDBTxWork(ctx context.Context, newContact *entity.ContactEnti
 		}
 
 		for _, textCustomField := range newContact.TextCustomFields {
-			_, err := addTextCustomFieldToContact(ctx, utils.GetPropsFromNode(record.Values[0].(dbtype.Node))["id"].(string), textCustomField, tx)
+			_, err := txAddTextCustomFieldToContact(ctx, utils.GetPropsFromNode(record.Values[0].(dbtype.Node))["id"].(string), textCustomField, tx)
 			if err != nil {
 				return nil, err
 			}

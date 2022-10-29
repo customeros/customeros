@@ -11,8 +11,9 @@ import (
 	"github.com/openline-ai/openline-customer-os/customer-os-api/utils"
 )
 
-type TextCustomPropertyService interface {
+type TextCustomFieldService interface {
 	FindAllForContact(ctx context.Context, obj *model.Contact) (*entity.TextCustomFieldEntities, error)
+	MergeTextCustomFieldToContact(ctx context.Context, id string, entity *entity.TextCustomFieldEntity) (*entity.TextCustomFieldEntity, error)
 
 	mapDbNodeToTextCustomFieldEntity(dbContactGroupNode dbtype.Node) *entity.TextCustomFieldEntity
 }
@@ -21,7 +22,7 @@ type textCustomPropertyService struct {
 	driver *neo4j.Driver
 }
 
-func NewTextCustomPropertyService(driver *neo4j.Driver) TextCustomPropertyService {
+func NewTextCustomFieldService(driver *neo4j.Driver) TextCustomFieldService {
 	return &textCustomPropertyService{
 		driver: driver,
 	}
@@ -57,7 +58,38 @@ func (s *textCustomPropertyService) FindAllForContact(ctx context.Context, conta
 	return &textCustomFieldEntities, nil
 }
 
-func addTextCustomFieldToContact(ctx context.Context, contactId string, input entity.TextCustomFieldEntity, tx neo4j.Transaction) (interface{}, error) {
+func (s *textCustomPropertyService) MergeTextCustomFieldToContact(ctx context.Context, contactId string, entity *entity.TextCustomFieldEntity) (*entity.TextCustomFieldEntity, error) {
+	session := (*s.driver).NewSession(neo4j.SessionConfig{AccessMode: neo4j.AccessModeWrite})
+	defer session.Close()
+
+	queryResult, err := session.WriteTransaction(func(tx neo4j.Transaction) (interface{}, error) {
+		txResult, err := tx.Run(`
+			MATCH (c:Contact {id:$contactId})--(:Tenant {name:$tenant})
+			MERGE (f:TextCustomField {name: $name})<-[:HAS_PROPERTY]-(c)
+            ON CREATE SET f.value=$value, f.group=$group
+            ON MATCH SET f.value=$value, f.group=$group
+			RETURN f`,
+			map[string]interface{}{
+				"tenant":    common.GetContext(ctx).Tenant,
+				"contactId": contactId,
+				"name":      entity.Name,
+				"value":     entity.Value,
+				"group":     entity.Group,
+			})
+		record, err := txResult.Single()
+		if err != nil {
+			return nil, err
+		}
+		return record.Values[0], nil
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return s.mapDbNodeToTextCustomFieldEntity(queryResult.(dbtype.Node)), nil
+}
+
+func txAddTextCustomFieldToContact(ctx context.Context, contactId string, input entity.TextCustomFieldEntity, tx neo4j.Transaction) (interface{}, error) {
 	result, err := tx.Run(`
 			MATCH (c:Contact {id:$contactId})
 			CREATE (f:TextCustomField {
