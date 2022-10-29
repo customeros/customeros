@@ -1,0 +1,13 @@
+type TextCustomField {
+    group: String
+    name: String!
+    value: String!
+}
+
+input TextCustomFieldInput {
+    group: String
+    name: String!
+    value: String!
+}
+
+

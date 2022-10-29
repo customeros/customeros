@@ -32,9 +32,22 @@ type ContactGroupInput struct {
 }
 
 type ContactInput struct {
-	FirstName   string  `json:"firstName"`
-	LastName    string  `json:"lastName"`
-	Label       *string `json:"label"`
-	CompanyName *string `json:"companyName"`
-	ContactType *string `json:"contactType"`
+	FirstName        string                  `json:"firstName"`
+	LastName         string                  `json:"lastName"`
+	Label            *string                 `json:"label"`
+	CompanyName      *string                 `json:"companyName"`
+	ContactType      *string                 `json:"contactType"`
+	TextCustomFields []*TextCustomFieldInput `json:"textCustomFields"`
+}
+
+type TextCustomField struct {
+	Group *string `json:"group"`
+	Name  string  `json:"name"`
+	Value string  `json:"value"`
+}
+
+type TextCustomFieldInput struct {
+	Group *string `json:"group"`
+	Name  string  `json:"name"`
+	Value string  `json:"value"`
 }

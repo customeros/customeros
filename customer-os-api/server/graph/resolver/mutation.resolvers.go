@@ -50,7 +50,7 @@ func (r *mutationResolver) RemoveContactFromGroup(ctx context.Context, contactID
 
 // CreateContactGroup is the resolver for the createContactGroup field.
 func (r *mutationResolver) CreateContactGroup(ctx context.Context, input model.ContactGroupInput) (*model.ContactGroup, error) {
-	contactGroupNodeCreated, err := r.ServiceContainer.ContactGroupService.Create(ctx, &entity.ContactGroupNode{
+	contactGroupEntityCreated, err := r.ServiceContainer.ContactGroupService.Create(ctx, &entity.ContactGroupEntity{
 		Name: input.Name,
 	})
 	if err != nil {
@@ -58,7 +58,7 @@ func (r *mutationResolver) CreateContactGroup(ctx context.Context, input model.C
 		return nil, err
 	}
 
-	return mapper.MapEntityToContactGroup(contactGroupNodeCreated), nil
+	return mapper.MapEntityToContactGroup(contactGroupEntityCreated), nil
 }
 
 // DeleteContactGroupAndUnlinkAllContacts is the resolver for the deleteContactGroupAndUnlinkAllContacts field.
