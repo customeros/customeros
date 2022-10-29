@@ -14,7 +14,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/customer-os-api/config"
 	"github.com/openline-ai/openline-customer-os/customer-os-api/graph/generated"
 	"github.com/openline-ai/openline-customer-os/customer-os-api/graph/resolver"
-	"github.com/openline-ai/openline-customer-os/customer-os-api/service"
+	"github.com/openline-ai/openline-customer-os/customer-os-api/service/container"
 	"github.com/vektah/gqlparser/v2/gqlerror"
 	"log"
 )
@@ -22,7 +22,7 @@ import (
 const customerOSApiPort = "1010"
 
 func graphqlHandler(driver neo4j.Driver) gin.HandlerFunc {
-	serviceContainer := service.InitServices(&driver)
+	serviceContainer := container.InitServices(&driver)
 	// instantiate graph resolver
 	graphResolver := resolver.NewResolver(serviceContainer)
 
