@@ -35,7 +35,7 @@ func (s *contactService) Create(ctx context.Context, newContact *entity.ContactE
 	if err != nil {
 		return nil, err
 	}
-	return mapDbNodeToContact(queryResult.(dbtype.Node)), nil
+	return s.mapDbNodeToContactEntity(queryResult.(dbtype.Node)), nil
 }
 
 func createContactInDBTxWork(ctx context.Context, newContact *entity.ContactEntity) func(tx neo4j.Transaction) (interface{}, error) {
@@ -98,7 +98,7 @@ func (s *contactService) FindContactById(ctx context.Context, id string) (*entit
 		return nil, err
 	}
 
-	return mapDbNodeToContact(queryResult.(dbtype.Node)), nil
+	return s.mapDbNodeToContactEntity(queryResult.(dbtype.Node)), nil
 }
 
 func (s *contactService) FindAll(ctx context.Context) (*entity.ContactNodes, error) {
@@ -122,14 +122,14 @@ func (s *contactService) FindAll(ctx context.Context) (*entity.ContactNodes, err
 	contacts := entity.ContactNodes{}
 
 	for _, dbRecord := range queryResult.([]*db.Record) {
-		contact := mapDbNodeToContact(dbRecord.Values[0].(dbtype.Node))
+		contact := s.mapDbNodeToContactEntity(dbRecord.Values[0].(dbtype.Node))
 		contacts = append(contacts, *contact)
 	}
 
 	return &contacts, nil
 }
 
-func mapDbNodeToContact(dbContactNode dbtype.Node) *entity.ContactEntity {
+func (s *contactService) mapDbNodeToContactEntity(dbContactNode dbtype.Node) *entity.ContactEntity {
 	props := utils.GetPropsFromNode(dbContactNode)
 	contact := entity.ContactEntity{
 		Id:          props["id"].(string),

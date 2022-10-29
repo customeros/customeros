@@ -10,6 +10,7 @@ type Contact {
     companyName: String
     contactType: String
     groups: [ContactGroup!]! @goField(forceResolver: true)
+    textCustomFields: [TextCustomField!]! @goField(forceResolver: true)
 }
 
 input ContactInput {

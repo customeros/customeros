@@ -5,7 +5,6 @@ package resolver
 
 import (
 	"context"
-
 	"github.com/openline-ai/openline-customer-os/customer-os-api/graph/generated"
 	"github.com/openline-ai/openline-customer-os/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/customer-os-api/mapper"
@@ -15,6 +14,12 @@ import (
 func (r *contactResolver) Groups(ctx context.Context, obj *model.Contact) ([]*model.ContactGroup, error) {
 	contactGroupEntities, err := r.ServiceContainer.ContactGroupService.FindAllForContact(ctx, obj)
 	return mapper.MapEntitiesToContactGroups(contactGroupEntities), err
+}
+
+// TextCustomFields is the resolver for the textCustomFields field.
+func (r *contactResolver) TextCustomFields(ctx context.Context, obj *model.Contact) ([]*model.TextCustomField, error) {
+	textCustomFieldEntities, err := r.ServiceContainer.TextCustomPropertyService.FindAllForContact(ctx, obj)
+	return mapper.MapEntitiesToTextCustomFields(textCustomFieldEntities), err
 }
 
 // Contact returns generated.ContactResolver implementation.

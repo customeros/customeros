@@ -1,7 +1,7 @@
 package resolver
 
 import (
-	"github.com/openline-ai/openline-customer-os/customer-os-api/service"
+	"github.com/openline-ai/openline-customer-os/customer-os-api/service/container"
 )
 
 //go:generate go run github.com/99designs/gqlgen
@@ -10,9 +10,9 @@ import (
 // It serves as dependency injection for your app, add any dependencies you require here.
 
 type Resolver struct {
-	ServiceContainer *service.ServiceContainer
+	ServiceContainer *container.ServiceContainer
 }
 
-func NewResolver(serviceContainer *service.ServiceContainer) *Resolver {
+func NewResolver(serviceContainer *container.ServiceContainer) *Resolver {
 	return &Resolver{ServiceContainer: serviceContainer}
 }
