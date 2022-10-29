@@ -5,17 +5,27 @@ import (
 	"github.com/openline-ai/openline-customer-os/customer-os-api/graph/model"
 )
 
-func MapContactInputToEntity(input model.ContactInput) *entity.ContactNode {
-	return &entity.ContactNode{
-		FirstName:   input.FirstName,
-		LastName:    input.LastName,
-		Label:       *input.Label,
-		CompanyName: *input.CompanyName,
-		ContactType: *input.ContactType,
+func MapContactInputToEntity(input model.ContactInput) *entity.ContactEntity {
+	contactEntity := entity.ContactEntity{
+		FirstName: input.FirstName,
+		LastName:  input.LastName,
 	}
+	if input.Label != nil {
+		contactEntity.Label = *input.Label
+	}
+	if input.CompanyName != nil {
+		contactEntity.CompanyName = *input.CompanyName
+	}
+	if input.ContactType != nil {
+		contactEntity.ContactType = *input.ContactType
+	}
+	if input.TextCustomFields != nil {
+		contactEntity.TextCustomFields = *MapTextCustomFieldInputsToEntities(input.TextCustomFields)
+	}
+	return &contactEntity
 }
 
-func MapEntityToContact(contact *entity.ContactNode) *model.Contact {
+func MapEntityToContact(contact *entity.ContactEntity) *model.Contact {
 	var label = contact.Label
 	var company = contact.CompanyName
 	var contactType = contact.ContactType

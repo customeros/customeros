@@ -4,13 +4,13 @@ import (
 	"fmt"
 )
 
-type ContactGroupNode struct {
+type ContactGroupEntity struct {
 	Id   string
 	Name string
 }
 
-func (contactGroup ContactGroupNode) ToString() string {
-	return fmt.Sprintf("id: %s\nname: %s", contactGroup.Id, contactGroup.Name)
+func (contactGroupEntity ContactGroupEntity) ToString() string {
+	return fmt.Sprintf("id: %s\nname: %s", contactGroupEntity.Id, contactGroupEntity.Name)
 }
 
-type ContactGroupNodes []ContactGroupNode
+type ContactGroupEntities []ContactGroupEntity

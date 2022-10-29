@@ -18,6 +18,7 @@ input ContactInput {
     label: String
     companyName: String
     contactType: String
+    textCustomFields: [TextCustomFieldInput!]
 }
 
 

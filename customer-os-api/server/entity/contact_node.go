@@ -5,19 +5,20 @@ import (
 	"time"
 )
 
-type ContactNode struct {
-	Id          string
-	FirstName   string
-	LastName    string
-	Label       string
-	CompanyName string
-	ContactType string
-	CreatedAt   time.Time
-	Groups      ContactGroupNodes
+type ContactEntity struct {
+	Id               string
+	FirstName        string
+	LastName         string
+	Label            string
+	CompanyName      string
+	ContactType      string
+	CreatedAt        time.Time
+	Groups           ContactGroupEntities
+	TextCustomFields TextCustomFieldEntities
 }
 
-func (contact ContactNode) ToString() string {
+func (contact ContactEntity) ToString() string {
 	return fmt.Sprintf("id: %s\nfirstName: %s\nlastName: %s", contact.Id, contact.FirstName, contact.LastName)
 }
 
-type ContactNodes []ContactNode
+type ContactNodes []ContactEntity

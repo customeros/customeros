@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"github.com/mitchellh/mapstructure"
 	"github.com/neo4j/neo4j-go-driver/v4/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v4/neo4j/db"
 	"github.com/neo4j/neo4j-go-driver/v4/neo4j/dbtype"
@@ -13,10 +12,10 @@ import (
 )
 
 type ContactGroupService interface {
-	Create(ctx context.Context, contactGroup *entity.ContactGroupNode) (*entity.ContactGroupNode, error)
-	FindAll(ctx context.Context) (*entity.ContactGroupNodes, error)
+	Create(ctx context.Context, contactGroup *entity.ContactGroupEntity) (*entity.ContactGroupEntity, error)
 	Delete(ctx context.Context, id string) (bool, error)
-	FindAllForContact(ctx context.Context, contact *model.Contact) (*entity.ContactGroupNodes, error)
+	FindAll(ctx context.Context) (*entity.ContactGroupEntities, error)
+	FindAllForContact(ctx context.Context, contact *model.Contact) (*entity.ContactGroupEntities, error)
 }
 
 type contactGroupService struct {
@@ -29,7 +28,7 @@ func NewContactGroupService(driver *neo4j.Driver) ContactGroupService {
 	}
 }
 
-func (s *contactGroupService) Create(ctx context.Context, newContactGroup *entity.ContactGroupNode) (*entity.ContactGroupNode, error) {
+func (s *contactGroupService) Create(ctx context.Context, newContactGroup *entity.ContactGroupEntity) (*entity.ContactGroupEntity, error) {
 	session := (*s.driver).NewSession(neo4j.SessionConfig{AccessMode: neo4j.AccessModeWrite})
 	defer session.Close()
 
@@ -54,39 +53,7 @@ func (s *contactGroupService) Create(ctx context.Context, newContactGroup *entit
 	if err != nil {
 		return nil, err
 	}
-	contactGroup := entity.ContactGroupNode{}
-	mapstructure.Decode(utils.GetPropsFromNode(queryResult.(dbtype.Node)), &contactGroup)
-
-	return &contactGroup, nil
-}
-
-func (s *contactGroupService) FindAll(ctx context.Context) (*entity.ContactGroupNodes, error) {
-	session := (*s.driver).NewSession(neo4j.SessionConfig{AccessMode: neo4j.AccessModeRead})
-	defer session.Close()
-
-	queryResult, err := session.ReadTransaction(func(tx neo4j.Transaction) (interface{}, error) {
-		result, err := tx.Run(`MATCH (g:ContactGroup)--(:Tenant {name:$tenant}) RETURN g`, map[string]interface{}{
-			"tenant": common.GetContext(ctx).Tenant,
-		})
-		records, err := result.Collect()
-		if err != nil {
-			return nil, err
-		}
-		return records, nil
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	contactGroups := entity.ContactGroupNodes{}
-
-	for _, dbRecord := range queryResult.([]*db.Record) {
-		contactGroup := entity.ContactGroupNode{}
-		mapstructure.Decode(utils.GetPropsFromNode(dbRecord.Values[0].(dbtype.Node)), &contactGroup)
-		contactGroups = append(contactGroups, contactGroup)
-	}
-
-	return &contactGroups, nil
+	return mapDbNodeToContactGroup(queryResult.(dbtype.Node)), nil
 }
 
 func (s *contactGroupService) Delete(ctx context.Context, id string) (bool, error) {
@@ -112,12 +79,45 @@ func (s *contactGroupService) Delete(ctx context.Context, id string) (bool, erro
 	return queryResult.(bool), nil
 }
 
-func (s *contactGroupService) FindAllForContact(ctx context.Context, contact *model.Contact) (*entity.ContactGroupNodes, error) {
+func (s *contactGroupService) FindAll(ctx context.Context) (*entity.ContactGroupEntities, error) {
 	session := (*s.driver).NewSession(neo4j.SessionConfig{AccessMode: neo4j.AccessModeRead})
 	defer session.Close()
 
 	queryResult, err := session.ReadTransaction(func(tx neo4j.Transaction) (interface{}, error) {
-		result, err := tx.Run(`MATCH (:Tenant {name:$tenant})<--(g:ContactGroup)<--(c:Contact {id:$id}) RETURN g`,
+		result, err := tx.Run(`MATCH (g:ContactGroup)--(:Tenant {name:$tenant}) 
+				RETURN g
+				ORDER BY g.name`,
+			map[string]interface{}{
+				"tenant": common.GetContext(ctx).Tenant,
+			})
+		records, err := result.Collect()
+		if err != nil {
+			return nil, err
+		}
+		return records, nil
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	contactGroups := entity.ContactGroupEntities{}
+
+	for _, dbRecord := range queryResult.([]*db.Record) {
+		contactGroup := mapDbNodeToContactGroup(dbRecord.Values[0].(dbtype.Node))
+		contactGroups = append(contactGroups, *contactGroup)
+	}
+
+	return &contactGroups, nil
+}
+
+func (s *contactGroupService) FindAllForContact(ctx context.Context, contact *model.Contact) (*entity.ContactGroupEntities, error) {
+	session := (*s.driver).NewSession(neo4j.SessionConfig{AccessMode: neo4j.AccessModeRead})
+	defer session.Close()
+
+	queryResult, err := session.ReadTransaction(func(tx neo4j.Transaction) (interface{}, error) {
+		result, err := tx.Run(`MATCH (:Tenant {name:$tenant})<--(g:ContactGroup)<--(c:Contact {id:$id}) 
+				RETURN g 
+				ORDER BY g.name`,
 			map[string]interface{}{
 				"id":     contact.ID,
 				"tenant": common.GetContext(ctx).Tenant})
@@ -131,13 +131,21 @@ func (s *contactGroupService) FindAllForContact(ctx context.Context, contact *mo
 		return nil, err
 	}
 
-	contactGroups := entity.ContactGroupNodes{}
+	contactGroups := entity.ContactGroupEntities{}
 
 	for _, dbRecord := range queryResult.([]*db.Record) {
-		contactGroup := entity.ContactGroupNode{}
-		mapstructure.Decode(utils.GetPropsFromNode(dbRecord.Values[0].(dbtype.Node)), &contactGroup)
-		contactGroups = append(contactGroups, contactGroup)
+		contactGroup := mapDbNodeToContactGroup(dbRecord.Values[0].(dbtype.Node))
+		contactGroups = append(contactGroups, *contactGroup)
 	}
 
 	return &contactGroups, nil
+}
+
+func mapDbNodeToContactGroup(dbContactGroupNode dbtype.Node) *entity.ContactGroupEntity {
+	props := utils.GetPropsFromNode(dbContactGroupNode)
+	contactGroup := entity.ContactGroupEntity{
+		Id:   props["id"].(string),
+		Name: props["name"].(string),
+	}
+	return &contactGroup
 }
