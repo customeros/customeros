@@ -10,7 +10,7 @@ type ContactEntity struct {
 	FirstName        string
 	LastName         string
 	Label            string
-	CompanyName      string
+	Company          string
 	ContactType      string
 	CreatedAt        time.Time
 	Groups           ContactGroupEntities

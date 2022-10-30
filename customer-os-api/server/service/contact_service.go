@@ -48,7 +48,7 @@ func createContactInDBTxWork(ctx context.Context, newContact *entity.ContactEnti
 				  firstName: $firstName,
 				  lastName: $lastName,
 				  label: $label,
-				  companyName: $companyName,
+				  company: $company,
 				  contactType: $contactType,
                   createdAt :datetime({timezone: 'UTC'})
 			})-[:CONTACT_BELONGS_TO_TENANT]->(t)
@@ -59,7 +59,7 @@ func createContactInDBTxWork(ctx context.Context, newContact *entity.ContactEnti
 				"lastName":    newContact.LastName,
 				"label":       newContact.Label,
 				"contactType": newContact.ContactType,
-				"companyName": newContact.CompanyName,
+				"company":     newContact.Company,
 			})
 
 		record, err := result.Single()
@@ -163,7 +163,7 @@ func (s *contactService) mapDbNodeToContactEntity(dbContactNode dbtype.Node) *en
 		FirstName:   props["firstName"].(string),
 		LastName:    props["lastName"].(string),
 		Label:       props["label"].(string),
-		CompanyName: props["companyName"].(string),
+		Company:     props["company"].(string),
 		ContactType: props["contactType"].(string),
 		CreatedAt:   props["createdAt"].(time.Time),
 	}

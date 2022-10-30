@@ -13,8 +13,8 @@ func MapContactInputToEntity(input model.ContactInput) *entity.ContactEntity {
 	if input.Label != nil {
 		contactEntity.Label = *input.Label
 	}
-	if input.CompanyName != nil {
-		contactEntity.CompanyName = *input.CompanyName
+	if input.Company != nil {
+		contactEntity.Company = *input.Company
 	}
 	if input.ContactType != nil {
 		contactEntity.ContactType = *input.ContactType
@@ -27,14 +27,14 @@ func MapContactInputToEntity(input model.ContactInput) *entity.ContactEntity {
 
 func MapEntityToContact(contact *entity.ContactEntity) *model.Contact {
 	var label = contact.Label
-	var company = contact.CompanyName
+	var company = contact.Company
 	var contactType = contact.ContactType
 	return &model.Contact{
 		ID:          contact.Id,
 		FirstName:   contact.FirstName,
 		LastName:    contact.LastName,
 		Label:       &label,
-		CompanyName: &company,
+		Company:     &company,
 		ContactType: &contactType,
 		CreatedAt:   contact.CreatedAt,
 	}
