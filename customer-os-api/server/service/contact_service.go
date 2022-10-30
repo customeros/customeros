@@ -15,6 +15,7 @@ type ContactService interface {
 	Create(ctx context.Context, contact *entity.ContactEntity) (*entity.ContactEntity, error)
 	FindContactById(ctx context.Context, id string) (*entity.ContactEntity, error)
 	FindAll(ctx context.Context) (*entity.ContactNodes, error)
+	Delete(ctx context.Context, id string) (bool, error)
 }
 
 type contactService struct {
@@ -75,6 +76,30 @@ func createContactInDBTxWork(ctx context.Context, newContact *entity.ContactEnti
 
 		return record.Values[0], nil
 	}
+}
+
+func (s *contactService) Delete(ctx context.Context, contactId string) (bool, error) {
+	session := (*s.driver).NewSession(neo4j.SessionConfig{AccessMode: neo4j.AccessModeWrite})
+	defer session.Close()
+
+	queryResult, err := session.WriteTransaction(func(tx neo4j.Transaction) (interface{}, error) {
+		_, err := tx.Run(`
+			MATCH (c:Contact {id:$id})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant})
+			OPTIONAL MATCH (c)-[:HAS_TEXT_PROPERTY]->(f:TextCustomField)
+            DETACH DELETE f, c
+			`,
+			map[string]interface{}{
+				"id":     contactId,
+				"tenant": common.GetContext(ctx).Tenant,
+			})
+
+		return true, err
+	})
+	if err != nil {
+		return false, err
+	}
+
+	return queryResult.(bool), nil
 }
 
 func (s *contactService) FindContactById(ctx context.Context, id string) (*entity.ContactEntity, error) {
