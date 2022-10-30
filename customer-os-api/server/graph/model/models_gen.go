@@ -18,6 +18,7 @@ type Contact struct {
 	CreatedAt        time.Time          `json:"createdAt"`
 	Label            *string            `json:"label"`
 	Company          *string            `json:"company"`
+	Title            *string            `json:"title"`
 	ContactType      *string            `json:"contactType"`
 	Groups           []*ContactGroup    `json:"groups"`
 	TextCustomFields []*TextCustomField `json:"textCustomFields"`
@@ -37,6 +38,7 @@ type ContactInput struct {
 	LastName         string                  `json:"lastName"`
 	Label            *string                 `json:"label"`
 	Company          *string                 `json:"company"`
+	Title            *string                 `json:"title"`
 	ContactType      *string                 `json:"contactType"`
 	TextCustomFields []*TextCustomFieldInput `json:"textCustomFields"`
 }

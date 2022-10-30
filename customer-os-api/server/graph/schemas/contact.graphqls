@@ -8,6 +8,7 @@ type Contact {
     createdAt: Time!
     label: String
     company: String
+    title: String
     contactType: String
     groups: [ContactGroup!]! @goField(forceResolver: true)
     textCustomFields: [TextCustomField!]! @goField(forceResolver: true)
@@ -18,6 +19,7 @@ input ContactInput {
     lastName: String!
     label: String
     company: String
+    title: String
     contactType: String
     textCustomFields: [TextCustomFieldInput!]
 }

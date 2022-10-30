@@ -49,6 +49,7 @@ func createContactInDBTxWork(ctx context.Context, newContact *entity.ContactEnti
 				  lastName: $lastName,
 				  label: $label,
 				  company: $company,
+				  title: $title,
 				  contactType: $contactType,
                   createdAt :datetime({timezone: 'UTC'})
 			})-[:CONTACT_BELONGS_TO_TENANT]->(t)
@@ -60,6 +61,7 @@ func createContactInDBTxWork(ctx context.Context, newContact *entity.ContactEnti
 				"label":       newContact.Label,
 				"contactType": newContact.ContactType,
 				"company":     newContact.Company,
+				"title":       newContact.Title,
 			})
 
 		record, err := result.Single()
@@ -159,12 +161,13 @@ func (s *contactService) FindAll(ctx context.Context) (*entity.ContactNodes, err
 func (s *contactService) mapDbNodeToContactEntity(dbContactNode dbtype.Node) *entity.ContactEntity {
 	props := utils.GetPropsFromNode(dbContactNode)
 	contact := entity.ContactEntity{
-		Id:          props["id"].(string),
-		FirstName:   props["firstName"].(string),
-		LastName:    props["lastName"].(string),
-		Label:       props["label"].(string),
-		Company:     props["company"].(string),
-		ContactType: props["contactType"].(string),
+		Id:          utils.GetStringPropOrEmpty(props, "id"),
+		FirstName:   utils.GetStringPropOrEmpty(props, "firstName"),
+		LastName:    utils.GetStringPropOrEmpty(props, "lastName"),
+		Label:       utils.GetStringPropOrEmpty(props, "label"),
+		Company:     utils.GetStringPropOrEmpty(props, "company"),
+		Title:       utils.GetStringPropOrEmpty(props, "title"),
+		ContactType: utils.GetStringPropOrEmpty(props, "contactType"),
 		CreatedAt:   props["createdAt"].(time.Time),
 	}
 	return &contact

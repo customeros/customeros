@@ -11,6 +11,7 @@ type ContactEntity struct {
 	LastName         string
 	Label            string
 	Company          string
+	Title            string
 	ContactType      string
 	CreatedAt        time.Time
 	Groups           ContactGroupEntities

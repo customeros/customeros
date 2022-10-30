@@ -142,9 +142,9 @@ func txAddTextCustomFieldToContact(ctx context.Context, contactId string, input 
 func (s *textCustomPropertyService) mapDbNodeToTextCustomFieldEntity(dbContactGroupNode dbtype.Node) *entity.TextCustomFieldEntity {
 	props := utils.GetPropsFromNode(dbContactGroupNode)
 	result := entity.TextCustomFieldEntity{
-		Name:  props["name"].(string),
-		Value: props["value"].(string),
-		Group: props["group"].(string),
+		Name:  utils.GetStringPropOrEmpty(props, "name"),
+		Value: utils.GetStringPropOrEmpty(props, "value"),
+		Group: utils.GetStringPropOrEmpty(props, "group"),
 	}
 	return &result
 }
