@@ -11,11 +11,17 @@ import (
 	"github.com/openline-ai/openline-customer-os/customer-os-api/graph/generated"
 	"github.com/openline-ai/openline-customer-os/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/customer-os-api/mapper"
+	"github.com/openline-ai/openline-customer-os/customer-os-api/service"
 )
 
 // CreateContact is the resolver for the createContact field.
 func (r *mutationResolver) CreateContact(ctx context.Context, input model.ContactInput) (*model.Contact, error) {
-	contactNodeCreated, err := r.ServiceContainer.ContactService.Create(ctx, mapper.MapContactInputToEntity(input))
+	contactNodeCreated, err := r.ServiceContainer.ContactService.Create(ctx, &service.ContactCreateData{
+		ContactEntity:     mapper.MapContactInputToEntity(input),
+		TextCustomFields:  mapper.MapTextCustomFieldInputsToEntities(input.TextCustomFields),
+		PhoneNumberEntity: mapper.MapPhoneNumberInputToEntity(input.PhoneNumber),
+		EmailEntity:       mapper.MapEmailInputToEntity(input.Email),
+	})
 	if err != nil {
 		graphql.AddErrorf(ctx, "Failed to create contact %s %s", input.FirstName, input.LastName)
 		return nil, err

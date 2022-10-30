@@ -116,8 +116,8 @@ func (s *textCustomPropertyService) Delete(ctx context.Context, contactId string
 	return queryResult.(bool), nil
 }
 
-func txAddTextCustomFieldToContact(ctx context.Context, contactId string, input entity.TextCustomFieldEntity, tx neo4j.Transaction) (interface{}, error) {
-	result, err := tx.Run(`
+func addTextCustomFieldToContactInTx(ctx context.Context, contactId string, input entity.TextCustomFieldEntity, tx neo4j.Transaction) error {
+	_, err := tx.Run(`
 			MATCH (c:Contact {id:$contactId})
 			CREATE (f:TextCustomField {
 				  group: $group,
@@ -132,11 +132,7 @@ func txAddTextCustomFieldToContact(ctx context.Context, contactId string, input 
 			"value":     input.Value,
 		})
 
-	record, err := result.Single()
-	if err != nil {
-		return nil, err
-	}
-	return record, nil
+	return err
 }
 
 func (s *textCustomPropertyService) mapDbNodeToTextCustomFieldEntity(dbContactGroupNode dbtype.Node) *entity.TextCustomFieldEntity {

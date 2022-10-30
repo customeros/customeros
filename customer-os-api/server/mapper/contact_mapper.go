@@ -22,9 +22,6 @@ func MapContactInputToEntity(input model.ContactInput) *entity.ContactEntity {
 	if input.ContactType != nil {
 		contactEntity.ContactType = *input.ContactType
 	}
-	if input.TextCustomFields != nil {
-		contactEntity.TextCustomFields = *MapTextCustomFieldInputsToEntities(input.TextCustomFields)
-	}
 	return &contactEntity
 }
 

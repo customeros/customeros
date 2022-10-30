@@ -12,10 +12,17 @@ import (
 )
 
 type ContactService interface {
-	Create(ctx context.Context, contact *entity.ContactEntity) (*entity.ContactEntity, error)
+	Create(ctx context.Context, contact *ContactCreateData) (*entity.ContactEntity, error)
 	FindContactById(ctx context.Context, id string) (*entity.ContactEntity, error)
 	FindAll(ctx context.Context) (*entity.ContactNodes, error)
 	Delete(ctx context.Context, id string) (bool, error)
+}
+
+type ContactCreateData struct {
+	ContactEntity     *entity.ContactEntity
+	TextCustomFields  *entity.TextCustomFieldEntities
+	EmailEntity       *entity.EmailEntity
+	PhoneNumberEntity *entity.PhoneNumberEntity
 }
 
 type contactService struct {
@@ -28,7 +35,7 @@ func NewContactService(driver *neo4j.Driver) ContactService {
 	}
 }
 
-func (s *contactService) Create(ctx context.Context, newContact *entity.ContactEntity) (*entity.ContactEntity, error) {
+func (s *contactService) Create(ctx context.Context, newContact *ContactCreateData) (*entity.ContactEntity, error) {
 	session := (*s.driver).NewSession(neo4j.SessionConfig{AccessMode: neo4j.AccessModeWrite})
 	defer session.Close()
 
@@ -39,7 +46,7 @@ func (s *contactService) Create(ctx context.Context, newContact *entity.ContactE
 	return s.mapDbNodeToContactEntity(queryResult.(dbtype.Node)), nil
 }
 
-func createContactInDBTxWork(ctx context.Context, newContact *entity.ContactEntity) func(tx neo4j.Transaction) (interface{}, error) {
+func createContactInDBTxWork(ctx context.Context, newContact *ContactCreateData) func(tx neo4j.Transaction) (interface{}, error) {
 	return func(tx neo4j.Transaction) (interface{}, error) {
 		result, err := tx.Run(`
 			MATCH (t:Tenant {name:$tenant})
@@ -56,12 +63,12 @@ func createContactInDBTxWork(ctx context.Context, newContact *entity.ContactEnti
 			RETURN c`,
 			map[string]interface{}{
 				"tenant":      common.GetContext(ctx).Tenant,
-				"firstName":   newContact.FirstName,
-				"lastName":    newContact.LastName,
-				"label":       newContact.Label,
-				"contactType": newContact.ContactType,
-				"company":     newContact.Company,
-				"title":       newContact.Title,
+				"firstName":   newContact.ContactEntity.FirstName,
+				"lastName":    newContact.ContactEntity.LastName,
+				"label":       newContact.ContactEntity.Label,
+				"contactType": newContact.ContactEntity.ContactType,
+				"company":     newContact.ContactEntity.Company,
+				"title":       newContact.ContactEntity.Title,
 			})
 
 		record, err := result.Single()
@@ -69,13 +76,27 @@ func createContactInDBTxWork(ctx context.Context, newContact *entity.ContactEnti
 			return nil, err
 		}
 
-		for _, textCustomField := range newContact.TextCustomFields {
-			_, err := txAddTextCustomFieldToContact(ctx, utils.GetPropsFromNode(record.Values[0].(dbtype.Node))["id"].(string), textCustomField, tx)
+		var contactId = utils.GetPropsFromNode(record.Values[0].(dbtype.Node))["id"].(string)
+		if newContact.TextCustomFields != nil {
+			for _, textCustomField := range *newContact.TextCustomFields {
+				err := addTextCustomFieldToContactInTx(ctx, contactId, textCustomField, tx)
+				if err != nil {
+					return nil, err
+				}
+			}
+		}
+		if newContact.EmailEntity != nil {
+			err := addEmailToContactInTx(ctx, contactId, *newContact.EmailEntity, tx)
 			if err != nil {
 				return nil, err
 			}
 		}
-
+		if newContact.PhoneNumberEntity != nil {
+			err := addPhoneNumberToContactInTx(ctx, contactId, *newContact.PhoneNumberEntity, tx)
+			if err != nil {
+				return nil, err
+			}
+		}
 		return record.Values[0], nil
 	}
 }

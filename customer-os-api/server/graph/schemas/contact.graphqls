@@ -22,6 +22,8 @@ input ContactInput {
     title: String
     contactType: String
     textCustomFields: [TextCustomFieldInput!]
+    email: EmailInput
+    phoneNumber: PhoneNumberInput
 }
 
 

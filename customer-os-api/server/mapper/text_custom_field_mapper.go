@@ -6,6 +6,9 @@ import (
 )
 
 func MapTextCustomFieldInputsToEntities(inputs []*model.TextCustomFieldInput) *entity.TextCustomFieldEntities {
+	if inputs == nil {
+		return nil
+	}
 	var result entity.TextCustomFieldEntities
 	for _, singleInput := range inputs {
 		result = append(result, *MapTextCustomFieldInputToEntity(*singleInput))

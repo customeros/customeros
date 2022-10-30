@@ -1,0 +1,17 @@
+type PhoneNumberInfo {
+    number: String!
+    label: PhoneLabel!
+}
+
+input PhoneNumberInput {
+    number: String!
+    label: PhoneLabel!
+}
+
+enum PhoneLabel {
+    MAIN
+    WORK
+    HOME
+    MOBILE
+    OTHER
+}
