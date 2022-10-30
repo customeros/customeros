@@ -1,12 +1,14 @@
 type Mutation {
     createContact(input: ContactInput!): Contact!
-    addContactToGroup(contactId : ID!, groupId: ID!): BooleanResult!
-    removeContactFromGroup(contactId : ID!, groupId: ID!): BooleanResult!
 
     mergeTextCustomFieldToContact(contactId : ID!, input: TextCustomFieldInput!): TextCustomField!
+    removeTextCustomFieldFromContact(contactId : ID!, fieldName: String!): BooleanResult!
 
     createContactGroup(input: ContactGroupInput!): ContactGroup!
     deleteContactGroupAndUnlinkAllContacts(id :ID!): BooleanResult!
+    addContactToGroup(contactId : ID!, groupId: ID!): BooleanResult!
+    removeContactFromGroup(contactId : ID!, groupId: ID!): BooleanResult!
+
     #  TODO implement
     #  updateContact(input: ContactUpdateInput!): Contact!
     #  updateContactGroup(input: ContactGroupUpdateInput!): Contact!
