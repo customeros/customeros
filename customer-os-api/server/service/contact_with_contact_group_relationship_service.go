@@ -27,10 +27,10 @@ func (s *contactWithContactGroupRelationshipService) AddContactToGroup(ctx conte
 
 	queryResult, err := session.WriteTransaction(func(tx neo4j.Transaction) (interface{}, error) {
 		_, err := tx.Run(`
-			MATCH 	(c:Contact {id:$contactId})--(:Tenant {name:$tenant}), 
-					(g:ContactGroup {id:$groupId})--(:Tenant {name:$tenant})
-			MERGE (c)-[:BELONGS_TO]->(g)
-			MERGE (g)-[:CONTAINS]->(c)
+			MATCH 	(c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}), 
+					(g:ContactGroup {id:$groupId})-[:GROUP_BELONGS_TO_TENANT]->(:Tenant {name:$tenant})
+			MERGE (c)-[:BELONGS_TO_GROUP]->(g)
+			MERGE (g)-[:CONTAINS_CONTACT]->(c)
 			`,
 			map[string]interface{}{
 				"tenant":    common.GetContext(ctx).Tenant,
@@ -52,10 +52,10 @@ func (s *contactWithContactGroupRelationshipService) RemoveContactFromGroup(ctx 
 
 	queryResult, err := session.WriteTransaction(func(tx neo4j.Transaction) (interface{}, error) {
 		_, err := tx.Run(`
-			MATCH 	(c:Contact {id:$contactId})--(:Tenant {name:$tenant}), 
-					(g:ContactGroup {id:$groupId})--(:Tenant {name:$tenant})
-			MATCH (c)-[r1:BELONGS_TO]->(g)
-			MATCH (g)-[r2:CONTAINS]->(c)
+			MATCH 	(c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}), 
+					(g:ContactGroup {id:$groupId})-[:GROUP_BELONGS_TO_TENANT]->(:Tenant {name:$tenant})
+			MATCH (c)-[r1:BELONGS_TO_GROUP]->(g)
+			MATCH (g)-[r2:CONTAINS_CONTACT]->(c)
             DELETE r1, r2
 			`,
 			map[string]interface{}{

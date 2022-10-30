@@ -50,7 +50,7 @@ func createContactInDBTxWork(ctx context.Context, newContact *entity.ContactEnti
 				  companyName: $companyName,
 				  contactType: $contactType,
                   createdAt :datetime({timezone: 'UTC'})
-			})-[:BELONGS_TO]->(t)
+			})-[:CONTACT_BELONGS_TO_TENANT]->(t)
 			RETURN c`,
 			map[string]interface{}{
 				"tenant":      common.GetContext(ctx).Tenant,
@@ -83,7 +83,7 @@ func (s *contactService) FindContactById(ctx context.Context, id string) (*entit
 
 	queryResult, err := session.ReadTransaction(func(tx neo4j.Transaction) (interface{}, error) {
 		result, err := tx.Run(`
-			MATCH (c:Contact {id:$id})--(:Tenant {name:$tenant}) RETURN c`,
+			MATCH (c:Contact {id:$id})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) RETURN c`,
 			map[string]interface{}{
 				"id":     id,
 				"tenant": common.GetContext(ctx).Tenant,
@@ -106,9 +106,11 @@ func (s *contactService) FindAll(ctx context.Context) (*entity.ContactNodes, err
 	defer session.Close()
 
 	queryResult, err := session.ReadTransaction(func(tx neo4j.Transaction) (interface{}, error) {
-		result, err := tx.Run(`MATCH (c:Contact)--(:Tenant {name:$tenant}) RETURN c`, map[string]interface{}{
-			"tenant": common.GetContext(ctx).Tenant,
-		})
+		result, err := tx.Run(`
+				MATCH (:Tenant {name:$tenant})<-[:CONTACT_BELONGS_TO_TENANT]-(c:Contact) RETURN c`,
+			map[string]interface{}{
+				"tenant": common.GetContext(ctx).Tenant,
+			})
 		records, err := result.Collect()
 		if err != nil {
 			return nil, err

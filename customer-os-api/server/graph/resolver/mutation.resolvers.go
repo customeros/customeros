@@ -57,6 +57,18 @@ func (r *mutationResolver) MergeTextCustomFieldToContact(ctx context.Context, co
 	return mapper.MapEntityToTextCustomField(result), nil
 }
 
+// RemoveTextCustomFieldFromContact is the resolver for the removeTextCustomFieldFromContact field.
+func (r *mutationResolver) RemoveTextCustomFieldFromContact(ctx context.Context, contactID string, fieldName string) (*model.BooleanResult, error) {
+	result, err := r.ServiceContainer.TextCustomFieldService.Delete(ctx, contactID, fieldName)
+	if err != nil {
+		graphql.AddErrorf(ctx, "Could not remove property %s from contact %s", fieldName, contactID)
+		return nil, err
+	}
+	return &model.BooleanResult{
+		Result: result,
+	}, nil
+}
+
 // CreateContactGroup is the resolver for the createContactGroup field.
 func (r *mutationResolver) CreateContactGroup(ctx context.Context, input model.ContactGroupInput) (*model.ContactGroup, error) {
 	contactGroupEntityCreated, err := r.ServiceContainer.ContactGroupService.Create(ctx, &entity.ContactGroupEntity{
