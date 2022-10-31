@@ -6,9 +6,9 @@ echo CUSTOMER_OS_HOME=$CUSTOMER_OS_HOME
 
 if [[ $(kubectl get namespaces) == *"$NAMESPACE_NAME"* ]];
   then
-    echo " --- Continue deploy on namespace openline --- "
+    echo " --- Continue deploy on namespace $NAMESPACE_NAME --- "
   else
-    echo " --- Creating Openline Development namespace in minikube ---"
+    echo " --- Creating $NAMESPACE_NAME namespace in minikube ---"
     kubectl create -f "$CUSTOMER_OS_HOME/deployment/k8s/configs/openline-namespace.json"
     wait
 fi
