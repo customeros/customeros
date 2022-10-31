@@ -51,6 +51,16 @@
       "contributions": [
         "review"
       ]
+    },
+    {
+      "login": "tsearle",
+      "name": "tsearle",
+      "avatar_url": "https://avatars.githubusercontent.com/u/4540323?v=4",
+      "profile": "https://github.com/tsearle",
+      "contributions": [
+        "code",
+        "doc"
+      ]
     }
   ],
   "contributorsPerLine": 7,
