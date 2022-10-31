@@ -8,12 +8,7 @@
 
 # Install Prerequisites 
 
-Set Customer OS home env variable by running :
-```
-export CUSTOMER_OS_HOME=~/[path to the checked out folder]/openline-customer-os
-```
-or added to .zprofile for Mac or .bashrc for linux
-
+## Setup Environment for OSX
 
 TODO create script to install Prerequisites
 
@@ -43,13 +38,22 @@ brew install helm
 helm repo add bitnami https://charts.bitnami.com/bitnami
 ```
 
-
 # Start on local dev env
-Go to $CUSTOMER_OS_HOME/deployment/k8s/local-minikube
+Go to deployment/k8s/local-minikube
 and execute :
 0-mac-install-prerequisites.sh
 1-deploy-customer-os-base-infrastructure-local.sh
 2-build-deploy-customer-os-local-images.sh
+
+## Setup Environment for Ubuntu
+
+Go to eployment/k8s/local-minikube
+and execute :
+``` 
+0-ubuntu-install-prerequisites.sh
+1-deploy-customer-os-base-infrastructure-local.sh
+2-build-deploy-customer-os-local-images.sh
+``` 
 
 # Port FWD
 ```
