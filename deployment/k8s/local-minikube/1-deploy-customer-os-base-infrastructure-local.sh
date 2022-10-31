@@ -4,7 +4,7 @@ NAMESPACE_NAME="openline"
 
 if [[ $(kubectl get namespaces) == *"$NAMESPACE_NAME"* ]];
   then
-    echo " --- Continue deploy on namespace openline-development --- "
+    echo " --- Continue deploy on namespace openline --- "
   else
     echo " --- Creating Openline Development namespace in minikube ---"
     kubectl create -f "../configs/openline-namespace.json"
