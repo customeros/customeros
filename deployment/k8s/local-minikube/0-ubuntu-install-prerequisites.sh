@@ -14,8 +14,9 @@ if [ -z $(which docker) ]; then
 fi
 
 if [ -z $(which minikube) ]; then
-    wget -O /tmp/minikube_latest.deb https://storage.googleapis.com/minikube/releases/latest/minikube_latest_amd64.deb
-    sudo apt install -y /tmp/minikube_latest.deb
+    wget -O /tmp/minikube-linux-amd64 https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64
+    sudo install -o root -g root -m 0755 /tmp/minikube-linux-amd64 /usr/local/bin/kubectl
+    minikube config set driver docker
 fi
 
 if [ -z $(which kubectl) ]; then
