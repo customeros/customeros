@@ -12,6 +12,8 @@ type Contact {
     contactType: String
     groups: [ContactGroup!]! @goField(forceResolver: true)
     textCustomFields: [TextCustomField!]! @goField(forceResolver: true)
+    phoneNumbers: [PhoneNumberInfo!] @goField(forceResolver: true)
+    emails: [EmailInfo!] @goField(forceResolver: true)
 }
 
 input ContactInput {

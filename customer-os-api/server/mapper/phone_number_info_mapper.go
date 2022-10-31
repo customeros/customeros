@@ -15,3 +15,22 @@ func MapPhoneNumberInputToEntity(input *model.PhoneNumberInput) *entity.PhoneNum
 	}
 	return &phoneNumberEntity
 }
+
+func MapEntitiesToPhoneNumbers(entities *entity.PhoneNumberEntities) []*model.PhoneNumberInfo {
+	var phoneNumbers []*model.PhoneNumberInfo
+	for _, phoneNumberEntity := range *entities {
+		phoneNumbers = append(phoneNumbers, MapEntityToPhoneNumber(&phoneNumberEntity))
+	}
+	return phoneNumbers
+}
+
+func MapEntityToPhoneNumber(phoneNumberEntity *entity.PhoneNumberEntity) *model.PhoneNumberInfo {
+	var label = model.PhoneLabel(phoneNumberEntity.Label)
+	if !label.IsValid() {
+		label = model.PhoneLabelOther
+	}
+	return &model.PhoneNumberInfo{
+		Number: phoneNumberEntity.Number,
+		Label:  label,
+	}
+}

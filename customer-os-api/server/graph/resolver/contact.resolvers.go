@@ -5,7 +5,6 @@ package resolver
 
 import (
 	"context"
-
 	"github.com/openline-ai/openline-customer-os/customer-os-api/graph/generated"
 	"github.com/openline-ai/openline-customer-os/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/customer-os-api/mapper"
@@ -21,6 +20,18 @@ func (r *contactResolver) Groups(ctx context.Context, obj *model.Contact) ([]*mo
 func (r *contactResolver) TextCustomFields(ctx context.Context, obj *model.Contact) ([]*model.TextCustomField, error) {
 	textCustomFieldEntities, err := r.ServiceContainer.TextCustomFieldService.FindAllForContact(ctx, obj)
 	return mapper.MapEntitiesToTextCustomFields(textCustomFieldEntities), err
+}
+
+// PhoneNumbers is the resolver for the phoneNumbers field.
+func (r *contactResolver) PhoneNumbers(ctx context.Context, obj *model.Contact) ([]*model.PhoneNumberInfo, error) {
+	phoneNumberEntities, err := r.ServiceContainer.PhoneNumberService.FindAllForContact(ctx, obj)
+	return mapper.MapEntitiesToPhoneNumbers(phoneNumberEntities), err
+}
+
+// Emails is the resolver for the emails field.
+func (r *contactResolver) Emails(ctx context.Context, obj *model.Contact) ([]*model.EmailInfo, error) {
+	emailEntities, err := r.ServiceContainer.EmailService.FindAllForContact(ctx, obj)
+	return mapper.MapEntitiesToEmails(emailEntities), err
 }
 
 // Contact returns generated.ContactResolver implementation.

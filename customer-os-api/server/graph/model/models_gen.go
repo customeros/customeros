@@ -25,6 +25,8 @@ type Contact struct {
 	ContactType      *string            `json:"contactType"`
 	Groups           []*ContactGroup    `json:"groups"`
 	TextCustomFields []*TextCustomField `json:"textCustomFields"`
+	PhoneNumbers     []*PhoneNumberInfo `json:"phoneNumbers"`
+	Emails           []*EmailInfo       `json:"emails"`
 }
 
 type ContactGroup struct {
