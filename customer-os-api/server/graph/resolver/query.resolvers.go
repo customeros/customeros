@@ -14,7 +14,7 @@ import (
 
 // Contact is the resolver for the contact field.
 func (r *queryResolver) Contact(ctx context.Context, id string) (*model.Contact, error) {
-	contactEntity, err := r.ServiceContainer.ContactService.FindContactById(id)
+	contactEntity, err := r.ServiceContainer.ContactService.FindContactById(ctx, id)
 	if err != nil || contactEntity == nil {
 		graphql.AddErrorf(ctx, "Contact with id %s not found", id)
 		return nil, err
@@ -24,13 +24,13 @@ func (r *queryResolver) Contact(ctx context.Context, id string) (*model.Contact,
 
 // Contacts is the resolver for the contacts field.
 func (r *queryResolver) Contacts(ctx context.Context) ([]*model.Contact, error) {
-	contactEntities, err := r.ServiceContainer.ContactService.FindAll()
+	contactEntities, err := r.ServiceContainer.ContactService.FindAll(ctx)
 	return mapper.MapEntitiesToContacts(contactEntities), err
 }
 
 // ContactGroups is the resolver for the contactGroups field.
 func (r *queryResolver) ContactGroups(ctx context.Context) ([]*model.ContactGroup, error) {
-	contactGroupEntities, err := r.ServiceContainer.ContactGroupService.FindAll()
+	contactGroupEntities, err := r.ServiceContainer.ContactGroupService.FindAll(ctx)
 	return mapper.MapEntitiesToContactGroups(contactGroupEntities), err
 }
 

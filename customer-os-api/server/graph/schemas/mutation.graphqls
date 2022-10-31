@@ -6,7 +6,8 @@ type Mutation {
     createContactGroup(input: ContactGroupInput!): ContactGroup!
     deleteContactGroupAndUnlinkAllContacts(id :ID!): BooleanResult!
     #  TODO implement
-    #  updateContact(id: ID!, request: ContactInput!): Contact!
+    #  updateContact(input: ContactUpdateInput!): Contact!
+    #  updateContactGroup(input: ContactGroupUpdateInput!): Contact!
 }
 
 
