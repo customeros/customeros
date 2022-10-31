@@ -1,6 +1,6 @@
 #!/bin/bash
 
-if [ -z $ (which docker) ]; then
+if [ -z $(which docker) ]; then
     sudo apt update
     sudo apt install ca-certificates curl gnupg lsb-release
     if [ ! -f "/etc/apt/sources.list.d/docker.list" ]; then
@@ -13,7 +13,7 @@ if [ -z $ (which docker) ]; then
     sudo usermod -aG docker $(whoami)
 fi
 
-if [ -z $ (which kubectl) ]; then
+if [ -z $(which kubectl) ]; then
     wget -O /tmp/minikube_latest.deb https://storage.googleapis.com/minikube/releases/latest/minikube_latest_amd64.deb
     sudo apt install -y /tmp/minikube_latest.deb
     wget -O /tmp/kubectl "https://dl.k8s.io/release/v1.25.3/bin/linux/amd64/kubectl"
