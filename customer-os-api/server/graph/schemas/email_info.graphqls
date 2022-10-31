@@ -1,0 +1,16 @@
+type EmailInfo {
+    email: String!
+    label: EmailLabel!
+}
+
+input EmailInput {
+    email: String!
+    label: EmailLabel!
+}
+
+enum EmailLabel {
+    MAIN
+    WORK
+    HOME
+    OTHER
+}

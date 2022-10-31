@@ -10,11 +10,17 @@ import (
 	"github.com/openline-ai/openline-customer-os/customer-os-api/graph/generated"
 	"github.com/openline-ai/openline-customer-os/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/customer-os-api/mapper"
+	"github.com/openline-ai/openline-customer-os/customer-os-api/service"
 )
 
 // CreateContact is the resolver for the createContact field.
 func (r *mutationResolver) CreateContact(ctx context.Context, input model.ContactInput) (*model.Contact, error) {
-	contactNodeCreated, err := r.ServiceContainer.ContactService.Create(ctx, mapper.MapContactInputToEntity(input))
+	contactNodeCreated, err := r.ServiceContainer.ContactService.Create(ctx, &service.ContactCreateData{
+		ContactEntity:     mapper.MapContactInputToEntity(input),
+		TextCustomFields:  mapper.MapTextCustomFieldInputsToEntities(input.TextCustomFields),
+		PhoneNumberEntity: mapper.MapPhoneNumberInputToEntity(input.PhoneNumber),
+		EmailEntity:       mapper.MapEmailInputToEntity(input.Email),
+	})
 	if err != nil {
 		graphql.AddErrorf(ctx, "Failed to create contact %s %s", input.FirstName, input.LastName)
 		return nil, err
@@ -50,6 +56,50 @@ func (r *mutationResolver) RemoveTextCustomFieldFromContact(ctx context.Context,
 	result, err := r.ServiceContainer.TextCustomFieldService.Delete(ctx, contactID, fieldName)
 	if err != nil {
 		graphql.AddErrorf(ctx, "Could not remove property %s from contact %s", fieldName, contactID)
+		return nil, err
+	}
+	return &model.BooleanResult{
+		Result: result,
+	}, nil
+}
+
+// MergePhoneNumberToContact is the resolver for the mergePhoneNumberToContact field.
+func (r *mutationResolver) MergePhoneNumberToContact(ctx context.Context, contactID string, input model.PhoneNumberInput) (*model.PhoneNumberInfo, error) {
+	result, err := r.ServiceContainer.PhoneNumberService.MergePhoneNumberToContact(ctx, contactID, mapper.MapPhoneNumberInputToEntity(&input))
+	if err != nil {
+		graphql.AddErrorf(ctx, "Could not add phone number %s to contact %s", input.Number, contactID)
+		return nil, err
+	}
+	return mapper.MapEntityToPhoneNumber(result), nil
+}
+
+// RemovePhoneNumberFromContact is the resolver for the removePhoneNumberFromContact field.
+func (r *mutationResolver) RemovePhoneNumberFromContact(ctx context.Context, contactID string, phoneNumber string) (*model.BooleanResult, error) {
+	result, err := r.ServiceContainer.PhoneNumberService.Delete(ctx, contactID, phoneNumber)
+	if err != nil {
+		graphql.AddErrorf(ctx, "Could not remove phone number %s from contact %s", phoneNumber, contactID)
+		return nil, err
+	}
+	return &model.BooleanResult{
+		Result: result,
+	}, nil
+}
+
+// MergeEmailToContact is the resolver for the mergeEmailToContact field.
+func (r *mutationResolver) MergeEmailToContact(ctx context.Context, contactID string, input model.EmailInput) (*model.EmailInfo, error) {
+	result, err := r.ServiceContainer.EmailService.MergeEmailToContact(ctx, contactID, mapper.MapEmailInputToEntity(&input))
+	if err != nil {
+		graphql.AddErrorf(ctx, "Could not add email %s to contact %s", input.Email, contactID)
+		return nil, err
+	}
+	return mapper.MapEntityToEmail(result), nil
+}
+
+// RemoveEmailFromContact is the resolver for the removeEmailFromContact field.
+func (r *mutationResolver) RemoveEmailFromContact(ctx context.Context, contactID string, email string) (*model.BooleanResult, error) {
+	result, err := r.ServiceContainer.EmailService.Delete(ctx, contactID, email)
+	if err != nil {
+		graphql.AddErrorf(ctx, "Could not remove email %s from contact %s", email, contactID)
 		return nil, err
 	}
 	return &model.BooleanResult{

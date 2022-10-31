@@ -145,8 +145,8 @@ func (s *contactGroupService) FindAllForContact(ctx context.Context, contact *mo
 func mapDbNodeToContactGroup(dbContactGroupNode dbtype.Node) *entity.ContactGroupEntity {
 	props := utils.GetPropsFromNode(dbContactGroupNode)
 	contactGroup := entity.ContactGroupEntity{
-		Id:   props["id"].(string),
-		Name: props["name"].(string),
+		Id:   utils.GetStringPropOrEmpty(props, "id"),
+		Name: utils.GetStringPropOrEmpty(props, "name"),
 	}
 	return &contactGroup
 }

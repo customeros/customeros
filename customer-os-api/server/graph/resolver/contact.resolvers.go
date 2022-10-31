@@ -23,6 +23,18 @@ func (r *contactResolver) TextCustomFields(ctx context.Context, obj *model.Conta
 	return mapper.MapEntitiesToTextCustomFields(textCustomFieldEntities), err
 }
 
+// PhoneNumbers is the resolver for the phoneNumbers field.
+func (r *contactResolver) PhoneNumbers(ctx context.Context, obj *model.Contact) ([]*model.PhoneNumberInfo, error) {
+	phoneNumberEntities, err := r.ServiceContainer.PhoneNumberService.FindAllForContact(ctx, obj)
+	return mapper.MapEntitiesToPhoneNumbers(phoneNumberEntities), err
+}
+
+// Emails is the resolver for the emails field.
+func (r *contactResolver) Emails(ctx context.Context, obj *model.Contact) ([]*model.EmailInfo, error) {
+	emailEntities, err := r.ServiceContainer.EmailService.FindAllForContact(ctx, obj)
+	return mapper.MapEntitiesToEmails(emailEntities), err
+}
+
 // Contact returns generated.ContactResolver implementation.
 func (r *Resolver) Contact() generated.ContactResolver { return &contactResolver{r} }
 

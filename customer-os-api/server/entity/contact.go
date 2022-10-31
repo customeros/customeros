@@ -6,15 +6,14 @@ import (
 )
 
 type ContactEntity struct {
-	Id               string
-	FirstName        string
-	LastName         string
-	Label            string
-	CompanyName      string
-	ContactType      string
-	CreatedAt        time.Time
-	Groups           ContactGroupEntities
-	TextCustomFields TextCustomFieldEntities
+	Id          string
+	FirstName   string
+	LastName    string
+	Label       string
+	Company     string
+	Title       string
+	ContactType string
+	CreatedAt   time.Time
 }
 
 func (contact ContactEntity) ToString() string {

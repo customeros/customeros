@@ -10,6 +10,8 @@ type ServiceContainer struct {
 	ContactGroupService                        service.ContactGroupService
 	ContactWithContactGroupRelationshipService service.ContactWithContactGroupRelationshipService
 	TextCustomFieldService                     service.TextCustomFieldService
+	PhoneNumberService                         service.PhoneNumberService
+	EmailService                               service.EmailService
 }
 
 func InitServices(driver *neo4j.Driver) *ServiceContainer {
@@ -18,5 +20,7 @@ func InitServices(driver *neo4j.Driver) *ServiceContainer {
 		ContactGroupService: service.NewContactGroupService(driver),
 		ContactWithContactGroupRelationshipService: service.NewContactWithContactGroupRelationshipService(driver),
 		TextCustomFieldService:                     service.NewTextCustomFieldService(driver),
+		PhoneNumberService:                         service.NewPhoneNumberService(driver),
+		EmailService:                               service.NewEmailService(driver),
 	}
 }

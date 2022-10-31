@@ -7,19 +7,25 @@ type Contact {
     lastName: String!
     createdAt: Time!
     label: String
-    companyName: String
+    company: String
+    title: String
     contactType: String
     groups: [ContactGroup!]! @goField(forceResolver: true)
     textCustomFields: [TextCustomField!]! @goField(forceResolver: true)
+    phoneNumbers: [PhoneNumberInfo!] @goField(forceResolver: true)
+    emails: [EmailInfo!] @goField(forceResolver: true)
 }
 
 input ContactInput {
     firstName: String!
     lastName: String!
     label: String
-    companyName: String
+    company: String
+    title: String
     contactType: String
     textCustomFields: [TextCustomFieldInput!]
+    email: EmailInput
+    phoneNumber: PhoneNumberInput
 }
 
 
