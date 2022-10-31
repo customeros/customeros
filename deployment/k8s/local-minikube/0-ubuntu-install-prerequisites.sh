@@ -15,7 +15,7 @@ fi
 
 if [ -z $(which minikube) ]; then
     wget -O /tmp/minikube-linux-amd64 https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64
-    sudo install -o root -g root -m 0755 /tmp/minikube /usr/local/bin/kubectl
+    sudo install -o root -g root -m 0755 /tmp/minikube-linux-amd64 /usr/local/bin/minikube
     minikube config set driver docker
 fi
 
