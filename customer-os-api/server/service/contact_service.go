@@ -109,7 +109,9 @@ func (s *contactService) Delete(ctx context.Context, contactId string) (bool, er
 		_, err := tx.Run(`
 			MATCH (c:Contact {id:$id})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant})
 			OPTIONAL MATCH (c)-[:HAS_TEXT_PROPERTY]->(f:TextCustomField)
-            DETACH DELETE f, c
+			OPTIONAL MATCH (c)-[:CALLED_AT]->(p:PhoneNumber)
+			OPTIONAL MATCH (c)-[:EMAILED_AT]->(e:Email)
+            DETACH DELETE p, e, f, c
 			`,
 			map[string]interface{}{
 				"id":     contactId,
