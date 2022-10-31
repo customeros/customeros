@@ -1,5 +1,7 @@
 #! /bin/sh
 NAMESPACE_NAME="openline-development"
+CUSTOMER_OS_HOME="$(dirname $(readlink -f $0))/../../../"
+
 ## Build Images
 cd  $CUSTOMER_OS_HOME/customer-os-api/server/
 
