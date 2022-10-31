@@ -1,5 +1,5 @@
 #! /bin/sh
-NAMESPACE_NAME="openline-development"
+NAMESPACE_NAME="openline"
 CUSTOMER_OS_HOME="$(dirname $(readlink -f $0))/../../../"
 
 ## Build Images
