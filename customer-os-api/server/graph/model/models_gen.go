@@ -9,6 +9,12 @@ import (
 	"time"
 )
 
+type PagedResult interface {
+	IsPagedResult()
+	GetTotalPages() int
+	GetTotalElements() int64
+}
+
 type BooleanResult struct {
 	Result bool `json:"result"`
 }
@@ -54,6 +60,16 @@ type ContactInput struct {
 	PhoneNumber      *PhoneNumberInput       `json:"phoneNumber"`
 }
 
+type ContactsPage struct {
+	Content       []*Contact `json:"content"`
+	TotalPages    int        `json:"totalPages"`
+	TotalElements int64      `json:"totalElements"`
+}
+
+func (ContactsPage) IsPagedResult()               {}
+func (this ContactsPage) GetTotalPages() int      { return this.TotalPages }
+func (this ContactsPage) GetTotalElements() int64 { return this.TotalElements }
+
 type EmailInfo struct {
 	Email string     `json:"email"`
 	Label EmailLabel `json:"label"`
@@ -62,6 +78,11 @@ type EmailInfo struct {
 type EmailInput struct {
 	Email string     `json:"email"`
 	Label EmailLabel `json:"label"`
+}
+
+type PaginationFilter struct {
+	Page  int `json:"page"`
+	Limit int `json:"limit"`
 }
 
 type PhoneNumberInfo struct {

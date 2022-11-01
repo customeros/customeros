@@ -1,7 +1,6 @@
 type Query {
   contact(id: ID!) :Contact!
-  contacts: [Contact!]!
+  contacts(paginationFilter: PaginationFilter): ContactsPage!
 
   contactGroups: [ContactGroup!]!
-#  TODO list contacts in contact group
 }

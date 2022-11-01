@@ -14,7 +14,7 @@ import (
 type ContactService interface {
 	Create(ctx context.Context, contact *ContactCreateData) (*entity.ContactEntity, error)
 	FindContactById(ctx context.Context, id string) (*entity.ContactEntity, error)
-	FindAll(ctx context.Context) (*entity.ContactNodes, error)
+	FindAll(ctx context.Context, page int, limit int) (*utils.Pagination, error)
 	Delete(ctx context.Context, id string) (bool, error)
 }
 
@@ -155,21 +155,35 @@ func (s *contactService) FindContactById(ctx context.Context, id string) (*entit
 	return s.mapDbNodeToContactEntity(queryResult.(dbtype.Node)), nil
 }
 
-func (s *contactService) FindAll(ctx context.Context) (*entity.ContactNodes, error) {
+func (s *contactService) FindAll(ctx context.Context, page int, limit int) (*utils.Pagination, error) {
+	var paginatedResult = utils.Pagination{
+		Limit: limit,
+		Page:  page,
+	}
 	session := (*s.driver).NewSession(neo4j.SessionConfig{AccessMode: neo4j.AccessModeRead})
 	defer session.Close()
 
-	queryResult, err := session.ReadTransaction(func(tx neo4j.Transaction) (interface{}, error) {
+	dataResult, err := session.ReadTransaction(func(tx neo4j.Transaction) (interface{}, error) {
 		result, err := tx.Run(`
-				MATCH (:Tenant {name:$tenant})<-[:CONTACT_BELONGS_TO_TENANT]-(c:Contact) RETURN c`,
+				MATCH (:Tenant {name:$tenant})<-[:CONTACT_BELONGS_TO_TENANT]-(c:Contact) RETURN count(c) as count`,
 			map[string]interface{}{
 				"tenant": common.GetContext(ctx).Tenant,
 			})
-		records, err := result.Collect()
+		count, _ := result.Single()
+		paginatedResult.SetTotalRows(count.Values[0].(int64))
+
+		result, err = tx.Run(`
+				MATCH (:Tenant {name:$tenant})<-[:CONTACT_BELONGS_TO_TENANT]-(c:Contact) RETURN c SKIP $skip LIMIT $limit`,
+			map[string]interface{}{
+				"tenant": common.GetContext(ctx).Tenant,
+				"skip":   paginatedResult.GetSkip(),
+				"limit":  paginatedResult.GetLimit(),
+			})
+		data, err := result.Collect()
 		if err != nil {
 			return nil, err
 		}
-		return records, nil
+		return data, nil
 	})
 	if err != nil {
 		return nil, err
@@ -177,12 +191,12 @@ func (s *contactService) FindAll(ctx context.Context) (*entity.ContactNodes, err
 
 	contacts := entity.ContactNodes{}
 
-	for _, dbRecord := range queryResult.([]*db.Record) {
+	for _, dbRecord := range dataResult.([]*db.Record) {
 		contact := s.mapDbNodeToContactEntity(dbRecord.Values[0].(dbtype.Node))
 		contacts = append(contacts, *contact)
 	}
-
-	return &contacts, nil
+	paginatedResult.SetRows(&contacts)
+	return &paginatedResult, nil
 }
 
 func (s *contactService) mapDbNodeToContactEntity(dbContactNode dbtype.Node) *entity.ContactEntity {

@@ -1,0 +1,4 @@
+input PaginationFilter {
+    page: Int!
+    limit: Int!
+}
