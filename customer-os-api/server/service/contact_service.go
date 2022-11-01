@@ -52,23 +52,27 @@ func createContactInDBTxWork(ctx context.Context, newContact *ContactCreateData)
 			MATCH (t:Tenant {name:$tenant})
 			CREATE (c:Contact {
 				  id: randomUUID(),
+				  title: $title,
 				  firstName: $firstName,
 				  lastName: $lastName,
 				  label: $label,
 				  company: $company,
-				  title: $title,
+				  companyTitle: $companyTitle,
+				  notes: $notes,
 				  contactType: $contactType,
                   createdAt :datetime({timezone: 'UTC'})
 			})-[:CONTACT_BELONGS_TO_TENANT]->(t)
 			RETURN c`,
 			map[string]interface{}{
-				"tenant":      common.GetContext(ctx).Tenant,
-				"firstName":   newContact.ContactEntity.FirstName,
-				"lastName":    newContact.ContactEntity.LastName,
-				"label":       newContact.ContactEntity.Label,
-				"contactType": newContact.ContactEntity.ContactType,
-				"company":     newContact.ContactEntity.Company,
-				"title":       newContact.ContactEntity.Title,
+				"tenant":       common.GetContext(ctx).Tenant,
+				"firstName":    newContact.ContactEntity.FirstName,
+				"lastName":     newContact.ContactEntity.LastName,
+				"label":        newContact.ContactEntity.Label,
+				"contactType":  newContact.ContactEntity.ContactType,
+				"company":      newContact.ContactEntity.Company,
+				"title":        newContact.ContactEntity.Title,
+				"companyTitle": newContact.ContactEntity.CompanyTitle,
+				"notes":        newContact.ContactEntity.Notes,
 			})
 
 		record, err := result.Single()
@@ -184,14 +188,16 @@ func (s *contactService) FindAll(ctx context.Context) (*entity.ContactNodes, err
 func (s *contactService) mapDbNodeToContactEntity(dbContactNode dbtype.Node) *entity.ContactEntity {
 	props := utils.GetPropsFromNode(dbContactNode)
 	contact := entity.ContactEntity{
-		Id:          utils.GetStringPropOrEmpty(props, "id"),
-		FirstName:   utils.GetStringPropOrEmpty(props, "firstName"),
-		LastName:    utils.GetStringPropOrEmpty(props, "lastName"),
-		Label:       utils.GetStringPropOrEmpty(props, "label"),
-		Company:     utils.GetStringPropOrEmpty(props, "company"),
-		Title:       utils.GetStringPropOrEmpty(props, "title"),
-		ContactType: utils.GetStringPropOrEmpty(props, "contactType"),
-		CreatedAt:   props["createdAt"].(time.Time),
+		Id:           utils.GetStringPropOrEmpty(props, "id"),
+		FirstName:    utils.GetStringPropOrEmpty(props, "firstName"),
+		LastName:     utils.GetStringPropOrEmpty(props, "lastName"),
+		Label:        utils.GetStringPropOrEmpty(props, "label"),
+		Company:      utils.GetStringPropOrEmpty(props, "company"),
+		Title:        utils.GetStringPropOrEmpty(props, "title"),
+		CompanyTitle: utils.GetStringPropOrEmpty(props, "companyTitle"),
+		Notes:        utils.GetStringPropOrEmpty(props, "notes"),
+		ContactType:  utils.GetStringPropOrEmpty(props, "contactType"),
+		CreatedAt:    props["createdAt"].(time.Time),
 	}
 	return &contact
 }
