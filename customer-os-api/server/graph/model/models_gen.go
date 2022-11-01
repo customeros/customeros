@@ -16,12 +16,14 @@ type BooleanResult struct {
 // Contact - represents one person that can be contacted for a Customer. In B2C
 type Contact struct {
 	ID               string             `json:"id"`
+	Title            *string            `json:"title"`
 	FirstName        string             `json:"firstName"`
 	LastName         string             `json:"lastName"`
 	CreatedAt        time.Time          `json:"createdAt"`
 	Label            *string            `json:"label"`
 	Company          *string            `json:"company"`
-	Title            *string            `json:"title"`
+	CompanyTitle     *string            `json:"companyTitle"`
+	Notes            *string            `json:"notes"`
 	ContactType      *string            `json:"contactType"`
 	Groups           []*ContactGroup    `json:"groups"`
 	TextCustomFields []*TextCustomField `json:"textCustomFields"`
@@ -40,10 +42,12 @@ type ContactGroupInput struct {
 
 type ContactInput struct {
 	FirstName        string                  `json:"firstName"`
+	Title            *string                 `json:"title"`
 	LastName         string                  `json:"lastName"`
 	Label            *string                 `json:"label"`
 	Company          *string                 `json:"company"`
-	Title            *string                 `json:"title"`
+	CompanyTitle     *string                 `json:"companyTitle"`
+	Notes            *string                 `json:"notes"`
 	ContactType      *string                 `json:"contactType"`
 	TextCustomFields []*TextCustomFieldInput `json:"textCustomFields"`
 	Email            *EmailInput             `json:"email"`
