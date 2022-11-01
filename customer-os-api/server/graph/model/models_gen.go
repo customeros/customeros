@@ -87,6 +87,11 @@ type PaginationFilter struct {
 	Limit int `json:"limit"`
 }
 
+type PaginationFilter struct {
+	Page  int `json:"page"`
+	Limit int `json:"limit"`
+}
+
 type PhoneNumberInfo struct {
 	Number  string     `json:"number"`
 	Label   PhoneLabel `json:"label"`
