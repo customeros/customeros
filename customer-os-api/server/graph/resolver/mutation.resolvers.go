@@ -5,6 +5,7 @@ package resolver
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/openline-ai/openline-customer-os/customer-os-api/entity"
@@ -13,6 +14,11 @@ import (
 	"github.com/openline-ai/openline-customer-os/customer-os-api/mapper"
 	"github.com/openline-ai/openline-customer-os/customer-os-api/service"
 )
+
+// CreateTenantUser is the resolver for the createTenantUser field.
+func (r *mutationResolver) CreateTenantUser(ctx context.Context, input model.TenantUserInput) (*model.TenantUser, error) {
+	panic(fmt.Errorf("not implemented: CreateTenantUser - createTenantUser"))
+}
 
 // CreateContact is the resolver for the createContact field.
 func (r *mutationResolver) CreateContact(ctx context.Context, input model.ContactInput) (*model.Contact, error) {
