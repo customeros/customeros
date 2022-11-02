@@ -65,6 +65,12 @@ func (s *emailService) MergeEmailToContact(ctx context.Context, contactId string
 	defer session.Close()
 
 	queryResult, err := session.WriteTransaction(func(tx neo4j.Transaction) (interface{}, error) {
+		if entity.Primary == true {
+			err := setOtherContactEmailsNonPrimaryInTx(ctx, contactId, entity.Email, tx)
+			if err != nil {
+				return nil, err
+			}
+		}
 		txResult, err := tx.Run(`
 			MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant})
 			MERGE (c)-[r:EMAILED_AT]->(e:Email {email: $email})
@@ -131,6 +137,20 @@ func addEmailToContactInTx(ctx context.Context, contactId string, input entity.E
 			"primary":   input.Primary,
 			"email":     input.Email,
 			"label":     input.Label,
+		})
+	return err
+}
+
+func setOtherContactEmailsNonPrimaryInTx(ctx context.Context, contactId string, email string, tx neo4j.Transaction) error {
+	_, err := tx.Run(`
+			MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}),
+				 (c)-[r:EMAILED_AT]->(e:Email)
+			WHERE e.email <> $email
+            SET r.primary=false`,
+		map[string]interface{}{
+			"tenant":    common.GetContext(ctx).Tenant,
+			"contactId": contactId,
+			"email":     email,
 		})
 	return err
 }

@@ -65,6 +65,12 @@ func (s *phoneNumberService) MergePhoneNumberToContact(ctx context.Context, cont
 	defer session.Close()
 
 	queryResult, err := session.WriteTransaction(func(tx neo4j.Transaction) (interface{}, error) {
+		if entity.Primary == true {
+			err := setOtherContactPhoneNumbersNonPrimaryInTx(ctx, contactId, entity.Number, tx)
+			if err != nil {
+				return nil, err
+			}
+		}
 		txResult, err := tx.Run(`
 			MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant})
 			MERGE (c)-[r:CALLED_AT]->(p:PhoneNumber {number: $number})
@@ -107,7 +113,20 @@ func addPhoneNumberToContactInTx(ctx context.Context, contactId string, input en
 			"label":     input.Label,
 			"primary":   input.Primary,
 		})
+	return err
+}
 
+func setOtherContactPhoneNumbersNonPrimaryInTx(ctx context.Context, contactId string, number string, tx neo4j.Transaction) error {
+	_, err := tx.Run(`
+			MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}),
+				 (c)-[r:CALLED_AT]->(p:PhoneNumber)
+			WHERE p.number <> $number
+            SET r.primary=false`,
+		map[string]interface{}{
+			"tenant":    common.GetContext(ctx).Tenant,
+			"contactId": contactId,
+			"number":    number,
+		})
 	return err
 }
 
