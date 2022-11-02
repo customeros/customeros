@@ -1,4 +1,6 @@
 type Query {
+  tenantUsers(paginationFilter: PaginationFilter): TenantUsersPage!
+
   contact(id: ID!) :Contact!
   contacts(paginationFilter: PaginationFilter): ContactsPage!
 

@@ -7,7 +7,7 @@ type TenantUser {
 }
 
 type TenantUsersPage implements PagedResult {
-    content: [Contact!]!
+    content: [TenantUser!]!
     totalPages: Int!
     totalElements: Int64!
 }

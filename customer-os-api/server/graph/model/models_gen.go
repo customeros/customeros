@@ -114,9 +114,9 @@ type TenantUserInput struct {
 }
 
 type TenantUsersPage struct {
-	Content       []*Contact `json:"content"`
-	TotalPages    int        `json:"totalPages"`
-	TotalElements int64      `json:"totalElements"`
+	Content       []*TenantUser `json:"content"`
+	TotalPages    int           `json:"totalPages"`
+	TotalElements int64         `json:"totalElements"`
 }
 
 func (TenantUsersPage) IsPagedResult()               {}

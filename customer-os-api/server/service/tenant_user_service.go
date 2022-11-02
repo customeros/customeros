@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"github.com/neo4j/neo4j-go-driver/v4/neo4j"
+	"github.com/neo4j/neo4j-go-driver/v4/neo4j/db"
 	"github.com/neo4j/neo4j-go-driver/v4/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/customer-os-api/common"
 	"github.com/openline-ai/openline-customer-os/customer-os-api/entity"
@@ -12,6 +13,7 @@ import (
 
 type TenantUserService interface {
 	Create(ctx context.Context, tenantUser *entity.TenantUserEntity) (*entity.TenantUserEntity, error)
+	FindAll(ctx context.Context, page int, limit int) (*utils.Pagination, error)
 }
 
 type tenantUserService struct {
@@ -56,6 +58,50 @@ func (s *tenantUserService) Create(ctx context.Context, tenantUser *entity.Tenan
 		return nil, err
 	}
 	return s.mapDbNodeToTenantUserEntity(queryResult.(dbtype.Node)), nil
+}
+
+func (s *tenantUserService) FindAll(ctx context.Context, page int, limit int) (*utils.Pagination, error) {
+	var paginatedResult = utils.Pagination{
+		Limit: limit,
+		Page:  page,
+	}
+	session := (*s.driver).NewSession(neo4j.SessionConfig{AccessMode: neo4j.AccessModeRead})
+	defer session.Close()
+
+	dataResult, err := session.ReadTransaction(func(tx neo4j.Transaction) (interface{}, error) {
+		result, err := tx.Run(`
+				MATCH (:Tenant {name:$tenant})<-[:USER_BELONGS_TO_TENANT]-(u:TenantUser) RETURN count(u) as count`,
+			map[string]interface{}{
+				"tenant": common.GetContext(ctx).Tenant,
+			})
+		count, _ := result.Single()
+		paginatedResult.SetTotalRows(count.Values[0].(int64))
+
+		result, err = tx.Run(`
+				MATCH (:Tenant {name:$tenant})<-[:USER_BELONGS_TO_TENANT]-(u:TenantUser) RETURN u SKIP $skip LIMIT $limit`,
+			map[string]interface{}{
+				"tenant": common.GetContext(ctx).Tenant,
+				"skip":   paginatedResult.GetSkip(),
+				"limit":  paginatedResult.GetLimit(),
+			})
+		data, err := result.Collect()
+		if err != nil {
+			return nil, err
+		}
+		return data, nil
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	tenantUsers := entity.TenantUserEntities{}
+
+	for _, dbRecord := range dataResult.([]*db.Record) {
+		tenantUser := s.mapDbNodeToTenantUserEntity(dbRecord.Values[0].(dbtype.Node))
+		tenantUsers = append(tenantUsers, *tenantUser)
+	}
+	paginatedResult.SetRows(&tenantUsers)
+	return &paginatedResult, nil
 }
 
 func (s *tenantUserService) mapDbNodeToTenantUserEntity(dbNode dbtype.Node) *entity.TenantUserEntity {

@@ -13,6 +13,19 @@ import (
 	"github.com/openline-ai/openline-customer-os/customer-os-api/mapper"
 )
 
+// TenantUsers is the resolver for the tenantUsers field.
+func (r *queryResolver) TenantUsers(ctx context.Context, paginationFilter *model.PaginationFilter) (*model.TenantUsersPage, error) {
+	if paginationFilter == nil {
+		paginationFilter = &model.PaginationFilter{Page: 0, Limit: 0}
+	}
+	paginatedResult, err := r.ServiceContainer.TenantUserService.FindAll(ctx, paginationFilter.Page, paginationFilter.Limit)
+	return &model.TenantUsersPage{
+		Content:       mapper.MapEntitiesToTenantUsers(paginatedResult.Rows.(*entity.TenantUserEntities)),
+		TotalPages:    paginatedResult.TotalPages,
+		TotalElements: paginatedResult.TotalRows,
+	}, err
+}
+
 // Contact is the resolver for the contact field.
 func (r *queryResolver) Contact(ctx context.Context, id string) (*model.Contact, error) {
 	contactEntity, err := r.ServiceContainer.ContactService.FindContactById(ctx, id)
