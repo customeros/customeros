@@ -18,6 +18,12 @@ type Contact {
     emails: [EmailInfo!] @goField(forceResolver: true)
 }
 
+type ContactsPage implements PagedResult {
+    content: [Contact!]!
+    totalPages: Int!
+    totalElements: Int64!
+}
+
 input ContactInput {
     firstName: String!
     title: String

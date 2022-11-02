@@ -72,6 +72,12 @@ type ComplexityRoot struct {
 		Name func(childComplexity int) int
 	}
 
+	ContactsPage struct {
+		Content       func(childComplexity int) int
+		TotalElements func(childComplexity int) int
+		TotalPages    func(childComplexity int) int
+	}
+
 	EmailInfo struct {
 		Email func(childComplexity int) int
 		Label func(childComplexity int) int
@@ -100,7 +106,7 @@ type ComplexityRoot struct {
 	Query struct {
 		Contact       func(childComplexity int, id string) int
 		ContactGroups func(childComplexity int) int
-		Contacts      func(childComplexity int) int
+		Contacts      func(childComplexity int, paginationFilter *model.PaginationFilter) int
 	}
 
 	TextCustomField struct {
@@ -132,7 +138,7 @@ type MutationResolver interface {
 }
 type QueryResolver interface {
 	Contact(ctx context.Context, id string) (*model.Contact, error)
-	Contacts(ctx context.Context) ([]*model.Contact, error)
+	Contacts(ctx context.Context, paginationFilter *model.PaginationFilter) (*model.ContactsPage, error)
 	ContactGroups(ctx context.Context) ([]*model.ContactGroup, error)
 }
 
@@ -269,6 +275,27 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.ContactGroup.Name(childComplexity), true
+
+	case "ContactsPage.content":
+		if e.complexity.ContactsPage.Content == nil {
+			break
+		}
+
+		return e.complexity.ContactsPage.Content(childComplexity), true
+
+	case "ContactsPage.totalElements":
+		if e.complexity.ContactsPage.TotalElements == nil {
+			break
+		}
+
+		return e.complexity.ContactsPage.TotalElements(childComplexity), true
+
+	case "ContactsPage.totalPages":
+		if e.complexity.ContactsPage.TotalPages == nil {
+			break
+		}
+
+		return e.complexity.ContactsPage.TotalPages(childComplexity), true
 
 	case "EmailInfo.email":
 		if e.complexity.EmailInfo.Email == nil {
@@ -466,7 +493,12 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		return e.complexity.Query.Contacts(childComplexity), true
+		args, err := ec.field_Query_contacts_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.Contacts(childComplexity, args["paginationFilter"].(*model.PaginationFilter)), true
 
 	case "TextCustomField.group":
 		if e.complexity.TextCustomField.Group == nil {
@@ -500,6 +532,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputContactGroupInput,
 		ec.unmarshalInputContactInput,
 		ec.unmarshalInputEmailInput,
+		ec.unmarshalInputPaginationFilter,
 		ec.unmarshalInputPhoneNumberInput,
 		ec.unmarshalInputTextCustomFieldInput,
 	)
@@ -582,6 +615,12 @@ type Contact {
     emails: [EmailInfo!] @goField(forceResolver: true)
 }
 
+type ContactsPage implements PagedResult {
+    content: [Contact!]!
+    totalPages: Int!
+    totalElements: Int64!
+}
+
 input ContactInput {
     firstName: String!
     title: String
@@ -628,6 +667,14 @@ enum EmailLabel {
     OTHER
 }
 `, BuiltIn: false},
+	{Name: "../schemas/filter.graphqls", Input: `input PaginationFilter {
+    page: Int!
+    limit: Int!
+}`, BuiltIn: false},
+	{Name: "../schemas/interfaces.graphqls", Input: `interface PagedResult {
+    totalPages: Int!
+    totalElements: Int64!
+}`, BuiltIn: false},
 	{Name: "../schemas/mutation.graphqls", Input: `type Mutation {
     createContact(input: ContactInput!): Contact!
     deleteContact(contactId: ID!): BooleanResult!
@@ -673,10 +720,9 @@ enum PhoneLabel {
 `, BuiltIn: false},
 	{Name: "../schemas/query.graphqls", Input: `type Query {
   contact(id: ID!) :Contact!
-  contacts: [Contact!]!
+  contacts(paginationFilter: PaginationFilter): ContactsPage!
 
   contactGroups: [ContactGroup!]!
-#  TODO list contacts in contact group
 }`, BuiltIn: false},
 	{Name: "../schemas/result.graphqls", Input: `type BooleanResult {
     result: Boolean!
@@ -982,6 +1028,21 @@ func (ec *executionContext) field_Query_contact_args(ctx context.Context, rawArg
 		}
 	}
 	args["id"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_contacts_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 *model.PaginationFilter
+	if tmp, ok := rawArgs["paginationFilter"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("paginationFilter"))
+		arg0, err = ec.unmarshalOPaginationFilter2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐPaginationFilter(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["paginationFilter"] = arg0
 	return args, nil
 }
 
@@ -1768,6 +1829,168 @@ func (ec *executionContext) fieldContext_ContactGroup_name(ctx context.Context, 
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ContactsPage_content(ctx context.Context, field graphql.CollectedField, obj *model.ContactsPage) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ContactsPage_content(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Content, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.Contact)
+	fc.Result = res
+	return ec.marshalNContact2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐContactᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_ContactsPage_content(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ContactsPage",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Contact_id(ctx, field)
+			case "title":
+				return ec.fieldContext_Contact_title(ctx, field)
+			case "firstName":
+				return ec.fieldContext_Contact_firstName(ctx, field)
+			case "lastName":
+				return ec.fieldContext_Contact_lastName(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Contact_createdAt(ctx, field)
+			case "label":
+				return ec.fieldContext_Contact_label(ctx, field)
+			case "company":
+				return ec.fieldContext_Contact_company(ctx, field)
+			case "companyTitle":
+				return ec.fieldContext_Contact_companyTitle(ctx, field)
+			case "notes":
+				return ec.fieldContext_Contact_notes(ctx, field)
+			case "contactType":
+				return ec.fieldContext_Contact_contactType(ctx, field)
+			case "groups":
+				return ec.fieldContext_Contact_groups(ctx, field)
+			case "textCustomFields":
+				return ec.fieldContext_Contact_textCustomFields(ctx, field)
+			case "phoneNumbers":
+				return ec.fieldContext_Contact_phoneNumbers(ctx, field)
+			case "emails":
+				return ec.fieldContext_Contact_emails(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Contact", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ContactsPage_totalPages(ctx context.Context, field graphql.CollectedField, obj *model.ContactsPage) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ContactsPage_totalPages(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.TotalPages, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_ContactsPage_totalPages(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ContactsPage",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ContactsPage_totalElements(ctx context.Context, field graphql.CollectedField, obj *model.ContactsPage) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ContactsPage_totalElements(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.TotalElements, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int64)
+	fc.Result = res
+	return ec.marshalNInt642int64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_ContactsPage_totalElements(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ContactsPage",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int64 does not have child fields")
 		},
 	}
 	return fc, nil
@@ -2792,7 +3015,7 @@ func (ec *executionContext) _Query_contacts(ctx context.Context, field graphql.C
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().Contacts(rctx)
+		return ec.resolvers.Query().Contacts(rctx, fc.Args["paginationFilter"].(*model.PaginationFilter))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2804,9 +3027,9 @@ func (ec *executionContext) _Query_contacts(ctx context.Context, field graphql.C
 		}
 		return graphql.Null
 	}
-	res := resTmp.([]*model.Contact)
+	res := resTmp.(*model.ContactsPage)
 	fc.Result = res
-	return ec.marshalNContact2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐContactᚄ(ctx, field.Selections, res)
+	return ec.marshalNContactsPage2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐContactsPage(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_contacts(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -2817,37 +3040,26 @@ func (ec *executionContext) fieldContext_Query_contacts(ctx context.Context, fie
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
-			case "id":
-				return ec.fieldContext_Contact_id(ctx, field)
-			case "title":
-				return ec.fieldContext_Contact_title(ctx, field)
-			case "firstName":
-				return ec.fieldContext_Contact_firstName(ctx, field)
-			case "lastName":
-				return ec.fieldContext_Contact_lastName(ctx, field)
-			case "createdAt":
-				return ec.fieldContext_Contact_createdAt(ctx, field)
-			case "label":
-				return ec.fieldContext_Contact_label(ctx, field)
-			case "company":
-				return ec.fieldContext_Contact_company(ctx, field)
-			case "companyTitle":
-				return ec.fieldContext_Contact_companyTitle(ctx, field)
-			case "notes":
-				return ec.fieldContext_Contact_notes(ctx, field)
-			case "contactType":
-				return ec.fieldContext_Contact_contactType(ctx, field)
-			case "groups":
-				return ec.fieldContext_Contact_groups(ctx, field)
-			case "textCustomFields":
-				return ec.fieldContext_Contact_textCustomFields(ctx, field)
-			case "phoneNumbers":
-				return ec.fieldContext_Contact_phoneNumbers(ctx, field)
-			case "emails":
-				return ec.fieldContext_Contact_emails(ctx, field)
+			case "content":
+				return ec.fieldContext_ContactsPage_content(ctx, field)
+			case "totalPages":
+				return ec.fieldContext_ContactsPage_totalPages(ctx, field)
+			case "totalElements":
+				return ec.fieldContext_ContactsPage_totalElements(ctx, field)
 			}
-			return nil, fmt.Errorf("no field named %q was found under type Contact", field.Name)
+			return nil, fmt.Errorf("no field named %q was found under type ContactsPage", field.Name)
 		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_contacts_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
 	}
 	return fc, nil
 }
@@ -5105,6 +5317,42 @@ func (ec *executionContext) unmarshalInputEmailInput(ctx context.Context, obj in
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputPaginationFilter(ctx context.Context, obj interface{}) (model.PaginationFilter, error) {
+	var it model.PaginationFilter
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"page", "limit"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "page":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("page"))
+			it.Page, err = ec.unmarshalNInt2int(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "limit":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("limit"))
+			it.Limit, err = ec.unmarshalNInt2int(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputPhoneNumberInput(ctx context.Context, obj interface{}) (model.PhoneNumberInput, error) {
 	var it model.PhoneNumberInput
 	asMap := map[string]interface{}{}
@@ -5188,6 +5436,22 @@ func (ec *executionContext) unmarshalInputTextCustomFieldInput(ctx context.Conte
 // endregion **************************** input.gotpl *****************************
 
 // region    ************************** interface.gotpl ***************************
+
+func (ec *executionContext) _PagedResult(ctx context.Context, sel ast.SelectionSet, obj model.PagedResult) graphql.Marshaler {
+	switch obj := (obj).(type) {
+	case nil:
+		return graphql.Null
+	case model.ContactsPage:
+		return ec._ContactsPage(ctx, sel, &obj)
+	case *model.ContactsPage:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._ContactsPage(ctx, sel, obj)
+	default:
+		panic(fmt.Errorf("unexpected type %T", obj))
+	}
+}
 
 // endregion ************************** interface.gotpl ***************************
 
@@ -5388,6 +5652,48 @@ func (ec *executionContext) _ContactGroup(ctx context.Context, sel ast.Selection
 		case "name":
 
 			out.Values[i] = ec._ContactGroup_name(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var contactsPageImplementors = []string{"ContactsPage", "PagedResult"}
+
+func (ec *executionContext) _ContactsPage(ctx context.Context, sel ast.SelectionSet, obj *model.ContactsPage) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, contactsPageImplementors)
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("ContactsPage")
+		case "content":
+
+			out.Values[i] = ec._ContactsPage_content(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "totalPages":
+
+			out.Values[i] = ec._ContactsPage_totalPages(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "totalElements":
+
+			out.Values[i] = ec._ContactsPage_totalElements(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
 				invalids++
@@ -6234,6 +6540,20 @@ func (ec *executionContext) unmarshalNContactInput2githubᚗcomᚋopenlineᚑai�
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
+func (ec *executionContext) marshalNContactsPage2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐContactsPage(ctx context.Context, sel ast.SelectionSet, v model.ContactsPage) graphql.Marshaler {
+	return ec._ContactsPage(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNContactsPage2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐContactsPage(ctx context.Context, sel ast.SelectionSet, v *model.ContactsPage) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._ContactsPage(ctx, sel, v)
+}
+
 func (ec *executionContext) marshalNEmailInfo2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐEmailInfo(ctx context.Context, sel ast.SelectionSet, v model.EmailInfo) graphql.Marshaler {
 	return ec._EmailInfo(ctx, sel, &v)
 }
@@ -6270,6 +6590,36 @@ func (ec *executionContext) unmarshalNID2string(ctx context.Context, v interface
 
 func (ec *executionContext) marshalNID2string(ctx context.Context, sel ast.SelectionSet, v string) graphql.Marshaler {
 	res := graphql.MarshalID(v)
+	if res == graphql.Null {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+	}
+	return res
+}
+
+func (ec *executionContext) unmarshalNInt2int(ctx context.Context, v interface{}) (int, error) {
+	res, err := graphql.UnmarshalInt(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNInt2int(ctx context.Context, sel ast.SelectionSet, v int) graphql.Marshaler {
+	res := graphql.MarshalInt(v)
+	if res == graphql.Null {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+	}
+	return res
+}
+
+func (ec *executionContext) unmarshalNInt642int64(ctx context.Context, v interface{}) (int64, error) {
+	res, err := graphql.UnmarshalInt64(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNInt642int64(ctx context.Context, sel ast.SelectionSet, v int64) graphql.Marshaler {
+	res := graphql.MarshalInt64(v)
 	if res == graphql.Null {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -6736,6 +7086,14 @@ func (ec *executionContext) unmarshalOEmailInput2ᚖgithubᚗcomᚋopenlineᚑai
 		return nil, nil
 	}
 	res, err := ec.unmarshalInputEmailInput(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalOPaginationFilter2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐPaginationFilter(ctx context.Context, v interface{}) (*model.PaginationFilter, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalInputPaginationFilter(ctx, v)
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
