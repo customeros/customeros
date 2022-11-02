@@ -79,8 +79,9 @@ type ComplexityRoot struct {
 	}
 
 	EmailInfo struct {
-		Email func(childComplexity int) int
-		Label func(childComplexity int) int
+		Email   func(childComplexity int) int
+		Label   func(childComplexity int) int
+		Primary func(childComplexity int) int
 	}
 
 	Mutation struct {
@@ -99,8 +100,9 @@ type ComplexityRoot struct {
 	}
 
 	PhoneNumberInfo struct {
-		Label  func(childComplexity int) int
-		Number func(childComplexity int) int
+		Label   func(childComplexity int) int
+		Number  func(childComplexity int) int
+		Primary func(childComplexity int) int
 	}
 
 	Query struct {
@@ -311,6 +313,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.EmailInfo.Label(childComplexity), true
 
+	case "EmailInfo.primary":
+		if e.complexity.EmailInfo.Primary == nil {
+			break
+		}
+
+		return e.complexity.EmailInfo.Primary(childComplexity), true
+
 	case "Mutation.addContactToGroup":
 		if e.complexity.Mutation.AddContactToGroup == nil {
 			break
@@ -468,6 +477,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.PhoneNumberInfo.Number(childComplexity), true
+
+	case "PhoneNumberInfo.primary":
+		if e.complexity.PhoneNumberInfo.Primary == nil {
+			break
+		}
+
+		return e.complexity.PhoneNumberInfo.Primary(childComplexity), true
 
 	case "Query.contact":
 		if e.complexity.Query.Contact == nil {
@@ -653,11 +669,13 @@ directive @goField(forceResolver: Boolean, name: String) on FIELD_DEFINITION | I
 	{Name: "../schemas/email_info.graphqls", Input: `type EmailInfo {
     email: String!
     label: EmailLabel!
+    primary: Boolean!
 }
 
 input EmailInput {
     email: String!
     label: EmailLabel!
+    primary: Boolean
 }
 
 enum EmailLabel {
@@ -703,11 +721,13 @@ enum EmailLabel {
 	{Name: "../schemas/phone_info.graphqls", Input: `type PhoneNumberInfo {
     number: String!
     label: PhoneLabel!
+    primary: Boolean!
 }
 
 input PhoneNumberInput {
     number: String!
     label: PhoneLabel!
+    primary: Boolean
 }
 
 enum PhoneLabel {
@@ -1692,6 +1712,8 @@ func (ec *executionContext) fieldContext_Contact_phoneNumbers(ctx context.Contex
 				return ec.fieldContext_PhoneNumberInfo_number(ctx, field)
 			case "label":
 				return ec.fieldContext_PhoneNumberInfo_label(ctx, field)
+			case "primary":
+				return ec.fieldContext_PhoneNumberInfo_primary(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type PhoneNumberInfo", field.Name)
 		},
@@ -1739,6 +1761,8 @@ func (ec *executionContext) fieldContext_Contact_emails(ctx context.Context, fie
 				return ec.fieldContext_EmailInfo_email(ctx, field)
 			case "label":
 				return ec.fieldContext_EmailInfo_label(ctx, field)
+			case "primary":
+				return ec.fieldContext_EmailInfo_primary(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type EmailInfo", field.Name)
 		},
@@ -2084,6 +2108,50 @@ func (ec *executionContext) fieldContext_EmailInfo_label(ctx context.Context, fi
 	return fc, nil
 }
 
+func (ec *executionContext) _EmailInfo_primary(ctx context.Context, field graphql.CollectedField, obj *model.EmailInfo) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_EmailInfo_primary(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Primary, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_EmailInfo_primary(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "EmailInfo",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Mutation_createContact(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Mutation_createContact(ctx, field)
 	if err != nil {
@@ -2393,6 +2461,8 @@ func (ec *executionContext) fieldContext_Mutation_mergePhoneNumberToContact(ctx 
 				return ec.fieldContext_PhoneNumberInfo_number(ctx, field)
 			case "label":
 				return ec.fieldContext_PhoneNumberInfo_label(ctx, field)
+			case "primary":
+				return ec.fieldContext_PhoneNumberInfo_primary(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type PhoneNumberInfo", field.Name)
 		},
@@ -2513,6 +2583,8 @@ func (ec *executionContext) fieldContext_Mutation_mergeEmailToContact(ctx contex
 				return ec.fieldContext_EmailInfo_email(ctx, field)
 			case "label":
 				return ec.fieldContext_EmailInfo_label(ctx, field)
+			case "primary":
+				return ec.fieldContext_EmailInfo_primary(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type EmailInfo", field.Name)
 		},
@@ -2911,6 +2983,50 @@ func (ec *executionContext) fieldContext_PhoneNumberInfo_label(ctx context.Conte
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type PhoneLabel does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PhoneNumberInfo_primary(ctx context.Context, field graphql.CollectedField, obj *model.PhoneNumberInfo) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_PhoneNumberInfo_primary(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Primary, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_PhoneNumberInfo_primary(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PhoneNumberInfo",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
 		},
 	}
 	return fc, nil
@@ -5288,7 +5404,7 @@ func (ec *executionContext) unmarshalInputEmailInput(ctx context.Context, obj in
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"email", "label"}
+	fieldsInOrder := [...]string{"email", "label", "primary"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -5308,6 +5424,14 @@ func (ec *executionContext) unmarshalInputEmailInput(ctx context.Context, obj in
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("label"))
 			it.Label, err = ec.unmarshalNEmailLabel2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐEmailLabel(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "primary":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("primary"))
+			it.Primary, err = ec.unmarshalOBoolean2ᚖbool(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -5360,7 +5484,7 @@ func (ec *executionContext) unmarshalInputPhoneNumberInput(ctx context.Context, 
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"number", "label"}
+	fieldsInOrder := [...]string{"number", "label", "primary"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -5380,6 +5504,14 @@ func (ec *executionContext) unmarshalInputPhoneNumberInput(ctx context.Context, 
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("label"))
 			it.Label, err = ec.unmarshalNPhoneLabel2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐPhoneLabel(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "primary":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("primary"))
+			it.Primary, err = ec.unmarshalOBoolean2ᚖbool(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -5733,6 +5865,13 @@ func (ec *executionContext) _EmailInfo(ctx context.Context, sel ast.SelectionSet
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
+		case "primary":
+
+			out.Values[i] = ec._EmailInfo_primary(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -5902,6 +6041,13 @@ func (ec *executionContext) _PhoneNumberInfo(ctx context.Context, sel ast.Select
 		case "label":
 
 			out.Values[i] = ec._PhoneNumberInfo_label(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "primary":
+
+			out.Values[i] = ec._PhoneNumberInfo_primary(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
 				invalids++

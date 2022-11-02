@@ -13,6 +13,11 @@ func MapEmailInputToEntity(input *model.EmailInput) *entity.EmailEntity {
 		Email: input.Email,
 		Label: input.Label.String(),
 	}
+	if input.Primary != nil {
+		emailEntity.Primary = *input.Primary
+	} else {
+		emailEntity.Primary = false
+	}
 	return &emailEntity
 }
 
@@ -30,7 +35,8 @@ func MapEntityToEmail(emailEntity *entity.EmailEntity) *model.EmailInfo {
 		label = model.EmailLabelOther
 	}
 	return &model.EmailInfo{
-		Email: emailEntity.Email,
-		Label: label,
+		Email:   emailEntity.Email,
+		Label:   label,
+		Primary: emailEntity.Primary,
 	}
 }

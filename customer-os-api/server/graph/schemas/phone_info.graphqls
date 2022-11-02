@@ -1,11 +1,13 @@
 type PhoneNumberInfo {
     number: String!
     label: PhoneLabel!
+    primary: Boolean!
 }
 
 input PhoneNumberInput {
     number: String!
     label: PhoneLabel!
+    primary: Boolean
 }
 
 enum PhoneLabel {

@@ -34,8 +34,8 @@ func (s *phoneNumberService) FindAllForContact(ctx context.Context, contact *mod
 	queryResult, err := session.ReadTransaction(func(tx neo4j.Transaction) (interface{}, error) {
 		result, err := tx.Run(`
 				MATCH (c:Contact {id:$id})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}),
-              			(c:Contact {id:$id})-[:CALLED_AT]->(p:PhoneNumber) 
-				RETURN p `,
+              			(c:Contact {id:$id})-[r:CALLED_AT]->(p:PhoneNumber) 
+				RETURN p, r`,
 			map[string]interface{}{
 				"id":     contact.ID,
 				"tenant": common.GetContext(ctx).Tenant})
@@ -53,6 +53,7 @@ func (s *phoneNumberService) FindAllForContact(ctx context.Context, contact *mod
 
 	for _, dbRecord := range queryResult.([]*db.Record) {
 		phoneNumberEntity := s.mapDbNodeToPhoneNumberEntity(dbRecord.Values[0].(dbtype.Node))
+		s.addDbRelationshipToPhoneNumberEntity(dbRecord.Values[1].(dbtype.Relationship), phoneNumberEntity)
 		phoneNumberEntities = append(phoneNumberEntities, *phoneNumberEntity)
 	}
 
@@ -64,45 +65,68 @@ func (s *phoneNumberService) MergePhoneNumberToContact(ctx context.Context, cont
 	defer session.Close()
 
 	queryResult, err := session.WriteTransaction(func(tx neo4j.Transaction) (interface{}, error) {
+		if entity.Primary == true {
+			err := setOtherContactPhoneNumbersNonPrimaryInTx(ctx, contactId, entity.Number, tx)
+			if err != nil {
+				return nil, err
+			}
+		}
 		txResult, err := tx.Run(`
 			MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant})
-			MERGE (p:PhoneNumber {number: $number})<-[:CALLED_AT]-(c)
-            ON CREATE SET p.label=$label
-            ON MATCH SET p.label=$label
-			RETURN p`,
+			MERGE (c)-[r:CALLED_AT]->(p:PhoneNumber {number: $number})
+            ON CREATE SET p.label=$label, r.primary=$primary
+            ON MATCH SET p.label=$label, r.primary=$primary
+			RETURN p, r`,
 			map[string]interface{}{
 				"tenant":    common.GetContext(ctx).Tenant,
 				"contactId": contactId,
 				"number":    entity.Number,
 				"label":     entity.Label,
+				"primary":   entity.Primary,
 			})
 		record, err := txResult.Single()
 		if err != nil {
 			return nil, err
 		}
-		return record.Values[0], nil
+		return record, nil
 	})
 	if err != nil {
 		return nil, err
 	}
 
-	return s.mapDbNodeToPhoneNumberEntity(queryResult.(dbtype.Node)), nil
+	var phoneNumberEntity = s.mapDbNodeToPhoneNumberEntity(queryResult.(*db.Record).Values[0].(dbtype.Node))
+	s.addDbRelationshipToPhoneNumberEntity(queryResult.(*db.Record).Values[1].(dbtype.Relationship), phoneNumberEntity)
+	return phoneNumberEntity, nil
 }
 
 func addPhoneNumberToContactInTx(ctx context.Context, contactId string, input entity.PhoneNumberEntity, tx neo4j.Transaction) error {
 	_, err := tx.Run(`
 			MATCH (c:Contact {id:$contactId})
-			CREATE (p:PhoneNumber {
+			MERGE (p:PhoneNumber {
 				  number: $number,
 				  label: $label
-			})<-[:CALLED_AT]-(c)
+			})<-[:CALLED_AT {primary:$primary}]-(c)
 			RETURN p`,
 		map[string]interface{}{
 			"contactId": contactId,
 			"number":    input.Number,
 			"label":     input.Label,
+			"primary":   input.Primary,
 		})
+	return err
+}
 
+func setOtherContactPhoneNumbersNonPrimaryInTx(ctx context.Context, contactId string, number string, tx neo4j.Transaction) error {
+	_, err := tx.Run(`
+			MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}),
+				 (c)-[r:CALLED_AT]->(p:PhoneNumber)
+			WHERE p.number <> $number
+            SET r.primary=false`,
+		map[string]interface{}{
+			"tenant":    common.GetContext(ctx).Tenant,
+			"contactId": contactId,
+			"number":    number,
+		})
 	return err
 }
 
@@ -131,11 +155,16 @@ func (s *phoneNumberService) Delete(ctx context.Context, contactId string, phone
 	return queryResult.(bool), nil
 }
 
-func (s *phoneNumberService) mapDbNodeToPhoneNumberEntity(dbContactGroupNode dbtype.Node) *entity.PhoneNumberEntity {
-	props := utils.GetPropsFromNode(dbContactGroupNode)
+func (s *phoneNumberService) mapDbNodeToPhoneNumberEntity(node dbtype.Node) *entity.PhoneNumberEntity {
+	props := utils.GetPropsFromNode(node)
 	result := entity.PhoneNumberEntity{
 		Number: utils.GetStringPropOrEmpty(props, "number"),
 		Label:  utils.GetStringPropOrEmpty(props, "label"),
 	}
 	return &result
+}
+
+func (s *phoneNumberService) addDbRelationshipToPhoneNumberEntity(relationship dbtype.Relationship, phoneNumberEntity *entity.PhoneNumberEntity) {
+	props := utils.GetPropsFromRelationship(relationship)
+	phoneNumberEntity.Primary = utils.GetBoolPropOrFalse(props, "primary")
 }

@@ -5,8 +5,9 @@ import (
 )
 
 type EmailEntity struct {
-	Email string
-	Label string
+	Email   string
+	Label   string
+	Primary bool
 }
 
 func (email EmailEntity) ToString() string {

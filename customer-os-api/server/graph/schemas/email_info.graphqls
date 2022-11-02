@@ -1,11 +1,13 @@
 type EmailInfo {
     email: String!
     label: EmailLabel!
+    primary: Boolean!
 }
 
 input EmailInput {
     email: String!
     label: EmailLabel!
+    primary: Boolean
 }
 
 enum EmailLabel {
