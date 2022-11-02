@@ -52,7 +52,7 @@ func MapEntityToContact(contact *entity.ContactEntity) *model.Contact {
 	}
 }
 
-func MapEntitiesToContacts(contactEntities *entity.ContactNodes) []*model.Contact {
+func MapEntitiesToContacts(contactEntities *entity.ContactEntities) []*model.Contact {
 	var contacts []*model.Contact
 	for _, contactEntity := range *contactEntities {
 		contacts = append(contacts, MapEntityToContact(&contactEntity))

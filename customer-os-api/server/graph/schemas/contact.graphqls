@@ -1,5 +1,5 @@
 """
-Contact - represents one person that can be contacted for a Customer. In B2C
+Contact - represents one person that can be contacted. In B2C
 """
 type Contact {
     id: ID!

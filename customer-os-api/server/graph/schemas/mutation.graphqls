@@ -1,4 +1,6 @@
 type Mutation {
+    createTenantUser(input: TenantUserInput!): TenantUser!
+
     createContact(input: ContactInput!): Contact!
     deleteContact(contactId: ID!): BooleanResult!
 

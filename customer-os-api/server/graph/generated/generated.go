@@ -88,6 +88,7 @@ type ComplexityRoot struct {
 		AddContactToGroup                      func(childComplexity int, contactID string, groupID string) int
 		CreateContact                          func(childComplexity int, input model.ContactInput) int
 		CreateContactGroup                     func(childComplexity int, input model.ContactGroupInput) int
+		CreateTenantUser                       func(childComplexity int, input model.TenantUserInput) int
 		DeleteContact                          func(childComplexity int, contactID string) int
 		DeleteContactGroupAndUnlinkAllContacts func(childComplexity int, id string) int
 		MergeEmailToContact                    func(childComplexity int, contactID string, input model.EmailInput) int
@@ -109,6 +110,21 @@ type ComplexityRoot struct {
 		Contact       func(childComplexity int, id string) int
 		ContactGroups func(childComplexity int) int
 		Contacts      func(childComplexity int, paginationFilter *model.PaginationFilter) int
+		TenantUsers   func(childComplexity int, paginationFilter *model.PaginationFilter) int
+	}
+
+	TenantUser struct {
+		CreatedAt func(childComplexity int) int
+		Email     func(childComplexity int) int
+		FirstName func(childComplexity int) int
+		ID        func(childComplexity int) int
+		LastName  func(childComplexity int) int
+	}
+
+	TenantUsersPage struct {
+		Content       func(childComplexity int) int
+		TotalElements func(childComplexity int) int
+		TotalPages    func(childComplexity int) int
 	}
 
 	TextCustomField struct {
@@ -125,6 +141,7 @@ type ContactResolver interface {
 	Emails(ctx context.Context, obj *model.Contact) ([]*model.EmailInfo, error)
 }
 type MutationResolver interface {
+	CreateTenantUser(ctx context.Context, input model.TenantUserInput) (*model.TenantUser, error)
 	CreateContact(ctx context.Context, input model.ContactInput) (*model.Contact, error)
 	DeleteContact(ctx context.Context, contactID string) (*model.BooleanResult, error)
 	MergeTextCustomFieldToContact(ctx context.Context, contactID string, input model.TextCustomFieldInput) (*model.TextCustomField, error)
@@ -139,6 +156,7 @@ type MutationResolver interface {
 	RemoveContactFromGroup(ctx context.Context, contactID string, groupID string) (*model.BooleanResult, error)
 }
 type QueryResolver interface {
+	TenantUsers(ctx context.Context, paginationFilter *model.PaginationFilter) (*model.TenantUsersPage, error)
 	Contact(ctx context.Context, id string) (*model.Contact, error)
 	Contacts(ctx context.Context, paginationFilter *model.PaginationFilter) (*model.ContactsPage, error)
 	ContactGroups(ctx context.Context) ([]*model.ContactGroup, error)
@@ -356,6 +374,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.CreateContactGroup(childComplexity, args["input"].(model.ContactGroupInput)), true
 
+	case "Mutation.createTenantUser":
+		if e.complexity.Mutation.CreateTenantUser == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_createTenantUser_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.CreateTenantUser(childComplexity, args["input"].(model.TenantUserInput)), true
+
 	case "Mutation.deleteContact":
 		if e.complexity.Mutation.DeleteContact == nil {
 			break
@@ -516,6 +546,74 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.Contacts(childComplexity, args["paginationFilter"].(*model.PaginationFilter)), true
 
+	case "Query.tenantUsers":
+		if e.complexity.Query.TenantUsers == nil {
+			break
+		}
+
+		args, err := ec.field_Query_tenantUsers_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.TenantUsers(childComplexity, args["paginationFilter"].(*model.PaginationFilter)), true
+
+	case "TenantUser.createdAt":
+		if e.complexity.TenantUser.CreatedAt == nil {
+			break
+		}
+
+		return e.complexity.TenantUser.CreatedAt(childComplexity), true
+
+	case "TenantUser.email":
+		if e.complexity.TenantUser.Email == nil {
+			break
+		}
+
+		return e.complexity.TenantUser.Email(childComplexity), true
+
+	case "TenantUser.firstName":
+		if e.complexity.TenantUser.FirstName == nil {
+			break
+		}
+
+		return e.complexity.TenantUser.FirstName(childComplexity), true
+
+	case "TenantUser.id":
+		if e.complexity.TenantUser.ID == nil {
+			break
+		}
+
+		return e.complexity.TenantUser.ID(childComplexity), true
+
+	case "TenantUser.lastName":
+		if e.complexity.TenantUser.LastName == nil {
+			break
+		}
+
+		return e.complexity.TenantUser.LastName(childComplexity), true
+
+	case "TenantUsersPage.content":
+		if e.complexity.TenantUsersPage.Content == nil {
+			break
+		}
+
+		return e.complexity.TenantUsersPage.Content(childComplexity), true
+
+	case "TenantUsersPage.totalElements":
+		if e.complexity.TenantUsersPage.TotalElements == nil {
+			break
+		}
+
+		return e.complexity.TenantUsersPage.TotalElements(childComplexity), true
+
+	case "TenantUsersPage.totalPages":
+		if e.complexity.TenantUsersPage.TotalPages == nil {
+			break
+		}
+
+		return e.complexity.TenantUsersPage.TotalPages(childComplexity), true
+
 	case "TextCustomField.group":
 		if e.complexity.TextCustomField.Group == nil {
 			break
@@ -550,6 +648,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputEmailInput,
 		ec.unmarshalInputPaginationFilter,
 		ec.unmarshalInputPhoneNumberInput,
+		ec.unmarshalInputTenantUserInput,
 		ec.unmarshalInputTextCustomFieldInput,
 	)
 	first := true
@@ -612,7 +711,7 @@ func (ec *executionContext) introspectType(name string) (*introspection.Type, er
 
 var sources = []*ast.Source{
 	{Name: "../schemas/contact.graphqls", Input: `"""
-Contact - represents one person that can be contacted for a Customer. In B2C
+Contact - represents one person that can be contacted. In B2C
 """
 type Contact {
     id: ID!
@@ -694,6 +793,8 @@ enum EmailLabel {
     totalElements: Int64!
 }`, BuiltIn: false},
 	{Name: "../schemas/mutation.graphqls", Input: `type Mutation {
+    createTenantUser(input: TenantUserInput!): TenantUser!
+
     createContact(input: ContactInput!): Contact!
     deleteContact(contactId: ID!): BooleanResult!
 
@@ -739,6 +840,8 @@ enum PhoneLabel {
 }
 `, BuiltIn: false},
 	{Name: "../schemas/query.graphqls", Input: `type Query {
+  tenantUsers(paginationFilter: PaginationFilter): TenantUsersPage!
+
   contact(id: ID!) :Contact!
   contacts(paginationFilter: PaginationFilter): ContactsPage!
 
@@ -749,6 +852,28 @@ enum PhoneLabel {
 }`, BuiltIn: false},
 	{Name: "../schemas/scalar.graphqls", Input: `scalar Time
 scalar Int64
+`, BuiltIn: false},
+	{Name: "../schemas/tenant_user.graphqls", Input: `type TenantUser {
+    id: ID!
+    firstName: String!
+    lastName: String!
+    email: String!
+    createdAt: Time!
+}
+
+type TenantUsersPage implements PagedResult {
+    content: [TenantUser!]!
+    totalPages: Int!
+    totalElements: Int64!
+}
+
+input TenantUserInput {
+    firstName: String!
+    lastName: String!
+    email: String!
+}
+
+
 `, BuiltIn: false},
 	{Name: "../schemas/text_custom_field.graphqls", Input: `type TextCustomField {
     group: String
@@ -815,6 +940,21 @@ func (ec *executionContext) field_Mutation_createContact_args(ctx context.Contex
 	if tmp, ok := rawArgs["input"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
 		arg0, err = ec.unmarshalNContactInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐContactInput(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_createTenantUser_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 model.TenantUserInput
+	if tmp, ok := rawArgs["input"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+		arg0, err = ec.unmarshalNTenantUserInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐTenantUserInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -1052,6 +1192,21 @@ func (ec *executionContext) field_Query_contact_args(ctx context.Context, rawArg
 }
 
 func (ec *executionContext) field_Query_contacts_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 *model.PaginationFilter
+	if tmp, ok := rawArgs["paginationFilter"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("paginationFilter"))
+		arg0, err = ec.unmarshalOPaginationFilter2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐPaginationFilter(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["paginationFilter"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_tenantUsers_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
 	var arg0 *model.PaginationFilter
@@ -2152,6 +2307,73 @@ func (ec *executionContext) fieldContext_EmailInfo_primary(ctx context.Context, 
 	return fc, nil
 }
 
+func (ec *executionContext) _Mutation_createTenantUser(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_createTenantUser(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().CreateTenantUser(rctx, fc.Args["input"].(model.TenantUserInput))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.TenantUser)
+	fc.Result = res
+	return ec.marshalNTenantUser2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐTenantUser(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_createTenantUser(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_TenantUser_id(ctx, field)
+			case "firstName":
+				return ec.fieldContext_TenantUser_firstName(ctx, field)
+			case "lastName":
+				return ec.fieldContext_TenantUser_lastName(ctx, field)
+			case "email":
+				return ec.fieldContext_TenantUser_email(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_TenantUser_createdAt(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type TenantUser", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_createTenantUser_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Mutation_createContact(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Mutation_createContact(ctx, field)
 	if err != nil {
@@ -3032,6 +3254,69 @@ func (ec *executionContext) fieldContext_PhoneNumberInfo_primary(ctx context.Con
 	return fc, nil
 }
 
+func (ec *executionContext) _Query_tenantUsers(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_tenantUsers(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().TenantUsers(rctx, fc.Args["paginationFilter"].(*model.PaginationFilter))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.TenantUsersPage)
+	fc.Result = res
+	return ec.marshalNTenantUsersPage2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐTenantUsersPage(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_tenantUsers(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "content":
+				return ec.fieldContext_TenantUsersPage_content(ctx, field)
+			case "totalPages":
+				return ec.fieldContext_TenantUsersPage_totalPages(ctx, field)
+			case "totalElements":
+				return ec.fieldContext_TenantUsersPage_totalElements(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type TenantUsersPage", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_tenantUsers_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Query_contact(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Query_contact(ctx, field)
 	if err != nil {
@@ -3354,6 +3639,370 @@ func (ec *executionContext) fieldContext_Query___schema(ctx context.Context, fie
 				return ec.fieldContext___Schema_directives(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type __Schema", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _TenantUser_id(ctx context.Context, field graphql.CollectedField, obj *model.TenantUser) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_TenantUser_id(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNID2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_TenantUser_id(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "TenantUser",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _TenantUser_firstName(ctx context.Context, field graphql.CollectedField, obj *model.TenantUser) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_TenantUser_firstName(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.FirstName, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_TenantUser_firstName(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "TenantUser",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _TenantUser_lastName(ctx context.Context, field graphql.CollectedField, obj *model.TenantUser) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_TenantUser_lastName(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.LastName, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_TenantUser_lastName(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "TenantUser",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _TenantUser_email(ctx context.Context, field graphql.CollectedField, obj *model.TenantUser) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_TenantUser_email(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Email, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_TenantUser_email(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "TenantUser",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _TenantUser_createdAt(ctx context.Context, field graphql.CollectedField, obj *model.TenantUser) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_TenantUser_createdAt(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.CreatedAt, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(time.Time)
+	fc.Result = res
+	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_TenantUser_createdAt(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "TenantUser",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _TenantUsersPage_content(ctx context.Context, field graphql.CollectedField, obj *model.TenantUsersPage) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_TenantUsersPage_content(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Content, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.TenantUser)
+	fc.Result = res
+	return ec.marshalNTenantUser2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐTenantUserᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_TenantUsersPage_content(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "TenantUsersPage",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_TenantUser_id(ctx, field)
+			case "firstName":
+				return ec.fieldContext_TenantUser_firstName(ctx, field)
+			case "lastName":
+				return ec.fieldContext_TenantUser_lastName(ctx, field)
+			case "email":
+				return ec.fieldContext_TenantUser_email(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_TenantUser_createdAt(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type TenantUser", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _TenantUsersPage_totalPages(ctx context.Context, field graphql.CollectedField, obj *model.TenantUsersPage) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_TenantUsersPage_totalPages(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.TotalPages, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_TenantUsersPage_totalPages(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "TenantUsersPage",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _TenantUsersPage_totalElements(ctx context.Context, field graphql.CollectedField, obj *model.TenantUsersPage) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_TenantUsersPage_totalElements(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.TotalElements, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int64)
+	fc.Result = res
+	return ec.marshalNInt642int64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_TenantUsersPage_totalElements(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "TenantUsersPage",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int64 does not have child fields")
 		},
 	}
 	return fc, nil
@@ -5521,6 +6170,50 @@ func (ec *executionContext) unmarshalInputPhoneNumberInput(ctx context.Context, 
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputTenantUserInput(ctx context.Context, obj interface{}) (model.TenantUserInput, error) {
+	var it model.TenantUserInput
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"firstName", "lastName", "email"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "firstName":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("firstName"))
+			it.FirstName, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "lastName":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("lastName"))
+			it.LastName, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "email":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("email"))
+			it.Email, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputTextCustomFieldInput(ctx context.Context, obj interface{}) (model.TextCustomFieldInput, error) {
 	var it model.TextCustomFieldInput
 	asMap := map[string]interface{}{}
@@ -5580,6 +6273,13 @@ func (ec *executionContext) _PagedResult(ctx context.Context, sel ast.SelectionS
 			return graphql.Null
 		}
 		return ec._ContactsPage(ctx, sel, obj)
+	case model.TenantUsersPage:
+		return ec._TenantUsersPage(ctx, sel, &obj)
+	case *model.TenantUsersPage:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._TenantUsersPage(ctx, sel, obj)
 	default:
 		panic(fmt.Errorf("unexpected type %T", obj))
 	}
@@ -5902,6 +6602,15 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("Mutation")
+		case "createTenantUser":
+
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_createTenantUser(ctx, field)
+			})
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		case "createContact":
 
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
@@ -6082,6 +6791,29 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("Query")
+		case "tenantUsers":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_tenantUsers(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx, innerFunc)
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return rrm(innerCtx)
+			})
 		case "contact":
 			field := field
 
@@ -6163,6 +6895,104 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 				return ec._Query___schema(ctx, field)
 			})
 
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var tenantUserImplementors = []string{"TenantUser"}
+
+func (ec *executionContext) _TenantUser(ctx context.Context, sel ast.SelectionSet, obj *model.TenantUser) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, tenantUserImplementors)
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("TenantUser")
+		case "id":
+
+			out.Values[i] = ec._TenantUser_id(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "firstName":
+
+			out.Values[i] = ec._TenantUser_firstName(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "lastName":
+
+			out.Values[i] = ec._TenantUser_lastName(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "email":
+
+			out.Values[i] = ec._TenantUser_email(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "createdAt":
+
+			out.Values[i] = ec._TenantUser_createdAt(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var tenantUsersPageImplementors = []string{"TenantUsersPage", "PagedResult"}
+
+func (ec *executionContext) _TenantUsersPage(ctx context.Context, sel ast.SelectionSet, obj *model.TenantUsersPage) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, tenantUsersPageImplementors)
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("TenantUsersPage")
+		case "content":
+
+			out.Values[i] = ec._TenantUsersPage_content(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "totalPages":
+
+			out.Values[i] = ec._TenantUsersPage_totalPages(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "totalElements":
+
+			out.Values[i] = ec._TenantUsersPage_totalElements(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -6816,6 +7646,83 @@ func (ec *executionContext) marshalNString2string(ctx context.Context, sel ast.S
 		}
 	}
 	return res
+}
+
+func (ec *executionContext) marshalNTenantUser2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐTenantUser(ctx context.Context, sel ast.SelectionSet, v model.TenantUser) graphql.Marshaler {
+	return ec._TenantUser(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNTenantUser2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐTenantUserᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.TenantUser) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNTenantUser2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐTenantUser(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNTenantUser2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐTenantUser(ctx context.Context, sel ast.SelectionSet, v *model.TenantUser) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._TenantUser(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalNTenantUserInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐTenantUserInput(ctx context.Context, v interface{}) (model.TenantUserInput, error) {
+	res, err := ec.unmarshalInputTenantUserInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNTenantUsersPage2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐTenantUsersPage(ctx context.Context, sel ast.SelectionSet, v model.TenantUsersPage) graphql.Marshaler {
+	return ec._TenantUsersPage(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNTenantUsersPage2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐTenantUsersPage(ctx context.Context, sel ast.SelectionSet, v *model.TenantUsersPage) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._TenantUsersPage(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalNTextCustomField2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐTextCustomField(ctx context.Context, sel ast.SelectionSet, v model.TextCustomField) graphql.Marshaler {

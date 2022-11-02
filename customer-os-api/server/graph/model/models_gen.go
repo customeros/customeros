@@ -19,7 +19,7 @@ type BooleanResult struct {
 	Result bool `json:"result"`
 }
 
-// Contact - represents one person that can be contacted for a Customer. In B2C
+// Contact - represents one person that can be contacted. In B2C
 type Contact struct {
 	ID               string             `json:"id"`
 	Title            *string            `json:"title"`
@@ -98,6 +98,30 @@ type PhoneNumberInput struct {
 	Label   PhoneLabel `json:"label"`
 	Primary *bool      `json:"primary"`
 }
+
+type TenantUser struct {
+	ID        string    `json:"id"`
+	FirstName string    `json:"firstName"`
+	LastName  string    `json:"lastName"`
+	Email     string    `json:"email"`
+	CreatedAt time.Time `json:"createdAt"`
+}
+
+type TenantUserInput struct {
+	FirstName string `json:"firstName"`
+	LastName  string `json:"lastName"`
+	Email     string `json:"email"`
+}
+
+type TenantUsersPage struct {
+	Content       []*TenantUser `json:"content"`
+	TotalPages    int           `json:"totalPages"`
+	TotalElements int64         `json:"totalElements"`
+}
+
+func (TenantUsersPage) IsPagedResult()               {}
+func (this TenantUsersPage) GetTotalPages() int      { return this.TotalPages }
+func (this TenantUsersPage) GetTotalElements() int64 { return this.TotalElements }
 
 type TextCustomField struct {
 	Group *string `json:"group"`

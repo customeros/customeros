@@ -6,21 +6,21 @@ import (
 )
 
 type ServiceContainer struct {
-	ContactService                             service.ContactService
-	ContactGroupService                        service.ContactGroupService
-	ContactWithContactGroupRelationshipService service.ContactWithContactGroupRelationshipService
-	TextCustomFieldService                     service.TextCustomFieldService
-	PhoneNumberService                         service.PhoneNumberService
-	EmailService                               service.EmailService
+	ContactService         service.ContactService
+	ContactGroupService    service.ContactGroupService
+	TextCustomFieldService service.TextCustomFieldService
+	PhoneNumberService     service.PhoneNumberService
+	EmailService           service.EmailService
+	TenantUserService      service.TenantUserService
 }
 
 func InitServices(driver *neo4j.Driver) *ServiceContainer {
 	return &ServiceContainer{
-		ContactService:      service.NewContactService(driver),
-		ContactGroupService: service.NewContactGroupService(driver),
-		ContactWithContactGroupRelationshipService: service.NewContactWithContactGroupRelationshipService(driver),
-		TextCustomFieldService:                     service.NewTextCustomFieldService(driver),
-		PhoneNumberService:                         service.NewPhoneNumberService(driver),
-		EmailService:                               service.NewEmailService(driver),
+		ContactService:         service.NewContactService(driver),
+		ContactGroupService:    service.NewContactGroupService(driver),
+		TextCustomFieldService: service.NewTextCustomFieldService(driver),
+		PhoneNumberService:     service.NewPhoneNumberService(driver),
+		EmailService:           service.NewEmailService(driver),
+		TenantUserService:      service.NewTenantUserService(driver),
 	}
 }

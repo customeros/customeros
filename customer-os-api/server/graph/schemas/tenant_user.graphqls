@@ -1,0 +1,21 @@
+type TenantUser {
+    id: ID!
+    firstName: String!
+    lastName: String!
+    email: String!
+    createdAt: Time!
+}
+
+type TenantUsersPage implements PagedResult {
+    content: [TenantUser!]!
+    totalPages: Int!
+    totalElements: Int64!
+}
+
+input TenantUserInput {
+    firstName: String!
+    lastName: String!
+    email: String!
+}
+
+
