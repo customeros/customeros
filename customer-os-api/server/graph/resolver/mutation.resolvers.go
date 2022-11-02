@@ -5,8 +5,6 @@ package resolver
 
 import (
 	"context"
-	"fmt"
-
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/openline-ai/openline-customer-os/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/customer-os-api/graph/generated"
@@ -17,7 +15,12 @@ import (
 
 // CreateTenantUser is the resolver for the createTenantUser field.
 func (r *mutationResolver) CreateTenantUser(ctx context.Context, input model.TenantUserInput) (*model.TenantUser, error) {
-	panic(fmt.Errorf("not implemented: CreateTenantUser - createTenantUser"))
+	createdTenantEntity, err := r.ServiceContainer.TenantUserService.Create(ctx, mapper.MapTenantUserInputToEntity(input))
+	if err != nil {
+		graphql.AddErrorf(ctx, "Failed to create user %s %s", input.FirstName, input.LastName)
+		return nil, err
+	}
+	return mapper.MapEntityToTenantUser(createdTenantEntity), nil
 }
 
 // CreateContact is the resolver for the createContact field.
@@ -123,7 +126,6 @@ func (r *mutationResolver) CreateContactGroup(ctx context.Context, input model.C
 		graphql.AddErrorf(ctx, "Failed to create contact group %s", input.Name)
 		return nil, err
 	}
-
 	return mapper.MapEntityToContactGroup(contactGroupEntityCreated), nil
 }
 
@@ -141,7 +143,7 @@ func (r *mutationResolver) DeleteContactGroupAndUnlinkAllContacts(ctx context.Co
 
 // AddContactToGroup is the resolver for the addContactToGroup field.
 func (r *mutationResolver) AddContactToGroup(ctx context.Context, contactID string, groupID string) (*model.BooleanResult, error) {
-	result, err := r.ServiceContainer.ContactWithContactGroupRelationshipService.AddContactToGroup(ctx, contactID, groupID)
+	result, err := r.ServiceContainer.ContactGroupService.AddContactToGroup(ctx, contactID, groupID)
 	if err != nil {
 		graphql.AddErrorf(ctx, "Could not add contact to group")
 		return nil, err
@@ -153,7 +155,7 @@ func (r *mutationResolver) AddContactToGroup(ctx context.Context, contactID stri
 
 // RemoveContactFromGroup is the resolver for the removeContactFromGroup field.
 func (r *mutationResolver) RemoveContactFromGroup(ctx context.Context, contactID string, groupID string) (*model.BooleanResult, error) {
-	result, err := r.ServiceContainer.ContactWithContactGroupRelationshipService.RemoveContactFromGroup(ctx, contactID, groupID)
+	result, err := r.ServiceContainer.ContactGroupService.RemoveContactFromGroup(ctx, contactID, groupID)
 	if err != nil {
 		graphql.AddErrorf(ctx, "Could not remove contact from group")
 		return nil, err

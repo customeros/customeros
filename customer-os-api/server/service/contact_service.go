@@ -189,7 +189,7 @@ func (s *contactService) FindAll(ctx context.Context, page int, limit int) (*uti
 		return nil, err
 	}
 
-	contacts := entity.ContactNodes{}
+	contacts := entity.ContactEntities{}
 
 	for _, dbRecord := range dataResult.([]*db.Record) {
 		contact := s.mapDbNodeToContactEntity(dbRecord.Values[0].(dbtype.Node))

@@ -30,7 +30,7 @@ func (r *queryResolver) Contacts(ctx context.Context, paginationFilter *model.Pa
 	}
 	paginatedResult, err := r.ServiceContainer.ContactService.FindAll(ctx, paginationFilter.Page, paginationFilter.Limit)
 	return &model.ContactsPage{
-		Content:       mapper.MapEntitiesToContacts(paginatedResult.Rows.(*entity.ContactNodes)),
+		Content:       mapper.MapEntitiesToContacts(paginatedResult.Rows.(*entity.ContactEntities)),
 		TotalPages:    paginatedResult.TotalPages,
 		TotalElements: paginatedResult.TotalRows,
 	}, err
