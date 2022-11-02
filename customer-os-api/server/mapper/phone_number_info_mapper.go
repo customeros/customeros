@@ -13,6 +13,11 @@ func MapPhoneNumberInputToEntity(input *model.PhoneNumberInput) *entity.PhoneNum
 		Number: input.Number,
 		Label:  input.Label.String(),
 	}
+	if input.Primary != nil {
+		phoneNumberEntity.Primary = *input.Primary
+	} else {
+		phoneNumberEntity.Primary = false
+	}
 	return &phoneNumberEntity
 }
 
@@ -30,7 +35,8 @@ func MapEntityToPhoneNumber(phoneNumberEntity *entity.PhoneNumberEntity) *model.
 		label = model.PhoneLabelOther
 	}
 	return &model.PhoneNumberInfo{
-		Number: phoneNumberEntity.Number,
-		Label:  label,
+		Number:  phoneNumberEntity.Number,
+		Label:   label,
+		Primary: phoneNumberEntity.Primary,
 	}
 }

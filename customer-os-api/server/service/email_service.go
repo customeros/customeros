@@ -34,8 +34,8 @@ func (s *emailService) FindAllForContact(ctx context.Context, contact *model.Con
 	queryResult, err := session.ReadTransaction(func(tx neo4j.Transaction) (interface{}, error) {
 		result, err := tx.Run(`
 				MATCH (c:Contact {id:$id})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}),
-              			(c:Contact {id:$id})-[:EMAILED_AT]->(e:Email) 
-				RETURN e`,
+              			(c:Contact {id:$id})-[r:EMAILED_AT]->(e:Email) 
+				RETURN e, r`,
 			map[string]interface{}{
 				"id":     contact.ID,
 				"tenant": common.GetContext(ctx).Tenant})
@@ -53,6 +53,7 @@ func (s *emailService) FindAllForContact(ctx context.Context, contact *model.Con
 
 	for _, dbRecord := range queryResult.([]*db.Record) {
 		emailEntity := s.mapDbNodeToEmailEntity(dbRecord.Values[0].(dbtype.Node))
+		s.addDbRelationshipToEmailEntity(dbRecord.Values[1].(dbtype.Relationship), emailEntity)
 		emailEntities = append(emailEntities, *emailEntity)
 	}
 
@@ -66,27 +67,30 @@ func (s *emailService) MergeEmailToContact(ctx context.Context, contactId string
 	queryResult, err := session.WriteTransaction(func(tx neo4j.Transaction) (interface{}, error) {
 		txResult, err := tx.Run(`
 			MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant})
-			MERGE (e:Email {email: $email})<-[:EMAILED_AT]-(c)
-            ON CREATE SET e.label=$label
-            ON MATCH SET e.label=$label
-			RETURN e`,
+			MERGE (c)-[r:EMAILED_AT]->(e:Email {email: $email})
+            ON CREATE SET e.label=$label, r.primary=$primary
+            ON MATCH SET e.label=$label, r.primary=$primary
+			RETURN e, r`,
 			map[string]interface{}{
 				"tenant":    common.GetContext(ctx).Tenant,
 				"contactId": contactId,
 				"email":     entity.Email,
 				"label":     entity.Label,
+				"primary":   entity.Primary,
 			})
 		record, err := txResult.Single()
 		if err != nil {
 			return nil, err
 		}
-		return record.Values[0], nil
+		return record, nil
 	})
 	if err != nil {
 		return nil, err
 	}
 
-	return s.mapDbNodeToEmailEntity(queryResult.(dbtype.Node)), nil
+	var emailEntity = s.mapDbNodeToEmailEntity(queryResult.(*db.Record).Values[0].(dbtype.Node))
+	s.addDbRelationshipToEmailEntity(queryResult.(*db.Record).Values[1].(dbtype.Relationship), emailEntity)
+	return emailEntity, nil
 }
 
 func (s *emailService) Delete(ctx context.Context, contactId string, email string) (bool, error) {
@@ -117,25 +121,30 @@ func (s *emailService) Delete(ctx context.Context, contactId string, email strin
 func addEmailToContactInTx(ctx context.Context, contactId string, input entity.EmailEntity, tx neo4j.Transaction) error {
 	_, err := tx.Run(`
 			MATCH (c:Contact {id:$contactId})
-			CREATE (e:Email {
+			MERGE (e:Email {
 				  email: $email,
 				  label: $label
-			})<-[:EMAILED_AT]-(c)
+			})<-[:EMAILED_AT {primary:$primary}]-(c)
 			RETURN e`,
 		map[string]interface{}{
 			"contactId": contactId,
+			"primary":   input.Primary,
 			"email":     input.Email,
 			"label":     input.Label,
 		})
-
 	return err
 }
 
-func (s *emailService) mapDbNodeToEmailEntity(dbContactGroupNode dbtype.Node) *entity.EmailEntity {
-	props := utils.GetPropsFromNode(dbContactGroupNode)
+func (s *emailService) mapDbNodeToEmailEntity(node dbtype.Node) *entity.EmailEntity {
+	props := utils.GetPropsFromNode(node)
 	result := entity.EmailEntity{
 		Email: utils.GetStringPropOrEmpty(props, "email"),
 		Label: utils.GetStringPropOrEmpty(props, "label"),
 	}
 	return &result
+}
+
+func (s *emailService) addDbRelationshipToEmailEntity(relationship dbtype.Relationship, emailEntity *entity.EmailEntity) {
+	props := utils.GetPropsFromRelationship(relationship)
+	emailEntity.Primary = utils.GetBoolPropOrFalse(props, "primary")
 }

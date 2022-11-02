@@ -71,13 +71,15 @@ func (this ContactsPage) GetTotalPages() int      { return this.TotalPages }
 func (this ContactsPage) GetTotalElements() int64 { return this.TotalElements }
 
 type EmailInfo struct {
-	Email string     `json:"email"`
-	Label EmailLabel `json:"label"`
+	Email   string     `json:"email"`
+	Label   EmailLabel `json:"label"`
+	Primary bool       `json:"primary"`
 }
 
 type EmailInput struct {
-	Email string     `json:"email"`
-	Label EmailLabel `json:"label"`
+	Email   string     `json:"email"`
+	Label   EmailLabel `json:"label"`
+	Primary *bool      `json:"primary"`
 }
 
 type PaginationFilter struct {
@@ -86,13 +88,15 @@ type PaginationFilter struct {
 }
 
 type PhoneNumberInfo struct {
-	Number string     `json:"number"`
-	Label  PhoneLabel `json:"label"`
+	Number  string     `json:"number"`
+	Label   PhoneLabel `json:"label"`
+	Primary bool       `json:"primary"`
 }
 
 type PhoneNumberInput struct {
-	Number string     `json:"number"`
-	Label  PhoneLabel `json:"label"`
+	Number  string     `json:"number"`
+	Label   PhoneLabel `json:"label"`
+	Primary *bool      `json:"primary"`
 }
 
 type TextCustomField struct {

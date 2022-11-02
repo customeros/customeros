@@ -5,8 +5,9 @@ import (
 )
 
 type PhoneNumberEntity struct {
-	Number string
-	Label  string
+	Number  string
+	Label   string
+	Primary bool
 }
 
 func (phone PhoneNumberEntity) ToString() string {
