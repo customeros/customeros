@@ -55,6 +55,16 @@ type ContactGroupInput struct {
 	Name string `json:"name"`
 }
 
+type ContactGroupsPage struct {
+	Content       []*ContactGroup `json:"content"`
+	TotalPages    int             `json:"totalPages"`
+	TotalElements int64           `json:"totalElements"`
+}
+
+func (ContactGroupsPage) IsPagedResult()               {}
+func (this ContactGroupsPage) GetTotalPages() int      { return this.TotalPages }
+func (this ContactGroupsPage) GetTotalElements() int64 { return this.TotalElements }
+
 type ContactInput struct {
 	Title            *PersonTitle            `json:"title"`
 	FirstName        string                  `json:"firstName"`
