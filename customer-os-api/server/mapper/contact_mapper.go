@@ -25,6 +25,27 @@ func MapContactInputToEntity(input model.ContactInput) *entity.ContactEntity {
 	return &contactEntity
 }
 
+func MapContactUpdateInputToEntity(input model.ContactUpdateInput) *entity.ContactEntity {
+	contactEntity := entity.ContactEntity{
+		Id:        input.ID,
+		FirstName: input.FirstName,
+		LastName:  input.LastName,
+	}
+	if input.Label != nil {
+		contactEntity.Label = *input.Label
+	}
+	if input.Title != nil {
+		contactEntity.Title = input.Title.String()
+	}
+	if input.Notes != nil {
+		contactEntity.Notes = *input.Notes
+	}
+	if input.ContactType != nil {
+		contactEntity.ContactType = *input.ContactType
+	}
+	return &contactEntity
+}
+
 func MapEntityToContact(contact *entity.ContactEntity) *model.Contact {
 	var title = model.PersonTitle(contact.Title)
 	if !title.IsValid() {
