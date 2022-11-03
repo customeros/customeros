@@ -1,4 +1,5 @@
 type PhoneNumberInfo {
+    id: ID!
     number: String!
     label: PhoneLabel!
     primary: Boolean!
@@ -8,6 +9,11 @@ input PhoneNumberInput {
     number: String!
     label: PhoneLabel!
     primary: Boolean
+}
+
+input PhoneNumberUpdateInput {
+    id: ID!
+    phoneNumberDetails: PhoneNumberInput!
 }
 
 enum PhoneLabel {

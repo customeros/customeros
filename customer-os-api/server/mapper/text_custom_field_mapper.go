@@ -11,12 +11,12 @@ func MapTextCustomFieldInputsToEntities(inputs []*model.TextCustomFieldInput) *e
 	}
 	var result entity.TextCustomFieldEntities
 	for _, singleInput := range inputs {
-		result = append(result, *MapTextCustomFieldInputToEntity(*singleInput))
+		result = append(result, *MapTextCustomFieldInputToEntity(singleInput))
 	}
 	return &result
 }
 
-func MapTextCustomFieldInputToEntity(input model.TextCustomFieldInput) *entity.TextCustomFieldEntity {
+func MapTextCustomFieldInputToEntity(input *model.TextCustomFieldInput) *entity.TextCustomFieldEntity {
 	textCustomFieldEntity := entity.TextCustomFieldEntity{
 		Name:  input.Name,
 		Value: input.Value,
@@ -38,6 +38,7 @@ func MapEntitiesToTextCustomFields(textCustomFieldEntities *entity.TextCustomFie
 func MapEntityToTextCustomField(textCustomFieldEntity *entity.TextCustomFieldEntity) *model.TextCustomField {
 	var group = textCustomFieldEntity.Group
 	return &model.TextCustomField{
+		ID:    textCustomFieldEntity.Id,
 		Name:  textCustomFieldEntity.Name,
 		Value: textCustomFieldEntity.Value,
 		Group: &group,

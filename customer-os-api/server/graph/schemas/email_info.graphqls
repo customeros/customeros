@@ -1,4 +1,5 @@
 type EmailInfo {
+    id: ID!
     email: String!
     label: EmailLabel!
     primary: Boolean!
@@ -8,6 +9,11 @@ input EmailInput {
     email: String!
     label: EmailLabel!
     primary: Boolean
+}
+
+input EmailUpdateInput {
+    id: ID!
+    emailDetails: EmailInput!
 }
 
 enum EmailLabel {

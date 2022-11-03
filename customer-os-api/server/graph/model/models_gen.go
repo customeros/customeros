@@ -99,6 +99,7 @@ func (this ContactsPage) GetTotalPages() int      { return this.TotalPages }
 func (this ContactsPage) GetTotalElements() int64 { return this.TotalElements }
 
 type EmailInfo struct {
+	ID      string     `json:"id"`
 	Email   string     `json:"email"`
 	Label   EmailLabel `json:"label"`
 	Primary bool       `json:"primary"`
@@ -110,12 +111,18 @@ type EmailInput struct {
 	Primary *bool      `json:"primary"`
 }
 
+type EmailUpdateInput struct {
+	ID           string      `json:"id"`
+	EmailDetails *EmailInput `json:"emailDetails"`
+}
+
 type PaginationFilter struct {
 	Page  int `json:"page"`
 	Limit int `json:"limit"`
 }
 
 type PhoneNumberInfo struct {
+	ID      string     `json:"id"`
 	Number  string     `json:"number"`
 	Label   PhoneLabel `json:"label"`
 	Primary bool       `json:"primary"`
@@ -125,6 +132,11 @@ type PhoneNumberInput struct {
 	Number  string     `json:"number"`
 	Label   PhoneLabel `json:"label"`
 	Primary *bool      `json:"primary"`
+}
+
+type PhoneNumberUpdateInput struct {
+	ID                 string            `json:"id"`
+	PhoneNumberDetails *PhoneNumberInput `json:"phoneNumberDetails"`
 }
 
 type TenantUser struct {
@@ -152,6 +164,7 @@ func (this TenantUsersPage) GetTotalPages() int      { return this.TotalPages }
 func (this TenantUsersPage) GetTotalElements() int64 { return this.TotalElements }
 
 type TextCustomField struct {
+	ID    string  `json:"id"`
 	Group *string `json:"group"`
 	Name  string  `json:"name"`
 	Value string  `json:"value"`
@@ -161,6 +174,11 @@ type TextCustomFieldInput struct {
 	Group *string `json:"group"`
 	Name  string  `json:"name"`
 	Value string  `json:"value"`
+}
+
+type TextCustomFieldUpdateInput struct {
+	ID                     string                `json:"id"`
+	TextCustomFieldDetails *TextCustomFieldInput `json:"textCustomFieldDetails"`
 }
 
 type EmailLabel string

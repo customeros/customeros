@@ -35,6 +35,7 @@ func MapEntityToEmail(emailEntity *entity.EmailEntity) *model.EmailInfo {
 		label = model.EmailLabelOther
 	}
 	return &model.EmailInfo{
+		ID:      emailEntity.Id,
 		Email:   emailEntity.Email,
 		Label:   label,
 		Primary: emailEntity.Primary,

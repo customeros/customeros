@@ -35,6 +35,7 @@ func MapEntityToPhoneNumber(phoneNumberEntity *entity.PhoneNumberEntity) *model.
 		label = model.PhoneLabelOther
 	}
 	return &model.PhoneNumberInfo{
+		ID:      phoneNumberEntity.Id,
 		Number:  phoneNumberEntity.Number,
 		Label:   label,
 		Primary: phoneNumberEntity.Primary,
