@@ -55,6 +55,11 @@ type ContactGroupInput struct {
 	Name string `json:"name"`
 }
 
+type ContactGroupUpdateInput struct {
+	ID                  string             `json:"id"`
+	ContactGroupDetails *ContactGroupInput `json:"contactGroupDetails"`
+}
+
 type ContactGroupsPage struct {
 	Content       []*ContactGroup `json:"content"`
 	TotalPages    int             `json:"totalPages"`

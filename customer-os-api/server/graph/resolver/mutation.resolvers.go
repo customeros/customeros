@@ -5,6 +5,7 @@ package resolver
 
 import (
 	"context"
+
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/openline-ai/openline-customer-os/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/customer-os-api/graph/generated"
@@ -222,6 +223,19 @@ func (r *mutationResolver) CreateContactGroup(ctx context.Context, input model.C
 		return nil, err
 	}
 	return mapper.MapEntityToContactGroup(contactGroupEntityCreated), nil
+}
+
+// UpdateContactGroup is the resolver for the updateContactGroup field.
+func (r *mutationResolver) UpdateContactGroup(ctx context.Context, input model.ContactGroupUpdateInput) (*model.ContactGroup, error) {
+	updatedContactGroup, err := r.ServiceContainer.ContactGroupService.Update(ctx, &entity.ContactGroupEntity{
+		Id:   input.ID,
+		Name: input.ContactGroupDetails.Name,
+	})
+	if err != nil {
+		graphql.AddErrorf(ctx, "Failed to update contact group %s", input.ID)
+		return nil, err
+	}
+	return mapper.MapEntityToContactGroup(updatedContactGroup), nil
 }
 
 // DeleteContactGroupAndUnlinkAllContacts is the resolver for the deleteContactGroupAndUnlinkAllContacts field.

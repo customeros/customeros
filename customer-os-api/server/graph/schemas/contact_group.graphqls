@@ -7,6 +7,11 @@ input ContactGroupInput {
     name: String!
 }
 
+input ContactGroupUpdateInput {
+    id: ID!
+    contactGroupDetails: ContactGroupInput!
+}
+
 type ContactGroupsPage implements PagedResult {
     content: [ContactGroup!]!
     totalPages: Int!
