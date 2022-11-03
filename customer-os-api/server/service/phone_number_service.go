@@ -15,6 +15,7 @@ type PhoneNumberService interface {
 	FindAllForContact(ctx context.Context, obj *model.Contact) (*entity.PhoneNumberEntities, error)
 	MergePhoneNumberToContact(ctx context.Context, id string, toEntity *entity.PhoneNumberEntity) (*entity.PhoneNumberEntity, error)
 	Delete(ctx context.Context, contactId string, phoneNumber string) (bool, error)
+	DeleteById(ctx context.Context, contactId string, phoneId string) (bool, error)
 }
 
 type phoneNumberService struct {
@@ -145,6 +146,31 @@ func (s *phoneNumberService) Delete(ctx context.Context, contactId string, phone
 				"id":     contactId,
 				"number": phoneNumber,
 				"tenant": common.GetContext(ctx).Tenant,
+			})
+
+		return true, err
+	})
+	if err != nil {
+		return false, err
+	}
+
+	return queryResult.(bool), nil
+}
+
+func (s *phoneNumberService) DeleteById(ctx context.Context, contactId string, phoneId string) (bool, error) {
+	session := (*s.driver).NewSession(neo4j.SessionConfig{AccessMode: neo4j.AccessModeWrite})
+	defer session.Close()
+
+	queryResult, err := session.WriteTransaction(func(tx neo4j.Transaction) (interface{}, error) {
+		_, err := tx.Run(`
+			MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}),
+                  (c:Contact {id:$contactId})-[:CALLED_AT]->(p:PhoneNumber {id:$phoneId})
+            DETACH DELETE p
+			`,
+			map[string]interface{}{
+				"contactId": contactId,
+				"phoneId":   phoneId,
+				"tenant":    common.GetContext(ctx).Tenant,
 			})
 
 		return true, err

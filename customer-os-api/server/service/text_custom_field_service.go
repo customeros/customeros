@@ -15,6 +15,7 @@ type TextCustomFieldService interface {
 	FindAllForContact(ctx context.Context, obj *model.Contact) (*entity.TextCustomFieldEntities, error)
 	MergeTextCustomFieldToContact(ctx context.Context, id string, entity *entity.TextCustomFieldEntity) (*entity.TextCustomFieldEntity, error)
 	Delete(ctx context.Context, contactId string, fieldName string) (bool, error)
+	DeleteById(ctx context.Context, contactId string, fieldId string) (bool, error)
 	mapDbNodeToTextCustomFieldEntity(dbContactGroupNode dbtype.Node) *entity.TextCustomFieldEntity
 }
 
@@ -105,6 +106,31 @@ func (s *textCustomPropertyService) Delete(ctx context.Context, contactId string
 				"id":     contactId,
 				"name":   fieldName,
 				"tenant": common.GetContext(ctx).Tenant,
+			})
+
+		return true, err
+	})
+	if err != nil {
+		return false, err
+	}
+
+	return queryResult.(bool), nil
+}
+
+func (s *textCustomPropertyService) DeleteById(ctx context.Context, contactId string, fieldId string) (bool, error) {
+	session := (*s.driver).NewSession(neo4j.SessionConfig{AccessMode: neo4j.AccessModeWrite})
+	defer session.Close()
+
+	queryResult, err := session.WriteTransaction(func(tx neo4j.Transaction) (interface{}, error) {
+		_, err := tx.Run(`
+			MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}),
+                  (c:Contact {id:$contactId})-[:HAS_TEXT_PROPERTY]->(f:TextCustomField {id:$fieldId})
+            DETACH DELETE f
+			`,
+			map[string]interface{}{
+				"contactId": contactId,
+				"fieldId":   fieldId,
+				"tenant":    common.GetContext(ctx).Tenant,
 			})
 
 		return true, err

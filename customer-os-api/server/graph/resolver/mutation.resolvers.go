@@ -77,7 +77,19 @@ func (r *mutationResolver) MergeTextCustomFieldToContact(ctx context.Context, co
 func (r *mutationResolver) RemoveTextCustomFieldFromContact(ctx context.Context, contactID string, fieldName string) (*model.BooleanResult, error) {
 	result, err := r.ServiceContainer.TextCustomFieldService.Delete(ctx, contactID, fieldName)
 	if err != nil {
-		graphql.AddErrorf(ctx, "Could not remove property %s from contact %s", fieldName, contactID)
+		graphql.AddErrorf(ctx, "Could not remove text field %s from contact %s", fieldName, contactID)
+		return nil, err
+	}
+	return &model.BooleanResult{
+		Result: result,
+	}, nil
+}
+
+// RemoveTextCustomFieldFromContactByID is the resolver for the removeTextCustomFieldFromContactById field.
+func (r *mutationResolver) RemoveTextCustomFieldFromContactByID(ctx context.Context, contactID string, id string) (*model.BooleanResult, error) {
+	result, err := r.ServiceContainer.TextCustomFieldService.DeleteById(ctx, contactID, id)
+	if err != nil {
+		graphql.AddErrorf(ctx, "Could not remove text field %s from contact %s", id, contactID)
 		return nil, err
 	}
 	return &model.BooleanResult{
@@ -107,6 +119,18 @@ func (r *mutationResolver) RemovePhoneNumberFromContact(ctx context.Context, con
 	}, nil
 }
 
+// RemovePhoneNumberFromContactByID is the resolver for the removePhoneNumberFromContactById field.
+func (r *mutationResolver) RemovePhoneNumberFromContactByID(ctx context.Context, contactID string, id string) (*model.BooleanResult, error) {
+	result, err := r.ServiceContainer.PhoneNumberService.DeleteById(ctx, contactID, id)
+	if err != nil {
+		graphql.AddErrorf(ctx, "Could not remove phone number %s from contact %s", id, contactID)
+		return nil, err
+	}
+	return &model.BooleanResult{
+		Result: result,
+	}, nil
+}
+
 // MergeEmailToContact is the resolver for the mergeEmailToContact field.
 func (r *mutationResolver) MergeEmailToContact(ctx context.Context, contactID string, input model.EmailInput) (*model.EmailInfo, error) {
 	result, err := r.ServiceContainer.EmailService.MergeEmailToContact(ctx, contactID, mapper.MapEmailInputToEntity(&input))
@@ -122,6 +146,18 @@ func (r *mutationResolver) RemoveEmailFromContact(ctx context.Context, contactID
 	result, err := r.ServiceContainer.EmailService.Delete(ctx, contactID, email)
 	if err != nil {
 		graphql.AddErrorf(ctx, "Could not remove email %s from contact %s", email, contactID)
+		return nil, err
+	}
+	return &model.BooleanResult{
+		Result: result,
+	}, nil
+}
+
+// RemoveEmailFromContactByID is the resolver for the removeEmailFromContactById field.
+func (r *mutationResolver) RemoveEmailFromContactByID(ctx context.Context, contactID string, id string) (*model.BooleanResult, error) {
+	result, err := r.ServiceContainer.EmailService.DeleteById(ctx, contactID, id)
+	if err != nil {
+		graphql.AddErrorf(ctx, "Could not remove email %s from contact %s", id, contactID)
 		return nil, err
 	}
 	return &model.BooleanResult{

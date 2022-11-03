@@ -15,6 +15,7 @@ type EmailService interface {
 	FindAllForContact(ctx context.Context, obj *model.Contact) (*entity.EmailEntities, error)
 	MergeEmailToContact(ctx context.Context, id string, toEntity *entity.EmailEntity) (*entity.EmailEntity, error)
 	Delete(ctx context.Context, contactId string, email string) (bool, error)
+	DeleteById(ctx context.Context, contactId string, emailId string) (bool, error)
 }
 
 type emailService struct {
@@ -113,6 +114,31 @@ func (s *emailService) Delete(ctx context.Context, contactId string, email strin
 				"id":     contactId,
 				"email":  email,
 				"tenant": common.GetContext(ctx).Tenant,
+			})
+
+		return true, err
+	})
+	if err != nil {
+		return false, err
+	}
+
+	return queryResult.(bool), nil
+}
+
+func (s *emailService) DeleteById(ctx context.Context, contactId string, emailId string) (bool, error) {
+	session := (*s.driver).NewSession(neo4j.SessionConfig{AccessMode: neo4j.AccessModeWrite})
+	defer session.Close()
+
+	queryResult, err := session.WriteTransaction(func(tx neo4j.Transaction) (interface{}, error) {
+		_, err := tx.Run(`
+			MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}),
+                  (c:Contact {id:$contactId})-[:EMAILED_AT]->(p:Email {id:$emailId})
+            DETACH DELETE p
+			`,
+			map[string]interface{}{
+				"contactId": contactId,
+				"emailId":   emailId,
+				"tenant":    common.GetContext(ctx).Tenant,
 			})
 
 		return true, err
