@@ -14,7 +14,7 @@ func MapContactInputToEntity(input model.ContactInput) *entity.ContactEntity {
 		contactEntity.Label = *input.Label
 	}
 	if input.Title != nil {
-		contactEntity.Title = *input.Title
+		contactEntity.Title = input.Title.String()
 	}
 	if input.Notes != nil {
 		contactEntity.Notes = *input.Notes
@@ -26,7 +26,10 @@ func MapContactInputToEntity(input model.ContactInput) *entity.ContactEntity {
 }
 
 func MapEntityToContact(contact *entity.ContactEntity) *model.Contact {
-	var title = contact.Title
+	var title = model.PersonTitle(contact.Title)
+	if !title.IsValid() {
+		title = ""
+	}
 	var label = contact.Label
 	var notes = contact.Notes
 	var contactType = contact.ContactType

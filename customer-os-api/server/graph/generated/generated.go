@@ -737,7 +737,7 @@ Contact - represents one person that can be contacted. In B2C
 """
 type Contact {
     id: ID!
-    title: String
+    title: PersonTitle
     firstName: String!
     lastName: String!
     createdAt: Time!
@@ -759,7 +759,7 @@ type ContactsPage implements PagedResult {
 
 input ContactInput {
     firstName: String!
-    title: String
+    title: PersonTitle
     lastName: String!
     label: String
     notes: String
@@ -769,7 +769,14 @@ input ContactInput {
     email: EmailInput
     phoneNumber: PhoneNumberInput
 }
-`, BuiltIn: false},
+
+enum PersonTitle {
+    MR
+    MRS
+    MISS
+    MS
+    DR
+}`, BuiltIn: false},
 	{Name: "../schemas/contact_group.graphqls", Input: `type ContactGroup {
     id: ID!
     name: String!
@@ -1472,9 +1479,9 @@ func (ec *executionContext) _Contact_title(ctx context.Context, field graphql.Co
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.(*string)
+	res := resTmp.(*model.PersonTitle)
 	fc.Result = res
-	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+	return ec.marshalOPersonTitle2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐPersonTitle(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Contact_title(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -1484,7 +1491,7 @@ func (ec *executionContext) fieldContext_Contact_title(ctx context.Context, fiel
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
+			return nil, errors.New("field of type PersonTitle does not have child fields")
 		},
 	}
 	return fc, nil
@@ -6064,7 +6071,7 @@ func (ec *executionContext) unmarshalInputContactInput(ctx context.Context, obj 
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("title"))
-			it.Title, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			it.Title, err = ec.unmarshalOPersonTitle2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐPersonTitle(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -8346,6 +8353,22 @@ func (ec *executionContext) unmarshalOPaginationFilter2ᚖgithubᚗcomᚋopenlin
 	}
 	res, err := ec.unmarshalInputPaginationFilter(ctx, v)
 	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalOPersonTitle2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐPersonTitle(ctx context.Context, v interface{}) (*model.PersonTitle, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var res = new(model.PersonTitle)
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOPersonTitle2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐPersonTitle(ctx context.Context, sel ast.SelectionSet, v *model.PersonTitle) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return v
 }
 
 func (ec *executionContext) marshalOPhoneNumberInfo2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐPhoneNumberInfoᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.PhoneNumberInfo) graphql.Marshaler {
