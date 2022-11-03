@@ -112,6 +112,7 @@ type ComplexityRoot struct {
 		RemovePhoneNumberFromContactByID       func(childComplexity int, contactID string, id string) int
 		RemoveTextCustomFieldFromContact       func(childComplexity int, contactID string, fieldName string) int
 		RemoveTextCustomFieldFromContactByID   func(childComplexity int, contactID string, id string) int
+		SoftDeleteContact                      func(childComplexity int, contactID string) int
 		UpdateContact                          func(childComplexity int, input model.ContactUpdateInput) int
 		UpdateEmailInContact                   func(childComplexity int, contactID string, input model.EmailUpdateInput) int
 		UpdatePhoneNumberInContact             func(childComplexity int, contactID string, input model.PhoneNumberUpdateInput) int
@@ -166,6 +167,7 @@ type MutationResolver interface {
 	CreateContact(ctx context.Context, input model.ContactInput) (*model.Contact, error)
 	UpdateContact(ctx context.Context, input model.ContactUpdateInput) (*model.Contact, error)
 	DeleteContact(ctx context.Context, contactID string) (*model.BooleanResult, error)
+	SoftDeleteContact(ctx context.Context, contactID string) (*model.BooleanResult, error)
 	MergeTextCustomFieldToContact(ctx context.Context, contactID string, input model.TextCustomFieldInput) (*model.TextCustomField, error)
 	UpdateTextCustomFieldInContact(ctx context.Context, contactID string, input model.TextCustomFieldUpdateInput) (*model.TextCustomField, error)
 	RemoveTextCustomFieldFromContact(ctx context.Context, contactID string, fieldName string) (*model.BooleanResult, error)
@@ -593,6 +595,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.RemoveTextCustomFieldFromContactByID(childComplexity, args["contactId"].(string), args["id"].(string)), true
 
+	case "Mutation.softDeleteContact":
+		if e.complexity.Mutation.SoftDeleteContact == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_softDeleteContact_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.SoftDeleteContact(childComplexity, args["contactId"].(string)), true
+
 	case "Mutation.updateContact":
 		if e.complexity.Mutation.UpdateContact == nil {
 			break
@@ -1003,6 +1017,7 @@ enum EmailLabel {
     createContact(input: ContactInput!): Contact!
     updateContact(input: ContactUpdateInput!): Contact!
     deleteContact(contactId: ID!): BooleanResult!
+    softDeleteContact(contactId: ID!): BooleanResult!
 
     mergeTextCustomFieldToContact(contactId : ID!, input: TextCustomFieldInput!): TextCustomField!
     updateTextCustomFieldInContact(contactId : ID!, input: TextCustomFieldUpdateInput!): TextCustomField!
@@ -1449,6 +1464,21 @@ func (ec *executionContext) field_Mutation_removeTextCustomFieldFromContact_args
 		}
 	}
 	args["fieldName"] = arg1
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_softDeleteContact_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["contactId"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("contactId"))
+		arg0, err = ec.unmarshalNID2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["contactId"] = arg0
 	return args, nil
 }
 
@@ -3225,6 +3255,65 @@ func (ec *executionContext) fieldContext_Mutation_deleteContact(ctx context.Cont
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Mutation_deleteContact_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_softDeleteContact(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_softDeleteContact(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().SoftDeleteContact(rctx, fc.Args["contactId"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.BooleanResult)
+	fc.Result = res
+	return ec.marshalNBooleanResult2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐBooleanResult(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_softDeleteContact(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "result":
+				return ec.fieldContext_BooleanResult_result(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type BooleanResult", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_softDeleteContact_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return
 	}
@@ -8135,6 +8224,15 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_deleteContact(ctx, field)
+			})
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "softDeleteContact":
+
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_softDeleteContact(ctx, field)
 			})
 
 			if out.Values[i] == graphql.Null {
