@@ -1,6 +1,9 @@
 package config
 
 type Config struct {
+	GraphQL struct {
+		PlaygroundEnabled bool `env:"GRAPHQL_PLAYGROUND_ENABLED" envDefault:"false"`
+	}
 	Db struct {
 		Host            string `env:"DB_HOST,required"`
 		Port            string `env:"DB_PORT" envDefault:"5432"`

@@ -88,7 +88,9 @@ func main() {
 
 	r := gin.Default()
 	r.POST("/query", graphqlHandler(db))
-	r.GET("/", playgroundHandler())
+	if cfg.GraphQL.PlaygroundEnabled {
+		r.GET("/", playgroundHandler())
+	}
 	r.GET("/health", healthCheckHandler)
 
 	port := os.Getenv("PORT")
