@@ -41,6 +41,16 @@ func (r *mutationResolver) CreateContact(ctx context.Context, input model.Contac
 	return mapper.MapEntityToContact(contactNodeCreated), nil
 }
 
+// UpdateContact is the resolver for the updateContact field.
+func (r *mutationResolver) UpdateContact(ctx context.Context, input model.ContactUpdateInput) (*model.Contact, error) {
+	updatedContact, err := r.ServiceContainer.ContactService.Update(ctx, mapper.MapContactUpdateInputToEntity(input))
+	if err != nil {
+		graphql.AddErrorf(ctx, "Failed to update contact %s", input.ID)
+		return nil, err
+	}
+	return mapper.MapEntityToContact(updatedContact), nil
+}
+
 // DeleteContact is the resolver for the deleteContact field.
 func (r *mutationResolver) DeleteContact(ctx context.Context, contactID string) (*model.BooleanResult, error) {
 	result, err := r.ServiceContainer.ContactService.Delete(ctx, contactID)

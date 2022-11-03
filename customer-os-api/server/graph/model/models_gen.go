@@ -56,8 +56,8 @@ type ContactGroupInput struct {
 }
 
 type ContactInput struct {
-	FirstName        string                  `json:"firstName"`
 	Title            *PersonTitle            `json:"title"`
+	FirstName        string                  `json:"firstName"`
 	LastName         string                  `json:"lastName"`
 	Label            *string                 `json:"label"`
 	Notes            *string                 `json:"notes"`
@@ -66,6 +66,16 @@ type ContactInput struct {
 	CompanyPosition  *CompanyPositionInput   `json:"companyPosition"`
 	Email            *EmailInput             `json:"email"`
 	PhoneNumber      *PhoneNumberInput       `json:"phoneNumber"`
+}
+
+type ContactUpdateInput struct {
+	ID          string       `json:"id"`
+	Title       *PersonTitle `json:"title"`
+	FirstName   string       `json:"firstName"`
+	LastName    string       `json:"lastName"`
+	Label       *string      `json:"label"`
+	Notes       *string      `json:"notes"`
+	ContactType *string      `json:"contactType"`
 }
 
 type ContactsPage struct {

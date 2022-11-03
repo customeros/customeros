@@ -2,6 +2,7 @@ type Mutation {
     createTenantUser(input: TenantUserInput!): TenantUser!
 
     createContact(input: ContactInput!): Contact!
+    updateContact(input: ContactUpdateInput!): Contact!
     deleteContact(contactId: ID!): BooleanResult!
 
     mergeTextCustomFieldToContact(contactId : ID!, input: TextCustomFieldInput!): TextCustomField!
@@ -17,9 +18,6 @@ type Mutation {
     deleteContactGroupAndUnlinkAllContacts(id :ID!): BooleanResult!
     addContactToGroup(contactId : ID!, groupId: ID!): BooleanResult!
     removeContactFromGroup(contactId : ID!, groupId: ID!): BooleanResult!
-
-    #  TODO implement
-    #  updateContact(input: ContactUpdateInput!): Contact!
 }
 
 

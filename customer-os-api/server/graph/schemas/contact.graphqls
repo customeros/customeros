@@ -24,8 +24,8 @@ type ContactsPage implements PagedResult {
 }
 
 input ContactInput {
-    firstName: String!
     title: PersonTitle
+    firstName: String!
     lastName: String!
     label: String
     notes: String
@@ -34,6 +34,16 @@ input ContactInput {
     companyPosition: CompanyPositionInput
     email: EmailInput
     phoneNumber: PhoneNumberInput
+}
+
+input ContactUpdateInput {
+    id: ID!
+    title: PersonTitle
+    firstName: String!
+    lastName: String!
+    label: String
+    notes: String
+    contactType: String
 }
 
 enum PersonTitle {
