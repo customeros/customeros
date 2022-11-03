@@ -10,7 +10,7 @@ type Contact {
     label: String
     notes: String
     contactType: String
-    companies: [ContactCompany!]! @goField(forceResolver: true)
+    companyPositions: [CompanyPosition!]! @goField(forceResolver: true)
     groups: [ContactGroup!]! @goField(forceResolver: true)
     textCustomFields: [TextCustomField!]! @goField(forceResolver: true)
     phoneNumbers: [PhoneNumberInfo!] @goField(forceResolver: true)
@@ -31,7 +31,7 @@ input ContactInput {
     notes: String
     contactType: String
     textCustomFields: [TextCustomFieldInput!]
-    company: ContactCompanyInput
+    companyPosition: CompanyPositionInput
     email: EmailInput
     phoneNumber: PhoneNumberInput
 }

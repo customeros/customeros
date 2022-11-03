@@ -4,13 +4,13 @@ import (
 	"fmt"
 )
 
-type ContactCompanyEntity struct {
+type CompanyPositionEntity struct {
 	Company  string
 	JobTitle string
 }
 
-func (contactCompany ContactCompanyEntity) ToString() string {
-	return fmt.Sprintf("company: %s\njob title: %s", contactCompany.Company, contactCompany.JobTitle)
+func (companyPosition CompanyPositionEntity) ToString() string {
+	return fmt.Sprintf("company: %s\njob title: %s", companyPosition.Company, companyPosition.JobTitle)
 }
 
-type ContactCompanyEntities []ContactCompanyEntity
+type CompanyPositionEntities []CompanyPositionEntity

@@ -1,9 +1,9 @@
-type ContactCompany {
+type CompanyPosition {
     companyName: String!
     jobTitle: String
 }
 
-input ContactCompanyInput {
+input CompanyPositionInput {
     companyName: String!
     jobTitle: String
 }
