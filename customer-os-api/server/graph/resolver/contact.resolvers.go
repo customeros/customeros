@@ -11,6 +11,12 @@ import (
 	"github.com/openline-ai/openline-customer-os/customer-os-api/mapper"
 )
 
+// CompanyPositions is the resolver for the companyPositions field.
+func (r *contactResolver) CompanyPositions(ctx context.Context, obj *model.Contact) ([]*model.CompanyPosition, error) {
+	companyPositionEntities, err := r.ServiceContainer.CompanyPositionService.FindAllForContact(ctx, obj)
+	return mapper.MapEntitiesToCompanyPositiones(companyPositionEntities), err
+}
+
 // Groups is the resolver for the groups field.
 func (r *contactResolver) Groups(ctx context.Context, obj *model.Contact) ([]*model.ContactGroup, error) {
 	contactGroupEntities, err := r.ServiceContainer.ContactGroupService.FindAllForContact(ctx, obj)

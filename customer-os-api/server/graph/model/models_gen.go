@@ -19,6 +19,16 @@ type BooleanResult struct {
 	Result bool `json:"result"`
 }
 
+type CompanyPosition struct {
+	CompanyName string  `json:"companyName"`
+	JobTitle    *string `json:"jobTitle"`
+}
+
+type CompanyPositionInput struct {
+	CompanyName string  `json:"companyName"`
+	JobTitle    *string `json:"jobTitle"`
+}
+
 // Contact - represents one person that can be contacted. In B2C
 type Contact struct {
 	ID               string             `json:"id"`
@@ -27,10 +37,9 @@ type Contact struct {
 	LastName         string             `json:"lastName"`
 	CreatedAt        time.Time          `json:"createdAt"`
 	Label            *string            `json:"label"`
-	Company          *string            `json:"company"`
-	CompanyTitle     *string            `json:"companyTitle"`
 	Notes            *string            `json:"notes"`
 	ContactType      *string            `json:"contactType"`
+	CompanyPositions []*CompanyPosition `json:"companyPositions"`
 	Groups           []*ContactGroup    `json:"groups"`
 	TextCustomFields []*TextCustomField `json:"textCustomFields"`
 	PhoneNumbers     []*PhoneNumberInfo `json:"phoneNumbers"`
@@ -51,11 +60,10 @@ type ContactInput struct {
 	Title            *string                 `json:"title"`
 	LastName         string                  `json:"lastName"`
 	Label            *string                 `json:"label"`
-	Company          *string                 `json:"company"`
-	CompanyTitle     *string                 `json:"companyTitle"`
 	Notes            *string                 `json:"notes"`
 	ContactType      *string                 `json:"contactType"`
 	TextCustomFields []*TextCustomFieldInput `json:"textCustomFields"`
+	CompanyPosition  *CompanyPositionInput   `json:"companyPosition"`
 	Email            *EmailInput             `json:"email"`
 	PhoneNumber      *PhoneNumberInput       `json:"phoneNumber"`
 }

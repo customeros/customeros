@@ -20,7 +20,6 @@ type Mutation {
 
     #  TODO implement
     #  updateContact(input: ContactUpdateInput!): Contact!
-    #  updateContactGroup(input: ContactGroupUpdateInput!): Contact!
 }
 
 

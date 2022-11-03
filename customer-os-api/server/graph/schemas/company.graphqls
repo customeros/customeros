@@ -1,0 +1,9 @@
+type CompanyPosition {
+    companyName: String!
+    jobTitle: String
+}
+
+input CompanyPositionInput {
+    companyName: String!
+    jobTitle: String
+}
