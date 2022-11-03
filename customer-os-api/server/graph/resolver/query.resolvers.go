@@ -50,9 +50,16 @@ func (r *queryResolver) Contacts(ctx context.Context, paginationFilter *model.Pa
 }
 
 // ContactGroups is the resolver for the contactGroups field.
-func (r *queryResolver) ContactGroups(ctx context.Context) ([]*model.ContactGroup, error) {
-	contactGroupEntities, err := r.ServiceContainer.ContactGroupService.FindAll(ctx)
-	return mapper.MapEntitiesToContactGroups(contactGroupEntities), err
+func (r *queryResolver) ContactGroups(ctx context.Context, paginationFilter *model.PaginationFilter) (*model.ContactGroupsPage, error) {
+	if paginationFilter == nil {
+		paginationFilter = &model.PaginationFilter{Page: 0, Limit: 0}
+	}
+	paginatedResult, err := r.ServiceContainer.ContactGroupService.FindAll(ctx, paginationFilter.Page, paginationFilter.Limit)
+	return &model.ContactGroupsPage{
+		Content:       mapper.MapEntitiesToContactGroups(paginatedResult.Rows.(*entity.ContactGroupEntities)),
+		TotalPages:    paginatedResult.TotalPages,
+		TotalElements: paginatedResult.TotalRows,
+	}, err
 }
 
 // Query returns generated.QueryResolver implementation.

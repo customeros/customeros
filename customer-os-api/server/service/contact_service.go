@@ -13,6 +13,7 @@ import (
 
 type ContactService interface {
 	Create(ctx context.Context, contact *ContactCreateData) (*entity.ContactEntity, error)
+	Update(ctx context.Context, contact *entity.ContactEntity) (*entity.ContactEntity, error)
 	FindContactById(ctx context.Context, id string) (*entity.ContactEntity, error)
 	FindAll(ctx context.Context, page int, limit int) (*utils.Pagination, error)
 	Delete(ctx context.Context, id string) (bool, error)
@@ -106,6 +107,43 @@ func createContactInDBTxWork(ctx context.Context, newContact *ContactCreateData)
 		}
 		return record.Values[0], nil
 	}
+}
+
+func (s *contactService) Update(ctx context.Context, contact *entity.ContactEntity) (*entity.ContactEntity, error) {
+	session := (*s.driver).NewSession(neo4j.SessionConfig{AccessMode: neo4j.AccessModeWrite})
+	defer session.Close()
+
+	queryResult, err := session.WriteTransaction(func(tx neo4j.Transaction) (interface{}, error) {
+		txResult, err := tx.Run(`
+			MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant})
+			SET c.firstName=$firstName,
+				c.lastName=$lastName,
+				c.label=$label,
+				c.contactType=$contactType,
+				c.title=$title,
+				c.notes=$notes
+			RETURN c`,
+			map[string]interface{}{
+				"tenant":      common.GetContext(ctx).Tenant,
+				"contactId":   contact.Id,
+				"firstName":   contact.FirstName,
+				"lastName":    contact.LastName,
+				"label":       contact.Label,
+				"contactType": contact.ContactType,
+				"title":       contact.Title,
+				"notes":       contact.Notes,
+			})
+		record, err := txResult.Single()
+		if err != nil {
+			return nil, err
+		}
+		return record, nil
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return s.mapDbNodeToContactEntity(queryResult.(*db.Record).Values[0].(dbtype.Node)), nil
 }
 
 func (s *contactService) Delete(ctx context.Context, contactId string) (bool, error) {

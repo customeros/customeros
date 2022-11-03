@@ -32,7 +32,7 @@ type CompanyPositionInput struct {
 // Contact - represents one person that can be contacted. In B2C
 type Contact struct {
 	ID               string             `json:"id"`
-	Title            *string            `json:"title"`
+	Title            *PersonTitle       `json:"title"`
 	FirstName        string             `json:"firstName"`
 	LastName         string             `json:"lastName"`
 	CreatedAt        time.Time          `json:"createdAt"`
@@ -55,9 +55,19 @@ type ContactGroupInput struct {
 	Name string `json:"name"`
 }
 
+type ContactGroupsPage struct {
+	Content       []*ContactGroup `json:"content"`
+	TotalPages    int             `json:"totalPages"`
+	TotalElements int64           `json:"totalElements"`
+}
+
+func (ContactGroupsPage) IsPagedResult()               {}
+func (this ContactGroupsPage) GetTotalPages() int      { return this.TotalPages }
+func (this ContactGroupsPage) GetTotalElements() int64 { return this.TotalElements }
+
 type ContactInput struct {
+	Title            *PersonTitle            `json:"title"`
 	FirstName        string                  `json:"firstName"`
-	Title            *string                 `json:"title"`
 	LastName         string                  `json:"lastName"`
 	Label            *string                 `json:"label"`
 	Notes            *string                 `json:"notes"`
@@ -66,6 +76,16 @@ type ContactInput struct {
 	CompanyPosition  *CompanyPositionInput   `json:"companyPosition"`
 	Email            *EmailInput             `json:"email"`
 	PhoneNumber      *PhoneNumberInput       `json:"phoneNumber"`
+}
+
+type ContactUpdateInput struct {
+	ID          string       `json:"id"`
+	Title       *PersonTitle `json:"title"`
+	FirstName   string       `json:"firstName"`
+	LastName    string       `json:"lastName"`
+	Label       *string      `json:"label"`
+	Notes       *string      `json:"notes"`
+	ContactType *string      `json:"contactType"`
 }
 
 type ContactsPage struct {
@@ -185,6 +205,53 @@ func (e *EmailLabel) UnmarshalGQL(v interface{}) error {
 }
 
 func (e EmailLabel) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+type PersonTitle string
+
+const (
+	PersonTitleMr   PersonTitle = "MR"
+	PersonTitleMrs  PersonTitle = "MRS"
+	PersonTitleMiss PersonTitle = "MISS"
+	PersonTitleMs   PersonTitle = "MS"
+	PersonTitleDr   PersonTitle = "DR"
+)
+
+var AllPersonTitle = []PersonTitle{
+	PersonTitleMr,
+	PersonTitleMrs,
+	PersonTitleMiss,
+	PersonTitleMs,
+	PersonTitleDr,
+}
+
+func (e PersonTitle) IsValid() bool {
+	switch e {
+	case PersonTitleMr, PersonTitleMrs, PersonTitleMiss, PersonTitleMs, PersonTitleDr:
+		return true
+	}
+	return false
+}
+
+func (e PersonTitle) String() string {
+	return string(e)
+}
+
+func (e *PersonTitle) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = PersonTitle(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid PersonTitle", str)
+	}
+	return nil
+}
+
+func (e PersonTitle) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
 }
 

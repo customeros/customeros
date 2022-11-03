@@ -3,7 +3,7 @@ Contact - represents one person that can be contacted. In B2C
 """
 type Contact {
     id: ID!
-    title: String
+    title: PersonTitle
     firstName: String!
     lastName: String!
     createdAt: Time!
@@ -24,8 +24,8 @@ type ContactsPage implements PagedResult {
 }
 
 input ContactInput {
+    title: PersonTitle
     firstName: String!
-    title: String
     lastName: String!
     label: String
     notes: String
@@ -34,4 +34,22 @@ input ContactInput {
     companyPosition: CompanyPositionInput
     email: EmailInput
     phoneNumber: PhoneNumberInput
+}
+
+input ContactUpdateInput {
+    id: ID!
+    title: PersonTitle
+    firstName: String!
+    lastName: String!
+    label: String
+    notes: String
+    contactType: String
+}
+
+enum PersonTitle {
+    MR
+    MRS
+    MISS
+    MS
+    DR
 }
