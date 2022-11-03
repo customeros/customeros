@@ -38,6 +38,7 @@ func MapEntitiesToTextCustomFields(textCustomFieldEntities *entity.TextCustomFie
 func MapEntityToTextCustomField(textCustomFieldEntity *entity.TextCustomFieldEntity) *model.TextCustomField {
 	var group = textCustomFieldEntity.Group
 	return &model.TextCustomField{
+		ID:    textCustomFieldEntity.Id,
 		Name:  textCustomFieldEntity.Name,
 		Value: textCustomFieldEntity.Value,
 		Group: &group,

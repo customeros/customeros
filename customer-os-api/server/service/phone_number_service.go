@@ -103,8 +103,9 @@ func addPhoneNumberToContactInTx(ctx context.Context, contactId string, input en
 	_, err := tx.Run(`
 			MATCH (c:Contact {id:$contactId})
 			MERGE (p:PhoneNumber {
-				  number: $number,
-				  label: $label
+				id: randomUUID(),
+				number: $number,
+				label: $label
 			})<-[:CALLED_AT {primary:$primary}]-(c)
 			RETURN p`,
 		map[string]interface{}{
@@ -158,6 +159,7 @@ func (s *phoneNumberService) Delete(ctx context.Context, contactId string, phone
 func (s *phoneNumberService) mapDbNodeToPhoneNumberEntity(node dbtype.Node) *entity.PhoneNumberEntity {
 	props := utils.GetPropsFromNode(node)
 	result := entity.PhoneNumberEntity{
+		Id:     utils.GetStringPropOrEmpty(props, "id"),
 		Number: utils.GetStringPropOrEmpty(props, "number"),
 		Label:  utils.GetStringPropOrEmpty(props, "label"),
 	}

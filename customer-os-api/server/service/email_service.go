@@ -128,8 +128,9 @@ func addEmailToContactInTx(ctx context.Context, contactId string, input entity.E
 	_, err := tx.Run(`
 			MATCH (c:Contact {id:$contactId})
 			MERGE (e:Email {
-				  email: $email,
-				  label: $label
+				id: randomUUID(),
+				email: $email,
+				label: $label
 			})<-[:EMAILED_AT {primary:$primary}]-(c)
 			RETURN e`,
 		map[string]interface{}{
@@ -158,6 +159,7 @@ func setOtherContactEmailsNonPrimaryInTx(ctx context.Context, contactId string, 
 func (s *emailService) mapDbNodeToEmailEntity(node dbtype.Node) *entity.EmailEntity {
 	props := utils.GetPropsFromNode(node)
 	result := entity.EmailEntity{
+		Id:    utils.GetStringPropOrEmpty(props, "id"),
 		Email: utils.GetStringPropOrEmpty(props, "email"),
 		Label: utils.GetStringPropOrEmpty(props, "label"),
 	}

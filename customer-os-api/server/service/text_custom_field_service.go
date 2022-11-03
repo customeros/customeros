@@ -120,9 +120,10 @@ func addTextCustomFieldToContactInTx(ctx context.Context, contactId string, inpu
 	_, err := tx.Run(`
 			MATCH (c:Contact {id:$contactId})
 			CREATE (f:TextCustomField {
-				  group: $group,
-				  name: $name,
-				  value: $value
+				id: randomUUID(),
+				group: $group,
+				name: $name,
+				value: $value
 			})<-[:HAS_TEXT_PROPERTY]-(c)
 			RETURN f`,
 		map[string]interface{}{
@@ -138,6 +139,7 @@ func addTextCustomFieldToContactInTx(ctx context.Context, contactId string, inpu
 func (s *textCustomPropertyService) mapDbNodeToTextCustomFieldEntity(dbContactGroupNode dbtype.Node) *entity.TextCustomFieldEntity {
 	props := utils.GetPropsFromNode(dbContactGroupNode)
 	result := entity.TextCustomFieldEntity{
+		Id:    utils.GetStringPropOrEmpty(props, "id"),
 		Name:  utils.GetStringPropOrEmpty(props, "name"),
 		Value: utils.GetStringPropOrEmpty(props, "value"),
 		Group: utils.GetStringPropOrEmpty(props, "group"),
