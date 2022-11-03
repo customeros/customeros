@@ -1,0 +1,9 @@
+type ContactCompany {
+    companyName: String!
+    jobTitle: String
+}
+
+input ContactCompanyInput {
+    companyName: String!
+    jobTitle: String
+}

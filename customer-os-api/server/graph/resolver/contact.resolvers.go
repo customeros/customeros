@@ -5,11 +5,17 @@ package resolver
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/openline-ai/openline-customer-os/customer-os-api/graph/generated"
 	"github.com/openline-ai/openline-customer-os/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/customer-os-api/mapper"
 )
+
+// Companies is the resolver for the companies field.
+func (r *contactResolver) Companies(ctx context.Context, obj *model.Contact) ([]*model.ContactCompany, error) {
+	panic(fmt.Errorf("not implemented: Companies - companies"))
+}
 
 // Groups is the resolver for the groups field.
 func (r *contactResolver) Groups(ctx context.Context, obj *model.Contact) ([]*model.ContactGroup, error) {

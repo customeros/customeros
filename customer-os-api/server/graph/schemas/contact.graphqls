@@ -8,10 +8,9 @@ type Contact {
     lastName: String!
     createdAt: Time!
     label: String
-    company: String
-    companyTitle: String
     notes: String
     contactType: String
+    companies: [ContactCompany!]! @goField(forceResolver: true)
     groups: [ContactGroup!]! @goField(forceResolver: true)
     textCustomFields: [TextCustomField!]! @goField(forceResolver: true)
     phoneNumbers: [PhoneNumberInfo!] @goField(forceResolver: true)
@@ -29,13 +28,10 @@ input ContactInput {
     title: String
     lastName: String!
     label: String
-    company: String
-    companyTitle: String
     notes: String
     contactType: String
     textCustomFields: [TextCustomFieldInput!]
+    company: ContactCompanyInput
     email: EmailInput
     phoneNumber: PhoneNumberInput
 }
-
-

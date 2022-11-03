@@ -23,6 +23,7 @@ type ContactCreateData struct {
 	TextCustomFields  *entity.TextCustomFieldEntities
 	EmailEntity       *entity.EmailEntity
 	PhoneNumberEntity *entity.PhoneNumberEntity
+	ContactCompany    *entity.ContactCompanyEntity
 }
 
 type contactService struct {
@@ -56,23 +57,19 @@ func createContactInDBTxWork(ctx context.Context, newContact *ContactCreateData)
 				  firstName: $firstName,
 				  lastName: $lastName,
 				  label: $label,
-				  company: $company,
-				  companyTitle: $companyTitle,
 				  notes: $notes,
 				  contactType: $contactType,
                   createdAt :datetime({timezone: 'UTC'})
 			})-[:CONTACT_BELONGS_TO_TENANT]->(t)
 			RETURN c`,
 			map[string]interface{}{
-				"tenant":       common.GetContext(ctx).Tenant,
-				"firstName":    newContact.ContactEntity.FirstName,
-				"lastName":     newContact.ContactEntity.LastName,
-				"label":        newContact.ContactEntity.Label,
-				"contactType":  newContact.ContactEntity.ContactType,
-				"company":      newContact.ContactEntity.Company,
-				"title":        newContact.ContactEntity.Title,
-				"companyTitle": newContact.ContactEntity.CompanyTitle,
-				"notes":        newContact.ContactEntity.Notes,
+				"tenant":      common.GetContext(ctx).Tenant,
+				"firstName":   newContact.ContactEntity.FirstName,
+				"lastName":    newContact.ContactEntity.LastName,
+				"label":       newContact.ContactEntity.Label,
+				"contactType": newContact.ContactEntity.ContactType,
+				"title":       newContact.ContactEntity.Title,
+				"notes":       newContact.ContactEntity.Notes,
 			})
 
 		record, err := result.Single()
@@ -87,6 +84,12 @@ func createContactInDBTxWork(ctx context.Context, newContact *ContactCreateData)
 				if err != nil {
 					return nil, err
 				}
+			}
+		}
+		if newContact.ContactCompany != nil {
+			err := setContactCompanyRelationshipInTx(ctx, contactId, *newContact.ContactCompany, tx)
+			if err != nil {
+				return nil, err
 			}
 		}
 		if newContact.EmailEntity != nil {
@@ -202,16 +205,14 @@ func (s *contactService) FindAll(ctx context.Context, page int, limit int) (*uti
 func (s *contactService) mapDbNodeToContactEntity(dbContactNode dbtype.Node) *entity.ContactEntity {
 	props := utils.GetPropsFromNode(dbContactNode)
 	contact := entity.ContactEntity{
-		Id:           utils.GetStringPropOrEmpty(props, "id"),
-		FirstName:    utils.GetStringPropOrEmpty(props, "firstName"),
-		LastName:     utils.GetStringPropOrEmpty(props, "lastName"),
-		Label:        utils.GetStringPropOrEmpty(props, "label"),
-		Company:      utils.GetStringPropOrEmpty(props, "company"),
-		Title:        utils.GetStringPropOrEmpty(props, "title"),
-		CompanyTitle: utils.GetStringPropOrEmpty(props, "companyTitle"),
-		Notes:        utils.GetStringPropOrEmpty(props, "notes"),
-		ContactType:  utils.GetStringPropOrEmpty(props, "contactType"),
-		CreatedAt:    props["createdAt"].(time.Time),
+		Id:          utils.GetStringPropOrEmpty(props, "id"),
+		FirstName:   utils.GetStringPropOrEmpty(props, "firstName"),
+		LastName:    utils.GetStringPropOrEmpty(props, "lastName"),
+		Label:       utils.GetStringPropOrEmpty(props, "label"),
+		Title:       utils.GetStringPropOrEmpty(props, "title"),
+		Notes:       utils.GetStringPropOrEmpty(props, "notes"),
+		ContactType: utils.GetStringPropOrEmpty(props, "contactType"),
+		CreatedAt:   props["createdAt"].(time.Time),
 	}
 	return &contact
 }
