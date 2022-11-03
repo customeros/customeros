@@ -10,3 +10,8 @@ input TextCustomFieldInput {
     name: String!
     value: String!
 }
+
+input TextCustomFieldUpdateInput {
+    id: ID!
+    textCustomFieldDetails: TextCustomFieldInput!
+}

@@ -65,9 +65,21 @@ func (r *mutationResolver) DeleteContact(ctx context.Context, contactID string) 
 
 // MergeTextCustomFieldToContact is the resolver for the mergeTextCustomFieldToContact field.
 func (r *mutationResolver) MergeTextCustomFieldToContact(ctx context.Context, contactID string, input model.TextCustomFieldInput) (*model.TextCustomField, error) {
-	result, err := r.ServiceContainer.TextCustomFieldService.MergeTextCustomFieldToContact(ctx, contactID, mapper.MapTextCustomFieldInputToEntity(input))
+	result, err := r.ServiceContainer.TextCustomFieldService.MergeTextCustomFieldToContact(ctx, contactID, mapper.MapTextCustomFieldInputToEntity(&input))
 	if err != nil {
 		graphql.AddErrorf(ctx, "Could not add custom field %s to contact %s", input.Name, contactID)
+		return nil, err
+	}
+	return mapper.MapEntityToTextCustomField(result), nil
+}
+
+// UpdateTextCustomFieldInContact is the resolver for the updateTextCustomFieldInContact field.
+func (r *mutationResolver) UpdateTextCustomFieldInContact(ctx context.Context, contactID string, input model.TextCustomFieldUpdateInput) (*model.TextCustomField, error) {
+	textCustomField := mapper.MapTextCustomFieldInputToEntity(input.TextCustomFieldDetails)
+	textCustomField.Id = input.ID
+	result, err := r.ServiceContainer.TextCustomFieldService.UpdateTextCustomFieldInContact(ctx, contactID, textCustomField)
+	if err != nil {
+		graphql.AddErrorf(ctx, "Could not update text custom field %s in contact %s", input.ID, contactID)
 		return nil, err
 	}
 	return mapper.MapEntityToTextCustomField(result), nil
@@ -107,6 +119,18 @@ func (r *mutationResolver) MergePhoneNumberToContact(ctx context.Context, contac
 	return mapper.MapEntityToPhoneNumber(result), nil
 }
 
+// UpdatePhoneNumberInContact is the resolver for the updatePhoneNumberInContact field.
+func (r *mutationResolver) UpdatePhoneNumberInContact(ctx context.Context, contactID string, input model.PhoneNumberUpdateInput) (*model.PhoneNumberInfo, error) {
+	phoneNumberEntity := mapper.MapPhoneNumberInputToEntity(input.PhoneNumberDetails)
+	phoneNumberEntity.Id = input.ID
+	result, err := r.ServiceContainer.PhoneNumberService.UpdatePhoneNumberInContact(ctx, contactID, phoneNumberEntity)
+	if err != nil {
+		graphql.AddErrorf(ctx, "Could not update email %s in contact %s", input.ID, contactID)
+		return nil, err
+	}
+	return mapper.MapEntityToPhoneNumber(result), nil
+}
+
 // RemovePhoneNumberFromContact is the resolver for the removePhoneNumberFromContact field.
 func (r *mutationResolver) RemovePhoneNumberFromContact(ctx context.Context, contactID string, phoneNumber string) (*model.BooleanResult, error) {
 	result, err := r.ServiceContainer.PhoneNumberService.Delete(ctx, contactID, phoneNumber)
@@ -136,6 +160,18 @@ func (r *mutationResolver) MergeEmailToContact(ctx context.Context, contactID st
 	result, err := r.ServiceContainer.EmailService.MergeEmailToContact(ctx, contactID, mapper.MapEmailInputToEntity(&input))
 	if err != nil {
 		graphql.AddErrorf(ctx, "Could not add email %s to contact %s", input.Email, contactID)
+		return nil, err
+	}
+	return mapper.MapEntityToEmail(result), nil
+}
+
+// UpdateEmailInContact is the resolver for the updateEmailInContact field.
+func (r *mutationResolver) UpdateEmailInContact(ctx context.Context, contactID string, input model.EmailUpdateInput) (*model.EmailInfo, error) {
+	emailEntity := mapper.MapEmailInputToEntity(input.EmailDetails)
+	emailEntity.Id = input.ID
+	result, err := r.ServiceContainer.EmailService.UpdateEmailInContact(ctx, contactID, emailEntity)
+	if err != nil {
+		graphql.AddErrorf(ctx, "Could not update email %s in contact %s", input.ID, contactID)
 		return nil, err
 	}
 	return mapper.MapEntityToEmail(result), nil

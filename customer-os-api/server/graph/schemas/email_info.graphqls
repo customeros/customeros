@@ -11,6 +11,11 @@ input EmailInput {
     primary: Boolean
 }
 
+input EmailUpdateInput {
+    id: ID!
+    emailDetails: EmailInput!
+}
+
 enum EmailLabel {
     MAIN
     WORK

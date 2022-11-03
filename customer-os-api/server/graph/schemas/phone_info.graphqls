@@ -11,6 +11,11 @@ input PhoneNumberInput {
     primary: Boolean
 }
 
+input PhoneNumberUpdateInput {
+    id: ID!
+    phoneNumberDetails: PhoneNumberInput!
+}
+
 enum PhoneLabel {
     MAIN
     WORK

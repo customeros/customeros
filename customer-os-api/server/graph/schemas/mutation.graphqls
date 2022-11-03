@@ -6,14 +6,17 @@ type Mutation {
     deleteContact(contactId: ID!): BooleanResult!
 
     mergeTextCustomFieldToContact(contactId : ID!, input: TextCustomFieldInput!): TextCustomField!
+    updateTextCustomFieldInContact(contactId : ID!, input: TextCustomFieldUpdateInput!): TextCustomField!
     removeTextCustomFieldFromContact(contactId : ID!, fieldName: String!): BooleanResult!
     removeTextCustomFieldFromContactById(contactId : ID!, id: ID!): BooleanResult!
 
     mergePhoneNumberToContact(contactId : ID!, input: PhoneNumberInput!): PhoneNumberInfo!
+    updatePhoneNumberInContact(contactId : ID!, input: PhoneNumberUpdateInput!): PhoneNumberInfo!
     removePhoneNumberFromContact(contactId : ID!, phoneNumber: String!): BooleanResult!
     removePhoneNumberFromContactById(contactId : ID!, id: ID!): BooleanResult!
 
     mergeEmailToContact(contactId : ID!, input: EmailInput!): EmailInfo!
+    updateEmailInContact(contactId : ID!, input: EmailUpdateInput!): EmailInfo!
     removeEmailFromContact(contactId : ID!, email: String!): BooleanResult!
     removeEmailFromContactById(contactId : ID!, id: ID!): BooleanResult!
 

@@ -113,6 +113,9 @@ type ComplexityRoot struct {
 		RemoveTextCustomFieldFromContact       func(childComplexity int, contactID string, fieldName string) int
 		RemoveTextCustomFieldFromContactByID   func(childComplexity int, contactID string, id string) int
 		UpdateContact                          func(childComplexity int, input model.ContactUpdateInput) int
+		UpdateEmailInContact                   func(childComplexity int, contactID string, input model.EmailUpdateInput) int
+		UpdatePhoneNumberInContact             func(childComplexity int, contactID string, input model.PhoneNumberUpdateInput) int
+		UpdateTextCustomFieldInContact         func(childComplexity int, contactID string, input model.TextCustomFieldUpdateInput) int
 	}
 
 	PhoneNumberInfo struct {
@@ -164,12 +167,15 @@ type MutationResolver interface {
 	UpdateContact(ctx context.Context, input model.ContactUpdateInput) (*model.Contact, error)
 	DeleteContact(ctx context.Context, contactID string) (*model.BooleanResult, error)
 	MergeTextCustomFieldToContact(ctx context.Context, contactID string, input model.TextCustomFieldInput) (*model.TextCustomField, error)
+	UpdateTextCustomFieldInContact(ctx context.Context, contactID string, input model.TextCustomFieldUpdateInput) (*model.TextCustomField, error)
 	RemoveTextCustomFieldFromContact(ctx context.Context, contactID string, fieldName string) (*model.BooleanResult, error)
 	RemoveTextCustomFieldFromContactByID(ctx context.Context, contactID string, id string) (*model.BooleanResult, error)
 	MergePhoneNumberToContact(ctx context.Context, contactID string, input model.PhoneNumberInput) (*model.PhoneNumberInfo, error)
+	UpdatePhoneNumberInContact(ctx context.Context, contactID string, input model.PhoneNumberUpdateInput) (*model.PhoneNumberInfo, error)
 	RemovePhoneNumberFromContact(ctx context.Context, contactID string, phoneNumber string) (*model.BooleanResult, error)
 	RemovePhoneNumberFromContactByID(ctx context.Context, contactID string, id string) (*model.BooleanResult, error)
 	MergeEmailToContact(ctx context.Context, contactID string, input model.EmailInput) (*model.EmailInfo, error)
+	UpdateEmailInContact(ctx context.Context, contactID string, input model.EmailUpdateInput) (*model.EmailInfo, error)
 	RemoveEmailFromContact(ctx context.Context, contactID string, email string) (*model.BooleanResult, error)
 	RemoveEmailFromContactByID(ctx context.Context, contactID string, id string) (*model.BooleanResult, error)
 	CreateContactGroup(ctx context.Context, input model.ContactGroupInput) (*model.ContactGroup, error)
@@ -599,6 +605,42 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.UpdateContact(childComplexity, args["input"].(model.ContactUpdateInput)), true
 
+	case "Mutation.updateEmailInContact":
+		if e.complexity.Mutation.UpdateEmailInContact == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_updateEmailInContact_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.UpdateEmailInContact(childComplexity, args["contactId"].(string), args["input"].(model.EmailUpdateInput)), true
+
+	case "Mutation.updatePhoneNumberInContact":
+		if e.complexity.Mutation.UpdatePhoneNumberInContact == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_updatePhoneNumberInContact_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.UpdatePhoneNumberInContact(childComplexity, args["contactId"].(string), args["input"].(model.PhoneNumberUpdateInput)), true
+
+	case "Mutation.updateTextCustomFieldInContact":
+		if e.complexity.Mutation.UpdateTextCustomFieldInContact == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_updateTextCustomFieldInContact_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.UpdateTextCustomFieldInContact(childComplexity, args["contactId"].(string), args["input"].(model.TextCustomFieldUpdateInput)), true
+
 	case "PhoneNumberInfo.id":
 		if e.complexity.PhoneNumberInfo.ID == nil {
 			break
@@ -772,10 +814,13 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputContactInput,
 		ec.unmarshalInputContactUpdateInput,
 		ec.unmarshalInputEmailInput,
+		ec.unmarshalInputEmailUpdateInput,
 		ec.unmarshalInputPaginationFilter,
 		ec.unmarshalInputPhoneNumberInput,
+		ec.unmarshalInputPhoneNumberUpdateInput,
 		ec.unmarshalInputTenantUserInput,
 		ec.unmarshalInputTextCustomFieldInput,
+		ec.unmarshalInputTextCustomFieldUpdateInput,
 	)
 	first := true
 
@@ -932,6 +977,11 @@ input EmailInput {
     primary: Boolean
 }
 
+input EmailUpdateInput {
+    id: ID!
+    emailDetails: EmailInput!
+}
+
 enum EmailLabel {
     MAIN
     WORK
@@ -955,14 +1005,17 @@ enum EmailLabel {
     deleteContact(contactId: ID!): BooleanResult!
 
     mergeTextCustomFieldToContact(contactId : ID!, input: TextCustomFieldInput!): TextCustomField!
+    updateTextCustomFieldInContact(contactId : ID!, input: TextCustomFieldUpdateInput!): TextCustomField!
     removeTextCustomFieldFromContact(contactId : ID!, fieldName: String!): BooleanResult!
     removeTextCustomFieldFromContactById(contactId : ID!, id: ID!): BooleanResult!
 
     mergePhoneNumberToContact(contactId : ID!, input: PhoneNumberInput!): PhoneNumberInfo!
+    updatePhoneNumberInContact(contactId : ID!, input: PhoneNumberUpdateInput!): PhoneNumberInfo!
     removePhoneNumberFromContact(contactId : ID!, phoneNumber: String!): BooleanResult!
     removePhoneNumberFromContactById(contactId : ID!, id: ID!): BooleanResult!
 
     mergeEmailToContact(contactId : ID!, input: EmailInput!): EmailInfo!
+    updateEmailInContact(contactId : ID!, input: EmailUpdateInput!): EmailInfo!
     removeEmailFromContact(contactId : ID!, email: String!): BooleanResult!
     removeEmailFromContactById(contactId : ID!, id: ID!): BooleanResult!
 
@@ -985,6 +1038,11 @@ input PhoneNumberInput {
     number: String!
     label: PhoneLabel!
     primary: Boolean
+}
+
+input PhoneNumberUpdateInput {
+    id: ID!
+    phoneNumberDetails: PhoneNumberInput!
 }
 
 enum PhoneLabel {
@@ -1043,7 +1101,11 @@ input TextCustomFieldInput {
     name: String!
     value: String!
 }
-`, BuiltIn: false},
+
+input TextCustomFieldUpdateInput {
+    id: ID!
+    textCustomFieldDetails: TextCustomFieldInput!
+}`, BuiltIn: false},
 }
 var parsedSchema = gqlparser.MustLoadSchema(sources...)
 
@@ -1402,6 +1464,78 @@ func (ec *executionContext) field_Mutation_updateContact_args(ctx context.Contex
 		}
 	}
 	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_updateEmailInContact_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["contactId"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("contactId"))
+		arg0, err = ec.unmarshalNID2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["contactId"] = arg0
+	var arg1 model.EmailUpdateInput
+	if tmp, ok := rawArgs["input"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+		arg1, err = ec.unmarshalNEmailUpdateInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐEmailUpdateInput(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg1
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_updatePhoneNumberInContact_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["contactId"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("contactId"))
+		arg0, err = ec.unmarshalNID2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["contactId"] = arg0
+	var arg1 model.PhoneNumberUpdateInput
+	if tmp, ok := rawArgs["input"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+		arg1, err = ec.unmarshalNPhoneNumberUpdateInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐPhoneNumberUpdateInput(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg1
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_updateTextCustomFieldInContact_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["contactId"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("contactId"))
+		arg0, err = ec.unmarshalNID2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["contactId"] = arg0
+	var arg1 model.TextCustomFieldUpdateInput
+	if tmp, ok := rawArgs["input"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+		arg1, err = ec.unmarshalNTextCustomFieldUpdateInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐTextCustomFieldUpdateInput(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg1
 	return args, nil
 }
 
@@ -3162,6 +3296,71 @@ func (ec *executionContext) fieldContext_Mutation_mergeTextCustomFieldToContact(
 	return fc, nil
 }
 
+func (ec *executionContext) _Mutation_updateTextCustomFieldInContact(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_updateTextCustomFieldInContact(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().UpdateTextCustomFieldInContact(rctx, fc.Args["contactId"].(string), fc.Args["input"].(model.TextCustomFieldUpdateInput))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.TextCustomField)
+	fc.Result = res
+	return ec.marshalNTextCustomField2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐTextCustomField(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_updateTextCustomFieldInContact(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_TextCustomField_id(ctx, field)
+			case "group":
+				return ec.fieldContext_TextCustomField_group(ctx, field)
+			case "name":
+				return ec.fieldContext_TextCustomField_name(ctx, field)
+			case "value":
+				return ec.fieldContext_TextCustomField_value(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type TextCustomField", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_updateTextCustomFieldInContact_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Mutation_removeTextCustomFieldFromContact(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Mutation_removeTextCustomFieldFromContact(ctx, field)
 	if err != nil {
@@ -3345,6 +3544,71 @@ func (ec *executionContext) fieldContext_Mutation_mergePhoneNumberToContact(ctx 
 	return fc, nil
 }
 
+func (ec *executionContext) _Mutation_updatePhoneNumberInContact(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_updatePhoneNumberInContact(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().UpdatePhoneNumberInContact(rctx, fc.Args["contactId"].(string), fc.Args["input"].(model.PhoneNumberUpdateInput))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.PhoneNumberInfo)
+	fc.Result = res
+	return ec.marshalNPhoneNumberInfo2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐPhoneNumberInfo(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_updatePhoneNumberInContact(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_PhoneNumberInfo_id(ctx, field)
+			case "number":
+				return ec.fieldContext_PhoneNumberInfo_number(ctx, field)
+			case "label":
+				return ec.fieldContext_PhoneNumberInfo_label(ctx, field)
+			case "primary":
+				return ec.fieldContext_PhoneNumberInfo_primary(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type PhoneNumberInfo", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_updatePhoneNumberInContact_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Mutation_removePhoneNumberFromContact(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Mutation_removePhoneNumberFromContact(ctx, field)
 	if err != nil {
@@ -3522,6 +3786,71 @@ func (ec *executionContext) fieldContext_Mutation_mergeEmailToContact(ctx contex
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Mutation_mergeEmailToContact_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_updateEmailInContact(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_updateEmailInContact(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().UpdateEmailInContact(rctx, fc.Args["contactId"].(string), fc.Args["input"].(model.EmailUpdateInput))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.EmailInfo)
+	fc.Result = res
+	return ec.marshalNEmailInfo2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐEmailInfo(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_updateEmailInContact(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_EmailInfo_id(ctx, field)
+			case "email":
+				return ec.fieldContext_EmailInfo_email(ctx, field)
+			case "label":
+				return ec.fieldContext_EmailInfo_label(ctx, field)
+			case "primary":
+				return ec.fieldContext_EmailInfo_primary(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type EmailInfo", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_updateEmailInContact_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return
 	}
@@ -7055,6 +7384,42 @@ func (ec *executionContext) unmarshalInputEmailInput(ctx context.Context, obj in
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputEmailUpdateInput(ctx context.Context, obj interface{}) (model.EmailUpdateInput, error) {
+	var it model.EmailUpdateInput
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"id", "emailDetails"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "id":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+			it.ID, err = ec.unmarshalNID2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "emailDetails":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("emailDetails"))
+			it.EmailDetails, err = ec.unmarshalNEmailInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐEmailInput(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputPaginationFilter(ctx context.Context, obj interface{}) (model.PaginationFilter, error) {
 	var it model.PaginationFilter
 	asMap := map[string]interface{}{}
@@ -7126,6 +7491,42 @@ func (ec *executionContext) unmarshalInputPhoneNumberInput(ctx context.Context, 
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("primary"))
 			it.Primary, err = ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputPhoneNumberUpdateInput(ctx context.Context, obj interface{}) (model.PhoneNumberUpdateInput, error) {
+	var it model.PhoneNumberUpdateInput
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"id", "phoneNumberDetails"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "id":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+			it.ID, err = ec.unmarshalNID2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "phoneNumberDetails":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("phoneNumberDetails"))
+			it.PhoneNumberDetails, err = ec.unmarshalNPhoneNumberInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐPhoneNumberInput(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -7214,6 +7615,42 @@ func (ec *executionContext) unmarshalInputTextCustomFieldInput(ctx context.Conte
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("value"))
 			it.Value, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputTextCustomFieldUpdateInput(ctx context.Context, obj interface{}) (model.TextCustomFieldUpdateInput, error) {
+	var it model.TextCustomFieldUpdateInput
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"id", "textCustomFieldDetails"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "id":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+			it.ID, err = ec.unmarshalNID2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "textCustomFieldDetails":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("textCustomFieldDetails"))
+			it.TextCustomFieldDetails, err = ec.unmarshalNTextCustomFieldInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐTextCustomFieldInput(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -7712,6 +8149,15 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
+		case "updateTextCustomFieldInContact":
+
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_updateTextCustomFieldInContact(ctx, field)
+			})
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		case "removeTextCustomFieldFromContact":
 
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
@@ -7739,6 +8185,15 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
+		case "updatePhoneNumberInContact":
+
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_updatePhoneNumberInContact(ctx, field)
+			})
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		case "removePhoneNumberFromContact":
 
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
@@ -7761,6 +8216,15 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_mergeEmailToContact(ctx, field)
+			})
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "updateEmailInContact":
+
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_updateEmailInContact(ctx, field)
 			})
 
 			if out.Values[i] == graphql.Null {
@@ -8737,6 +9201,11 @@ func (ec *executionContext) unmarshalNEmailInput2githubᚗcomᚋopenlineᚑaiᚋ
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
+func (ec *executionContext) unmarshalNEmailInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐEmailInput(ctx context.Context, v interface{}) (*model.EmailInput, error) {
+	res, err := ec.unmarshalInputEmailInput(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
 func (ec *executionContext) unmarshalNEmailLabel2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐEmailLabel(ctx context.Context, v interface{}) (model.EmailLabel, error) {
 	var res model.EmailLabel
 	err := res.UnmarshalGQL(v)
@@ -8745,6 +9214,11 @@ func (ec *executionContext) unmarshalNEmailLabel2githubᚗcomᚋopenlineᚑaiᚋ
 
 func (ec *executionContext) marshalNEmailLabel2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐEmailLabel(ctx context.Context, sel ast.SelectionSet, v model.EmailLabel) graphql.Marshaler {
 	return v
+}
+
+func (ec *executionContext) unmarshalNEmailUpdateInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐEmailUpdateInput(ctx context.Context, v interface{}) (model.EmailUpdateInput, error) {
+	res, err := ec.unmarshalInputEmailUpdateInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) unmarshalNID2string(ctx context.Context, v interface{}) (string, error) {
@@ -8818,6 +9292,16 @@ func (ec *executionContext) marshalNPhoneNumberInfo2ᚖgithubᚗcomᚋopenline�
 
 func (ec *executionContext) unmarshalNPhoneNumberInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐPhoneNumberInput(ctx context.Context, v interface{}) (model.PhoneNumberInput, error) {
 	res, err := ec.unmarshalInputPhoneNumberInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalNPhoneNumberInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐPhoneNumberInput(ctx context.Context, v interface{}) (*model.PhoneNumberInput, error) {
+	res, err := ec.unmarshalInputPhoneNumberInput(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalNPhoneNumberUpdateInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐPhoneNumberUpdateInput(ctx context.Context, v interface{}) (model.PhoneNumberUpdateInput, error) {
+	res, err := ec.unmarshalInputPhoneNumberUpdateInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
@@ -8979,6 +9463,11 @@ func (ec *executionContext) unmarshalNTextCustomFieldInput2githubᚗcomᚋopenli
 func (ec *executionContext) unmarshalNTextCustomFieldInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐTextCustomFieldInput(ctx context.Context, v interface{}) (*model.TextCustomFieldInput, error) {
 	res, err := ec.unmarshalInputTextCustomFieldInput(ctx, v)
 	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalNTextCustomFieldUpdateInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐTextCustomFieldUpdateInput(ctx context.Context, v interface{}) (model.TextCustomFieldUpdateInput, error) {
+	res, err := ec.unmarshalInputTextCustomFieldUpdateInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) unmarshalNTime2timeᚐTime(ctx context.Context, v interface{}) (time.Time, error) {

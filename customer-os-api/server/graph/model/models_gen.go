@@ -111,6 +111,11 @@ type EmailInput struct {
 	Primary *bool      `json:"primary"`
 }
 
+type EmailUpdateInput struct {
+	ID           string      `json:"id"`
+	EmailDetails *EmailInput `json:"emailDetails"`
+}
+
 type PaginationFilter struct {
 	Page  int `json:"page"`
 	Limit int `json:"limit"`
@@ -127,6 +132,11 @@ type PhoneNumberInput struct {
 	Number  string     `json:"number"`
 	Label   PhoneLabel `json:"label"`
 	Primary *bool      `json:"primary"`
+}
+
+type PhoneNumberUpdateInput struct {
+	ID                 string            `json:"id"`
+	PhoneNumberDetails *PhoneNumberInput `json:"phoneNumberDetails"`
 }
 
 type TenantUser struct {
@@ -164,6 +174,11 @@ type TextCustomFieldInput struct {
 	Group *string `json:"group"`
 	Name  string  `json:"name"`
 	Value string  `json:"value"`
+}
+
+type TextCustomFieldUpdateInput struct {
+	ID                     string                `json:"id"`
+	TextCustomFieldDetails *TextCustomFieldInput `json:"textCustomFieldDetails"`
 }
 
 type EmailLabel string

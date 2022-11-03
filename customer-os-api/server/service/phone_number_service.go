@@ -14,6 +14,7 @@ import (
 type PhoneNumberService interface {
 	FindAllForContact(ctx context.Context, obj *model.Contact) (*entity.PhoneNumberEntities, error)
 	MergePhoneNumberToContact(ctx context.Context, id string, toEntity *entity.PhoneNumberEntity) (*entity.PhoneNumberEntity, error)
+	UpdatePhoneNumberInContact(ctx context.Context, id string, toEntity *entity.PhoneNumberEntity) (*entity.PhoneNumberEntity, error)
 	Delete(ctx context.Context, contactId string, phoneNumber string) (bool, error)
 	DeleteById(ctx context.Context, contactId string, phoneId string) (bool, error)
 }
@@ -75,7 +76,7 @@ func (s *phoneNumberService) MergePhoneNumberToContact(ctx context.Context, cont
 		txResult, err := tx.Run(`
 			MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant})
 			MERGE (c)-[r:CALLED_AT]->(p:PhoneNumber {number: $number})
-            ON CREATE SET p.label=$label, r.primary=$primary
+            ON CREATE SET p.label=$label, r.primary=$primary, p.id=randomUUID()
             ON MATCH SET p.label=$label, r.primary=$primary
 			RETURN p, r`,
 			map[string]interface{}{
@@ -88,6 +89,47 @@ func (s *phoneNumberService) MergePhoneNumberToContact(ctx context.Context, cont
 		record, err := txResult.Single()
 		if err != nil {
 			return nil, err
+		}
+		return record, nil
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	var phoneNumberEntity = s.mapDbNodeToPhoneNumberEntity(queryResult.(*db.Record).Values[0].(dbtype.Node))
+	s.addDbRelationshipToPhoneNumberEntity(queryResult.(*db.Record).Values[1].(dbtype.Relationship), phoneNumberEntity)
+	return phoneNumberEntity, nil
+}
+
+func (s *phoneNumberService) UpdatePhoneNumberInContact(ctx context.Context, contactId string, entity *entity.PhoneNumberEntity) (*entity.PhoneNumberEntity, error) {
+	session := (*s.driver).NewSession(neo4j.SessionConfig{AccessMode: neo4j.AccessModeWrite})
+	defer session.Close()
+
+	queryResult, err := session.WriteTransaction(func(tx neo4j.Transaction) (interface{}, error) {
+		txResult, err := tx.Run(`
+			MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}),
+				(c)-[r:CALLED_AT]->(p:PhoneNumber {id: $phoneId})
+            SET p.number=$number,
+				p.label=$label,
+				r.primary=$primary
+			RETURN p, r`,
+			map[string]interface{}{
+				"tenant":    common.GetContext(ctx).Tenant,
+				"contactId": contactId,
+				"phoneId":   entity.Id,
+				"number":    entity.Number,
+				"label":     entity.Label,
+				"primary":   entity.Primary,
+			})
+		record, err := txResult.Single()
+		if err != nil {
+			return nil, err
+		}
+		if entity.Primary == true {
+			err := setOtherContactPhoneNumbersNonPrimaryInTx(ctx, contactId, entity.Number, tx)
+			if err != nil {
+				return nil, err
+			}
 		}
 		return record, nil
 	})
