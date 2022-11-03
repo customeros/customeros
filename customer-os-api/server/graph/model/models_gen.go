@@ -99,6 +99,7 @@ func (this ContactsPage) GetTotalPages() int      { return this.TotalPages }
 func (this ContactsPage) GetTotalElements() int64 { return this.TotalElements }
 
 type EmailInfo struct {
+	ID      string     `json:"id"`
 	Email   string     `json:"email"`
 	Label   EmailLabel `json:"label"`
 	Primary bool       `json:"primary"`
@@ -116,6 +117,7 @@ type PaginationFilter struct {
 }
 
 type PhoneNumberInfo struct {
+	ID      string     `json:"id"`
 	Number  string     `json:"number"`
 	Label   PhoneLabel `json:"label"`
 	Primary bool       `json:"primary"`
@@ -152,6 +154,7 @@ func (this TenantUsersPage) GetTotalPages() int      { return this.TotalPages }
 func (this TenantUsersPage) GetTotalElements() int64 { return this.TotalElements }
 
 type TextCustomField struct {
+	ID    string  `json:"id"`
 	Group *string `json:"group"`
 	Name  string  `json:"name"`
 	Value string  `json:"value"`

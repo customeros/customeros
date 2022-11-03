@@ -1,4 +1,5 @@
 type PhoneNumberInfo {
+    id: ID!
     number: String!
     label: PhoneLabel!
     primary: Boolean!

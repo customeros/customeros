@@ -90,6 +90,7 @@ type ComplexityRoot struct {
 
 	EmailInfo struct {
 		Email   func(childComplexity int) int
+		ID      func(childComplexity int) int
 		Label   func(childComplexity int) int
 		Primary func(childComplexity int) int
 	}
@@ -112,6 +113,7 @@ type ComplexityRoot struct {
 	}
 
 	PhoneNumberInfo struct {
+		ID      func(childComplexity int) int
 		Label   func(childComplexity int) int
 		Number  func(childComplexity int) int
 		Primary func(childComplexity int) int
@@ -140,6 +142,7 @@ type ComplexityRoot struct {
 
 	TextCustomField struct {
 		Group func(childComplexity int) int
+		ID    func(childComplexity int) int
 		Name  func(childComplexity int) int
 		Value func(childComplexity int) int
 	}
@@ -365,6 +368,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.EmailInfo.Email(childComplexity), true
 
+	case "EmailInfo.id":
+		if e.complexity.EmailInfo.ID == nil {
+			break
+		}
+
+		return e.complexity.EmailInfo.ID(childComplexity), true
+
 	case "EmailInfo.label":
 		if e.complexity.EmailInfo.Label == nil {
 			break
@@ -547,6 +557,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.UpdateContact(childComplexity, args["input"].(model.ContactUpdateInput)), true
 
+	case "PhoneNumberInfo.id":
+		if e.complexity.PhoneNumberInfo.ID == nil {
+			break
+		}
+
+		return e.complexity.PhoneNumberInfo.ID(childComplexity), true
+
 	case "PhoneNumberInfo.label":
 		if e.complexity.PhoneNumberInfo.Label == nil {
 			break
@@ -678,6 +695,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.TextCustomField.Group(childComplexity), true
+
+	case "TextCustomField.id":
+		if e.complexity.TextCustomField.ID == nil {
+			break
+		}
+
+		return e.complexity.TextCustomField.ID(childComplexity), true
 
 	case "TextCustomField.name":
 		if e.complexity.TextCustomField.Name == nil {
@@ -854,6 +878,7 @@ type ContactGroupsPage implements PagedResult {
 	{Name: "../schemas/directive.graphqls", Input: `# build-in directive by Gqlgen
 directive @goField(forceResolver: Boolean, name: String) on FIELD_DEFINITION | INPUT_FIELD_DEFINITION`, BuiltIn: false},
 	{Name: "../schemas/email_info.graphqls", Input: `type EmailInfo {
+    id: ID!
     email: String!
     label: EmailLabel!
     primary: Boolean!
@@ -905,6 +930,7 @@ enum EmailLabel {
 
 `, BuiltIn: false},
 	{Name: "../schemas/phone_info.graphqls", Input: `type PhoneNumberInfo {
+    id: ID!
     number: String!
     label: PhoneLabel!
     primary: Boolean!
@@ -961,6 +987,7 @@ input TenantUserInput {
 
 `, BuiltIn: false},
 	{Name: "../schemas/text_custom_field.graphqls", Input: `type TextCustomField {
+    id: ID!
     group: String
     name: String!
     value: String!
@@ -1982,6 +2009,8 @@ func (ec *executionContext) fieldContext_Contact_textCustomFields(ctx context.Co
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
+			case "id":
+				return ec.fieldContext_TextCustomField_id(ctx, field)
 			case "group":
 				return ec.fieldContext_TextCustomField_group(ctx, field)
 			case "name":
@@ -2031,6 +2060,8 @@ func (ec *executionContext) fieldContext_Contact_phoneNumbers(ctx context.Contex
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
+			case "id":
+				return ec.fieldContext_PhoneNumberInfo_id(ctx, field)
 			case "number":
 				return ec.fieldContext_PhoneNumberInfo_number(ctx, field)
 			case "label":
@@ -2080,6 +2111,8 @@ func (ec *executionContext) fieldContext_Contact_emails(ctx context.Context, fie
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
+			case "id":
+				return ec.fieldContext_EmailInfo_id(ctx, field)
 			case "email":
 				return ec.fieldContext_EmailInfo_email(ctx, field)
 			case "label":
@@ -2474,6 +2507,50 @@ func (ec *executionContext) fieldContext_ContactsPage_totalElements(ctx context.
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type Int64 does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _EmailInfo_id(ctx context.Context, field graphql.CollectedField, obj *model.EmailInfo) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_EmailInfo_id(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNID2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_EmailInfo_id(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "EmailInfo",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
 		},
 	}
 	return fc, nil
@@ -2942,6 +3019,8 @@ func (ec *executionContext) fieldContext_Mutation_mergeTextCustomFieldToContact(
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
+			case "id":
+				return ec.fieldContext_TextCustomField_id(ctx, field)
 			case "group":
 				return ec.fieldContext_TextCustomField_group(ctx, field)
 			case "name":
@@ -3064,6 +3143,8 @@ func (ec *executionContext) fieldContext_Mutation_mergePhoneNumberToContact(ctx 
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
+			case "id":
+				return ec.fieldContext_PhoneNumberInfo_id(ctx, field)
 			case "number":
 				return ec.fieldContext_PhoneNumberInfo_number(ctx, field)
 			case "label":
@@ -3186,6 +3267,8 @@ func (ec *executionContext) fieldContext_Mutation_mergeEmailToContact(ctx contex
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
+			case "id":
+				return ec.fieldContext_EmailInfo_id(ctx, field)
 			case "email":
 				return ec.fieldContext_EmailInfo_email(ctx, field)
 			case "label":
@@ -3503,6 +3586,50 @@ func (ec *executionContext) fieldContext_Mutation_removeContactFromGroup(ctx con
 	if fc.Args, err = ec.field_Mutation_removeContactFromGroup_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PhoneNumberInfo_id(ctx context.Context, field graphql.CollectedField, obj *model.PhoneNumberInfo) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_PhoneNumberInfo_id(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNID2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_PhoneNumberInfo_id(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PhoneNumberInfo",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
 	}
 	return fc, nil
 }
@@ -4399,6 +4526,50 @@ func (ec *executionContext) fieldContext_TenantUsersPage_totalElements(ctx conte
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type Int64 does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _TextCustomField_id(ctx context.Context, field graphql.CollectedField, obj *model.TextCustomField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_TextCustomField_id(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNID2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_TextCustomField_id(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "TextCustomField",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
 		},
 	}
 	return fc, nil
@@ -7144,6 +7315,13 @@ func (ec *executionContext) _EmailInfo(ctx context.Context, sel ast.SelectionSet
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("EmailInfo")
+		case "id":
+
+			out.Values[i] = ec._EmailInfo_id(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		case "email":
 
 			out.Values[i] = ec._EmailInfo_email(ctx, field, obj)
@@ -7342,6 +7520,13 @@ func (ec *executionContext) _PhoneNumberInfo(ctx context.Context, sel ast.Select
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("PhoneNumberInfo")
+		case "id":
+
+			out.Values[i] = ec._PhoneNumberInfo_id(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		case "number":
 
 			out.Values[i] = ec._PhoneNumberInfo_number(ctx, field, obj)
@@ -7616,6 +7801,13 @@ func (ec *executionContext) _TextCustomField(ctx context.Context, sel ast.Select
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("TextCustomField")
+		case "id":
+
+			out.Values[i] = ec._TextCustomField_id(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		case "group":
 
 			out.Values[i] = ec._TextCustomField_group(ctx, field, obj)

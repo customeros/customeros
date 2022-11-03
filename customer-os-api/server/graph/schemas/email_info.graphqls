@@ -1,4 +1,5 @@
 type EmailInfo {
+    id: ID!
     email: String!
     label: EmailLabel!
     primary: Boolean!
