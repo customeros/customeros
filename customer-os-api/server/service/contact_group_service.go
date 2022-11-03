@@ -14,7 +14,7 @@ import (
 type ContactGroupService interface {
 	Create(ctx context.Context, contactGroup *entity.ContactGroupEntity) (*entity.ContactGroupEntity, error)
 	Delete(ctx context.Context, id string) (bool, error)
-	FindAll(ctx context.Context) (*entity.ContactGroupEntities, error)
+	FindAll(ctx context.Context, page int, limit int) (*utils.Pagination, error)
 	FindAllForContact(ctx context.Context, contact *model.Contact) (*entity.ContactGroupEntities, error)
 	AddContactToGroup(ctx context.Context, contactId, groupId string) (bool, error)
 	RemoveContactFromGroup(ctx context.Context, contactId, groupId string) (bool, error)
@@ -81,16 +81,31 @@ func (s *contactGroupService) Delete(ctx context.Context, id string) (bool, erro
 	return queryResult.(bool), nil
 }
 
-func (s *contactGroupService) FindAll(ctx context.Context) (*entity.ContactGroupEntities, error) {
+func (s *contactGroupService) FindAll(ctx context.Context, page int, limit int) (*utils.Pagination, error) {
+	var paginatedResult = utils.Pagination{
+		Limit: limit,
+		Page:  page,
+	}
 	session := (*s.driver).NewSession(neo4j.SessionConfig{AccessMode: neo4j.AccessModeRead})
 	defer session.Close()
 
 	queryResult, err := session.ReadTransaction(func(tx neo4j.Transaction) (interface{}, error) {
-		result, err := tx.Run(`MATCH (:Tenant {name:$tenant})<-[:GROUP_BELONGS_TO_TENANT]-(g:ContactGroup) 
-				RETURN g
-				ORDER BY g.name`,
+		result, err := tx.Run(`
+				MATCH (:Tenant {name:$tenant})<-[:GROUP_BELONGS_TO_TENANT]-(g:ContactGroup) RETURN count(g) as count`,
 			map[string]interface{}{
 				"tenant": common.GetContext(ctx).Tenant,
+			})
+		count, _ := result.Single()
+		paginatedResult.SetTotalRows(count.Values[0].(int64))
+
+		result, err = tx.Run(`MATCH (:Tenant {name:$tenant})<-[:GROUP_BELONGS_TO_TENANT]-(g:ContactGroup) 
+				RETURN g
+				ORDER BY g.name
+				SKIP $skip LIMIT $limit`,
+			map[string]interface{}{
+				"tenant": common.GetContext(ctx).Tenant,
+				"skip":   paginatedResult.GetSkip(),
+				"limit":  paginatedResult.GetLimit(),
 			})
 		records, err := result.Collect()
 		if err != nil {
@@ -108,8 +123,8 @@ func (s *contactGroupService) FindAll(ctx context.Context) (*entity.ContactGroup
 		contactGroup := mapDbNodeToContactGroup(dbRecord.Values[0].(dbtype.Node))
 		contactGroups = append(contactGroups, *contactGroup)
 	}
-
-	return &contactGroups, nil
+	paginatedResult.SetRows(&contactGroups)
+	return &paginatedResult, nil
 }
 
 func (s *contactGroupService) FindAllForContact(ctx context.Context, contact *model.Contact) (*entity.ContactGroupEntities, error) {
