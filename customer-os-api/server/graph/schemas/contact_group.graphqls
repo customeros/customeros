@@ -9,7 +9,7 @@ input ContactGroupInput {
 
 input ContactGroupUpdateInput {
     id: ID!
-    contactGroupDetails: ContactGroupInput!
+    name: String!
 }
 
 type ContactGroupsPage implements PagedResult {

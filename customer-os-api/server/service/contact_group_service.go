@@ -15,6 +15,7 @@ type ContactGroupService interface {
 	Create(ctx context.Context, contactGroup *entity.ContactGroupEntity) (*entity.ContactGroupEntity, error)
 	Update(ctx context.Context, contactGroup *entity.ContactGroupEntity) (*entity.ContactGroupEntity, error)
 	Delete(ctx context.Context, id string) (bool, error)
+	FindContactGroupById(ctx context.Context, id string) (*entity.ContactGroupEntity, error)
 	FindAll(ctx context.Context, page int, limit int) (*utils.Pagination, error)
 	FindAllForContact(ctx context.Context, contact *model.Contact) (*entity.ContactGroupEntities, error)
 	AddContactToGroup(ctx context.Context, contactId, groupId string) (bool, error)
@@ -153,6 +154,30 @@ func (s *contactGroupService) FindAll(ctx context.Context, page int, limit int) 
 	}
 	paginatedResult.SetRows(&contactGroups)
 	return &paginatedResult, nil
+}
+
+func (s *contactGroupService) FindContactGroupById(ctx context.Context, id string) (*entity.ContactGroupEntity, error) {
+	session := (*s.driver).NewSession(neo4j.SessionConfig{AccessMode: neo4j.AccessModeRead})
+	defer session.Close()
+
+	queryResult, err := session.ReadTransaction(func(tx neo4j.Transaction) (interface{}, error) {
+		result, err := tx.Run(`
+			MATCH (c:ContactGroup {id:$id})-[:GROUP_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) RETURN c`,
+			map[string]interface{}{
+				"id":     id,
+				"tenant": common.GetContext(ctx).Tenant,
+			})
+		record, err := result.Single()
+		if err != nil {
+			return nil, err
+		}
+		return record.Values[0], nil
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return mapDbNodeToContactGroup(queryResult.(dbtype.Node)), nil
 }
 
 func (s *contactGroupService) FindAllForContact(ctx context.Context, contact *model.Contact) (*entity.ContactGroupEntities, error) {

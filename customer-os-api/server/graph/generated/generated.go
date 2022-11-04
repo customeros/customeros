@@ -129,6 +129,7 @@ type ComplexityRoot struct {
 
 	Query struct {
 		Contact       func(childComplexity int, id string) int
+		ContactGroup  func(childComplexity int, id string) int
 		ContactGroups func(childComplexity int, paginationFilter *model.PaginationFilter) int
 		Contacts      func(childComplexity int, paginationFilter *model.PaginationFilter) int
 		TenantUsers   func(childComplexity int, paginationFilter *model.PaginationFilter) int
@@ -191,6 +192,7 @@ type QueryResolver interface {
 	TenantUsers(ctx context.Context, paginationFilter *model.PaginationFilter) (*model.TenantUsersPage, error)
 	Contact(ctx context.Context, id string) (*model.Contact, error)
 	Contacts(ctx context.Context, paginationFilter *model.PaginationFilter) (*model.ContactsPage, error)
+	ContactGroup(ctx context.Context, id string) (*model.ContactGroup, error)
 	ContactGroups(ctx context.Context, paginationFilter *model.PaginationFilter) (*model.ContactGroupsPage, error)
 }
 
@@ -709,6 +711,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.Contact(childComplexity, args["id"].(string)), true
 
+	case "Query.contactGroup":
+		if e.complexity.Query.ContactGroup == nil {
+			break
+		}
+
+		args, err := ec.field_Query_contactGroup_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.ContactGroup(childComplexity, args["id"].(string)), true
+
 	case "Query.contactGroups":
 		if e.complexity.Query.ContactGroups == nil {
 			break
@@ -985,7 +999,7 @@ input ContactGroupInput {
 
 input ContactGroupUpdateInput {
     id: ID!
-    contactGroupDetails: ContactGroupInput!
+    name: String!
 }
 
 type ContactGroupsPage implements PagedResult {
@@ -1095,6 +1109,7 @@ enum PhoneLabel {
   contact(id: ID!) :Contact!
   contacts(paginationFilter: PaginationFilter): ContactsPage!
 
+  contactGroup(id: ID!): ContactGroup!
   contactGroups(paginationFilter: PaginationFilter): ContactGroupsPage!
 }`, BuiltIn: false},
 	{Name: "../schemas/result.graphqls", Input: `type BooleanResult {
@@ -1617,6 +1632,21 @@ func (ec *executionContext) field_Query___type_args(ctx context.Context, rawArgs
 		}
 	}
 	args["name"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_contactGroup_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["id"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+		arg0, err = ec.unmarshalNID2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["id"] = arg0
 	return args, nil
 }
 
@@ -4784,6 +4814,67 @@ func (ec *executionContext) fieldContext_Query_contacts(ctx context.Context, fie
 	return fc, nil
 }
 
+func (ec *executionContext) _Query_contactGroup(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_contactGroup(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().ContactGroup(rctx, fc.Args["id"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.ContactGroup)
+	fc.Result = res
+	return ec.marshalNContactGroup2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐContactGroup(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_contactGroup(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_ContactGroup_id(ctx, field)
+			case "name":
+				return ec.fieldContext_ContactGroup_name(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type ContactGroup", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_contactGroup_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Query_contactGroups(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Query_contactGroups(ctx, field)
 	if err != nil {
@@ -7357,7 +7448,7 @@ func (ec *executionContext) unmarshalInputContactGroupUpdateInput(ctx context.Co
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"id", "contactGroupDetails"}
+	fieldsInOrder := [...]string{"id", "name"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -7372,11 +7463,11 @@ func (ec *executionContext) unmarshalInputContactGroupUpdateInput(ctx context.Co
 			if err != nil {
 				return it, err
 			}
-		case "contactGroupDetails":
+		case "name":
 			var err error
 
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("contactGroupDetails"))
-			it.ContactGroupDetails, err = ec.unmarshalNContactGroupInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐContactGroupInput(ctx, v)
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
+			it.Name, err = ec.unmarshalNString2string(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -8672,6 +8763,29 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			out.Concurrently(i, func() graphql.Marshaler {
 				return rrm(innerCtx)
 			})
+		case "contactGroup":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_contactGroup(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx, innerFunc)
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return rrm(innerCtx)
+			})
 		case "contactGroups":
 			field := field
 
@@ -9382,11 +9496,6 @@ func (ec *executionContext) marshalNContactGroup2ᚖgithubᚗcomᚋopenlineᚑai
 func (ec *executionContext) unmarshalNContactGroupInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐContactGroupInput(ctx context.Context, v interface{}) (model.ContactGroupInput, error) {
 	res, err := ec.unmarshalInputContactGroupInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
-}
-
-func (ec *executionContext) unmarshalNContactGroupInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐContactGroupInput(ctx context.Context, v interface{}) (*model.ContactGroupInput, error) {
-	res, err := ec.unmarshalInputContactGroupInput(ctx, v)
-	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) unmarshalNContactGroupUpdateInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐContactGroupUpdateInput(ctx context.Context, v interface{}) (model.ContactGroupUpdateInput, error) {

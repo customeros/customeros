@@ -5,7 +5,6 @@ package resolver
 
 import (
 	"context"
-
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/openline-ai/openline-customer-os/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/customer-os-api/graph/generated"
@@ -47,6 +46,12 @@ func (r *queryResolver) Contacts(ctx context.Context, paginationFilter *model.Pa
 		TotalPages:    paginatedResult.TotalPages,
 		TotalElements: paginatedResult.TotalRows,
 	}, err
+}
+
+// ContactGroup is the resolver for the contactGroup field.
+func (r *queryResolver) ContactGroup(ctx context.Context, id string) (*model.ContactGroup, error) {
+	contactGroupEntity, err := r.ServiceContainer.ContactGroupService.FindContactGroupById(ctx, id)
+	return mapper.MapEntityToContactGroup(contactGroupEntity), err
 }
 
 // ContactGroups is the resolver for the contactGroups field.
