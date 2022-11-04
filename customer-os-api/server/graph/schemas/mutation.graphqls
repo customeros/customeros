@@ -22,6 +22,7 @@ type Mutation {
     removeEmailFromContactById(contactId : ID!, id: ID!): BooleanResult!
 
     createContactGroup(input: ContactGroupInput!): ContactGroup!
+    updateContactGroup(input: ContactGroupUpdateInput!): ContactGroup!
     deleteContactGroupAndUnlinkAllContacts(id :ID!): BooleanResult!
     addContactToGroup(contactId : ID!, groupId: ID!): BooleanResult!
     removeContactFromGroup(contactId : ID!, groupId: ID!): BooleanResult!

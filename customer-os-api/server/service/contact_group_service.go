@@ -13,6 +13,7 @@ import (
 
 type ContactGroupService interface {
 	Create(ctx context.Context, contactGroup *entity.ContactGroupEntity) (*entity.ContactGroupEntity, error)
+	Update(ctx context.Context, contactGroup *entity.ContactGroupEntity) (*entity.ContactGroupEntity, error)
 	Delete(ctx context.Context, id string) (bool, error)
 	FindAll(ctx context.Context, page int, limit int) (*utils.Pagination, error)
 	FindAllForContact(ctx context.Context, contact *model.Contact) (*entity.ContactGroupEntities, error)
@@ -44,6 +45,33 @@ func (s *contactGroupService) Create(ctx context.Context, newContactGroup *entit
 			map[string]interface{}{
 				"name":   newContactGroup.Name,
 				"tenant": common.GetContext(ctx).Tenant,
+			})
+
+		record, err := result.Single()
+		if err != nil {
+			return nil, err
+		}
+		return record.Values[0], nil
+	})
+	if err != nil {
+		return nil, err
+	}
+	return mapDbNodeToContactGroup(queryResult.(dbtype.Node)), nil
+}
+
+func (s *contactGroupService) Update(ctx context.Context, contactGroup *entity.ContactGroupEntity) (*entity.ContactGroupEntity, error) {
+	session := (*s.driver).NewSession(neo4j.SessionConfig{AccessMode: neo4j.AccessModeWrite})
+	defer session.Close()
+
+	queryResult, err := session.WriteTransaction(func(tx neo4j.Transaction) (interface{}, error) {
+		result, err := tx.Run(`
+			MATCH (g:ContactGroup {id:$groupId})-[:GROUP_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant})
+			SET g.name=$name
+			RETURN g`,
+			map[string]interface{}{
+				"tenant":  common.GetContext(ctx).Tenant,
+				"groupId": contactGroup.Id,
+				"name":    contactGroup.Name,
 			})
 
 		record, err := result.Single()
