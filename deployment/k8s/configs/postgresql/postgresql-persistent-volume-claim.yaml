@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: PersistentVolumeClaim # Create PVC
 metadata:
-  name: postgresql-customer-os-data-claim # Sets name of PV
+  name: efs-postgresql-claim # Sets name of PV
 spec:
   storageClassName: manual
   accessModes:

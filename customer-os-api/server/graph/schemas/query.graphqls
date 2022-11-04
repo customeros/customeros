@@ -4,5 +4,6 @@ type Query {
   contact(id: ID!) :Contact!
   contacts(paginationFilter: PaginationFilter): ContactsPage!
 
+  contactGroup(id: ID!): ContactGroup!
   contactGroups(paginationFilter: PaginationFilter): ContactGroupsPage!
 }

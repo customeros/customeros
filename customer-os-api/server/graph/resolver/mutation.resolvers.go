@@ -229,7 +229,7 @@ func (r *mutationResolver) CreateContactGroup(ctx context.Context, input model.C
 func (r *mutationResolver) UpdateContactGroup(ctx context.Context, input model.ContactGroupUpdateInput) (*model.ContactGroup, error) {
 	updatedContactGroup, err := r.ServiceContainer.ContactGroupService.Update(ctx, &entity.ContactGroupEntity{
 		Id:   input.ID,
-		Name: input.ContactGroupDetails.Name,
+		Name: input.Name,
 	})
 	if err != nil {
 		graphql.AddErrorf(ctx, "Failed to update contact group %s", input.ID)
