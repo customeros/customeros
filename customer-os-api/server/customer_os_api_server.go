@@ -72,7 +72,9 @@ func main() {
 	r.Use(cors.New(corsConfig))
 
 	r.POST("/query", graphqlHandler(neo4jDriver))
-	r.GET("/", playgroundHandler())
+	if cfg.GraphQL.PlaygroundEnabled {
+		r.GET("/", playgroundHandler())
+	}
 	r.GET("/health", healthCheckHandler)
 	r.GET("/readiness", healthCheckHandler)
 
