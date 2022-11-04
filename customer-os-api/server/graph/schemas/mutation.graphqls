@@ -3,7 +3,7 @@ type Mutation {
 
     createContact(input: ContactInput!): Contact!
     updateContact(input: ContactUpdateInput!): Contact!
-    deleteContact(contactId: ID!): BooleanResult!
+    hardDeleteContact(contactId: ID!): BooleanResult!
     softDeleteContact(contactId: ID!): BooleanResult!
 
     mergeTextCustomFieldToContact(contactId : ID!, input: TextCustomFieldInput!): TextCustomField!

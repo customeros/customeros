@@ -16,7 +16,7 @@ type ContactService interface {
 	Update(ctx context.Context, contact *entity.ContactEntity) (*entity.ContactEntity, error)
 	FindContactById(ctx context.Context, id string) (*entity.ContactEntity, error)
 	FindAll(ctx context.Context, page int, limit int) (*utils.Pagination, error)
-	Delete(ctx context.Context, id string) (bool, error)
+	HardDelete(ctx context.Context, id string) (bool, error)
 	SoftDelete(ctx context.Context, id string) (bool, error)
 }
 
@@ -147,7 +147,7 @@ func (s *contactService) Update(ctx context.Context, contact *entity.ContactEnti
 	return s.mapDbNodeToContactEntity(queryResult.(*db.Record).Values[0].(dbtype.Node)), nil
 }
 
-func (s *contactService) Delete(ctx context.Context, contactId string) (bool, error) {
+func (s *contactService) HardDelete(ctx context.Context, contactId string) (bool, error) {
 	session := (*s.driver).NewSession(neo4j.SessionConfig{AccessMode: neo4j.AccessModeWrite})
 	defer session.Close()
 
