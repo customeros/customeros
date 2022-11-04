@@ -31,7 +31,7 @@ func TestMain(m *testing.M) {
 	defer func(dbContainer testcontainers.Container, ctx context.Context) {
 		err := dbContainer.Terminate(ctx)
 		if err != nil {
-			log.Print("Error during container termination")
+			log.Fatal("Error during container termination")
 		}
 	}(dbContainer, context.Background())
 
