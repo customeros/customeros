@@ -1094,7 +1094,9 @@ input PhoneNumberInput {
 
 input PhoneNumberUpdateInput {
     id: ID!
-    phoneNumberDetails: PhoneNumberInput!
+    number: String!
+    label: PhoneLabel!
+    primary: Boolean
 }
 
 enum PhoneLabel {
@@ -1157,7 +1159,9 @@ input TextCustomFieldInput {
 
 input TextCustomFieldUpdateInput {
     id: ID!
-    textCustomFieldDetails: TextCustomFieldInput!
+    group: String
+    name: String!
+    value: String!
 }`, BuiltIn: false},
 }
 var parsedSchema = gqlparser.MustLoadSchema(sources...)
@@ -7838,7 +7842,7 @@ func (ec *executionContext) unmarshalInputPhoneNumberUpdateInput(ctx context.Con
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"id", "phoneNumberDetails"}
+	fieldsInOrder := [...]string{"id", "number", "label", "primary"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -7853,11 +7857,27 @@ func (ec *executionContext) unmarshalInputPhoneNumberUpdateInput(ctx context.Con
 			if err != nil {
 				return it, err
 			}
-		case "phoneNumberDetails":
+		case "number":
 			var err error
 
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("phoneNumberDetails"))
-			it.PhoneNumberDetails, err = ec.unmarshalNPhoneNumberInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐPhoneNumberInput(ctx, v)
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("number"))
+			it.Number, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "label":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("label"))
+			it.Label, err = ec.unmarshalNPhoneLabel2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐPhoneLabel(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "primary":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("primary"))
+			it.Primary, err = ec.unmarshalOBoolean2ᚖbool(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -7962,7 +7982,7 @@ func (ec *executionContext) unmarshalInputTextCustomFieldUpdateInput(ctx context
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"id", "textCustomFieldDetails"}
+	fieldsInOrder := [...]string{"id", "group", "name", "value"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -7977,11 +7997,27 @@ func (ec *executionContext) unmarshalInputTextCustomFieldUpdateInput(ctx context
 			if err != nil {
 				return it, err
 			}
-		case "textCustomFieldDetails":
+		case "group":
 			var err error
 
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("textCustomFieldDetails"))
-			it.TextCustomFieldDetails, err = ec.unmarshalNTextCustomFieldInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐTextCustomFieldInput(ctx, v)
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("group"))
+			it.Group, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "name":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
+			it.Name, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "value":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("value"))
+			it.Value, err = ec.unmarshalNString2string(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -9665,11 +9701,6 @@ func (ec *executionContext) marshalNPhoneNumberInfo2ᚖgithubᚗcomᚋopenline�
 func (ec *executionContext) unmarshalNPhoneNumberInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐPhoneNumberInput(ctx context.Context, v interface{}) (model.PhoneNumberInput, error) {
 	res, err := ec.unmarshalInputPhoneNumberInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
-}
-
-func (ec *executionContext) unmarshalNPhoneNumberInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐPhoneNumberInput(ctx context.Context, v interface{}) (*model.PhoneNumberInput, error) {
-	res, err := ec.unmarshalInputPhoneNumberInput(ctx, v)
-	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) unmarshalNPhoneNumberUpdateInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐPhoneNumberUpdateInput(ctx context.Context, v interface{}) (model.PhoneNumberUpdateInput, error) {

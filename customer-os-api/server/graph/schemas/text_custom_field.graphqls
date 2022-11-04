@@ -13,5 +13,7 @@ input TextCustomFieldInput {
 
 input TextCustomFieldUpdateInput {
     id: ID!
-    textCustomFieldDetails: TextCustomFieldInput!
+    group: String
+    name: String!
+    value: String!
 }
