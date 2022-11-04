@@ -1,0 +1,13 @@
+query {
+  tenantUsers {
+    totalPages
+    totalElements
+    content {
+      id
+      firstName
+      lastName
+      email
+      createdAt
+    }
+  }
+}
