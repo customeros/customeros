@@ -8,6 +8,7 @@ require (
 	github.com/gin-contrib/cors v1.4.0
 	github.com/gin-gonic/gin v1.8.1
 	github.com/joho/godotenv v1.4.0
+	github.com/mitchellh/mapstructure v1.3.1
 	github.com/neo4j/neo4j-go-driver/v4 v4.4.4
 	github.com/stretchr/testify v1.8.0
 	github.com/testcontainers/testcontainers-go v0.15.0
@@ -43,7 +44,6 @@ require (
 	github.com/leodido/go-urn v1.2.1 // indirect
 	github.com/magiconair/properties v1.8.6 // indirect
 	github.com/mattn/go-isatty v0.0.16 // indirect
-	github.com/mitchellh/mapstructure v1.3.1 // indirect
 	github.com/moby/sys/mount v0.3.3 // indirect
 	github.com/moby/sys/mountinfo v0.6.2 // indirect
 	github.com/moby/term v0.0.0-20210619224110-3f7ff695adc6 // indirect

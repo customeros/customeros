@@ -12,6 +12,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/customer-os-api/integration_tests"
 	"github.com/openline-ai/openline-customer-os/customer-os-api/service/container"
+	"github.com/openline-ai/openline-customer-os/customer-os-api/utils/decode"
 	"github.com/stretchr/testify/require"
 	"github.com/testcontainers/testcontainers-go"
 	"os"
@@ -23,6 +24,10 @@ var (
 	driver         *neo4j.Driver
 	c              *client.Client
 )
+
+var tenantUsers struct {
+	TenantUsers model.TenantUsersPage
+}
 
 func TestMain(m *testing.M) {
 	neo4jContainer, driver = integration_tests.InitTestNeo4jDB()
@@ -55,7 +60,7 @@ func getQuery(fileName string) string {
 	return string(b)
 }
 
-func assertResponseNotNil(t *testing.T, response *client.Response, err error) {
+func assertRawResponseNotNil(t *testing.T, response *client.Response, err error) {
 	require.Nil(t, err)
 	require.NotNil(t, response)
 	require.NotNil(t, response.Data)
@@ -76,17 +81,17 @@ func TestQueryGetTenantUsers(t *testing.T) {
 		LastName:  "otherLast",
 		Email:     "otherEmail",
 	})
-	graphQlQuery := getQuery("get_tenant_users")
 
-	var resp struct {
-		TenantUsers model.TenantUsersPage
-	}
+	rawResponse, err := c.RawPost(getQuery("get_tenant_users"))
+	assertRawResponseNotNil(t, rawResponse, err)
 
-	c.MustPost(graphQlQuery, &resp)
-	require.NotNil(t, resp)
-	require.Equal(t, 1, resp.TenantUsers.TotalPages)
-	require.Equal(t, int64(1), resp.TenantUsers.TotalElements)
-	require.Equal(t, "first", resp.TenantUsers.Content[0].FirstName)
-	require.Equal(t, "last", resp.TenantUsers.Content[0].LastName)
-	require.Equal(t, "test@openline.ai", resp.TenantUsers.Content[0].Email)
+	err = decode.Decode(rawResponse.Data.(map[string]interface{}), &tenantUsers)
+	require.Nil(t, err)
+	require.NotNil(t, tenantUsers)
+	require.Equal(t, 1, tenantUsers.TenantUsers.TotalPages)
+	require.Equal(t, int64(1), tenantUsers.TenantUsers.TotalElements)
+	require.Equal(t, "first", tenantUsers.TenantUsers.Content[0].FirstName)
+	require.Equal(t, "last", tenantUsers.TenantUsers.Content[0].LastName)
+	require.Equal(t, "test@openline.ai", tenantUsers.TenantUsers.Content[0].Email)
+	require.NotNil(t, "test@openline.ai", tenantUsers.TenantUsers.Content[0].CreatedAt)
 }
