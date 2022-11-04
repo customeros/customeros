@@ -51,11 +51,11 @@ func (r *mutationResolver) UpdateContact(ctx context.Context, input model.Contac
 	return mapper.MapEntityToContact(updatedContact), nil
 }
 
-// DeleteContact is the resolver for the deleteContact field.
-func (r *mutationResolver) DeleteContact(ctx context.Context, contactID string) (*model.BooleanResult, error) {
-	result, err := r.ServiceContainer.ContactService.Delete(ctx, contactID)
+// HardDeleteContact is the resolver for the hardDeleteContact field.
+func (r *mutationResolver) HardDeleteContact(ctx context.Context, contactID string) (*model.BooleanResult, error) {
+	result, err := r.ServiceContainer.ContactService.HardDelete(ctx, contactID)
 	if err != nil {
-		graphql.AddErrorf(ctx, "Could not delete contact %s", contactID)
+		graphql.AddErrorf(ctx, "Could not hard delete contact %s", contactID)
 		return nil, err
 	}
 	return &model.BooleanResult{
