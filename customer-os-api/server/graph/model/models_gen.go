@@ -117,8 +117,10 @@ type EmailInput struct {
 }
 
 type EmailUpdateInput struct {
-	ID           string      `json:"id"`
-	EmailDetails *EmailInput `json:"emailDetails"`
+	ID      string     `json:"id"`
+	Email   string     `json:"email"`
+	Label   EmailLabel `json:"label"`
+	Primary *bool      `json:"primary"`
 }
 
 type PaginationFilter struct {
