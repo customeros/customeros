@@ -17,6 +17,7 @@ type ContactService interface {
 	FindContactById(ctx context.Context, id string) (*entity.ContactEntity, error)
 	FindAll(ctx context.Context, page int, limit int) (*utils.Pagination, error)
 	Delete(ctx context.Context, id string) (bool, error)
+	SoftDelete(ctx context.Context, id string) (bool, error)
 }
 
 type ContactCreateData struct {
@@ -152,15 +153,40 @@ func (s *contactService) Delete(ctx context.Context, contactId string) (bool, er
 
 	queryResult, err := session.WriteTransaction(func(tx neo4j.Transaction) (interface{}, error) {
 		_, err := tx.Run(`
-			MATCH (c:Contact {id:$id})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant})
+			MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant})
 			OPTIONAL MATCH (c)-[:HAS_TEXT_PROPERTY]->(f:TextCustomField)
 			OPTIONAL MATCH (c)-[:CALLED_AT]->(p:PhoneNumber)
 			OPTIONAL MATCH (c)-[:EMAILED_AT]->(e:Email)
             DETACH DELETE p, e, f, c
 			`,
 			map[string]interface{}{
-				"id":     contactId,
-				"tenant": common.GetContext(ctx).Tenant,
+				"contactId": contactId,
+				"tenant":    common.GetContext(ctx).Tenant,
+			})
+
+		return true, err
+	})
+	if err != nil {
+		return false, err
+	}
+
+	return queryResult.(bool), nil
+}
+
+func (s *contactService) SoftDelete(ctx context.Context, contactId string) (bool, error) {
+	session := (*s.driver).NewSession(neo4j.SessionConfig{AccessMode: neo4j.AccessModeWrite})
+	defer session.Close()
+
+	queryResult, err := session.WriteTransaction(func(tx neo4j.Transaction) (interface{}, error) {
+		_, err := tx.Run(`
+			MATCH (c:Contact {id:$contactId})-[r:CONTACT_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant})
+			MERGE (c)-[:CONTACT_REMOVED_FROM_TENANT {removedAt:datetime({timezone: 'UTC'})}]->(t)
+			SET c.removed=true
+            DELETE r
+			`,
+			map[string]interface{}{
+				"contactId": contactId,
+				"tenant":    common.GetContext(ctx).Tenant,
 			})
 
 		return true, err

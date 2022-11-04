@@ -5,7 +5,6 @@ package resolver
 
 import (
 	"context"
-
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/openline-ai/openline-customer-os/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/customer-os-api/graph/generated"
@@ -56,6 +55,18 @@ func (r *mutationResolver) DeleteContact(ctx context.Context, contactID string) 
 	result, err := r.ServiceContainer.ContactService.Delete(ctx, contactID)
 	if err != nil {
 		graphql.AddErrorf(ctx, "Could not delete contact %s", contactID)
+		return nil, err
+	}
+	return &model.BooleanResult{
+		Result: result,
+	}, nil
+}
+
+// SoftDeleteContact is the resolver for the softDeleteContact field.
+func (r *mutationResolver) SoftDeleteContact(ctx context.Context, contactID string) (*model.BooleanResult, error) {
+	result, err := r.ServiceContainer.ContactService.SoftDelete(ctx, contactID)
+	if err != nil {
+		graphql.AddErrorf(ctx, "Could not soft delete contact %s", contactID)
 		return nil, err
 	}
 	return &model.BooleanResult{
