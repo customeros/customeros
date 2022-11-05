@@ -1,0 +1,21 @@
+mutation UpdateContact($contactId: ID!){
+    updateContact(
+        input: {
+            id: $contactId,
+            title: DR,
+            firstName: "updated first",
+            lastName: "updated last",
+            contactType: "updated type",
+            notes: "updated notes",
+            label: "updated label"
+        }
+    ) {
+        id
+        title
+        firstName
+        lastName
+        label
+        notes
+        contactType
+    }
+}

@@ -4,6 +4,7 @@ createContact(
       title: MR,
       firstName: "first",
       lastName: "last",
+      label: "Some label"
       contactType: "customer",
       notes: "Some notes...",
       textCustomFields: [ {name: "field1", value: "value1"},

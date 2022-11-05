@@ -58,10 +58,11 @@ func getQuery(fileName string) string {
 	return string(b)
 }
 
-func assertRawResponseNotNil(t *testing.T, response *client.Response, err error) {
+func assertRawResponseSuccess(t *testing.T, response *client.Response, err error) {
 	require.Nil(t, err)
 	require.NotNil(t, response)
 	require.NotNil(t, response.Data)
+	require.Nil(t, response.Errors)
 }
 
 func TestQueryGetTenantUsers(t *testing.T) {
@@ -81,7 +82,7 @@ func TestQueryGetTenantUsers(t *testing.T) {
 	})
 
 	rawResponse, err := c.RawPost(getQuery("get_tenant_users"))
-	assertRawResponseNotNil(t, rawResponse, err)
+	assertRawResponseSuccess(t, rawResponse, err)
 
 	var tenantUsers struct {
 		TenantUsers model.TenantUsersPage
@@ -103,7 +104,7 @@ func TestCreateTenantUser(t *testing.T) {
 	createTenant(driver, "other")
 
 	rawResponse, err := c.RawPost(getQuery("create_tenant_user"))
-	assertRawResponseNotNil(t, rawResponse, err)
+	assertRawResponseSuccess(t, rawResponse, err)
 
 	var tenantUser struct {
 		CreateTenantUser model.TenantUser
@@ -124,7 +125,7 @@ func TestCreateContact(t *testing.T) {
 	createTenant(driver, "otherTenant")
 
 	rawResponse, err := c.RawPost(getQuery("create_contact"))
-	assertRawResponseNotNil(t, rawResponse, err)
+	assertRawResponseSuccess(t, rawResponse, err)
 
 	var contact struct {
 		CreateContact model.Contact
@@ -133,11 +134,12 @@ func TestCreateContact(t *testing.T) {
 	err = decode.Decode(rawResponse.Data.(map[string]interface{}), &contact)
 	require.Nil(t, err)
 	require.NotNil(t, contact)
+	require.Equal(t, "MR", contact.CreateContact.Title.String())
 	require.Equal(t, "first", contact.CreateContact.FirstName)
 	require.Equal(t, "last", contact.CreateContact.LastName)
-	require.Equal(t, "MR", contact.CreateContact.Title.String())
 	require.Equal(t, "customer", *contact.CreateContact.ContactType)
 	require.Equal(t, "Some notes...", *contact.CreateContact.Notes)
+	require.Equal(t, "Some label", *contact.CreateContact.Label)
 
 	require.Equal(t, 2, len(contact.CreateContact.TextCustomFields))
 	require.Equal(t, "field1", contact.CreateContact.TextCustomFields[0].Name)
@@ -164,4 +166,33 @@ func TestCreateContact(t *testing.T) {
 	require.Equal(t, "CTO", *contact.CreateContact.CompanyPositions[0].JobTitle)
 
 	require.Equal(t, 0, len(contact.CreateContact.Groups))
+}
+
+func TestUpdateContact(t *testing.T) {
+	createTenant(driver, tenantName)
+	contactId := createContact(driver, tenantName, entity.ContactEntity{
+		Title:       model.PersonTitleMr.String(),
+		FirstName:   "first",
+		LastName:    "last",
+		Label:       "label",
+		ContactType: "type",
+		Notes:       "notes",
+	})
+
+	rawResponse, err := c.RawPost(getQuery("update_contact"), client.Var("contactId", contactId))
+	assertRawResponseSuccess(t, rawResponse, err)
+
+	var contact struct {
+		UpdateContact model.Contact
+	}
+
+	err = decode.Decode(rawResponse.Data.(map[string]interface{}), &contact)
+	require.Nil(t, err)
+	require.NotNil(t, contact)
+	require.Equal(t, "DR", contact.UpdateContact.Title.String())
+	require.Equal(t, "updated first", contact.UpdateContact.FirstName)
+	require.Equal(t, "updated last", contact.UpdateContact.LastName)
+	require.Equal(t, "updated type", *contact.UpdateContact.ContactType)
+	require.Equal(t, "updated notes", *contact.UpdateContact.Notes)
+	require.Equal(t, "updated label", *contact.UpdateContact.Label)
 }
