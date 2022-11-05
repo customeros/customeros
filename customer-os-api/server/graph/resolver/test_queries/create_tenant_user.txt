@@ -1,0 +1,9 @@
+mutation {
+  createTenantUser(input: {firstName:"first", lastName:"last", email:"user@openline.ai"}) {
+      id
+      firstName
+      lastName
+      email
+      createdAt
+    }
+}
