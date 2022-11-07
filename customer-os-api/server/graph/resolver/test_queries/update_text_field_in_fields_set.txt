@@ -1,0 +1,15 @@
+mutation UpdateTextCustomFieldInFieldsSet($contactId: ID!, $fieldsSetId: ID!, $fieldId: ID!){
+     updateTextCustomFieldInFieldsSet(
+        contactId: $contactId,
+        fieldsSetId: $fieldsSetId,
+        input: {id: $fieldId
+                name: "new name",
+                value: "new value",
+                group: "new group"}
+     ) {
+        id
+        name
+        value
+        group
+      }
+}

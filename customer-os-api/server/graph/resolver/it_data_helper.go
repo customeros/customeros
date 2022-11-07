@@ -38,6 +38,10 @@ func createTenantUser(driver *neo4j.Driver, tenant string, user entity.TenantUse
 	})
 }
 
+func createDefaultContact(driver *neo4j.Driver, tenant string) string {
+	return createContact(driver, tenant, entity.ContactEntity{Title: "MR", FirstName: "first", LastName: "last"})
+}
+
 func createContact(driver *neo4j.Driver, tenant string, contact entity.ContactEntity) string {
 	var contactId, _ = uuid.NewRandom()
 	query := `
@@ -63,6 +67,50 @@ func createContact(driver *neo4j.Driver, tenant string, contact entity.ContactEn
 		"label":       contact.Label,
 	})
 	return contactId.String()
+}
+
+func createDefaultFieldsSet(driver *neo4j.Driver, contactId string) string {
+	return createFieldsSet(driver, contactId, entity.FieldsSetEntity{Name: "name", Type: "type"})
+}
+
+func createFieldsSet(driver *neo4j.Driver, contactId string, fieldsSet entity.FieldsSetEntity) string {
+	var fieldsSetId, _ = uuid.NewRandom()
+	query := `
+			MATCH (c:Contact {id:$contactId})
+			MERGE (s:FieldsSet {
+				  id: $fieldsSetId,
+				  type: $type,
+				  name: $name
+				})<-[:HAS_COMPLEX_PROPERTY {added:datetime({timezone: 'UTC'})}]-(c)`
+	integration_tests.ExecuteWriteQuery(driver, query, map[string]any{
+		"contactId":   contactId,
+		"fieldsSetId": fieldsSetId.String(),
+		"type":        fieldsSet.Type,
+		"name":        fieldsSet.Name,
+	})
+	return fieldsSetId.String()
+}
+
+func createDefaultTextFieldInSet(driver *neo4j.Driver, fieldsSetId string) string {
+	return createTextFieldInSet(driver, fieldsSetId, entity.TextCustomFieldEntity{Name: "name", Value: "value"})
+}
+
+func createTextFieldInSet(driver *neo4j.Driver, fieldsSetId string, textField entity.TextCustomFieldEntity) string {
+	var fieldId, _ = uuid.NewRandom()
+	query := `
+			MATCH (s:FieldsSet {id:$fieldsSetId})
+			MERGE (:TextCustomField {
+				  id: $fieldId,
+				  value: $value,
+				  name: $name
+				})<-[:HAS_TEXT_PROPERTY]-(s)`
+	integration_tests.ExecuteWriteQuery(driver, query, map[string]any{
+		"fieldsSetId": fieldsSetId,
+		"fieldId":     fieldId.String(),
+		"name":        textField.Name,
+		"value":       textField.Value,
+	})
+	return fieldId.String()
 }
 
 func getCountOfNodes(driver *neo4j.Driver, nodeLabel string) int {

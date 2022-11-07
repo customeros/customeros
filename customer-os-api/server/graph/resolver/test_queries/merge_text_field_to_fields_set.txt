@@ -1,0 +1,14 @@
+mutation MergeTextCustomFieldToFieldsSet($contactId: ID!, $fieldsSetId: ID!){
+     mergeTextCustomFieldToFieldsSet(
+        contactId: $contactId,
+        fieldsSetId: $fieldsSetId,
+        input: {name: "some name",
+                value: "some value",
+                group: "some group"}
+     ) {
+        id
+        name
+        value
+        group
+      }
+}

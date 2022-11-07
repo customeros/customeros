@@ -260,3 +260,87 @@ func TestMergeFieldsSetToContact_AllowMultipleFieldsSetWithSameNameOnDifferentCo
 
 	require.Equal(t, 2, getCountOfNodes(driver, "FieldsSet"))
 }
+
+func TestMergeTextCustomFieldToFieldsSet(t *testing.T) {
+	defer setupTestCase()(t)
+	createTenant(driver, tenantName)
+	contactId := createDefaultContact(driver, tenantName)
+	fieldsSetId := createDefaultFieldsSet(driver, contactId)
+
+	rawResponse, err := c.RawPost(getQuery("merge_text_field_to_fields_set"),
+		client.Var("contactId", contactId), client.Var("fieldsSetId", fieldsSetId))
+	assertRawResponseSuccess(t, rawResponse, err)
+
+	var textField struct {
+		MergeTextCustomFieldToFieldsSet model.TextCustomField
+	}
+
+	err = decode.Decode(rawResponse.Data.(map[string]interface{}), &textField)
+	require.Nil(t, err)
+
+	require.Equal(t, "some name", textField.MergeTextCustomFieldToFieldsSet.Name)
+	require.Equal(t, "some value", textField.MergeTextCustomFieldToFieldsSet.Value)
+	require.Equal(t, "some group", *textField.MergeTextCustomFieldToFieldsSet.Group)
+	require.NotNil(t, textField.MergeTextCustomFieldToFieldsSet.ID)
+
+	require.Equal(t, 1, getCountOfNodes(driver, "Contact"))
+	require.Equal(t, 1, getCountOfNodes(driver, "FieldsSet"))
+	require.Equal(t, 1, getCountOfNodes(driver, "TextCustomField"))
+}
+
+func TestUpdateTextCustomFieldInFieldsSet(t *testing.T) {
+	defer setupTestCase()(t)
+	createTenant(driver, tenantName)
+	contactId := createDefaultContact(driver, tenantName)
+	fieldsSetId := createDefaultFieldsSet(driver, contactId)
+	fieldId := createDefaultTextFieldInSet(driver, fieldsSetId)
+
+	rawResponse, err := c.RawPost(getQuery("update_text_field_in_fields_set"),
+		client.Var("contactId", contactId),
+		client.Var("fieldsSetId", fieldsSetId),
+		client.Var("fieldId", fieldId))
+	assertRawResponseSuccess(t, rawResponse, err)
+
+	var textField struct {
+		UpdateTextCustomFieldInFieldsSet model.TextCustomField
+	}
+
+	err = decode.Decode(rawResponse.Data.(map[string]interface{}), &textField)
+	require.Nil(t, err)
+
+	require.Equal(t, "new name", textField.UpdateTextCustomFieldInFieldsSet.Name)
+	require.Equal(t, "new value", textField.UpdateTextCustomFieldInFieldsSet.Value)
+	require.Equal(t, "new group", *textField.UpdateTextCustomFieldInFieldsSet.Group)
+	require.Equal(t, fieldId, textField.UpdateTextCustomFieldInFieldsSet.ID)
+
+	require.Equal(t, 1, getCountOfNodes(driver, "Contact"))
+	require.Equal(t, 1, getCountOfNodes(driver, "FieldsSet"))
+	require.Equal(t, 1, getCountOfNodes(driver, "TextCustomField"))
+}
+
+func TestRemoveTextCustomFieldFromFieldsSetByID(t *testing.T) {
+	defer setupTestCase()(t)
+	createTenant(driver, tenantName)
+	contactId := createDefaultContact(driver, tenantName)
+	fieldsSetId := createDefaultFieldsSet(driver, contactId)
+	fieldId := createDefaultTextFieldInSet(driver, fieldsSetId)
+
+	rawResponse, err := c.RawPost(getQuery("remove_text_field_from_fields_set"),
+		client.Var("contactId", contactId),
+		client.Var("fieldsSetId", fieldsSetId),
+		client.Var("fieldId", fieldId))
+	assertRawResponseSuccess(t, rawResponse, err)
+
+	var textField struct {
+		RemoveTextCustomFieldFromFieldsSetByID model.BooleanResult
+	}
+
+	err = decode.Decode(rawResponse.Data.(map[string]interface{}), &textField)
+	require.Nil(t, err)
+
+	require.Equal(t, true, textField.RemoveTextCustomFieldFromFieldsSetByID.Result)
+
+	require.Equal(t, 1, getCountOfNodes(driver, "Contact"))
+	require.Equal(t, 1, getCountOfNodes(driver, "FieldsSet"))
+	require.Equal(t, 0, getCountOfNodes(driver, "TextCustomField"))
+}

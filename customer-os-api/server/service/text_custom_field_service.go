@@ -13,10 +13,13 @@ import (
 
 type TextCustomFieldService interface {
 	FindAllForContact(ctx context.Context, obj *model.Contact) (*entity.TextCustomFieldEntities, error)
-	MergeTextCustomFieldToContact(ctx context.Context, id string, entity *entity.TextCustomFieldEntity) (*entity.TextCustomFieldEntity, error)
-	UpdateTextCustomFieldInContact(ctx context.Context, id string, entity *entity.TextCustomFieldEntity) (*entity.TextCustomFieldEntity, error)
+	MergeTextCustomFieldToContact(ctx context.Context, contactId string, entity *entity.TextCustomFieldEntity) (*entity.TextCustomFieldEntity, error)
+	MergeTextCustomFieldToFieldsSet(ctx context.Context, contactId string, fieldsSetId string, entity *entity.TextCustomFieldEntity) (*entity.TextCustomFieldEntity, error)
+	UpdateTextCustomFieldInContact(ctx context.Context, contactId string, entity *entity.TextCustomFieldEntity) (*entity.TextCustomFieldEntity, error)
+	UpdateTextCustomFieldInFieldsSet(ctx context.Context, contactId string, fieldsSetId string, entity *entity.TextCustomFieldEntity) (*entity.TextCustomFieldEntity, error)
 	Delete(ctx context.Context, contactId string, fieldName string) (bool, error)
 	DeleteById(ctx context.Context, contactId string, fieldId string) (bool, error)
+	DeleteByIdFromFieldsSet(ctx context.Context, contactId string, fieldsSetId string, fieldId string) (bool, error)
 	mapDbNodeToTextCustomFieldEntity(dbContactGroupNode dbtype.Node) *entity.TextCustomFieldEntity
 }
 
@@ -34,12 +37,12 @@ func (s *textCustomPropertyService) FindAllForContact(ctx context.Context, conta
 	session := (*s.driver).NewSession(neo4j.SessionConfig{AccessMode: neo4j.AccessModeRead})
 	defer session.Close()
 
-	queryResult, err := session.ReadTransaction(func(tx neo4j.Transaction) (interface{}, error) {
+	queryResult, err := session.ReadTransaction(func(tx neo4j.Transaction) (any, error) {
 		result, err := tx.Run(`
 				MATCH (c:Contact {id:$id})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}),
               			(c:Contact {id:$id})-[:HAS_TEXT_PROPERTY]->(f:TextCustomField) 
 				RETURN f `,
-			map[string]interface{}{
+			map[string]any{
 				"id":     contact.ID,
 				"tenant": common.GetContext(ctx).Tenant})
 		records, err := result.Collect()
@@ -66,14 +69,14 @@ func (s *textCustomPropertyService) MergeTextCustomFieldToContact(ctx context.Co
 	session := (*s.driver).NewSession(neo4j.SessionConfig{AccessMode: neo4j.AccessModeWrite})
 	defer session.Close()
 
-	queryResult, err := session.WriteTransaction(func(tx neo4j.Transaction) (interface{}, error) {
+	queryResult, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
 		txResult, err := tx.Run(`
 			MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant})
 			MERGE (f:TextCustomField {name: $name})<-[:HAS_TEXT_PROPERTY]-(c)
             ON CREATE SET f.value=$value, f.group=$group, f.id=randomUUID()
             ON MATCH SET f.value=$value, f.group=$group
 			RETURN f`,
-			map[string]interface{}{
+			map[string]any{
 				"tenant":    common.GetContext(ctx).Tenant,
 				"contactId": contactId,
 				"name":      entity.Name,
@@ -93,19 +96,51 @@ func (s *textCustomPropertyService) MergeTextCustomFieldToContact(ctx context.Co
 	return s.mapDbNodeToTextCustomFieldEntity(queryResult.(dbtype.Node)), nil
 }
 
+func (s *textCustomPropertyService) MergeTextCustomFieldToFieldsSet(ctx context.Context, contactId string, fieldsSetId string, entity *entity.TextCustomFieldEntity) (*entity.TextCustomFieldEntity, error) {
+	session := (*s.driver).NewSession(neo4j.SessionConfig{AccessMode: neo4j.AccessModeWrite})
+	defer session.Close()
+
+	queryResult, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
+		txResult, err := tx.Run(`
+			MATCH (s:FieldsSet {id:$fieldsSetId})<-[:HAS_COMPLEX_PROPERTY]-(c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant})
+			MERGE (f:TextCustomField {name: $name})<-[:HAS_TEXT_PROPERTY]-(s)
+            ON CREATE SET f.value=$value, f.group=$group, f.id=randomUUID()
+            ON MATCH SET f.value=$value, f.group=$group
+			RETURN f`,
+			map[string]any{
+				"tenant":      common.GetContext(ctx).Tenant,
+				"contactId":   contactId,
+				"fieldsSetId": fieldsSetId,
+				"name":        entity.Name,
+				"value":       entity.Value,
+				"group":       entity.Group,
+			})
+		record, err := txResult.Single()
+		if err != nil {
+			return nil, err
+		}
+		return record.Values[0], nil
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return s.mapDbNodeToTextCustomFieldEntity(queryResult.(dbtype.Node)), nil
+}
+
 func (s *textCustomPropertyService) UpdateTextCustomFieldInContact(ctx context.Context, contactId string, entity *entity.TextCustomFieldEntity) (*entity.TextCustomFieldEntity, error) {
 	session := (*s.driver).NewSession(neo4j.SessionConfig{AccessMode: neo4j.AccessModeWrite})
 	defer session.Close()
 
-	queryResult, err := session.WriteTransaction(func(tx neo4j.Transaction) (interface{}, error) {
+	queryResult, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
 		txResult, err := tx.Run(`
 			MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}),
 			  (c)-[:HAS_TEXT_PROPERTY]->(f:TextCustomField {id:$fieldId})
-			SET	name=$name,
-				value=$value,
-				group=$group
+			SET	f.name=$name,
+				f.value=$value,
+				f.group=$group
 			RETURN f`,
-			map[string]interface{}{
+			map[string]any{
 				"tenant":    common.GetContext(ctx).Tenant,
 				"contactId": contactId,
 				"fieldId":   entity.Id,
@@ -126,17 +161,52 @@ func (s *textCustomPropertyService) UpdateTextCustomFieldInContact(ctx context.C
 	return s.mapDbNodeToTextCustomFieldEntity(queryResult.(dbtype.Node)), nil
 }
 
+func (s *textCustomPropertyService) UpdateTextCustomFieldInFieldsSet(ctx context.Context, contactId string, fieldsSetId string, entity *entity.TextCustomFieldEntity) (*entity.TextCustomFieldEntity, error) {
+	session := (*s.driver).NewSession(neo4j.SessionConfig{AccessMode: neo4j.AccessModeWrite})
+	defer session.Close()
+
+	queryResult, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
+		txResult, err := tx.Run(`
+			MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}),
+              (c)-[:HAS_COMPLEX_PROPERTY]->(s:FieldsSet {id:$fieldsSetId}),
+			  (s)-[:HAS_TEXT_PROPERTY]->(f:TextCustomField {id:$fieldId})
+			SET	f.name=$name,
+				f.value=$value,
+				f.group=$group
+			RETURN f`,
+			map[string]any{
+				"tenant":      common.GetContext(ctx).Tenant,
+				"contactId":   contactId,
+				"fieldsSetId": fieldsSetId,
+				"fieldId":     entity.Id,
+				"name":        entity.Name,
+				"value":       entity.Value,
+				"group":       entity.Group,
+			})
+		record, err := txResult.Single()
+		if err != nil {
+			return nil, err
+		}
+		return record.Values[0], nil
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return s.mapDbNodeToTextCustomFieldEntity(queryResult.(dbtype.Node)), nil
+}
+
 func (s *textCustomPropertyService) Delete(ctx context.Context, contactId string, fieldName string) (bool, error) {
 	session := (*s.driver).NewSession(neo4j.SessionConfig{AccessMode: neo4j.AccessModeWrite})
 	defer session.Close()
 
-	queryResult, err := session.WriteTransaction(func(tx neo4j.Transaction) (interface{}, error) {
+	queryResult, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
 		_, err := tx.Run(`
 			MATCH (c:Contact {id:$id})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}),
                   (c:Contact {id:$id})-[:HAS_TEXT_PROPERTY]->(f:TextCustomField {name:$name})
             DETACH DELETE f
 			`,
-			map[string]interface{}{
+			map[string]any{
 				"id":     contactId,
 				"name":   fieldName,
 				"tenant": common.GetContext(ctx).Tenant,
@@ -155,16 +225,41 @@ func (s *textCustomPropertyService) DeleteById(ctx context.Context, contactId st
 	session := (*s.driver).NewSession(neo4j.SessionConfig{AccessMode: neo4j.AccessModeWrite})
 	defer session.Close()
 
-	queryResult, err := session.WriteTransaction(func(tx neo4j.Transaction) (interface{}, error) {
+	queryResult, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
 		_, err := tx.Run(`
 			MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}),
-                  (c:Contact {id:$contactId})-[:HAS_TEXT_PROPERTY]->(f:TextCustomField {id:$fieldId})
-            DETACH DELETE f
-			`,
-			map[string]interface{}{
+                  (c)-[:HAS_TEXT_PROPERTY]->(f:TextCustomField {id:$fieldId})
+            DETACH DELETE f`,
+			map[string]any{
 				"contactId": contactId,
 				"fieldId":   fieldId,
 				"tenant":    common.GetContext(ctx).Tenant,
+			})
+
+		return true, err
+	})
+	if err != nil {
+		return false, err
+	}
+
+	return queryResult.(bool), nil
+}
+
+func (s *textCustomPropertyService) DeleteByIdFromFieldsSet(ctx context.Context, contactId string, fieldsSetId string, fieldId string) (bool, error) {
+	session := (*s.driver).NewSession(neo4j.SessionConfig{AccessMode: neo4j.AccessModeWrite})
+	defer session.Close()
+
+	queryResult, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
+		_, err := tx.Run(`
+			MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}),
+                  (c)-[:HAS_COMPLEX_PROPERTY]->(s:FieldsSet {id:$fieldsSetId}),
+                  (s)-[:HAS_TEXT_PROPERTY]->(f:TextCustomField {id:$fieldId})
+            DETACH DELETE f`,
+			map[string]any{
+				"contactId":   contactId,
+				"fieldsSetId": fieldsSetId,
+				"fieldId":     fieldId,
+				"tenant":      common.GetContext(ctx).Tenant,
 			})
 
 		return true, err
@@ -186,7 +281,7 @@ func addTextCustomFieldToContactInTx(ctx context.Context, contactId string, inpu
 				value: $value
 			})<-[:HAS_TEXT_PROPERTY]-(c)
 			RETURN f`,
-		map[string]interface{}{
+		map[string]any{
 			"contactId": contactId,
 			"group":     input.Group,
 			"name":      input.Name,

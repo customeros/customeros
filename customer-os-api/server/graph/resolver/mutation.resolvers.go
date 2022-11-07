@@ -140,6 +140,38 @@ func (r *mutationResolver) RemoveFieldsSetFromContact(ctx context.Context, conta
 	panic(fmt.Errorf("not implemented: RemoveFieldsSetFromContact - removeFieldsSetFromContact"))
 }
 
+// MergeTextCustomFieldToFieldsSet is the resolver for the mergeTextCustomFieldToFieldsSet field.
+func (r *mutationResolver) MergeTextCustomFieldToFieldsSet(ctx context.Context, contactID string, fieldsSetID string, input model.TextCustomFieldInput) (*model.TextCustomField, error) {
+	result, err := r.ServiceContainer.TextCustomFieldService.MergeTextCustomFieldToFieldsSet(ctx, contactID, fieldsSetID, mapper.MapTextCustomFieldInputToEntity(&input))
+	if err != nil {
+		graphql.AddErrorf(ctx, "Could not merge custom field %s to contact %s, fields set %s", input.Name, contactID, fieldsSetID)
+		return nil, err
+	}
+	return mapper.MapEntityToTextCustomField(result), nil
+}
+
+// UpdateTextCustomFieldInFieldsSet is the resolver for the updateTextCustomFieldInFieldsSet field.
+func (r *mutationResolver) UpdateTextCustomFieldInFieldsSet(ctx context.Context, contactID string, fieldsSetID string, input model.TextCustomFieldUpdateInput) (*model.TextCustomField, error) {
+	result, err := r.ServiceContainer.TextCustomFieldService.UpdateTextCustomFieldInFieldsSet(ctx, contactID, fieldsSetID, mapper.MapTextCustomFieldUpdateInputToEntity(&input))
+	if err != nil {
+		graphql.AddErrorf(ctx, "Could not update text custom field %s in contact %s, fields set %s", input.ID, contactID, fieldsSetID)
+		return nil, err
+	}
+	return mapper.MapEntityToTextCustomField(result), nil
+}
+
+// RemoveTextCustomFieldFromFieldsSetByID is the resolver for the removeTextCustomFieldFromFieldsSetById field.
+func (r *mutationResolver) RemoveTextCustomFieldFromFieldsSetByID(ctx context.Context, contactID string, fieldsSetID string, id string) (*model.BooleanResult, error) {
+	result, err := r.ServiceContainer.TextCustomFieldService.DeleteByIdFromFieldsSet(ctx, contactID, fieldsSetID, id)
+	if err != nil {
+		graphql.AddErrorf(ctx, "Could not remove text field %s from contact %s, fields set %s", id, contactID, fieldsSetID)
+		return nil, err
+	}
+	return &model.BooleanResult{
+		Result: result,
+	}, nil
+}
+
 // MergePhoneNumberToContact is the resolver for the mergePhoneNumberToContact field.
 func (r *mutationResolver) MergePhoneNumberToContact(ctx context.Context, contactID string, input model.PhoneNumberInput) (*model.PhoneNumberInfo, error) {
 	result, err := r.ServiceContainer.PhoneNumberService.MergePhoneNumberToContact(ctx, contactID, mapper.MapPhoneNumberInputToEntity(&input))
@@ -293,13 +325,3 @@ func (r *mutationResolver) RemoveContactFromGroup(ctx context.Context, contactID
 func (r *Resolver) Mutation() generated.MutationResolver { return &mutationResolver{r} }
 
 type mutationResolver struct{ *Resolver }
-
-// !!! WARNING !!!
-// The code below was going to be deleted when updating resolvers. It has been copied here so you have
-// one last chance to move it out of harms way if you want. There are two reasons this happens:
-//   - When renaming or deleting a resolver the old code will be put in here. You can safely delete
-//     it when you're done.
-//   - You have helper methods in this file. Move them out to keep these resolver files clean.
-func (r *mutationResolver) AddFieldsSetToContact(ctx context.Context, contactID string, input model.FieldsSetInput) (*model.FieldsSet, error) {
-	panic(fmt.Errorf("not implemented: AddFieldsSetToContact - addFieldsSetToContact"))
-}
