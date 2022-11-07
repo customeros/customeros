@@ -13,13 +13,18 @@ import (
 
 type TextCustomFieldService interface {
 	FindAllForContact(ctx context.Context, obj *model.Contact) (*entity.TextCustomFieldEntities, error)
+	FindAllForFieldsSet(ctx context.Context, obj *model.FieldsSet) (*entity.TextCustomFieldEntities, error)
+
 	MergeTextCustomFieldToContact(ctx context.Context, contactId string, entity *entity.TextCustomFieldEntity) (*entity.TextCustomFieldEntity, error)
 	MergeTextCustomFieldToFieldsSet(ctx context.Context, contactId string, fieldsSetId string, entity *entity.TextCustomFieldEntity) (*entity.TextCustomFieldEntity, error)
+
 	UpdateTextCustomFieldInContact(ctx context.Context, contactId string, entity *entity.TextCustomFieldEntity) (*entity.TextCustomFieldEntity, error)
 	UpdateTextCustomFieldInFieldsSet(ctx context.Context, contactId string, fieldsSetId string, entity *entity.TextCustomFieldEntity) (*entity.TextCustomFieldEntity, error)
+
 	Delete(ctx context.Context, contactId string, fieldName string) (bool, error)
 	DeleteById(ctx context.Context, contactId string, fieldId string) (bool, error)
 	DeleteByIdFromFieldsSet(ctx context.Context, contactId string, fieldsSetId string, fieldId string) (bool, error)
+
 	mapDbNodeToTextCustomFieldEntity(dbContactGroupNode dbtype.Node) *entity.TextCustomFieldEntity
 }
 
@@ -39,12 +44,44 @@ func (s *textCustomPropertyService) FindAllForContact(ctx context.Context, conta
 
 	queryResult, err := session.ReadTransaction(func(tx neo4j.Transaction) (any, error) {
 		result, err := tx.Run(`
-				MATCH (c:Contact {id:$id})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}),
-              			(c:Contact {id:$id})-[:HAS_TEXT_PROPERTY]->(f:TextCustomField) 
+				MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}),
+              		  (c)-[:HAS_TEXT_PROPERTY]->(f:TextCustomField) 
 				RETURN f `,
 			map[string]any{
-				"id":     contact.ID,
-				"tenant": common.GetContext(ctx).Tenant})
+				"contactId": contact.ID,
+				"tenant":    common.GetContext(ctx).Tenant})
+		records, err := result.Collect()
+		if err != nil {
+			return nil, err
+		}
+		return records, nil
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	textCustomFieldEntities := entity.TextCustomFieldEntities{}
+
+	for _, dbRecord := range queryResult.([]*db.Record) {
+		textCustomFieldEntity := s.mapDbNodeToTextCustomFieldEntity(dbRecord.Values[0].(dbtype.Node))
+		textCustomFieldEntities = append(textCustomFieldEntities, *textCustomFieldEntity)
+	}
+
+	return &textCustomFieldEntities, nil
+}
+
+func (s *textCustomPropertyService) FindAllForFieldsSet(ctx context.Context, fieldsSet *model.FieldsSet) (*entity.TextCustomFieldEntities, error) {
+	session := (*s.driver).NewSession(neo4j.SessionConfig{AccessMode: neo4j.AccessModeRead})
+	defer session.Close()
+
+	queryResult, err := session.ReadTransaction(func(tx neo4j.Transaction) (any, error) {
+		result, err := tx.Run(`
+				MATCH (s:FieldsSet {id:$fieldsSetId})<-[:HAS_COMPLEX_PROPERTY]-(:Contact)-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}),
+              		  (s)-[:HAS_TEXT_PROPERTY]->(f:TextCustomField) 
+				RETURN f`,
+			map[string]any{
+				"fieldsSetId": fieldsSet.ID,
+				"tenant":      common.GetContext(ctx).Tenant})
 		records, err := result.Collect()
 		if err != nil {
 			return nil, err

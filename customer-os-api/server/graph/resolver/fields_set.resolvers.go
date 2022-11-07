@@ -5,7 +5,7 @@ package resolver
 
 import (
 	"context"
-	"fmt"
+	"github.com/openline-ai/openline-customer-os/customer-os-api/mapper"
 
 	"github.com/openline-ai/openline-customer-os/customer-os-api/graph/generated"
 	"github.com/openline-ai/openline-customer-os/customer-os-api/graph/model"
@@ -13,7 +13,8 @@ import (
 
 // TextCustomFields is the resolver for the textCustomFields field.
 func (r *fieldsSetResolver) TextCustomFields(ctx context.Context, obj *model.FieldsSet) ([]*model.TextCustomField, error) {
-	panic(fmt.Errorf("not implemented: TextCustomFields - textCustomFields"))
+	textCustomFieldEntities, err := r.ServiceContainer.TextCustomFieldService.FindAllForFieldsSet(ctx, obj)
+	return mapper.MapEntitiesToTextCustomFields(textCustomFieldEntities), err
 }
 
 // FieldsSet returns generated.FieldsSetResolver implementation.

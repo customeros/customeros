@@ -7,10 +7,12 @@ import (
 	"github.com/neo4j/neo4j-go-driver/v4/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/customer-os-api/common"
 	"github.com/openline-ai/openline-customer-os/customer-os-api/entity"
+	"github.com/openline-ai/openline-customer-os/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/customer-os-api/utils"
 )
 
 type FieldsSetService interface {
+	FindAllForContact(ctx context.Context, contact *model.Contact) (*entity.FieldsSetEntities, error)
 	MergeFieldsSetToContact(ctx context.Context, contactId string, input *entity.FieldsSetEntity) (*entity.FieldsSetEntity, error)
 }
 
@@ -22,6 +24,39 @@ func NewFieldsSetService(driver *neo4j.Driver) FieldsSetService {
 	return &fieldsSetService{
 		driver: driver,
 	}
+}
+
+func (s *fieldsSetService) FindAllForContact(ctx context.Context, contact *model.Contact) (*entity.FieldsSetEntities, error) {
+	session := (*s.driver).NewSession(neo4j.SessionConfig{AccessMode: neo4j.AccessModeRead})
+	defer session.Close()
+
+	queryResult, err := session.ReadTransaction(func(tx neo4j.Transaction) (any, error) {
+		result, err := tx.Run(`
+				MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}),
+              			(c)-[r:HAS_COMPLEX_PROPERTY]->(s:FieldsSet) 
+				RETURN s, r`,
+			map[string]any{
+				"contactId": contact.ID,
+				"tenant":    common.GetContext(ctx).Tenant})
+		records, err := result.Collect()
+		if err != nil {
+			return nil, err
+		}
+		return records, nil
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	fieldsSetEntities := entity.FieldsSetEntities{}
+
+	for _, dbRecord := range queryResult.([]*db.Record) {
+		fieldsSetEntity := s.mapDbNodeToFieldsSetEntity(dbRecord.Values[0].(dbtype.Node))
+		s.addDbRelationshipToEntity((queryResult.([]*db.Record))[0].Values[1].(dbtype.Relationship), fieldsSetEntity)
+		fieldsSetEntities = append(fieldsSetEntities, *fieldsSetEntity)
+	}
+
+	return &fieldsSetEntities, nil
 }
 
 func (s *fieldsSetService) MergeFieldsSetToContact(ctx context.Context, contactId string, input *entity.FieldsSetEntity) (*entity.FieldsSetEntity, error) {
@@ -50,9 +85,9 @@ func (s *fieldsSetService) MergeFieldsSetToContact(ctx context.Context, contactI
 		return nil, err
 	}
 
-	var entity = s.mapDbNodeToFieldsSetEntity((queryResult.([]*db.Record))[0].Values[0].(dbtype.Node))
-	s.addDbRelationshipToEntity((queryResult.([]*db.Record))[0].Values[1].(dbtype.Relationship), entity)
-	return entity, nil
+	var fieldsSetEntity = s.mapDbNodeToFieldsSetEntity((queryResult.([]*db.Record))[0].Values[0].(dbtype.Node))
+	s.addDbRelationshipToEntity((queryResult.([]*db.Record))[0].Values[1].(dbtype.Relationship), fieldsSetEntity)
+	return fieldsSetEntity, nil
 }
 
 func (s *fieldsSetService) mapDbNodeToFieldsSetEntity(node dbtype.Node) *entity.FieldsSetEntity {
