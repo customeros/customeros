@@ -1,0 +1,61 @@
+mutation {
+createContact(
+    input: {
+      title: MR,
+      firstName: "first",
+      lastName: "last",
+      label: "Some label"
+      contactType: "customer",
+      notes: "Some notes...",
+      textCustomFields: [ {name: "field1", value: "value1"},
+                          {name: "field2", value: "value2"}],
+      companyPosition: {
+            companyName:"abc",
+            jobTitle:"CTO"
+      }
+      email: {
+            email: "contact@abc.com",
+            label: WORK,
+            primary: false
+      },
+      phoneNumber: {
+            number: "+1234567890",
+            label: MOBILE,
+            primary: true
+      }
+    }
+  ) {
+    id
+    title
+    firstName
+    lastName
+    label
+    notes
+    contactType
+    createdAt
+    textCustomFields {
+      id
+      name
+      value
+    }
+    emails {
+      id
+      email
+      label
+    }
+    phoneNumbers {
+      id
+      primary
+      number
+      label
+    }
+    groups {
+      id
+      name
+    }
+    companyPositions{
+      companyName
+      jobTitle
+    }
+  }
+}
