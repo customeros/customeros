@@ -29,34 +29,22 @@ type CompanyPositionInput struct {
 	JobTitle    *string `json:"jobTitle"`
 }
 
-// A contact represents an individual in customerOS.
+// Contact - represents one person that can be contacted. In B2C
 type Contact struct {
-	// The unique ID associated with the contact in customerOS.
-	ID string `json:"id"`
-	// The title associate with the contact in customerOS.
-	Title *PersonTitle `json:"title"`
-	// The first name of the contact in customerOS.
-	FirstName string `json:"firstName"`
-	// The last name of the contact in customerOS.
-	LastName string `json:"lastName"`
-	// An ISO8601 timestamp recording when the contact was created in customerOS.
-	CreatedAt time.Time `json:"createdAt"`
-	// A user-defined label applied against a contact in customerOS.
-	Label *string `json:"label"`
-	// User-defined notes associated with a contact in customerOS.
-	Notes *string `json:"notes"`
-	// User-defined [should this be a defined type?]
-	ContactType *string `json:"contactType"`
-	// `companyName` and `jobTitle` of the contact if it has been associated with a company.
+	ID               string             `json:"id"`
+	Title            *PersonTitle       `json:"title"`
+	FirstName        string             `json:"firstName"`
+	LastName         string             `json:"lastName"`
+	CreatedAt        time.Time          `json:"createdAt"`
+	Label            *string            `json:"label"`
+	Notes            *string            `json:"notes"`
+	ContactType      *string            `json:"contactType"`
 	CompanyPositions []*CompanyPosition `json:"companyPositions"`
-	// Identifies any contact groups the contact is associated with.
-	Groups []*ContactGroup `json:"groups"`
-	// User defined metadata appended to the contact record in customerOS.
+	Groups           []*ContactGroup    `json:"groups"`
 	TextCustomFields []*TextCustomField `json:"textCustomFields"`
-	// All phone numbers associated with a contact in customerOS.
-	PhoneNumbers []*PhoneNumberInfo `json:"phoneNumbers"`
-	// All email addresses assocaited with a contact in customerOS.
-	Emails []*EmailInfo `json:"emails"`
+	PhoneNumbers     []*PhoneNumberInfo `json:"phoneNumbers"`
+	Emails           []*EmailInfo       `json:"emails"`
+	FieldsSets       []*FieldsSet       `json:"fieldsSets"`
 }
 
 type ContactGroup struct {
@@ -83,56 +71,33 @@ func (ContactGroupsPage) IsPagedResult()               {}
 func (this ContactGroupsPage) GetTotalPages() int      { return this.TotalPages }
 func (this ContactGroupsPage) GetTotalElements() int64 { return this.TotalElements }
 
-// An individual that you would like to add to customerOS.
 type ContactInput struct {
-	// The title of the contact.
-	Title *PersonTitle `json:"title"`
-	// The first name of the contact.
-	FirstName string `json:"firstName"`
-	// The last name of the contact.
-	LastName string `json:"lastName"`
-	// A user-defined label attached to contact.
-	Label *string `json:"label"`
-	// User-defined notes associated with contact.
-	Notes *string `json:"notes"`
-	// User-defined [should this be a defined type?]
-	ContactType *string `json:"contactType"`
-	// User defined metadata appended to contact.
+	Title            *PersonTitle            `json:"title"`
+	FirstName        string                  `json:"firstName"`
+	LastName         string                  `json:"lastName"`
+	Label            *string                 `json:"label"`
+	Notes            *string                 `json:"notes"`
+	ContactType      *string                 `json:"contactType"`
 	TextCustomFields []*TextCustomFieldInput `json:"textCustomFields"`
-	// The job title of the contact.
-	CompanyPosition *CompanyPositionInput `json:"companyPosition"`
-	// An email addresses assocaited with the contact.
-	Email *EmailInput `json:"email"`
-	// A phone number associated with the contact.
-	PhoneNumber *PhoneNumberInput `json:"phoneNumber"`
+	CompanyPosition  *CompanyPositionInput   `json:"companyPosition"`
+	Email            *EmailInput             `json:"email"`
+	PhoneNumber      *PhoneNumberInput       `json:"phoneNumber"`
 }
 
-// Updates data fields associated with an existing customer record in customerOS.
 type ContactUpdateInput struct {
-	// The unique ID associated with the contact in customerOS.
-	ID string `json:"id"`
-	// The title associate with the contact in customerOS.
-	Title *PersonTitle `json:"title"`
-	// The first name of the contact in customerOS.
-	FirstName string `json:"firstName"`
-	// The last name of the contact in customerOS.
-	LastName string `json:"lastName"`
-	// A user-defined label applied against a contact in customerOS.
-	Label *string `json:"label"`
-	// User-defined notes associated with contact.
-	Notes *string `json:"notes"`
-	// User-defined [should this be a defined type?]
-	ContactType *string `json:"contactType"`
+	ID          string       `json:"id"`
+	Title       *PersonTitle `json:"title"`
+	FirstName   string       `json:"firstName"`
+	LastName    string       `json:"lastName"`
+	Label       *string      `json:"label"`
+	Notes       *string      `json:"notes"`
+	ContactType *string      `json:"contactType"`
 }
 
-// Specifies how many pages of contact information has been returned in the query response.
 type ContactsPage struct {
-	// A contact entity in customerOS.
-	Content []*Contact `json:"content"`
-	// Total number of pages in the query response.
-	TotalPages int `json:"totalPages"`
-	// Total number of elements in the query response.
-	TotalElements int64 `json:"totalElements"`
+	Content       []*Contact `json:"content"`
+	TotalPages    int        `json:"totalPages"`
+	TotalElements int64      `json:"totalElements"`
 }
 
 func (ContactsPage) IsPagedResult()               {}
@@ -157,6 +122,24 @@ type EmailUpdateInput struct {
 	Email   string     `json:"email"`
 	Label   EmailLabel `json:"label"`
 	Primary *bool      `json:"primary"`
+}
+
+type FieldsSet struct {
+	ID               string             `json:"id"`
+	Type             string             `json:"type"`
+	Name             string             `json:"name"`
+	Added            time.Time          `json:"added"`
+	TextCustomFields []*TextCustomField `json:"textCustomFields"`
+}
+
+type FieldsSetInput struct {
+	Type string `json:"type"`
+	Name string `json:"name"`
+}
+
+type FieldsSetUpdateInput struct {
+	ID   string `json:"id"`
+	Name string `json:"name"`
 }
 
 type PaginationFilter struct {
@@ -273,20 +256,14 @@ func (e EmailLabel) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
 }
 
-// The honorific title of an individual.
 type PersonTitle string
 
 const (
-	// For men, regardless of marital status.
-	PersonTitleMr PersonTitle = "MR"
-	// For married women.
-	PersonTitleMrs PersonTitle = "MRS"
-	// For girls, unmarried women, and married women who continue to use their maiden name.
+	PersonTitleMr   PersonTitle = "MR"
+	PersonTitleMrs  PersonTitle = "MRS"
 	PersonTitleMiss PersonTitle = "MISS"
-	// For women, regardless of marital status, or when marital status is unknown.
-	PersonTitleMs PersonTitle = "MS"
-	// For the holder of a doctoral degree.
-	PersonTitleDr PersonTitle = "DR"
+	PersonTitleMs   PersonTitle = "MS"
+	PersonTitleDr   PersonTitle = "DR"
 )
 
 var AllPersonTitle = []PersonTitle{

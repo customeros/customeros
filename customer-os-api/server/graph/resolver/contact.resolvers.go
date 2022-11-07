@@ -5,6 +5,7 @@ package resolver
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/openline-ai/openline-customer-os/customer-os-api/graph/generated"
 	"github.com/openline-ai/openline-customer-os/customer-os-api/graph/model"
@@ -39,6 +40,11 @@ func (r *contactResolver) PhoneNumbers(ctx context.Context, obj *model.Contact) 
 func (r *contactResolver) Emails(ctx context.Context, obj *model.Contact) ([]*model.EmailInfo, error) {
 	emailEntities, err := r.ServiceContainer.EmailService.FindAllForContact(ctx, obj)
 	return mapper.MapEntitiesToEmails(emailEntities), err
+}
+
+// FieldsSets is the resolver for the fieldsSets field.
+func (r *contactResolver) FieldsSets(ctx context.Context, obj *model.Contact) ([]*model.FieldsSet, error) {
+	panic(fmt.Errorf("not implemented: FieldsSets - fieldsSets"))
 }
 
 // Contact returns generated.ContactResolver implementation.

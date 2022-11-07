@@ -5,6 +5,7 @@ package resolver
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/openline-ai/openline-customer-os/customer-os-api/entity"
@@ -117,6 +118,26 @@ func (r *mutationResolver) RemoveTextCustomFieldFromContactByID(ctx context.Cont
 	return &model.BooleanResult{
 		Result: result,
 	}, nil
+}
+
+// MergeFieldsSetToContact is the resolver for the mergeFieldsSetToContact field.
+func (r *mutationResolver) MergeFieldsSetToContact(ctx context.Context, contactID string, input model.FieldsSetInput) (*model.FieldsSet, error) {
+	result, err := r.ServiceContainer.FieldsSetService.MergeFieldsSetToContact(ctx, contactID, mapper.MapFieldsSetInputToEntity(&input))
+	if err != nil {
+		graphql.AddErrorf(ctx, "Could not merge fields set %s to contact %s", input.Name, contactID)
+		return nil, err
+	}
+	return mapper.MapEntityToFieldsSet(result), nil
+}
+
+// UpdateFieldsSetInContact is the resolver for the updateFieldsSetInContact field.
+func (r *mutationResolver) UpdateFieldsSetInContact(ctx context.Context, contactID string, input model.FieldsSetUpdateInput) (*model.FieldsSet, error) {
+	panic(fmt.Errorf("not implemented: UpdateFieldsSetInContact - updateFieldsSetInContact"))
+}
+
+// RemoveFieldsSetFromContact is the resolver for the removeFieldsSetFromContact field.
+func (r *mutationResolver) RemoveFieldsSetFromContact(ctx context.Context, contactID string, id string) (*model.BooleanResult, error) {
+	panic(fmt.Errorf("not implemented: RemoveFieldsSetFromContact - removeFieldsSetFromContact"))
 }
 
 // MergePhoneNumberToContact is the resolver for the mergePhoneNumberToContact field.
@@ -272,3 +293,13 @@ func (r *mutationResolver) RemoveContactFromGroup(ctx context.Context, contactID
 func (r *Resolver) Mutation() generated.MutationResolver { return &mutationResolver{r} }
 
 type mutationResolver struct{ *Resolver }
+
+// !!! WARNING !!!
+// The code below was going to be deleted when updating resolvers. It has been copied here so you have
+// one last chance to move it out of harms way if you want. There are two reasons this happens:
+//   - When renaming or deleting a resolver the old code will be put in here. You can safely delete
+//     it when you're done.
+//   - You have helper methods in this file. Move them out to keep these resolver files clean.
+func (r *mutationResolver) AddFieldsSetToContact(ctx context.Context, contactID string, input model.FieldsSetInput) (*model.FieldsSet, error) {
+	panic(fmt.Errorf("not implemented: AddFieldsSetToContact - addFieldsSetToContact"))
+}

@@ -11,6 +11,11 @@ type Mutation {
     removeTextCustomFieldFromContact(contactId : ID!, fieldName: String!): BooleanResult!
     removeTextCustomFieldFromContactById(contactId : ID!, id: ID!): BooleanResult!
 
+    mergeFieldsSetToContact(contactId : ID!, input: FieldsSetInput!): FieldsSet
+    updateFieldsSetInContact(contactId : ID!, input: FieldsSetUpdateInput!): FieldsSet
+#    alexb implement removing linked custom fields
+    removeFieldsSetFromContact(contactId : ID!, id: ID!):BooleanResult!
+
     mergePhoneNumberToContact(contactId : ID!, input: PhoneNumberInput!): PhoneNumberInfo!
     updatePhoneNumberInContact(contactId : ID!, input: PhoneNumberUpdateInput!): PhoneNumberInfo!
     removePhoneNumberFromContact(contactId : ID!, phoneNumber: String!): BooleanResult!

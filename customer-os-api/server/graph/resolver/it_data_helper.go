@@ -1,11 +1,17 @@
 package resolver
 
 import (
+	"fmt"
 	"github.com/google/uuid"
 	"github.com/neo4j/neo4j-go-driver/v4/neo4j"
+	"github.com/neo4j/neo4j-go-driver/v4/neo4j/db"
 	"github.com/openline-ai/openline-customer-os/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/customer-os-api/integration_tests"
 )
+
+func cleanupAllData(driver *neo4j.Driver) {
+	integration_tests.ExecuteWriteQuery(driver, `MATCH (n) DETACH DELETE n`, map[string]any{})
+}
 
 func createTenant(driver *neo4j.Driver, tenant string) {
 	query := `MERGE (t:Tenant {name:$tenant})`
@@ -57,4 +63,10 @@ func createContact(driver *neo4j.Driver, tenant string, contact entity.ContactEn
 		"label":       contact.Label,
 	})
 	return contactId.String()
+}
+
+func getCountOfNodes(driver *neo4j.Driver, nodeLabel string) int {
+	query := fmt.Sprintf(`MATCH (n:%s) RETURN count(n)`, nodeLabel)
+	result := integration_tests.ExecuteReadQueryWithSingleReturn(driver, query, map[string]any{})
+	return int(result.(*db.Record).Values[0].(int64))
 }

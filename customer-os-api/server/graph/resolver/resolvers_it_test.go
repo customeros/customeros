@@ -39,6 +39,13 @@ func TestMain(m *testing.M) {
 	os.Exit(m.Run())
 }
 
+func setupTestCase() func(tb testing.TB) {
+	return func(tb testing.TB) {
+		tb.Logf("Teardown test %v, cleaning neo4j DB", tb.Name())
+		cleanupAllData(driver)
+	}
+}
+
 func prepareClient() {
 	serviceContainer := container.InitServices(driver)
 	graphResolver := NewResolver(serviceContainer)
@@ -66,6 +73,7 @@ func assertRawResponseSuccess(t *testing.T, response *client.Response, err error
 }
 
 func TestQueryGetTenantUsers(t *testing.T) {
+	defer setupTestCase()(t)
 	tenant := "openline"
 	otherTenant := "other"
 	createTenant(driver, tenant)
@@ -100,6 +108,7 @@ func TestQueryGetTenantUsers(t *testing.T) {
 }
 
 func TestCreateTenantUser(t *testing.T) {
+	defer setupTestCase()(t)
 	createTenant(driver, "openline")
 	createTenant(driver, "other")
 
@@ -121,6 +130,7 @@ func TestCreateTenantUser(t *testing.T) {
 }
 
 func TestCreateContact(t *testing.T) {
+	defer setupTestCase()(t)
 	createTenant(driver, tenantName)
 	createTenant(driver, "otherTenant")
 
@@ -166,9 +176,17 @@ func TestCreateContact(t *testing.T) {
 	require.Equal(t, "CTO", *contact.CreateContact.CompanyPositions[0].JobTitle)
 
 	require.Equal(t, 0, len(contact.CreateContact.Groups))
+
+	//require.Equal(t, 2, getCountOfNodes(driver, "Tenant"))
+	require.Equal(t, 1, getCountOfNodes(driver, "Contact"))
+	require.Equal(t, 0, getCountOfNodes(driver, "ContactGroup"))
+	require.Equal(t, 2, getCountOfNodes(driver, "TextCustomField"))
+	require.Equal(t, 1, getCountOfNodes(driver, "Email"))
+	require.Equal(t, 1, getCountOfNodes(driver, "PhoneNumber"))
 }
 
 func TestUpdateContact(t *testing.T) {
+	defer setupTestCase()(t)
 	createTenant(driver, tenantName)
 	contactId := createContact(driver, tenantName, entity.ContactEntity{
 		Title:       model.PersonTitleMr.String(),
@@ -195,4 +213,50 @@ func TestUpdateContact(t *testing.T) {
 	require.Equal(t, "updated type", *contact.UpdateContact.ContactType)
 	require.Equal(t, "updated notes", *contact.UpdateContact.Notes)
 	require.Equal(t, "updated label", *contact.UpdateContact.Label)
+}
+
+func TestMergeFieldsSetToContact_AllowMultipleFieldsSetWithSameNameOnDifferentContacts(t *testing.T) {
+	defer setupTestCase()(t)
+	createTenant(driver, tenantName)
+	contactId1 := createContact(driver, tenantName, entity.ContactEntity{
+		Title:     model.PersonTitleMr.String(),
+		FirstName: "first",
+		LastName:  "last",
+	})
+	contactId2 := createContact(driver, tenantName, entity.ContactEntity{
+		Title:     model.PersonTitleMr.String(),
+		FirstName: "first",
+		LastName:  "last",
+	})
+
+	rawResponse1, err := c.RawPost(getQuery("merge_fields_set_to_contact"), client.Var("contactId", contactId1))
+	rawResponse2, err := c.RawPost(getQuery("merge_fields_set_to_contact"), client.Var("contactId", contactId2))
+	assertRawResponseSuccess(t, rawResponse1, err)
+	assertRawResponseSuccess(t, rawResponse2, err)
+
+	var fieldsSet1 struct {
+		MergeFieldsSetToContact model.FieldsSet
+	}
+	var fieldsSet2 struct {
+		MergeFieldsSetToContact model.FieldsSet
+	}
+
+	err = decode.Decode(rawResponse1.Data.(map[string]interface{}), &fieldsSet1)
+	require.Nil(t, err)
+	err = decode.Decode(rawResponse2.Data.(map[string]interface{}), &fieldsSet2)
+	require.Nil(t, err)
+	require.NotNil(t, fieldsSet1)
+	require.NotNil(t, fieldsSet2)
+
+	require.NotNil(t, fieldsSet1.MergeFieldsSetToContact.ID)
+	require.NotNil(t, fieldsSet2.MergeFieldsSetToContact.ID)
+	require.NotEqual(t, fieldsSet1.MergeFieldsSetToContact.ID, fieldsSet2.MergeFieldsSetToContact.ID)
+	require.Equal(t, "some name", fieldsSet1.MergeFieldsSetToContact.Name)
+	require.Equal(t, "some type", fieldsSet1.MergeFieldsSetToContact.Type)
+	require.NotNil(t, fieldsSet1.MergeFieldsSetToContact.Added)
+	require.Equal(t, "some name", fieldsSet2.MergeFieldsSetToContact.Name)
+	require.Equal(t, "some type", fieldsSet2.MergeFieldsSetToContact.Type)
+	require.NotNil(t, fieldsSet2.MergeFieldsSetToContact.Added)
+
+	require.Equal(t, 2, getCountOfNodes(driver, "FieldsSet"))
 }
