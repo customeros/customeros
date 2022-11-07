@@ -13,7 +13,9 @@ input EmailInput {
 
 input EmailUpdateInput {
     id: ID!
-    emailDetails: EmailInput!
+    email: String!
+    label: EmailLabel!
+    primary: Boolean
 }
 
 enum EmailLabel {

@@ -21,6 +21,23 @@ func MapPhoneNumberInputToEntity(input *model.PhoneNumberInput) *entity.PhoneNum
 	return &phoneNumberEntity
 }
 
+func MapPhoneNumberUpdateInputToEntity(input *model.PhoneNumberUpdateInput) *entity.PhoneNumberEntity {
+	if input == nil {
+		return nil
+	}
+	phoneNumberEntity := entity.PhoneNumberEntity{
+		Id:     input.ID,
+		Number: input.Number,
+		Label:  input.Label.String(),
+	}
+	if input.Primary != nil {
+		phoneNumberEntity.Primary = *input.Primary
+	} else {
+		phoneNumberEntity.Primary = false
+	}
+	return &phoneNumberEntity
+}
+
 func MapEntitiesToPhoneNumbers(entities *entity.PhoneNumberEntities) []*model.PhoneNumberInfo {
 	var phoneNumbers []*model.PhoneNumberInfo
 	for _, phoneNumberEntity := range *entities {

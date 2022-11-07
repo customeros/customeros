@@ -21,6 +21,23 @@ func MapEmailInputToEntity(input *model.EmailInput) *entity.EmailEntity {
 	return &emailEntity
 }
 
+func MapEmailUpdateInputToEntity(input *model.EmailUpdateInput) *entity.EmailEntity {
+	if input == nil {
+		return nil
+	}
+	emailEntity := entity.EmailEntity{
+		Id:    input.ID,
+		Email: input.Email,
+		Label: input.Label.String(),
+	}
+	if input.Primary != nil {
+		emailEntity.Primary = *input.Primary
+	} else {
+		emailEntity.Primary = false
+	}
+	return &emailEntity
+}
+
 func MapEntitiesToEmails(entities *entity.EmailEntities) []*model.EmailInfo {
 	var emails []*model.EmailInfo
 	for _, emailEntity := range *entities {

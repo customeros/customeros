@@ -13,7 +13,9 @@ input PhoneNumberInput {
 
 input PhoneNumberUpdateInput {
     id: ID!
-    phoneNumberDetails: PhoneNumberInput!
+    number: String!
+    label: PhoneLabel!
+    primary: Boolean
 }
 
 enum PhoneLabel {

@@ -87,9 +87,7 @@ func (r *mutationResolver) MergeTextCustomFieldToContact(ctx context.Context, co
 
 // UpdateTextCustomFieldInContact is the resolver for the updateTextCustomFieldInContact field.
 func (r *mutationResolver) UpdateTextCustomFieldInContact(ctx context.Context, contactID string, input model.TextCustomFieldUpdateInput) (*model.TextCustomField, error) {
-	textCustomField := mapper.MapTextCustomFieldInputToEntity(input.TextCustomFieldDetails)
-	textCustomField.Id = input.ID
-	result, err := r.ServiceContainer.TextCustomFieldService.UpdateTextCustomFieldInContact(ctx, contactID, textCustomField)
+	result, err := r.ServiceContainer.TextCustomFieldService.UpdateTextCustomFieldInContact(ctx, contactID, mapper.MapTextCustomFieldUpdateInputToEntity(&input))
 	if err != nil {
 		graphql.AddErrorf(ctx, "Could not update text custom field %s in contact %s", input.ID, contactID)
 		return nil, err
@@ -133,9 +131,7 @@ func (r *mutationResolver) MergePhoneNumberToContact(ctx context.Context, contac
 
 // UpdatePhoneNumberInContact is the resolver for the updatePhoneNumberInContact field.
 func (r *mutationResolver) UpdatePhoneNumberInContact(ctx context.Context, contactID string, input model.PhoneNumberUpdateInput) (*model.PhoneNumberInfo, error) {
-	phoneNumberEntity := mapper.MapPhoneNumberInputToEntity(input.PhoneNumberDetails)
-	phoneNumberEntity.Id = input.ID
-	result, err := r.ServiceContainer.PhoneNumberService.UpdatePhoneNumberInContact(ctx, contactID, phoneNumberEntity)
+	result, err := r.ServiceContainer.PhoneNumberService.UpdatePhoneNumberInContact(ctx, contactID, mapper.MapPhoneNumberUpdateInputToEntity(&input))
 	if err != nil {
 		graphql.AddErrorf(ctx, "Could not update email %s in contact %s", input.ID, contactID)
 		return nil, err
@@ -179,9 +175,7 @@ func (r *mutationResolver) MergeEmailToContact(ctx context.Context, contactID st
 
 // UpdateEmailInContact is the resolver for the updateEmailInContact field.
 func (r *mutationResolver) UpdateEmailInContact(ctx context.Context, contactID string, input model.EmailUpdateInput) (*model.EmailInfo, error) {
-	emailEntity := mapper.MapEmailInputToEntity(input.EmailDetails)
-	emailEntity.Id = input.ID
-	result, err := r.ServiceContainer.EmailService.UpdateEmailInContact(ctx, contactID, emailEntity)
+	result, err := r.ServiceContainer.EmailService.UpdateEmailInContact(ctx, contactID, mapper.MapEmailUpdateInputToEntity(&input))
 	if err != nil {
 		graphql.AddErrorf(ctx, "Could not update email %s in contact %s", input.ID, contactID)
 		return nil, err
