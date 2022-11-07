@@ -72,7 +72,7 @@ func assertRawResponseSuccess(t *testing.T, response *client.Response, err error
 	require.Nil(t, response.Errors)
 }
 
-func TestQueryGetTenantUsers(t *testing.T) {
+func TestQueryResolver_TenantUsers(t *testing.T) {
 	defer setupTestCase()(t)
 	tenant := "openline"
 	otherTenant := "other"
@@ -107,7 +107,7 @@ func TestQueryGetTenantUsers(t *testing.T) {
 	require.NotNil(t, tenantUsers.TenantUsers.Content[0].CreatedAt)
 }
 
-func TestCreateTenantUser(t *testing.T) {
+func TestMutationResolver_CreateTenantUser(t *testing.T) {
 	defer setupTestCase()(t)
 	createTenant(driver, "openline")
 	createTenant(driver, "other")
@@ -129,7 +129,7 @@ func TestCreateTenantUser(t *testing.T) {
 	require.NotNil(t, tenantUser.CreateTenantUser.ID)
 }
 
-func TestCreateContact(t *testing.T) {
+func TestMutationResolver_CreateContact(t *testing.T) {
 	defer setupTestCase()(t)
 	createTenant(driver, tenantName)
 	createTenant(driver, "otherTenant")
@@ -185,7 +185,7 @@ func TestCreateContact(t *testing.T) {
 	require.Equal(t, 1, getCountOfNodes(driver, "PhoneNumber"))
 }
 
-func TestUpdateContact(t *testing.T) {
+func TestMutationResolver_UpdateContact(t *testing.T) {
 	defer setupTestCase()(t)
 	createTenant(driver, tenantName)
 	contactId := createContact(driver, tenantName, entity.ContactEntity{
@@ -215,7 +215,7 @@ func TestUpdateContact(t *testing.T) {
 	require.Equal(t, "updated label", *contact.UpdateContact.Label)
 }
 
-func TestMergeFieldsSetToContact_AllowMultipleFieldsSetWithSameNameOnDifferentContacts(t *testing.T) {
+func TestMutationResolver_MergeFieldsSetToContact_AllowMultipleFieldsSetWithSameNameOnDifferentContacts(t *testing.T) {
 	defer setupTestCase()(t)
 	createTenant(driver, tenantName)
 	contactId1 := createContact(driver, tenantName, entity.ContactEntity{
@@ -261,7 +261,7 @@ func TestMergeFieldsSetToContact_AllowMultipleFieldsSetWithSameNameOnDifferentCo
 	require.Equal(t, 2, getCountOfNodes(driver, "FieldsSet"))
 }
 
-func TestMergeTextCustomFieldToFieldsSet(t *testing.T) {
+func TestMutationResolver_MergeTextCustomFieldToFieldsSet(t *testing.T) {
 	defer setupTestCase()(t)
 	createTenant(driver, tenantName)
 	contactId := createDefaultContact(driver, tenantName)
@@ -288,7 +288,7 @@ func TestMergeTextCustomFieldToFieldsSet(t *testing.T) {
 	require.Equal(t, 1, getCountOfNodes(driver, "TextCustomField"))
 }
 
-func TestUpdateTextCustomFieldInFieldsSet(t *testing.T) {
+func TestMutationResolver_UpdateTextCustomFieldInFieldsSet(t *testing.T) {
 	defer setupTestCase()(t)
 	createTenant(driver, tenantName)
 	contactId := createDefaultContact(driver, tenantName)
@@ -318,7 +318,7 @@ func TestUpdateTextCustomFieldInFieldsSet(t *testing.T) {
 	require.Equal(t, 1, getCountOfNodes(driver, "TextCustomField"))
 }
 
-func TestRemoveTextCustomFieldFromFieldsSetByID(t *testing.T) {
+func TestMutationResolver_RemoveTextCustomFieldFromFieldsSetByID(t *testing.T) {
 	defer setupTestCase()(t)
 	createTenant(driver, tenantName)
 	contactId := createDefaultContact(driver, tenantName)
@@ -342,5 +342,35 @@ func TestRemoveTextCustomFieldFromFieldsSetByID(t *testing.T) {
 
 	require.Equal(t, 1, getCountOfNodes(driver, "Contact"))
 	require.Equal(t, 1, getCountOfNodes(driver, "FieldsSet"))
+	require.Equal(t, 0, getCountOfNodes(driver, "TextCustomField"))
+}
+
+func TestMutationResolver_RemoveFieldsSetFromContact(t *testing.T) {
+	defer setupTestCase()(t)
+	createTenant(driver, tenantName)
+	contactId := createDefaultContact(driver, tenantName)
+	fieldsSetId := createDefaultFieldsSet(driver, contactId)
+	createDefaultTextFieldInSet(driver, fieldsSetId)
+
+	require.Equal(t, 1, getCountOfNodes(driver, "Contact"))
+	require.Equal(t, 1, getCountOfNodes(driver, "FieldsSet"))
+	require.Equal(t, 1, getCountOfNodes(driver, "TextCustomField"))
+
+	rawResponse, err := c.RawPost(getQuery("remove_fields_set_from_contact"),
+		client.Var("contactId", contactId),
+		client.Var("fieldsSetId", fieldsSetId))
+	assertRawResponseSuccess(t, rawResponse, err)
+
+	var textField struct {
+		RemoveFieldsSetFromContact model.BooleanResult
+	}
+
+	err = decode.Decode(rawResponse.Data.(map[string]interface{}), &textField)
+	require.Nil(t, err)
+
+	require.Equal(t, true, textField.RemoveFieldsSetFromContact.Result)
+
+	require.Equal(t, 1, getCountOfNodes(driver, "Contact"))
+	require.Equal(t, 0, getCountOfNodes(driver, "FieldsSet"))
 	require.Equal(t, 0, getCountOfNodes(driver, "TextCustomField"))
 }

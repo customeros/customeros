@@ -21,8 +21,8 @@ type TextCustomFieldService interface {
 	UpdateTextCustomFieldInContact(ctx context.Context, contactId string, entity *entity.TextCustomFieldEntity) (*entity.TextCustomFieldEntity, error)
 	UpdateTextCustomFieldInFieldsSet(ctx context.Context, contactId string, fieldsSetId string, entity *entity.TextCustomFieldEntity) (*entity.TextCustomFieldEntity, error)
 
-	Delete(ctx context.Context, contactId string, fieldName string) (bool, error)
-	DeleteById(ctx context.Context, contactId string, fieldId string) (bool, error)
+	DeleteByNameFromContact(ctx context.Context, contactId string, fieldName string) (bool, error)
+	DeleteByIdFromContact(ctx context.Context, contactId string, fieldId string) (bool, error)
 	DeleteByIdFromFieldsSet(ctx context.Context, contactId string, fieldsSetId string, fieldId string) (bool, error)
 
 	mapDbNodeToTextCustomFieldEntity(dbContactGroupNode dbtype.Node) *entity.TextCustomFieldEntity
@@ -233,14 +233,14 @@ func (s *textCustomPropertyService) UpdateTextCustomFieldInFieldsSet(ctx context
 	return s.mapDbNodeToTextCustomFieldEntity(queryResult.(dbtype.Node)), nil
 }
 
-func (s *textCustomPropertyService) Delete(ctx context.Context, contactId string, fieldName string) (bool, error) {
+func (s *textCustomPropertyService) DeleteByNameFromContact(ctx context.Context, contactId string, fieldName string) (bool, error) {
 	session := (*s.driver).NewSession(neo4j.SessionConfig{AccessMode: neo4j.AccessModeWrite})
 	defer session.Close()
 
 	queryResult, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
 		_, err := tx.Run(`
 			MATCH (c:Contact {id:$id})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}),
-                  (c:Contact {id:$id})-[:HAS_TEXT_PROPERTY]->(f:TextCustomField {name:$name})
+                  (c)-[:HAS_TEXT_PROPERTY]->(f:TextCustomField {name:$name})
             DETACH DELETE f
 			`,
 			map[string]any{
@@ -258,7 +258,7 @@ func (s *textCustomPropertyService) Delete(ctx context.Context, contactId string
 	return queryResult.(bool), nil
 }
 
-func (s *textCustomPropertyService) DeleteById(ctx context.Context, contactId string, fieldId string) (bool, error) {
+func (s *textCustomPropertyService) DeleteByIdFromContact(ctx context.Context, contactId string, fieldId string) (bool, error) {
 	session := (*s.driver).NewSession(neo4j.SessionConfig{AccessMode: neo4j.AccessModeWrite})
 	defer session.Close()
 

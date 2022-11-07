@@ -5,7 +5,6 @@ package resolver
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/openline-ai/openline-customer-os/customer-os-api/entity"
@@ -98,7 +97,7 @@ func (r *mutationResolver) UpdateTextCustomFieldInContact(ctx context.Context, c
 
 // RemoveTextCustomFieldFromContact is the resolver for the removeTextCustomFieldFromContact field.
 func (r *mutationResolver) RemoveTextCustomFieldFromContact(ctx context.Context, contactID string, fieldName string) (*model.BooleanResult, error) {
-	result, err := r.ServiceContainer.TextCustomFieldService.Delete(ctx, contactID, fieldName)
+	result, err := r.ServiceContainer.TextCustomFieldService.DeleteByNameFromContact(ctx, contactID, fieldName)
 	if err != nil {
 		graphql.AddErrorf(ctx, "Could not remove text field %s from contact %s", fieldName, contactID)
 		return nil, err
@@ -110,7 +109,7 @@ func (r *mutationResolver) RemoveTextCustomFieldFromContact(ctx context.Context,
 
 // RemoveTextCustomFieldFromContactByID is the resolver for the removeTextCustomFieldFromContactById field.
 func (r *mutationResolver) RemoveTextCustomFieldFromContactByID(ctx context.Context, contactID string, id string) (*model.BooleanResult, error) {
-	result, err := r.ServiceContainer.TextCustomFieldService.DeleteById(ctx, contactID, id)
+	result, err := r.ServiceContainer.TextCustomFieldService.DeleteByIdFromContact(ctx, contactID, id)
 	if err != nil {
 		graphql.AddErrorf(ctx, "Could not remove text field %s from contact %s", id, contactID)
 		return nil, err
@@ -132,12 +131,24 @@ func (r *mutationResolver) MergeFieldsSetToContact(ctx context.Context, contactI
 
 // UpdateFieldsSetInContact is the resolver for the updateFieldsSetInContact field.
 func (r *mutationResolver) UpdateFieldsSetInContact(ctx context.Context, contactID string, input model.FieldsSetUpdateInput) (*model.FieldsSet, error) {
-	panic(fmt.Errorf("not implemented: UpdateFieldsSetInContact - updateFieldsSetInContact"))
+	result, err := r.ServiceContainer.FieldsSetService.UpdateFieldsSetInContact(ctx, contactID, mapper.MapFieldsSetUpdateInputToEntity(&input))
+	if err != nil {
+		graphql.AddErrorf(ctx, "Could not update fields set %s in contact %s", input.ID, contactID)
+		return nil, err
+	}
+	return mapper.MapEntityToFieldsSet(result), nil
 }
 
 // RemoveFieldsSetFromContact is the resolver for the removeFieldsSetFromContact field.
 func (r *mutationResolver) RemoveFieldsSetFromContact(ctx context.Context, contactID string, id string) (*model.BooleanResult, error) {
-	panic(fmt.Errorf("not implemented: RemoveFieldsSetFromContact - removeFieldsSetFromContact"))
+	result, err := r.ServiceContainer.FieldsSetService.DeleteByIdFromContact(ctx, contactID, id)
+	if err != nil {
+		graphql.AddErrorf(ctx, "Could not remove fields set %s from contact %s", id, contactID)
+		return nil, err
+	}
+	return &model.BooleanResult{
+		Result: result,
+	}, nil
 }
 
 // MergeTextCustomFieldToFieldsSet is the resolver for the mergeTextCustomFieldToFieldsSet field.

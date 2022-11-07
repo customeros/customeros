@@ -1308,7 +1308,6 @@ input FieldsSetUpdateInput {
 
     mergeFieldsSetToContact(contactId : ID!, input: FieldsSetInput!): FieldsSet
     updateFieldsSetInContact(contactId : ID!, input: FieldsSetUpdateInput!): FieldsSet
-    #    alexb implement removing linked custom fields
     removeFieldsSetFromContact(contactId : ID!, id: ID!):BooleanResult!
 
     mergeTextCustomFieldToFieldsSet(contactId : ID!, fieldsSetId : ID!, input: TextCustomFieldInput!): TextCustomField!
