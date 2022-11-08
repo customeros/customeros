@@ -55,7 +55,7 @@ type Contact {
     User defined metadata appended to the contact record in customerOS.
      **Required.  If no values it returns an empty array.**
     """
-    textCustomFields: [TextCustomField!]! @goField(forceResolver: true)
+    CustomFields: [CustomField!]! @goField(forceResolver: true)
 
     """
     All phone numbers associated with a contact in customerOS.
@@ -130,7 +130,7 @@ input ContactInput {
     User defined metadata appended to contact.
     **Required.**
     """
-    textCustomFields: [TextCustomFieldInput!]
+    CustomFields: [CustomFieldInput!]
 
      "`companyName` and `jobTitle` of the contact if it has been associated with a company."
     company: CompanyInput

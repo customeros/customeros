@@ -13,7 +13,7 @@ type PhoneNumber {
     The phone number in e164 format. 
     **Required**
     """
-    number: String!
+    e164: String!
 
     """
     Defines the type of phone number.
@@ -38,7 +38,7 @@ input PhoneNumberInput {
     The phone number in e164 format. 
     **Required**
     """
-    number: String!
+    e164: String!
 
     """
     Defines the type of phone number.
@@ -69,7 +69,7 @@ input PhoneNumberUpdateInput {
     The phone number in e164 format. 
     **Required**
     """
-    number: String!
+    e164: String!
 
     """
     Defines the type of phone number.
