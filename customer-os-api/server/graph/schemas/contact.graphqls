@@ -67,7 +67,7 @@ type Contact {
     All email addresses assocaited with a contact in customerOS.
     **Required.  If no values it returns an empty array.**
     """
-    emails: [EmailInfo!] @goField(forceResolver: true)
+    emails: [Email!] @goField(forceResolver: true)
 
     fieldSets: [FieldSet!] @goField(forceResolver: true)
 }
@@ -136,7 +136,7 @@ input ContactInput {
     company: CompanyInput
     
     "An email addresses assocaited with the contact."
-    email: EmailInput
+    email: Email
 
     "A phone number associated with the contact."
     phoneNumber: PhoneNumberInput

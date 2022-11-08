@@ -1,23 +1,95 @@
-type EmailInfo {
+"""
+Describes an email address associated with a `Contact` in customerOS.
+**A `return` object.**
+"""
+type Email {
+    
+    """
+    The unique ID associated with the contact in customerOS. 
+    **Required**
+    """
     id: ID!
+
+    """
+    An email address assocaited with the contact in customerOS.
+    **Required.**
+    """
     email: String!
+
+    """
+    Describes the type of email address (WORK, PERSONAL, etc).
+    **Required.**
+    """
     label: EmailLabel!
+
+    """
+    Identifies whether the email address is primary or not.
+    **Required.**
+    """
     primary: Boolean!
 }
 
+"""
+Describes an email address associated with a `Contact` in customerOS.
+**A `create` object.**
+"""
 input EmailInput {
+    
+    """
+    An email address assocaited with the contact in customerOS.
+    **Required.**
+    """
     email: String!
+
+    """
+    Describes the type of email address (WORK, PERSONAL, etc).
+    **Required.**
+    """
     label: EmailLabel!
+
+    """
+    Identifies whether the email address is primary or not.
+    **Required.**
+    """
     primary: Boolean
 }
 
+"""
+Describes an email address associated with a `Contact` in customerOS.
+**An `update` object.**
+"""
 input EmailUpdateInput {
+    
+    """
+    An email address assocaited with the contact in customerOS.
+    **Required.**
+    """
     id: ID!
+
+    """
+    An email address assocaited with the contact in customerOS.
+    **Required.**
+    """
     email: String!
+
+    """
+    Describes the type of email address (WORK, PERSONAL, etc).
+    **Required.**
+    """
     label: EmailLabel!
+
+    """
+    Identifies whether the email address is primary or not.
+    **Required.**
+    """
     primary: Boolean
 }
 
+
+"""
+Describes the type of email address (WORK, PERSONAL, etc).
+**A `return` object.
+"""
 enum EmailLabel {
     MAIN
     WORK
