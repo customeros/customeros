@@ -72,39 +72,39 @@ func assertRawResponseSuccess(t *testing.T, response *client.Response, err error
 	require.Nil(t, response.Errors)
 }
 
-func TestQueryResolver_TenantUsers(t *testing.T) {
+func TestQueryResolver_Users(t *testing.T) {
 	defer setupTestCase()(t)
 	tenant := "openline"
 	otherTenant := "other"
 	createTenant(driver, tenant)
 	createTenant(driver, otherTenant)
-	createTenantUser(driver, tenant, entity.TenantUserEntity{
+	createUser(driver, tenant, entity.UserEntity{
 		FirstName: "first",
 		LastName:  "last",
 		Email:     "test@openline.ai",
 	})
-	createTenantUser(driver, otherTenant, entity.TenantUserEntity{
+	createUser(driver, otherTenant, entity.UserEntity{
 		FirstName: "otherFirst",
 		LastName:  "otherLast",
 		Email:     "otherEmail",
 	})
 
-	rawResponse, err := c.RawPost(getQuery("get_tenant_users"))
+	rawResponse, err := c.RawPost(getQuery("get_users"))
 	assertRawResponseSuccess(t, rawResponse, err)
 
-	var tenantUsers struct {
-		TenantUsers model.TenantUsersPage
+	var users struct {
+		Users model.UserPage
 	}
 
-	err = decode.Decode(rawResponse.Data.(map[string]any), &tenantUsers)
+	err = decode.Decode(rawResponse.Data.(map[string]any), &users)
 	require.Nil(t, err)
-	require.NotNil(t, tenantUsers)
-	require.Equal(t, 1, tenantUsers.TenantUsers.TotalPages)
-	require.Equal(t, int64(1), tenantUsers.TenantUsers.TotalElements)
-	require.Equal(t, "first", tenantUsers.TenantUsers.Content[0].FirstName)
-	require.Equal(t, "last", tenantUsers.TenantUsers.Content[0].LastName)
-	require.Equal(t, "test@openline.ai", tenantUsers.TenantUsers.Content[0].Email)
-	require.NotNil(t, tenantUsers.TenantUsers.Content[0].CreatedAt)
+	require.NotNil(t, users)
+	require.Equal(t, 1, users.Users.TotalPages)
+	require.Equal(t, int64(1), users.Users.TotalElements)
+	require.Equal(t, "first", users.Users.Content[0].FirstName)
+	require.Equal(t, "last", users.Users.Content[0].LastName)
+	require.Equal(t, "test@openline.ai", users.Users.Content[0].Email)
+	require.NotNil(t, users.Users.Content[0].CreatedAt)
 }
 
 func TestQueryResolver_ContactByEmail(t *testing.T) {
@@ -140,7 +140,7 @@ func TestQueryResolver_ContactByPhone(t *testing.T) {
 	addPhoneNumberToContact(driver, contactId1, "+1234567890", false, "OTHER")
 	addPhoneNumberToContact(driver, contactId2, "+1234567890", true, "MAIN")
 
-	rawResponse, err := c.RawPost(getQuery("get_contact_by_phone"), client.Var("number", "+1234567890"))
+	rawResponse, err := c.RawPost(getQuery("get_contact_by_phone"), client.Var("e164", "+1234567890"))
 	assertRawResponseSuccess(t, rawResponse, err)
 
 	var contact struct {
@@ -153,26 +153,26 @@ func TestQueryResolver_ContactByPhone(t *testing.T) {
 	require.Equal(t, contactId1, contact.ContactByPhone.ID)
 }
 
-func TestMutationResolver_CreateTenantUser(t *testing.T) {
+func TestMutationResolver_CreateUser(t *testing.T) {
 	defer setupTestCase()(t)
 	createTenant(driver, "openline")
 	createTenant(driver, "other")
 
-	rawResponse, err := c.RawPost(getQuery("create_tenant_user"))
+	rawResponse, err := c.RawPost(getQuery("create_user"))
 	assertRawResponseSuccess(t, rawResponse, err)
 
-	var tenantUser struct {
-		CreateTenantUser model.TenantUser
+	var user struct {
+		CreateUser model.User
 	}
 
-	err = decode.Decode(rawResponse.Data.(map[string]any), &tenantUser)
+	err = decode.Decode(rawResponse.Data.(map[string]any), &user)
 	require.Nil(t, err)
-	require.NotNil(t, tenantUser)
-	require.Equal(t, "first", tenantUser.CreateTenantUser.FirstName)
-	require.Equal(t, "last", tenantUser.CreateTenantUser.LastName)
-	require.Equal(t, "user@openline.ai", tenantUser.CreateTenantUser.Email)
-	require.NotNil(t, tenantUser.CreateTenantUser.CreatedAt)
-	require.NotNil(t, tenantUser.CreateTenantUser.ID)
+	require.NotNil(t, user)
+	require.Equal(t, "first", user.CreateUser.FirstName)
+	require.Equal(t, "last", user.CreateUser.LastName)
+	require.Equal(t, "user@openline.ai", user.CreateUser.Email)
+	require.NotNil(t, user.CreateUser.CreatedAt)
+	require.NotNil(t, user.CreateUser.ID)
 }
 
 func TestMutationResolver_CreateContact(t *testing.T) {
@@ -213,13 +213,13 @@ func TestMutationResolver_CreateContact(t *testing.T) {
 
 	require.Equal(t, 1, len(contact.CreateContact.PhoneNumbers))
 	require.NotNil(t, contact.CreateContact.PhoneNumbers[0].ID)
-	require.Equal(t, "+1234567890", contact.CreateContact.PhoneNumbers[0].Number)
+	require.Equal(t, "+1234567890", contact.CreateContact.PhoneNumbers[0].E164)
 	require.Equal(t, "MOBILE", contact.CreateContact.PhoneNumbers[0].Label.String())
 	require.Equal(t, true, contact.CreateContact.PhoneNumbers[0].Primary)
 
-	require.Equal(t, 1, len(contact.CreateContact.CompanyPositions))
-	require.Equal(t, "abc", contact.CreateContact.CompanyPositions[0].CompanyName)
-	require.Equal(t, "CTO", *contact.CreateContact.CompanyPositions[0].JobTitle)
+	require.Equal(t, 1, len(contact.CreateContact.Companies))
+	require.Equal(t, "abc", contact.CreateContact.Companies[0].CompanyName)
+	require.Equal(t, "CTO", *contact.CreateContact.Companies[0].JobTitle)
 
 	require.Equal(t, 0, len(contact.CreateContact.Groups))
 
@@ -376,7 +376,7 @@ func TestMutationResolver_RemoveTextCustomFieldFromFieldSetByID(t *testing.T) {
 	assertRawResponseSuccess(t, rawResponse, err)
 
 	var textField struct {
-		RemoveTextCustomFieldFromFieldSetByID model.BooleanResult
+		RemoveTextCustomFieldFromFieldSetByID model.Result
 	}
 
 	err = decode.Decode(rawResponse.Data.(map[string]any), &textField)
@@ -406,7 +406,7 @@ func TestMutationResolver_RemoveFieldSetFromContact(t *testing.T) {
 	assertRawResponseSuccess(t, rawResponse, err)
 
 	var textField struct {
-		RemoveFieldSetFromContact model.BooleanResult
+		RemoveFieldSetFromContact model.Result
 	}
 
 	err = decode.Decode(rawResponse.Data.(map[string]any), &textField)

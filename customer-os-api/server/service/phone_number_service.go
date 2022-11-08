@@ -15,7 +15,7 @@ type PhoneNumberService interface {
 	FindAllForContact(ctx context.Context, obj *model.Contact) (*entity.PhoneNumberEntities, error)
 	MergePhoneNumberToContact(ctx context.Context, id string, toEntity *entity.PhoneNumberEntity) (*entity.PhoneNumberEntity, error)
 	UpdatePhoneNumberInContact(ctx context.Context, id string, toEntity *entity.PhoneNumberEntity) (*entity.PhoneNumberEntity, error)
-	Delete(ctx context.Context, contactId string, phoneNumber string) (bool, error)
+	Delete(ctx context.Context, contactId string, e164 string) (bool, error)
 	DeleteById(ctx context.Context, contactId string, phoneId string) (bool, error)
 }
 
@@ -68,21 +68,21 @@ func (s *phoneNumberService) MergePhoneNumberToContact(ctx context.Context, cont
 
 	queryResult, err := session.WriteTransaction(func(tx neo4j.Transaction) (interface{}, error) {
 		if entity.Primary == true {
-			err := setOtherContactPhoneNumbersNonPrimaryInTx(ctx, contactId, entity.Number, tx)
+			err := setOtherContactPhoneNumbersNonPrimaryInTx(ctx, contactId, entity.E164, tx)
 			if err != nil {
 				return nil, err
 			}
 		}
 		txResult, err := tx.Run(`
 			MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant})
-			MERGE (c)-[r:CALLED_AT]->(p:PhoneNumber {number: $number})
+			MERGE (c)-[r:CALLED_AT]->(p:PhoneNumber {e164: $e164})
             ON CREATE SET p.label=$label, r.primary=$primary, p.id=randomUUID()
             ON MATCH SET p.label=$label, r.primary=$primary
 			RETURN p, r`,
 			map[string]interface{}{
 				"tenant":    common.GetContext(ctx).Tenant,
 				"contactId": contactId,
-				"number":    entity.Number,
+				"e164":      entity.E164,
 				"label":     entity.Label,
 				"primary":   entity.Primary,
 			})
@@ -109,7 +109,7 @@ func (s *phoneNumberService) UpdatePhoneNumberInContact(ctx context.Context, con
 		txResult, err := tx.Run(`
 			MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}),
 				(c)-[r:CALLED_AT]->(p:PhoneNumber {id: $phoneId})
-            SET p.number=$number,
+            SET p.e164=$e164,
 				p.label=$label,
 				r.primary=$primary
 			RETURN p, r`,
@@ -117,7 +117,7 @@ func (s *phoneNumberService) UpdatePhoneNumberInContact(ctx context.Context, con
 				"tenant":    common.GetContext(ctx).Tenant,
 				"contactId": contactId,
 				"phoneId":   entity.Id,
-				"number":    entity.Number,
+				"e164":      entity.E164,
 				"label":     entity.Label,
 				"primary":   entity.Primary,
 			})
@@ -126,7 +126,7 @@ func (s *phoneNumberService) UpdatePhoneNumberInContact(ctx context.Context, con
 			return nil, err
 		}
 		if entity.Primary == true {
-			err := setOtherContactPhoneNumbersNonPrimaryInTx(ctx, contactId, entity.Number, tx)
+			err := setOtherContactPhoneNumbersNonPrimaryInTx(ctx, contactId, entity.E164, tx)
 			if err != nil {
 				return nil, err
 			}
@@ -147,46 +147,46 @@ func addPhoneNumberToContactInTx(ctx context.Context, contactId string, input en
 			MATCH (c:Contact {id:$contactId})
 			MERGE (p:PhoneNumber {
 				id: randomUUID(),
-				number: $number,
+				e164: $e164,
 				label: $label
 			})<-[:CALLED_AT {primary:$primary}]-(c)
 			RETURN p`,
 		map[string]interface{}{
 			"contactId": contactId,
-			"number":    input.Number,
+			"e164":      input.E164,
 			"label":     input.Label,
 			"primary":   input.Primary,
 		})
 	return err
 }
 
-func setOtherContactPhoneNumbersNonPrimaryInTx(ctx context.Context, contactId string, number string, tx neo4j.Transaction) error {
+func setOtherContactPhoneNumbersNonPrimaryInTx(ctx context.Context, contactId string, e164 string, tx neo4j.Transaction) error {
 	_, err := tx.Run(`
 			MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}),
 				 (c)-[r:CALLED_AT]->(p:PhoneNumber)
-			WHERE p.number <> $number
+			WHERE p.e164 <> $e164
             SET r.primary=false`,
 		map[string]interface{}{
 			"tenant":    common.GetContext(ctx).Tenant,
 			"contactId": contactId,
-			"number":    number,
+			"e164":      e164,
 		})
 	return err
 }
 
-func (s *phoneNumberService) Delete(ctx context.Context, contactId string, phoneNumber string) (bool, error) {
+func (s *phoneNumberService) Delete(ctx context.Context, contactId string, e164 string) (bool, error) {
 	session := (*s.driver).NewSession(neo4j.SessionConfig{AccessMode: neo4j.AccessModeWrite})
 	defer session.Close()
 
 	queryResult, err := session.WriteTransaction(func(tx neo4j.Transaction) (interface{}, error) {
 		_, err := tx.Run(`
 			MATCH (c:Contact {id:$id})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}),
-                  (c:Contact {id:$id})-[:CALLED_AT]->(p:PhoneNumber {number:$number})
+                  (c:Contact {id:$id})-[:CALLED_AT]->(p:PhoneNumber {e164:$e164})
             DETACH DELETE p
 			`,
 			map[string]interface{}{
 				"id":     contactId,
-				"number": phoneNumber,
+				"e164":   e164,
 				"tenant": common.GetContext(ctx).Tenant,
 			})
 
@@ -227,9 +227,9 @@ func (s *phoneNumberService) DeleteById(ctx context.Context, contactId string, p
 func (s *phoneNumberService) mapDbNodeToPhoneNumberEntity(node dbtype.Node) *entity.PhoneNumberEntity {
 	props := utils.GetPropsFromNode(node)
 	result := entity.PhoneNumberEntity{
-		Id:     utils.GetStringPropOrEmpty(props, "id"),
-		Number: utils.GetStringPropOrEmpty(props, "number"),
-		Label:  utils.GetStringPropOrEmpty(props, "label"),
+		Id:    utils.GetStringPropOrEmpty(props, "id"),
+		E164:  utils.GetStringPropOrEmpty(props, "e164"),
+		Label: utils.GetStringPropOrEmpty(props, "label"),
 	}
 	return &result
 }

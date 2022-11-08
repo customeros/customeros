@@ -2,7 +2,7 @@
 Describes a custom, user-defined field associated with a `Contact`.
 **A `return` object.**
 """
-type CustomField {
+type TextCustomField {
     
     """
     The unique ID associated with the custom field. 
@@ -27,7 +27,7 @@ type CustomField {
 Describes a custom, user-defined field associated with a `Contact`.
 **A `create` object.**
 """
-input CustomFieldInput {
+input TextCustomFieldInput {
     
     """
     The name of the custom field.
@@ -46,7 +46,7 @@ input CustomFieldInput {
 Describes a custom, user-defined field associated with a `Contact`.
 **An `update` object.**
 """
-input CustomFieldUpdateInput {
+input TextCustomFieldUpdateInput {
     
     """
     The unique ID associated with the custom field. 

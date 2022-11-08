@@ -1,5 +1,5 @@
-query GetContactByPhone($number: String!){
-  contactByPhone(number: $number) {
+query GetContactByPhone($e164: String!){
+  contactByPhone(e164: $e164) {
     id
   }
 }

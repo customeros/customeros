@@ -13,14 +13,14 @@ import (
 	"github.com/openline-ai/openline-customer-os/customer-os-api/mapper"
 )
 
-// TenantUsers is the resolver for the tenantUsers field.
-func (r *queryResolver) TenantUsers(ctx context.Context, paginationFilter *model.PaginationFilter) (*model.TenantUsersPage, error) {
+// Users is the resolver for the users field.
+func (r *queryResolver) Users(ctx context.Context, paginationFilter *model.PaginationFilter) (*model.UserPage, error) {
 	if paginationFilter == nil {
 		paginationFilter = &model.PaginationFilter{Page: 0, Limit: 0}
 	}
-	paginatedResult, err := r.ServiceContainer.TenantUserService.FindAll(ctx, paginationFilter.Page, paginationFilter.Limit)
-	return &model.TenantUsersPage{
-		Content:       mapper.MapEntitiesToTenantUsers(paginatedResult.Rows.(*entity.TenantUserEntities)),
+	paginatedResult, err := r.ServiceContainer.UserService.FindAll(ctx, paginationFilter.Page, paginationFilter.Limit)
+	return &model.UserPage{
+		Content:       mapper.MapEntitiesToUsers(paginatedResult.Rows.(*entity.UserEntities)),
 		TotalPages:    paginatedResult.TotalPages,
 		TotalElements: paginatedResult.TotalRows,
 	}, err
@@ -60,10 +60,10 @@ func (r *queryResolver) ContactByEmail(ctx context.Context, email string) (*mode
 }
 
 // ContactByPhone is the resolver for the contactByPhone field.
-func (r *queryResolver) ContactByPhone(ctx context.Context, number string) (*model.Contact, error) {
-	contactEntity, err := r.ServiceContainer.ContactService.FindContactByPhoneNumber(ctx, number)
+func (r *queryResolver) ContactByPhone(ctx context.Context, e164 string) (*model.Contact, error) {
+	contactEntity, err := r.ServiceContainer.ContactService.FindContactByPhoneNumber(ctx, e164)
 	if err != nil || contactEntity == nil {
-		graphql.AddErrorf(ctx, "Contact with phone number %s not identified", number)
+		graphql.AddErrorf(ctx, "Contact with phone number %s not identified", e164)
 		return nil, err
 	}
 	return mapper.MapEntityToContact(contactEntity), nil
@@ -76,12 +76,12 @@ func (r *queryResolver) ContactGroup(ctx context.Context, id string) (*model.Con
 }
 
 // ContactGroups is the resolver for the contactGroups field.
-func (r *queryResolver) ContactGroups(ctx context.Context, paginationFilter *model.PaginationFilter) (*model.ContactGroupsPage, error) {
+func (r *queryResolver) ContactGroups(ctx context.Context, paginationFilter *model.PaginationFilter) (*model.ContactGroupPage, error) {
 	if paginationFilter == nil {
 		paginationFilter = &model.PaginationFilter{Page: 0, Limit: 0}
 	}
 	paginatedResult, err := r.ServiceContainer.ContactGroupService.FindAll(ctx, paginationFilter.Page, paginationFilter.Limit)
-	return &model.ContactGroupsPage{
+	return &model.ContactGroupPage{
 		Content:       mapper.MapEntitiesToContactGroups(paginatedResult.Rows.(*entity.ContactGroupEntities)),
 		TotalPages:    paginatedResult.TotalPages,
 		TotalElements: paginatedResult.TotalRows,

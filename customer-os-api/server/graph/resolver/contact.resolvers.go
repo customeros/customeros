@@ -5,14 +5,13 @@ package resolver
 
 import (
 	"context"
-
 	"github.com/openline-ai/openline-customer-os/customer-os-api/graph/generated"
 	"github.com/openline-ai/openline-customer-os/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/customer-os-api/mapper"
 )
 
-// CompanyPositions is the resolver for the companyPositions field.
-func (r *contactResolver) CompanyPositions(ctx context.Context, obj *model.Contact) ([]*model.CompanyPosition, error) {
+// Companies is the resolver for the companies field.
+func (r *contactResolver) Companies(ctx context.Context, obj *model.Contact) ([]*model.Company, error) {
 	companyPositionEntities, err := r.ServiceContainer.CompanyPositionService.FindAllForContact(ctx, obj)
 	return mapper.MapEntitiesToCompanyPositiones(companyPositionEntities), err
 }
@@ -23,22 +22,22 @@ func (r *contactResolver) Groups(ctx context.Context, obj *model.Contact) ([]*mo
 	return mapper.MapEntitiesToContactGroups(contactGroupEntities), err
 }
 
-// TextCustomFields is the resolver for the textCustomFields field.
-func (r *contactResolver) TextCustomFields(ctx context.Context, obj *model.Contact) ([]*model.TextCustomField, error) {
-	textCustomFieldEntities, err := r.ServiceContainer.TextCustomFieldService.FindAllForContact(ctx, obj)
-	return mapper.MapEntitiesToTextCustomFields(textCustomFieldEntities), err
-}
-
 // PhoneNumbers is the resolver for the phoneNumbers field.
-func (r *contactResolver) PhoneNumbers(ctx context.Context, obj *model.Contact) ([]*model.PhoneNumberInfo, error) {
+func (r *contactResolver) PhoneNumbers(ctx context.Context, obj *model.Contact) ([]*model.PhoneNumber, error) {
 	phoneNumberEntities, err := r.ServiceContainer.PhoneNumberService.FindAllForContact(ctx, obj)
 	return mapper.MapEntitiesToPhoneNumbers(phoneNumberEntities), err
 }
 
 // Emails is the resolver for the emails field.
-func (r *contactResolver) Emails(ctx context.Context, obj *model.Contact) ([]*model.EmailInfo, error) {
+func (r *contactResolver) Emails(ctx context.Context, obj *model.Contact) ([]*model.Email, error) {
 	emailEntities, err := r.ServiceContainer.EmailService.FindAllForContact(ctx, obj)
 	return mapper.MapEntitiesToEmails(emailEntities), err
+}
+
+// TextCustomFields is the resolver for the textCustomFields field.
+func (r *contactResolver) TextCustomFields(ctx context.Context, obj *model.Contact) ([]*model.TextCustomField, error) {
+	textCustomFieldEntities, err := r.ServiceContainer.TextCustomFieldService.FindAllForContact(ctx, obj)
+	return mapper.MapEntitiesToTextCustomFields(textCustomFieldEntities), err
 }
 
 // FieldSets is the resolver for the fieldSets field.

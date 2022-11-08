@@ -1,5 +1,5 @@
 type Query {
-  tenantUsers(paginationFilter: PaginationFilter): TenantUsersPage!
+  users(paginationFilter: PaginationFilter): UserPage!
 
   """
   Fetch a single contact from customerOS by contact ID.
@@ -17,7 +17,7 @@ type Query {
   
   contactByEmail(email: String!) :Contact!
   
-  contactByPhone(number: String!) :Contact!
+  contactByPhone(e164: String!) :Contact!
 
   """
   Fetch a specific contact group associated with a `Contact` in customerOS

@@ -6,13 +6,13 @@ import (
 
 type PhoneNumberEntity struct {
 	Id      string
-	Number  string
+	E164    string
 	Label   string
 	Primary bool
 }
 
 func (phone PhoneNumberEntity) ToString() string {
-	return fmt.Sprintf("id: %s\nnumber: %s\nlabel: %s", phone.Id, phone.Number, phone.Label)
+	return fmt.Sprintf("id: %s\ne164: %s\nlabel: %s", phone.Id, phone.E164, phone.Label)
 }
 
 type PhoneNumberEntities []PhoneNumberEntity

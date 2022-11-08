@@ -9,155 +9,253 @@ import (
 	"time"
 )
 
-type PagedResult interface {
-	IsPagedResult()
+// Describes the number of pages and total elements included in a query response.
+// **A `response` object.**
+type Pages interface {
+	IsPages()
+	// The total number of pages included in the query response.
+	// **Required.**
 	GetTotalPages() int
+	// The total number of elements included in the query response.
+	// **Required.**
 	GetTotalElements() int64
 }
 
-type BooleanResult struct {
-	Result bool `json:"result"`
+// Describes the relationship a Contact has with a Company.
+// **A `return` object**
+type Company struct {
+	// The name of the company associated with a Contact.
+	// **Required.**
+	CompanyName string `json:"companyName"`
+	// The Contact's job title.
+	JobTitle *string `json:"jobTitle"`
 }
 
-type CompanyPosition struct {
-	CompanyName string  `json:"companyName"`
-	JobTitle    *string `json:"jobTitle"`
-}
-
-type CompanyPositionInput struct {
-	CompanyName string  `json:"companyName"`
-	JobTitle    *string `json:"jobTitle"`
+// Describes the relationship a Contact has with a Company.
+// **A `create` object**
+type CompanyInput struct {
+	// The name of the company associated with a Contact.
+	// **Required.**
+	CompanyName string `json:"companyName"`
+	// The Contact's job title.
+	JobTitle *string `json:"jobTitle"`
 }
 
 // A contact represents an individual in customerOS.
+// **A `response` object.**
 type Contact struct {
 	// The unique ID associated with the contact in customerOS.
+	// **Required**
 	ID string `json:"id"`
 	// The title associate with the contact in customerOS.
 	Title *PersonTitle `json:"title"`
 	// The first name of the contact in customerOS.
+	// **Required**"
 	FirstName string `json:"firstName"`
 	// The last name of the contact in customerOS.
+	// **Required**
 	LastName string `json:"lastName"`
 	// An ISO8601 timestamp recording when the contact was created in customerOS.
+	// **Required**
 	CreatedAt time.Time `json:"createdAt"`
 	// A user-defined label applied against a contact in customerOS.
 	Label *string `json:"label"`
 	// User-defined notes associated with a contact in customerOS.
 	Notes *string `json:"notes"`
-	// User-defined [should this be a defined type?]
+	// User-defined field that defines the relationship type the contact has with your business.  `Customer`, `Partner`, `Lead` are examples.
 	ContactType *string `json:"contactType"`
 	// `companyName` and `jobTitle` of the contact if it has been associated with a company.
-	CompanyPositions []*CompanyPosition `json:"companyPositions"`
+	// **Required.  If no values it returns an empty array.**
+	Companies []*Company `json:"companies"`
 	// Identifies any contact groups the contact is associated with.
+	//  **Required.  If no values it returns an empty array.**
 	Groups []*ContactGroup `json:"groups"`
-	// User defined metadata appended to the contact record in customerOS.
-	TextCustomFields []*TextCustomField `json:"textCustomFields"`
 	// All phone numbers associated with a contact in customerOS.
-	PhoneNumbers []*PhoneNumberInfo `json:"phoneNumbers"`
+	// **Required.  If no values it returns an empty array.**
+	PhoneNumbers []*PhoneNumber `json:"phoneNumbers"`
 	// All email addresses assocaited with a contact in customerOS.
-	Emails    []*EmailInfo `json:"emails"`
-	FieldSets []*FieldSet  `json:"fieldSets"`
+	// **Required.  If no values it returns an empty array.**
+	Emails []*Email `json:"emails"`
+	// User defined metadata appended to the contact record in customerOS.
+	// **Required.  If no values it returns an empty array.**
+	TextCustomFields []*TextCustomField `json:"textCustomFields"`
+	FieldSets        []*FieldSet        `json:"fieldSets"`
 }
 
+// A collection of groups that a Contact belongs to.  Groups are user-defined entities.
+// **A `return` object.**
 type ContactGroup struct {
-	ID   string `json:"id"`
+	// The unique ID associated with the `ContactGroup` in customerOS.
+	// **Required**
+	ID string `json:"id"`
+	// The name of the `ContactGroup`.
+	// **Required**
 	Name string `json:"name"`
 }
 
+// Create a groups that can be associated with a `Contact` in customerOS.
+// **A `create` object.**
 type ContactGroupInput struct {
+	// The name of the `ContactGroup`.
+	// **Required**
 	Name string `json:"name"`
 }
 
+// Specifies how many pages of `ContactGroup` information has been returned in the query response.
+// **A `response` object.**
+type ContactGroupPage struct {
+	// A collection of groups that a Contact belongs to.  Groups are user-defined entities.
+	// **Required.  If no values it returns an empty array.**
+	Content []*ContactGroup `json:"content"`
+	// Total number of pages in the query response.
+	// **Required.**
+	TotalPages int `json:"totalPages"`
+	// Total number of elements in the query response.
+	// **Required.**
+	TotalElements int64 `json:"totalElements"`
+}
+
+func (ContactGroupPage) IsPages() {}
+
+// The total number of pages included in the query response.
+// **Required.**
+func (this ContactGroupPage) GetTotalPages() int { return this.TotalPages }
+
+// The total number of elements included in the query response.
+// **Required.**
+func (this ContactGroupPage) GetTotalElements() int64 { return this.TotalElements }
+
+// Update a group that can be associated with a `Contact` in customerOS.
+// **A `update` object.**
 type ContactGroupUpdateInput struct {
-	ID   string `json:"id"`
+	// The unique ID associated with the `ContactGroup` in customerOS.
+	// **Required**
+	ID string `json:"id"`
+	// The name of the `ContactGroup`.
+	// **Required**
 	Name string `json:"name"`
 }
 
-type ContactGroupsPage struct {
-	Content       []*ContactGroup `json:"content"`
-	TotalPages    int             `json:"totalPages"`
-	TotalElements int64           `json:"totalElements"`
-}
-
-func (ContactGroupsPage) IsPagedResult()               {}
-func (this ContactGroupsPage) GetTotalPages() int      { return this.TotalPages }
-func (this ContactGroupsPage) GetTotalElements() int64 { return this.TotalElements }
-
-// An individual that you would like to add to customerOS.
+// Create an individual in customerOS.
+// **A `create` object.**
 type ContactInput struct {
 	// The title of the contact.
 	Title *PersonTitle `json:"title"`
 	// The first name of the contact.
+	// **Required.**
 	FirstName string `json:"firstName"`
 	// The last name of the contact.
+	// **Required.**
 	LastName string `json:"lastName"`
 	// A user-defined label attached to contact.
 	Label *string `json:"label"`
 	// User-defined notes associated with contact.
 	Notes *string `json:"notes"`
-	// User-defined [should this be a defined type?]
+	// User-defined field that defines the relationship type the contact has with your business.  `Customer`, `Partner`, `Lead` are examples.
 	ContactType *string `json:"contactType"`
 	// User defined metadata appended to contact.
+	// **Required.**
 	TextCustomFields []*TextCustomFieldInput `json:"textCustomFields"`
-	// The job title of the contact.
-	CompanyPosition *CompanyPositionInput `json:"companyPosition"`
-	// An email addresses assocaited with the contact.
+	// `companyName` and `jobTitle` of the contact if it has been associated with a company.
+	Company *CompanyInput `json:"company"`
+	// An email addresses associted with the contact.
 	Email *EmailInput `json:"email"`
 	// A phone number associated with the contact.
 	PhoneNumber *PhoneNumberInput `json:"phoneNumber"`
 }
 
 // Updates data fields associated with an existing customer record in customerOS.
+// **An `update` object.**
 type ContactUpdateInput struct {
 	// The unique ID associated with the contact in customerOS.
+	// **Required.**
 	ID string `json:"id"`
 	// The title associate with the contact in customerOS.
 	Title *PersonTitle `json:"title"`
 	// The first name of the contact in customerOS.
+	// **Required.**
 	FirstName string `json:"firstName"`
 	// The last name of the contact in customerOS.
+	// **Required.**
 	LastName string `json:"lastName"`
 	// A user-defined label applied against a contact in customerOS.
 	Label *string `json:"label"`
 	// User-defined notes associated with contact.
 	Notes *string `json:"notes"`
-	// User-defined [should this be a defined type?]
+	// User-defined field that defines the relationship type the contact has with your business.  `Customer`, `Partner`, `Lead` are examples.
 	ContactType *string `json:"contactType"`
 }
 
 // Specifies how many pages of contact information has been returned in the query response.
+// **A `response` object.**
 type ContactsPage struct {
 	// A contact entity in customerOS.
+	// **Required.  If no values it returns an empty array.**
 	Content []*Contact `json:"content"`
 	// Total number of pages in the query response.
+	// **Required.**
 	TotalPages int `json:"totalPages"`
 	// Total number of elements in the query response.
+	// **Required.**
 	TotalElements int64 `json:"totalElements"`
 }
 
-func (ContactsPage) IsPagedResult()               {}
-func (this ContactsPage) GetTotalPages() int      { return this.TotalPages }
+func (ContactsPage) IsPages() {}
+
+// The total number of pages included in the query response.
+// **Required.**
+func (this ContactsPage) GetTotalPages() int { return this.TotalPages }
+
+// The total number of elements included in the query response.
+// **Required.**
 func (this ContactsPage) GetTotalElements() int64 { return this.TotalElements }
 
-type EmailInfo struct {
-	ID      string     `json:"id"`
-	Email   string     `json:"email"`
-	Label   EmailLabel `json:"label"`
-	Primary bool       `json:"primary"`
+// Describes an email address associated with a `Contact` in customerOS.
+// **A `return` object.**
+type Email struct {
+	// The unique ID associated with the contact in customerOS.
+	// **Required**
+	ID string `json:"id"`
+	// An email address assocaited with the contact in customerOS.
+	// **Required.**
+	Email string `json:"email"`
+	// Describes the type of email address (WORK, PERSONAL, etc).
+	// **Required.**
+	Label EmailLabel `json:"label"`
+	// Identifies whether the email address is primary or not.
+	// **Required.**
+	Primary bool `json:"primary"`
 }
 
+// Describes an email address associated with a `Contact` in customerOS.
+// **A `create` object.**
 type EmailInput struct {
-	Email   string     `json:"email"`
-	Label   EmailLabel `json:"label"`
-	Primary *bool      `json:"primary"`
+	// An email address assocaited with the contact in customerOS.
+	// **Required.**
+	Email string `json:"email"`
+	// Describes the type of email address (WORK, PERSONAL, etc).
+	// **Required.**
+	Label EmailLabel `json:"label"`
+	// Identifies whether the email address is primary or not.
+	// **Required.**
+	Primary *bool `json:"primary"`
 }
 
+// Describes an email address associated with a `Contact` in customerOS.
+// **An `update` object.**
 type EmailUpdateInput struct {
-	ID      string     `json:"id"`
-	Email   string     `json:"email"`
-	Label   EmailLabel `json:"label"`
-	Primary *bool      `json:"primary"`
+	// An email address assocaited with the contact in customerOS.
+	// **Required.**
+	ID string `json:"id"`
+	// An email address assocaited with the contact in customerOS.
+	// **Required.**
+	Email string `json:"email"`
+	// Describes the type of email address (WORK, PERSONAL, etc).
+	// **Required.**
+	Label EmailLabel `json:"label"`
+	// Identifies whether the email address is primary or not.
+	// **Required.**
+	Primary *bool `json:"primary"`
 }
 
 type FieldSet struct {
@@ -178,72 +276,171 @@ type FieldSetUpdateInput struct {
 	Name string `json:"name"`
 }
 
+// If provided as part of the request, results will be filtered down to the `page` and `limit` specified.
 type PaginationFilter struct {
-	Page  int `json:"page"`
+	// The results page to return in the response.
+	// **Required.**
+	Page int `json:"page"`
+	// The maximum number of results in the response.
+	// **Required.**
 	Limit int `json:"limit"`
 }
 
-type PhoneNumberInfo struct {
-	ID      string     `json:"id"`
-	Number  string     `json:"number"`
-	Label   PhoneLabel `json:"label"`
-	Primary bool       `json:"primary"`
+// Describes a phone number associated with a `Contact` in customerOS.
+// **A `return` object.**
+type PhoneNumber struct {
+	// The unique ID associated with the phone number.
+	// **Required**
+	ID string `json:"id"`
+	// The phone number in e164 format.
+	// **Required**
+	E164 string `json:"e164"`
+	// Defines the type of phone number.
+	// **Required**
+	Label PhoneNumberLabel `json:"label"`
+	// Determines if the phone number is primary or not.
+	// **Required**
+	Primary bool `json:"primary"`
 }
 
+// Describes a phone number associated with a `Contact` in customerOS.
+// **A `create` object.**
 type PhoneNumberInput struct {
-	Number  string     `json:"number"`
-	Label   PhoneLabel `json:"label"`
-	Primary *bool      `json:"primary"`
+	// The phone number in e164 format.
+	// **Required**
+	E164 string `json:"e164"`
+	// Defines the type of phone number.
+	// **Required**
+	Label PhoneNumberLabel `json:"label"`
+	// Determines if the phone number is primary or not.
+	// **Required**
+	Primary *bool `json:"primary"`
 }
 
+// Describes a phone number associated with a `Contact` in customerOS.
+// **An `update` object.**
 type PhoneNumberUpdateInput struct {
-	ID      string     `json:"id"`
-	Number  string     `json:"number"`
-	Label   PhoneLabel `json:"label"`
-	Primary *bool      `json:"primary"`
+	// The unique ID associated with the phone number.
+	// **Required**
+	ID string `json:"id"`
+	// The phone number in e164 format.
+	// **Required**
+	E164 string `json:"e164"`
+	// Defines the type of phone number.
+	// **Required**
+	Label PhoneNumberLabel `json:"label"`
+	// Determines if the phone number is primary or not.
+	// **Required**
+	Primary *bool `json:"primary"`
 }
 
-type TenantUser struct {
-	ID        string    `json:"id"`
-	FirstName string    `json:"firstName"`
-	LastName  string    `json:"lastName"`
-	Email     string    `json:"email"`
+// Describes the success or failure of the GraphQL call.
+// **A `return` object**
+type Result struct {
+	// The result of the GraphQL call.
+	// **Required.**
+	Result bool `json:"result"`
+}
+
+// Describes a custom, user-defined field associated with a `Contact`.
+// **A `return` object.**
+type TextCustomField struct {
+	// The unique ID associated with the custom field.
+	// **Required**
+	ID string `json:"id"`
+	// The name of the custom field.
+	// **Required**
+	Name string `json:"name"`
+	// The value of the custom field.
+	// **Required**
+	Value string `json:"value"`
+}
+
+// Describes a custom, user-defined field associated with a `Contact`.
+// **A `create` object.**
+type TextCustomFieldInput struct {
+	// The name of the custom field.
+	// **Required**
+	Name string `json:"name"`
+	// The value of the custom field.
+	// **Required**
+	Value string `json:"value"`
+}
+
+// Describes a custom, user-defined field associated with a `Contact`.
+// **An `update` object.**
+type TextCustomFieldUpdateInput struct {
+	// The unique ID associated with the custom field.
+	// **Required**
+	ID string `json:"id"`
+	// The name of the custom field.
+	// **Required**
+	Name string `json:"name"`
+	// The value of the custom field.
+	// **Required**
+	Value string `json:"value"`
+}
+
+// Describes the User of customerOS.  A user is the person who logs into the Openline platform.
+// **A `return` object**
+type User struct {
+	// The unique ID associated with the customerOS user.
+	// **Required**
+	ID string `json:"id"`
+	// The first name of the customerOS user.
+	// **Required**
+	FirstName string `json:"firstName"`
+	// The last name of the customerOS user.
+	// **Required**
+	LastName string `json:"lastName"`
+	// The email address of the customerOS user.
+	// **Required**
+	Email string `json:"email"`
+	// Timestamp of user creation.
+	// **Required**
 	CreatedAt time.Time `json:"createdAt"`
 }
 
-type TenantUserInput struct {
+// Describes the User of customerOS.  A user is the person who logs into the Openline platform.
+// **A `create` object.**
+type UserInput struct {
+	// The first name of the customerOS user.
+	// **Required**
 	FirstName string `json:"firstName"`
-	LastName  string `json:"lastName"`
-	Email     string `json:"email"`
+	// The last name of the customerOS user.
+	// **Required**
+	LastName string `json:"lastName"`
+	// The email address of the customerOS user.
+	// **Required**
+	Email string `json:"email"`
 }
 
-type TenantUsersPage struct {
-	Content       []*TenantUser `json:"content"`
-	TotalPages    int           `json:"totalPages"`
-	TotalElements int64         `json:"totalElements"`
+// Specifies how many pages of `User` information has been returned in the query response.
+// **A `return` object.**
+type UserPage struct {
+	// A `User` entity in customerOS.
+	// **Required.  If no values it returns an empty array.**
+	Content []*User `json:"content"`
+	// Total number of pages in the query response.
+	// **Required.**
+	TotalPages int `json:"totalPages"`
+	// Total number of elements in the query response.
+	// **Required.**
+	TotalElements int64 `json:"totalElements"`
 }
 
-func (TenantUsersPage) IsPagedResult()               {}
-func (this TenantUsersPage) GetTotalPages() int      { return this.TotalPages }
-func (this TenantUsersPage) GetTotalElements() int64 { return this.TotalElements }
+func (UserPage) IsPages() {}
 
-type TextCustomField struct {
-	ID    string `json:"id"`
-	Name  string `json:"name"`
-	Value string `json:"value"`
-}
+// The total number of pages included in the query response.
+// **Required.**
+func (this UserPage) GetTotalPages() int { return this.TotalPages }
 
-type TextCustomFieldInput struct {
-	Name  string `json:"name"`
-	Value string `json:"value"`
-}
+// The total number of elements included in the query response.
+// **Required.**
+func (this UserPage) GetTotalElements() int64 { return this.TotalElements }
 
-type TextCustomFieldUpdateInput struct {
-	ID    string `json:"id"`
-	Name  string `json:"name"`
-	Value string `json:"value"`
-}
-
+// Describes the type of email address (WORK, PERSONAL, etc).
+// **A `return` object.
 type EmailLabel string
 
 const (
@@ -290,6 +487,7 @@ func (e EmailLabel) MarshalGQL(w io.Writer) {
 }
 
 // The honorific title of an individual.
+// **A `response` object.**
 type PersonTitle string
 
 const (
@@ -342,49 +540,51 @@ func (e PersonTitle) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
 }
 
-type PhoneLabel string
+// Defines the type of phone number.
+// **A `response` object. **
+type PhoneNumberLabel string
 
 const (
-	PhoneLabelMain   PhoneLabel = "MAIN"
-	PhoneLabelWork   PhoneLabel = "WORK"
-	PhoneLabelHome   PhoneLabel = "HOME"
-	PhoneLabelMobile PhoneLabel = "MOBILE"
-	PhoneLabelOther  PhoneLabel = "OTHER"
+	PhoneNumberLabelMain   PhoneNumberLabel = "MAIN"
+	PhoneNumberLabelWork   PhoneNumberLabel = "WORK"
+	PhoneNumberLabelHome   PhoneNumberLabel = "HOME"
+	PhoneNumberLabelMobile PhoneNumberLabel = "MOBILE"
+	PhoneNumberLabelOther  PhoneNumberLabel = "OTHER"
 )
 
-var AllPhoneLabel = []PhoneLabel{
-	PhoneLabelMain,
-	PhoneLabelWork,
-	PhoneLabelHome,
-	PhoneLabelMobile,
-	PhoneLabelOther,
+var AllPhoneNumberLabel = []PhoneNumberLabel{
+	PhoneNumberLabelMain,
+	PhoneNumberLabelWork,
+	PhoneNumberLabelHome,
+	PhoneNumberLabelMobile,
+	PhoneNumberLabelOther,
 }
 
-func (e PhoneLabel) IsValid() bool {
+func (e PhoneNumberLabel) IsValid() bool {
 	switch e {
-	case PhoneLabelMain, PhoneLabelWork, PhoneLabelHome, PhoneLabelMobile, PhoneLabelOther:
+	case PhoneNumberLabelMain, PhoneNumberLabelWork, PhoneNumberLabelHome, PhoneNumberLabelMobile, PhoneNumberLabelOther:
 		return true
 	}
 	return false
 }
 
-func (e PhoneLabel) String() string {
+func (e PhoneNumberLabel) String() string {
 	return string(e)
 }
 
-func (e *PhoneLabel) UnmarshalGQL(v interface{}) error {
+func (e *PhoneNumberLabel) UnmarshalGQL(v interface{}) error {
 	str, ok := v.(string)
 	if !ok {
 		return fmt.Errorf("enums must be strings")
 	}
 
-	*e = PhoneLabel(str)
+	*e = PhoneNumberLabel(str)
 	if !e.IsValid() {
-		return fmt.Errorf("%s is not a valid PhoneLabel", str)
+		return fmt.Errorf("%s is not a valid PhoneNumberLabel", str)
 	}
 	return nil
 }
 
-func (e PhoneLabel) MarshalGQL(w io.Writer) {
+func (e PhoneNumberLabel) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
 }

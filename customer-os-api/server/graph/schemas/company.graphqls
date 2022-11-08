@@ -18,7 +18,7 @@ type Company {
 Describes the relationship a Contact has with a Company.
 **A `create` object**
 """
-input CompanyInputß {
+input CompanyInput {
 
     """
     The name of the company associated with a Contact.

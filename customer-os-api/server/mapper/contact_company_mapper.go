@@ -5,7 +5,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/customer-os-api/graph/model"
 )
 
-func MapCompanyPositionInputToEntity(input *model.CompanyPositionInput) *entity.CompanyPositionEntity {
+func MapCompanyPositionInputToEntity(input *model.CompanyInput) *entity.CompanyPositionEntity {
 	if input == nil {
 		return nil
 	}
@@ -18,16 +18,16 @@ func MapCompanyPositionInputToEntity(input *model.CompanyPositionInput) *entity.
 	return &companyPositionEntity
 }
 
-func MapEntityToCompanyPosition(companyPosition *entity.CompanyPositionEntity) *model.CompanyPosition {
+func MapEntityToCompanyPosition(companyPosition *entity.CompanyPositionEntity) *model.Company {
 	var jobTitle = companyPosition.JobTitle
-	return &model.CompanyPosition{
+	return &model.Company{
 		CompanyName: companyPosition.Company,
 		JobTitle:    &jobTitle,
 	}
 }
 
-func MapEntitiesToCompanyPositiones(companyPositionEntities *entity.CompanyPositionEntities) []*model.CompanyPosition {
-	var companyPositions []*model.CompanyPosition
+func MapEntitiesToCompanyPositiones(companyPositionEntities *entity.CompanyPositionEntities) []*model.Company {
+	var companyPositions []*model.Company
 	for _, companyPositionEntity := range *companyPositionEntities {
 		companyPositions = append(companyPositions, MapEntityToCompanyPosition(&companyPositionEntity))
 	}
