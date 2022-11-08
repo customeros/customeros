@@ -43,7 +43,7 @@ type Contact {
 }
 
 """
-`ContactsPage` specifies how many pages of contact information has been returned in the query response.
+Specifies how many pages of contact information has been returned in the query response.
 """
 type ContactsPage implements PagedResult {
     
