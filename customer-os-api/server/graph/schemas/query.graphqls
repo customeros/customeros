@@ -1,11 +1,34 @@
 type Query {
   tenantUsers(paginationFilter: PaginationFilter): TenantUsersPage!
 
-  contact(id: ID!) :Contact!
+  """
+  Fetch a single contact from customerOS by contact ID.
+  """
+  contact(
+
+    """
+    The unique ID associated with the contact in customerOS. 
+    **Required.**
+    """
+    id: ID!) :Contact
+
+
   contacts(paginationFilter: PaginationFilter): ContactsPage!
+  
   contactByEmail(email: String!) :Contact!
+  
   contactByPhone(number: String!) :Contact!
 
-  contactGroup(id: ID!): ContactGroup!
-  contactGroups(paginationFilter: PaginationFilter): ContactGroupsPage!
+  """
+  Fetch a specific contact group associated with a `Contact` in customerOS
+  """
+  contactGroup(
+    
+    """
+    The unique ID associated with the `ContactGroup`. 
+    **Required.**
+    """
+    id: ID!): ContactGroup
+  
+  contactGroups(paginationFilter: PaginationFilter): ContactGroupPage!
 }
