@@ -11,31 +11,31 @@ import (
 	"github.com/openline-ai/openline-customer-os/customer-os-api/utils"
 )
 
-type FieldsSetService interface {
-	FindAllForContact(ctx context.Context, contact *model.Contact) (*entity.FieldsSetEntities, error)
-	MergeFieldsSetToContact(ctx context.Context, contactId string, input *entity.FieldsSetEntity) (*entity.FieldsSetEntity, error)
-	UpdateFieldsSetInContact(ctx context.Context, contactId string, input *entity.FieldsSetEntity) (*entity.FieldsSetEntity, error)
-	DeleteByIdFromContact(ctx context.Context, contactId string, fieldsSetId string) (bool, error)
+type FieldSetService interface {
+	FindAllForContact(ctx context.Context, contact *model.Contact) (*entity.FieldSetEntities, error)
+	MergeFieldSetToContact(ctx context.Context, contactId string, input *entity.FieldSetEntity) (*entity.FieldSetEntity, error)
+	UpdateFieldSetInContact(ctx context.Context, contactId string, input *entity.FieldSetEntity) (*entity.FieldSetEntity, error)
+	DeleteByIdFromContact(ctx context.Context, contactId string, fieldSetId string) (bool, error)
 }
 
-type fieldsSetService struct {
+type fieldSetService struct {
 	driver *neo4j.Driver
 }
 
-func NewFieldsSetService(driver *neo4j.Driver) FieldsSetService {
-	return &fieldsSetService{
+func NewFieldSetService(driver *neo4j.Driver) FieldSetService {
+	return &fieldSetService{
 		driver: driver,
 	}
 }
 
-func (s *fieldsSetService) FindAllForContact(ctx context.Context, contact *model.Contact) (*entity.FieldsSetEntities, error) {
+func (s *fieldSetService) FindAllForContact(ctx context.Context, contact *model.Contact) (*entity.FieldSetEntities, error) {
 	session := (*s.driver).NewSession(neo4j.SessionConfig{AccessMode: neo4j.AccessModeRead})
 	defer session.Close()
 
 	queryResult, err := session.ReadTransaction(func(tx neo4j.Transaction) (any, error) {
 		result, err := tx.Run(`
 				MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}),
-              			(c)-[r:HAS_COMPLEX_PROPERTY]->(s:FieldsSet) 
+              			(c)-[r:HAS_COMPLEX_PROPERTY]->(s:FieldSet) 
 				RETURN s, r`,
 			map[string]any{
 				"contactId": contact.ID,
@@ -50,25 +50,25 @@ func (s *fieldsSetService) FindAllForContact(ctx context.Context, contact *model
 		return nil, err
 	}
 
-	fieldsSetEntities := entity.FieldsSetEntities{}
+	fieldSetEntities := entity.FieldSetEntities{}
 
 	for _, dbRecord := range queryResult.([]*db.Record) {
-		fieldsSetEntity := s.mapDbNodeToFieldsSetEntity(dbRecord.Values[0].(dbtype.Node))
-		s.addDbRelationshipToEntity((queryResult.([]*db.Record))[0].Values[1].(dbtype.Relationship), fieldsSetEntity)
-		fieldsSetEntities = append(fieldsSetEntities, *fieldsSetEntity)
+		fieldSetEntity := s.mapDbNodeToFieldSetEntity(dbRecord.Values[0].(dbtype.Node))
+		s.addDbRelationshipToEntity((queryResult.([]*db.Record))[0].Values[1].(dbtype.Relationship), fieldSetEntity)
+		fieldSetEntities = append(fieldSetEntities, *fieldSetEntity)
 	}
 
-	return &fieldsSetEntities, nil
+	return &fieldSetEntities, nil
 }
 
-func (s *fieldsSetService) MergeFieldsSetToContact(ctx context.Context, contactId string, input *entity.FieldsSetEntity) (*entity.FieldsSetEntity, error) {
+func (s *fieldSetService) MergeFieldSetToContact(ctx context.Context, contactId string, input *entity.FieldSetEntity) (*entity.FieldSetEntity, error) {
 	session := (*s.driver).NewSession(neo4j.SessionConfig{AccessMode: neo4j.AccessModeWrite})
 	defer session.Close()
 
 	queryResult, err := session.WriteTransaction(func(tx neo4j.Transaction) (interface{}, error) {
 		txResult, err := tx.Run(`
 			MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant})
-			MERGE (f:FieldsSet {name: $name})<-[r:HAS_COMPLEX_PROPERTY]-(c)
+			MERGE (f:FieldSet {name: $name})<-[r:HAS_COMPLEX_PROPERTY]-(c)
             ON CREATE SET f.type=$type, f.id=randomUUID(), r.added=datetime({timezone: 'UTC'})
 			RETURN f, r`,
 			map[string]interface{}{
@@ -87,26 +87,26 @@ func (s *fieldsSetService) MergeFieldsSetToContact(ctx context.Context, contactI
 		return nil, err
 	}
 
-	var fieldsSetEntity = s.mapDbNodeToFieldsSetEntity((queryResult.([]*db.Record))[0].Values[0].(dbtype.Node))
-	s.addDbRelationshipToEntity((queryResult.([]*db.Record))[0].Values[1].(dbtype.Relationship), fieldsSetEntity)
-	return fieldsSetEntity, nil
+	var fieldSetEntity = s.mapDbNodeToFieldSetEntity((queryResult.([]*db.Record))[0].Values[0].(dbtype.Node))
+	s.addDbRelationshipToEntity((queryResult.([]*db.Record))[0].Values[1].(dbtype.Relationship), fieldSetEntity)
+	return fieldSetEntity, nil
 }
 
-func (s *fieldsSetService) UpdateFieldsSetInContact(ctx context.Context, contactId string, input *entity.FieldsSetEntity) (*entity.FieldsSetEntity, error) {
+func (s *fieldSetService) UpdateFieldSetInContact(ctx context.Context, contactId string, input *entity.FieldSetEntity) (*entity.FieldSetEntity, error) {
 	session := (*s.driver).NewSession(neo4j.SessionConfig{AccessMode: neo4j.AccessModeWrite})
 	defer session.Close()
 
 	queryResult, err := session.WriteTransaction(func(tx neo4j.Transaction) (interface{}, error) {
 		txResult, err := tx.Run(`
 			MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}),
-					(c)-[r:HAS_COMPLEX_PROPERTY]->(s:FieldsSet {id:$fieldsSetId})
+					(c)-[r:HAS_COMPLEX_PROPERTY]->(s:FieldSet {id:$fieldSetId})
             SET s.name=$name
 			RETURN s, r`,
 			map[string]interface{}{
-				"tenant":      common.GetContext(ctx).Tenant,
-				"contactId":   contactId,
-				"fieldsSetId": input.Id,
-				"name":        input.Name,
+				"tenant":     common.GetContext(ctx).Tenant,
+				"contactId":  contactId,
+				"fieldSetId": input.Id,
+				"name":       input.Name,
 			})
 		records, err := txResult.Collect()
 		if err != nil {
@@ -118,25 +118,25 @@ func (s *fieldsSetService) UpdateFieldsSetInContact(ctx context.Context, contact
 		return nil, err
 	}
 
-	var fieldsSetEntity = s.mapDbNodeToFieldsSetEntity((queryResult.([]*db.Record))[0].Values[0].(dbtype.Node))
-	s.addDbRelationshipToEntity((queryResult.([]*db.Record))[0].Values[1].(dbtype.Relationship), fieldsSetEntity)
-	return fieldsSetEntity, nil
+	var fieldSetEntity = s.mapDbNodeToFieldSetEntity((queryResult.([]*db.Record))[0].Values[0].(dbtype.Node))
+	s.addDbRelationshipToEntity((queryResult.([]*db.Record))[0].Values[1].(dbtype.Relationship), fieldSetEntity)
+	return fieldSetEntity, nil
 }
 
-func (s *fieldsSetService) DeleteByIdFromContact(ctx context.Context, contactId string, fieldsSetId string) (bool, error) {
+func (s *fieldSetService) DeleteByIdFromContact(ctx context.Context, contactId string, fieldSetId string) (bool, error) {
 	session := (*s.driver).NewSession(neo4j.SessionConfig{AccessMode: neo4j.AccessModeWrite})
 	defer session.Close()
 
 	queryResult, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
 		_, err := tx.Run(`
 			MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}),
-                  (c)-[:HAS_COMPLEX_PROPERTY]->(s:FieldsSet {id:$fieldsSetId}),
+                  (c)-[:HAS_COMPLEX_PROPERTY]->(s:FieldSet {id:$fieldSetId}),
 				  (s)-[:HAS_TEXT_PROPERTY]->(f:TextCustomField)
             DETACH DELETE f, s`,
 			map[string]any{
-				"contactId":   contactId,
-				"fieldsSetId": fieldsSetId,
-				"tenant":      common.GetContext(ctx).Tenant,
+				"contactId":  contactId,
+				"fieldSetId": fieldSetId,
+				"tenant":     common.GetContext(ctx).Tenant,
 			})
 
 		return true, err
@@ -148,9 +148,9 @@ func (s *fieldsSetService) DeleteByIdFromContact(ctx context.Context, contactId 
 	return queryResult.(bool), nil
 }
 
-func (s *fieldsSetService) mapDbNodeToFieldsSetEntity(node dbtype.Node) *entity.FieldsSetEntity {
+func (s *fieldSetService) mapDbNodeToFieldSetEntity(node dbtype.Node) *entity.FieldSetEntity {
 	props := utils.GetPropsFromNode(node)
-	result := entity.FieldsSetEntity{
+	result := entity.FieldSetEntity{
 		Id:   utils.GetStringPropOrEmpty(props, "id"),
 		Name: utils.GetStringPropOrEmpty(props, "name"),
 		Type: utils.GetStringPropOrEmpty(props, "type"),
@@ -158,7 +158,7 @@ func (s *fieldsSetService) mapDbNodeToFieldsSetEntity(node dbtype.Node) *entity.
 	return &result
 }
 
-func (s *fieldsSetService) addDbRelationshipToEntity(relationship dbtype.Relationship, fieldsSetEntity *entity.FieldsSetEntity) {
+func (s *fieldSetService) addDbRelationshipToEntity(relationship dbtype.Relationship, fieldSetEntity *entity.FieldSetEntity) {
 	props := utils.GetPropsFromRelationship(relationship)
-	fieldsSetEntity.Added = utils.GetTimePropOrNow(props, "added")
+	fieldSetEntity.Added = utils.GetTimePropOrNow(props, "added")
 }

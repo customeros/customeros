@@ -12,12 +12,12 @@ import (
 )
 
 // TextCustomFields is the resolver for the textCustomFields field.
-func (r *fieldsSetResolver) TextCustomFields(ctx context.Context, obj *model.FieldsSet) ([]*model.TextCustomField, error) {
-	textCustomFieldEntities, err := r.ServiceContainer.TextCustomFieldService.FindAllForFieldsSet(ctx, obj)
+func (r *fieldSetResolver) TextCustomFields(ctx context.Context, obj *model.FieldSet) ([]*model.TextCustomField, error) {
+	textCustomFieldEntities, err := r.ServiceContainer.TextCustomFieldService.FindAllForFieldSet(ctx, obj)
 	return mapper.MapEntitiesToTextCustomFields(textCustomFieldEntities), err
 }
 
-// FieldsSet returns generated.FieldsSetResolver implementation.
-func (r *Resolver) FieldsSet() generated.FieldsSetResolver { return &fieldsSetResolver{r} }
+// FieldSet returns generated.FieldSetResolver implementation.
+func (r *Resolver) FieldSet() generated.FieldSetResolver { return &fieldSetResolver{r} }
 
-type fieldsSetResolver struct{ *Resolver }
+type fieldSetResolver struct{ *Resolver }

@@ -5,35 +5,35 @@ import (
 	"github.com/openline-ai/openline-customer-os/customer-os-api/graph/model"
 )
 
-func MapFieldsSetInputToEntity(input *model.FieldsSetInput) *entity.FieldsSetEntity {
-	fieldsSetEntity := entity.FieldsSetEntity{
+func MapFieldSetInputToEntity(input *model.FieldSetInput) *entity.FieldSetEntity {
+	fieldSetEntity := entity.FieldSetEntity{
 		Type: input.Type,
 		Name: input.Name,
 	}
-	return &fieldsSetEntity
+	return &fieldSetEntity
 }
 
-func MapFieldsSetUpdateInputToEntity(input *model.FieldsSetUpdateInput) *entity.FieldsSetEntity {
-	fieldsSetEntity := entity.FieldsSetEntity{
+func MapFieldSetUpdateInputToEntity(input *model.FieldSetUpdateInput) *entity.FieldSetEntity {
+	fieldSetEntity := entity.FieldSetEntity{
 		Id:   input.ID,
 		Name: input.Name,
 	}
-	return &fieldsSetEntity
+	return &fieldSetEntity
 }
 
-func MapEntitiesToFieldsSets(fieldsSetEntities *entity.FieldsSetEntities) []*model.FieldsSet {
-	var fieldsSet []*model.FieldsSet
-	for _, fieldsSetEntity := range *fieldsSetEntities {
-		fieldsSet = append(fieldsSet, MapEntityToFieldsSet(&fieldsSetEntity))
+func MapEntitiesToFieldSets(fieldSetEntities *entity.FieldSetEntities) []*model.FieldSet {
+	var fieldSet []*model.FieldSet
+	for _, fieldSetEntity := range *fieldSetEntities {
+		fieldSet = append(fieldSet, MapEntityToFieldSet(&fieldSetEntity))
 	}
-	return fieldsSet
+	return fieldSet
 }
 
-func MapEntityToFieldsSet(fieldsSetEntity *entity.FieldsSetEntity) *model.FieldsSet {
-	return &model.FieldsSet{
-		ID:    fieldsSetEntity.Id,
-		Type:  fieldsSetEntity.Type,
-		Name:  fieldsSetEntity.Name,
-		Added: fieldsSetEntity.Added,
+func MapEntityToFieldSet(fieldSetEntity *entity.FieldSetEntity) *model.FieldSet {
+	return &model.FieldSet{
+		ID:    fieldSetEntity.Id,
+		Type:  fieldSetEntity.Type,
+		Name:  fieldSetEntity.Name,
+		Added: fieldSetEntity.Added,
 	}
 }

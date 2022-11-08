@@ -4,7 +4,7 @@ CREATE(t:Tenant {name: "openline"});
 CREATE INDEX ON :Contact(id);
 CREATE INDEX ON :ContactGroup(id);
 CREATE INDEX ON :TextCustomField(id);
-CREATE INDEX ON :FieldsSet(id);
+CREATE INDEX ON :FieldSet(id);
 CREATE INDEX ON :Email(id);
 CREATE INDEX ON :Email(email);
 CREATE INDEX ON :PhoneNumber(id);

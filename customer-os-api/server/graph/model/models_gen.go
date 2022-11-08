@@ -56,8 +56,8 @@ type Contact struct {
 	// All phone numbers associated with a contact in customerOS.
 	PhoneNumbers []*PhoneNumberInfo `json:"phoneNumbers"`
 	// All email addresses assocaited with a contact in customerOS.
-	Emails     []*EmailInfo `json:"emails"`
-	FieldsSets []*FieldsSet `json:"fieldsSets"`
+	Emails    []*EmailInfo `json:"emails"`
+	FieldSets []*FieldSet  `json:"fieldSets"`
 }
 
 type ContactGroup struct {
@@ -160,7 +160,7 @@ type EmailUpdateInput struct {
 	Primary *bool      `json:"primary"`
 }
 
-type FieldsSet struct {
+type FieldSet struct {
 	ID               string             `json:"id"`
 	Type             string             `json:"type"`
 	Name             string             `json:"name"`
@@ -168,12 +168,12 @@ type FieldsSet struct {
 	TextCustomFields []*TextCustomField `json:"textCustomFields"`
 }
 
-type FieldsSetInput struct {
+type FieldSetInput struct {
 	Type string `json:"type"`
 	Name string `json:"name"`
 }
 
-type FieldsSetUpdateInput struct {
+type FieldSetUpdateInput struct {
 	ID   string `json:"id"`
 	Name string `json:"name"`
 }

@@ -40,7 +40,8 @@ type Contact {
 
     "All email addresses assocaited with a contact in customerOS."
     emails: [EmailInfo!] @goField(forceResolver: true)
-    fieldsSets: [FieldsSet!] @goField(forceResolver: true)
+
+    fieldSets: [FieldSet!] @goField(forceResolver: true)
 }
 
 """

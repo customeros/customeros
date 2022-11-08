@@ -13,7 +13,7 @@ type ServiceContainer struct {
 	PhoneNumberService     service.PhoneNumberService
 	EmailService           service.EmailService
 	TenantUserService      service.TenantUserService
-	FieldsSetService       service.FieldsSetService
+	FieldSetService        service.FieldSetService
 }
 
 func InitServices(driver *neo4j.Driver) *ServiceContainer {
@@ -25,6 +25,6 @@ func InitServices(driver *neo4j.Driver) *ServiceContainer {
 		PhoneNumberService:     service.NewPhoneNumberService(driver),
 		EmailService:           service.NewEmailService(driver),
 		TenantUserService:      service.NewTenantUserService(driver),
-		FieldsSetService:       service.NewFieldsSetService(driver),
+		FieldSetService:        service.NewFieldSetService(driver),
 	}
 }

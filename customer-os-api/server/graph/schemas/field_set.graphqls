@@ -1,4 +1,4 @@
-type FieldsSet {
+type FieldSet {
     id: ID!
     type: String!
     name: String!
@@ -6,12 +6,12 @@ type FieldsSet {
     textCustomFields: [TextCustomField!]! @goField(forceResolver: true)
 }
 
-input FieldsSetInput {
+input FieldSetInput {
     type: String!
     name: String!
 }
 
-input FieldsSetUpdateInput {
+input FieldSetUpdateInput {
     id: ID!
     name: String!
 }
