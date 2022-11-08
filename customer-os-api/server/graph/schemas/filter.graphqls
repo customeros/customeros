@@ -1,4 +1,17 @@
+"""
+If provided as part of the request, results will be filtered down to the `page` and `limit` specified.
+"""
 input PaginationFilter {
+    
+    """
+    The results page to return in the response.
+    **Required.**
+    """
     page: Int!
+
+    """
+    The maximum number of results in the response.
+    **Required.**
+    """
     limit: Int!
 }
