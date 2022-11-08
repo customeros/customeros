@@ -1,24 +1,94 @@
-type PhoneNumberInfo {
+"""
+Describes a phone number associated with a `Contact` in customerOS.
+**A `return` object.**
+"""
+type PhoneNumber {
+    """
+    The unique ID associated with the phone number. 
+    **Required**
+    """
     id: ID!
+    
+    """
+    The phone number in e164 format. 
+    **Required**
+    """
     number: String!
-    label: PhoneLabel!
+
+    """
+    Defines the type of phone number.
+    **Required**
+    """
+    label: PhoneNumberLabel!
+
+    """
+    Determines if the phone number is primary or not.
+    **Required**
+    """
     primary: Boolean!
 }
 
+"""
+Describes a phone number associated with a `Contact` in customerOS.
+**A `create` object.**
+"""
 input PhoneNumberInput {
+    
+    """
+    The phone number in e164 format. 
+    **Required**
+    """
     number: String!
-    label: PhoneLabel!
+
+    """
+    Defines the type of phone number.
+    **Required**
+    """
+    label: PhoneNumberLabel!
+
+    """
+    Determines if the phone number is primary or not.
+    **Required**
+    """
     primary: Boolean
 }
 
+"""
+Describes a phone number associated with a `Contact` in customerOS.
+**An `update` object.**
+"""
 input PhoneNumberUpdateInput {
+    
+    """
+    The unique ID associated with the phone number. 
+    **Required**
+    """
     id: ID!
+
+    """
+    The phone number in e164 format. 
+    **Required**
+    """
     number: String!
-    label: PhoneLabel!
+
+    """
+    Defines the type of phone number.
+    **Required**
+    """
+    label: PhoneNumberLabel!
+
+    """
+    Determines if the phone number is primary or not.
+    **Required**
+    """
     primary: Boolean
 }
 
-enum PhoneLabel {
+"""
+Defines the type of phone number.
+**A `response` object. **
+"""
+enum PhoneNumberLabel {
     MAIN
     WORK
     HOME
