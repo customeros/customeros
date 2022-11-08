@@ -1,55 +1,141 @@
 """
-Contact - represents one person that can be contacted. In B2C
+A contact represents an individual in customerOS.
 """
 type Contact {
+    "The unique ID associated with the contact in customerOS."
     id: ID!
+
+    "The title associate with the contact in customerOS."
     title: PersonTitle
+
+    "The first name of the contact in customerOS."
     firstName: String!
+
+    "The last name of the contact in customerOS."
     lastName: String!
+
+    "An ISO8601 timestamp recording when the contact was created in customerOS."
     createdAt: Time!
+
+    "A user-defined label applied against a contact in customerOS."
     label: String
+
+    "User-defined notes associated with a contact in customerOS."
     notes: String
+
+    "User-defined [should this be a defined type?]"
     contactType: String
+
+    "`companyName` and `jobTitle` of the contact if it has been associated with a company."
     companyPositions: [CompanyPosition!]! @goField(forceResolver: true)
+
+    "Identifies any contact groups the contact is associated with."
     groups: [ContactGroup!]! @goField(forceResolver: true)
+
+    "User defined metadata appended to the contact record in customerOS."
     textCustomFields: [TextCustomField!]! @goField(forceResolver: true)
+
+    "All phone numbers associated with a contact in customerOS."
     phoneNumbers: [PhoneNumberInfo!] @goField(forceResolver: true)
+
+    "All email addresses assocaited with a contact in customerOS."
     emails: [EmailInfo!] @goField(forceResolver: true)
 }
 
+"""
+`ContactsPage` specifies how many pages of contact information has been returned in the query response.
+"""
 type ContactsPage implements PagedResult {
+    
+    "A contact entity in customerOS."
     content: [Contact!]!
+
+    "Total number of pages in the query response."
     totalPages: Int!
+
+    "Total number of elements in the query response."
     totalElements: Int64!
 }
 
+"""
+An individual that you would like to add to customerOS.
+"""
 input ContactInput {
+    "The title of the contact."
     title: PersonTitle
+
+    "The first name of the contact."
     firstName: String!
+
+    "The last name of the contact."
     lastName: String!
+
+    "A user-defined label attached to contact."
     label: String
+
+    "User-defined notes associated with contact."
     notes: String
+
+    "User-defined [should this be a defined type?]"
     contactType: String
+
+    "User defined metadata appended to contact."
     textCustomFields: [TextCustomFieldInput!]
+
+    "The job title of the contact."
     companyPosition: CompanyPositionInput
+    
+    "An email addresses assocaited with the contact."
     email: EmailInput
+
+    "A phone number associated with the contact."
     phoneNumber: PhoneNumberInput
 }
 
+"""
+Updates data fields associated with an existing customer record in customerOS.
+"""
 input ContactUpdateInput {
+    
+    "The unique ID associated with the contact in customerOS."
     id: ID!
+
+    "The title associate with the contact in customerOS."
     title: PersonTitle
+
+    "The first name of the contact in customerOS."
     firstName: String!
+
+    "The last name of the contact in customerOS."
     lastName: String!
+
+    "A user-defined label applied against a contact in customerOS."
     label: String
+
+    "User-defined notes associated with contact."
     notes: String
+
+    "User-defined [should this be a defined type?]"
     contactType: String
 }
 
+"""
+The honorific title of an individual.
+"""
 enum PersonTitle {
+    
+    "For men, regardless of marital status."
     MR
+
+    "For married women."
     MRS
+
+    "For girls, unmarried women, and married women who continue to use their maiden name."
     MISS
+
+    "For women, regardless of marital status, or when marital status is unknown."
     MS
+
+    "For the holder of a doctoral degree."
     DR
 }
