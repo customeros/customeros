@@ -13,9 +13,14 @@ import (
 
 type ContactService interface {
 	Create(ctx context.Context, contact *ContactCreateData) (*entity.ContactEntity, error)
+
 	Update(ctx context.Context, contact *entity.ContactEntity) (*entity.ContactEntity, error)
+
 	FindContactById(ctx context.Context, id string) (*entity.ContactEntity, error)
+	FindContactByEmail(ctx context.Context, email string) (*entity.ContactEntity, error)
+	FindContactByPhoneNumber(ctx context.Context, number string) (*entity.ContactEntity, error)
 	FindAll(ctx context.Context, page int, limit int) (*utils.Pagination, error)
+
 	HardDelete(ctx context.Context, id string) (bool, error)
 	SoftDelete(ctx context.Context, id string) (bool, error)
 }
@@ -207,6 +212,58 @@ func (s *contactService) FindContactById(ctx context.Context, id string) (*entit
 			MATCH (c:Contact {id:$id})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) RETURN c`,
 			map[string]interface{}{
 				"id":     id,
+				"tenant": common.GetContext(ctx).Tenant,
+			})
+		record, err := result.Single()
+		if err != nil {
+			return nil, err
+		}
+		return record.Values[0], nil
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return s.mapDbNodeToContactEntity(queryResult.(dbtype.Node)), nil
+}
+
+func (s *contactService) FindContactByEmail(ctx context.Context, email string) (*entity.ContactEntity, error) {
+	session := (*s.driver).NewSession(neo4j.SessionConfig{AccessMode: neo4j.AccessModeRead})
+	defer session.Close()
+
+	queryResult, err := session.ReadTransaction(func(tx neo4j.Transaction) (interface{}, error) {
+		result, err := tx.Run(`
+			MATCH (:Email {email:$email})<-[:EMAILED_AT]-(c:Contact),
+					(c)-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) 
+			RETURN c`,
+			map[string]interface{}{
+				"email":  email,
+				"tenant": common.GetContext(ctx).Tenant,
+			})
+		record, err := result.Single()
+		if err != nil {
+			return nil, err
+		}
+		return record.Values[0], nil
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return s.mapDbNodeToContactEntity(queryResult.(dbtype.Node)), nil
+}
+
+func (s *contactService) FindContactByPhoneNumber(ctx context.Context, number string) (*entity.ContactEntity, error) {
+	session := (*s.driver).NewSession(neo4j.SessionConfig{AccessMode: neo4j.AccessModeRead})
+	defer session.Close()
+
+	queryResult, err := session.ReadTransaction(func(tx neo4j.Transaction) (interface{}, error) {
+		result, err := tx.Run(`
+			MATCH (:PhoneNumber {number:$number})<-[:CALLED_AT]-(c:Contact),
+					(c)-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) 
+			RETURN c`,
+			map[string]interface{}{
+				"number": number,
 				"tenant": common.GetContext(ctx).Tenant,
 			})
 		record, err := result.Single()

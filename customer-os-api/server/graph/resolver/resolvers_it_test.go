@@ -96,7 +96,7 @@ func TestQueryResolver_TenantUsers(t *testing.T) {
 		TenantUsers model.TenantUsersPage
 	}
 
-	err = decode.Decode(rawResponse.Data.(map[string]interface{}), &tenantUsers)
+	err = decode.Decode(rawResponse.Data.(map[string]any), &tenantUsers)
 	require.Nil(t, err)
 	require.NotNil(t, tenantUsers)
 	require.Equal(t, 1, tenantUsers.TenantUsers.TotalPages)
@@ -105,6 +105,52 @@ func TestQueryResolver_TenantUsers(t *testing.T) {
 	require.Equal(t, "last", tenantUsers.TenantUsers.Content[0].LastName)
 	require.Equal(t, "test@openline.ai", tenantUsers.TenantUsers.Content[0].Email)
 	require.NotNil(t, tenantUsers.TenantUsers.Content[0].CreatedAt)
+}
+
+func TestQueryResolver_ContactByEmail(t *testing.T) {
+	defer setupTestCase()(t)
+	otherTenant := "other"
+	createTenant(driver, tenantName)
+	createTenant(driver, otherTenant)
+	contactId1 := createDefaultContact(driver, tenantName)
+	contactId2 := createDefaultContact(driver, otherTenant)
+	addEmailToContact(driver, contactId1, "test@test.com", true, "MAIN")
+	addEmailToContact(driver, contactId2, "test@test.com", true, "MAIN")
+
+	rawResponse, err := c.RawPost(getQuery("get_contact_by_email"), client.Var("email", "test@test.com"))
+	assertRawResponseSuccess(t, rawResponse, err)
+
+	var contact struct {
+		ContactByEmail model.Contact
+	}
+
+	err = decode.Decode(rawResponse.Data.(map[string]any), &contact)
+	require.Nil(t, err)
+	require.NotNil(t, contact)
+	require.Equal(t, contactId1, contact.ContactByEmail.ID)
+}
+
+func TestQueryResolver_ContactByPhone(t *testing.T) {
+	defer setupTestCase()(t)
+	otherTenant := "other"
+	createTenant(driver, tenantName)
+	createTenant(driver, otherTenant)
+	contactId1 := createDefaultContact(driver, tenantName)
+	contactId2 := createDefaultContact(driver, otherTenant)
+	addPhoneNumberToContact(driver, contactId1, "+1234567890", false, "OTHER")
+	addPhoneNumberToContact(driver, contactId2, "+1234567890", true, "MAIN")
+
+	rawResponse, err := c.RawPost(getQuery("get_contact_by_phone"), client.Var("number", "+1234567890"))
+	assertRawResponseSuccess(t, rawResponse, err)
+
+	var contact struct {
+		ContactByPhone model.Contact
+	}
+
+	err = decode.Decode(rawResponse.Data.(map[string]any), &contact)
+	require.Nil(t, err)
+	require.NotNil(t, contact)
+	require.Equal(t, contactId1, contact.ContactByPhone.ID)
 }
 
 func TestMutationResolver_CreateTenantUser(t *testing.T) {
@@ -119,7 +165,7 @@ func TestMutationResolver_CreateTenantUser(t *testing.T) {
 		CreateTenantUser model.TenantUser
 	}
 
-	err = decode.Decode(rawResponse.Data.(map[string]interface{}), &tenantUser)
+	err = decode.Decode(rawResponse.Data.(map[string]any), &tenantUser)
 	require.Nil(t, err)
 	require.NotNil(t, tenantUser)
 	require.Equal(t, "first", tenantUser.CreateTenantUser.FirstName)
@@ -141,7 +187,7 @@ func TestMutationResolver_CreateContact(t *testing.T) {
 		CreateContact model.Contact
 	}
 
-	err = decode.Decode(rawResponse.Data.(map[string]interface{}), &contact)
+	err = decode.Decode(rawResponse.Data.(map[string]any), &contact)
 	require.Nil(t, err)
 	require.NotNil(t, contact)
 	require.Equal(t, "MR", contact.CreateContact.Title.String())
@@ -204,7 +250,7 @@ func TestMutationResolver_UpdateContact(t *testing.T) {
 		UpdateContact model.Contact
 	}
 
-	err = decode.Decode(rawResponse.Data.(map[string]interface{}), &contact)
+	err = decode.Decode(rawResponse.Data.(map[string]any), &contact)
 	require.Nil(t, err)
 	require.NotNil(t, contact)
 	require.Equal(t, "DR", contact.UpdateContact.Title.String())
@@ -241,9 +287,9 @@ func TestMutationResolver_MergeFieldSetToContact_AllowMultipleFieldSetWithSameNa
 		MergeFieldSetToContact model.FieldSet
 	}
 
-	err = decode.Decode(rawResponse1.Data.(map[string]interface{}), &fieldSet1)
+	err = decode.Decode(rawResponse1.Data.(map[string]any), &fieldSet1)
 	require.Nil(t, err)
-	err = decode.Decode(rawResponse2.Data.(map[string]interface{}), &fieldSet2)
+	err = decode.Decode(rawResponse2.Data.(map[string]any), &fieldSet2)
 	require.Nil(t, err)
 	require.NotNil(t, fieldSet1)
 	require.NotNil(t, fieldSet2)
@@ -275,7 +321,7 @@ func TestMutationResolver_MergeTextCustomFieldToFieldSet(t *testing.T) {
 		MergeTextCustomFieldToFieldSet model.TextCustomField
 	}
 
-	err = decode.Decode(rawResponse.Data.(map[string]interface{}), &textField)
+	err = decode.Decode(rawResponse.Data.(map[string]any), &textField)
 	require.Nil(t, err)
 
 	require.Equal(t, "some name", textField.MergeTextCustomFieldToFieldSet.Name)
@@ -304,7 +350,7 @@ func TestMutationResolver_UpdateTextCustomFieldInFieldSet(t *testing.T) {
 		UpdateTextCustomFieldInFieldSet model.TextCustomField
 	}
 
-	err = decode.Decode(rawResponse.Data.(map[string]interface{}), &textField)
+	err = decode.Decode(rawResponse.Data.(map[string]any), &textField)
 	require.Nil(t, err)
 
 	require.Equal(t, "new name", textField.UpdateTextCustomFieldInFieldSet.Name)
@@ -333,7 +379,7 @@ func TestMutationResolver_RemoveTextCustomFieldFromFieldSetByID(t *testing.T) {
 		RemoveTextCustomFieldFromFieldSetByID model.BooleanResult
 	}
 
-	err = decode.Decode(rawResponse.Data.(map[string]interface{}), &textField)
+	err = decode.Decode(rawResponse.Data.(map[string]any), &textField)
 	require.Nil(t, err)
 
 	require.Equal(t, true, textField.RemoveTextCustomFieldFromFieldSetByID.Result)
@@ -363,7 +409,7 @@ func TestMutationResolver_RemoveFieldSetFromContact(t *testing.T) {
 		RemoveFieldSetFromContact model.BooleanResult
 	}
 
-	err = decode.Decode(rawResponse.Data.(map[string]interface{}), &textField)
+	err = decode.Decode(rawResponse.Data.(map[string]any), &textField)
 	require.Nil(t, err)
 
 	require.Equal(t, true, textField.RemoveFieldSetFromContact.Result)
