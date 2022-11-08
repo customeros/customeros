@@ -9,9 +9,25 @@ import (
 	"time"
 )
 
+type CustomFieldDefinition interface {
+	IsNode()
+	IsCustomFieldDefinition()
+	GetID() string
+	GetName() string
+	GetOrder() int
+	GetMandatory() bool
+}
+
 type ExtensibleEntity interface {
+	IsNode()
 	IsExtensibleEntity()
+	GetID() string
 	GetDefinitionID() string
+}
+
+type Node interface {
+	IsNode()
+	GetID() string
 }
 
 // Describes the number of pages and total elements included in a query response.
@@ -83,15 +99,18 @@ type Contact struct {
 	Emails []*Email `json:"emails"`
 	// User defined metadata appended to the contact record in customerOS.
 	// **Required.  If no values it returns an empty array.**
-	TextCustomFields []*TextCustomField `json:"textCustomFields"`
-	FieldSets        []*FieldSet        `json:"fieldSets"`
+	CustomFields []*CustomField `json:"customFields"`
+	FieldSets    []*FieldSet    `json:"fieldSets"`
 	// The unique ID associated with the definition of the contact in customerOS.
 	// **Required**
 	DefinitionID string `json:"definitionId"`
 }
 
 func (Contact) IsExtensibleEntity()          {}
+func (this Contact) GetID() string           { return this.ID }
 func (this Contact) GetDefinitionID() string { return this.DefinitionID }
+
+func (Contact) IsNode() {}
 
 // A collection of groups that a Contact belongs to.  Groups are user-defined entities.
 // **A `return` object.**
@@ -221,6 +240,23 @@ func (this ContactsPage) GetTotalPages() int { return this.TotalPages }
 // **Required.**
 func (this ContactsPage) GetTotalElements() int64 { return this.TotalElements }
 
+// Describes a custom, user-defined field associated with a `Contact`.
+// **A `return` object.**
+type CustomField struct {
+	// The unique ID associated with the custom field.
+	// **Required**
+	ID string `json:"id"`
+	// The name of the custom field.
+	// **Required**
+	Name string `json:"name"`
+	// The value of the custom field.
+	// **Required**
+	Value string `json:"value"`
+}
+
+func (CustomField) IsNode()            {}
+func (this CustomField) GetID() string { return this.ID }
+
 // Describes an email address associated with a `Contact` in customerOS.
 // **A `return` object.**
 type Email struct {
@@ -270,16 +306,33 @@ type EmailUpdateInput struct {
 }
 
 type EntityDefinition struct {
-	ID string `json:"id"`
+	ID           string                     `json:"id"`
+	Name         string                     `json:"name"`
+	Extends      *EntityDefinitionExtension `json:"extends"`
+	FieldSets    []*FieldSetDefinition      `json:"fieldSets"`
+	CustomFields []CustomFieldDefinition    `json:"customFields"`
 }
 
+func (EntityDefinition) IsNode()            {}
+func (this EntityDefinition) GetID() string { return this.ID }
+
 type FieldSet struct {
-	ID               string             `json:"id"`
-	Type             string             `json:"type"`
-	Name             string             `json:"name"`
-	Added            time.Time          `json:"added"`
-	TextCustomFields []*TextCustomField `json:"textCustomFields"`
+	ID           string         `json:"id"`
+	Type         string         `json:"type"`
+	Name         string         `json:"name"`
+	Added        time.Time      `json:"added"`
+	CustomFields []*CustomField `json:"customFields"`
 }
+
+type FieldSetDefinition struct {
+	ID           string                  `json:"id"`
+	Name         string                  `json:"name"`
+	Order        int                     `json:"order"`
+	CustomFields []CustomFieldDefinition `json:"customFields"`
+}
+
+func (FieldSetDefinition) IsNode()            {}
+func (this FieldSetDefinition) GetID() string { return this.ID }
 
 type FieldSetInput struct {
 	Type string `json:"type"`
@@ -290,6 +343,23 @@ type FieldSetUpdateInput struct {
 	ID   string `json:"id"`
 	Name string `json:"name"`
 }
+
+type IntCustomFieldDefinition struct {
+	ID        string `json:"id"`
+	Name      string `json:"name"`
+	Order     int    `json:"order"`
+	Mandatory bool   `json:"mandatory"`
+	Min       *int   `json:"min"`
+	Max       *int   `json:"max"`
+}
+
+func (IntCustomFieldDefinition) IsCustomFieldDefinition() {}
+func (this IntCustomFieldDefinition) GetID() string       { return this.ID }
+func (this IntCustomFieldDefinition) GetName() string     { return this.Name }
+func (this IntCustomFieldDefinition) GetOrder() int       { return this.Order }
+func (this IntCustomFieldDefinition) GetMandatory() bool  { return this.Mandatory }
+
+func (IntCustomFieldDefinition) IsNode() {}
 
 // If provided as part of the request, results will be filtered down to the `page` and `limit` specified.
 type PaginationFilter struct {
@@ -357,21 +427,23 @@ type Result struct {
 	Result bool `json:"result"`
 }
 
-// Describes a custom, user-defined field associated with a `Contact`.
-// **A `return` object.**
-type TextCustomField struct {
-	// The unique ID associated with the custom field.
-	// **Required**
-	ID string `json:"id"`
-	// The name of the custom field.
-	// **Required**
-	Name string `json:"name"`
-	// The value of the custom field.
-	// **Required**
-	Value string `json:"value"`
+type TextCustomFieldDefinition struct {
+	ID        string `json:"id"`
+	Name      string `json:"name"`
+	Order     int    `json:"order"`
+	Mandatory bool   `json:"mandatory"`
+	Length    *int   `json:"length"`
 }
 
-// Describes a custom, user-defined field associated with a `Contact`.
+func (TextCustomFieldDefinition) IsCustomFieldDefinition() {}
+func (this TextCustomFieldDefinition) GetID() string       { return this.ID }
+func (this TextCustomFieldDefinition) GetName() string     { return this.Name }
+func (this TextCustomFieldDefinition) GetOrder() int       { return this.Order }
+func (this TextCustomFieldDefinition) GetMandatory() bool  { return this.Mandatory }
+
+func (TextCustomFieldDefinition) IsNode() {}
+
+// Describes a custom, user-defined field associated with a `Contact` of type String.
 // **A `create` object.**
 type TextCustomFieldInput struct {
 	// The name of the custom field.
@@ -498,6 +570,45 @@ func (e *EmailLabel) UnmarshalGQL(v interface{}) error {
 }
 
 func (e EmailLabel) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+type EntityDefinitionExtension string
+
+const (
+	EntityDefinitionExtensionContact EntityDefinitionExtension = "CONTACT"
+)
+
+var AllEntityDefinitionExtension = []EntityDefinitionExtension{
+	EntityDefinitionExtensionContact,
+}
+
+func (e EntityDefinitionExtension) IsValid() bool {
+	switch e {
+	case EntityDefinitionExtensionContact:
+		return true
+	}
+	return false
+}
+
+func (e EntityDefinitionExtension) String() string {
+	return string(e)
+}
+
+func (e *EntityDefinitionExtension) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = EntityDefinitionExtension(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid EntityDefinitionExtension", str)
+	}
+	return nil
+}
+
+func (e EntityDefinitionExtension) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
 }
 

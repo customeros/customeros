@@ -2,7 +2,7 @@
 A contact represents an individual in customerOS.
 **A `response` object.**
 """
-type Contact implements ExtensibleEntity {
+type Contact implements ExtensibleEntity & Node {
     """
     The unique ID associated with the contact in customerOS.
     **Required**
@@ -67,7 +67,7 @@ type Contact implements ExtensibleEntity {
     User defined metadata appended to the contact record in customerOS.
     **Required.  If no values it returns an empty array.**
     """
-    textCustomFields: [TextCustomField!]! @goField(forceResolver: true)
+    customFields: [CustomField!]! @goField(forceResolver: true)
 
     fieldSets: [FieldSet!]! @goField(forceResolver: true)
 

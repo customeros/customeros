@@ -33,7 +33,7 @@ createContact(
     notes
     contactType
     createdAt
-    textCustomFields {
+    customFields {
       id
       name
       value
@@ -53,7 +53,7 @@ createContact(
       id
       name
     }
-    companies{
+    companies {
       companyName
       jobTitle
     }

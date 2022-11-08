@@ -11,10 +11,14 @@ import (
 	"github.com/openline-ai/openline-customer-os/customer-os-api/mapper"
 )
 
-// TextCustomFields is the resolver for the textCustomFields field.
-func (r *fieldSetResolver) TextCustomFields(ctx context.Context, obj *model.FieldSet) ([]*model.TextCustomField, error) {
+// CustomFields is the resolver for the customFields field.
+func (r *fieldSetResolver) CustomFields(ctx context.Context, obj *model.FieldSet) ([]*model.CustomField, error) {
+	var customFields []*model.CustomField
 	textCustomFieldEntities, err := r.ServiceContainer.TextCustomFieldService.FindAllForFieldSet(ctx, obj)
-	return mapper.MapEntitiesToTextCustomFields(textCustomFieldEntities), err
+	for _, v := range mapper.MapEntitiesToTextCustomFields(textCustomFieldEntities) {
+		customFields = append(customFields, v)
+	}
+	return customFields, err
 }
 
 // FieldSet returns generated.FieldSetResolver implementation.

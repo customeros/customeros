@@ -7,10 +7,7 @@ import (
 )
 
 func ToTimeHookFunc() mapstructure.DecodeHookFunc {
-	return func(
-		f reflect.Type,
-		t reflect.Type,
-		data interface{}) (interface{}, error) {
+	return func(f reflect.Type, t reflect.Type, data any) (any, error) {
 		if t != reflect.TypeOf(time.Time{}) {
 			return data, nil
 		}
@@ -29,7 +26,7 @@ func ToTimeHookFunc() mapstructure.DecodeHookFunc {
 	}
 }
 
-func Decode(input map[string]interface{}, result interface{}) error {
+func Decode(input map[string]any, result any) error {
 	decoder, err := mapstructure.NewDecoder(&mapstructure.DecoderConfig{
 		Metadata: nil,
 		DecodeHook: mapstructure.ComposeDecodeHookFunc(

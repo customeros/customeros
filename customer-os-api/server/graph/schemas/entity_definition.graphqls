@@ -1,4 +1,42 @@
-type EntityDefinition {
-    id: ID!
+enum EntityDefinitionExtension {
+    CONTACT
 }
 
+type EntityDefinition implements Node {
+    id: ID!
+    name: String!
+    extends: EntityDefinitionExtension
+    fieldSets: [FieldSetDefinition!]!
+    customFields: [CustomFieldDefinition!]!
+}
+
+type FieldSetDefinition  implements Node {
+    id: ID!
+    name: String!
+    order: Int!
+    customFields: [CustomFieldDefinition!]!
+}
+
+interface CustomFieldDefinition  implements Node {
+    id: ID!
+    name: String!
+    order: Int!
+    mandatory: Boolean!
+}
+
+type TextCustomFieldDefinition implements CustomFieldDefinition & Node {
+    id: ID!
+    name: String!
+    order: Int!
+    mandatory: Boolean!
+    length: Int
+}
+
+type IntCustomFieldDefinition implements CustomFieldDefinition & Node {
+    id: ID!
+    name: String!
+    order: Int!
+    mandatory: Boolean!
+    min: Int
+    max: Int
+}

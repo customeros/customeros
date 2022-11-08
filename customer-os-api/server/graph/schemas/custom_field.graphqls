@@ -2,10 +2,9 @@
 Describes a custom, user-defined field associated with a `Contact`.
 **A `return` object.**
 """
-type TextCustomField {
-    
+type CustomField implements Node {
     """
-    The unique ID associated with the custom field. 
+    The unique ID associated with the custom field.
     **Required**
     """
     id: ID!
@@ -24,11 +23,11 @@ type TextCustomField {
 }
 
 """
-Describes a custom, user-defined field associated with a `Contact`.
+Describes a custom, user-defined field associated with a `Contact` of type String.
 **A `create` object.**
 """
 input TextCustomFieldInput {
-    
+
     """
     The name of the custom field.
     **Required**
