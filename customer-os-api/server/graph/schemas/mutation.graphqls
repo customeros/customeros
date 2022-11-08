@@ -1,39 +1,39 @@
 type Mutation {
-    createTenantUser(input: TenantUserInput!): TenantUser!
+    createUser(input: UserInput!): User!
 
     createContact(input: ContactInput!): Contact!
     updateContact(input: ContactUpdateInput!): Contact!
-    hardDeleteContact(contactId: ID!): BooleanResult!
-    softDeleteContact(contactId: ID!): BooleanResult!
+    hardDeleteContact(contactId: ID!): Result!
+    softDeleteContact(contactId: ID!): Result!
 
     mergeTextCustomFieldToContact(contactId : ID!, input: TextCustomFieldInput!): TextCustomField!
     updateTextCustomFieldInContact(contactId : ID!, input: TextCustomFieldUpdateInput!): TextCustomField!
-    removeTextCustomFieldFromContact(contactId : ID!, fieldName: String!): BooleanResult!
-    removeTextCustomFieldFromContactById(contactId : ID!, id: ID!): BooleanResult!
+    removeTextCustomFieldFromContact(contactId : ID!, fieldName: String!): Result!
+    removeTextCustomFieldFromContactById(contactId : ID!, id: ID!): Result!
 
     mergeFieldSetToContact(contactId : ID!, input: FieldSetInput!): FieldSet
     updateFieldSetInContact(contactId : ID!, input: FieldSetUpdateInput!): FieldSet
-    removeFieldSetFromContact(contactId : ID!, id: ID!):BooleanResult!
+    removeFieldSetFromContact(contactId : ID!, id: ID!):Result!
 
     mergeTextCustomFieldToFieldSet(contactId : ID!, fieldSetId : ID!, input: TextCustomFieldInput!): TextCustomField!
     updateTextCustomFieldInFieldSet(contactId : ID!, fieldSetId : ID!, input: TextCustomFieldUpdateInput!): TextCustomField!
-    removeTextCustomFieldFromFieldSetById(contactId : ID!, fieldSetId : ID!, id: ID!): BooleanResult!
+    removeTextCustomFieldFromFieldSetById(contactId : ID!, fieldSetId : ID!, id: ID!): Result!
 
-    mergePhoneNumberToContact(contactId : ID!, input: PhoneNumberInput!): PhoneNumberInfo!
-    updatePhoneNumberInContact(contactId : ID!, input: PhoneNumberUpdateInput!): PhoneNumberInfo!
-    removePhoneNumberFromContact(contactId : ID!, phoneNumber: String!): BooleanResult!
-    removePhoneNumberFromContactById(contactId : ID!, id: ID!): BooleanResult!
+    mergePhoneNumberToContact(contactId : ID!, input: PhoneNumberInput!): PhoneNumber!
+    updatePhoneNumberInContact(contactId : ID!, input: PhoneNumberUpdateInput!): PhoneNumber!
+    removePhoneNumberFromContact(contactId : ID!, e164: String!): Result!
+    removePhoneNumberFromContactById(contactId : ID!, id: ID!): Result!
 
-    mergeEmailToContact(contactId : ID!, input: EmailInput!): EmailInfo!
-    updateEmailInContact(contactId : ID!, input: EmailUpdateInput!): EmailInfo!
-    removeEmailFromContact(contactId : ID!, email: String!): BooleanResult!
-    removeEmailFromContactById(contactId : ID!, id: ID!): BooleanResult!
+    mergeEmailToContact(contactId : ID!, input: EmailInput!): Email!
+    updateEmailInContact(contactId : ID!, input: EmailUpdateInput!): Email!
+    removeEmailFromContact(contactId : ID!, email: String!): Result!
+    removeEmailFromContactById(contactId : ID!, id: ID!): Result!
 
     createContactGroup(input: ContactGroupInput!): ContactGroup!
     updateContactGroup(input: ContactGroupUpdateInput!): ContactGroup!
-    deleteContactGroupAndUnlinkAllContacts(id :ID!): BooleanResult!
-    addContactToGroup(contactId : ID!, groupId: ID!): BooleanResult!
-    removeContactFromGroup(contactId : ID!, groupId: ID!): BooleanResult!
+    deleteContactGroupAndUnlinkAllContacts(id :ID!): Result!
+    addContactToGroup(contactId : ID!, groupId: ID!): Result!
+    removeContactFromGroup(contactId : ID!, groupId: ID!): Result!
 }
 
 

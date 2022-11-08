@@ -18,7 +18,7 @@ type ContactService interface {
 
 	FindContactById(ctx context.Context, id string) (*entity.ContactEntity, error)
 	FindContactByEmail(ctx context.Context, email string) (*entity.ContactEntity, error)
-	FindContactByPhoneNumber(ctx context.Context, number string) (*entity.ContactEntity, error)
+	FindContactByPhoneNumber(ctx context.Context, e164 string) (*entity.ContactEntity, error)
 	FindAll(ctx context.Context, page int, limit int) (*utils.Pagination, error)
 
 	HardDelete(ctx context.Context, id string) (bool, error)
@@ -253,17 +253,17 @@ func (s *contactService) FindContactByEmail(ctx context.Context, email string) (
 	return s.mapDbNodeToContactEntity(queryResult.(dbtype.Node)), nil
 }
 
-func (s *contactService) FindContactByPhoneNumber(ctx context.Context, number string) (*entity.ContactEntity, error) {
+func (s *contactService) FindContactByPhoneNumber(ctx context.Context, e164 string) (*entity.ContactEntity, error) {
 	session := (*s.driver).NewSession(neo4j.SessionConfig{AccessMode: neo4j.AccessModeRead})
 	defer session.Close()
 
 	queryResult, err := session.ReadTransaction(func(tx neo4j.Transaction) (interface{}, error) {
 		result, err := tx.Run(`
-			MATCH (:PhoneNumber {number:$number})<-[:CALLED_AT]-(c:Contact),
+			MATCH (:PhoneNumber {e164:$e164})<-[:CALLED_AT]-(c:Contact),
 					(c)-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) 
 			RETURN c`,
 			map[string]interface{}{
-				"number": number,
+				"e164":   e164,
 				"tenant": common.GetContext(ctx).Tenant,
 			})
 		record, err := result.Single()

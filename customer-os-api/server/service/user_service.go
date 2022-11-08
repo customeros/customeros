@@ -11,29 +11,29 @@ import (
 	"time"
 )
 
-type TenantUserService interface {
-	Create(ctx context.Context, tenantUser *entity.TenantUserEntity) (*entity.TenantUserEntity, error)
+type UserService interface {
+	Create(ctx context.Context, user *entity.UserEntity) (*entity.UserEntity, error)
 	FindAll(ctx context.Context, page int, limit int) (*utils.Pagination, error)
 }
 
-type tenantUserService struct {
+type userService struct {
 	driver *neo4j.Driver
 }
 
-func NewTenantUserService(driver *neo4j.Driver) TenantUserService {
-	return &tenantUserService{
+func NewUserService(driver *neo4j.Driver) UserService {
+	return &userService{
 		driver: driver,
 	}
 }
 
-func (s *tenantUserService) Create(ctx context.Context, tenantUser *entity.TenantUserEntity) (*entity.TenantUserEntity, error) {
+func (s *userService) Create(ctx context.Context, user *entity.UserEntity) (*entity.UserEntity, error) {
 	session := (*s.driver).NewSession(neo4j.SessionConfig{AccessMode: neo4j.AccessModeWrite})
 	defer session.Close()
 
 	queryResult, err := session.WriteTransaction(func(tx neo4j.Transaction) (interface{}, error) {
 		result, err := tx.Run(`
 			MATCH (t:Tenant {name:$tenant})
-			MERGE (u:TenantUser {
+			MERGE (u:User {
 				  id: randomUUID(),
 				  firstName: $firstName,
 				  lastName: $lastName,
@@ -42,9 +42,9 @@ func (s *tenantUserService) Create(ctx context.Context, tenantUser *entity.Tenan
 				})-[:USER_BELONGS_TO_TENANT]->(t)
 			RETURN u`,
 			map[string]interface{}{
-				"firstName": tenantUser.FirstName,
-				"lastName":  tenantUser.LastName,
-				"email":     tenantUser.Email,
+				"firstName": user.FirstName,
+				"lastName":  user.LastName,
+				"email":     user.Email,
 				"tenant":    common.GetContext(ctx).Tenant,
 			})
 
@@ -57,10 +57,10 @@ func (s *tenantUserService) Create(ctx context.Context, tenantUser *entity.Tenan
 	if err != nil {
 		return nil, err
 	}
-	return s.mapDbNodeToTenantUserEntity(queryResult.(dbtype.Node)), nil
+	return s.mapDbNodeToUserEntity(queryResult.(dbtype.Node)), nil
 }
 
-func (s *tenantUserService) FindAll(ctx context.Context, page int, limit int) (*utils.Pagination, error) {
+func (s *userService) FindAll(ctx context.Context, page int, limit int) (*utils.Pagination, error) {
 	var paginatedResult = utils.Pagination{
 		Limit: limit,
 		Page:  page,
@@ -70,7 +70,7 @@ func (s *tenantUserService) FindAll(ctx context.Context, page int, limit int) (*
 
 	dataResult, err := session.ReadTransaction(func(tx neo4j.Transaction) (interface{}, error) {
 		result, err := tx.Run(`
-				MATCH (:Tenant {name:$tenant})<-[:USER_BELONGS_TO_TENANT]-(u:TenantUser) RETURN count(u) as count`,
+				MATCH (:Tenant {name:$tenant})<-[:USER_BELONGS_TO_TENANT]-(u:User) RETURN count(u) as count`,
 			map[string]interface{}{
 				"tenant": common.GetContext(ctx).Tenant,
 			})
@@ -78,7 +78,7 @@ func (s *tenantUserService) FindAll(ctx context.Context, page int, limit int) (*
 		paginatedResult.SetTotalRows(count.Values[0].(int64))
 
 		result, err = tx.Run(`
-				MATCH (:Tenant {name:$tenant})<-[:USER_BELONGS_TO_TENANT]-(u:TenantUser) RETURN u SKIP $skip LIMIT $limit`,
+				MATCH (:Tenant {name:$tenant})<-[:USER_BELONGS_TO_TENANT]-(u:User) RETURN u SKIP $skip LIMIT $limit`,
 			map[string]interface{}{
 				"tenant": common.GetContext(ctx).Tenant,
 				"skip":   paginatedResult.GetSkip(),
@@ -94,19 +94,19 @@ func (s *tenantUserService) FindAll(ctx context.Context, page int, limit int) (*
 		return nil, err
 	}
 
-	tenantUsers := entity.TenantUserEntities{}
+	users := entity.UserEntities{}
 
 	for _, dbRecord := range dataResult.([]*db.Record) {
-		tenantUser := s.mapDbNodeToTenantUserEntity(dbRecord.Values[0].(dbtype.Node))
-		tenantUsers = append(tenantUsers, *tenantUser)
+		user := s.mapDbNodeToUserEntity(dbRecord.Values[0].(dbtype.Node))
+		users = append(users, *user)
 	}
-	paginatedResult.SetRows(&tenantUsers)
+	paginatedResult.SetRows(&users)
 	return &paginatedResult, nil
 }
 
-func (s *tenantUserService) mapDbNodeToTenantUserEntity(dbNode dbtype.Node) *entity.TenantUserEntity {
+func (s *userService) mapDbNodeToUserEntity(dbNode dbtype.Node) *entity.UserEntity {
 	props := utils.GetPropsFromNode(dbNode)
-	contact := entity.TenantUserEntity{
+	contact := entity.UserEntity{
 		Id:        utils.GetStringPropOrEmpty(props, "id"),
 		FirstName: utils.GetStringPropOrEmpty(props, "firstName"),
 		LastName:  utils.GetStringPropOrEmpty(props, "lastName"),

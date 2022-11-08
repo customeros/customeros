@@ -10,8 +10,8 @@ func MapPhoneNumberInputToEntity(input *model.PhoneNumberInput) *entity.PhoneNum
 		return nil
 	}
 	phoneNumberEntity := entity.PhoneNumberEntity{
-		Number: input.Number,
-		Label:  input.Label.String(),
+		E164:  input.E164,
+		Label: input.Label.String(),
 	}
 	if input.Primary != nil {
 		phoneNumberEntity.Primary = *input.Primary
@@ -26,9 +26,9 @@ func MapPhoneNumberUpdateInputToEntity(input *model.PhoneNumberUpdateInput) *ent
 		return nil
 	}
 	phoneNumberEntity := entity.PhoneNumberEntity{
-		Id:     input.ID,
-		Number: input.Number,
-		Label:  input.Label.String(),
+		Id:    input.ID,
+		E164:  input.E164,
+		Label: input.Label.String(),
 	}
 	if input.Primary != nil {
 		phoneNumberEntity.Primary = *input.Primary
@@ -38,22 +38,22 @@ func MapPhoneNumberUpdateInputToEntity(input *model.PhoneNumberUpdateInput) *ent
 	return &phoneNumberEntity
 }
 
-func MapEntitiesToPhoneNumbers(entities *entity.PhoneNumberEntities) []*model.PhoneNumberInfo {
-	var phoneNumbers []*model.PhoneNumberInfo
+func MapEntitiesToPhoneNumbers(entities *entity.PhoneNumberEntities) []*model.PhoneNumber {
+	var phoneNumbers []*model.PhoneNumber
 	for _, phoneNumberEntity := range *entities {
 		phoneNumbers = append(phoneNumbers, MapEntityToPhoneNumber(&phoneNumberEntity))
 	}
 	return phoneNumbers
 }
 
-func MapEntityToPhoneNumber(phoneNumberEntity *entity.PhoneNumberEntity) *model.PhoneNumberInfo {
-	var label = model.PhoneLabel(phoneNumberEntity.Label)
+func MapEntityToPhoneNumber(phoneNumberEntity *entity.PhoneNumberEntity) *model.PhoneNumber {
+	var label = model.PhoneNumberLabel(phoneNumberEntity.Label)
 	if !label.IsValid() {
-		label = model.PhoneLabelOther
+		label = model.PhoneNumberLabelOther
 	}
-	return &model.PhoneNumberInfo{
+	return &model.PhoneNumber{
 		ID:      phoneNumberEntity.Id,
-		Number:  phoneNumberEntity.Number,
+		E164:    phoneNumberEntity.E164,
 		Label:   label,
 		Primary: phoneNumberEntity.Primary,
 	}

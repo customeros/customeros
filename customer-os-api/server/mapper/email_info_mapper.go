@@ -38,20 +38,20 @@ func MapEmailUpdateInputToEntity(input *model.EmailUpdateInput) *entity.EmailEnt
 	return &emailEntity
 }
 
-func MapEntitiesToEmails(entities *entity.EmailEntities) []*model.EmailInfo {
-	var emails []*model.EmailInfo
+func MapEntitiesToEmails(entities *entity.EmailEntities) []*model.Email {
+	var emails []*model.Email
 	for _, emailEntity := range *entities {
 		emails = append(emails, MapEntityToEmail(&emailEntity))
 	}
 	return emails
 }
 
-func MapEntityToEmail(emailEntity *entity.EmailEntity) *model.EmailInfo {
+func MapEntityToEmail(emailEntity *entity.EmailEntity) *model.Email {
 	var label = model.EmailLabel(emailEntity.Label)
 	if !label.IsValid() {
 		label = model.EmailLabelOther
 	}
-	return &model.EmailInfo{
+	return &model.Email{
 		ID:      emailEntity.Id,
 		Email:   emailEntity.Email,
 		Label:   label,

@@ -43,7 +43,7 @@ type Contact {
     `companyName` and `jobTitle` of the contact if it has been associated with a company. 
     **Required.  If no values it returns an empty array.**
     """
-    company: [Company!]! @goField(forceResolver: true)
+    companies: [Company!]! @goField(forceResolver: true)
    
     """
     Identifies any contact groups the contact is associated with.
@@ -52,31 +52,31 @@ type Contact {
     groups: [ContactGroup!]! @goField(forceResolver: true)
 
     """
-    User defined metadata appended to the contact record in customerOS.
-     **Required.  If no values it returns an empty array.**
-    """
-    CustomFields: [CustomField!]! @goField(forceResolver: true)
-
-    """
     All phone numbers associated with a contact in customerOS.
     **Required.  If no values it returns an empty array.**
     """
-    phoneNumbers: [PhoneNumber!] @goField(forceResolver: true)
+    phoneNumbers: [PhoneNumber!]! @goField(forceResolver: true)
 
     """
     All email addresses assocaited with a contact in customerOS.
     **Required.  If no values it returns an empty array.**
     """
-    emails: [Email!] @goField(forceResolver: true)
+    emails: [Email!]! @goField(forceResolver: true)
 
-    fieldSets: [FieldSet!] @goField(forceResolver: true)
+    """
+    User defined metadata appended to the contact record in customerOS.
+    **Required.  If no values it returns an empty array.**
+    """
+    textCustomFields: [TextCustomField!]! @goField(forceResolver: true)
+
+    fieldSets: [FieldSet!]! @goField(forceResolver: true)
 }
 
 """
 Specifies how many pages of contact information has been returned in the query response.
 **A `response` object.**
 """
-type ContactsPage implements PagedResult {
+type ContactsPage implements Pages {
     
     """
     A contact entity in customerOS.
@@ -130,13 +130,13 @@ input ContactInput {
     User defined metadata appended to contact.
     **Required.**
     """
-    CustomFields: [CustomFieldInput!]
+    textCustomFields: [TextCustomFieldInput!]
 
      "`companyName` and `jobTitle` of the contact if it has been associated with a company."
     company: CompanyInput
     
-    "An email addresses assocaited with the contact."
-    email: Email
+    "An email addresses associted with the contact."
+    email: EmailInput
 
     "A phone number associated with the contact."
     phoneNumber: PhoneNumberInput

@@ -20,10 +20,10 @@ func createTenant(driver *neo4j.Driver, tenant string) {
 	})
 }
 
-func createTenantUser(driver *neo4j.Driver, tenant string, user entity.TenantUserEntity) {
+func createUser(driver *neo4j.Driver, tenant string, user entity.UserEntity) {
 	query := `
 		MATCH (t:Tenant {name:$tenant})
-			MERGE (u:TenantUser {
+			MERGE (u:User {
 				  id: randomUUID(),
 				  firstName: $firstName,
 				  lastName: $lastName,
@@ -129,18 +129,18 @@ func addEmailToContact(driver *neo4j.Driver, contactId string, email string, pri
 	})
 }
 
-func addPhoneNumberToContact(driver *neo4j.Driver, contactId string, number string, primary bool, label string) {
+func addPhoneNumberToContact(driver *neo4j.Driver, contactId string, e164 string, primary bool, label string) {
 	query := `
 			MATCH (c:Contact {id:$contactId})
 			MERGE (:PhoneNumber {
 				  id: randomUUID(),
-				  number: $number,
+				  e164: $e164,
 				  label: $label
 				})<-[:CALLED_AT {primary:$primary}]-(c)`
 	integration_tests.ExecuteWriteQuery(driver, query, map[string]any{
 		"contactId": contactId,
 		"primary":   primary,
-		"number":    number,
+		"e164":      e164,
 		"label":     label,
 	})
 }

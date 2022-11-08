@@ -9,7 +9,7 @@ createContact(
       notes: "Some notes...",
       textCustomFields: [ {name: "field1", value: "value1"},
                           {name: "field2", value: "value2"}],
-      companyPosition: {
+      company: {
             companyName:"abc",
             jobTitle:"CTO"
       }
@@ -19,7 +19,7 @@ createContact(
             primary: false
       },
       phoneNumber: {
-            number: "+1234567890",
+            e164: "+1234567890",
             label: MOBILE,
             primary: true
       }
@@ -46,14 +46,14 @@ createContact(
     phoneNumbers {
       id
       primary
-      number
+      e164
       label
     }
     groups {
       id
       name
     }
-    companyPositions{
+    companies{
       companyName
       jobTitle
     }

@@ -39,7 +39,7 @@ type User {
 Specifies how many pages of `User` information has been returned in the query response.
 **A `return` object.**
 """   
-type UserPage implements PagedResult {
+type UserPage implements Pages {
     
     """
     A `User` entity in customerOS.

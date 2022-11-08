@@ -53,7 +53,7 @@ input ContactGroupUpdateInput {
 Specifies how many pages of `ContactGroup` information has been returned in the query response.
 **A `response` object.**
 """   
-type ContactGroupPage implements PagedResult {
+type ContactGroupPage implements Pages {
     
     """
     A collection of groups that a Contact belongs to.  Groups are user-defined entities.
