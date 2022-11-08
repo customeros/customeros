@@ -1,12 +1,31 @@
 """
-The honorific title of an individual.
+Describes the relationship a Contact has with a Company.
+**A `return` object**
 """
-type CompanyPosition {
+type Company {
+    """
+    The name of the company associated with a Contact.
+    **Required.**
+    """
     companyName: String!
+
+    "The Contact's job title."
     jobTitle: String
 }
 
-input CompanyPositionInput {
+
+"""
+Describes the relationship a Contact has with a Company.
+**A `create` object**
+"""
+input CompanyInputß {
+
+    """
+    The name of the company associated with a Contact.
+    **Required.**
+    """
     companyName: String!
+
+    "The Contact's job title."
     jobTitle: String
 }

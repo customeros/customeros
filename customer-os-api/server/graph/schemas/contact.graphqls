@@ -43,7 +43,7 @@ type Contact {
     `companyName` and `jobTitle` of the contact if it has been associated with a company. 
     **Required.  If no values it returns an empty array.**
     """
-    companyPositions: [CompanyPosition!]! @goField(forceResolver: true)
+    company: [Company!]! @goField(forceResolver: true)
    
     """
     Identifies any contact groups the contact is associated with.
@@ -133,7 +133,7 @@ input ContactInput {
     textCustomFields: [TextCustomFieldInput!]
 
      "`companyName` and `jobTitle` of the contact if it has been associated with a company."
-    companyPosition: CompanyPositionInput
+    company: CompanyInput
     
     "An email addresses assocaited with the contact."
     email: EmailInput

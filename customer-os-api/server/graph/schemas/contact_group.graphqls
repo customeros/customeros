@@ -1,20 +1,76 @@
+"""
+A collection of groups that a Contact belongs to.  Groups are user-defined entities.
+**A `return` object.**
+"""
 type ContactGroup {
+    
+    """
+    The unique ID associated with the `ContactGroup` in customerOS. 
+    **Required**
+    """
     id: ID!
+
+    """
+    The name of the `ContactGroup`. 
+    **Required**
+    """
     name: String!
 }
 
+"""
+Create a groups that can be associated with a `Contact` in customerOS.
+**A `create` object.**
+"""
 input ContactGroupInput {
+    
+    """
+    The name of the `ContactGroup`. 
+    **Required**
+    """
     name: String!
 }
 
+"""
+Update a group that can be associated with a `Contact` in customerOS.
+**A `update` object.**
+"""    
 input ContactGroupUpdateInput {
+    
+    """
+    The unique ID associated with the `ContactGroup` in customerOS. 
+    **Required**
+    """
     id: ID!
+
+    """
+    The name of the `ContactGroup`. 
+    **Required**
+    """
     name: String!
 }
 
-type ContactGroupsPage implements PagedResult {
+"""
+Specifies how many pages of `ContactGroup` information has been returned in the query response.
+**A `response` object.**
+"""   
+type ContactGroupPage implements PagedResult {
+    
+    """
+    A collection of groups that a Contact belongs to.  Groups are user-defined entities.
+    **Required.  If no values it returns an empty array.**
+    """
     content: [ContactGroup!]!
+
+    """
+    Total number of pages in the query response.
+    **Required.**
+    """
     totalPages: Int!
+
+    """
+    Total number of elements in the query response.
+    **Required.**
+    """
     totalElements: Int64!
 }
 
