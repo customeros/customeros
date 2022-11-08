@@ -1,4 +1,18 @@
-interface PagedResult {
+"""
+Describes the number of pages and total elements included in a query response.
+**A `response` object.**
+"""
+interface Pages {
+
+    """
+    The total number of pages included in the query response.
+    **Required.**
+    """
     totalPages: Int!
+
+    """
+    The total number of elements included in the query response.
+    **Required.**
+    """
     totalElements: Int64!
 }
