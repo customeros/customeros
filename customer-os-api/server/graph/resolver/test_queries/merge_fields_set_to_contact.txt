@@ -1,0 +1,11 @@
+mutation MergeFieldSetToContact($contactId: ID!){
+     mergeFieldSetToContact(
+        contactId: $contactId
+        input: {name: "some name", type:"some type"}
+     ) {
+        name
+        type
+        id
+        added
+      }
+}

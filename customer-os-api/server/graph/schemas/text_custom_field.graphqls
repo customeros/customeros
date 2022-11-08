@@ -1,19 +1,16 @@
 type TextCustomField {
     id: ID!
-    group: String
     name: String!
     value: String!
 }
 
 input TextCustomFieldInput {
-    group: String
     name: String!
     value: String!
 }
 
 input TextCustomFieldUpdateInput {
     id: ID!
-    group: String
     name: String!
     value: String!
 }

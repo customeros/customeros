@@ -1,11 +1,17 @@
 package resolver
 
 import (
+	"fmt"
 	"github.com/google/uuid"
 	"github.com/neo4j/neo4j-go-driver/v4/neo4j"
+	"github.com/neo4j/neo4j-go-driver/v4/neo4j/db"
 	"github.com/openline-ai/openline-customer-os/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/customer-os-api/integration_tests"
 )
+
+func cleanupAllData(driver *neo4j.Driver) {
+	integration_tests.ExecuteWriteQuery(driver, `MATCH (n) DETACH DELETE n`, map[string]any{})
+}
 
 func createTenant(driver *neo4j.Driver, tenant string) {
 	query := `MERGE (t:Tenant {name:$tenant})`
@@ -30,6 +36,10 @@ func createTenantUser(driver *neo4j.Driver, tenant string, user entity.TenantUse
 		"lastName":  user.LastName,
 		"email":     user.Email,
 	})
+}
+
+func createDefaultContact(driver *neo4j.Driver, tenant string) string {
+	return createContact(driver, tenant, entity.ContactEntity{Title: "MR", FirstName: "first", LastName: "last"})
 }
 
 func createContact(driver *neo4j.Driver, tenant string, contact entity.ContactEntity) string {
@@ -57,4 +67,54 @@ func createContact(driver *neo4j.Driver, tenant string, contact entity.ContactEn
 		"label":       contact.Label,
 	})
 	return contactId.String()
+}
+
+func createDefaultFieldSet(driver *neo4j.Driver, contactId string) string {
+	return createFieldSet(driver, contactId, entity.FieldSetEntity{Name: "name", Type: "type"})
+}
+
+func createFieldSet(driver *neo4j.Driver, contactId string, fieldSet entity.FieldSetEntity) string {
+	var fieldSetId, _ = uuid.NewRandom()
+	query := `
+			MATCH (c:Contact {id:$contactId})
+			MERGE (s:FieldSet {
+				  id: $fieldSetId,
+				  type: $type,
+				  name: $name
+				})<-[:HAS_COMPLEX_PROPERTY {added:datetime({timezone: 'UTC'})}]-(c)`
+	integration_tests.ExecuteWriteQuery(driver, query, map[string]any{
+		"contactId":  contactId,
+		"fieldSetId": fieldSetId.String(),
+		"type":       fieldSet.Type,
+		"name":       fieldSet.Name,
+	})
+	return fieldSetId.String()
+}
+
+func createDefaultTextFieldInSet(driver *neo4j.Driver, fieldSetId string) string {
+	return createTextFieldInSet(driver, fieldSetId, entity.TextCustomFieldEntity{Name: "name", Value: "value"})
+}
+
+func createTextFieldInSet(driver *neo4j.Driver, fieldSetId string, textField entity.TextCustomFieldEntity) string {
+	var fieldId, _ = uuid.NewRandom()
+	query := `
+			MATCH (s:FieldSet {id:$fieldSetId})
+			MERGE (:TextCustomField {
+				  id: $fieldId,
+				  value: $value,
+				  name: $name
+				})<-[:HAS_TEXT_PROPERTY]-(s)`
+	integration_tests.ExecuteWriteQuery(driver, query, map[string]any{
+		"fieldSetId": fieldSetId,
+		"fieldId":    fieldId.String(),
+		"name":       textField.Name,
+		"value":      textField.Value,
+	})
+	return fieldId.String()
+}
+
+func getCountOfNodes(driver *neo4j.Driver, nodeLabel string) int {
+	query := fmt.Sprintf(`MATCH (n:%s) RETURN count(n)`, nodeLabel)
+	result := integration_tests.ExecuteReadQueryWithSingleReturn(driver, query, map[string]any{})
+	return int(result.(*db.Record).Values[0].(int64))
 }

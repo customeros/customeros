@@ -21,9 +21,6 @@ func MapTextCustomFieldInputToEntity(input *model.TextCustomFieldInput) *entity.
 		Name:  input.Name,
 		Value: input.Value,
 	}
-	if input.Group != nil {
-		textCustomFieldEntity.Group = *input.Group
-	}
 	return &textCustomFieldEntity
 }
 
@@ -32,9 +29,6 @@ func MapTextCustomFieldUpdateInputToEntity(input *model.TextCustomFieldUpdateInp
 		Id:    input.ID,
 		Name:  input.Name,
 		Value: input.Value,
-	}
-	if input.Group != nil {
-		textCustomFieldEntity.Group = *input.Group
 	}
 	return &textCustomFieldEntity
 }
@@ -48,11 +42,9 @@ func MapEntitiesToTextCustomFields(textCustomFieldEntities *entity.TextCustomFie
 }
 
 func MapEntityToTextCustomField(textCustomFieldEntity *entity.TextCustomFieldEntity) *model.TextCustomField {
-	var group = textCustomFieldEntity.Group
 	return &model.TextCustomField{
 		ID:    textCustomFieldEntity.Id,
 		Name:  textCustomFieldEntity.Name,
 		Value: textCustomFieldEntity.Value,
-		Group: &group,
 	}
 }

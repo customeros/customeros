@@ -1,0 +1,17 @@
+type FieldSet {
+    id: ID!
+    type: String!
+    name: String!
+    added: Time!
+    textCustomFields: [TextCustomField!]! @goField(forceResolver: true)
+}
+
+input FieldSetInput {
+    type: String!
+    name: String!
+}
+
+input FieldSetUpdateInput {
+    id: ID!
+    name: String!
+}

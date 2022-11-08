@@ -11,6 +11,14 @@ type Mutation {
     removeTextCustomFieldFromContact(contactId : ID!, fieldName: String!): BooleanResult!
     removeTextCustomFieldFromContactById(contactId : ID!, id: ID!): BooleanResult!
 
+    mergeFieldSetToContact(contactId : ID!, input: FieldSetInput!): FieldSet
+    updateFieldSetInContact(contactId : ID!, input: FieldSetUpdateInput!): FieldSet
+    removeFieldSetFromContact(contactId : ID!, id: ID!):BooleanResult!
+
+    mergeTextCustomFieldToFieldSet(contactId : ID!, fieldSetId : ID!, input: TextCustomFieldInput!): TextCustomField!
+    updateTextCustomFieldInFieldSet(contactId : ID!, fieldSetId : ID!, input: TextCustomFieldUpdateInput!): TextCustomField!
+    removeTextCustomFieldFromFieldSetById(contactId : ID!, fieldSetId : ID!, id: ID!): BooleanResult!
+
     mergePhoneNumberToContact(contactId : ID!, input: PhoneNumberInput!): PhoneNumberInfo!
     updatePhoneNumberInContact(contactId : ID!, input: PhoneNumberUpdateInput!): PhoneNumberInfo!
     removePhoneNumberFromContact(contactId : ID!, phoneNumber: String!): BooleanResult!

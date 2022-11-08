@@ -56,7 +56,8 @@ type Contact struct {
 	// All phone numbers associated with a contact in customerOS.
 	PhoneNumbers []*PhoneNumberInfo `json:"phoneNumbers"`
 	// All email addresses assocaited with a contact in customerOS.
-	Emails []*EmailInfo `json:"emails"`
+	Emails    []*EmailInfo `json:"emails"`
+	FieldSets []*FieldSet  `json:"fieldSets"`
 }
 
 type ContactGroup struct {
@@ -159,6 +160,24 @@ type EmailUpdateInput struct {
 	Primary *bool      `json:"primary"`
 }
 
+type FieldSet struct {
+	ID               string             `json:"id"`
+	Type             string             `json:"type"`
+	Name             string             `json:"name"`
+	Added            time.Time          `json:"added"`
+	TextCustomFields []*TextCustomField `json:"textCustomFields"`
+}
+
+type FieldSetInput struct {
+	Type string `json:"type"`
+	Name string `json:"name"`
+}
+
+type FieldSetUpdateInput struct {
+	ID   string `json:"id"`
+	Name string `json:"name"`
+}
+
 type PaginationFilter struct {
 	Page  int `json:"page"`
 	Limit int `json:"limit"`
@@ -209,23 +228,20 @@ func (this TenantUsersPage) GetTotalPages() int      { return this.TotalPages }
 func (this TenantUsersPage) GetTotalElements() int64 { return this.TotalElements }
 
 type TextCustomField struct {
-	ID    string  `json:"id"`
-	Group *string `json:"group"`
-	Name  string  `json:"name"`
-	Value string  `json:"value"`
+	ID    string `json:"id"`
+	Name  string `json:"name"`
+	Value string `json:"value"`
 }
 
 type TextCustomFieldInput struct {
-	Group *string `json:"group"`
-	Name  string  `json:"name"`
-	Value string  `json:"value"`
+	Name  string `json:"name"`
+	Value string `json:"value"`
 }
 
 type TextCustomFieldUpdateInput struct {
-	ID    string  `json:"id"`
-	Group *string `json:"group"`
-	Name  string  `json:"name"`
-	Value string  `json:"value"`
+	ID    string `json:"id"`
+	Name  string `json:"name"`
+	Value string `json:"value"`
 }
 
 type EmailLabel string

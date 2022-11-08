@@ -41,6 +41,12 @@ func (r *contactResolver) Emails(ctx context.Context, obj *model.Contact) ([]*mo
 	return mapper.MapEntitiesToEmails(emailEntities), err
 }
 
+// FieldSets is the resolver for the fieldSets field.
+func (r *contactResolver) FieldSets(ctx context.Context, obj *model.Contact) ([]*model.FieldSet, error) {
+	fieldSetEntities, err := r.ServiceContainer.FieldSetService.FindAllForContact(ctx, obj)
+	return mapper.MapEntitiesToFieldSets(fieldSetEntities), err
+}
+
 // Contact returns generated.ContactResolver implementation.
 func (r *Resolver) Contact() generated.ContactResolver { return &contactResolver{r} }
 
