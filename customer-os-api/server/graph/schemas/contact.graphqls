@@ -1,20 +1,33 @@
 """
 A contact represents an individual in customerOS.
+**A `response` object.**
 """
 type Contact {
-    "The unique ID associated with the contact in customerOS."
+    """
+    The unique ID associated with the contact in customerOS. 
+    **Required**
+    """
     id: ID!
 
     "The title associate with the contact in customerOS."
     title: PersonTitle
 
-    "The first name of the contact in customerOS."
+    """
+    The first name of the contact in customerOS.  
+    **Required**"
+    """
     firstName: String!
 
-    "The last name of the contact in customerOS."
+    """
+    The last name of the contact in customerOS.  
+    **Required**
+    """
     lastName: String!
 
-    "An ISO8601 timestamp recording when the contact was created in customerOS."
+    """
+    An ISO8601 timestamp recording when the contact was created in customerOS. 
+    **Required**
+    """
     createdAt: Time!
 
     "A user-defined label applied against a contact in customerOS."
@@ -26,7 +39,7 @@ type Contact {
     "User-defined [should this be a defined type?]"
     contactType: String
 
-    "`companyName` and `jobTitle` of the contact if it has been associated with a company."
+    "`companyName` and `jobTitle` of the contact if it has been associated with a company. **Required.  If no values it returns an empty array.**"
     companyPositions: [CompanyPosition!]! @goField(forceResolver: true)
 
     "Identifies any contact groups the contact is associated with."
@@ -60,7 +73,7 @@ type ContactsPage implements PagedResult {
 }
 
 """
-An individual that you would like to add to customerOS.
+Create an individual in customerOS.
 """
 input ContactInput {
     "The title of the contact."
@@ -84,7 +97,7 @@ input ContactInput {
     "User defined metadata appended to contact."
     textCustomFields: [TextCustomFieldInput!]
 
-    "The job title of the contact."
+     "`companyName` and `jobTitle` of the contact if it has been associated with a company."
     companyPosition: CompanyPositionInput
     
     "An email addresses assocaited with the contact."
