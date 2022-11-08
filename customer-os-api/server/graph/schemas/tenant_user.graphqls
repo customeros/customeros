@@ -1,20 +1,87 @@
-type TenantUser {
+"""
+Describes the User of customerOS.  A user is the person who logs into the Openline platform.
+**A `return` object**
+"""
+type User {
+    
+    """
+    The unique ID associated with the customerOS user. 
+    **Required**
+    """
     id: ID!
+
+    """
+    The first name of the customerOS user. 
+    **Required**
+    """
     firstName: String!
+
+    """
+    The last name of the customerOS user. 
+    **Required**
+    """
     lastName: String!
+
+    """
+    The email address of the customerOS user. 
+    **Required**
+    """
     email: String!
+
+    """
+    Timestamp of user creation.
+    **Required**
+    """
     createdAt: Time!
 }
 
-type TenantUsersPage implements PagedResult {
-    content: [TenantUser!]!
+"""
+Specifies how many pages of `User` information has been returned in the query response.
+**A `return` object.**
+"""   
+type UserPage implements PagedResult {
+    
+    """
+    A `User` entity in customerOS.
+    **Required.  If no values it returns an empty array.**
+    """
+    content: [User!]!
+    
+    """
+    Total number of pages in the query response.
+    **Required.**
+    """
     totalPages: Int!
+
+    """
+    Total number of elements in the query response.
+    **Required.**
+    """
     totalElements: Int64!
 }
 
-input TenantUserInput {
+"""
+Describes the User of customerOS.  A user is the person who logs into the Openline platform.
+**A `create` object.**
+"""   
+input UserInput {
+    
+    """
+    The first name of the customerOS user. 
+    **Required**
+    """
     firstName: String!
+    
+    """
+    The last name of the customerOS user. 
+    **Required**
+    """
     lastName: String!
+
+    """
+    The email address of the customerOS user. 
+    **Required**
+    """
     email: String!
 }
 

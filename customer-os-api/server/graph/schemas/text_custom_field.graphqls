@@ -1,16 +1,68 @@
-type TextCustomField {
+"""
+Describes a custom, user-defined field associated with a `Contact`.
+**A `return` object.**
+"""
+type CustomField {
+    
+    """
+    The unique ID associated with the custom field. 
+    **Required**
+    """
     id: ID!
+
+    """
+    The name of the custom field.
+    **Required**
+    """
     name: String!
+
+    """
+    The value of the custom field.
+    **Required**
+    """
     value: String!
 }
 
-input TextCustomFieldInput {
+"""
+Describes a custom, user-defined field associated with a `Contact`.
+**A `create` object.**
+"""
+input CustomFieldInput {
+    
+    """
+    The name of the custom field.
+    **Required**
+    """
     name: String!
+
+    """
+    The value of the custom field.
+    **Required**
+    """
     value: String!
 }
 
-input TextCustomFieldUpdateInput {
+"""
+Describes a custom, user-defined field associated with a `Contact`.
+**An `update` object.**
+"""
+input CustomFieldUpdateInput {
+    
+    """
+    The unique ID associated with the custom field. 
+    **Required**
+    """
     id: ID!
+
+    """
+    The name of the custom field.
+    **Required**
+    """
     name: String!
+
+    """
+    The value of the custom field.
+    **Required**
+    """
     value: String!
 }
