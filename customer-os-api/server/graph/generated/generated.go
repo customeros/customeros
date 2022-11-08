@@ -56,6 +56,7 @@ type ComplexityRoot struct {
 		Companies        func(childComplexity int) int
 		ContactType      func(childComplexity int) int
 		CreatedAt        func(childComplexity int) int
+		DefinitionID     func(childComplexity int) int
 		Emails           func(childComplexity int) int
 		FieldSets        func(childComplexity int) int
 		FirstName        func(childComplexity int) int
@@ -91,6 +92,10 @@ type ComplexityRoot struct {
 		ID      func(childComplexity int) int
 		Label   func(childComplexity int) int
 		Primary func(childComplexity int) int
+	}
+
+	EntityDefinition struct {
+		ID func(childComplexity int) int
 	}
 
 	FieldSet struct {
@@ -275,6 +280,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Contact.CreatedAt(childComplexity), true
 
+	case "Contact.definitionId":
+		if e.complexity.Contact.DefinitionID == nil {
+			break
+		}
+
+		return e.complexity.Contact.DefinitionID(childComplexity), true
+
 	case "Contact.emails":
 		if e.complexity.Contact.Emails == nil {
 			break
@@ -435,6 +447,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Email.Primary(childComplexity), true
+
+	case "EntityDefinition.id":
+		if e.complexity.EntityDefinition.ID == nil {
+			break
+		}
+
+		return e.complexity.EntityDefinition.ID(childComplexity), true
 
 	case "FieldSet.added":
 		if e.complexity.FieldSet.Added == nil {
@@ -1121,9 +1140,9 @@ input CompanyInput {
 A contact represents an individual in customerOS.
 **A ` + "`" + `response` + "`" + ` object.**
 """
-type Contact {
+type Contact implements ExtensibleEntity {
     """
-    The unique ID associated with the contact in customerOS. 
+    The unique ID associated with the contact in customerOS.
     **Required**
     """
     id: ID!
@@ -1132,19 +1151,19 @@ type Contact {
     title: PersonTitle
 
     """
-    The first name of the contact in customerOS.  
+    The first name of the contact in customerOS.
     **Required**"
     """
     firstName: String!
 
     """
-    The last name of the contact in customerOS.  
+    The last name of the contact in customerOS.
     **Required**
     """
     lastName: String!
 
     """
-    An ISO8601 timestamp recording when the contact was created in customerOS. 
+    An ISO8601 timestamp recording when the contact was created in customerOS.
     **Required**
     """
     createdAt: Time!
@@ -1159,11 +1178,11 @@ type Contact {
     contactType: String
 
     """
-    ` + "`" + `companyName` + "`" + ` and ` + "`" + `jobTitle` + "`" + ` of the contact if it has been associated with a company. 
+    ` + "`" + `companyName` + "`" + ` and ` + "`" + `jobTitle` + "`" + ` of the contact if it has been associated with a company.
     **Required.  If no values it returns an empty array.**
     """
     companies: [Company!]! @goField(forceResolver: true)
-   
+
     """
     Identifies any contact groups the contact is associated with.
      **Required.  If no values it returns an empty array.**
@@ -1189,6 +1208,12 @@ type Contact {
     textCustomFields: [TextCustomField!]! @goField(forceResolver: true)
 
     fieldSets: [FieldSet!]! @goField(forceResolver: true)
+
+    """
+    The unique ID associated with the definition of the contact in customerOS.
+    **Required**
+    """
+    definitionId: ID!
 }
 
 """
@@ -1498,6 +1523,11 @@ enum EmailLabel {
     OTHER
 }
 `, BuiltIn: false},
+	{Name: "../schemas/entity_definition.graphqls", Input: `type EntityDefinition {
+    id: ID!
+}
+
+`, BuiltIn: false},
 	{Name: "../schemas/field_set.graphqls", Input: `type FieldSet {
     id: ID!
     type: String!
@@ -1549,6 +1579,10 @@ interface Pages {
     **Required.**
     """
     totalElements: Int64!
+}
+
+interface ExtensibleEntity {
+    definitionId: ID!
 }`, BuiltIn: false},
 	{Name: "../schemas/mutation.graphqls", Input: `type Mutation {
     createUser(input: UserInput!): User!
@@ -3427,6 +3461,50 @@ func (ec *executionContext) fieldContext_Contact_fieldSets(ctx context.Context, 
 	return fc, nil
 }
 
+func (ec *executionContext) _Contact_definitionId(ctx context.Context, field graphql.CollectedField, obj *model.Contact) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Contact_definitionId(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.DefinitionID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNID2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Contact_definitionId(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Contact",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _ContactGroup_id(ctx context.Context, field graphql.CollectedField, obj *model.ContactGroup) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_ContactGroup_id(ctx, field)
 	if err != nil {
@@ -3720,6 +3798,8 @@ func (ec *executionContext) fieldContext_ContactsPage_content(ctx context.Contex
 				return ec.fieldContext_Contact_textCustomFields(ctx, field)
 			case "fieldSets":
 				return ec.fieldContext_Contact_fieldSets(ctx, field)
+			case "definitionId":
+				return ec.fieldContext_Contact_definitionId(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Contact", field.Name)
 		},
@@ -3986,6 +4066,50 @@ func (ec *executionContext) fieldContext_Email_primary(ctx context.Context, fiel
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _EntityDefinition_id(ctx context.Context, field graphql.CollectedField, obj *model.EntityDefinition) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_EntityDefinition_id(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNID2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_EntityDefinition_id(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "EntityDefinition",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
 		},
 	}
 	return fc, nil
@@ -4353,6 +4477,8 @@ func (ec *executionContext) fieldContext_Mutation_createContact(ctx context.Cont
 				return ec.fieldContext_Contact_textCustomFields(ctx, field)
 			case "fieldSets":
 				return ec.fieldContext_Contact_fieldSets(ctx, field)
+			case "definitionId":
+				return ec.fieldContext_Contact_definitionId(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Contact", field.Name)
 		},
@@ -4438,6 +4564,8 @@ func (ec *executionContext) fieldContext_Mutation_updateContact(ctx context.Cont
 				return ec.fieldContext_Contact_textCustomFields(ctx, field)
 			case "fieldSets":
 				return ec.fieldContext_Contact_fieldSets(ctx, field)
+			case "definitionId":
+				return ec.fieldContext_Contact_definitionId(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Contact", field.Name)
 		},
@@ -6288,6 +6416,8 @@ func (ec *executionContext) fieldContext_Query_contact(ctx context.Context, fiel
 				return ec.fieldContext_Contact_textCustomFields(ctx, field)
 			case "fieldSets":
 				return ec.fieldContext_Contact_fieldSets(ctx, field)
+			case "definitionId":
+				return ec.fieldContext_Contact_definitionId(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Contact", field.Name)
 		},
@@ -6436,6 +6566,8 @@ func (ec *executionContext) fieldContext_Query_contactByEmail(ctx context.Contex
 				return ec.fieldContext_Contact_textCustomFields(ctx, field)
 			case "fieldSets":
 				return ec.fieldContext_Contact_fieldSets(ctx, field)
+			case "definitionId":
+				return ec.fieldContext_Contact_definitionId(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Contact", field.Name)
 		},
@@ -6521,6 +6653,8 @@ func (ec *executionContext) fieldContext_Query_contactByPhone(ctx context.Contex
 				return ec.fieldContext_Contact_textCustomFields(ctx, field)
 			case "fieldSets":
 				return ec.fieldContext_Contact_fieldSets(ctx, field)
+			case "definitionId":
+				return ec.fieldContext_Contact_definitionId(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Contact", field.Name)
 		},
@@ -9806,6 +9940,22 @@ func (ec *executionContext) unmarshalInputUserInput(ctx context.Context, obj int
 
 // region    ************************** interface.gotpl ***************************
 
+func (ec *executionContext) _ExtensibleEntity(ctx context.Context, sel ast.SelectionSet, obj model.ExtensibleEntity) graphql.Marshaler {
+	switch obj := (obj).(type) {
+	case nil:
+		return graphql.Null
+	case model.Contact:
+		return ec._Contact(ctx, sel, &obj)
+	case *model.Contact:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._Contact(ctx, sel, obj)
+	default:
+		panic(fmt.Errorf("unexpected type %T", obj))
+	}
+}
+
 func (ec *executionContext) _Pages(ctx context.Context, sel ast.SelectionSet, obj model.Pages) graphql.Marshaler {
 	switch obj := (obj).(type) {
 	case nil:
@@ -9872,7 +10022,7 @@ func (ec *executionContext) _Company(ctx context.Context, sel ast.SelectionSet, 
 	return out
 }
 
-var contactImplementors = []string{"Contact"}
+var contactImplementors = []string{"Contact", "ExtensibleEntity"}
 
 func (ec *executionContext) _Contact(ctx context.Context, sel ast.SelectionSet, obj *model.Contact) graphql.Marshaler {
 	fields := graphql.CollectFields(ec.OperationContext, sel, contactImplementors)
@@ -10046,6 +10196,13 @@ func (ec *executionContext) _Contact(ctx context.Context, sel ast.SelectionSet, 
 				return innerFunc(ctx)
 
 			})
+		case "definitionId":
+
+			out.Values[i] = ec._Contact_definitionId(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -10210,6 +10367,34 @@ func (ec *executionContext) _Email(ctx context.Context, sel ast.SelectionSet, ob
 		case "primary":
 
 			out.Values[i] = ec._Email_primary(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var entityDefinitionImplementors = []string{"EntityDefinition"}
+
+func (ec *executionContext) _EntityDefinition(ctx context.Context, sel ast.SelectionSet, obj *model.EntityDefinition) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, entityDefinitionImplementors)
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("EntityDefinition")
+		case "id":
+
+			out.Values[i] = ec._EntityDefinition_id(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
 				invalids++

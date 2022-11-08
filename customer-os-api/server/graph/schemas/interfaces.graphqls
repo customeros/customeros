@@ -16,3 +16,7 @@ interface Pages {
     """
     totalElements: Int64!
 }
+
+interface ExtensibleEntity {
+    definitionId: ID!
+}

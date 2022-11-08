@@ -1,0 +1,4 @@
+type EntityDefinition {
+    id: ID!
+}
+

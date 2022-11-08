@@ -9,6 +9,11 @@ import (
 	"time"
 )
 
+type ExtensibleEntity interface {
+	IsExtensibleEntity()
+	GetDefinitionID() string
+}
+
 // Describes the number of pages and total elements included in a query response.
 // **A `response` object.**
 type Pages interface {
@@ -80,7 +85,13 @@ type Contact struct {
 	// **Required.  If no values it returns an empty array.**
 	TextCustomFields []*TextCustomField `json:"textCustomFields"`
 	FieldSets        []*FieldSet        `json:"fieldSets"`
+	// The unique ID associated with the definition of the contact in customerOS.
+	// **Required**
+	DefinitionID string `json:"definitionId"`
 }
+
+func (Contact) IsExtensibleEntity()          {}
+func (this Contact) GetDefinitionID() string { return this.DefinitionID }
 
 // A collection of groups that a Contact belongs to.  Groups are user-defined entities.
 // **A `return` object.**
@@ -256,6 +267,10 @@ type EmailUpdateInput struct {
 	// Identifies whether the email address is primary or not.
 	// **Required.**
 	Primary *bool `json:"primary"`
+}
+
+type EntityDefinition struct {
+	ID string `json:"id"`
 }
 
 type FieldSet struct {
