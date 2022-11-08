@@ -166,7 +166,6 @@ type ComplexityRoot struct {
 	}
 
 	TextCustomField struct {
-		Group func(childComplexity int) int
 		ID    func(childComplexity int) int
 		Name  func(childComplexity int) int
 		Value func(childComplexity int) int
@@ -955,13 +954,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.TenantUsersPage.TotalPages(childComplexity), true
 
-	case "TextCustomField.group":
-		if e.complexity.TextCustomField.Group == nil {
-			break
-		}
-
-		return e.complexity.TextCustomField.Group(childComplexity), true
-
 	case "TextCustomField.id":
 		if e.complexity.TextCustomField.ID == nil {
 			break
@@ -1400,20 +1392,17 @@ input TenantUserInput {
 `, BuiltIn: false},
 	{Name: "../schemas/text_custom_field.graphqls", Input: `type TextCustomField {
     id: ID!
-    group: String
     name: String!
     value: String!
 }
 
 input TextCustomFieldInput {
-    group: String
     name: String!
     value: String!
 }
 
 input TextCustomFieldUpdateInput {
     id: ID!
-    group: String
     name: String!
     value: String!
 }`, BuiltIn: false},
@@ -2789,8 +2778,6 @@ func (ec *executionContext) fieldContext_Contact_textCustomFields(ctx context.Co
 			switch field.Name {
 			case "id":
 				return ec.fieldContext_TextCustomField_id(ctx, field)
-			case "group":
-				return ec.fieldContext_TextCustomField_group(ctx, field)
 			case "name":
 				return ec.fieldContext_TextCustomField_name(ctx, field)
 			case "value":
@@ -3738,8 +3725,6 @@ func (ec *executionContext) fieldContext_FieldsSet_textCustomFields(ctx context.
 			switch field.Name {
 			case "id":
 				return ec.fieldContext_TextCustomField_id(ctx, field)
-			case "group":
-				return ec.fieldContext_TextCustomField_group(ctx, field)
 			case "name":
 				return ec.fieldContext_TextCustomField_name(ctx, field)
 			case "value":
@@ -4147,8 +4132,6 @@ func (ec *executionContext) fieldContext_Mutation_mergeTextCustomFieldToContact(
 			switch field.Name {
 			case "id":
 				return ec.fieldContext_TextCustomField_id(ctx, field)
-			case "group":
-				return ec.fieldContext_TextCustomField_group(ctx, field)
 			case "name":
 				return ec.fieldContext_TextCustomField_name(ctx, field)
 			case "value":
@@ -4212,8 +4195,6 @@ func (ec *executionContext) fieldContext_Mutation_updateTextCustomFieldInContact
 			switch field.Name {
 			case "id":
 				return ec.fieldContext_TextCustomField_id(ctx, field)
-			case "group":
-				return ec.fieldContext_TextCustomField_group(ctx, field)
 			case "name":
 				return ec.fieldContext_TextCustomField_name(ctx, field)
 			case "value":
@@ -4582,8 +4563,6 @@ func (ec *executionContext) fieldContext_Mutation_mergeTextCustomFieldToFieldsSe
 			switch field.Name {
 			case "id":
 				return ec.fieldContext_TextCustomField_id(ctx, field)
-			case "group":
-				return ec.fieldContext_TextCustomField_group(ctx, field)
 			case "name":
 				return ec.fieldContext_TextCustomField_name(ctx, field)
 			case "value":
@@ -4647,8 +4626,6 @@ func (ec *executionContext) fieldContext_Mutation_updateTextCustomFieldInFieldsS
 			switch field.Name {
 			case "id":
 				return ec.fieldContext_TextCustomField_id(ctx, field)
-			case "group":
-				return ec.fieldContext_TextCustomField_group(ctx, field)
 			case "name":
 				return ec.fieldContext_TextCustomField_name(ctx, field)
 			case "value":
@@ -6568,47 +6545,6 @@ func (ec *executionContext) fieldContext_TextCustomField_id(ctx context.Context,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type ID does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _TextCustomField_group(ctx context.Context, field graphql.CollectedField, obj *model.TextCustomField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_TextCustomField_group(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Group, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*string)
-	fc.Result = res
-	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_TextCustomField_group(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "TextCustomField",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
 		},
 	}
 	return fc, nil
@@ -9102,21 +9038,13 @@ func (ec *executionContext) unmarshalInputTextCustomFieldInput(ctx context.Conte
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"group", "name", "value"}
+	fieldsInOrder := [...]string{"name", "value"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
 			continue
 		}
 		switch k {
-		case "group":
-			var err error
-
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("group"))
-			it.Group, err = ec.unmarshalOString2ᚖstring(ctx, v)
-			if err != nil {
-				return it, err
-			}
 		case "name":
 			var err error
 
@@ -9146,7 +9074,7 @@ func (ec *executionContext) unmarshalInputTextCustomFieldUpdateInput(ctx context
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"id", "group", "name", "value"}
+	fieldsInOrder := [...]string{"id", "name", "value"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -9158,14 +9086,6 @@ func (ec *executionContext) unmarshalInputTextCustomFieldUpdateInput(ctx context
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
 			it.ID, err = ec.unmarshalNID2string(ctx, v)
-			if err != nil {
-				return it, err
-			}
-		case "group":
-			var err error
-
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("group"))
-			it.Group, err = ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -10299,10 +10219,6 @@ func (ec *executionContext) _TextCustomField(ctx context.Context, sel ast.Select
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
-		case "group":
-
-			out.Values[i] = ec._TextCustomField_group(ctx, field, obj)
-
 		case "name":
 
 			out.Values[i] = ec._TextCustomField_name(ctx, field, obj)

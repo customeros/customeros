@@ -228,23 +228,20 @@ func (this TenantUsersPage) GetTotalPages() int      { return this.TotalPages }
 func (this TenantUsersPage) GetTotalElements() int64 { return this.TotalElements }
 
 type TextCustomField struct {
-	ID    string  `json:"id"`
-	Group *string `json:"group"`
-	Name  string  `json:"name"`
-	Value string  `json:"value"`
+	ID    string `json:"id"`
+	Name  string `json:"name"`
+	Value string `json:"value"`
 }
 
 type TextCustomFieldInput struct {
-	Group *string `json:"group"`
-	Name  string  `json:"name"`
-	Value string  `json:"value"`
+	Name  string `json:"name"`
+	Value string `json:"value"`
 }
 
 type TextCustomFieldUpdateInput struct {
-	ID    string  `json:"id"`
-	Group *string `json:"group"`
-	Name  string  `json:"name"`
-	Value string  `json:"value"`
+	ID    string `json:"id"`
+	Name  string `json:"name"`
+	Value string `json:"value"`
 }
 
 type EmailLabel string

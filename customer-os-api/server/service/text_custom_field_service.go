@@ -25,7 +25,7 @@ type TextCustomFieldService interface {
 	DeleteByIdFromContact(ctx context.Context, contactId string, fieldId string) (bool, error)
 	DeleteByIdFromFieldsSet(ctx context.Context, contactId string, fieldsSetId string, fieldId string) (bool, error)
 
-	mapDbNodeToTextCustomFieldEntity(dbContactGroupNode dbtype.Node) *entity.TextCustomFieldEntity
+	mapDbNodeToTextCustomFieldEntity(node dbtype.Node) *entity.TextCustomFieldEntity
 }
 
 type textCustomPropertyService struct {
@@ -110,15 +110,14 @@ func (s *textCustomPropertyService) MergeTextCustomFieldToContact(ctx context.Co
 		txResult, err := tx.Run(`
 			MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant})
 			MERGE (f:TextCustomField {name: $name})<-[:HAS_TEXT_PROPERTY]-(c)
-            ON CREATE SET f.value=$value, f.group=$group, f.id=randomUUID()
-            ON MATCH SET f.value=$value, f.group=$group
+            ON CREATE SET f.value=$value, f.id=randomUUID()
+            ON MATCH SET f.value=$value
 			RETURN f`,
 			map[string]any{
 				"tenant":    common.GetContext(ctx).Tenant,
 				"contactId": contactId,
 				"name":      entity.Name,
 				"value":     entity.Value,
-				"group":     entity.Group,
 			})
 		record, err := txResult.Single()
 		if err != nil {
@@ -141,8 +140,8 @@ func (s *textCustomPropertyService) MergeTextCustomFieldToFieldsSet(ctx context.
 		txResult, err := tx.Run(`
 			MATCH (s:FieldsSet {id:$fieldsSetId})<-[:HAS_COMPLEX_PROPERTY]-(c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant})
 			MERGE (f:TextCustomField {name: $name})<-[:HAS_TEXT_PROPERTY]-(s)
-            ON CREATE SET f.value=$value, f.group=$group, f.id=randomUUID()
-            ON MATCH SET f.value=$value, f.group=$group
+            ON CREATE SET f.value=$value, f.id=randomUUID()
+            ON MATCH SET f.value=$value
 			RETURN f`,
 			map[string]any{
 				"tenant":      common.GetContext(ctx).Tenant,
@@ -150,7 +149,6 @@ func (s *textCustomPropertyService) MergeTextCustomFieldToFieldsSet(ctx context.
 				"fieldsSetId": fieldsSetId,
 				"name":        entity.Name,
 				"value":       entity.Value,
-				"group":       entity.Group,
 			})
 		record, err := txResult.Single()
 		if err != nil {
@@ -174,8 +172,7 @@ func (s *textCustomPropertyService) UpdateTextCustomFieldInContact(ctx context.C
 			MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}),
 			  (c)-[:HAS_TEXT_PROPERTY]->(f:TextCustomField {id:$fieldId})
 			SET	f.name=$name,
-				f.value=$value,
-				f.group=$group
+				f.value=$value
 			RETURN f`,
 			map[string]any{
 				"tenant":    common.GetContext(ctx).Tenant,
@@ -183,7 +180,6 @@ func (s *textCustomPropertyService) UpdateTextCustomFieldInContact(ctx context.C
 				"fieldId":   entity.Id,
 				"name":      entity.Name,
 				"value":     entity.Value,
-				"group":     entity.Group,
 			})
 		record, err := txResult.Single()
 		if err != nil {
@@ -208,8 +204,7 @@ func (s *textCustomPropertyService) UpdateTextCustomFieldInFieldsSet(ctx context
               (c)-[:HAS_COMPLEX_PROPERTY]->(s:FieldsSet {id:$fieldsSetId}),
 			  (s)-[:HAS_TEXT_PROPERTY]->(f:TextCustomField {id:$fieldId})
 			SET	f.name=$name,
-				f.value=$value,
-				f.group=$group
+				f.value=$value
 			RETURN f`,
 			map[string]any{
 				"tenant":      common.GetContext(ctx).Tenant,
@@ -218,7 +213,6 @@ func (s *textCustomPropertyService) UpdateTextCustomFieldInFieldsSet(ctx context
 				"fieldId":     entity.Id,
 				"name":        entity.Name,
 				"value":       entity.Value,
-				"group":       entity.Group,
 			})
 		record, err := txResult.Single()
 		if err != nil {
@@ -313,14 +307,12 @@ func addTextCustomFieldToContactInTx(ctx context.Context, contactId string, inpu
 			MATCH (c:Contact {id:$contactId})
 			CREATE (f:TextCustomField {
 				id: randomUUID(),
-				group: $group,
 				name: $name,
 				value: $value
 			})<-[:HAS_TEXT_PROPERTY]-(c)
 			RETURN f`,
 		map[string]any{
 			"contactId": contactId,
-			"group":     input.Group,
 			"name":      input.Name,
 			"value":     input.Value,
 		})
@@ -334,7 +326,6 @@ func (s *textCustomPropertyService) mapDbNodeToTextCustomFieldEntity(node dbtype
 		Id:    utils.GetStringPropOrEmpty(props, "id"),
 		Name:  utils.GetStringPropOrEmpty(props, "name"),
 		Value: utils.GetStringPropOrEmpty(props, "value"),
-		Group: utils.GetStringPropOrEmpty(props, "group"),
 	}
 	return &result
 }

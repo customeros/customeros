@@ -4,12 +4,10 @@ mutation UpdateTextCustomFieldInFieldsSet($contactId: ID!, $fieldsSetId: ID!, $f
         fieldsSetId: $fieldsSetId,
         input: {id: $fieldId
                 name: "new name",
-                value: "new value",
-                group: "new group"}
+                value: "new value"}
      ) {
         id
         name
         value
-        group
       }
 }

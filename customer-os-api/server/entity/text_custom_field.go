@@ -6,7 +6,6 @@ import (
 
 type TextCustomFieldEntity struct {
 	Id    string
-	Group string
 	Name  string
 	Value string
 }

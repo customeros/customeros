@@ -3,12 +3,10 @@ mutation MergeTextCustomFieldToFieldsSet($contactId: ID!, $fieldsSetId: ID!){
         contactId: $contactId,
         fieldsSetId: $fieldsSetId,
         input: {name: "some name",
-                value: "some value",
-                group: "some group"}
+                value: "some value"}
      ) {
         id
         name
         value
-        group
       }
 }

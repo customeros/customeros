@@ -280,7 +280,6 @@ func TestMutationResolver_MergeTextCustomFieldToFieldsSet(t *testing.T) {
 
 	require.Equal(t, "some name", textField.MergeTextCustomFieldToFieldsSet.Name)
 	require.Equal(t, "some value", textField.MergeTextCustomFieldToFieldsSet.Value)
-	require.Equal(t, "some group", *textField.MergeTextCustomFieldToFieldsSet.Group)
 	require.NotNil(t, textField.MergeTextCustomFieldToFieldsSet.ID)
 
 	require.Equal(t, 1, getCountOfNodes(driver, "Contact"))
@@ -310,7 +309,6 @@ func TestMutationResolver_UpdateTextCustomFieldInFieldsSet(t *testing.T) {
 
 	require.Equal(t, "new name", textField.UpdateTextCustomFieldInFieldsSet.Name)
 	require.Equal(t, "new value", textField.UpdateTextCustomFieldInFieldsSet.Value)
-	require.Equal(t, "new group", *textField.UpdateTextCustomFieldInFieldsSet.Group)
 	require.Equal(t, fieldId, textField.UpdateTextCustomFieldInFieldsSet.ID)
 
 	require.Equal(t, 1, getCountOfNodes(driver, "Contact"))
