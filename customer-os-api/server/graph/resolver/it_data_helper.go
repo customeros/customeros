@@ -113,6 +113,38 @@ func createTextFieldInSet(driver *neo4j.Driver, fieldSetId string, textField ent
 	return fieldId.String()
 }
 
+func addEmailToContact(driver *neo4j.Driver, contactId string, email string, primary bool, label string) {
+	query := `
+			MATCH (c:Contact {id:$contactId})
+			MERGE (:Email {
+				  id: randomUUID(),
+				  email: $email,
+				  label: $label
+				})<-[:EMAILED_AT {primary:$primary}]-(c)`
+	integration_tests.ExecuteWriteQuery(driver, query, map[string]any{
+		"contactId": contactId,
+		"primary":   primary,
+		"email":     email,
+		"label":     label,
+	})
+}
+
+func addPhoneNumberToContact(driver *neo4j.Driver, contactId string, number string, primary bool, label string) {
+	query := `
+			MATCH (c:Contact {id:$contactId})
+			MERGE (:PhoneNumber {
+				  id: randomUUID(),
+				  number: $number,
+				  label: $label
+				})<-[:CALLED_AT {primary:$primary}]-(c)`
+	integration_tests.ExecuteWriteQuery(driver, query, map[string]any{
+		"contactId": contactId,
+		"primary":   primary,
+		"number":    number,
+		"label":     label,
+	})
+}
+
 func getCountOfNodes(driver *neo4j.Driver, nodeLabel string) int {
 	query := fmt.Sprintf(`MATCH (n:%s) RETURN count(n)`, nodeLabel)
 	result := integration_tests.ExecuteReadQueryWithSingleReturn(driver, query, map[string]any{})

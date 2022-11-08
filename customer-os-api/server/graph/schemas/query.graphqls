@@ -3,6 +3,8 @@ type Query {
 
   contact(id: ID!) :Contact!
   contacts(paginationFilter: PaginationFilter): ContactsPage!
+  contactByEmail(email: String!) :Contact!
+  contactByPhone(number: String!) :Contact!
 
   contactGroup(id: ID!): ContactGroup!
   contactGroups(paginationFilter: PaginationFilter): ContactGroupsPage!

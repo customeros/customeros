@@ -1,0 +1,5 @@
+query GetContactByEmail($email: String!){
+  contactByEmail(email: $email) {
+    id
+  }
+}

@@ -49,6 +49,26 @@ func (r *queryResolver) Contacts(ctx context.Context, paginationFilter *model.Pa
 	}, err
 }
 
+// ContactByEmail is the resolver for the contactByEmail field.
+func (r *queryResolver) ContactByEmail(ctx context.Context, email string) (*model.Contact, error) {
+	contactEntity, err := r.ServiceContainer.ContactService.FindContactByEmail(ctx, email)
+	if err != nil || contactEntity == nil {
+		graphql.AddErrorf(ctx, "Contact with email %s not identified", email)
+		return nil, err
+	}
+	return mapper.MapEntityToContact(contactEntity), nil
+}
+
+// ContactByPhone is the resolver for the contactByPhone field.
+func (r *queryResolver) ContactByPhone(ctx context.Context, number string) (*model.Contact, error) {
+	contactEntity, err := r.ServiceContainer.ContactService.FindContactByPhoneNumber(ctx, number)
+	if err != nil || contactEntity == nil {
+		graphql.AddErrorf(ctx, "Contact with phone number %s not identified", number)
+		return nil, err
+	}
+	return mapper.MapEntityToContact(contactEntity), nil
+}
+
 // ContactGroup is the resolver for the contactGroup field.
 func (r *queryResolver) ContactGroup(ctx context.Context, id string) (*model.ContactGroup, error) {
 	contactGroupEntity, err := r.ServiceContainer.ContactGroupService.FindContactGroupById(ctx, id)
