@@ -7,6 +7,7 @@ require (
 	github.com/caarlos0/env/v6 v6.10.1
 	github.com/gin-contrib/cors v1.4.0
 	github.com/gin-gonic/gin v1.8.1
+	github.com/google/uuid v1.3.0
 	github.com/joho/godotenv v1.4.0
 	github.com/mitchellh/mapstructure v1.3.1
 	github.com/neo4j/neo4j-go-driver/v4 v4.4.4
@@ -37,7 +38,6 @@ require (
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
-	github.com/google/uuid v1.3.0 // indirect
 	github.com/gorilla/websocket v1.5.0 // indirect
 	github.com/hashicorp/golang-lru v0.5.4 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
