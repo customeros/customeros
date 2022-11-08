@@ -1,3 +1,6 @@
+"""
+The honorific title of an individual.
+"""
 type CompanyPosition {
     companyName: String!
     jobTitle: String
