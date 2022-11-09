@@ -7,15 +7,15 @@ type EntityDefinition implements Node {
     version: Int!
     name: String!
     extends: EntityDefinitionExtension
-    fieldSets: [FieldSetDefinition!]!
-    customFields: [CustomFieldDefinition!]!
+    fieldSets: [FieldSetDefinition!]! @goField(forceResolver: true)
+    customFields: [CustomFieldDefinition!]! @goField(forceResolver: true)
 }
 
 type FieldSetDefinition  implements Node {
     id: ID!
     name: String!
     order: Int!
-    customFields: [CustomFieldDefinition!]!
+    customFields: [CustomFieldDefinition!]! @goField(forceResolver: true)
 }
 
 type CustomFieldDefinition  implements Node {

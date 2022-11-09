@@ -337,7 +337,7 @@ func (r *mutationResolver) RemoveContactFromGroup(ctx context.Context, contactID
 func (r *mutationResolver) CreateEntityDefinition(ctx context.Context, input model.EntityDefinitionInput) (*model.EntityDefinition, error) {
 	entityDefinitionEntity, err := r.ServiceContainer.EntityDefinitionService.Create(ctx, mapper.MapEntityDefinitionInputToEntity(input))
 	if err != nil {
-		graphql.AddErrorf(ctx, "Failed to merge entity definition: %s", input.Name)
+		graphql.AddErrorf(ctx, "Failed to create entity definition: %s", input.Name)
 		return nil, err
 	}
 	return mapper.MapEntityToEntityDefinition(entityDefinitionEntity), nil

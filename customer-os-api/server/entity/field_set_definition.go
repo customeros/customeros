@@ -7,7 +7,8 @@ import (
 type FieldSetDefinitionEntity struct {
 	Id           string
 	Name         string
-	CustomFields []CustomFieldDefinitionEntity
+	Order        int64
+	CustomFields []*CustomFieldDefinitionEntity
 }
 
 func (definition FieldSetDefinitionEntity) ToString() string {

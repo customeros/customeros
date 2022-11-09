@@ -13,6 +13,12 @@ func MapEntityDefinitionInputToEntity(input model.EntityDefinitionInput) *entity
 		extends := input.Extends.String()
 		definitionEntity.Extends = &extends
 	}
+	for _, v := range input.FieldSets {
+		definitionEntity.FieldSets = append(definitionEntity.FieldSets, MapFieldSetDefinitionInputToEntity(*v))
+	}
+	for _, v := range input.CustomFields {
+		definitionEntity.CustomFields = append(definitionEntity.CustomFields, MapCustomFieldDefinitionInputToEntity(*v))
+	}
 	return &definitionEntity
 }
 

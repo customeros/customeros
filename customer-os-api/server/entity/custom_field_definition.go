@@ -5,9 +5,14 @@ import (
 )
 
 type CustomFieldDefinitionEntity struct {
-	Id   string
-	Name string
-	Type string
+	Id        string
+	Name      string
+	Type      string
+	Order     int64
+	Mandatory bool
+	Length    *int64
+	Min       *int64
+	Max       *int64
 }
 
 func (definition CustomFieldDefinitionEntity) ToString() string {

@@ -9,8 +9,8 @@ type EntityDefinitionEntity struct {
 	Name         string
 	Extends      *string
 	Version      int64
-	CustomFields []CustomFieldDefinitionEntity
-	FieldSets    []FieldSetDefinitionEntity
+	CustomFields []*CustomFieldDefinitionEntity
+	FieldSets    []*FieldSetDefinitionEntity
 }
 
 func (entityDefinition EntityDefinitionEntity) ToString() string {
