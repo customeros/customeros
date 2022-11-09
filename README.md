@@ -44,7 +44,7 @@ Openline customerOS is an open source development platform that enables the flex
 - **Openline Auth** - End-to-end identity solution for easy user authentication, sign-in, and permissions using OAuth.
 - **customerDB** - Backend server that host your customer data in a secure, compliant, and standards based way.
 - **customerOS API** - GraphQL and gRPC API for reading, writing, and manipulating data.
-- **customerOS SDK** - Client libraries that simplify the process of interacting with the customerOS API [comins soon].
+- **customerOS SDK** - Client libraries that simplify the process of interacting with the customerOS API [coming soon].
 - **Event trackers** - First party event trackers fully integrated with customerDB, allowing you full visibility into how your customers are engaging with your apps and content
 - **Web components** - A library of web components that make it easy to interact with customer data in your front end applications [coming soon].
 - **App launcher** - Web application with built in SSO to launch into any app built into customerOS
@@ -57,7 +57,7 @@ Openline customerOS is an open source development platform that enables the flex
 Download customerOS using the following command
 
 ```
-TBD
+[coming soon]
 ```
 
 ## 🤝 Resources
@@ -75,6 +75,10 @@ Here's a list of the big technologies that we use:
 - **Go** - Back end & API
 - **TypeScript** - Web components
 - **React** - Front end apps and UI components
+
+### Folder structure
+
+[coming soon]
 
 ## 💪 Contributions
 
