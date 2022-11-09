@@ -27,6 +27,7 @@ type TextCustomFieldService interface {
 	DeleteByIdFromFieldSet(ctx context.Context, contactId string, fieldSetId string, fieldId string) (bool, error)
 
 	mapDbNodeToTextCustomFieldEntity(node dbtype.Node) *entity.TextCustomFieldEntity
+	getDriver() neo4j.Driver
 }
 
 type textCustomPropertyService struct {

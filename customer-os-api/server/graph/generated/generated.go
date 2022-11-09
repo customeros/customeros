@@ -93,6 +93,17 @@ type ComplexityRoot struct {
 		Value func(childComplexity int) int
 	}
 
+	CustomFieldDefinition struct {
+		ID        func(childComplexity int) int
+		Length    func(childComplexity int) int
+		Mandatory func(childComplexity int) int
+		Max       func(childComplexity int) int
+		Min       func(childComplexity int) int
+		Name      func(childComplexity int) int
+		Order     func(childComplexity int) int
+		Type      func(childComplexity int) int
+	}
+
 	Email struct {
 		Email   func(childComplexity int) int
 		ID      func(childComplexity int) int
@@ -106,6 +117,7 @@ type ComplexityRoot struct {
 		FieldSets    func(childComplexity int) int
 		ID           func(childComplexity int) int
 		Name         func(childComplexity int) int
+		Version      func(childComplexity int) int
 	}
 
 	FieldSet struct {
@@ -123,19 +135,12 @@ type ComplexityRoot struct {
 		Order        func(childComplexity int) int
 	}
 
-	IntCustomFieldDefinition struct {
-		ID        func(childComplexity int) int
-		Mandatory func(childComplexity int) int
-		Max       func(childComplexity int) int
-		Min       func(childComplexity int) int
-		Name      func(childComplexity int) int
-		Order     func(childComplexity int) int
-	}
-
 	Mutation struct {
 		AddContactToGroup                      func(childComplexity int, contactID string, groupID string) int
 		CreateContact                          func(childComplexity int, input model.ContactInput) int
 		CreateContactGroup                     func(childComplexity int, input model.ContactGroupInput) int
+		CreateEntityDefinition                 func(childComplexity int, input model.EntityDefinitionInput) int
+		CreateEntityDefinitionNewVersion       func(childComplexity int, id string, input model.EntityDefinitionInput) int
 		CreateUser                             func(childComplexity int, input model.UserInput) int
 		DeleteContactGroupAndUnlinkAllContacts func(childComplexity int, id string) int
 		HardDeleteContact                      func(childComplexity int, contactID string) int
@@ -183,14 +188,6 @@ type ComplexityRoot struct {
 
 	Result struct {
 		Result func(childComplexity int) int
-	}
-
-	TextCustomFieldDefinition struct {
-		ID        func(childComplexity int) int
-		Length    func(childComplexity int) int
-		Mandatory func(childComplexity int) int
-		Name      func(childComplexity int) int
-		Order     func(childComplexity int) int
 	}
 
 	User struct {
@@ -248,6 +245,8 @@ type MutationResolver interface {
 	DeleteContactGroupAndUnlinkAllContacts(ctx context.Context, id string) (*model.Result, error)
 	AddContactToGroup(ctx context.Context, contactID string, groupID string) (*model.Result, error)
 	RemoveContactFromGroup(ctx context.Context, contactID string, groupID string) (*model.Result, error)
+	CreateEntityDefinition(ctx context.Context, input model.EntityDefinitionInput) (*model.EntityDefinition, error)
+	CreateEntityDefinitionNewVersion(ctx context.Context, id string, input model.EntityDefinitionInput) (*model.EntityDefinition, error)
 }
 type QueryResolver interface {
 	Users(ctx context.Context, paginationFilter *model.PaginationFilter) (*model.UserPage, error)
@@ -471,6 +470,62 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.CustomField.Value(childComplexity), true
 
+	case "CustomFieldDefinition.id":
+		if e.complexity.CustomFieldDefinition.ID == nil {
+			break
+		}
+
+		return e.complexity.CustomFieldDefinition.ID(childComplexity), true
+
+	case "CustomFieldDefinition.length":
+		if e.complexity.CustomFieldDefinition.Length == nil {
+			break
+		}
+
+		return e.complexity.CustomFieldDefinition.Length(childComplexity), true
+
+	case "CustomFieldDefinition.mandatory":
+		if e.complexity.CustomFieldDefinition.Mandatory == nil {
+			break
+		}
+
+		return e.complexity.CustomFieldDefinition.Mandatory(childComplexity), true
+
+	case "CustomFieldDefinition.max":
+		if e.complexity.CustomFieldDefinition.Max == nil {
+			break
+		}
+
+		return e.complexity.CustomFieldDefinition.Max(childComplexity), true
+
+	case "CustomFieldDefinition.min":
+		if e.complexity.CustomFieldDefinition.Min == nil {
+			break
+		}
+
+		return e.complexity.CustomFieldDefinition.Min(childComplexity), true
+
+	case "CustomFieldDefinition.name":
+		if e.complexity.CustomFieldDefinition.Name == nil {
+			break
+		}
+
+		return e.complexity.CustomFieldDefinition.Name(childComplexity), true
+
+	case "CustomFieldDefinition.order":
+		if e.complexity.CustomFieldDefinition.Order == nil {
+			break
+		}
+
+		return e.complexity.CustomFieldDefinition.Order(childComplexity), true
+
+	case "CustomFieldDefinition.type":
+		if e.complexity.CustomFieldDefinition.Type == nil {
+			break
+		}
+
+		return e.complexity.CustomFieldDefinition.Type(childComplexity), true
+
 	case "Email.email":
 		if e.complexity.Email.Email == nil {
 			break
@@ -533,6 +588,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.EntityDefinition.Name(childComplexity), true
+
+	case "EntityDefinition.version":
+		if e.complexity.EntityDefinition.Version == nil {
+			break
+		}
+
+		return e.complexity.EntityDefinition.Version(childComplexity), true
 
 	case "FieldSet.added":
 		if e.complexity.FieldSet.Added == nil {
@@ -597,48 +659,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.FieldSetDefinition.Order(childComplexity), true
 
-	case "IntCustomFieldDefinition.id":
-		if e.complexity.IntCustomFieldDefinition.ID == nil {
-			break
-		}
-
-		return e.complexity.IntCustomFieldDefinition.ID(childComplexity), true
-
-	case "IntCustomFieldDefinition.mandatory":
-		if e.complexity.IntCustomFieldDefinition.Mandatory == nil {
-			break
-		}
-
-		return e.complexity.IntCustomFieldDefinition.Mandatory(childComplexity), true
-
-	case "IntCustomFieldDefinition.max":
-		if e.complexity.IntCustomFieldDefinition.Max == nil {
-			break
-		}
-
-		return e.complexity.IntCustomFieldDefinition.Max(childComplexity), true
-
-	case "IntCustomFieldDefinition.min":
-		if e.complexity.IntCustomFieldDefinition.Min == nil {
-			break
-		}
-
-		return e.complexity.IntCustomFieldDefinition.Min(childComplexity), true
-
-	case "IntCustomFieldDefinition.name":
-		if e.complexity.IntCustomFieldDefinition.Name == nil {
-			break
-		}
-
-		return e.complexity.IntCustomFieldDefinition.Name(childComplexity), true
-
-	case "IntCustomFieldDefinition.order":
-		if e.complexity.IntCustomFieldDefinition.Order == nil {
-			break
-		}
-
-		return e.complexity.IntCustomFieldDefinition.Order(childComplexity), true
-
 	case "Mutation.addContactToGroup":
 		if e.complexity.Mutation.AddContactToGroup == nil {
 			break
@@ -674,6 +694,30 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.CreateContactGroup(childComplexity, args["input"].(model.ContactGroupInput)), true
+
+	case "Mutation.createEntityDefinition":
+		if e.complexity.Mutation.CreateEntityDefinition == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_createEntityDefinition_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.CreateEntityDefinition(childComplexity, args["input"].(model.EntityDefinitionInput)), true
+
+	case "Mutation.createEntityDefinitionNewVersion":
+		if e.complexity.Mutation.CreateEntityDefinitionNewVersion == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_createEntityDefinitionNewVersion_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.CreateEntityDefinitionNewVersion(childComplexity, args["id"].(string), args["input"].(model.EntityDefinitionInput)), true
 
 	case "Mutation.createUser":
 		if e.complexity.Mutation.CreateUser == nil {
@@ -1101,41 +1145,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Result.Result(childComplexity), true
 
-	case "TextCustomFieldDefinition.id":
-		if e.complexity.TextCustomFieldDefinition.ID == nil {
-			break
-		}
-
-		return e.complexity.TextCustomFieldDefinition.ID(childComplexity), true
-
-	case "TextCustomFieldDefinition.length":
-		if e.complexity.TextCustomFieldDefinition.Length == nil {
-			break
-		}
-
-		return e.complexity.TextCustomFieldDefinition.Length(childComplexity), true
-
-	case "TextCustomFieldDefinition.mandatory":
-		if e.complexity.TextCustomFieldDefinition.Mandatory == nil {
-			break
-		}
-
-		return e.complexity.TextCustomFieldDefinition.Mandatory(childComplexity), true
-
-	case "TextCustomFieldDefinition.name":
-		if e.complexity.TextCustomFieldDefinition.Name == nil {
-			break
-		}
-
-		return e.complexity.TextCustomFieldDefinition.Name(childComplexity), true
-
-	case "TextCustomFieldDefinition.order":
-		if e.complexity.TextCustomFieldDefinition.Order == nil {
-			break
-		}
-
-		return e.complexity.TextCustomFieldDefinition.Order(childComplexity), true
-
 	case "User.createdAt":
 		if e.complexity.User.CreatedAt == nil {
 			break
@@ -1205,8 +1214,11 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputContactGroupUpdateInput,
 		ec.unmarshalInputContactInput,
 		ec.unmarshalInputContactUpdateInput,
+		ec.unmarshalInputCustomFieldDefinitionInput,
 		ec.unmarshalInputEmailInput,
 		ec.unmarshalInputEmailUpdateInput,
+		ec.unmarshalInputEntityDefinitionInput,
+		ec.unmarshalInputFieldSetDefinitionInput,
 		ec.unmarshalInputFieldSetInput,
 		ec.unmarshalInputFieldSetUpdateInput,
 		ec.unmarshalInputPaginationFilter,
@@ -1766,6 +1778,7 @@ enum EmailLabel {
 
 type EntityDefinition implements Node {
     id: ID!
+    version: Int!
     name: String!
     extends: EntityDefinitionExtension
     fieldSets: [FieldSetDefinition!]!
@@ -1779,28 +1792,50 @@ type FieldSetDefinition  implements Node {
     customFields: [CustomFieldDefinition!]!
 }
 
-interface CustomFieldDefinition  implements Node {
+type CustomFieldDefinition  implements Node {
     id: ID!
     name: String!
-    order: Int!
-    mandatory: Boolean!
-}
-
-type TextCustomFieldDefinition implements CustomFieldDefinition & Node {
-    id: ID!
-    name: String!
+    type: CustomFieldType!
     order: Int!
     mandatory: Boolean!
     length: Int
-}
-
-type IntCustomFieldDefinition implements CustomFieldDefinition & Node {
-    id: ID!
-    name: String!
-    order: Int!
-    mandatory: Boolean!
     min: Int
     max: Int
+}
+
+input EntityDefinitionInput {
+    name: String!
+    extends: EntityDefinitionExtension
+    fieldSets: [FieldSetDefinitionInput!]!
+    customFields: [CustomFieldDefinitionInput!]!
+}
+
+input FieldSetDefinitionInput {
+    name: String!
+    order: Int!
+    customFields: [CustomFieldDefinitionInput!]!
+}
+
+input CustomFieldDefinitionInput {
+    name: String!
+    type: CustomFieldType!
+    order: Int!
+    mandatory: Boolean!
+    length: Int
+    min: Int
+    max: Int
+}
+
+enum CustomFieldType {
+    TEXT
+    #    INTEGER
+    #    DECIMAL
+    #    DATE
+    #    DATETIME
+    #    TIME
+    #    BOOL
+    #    ENUM
+    #    ENTITY
 }`, BuiltIn: false},
 	{Name: "../schemas/field_set.graphqls", Input: `type FieldSet {
     id: ID!
@@ -1899,6 +1934,9 @@ interface ExtensibleEntity implements Node {
     deleteContactGroupAndUnlinkAllContacts(id :ID!): Result!
     addContactToGroup(contactId : ID!, groupId: ID!): Result!
     removeContactFromGroup(contactId : ID!, groupId: ID!): Result!
+
+    createEntityDefinition(input: EntityDefinitionInput!): EntityDefinition!
+    createEntityDefinitionNewVersion(id: ID!, input: EntityDefinitionInput!): EntityDefinition!
 }
 
 
@@ -2194,6 +2232,45 @@ func (ec *executionContext) field_Mutation_createContact_args(ctx context.Contex
 	if tmp, ok := rawArgs["input"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
 		arg0, err = ec.unmarshalNContactInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐContactInput(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_createEntityDefinitionNewVersion_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["id"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+		arg0, err = ec.unmarshalNID2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["id"] = arg0
+	var arg1 model.EntityDefinitionInput
+	if tmp, ok := rawArgs["input"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+		arg1, err = ec.unmarshalNEntityDefinitionInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐEntityDefinitionInput(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg1
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_createEntityDefinition_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 model.EntityDefinitionInput
+	if tmp, ok := rawArgs["input"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+		arg0, err = ec.unmarshalNEntityDefinitionInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐEntityDefinitionInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -4240,6 +4317,349 @@ func (ec *executionContext) fieldContext_CustomField_value(ctx context.Context, 
 	return fc, nil
 }
 
+func (ec *executionContext) _CustomFieldDefinition_id(ctx context.Context, field graphql.CollectedField, obj *model.CustomFieldDefinition) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_CustomFieldDefinition_id(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNID2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_CustomFieldDefinition_id(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "CustomFieldDefinition",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _CustomFieldDefinition_name(ctx context.Context, field graphql.CollectedField, obj *model.CustomFieldDefinition) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_CustomFieldDefinition_name(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Name, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_CustomFieldDefinition_name(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "CustomFieldDefinition",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _CustomFieldDefinition_type(ctx context.Context, field graphql.CollectedField, obj *model.CustomFieldDefinition) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_CustomFieldDefinition_type(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Type, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(model.CustomFieldType)
+	fc.Result = res
+	return ec.marshalNCustomFieldType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐCustomFieldType(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_CustomFieldDefinition_type(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "CustomFieldDefinition",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type CustomFieldType does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _CustomFieldDefinition_order(ctx context.Context, field graphql.CollectedField, obj *model.CustomFieldDefinition) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_CustomFieldDefinition_order(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Order, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_CustomFieldDefinition_order(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "CustomFieldDefinition",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _CustomFieldDefinition_mandatory(ctx context.Context, field graphql.CollectedField, obj *model.CustomFieldDefinition) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_CustomFieldDefinition_mandatory(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Mandatory, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_CustomFieldDefinition_mandatory(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "CustomFieldDefinition",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _CustomFieldDefinition_length(ctx context.Context, field graphql.CollectedField, obj *model.CustomFieldDefinition) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_CustomFieldDefinition_length(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Length, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*int)
+	fc.Result = res
+	return ec.marshalOInt2ᚖint(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_CustomFieldDefinition_length(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "CustomFieldDefinition",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _CustomFieldDefinition_min(ctx context.Context, field graphql.CollectedField, obj *model.CustomFieldDefinition) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_CustomFieldDefinition_min(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Min, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*int)
+	fc.Result = res
+	return ec.marshalOInt2ᚖint(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_CustomFieldDefinition_min(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "CustomFieldDefinition",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _CustomFieldDefinition_max(ctx context.Context, field graphql.CollectedField, obj *model.CustomFieldDefinition) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_CustomFieldDefinition_max(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Max, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*int)
+	fc.Result = res
+	return ec.marshalOInt2ᚖint(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_CustomFieldDefinition_max(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "CustomFieldDefinition",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Email_id(ctx context.Context, field graphql.CollectedField, obj *model.Email) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Email_id(ctx, field)
 	if err != nil {
@@ -4460,6 +4880,50 @@ func (ec *executionContext) fieldContext_EntityDefinition_id(ctx context.Context
 	return fc, nil
 }
 
+func (ec *executionContext) _EntityDefinition_version(ctx context.Context, field graphql.CollectedField, obj *model.EntityDefinition) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_EntityDefinition_version(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Version, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_EntityDefinition_version(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "EntityDefinition",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _EntityDefinition_name(ctx context.Context, field graphql.CollectedField, obj *model.EntityDefinition) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_EntityDefinition_name(ctx, field)
 	if err != nil {
@@ -4625,9 +5089,9 @@ func (ec *executionContext) _EntityDefinition_customFields(ctx context.Context, 
 		}
 		return graphql.Null
 	}
-	res := resTmp.([]model.CustomFieldDefinition)
+	res := resTmp.([]*model.CustomFieldDefinition)
 	fc.Result = res
-	return ec.marshalNCustomFieldDefinition2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐCustomFieldDefinitionᚄ(ctx, field.Selections, res)
+	return ec.marshalNCustomFieldDefinition2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐCustomFieldDefinitionᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_EntityDefinition_customFields(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -4637,7 +5101,25 @@ func (ec *executionContext) fieldContext_EntityDefinition_customFields(ctx conte
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("FieldContext.Child cannot be called on type INTERFACE")
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_CustomFieldDefinition_id(ctx, field)
+			case "name":
+				return ec.fieldContext_CustomFieldDefinition_name(ctx, field)
+			case "type":
+				return ec.fieldContext_CustomFieldDefinition_type(ctx, field)
+			case "order":
+				return ec.fieldContext_CustomFieldDefinition_order(ctx, field)
+			case "mandatory":
+				return ec.fieldContext_CustomFieldDefinition_mandatory(ctx, field)
+			case "length":
+				return ec.fieldContext_CustomFieldDefinition_length(ctx, field)
+			case "min":
+				return ec.fieldContext_CustomFieldDefinition_min(ctx, field)
+			case "max":
+				return ec.fieldContext_CustomFieldDefinition_max(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type CustomFieldDefinition", field.Name)
 		},
 	}
 	return fc, nil
@@ -5029,9 +5511,9 @@ func (ec *executionContext) _FieldSetDefinition_customFields(ctx context.Context
 		}
 		return graphql.Null
 	}
-	res := resTmp.([]model.CustomFieldDefinition)
+	res := resTmp.([]*model.CustomFieldDefinition)
 	fc.Result = res
-	return ec.marshalNCustomFieldDefinition2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐCustomFieldDefinitionᚄ(ctx, field.Selections, res)
+	return ec.marshalNCustomFieldDefinition2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐCustomFieldDefinitionᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_FieldSetDefinition_customFields(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -5041,265 +5523,25 @@ func (ec *executionContext) fieldContext_FieldSetDefinition_customFields(ctx con
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("FieldContext.Child cannot be called on type INTERFACE")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _IntCustomFieldDefinition_id(ctx context.Context, field graphql.CollectedField, obj *model.IntCustomFieldDefinition) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_IntCustomFieldDefinition_id(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.ID, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNID2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_IntCustomFieldDefinition_id(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "IntCustomFieldDefinition",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type ID does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _IntCustomFieldDefinition_name(ctx context.Context, field graphql.CollectedField, obj *model.IntCustomFieldDefinition) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_IntCustomFieldDefinition_name(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Name, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_IntCustomFieldDefinition_name(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "IntCustomFieldDefinition",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _IntCustomFieldDefinition_order(ctx context.Context, field graphql.CollectedField, obj *model.IntCustomFieldDefinition) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_IntCustomFieldDefinition_order(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Order, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(int)
-	fc.Result = res
-	return ec.marshalNInt2int(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_IntCustomFieldDefinition_order(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "IntCustomFieldDefinition",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Int does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _IntCustomFieldDefinition_mandatory(ctx context.Context, field graphql.CollectedField, obj *model.IntCustomFieldDefinition) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_IntCustomFieldDefinition_mandatory(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Mandatory, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(bool)
-	fc.Result = res
-	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_IntCustomFieldDefinition_mandatory(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "IntCustomFieldDefinition",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Boolean does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _IntCustomFieldDefinition_min(ctx context.Context, field graphql.CollectedField, obj *model.IntCustomFieldDefinition) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_IntCustomFieldDefinition_min(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Min, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*int)
-	fc.Result = res
-	return ec.marshalOInt2ᚖint(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_IntCustomFieldDefinition_min(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "IntCustomFieldDefinition",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Int does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _IntCustomFieldDefinition_max(ctx context.Context, field graphql.CollectedField, obj *model.IntCustomFieldDefinition) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_IntCustomFieldDefinition_max(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Max, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*int)
-	fc.Result = res
-	return ec.marshalOInt2ᚖint(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_IntCustomFieldDefinition_max(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "IntCustomFieldDefinition",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Int does not have child fields")
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_CustomFieldDefinition_id(ctx, field)
+			case "name":
+				return ec.fieldContext_CustomFieldDefinition_name(ctx, field)
+			case "type":
+				return ec.fieldContext_CustomFieldDefinition_type(ctx, field)
+			case "order":
+				return ec.fieldContext_CustomFieldDefinition_order(ctx, field)
+			case "mandatory":
+				return ec.fieldContext_CustomFieldDefinition_mandatory(ctx, field)
+			case "length":
+				return ec.fieldContext_CustomFieldDefinition_length(ctx, field)
+			case "min":
+				return ec.fieldContext_CustomFieldDefinition_min(ctx, field)
+			case "max":
+				return ec.fieldContext_CustomFieldDefinition_max(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type CustomFieldDefinition", field.Name)
 		},
 	}
 	return fc, nil
@@ -7075,6 +7317,144 @@ func (ec *executionContext) fieldContext_Mutation_removeContactFromGroup(ctx con
 	return fc, nil
 }
 
+func (ec *executionContext) _Mutation_createEntityDefinition(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_createEntityDefinition(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().CreateEntityDefinition(rctx, fc.Args["input"].(model.EntityDefinitionInput))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.EntityDefinition)
+	fc.Result = res
+	return ec.marshalNEntityDefinition2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐEntityDefinition(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_createEntityDefinition(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_EntityDefinition_id(ctx, field)
+			case "version":
+				return ec.fieldContext_EntityDefinition_version(ctx, field)
+			case "name":
+				return ec.fieldContext_EntityDefinition_name(ctx, field)
+			case "extends":
+				return ec.fieldContext_EntityDefinition_extends(ctx, field)
+			case "fieldSets":
+				return ec.fieldContext_EntityDefinition_fieldSets(ctx, field)
+			case "customFields":
+				return ec.fieldContext_EntityDefinition_customFields(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type EntityDefinition", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_createEntityDefinition_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_createEntityDefinitionNewVersion(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_createEntityDefinitionNewVersion(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().CreateEntityDefinitionNewVersion(rctx, fc.Args["id"].(string), fc.Args["input"].(model.EntityDefinitionInput))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.EntityDefinition)
+	fc.Result = res
+	return ec.marshalNEntityDefinition2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐEntityDefinition(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_createEntityDefinitionNewVersion(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_EntityDefinition_id(ctx, field)
+			case "version":
+				return ec.fieldContext_EntityDefinition_version(ctx, field)
+			case "name":
+				return ec.fieldContext_EntityDefinition_name(ctx, field)
+			case "extends":
+				return ec.fieldContext_EntityDefinition_extends(ctx, field)
+			case "fieldSets":
+				return ec.fieldContext_EntityDefinition_fieldSets(ctx, field)
+			case "customFields":
+				return ec.fieldContext_EntityDefinition_customFields(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type EntityDefinition", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_createEntityDefinitionNewVersion_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _PhoneNumber_id(ctx context.Context, field graphql.CollectedField, obj *model.PhoneNumber) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_PhoneNumber_id(ctx, field)
 	if err != nil {
@@ -7797,6 +8177,8 @@ func (ec *executionContext) fieldContext_Query_entityDefinitions(ctx context.Con
 			switch field.Name {
 			case "id":
 				return ec.fieldContext_EntityDefinition_id(ctx, field)
+			case "version":
+				return ec.fieldContext_EntityDefinition_version(ctx, field)
 			case "name":
 				return ec.fieldContext_EntityDefinition_name(ctx, field)
 			case "extends":
@@ -7980,223 +8362,6 @@ func (ec *executionContext) fieldContext_Result_result(ctx context.Context, fiel
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type Boolean does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _TextCustomFieldDefinition_id(ctx context.Context, field graphql.CollectedField, obj *model.TextCustomFieldDefinition) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_TextCustomFieldDefinition_id(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.ID, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNID2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_TextCustomFieldDefinition_id(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "TextCustomFieldDefinition",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type ID does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _TextCustomFieldDefinition_name(ctx context.Context, field graphql.CollectedField, obj *model.TextCustomFieldDefinition) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_TextCustomFieldDefinition_name(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Name, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_TextCustomFieldDefinition_name(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "TextCustomFieldDefinition",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _TextCustomFieldDefinition_order(ctx context.Context, field graphql.CollectedField, obj *model.TextCustomFieldDefinition) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_TextCustomFieldDefinition_order(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Order, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(int)
-	fc.Result = res
-	return ec.marshalNInt2int(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_TextCustomFieldDefinition_order(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "TextCustomFieldDefinition",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Int does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _TextCustomFieldDefinition_mandatory(ctx context.Context, field graphql.CollectedField, obj *model.TextCustomFieldDefinition) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_TextCustomFieldDefinition_mandatory(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Mandatory, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(bool)
-	fc.Result = res
-	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_TextCustomFieldDefinition_mandatory(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "TextCustomFieldDefinition",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Boolean does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _TextCustomFieldDefinition_length(ctx context.Context, field graphql.CollectedField, obj *model.TextCustomFieldDefinition) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_TextCustomFieldDefinition_length(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Length, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*int)
-	fc.Result = res
-	return ec.marshalOInt2ᚖint(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_TextCustomFieldDefinition_length(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "TextCustomFieldDefinition",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Int does not have child fields")
 		},
 	}
 	return fc, nil
@@ -10615,6 +10780,82 @@ func (ec *executionContext) unmarshalInputContactUpdateInput(ctx context.Context
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputCustomFieldDefinitionInput(ctx context.Context, obj interface{}) (model.CustomFieldDefinitionInput, error) {
+	var it model.CustomFieldDefinitionInput
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"name", "type", "order", "mandatory", "length", "min", "max"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "name":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
+			it.Name, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "type":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("type"))
+			it.Type, err = ec.unmarshalNCustomFieldType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐCustomFieldType(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "order":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("order"))
+			it.Order, err = ec.unmarshalNInt2int(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "mandatory":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("mandatory"))
+			it.Mandatory, err = ec.unmarshalNBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "length":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("length"))
+			it.Length, err = ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "min":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("min"))
+			it.Min, err = ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "max":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("max"))
+			it.Max, err = ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputEmailInput(ctx context.Context, obj interface{}) (model.EmailInput, error) {
 	var it model.EmailInput
 	asMap := map[string]interface{}{}
@@ -10702,6 +10943,102 @@ func (ec *executionContext) unmarshalInputEmailUpdateInput(ctx context.Context, 
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("primary"))
 			it.Primary, err = ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputEntityDefinitionInput(ctx context.Context, obj interface{}) (model.EntityDefinitionInput, error) {
+	var it model.EntityDefinitionInput
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"name", "extends", "fieldSets", "customFields"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "name":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
+			it.Name, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "extends":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("extends"))
+			it.Extends, err = ec.unmarshalOEntityDefinitionExtension2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐEntityDefinitionExtension(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "fieldSets":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("fieldSets"))
+			it.FieldSets, err = ec.unmarshalNFieldSetDefinitionInput2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐFieldSetDefinitionInputᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "customFields":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("customFields"))
+			it.CustomFields, err = ec.unmarshalNCustomFieldDefinitionInput2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐCustomFieldDefinitionInputᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputFieldSetDefinitionInput(ctx context.Context, obj interface{}) (model.FieldSetDefinitionInput, error) {
+	var it model.FieldSetDefinitionInput
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"name", "order", "customFields"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "name":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
+			it.Name, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "order":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("order"))
+			it.Order, err = ec.unmarshalNInt2int(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "customFields":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("customFields"))
+			it.CustomFields, err = ec.unmarshalNCustomFieldDefinitionInput2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐCustomFieldDefinitionInputᚄ(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -11043,29 +11380,6 @@ func (ec *executionContext) unmarshalInputUserInput(ctx context.Context, obj int
 
 // region    ************************** interface.gotpl ***************************
 
-func (ec *executionContext) _CustomFieldDefinition(ctx context.Context, sel ast.SelectionSet, obj model.CustomFieldDefinition) graphql.Marshaler {
-	switch obj := (obj).(type) {
-	case nil:
-		return graphql.Null
-	case model.TextCustomFieldDefinition:
-		return ec._TextCustomFieldDefinition(ctx, sel, &obj)
-	case *model.TextCustomFieldDefinition:
-		if obj == nil {
-			return graphql.Null
-		}
-		return ec._TextCustomFieldDefinition(ctx, sel, obj)
-	case model.IntCustomFieldDefinition:
-		return ec._IntCustomFieldDefinition(ctx, sel, &obj)
-	case *model.IntCustomFieldDefinition:
-		if obj == nil {
-			return graphql.Null
-		}
-		return ec._IntCustomFieldDefinition(ctx, sel, obj)
-	default:
-		panic(fmt.Errorf("unexpected type %T", obj))
-	}
-}
-
 func (ec *executionContext) _ExtensibleEntity(ctx context.Context, sel ast.SelectionSet, obj model.ExtensibleEntity) graphql.Marshaler {
 	switch obj := (obj).(type) {
 	case nil:
@@ -11115,24 +11429,12 @@ func (ec *executionContext) _Node(ctx context.Context, sel ast.SelectionSet, obj
 		}
 		return ec._FieldSetDefinition(ctx, sel, obj)
 	case model.CustomFieldDefinition:
+		return ec._CustomFieldDefinition(ctx, sel, &obj)
+	case *model.CustomFieldDefinition:
 		if obj == nil {
 			return graphql.Null
 		}
 		return ec._CustomFieldDefinition(ctx, sel, obj)
-	case model.TextCustomFieldDefinition:
-		return ec._TextCustomFieldDefinition(ctx, sel, &obj)
-	case *model.TextCustomFieldDefinition:
-		if obj == nil {
-			return graphql.Null
-		}
-		return ec._TextCustomFieldDefinition(ctx, sel, obj)
-	case model.IntCustomFieldDefinition:
-		return ec._IntCustomFieldDefinition(ctx, sel, &obj)
-	case *model.IntCustomFieldDefinition:
-		if obj == nil {
-			return graphql.Null
-		}
-		return ec._IntCustomFieldDefinition(ctx, sel, obj)
 	case model.ExtensibleEntity:
 		if obj == nil {
 			return graphql.Null
@@ -11562,6 +11864,74 @@ func (ec *executionContext) _CustomField(ctx context.Context, sel ast.SelectionS
 	return out
 }
 
+var customFieldDefinitionImplementors = []string{"CustomFieldDefinition", "Node"}
+
+func (ec *executionContext) _CustomFieldDefinition(ctx context.Context, sel ast.SelectionSet, obj *model.CustomFieldDefinition) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, customFieldDefinitionImplementors)
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("CustomFieldDefinition")
+		case "id":
+
+			out.Values[i] = ec._CustomFieldDefinition_id(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "name":
+
+			out.Values[i] = ec._CustomFieldDefinition_name(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "type":
+
+			out.Values[i] = ec._CustomFieldDefinition_type(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "order":
+
+			out.Values[i] = ec._CustomFieldDefinition_order(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "mandatory":
+
+			out.Values[i] = ec._CustomFieldDefinition_mandatory(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "length":
+
+			out.Values[i] = ec._CustomFieldDefinition_length(ctx, field, obj)
+
+		case "min":
+
+			out.Values[i] = ec._CustomFieldDefinition_min(ctx, field, obj)
+
+		case "max":
+
+			out.Values[i] = ec._CustomFieldDefinition_max(ctx, field, obj)
+
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
 var emailImplementors = []string{"Email"}
 
 func (ec *executionContext) _Email(ctx context.Context, sel ast.SelectionSet, obj *model.Email) graphql.Marshaler {
@@ -11624,6 +11994,13 @@ func (ec *executionContext) _EntityDefinition(ctx context.Context, sel ast.Selec
 		case "id":
 
 			out.Values[i] = ec._EntityDefinition_id(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "version":
+
+			out.Values[i] = ec._EntityDefinition_version(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
 				invalids++
@@ -11771,63 +12148,6 @@ func (ec *executionContext) _FieldSetDefinition(ctx context.Context, sel ast.Sel
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
-		default:
-			panic("unknown field " + strconv.Quote(field.Name))
-		}
-	}
-	out.Dispatch()
-	if invalids > 0 {
-		return graphql.Null
-	}
-	return out
-}
-
-var intCustomFieldDefinitionImplementors = []string{"IntCustomFieldDefinition", "CustomFieldDefinition", "Node"}
-
-func (ec *executionContext) _IntCustomFieldDefinition(ctx context.Context, sel ast.SelectionSet, obj *model.IntCustomFieldDefinition) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.OperationContext, sel, intCustomFieldDefinitionImplementors)
-	out := graphql.NewFieldSet(fields)
-	var invalids uint32
-	for i, field := range fields {
-		switch field.Name {
-		case "__typename":
-			out.Values[i] = graphql.MarshalString("IntCustomFieldDefinition")
-		case "id":
-
-			out.Values[i] = ec._IntCustomFieldDefinition_id(ctx, field, obj)
-
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
-		case "name":
-
-			out.Values[i] = ec._IntCustomFieldDefinition_name(ctx, field, obj)
-
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
-		case "order":
-
-			out.Values[i] = ec._IntCustomFieldDefinition_order(ctx, field, obj)
-
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
-		case "mandatory":
-
-			out.Values[i] = ec._IntCustomFieldDefinition_mandatory(ctx, field, obj)
-
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
-		case "min":
-
-			out.Values[i] = ec._IntCustomFieldDefinition_min(ctx, field, obj)
-
-		case "max":
-
-			out.Values[i] = ec._IntCustomFieldDefinition_max(ctx, field, obj)
-
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -12099,6 +12419,24 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_removeContactFromGroup(ctx, field)
+			})
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "createEntityDefinition":
+
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_createEntityDefinition(ctx, field)
+			})
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "createEntityDefinitionNewVersion":
+
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_createEntityDefinitionNewVersion(ctx, field)
 			})
 
 			if out.Values[i] == graphql.Null {
@@ -12401,59 +12739,6 @@ func (ec *executionContext) _Result(ctx context.Context, sel ast.SelectionSet, o
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
-		default:
-			panic("unknown field " + strconv.Quote(field.Name))
-		}
-	}
-	out.Dispatch()
-	if invalids > 0 {
-		return graphql.Null
-	}
-	return out
-}
-
-var textCustomFieldDefinitionImplementors = []string{"TextCustomFieldDefinition", "CustomFieldDefinition", "Node"}
-
-func (ec *executionContext) _TextCustomFieldDefinition(ctx context.Context, sel ast.SelectionSet, obj *model.TextCustomFieldDefinition) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.OperationContext, sel, textCustomFieldDefinitionImplementors)
-	out := graphql.NewFieldSet(fields)
-	var invalids uint32
-	for i, field := range fields {
-		switch field.Name {
-		case "__typename":
-			out.Values[i] = graphql.MarshalString("TextCustomFieldDefinition")
-		case "id":
-
-			out.Values[i] = ec._TextCustomFieldDefinition_id(ctx, field, obj)
-
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
-		case "name":
-
-			out.Values[i] = ec._TextCustomFieldDefinition_name(ctx, field, obj)
-
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
-		case "order":
-
-			out.Values[i] = ec._TextCustomFieldDefinition_order(ctx, field, obj)
-
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
-		case "mandatory":
-
-			out.Values[i] = ec._TextCustomFieldDefinition_mandatory(ctx, field, obj)
-
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
-		case "length":
-
-			out.Values[i] = ec._TextCustomFieldDefinition_length(ctx, field, obj)
-
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -13172,17 +13457,7 @@ func (ec *executionContext) marshalNCustomField2ᚖgithubᚗcomᚋopenlineᚑai�
 	return ec._CustomField(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNCustomFieldDefinition2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐCustomFieldDefinition(ctx context.Context, sel ast.SelectionSet, v model.CustomFieldDefinition) graphql.Marshaler {
-	if v == nil {
-		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
-		}
-		return graphql.Null
-	}
-	return ec._CustomFieldDefinition(ctx, sel, v)
-}
-
-func (ec *executionContext) marshalNCustomFieldDefinition2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐCustomFieldDefinitionᚄ(ctx context.Context, sel ast.SelectionSet, v []model.CustomFieldDefinition) graphql.Marshaler {
+func (ec *executionContext) marshalNCustomFieldDefinition2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐCustomFieldDefinitionᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.CustomFieldDefinition) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -13206,7 +13481,7 @@ func (ec *executionContext) marshalNCustomFieldDefinition2ᚕgithubᚗcomᚋopen
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNCustomFieldDefinition2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐCustomFieldDefinition(ctx, sel, v[i])
+			ret[i] = ec.marshalNCustomFieldDefinition2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐCustomFieldDefinition(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -13224,6 +13499,48 @@ func (ec *executionContext) marshalNCustomFieldDefinition2ᚕgithubᚗcomᚋopen
 	}
 
 	return ret
+}
+
+func (ec *executionContext) marshalNCustomFieldDefinition2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐCustomFieldDefinition(ctx context.Context, sel ast.SelectionSet, v *model.CustomFieldDefinition) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._CustomFieldDefinition(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalNCustomFieldDefinitionInput2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐCustomFieldDefinitionInputᚄ(ctx context.Context, v interface{}) ([]*model.CustomFieldDefinitionInput, error) {
+	var vSlice []interface{}
+	if v != nil {
+		vSlice = graphql.CoerceList(v)
+	}
+	var err error
+	res := make([]*model.CustomFieldDefinitionInput, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalNCustomFieldDefinitionInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐCustomFieldDefinitionInput(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
+func (ec *executionContext) unmarshalNCustomFieldDefinitionInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐCustomFieldDefinitionInput(ctx context.Context, v interface{}) (*model.CustomFieldDefinitionInput, error) {
+	res, err := ec.unmarshalInputCustomFieldDefinitionInput(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalNCustomFieldType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐCustomFieldType(ctx context.Context, v interface{}) (model.CustomFieldType, error) {
+	var res model.CustomFieldType
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNCustomFieldType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐCustomFieldType(ctx context.Context, sel ast.SelectionSet, v model.CustomFieldType) graphql.Marshaler {
+	return v
 }
 
 func (ec *executionContext) marshalNEmail2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐEmail(ctx context.Context, sel ast.SelectionSet, v model.Email) graphql.Marshaler {
@@ -13304,6 +13621,10 @@ func (ec *executionContext) unmarshalNEmailUpdateInput2githubᚗcomᚋopenline�
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
+func (ec *executionContext) marshalNEntityDefinition2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐEntityDefinition(ctx context.Context, sel ast.SelectionSet, v model.EntityDefinition) graphql.Marshaler {
+	return ec._EntityDefinition(ctx, sel, &v)
+}
+
 func (ec *executionContext) marshalNEntityDefinition2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐEntityDefinitionᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.EntityDefinition) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
@@ -13356,6 +13677,11 @@ func (ec *executionContext) marshalNEntityDefinition2ᚖgithubᚗcomᚋopenline�
 		return graphql.Null
 	}
 	return ec._EntityDefinition(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalNEntityDefinitionInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐEntityDefinitionInput(ctx context.Context, v interface{}) (model.EntityDefinitionInput, error) {
+	res, err := ec.unmarshalInputEntityDefinitionInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) marshalNFieldSet2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐFieldSetᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.FieldSet) graphql.Marshaler {
@@ -13464,6 +13790,28 @@ func (ec *executionContext) marshalNFieldSetDefinition2ᚖgithubᚗcomᚋopenlin
 		return graphql.Null
 	}
 	return ec._FieldSetDefinition(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalNFieldSetDefinitionInput2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐFieldSetDefinitionInputᚄ(ctx context.Context, v interface{}) ([]*model.FieldSetDefinitionInput, error) {
+	var vSlice []interface{}
+	if v != nil {
+		vSlice = graphql.CoerceList(v)
+	}
+	var err error
+	res := make([]*model.FieldSetDefinitionInput, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalNFieldSetDefinitionInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐFieldSetDefinitionInput(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
+func (ec *executionContext) unmarshalNFieldSetDefinitionInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐFieldSetDefinitionInput(ctx context.Context, v interface{}) (*model.FieldSetDefinitionInput, error) {
+	res, err := ec.unmarshalInputFieldSetDefinitionInput(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) unmarshalNFieldSetInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐFieldSetInput(ctx context.Context, v interface{}) (model.FieldSetInput, error) {

@@ -18,6 +18,7 @@ type EmailService interface {
 	UpdateEmailInContact(ctx context.Context, id string, toEntity *entity.EmailEntity) (*entity.EmailEntity, error)
 	Delete(ctx context.Context, contactId string, email string) (bool, error)
 	DeleteById(ctx context.Context, contactId string, emailId string) (bool, error)
+	getDriver() neo4j.Driver
 }
 
 type emailService struct {

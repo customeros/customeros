@@ -21,6 +21,7 @@ type ContactGroupService interface {
 	FindAllForContact(ctx context.Context, contact *model.Contact) (*entity.ContactGroupEntities, error)
 	AddContactToGroup(ctx context.Context, contactId, groupId string) (bool, error)
 	RemoveContactFromGroup(ctx context.Context, contactId, groupId string) (bool, error)
+	getDriver() neo4j.Driver
 }
 
 type contactGroupService struct {

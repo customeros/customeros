@@ -24,6 +24,8 @@ type ContactService interface {
 
 	HardDelete(ctx context.Context, id string) (bool, error)
 	SoftDelete(ctx context.Context, id string) (bool, error)
+
+	getDriver() neo4j.Driver
 }
 
 type ContactCreateData struct {

@@ -15,6 +15,7 @@ import (
 type UserService interface {
 	Create(ctx context.Context, user *entity.UserEntity) (*entity.UserEntity, error)
 	FindAll(ctx context.Context, page int, limit int) (*utils.Pagination, error)
+	getDriver() neo4j.Driver
 }
 
 type userService struct {

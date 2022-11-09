@@ -34,6 +34,9 @@ type Mutation {
     deleteContactGroupAndUnlinkAllContacts(id :ID!): Result!
     addContactToGroup(contactId : ID!, groupId: ID!): Result!
     removeContactFromGroup(contactId : ID!, groupId: ID!): Result!
+
+    createEntityDefinition(input: EntityDefinitionInput!): EntityDefinition!
+    createEntityDefinitionNewVersion(id: ID!, input: EntityDefinitionInput!): EntityDefinition!
 }
 
 

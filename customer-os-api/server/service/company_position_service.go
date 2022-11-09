@@ -12,15 +12,16 @@ import (
 	"github.com/openline-ai/openline-customer-os/customer-os-api/utils"
 )
 
-type CompanyPositionService interface {
+type CompanyService interface {
 	FindAllForContact(ctx context.Context, obj *model.Contact) (*entity.CompanyPositionEntities, error)
+	getDriver() neo4j.Driver
 }
 
 type companyPositionService struct {
 	repository *repository.RepositoryContainer
 }
 
-func NewCompanyPositionService(repository *repository.RepositoryContainer) CompanyPositionService {
+func NewCompanyPositionService(repository *repository.RepositoryContainer) CompanyService {
 	return &companyPositionService{
 		repository: repository,
 	}

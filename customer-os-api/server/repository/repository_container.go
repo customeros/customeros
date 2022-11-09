@@ -14,10 +14,11 @@ type Drivers struct {
 }
 
 func InitRepos(driver *neo4j.Driver) *RepositoryContainer {
-	return &RepositoryContainer{
-		EntityDefinitionRepository: NewEntityDefinitionRepository(driver),
+	container := RepositoryContainer{
 		Drivers: Drivers{
 			Neo4jDriver: driver,
 		},
 	}
+	container.EntityDefinitionRepository = NewEntityDefinitionRepository(driver, &container)
+	return &container
 }

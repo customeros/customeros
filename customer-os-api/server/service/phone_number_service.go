@@ -18,6 +18,7 @@ type PhoneNumberService interface {
 	UpdatePhoneNumberInContact(ctx context.Context, id string, toEntity *entity.PhoneNumberEntity) (*entity.PhoneNumberEntity, error)
 	Delete(ctx context.Context, contactId string, e164 string) (bool, error)
 	DeleteById(ctx context.Context, contactId string, phoneId string) (bool, error)
+	getDriver() neo4j.Driver
 }
 
 type phoneNumberService struct {

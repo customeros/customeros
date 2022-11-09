@@ -4,6 +4,7 @@ enum EntityDefinitionExtension {
 
 type EntityDefinition implements Node {
     id: ID!
+    version: Int!
     name: String!
     extends: EntityDefinitionExtension
     fieldSets: [FieldSetDefinition!]!
@@ -17,26 +18,48 @@ type FieldSetDefinition  implements Node {
     customFields: [CustomFieldDefinition!]!
 }
 
-interface CustomFieldDefinition  implements Node {
+type CustomFieldDefinition  implements Node {
     id: ID!
     name: String!
-    order: Int!
-    mandatory: Boolean!
-}
-
-type TextCustomFieldDefinition implements CustomFieldDefinition & Node {
-    id: ID!
-    name: String!
+    type: CustomFieldType!
     order: Int!
     mandatory: Boolean!
     length: Int
-}
-
-type IntCustomFieldDefinition implements CustomFieldDefinition & Node {
-    id: ID!
-    name: String!
-    order: Int!
-    mandatory: Boolean!
     min: Int
     max: Int
+}
+
+input EntityDefinitionInput {
+    name: String!
+    extends: EntityDefinitionExtension
+    fieldSets: [FieldSetDefinitionInput!]!
+    customFields: [CustomFieldDefinitionInput!]!
+}
+
+input FieldSetDefinitionInput {
+    name: String!
+    order: Int!
+    customFields: [CustomFieldDefinitionInput!]!
+}
+
+input CustomFieldDefinitionInput {
+    name: String!
+    type: CustomFieldType!
+    order: Int!
+    mandatory: Boolean!
+    length: Int
+    min: Int
+    max: Int
+}
+
+enum CustomFieldType {
+    TEXT
+    #    INTEGER
+    #    DECIMAL
+    #    DATE
+    #    DATETIME
+    #    TIME
+    #    BOOL
+    #    ENUM
+    #    ENTITY
 }
