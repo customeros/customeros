@@ -2,9 +2,9 @@
 A contact represents an individual in customerOS.
 **A `response` object.**
 """
-type Contact {
+type Contact implements ExtensibleEntity & Node {
     """
-    The unique ID associated with the contact in customerOS. 
+    The unique ID associated with the contact in customerOS.
     **Required**
     """
     id: ID!
@@ -13,19 +13,19 @@ type Contact {
     title: PersonTitle
 
     """
-    The first name of the contact in customerOS.  
+    The first name of the contact in customerOS.
     **Required**"
     """
     firstName: String!
 
     """
-    The last name of the contact in customerOS.  
+    The last name of the contact in customerOS.
     **Required**
     """
     lastName: String!
 
     """
-    An ISO8601 timestamp recording when the contact was created in customerOS. 
+    An ISO8601 timestamp recording when the contact was created in customerOS.
     **Required**
     """
     createdAt: Time!
@@ -40,11 +40,11 @@ type Contact {
     contactType: String
 
     """
-    `companyName` and `jobTitle` of the contact if it has been associated with a company. 
+    `companyName` and `jobTitle` of the contact if it has been associated with a company.
     **Required.  If no values it returns an empty array.**
     """
     companies: [Company!]! @goField(forceResolver: true)
-   
+
     """
     Identifies any contact groups the contact is associated with.
      **Required.  If no values it returns an empty array.**
@@ -67,9 +67,15 @@ type Contact {
     User defined metadata appended to the contact record in customerOS.
     **Required.  If no values it returns an empty array.**
     """
-    textCustomFields: [TextCustomField!]! @goField(forceResolver: true)
+    customFields: [CustomField!]! @goField(forceResolver: true)
 
     fieldSets: [FieldSet!]! @goField(forceResolver: true)
+
+    """
+    The unique ID associated with the definition of the contact in customerOS.
+    **Required**
+    """
+    definitionId: ID!
 }
 
 """

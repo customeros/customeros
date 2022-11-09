@@ -6,8 +6,8 @@ type Mutation {
     hardDeleteContact(contactId: ID!): Result!
     softDeleteContact(contactId: ID!): Result!
 
-    mergeTextCustomFieldToContact(contactId : ID!, input: TextCustomFieldInput!): TextCustomField!
-    updateTextCustomFieldInContact(contactId : ID!, input: TextCustomFieldUpdateInput!): TextCustomField!
+    mergeTextCustomFieldToContact(contactId : ID!, input: TextCustomFieldInput!): CustomField!
+    updateTextCustomFieldInContact(contactId : ID!, input: TextCustomFieldUpdateInput!): CustomField!
     removeTextCustomFieldFromContact(contactId : ID!, fieldName: String!): Result!
     removeTextCustomFieldFromContactById(contactId : ID!, id: ID!): Result!
 
@@ -15,8 +15,8 @@ type Mutation {
     updateFieldSetInContact(contactId : ID!, input: FieldSetUpdateInput!): FieldSet
     removeFieldSetFromContact(contactId : ID!, id: ID!):Result!
 
-    mergeTextCustomFieldToFieldSet(contactId : ID!, fieldSetId : ID!, input: TextCustomFieldInput!): TextCustomField!
-    updateTextCustomFieldInFieldSet(contactId : ID!, fieldSetId : ID!, input: TextCustomFieldUpdateInput!): TextCustomField!
+    mergeTextCustomFieldToFieldSet(contactId : ID!, fieldSetId : ID!, input: TextCustomFieldInput!): CustomField!
+    updateTextCustomFieldInFieldSet(contactId : ID!, fieldSetId : ID!, input: TextCustomFieldUpdateInput!): CustomField!
     removeTextCustomFieldFromFieldSetById(contactId : ID!, fieldSetId : ID!, id: ID!): Result!
 
     mergePhoneNumberToContact(contactId : ID!, input: PhoneNumberInput!): PhoneNumber!

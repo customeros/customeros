@@ -3,7 +3,7 @@ type FieldSet {
     type: String!
     name: String!
     added: Time!
-    textCustomFields: [TextCustomField!]! @goField(forceResolver: true)
+    customFields: [CustomField!]! @goField(forceResolver: true)
 }
 
 input FieldSetInput {

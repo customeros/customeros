@@ -5,6 +5,7 @@ package resolver
 
 import (
 	"context"
+
 	"github.com/openline-ai/openline-customer-os/customer-os-api/graph/generated"
 	"github.com/openline-ai/openline-customer-os/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/customer-os-api/mapper"
@@ -34,10 +35,14 @@ func (r *contactResolver) Emails(ctx context.Context, obj *model.Contact) ([]*mo
 	return mapper.MapEntitiesToEmails(emailEntities), err
 }
 
-// TextCustomFields is the resolver for the textCustomFields field.
-func (r *contactResolver) TextCustomFields(ctx context.Context, obj *model.Contact) ([]*model.TextCustomField, error) {
+// CustomFields is the resolver for the customFields field.
+func (r *contactResolver) CustomFields(ctx context.Context, obj *model.Contact) ([]*model.CustomField, error) {
+	var customFields []*model.CustomField
 	textCustomFieldEntities, err := r.ServiceContainer.TextCustomFieldService.FindAllForContact(ctx, obj)
-	return mapper.MapEntitiesToTextCustomFields(textCustomFieldEntities), err
+	for _, v := range mapper.MapEntitiesToTextCustomFields(textCustomFieldEntities) {
+		customFields = append(customFields, v)
+	}
+	return customFields, err
 }
 
 // FieldSets is the resolver for the fieldSets field.

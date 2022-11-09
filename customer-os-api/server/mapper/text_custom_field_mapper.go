@@ -33,16 +33,16 @@ func MapTextCustomFieldUpdateInputToEntity(input *model.TextCustomFieldUpdateInp
 	return &textCustomFieldEntity
 }
 
-func MapEntitiesToTextCustomFields(textCustomFieldEntities *entity.TextCustomFieldEntities) []*model.TextCustomField {
-	var textCustomFields []*model.TextCustomField
+func MapEntitiesToTextCustomFields(textCustomFieldEntities *entity.TextCustomFieldEntities) []*model.CustomField {
+	var textCustomFields []*model.CustomField
 	for _, textCustomFieldEntity := range *textCustomFieldEntities {
 		textCustomFields = append(textCustomFields, MapEntityToTextCustomField(&textCustomFieldEntity))
 	}
 	return textCustomFields
 }
 
-func MapEntityToTextCustomField(textCustomFieldEntity *entity.TextCustomFieldEntity) *model.TextCustomField {
-	return &model.TextCustomField{
+func MapEntityToTextCustomField(textCustomFieldEntity *entity.TextCustomFieldEntity) *model.CustomField {
+	return &model.CustomField{
 		ID:    textCustomFieldEntity.Id,
 		Name:  textCustomFieldEntity.Name,
 		Value: textCustomFieldEntity.Value,

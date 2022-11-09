@@ -31,4 +31,6 @@ type Query {
     id: ID!): ContactGroup
   
   contactGroups(paginationFilter: PaginationFilter): ContactGroupPage!
+
+  entityDefinitions :[EntityDefinition!]!
 }

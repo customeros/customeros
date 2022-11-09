@@ -16,3 +16,12 @@ interface Pages {
     """
     totalElements: Int64!
 }
+
+interface Node {
+    id: ID!
+}
+
+interface ExtensibleEntity implements Node {
+    id: ID!
+    definitionId: ID!
+}

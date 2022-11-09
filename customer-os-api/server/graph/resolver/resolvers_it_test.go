@@ -197,13 +197,13 @@ func TestMutationResolver_CreateContact(t *testing.T) {
 	require.Equal(t, "Some notes...", *contact.CreateContact.Notes)
 	require.Equal(t, "Some label", *contact.CreateContact.Label)
 
-	require.Equal(t, 2, len(contact.CreateContact.TextCustomFields))
-	require.Equal(t, "field1", contact.CreateContact.TextCustomFields[0].Name)
-	require.Equal(t, "value1", contact.CreateContact.TextCustomFields[0].Value)
-	require.NotNil(t, contact.CreateContact.TextCustomFields[0].ID)
-	require.Equal(t, "field2", contact.CreateContact.TextCustomFields[1].Name)
-	require.Equal(t, "value2", contact.CreateContact.TextCustomFields[1].Value)
-	require.NotNil(t, contact.CreateContact.TextCustomFields[1].ID)
+	require.Equal(t, 2, len(contact.CreateContact.CustomFields))
+	require.Equal(t, "field1", contact.CreateContact.CustomFields[0].Name)
+	require.Equal(t, "value1", contact.CreateContact.CustomFields[0].Value)
+	require.NotNil(t, contact.CreateContact.CustomFields[0].GetID())
+	require.Equal(t, "field2", contact.CreateContact.CustomFields[1].Name)
+	require.Equal(t, "value2", contact.CreateContact.CustomFields[1].Value)
+	require.NotNil(t, contact.CreateContact.CustomFields[1].GetID())
 
 	require.Equal(t, 1, len(contact.CreateContact.Emails))
 	require.NotNil(t, contact.CreateContact.Emails[0].ID)
@@ -223,7 +223,7 @@ func TestMutationResolver_CreateContact(t *testing.T) {
 
 	require.Equal(t, 0, len(contact.CreateContact.Groups))
 
-	//require.Equal(t, 2, getCountOfNodes(driver, "Tenant"))
+	require.Equal(t, 2, getCountOfNodes(driver, "Tenant"))
 	require.Equal(t, 1, getCountOfNodes(driver, "Contact"))
 	require.Equal(t, 0, getCountOfNodes(driver, "ContactGroup"))
 	require.Equal(t, 2, getCountOfNodes(driver, "TextCustomField"))
@@ -318,7 +318,7 @@ func TestMutationResolver_MergeTextCustomFieldToFieldSet(t *testing.T) {
 	assertRawResponseSuccess(t, rawResponse, err)
 
 	var textField struct {
-		MergeTextCustomFieldToFieldSet model.TextCustomField
+		MergeTextCustomFieldToFieldSet model.CustomField
 	}
 
 	err = decode.Decode(rawResponse.Data.(map[string]any), &textField)
@@ -347,7 +347,7 @@ func TestMutationResolver_UpdateTextCustomFieldInFieldSet(t *testing.T) {
 	assertRawResponseSuccess(t, rawResponse, err)
 
 	var textField struct {
-		UpdateTextCustomFieldInFieldSet model.TextCustomField
+		UpdateTextCustomFieldInFieldSet model.CustomField
 	}
 
 	err = decode.Decode(rawResponse.Data.(map[string]any), &textField)
