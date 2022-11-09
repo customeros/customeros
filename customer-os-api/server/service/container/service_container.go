@@ -2,6 +2,7 @@ package container
 
 import (
 	"github.com/neo4j/neo4j-go-driver/v4/neo4j"
+	"github.com/openline-ai/openline-customer-os/customer-os-api/repository"
 	"github.com/openline-ai/openline-customer-os/customer-os-api/service"
 )
 
@@ -17,14 +18,16 @@ type ServiceContainer struct {
 }
 
 func InitServices(driver *neo4j.Driver) *ServiceContainer {
+	repoContainer := repository.InitRepos(driver)
+
 	return &ServiceContainer{
-		ContactService:         service.NewContactService(driver),
-		CompanyPositionService: service.NewCompanyPositionService(driver),
-		ContactGroupService:    service.NewContactGroupService(driver),
-		TextCustomFieldService: service.NewTextCustomFieldService(driver),
-		PhoneNumberService:     service.NewPhoneNumberService(driver),
-		EmailService:           service.NewEmailService(driver),
-		UserService:            service.NewUserService(driver),
-		FieldSetService:        service.NewFieldSetService(driver),
+		ContactService:         service.NewContactService(repoContainer),
+		CompanyPositionService: service.NewCompanyPositionService(repoContainer),
+		ContactGroupService:    service.NewContactGroupService(repoContainer),
+		TextCustomFieldService: service.NewTextCustomFieldService(repoContainer),
+		PhoneNumberService:     service.NewPhoneNumberService(repoContainer),
+		EmailService:           service.NewEmailService(repoContainer),
+		UserService:            service.NewUserService(repoContainer),
+		FieldSetService:        service.NewFieldSetService(repoContainer),
 	}
 }

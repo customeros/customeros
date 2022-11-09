@@ -7,6 +7,7 @@ import (
 	"github.com/neo4j/neo4j-go-driver/v4/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/customer-os-api/common"
 	"github.com/openline-ai/openline-customer-os/customer-os-api/entity"
+	"github.com/openline-ai/openline-customer-os/customer-os-api/repository"
 	"github.com/openline-ai/openline-customer-os/customer-os-api/utils"
 	"time"
 )
@@ -17,17 +18,21 @@ type UserService interface {
 }
 
 type userService struct {
-	driver *neo4j.Driver
+	repository *repository.RepositoryContainer
 }
 
-func NewUserService(driver *neo4j.Driver) UserService {
+func NewUserService(repository *repository.RepositoryContainer) UserService {
 	return &userService{
-		driver: driver,
+		repository: repository,
 	}
 }
 
+func (s *userService) getDriver() neo4j.Driver {
+	return *s.repository.Drivers.Neo4jDriver
+}
+
 func (s *userService) Create(ctx context.Context, user *entity.UserEntity) (*entity.UserEntity, error) {
-	session := (*s.driver).NewSession(neo4j.SessionConfig{AccessMode: neo4j.AccessModeWrite})
+	session := s.getDriver().NewSession(neo4j.SessionConfig{AccessMode: neo4j.AccessModeWrite})
 	defer session.Close()
 
 	queryResult, err := session.WriteTransaction(func(tx neo4j.Transaction) (interface{}, error) {
@@ -65,7 +70,7 @@ func (s *userService) FindAll(ctx context.Context, page int, limit int) (*utils.
 		Limit: limit,
 		Page:  page,
 	}
-	session := (*s.driver).NewSession(neo4j.SessionConfig{AccessMode: neo4j.AccessModeRead})
+	session := s.getDriver().NewSession(neo4j.SessionConfig{AccessMode: neo4j.AccessModeRead})
 	defer session.Close()
 
 	dataResult, err := session.ReadTransaction(func(tx neo4j.Transaction) (interface{}, error) {
