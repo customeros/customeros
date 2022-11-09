@@ -16,6 +16,7 @@ fi
 #Adding helm repos :
 helm repo add bitnami https://charts.bitnami.com/bitnami
 helm repo add neo4j https://helm.neo4j.com/neo4j
+helm repo add fusionauth https://fusionauth.github.io/charts
 helm repo update
 
 #install postgresql
@@ -26,5 +27,7 @@ helm install --values "$CUSTOMER_OS_HOME/deployment/k8s/configs/postgresql/postg
 wait
 
 helm install neo4j-customer-os neo4j/neo4j-standalone --set volumes.data.mode=defaultStorageClass -f $CUSTOMER_OS_HOME/deployment/k8s/configs/neo4j/neo4j-helm-values.yaml --namespace $NAMESPACE_NAME
+
+helm install fusionauth-customer-os fusionauth/fusionauth -f "$CUSTOMER_OS_HOME/deployment/k8s/configs/fusionauth/fusionauth-values.yaml" --namespace $NAMESPACE_NAME
 
 echo "Completed."

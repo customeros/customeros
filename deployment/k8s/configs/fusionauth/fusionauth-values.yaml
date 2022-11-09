@@ -1,0 +1,72 @@
+replicaCount: 1
+image:
+  repository: fusionauth/fusionauth-app
+  tag: 1.40.2
+  pullPolicy: IfNotPresent
+
+service:
+  type: ClusterIP
+  port: 9011
+
+database:
+  protocol: postgresql
+  host: postgresql-customer-os-dev.openline.svc.cluster.local
+  port: 5432
+  name: fusionauth
+  user: "postgres"
+  password: "password"
+  root:
+    username: "postgres"
+    password: "password"
+
+search:
+  engine: database
+
+app:
+  memory: 256M
+  runtimeMode: development
+
+kickstart:
+  enabled: true
+  data:
+    kickstart.json: |
+      {
+        "variables": {
+          "mainTenantId": "#{UUID()}",
+          "adminEmail": "admin@openline.ai",
+          "adminPassword": "password"
+        },
+        "apiKeys": [
+          {
+            "key": "bf69486b-4733-4470-a592-f1bfce7af580",
+            "description": "Core API Key"
+          }
+        ],
+        "requests": [
+          {
+            "method": "POST",
+            "url": "/api/tenant/#{mainTenantId}",
+            "body": {
+              "tenant": {
+                "name": "Openline"
+              }
+            }
+          },
+          {
+            "method": "POST",
+            "url": "/api/user/registration",
+            "body": {
+              "user": {
+                "email": "#{adminEmail}",
+                "password": "#{adminPassword}"
+              },
+              "registration": {
+                "applicationId": "#{FUSIONAUTH_APPLICATION_ID}",
+                "roles": [
+                  "admin"
+                ]
+              }
+            }
+          }
+        ]
+      }
