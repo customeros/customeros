@@ -78,7 +78,24 @@ Here's a list of the big technologies that we use:
 
 ### Folder structure
 
-[coming soon]
+```sh
+openline-customer-os/
+├── architecture            # Architectural documentation
+├── deployment              
+│   ├── infra               # Infrastructure-as-code
+│   └── scripts             # Deployment scripts
+└── packages
+    ├── apps                # Front end web applications
+    │   ├── explorer        # customerOS data explorer
+    │   ├── launcher        # customerOS app launcher & home screen
+    │   └── settings        # customerOS system settings & app configuration
+    ├── auth                # Authentication
+    ├── components
+    │   ├── react           # React component library
+    │   └── web             # Web & UI component library
+    ├── core                # Shared core libraries
+    └── server              # Back end database & API server
+```
 
 ## 💪 Contributions
 
