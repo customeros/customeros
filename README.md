@@ -39,11 +39,19 @@
 
 
 ## 👋 Overview
-Openline customerOS is an open source customer data warehouse that's purpose built as a development plaform.  
+Openline customerOS is an open source development platform that enables the flexible and rapid development of customer-centric applications.
 
-We make it easy to get a complete 360-degree view of your customers.  We bring together behavioral, demographic, transactional, conversational, and social data to give you the most comprehensive view of your customer relationship.  
+- **Openline Auth** - End-to-end identity solution for easy user authentication, sign-in, and permissions using OAuth.
+- **customerDB** - Backend server that host your customer data in a secure, compliant, and standards based way.
+- **customerOS API** - GraphQL and gRPC API for reading, writing, and manipulating data.
+- **customerOS SDK** - Client libraries that simplify the process of interacting with the customerOS API [comins soon].
+- **Event trackers** - First party event trackers fully integrated with customerDB, allowing you full visibility into how your customers are engaging with your apps and content
+- **Web components** - A library of web components that make it easy to interact with customer data in your front end applications [coming soon].
+- **App launcher** - Web application with built in SSO to launch into any app built into customerOS
+- **Explorer app** - Web application where you can view your data and perform basic editing tasks [coming soon].
+- **Admin app** - Web application where you configure and administer all Openline services [coming soon]
+- **UI components** - A library of React components designed to help you quickly develop custom applications on customerOS [coming soon].
 
-Third-party tracking and analytics tools do not work in the current world of GDPR, HIPAA, CCPA, ad blockers, and cookie deprecation.  We allow you to get the most comprehensive view of your customers without sending personal identifying and/or usage data to third parties.
 
 ## 🚀 Installation
 Download customerOS using the following command
@@ -52,19 +60,21 @@ Download customerOS using the following command
 TBD
 ```
 
-## 🙌 Features
-
-- **First-Party Event Trackers**:  Automatically track every event on your website or app.
-- **Data Pipeline Tools**:  ETL / Reverse ETL tools to aggregate customer data from your favorite applications.
-- **Data Integration**:  Combine and organize customer data from different sources into a single, easy-to-use schema.
-- **CustomerDB**:  Real-time transactional database that is the customer system of record.
-- **GraphQL API**:  Build amazing experiences based on a comprehensive, 360-degree view of the customer.
-- **Self-Hosted**:  Deploy on your own infrastructure (if you’d like) to keep total control over your customer data.
-
 ## 🤝 Resources
 
+- Our [docs site][docs] has numerous guides and reference material for to make building on customerOS easy.
 - For help, feature requests, or chat with fellow Openline enthusiasts, check out our [slack community][slack]!
-- Our [docs site][docs] has references for developer functionality, including the Graph API
+
+## 👩‍💻 Codebase
+
+### Technologies
+
+Here's a list of the big technologies that we use:
+
+- **PostgreSQL** & **Neo4j** - Data storage
+- **Go** - Back end & API
+- **TypeScript** - Web components
+- **React** - Front end apps and UI components
 
 ## 💪 Contributions
 
@@ -100,6 +110,7 @@ A massive thank you goes out to all these wonderful people ([emoji key][emoji]):
 
 - This repo is licensed under [Apache 2.0][apache2], with the exception of the ee directory (if applicable).
 - Premium features (contained in the ee directory) require an Openline Enterprise license.  See our [pricing page][pricing] for more details.
+- Copyright &copy; Openline Technologies Inc. 2022
 
 
 [apache2]: https://www.apache.org/licenses/LICENSE-2.0
