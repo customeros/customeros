@@ -8,7 +8,7 @@ COPY go.mod ./
 COPY go.sum ./
 RUN go mod download && go mod verify
 
-COPY . ./
+COPY . .
 
 RUN go build -v -o /go/bin/app
 

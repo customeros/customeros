@@ -3,7 +3,7 @@ name: Build and publish customer-os-api
 on:
   push:
     paths:
-      - customer-os-api/**
+      - packages/server/customer-os-api/**
 
 env:
   REGISTRY: ghcr.io
@@ -16,7 +16,7 @@ permissions:
 
 defaults:
   run:
-    working-directory: customer-os-api/server
+    working-directory: packages/server/customer-os-api
 
 jobs:
   build:
@@ -62,7 +62,7 @@ jobs:
       - name: Push Docker image
         uses: docker/build-push-action@v3
         with:
-          context: customer-os-api/server/.
+          context: packages/server/customer-os-api/.
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}

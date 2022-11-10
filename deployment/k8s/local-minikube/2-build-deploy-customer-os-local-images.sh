@@ -3,7 +3,7 @@ NAMESPACE_NAME="openline"
 CUSTOMER_OS_HOME="$(dirname $(readlink -f $0))/../../../"
 
 ## Build Images
-cd  $CUSTOMER_OS_HOME/customer-os-api/server/
+cd  $CUSTOMER_OS_HOME/packages/server/customer-os-api/
 
 ## clean up previous install
 kubectl delete service customer-os-api-service --namespace $NAMESPACE_NAME

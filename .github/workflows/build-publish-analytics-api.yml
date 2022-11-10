@@ -3,7 +3,7 @@ name: Build and publish customer-os-analytics-api
 on:
   push:
     paths:
-      - customer-os-analytics-api/**
+      - packages/server/customer-os-analytics-api/**
 
 env:
   REGISTRY: ghcr.io
@@ -16,7 +16,7 @@ permissions:
 
 defaults:
   run:
-    working-directory: customer-os-analytics-api
+    working-directory: packages/server/customer-os-analytics-api
 
 jobs:
   build:
@@ -34,19 +34,6 @@ jobs:
 
       - name: Test
         run: go test ./... -v
-
-#  sonar:
-#    runs-on: ubuntu-latest
-#    steps:
-#      - uses: actions/checkout@v2
-#        with:
-#          # Disabling shallow clone is recommended for improving relevancy of reporting
-#          fetch-depth: 0
-#      - name: SonarCloud Scan
-#        uses: sonarsource/sonarcloud-github-action@master
-#        env:
-#          GITHUB_TOKEN: ${{ secrets.SONAR_GITHUB_REPORT_BACK_TOKEN }}
-#          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
   publish:
     name: publish image
@@ -75,7 +62,7 @@ jobs:
       - name: Push Docker image
         uses: docker/build-push-action@v3
         with:
-          context: customer-os-analytics-api/.
+          context: packages/server/customer-os-analytics-api/.
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
