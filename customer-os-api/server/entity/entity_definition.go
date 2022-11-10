@@ -16,7 +16,7 @@ type EntityDefinitionEntity struct {
 }
 
 func (entityDefinition EntityDefinitionEntity) ToString() string {
-	return fmt.Sprintf("id: %s\nname: %s\nextends: %s", entityDefinition.Id, entityDefinition.Name, entityDefinition.Extends)
+	return fmt.Sprintf("id: %s\nname: %s\nextends: %s", entityDefinition.Id, entityDefinition.Name, *entityDefinition.Extends)
 }
 
 type EntityDefinitionEntities []EntityDefinitionEntity
