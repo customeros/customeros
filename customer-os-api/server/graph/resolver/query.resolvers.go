@@ -5,7 +5,6 @@ package resolver
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/openline-ai/openline-customer-os/customer-os-api/entity"
@@ -91,7 +90,8 @@ func (r *queryResolver) ContactGroups(ctx context.Context, paginationFilter *mod
 
 // EntityDefinitions is the resolver for the entityDefinitions field.
 func (r *queryResolver) EntityDefinitions(ctx context.Context) ([]*model.EntityDefinition, error) {
-	panic(fmt.Errorf("not implemented: EntityDefinitions - entityDefinitions"))
+	result, err := r.ServiceContainer.EntityDefinitionService.FindAll(ctx)
+	return mapper.MapEntitiesToEntityDefinitions(result), err
 }
 
 // Query returns generated.QueryResolver implementation.

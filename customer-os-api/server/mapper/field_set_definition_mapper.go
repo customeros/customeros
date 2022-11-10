@@ -24,3 +24,11 @@ func MapEntityToFieldSetDefinition(entity *entity.FieldSetDefinitionEntity) *mod
 	}
 	return &output
 }
+
+func MapEntitiesToFieldSetDefinitions(entities *entity.FieldSetDefinitionEntities) []*model.FieldSetDefinition {
+	var fieldSetDefinitions []*model.FieldSetDefinition
+	for _, v := range *entities {
+		fieldSetDefinitions = append(fieldSetDefinitions, MapEntityToFieldSetDefinition(&v))
+	}
+	return fieldSetDefinitions
+}

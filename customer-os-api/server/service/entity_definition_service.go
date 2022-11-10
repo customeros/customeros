@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"github.com/neo4j/neo4j-go-driver/v4/neo4j/db"
 	"github.com/neo4j/neo4j-go-driver/v4/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/customer-os-api/common"
 	"github.com/openline-ai/openline-customer-os/customer-os-api/entity"
@@ -11,6 +12,7 @@ import (
 
 type EntityDefinitionService interface {
 	Create(ctx context.Context, entity *entity.EntityDefinitionEntity) (*entity.EntityDefinitionEntity, error)
+	FindAll(ctx context.Context) (*entity.EntityDefinitionEntities, error)
 }
 
 type entityDefinitionService struct {
@@ -32,6 +34,20 @@ func (s *entityDefinitionService) Create(ctx context.Context, entity *entity.Ent
 	return s.mapDbNodeToEntityDefinition(record.(dbtype.Node)), nil
 }
 
+func (s *entityDefinitionService) FindAll(ctx context.Context) (*entity.EntityDefinitionEntities, error) {
+	all, err := s.repository.EntityDefinitionRepository.FindAll(common.GetContext(ctx).Tenant)
+	if err != nil {
+		return nil, err
+	}
+	entityDefinitionEntities := entity.EntityDefinitionEntities{}
+	for _, dbRecord := range all.([]*db.Record) {
+		entityDefinitionEntity := s.mapDbNodeToEntityDefinition(dbRecord.Values[0].(dbtype.Node))
+		s.addDbRelationshipToEntity(dbRecord.Values[1].(dbtype.Relationship), entityDefinitionEntity)
+		entityDefinitionEntities = append(entityDefinitionEntities, *entityDefinitionEntity)
+	}
+	return &entityDefinitionEntities, nil
+}
+
 func (s *entityDefinitionService) mapDbNodeToEntityDefinition(dbNode dbtype.Node) *entity.EntityDefinitionEntity {
 	props := utils.GetPropsFromNode(dbNode)
 	entityDefinition := entity.EntityDefinitionEntity{
@@ -41,4 +57,9 @@ func (s *entityDefinitionService) mapDbNodeToEntityDefinition(dbNode dbtype.Node
 		Version: utils.GetIntPropOrDefault(props, "version"),
 	}
 	return &entityDefinition
+}
+
+func (s *entityDefinitionService) addDbRelationshipToEntity(relationship dbtype.Relationship, entityDefinition *entity.EntityDefinitionEntity) {
+	props := utils.GetPropsFromRelationship(relationship)
+	entityDefinition.Added = utils.GetTimePropOrNow(props, "added")
 }

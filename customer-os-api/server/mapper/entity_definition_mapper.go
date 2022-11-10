@@ -27,6 +27,7 @@ func MapEntityToEntityDefinition(entity *entity.EntityDefinitionEntity) *model.E
 		ID:      entity.Id,
 		Name:    entity.Name,
 		Version: int(entity.Version),
+		Added:   entity.Added,
 	}
 	if entity.Extends != nil {
 		extends := model.EntityDefinitionExtension(*entity.Extends)
@@ -35,4 +36,12 @@ func MapEntityToEntityDefinition(entity *entity.EntityDefinitionEntity) *model.E
 		}
 	}
 	return &output
+}
+
+func MapEntitiesToEntityDefinitions(entities *entity.EntityDefinitionEntities) []*model.EntityDefinition {
+	var entityDefinitions []*model.EntityDefinition
+	for _, v := range *entities {
+		entityDefinitions = append(entityDefinitions, MapEntityToEntityDefinition(&v))
+	}
+	return entityDefinitions
 }

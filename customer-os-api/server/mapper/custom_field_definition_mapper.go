@@ -36,3 +36,11 @@ func MapEntityToCustomFieldDefinition(entity *entity.CustomFieldDefinitionEntity
 	}
 	return &output
 }
+
+func MapEntitiesToCustomFieldDefinitions(entities *entity.CustomFieldDefinitionEntities) []*model.CustomFieldDefinition {
+	var customFieldDefinitions []*model.CustomFieldDefinition
+	for _, v := range *entities {
+		customFieldDefinitions = append(customFieldDefinitions, MapEntityToCustomFieldDefinition(&v))
+	}
+	return customFieldDefinitions
+}

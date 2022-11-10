@@ -60,7 +60,7 @@ func (s *fieldSetService) FindAllForContact(ctx context.Context, contact *model.
 
 	for _, dbRecord := range queryResult.([]*db.Record) {
 		fieldSetEntity := s.mapDbNodeToFieldSetEntity(dbRecord.Values[0].(dbtype.Node))
-		s.addDbRelationshipToEntity((queryResult.([]*db.Record))[0].Values[1].(dbtype.Relationship), fieldSetEntity)
+		s.addDbRelationshipToEntity(dbRecord.Values[1].(dbtype.Relationship), fieldSetEntity)
 		fieldSetEntities = append(fieldSetEntities, *fieldSetEntity)
 	}
 

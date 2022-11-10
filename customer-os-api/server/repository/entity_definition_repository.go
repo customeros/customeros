@@ -9,6 +9,7 @@ import (
 
 type EntityDefinitionRepository interface {
 	Create(tenant string, entity *entity.EntityDefinitionEntity) (any, error)
+	FindAll(tenant string) (any, error)
 }
 
 type entityDefinitionRepository struct {
@@ -32,6 +33,23 @@ func (r *entityDefinitionRepository) Create(tenant string, entity *entity.Entity
 		return nil, err
 	}
 	return queryResult, nil
+}
+
+func (r *entityDefinitionRepository) FindAll(tenant string) (any, error) {
+	session := (*r.driver).NewSession(neo4j.SessionConfig{AccessMode: neo4j.AccessModeRead})
+	defer session.Close()
+
+	return session.ReadTransaction(func(tx neo4j.Transaction) (interface{}, error) {
+		queryResult, err := tx.Run(`
+				MATCH (:Tenant {name:$tenant})-[r:USES_ENTITY_DEFINITION]->(e:EntityDefinition) RETURN e, r`,
+			map[string]any{
+				"tenant": tenant,
+			})
+		if err != nil {
+			return nil, err
+		}
+		return queryResult.Collect()
+	})
 }
 
 func (r *entityDefinitionRepository) createFullEntityDefinitionInTxWork(tenant string, entity *entity.EntityDefinitionEntity) func(tx neo4j.Transaction) (any, error) {

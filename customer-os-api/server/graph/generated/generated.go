@@ -38,7 +38,9 @@ type Config struct {
 
 type ResolverRoot interface {
 	Contact() ContactResolver
+	EntityDefinition() EntityDefinitionResolver
 	FieldSet() FieldSetResolver
+	FieldSetDefinition() FieldSetDefinitionResolver
 	Mutation() MutationResolver
 	Query() QueryResolver
 }
@@ -112,6 +114,7 @@ type ComplexityRoot struct {
 	}
 
 	EntityDefinition struct {
+		Added        func(childComplexity int) int
 		CustomFields func(childComplexity int) int
 		Extends      func(childComplexity int) int
 		FieldSets    func(childComplexity int) int
@@ -140,7 +143,6 @@ type ComplexityRoot struct {
 		CreateContact                          func(childComplexity int, input model.ContactInput) int
 		CreateContactGroup                     func(childComplexity int, input model.ContactGroupInput) int
 		CreateEntityDefinition                 func(childComplexity int, input model.EntityDefinitionInput) int
-		CreateEntityDefinitionNewVersion       func(childComplexity int, id string, input model.EntityDefinitionInput) int
 		CreateUser                             func(childComplexity int, input model.UserInput) int
 		DeleteContactGroupAndUnlinkAllContacts func(childComplexity int, id string) int
 		HardDeleteContact                      func(childComplexity int, contactID string) int
@@ -213,8 +215,15 @@ type ContactResolver interface {
 	CustomFields(ctx context.Context, obj *model.Contact) ([]*model.CustomField, error)
 	FieldSets(ctx context.Context, obj *model.Contact) ([]*model.FieldSet, error)
 }
+type EntityDefinitionResolver interface {
+	FieldSets(ctx context.Context, obj *model.EntityDefinition) ([]*model.FieldSetDefinition, error)
+	CustomFields(ctx context.Context, obj *model.EntityDefinition) ([]*model.CustomFieldDefinition, error)
+}
 type FieldSetResolver interface {
 	CustomFields(ctx context.Context, obj *model.FieldSet) ([]*model.CustomField, error)
+}
+type FieldSetDefinitionResolver interface {
+	CustomFields(ctx context.Context, obj *model.FieldSetDefinition) ([]*model.CustomFieldDefinition, error)
 }
 type MutationResolver interface {
 	CreateUser(ctx context.Context, input model.UserInput) (*model.User, error)
@@ -246,7 +255,6 @@ type MutationResolver interface {
 	AddContactToGroup(ctx context.Context, contactID string, groupID string) (*model.Result, error)
 	RemoveContactFromGroup(ctx context.Context, contactID string, groupID string) (*model.Result, error)
 	CreateEntityDefinition(ctx context.Context, input model.EntityDefinitionInput) (*model.EntityDefinition, error)
-	CreateEntityDefinitionNewVersion(ctx context.Context, id string, input model.EntityDefinitionInput) (*model.EntityDefinition, error)
 }
 type QueryResolver interface {
 	Users(ctx context.Context, paginationFilter *model.PaginationFilter) (*model.UserPage, error)
@@ -554,6 +562,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Email.Primary(childComplexity), true
 
+	case "EntityDefinition.added":
+		if e.complexity.EntityDefinition.Added == nil {
+			break
+		}
+
+		return e.complexity.EntityDefinition.Added(childComplexity), true
+
 	case "EntityDefinition.customFields":
 		if e.complexity.EntityDefinition.CustomFields == nil {
 			break
@@ -706,18 +721,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.CreateEntityDefinition(childComplexity, args["input"].(model.EntityDefinitionInput)), true
-
-	case "Mutation.createEntityDefinitionNewVersion":
-		if e.complexity.Mutation.CreateEntityDefinitionNewVersion == nil {
-			break
-		}
-
-		args, err := ec.field_Mutation_createEntityDefinitionNewVersion_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Mutation.CreateEntityDefinitionNewVersion(childComplexity, args["id"].(string), args["input"].(model.EntityDefinitionInput)), true
 
 	case "Mutation.createUser":
 		if e.complexity.Mutation.CreateUser == nil {
@@ -1781,15 +1784,16 @@ type EntityDefinition implements Node {
     version: Int!
     name: String!
     extends: EntityDefinitionExtension
-    fieldSets: [FieldSetDefinition!]!
-    customFields: [CustomFieldDefinition!]!
+    fieldSets: [FieldSetDefinition!]! @goField(forceResolver: true)
+    customFields: [CustomFieldDefinition!]! @goField(forceResolver: true)
+    added: Time!
 }
 
 type FieldSetDefinition  implements Node {
     id: ID!
     name: String!
     order: Int!
-    customFields: [CustomFieldDefinition!]!
+    customFields: [CustomFieldDefinition!]! @goField(forceResolver: true)
 }
 
 type CustomFieldDefinition  implements Node {
@@ -1936,7 +1940,7 @@ interface ExtensibleEntity implements Node {
     removeContactFromGroup(contactId : ID!, groupId: ID!): Result!
 
     createEntityDefinition(input: EntityDefinitionInput!): EntityDefinition!
-    createEntityDefinitionNewVersion(id: ID!, input: EntityDefinitionInput!): EntityDefinition!
+#    createEntityDefinitionNewVersion(id: ID!, input: EntityDefinitionInput!): EntityDefinition!
 }
 
 
@@ -2237,30 +2241,6 @@ func (ec *executionContext) field_Mutation_createContact_args(ctx context.Contex
 		}
 	}
 	args["input"] = arg0
-	return args, nil
-}
-
-func (ec *executionContext) field_Mutation_createEntityDefinitionNewVersion_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
-	var err error
-	args := map[string]interface{}{}
-	var arg0 string
-	if tmp, ok := rawArgs["id"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
-		arg0, err = ec.unmarshalNID2string(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["id"] = arg0
-	var arg1 model.EntityDefinitionInput
-	if tmp, ok := rawArgs["input"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-		arg1, err = ec.unmarshalNEntityDefinitionInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐEntityDefinitionInput(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["input"] = arg1
 	return args, nil
 }
 
@@ -5023,7 +5003,7 @@ func (ec *executionContext) _EntityDefinition_fieldSets(ctx context.Context, fie
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.FieldSets, nil
+		return ec.resolvers.EntityDefinition().FieldSets(rctx, obj)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -5044,8 +5024,8 @@ func (ec *executionContext) fieldContext_EntityDefinition_fieldSets(ctx context.
 	fc = &graphql.FieldContext{
 		Object:     "EntityDefinition",
 		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
+		IsMethod:   true,
+		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
 			case "id":
@@ -5077,7 +5057,7 @@ func (ec *executionContext) _EntityDefinition_customFields(ctx context.Context, 
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.CustomFields, nil
+		return ec.resolvers.EntityDefinition().CustomFields(rctx, obj)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -5098,8 +5078,8 @@ func (ec *executionContext) fieldContext_EntityDefinition_customFields(ctx conte
 	fc = &graphql.FieldContext{
 		Object:     "EntityDefinition",
 		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
+		IsMethod:   true,
+		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
 			case "id":
@@ -5120,6 +5100,50 @@ func (ec *executionContext) fieldContext_EntityDefinition_customFields(ctx conte
 				return ec.fieldContext_CustomFieldDefinition_max(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type CustomFieldDefinition", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _EntityDefinition_added(ctx context.Context, field graphql.CollectedField, obj *model.EntityDefinition) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_EntityDefinition_added(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Added, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(time.Time)
+	fc.Result = res
+	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_EntityDefinition_added(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "EntityDefinition",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
 		},
 	}
 	return fc, nil
@@ -5499,7 +5523,7 @@ func (ec *executionContext) _FieldSetDefinition_customFields(ctx context.Context
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.CustomFields, nil
+		return ec.resolvers.FieldSetDefinition().CustomFields(rctx, obj)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -5520,8 +5544,8 @@ func (ec *executionContext) fieldContext_FieldSetDefinition_customFields(ctx con
 	fc = &graphql.FieldContext{
 		Object:     "FieldSetDefinition",
 		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
+		IsMethod:   true,
+		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
 			case "id":
@@ -7368,6 +7392,8 @@ func (ec *executionContext) fieldContext_Mutation_createEntityDefinition(ctx con
 				return ec.fieldContext_EntityDefinition_fieldSets(ctx, field)
 			case "customFields":
 				return ec.fieldContext_EntityDefinition_customFields(ctx, field)
+			case "added":
+				return ec.fieldContext_EntityDefinition_added(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type EntityDefinition", field.Name)
 		},
@@ -7380,75 +7406,6 @@ func (ec *executionContext) fieldContext_Mutation_createEntityDefinition(ctx con
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Mutation_createEntityDefinition_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
-		ec.Error(ctx, err)
-		return
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Mutation_createEntityDefinitionNewVersion(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_createEntityDefinitionNewVersion(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().CreateEntityDefinitionNewVersion(rctx, fc.Args["id"].(string), fc.Args["input"].(model.EntityDefinitionInput))
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(*model.EntityDefinition)
-	fc.Result = res
-	return ec.marshalNEntityDefinition2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐEntityDefinition(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Mutation_createEntityDefinitionNewVersion(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Mutation",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_EntityDefinition_id(ctx, field)
-			case "version":
-				return ec.fieldContext_EntityDefinition_version(ctx, field)
-			case "name":
-				return ec.fieldContext_EntityDefinition_name(ctx, field)
-			case "extends":
-				return ec.fieldContext_EntityDefinition_extends(ctx, field)
-			case "fieldSets":
-				return ec.fieldContext_EntityDefinition_fieldSets(ctx, field)
-			case "customFields":
-				return ec.fieldContext_EntityDefinition_customFields(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type EntityDefinition", field.Name)
-		},
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			err = ec.Recover(ctx, r)
-			ec.Error(ctx, err)
-		}
-	}()
-	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_createEntityDefinitionNewVersion_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return
 	}
@@ -8187,6 +8144,8 @@ func (ec *executionContext) fieldContext_Query_entityDefinitions(ctx context.Con
 				return ec.fieldContext_EntityDefinition_fieldSets(ctx, field)
 			case "customFields":
 				return ec.fieldContext_EntityDefinition_customFields(ctx, field)
+			case "added":
+				return ec.fieldContext_EntityDefinition_added(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type EntityDefinition", field.Name)
 		},
@@ -11996,39 +11955,72 @@ func (ec *executionContext) _EntityDefinition(ctx context.Context, sel ast.Selec
 			out.Values[i] = ec._EntityDefinition_id(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "version":
 
 			out.Values[i] = ec._EntityDefinition_version(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "name":
 
 			out.Values[i] = ec._EntityDefinition_name(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "extends":
 
 			out.Values[i] = ec._EntityDefinition_extends(ctx, field, obj)
 
 		case "fieldSets":
+			field := field
 
-			out.Values[i] = ec._EntityDefinition_fieldSets(ctx, field, obj)
-
-			if out.Values[i] == graphql.Null {
-				invalids++
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._EntityDefinition_fieldSets(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
 			}
-		case "customFields":
 
-			out.Values[i] = ec._EntityDefinition_customFields(ctx, field, obj)
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
+		case "customFields":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._EntityDefinition_customFields(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
+		case "added":
+
+			out.Values[i] = ec._EntityDefinition_added(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
@@ -12125,29 +12117,42 @@ func (ec *executionContext) _FieldSetDefinition(ctx context.Context, sel ast.Sel
 			out.Values[i] = ec._FieldSetDefinition_id(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "name":
 
 			out.Values[i] = ec._FieldSetDefinition_name(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "order":
 
 			out.Values[i] = ec._FieldSetDefinition_order(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "customFields":
+			field := field
 
-			out.Values[i] = ec._FieldSetDefinition_customFields(ctx, field, obj)
-
-			if out.Values[i] == graphql.Null {
-				invalids++
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._FieldSetDefinition_customFields(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
 			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -12428,15 +12433,6 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_createEntityDefinition(ctx, field)
-			})
-
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
-		case "createEntityDefinitionNewVersion":
-
-			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_createEntityDefinitionNewVersion(ctx, field)
 			})
 
 			if out.Values[i] == graphql.Null {

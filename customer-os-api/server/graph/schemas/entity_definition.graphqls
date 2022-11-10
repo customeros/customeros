@@ -9,6 +9,7 @@ type EntityDefinition implements Node {
     extends: EntityDefinitionExtension
     fieldSets: [FieldSetDefinition!]! @goField(forceResolver: true)
     customFields: [CustomFieldDefinition!]! @goField(forceResolver: true)
+    added: Time!
 }
 
 type FieldSetDefinition  implements Node {
