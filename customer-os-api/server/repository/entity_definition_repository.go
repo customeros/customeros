@@ -54,14 +54,14 @@ func (r *entityDefinitionRepository) FindAllByTenant(tenant string) (any, error)
 
 func (r *entityDefinitionRepository) createFullEntityDefinitionInTxWork(tenant string, entity *entity.EntityDefinitionEntity) func(tx neo4j.Transaction) (any, error) {
 	return func(tx neo4j.Transaction) (interface{}, error) {
-		queryResult, err := tx.Run(`
+		txResult, err := tx.Run(`
 			MATCH (t:Tenant {name:$tenant})
-			MERGE (t)-[:USES_ENTITY_DEFINITION {added:datetime({timezone: 'UTC'})}]->(e:EntityDefinition {
+			MERGE (t)-[r:USES_ENTITY_DEFINITION {added:datetime({timezone: 'UTC'})}]->(e:EntityDefinition {
 				  id: randomUUID(),
 				  name: $name,
 				  version: $version
 			}) ON CREATE SET e.extends=$extends
-			RETURN e`,
+			RETURN e, r`,
 			map[string]any{
 				"tenant":  tenant,
 				"name":    entity.Name,
@@ -71,11 +71,11 @@ func (r *entityDefinitionRepository) createFullEntityDefinitionInTxWork(tenant s
 		if err != nil {
 			return nil, err
 		}
-		record, err := queryResult.Single()
+		records, err := txResult.Collect()
 		if err != nil {
 			return nil, err
 		}
-		entityDefinitionId := utils.GetPropsFromNode(record.Values[0].(dbtype.Node))["id"].(string)
+		entityDefinitionId := utils.GetPropsFromNode(records[0].Values[0].(dbtype.Node))["id"].(string)
 		for _, v := range entity.FieldSets {
 			err := r.repos.FieldSetDefinitionRepository.createFieldSetDefinitionInTx(entityDefinitionId, v, tx)
 			if err != nil {
@@ -88,6 +88,6 @@ func (r *entityDefinitionRepository) createFullEntityDefinitionInTxWork(tenant s
 				return nil, err
 			}
 		}
-		return record.Values[0], nil
+		return records, nil
 	}
 }

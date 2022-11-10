@@ -31,7 +31,9 @@ func (s *entityDefinitionService) Create(ctx context.Context, entity *entity.Ent
 	if err != nil {
 		return nil, err
 	}
-	return s.mapDbNodeToEntityDefinition(record.(dbtype.Node)), nil
+	entityDefinition := s.mapDbNodeToEntityDefinition((record.([]*db.Record)[0]).Values[0].(dbtype.Node))
+	s.addDbRelationshipToEntity((record.([]*db.Record)[0]).Values[1].(dbtype.Relationship), entityDefinition)
+	return entityDefinition, nil
 }
 
 func (s *entityDefinitionService) FindAll(ctx context.Context) (*entity.EntityDefinitionEntities, error) {
