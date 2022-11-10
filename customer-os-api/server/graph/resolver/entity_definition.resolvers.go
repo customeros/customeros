@@ -5,7 +5,6 @@ package resolver
 
 import (
 	"context"
-	"fmt"
 	"github.com/openline-ai/openline-customer-os/customer-os-api/mapper"
 
 	"github.com/openline-ai/openline-customer-os/customer-os-api/graph/generated"
@@ -20,12 +19,14 @@ func (r *entityDefinitionResolver) FieldSets(ctx context.Context, obj *model.Ent
 
 // CustomFields is the resolver for the customFields field.
 func (r *entityDefinitionResolver) CustomFields(ctx context.Context, obj *model.EntityDefinition) ([]*model.CustomFieldDefinition, error) {
-	panic(fmt.Errorf("not implemented: CustomFields - customFields"))
+	result, err := r.ServiceContainer.CustomFieldDefinitionService.FindAllForEntityDefinition(obj.ID)
+	return mapper.MapEntitiesToCustomFieldDefinitions(result), err
 }
 
 // CustomFields is the resolver for the customFields field.
 func (r *fieldSetDefinitionResolver) CustomFields(ctx context.Context, obj *model.FieldSetDefinition) ([]*model.CustomFieldDefinition, error) {
-	panic(fmt.Errorf("not implemented: CustomFields - customFields"))
+	result, err := r.ServiceContainer.CustomFieldDefinitionService.FindAllForFieldSetDefinition(obj.ID)
+	return mapper.MapEntitiesToCustomFieldDefinitions(result), err
 }
 
 // EntityDefinition returns generated.EntityDefinitionResolver implementation.

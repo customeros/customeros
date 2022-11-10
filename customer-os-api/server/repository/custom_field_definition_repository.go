@@ -6,8 +6,10 @@ import (
 )
 
 type CustomFieldDefinitionRepository interface {
-	createCustomFieldDefinitionForEntityInTx(entityDefId string, entity *entity.CustomFieldDefinitionEntity, tx neo4j.Transaction) error
-	createCustomFieldDefinitionForFieldSetInTx(fieldSetDefId string, entity *entity.CustomFieldDefinitionEntity, tx neo4j.Transaction) error
+	createCustomFieldDefinitionForEntityInTx(entityDefinitionId string, entity *entity.CustomFieldDefinitionEntity, tx neo4j.Transaction) error
+	createCustomFieldDefinitionForFieldSetInTx(fieldSetDefinitionId string, entity *entity.CustomFieldDefinitionEntity, tx neo4j.Transaction) error
+	FindAllByEntityDefinitionId(entityDefinitionId string) (any, error)
+	FindAllByEntityFieldSetDefinitionId(fieldSetDefinitionId string) (any, error)
 }
 
 type customFieldDefinitionRepository struct {
@@ -22,7 +24,7 @@ func NewCustomFieldDefinitionRepository(driver *neo4j.Driver, repos *RepositoryC
 	}
 }
 
-func (r *customFieldDefinitionRepository) createCustomFieldDefinitionForEntityInTx(entityDefId string, entity *entity.CustomFieldDefinitionEntity, tx neo4j.Transaction) error {
+func (r *customFieldDefinitionRepository) createCustomFieldDefinitionForEntityInTx(entityDefinitionId string, entity *entity.CustomFieldDefinitionEntity, tx neo4j.Transaction) error {
 	_, err := tx.Run(`
 			MATCH (e:EntityDefinition {id:$entityDefinitionId})
 			MERGE (e)-[:CONTAINS]->(f:CustomFieldDefinition {
@@ -36,7 +38,7 @@ func (r *customFieldDefinitionRepository) createCustomFieldDefinitionForEntityIn
 				f.min=$min,
 				f.max=$max`,
 		map[string]any{
-			"entityDefinitionId": entityDefId,
+			"entityDefinitionId": entityDefinitionId,
 			"name":               entity.Name,
 			"order":              entity.Order,
 			"mandatory":          entity.Mandatory,
@@ -49,7 +51,7 @@ func (r *customFieldDefinitionRepository) createCustomFieldDefinitionForEntityIn
 	return err
 }
 
-func (r *customFieldDefinitionRepository) createCustomFieldDefinitionForFieldSetInTx(fieldSetDefId string, entity *entity.CustomFieldDefinitionEntity, tx neo4j.Transaction) error {
+func (r *customFieldDefinitionRepository) createCustomFieldDefinitionForFieldSetInTx(fieldSetDefinition string, entity *entity.CustomFieldDefinitionEntity, tx neo4j.Transaction) error {
 	_, err := tx.Run(`
 			MATCH (d:FieldSetDefinition {id:$fieldSetDefinitionId})
 			MERGE (d)-[:CONTAINS]->(f:CustomFieldDefinition {
@@ -63,7 +65,7 @@ func (r *customFieldDefinitionRepository) createCustomFieldDefinitionForFieldSet
 				f.min=$min,
 				f.max=$max`,
 		map[string]any{
-			"fieldSetDefinitionId": fieldSetDefId,
+			"fieldSetDefinitionId": fieldSetDefinition,
 			"name":                 entity.Name,
 			"order":                entity.Order,
 			"mandatory":            entity.Mandatory,
@@ -74,4 +76,38 @@ func (r *customFieldDefinitionRepository) createCustomFieldDefinitionForFieldSet
 		})
 
 	return err
+}
+
+func (r *customFieldDefinitionRepository) FindAllByEntityDefinitionId(entityDefinitionId string) (any, error) {
+	session := (*r.driver).NewSession(neo4j.SessionConfig{AccessMode: neo4j.AccessModeRead})
+	defer session.Close()
+
+	return session.ReadTransaction(func(tx neo4j.Transaction) (interface{}, error) {
+		queryResult, err := tx.Run(`
+				MATCH (:EntityDefinition {id:$entityDefinitionId})-[:CONTAINS]->(f:CustomFieldDefinition) RETURN f ORDER BY f.order`,
+			map[string]any{
+				"entityDefinitionId": entityDefinitionId,
+			})
+		if err != nil {
+			return nil, err
+		}
+		return queryResult.Collect()
+	})
+}
+
+func (r *customFieldDefinitionRepository) FindAllByEntityFieldSetDefinitionId(fieldSetDefinitionId string) (any, error) {
+	session := (*r.driver).NewSession(neo4j.SessionConfig{AccessMode: neo4j.AccessModeRead})
+	defer session.Close()
+
+	return session.ReadTransaction(func(tx neo4j.Transaction) (interface{}, error) {
+		queryResult, err := tx.Run(`
+				MATCH (:FieldSetDefinition {id:$fieldSetDefinitionId})-[:CONTAINS]->(f:CustomFieldDefinition) RETURN f ORDER BY f.order`,
+			map[string]any{
+				"fieldSetDefinitionId": fieldSetDefinitionId,
+			})
+		if err != nil {
+			return nil, err
+		}
+		return queryResult.Collect()
+	})
 }

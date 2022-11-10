@@ -1,0 +1,63 @@
+package service
+
+import (
+	"github.com/neo4j/neo4j-go-driver/v4/neo4j/db"
+	"github.com/neo4j/neo4j-go-driver/v4/neo4j/dbtype"
+	"github.com/openline-ai/openline-customer-os/customer-os-api/entity"
+	"github.com/openline-ai/openline-customer-os/customer-os-api/repository"
+	"github.com/openline-ai/openline-customer-os/customer-os-api/utils"
+)
+
+type CustomFieldDefinitionService interface {
+	FindAllForEntityDefinition(entityDefinitionId string) (*entity.CustomFieldDefinitionEntities, error)
+	FindAllForFieldSetDefinition(fieldSetDefinitionId string) (*entity.CustomFieldDefinitionEntities, error)
+}
+
+type customFieldDefinitionService struct {
+	repository *repository.RepositoryContainer
+}
+
+func NewCustomFieldDefinitionService(repository *repository.RepositoryContainer) CustomFieldDefinitionService {
+	return &customFieldDefinitionService{
+		repository: repository,
+	}
+}
+
+func (s *customFieldDefinitionService) FindAllForEntityDefinition(entityDefinitionId string) (*entity.CustomFieldDefinitionEntities, error) {
+	all, err := s.repository.CustomFieldDefinitionRepository.FindAllByEntityDefinitionId(entityDefinitionId)
+	if err != nil {
+		return nil, err
+	}
+	customFieldDefinitionEntities := entity.CustomFieldDefinitionEntities{}
+	for _, dbRecord := range all.([]*db.Record) {
+		customFieldDefinitionEntities = append(customFieldDefinitionEntities, *s.mapDbNodeToCustomFieldDefinition(dbRecord.Values[0].(dbtype.Node)))
+	}
+	return &customFieldDefinitionEntities, nil
+}
+
+func (s *customFieldDefinitionService) FindAllForFieldSetDefinition(fieldSetDefinitionId string) (*entity.CustomFieldDefinitionEntities, error) {
+	all, err := s.repository.CustomFieldDefinitionRepository.FindAllByEntityFieldSetDefinitionId(fieldSetDefinitionId)
+	if err != nil {
+		return nil, err
+	}
+	customFieldDefinitionEntities := entity.CustomFieldDefinitionEntities{}
+	for _, dbRecord := range all.([]*db.Record) {
+		customFieldDefinitionEntities = append(customFieldDefinitionEntities, *s.mapDbNodeToCustomFieldDefinition(dbRecord.Values[0].(dbtype.Node)))
+	}
+	return &customFieldDefinitionEntities, nil
+}
+
+func (s *customFieldDefinitionService) mapDbNodeToCustomFieldDefinition(dbNode dbtype.Node) *entity.CustomFieldDefinitionEntity {
+	props := utils.GetPropsFromNode(dbNode)
+	customFieldDefinition := entity.CustomFieldDefinitionEntity{
+		Id:        utils.GetStringPropOrEmpty(props, "id"),
+		Name:      utils.GetStringPropOrEmpty(props, "name"),
+		Order:     utils.GetIntPropOrDefault(props, "order"),
+		Mandatory: utils.GetBoolPropOrFalse(props, "mandatory"),
+		Type:      utils.GetStringPropOrEmpty(props, "type"),
+		Length:    utils.GetIntPropOrNil(props, "length"),
+		Min:       utils.GetIntPropOrNil(props, "min"),
+		Max:       utils.GetIntPropOrNil(props, "max"),
+	}
+	return &customFieldDefinition
+}
