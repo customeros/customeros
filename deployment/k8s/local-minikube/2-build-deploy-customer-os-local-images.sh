@@ -19,7 +19,7 @@ minikube image unload ghcr.io/openline-ai/openline-customer-os/message-store:ott
 
 if [ "x$1" == "xbuild" ]; then
 	echo "locally building docker images"
-	cd  $CUSTOMER_OS_HOME/customer-os-api/server/
+	cd  $CUSTOMER_OS_HOME/packages/server/customer-os-api/
 	docker build --no-cache -t ghcr.io/openline-ai/openline-customer-os/customer-os-api:otter .
 	minikube image load ghcr.io/openline-ai/openline-customer-os/customer-os-api:otter
 
