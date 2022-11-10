@@ -14,7 +14,6 @@ RUN go build -v -o /go/bin/app
 
 FROM alpine:3.14
 COPY --chown=65534:65534 --from=builder /go/bin/app .
-COPY --chown=65534:65534 --from=builder /app/.env .
 USER 65534
 
 EXPOSE 1010
