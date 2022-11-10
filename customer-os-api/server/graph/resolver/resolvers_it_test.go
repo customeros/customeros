@@ -275,8 +275,8 @@ func TestMutationResolver_MergeFieldSetToContact_AllowMultipleFieldSetWithSameNa
 		LastName:  "last",
 	})
 
-	rawResponse1, err := c.RawPost(getQuery("merge_fields_set_to_contact"), client.Var("contactId", contactId1))
-	rawResponse2, err := c.RawPost(getQuery("merge_fields_set_to_contact"), client.Var("contactId", contactId2))
+	rawResponse1, err := c.RawPost(getQuery("merge_field_set_to_contact"), client.Var("contactId", contactId1))
+	rawResponse2, err := c.RawPost(getQuery("merge_field_set_to_contact"), client.Var("contactId", contactId2))
 	assertRawResponseSuccess(t, rawResponse1, err)
 	assertRawResponseSuccess(t, rawResponse2, err)
 
@@ -313,7 +313,7 @@ func TestMutationResolver_MergeTextCustomFieldToFieldSet(t *testing.T) {
 	contactId := createDefaultContact(driver, tenantName)
 	fieldSetId := createDefaultFieldSet(driver, contactId)
 
-	rawResponse, err := c.RawPost(getQuery("merge_text_field_to_fields_set"),
+	rawResponse, err := c.RawPost(getQuery("merge_text_field_to_field_set"),
 		client.Var("contactId", contactId), client.Var("fieldSetId", fieldSetId))
 	assertRawResponseSuccess(t, rawResponse, err)
 
@@ -340,7 +340,7 @@ func TestMutationResolver_UpdateTextCustomFieldInFieldSet(t *testing.T) {
 	fieldSetId := createDefaultFieldSet(driver, contactId)
 	fieldId := createDefaultTextFieldInSet(driver, fieldSetId)
 
-	rawResponse, err := c.RawPost(getQuery("update_text_field_in_fields_set"),
+	rawResponse, err := c.RawPost(getQuery("update_text_field_in_field_set"),
 		client.Var("contactId", contactId),
 		client.Var("fieldSetId", fieldSetId),
 		client.Var("fieldId", fieldId))
@@ -369,7 +369,7 @@ func TestMutationResolver_RemoveTextCustomFieldFromFieldSetByID(t *testing.T) {
 	fieldSetId := createDefaultFieldSet(driver, contactId)
 	fieldId := createDefaultTextFieldInSet(driver, fieldSetId)
 
-	rawResponse, err := c.RawPost(getQuery("remove_text_field_from_fields_set"),
+	rawResponse, err := c.RawPost(getQuery("remove_text_field_from_field_set"),
 		client.Var("contactId", contactId),
 		client.Var("fieldSetId", fieldSetId),
 		client.Var("fieldId", fieldId))
@@ -400,7 +400,7 @@ func TestMutationResolver_RemoveFieldSetFromContact(t *testing.T) {
 	require.Equal(t, 1, getCountOfNodes(driver, "FieldSet"))
 	require.Equal(t, 1, getCountOfNodes(driver, "TextCustomField"))
 
-	rawResponse, err := c.RawPost(getQuery("remove_fields_set_from_contact"),
+	rawResponse, err := c.RawPost(getQuery("remove_field_set_from_contact"),
 		client.Var("contactId", contactId),
 		client.Var("fieldSetId", fieldSetId))
 	assertRawResponseSuccess(t, rawResponse, err)
