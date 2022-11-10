@@ -1,6 +1,3 @@
 .idea
 .fleet
 .vscode
-packages/server/message-store/ent/*
-!packages/server/message-store/ent/generate.go
-!packages/server/message-store/ent/schema
