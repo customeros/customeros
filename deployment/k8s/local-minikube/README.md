@@ -39,16 +39,11 @@ helm repo add bitnami https://charts.bitnami.com/bitnami
 ```
 
 # Setup local environment
-#### 1. Export CUSTOMER_OS_HOME env. variable 
-_(e.g. /Users/alex/workspace/openline-customer-os)_
-```
-export CUSTOMER_OS_HOME = <path to current repo>
-```
-#### 2. Go to 
+#### 1. Go to 
 ```
 deployment/k8s/local-minikube
 ```
-#### 3. Install prerequisites, execute:
+#### 2. Install prerequisites, execute:
 
 * For Mac:
 ```
@@ -58,18 +53,18 @@ deployment/k8s/local-minikube
 ```
 0-ubuntu-install-prerequisites.sh
 ``` 
-#### 4. Execute
+#### 3. Execute
 ```
 1-deploy-customer-os-base-infrastructure-local.sh
 2-build-deploy-customer-os-local-images.sh
 ``` 
 
-#### 5. Check all services are running:
+#### 4. Check all services are running:
 ```
 kubectl get pods -n openline
 ```
 
-#### 6.For customerOs API, prepare neo4j constraints and onboard first tenant
+#### 5.For customerOs API, prepare neo4j constraints and onboard first tenant
 * Connect to neo4j, when aksed provide password `StrongLocalPa$$`
 ```
 kubectl run --rm -it --namespace "openline" --image "neo4j:4.4.11" cypher-shell \
@@ -80,17 +75,17 @@ kubectl run --rm -it --namespace "openline" --image "neo4j:4.4.11" cypher-shell 
 customer-os-api/init-customer-os.cypher
 ```
 
-#### 7. Port FWD for customerOS API
+#### 6. Port FWD for customerOS API
 ```
 kubectl port-forward --namespace openline svc/customer-os-api-service 10010:10010 &
 ```
 
-#### 8. Open in browser
+#### 7. Open in browser
 ```
 http://127.0.0.1:10010/
 ```
 
-#### 9. Create first contact in your tenant workspace
+#### 8. Create first contact in your tenant workspace
 ```
 mutation CreateContact {
   createContact(input: {firstName: "Mr", lastName:"Otter"}) {

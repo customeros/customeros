@@ -34,13 +34,13 @@ spec:
             initialDelaySeconds: 5
             timeoutSeconds: 1
           env:
-            - name: NEOJ4_TARGET
+            - name: NEO4J_TARGET
               value: "neo4j://neo4j-customer-os.openline.svc.cluster.local:7687"
-            - name: NEOJ4_AUTH_USER
+            - name: NEO4J_AUTH_USER
               value: "neo4j"
-            - name: NEOJ4_AUTH_PWD
+            - name: NEO4J_AUTH_PWD
               value: "StrongLocalPa$$"
-            - name: NEOJ4_AUTH_REALM
+            - name: NEO4J_AUTH_REALM
               value: ""
             - name: NEO4J_MAX_CONN_POOL_SIZE 
               value: "100"
