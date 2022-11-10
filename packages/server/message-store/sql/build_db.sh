@@ -22,7 +22,7 @@ if [ "x$1" == "xlocal-kube" ]; then
   done
 
   echo "connecting to pod $pod"
-  echo $FILES |xargs cat|kubectl exec -n $NAMESPACE_NAME -it $pod -- bash -c "PGPASSWORD=$SQL_PASSWORD psql -U $SQL_USER $SQL_DATABASE"
+  echo $FILES |xargs cat|kubectl exec -n $NAMESPACE_NAME -i $pod -- bash -c "PGPASSWORD=$SQL_PASSWORD psql -U $SQL_USER $SQL_DATABASE"
 else
   echo $FILES |xargs cat| PGPASSWORD=$SQL_PASSWORD  psql -h $SQL_HOST $SQL_USER $SQL_DATABASE
 fi

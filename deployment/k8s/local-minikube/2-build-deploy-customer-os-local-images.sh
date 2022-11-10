@@ -42,5 +42,19 @@ kubectl apply -f apps-config/customer-os-api-k8s-service.yaml --namespace $NAMES
 kubectl apply -f apps-config/message-store.yaml --namespace $NAMESPACE_NAME
 kubectl apply -f apps-config/message-store-k8s-service.yaml --namespace $NAMESPACE_NAME
 
+#provision neo4j
+
+while [ -z "$pod" ]; do
+    pod=$(kubectl get pods -n $NAMESPACE_NAME|grep neo4j-customer-os|grep Running| cut -f1 -d ' ')
+    if [ -z "$pod" ]; then
+      echo "message-store not ready waiting"
+      sleep 1
+    fi
+done
+
+echo "provisioning neo4j"
+cat $CUSTOMER_OS_HOME/packages/server/customer-os-api/customer-os.cypher |kubectl run --rm -i --namespace $NAMESPACE_NAME --image "neo4j:4.4.11" cypher-shell  -- bash -c 'NEO4J_PASSWORD=StrongLocalPa\$\$ cypher-shell -a neo4j://neo4j-customer-os.openline.svc.cluster.local:7687 -u neo4j'
+
+echo "provisioning postrgess"
 cd $CUSTOMER_OS_HOME/packages/server/message-store/sql
 SQL_USER=openline SQL_DATABABASE=openline SQL_PASSWORD=password ./build_db.sh local-kube

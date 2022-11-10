@@ -1,2 +1,2 @@
 # Customer OS Base Model
-![Model](Customer Os Base model.png)
+![Model](Customer%20Os%20Base%20model.png)
