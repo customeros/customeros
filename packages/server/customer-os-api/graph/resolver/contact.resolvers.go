@@ -5,6 +5,7 @@ package resolver
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/openline-ai/openline-customer-os/customer-os-api/graph/generated"
 	"github.com/openline-ai/openline-customer-os/customer-os-api/graph/model"
@@ -49,6 +50,11 @@ func (r *contactResolver) CustomFields(ctx context.Context, obj *model.Contact) 
 func (r *contactResolver) FieldSets(ctx context.Context, obj *model.Contact) ([]*model.FieldSet, error) {
 	fieldSetEntities, err := r.ServiceContainer.FieldSetService.FindAllForContact(ctx, obj)
 	return mapper.MapEntitiesToFieldSets(fieldSetEntities), err
+}
+
+// Definition is the resolver for the definition field.
+func (r *contactResolver) Definition(ctx context.Context, obj *model.Contact) (*model.EntityDefinition, error) {
+	panic(fmt.Errorf("not implemented: Definition - definition"))
 }
 
 // Contact returns generated.ContactResolver implementation.

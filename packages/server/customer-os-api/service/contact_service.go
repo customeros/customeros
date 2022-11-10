@@ -34,6 +34,7 @@ type ContactCreateData struct {
 	EmailEntity       *entity.EmailEntity
 	PhoneNumberEntity *entity.PhoneNumberEntity
 	CompanyPosition   *entity.CompanyPositionEntity
+	DefinitionId      *string
 }
 
 type contactService struct {
@@ -54,14 +55,14 @@ func (s *contactService) Create(ctx context.Context, newContact *ContactCreateDa
 	session := s.getDriver().NewSession(neo4j.SessionConfig{AccessMode: neo4j.AccessModeWrite})
 	defer session.Close()
 
-	queryResult, err := session.WriteTransaction(createContactInDBTxWork(ctx, newContact))
+	queryResult, err := session.WriteTransaction(s.createContactInDBTxWork(ctx, newContact))
 	if err != nil {
 		return nil, err
 	}
 	return s.mapDbNodeToContactEntity(queryResult.(dbtype.Node)), nil
 }
 
-func createContactInDBTxWork(ctx context.Context, newContact *ContactCreateData) func(tx neo4j.Transaction) (interface{}, error) {
+func (s *contactService) createContactInDBTxWork(ctx context.Context, newContact *ContactCreateData) func(tx neo4j.Transaction) (interface{}, error) {
 	return func(tx neo4j.Transaction) (interface{}, error) {
 		result, err := tx.Run(`
 			MATCH (t:Tenant {name:$tenant})
@@ -114,6 +115,12 @@ func createContactInDBTxWork(ctx context.Context, newContact *ContactCreateData)
 		}
 		if newContact.PhoneNumberEntity != nil {
 			err := addPhoneNumberToContactInTx(ctx, contactId, *newContact.PhoneNumberEntity, tx)
+			if err != nil {
+				return nil, err
+			}
+		}
+		if newContact.DefinitionId != nil {
+			err := s.repository.ContactRepository.LinkWithEntityDefinitionInTx(common.GetContext(ctx).Tenant, contactId, *newContact.DefinitionId, tx)
 			if err != nil {
 				return nil, err
 			}

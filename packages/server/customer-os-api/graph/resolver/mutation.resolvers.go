@@ -32,6 +32,7 @@ func (r *mutationResolver) CreateContact(ctx context.Context, input model.Contac
 		PhoneNumberEntity: mapper.MapPhoneNumberInputToEntity(input.PhoneNumber),
 		EmailEntity:       mapper.MapEmailInputToEntity(input.Email),
 		CompanyPosition:   mapper.MapCompanyPositionInputToEntity(input.Company),
+		DefinitionId:      input.DefinitionID,
 	})
 	if err != nil {
 		graphql.AddErrorf(ctx, "Failed to create contact %s %s", input.FirstName, input.LastName)

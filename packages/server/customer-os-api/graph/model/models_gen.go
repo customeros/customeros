@@ -13,7 +13,7 @@ type ExtensibleEntity interface {
 	IsNode()
 	IsExtensibleEntity()
 	GetID() string
-	GetDefinitionID() string
+	GetDefinition() *EntityDefinition
 }
 
 type Node interface {
@@ -92,14 +92,13 @@ type Contact struct {
 	// **Required.  If no values it returns an empty array.**
 	CustomFields []*CustomField `json:"customFields"`
 	FieldSets    []*FieldSet    `json:"fieldSets"`
-	// The unique ID associated with the definition of the contact in customerOS.
-	// **Required**
-	DefinitionID string `json:"definitionId"`
+	// Definition of the contact in customerOS.
+	Definition *EntityDefinition `json:"definition"`
 }
 
-func (Contact) IsExtensibleEntity()          {}
-func (this Contact) GetID() string           { return this.ID }
-func (this Contact) GetDefinitionID() string { return this.DefinitionID }
+func (Contact) IsExtensibleEntity()                   {}
+func (this Contact) GetID() string                    { return this.ID }
+func (this Contact) GetDefinition() *EntityDefinition { return this.Definition }
 
 func (Contact) IsNode() {}
 
@@ -160,6 +159,8 @@ type ContactGroupUpdateInput struct {
 // Create an individual in customerOS.
 // **A `create` object.**
 type ContactInput struct {
+	// The unique ID associated with the definition of the contact in customerOS.
+	DefinitionID *string `json:"definitionId"`
 	// The title of the contact.
 	Title *PersonTitle `json:"title"`
 	// The first name of the contact.
