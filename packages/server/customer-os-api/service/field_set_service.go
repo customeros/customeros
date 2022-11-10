@@ -75,13 +75,12 @@ func (s *fieldSetService) MergeFieldSetToContact(ctx context.Context, contactId 
 		txResult, err := tx.Run(`
 			MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant})
 			MERGE (f:FieldSet {name: $name})<-[r:HAS_COMPLEX_PROPERTY]-(c)
-            ON CREATE SET f.type=$type, f.id=randomUUID(), r.added=datetime({timezone: 'UTC'})
+            ON CREATE SET f.id=randomUUID(), r.added=datetime({timezone: 'UTC'})
 			RETURN f, r`,
 			map[string]interface{}{
 				"tenant":    common.GetContext(ctx).Tenant,
 				"contactId": contactId,
 				"name":      input.Name,
-				"type":      input.Type,
 			})
 		records, err := txResult.Collect()
 		if err != nil {
@@ -159,7 +158,6 @@ func (s *fieldSetService) mapDbNodeToFieldSetEntity(node dbtype.Node) *entity.Fi
 	result := entity.FieldSetEntity{
 		Id:   utils.GetStringPropOrEmpty(props, "id"),
 		Name: utils.GetStringPropOrEmpty(props, "name"),
-		Type: utils.GetStringPropOrEmpty(props, "type"),
 	}
 	return &result
 }

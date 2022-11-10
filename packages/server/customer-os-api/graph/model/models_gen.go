@@ -356,11 +356,11 @@ type EntityDefinitionInput struct {
 }
 
 type FieldSet struct {
-	ID           string         `json:"id"`
-	Type         string         `json:"type"`
-	Name         string         `json:"name"`
-	Added        time.Time      `json:"added"`
-	CustomFields []*CustomField `json:"customFields"`
+	ID           string              `json:"id"`
+	Name         string              `json:"name"`
+	Added        time.Time           `json:"added"`
+	CustomFields []*CustomField      `json:"customFields"`
+	Definition   *FieldSetDefinition `json:"definition"`
 }
 
 type FieldSetDefinition struct {
@@ -380,8 +380,8 @@ type FieldSetDefinitionInput struct {
 }
 
 type FieldSetInput struct {
-	Type string `json:"type"`
-	Name string `json:"name"`
+	Name         string  `json:"name"`
+	DefinitionID *string `json:"definitionId"`
 }
 
 type FieldSetUpdateInput struct {

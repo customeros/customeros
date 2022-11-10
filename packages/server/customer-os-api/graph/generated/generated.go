@@ -131,9 +131,9 @@ type ComplexityRoot struct {
 	FieldSet struct {
 		Added        func(childComplexity int) int
 		CustomFields func(childComplexity int) int
+		Definition   func(childComplexity int) int
 		ID           func(childComplexity int) int
 		Name         func(childComplexity int) int
-		Type         func(childComplexity int) int
 	}
 
 	FieldSetDefinition struct {
@@ -228,6 +228,7 @@ type EntityDefinitionResolver interface {
 }
 type FieldSetResolver interface {
 	CustomFields(ctx context.Context, obj *model.FieldSet) ([]*model.CustomField, error)
+	Definition(ctx context.Context, obj *model.FieldSet) (*model.FieldSetDefinition, error)
 }
 type FieldSetDefinitionResolver interface {
 	CustomFields(ctx context.Context, obj *model.FieldSetDefinition) ([]*model.CustomFieldDefinition, error)
@@ -647,6 +648,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.FieldSet.CustomFields(childComplexity), true
 
+	case "FieldSet.definition":
+		if e.complexity.FieldSet.Definition == nil {
+			break
+		}
+
+		return e.complexity.FieldSet.Definition(childComplexity), true
+
 	case "FieldSet.id":
 		if e.complexity.FieldSet.ID == nil {
 			break
@@ -660,13 +668,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.FieldSet.Name(childComplexity), true
-
-	case "FieldSet.type":
-		if e.complexity.FieldSet.Type == nil {
-			break
-		}
-
-		return e.complexity.FieldSet.Type(childComplexity), true
 
 	case "FieldSetDefinition.customFields":
 		if e.complexity.FieldSetDefinition.CustomFields == nil {
@@ -1891,15 +1892,15 @@ enum CustomFieldType {
 }`, BuiltIn: false},
 	{Name: "../schemas/field_set.graphqls", Input: `type FieldSet {
     id: ID!
-    type: String!
     name: String!
     added: Time!
     customFields: [CustomField!]! @goField(forceResolver: true)
+    definition: FieldSetDefinition @goField(forceResolver: true)
 }
 
 input FieldSetInput {
-    type: String!
     name: String!
+    definitionId: ID
 }
 
 input FieldSetUpdateInput {
@@ -3781,14 +3782,14 @@ func (ec *executionContext) fieldContext_Contact_fieldSets(ctx context.Context, 
 			switch field.Name {
 			case "id":
 				return ec.fieldContext_FieldSet_id(ctx, field)
-			case "type":
-				return ec.fieldContext_FieldSet_type(ctx, field)
 			case "name":
 				return ec.fieldContext_FieldSet_name(ctx, field)
 			case "added":
 				return ec.fieldContext_FieldSet_added(ctx, field)
 			case "customFields":
 				return ec.fieldContext_FieldSet_customFields(ctx, field)
+			case "definition":
+				return ec.fieldContext_FieldSet_definition(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type FieldSet", field.Name)
 		},
@@ -5359,50 +5360,6 @@ func (ec *executionContext) fieldContext_FieldSet_id(ctx context.Context, field 
 	return fc, nil
 }
 
-func (ec *executionContext) _FieldSet_type(ctx context.Context, field graphql.CollectedField, obj *model.FieldSet) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_FieldSet_type(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Type, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_FieldSet_type(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "FieldSet",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
 func (ec *executionContext) _FieldSet_name(ctx context.Context, field graphql.CollectedField, obj *model.FieldSet) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_FieldSet_name(ctx, field)
 	if err != nil {
@@ -5538,6 +5495,57 @@ func (ec *executionContext) fieldContext_FieldSet_customFields(ctx context.Conte
 				return ec.fieldContext_CustomField_value(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type CustomField", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _FieldSet_definition(ctx context.Context, field graphql.CollectedField, obj *model.FieldSet) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_FieldSet_definition(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.FieldSet().Definition(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.FieldSetDefinition)
+	fc.Result = res
+	return ec.marshalOFieldSetDefinition2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐFieldSetDefinition(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_FieldSet_definition(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "FieldSet",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_FieldSetDefinition_id(ctx, field)
+			case "name":
+				return ec.fieldContext_FieldSetDefinition_name(ctx, field)
+			case "order":
+				return ec.fieldContext_FieldSetDefinition_order(ctx, field)
+			case "customFields":
+				return ec.fieldContext_FieldSetDefinition_customFields(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type FieldSetDefinition", field.Name)
 		},
 	}
 	return fc, nil
@@ -6378,14 +6386,14 @@ func (ec *executionContext) fieldContext_Mutation_mergeFieldSetToContact(ctx con
 			switch field.Name {
 			case "id":
 				return ec.fieldContext_FieldSet_id(ctx, field)
-			case "type":
-				return ec.fieldContext_FieldSet_type(ctx, field)
 			case "name":
 				return ec.fieldContext_FieldSet_name(ctx, field)
 			case "added":
 				return ec.fieldContext_FieldSet_added(ctx, field)
 			case "customFields":
 				return ec.fieldContext_FieldSet_customFields(ctx, field)
+			case "definition":
+				return ec.fieldContext_FieldSet_definition(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type FieldSet", field.Name)
 		},
@@ -6442,14 +6450,14 @@ func (ec *executionContext) fieldContext_Mutation_updateFieldSetInContact(ctx co
 			switch field.Name {
 			case "id":
 				return ec.fieldContext_FieldSet_id(ctx, field)
-			case "type":
-				return ec.fieldContext_FieldSet_type(ctx, field)
 			case "name":
 				return ec.fieldContext_FieldSet_name(ctx, field)
 			case "added":
 				return ec.fieldContext_FieldSet_added(ctx, field)
 			case "customFields":
 				return ec.fieldContext_FieldSet_customFields(ctx, field)
+			case "definition":
+				return ec.fieldContext_FieldSet_definition(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type FieldSet", field.Name)
 		},
@@ -11293,26 +11301,26 @@ func (ec *executionContext) unmarshalInputFieldSetInput(ctx context.Context, obj
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"type", "name"}
+	fieldsInOrder := [...]string{"name", "definitionId"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
 			continue
 		}
 		switch k {
-		case "type":
-			var err error
-
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("type"))
-			it.Type, err = ec.unmarshalNString2string(ctx, v)
-			if err != nil {
-				return it, err
-			}
 		case "name":
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
 			it.Name, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "definitionId":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("definitionId"))
+			it.DefinitionID, err = ec.unmarshalOID2ᚖstring(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -12381,13 +12389,6 @@ func (ec *executionContext) _FieldSet(ctx context.Context, sel ast.SelectionSet,
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&invalids, 1)
 			}
-		case "type":
-
-			out.Values[i] = ec._FieldSet_type(ctx, field, obj)
-
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&invalids, 1)
-			}
 		case "name":
 
 			out.Values[i] = ec._FieldSet_name(ctx, field, obj)
@@ -12415,6 +12416,23 @@ func (ec *executionContext) _FieldSet(ctx context.Context, sel ast.SelectionSet,
 				if res == graphql.Null {
 					atomic.AddUint32(&invalids, 1)
 				}
+				return res
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
+		case "definition":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._FieldSet_definition(ctx, field, obj)
 				return res
 			}
 
@@ -14775,6 +14793,13 @@ func (ec *executionContext) marshalOFieldSet2ᚖgithubᚗcomᚋopenlineᚑaiᚋo
 		return graphql.Null
 	}
 	return ec._FieldSet(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalOFieldSetDefinition2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐFieldSetDefinition(ctx context.Context, sel ast.SelectionSet, v *model.FieldSetDefinition) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._FieldSetDefinition(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalOID2ᚖstring(ctx context.Context, v interface{}) (*string, error) {

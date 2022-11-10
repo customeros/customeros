@@ -5,6 +5,7 @@ package resolver
 
 import (
 	"context"
+
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/openline-ai/openline-customer-os/customer-os-api/graph/generated"
 	"github.com/openline-ai/openline-customer-os/customer-os-api/graph/model"
@@ -55,7 +56,7 @@ func (r *contactResolver) FieldSets(ctx context.Context, obj *model.Contact) ([]
 func (r *contactResolver) Definition(ctx context.Context, obj *model.Contact) (*model.EntityDefinition, error) {
 	entity, err := r.ServiceContainer.EntityDefinitionService.FindLinkedWithContact(ctx, obj.ID)
 	if err != nil {
-		graphql.AddErrorf(ctx, "Failed to get contact definition for contact ", obj.ID)
+		graphql.AddErrorf(ctx, "Failed to get contact definition for contact %s", obj.ID)
 		return nil, err
 	}
 	if entity == nil {

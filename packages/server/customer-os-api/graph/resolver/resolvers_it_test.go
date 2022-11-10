@@ -298,10 +298,8 @@ func TestMutationResolver_MergeFieldSetToContact_AllowMultipleFieldSetWithSameNa
 	require.NotNil(t, fieldSet2.MergeFieldSetToContact.ID)
 	require.NotEqual(t, fieldSet1.MergeFieldSetToContact.ID, fieldSet2.MergeFieldSetToContact.ID)
 	require.Equal(t, "some name", fieldSet1.MergeFieldSetToContact.Name)
-	require.Equal(t, "some type", fieldSet1.MergeFieldSetToContact.Type)
 	require.NotNil(t, fieldSet1.MergeFieldSetToContact.Added)
 	require.Equal(t, "some name", fieldSet2.MergeFieldSetToContact.Name)
-	require.Equal(t, "some type", fieldSet2.MergeFieldSetToContact.Type)
 	require.NotNil(t, fieldSet2.MergeFieldSetToContact.Added)
 
 	require.Equal(t, 2, getCountOfNodes(driver, "FieldSet"))

@@ -80,7 +80,7 @@ func createContact(driver *neo4j.Driver, tenant string, contact entity.ContactEn
 }
 
 func createDefaultFieldSet(driver *neo4j.Driver, contactId string) string {
-	return createFieldSet(driver, contactId, entity.FieldSetEntity{Name: "name", Type: "type"})
+	return createFieldSet(driver, contactId, entity.FieldSetEntity{Name: "name"})
 }
 
 func createFieldSet(driver *neo4j.Driver, contactId string, fieldSet entity.FieldSetEntity) string {
@@ -89,13 +89,11 @@ func createFieldSet(driver *neo4j.Driver, contactId string, fieldSet entity.Fiel
 			MATCH (c:Contact {id:$contactId})
 			MERGE (s:FieldSet {
 				  id: $fieldSetId,
-				  type: $type,
 				  name: $name
 				})<-[:HAS_COMPLEX_PROPERTY {added:datetime({timezone: 'UTC'})}]-(c)`
 	integration_tests.ExecuteWriteQuery(driver, query, map[string]any{
 		"contactId":  contactId,
 		"fieldSetId": fieldSetId.String(),
-		"type":       fieldSet.Type,
 		"name":       fieldSet.Name,
 	})
 	return fieldSetId.String()

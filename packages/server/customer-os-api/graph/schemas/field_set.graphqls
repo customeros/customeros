@@ -1,14 +1,14 @@
 type FieldSet {
     id: ID!
-    type: String!
     name: String!
     added: Time!
     customFields: [CustomField!]! @goField(forceResolver: true)
+    definition: FieldSetDefinition @goField(forceResolver: true)
 }
 
 input FieldSetInput {
-    type: String!
     name: String!
+    definitionId: ID
 }
 
 input FieldSetUpdateInput {
