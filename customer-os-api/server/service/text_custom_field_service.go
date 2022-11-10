@@ -8,6 +8,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/customer-os-api/common"
 	"github.com/openline-ai/openline-customer-os/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/customer-os-api/graph/model"
+	"github.com/openline-ai/openline-customer-os/customer-os-api/repository"
 	"github.com/openline-ai/openline-customer-os/customer-os-api/utils"
 )
 
@@ -26,20 +27,25 @@ type TextCustomFieldService interface {
 	DeleteByIdFromFieldSet(ctx context.Context, contactId string, fieldSetId string, fieldId string) (bool, error)
 
 	mapDbNodeToTextCustomFieldEntity(node dbtype.Node) *entity.TextCustomFieldEntity
+	getDriver() neo4j.Driver
 }
 
 type textCustomPropertyService struct {
-	driver *neo4j.Driver
+	repository *repository.RepositoryContainer
 }
 
-func NewTextCustomFieldService(driver *neo4j.Driver) TextCustomFieldService {
+func NewTextCustomFieldService(repository *repository.RepositoryContainer) TextCustomFieldService {
 	return &textCustomPropertyService{
-		driver: driver,
+		repository: repository,
 	}
 }
 
+func (s *textCustomPropertyService) getDriver() neo4j.Driver {
+	return *s.repository.Drivers.Neo4jDriver
+}
+
 func (s *textCustomPropertyService) FindAllForContact(ctx context.Context, contact *model.Contact) (*entity.TextCustomFieldEntities, error) {
-	session := (*s.driver).NewSession(neo4j.SessionConfig{AccessMode: neo4j.AccessModeRead})
+	session := s.getDriver().NewSession(neo4j.SessionConfig{AccessMode: neo4j.AccessModeRead})
 	defer session.Close()
 
 	queryResult, err := session.ReadTransaction(func(tx neo4j.Transaction) (any, error) {
@@ -71,7 +77,7 @@ func (s *textCustomPropertyService) FindAllForContact(ctx context.Context, conta
 }
 
 func (s *textCustomPropertyService) FindAllForFieldSet(ctx context.Context, fieldSet *model.FieldSet) (*entity.TextCustomFieldEntities, error) {
-	session := (*s.driver).NewSession(neo4j.SessionConfig{AccessMode: neo4j.AccessModeRead})
+	session := s.getDriver().NewSession(neo4j.SessionConfig{AccessMode: neo4j.AccessModeRead})
 	defer session.Close()
 
 	queryResult, err := session.ReadTransaction(func(tx neo4j.Transaction) (any, error) {
@@ -103,7 +109,7 @@ func (s *textCustomPropertyService) FindAllForFieldSet(ctx context.Context, fiel
 }
 
 func (s *textCustomPropertyService) MergeTextCustomFieldToContact(ctx context.Context, contactId string, entity *entity.TextCustomFieldEntity) (*entity.TextCustomFieldEntity, error) {
-	session := (*s.driver).NewSession(neo4j.SessionConfig{AccessMode: neo4j.AccessModeWrite})
+	session := s.getDriver().NewSession(neo4j.SessionConfig{AccessMode: neo4j.AccessModeWrite})
 	defer session.Close()
 
 	queryResult, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
@@ -133,7 +139,7 @@ func (s *textCustomPropertyService) MergeTextCustomFieldToContact(ctx context.Co
 }
 
 func (s *textCustomPropertyService) MergeTextCustomFieldToFieldSet(ctx context.Context, contactId string, fieldSetId string, entity *entity.TextCustomFieldEntity) (*entity.TextCustomFieldEntity, error) {
-	session := (*s.driver).NewSession(neo4j.SessionConfig{AccessMode: neo4j.AccessModeWrite})
+	session := s.getDriver().NewSession(neo4j.SessionConfig{AccessMode: neo4j.AccessModeWrite})
 	defer session.Close()
 
 	queryResult, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
@@ -164,7 +170,7 @@ func (s *textCustomPropertyService) MergeTextCustomFieldToFieldSet(ctx context.C
 }
 
 func (s *textCustomPropertyService) UpdateTextCustomFieldInContact(ctx context.Context, contactId string, entity *entity.TextCustomFieldEntity) (*entity.TextCustomFieldEntity, error) {
-	session := (*s.driver).NewSession(neo4j.SessionConfig{AccessMode: neo4j.AccessModeWrite})
+	session := s.getDriver().NewSession(neo4j.SessionConfig{AccessMode: neo4j.AccessModeWrite})
 	defer session.Close()
 
 	queryResult, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
@@ -195,7 +201,7 @@ func (s *textCustomPropertyService) UpdateTextCustomFieldInContact(ctx context.C
 }
 
 func (s *textCustomPropertyService) UpdateTextCustomFieldInFieldSet(ctx context.Context, contactId string, fieldSetId string, entity *entity.TextCustomFieldEntity) (*entity.TextCustomFieldEntity, error) {
-	session := (*s.driver).NewSession(neo4j.SessionConfig{AccessMode: neo4j.AccessModeWrite})
+	session := s.getDriver().NewSession(neo4j.SessionConfig{AccessMode: neo4j.AccessModeWrite})
 	defer session.Close()
 
 	queryResult, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
@@ -228,7 +234,7 @@ func (s *textCustomPropertyService) UpdateTextCustomFieldInFieldSet(ctx context.
 }
 
 func (s *textCustomPropertyService) DeleteByNameFromContact(ctx context.Context, contactId string, fieldName string) (bool, error) {
-	session := (*s.driver).NewSession(neo4j.SessionConfig{AccessMode: neo4j.AccessModeWrite})
+	session := s.getDriver().NewSession(neo4j.SessionConfig{AccessMode: neo4j.AccessModeWrite})
 	defer session.Close()
 
 	queryResult, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
@@ -253,7 +259,7 @@ func (s *textCustomPropertyService) DeleteByNameFromContact(ctx context.Context,
 }
 
 func (s *textCustomPropertyService) DeleteByIdFromContact(ctx context.Context, contactId string, fieldId string) (bool, error) {
-	session := (*s.driver).NewSession(neo4j.SessionConfig{AccessMode: neo4j.AccessModeWrite})
+	session := s.getDriver().NewSession(neo4j.SessionConfig{AccessMode: neo4j.AccessModeWrite})
 	defer session.Close()
 
 	queryResult, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
@@ -277,7 +283,7 @@ func (s *textCustomPropertyService) DeleteByIdFromContact(ctx context.Context, c
 }
 
 func (s *textCustomPropertyService) DeleteByIdFromFieldSet(ctx context.Context, contactId string, fieldSetId string, fieldId string) (bool, error) {
-	session := (*s.driver).NewSession(neo4j.SessionConfig{AccessMode: neo4j.AccessModeWrite})
+	session := s.getDriver().NewSession(neo4j.SessionConfig{AccessMode: neo4j.AccessModeWrite})
 	defer session.Close()
 
 	queryResult, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {

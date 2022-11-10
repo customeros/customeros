@@ -8,6 +8,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/customer-os-api/common"
 	"github.com/openline-ai/openline-customer-os/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/customer-os-api/graph/model"
+	"github.com/openline-ai/openline-customer-os/customer-os-api/repository"
 	"github.com/openline-ai/openline-customer-os/customer-os-api/utils"
 )
 
@@ -16,20 +17,25 @@ type FieldSetService interface {
 	MergeFieldSetToContact(ctx context.Context, contactId string, input *entity.FieldSetEntity) (*entity.FieldSetEntity, error)
 	UpdateFieldSetInContact(ctx context.Context, contactId string, input *entity.FieldSetEntity) (*entity.FieldSetEntity, error)
 	DeleteByIdFromContact(ctx context.Context, contactId string, fieldSetId string) (bool, error)
+	getDriver() neo4j.Driver
 }
 
 type fieldSetService struct {
-	driver *neo4j.Driver
+	repository *repository.RepositoryContainer
 }
 
-func NewFieldSetService(driver *neo4j.Driver) FieldSetService {
+func NewFieldSetService(repository *repository.RepositoryContainer) FieldSetService {
 	return &fieldSetService{
-		driver: driver,
+		repository: repository,
 	}
 }
 
+func (s *fieldSetService) getDriver() neo4j.Driver {
+	return *s.repository.Drivers.Neo4jDriver
+}
+
 func (s *fieldSetService) FindAllForContact(ctx context.Context, contact *model.Contact) (*entity.FieldSetEntities, error) {
-	session := (*s.driver).NewSession(neo4j.SessionConfig{AccessMode: neo4j.AccessModeRead})
+	session := s.getDriver().NewSession(neo4j.SessionConfig{AccessMode: neo4j.AccessModeRead})
 	defer session.Close()
 
 	queryResult, err := session.ReadTransaction(func(tx neo4j.Transaction) (any, error) {
@@ -54,7 +60,7 @@ func (s *fieldSetService) FindAllForContact(ctx context.Context, contact *model.
 
 	for _, dbRecord := range queryResult.([]*db.Record) {
 		fieldSetEntity := s.mapDbNodeToFieldSetEntity(dbRecord.Values[0].(dbtype.Node))
-		s.addDbRelationshipToEntity((queryResult.([]*db.Record))[0].Values[1].(dbtype.Relationship), fieldSetEntity)
+		s.addDbRelationshipToEntity(dbRecord.Values[1].(dbtype.Relationship), fieldSetEntity)
 		fieldSetEntities = append(fieldSetEntities, *fieldSetEntity)
 	}
 
@@ -62,7 +68,7 @@ func (s *fieldSetService) FindAllForContact(ctx context.Context, contact *model.
 }
 
 func (s *fieldSetService) MergeFieldSetToContact(ctx context.Context, contactId string, input *entity.FieldSetEntity) (*entity.FieldSetEntity, error) {
-	session := (*s.driver).NewSession(neo4j.SessionConfig{AccessMode: neo4j.AccessModeWrite})
+	session := s.getDriver().NewSession(neo4j.SessionConfig{AccessMode: neo4j.AccessModeWrite})
 	defer session.Close()
 
 	queryResult, err := session.WriteTransaction(func(tx neo4j.Transaction) (interface{}, error) {
@@ -93,7 +99,7 @@ func (s *fieldSetService) MergeFieldSetToContact(ctx context.Context, contactId 
 }
 
 func (s *fieldSetService) UpdateFieldSetInContact(ctx context.Context, contactId string, input *entity.FieldSetEntity) (*entity.FieldSetEntity, error) {
-	session := (*s.driver).NewSession(neo4j.SessionConfig{AccessMode: neo4j.AccessModeWrite})
+	session := (s.getDriver()).NewSession(neo4j.SessionConfig{AccessMode: neo4j.AccessModeWrite})
 	defer session.Close()
 
 	queryResult, err := session.WriteTransaction(func(tx neo4j.Transaction) (interface{}, error) {
@@ -124,7 +130,7 @@ func (s *fieldSetService) UpdateFieldSetInContact(ctx context.Context, contactId
 }
 
 func (s *fieldSetService) DeleteByIdFromContact(ctx context.Context, contactId string, fieldSetId string) (bool, error) {
-	session := (*s.driver).NewSession(neo4j.SessionConfig{AccessMode: neo4j.AccessModeWrite})
+	session := s.getDriver().NewSession(neo4j.SessionConfig{AccessMode: neo4j.AccessModeWrite})
 	defer session.Close()
 
 	queryResult, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {

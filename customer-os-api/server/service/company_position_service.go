@@ -8,25 +8,31 @@ import (
 	"github.com/openline-ai/openline-customer-os/customer-os-api/common"
 	"github.com/openline-ai/openline-customer-os/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/customer-os-api/graph/model"
+	"github.com/openline-ai/openline-customer-os/customer-os-api/repository"
 	"github.com/openline-ai/openline-customer-os/customer-os-api/utils"
 )
 
-type CompanyPositionService interface {
+type CompanyService interface {
 	FindAllForContact(ctx context.Context, obj *model.Contact) (*entity.CompanyPositionEntities, error)
+	getDriver() neo4j.Driver
 }
 
 type companyPositionService struct {
-	driver *neo4j.Driver
+	repository *repository.RepositoryContainer
 }
 
-func NewCompanyPositionService(driver *neo4j.Driver) CompanyPositionService {
+func NewCompanyPositionService(repository *repository.RepositoryContainer) CompanyService {
 	return &companyPositionService{
-		driver: driver,
+		repository: repository,
 	}
 }
 
+func (s *companyPositionService) getDriver() neo4j.Driver {
+	return *s.repository.Drivers.Neo4jDriver
+}
+
 func (s *companyPositionService) FindAllForContact(ctx context.Context, contact *model.Contact) (*entity.CompanyPositionEntities, error) {
-	session := (*s.driver).NewSession(neo4j.SessionConfig{AccessMode: neo4j.AccessModeRead})
+	session := s.getDriver().NewSession(neo4j.SessionConfig{AccessMode: neo4j.AccessModeRead})
 	defer session.Close()
 
 	queryResult, err := session.ReadTransaction(func(tx neo4j.Transaction) (interface{}, error) {

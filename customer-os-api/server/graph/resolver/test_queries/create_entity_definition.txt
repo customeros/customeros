@@ -1,0 +1,51 @@
+mutation CreateEntityDefinition {
+  createEntityDefinition(input: {
+    name:"the entity definition name",
+    customFields: [
+      {name:"field 1", type:TEXT, order:1, mandatory:true},
+      {name:"field 2", type:TEXT, order:2, mandatory:false, min:1, max:99, length:255}
+    ],
+    fieldSets: [
+      {name:"set 1",order:1,
+      		customFields:[
+            	{name:"field 3",type:TEXT,order:1,mandatory:true},
+      			{name:"field 4",type:TEXT,order:2, mandatory:false, min:10, max:990, length:2550}
+          ]
+      },
+    	{name:"set 2",order:2,
+      		customFields:[]
+      }
+    ]
+  }) {
+    id
+    name
+    extends
+    added
+    version
+    fieldSets {
+          id
+          name
+          order
+          customFields {
+            id
+            name
+            order
+            type
+            mandatory
+            min
+            max
+            length
+          }
+        }
+        customFields {
+            id
+            name
+            order
+            type
+            mandatory
+            min
+            max
+            length
+        }
+  }
+}

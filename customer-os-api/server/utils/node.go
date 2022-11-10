@@ -20,6 +20,29 @@ func GetStringPropOrEmpty(props map[string]any, key string) string {
 	return ""
 }
 
+func GetStringPropOrNil(props map[string]any, key string) *string {
+	if props[key] != nil {
+		s := props[key].(string)
+		return &s
+	}
+	return nil
+}
+
+func GetIntPropOrDefault(props map[string]any, key string) int64 {
+	if props[key] != nil {
+		return props[key].(int64)
+	}
+	return -1
+}
+
+func GetIntPropOrNil(props map[string]any, key string) *int64 {
+	if props[key] != nil {
+		i := props[key].(int64)
+		return &i
+	}
+	return nil
+}
+
 func GetBoolPropOrFalse(props map[string]any, key string) bool {
 	if props[key] != nil {
 		return props[key].(bool)

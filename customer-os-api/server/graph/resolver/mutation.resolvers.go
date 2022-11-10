@@ -5,7 +5,6 @@ package resolver
 
 import (
 	"context"
-
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/openline-ai/openline-customer-os/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/customer-os-api/graph/generated"
@@ -330,6 +329,16 @@ func (r *mutationResolver) RemoveContactFromGroup(ctx context.Context, contactID
 	return &model.Result{
 		Result: result,
 	}, nil
+}
+
+// CreateEntityDefinition is the resolver for the createEntityDefinition field.
+func (r *mutationResolver) CreateEntityDefinition(ctx context.Context, input model.EntityDefinitionInput) (*model.EntityDefinition, error) {
+	entityDefinitionEntity, err := r.ServiceContainer.EntityDefinitionService.Create(ctx, mapper.MapEntityDefinitionInputToEntity(input))
+	if err != nil {
+		graphql.AddErrorf(ctx, "Failed to create entity definition: %s", input.Name)
+		return nil, err
+	}
+	return mapper.MapEntityToEntityDefinition(entityDefinitionEntity), nil
 }
 
 // Mutation returns generated.MutationResolver implementation.

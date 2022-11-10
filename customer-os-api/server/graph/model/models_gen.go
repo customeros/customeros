@@ -9,15 +9,6 @@ import (
 	"time"
 )
 
-type CustomFieldDefinition interface {
-	IsNode()
-	IsCustomFieldDefinition()
-	GetID() string
-	GetName() string
-	GetOrder() int
-	GetMandatory() bool
-}
-
 type ExtensibleEntity interface {
 	IsNode()
 	IsExtensibleEntity()
@@ -257,6 +248,30 @@ type CustomField struct {
 func (CustomField) IsNode()            {}
 func (this CustomField) GetID() string { return this.ID }
 
+type CustomFieldDefinition struct {
+	ID        string          `json:"id"`
+	Name      string          `json:"name"`
+	Type      CustomFieldType `json:"type"`
+	Order     int             `json:"order"`
+	Mandatory bool            `json:"mandatory"`
+	Length    *int            `json:"length"`
+	Min       *int            `json:"min"`
+	Max       *int            `json:"max"`
+}
+
+func (CustomFieldDefinition) IsNode()            {}
+func (this CustomFieldDefinition) GetID() string { return this.ID }
+
+type CustomFieldDefinitionInput struct {
+	Name      string          `json:"name"`
+	Type      CustomFieldType `json:"type"`
+	Order     int             `json:"order"`
+	Mandatory bool            `json:"mandatory"`
+	Length    *int            `json:"length"`
+	Min       *int            `json:"min"`
+	Max       *int            `json:"max"`
+}
+
 // Describes an email address associated with a `Contact` in customerOS.
 // **A `return` object.**
 type Email struct {
@@ -307,14 +322,23 @@ type EmailUpdateInput struct {
 
 type EntityDefinition struct {
 	ID           string                     `json:"id"`
+	Version      int                        `json:"version"`
 	Name         string                     `json:"name"`
 	Extends      *EntityDefinitionExtension `json:"extends"`
 	FieldSets    []*FieldSetDefinition      `json:"fieldSets"`
-	CustomFields []CustomFieldDefinition    `json:"customFields"`
+	CustomFields []*CustomFieldDefinition   `json:"customFields"`
+	Added        time.Time                  `json:"added"`
 }
 
 func (EntityDefinition) IsNode()            {}
 func (this EntityDefinition) GetID() string { return this.ID }
+
+type EntityDefinitionInput struct {
+	Name         string                        `json:"name"`
+	Extends      *EntityDefinitionExtension    `json:"extends"`
+	FieldSets    []*FieldSetDefinitionInput    `json:"fieldSets"`
+	CustomFields []*CustomFieldDefinitionInput `json:"customFields"`
+}
 
 type FieldSet struct {
 	ID           string         `json:"id"`
@@ -325,14 +349,20 @@ type FieldSet struct {
 }
 
 type FieldSetDefinition struct {
-	ID           string                  `json:"id"`
-	Name         string                  `json:"name"`
-	Order        int                     `json:"order"`
-	CustomFields []CustomFieldDefinition `json:"customFields"`
+	ID           string                   `json:"id"`
+	Name         string                   `json:"name"`
+	Order        int                      `json:"order"`
+	CustomFields []*CustomFieldDefinition `json:"customFields"`
 }
 
 func (FieldSetDefinition) IsNode()            {}
 func (this FieldSetDefinition) GetID() string { return this.ID }
+
+type FieldSetDefinitionInput struct {
+	Name         string                        `json:"name"`
+	Order        int                           `json:"order"`
+	CustomFields []*CustomFieldDefinitionInput `json:"customFields"`
+}
 
 type FieldSetInput struct {
 	Type string `json:"type"`
@@ -343,23 +373,6 @@ type FieldSetUpdateInput struct {
 	ID   string `json:"id"`
 	Name string `json:"name"`
 }
-
-type IntCustomFieldDefinition struct {
-	ID        string `json:"id"`
-	Name      string `json:"name"`
-	Order     int    `json:"order"`
-	Mandatory bool   `json:"mandatory"`
-	Min       *int   `json:"min"`
-	Max       *int   `json:"max"`
-}
-
-func (IntCustomFieldDefinition) IsCustomFieldDefinition() {}
-func (this IntCustomFieldDefinition) GetID() string       { return this.ID }
-func (this IntCustomFieldDefinition) GetName() string     { return this.Name }
-func (this IntCustomFieldDefinition) GetOrder() int       { return this.Order }
-func (this IntCustomFieldDefinition) GetMandatory() bool  { return this.Mandatory }
-
-func (IntCustomFieldDefinition) IsNode() {}
 
 // If provided as part of the request, results will be filtered down to the `page` and `limit` specified.
 type PaginationFilter struct {
@@ -426,22 +439,6 @@ type Result struct {
 	// **Required.**
 	Result bool `json:"result"`
 }
-
-type TextCustomFieldDefinition struct {
-	ID        string `json:"id"`
-	Name      string `json:"name"`
-	Order     int    `json:"order"`
-	Mandatory bool   `json:"mandatory"`
-	Length    *int   `json:"length"`
-}
-
-func (TextCustomFieldDefinition) IsCustomFieldDefinition() {}
-func (this TextCustomFieldDefinition) GetID() string       { return this.ID }
-func (this TextCustomFieldDefinition) GetName() string     { return this.Name }
-func (this TextCustomFieldDefinition) GetOrder() int       { return this.Order }
-func (this TextCustomFieldDefinition) GetMandatory() bool  { return this.Mandatory }
-
-func (TextCustomFieldDefinition) IsNode() {}
 
 // Describes a custom, user-defined field associated with a `Contact` of type String.
 // **A `create` object.**
@@ -525,6 +522,45 @@ func (this UserPage) GetTotalPages() int { return this.TotalPages }
 // The total number of elements included in the query response.
 // **Required.**
 func (this UserPage) GetTotalElements() int64 { return this.TotalElements }
+
+type CustomFieldType string
+
+const (
+	CustomFieldTypeText CustomFieldType = "TEXT"
+)
+
+var AllCustomFieldType = []CustomFieldType{
+	CustomFieldTypeText,
+}
+
+func (e CustomFieldType) IsValid() bool {
+	switch e {
+	case CustomFieldTypeText:
+		return true
+	}
+	return false
+}
+
+func (e CustomFieldType) String() string {
+	return string(e)
+}
+
+func (e *CustomFieldType) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = CustomFieldType(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid CustomFieldType", str)
+	}
+	return nil
+}
+
+func (e CustomFieldType) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
 
 // Describes the type of email address (WORK, PERSONAL, etc).
 // **A `return` object.

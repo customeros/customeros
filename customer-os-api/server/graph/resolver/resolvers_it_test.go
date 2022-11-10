@@ -275,8 +275,8 @@ func TestMutationResolver_MergeFieldSetToContact_AllowMultipleFieldSetWithSameNa
 		LastName:  "last",
 	})
 
-	rawResponse1, err := c.RawPost(getQuery("merge_fields_set_to_contact"), client.Var("contactId", contactId1))
-	rawResponse2, err := c.RawPost(getQuery("merge_fields_set_to_contact"), client.Var("contactId", contactId2))
+	rawResponse1, err := c.RawPost(getQuery("merge_field_set_to_contact"), client.Var("contactId", contactId1))
+	rawResponse2, err := c.RawPost(getQuery("merge_field_set_to_contact"), client.Var("contactId", contactId2))
 	assertRawResponseSuccess(t, rawResponse1, err)
 	assertRawResponseSuccess(t, rawResponse2, err)
 
@@ -313,7 +313,7 @@ func TestMutationResolver_MergeTextCustomFieldToFieldSet(t *testing.T) {
 	contactId := createDefaultContact(driver, tenantName)
 	fieldSetId := createDefaultFieldSet(driver, contactId)
 
-	rawResponse, err := c.RawPost(getQuery("merge_text_field_to_fields_set"),
+	rawResponse, err := c.RawPost(getQuery("merge_text_field_to_field_set"),
 		client.Var("contactId", contactId), client.Var("fieldSetId", fieldSetId))
 	assertRawResponseSuccess(t, rawResponse, err)
 
@@ -340,7 +340,7 @@ func TestMutationResolver_UpdateTextCustomFieldInFieldSet(t *testing.T) {
 	fieldSetId := createDefaultFieldSet(driver, contactId)
 	fieldId := createDefaultTextFieldInSet(driver, fieldSetId)
 
-	rawResponse, err := c.RawPost(getQuery("update_text_field_in_fields_set"),
+	rawResponse, err := c.RawPost(getQuery("update_text_field_in_field_set"),
 		client.Var("contactId", contactId),
 		client.Var("fieldSetId", fieldSetId),
 		client.Var("fieldId", fieldId))
@@ -369,7 +369,7 @@ func TestMutationResolver_RemoveTextCustomFieldFromFieldSetByID(t *testing.T) {
 	fieldSetId := createDefaultFieldSet(driver, contactId)
 	fieldId := createDefaultTextFieldInSet(driver, fieldSetId)
 
-	rawResponse, err := c.RawPost(getQuery("remove_text_field_from_fields_set"),
+	rawResponse, err := c.RawPost(getQuery("remove_text_field_from_field_set"),
 		client.Var("contactId", contactId),
 		client.Var("fieldSetId", fieldSetId),
 		client.Var("fieldId", fieldId))
@@ -400,7 +400,7 @@ func TestMutationResolver_RemoveFieldSetFromContact(t *testing.T) {
 	require.Equal(t, 1, getCountOfNodes(driver, "FieldSet"))
 	require.Equal(t, 1, getCountOfNodes(driver, "TextCustomField"))
 
-	rawResponse, err := c.RawPost(getQuery("remove_fields_set_from_contact"),
+	rawResponse, err := c.RawPost(getQuery("remove_field_set_from_contact"),
 		client.Var("contactId", contactId),
 		client.Var("fieldSetId", fieldSetId))
 	assertRawResponseSuccess(t, rawResponse, err)
@@ -417,4 +417,85 @@ func TestMutationResolver_RemoveFieldSetFromContact(t *testing.T) {
 	require.Equal(t, 1, getCountOfNodes(driver, "Contact"))
 	require.Equal(t, 0, getCountOfNodes(driver, "FieldSet"))
 	require.Equal(t, 0, getCountOfNodes(driver, "TextCustomField"))
+}
+
+func TestMutationResolver_CreateEntityDefinition(t *testing.T) {
+	defer setupTestCase()(t)
+	createTenant(driver, "openline")
+	createTenant(driver, "other")
+
+	rawResponse, err := c.RawPost(getQuery("create_entity_definition"))
+	assertRawResponseSuccess(t, rawResponse, err)
+
+	var entityDefinition struct {
+		CreateEntityDefinition model.EntityDefinition
+	}
+
+	err = decode.Decode(rawResponse.Data.(map[string]any), &entityDefinition)
+	actual := entityDefinition.CreateEntityDefinition
+	require.Nil(t, err)
+	require.NotNil(t, actual)
+	require.NotNil(t, actual.ID)
+	require.NotNil(t, actual.Added)
+	require.Equal(t, "the entity definition name", actual.Name)
+	require.Equal(t, 1, actual.Version)
+	require.Nil(t, actual.Extends)
+
+	require.Equal(t, 2, len(actual.FieldSets))
+
+	set := actual.FieldSets[0]
+	require.NotNil(t, set.ID)
+	require.Equal(t, "set 1", set.Name)
+	require.Equal(t, 1, set.Order)
+	require.Equal(t, 2, len(set.CustomFields))
+
+	field := set.CustomFields[0]
+	require.NotNil(t, field)
+	require.Equal(t, "field 3", field.Name)
+	require.Equal(t, 1, field.Order)
+	require.Equal(t, true, field.Mandatory)
+	require.Equal(t, model.CustomFieldTypeText, field.Type)
+	require.Nil(t, field.Min)
+	require.Nil(t, field.Max)
+	require.Nil(t, field.Length)
+
+	field = set.CustomFields[1]
+	require.NotNil(t, field)
+	require.Equal(t, "field 4", field.Name)
+	require.Equal(t, 2, field.Order)
+	require.Equal(t, false, field.Mandatory)
+	require.Equal(t, model.CustomFieldTypeText, field.Type)
+	require.Equal(t, 10, *field.Min)
+	require.Equal(t, 990, *field.Max)
+	require.Equal(t, 2550, *field.Length)
+
+	set = actual.FieldSets[1]
+	require.NotNil(t, set.ID)
+	require.Equal(t, "set 2", set.Name)
+	require.Equal(t, 2, set.Order)
+	require.Equal(t, 0, len(set.CustomFields))
+
+	field = actual.CustomFields[0]
+	require.NotNil(t, field)
+	require.Equal(t, "field 1", field.Name)
+	require.Equal(t, 1, field.Order)
+	require.Equal(t, true, field.Mandatory)
+	require.Equal(t, model.CustomFieldTypeText, field.Type)
+	require.Nil(t, field.Min)
+	require.Nil(t, field.Max)
+	require.Nil(t, field.Length)
+
+	field = actual.CustomFields[1]
+	require.NotNil(t, field)
+	require.Equal(t, "field 2", field.Name)
+	require.Equal(t, 2, field.Order)
+	require.Equal(t, false, field.Mandatory)
+	require.Equal(t, model.CustomFieldTypeText, field.Type)
+	require.Equal(t, 1, *field.Min)
+	require.Equal(t, 99, *field.Max)
+	require.Equal(t, 255, *field.Length)
+
+	require.Equal(t, 1, getCountOfNodes(driver, "EntityDefinition"))
+	require.Equal(t, 2, getCountOfNodes(driver, "FieldSetDefinition"))
+	require.Equal(t, 4, getCountOfNodes(driver, "CustomFieldDefinition"))
 }
