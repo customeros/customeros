@@ -72,15 +72,14 @@ To build the images locally run
 kubectl get pods -n openline
 ```
 #### 5. Setup Port Forwards
-# Port FWD
-run the script
+
 ```
 ./port-forwarding.sh
-
+```
 #### 6. Open in browser
-```
+
 http://127.0.0.1:10010/
-```
+
 
 #### 7. Create first contact in your tenant workspace
 ```
