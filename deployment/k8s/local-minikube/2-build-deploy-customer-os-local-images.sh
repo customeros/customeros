@@ -28,10 +28,10 @@ docker build --no-cache -t ghcr.io/openline-ai/openline-customer-os/message-stor
 	minikube image load ghcr.io/openline-ai/openline-customer-os/message-store:otter
 else
 	echo "installing pre-build images"
-	docker pull ghcr.io/openline-ai/openline-customer-os/customer-os-api:otter .
+	docker pull ghcr.io/openline-ai/openline-customer-os/customer-os-api:otter 
 	minikube image load ghcr.io/openline-ai/openline-customer-os/customer-os-api:otter
 
-	docker pull ghcr.io/openline-ai/openline-customer-os/message-store:otter .
+	docker pull ghcr.io/openline-ai/openline-customer-os/message-store:otter 
 	minikube image load ghcr.io/openline-ai/openline-customer-os/message-store:otter
 fi
 
@@ -47,7 +47,7 @@ kubectl apply -f apps-config/message-store-k8s-service.yaml --namespace $NAMESPA
 while [ -z "$pod" ]; do
     pod=$(kubectl get pods -n $NAMESPACE_NAME|grep neo4j-customer-os|grep Running| cut -f1 -d ' ')
     if [ -z "$pod" ]; then
-      echo "message-store not ready waiting"
+      echo "neo4j not ready waiting"
       sleep 1
     fi
 done
