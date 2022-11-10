@@ -9,7 +9,7 @@ import (
 
 type EntityDefinitionRepository interface {
 	Create(tenant string, entity *entity.EntityDefinitionEntity) (any, error)
-	FindAll(tenant string) (any, error)
+	FindAllByTenant(tenant string) (any, error)
 }
 
 type entityDefinitionRepository struct {
@@ -35,7 +35,7 @@ func (r *entityDefinitionRepository) Create(tenant string, entity *entity.Entity
 	return queryResult, nil
 }
 
-func (r *entityDefinitionRepository) FindAll(tenant string) (any, error) {
+func (r *entityDefinitionRepository) FindAllByTenant(tenant string) (any, error) {
 	session := (*r.driver).NewSession(neo4j.SessionConfig{AccessMode: neo4j.AccessModeRead})
 	defer session.Close()
 

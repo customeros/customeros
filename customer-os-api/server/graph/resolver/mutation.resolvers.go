@@ -5,8 +5,6 @@ package resolver
 
 import (
 	"context"
-	"fmt"
-
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/openline-ai/openline-customer-os/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/customer-os-api/graph/generated"
@@ -347,13 +345,3 @@ func (r *mutationResolver) CreateEntityDefinition(ctx context.Context, input mod
 func (r *Resolver) Mutation() generated.MutationResolver { return &mutationResolver{r} }
 
 type mutationResolver struct{ *Resolver }
-
-// !!! WARNING !!!
-// The code below was going to be deleted when updating resolvers. It has been copied here so you have
-// one last chance to move it out of harms way if you want. There are two reasons this happens:
-//   - When renaming or deleting a resolver the old code will be put in here. You can safely delete
-//     it when you're done.
-//   - You have helper methods in this file. Move them out to keep these resolver files clean.
-func (r *mutationResolver) CreateEntityDefinitionNewVersion(ctx context.Context, id string, input model.EntityDefinitionInput) (*model.EntityDefinition, error) {
-	panic(fmt.Errorf("not implemented: CreateEntityDefinitionNewVersion - createEntityDefinitionNewVersion"))
-}

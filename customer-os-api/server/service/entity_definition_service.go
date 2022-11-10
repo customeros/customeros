@@ -35,7 +35,7 @@ func (s *entityDefinitionService) Create(ctx context.Context, entity *entity.Ent
 }
 
 func (s *entityDefinitionService) FindAll(ctx context.Context) (*entity.EntityDefinitionEntities, error) {
-	all, err := s.repository.EntityDefinitionRepository.FindAll(common.GetContext(ctx).Tenant)
+	all, err := s.repository.EntityDefinitionRepository.FindAllByTenant(common.GetContext(ctx).Tenant)
 	if err != nil {
 		return nil, err
 	}

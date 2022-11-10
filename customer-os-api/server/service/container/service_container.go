@@ -7,29 +7,31 @@ import (
 )
 
 type ServiceContainer struct {
-	ContactService          service.ContactService
-	CompanyPositionService  service.CompanyService
-	ContactGroupService     service.ContactGroupService
-	TextCustomFieldService  service.TextCustomFieldService
-	PhoneNumberService      service.PhoneNumberService
-	EmailService            service.EmailService
-	UserService             service.UserService
-	FieldSetService         service.FieldSetService
-	EntityDefinitionService service.EntityDefinitionService
+	ContactService            service.ContactService
+	CompanyPositionService    service.CompanyService
+	ContactGroupService       service.ContactGroupService
+	TextCustomFieldService    service.TextCustomFieldService
+	PhoneNumberService        service.PhoneNumberService
+	EmailService              service.EmailService
+	UserService               service.UserService
+	FieldSetService           service.FieldSetService
+	EntityDefinitionService   service.EntityDefinitionService
+	FieldSetDefinitionService service.FieldSetDefinitionService
 }
 
 func InitServices(driver *neo4j.Driver) *ServiceContainer {
 	repoContainer := repository.InitRepos(driver)
 
 	return &ServiceContainer{
-		ContactService:          service.NewContactService(repoContainer),
-		CompanyPositionService:  service.NewCompanyPositionService(repoContainer),
-		ContactGroupService:     service.NewContactGroupService(repoContainer),
-		TextCustomFieldService:  service.NewTextCustomFieldService(repoContainer),
-		PhoneNumberService:      service.NewPhoneNumberService(repoContainer),
-		EmailService:            service.NewEmailService(repoContainer),
-		UserService:             service.NewUserService(repoContainer),
-		FieldSetService:         service.NewFieldSetService(repoContainer),
-		EntityDefinitionService: service.NewEntityDefinitionService(repoContainer),
+		ContactService:            service.NewContactService(repoContainer),
+		CompanyPositionService:    service.NewCompanyPositionService(repoContainer),
+		ContactGroupService:       service.NewContactGroupService(repoContainer),
+		TextCustomFieldService:    service.NewTextCustomFieldService(repoContainer),
+		PhoneNumberService:        service.NewPhoneNumberService(repoContainer),
+		EmailService:              service.NewEmailService(repoContainer),
+		UserService:               service.NewUserService(repoContainer),
+		FieldSetService:           service.NewFieldSetService(repoContainer),
+		EntityDefinitionService:   service.NewEntityDefinitionService(repoContainer),
+		FieldSetDefinitionService: service.NewFieldSetDefinitionService(repoContainer),
 	}
 }

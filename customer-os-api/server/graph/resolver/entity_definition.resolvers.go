@@ -6,6 +6,7 @@ package resolver
 import (
 	"context"
 	"fmt"
+	"github.com/openline-ai/openline-customer-os/customer-os-api/mapper"
 
 	"github.com/openline-ai/openline-customer-os/customer-os-api/graph/generated"
 	"github.com/openline-ai/openline-customer-os/customer-os-api/graph/model"
@@ -13,7 +14,8 @@ import (
 
 // FieldSets is the resolver for the fieldSets field.
 func (r *entityDefinitionResolver) FieldSets(ctx context.Context, obj *model.EntityDefinition) ([]*model.FieldSetDefinition, error) {
-	panic(fmt.Errorf("not implemented: FieldSets - fieldSets"))
+	result, err := r.ServiceContainer.FieldSetDefinitionService.FindAll(obj.ID)
+	return mapper.MapEntitiesToFieldSetDefinitions(result), err
 }
 
 // CustomFields is the resolver for the customFields field.
