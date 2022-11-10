@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: Deployment                 # Type of Kubernetes resource
+metadata:
+  name: message-store           # Name of the Kubernetes resource
+spec:
+  replicas: 1                    # Number of pods to run at any given time
+  selector:
+    matchLabels:
+      app: message-store        # This deployment applies to any Pods matching the specified label
+  template:                      # This deployment will create a set of pods using the configurations in this template
+    metadata:
+      labels:                    # The labels that will be applied to all of the pods in this deployment
+        app: message-store
+    spec:                        # Spec for the container which will run in the Pod
+      containers:
+        - image: ghcr.io/openline-ai/openline-customer-os/message-store:otter
+          name: message-store
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 8009  # Should match the port number that the Go application listens on
+              name: http-port
+            - containerPort: 9009  # Should match the port number that the Go application listens on
+              name: grpc-port
+          env:
+            - name: DB_USER
+              value: "openline"
+            - name: DB_PASSWORD
+              value: "password"
+            - name: DB_NAME
+              value: "openline"
+            - name: DB_HOST
+              value: "postgresql-customer-os-dev.openline.svc.cluster.local"
+            - name: DB_PORT
+              value: "5432"
+            - name: MESSAGE_STORE_SERVER_PORT
+              value: "9009"

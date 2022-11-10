@@ -13,7 +13,7 @@ spec:
         app: customer-os-api
     spec:                        # Spec for the container which will run in the Pod
       containers:
-        - image: docker.io/library/customer-os-api:latest
+        - image: ghcr.io/openline-ai/openline-customer-os/message-store:otter
           name: customer-os-api
           imagePullPolicy: Never
           ports:
@@ -33,3 +33,18 @@ spec:
               scheme: HTTP
             initialDelaySeconds: 5
             timeoutSeconds: 1
+          env:
+            - name: NEOJ4_TARGET
+              value: "neo4j://neo4j-customer-os.openline.svc.cluster.local:7687"
+            - name: NEOJ4_AUTH_USER
+              value: "neo4j"
+            - name: NEOJ4_AUTH_PWD
+              value: "StrongLocalPa$$"
+            - name: NEOJ4_AUTH_REALM
+              value: ""
+            - name: NEO4J_MAX_CONN_POOL_SIZE 
+              value: "100"
+            - name: GRAPHQL_PLAYGROUND_ENABLED
+              value: "true"
+            - name: PORT
+              value: "1010"
