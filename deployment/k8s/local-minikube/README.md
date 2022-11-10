@@ -56,7 +56,15 @@ deployment/k8s/local-minikube
 #### 3. Execute
 ```
 1-deploy-customer-os-base-infrastructure-local.sh
+``` 
+
+To download the latest images from github run
+``` 
 2-build-deploy-customer-os-local-images.sh
+``` 
+To build the images locally run
+``` 
+2-build-deploy-customer-os-local-images.sh build
 ``` 
 
 #### 4. Check all services are running:
