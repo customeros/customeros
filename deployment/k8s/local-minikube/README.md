@@ -63,29 +63,18 @@ deployment/k8s/local-minikube
 ```
 kubectl get pods -n openline
 ```
+#### 5. Setup Port Forwards
+# Port FWD
+run the script
+```
+./port-forwarding.sh
 
-#### 5.For customerOs API, prepare neo4j constraints and onboard first tenant
-* Connect to neo4j, when aksed provide password `StrongLocalPa$$`
-```
-kubectl run --rm -it --namespace "openline" --image "neo4j:4.4.11" cypher-shell \
-     -- cypher-shell -a "neo4j://neo4j-customer-os.openline.svc.cluster.local:7687" -u "neo4j"
-```
-* Execute cypher commands located in the file
-```
-customer-os-api/init-customer-os.cypher
-```
-
-#### 6. Port FWD for customerOS API
-```
-kubectl port-forward --namespace openline svc/customer-os-api-service 10010:10010 &
-```
-
-#### 7. Open in browser
+#### 6. Open in browser
 ```
 http://127.0.0.1:10010/
 ```
 
-#### 8. Create first contact in your tenant workspace
+#### 7. Create first contact in your tenant workspace
 ```
 mutation CreateContact {
   createContact(input: {firstName: "Mr", lastName:"Otter"}) {
@@ -95,20 +84,4 @@ mutation CreateContact {
   }
 }
 ```
-
-# Port FWD
-```
-#PostgreSQL DB
-kubectl port-forward --namespace openline svc/postgresql-customer-os-dev 5432:5432
-```
-```
-#Neo4j DB
-kubectl port-forward --namespace openline svc/neo4j-customer-os 7687:7687
-```
-
-or run the script for both DBs
-```
-./port-forwarding.sh
-```
-
 
