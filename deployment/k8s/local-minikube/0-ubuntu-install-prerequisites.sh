@@ -19,6 +19,15 @@ if [ -z $(which minikube) ]; then
     minikube config set driver docker
 fi
 
+if [ -z $(which helm) ]; then
+    mkdir -p /tmp/helm/
+    wget -O /tmp/helm/helm.tar.gz "https://get.helm.sh/helm-v3.10.2-linux-amd64.tar.gz"
+    cd /tmp/helm/
+    tar -zxvf helm.tar.gz
+    sudo install -o root -g root -m 0755 /tmp/helm/linux-amd64/helm /usr/local/bin/helm
+    cd -
+fi
+
 if [ -z $(which kubectl) ]; then
     wget -O /tmp/kubectl "https://dl.k8s.io/release/v1.25.3/bin/linux/amd64/kubectl"
     sudo install -o root -g root -m 0755 /tmp/kubectl /usr/local/bin/kubectl
