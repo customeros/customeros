@@ -18,8 +18,9 @@ func MapTextCustomFieldInputsToEntities(inputs []*model.TextCustomFieldInput) *e
 
 func MapTextCustomFieldInputToEntity(input *model.TextCustomFieldInput) *entity.TextCustomFieldEntity {
 	textCustomFieldEntity := entity.TextCustomFieldEntity{
-		Name:  input.Name,
-		Value: input.Value,
+		Name:         input.Name,
+		Value:        input.Value,
+		DefinitionId: input.DefinitionID,
 	}
 	return &textCustomFieldEntity
 }

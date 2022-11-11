@@ -93,11 +93,25 @@ func (s *contactService) createContactInDBTxWork(ctx context.Context, newContact
 		}
 
 		var contactId = utils.GetPropsFromNode(record.Values[0].(dbtype.Node))["id"].(string)
+
+		if newContact.DefinitionId != nil {
+			err := s.repository.ContactRepository.LinkWithEntityDefinitionInTx(common.GetContext(ctx).Tenant, contactId, *newContact.DefinitionId, tx)
+			if err != nil {
+				return nil, err
+			}
+		}
 		if newContact.TextCustomFields != nil {
 			for _, textCustomField := range *newContact.TextCustomFields {
-				err := addTextCustomFieldToContactInTx(ctx, contactId, textCustomField, tx)
+				queryResult, err := s.repository.CustomFieldRepository.AddTextCustomFieldToContactInTx(contactId, textCustomField, tx)
 				if err != nil {
 					return nil, err
+				}
+				var fieldId = utils.GetPropsFromNode(queryResult.(dbtype.Node))["id"].(string)
+				if textCustomField.DefinitionId != nil {
+					err := s.repository.CustomFieldRepository.LinkWithCustomFieldDefinitionForContactInTx(fieldId, contactId, *textCustomField.DefinitionId, tx)
+					if err != nil {
+						return nil, err
+					}
 				}
 			}
 		}
@@ -115,12 +129,6 @@ func (s *contactService) createContactInDBTxWork(ctx context.Context, newContact
 		}
 		if newContact.PhoneNumberEntity != nil {
 			err := addPhoneNumberToContactInTx(ctx, contactId, *newContact.PhoneNumberEntity, tx)
-			if err != nil {
-				return nil, err
-			}
-		}
-		if newContact.DefinitionId != nil {
-			err := s.repository.ContactRepository.LinkWithEntityDefinitionInTx(common.GetContext(ctx).Tenant, contactId, *newContact.DefinitionId, tx)
 			if err != nil {
 				return nil, err
 			}

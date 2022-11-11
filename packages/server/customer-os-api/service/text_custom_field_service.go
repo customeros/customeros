@@ -308,24 +308,6 @@ func (s *textCustomPropertyService) DeleteByIdFromFieldSet(ctx context.Context, 
 	return queryResult.(bool), nil
 }
 
-func addTextCustomFieldToContactInTx(ctx context.Context, contactId string, input entity.TextCustomFieldEntity, tx neo4j.Transaction) error {
-	_, err := tx.Run(`
-			MATCH (c:Contact {id:$contactId})
-			CREATE (f:TextCustomField {
-				id: randomUUID(),
-				name: $name,
-				value: $value
-			})<-[:HAS_TEXT_PROPERTY]-(c)
-			RETURN f`,
-		map[string]any{
-			"contactId": contactId,
-			"name":      input.Name,
-			"value":     input.Value,
-		})
-
-	return err
-}
-
 func (s *textCustomPropertyService) mapDbNodeToTextCustomFieldEntity(node dbtype.Node) *entity.TextCustomFieldEntity {
 	props := utils.GetPropsFromNode(node)
 	result := entity.TextCustomFieldEntity{

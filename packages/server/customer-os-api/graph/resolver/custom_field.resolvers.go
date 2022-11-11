@@ -5,11 +5,11 @@ package resolver
 
 import (
 	"context"
-	"github.com/99designs/gqlgen/graphql"
-	"github.com/openline-ai/openline-customer-os/customer-os-api/mapper"
 
+	"github.com/99designs/gqlgen/graphql"
 	"github.com/openline-ai/openline-customer-os/customer-os-api/graph/generated"
 	"github.com/openline-ai/openline-customer-os/customer-os-api/graph/model"
+	"github.com/openline-ai/openline-customer-os/customer-os-api/mapper"
 )
 
 // Definition is the resolver for the definition field.
