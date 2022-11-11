@@ -1,6 +1,15 @@
 CREATE CONSTRAINT tenant_name_unique IF NOT EXISTS ON (t:Tenant) ASSERT t.name IS UNIQUE;
 MERGE(t:Tenant {name: "openline"});
 
+MATCH (t:Tenant {name:"openline"})
+    MERGE (u:User {
+	    id:"AgentSmith",
+		firstName:"Agent",
+        lastName:"Smith",
+        email:"AgentSmith@oasis.openline.ninja",
+		createdAt :datetime({timezone: 'UTC'})
+		})-[:USER_BELONGS_TO_TENANT]->(t);
+
 CREATE INDEX contact_id_idx IF NOT EXISTS FOR (n:Contact) ON (n.id);
 CREATE INDEX contact_group_id_idx IF NOT EXISTS FOR (n:ContactGroup) ON (n.id);
 CREATE INDEX text_custom_field_id_idx IF NOT EXISTS FOR (n:TextCustomField) ON (n.id);
