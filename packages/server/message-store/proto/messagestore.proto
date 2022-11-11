@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-option go_package = "openline-ai/message-store/ent/proto/";
+option go_package = "github.com/openline-ai/openline-customer-os/packages/server/message-store/ent/proto/";
 
 import "google/protobuf/timestamp.proto";
 
