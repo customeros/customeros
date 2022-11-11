@@ -39,12 +39,14 @@ spec:
             - name: NEO4J_AUTH_USER
               value: "neo4j"
             - name: NEO4J_AUTH_PWD
-              value: "StrongLocalPa$$"
+              value: "StrongLocalPa$$$"
             - name: NEO4J_AUTH_REALM
               value: ""
             - name: NEO4J_MAX_CONN_POOL_SIZE 
               value: "100"
             - name: GRAPHQL_PLAYGROUND_ENABLED
               value: "true"
+            - name: NEO4J_LOG_LEVEL
+              value: "INFO"
             - name: PORT
               value: "1010"
