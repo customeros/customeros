@@ -499,3 +499,49 @@ func TestMutationResolver_CreateEntityDefinition(t *testing.T) {
 	require.Equal(t, 2, getCountOfNodes(driver, "FieldSetDefinition"))
 	require.Equal(t, 4, getCountOfNodes(driver, "CustomFieldDefinition"))
 }
+
+func TestMutationResolver_CreateConversation_AutogenerateID(t *testing.T) {
+	defer setupTestCase()(t)
+	createTenant(driver, "openline")
+	userId := createDefaultUser(driver, tenantName)
+	contactId := createDefaultContact(driver, tenantName)
+
+	rawResponse, err := c.RawPost(getQuery("create_conversation"),
+		client.Var("contactId", contactId),
+		client.Var("userId", userId))
+	assertRawResponseSuccess(t, rawResponse, err)
+
+	var conversation struct {
+		CreateConversation model.Conversation
+	}
+
+	err = decode.Decode(rawResponse.Data.(map[string]any), &conversation)
+	require.Nil(t, err)
+	require.NotNil(t, conversation)
+	require.NotNil(t, conversation.CreateConversation.ID)
+	require.NotNil(t, conversation.CreateConversation.StartedAt)
+}
+
+func TestMutationResolver_CreateConversation_WithGivenID(t *testing.T) {
+	defer setupTestCase()(t)
+	createTenant(driver, "openline")
+	conversationId := "Some conversation ID"
+	userId := createDefaultUser(driver, tenantName)
+	contactId := createDefaultContact(driver, tenantName)
+
+	rawResponse, err := c.RawPost(getQuery("create_conversation_with_id"),
+		client.Var("contactId", contactId),
+		client.Var("userId", userId),
+		client.Var("conversationId", conversationId))
+	assertRawResponseSuccess(t, rawResponse, err)
+
+	var conversation struct {
+		CreateConversation model.Conversation
+	}
+
+	err = decode.Decode(rawResponse.Data.(map[string]any), &conversation)
+	require.Nil(t, err)
+	require.NotNil(t, conversation)
+	require.NotNil(t, conversation.CreateConversation.StartedAt)
+	require.Equal(t, conversationId, conversation.CreateConversation.ID)
+}

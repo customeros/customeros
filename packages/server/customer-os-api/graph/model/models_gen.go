@@ -231,6 +231,20 @@ func (this ContactsPage) GetTotalPages() int { return this.TotalPages }
 // **Required.**
 func (this ContactsPage) GetTotalElements() int64 { return this.TotalElements }
 
+type Conversation struct {
+	ID        string    `json:"id"`
+	StartedAt time.Time `json:"startedAt"`
+}
+
+func (Conversation) IsNode()            {}
+func (this Conversation) GetID() string { return this.ID }
+
+type ConversationInput struct {
+	UserID    string  `json:"userId"`
+	ContactID string  `json:"contactId"`
+	ID        *string `json:"id"`
+}
+
 // Describes a custom, user-defined field associated with a `Contact`.
 // **A `return` object.**
 type CustomField struct {

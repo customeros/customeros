@@ -19,12 +19,20 @@ func createTenant(driver *neo4j.Driver, tenant string) {
 		"tenant": tenant,
 	})
 }
+func createDefaultUser(driver *neo4j.Driver, tenant string) string {
+	return createUser(driver, tenant, entity.UserEntity{
+		FirstName: "first",
+		LastName:  "last",
+		Email:     "user@openline.ai",
+	})
+}
 
-func createUser(driver *neo4j.Driver, tenant string, user entity.UserEntity) {
+func createUser(driver *neo4j.Driver, tenant string, user entity.UserEntity) string {
+	var userId, _ = uuid.NewRandom()
 	query := `
 		MATCH (t:Tenant {name:$tenant})
 			MERGE (u:User {
-				  id: randomUUID(),
+				  id: $userId,
 				  firstName: $firstName,
 				  lastName: $lastName,
 				  email: $email,
@@ -32,10 +40,12 @@ func createUser(driver *neo4j.Driver, tenant string, user entity.UserEntity) {
 				})-[:USER_BELONGS_TO_TENANT]->(t)`
 	integration_tests.ExecuteWriteQuery(driver, query, map[string]any{
 		"tenant":    tenant,
+		"userId":    userId.String(),
 		"firstName": user.FirstName,
 		"lastName":  user.LastName,
 		"email":     user.Email,
 	})
+	return userId.String()
 }
 
 func createDefaultContact(driver *neo4j.Driver, tenant string) string {

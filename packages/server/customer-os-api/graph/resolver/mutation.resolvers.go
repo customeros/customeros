@@ -5,6 +5,7 @@ package resolver
 
 import (
 	"context"
+
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/openline-ai/openline-customer-os/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/customer-os-api/graph/generated"
@@ -339,6 +340,16 @@ func (r *mutationResolver) CreateEntityDefinition(ctx context.Context, input mod
 		return nil, err
 	}
 	return mapper.MapEntityToEntityDefinition(entityDefinitionEntity), nil
+}
+
+// CreateConversation is the resolver for the createConversation field.
+func (r *mutationResolver) CreateConversation(ctx context.Context, input model.ConversationInput) (*model.Conversation, error) {
+	conversationEntity, err := r.ServiceContainer.ConversationService.CreateNewConversation(ctx, input.UserID, input.ContactID, input.ID)
+	if err != nil {
+		graphql.AddErrorf(ctx, "Failed to create conversation between user: %s and contact: %s", input.UserID, input.ContactID)
+		return nil, err
+	}
+	return mapper.MapEntityToConversation(conversationEntity), nil
 }
 
 // Mutation returns generated.MutationResolver implementation.

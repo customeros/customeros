@@ -1,0 +1,9 @@
+mutation CreateConversation($contactId: ID!, $userId: ID!) {
+  createConversation(input: {
+    userId: $userId
+    contactId: $contactId
+  }) {
+    id
+    startedAt
+  }
+}

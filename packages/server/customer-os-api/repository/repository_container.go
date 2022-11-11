@@ -9,6 +9,7 @@ type RepositoryContainer struct {
 	EntityDefinitionRepository      EntityDefinitionRepository
 	FieldSetDefinitionRepository    FieldSetDefinitionRepository
 	CustomFieldDefinitionRepository CustomFieldDefinitionRepository
+	ConversationRepository          ConversationRepository
 }
 
 type Drivers struct {
@@ -24,5 +25,6 @@ func InitRepos(driver *neo4j.Driver) *RepositoryContainer {
 	container.EntityDefinitionRepository = NewEntityDefinitionRepository(driver, &container)
 	container.FieldSetDefinitionRepository = NewFieldSetDefinitionRepository(driver, &container)
 	container.CustomFieldDefinitionRepository = NewCustomFieldDefinitionRepository(driver, &container)
+	container.ConversationRepository = NewConversationRepository(driver, &container)
 	return &container
 }

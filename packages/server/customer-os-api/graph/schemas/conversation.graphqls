@@ -1,0 +1,10 @@
+type Conversation implements Node {
+    id: ID!
+    startedAt: Time!
+}
+
+input ConversationInput {
+    userId: ID!
+    contactId: ID!
+    id: ID
+}
