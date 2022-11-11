@@ -10,5 +10,18 @@ func NewDriver(cfg *Config) (neo4j.Driver, error) {
 		neo4j.BasicAuth(cfg.Neo4j.User, cfg.Neo4j.Pwd, cfg.Neo4j.Realm),
 		func(config *neo4j.Config) {
 			config.MaxConnectionPoolSize = cfg.Neo4j.MaxConnectionPoolSize
+			config.Log = neo4j.ConsoleLogger(strToLogLevel(cfg.Neo4j.LogLevel))
 		})
+}
+
+func strToLogLevel(str string) neo4j.LogLevel {
+	switch str {
+	case "ERROR":
+		return neo4j.ERROR
+	case "INFO":
+		return neo4j.INFO
+	case "DEBUG":
+		return neo4j.DEBUG
+	}
+	return neo4j.WARNING
 }
