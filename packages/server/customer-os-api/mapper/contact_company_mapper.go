@@ -3,6 +3,7 @@ package mapper
 import (
 	"github.com/openline-ai/openline-customer-os/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/customer-os-api/graph/model"
+	"github.com/openline-ai/openline-customer-os/customer-os-api/utils"
 )
 
 func MapCompanyPositionInputToEntity(input *model.CompanyInput) *entity.CompanyPositionEntity {
@@ -19,10 +20,9 @@ func MapCompanyPositionInputToEntity(input *model.CompanyInput) *entity.CompanyP
 }
 
 func MapEntityToCompanyPosition(companyPosition *entity.CompanyPositionEntity) *model.Company {
-	var jobTitle = companyPosition.JobTitle
 	return &model.Company{
 		CompanyName: companyPosition.Company,
-		JobTitle:    &jobTitle,
+		JobTitle:    utils.StringPtr(companyPosition.JobTitle),
 	}
 }
 

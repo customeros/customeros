@@ -14,7 +14,7 @@ import (
 
 type FieldSetService interface {
 	FindAllForContact(ctx context.Context, contact *model.Contact) (*entity.FieldSetEntities, error)
-	MergeFieldSetToContact(ctx context.Context, contactId string, input *entity.FieldSetEntity) (*entity.FieldSetEntity, error)
+	MergeFieldSetToContact(ctx context.Context, contactId string, input *entity.FieldSetEntity, fieldSetDefinitionId *string) (*entity.FieldSetEntity, error)
 	UpdateFieldSetInContact(ctx context.Context, contactId string, input *entity.FieldSetEntity) (*entity.FieldSetEntity, error)
 	DeleteByIdFromContact(ctx context.Context, contactId string, fieldSetId string) (bool, error)
 	getDriver() neo4j.Driver
@@ -67,7 +67,7 @@ func (s *fieldSetService) FindAllForContact(ctx context.Context, contact *model.
 	return &fieldSetEntities, nil
 }
 
-func (s *fieldSetService) MergeFieldSetToContact(ctx context.Context, contactId string, input *entity.FieldSetEntity) (*entity.FieldSetEntity, error) {
+func (s *fieldSetService) MergeFieldSetToContact(ctx context.Context, contactId string, input *entity.FieldSetEntity, fieldSetDefinitionId *string) (*entity.FieldSetEntity, error) {
 	session := s.getDriver().NewSession(neo4j.SessionConfig{AccessMode: neo4j.AccessModeWrite})
 	defer session.Close()
 
@@ -85,6 +85,13 @@ func (s *fieldSetService) MergeFieldSetToContact(ctx context.Context, contactId 
 		records, err := txResult.Collect()
 		if err != nil {
 			return nil, err
+		}
+		if fieldSetDefinitionId != nil {
+			var fieldSetId = utils.GetPropsFromNode(records[0].Values[0].(dbtype.Node))["id"].(string)
+			err := s.repository.FieldSetRepository.LinkWithFieldSetDefinitionInTx(common.GetContext(ctx).Tenant, fieldSetId, *fieldSetDefinitionId, tx)
+			if err != nil {
+				return nil, err
+			}
 		}
 		return records, nil
 	})

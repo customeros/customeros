@@ -122,9 +122,9 @@ func (r *mutationResolver) RemoveTextCustomFieldFromContactByID(ctx context.Cont
 
 // MergeFieldSetToContact is the resolver for the mergeFieldSetToContact field.
 func (r *mutationResolver) MergeFieldSetToContact(ctx context.Context, contactID string, input model.FieldSetInput) (*model.FieldSet, error) {
-	result, err := r.ServiceContainer.FieldSetService.MergeFieldSetToContact(ctx, contactID, mapper.MapFieldSetInputToEntity(&input))
+	result, err := r.ServiceContainer.FieldSetService.MergeFieldSetToContact(ctx, contactID, mapper.MapFieldSetInputToEntity(&input), input.DefinitionID)
 	if err != nil {
-		graphql.AddErrorf(ctx, "Could not merge fields set %s to contact %s", input.Name, contactID)
+		graphql.AddErrorf(ctx, "Could not merge fields set <%s> to contact %s", input.Name, contactID)
 		return nil, err
 	}
 	return mapper.MapEntityToFieldSet(result), nil

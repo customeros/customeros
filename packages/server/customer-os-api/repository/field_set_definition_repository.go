@@ -10,6 +10,7 @@ import (
 type FieldSetDefinitionRepository interface {
 	createFieldSetDefinitionInTx(entityDefId string, entity *entity.FieldSetDefinitionEntity, tx neo4j.Transaction) error
 	FindAllByEntityDefinitionId(entityDefinitionId string) (any, error)
+	FindByFieldSetId(fieldSetId string) (any, error)
 }
 
 type fieldSetDefinitionRepository struct {
@@ -61,6 +62,24 @@ func (r *fieldSetDefinitionRepository) FindAllByEntityDefinitionId(entityDefinit
 				MATCH (:EntityDefinition {id:$entityDefinitionId})-[:CONTAINS]->(f:FieldSetDefinition) RETURN f ORDER BY f.order`,
 			map[string]any{
 				"entityDefinitionId": entityDefinitionId,
+			})
+		if err != nil {
+			return nil, err
+		}
+		return queryResult.Collect()
+	})
+}
+
+func (r *fieldSetDefinitionRepository) FindByFieldSetId(fieldSetId string) (any, error) {
+	session := (*r.driver).NewSession(neo4j.SessionConfig{AccessMode: neo4j.AccessModeRead})
+	defer session.Close()
+
+	return session.ReadTransaction(func(tx neo4j.Transaction) (interface{}, error) {
+		queryResult, err := tx.Run(`
+				MATCH (c:FieldSet {id:$fieldSetId})-[:IS_DEFINED_BY]->(e:FieldSetDefinition)
+					RETURN e`,
+			map[string]any{
+				"fieldSetId": fieldSetId,
 			})
 		if err != nil {
 			return nil, err

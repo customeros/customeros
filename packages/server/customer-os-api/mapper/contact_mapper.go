@@ -3,6 +3,7 @@ package mapper
 import (
 	"github.com/openline-ai/openline-customer-os/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/customer-os-api/graph/model"
+	"github.com/openline-ai/openline-customer-os/customer-os-api/utils"
 )
 
 func MapContactInputToEntity(input model.ContactInput) *entity.ContactEntity {
@@ -49,19 +50,16 @@ func MapContactUpdateInputToEntity(input model.ContactUpdateInput) *entity.Conta
 func MapEntityToContact(contact *entity.ContactEntity) *model.Contact {
 	var title = model.PersonTitle(contact.Title)
 	if !title.IsValid() {
-		title = ""
+		title = model.PersonTitleMr
 	}
-	var label = contact.Label
-	var notes = contact.Notes
-	var contactType = contact.ContactType
 	return &model.Contact{
 		ID:          contact.Id,
 		Title:       &title,
 		FirstName:   contact.FirstName,
 		LastName:    contact.LastName,
-		Label:       &label,
-		Notes:       &notes,
-		ContactType: &contactType,
+		Label:       utils.StringPtr(contact.Label),
+		Notes:       utils.StringPtr(contact.Notes),
+		ContactType: utils.StringPtr(contact.ContactType),
 		CreatedAt:   contact.CreatedAt,
 	}
 }
