@@ -26,7 +26,7 @@ func (r *fieldSetResolver) CustomFields(ctx context.Context, obj *model.FieldSet
 func (r *fieldSetResolver) Definition(ctx context.Context, obj *model.FieldSet) (*model.FieldSetDefinition, error) {
 	entity, err := r.ServiceContainer.FieldSetDefinitionService.FindLinkedWithFieldSet(ctx, obj.ID)
 	if err != nil {
-		graphql.AddErrorf(ctx, "Failed to get contact definition for contact %s", obj.ID)
+		graphql.AddErrorf(ctx, "Failed to get contact definition for field set %s", obj.ID)
 		return nil, err
 	}
 	if entity == nil {

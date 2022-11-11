@@ -257,7 +257,8 @@ type CustomField struct {
 	Name string `json:"name"`
 	// The value of the custom field.
 	// **Required**
-	Value string `json:"value"`
+	Value      string                 `json:"value"`
+	Definition *CustomFieldDefinition `json:"definition"`
 }
 
 func (CustomField) IsNode()            {}
@@ -463,7 +464,8 @@ type TextCustomFieldInput struct {
 	Name string `json:"name"`
 	// The value of the custom field.
 	// **Required**
-	Value string `json:"value"`
+	Value        string  `json:"value"`
+	DefinitionID *string `json:"definitionId"`
 }
 
 // Describes a custom, user-defined field associated with a `Contact`.

@@ -76,8 +76,8 @@ func (r *fieldSetDefinitionRepository) FindByFieldSetId(fieldSetId string) (any,
 
 	return session.ReadTransaction(func(tx neo4j.Transaction) (interface{}, error) {
 		queryResult, err := tx.Run(`
-				MATCH (c:FieldSet {id:$fieldSetId})-[:IS_DEFINED_BY]->(e:FieldSetDefinition)
-					RETURN e`,
+				MATCH (:FieldSet {id:$fieldSetId})-[:IS_DEFINED_BY]->(d:FieldSetDefinition)
+					RETURN d`,
 			map[string]any{
 				"fieldSetId": fieldSetId,
 			})
