@@ -52,8 +52,26 @@ while [ -z "$pod" ]; do
     fi
 done
 
-echo "provisioning neo4j"
-cat $CUSTOMER_OS_HOME/packages/server/customer-os-api/customer-os.cypher |kubectl run --rm -i --namespace $NAMESPACE_NAME --image "neo4j:4.4.11" cypher-shell  -- bash -c 'NEO4J_PASSWORD=StrongLocalPa\$\$ cypher-shell -a neo4j://neo4j-customer-os.openline.svc.cluster.local:7687 -u neo4j'
+started=""
+while [ -z "$started" ]; do
+    started=$(kubectl logs -n $NAMESPACE_NAME $pod|grep password)
+    if [ -z "$started" ]; then
+      echo "neo4j waiting for app to start"
+      sleep 1
+    fi
+done
+sleep 1
+
+neo_output="not empty"
+while  [ ! -z "$neo_output" ]; do
+	echo "provisioning neo4j"
+	neo_output=$(cat $CUSTOMER_OS_HOME/packages/server/customer-os-api/customer-os.cypher |kubectl run --rm -i --namespace $NAMESPACE_NAME --image "neo4j:4.4.11" cypher-shell  -- bash -c 'NEO4J_PASSWORD=StrongLocalPa\$\$ cypher-shell -a neo4j://neo4j-customer-os.openline.svc.cluster.local:7687 -u neo4j --non-interactive' 2>&1 |grep -v "see a command prompt" |grep -v "deleted")
+	if [ ! -z "$neo_output" ]; then
+		echo "neo4j provisioning failed, trying again"
+		echo "output: $neo_output"
+		sleep 1
+	fi
+done
 
 echo "provisioning postrgess"
 cd $CUSTOMER_OS_HOME/packages/server/message-store/sql
