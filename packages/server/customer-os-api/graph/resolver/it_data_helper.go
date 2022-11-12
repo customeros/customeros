@@ -6,7 +6,9 @@ import (
 	"github.com/neo4j/neo4j-go-driver/v4/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v4/neo4j/db"
 	"github.com/openline-ai/openline-customer-os/customer-os-api/entity"
+	"github.com/openline-ai/openline-customer-os/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/customer-os-api/integration_tests"
+	"github.com/openline-ai/openline-customer-os/customer-os-api/utils"
 )
 
 func cleanupAllData(driver *neo4j.Driver) {
@@ -101,10 +103,10 @@ func createFieldSet(driver *neo4j.Driver, contactId string, fieldSet entity.Fiel
 }
 
 func createDefaultTextFieldInSet(driver *neo4j.Driver, fieldSetId string) string {
-	return createTextFieldInSet(driver, fieldSetId, entity.TextCustomFieldEntity{Name: "name", Value: "value"})
+	return createTextFieldInSet(driver, fieldSetId, entity.CustomFieldEntity{Name: "name", Value: model.AnyTypeValue{Str: utils.StringPtr("value")}})
 }
 
-func createTextFieldInSet(driver *neo4j.Driver, fieldSetId string, textField entity.TextCustomFieldEntity) string {
+func createTextFieldInSet(driver *neo4j.Driver, fieldSetId string, textField entity.CustomFieldEntity) string {
 	var fieldId, _ = uuid.NewRandom()
 	query := `
 			MATCH (s:FieldSet {id:$fieldSetId})
@@ -112,7 +114,7 @@ func createTextFieldInSet(driver *neo4j.Driver, fieldSetId string, textField ent
 				  id: $fieldId,
 				  value: $value,
 				  name: $name
-				})<-[:HAS_TEXT_PROPERTY]-(s)`
+				})<-[:HAS_PROPERTY]-(s)`
 	integration_tests.ExecuteWriteQuery(driver, query, map[string]any{
 		"fieldSetId": fieldSetId,
 		"fieldId":    fieldId.String(),

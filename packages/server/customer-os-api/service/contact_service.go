@@ -30,7 +30,7 @@ type ContactService interface {
 
 type ContactCreateData struct {
 	ContactEntity     *entity.ContactEntity
-	TextCustomFields  *entity.TextCustomFieldEntities
+	CustomFields      *entity.CustomFieldEntities
 	EmailEntity       *entity.EmailEntity
 	PhoneNumberEntity *entity.PhoneNumberEntity
 	CompanyPosition   *entity.CompanyPositionEntity
@@ -87,12 +87,12 @@ func (s *contactService) createContactInDBTxWork(ctx context.Context, newContact
 				"notes":       newContact.ContactEntity.Notes,
 			})
 
-		record, err := result.Single()
+		dbContact, err := utils.ExtractSingleRecordFirstValue(result, err)
 		if err != nil {
 			return nil, err
 		}
 
-		var contactId = utils.GetPropsFromNode(record.Values[0].(dbtype.Node))["id"].(string)
+		var contactId = utils.GetPropsFromNode(dbContact.(dbtype.Node))["id"].(string)
 
 		if newContact.DefinitionId != nil {
 			err := s.repository.ContactRepository.LinkWithEntityDefinitionInTx(common.GetContext(ctx).Tenant, contactId, *newContact.DefinitionId, tx)
@@ -100,15 +100,15 @@ func (s *contactService) createContactInDBTxWork(ctx context.Context, newContact
 				return nil, err
 			}
 		}
-		if newContact.TextCustomFields != nil {
-			for _, textCustomField := range *newContact.TextCustomFields {
-				queryResult, err := s.repository.CustomFieldRepository.AddTextCustomFieldToContactInTx(contactId, textCustomField, tx)
+		if newContact.CustomFields != nil {
+			for _, customField := range *newContact.CustomFields {
+				queryResult, err := s.repository.CustomFieldRepository.MergeCustomFieldToContactInTx(common.GetContext(ctx).Tenant, contactId, &customField, tx)
 				if err != nil {
 					return nil, err
 				}
 				var fieldId = utils.GetPropsFromNode(queryResult.(dbtype.Node))["id"].(string)
-				if textCustomField.DefinitionId != nil {
-					err := s.repository.CustomFieldRepository.LinkWithCustomFieldDefinitionForContactInTx(fieldId, contactId, *textCustomField.DefinitionId, tx)
+				if customField.DefinitionId != nil {
+					err := s.repository.CustomFieldRepository.LinkWithCustomFieldDefinitionForContactInTx(fieldId, contactId, *customField.DefinitionId, tx)
 					if err != nil {
 						return nil, err
 					}
@@ -133,7 +133,7 @@ func (s *contactService) createContactInDBTxWork(ctx context.Context, newContact
 				return nil, err
 			}
 		}
-		return record.Values[0], nil
+		return dbContact, nil
 	}
 }
 
@@ -181,7 +181,7 @@ func (s *contactService) HardDelete(ctx context.Context, contactId string) (bool
 	queryResult, err := session.WriteTransaction(func(tx neo4j.Transaction) (interface{}, error) {
 		_, err := tx.Run(`
 			MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant})
-			OPTIONAL MATCH (c)-[:HAS_TEXT_PROPERTY]->(f:TextCustomField)
+			OPTIONAL MATCH (c)-[:HAS_PROPERTY]->(f:TextCustomField)
 			OPTIONAL MATCH (c)-[:CALLED_AT]->(p:PhoneNumber)
 			OPTIONAL MATCH (c)-[:EMAILED_AT]->(e:Email)
             DETACH DELETE p, e, f, c

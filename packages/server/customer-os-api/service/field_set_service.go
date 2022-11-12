@@ -143,7 +143,7 @@ func (s *fieldSetService) DeleteByIdFromContact(ctx context.Context, contactId s
 		_, err := tx.Run(`
 			MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}),
                   (c)-[:HAS_COMPLEX_PROPERTY]->(s:FieldSet {id:$fieldSetId}),
-				  (s)-[:HAS_TEXT_PROPERTY]->(f:TextCustomField)
+				  (s)-[:HAS_PROPERTY]->(f:TextCustomField)
             DETACH DELETE f, s`,
 			map[string]any{
 				"contactId":  contactId,

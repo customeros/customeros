@@ -177,7 +177,7 @@ type ContactInput struct {
 	ContactType *string `json:"contactType"`
 	// User defined metadata appended to contact.
 	// **Required.**
-	TextCustomFields []*TextCustomFieldInput `json:"textCustomFields"`
+	CustomFields []*CustomFieldInput `json:"customFields"`
 	// `companyName` and `jobTitle` of the contact if it has been associated with a company.
 	Company *CompanyInput `json:"company"`
 	// An email addresses associted with the contact.
@@ -255,6 +255,9 @@ type CustomField struct {
 	// The name of the custom field.
 	// **Required**
 	Name string `json:"name"`
+	// Datatype of the custom field.
+	// **Required**
+	Datatype CustomFieldDataType `json:"datatype"`
 	// The value of the custom field.
 	// **Required**
 	Value      string                 `json:"value"`
@@ -286,6 +289,35 @@ type CustomFieldDefinitionInput struct {
 	Length    *int            `json:"length"`
 	Min       *int            `json:"min"`
 	Max       *int            `json:"max"`
+}
+
+// Describes a custom, user-defined field associated with a `Contact` of type String.
+// **A `create` object.**
+type CustomFieldInput struct {
+	// The name of the custom field.
+	// **Required**
+	Name string `json:"name"`
+	// Datatype of the custom field.
+	// **Required**
+	Datatype CustomFieldDataType `json:"datatype"`
+	// The value of the custom field.
+	// **Required**
+	Value        AnyTypeValue `json:"value"`
+	DefinitionID *string      `json:"definitionId"`
+}
+
+// Describes a custom, user-defined field associated with a `Contact`.
+// **An `update` object.**
+type CustomFieldUpdateInput struct {
+	// The unique ID associated with the custom field.
+	// **Required**
+	ID string `json:"id"`
+	// The name of the custom field.
+	// **Required**
+	Name string `json:"name"`
+	// The value of the custom field.
+	// **Required**
+	Value string `json:"value"`
 }
 
 // Describes an email address associated with a `Contact` in customerOS.
@@ -456,32 +488,6 @@ type Result struct {
 	Result bool `json:"result"`
 }
 
-// Describes a custom, user-defined field associated with a `Contact` of type String.
-// **A `create` object.**
-type TextCustomFieldInput struct {
-	// The name of the custom field.
-	// **Required**
-	Name string `json:"name"`
-	// The value of the custom field.
-	// **Required**
-	Value        string  `json:"value"`
-	DefinitionID *string `json:"definitionId"`
-}
-
-// Describes a custom, user-defined field associated with a `Contact`.
-// **An `update` object.**
-type TextCustomFieldUpdateInput struct {
-	// The unique ID associated with the custom field.
-	// **Required**
-	ID string `json:"id"`
-	// The name of the custom field.
-	// **Required**
-	Name string `json:"name"`
-	// The value of the custom field.
-	// **Required**
-	Value string `json:"value"`
-}
-
 // Describes the User of customerOS.  A user is the person who logs into the Openline platform.
 // **A `return` object**
 type User struct {
@@ -539,6 +545,53 @@ func (this UserPage) GetTotalPages() int { return this.TotalPages }
 // The total number of elements included in the query response.
 // **Required.**
 func (this UserPage) GetTotalElements() int64 { return this.TotalElements }
+
+type CustomFieldDataType string
+
+const (
+	CustomFieldDataTypeText     CustomFieldDataType = "TEXT"
+	CustomFieldDataTypeBool     CustomFieldDataType = "BOOL"
+	CustomFieldDataTypeDatetime CustomFieldDataType = "DATETIME"
+	CustomFieldDataTypeInteger  CustomFieldDataType = "INTEGER"
+	CustomFieldDataTypeDecimal  CustomFieldDataType = "DECIMAL"
+)
+
+var AllCustomFieldDataType = []CustomFieldDataType{
+	CustomFieldDataTypeText,
+	CustomFieldDataTypeBool,
+	CustomFieldDataTypeDatetime,
+	CustomFieldDataTypeInteger,
+	CustomFieldDataTypeDecimal,
+}
+
+func (e CustomFieldDataType) IsValid() bool {
+	switch e {
+	case CustomFieldDataTypeText, CustomFieldDataTypeBool, CustomFieldDataTypeDatetime, CustomFieldDataTypeInteger, CustomFieldDataTypeDecimal:
+		return true
+	}
+	return false
+}
+
+func (e CustomFieldDataType) String() string {
+	return string(e)
+}
+
+func (e *CustomFieldDataType) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = CustomFieldDataType(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid CustomFieldDataType", str)
+	}
+	return nil
+}
+
+func (e CustomFieldDataType) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
 
 type CustomFieldType string
 
