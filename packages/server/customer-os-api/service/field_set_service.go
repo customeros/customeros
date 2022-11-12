@@ -14,7 +14,7 @@ import (
 
 type FieldSetService interface {
 	FindAllForContact(ctx context.Context, contact *model.Contact) (*entity.FieldSetEntities, error)
-	MergeFieldSetToContact(ctx context.Context, contactId string, input *entity.FieldSetEntity) (*entity.FieldSetEntity, error)
+	MergeFieldSetToContact(ctx context.Context, contactId string, input *entity.FieldSetEntity, fieldSetDefinitionId *string) (*entity.FieldSetEntity, error)
 	UpdateFieldSetInContact(ctx context.Context, contactId string, input *entity.FieldSetEntity) (*entity.FieldSetEntity, error)
 	DeleteByIdFromContact(ctx context.Context, contactId string, fieldSetId string) (bool, error)
 	getDriver() neo4j.Driver
@@ -67,7 +67,7 @@ func (s *fieldSetService) FindAllForContact(ctx context.Context, contact *model.
 	return &fieldSetEntities, nil
 }
 
-func (s *fieldSetService) MergeFieldSetToContact(ctx context.Context, contactId string, input *entity.FieldSetEntity) (*entity.FieldSetEntity, error) {
+func (s *fieldSetService) MergeFieldSetToContact(ctx context.Context, contactId string, input *entity.FieldSetEntity, fieldSetDefinitionId *string) (*entity.FieldSetEntity, error) {
 	session := s.getDriver().NewSession(neo4j.SessionConfig{AccessMode: neo4j.AccessModeWrite})
 	defer session.Close()
 
@@ -75,17 +75,23 @@ func (s *fieldSetService) MergeFieldSetToContact(ctx context.Context, contactId 
 		txResult, err := tx.Run(`
 			MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant})
 			MERGE (f:FieldSet {name: $name})<-[r:HAS_COMPLEX_PROPERTY]-(c)
-            ON CREATE SET f.type=$type, f.id=randomUUID(), r.added=datetime({timezone: 'UTC'})
+            ON CREATE SET f.id=randomUUID(), r.added=datetime({timezone: 'UTC'})
 			RETURN f, r`,
 			map[string]interface{}{
 				"tenant":    common.GetContext(ctx).Tenant,
 				"contactId": contactId,
 				"name":      input.Name,
-				"type":      input.Type,
 			})
 		records, err := txResult.Collect()
 		if err != nil {
 			return nil, err
+		}
+		if fieldSetDefinitionId != nil {
+			var fieldSetId = utils.GetPropsFromNode(records[0].Values[0].(dbtype.Node))["id"].(string)
+			err := s.repository.FieldSetRepository.LinkWithFieldSetDefinitionInTx(common.GetContext(ctx).Tenant, fieldSetId, *fieldSetDefinitionId, tx)
+			if err != nil {
+				return nil, err
+			}
 		}
 		return records, nil
 	})
@@ -159,7 +165,6 @@ func (s *fieldSetService) mapDbNodeToFieldSetEntity(node dbtype.Node) *entity.Fi
 	result := entity.FieldSetEntity{
 		Id:   utils.GetStringPropOrEmpty(props, "id"),
 		Name: utils.GetStringPropOrEmpty(props, "name"),
-		Type: utils.GetStringPropOrEmpty(props, "type"),
 	}
 	return &result
 }

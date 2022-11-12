@@ -231,6 +231,47 @@ func TestMutationResolver_CreateContact(t *testing.T) {
 	require.Equal(t, 1, getCountOfNodes(driver, "PhoneNumber"))
 }
 
+func TestMutationResolver_CreateContact_WithEntityDefinition(t *testing.T) {
+	defer setupTestCase()(t)
+	createTenant(driver, tenantName)
+	entityDefinitionId := createEntityDefinition(driver, tenantName, model.EntityDefinitionExtensionContact.String())
+	fieldDefinitionId := addFieldDefinitionToEntity(driver, entityDefinitionId)
+
+	rawResponse, err := c.RawPost(getQuery("create_contact_with_entity_definition"),
+		client.Var("entityDefinitionId", entityDefinitionId),
+		client.Var("fieldDefinitionId", fieldDefinitionId))
+	assertRawResponseSuccess(t, rawResponse, err)
+
+	require.Equal(t, 1, getCountOfNodes(driver, "Contact"))
+	require.Equal(t, 0, getCountOfNodes(driver, "ContactGroup"))
+	require.Equal(t, 0, getCountOfNodes(driver, "Company"))
+	require.Equal(t, 2, getCountOfNodes(driver, "TextCustomField"))
+	require.Equal(t, 0, getCountOfNodes(driver, "Email"))
+	require.Equal(t, 0, getCountOfNodes(driver, "PhoneNumber"))
+	require.Equal(t, 1, getCountOfNodes(driver, "EntityDefinition"))
+	require.Equal(t, 1, getCountOfNodes(driver, "CustomFieldDefinition"))
+	require.Equal(t, 0, getCountOfNodes(driver, "FieldSetDefinition"))
+
+	var contact struct {
+		CreateContact model.Contact
+	}
+
+	err = decode.Decode(rawResponse.Data.(map[string]any), &contact)
+	require.Nil(t, err)
+	require.NotNil(t, contact)
+
+	require.Equal(t, entityDefinitionId, contact.CreateContact.Definition.ID)
+	require.Equal(t, 2, len(contact.CreateContact.CustomFields))
+	require.Equal(t, "field1", contact.CreateContact.CustomFields[0].Name)
+	require.Equal(t, "value1", contact.CreateContact.CustomFields[0].Value)
+	require.Equal(t, fieldDefinitionId, contact.CreateContact.CustomFields[0].Definition.ID)
+	require.NotNil(t, contact.CreateContact.CustomFields[0].GetID())
+	require.Equal(t, "field2", contact.CreateContact.CustomFields[1].Name)
+	require.Equal(t, "value2", contact.CreateContact.CustomFields[1].Value)
+	require.NotNil(t, contact.CreateContact.CustomFields[1].GetID())
+
+}
+
 func TestMutationResolver_UpdateContact(t *testing.T) {
 	defer setupTestCase()(t)
 	createTenant(driver, tenantName)
@@ -298,10 +339,8 @@ func TestMutationResolver_MergeFieldSetToContact_AllowMultipleFieldSetWithSameNa
 	require.NotNil(t, fieldSet2.MergeFieldSetToContact.ID)
 	require.NotEqual(t, fieldSet1.MergeFieldSetToContact.ID, fieldSet2.MergeFieldSetToContact.ID)
 	require.Equal(t, "some name", fieldSet1.MergeFieldSetToContact.Name)
-	require.Equal(t, "some type", fieldSet1.MergeFieldSetToContact.Type)
 	require.NotNil(t, fieldSet1.MergeFieldSetToContact.Added)
 	require.Equal(t, "some name", fieldSet2.MergeFieldSetToContact.Name)
-	require.Equal(t, "some type", fieldSet2.MergeFieldSetToContact.Type)
 	require.NotNil(t, fieldSet2.MergeFieldSetToContact.Added)
 
 	require.Equal(t, 2, getCountOfNodes(driver, "FieldSet"))

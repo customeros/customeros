@@ -23,5 +23,5 @@ interface Node {
 
 interface ExtensibleEntity implements Node {
     id: ID!
-    definitionId: ID!
+    definition: EntityDefinition
 }

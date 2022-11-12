@@ -1,6 +1,7 @@
 package service
 
 import (
+	"context"
 	"github.com/neo4j/neo4j-go-driver/v4/neo4j/db"
 	"github.com/neo4j/neo4j-go-driver/v4/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/customer-os-api/entity"
@@ -10,6 +11,7 @@ import (
 
 type FieldSetDefinitionService interface {
 	FindAll(entityDefinitionId string) (*entity.FieldSetDefinitionEntities, error)
+	FindLinkedWithFieldSet(ctx context.Context, fieldSetId string) (*entity.FieldSetDefinitionEntity, error)
 }
 
 type fieldSetDefinitionService struct {
@@ -32,6 +34,17 @@ func (s *fieldSetDefinitionService) FindAll(entityDefinitionId string) (*entity.
 		fieldSetDefinitionEntities = append(fieldSetDefinitionEntities, *s.mapDbNodeToFieldSetDefinition(dbRecord.Values[0].(dbtype.Node)))
 	}
 	return &fieldSetDefinitionEntities, nil
+}
+
+func (s *fieldSetDefinitionService) FindLinkedWithFieldSet(ctx context.Context, fieldSetId string) (*entity.FieldSetDefinitionEntity, error) {
+	queryResult, err := s.repository.FieldSetDefinitionRepository.FindByFieldSetId(fieldSetId)
+	if err != nil {
+		return nil, err
+	}
+	if len(queryResult.([]*db.Record)) == 0 {
+		return nil, nil
+	}
+	return s.mapDbNodeToFieldSetDefinition((queryResult.([]*db.Record))[0].Values[0].(dbtype.Node)), nil
 }
 
 func (s *fieldSetDefinitionService) mapDbNodeToFieldSetDefinition(dbNode dbtype.Node) *entity.FieldSetDefinitionEntity {

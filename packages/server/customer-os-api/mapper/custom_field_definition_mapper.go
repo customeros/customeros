@@ -12,9 +12,9 @@ func MapCustomFieldDefinitionInputToEntity(input model.CustomFieldDefinitionInpu
 		Type:      input.Type.String(),
 		Order:     int64(input.Order),
 		Mandatory: input.Mandatory,
-		Length:    utils.ToInt64Ptr(input.Length),
-		Min:       utils.ToInt64Ptr(input.Min),
-		Max:       utils.ToInt64Ptr(input.Max),
+		Length:    utils.IntPtrToInt64Ptr(input.Length),
+		Min:       utils.IntPtrToInt64Ptr(input.Min),
+		Max:       utils.IntPtrToInt64Ptr(input.Max),
 	}
 	return &definitionEntity
 }
@@ -30,9 +30,9 @@ func MapEntityToCustomFieldDefinition(entity *entity.CustomFieldDefinitionEntity
 		Type:      fieldType,
 		Order:     int(entity.Order),
 		Mandatory: entity.Mandatory,
-		Length:    utils.ToIntPtr(entity.Length),
-		Min:       utils.ToIntPtr(entity.Min),
-		Max:       utils.ToIntPtr(entity.Max),
+		Length:    utils.Int64PtrToIntPtr(entity.Length),
+		Min:       utils.Int64PtrToIntPtr(entity.Min),
+		Max:       utils.Int64PtrToIntPtr(entity.Max),
 	}
 	return &output
 }
