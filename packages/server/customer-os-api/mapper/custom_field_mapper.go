@@ -45,11 +45,15 @@ func MapEntitiesToTextCustomFields(textCustomFieldEntities *entity.CustomFieldEn
 	return textCustomFields
 }
 
-func MapEntityToTextCustomField(textCustomFieldEntity *entity.CustomFieldEntity) *model.CustomField {
+func MapEntityToTextCustomField(entity *entity.CustomFieldEntity) *model.CustomField {
+	var datatype = model.CustomFieldDataType(entity.DataType)
+	if !datatype.IsValid() {
+		datatype = model.CustomFieldDataTypeText
+	}
 	return &model.CustomField{
-		ID:   textCustomFieldEntity.Id,
-		Name: textCustomFieldEntity.Name,
-		//TODO alexb implement
-		//Value: textCustomFieldEntity.Value,
+		ID:       entity.Id,
+		Name:     entity.Name,
+		Datatype: datatype,
+		Value:    entity.Value,
 	}
 }

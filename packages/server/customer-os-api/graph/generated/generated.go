@@ -1703,7 +1703,7 @@ type CustomField implements Node {
     The value of the custom field.
     **Required**
     """
-    value: String!
+    value: Any!
 
     definition: CustomFieldDefinition @goField(forceResolver: true)
 }
@@ -4545,9 +4545,9 @@ func (ec *executionContext) _CustomField_value(ctx context.Context, field graphq
 		}
 		return graphql.Null
 	}
-	res := resTmp.(string)
+	res := resTmp.(model.AnyTypeValue)
 	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
+	return ec.marshalNAny2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐAnyTypeValue(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_CustomField_value(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -4557,7 +4557,7 @@ func (ec *executionContext) fieldContext_CustomField_value(ctx context.Context, 
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
+			return nil, errors.New("field of type Any does not have child fields")
 		},
 	}
 	return fc, nil

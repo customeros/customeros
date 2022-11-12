@@ -87,12 +87,12 @@ func (s *contactService) createContactInDBTxWork(ctx context.Context, newContact
 				"notes":       newContact.ContactEntity.Notes,
 			})
 
-		dbContact, err := utils.ExtractSingleRecordFirstValue(result, err)
+		dbContact, err := utils.ExtractSingleRecordFirstValueAsNode(result, err)
 		if err != nil {
 			return nil, err
 		}
 
-		var contactId = utils.GetPropsFromNode(dbContact.(dbtype.Node))["id"].(string)
+		var contactId = utils.GetPropsFromNode(dbContact)["id"].(string)
 
 		if newContact.DefinitionId != nil {
 			err := s.repository.ContactRepository.LinkWithEntityDefinitionInTx(common.GetContext(ctx).Tenant, contactId, *newContact.DefinitionId, tx)
@@ -102,13 +102,13 @@ func (s *contactService) createContactInDBTxWork(ctx context.Context, newContact
 		}
 		if newContact.CustomFields != nil {
 			for _, customField := range *newContact.CustomFields {
-				queryResult, err := s.repository.CustomFieldRepository.MergeCustomFieldToContactInTx(common.GetContext(ctx).Tenant, contactId, &customField, tx)
+				queryResult, err := s.repository.CustomFieldRepository.MergeCustomFieldToContactInTx(tx, common.GetContext(ctx).Tenant, contactId, &customField)
 				if err != nil {
 					return nil, err
 				}
-				var fieldId = utils.GetPropsFromNode(queryResult.(dbtype.Node))["id"].(string)
+				var fieldId = utils.GetPropsFromNode(queryResult)["id"].(string)
 				if customField.DefinitionId != nil {
-					err := s.repository.CustomFieldRepository.LinkWithCustomFieldDefinitionForContactInTx(fieldId, contactId, *customField.DefinitionId, tx)
+					err := s.repository.CustomFieldRepository.LinkWithCustomFieldDefinitionForContactInTx(tx, fieldId, contactId, *customField.DefinitionId)
 					if err != nil {
 						return nil, err
 					}

@@ -3,7 +3,6 @@ package model
 import (
 	"fmt"
 	"github.com/openline-ai/openline-customer-os/customer-os-api/utils"
-	"io"
 	"log"
 	"strconv"
 	"time"
@@ -107,14 +106,17 @@ func (a *AnyTypeValue) RealValue() any {
 	}
 }
 
-// TODO implement for all datatypes
-func MarshalAnyTypeValue(tp AnyTypeValue) graphql.Marshaler {
-	return graphql.WriterFunc(func(w io.Writer) {
-		_, err := io.WriteString(w, strconv.Quote(*tp.Str))
-		if err != nil {
-			panic(err)
-		}
-	})
+func MarshalAnyTypeValue(atv AnyTypeValue) graphql.Marshaler {
+	if atv.Time != nil {
+		return graphql.MarshalTime(*atv.Time)
+	} else if atv.Int != nil {
+		return graphql.MarshalInt64(*atv.Int)
+	} else if atv.Float != nil {
+		return graphql.MarshalFloat(*atv.Float)
+	} else if atv.Bool != nil {
+		return graphql.MarshalBoolean(*atv.Bool)
+	}
+	return graphql.MarshalString(*atv.Str)
 }
 
 func UnmarshalAnyTypeValue(input interface{}) (AnyTypeValue, error) {

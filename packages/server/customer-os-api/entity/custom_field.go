@@ -22,11 +22,11 @@ func (l nodeLabel) String() string {
 type propertyName string
 
 const (
-	textProperty  propertyName = "textValue"
-	intProperty   propertyName = "intValue"
-	floatProperty propertyName = "floatValue"
-	boolProperty  propertyName = "boolValue"
-	timeProperty  propertyName = "timeValue"
+	CustomFieldTextProperty  propertyName = "textValue"
+	CustomFieldIntProperty   propertyName = "intValue"
+	CustomFieldFloatProperty propertyName = "floatValue"
+	CustomFieldBoolProperty  propertyName = "boolValue"
+	CustomFieldTimeProperty  propertyName = "timeValue"
 )
 
 func (p propertyName) String() string {
@@ -62,15 +62,15 @@ func (f *CustomFieldEntity) NodeLabel() string {
 func (f *CustomFieldEntity) PropertyName() string {
 	switch f.DataType {
 	case model.CustomFieldDataTypeText.String():
-		return textProperty.String()
+		return CustomFieldTextProperty.String()
 	case model.CustomFieldDataTypeInteger.String():
-		return intProperty.String()
+		return CustomFieldIntProperty.String()
 	case model.CustomFieldDataTypeDecimal.String():
-		return floatProperty.String()
+		return CustomFieldFloatProperty.String()
 	case model.CustomFieldDataTypeDatetime.String():
-		return timeProperty.String()
+		return CustomFieldTimeProperty.String()
 	case model.CustomFieldDataTypeBool.String():
-		return boolProperty.String()
+		return CustomFieldBoolProperty.String()
 	}
 	return ""
 }

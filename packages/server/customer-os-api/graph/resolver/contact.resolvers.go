@@ -39,8 +39,8 @@ func (r *contactResolver) Emails(ctx context.Context, obj *model.Contact) ([]*mo
 // CustomFields is the resolver for the customFields field.
 func (r *contactResolver) CustomFields(ctx context.Context, obj *model.Contact) ([]*model.CustomField, error) {
 	var customFields []*model.CustomField
-	textCustomFieldEntities, err := r.ServiceContainer.TextCustomFieldService.FindAllForContact(ctx, obj)
-	for _, v := range mapper.MapEntitiesToTextCustomFields(textCustomFieldEntities) {
+	customFieldEntities, err := r.ServiceContainer.CustomFieldService.FindAllForContact(ctx, obj)
+	for _, v := range mapper.MapEntitiesToTextCustomFields(customFieldEntities) {
 		customFields = append(customFields, v)
 	}
 	return customFields, err

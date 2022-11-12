@@ -25,7 +25,7 @@ type CustomField implements Node {
     The value of the custom field.
     **Required**
     """
-    value: String!
+    value: Any!
 
     definition: CustomFieldDefinition @goField(forceResolver: true)
 }

@@ -260,7 +260,7 @@ type CustomField struct {
 	Datatype CustomFieldDataType `json:"datatype"`
 	// The value of the custom field.
 	// **Required**
-	Value      string                 `json:"value"`
+	Value      AnyTypeValue           `json:"value"`
 	Definition *CustomFieldDefinition `json:"definition"`
 }
 
