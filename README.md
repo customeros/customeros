@@ -54,11 +54,21 @@ Openline customerOS is an open source development platform that enables the flex
 
 
 ## 🚀 Installation
-Download customerOS using the following command
+Download and install customerOS using the following command
 
-```
+```terminal
 [coming soon]
 ```
+
+This command will walk you through the installation and setup of the five docker images that comprise customerOS:
+
+- customer-os-api
+- analytics-api
+- message-store
+- neo4j
+- postgreSQL
+
+For local deployments we use `minikube` to orchestrate and run the customerOS docker images.
 
 ## 🤝 Resources
 
