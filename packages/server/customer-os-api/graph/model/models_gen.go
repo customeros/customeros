@@ -315,9 +315,12 @@ type CustomFieldUpdateInput struct {
 	// The name of the custom field.
 	// **Required**
 	Name string `json:"name"`
+	// Datatype of the custom field.
+	// **Required**
+	Datatype CustomFieldDataType `json:"datatype"`
 	// The value of the custom field.
 	// **Required**
-	Value string `json:"value"`
+	Value AnyTypeValue `json:"value"`
 }
 
 // Describes an email address associated with a `Contact` in customerOS.

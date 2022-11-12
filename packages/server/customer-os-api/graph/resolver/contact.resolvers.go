@@ -40,7 +40,7 @@ func (r *contactResolver) Emails(ctx context.Context, obj *model.Contact) ([]*mo
 func (r *contactResolver) CustomFields(ctx context.Context, obj *model.Contact) ([]*model.CustomField, error) {
 	var customFields []*model.CustomField
 	customFieldEntities, err := r.ServiceContainer.CustomFieldService.FindAllForContact(ctx, obj)
-	for _, v := range mapper.MapEntitiesToTextCustomFields(customFieldEntities) {
+	for _, v := range mapper.MapEntitiesToCustomFields(customFieldEntities) {
 		customFields = append(customFields, v)
 	}
 	return customFields, err

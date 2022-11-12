@@ -76,10 +76,16 @@ input CustomFieldUpdateInput {
     name: String!
 
     """
+    Datatype of the custom field.
+    **Required**
+    """
+    datatype: CustomFieldDataType!
+
+    """
     The value of the custom field.
     **Required**
     """
-    value: String!
+    value: Any!
 }
 
 enum CustomFieldDataType {

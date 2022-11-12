@@ -5,6 +5,7 @@ package resolver
 
 import (
 	"context"
+
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/openline-ai/openline-customer-os/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/customer-os-api/graph/generated"
@@ -82,17 +83,17 @@ func (r *mutationResolver) MergeCustomFieldToContact(ctx context.Context, contac
 		graphql.AddErrorf(ctx, "Could not add custom field %s to contact %s", input.Name, contactID)
 		return nil, err
 	}
-	return mapper.MapEntityToTextCustomField(result), nil
+	return mapper.MapEntityToCustomField(result), nil
 }
 
 // UpdateCustomFieldInContact is the resolver for the updateCustomFieldInContact field.
 func (r *mutationResolver) UpdateCustomFieldInContact(ctx context.Context, contactID string, input model.CustomFieldUpdateInput) (*model.CustomField, error) {
-	result, err := r.ServiceContainer.CustomFieldService.UpdateTextCustomFieldInContact(ctx, contactID, mapper.MapTextCustomFieldUpdateInputToEntity(&input))
+	result, err := r.ServiceContainer.CustomFieldService.UpdateTextCustomFieldInContact(ctx, contactID, mapper.MapCustomFieldUpdateInputToEntity(&input))
 	if err != nil {
 		graphql.AddErrorf(ctx, "Could not update custom field %s in contact %s", input.ID, contactID)
 		return nil, err
 	}
-	return mapper.MapEntityToTextCustomField(result), nil
+	return mapper.MapEntityToCustomField(result), nil
 }
 
 // RemoveCustomFieldFromContactByName is the resolver for the removeCustomFieldFromContactByName field.
@@ -158,17 +159,17 @@ func (r *mutationResolver) MergeCustomFieldToFieldSet(ctx context.Context, conta
 		graphql.AddErrorf(ctx, "Could not merge custom field %s to contact %s, fields set %s", input.Name, contactID, fieldSetID)
 		return nil, err
 	}
-	return mapper.MapEntityToTextCustomField(result), nil
+	return mapper.MapEntityToCustomField(result), nil
 }
 
 // UpdateCustomFieldInFieldSet is the resolver for the updateCustomFieldInFieldSet field.
 func (r *mutationResolver) UpdateCustomFieldInFieldSet(ctx context.Context, contactID string, fieldSetID string, input model.CustomFieldUpdateInput) (*model.CustomField, error) {
-	result, err := r.ServiceContainer.CustomFieldService.UpdateTextCustomFieldInFieldSet(ctx, contactID, fieldSetID, mapper.MapTextCustomFieldUpdateInputToEntity(&input))
+	result, err := r.ServiceContainer.CustomFieldService.UpdateTextCustomFieldInFieldSet(ctx, contactID, fieldSetID, mapper.MapCustomFieldUpdateInputToEntity(&input))
 	if err != nil {
 		graphql.AddErrorf(ctx, "Could not update text custom field %s in contact %s, fields set %s", input.ID, contactID, fieldSetID)
 		return nil, err
 	}
-	return mapper.MapEntityToTextCustomField(result), nil
+	return mapper.MapEntityToCustomField(result), nil
 }
 
 // RemoveCustomFieldFromFieldSetByID is the resolver for the removeCustomFieldFromFieldSetById field.

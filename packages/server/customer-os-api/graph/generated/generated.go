@@ -1754,10 +1754,16 @@ input CustomFieldUpdateInput {
     name: String!
 
     """
+    Datatype of the custom field.
+    **Required**
+    """
+    datatype: CustomFieldDataType!
+
+    """
     The value of the custom field.
     **Required**
     """
-    value: String!
+    value: Any!
 }
 
 enum CustomFieldDataType {
@@ -11339,7 +11345,7 @@ func (ec *executionContext) unmarshalInputCustomFieldUpdateInput(ctx context.Con
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"id", "name", "value"}
+	fieldsInOrder := [...]string{"id", "name", "datatype", "value"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -11362,11 +11368,19 @@ func (ec *executionContext) unmarshalInputCustomFieldUpdateInput(ctx context.Con
 			if err != nil {
 				return it, err
 			}
+		case "datatype":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("datatype"))
+			it.Datatype, err = ec.unmarshalNCustomFieldDataType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐCustomFieldDataType(ctx, v)
+			if err != nil {
+				return it, err
+			}
 		case "value":
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("value"))
-			it.Value, err = ec.unmarshalNString2string(ctx, v)
+			it.Value, err = ec.unmarshalNAny2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐAnyTypeValue(ctx, v)
 			if err != nil {
 				return it, err
 			}

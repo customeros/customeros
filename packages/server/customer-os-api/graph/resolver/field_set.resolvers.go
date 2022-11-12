@@ -16,7 +16,7 @@ import (
 func (r *fieldSetResolver) CustomFields(ctx context.Context, obj *model.FieldSet) ([]*model.CustomField, error) {
 	var customFields []*model.CustomField
 	textCustomFieldEntities, err := r.ServiceContainer.CustomFieldService.FindAllForFieldSet(ctx, obj)
-	for _, v := range mapper.MapEntitiesToTextCustomFields(textCustomFieldEntities) {
+	for _, v := range mapper.MapEntitiesToCustomFields(textCustomFieldEntities) {
 		customFields = append(customFields, v)
 	}
 	return customFields, err

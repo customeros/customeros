@@ -27,25 +27,26 @@ func MapCustomFieldInputToEntity(input *model.CustomFieldInput) *entity.CustomFi
 	return &customFieldEntity
 }
 
-func MapTextCustomFieldUpdateInputToEntity(input *model.CustomFieldUpdateInput) *entity.CustomFieldEntity {
-	textCustomFieldEntity := entity.CustomFieldEntity{
-		Id:   input.ID,
-		Name: input.Name,
-		//TODO alexb implement update custom fields,
-		//Value: input.Value,
+func MapCustomFieldUpdateInputToEntity(input *model.CustomFieldUpdateInput) *entity.CustomFieldEntity {
+	customFieldEntity := entity.CustomFieldEntity{
+		Id:       input.ID,
+		Name:     input.Name,
+		DataType: input.Datatype.String(),
+		Value:    input.Value,
 	}
-	return &textCustomFieldEntity
+	customFieldEntity.AdjustValueByDatatype()
+	return &customFieldEntity
 }
 
-func MapEntitiesToTextCustomFields(textCustomFieldEntities *entity.CustomFieldEntities) []*model.CustomField {
-	var textCustomFields []*model.CustomField
-	for _, textCustomFieldEntity := range *textCustomFieldEntities {
-		textCustomFields = append(textCustomFields, MapEntityToTextCustomField(&textCustomFieldEntity))
+func MapEntitiesToCustomFields(customFieldEntities *entity.CustomFieldEntities) []*model.CustomField {
+	var customFields []*model.CustomField
+	for _, customFieldEntity := range *customFieldEntities {
+		customFields = append(customFields, MapEntityToCustomField(&customFieldEntity))
 	}
-	return textCustomFields
+	return customFields
 }
 
-func MapEntityToTextCustomField(entity *entity.CustomFieldEntity) *model.CustomField {
+func MapEntityToCustomField(entity *entity.CustomFieldEntity) *model.CustomField {
 	var datatype = model.CustomFieldDataType(entity.DataType)
 	if !datatype.IsValid() {
 		datatype = model.CustomFieldDataTypeText
