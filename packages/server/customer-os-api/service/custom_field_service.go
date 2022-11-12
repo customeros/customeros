@@ -22,9 +22,9 @@ type CustomFieldService interface {
 	UpdateTextCustomFieldInContact(ctx context.Context, contactId string, entity *entity.CustomFieldEntity) (*entity.CustomFieldEntity, error)
 	UpdateTextCustomFieldInFieldSet(ctx context.Context, contactId string, fieldSetId string, entity *entity.CustomFieldEntity) (*entity.CustomFieldEntity, error)
 
-	DeleteByNameFromContact(ctx context.Context, contactId string, fieldName string) (bool, error)
-	DeleteByIdFromContact(ctx context.Context, contactId string, fieldId string) (bool, error)
-	DeleteByIdFromFieldSet(ctx context.Context, contactId string, fieldSetId string, fieldId string) (bool, error)
+	DeleteByNameFromContact(ctx context.Context, contactId, fieldName string) (bool, error)
+	DeleteByIdFromContact(ctx context.Context, contactId, fieldId string) (bool, error)
+	DeleteByIdFromFieldSet(ctx context.Context, contactId, fieldSetId, fieldId string) (bool, error)
 
 	mapDbNodeToTextCustomFieldEntity(node dbtype.Node) *entity.CustomFieldEntity
 	getDriver() neo4j.Driver
@@ -207,79 +207,34 @@ func (s *customFieldService) UpdateTextCustomFieldInFieldSet(ctx context.Context
 	return s.mapDbNodeToTextCustomFieldEntity(queryResult.(dbtype.Node)), nil
 }
 
-func (s *customFieldService) DeleteByNameFromContact(ctx context.Context, contactId string, fieldName string) (bool, error) {
+func (s *customFieldService) DeleteByNameFromContact(ctx context.Context, contactId, fieldName string) (bool, error) {
 	session := s.getDriver().NewSession(neo4j.SessionConfig{AccessMode: neo4j.AccessModeWrite})
 	defer session.Close()
-
-	queryResult, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
-		_, err := tx.Run(`
-			MATCH (c:Contact {id:$id})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}),
-                  (c)-[:HAS_PROPERTY]->(f:TextCustomField {name:$name})
-            DETACH DELETE f
-			`,
-			map[string]any{
-				"id":     contactId,
-				"name":   fieldName,
-				"tenant": common.GetContext(ctx).Tenant,
-			})
-
-		return true, err
-	})
+	err := s.repository.CustomFieldRepository.DeleteByNameFromContact(session, common.GetContext(ctx).Tenant, contactId, fieldName)
 	if err != nil {
 		return false, err
 	}
-
-	return queryResult.(bool), nil
+	return true, nil
 }
 
-func (s *customFieldService) DeleteByIdFromContact(ctx context.Context, contactId string, fieldId string) (bool, error) {
+func (s *customFieldService) DeleteByIdFromContact(ctx context.Context, contactId, fieldId string) (bool, error) {
 	session := s.getDriver().NewSession(neo4j.SessionConfig{AccessMode: neo4j.AccessModeWrite})
 	defer session.Close()
-
-	queryResult, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
-		_, err := tx.Run(`
-			MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}),
-                  (c)-[:HAS_PROPERTY]->(f:TextCustomField {id:$fieldId})
-            DETACH DELETE f`,
-			map[string]any{
-				"contactId": contactId,
-				"fieldId":   fieldId,
-				"tenant":    common.GetContext(ctx).Tenant,
-			})
-
-		return true, err
-	})
+	err := s.repository.CustomFieldRepository.DeleteByIdFromContact(session, common.GetContext(ctx).Tenant, contactId, fieldId)
 	if err != nil {
 		return false, err
 	}
-
-	return queryResult.(bool), nil
+	return true, nil
 }
 
-func (s *customFieldService) DeleteByIdFromFieldSet(ctx context.Context, contactId string, fieldSetId string, fieldId string) (bool, error) {
+func (s *customFieldService) DeleteByIdFromFieldSet(ctx context.Context, contactId, fieldSetId, fieldId string) (bool, error) {
 	session := s.getDriver().NewSession(neo4j.SessionConfig{AccessMode: neo4j.AccessModeWrite})
 	defer session.Close()
-
-	queryResult, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
-		_, err := tx.Run(`
-			MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}),
-                  (c)-[:HAS_COMPLEX_PROPERTY]->(s:FieldSet {id:$fieldSetId}),
-                  (s)-[:HAS_PROPERTY]->(f:TextCustomField {id:$fieldId})
-            DETACH DELETE f`,
-			map[string]any{
-				"contactId":  contactId,
-				"fieldSetId": fieldSetId,
-				"fieldId":    fieldId,
-				"tenant":     common.GetContext(ctx).Tenant,
-			})
-
-		return true, err
-	})
+	err := s.repository.CustomFieldRepository.DeleteByIdFromFieldSet(session, common.GetContext(ctx).Tenant, contactId, fieldSetId, fieldId)
 	if err != nil {
 		return false, err
 	}
-
-	return queryResult.(bool), nil
+	return true, nil
 }
 
 func (s *customFieldService) mapDbNodeToTextCustomFieldEntity(node dbtype.Node) *entity.CustomFieldEntity {

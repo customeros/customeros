@@ -16,6 +16,9 @@ type CustomFieldRepository interface {
 	LinkWithCustomFieldDefinitionForFieldSetInTx(tx neo4j.Transaction, fieldId, fieldSetId, definitionId string) error
 
 	FindAllForContact(session neo4j.Session, tenant, contactId string) ([]*neo4j.Record, error)
+	DeleteByNameFromContact(session neo4j.Session, tenant, contactId, fieldName string) error
+	DeleteByIdFromContact(session neo4j.Session, tenant, contactId, fieldId string) error
+	DeleteByIdFromFieldSet(session neo4j.Session, tenant, contactId, fieldSetId, fieldId string) error
 }
 
 type customFieldRepository struct {
@@ -117,4 +120,54 @@ func (r *customFieldRepository) FindAllForContact(session neo4j.Session, tenant,
 		return queryResult.Collect()
 	})
 	return records.([]*neo4j.Record), err
+}
+
+func (r *customFieldRepository) DeleteByIdFromContact(session neo4j.Session, tenant, contactId, fieldId string) error {
+	_, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
+		_, err := tx.Run(`
+			MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}),
+                  (c)-[:HAS_PROPERTY]->(f:CustomField {id:$fieldId})
+            DETACH DELETE f`,
+			map[string]any{
+				"contactId": contactId,
+				"fieldId":   fieldId,
+				"tenant":    tenant,
+			})
+		return nil, err
+	})
+	return err
+}
+
+func (r *customFieldRepository) DeleteByNameFromContact(session neo4j.Session, tenant, contactId, fieldId string) error {
+	_, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
+		_, err := tx.Run(`
+			MATCH (c:Contact {id:$id})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}),
+                  (c)-[:HAS_PROPERTY]->(f:CustomField {name:$name})
+            DETACH DELETE f`,
+			map[string]any{
+				"contactId": contactId,
+				"fieldId":   fieldId,
+				"tenant":    tenant,
+			})
+		return nil, err
+	})
+	return err
+}
+
+func (r *customFieldRepository) DeleteByIdFromFieldSet(session neo4j.Session, tenant, contactId, fieldSetId, fieldId string) error {
+	_, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
+		_, err := tx.Run(`
+			MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}),
+                  (c)-[:HAS_COMPLEX_PROPERTY]->(s:FieldSet {id:$fieldSetId}),
+                  (s)-[:HAS_PROPERTY]->(f:CustomField {id:$fieldId})
+            DETACH DELETE f`,
+			map[string]any{
+				"contactId":  contactId,
+				"fieldSetId": fieldSetId,
+				"fieldId":    fieldId,
+				"tenant":     tenant,
+			})
+		return nil, err
+	})
+	return err
 }
