@@ -19,6 +19,7 @@ func createTenant(driver *neo4j.Driver, tenant string) {
 		"tenant": tenant,
 	})
 }
+
 func createDefaultUser(driver *neo4j.Driver, tenant string) string {
 	return createUser(driver, tenant, entity.UserEntity{
 		FirstName: "first",
@@ -151,6 +152,36 @@ func addPhoneNumberToContact(driver *neo4j.Driver, contactId string, e164 string
 		"e164":      e164,
 		"label":     label,
 	})
+}
+
+func createEntityDefinition(driver *neo4j.Driver, tenant, extends string) string {
+	var definitionId, _ = uuid.NewRandom()
+	query := `MATCH (t:Tenant {name:$tenant})
+			MERGE (e:EntityDefinition {id:$definitionId})<-[:USES_ENTITY_DEFINITION]-(t)
+			ON CREATE SET e.extends=$extends, e.name=$name`
+	integration_tests.ExecuteWriteQuery(driver, query, map[string]any{
+		"definitionId": definitionId.String(),
+		"tenant":       tenant,
+		"extends":      extends,
+		"name":         "definition name",
+	})
+	return definitionId.String()
+}
+
+func addFieldDefinitionToEntity(driver *neo4j.Driver, entityDefinitionId string) string {
+	var definitionId, _ = uuid.NewRandom()
+	query := `MATCH (e:EntityDefinition {id:$entityDefinitionId})
+			MERGE (f:CustomFieldDefinition {id:$definitionId})<-[:CONTAINS]-(e)
+			ON CREATE SET f.name=$name, f.type=$type, f.order=$order, f.mandatory=$mandatory`
+	integration_tests.ExecuteWriteQuery(driver, query, map[string]any{
+		"definitionId":       definitionId.String(),
+		"entityDefinitionId": entityDefinitionId,
+		"type":               "TEXT",
+		"order":              1,
+		"mandatory":          false,
+		"name":               "definition name",
+	})
+	return definitionId.String()
 }
 
 func getCountOfNodes(driver *neo4j.Driver, nodeLabel string) int {
