@@ -69,6 +69,7 @@ while  [ ! -z "$neo_output" ]; do
 	if [ ! -z "$neo_output" ]; then
 		echo "neo4j provisioning failed, trying again"
 		echo "output: $neo_output"
+		kubectl delete pod cypher-shell -n $NAMESPACE_NAME
 		sleep 1
 	fi
 done
