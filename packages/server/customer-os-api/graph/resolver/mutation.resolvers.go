@@ -5,6 +5,7 @@ package resolver
 
 import (
 	"context"
+
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/openline-ai/openline-customer-os/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/customer-os-api/graph/generated"
@@ -31,6 +32,7 @@ func (r *mutationResolver) CreateContact(ctx context.Context, input model.Contac
 		PhoneNumberEntity: mapper.MapPhoneNumberInputToEntity(input.PhoneNumber),
 		EmailEntity:       mapper.MapEmailInputToEntity(input.Email),
 		CompanyPosition:   mapper.MapCompanyPositionInputToEntity(input.Company),
+		DefinitionId:      input.DefinitionID,
 	})
 	if err != nil {
 		graphql.AddErrorf(ctx, "Failed to create contact %s %s", input.FirstName, input.LastName)
@@ -120,9 +122,9 @@ func (r *mutationResolver) RemoveTextCustomFieldFromContactByID(ctx context.Cont
 
 // MergeFieldSetToContact is the resolver for the mergeFieldSetToContact field.
 func (r *mutationResolver) MergeFieldSetToContact(ctx context.Context, contactID string, input model.FieldSetInput) (*model.FieldSet, error) {
-	result, err := r.ServiceContainer.FieldSetService.MergeFieldSetToContact(ctx, contactID, mapper.MapFieldSetInputToEntity(&input))
+	result, err := r.ServiceContainer.FieldSetService.MergeFieldSetToContact(ctx, contactID, mapper.MapFieldSetInputToEntity(&input), input.DefinitionID)
 	if err != nil {
-		graphql.AddErrorf(ctx, "Could not merge fields set %s to contact %s", input.Name, contactID)
+		graphql.AddErrorf(ctx, "Could not merge fields set <%s> to contact %s", input.Name, contactID)
 		return nil, err
 	}
 	return mapper.MapEntityToFieldSet(result), nil
@@ -339,6 +341,16 @@ func (r *mutationResolver) CreateEntityDefinition(ctx context.Context, input mod
 		return nil, err
 	}
 	return mapper.MapEntityToEntityDefinition(entityDefinitionEntity), nil
+}
+
+// CreateConversation is the resolver for the createConversation field.
+func (r *mutationResolver) CreateConversation(ctx context.Context, input model.ConversationInput) (*model.Conversation, error) {
+	conversationEntity, err := r.ServiceContainer.ConversationService.CreateNewConversation(ctx, input.UserID, input.ContactID, input.ID)
+	if err != nil {
+		graphql.AddErrorf(ctx, "Failed to create conversation between user: %s and contact: %s", input.UserID, input.ContactID)
+		return nil, err
+	}
+	return mapper.MapEntityToConversation(conversationEntity), nil
 }
 
 // Mutation returns generated.MutationResolver implementation.

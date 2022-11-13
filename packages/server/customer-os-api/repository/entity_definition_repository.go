@@ -10,6 +10,7 @@ import (
 type EntityDefinitionRepository interface {
 	Create(tenant string, entity *entity.EntityDefinitionEntity) (any, error)
 	FindAllByTenant(tenant string) (any, error)
+	FindByContactId(tenant string, contactId string) (any, error)
 }
 
 type entityDefinitionRepository struct {
@@ -44,6 +45,26 @@ func (r *entityDefinitionRepository) FindAllByTenant(tenant string) (any, error)
 				MATCH (:Tenant {name:$tenant})-[r:USES_ENTITY_DEFINITION]->(e:EntityDefinition) RETURN e, r`,
 			map[string]any{
 				"tenant": tenant,
+			})
+		if err != nil {
+			return nil, err
+		}
+		return queryResult.Collect()
+	})
+}
+
+func (r *entityDefinitionRepository) FindByContactId(tenant string, contactId string) (any, error) {
+	session := (*r.driver).NewSession(neo4j.SessionConfig{AccessMode: neo4j.AccessModeRead})
+	defer session.Close()
+
+	return session.ReadTransaction(func(tx neo4j.Transaction) (interface{}, error) {
+		queryResult, err := tx.Run(`
+				MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant})-[r:USES_ENTITY_DEFINITION]->(e:EntityDefinition),
+					(c)-[:IS_DEFINED_BY]->(e)
+					RETURN e, r`,
+			map[string]any{
+				"tenant":    tenant,
+				"contactId": contactId,
 			})
 		if err != nil {
 			return nil, err

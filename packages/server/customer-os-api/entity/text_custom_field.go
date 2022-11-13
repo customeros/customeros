@@ -5,9 +5,10 @@ import (
 )
 
 type TextCustomFieldEntity struct {
-	Id    string
-	Name  string
-	Value string
+	Id           string
+	Name         string
+	Value        string
+	DefinitionId *string
 }
 
 func (field TextCustomFieldEntity) ToString() string {

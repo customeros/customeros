@@ -7,7 +7,6 @@ import (
 
 func MapFieldSetInputToEntity(input *model.FieldSetInput) *entity.FieldSetEntity {
 	fieldSetEntity := entity.FieldSetEntity{
-		Type: input.Type,
 		Name: input.Name,
 	}
 	return &fieldSetEntity
@@ -32,7 +31,6 @@ func MapEntitiesToFieldSets(fieldSetEntities *entity.FieldSetEntities) []*model.
 func MapEntityToFieldSet(fieldSetEntity *entity.FieldSetEntity) *model.FieldSet {
 	return &model.FieldSet{
 		ID:    fieldSetEntity.Id,
-		Type:  fieldSetEntity.Type,
 		Name:  fieldSetEntity.Name,
 		Added: fieldSetEntity.Added,
 	}

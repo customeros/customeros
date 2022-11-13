@@ -20,6 +20,8 @@ type CustomField implements Node {
     **Required**
     """
     value: String!
+
+    definition: CustomFieldDefinition @goField(forceResolver: true)
 }
 
 """
@@ -39,6 +41,8 @@ input TextCustomFieldInput {
     **Required**
     """
     value: String!
+
+    definitionId: ID
 }
 
 """

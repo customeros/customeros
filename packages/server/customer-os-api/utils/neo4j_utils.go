@@ -1,9 +1,21 @@
 package utils
 
 import (
+	"github.com/neo4j/neo4j-go-driver/v4/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v4/neo4j/dbtype"
 	"time"
 )
+
+func ExtractSingleRecordFirstValue(result neo4j.Result, err error) (any, error) {
+	if err != nil {
+		return nil, err
+	}
+	if record, err := result.Single(); err != nil {
+		return nil, err
+	} else {
+		return record.Values[0], nil
+	}
+}
 
 func GetPropsFromNode(node dbtype.Node) map[string]any {
 	return node.Props

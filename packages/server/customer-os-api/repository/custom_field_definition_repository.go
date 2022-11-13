@@ -10,6 +10,7 @@ type CustomFieldDefinitionRepository interface {
 	createCustomFieldDefinitionForFieldSetInTx(fieldSetDefinitionId string, entity *entity.CustomFieldDefinitionEntity, tx neo4j.Transaction) error
 	FindAllByEntityDefinitionId(entityDefinitionId string) (any, error)
 	FindAllByEntityFieldSetDefinitionId(fieldSetDefinitionId string) (any, error)
+	FindByCustomFieldId(fieldSetId string) (any, error)
 }
 
 type customFieldDefinitionRepository struct {
@@ -104,6 +105,24 @@ func (r *customFieldDefinitionRepository) FindAllByEntityFieldSetDefinitionId(fi
 				MATCH (:FieldSetDefinition {id:$fieldSetDefinitionId})-[:CONTAINS]->(f:CustomFieldDefinition) RETURN f ORDER BY f.order`,
 			map[string]any{
 				"fieldSetDefinitionId": fieldSetDefinitionId,
+			})
+		if err != nil {
+			return nil, err
+		}
+		return queryResult.Collect()
+	})
+}
+
+func (r *customFieldDefinitionRepository) FindByCustomFieldId(customFieldId string) (any, error) {
+	session := (*r.driver).NewSession(neo4j.SessionConfig{AccessMode: neo4j.AccessModeRead})
+	defer session.Close()
+
+	return session.ReadTransaction(func(tx neo4j.Transaction) (interface{}, error) {
+		queryResult, err := tx.Run(`
+				MATCH (:TextCustomField {id:$customFieldId})-[:IS_DEFINED_BY]->(d:CustomFieldDefinition)
+					RETURN d`,
+			map[string]any{
+				"customFieldId": customFieldId,
 			})
 		if err != nil {
 			return nil, err

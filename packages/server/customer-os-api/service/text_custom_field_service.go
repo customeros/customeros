@@ -112,61 +112,48 @@ func (s *textCustomPropertyService) MergeTextCustomFieldToContact(ctx context.Co
 	session := s.getDriver().NewSession(neo4j.SessionConfig{AccessMode: neo4j.AccessModeWrite})
 	defer session.Close()
 
-	queryResult, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
-		txResult, err := tx.Run(`
-			MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant})
-			MERGE (f:TextCustomField {name: $name})<-[:HAS_TEXT_PROPERTY]-(c)
-            ON CREATE SET f.value=$value, f.id=randomUUID()
-            ON MATCH SET f.value=$value
-			RETURN f`,
-			map[string]any{
-				"tenant":    common.GetContext(ctx).Tenant,
-				"contactId": contactId,
-				"name":      entity.Name,
-				"value":     entity.Value,
-			})
-		record, err := txResult.Single()
+	customFieldNode, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
+		customFieldDbNode, err := s.repository.CustomFieldRepository.MergeTextCustomFieldToContactInTx(common.GetContext(ctx).Tenant, contactId, entity, tx)
 		if err != nil {
 			return nil, err
 		}
-		return record.Values[0], nil
+		if entity.DefinitionId != nil {
+			var fieldId = utils.GetPropsFromNode(customFieldDbNode.(dbtype.Node))["id"].(string)
+			if err = s.repository.CustomFieldRepository.LinkWithCustomFieldDefinitionForContactInTx(fieldId, contactId, *entity.DefinitionId, tx); err != nil {
+				return nil, err
+			}
+		}
+		return customFieldDbNode, err
 	})
 	if err != nil {
 		return nil, err
 	}
 
-	return s.mapDbNodeToTextCustomFieldEntity(queryResult.(dbtype.Node)), nil
+	return s.mapDbNodeToTextCustomFieldEntity(customFieldNode.(dbtype.Node)), nil
 }
 
 func (s *textCustomPropertyService) MergeTextCustomFieldToFieldSet(ctx context.Context, contactId string, fieldSetId string, entity *entity.TextCustomFieldEntity) (*entity.TextCustomFieldEntity, error) {
 	session := s.getDriver().NewSession(neo4j.SessionConfig{AccessMode: neo4j.AccessModeWrite})
 	defer session.Close()
 
-	queryResult, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
-		txResult, err := tx.Run(`
-			MATCH (s:FieldSet {id:$fieldSetId})<-[:HAS_COMPLEX_PROPERTY]-(c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant})
-			MERGE (f:TextCustomField {name: $name})<-[:HAS_TEXT_PROPERTY]-(s)
-            ON CREATE SET f.value=$value, f.id=randomUUID()
-            ON MATCH SET f.value=$value
-			RETURN f`,
-			map[string]any{
-				"tenant":     common.GetContext(ctx).Tenant,
-				"contactId":  contactId,
-				"fieldSetId": fieldSetId,
-				"name":       entity.Name,
-				"value":      entity.Value,
-			})
-		record, err := txResult.Single()
+	customFieldNode, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
+		customFieldNode, err := s.repository.CustomFieldRepository.MergeTextCustomFieldToFieldSetInTx(common.GetContext(ctx).Tenant, contactId, fieldSetId, entity, tx)
 		if err != nil {
 			return nil, err
 		}
-		return record.Values[0], nil
+		if entity.DefinitionId != nil {
+			var fieldId = utils.GetPropsFromNode(customFieldNode.(dbtype.Node))["id"].(string)
+			if err = s.repository.CustomFieldRepository.LinkWithCustomFieldDefinitionForFieldSetInTx(fieldId, fieldSetId, *entity.DefinitionId, tx); err != nil {
+				return nil, err
+			}
+		}
+		return customFieldNode, err
 	})
 	if err != nil {
 		return nil, err
 	}
 
-	return s.mapDbNodeToTextCustomFieldEntity(queryResult.(dbtype.Node)), nil
+	return s.mapDbNodeToTextCustomFieldEntity(customFieldNode.(dbtype.Node)), nil
 }
 
 func (s *textCustomPropertyService) UpdateTextCustomFieldInContact(ctx context.Context, contactId string, entity *entity.TextCustomFieldEntity) (*entity.TextCustomFieldEntity, error) {
@@ -306,24 +293,6 @@ func (s *textCustomPropertyService) DeleteByIdFromFieldSet(ctx context.Context, 
 	}
 
 	return queryResult.(bool), nil
-}
-
-func addTextCustomFieldToContactInTx(ctx context.Context, contactId string, input entity.TextCustomFieldEntity, tx neo4j.Transaction) error {
-	_, err := tx.Run(`
-			MATCH (c:Contact {id:$contactId})
-			CREATE (f:TextCustomField {
-				id: randomUUID(),
-				name: $name,
-				value: $value
-			})<-[:HAS_TEXT_PROPERTY]-(c)
-			RETURN f`,
-		map[string]any{
-			"contactId": contactId,
-			"name":      input.Name,
-			"value":     input.Value,
-		})
-
-	return err
 }
 
 func (s *textCustomPropertyService) mapDbNodeToTextCustomFieldEntity(node dbtype.Node) *entity.TextCustomFieldEntity {

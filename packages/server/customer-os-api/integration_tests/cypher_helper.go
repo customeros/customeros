@@ -17,7 +17,7 @@ func ExecuteWriteQuery(driver *neo4j.Driver, query string, params map[string]int
 		return nil, nil
 	})
 	if err != nil {
-		log.Fatalf("Error executing query %s", query)
+		log.Fatalf("Failed executing query: %s\n Error: %s", query, err)
 	}
 }
 

@@ -6,6 +6,7 @@ package resolver
 import (
 	"context"
 
+	"github.com/99designs/gqlgen/graphql"
 	"github.com/openline-ai/openline-customer-os/customer-os-api/graph/generated"
 	"github.com/openline-ai/openline-customer-os/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/customer-os-api/mapper"
@@ -49,6 +50,19 @@ func (r *contactResolver) CustomFields(ctx context.Context, obj *model.Contact) 
 func (r *contactResolver) FieldSets(ctx context.Context, obj *model.Contact) ([]*model.FieldSet, error) {
 	fieldSetEntities, err := r.ServiceContainer.FieldSetService.FindAllForContact(ctx, obj)
 	return mapper.MapEntitiesToFieldSets(fieldSetEntities), err
+}
+
+// Definition is the resolver for the definition field.
+func (r *contactResolver) Definition(ctx context.Context, obj *model.Contact) (*model.EntityDefinition, error) {
+	entity, err := r.ServiceContainer.EntityDefinitionService.FindLinkedWithContact(ctx, obj.ID)
+	if err != nil {
+		graphql.AddErrorf(ctx, "Failed to get contact definition for contact %s", obj.ID)
+		return nil, err
+	}
+	if entity == nil {
+		return nil, nil
+	}
+	return mapper.MapEntityToEntityDefinition(entity), err
 }
 
 // Contact returns generated.ContactResolver implementation.

@@ -13,6 +13,7 @@ import (
 type EntityDefinitionService interface {
 	Create(ctx context.Context, entity *entity.EntityDefinitionEntity) (*entity.EntityDefinitionEntity, error)
 	FindAll(ctx context.Context) (*entity.EntityDefinitionEntities, error)
+	FindLinkedWithContact(ctx context.Context, contactId string) (*entity.EntityDefinitionEntity, error)
 }
 
 type entityDefinitionService struct {
@@ -48,6 +49,19 @@ func (s *entityDefinitionService) FindAll(ctx context.Context) (*entity.EntityDe
 		entityDefinitionEntities = append(entityDefinitionEntities, *entityDefinitionEntity)
 	}
 	return &entityDefinitionEntities, nil
+}
+
+func (s *entityDefinitionService) FindLinkedWithContact(ctx context.Context, contactId string) (*entity.EntityDefinitionEntity, error) {
+	queryResult, err := s.repository.EntityDefinitionRepository.FindByContactId(common.GetContext(ctx).Tenant, contactId)
+	if err != nil {
+		return nil, err
+	}
+	if len(queryResult.([]*db.Record)) == 0 {
+		return nil, nil
+	}
+	entityDefinitionEntity := s.mapDbNodeToEntityDefinition((queryResult.([]*db.Record))[0].Values[0].(dbtype.Node))
+	s.addDbRelationshipToEntity((queryResult.([]*db.Record))[0].Values[1].(dbtype.Relationship), entityDefinitionEntity)
+	return entityDefinitionEntity, nil
 }
 
 func (s *entityDefinitionService) mapDbNodeToEntityDefinition(dbNode dbtype.Node) *entity.EntityDefinitionEntity {

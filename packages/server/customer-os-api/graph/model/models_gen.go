@@ -13,7 +13,7 @@ type ExtensibleEntity interface {
 	IsNode()
 	IsExtensibleEntity()
 	GetID() string
-	GetDefinitionID() string
+	GetDefinition() *EntityDefinition
 }
 
 type Node interface {
@@ -92,14 +92,13 @@ type Contact struct {
 	// **Required.  If no values it returns an empty array.**
 	CustomFields []*CustomField `json:"customFields"`
 	FieldSets    []*FieldSet    `json:"fieldSets"`
-	// The unique ID associated with the definition of the contact in customerOS.
-	// **Required**
-	DefinitionID string `json:"definitionId"`
+	// Definition of the contact in customerOS.
+	Definition *EntityDefinition `json:"definition"`
 }
 
-func (Contact) IsExtensibleEntity()          {}
-func (this Contact) GetID() string           { return this.ID }
-func (this Contact) GetDefinitionID() string { return this.DefinitionID }
+func (Contact) IsExtensibleEntity()                   {}
+func (this Contact) GetID() string                    { return this.ID }
+func (this Contact) GetDefinition() *EntityDefinition { return this.Definition }
 
 func (Contact) IsNode() {}
 
@@ -160,6 +159,8 @@ type ContactGroupUpdateInput struct {
 // Create an individual in customerOS.
 // **A `create` object.**
 type ContactInput struct {
+	// The unique ID associated with the definition of the contact in customerOS.
+	DefinitionID *string `json:"definitionId"`
 	// The title of the contact.
 	Title *PersonTitle `json:"title"`
 	// The first name of the contact.
@@ -231,6 +232,20 @@ func (this ContactsPage) GetTotalPages() int { return this.TotalPages }
 // **Required.**
 func (this ContactsPage) GetTotalElements() int64 { return this.TotalElements }
 
+type Conversation struct {
+	ID        string    `json:"id"`
+	StartedAt time.Time `json:"startedAt"`
+}
+
+func (Conversation) IsNode()            {}
+func (this Conversation) GetID() string { return this.ID }
+
+type ConversationInput struct {
+	UserID    string  `json:"userId"`
+	ContactID string  `json:"contactId"`
+	ID        *string `json:"id"`
+}
+
 // Describes a custom, user-defined field associated with a `Contact`.
 // **A `return` object.**
 type CustomField struct {
@@ -242,7 +257,8 @@ type CustomField struct {
 	Name string `json:"name"`
 	// The value of the custom field.
 	// **Required**
-	Value string `json:"value"`
+	Value      string                 `json:"value"`
+	Definition *CustomFieldDefinition `json:"definition"`
 }
 
 func (CustomField) IsNode()            {}
@@ -341,11 +357,11 @@ type EntityDefinitionInput struct {
 }
 
 type FieldSet struct {
-	ID           string         `json:"id"`
-	Type         string         `json:"type"`
-	Name         string         `json:"name"`
-	Added        time.Time      `json:"added"`
-	CustomFields []*CustomField `json:"customFields"`
+	ID           string              `json:"id"`
+	Name         string              `json:"name"`
+	Added        time.Time           `json:"added"`
+	CustomFields []*CustomField      `json:"customFields"`
+	Definition   *FieldSetDefinition `json:"definition"`
 }
 
 type FieldSetDefinition struct {
@@ -365,8 +381,8 @@ type FieldSetDefinitionInput struct {
 }
 
 type FieldSetInput struct {
-	Type string `json:"type"`
-	Name string `json:"name"`
+	Name         string  `json:"name"`
+	DefinitionID *string `json:"definitionId"`
 }
 
 type FieldSetUpdateInput struct {
@@ -448,7 +464,8 @@ type TextCustomFieldInput struct {
 	Name string `json:"name"`
 	// The value of the custom field.
 	// **Required**
-	Value string `json:"value"`
+	Value        string  `json:"value"`
+	DefinitionID *string `json:"definitionId"`
 }
 
 // Describes a custom, user-defined field associated with a `Contact`.
