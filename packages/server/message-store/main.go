@@ -5,13 +5,14 @@ import (
 	"fmt"
 	"github.com/caarlos0/env/v6"
 	_ "github.com/lib/pq"
+	"github.com/machinebox/graphql"
+	c "github.com/openline-ai/openline-customer-os/packages/server/message-store/config"
+	"github.com/openline-ai/openline-customer-os/packages/server/message-store/gen"
+	pb "github.com/openline-ai/openline-customer-os/packages/server/message-store/gen/proto"
+	"github.com/openline-ai/openline-customer-os/packages/server/message-store/service"
 	"google.golang.org/grpc"
 	"log"
 	"net"
-	c "github.com/openline-ai/openline-customer-os/packages/server/message-store/config"
-	"github.com/openline-ai/openline-customer-os/packages/server/message-store/ent"
-	pb "github.com/openline-ai/openline-customer-os/packages/server/message-store/ent/proto"
-	"github.com/openline-ai/openline-customer-os/packages/server/message-store/service"
 )
 
 func main() {
@@ -22,7 +23,7 @@ func main() {
 	}
 	var connUrl = fmt.Sprintf("host=%s port=%d user=%s dbname=%s password=%s sslmode=disable", conf.DB.Host, conf.DB.Port, conf.DB.User, conf.DB.Name, conf.DB.Password)
 	log.Printf("Connecting to database %s", connUrl)
-	client, err := ent.Open("postgres", connUrl)
+	client, err := gen.Open("postgres", connUrl)
 	if err != nil {
 		log.Fatalf("failed opening connection to postgres: %v", err)
 	}
@@ -32,8 +33,10 @@ func main() {
 		log.Fatalf("failed creating schema resources: %v", err)
 	}
 
+	graphqlClient := graphql.NewClient(conf.Service.CustomerOsAPI)
+
 	// Initialize the generated User service.
-	svc := service.NewMessageService(client)
+	svc := service.NewMessageService(client, graphqlClient)
 
 	// Create a new gRPC server (you can wire multiple services to a single server).
 	server := grpc.NewServer()

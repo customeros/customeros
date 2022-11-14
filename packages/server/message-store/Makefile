@@ -14,7 +14,7 @@ install:
 	go install entgo.io/contrib/entproto/cmd/protoc-gen-entgrpc@latest
 
 clean:
-	find ent -mindepth 1 -maxdepth 1 -exec rm -r {} \;
+	find gen -mindepth 1 -maxdepth 1 -exec rm -r {} \;
 	rm -rf bin
 
 all: install build

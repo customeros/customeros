@@ -2,21 +2,32 @@ package service
 
 import (
 	"context"
+	"fmt"
+	"github.com/machinebox/graphql"
+	"github.com/openline-ai/openline-customer-os/packages/server/message-store/gen"
+	"github.com/openline-ai/openline-customer-os/packages/server/message-store/gen/messagefeed"
+	"github.com/openline-ai/openline-customer-os/packages/server/message-store/gen/messageitem"
+	"github.com/openline-ai/openline-customer-os/packages/server/message-store/gen/proto"
+	pb "github.com/openline-ai/openline-customer-os/packages/server/message-store/gen/proto"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
 	"log"
-	"github.com/openline-ai/openline-customer-os/packages/server/message-store/ent"
-	"github.com/openline-ai/openline-customer-os/packages/server/message-store/ent/messagefeed"
-	"github.com/openline-ai/openline-customer-os/packages/server/message-store/ent/messageitem"
-	"github.com/openline-ai/openline-customer-os/packages/server/message-store/ent/proto"
-	pb "github.com/openline-ai/openline-customer-os/packages/server/message-store/ent/proto"
+	"regexp"
+	"strings"
 	time "time"
 )
 
 type messageService struct {
 	proto.UnimplementedMessageStoreServiceServer
-	client *ent.Client
+	client        *gen.Client
+	graphqlClient *graphql.Client
+}
+
+type ContactInfo struct {
+	firstName string
+	lastName  string
+	id        string
 }
 
 func encodeChannel(channel pb.MessageChannel) messageitem.Channel {
@@ -100,17 +111,95 @@ func decodeChannel(channel messageitem.Channel) pb.MessageChannel {
 		return pb.MessageChannel_WIDGET
 	}
 }
+
+func parseEmail(email string) (string, string) {
+	re := regexp.MustCompile("^\"{0,1}([^\"]*)\"{0,1}[ ]*<(.*)>$")
+	matches := re.FindStringSubmatch(strings.Trim(email, " "))
+	if matches != nil {
+		return strings.Trim(matches[1], " "), matches[2]
+	}
+	return "", email
+}
+
+func getContactByEmail(graphqlClient *graphql.Client, email string) (*ContactInfo, error) {
+
+	graphqlRequest := graphql.NewRequest(fmt.Sprintf(`
+  				query {
+  					contactByEmail(email: "%s"){firstName,lastName,id}
+  				}
+    `, email))
+
+	var graphqlResponse map[string]map[string]string
+	if err := graphqlClient.Run(context.Background(), graphqlRequest, &graphqlResponse); err != nil {
+		return nil, err
+	}
+	return &ContactInfo{firstName: graphqlResponse["contactByEmail"]["firstName"],
+		lastName: graphqlResponse["contactByEmail"]["lastName"],
+		id:       graphqlResponse["contactByEmail"]["id"]}, nil
+}
+
+func createContact(graphqlClient *graphql.Client, firstName string, lastName string, email string) (string, error) {
+	graphqlRequest := graphql.NewRequest(fmt.Sprintf(`
+		mutation CreateContact {
+		  createContact(input: {firstName: "%s",
+			lastName: "%s",
+		  email:{email:  "%s", label: WORK}}) {
+			id
+		  }
+		}
+    `, firstName, lastName, email))
+
+	var graphqlResponse map[string]map[string]string
+	if err := graphqlClient.Run(context.Background(), graphqlRequest, &graphqlResponse); err != nil {
+		return "", err
+	}
+	return graphqlResponse["createContact"]["id"], nil
+}
+
 func (s *messageService) SaveMessage(ctx context.Context, message *pb.Message) (*pb.Message, error) {
-	var contact string
+	var contact *ContactInfo
+	var err error
 	if message.Contact == nil {
-		contact = message.Username // TODO: resolve address to contact
+		if message.GetChannel() == pb.MessageChannel_MAIL || message.GetChannel() == pb.MessageChannel_WIDGET {
+			displayName, email := parseEmail(message.Username)
+			contact, err = getContactByEmail(s.graphqlClient, email)
+
+			if err != nil {
+
+				log.Printf("Contact %s creating a new contact", email)
+				firstName, lastName := "Unknown", "User"
+				if displayName != "" {
+					parts := strings.SplitN(displayName, " ", 2)
+					firstName = parts[0]
+					if len(parts) > 1 {
+						lastName = parts[1]
+					}
+				}
+				log.Printf("Making a contact, firstName=%s lastName=%s email=%s", firstName, lastName, email)
+				contactId, err := createContact(s.graphqlClient, firstName, lastName, email)
+				contact = &ContactInfo{
+					firstName: firstName,
+					lastName:  lastName,
+					id:        contactId,
+				}
+				if err != nil {
+					log.Printf("Unable to create contact! %v", err)
+					return nil, err
+				}
+			}
+		} else {
+			return nil, status.Errorf(codes.Unimplemented, "Contact mapping not implemented yet for %v", message.GetChannel())
+		}
 	} else {
-		contact = message.Contact.Username
+		contact = &ContactInfo{firstName: message.Contact.FirstName,
+			lastName: message.Contact.LastName,
+			id:       message.Contact.ContactId,
+		}
 	}
 
 	feed, err := s.client.MessageFeed.
 		Query().
-		Where(messagefeed.Username(contact)).
+		Where(messagefeed.ContactId(contact.id)).
 		First(ctx)
 
 	if err != nil {
@@ -120,7 +209,9 @@ func (s *messageService) SaveMessage(ctx context.Context, message *pb.Message) (
 		} else {
 			feed, err = s.client.MessageFeed.
 				Create().
-				SetUsername(contact).
+				SetFirstName(contact.firstName).
+				SetLastName(contact.lastName).
+				SetContactId(contact.id).
 				Save(ctx)
 			if err != nil {
 				se, _ = status.FromError(err)
@@ -157,6 +248,7 @@ func (s *messageService) SaveMessage(ctx context.Context, message *pb.Message) (
 	}
 
 	var id int64 = int64(msg.ID)
+	var feedId int64 = int64(feed.ID)
 	mi := &pb.Message{
 		Type:      decodeType(msg.Type),
 		Message:   msg.Message,
@@ -164,7 +256,7 @@ func (s *messageService) SaveMessage(ctx context.Context, message *pb.Message) (
 		Channel:   decodeChannel(msg.Channel),
 		Username:  msg.Username,
 		Id:        &id,
-		Contact:   &pb.Contact{Username: contact},
+		Contact:   &pb.Contact{ContactId: contact.id, Id: &feedId, FirstName: contact.firstName, LastName: contact.lastName},
 		Time:      timestamppb.New(*t),
 	}
 	return mi, nil
@@ -189,15 +281,15 @@ func (s *messageService) GetMessage(ctx context.Context, msg *pb.Message) (*pb.M
 		Username:  mi.Username,
 		Id:        msg.Id,
 		Time:      timestamppb.New(mi.Time),
-		Contact:   &pb.Contact{Username: mi.Username},
+		//Contact:   &pb.Contact{Id: mi. },
 	}
 	return m, nil
 }
 
 func (s *messageService) GetMessages(ctx context.Context, pc *pb.PagedContact) (*pb.MessageList, error) {
-	var messages []*ent.MessageItem
+	var messages []*gen.MessageItem
 	var err error
-	var mf *ent.MessageFeed
+	var mf *gen.MessageFeed
 	contact := pc.Contact
 	pageInfo := pc.Page
 
@@ -209,9 +301,9 @@ func (s *messageService) GetMessages(ctx context.Context, pc *pb.PagedContact) (
 			return nil, status.Errorf(se.Code(), "Error finding Feed")
 		}
 	} else {
-		log.Printf("Looking up messages for Contact name %s", contact.GetUsername())
+		log.Printf("Looking up messages for Contact name %s", contact.GetContactId())
 		mf, err = s.client.MessageFeed.Query().
-			Where(messagefeed.Username(contact.GetUsername())).
+			Where(messagefeed.ContactId(contact.GetContactId())).
 			First(ctx)
 		if err != nil {
 			se, _ := status.FromError(err)
@@ -221,12 +313,12 @@ func (s *messageService) GetMessages(ctx context.Context, pc *pb.PagedContact) (
 
 	if pageInfo.Before == nil {
 		messages, err = s.client.MessageFeed.QueryMessageItem(mf).
-			Order(ent.Desc(messageitem.FieldTime)).
+			Order(gen.Desc(messageitem.FieldTime)).
 			Limit(int(pageInfo.PageSize)).
 			All(ctx)
 	} else {
 		messages, err = s.client.MessageFeed.QueryMessageItem(mf).
-			Order(ent.Desc(messageitem.FieldTime)).
+			Order(gen.Desc(messageitem.FieldTime)).
 			Where(messageitem.TimeLT(pageInfo.Before.AsTime())).
 			Limit(int(pageInfo.PageSize)).
 			All(ctx)
@@ -249,7 +341,7 @@ func (s *messageService) GetMessages(ctx context.Context, pc *pb.PagedContact) (
 			Username:  message.Username,
 			Id:        &id,
 			Time:      timestamppb.New(message.Time),
-			Contact:   &pb.Contact{Username: contact.Username},
+			Contact:   &pb.Contact{ContactId: contact.ContactId},
 		}
 		ml.Message[j] = mi
 	}
@@ -267,7 +359,7 @@ func (s *messageService) GetFeeds(ctx context.Context, _ *pb.Empty) (*pb.FeedLis
 	for i, contact := range contacts {
 		var id int64 = int64(contact.ID)
 		log.Printf("Got an feed id of %d", id)
-		fl.Contact[i] = &pb.Contact{Username: contact.Username, Id: &id}
+		fl.Contact[i] = &pb.Contact{ContactId: contact.ContactId, FirstName: contact.FirstName, LastName: contact.LastName, Id: &id}
 	}
 	return fl, nil
 }
@@ -280,23 +372,24 @@ func (s *messageService) GetFeed(ctx context.Context, contact *pb.Contact) (*pb.
 			return nil, status.Errorf(se.Code(), "Error finding Feed")
 		}
 		var id int64 = int64(mf.ID)
-		return &pb.Contact{Username: mf.Username, Id: &id}, nil
+		return &pb.Contact{FirstName: mf.FirstName, LastName: mf.LastName, Id: &id}, nil
 	} else {
-		log.Printf("Looking up messages for Contact name %s", contact.GetUsername())
+		log.Printf("Looking up messages for Contact name %s", contact.GetContactId())
 		mf, err := s.client.MessageFeed.Query().
-			Where(messagefeed.Username(contact.GetUsername())).
+			Where(messagefeed.ContactId(contact.GetContactId())).
 			First(ctx)
 		if err != nil {
 			se, _ := status.FromError(err)
 			return nil, status.Errorf(se.Code(), "Error finding Feed")
 		}
 		var id int64 = int64(mf.ID)
-		return &pb.Contact{Username: mf.Username, Id: &id}, nil
+		return &pb.Contact{FirstName: mf.FirstName, LastName: mf.LastName, Id: &id}, nil
 	}
 }
 
-func NewMessageService(client *ent.Client) *messageService {
+func NewMessageService(client *gen.Client, graphqlClient *graphql.Client) *messageService {
 	ms := new(messageService)
 	ms.client = client
+	ms.graphqlClient = graphqlClient
 	return ms
 }
