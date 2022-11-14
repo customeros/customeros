@@ -37,7 +37,7 @@ type Contact implements ExtensibleEntity & Node {
     notes: String
 
     "User-defined field that defines the relationship type the contact has with your business.  `Customer`, `Partner`, `Lead` are examples."
-    contactType: String
+    contactType: ContactType @goField(forceResolver: true)
 
     """
     `companyName` and `jobTitle` of the contact if it has been associated with a company.
@@ -133,7 +133,7 @@ input ContactInput {
     notes: String
 
     "User-defined field that defines the relationship type the contact has with your business.  `Customer`, `Partner`, `Lead` are examples."
-    contactType: String
+    contactTypeId: ID
 
     """
     User defined metadata appended to contact.
@@ -185,7 +185,7 @@ input ContactUpdateInput {
     notes: String
 
     "User-defined field that defines the relationship type the contact has with your business.  `Customer`, `Partner`, `Lead` are examples."
-    contactType: String
+    contactTypeId: ID
 }
 
 """

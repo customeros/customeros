@@ -19,6 +19,7 @@ type ServiceContainer struct {
 	FieldSetDefinitionService    service.FieldSetDefinitionService
 	CustomFieldDefinitionService service.CustomFieldDefinitionService
 	ConversationService          service.ConversationService
+	ContactTypeService           service.ContactTypeService
 }
 
 func InitServices(driver *neo4j.Driver) *ServiceContainer {
@@ -37,5 +38,6 @@ func InitServices(driver *neo4j.Driver) *ServiceContainer {
 		FieldSetDefinitionService:    service.NewFieldSetDefinitionService(repoContainer),
 		CustomFieldDefinitionService: service.NewCustomFieldDefinitionService(repoContainer),
 		ConversationService:          service.NewConversationService(repoContainer),
+		ContactTypeService:           service.NewContactTypeService(repoContainer),
 	}
 }

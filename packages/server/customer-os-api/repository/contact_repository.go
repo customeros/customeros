@@ -6,7 +6,9 @@ import (
 )
 
 type ContactRepository interface {
-	LinkWithEntityDefinitionInTx(tenant string, contactId string, entityDefinitionId string, tx neo4j.Transaction) error
+	LinkWithEntityDefinitionInTx(tx neo4j.Transaction, tenant, contactId, entityDefinitionId string) error
+	LinkWithContactTypeInTx(tx neo4j.Transaction, tenant, contactId, contactTypeId string) error
+	UnlinkFromContactTypesInTx(tx neo4j.Transaction, tenant, contactId string) error
 }
 
 type contactRepository struct {
@@ -21,8 +23,8 @@ func NewContactRepository(driver *neo4j.Driver, repos *RepositoryContainer) Cont
 	}
 }
 
-func (r *contactRepository) LinkWithEntityDefinitionInTx(tenant string, contactId string, entityDefinitionId string, tx neo4j.Transaction) error {
-	txResult, err := tx.Run(`
+func (r *contactRepository) LinkWithEntityDefinitionInTx(tx neo4j.Transaction, tenant, contactId, entityDefinitionId string) error {
+	queryResult, err := tx.Run(`
 			MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant})-[:USES_ENTITY_DEFINITION]->(e:EntityDefinition {id:$entityDefinitionId})
 			WHERE e.extends=$extends
 			MERGE (c)-[r:IS_DEFINED_BY]->(e)
@@ -36,6 +38,37 @@ func (r *contactRepository) LinkWithEntityDefinitionInTx(tenant string, contactI
 	if err != nil {
 		return err
 	}
-	_, err = txResult.Single()
+	_, err = queryResult.Single()
 	return err
+}
+
+func (r *contactRepository) LinkWithContactTypeInTx(tx neo4j.Transaction, tenant, contactId, contactTypeId string) error {
+	queryResult, err := tx.Run(`
+			MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant})-[:USES_CONTACT_TYPE]->(e:ContactType {id:$contactTypeId})
+			MERGE (c)-[r:IS_OF_TYPE]->(e)
+			RETURN r`,
+		map[string]any{
+			"tenant":        tenant,
+			"contactId":     contactId,
+			"contactTypeId": contactTypeId,
+		})
+	if err != nil {
+		return err
+	}
+	_, err = queryResult.Single()
+	return err
+}
+
+func (r *contactRepository) UnlinkFromContactTypesInTx(tx neo4j.Transaction, tenant, contactId string) error {
+	if _, err := tx.Run(`
+			MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}),
+				(c)-[r:IS_OF_TYPE]->(o:ContactType)
+			DELETE r`,
+		map[string]any{
+			"tenant":    tenant,
+			"contactId": contactId,
+		}); err != nil {
+		return err
+	}
+	return nil
 }

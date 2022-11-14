@@ -1,0 +1,6 @@
+mutation DeleteContactType($contactTypeId: ID!) {
+  contactType_Delete(id: $contactTypeId)
+    {
+      result
+    }
+}

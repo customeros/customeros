@@ -91,7 +91,7 @@ func (s *customFieldService) MergeCustomFieldToContact(ctx context.Context, cont
 			return nil, err
 		}
 		if entity.DefinitionId != nil {
-			var fieldId = utils.GetPropsFromNode(customFieldDbNode)["id"].(string)
+			var fieldId = utils.GetPropsFromNode(*customFieldDbNode)["id"].(string)
 			if err = s.repository.CustomFieldRepository.LinkWithCustomFieldDefinitionForContactInTx(tx, fieldId, contactId, *entity.DefinitionId); err != nil {
 				return nil, err
 			}
@@ -102,7 +102,7 @@ func (s *customFieldService) MergeCustomFieldToContact(ctx context.Context, cont
 		return nil, err
 	}
 
-	return s.mapDbNodeToCustomFieldEntity(customFieldNode.(dbtype.Node)), nil
+	return s.mapDbNodePtrToCustomFieldEntity(customFieldNode.(*dbtype.Node)), nil
 }
 
 func (s *customFieldService) MergeCustomFieldToFieldSet(ctx context.Context, contactId string, fieldSetId string, entity *entity.CustomFieldEntity) (*entity.CustomFieldEntity, error) {
@@ -115,7 +115,7 @@ func (s *customFieldService) MergeCustomFieldToFieldSet(ctx context.Context, con
 			return nil, err
 		}
 		if entity.DefinitionId != nil {
-			var fieldId = utils.GetPropsFromNode(customFieldNode)["id"].(string)
+			var fieldId = utils.GetPropsFromNode(*customFieldNode)["id"].(string)
 			if err = s.repository.CustomFieldRepository.LinkWithCustomFieldDefinitionForFieldSetInTx(tx, fieldId, fieldSetId, *entity.DefinitionId); err != nil {
 				return nil, err
 			}
@@ -126,7 +126,7 @@ func (s *customFieldService) MergeCustomFieldToFieldSet(ctx context.Context, con
 		return nil, err
 	}
 
-	return s.mapDbNodeToCustomFieldEntity(customFieldNode.(dbtype.Node)), nil
+	return s.mapDbNodePtrToCustomFieldEntity(customFieldNode.(*dbtype.Node)), nil
 }
 
 func (s *customFieldService) UpdateCustomFieldForContact(ctx context.Context, contactId string, entity *entity.CustomFieldEntity) (*entity.CustomFieldEntity, error) {
@@ -137,7 +137,7 @@ func (s *customFieldService) UpdateCustomFieldForContact(ctx context.Context, co
 	if err != nil {
 		return nil, err
 	}
-	return s.mapDbNodeToCustomFieldEntity(customFieldDbNode), nil
+	return s.mapDbNodePtrToCustomFieldEntity(customFieldDbNode), nil
 }
 
 func (s *customFieldService) UpdateCustomFieldForFieldSet(ctx context.Context, contactId string, fieldSetId string, entity *entity.CustomFieldEntity) (*entity.CustomFieldEntity, error) {
@@ -148,7 +148,7 @@ func (s *customFieldService) UpdateCustomFieldForFieldSet(ctx context.Context, c
 	if err != nil {
 		return nil, err
 	}
-	return s.mapDbNodeToCustomFieldEntity(customFieldDbNode), nil
+	return s.mapDbNodePtrToCustomFieldEntity(customFieldDbNode), nil
 }
 
 func (s *customFieldService) DeleteByNameFromContact(ctx context.Context, contactId, fieldName string) (bool, error) {
@@ -182,7 +182,11 @@ func (s *customFieldService) DeleteByIdFromFieldSet(ctx context.Context, contact
 }
 
 func (s *customFieldService) mapDbNodeToCustomFieldEntity(node dbtype.Node) *entity.CustomFieldEntity {
-	props := utils.GetPropsFromNode(node)
+	return s.mapDbNodePtrToCustomFieldEntity(&node)
+}
+
+func (s *customFieldService) mapDbNodePtrToCustomFieldEntity(node *dbtype.Node) *entity.CustomFieldEntity {
+	props := utils.GetPropsFromNode(*node)
 	result := entity.CustomFieldEntity{
 		Id:       utils.GetStringPropOrEmpty(props, "id"),
 		Name:     utils.GetStringPropOrEmpty(props, "name"),
