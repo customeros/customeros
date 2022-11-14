@@ -34,7 +34,14 @@ func (r *mutationResolver) ContactTypeUpdate(ctx context.Context, input model.Co
 
 // ContactTypeDelete is the resolver for the contactType_Delete field.
 func (r *mutationResolver) ContactTypeDelete(ctx context.Context, id string) (*model.Result, error) {
-	panic(fmt.Errorf("not implemented: ContactTypeDelete - contactType_Delete"))
+	result, err := r.ServiceContainer.ContactTypeService.Delete(ctx, id)
+	if err != nil {
+		graphql.AddErrorf(ctx, "Failed to delete contact type %s", id)
+		return nil, err
+	}
+	return &model.Result{
+		Result: result,
+	}, nil
 }
 
 // ContactTypes is the resolver for the contactTypes field.

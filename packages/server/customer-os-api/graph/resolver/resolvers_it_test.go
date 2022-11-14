@@ -662,3 +662,26 @@ func TestMutationResolver_ContactTypeUpdate(t *testing.T) {
 
 	require.Equal(t, 1, getCountOfNodes(driver, "ContactType"))
 }
+
+func TestMutationResolver_ContactTypeDelete(t *testing.T) {
+	defer setupTestCase()(t)
+	createTenant(driver, tenantName)
+	contactTypeId := createContactType(driver, tenantName, "the type")
+
+	require.Equal(t, 1, getCountOfNodes(driver, "ContactType"))
+
+	rawResponse, err := c.RawPost(getQuery("delete_contact_type"),
+		client.Var("contactTypeId", contactTypeId))
+	assertRawResponseSuccess(t, rawResponse, err)
+
+	var result struct {
+		ContactType_Delete model.Result
+	}
+
+	err = decode.Decode(rawResponse.Data.(map[string]any), &result)
+	require.Nil(t, err)
+	require.NotNil(t, result)
+	require.Equal(t, true, result.ContactType_Delete.Result)
+
+	require.Equal(t, 0, getCountOfNodes(driver, "ContactType"))
+}

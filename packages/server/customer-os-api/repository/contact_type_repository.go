@@ -10,6 +10,7 @@ import (
 type ContactTypeRepository interface {
 	Create(tenant string, contactType *entity.ContactTypeEntity) (*dbtype.Node, error)
 	Update(tenant string, contactType *entity.ContactTypeEntity) (*dbtype.Node, error)
+	Delete(tenant string, id string) error
 }
 
 type contactTypeRepository struct {
@@ -28,7 +29,7 @@ func (r *contactTypeRepository) Create(tenant string, contactType *entity.Contac
 	session := (*r.driver).NewSession(neo4j.SessionConfig{AccessMode: neo4j.AccessModeWrite})
 	defer session.Close()
 
-	if result, err := session.WriteTransaction(func(tx neo4j.Transaction) (interface{}, error) {
+	if result, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
 		queryResult, err := tx.Run(`
 			MATCH (t:Tenant {name:$tenant})
 			MERGE (t)-[:USES_CONTACT_TYPE]->(c:ContactType {id:randomUUID()})
@@ -50,7 +51,7 @@ func (r *contactTypeRepository) Update(tenant string, contactType *entity.Contac
 	session := (*r.driver).NewSession(neo4j.SessionConfig{AccessMode: neo4j.AccessModeWrite})
 	defer session.Close()
 
-	if result, err := session.WriteTransaction(func(tx neo4j.Transaction) (interface{}, error) {
+	if result, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
 		queryResult, err := tx.Run(`
 			MATCH (t:Tenant {name:$tenant})-[:USES_CONTACT_TYPE]->(c:ContactType {id:$id})
 			SET c.name=$name
@@ -65,5 +66,25 @@ func (r *contactTypeRepository) Update(tenant string, contactType *entity.Contac
 		return nil, err
 	} else {
 		return result.(*dbtype.Node), nil
+	}
+}
+
+func (r *contactTypeRepository) Delete(tenant string, id string) error {
+	session := (*r.driver).NewSession(neo4j.SessionConfig{AccessMode: neo4j.AccessModeWrite})
+	defer session.Close()
+
+	if _, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
+		_, err := tx.Run(`
+			MATCH (t:Tenant {name:$tenant})-[r:USES_CONTACT_TYPE]->(c:ContactType {id:$id})
+			DELETE r, c`,
+			map[string]any{
+				"tenant": tenant,
+				"id":     id,
+			})
+		return nil, err
+	}); err != nil {
+		return err
+	} else {
+		return nil
 	}
 }

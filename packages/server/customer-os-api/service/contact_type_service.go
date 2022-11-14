@@ -12,6 +12,7 @@ import (
 type ContactTypeService interface {
 	Create(ctx context.Context, contactType *entity.ContactTypeEntity) (*entity.ContactTypeEntity, error)
 	Update(ctx context.Context, contactType *entity.ContactTypeEntity) (*entity.ContactTypeEntity, error)
+	Delete(ctx context.Context, id string) (bool, error)
 }
 
 type contactTypeService struct {
@@ -29,7 +30,7 @@ func (s *contactTypeService) Create(ctx context.Context, contactType *entity.Con
 	if err != nil {
 		return nil, err
 	}
-	return s.mapDbNodeToContactTypeEntity(*contactTypeNode), nil
+	return s.mapDbNodeToContactTypeEntity(contactTypeNode), nil
 }
 
 func (s *contactTypeService) Update(ctx context.Context, contactType *entity.ContactTypeEntity) (*entity.ContactTypeEntity, error) {
@@ -37,11 +38,19 @@ func (s *contactTypeService) Update(ctx context.Context, contactType *entity.Con
 	if err != nil {
 		return nil, err
 	}
-	return s.mapDbNodeToContactTypeEntity(*contactTypeNode), nil
+	return s.mapDbNodeToContactTypeEntity(contactTypeNode), nil
 }
 
-func (s *contactTypeService) mapDbNodeToContactTypeEntity(dbNode dbtype.Node) *entity.ContactTypeEntity {
-	props := utils.GetPropsFromNode(dbNode)
+func (s *contactTypeService) Delete(ctx context.Context, id string) (bool, error) {
+	err := s.repository.ContactTypeRepository.Delete(common.GetContext(ctx).Tenant, id)
+	if err != nil {
+		return false, err
+	}
+	return true, nil
+}
+
+func (s *contactTypeService) mapDbNodeToContactTypeEntity(dbNode *dbtype.Node) *entity.ContactTypeEntity {
+	props := utils.GetPropsFromNode(*dbNode)
 	contactType := entity.ContactTypeEntity{
 		Id:   utils.GetStringPropOrEmpty(props, "id"),
 		Name: utils.GetStringPropOrEmpty(props, "name"),
