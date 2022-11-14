@@ -12,6 +12,14 @@ func MapContactTypeInputToEntity(input model.ContactTypeInput) *entity.ContactTy
 	return &contactTypeEntity
 }
 
+func MapContactTypeUpdateInputToEntity(input model.ContactTypeUpdateInput) *entity.ContactTypeEntity {
+	contactTypeEntity := entity.ContactTypeEntity{
+		Id:   input.ID,
+		Name: input.Name,
+	}
+	return &contactTypeEntity
+}
+
 func MapEntityToContactType(entity *entity.ContactTypeEntity) *model.ContactType {
 	return &model.ContactType{
 		ID:   entity.Id,

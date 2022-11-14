@@ -15,8 +15,8 @@ type CustomFieldRepository interface {
 	LinkWithCustomFieldDefinitionForContactInTx(tx neo4j.Transaction, fieldId, contactId, definitionId string) error
 	LinkWithCustomFieldDefinitionForFieldSetInTx(tx neo4j.Transaction, fieldId, fieldSetId, definitionId string) error
 
-	UpdateForContact(session neo4j.Session, tenant, contactId string, entity *entity.CustomFieldEntity) (dbtype.Node, error)
-	UpdateForFieldSet(session neo4j.Session, tenant, contactId, fieldSetId string, entity *entity.CustomFieldEntity) (dbtype.Node, error)
+	UpdateForContact(session neo4j.Session, tenant, contactId string, entity *entity.CustomFieldEntity) (*dbtype.Node, error)
+	UpdateForFieldSet(session neo4j.Session, tenant, contactId, fieldSetId string, entity *entity.CustomFieldEntity) (*dbtype.Node, error)
 	FindAllForContact(session neo4j.Session, tenant, contactId string) ([]*neo4j.Record, error)
 	FindAllForFieldSet(session neo4j.Session, tenant, fieldSetId string) ([]*neo4j.Record, error)
 	DeleteByNameFromContact(session neo4j.Session, tenant, contactId, fieldName string) error
@@ -50,7 +50,7 @@ func (r *customFieldRepository) MergeCustomFieldToContactInTx(tx neo4j.Transacti
 			"datatype":  entity.DataType,
 			"value":     entity.Value.RealValue(),
 		})
-	return utils.ExtractSingleRecordFirstValueAsNode(queryResult, err)
+	return utils.ExtractSingleRecordFirstValueAsNodePtr(queryResult, err)
 }
 
 func (r *customFieldRepository) MergeCustomFieldToFieldSetInTx(tx neo4j.Transaction, tenant, contactId, fieldSetId string, entity *entity.CustomFieldEntity) (*dbtype.Node, error) {
@@ -68,7 +68,7 @@ func (r *customFieldRepository) MergeCustomFieldToFieldSetInTx(tx neo4j.Transact
 			"datatype":   entity.DataType,
 			"value":      entity.Value.RealValue(),
 		})
-	return utils.ExtractSingleRecordFirstValueAsNode(queryResult, err)
+	return utils.ExtractSingleRecordFirstValueAsNodePtr(queryResult, err)
 }
 
 func (r *customFieldRepository) LinkWithCustomFieldDefinitionForContactInTx(tx neo4j.Transaction, fieldId, contactId, definitionId string) error {
@@ -193,7 +193,7 @@ func (r *customFieldRepository) DeleteByIdFromFieldSet(session neo4j.Session, te
 	return err
 }
 
-func (r *customFieldRepository) UpdateForContact(session neo4j.Session, tenant, contactId string, entity *entity.CustomFieldEntity) (dbtype.Node, error) {
+func (r *customFieldRepository) UpdateForContact(session neo4j.Session, tenant, contactId string, entity *entity.CustomFieldEntity) (*dbtype.Node, error) {
 	dbNode, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
 		queryResult, err := tx.Run(fmt.Sprintf(
 			"MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}), "+
@@ -208,12 +208,12 @@ func (r *customFieldRepository) UpdateForContact(session neo4j.Session, tenant, 
 				"name":      entity.Name,
 				"value":     entity.Value.RealValue(),
 			})
-		return utils.ExtractSingleRecordFirstValueAsNode(queryResult, err)
+		return utils.ExtractSingleRecordFirstValueAsNodePtr(queryResult, err)
 	})
-	return dbNode.(dbtype.Node), err
+	return dbNode.(*dbtype.Node), err
 }
 
-func (r *customFieldRepository) UpdateForFieldSet(session neo4j.Session, tenant, contactId, fieldSetId string, entity *entity.CustomFieldEntity) (dbtype.Node, error) {
+func (r *customFieldRepository) UpdateForFieldSet(session neo4j.Session, tenant, contactId, fieldSetId string, entity *entity.CustomFieldEntity) (*dbtype.Node, error) {
 	dbNode, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
 		queryResult, err := tx.Run(fmt.Sprintf(
 			"MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}), "+
@@ -230,7 +230,7 @@ func (r *customFieldRepository) UpdateForFieldSet(session neo4j.Session, tenant,
 				"name":       entity.Name,
 				"value":      entity.Value.RealValue(),
 			})
-		return utils.ExtractSingleRecordFirstValueAsNode(queryResult, err)
+		return utils.ExtractSingleRecordFirstValueAsNodePtr(queryResult, err)
 	})
-	return dbNode.(dbtype.Node), err
+	return dbNode.(*dbtype.Node), err
 }

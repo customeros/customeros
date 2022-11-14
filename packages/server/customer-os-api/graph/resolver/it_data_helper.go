@@ -193,6 +193,19 @@ func addFieldDefinitionToEntity(driver *neo4j.Driver, entityDefinitionId string)
 	return definitionId.String()
 }
 
+func createContactType(driver *neo4j.Driver, tenant, contactTypeName string) string {
+	var contactTypeId, _ = uuid.NewRandom()
+	query := `MATCH (t:Tenant {name:$tenant})
+			MERGE (t)-[:USES_CONTACT_TYPE]->(c:ContactType {id:$id})
+			ON CREATE SET c.name=$name`
+	integration_tests.ExecuteWriteQuery(driver, query, map[string]any{
+		"id":     contactTypeId.String(),
+		"tenant": tenant,
+		"name":   contactTypeName,
+	})
+	return contactTypeId.String()
+}
+
 func getCountOfNodes(driver *neo4j.Driver, nodeLabel string) int {
 	query := fmt.Sprintf(`MATCH (n:%s) RETURN count(n)`, nodeLabel)
 	result := integration_tests.ExecuteReadQueryWithSingleReturn(driver, query, map[string]any{})

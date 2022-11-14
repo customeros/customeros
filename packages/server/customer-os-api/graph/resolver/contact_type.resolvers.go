@@ -24,7 +24,12 @@ func (r *mutationResolver) ContactTypeCreate(ctx context.Context, input model.Co
 
 // ContactTypeUpdate is the resolver for the contactType_Update field.
 func (r *mutationResolver) ContactTypeUpdate(ctx context.Context, input model.ContactTypeUpdateInput) (*model.ContactType, error) {
-	panic(fmt.Errorf("not implemented: ContactTypeUpdate - contactType_Update"))
+	updatedContactType, err := r.ServiceContainer.ContactTypeService.Update(ctx, mapper.MapContactTypeUpdateInputToEntity(input))
+	if err != nil {
+		graphql.AddErrorf(ctx, "Failed to update contact type %s", input.ID)
+		return nil, err
+	}
+	return mapper.MapEntityToContactType(updatedContactType), nil
 }
 
 // ContactTypeDelete is the resolver for the contactType_Delete field.

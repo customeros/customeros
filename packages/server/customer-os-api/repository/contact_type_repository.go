@@ -9,6 +9,7 @@ import (
 
 type ContactTypeRepository interface {
 	Create(tenant string, contactType *entity.ContactTypeEntity) (*dbtype.Node, error)
+	Update(tenant string, contactType *entity.ContactTypeEntity) (*dbtype.Node, error)
 }
 
 type contactTypeRepository struct {
@@ -37,7 +38,29 @@ func (r *contactTypeRepository) Create(tenant string, contactType *entity.Contac
 				"tenant": tenant,
 				"name":   contactType.Name,
 			})
-		return utils.ExtractSingleRecordFirstValueAsNode(queryResult, err)
+		return utils.ExtractSingleRecordFirstValueAsNodePtr(queryResult, err)
+	}); err != nil {
+		return nil, err
+	} else {
+		return result.(*dbtype.Node), nil
+	}
+}
+
+func (r *contactTypeRepository) Update(tenant string, contactType *entity.ContactTypeEntity) (*dbtype.Node, error) {
+	session := (*r.driver).NewSession(neo4j.SessionConfig{AccessMode: neo4j.AccessModeWrite})
+	defer session.Close()
+
+	if result, err := session.WriteTransaction(func(tx neo4j.Transaction) (interface{}, error) {
+		queryResult, err := tx.Run(`
+			MATCH (t:Tenant {name:$tenant})-[:USES_CONTACT_TYPE]->(c:ContactType {id:$id})
+			SET c.name=$name
+			RETURN c`,
+			map[string]any{
+				"tenant": tenant,
+				"id":     contactType.Id,
+				"name":   contactType.Name,
+			})
+		return utils.ExtractSingleRecordFirstValueAsNodePtr(queryResult, err)
 	}); err != nil {
 		return nil, err
 	} else {

@@ -11,6 +11,7 @@ import (
 
 type ContactTypeService interface {
 	Create(ctx context.Context, contactType *entity.ContactTypeEntity) (*entity.ContactTypeEntity, error)
+	Update(ctx context.Context, contactType *entity.ContactTypeEntity) (*entity.ContactTypeEntity, error)
 }
 
 type contactTypeService struct {
@@ -25,6 +26,14 @@ func NewContactTypeService(repository *repository.RepositoryContainer) ContactTy
 
 func (s *contactTypeService) Create(ctx context.Context, contactType *entity.ContactTypeEntity) (*entity.ContactTypeEntity, error) {
 	contactTypeNode, err := s.repository.ContactTypeRepository.Create(common.GetContext(ctx).Tenant, contactType)
+	if err != nil {
+		return nil, err
+	}
+	return s.mapDbNodeToContactTypeEntity(*contactTypeNode), nil
+}
+
+func (s *contactTypeService) Update(ctx context.Context, contactType *entity.ContactTypeEntity) (*entity.ContactTypeEntity, error) {
+	contactTypeNode, err := s.repository.ContactTypeRepository.Update(common.GetContext(ctx).Tenant, contactType)
 	if err != nil {
 		return nil, err
 	}

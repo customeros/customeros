@@ -17,7 +17,7 @@ func ExtractSingleRecordFirstValue(result neo4j.Result, err error) (any, error) 
 	}
 }
 
-func ExtractSingleRecordFirstValueAsNode(result neo4j.Result, err error) (*dbtype.Node, error) {
+func ExtractSingleRecordFirstValueAsNodePtr(result neo4j.Result, err error) (*dbtype.Node, error) {
 	node, err := ExtractSingleRecordFirstValue(result, err)
 	if err != nil {
 		return nil, err

@@ -640,3 +640,25 @@ func TestMutationResolver_ContactTypeCreate(t *testing.T) {
 
 	require.Equal(t, 1, getCountOfNodes(driver, "ContactType"))
 }
+
+func TestMutationResolver_ContactTypeUpdate(t *testing.T) {
+	defer setupTestCase()(t)
+	createTenant(driver, tenantName)
+	contactTypeId := createContactType(driver, tenantName, "original type")
+
+	rawResponse, err := c.RawPost(getQuery("update_contact_type"),
+		client.Var("contactTypeId", contactTypeId))
+	assertRawResponseSuccess(t, rawResponse, err)
+
+	var contactType struct {
+		ContactType_Update model.ContactType
+	}
+
+	err = decode.Decode(rawResponse.Data.(map[string]any), &contactType)
+	require.Nil(t, err)
+	require.NotNil(t, contactType)
+	require.Equal(t, contactTypeId, contactType.ContactType_Update.ID)
+	require.Equal(t, "updated type", contactType.ContactType_Update.Name)
+
+	require.Equal(t, 1, getCountOfNodes(driver, "ContactType"))
+}
