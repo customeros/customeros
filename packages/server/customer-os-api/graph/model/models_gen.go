@@ -186,6 +186,20 @@ type ContactInput struct {
 	PhoneNumber *PhoneNumberInput `json:"phoneNumber"`
 }
 
+type ContactType struct {
+	ID   string `json:"id"`
+	Name string `json:"name"`
+}
+
+type ContactTypeInput struct {
+	Name string `json:"name"`
+}
+
+type ContactTypeUpdateInput struct {
+	ID   string `json:"id"`
+	Name string `json:"name"`
+}
+
 // Updates data fields associated with an existing customer record in customerOS.
 // **An `update` object.**
 type ContactUpdateInput struct {

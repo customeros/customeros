@@ -92,7 +92,7 @@ func (s *contactService) createContactInDBTxWork(ctx context.Context, newContact
 			return nil, err
 		}
 
-		var contactId = utils.GetPropsFromNode(dbContact)["id"].(string)
+		var contactId = utils.GetPropsFromNode(*dbContact)["id"].(string)
 
 		if newContact.DefinitionId != nil {
 			err := s.repository.ContactRepository.LinkWithEntityDefinitionInTx(common.GetContext(ctx).Tenant, contactId, *newContact.DefinitionId, tx)
@@ -106,7 +106,7 @@ func (s *contactService) createContactInDBTxWork(ctx context.Context, newContact
 				if err != nil {
 					return nil, err
 				}
-				var fieldId = utils.GetPropsFromNode(queryResult)["id"].(string)
+				var fieldId = utils.GetPropsFromNode(*queryResult)["id"].(string)
 				if customField.DefinitionId != nil {
 					err := s.repository.CustomFieldRepository.LinkWithCustomFieldDefinitionForContactInTx(tx, fieldId, contactId, *customField.DefinitionId)
 					if err != nil {

@@ -50,7 +50,7 @@ func prepareClient() {
 	serviceContainer := container.InitServices(driver)
 	graphResolver := NewResolver(serviceContainer)
 	customCtx := &common.CustomContext{
-		Tenant: "openline",
+		Tenant: tenantName,
 	}
 	server := handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: graphResolver}))
 	h := common.CreateContext(customCtx, server)
@@ -74,11 +74,10 @@ func assertRawResponseSuccess(t *testing.T, response *client.Response, err error
 
 func TestQueryResolver_Users(t *testing.T) {
 	defer setupTestCase()(t)
-	tenant := "openline"
 	otherTenant := "other"
-	createTenant(driver, tenant)
+	createTenant(driver, tenantName)
 	createTenant(driver, otherTenant)
-	createUser(driver, tenant, entity.UserEntity{
+	createUser(driver, tenantName, entity.UserEntity{
 		FirstName: "first",
 		LastName:  "last",
 		Email:     "test@openline.ai",
@@ -155,7 +154,7 @@ func TestQueryResolver_ContactByPhone(t *testing.T) {
 
 func TestMutationResolver_CreateUser(t *testing.T) {
 	defer setupTestCase()(t)
-	createTenant(driver, "openline")
+	createTenant(driver, tenantName)
 	createTenant(driver, "other")
 
 	rawResponse, err := c.RawPost(getQuery("create_user"))
@@ -496,7 +495,7 @@ func TestMutationResolver_RemoveFieldSetFromContact(t *testing.T) {
 
 func TestMutationResolver_CreateEntityDefinition(t *testing.T) {
 	defer setupTestCase()(t)
-	createTenant(driver, "openline")
+	createTenant(driver, tenantName)
 	createTenant(driver, "other")
 
 	rawResponse, err := c.RawPost(getQuery("create_entity_definition"))
@@ -577,7 +576,7 @@ func TestMutationResolver_CreateEntityDefinition(t *testing.T) {
 
 func TestMutationResolver_CreateConversation_AutogenerateID(t *testing.T) {
 	defer setupTestCase()(t)
-	createTenant(driver, "openline")
+	createTenant(driver, tenantName)
 	userId := createDefaultUser(driver, tenantName)
 	contactId := createDefaultContact(driver, tenantName)
 
@@ -599,7 +598,7 @@ func TestMutationResolver_CreateConversation_AutogenerateID(t *testing.T) {
 
 func TestMutationResolver_CreateConversation_WithGivenID(t *testing.T) {
 	defer setupTestCase()(t)
-	createTenant(driver, "openline")
+	createTenant(driver, tenantName)
 	conversationId := "Some conversation ID"
 	userId := createDefaultUser(driver, tenantName)
 	contactId := createDefaultContact(driver, tenantName)
@@ -619,4 +618,25 @@ func TestMutationResolver_CreateConversation_WithGivenID(t *testing.T) {
 	require.NotNil(t, conversation)
 	require.NotNil(t, conversation.CreateConversation.StartedAt)
 	require.Equal(t, conversationId, conversation.CreateConversation.ID)
+}
+
+func TestMutationResolver_ContactTypeCreate(t *testing.T) {
+	defer setupTestCase()(t)
+	createTenant(driver, tenantName)
+	createTenant(driver, "otherTenantName")
+
+	rawResponse, err := c.RawPost(getQuery("create_contact_type"))
+	assertRawResponseSuccess(t, rawResponse, err)
+
+	var contactType struct {
+		ContactType_Create model.ContactType
+	}
+
+	err = decode.Decode(rawResponse.Data.(map[string]any), &contactType)
+	require.Nil(t, err)
+	require.NotNil(t, contactType)
+	require.NotNil(t, contactType.ContactType_Create.ID)
+	require.Equal(t, "the contact type", contactType.ContactType_Create.Name)
+
+	require.Equal(t, 1, getCountOfNodes(driver, "ContactType"))
 }

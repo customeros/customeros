@@ -91,7 +91,7 @@ func (s *customFieldService) MergeCustomFieldToContact(ctx context.Context, cont
 			return nil, err
 		}
 		if entity.DefinitionId != nil {
-			var fieldId = utils.GetPropsFromNode(customFieldDbNode)["id"].(string)
+			var fieldId = utils.GetPropsFromNode(*customFieldDbNode)["id"].(string)
 			if err = s.repository.CustomFieldRepository.LinkWithCustomFieldDefinitionForContactInTx(tx, fieldId, contactId, *entity.DefinitionId); err != nil {
 				return nil, err
 			}
@@ -115,7 +115,7 @@ func (s *customFieldService) MergeCustomFieldToFieldSet(ctx context.Context, con
 			return nil, err
 		}
 		if entity.DefinitionId != nil {
-			var fieldId = utils.GetPropsFromNode(customFieldNode)["id"].(string)
+			var fieldId = utils.GetPropsFromNode(*customFieldNode)["id"].(string)
 			if err = s.repository.CustomFieldRepository.LinkWithCustomFieldDefinitionForFieldSetInTx(tx, fieldId, fieldSetId, *entity.DefinitionId); err != nil {
 				return nil, err
 			}
