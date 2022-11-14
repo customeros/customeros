@@ -685,3 +685,30 @@ func TestMutationResolver_ContactTypeDelete(t *testing.T) {
 
 	require.Equal(t, 0, getCountOfNodes(driver, "ContactType"))
 }
+
+func TestQueryResolver_ContactTypes(t *testing.T) {
+	defer setupTestCase()(t)
+	createTenant(driver, tenantName)
+	createTenant(driver, "other")
+	contactTypeId1 := createContactType(driver, tenantName, "first")
+	contactTypeId2 := createContactType(driver, tenantName, "second")
+	createContactType(driver, "other", "contact type for other tenant")
+
+	require.Equal(t, 3, getCountOfNodes(driver, "ContactType"))
+
+	rawResponse, err := c.RawPost(getQuery("get_contact_types"))
+	assertRawResponseSuccess(t, rawResponse, err)
+
+	var contactType struct {
+		ContactTypes []model.ContactType
+	}
+
+	err = decode.Decode(rawResponse.Data.(map[string]any), &contactType)
+	require.Nil(t, err)
+	require.NotNil(t, contactType)
+	require.Equal(t, 2, len(contactType.ContactTypes))
+	require.Equal(t, contactTypeId1, contactType.ContactTypes[0].ID)
+	require.Equal(t, "first", contactType.ContactTypes[0].Name)
+	require.Equal(t, contactTypeId2, contactType.ContactTypes[1].ID)
+	require.Equal(t, "second", contactType.ContactTypes[1].Name)
+}

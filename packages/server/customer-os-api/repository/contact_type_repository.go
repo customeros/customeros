@@ -11,6 +11,7 @@ type ContactTypeRepository interface {
 	Create(tenant string, contactType *entity.ContactTypeEntity) (*dbtype.Node, error)
 	Update(tenant string, contactType *entity.ContactTypeEntity) (*dbtype.Node, error)
 	Delete(tenant string, id string) error
+	FindAll(tenant string) ([]*dbtype.Node, error)
 }
 
 type contactTypeRepository struct {
@@ -87,4 +88,27 @@ func (r *contactTypeRepository) Delete(tenant string, id string) error {
 	} else {
 		return nil
 	}
+}
+
+func (r *contactTypeRepository) FindAll(tenant string) ([]*dbtype.Node, error) {
+	session := (*r.driver).NewSession(neo4j.SessionConfig{AccessMode: neo4j.AccessModeRead})
+	defer session.Close()
+
+	records, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
+		if queryResult, err := tx.Run(`
+			MATCH (t:Tenant {name:$tenant})-[:USES_CONTACT_TYPE]->(c:ContactType)
+			RETURN c ORDER BY c.name`,
+			map[string]any{
+				"tenant": tenant,
+			}); err != nil {
+			return nil, err
+		} else {
+			return queryResult.Collect()
+		}
+	})
+	contactTypeDbNodes := []*dbtype.Node{}
+	for _, v := range records.([]*neo4j.Record) {
+		contactTypeDbNodes = append(contactTypeDbNodes, utils.NodePtr(v.Values[0].(dbtype.Node)))
+	}
+	return contactTypeDbNodes, err
 }

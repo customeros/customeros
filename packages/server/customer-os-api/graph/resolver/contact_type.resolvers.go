@@ -5,7 +5,6 @@ package resolver
 
 import (
 	"context"
-	"fmt"
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/openline-ai/openline-customer-os/customer-os-api/mapper"
 
@@ -46,5 +45,10 @@ func (r *mutationResolver) ContactTypeDelete(ctx context.Context, id string) (*m
 
 // ContactTypes is the resolver for the contactTypes field.
 func (r *queryResolver) ContactTypes(ctx context.Context) ([]*model.ContactType, error) {
-	panic(fmt.Errorf("not implemented: ContactTypes - contactTypes"))
+	contactTypes, err := r.ServiceContainer.ContactTypeService.GetAll(ctx)
+	if err != nil {
+		graphql.AddErrorf(ctx, "Failed to fetch contact types")
+		return nil, err
+	}
+	return mapper.MapEntitiesToContactTypes(contactTypes), err
 }

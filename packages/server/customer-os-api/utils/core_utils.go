@@ -1,7 +1,13 @@
 package utils
 
+import "github.com/neo4j/neo4j-go-driver/v4/neo4j/dbtype"
+
 func StringPtr(str string) *string {
 	return &str
+}
+
+func NodePtr(node dbtype.Node) *dbtype.Node {
+	return &node
 }
 
 func Int64Ptr(i int64) *int64 {
