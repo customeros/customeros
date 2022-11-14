@@ -1,18 +1,27 @@
 package repository
 
 import (
+	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v4/neo4j"
+	"github.com/neo4j/neo4j-go-driver/v4/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/customer-os-api/utils"
 )
 
 type CustomFieldRepository interface {
-	AddTextCustomFieldToContactInTx(contactId string, input entity.TextCustomFieldEntity, tx neo4j.Transaction) (any, error)
-	MergeTextCustomFieldToContactInTx(tenant, contactId string, entity *entity.TextCustomFieldEntity, tx neo4j.Transaction) (any, error)
-	MergeTextCustomFieldToFieldSetInTx(tenant, contactId, fieldSet string, entity *entity.TextCustomFieldEntity, tx neo4j.Transaction) (any, error)
+	MergeCustomFieldToContactInTx(tx neo4j.Transaction, tenant, contactId string, entity *entity.CustomFieldEntity) (dbtype.Node, error)
+	MergeCustomFieldToFieldSetInTx(tx neo4j.Transaction, tenant, contactId, fieldSet string, entity *entity.CustomFieldEntity) (dbtype.Node, error)
 
-	LinkWithCustomFieldDefinitionForContactInTx(fieldId, contactId, definitionId string, tx neo4j.Transaction) error
-	LinkWithCustomFieldDefinitionForFieldSetInTx(fieldId, fieldSetId, definitionId string, tx neo4j.Transaction) error
+	LinkWithCustomFieldDefinitionForContactInTx(tx neo4j.Transaction, fieldId, contactId, definitionId string) error
+	LinkWithCustomFieldDefinitionForFieldSetInTx(tx neo4j.Transaction, fieldId, fieldSetId, definitionId string) error
+
+	UpdateForContact(session neo4j.Session, tenant, contactId string, entity *entity.CustomFieldEntity) (dbtype.Node, error)
+	UpdateForFieldSet(session neo4j.Session, tenant, contactId, fieldSetId string, entity *entity.CustomFieldEntity) (dbtype.Node, error)
+	FindAllForContact(session neo4j.Session, tenant, contactId string) ([]*neo4j.Record, error)
+	FindAllForFieldSet(session neo4j.Session, tenant, fieldSetId string) ([]*neo4j.Record, error)
+	DeleteByNameFromContact(session neo4j.Session, tenant, contactId, fieldName string) error
+	DeleteByIdFromContact(session neo4j.Session, tenant, contactId, fieldId string) error
+	DeleteByIdFromFieldSet(session neo4j.Session, tenant, contactId, fieldSetId, fieldId string) error
 }
 
 type customFieldRepository struct {
@@ -27,59 +36,44 @@ func NewCustomFieldRepository(driver *neo4j.Driver, repos *RepositoryContainer) 
 	}
 }
 
-func (r *customFieldRepository) AddTextCustomFieldToContactInTx(contactId string, input entity.TextCustomFieldEntity, tx neo4j.Transaction) (any, error) {
-	queryResult, err := tx.Run(`
-			MATCH (c:Contact {id:$contactId})
-			MERGE (f:TextCustomField {
-				id: randomUUID(),
-				name: $name,
-				value: $value
-			})<-[:HAS_TEXT_PROPERTY]-(c)
-			RETURN f`,
-		map[string]any{
-			"contactId": contactId,
-			"name":      input.Name,
-			"value":     input.Value,
-		})
-	return utils.ExtractSingleRecordFirstValue(queryResult, err)
-}
-
-func (r *customFieldRepository) MergeTextCustomFieldToContactInTx(tenant, contactId string, entity *entity.TextCustomFieldEntity, tx neo4j.Transaction) (any, error) {
-	queryResult, err := tx.Run(`
-			MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant})
-			MERGE (f:TextCustomField {name: $name})<-[:HAS_TEXT_PROPERTY]-(c)
-            ON CREATE SET f.value=$value, f.id=randomUUID()
-            ON MATCH SET f.value=$value
-			RETURN f`,
+func (r *customFieldRepository) MergeCustomFieldToContactInTx(tx neo4j.Transaction, tenant, contactId string, entity *entity.CustomFieldEntity) (dbtype.Node, error) {
+	queryResult, err := tx.Run(
+		fmt.Sprintf("MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) "+
+			" MERGE (f:%s:CustomField {name: $name, datatype:$datatype})<-[:HAS_PROPERTY]-(c) "+
+			" ON CREATE SET f.%s=$value, f.id=randomUUID()"+
+			" ON MATCH SET f.%s=$value "+
+			" RETURN f", entity.NodeLabel(), entity.PropertyName(), entity.PropertyName()),
 		map[string]any{
 			"tenant":    tenant,
 			"contactId": contactId,
 			"name":      entity.Name,
-			"value":     entity.Value,
+			"datatype":  entity.DataType,
+			"value":     entity.Value.RealValue(),
 		})
-	return utils.ExtractSingleRecordFirstValue(queryResult, err)
+	return utils.ExtractSingleRecordFirstValueAsNode(queryResult, err)
 }
 
-func (r *customFieldRepository) MergeTextCustomFieldToFieldSetInTx(tenant, contactId, fieldSetId string, entity *entity.TextCustomFieldEntity, tx neo4j.Transaction) (any, error) {
-	queryResult, err := tx.Run(`
-			MATCH (s:FieldSet {id:$fieldSetId})<-[:HAS_COMPLEX_PROPERTY]-(c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant})
-			MERGE (f:TextCustomField {name: $name})<-[:HAS_TEXT_PROPERTY]-(s)
-            ON CREATE SET f.value=$value, f.id=randomUUID()
-            ON MATCH SET f.value=$value
-			RETURN f`,
+func (r *customFieldRepository) MergeCustomFieldToFieldSetInTx(tx neo4j.Transaction, tenant, contactId, fieldSetId string, entity *entity.CustomFieldEntity) (dbtype.Node, error) {
+	queryResult, err := tx.Run(
+		fmt.Sprintf(" MATCH (s:FieldSet {id:$fieldSetId})<-[:HAS_COMPLEX_PROPERTY]-(c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) "+
+			" MERGE (f:%s:CustomField {name: $name, datatype:$datatype})<-[:HAS_PROPERTY]-(s)"+
+			" ON CREATE SET f.%s=$value, f.id=randomUUID()"+
+			" ON MATCH SET f.%s=$value "+
+			" RETURN f", entity.NodeLabel(), entity.PropertyName(), entity.PropertyName()),
 		map[string]any{
 			"tenant":     tenant,
 			"contactId":  contactId,
 			"fieldSetId": fieldSetId,
 			"name":       entity.Name,
-			"value":      entity.Value,
+			"datatype":   entity.DataType,
+			"value":      entity.Value.RealValue(),
 		})
-	return utils.ExtractSingleRecordFirstValue(queryResult, err)
+	return utils.ExtractSingleRecordFirstValueAsNode(queryResult, err)
 }
 
-func (r *customFieldRepository) LinkWithCustomFieldDefinitionForContactInTx(fieldId, contactId, definitionId string, tx neo4j.Transaction) error {
+func (r *customFieldRepository) LinkWithCustomFieldDefinitionForContactInTx(tx neo4j.Transaction, fieldId, contactId, definitionId string) error {
 	queryResult, err := tx.Run(`
-			MATCH (f:TextCustomField {id:$fieldId})<-[:HAS_TEXT_PROPERTY]-(c:Contact {id:$contactId}),
+			MATCH (f:CustomField {id:$fieldId})<-[:HAS_PROPERTY]-(c:Contact {id:$contactId}),
 				  (c)-[:IS_DEFINED_BY]->(e:EntityDefinition),
 				  (e)-[:CONTAINS]->(d:CustomFieldDefinition {id:$customFieldDefinitionId})
 			MERGE (f)-[r:IS_DEFINED_BY]->(d)
@@ -96,9 +90,9 @@ func (r *customFieldRepository) LinkWithCustomFieldDefinitionForContactInTx(fiel
 	return err
 }
 
-func (r *customFieldRepository) LinkWithCustomFieldDefinitionForFieldSetInTx(fieldId, fieldSetId, definitionId string, tx neo4j.Transaction) error {
+func (r *customFieldRepository) LinkWithCustomFieldDefinitionForFieldSetInTx(tx neo4j.Transaction, fieldId, fieldSetId, definitionId string) error {
 	queryResult, err := tx.Run(`
-			MATCH (f:TextCustomField {id:$fieldId})<-[:HAS_TEXT_PROPERTY]-(s:FieldSet {id:$fieldSetId}),
+			MATCH (f:CustomField {id:$fieldId})<-[:HAS_PROPERTY]-(s:FieldSet {id:$fieldSetId}),
 				  (s)-[:IS_DEFINED_BY]->(e:FieldSetDefinition),
 				  (e)-[:CONTAINS]->(d:CustomFieldDefinition {id:$customFieldDefinitionId})
 			MERGE (f)-[r:IS_DEFINED_BY]->(d)
@@ -113,4 +107,130 @@ func (r *customFieldRepository) LinkWithCustomFieldDefinitionForFieldSetInTx(fie
 	}
 	_, err = queryResult.Single()
 	return err
+}
+
+func (r *customFieldRepository) FindAllForContact(session neo4j.Session, tenant, contactId string) ([]*neo4j.Record, error) {
+	records, err := session.ReadTransaction(func(tx neo4j.Transaction) (any, error) {
+		queryResult, err := tx.Run(`
+				MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}),
+              		  (c)-[:HAS_PROPERTY]->(f:CustomField) 
+				RETURN f ORDER BY f.name`,
+			map[string]any{
+				"contactId": contactId,
+				"tenant":    tenant})
+		if err != nil {
+			return nil, err
+		}
+		return queryResult.Collect()
+	})
+	return records.([]*neo4j.Record), err
+}
+
+func (r *customFieldRepository) FindAllForFieldSet(session neo4j.Session, tenant, fieldSetId string) ([]*neo4j.Record, error) {
+	records, err := session.ReadTransaction(func(tx neo4j.Transaction) (any, error) {
+		queryResult, err := tx.Run(`
+				MATCH (s:FieldSet {id:$fieldSetId})<-[:HAS_COMPLEX_PROPERTY]-(:Contact)-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}),
+              		  (s)-[:HAS_PROPERTY]->(f:CustomField) 
+				RETURN f ORDER BY f.name`,
+			map[string]any{
+				"fieldSetId": fieldSetId,
+				"tenant":     tenant})
+		if err != nil {
+			return nil, err
+		}
+		return queryResult.Collect()
+	})
+	return records.([]*neo4j.Record), err
+}
+
+func (r *customFieldRepository) DeleteByIdFromContact(session neo4j.Session, tenant, contactId, fieldId string) error {
+	_, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
+		_, err := tx.Run(`
+			MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}),
+                  (c)-[:HAS_PROPERTY]->(f:CustomField {id:$fieldId})
+            DETACH DELETE f`,
+			map[string]any{
+				"contactId": contactId,
+				"fieldId":   fieldId,
+				"tenant":    tenant,
+			})
+		return nil, err
+	})
+	return err
+}
+
+func (r *customFieldRepository) DeleteByNameFromContact(session neo4j.Session, tenant, contactId, fieldId string) error {
+	_, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
+		_, err := tx.Run(`
+			MATCH (c:Contact {id:$id})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}),
+                  (c)-[:HAS_PROPERTY]->(f:CustomField {name:$name})
+            DETACH DELETE f`,
+			map[string]any{
+				"contactId": contactId,
+				"fieldId":   fieldId,
+				"tenant":    tenant,
+			})
+		return nil, err
+	})
+	return err
+}
+
+func (r *customFieldRepository) DeleteByIdFromFieldSet(session neo4j.Session, tenant, contactId, fieldSetId, fieldId string) error {
+	_, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
+		_, err := tx.Run(`
+			MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}),
+                  (c)-[:HAS_COMPLEX_PROPERTY]->(s:FieldSet {id:$fieldSetId}),
+                  (s)-[:HAS_PROPERTY]->(f:CustomField {id:$fieldId})
+            DETACH DELETE f`,
+			map[string]any{
+				"contactId":  contactId,
+				"fieldSetId": fieldSetId,
+				"fieldId":    fieldId,
+				"tenant":     tenant,
+			})
+		return nil, err
+	})
+	return err
+}
+
+func (r *customFieldRepository) UpdateForContact(session neo4j.Session, tenant, contactId string, entity *entity.CustomFieldEntity) (dbtype.Node, error) {
+	dbNode, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
+		queryResult, err := tx.Run(fmt.Sprintf(
+			"MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}), "+
+				" (c)-[:HAS_PROPERTY]->(f:%s:CustomField {id:$fieldId}) "+
+				" SET f.name=$name, "+
+				" f.%s=$value "+
+				" RETURN f", entity.NodeLabel(), entity.PropertyName()),
+			map[string]any{
+				"tenant":    tenant,
+				"contactId": contactId,
+				"fieldId":   entity.Id,
+				"name":      entity.Name,
+				"value":     entity.Value.RealValue(),
+			})
+		return utils.ExtractSingleRecordFirstValueAsNode(queryResult, err)
+	})
+	return dbNode.(dbtype.Node), err
+}
+
+func (r *customFieldRepository) UpdateForFieldSet(session neo4j.Session, tenant, contactId, fieldSetId string, entity *entity.CustomFieldEntity) (dbtype.Node, error) {
+	dbNode, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
+		queryResult, err := tx.Run(fmt.Sprintf(
+			"MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}), "+
+				" (c)-[:HAS_COMPLEX_PROPERTY]->(s:FieldSet {id:$fieldSetId}),"+
+				" (s)-[:HAS_PROPERTY]->(f:%s:CustomField {id:$fieldId})"+
+				" SET f.name=$name, "+
+				" f.%s=$value "+
+				"RETURN f", entity.NodeLabel(), entity.PropertyName()),
+			map[string]any{
+				"tenant":     tenant,
+				"contactId":  contactId,
+				"fieldSetId": fieldSetId,
+				"fieldId":    entity.Id,
+				"name":       entity.Name,
+				"value":      entity.Value.RealValue(),
+			})
+		return utils.ExtractSingleRecordFirstValueAsNode(queryResult, err)
+	})
+	return dbNode.(dbtype.Node), err
 }

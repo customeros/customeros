@@ -16,10 +16,16 @@ type CustomField implements Node {
     name: String!
 
     """
+    Datatype of the custom field.
+    **Required**
+    """
+    datatype: CustomFieldDataType!
+
+    """
     The value of the custom field.
     **Required**
     """
-    value: String!
+    value: Any!
 
     definition: CustomFieldDefinition @goField(forceResolver: true)
 }
@@ -28,7 +34,7 @@ type CustomField implements Node {
 Describes a custom, user-defined field associated with a `Contact` of type String.
 **A `create` object.**
 """
-input TextCustomFieldInput {
+input CustomFieldInput {
 
     """
     The name of the custom field.
@@ -37,10 +43,16 @@ input TextCustomFieldInput {
     name: String!
 
     """
+    Datatype of the custom field.
+    **Required**
+    """
+    datatype: CustomFieldDataType!
+
+    """
     The value of the custom field.
     **Required**
     """
-    value: String!
+    value: Any!
 
     definitionId: ID
 }
@@ -49,7 +61,7 @@ input TextCustomFieldInput {
 Describes a custom, user-defined field associated with a `Contact`.
 **An `update` object.**
 """
-input TextCustomFieldUpdateInput {
+input CustomFieldUpdateInput {
     
     """
     The unique ID associated with the custom field. 
@@ -64,8 +76,22 @@ input TextCustomFieldUpdateInput {
     name: String!
 
     """
+    Datatype of the custom field.
+    **Required**
+    """
+    datatype: CustomFieldDataType!
+
+    """
     The value of the custom field.
     **Required**
     """
-    value: String!
+    value: Any!
+}
+
+enum CustomFieldDataType {
+    TEXT
+    BOOL
+    DATETIME
+    INTEGER
+    DECIMAL
 }

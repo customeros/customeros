@@ -20,9 +20,9 @@ func MapCustomFieldDefinitionInputToEntity(input model.CustomFieldDefinitionInpu
 }
 
 func MapEntityToCustomFieldDefinition(entity *entity.CustomFieldDefinitionEntity) *model.CustomFieldDefinition {
-	fieldType := model.CustomFieldType(entity.Type)
+	fieldType := model.CustomFieldDefinitionType(entity.Type)
 	if !fieldType.IsValid() {
-		fieldType = model.CustomFieldTypeText
+		fieldType = model.CustomFieldDefinitionTypeText
 	}
 	output := model.CustomFieldDefinition{
 		ID:        entity.Id,

@@ -139,7 +139,7 @@ input ContactInput {
     User defined metadata appended to contact.
     **Required.**
     """
-    textCustomFields: [TextCustomFieldInput!]
+    customFields: [CustomFieldInput!]
 
      "`companyName` and `jobTitle` of the contact if it has been associated with a company."
     company: CompanyInput

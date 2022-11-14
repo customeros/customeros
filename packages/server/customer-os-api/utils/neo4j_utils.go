@@ -17,6 +17,11 @@ func ExtractSingleRecordFirstValue(result neo4j.Result, err error) (any, error) 
 	}
 }
 
+func ExtractSingleRecordFirstValueAsNode(result neo4j.Result, err error) (dbtype.Node, error) {
+	node, err := ExtractSingleRecordFirstValue(result, err)
+	return node.(dbtype.Node), err
+}
+
 func GetPropsFromNode(node dbtype.Node) map[string]any {
 	return node.Props
 }
@@ -62,9 +67,33 @@ func GetBoolPropOrFalse(props map[string]any, key string) bool {
 	return false
 }
 
+func GetBoolPropOrNil(props map[string]any, key string) *bool {
+	if props[key] != nil {
+		b := props[key].(bool)
+		return &b
+	}
+	return nil
+}
+
+func GetFloatPropOrNil(props map[string]any, key string) *float64 {
+	if props[key] != nil {
+		f := props[key].(float64)
+		return &f
+	}
+	return nil
+}
+
 func GetTimePropOrNow(props map[string]any, key string) time.Time {
 	if props[key] != nil {
 		return props[key].(time.Time)
 	}
 	return time.Now().UTC()
+}
+
+func GetTimePropOrNil(props map[string]any, key string) *time.Time {
+	if props[key] != nil {
+		t := props[key].(time.Time)
+		return &t
+	}
+	return nil
 }

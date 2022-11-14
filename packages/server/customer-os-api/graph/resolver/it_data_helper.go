@@ -6,7 +6,9 @@ import (
 	"github.com/neo4j/neo4j-go-driver/v4/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v4/neo4j/db"
 	"github.com/openline-ai/openline-customer-os/customer-os-api/entity"
+	"github.com/openline-ai/openline-customer-os/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/customer-os-api/integration_tests"
+	"github.com/openline-ai/openline-customer-os/customer-os-api/utils"
 )
 
 func cleanupAllData(driver *neo4j.Driver) {
@@ -100,24 +102,31 @@ func createFieldSet(driver *neo4j.Driver, contactId string, fieldSet entity.Fiel
 	return fieldSetId.String()
 }
 
-func createDefaultTextFieldInSet(driver *neo4j.Driver, fieldSetId string) string {
-	return createTextFieldInSet(driver, fieldSetId, entity.TextCustomFieldEntity{Name: "name", Value: "value"})
+func createDefaultCustomFieldInSet(driver *neo4j.Driver, fieldSetId string) string {
+	return createCustomFieldInSet(driver, fieldSetId,
+		entity.CustomFieldEntity{
+			Name:     "name",
+			DataType: model.CustomFieldDataTypeText.String(),
+			Value:    model.AnyTypeValue{Str: utils.StringPtr("value")}})
 }
 
-func createTextFieldInSet(driver *neo4j.Driver, fieldSetId string, textField entity.TextCustomFieldEntity) string {
+func createCustomFieldInSet(driver *neo4j.Driver, fieldSetId string, customField entity.CustomFieldEntity) string {
 	var fieldId, _ = uuid.NewRandom()
-	query := `
-			MATCH (s:FieldSet {id:$fieldSetId})
-			MERGE (:TextCustomField {
-				  id: $fieldId,
-				  value: $value,
-				  name: $name
-				})<-[:HAS_TEXT_PROPERTY]-(s)`
+	customField.AdjustValueByDatatype()
+	query := fmt.Sprintf(
+		"MATCH (s:FieldSet {id:$fieldSetId}) "+
+			" MERGE (:%s:CustomField { "+
+			"	  id: $fieldId, "+
+			"	  %s: $value, "+
+			"	  datatype: $datatype, "+
+			"	  name: $name "+
+			"	})<-[:HAS_PROPERTY]-(s)", customField.NodeLabel(), customField.PropertyName())
 	integration_tests.ExecuteWriteQuery(driver, query, map[string]any{
 		"fieldSetId": fieldSetId,
 		"fieldId":    fieldId.String(),
-		"name":       textField.Name,
-		"value":      textField.Value,
+		"name":       customField.Name,
+		"datatype":   customField.DataType,
+		"value":      customField.Value.RealValue(),
 	})
 	return fieldId.String()
 }
