@@ -66,18 +66,16 @@ func createContact(driver *neo4j.Driver, tenant string, contact entity.ContactEn
 				  lastName: $lastName,
 				  label: $label,
 				  notes: $notes,
-				  contactType: $contactType,
 				  createdAt :datetime({timezone: 'UTC'})
 				})-[:CONTACT_BELONGS_TO_TENANT]->(t)`
 	integration_tests.ExecuteWriteQuery(driver, query, map[string]any{
-		"tenant":      tenant,
-		"contactId":   contactId.String(),
-		"title":       contact.Title,
-		"firstName":   contact.FirstName,
-		"lastName":    contact.LastName,
-		"contactType": contact.ContactType,
-		"notes":       contact.Notes,
-		"label":       contact.Label,
+		"tenant":    tenant,
+		"contactId": contactId.String(),
+		"title":     contact.Title,
+		"firstName": contact.FirstName,
+		"lastName":  contact.LastName,
+		"notes":     contact.Notes,
+		"label":     contact.Label,
 	})
 	return contactId.String()
 }

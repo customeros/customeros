@@ -14,6 +14,7 @@ type ContactTypeService interface {
 	Update(ctx context.Context, contactType *entity.ContactTypeEntity) (*entity.ContactTypeEntity, error)
 	Delete(ctx context.Context, id string) (bool, error)
 	GetAll(ctx context.Context) (*entity.ContactTypeEntities, error)
+	FindContactTypeForContact(ctx context.Context, contactId string) (*entity.ContactTypeEntity, error)
 }
 
 type contactTypeService struct {
@@ -61,6 +62,17 @@ func (s *contactTypeService) GetAll(ctx context.Context) (*entity.ContactTypeEnt
 		contactTypeEntities = append(contactTypeEntities, *contactTypeEntity)
 	}
 	return &contactTypeEntities, nil
+}
+
+func (s *contactTypeService) FindContactTypeForContact(ctx context.Context, contactId string) (*entity.ContactTypeEntity, error) {
+	contactTypeDbNode, err := s.repository.ContactTypeRepository.FindForContact(common.GetContext(ctx).Tenant, contactId)
+	if err != nil {
+		return nil, err
+	} else if contactTypeDbNode == nil {
+		return nil, nil
+	} else {
+		return s.mapDbNodeToContactTypeEntity(contactTypeDbNode), nil
+	}
 }
 
 func (s *contactTypeService) mapDbNodeToContactTypeEntity(dbNode *dbtype.Node) *entity.ContactTypeEntity {

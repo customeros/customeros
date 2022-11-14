@@ -226,6 +226,7 @@ type ComplexityRoot struct {
 }
 
 type ContactResolver interface {
+	ContactType(ctx context.Context, obj *model.Contact) (*model.ContactType, error)
 	Companies(ctx context.Context, obj *model.Contact) ([]*model.Company, error)
 	Groups(ctx context.Context, obj *model.Contact) ([]*model.ContactGroup, error)
 	PhoneNumbers(ctx context.Context, obj *model.Contact) ([]*model.PhoneNumber, error)
@@ -1488,7 +1489,7 @@ type Contact implements ExtensibleEntity & Node {
     notes: String
 
     "User-defined field that defines the relationship type the contact has with your business.  ` + "`" + `Customer` + "`" + `, ` + "`" + `Partner` + "`" + `, ` + "`" + `Lead` + "`" + ` are examples."
-    contactType: String
+    contactType: ContactType @goField(forceResolver: true)
 
     """
     ` + "`" + `companyName` + "`" + ` and ` + "`" + `jobTitle` + "`" + ` of the contact if it has been associated with a company.
@@ -1584,7 +1585,7 @@ input ContactInput {
     notes: String
 
     "User-defined field that defines the relationship type the contact has with your business.  ` + "`" + `Customer` + "`" + `, ` + "`" + `Partner` + "`" + `, ` + "`" + `Lead` + "`" + ` are examples."
-    contactType: String
+    contactTypeId: ID
 
     """
     User defined metadata appended to contact.
@@ -1636,7 +1637,7 @@ input ContactUpdateInput {
     notes: String
 
     "User-defined field that defines the relationship type the contact has with your business.  ` + "`" + `Customer` + "`" + `, ` + "`" + `Partner` + "`" + `, ` + "`" + `Lead` + "`" + ` are examples."
-    contactType: String
+    contactTypeId: ID
 }
 
 """
@@ -3651,7 +3652,7 @@ func (ec *executionContext) _Contact_contactType(ctx context.Context, field grap
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.ContactType, nil
+		return ec.resolvers.Contact().ContactType(rctx, obj)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -3660,19 +3661,25 @@ func (ec *executionContext) _Contact_contactType(ctx context.Context, field grap
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.(*string)
+	res := resTmp.(*model.ContactType)
 	fc.Result = res
-	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+	return ec.marshalOContactType2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐContactType(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Contact_contactType(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Contact",
 		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
+		IsMethod:   true,
+		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_ContactType_id(ctx, field)
+			case "name":
+				return ec.fieldContext_ContactType_name(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type ContactType", field.Name)
 		},
 	}
 	return fc, nil
@@ -11442,7 +11449,7 @@ func (ec *executionContext) unmarshalInputContactInput(ctx context.Context, obj 
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"definitionId", "title", "firstName", "lastName", "label", "notes", "contactType", "customFields", "company", "email", "phoneNumber"}
+	fieldsInOrder := [...]string{"definitionId", "title", "firstName", "lastName", "label", "notes", "contactTypeId", "customFields", "company", "email", "phoneNumber"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -11497,11 +11504,11 @@ func (ec *executionContext) unmarshalInputContactInput(ctx context.Context, obj 
 			if err != nil {
 				return it, err
 			}
-		case "contactType":
+		case "contactTypeId":
 			var err error
 
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("contactType"))
-			it.ContactType, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("contactTypeId"))
+			it.ContactTypeID, err = ec.unmarshalOID2ᚖstring(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -11614,7 +11621,7 @@ func (ec *executionContext) unmarshalInputContactUpdateInput(ctx context.Context
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"id", "title", "firstName", "lastName", "label", "notes", "contactType"}
+	fieldsInOrder := [...]string{"id", "title", "firstName", "lastName", "label", "notes", "contactTypeId"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -11669,11 +11676,11 @@ func (ec *executionContext) unmarshalInputContactUpdateInput(ctx context.Context
 			if err != nil {
 				return it, err
 			}
-		case "contactType":
+		case "contactTypeId":
 			var err error
 
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("contactType"))
-			it.ContactType, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("contactTypeId"))
+			it.ContactTypeID, err = ec.unmarshalOID2ᚖstring(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -12540,9 +12547,22 @@ func (ec *executionContext) _Contact(ctx context.Context, sel ast.SelectionSet, 
 			out.Values[i] = ec._Contact_notes(ctx, field, obj)
 
 		case "contactType":
+			field := field
 
-			out.Values[i] = ec._Contact_contactType(ctx, field, obj)
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Contact_contactType(ctx, field, obj)
+				return res
+			}
 
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
 		case "companies":
 			field := field
 

@@ -178,8 +178,10 @@ func TestMutationResolver_CreateContact(t *testing.T) {
 	defer setupTestCase()(t)
 	createTenant(driver, tenantName)
 	createTenant(driver, "otherTenant")
+	contactTypeId := createContactType(driver, tenantName, "CUSTOMER")
 
-	rawResponse, err := c.RawPost(getQuery("create_contact"))
+	rawResponse, err := c.RawPost(getQuery("create_contact"),
+		client.Var("contactTypeId", contactTypeId))
 	assertRawResponseSuccess(t, rawResponse, err)
 
 	var contact struct {
@@ -192,7 +194,8 @@ func TestMutationResolver_CreateContact(t *testing.T) {
 	require.Equal(t, "MR", contact.CreateContact.Title.String())
 	require.Equal(t, "first", contact.CreateContact.FirstName)
 	require.Equal(t, "last", contact.CreateContact.LastName)
-	require.Equal(t, "customer", *contact.CreateContact.ContactType)
+	require.Equal(t, contactTypeId, contact.CreateContact.ContactType.ID)
+	require.Equal(t, "CUSTOMER", contact.CreateContact.ContactType.Name)
 	require.Equal(t, "Some notes...", *contact.CreateContact.Notes)
 	require.Equal(t, "Some label", *contact.CreateContact.Label)
 
@@ -258,6 +261,7 @@ func TestMutationResolver_CreateContact(t *testing.T) {
 	require.Equal(t, 1, getCountOfNodes(driver, "TimeField"))
 	require.Equal(t, 1, getCountOfNodes(driver, "Email"))
 	require.Equal(t, 1, getCountOfNodes(driver, "PhoneNumber"))
+	require.Equal(t, 1, getCountOfNodes(driver, "ContactType"))
 }
 
 func TestMutationResolver_CreateContact_WithEntityDefinition(t *testing.T) {
@@ -308,12 +312,11 @@ func TestMutationResolver_UpdateContact(t *testing.T) {
 	defer setupTestCase()(t)
 	createTenant(driver, tenantName)
 	contactId := createContact(driver, tenantName, entity.ContactEntity{
-		Title:       model.PersonTitleMr.String(),
-		FirstName:   "first",
-		LastName:    "last",
-		Label:       "label",
-		ContactType: "type",
-		Notes:       "notes",
+		Title:     model.PersonTitleMr.String(),
+		FirstName: "first",
+		LastName:  "last",
+		Label:     "label",
+		Notes:     "notes",
 	})
 
 	rawResponse, err := c.RawPost(getQuery("update_contact"), client.Var("contactId", contactId))
@@ -329,7 +332,6 @@ func TestMutationResolver_UpdateContact(t *testing.T) {
 	require.Equal(t, "DR", contact.UpdateContact.Title.String())
 	require.Equal(t, "updated first", contact.UpdateContact.FirstName)
 	require.Equal(t, "updated last", contact.UpdateContact.LastName)
-	require.Equal(t, "updated type", *contact.UpdateContact.ContactType)
 	require.Equal(t, "updated notes", *contact.UpdateContact.Notes)
 	require.Equal(t, "updated label", *contact.UpdateContact.Label)
 }

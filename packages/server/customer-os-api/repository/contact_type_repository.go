@@ -12,6 +12,7 @@ type ContactTypeRepository interface {
 	Update(tenant string, contactType *entity.ContactTypeEntity) (*dbtype.Node, error)
 	Delete(tenant string, id string) error
 	FindAll(tenant string) ([]*dbtype.Node, error)
+	FindForContact(tenant, contactId string) (*dbtype.Node, error)
 }
 
 type contactTypeRepository struct {
@@ -94,7 +95,7 @@ func (r *contactTypeRepository) FindAll(tenant string) ([]*dbtype.Node, error) {
 	session := (*r.driver).NewSession(neo4j.SessionConfig{AccessMode: neo4j.AccessModeRead})
 	defer session.Close()
 
-	records, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
+	records, err := session.ReadTransaction(func(tx neo4j.Transaction) (any, error) {
 		if queryResult, err := tx.Run(`
 			MATCH (t:Tenant {name:$tenant})-[:USES_CONTACT_TYPE]->(c:ContactType)
 			RETURN c ORDER BY c.name`,
@@ -111,4 +112,30 @@ func (r *contactTypeRepository) FindAll(tenant string) ([]*dbtype.Node, error) {
 		contactTypeDbNodes = append(contactTypeDbNodes, utils.NodePtr(v.Values[0].(dbtype.Node)))
 	}
 	return contactTypeDbNodes, err
+}
+
+func (r *contactTypeRepository) FindForContact(tenant, contactId string) (*dbtype.Node, error) {
+	session := (*r.driver).NewSession(neo4j.SessionConfig{AccessMode: neo4j.AccessModeRead})
+	defer session.Close()
+
+	records, err := session.ReadTransaction(func(tx neo4j.Transaction) (any, error) {
+		if queryResult, err := tx.Run(`
+			MATCH (t:Tenant {name:$tenant})<-[:CONTACT_BELONGS_TO_TENANT]-(c:Contact {id:$contactId})-[:IS_OF_TYPE]->(o:ContactType)
+			RETURN o`,
+			map[string]any{
+				"tenant":    tenant,
+				"contactId": contactId,
+			}); err != nil {
+			return nil, err
+		} else {
+			return queryResult.Collect()
+		}
+	})
+	if err != nil {
+		return nil, err
+	} else if len(records.([]*neo4j.Record)) == 0 {
+		return nil, nil
+	} else {
+		return utils.NodePtr(records.([]*neo4j.Record)[0].Values[0].(dbtype.Node)), nil
+	}
 }

@@ -5,7 +5,6 @@ mutation UpdateContact($contactId: ID!){
             title: DR,
             firstName: "updated first",
             lastName: "updated last",
-            contactType: "updated type",
             notes: "updated notes",
             label: "updated label"
         }
@@ -16,6 +15,5 @@ mutation UpdateContact($contactId: ID!){
         lastName
         label
         notes
-        contactType
     }
 }

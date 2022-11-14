@@ -35,6 +35,7 @@ type ContactCreateData struct {
 	PhoneNumberEntity *entity.PhoneNumberEntity
 	CompanyPosition   *entity.CompanyPositionEntity
 	DefinitionId      *string
+	ContactTypeId     *string
 }
 
 type contactService struct {
@@ -73,18 +74,16 @@ func (s *contactService) createContactInDBTxWork(ctx context.Context, newContact
 				  lastName: $lastName,
 				  label: $label,
 				  notes: $notes,
-				  contactType: $contactType,
                   createdAt :datetime({timezone: 'UTC'})
 			})-[:CONTACT_BELONGS_TO_TENANT]->(t)
 			RETURN c`,
 			map[string]interface{}{
-				"tenant":      common.GetContext(ctx).Tenant,
-				"firstName":   newContact.ContactEntity.FirstName,
-				"lastName":    newContact.ContactEntity.LastName,
-				"label":       newContact.ContactEntity.Label,
-				"contactType": newContact.ContactEntity.ContactType,
-				"title":       newContact.ContactEntity.Title,
-				"notes":       newContact.ContactEntity.Notes,
+				"tenant":    common.GetContext(ctx).Tenant,
+				"firstName": newContact.ContactEntity.FirstName,
+				"lastName":  newContact.ContactEntity.LastName,
+				"label":     newContact.ContactEntity.Label,
+				"title":     newContact.ContactEntity.Title,
+				"notes":     newContact.ContactEntity.Notes,
 			})
 
 		dbContact, err := utils.ExtractSingleRecordFirstValueAsNodePtr(result, err)
@@ -94,8 +93,15 @@ func (s *contactService) createContactInDBTxWork(ctx context.Context, newContact
 
 		var contactId = utils.GetPropsFromNode(*dbContact)["id"].(string)
 
+		if newContact.ContactTypeId != nil {
+			err := s.repository.ContactRepository.LinkWithContactTypeInTx(tx, common.GetContext(ctx).Tenant, contactId, *newContact.ContactTypeId)
+			if err != nil {
+				return nil, err
+			}
+		}
+
 		if newContact.DefinitionId != nil {
-			err := s.repository.ContactRepository.LinkWithEntityDefinitionInTx(common.GetContext(ctx).Tenant, contactId, *newContact.DefinitionId, tx)
+			err := s.repository.ContactRepository.LinkWithEntityDefinitionInTx(tx, common.GetContext(ctx).Tenant, contactId, *newContact.DefinitionId)
 			if err != nil {
 				return nil, err
 			}
@@ -147,19 +153,17 @@ func (s *contactService) Update(ctx context.Context, contact *entity.ContactEnti
 			SET c.firstName=$firstName,
 				c.lastName=$lastName,
 				c.label=$label,
-				c.contactType=$contactType,
 				c.title=$title,
 				c.notes=$notes
 			RETURN c`,
 			map[string]interface{}{
-				"tenant":      common.GetContext(ctx).Tenant,
-				"contactId":   contact.Id,
-				"firstName":   contact.FirstName,
-				"lastName":    contact.LastName,
-				"label":       contact.Label,
-				"contactType": contact.ContactType,
-				"title":       contact.Title,
-				"notes":       contact.Notes,
+				"tenant":    common.GetContext(ctx).Tenant,
+				"contactId": contact.Id,
+				"firstName": contact.FirstName,
+				"lastName":  contact.LastName,
+				"label":     contact.Label,
+				"title":     contact.Title,
+				"notes":     contact.Notes,
 			})
 		record, err := txResult.Single()
 		if err != nil {
@@ -352,14 +356,13 @@ func (s *contactService) mapDbNodeToContactEntity(dbContactNode dbtype.Node) *en
 func (s *contactService) mapDbNodePtrToContactEntity(dbContactNode *dbtype.Node) *entity.ContactEntity {
 	props := utils.GetPropsFromNode(*dbContactNode)
 	contact := entity.ContactEntity{
-		Id:          utils.GetStringPropOrEmpty(props, "id"),
-		FirstName:   utils.GetStringPropOrEmpty(props, "firstName"),
-		LastName:    utils.GetStringPropOrEmpty(props, "lastName"),
-		Label:       utils.GetStringPropOrEmpty(props, "label"),
-		Title:       utils.GetStringPropOrEmpty(props, "title"),
-		Notes:       utils.GetStringPropOrEmpty(props, "notes"),
-		ContactType: utils.GetStringPropOrEmpty(props, "contactType"),
-		CreatedAt:   props["createdAt"].(time.Time),
+		Id:        utils.GetStringPropOrEmpty(props, "id"),
+		FirstName: utils.GetStringPropOrEmpty(props, "firstName"),
+		LastName:  utils.GetStringPropOrEmpty(props, "lastName"),
+		Label:     utils.GetStringPropOrEmpty(props, "label"),
+		Title:     utils.GetStringPropOrEmpty(props, "title"),
+		Notes:     utils.GetStringPropOrEmpty(props, "notes"),
+		CreatedAt: props["createdAt"].(time.Time),
 	}
 	return &contact
 }

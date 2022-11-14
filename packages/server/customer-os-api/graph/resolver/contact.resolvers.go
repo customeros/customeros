@@ -5,12 +5,24 @@ package resolver
 
 import (
 	"context"
-
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/openline-ai/openline-customer-os/customer-os-api/graph/generated"
 	"github.com/openline-ai/openline-customer-os/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/customer-os-api/mapper"
 )
+
+// ContactType is the resolver for the contactType field.
+func (r *contactResolver) ContactType(ctx context.Context, obj *model.Contact) (*model.ContactType, error) {
+	entity, err := r.ServiceContainer.ContactTypeService.FindContactTypeForContact(ctx, obj.ID)
+	if err != nil {
+		graphql.AddErrorf(ctx, "Failed to get contact type for contact %s", obj.ID)
+		return nil, err
+	}
+	if entity == nil {
+		return nil, nil
+	}
+	return mapper.MapEntityToContactType(entity), nil
+}
 
 // Companies is the resolver for the companies field.
 func (r *contactResolver) Companies(ctx context.Context, obj *model.Contact) ([]*model.Company, error) {

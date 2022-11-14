@@ -75,7 +75,7 @@ type Contact struct {
 	// User-defined notes associated with a contact in customerOS.
 	Notes *string `json:"notes"`
 	// User-defined field that defines the relationship type the contact has with your business.  `Customer`, `Partner`, `Lead` are examples.
-	ContactType *string `json:"contactType"`
+	ContactType *ContactType `json:"contactType"`
 	// `companyName` and `jobTitle` of the contact if it has been associated with a company.
 	// **Required.  If no values it returns an empty array.**
 	Companies []*Company `json:"companies"`
@@ -174,7 +174,7 @@ type ContactInput struct {
 	// User-defined notes associated with contact.
 	Notes *string `json:"notes"`
 	// User-defined field that defines the relationship type the contact has with your business.  `Customer`, `Partner`, `Lead` are examples.
-	ContactType *string `json:"contactType"`
+	ContactTypeID *string `json:"contactTypeId"`
 	// User defined metadata appended to contact.
 	// **Required.**
 	CustomFields []*CustomFieldInput `json:"customFields"`
@@ -219,7 +219,7 @@ type ContactUpdateInput struct {
 	// User-defined notes associated with contact.
 	Notes *string `json:"notes"`
 	// User-defined field that defines the relationship type the contact has with your business.  `Customer`, `Partner`, `Lead` are examples.
-	ContactType *string `json:"contactType"`
+	ContactTypeID *string `json:"contactTypeId"`
 }
 
 // Specifies how many pages of contact information has been returned in the query response.

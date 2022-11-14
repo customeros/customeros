@@ -20,9 +20,6 @@ func MapContactInputToEntity(input model.ContactInput) *entity.ContactEntity {
 	if input.Notes != nil {
 		contactEntity.Notes = *input.Notes
 	}
-	if input.ContactType != nil {
-		contactEntity.ContactType = *input.ContactType
-	}
 	return &contactEntity
 }
 
@@ -41,9 +38,6 @@ func MapContactUpdateInputToEntity(input model.ContactUpdateInput) *entity.Conta
 	if input.Notes != nil {
 		contactEntity.Notes = *input.Notes
 	}
-	if input.ContactType != nil {
-		contactEntity.ContactType = *input.ContactType
-	}
 	return &contactEntity
 }
 
@@ -53,14 +47,13 @@ func MapEntityToContact(contact *entity.ContactEntity) *model.Contact {
 		title = model.PersonTitleMr
 	}
 	return &model.Contact{
-		ID:          contact.Id,
-		Title:       &title,
-		FirstName:   contact.FirstName,
-		LastName:    contact.LastName,
-		Label:       utils.StringPtr(contact.Label),
-		Notes:       utils.StringPtr(contact.Notes),
-		ContactType: utils.StringPtr(contact.ContactType),
-		CreatedAt:   contact.CreatedAt,
+		ID:        contact.Id,
+		Title:     &title,
+		FirstName: contact.FirstName,
+		LastName:  contact.LastName,
+		Label:     utils.StringPtr(contact.Label),
+		Notes:     utils.StringPtr(contact.Notes),
+		CreatedAt: contact.CreatedAt,
 	}
 }
 
