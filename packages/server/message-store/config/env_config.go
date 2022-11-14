@@ -9,6 +9,10 @@ type Config struct {
 		Password string `env:"DB_PASSWORD,required,unset"`
 	}
 	Service struct {
-		ServerPort int `env:"MESSAGE_STORE_SERVER_PORT,required"`
+		ServerPort    int    `env:"MESSAGE_STORE_SERVER_PORT,required"`
+		CustomerOsAPI string `env:"CUSTOMER_OS_API,required"`
+	}
+	Identity struct {
+		DefaultUserId string `env:"DEFAULT_USER_ID" envDefault:"AgentSmith"`
 	}
 }

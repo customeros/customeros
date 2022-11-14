@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-option go_package = "github.com/openline-ai/openline-customer-os/packages/server/message-store/ent/proto/";
+option go_package = "github.com/openline-ai/openline-customer-os/packages/server/message-store/gen/proto/";
 
 import "google/protobuf/timestamp.proto";
 
@@ -35,8 +35,10 @@ message Message {
 }
 
 message Contact {
-  string username = 1;
-  optional int64 id = 2;
+  string contactId = 1;
+  string firstName = 2;
+  string lastName = 3;
+  optional int64 id = 4;
 }
 
 message PageInfo {

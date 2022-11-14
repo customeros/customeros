@@ -15,8 +15,10 @@ type MessageFeed struct {
 // Fields of the MessageFeed.
 func (MessageFeed) Fields() []ent.Field {
 	return []ent.Field{
-		field.String("username").
+		field.String("contactId").
 			Unique(),
+		field.String("firstName"),
+		field.String("lastName"),
 	}
 }
 
@@ -29,6 +31,6 @@ func (MessageFeed) Edges() []ent.Edge {
 
 func (MessageFeed) Indexes() []ent.Index {
 	return []ent.Index{
-		index.Fields("username").Unique(),
+		index.Fields("contactId").Unique(),
 	}
 }
