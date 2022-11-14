@@ -15,8 +15,8 @@ import (
 // CustomFields is the resolver for the customFields field.
 func (r *fieldSetResolver) CustomFields(ctx context.Context, obj *model.FieldSet) ([]*model.CustomField, error) {
 	var customFields []*model.CustomField
-	textCustomFieldEntities, err := r.ServiceContainer.CustomFieldService.FindAllForFieldSet(ctx, obj)
-	for _, v := range mapper.MapEntitiesToCustomFields(textCustomFieldEntities) {
+	customFieldEntities, err := r.ServiceContainer.CustomFieldService.FindAllForFieldSet(ctx, obj)
+	for _, v := range mapper.MapEntitiesToCustomFields(customFieldEntities) {
 		customFields = append(customFields, v)
 	}
 	return customFields, err

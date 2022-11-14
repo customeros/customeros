@@ -119,7 +119,7 @@ func (r *customFieldDefinitionRepository) FindByCustomFieldId(customFieldId stri
 
 	return session.ReadTransaction(func(tx neo4j.Transaction) (interface{}, error) {
 		queryResult, err := tx.Run(`
-				MATCH (:TextCustomField {id:$customFieldId})-[:IS_DEFINED_BY]->(d:CustomFieldDefinition)
+				MATCH (:CustomField {id:$customFieldId})-[:IS_DEFINED_BY]->(d:CustomFieldDefinition)
 					RETURN d`,
 			map[string]any{
 				"customFieldId": customFieldId,

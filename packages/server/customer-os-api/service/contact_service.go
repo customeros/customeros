@@ -181,7 +181,7 @@ func (s *contactService) HardDelete(ctx context.Context, contactId string) (bool
 	queryResult, err := session.WriteTransaction(func(tx neo4j.Transaction) (interface{}, error) {
 		_, err := tx.Run(`
 			MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant})
-			OPTIONAL MATCH (c)-[:HAS_PROPERTY]->(f:TextCustomField)
+			OPTIONAL MATCH (c)-[:HAS_PROPERTY]->(f:CustomField)
 			OPTIONAL MATCH (c)-[:CALLED_AT]->(p:PhoneNumber)
 			OPTIONAL MATCH (c)-[:EMAILED_AT]->(e:Email)
             DETACH DELETE p, e, f, c

@@ -4,9 +4,9 @@ createContact(
       title: MR
       firstName: "first"
       lastName: "last"
-      textCustomFields: [
-                            {name: "field1", value: "value1", definitionId:$fieldDefinitionId},
-                            {name: "field2", value: "value2"}
+      customFields: [
+                            {name: "field1", value: "value1", datatype: TEXT, definitionId:$fieldDefinitionId},
+                            {name: "field2", value: "value2", datatype: TEXT}
                         ]
       definitionId: $entityDefinitionId
     }
@@ -23,6 +23,7 @@ createContact(
         id
         name
         value
+        datatype
         definition {
             id
         }

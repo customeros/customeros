@@ -1905,7 +1905,7 @@ type FieldSetDefinition  implements Node {
 type CustomFieldDefinition  implements Node {
     id: ID!
     name: String!
-    type: CustomFieldType!
+    type: CustomFieldDefinitionType!
     order: Int!
     mandatory: Boolean!
     length: Int
@@ -1928,7 +1928,7 @@ input FieldSetDefinitionInput {
 
 input CustomFieldDefinitionInput {
     name: String!
-    type: CustomFieldType!
+    type: CustomFieldDefinitionType!
     order: Int!
     mandatory: Boolean!
     length: Int
@@ -1936,7 +1936,7 @@ input CustomFieldDefinitionInput {
     max: Int
 }
 
-enum CustomFieldType {
+enum CustomFieldDefinitionType {
     TEXT
     #    INTEGER
     #    DECIMAL
@@ -4742,9 +4742,9 @@ func (ec *executionContext) _CustomFieldDefinition_type(ctx context.Context, fie
 		}
 		return graphql.Null
 	}
-	res := resTmp.(model.CustomFieldType)
+	res := resTmp.(model.CustomFieldDefinitionType)
 	fc.Result = res
-	return ec.marshalNCustomFieldType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐCustomFieldType(ctx, field.Selections, res)
+	return ec.marshalNCustomFieldDefinitionType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐCustomFieldDefinitionType(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_CustomFieldDefinition_type(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -4754,7 +4754,7 @@ func (ec *executionContext) fieldContext_CustomFieldDefinition_type(ctx context.
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type CustomFieldType does not have child fields")
+			return nil, errors.New("field of type CustomFieldDefinitionType does not have child fields")
 		},
 	}
 	return fc, nil
@@ -11236,7 +11236,7 @@ func (ec *executionContext) unmarshalInputCustomFieldDefinitionInput(ctx context
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("type"))
-			it.Type, err = ec.unmarshalNCustomFieldType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐCustomFieldType(ctx, v)
+			it.Type, err = ec.unmarshalNCustomFieldDefinitionType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐCustomFieldDefinitionType(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -14163,6 +14163,16 @@ func (ec *executionContext) unmarshalNCustomFieldDefinitionInput2ᚖgithubᚗcom
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
+func (ec *executionContext) unmarshalNCustomFieldDefinitionType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐCustomFieldDefinitionType(ctx context.Context, v interface{}) (model.CustomFieldDefinitionType, error) {
+	var res model.CustomFieldDefinitionType
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNCustomFieldDefinitionType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐCustomFieldDefinitionType(ctx context.Context, sel ast.SelectionSet, v model.CustomFieldDefinitionType) graphql.Marshaler {
+	return v
+}
+
 func (ec *executionContext) unmarshalNCustomFieldInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐCustomFieldInput(ctx context.Context, v interface{}) (model.CustomFieldInput, error) {
 	res, err := ec.unmarshalInputCustomFieldInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -14171,16 +14181,6 @@ func (ec *executionContext) unmarshalNCustomFieldInput2githubᚗcomᚋopenline�
 func (ec *executionContext) unmarshalNCustomFieldInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐCustomFieldInput(ctx context.Context, v interface{}) (*model.CustomFieldInput, error) {
 	res, err := ec.unmarshalInputCustomFieldInput(ctx, v)
 	return &res, graphql.ErrorOnPath(ctx, err)
-}
-
-func (ec *executionContext) unmarshalNCustomFieldType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐCustomFieldType(ctx context.Context, v interface{}) (model.CustomFieldType, error) {
-	var res model.CustomFieldType
-	err := res.UnmarshalGQL(v)
-	return res, graphql.ErrorOnPath(ctx, err)
-}
-
-func (ec *executionContext) marshalNCustomFieldType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐCustomFieldType(ctx context.Context, sel ast.SelectionSet, v model.CustomFieldType) graphql.Marshaler {
-	return v
 }
 
 func (ec *executionContext) unmarshalNCustomFieldUpdateInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐCustomFieldUpdateInput(ctx context.Context, v interface{}) (model.CustomFieldUpdateInput, error) {

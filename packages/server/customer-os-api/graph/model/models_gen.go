@@ -268,27 +268,27 @@ func (CustomField) IsNode()            {}
 func (this CustomField) GetID() string { return this.ID }
 
 type CustomFieldDefinition struct {
-	ID        string          `json:"id"`
-	Name      string          `json:"name"`
-	Type      CustomFieldType `json:"type"`
-	Order     int             `json:"order"`
-	Mandatory bool            `json:"mandatory"`
-	Length    *int            `json:"length"`
-	Min       *int            `json:"min"`
-	Max       *int            `json:"max"`
+	ID        string                    `json:"id"`
+	Name      string                    `json:"name"`
+	Type      CustomFieldDefinitionType `json:"type"`
+	Order     int                       `json:"order"`
+	Mandatory bool                      `json:"mandatory"`
+	Length    *int                      `json:"length"`
+	Min       *int                      `json:"min"`
+	Max       *int                      `json:"max"`
 }
 
 func (CustomFieldDefinition) IsNode()            {}
 func (this CustomFieldDefinition) GetID() string { return this.ID }
 
 type CustomFieldDefinitionInput struct {
-	Name      string          `json:"name"`
-	Type      CustomFieldType `json:"type"`
-	Order     int             `json:"order"`
-	Mandatory bool            `json:"mandatory"`
-	Length    *int            `json:"length"`
-	Min       *int            `json:"min"`
-	Max       *int            `json:"max"`
+	Name      string                    `json:"name"`
+	Type      CustomFieldDefinitionType `json:"type"`
+	Order     int                       `json:"order"`
+	Mandatory bool                      `json:"mandatory"`
+	Length    *int                      `json:"length"`
+	Min       *int                      `json:"min"`
+	Max       *int                      `json:"max"`
 }
 
 // Describes a custom, user-defined field associated with a `Contact` of type String.
@@ -596,42 +596,42 @@ func (e CustomFieldDataType) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
 }
 
-type CustomFieldType string
+type CustomFieldDefinitionType string
 
 const (
-	CustomFieldTypeText CustomFieldType = "TEXT"
+	CustomFieldDefinitionTypeText CustomFieldDefinitionType = "TEXT"
 )
 
-var AllCustomFieldType = []CustomFieldType{
-	CustomFieldTypeText,
+var AllCustomFieldDefinitionType = []CustomFieldDefinitionType{
+	CustomFieldDefinitionTypeText,
 }
 
-func (e CustomFieldType) IsValid() bool {
+func (e CustomFieldDefinitionType) IsValid() bool {
 	switch e {
-	case CustomFieldTypeText:
+	case CustomFieldDefinitionTypeText:
 		return true
 	}
 	return false
 }
 
-func (e CustomFieldType) String() string {
+func (e CustomFieldDefinitionType) String() string {
 	return string(e)
 }
 
-func (e *CustomFieldType) UnmarshalGQL(v interface{}) error {
+func (e *CustomFieldDefinitionType) UnmarshalGQL(v interface{}) error {
 	str, ok := v.(string)
 	if !ok {
 		return fmt.Errorf("enums must be strings")
 	}
 
-	*e = CustomFieldType(str)
+	*e = CustomFieldDefinitionType(str)
 	if !e.IsValid() {
-		return fmt.Errorf("%s is not a valid CustomFieldType", str)
+		return fmt.Errorf("%s is not a valid CustomFieldDefinitionType", str)
 	}
 	return nil
 }
 
-func (e CustomFieldType) MarshalGQL(w io.Writer) {
+func (e CustomFieldDefinitionType) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
 }
 

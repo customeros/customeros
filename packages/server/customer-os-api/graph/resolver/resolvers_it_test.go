@@ -197,13 +197,38 @@ func TestMutationResolver_CreateContact(t *testing.T) {
 	require.Equal(t, "Some notes...", *contact.CreateContact.Notes)
 	require.Equal(t, "Some label", *contact.CreateContact.Label)
 
-	require.Equal(t, 2, len(contact.CreateContact.CustomFields))
-	require.Equal(t, "field1", contact.CreateContact.CustomFields[0].Name)
-	require.Equal(t, "value1", contact.CreateContact.CustomFields[0].Value)
-	require.NotNil(t, contact.CreateContact.CustomFields[0].GetID())
-	require.Equal(t, "field2", contact.CreateContact.CustomFields[1].Name)
-	require.Equal(t, "value2", contact.CreateContact.CustomFields[1].Value)
-	require.NotNil(t, contact.CreateContact.CustomFields[1].GetID())
+	require.Equal(t, 5, len(contact.CreateContact.CustomFields))
+
+	boolField := contact.CreateContact.CustomFields[0]
+	require.NotNil(t, boolField.GetID())
+	require.Equal(t, "boolField", boolField.Name)
+	require.Equal(t, model.CustomFieldDataTypeBool, boolField.Datatype)
+	require.Equal(t, true, boolField.Value.RealValue())
+
+	decimalField := contact.CreateContact.CustomFields[1]
+	require.NotNil(t, decimalField.GetID())
+	require.Equal(t, "decimalField", decimalField.Name)
+	require.Equal(t, model.CustomFieldDataTypeDecimal, decimalField.Datatype)
+	require.Equal(t, 0.001, decimalField.Value.RealValue())
+
+	integerField := contact.CreateContact.CustomFields[2]
+	require.NotNil(t, integerField.GetID())
+	require.Equal(t, "integerField", integerField.Name)
+	require.Equal(t, model.CustomFieldDataTypeInteger, integerField.Datatype)
+	// issue in decoding, int converted to float 64
+	require.Equal(t, float64(123), integerField.Value.RealValue())
+
+	textField := contact.CreateContact.CustomFields[3]
+	require.NotNil(t, textField.GetID())
+	require.Equal(t, "textField", textField.Name)
+	require.Equal(t, model.CustomFieldDataTypeText, textField.Datatype)
+	require.Equal(t, "value1", textField.Value.RealValue())
+
+	timeField := contact.CreateContact.CustomFields[4]
+	require.NotNil(t, timeField.GetID())
+	require.Equal(t, "timeField", timeField.Name)
+	require.Equal(t, model.CustomFieldDataTypeDatetime, timeField.Datatype)
+	require.Equal(t, "2022-11-13T20:21:56.732Z", timeField.Value.RealValue())
 
 	require.Equal(t, 1, len(contact.CreateContact.Emails))
 	require.NotNil(t, contact.CreateContact.Emails[0].ID)
@@ -226,7 +251,12 @@ func TestMutationResolver_CreateContact(t *testing.T) {
 	require.Equal(t, 2, getCountOfNodes(driver, "Tenant"))
 	require.Equal(t, 1, getCountOfNodes(driver, "Contact"))
 	require.Equal(t, 0, getCountOfNodes(driver, "ContactGroup"))
-	require.Equal(t, 2, getCountOfNodes(driver, "TextCustomField"))
+	require.Equal(t, 5, getCountOfNodes(driver, "CustomField"))
+	require.Equal(t, 1, getCountOfNodes(driver, "TextField"))
+	require.Equal(t, 1, getCountOfNodes(driver, "IntField"))
+	require.Equal(t, 1, getCountOfNodes(driver, "FloatField"))
+	require.Equal(t, 1, getCountOfNodes(driver, "BoolField"))
+	require.Equal(t, 1, getCountOfNodes(driver, "TimeField"))
 	require.Equal(t, 1, getCountOfNodes(driver, "Email"))
 	require.Equal(t, 1, getCountOfNodes(driver, "PhoneNumber"))
 }
@@ -245,7 +275,8 @@ func TestMutationResolver_CreateContact_WithEntityDefinition(t *testing.T) {
 	require.Equal(t, 1, getCountOfNodes(driver, "Contact"))
 	require.Equal(t, 0, getCountOfNodes(driver, "ContactGroup"))
 	require.Equal(t, 0, getCountOfNodes(driver, "Company"))
-	require.Equal(t, 2, getCountOfNodes(driver, "TextCustomField"))
+	require.Equal(t, 2, getCountOfNodes(driver, "CustomField"))
+	require.Equal(t, 2, getCountOfNodes(driver, "TextField"))
 	require.Equal(t, 0, getCountOfNodes(driver, "Email"))
 	require.Equal(t, 0, getCountOfNodes(driver, "PhoneNumber"))
 	require.Equal(t, 1, getCountOfNodes(driver, "EntityDefinition"))
@@ -263,11 +294,13 @@ func TestMutationResolver_CreateContact_WithEntityDefinition(t *testing.T) {
 	require.Equal(t, entityDefinitionId, contact.CreateContact.Definition.ID)
 	require.Equal(t, 2, len(contact.CreateContact.CustomFields))
 	require.Equal(t, "field1", contact.CreateContact.CustomFields[0].Name)
-	require.Equal(t, "value1", contact.CreateContact.CustomFields[0].Value)
+	require.Equal(t, "TEXT", contact.CreateContact.CustomFields[0].Datatype.String())
+	require.Equal(t, "value1", contact.CreateContact.CustomFields[0].Value.RealValue())
 	require.Equal(t, fieldDefinitionId, contact.CreateContact.CustomFields[0].Definition.ID)
 	require.NotNil(t, contact.CreateContact.CustomFields[0].GetID())
 	require.Equal(t, "field2", contact.CreateContact.CustomFields[1].Name)
-	require.Equal(t, "value2", contact.CreateContact.CustomFields[1].Value)
+	require.Equal(t, "TEXT", contact.CreateContact.CustomFields[1].Datatype.String())
+	require.Equal(t, "value2", contact.CreateContact.CustomFields[1].Value.RealValue())
 	require.NotNil(t, contact.CreateContact.CustomFields[1].GetID())
 
 }
@@ -346,7 +379,7 @@ func TestMutationResolver_MergeFieldSetToContact_AllowMultipleFieldSetWithSameNa
 	require.Equal(t, 2, getCountOfNodes(driver, "FieldSet"))
 }
 
-func TestMutationResolver_MergeTextCustomFieldToFieldSet(t *testing.T) {
+func TestMutationResolver_MergeCustomFieldToFieldSet(t *testing.T) {
 	defer setupTestCase()(t)
 	createTenant(driver, tenantName)
 	contactId := createDefaultContact(driver, tenantName)
@@ -357,27 +390,29 @@ func TestMutationResolver_MergeTextCustomFieldToFieldSet(t *testing.T) {
 	assertRawResponseSuccess(t, rawResponse, err)
 
 	var textField struct {
-		MergeTextCustomFieldToFieldSet model.CustomField
+		MergeCustomFieldToFieldSet model.CustomField
 	}
 
 	err = decode.Decode(rawResponse.Data.(map[string]any), &textField)
 	require.Nil(t, err)
 
-	require.Equal(t, "some name", textField.MergeTextCustomFieldToFieldSet.Name)
-	require.Equal(t, "some value", textField.MergeTextCustomFieldToFieldSet.Value)
-	require.NotNil(t, textField.MergeTextCustomFieldToFieldSet.ID)
+	require.Equal(t, "some name", textField.MergeCustomFieldToFieldSet.Name)
+	require.Equal(t, "some value", textField.MergeCustomFieldToFieldSet.Value.RealValue())
+	require.Equal(t, model.CustomFieldDataTypeText, textField.MergeCustomFieldToFieldSet.Datatype)
+	require.NotNil(t, textField.MergeCustomFieldToFieldSet.ID)
 
 	require.Equal(t, 1, getCountOfNodes(driver, "Contact"))
 	require.Equal(t, 1, getCountOfNodes(driver, "FieldSet"))
-	require.Equal(t, 1, getCountOfNodes(driver, "TextCustomField"))
+	require.Equal(t, 1, getCountOfNodes(driver, "CustomField"))
+	require.Equal(t, 1, getCountOfNodes(driver, "TextField"))
 }
 
-func TestMutationResolver_UpdateTextCustomFieldInFieldSet(t *testing.T) {
+func TestMutationResolver_UpdateCustomFieldInFieldSet(t *testing.T) {
 	defer setupTestCase()(t)
 	createTenant(driver, tenantName)
 	contactId := createDefaultContact(driver, tenantName)
 	fieldSetId := createDefaultFieldSet(driver, contactId)
-	fieldId := createDefaultTextFieldInSet(driver, fieldSetId)
+	fieldId := createDefaultCustomFieldInSet(driver, fieldSetId)
 
 	rawResponse, err := c.RawPost(getQuery("update_text_field_in_field_set"),
 		client.Var("contactId", contactId),
@@ -386,27 +421,28 @@ func TestMutationResolver_UpdateTextCustomFieldInFieldSet(t *testing.T) {
 	assertRawResponseSuccess(t, rawResponse, err)
 
 	var textField struct {
-		UpdateTextCustomFieldInFieldSet model.CustomField
+		UpdateCustomFieldInFieldSet model.CustomField
 	}
 
 	err = decode.Decode(rawResponse.Data.(map[string]any), &textField)
 	require.Nil(t, err)
 
-	require.Equal(t, "new name", textField.UpdateTextCustomFieldInFieldSet.Name)
-	require.Equal(t, "new value", textField.UpdateTextCustomFieldInFieldSet.Value)
-	require.Equal(t, fieldId, textField.UpdateTextCustomFieldInFieldSet.ID)
+	require.Equal(t, "new name", textField.UpdateCustomFieldInFieldSet.Name)
+	require.Equal(t, "new value", textField.UpdateCustomFieldInFieldSet.Value.RealValue())
+	require.Equal(t, model.CustomFieldDataTypeText, textField.UpdateCustomFieldInFieldSet.Datatype)
+	require.Equal(t, fieldId, textField.UpdateCustomFieldInFieldSet.ID)
 
 	require.Equal(t, 1, getCountOfNodes(driver, "Contact"))
 	require.Equal(t, 1, getCountOfNodes(driver, "FieldSet"))
-	require.Equal(t, 1, getCountOfNodes(driver, "TextCustomField"))
+	require.Equal(t, 1, getCountOfNodes(driver, "CustomField"))
 }
 
-func TestMutationResolver_RemoveTextCustomFieldFromFieldSetByID(t *testing.T) {
+func TestMutationResolver_RemoveCustomFieldFromFieldSetByID(t *testing.T) {
 	defer setupTestCase()(t)
 	createTenant(driver, tenantName)
 	contactId := createDefaultContact(driver, tenantName)
 	fieldSetId := createDefaultFieldSet(driver, contactId)
-	fieldId := createDefaultTextFieldInSet(driver, fieldSetId)
+	fieldId := createDefaultCustomFieldInSet(driver, fieldSetId)
 
 	rawResponse, err := c.RawPost(getQuery("remove_text_field_from_field_set"),
 		client.Var("contactId", contactId),
@@ -415,17 +451,17 @@ func TestMutationResolver_RemoveTextCustomFieldFromFieldSetByID(t *testing.T) {
 	assertRawResponseSuccess(t, rawResponse, err)
 
 	var textField struct {
-		RemoveTextCustomFieldFromFieldSetByID model.Result
+		RemoveCustomFieldFromFieldSetByID model.Result
 	}
 
 	err = decode.Decode(rawResponse.Data.(map[string]any), &textField)
 	require.Nil(t, err)
 
-	require.Equal(t, true, textField.RemoveTextCustomFieldFromFieldSetByID.Result)
+	require.Equal(t, true, textField.RemoveCustomFieldFromFieldSetByID.Result)
 
 	require.Equal(t, 1, getCountOfNodes(driver, "Contact"))
 	require.Equal(t, 1, getCountOfNodes(driver, "FieldSet"))
-	require.Equal(t, 0, getCountOfNodes(driver, "TextCustomField"))
+	require.Equal(t, 0, getCountOfNodes(driver, "CustomField"))
 }
 
 func TestMutationResolver_RemoveFieldSetFromContact(t *testing.T) {
@@ -433,11 +469,11 @@ func TestMutationResolver_RemoveFieldSetFromContact(t *testing.T) {
 	createTenant(driver, tenantName)
 	contactId := createDefaultContact(driver, tenantName)
 	fieldSetId := createDefaultFieldSet(driver, contactId)
-	createDefaultTextFieldInSet(driver, fieldSetId)
+	createDefaultCustomFieldInSet(driver, fieldSetId)
 
 	require.Equal(t, 1, getCountOfNodes(driver, "Contact"))
 	require.Equal(t, 1, getCountOfNodes(driver, "FieldSet"))
-	require.Equal(t, 1, getCountOfNodes(driver, "TextCustomField"))
+	require.Equal(t, 1, getCountOfNodes(driver, "CustomField"))
 
 	rawResponse, err := c.RawPost(getQuery("remove_field_set_from_contact"),
 		client.Var("contactId", contactId),
@@ -455,7 +491,7 @@ func TestMutationResolver_RemoveFieldSetFromContact(t *testing.T) {
 
 	require.Equal(t, 1, getCountOfNodes(driver, "Contact"))
 	require.Equal(t, 0, getCountOfNodes(driver, "FieldSet"))
-	require.Equal(t, 0, getCountOfNodes(driver, "TextCustomField"))
+	require.Equal(t, 0, getCountOfNodes(driver, "CustomField"))
 }
 
 func TestMutationResolver_CreateEntityDefinition(t *testing.T) {
@@ -493,7 +529,7 @@ func TestMutationResolver_CreateEntityDefinition(t *testing.T) {
 	require.Equal(t, "field 3", field.Name)
 	require.Equal(t, 1, field.Order)
 	require.Equal(t, true, field.Mandatory)
-	require.Equal(t, model.CustomFieldTypeText, field.Type)
+	require.Equal(t, model.CustomFieldDefinitionTypeText, field.Type)
 	require.Nil(t, field.Min)
 	require.Nil(t, field.Max)
 	require.Nil(t, field.Length)
@@ -503,7 +539,7 @@ func TestMutationResolver_CreateEntityDefinition(t *testing.T) {
 	require.Equal(t, "field 4", field.Name)
 	require.Equal(t, 2, field.Order)
 	require.Equal(t, false, field.Mandatory)
-	require.Equal(t, model.CustomFieldTypeText, field.Type)
+	require.Equal(t, model.CustomFieldDefinitionTypeText, field.Type)
 	require.Equal(t, 10, *field.Min)
 	require.Equal(t, 990, *field.Max)
 	require.Equal(t, 2550, *field.Length)
@@ -519,7 +555,7 @@ func TestMutationResolver_CreateEntityDefinition(t *testing.T) {
 	require.Equal(t, "field 1", field.Name)
 	require.Equal(t, 1, field.Order)
 	require.Equal(t, true, field.Mandatory)
-	require.Equal(t, model.CustomFieldTypeText, field.Type)
+	require.Equal(t, model.CustomFieldDefinitionTypeText, field.Type)
 	require.Nil(t, field.Min)
 	require.Nil(t, field.Max)
 	require.Nil(t, field.Length)
@@ -529,7 +565,7 @@ func TestMutationResolver_CreateEntityDefinition(t *testing.T) {
 	require.Equal(t, "field 2", field.Name)
 	require.Equal(t, 2, field.Order)
 	require.Equal(t, false, field.Mandatory)
-	require.Equal(t, model.CustomFieldTypeText, field.Type)
+	require.Equal(t, model.CustomFieldDefinitionTypeText, field.Type)
 	require.Equal(t, 1, *field.Min)
 	require.Equal(t, 99, *field.Max)
 	require.Equal(t, 255, *field.Length)

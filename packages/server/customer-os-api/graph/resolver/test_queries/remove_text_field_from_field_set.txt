@@ -1,5 +1,5 @@
-mutation RemoveTextCustomFieldFromFieldSetById($contactId: ID!, $fieldSetId: ID!, $fieldId: ID!) {
-     removeTextCustomFieldFromFieldSetById(
+mutation RemoveCustomFieldFromFieldSetById($contactId: ID!, $fieldSetId: ID!, $fieldId: ID!) {
+     removeCustomFieldFromFieldSetById(
         contactId: $contactId,
         fieldSetId: $fieldSetId,
         id: $fieldId)

@@ -78,7 +78,7 @@ func (r *mutationResolver) SoftDeleteContact(ctx context.Context, contactID stri
 
 // MergeCustomFieldToContact is the resolver for the mergeCustomFieldToContact field.
 func (r *mutationResolver) MergeCustomFieldToContact(ctx context.Context, contactID string, input model.CustomFieldInput) (*model.CustomField, error) {
-	result, err := r.ServiceContainer.CustomFieldService.MergeTextCustomFieldToContact(ctx, contactID, mapper.MapCustomFieldInputToEntity(&input))
+	result, err := r.ServiceContainer.CustomFieldService.MergeCustomFieldToContact(ctx, contactID, mapper.MapCustomFieldInputToEntity(&input))
 	if err != nil {
 		graphql.AddErrorf(ctx, "Could not add custom field %s to contact %s", input.Name, contactID)
 		return nil, err
@@ -88,7 +88,7 @@ func (r *mutationResolver) MergeCustomFieldToContact(ctx context.Context, contac
 
 // UpdateCustomFieldInContact is the resolver for the updateCustomFieldInContact field.
 func (r *mutationResolver) UpdateCustomFieldInContact(ctx context.Context, contactID string, input model.CustomFieldUpdateInput) (*model.CustomField, error) {
-	result, err := r.ServiceContainer.CustomFieldService.UpdateTextCustomFieldInContact(ctx, contactID, mapper.MapCustomFieldUpdateInputToEntity(&input))
+	result, err := r.ServiceContainer.CustomFieldService.UpdateCustomFieldForContact(ctx, contactID, mapper.MapCustomFieldUpdateInputToEntity(&input))
 	if err != nil {
 		graphql.AddErrorf(ctx, "Could not update custom field %s in contact %s", input.ID, contactID)
 		return nil, err
@@ -154,7 +154,7 @@ func (r *mutationResolver) RemoveFieldSetFromContact(ctx context.Context, contac
 
 // MergeCustomFieldToFieldSet is the resolver for the mergeCustomFieldToFieldSet field.
 func (r *mutationResolver) MergeCustomFieldToFieldSet(ctx context.Context, contactID string, fieldSetID string, input model.CustomFieldInput) (*model.CustomField, error) {
-	result, err := r.ServiceContainer.CustomFieldService.MergeTextCustomFieldToFieldSet(ctx, contactID, fieldSetID, mapper.MapCustomFieldInputToEntity(&input))
+	result, err := r.ServiceContainer.CustomFieldService.MergeCustomFieldToFieldSet(ctx, contactID, fieldSetID, mapper.MapCustomFieldInputToEntity(&input))
 	if err != nil {
 		graphql.AddErrorf(ctx, "Could not merge custom field %s to contact %s, fields set %s", input.Name, contactID, fieldSetID)
 		return nil, err
@@ -164,9 +164,9 @@ func (r *mutationResolver) MergeCustomFieldToFieldSet(ctx context.Context, conta
 
 // UpdateCustomFieldInFieldSet is the resolver for the updateCustomFieldInFieldSet field.
 func (r *mutationResolver) UpdateCustomFieldInFieldSet(ctx context.Context, contactID string, fieldSetID string, input model.CustomFieldUpdateInput) (*model.CustomField, error) {
-	result, err := r.ServiceContainer.CustomFieldService.UpdateTextCustomFieldInFieldSet(ctx, contactID, fieldSetID, mapper.MapCustomFieldUpdateInputToEntity(&input))
+	result, err := r.ServiceContainer.CustomFieldService.UpdateCustomFieldForFieldSet(ctx, contactID, fieldSetID, mapper.MapCustomFieldUpdateInputToEntity(&input))
 	if err != nil {
-		graphql.AddErrorf(ctx, "Could not update text custom field %s in contact %s, fields set %s", input.ID, contactID, fieldSetID)
+		graphql.AddErrorf(ctx, "Could not update custom field %s in contact %s, fields set %s", input.ID, contactID, fieldSetID)
 		return nil, err
 	}
 	return mapper.MapEntityToCustomField(result), nil

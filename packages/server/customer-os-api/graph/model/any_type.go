@@ -94,15 +94,15 @@ func (a *AnyTypeValue) FloatToInt() {
 
 func (a *AnyTypeValue) RealValue() any {
 	if a.Int != nil {
-		return a.Int
+		return *a.Int
 	} else if a.Float != nil {
-		return a.Float
+		return *a.Float
 	} else if a.Time != nil {
-		return a.Time
+		return *a.Time
 	} else if a.Bool != nil {
-		return a.Bool
+		return *a.Bool
 	} else {
-		return a.Str
+		return *a.Str
 	}
 }
 
@@ -119,7 +119,7 @@ func MarshalAnyTypeValue(atv AnyTypeValue) graphql.Marshaler {
 	return graphql.MarshalString(*atv.Str)
 }
 
-func UnmarshalAnyTypeValue(input interface{}) (AnyTypeValue, error) {
+func UnmarshalAnyTypeValue(input any) (AnyTypeValue, error) {
 	switch input := input.(type) {
 	case string:
 		return AnyTypeValue{Str: &input}, nil
