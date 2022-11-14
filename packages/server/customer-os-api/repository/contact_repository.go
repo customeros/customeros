@@ -7,7 +7,8 @@ import (
 
 type ContactRepository interface {
 	LinkWithEntityDefinitionInTx(tx neo4j.Transaction, tenant, contactId, entityDefinitionId string) error
-	LinkWithContactTypeInTx(tx neo4j.Transaction, tenant, contactId, entityDefinitionId string) error
+	LinkWithContactTypeInTx(tx neo4j.Transaction, tenant, contactId, contactTypeId string) error
+	UnlinkFromContactTypesInTx(tx neo4j.Transaction, tenant, contactId string) error
 }
 
 type contactRepository struct {
@@ -56,4 +57,18 @@ func (r *contactRepository) LinkWithContactTypeInTx(tx neo4j.Transaction, tenant
 	}
 	_, err = queryResult.Single()
 	return err
+}
+
+func (r *contactRepository) UnlinkFromContactTypesInTx(tx neo4j.Transaction, tenant, contactId string) error {
+	if _, err := tx.Run(`
+			MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}),
+				(c)-[r:IS_OF_TYPE]->(o:ContactType)
+			DELETE r`,
+		map[string]any{
+			"tenant":    tenant,
+			"contactId": contactId,
+		}); err != nil {
+		return err
+	}
+	return nil
 }

@@ -318,8 +318,14 @@ func TestMutationResolver_UpdateContact(t *testing.T) {
 		Label:     "label",
 		Notes:     "notes",
 	})
+	contactTypeIdOrig := createContactType(driver, tenantName, "ORIG")
+	contactTypeIdUpdate := createContactType(driver, tenantName, "UPDATED")
 
-	rawResponse, err := c.RawPost(getQuery("update_contact"), client.Var("contactId", contactId))
+	setContactTypeForContact(driver, contactId, contactTypeIdOrig)
+
+	rawResponse, err := c.RawPost(getQuery("update_contact"),
+		client.Var("contactId", contactId),
+		client.Var("contactTypeId", contactTypeIdUpdate))
 	assertRawResponseSuccess(t, rawResponse, err)
 
 	var contact struct {
@@ -334,6 +340,12 @@ func TestMutationResolver_UpdateContact(t *testing.T) {
 	require.Equal(t, "updated last", contact.UpdateContact.LastName)
 	require.Equal(t, "updated notes", *contact.UpdateContact.Notes)
 	require.Equal(t, "updated label", *contact.UpdateContact.Label)
+	require.Equal(t, contactTypeIdUpdate, contact.UpdateContact.ContactType.ID)
+	require.Equal(t, "UPDATED", contact.UpdateContact.ContactType.Name)
+
+	require.Equal(t, 1, getCountOfNodes(driver, "Contact"))
+	require.Equal(t, 2, getCountOfNodes(driver, "ContactType"))
+	require.Equal(t, 1, getCountOfRelationships(driver, "IS_OF_TYPE"))
 }
 
 func TestMutationResolver_MergeFieldSetToContact_AllowMultipleFieldSetWithSameNameOnDifferentContacts(t *testing.T) {
