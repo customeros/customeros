@@ -5,15 +5,15 @@
 CUSTOMER_OS_API_CONFIG="https://raw.githubusercontent.com/openline-ai/openline-customer-os/otter/deployment/k8s/local-minikube/apps-config/customer-os-api.yaml"
 CUSTOMER_OS_API_K8S_CONFIG="https://raw.githubusercontent.com/openline-ai/openline-customer-os/otter/deployment/k8s/local-minikube/apps-config/customer-os-api-k8s-service.yaml"
 CUSTOMER_OS_API_K8S_LOADBALANCER_CONFIG="https://raw.githubusercontent.com/openline-ai/openline-customer-os/otter/deployment/k8s/local-minikube/apps-config/customer-os-api-k8s-loadbalancer-service.yaml"
-FUSIONAUTH_VALUES_CONFIG="https://raw.githubusercontent.com/openline-ai/openline-customer-os/otter/deployment/k8s/configs/fusionauth/fusionauth-values.yaml"
+FUSIONAUTH_HELM_CONFIG="https://raw.githubusercontent.com/openline-ai/openline-customer-os/otter/deployment/k8s/configs/fusionauth/fusionauth-values.yaml"
 NEO4J_CYPHER="https://raw.githubusercontent.com/openline-ai/openline-customer-os/otter/packages/server/customer-os-api/customer-os.cypher"
-NEO4J_HELM_VALUES_CONFIG="https://raw.githubusercontent.com/openline-ai/openline-customer-os/otter/deployment/k8s/configs/neo4j/neo4j-helm-values.yaml"
+NEO4J_HELM_CONFIG="https://raw.githubusercontent.com/openline-ai/openline-customer-os/otter/deployment/k8s/configs/neo4j/neo4j-helm-values.yaml"
 MESSAGE_STORE_API_CONFIG="https://raw.githubusercontent.com/openline-ai/openline-customer-os/otter/deployment/k8s/local-minikube/apps-config/message-store.yaml"
 MESSAGE_STORE_K8S_CONFIG="https://raw.githubusercontent.com/openline-ai/openline-customer-os/otter/deployment/k8s/local-minikube/apps-config/message-store-k8s-service.yaml"
 OPENLINE_NAMESPACE="https://raw.githubusercontent.com/openline-ai/openline-customer-os/otter/deployment/k8s/configs/openline-namespace.json"
 POSTGRESQL_PERSISTENT_VOLUME_CONFIG="https://raw.githubusercontent.com/openline-ai/openline-customer-os/otter/deployment/k8s/configs/postgresql/postgresql-persistent-volume.yaml"
 POSTGRESQL_PERSISTENT_VOLUME_CLAIM_CONFIG="https://raw.githubusercontent.com/openline-ai/openline-customer-os/otter/deployment/k8s/configs/postgresql/postgresql-persistent-volume-claim.yaml"
-POSTGRESQL_VALUES_CONFIG="https://raw.githubusercontent.com/openline-ai/openline-customer-os/otter/deployment/k8s/configs/postgresql/postgresql-values.yaml"
+POSTGRESQL_HELM_CONFIG="https://raw.githubusercontent.com/openline-ai/openline-customer-os/otter/deployment/k8s/configs/postgresql/postgresql-values.yaml"
 
 ###########################################
 
@@ -42,7 +42,7 @@ else
     echo "  ❌ customer-os-api-k8s-loadbalancer-service.yaml"
 fi
 
-curl -sS $FUSIONAUTH_VALUES_CONFIG -o openline-setup/fusionauth-values.yaml
+curl -sS $FUSIONAUTH_HELM_CONFIG -o openline-setup/fusionauth-values.yaml
 if [ $? -eq 0 ]; then
     echo "  ✅ fusionauth-values.yaml"
 else
@@ -56,7 +56,7 @@ else
     echo "  ❌ customer-os.cypher"
 fi
 
-curl -sS $NEO4J_HELM_VALUES_CONFIG -o openline-setup/neo4j-helm-values.yaml
+curl -sS $NEO4J_HELM_CONFIG -o openline-setup/neo4j-helm-values.yaml
 if [ $? -eq 0 ]; then
     echo "  ✅ neo4j-helm-values.yaml"
 else
@@ -91,7 +91,7 @@ else
     echo "  ❌ postgresql-persistent-volume-claim.yaml"
 fi
 
-curl -sS $POSTGRESQL_VALUES_CONFIG -o openline-setup/postgresql-values.yaml
+curl -sS $POSTGRESQL_HELM_CONFIG -o openline-setup/postgresql-values.yaml
 if [ $? -eq 0 ]; then
     echo "  ✅ postgresql-values.yaml"
 else
