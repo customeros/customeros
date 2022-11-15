@@ -1,33 +1,8 @@
 package service
 
 import (
-	"fmt"
-	"github.com/machinebox/graphql"
 	"testing"
 )
-
-func Test_getContactByEmail(t *testing.T) {
-	graphqlClient := graphql.NewClient("http://localhost:10010/query")
-	contact, err := getContactByEmail(graphqlClient, "tsearle@gmail.com")
-
-	if err != nil {
-		t.Errorf("Got an error %v", err)
-		return
-	}
-	fmt.Printf("Got a contact of %s %s %s", contact.firstName, contact.lastName, contact.id)
-}
-
-func Test_createContact(t *testing.T) {
-	graphqlClient := graphql.NewClient("http://localhost:10010/query")
-
-	contact, err := createContact(graphqlClient, "Torrey", "Searle", "tsearle@gmail.com")
-
-	if err != nil {
-		t.Errorf("Got an error %v", err)
-		return
-	}
-	fmt.Printf("Got a contact of %s", contact)
-}
 
 func Test_parseEmail(t *testing.T) {
 	type args struct {
