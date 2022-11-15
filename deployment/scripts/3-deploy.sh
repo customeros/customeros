@@ -70,7 +70,7 @@ kubectl apply -f openline-setup/message-store-k8s-service.yaml --namespace $NAME
 while [ -z "$pod" ]; do
     pod=$(kubectl get pods -n $NAMESPACE_NAME|grep neo4j-customer-os|grep Running| cut -f1 -d ' ')
     if [ -z "$pod" ]; then
-      echo "  ⏳ Neo4j not ready waiting"
+      echo "  ⏳ Neo4j not ready, please wait..."
       sleep 1
     fi
 done
@@ -79,7 +79,7 @@ started=""
 while [ -z "$started" ]; do
     started=$(kubectl logs -n $NAMESPACE_NAME $pod|grep password)
     if [ -z "$started" ]; then
-      echo "  ⏳ Neo4j waiting for app to start"
+      echo "  ⏳ Neo4j waiting for app to start..."
       sleep 1
     fi
 done
