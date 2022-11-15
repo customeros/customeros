@@ -20,6 +20,9 @@ POSTGRESQL_HELM_CONFIG="https://raw.githubusercontent.com/openline-ai/openline-c
 # Neo4j
 NEO4J_CYPHER="https://raw.githubusercontent.com/openline-ai/openline-customer-os/otter/packages/server/customer-os-api/customer-os.cypher"
 
+# PostgreSQL
+POSTGRES_BUILD_CONFIG='https://raw.githubusercontent.com/openline-ai/openline-customer-os/otter/deployment/scripts/postgresql/build_db.sh'
+
 ###########################################
 
 mkdir openline-setup
@@ -108,4 +111,11 @@ if [ $? -eq 0 ]; then
     echo "  ✅ openline-namespace.json"
 else
     echo "  ❌ openline-namespace.json"
+fi
+
+curl -sS $POSTGRES_BUILD_CONFIG -o openline-setup/build-postgres.sh
+if [ $? -eq 0 ]; then
+    echo "  ✅ build-postgres.sh"
+else
+    echo "  ❌ build-postgres.sh"
 fi

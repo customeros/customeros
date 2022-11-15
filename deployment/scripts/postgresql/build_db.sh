@@ -3,6 +3,8 @@
 NAMESPACE_NAME="openline"
 FILES="example_provisioning.sql"
 
+echo "  🦦 Provisioning PostgreSQL"
+
 if [ "x$1" == "xlocal-kube" ]; then
   while [ -z "$pod" ]; do
     pod=$(kubectl get pods -n $NAMESPACE_NAME|grep message-store|grep Running| cut -f1 -d ' ')

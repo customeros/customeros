@@ -99,5 +99,4 @@ while  [ ! -z "$neo_output" ]; do
 	fi
 done
 
-echo "  🦦 Provisioning PostgreSQL"
-SQL_USER=openline SQL_DATABABASE=openline SQL_PASSWORD=password ./postgresql/build_db.sh local-kube
+SQL_USER=openline SQL_DATABABASE=openline SQL_PASSWORD=password ./openline-setup/build-postgres.sh local-kube
