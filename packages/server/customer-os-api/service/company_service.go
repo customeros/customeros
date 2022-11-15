@@ -17,6 +17,8 @@ type CompanyService interface {
 
 	GetCompanyPositionsForContact(ctx context.Context, contactId string) (*entity.CompanyPositionEntities, error)
 
+	FindCompaniesByNameLike(ctx context.Context, page, limit int, companyName string) (*utils.Pagination, error)
+
 	getDriver() neo4j.Driver
 }
 
@@ -84,6 +86,27 @@ func (s *companyService) GetCompanyPositionsForContact(ctx context.Context, cont
 		companyPositionEntities = append(companyPositionEntities, *companyPositionEntity)
 	}
 	return &companyPositionEntities, nil
+}
+
+func (s *companyService) FindCompaniesByNameLike(ctx context.Context, page, limit int, companyName string) (*utils.Pagination, error) {
+	var paginatedResult = utils.Pagination{
+		Limit: limit,
+		Page:  page,
+	}
+
+	dbNodesWithTotalCount, err := s.repository.CompanyRepository.GetPaginatedCompaniesWithNameLike(common.GetContext(ctx).Tenant, companyName, paginatedResult.GetSkip(), paginatedResult.GetLimit())
+	if err != nil {
+		return nil, err
+	}
+	paginatedResult.SetTotalRows(dbNodesWithTotalCount.Count)
+
+	companyEntities := entity.CompanyEntities{}
+
+	for _, v := range dbNodesWithTotalCount.Nodes {
+		companyEntities = append(companyEntities, *s.mapCompanyDbNodeToEntity(v))
+	}
+	paginatedResult.SetRows(&companyEntities)
+	return &paginatedResult, nil
 }
 
 func (s *companyService) mapCompanyDbNodeToEntity(node *dbtype.Node) *entity.CompanyEntity {

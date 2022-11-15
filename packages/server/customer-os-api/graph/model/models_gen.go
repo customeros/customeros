@@ -33,22 +33,6 @@ type Pages interface {
 	GetTotalElements() int64
 }
 
-type CompaniesPage struct {
-	Content       []*Company `json:"content"`
-	TotalPages    int        `json:"totalPages"`
-	TotalElements int64      `json:"totalElements"`
-}
-
-func (CompaniesPage) IsPages() {}
-
-// The total number of pages included in the query response.
-// **Required.**
-func (this CompaniesPage) GetTotalPages() int { return this.TotalPages }
-
-// The total number of elements included in the query response.
-// **Required.**
-func (this CompaniesPage) GetTotalElements() int64 { return this.TotalElements }
-
 type Company struct {
 	ID   string `json:"id"`
 	Name string `json:"name"`
@@ -60,6 +44,22 @@ type CompanyInput struct {
 	// **Required.**
 	Name *string `json:"name"`
 }
+
+type CompanyPage struct {
+	Content       []*Company `json:"content"`
+	TotalPages    int        `json:"totalPages"`
+	TotalElements int64      `json:"totalElements"`
+}
+
+func (CompanyPage) IsPages() {}
+
+// The total number of pages included in the query response.
+// **Required.**
+func (this CompanyPage) GetTotalPages() int { return this.TotalPages }
+
+// The total number of elements included in the query response.
+// **Required.**
+func (this CompanyPage) GetTotalElements() int64 { return this.TotalElements }
 
 // Describes the relationship a Contact has with a Company.
 // **A `return` object**

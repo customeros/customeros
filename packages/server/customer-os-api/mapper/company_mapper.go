@@ -6,14 +6,14 @@ import (
 )
 
 func MapCompanyInputToEntity(input *model.CompanyInput) *entity.CompanyEntity {
-	companyEntity := entity.CompanyEntity{}
+	companyEntity := new(entity.CompanyEntity)
 	if input.ID != nil {
 		companyEntity.Id = *input.ID
 	}
 	if input.Name != nil {
 		companyEntity.Name = *input.Name
 	}
-	return &companyEntity
+	return companyEntity
 }
 
 func MapEntityToCompany(entity *entity.CompanyEntity) *model.Company {
@@ -23,10 +23,10 @@ func MapEntityToCompany(entity *entity.CompanyEntity) *model.Company {
 	}
 }
 
-//func MapEntitiesToCompanyPositiones(companyPositionEntities *entity.CompanyPositionEntities) []*model.Company {
-//	var companyPositions []*model.Company
-//	for _, companyPositionEntity := range *companyPositionEntities {
-//		companyPositions = append(companyPositions, MapEntityToCompanyPosition(&companyPositionEntity))
-//	}
-//	return companyPositions
-//}
+func MapEntitiesToCompanies(companyEntities *entity.CompanyEntities) []*model.Company {
+	var companies []*model.Company
+	for _, companyEntity := range *companyEntities {
+		companies = append(companies, MapEntityToCompany(&companyEntity))
+	}
+	return companies
+}

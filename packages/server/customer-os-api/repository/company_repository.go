@@ -13,6 +13,8 @@ type CompanyRepository interface {
 	UpdateCompanyPosition(tenant, contactId, companyPositionId, jobTitle string) (*dbtype.Node, *dbtype.Relationship, error)
 	DeleteCompanyPosition(tenant, contactId, companyPositionId string) error
 	GetCompanyPositionsForContact(tenant, contactId string) ([]*CompanyWithPositionNodes, error)
+
+	GetPaginatedCompaniesWithNameLike(tenant, companyName string, skip, limit int) (*utils.DbNodesWithTotalCount, error)
 }
 
 type companyRepository struct {
@@ -167,5 +169,48 @@ func (r *companyRepository) GetCompanyPositionsForContact(tenant, contactId stri
 		}
 		return companyWithPositionNodes, nil
 	}
+}
 
+func (r *companyRepository) GetPaginatedCompaniesWithNameLike(tenant, companyName string, skip, limit int) (*utils.DbNodesWithTotalCount, error) {
+	session := (*r.driver).NewSession(neo4j.SessionConfig{AccessMode: neo4j.AccessModeRead})
+	defer session.Close()
+
+	dbNodesWithTotalCount := new(utils.DbNodesWithTotalCount)
+
+	dbRecords, err := session.ReadTransaction(func(tx neo4j.Transaction) (any, error) {
+		queryResult, err := tx.Run(`
+				MATCH (:Tenant {name:$tenant})<-[:COMPANY_BELONGS_TO_TENANT]-(co:Company) 
+				WHERE toLower(co.name) CONTAINS toLower($companyName)
+				RETURN count(co) as count`,
+			map[string]interface{}{
+				"tenant":      tenant,
+				"companyName": companyName,
+			})
+		if err != nil {
+			return nil, err
+		}
+		count, _ := queryResult.Single()
+		dbNodesWithTotalCount.Count = count.Values[0].(int64)
+
+		queryResult, err = tx.Run(`
+				MATCH (:Tenant {name:$tenant})<-[:COMPANY_BELONGS_TO_TENANT]-(co:Company) 
+                WHERE toLower(co.name) CONTAINS toLower($companyName)
+				RETURN co ORDER BY co.name SKIP $skip LIMIT $limit`,
+			map[string]interface{}{
+				"tenant":      tenant,
+				"companyName": companyName,
+				"skip":        skip,
+				"limit":       limit,
+			})
+		return queryResult.Collect()
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	for _, v := range dbRecords.([]*neo4j.Record) {
+		dbNodesWithTotalCount.Nodes = append(dbNodesWithTotalCount.Nodes, utils.NodePtr(v.Values[0].(neo4j.Node)))
+	}
+
+	return dbNodesWithTotalCount, nil
 }

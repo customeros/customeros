@@ -14,7 +14,7 @@ import (
 
 type UserService interface {
 	Create(ctx context.Context, user *entity.UserEntity) (*entity.UserEntity, error)
-	FindAll(ctx context.Context, page int, limit int) (*utils.Pagination, error)
+	FindAll(ctx context.Context, page, limit int) (*utils.Pagination, error)
 	getDriver() neo4j.Driver
 }
 
@@ -66,7 +66,7 @@ func (s *userService) Create(ctx context.Context, user *entity.UserEntity) (*ent
 	return s.mapDbNodeToUserEntity(queryResult.(dbtype.Node)), nil
 }
 
-func (s *userService) FindAll(ctx context.Context, page int, limit int) (*utils.Pagination, error) {
+func (s *userService) FindAll(ctx context.Context, page, limit int) (*utils.Pagination, error) {
 	var paginatedResult = utils.Pagination{
 		Limit: limit,
 		Page:  page,

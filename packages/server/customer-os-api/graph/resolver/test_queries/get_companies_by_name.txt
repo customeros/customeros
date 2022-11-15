@@ -1,0 +1,10 @@
+query GetCompanies($companyName: String!, $page: Int!, $limit: Int!){
+  companies_ByNameLike(paginationFilter: {page: $page, limit: $limit}, companyName: $companyName) {
+    totalPages
+    totalElements
+    content {
+      id
+      name
+    }
+  }
+}
