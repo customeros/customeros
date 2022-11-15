@@ -2,18 +2,18 @@
 
 ### Locations for remote file downloads ###
 
-CUSTOMER_OS_API_CONFIG="https://raw.githubusercontent.com/openline-ai/openline-customer-os/otter/deployment/k8s/local-minikube/apps-config/customer-os-api.yaml"
-CUSTOMER_OS_API_K8S_CONFIG="https://raw.githubusercontent.com/openline-ai/openline-customer-os/otter/deployment/k8s/local-minikube/apps-config/customer-os-api-k8s-service.yaml"
-CUSTOMER_OS_API_K8S_LOADBALANCER_CONFIG="https://raw.githubusercontent.com/openline-ai/openline-customer-os/otter/deployment/k8s/local-minikube/apps-config/customer-os-api-k8s-loadbalancer-service.yaml"
-FUSIONAUTH_VALUES_CONFIG="https://raw.githubusercontent.com/openline-ai/openline-customer-os/otter/deployment/k8s/configs/fusionauth/fusionauth-values.yaml"
+OPENLINE_NAMESPACE="https://raw.githubusercontent.com/openline-ai/openline-customer-os/otter/deployment/infra/minikube-config/openline-namespace.json"
+CUSTOMER_OS_API_CONFIG="https://raw.githubusercontent.com/openline-ai/openline-customer-os/otter/deployment/infra/minikube-config/customer-os-api.yaml"
+CUSTOMER_OS_API_K8S_CONFIG="https://raw.githubusercontent.com/openline-ai/openline-customer-os/otter/deployment/infra/minikube-config/customer-os-api-k8s-service.yaml"
+CUSTOMER_OS_API_K8S_LOADBALANCER_CONFIG="https://raw.githubusercontent.com/openline-ai/openline-customer-os/otter/deployment/infra/minikube-config/customer-os-api-k8s-loadbalancer-service.yaml"
+FUSIONAUTH_VALUES_CONFIG="https://raw.githubusercontent.com/openline-ai/openline-customer-os/otter/deployment/infra/helm-charts/fusionauth/fusionauth.yaml"
 NEO4J_CYPHER="https://raw.githubusercontent.com/openline-ai/openline-customer-os/otter/packages/server/customer-os-api/customer-os.cypher"
-NEO4J_HELM_VALUES_CONFIG="https://raw.githubusercontent.com/openline-ai/openline-customer-os/otter/deployment/k8s/configs/neo4j/neo4j-helm-values.yaml"
-MESSAGE_STORE_API_CONFIG="https://raw.githubusercontent.com/openline-ai/openline-customer-os/otter/deployment/k8s/local-minikube/apps-config/message-store.yaml"
-MESSAGE_STORE_K8S_CONFIG="https://raw.githubusercontent.com/openline-ai/openline-customer-os/otter/deployment/k8s/local-minikube/apps-config/message-store-k8s-service.yaml"
-OPENLINE_NAMESPACE="https://raw.githubusercontent.com/openline-ai/openline-customer-os/otter/deployment/k8s/configs/openline-namespace.json"
-POSTGRESQL_PERSISTENT_VOLUME_CONFIG="https://raw.githubusercontent.com/openline-ai/openline-customer-os/otter/deployment/k8s/configs/postgresql/postgresql-persistent-volume.yaml"
-POSTGRESQL_PERSISTENT_VOLUME_CLAIM_CONFIG="https://raw.githubusercontent.com/openline-ai/openline-customer-os/otter/deployment/k8s/configs/postgresql/postgresql-persistent-volume-claim.yaml"
-POSTGRESQL_VALUES_CONFIG="https://raw.githubusercontent.com/openline-ai/openline-customer-os/otter/deployment/k8s/configs/postgresql/postgresql-values.yaml"
+NEO4J_HELM_VALUES_CONFIG="https://raw.githubusercontent.com/openline-ai/openline-customer-os/otter/deployment/infra/helm-charts/neo4j/neo4j.yaml"
+MESSAGE_STORE_API_CONFIG="https://raw.githubusercontent.com/openline-ai/openline-customer-os/otter/deployment/infra/minikube-config/message-store.yaml"
+MESSAGE_STORE_K8S_CONFIG="https://raw.githubusercontent.com/openline-ai/openline-customer-os/otter/deployment/infra/minikube-config/message-store-k8s-service.yaml"
+POSTGRESQL_PERSISTENT_VOLUME_CONFIG="https://raw.githubusercontent.com/openline-ai/openline-customer-os/otter/deployment/infra/minikube-config/postgresql-persistent-volume.yaml"
+POSTGRESQL_PERSISTENT_VOLUME_CLAIM_CONFIG="https://raw.githubusercontent.com/openline-ai/openline-customer-os/otter/deployment/infra/minikube-config/postgresql-persistent-volume-claim.yaml"
+POSTGRESQL_VALUES_CONFIG="https://raw.githubusercontent.com/openline-ai/openline-customer-os/otter/deployment/infra/helm-charts/postgresql/postgresql.yaml"
 
 ###########################################
 
