@@ -13,7 +13,7 @@ spec:
         app: message-store
     spec:                        # Spec for the container which will run in the Pod
       containers:
-        - image: ghcr.io/openline-ai/openline-customer-os/message-store:otter
+        - image: ghcr.io/openline-ai/openline-customer-os/message-store:latest
           name: message-store
           imagePullPolicy: Never
           ports:

@@ -1,6 +1,5 @@
 #!/bin/bash
 
-
 # Start minikube
 echo "  🦦 starting Minikube"
 MINIKUBE_STATUS=$(minikube status)
@@ -29,7 +28,6 @@ fi
 #Get namespace config & setup namespace in minikube
 OPENLINE_NAMESPACE="./openline-setup/openline-namespace.json"
 NAMESPACE_NAME="openline"
-
 if [[ $(kubectl get namespaces) == *"$NAMESPACE_NAME"* ]];
   then
     echo "  🦦 Continue deploy on namespace $NAMESPACE_NAME"
@@ -41,21 +39,6 @@ if [[ $(kubectl get namespaces) == *"$NAMESPACE_NAME"* ]];
     else
         echo "  ❌ failed to create $NAMESPACE_NAME namespace in Minikube.  Will retry after Kubernetes setup..."
         wait
-    fi
-fi
-
-
-if [[ $(kubectl get namespaces) == *"$NAMESPACE_NAME"* ]];
-  then
-    echo "  🦦 Continue deploy on namespace $NAMESPACE_NAME"
-  else
-    echo "  🦦 Creating $NAMESPACE_NAME namespace in Minikube"
-    kubectl create -f $OPENLINE_NAMESPACE
-    if [ $? -eq 0 ]; then
-        echo "  ✅ $NAMESPACE_NAME namespace created in Minikube"
-    else
-        echo "  ❌ failed to create $NAMESPACE_NAME namespace in Minikube."
-        exit 1
     fi
 fi
 
