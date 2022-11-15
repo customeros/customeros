@@ -36,7 +36,7 @@ func main() {
 	graphqlClient := graphql.NewClient(conf.Service.CustomerOsAPI)
 
 	// Initialize the generated User service.
-	svc := service.NewMessageService(client, graphqlClient)
+	svc := service.NewMessageService(client, graphqlClient, &conf)
 
 	// Create a new gRPC server (you can wire multiple services to a single server).
 	server := grpc.NewServer()
