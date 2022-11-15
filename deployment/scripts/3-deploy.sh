@@ -53,7 +53,6 @@ sleep 1
 neo_output="not empty"
 while  [ ! -z "$neo_output" ]; do
 	echo "  🦦 Provisioning Neo4j"
-    curl $NEO4J_CYPHER -o openline-setup/customer-os.cypher
 	neo_output=$(cat openline-setup/customer-os.cypher |kubectl run --rm -i --namespace $NAMESPACE_NAME --image "neo4j:4.4.11" cypher-shell  -- bash -c 'NEO4J_PASSWORD=StrongLocalPa\$\$ cypher-shell -a neo4j://neo4j-customer-os.openline.svc.cluster.local:7687 -u neo4j --non-interactive' 2>&1 |grep -v "see a command prompt" |grep -v "deleted")
 	if [ ! -z "$neo_output" ]; then
 		echo "  ❌ Neo4j provisioning failed, trying again"
@@ -64,5 +63,4 @@ while  [ ! -z "$neo_output" ]; do
 done
 
 echo "  🦦 Provisioning PostgreSQL"
-cd $CUSTOMER_OS_HOME/packages/server/message-store/sql
-SQL_USER=openline SQL_DATABABASE=openline SQL_PASSWORD=password ./build_db.sh local-kube
+SQL_USER=openline SQL_DATABABASE=openline SQL_PASSWORD=password ./postgresql/build_db.sh local-kube

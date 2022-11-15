@@ -39,10 +39,15 @@ if [[ $(kubectl get namespaces) == *"$NAMESPACE_NAME"* ]];
     if [ $? -eq 0 ]; then
         echo "  ✅ $NAMESPACE_NAME namespace created in Minikube"
     else
-        echo "  ❌ failed to create $NAMESPACE_NAME namespace in Minikube"
-        exit 1
+        echo "  ❌ failed to create $NAMESPACE_NAME namespace in Minikube.  Retrying..."
+        kubectl create -f $OPENLINE_NAMESPACE
+        if [ $? -eq 0 ]; then
+            echo "  ✅ $NAMESPACE_NAME namespace created in Minikube"
+        else
+            echo "  ❌ failed to create $NAMESPACE_NAME namespace in Minikube"
+            exit 1
+        fi
     fi
-    
 fi
 
 #Adding helm repos :
