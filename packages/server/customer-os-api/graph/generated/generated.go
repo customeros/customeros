@@ -68,21 +68,21 @@ type ComplexityRoot struct {
 	}
 
 	Contact struct {
-		Companies    func(childComplexity int) int
-		ContactType  func(childComplexity int) int
-		CreatedAt    func(childComplexity int) int
-		CustomFields func(childComplexity int) int
-		Definition   func(childComplexity int) int
-		Emails       func(childComplexity int) int
-		FieldSets    func(childComplexity int) int
-		FirstName    func(childComplexity int) int
-		Groups       func(childComplexity int) int
-		ID           func(childComplexity int) int
-		Label        func(childComplexity int) int
-		LastName     func(childComplexity int) int
-		Notes        func(childComplexity int) int
-		PhoneNumbers func(childComplexity int) int
-		Title        func(childComplexity int) int
+		CompanyPositions func(childComplexity int) int
+		ContactType      func(childComplexity int) int
+		CreatedAt        func(childComplexity int) int
+		CustomFields     func(childComplexity int) int
+		Definition       func(childComplexity int) int
+		Emails           func(childComplexity int) int
+		FieldSets        func(childComplexity int) int
+		FirstName        func(childComplexity int) int
+		Groups           func(childComplexity int) int
+		ID               func(childComplexity int) int
+		Label            func(childComplexity int) int
+		LastName         func(childComplexity int) int
+		Notes            func(childComplexity int) int
+		PhoneNumbers     func(childComplexity int) int
+		Title            func(childComplexity int) int
 	}
 
 	ContactGroup struct {
@@ -243,7 +243,7 @@ type ComplexityRoot struct {
 
 type ContactResolver interface {
 	ContactType(ctx context.Context, obj *model.Contact) (*model.ContactType, error)
-	Companies(ctx context.Context, obj *model.Contact) ([]*model.Company, error)
+	CompanyPositions(ctx context.Context, obj *model.Contact) ([]*model.CompanyPosition, error)
 	Groups(ctx context.Context, obj *model.Contact) ([]*model.ContactGroup, error)
 	PhoneNumbers(ctx context.Context, obj *model.Contact) ([]*model.PhoneNumber, error)
 	Emails(ctx context.Context, obj *model.Contact) ([]*model.Email, error)
@@ -387,12 +387,12 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.CompanyPosition.JobTitle(childComplexity), true
 
-	case "Contact.companies":
-		if e.complexity.Contact.Companies == nil {
+	case "Contact.companyPositions":
+		if e.complexity.Contact.CompanyPositions == nil {
 			break
 		}
 
-		return e.complexity.Contact.Companies(childComplexity), true
+		return e.complexity.Contact.CompanyPositions(childComplexity), true
 
 	case "Contact.contactType":
 		if e.complexity.Contact.ContactType == nil {
@@ -1639,7 +1639,7 @@ type Contact implements ExtensibleEntity & Node {
     ` + "`" + `companyName` + "`" + ` and ` + "`" + `jobTitle` + "`" + ` of the contact if it has been associated with a company.
     **Required.  If no values it returns an empty array.**
     """
-    companies: [Company!]! @goField(forceResolver: true)
+    companyPositions: [CompanyPosition!]! @goField(forceResolver: true)
 
     """
     Identifies any contact groups the contact is associated with.
@@ -4209,8 +4209,8 @@ func (ec *executionContext) fieldContext_Contact_contactType(ctx context.Context
 	return fc, nil
 }
 
-func (ec *executionContext) _Contact_companies(ctx context.Context, field graphql.CollectedField, obj *model.Contact) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Contact_companies(ctx, field)
+func (ec *executionContext) _Contact_companyPositions(ctx context.Context, field graphql.CollectedField, obj *model.Contact) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Contact_companyPositions(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -4223,7 +4223,7 @@ func (ec *executionContext) _Contact_companies(ctx context.Context, field graphq
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Contact().Companies(rctx, obj)
+		return ec.resolvers.Contact().CompanyPositions(rctx, obj)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -4235,12 +4235,12 @@ func (ec *executionContext) _Contact_companies(ctx context.Context, field graphq
 		}
 		return graphql.Null
 	}
-	res := resTmp.([]*model.Company)
+	res := resTmp.([]*model.CompanyPosition)
 	fc.Result = res
-	return ec.marshalNCompany2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐCompanyᚄ(ctx, field.Selections, res)
+	return ec.marshalNCompanyPosition2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐCompanyPositionᚄ(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Contact_companies(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Contact_companyPositions(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Contact",
 		Field:      field,
@@ -4249,11 +4249,13 @@ func (ec *executionContext) fieldContext_Contact_companies(ctx context.Context, 
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
 			case "id":
-				return ec.fieldContext_Company_id(ctx, field)
-			case "name":
-				return ec.fieldContext_Company_name(ctx, field)
+				return ec.fieldContext_CompanyPosition_id(ctx, field)
+			case "company":
+				return ec.fieldContext_CompanyPosition_company(ctx, field)
+			case "jobTitle":
+				return ec.fieldContext_CompanyPosition_jobTitle(ctx, field)
 			}
-			return nil, fmt.Errorf("no field named %q was found under type Company", field.Name)
+			return nil, fmt.Errorf("no field named %q was found under type CompanyPosition", field.Name)
 		},
 	}
 	return fc, nil
@@ -4955,8 +4957,8 @@ func (ec *executionContext) fieldContext_ContactsPage_content(ctx context.Contex
 				return ec.fieldContext_Contact_notes(ctx, field)
 			case "contactType":
 				return ec.fieldContext_Contact_contactType(ctx, field)
-			case "companies":
-				return ec.fieldContext_Contact_companies(ctx, field)
+			case "companyPositions":
+				return ec.fieldContext_Contact_companyPositions(ctx, field)
 			case "groups":
 				return ec.fieldContext_Contact_groups(ctx, field)
 			case "phoneNumbers":
@@ -6794,8 +6796,8 @@ func (ec *executionContext) fieldContext_Mutation_createContact(ctx context.Cont
 				return ec.fieldContext_Contact_notes(ctx, field)
 			case "contactType":
 				return ec.fieldContext_Contact_contactType(ctx, field)
-			case "companies":
-				return ec.fieldContext_Contact_companies(ctx, field)
+			case "companyPositions":
+				return ec.fieldContext_Contact_companyPositions(ctx, field)
 			case "groups":
 				return ec.fieldContext_Contact_groups(ctx, field)
 			case "phoneNumbers":
@@ -6881,8 +6883,8 @@ func (ec *executionContext) fieldContext_Mutation_updateContact(ctx context.Cont
 				return ec.fieldContext_Contact_notes(ctx, field)
 			case "contactType":
 				return ec.fieldContext_Contact_contactType(ctx, field)
-			case "companies":
-				return ec.fieldContext_Contact_companies(ctx, field)
+			case "companyPositions":
+				return ec.fieldContext_Contact_companyPositions(ctx, field)
 			case "groups":
 				return ec.fieldContext_Contact_groups(ctx, field)
 			case "phoneNumbers":
@@ -9241,8 +9243,8 @@ func (ec *executionContext) fieldContext_Query_contact(ctx context.Context, fiel
 				return ec.fieldContext_Contact_notes(ctx, field)
 			case "contactType":
 				return ec.fieldContext_Contact_contactType(ctx, field)
-			case "companies":
-				return ec.fieldContext_Contact_companies(ctx, field)
+			case "companyPositions":
+				return ec.fieldContext_Contact_companyPositions(ctx, field)
 			case "groups":
 				return ec.fieldContext_Contact_groups(ctx, field)
 			case "phoneNumbers":
@@ -9391,8 +9393,8 @@ func (ec *executionContext) fieldContext_Query_contact_ByEmail(ctx context.Conte
 				return ec.fieldContext_Contact_notes(ctx, field)
 			case "contactType":
 				return ec.fieldContext_Contact_contactType(ctx, field)
-			case "companies":
-				return ec.fieldContext_Contact_companies(ctx, field)
+			case "companyPositions":
+				return ec.fieldContext_Contact_companyPositions(ctx, field)
 			case "groups":
 				return ec.fieldContext_Contact_groups(ctx, field)
 			case "phoneNumbers":
@@ -9478,8 +9480,8 @@ func (ec *executionContext) fieldContext_Query_contact_ByPhone(ctx context.Conte
 				return ec.fieldContext_Contact_notes(ctx, field)
 			case "contactType":
 				return ec.fieldContext_Contact_contactType(ctx, field)
-			case "companies":
-				return ec.fieldContext_Contact_companies(ctx, field)
+			case "companyPositions":
+				return ec.fieldContext_Contact_companyPositions(ctx, field)
 			case "groups":
 				return ec.fieldContext_Contact_groups(ctx, field)
 			case "phoneNumbers":
@@ -13479,7 +13481,7 @@ func (ec *executionContext) _Contact(ctx context.Context, sel ast.SelectionSet, 
 				return innerFunc(ctx)
 
 			})
-		case "companies":
+		case "companyPositions":
 			field := field
 
 			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
@@ -13488,7 +13490,7 @@ func (ec *executionContext) _Contact(ctx context.Context, sel ast.SelectionSet, 
 						ec.Error(ctx, ec.Recover(ctx, r))
 					}
 				}()
-				res = ec._Contact_companies(ctx, field, obj)
+				res = ec._Contact_companyPositions(ctx, field, obj)
 				if res == graphql.Null {
 					atomic.AddUint32(&invalids, 1)
 				}
@@ -15422,6 +15424,50 @@ func (ec *executionContext) unmarshalNCompanyInput2ᚖgithubᚗcomᚋopenlineᚑ
 
 func (ec *executionContext) marshalNCompanyPosition2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐCompanyPosition(ctx context.Context, sel ast.SelectionSet, v model.CompanyPosition) graphql.Marshaler {
 	return ec._CompanyPosition(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNCompanyPosition2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐCompanyPositionᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.CompanyPosition) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNCompanyPosition2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐCompanyPosition(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
 }
 
 func (ec *executionContext) marshalNCompanyPosition2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐCompanyPosition(ctx context.Context, sel ast.SelectionSet, v *model.CompanyPosition) graphql.Marshaler {

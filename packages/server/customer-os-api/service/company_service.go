@@ -15,6 +15,8 @@ type CompanyService interface {
 	UpdateCompanyPosition(ctx context.Context, contactId, companyPositionId, jobTitle string) (*entity.CompanyPositionEntity, error)
 	DeleteCompanyPositionFromContact(ctx context.Context, contactId, companyPositionId string) (bool, error)
 
+	GetCompanyPositionsForContact(ctx context.Context, contactId string) (*entity.CompanyPositionEntities, error)
+
 	getDriver() neo4j.Driver
 }
 
@@ -68,6 +70,22 @@ func (s *companyService) DeleteCompanyPositionFromContact(ctx context.Context, c
 	return true, nil
 }
 
+func (s *companyService) GetCompanyPositionsForContact(ctx context.Context, contactId string) (*entity.CompanyPositionEntities, error) {
+
+	companiesAndPositionsDbNodes, err := s.repository.CompanyRepository.GetCompanyPositionsForContact(common.GetContext(ctx).Tenant, contactId)
+	if err != nil {
+		return nil, err
+	}
+
+	companyPositionEntities := entity.CompanyPositionEntities{}
+	for _, v := range companiesAndPositionsDbNodes {
+		companyPositionEntity := s.mapCompanyPositionDbRelationshipToEntity(v.Position)
+		companyPositionEntity.Company = *s.mapCompanyDbNodeToEntity(v.Company)
+		companyPositionEntities = append(companyPositionEntities, *companyPositionEntity)
+	}
+	return &companyPositionEntities, nil
+}
+
 func (s *companyService) mapCompanyDbNodeToEntity(node *dbtype.Node) *entity.CompanyEntity {
 	props := utils.GetPropsFromNode(*node)
 	companyEntity := new(entity.CompanyEntity)
@@ -83,63 +101,3 @@ func (s *companyService) mapCompanyPositionDbRelationshipToEntity(relationship *
 	companyPositionEntity.JobTitle = utils.GetStringPropOrEmpty(props, "jobTitle")
 	return companyPositionEntity
 }
-
-//func (s *companyPositionService) FindAllForContact(ctx context.Context, contact *model.Contact) (*entity.CompanyPositionEntities, error) {
-//	session := s.getDriver().NewSession(neo4j.SessionConfig{AccessMode: neo4j.AccessModeRead})
-//	defer session.Close()
-//
-//	queryResult, err := session.ReadTransaction(func(tx neo4j.Transaction) (interface{}, error) {
-//		result, err := tx.Run(`
-//				MATCH (c:Contact {id:$id})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}),
-//             			(c:Contact {id:$id})-[r:WORKS_AT]->(co:Company)
-//				RETURN co, r`,
-//			map[string]interface{}{
-//				"id":     contact.ID,
-//				"tenant": common.GetContext(ctx).Tenant})
-//		records, err := result.Collect()
-//		if err != nil {
-//			return nil, err
-//		}
-//		return records, nil
-//	})
-//	if err != nil {
-//		return nil, err
-//	}
-//
-//	companyPositionEntities := entity.CompanyPositionEntities{}
-//
-//	for _, dbRecord := range queryResult.([]*db.Record) {
-//		companyPositionEntity := s.mapDbNodeToEntity(dbRecord.Values[0].(dbtype.Node))
-//		s.addDbRelationshipToEntity(dbRecord.Values[1].(dbtype.Relationship), companyPositionEntity)
-//		companyPositionEntities = append(companyPositionEntities, *companyPositionEntity)
-//	}
-//
-//	return &companyPositionEntities, nil
-//}
-//
-//func setCompanyPositionRelationshipInTx(ctx context.Context, contactId string, input entity.CompanyEntity, tx neo4j.Transaction) error {
-//	_, err := tx.Run(`
-//			MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant})
-//            MERGE (co:Company {name: $company})-[:COMPANY_BELONGS_TO_TENANT]->(t)
-//			MERGE (c)-[:WORKS_AT {jobTitle:$jobTitle}]->(co)`,
-//		map[string]interface{}{
-//			"tenant":    common.GetContext(ctx).Tenant,
-//			"contactId": contactId,
-//			"company":   input.Company,
-//			"jobTitle":  input.JobTitle,
-//		})
-//	return err
-//}
-//
-//func (s *companyPositionService) mapDbNodeToEntity(node dbtype.Node) *entity.CompanyEntity {
-//	props := utils.GetPropsFromNode(node)
-//	result := entity.CompanyEntity{
-//		Company: utils.GetStringPropOrEmpty(props, "name"),
-//	}
-//	return &result
-//}
-//
-//func (s *companyPositionService) addDbRelationshipToEntity(relationship dbtype.Relationship, companyPositionEntity *entity.CompanyEntity) {
-//	props := utils.GetPropsFromRelationship(relationship)
-//	companyPositionEntity.JobTitle = utils.GetStringPropOrEmpty(props, "jobTitle")
-//}

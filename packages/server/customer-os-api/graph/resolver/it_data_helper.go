@@ -228,15 +228,16 @@ func createCompany(driver *neo4j.Driver, tenant, companyName string) string {
 	return companyId.String()
 }
 
-func contactWorksForCompany(driver *neo4j.Driver, contactId, companyId string) string {
+func contactWorksForCompany(driver *neo4j.Driver, contactId, companyId, jobTitle string) string {
 	var positionId, _ = uuid.NewRandom()
 	query := `MATCH (c:Contact {id:$contactId}),
 			        (co:Company {id:$companyId})
-			MERGE (c)-[:WORKS_AT {id:$id}]->(co)`
+			MERGE (c)-[:WORKS_AT {id:$id, jobTitle:$jobTitle}]->(co)`
 	integration_tests.ExecuteWriteQuery(driver, query, map[string]any{
 		"id":        positionId.String(),
 		"contactId": contactId,
 		"companyId": companyId,
+		"jobTitle":  jobTitle,
 	})
 	return positionId.String()
 }

@@ -118,7 +118,7 @@ func (r *contactTypeRepository) FindForContact(tenant, contactId string) (*dbtyp
 	session := (*r.driver).NewSession(neo4j.SessionConfig{AccessMode: neo4j.AccessModeRead})
 	defer session.Close()
 
-	records, err := session.ReadTransaction(func(tx neo4j.Transaction) (any, error) {
+	dbRecords, err := session.ReadTransaction(func(tx neo4j.Transaction) (any, error) {
 		if queryResult, err := tx.Run(`
 			MATCH (t:Tenant {name:$tenant})<-[:CONTACT_BELONGS_TO_TENANT]-(c:Contact {id:$contactId})-[:IS_OF_TYPE]->(o:ContactType)
 			RETURN o`,
@@ -133,9 +133,9 @@ func (r *contactTypeRepository) FindForContact(tenant, contactId string) (*dbtyp
 	})
 	if err != nil {
 		return nil, err
-	} else if len(records.([]*neo4j.Record)) == 0 {
+	} else if len(dbRecords.([]*neo4j.Record)) == 0 {
 		return nil, nil
 	} else {
-		return utils.NodePtr(records.([]*neo4j.Record)[0].Values[0].(dbtype.Node)), nil
+		return utils.NodePtr(dbRecords.([]*neo4j.Record)[0].Values[0].(dbtype.Node)), nil
 	}
 }

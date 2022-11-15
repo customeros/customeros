@@ -12,6 +12,7 @@ type CompanyRepository interface {
 	LinkExistingCompanyToContact(tenant, contactId, companyId, jobTitle string) (*dbtype.Node, *dbtype.Relationship, error)
 	UpdateCompanyPosition(tenant, contactId, companyPositionId, jobTitle string) (*dbtype.Node, *dbtype.Relationship, error)
 	DeleteCompanyPosition(tenant, contactId, companyPositionId string) error
+	GetCompanyPositionsForContact(tenant, contactId string) ([]*CompanyWithPositionNodes, error)
 }
 
 type companyRepository struct {
@@ -24,6 +25,11 @@ func NewCompanyRepository(driver *neo4j.Driver, repos *RepositoryContainer) Comp
 		driver: driver,
 		repos:  repos,
 	}
+}
+
+type CompanyWithPositionNodes struct {
+	Company  *dbtype.Node
+	Position *dbtype.Relationship
 }
 
 func (r *companyRepository) LinkNewCompanyToContact(tenant, contactId, companyName, jobTitle string) (*dbtype.Node, *dbtype.Relationship, error) {
@@ -104,7 +110,7 @@ func (r *companyRepository) UpdateCompanyPosition(tenant, contactId, companyPosi
 	if err != nil {
 		return nil, nil, err
 	}
-	return utils.NodePtr(dbRecord.(*db.Record).Values[0].(dbtype.Node)), utils.RelationshipPtr(dbRecord.(*db.Record).Values[1].(dbtype.Relationship)), err
+	return utils.NodePtr(dbRecord.(*neo4j.Record).Values[0].(dbtype.Node)), utils.RelationshipPtr(dbRecord.(*neo4j.Record).Values[1].(dbtype.Relationship)), err
 }
 
 func (r *companyRepository) DeleteCompanyPosition(tenant, contactId, companyPositionId string) error {
@@ -127,4 +133,39 @@ func (r *companyRepository) DeleteCompanyPosition(tenant, contactId, companyPosi
 	} else {
 		return nil
 	}
+}
+
+func (r *companyRepository) GetCompanyPositionsForContact(tenant, contactId string) ([]*CompanyWithPositionNodes, error) {
+	session := (*r.driver).NewSession(neo4j.SessionConfig{AccessMode: neo4j.AccessModeRead})
+	defer session.Close()
+
+	dbRecords, err := session.ReadTransaction(func(tx neo4j.Transaction) (any, error) {
+		if queryResult, err := tx.Run(`
+			MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant}),
+					(c)-[r:WORKS_AT]->(co:Company)
+			RETURN co, r ORDER BY co.name, r.jobTitle`,
+			map[string]any{
+				"tenant":    tenant,
+				"contactId": contactId,
+			}); err != nil {
+			return nil, err
+		} else {
+			return queryResult.Collect()
+		}
+	})
+	if err != nil {
+		return nil, err
+	} else if len(dbRecords.([]*neo4j.Record)) == 0 {
+		return nil, nil
+	} else {
+		companyWithPositionNodes := []*CompanyWithPositionNodes{}
+		for _, v := range dbRecords.([]*neo4j.Record) {
+			singleCompanyWithPositionNodes := new(CompanyWithPositionNodes)
+			singleCompanyWithPositionNodes.Company = utils.NodePtr(v.Values[0].(dbtype.Node))
+			singleCompanyWithPositionNodes.Position = utils.RelationshipPtr(v.Values[1].(dbtype.Relationship))
+			companyWithPositionNodes = append(companyWithPositionNodes, singleCompanyWithPositionNodes)
+		}
+		return companyWithPositionNodes, nil
+	}
+
 }

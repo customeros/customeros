@@ -110,7 +110,7 @@ type Contact struct {
 	ContactType *ContactType `json:"contactType"`
 	// `companyName` and `jobTitle` of the contact if it has been associated with a company.
 	// **Required.  If no values it returns an empty array.**
-	Companies []*Company `json:"companies"`
+	CompanyPositions []*CompanyPosition `json:"companyPositions"`
 	// Identifies any contact groups the contact is associated with.
 	//  **Required.  If no values it returns an empty array.**
 	Groups []*ContactGroup `json:"groups"`

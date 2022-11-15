@@ -120,13 +120,13 @@ func TestQueryResolver_ContactByEmail(t *testing.T) {
 	assertRawResponseSuccess(t, rawResponse, err)
 
 	var contact struct {
-		ContactByEmail model.Contact
+		Contact_ByEmail model.Contact
 	}
 
 	err = decode.Decode(rawResponse.Data.(map[string]any), &contact)
 	require.Nil(t, err)
 	require.NotNil(t, contact)
-	require.Equal(t, contactId1, contact.ContactByEmail.ID)
+	require.Equal(t, contactId1, contact.Contact_ByEmail.ID)
 }
 
 func TestQueryResolver_ContactByPhone(t *testing.T) {
@@ -143,13 +143,13 @@ func TestQueryResolver_ContactByPhone(t *testing.T) {
 	assertRawResponseSuccess(t, rawResponse, err)
 
 	var contact struct {
-		ContactByPhone model.Contact
+		Contact_ByPhone model.Contact
 	}
 
 	err = decode.Decode(rawResponse.Data.(map[string]any), &contact)
 	require.Nil(t, err)
 	require.NotNil(t, contact)
-	require.Equal(t, contactId1, contact.ContactByPhone.ID)
+	require.Equal(t, contactId1, contact.Contact_ByPhone.ID)
 }
 
 func TestMutationResolver_CreateUser(t *testing.T) {
@@ -782,7 +782,7 @@ func TestMutationResolver_ContactRemoveCompanyPosition(t *testing.T) {
 	createTenant(driver, tenantName)
 	contactId := createDefaultContact(driver, tenantName)
 	companyId := createCompany(driver, tenantName, "LLC LLC")
-	positionId := contactWorksForCompany(driver, contactId, companyId)
+	positionId := contactWorksForCompany(driver, contactId, companyId, "CTO")
 
 	require.Equal(t, 1, getCountOfRelationships(driver, "WORKS_AT"))
 
@@ -808,7 +808,7 @@ func TestMutationResolver_ContactUpdateCompanyPosition(t *testing.T) {
 	createTenant(driver, tenantName)
 	contactId := createDefaultContact(driver, tenantName)
 	companyId := createCompany(driver, tenantName, "LLC LLC")
-	positionId := contactWorksForCompany(driver, contactId, companyId)
+	positionId := contactWorksForCompany(driver, contactId, companyId, "CTO")
 
 	rawResponse, err := c.RawPost(getQuery("update_company_position"),
 		client.Var("contactId", contactId),
@@ -830,4 +830,41 @@ func TestMutationResolver_ContactUpdateCompanyPosition(t *testing.T) {
 	require.Equal(t, 1, getCountOfNodes(driver, "Contact"))
 	require.Equal(t, 1, getCountOfNodes(driver, "Company"))
 	require.Equal(t, 1, getCountOfRelationships(driver, "WORKS_AT"))
+}
+
+func TestQueryResolver_Contact(t *testing.T) {
+	defer setupTestCase()(t)
+	createTenant(driver, tenantName)
+	contactId := createDefaultContact(driver, tenantName)
+	companyId1 := createCompany(driver, tenantName, "ABC")
+	companyId2 := createCompany(driver, tenantName, "XYZ")
+	positionId1 := contactWorksForCompany(driver, contactId, companyId1, "CTO")
+	positionId2 := contactWorksForCompany(driver, contactId, companyId2, "CEO")
+
+	rawResponse, err := c.RawPost(getQuery("get_contact_by_id"),
+		client.Var("contactId", contactId))
+	assertRawResponseSuccess(t, rawResponse, err)
+
+	var searchedContact struct {
+		Contact model.Contact
+	}
+
+	err = decode.Decode(rawResponse.Data.(map[string]any), &searchedContact)
+	require.Nil(t, err)
+	require.Equal(t, contactId, searchedContact.Contact.ID)
+
+	companyPositions := searchedContact.Contact.CompanyPositions
+	require.Equal(t, 2, len(companyPositions))
+	require.Equal(t, positionId1, companyPositions[0].ID)
+	require.Equal(t, "CTO", *companyPositions[0].JobTitle)
+	require.Equal(t, companyId1, companyPositions[0].Company.ID)
+	require.Equal(t, "ABC", companyPositions[0].Company.Name)
+	require.Equal(t, positionId2, companyPositions[1].ID)
+	require.Equal(t, "CEO", *companyPositions[1].JobTitle)
+	require.Equal(t, companyId2, companyPositions[1].Company.ID)
+	require.Equal(t, "XYZ", companyPositions[1].Company.Name)
+
+	require.Equal(t, 1, getCountOfNodes(driver, "Contact"))
+	require.Equal(t, 2, getCountOfNodes(driver, "Company"))
+	require.Equal(t, 2, getCountOfRelationships(driver, "WORKS_AT"))
 }
