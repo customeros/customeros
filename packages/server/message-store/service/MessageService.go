@@ -181,6 +181,8 @@ func createConversation(graphqlClient *graphql.Client, userId string, contactId 
 func (s *messageService) SaveMessage(ctx context.Context, message *pb.Message) (*pb.Message, error) {
 	var contact *ContactInfo
 	var err error
+	var feed *gen.MessageFeed
+
 	if message.Contact == nil {
 		if message.GetChannel() == pb.MessageChannel_MAIL || message.GetChannel() == pb.MessageChannel_WIDGET {
 			displayName, email := parseEmail(message.Username)
@@ -209,22 +211,29 @@ func (s *messageService) SaveMessage(ctx context.Context, message *pb.Message) (
 					return nil, err
 				}
 			}
+			feed, err = s.client.MessageFeed.
+				Query().
+				Where(messagefeed.ContactId(contact.id)).
+				First(ctx)
+
 		} else {
 			return nil, status.Errorf(codes.Unimplemented, "Contact mapping not implemented yet for %v", message.GetChannel())
 		}
 	} else {
-		contact = &ContactInfo{firstName: message.Contact.FirstName,
-			lastName: message.Contact.LastName,
-			id:       message.Contact.ContactId,
+		feed, err = s.client.MessageFeed.
+			Get(ctx, int(*message.Contact.Id))
+		if err != nil {
+			return nil, status.Errorf(codes.NotFound, "Couldn't find a feed for id of %d", *message.Contact.Id)
+		}
+
+		contact = &ContactInfo{firstName: feed.FirstName,
+			lastName: feed.LastName,
+			id:       feed.ContactId,
 		}
 	}
 
-	feed, err := s.client.MessageFeed.
-		Query().
-		Where(messagefeed.ContactId(contact.id)).
-		First(ctx)
-
 	if err != nil {
+		// can only reach here if message.Contact is nil & the contactId found in neo4j doesn't match a message any feed
 		se, _ := status.FromError(err)
 		if se.Code() != codes.Unknown {
 			return nil, status.Errorf(se.Code(), "Error upserting Feed")
@@ -408,7 +417,7 @@ func (s *messageService) GetFeed(ctx context.Context, contact *pb.Contact) (*pb.
 			return nil, status.Errorf(se.Code(), "Error finding Feed")
 		}
 		var id int64 = int64(mf.ID)
-		return &pb.Contact{FirstName: mf.FirstName, LastName: mf.LastName, Id: &id}, nil
+		return &pb.Contact{FirstName: mf.FirstName, LastName: mf.LastName, ContactId: mf.ContactId, Id: &id}, nil
 	} else {
 		log.Printf("Looking up messages for Contact name %s", contact.GetContactId())
 		mf, err := s.client.MessageFeed.Query().
