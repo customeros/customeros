@@ -170,7 +170,7 @@ func createConversation(graphqlClient *graphql.Client, userId string, contactId 
 					startedAt
 				}
 			}
-    `, userId, contactId))
+    `, userId, contactId, feedId))
 
 	var graphqlResponse map[string]map[string]string
 	if err := graphqlClient.Run(context.Background(), graphqlRequest, &graphqlResponse); err != nil {
