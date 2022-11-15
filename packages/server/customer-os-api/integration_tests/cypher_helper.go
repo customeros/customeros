@@ -2,11 +2,12 @@ package integration_tests
 
 import (
 	"github.com/neo4j/neo4j-go-driver/v4/neo4j"
+	"github.com/openline-ai/openline-customer-os/customer-os-api/utils"
 	"log"
 )
 
 func ExecuteWriteQuery(driver *neo4j.Driver, query string, params map[string]interface{}) {
-	session := (*driver).NewSession(neo4j.SessionConfig{AccessMode: neo4j.AccessModeWrite})
+	session := utils.NewNeo4jWriteSession(*driver)
 	defer session.Close()
 
 	_, err := session.WriteTransaction(func(tx neo4j.Transaction) (interface{}, error) {
@@ -22,7 +23,7 @@ func ExecuteWriteQuery(driver *neo4j.Driver, query string, params map[string]int
 }
 
 func ExecuteReadQueryWithSingleReturn(driver *neo4j.Driver, query string, params map[string]any) any {
-	session := (*driver).NewSession(neo4j.SessionConfig{AccessMode: neo4j.AccessModeRead})
+	session := utils.NewNeo4jReadSession(*driver)
 	defer session.Close()
 
 	queryResult, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {

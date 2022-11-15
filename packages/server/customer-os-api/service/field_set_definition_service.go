@@ -52,7 +52,7 @@ func (s *fieldSetDefinitionService) mapDbNodeToFieldSetDefinition(dbNode dbtype.
 	fieldSetDefinition := entity.FieldSetDefinitionEntity{
 		Id:    utils.GetStringPropOrEmpty(props, "id"),
 		Name:  utils.GetStringPropOrEmpty(props, "name"),
-		Order: utils.GetIntPropOrDefault(props, "order"),
+		Order: utils.GetIntPropOrMinusOne(props, "order"),
 	}
 	return &fieldSetDefinition
 }

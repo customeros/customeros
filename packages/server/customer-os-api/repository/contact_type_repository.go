@@ -28,7 +28,7 @@ func NewContactTypeRepository(driver *neo4j.Driver, repos *RepositoryContainer) 
 }
 
 func (r *contactTypeRepository) Create(tenant string, contactType *entity.ContactTypeEntity) (*dbtype.Node, error) {
-	session := (*r.driver).NewSession(neo4j.SessionConfig{AccessMode: neo4j.AccessModeWrite})
+	session := utils.NewNeo4jWriteSession(*r.driver)
 	defer session.Close()
 
 	if result, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
@@ -50,7 +50,7 @@ func (r *contactTypeRepository) Create(tenant string, contactType *entity.Contac
 }
 
 func (r *contactTypeRepository) Update(tenant string, contactType *entity.ContactTypeEntity) (*dbtype.Node, error) {
-	session := (*r.driver).NewSession(neo4j.SessionConfig{AccessMode: neo4j.AccessModeWrite})
+	session := utils.NewNeo4jWriteSession(*r.driver)
 	defer session.Close()
 
 	if result, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
@@ -72,7 +72,7 @@ func (r *contactTypeRepository) Update(tenant string, contactType *entity.Contac
 }
 
 func (r *contactTypeRepository) Delete(tenant string, id string) error {
-	session := (*r.driver).NewSession(neo4j.SessionConfig{AccessMode: neo4j.AccessModeWrite})
+	session := utils.NewNeo4jWriteSession(*r.driver)
 	defer session.Close()
 
 	if _, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
@@ -92,7 +92,7 @@ func (r *contactTypeRepository) Delete(tenant string, id string) error {
 }
 
 func (r *contactTypeRepository) FindAll(tenant string) ([]*dbtype.Node, error) {
-	session := (*r.driver).NewSession(neo4j.SessionConfig{AccessMode: neo4j.AccessModeRead})
+	session := utils.NewNeo4jReadSession(*r.driver)
 	defer session.Close()
 
 	records, err := session.ReadTransaction(func(tx neo4j.Transaction) (any, error) {
@@ -115,7 +115,7 @@ func (r *contactTypeRepository) FindAll(tenant string) ([]*dbtype.Node, error) {
 }
 
 func (r *contactTypeRepository) FindForContact(tenant, contactId string) (*dbtype.Node, error) {
-	session := (*r.driver).NewSession(neo4j.SessionConfig{AccessMode: neo4j.AccessModeRead})
+	session := utils.NewNeo4jReadSession(*r.driver)
 	defer session.Close()
 
 	dbRecords, err := session.ReadTransaction(func(tx neo4j.Transaction) (any, error) {

@@ -65,7 +65,7 @@ func (s *customFieldDefinitionService) mapDbNodeToCustomFieldDefinition(dbNode d
 	customFieldDefinition := entity.CustomFieldDefinitionEntity{
 		Id:        utils.GetStringPropOrEmpty(props, "id"),
 		Name:      utils.GetStringPropOrEmpty(props, "name"),
-		Order:     utils.GetIntPropOrDefault(props, "order"),
+		Order:     utils.GetIntPropOrMinusOne(props, "order"),
 		Mandatory: utils.GetBoolPropOrFalse(props, "mandatory"),
 		Type:      utils.GetStringPropOrEmpty(props, "type"),
 		Length:    utils.GetIntPropOrNil(props, "length"),

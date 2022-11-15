@@ -2,6 +2,7 @@ package repository
 
 import (
 	"github.com/neo4j/neo4j-go-driver/v4/neo4j"
+	"github.com/openline-ai/openline-customer-os/customer-os-api/utils"
 )
 
 type ConversationRepository interface {
@@ -21,7 +22,7 @@ func NewConversationRepository(driver *neo4j.Driver, repos *RepositoryContainer)
 }
 
 func (r *conversationRepository) Create(tenant string, userId string, contactId string, conversationId string) (any, error) {
-	session := (*r.driver).NewSession(neo4j.SessionConfig{AccessMode: neo4j.AccessModeWrite})
+	session := utils.NewNeo4jWriteSession(*r.driver)
 	defer session.Close()
 
 	return session.WriteTransaction(func(tx neo4j.Transaction) (interface{}, error) {

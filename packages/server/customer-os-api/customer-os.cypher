@@ -11,6 +11,8 @@ MATCH (t:Tenant {name:"openline"})
 
 CREATE INDEX contact_id_idx IF NOT EXISTS FOR (n:Contact) ON (n.id);
 CREATE INDEX contact_group_id_idx IF NOT EXISTS FOR (n:ContactGroup) ON (n.id);
+CREATE INDEX company_id_idx IF NOT EXISTS FOR (n:Company) ON (n.id);
+CREATE INDEX company_name_idx IF NOT EXISTS FOR (n:Company) ON (n.name);
 CREATE INDEX custom_field_id_idx IF NOT EXISTS FOR (n:CustomField) ON (n.id);
 CREATE INDEX field_set_id_idx IF NOT EXISTS FOR (n:FieldSet) ON (n.id);
 CREATE INDEX email_id_idx IF NOT EXISTS FOR (n:Email) ON (n.id);

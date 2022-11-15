@@ -39,7 +39,7 @@ func (s *contactGroupService) getDriver() neo4j.Driver {
 }
 
 func (s *contactGroupService) Create(ctx context.Context, newContactGroup *entity.ContactGroupEntity) (*entity.ContactGroupEntity, error) {
-	session := s.getDriver().NewSession(neo4j.SessionConfig{AccessMode: neo4j.AccessModeWrite})
+	session := utils.NewNeo4jWriteSession(s.getDriver())
 	defer session.Close()
 
 	queryResult, err := session.WriteTransaction(func(tx neo4j.Transaction) (interface{}, error) {
@@ -67,7 +67,7 @@ func (s *contactGroupService) Create(ctx context.Context, newContactGroup *entit
 }
 
 func (s *contactGroupService) Update(ctx context.Context, contactGroup *entity.ContactGroupEntity) (*entity.ContactGroupEntity, error) {
-	session := s.getDriver().NewSession(neo4j.SessionConfig{AccessMode: neo4j.AccessModeWrite})
+	session := utils.NewNeo4jWriteSession(s.getDriver())
 	defer session.Close()
 
 	queryResult, err := session.WriteTransaction(func(tx neo4j.Transaction) (interface{}, error) {
@@ -94,7 +94,7 @@ func (s *contactGroupService) Update(ctx context.Context, contactGroup *entity.C
 }
 
 func (s *contactGroupService) Delete(ctx context.Context, id string) (bool, error) {
-	session := s.getDriver().NewSession(neo4j.SessionConfig{AccessMode: neo4j.AccessModeWrite})
+	session := utils.NewNeo4jWriteSession(s.getDriver())
 	defer session.Close()
 
 	queryResult, err := session.WriteTransaction(func(tx neo4j.Transaction) (interface{}, error) {
@@ -121,7 +121,7 @@ func (s *contactGroupService) FindAll(ctx context.Context, page int, limit int) 
 		Limit: limit,
 		Page:  page,
 	}
-	session := s.getDriver().NewSession(neo4j.SessionConfig{AccessMode: neo4j.AccessModeRead})
+	session := utils.NewNeo4jReadSession(s.getDriver())
 	defer session.Close()
 
 	queryResult, err := session.ReadTransaction(func(tx neo4j.Transaction) (interface{}, error) {
@@ -163,7 +163,7 @@ func (s *contactGroupService) FindAll(ctx context.Context, page int, limit int) 
 }
 
 func (s *contactGroupService) FindContactGroupById(ctx context.Context, id string) (*entity.ContactGroupEntity, error) {
-	session := s.getDriver().NewSession(neo4j.SessionConfig{AccessMode: neo4j.AccessModeRead})
+	session := utils.NewNeo4jReadSession(s.getDriver())
 	defer session.Close()
 
 	queryResult, err := session.ReadTransaction(func(tx neo4j.Transaction) (interface{}, error) {
@@ -187,7 +187,7 @@ func (s *contactGroupService) FindContactGroupById(ctx context.Context, id strin
 }
 
 func (s *contactGroupService) FindAllForContact(ctx context.Context, contact *model.Contact) (*entity.ContactGroupEntities, error) {
-	session := s.getDriver().NewSession(neo4j.SessionConfig{AccessMode: neo4j.AccessModeRead})
+	session := utils.NewNeo4jReadSession(s.getDriver())
 	defer session.Close()
 
 	queryResult, err := session.ReadTransaction(func(tx neo4j.Transaction) (interface{}, error) {
@@ -219,7 +219,7 @@ func (s *contactGroupService) FindAllForContact(ctx context.Context, contact *mo
 }
 
 func (s *contactGroupService) AddContactToGroup(ctx context.Context, contactId, groupId string) (bool, error) {
-	session := s.getDriver().NewSession(neo4j.SessionConfig{AccessMode: neo4j.AccessModeWrite})
+	session := utils.NewNeo4jWriteSession(s.getDriver())
 	defer session.Close()
 
 	queryResult, err := session.WriteTransaction(func(tx neo4j.Transaction) (interface{}, error) {
@@ -244,7 +244,7 @@ func (s *contactGroupService) AddContactToGroup(ctx context.Context, contactId, 
 }
 
 func (s *contactGroupService) RemoveContactFromGroup(ctx context.Context, contactId, groupId string) (bool, error) {
-	session := s.getDriver().NewSession(neo4j.SessionConfig{AccessMode: neo4j.AccessModeWrite})
+	session := utils.NewNeo4jWriteSession(s.getDriver())
 	defer session.Close()
 
 	queryResult, err := session.WriteTransaction(func(tx neo4j.Transaction) (interface{}, error) {

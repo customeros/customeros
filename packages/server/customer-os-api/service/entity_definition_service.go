@@ -70,7 +70,7 @@ func (s *entityDefinitionService) mapDbNodeToEntityDefinition(dbNode dbtype.Node
 		Id:      utils.GetStringPropOrEmpty(props, "id"),
 		Name:    utils.GetStringPropOrEmpty(props, "name"),
 		Extends: utils.GetStringPropOrNil(props, "extends"),
-		Version: utils.GetIntPropOrDefault(props, "version"),
+		Version: utils.GetIntPropOrMinusOne(props, "version"),
 	}
 	return &entityDefinition
 }

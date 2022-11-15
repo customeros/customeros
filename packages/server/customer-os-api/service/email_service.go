@@ -36,7 +36,7 @@ func (s *emailService) getDriver() neo4j.Driver {
 }
 
 func (s *emailService) FindAllForContact(ctx context.Context, contact *model.Contact) (*entity.EmailEntities, error) {
-	session := s.getDriver().NewSession(neo4j.SessionConfig{AccessMode: neo4j.AccessModeRead})
+	session := utils.NewNeo4jReadSession(s.getDriver())
 	defer session.Close()
 
 	queryResult, err := session.ReadTransaction(func(tx neo4j.Transaction) (interface{}, error) {
@@ -69,7 +69,7 @@ func (s *emailService) FindAllForContact(ctx context.Context, contact *model.Con
 }
 
 func (s *emailService) MergeEmailToContact(ctx context.Context, contactId string, entity *entity.EmailEntity) (*entity.EmailEntity, error) {
-	session := s.getDriver().NewSession(neo4j.SessionConfig{AccessMode: neo4j.AccessModeWrite})
+	session := utils.NewNeo4jWriteSession(s.getDriver())
 	defer session.Close()
 
 	queryResult, err := session.WriteTransaction(func(tx neo4j.Transaction) (interface{}, error) {
@@ -108,7 +108,7 @@ func (s *emailService) MergeEmailToContact(ctx context.Context, contactId string
 }
 
 func (s *emailService) UpdateEmailInContact(ctx context.Context, contactId string, entity *entity.EmailEntity) (*entity.EmailEntity, error) {
-	session := s.getDriver().NewSession(neo4j.SessionConfig{AccessMode: neo4j.AccessModeWrite})
+	session := utils.NewNeo4jWriteSession(s.getDriver())
 	defer session.Close()
 
 	queryResult, err := session.WriteTransaction(func(tx neo4j.Transaction) (interface{}, error) {
@@ -149,7 +149,7 @@ func (s *emailService) UpdateEmailInContact(ctx context.Context, contactId strin
 }
 
 func (s *emailService) Delete(ctx context.Context, contactId string, email string) (bool, error) {
-	session := s.getDriver().NewSession(neo4j.SessionConfig{AccessMode: neo4j.AccessModeWrite})
+	session := utils.NewNeo4jWriteSession(s.getDriver())
 	defer session.Close()
 
 	queryResult, err := session.WriteTransaction(func(tx neo4j.Transaction) (interface{}, error) {
@@ -174,7 +174,7 @@ func (s *emailService) Delete(ctx context.Context, contactId string, email strin
 }
 
 func (s *emailService) DeleteById(ctx context.Context, contactId string, emailId string) (bool, error) {
-	session := s.getDriver().NewSession(neo4j.SessionConfig{AccessMode: neo4j.AccessModeWrite})
+	session := utils.NewNeo4jWriteSession(s.getDriver())
 	defer session.Close()
 
 	queryResult, err := session.WriteTransaction(func(tx neo4j.Transaction) (interface{}, error) {
