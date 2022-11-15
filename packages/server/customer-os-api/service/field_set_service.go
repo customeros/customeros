@@ -35,7 +35,7 @@ func (s *fieldSetService) getDriver() neo4j.Driver {
 }
 
 func (s *fieldSetService) FindAllForContact(ctx context.Context, contact *model.Contact) (*entity.FieldSetEntities, error) {
-	session := s.getDriver().NewSession(neo4j.SessionConfig{AccessMode: neo4j.AccessModeRead})
+	session := utils.NewNeo4jReadSession(s.getDriver())
 	defer session.Close()
 
 	queryResult, err := session.ReadTransaction(func(tx neo4j.Transaction) (any, error) {
@@ -68,7 +68,7 @@ func (s *fieldSetService) FindAllForContact(ctx context.Context, contact *model.
 }
 
 func (s *fieldSetService) MergeFieldSetToContact(ctx context.Context, contactId string, input *entity.FieldSetEntity, fieldSetDefinitionId *string) (*entity.FieldSetEntity, error) {
-	session := s.getDriver().NewSession(neo4j.SessionConfig{AccessMode: neo4j.AccessModeWrite})
+	session := utils.NewNeo4jWriteSession(s.getDriver())
 	defer session.Close()
 
 	queryResult, err := session.WriteTransaction(func(tx neo4j.Transaction) (interface{}, error) {
@@ -105,7 +105,7 @@ func (s *fieldSetService) MergeFieldSetToContact(ctx context.Context, contactId 
 }
 
 func (s *fieldSetService) UpdateFieldSetInContact(ctx context.Context, contactId string, input *entity.FieldSetEntity) (*entity.FieldSetEntity, error) {
-	session := (s.getDriver()).NewSession(neo4j.SessionConfig{AccessMode: neo4j.AccessModeWrite})
+	session := utils.NewNeo4jWriteSession(s.getDriver())
 	defer session.Close()
 
 	queryResult, err := session.WriteTransaction(func(tx neo4j.Transaction) (interface{}, error) {
@@ -136,7 +136,7 @@ func (s *fieldSetService) UpdateFieldSetInContact(ctx context.Context, contactId
 }
 
 func (s *fieldSetService) DeleteByIdFromContact(ctx context.Context, contactId string, fieldSetId string) (bool, error) {
-	session := s.getDriver().NewSession(neo4j.SessionConfig{AccessMode: neo4j.AccessModeWrite})
+	session := utils.NewNeo4jWriteSession(s.getDriver())
 	defer session.Close()
 
 	queryResult, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {

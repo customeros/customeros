@@ -33,7 +33,7 @@ func (s *userService) getDriver() neo4j.Driver {
 }
 
 func (s *userService) Create(ctx context.Context, user *entity.UserEntity) (*entity.UserEntity, error) {
-	session := s.getDriver().NewSession(neo4j.SessionConfig{AccessMode: neo4j.AccessModeWrite})
+	session := utils.NewNeo4jWriteSession(s.getDriver())
 	defer session.Close()
 
 	queryResult, err := session.WriteTransaction(func(tx neo4j.Transaction) (interface{}, error) {
@@ -71,7 +71,7 @@ func (s *userService) FindAll(ctx context.Context, page, limit int) (*utils.Pagi
 		Limit: limit,
 		Page:  page,
 	}
-	session := s.getDriver().NewSession(neo4j.SessionConfig{AccessMode: neo4j.AccessModeRead})
+	session := utils.NewNeo4jReadSession(s.getDriver())
 	defer session.Close()
 
 	dataResult, err := session.ReadTransaction(func(tx neo4j.Transaction) (interface{}, error) {

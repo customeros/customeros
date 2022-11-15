@@ -26,7 +26,7 @@ func NewEntityDefinitionRepository(driver *neo4j.Driver, repos *RepositoryContai
 }
 
 func (r *entityDefinitionRepository) Create(tenant string, entity *entity.EntityDefinitionEntity) (any, error) {
-	session := (*r.driver).NewSession(neo4j.SessionConfig{AccessMode: neo4j.AccessModeWrite})
+	session := utils.NewNeo4jWriteSession(*r.driver)
 	defer session.Close()
 
 	queryResult, err := session.WriteTransaction(r.createFullEntityDefinitionInTxWork(tenant, entity))
@@ -37,7 +37,7 @@ func (r *entityDefinitionRepository) Create(tenant string, entity *entity.Entity
 }
 
 func (r *entityDefinitionRepository) FindAllByTenant(tenant string) (any, error) {
-	session := (*r.driver).NewSession(neo4j.SessionConfig{AccessMode: neo4j.AccessModeRead})
+	session := utils.NewNeo4jReadSession(*r.driver)
 	defer session.Close()
 
 	return session.ReadTransaction(func(tx neo4j.Transaction) (interface{}, error) {
@@ -54,7 +54,7 @@ func (r *entityDefinitionRepository) FindAllByTenant(tenant string) (any, error)
 }
 
 func (r *entityDefinitionRepository) FindByContactId(tenant string, contactId string) (any, error) {
-	session := (*r.driver).NewSession(neo4j.SessionConfig{AccessMode: neo4j.AccessModeRead})
+	session := utils.NewNeo4jReadSession(*r.driver)
 	defer session.Close()
 
 	return session.ReadTransaction(func(tx neo4j.Transaction) (interface{}, error) {

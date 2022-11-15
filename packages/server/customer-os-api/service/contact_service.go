@@ -57,7 +57,7 @@ func (s *contactService) getDriver() neo4j.Driver {
 }
 
 func (s *contactService) Create(ctx context.Context, newContact *ContactCreateData) (*entity.ContactEntity, error) {
-	session := s.getDriver().NewSession(neo4j.SessionConfig{AccessMode: neo4j.AccessModeWrite})
+	session := utils.NewNeo4jWriteSession(s.getDriver())
 	defer session.Close()
 
 	queryResult, err := session.WriteTransaction(s.createContactInDBTxWork(ctx, newContact))
@@ -142,7 +142,7 @@ func (s *contactService) createContactInDBTxWork(ctx context.Context, newContact
 }
 
 func (s *contactService) Update(ctx context.Context, contactUpdateData *ContactUpdateData) (*entity.ContactEntity, error) {
-	session := s.getDriver().NewSession(neo4j.SessionConfig{AccessMode: neo4j.AccessModeWrite})
+	session := utils.NewNeo4jWriteSession(s.getDriver())
 	defer session.Close()
 
 	contactDbNode, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
@@ -183,7 +183,7 @@ func (s *contactService) Update(ctx context.Context, contactUpdateData *ContactU
 }
 
 func (s *contactService) HardDelete(ctx context.Context, contactId string) (bool, error) {
-	session := s.getDriver().NewSession(neo4j.SessionConfig{AccessMode: neo4j.AccessModeWrite})
+	session := utils.NewNeo4jWriteSession(s.getDriver())
 	defer session.Close()
 
 	queryResult, err := session.WriteTransaction(func(tx neo4j.Transaction) (interface{}, error) {
@@ -209,7 +209,7 @@ func (s *contactService) HardDelete(ctx context.Context, contactId string) (bool
 }
 
 func (s *contactService) SoftDelete(ctx context.Context, contactId string) (bool, error) {
-	session := s.getDriver().NewSession(neo4j.SessionConfig{AccessMode: neo4j.AccessModeWrite})
+	session := utils.NewNeo4jWriteSession(s.getDriver())
 	defer session.Close()
 
 	queryResult, err := session.WriteTransaction(func(tx neo4j.Transaction) (interface{}, error) {
@@ -234,7 +234,7 @@ func (s *contactService) SoftDelete(ctx context.Context, contactId string) (bool
 }
 
 func (s *contactService) FindContactById(ctx context.Context, id string) (*entity.ContactEntity, error) {
-	session := s.getDriver().NewSession(neo4j.SessionConfig{AccessMode: neo4j.AccessModeRead})
+	session := utils.NewNeo4jReadSession(s.getDriver())
 	defer session.Close()
 
 	queryResult, err := session.ReadTransaction(func(tx neo4j.Transaction) (interface{}, error) {
@@ -258,7 +258,7 @@ func (s *contactService) FindContactById(ctx context.Context, id string) (*entit
 }
 
 func (s *contactService) FindContactByEmail(ctx context.Context, email string) (*entity.ContactEntity, error) {
-	session := s.getDriver().NewSession(neo4j.SessionConfig{AccessMode: neo4j.AccessModeRead})
+	session := utils.NewNeo4jReadSession(s.getDriver())
 	defer session.Close()
 
 	queryResult, err := session.ReadTransaction(func(tx neo4j.Transaction) (interface{}, error) {
@@ -284,7 +284,7 @@ func (s *contactService) FindContactByEmail(ctx context.Context, email string) (
 }
 
 func (s *contactService) FindContactByPhoneNumber(ctx context.Context, e164 string) (*entity.ContactEntity, error) {
-	session := s.getDriver().NewSession(neo4j.SessionConfig{AccessMode: neo4j.AccessModeRead})
+	session := utils.NewNeo4jReadSession(s.getDriver())
 	defer session.Close()
 
 	queryResult, err := session.ReadTransaction(func(tx neo4j.Transaction) (interface{}, error) {
@@ -314,7 +314,7 @@ func (s *contactService) FindAll(ctx context.Context, page int, limit int) (*uti
 		Limit: limit,
 		Page:  page,
 	}
-	session := s.getDriver().NewSession(neo4j.SessionConfig{AccessMode: neo4j.AccessModeRead})
+	session := utils.NewNeo4jReadSession(s.getDriver())
 	defer session.Close()
 
 	dataResult, err := session.ReadTransaction(func(tx neo4j.Transaction) (interface{}, error) {

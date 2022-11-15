@@ -35,7 +35,7 @@ type CompanyWithPositionNodes struct {
 }
 
 func (r *companyRepository) LinkNewCompanyToContact(tenant, contactId, companyName, jobTitle string) (*dbtype.Node, *dbtype.Relationship, error) {
-	session := (*r.driver).NewSession(neo4j.SessionConfig{AccessMode: neo4j.AccessModeWrite})
+	session := utils.NewNeo4jWriteSession(*r.driver)
 	defer session.Close()
 
 	dbRecord, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
@@ -62,7 +62,7 @@ func (r *companyRepository) LinkNewCompanyToContact(tenant, contactId, companyNa
 }
 
 func (r *companyRepository) LinkExistingCompanyToContact(tenant, contactId, companyId, jobTitle string) (*dbtype.Node, *dbtype.Relationship, error) {
-	session := (*r.driver).NewSession(neo4j.SessionConfig{AccessMode: neo4j.AccessModeWrite})
+	session := utils.NewNeo4jWriteSession(*r.driver)
 	defer session.Close()
 
 	dbRecord, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
@@ -89,7 +89,7 @@ func (r *companyRepository) LinkExistingCompanyToContact(tenant, contactId, comp
 }
 
 func (r *companyRepository) UpdateCompanyPosition(tenant, contactId, companyPositionId, jobTitle string) (*dbtype.Node, *dbtype.Relationship, error) {
-	session := (*r.driver).NewSession(neo4j.SessionConfig{AccessMode: neo4j.AccessModeWrite})
+	session := utils.NewNeo4jWriteSession(*r.driver)
 	defer session.Close()
 
 	dbRecord, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
@@ -116,7 +116,7 @@ func (r *companyRepository) UpdateCompanyPosition(tenant, contactId, companyPosi
 }
 
 func (r *companyRepository) DeleteCompanyPosition(tenant, contactId, companyPositionId string) error {
-	session := (*r.driver).NewSession(neo4j.SessionConfig{AccessMode: neo4j.AccessModeWrite})
+	session := utils.NewNeo4jWriteSession(*r.driver)
 	defer session.Close()
 
 	if _, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
@@ -138,7 +138,7 @@ func (r *companyRepository) DeleteCompanyPosition(tenant, contactId, companyPosi
 }
 
 func (r *companyRepository) GetCompanyPositionsForContact(tenant, contactId string) ([]*CompanyWithPositionNodes, error) {
-	session := (*r.driver).NewSession(neo4j.SessionConfig{AccessMode: neo4j.AccessModeRead})
+	session := utils.NewNeo4jReadSession(*r.driver)
 	defer session.Close()
 
 	dbRecords, err := session.ReadTransaction(func(tx neo4j.Transaction) (any, error) {
@@ -172,7 +172,7 @@ func (r *companyRepository) GetCompanyPositionsForContact(tenant, contactId stri
 }
 
 func (r *companyRepository) GetPaginatedCompaniesWithNameLike(tenant, companyName string, skip, limit int) (*utils.DbNodesWithTotalCount, error) {
-	session := (*r.driver).NewSession(neo4j.SessionConfig{AccessMode: neo4j.AccessModeRead})
+	session := utils.NewNeo4jReadSession(*r.driver)
 	defer session.Close()
 
 	dbNodesWithTotalCount := new(utils.DbNodesWithTotalCount)

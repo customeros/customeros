@@ -54,7 +54,7 @@ func (r *fieldSetDefinitionRepository) createFieldSetDefinitionInTx(entityDefId 
 }
 
 func (r *fieldSetDefinitionRepository) FindAllByEntityDefinitionId(entityDefinitionId string) (any, error) {
-	session := (*r.driver).NewSession(neo4j.SessionConfig{AccessMode: neo4j.AccessModeRead})
+	session := utils.NewNeo4jReadSession(*r.driver)
 	defer session.Close()
 
 	return session.ReadTransaction(func(tx neo4j.Transaction) (interface{}, error) {
@@ -71,7 +71,7 @@ func (r *fieldSetDefinitionRepository) FindAllByEntityDefinitionId(entityDefinit
 }
 
 func (r *fieldSetDefinitionRepository) FindByFieldSetId(fieldSetId string) (any, error) {
-	session := (*r.driver).NewSession(neo4j.SessionConfig{AccessMode: neo4j.AccessModeRead})
+	session := utils.NewNeo4jReadSession(*r.driver)
 	defer session.Close()
 
 	return session.ReadTransaction(func(tx neo4j.Transaction) (interface{}, error) {

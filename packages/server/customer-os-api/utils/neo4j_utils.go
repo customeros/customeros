@@ -11,6 +11,23 @@ type DbNodesWithTotalCount struct {
 	Count int64
 }
 
+func NewNeo4jReadSession(driver neo4j.Driver) neo4j.Session {
+	return newNeo4jSession(driver, neo4j.AccessModeRead)
+}
+
+func NewNeo4jWriteSession(driver neo4j.Driver) neo4j.Session {
+	return newNeo4jSession(driver, neo4j.AccessModeWrite)
+}
+
+func newNeo4jSession(driver neo4j.Driver, accessMode neo4j.AccessMode) neo4j.Session {
+	return driver.NewSession(
+		neo4j.SessionConfig{
+			AccessMode: accessMode,
+			BoltLogger: neo4j.ConsoleBoltLogger(),
+		},
+	)
+}
+
 func ExtractSingleRecordFirstValue(result neo4j.Result, err error) (any, error) {
 	if err != nil {
 		return nil, err
@@ -54,7 +71,7 @@ func GetStringPropOrNil(props map[string]any, key string) *string {
 	return nil
 }
 
-func GetIntPropOrDefault(props map[string]any, key string) int64 {
+func GetIntPropOrMinusOne(props map[string]any, key string) int64 {
 	if props[key] != nil {
 		return props[key].(int64)
 	}

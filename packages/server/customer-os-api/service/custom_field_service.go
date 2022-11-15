@@ -44,7 +44,7 @@ func (s *customFieldService) getDriver() neo4j.Driver {
 }
 
 func (s *customFieldService) FindAllForContact(ctx context.Context, contact *model.Contact) (*entity.CustomFieldEntities, error) {
-	session := s.getDriver().NewSession(neo4j.SessionConfig{AccessMode: neo4j.AccessModeRead})
+	session := utils.NewNeo4jReadSession(s.getDriver())
 	defer session.Close()
 
 	dbRecords, err := s.repository.CustomFieldRepository.FindAllForContact(session, common.GetContext(ctx).Tenant, contact.ID)
@@ -63,7 +63,7 @@ func (s *customFieldService) FindAllForContact(ctx context.Context, contact *mod
 }
 
 func (s *customFieldService) FindAllForFieldSet(ctx context.Context, fieldSet *model.FieldSet) (*entity.CustomFieldEntities, error) {
-	session := s.getDriver().NewSession(neo4j.SessionConfig{AccessMode: neo4j.AccessModeRead})
+	session := utils.NewNeo4jReadSession(s.getDriver())
 	defer session.Close()
 
 	dbRecords, err := s.repository.CustomFieldRepository.FindAllForContact(session, common.GetContext(ctx).Tenant, fieldSet.ID)
@@ -82,7 +82,7 @@ func (s *customFieldService) FindAllForFieldSet(ctx context.Context, fieldSet *m
 }
 
 func (s *customFieldService) MergeCustomFieldToContact(ctx context.Context, contactId string, entity *entity.CustomFieldEntity) (*entity.CustomFieldEntity, error) {
-	session := s.getDriver().NewSession(neo4j.SessionConfig{AccessMode: neo4j.AccessModeWrite})
+	session := utils.NewNeo4jWriteSession(s.getDriver())
 	defer session.Close()
 
 	customFieldNode, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
@@ -106,7 +106,7 @@ func (s *customFieldService) MergeCustomFieldToContact(ctx context.Context, cont
 }
 
 func (s *customFieldService) MergeCustomFieldToFieldSet(ctx context.Context, contactId string, fieldSetId string, entity *entity.CustomFieldEntity) (*entity.CustomFieldEntity, error) {
-	session := s.getDriver().NewSession(neo4j.SessionConfig{AccessMode: neo4j.AccessModeWrite})
+	session := utils.NewNeo4jWriteSession(s.getDriver())
 	defer session.Close()
 
 	customFieldNode, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
@@ -130,7 +130,7 @@ func (s *customFieldService) MergeCustomFieldToFieldSet(ctx context.Context, con
 }
 
 func (s *customFieldService) UpdateCustomFieldForContact(ctx context.Context, contactId string, entity *entity.CustomFieldEntity) (*entity.CustomFieldEntity, error) {
-	session := s.getDriver().NewSession(neo4j.SessionConfig{AccessMode: neo4j.AccessModeWrite})
+	session := utils.NewNeo4jWriteSession(s.getDriver())
 	defer session.Close()
 
 	customFieldDbNode, err := s.repository.CustomFieldRepository.UpdateForContact(session, common.GetContext(ctx).Tenant, contactId, entity)
@@ -141,7 +141,7 @@ func (s *customFieldService) UpdateCustomFieldForContact(ctx context.Context, co
 }
 
 func (s *customFieldService) UpdateCustomFieldForFieldSet(ctx context.Context, contactId string, fieldSetId string, entity *entity.CustomFieldEntity) (*entity.CustomFieldEntity, error) {
-	session := s.getDriver().NewSession(neo4j.SessionConfig{AccessMode: neo4j.AccessModeWrite})
+	session := utils.NewNeo4jWriteSession(s.getDriver())
 	defer session.Close()
 
 	customFieldDbNode, err := s.repository.CustomFieldRepository.UpdateForFieldSet(session, common.GetContext(ctx).Tenant, contactId, fieldSetId, entity)
@@ -152,7 +152,7 @@ func (s *customFieldService) UpdateCustomFieldForFieldSet(ctx context.Context, c
 }
 
 func (s *customFieldService) DeleteByNameFromContact(ctx context.Context, contactId, fieldName string) (bool, error) {
-	session := s.getDriver().NewSession(neo4j.SessionConfig{AccessMode: neo4j.AccessModeWrite})
+	session := utils.NewNeo4jWriteSession(s.getDriver())
 	defer session.Close()
 	err := s.repository.CustomFieldRepository.DeleteByNameFromContact(session, common.GetContext(ctx).Tenant, contactId, fieldName)
 	if err != nil {
@@ -162,7 +162,7 @@ func (s *customFieldService) DeleteByNameFromContact(ctx context.Context, contac
 }
 
 func (s *customFieldService) DeleteByIdFromContact(ctx context.Context, contactId, fieldId string) (bool, error) {
-	session := s.getDriver().NewSession(neo4j.SessionConfig{AccessMode: neo4j.AccessModeWrite})
+	session := utils.NewNeo4jWriteSession(s.getDriver())
 	defer session.Close()
 	err := s.repository.CustomFieldRepository.DeleteByIdFromContact(session, common.GetContext(ctx).Tenant, contactId, fieldId)
 	if err != nil {
@@ -172,7 +172,7 @@ func (s *customFieldService) DeleteByIdFromContact(ctx context.Context, contactI
 }
 
 func (s *customFieldService) DeleteByIdFromFieldSet(ctx context.Context, contactId, fieldSetId, fieldId string) (bool, error) {
-	session := s.getDriver().NewSession(neo4j.SessionConfig{AccessMode: neo4j.AccessModeWrite})
+	session := utils.NewNeo4jWriteSession(s.getDriver())
 	defer session.Close()
 	err := s.repository.CustomFieldRepository.DeleteByIdFromFieldSet(session, common.GetContext(ctx).Tenant, contactId, fieldSetId, fieldId)
 	if err != nil {

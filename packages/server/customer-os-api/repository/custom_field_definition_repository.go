@@ -3,6 +3,7 @@ package repository
 import (
 	"github.com/neo4j/neo4j-go-driver/v4/neo4j"
 	"github.com/openline-ai/openline-customer-os/customer-os-api/entity"
+	"github.com/openline-ai/openline-customer-os/customer-os-api/utils"
 )
 
 type CustomFieldDefinitionRepository interface {
@@ -80,7 +81,7 @@ func (r *customFieldDefinitionRepository) createCustomFieldDefinitionForFieldSet
 }
 
 func (r *customFieldDefinitionRepository) FindAllByEntityDefinitionId(entityDefinitionId string) (any, error) {
-	session := (*r.driver).NewSession(neo4j.SessionConfig{AccessMode: neo4j.AccessModeRead})
+	session := utils.NewNeo4jReadSession(*r.driver)
 	defer session.Close()
 
 	return session.ReadTransaction(func(tx neo4j.Transaction) (interface{}, error) {
@@ -97,7 +98,7 @@ func (r *customFieldDefinitionRepository) FindAllByEntityDefinitionId(entityDefi
 }
 
 func (r *customFieldDefinitionRepository) FindAllByEntityFieldSetDefinitionId(fieldSetDefinitionId string) (any, error) {
-	session := (*r.driver).NewSession(neo4j.SessionConfig{AccessMode: neo4j.AccessModeRead})
+	session := utils.NewNeo4jReadSession(*r.driver)
 	defer session.Close()
 
 	return session.ReadTransaction(func(tx neo4j.Transaction) (interface{}, error) {
@@ -114,7 +115,7 @@ func (r *customFieldDefinitionRepository) FindAllByEntityFieldSetDefinitionId(fi
 }
 
 func (r *customFieldDefinitionRepository) FindByCustomFieldId(customFieldId string) (any, error) {
-	session := (*r.driver).NewSession(neo4j.SessionConfig{AccessMode: neo4j.AccessModeRead})
+	session := utils.NewNeo4jReadSession(*r.driver)
 	defer session.Close()
 
 	return session.ReadTransaction(func(tx neo4j.Transaction) (interface{}, error) {
