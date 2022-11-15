@@ -12,6 +12,7 @@ import (
 
 type CompanyService interface {
 	MergeCompanyToContact(ctx context.Context, contactId string, input *entity.CompanyPositionEntity) (*entity.CompanyPositionEntity, error)
+	DeleteCompanyPositionFromContact(ctx context.Context, contactId, companyPositionId string) (bool, error)
 
 	getDriver() neo4j.Driver
 }
@@ -46,6 +47,14 @@ func (s *companyService) MergeCompanyToContact(ctx context.Context, contactId st
 	companyPositionEntity := s.mapCompanyPositionDbRelationshipToEntity(positionDbRelationship)
 	companyPositionEntity.Company = *s.mapCompanyDbNodeToEntity(companyDbNode)
 	return companyPositionEntity, nil
+}
+
+func (s *companyService) DeleteCompanyPositionFromContact(ctx context.Context, contactId, companyPositionId string) (bool, error) {
+	err := s.repository.CompanyRepository.DeleteCompanyPosition(common.GetContext(ctx).Tenant, contactId, companyPositionId)
+	if err != nil {
+		return false, err
+	}
+	return true, nil
 }
 
 func (s *companyService) mapCompanyDbNodeToEntity(node *dbtype.Node) *entity.CompanyEntity {

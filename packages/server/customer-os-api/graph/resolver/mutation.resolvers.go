@@ -291,9 +291,16 @@ func (r *mutationResolver) ContactUpdateCompanyPosition(ctx context.Context, con
 	panic(fmt.Errorf("not implemented: ContactUpdateCompanyPosition - contact_UpdateCompanyPosition"))
 }
 
-// ContactRemoveCompanyPosition is the resolver for the contact_RemoveCompanyPosition field.
-func (r *mutationResolver) ContactRemoveCompanyPosition(ctx context.Context, contactID string, companyPositionID string) (*model.Result, error) {
-	panic(fmt.Errorf("not implemented: ContactRemoveCompanyPosition - contact_RemoveCompanyPosition"))
+// ContactDeleteCompanyPosition is the resolver for the contact_DeleteCompanyPosition field.
+func (r *mutationResolver) ContactDeleteCompanyPosition(ctx context.Context, contactID string, companyPositionID string) (*model.Result, error) {
+	result, err := r.ServiceContainer.CompanyService.DeleteCompanyPositionFromContact(ctx, contactID, companyPositionID)
+	if err != nil {
+		graphql.AddErrorf(ctx, "Could not remove company position %s from contact %s", companyPositionID, contactID)
+		return nil, err
+	}
+	return &model.Result{
+		Result: result,
+	}, nil
 }
 
 // CreateContactGroup is the resolver for the createContactGroup field.

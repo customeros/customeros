@@ -165,8 +165,8 @@ type ComplexityRoot struct {
 
 	Mutation struct {
 		AddContactToGroup                      func(childComplexity int, contactID string, groupID string) int
+		ContactDeleteCompanyPosition           func(childComplexity int, contactID string, companyPositionID string) int
 		ContactMergeCompanyPosition            func(childComplexity int, contactID string, input model.CompanyPositionInput) int
-		ContactRemoveCompanyPosition           func(childComplexity int, contactID string, companyPositionID string) int
 		ContactTypeCreate                      func(childComplexity int, input model.ContactTypeInput) int
 		ContactTypeDelete                      func(childComplexity int, id string) int
 		ContactTypeUpdate                      func(childComplexity int, input model.ContactTypeUpdateInput) int
@@ -291,7 +291,7 @@ type MutationResolver interface {
 	RemoveEmailFromContactByID(ctx context.Context, contactID string, id string) (*model.Result, error)
 	ContactMergeCompanyPosition(ctx context.Context, contactID string, input model.CompanyPositionInput) (*model.CompanyPosition, error)
 	ContactUpdateCompanyPosition(ctx context.Context, contactID string, companyPositionID string, input model.CompanyPositionInput) (*model.CompanyPosition, error)
-	ContactRemoveCompanyPosition(ctx context.Context, contactID string, companyPositionID string) (*model.Result, error)
+	ContactDeleteCompanyPosition(ctx context.Context, contactID string, companyPositionID string) (*model.Result, error)
 	CreateContactGroup(ctx context.Context, input model.ContactGroupInput) (*model.ContactGroup, error)
 	UpdateContactGroup(ctx context.Context, input model.ContactGroupUpdateInput) (*model.ContactGroup, error)
 	DeleteContactGroupAndUnlinkAllContacts(ctx context.Context, id string) (*model.Result, error)
@@ -819,6 +819,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.AddContactToGroup(childComplexity, args["contactId"].(string), args["groupId"].(string)), true
 
+	case "Mutation.contact_DeleteCompanyPosition":
+		if e.complexity.Mutation.ContactDeleteCompanyPosition == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_contact_DeleteCompanyPosition_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.ContactDeleteCompanyPosition(childComplexity, args["contactId"].(string), args["companyPositionId"].(string)), true
+
 	case "Mutation.contact_MergeCompanyPosition":
 		if e.complexity.Mutation.ContactMergeCompanyPosition == nil {
 			break
@@ -830,18 +842,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.ContactMergeCompanyPosition(childComplexity, args["contactId"].(string), args["input"].(model.CompanyPositionInput)), true
-
-	case "Mutation.contact_RemoveCompanyPosition":
-		if e.complexity.Mutation.ContactRemoveCompanyPosition == nil {
-			break
-		}
-
-		args, err := ec.field_Mutation_contact_RemoveCompanyPosition_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Mutation.ContactRemoveCompanyPosition(childComplexity, args["contactId"].(string), args["companyPositionId"].(string)), true
 
 	case "Mutation.contactType_Create":
 		if e.complexity.Mutation.ContactTypeCreate == nil {
@@ -1554,7 +1554,7 @@ Describes the relationship a Contact has with a Company.
 """
 input CompanyPositionInput {
 
-    company: CompanyInput
+    company: CompanyInput!
 
     "The Contact's job title."
     jobTitle: String
@@ -2271,7 +2271,7 @@ interface ExtensibleEntity implements Node {
 
     contact_MergeCompanyPosition(contactId : ID!, input: CompanyPositionInput!): CompanyPosition!
     contact_UpdateCompanyPosition(contactId : ID!, companyPositionId: ID!, input: CompanyPositionInput!): CompanyPosition!
-    contact_RemoveCompanyPosition(contactId : ID!, companyPositionId: ID!): Result!
+    contact_DeleteCompanyPosition(contactId : ID!, companyPositionId: ID!): Result!
 
     createContactGroup(input: ContactGroupInput!): ContactGroup!
     updateContactGroup(input: ContactGroupUpdateInput!): ContactGroup!
@@ -2599,6 +2599,30 @@ func (ec *executionContext) field_Mutation_contactType_Update_args(ctx context.C
 	return args, nil
 }
 
+func (ec *executionContext) field_Mutation_contact_DeleteCompanyPosition_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["contactId"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("contactId"))
+		arg0, err = ec.unmarshalNID2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["contactId"] = arg0
+	var arg1 string
+	if tmp, ok := rawArgs["companyPositionId"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("companyPositionId"))
+		arg1, err = ec.unmarshalNID2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["companyPositionId"] = arg1
+	return args, nil
+}
+
 func (ec *executionContext) field_Mutation_contact_MergeCompanyPosition_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
@@ -2620,30 +2644,6 @@ func (ec *executionContext) field_Mutation_contact_MergeCompanyPosition_args(ctx
 		}
 	}
 	args["input"] = arg1
-	return args, nil
-}
-
-func (ec *executionContext) field_Mutation_contact_RemoveCompanyPosition_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
-	var err error
-	args := map[string]interface{}{}
-	var arg0 string
-	if tmp, ok := rawArgs["contactId"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("contactId"))
-		arg0, err = ec.unmarshalNID2string(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["contactId"] = arg0
-	var arg1 string
-	if tmp, ok := rawArgs["companyPositionId"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("companyPositionId"))
-		arg1, err = ec.unmarshalNID2string(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["companyPositionId"] = arg1
 	return args, nil
 }
 
@@ -8278,8 +8278,8 @@ func (ec *executionContext) fieldContext_Mutation_contact_UpdateCompanyPosition(
 	return fc, nil
 }
 
-func (ec *executionContext) _Mutation_contact_RemoveCompanyPosition(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_contact_RemoveCompanyPosition(ctx, field)
+func (ec *executionContext) _Mutation_contact_DeleteCompanyPosition(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_contact_DeleteCompanyPosition(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -8292,7 +8292,7 @@ func (ec *executionContext) _Mutation_contact_RemoveCompanyPosition(ctx context.
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().ContactRemoveCompanyPosition(rctx, fc.Args["contactId"].(string), fc.Args["companyPositionId"].(string))
+		return ec.resolvers.Mutation().ContactDeleteCompanyPosition(rctx, fc.Args["contactId"].(string), fc.Args["companyPositionId"].(string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -8309,7 +8309,7 @@ func (ec *executionContext) _Mutation_contact_RemoveCompanyPosition(ctx context.
 	return ec.marshalNResult2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐResult(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Mutation_contact_RemoveCompanyPosition(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Mutation_contact_DeleteCompanyPosition(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Mutation",
 		Field:      field,
@@ -8330,7 +8330,7 @@ func (ec *executionContext) fieldContext_Mutation_contact_RemoveCompanyPosition(
 		}
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_contact_RemoveCompanyPosition_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+	if fc.Args, err = ec.field_Mutation_contact_DeleteCompanyPosition_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return
 	}
@@ -12158,7 +12158,7 @@ func (ec *executionContext) unmarshalInputCompanyPositionInput(ctx context.Conte
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("company"))
-			it.Company, err = ec.unmarshalOCompanyInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐCompanyInput(ctx, v)
+			it.Company, err = ec.unmarshalNCompanyInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐCompanyInput(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -14436,10 +14436,10 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
-		case "contact_RemoveCompanyPosition":
+		case "contact_DeleteCompanyPosition":
 
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_contact_RemoveCompanyPosition(ctx, field)
+				return ec._Mutation_contact_DeleteCompanyPosition(ctx, field)
 			})
 
 			if out.Values[i] == graphql.Null {
@@ -15378,6 +15378,11 @@ func (ec *executionContext) marshalNCompany2ᚖgithubᚗcomᚋopenlineᚑaiᚋop
 		return graphql.Null
 	}
 	return ec._Company(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalNCompanyInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐCompanyInput(ctx context.Context, v interface{}) (*model.CompanyInput, error) {
+	res, err := ec.unmarshalInputCompanyInput(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) marshalNCompanyPosition2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐCompanyPosition(ctx context.Context, sel ast.SelectionSet, v model.CompanyPosition) graphql.Marshaler {
@@ -16628,14 +16633,6 @@ func (ec *executionContext) marshalOCompaniesPage2ᚖgithubᚗcomᚋopenlineᚑa
 		return graphql.Null
 	}
 	return ec._CompaniesPage(ctx, sel, v)
-}
-
-func (ec *executionContext) unmarshalOCompanyInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐCompanyInput(ctx context.Context, v interface{}) (*model.CompanyInput, error) {
-	if v == nil {
-		return nil, nil
-	}
-	res, err := ec.unmarshalInputCompanyInput(ctx, v)
-	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) marshalOContact2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐContact(ctx context.Context, sel ast.SelectionSet, v *model.Contact) graphql.Marshaler {

@@ -776,3 +776,29 @@ func TestMutationResolver_ContactMergeCompanyPosition_ExistingCompany(t *testing
 	require.Equal(t, 1, getCountOfNodes(driver, "Company"))
 	require.Equal(t, 1, getCountOfRelationships(driver, "WORKS_AT"))
 }
+
+func TestMutationResolver_ContactRemoveCompanyPosition(t *testing.T) {
+	defer setupTestCase()(t)
+	createTenant(driver, tenantName)
+	contactId := createDefaultContact(driver, tenantName)
+	companyId := createCompany(driver, tenantName, "LLC LLC")
+	positionId := contactWorksForCompany(driver, contactId, companyId)
+
+	require.Equal(t, 1, getCountOfRelationships(driver, "WORKS_AT"))
+
+	rawResponse, err := c.RawPost(getQuery("delete_company_position"),
+		client.Var("contactId", contactId),
+		client.Var("companyPositionId", positionId))
+	assertRawResponseSuccess(t, rawResponse, err)
+
+	var result struct {
+		Contact_DeleteCompanyPosition model.Result
+	}
+
+	err = decode.Decode(rawResponse.Data.(map[string]any), &result)
+	require.Nil(t, err)
+	require.NotNil(t, result)
+	require.Equal(t, true, result.Contact_DeleteCompanyPosition.Result)
+
+	require.Equal(t, 0, getCountOfRelationships(driver, "WORKS_AT"))
+}

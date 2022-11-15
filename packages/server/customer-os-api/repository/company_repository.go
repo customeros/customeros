@@ -10,6 +10,7 @@ import (
 type CompanyRepository interface {
 	LinkNewCompanyToContact(tenant, contactId, companyName, jobTitle string) (*dbtype.Node, *dbtype.Relationship, error)
 	LinkExistingCompanyToContact(tenant, contactId, companyId, jobTitle string) (*dbtype.Node, *dbtype.Relationship, error)
+	DeleteCompanyPosition(tenant, contactId, companyPositionId string) error
 }
 
 type companyRepository struct {
@@ -76,4 +77,26 @@ func (r *companyRepository) LinkExistingCompanyToContact(tenant, contactId, comp
 		return nil, nil, err
 	}
 	return utils.NodePtr(dbRecord.(*db.Record).Values[0].(dbtype.Node)), utils.RelationshipPtr(dbRecord.(*db.Record).Values[1].(dbtype.Relationship)), err
+}
+
+func (r *companyRepository) DeleteCompanyPosition(tenant, contactId, companyPositionId string) error {
+	session := (*r.driver).NewSession(neo4j.SessionConfig{AccessMode: neo4j.AccessModeWrite})
+	defer session.Close()
+
+	if _, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
+		_, err := tx.Run(`
+			MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant}),
+					(c)-[r:WORKS_AT {id:$companyPositionId}]->(co:Company)
+			DELETE r`,
+			map[string]any{
+				"tenant":            tenant,
+				"contactId":         contactId,
+				"companyPositionId": companyPositionId,
+			})
+		return nil, err
+	}); err != nil {
+		return err
+	} else {
+		return nil
+	}
 }
