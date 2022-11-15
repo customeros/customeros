@@ -15,7 +15,7 @@ import (
 type ContactService interface {
 	Create(ctx context.Context, contact *ContactCreateData) (*entity.ContactEntity, error)
 
-	Update(ctx context.Context, contact *entity.ContactEntity) (*entity.ContactEntity, error)
+	Update(ctx context.Context, contactUpdateData *ContactUpdateData) (*entity.ContactEntity, error)
 
 	FindContactById(ctx context.Context, id string) (*entity.ContactEntity, error)
 	FindContactByEmail(ctx context.Context, email string) (*entity.ContactEntity, error)
@@ -35,6 +35,12 @@ type ContactCreateData struct {
 	PhoneNumberEntity *entity.PhoneNumberEntity
 	CompanyPosition   *entity.CompanyPositionEntity
 	DefinitionId      *string
+	ContactTypeId     *string
+}
+
+type ContactUpdateData struct {
+	ContactEntity *entity.ContactEntity
+	ContactTypeId *string
 }
 
 type contactService struct {
@@ -59,11 +65,11 @@ func (s *contactService) Create(ctx context.Context, newContact *ContactCreateDa
 	if err != nil {
 		return nil, err
 	}
-	return s.mapDbNodeToContactEntity(queryResult.(dbtype.Node)), nil
+	return s.mapDbNodePtrToContactEntity(queryResult.(*dbtype.Node)), nil
 }
 
-func (s *contactService) createContactInDBTxWork(ctx context.Context, newContact *ContactCreateData) func(tx neo4j.Transaction) (interface{}, error) {
-	return func(tx neo4j.Transaction) (interface{}, error) {
+func (s *contactService) createContactInDBTxWork(ctx context.Context, newContact *ContactCreateData) func(tx neo4j.Transaction) (any, error) {
+	return func(tx neo4j.Transaction) (any, error) {
 		result, err := tx.Run(`
 			MATCH (t:Tenant {name:$tenant})
 			CREATE (c:Contact {
@@ -73,29 +79,34 @@ func (s *contactService) createContactInDBTxWork(ctx context.Context, newContact
 				  lastName: $lastName,
 				  label: $label,
 				  notes: $notes,
-				  contactType: $contactType,
                   createdAt :datetime({timezone: 'UTC'})
 			})-[:CONTACT_BELONGS_TO_TENANT]->(t)
 			RETURN c`,
 			map[string]interface{}{
-				"tenant":      common.GetContext(ctx).Tenant,
-				"firstName":   newContact.ContactEntity.FirstName,
-				"lastName":    newContact.ContactEntity.LastName,
-				"label":       newContact.ContactEntity.Label,
-				"contactType": newContact.ContactEntity.ContactType,
-				"title":       newContact.ContactEntity.Title,
-				"notes":       newContact.ContactEntity.Notes,
+				"tenant":    common.GetContext(ctx).Tenant,
+				"firstName": newContact.ContactEntity.FirstName,
+				"lastName":  newContact.ContactEntity.LastName,
+				"label":     newContact.ContactEntity.Label,
+				"title":     newContact.ContactEntity.Title,
+				"notes":     newContact.ContactEntity.Notes,
 			})
 
-		dbContact, err := utils.ExtractSingleRecordFirstValueAsNode(result, err)
+		dbContact, err := utils.ExtractSingleRecordFirstValueAsNodePtr(result, err)
 		if err != nil {
 			return nil, err
 		}
 
-		var contactId = utils.GetPropsFromNode(dbContact)["id"].(string)
+		var contactId = utils.GetPropsFromNode(*dbContact)["id"].(string)
+
+		if newContact.ContactTypeId != nil {
+			err := s.repository.ContactRepository.LinkWithContactTypeInTx(tx, common.GetContext(ctx).Tenant, contactId, *newContact.ContactTypeId)
+			if err != nil {
+				return nil, err
+			}
+		}
 
 		if newContact.DefinitionId != nil {
-			err := s.repository.ContactRepository.LinkWithEntityDefinitionInTx(common.GetContext(ctx).Tenant, contactId, *newContact.DefinitionId, tx)
+			err := s.repository.ContactRepository.LinkWithEntityDefinitionInTx(tx, common.GetContext(ctx).Tenant, contactId, *newContact.DefinitionId)
 			if err != nil {
 				return nil, err
 			}
@@ -106,7 +117,7 @@ func (s *contactService) createContactInDBTxWork(ctx context.Context, newContact
 				if err != nil {
 					return nil, err
 				}
-				var fieldId = utils.GetPropsFromNode(queryResult)["id"].(string)
+				var fieldId = utils.GetPropsFromNode(*queryResult)["id"].(string)
 				if customField.DefinitionId != nil {
 					err := s.repository.CustomFieldRepository.LinkWithCustomFieldDefinitionForContactInTx(tx, fieldId, contactId, *customField.DefinitionId)
 					if err != nil {
@@ -137,41 +148,45 @@ func (s *contactService) createContactInDBTxWork(ctx context.Context, newContact
 	}
 }
 
-func (s *contactService) Update(ctx context.Context, contact *entity.ContactEntity) (*entity.ContactEntity, error) {
+func (s *contactService) Update(ctx context.Context, contactUpdateData *ContactUpdateData) (*entity.ContactEntity, error) {
 	session := s.getDriver().NewSession(neo4j.SessionConfig{AccessMode: neo4j.AccessModeWrite})
 	defer session.Close()
 
-	queryResult, err := session.WriteTransaction(func(tx neo4j.Transaction) (interface{}, error) {
-		txResult, err := tx.Run(`
+	contactDbNode, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
+		queryResult, err := tx.Run(`
 			MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant})
 			SET c.firstName=$firstName,
 				c.lastName=$lastName,
 				c.label=$label,
-				c.contactType=$contactType,
 				c.title=$title,
 				c.notes=$notes
 			RETURN c`,
 			map[string]interface{}{
-				"tenant":      common.GetContext(ctx).Tenant,
-				"contactId":   contact.Id,
-				"firstName":   contact.FirstName,
-				"lastName":    contact.LastName,
-				"label":       contact.Label,
-				"contactType": contact.ContactType,
-				"title":       contact.Title,
-				"notes":       contact.Notes,
+				"tenant":    common.GetContext(ctx).Tenant,
+				"contactId": contactUpdateData.ContactEntity.Id,
+				"firstName": contactUpdateData.ContactEntity.FirstName,
+				"lastName":  contactUpdateData.ContactEntity.LastName,
+				"label":     contactUpdateData.ContactEntity.Label,
+				"title":     contactUpdateData.ContactEntity.Title,
+				"notes":     contactUpdateData.ContactEntity.Notes,
 			})
-		record, err := txResult.Single()
+		err = s.repository.ContactRepository.UnlinkFromContactTypesInTx(tx, common.GetContext(ctx).Tenant, contactUpdateData.ContactEntity.Id)
 		if err != nil {
 			return nil, err
 		}
-		return record, nil
+		if contactUpdateData.ContactTypeId != nil {
+			err := s.repository.ContactRepository.LinkWithContactTypeInTx(tx, common.GetContext(ctx).Tenant, contactUpdateData.ContactEntity.Id, *contactUpdateData.ContactTypeId)
+			if err != nil {
+				return nil, err
+			}
+		}
+		return utils.ExtractSingleRecordFirstValueAsNodePtr(queryResult, err)
 	})
 	if err != nil {
 		return nil, err
 	}
 
-	return s.mapDbNodeToContactEntity(queryResult.(*db.Record).Values[0].(dbtype.Node)), nil
+	return s.mapDbNodePtrToContactEntity(contactDbNode.(*dbtype.Node)), nil
 }
 
 func (s *contactService) HardDelete(ctx context.Context, contactId string) (bool, error) {
@@ -346,16 +361,19 @@ func (s *contactService) FindAll(ctx context.Context, page int, limit int) (*uti
 }
 
 func (s *contactService) mapDbNodeToContactEntity(dbContactNode dbtype.Node) *entity.ContactEntity {
-	props := utils.GetPropsFromNode(dbContactNode)
+	return s.mapDbNodePtrToContactEntity(&dbContactNode)
+}
+
+func (s *contactService) mapDbNodePtrToContactEntity(dbContactNode *dbtype.Node) *entity.ContactEntity {
+	props := utils.GetPropsFromNode(*dbContactNode)
 	contact := entity.ContactEntity{
-		Id:          utils.GetStringPropOrEmpty(props, "id"),
-		FirstName:   utils.GetStringPropOrEmpty(props, "firstName"),
-		LastName:    utils.GetStringPropOrEmpty(props, "lastName"),
-		Label:       utils.GetStringPropOrEmpty(props, "label"),
-		Title:       utils.GetStringPropOrEmpty(props, "title"),
-		Notes:       utils.GetStringPropOrEmpty(props, "notes"),
-		ContactType: utils.GetStringPropOrEmpty(props, "contactType"),
-		CreatedAt:   props["createdAt"].(time.Time),
+		Id:        utils.GetStringPropOrEmpty(props, "id"),
+		FirstName: utils.GetStringPropOrEmpty(props, "firstName"),
+		LastName:  utils.GetStringPropOrEmpty(props, "lastName"),
+		Label:     utils.GetStringPropOrEmpty(props, "label"),
+		Title:     utils.GetStringPropOrEmpty(props, "title"),
+		Notes:     utils.GetStringPropOrEmpty(props, "notes"),
+		CreatedAt: props["createdAt"].(time.Time),
 	}
 	return &contact
 }

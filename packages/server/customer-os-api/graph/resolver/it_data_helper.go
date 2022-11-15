@@ -66,20 +66,29 @@ func createContact(driver *neo4j.Driver, tenant string, contact entity.ContactEn
 				  lastName: $lastName,
 				  label: $label,
 				  notes: $notes,
-				  contactType: $contactType,
 				  createdAt :datetime({timezone: 'UTC'})
 				})-[:CONTACT_BELONGS_TO_TENANT]->(t)`
 	integration_tests.ExecuteWriteQuery(driver, query, map[string]any{
-		"tenant":      tenant,
-		"contactId":   contactId.String(),
-		"title":       contact.Title,
-		"firstName":   contact.FirstName,
-		"lastName":    contact.LastName,
-		"contactType": contact.ContactType,
-		"notes":       contact.Notes,
-		"label":       contact.Label,
+		"tenant":    tenant,
+		"contactId": contactId.String(),
+		"title":     contact.Title,
+		"firstName": contact.FirstName,
+		"lastName":  contact.LastName,
+		"notes":     contact.Notes,
+		"label":     contact.Label,
 	})
 	return contactId.String()
+}
+
+func setContactTypeForContact(driver *neo4j.Driver, contactId, contactTypeId string) {
+	query := `
+			MATCH (c:Contact {id:$contactId}),
+				  (o:ContactType {id:$contactTypeId})
+			MERGE (c)-[:IS_OF_TYPE]->(o)`
+	integration_tests.ExecuteWriteQuery(driver, query, map[string]any{
+		"contactId":     contactId,
+		"contactTypeId": contactTypeId,
+	})
 }
 
 func createDefaultFieldSet(driver *neo4j.Driver, contactId string) string {
@@ -193,8 +202,27 @@ func addFieldDefinitionToEntity(driver *neo4j.Driver, entityDefinitionId string)
 	return definitionId.String()
 }
 
+func createContactType(driver *neo4j.Driver, tenant, contactTypeName string) string {
+	var contactTypeId, _ = uuid.NewRandom()
+	query := `MATCH (t:Tenant {name:$tenant})
+			MERGE (t)-[:USES_CONTACT_TYPE]->(c:ContactType {id:$id})
+			ON CREATE SET c.name=$name`
+	integration_tests.ExecuteWriteQuery(driver, query, map[string]any{
+		"id":     contactTypeId.String(),
+		"tenant": tenant,
+		"name":   contactTypeName,
+	})
+	return contactTypeId.String()
+}
+
 func getCountOfNodes(driver *neo4j.Driver, nodeLabel string) int {
 	query := fmt.Sprintf(`MATCH (n:%s) RETURN count(n)`, nodeLabel)
+	result := integration_tests.ExecuteReadQueryWithSingleReturn(driver, query, map[string]any{})
+	return int(result.(*db.Record).Values[0].(int64))
+}
+
+func getCountOfRelationships(driver *neo4j.Driver, relationship string) int {
+	query := fmt.Sprintf(`MATCH (a)-[r:%s]-(b) RETURN count(distinct r)`, relationship)
 	result := integration_tests.ExecuteReadQueryWithSingleReturn(driver, query, map[string]any{})
 	return int(result.(*db.Record).Values[0].(int64))
 }

@@ -17,9 +17,13 @@ func ExtractSingleRecordFirstValue(result neo4j.Result, err error) (any, error) 
 	}
 }
 
-func ExtractSingleRecordFirstValueAsNode(result neo4j.Result, err error) (dbtype.Node, error) {
+func ExtractSingleRecordFirstValueAsNodePtr(result neo4j.Result, err error) (*dbtype.Node, error) {
 	node, err := ExtractSingleRecordFirstValue(result, err)
-	return node.(dbtype.Node), err
+	if err != nil {
+		return nil, err
+	}
+	dbTypeNode := node.(dbtype.Node)
+	return &dbTypeNode, err
 }
 
 func GetPropsFromNode(node dbtype.Node) map[string]any {

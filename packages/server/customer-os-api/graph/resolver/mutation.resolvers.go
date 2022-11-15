@@ -33,6 +33,7 @@ func (r *mutationResolver) CreateContact(ctx context.Context, input model.Contac
 		EmailEntity:       mapper.MapEmailInputToEntity(input.Email),
 		CompanyPosition:   mapper.MapCompanyPositionInputToEntity(input.Company),
 		DefinitionId:      input.DefinitionID,
+		ContactTypeId:     input.ContactTypeID,
 	})
 	if err != nil {
 		graphql.AddErrorf(ctx, "Failed to create contact %s %s", input.FirstName, input.LastName)
@@ -44,7 +45,10 @@ func (r *mutationResolver) CreateContact(ctx context.Context, input model.Contac
 
 // UpdateContact is the resolver for the updateContact field.
 func (r *mutationResolver) UpdateContact(ctx context.Context, input model.ContactUpdateInput) (*model.Contact, error) {
-	updatedContact, err := r.ServiceContainer.ContactService.Update(ctx, mapper.MapContactUpdateInputToEntity(input))
+	updatedContact, err := r.ServiceContainer.ContactService.Update(ctx, &service.ContactUpdateData{
+		ContactEntity: mapper.MapContactUpdateInputToEntity(input),
+		ContactTypeId: input.ContactTypeID,
+	})
 	if err != nil {
 		graphql.AddErrorf(ctx, "Failed to update contact %s", input.ID)
 		return nil, err
