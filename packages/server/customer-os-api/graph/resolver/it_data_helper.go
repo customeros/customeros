@@ -215,6 +215,19 @@ func createContactType(driver *neo4j.Driver, tenant, contactTypeName string) str
 	return contactTypeId.String()
 }
 
+func createCompany(driver *neo4j.Driver, tenant, companyName string) string {
+	var companyId, _ = uuid.NewRandom()
+	query := `MATCH (t:Tenant {name:$tenant})
+			MERGE (t)<-[:COMPANY_BELONGS_TO_TENANT]-(co:Company {id:$id})
+			ON CREATE SET co.name=$name`
+	integration_tests.ExecuteWriteQuery(driver, query, map[string]any{
+		"id":     companyId.String(),
+		"tenant": tenant,
+		"name":   companyName,
+	})
+	return companyId.String()
+}
+
 func getCountOfNodes(driver *neo4j.Driver, nodeLabel string) int {
 	query := fmt.Sprintf(`MATCH (n:%s) RETURN count(n)`, nodeLabel)
 	result := integration_tests.ExecuteReadQueryWithSingleReturn(driver, query, map[string]any{})

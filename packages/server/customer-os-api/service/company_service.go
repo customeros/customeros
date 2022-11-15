@@ -31,16 +31,21 @@ func (s *companyService) getDriver() neo4j.Driver {
 }
 
 func (s *companyService) MergeCompanyToContact(ctx context.Context, contactId string, input *entity.CompanyPositionEntity) (*entity.CompanyPositionEntity, error) {
+	var err error
+	var companyDbNode *dbtype.Node
+	var positionDbRelationship *dbtype.Relationship
+
 	if len(input.Company.Id) == 0 {
-		companyDbNode, positionDbRelationship, err := s.repository.CompanyRepository.LinkNewCompanyToContact(common.GetContext(ctx).Tenant, contactId, input.Company.Name, input.JobTitle)
-		if err != nil {
-			return nil, err
-		}
-		companyPositionEntity := s.mapCompanyPositionDbRelationshipToEntity(positionDbRelationship)
-		companyPositionEntity.Company = *s.mapCompanyDbNodeToEntity(companyDbNode)
-		return companyPositionEntity, nil
+		companyDbNode, positionDbRelationship, err = s.repository.CompanyRepository.LinkNewCompanyToContact(common.GetContext(ctx).Tenant, contactId, input.Company.Name, input.JobTitle)
+	} else {
+		companyDbNode, positionDbRelationship, err = s.repository.CompanyRepository.LinkExistingCompanyToContact(common.GetContext(ctx).Tenant, contactId, input.Company.Id, input.JobTitle)
 	}
-	return nil, nil
+	if err != nil {
+		return nil, err
+	}
+	companyPositionEntity := s.mapCompanyPositionDbRelationshipToEntity(positionDbRelationship)
+	companyPositionEntity.Company = *s.mapCompanyDbNodeToEntity(companyDbNode)
+	return companyPositionEntity, nil
 }
 
 func (s *companyService) mapCompanyDbNodeToEntity(node *dbtype.Node) *entity.CompanyEntity {
