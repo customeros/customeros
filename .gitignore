@@ -1,3 +1,5 @@
 .idea
 .fleet
 .vscode
+
+deployment/scripts/openline-setup/*.*

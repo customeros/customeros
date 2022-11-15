@@ -11,8 +11,8 @@ NEO4J_HELM_VALUES_CONFIG="https://raw.githubusercontent.com/openline-ai/openline
 MESSAGE_STORE_API_CONFIG="https://raw.githubusercontent.com/openline-ai/openline-customer-os/otter/deployment/k8s/local-minikube/apps-config/message-store.yaml"
 MESSAGE_STORE_K8S_CONFIG="https://raw.githubusercontent.com/openline-ai/openline-customer-os/otter/deployment/k8s/local-minikube/apps-config/message-store-k8s-service.yaml"
 OPENLINE_NAMESPACE="https://raw.githubusercontent.com/openline-ai/openline-customer-os/otter/deployment/k8s/configs/openline-namespace.json"
+POSTGRESQL_PERSISTENT_VOLUME_CONFIG="https://raw.githubusercontent.com/openline-ai/openline-customer-os/otter/deployment/k8s/configs/postgresql/postgresql-persistent-volume.yaml"
 POSTGRESQL_PERSISTENT_VOLUME_CLAIM_CONFIG="https://raw.githubusercontent.com/openline-ai/openline-customer-os/otter/deployment/k8s/configs/postgresql/postgresql-persistent-volume-claim.yaml"
-POSTGRESQL_PERSISTENT_VOLUME_CONFIG="https://raw.githubusercontent.com/openline-ai/openline-customer-os/otter/deployment/k8s/configs/postgresql/postgresql-presistent-volume.yaml"
 POSTGRESQL_VALUES_CONFIG="https://raw.githubusercontent.com/openline-ai/openline-customer-os/otter/deployment/k8s/configs/postgresql/postgresql-values.yaml"
 
 ###########################################
@@ -77,18 +77,18 @@ else
     echo "  ❌ message-store-k8s-service.yaml"
 fi
 
+curl -sS $POSTGRESQL_PERSISTENT_VOLUME_CONFIG -o openline-setup/postgresql-persistent-volume.yaml
+if [ $? -eq 0 ]; then
+    echo "  ✅ postgresql-persistent-volume.yaml"
+else
+    echo "  ❌ postgresql-persistent-volume.yaml"
+fi
+
 curl -sS $POSTGRESQL_PERSISTENT_VOLUME_CLAIM_CONFIG -o openline-setup/postgresql-persistent-volume-claim.yaml
 if [ $? -eq 0 ]; then
     echo "  ✅ postgresql-persistent-volume-claim.yaml"
 else
     echo "  ❌ postgresql-persistent-volume-claim.yaml"
-fi
-
-curl -sS $POSTGRESQL_PERSISTENT_VOLUME_CONFIG -o openline-setup/postgresql-presistent-volume.yaml
-if [ $? -eq 0 ]; then
-    echo "  ✅ postgresql-presistent-volume.yaml"
-else
-    echo "  ❌ postgresql-presistent-volume.yaml"
 fi
 
 curl -sS $POSTGRESQL_VALUES_CONFIG -o openline-setup/postgresql-values.yaml

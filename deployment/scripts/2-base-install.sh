@@ -86,7 +86,7 @@ helm repo update
 echo "  ✅ helm repos updated"
 
 #Get postgresql config and install 
-POSTGRESQL_PERSISTENT_VOLUME="./openline-setup/postgresql-presistent-volume.yaml"
+POSTGRESQL_PERSISTENT_VOLUME="./openline-setup/postgresql-persistent-volume.yaml"
 kubectl apply -f $POSTGRESQL_PERSISTENT_VOLUME --namespace $NAMESPACE_NAME
 if [ $? -eq 0 ]; then
     echo "  ✅ postgresql-persistent-volume.yaml configured"
@@ -94,7 +94,7 @@ else
     echo "  ❌ postgresql-persistent-volume.yaml not configured"
 fi
 
-POSTGRESQL_PERSISTENT_VOLUME_CLAIM="./openline-setup/postgresql-presistent-volume.yaml"
+POSTGRESQL_PERSISTENT_VOLUME_CLAIM="./openline-setup/postgresql-persistent-volume-claim.yaml"
 kubectl apply -f $POSTGRESQL_PERSISTENT_VOLUME_CLAIM --namespace $NAMESPACE_NAME
 if [ $? -eq 0 ]; then
     echo "  ✅ postgresql-persistent-volume-claim.yaml configured"
