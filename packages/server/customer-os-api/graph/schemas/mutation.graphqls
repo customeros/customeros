@@ -29,6 +29,10 @@ type Mutation {
     removeEmailFromContact(contactId : ID!, email: String!): Result!
     removeEmailFromContactById(contactId : ID!, id: ID!): Result!
 
+    contact_MergeCompanyPosition(contactId : ID!, input: CompanyPositionInput!): CompanyPosition!
+    contact_UpdateCompanyPosition(contactId : ID!, companyPositionId: ID!, input: CompanyPositionUpdateInput!): CompanyPosition!
+    contact_DeleteCompanyPosition(contactId : ID!, companyPositionId: ID!): Result!
+
     createContactGroup(input: ContactGroupInput!): ContactGroup!
     updateContactGroup(input: ContactGroupUpdateInput!): ContactGroup!
     deleteContactGroupAndUnlinkAllContacts(id :ID!): Result!
@@ -36,7 +40,7 @@ type Mutation {
     removeContactFromGroup(contactId : ID!, groupId: ID!): Result!
 
     createEntityDefinition(input: EntityDefinitionInput!): EntityDefinition!
-#    createEntityDefinitionNewVersion(id: ID!, input: EntityDefinitionInput!): EntityDefinition!
+    # createEntityDefinitionNewVersion(id: ID!, input: EntityDefinitionInput!): EntityDefinition!
 
     createConversation(input: ConversationInput!): Conversation!
 }

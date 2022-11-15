@@ -6,6 +6,11 @@ import (
 	"time"
 )
 
+type DbNodesWithTotalCount struct {
+	Nodes []*dbtype.Node
+	Count int64
+}
+
 func ExtractSingleRecordFirstValue(result neo4j.Result, err error) (any, error) {
 	if err != nil {
 		return nil, err

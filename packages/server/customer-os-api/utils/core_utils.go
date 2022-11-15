@@ -10,6 +10,10 @@ func NodePtr(node dbtype.Node) *dbtype.Node {
 	return &node
 }
 
+func RelationshipPtr(relationship dbtype.Relationship) *dbtype.Relationship {
+	return &relationship
+}
+
 func Int64Ptr(i int64) *int64 {
 	return &i
 }

@@ -2,30 +2,61 @@
 Describes the relationship a Contact has with a Company.
 **A `return` object**
 """
-type Company {
+type CompanyPosition {
+
+    id: ID!
+
     """
-    The name of the company associated with a Contact.
+    Company associated with a Contact.
     **Required.**
     """
-    companyName: String!
+    company: Company!
 
     "The Contact's job title."
     jobTitle: String
 }
-
 
 """
 Describes the relationship a Contact has with a Company.
 **A `create` object**
 """
+input CompanyPositionInput {
+
+    company: CompanyInput!
+
+    "The Contact's job title."
+    jobTitle: String
+}
+
+input CompanyPositionUpdateInput {
+
+    "The Contact's job title."
+    jobTitle: String
+}
+
 input CompanyInput {
+
+    id: ID
 
     """
     The name of the company associated with a Contact.
     **Required.**
     """
-    companyName: String!
-
-    "The Contact's job title."
-    jobTitle: String
+    name: String
 }
+
+type Company {
+    id: ID!
+    name: String!
+}
+
+type CompanyPage implements Pages {
+    content: [Company!]!
+    totalPages: Int!
+    totalElements: Int64!
+}
+
+extend type Query {
+    companies_ByNameLike(paginationFilter: PaginationFilter, companyName: String!): CompanyPage
+}
+

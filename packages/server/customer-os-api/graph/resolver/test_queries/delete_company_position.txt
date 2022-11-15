@@ -1,0 +1,6 @@
+mutation DeleteCompanyPosition($contactId:ID!, $companyPositionId: ID!) {
+  contact_DeleteCompanyPosition(contactId: $contactId, companyPositionId: $companyPositionId)
+    {
+      result
+    }
+}

@@ -33,7 +33,6 @@ type ContactCreateData struct {
 	CustomFields      *entity.CustomFieldEntities
 	EmailEntity       *entity.EmailEntity
 	PhoneNumberEntity *entity.PhoneNumberEntity
-	CompanyPosition   *entity.CompanyPositionEntity
 	DefinitionId      *string
 	ContactTypeId     *string
 }
@@ -124,12 +123,6 @@ func (s *contactService) createContactInDBTxWork(ctx context.Context, newContact
 						return nil, err
 					}
 				}
-			}
-		}
-		if newContact.CompanyPosition != nil {
-			err := setCompanyPositionRelationshipInTx(ctx, contactId, *newContact.CompanyPosition, tx)
-			if err != nil {
-				return nil, err
 			}
 		}
 		if newContact.EmailEntity != nil {

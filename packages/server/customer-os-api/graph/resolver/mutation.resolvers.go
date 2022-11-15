@@ -31,7 +31,6 @@ func (r *mutationResolver) CreateContact(ctx context.Context, input model.Contac
 		CustomFields:      mapper.MapCustomFieldInputsToEntities(input.CustomFields),
 		PhoneNumberEntity: mapper.MapPhoneNumberInputToEntity(input.PhoneNumber),
 		EmailEntity:       mapper.MapEmailInputToEntity(input.Email),
-		CompanyPosition:   mapper.MapCompanyPositionInputToEntity(input.Company),
 		DefinitionId:      input.DefinitionID,
 		ContactTypeId:     input.ContactTypeID,
 	})
@@ -269,6 +268,38 @@ func (r *mutationResolver) RemoveEmailFromContactByID(ctx context.Context, conta
 	result, err := r.ServiceContainer.EmailService.DeleteById(ctx, contactID, id)
 	if err != nil {
 		graphql.AddErrorf(ctx, "Could not remove email %s from contact %s", id, contactID)
+		return nil, err
+	}
+	return &model.Result{
+		Result: result,
+	}, nil
+}
+
+// ContactMergeCompanyPosition is the resolver for the contact_MergeCompanyPosition field.
+func (r *mutationResolver) ContactMergeCompanyPosition(ctx context.Context, contactID string, input model.CompanyPositionInput) (*model.CompanyPosition, error) {
+	result, err := r.ServiceContainer.CompanyService.MergeCompanyToContact(ctx, contactID, mapper.MapCompanyPositionInputToEntity(&input))
+	if err != nil {
+		graphql.AddErrorf(ctx, "Could not add company position to contact %s", contactID)
+		return nil, err
+	}
+	return mapper.MapEntityToCompanyPosition(result), nil
+}
+
+// ContactUpdateCompanyPosition is the resolver for the contact_UpdateCompanyPosition field.
+func (r *mutationResolver) ContactUpdateCompanyPosition(ctx context.Context, contactID string, companyPositionID string, input model.CompanyPositionUpdateInput) (*model.CompanyPosition, error) {
+	result, err := r.ServiceContainer.CompanyService.UpdateCompanyPosition(ctx, contactID, companyPositionID, *input.JobTitle)
+	if err != nil {
+		graphql.AddErrorf(ctx, "Could not update company position%s", companyPositionID)
+		return nil, err
+	}
+	return mapper.MapEntityToCompanyPosition(result), nil
+}
+
+// ContactDeleteCompanyPosition is the resolver for the contact_DeleteCompanyPosition field.
+func (r *mutationResolver) ContactDeleteCompanyPosition(ctx context.Context, contactID string, companyPositionID string) (*model.Result, error) {
+	result, err := r.ServiceContainer.CompanyService.DeleteCompanyPositionFromContact(ctx, contactID, companyPositionID)
+	if err != nil {
+		graphql.AddErrorf(ctx, "Could not remove company position %s from contact %s", companyPositionID, contactID)
 		return nil, err
 	}
 	return &model.Result{

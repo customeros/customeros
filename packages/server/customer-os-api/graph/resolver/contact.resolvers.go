@@ -25,9 +25,13 @@ func (r *contactResolver) ContactType(ctx context.Context, obj *model.Contact) (
 	return mapper.MapEntityToContactType(entity), nil
 }
 
-// Companies is the resolver for the companies field.
-func (r *contactResolver) Companies(ctx context.Context, obj *model.Contact) ([]*model.Company, error) {
-	companyPositionEntities, err := r.ServiceContainer.CompanyPositionService.FindAllForContact(ctx, obj)
+// CompanyPositions is the resolver for the companyPositions field.
+func (r *contactResolver) CompanyPositions(ctx context.Context, obj *model.Contact) ([]*model.CompanyPosition, error) {
+	companyPositionEntities, err := r.ServiceContainer.CompanyService.GetCompanyPositionsForContact(ctx, obj.ID)
+	if err != nil {
+		graphql.AddErrorf(ctx, "Failed to get company positions %s", obj.ID)
+		return nil, err
+	}
 	return mapper.MapEntitiesToCompanyPositiones(companyPositionEntities), err
 }
 

@@ -43,7 +43,7 @@ type Contact implements ExtensibleEntity & Node {
     `companyName` and `jobTitle` of the contact if it has been associated with a company.
     **Required.  If no values it returns an empty array.**
     """
-    companies: [Company!]! @goField(forceResolver: true)
+    companyPositions: [CompanyPosition!]! @goField(forceResolver: true)
 
     """
     Identifies any contact groups the contact is associated with.
@@ -140,9 +140,6 @@ input ContactInput {
     **Required.**
     """
     customFields: [CustomFieldInput!]
-
-     "`companyName` and `jobTitle` of the contact if it has been associated with a company."
-    company: CompanyInput
     
     "An email addresses associted with the contact."
     email: EmailInput

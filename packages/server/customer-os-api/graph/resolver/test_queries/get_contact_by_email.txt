@@ -1,5 +1,5 @@
 query GetContactByEmail($email: String!){
-  contactByEmail(email: $email) {
+  contact_ByEmail(email: $email) {
     id
   }
 }
