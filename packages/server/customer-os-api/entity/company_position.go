@@ -5,12 +5,13 @@ import (
 )
 
 type CompanyPositionEntity struct {
-	Company  string
+	Id       string
+	Company  CompanyEntity
 	JobTitle string
 }
 
 func (companyPosition CompanyPositionEntity) ToString() string {
-	return fmt.Sprintf("company: %s\njob title: %s", companyPosition.Company, companyPosition.JobTitle)
+	return fmt.Sprintf("id: %s\njob title: %s", companyPosition.Id, companyPosition.JobTitle)
 }
 
 type CompanyPositionEntities []CompanyPositionEntity

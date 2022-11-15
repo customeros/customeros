@@ -1,0 +1,13 @@
+mutation MergeNewCompanyToContact($contactId: ID!){
+     contact_MergeCompanyPosition(
+        contactId: $contactId
+        input: {company: {name:"Openline"}
+                jobTitle: "CTO"}
+     ) {
+        company {
+            id
+            name
+        }
+        jobTitle
+      }
+}

@@ -13,10 +13,6 @@ createContact(
                       {name: "boolField", value: true, datatype: BOOL},
                       {name: "timeField", value: "2022-11-13T20:21:56.732Z", datatype: DATETIME},
                     ],
-      company: {
-            companyName:"abc",
-            jobTitle:"CTO"
-      }
       email: {
             email: "contact@abc.com",
             label: WORK,
@@ -60,10 +56,6 @@ createContact(
     groups {
       id
       name
-    }
-    companies {
-      companyName
-      jobTitle
     }
   }
 }

@@ -6,12 +6,12 @@ import (
 	"github.com/openline-ai/openline-customer-os/customer-os-api/utils"
 )
 
-func MapCompanyPositionInputToEntity(input *model.CompanyInput) *entity.CompanyPositionEntity {
+func MapCompanyPositionInputToEntity(input *model.CompanyPositionInput) *entity.CompanyPositionEntity {
 	if input == nil {
 		return nil
 	}
 	companyPositionEntity := entity.CompanyPositionEntity{
-		Company: input.CompanyName,
+		Company: *MapCompanyInputToEntity(input.Company),
 	}
 	if input.JobTitle != nil {
 		companyPositionEntity.JobTitle = *input.JobTitle
@@ -19,15 +19,16 @@ func MapCompanyPositionInputToEntity(input *model.CompanyInput) *entity.CompanyP
 	return &companyPositionEntity
 }
 
-func MapEntityToCompanyPosition(companyPosition *entity.CompanyPositionEntity) *model.Company {
-	return &model.Company{
-		CompanyName: companyPosition.Company,
-		JobTitle:    utils.StringPtr(companyPosition.JobTitle),
+func MapEntityToCompanyPosition(entity *entity.CompanyPositionEntity) *model.CompanyPosition {
+	return &model.CompanyPosition{
+		ID:       entity.Id,
+		JobTitle: utils.StringPtr(entity.JobTitle),
+		Company:  MapEntityToCompany(&entity.Company),
 	}
 }
 
-func MapEntitiesToCompanyPositiones(companyPositionEntities *entity.CompanyPositionEntities) []*model.Company {
-	var companyPositions []*model.Company
+func MapEntitiesToCompanyPositiones(companyPositionEntities *entity.CompanyPositionEntities) []*model.CompanyPosition {
+	var companyPositions []*model.CompanyPosition
 	for _, companyPositionEntity := range *companyPositionEntities {
 		companyPositions = append(companyPositions, MapEntityToCompanyPosition(&companyPositionEntity))
 	}

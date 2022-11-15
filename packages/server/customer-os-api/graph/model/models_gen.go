@@ -33,22 +33,49 @@ type Pages interface {
 	GetTotalElements() int64
 }
 
-// Describes the relationship a Contact has with a Company.
-// **A `return` object**
+type CompaniesPage struct {
+	Content       []*Company `json:"content"`
+	TotalPages    int        `json:"totalPages"`
+	TotalElements int64      `json:"totalElements"`
+}
+
+func (CompaniesPage) IsPages() {}
+
+// The total number of pages included in the query response.
+// **Required.**
+func (this CompaniesPage) GetTotalPages() int { return this.TotalPages }
+
+// The total number of elements included in the query response.
+// **Required.**
+func (this CompaniesPage) GetTotalElements() int64 { return this.TotalElements }
+
 type Company struct {
+	ID   string `json:"id"`
+	Name string `json:"name"`
+}
+
+type CompanyInput struct {
+	ID *string `json:"id"`
 	// The name of the company associated with a Contact.
 	// **Required.**
-	CompanyName string `json:"companyName"`
+	Name *string `json:"name"`
+}
+
+// Describes the relationship a Contact has with a Company.
+// **A `return` object**
+type CompanyPosition struct {
+	ID string `json:"id"`
+	// Company associated with a Contact.
+	// **Required.**
+	Company *Company `json:"company"`
 	// The Contact's job title.
 	JobTitle *string `json:"jobTitle"`
 }
 
 // Describes the relationship a Contact has with a Company.
 // **A `create` object**
-type CompanyInput struct {
-	// The name of the company associated with a Contact.
-	// **Required.**
-	CompanyName string `json:"companyName"`
+type CompanyPositionInput struct {
+	Company *CompanyInput `json:"company"`
 	// The Contact's job title.
 	JobTitle *string `json:"jobTitle"`
 }
@@ -178,8 +205,6 @@ type ContactInput struct {
 	// User defined metadata appended to contact.
 	// **Required.**
 	CustomFields []*CustomFieldInput `json:"customFields"`
-	// `companyName` and `jobTitle` of the contact if it has been associated with a company.
-	Company *CompanyInput `json:"company"`
 	// An email addresses associted with the contact.
 	Email *EmailInput `json:"email"`
 	// A phone number associated with the contact.

@@ -8,7 +8,7 @@ import (
 
 type ServiceContainer struct {
 	ContactService               service.ContactService
-	CompanyPositionService       service.CompanyService
+	CompanyService               service.CompanyService
 	ContactGroupService          service.ContactGroupService
 	CustomFieldService           service.CustomFieldService
 	PhoneNumberService           service.PhoneNumberService
@@ -27,7 +27,7 @@ func InitServices(driver *neo4j.Driver) *ServiceContainer {
 
 	return &ServiceContainer{
 		ContactService:               service.NewContactService(repoContainer),
-		CompanyPositionService:       service.NewCompanyPositionService(repoContainer),
+		CompanyService:               service.NewCompanyService(repoContainer),
 		ContactGroupService:          service.NewContactGroupService(repoContainer),
 		CustomFieldService:           service.NewCustomFieldService(repoContainer),
 		PhoneNumberService:           service.NewPhoneNumberService(repoContainer),

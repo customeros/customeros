@@ -140,9 +140,6 @@ input ContactInput {
     **Required.**
     """
     customFields: [CustomFieldInput!]
-
-     "`companyName` and `jobTitle` of the contact if it has been associated with a company."
-    company: CompanyInput
     
     "An email addresses associted with the contact."
     email: EmailInput

@@ -27,8 +27,10 @@ func (r *contactResolver) ContactType(ctx context.Context, obj *model.Contact) (
 
 // Companies is the resolver for the companies field.
 func (r *contactResolver) Companies(ctx context.Context, obj *model.Contact) ([]*model.Company, error) {
-	companyPositionEntities, err := r.ServiceContainer.CompanyPositionService.FindAllForContact(ctx, obj)
-	return mapper.MapEntitiesToCompanyPositiones(companyPositionEntities), err
+	// FIXME alexb implement
+	//companyPositionEntities, err := r.ServiceContainer.CompanyPositionService.FindAllForContact(ctx, obj)
+	//return mapper.MapEntitiesToCompanyPositiones(companyPositionEntities), err
+	return nil, nil
 }
 
 // Groups is the resolver for the groups field.

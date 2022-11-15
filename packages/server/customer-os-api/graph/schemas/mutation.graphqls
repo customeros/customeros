@@ -29,12 +29,9 @@ type Mutation {
     removeEmailFromContact(contactId : ID!, email: String!): Result!
     removeEmailFromContactById(contactId : ID!, id: ID!): Result!
 
-    contact_MergeCompany(contactId : ID!, input: CompanyInput!): Company!
-    contact_MergeCompanyById(contactId : ID!, input: CompanyIdInput!): Company!
-    contact_UpdateCompany(contactId : ID!, companyId: ID!, input: CompanyInput!): Company!
-    contact_UpdateCompanyById(contactId : ID!, companyId: ID!, input: CompanyIdInput!): Company!
-    contact_RemoveCompany(contactId : ID!, companyId: ID!): Result!
-    contact_RemoveAllCompanies(contactId : ID!): Result!
+    contact_MergeCompanyPosition(contactId : ID!, input: CompanyPositionInput!): CompanyPosition!
+    contact_UpdateCompanyPosition(contactId : ID!, companyPositionId: ID!, input: CompanyPositionInput!): CompanyPosition!
+    contact_RemoveCompanyPosition(contactId : ID!, companyPositionId: ID!): Result!
 
     createContactGroup(input: ContactGroupInput!): ContactGroup!
     updateContactGroup(input: ContactGroupUpdateInput!): ContactGroup!
@@ -43,7 +40,7 @@ type Mutation {
     removeContactFromGroup(contactId : ID!, groupId: ID!): Result!
 
     createEntityDefinition(input: EntityDefinitionInput!): EntityDefinition!
-    #    createEntityDefinitionNewVersion(id: ID!, input: EntityDefinitionInput!): EntityDefinition!
+    # createEntityDefinitionNewVersion(id: ID!, input: EntityDefinitionInput!): EntityDefinition!
 
     createConversation(input: ConversationInput!): Conversation!
 }
