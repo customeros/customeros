@@ -57,15 +57,16 @@ make
 
 To run this service to run on your laptop you need the following environemnt vars to be set
 
-| Variable                  | Meaning                                                        |
-|---------------------------|----------------------------------------------------------------|
-| DB_HOST                   | hostname of postgres db                                        |
-| DB_PORT                   | port of postgres db                                            |
-| DB_NAME                   | database name                                                  |
-| DB_USER                   | user to log into db as                                         |
-| DB_PASS                   | the database password                                          |
-| MESSAGE_STORE_SERVER_PORT | port to bind for GRPC communications should be set to "9009"   |
-| CUSTOMER_OS_API           | URL to access the Customer OS API                              |
+| Variable                  | Meaning                                                                                |
+|---------------------------|----------------------------------------------------------------------------------------|
+| DB_HOST                   | hostname of postgres db                                                                |
+| DB_PORT                   | port of postgres db                                                                    |
+| DB_NAME                   | database name                                                                          |
+| DB_USER                   | user to log into db as                                                                 |
+| DB_PASS                   | the database password                                                                  |
+| MESSAGE_STORE_SERVER_PORT | port to bind for GRPC communications should be set to "9009"                           |
+| CUSTOMER_OS_API           | URL to access the Customer OS API                                                      |
+| DEFAULT_USER_ID           | ID of user to associate conversations with in grapql, optional, defaults to AgentSmith |
 
 
 ## 🙌 Features

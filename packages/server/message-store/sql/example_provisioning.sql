@@ -1,2 +1,2 @@
-INSERT INTO message_feeds(username) VALUES ('echo@oasis.openline.ai');
-INSERT INTO message_items(type, username, message, channel, direction, message_feed_message_item) (SELECT 'MESSAGE', 'echo@oasis.openline.ai', 'call me!', 'MAIL', 'INBOUND', id FROM message_feeds WHERE username='echo@oasis.openline.ai');
+INSERT INTO message_feeds(contact_id, first_name, last_name) VALUES ('echotest', 'Echo', 'Test');
+INSERT INTO message_items(type, username, message, channel, direction, message_feed_message_item) (SELECT 'MESSAGE', 'echo@oasis.openline.ai', 'call me!', 'MAIL', 'INBOUND', id FROM message_feeds WHERE contact_id='echotest');

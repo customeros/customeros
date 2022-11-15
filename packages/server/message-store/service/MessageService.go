@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/machinebox/graphql"
+	c "github.com/openline-ai/openline-customer-os/packages/server/message-store/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/message-store/gen"
 	"github.com/openline-ai/openline-customer-os/packages/server/message-store/gen/messagefeed"
 	"github.com/openline-ai/openline-customer-os/packages/server/message-store/gen/messageitem"
@@ -22,6 +23,7 @@ type messageService struct {
 	proto.UnimplementedMessageStoreServiceServer
 	client        *gen.Client
 	graphqlClient *graphql.Client
+	config        *c.Config
 }
 
 type ContactInfo struct {
@@ -156,6 +158,26 @@ func createContact(graphqlClient *graphql.Client, firstName string, lastName str
 	return graphqlResponse["createContact"]["id"], nil
 }
 
+func createConversation(graphqlClient *graphql.Client, userId string, contactId string) (string, error) {
+	graphqlRequest := graphql.NewRequest(fmt.Sprintf(`
+			mutation CreateConversation {
+				createConversation(input: {
+					userId: "%s"
+					contactId: "%s"
+				}) {
+					id
+					startedAt
+				}
+			}
+    `, userId, contactId))
+
+	var graphqlResponse map[string]map[string]string
+	if err := graphqlClient.Run(context.Background(), graphqlRequest, &graphqlResponse); err != nil {
+		return "", err
+	}
+	return graphqlResponse["createConversation"]["id"], nil
+}
+
 func (s *messageService) SaveMessage(ctx context.Context, message *pb.Message) (*pb.Message, error) {
 	var contact *ContactInfo
 	var err error
@@ -218,6 +240,15 @@ func (s *messageService) SaveMessage(ctx context.Context, message *pb.Message) (
 				return nil, status.Errorf(se.Code(), "Error inserting new Feed")
 			}
 
+			conv, err := createConversation(s.graphqlClient, s.config.Identity.DefaultUserId, contact.id)
+
+			if err != nil {
+				log.Printf("Error making conversation %v", err)
+				return nil, err
+			}
+
+			log.Printf("Created conversation %s", conv)
+
 		}
 	}
 
@@ -273,6 +304,11 @@ func (s *messageService) GetMessage(ctx context.Context, msg *pb.Message) (*pb.M
 		return nil, status.Errorf(se.Code(), "Error finding Message")
 	}
 
+	mf, err := s.client.MessageItem.QueryMessageFeed(mi).First(ctx)
+	if err != nil {
+		se, _ := status.FromError(err)
+		return nil, status.Errorf(se.Code(), "Error finding Feed")
+	}
 	m := &pb.Message{
 		Type:      decodeType(mi.Type),
 		Message:   mi.Message,
@@ -281,7 +317,7 @@ func (s *messageService) GetMessage(ctx context.Context, msg *pb.Message) (*pb.M
 		Username:  mi.Username,
 		Id:        msg.Id,
 		Time:      timestamppb.New(mi.Time),
-		//Contact:   &pb.Contact{Id: mi. },
+		Contact:   &pb.Contact{ContactId: mf.ContactId, FirstName: mf.FirstName, LastName: mf.LastName},
 	}
 	return m, nil
 }
@@ -383,13 +419,14 @@ func (s *messageService) GetFeed(ctx context.Context, contact *pb.Contact) (*pb.
 			return nil, status.Errorf(se.Code(), "Error finding Feed")
 		}
 		var id int64 = int64(mf.ID)
-		return &pb.Contact{FirstName: mf.FirstName, LastName: mf.LastName, Id: &id}, nil
+		return &pb.Contact{FirstName: mf.FirstName, LastName: mf.LastName, ContactId: mf.ContactId, Id: &id}, nil
 	}
 }
 
-func NewMessageService(client *gen.Client, graphqlClient *graphql.Client) *messageService {
+func NewMessageService(client *gen.Client, graphqlClient *graphql.Client, config *c.Config) *messageService {
 	ms := new(messageService)
 	ms.client = client
 	ms.graphqlClient = graphqlClient
+	ms.config = config
 	return ms
 }
