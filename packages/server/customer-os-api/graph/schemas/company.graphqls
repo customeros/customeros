@@ -29,3 +29,19 @@ input CompanyInput {
     "The Contact's job title."
     jobTitle: String
 }
+
+"""
+Describes the relationship a Contact has with an existing Company.
+**A `create` object**
+"""
+input CompanyIdInput {
+
+    """
+    The ID of the company associated with a Contact.
+    **Required.**
+    """
+    companyId: ID!
+
+    "The Contact's job title."
+    jobTitle: String
+}
