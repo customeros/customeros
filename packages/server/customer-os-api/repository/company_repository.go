@@ -10,6 +10,7 @@ import (
 type CompanyRepository interface {
 	LinkNewCompanyToContact(tenant, contactId, companyName, jobTitle string) (*dbtype.Node, *dbtype.Relationship, error)
 	LinkExistingCompanyToContact(tenant, contactId, companyId, jobTitle string) (*dbtype.Node, *dbtype.Relationship, error)
+	UpdateCompanyPosition(tenant, contactId, companyPositionId, jobTitle string) (*dbtype.Node, *dbtype.Relationship, error)
 	DeleteCompanyPosition(tenant, contactId, companyPositionId string) error
 }
 
@@ -67,6 +68,33 @@ func (r *companyRepository) LinkExistingCompanyToContact(tenant, contactId, comp
 				"contactId": contactId,
 				"companyId": companyId,
 				"jobTitle":  jobTitle,
+			}); err != nil {
+			return nil, err
+		} else {
+			return queryResult.Single()
+		}
+	})
+	if err != nil {
+		return nil, nil, err
+	}
+	return utils.NodePtr(dbRecord.(*db.Record).Values[0].(dbtype.Node)), utils.RelationshipPtr(dbRecord.(*db.Record).Values[1].(dbtype.Relationship)), err
+}
+
+func (r *companyRepository) UpdateCompanyPosition(tenant, contactId, companyPositionId, jobTitle string) (*dbtype.Node, *dbtype.Relationship, error) {
+	session := (*r.driver).NewSession(neo4j.SessionConfig{AccessMode: neo4j.AccessModeWrite})
+	defer session.Close()
+
+	dbRecord, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
+		if queryResult, err := tx.Run(`
+			MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant}),
+				  (c)-[r:WORKS_AT {id:$companyPositionId}]->(co:Company)
+			SET r.jobTitle=$jobTitle
+			RETURN co, r`,
+			map[string]any{
+				"tenant":            tenant,
+				"contactId":         contactId,
+				"companyPositionId": companyPositionId,
+				"jobTitle":          jobTitle,
 			}); err != nil {
 			return nil, err
 		} else {

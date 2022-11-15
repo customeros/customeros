@@ -28,6 +28,12 @@ input CompanyPositionInput {
     jobTitle: String
 }
 
+input CompanyPositionUpdateInput {
+
+    "The Contact's job title."
+    jobTitle: String
+}
+
 input CompanyInput {
 
     id: ID

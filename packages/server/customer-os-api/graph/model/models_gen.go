@@ -80,6 +80,11 @@ type CompanyPositionInput struct {
 	JobTitle *string `json:"jobTitle"`
 }
 
+type CompanyPositionUpdateInput struct {
+	// The Contact's job title.
+	JobTitle *string `json:"jobTitle"`
+}
+
 // A contact represents an individual in customerOS.
 // **A `response` object.**
 type Contact struct {

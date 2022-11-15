@@ -5,8 +5,6 @@ package resolver
 
 import (
 	"context"
-	"fmt"
-
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/openline-ai/openline-customer-os/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/customer-os-api/graph/generated"
@@ -287,8 +285,13 @@ func (r *mutationResolver) ContactMergeCompanyPosition(ctx context.Context, cont
 }
 
 // ContactUpdateCompanyPosition is the resolver for the contact_UpdateCompanyPosition field.
-func (r *mutationResolver) ContactUpdateCompanyPosition(ctx context.Context, contactID string, companyPositionID string, input model.CompanyPositionInput) (*model.CompanyPosition, error) {
-	panic(fmt.Errorf("not implemented: ContactUpdateCompanyPosition - contact_UpdateCompanyPosition"))
+func (r *mutationResolver) ContactUpdateCompanyPosition(ctx context.Context, contactID string, companyPositionID string, input model.CompanyPositionUpdateInput) (*model.CompanyPosition, error) {
+	result, err := r.ServiceContainer.CompanyService.UpdateCompanyPosition(ctx, contactID, companyPositionID, *input.JobTitle)
+	if err != nil {
+		graphql.AddErrorf(ctx, "Could not update company position%s", companyPositionID)
+		return nil, err
+	}
+	return mapper.MapEntityToCompanyPosition(result), nil
 }
 
 // ContactDeleteCompanyPosition is the resolver for the contact_DeleteCompanyPosition field.
