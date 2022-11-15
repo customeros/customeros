@@ -158,12 +158,13 @@ func createContact(graphqlClient *graphql.Client, firstName string, lastName str
 	return graphqlResponse["createContact"]["id"], nil
 }
 
-func createConversation(graphqlClient *graphql.Client, userId string, contactId string) (string, error) {
+func createConversation(graphqlClient *graphql.Client, userId string, contactId string, feedId int) (string, error) {
 	graphqlRequest := graphql.NewRequest(fmt.Sprintf(`
 			mutation CreateConversation {
 				createConversation(input: {
 					userId: "%s"
 					contactId: "%s"
+					id: "%d"
 				}) {
 					id
 					startedAt
@@ -249,7 +250,7 @@ func (s *messageService) SaveMessage(ctx context.Context, message *pb.Message) (
 				return nil, status.Errorf(se.Code(), "Error inserting new Feed")
 			}
 
-			conv, err := createConversation(s.graphqlClient, s.config.Identity.DefaultUserId, contact.id)
+			conv, err := createConversation(s.graphqlClient, s.config.Identity.DefaultUserId, contact.id, feed.ID)
 
 			if err != nil {
 				log.Printf("Error making conversation %v", err)
