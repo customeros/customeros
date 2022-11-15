@@ -1,7 +1,7 @@
 #!/bin/bash
 
 NAMESPACE_NAME="openline"
-FILES="example_provisioning.sql"
+FILES="./example_provisioning.sql"
 
 echo "  🦦 Provisioning PostgreSQL"
 
@@ -10,18 +10,18 @@ if [ "x$1" == "xlocal-kube" ]; then
     pod=$(kubectl get pods -n $NAMESPACE_NAME|grep message-store|grep Running| cut -f1 -d ' ')
     if [ -z "$pod" ]; then
       echo "  ⏳ message-store not ready, please wait..."
-      sleep 1
+      sleep 2
     fi
-    sleep 1
+    sleep 2
   done
   pod=$(kubectl get pods -n $NAMESPACE_NAME|grep postgresql-customer-os-dev|grep Running| cut -f1 -d ' ')
   while [ -z "$pod" ]; do
     pod=$(kubectl get pods -n $NAMESPACE_NAME|grep postgresql-customer-os-dev|grep Running| cut -f1 -d ' ')
     if [ -z "$pod" ]; then
       echo "  ⏳ message-store not ready, please wait..."
-      sleep 1
+      sleep 2
     fi
-    sleep 1
+    sleep 2
   done
 
   echo "connecting to pod $pod"

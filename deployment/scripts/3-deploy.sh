@@ -71,7 +71,7 @@ while [ -z "$pod" ]; do
     pod=$(kubectl get pods -n $NAMESPACE_NAME|grep neo4j-customer-os|grep Running| cut -f1 -d ' ')
     if [ -z "$pod" ]; then
       echo "  ⏳ Neo4j not ready, please wait..."
-      sleep 1
+      sleep 2
     fi
 done
 
@@ -80,10 +80,10 @@ while [ -z "$started" ]; do
     started=$(kubectl logs -n $NAMESPACE_NAME $pod|grep password)
     if [ -z "$started" ]; then
       echo "  ⏳ Neo4j waiting for app to start..."
-      sleep 1
+      sleep 2
     fi
 done
-sleep 1
+sleep 2
 
 neo_output="not empty"
 while  [ ! -z "$neo_output" ]; do
@@ -93,10 +93,17 @@ while  [ ! -z "$neo_output" ]; do
 		echo "  ❌ Neo4j provisioning failed, trying again"
 		echo "  output: $neo_output"
 		kubectl delete pod cypher-shell -n $NAMESPACE_NAME
-		sleep 1
+		sleep 2
   else
     echo "  ✅ Neo4j provisioned"
 	fi
 done
 
-SQL_USER=openline SQL_DATABABASE=openline SQL_PASSWORD=password ./openline-setup/build-postgres.sh local-kube
+SQL_USER=openline SQL_DATABABASE=openline SQL_PASSWORD=password ./4-build-db.sh local-kube
+if [ $? -eq 0 ]; then
+    echo "  ✅ postgreSQL provisioned"
+  else
+    echo "  ❌ postgreSQL not provisioned"
+  fi
+
+rm -r openline-setup
