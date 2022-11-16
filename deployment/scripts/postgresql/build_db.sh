@@ -1,7 +1,8 @@
 #!/bin/bash
 
 NAMESPACE_NAME="openline"
-FILES="example_provisioning.sql"
+SCRIPT_DIR="$(dirname $(readlink -f $0))
+FILES="$SCRIPT_DIR/example_provisioning.sql"
 
 if [ "x$1" == "xlocal-kube" ]; then
   while [ -z "$pod" ]; do
