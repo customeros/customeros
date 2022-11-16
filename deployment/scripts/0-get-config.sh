@@ -22,7 +22,7 @@ NEO4J_CYPHER="https://raw.githubusercontent.com/openline-ai/openline-customer-os
 
 # PostgreSQL
 POSTGRES_BUILD_CONFIG='https://raw.githubusercontent.com/openline-ai/openline-customer-os/otter/deployment/scripts/postgresql/build_db.sh'
-
+EXAMPLE_PROVISIONING='https://raw.githubusercontent.com/openline-ai/openline-customer-os/otter/deployment/scripts/postgresql/example_provisioning.sql'
 ###########################################
 
 mkdir openline-setup
@@ -114,6 +114,13 @@ else
 fi
 
 curl -sS $POSTGRES_BUILD_CONFIG -o openline-setup/build-postgres.sh
+if [ $? -eq 0 ]; then
+    echo "  ✅ build-postgres.sh"
+else
+    echo "  ❌ build-postgres.sh"
+fi
+
+curl -sS $EXAMPLE_PROVISIONING -o openline-setup/example_provisioning.sql
 if [ $? -eq 0 ]; then
     echo "  ✅ build-postgres.sh"
 else
