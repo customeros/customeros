@@ -13,12 +13,12 @@ if [ -z $(which docker) ]; then
         sudo apt-get update
     fi
     sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin
-    sudo usermod -aG docker $(whoami)
     if [ $? -eq 0 ]; then
         echo "  ✅ Docker"
     else
         echo "  ❌ Docker"
     fi
+    sudo usermod -aG docker $(whoami)
 else
     echo "  ✅ Docker"
 fi
