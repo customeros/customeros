@@ -1,3 +1,14 @@
+extend type Mutation {
+    customFieldMergeToContact(contactId : ID!, input: CustomFieldInput!): CustomField!
+    customFieldUpdateInContact(contactId : ID!, input: CustomFieldUpdateInput!): CustomField!
+    customFieldDeleteFromContactByName(contactId : ID!, fieldName: String!): Result!
+    customFieldDeleteFromContactById(contactId : ID!, id: ID!): Result!
+
+    customFieldMergeToFieldSet(contactId : ID!, fieldSetId : ID!, input: CustomFieldInput!): CustomField!
+    customFieldUpdateInFieldSet(contactId : ID!, fieldSetId : ID!, input: CustomFieldUpdateInput!): CustomField!
+    customFieldDeleteFromFieldSetById(contactId : ID!, fieldSetId : ID!, id: ID!): Result!
+}
+
 """
 Describes a custom, user-defined field associated with a `Contact`.
 **A `return` object.**

@@ -1,5 +1,5 @@
 mutation MergeCustomFieldToFieldSet($contactId: ID!, $fieldSetId: ID!){
-     mergeCustomFieldToFieldSet(
+     customFieldMergeToFieldSet(
         contactId: $contactId,
         fieldSetId: $fieldSetId,
         input: {name: "some name"

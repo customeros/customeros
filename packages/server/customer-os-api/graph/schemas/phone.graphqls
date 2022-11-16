@@ -1,3 +1,10 @@
+extend type Mutation {
+    phoneNumberMergeToContact(contactId : ID!, input: PhoneNumberInput!): PhoneNumber!
+    phoneNumberUpdateInContact(contactId : ID!, input: PhoneNumberUpdateInput!): PhoneNumber!
+    phoneNumberDeleteFromContact(contactId : ID!, e164: String!): Result!
+    phoneNumberDeleteFromContactById(contactId : ID!, id: ID!): Result!
+}
+
 """
 Describes a phone number associated with a `Contact` in customerOS.
 **A `return` object.**
