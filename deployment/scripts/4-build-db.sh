@@ -10,7 +10,7 @@ SQL_USER=openline SQL_DATABABASE=openline SQL_PASSWORD=password
 while [ -z "$pod" ]; do
   pod=$(kubectl get pods -n $NAMESPACE_NAME|grep message-store|grep Running| cut -f1 -d ' ')
   if [ -z "$pod" ]; then
-    echo "  ⏳ message-store not ready, please wait..."
+    echo "  ⏳ message-store not ready yet, please wait..."
     sleep 2
   fi
 done
@@ -20,7 +20,7 @@ pod=$(kubectl get pods -n $NAMESPACE_NAME|grep postgresql-customer-os-dev|grep R
 while [ -z "$pod" ]; do
   pod=$(kubectl get pods -n $NAMESPACE_NAME|grep postgresql-customer-os-dev|grep Running| cut -f1 -d ' ')
   if [ -z "$pod" ]; then
-    echo "  ⏳ message-store not ready, please wait..."
+    echo "  ⏳ message-store not ready yet, please wait..."
     sleep 2
   fi
 done
