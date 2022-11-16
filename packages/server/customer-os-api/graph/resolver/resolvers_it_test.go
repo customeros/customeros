@@ -106,52 +106,6 @@ func TestQueryResolver_Users(t *testing.T) {
 	require.NotNil(t, users.Users.Content[0].CreatedAt)
 }
 
-func TestQueryResolver_ContactByEmail(t *testing.T) {
-	defer setupTestCase()(t)
-	otherTenant := "other"
-	createTenant(driver, tenantName)
-	createTenant(driver, otherTenant)
-	contactId1 := createDefaultContact(driver, tenantName)
-	contactId2 := createDefaultContact(driver, otherTenant)
-	addEmailToContact(driver, contactId1, "test@test.com", true, "MAIN")
-	addEmailToContact(driver, contactId2, "test@test.com", true, "MAIN")
-
-	rawResponse, err := c.RawPost(getQuery("get_contact_by_email"), client.Var("email", "test@test.com"))
-	assertRawResponseSuccess(t, rawResponse, err)
-
-	var contact struct {
-		Contact_ByEmail model.Contact
-	}
-
-	err = decode.Decode(rawResponse.Data.(map[string]any), &contact)
-	require.Nil(t, err)
-	require.NotNil(t, contact)
-	require.Equal(t, contactId1, contact.Contact_ByEmail.ID)
-}
-
-func TestQueryResolver_ContactByPhone(t *testing.T) {
-	defer setupTestCase()(t)
-	otherTenant := "other"
-	createTenant(driver, tenantName)
-	createTenant(driver, otherTenant)
-	contactId1 := createDefaultContact(driver, tenantName)
-	contactId2 := createDefaultContact(driver, otherTenant)
-	addPhoneNumberToContact(driver, contactId1, "+1234567890", false, "OTHER")
-	addPhoneNumberToContact(driver, contactId2, "+1234567890", true, "MAIN")
-
-	rawResponse, err := c.RawPost(getQuery("get_contact_by_phone"), client.Var("e164", "+1234567890"))
-	assertRawResponseSuccess(t, rawResponse, err)
-
-	var contact struct {
-		Contact_ByPhone model.Contact
-	}
-
-	err = decode.Decode(rawResponse.Data.(map[string]any), &contact)
-	require.Nil(t, err)
-	require.NotNil(t, contact)
-	require.Equal(t, contactId1, contact.Contact_ByPhone.ID)
-}
-
 func TestMutationResolver_CreateUser(t *testing.T) {
 	defer setupTestCase()(t)
 	createTenant(driver, tenantName)
@@ -161,190 +115,20 @@ func TestMutationResolver_CreateUser(t *testing.T) {
 	assertRawResponseSuccess(t, rawResponse, err)
 
 	var user struct {
-		CreateUser model.User
+		UserCreate model.User
 	}
 
 	err = decode.Decode(rawResponse.Data.(map[string]any), &user)
 	require.Nil(t, err)
 	require.NotNil(t, user)
-	require.Equal(t, "first", user.CreateUser.FirstName)
-	require.Equal(t, "last", user.CreateUser.LastName)
-	require.Equal(t, "user@openline.ai", user.CreateUser.Email)
-	require.NotNil(t, user.CreateUser.CreatedAt)
-	require.NotNil(t, user.CreateUser.ID)
+	require.Equal(t, "first", user.UserCreate.FirstName)
+	require.Equal(t, "last", user.UserCreate.LastName)
+	require.Equal(t, "user@openline.ai", user.UserCreate.Email)
+	require.NotNil(t, user.UserCreate.CreatedAt)
+	require.NotNil(t, user.UserCreate.ID)
 }
 
-func TestMutationResolver_CreateContact(t *testing.T) {
-	defer setupTestCase()(t)
-	createTenant(driver, tenantName)
-	createTenant(driver, "otherTenant")
-	contactTypeId := createContactType(driver, tenantName, "CUSTOMER")
-
-	rawResponse, err := c.RawPost(getQuery("create_contact"),
-		client.Var("contactTypeId", contactTypeId))
-	assertRawResponseSuccess(t, rawResponse, err)
-
-	var contact struct {
-		CreateContact model.Contact
-	}
-
-	err = decode.Decode(rawResponse.Data.(map[string]any), &contact)
-	require.Nil(t, err)
-	require.NotNil(t, contact)
-	require.Equal(t, "MR", contact.CreateContact.Title.String())
-	require.Equal(t, "first", contact.CreateContact.FirstName)
-	require.Equal(t, "last", contact.CreateContact.LastName)
-	require.Equal(t, contactTypeId, contact.CreateContact.ContactType.ID)
-	require.Equal(t, "CUSTOMER", contact.CreateContact.ContactType.Name)
-	require.Equal(t, "Some notes...", *contact.CreateContact.Notes)
-	require.Equal(t, "Some label", *contact.CreateContact.Label)
-
-	require.Equal(t, 5, len(contact.CreateContact.CustomFields))
-
-	boolField := contact.CreateContact.CustomFields[0]
-	require.NotNil(t, boolField.GetID())
-	require.Equal(t, "boolField", boolField.Name)
-	require.Equal(t, model.CustomFieldDataTypeBool, boolField.Datatype)
-	require.Equal(t, true, boolField.Value.RealValue())
-
-	decimalField := contact.CreateContact.CustomFields[1]
-	require.NotNil(t, decimalField.GetID())
-	require.Equal(t, "decimalField", decimalField.Name)
-	require.Equal(t, model.CustomFieldDataTypeDecimal, decimalField.Datatype)
-	require.Equal(t, 0.001, decimalField.Value.RealValue())
-
-	integerField := contact.CreateContact.CustomFields[2]
-	require.NotNil(t, integerField.GetID())
-	require.Equal(t, "integerField", integerField.Name)
-	require.Equal(t, model.CustomFieldDataTypeInteger, integerField.Datatype)
-	// issue in decoding, int converted to float 64
-	require.Equal(t, float64(123), integerField.Value.RealValue())
-
-	textField := contact.CreateContact.CustomFields[3]
-	require.NotNil(t, textField.GetID())
-	require.Equal(t, "textField", textField.Name)
-	require.Equal(t, model.CustomFieldDataTypeText, textField.Datatype)
-	require.Equal(t, "value1", textField.Value.RealValue())
-
-	timeField := contact.CreateContact.CustomFields[4]
-	require.NotNil(t, timeField.GetID())
-	require.Equal(t, "timeField", timeField.Name)
-	require.Equal(t, model.CustomFieldDataTypeDatetime, timeField.Datatype)
-	require.Equal(t, "2022-11-13T20:21:56.732Z", timeField.Value.RealValue())
-
-	require.Equal(t, 1, len(contact.CreateContact.Emails))
-	require.NotNil(t, contact.CreateContact.Emails[0].ID)
-	require.Equal(t, "contact@abc.com", contact.CreateContact.Emails[0].Email)
-	require.Equal(t, "WORK", contact.CreateContact.Emails[0].Label.String())
-	require.Equal(t, false, contact.CreateContact.Emails[0].Primary)
-
-	require.Equal(t, 1, len(contact.CreateContact.PhoneNumbers))
-	require.NotNil(t, contact.CreateContact.PhoneNumbers[0].ID)
-	require.Equal(t, "+1234567890", contact.CreateContact.PhoneNumbers[0].E164)
-	require.Equal(t, "MOBILE", contact.CreateContact.PhoneNumbers[0].Label.String())
-	require.Equal(t, true, contact.CreateContact.PhoneNumbers[0].Primary)
-
-	require.Equal(t, 0, len(contact.CreateContact.Groups))
-
-	require.Equal(t, 2, getCountOfNodes(driver, "Tenant"))
-	require.Equal(t, 1, getCountOfNodes(driver, "Contact"))
-	require.Equal(t, 0, getCountOfNodes(driver, "ContactGroup"))
-	require.Equal(t, 5, getCountOfNodes(driver, "CustomField"))
-	require.Equal(t, 1, getCountOfNodes(driver, "TextField"))
-	require.Equal(t, 1, getCountOfNodes(driver, "IntField"))
-	require.Equal(t, 1, getCountOfNodes(driver, "FloatField"))
-	require.Equal(t, 1, getCountOfNodes(driver, "BoolField"))
-	require.Equal(t, 1, getCountOfNodes(driver, "TimeField"))
-	require.Equal(t, 1, getCountOfNodes(driver, "Email"))
-	require.Equal(t, 1, getCountOfNodes(driver, "PhoneNumber"))
-	require.Equal(t, 1, getCountOfNodes(driver, "ContactType"))
-}
-
-func TestMutationResolver_CreateContact_WithEntityDefinition(t *testing.T) {
-	defer setupTestCase()(t)
-	createTenant(driver, tenantName)
-	entityDefinitionId := createEntityDefinition(driver, tenantName, model.EntityDefinitionExtensionContact.String())
-	fieldDefinitionId := addFieldDefinitionToEntity(driver, entityDefinitionId)
-
-	rawResponse, err := c.RawPost(getQuery("create_contact_with_entity_definition"),
-		client.Var("entityDefinitionId", entityDefinitionId),
-		client.Var("fieldDefinitionId", fieldDefinitionId))
-	assertRawResponseSuccess(t, rawResponse, err)
-
-	require.Equal(t, 1, getCountOfNodes(driver, "Contact"))
-	require.Equal(t, 0, getCountOfNodes(driver, "ContactGroup"))
-	require.Equal(t, 0, getCountOfNodes(driver, "Company"))
-	require.Equal(t, 2, getCountOfNodes(driver, "CustomField"))
-	require.Equal(t, 2, getCountOfNodes(driver, "TextField"))
-	require.Equal(t, 0, getCountOfNodes(driver, "Email"))
-	require.Equal(t, 0, getCountOfNodes(driver, "PhoneNumber"))
-	require.Equal(t, 1, getCountOfNodes(driver, "EntityDefinition"))
-	require.Equal(t, 1, getCountOfNodes(driver, "CustomFieldDefinition"))
-	require.Equal(t, 0, getCountOfNodes(driver, "FieldSetDefinition"))
-
-	var contact struct {
-		CreateContact model.Contact
-	}
-
-	err = decode.Decode(rawResponse.Data.(map[string]any), &contact)
-	require.Nil(t, err)
-	require.NotNil(t, contact)
-
-	require.Equal(t, entityDefinitionId, contact.CreateContact.Definition.ID)
-	require.Equal(t, 2, len(contact.CreateContact.CustomFields))
-	require.Equal(t, "field1", contact.CreateContact.CustomFields[0].Name)
-	require.Equal(t, "TEXT", contact.CreateContact.CustomFields[0].Datatype.String())
-	require.Equal(t, "value1", contact.CreateContact.CustomFields[0].Value.RealValue())
-	require.Equal(t, fieldDefinitionId, contact.CreateContact.CustomFields[0].Definition.ID)
-	require.NotNil(t, contact.CreateContact.CustomFields[0].GetID())
-	require.Equal(t, "field2", contact.CreateContact.CustomFields[1].Name)
-	require.Equal(t, "TEXT", contact.CreateContact.CustomFields[1].Datatype.String())
-	require.Equal(t, "value2", contact.CreateContact.CustomFields[1].Value.RealValue())
-	require.NotNil(t, contact.CreateContact.CustomFields[1].GetID())
-
-}
-
-func TestMutationResolver_UpdateContact(t *testing.T) {
-	defer setupTestCase()(t)
-	createTenant(driver, tenantName)
-	contactId := createContact(driver, tenantName, entity.ContactEntity{
-		Title:     model.PersonTitleMr.String(),
-		FirstName: "first",
-		LastName:  "last",
-		Label:     "label",
-		Notes:     "notes",
-	})
-	contactTypeIdOrig := createContactType(driver, tenantName, "ORIG")
-	contactTypeIdUpdate := createContactType(driver, tenantName, "UPDATED")
-
-	setContactTypeForContact(driver, contactId, contactTypeIdOrig)
-
-	rawResponse, err := c.RawPost(getQuery("update_contact"),
-		client.Var("contactId", contactId),
-		client.Var("contactTypeId", contactTypeIdUpdate))
-	assertRawResponseSuccess(t, rawResponse, err)
-
-	var contact struct {
-		UpdateContact model.Contact
-	}
-
-	err = decode.Decode(rawResponse.Data.(map[string]any), &contact)
-	require.Nil(t, err)
-	require.NotNil(t, contact)
-	require.Equal(t, "DR", contact.UpdateContact.Title.String())
-	require.Equal(t, "updated first", contact.UpdateContact.FirstName)
-	require.Equal(t, "updated last", contact.UpdateContact.LastName)
-	require.Equal(t, "updated notes", *contact.UpdateContact.Notes)
-	require.Equal(t, "updated label", *contact.UpdateContact.Label)
-	require.Equal(t, contactTypeIdUpdate, contact.UpdateContact.ContactType.ID)
-	require.Equal(t, "UPDATED", contact.UpdateContact.ContactType.Name)
-
-	require.Equal(t, 1, getCountOfNodes(driver, "Contact"))
-	require.Equal(t, 2, getCountOfNodes(driver, "ContactType"))
-	require.Equal(t, 1, getCountOfRelationships(driver, "IS_OF_TYPE"))
-}
-
-func TestMutationResolver_MergeFieldSetToContact_AllowMultipleFieldSetWithSameNameOnDifferentContacts(t *testing.T) {
+func TestMutationResolver_FieldSetMergeToContact_AllowMultipleFieldSetWithSameNameOnDifferentContacts(t *testing.T) {
 	defer setupTestCase()(t)
 	createTenant(driver, tenantName)
 	contactId1 := createContact(driver, tenantName, entity.ContactEntity{
@@ -364,10 +148,10 @@ func TestMutationResolver_MergeFieldSetToContact_AllowMultipleFieldSetWithSameNa
 	assertRawResponseSuccess(t, rawResponse2, err)
 
 	var fieldSet1 struct {
-		MergeFieldSetToContact model.FieldSet
+		FieldSetMergeToContact model.FieldSet
 	}
 	var fieldSet2 struct {
-		MergeFieldSetToContact model.FieldSet
+		FieldSetMergeToContact model.FieldSet
 	}
 
 	err = decode.Decode(rawResponse1.Data.(map[string]any), &fieldSet1)
@@ -377,13 +161,13 @@ func TestMutationResolver_MergeFieldSetToContact_AllowMultipleFieldSetWithSameNa
 	require.NotNil(t, fieldSet1)
 	require.NotNil(t, fieldSet2)
 
-	require.NotNil(t, fieldSet1.MergeFieldSetToContact.ID)
-	require.NotNil(t, fieldSet2.MergeFieldSetToContact.ID)
-	require.NotEqual(t, fieldSet1.MergeFieldSetToContact.ID, fieldSet2.MergeFieldSetToContact.ID)
-	require.Equal(t, "some name", fieldSet1.MergeFieldSetToContact.Name)
-	require.NotNil(t, fieldSet1.MergeFieldSetToContact.Added)
-	require.Equal(t, "some name", fieldSet2.MergeFieldSetToContact.Name)
-	require.NotNil(t, fieldSet2.MergeFieldSetToContact.Added)
+	require.NotNil(t, fieldSet1.FieldSetMergeToContact.ID)
+	require.NotNil(t, fieldSet2.FieldSetMergeToContact.ID)
+	require.NotEqual(t, fieldSet1.FieldSetMergeToContact.ID, fieldSet2.FieldSetMergeToContact.ID)
+	require.Equal(t, "some name", fieldSet1.FieldSetMergeToContact.Name)
+	require.NotNil(t, fieldSet1.FieldSetMergeToContact.Added)
+	require.Equal(t, "some name", fieldSet2.FieldSetMergeToContact.Name)
+	require.NotNil(t, fieldSet2.FieldSetMergeToContact.Added)
 
 	require.Equal(t, 2, getCountOfNodes(driver, "FieldSet"))
 }
@@ -394,21 +178,21 @@ func TestMutationResolver_MergeCustomFieldToFieldSet(t *testing.T) {
 	contactId := createDefaultContact(driver, tenantName)
 	fieldSetId := createDefaultFieldSet(driver, contactId)
 
-	rawResponse, err := c.RawPost(getQuery("merge_text_field_to_field_set"),
+	rawResponse, err := c.RawPost(getQuery("merge_custom_field_to_field_set"),
 		client.Var("contactId", contactId), client.Var("fieldSetId", fieldSetId))
 	assertRawResponseSuccess(t, rawResponse, err)
 
 	var textField struct {
-		MergeCustomFieldToFieldSet model.CustomField
+		CustomFieldMergeToFieldSet model.CustomField
 	}
 
 	err = decode.Decode(rawResponse.Data.(map[string]any), &textField)
 	require.Nil(t, err)
 
-	require.Equal(t, "some name", textField.MergeCustomFieldToFieldSet.Name)
-	require.Equal(t, "some value", textField.MergeCustomFieldToFieldSet.Value.RealValue())
-	require.Equal(t, model.CustomFieldDataTypeText, textField.MergeCustomFieldToFieldSet.Datatype)
-	require.NotNil(t, textField.MergeCustomFieldToFieldSet.ID)
+	require.Equal(t, "some name", textField.CustomFieldMergeToFieldSet.Name)
+	require.Equal(t, "some value", textField.CustomFieldMergeToFieldSet.Value.RealValue())
+	require.Equal(t, model.CustomFieldDataTypeText, textField.CustomFieldMergeToFieldSet.Datatype)
+	require.NotNil(t, textField.CustomFieldMergeToFieldSet.ID)
 
 	require.Equal(t, 1, getCountOfNodes(driver, "Contact"))
 	require.Equal(t, 1, getCountOfNodes(driver, "FieldSet"))
@@ -416,64 +200,64 @@ func TestMutationResolver_MergeCustomFieldToFieldSet(t *testing.T) {
 	require.Equal(t, 1, getCountOfNodes(driver, "TextField"))
 }
 
-func TestMutationResolver_UpdateCustomFieldInFieldSet(t *testing.T) {
+func TestMutationResolver_CustomFieldUpdateInFieldSet(t *testing.T) {
 	defer setupTestCase()(t)
 	createTenant(driver, tenantName)
 	contactId := createDefaultContact(driver, tenantName)
 	fieldSetId := createDefaultFieldSet(driver, contactId)
 	fieldId := createDefaultCustomFieldInSet(driver, fieldSetId)
 
-	rawResponse, err := c.RawPost(getQuery("update_text_field_in_field_set"),
+	rawResponse, err := c.RawPost(getQuery("update_custom_field_in_field_set"),
 		client.Var("contactId", contactId),
 		client.Var("fieldSetId", fieldSetId),
 		client.Var("fieldId", fieldId))
 	assertRawResponseSuccess(t, rawResponse, err)
 
 	var textField struct {
-		UpdateCustomFieldInFieldSet model.CustomField
+		CustomFieldUpdateInFieldSet model.CustomField
 	}
 
 	err = decode.Decode(rawResponse.Data.(map[string]any), &textField)
 	require.Nil(t, err)
 
-	require.Equal(t, "new name", textField.UpdateCustomFieldInFieldSet.Name)
-	require.Equal(t, "new value", textField.UpdateCustomFieldInFieldSet.Value.RealValue())
-	require.Equal(t, model.CustomFieldDataTypeText, textField.UpdateCustomFieldInFieldSet.Datatype)
-	require.Equal(t, fieldId, textField.UpdateCustomFieldInFieldSet.ID)
+	require.Equal(t, "new name", textField.CustomFieldUpdateInFieldSet.Name)
+	require.Equal(t, "new value", textField.CustomFieldUpdateInFieldSet.Value.RealValue())
+	require.Equal(t, model.CustomFieldDataTypeText, textField.CustomFieldUpdateInFieldSet.Datatype)
+	require.Equal(t, fieldId, textField.CustomFieldUpdateInFieldSet.ID)
 
 	require.Equal(t, 1, getCountOfNodes(driver, "Contact"))
 	require.Equal(t, 1, getCountOfNodes(driver, "FieldSet"))
 	require.Equal(t, 1, getCountOfNodes(driver, "CustomField"))
 }
 
-func TestMutationResolver_RemoveCustomFieldFromFieldSetByID(t *testing.T) {
+func TestMutationResolver_CustomFieldDeleteFromFieldSetByID(t *testing.T) {
 	defer setupTestCase()(t)
 	createTenant(driver, tenantName)
 	contactId := createDefaultContact(driver, tenantName)
 	fieldSetId := createDefaultFieldSet(driver, contactId)
 	fieldId := createDefaultCustomFieldInSet(driver, fieldSetId)
 
-	rawResponse, err := c.RawPost(getQuery("remove_text_field_from_field_set"),
+	rawResponse, err := c.RawPost(getQuery("delete_custom_field_from_field_set"),
 		client.Var("contactId", contactId),
 		client.Var("fieldSetId", fieldSetId),
 		client.Var("fieldId", fieldId))
 	assertRawResponseSuccess(t, rawResponse, err)
 
 	var textField struct {
-		RemoveCustomFieldFromFieldSetByID model.Result
+		CustomFieldDeleteFromFieldSetByID model.Result
 	}
 
 	err = decode.Decode(rawResponse.Data.(map[string]any), &textField)
 	require.Nil(t, err)
 
-	require.Equal(t, true, textField.RemoveCustomFieldFromFieldSetByID.Result)
+	require.Equal(t, true, textField.CustomFieldDeleteFromFieldSetByID.Result)
 
 	require.Equal(t, 1, getCountOfNodes(driver, "Contact"))
 	require.Equal(t, 1, getCountOfNodes(driver, "FieldSet"))
 	require.Equal(t, 0, getCountOfNodes(driver, "CustomField"))
 }
 
-func TestMutationResolver_RemoveFieldSetFromContact(t *testing.T) {
+func TestMutationResolver_FieldSetDeleteFromContact(t *testing.T) {
 	defer setupTestCase()(t)
 	createTenant(driver, tenantName)
 	contactId := createDefaultContact(driver, tenantName)
@@ -484,26 +268,26 @@ func TestMutationResolver_RemoveFieldSetFromContact(t *testing.T) {
 	require.Equal(t, 1, getCountOfNodes(driver, "FieldSet"))
 	require.Equal(t, 1, getCountOfNodes(driver, "CustomField"))
 
-	rawResponse, err := c.RawPost(getQuery("remove_field_set_from_contact"),
+	rawResponse, err := c.RawPost(getQuery("delete_field_set_from_contact"),
 		client.Var("contactId", contactId),
 		client.Var("fieldSetId", fieldSetId))
 	assertRawResponseSuccess(t, rawResponse, err)
 
 	var textField struct {
-		RemoveFieldSetFromContact model.Result
+		FieldSetDeleteFromContact model.Result
 	}
 
 	err = decode.Decode(rawResponse.Data.(map[string]any), &textField)
 	require.Nil(t, err)
 
-	require.Equal(t, true, textField.RemoveFieldSetFromContact.Result)
+	require.Equal(t, true, textField.FieldSetDeleteFromContact.Result)
 
 	require.Equal(t, 1, getCountOfNodes(driver, "Contact"))
 	require.Equal(t, 0, getCountOfNodes(driver, "FieldSet"))
 	require.Equal(t, 0, getCountOfNodes(driver, "CustomField"))
 }
 
-func TestMutationResolver_CreateEntityDefinition(t *testing.T) {
+func TestMutationResolver_EntityDefinitionCreate(t *testing.T) {
 	defer setupTestCase()(t)
 	createTenant(driver, tenantName)
 	createTenant(driver, "other")
@@ -512,11 +296,11 @@ func TestMutationResolver_CreateEntityDefinition(t *testing.T) {
 	assertRawResponseSuccess(t, rawResponse, err)
 
 	var entityDefinition struct {
-		CreateEntityDefinition model.EntityDefinition
+		EntityDefinitionCreate model.EntityDefinition
 	}
 
 	err = decode.Decode(rawResponse.Data.(map[string]any), &entityDefinition)
-	actual := entityDefinition.CreateEntityDefinition
+	actual := entityDefinition.EntityDefinitionCreate
 	require.Nil(t, err)
 	require.NotNil(t, actual)
 	require.NotNil(t, actual.ID)
@@ -584,7 +368,7 @@ func TestMutationResolver_CreateEntityDefinition(t *testing.T) {
 	require.Equal(t, 4, getCountOfNodes(driver, "CustomFieldDefinition"))
 }
 
-func TestMutationResolver_CreateConversation_AutogenerateID(t *testing.T) {
+func TestMutationResolver_ConversationCreate_AutogenerateID(t *testing.T) {
 	defer setupTestCase()(t)
 	createTenant(driver, tenantName)
 	userId := createDefaultUser(driver, tenantName)
@@ -596,17 +380,17 @@ func TestMutationResolver_CreateConversation_AutogenerateID(t *testing.T) {
 	assertRawResponseSuccess(t, rawResponse, err)
 
 	var conversation struct {
-		CreateConversation model.Conversation
+		ConversationCreate model.Conversation
 	}
 
 	err = decode.Decode(rawResponse.Data.(map[string]any), &conversation)
 	require.Nil(t, err)
 	require.NotNil(t, conversation)
-	require.NotNil(t, conversation.CreateConversation.ID)
-	require.NotNil(t, conversation.CreateConversation.StartedAt)
+	require.NotNil(t, conversation.ConversationCreate.ID)
+	require.NotNil(t, conversation.ConversationCreate.StartedAt)
 }
 
-func TestMutationResolver_CreateConversation_WithGivenID(t *testing.T) {
+func TestMutationResolver_ConversationCreate_WithGivenID(t *testing.T) {
 	defer setupTestCase()(t)
 	createTenant(driver, tenantName)
 	conversationId := "Some conversation ID"
@@ -620,14 +404,14 @@ func TestMutationResolver_CreateConversation_WithGivenID(t *testing.T) {
 	assertRawResponseSuccess(t, rawResponse, err)
 
 	var conversation struct {
-		CreateConversation model.Conversation
+		ConversationCreate model.Conversation
 	}
 
 	err = decode.Decode(rawResponse.Data.(map[string]any), &conversation)
 	require.Nil(t, err)
 	require.NotNil(t, conversation)
-	require.NotNil(t, conversation.CreateConversation.StartedAt)
-	require.Equal(t, conversationId, conversation.CreateConversation.ID)
+	require.NotNil(t, conversation.ConversationCreate.StartedAt)
+	require.Equal(t, conversationId, conversation.ConversationCreate.ID)
 }
 
 func TestMutationResolver_ContactTypeCreate(t *testing.T) {
@@ -891,43 +675,6 @@ func TestMutationResolver_ContactUpdateCompanyPosition_InNewCompany(t *testing.T
 	require.Equal(t, 1, getCountOfNodes(driver, "Contact"))
 	require.Equal(t, 2, getCountOfNodes(driver, "Company"))
 	require.Equal(t, 1, getCountOfRelationships(driver, "WORKS_AT"))
-}
-
-func TestQueryResolver_Contact(t *testing.T) {
-	defer setupTestCase()(t)
-	createTenant(driver, tenantName)
-	contactId := createDefaultContact(driver, tenantName)
-	companyId1 := createCompany(driver, tenantName, "ABC")
-	companyId2 := createCompany(driver, tenantName, "XYZ")
-	positionId1 := contactWorksForCompany(driver, contactId, companyId1, "CTO")
-	positionId2 := contactWorksForCompany(driver, contactId, companyId2, "CEO")
-
-	rawResponse, err := c.RawPost(getQuery("get_contact_by_id"),
-		client.Var("contactId", contactId))
-	assertRawResponseSuccess(t, rawResponse, err)
-
-	var searchedContact struct {
-		Contact model.Contact
-	}
-
-	err = decode.Decode(rawResponse.Data.(map[string]any), &searchedContact)
-	require.Nil(t, err)
-	require.Equal(t, contactId, searchedContact.Contact.ID)
-
-	companyPositions := searchedContact.Contact.CompanyPositions
-	require.Equal(t, 2, len(companyPositions))
-	require.Equal(t, positionId1, companyPositions[0].ID)
-	require.Equal(t, "CTO", *companyPositions[0].JobTitle)
-	require.Equal(t, companyId1, companyPositions[0].Company.ID)
-	require.Equal(t, "ABC", companyPositions[0].Company.Name)
-	require.Equal(t, positionId2, companyPositions[1].ID)
-	require.Equal(t, "CEO", *companyPositions[1].JobTitle)
-	require.Equal(t, companyId2, companyPositions[1].Company.ID)
-	require.Equal(t, "XYZ", companyPositions[1].Company.Name)
-
-	require.Equal(t, 1, getCountOfNodes(driver, "Contact"))
-	require.Equal(t, 2, getCountOfNodes(driver, "Company"))
-	require.Equal(t, 2, getCountOfRelationships(driver, "WORKS_AT"))
 }
 
 func TestQueryResolver_CompaniesByNameLike(t *testing.T) {

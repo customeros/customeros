@@ -1,5 +1,5 @@
 mutation UpdateCustomFieldInFieldSet($contactId: ID!, $fieldSetId: ID!, $fieldId: ID!){
-     updateCustomFieldInFieldSet(
+     customFieldUpdateInFieldSet(
         contactId: $contactId,
         fieldSetId: $fieldSetId,
         input: {id: $fieldId

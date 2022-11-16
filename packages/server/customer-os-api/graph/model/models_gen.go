@@ -121,6 +121,8 @@ type Contact struct {
 	FieldSets    []*FieldSet    `json:"fieldSets"`
 	// Definition of the contact in customerOS.
 	Definition *EntityDefinition `json:"definition"`
+	// Contact owner (user)
+	Owner *User `json:"owner"`
 }
 
 func (Contact) IsExtensibleEntity()                   {}
@@ -209,6 +211,8 @@ type ContactInput struct {
 	Email *EmailInput `json:"email"`
 	// A phone number associated with the contact.
 	PhoneNumber *PhoneNumberInput `json:"phoneNumber"`
+	// Id of the contact owner (user)
+	OwnerID *string `json:"ownerId"`
 }
 
 type ContactType struct {
@@ -245,6 +249,8 @@ type ContactUpdateInput struct {
 	Notes *string `json:"notes"`
 	// User-defined field that defines the relationship type the contact has with your business.  `Customer`, `Partner`, `Lead` are examples.
 	ContactTypeID *string `json:"contactTypeId"`
+	// Id of the contact owner (user)
+	OwnerID *string `json:"ownerId"`
 }
 
 // Specifies how many pages of contact information has been returned in the query response.

@@ -1,5 +1,5 @@
 mutation {
-  createUser(input: {firstName:"first", lastName:"last", email:"user@openline.ai"}) {
+  userCreate(input: {firstName:"first", lastName:"last", email:"user@openline.ai"}) {
       id
       firstName
       lastName

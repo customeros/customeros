@@ -1,5 +1,5 @@
 mutation CreateConversation($contactId: ID!, $userId: ID!) {
-  createConversation(input: {
+  conversationCreate(input: {
     userId: $userId
     contactId: $contactId
   }) {

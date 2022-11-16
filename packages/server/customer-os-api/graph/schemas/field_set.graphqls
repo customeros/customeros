@@ -1,3 +1,9 @@
+extend type Mutation {
+    fieldSetMergeToContact(contactId : ID!, input: FieldSetInput!): FieldSet
+    fieldSetUpdateInContact(contactId : ID!, input: FieldSetUpdateInput!): FieldSet
+    fieldSetDeleteFromContact(contactId : ID!, id: ID!):Result!
+}
+
 type FieldSet {
     id: ID!
     name: String!

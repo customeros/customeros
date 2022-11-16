@@ -242,6 +242,16 @@ func contactWorksForCompany(driver *neo4j.Driver, contactId, companyId, jobTitle
 	return positionId.String()
 }
 
+func userOwnsContact(driver *neo4j.Driver, userId, contactId string) {
+	query := `MATCH (c:Contact {id:$contactId}),
+			        (u:User {id:$userId})
+			MERGE (u)-[:OWNS]->(c)`
+	integration_tests.ExecuteWriteQuery(driver, query, map[string]any{
+		"contactId": contactId,
+		"userId":    userId,
+	})
+}
+
 func getCountOfNodes(driver *neo4j.Driver, nodeLabel string) int {
 	query := fmt.Sprintf(`MATCH (n:%s) RETURN count(n)`, nodeLabel)
 	result := integration_tests.ExecuteReadQueryWithSingleReturn(driver, query, map[string]any{})

@@ -1,3 +1,11 @@
+extend type Query {
+    users(paginationFilter: PaginationFilter): UserPage!
+}
+
+extend type Mutation {
+    userCreate(input: UserInput!): User!
+}
+
 """
 Describes the User of customerOS.  A user is the person who logs into the Openline platform.
 **A `return` object**

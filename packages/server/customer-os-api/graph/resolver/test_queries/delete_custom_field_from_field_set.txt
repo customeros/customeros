@@ -1,5 +1,5 @@
 mutation RemoveCustomFieldFromFieldSetById($contactId: ID!, $fieldSetId: ID!, $fieldId: ID!) {
-     removeCustomFieldFromFieldSetById(
+     customFieldDeleteFromFieldSetById(
         contactId: $contactId,
         fieldSetId: $fieldSetId,
         id: $fieldId)

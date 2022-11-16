@@ -1,48 +1,8 @@
 type Mutation {
-    createUser(input: UserInput!): User!
-
-    createContact(input: ContactInput!): Contact!
-    updateContact(input: ContactUpdateInput!): Contact!
-    hardDeleteContact(contactId: ID!): Result!
-    softDeleteContact(contactId: ID!): Result!
-
-    mergeCustomFieldToContact(contactId : ID!, input: CustomFieldInput!): CustomField!
-    updateCustomFieldInContact(contactId : ID!, input: CustomFieldUpdateInput!): CustomField!
-    removeCustomFieldFromContactByName(contactId : ID!, fieldName: String!): Result!
-    removeCustomFieldFromContactById(contactId : ID!, id: ID!): Result!
-
-    mergeFieldSetToContact(contactId : ID!, input: FieldSetInput!): FieldSet
-    updateFieldSetInContact(contactId : ID!, input: FieldSetUpdateInput!): FieldSet
-    removeFieldSetFromContact(contactId : ID!, id: ID!):Result!
-
-    mergeCustomFieldToFieldSet(contactId : ID!, fieldSetId : ID!, input: CustomFieldInput!): CustomField!
-    updateCustomFieldInFieldSet(contactId : ID!, fieldSetId : ID!, input: CustomFieldUpdateInput!): CustomField!
-    removeCustomFieldFromFieldSetById(contactId : ID!, fieldSetId : ID!, id: ID!): Result!
-
-    mergePhoneNumberToContact(contactId : ID!, input: PhoneNumberInput!): PhoneNumber!
-    updatePhoneNumberInContact(contactId : ID!, input: PhoneNumberUpdateInput!): PhoneNumber!
-    removePhoneNumberFromContact(contactId : ID!, e164: String!): Result!
-    removePhoneNumberFromContactById(contactId : ID!, id: ID!): Result!
-
-    mergeEmailToContact(contactId : ID!, input: EmailInput!): Email!
-    updateEmailInContact(contactId : ID!, input: EmailUpdateInput!): Email!
-    removeEmailFromContact(contactId : ID!, email: String!): Result!
-    removeEmailFromContactById(contactId : ID!, id: ID!): Result!
-
-    contact_MergeCompanyPosition(contactId : ID!, input: CompanyPositionInput!): CompanyPosition!
-    contact_UpdateCompanyPosition(contactId : ID!, companyPositionId: ID!, input: CompanyPositionInput!): CompanyPosition!
-    contact_DeleteCompanyPosition(contactId : ID!, companyPositionId: ID!): Result!
-
-    createContactGroup(input: ContactGroupInput!): ContactGroup!
-    updateContactGroup(input: ContactGroupUpdateInput!): ContactGroup!
-    deleteContactGroupAndUnlinkAllContacts(id :ID!): Result!
-    addContactToGroup(contactId : ID!, groupId: ID!): Result!
-    removeContactFromGroup(contactId : ID!, groupId: ID!): Result!
-
-    createEntityDefinition(input: EntityDefinitionInput!): EntityDefinition!
+    entityDefinitionCreate(input: EntityDefinitionInput!): EntityDefinition!
     # createEntityDefinitionNewVersion(id: ID!, input: EntityDefinitionInput!): EntityDefinition!
 
-    createConversation(input: ConversationInput!): Conversation!
+    conversationCreate(input: ConversationInput!): Conversation!
 }
 
 

@@ -35,6 +35,38 @@ func (r *fieldSetResolver) Definition(ctx context.Context, obj *model.FieldSet) 
 	return mapper.MapEntityToFieldSetDefinition(entity), err
 }
 
+// FieldSetMergeToContact is the resolver for the fieldSetMergeToContact field.
+func (r *mutationResolver) FieldSetMergeToContact(ctx context.Context, contactID string, input model.FieldSetInput) (*model.FieldSet, error) {
+	result, err := r.ServiceContainer.FieldSetService.MergeFieldSetToContact(ctx, contactID, mapper.MapFieldSetInputToEntity(&input), input.DefinitionID)
+	if err != nil {
+		graphql.AddErrorf(ctx, "Could not merge fields set <%s> to contact %s", input.Name, contactID)
+		return nil, err
+	}
+	return mapper.MapEntityToFieldSet(result), nil
+}
+
+// FieldSetUpdateInContact is the resolver for the fieldSetUpdateInContact field.
+func (r *mutationResolver) FieldSetUpdateInContact(ctx context.Context, contactID string, input model.FieldSetUpdateInput) (*model.FieldSet, error) {
+	result, err := r.ServiceContainer.FieldSetService.UpdateFieldSetInContact(ctx, contactID, mapper.MapFieldSetUpdateInputToEntity(&input))
+	if err != nil {
+		graphql.AddErrorf(ctx, "Could not update fields set %s in contact %s", input.ID, contactID)
+		return nil, err
+	}
+	return mapper.MapEntityToFieldSet(result), nil
+}
+
+// FieldSetDeleteFromContact is the resolver for the fieldSetDeleteFromContact field.
+func (r *mutationResolver) FieldSetDeleteFromContact(ctx context.Context, contactID string, id string) (*model.Result, error) {
+	result, err := r.ServiceContainer.FieldSetService.DeleteByIdFromContact(ctx, contactID, id)
+	if err != nil {
+		graphql.AddErrorf(ctx, "Could not remove fields set %s from contact %s", id, contactID)
+		return nil, err
+	}
+	return &model.Result{
+		Result: result,
+	}, nil
+}
+
 // FieldSet returns generated.FieldSetResolver implementation.
 func (r *Resolver) FieldSet() generated.FieldSetResolver { return &fieldSetResolver{r} }
 

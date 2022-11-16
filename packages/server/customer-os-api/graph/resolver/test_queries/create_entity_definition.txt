@@ -1,5 +1,5 @@
 mutation CreateEntityDefinition {
-  createEntityDefinition(input: {
+  entityDefinitionCreate(input: {
     name:"the entity definition name",
     customFields: [
       {name:"field 1", type:TEXT, order:1, mandatory:true},

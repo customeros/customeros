@@ -1,5 +1,5 @@
 mutation ($entityDefinitionId: ID!, $fieldDefinitionId: ID!){
-createContact(
+contact_Create(
     input: {
       title: MR
       firstName: "first"
