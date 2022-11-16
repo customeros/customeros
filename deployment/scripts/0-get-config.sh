@@ -112,16 +112,9 @@ else
     echo "  ❌ openline-namespace.json"
 fi
 
-curl -sS $POSTGRES_BUILD_CONFIG -o openline-setup/build-postgres.sh
-if [ $? -eq 0 ]; then
-    echo "  ✅ build-postgres.sh"
-else
-    echo "  ❌ build-postgres.sh"
-fi
-
 curl -sS $EXAMPLE_PROVISIONING -o openline-setup/example_provisioning.sql
 if [ $? -eq 0 ]; then
-    echo "  ✅ build-postgres.sh"
+    echo "  ✅ example_provisioning.sql"
 else
-    echo "  ❌ build-postgres.sh"
+    echo "  ❌ example_provisioning.sql"
 fi
