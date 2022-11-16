@@ -1,7 +1,7 @@
 #!/bin/bash
 
 NAMESPACE_NAME="openline"
-FILES="./example_provisioning.sql"
+FILES="./openline-setup/example_provisioning.sql"
 
 echo "  🦦 Provisioning PostgreSQL"
 

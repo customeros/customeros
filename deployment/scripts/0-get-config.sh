@@ -3,12 +3,12 @@
 ### Locations for remote file downloads ###
 
 # Minikube config
+OPENLINE_NAMESPACE="https://raw.githubusercontent.com/openline-ai/openline-customer-os/otter/deployment/infra/minikube-config/openline-namespace.json"
 CUSTOMER_OS_API_CONFIG="https://raw.githubusercontent.com/openline-ai/openline-customer-os/otter/deployment/infra/minikube-config/customer-os-api.yaml"
 CUSTOMER_OS_API_K8S_CONFIG="https://raw.githubusercontent.com/openline-ai/openline-customer-os/otter/deployment/infra/minikube-config/customer-os-api-k8s-service.yaml"
 CUSTOMER_OS_API_K8S_LOADBALANCER_CONFIG="https://raw.githubusercontent.com/openline-ai/openline-customer-os/otter/deployment/infra/minikube-config/customer-os-api-k8s-loadbalancer-service.yaml"
 MESSAGE_STORE_API_CONFIG="https://raw.githubusercontent.com/openline-ai/openline-customer-os/otter/deployment/infra/minikube-config/message-store.yaml"
 MESSAGE_STORE_K8S_CONFIG="https://raw.githubusercontent.com/openline-ai/openline-customer-os/otter/deployment/infra/minikube-config/message-store-k8s-service.yaml"
-OPENLINE_NAMESPACE="https://raw.githubusercontent.com/openline-ai/openline-customer-os/otter/deployment/infra/minikube-config/openline-namespace.json"
 POSTGRESQL_PERSISTENT_VOLUME_CONFIG="https://raw.githubusercontent.com/openline-ai/openline-customer-os/otter/deployment/infra/minikube-config/postgresql-persistent-volume.yaml"
 POSTGRESQL_PERSISTENT_VOLUME_CLAIM_CONFIG="https://raw.githubusercontent.com/openline-ai/openline-customer-os/otter/deployment/infra/minikube-config/postgresql-persistent-volume-claim.yaml"
 
@@ -21,7 +21,6 @@ POSTGRESQL_HELM_CONFIG="https://raw.githubusercontent.com/openline-ai/openline-c
 NEO4J_CYPHER="https://raw.githubusercontent.com/openline-ai/openline-customer-os/otter/packages/server/customer-os-api/customer-os.cypher"
 
 # PostgreSQL
-POSTGRES_BUILD_CONFIG='https://raw.githubusercontent.com/openline-ai/openline-customer-os/otter/deployment/scripts/postgresql/build_db.sh'
 EXAMPLE_PROVISIONING='https://raw.githubusercontent.com/openline-ai/openline-customer-os/otter/deployment/scripts/postgresql/example_provisioning.sql'
 ###########################################
 
