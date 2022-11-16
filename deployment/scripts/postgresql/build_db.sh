@@ -1,7 +1,7 @@
 #!/bin/bash
 
 NAMESPACE_NAME="openline"
-SCRIPT_DIR="$(dirname $(readlink -f $0))
+SCRIPT_DIR="$(dirname $(readlink -f $0))"
 FILES="$SCRIPT_DIR/example_provisioning.sql"
 
 if [ "x$1" == "xlocal-kube" ]; then
