@@ -1,0 +1,25 @@
+package resolver
+
+// This file will be automatically regenerated based on the schema, any resolver implementations
+// will be copied through when generating and any unknown code will be moved to the end.
+
+import (
+	"context"
+	"github.com/openline-ai/openline-customer-os/customer-os-api/entity"
+	"github.com/openline-ai/openline-customer-os/customer-os-api/mapper"
+
+	"github.com/openline-ai/openline-customer-os/customer-os-api/graph/model"
+)
+
+// Users is the resolver for the users field.
+func (r *queryResolver) Users(ctx context.Context, paginationFilter *model.PaginationFilter) (*model.UserPage, error) {
+	if paginationFilter == nil {
+		paginationFilter = &model.PaginationFilter{Page: 0, Limit: 0}
+	}
+	paginatedResult, err := r.ServiceContainer.UserService.FindAll(ctx, paginationFilter.Page, paginationFilter.Limit)
+	return &model.UserPage{
+		Content:       mapper.MapEntitiesToUsers(paginatedResult.Rows.(*entity.UserEntities)),
+		TotalPages:    paginatedResult.TotalPages,
+		TotalElements: paginatedResult.TotalRows,
+	}, err
+}

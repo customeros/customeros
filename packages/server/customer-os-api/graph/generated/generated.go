@@ -304,16 +304,16 @@ type MutationResolver interface {
 	ContactTypeDelete(ctx context.Context, id string) (*model.Result, error)
 }
 type QueryResolver interface {
-	Users(ctx context.Context, paginationFilter *model.PaginationFilter) (*model.UserPage, error)
+	EntityDefinitions(ctx context.Context) ([]*model.EntityDefinition, error)
+	CompaniesByNameLike(ctx context.Context, paginationFilter *model.PaginationFilter, companyName string) (*model.CompanyPage, error)
 	Contact(ctx context.Context, id string) (*model.Contact, error)
 	Contacts(ctx context.Context, paginationFilter *model.PaginationFilter) (*model.ContactsPage, error)
 	ContactByEmail(ctx context.Context, email string) (*model.Contact, error)
 	ContactByPhone(ctx context.Context, e164 string) (*model.Contact, error)
 	ContactGroup(ctx context.Context, id string) (*model.ContactGroup, error)
 	ContactGroups(ctx context.Context, paginationFilter *model.PaginationFilter) (*model.ContactGroupPage, error)
-	EntityDefinitions(ctx context.Context) ([]*model.EntityDefinition, error)
-	CompaniesByNameLike(ctx context.Context, paginationFilter *model.PaginationFilter, companyName string) (*model.CompanyPage, error)
 	ContactTypes(ctx context.Context) ([]*model.ContactType, error)
+	Users(ctx context.Context, paginationFilter *model.PaginationFilter) (*model.UserPage, error)
 }
 
 type executableSchema struct {
@@ -1587,7 +1587,25 @@ extend type Query {
 }
 
 `, BuiltIn: false},
-	{Name: "../schemas/contact.graphqls", Input: `"""
+	{Name: "../schemas/contact.graphqls", Input: `extend type Query {
+    """
+    Fetch a single contact from customerOS by contact ID.
+    """
+    contact(
+
+        """
+        The unique ID associated with the contact in customerOS.
+        **Required.**
+        """
+        id: ID!) :Contact
+
+
+    contacts(paginationFilter: PaginationFilter): ContactsPage!
+    contact_ByEmail(email: String!) :Contact!
+    contact_ByPhone(e164: String!) :Contact!
+}
+
+"""
 A contact represents an individual in customerOS.
 **A ` + "`" + `response` + "`" + ` object.**
 """
@@ -1795,7 +1813,22 @@ enum PersonTitle {
     "For the holder of a doctoral degree."
     DR
 }`, BuiltIn: false},
-	{Name: "../schemas/contact_group.graphqls", Input: `"""
+	{Name: "../schemas/contact_group.graphqls", Input: `extend type Query {
+    """
+    Fetch a specific contact group associated with a ` + "`" + `Contact` + "`" + ` in customerOS
+    """
+    contactGroup(
+
+        """
+        The unique ID associated with the ` + "`" + `ContactGroup` + "`" + `.
+        **Required.**
+        """
+        id: ID!): ContactGroup
+
+    contactGroups(paginationFilter: PaginationFilter): ContactGroupPage!
+}
+
+"""
 A collection of groups that a Contact belongs to.  Groups are user-defined entities.
 **A ` + "`" + `return` + "`" + ` object.**
 """
@@ -1869,10 +1902,7 @@ type ContactGroupPage implements Pages {
     **Required.**
     """
     totalElements: Int64!
-}
-
-
-`, BuiltIn: false},
+}`, BuiltIn: false},
 	{Name: "../schemas/contact_type.graphqls", Input: `type ContactType {
     id: ID!
     name: String!
@@ -2386,37 +2416,6 @@ enum PhoneNumberLabel {
 }
 `, BuiltIn: false},
 	{Name: "../schemas/query.graphqls", Input: `type Query {
-    users(paginationFilter: PaginationFilter): UserPage!
-
-    """
-    Fetch a single contact from customerOS by contact ID.
-    """
-    contact(
-
-        """
-        The unique ID associated with the contact in customerOS.
-        **Required.**
-        """
-        id: ID!) :Contact
-
-
-    contacts(paginationFilter: PaginationFilter): ContactsPage!
-    contact_ByEmail(email: String!) :Contact!
-    contact_ByPhone(e164: String!) :Contact!
-
-    """
-    Fetch a specific contact group associated with a ` + "`" + `Contact` + "`" + ` in customerOS
-    """
-    contactGroup(
-
-        """
-        The unique ID associated with the ` + "`" + `ContactGroup` + "`" + `.
-        **Required.**
-        """
-        id: ID!): ContactGroup
-
-    contactGroups(paginationFilter: PaginationFilter): ContactGroupPage!
-
     entityDefinitions :[EntityDefinition!]!
 }`, BuiltIn: false},
 	{Name: "../schemas/result.graphqls", Input: `"""
@@ -2434,7 +2433,11 @@ type Result {
 	{Name: "../schemas/scalar.graphqls", Input: `scalar Time
 scalar Int64
 scalar Any @goModel(model:"model.AnyTypeValue")`, BuiltIn: false},
-	{Name: "../schemas/user.graphqls", Input: `"""
+	{Name: "../schemas/user.graphqls", Input: `extend type Query {
+    users(paginationFilter: PaginationFilter): UserPage!
+}
+
+"""
 Describes the User of customerOS.  A user is the person who logs into the Openline platform.
 **A ` + "`" + `return` + "`" + ` object**
 """
@@ -9121,8 +9124,8 @@ func (ec *executionContext) fieldContext_PhoneNumber_primary(ctx context.Context
 	return fc, nil
 }
 
-func (ec *executionContext) _Query_users(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Query_users(ctx, field)
+func (ec *executionContext) _Query_entityDefinitions(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_entityDefinitions(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -9135,7 +9138,7 @@ func (ec *executionContext) _Query_users(ctx context.Context, field graphql.Coll
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().Users(rctx, fc.Args["paginationFilter"].(*model.PaginationFilter))
+		return ec.resolvers.Query().EntityDefinitions(rctx)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -9147,12 +9150,69 @@ func (ec *executionContext) _Query_users(ctx context.Context, field graphql.Coll
 		}
 		return graphql.Null
 	}
-	res := resTmp.(*model.UserPage)
+	res := resTmp.([]*model.EntityDefinition)
 	fc.Result = res
-	return ec.marshalNUserPage2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐUserPage(ctx, field.Selections, res)
+	return ec.marshalNEntityDefinition2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐEntityDefinitionᚄ(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Query_users(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Query_entityDefinitions(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_EntityDefinition_id(ctx, field)
+			case "version":
+				return ec.fieldContext_EntityDefinition_version(ctx, field)
+			case "name":
+				return ec.fieldContext_EntityDefinition_name(ctx, field)
+			case "extends":
+				return ec.fieldContext_EntityDefinition_extends(ctx, field)
+			case "fieldSets":
+				return ec.fieldContext_EntityDefinition_fieldSets(ctx, field)
+			case "customFields":
+				return ec.fieldContext_EntityDefinition_customFields(ctx, field)
+			case "added":
+				return ec.fieldContext_EntityDefinition_added(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type EntityDefinition", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_companies_ByNameLike(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_companies_ByNameLike(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().CompaniesByNameLike(rctx, fc.Args["paginationFilter"].(*model.PaginationFilter), fc.Args["companyName"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.CompanyPage)
+	fc.Result = res
+	return ec.marshalOCompanyPage2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐCompanyPage(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_companies_ByNameLike(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Query",
 		Field:      field,
@@ -9161,13 +9221,13 @@ func (ec *executionContext) fieldContext_Query_users(ctx context.Context, field 
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
 			case "content":
-				return ec.fieldContext_UserPage_content(ctx, field)
+				return ec.fieldContext_CompanyPage_content(ctx, field)
 			case "totalPages":
-				return ec.fieldContext_UserPage_totalPages(ctx, field)
+				return ec.fieldContext_CompanyPage_totalPages(ctx, field)
 			case "totalElements":
-				return ec.fieldContext_UserPage_totalElements(ctx, field)
+				return ec.fieldContext_CompanyPage_totalElements(ctx, field)
 			}
-			return nil, fmt.Errorf("no field named %q was found under type UserPage", field.Name)
+			return nil, fmt.Errorf("no field named %q was found under type CompanyPage", field.Name)
 		},
 	}
 	defer func() {
@@ -9177,7 +9237,7 @@ func (ec *executionContext) fieldContext_Query_users(ctx context.Context, field 
 		}
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Query_users_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+	if fc.Args, err = ec.field_Query_companies_ByNameLike_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return
 	}
@@ -9626,126 +9686,6 @@ func (ec *executionContext) fieldContext_Query_contactGroups(ctx context.Context
 	return fc, nil
 }
 
-func (ec *executionContext) _Query_entityDefinitions(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Query_entityDefinitions(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().EntityDefinitions(rctx)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.([]*model.EntityDefinition)
-	fc.Result = res
-	return ec.marshalNEntityDefinition2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐEntityDefinitionᚄ(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Query_entityDefinitions(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Query",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_EntityDefinition_id(ctx, field)
-			case "version":
-				return ec.fieldContext_EntityDefinition_version(ctx, field)
-			case "name":
-				return ec.fieldContext_EntityDefinition_name(ctx, field)
-			case "extends":
-				return ec.fieldContext_EntityDefinition_extends(ctx, field)
-			case "fieldSets":
-				return ec.fieldContext_EntityDefinition_fieldSets(ctx, field)
-			case "customFields":
-				return ec.fieldContext_EntityDefinition_customFields(ctx, field)
-			case "added":
-				return ec.fieldContext_EntityDefinition_added(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type EntityDefinition", field.Name)
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Query_companies_ByNameLike(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Query_companies_ByNameLike(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().CompaniesByNameLike(rctx, fc.Args["paginationFilter"].(*model.PaginationFilter), fc.Args["companyName"].(string))
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*model.CompanyPage)
-	fc.Result = res
-	return ec.marshalOCompanyPage2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐCompanyPage(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Query_companies_ByNameLike(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Query",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "content":
-				return ec.fieldContext_CompanyPage_content(ctx, field)
-			case "totalPages":
-				return ec.fieldContext_CompanyPage_totalPages(ctx, field)
-			case "totalElements":
-				return ec.fieldContext_CompanyPage_totalElements(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type CompanyPage", field.Name)
-		},
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			err = ec.Recover(ctx, r)
-			ec.Error(ctx, err)
-		}
-	}()
-	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Query_companies_ByNameLike_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
-		ec.Error(ctx, err)
-		return
-	}
-	return fc, nil
-}
-
 func (ec *executionContext) _Query_contactTypes(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Query_contactTypes(ctx, field)
 	if err != nil {
@@ -9792,6 +9732,69 @@ func (ec *executionContext) fieldContext_Query_contactTypes(ctx context.Context,
 			}
 			return nil, fmt.Errorf("no field named %q was found under type ContactType", field.Name)
 		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_users(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_users(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().Users(rctx, fc.Args["paginationFilter"].(*model.PaginationFilter))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.UserPage)
+	fc.Result = res
+	return ec.marshalNUserPage2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐUserPage(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_users(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "content":
+				return ec.fieldContext_UserPage_content(ctx, field)
+			case "totalPages":
+				return ec.fieldContext_UserPage_totalPages(ctx, field)
+			case "totalElements":
+				return ec.fieldContext_UserPage_totalElements(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type UserPage", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_users_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
 	}
 	return fc, nil
 }
@@ -14610,7 +14613,7 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("Query")
-		case "users":
+		case "entityDefinitions":
 			field := field
 
 			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
@@ -14619,10 +14622,30 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 						ec.Error(ctx, ec.Recover(ctx, r))
 					}
 				}()
-				res = ec._Query_users(ctx, field)
+				res = ec._Query_entityDefinitions(ctx, field)
 				if res == graphql.Null {
 					atomic.AddUint32(&invalids, 1)
 				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx, innerFunc)
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return rrm(innerCtx)
+			})
+		case "companies_ByNameLike":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_companies_ByNameLike(ctx, field)
 				return res
 			}
 
@@ -14765,7 +14788,7 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			out.Concurrently(i, func() graphql.Marshaler {
 				return rrm(innerCtx)
 			})
-		case "entityDefinitions":
+		case "contactTypes":
 			field := field
 
 			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
@@ -14774,7 +14797,7 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 						ec.Error(ctx, ec.Recover(ctx, r))
 					}
 				}()
-				res = ec._Query_entityDefinitions(ctx, field)
+				res = ec._Query_contactTypes(ctx, field)
 				if res == graphql.Null {
 					atomic.AddUint32(&invalids, 1)
 				}
@@ -14788,7 +14811,7 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			out.Concurrently(i, func() graphql.Marshaler {
 				return rrm(innerCtx)
 			})
-		case "companies_ByNameLike":
+		case "users":
 			field := field
 
 			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
@@ -14797,27 +14820,7 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 						ec.Error(ctx, ec.Recover(ctx, r))
 					}
 				}()
-				res = ec._Query_companies_ByNameLike(ctx, field)
-				return res
-			}
-
-			rrm := func(ctx context.Context) graphql.Marshaler {
-				return ec.OperationContext.RootResolverMiddleware(ctx, innerFunc)
-			}
-
-			out.Concurrently(i, func() graphql.Marshaler {
-				return rrm(innerCtx)
-			})
-		case "contactTypes":
-			field := field
-
-			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._Query_contactTypes(ctx, field)
+				res = ec._Query_users(ctx, field)
 				if res == graphql.Null {
 					atomic.AddUint32(&invalids, 1)
 				}

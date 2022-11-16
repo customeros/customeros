@@ -1,3 +1,7 @@
+extend type Query {
+    users(paginationFilter: PaginationFilter): UserPage!
+}
+
 """
 Describes the User of customerOS.  A user is the person who logs into the Openline platform.
 **A `return` object**

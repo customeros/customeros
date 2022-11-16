@@ -1,3 +1,21 @@
+extend type Query {
+    """
+    Fetch a single contact from customerOS by contact ID.
+    """
+    contact(
+
+        """
+        The unique ID associated with the contact in customerOS.
+        **Required.**
+        """
+        id: ID!) :Contact
+
+
+    contacts(paginationFilter: PaginationFilter): ContactsPage!
+    contact_ByEmail(email: String!) :Contact!
+    contact_ByPhone(e164: String!) :Contact!
+}
+
 """
 A contact represents an individual in customerOS.
 **A `response` object.**

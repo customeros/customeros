@@ -1,34 +1,3 @@
 type Query {
-    users(paginationFilter: PaginationFilter): UserPage!
-
-    """
-    Fetch a single contact from customerOS by contact ID.
-    """
-    contact(
-
-        """
-        The unique ID associated with the contact in customerOS.
-        **Required.**
-        """
-        id: ID!) :Contact
-
-
-    contacts(paginationFilter: PaginationFilter): ContactsPage!
-    contact_ByEmail(email: String!) :Contact!
-    contact_ByPhone(e164: String!) :Contact!
-
-    """
-    Fetch a specific contact group associated with a `Contact` in customerOS
-    """
-    contactGroup(
-
-        """
-        The unique ID associated with the `ContactGroup`.
-        **Required.**
-        """
-        id: ID!): ContactGroup
-
-    contactGroups(paginationFilter: PaginationFilter): ContactGroupPage!
-
     entityDefinitions :[EntityDefinition!]!
 }

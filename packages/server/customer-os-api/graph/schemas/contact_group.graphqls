@@ -1,3 +1,18 @@
+extend type Query {
+    """
+    Fetch a specific contact group associated with a `Contact` in customerOS
+    """
+    contactGroup(
+
+        """
+        The unique ID associated with the `ContactGroup`.
+        **Required.**
+        """
+        id: ID!): ContactGroup
+
+    contactGroups(paginationFilter: PaginationFilter): ContactGroupPage!
+}
+
 """
 A collection of groups that a Contact belongs to.  Groups are user-defined entities.
 **A `return` object.**
@@ -73,5 +88,3 @@ type ContactGroupPage implements Pages {
     """
     totalElements: Int64!
 }
-
-

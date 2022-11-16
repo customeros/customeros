@@ -5,6 +5,7 @@ package resolver
 
 import (
 	"context"
+	"github.com/openline-ai/openline-customer-os/customer-os-api/entity"
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/openline-ai/openline-customer-os/customer-os-api/graph/generated"
@@ -80,6 +81,49 @@ func (r *contactResolver) Definition(ctx context.Context, obj *model.Contact) (*
 		return nil, nil
 	}
 	return mapper.MapEntityToEntityDefinition(entity), err
+}
+
+// Contact is the resolver for the contact field.
+func (r *queryResolver) Contact(ctx context.Context, id string) (*model.Contact, error) {
+	contactEntity, err := r.ServiceContainer.ContactService.FindContactById(ctx, id)
+	if err != nil || contactEntity == nil {
+		graphql.AddErrorf(ctx, "Contact with id %s not found", id)
+		return nil, err
+	}
+	return mapper.MapEntityToContact(contactEntity), nil
+}
+
+// Contacts is the resolver for the contacts field.
+func (r *queryResolver) Contacts(ctx context.Context, paginationFilter *model.PaginationFilter) (*model.ContactsPage, error) {
+	if paginationFilter == nil {
+		paginationFilter = &model.PaginationFilter{Page: 0, Limit: 0}
+	}
+	paginatedResult, err := r.ServiceContainer.ContactService.FindAll(ctx, paginationFilter.Page, paginationFilter.Limit)
+	return &model.ContactsPage{
+		Content:       mapper.MapEntitiesToContacts(paginatedResult.Rows.(*entity.ContactEntities)),
+		TotalPages:    paginatedResult.TotalPages,
+		TotalElements: paginatedResult.TotalRows,
+	}, err
+}
+
+// ContactByEmail is the resolver for the contactByEmail field.
+func (r *queryResolver) ContactByEmail(ctx context.Context, email string) (*model.Contact, error) {
+	contactEntity, err := r.ServiceContainer.ContactService.FindContactByEmail(ctx, email)
+	if err != nil || contactEntity == nil {
+		graphql.AddErrorf(ctx, "Contact with email %s not identified", email)
+		return nil, err
+	}
+	return mapper.MapEntityToContact(contactEntity), nil
+}
+
+// ContactByPhone is the resolver for the contactByPhone field.
+func (r *queryResolver) ContactByPhone(ctx context.Context, e164 string) (*model.Contact, error) {
+	contactEntity, err := r.ServiceContainer.ContactService.FindContactByPhoneNumber(ctx, e164)
+	if err != nil || contactEntity == nil {
+		graphql.AddErrorf(ctx, "Contact with phone number %s not identified", e164)
+		return nil, err
+	}
+	return mapper.MapEntityToContact(contactEntity), nil
 }
 
 // Contact returns generated.ContactResolver implementation.
