@@ -1,5 +1,5 @@
 mutation RemoveFieldSetFromContact($contactId: ID!, $fieldSetId: ID!) {
-     removeFieldSetFromContact(
+     fieldSetDeleteFromContact(
         contactId: $contactId,
         id: $fieldSetId)
      {

@@ -1,5 +1,5 @@
 mutation MergeFieldSetToContact($contactId: ID!){
-     mergeFieldSetToContact(
+     fieldSetMergeToContact(
         contactId: $contactId
         input: {name: "some name"}
      ) {

@@ -5,6 +5,7 @@ package resolver
 
 import (
 	"context"
+
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/openline-ai/openline-customer-os/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/customer-os-api/graph/generated"
@@ -131,6 +132,38 @@ func (r *mutationResolver) ContactSoftDelete(ctx context.Context, contactID stri
 	result, err := r.ServiceContainer.ContactService.SoftDelete(ctx, contactID)
 	if err != nil {
 		graphql.AddErrorf(ctx, "Could not soft delete contact %s", contactID)
+		return nil, err
+	}
+	return &model.Result{
+		Result: result,
+	}, nil
+}
+
+// ContactMergeCompanyPosition is the resolver for the contact_MergeCompanyPosition field.
+func (r *mutationResolver) ContactMergeCompanyPosition(ctx context.Context, contactID string, input model.CompanyPositionInput) (*model.CompanyPosition, error) {
+	result, err := r.ServiceContainer.CompanyService.MergeCompanyToContact(ctx, contactID, mapper.MapCompanyPositionInputToEntity(&input))
+	if err != nil {
+		graphql.AddErrorf(ctx, "Could not add company position to contact %s", contactID)
+		return nil, err
+	}
+	return mapper.MapEntityToCompanyPosition(result), nil
+}
+
+// ContactUpdateCompanyPosition is the resolver for the contact_UpdateCompanyPosition field.
+func (r *mutationResolver) ContactUpdateCompanyPosition(ctx context.Context, contactID string, companyPositionID string, input model.CompanyPositionInput) (*model.CompanyPosition, error) {
+	result, err := r.ServiceContainer.CompanyService.UpdateCompanyPosition(ctx, contactID, companyPositionID, mapper.MapCompanyPositionInputToEntity(&input))
+	if err != nil {
+		graphql.AddErrorf(ctx, "Could not update company position%s", companyPositionID)
+		return nil, err
+	}
+	return mapper.MapEntityToCompanyPosition(result), nil
+}
+
+// ContactDeleteCompanyPosition is the resolver for the contact_DeleteCompanyPosition field.
+func (r *mutationResolver) ContactDeleteCompanyPosition(ctx context.Context, contactID string, companyPositionID string) (*model.Result, error) {
+	result, err := r.ServiceContainer.CompanyService.DeleteCompanyPositionFromContact(ctx, contactID, companyPositionID)
+	if err != nil {
+		graphql.AddErrorf(ctx, "Could not remove company position %s from contact %s", companyPositionID, contactID)
 		return nil, err
 	}
 	return &model.Result{

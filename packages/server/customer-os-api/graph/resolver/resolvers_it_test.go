@@ -344,7 +344,7 @@ func TestMutationResolver_UpdateContact(t *testing.T) {
 	require.Equal(t, 1, getCountOfRelationships(driver, "IS_OF_TYPE"))
 }
 
-func TestMutationResolver_MergeFieldSetToContact_AllowMultipleFieldSetWithSameNameOnDifferentContacts(t *testing.T) {
+func TestMutationResolver_FieldSetMergeToContact_AllowMultipleFieldSetWithSameNameOnDifferentContacts(t *testing.T) {
 	defer setupTestCase()(t)
 	createTenant(driver, tenantName)
 	contactId1 := createContact(driver, tenantName, entity.ContactEntity{
@@ -364,10 +364,10 @@ func TestMutationResolver_MergeFieldSetToContact_AllowMultipleFieldSetWithSameNa
 	assertRawResponseSuccess(t, rawResponse2, err)
 
 	var fieldSet1 struct {
-		MergeFieldSetToContact model.FieldSet
+		FieldSetMergeToContact model.FieldSet
 	}
 	var fieldSet2 struct {
-		MergeFieldSetToContact model.FieldSet
+		FieldSetMergeToContact model.FieldSet
 	}
 
 	err = decode.Decode(rawResponse1.Data.(map[string]any), &fieldSet1)
@@ -377,13 +377,13 @@ func TestMutationResolver_MergeFieldSetToContact_AllowMultipleFieldSetWithSameNa
 	require.NotNil(t, fieldSet1)
 	require.NotNil(t, fieldSet2)
 
-	require.NotNil(t, fieldSet1.MergeFieldSetToContact.ID)
-	require.NotNil(t, fieldSet2.MergeFieldSetToContact.ID)
-	require.NotEqual(t, fieldSet1.MergeFieldSetToContact.ID, fieldSet2.MergeFieldSetToContact.ID)
-	require.Equal(t, "some name", fieldSet1.MergeFieldSetToContact.Name)
-	require.NotNil(t, fieldSet1.MergeFieldSetToContact.Added)
-	require.Equal(t, "some name", fieldSet2.MergeFieldSetToContact.Name)
-	require.NotNil(t, fieldSet2.MergeFieldSetToContact.Added)
+	require.NotNil(t, fieldSet1.FieldSetMergeToContact.ID)
+	require.NotNil(t, fieldSet2.FieldSetMergeToContact.ID)
+	require.NotEqual(t, fieldSet1.FieldSetMergeToContact.ID, fieldSet2.FieldSetMergeToContact.ID)
+	require.Equal(t, "some name", fieldSet1.FieldSetMergeToContact.Name)
+	require.NotNil(t, fieldSet1.FieldSetMergeToContact.Added)
+	require.Equal(t, "some name", fieldSet2.FieldSetMergeToContact.Name)
+	require.NotNil(t, fieldSet2.FieldSetMergeToContact.Added)
 
 	require.Equal(t, 2, getCountOfNodes(driver, "FieldSet"))
 }
@@ -473,7 +473,7 @@ func TestMutationResolver_RemoveCustomFieldFromFieldSetByID(t *testing.T) {
 	require.Equal(t, 0, getCountOfNodes(driver, "CustomField"))
 }
 
-func TestMutationResolver_RemoveFieldSetFromContact(t *testing.T) {
+func TestMutationResolver_FieldSetDeleteFromContact(t *testing.T) {
 	defer setupTestCase()(t)
 	createTenant(driver, tenantName)
 	contactId := createDefaultContact(driver, tenantName)
@@ -484,19 +484,19 @@ func TestMutationResolver_RemoveFieldSetFromContact(t *testing.T) {
 	require.Equal(t, 1, getCountOfNodes(driver, "FieldSet"))
 	require.Equal(t, 1, getCountOfNodes(driver, "CustomField"))
 
-	rawResponse, err := c.RawPost(getQuery("remove_field_set_from_contact"),
+	rawResponse, err := c.RawPost(getQuery("delete_field_set_from_contact"),
 		client.Var("contactId", contactId),
 		client.Var("fieldSetId", fieldSetId))
 	assertRawResponseSuccess(t, rawResponse, err)
 
 	var textField struct {
-		RemoveFieldSetFromContact model.Result
+		FieldSetDeleteFromContact model.Result
 	}
 
 	err = decode.Decode(rawResponse.Data.(map[string]any), &textField)
 	require.Nil(t, err)
 
-	require.Equal(t, true, textField.RemoveFieldSetFromContact.Result)
+	require.Equal(t, true, textField.FieldSetDeleteFromContact.Result)
 
 	require.Equal(t, 1, getCountOfNodes(driver, "Contact"))
 	require.Equal(t, 0, getCountOfNodes(driver, "FieldSet"))
