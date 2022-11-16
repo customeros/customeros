@@ -286,8 +286,8 @@ func (r *mutationResolver) ContactMergeCompanyPosition(ctx context.Context, cont
 }
 
 // ContactUpdateCompanyPosition is the resolver for the contact_UpdateCompanyPosition field.
-func (r *mutationResolver) ContactUpdateCompanyPosition(ctx context.Context, contactID string, companyPositionID string, input model.CompanyPositionUpdateInput) (*model.CompanyPosition, error) {
-	result, err := r.ServiceContainer.CompanyService.UpdateCompanyPosition(ctx, contactID, companyPositionID, *input.JobTitle)
+func (r *mutationResolver) ContactUpdateCompanyPosition(ctx context.Context, contactID string, companyPositionID string, input model.CompanyPositionInput) (*model.CompanyPosition, error) {
+	result, err := r.ServiceContainer.CompanyService.UpdateCompanyPosition(ctx, contactID, companyPositionID, mapper.MapCompanyPositionInputToEntity(&input))
 	if err != nil {
 		graphql.AddErrorf(ctx, "Could not update company position%s", companyPositionID)
 		return nil, err

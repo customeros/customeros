@@ -12,7 +12,7 @@ import (
 
 type CompanyService interface {
 	MergeCompanyToContact(ctx context.Context, contactId string, input *entity.CompanyPositionEntity) (*entity.CompanyPositionEntity, error)
-	UpdateCompanyPosition(ctx context.Context, contactId, companyPositionId, jobTitle string) (*entity.CompanyPositionEntity, error)
+	UpdateCompanyPosition(ctx context.Context, contactId, companyPositionId string, input *entity.CompanyPositionEntity) (*entity.CompanyPositionEntity, error)
 	DeleteCompanyPositionFromContact(ctx context.Context, contactId, companyPositionId string) (bool, error)
 
 	GetCompanyPositionsForContact(ctx context.Context, contactId string) (*entity.CompanyPositionEntities, error)
@@ -41,31 +41,71 @@ func (s *companyService) MergeCompanyToContact(ctx context.Context, contactId st
 	var companyDbNode *dbtype.Node
 	var positionDbRelationship *dbtype.Relationship
 
-	if len(input.Company.Id) == 0 {
-		companyDbNode, positionDbRelationship, err = s.repository.CompanyRepository.LinkNewCompanyToContact(common.GetContext(ctx).Tenant, contactId, input.Company.Name, input.JobTitle)
-	} else {
-		companyDbNode, positionDbRelationship, err = s.repository.CompanyRepository.LinkExistingCompanyToContact(common.GetContext(ctx).Tenant, contactId, input.Company.Id, input.JobTitle)
-	}
-	if err != nil {
-		return nil, err
-	}
-	companyPositionEntity := s.mapCompanyPositionDbRelationshipToEntity(positionDbRelationship)
-	companyPositionEntity.Company = *s.mapCompanyDbNodeToEntity(companyDbNode)
-	return companyPositionEntity, nil
+	session := utils.NewNeo4jWriteSession(*s.repository.Drivers.Neo4jDriver)
+	defer session.Close()
+
+	newPosition, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
+		if len(input.Company.Id) == 0 {
+			companyDbNode, positionDbRelationship, err = s.repository.CompanyRepository.LinkNewCompanyToContactInTx(tx, common.GetContext(ctx).Tenant, contactId, input.Company.Name, input.JobTitle)
+		} else {
+			companyDbNode, positionDbRelationship, err = s.repository.CompanyRepository.LinkExistingCompanyToContactInTx(tx, common.GetContext(ctx).Tenant, contactId, input.Company.Id, input.JobTitle)
+		}
+		if err != nil {
+			return nil, err
+		}
+		companyPositionEntity := s.mapCompanyPositionDbRelationshipToEntity(positionDbRelationship)
+		companyPositionEntity.Company = *s.mapCompanyDbNodeToEntity(companyDbNode)
+		return companyPositionEntity, nil
+	})
+
+	return newPosition.(*entity.CompanyPositionEntity), nil
 }
 
-func (s *companyService) UpdateCompanyPosition(ctx context.Context, contactId, companyPositionId, jobTitle string) (*entity.CompanyPositionEntity, error) {
-	companyDbNode, positionDbRelationship, err := s.repository.CompanyRepository.UpdateCompanyPosition(common.GetContext(ctx).Tenant, contactId, companyPositionId, jobTitle)
+func (s *companyService) UpdateCompanyPosition(ctx context.Context, contactId, companyPositionId string, input *entity.CompanyPositionEntity) (*entity.CompanyPositionEntity, error) {
+	var err error
+	var companyDbNode *dbtype.Node
+	var positionDbRelationship *dbtype.Relationship
+	tenant := common.GetContext(ctx).Tenant
+
+	session := utils.NewNeo4jWriteSession(*s.repository.Drivers.Neo4jDriver)
+	defer session.Close()
+
+	currentPositionDtls, err := s.repository.CompanyRepository.GetCompanyPositionForContact(session, tenant, contactId, companyPositionId)
 	if err != nil {
 		return nil, err
 	}
-	companyPositionEntity := s.mapCompanyPositionDbRelationshipToEntity(positionDbRelationship)
-	companyPositionEntity.Company = *s.mapCompanyDbNodeToEntity(companyDbNode)
-	return companyPositionEntity, nil
+	currentPositionId := utils.GetStringPropOrEmpty(utils.GetPropsFromRelationship(*currentPositionDtls.Position), "id")
+
+	updatedPosition, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
+		if len(input.Company.Id) == 0 {
+			err := s.repository.CompanyRepository.DeleteCompanyPositionInTx(tx, tenant, contactId, currentPositionId)
+			if err != nil {
+				return nil, err
+			}
+			companyDbNode, positionDbRelationship, err = s.repository.CompanyRepository.LinkNewCompanyToContactInTx(tx, tenant, contactId, input.Company.Name, input.JobTitle)
+		} else if input.Company.Id == currentPositionId {
+			companyDbNode, positionDbRelationship, err = s.repository.CompanyRepository.UpdateCompanyPositionInTx(tx, common.GetContext(ctx).Tenant, contactId, companyPositionId, input.JobTitle)
+		} else {
+			err := s.repository.CompanyRepository.DeleteCompanyPositionInTx(tx, tenant, contactId, currentPositionId)
+			if err != nil {
+				return nil, err
+			}
+			companyDbNode, positionDbRelationship, err = s.repository.CompanyRepository.LinkExistingCompanyToContactInTx(tx, tenant, contactId, input.Company.Id, input.JobTitle)
+		}
+		companyPositionEntity := s.mapCompanyPositionDbRelationshipToEntity(positionDbRelationship)
+		companyPositionEntity.Company = *s.mapCompanyDbNodeToEntity(companyDbNode)
+		return companyPositionEntity, nil
+	})
+
+	return updatedPosition.(*entity.CompanyPositionEntity), err
 }
 
 func (s *companyService) DeleteCompanyPositionFromContact(ctx context.Context, contactId, companyPositionId string) (bool, error) {
-	err := s.repository.CompanyRepository.DeleteCompanyPosition(common.GetContext(ctx).Tenant, contactId, companyPositionId)
+	session := utils.NewNeo4jWriteSession(*s.repository.Drivers.Neo4jDriver)
+	defer session.Close()
+	_, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
+		return nil, s.repository.CompanyRepository.DeleteCompanyPositionInTx(tx, common.GetContext(ctx).Tenant, contactId, companyPositionId)
+	})
 	if err != nil {
 		return false, err
 	}
@@ -73,8 +113,10 @@ func (s *companyService) DeleteCompanyPositionFromContact(ctx context.Context, c
 }
 
 func (s *companyService) GetCompanyPositionsForContact(ctx context.Context, contactId string) (*entity.CompanyPositionEntities, error) {
+	session := utils.NewNeo4jReadSession(*s.repository.Drivers.Neo4jDriver)
+	defer session.Close()
 
-	companiesAndPositionsDbNodes, err := s.repository.CompanyRepository.GetCompanyPositionsForContact(common.GetContext(ctx).Tenant, contactId)
+	companiesAndPositionsDbNodes, err := s.repository.CompanyRepository.GetCompanyPositionsForContact(session, common.GetContext(ctx).Tenant, contactId)
 	if err != nil {
 		return nil, err
 	}

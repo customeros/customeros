@@ -170,7 +170,7 @@ type ComplexityRoot struct {
 		ContactTypeCreate                      func(childComplexity int, input model.ContactTypeInput) int
 		ContactTypeDelete                      func(childComplexity int, id string) int
 		ContactTypeUpdate                      func(childComplexity int, input model.ContactTypeUpdateInput) int
-		ContactUpdateCompanyPosition           func(childComplexity int, contactID string, companyPositionID string, input model.CompanyPositionUpdateInput) int
+		ContactUpdateCompanyPosition           func(childComplexity int, contactID string, companyPositionID string, input model.CompanyPositionInput) int
 		CreateContact                          func(childComplexity int, input model.ContactInput) int
 		CreateContactGroup                     func(childComplexity int, input model.ContactGroupInput) int
 		CreateConversation                     func(childComplexity int, input model.ConversationInput) int
@@ -290,7 +290,7 @@ type MutationResolver interface {
 	RemoveEmailFromContact(ctx context.Context, contactID string, email string) (*model.Result, error)
 	RemoveEmailFromContactByID(ctx context.Context, contactID string, id string) (*model.Result, error)
 	ContactMergeCompanyPosition(ctx context.Context, contactID string, input model.CompanyPositionInput) (*model.CompanyPosition, error)
-	ContactUpdateCompanyPosition(ctx context.Context, contactID string, companyPositionID string, input model.CompanyPositionUpdateInput) (*model.CompanyPosition, error)
+	ContactUpdateCompanyPosition(ctx context.Context, contactID string, companyPositionID string, input model.CompanyPositionInput) (*model.CompanyPosition, error)
 	ContactDeleteCompanyPosition(ctx context.Context, contactID string, companyPositionID string) (*model.Result, error)
 	CreateContactGroup(ctx context.Context, input model.ContactGroupInput) (*model.ContactGroup, error)
 	UpdateContactGroup(ctx context.Context, input model.ContactGroupUpdateInput) (*model.ContactGroup, error)
@@ -889,7 +889,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.ContactUpdateCompanyPosition(childComplexity, args["contactId"].(string), args["companyPositionId"].(string), args["input"].(model.CompanyPositionUpdateInput)), true
+		return e.complexity.Mutation.ContactUpdateCompanyPosition(childComplexity, args["contactId"].(string), args["companyPositionId"].(string), args["input"].(model.CompanyPositionInput)), true
 
 	case "Mutation.createContact":
 		if e.complexity.Mutation.CreateContact == nil {
@@ -1450,7 +1450,6 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 	inputUnmarshalMap := graphql.BuildUnmarshalerMap(
 		ec.unmarshalInputCompanyInput,
 		ec.unmarshalInputCompanyPositionInput,
-		ec.unmarshalInputCompanyPositionUpdateInput,
 		ec.unmarshalInputContactGroupInput,
 		ec.unmarshalInputContactGroupUpdateInput,
 		ec.unmarshalInputContactInput,
@@ -1556,12 +1555,6 @@ Describes the relationship a Contact has with a Company.
 input CompanyPositionInput {
 
     company: CompanyInput!
-
-    "The Contact's job title."
-    jobTitle: String
-}
-
-input CompanyPositionUpdateInput {
 
     "The Contact's job title."
     jobTitle: String
@@ -2277,7 +2270,7 @@ interface ExtensibleEntity implements Node {
     removeEmailFromContactById(contactId : ID!, id: ID!): Result!
 
     contact_MergeCompanyPosition(contactId : ID!, input: CompanyPositionInput!): CompanyPosition!
-    contact_UpdateCompanyPosition(contactId : ID!, companyPositionId: ID!, input: CompanyPositionUpdateInput!): CompanyPosition!
+    contact_UpdateCompanyPosition(contactId : ID!, companyPositionId: ID!, input: CompanyPositionInput!): CompanyPosition!
     contact_DeleteCompanyPosition(contactId : ID!, companyPositionId: ID!): Result!
 
     createContactGroup(input: ContactGroupInput!): ContactGroup!
@@ -2675,10 +2668,10 @@ func (ec *executionContext) field_Mutation_contact_UpdateCompanyPosition_args(ct
 		}
 	}
 	args["companyPositionId"] = arg1
-	var arg2 model.CompanyPositionUpdateInput
+	var arg2 model.CompanyPositionInput
 	if tmp, ok := rawArgs["input"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-		arg2, err = ec.unmarshalNCompanyPositionUpdateInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐCompanyPositionUpdateInput(ctx, tmp)
+		arg2, err = ec.unmarshalNCompanyPositionInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐCompanyPositionInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -8238,7 +8231,7 @@ func (ec *executionContext) _Mutation_contact_UpdateCompanyPosition(ctx context.
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().ContactUpdateCompanyPosition(rctx, fc.Args["contactId"].(string), fc.Args["companyPositionId"].(string), fc.Args["input"].(model.CompanyPositionUpdateInput))
+		return ec.resolvers.Mutation().ContactUpdateCompanyPosition(rctx, fc.Args["contactId"].(string), fc.Args["companyPositionId"].(string), fc.Args["input"].(model.CompanyPositionInput))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -12185,34 +12178,6 @@ func (ec *executionContext) unmarshalInputCompanyPositionInput(ctx context.Conte
 	return it, nil
 }
 
-func (ec *executionContext) unmarshalInputCompanyPositionUpdateInput(ctx context.Context, obj interface{}) (model.CompanyPositionUpdateInput, error) {
-	var it model.CompanyPositionUpdateInput
-	asMap := map[string]interface{}{}
-	for k, v := range obj.(map[string]interface{}) {
-		asMap[k] = v
-	}
-
-	fieldsInOrder := [...]string{"jobTitle"}
-	for _, k := range fieldsInOrder {
-		v, ok := asMap[k]
-		if !ok {
-			continue
-		}
-		switch k {
-		case "jobTitle":
-			var err error
-
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("jobTitle"))
-			it.JobTitle, err = ec.unmarshalOString2ᚖstring(ctx, v)
-			if err != nil {
-				return it, err
-			}
-		}
-	}
-
-	return it, nil
-}
-
 func (ec *executionContext) unmarshalInputContactGroupInput(ctx context.Context, obj interface{}) (model.ContactGroupInput, error) {
 	var it model.ContactGroupInput
 	asMap := map[string]interface{}{}
@@ -15482,11 +15447,6 @@ func (ec *executionContext) marshalNCompanyPosition2ᚖgithubᚗcomᚋopenline�
 
 func (ec *executionContext) unmarshalNCompanyPositionInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐCompanyPositionInput(ctx context.Context, v interface{}) (model.CompanyPositionInput, error) {
 	res, err := ec.unmarshalInputCompanyPositionInput(ctx, v)
-	return res, graphql.ErrorOnPath(ctx, err)
-}
-
-func (ec *executionContext) unmarshalNCompanyPositionUpdateInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐCompanyPositionUpdateInput(ctx context.Context, v interface{}) (model.CompanyPositionUpdateInput, error) {
-	res, err := ec.unmarshalInputCompanyPositionUpdateInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 

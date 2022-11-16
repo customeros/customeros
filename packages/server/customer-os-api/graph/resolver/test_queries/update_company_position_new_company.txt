@@ -2,7 +2,11 @@ mutation MergeExistingCompanyToContact($contactId: ID!, $companyPositionId: ID!)
      contact_UpdateCompanyPosition(
         contactId: $contactId
         companyPositionId: $companyPositionId
-        input: {jobTitle: "CEO"}
+        input: {jobTitle: "CEO"
+                company: {
+                    name: "new company"
+                }
+               }
      ) {
         company {
             id

@@ -8,11 +8,12 @@ import (
 )
 
 type CompanyRepository interface {
-	LinkNewCompanyToContact(tenant, contactId, companyName, jobTitle string) (*dbtype.Node, *dbtype.Relationship, error)
-	LinkExistingCompanyToContact(tenant, contactId, companyId, jobTitle string) (*dbtype.Node, *dbtype.Relationship, error)
-	UpdateCompanyPosition(tenant, contactId, companyPositionId, jobTitle string) (*dbtype.Node, *dbtype.Relationship, error)
-	DeleteCompanyPosition(tenant, contactId, companyPositionId string) error
-	GetCompanyPositionsForContact(tenant, contactId string) ([]*CompanyWithPositionNodes, error)
+	LinkNewCompanyToContactInTx(tx neo4j.Transaction, tenant, contactId, companyName, jobTitle string) (*dbtype.Node, *dbtype.Relationship, error)
+	LinkExistingCompanyToContactInTx(tx neo4j.Transaction, tenant, contactId, companyId, jobTitle string) (*dbtype.Node, *dbtype.Relationship, error)
+	UpdateCompanyPositionInTx(tx neo4j.Transaction, tenant, contactId, companyPositionId, jobTitle string) (*dbtype.Node, *dbtype.Relationship, error)
+	DeleteCompanyPositionInTx(tx neo4j.Transaction, tenant, contactId, companyPositionId string) error
+	GetCompanyPositionsForContact(session neo4j.Session, tenant, contactId string) ([]*CompanyWithPositionNode, error)
+	GetCompanyPositionForContact(session neo4j.Session, tenant, contactId, companyPositionId string) (*CompanyWithPositionNode, error)
 
 	GetPaginatedCompaniesWithNameLike(tenant, companyName string, skip, limit int) (*utils.DbNodesWithTotalCount, error)
 }
@@ -29,118 +30,86 @@ func NewCompanyRepository(driver *neo4j.Driver, repos *RepositoryContainer) Comp
 	}
 }
 
-type CompanyWithPositionNodes struct {
+type CompanyWithPositionNode struct {
 	Company  *dbtype.Node
 	Position *dbtype.Relationship
 }
 
-func (r *companyRepository) LinkNewCompanyToContact(tenant, contactId, companyName, jobTitle string) (*dbtype.Node, *dbtype.Relationship, error) {
-	session := utils.NewNeo4jWriteSession(*r.driver)
-	defer session.Close()
-
-	dbRecord, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
-		if queryResult, err := tx.Run(`
+func (r *companyRepository) LinkNewCompanyToContactInTx(tx neo4j.Transaction, tenant, contactId, companyName, jobTitle string) (*dbtype.Node, *dbtype.Relationship, error) {
+	queryResult, err := tx.Run(`
 			MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant})
 			MERGE (co:Company {id:randomUUID(), name: $companyName})-[:COMPANY_BELONGS_TO_TENANT]->(t)
 			MERGE (c)-[r:WORKS_AT {id:randomUUID(), jobTitle:$jobTitle}]->(co)
 			RETURN co, r`,
-			map[string]any{
-				"tenant":      tenant,
-				"contactId":   contactId,
-				"companyName": companyName,
-				"jobTitle":    jobTitle,
-			}); err != nil {
-			return nil, err
-		} else {
-			return queryResult.Single()
-		}
-	})
+		map[string]any{
+			"tenant":      tenant,
+			"contactId":   contactId,
+			"companyName": companyName,
+			"jobTitle":    jobTitle,
+		})
 	if err != nil {
 		return nil, nil, err
 	}
-	return utils.NodePtr(dbRecord.(*db.Record).Values[0].(dbtype.Node)), utils.RelationshipPtr(dbRecord.(*db.Record).Values[1].(dbtype.Relationship)), err
+	dbRecord, err := queryResult.Single()
+	return utils.NodePtr(dbRecord.Values[0].(dbtype.Node)), utils.RelationshipPtr(dbRecord.Values[1].(dbtype.Relationship)), err
 }
 
-func (r *companyRepository) LinkExistingCompanyToContact(tenant, contactId, companyId, jobTitle string) (*dbtype.Node, *dbtype.Relationship, error) {
-	session := utils.NewNeo4jWriteSession(*r.driver)
-	defer session.Close()
-
-	dbRecord, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
-		if queryResult, err := tx.Run(`
+func (r *companyRepository) LinkExistingCompanyToContactInTx(tx neo4j.Transaction, tenant, contactId, companyId, jobTitle string) (*dbtype.Node, *dbtype.Relationship, error) {
+	queryResult, err := tx.Run(`
 			MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant}),
 				  (co:Company {id:$companyId})-[:COMPANY_BELONGS_TO_TENANT]->(t)
 			MERGE (c)-[r:WORKS_AT {id:randomUUID(), jobTitle:$jobTitle}]->(co)
 			RETURN co, r`,
-			map[string]any{
-				"tenant":    tenant,
-				"contactId": contactId,
-				"companyId": companyId,
-				"jobTitle":  jobTitle,
-			}); err != nil {
-			return nil, err
-		} else {
-			return queryResult.Single()
-		}
-	})
+		map[string]any{
+			"tenant":    tenant,
+			"contactId": contactId,
+			"companyId": companyId,
+			"jobTitle":  jobTitle,
+		})
 	if err != nil {
 		return nil, nil, err
 	}
-	return utils.NodePtr(dbRecord.(*db.Record).Values[0].(dbtype.Node)), utils.RelationshipPtr(dbRecord.(*db.Record).Values[1].(dbtype.Relationship)), err
+	dbRecord, err := queryResult.Single()
+
+	return utils.NodePtr(dbRecord.Values[0].(dbtype.Node)), utils.RelationshipPtr(dbRecord.Values[1].(dbtype.Relationship)), err
 }
 
-func (r *companyRepository) UpdateCompanyPosition(tenant, contactId, companyPositionId, jobTitle string) (*dbtype.Node, *dbtype.Relationship, error) {
+func (r *companyRepository) UpdateCompanyPositionInTx(tx neo4j.Transaction, tenant, contactId, companyPositionId, jobTitle string) (*dbtype.Node, *dbtype.Relationship, error) {
 	session := utils.NewNeo4jWriteSession(*r.driver)
 	defer session.Close()
 
-	dbRecord, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
-		if queryResult, err := tx.Run(`
+	queryResult, err := tx.Run(`
 			MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant}),
 				  (c)-[r:WORKS_AT {id:$companyPositionId}]->(co:Company)
 			SET r.jobTitle=$jobTitle
 			RETURN co, r`,
-			map[string]any{
-				"tenant":            tenant,
-				"contactId":         contactId,
-				"companyPositionId": companyPositionId,
-				"jobTitle":          jobTitle,
-			}); err != nil {
-			return nil, err
-		} else {
-			return queryResult.Single()
-		}
-	})
+		map[string]any{
+			"tenant":            tenant,
+			"contactId":         contactId,
+			"companyPositionId": companyPositionId,
+			"jobTitle":          jobTitle,
+		})
 	if err != nil {
 		return nil, nil, err
 	}
-	return utils.NodePtr(dbRecord.(*neo4j.Record).Values[0].(dbtype.Node)), utils.RelationshipPtr(dbRecord.(*neo4j.Record).Values[1].(dbtype.Relationship)), err
+	dbRecord, err := queryResult.Single()
+	return utils.NodePtr(dbRecord.Values[0].(dbtype.Node)), utils.RelationshipPtr(dbRecord.Values[1].(dbtype.Relationship)), err
 }
 
-func (r *companyRepository) DeleteCompanyPosition(tenant, contactId, companyPositionId string) error {
-	session := utils.NewNeo4jWriteSession(*r.driver)
-	defer session.Close()
-
-	if _, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
-		_, err := tx.Run(`
+func (r *companyRepository) DeleteCompanyPositionInTx(tx neo4j.Transaction, tenant, contactId, companyPositionId string) error {
+	_, err := tx.Run(`
 			MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant}),
 					(c)-[r:WORKS_AT {id:$companyPositionId}]->(co:Company)
 			DELETE r`,
-			map[string]any{
-				"tenant":            tenant,
-				"contactId":         contactId,
-				"companyPositionId": companyPositionId,
-			})
-		return nil, err
-	}); err != nil {
-		return err
-	} else {
-		return nil
-	}
+		map[string]any{
+			"tenant":            tenant,
+			"contactId":         contactId,
+			"companyPositionId": companyPositionId,
+		})
+	return err
 }
 
-func (r *companyRepository) GetCompanyPositionsForContact(tenant, contactId string) ([]*CompanyWithPositionNodes, error) {
-	session := utils.NewNeo4jReadSession(*r.driver)
-	defer session.Close()
-
+func (r *companyRepository) GetCompanyPositionsForContact(session neo4j.Session, tenant, contactId string) ([]*CompanyWithPositionNode, error) {
 	dbRecords, err := session.ReadTransaction(func(tx neo4j.Transaction) (any, error) {
 		if queryResult, err := tx.Run(`
 			MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant}),
@@ -160,15 +129,40 @@ func (r *companyRepository) GetCompanyPositionsForContact(tenant, contactId stri
 	} else if len(dbRecords.([]*neo4j.Record)) == 0 {
 		return nil, nil
 	} else {
-		companyWithPositionNodes := []*CompanyWithPositionNodes{}
+		companyWithPositionNodes := []*CompanyWithPositionNode{}
 		for _, v := range dbRecords.([]*neo4j.Record) {
-			singleCompanyWithPositionNodes := new(CompanyWithPositionNodes)
+			singleCompanyWithPositionNodes := new(CompanyWithPositionNode)
 			singleCompanyWithPositionNodes.Company = utils.NodePtr(v.Values[0].(dbtype.Node))
 			singleCompanyWithPositionNodes.Position = utils.RelationshipPtr(v.Values[1].(dbtype.Relationship))
 			companyWithPositionNodes = append(companyWithPositionNodes, singleCompanyWithPositionNodes)
 		}
 		return companyWithPositionNodes, nil
 	}
+}
+
+func (r *companyRepository) GetCompanyPositionForContact(session neo4j.Session, tenant, contactId, companyPositionId string) (*CompanyWithPositionNode, error) {
+	dbRecord, err := session.ReadTransaction(func(tx neo4j.Transaction) (any, error) {
+		if queryResult, err := tx.Run(`
+			MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant}),
+					(c)-[r:WORKS_AT {id:$companyPositionId}]->(co:Company)
+			RETURN co, r ORDER BY co.name, r.jobTitle`,
+			map[string]any{
+				"tenant":            tenant,
+				"contactId":         contactId,
+				"companyPositionId": companyPositionId,
+			}); err != nil {
+			return nil, err
+		} else {
+			return queryResult.Single()
+		}
+	})
+	if err != nil {
+		return nil, err
+	}
+	singleCompanyWithPositionNodes := new(CompanyWithPositionNode)
+	singleCompanyWithPositionNodes.Company = utils.NodePtr(dbRecord.(*db.Record).Values[0].(dbtype.Node))
+	singleCompanyWithPositionNodes.Position = utils.RelationshipPtr(dbRecord.(*db.Record).Values[1].(dbtype.Relationship))
+	return singleCompanyWithPositionNodes, nil
 }
 
 func (r *companyRepository) GetPaginatedCompaniesWithNameLike(tenant, companyName string, skip, limit int) (*utils.DbNodesWithTotalCount, error) {

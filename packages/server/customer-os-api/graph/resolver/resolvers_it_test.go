@@ -803,15 +803,16 @@ func TestMutationResolver_ContactRemoveCompanyPosition(t *testing.T) {
 	require.Equal(t, 0, getCountOfRelationships(driver, "WORKS_AT"))
 }
 
-func TestMutationResolver_ContactUpdateCompanyPosition(t *testing.T) {
+func TestMutationResolver_ContactUpdateCompanyPosition_SameCompanyNewPosition(t *testing.T) {
 	defer setupTestCase()(t)
 	createTenant(driver, tenantName)
 	contactId := createDefaultContact(driver, tenantName)
 	companyId := createCompany(driver, tenantName, "LLC LLC")
 	positionId := contactWorksForCompany(driver, contactId, companyId, "CTO")
 
-	rawResponse, err := c.RawPost(getQuery("update_company_position"),
+	rawResponse, err := c.RawPost(getQuery("update_company_position_same_company"),
 		client.Var("contactId", contactId),
+		client.Var("companyId", companyId),
 		client.Var("companyPositionId", positionId))
 	assertRawResponseSuccess(t, rawResponse, err)
 
@@ -829,6 +830,66 @@ func TestMutationResolver_ContactUpdateCompanyPosition(t *testing.T) {
 
 	require.Equal(t, 1, getCountOfNodes(driver, "Contact"))
 	require.Equal(t, 1, getCountOfNodes(driver, "Company"))
+	require.Equal(t, 1, getCountOfRelationships(driver, "WORKS_AT"))
+}
+
+func TestMutationResolver_ContactUpdateCompanyPosition_InOtherExistingCompany(t *testing.T) {
+	defer setupTestCase()(t)
+	createTenant(driver, tenantName)
+	contactId := createDefaultContact(driver, tenantName)
+	companyId := createCompany(driver, tenantName, "Current Company")
+	otherCompanyId := createCompany(driver, tenantName, "Other Company")
+	positionId := contactWorksForCompany(driver, contactId, companyId, "CTO")
+
+	rawResponse, err := c.RawPost(getQuery("update_company_position_other_company"),
+		client.Var("contactId", contactId),
+		client.Var("companyId", otherCompanyId),
+		client.Var("companyPositionId", positionId))
+	assertRawResponseSuccess(t, rawResponse, err)
+
+	var companyPosition struct {
+		Contact_UpdateCompanyPosition model.CompanyPosition
+	}
+
+	err = decode.Decode(rawResponse.Data.(map[string]any), &companyPosition)
+	require.Nil(t, err)
+
+	require.NotNil(t, companyPosition.Contact_UpdateCompanyPosition.ID)
+	require.Equal(t, otherCompanyId, companyPosition.Contact_UpdateCompanyPosition.Company.ID)
+	require.Equal(t, "Other Company", companyPosition.Contact_UpdateCompanyPosition.Company.Name)
+	require.Equal(t, "CEO", *companyPosition.Contact_UpdateCompanyPosition.JobTitle)
+
+	require.Equal(t, 1, getCountOfNodes(driver, "Contact"))
+	require.Equal(t, 2, getCountOfNodes(driver, "Company"))
+	require.Equal(t, 1, getCountOfRelationships(driver, "WORKS_AT"))
+}
+
+func TestMutationResolver_ContactUpdateCompanyPosition_InNewCompany(t *testing.T) {
+	defer setupTestCase()(t)
+	createTenant(driver, tenantName)
+	contactId := createDefaultContact(driver, tenantName)
+	companyId := createCompany(driver, tenantName, "LLC LLC")
+	positionId := contactWorksForCompany(driver, contactId, companyId, "CTO")
+
+	rawResponse, err := c.RawPost(getQuery("update_company_position_new_company"),
+		client.Var("contactId", contactId),
+		client.Var("companyPositionId", positionId))
+	assertRawResponseSuccess(t, rawResponse, err)
+
+	var companyPosition struct {
+		Contact_UpdateCompanyPosition model.CompanyPosition
+	}
+
+	err = decode.Decode(rawResponse.Data.(map[string]any), &companyPosition)
+	require.Nil(t, err)
+
+	require.NotNil(t, companyPosition.Contact_UpdateCompanyPosition.ID)
+	require.NotEqual(t, companyId, companyPosition.Contact_UpdateCompanyPosition.Company.ID)
+	require.Equal(t, "new company", companyPosition.Contact_UpdateCompanyPosition.Company.Name)
+	require.Equal(t, "CEO", *companyPosition.Contact_UpdateCompanyPosition.JobTitle)
+
+	require.Equal(t, 1, getCountOfNodes(driver, "Contact"))
+	require.Equal(t, 2, getCountOfNodes(driver, "Company"))
 	require.Equal(t, 1, getCountOfRelationships(driver, "WORKS_AT"))
 }
 
