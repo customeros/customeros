@@ -98,12 +98,3 @@ while  [ ! -z "$neo_output" ]; do
     echo "  ✅ Neo4j provisioned"
 	fi
 done
-
-SQL_USER=openline SQL_DATABABASE=openline SQL_PASSWORD=password ./4-build-db.sh local-kube
-if [ $? -eq 0 ]; then
-    echo "  ✅ postgreSQL provisioned"
-  else
-    echo "  ❌ postgreSQL not provisioned"
-  fi
-
-rm -r openline-setup
