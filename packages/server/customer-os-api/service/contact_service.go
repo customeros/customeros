@@ -35,11 +35,13 @@ type ContactCreateData struct {
 	PhoneNumberEntity *entity.PhoneNumberEntity
 	DefinitionId      *string
 	ContactTypeId     *string
+	OwnerUserId       *string
 }
 
 type ContactUpdateData struct {
 	ContactEntity *entity.ContactEntity
 	ContactTypeId *string
+	OwnerUserId   *string
 }
 
 type contactService struct {
@@ -60,42 +62,21 @@ func (s *contactService) Create(ctx context.Context, newContact *ContactCreateDa
 	session := utils.NewNeo4jWriteSession(s.getDriver())
 	defer session.Close()
 
-	queryResult, err := session.WriteTransaction(s.createContactInDBTxWork(ctx, newContact))
+	contactDbNode, err := session.WriteTransaction(s.createContactInDBTxWork(ctx, newContact))
 	if err != nil {
 		return nil, err
 	}
-	return s.mapDbNodePtrToContactEntity(queryResult.(*dbtype.Node)), nil
+	return s.mapDbNodePtrToContactEntity(contactDbNode.(*dbtype.Node)), nil
 }
 
 func (s *contactService) createContactInDBTxWork(ctx context.Context, newContact *ContactCreateData) func(tx neo4j.Transaction) (any, error) {
 	return func(tx neo4j.Transaction) (any, error) {
-		result, err := tx.Run(`
-			MATCH (t:Tenant {name:$tenant})
-			CREATE (c:Contact {
-				  id: randomUUID(),
-				  title: $title,
-				  firstName: $firstName,
-				  lastName: $lastName,
-				  label: $label,
-				  notes: $notes,
-                  createdAt :datetime({timezone: 'UTC'})
-			})-[:CONTACT_BELONGS_TO_TENANT]->(t)
-			RETURN c`,
-			map[string]interface{}{
-				"tenant":    common.GetContext(ctx).Tenant,
-				"firstName": newContact.ContactEntity.FirstName,
-				"lastName":  newContact.ContactEntity.LastName,
-				"label":     newContact.ContactEntity.Label,
-				"title":     newContact.ContactEntity.Title,
-				"notes":     newContact.ContactEntity.Notes,
-			})
-
-		dbContact, err := utils.ExtractSingleRecordFirstValueAsNodePtr(result, err)
+		tenant := common.GetContext(ctx).Tenant
+		contactDbNode, err := s.repository.ContactRepository.Create(tx, tenant, *newContact.ContactEntity)
 		if err != nil {
 			return nil, err
 		}
-
-		var contactId = utils.GetPropsFromNode(*dbContact)["id"].(string)
+		var contactId = utils.GetPropsFromNode(*contactDbNode)["id"].(string)
 
 		if newContact.ContactTypeId != nil {
 			err := s.repository.ContactRepository.LinkWithContactTypeInTx(tx, common.GetContext(ctx).Tenant, contactId, *newContact.ContactTypeId)
@@ -137,7 +118,13 @@ func (s *contactService) createContactInDBTxWork(ctx context.Context, newContact
 				return nil, err
 			}
 		}
-		return dbContact, nil
+		if newContact.OwnerUserId != nil {
+			err := s.repository.ContactRepository.SetOwner(tx, tenant, contactId, *newContact.OwnerUserId)
+			if err != nil {
+				return nil, err
+			}
+		}
+		return contactDbNode, nil
 	}
 }
 
@@ -146,6 +133,8 @@ func (s *contactService) Update(ctx context.Context, contactUpdateData *ContactU
 	defer session.Close()
 
 	contactDbNode, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
+		tenant := common.GetContext(ctx).Tenant
+		contactId := contactUpdateData.ContactEntity.Id
 		queryResult, err := tx.Run(`
 			MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant})
 			SET c.firstName=$firstName,
@@ -155,24 +144,37 @@ func (s *contactService) Update(ctx context.Context, contactUpdateData *ContactU
 				c.notes=$notes
 			RETURN c`,
 			map[string]interface{}{
-				"tenant":    common.GetContext(ctx).Tenant,
-				"contactId": contactUpdateData.ContactEntity.Id,
+				"tenant":    tenant,
+				"contactId": contactId,
 				"firstName": contactUpdateData.ContactEntity.FirstName,
 				"lastName":  contactUpdateData.ContactEntity.LastName,
 				"label":     contactUpdateData.ContactEntity.Label,
 				"title":     contactUpdateData.ContactEntity.Title,
 				"notes":     contactUpdateData.ContactEntity.Notes,
 			})
-		err = s.repository.ContactRepository.UnlinkFromContactTypesInTx(tx, common.GetContext(ctx).Tenant, contactUpdateData.ContactEntity.Id)
+
+		err = s.repository.ContactRepository.UnlinkFromContactTypesInTx(tx, tenant, contactId)
 		if err != nil {
 			return nil, err
 		}
 		if contactUpdateData.ContactTypeId != nil {
-			err := s.repository.ContactRepository.LinkWithContactTypeInTx(tx, common.GetContext(ctx).Tenant, contactUpdateData.ContactEntity.Id, *contactUpdateData.ContactTypeId)
+			err := s.repository.ContactRepository.LinkWithContactTypeInTx(tx, tenant, contactId, *contactUpdateData.ContactTypeId)
 			if err != nil {
 				return nil, err
 			}
 		}
+
+		err = s.repository.ContactRepository.RemoveOwner(tx, tenant, contactId)
+		if err != nil {
+			return nil, err
+		}
+		if contactUpdateData.OwnerUserId != nil {
+			err := s.repository.ContactRepository.SetOwner(tx, tenant, contactId, *contactUpdateData.OwnerUserId)
+			if err != nil {
+				return nil, err
+			}
+		}
+
 		return utils.ExtractSingleRecordFirstValueAsNodePtr(queryResult, err)
 	})
 	if err != nil {

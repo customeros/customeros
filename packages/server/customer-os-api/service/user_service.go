@@ -15,6 +15,7 @@ import (
 type UserService interface {
 	Create(ctx context.Context, user *entity.UserEntity) (*entity.UserEntity, error)
 	FindAll(ctx context.Context, page, limit int) (*utils.Pagination, error)
+	FindContactOwner(ctx context.Context, contactId string) (*entity.UserEntity, error)
 	getDriver() neo4j.Driver
 }
 
@@ -110,8 +111,28 @@ func (s *userService) FindAll(ctx context.Context, page, limit int) (*utils.Pagi
 	return &paginatedResult, nil
 }
 
+func (s *userService) FindContactOwner(ctx context.Context, contactId string) (*entity.UserEntity, error) {
+	session := utils.NewNeo4jReadSession(s.getDriver())
+	defer session.Close()
+
+	ownerDbNode, err := session.ReadTransaction(func(tx neo4j.Transaction) (any, error) {
+		return s.repository.UserRepository.FindOwnerForContact(tx, common.GetContext(ctx).Tenant, contactId)
+	})
+	if err != nil {
+		return nil, err
+	} else if ownerDbNode == nil {
+		return nil, nil
+	} else {
+		return s.mapDbNodePtrToUserEntity(ownerDbNode.(*dbtype.Node)), nil
+	}
+}
+
 func (s *userService) mapDbNodeToUserEntity(dbNode dbtype.Node) *entity.UserEntity {
-	props := utils.GetPropsFromNode(dbNode)
+	return s.mapDbNodePtrToUserEntity(utils.NodePtr(dbNode))
+}
+
+func (s *userService) mapDbNodePtrToUserEntity(dbNode *dbtype.Node) *entity.UserEntity {
+	props := utils.GetPropsFromNode(*dbNode)
 	contact := entity.UserEntity{
 		Id:        utils.GetStringPropOrEmpty(props, "id"),
 		FirstName: utils.GetStringPropOrEmpty(props, "firstName"),

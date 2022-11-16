@@ -5,7 +5,6 @@ package resolver
 
 import (
 	"context"
-
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/openline-ai/openline-customer-os/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/customer-os-api/graph/generated"
@@ -84,6 +83,19 @@ func (r *contactResolver) Definition(ctx context.Context, obj *model.Contact) (*
 	return mapper.MapEntityToEntityDefinition(entity), err
 }
 
+// Owner is the resolver for the owner field.
+func (r *contactResolver) Owner(ctx context.Context, obj *model.Contact) (*model.User, error) {
+	owner, err := r.ServiceContainer.UserService.FindContactOwner(ctx, obj.ID)
+	if err != nil {
+		graphql.AddErrorf(ctx, "Failed to get owner for contact %s", obj.ID)
+		return nil, err
+	}
+	if owner == nil {
+		return nil, nil
+	}
+	return mapper.MapEntityToUser(owner), err
+}
+
 // ContactCreate is the resolver for the contact_Create field.
 func (r *mutationResolver) ContactCreate(ctx context.Context, input model.ContactInput) (*model.Contact, error) {
 	contactNodeCreated, err := r.ServiceContainer.ContactService.Create(ctx, &service.ContactCreateData{
@@ -93,12 +105,12 @@ func (r *mutationResolver) ContactCreate(ctx context.Context, input model.Contac
 		EmailEntity:       mapper.MapEmailInputToEntity(input.Email),
 		DefinitionId:      input.DefinitionID,
 		ContactTypeId:     input.ContactTypeID,
+		OwnerUserId:       input.OwnerID,
 	})
 	if err != nil {
 		graphql.AddErrorf(ctx, "Failed to create contact %s %s", input.FirstName, input.LastName)
 		return nil, err
 	}
-
 	return mapper.MapEntityToContact(contactNodeCreated), nil
 }
 
@@ -107,6 +119,7 @@ func (r *mutationResolver) ContactUpdate(ctx context.Context, input model.Contac
 	updatedContact, err := r.ServiceContainer.ContactService.Update(ctx, &service.ContactUpdateData{
 		ContactEntity: mapper.MapContactUpdateInputToEntity(input),
 		ContactTypeId: input.ContactTypeID,
+		OwnerUserId:   input.OwnerID,
 	})
 	if err != nil {
 		graphql.AddErrorf(ctx, "Failed to update contact %s", input.ID)

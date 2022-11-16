@@ -81,6 +81,7 @@ type ComplexityRoot struct {
 		Label            func(childComplexity int) int
 		LastName         func(childComplexity int) int
 		Notes            func(childComplexity int) int
+		Owner            func(childComplexity int) int
 		PhoneNumbers     func(childComplexity int) int
 		Title            func(childComplexity int) int
 	}
@@ -250,6 +251,7 @@ type ContactResolver interface {
 	CustomFields(ctx context.Context, obj *model.Contact) ([]*model.CustomField, error)
 	FieldSets(ctx context.Context, obj *model.Contact) ([]*model.FieldSet, error)
 	Definition(ctx context.Context, obj *model.Contact) (*model.EntityDefinition, error)
+	Owner(ctx context.Context, obj *model.Contact) (*model.User, error)
 }
 type CustomFieldResolver interface {
 	Definition(ctx context.Context, obj *model.CustomField) (*model.CustomFieldDefinition, error)
@@ -477,6 +479,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Contact.Notes(childComplexity), true
+
+	case "Contact.owner":
+		if e.complexity.Contact.Owner == nil {
+			break
+		}
+
+		return e.complexity.Contact.Owner(childComplexity), true
 
 	case "Contact.phoneNumbers":
 		if e.complexity.Contact.PhoneNumbers == nil {
@@ -1693,6 +1702,9 @@ type Contact implements ExtensibleEntity & Node {
     Definition of the contact in customerOS.
     """
     definition: EntityDefinition @goField(forceResolver: true)
+
+    "Contact owner (user)"
+    owner: User @goField(forceResolver: true)
 }
 
 """
@@ -1764,6 +1776,9 @@ input ContactInput {
 
     "A phone number associated with the contact."
     phoneNumber: PhoneNumberInput
+
+    "Id of the contact owner (user)"
+    ownerId: ID
 }
 
 """
@@ -1801,6 +1816,9 @@ input ContactUpdateInput {
 
     "User-defined field that defines the relationship type the contact has with your business.  ` + "`" + `Customer` + "`" + `, ` + "`" + `Partner` + "`" + `, ` + "`" + `Lead` + "`" + ` are examples."
     contactTypeId: ID
+
+    "Id of the contact owner (user)"
+    ownerId: ID
 }
 
 """
@@ -4598,6 +4616,59 @@ func (ec *executionContext) fieldContext_Contact_definition(ctx context.Context,
 	return fc, nil
 }
 
+func (ec *executionContext) _Contact_owner(ctx context.Context, field graphql.CollectedField, obj *model.Contact) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Contact_owner(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Contact().Owner(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.User)
+	fc.Result = res
+	return ec.marshalOUser2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐUser(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Contact_owner(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Contact",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_User_id(ctx, field)
+			case "firstName":
+				return ec.fieldContext_User_firstName(ctx, field)
+			case "lastName":
+				return ec.fieldContext_User_lastName(ctx, field)
+			case "email":
+				return ec.fieldContext_User_email(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_User_createdAt(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _ContactGroup_id(ctx context.Context, field graphql.CollectedField, obj *model.ContactGroup) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_ContactGroup_id(ctx, field)
 	if err != nil {
@@ -4981,6 +5052,8 @@ func (ec *executionContext) fieldContext_ContactsPage_content(ctx context.Contex
 				return ec.fieldContext_Contact_fieldSets(ctx, field)
 			case "definition":
 				return ec.fieldContext_Contact_definition(ctx, field)
+			case "owner":
+				return ec.fieldContext_Contact_owner(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Contact", field.Name)
 		},
@@ -6885,6 +6958,8 @@ func (ec *executionContext) fieldContext_Mutation_contact_Create(ctx context.Con
 				return ec.fieldContext_Contact_fieldSets(ctx, field)
 			case "definition":
 				return ec.fieldContext_Contact_definition(ctx, field)
+			case "owner":
+				return ec.fieldContext_Contact_owner(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Contact", field.Name)
 		},
@@ -6972,6 +7047,8 @@ func (ec *executionContext) fieldContext_Mutation_contact_Update(ctx context.Con
 				return ec.fieldContext_Contact_fieldSets(ctx, field)
 			case "definition":
 				return ec.fieldContext_Contact_definition(ctx, field)
+			case "owner":
+				return ec.fieldContext_Contact_owner(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Contact", field.Name)
 		},
@@ -9324,6 +9401,8 @@ func (ec *executionContext) fieldContext_Query_contact(ctx context.Context, fiel
 				return ec.fieldContext_Contact_fieldSets(ctx, field)
 			case "definition":
 				return ec.fieldContext_Contact_definition(ctx, field)
+			case "owner":
+				return ec.fieldContext_Contact_owner(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Contact", field.Name)
 		},
@@ -9474,6 +9553,8 @@ func (ec *executionContext) fieldContext_Query_contact_ByEmail(ctx context.Conte
 				return ec.fieldContext_Contact_fieldSets(ctx, field)
 			case "definition":
 				return ec.fieldContext_Contact_definition(ctx, field)
+			case "owner":
+				return ec.fieldContext_Contact_owner(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Contact", field.Name)
 		},
@@ -9561,6 +9642,8 @@ func (ec *executionContext) fieldContext_Query_contact_ByPhone(ctx context.Conte
 				return ec.fieldContext_Contact_fieldSets(ctx, field)
 			case "definition":
 				return ec.fieldContext_Contact_definition(ctx, field)
+			case "owner":
+				return ec.fieldContext_Contact_owner(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Contact", field.Name)
 		},
@@ -12266,7 +12349,7 @@ func (ec *executionContext) unmarshalInputContactInput(ctx context.Context, obj 
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"definitionId", "title", "firstName", "lastName", "label", "notes", "contactTypeId", "customFields", "email", "phoneNumber"}
+	fieldsInOrder := [...]string{"definitionId", "title", "firstName", "lastName", "label", "notes", "contactTypeId", "customFields", "email", "phoneNumber", "ownerId"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -12353,6 +12436,14 @@ func (ec *executionContext) unmarshalInputContactInput(ctx context.Context, obj 
 			if err != nil {
 				return it, err
 			}
+		case "ownerId":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("ownerId"))
+			it.OwnerID, err = ec.unmarshalOID2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
 		}
 	}
 
@@ -12430,7 +12521,7 @@ func (ec *executionContext) unmarshalInputContactUpdateInput(ctx context.Context
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"id", "title", "firstName", "lastName", "label", "notes", "contactTypeId"}
+	fieldsInOrder := [...]string{"id", "title", "firstName", "lastName", "label", "notes", "contactTypeId", "ownerId"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -12490,6 +12581,14 @@ func (ec *executionContext) unmarshalInputContactUpdateInput(ctx context.Context
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("contactTypeId"))
 			it.ContactTypeID, err = ec.unmarshalOID2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "ownerId":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("ownerId"))
+			it.OwnerID, err = ec.unmarshalOID2ᚖstring(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -13593,6 +13692,23 @@ func (ec *executionContext) _Contact(ctx context.Context, sel ast.SelectionSet, 
 					}
 				}()
 				res = ec._Contact_definition(ctx, field, obj)
+				return res
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
+		case "owner":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Contact_owner(ctx, field, obj)
 				return res
 			}
 
@@ -16914,6 +17030,13 @@ func (ec *executionContext) marshalOString2ᚖstring(ctx context.Context, sel as
 	}
 	res := graphql.MarshalString(*v)
 	return res
+}
+
+func (ec *executionContext) marshalOUser2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐUser(ctx context.Context, sel ast.SelectionSet, v *model.User) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._User(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalO__EnumValue2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐEnumValueᚄ(ctx context.Context, sel ast.SelectionSet, v []introspection.EnumValue) graphql.Marshaler {
