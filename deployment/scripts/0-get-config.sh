@@ -2,19 +2,26 @@
 
 ### Locations for remote file downloads ###
 
+# Minikube config
 OPENLINE_NAMESPACE="https://raw.githubusercontent.com/openline-ai/openline-customer-os/otter/deployment/infra/minikube-config/openline-namespace.json"
 CUSTOMER_OS_API_CONFIG="https://raw.githubusercontent.com/openline-ai/openline-customer-os/otter/deployment/infra/minikube-config/customer-os-api.yaml"
 CUSTOMER_OS_API_K8S_CONFIG="https://raw.githubusercontent.com/openline-ai/openline-customer-os/otter/deployment/infra/minikube-config/customer-os-api-k8s-service.yaml"
 CUSTOMER_OS_API_K8S_LOADBALANCER_CONFIG="https://raw.githubusercontent.com/openline-ai/openline-customer-os/otter/deployment/infra/minikube-config/customer-os-api-k8s-loadbalancer-service.yaml"
-FUSIONAUTH_VALUES_CONFIG="https://raw.githubusercontent.com/openline-ai/openline-customer-os/otter/deployment/infra/helm-charts/fusionauth/fusionauth.yaml"
-NEO4J_CYPHER="https://raw.githubusercontent.com/openline-ai/openline-customer-os/otter/packages/server/customer-os-api/customer-os.cypher"
-NEO4J_HELM_VALUES_CONFIG="https://raw.githubusercontent.com/openline-ai/openline-customer-os/otter/deployment/infra/helm-charts/neo4j/neo4j.yaml"
 MESSAGE_STORE_API_CONFIG="https://raw.githubusercontent.com/openline-ai/openline-customer-os/otter/deployment/infra/minikube-config/message-store.yaml"
 MESSAGE_STORE_K8S_CONFIG="https://raw.githubusercontent.com/openline-ai/openline-customer-os/otter/deployment/infra/minikube-config/message-store-k8s-service.yaml"
 POSTGRESQL_PERSISTENT_VOLUME_CONFIG="https://raw.githubusercontent.com/openline-ai/openline-customer-os/otter/deployment/infra/minikube-config/postgresql-persistent-volume.yaml"
 POSTGRESQL_PERSISTENT_VOLUME_CLAIM_CONFIG="https://raw.githubusercontent.com/openline-ai/openline-customer-os/otter/deployment/infra/minikube-config/postgresql-persistent-volume-claim.yaml"
-POSTGRESQL_VALUES_CONFIG="https://raw.githubusercontent.com/openline-ai/openline-customer-os/otter/deployment/infra/helm-charts/postgresql/postgresql.yaml"
 
+# Helm config
+FUSIONAUTH_HELM_CONFIG="https://raw.githubusercontent.com/openline-ai/openline-customer-os/otter/deployment/infra/helm-charts/fusionauth/fusionauth.yaml"
+NEO4J_HELM_CONFIG="https://raw.githubusercontent.com/openline-ai/openline-customer-os/otter/deployment/infra/helm-charts/neo4j/neo4j.yaml"
+POSTGRESQL_HELM_CONFIG="https://raw.githubusercontent.com/openline-ai/openline-customer-os/otter/deployment/infra/helm-charts/postgresql/postgresql.yaml"
+
+# Neo4j
+NEO4J_CYPHER="https://raw.githubusercontent.com/openline-ai/openline-customer-os/otter/packages/server/customer-os-api/customer-os.cypher"
+
+# PostgreSQL
+EXAMPLE_PROVISIONING='https://raw.githubusercontent.com/openline-ai/openline-customer-os/otter/deployment/scripts/postgresql/example_provisioning.sql'
 ###########################################
 
 mkdir openline-setup
@@ -42,7 +49,7 @@ else
     echo "  ❌ customer-os-api-k8s-loadbalancer-service.yaml"
 fi
 
-curl -sS $FUSIONAUTH_VALUES_CONFIG -o openline-setup/fusionauth-values.yaml
+curl -sS $FUSIONAUTH_HELM_CONFIG -o openline-setup/fusionauth-values.yaml
 if [ $? -eq 0 ]; then
     echo "  ✅ fusionauth-values.yaml"
 else
@@ -56,7 +63,7 @@ else
     echo "  ❌ customer-os.cypher"
 fi
 
-curl -sS $NEO4J_HELM_VALUES_CONFIG -o openline-setup/neo4j-helm-values.yaml
+curl -sS $NEO4J_HELM_CONFIG -o openline-setup/neo4j-helm-values.yaml
 if [ $? -eq 0 ]; then
     echo "  ✅ neo4j-helm-values.yaml"
 else
@@ -91,7 +98,7 @@ else
     echo "  ❌ postgresql-persistent-volume-claim.yaml"
 fi
 
-curl -sS $POSTGRESQL_VALUES_CONFIG -o openline-setup/postgresql-values.yaml
+curl -sS $POSTGRESQL_HELM_CONFIG -o openline-setup/postgresql-values.yaml
 if [ $? -eq 0 ]; then
     echo "  ✅ postgresql-values.yaml"
 else
@@ -103,4 +110,11 @@ if [ $? -eq 0 ]; then
     echo "  ✅ openline-namespace.json"
 else
     echo "  ❌ openline-namespace.json"
+fi
+
+curl -sS $EXAMPLE_PROVISIONING -o openline-setup/example_provisioning.sql
+if [ $? -eq 0 ]; then
+    echo "  ✅ example_provisioning.sql"
+else
+    echo "  ❌ example_provisioning.sql"
 fi
