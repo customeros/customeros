@@ -13,7 +13,6 @@ while [ -z "$pod" ]; do
     echo "  ⏳ message-store not ready, please wait..."
     sleep 2
   fi
-  sleep 2
 done
 
 pod=$(kubectl get pods -n $NAMESPACE_NAME|grep postgresql-customer-os-dev|grep Running| cut -f1 -d ' ')
@@ -24,7 +23,6 @@ while [ -z "$pod" ]; do
     echo "  ⏳ message-store not ready, please wait..."
     sleep 2
   fi
-  sleep 2
 done
 
 echo "  🦦 connecting to pod $pod"
