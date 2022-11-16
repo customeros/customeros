@@ -5,12 +5,12 @@ package resolver
 
 import (
 	"context"
-	"github.com/openline-ai/openline-customer-os/customer-os-api/entity"
-
 	"github.com/99designs/gqlgen/graphql"
+	"github.com/openline-ai/openline-customer-os/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/customer-os-api/graph/generated"
 	"github.com/openline-ai/openline-customer-os/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/customer-os-api/mapper"
+	"github.com/openline-ai/openline-customer-os/customer-os-api/service"
 )
 
 // ContactType is the resolver for the contactType field.
@@ -81,6 +81,61 @@ func (r *contactResolver) Definition(ctx context.Context, obj *model.Contact) (*
 		return nil, nil
 	}
 	return mapper.MapEntityToEntityDefinition(entity), err
+}
+
+// ContactCreate is the resolver for the contact_Create field.
+func (r *mutationResolver) ContactCreate(ctx context.Context, input model.ContactInput) (*model.Contact, error) {
+	contactNodeCreated, err := r.ServiceContainer.ContactService.Create(ctx, &service.ContactCreateData{
+		ContactEntity:     mapper.MapContactInputToEntity(input),
+		CustomFields:      mapper.MapCustomFieldInputsToEntities(input.CustomFields),
+		PhoneNumberEntity: mapper.MapPhoneNumberInputToEntity(input.PhoneNumber),
+		EmailEntity:       mapper.MapEmailInputToEntity(input.Email),
+		DefinitionId:      input.DefinitionID,
+		ContactTypeId:     input.ContactTypeID,
+	})
+	if err != nil {
+		graphql.AddErrorf(ctx, "Failed to create contact %s %s", input.FirstName, input.LastName)
+		return nil, err
+	}
+
+	return mapper.MapEntityToContact(contactNodeCreated), nil
+}
+
+// ContactUpdate is the resolver for the contact_Update field.
+func (r *mutationResolver) ContactUpdate(ctx context.Context, input model.ContactUpdateInput) (*model.Contact, error) {
+	updatedContact, err := r.ServiceContainer.ContactService.Update(ctx, &service.ContactUpdateData{
+		ContactEntity: mapper.MapContactUpdateInputToEntity(input),
+		ContactTypeId: input.ContactTypeID,
+	})
+	if err != nil {
+		graphql.AddErrorf(ctx, "Failed to update contact %s", input.ID)
+		return nil, err
+	}
+	return mapper.MapEntityToContact(updatedContact), nil
+}
+
+// ContactHardDelete is the resolver for the contact_HardDelete field.
+func (r *mutationResolver) ContactHardDelete(ctx context.Context, contactID string) (*model.Result, error) {
+	result, err := r.ServiceContainer.ContactService.HardDelete(ctx, contactID)
+	if err != nil {
+		graphql.AddErrorf(ctx, "Could not hard delete contact %s", contactID)
+		return nil, err
+	}
+	return &model.Result{
+		Result: result,
+	}, nil
+}
+
+// ContactSoftDelete is the resolver for the contact_SoftDelete field.
+func (r *mutationResolver) ContactSoftDelete(ctx context.Context, contactID string) (*model.Result, error) {
+	result, err := r.ServiceContainer.ContactService.SoftDelete(ctx, contactID)
+	if err != nil {
+		graphql.AddErrorf(ctx, "Could not soft delete contact %s", contactID)
+		return nil, err
+	}
+	return &model.Result{
+		Result: result,
+	}, nil
 }
 
 // Contact is the resolver for the contact field.

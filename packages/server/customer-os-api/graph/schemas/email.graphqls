@@ -1,3 +1,10 @@
+extend type Mutation {
+    emailMergeToContact(contactId : ID!, input: EmailInput!): Email!
+    emailUpdateInContact(contactId : ID!, input: EmailUpdateInput!): Email!
+    emailRemoveFromContact(contactId : ID!, email: String!): Result!
+    emailRemoveFromContactById(contactId : ID!, id: ID!): Result!
+}
+
 """
 Describes an email address associated with a `Contact` in customerOS.
 **A `return` object.**

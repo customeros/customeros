@@ -5,10 +5,10 @@ package resolver
 
 import (
 	"context"
-	"github.com/openline-ai/openline-customer-os/customer-os-api/entity"
-	"github.com/openline-ai/openline-customer-os/customer-os-api/mapper"
 
+	"github.com/openline-ai/openline-customer-os/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/customer-os-api/graph/model"
+	"github.com/openline-ai/openline-customer-os/customer-os-api/mapper"
 )
 
 // ContactGroup is the resolver for the contactGroup field.

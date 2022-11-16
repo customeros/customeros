@@ -11,7 +11,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/customer-os-api/graph/generated"
 	"github.com/openline-ai/openline-customer-os/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/customer-os-api/mapper"
-	"github.com/openline-ai/openline-customer-os/customer-os-api/service"
 )
 
 // CreateUser is the resolver for the createUser field.
@@ -22,61 +21,6 @@ func (r *mutationResolver) CreateUser(ctx context.Context, input model.UserInput
 		return nil, err
 	}
 	return mapper.MapEntityToUser(createdTenantEntity), nil
-}
-
-// CreateContact is the resolver for the createContact field.
-func (r *mutationResolver) CreateContact(ctx context.Context, input model.ContactInput) (*model.Contact, error) {
-	contactNodeCreated, err := r.ServiceContainer.ContactService.Create(ctx, &service.ContactCreateData{
-		ContactEntity:     mapper.MapContactInputToEntity(input),
-		CustomFields:      mapper.MapCustomFieldInputsToEntities(input.CustomFields),
-		PhoneNumberEntity: mapper.MapPhoneNumberInputToEntity(input.PhoneNumber),
-		EmailEntity:       mapper.MapEmailInputToEntity(input.Email),
-		DefinitionId:      input.DefinitionID,
-		ContactTypeId:     input.ContactTypeID,
-	})
-	if err != nil {
-		graphql.AddErrorf(ctx, "Failed to create contact %s %s", input.FirstName, input.LastName)
-		return nil, err
-	}
-
-	return mapper.MapEntityToContact(contactNodeCreated), nil
-}
-
-// UpdateContact is the resolver for the updateContact field.
-func (r *mutationResolver) UpdateContact(ctx context.Context, input model.ContactUpdateInput) (*model.Contact, error) {
-	updatedContact, err := r.ServiceContainer.ContactService.Update(ctx, &service.ContactUpdateData{
-		ContactEntity: mapper.MapContactUpdateInputToEntity(input),
-		ContactTypeId: input.ContactTypeID,
-	})
-	if err != nil {
-		graphql.AddErrorf(ctx, "Failed to update contact %s", input.ID)
-		return nil, err
-	}
-	return mapper.MapEntityToContact(updatedContact), nil
-}
-
-// HardDeleteContact is the resolver for the hardDeleteContact field.
-func (r *mutationResolver) HardDeleteContact(ctx context.Context, contactID string) (*model.Result, error) {
-	result, err := r.ServiceContainer.ContactService.HardDelete(ctx, contactID)
-	if err != nil {
-		graphql.AddErrorf(ctx, "Could not hard delete contact %s", contactID)
-		return nil, err
-	}
-	return &model.Result{
-		Result: result,
-	}, nil
-}
-
-// SoftDeleteContact is the resolver for the softDeleteContact field.
-func (r *mutationResolver) SoftDeleteContact(ctx context.Context, contactID string) (*model.Result, error) {
-	result, err := r.ServiceContainer.ContactService.SoftDelete(ctx, contactID)
-	if err != nil {
-		graphql.AddErrorf(ctx, "Could not soft delete contact %s", contactID)
-		return nil, err
-	}
-	return &model.Result{
-		Result: result,
-	}, nil
 }
 
 // MergeCustomFieldToContact is the resolver for the mergeCustomFieldToContact field.
@@ -224,50 +168,6 @@ func (r *mutationResolver) RemovePhoneNumberFromContactByID(ctx context.Context,
 	result, err := r.ServiceContainer.PhoneNumberService.DeleteById(ctx, contactID, id)
 	if err != nil {
 		graphql.AddErrorf(ctx, "Could not remove phone number %s from contact %s", id, contactID)
-		return nil, err
-	}
-	return &model.Result{
-		Result: result,
-	}, nil
-}
-
-// MergeEmailToContact is the resolver for the mergeEmailToContact field.
-func (r *mutationResolver) MergeEmailToContact(ctx context.Context, contactID string, input model.EmailInput) (*model.Email, error) {
-	result, err := r.ServiceContainer.EmailService.MergeEmailToContact(ctx, contactID, mapper.MapEmailInputToEntity(&input))
-	if err != nil {
-		graphql.AddErrorf(ctx, "Could not add email %s to contact %s", input.Email, contactID)
-		return nil, err
-	}
-	return mapper.MapEntityToEmail(result), nil
-}
-
-// UpdateEmailInContact is the resolver for the updateEmailInContact field.
-func (r *mutationResolver) UpdateEmailInContact(ctx context.Context, contactID string, input model.EmailUpdateInput) (*model.Email, error) {
-	result, err := r.ServiceContainer.EmailService.UpdateEmailInContact(ctx, contactID, mapper.MapEmailUpdateInputToEntity(&input))
-	if err != nil {
-		graphql.AddErrorf(ctx, "Could not update email %s in contact %s", input.ID, contactID)
-		return nil, err
-	}
-	return mapper.MapEntityToEmail(result), nil
-}
-
-// RemoveEmailFromContact is the resolver for the removeEmailFromContact field.
-func (r *mutationResolver) RemoveEmailFromContact(ctx context.Context, contactID string, email string) (*model.Result, error) {
-	result, err := r.ServiceContainer.EmailService.Delete(ctx, contactID, email)
-	if err != nil {
-		graphql.AddErrorf(ctx, "Could not remove email %s from contact %s", email, contactID)
-		return nil, err
-	}
-	return &model.Result{
-		Result: result,
-	}, nil
-}
-
-// RemoveEmailFromContactByID is the resolver for the removeEmailFromContactById field.
-func (r *mutationResolver) RemoveEmailFromContactByID(ctx context.Context, contactID string, id string) (*model.Result, error) {
-	result, err := r.ServiceContainer.EmailService.DeleteById(ctx, contactID, id)
-	if err != nil {
-		graphql.AddErrorf(ctx, "Could not remove email %s from contact %s", id, contactID)
 		return nil, err
 	}
 	return &model.Result{

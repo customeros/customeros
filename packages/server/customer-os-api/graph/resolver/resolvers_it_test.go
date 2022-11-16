@@ -185,66 +185,66 @@ func TestMutationResolver_CreateContact(t *testing.T) {
 	assertRawResponseSuccess(t, rawResponse, err)
 
 	var contact struct {
-		CreateContact model.Contact
+		Contact_Create model.Contact
 	}
 
 	err = decode.Decode(rawResponse.Data.(map[string]any), &contact)
 	require.Nil(t, err)
 	require.NotNil(t, contact)
-	require.Equal(t, "MR", contact.CreateContact.Title.String())
-	require.Equal(t, "first", contact.CreateContact.FirstName)
-	require.Equal(t, "last", contact.CreateContact.LastName)
-	require.Equal(t, contactTypeId, contact.CreateContact.ContactType.ID)
-	require.Equal(t, "CUSTOMER", contact.CreateContact.ContactType.Name)
-	require.Equal(t, "Some notes...", *contact.CreateContact.Notes)
-	require.Equal(t, "Some label", *contact.CreateContact.Label)
+	require.Equal(t, "MR", contact.Contact_Create.Title.String())
+	require.Equal(t, "first", contact.Contact_Create.FirstName)
+	require.Equal(t, "last", contact.Contact_Create.LastName)
+	require.Equal(t, contactTypeId, contact.Contact_Create.ContactType.ID)
+	require.Equal(t, "CUSTOMER", contact.Contact_Create.ContactType.Name)
+	require.Equal(t, "Some notes...", *contact.Contact_Create.Notes)
+	require.Equal(t, "Some label", *contact.Contact_Create.Label)
 
-	require.Equal(t, 5, len(contact.CreateContact.CustomFields))
+	require.Equal(t, 5, len(contact.Contact_Create.CustomFields))
 
-	boolField := contact.CreateContact.CustomFields[0]
+	boolField := contact.Contact_Create.CustomFields[0]
 	require.NotNil(t, boolField.GetID())
 	require.Equal(t, "boolField", boolField.Name)
 	require.Equal(t, model.CustomFieldDataTypeBool, boolField.Datatype)
 	require.Equal(t, true, boolField.Value.RealValue())
 
-	decimalField := contact.CreateContact.CustomFields[1]
+	decimalField := contact.Contact_Create.CustomFields[1]
 	require.NotNil(t, decimalField.GetID())
 	require.Equal(t, "decimalField", decimalField.Name)
 	require.Equal(t, model.CustomFieldDataTypeDecimal, decimalField.Datatype)
 	require.Equal(t, 0.001, decimalField.Value.RealValue())
 
-	integerField := contact.CreateContact.CustomFields[2]
+	integerField := contact.Contact_Create.CustomFields[2]
 	require.NotNil(t, integerField.GetID())
 	require.Equal(t, "integerField", integerField.Name)
 	require.Equal(t, model.CustomFieldDataTypeInteger, integerField.Datatype)
 	// issue in decoding, int converted to float 64
 	require.Equal(t, float64(123), integerField.Value.RealValue())
 
-	textField := contact.CreateContact.CustomFields[3]
+	textField := contact.Contact_Create.CustomFields[3]
 	require.NotNil(t, textField.GetID())
 	require.Equal(t, "textField", textField.Name)
 	require.Equal(t, model.CustomFieldDataTypeText, textField.Datatype)
 	require.Equal(t, "value1", textField.Value.RealValue())
 
-	timeField := contact.CreateContact.CustomFields[4]
+	timeField := contact.Contact_Create.CustomFields[4]
 	require.NotNil(t, timeField.GetID())
 	require.Equal(t, "timeField", timeField.Name)
 	require.Equal(t, model.CustomFieldDataTypeDatetime, timeField.Datatype)
 	require.Equal(t, "2022-11-13T20:21:56.732Z", timeField.Value.RealValue())
 
-	require.Equal(t, 1, len(contact.CreateContact.Emails))
-	require.NotNil(t, contact.CreateContact.Emails[0].ID)
-	require.Equal(t, "contact@abc.com", contact.CreateContact.Emails[0].Email)
-	require.Equal(t, "WORK", contact.CreateContact.Emails[0].Label.String())
-	require.Equal(t, false, contact.CreateContact.Emails[0].Primary)
+	require.Equal(t, 1, len(contact.Contact_Create.Emails))
+	require.NotNil(t, contact.Contact_Create.Emails[0].ID)
+	require.Equal(t, "contact@abc.com", contact.Contact_Create.Emails[0].Email)
+	require.Equal(t, "WORK", contact.Contact_Create.Emails[0].Label.String())
+	require.Equal(t, false, contact.Contact_Create.Emails[0].Primary)
 
-	require.Equal(t, 1, len(contact.CreateContact.PhoneNumbers))
-	require.NotNil(t, contact.CreateContact.PhoneNumbers[0].ID)
-	require.Equal(t, "+1234567890", contact.CreateContact.PhoneNumbers[0].E164)
-	require.Equal(t, "MOBILE", contact.CreateContact.PhoneNumbers[0].Label.String())
-	require.Equal(t, true, contact.CreateContact.PhoneNumbers[0].Primary)
+	require.Equal(t, 1, len(contact.Contact_Create.PhoneNumbers))
+	require.NotNil(t, contact.Contact_Create.PhoneNumbers[0].ID)
+	require.Equal(t, "+1234567890", contact.Contact_Create.PhoneNumbers[0].E164)
+	require.Equal(t, "MOBILE", contact.Contact_Create.PhoneNumbers[0].Label.String())
+	require.Equal(t, true, contact.Contact_Create.PhoneNumbers[0].Primary)
 
-	require.Equal(t, 0, len(contact.CreateContact.Groups))
+	require.Equal(t, 0, len(contact.Contact_Create.Groups))
 
 	require.Equal(t, 2, getCountOfNodes(driver, "Tenant"))
 	require.Equal(t, 1, getCountOfNodes(driver, "Contact"))
@@ -283,24 +283,24 @@ func TestMutationResolver_CreateContact_WithEntityDefinition(t *testing.T) {
 	require.Equal(t, 0, getCountOfNodes(driver, "FieldSetDefinition"))
 
 	var contact struct {
-		CreateContact model.Contact
+		Contact_Create model.Contact
 	}
 
 	err = decode.Decode(rawResponse.Data.(map[string]any), &contact)
 	require.Nil(t, err)
 	require.NotNil(t, contact)
 
-	require.Equal(t, entityDefinitionId, contact.CreateContact.Definition.ID)
-	require.Equal(t, 2, len(contact.CreateContact.CustomFields))
-	require.Equal(t, "field1", contact.CreateContact.CustomFields[0].Name)
-	require.Equal(t, "TEXT", contact.CreateContact.CustomFields[0].Datatype.String())
-	require.Equal(t, "value1", contact.CreateContact.CustomFields[0].Value.RealValue())
-	require.Equal(t, fieldDefinitionId, contact.CreateContact.CustomFields[0].Definition.ID)
-	require.NotNil(t, contact.CreateContact.CustomFields[0].GetID())
-	require.Equal(t, "field2", contact.CreateContact.CustomFields[1].Name)
-	require.Equal(t, "TEXT", contact.CreateContact.CustomFields[1].Datatype.String())
-	require.Equal(t, "value2", contact.CreateContact.CustomFields[1].Value.RealValue())
-	require.NotNil(t, contact.CreateContact.CustomFields[1].GetID())
+	require.Equal(t, entityDefinitionId, contact.Contact_Create.Definition.ID)
+	require.Equal(t, 2, len(contact.Contact_Create.CustomFields))
+	require.Equal(t, "field1", contact.Contact_Create.CustomFields[0].Name)
+	require.Equal(t, "TEXT", contact.Contact_Create.CustomFields[0].Datatype.String())
+	require.Equal(t, "value1", contact.Contact_Create.CustomFields[0].Value.RealValue())
+	require.Equal(t, fieldDefinitionId, contact.Contact_Create.CustomFields[0].Definition.ID)
+	require.NotNil(t, contact.Contact_Create.CustomFields[0].GetID())
+	require.Equal(t, "field2", contact.Contact_Create.CustomFields[1].Name)
+	require.Equal(t, "TEXT", contact.Contact_Create.CustomFields[1].Datatype.String())
+	require.Equal(t, "value2", contact.Contact_Create.CustomFields[1].Value.RealValue())
+	require.NotNil(t, contact.Contact_Create.CustomFields[1].GetID())
 
 }
 
@@ -325,19 +325,19 @@ func TestMutationResolver_UpdateContact(t *testing.T) {
 	assertRawResponseSuccess(t, rawResponse, err)
 
 	var contact struct {
-		UpdateContact model.Contact
+		Contact_Update model.Contact
 	}
 
 	err = decode.Decode(rawResponse.Data.(map[string]any), &contact)
 	require.Nil(t, err)
 	require.NotNil(t, contact)
-	require.Equal(t, "DR", contact.UpdateContact.Title.String())
-	require.Equal(t, "updated first", contact.UpdateContact.FirstName)
-	require.Equal(t, "updated last", contact.UpdateContact.LastName)
-	require.Equal(t, "updated notes", *contact.UpdateContact.Notes)
-	require.Equal(t, "updated label", *contact.UpdateContact.Label)
-	require.Equal(t, contactTypeIdUpdate, contact.UpdateContact.ContactType.ID)
-	require.Equal(t, "UPDATED", contact.UpdateContact.ContactType.Name)
+	require.Equal(t, "DR", contact.Contact_Update.Title.String())
+	require.Equal(t, "updated first", contact.Contact_Update.FirstName)
+	require.Equal(t, "updated last", contact.Contact_Update.LastName)
+	require.Equal(t, "updated notes", *contact.Contact_Update.Notes)
+	require.Equal(t, "updated label", *contact.Contact_Update.Label)
+	require.Equal(t, contactTypeIdUpdate, contact.Contact_Update.ContactType.ID)
+	require.Equal(t, "UPDATED", contact.Contact_Update.ContactType.Name)
 
 	require.Equal(t, 1, getCountOfNodes(driver, "Contact"))
 	require.Equal(t, 2, getCountOfNodes(driver, "ContactType"))

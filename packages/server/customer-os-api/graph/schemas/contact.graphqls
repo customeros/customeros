@@ -16,6 +16,13 @@ extend type Query {
     contact_ByPhone(e164: String!) :Contact!
 }
 
+extend type Mutation {
+    contact_Create(input: ContactInput!): Contact!
+    contact_Update(input: ContactUpdateInput!): Contact!
+    contact_HardDelete(contactId: ID!): Result!
+    contact_SoftDelete(contactId: ID!): Result!
+}
+
 """
 A contact represents an individual in customerOS.
 **A `response` object.**

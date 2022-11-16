@@ -1,5 +1,5 @@
 mutation UpdateContact($contactId: ID!, $contactTypeId: ID){
-    updateContact(
+    contact_Update(
         input: {
             id: $contactId
             title: DR
