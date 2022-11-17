@@ -56,6 +56,7 @@ if [[ $(colima version) == *"colima version"* ]];
         else
             echo "❌ Colima installation failed"
         fi
+fi
 
 # Kubectl
 if [[ $(kubectl version) == *"Client Version"* ]];
@@ -69,6 +70,7 @@ if [[ $(kubectl version) == *"Client Version"* ]];
         else
             echo "❌ kubectl installation failed"
         fi
+fi
 
 # Helm
 if [[ $(helm version) == *"version.BuildInfo"* ]];

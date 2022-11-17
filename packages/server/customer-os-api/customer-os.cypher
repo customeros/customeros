@@ -22,3 +22,5 @@ CREATE INDEX phone_e164_idx IF NOT EXISTS FOR (n:PhoneNumber) ON (n.e164);
 CREATE INDEX entity_definition_id_idx IF NOT EXISTS FOR (n:EntityDefinition) ON (n.id);
 CREATE INDEX field_set_definition_id_idx IF NOT EXISTS FOR (n:FieldSetDefinition) ON (n.id);
 CREATE INDEX custom_field_definition_id_idx IF NOT EXISTS FOR (n:CustomFieldDefinition) ON (n.id);
+
+:exit;
