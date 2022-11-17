@@ -120,7 +120,7 @@ func (s *userService) FindContactOwner(ctx context.Context, contactId string) (*
 	})
 	if err != nil {
 		return nil, err
-	} else if ownerDbNode == nil {
+	} else if ownerDbNode.(*dbtype.Node) == nil {
 		return nil, nil
 	} else {
 		return s.mapDbNodePtrToUserEntity(ownerDbNode.(*dbtype.Node)), nil
