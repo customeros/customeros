@@ -12,7 +12,7 @@ import (
 
 type EntityDefinitionService interface {
 	Create(ctx context.Context, entity *entity.EntityDefinitionEntity) (*entity.EntityDefinitionEntity, error)
-	FindAll(ctx context.Context) (*entity.EntityDefinitionEntities, error)
+	FindAll(ctx context.Context, extends *string) (*entity.EntityDefinitionEntities, error)
 	FindLinkedWithContact(ctx context.Context, contactId string) (*entity.EntityDefinitionEntity, error)
 }
 
@@ -37,13 +37,22 @@ func (s *entityDefinitionService) Create(ctx context.Context, entity *entity.Ent
 	return entityDefinition, nil
 }
 
-func (s *entityDefinitionService) FindAll(ctx context.Context) (*entity.EntityDefinitionEntities, error) {
-	all, err := s.repository.EntityDefinitionRepository.FindAllByTenant(common.GetContext(ctx).Tenant)
+func (s *entityDefinitionService) FindAll(ctx context.Context, extends *string) (*entity.EntityDefinitionEntities, error) {
+	session := utils.NewNeo4jReadSession(*s.repository.Drivers.Neo4jDriver)
+	defer session.Close()
+
+	var err error
+	var entityDefinitionsDbRecords []*db.Record
+	if extends == nil {
+		entityDefinitionsDbRecords, err = s.repository.EntityDefinitionRepository.FindAllByTenant(session, common.GetContext(ctx).Tenant)
+	} else {
+		entityDefinitionsDbRecords, err = s.repository.EntityDefinitionRepository.FindAllByTenantAndExtends(session, common.GetContext(ctx).Tenant, *extends)
+	}
 	if err != nil {
 		return nil, err
 	}
 	entityDefinitionEntities := entity.EntityDefinitionEntities{}
-	for _, dbRecord := range all.([]*db.Record) {
+	for _, dbRecord := range entityDefinitionsDbRecords {
 		entityDefinitionEntity := s.mapDbNodeToEntityDefinition(dbRecord.Values[0].(dbtype.Node))
 		s.addDbRelationshipToEntity(dbRecord.Values[1].(dbtype.Relationship), entityDefinitionEntity)
 		entityDefinitionEntities = append(entityDefinitionEntities, *entityDefinitionEntity)

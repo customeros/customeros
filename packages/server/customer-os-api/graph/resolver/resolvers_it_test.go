@@ -368,6 +368,33 @@ func TestMutationResolver_EntityDefinitionCreate(t *testing.T) {
 	require.Equal(t, 4, getCountOfNodes(driver, "CustomFieldDefinition"))
 }
 
+func TestQueryResolver_EntityDefinitions_FilterExtendsProperty(t *testing.T) {
+	defer setupTestCase()(t)
+	createTenant(driver, tenantName)
+
+	createEntityDefinition(driver, tenantName, "")
+	id2 := createEntityDefinition(driver, tenantName, model.EntityDefinitionExtensionContact.String())
+	id3 := createEntityDefinition(driver, tenantName, model.EntityDefinitionExtensionContact.String())
+
+	rawResponse, err := c.RawPost(getQuery("get_entity_definitions_filter_by_extends"),
+		client.Var("extends", model.EntityDefinitionExtensionContact.String()))
+	assertRawResponseSuccess(t, rawResponse, err)
+
+	var entityDefinition struct {
+		EntityDefinitions []model.EntityDefinition
+	}
+
+	err = decode.Decode(rawResponse.Data.(map[string]any), &entityDefinition)
+	require.Nil(t, err)
+	require.NotNil(t, entityDefinition.EntityDefinitions)
+	require.Equal(t, 2, len(entityDefinition.EntityDefinitions))
+	require.Equal(t, "CONTACT", entityDefinition.EntityDefinitions[0].Extends.String())
+	require.Equal(t, "CONTACT", entityDefinition.EntityDefinitions[1].Extends.String())
+	require.ElementsMatch(t, []string{id2, id3}, []string{entityDefinition.EntityDefinitions[0].ID, entityDefinition.EntityDefinitions[1].ID})
+
+	require.Equal(t, 3, getCountOfNodes(driver, "EntityDefinition"))
+}
+
 func TestMutationResolver_ConversationCreate_AutogenerateID(t *testing.T) {
 	defer setupTestCase()(t)
 	createTenant(driver, tenantName)
