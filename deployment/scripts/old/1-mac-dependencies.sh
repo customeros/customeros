@@ -1,10 +1,6 @@
 #!/bin/bash
 
 echo "  ⏳ Openline dependency check..."
-brew install docker
-brew install docker-compose
-brew install colima
-brew install kubectl
 
 # Xcode
 xcode-select -p

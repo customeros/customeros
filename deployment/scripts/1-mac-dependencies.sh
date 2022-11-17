@@ -5,85 +5,81 @@ echo "  ⏳ Openline dependency check..."
 # Xcode
 xcode-select -p
 if [ $? -eq 0 ]; then
-    echo "  ✅ Xcode"
+    echo "✅ Xcode"
 else
     echo "  🦦 Installing Xcode.  This may take awhile, please let the script do it's thing.  It will prompt when completed."
     xcode-select --install
     if [ $? -eq 0 ]; then
-        echo "  ✅ Xcode"
+        echo "✅ Xcode"
     else
-        echo "  ❌ Xcode installation failed"
+        echo "❌ Xcode installation failed"
     fi
 fi
 
 # Homebrew
 if [[ $(brew --version) == *"Homebrew"* ]];
     then
-        echo "  ✅ Homebrew"
+        echo "✅ Homebrew"
     else
-        echo "  🦦 Installing Homebrew..."
+        echo "🦦 Installing Homebrew..."
         /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
         if [ $? -eq 0 ]; then
-            echo "  ✅ Homebrew"
+            echo "✅ Homebrew"
         else
-            echo "  ❌ Homebrew installation failed."
+            echo "❌ Homebrew installation failed"
         fi
 fi
 
 # Docker
 if [[ $(docker --version) == *"Docker version"* ]];
     then
-        echo "  ✅ Docker"
+        echo "✅ Docker"
     else
-        echo "  🦦 Installing Docker..."
-        echo "  ❗️ This can take a while, please let the script do it's thing.  It will prompt when completed."
-        softwareupdate --install-rosetta
-        
-        if [[ $(arch) == 'arm64' ]]; 
-            then
-                echo "  Installing Apple silicon version..."
-                curl -L https://desktop.docker.com/mac/main/arm64/Docker.dmg --output openline-setup/Docker.dmg
-            else
-                echo "  Installing Intel version..."
-                curl -L https://desktop.docker.com/mac/main/amd64/Docker.dmg --output openline-setup/Docker.dmg
-        fi
-
-        sudo hdiutil attach openline-setup/Docker.dmg
-        sudo /Volumes/Docker/Docker.app/Contents/MacOS/install
-        sudo hdiutil detach /Volumes/Docker
-
-        echo "  ✅ Docker"
-        echo "  ❗️Please open Docker desktop via the GUI to initialize the application before proceeding."
-        rm -r openline-setup/Docker.dmg
-        echo "  Attempting to open Docker..."
-        open -a Docker.app
-        read -p "  => Press enter to continue once Docker GUI has opened..."
-fi
-
-# Minikube
-if [[ $(minikube version) == *"minikube version"* ]];
-    then
-        echo "  ✅ Minikube"
-    else
-        echo "  🦦 Installing Minikube..."
-        brew install minikube
+        echo "🦦 Installing Docker..."
+        brew install docker
         if [ $? -eq 0 ]; then
-            echo "  ✅ Minikube"
+            echo "✅ Docker"
         else
-            echo "  ❌ Minikube installation failed."
+            echo "❌ Docker installation failed"
         fi
 fi
+
+# Colima
+if [[ $(colima version) == *"colima version"* ]];
+    then
+        echo "✅ Colima"
+    else
+        echo "🦦 Installing Colima..."
+        brew install colima
+        if [ $? -eq 0 ]; then
+            echo "✅ Colima"
+        else
+            echo "❌ Colima installation failed"
+        fi
+
+# Kubectl
+if [[ $(kubectl version) == *"Client Version"* ]];
+    then
+        echo "✅ kubectl"
+    else
+        echo "🦦 Installing kubectl..."
+        brew install kubectl
+        if [ $? -eq 0 ]; then
+            echo "✅ kubectl"
+        else
+            echo "❌ kubectl installation failed"
+        fi
 
 # Helm
 if [[ $(helm version) == *"version.BuildInfo"* ]];
     then
-        echo "  ✅ Helm"
+        echo "✅ Helm"
     else
-        echo "  🦦 Installing Helm..."
+        echo "🦦 Installing Helm..."
         brew install helm
         if [ $? -eq 0 ]; then
-            echo "  ✅ Helm"
+            echo "✅ Helm"
         else
-            echo "  ❌ Helm installation failed."
+            echo "❌ Helm installation failed."
         fi
 fi
