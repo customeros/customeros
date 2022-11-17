@@ -1,0 +1,13 @@
+query GetContactGroups{
+  contactGroups(sorting: {
+    properties: [{name: NAME direction:DESC caseSensitive:true}]
+    })
+  {
+    totalPages
+    totalElements
+    content {
+      id
+      name
+    }
+  }
+}

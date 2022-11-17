@@ -10,7 +10,7 @@ extend type Query {
         """
         id: ID!): ContactGroup
 
-    contactGroups(paginationFilter: PaginationFilter): ContactGroupPage!
+    contactGroups(paginationFilter: PaginationFilter, sorting: SortContactGroups): ContactGroupPage!
 }
 
 extend type Mutation {
@@ -95,4 +95,18 @@ type ContactGroupPage implements Pages {
     **Required.**
     """
     totalElements: Int64!
+}
+
+input SortContactGroups {
+    properties: [SortContactGroupProperty!]
+}
+
+input SortContactGroupProperty {
+    name: ContactGroupProperty!
+    direction: SortingDirection = ASC
+    caseSensitive: Boolean = false
+}
+
+enum ContactGroupProperty {
+    NAME
 }
