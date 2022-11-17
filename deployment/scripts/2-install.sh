@@ -9,6 +9,7 @@ POSTGRESQL_PERSISTENT_VOLUME_CLAIM="./openline-setup/postgresql-persistent-volum
 
 POSTGRESQL_HELM_VALUES="./openline-setup/postgresql-values.yaml"
 NEO4J_HELM_VALUES="./openline-setup/neo4j-helm-values.yaml"
+FUSIONAUTH_HELM_VALUES="./openline-setup/fusionauth-values.yaml"
 
 CUSTOMER_OS_API_IMAGE="ghcr.io/openline-ai/openline-customer-os/customer-os-api:latest"
 CUSTOMER_OS_API="openline-setup/customer-os-api.yaml"
@@ -160,3 +161,10 @@ kubectl apply -f $MESSAGE_STORE_API_K8S_SERVICE --namespace $NAMESPACE_NAME
     echo "❌ message-store-k8s-service.yaml"
   fi
 
+# Install FusionAuth
+helm install fusionauth-customer-os fusionauth/fusionauth -f $FUSIONAUTH_HELM_VALUES --namespace $NAMESPACE_NAME
+if [ $? -eq 0 ]; then
+    echo "  ✅ FusionAuth installed"
+else
+    echo "  ❌ FusionAuth not installed"
+fi
