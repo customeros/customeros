@@ -20,7 +20,6 @@ MESSAGE_STORE_API_IMAGE="ghcr.io/openline-ai/openline-customer-os/message-store:
 MESSAGE_STORE_API="openline-setup/message-store.yaml"
 MESSAGE_STORE_API_K8S_SERVICE="openline-setup/message-store-k8s-service.yaml"
 
-NEO4J_CYPHER="openline-setup/customer-os.cypher"
 ##############################################
 
 
@@ -164,7 +163,7 @@ kubectl apply -f $MESSAGE_STORE_API_K8S_SERVICE --namespace $NAMESPACE_NAME
 # Install FusionAuth
 helm install fusionauth-customer-os fusionauth/fusionauth -f $FUSIONAUTH_HELM_VALUES --namespace $NAMESPACE_NAME
 if [ $? -eq 0 ]; then
-    echo "  ✅ FusionAuth installed"
+    echo "✅ FusionAuth installed"
 else
-    echo "  ❌ FusionAuth not installed"
+    echo "❌ FusionAuth not installed"
 fi

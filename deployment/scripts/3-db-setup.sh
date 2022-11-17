@@ -3,6 +3,7 @@
 ###### Script Variables #################################
 NAMESPACE_NAME="openline"
 FILES="./openline-setup/setup.sql"
+NEO4J_CYPHER="./openline-setup/customer-os.cypher"
 #########################################################
 
 echo "🦦 Provisioning Neo4j DB..."
@@ -10,7 +11,7 @@ echo "🦦 Provisioning Neo4j DB..."
 while [ -z "$pod" ]; do
     pod=$(kubectl get pods -n $NAMESPACE_NAME|grep neo4j-customer-os|grep Running| cut -f1 -d ' ')
     if [ -z "$pod" ]; then
-      echo "  ⏳ Neo4j not ready yet, please wait..."
+      echo "⏳ Neo4j not ready yet, please wait..."
       sleep 2
     fi
 done

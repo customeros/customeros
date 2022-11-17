@@ -1,6 +1,6 @@
 #!/bin/bash
 
-echo "  ⏳ Openline dependency check..."
+echo "⏳ Openline dependency check..."
 
 # Xcode
 xcode-select -p
