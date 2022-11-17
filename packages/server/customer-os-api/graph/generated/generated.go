@@ -219,7 +219,7 @@ type ComplexityRoot struct {
 		ContactGroups       func(childComplexity int, paginationFilter *model.PaginationFilter) int
 		ContactTypes        func(childComplexity int) int
 		Contacts            func(childComplexity int, paginationFilter *model.PaginationFilter) int
-		EntityDefinitions   func(childComplexity int) int
+		EntityDefinitions   func(childComplexity int, extends *model.EntityDefinitionExtension) int
 		Users               func(childComplexity int, paginationFilter *model.PaginationFilter) int
 	}
 
@@ -306,7 +306,7 @@ type MutationResolver interface {
 	UserCreate(ctx context.Context, input model.UserInput) (*model.User, error)
 }
 type QueryResolver interface {
-	EntityDefinitions(ctx context.Context) ([]*model.EntityDefinition, error)
+	EntityDefinitions(ctx context.Context, extends *model.EntityDefinitionExtension) ([]*model.EntityDefinition, error)
 	CompaniesByNameLike(ctx context.Context, paginationFilter *model.PaginationFilter, companyName string) (*model.CompanyPage, error)
 	Contact(ctx context.Context, id string) (*model.Contact, error)
 	Contacts(ctx context.Context, paginationFilter *model.PaginationFilter) (*model.ContactsPage, error)
@@ -1372,7 +1372,12 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		return e.complexity.Query.EntityDefinitions(childComplexity), true
+		args, err := ec.field_Query_entityDefinitions_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.EntityDefinitions(childComplexity, args["extends"].(*model.EntityDefinitionExtension)), true
 
 	case "Query.users":
 		if e.complexity.Query.Users == nil {
@@ -2444,7 +2449,7 @@ enum PhoneNumberLabel {
 }
 `, BuiltIn: false},
 	{Name: "../schemas/query.graphqls", Input: `type Query {
-    entityDefinitions :[EntityDefinition!]!
+    entityDefinitions(extends: EntityDefinitionExtension) :[EntityDefinition!]!
 }`, BuiltIn: false},
 	{Name: "../schemas/result.graphqls", Input: `"""
 Describes the success or failure of the GraphQL call.
@@ -3474,6 +3479,21 @@ func (ec *executionContext) field_Query_contacts_args(ctx context.Context, rawAr
 		}
 	}
 	args["paginationFilter"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_entityDefinitions_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 *model.EntityDefinitionExtension
+	if tmp, ok := rawArgs["extends"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("extends"))
+		arg0, err = ec.unmarshalOEntityDefinitionExtension2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐEntityDefinitionExtension(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["extends"] = arg0
 	return args, nil
 }
 
@@ -9229,7 +9249,7 @@ func (ec *executionContext) _Query_entityDefinitions(ctx context.Context, field 
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().EntityDefinitions(rctx)
+		return ec.resolvers.Query().EntityDefinitions(rctx, fc.Args["extends"].(*model.EntityDefinitionExtension))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -9271,6 +9291,17 @@ func (ec *executionContext) fieldContext_Query_entityDefinitions(ctx context.Con
 			}
 			return nil, fmt.Errorf("no field named %q was found under type EntityDefinition", field.Name)
 		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_entityDefinitions_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
 	}
 	return fc, nil
 }

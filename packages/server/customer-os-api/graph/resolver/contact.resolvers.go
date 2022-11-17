@@ -5,6 +5,7 @@ package resolver
 
 import (
 	"context"
+
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/openline-ai/openline-customer-os/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/customer-os-api/graph/generated"

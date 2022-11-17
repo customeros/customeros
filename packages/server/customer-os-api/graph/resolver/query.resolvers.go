@@ -5,6 +5,7 @@ package resolver
 
 import (
 	"context"
+	"github.com/openline-ai/openline-customer-os/customer-os-api/utils"
 
 	"github.com/openline-ai/openline-customer-os/customer-os-api/graph/generated"
 	"github.com/openline-ai/openline-customer-os/customer-os-api/graph/model"
@@ -12,8 +13,8 @@ import (
 )
 
 // EntityDefinitions is the resolver for the entityDefinitions field.
-func (r *queryResolver) EntityDefinitions(ctx context.Context) ([]*model.EntityDefinition, error) {
-	result, err := r.ServiceContainer.EntityDefinitionService.FindAll(ctx)
+func (r *queryResolver) EntityDefinitions(ctx context.Context, extends *model.EntityDefinitionExtension) ([]*model.EntityDefinition, error) {
+	result, err := r.ServiceContainer.EntityDefinitionService.FindAll(ctx, utils.StringPtr(extends.String()))
 	return mapper.MapEntitiesToEntityDefinitions(result), err
 }
 
