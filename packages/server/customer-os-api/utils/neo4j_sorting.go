@@ -6,8 +6,15 @@ import (
 	"strings"
 )
 
+const (
+	tagKey                  = "neo4jDb"
+	tagLookupName           = "lookupName"
+	tagProperty             = "property"
+	tagSupportCaseSensitive = "supportCaseSensitive"
+)
+
 type Sortings struct {
-	properties []*Sorting
+	sorting []*Sorting
 }
 
 type Sorting struct {
@@ -24,21 +31,21 @@ func (s *Sortings) NewSortingProperty(exposedName, direction string, caseSensiti
 	if err != nil {
 		return err
 	}
-	sorting.nodeProperty = props["property"]
+	sorting.nodeProperty = props[tagProperty]
 	sorting.descending = "DESC" == direction
-	sorting.supportCaseSensitive = props["supportCaseSensitive"] == "true"
+	sorting.supportCaseSensitive = props[tagSupportCaseSensitive] == "true"
 	sorting.caseSensitive = caseSensitive
-	s.properties = append(s.properties, sorting)
+	s.sorting = append(s.sorting, sorting)
 	return nil
 }
 
 func (s *Sortings) CypherFragment(nodeAlias string) string {
-	if len(s.properties) == 0 {
+	if len(s.sorting) == 0 {
 		return ""
 	}
 	query := " ORDER BY "
-	for i := 0; i < len(s.properties); i++ {
-		sortingProperty := s.properties[i]
+	for i := 0; i < len(s.sorting); i++ {
+		sortingProperty := s.sorting[i]
 		if i > 0 {
 			query += " , "
 		}
@@ -62,16 +69,18 @@ func (s *Sortings) CypherFragment(nodeAlias string) string {
 func getFieldByExposedName(T reflect.Type, exposedName string) (map[string]string, error) {
 	for i := 0; i < T.NumField(); i++ {
 		structField := T.Field(i)
-		tag, ok := structField.Tag.Lookup("neo4jDb")
+		tag, ok := structField.Tag.Lookup(tagKey)
 		if ok {
 			tags := strings.Split(tag, ";")
 			if len(tags) > 0 {
 				m := make(map[string]string)
 				for _, v := range tags {
 					kvs := strings.Split(v, ":")
-					m[kvs[0]] = kvs[1]
+					if len(kvs) == 2 {
+						m[kvs[0]] = kvs[1]
+					}
 				}
-				if val, ok := m["exposedName"]; ok {
+				if val, ok := m[tagLookupName]; ok {
 					if val == exposedName {
 						return m, nil
 					}

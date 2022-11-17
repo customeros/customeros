@@ -11,7 +11,7 @@ extend type Query {
         id: ID!) :Contact
 
 
-    contacts(paginationFilter: PaginationFilter): ContactsPage!
+    contacts(paginationFilter: PaginationFilter, sorting: SortContacts): ContactsPage!
     contact_ByEmail(email: String!) :Contact!
     contact_ByPhone(e164: String!) :Contact!
 }
@@ -243,4 +243,23 @@ enum PersonTitle {
 
     "For the holder of a doctoral degree."
     DR
+}
+
+input SortContacts {
+    properties: [SortContactProperty!]
+}
+
+input SortContactProperty {
+    name: ContactProperty!
+    direction: SortingDirection = ASC
+    caseSensitive: Boolean = false
+}
+
+enum ContactProperty {
+    TITLE
+    FIRST_NAME
+    LAST_NAME
+    LABEL
+    NOTES
+    CREATED_AT
 }

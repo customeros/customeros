@@ -126,7 +126,7 @@ func (s *contactGroupService) FindAll(ctx context.Context, page, limit int, sort
 		Limit: limit,
 		Page:  page,
 	}
-	sortings, err := s.prepareContactGroupSorting(sorting)
+	sortings, err := s.prepareContactGroupsSorting(sorting)
 	if err != nil {
 		return nil, err
 	}
@@ -259,7 +259,7 @@ func (s *contactGroupService) RemoveContactFromGroup(ctx context.Context, contac
 	return queryResult.(bool), nil
 }
 
-func (s *contactGroupService) prepareContactGroupSorting(sorting *model.SortContactGroups) (*utils.Sortings, error) {
+func (s *contactGroupService) prepareContactGroupsSorting(sorting *model.SortContactGroups) (*utils.Sortings, error) {
 	transformedSorting := new(utils.Sortings)
 	if sorting != nil {
 		for _, v := range sorting.Properties {

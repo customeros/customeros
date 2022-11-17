@@ -3,12 +3,13 @@ package service
 import (
 	"context"
 	"github.com/neo4j/neo4j-go-driver/v4/neo4j"
-	"github.com/neo4j/neo4j-go-driver/v4/neo4j/db"
 	"github.com/neo4j/neo4j-go-driver/v4/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/customer-os-api/common"
 	"github.com/openline-ai/openline-customer-os/customer-os-api/entity"
+	"github.com/openline-ai/openline-customer-os/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/customer-os-api/repository"
 	"github.com/openline-ai/openline-customer-os/customer-os-api/utils"
+	"reflect"
 	"time"
 )
 
@@ -20,7 +21,7 @@ type ContactService interface {
 	FindContactById(ctx context.Context, id string) (*entity.ContactEntity, error)
 	FindContactByEmail(ctx context.Context, email string) (*entity.ContactEntity, error)
 	FindContactByPhoneNumber(ctx context.Context, e164 string) (*entity.ContactEntity, error)
-	FindAll(ctx context.Context, page int, limit int) (*utils.Pagination, error)
+	FindAll(ctx context.Context, page, limit int, sorting *model.SortContacts) (*utils.Pagination, error)
 
 	HardDelete(ctx context.Context, id string) (bool, error)
 	SoftDelete(ctx context.Context, id string) (bool, error)
@@ -66,7 +67,7 @@ func (s *contactService) Create(ctx context.Context, newContact *ContactCreateDa
 	if err != nil {
 		return nil, err
 	}
-	return s.mapDbNodePtrToContactEntity(contactDbNode.(*dbtype.Node)), nil
+	return s.mapDbNodeToContactEntity(contactDbNode.(*dbtype.Node)), nil
 }
 
 func (s *contactService) createContactInDBTxWork(ctx context.Context, newContact *ContactCreateData) func(tx neo4j.Transaction) (any, error) {
@@ -181,7 +182,7 @@ func (s *contactService) Update(ctx context.Context, contactUpdateData *ContactU
 		return nil, err
 	}
 
-	return s.mapDbNodePtrToContactEntity(contactDbNode.(*dbtype.Node)), nil
+	return s.mapDbNodeToContactEntity(contactDbNode.(*dbtype.Node)), nil
 }
 
 func (s *contactService) HardDelete(ctx context.Context, contactId string) (bool, error) {
@@ -256,7 +257,7 @@ func (s *contactService) FindContactById(ctx context.Context, id string) (*entit
 		return nil, err
 	}
 
-	return s.mapDbNodeToContactEntity(queryResult.(dbtype.Node)), nil
+	return s.mapDbNodeToContactEntity(utils.NodePtr(queryResult.(dbtype.Node))), nil
 }
 
 func (s *contactService) FindContactByEmail(ctx context.Context, email string) (*entity.ContactEntity, error) {
@@ -282,7 +283,7 @@ func (s *contactService) FindContactByEmail(ctx context.Context, email string) (
 		return nil, err
 	}
 
-	return s.mapDbNodeToContactEntity(queryResult.(dbtype.Node)), nil
+	return s.mapDbNodeToContactEntity(utils.NodePtr(queryResult.(dbtype.Node))), nil
 }
 
 func (s *contactService) FindContactByPhoneNumber(ctx context.Context, e164 string) (*entity.ContactEntity, error) {
@@ -308,58 +309,56 @@ func (s *contactService) FindContactByPhoneNumber(ctx context.Context, e164 stri
 		return nil, err
 	}
 
-	return s.mapDbNodeToContactEntity(queryResult.(dbtype.Node)), nil
+	return s.mapDbNodeToContactEntity(utils.NodePtr(queryResult.(dbtype.Node))), nil
 }
 
-func (s *contactService) FindAll(ctx context.Context, page int, limit int) (*utils.Pagination, error) {
+func (s *contactService) FindAll(ctx context.Context, page, limit int, sorting *model.SortContacts) (*utils.Pagination, error) {
+	session := utils.NewNeo4jReadSession(s.getDriver())
+	defer session.Close()
+
 	var paginatedResult = utils.Pagination{
 		Limit: limit,
 		Page:  page,
 	}
-	session := utils.NewNeo4jReadSession(s.getDriver())
-	defer session.Close()
-
-	dataResult, err := session.ReadTransaction(func(tx neo4j.Transaction) (interface{}, error) {
-		result, err := tx.Run(`
-				MATCH (:Tenant {name:$tenant})<-[:CONTACT_BELONGS_TO_TENANT]-(c:Contact) RETURN count(c) as count`,
-			map[string]interface{}{
-				"tenant": common.GetContext(ctx).Tenant,
-			})
-		count, _ := result.Single()
-		paginatedResult.SetTotalRows(count.Values[0].(int64))
-
-		result, err = tx.Run(`
-				MATCH (:Tenant {name:$tenant})<-[:CONTACT_BELONGS_TO_TENANT]-(c:Contact) RETURN c SKIP $skip LIMIT $limit`,
-			map[string]interface{}{
-				"tenant": common.GetContext(ctx).Tenant,
-				"skip":   paginatedResult.GetSkip(),
-				"limit":  paginatedResult.GetLimit(),
-			})
-		data, err := result.Collect()
-		if err != nil {
-			return nil, err
-		}
-		return data, nil
-	})
+	sortings, err := s.prepareContactsSorting(sorting)
 	if err != nil {
 		return nil, err
 	}
 
+	dbNodesWithTotalCount, err := s.repository.ContactRepository.GetPaginatedContacts(
+		session,
+		common.GetContext(ctx).Tenant,
+		paginatedResult.GetSkip(),
+		paginatedResult.GetLimit(),
+		sortings)
+	if err != nil {
+		return nil, err
+	}
+	paginatedResult.SetTotalRows(dbNodesWithTotalCount.Count)
+
 	contacts := entity.ContactEntities{}
 
-	for _, dbRecord := range dataResult.([]*db.Record) {
-		contact := s.mapDbNodeToContactEntity(dbRecord.Values[0].(dbtype.Node))
-		contacts = append(contacts, *contact)
+	for _, v := range dbNodesWithTotalCount.Nodes {
+		contacts = append(contacts, *s.mapDbNodeToContactEntity(v))
 	}
 	paginatedResult.SetRows(&contacts)
 	return &paginatedResult, nil
 }
 
-func (s *contactService) mapDbNodeToContactEntity(dbContactNode dbtype.Node) *entity.ContactEntity {
-	return s.mapDbNodePtrToContactEntity(&dbContactNode)
+func (s *contactService) prepareContactsSorting(sorting *model.SortContacts) (*utils.Sortings, error) {
+	transformedSorting := new(utils.Sortings)
+	if sorting != nil {
+		for _, v := range sorting.Properties {
+			err := transformedSorting.NewSortingProperty(v.Name.String(), v.Direction.String(), *v.CaseSensitive, reflect.TypeOf(entity.ContactEntity{}))
+			if err != nil {
+				return nil, err
+			}
+		}
+	}
+	return transformedSorting, nil
 }
 
-func (s *contactService) mapDbNodePtrToContactEntity(dbContactNode *dbtype.Node) *entity.ContactEntity {
+func (s *contactService) mapDbNodeToContactEntity(dbContactNode *dbtype.Node) *entity.ContactEntity {
 	props := utils.GetPropsFromNode(*dbContactNode)
 	contact := entity.ContactEntity{
 		Id:        utils.GetStringPropOrEmpty(props, "id"),

@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v4/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v4/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/customer-os-api/entity"
@@ -15,6 +16,7 @@ type ContactRepository interface {
 	LinkWithEntityDefinitionInTx(tx neo4j.Transaction, tenant, contactId, entityDefinitionId string) error
 	LinkWithContactTypeInTx(tx neo4j.Transaction, tenant, contactId, contactTypeId string) error
 	UnlinkFromContactTypesInTx(tx neo4j.Transaction, tenant, contactId string) error
+	GetPaginatedContacts(session neo4j.Session, tenant string, skip, limit int, sorting *utils.Sortings) (*utils.DbNodesWithTotalCount, error)
 }
 
 type contactRepository struct {
@@ -134,4 +136,40 @@ func (r *contactRepository) UnlinkFromContactTypesInTx(tx neo4j.Transaction, ten
 		return err
 	}
 	return nil
+}
+
+func (r *contactRepository) GetPaginatedContacts(session neo4j.Session, tenant string, skip, limit int, sorting *utils.Sortings) (*utils.DbNodesWithTotalCount, error) {
+	dbNodesWithTotalCount := new(utils.DbNodesWithTotalCount)
+
+	dbRecords, err := session.ReadTransaction(func(tx neo4j.Transaction) (any, error) {
+		queryResult, err := tx.Run(`
+				MATCH (:Tenant {name:$tenant})<-[:CONTACT_BELONGS_TO_TENANT]-(c:Contact) RETURN count(c) as count`,
+			map[string]any{
+				"tenant": tenant,
+			})
+		if err != nil {
+			return nil, err
+		}
+		count, _ := queryResult.Single()
+		dbNodesWithTotalCount.Count = count.Values[0].(int64)
+
+		queryResult, err = tx.Run(fmt.Sprintf(
+			"MATCH (:Tenant {name:$tenant})<-[:CONTACT_BELONGS_TO_TENANT]-(c:Contact) "+
+				" RETURN c "+
+				" %s "+
+				" SKIP $skip LIMIT $limit", sorting.CypherFragment("c")),
+			map[string]any{
+				"tenant": tenant,
+				"skip":   skip,
+				"limit":  limit,
+			})
+		return queryResult.Collect()
+	})
+	if err != nil {
+		return nil, err
+	}
+	for _, v := range dbRecords.([]*neo4j.Record) {
+		dbNodesWithTotalCount.Nodes = append(dbNodesWithTotalCount.Nodes, utils.NodePtr(v.Values[0].(neo4j.Node)))
+	}
+	return dbNodesWithTotalCount, nil
 }
