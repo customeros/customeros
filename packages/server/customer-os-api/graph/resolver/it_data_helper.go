@@ -91,6 +91,22 @@ func setContactTypeForContact(driver *neo4j.Driver, contactId, contactTypeId str
 	})
 }
 
+func createContactGroup(driver *neo4j.Driver, tenant, name string) string {
+	var contactGroupId, _ = uuid.NewRandom()
+	query := `
+			MATCH (t:Tenant {name:$tenant})
+			MERGE (g:ContactGroup {
+				  id: $id,
+				  name: $name
+				})-[:GROUP_BELONGS_TO_TENANT]->(t)`
+	integration_tests.ExecuteWriteQuery(driver, query, map[string]any{
+		"tenant": tenant,
+		"id":     contactGroupId.String(),
+		"name":   name,
+	})
+	return contactGroupId.String()
+}
+
 func createDefaultFieldSet(driver *neo4j.Driver, contactId string) string {
 	return createFieldSet(driver, contactId, entity.FieldSetEntity{Name: "name"})
 }

@@ -536,6 +536,16 @@ type Result struct {
 	Result bool `json:"result"`
 }
 
+type SortContactGroupProperty struct {
+	Name          ContactGroupProperty `json:"name"`
+	Direction     *SortingDirection    `json:"direction"`
+	CaseSensitive *bool                `json:"caseSensitive"`
+}
+
+type SortContactGroups struct {
+	Properties []*SortContactGroupProperty `json:"properties"`
+}
+
 // Describes the User of customerOS.  A user is the person who logs into the Openline platform.
 // **A `return` object**
 type User struct {
@@ -593,6 +603,45 @@ func (this UserPage) GetTotalPages() int { return this.TotalPages }
 // The total number of elements included in the query response.
 // **Required.**
 func (this UserPage) GetTotalElements() int64 { return this.TotalElements }
+
+type ContactGroupProperty string
+
+const (
+	ContactGroupPropertyName ContactGroupProperty = "NAME"
+)
+
+var AllContactGroupProperty = []ContactGroupProperty{
+	ContactGroupPropertyName,
+}
+
+func (e ContactGroupProperty) IsValid() bool {
+	switch e {
+	case ContactGroupPropertyName:
+		return true
+	}
+	return false
+}
+
+func (e ContactGroupProperty) String() string {
+	return string(e)
+}
+
+func (e *ContactGroupProperty) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = ContactGroupProperty(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid ContactGroupProperty", str)
+	}
+	return nil
+}
+
+func (e ContactGroupProperty) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
 
 type CustomFieldDataType string
 
@@ -866,5 +915,46 @@ func (e *PhoneNumberLabel) UnmarshalGQL(v interface{}) error {
 }
 
 func (e PhoneNumberLabel) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+type SortingDirection string
+
+const (
+	SortingDirectionAsc  SortingDirection = "ASC"
+	SortingDirectionDesc SortingDirection = "DESC"
+)
+
+var AllSortingDirection = []SortingDirection{
+	SortingDirectionAsc,
+	SortingDirectionDesc,
+}
+
+func (e SortingDirection) IsValid() bool {
+	switch e {
+	case SortingDirectionAsc, SortingDirectionDesc:
+		return true
+	}
+	return false
+}
+
+func (e SortingDirection) String() string {
+	return string(e)
+}
+
+func (e *SortingDirection) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = SortingDirection(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid SortingDirection", str)
+	}
+	return nil
+}
+
+func (e SortingDirection) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
 }

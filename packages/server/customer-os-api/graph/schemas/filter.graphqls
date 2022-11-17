@@ -2,7 +2,7 @@
 If provided as part of the request, results will be filtered down to the `page` and `limit` specified.
 """
 input PaginationFilter {
-    
+
     """
     The results page to return in the response.
     **Required.**
@@ -14,4 +14,9 @@ input PaginationFilter {
     **Required.**
     """
     limit: Int!
+}
+
+enum SortingDirection {
+    ASC
+    DESC
 }

@@ -6,7 +6,7 @@ import (
 
 type ContactGroupEntity struct {
 	Id   string
-	Name string
+	Name string `neo4jDb:"property:name;exposedName:NAME;supportCaseSensitive:true"`
 }
 
 func (contactGroupEntity ContactGroupEntity) ToString() string {
