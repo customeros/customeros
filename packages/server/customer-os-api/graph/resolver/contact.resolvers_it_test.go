@@ -300,3 +300,47 @@ func TestQueryResolver_Contact(t *testing.T) {
 	require.Equal(t, 2, getCountOfNodes(driver, "Company"))
 	require.Equal(t, 2, getCountOfRelationships(driver, "WORKS_AT"))
 }
+
+func TestQueryResolver_Contacts_SortByTitleAscFirstNameAscLastNameDesc(t *testing.T) {
+	defer setupTestCase()(t)
+	createTenant(driver, tenantName)
+
+	contact1 := createContact(driver, tenantName, entity.ContactEntity{
+		Title:     "MR",
+		FirstName: "contact",
+		LastName:  "1",
+	})
+	contact2 := createContact(driver, tenantName, entity.ContactEntity{
+		Title:     "DR",
+		FirstName: "contact",
+		LastName:  "9",
+	})
+	contact3 := createContact(driver, tenantName, entity.ContactEntity{
+		Title:     "MR",
+		FirstName: "contact",
+		LastName:  "222",
+	})
+	contact4 := createContact(driver, tenantName, entity.ContactEntity{
+		Title:     "MR",
+		FirstName: "other contact",
+		LastName:  "A",
+	})
+
+	rawResponse, err := c.RawPost(getQuery("get_contacts_with_sorting"))
+	assertRawResponseSuccess(t, rawResponse, err)
+
+	var contacts struct {
+		Contacts model.ContactGroupPage
+	}
+
+	err = decode.Decode(rawResponse.Data.(map[string]any), &contacts)
+	require.Nil(t, err)
+	require.NotNil(t, contacts.Contacts)
+	require.Equal(t, 4, len(contacts.Contacts.Content))
+	require.Equal(t, contact2, contacts.Contacts.Content[0].ID)
+	require.Equal(t, contact3, contacts.Contacts.Content[1].ID)
+	require.Equal(t, contact1, contacts.Contacts.Content[2].ID)
+	require.Equal(t, contact4, contacts.Contacts.Content[3].ID)
+
+	require.Equal(t, 4, getCountOfNodes(driver, "Contact"))
+}

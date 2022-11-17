@@ -546,6 +546,16 @@ type SortContactGroups struct {
 	Properties []*SortContactGroupProperty `json:"properties"`
 }
 
+type SortContactProperty struct {
+	Name          ContactProperty   `json:"name"`
+	Direction     *SortingDirection `json:"direction"`
+	CaseSensitive *bool             `json:"caseSensitive"`
+}
+
+type SortContacts struct {
+	Properties []*SortContactProperty `json:"properties"`
+}
+
 // Describes the User of customerOS.  A user is the person who logs into the Openline platform.
 // **A `return` object**
 type User struct {
@@ -640,6 +650,55 @@ func (e *ContactGroupProperty) UnmarshalGQL(v interface{}) error {
 }
 
 func (e ContactGroupProperty) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+type ContactProperty string
+
+const (
+	ContactPropertyTitle     ContactProperty = "TITLE"
+	ContactPropertyFirstName ContactProperty = "FIRST_NAME"
+	ContactPropertyLastName  ContactProperty = "LAST_NAME"
+	ContactPropertyLabel     ContactProperty = "LABEL"
+	ContactPropertyNotes     ContactProperty = "NOTES"
+	ContactPropertyCreatedAt ContactProperty = "CREATED_AT"
+)
+
+var AllContactProperty = []ContactProperty{
+	ContactPropertyTitle,
+	ContactPropertyFirstName,
+	ContactPropertyLastName,
+	ContactPropertyLabel,
+	ContactPropertyNotes,
+	ContactPropertyCreatedAt,
+}
+
+func (e ContactProperty) IsValid() bool {
+	switch e {
+	case ContactPropertyTitle, ContactPropertyFirstName, ContactPropertyLastName, ContactPropertyLabel, ContactPropertyNotes, ContactPropertyCreatedAt:
+		return true
+	}
+	return false
+}
+
+func (e ContactProperty) String() string {
+	return string(e)
+}
+
+func (e *ContactProperty) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = ContactProperty(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid ContactProperty", str)
+	}
+	return nil
+}
+
+func (e ContactProperty) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
 }
 
