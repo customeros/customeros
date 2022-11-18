@@ -8,9 +8,23 @@ import (
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/openline-ai/openline-customer-os/customer-os-api/entity"
+	"github.com/openline-ai/openline-customer-os/customer-os-api/graph/generated"
 	"github.com/openline-ai/openline-customer-os/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/customer-os-api/mapper"
 )
+
+// Contacts is the resolver for the contacts field.
+func (r *contactGroupResolver) Contacts(ctx context.Context, obj *model.ContactGroup, paginationFilter *model.PaginationFilter, sort []*model.SortBy) (*model.ContactsPage, error) {
+	if paginationFilter == nil {
+		paginationFilter = &model.PaginationFilter{Page: 0, Limit: 0}
+	}
+	paginatedResult, err := r.ServiceContainer.ContactService.FindAllForContactGroup(ctx, paginationFilter.Page, paginationFilter.Limit, sort, obj.ID)
+	return &model.ContactsPage{
+		Content:       mapper.MapEntitiesToContacts(paginatedResult.Rows.(*entity.ContactEntities)),
+		TotalPages:    paginatedResult.TotalPages,
+		TotalElements: paginatedResult.TotalRows,
+	}, err
+}
 
 // ContactGroupCreate is the resolver for the contactGroupCreate field.
 func (r *mutationResolver) ContactGroupCreate(ctx context.Context, input model.ContactGroupInput) (*model.ContactGroup, error) {
@@ -91,3 +105,8 @@ func (r *queryResolver) ContactGroups(ctx context.Context, paginationFilter *mod
 		TotalElements: paginatedResult.TotalRows,
 	}, err
 }
+
+// ContactGroup returns generated.ContactGroupResolver implementation.
+func (r *Resolver) ContactGroup() generated.ContactGroupResolver { return &contactGroupResolver{r} }
+
+type contactGroupResolver struct{ *Resolver }

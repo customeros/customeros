@@ -17,6 +17,7 @@ type ContactRepository interface {
 	LinkWithContactTypeInTx(tx neo4j.Transaction, tenant, contactId, contactTypeId string) error
 	UnlinkFromContactTypesInTx(tx neo4j.Transaction, tenant, contactId string) error
 	GetPaginatedContacts(session neo4j.Session, tenant string, skip, limit int, sorting *utils.Sorts) (*utils.DbNodesWithTotalCount, error)
+	GetPaginatedContactsForContactGroup(session neo4j.Session, tenant string, skip, limit int, sorting *utils.Sorts, contactGroupId string) (*utils.DbNodesWithTotalCount, error)
 }
 
 type contactRepository struct {
@@ -162,6 +163,47 @@ func (r *contactRepository) GetPaginatedContacts(session neo4j.Session, tenant s
 				"tenant": tenant,
 				"skip":   skip,
 				"limit":  limit,
+			})
+		return queryResult.Collect()
+	})
+	if err != nil {
+		return nil, err
+	}
+	for _, v := range dbRecords.([]*neo4j.Record) {
+		dbNodesWithTotalCount.Nodes = append(dbNodesWithTotalCount.Nodes, utils.NodePtr(v.Values[0].(neo4j.Node)))
+	}
+	return dbNodesWithTotalCount, nil
+}
+
+func (r *contactRepository) GetPaginatedContactsForContactGroup(session neo4j.Session, tenant string, skip, limit int, sorting *utils.Sorts, contactGroupId string) (*utils.DbNodesWithTotalCount, error) {
+	dbNodesWithTotalCount := new(utils.DbNodesWithTotalCount)
+
+	dbRecords, err := session.ReadTransaction(func(tx neo4j.Transaction) (any, error) {
+		queryResult, err := tx.Run(`
+				MATCH (t:Tenant {name:$tenant})<-[:GROUP_BELONGS_TO_TENANT]-(g:ContactGroup {id:$contactGroupId}),
+						(g)<-[:BELONGS_TO_GROUP]-(c:Contact)
+				RETURN count(c) as count`,
+			map[string]any{
+				"tenant":         tenant,
+				"contactGroupId": contactGroupId,
+			})
+		if err != nil {
+			return nil, err
+		}
+		count, _ := queryResult.Single()
+		dbNodesWithTotalCount.Count = count.Values[0].(int64)
+
+		queryResult, err = tx.Run(fmt.Sprintf(
+			"MATCH (t:Tenant {name:$tenant})<-[:GROUP_BELONGS_TO_TENANT]-(g:ContactGroup {id:$contactGroupId}), "+
+				" (g)<-[:BELONGS_TO_GROUP]-(c:Contact) "+
+				" RETURN c "+
+				" %s "+
+				" SKIP $skip LIMIT $limit", sorting.SortingCypherFragment("c")),
+			map[string]any{
+				"tenant":         tenant,
+				"skip":           skip,
+				"limit":          limit,
+				"contactGroupId": contactGroupId,
 			})
 		return queryResult.Collect()
 	})

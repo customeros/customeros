@@ -1,0 +1,18 @@
+query GetContactGroups{
+  contactGroups(sort: [{by: "NAME"}])
+  {
+    totalPages
+    totalElements
+    content {
+      id
+      name
+      contacts(sort: [{by:"FIRST_NAME"}]) {
+        totalPages
+        totalElements
+        content {
+          id
+        }
+      }
+    }
+  }
+}

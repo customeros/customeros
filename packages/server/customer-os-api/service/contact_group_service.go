@@ -216,7 +216,6 @@ func (s *contactGroupService) AddContactToGroup(ctx context.Context, contactId, 
 			MATCH 	(c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}), 
 					(g:ContactGroup {id:$groupId})-[:GROUP_BELONGS_TO_TENANT]->(:Tenant {name:$tenant})
 			MERGE (c)-[:BELONGS_TO_GROUP]->(g)
-			MERGE (g)-[:CONTAINS_CONTACT]->(c)
 			`,
 			map[string]any{
 				"tenant":    common.GetContext(ctx).Tenant,
@@ -240,9 +239,8 @@ func (s *contactGroupService) RemoveContactFromGroup(ctx context.Context, contac
 		_, err := tx.Run(`
 			MATCH 	(c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}), 
 					(g:ContactGroup {id:$groupId})-[:GROUP_BELONGS_TO_TENANT]->(:Tenant {name:$tenant})
-			MATCH (c)-[r1:BELONGS_TO_GROUP]->(g)
-			MATCH (g)-[r2:CONTAINS_CONTACT]->(c)
-            DELETE r1, r2
+			MATCH (c)-[r:BELONGS_TO_GROUP]->(g)
+            DELETE r1
 			`,
 			map[string]any{
 				"tenant":    common.GetContext(ctx).Tenant,
