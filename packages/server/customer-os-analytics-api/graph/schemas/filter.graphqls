@@ -1,4 +1,4 @@
-input PaginationFilter {
+input Pagination {
     page: Int!
     limit: Int!
 }

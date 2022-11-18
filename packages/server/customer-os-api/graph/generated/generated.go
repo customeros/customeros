@@ -88,7 +88,7 @@ type ComplexityRoot struct {
 	}
 
 	ContactGroup struct {
-		Contacts func(childComplexity int, paginationFilter *model.PaginationFilter, sort []*model.SortBy) int
+		Contacts func(childComplexity int, pagination *model.Pagination, sort []*model.SortBy) int
 		ID       func(childComplexity int) int
 		Name     func(childComplexity int) int
 	}
@@ -213,16 +213,16 @@ type ComplexityRoot struct {
 	}
 
 	Query struct {
-		CompaniesByNameLike func(childComplexity int, paginationFilter *model.PaginationFilter, companyName string) int
+		CompaniesByNameLike func(childComplexity int, pagination *model.Pagination, companyName string) int
 		Contact             func(childComplexity int, id string) int
 		ContactByEmail      func(childComplexity int, email string) int
 		ContactByPhone      func(childComplexity int, e164 string) int
 		ContactGroup        func(childComplexity int, id string) int
-		ContactGroups       func(childComplexity int, paginationFilter *model.PaginationFilter, sort []*model.SortBy) int
+		ContactGroups       func(childComplexity int, pagination *model.Pagination, sort []*model.SortBy) int
 		ContactTypes        func(childComplexity int) int
-		Contacts            func(childComplexity int, paginationFilter *model.PaginationFilter, sort []*model.SortBy) int
+		Contacts            func(childComplexity int, pagination *model.Pagination, sort []*model.SortBy) int
 		EntityDefinitions   func(childComplexity int, extends *model.EntityDefinitionExtension) int
-		Users               func(childComplexity int, paginationFilter *model.PaginationFilter) int
+		Users               func(childComplexity int, pagination *model.Pagination) int
 	}
 
 	Result struct {
@@ -256,7 +256,7 @@ type ContactResolver interface {
 	Owner(ctx context.Context, obj *model.Contact) (*model.User, error)
 }
 type ContactGroupResolver interface {
-	Contacts(ctx context.Context, obj *model.ContactGroup, paginationFilter *model.PaginationFilter, sort []*model.SortBy) (*model.ContactsPage, error)
+	Contacts(ctx context.Context, obj *model.ContactGroup, pagination *model.Pagination, sort []*model.SortBy) (*model.ContactsPage, error)
 }
 type CustomFieldResolver interface {
 	Definition(ctx context.Context, obj *model.CustomField) (*model.CustomFieldDefinition, error)
@@ -312,15 +312,15 @@ type MutationResolver interface {
 }
 type QueryResolver interface {
 	EntityDefinitions(ctx context.Context, extends *model.EntityDefinitionExtension) ([]*model.EntityDefinition, error)
-	CompaniesByNameLike(ctx context.Context, paginationFilter *model.PaginationFilter, companyName string) (*model.CompanyPage, error)
+	CompaniesByNameLike(ctx context.Context, pagination *model.Pagination, companyName string) (*model.CompanyPage, error)
 	Contact(ctx context.Context, id string) (*model.Contact, error)
-	Contacts(ctx context.Context, paginationFilter *model.PaginationFilter, sort []*model.SortBy) (*model.ContactsPage, error)
+	Contacts(ctx context.Context, pagination *model.Pagination, sort []*model.SortBy) (*model.ContactsPage, error)
 	ContactByEmail(ctx context.Context, email string) (*model.Contact, error)
 	ContactByPhone(ctx context.Context, e164 string) (*model.Contact, error)
 	ContactGroup(ctx context.Context, id string) (*model.ContactGroup, error)
-	ContactGroups(ctx context.Context, paginationFilter *model.PaginationFilter, sort []*model.SortBy) (*model.ContactGroupPage, error)
+	ContactGroups(ctx context.Context, pagination *model.Pagination, sort []*model.SortBy) (*model.ContactGroupPage, error)
 	ContactTypes(ctx context.Context) ([]*model.ContactType, error)
-	Users(ctx context.Context, paginationFilter *model.PaginationFilter) (*model.UserPage, error)
+	Users(ctx context.Context, pagination *model.Pagination) (*model.UserPage, error)
 }
 
 type executableSchema struct {
@@ -516,7 +516,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.ContactGroup.Contacts(childComplexity, args["paginationFilter"].(*model.PaginationFilter), args["sort"].([]*model.SortBy)), true
+		return e.complexity.ContactGroup.Contacts(childComplexity, args["pagination"].(*model.Pagination), args["sort"].([]*model.SortBy)), true
 
 	case "ContactGroup.id":
 		if e.complexity.ContactGroup.ID == nil {
@@ -1303,7 +1303,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Query.CompaniesByNameLike(childComplexity, args["paginationFilter"].(*model.PaginationFilter), args["companyName"].(string)), true
+		return e.complexity.Query.CompaniesByNameLike(childComplexity, args["pagination"].(*model.Pagination), args["companyName"].(string)), true
 
 	case "Query.contact":
 		if e.complexity.Query.Contact == nil {
@@ -1363,7 +1363,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Query.ContactGroups(childComplexity, args["paginationFilter"].(*model.PaginationFilter), args["sort"].([]*model.SortBy)), true
+		return e.complexity.Query.ContactGroups(childComplexity, args["pagination"].(*model.Pagination), args["sort"].([]*model.SortBy)), true
 
 	case "Query.contactTypes":
 		if e.complexity.Query.ContactTypes == nil {
@@ -1382,7 +1382,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Query.Contacts(childComplexity, args["paginationFilter"].(*model.PaginationFilter), args["sort"].([]*model.SortBy)), true
+		return e.complexity.Query.Contacts(childComplexity, args["pagination"].(*model.Pagination), args["sort"].([]*model.SortBy)), true
 
 	case "Query.entityDefinitions":
 		if e.complexity.Query.EntityDefinitions == nil {
@@ -1406,7 +1406,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Query.Users(childComplexity, args["paginationFilter"].(*model.PaginationFilter)), true
+		return e.complexity.Query.Users(childComplexity, args["pagination"].(*model.Pagination)), true
 
 	case "Result.result":
 		if e.complexity.Result.Result == nil {
@@ -1497,7 +1497,9 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputFieldSetDefinitionInput,
 		ec.unmarshalInputFieldSetInput,
 		ec.unmarshalInputFieldSetUpdateInput,
-		ec.unmarshalInputPaginationFilter,
+		ec.unmarshalInputFilter,
+		ec.unmarshalInputFilterItem,
+		ec.unmarshalInputPagination,
 		ec.unmarshalInputPhoneNumberInput,
 		ec.unmarshalInputPhoneNumberUpdateInput,
 		ec.unmarshalInputSortBy,
@@ -1615,7 +1617,7 @@ type CompanyPage implements Pages {
 }
 
 extend type Query {
-    companies_ByNameLike(paginationFilter: PaginationFilter, companyName: String!): CompanyPage
+    companies_ByNameLike(pagination: Pagination, companyName: String!): CompanyPage
 }
 
 `, BuiltIn: false},
@@ -1642,7 +1644,7 @@ extend type Query {
      - NOTES
      - CREATED_AT
     """
-    contacts(paginationFilter: PaginationFilter, sort: [SortBy!]): ContactsPage!
+    contacts(pagination: Pagination, sort: [SortBy!]): ContactsPage!
     contact_ByEmail(email: String!) :Contact!
     contact_ByPhone(e164: String!) :Contact!
 }
@@ -1892,7 +1894,7 @@ enum PersonTitle {
     Possible values for sort:
     - NAME
     """
-    contactGroups(paginationFilter: PaginationFilter, sort: [SortBy!]): ContactGroupPage!
+    contactGroups(pagination: Pagination, sort: [SortBy!]): ContactGroupPage!
 }
 
 extend type Mutation {
@@ -1921,7 +1923,7 @@ type ContactGroup {
     """
     name: String!
 
-    contacts(paginationFilter: PaginationFilter, sort: [SortBy!]): ContactsPage! @goField(forceResolver: true)
+    contacts(pagination: Pagination, sort: [SortBy!]): ContactsPage! @goField(forceResolver: true)
 }
 
 """
@@ -2329,7 +2331,7 @@ input FieldSetUpdateInput {
 	{Name: "../schemas/filter.graphqls", Input: `"""
 If provided as part of the request, results will be filtered down to the ` + "`" + `page` + "`" + ` and ` + "`" + `limit` + "`" + ` specified.
 """
-input PaginationFilter {
+input Pagination {
 
     """
     The results page to return in the response.
@@ -2355,18 +2357,27 @@ enum SortingDirection {
     DESC
 }
 
-#input FilterBy {
-#    by: String!
-#    operation: String = "EQ"
-#    caseSensitive: Boolean = false
-#}
-#
-#input GroupBy {
-#    filters: [FilterBy!]!
-#    logicalOperation: String = "AND"
-#}
+input Filter {
+    NOT: Filter
+    AND: [Filter!]
+    OR: [Filter!]
+    filter: FilterItem
+}
 
-`, BuiltIn: false},
+input FilterItem {
+    property: String!
+    operation: LogicalOperator = EQ
+    value: Any
+    values: [Any!]
+    caseSensitive: Boolean = false
+}
+
+enum LogicalOperator {
+    EQ
+    CONTAINS
+    STARTS_WITH
+    ENDS_WITH
+}`, BuiltIn: false},
 	{Name: "../schemas/interfaces.graphqls", Input: `"""
 Describes the number of pages and total elements included in a query response.
 **A ` + "`" + `response` + "`" + ` object.**
@@ -2529,7 +2540,7 @@ scalar Int64
 
 scalar Any @goModel(model:"model.AnyTypeValue")`, BuiltIn: false},
 	{Name: "../schemas/user.graphqls", Input: `extend type Query {
-    users(paginationFilter: PaginationFilter): UserPage!
+    users(pagination: Pagination): UserPage!
 }
 
 extend type Mutation {
@@ -2635,15 +2646,15 @@ var parsedSchema = gqlparser.MustLoadSchema(sources...)
 func (ec *executionContext) field_ContactGroup_contacts_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 *model.PaginationFilter
-	if tmp, ok := rawArgs["paginationFilter"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("paginationFilter"))
-		arg0, err = ec.unmarshalOPaginationFilter2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐPaginationFilter(ctx, tmp)
+	var arg0 *model.Pagination
+	if tmp, ok := rawArgs["pagination"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("pagination"))
+		arg0, err = ec.unmarshalOPagination2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐPagination(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["paginationFilter"] = arg0
+	args["pagination"] = arg0
 	var arg1 []*model.SortBy
 	if tmp, ok := rawArgs["sort"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("sort"))
@@ -3457,15 +3468,15 @@ func (ec *executionContext) field_Query___type_args(ctx context.Context, rawArgs
 func (ec *executionContext) field_Query_companies_ByNameLike_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 *model.PaginationFilter
-	if tmp, ok := rawArgs["paginationFilter"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("paginationFilter"))
-		arg0, err = ec.unmarshalOPaginationFilter2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐPaginationFilter(ctx, tmp)
+	var arg0 *model.Pagination
+	if tmp, ok := rawArgs["pagination"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("pagination"))
+		arg0, err = ec.unmarshalOPagination2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐPagination(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["paginationFilter"] = arg0
+	args["pagination"] = arg0
 	var arg1 string
 	if tmp, ok := rawArgs["companyName"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("companyName"))
@@ -3496,15 +3507,15 @@ func (ec *executionContext) field_Query_contactGroup_args(ctx context.Context, r
 func (ec *executionContext) field_Query_contactGroups_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 *model.PaginationFilter
-	if tmp, ok := rawArgs["paginationFilter"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("paginationFilter"))
-		arg0, err = ec.unmarshalOPaginationFilter2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐPaginationFilter(ctx, tmp)
+	var arg0 *model.Pagination
+	if tmp, ok := rawArgs["pagination"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("pagination"))
+		arg0, err = ec.unmarshalOPagination2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐPagination(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["paginationFilter"] = arg0
+	args["pagination"] = arg0
 	var arg1 []*model.SortBy
 	if tmp, ok := rawArgs["sort"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("sort"))
@@ -3565,15 +3576,15 @@ func (ec *executionContext) field_Query_contact_args(ctx context.Context, rawArg
 func (ec *executionContext) field_Query_contacts_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 *model.PaginationFilter
-	if tmp, ok := rawArgs["paginationFilter"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("paginationFilter"))
-		arg0, err = ec.unmarshalOPaginationFilter2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐPaginationFilter(ctx, tmp)
+	var arg0 *model.Pagination
+	if tmp, ok := rawArgs["pagination"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("pagination"))
+		arg0, err = ec.unmarshalOPagination2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐPagination(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["paginationFilter"] = arg0
+	args["pagination"] = arg0
 	var arg1 []*model.SortBy
 	if tmp, ok := rawArgs["sort"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("sort"))
@@ -3604,15 +3615,15 @@ func (ec *executionContext) field_Query_entityDefinitions_args(ctx context.Conte
 func (ec *executionContext) field_Query_users_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 *model.PaginationFilter
-	if tmp, ok := rawArgs["paginationFilter"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("paginationFilter"))
-		arg0, err = ec.unmarshalOPaginationFilter2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐPaginationFilter(ctx, tmp)
+	var arg0 *model.Pagination
+	if tmp, ok := rawArgs["pagination"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("pagination"))
+		arg0, err = ec.unmarshalOPagination2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐPagination(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["paginationFilter"] = arg0
+	args["pagination"] = arg0
 	return args, nil
 }
 
@@ -4897,7 +4908,7 @@ func (ec *executionContext) _ContactGroup_contacts(ctx context.Context, field gr
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.ContactGroup().Contacts(rctx, obj, fc.Args["paginationFilter"].(*model.PaginationFilter), fc.Args["sort"].([]*model.SortBy))
+		return ec.resolvers.ContactGroup().Contacts(rctx, obj, fc.Args["pagination"].(*model.Pagination), fc.Args["sort"].([]*model.SortBy))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -9495,7 +9506,7 @@ func (ec *executionContext) _Query_companies_ByNameLike(ctx context.Context, fie
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().CompaniesByNameLike(rctx, fc.Args["paginationFilter"].(*model.PaginationFilter), fc.Args["companyName"].(string))
+		return ec.resolvers.Query().CompaniesByNameLike(rctx, fc.Args["pagination"].(*model.Pagination), fc.Args["companyName"].(string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -9641,7 +9652,7 @@ func (ec *executionContext) _Query_contacts(ctx context.Context, field graphql.C
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().Contacts(rctx, fc.Args["paginationFilter"].(*model.PaginationFilter), fc.Args["sort"].([]*model.SortBy))
+		return ec.resolvers.Query().Contacts(rctx, fc.Args["pagination"].(*model.Pagination), fc.Args["sort"].([]*model.SortBy))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -9942,7 +9953,7 @@ func (ec *executionContext) _Query_contactGroups(ctx context.Context, field grap
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().ContactGroups(rctx, fc.Args["paginationFilter"].(*model.PaginationFilter), fc.Args["sort"].([]*model.SortBy))
+		return ec.resolvers.Query().ContactGroups(rctx, fc.Args["pagination"].(*model.Pagination), fc.Args["sort"].([]*model.SortBy))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -10055,7 +10066,7 @@ func (ec *executionContext) _Query_users(ctx context.Context, field graphql.Coll
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().Users(rctx, fc.Args["paginationFilter"].(*model.PaginationFilter))
+		return ec.resolvers.Query().Users(rctx, fc.Args["pagination"].(*model.Pagination))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -13294,8 +13305,127 @@ func (ec *executionContext) unmarshalInputFieldSetUpdateInput(ctx context.Contex
 	return it, nil
 }
 
-func (ec *executionContext) unmarshalInputPaginationFilter(ctx context.Context, obj interface{}) (model.PaginationFilter, error) {
-	var it model.PaginationFilter
+func (ec *executionContext) unmarshalInputFilter(ctx context.Context, obj interface{}) (model.Filter, error) {
+	var it model.Filter
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"NOT", "AND", "OR", "filter"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "NOT":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("NOT"))
+			it.Not, err = ec.unmarshalOFilter2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐFilter(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "AND":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("AND"))
+			it.And, err = ec.unmarshalOFilter2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐFilterᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "OR":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("OR"))
+			it.Or, err = ec.unmarshalOFilter2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐFilterᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "filter":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("filter"))
+			it.Filter, err = ec.unmarshalOFilterItem2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐFilterItem(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputFilterItem(ctx context.Context, obj interface{}) (model.FilterItem, error) {
+	var it model.FilterItem
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	if _, present := asMap["operation"]; !present {
+		asMap["operation"] = "EQ"
+	}
+	if _, present := asMap["caseSensitive"]; !present {
+		asMap["caseSensitive"] = false
+	}
+
+	fieldsInOrder := [...]string{"property", "operation", "value", "values", "caseSensitive"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "property":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("property"))
+			it.Property, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "operation":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("operation"))
+			it.Operation, err = ec.unmarshalOLogicalOperator2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐLogicalOperator(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "value":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("value"))
+			it.Value, err = ec.unmarshalOAny2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐAnyTypeValue(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "values":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("values"))
+			it.Values, err = ec.unmarshalOAny2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐAnyTypeValueᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "caseSensitive":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("caseSensitive"))
+			it.CaseSensitive, err = ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputPagination(ctx context.Context, obj interface{}) (model.Pagination, error) {
+	var it model.Pagination
 	asMap := map[string]interface{}{}
 	for k, v := range obj.(map[string]interface{}) {
 		asMap[k] = v
@@ -15725,6 +15855,27 @@ func (ec *executionContext) marshalNAny2githubᚗcomᚋopenlineᚑaiᚋopenline�
 	return res
 }
 
+func (ec *executionContext) unmarshalNAny2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐAnyTypeValue(ctx context.Context, v interface{}) (*model.AnyTypeValue, error) {
+	res, err := model.UnmarshalAnyTypeValue(v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNAny2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐAnyTypeValue(ctx context.Context, sel ast.SelectionSet, v *model.AnyTypeValue) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	res := model.MarshalAnyTypeValue(*v)
+	if res == graphql.Null {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+	}
+	return res
+}
+
 func (ec *executionContext) unmarshalNBoolean2bool(ctx context.Context, v interface{}) (bool, error) {
 	res, err := graphql.UnmarshalBoolean(v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -16563,6 +16714,11 @@ func (ec *executionContext) unmarshalNFieldSetUpdateInput2githubᚗcomᚋopenlin
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
+func (ec *executionContext) unmarshalNFilter2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐFilter(ctx context.Context, v interface{}) (*model.Filter, error) {
+	res, err := ec.unmarshalInputFilter(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
 func (ec *executionContext) unmarshalNID2string(ctx context.Context, v interface{}) (string, error) {
 	res, err := graphql.UnmarshalID(v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -17065,6 +17221,60 @@ func (ec *executionContext) marshalN__TypeKind2string(ctx context.Context, sel a
 	return res
 }
 
+func (ec *executionContext) unmarshalOAny2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐAnyTypeValueᚄ(ctx context.Context, v interface{}) ([]*model.AnyTypeValue, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var vSlice []interface{}
+	if v != nil {
+		vSlice = graphql.CoerceList(v)
+	}
+	var err error
+	res := make([]*model.AnyTypeValue, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalNAny2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐAnyTypeValue(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
+func (ec *executionContext) marshalOAny2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐAnyTypeValueᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.AnyTypeValue) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	ret := make(graphql.Array, len(v))
+	for i := range v {
+		ret[i] = ec.marshalNAny2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐAnyTypeValue(ctx, sel, v[i])
+	}
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) unmarshalOAny2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐAnyTypeValue(ctx context.Context, v interface{}) (*model.AnyTypeValue, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := model.UnmarshalAnyTypeValue(v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOAny2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐAnyTypeValue(ctx context.Context, sel ast.SelectionSet, v *model.AnyTypeValue) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	res := model.MarshalAnyTypeValue(*v)
+	return res
+}
+
 func (ec *executionContext) unmarshalOBoolean2bool(ctx context.Context, v interface{}) (bool, error) {
 	res, err := graphql.UnmarshalBoolean(v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -17191,6 +17401,42 @@ func (ec *executionContext) marshalOFieldSetDefinition2ᚖgithubᚗcomᚋopenlin
 	return ec._FieldSetDefinition(ctx, sel, v)
 }
 
+func (ec *executionContext) unmarshalOFilter2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐFilterᚄ(ctx context.Context, v interface{}) ([]*model.Filter, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var vSlice []interface{}
+	if v != nil {
+		vSlice = graphql.CoerceList(v)
+	}
+	var err error
+	res := make([]*model.Filter, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalNFilter2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐFilter(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
+func (ec *executionContext) unmarshalOFilter2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐFilter(ctx context.Context, v interface{}) (*model.Filter, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalInputFilter(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalOFilterItem2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐFilterItem(ctx context.Context, v interface{}) (*model.FilterItem, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalInputFilterItem(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
 func (ec *executionContext) unmarshalOID2ᚖstring(ctx context.Context, v interface{}) (*string, error) {
 	if v == nil {
 		return nil, nil
@@ -17223,11 +17469,27 @@ func (ec *executionContext) marshalOInt2ᚖint(ctx context.Context, sel ast.Sele
 	return res
 }
 
-func (ec *executionContext) unmarshalOPaginationFilter2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐPaginationFilter(ctx context.Context, v interface{}) (*model.PaginationFilter, error) {
+func (ec *executionContext) unmarshalOLogicalOperator2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐLogicalOperator(ctx context.Context, v interface{}) (*model.LogicalOperator, error) {
 	if v == nil {
 		return nil, nil
 	}
-	res, err := ec.unmarshalInputPaginationFilter(ctx, v)
+	var res = new(model.LogicalOperator)
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOLogicalOperator2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐLogicalOperator(ctx context.Context, sel ast.SelectionSet, v *model.LogicalOperator) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return v
+}
+
+func (ec *executionContext) unmarshalOPagination2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐPagination(ctx context.Context, v interface{}) (*model.Pagination, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalInputPagination(ctx, v)
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 

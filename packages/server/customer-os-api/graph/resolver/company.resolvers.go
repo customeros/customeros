@@ -12,11 +12,11 @@ import (
 )
 
 // CompaniesByNameLike is the resolver for the companies_ByNameLike field.
-func (r *queryResolver) CompaniesByNameLike(ctx context.Context, paginationFilter *model.PaginationFilter, companyName string) (*model.CompanyPage, error) {
-	if paginationFilter == nil {
-		paginationFilter = &model.PaginationFilter{Page: 0, Limit: 0}
+func (r *queryResolver) CompaniesByNameLike(ctx context.Context, pagination *model.Pagination, companyName string) (*model.CompanyPage, error) {
+	if pagination == nil {
+		pagination = &model.Pagination{Page: 0, Limit: 0}
 	}
-	paginatedResult, err := r.ServiceContainer.CompanyService.FindCompaniesByNameLike(ctx, paginationFilter.Page, paginationFilter.Limit, companyName)
+	paginatedResult, err := r.ServiceContainer.CompanyService.FindCompaniesByNameLike(ctx, pagination.Page, pagination.Limit, companyName)
 	return &model.CompanyPage{
 		Content:       mapper.MapEntitiesToCompanies(paginatedResult.Rows.(*entity.CompanyEntities)),
 		TotalPages:    paginatedResult.TotalPages,

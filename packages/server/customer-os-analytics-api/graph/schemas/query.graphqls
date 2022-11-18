@@ -8,7 +8,7 @@ type Application {
     platform: String!
     name: String!
     trackerName: String!
-    sessions(timeFilter: TimeFilter!, dataFilter: [AppSessionsDataFilter], paginationFilter: PaginationFilter): AppSessionsPage! @goField(forceResolver: true)
+    sessions(timeFilter: TimeFilter!, dataFilter: [AppSessionsDataFilter], pagination: Pagination): AppSessionsPage! @goField(forceResolver: true)
 }
 
 type AppSessionsPage implements PagedResult {

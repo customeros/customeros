@@ -471,8 +471,23 @@ type FieldSetUpdateInput struct {
 	Name string `json:"name"`
 }
 
+type Filter struct {
+	Not    *Filter     `json:"NOT"`
+	And    []*Filter   `json:"AND"`
+	Or     []*Filter   `json:"OR"`
+	Filter *FilterItem `json:"filter"`
+}
+
+type FilterItem struct {
+	Property      string           `json:"property"`
+	Operation     *LogicalOperator `json:"operation"`
+	Value         *AnyTypeValue    `json:"value"`
+	Values        []*AnyTypeValue  `json:"values"`
+	CaseSensitive *bool            `json:"caseSensitive"`
+}
+
 // If provided as part of the request, results will be filtered down to the `page` and `limit` specified.
-type PaginationFilter struct {
+type Pagination struct {
 	// The results page to return in the response.
 	// **Required.**
 	Page int `json:"page"`
@@ -770,6 +785,51 @@ func (e *EntityDefinitionExtension) UnmarshalGQL(v interface{}) error {
 }
 
 func (e EntityDefinitionExtension) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+type LogicalOperator string
+
+const (
+	LogicalOperatorEq         LogicalOperator = "EQ"
+	LogicalOperatorContains   LogicalOperator = "CONTAINS"
+	LogicalOperatorStartsWith LogicalOperator = "STARTS_WITH"
+	LogicalOperatorEndsWith   LogicalOperator = "ENDS_WITH"
+)
+
+var AllLogicalOperator = []LogicalOperator{
+	LogicalOperatorEq,
+	LogicalOperatorContains,
+	LogicalOperatorStartsWith,
+	LogicalOperatorEndsWith,
+}
+
+func (e LogicalOperator) IsValid() bool {
+	switch e {
+	case LogicalOperatorEq, LogicalOperatorContains, LogicalOperatorStartsWith, LogicalOperatorEndsWith:
+		return true
+	}
+	return false
+}
+
+func (e LogicalOperator) String() string {
+	return string(e)
+}
+
+func (e *LogicalOperator) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = LogicalOperator(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid LogicalOperator", str)
+	}
+	return nil
+}
+
+func (e LogicalOperator) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
 }
 

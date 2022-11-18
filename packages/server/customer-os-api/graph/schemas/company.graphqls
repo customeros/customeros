@@ -51,6 +51,6 @@ type CompanyPage implements Pages {
 }
 
 extend type Query {
-    companies_ByNameLike(paginationFilter: PaginationFilter, companyName: String!): CompanyPage
+    companies_ByNameLike(pagination: Pagination, companyName: String!): CompanyPage
 }
 

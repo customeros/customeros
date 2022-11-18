@@ -1,13 +1,13 @@
 package model
 
-func (p *PaginationFilter) GetPage() int {
+func (p *Pagination) GetPage() int {
 	if p == nil {
 		return 1
 	}
 	return p.Page
 }
 
-func (p *PaginationFilter) GetLimit() int {
+func (p *Pagination) GetLimit() int {
 	if p == nil {
 		return 10
 	}
