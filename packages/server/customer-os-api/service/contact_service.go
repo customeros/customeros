@@ -21,7 +21,9 @@ type ContactService interface {
 	FindContactById(ctx context.Context, id string) (*entity.ContactEntity, error)
 	FindContactByEmail(ctx context.Context, email string) (*entity.ContactEntity, error)
 	FindContactByPhoneNumber(ctx context.Context, e164 string) (*entity.ContactEntity, error)
+
 	FindAll(ctx context.Context, page, limit int, sortBy []*model.SortBy) (*utils.Pagination, error)
+	FindAllForContactGroup(ctx context.Context, page, limit int, sortBy []*model.SortBy, contactGroupId string) (*utils.Pagination, error)
 
 	HardDelete(ctx context.Context, id string) (bool, error)
 	SoftDelete(ctx context.Context, id string) (bool, error)
@@ -331,6 +333,40 @@ func (s *contactService) FindAll(ctx context.Context, page, limit int, sortBy []
 		paginatedResult.GetSkip(),
 		paginatedResult.GetLimit(),
 		sortings)
+	if err != nil {
+		return nil, err
+	}
+	paginatedResult.SetTotalRows(dbNodesWithTotalCount.Count)
+
+	contacts := entity.ContactEntities{}
+
+	for _, v := range dbNodesWithTotalCount.Nodes {
+		contacts = append(contacts, *s.mapDbNodeToContactEntity(v))
+	}
+	paginatedResult.SetRows(&contacts)
+	return &paginatedResult, nil
+}
+
+func (s *contactService) FindAllForContactGroup(ctx context.Context, page, limit int, sortBy []*model.SortBy, contactGroupId string) (*utils.Pagination, error) {
+	session := utils.NewNeo4jReadSession(s.getDriver())
+	defer session.Close()
+
+	var paginatedResult = utils.Pagination{
+		Limit: limit,
+		Page:  page,
+	}
+	sortings, err := s.prepareContactsSorting(sortBy)
+	if err != nil {
+		return nil, err
+	}
+
+	dbNodesWithTotalCount, err := s.repository.ContactRepository.GetPaginatedContactsForContactGroup(
+		session,
+		common.GetContext(ctx).Tenant,
+		paginatedResult.GetSkip(),
+		paginatedResult.GetLimit(),
+		sortings,
+		contactGroupId)
 	if err != nil {
 		return nil, err
 	}

@@ -139,7 +139,8 @@ type ContactGroup struct {
 	ID string `json:"id"`
 	// The name of the `ContactGroup`.
 	// **Required**
-	Name string `json:"name"`
+	Name     string        `json:"name"`
+	Contacts *ContactsPage `json:"contacts"`
 }
 
 // Create a groups that can be associated with a `Contact` in customerOS.

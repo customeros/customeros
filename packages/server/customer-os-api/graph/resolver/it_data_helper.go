@@ -107,6 +107,15 @@ func createContactGroup(driver *neo4j.Driver, tenant, name string) string {
 	return contactGroupId.String()
 }
 
+func addContactToGroup(driver *neo4j.Driver, contactId, groupId string) {
+	query := `MATCH (c:Contact {id:$contactId}), (g:ContactGroup {id:$groupId})
+				MERGE (c)-[:BELONGS_TO_GROUP]->(g)`
+	integration_tests.ExecuteWriteQuery(driver, query, map[string]any{
+		"contactId": contactId,
+		"groupId":   groupId,
+	})
+}
+
 func createDefaultFieldSet(driver *neo4j.Driver, contactId string) string {
 	return createFieldSet(driver, contactId, entity.FieldSetEntity{Name: "name"})
 }
