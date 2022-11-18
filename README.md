@@ -1,7 +1,7 @@
 <div align="center">
   <a href="https://openline.ai">
     <img
-      src="https://www.openline.ai/TeamHero.svg"
+      src="https://raw.githubusercontent.com/openline-ai/openline-customer-os/otter/.github/TeamHero.svg"
       alt="Openline Logo"
       height="64"
     />
