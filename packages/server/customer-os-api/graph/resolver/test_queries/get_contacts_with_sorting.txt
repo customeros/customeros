@@ -1,10 +1,8 @@
 query GetContacts{
-  contacts(sorting: {
-    properties: [   {name: TITLE}
-                    {name:FIRST_NAME}
-                    {name:LAST_NAME direction:DESC }
-                ]
-    })
+  contacts(sort:[   {by:"TITLE"}
+                    {by:"FIRST_NAME"}
+                    {by:"LAST_NAME" direction:DESC }
+                ])
   {
     totalPages
     totalElements

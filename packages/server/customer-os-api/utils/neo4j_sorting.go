@@ -1,23 +1,15 @@
 package utils
 
 import (
-	"fmt"
 	"reflect"
 	"strings"
 )
 
-const (
-	tagKey                  = "neo4jDb"
-	tagLookupName           = "lookupName"
-	tagProperty             = "property"
-	tagSupportCaseSensitive = "supportCaseSensitive"
-)
-
-type Sortings struct {
-	sorting []*Sorting
+type Sorts struct {
+	sorts []*orderBy
 }
 
-type Sorting struct {
+type orderBy struct {
 	nodeProperty         string
 	supportCaseSensitive bool
 	caseSensitive        bool
@@ -25,68 +17,48 @@ type Sorting struct {
 	dbNodePropertyProps  map[string]string
 }
 
-func (s *Sortings) NewSortingProperty(exposedName, direction string, caseSensitive bool, T reflect.Type) error {
-	sorting := new(Sorting)
-	props, err := getFieldByExposedName(T, exposedName)
+func (s *Sorts) NewSortRule(lookupName, direction string, caseSensitive bool, T reflect.Type) error {
+	orderBy := new(orderBy)
+
+	props, err := getPropertyDetailsByLookupName(T, lookupName)
 	if err != nil {
 		return err
 	}
-	sorting.nodeProperty = props[tagProperty]
-	sorting.descending = "DESC" == direction
-	sorting.supportCaseSensitive = props[tagSupportCaseSensitive] == "true"
-	sorting.caseSensitive = caseSensitive
-	s.sorting = append(s.sorting, sorting)
+
+	orderBy.nodeProperty = props[tagProperty]
+	orderBy.descending = "DESC" == direction
+	orderBy.supportCaseSensitive = props[tagSupportCaseSensitive] == "true"
+	orderBy.caseSensitive = caseSensitive
+
+	s.sorts = append(s.sorts, orderBy)
+
 	return nil
 }
 
-func (s *Sortings) CypherFragment(nodeAlias string) string {
-	if len(s.sorting) == 0 {
+func (s *Sorts) SortingCypherFragment(nodeAlias string) string {
+	if len(s.sorts) == 0 {
 		return ""
 	}
-	query := " ORDER BY "
-	for i := 0; i < len(s.sorting); i++ {
-		sortingProperty := s.sorting[i]
+	var query strings.Builder
+	query.WriteString(" ORDER BY ")
+	for i := 0; i < len(s.sorts); i++ {
+		sortingProperty := s.sorts[i]
 		if i > 0 {
-			query += " , "
+			query.WriteString(" , ")
 		}
 		toLower := sortingProperty.supportCaseSensitive && !sortingProperty.caseSensitive
 		if toLower {
-			query += "toLower("
+			query.WriteString("toLower(")
 		}
-		query += nodeAlias
-		query += "."
-		query += sortingProperty.nodeProperty
+		query.WriteString(nodeAlias)
+		query.WriteString(".")
+		query.WriteString(sortingProperty.nodeProperty)
 		if toLower {
-			query += ")"
+			query.WriteString(")")
 		}
 		if sortingProperty.descending {
-			query += " DESC "
+			query.WriteString(" DESC ")
 		}
 	}
-	return query
-}
-
-func getFieldByExposedName(T reflect.Type, exposedName string) (map[string]string, error) {
-	for i := 0; i < T.NumField(); i++ {
-		structField := T.Field(i)
-		tag, ok := structField.Tag.Lookup(tagKey)
-		if ok {
-			tags := strings.Split(tag, ";")
-			if len(tags) > 0 {
-				m := make(map[string]string)
-				for _, v := range tags {
-					kvs := strings.Split(v, ":")
-					if len(kvs) == 2 {
-						m[kvs[0]] = kvs[1]
-					}
-				}
-				if val, ok := m[tagLookupName]; ok {
-					if val == exposedName {
-						return m, nil
-					}
-				}
-			}
-		}
-	}
-	return nil, fmt.Errorf("Given field %s not identified", exposedName)
+	return query.String()
 }

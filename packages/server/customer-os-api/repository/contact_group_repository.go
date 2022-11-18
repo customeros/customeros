@@ -7,7 +7,7 @@ import (
 )
 
 type ContactGroupRepository interface {
-	GetPaginatedContactGroups(session neo4j.Session, tenant string, skip, limit int, sorting *utils.Sortings) (*utils.DbNodesWithTotalCount, error)
+	GetPaginatedContactGroups(session neo4j.Session, tenant string, skip, limit int, sorting *utils.Sorts) (*utils.DbNodesWithTotalCount, error)
 }
 
 type contactGroupRepository struct {
@@ -22,7 +22,7 @@ func NewContactGroupRepository(driver *neo4j.Driver, repos *RepositoryContainer)
 	}
 }
 
-func (r *contactGroupRepository) GetPaginatedContactGroups(session neo4j.Session, tenant string, skip, limit int, sorting *utils.Sortings) (*utils.DbNodesWithTotalCount, error) {
+func (r *contactGroupRepository) GetPaginatedContactGroups(session neo4j.Session, tenant string, skip, limit int, sorting *utils.Sorts) (*utils.DbNodesWithTotalCount, error) {
 	dbNodesWithTotalCount := new(utils.DbNodesWithTotalCount)
 
 	dbRecords, err := session.ReadTransaction(func(tx neo4j.Transaction) (any, error) {
@@ -41,7 +41,7 @@ func (r *contactGroupRepository) GetPaginatedContactGroups(session neo4j.Session
 			"MATCH (:Tenant {name:$tenant})<-[:GROUP_BELONGS_TO_TENANT]-(g:ContactGroup) "+
 				" RETURN g "+
 				" %s "+
-				" SKIP $skip LIMIT $limit", sorting.CypherFragment("g")),
+				" SKIP $skip LIMIT $limit", sorting.SortingCypherFragment("g")),
 			map[string]any{
 				"tenant": tenant,
 				"skip":   skip,

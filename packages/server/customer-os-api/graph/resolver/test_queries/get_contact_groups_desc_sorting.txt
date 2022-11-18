@@ -1,7 +1,5 @@
 query GetContactGroups{
-  contactGroups(sorting: {
-    properties: [{name: NAME direction:DESC caseSensitive:true}]
-    })
+  contactGroups(sort: [{by: "NAME" direction:DESC caseSensitive:true}])
   {
     totalPages
     totalElements

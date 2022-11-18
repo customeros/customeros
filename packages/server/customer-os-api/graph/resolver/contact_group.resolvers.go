@@ -80,11 +80,11 @@ func (r *queryResolver) ContactGroup(ctx context.Context, id string) (*model.Con
 }
 
 // ContactGroups is the resolver for the contactGroups field.
-func (r *queryResolver) ContactGroups(ctx context.Context, paginationFilter *model.PaginationFilter, sorting *model.SortContactGroups) (*model.ContactGroupPage, error) {
+func (r *queryResolver) ContactGroups(ctx context.Context, paginationFilter *model.PaginationFilter, sort []*model.SortBy) (*model.ContactGroupPage, error) {
 	if paginationFilter == nil {
 		paginationFilter = &model.PaginationFilter{Page: 0, Limit: 0}
 	}
-	paginatedResult, err := r.ServiceContainer.ContactGroupService.FindAll(ctx, paginationFilter.Page, paginationFilter.Limit, sorting)
+	paginatedResult, err := r.ServiceContainer.ContactGroupService.FindAll(ctx, paginationFilter.Page, paginationFilter.Limit, sort)
 	return &model.ContactGroupPage{
 		Content:       mapper.MapEntitiesToContactGroups(paginatedResult.Rows.(*entity.ContactGroupEntities)),
 		TotalPages:    paginatedResult.TotalPages,

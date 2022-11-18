@@ -216,9 +216,9 @@ type ComplexityRoot struct {
 		ContactByEmail      func(childComplexity int, email string) int
 		ContactByPhone      func(childComplexity int, e164 string) int
 		ContactGroup        func(childComplexity int, id string) int
-		ContactGroups       func(childComplexity int, paginationFilter *model.PaginationFilter, sorting *model.SortContactGroups) int
+		ContactGroups       func(childComplexity int, paginationFilter *model.PaginationFilter, sort []*model.SortBy) int
 		ContactTypes        func(childComplexity int) int
-		Contacts            func(childComplexity int, paginationFilter *model.PaginationFilter, sorting *model.SortContacts) int
+		Contacts            func(childComplexity int, paginationFilter *model.PaginationFilter, sort []*model.SortBy) int
 		EntityDefinitions   func(childComplexity int, extends *model.EntityDefinitionExtension) int
 		Users               func(childComplexity int, paginationFilter *model.PaginationFilter) int
 	}
@@ -309,11 +309,11 @@ type QueryResolver interface {
 	EntityDefinitions(ctx context.Context, extends *model.EntityDefinitionExtension) ([]*model.EntityDefinition, error)
 	CompaniesByNameLike(ctx context.Context, paginationFilter *model.PaginationFilter, companyName string) (*model.CompanyPage, error)
 	Contact(ctx context.Context, id string) (*model.Contact, error)
-	Contacts(ctx context.Context, paginationFilter *model.PaginationFilter, sorting *model.SortContacts) (*model.ContactsPage, error)
+	Contacts(ctx context.Context, paginationFilter *model.PaginationFilter, sort []*model.SortBy) (*model.ContactsPage, error)
 	ContactByEmail(ctx context.Context, email string) (*model.Contact, error)
 	ContactByPhone(ctx context.Context, e164 string) (*model.Contact, error)
 	ContactGroup(ctx context.Context, id string) (*model.ContactGroup, error)
-	ContactGroups(ctx context.Context, paginationFilter *model.PaginationFilter, sorting *model.SortContactGroups) (*model.ContactGroupPage, error)
+	ContactGroups(ctx context.Context, paginationFilter *model.PaginationFilter, sort []*model.SortBy) (*model.ContactGroupPage, error)
 	ContactTypes(ctx context.Context) ([]*model.ContactType, error)
 	Users(ctx context.Context, paginationFilter *model.PaginationFilter) (*model.UserPage, error)
 }
@@ -1346,7 +1346,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Query.ContactGroups(childComplexity, args["paginationFilter"].(*model.PaginationFilter), args["sorting"].(*model.SortContactGroups)), true
+		return e.complexity.Query.ContactGroups(childComplexity, args["paginationFilter"].(*model.PaginationFilter), args["sort"].([]*model.SortBy)), true
 
 	case "Query.contactTypes":
 		if e.complexity.Query.ContactTypes == nil {
@@ -1365,7 +1365,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Query.Contacts(childComplexity, args["paginationFilter"].(*model.PaginationFilter), args["sorting"].(*model.SortContacts)), true
+		return e.complexity.Query.Contacts(childComplexity, args["paginationFilter"].(*model.PaginationFilter), args["sort"].([]*model.SortBy)), true
 
 	case "Query.entityDefinitions":
 		if e.complexity.Query.EntityDefinitions == nil {
@@ -1483,10 +1483,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputPaginationFilter,
 		ec.unmarshalInputPhoneNumberInput,
 		ec.unmarshalInputPhoneNumberUpdateInput,
-		ec.unmarshalInputSortContactGroupProperty,
-		ec.unmarshalInputSortContactGroups,
-		ec.unmarshalInputSortContactProperty,
-		ec.unmarshalInputSortContacts,
+		ec.unmarshalInputSortBy,
 		ec.unmarshalInputUserInput,
 	)
 	first := true
@@ -1618,7 +1615,17 @@ extend type Query {
         id: ID!) :Contact
 
 
-    contacts(paginationFilter: PaginationFilter, sorting: SortContacts): ContactsPage!
+    """
+    Fetch paginated list of contacts
+    Possible values for sort:
+     - TITLE
+     - FIRST_NAME
+     - LAST_NAME
+     - LABEL
+     - NOTES
+     - CREATED_AT
+    """
+    contacts(paginationFilter: PaginationFilter, sort: [SortBy!]): ContactsPage!
     contact_ByEmail(email: String!) :Contact!
     contact_ByPhone(e164: String!) :Contact!
 }
@@ -1850,25 +1857,6 @@ enum PersonTitle {
 
     "For the holder of a doctoral degree."
     DR
-}
-
-input SortContacts {
-    properties: [SortContactProperty!]
-}
-
-input SortContactProperty {
-    name: ContactProperty!
-    direction: SortingDirection = ASC
-    caseSensitive: Boolean = false
-}
-
-enum ContactProperty {
-    TITLE
-    FIRST_NAME
-    LAST_NAME
-    LABEL
-    NOTES
-    CREATED_AT
 }`, BuiltIn: false},
 	{Name: "../schemas/contact_group.graphqls", Input: `extend type Query {
     """
@@ -1882,7 +1870,12 @@ enum ContactProperty {
         """
         id: ID!): ContactGroup
 
-    contactGroups(paginationFilter: PaginationFilter, sorting: SortContactGroups): ContactGroupPage!
+    """
+    Fetch paginated list of contact groups
+    Possible values for sort:
+    - NAME
+    """
+    contactGroups(paginationFilter: PaginationFilter, sort: [SortBy!]): ContactGroupPage!
 }
 
 extend type Mutation {
@@ -1910,6 +1903,8 @@ type ContactGroup {
     **Required**
     """
     name: String!
+
+#    contacts(paginationFilter: PaginationFilter, sorting: [SortBy!]): ContactsPage! @goField(forceResolver: true)
 }
 
 """
@@ -1968,20 +1963,7 @@ type ContactGroupPage implements Pages {
     """
     totalElements: Int64!
 }
-
-input SortContactGroups {
-    properties: [SortContactGroupProperty!]
-}
-
-input SortContactGroupProperty {
-    name: ContactGroupProperty!
-    direction: SortingDirection = ASC
-    caseSensitive: Boolean = false
-}
-
-enum ContactGroupProperty {
-    NAME
-}`, BuiltIn: false},
+`, BuiltIn: false},
 	{Name: "../schemas/contact_type.graphqls", Input: `type ContactType {
     id: ID!
     name: String!
@@ -2345,10 +2327,29 @@ input PaginationFilter {
     limit: Int!
 }
 
+input SortBy {
+    by: String!
+    direction: SortingDirection = ASC
+    caseSensitive: Boolean = false
+}
+
 enum SortingDirection {
     ASC
     DESC
-}`, BuiltIn: false},
+}
+
+#input FilterBy {
+#    by: String!
+#    operation: String = "EQ"
+#    caseSensitive: Boolean = false
+#}
+#
+#input GroupBy {
+#    filters: [FilterBy!]!
+#    logicalOperation: String = "AND"
+#}
+
+`, BuiltIn: false},
 	{Name: "../schemas/interfaces.graphqls", Input: `"""
 Describes the number of pages and total elements included in a query response.
 **A ` + "`" + `response` + "`" + ` object.**
@@ -3463,15 +3464,15 @@ func (ec *executionContext) field_Query_contactGroups_args(ctx context.Context, 
 		}
 	}
 	args["paginationFilter"] = arg0
-	var arg1 *model.SortContactGroups
-	if tmp, ok := rawArgs["sorting"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("sorting"))
-		arg1, err = ec.unmarshalOSortContactGroups2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐSortContactGroups(ctx, tmp)
+	var arg1 []*model.SortBy
+	if tmp, ok := rawArgs["sort"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("sort"))
+		arg1, err = ec.unmarshalOSortBy2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐSortByᚄ(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["sorting"] = arg1
+	args["sort"] = arg1
 	return args, nil
 }
 
@@ -3532,15 +3533,15 @@ func (ec *executionContext) field_Query_contacts_args(ctx context.Context, rawAr
 		}
 	}
 	args["paginationFilter"] = arg0
-	var arg1 *model.SortContacts
-	if tmp, ok := rawArgs["sorting"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("sorting"))
-		arg1, err = ec.unmarshalOSortContacts2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐSortContacts(ctx, tmp)
+	var arg1 []*model.SortBy
+	if tmp, ok := rawArgs["sort"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("sort"))
+		arg1, err = ec.unmarshalOSortBy2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐSortByᚄ(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["sorting"] = arg1
+	args["sort"] = arg1
 	return args, nil
 }
 
@@ -9528,7 +9529,7 @@ func (ec *executionContext) _Query_contacts(ctx context.Context, field graphql.C
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().Contacts(rctx, fc.Args["paginationFilter"].(*model.PaginationFilter), fc.Args["sorting"].(*model.SortContacts))
+		return ec.resolvers.Query().Contacts(rctx, fc.Args["paginationFilter"].(*model.PaginationFilter), fc.Args["sort"].([]*model.SortBy))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -9827,7 +9828,7 @@ func (ec *executionContext) _Query_contactGroups(ctx context.Context, field grap
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().ContactGroups(rctx, fc.Args["paginationFilter"].(*model.PaginationFilter), fc.Args["sorting"].(*model.SortContactGroups))
+		return ec.resolvers.Query().ContactGroups(rctx, fc.Args["paginationFilter"].(*model.PaginationFilter), fc.Args["sort"].([]*model.SortBy))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -13311,8 +13312,8 @@ func (ec *executionContext) unmarshalInputPhoneNumberUpdateInput(ctx context.Con
 	return it, nil
 }
 
-func (ec *executionContext) unmarshalInputSortContactGroupProperty(ctx context.Context, obj interface{}) (model.SortContactGroupProperty, error) {
-	var it model.SortContactGroupProperty
+func (ec *executionContext) unmarshalInputSortBy(ctx context.Context, obj interface{}) (model.SortBy, error) {
+	var it model.SortBy
 	asMap := map[string]interface{}{}
 	for k, v := range obj.(map[string]interface{}) {
 		asMap[k] = v
@@ -13325,18 +13326,18 @@ func (ec *executionContext) unmarshalInputSortContactGroupProperty(ctx context.C
 		asMap["caseSensitive"] = false
 	}
 
-	fieldsInOrder := [...]string{"name", "direction", "caseSensitive"}
+	fieldsInOrder := [...]string{"by", "direction", "caseSensitive"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
 			continue
 		}
 		switch k {
-		case "name":
+		case "by":
 			var err error
 
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
-			it.Name, err = ec.unmarshalNContactGroupProperty2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐContactGroupProperty(ctx, v)
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("by"))
+			it.By, err = ec.unmarshalNString2string(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -13353,113 +13354,6 @@ func (ec *executionContext) unmarshalInputSortContactGroupProperty(ctx context.C
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("caseSensitive"))
 			it.CaseSensitive, err = ec.unmarshalOBoolean2ᚖbool(ctx, v)
-			if err != nil {
-				return it, err
-			}
-		}
-	}
-
-	return it, nil
-}
-
-func (ec *executionContext) unmarshalInputSortContactGroups(ctx context.Context, obj interface{}) (model.SortContactGroups, error) {
-	var it model.SortContactGroups
-	asMap := map[string]interface{}{}
-	for k, v := range obj.(map[string]interface{}) {
-		asMap[k] = v
-	}
-
-	fieldsInOrder := [...]string{"properties"}
-	for _, k := range fieldsInOrder {
-		v, ok := asMap[k]
-		if !ok {
-			continue
-		}
-		switch k {
-		case "properties":
-			var err error
-
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("properties"))
-			it.Properties, err = ec.unmarshalOSortContactGroupProperty2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐSortContactGroupPropertyᚄ(ctx, v)
-			if err != nil {
-				return it, err
-			}
-		}
-	}
-
-	return it, nil
-}
-
-func (ec *executionContext) unmarshalInputSortContactProperty(ctx context.Context, obj interface{}) (model.SortContactProperty, error) {
-	var it model.SortContactProperty
-	asMap := map[string]interface{}{}
-	for k, v := range obj.(map[string]interface{}) {
-		asMap[k] = v
-	}
-
-	if _, present := asMap["direction"]; !present {
-		asMap["direction"] = "ASC"
-	}
-	if _, present := asMap["caseSensitive"]; !present {
-		asMap["caseSensitive"] = false
-	}
-
-	fieldsInOrder := [...]string{"name", "direction", "caseSensitive"}
-	for _, k := range fieldsInOrder {
-		v, ok := asMap[k]
-		if !ok {
-			continue
-		}
-		switch k {
-		case "name":
-			var err error
-
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
-			it.Name, err = ec.unmarshalNContactProperty2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐContactProperty(ctx, v)
-			if err != nil {
-				return it, err
-			}
-		case "direction":
-			var err error
-
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("direction"))
-			it.Direction, err = ec.unmarshalOSortingDirection2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐSortingDirection(ctx, v)
-			if err != nil {
-				return it, err
-			}
-		case "caseSensitive":
-			var err error
-
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("caseSensitive"))
-			it.CaseSensitive, err = ec.unmarshalOBoolean2ᚖbool(ctx, v)
-			if err != nil {
-				return it, err
-			}
-		}
-	}
-
-	return it, nil
-}
-
-func (ec *executionContext) unmarshalInputSortContacts(ctx context.Context, obj interface{}) (model.SortContacts, error) {
-	var it model.SortContacts
-	asMap := map[string]interface{}{}
-	for k, v := range obj.(map[string]interface{}) {
-		asMap[k] = v
-	}
-
-	fieldsInOrder := [...]string{"properties"}
-	for _, k := range fieldsInOrder {
-		v, ok := asMap[k]
-		if !ok {
-			continue
-		}
-		switch k {
-		case "properties":
-			var err error
-
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("properties"))
-			it.Properties, err = ec.unmarshalOSortContactProperty2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐSortContactPropertyᚄ(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -15969,16 +15863,6 @@ func (ec *executionContext) marshalNContactGroupPage2ᚖgithubᚗcomᚋopenline�
 	return ec._ContactGroupPage(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalNContactGroupProperty2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐContactGroupProperty(ctx context.Context, v interface{}) (model.ContactGroupProperty, error) {
-	var res model.ContactGroupProperty
-	err := res.UnmarshalGQL(v)
-	return res, graphql.ErrorOnPath(ctx, err)
-}
-
-func (ec *executionContext) marshalNContactGroupProperty2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐContactGroupProperty(ctx context.Context, sel ast.SelectionSet, v model.ContactGroupProperty) graphql.Marshaler {
-	return v
-}
-
 func (ec *executionContext) unmarshalNContactGroupUpdateInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐContactGroupUpdateInput(ctx context.Context, v interface{}) (model.ContactGroupUpdateInput, error) {
 	res, err := ec.unmarshalInputContactGroupUpdateInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -15987,16 +15871,6 @@ func (ec *executionContext) unmarshalNContactGroupUpdateInput2githubᚗcomᚋope
 func (ec *executionContext) unmarshalNContactInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐContactInput(ctx context.Context, v interface{}) (model.ContactInput, error) {
 	res, err := ec.unmarshalInputContactInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
-}
-
-func (ec *executionContext) unmarshalNContactProperty2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐContactProperty(ctx context.Context, v interface{}) (model.ContactProperty, error) {
-	var res model.ContactProperty
-	err := res.UnmarshalGQL(v)
-	return res, graphql.ErrorOnPath(ctx, err)
-}
-
-func (ec *executionContext) marshalNContactProperty2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐContactProperty(ctx context.Context, sel ast.SelectionSet, v model.ContactProperty) graphql.Marshaler {
-	return v
 }
 
 func (ec *executionContext) marshalNContactType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐContactType(ctx context.Context, sel ast.SelectionSet, v model.ContactType) graphql.Marshaler {
@@ -16692,13 +16566,8 @@ func (ec *executionContext) marshalNResult2ᚖgithubᚗcomᚋopenlineᚑaiᚋope
 	return ec._Result(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalNSortContactGroupProperty2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐSortContactGroupProperty(ctx context.Context, v interface{}) (*model.SortContactGroupProperty, error) {
-	res, err := ec.unmarshalInputSortContactGroupProperty(ctx, v)
-	return &res, graphql.ErrorOnPath(ctx, err)
-}
-
-func (ec *executionContext) unmarshalNSortContactProperty2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐSortContactProperty(ctx context.Context, v interface{}) (*model.SortContactProperty, error) {
-	res, err := ec.unmarshalInputSortContactProperty(ctx, v)
+func (ec *executionContext) unmarshalNSortBy2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐSortBy(ctx context.Context, v interface{}) (*model.SortBy, error) {
+	res, err := ec.unmarshalInputSortBy(ctx, v)
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
@@ -17259,7 +17128,7 @@ func (ec *executionContext) marshalOResult2ᚖgithubᚗcomᚋopenlineᚑaiᚋope
 	return ec._Result(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalOSortContactGroupProperty2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐSortContactGroupPropertyᚄ(ctx context.Context, v interface{}) ([]*model.SortContactGroupProperty, error) {
+func (ec *executionContext) unmarshalOSortBy2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐSortByᚄ(ctx context.Context, v interface{}) ([]*model.SortBy, error) {
 	if v == nil {
 		return nil, nil
 	}
@@ -17268,51 +17137,15 @@ func (ec *executionContext) unmarshalOSortContactGroupProperty2ᚕᚖgithubᚗco
 		vSlice = graphql.CoerceList(v)
 	}
 	var err error
-	res := make([]*model.SortContactGroupProperty, len(vSlice))
+	res := make([]*model.SortBy, len(vSlice))
 	for i := range vSlice {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
-		res[i], err = ec.unmarshalNSortContactGroupProperty2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐSortContactGroupProperty(ctx, vSlice[i])
+		res[i], err = ec.unmarshalNSortBy2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐSortBy(ctx, vSlice[i])
 		if err != nil {
 			return nil, err
 		}
 	}
 	return res, nil
-}
-
-func (ec *executionContext) unmarshalOSortContactGroups2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐSortContactGroups(ctx context.Context, v interface{}) (*model.SortContactGroups, error) {
-	if v == nil {
-		return nil, nil
-	}
-	res, err := ec.unmarshalInputSortContactGroups(ctx, v)
-	return &res, graphql.ErrorOnPath(ctx, err)
-}
-
-func (ec *executionContext) unmarshalOSortContactProperty2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐSortContactPropertyᚄ(ctx context.Context, v interface{}) ([]*model.SortContactProperty, error) {
-	if v == nil {
-		return nil, nil
-	}
-	var vSlice []interface{}
-	if v != nil {
-		vSlice = graphql.CoerceList(v)
-	}
-	var err error
-	res := make([]*model.SortContactProperty, len(vSlice))
-	for i := range vSlice {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
-		res[i], err = ec.unmarshalNSortContactProperty2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐSortContactProperty(ctx, vSlice[i])
-		if err != nil {
-			return nil, err
-		}
-	}
-	return res, nil
-}
-
-func (ec *executionContext) unmarshalOSortContacts2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐSortContacts(ctx context.Context, v interface{}) (*model.SortContacts, error) {
-	if v == nil {
-		return nil, nil
-	}
-	res, err := ec.unmarshalInputSortContacts(ctx, v)
-	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) unmarshalOSortingDirection2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐSortingDirection(ctx context.Context, v interface{}) (*model.SortingDirection, error) {
