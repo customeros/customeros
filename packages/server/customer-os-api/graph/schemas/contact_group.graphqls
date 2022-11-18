@@ -10,7 +10,12 @@ extend type Query {
         """
         id: ID!): ContactGroup
 
-    contactGroups(paginationFilter: PaginationFilter, sorting: SortContactGroups): ContactGroupPage!
+    """
+    Fetch paginated list of contact groups
+    Possible values for sort:
+    - NAME
+    """
+    contactGroups(paginationFilter: PaginationFilter, sort: [SortBy!]): ContactGroupPage!
 }
 
 extend type Mutation {
@@ -38,6 +43,8 @@ type ContactGroup {
     **Required**
     """
     name: String!
+
+#    contacts(paginationFilter: PaginationFilter, sorting: [SortBy!]): ContactsPage! @goField(forceResolver: true)
 }
 
 """
@@ -95,18 +102,4 @@ type ContactGroupPage implements Pages {
     **Required.**
     """
     totalElements: Int64!
-}
-
-input SortContactGroups {
-    properties: [SortContactGroupProperty!]
-}
-
-input SortContactGroupProperty {
-    name: ContactGroupProperty!
-    direction: SortingDirection = ASC
-    caseSensitive: Boolean = false
-}
-
-enum ContactGroupProperty {
-    NAME
 }

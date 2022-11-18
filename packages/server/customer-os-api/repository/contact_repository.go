@@ -16,7 +16,7 @@ type ContactRepository interface {
 	LinkWithEntityDefinitionInTx(tx neo4j.Transaction, tenant, contactId, entityDefinitionId string) error
 	LinkWithContactTypeInTx(tx neo4j.Transaction, tenant, contactId, contactTypeId string) error
 	UnlinkFromContactTypesInTx(tx neo4j.Transaction, tenant, contactId string) error
-	GetPaginatedContacts(session neo4j.Session, tenant string, skip, limit int, sorting *utils.Sortings) (*utils.DbNodesWithTotalCount, error)
+	GetPaginatedContacts(session neo4j.Session, tenant string, skip, limit int, sorting *utils.Sorts) (*utils.DbNodesWithTotalCount, error)
 }
 
 type contactRepository struct {
@@ -138,7 +138,7 @@ func (r *contactRepository) UnlinkFromContactTypesInTx(tx neo4j.Transaction, ten
 	return nil
 }
 
-func (r *contactRepository) GetPaginatedContacts(session neo4j.Session, tenant string, skip, limit int, sorting *utils.Sortings) (*utils.DbNodesWithTotalCount, error) {
+func (r *contactRepository) GetPaginatedContacts(session neo4j.Session, tenant string, skip, limit int, sorting *utils.Sorts) (*utils.DbNodesWithTotalCount, error) {
 	dbNodesWithTotalCount := new(utils.DbNodesWithTotalCount)
 
 	dbRecords, err := session.ReadTransaction(func(tx neo4j.Transaction) (any, error) {
@@ -157,7 +157,7 @@ func (r *contactRepository) GetPaginatedContacts(session neo4j.Session, tenant s
 			"MATCH (:Tenant {name:$tenant})<-[:CONTACT_BELONGS_TO_TENANT]-(c:Contact) "+
 				" RETURN c "+
 				" %s "+
-				" SKIP $skip LIMIT $limit", sorting.CypherFragment("c")),
+				" SKIP $skip LIMIT $limit", sorting.SortingCypherFragment("c")),
 			map[string]any{
 				"tenant": tenant,
 				"skip":   skip,

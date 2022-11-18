@@ -16,7 +16,25 @@ input PaginationFilter {
     limit: Int!
 }
 
+input SortBy {
+    by: String!
+    direction: SortingDirection = ASC
+    caseSensitive: Boolean = false
+}
+
 enum SortingDirection {
     ASC
     DESC
 }
+
+#input FilterBy {
+#    by: String!
+#    operation: String = "EQ"
+#    caseSensitive: Boolean = false
+#}
+#
+#input GroupBy {
+#    filters: [FilterBy!]!
+#    logicalOperation: String = "AND"
+#}
+

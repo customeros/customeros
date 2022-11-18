@@ -21,7 +21,7 @@ type ContactService interface {
 	FindContactById(ctx context.Context, id string) (*entity.ContactEntity, error)
 	FindContactByEmail(ctx context.Context, email string) (*entity.ContactEntity, error)
 	FindContactByPhoneNumber(ctx context.Context, e164 string) (*entity.ContactEntity, error)
-	FindAll(ctx context.Context, page, limit int, sorting *model.SortContacts) (*utils.Pagination, error)
+	FindAll(ctx context.Context, page, limit int, sortBy []*model.SortBy) (*utils.Pagination, error)
 
 	HardDelete(ctx context.Context, id string) (bool, error)
 	SoftDelete(ctx context.Context, id string) (bool, error)
@@ -312,7 +312,7 @@ func (s *contactService) FindContactByPhoneNumber(ctx context.Context, e164 stri
 	return s.mapDbNodeToContactEntity(utils.NodePtr(queryResult.(dbtype.Node))), nil
 }
 
-func (s *contactService) FindAll(ctx context.Context, page, limit int, sorting *model.SortContacts) (*utils.Pagination, error) {
+func (s *contactService) FindAll(ctx context.Context, page, limit int, sortBy []*model.SortBy) (*utils.Pagination, error) {
 	session := utils.NewNeo4jReadSession(s.getDriver())
 	defer session.Close()
 
@@ -320,7 +320,7 @@ func (s *contactService) FindAll(ctx context.Context, page, limit int, sorting *
 		Limit: limit,
 		Page:  page,
 	}
-	sortings, err := s.prepareContactsSorting(sorting)
+	sortings, err := s.prepareContactsSorting(sortBy)
 	if err != nil {
 		return nil, err
 	}
@@ -345,11 +345,11 @@ func (s *contactService) FindAll(ctx context.Context, page, limit int, sorting *
 	return &paginatedResult, nil
 }
 
-func (s *contactService) prepareContactsSorting(sorting *model.SortContacts) (*utils.Sortings, error) {
-	transformedSorting := new(utils.Sortings)
-	if sorting != nil {
-		for _, v := range sorting.Properties {
-			err := transformedSorting.NewSortingProperty(v.Name.String(), v.Direction.String(), *v.CaseSensitive, reflect.TypeOf(entity.ContactEntity{}))
+func (s *contactService) prepareContactsSorting(sortBy []*model.SortBy) (*utils.Sorts, error) {
+	transformedSorting := new(utils.Sorts)
+	if sortBy != nil {
+		for _, v := range sortBy {
+			err := transformedSorting.NewSortRule(v.By, v.Direction.String(), *v.CaseSensitive, reflect.TypeOf(entity.ContactEntity{}))
 			if err != nil {
 				return nil, err
 			}
