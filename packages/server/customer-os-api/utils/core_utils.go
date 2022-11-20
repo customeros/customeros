@@ -6,6 +6,10 @@ func StringPtr(str string) *string {
 	return &str
 }
 
+func BoolPtr(b bool) *bool {
+	return &b
+}
+
 func NodePtr(node dbtype.Node) *dbtype.Node {
 	return &node
 }
@@ -32,4 +36,10 @@ func IntPtrToInt64Ptr(v *int) *int64 {
 	}
 	var output = int64(*v)
 	return &output
+}
+
+func AddMapToMap(src, dst map[string]any) {
+	for k, v := range src {
+		dst[k] = v
+	}
 }

@@ -18,7 +18,7 @@ input Pagination {
 
 input SortBy {
     by: String!
-    direction: SortingDirection = ASC
+    direction: SortingDirection! = ASC
     caseSensitive: Boolean = false
 }
 
@@ -36,15 +36,12 @@ input Filter {
 
 input FilterItem {
     property: String!
-    operation: LogicalOperator = EQ
-    value: Any
-    values: [Any!]
+    operation: ComparisonOperator! = EQ
+    value: Any!
     caseSensitive: Boolean = false
 }
 
-enum LogicalOperator {
+enum ComparisonOperator {
     EQ
     CONTAINS
-    STARTS_WITH
-    ENDS_WITH
 }

@@ -94,11 +94,15 @@ func (r *queryResolver) ContactGroup(ctx context.Context, id string) (*model.Con
 }
 
 // ContactGroups is the resolver for the contactGroups field.
-func (r *queryResolver) ContactGroups(ctx context.Context, pagination *model.Pagination, sort []*model.SortBy) (*model.ContactGroupPage, error) {
+func (r *queryResolver) ContactGroups(ctx context.Context, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) (*model.ContactGroupPage, error) {
 	if pagination == nil {
 		pagination = &model.Pagination{Page: 0, Limit: 0}
 	}
-	paginatedResult, err := r.ServiceContainer.ContactGroupService.FindAll(ctx, pagination.Page, pagination.Limit, sort)
+	paginatedResult, err := r.ServiceContainer.ContactGroupService.FindAll(ctx, pagination.Page, pagination.Limit, where, sort)
+	if err != nil {
+		graphql.AddErrorf(ctx, "Could not fetch contact groups")
+		return nil, err
+	}
 	return &model.ContactGroupPage{
 		Content:       mapper.MapEntitiesToContactGroups(paginatedResult.Rows.(*entity.ContactGroupEntities)),
 		TotalPages:    paginatedResult.TotalPages,

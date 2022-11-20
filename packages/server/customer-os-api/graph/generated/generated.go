@@ -218,7 +218,7 @@ type ComplexityRoot struct {
 		ContactByEmail      func(childComplexity int, email string) int
 		ContactByPhone      func(childComplexity int, e164 string) int
 		ContactGroup        func(childComplexity int, id string) int
-		ContactGroups       func(childComplexity int, pagination *model.Pagination, sort []*model.SortBy) int
+		ContactGroups       func(childComplexity int, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) int
 		ContactTypes        func(childComplexity int) int
 		Contacts            func(childComplexity int, pagination *model.Pagination, sort []*model.SortBy) int
 		EntityDefinitions   func(childComplexity int, extends *model.EntityDefinitionExtension) int
@@ -318,7 +318,7 @@ type QueryResolver interface {
 	ContactByEmail(ctx context.Context, email string) (*model.Contact, error)
 	ContactByPhone(ctx context.Context, e164 string) (*model.Contact, error)
 	ContactGroup(ctx context.Context, id string) (*model.ContactGroup, error)
-	ContactGroups(ctx context.Context, pagination *model.Pagination, sort []*model.SortBy) (*model.ContactGroupPage, error)
+	ContactGroups(ctx context.Context, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) (*model.ContactGroupPage, error)
 	ContactTypes(ctx context.Context) ([]*model.ContactType, error)
 	Users(ctx context.Context, pagination *model.Pagination) (*model.UserPage, error)
 }
@@ -1363,7 +1363,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Query.ContactGroups(childComplexity, args["pagination"].(*model.Pagination), args["sort"].([]*model.SortBy)), true
+		return e.complexity.Query.ContactGroups(childComplexity, args["pagination"].(*model.Pagination), args["where"].(*model.Filter), args["sort"].([]*model.SortBy)), true
 
 	case "Query.contactTypes":
 		if e.complexity.Query.ContactTypes == nil {
@@ -1894,7 +1894,7 @@ enum PersonTitle {
     Possible values for sort:
     - NAME
     """
-    contactGroups(pagination: Pagination, sort: [SortBy!]): ContactGroupPage!
+    contactGroups(pagination: Pagination, where: Filter, sort: [SortBy!]): ContactGroupPage!
 }
 
 extend type Mutation {
@@ -2348,7 +2348,7 @@ input Pagination {
 
 input SortBy {
     by: String!
-    direction: SortingDirection = ASC
+    direction: SortingDirection! = ASC
     caseSensitive: Boolean = false
 }
 
@@ -2366,17 +2366,14 @@ input Filter {
 
 input FilterItem {
     property: String!
-    operation: LogicalOperator = EQ
-    value: Any
-    values: [Any!]
+    operation: ComparisonOperator! = EQ
+    value: Any!
     caseSensitive: Boolean = false
 }
 
-enum LogicalOperator {
+enum ComparisonOperator {
     EQ
     CONTAINS
-    STARTS_WITH
-    ENDS_WITH
 }`, BuiltIn: false},
 	{Name: "../schemas/interfaces.graphqls", Input: `"""
 Describes the number of pages and total elements included in a query response.
@@ -3516,15 +3513,24 @@ func (ec *executionContext) field_Query_contactGroups_args(ctx context.Context, 
 		}
 	}
 	args["pagination"] = arg0
-	var arg1 []*model.SortBy
-	if tmp, ok := rawArgs["sort"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("sort"))
-		arg1, err = ec.unmarshalOSortBy2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐSortByᚄ(ctx, tmp)
+	var arg1 *model.Filter
+	if tmp, ok := rawArgs["where"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("where"))
+		arg1, err = ec.unmarshalOFilter2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐFilter(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["sort"] = arg1
+	args["where"] = arg1
+	var arg2 []*model.SortBy
+	if tmp, ok := rawArgs["sort"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("sort"))
+		arg2, err = ec.unmarshalOSortBy2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐSortByᚄ(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["sort"] = arg2
 	return args, nil
 }
 
@@ -9953,7 +9959,7 @@ func (ec *executionContext) _Query_contactGroups(ctx context.Context, field grap
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().ContactGroups(rctx, fc.Args["pagination"].(*model.Pagination), fc.Args["sort"].([]*model.SortBy))
+		return ec.resolvers.Query().ContactGroups(rctx, fc.Args["pagination"].(*model.Pagination), fc.Args["where"].(*model.Filter), fc.Args["sort"].([]*model.SortBy))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -13371,7 +13377,7 @@ func (ec *executionContext) unmarshalInputFilterItem(ctx context.Context, obj in
 		asMap["caseSensitive"] = false
 	}
 
-	fieldsInOrder := [...]string{"property", "operation", "value", "values", "caseSensitive"}
+	fieldsInOrder := [...]string{"property", "operation", "value", "caseSensitive"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -13390,7 +13396,7 @@ func (ec *executionContext) unmarshalInputFilterItem(ctx context.Context, obj in
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("operation"))
-			it.Operation, err = ec.unmarshalOLogicalOperator2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐLogicalOperator(ctx, v)
+			it.Operation, err = ec.unmarshalNComparisonOperator2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐComparisonOperator(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -13398,15 +13404,7 @@ func (ec *executionContext) unmarshalInputFilterItem(ctx context.Context, obj in
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("value"))
-			it.Value, err = ec.unmarshalOAny2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐAnyTypeValue(ctx, v)
-			if err != nil {
-				return it, err
-			}
-		case "values":
-			var err error
-
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("values"))
-			it.Values, err = ec.unmarshalOAny2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐAnyTypeValueᚄ(ctx, v)
+			it.Value, err = ec.unmarshalNAny2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐAnyTypeValue(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -13589,7 +13587,7 @@ func (ec *executionContext) unmarshalInputSortBy(ctx context.Context, obj interf
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("direction"))
-			it.Direction, err = ec.unmarshalOSortingDirection2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐSortingDirection(ctx, v)
+			it.Direction, err = ec.unmarshalNSortingDirection2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐSortingDirection(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -15855,27 +15853,6 @@ func (ec *executionContext) marshalNAny2githubᚗcomᚋopenlineᚑaiᚋopenline�
 	return res
 }
 
-func (ec *executionContext) unmarshalNAny2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐAnyTypeValue(ctx context.Context, v interface{}) (*model.AnyTypeValue, error) {
-	res, err := model.UnmarshalAnyTypeValue(v)
-	return &res, graphql.ErrorOnPath(ctx, err)
-}
-
-func (ec *executionContext) marshalNAny2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐAnyTypeValue(ctx context.Context, sel ast.SelectionSet, v *model.AnyTypeValue) graphql.Marshaler {
-	if v == nil {
-		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
-		}
-		return graphql.Null
-	}
-	res := model.MarshalAnyTypeValue(*v)
-	if res == graphql.Null {
-		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
-		}
-	}
-	return res
-}
-
 func (ec *executionContext) unmarshalNBoolean2bool(ctx context.Context, v interface{}) (bool, error) {
 	res, err := graphql.UnmarshalBoolean(v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -16011,6 +15988,16 @@ func (ec *executionContext) marshalNCompanyPosition2ᚖgithubᚗcomᚋopenline�
 func (ec *executionContext) unmarshalNCompanyPositionInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐCompanyPositionInput(ctx context.Context, v interface{}) (model.CompanyPositionInput, error) {
 	res, err := ec.unmarshalInputCompanyPositionInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalNComparisonOperator2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐComparisonOperator(ctx context.Context, v interface{}) (model.ComparisonOperator, error) {
+	var res model.ComparisonOperator
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNComparisonOperator2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐComparisonOperator(ctx context.Context, sel ast.SelectionSet, v model.ComparisonOperator) graphql.Marshaler {
+	return v
 }
 
 func (ec *executionContext) marshalNContact2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐContact(ctx context.Context, sel ast.SelectionSet, v model.Contact) graphql.Marshaler {
@@ -16861,6 +16848,16 @@ func (ec *executionContext) unmarshalNSortBy2ᚖgithubᚗcomᚋopenlineᚑaiᚋo
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
+func (ec *executionContext) unmarshalNSortingDirection2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐSortingDirection(ctx context.Context, v interface{}) (model.SortingDirection, error) {
+	var res model.SortingDirection
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNSortingDirection2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐSortingDirection(ctx context.Context, sel ast.SelectionSet, v model.SortingDirection) graphql.Marshaler {
+	return v
+}
+
 func (ec *executionContext) unmarshalNString2string(ctx context.Context, v interface{}) (string, error) {
 	res, err := graphql.UnmarshalString(v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -17221,60 +17218,6 @@ func (ec *executionContext) marshalN__TypeKind2string(ctx context.Context, sel a
 	return res
 }
 
-func (ec *executionContext) unmarshalOAny2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐAnyTypeValueᚄ(ctx context.Context, v interface{}) ([]*model.AnyTypeValue, error) {
-	if v == nil {
-		return nil, nil
-	}
-	var vSlice []interface{}
-	if v != nil {
-		vSlice = graphql.CoerceList(v)
-	}
-	var err error
-	res := make([]*model.AnyTypeValue, len(vSlice))
-	for i := range vSlice {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
-		res[i], err = ec.unmarshalNAny2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐAnyTypeValue(ctx, vSlice[i])
-		if err != nil {
-			return nil, err
-		}
-	}
-	return res, nil
-}
-
-func (ec *executionContext) marshalOAny2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐAnyTypeValueᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.AnyTypeValue) graphql.Marshaler {
-	if v == nil {
-		return graphql.Null
-	}
-	ret := make(graphql.Array, len(v))
-	for i := range v {
-		ret[i] = ec.marshalNAny2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐAnyTypeValue(ctx, sel, v[i])
-	}
-
-	for _, e := range ret {
-		if e == graphql.Null {
-			return graphql.Null
-		}
-	}
-
-	return ret
-}
-
-func (ec *executionContext) unmarshalOAny2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐAnyTypeValue(ctx context.Context, v interface{}) (*model.AnyTypeValue, error) {
-	if v == nil {
-		return nil, nil
-	}
-	res, err := model.UnmarshalAnyTypeValue(v)
-	return &res, graphql.ErrorOnPath(ctx, err)
-}
-
-func (ec *executionContext) marshalOAny2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐAnyTypeValue(ctx context.Context, sel ast.SelectionSet, v *model.AnyTypeValue) graphql.Marshaler {
-	if v == nil {
-		return graphql.Null
-	}
-	res := model.MarshalAnyTypeValue(*v)
-	return res
-}
-
 func (ec *executionContext) unmarshalOBoolean2bool(ctx context.Context, v interface{}) (bool, error) {
 	res, err := graphql.UnmarshalBoolean(v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -17469,22 +17412,6 @@ func (ec *executionContext) marshalOInt2ᚖint(ctx context.Context, sel ast.Sele
 	return res
 }
 
-func (ec *executionContext) unmarshalOLogicalOperator2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐLogicalOperator(ctx context.Context, v interface{}) (*model.LogicalOperator, error) {
-	if v == nil {
-		return nil, nil
-	}
-	var res = new(model.LogicalOperator)
-	err := res.UnmarshalGQL(v)
-	return res, graphql.ErrorOnPath(ctx, err)
-}
-
-func (ec *executionContext) marshalOLogicalOperator2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐLogicalOperator(ctx context.Context, sel ast.SelectionSet, v *model.LogicalOperator) graphql.Marshaler {
-	if v == nil {
-		return graphql.Null
-	}
-	return v
-}
-
 func (ec *executionContext) unmarshalOPagination2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐPagination(ctx context.Context, v interface{}) (*model.Pagination, error) {
 	if v == nil {
 		return nil, nil
@@ -17542,22 +17469,6 @@ func (ec *executionContext) unmarshalOSortBy2ᚕᚖgithubᚗcomᚋopenlineᚑai�
 		}
 	}
 	return res, nil
-}
-
-func (ec *executionContext) unmarshalOSortingDirection2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐSortingDirection(ctx context.Context, v interface{}) (*model.SortingDirection, error) {
-	if v == nil {
-		return nil, nil
-	}
-	var res = new(model.SortingDirection)
-	err := res.UnmarshalGQL(v)
-	return res, graphql.ErrorOnPath(ctx, err)
-}
-
-func (ec *executionContext) marshalOSortingDirection2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐSortingDirection(ctx context.Context, sel ast.SelectionSet, v *model.SortingDirection) graphql.Marshaler {
-	if v == nil {
-		return graphql.Null
-	}
-	return v
 }
 
 func (ec *executionContext) unmarshalOString2ᚕstringᚄ(ctx context.Context, v interface{}) ([]string, error) {

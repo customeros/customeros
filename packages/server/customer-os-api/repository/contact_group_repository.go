@@ -7,7 +7,7 @@ import (
 )
 
 type ContactGroupRepository interface {
-	GetPaginatedContactGroups(session neo4j.Session, tenant string, skip, limit int, sorting *utils.Sorts) (*utils.DbNodesWithTotalCount, error)
+	GetPaginatedContactGroups(session neo4j.Session, tenant string, skip, limit int, filter *utils.CypherFilter, sorting *utils.CypherSort) (*utils.DbNodesWithTotalCount, error)
 }
 
 type contactGroupRepository struct {
@@ -22,31 +22,39 @@ func NewContactGroupRepository(driver *neo4j.Driver, repos *RepositoryContainer)
 	}
 }
 
-func (r *contactGroupRepository) GetPaginatedContactGroups(session neo4j.Session, tenant string, skip, limit int, sorting *utils.Sorts) (*utils.DbNodesWithTotalCount, error) {
+func (r *contactGroupRepository) GetPaginatedContactGroups(session neo4j.Session, tenant string, skip, limit int, filter *utils.CypherFilter, sorting *utils.CypherSort) (*utils.DbNodesWithTotalCount, error) {
 	dbNodesWithTotalCount := new(utils.DbNodesWithTotalCount)
 
 	dbRecords, err := session.ReadTransaction(func(tx neo4j.Transaction) (any, error) {
+		filterCypher, filterParams := filter.CypherFilterFragment("g")
+		countParams := map[string]any{
+			"tenant": tenant,
+		}
+		utils.AddMapToMap(filterParams, countParams)
+
 		queryResult, err := tx.Run(`
 				MATCH (:Tenant {name:$tenant})<-[:GROUP_BELONGS_TO_TENANT]-(cg:ContactGroup) RETURN count(cg) as count`,
-			map[string]any{
-				"tenant": tenant,
-			})
+			countParams)
 		if err != nil {
 			return nil, err
 		}
 		count, _ := queryResult.Single()
 		dbNodesWithTotalCount.Count = count.Values[0].(int64)
 
+		params := map[string]any{
+			"tenant": tenant,
+			"skip":   skip,
+			"limit":  limit,
+		}
+		utils.AddMapToMap(filterParams, params)
+
 		queryResult, err = tx.Run(fmt.Sprintf(
 			"MATCH (:Tenant {name:$tenant})<-[:GROUP_BELONGS_TO_TENANT]-(g:ContactGroup) "+
+				" %s "+
 				" RETURN g "+
 				" %s "+
-				" SKIP $skip LIMIT $limit", sorting.SortingCypherFragment("g")),
-			map[string]any{
-				"tenant": tenant,
-				"skip":   skip,
-				"limit":  limit,
-			})
+				" SKIP $skip LIMIT $limit", filterCypher, sorting.SortingCypherFragment("g")),
+			params)
 		return queryResult.Collect()
 	})
 	if err != nil {

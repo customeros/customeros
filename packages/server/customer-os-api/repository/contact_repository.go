@@ -16,8 +16,8 @@ type ContactRepository interface {
 	LinkWithEntityDefinitionInTx(tx neo4j.Transaction, tenant, contactId, entityDefinitionId string) error
 	LinkWithContactTypeInTx(tx neo4j.Transaction, tenant, contactId, contactTypeId string) error
 	UnlinkFromContactTypesInTx(tx neo4j.Transaction, tenant, contactId string) error
-	GetPaginatedContacts(session neo4j.Session, tenant string, skip, limit int, sorting *utils.Sorts) (*utils.DbNodesWithTotalCount, error)
-	GetPaginatedContactsForContactGroup(session neo4j.Session, tenant string, skip, limit int, sorting *utils.Sorts, contactGroupId string) (*utils.DbNodesWithTotalCount, error)
+	GetPaginatedContacts(session neo4j.Session, tenant string, skip, limit int, sorting *utils.CypherSort) (*utils.DbNodesWithTotalCount, error)
+	GetPaginatedContactsForContactGroup(session neo4j.Session, tenant string, skip, limit int, sorting *utils.CypherSort, contactGroupId string) (*utils.DbNodesWithTotalCount, error)
 }
 
 type contactRepository struct {
@@ -139,7 +139,7 @@ func (r *contactRepository) UnlinkFromContactTypesInTx(tx neo4j.Transaction, ten
 	return nil
 }
 
-func (r *contactRepository) GetPaginatedContacts(session neo4j.Session, tenant string, skip, limit int, sorting *utils.Sorts) (*utils.DbNodesWithTotalCount, error) {
+func (r *contactRepository) GetPaginatedContacts(session neo4j.Session, tenant string, skip, limit int, sorting *utils.CypherSort) (*utils.DbNodesWithTotalCount, error) {
 	dbNodesWithTotalCount := new(utils.DbNodesWithTotalCount)
 
 	dbRecords, err := session.ReadTransaction(func(tx neo4j.Transaction) (any, error) {
@@ -175,7 +175,7 @@ func (r *contactRepository) GetPaginatedContacts(session neo4j.Session, tenant s
 	return dbNodesWithTotalCount, nil
 }
 
-func (r *contactRepository) GetPaginatedContactsForContactGroup(session neo4j.Session, tenant string, skip, limit int, sorting *utils.Sorts, contactGroupId string) (*utils.DbNodesWithTotalCount, error) {
+func (r *contactRepository) GetPaginatedContactsForContactGroup(session neo4j.Session, tenant string, skip, limit int, sorting *utils.CypherSort, contactGroupId string) (*utils.DbNodesWithTotalCount, error) {
 	dbNodesWithTotalCount := new(utils.DbNodesWithTotalCount)
 
 	dbRecords, err := session.ReadTransaction(func(tx neo4j.Transaction) (any, error) {

@@ -479,11 +479,10 @@ type Filter struct {
 }
 
 type FilterItem struct {
-	Property      string           `json:"property"`
-	Operation     *LogicalOperator `json:"operation"`
-	Value         *AnyTypeValue    `json:"value"`
-	Values        []*AnyTypeValue  `json:"values"`
-	CaseSensitive *bool            `json:"caseSensitive"`
+	Property      string             `json:"property"`
+	Operation     ComparisonOperator `json:"operation"`
+	Value         AnyTypeValue       `json:"value"`
+	CaseSensitive *bool              `json:"caseSensitive"`
 }
 
 // If provided as part of the request, results will be filtered down to the `page` and `limit` specified.
@@ -553,9 +552,9 @@ type Result struct {
 }
 
 type SortBy struct {
-	By            string            `json:"by"`
-	Direction     *SortingDirection `json:"direction"`
-	CaseSensitive *bool             `json:"caseSensitive"`
+	By            string           `json:"by"`
+	Direction     SortingDirection `json:"direction"`
+	CaseSensitive *bool            `json:"caseSensitive"`
 }
 
 // Describes the User of customerOS.  A user is the person who logs into the Openline platform.
@@ -615,6 +614,47 @@ func (this UserPage) GetTotalPages() int { return this.TotalPages }
 // The total number of elements included in the query response.
 // **Required.**
 func (this UserPage) GetTotalElements() int64 { return this.TotalElements }
+
+type ComparisonOperator string
+
+const (
+	ComparisonOperatorEq       ComparisonOperator = "EQ"
+	ComparisonOperatorContains ComparisonOperator = "CONTAINS"
+)
+
+var AllComparisonOperator = []ComparisonOperator{
+	ComparisonOperatorEq,
+	ComparisonOperatorContains,
+}
+
+func (e ComparisonOperator) IsValid() bool {
+	switch e {
+	case ComparisonOperatorEq, ComparisonOperatorContains:
+		return true
+	}
+	return false
+}
+
+func (e ComparisonOperator) String() string {
+	return string(e)
+}
+
+func (e *ComparisonOperator) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = ComparisonOperator(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid ComparisonOperator", str)
+	}
+	return nil
+}
+
+func (e ComparisonOperator) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
 
 type CustomFieldDataType string
 
@@ -785,51 +825,6 @@ func (e *EntityDefinitionExtension) UnmarshalGQL(v interface{}) error {
 }
 
 func (e EntityDefinitionExtension) MarshalGQL(w io.Writer) {
-	fmt.Fprint(w, strconv.Quote(e.String()))
-}
-
-type LogicalOperator string
-
-const (
-	LogicalOperatorEq         LogicalOperator = "EQ"
-	LogicalOperatorContains   LogicalOperator = "CONTAINS"
-	LogicalOperatorStartsWith LogicalOperator = "STARTS_WITH"
-	LogicalOperatorEndsWith   LogicalOperator = "ENDS_WITH"
-)
-
-var AllLogicalOperator = []LogicalOperator{
-	LogicalOperatorEq,
-	LogicalOperatorContains,
-	LogicalOperatorStartsWith,
-	LogicalOperatorEndsWith,
-}
-
-func (e LogicalOperator) IsValid() bool {
-	switch e {
-	case LogicalOperatorEq, LogicalOperatorContains, LogicalOperatorStartsWith, LogicalOperatorEndsWith:
-		return true
-	}
-	return false
-}
-
-func (e LogicalOperator) String() string {
-	return string(e)
-}
-
-func (e *LogicalOperator) UnmarshalGQL(v interface{}) error {
-	str, ok := v.(string)
-	if !ok {
-		return fmt.Errorf("enums must be strings")
-	}
-
-	*e = LogicalOperator(str)
-	if !e.IsValid() {
-		return fmt.Errorf("%s is not a valid LogicalOperator", str)
-	}
-	return nil
-}
-
-func (e LogicalOperator) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
 }
 

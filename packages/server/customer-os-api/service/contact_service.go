@@ -381,8 +381,8 @@ func (s *contactService) FindAllForContactGroup(ctx context.Context, page, limit
 	return &paginatedResult, nil
 }
 
-func (s *contactService) prepareContactsSorting(sortBy []*model.SortBy) (*utils.Sorts, error) {
-	transformedSorting := new(utils.Sorts)
+func (s *contactService) prepareContactsSorting(sortBy []*model.SortBy) (*utils.CypherSort, error) {
+	transformedSorting := new(utils.CypherSort)
 	if sortBy != nil {
 		for _, v := range sortBy {
 			err := transformedSorting.NewSortRule(v.By, v.Direction.String(), *v.CaseSensitive, reflect.TypeOf(entity.ContactEntity{}))
