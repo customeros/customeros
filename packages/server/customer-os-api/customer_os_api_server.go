@@ -19,7 +19,7 @@ import (
 	"log"
 )
 
-const customerOSApiPort = "1010"
+const customerOSApiPort = "10000"
 
 func graphqlHandler(driver neo4j.Driver) gin.HandlerFunc {
 	serviceContainer := container.InitServices(&driver)
