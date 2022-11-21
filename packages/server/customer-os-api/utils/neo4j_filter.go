@@ -5,6 +5,10 @@ import (
 	"strings"
 )
 
+const (
+	paramPrefix = "param"
+)
+
 type ComparisonOperator int
 type LogicalOperator int
 
@@ -60,6 +64,8 @@ type CypherFilter struct {
 	LogicalOperator LogicalOperator
 	Filters         []*CypherFilter
 	Details         *CypherFilterItem
+	nodeAlias       string
+	paramCount      int
 }
 
 func (f CypherFilter) String() string {
@@ -91,26 +97,46 @@ func (f CypherFilterItem) String() string {
 }
 
 func (f *CypherFilter) CypherFilterFragment(nodeAlias string) (Cypher, map[string]any) {
-	return "", nil
-	//if len(f.filters) == 0 {
-	//	return ""
-	//}
-	//query := " WHERE "
-	//for i := 0; i < len(f.filters); i++ {
-	//	//filterProperty := f.filters[i]
-	//	if i > 0 {
-	//		query += " , "
-	//	}
-	//	//toLower := filterProperty.supportCaseSensitive && !filterProperty.caseSensitive
-	//	//if toLower {
-	//	//	query += "toLower("
-	//	//}
-	//	//query += nodeAlias
-	//	//query += "."
-	//	//query += filterProperty.nodeProperty
-	//	//if toLower {
-	//	//	query += ")"
-	//	//}
-	//}
-	//return query
+	var cypherStr strings.Builder
+
+	if f.Details == nil && len(f.Filters) == 0 {
+		return Cypher(""), nil
+	}
+	f.nodeAlias = nodeAlias
+	f.paramCount = 0
+
+	cypherStr.WriteString(" WHERE ")
+	innerCypherStr, params := f.buildCypherFilterFragment()
+	cypherStr.WriteString(innerCypherStr)
+
+	return Cypher(cypherStr.String()), params
+}
+
+func (f *CypherFilter) buildCypherFilterFragment() (string, map[string]any) {
+	var cypherStr strings.Builder
+	var params map[string]any
+
+	if f.Negate {
+		cypherStr.WriteString(" NOT ")
+		innerCypherStr, innerParams := f.buildCypherFilterFragment()
+		AddMapToMap(innerParams, params)
+		cypherStr.WriteString(SurroundWithRoundParentheses(innerCypherStr))
+	} else if f.LogicalOperator != L_NONE {
+		i := 0
+		cypherStr.WriteString("(")
+		for _, v := range f.Filters {
+			if i > 0 {
+				cypherStr.WriteString(SurroundWithSpaces(f.LogicalOperator.String()))
+			}
+			innerCypherStr, innerParams := v.buildCypherFilterFragment()
+			AddMapToMap(innerParams, params)
+			cypherStr.WriteString(SurroundWithRoundParentheses(innerCypherStr))
+			i++
+		}
+		cypherStr.WriteString(")")
+	} else {
+		// ITEM
+	}
+
+	return cypherStr.String(), params
 }

@@ -43,3 +43,15 @@ func AddMapToMap(src, dst map[string]any) {
 		dst[k] = v
 	}
 }
+
+func SurroundWithSpaces(src string) string {
+	return SurroundWith(src, " ")
+}
+
+func SurroundWithRoundParentheses(src string) string {
+	return "(" + src + ")"
+}
+
+func SurroundWith(src, surround string) string {
+	return surround + src + surround
+}
