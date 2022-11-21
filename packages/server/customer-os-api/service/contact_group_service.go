@@ -240,8 +240,7 @@ func (s *contactGroupService) RemoveContactFromGroup(ctx context.Context, contac
 			MATCH 	(c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}), 
 					(g:ContactGroup {id:$groupId})-[:GROUP_BELONGS_TO_TENANT]->(:Tenant {name:$tenant})
 			MATCH (c)-[r:BELONGS_TO_GROUP]->(g)
-            DELETE r1
-			`,
+            DELETE r`,
 			map[string]any{
 				"tenant":    common.GetContext(ctx).Tenant,
 				"contactId": contactId,
