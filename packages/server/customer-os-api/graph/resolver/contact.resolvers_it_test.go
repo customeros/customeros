@@ -344,3 +344,44 @@ func TestQueryResolver_Contacts_SortByTitleAscFirstNameAscLastNameDesc(t *testin
 
 	require.Equal(t, 4, getCountOfNodes(driver, "Contact"))
 }
+
+func TestQueryResolver_Contact_BasicFilters_FindContactWithLetterAInName(t *testing.T) {
+	defer setupTestCase()(t)
+	createTenant(driver, tenantName)
+
+	contactFoundByFirstName := createContact(driver, tenantName, entity.ContactEntity{
+		Title:     "MR",
+		FirstName: "aa",
+		LastName:  "bb",
+	})
+	contactFoundByLastName := createContact(driver, tenantName, entity.ContactEntity{
+		Title:     "MR",
+		FirstName: "bb",
+		LastName:  "AA",
+	})
+	contactFilteredOut := createContact(driver, tenantName, entity.ContactEntity{
+		Title:     "MR",
+		FirstName: "bb",
+		LastName:  "BB",
+	})
+
+	require.Equal(t, 3, getCountOfNodes(driver, "Contact"))
+
+	rawResponse, err := c.RawPost(getQuery("get_contacts_basic_filters"))
+	assertRawResponseSuccess(t, rawResponse, err)
+
+	var contacts struct {
+		Contacts model.ContactsPage
+	}
+
+	err = decode.Decode(rawResponse.Data.(map[string]any), &contacts)
+	require.Nil(t, err)
+	require.NotNil(t, contacts.Contacts)
+	require.Equal(t, 2, len(contacts.Contacts.Content))
+	require.Equal(t, contactFoundByFirstName, contacts.Contacts.Content[0].ID)
+	require.Equal(t, contactFoundByLastName, contacts.Contacts.Content[1].ID)
+	require.Equal(t, 1, contacts.Contacts.TotalPages)
+	require.Equal(t, int64(2), contacts.Contacts.TotalElements)
+	// suppress unused warnings
+	require.NotNil(t, contactFilteredOut)
+}

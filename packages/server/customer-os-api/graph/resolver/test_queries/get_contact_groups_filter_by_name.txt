@@ -1,0 +1,19 @@
+query GetContactGroups{
+  contactGroups(where: {
+                      AND: [
+                        {OR:[
+                          {filter: {property:"NAME" value:"aa"}}
+                          {filter: {property:"NAME" operation:CONTAINS value:"ABC" caseSensitive: true}}]}
+                        {NOT: {filter: {property:"NAME" operation:CONTAINS value:"test"}}}
+                      ]
+                    }
+                 sort: [{by: "NAME"}])
+  {
+    totalPages
+    totalElements
+    content {
+      id
+      name
+    }
+  }
+}

@@ -7,16 +7,16 @@ import (
 )
 
 const (
-	tagKey                  = "neo4jDb"
-	tagLookupName           = "lookupName"
-	tagProperty             = "property"
-	tagSupportCaseSensitive = "supportCaseSensitive"
+	TagKey                  = "neo4jDb"
+	TagLookupName           = "lookupName"
+	TagProperty             = "property"
+	TagSupportCaseSensitive = "supportCaseSensitive"
 )
 
-func getPropertyDetailsByLookupName(T reflect.Type, lookupName string) (map[string]string, error) {
+func GetPropertyDetailsByLookupName(T reflect.Type, lookupName string) (map[string]string, error) {
 	for i := 0; i < T.NumField(); i++ {
 		structField := T.Field(i)
-		tag, ok := structField.Tag.Lookup(tagKey)
+		tag, ok := structField.Tag.Lookup(TagKey)
 		if ok {
 			tags := strings.Split(tag, ";")
 			if len(tags) > 0 {
@@ -27,7 +27,7 @@ func getPropertyDetailsByLookupName(T reflect.Type, lookupName string) (map[stri
 						m[kvs[0]] = kvs[1]
 					}
 				}
-				if val, ok := m[tagLookupName]; ok {
+				if val, ok := m[TagLookupName]; ok {
 					if val == lookupName {
 						return m, nil
 					}

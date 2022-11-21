@@ -21,7 +21,7 @@ extend type Query {
      - NOTES
      - CREATED_AT
     """
-    contacts(paginationFilter: PaginationFilter, sort: [SortBy!]): ContactsPage!
+    contacts(pagination: Pagination, where: Filter, sort: [SortBy!]): ContactsPage!
     contact_ByEmail(email: String!) :Contact!
     contact_ByPhone(e164: String!) :Contact!
 }

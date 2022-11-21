@@ -171,3 +171,36 @@ func TestMutationResolver_ContactGroupRemoveContact(t *testing.T) {
 
 	require.Equal(t, 1, getCountOfRelationships(driver, "BELONGS_TO_GROUP"))
 }
+
+func TestQueryResolver_ContactGroups_MultipleFiltersByName(t *testing.T) {
+	defer setupTestCase()(t)
+	createTenant(driver, tenantName)
+
+	groupAcceptFilterCaseInsensitive := createContactGroup(driver, tenantName, "aA")
+	groupAcceptFilterCaseSensitive := createContactGroup(driver, tenantName, "_ABC_")
+	groupRejectFilterCaseSensitive := createContactGroup(driver, tenantName, "_ABc_")
+	groupRejectFilterNegation := createContactGroup(driver, tenantName, "ABC_test")
+
+	require.Equal(t, 4, getCountOfNodes(driver, "ContactGroup"))
+
+	rawResponse, err := c.RawPost(getQuery("get_contact_groups_filter_by_name"))
+	assertRawResponseSuccess(t, rawResponse, err)
+
+	var groups struct {
+		ContactGroups model.ContactGroupPage
+	}
+
+	err = decode.Decode(rawResponse.Data.(map[string]any), &groups)
+	require.Nil(t, err)
+	require.NotNil(t, groups.ContactGroups)
+	require.Equal(t, 2, len(groups.ContactGroups.Content))
+	require.Equal(t, groupAcceptFilterCaseSensitive, groups.ContactGroups.Content[0].ID)
+	require.Equal(t, groupAcceptFilterCaseInsensitive, groups.ContactGroups.Content[1].ID)
+	require.Equal(t, 1, groups.ContactGroups.TotalPages)
+	require.Equal(t, int64(2), groups.ContactGroups.TotalElements)
+	// suppress unused warnings
+	require.NotNil(t, groupRejectFilterCaseSensitive)
+	require.NotNil(t, groupRejectFilterNegation)
+
+	require.Equal(t, 4, getCountOfNodes(driver, "ContactGroup"))
+}

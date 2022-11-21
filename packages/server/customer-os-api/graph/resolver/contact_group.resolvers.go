@@ -14,11 +14,11 @@ import (
 )
 
 // Contacts is the resolver for the contacts field.
-func (r *contactGroupResolver) Contacts(ctx context.Context, obj *model.ContactGroup, paginationFilter *model.PaginationFilter, sort []*model.SortBy) (*model.ContactsPage, error) {
-	if paginationFilter == nil {
-		paginationFilter = &model.PaginationFilter{Page: 0, Limit: 0}
+func (r *contactGroupResolver) Contacts(ctx context.Context, obj *model.ContactGroup, pagination *model.Pagination, sort []*model.SortBy) (*model.ContactsPage, error) {
+	if pagination == nil {
+		pagination = &model.Pagination{Page: 0, Limit: 0}
 	}
-	paginatedResult, err := r.ServiceContainer.ContactService.FindAllForContactGroup(ctx, paginationFilter.Page, paginationFilter.Limit, sort, obj.ID)
+	paginatedResult, err := r.ServiceContainer.ContactService.FindAllForContactGroup(ctx, pagination.Page, pagination.Limit, sort, obj.ID)
 	return &model.ContactsPage{
 		Content:       mapper.MapEntitiesToContacts(paginatedResult.Rows.(*entity.ContactEntities)),
 		TotalPages:    paginatedResult.TotalPages,
@@ -94,11 +94,15 @@ func (r *queryResolver) ContactGroup(ctx context.Context, id string) (*model.Con
 }
 
 // ContactGroups is the resolver for the contactGroups field.
-func (r *queryResolver) ContactGroups(ctx context.Context, paginationFilter *model.PaginationFilter, sort []*model.SortBy) (*model.ContactGroupPage, error) {
-	if paginationFilter == nil {
-		paginationFilter = &model.PaginationFilter{Page: 0, Limit: 0}
+func (r *queryResolver) ContactGroups(ctx context.Context, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) (*model.ContactGroupPage, error) {
+	if pagination == nil {
+		pagination = &model.Pagination{Page: 0, Limit: 0}
 	}
-	paginatedResult, err := r.ServiceContainer.ContactGroupService.FindAll(ctx, paginationFilter.Page, paginationFilter.Limit, sort)
+	paginatedResult, err := r.ServiceContainer.ContactGroupService.FindAll(ctx, pagination.Page, pagination.Limit, where, sort)
+	if err != nil {
+		graphql.AddErrorf(ctx, "Could not fetch contact groups")
+		return nil, err
+	}
 	return &model.ContactGroupPage{
 		Content:       mapper.MapEntitiesToContactGroups(paginatedResult.Rows.(*entity.ContactGroupEntities)),
 		TotalPages:    paginatedResult.TotalPages,

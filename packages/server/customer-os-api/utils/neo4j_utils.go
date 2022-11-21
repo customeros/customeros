@@ -6,6 +6,12 @@ import (
 	"time"
 )
 
+type Cypher string
+
+func CypherPtr(cypher Cypher) *Cypher {
+	return &cypher
+}
+
 type DbNodesWithTotalCount struct {
 	Nodes []*dbtype.Node
 	Count int64

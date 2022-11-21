@@ -84,7 +84,7 @@ type ComplexityRoot struct {
 		ID          func(childComplexity int) int
 		Name        func(childComplexity int) int
 		Platform    func(childComplexity int) int
-		Sessions    func(childComplexity int, timeFilter model.TimeFilter, dataFilter []*model.AppSessionsDataFilter, paginationFilter *model.PaginationFilter) int
+		Sessions    func(childComplexity int, timeFilter model.TimeFilter, dataFilter []*model.AppSessionsDataFilter, pagination *model.Pagination) int
 		TrackerName func(childComplexity int) int
 	}
 
@@ -106,7 +106,7 @@ type AppSessionResolver interface {
 	PageViews(ctx context.Context, obj *model.AppSession) ([]*model.PageView, error)
 }
 type ApplicationResolver interface {
-	Sessions(ctx context.Context, obj *model.Application, timeFilter model.TimeFilter, dataFilter []*model.AppSessionsDataFilter, paginationFilter *model.PaginationFilter) (*model.AppSessionsPage, error)
+	Sessions(ctx context.Context, obj *model.Application, timeFilter model.TimeFilter, dataFilter []*model.AppSessionsDataFilter, pagination *model.Pagination) (*model.AppSessionsPage, error)
 }
 type QueryResolver interface {
 	Application(ctx context.Context, id *string) (*model.Application, error)
@@ -355,7 +355,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Application.Sessions(childComplexity, args["timeFilter"].(model.TimeFilter), args["dataFilter"].([]*model.AppSessionsDataFilter), args["paginationFilter"].(*model.PaginationFilter)), true
+		return e.complexity.Application.Sessions(childComplexity, args["timeFilter"].(model.TimeFilter), args["dataFilter"].([]*model.AppSessionsDataFilter), args["pagination"].(*model.Pagination)), true
 
 	case "Application.trackerName":
 		if e.complexity.Application.TrackerName == nil {
@@ -427,7 +427,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 	ec := executionContext{rc, e}
 	inputUnmarshalMap := graphql.BuildUnmarshalerMap(
 		ec.unmarshalInputAppSessionsDataFilter,
-		ec.unmarshalInputPaginationFilter,
+		ec.unmarshalInputPagination,
 		ec.unmarshalInputTimeFilter,
 	)
 	first := true
@@ -474,7 +474,9 @@ func (ec *executionContext) introspectType(name string) (*introspection.Type, er
 }
 
 var sources = []*ast.Source{
-	{Name: "../graphqls/filter.graphqls", Input: `input PaginationFilter {
+	{Name: "../schemas/directive.graphqls", Input: `# build-in directive by Gqlgen
+directive @goField(forceResolver: Boolean, name: String) on FIELD_DEFINITION | INPUT_FIELD_DEFINITION`, BuiltIn: false},
+	{Name: "../schemas/filter.graphqls", Input: `input Pagination {
     page: Int!
     limit: Int!
 }
@@ -534,14 +536,11 @@ enum TimePeriod {
     ALL_TIME
     CUSTOM
 }`, BuiltIn: false},
-	{Name: "../graphqls/interfaces.graphqls", Input: `interface PagedResult {
+	{Name: "../schemas/interfaces.graphqls", Input: `interface PagedResult {
     totalPages: Int!
     totalElements: Int64!
 }`, BuiltIn: false},
-	{Name: "../graphqls/query.graphqls", Input: `# build-in directive by Gqlgen
-directive @goField(forceResolver: Boolean, name: String) on FIELD_DEFINITION | INPUT_FIELD_DEFINITION
-
-type Query {
+	{Name: "../schemas/query.graphqls", Input: `type Query {
     application(id: ID): Application!
     applications: [Application!]!
 }
@@ -551,7 +550,7 @@ type Application {
     platform: String!
     name: String!
     trackerName: String!
-    sessions(timeFilter: TimeFilter!, dataFilter: [AppSessionsDataFilter], paginationFilter: PaginationFilter): AppSessionsPage! @goField(forceResolver: true)
+    sessions(timeFilter: TimeFilter!, dataFilter: [AppSessionsDataFilter], pagination: Pagination): AppSessionsPage! @goField(forceResolver: true)
 }
 
 type AppSessionsPage implements PagedResult {
@@ -595,7 +594,7 @@ type PageView {
     order: Int!
     engagedTime: Int!
 }`, BuiltIn: false},
-	{Name: "../graphqls/scalar.graphqls", Input: `scalar Time
+	{Name: "../schemas/scalar.graphqls", Input: `scalar Time
 scalar Int64
 `, BuiltIn: false},
 }
@@ -626,15 +625,15 @@ func (ec *executionContext) field_Application_sessions_args(ctx context.Context,
 		}
 	}
 	args["dataFilter"] = arg1
-	var arg2 *model.PaginationFilter
-	if tmp, ok := rawArgs["paginationFilter"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("paginationFilter"))
-		arg2, err = ec.unmarshalOPaginationFilter2ᚖgithubᚗcomᚗopenlineᚑaiᚗcustomerᚑosᚑanalyticsᚑapiᚋgraphᚋmodelᚐPaginationFilter(ctx, tmp)
+	var arg2 *model.Pagination
+	if tmp, ok := rawArgs["pagination"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("pagination"))
+		arg2, err = ec.unmarshalOPagination2ᚖgithubᚗcomᚗopenlineᚑaiᚗcustomerᚑosᚑanalyticsᚑapiᚋgraphᚋmodelᚐPagination(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["paginationFilter"] = arg2
+	args["pagination"] = arg2
 	return args, nil
 }
 
@@ -2192,7 +2191,7 @@ func (ec *executionContext) _Application_sessions(ctx context.Context, field gra
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Application().Sessions(rctx, obj, fc.Args["timeFilter"].(model.TimeFilter), fc.Args["dataFilter"].([]*model.AppSessionsDataFilter), fc.Args["paginationFilter"].(*model.PaginationFilter))
+		return ec.resolvers.Application().Sessions(rctx, obj, fc.Args["timeFilter"].(model.TimeFilter), fc.Args["dataFilter"].([]*model.AppSessionsDataFilter), fc.Args["pagination"].(*model.Pagination))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -4530,8 +4529,8 @@ func (ec *executionContext) unmarshalInputAppSessionsDataFilter(ctx context.Cont
 	return it, nil
 }
 
-func (ec *executionContext) unmarshalInputPaginationFilter(ctx context.Context, obj interface{}) (model.PaginationFilter, error) {
-	var it model.PaginationFilter
+func (ec *executionContext) unmarshalInputPagination(ctx context.Context, obj interface{}) (model.Pagination, error) {
+	var it model.Pagination
 	asMap := map[string]interface{}{}
 	for k, v := range obj.(map[string]interface{}) {
 		asMap[k] = v
@@ -6044,11 +6043,11 @@ func (ec *executionContext) marshalOID2ᚖstring(ctx context.Context, sel ast.Se
 	return res
 }
 
-func (ec *executionContext) unmarshalOPaginationFilter2ᚖgithubᚗcomᚗopenlineᚑaiᚗcustomerᚑosᚑanalyticsᚑapiᚋgraphᚋmodelᚐPaginationFilter(ctx context.Context, v interface{}) (*model.PaginationFilter, error) {
+func (ec *executionContext) unmarshalOPagination2ᚖgithubᚗcomᚗopenlineᚑaiᚗcustomerᚑosᚑanalyticsᚑapiᚋgraphᚋmodelᚐPagination(ctx context.Context, v interface{}) (*model.Pagination, error) {
 	if v == nil {
 		return nil, nil
 	}
-	res, err := ec.unmarshalInputPaginationFilter(ctx, v)
+	res, err := ec.unmarshalInputPagination(ctx, v)
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 

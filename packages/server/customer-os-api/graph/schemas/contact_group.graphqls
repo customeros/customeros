@@ -15,7 +15,7 @@ extend type Query {
     Possible values for sort:
     - NAME
     """
-    contactGroups(paginationFilter: PaginationFilter, sort: [SortBy!]): ContactGroupPage!
+    contactGroups(pagination: Pagination, where: Filter, sort: [SortBy!]): ContactGroupPage!
 }
 
 extend type Mutation {
@@ -44,7 +44,7 @@ type ContactGroup {
     """
     name: String!
 
-    contacts(paginationFilter: PaginationFilter, sort: [SortBy!]): ContactsPage! @goField(forceResolver: true)
+    contacts(pagination: Pagination, sort: [SortBy!]): ContactsPage! @goField(forceResolver: true)
 }
 
 """

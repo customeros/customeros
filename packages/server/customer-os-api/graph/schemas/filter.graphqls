@@ -1,7 +1,7 @@
 """
 If provided as part of the request, results will be filtered down to the `page` and `limit` specified.
 """
-input PaginationFilter {
+input Pagination {
 
     """
     The results page to return in the response.
@@ -18,7 +18,7 @@ input PaginationFilter {
 
 input SortBy {
     by: String!
-    direction: SortingDirection = ASC
+    direction: SortingDirection! = ASC
     caseSensitive: Boolean = false
 }
 
@@ -27,14 +27,21 @@ enum SortingDirection {
     DESC
 }
 
-#input FilterBy {
-#    by: String!
-#    operation: String = "EQ"
-#    caseSensitive: Boolean = false
-#}
-#
-#input GroupBy {
-#    filters: [FilterBy!]!
-#    logicalOperation: String = "AND"
-#}
+input Filter {
+    NOT: Filter
+    AND: [Filter!]
+    OR: [Filter!]
+    filter: FilterItem
+}
 
+input FilterItem {
+    property: String!
+    operation: ComparisonOperator! = EQ
+    value: Any!
+    caseSensitive: Boolean = false
+}
+
+enum ComparisonOperator {
+    EQ
+    CONTAINS
+}

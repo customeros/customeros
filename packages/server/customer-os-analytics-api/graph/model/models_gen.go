@@ -59,7 +59,7 @@ func (AppSessionsPage) IsPagedResult()               {}
 func (this AppSessionsPage) GetTotalPages() int      { return this.TotalPages }
 func (this AppSessionsPage) GetTotalElements() int64 { return this.TotalElements }
 
-type PaginationFilter struct {
+type Pagination struct {
 	Page  int `json:"page"`
 	Limit int `json:"limit"`
 }

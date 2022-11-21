@@ -1,5 +1,5 @@
 extend type Query {
-    users(paginationFilter: PaginationFilter): UserPage!
+    users(pagination: Pagination): UserPage!
 }
 
 extend type Mutation {

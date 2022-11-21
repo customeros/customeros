@@ -19,7 +19,7 @@ type ContactGroupService interface {
 	Delete(ctx context.Context, id string) (bool, error)
 
 	FindContactGroupById(ctx context.Context, id string) (*entity.ContactGroupEntity, error)
-	FindAll(ctx context.Context, page, limit int, sortBy []*model.SortBy) (*utils.Pagination, error)
+	FindAll(ctx context.Context, page, limit int, filter *model.Filter, sortBy []*model.SortBy) (*utils.Pagination, error)
 	FindAllForContact(ctx context.Context, contact *model.Contact) (*entity.ContactGroupEntities, error)
 
 	AddContactToGroup(ctx context.Context, contactId, groupId string) (bool, error)
@@ -118,7 +118,7 @@ func (s *contactGroupService) Delete(ctx context.Context, id string) (bool, erro
 	return queryResult.(bool), nil
 }
 
-func (s *contactGroupService) FindAll(ctx context.Context, page, limit int, sortBy []*model.SortBy) (*utils.Pagination, error) {
+func (s *contactGroupService) FindAll(ctx context.Context, page, limit int, filter *model.Filter, sortBy []*model.SortBy) (*utils.Pagination, error) {
 	session := utils.NewNeo4jReadSession(s.getDriver())
 	defer session.Close()
 
@@ -126,7 +126,11 @@ func (s *contactGroupService) FindAll(ctx context.Context, page, limit int, sort
 		Limit: limit,
 		Page:  page,
 	}
-	sortings, err := s.prepareContactGroupsSorting(sortBy)
+	cypherSort, err := s.prepareContactGroupsSorting(sortBy)
+	if err != nil {
+		return nil, err
+	}
+	cypherFilter, err := buildFilter(filter, reflect.TypeOf(entity.ContactGroupEntity{}))
 	if err != nil {
 		return nil, err
 	}
@@ -136,7 +140,8 @@ func (s *contactGroupService) FindAll(ctx context.Context, page, limit int, sort
 		common.GetContext(ctx).Tenant,
 		paginatedResult.GetSkip(),
 		paginatedResult.GetLimit(),
-		sortings)
+		cypherFilter,
+		cypherSort)
 	if err != nil {
 		return nil, err
 	}
@@ -256,8 +261,8 @@ func (s *contactGroupService) RemoveContactFromGroup(ctx context.Context, contac
 	return queryResult.(bool), nil
 }
 
-func (s *contactGroupService) prepareContactGroupsSorting(sortBy []*model.SortBy) (*utils.Sorts, error) {
-	transformedSorting := new(utils.Sorts)
+func (s *contactGroupService) prepareContactGroupsSorting(sortBy []*model.SortBy) (*utils.CypherSort, error) {
+	transformedSorting := new(utils.CypherSort)
 	if sortBy != nil {
 		for _, v := range sortBy {
 			err := transformedSorting.NewSortRule(v.By, v.Direction.String(), *v.CaseSensitive, reflect.TypeOf(entity.ContactGroupEntity{}))
