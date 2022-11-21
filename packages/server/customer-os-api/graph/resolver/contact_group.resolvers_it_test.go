@@ -1,6 +1,7 @@
 package resolver
 
 import (
+	"github.com/99designs/gqlgen/client"
 	"github.com/openline-ai/openline-customer-os/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/customer-os-api/utils/decode"
@@ -139,4 +140,34 @@ func TestQueryResolver_Contacts_ForContactGroup(t *testing.T) {
 	require.Equal(t, int64(0), thirdGroup.Contacts.TotalElements)
 	require.Equal(t, 0, thirdGroup.Contacts.TotalPages)
 	require.Equal(t, 0, len(thirdGroup.Contacts.Content))
+}
+
+func TestMutationResolver_ContactGroupRemoveContact(t *testing.T) {
+	defer setupTestCase()(t)
+	createTenant(driver, tenantName)
+	contactId1 := createDefaultContact(driver, tenantName)
+	contactId2 := createDefaultContact(driver, tenantName)
+	groupId := createContactGroup(driver, tenantName, "Group1")
+	addContactToGroup(driver, contactId1, groupId)
+	addContactToGroup(driver, contactId2, groupId)
+
+	require.Equal(t, 2, getCountOfNodes(driver, "Contact"))
+	require.Equal(t, 1, getCountOfNodes(driver, "ContactGroup"))
+	require.Equal(t, 2, getCountOfRelationships(driver, "BELONGS_TO_GROUP"))
+
+	rawResponse, err := c.RawPost(getQuery("remove_contact_from_group"),
+		client.Var("contactId", contactId1),
+		client.Var("groupId", groupId))
+	assertRawResponseSuccess(t, rawResponse, err)
+
+	var result struct {
+		ContactGroupRemoveContact model.Result
+	}
+
+	err = decode.Decode(rawResponse.Data.(map[string]any), &result)
+	require.Nil(t, err)
+	require.NotNil(t, result)
+	require.Equal(t, true, result.ContactGroupRemoveContact.Result)
+
+	require.Equal(t, 1, getCountOfRelationships(driver, "BELONGS_TO_GROUP"))
 }
