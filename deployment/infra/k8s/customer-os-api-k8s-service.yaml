@@ -1,12 +1,12 @@
 apiVersion: v1
-kind: Service                    # Type of kubernetes resource
+kind: Service
 metadata:
-  name: customer-os-api-service   # Name of the resource
+  name: customer-os-api-service
 spec:
-  type: NodePort                 # A port is opened on each node in your cluster via Kube proxy.
-  ports:                         # Take incoming HTTP requests on port 10010 and forward them to the targetPort of 1010
+  type: NodePort               .
+  ports:
     - name: http
-      port: 10010
-      targetPort: 1010
+      port: 10000
+      targetPort: 10000
   selector:
-    app: customer-os-api         # Map any pod with label `app=customer-os-api` to this service
+    app: customer-os-api

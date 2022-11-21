@@ -1,35 +1,35 @@
 apiVersion: apps/v1
-kind: Deployment                 # Type of Kubernetes resource
+kind: Deployment
 metadata:
-  name: customer-os-api           # Name of the Kubernetes resource
+  name: customer-os-api
 spec:
-  replicas: 1                    # Number of pods to run at any given time
+  replicas: 1
   selector:
     matchLabels:
-      app: customer-os-api        # This deployment applies to any Pods matching the specified label
-  template:                      # This deployment will create a set of pods using the configurations in this template
+      app: customer-os-api
+  template:
     metadata:
-      labels:                    # The labels that will be applied to all of the pods in this deployment
+      labels:
         app: customer-os-api
-    spec:                        # Spec for the container which will run in the Pod
+    spec:
       containers:
         - image: ghcr.io/openline-ai/openline-customer-os/customer-os-api:latest
           name: customer-os-api
           imagePullPolicy: Never
           ports:
-            - containerPort: 1010  # Should match the port number that the Go application listens on
-          livenessProbe:           # To check the health of the Pod
+            - containerPort: 10000
+          livenessProbe:
             httpGet:
               path: /health
-              port: 1010
+              port: 10000
               scheme: HTTP
             initialDelaySeconds: 5
             periodSeconds: 15
             timeoutSeconds: 5
-          readinessProbe:          # To check if the Pod is ready to serve traffic or not
+          readinessProbe: # To check if the Pod is ready to serve traffic or not
             httpGet:
               path: /readiness
-              port: 1010
+              port: 10000
               scheme: HTTP
             initialDelaySeconds: 5
             timeoutSeconds: 1
@@ -42,11 +42,11 @@ spec:
               value: "StrongLocalPa$$$"
             - name: NEO4J_AUTH_REALM
               value: ""
-            - name: NEO4J_MAX_CONN_POOL_SIZE 
+            - name: NEO4J_MAX_CONN_POOL_SIZE
               value: "100"
             - name: GRAPHQL_PLAYGROUND_ENABLED
               value: "true"
             - name: NEO4J_LOG_LEVEL
               value: "INFO"
             - name: PORT
-              value: "1010"
+              value: "10000"

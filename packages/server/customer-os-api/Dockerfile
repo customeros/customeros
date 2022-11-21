@@ -16,5 +16,5 @@ FROM alpine:3.14
 COPY --chown=65534:65534 --from=builder /go/bin/app .
 USER 65534
 
-EXPOSE 1010
+EXPOSE 10000
 ENTRYPOINT [ "./app" ]
