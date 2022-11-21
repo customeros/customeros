@@ -33,6 +33,6 @@ spec:
             - name: DB_PORT
               value: "5432"
             - name: CUSTOMER_OS_API
-              value: "http://customer-os-api-service.openline.svc.cluster.local:10010/query"
+              value: "http://customer-os-api-service.openline.svc.cluster.local:10000/query"
             - name: MESSAGE_STORE_SERVER_PORT
               value: "9009"
