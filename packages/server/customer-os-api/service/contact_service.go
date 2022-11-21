@@ -22,7 +22,7 @@ type ContactService interface {
 	FindContactByEmail(ctx context.Context, email string) (*entity.ContactEntity, error)
 	FindContactByPhoneNumber(ctx context.Context, e164 string) (*entity.ContactEntity, error)
 
-	FindAll(ctx context.Context, page, limit int, sortBy []*model.SortBy) (*utils.Pagination, error)
+	FindAll(ctx context.Context, page, limit int, filter *model.Filter, sortBy []*model.SortBy) (*utils.Pagination, error)
 	FindAllForContactGroup(ctx context.Context, page, limit int, sortBy []*model.SortBy, contactGroupId string) (*utils.Pagination, error)
 
 	HardDelete(ctx context.Context, id string) (bool, error)
@@ -314,7 +314,7 @@ func (s *contactService) FindContactByPhoneNumber(ctx context.Context, e164 stri
 	return s.mapDbNodeToContactEntity(utils.NodePtr(queryResult.(dbtype.Node))), nil
 }
 
-func (s *contactService) FindAll(ctx context.Context, page, limit int, sortBy []*model.SortBy) (*utils.Pagination, error) {
+func (s *contactService) FindAll(ctx context.Context, page, limit int, filter *model.Filter, sortBy []*model.SortBy) (*utils.Pagination, error) {
 	session := utils.NewNeo4jReadSession(s.getDriver())
 	defer session.Close()
 
@@ -322,7 +322,11 @@ func (s *contactService) FindAll(ctx context.Context, page, limit int, sortBy []
 		Limit: limit,
 		Page:  page,
 	}
-	sortings, err := s.prepareContactsSorting(sortBy)
+	cypherSort, err := s.prepareContactsSorting(sortBy)
+	if err != nil {
+		return nil, err
+	}
+	cypherFilter, err := buildFilter(filter, reflect.TypeOf(entity.ContactEntity{}))
 	if err != nil {
 		return nil, err
 	}
@@ -332,7 +336,8 @@ func (s *contactService) FindAll(ctx context.Context, page, limit int, sortBy []
 		common.GetContext(ctx).Tenant,
 		paginatedResult.GetSkip(),
 		paginatedResult.GetLimit(),
-		sortings)
+		cypherFilter,
+		cypherSort)
 	if err != nil {
 		return nil, err
 	}

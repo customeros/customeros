@@ -2,11 +2,12 @@ package utils
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 )
 
 const (
-	paramPrefix = "param"
+	paramPrefix = "param_"
 )
 
 type ComparisonOperator int
@@ -28,6 +29,19 @@ func (c ComparisonOperator) String() string {
 		return "CONTAINS"
 	default:
 		return fmt.Sprintf("%d", int(c))
+	}
+}
+
+func (c ComparisonOperator) CypherString() string {
+	switch c {
+	case C_NONE:
+		return ""
+	case EQUALS:
+		return "="
+	case CONTAINS:
+		return "CONTAINS"
+	default:
+		return "="
 	}
 }
 
@@ -64,7 +78,6 @@ type CypherFilter struct {
 	LogicalOperator LogicalOperator
 	Filters         []*CypherFilter
 	Details         *CypherFilterItem
-	nodeAlias       string
 	paramCount      int
 }
 
@@ -97,45 +110,73 @@ func (f CypherFilterItem) String() string {
 }
 
 func (f *CypherFilter) CypherFilterFragment(nodeAlias string) (Cypher, map[string]any) {
-	var cypherStr strings.Builder
-
-	if f.Details == nil && len(f.Filters) == 0 {
-		return Cypher(""), nil
+	if f == nil || (f.Details == nil && (f.Filters == nil || len(f.Filters) == 0)) {
+		return "", map[string]any{}
 	}
-	f.nodeAlias = nodeAlias
+
 	f.paramCount = 0
 
+	var cypherStr strings.Builder
 	cypherStr.WriteString(" WHERE ")
-	innerCypherStr, params := f.buildCypherFilterFragment()
+	innerCypherStr, params := f.buildCypherFilterFragment(nodeAlias)
 	cypherStr.WriteString(innerCypherStr)
 
 	return Cypher(cypherStr.String()), params
 }
 
-func (f *CypherFilter) buildCypherFilterFragment() (string, map[string]any) {
+func (f *CypherFilter) buildCypherFilterFragment(nodeAlias string) (string, map[string]any) {
 	var cypherStr strings.Builder
-	var params map[string]any
+	var params = map[string]any{}
 
 	if f.Negate {
 		cypherStr.WriteString(" NOT ")
-		innerCypherStr, innerParams := f.buildCypherFilterFragment()
-		AddMapToMap(innerParams, params)
+		f.Filters[0].paramCount = f.paramCount
+		innerCypherStr, innerParams := f.Filters[0].buildCypherFilterFragment(nodeAlias)
+		f.paramCount = f.Filters[0].paramCount
+		MergeMapToMap(innerParams, params)
 		cypherStr.WriteString(SurroundWithRoundParentheses(innerCypherStr))
 	} else if f.LogicalOperator != L_NONE {
-		i := 0
 		cypherStr.WriteString("(")
+		i := 0
 		for _, v := range f.Filters {
 			if i > 0 {
 				cypherStr.WriteString(SurroundWithSpaces(f.LogicalOperator.String()))
 			}
-			innerCypherStr, innerParams := v.buildCypherFilterFragment()
-			AddMapToMap(innerParams, params)
+			v.paramCount = f.paramCount
+			innerCypherStr, innerParams := v.buildCypherFilterFragment(nodeAlias)
+			f.paramCount = v.paramCount
+			MergeMapToMap(innerParams, params)
 			cypherStr.WriteString(SurroundWithRoundParentheses(innerCypherStr))
 			i++
 		}
 		cypherStr.WriteString(")")
 	} else {
-		// ITEM
+		toLower := f.Details.SupportCaseSensitive && !f.Details.CaseSensitive
+		if toLower {
+			cypherStr.WriteString("toLower(")
+		}
+		cypherStr.WriteString(nodeAlias)
+		cypherStr.WriteString(".")
+		cypherStr.WriteString(f.Details.NodeProperty)
+		if toLower {
+			cypherStr.WriteString(")")
+		}
+		cypherStr.WriteString(SurroundWithSpaces(f.Details.ComparisonOperator.CypherString()))
+		if toLower {
+			cypherStr.WriteString("toLower(")
+		}
+		f.paramCount++
+		paramSuffix := strconv.Itoa(f.paramCount)
+		cypherStr.WriteString("$" + paramPrefix + paramSuffix)
+		if params == nil {
+			params = map[string]any{paramPrefix + paramSuffix: f.Details.Value}
+		} else {
+			params[paramPrefix+paramSuffix] = f.Details.Value
+		}
+
+		if toLower {
+			cypherStr.WriteString(")")
+		}
 	}
 
 	return cypherStr.String(), params

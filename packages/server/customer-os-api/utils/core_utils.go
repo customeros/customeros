@@ -1,6 +1,9 @@
 package utils
 
-import "github.com/neo4j/neo4j-go-driver/v4/neo4j/dbtype"
+import (
+	"github.com/neo4j/neo4j-go-driver/v4/neo4j/dbtype"
+	"log"
+)
 
 func StringPtr(str string) *string {
 	return &str
@@ -38,9 +41,13 @@ func IntPtrToInt64Ptr(v *int) *int64 {
 	return &output
 }
 
-func AddMapToMap(src, dst map[string]any) {
-	for k, v := range src {
-		dst[k] = v
+func MergeMapToMap(src, dst map[string]any) {
+	if dst == nil {
+		log.Panic("expecting not nil map")
+	} else if src != nil {
+		for k, v := range src {
+			dst[k] = v
+		}
 	}
 }
 

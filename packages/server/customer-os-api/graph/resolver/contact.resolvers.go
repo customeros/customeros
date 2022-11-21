@@ -196,11 +196,11 @@ func (r *queryResolver) Contact(ctx context.Context, id string) (*model.Contact,
 }
 
 // Contacts is the resolver for the contacts field.
-func (r *queryResolver) Contacts(ctx context.Context, pagination *model.Pagination, sort []*model.SortBy) (*model.ContactsPage, error) {
+func (r *queryResolver) Contacts(ctx context.Context, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) (*model.ContactsPage, error) {
 	if pagination == nil {
 		pagination = &model.Pagination{Page: 0, Limit: 0}
 	}
-	paginatedResult, err := r.ServiceContainer.ContactService.FindAll(ctx, pagination.Page, pagination.Limit, sort)
+	paginatedResult, err := r.ServiceContainer.ContactService.FindAll(ctx, pagination.Page, pagination.Limit, where, sort)
 	return &model.ContactsPage{
 		Content:       mapper.MapEntitiesToContacts(paginatedResult.Rows.(*entity.ContactEntities)),
 		TotalPages:    paginatedResult.TotalPages,

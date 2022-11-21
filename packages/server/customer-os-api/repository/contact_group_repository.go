@@ -26,14 +26,13 @@ func (r *contactGroupRepository) GetPaginatedContactGroups(session neo4j.Session
 	dbNodesWithTotalCount := new(utils.DbNodesWithTotalCount)
 
 	dbRecords, err := session.ReadTransaction(func(tx neo4j.Transaction) (any, error) {
-		filterCypher, filterParams := filter.CypherFilterFragment("g")
+		filterCypherStr, filterParams := filter.CypherFilterFragment("g")
 		countParams := map[string]any{
 			"tenant": tenant,
 		}
-		utils.AddMapToMap(filterParams, countParams)
+		utils.MergeMapToMap(filterParams, countParams)
 
-		queryResult, err := tx.Run(`
-				MATCH (:Tenant {name:$tenant})<-[:GROUP_BELONGS_TO_TENANT]-(cg:ContactGroup) RETURN count(cg) as count`,
+		queryResult, err := tx.Run(fmt.Sprintf("MATCH (:Tenant {name:$tenant})<-[:GROUP_BELONGS_TO_TENANT]-(g:ContactGroup) %s RETURN count(g) as count", filterCypherStr),
 			countParams)
 		if err != nil {
 			return nil, err
@@ -46,14 +45,14 @@ func (r *contactGroupRepository) GetPaginatedContactGroups(session neo4j.Session
 			"skip":   skip,
 			"limit":  limit,
 		}
-		utils.AddMapToMap(filterParams, params)
+		utils.MergeMapToMap(filterParams, params)
 
 		queryResult, err = tx.Run(fmt.Sprintf(
 			"MATCH (:Tenant {name:$tenant})<-[:GROUP_BELONGS_TO_TENANT]-(g:ContactGroup) "+
 				" %s "+
 				" RETURN g "+
 				" %s "+
-				" SKIP $skip LIMIT $limit", filterCypher, sorting.SortingCypherFragment("g")),
+				" SKIP $skip LIMIT $limit", filterCypherStr, sorting.SortingCypherFragment("g")),
 			params)
 		return queryResult.Collect()
 	})
