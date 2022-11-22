@@ -122,7 +122,8 @@ type Contact struct {
 	// Definition of the contact in customerOS.
 	Definition *EntityDefinition `json:"definition"`
 	// Contact owner (user)
-	Owner *User `json:"owner"`
+	Owner         *User             `json:"owner"`
+	Conversations *ConversationPage `json:"conversations"`
 }
 
 func (Contact) IsExtensibleEntity()                   {}
@@ -281,6 +282,10 @@ func (this ContactsPage) GetTotalElements() int64 { return this.TotalElements }
 type Conversation struct {
 	ID        string    `json:"id"`
 	StartedAt time.Time `json:"startedAt"`
+	ContactID string    `json:"contactId"`
+	Contact   *Contact  `json:"contact"`
+	UserID    string    `json:"userId"`
+	User      *User     `json:"user"`
 }
 
 func (Conversation) IsNode()            {}
@@ -291,6 +296,22 @@ type ConversationInput struct {
 	ContactID string  `json:"contactId"`
 	ID        *string `json:"id"`
 }
+
+type ConversationPage struct {
+	Content       []*Conversation `json:"content"`
+	TotalPages    int             `json:"totalPages"`
+	TotalElements int64           `json:"totalElements"`
+}
+
+func (ConversationPage) IsPages() {}
+
+// The total number of pages included in the query response.
+// **Required.**
+func (this ConversationPage) GetTotalPages() int { return this.TotalPages }
+
+// The total number of elements included in the query response.
+// **Required.**
+func (this ConversationPage) GetTotalElements() int64 { return this.TotalElements }
 
 // Describes a custom, user-defined field associated with a `Contact`.
 // **A `return` object.**
@@ -574,7 +595,8 @@ type User struct {
 	Email string `json:"email"`
 	// Timestamp of user creation.
 	// **Required**
-	CreatedAt time.Time `json:"createdAt"`
+	CreatedAt     time.Time         `json:"createdAt"`
+	Conversations *ConversationPage `json:"conversations"`
 }
 
 // Describes the User of customerOS.  A user is the person who logs into the Openline platform.

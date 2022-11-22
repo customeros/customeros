@@ -1,0 +1,21 @@
+query GetUserById($userId: ID!){
+  user(id: $userId) {
+    id
+    conversations(sort:[{by:"STARTED_AT"}]) {
+        totalPages
+        totalElements
+        content {
+            id
+            startedAt
+            contactId
+            userId
+            contact {
+                id
+            }
+            user {
+                id
+            }
+        }
+    }
+  }
+}

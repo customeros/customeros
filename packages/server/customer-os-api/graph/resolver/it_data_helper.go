@@ -277,6 +277,19 @@ func userOwnsContact(driver *neo4j.Driver, userId, contactId string) {
 	})
 }
 
+func createConversation(driver *neo4j.Driver, userId, contactId string) string {
+	var conversationId, _ = uuid.NewRandom()
+	query := `MATCH (c:Contact {id:$contactId}),
+			        (u:User {id:$userId})
+			MERGE (u)-[:PARTICIPATES]->(o:Conversation {id:$conversationId, startedAt:datetime({timezone: 'UTC'})})<-[:PARTICIPATES]-(c)`
+	integration_tests.ExecuteWriteQuery(driver, query, map[string]any{
+		"contactId":      contactId,
+		"userId":         userId,
+		"conversationId": conversationId.String(),
+	})
+	return conversationId.String()
+}
+
 func getCountOfNodes(driver *neo4j.Driver, nodeLabel string) int {
 	query := fmt.Sprintf(`MATCH (n:%s) RETURN count(n)`, nodeLabel)
 	result := integration_tests.ExecuteReadQueryWithSingleReturn(driver, query, map[string]any{})

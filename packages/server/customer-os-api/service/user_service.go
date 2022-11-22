@@ -17,6 +17,7 @@ type UserService interface {
 	Create(ctx context.Context, user *entity.UserEntity) (*entity.UserEntity, error)
 	FindAll(ctx context.Context, page, limit int, filter *model.Filter, sortBy []*model.SortBy) (*utils.Pagination, error)
 	FindContactOwner(ctx context.Context, contactId string) (*entity.UserEntity, error)
+	FindUserById(ctx context.Context, userId string) (*entity.UserEntity, error)
 	getDriver() neo4j.Driver
 }
 
@@ -122,14 +123,25 @@ func (s *userService) FindContactOwner(ctx context.Context, contactId string) (*
 	}
 }
 
+func (s *userService) FindUserById(ctx context.Context, userId string) (*entity.UserEntity, error) {
+	session := utils.NewNeo4jReadSession(s.getDriver())
+	defer session.Close()
+
+	if userDbNode, err := s.repository.UserRepository.GetById(session, common.GetContext(ctx).Tenant, userId); err != nil {
+		return nil, err
+	} else {
+		return s.mapDbNodeToUserEntity(userDbNode), nil
+	}
+}
+
 func (s *userService) mapDbNodeToUserEntity(dbNode *dbtype.Node) *entity.UserEntity {
 	props := utils.GetPropsFromNode(*dbNode)
-	contact := entity.UserEntity{
+	userEntity := entity.UserEntity{
 		Id:        utils.GetStringPropOrEmpty(props, "id"),
 		FirstName: utils.GetStringPropOrEmpty(props, "firstName"),
 		LastName:  utils.GetStringPropOrEmpty(props, "lastName"),
 		Email:     utils.GetStringPropOrEmpty(props, "email"),
 		CreatedAt: props["createdAt"].(time.Time),
 	}
-	return &contact
+	return &userEntity
 }

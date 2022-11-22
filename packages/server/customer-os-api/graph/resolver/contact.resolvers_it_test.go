@@ -385,3 +385,52 @@ func TestQueryResolver_Contact_BasicFilters_FindContactWithLetterAInName(t *test
 	// suppress unused warnings
 	require.NotNil(t, contactFilteredOut)
 }
+
+func TestQueryResolver_Contact_WithConversations(t *testing.T) {
+	defer setupTestCase()(t)
+	createTenant(driver, tenantName)
+
+	user1 := createDefaultUser(driver, tenantName)
+	user2 := createDefaultUser(driver, tenantName)
+	contact1 := createDefaultContact(driver, tenantName)
+	contact2 := createDefaultContact(driver, tenantName)
+	contact3 := createDefaultContact(driver, tenantName)
+
+	conv1_1 := createConversation(driver, user1, contact1)
+	conv1_2 := createConversation(driver, user1, contact2)
+	conv2_1 := createConversation(driver, user2, contact1)
+	conv2_3 := createConversation(driver, user2, contact3)
+
+	require.Equal(t, 2, getCountOfNodes(driver, "User"))
+	require.Equal(t, 3, getCountOfNodes(driver, "Contact"))
+	require.Equal(t, 4, getCountOfNodes(driver, "Conversation"))
+
+	rawResponse, err := c.RawPost(getQuery("get_contact_with_conversations"),
+		client.Var("contactId", contact1))
+	assertRawResponseSuccess(t, rawResponse, err)
+
+	var contact struct {
+		Contact model.Contact
+	}
+
+	err = decode.Decode(rawResponse.Data.(map[string]any), &contact)
+	require.Nil(t, err)
+	err = decode.Decode(rawResponse.Data.(map[string]any), &contact)
+	require.Nil(t, err)
+	require.NotNil(t, contact)
+	require.Equal(t, contact1, contact.Contact.ID)
+	require.Equal(t, 1, contact.Contact.Conversations.TotalPages)
+	require.Equal(t, int64(2), contact.Contact.Conversations.TotalElements)
+	require.Equal(t, 2, len(contact.Contact.Conversations.Content))
+	conversations := contact.Contact.Conversations.Content
+	require.ElementsMatch(t, []string{conv1_1, conv2_1}, []string{conversations[0].ID, conversations[1].ID})
+	require.ElementsMatch(t, []string{user1, user2}, []string{conversations[0].User.ID, conversations[1].User.ID})
+	require.ElementsMatch(t, []string{user1, user2}, []string{conversations[0].UserID, conversations[1].UserID})
+	require.Equal(t, contact1, conversations[0].Contact.ID)
+	require.Equal(t, contact1, conversations[1].Contact.ID)
+	require.Equal(t, contact1, conversations[0].ContactID)
+	require.Equal(t, contact1, conversations[1].ContactID)
+
+	require.NotNil(t, conv1_2)
+	require.NotNil(t, conv2_3)
+}

@@ -3,6 +3,7 @@ package repository
 import (
 	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v4/neo4j"
+	"github.com/neo4j/neo4j-go-driver/v4/neo4j/db"
 	"github.com/neo4j/neo4j-go-driver/v4/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/customer-os-api/utils"
 )
@@ -10,6 +11,7 @@ import (
 type UserRepository interface {
 	FindOwnerForContact(tx neo4j.Transaction, tenant, contactId string) (*dbtype.Node, error)
 	GetPaginatedUsers(session neo4j.Session, tenant string, skip, limit int, filter *utils.CypherFilter, sort *utils.CypherSort) (*utils.DbNodesWithTotalCount, error)
+	GetById(session neo4j.Session, tenant, userId string) (*dbtype.Node, error)
 }
 
 type userRepository struct {
@@ -85,4 +87,21 @@ func (r *userRepository) GetPaginatedUsers(session neo4j.Session, tenant string,
 		dbNodesWithTotalCount.Nodes = append(dbNodesWithTotalCount.Nodes, utils.NodePtr(v.Values[0].(neo4j.Node)))
 	}
 	return dbNodesWithTotalCount, nil
+}
+
+func (r *userRepository) GetById(session neo4j.Session, tenant, userId string) (*dbtype.Node, error) {
+	dbRecord, err := session.ReadTransaction(func(tx neo4j.Transaction) (any, error) {
+		queryResult, err := tx.Run(`
+			MATCH (t:Tenant {name:$tenant})<-[:USER_BELONGS_TO_TENANT]-(u:User {id:$userId})
+			RETURN u`,
+			map[string]any{
+				"tenant": tenant,
+				"userId": userId,
+			})
+		if err != nil {
+			return nil, err
+		}
+		return queryResult.Single()
+	})
+	return utils.NodePtr(dbRecord.(*db.Record).Values[0].(dbtype.Node)), err
 }
