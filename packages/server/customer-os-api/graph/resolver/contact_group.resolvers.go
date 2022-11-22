@@ -14,11 +14,11 @@ import (
 )
 
 // Contacts is the resolver for the contacts field.
-func (r *contactGroupResolver) Contacts(ctx context.Context, obj *model.ContactGroup, pagination *model.Pagination, sort []*model.SortBy) (*model.ContactsPage, error) {
+func (r *contactGroupResolver) Contacts(ctx context.Context, obj *model.ContactGroup, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) (*model.ContactsPage, error) {
 	if pagination == nil {
 		pagination = &model.Pagination{Page: 0, Limit: 0}
 	}
-	paginatedResult, err := r.ServiceContainer.ContactService.FindAllForContactGroup(ctx, pagination.Page, pagination.Limit, sort, obj.ID)
+	paginatedResult, err := r.ServiceContainer.ContactService.FindAllForContactGroup(ctx, pagination.Page, pagination.Limit, where, sort, obj.ID)
 	return &model.ContactsPage{
 		Content:       mapper.MapEntitiesToContacts(paginatedResult.Rows.(*entity.ContactEntities)),
 		TotalPages:    paginatedResult.TotalPages,
