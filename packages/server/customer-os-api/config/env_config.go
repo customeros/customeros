@@ -2,6 +2,7 @@ package config
 
 type Config struct {
 	ApiPort string `env:"PORT"`
+	CorsUrl string `env:"CORS_URL"`
 	GraphQL struct {
 		PlaygroundEnabled bool `env:"GRAPHQL_PLAYGROUND_ENABLED" envDefault:"false"`
 	}

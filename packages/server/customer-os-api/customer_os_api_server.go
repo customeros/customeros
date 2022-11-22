@@ -17,6 +17,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/customer-os-api/service/container"
 	"github.com/vektah/gqlparser/v2/gqlerror"
 	"log"
+	"strings"
 )
 
 const customerOSApiPort = "10000"
@@ -68,7 +69,7 @@ func main() {
 	r := gin.Default()
 
 	corsConfig := cors.DefaultConfig()
-	corsConfig.AllowOrigins = []string{"http://localhost:3000"}
+	corsConfig.AllowOrigins = strings.Split(cfg.CorsUrl, " ")
 	r.Use(cors.New(corsConfig))
 
 	r.POST("/query", graphqlHandler(neo4jDriver))
