@@ -126,7 +126,7 @@ func (s *contactGroupService) FindAll(ctx context.Context, page, limit int, filt
 		Limit: limit,
 		Page:  page,
 	}
-	cypherSort, err := s.prepareContactGroupsSorting(sortBy)
+	cypherSort, err := buildSort(sortBy, reflect.TypeOf(entity.ContactGroupEntity{}))
 	if err != nil {
 		return nil, err
 	}
@@ -259,19 +259,6 @@ func (s *contactGroupService) RemoveContactFromGroup(ctx context.Context, contac
 	}
 
 	return queryResult.(bool), nil
-}
-
-func (s *contactGroupService) prepareContactGroupsSorting(sortBy []*model.SortBy) (*utils.CypherSort, error) {
-	transformedSorting := new(utils.CypherSort)
-	if sortBy != nil {
-		for _, v := range sortBy {
-			err := transformedSorting.NewSortRule(v.By, v.Direction.String(), *v.CaseSensitive, reflect.TypeOf(entity.ContactGroupEntity{}))
-			if err != nil {
-				return nil, err
-			}
-		}
-	}
-	return transformedSorting, nil
 }
 
 func (s *contactGroupService) mapDbNodeToContactGroup(dbContactGroupNode *dbtype.Node) *entity.ContactGroupEntity {

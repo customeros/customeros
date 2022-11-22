@@ -3,18 +3,19 @@ package service
 import (
 	"context"
 	"github.com/neo4j/neo4j-go-driver/v4/neo4j"
-	"github.com/neo4j/neo4j-go-driver/v4/neo4j/db"
 	"github.com/neo4j/neo4j-go-driver/v4/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/customer-os-api/common"
 	"github.com/openline-ai/openline-customer-os/customer-os-api/entity"
+	"github.com/openline-ai/openline-customer-os/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/customer-os-api/repository"
 	"github.com/openline-ai/openline-customer-os/customer-os-api/utils"
+	"reflect"
 	"time"
 )
 
 type UserService interface {
 	Create(ctx context.Context, user *entity.UserEntity) (*entity.UserEntity, error)
-	FindAll(ctx context.Context, page, limit int) (*utils.Pagination, error)
+	FindAll(ctx context.Context, page, limit int, filter *model.Filter, sortBy []*model.SortBy) (*utils.Pagination, error)
 	FindContactOwner(ctx context.Context, contactId string) (*entity.UserEntity, error)
 	getDriver() neo4j.Driver
 }
@@ -64,48 +65,42 @@ func (s *userService) Create(ctx context.Context, user *entity.UserEntity) (*ent
 	if err != nil {
 		return nil, err
 	}
-	return s.mapDbNodeToUserEntity(queryResult.(dbtype.Node)), nil
+	return s.mapDbNodeToUserEntity(utils.NodePtr(queryResult.(dbtype.Node))), nil
 }
 
-func (s *userService) FindAll(ctx context.Context, page, limit int) (*utils.Pagination, error) {
+func (s *userService) FindAll(ctx context.Context, page, limit int, filter *model.Filter, sortBy []*model.SortBy) (*utils.Pagination, error) {
+	session := utils.NewNeo4jReadSession(s.getDriver())
+	defer session.Close()
+
 	var paginatedResult = utils.Pagination{
 		Limit: limit,
 		Page:  page,
 	}
-	session := utils.NewNeo4jReadSession(s.getDriver())
-	defer session.Close()
-
-	dataResult, err := session.ReadTransaction(func(tx neo4j.Transaction) (interface{}, error) {
-		result, err := tx.Run(`
-				MATCH (:Tenant {name:$tenant})<-[:USER_BELONGS_TO_TENANT]-(u:User) RETURN count(u) as count`,
-			map[string]interface{}{
-				"tenant": common.GetContext(ctx).Tenant,
-			})
-		count, _ := result.Single()
-		paginatedResult.SetTotalRows(count.Values[0].(int64))
-
-		result, err = tx.Run(`
-				MATCH (:Tenant {name:$tenant})<-[:USER_BELONGS_TO_TENANT]-(u:User) RETURN u SKIP $skip LIMIT $limit`,
-			map[string]interface{}{
-				"tenant": common.GetContext(ctx).Tenant,
-				"skip":   paginatedResult.GetSkip(),
-				"limit":  paginatedResult.GetLimit(),
-			})
-		data, err := result.Collect()
-		if err != nil {
-			return nil, err
-		}
-		return data, nil
-	})
+	cypherSort, err := buildSort(sortBy, reflect.TypeOf(entity.UserEntity{}))
+	if err != nil {
+		return nil, err
+	}
+	cypherFilter, err := buildFilter(filter, reflect.TypeOf(entity.UserEntity{}))
 	if err != nil {
 		return nil, err
 	}
 
+	dbNodesWithTotalCount, err := s.repository.UserRepository.GetPaginatedUsers(
+		session,
+		common.GetContext(ctx).Tenant,
+		paginatedResult.GetSkip(),
+		paginatedResult.GetLimit(),
+		cypherFilter,
+		cypherSort)
+	if err != nil {
+		return nil, err
+	}
+	paginatedResult.SetTotalRows(dbNodesWithTotalCount.Count)
+
 	users := entity.UserEntities{}
 
-	for _, dbRecord := range dataResult.([]*db.Record) {
-		user := s.mapDbNodeToUserEntity(dbRecord.Values[0].(dbtype.Node))
-		users = append(users, *user)
+	for _, v := range dbNodesWithTotalCount.Nodes {
+		users = append(users, *s.mapDbNodeToUserEntity(v))
 	}
 	paginatedResult.SetRows(&users)
 	return &paginatedResult, nil
@@ -123,15 +118,11 @@ func (s *userService) FindContactOwner(ctx context.Context, contactId string) (*
 	} else if ownerDbNode.(*dbtype.Node) == nil {
 		return nil, nil
 	} else {
-		return s.mapDbNodePtrToUserEntity(ownerDbNode.(*dbtype.Node)), nil
+		return s.mapDbNodeToUserEntity(ownerDbNode.(*dbtype.Node)), nil
 	}
 }
 
-func (s *userService) mapDbNodeToUserEntity(dbNode dbtype.Node) *entity.UserEntity {
-	return s.mapDbNodePtrToUserEntity(utils.NodePtr(dbNode))
-}
-
-func (s *userService) mapDbNodePtrToUserEntity(dbNode *dbtype.Node) *entity.UserEntity {
+func (s *userService) mapDbNodeToUserEntity(dbNode *dbtype.Node) *entity.UserEntity {
 	props := utils.GetPropsFromNode(*dbNode)
 	contact := entity.UserEntity{
 		Id:        utils.GetStringPropOrEmpty(props, "id"),
