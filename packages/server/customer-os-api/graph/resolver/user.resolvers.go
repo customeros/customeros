@@ -23,11 +23,11 @@ func (r *mutationResolver) UserCreate(ctx context.Context, input model.UserInput
 }
 
 // Users is the resolver for the users field.
-func (r *queryResolver) Users(ctx context.Context, pagination *model.Pagination) (*model.UserPage, error) {
+func (r *queryResolver) Users(ctx context.Context, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) (*model.UserPage, error) {
 	if pagination == nil {
 		pagination = &model.Pagination{Page: 0, Limit: 0}
 	}
-	paginatedResult, err := r.ServiceContainer.UserService.FindAll(ctx, pagination.Page, pagination.Limit)
+	paginatedResult, err := r.ServiceContainer.UserService.FindAll(ctx, pagination.Page, pagination.Limit, where, sort)
 	return &model.UserPage{
 		Content:       mapper.MapEntitiesToUsers(paginatedResult.Rows.(*entity.UserEntities)),
 		TotalPages:    paginatedResult.TotalPages,

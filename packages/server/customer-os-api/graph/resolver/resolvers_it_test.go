@@ -72,62 +72,6 @@ func assertRawResponseSuccess(t *testing.T, response *client.Response, err error
 	require.Nil(t, response.Errors)
 }
 
-func TestQueryResolver_Users(t *testing.T) {
-	defer setupTestCase()(t)
-	otherTenant := "other"
-	createTenant(driver, tenantName)
-	createTenant(driver, otherTenant)
-	createUser(driver, tenantName, entity.UserEntity{
-		FirstName: "first",
-		LastName:  "last",
-		Email:     "test@openline.ai",
-	})
-	createUser(driver, otherTenant, entity.UserEntity{
-		FirstName: "otherFirst",
-		LastName:  "otherLast",
-		Email:     "otherEmail",
-	})
-
-	rawResponse, err := c.RawPost(getQuery("get_users"))
-	assertRawResponseSuccess(t, rawResponse, err)
-
-	var users struct {
-		Users model.UserPage
-	}
-
-	err = decode.Decode(rawResponse.Data.(map[string]any), &users)
-	require.Nil(t, err)
-	require.NotNil(t, users)
-	require.Equal(t, 1, users.Users.TotalPages)
-	require.Equal(t, int64(1), users.Users.TotalElements)
-	require.Equal(t, "first", users.Users.Content[0].FirstName)
-	require.Equal(t, "last", users.Users.Content[0].LastName)
-	require.Equal(t, "test@openline.ai", users.Users.Content[0].Email)
-	require.NotNil(t, users.Users.Content[0].CreatedAt)
-}
-
-func TestMutationResolver_CreateUser(t *testing.T) {
-	defer setupTestCase()(t)
-	createTenant(driver, tenantName)
-	createTenant(driver, "other")
-
-	rawResponse, err := c.RawPost(getQuery("create_user"))
-	assertRawResponseSuccess(t, rawResponse, err)
-
-	var user struct {
-		UserCreate model.User
-	}
-
-	err = decode.Decode(rawResponse.Data.(map[string]any), &user)
-	require.Nil(t, err)
-	require.NotNil(t, user)
-	require.Equal(t, "first", user.UserCreate.FirstName)
-	require.Equal(t, "last", user.UserCreate.LastName)
-	require.Equal(t, "user@openline.ai", user.UserCreate.Email)
-	require.NotNil(t, user.UserCreate.CreatedAt)
-	require.NotNil(t, user.UserCreate.ID)
-}
-
 func TestMutationResolver_FieldSetMergeToContact_AllowMultipleFieldSetWithSameNameOnDifferentContacts(t *testing.T) {
 	defer setupTestCase()(t)
 	createTenant(driver, tenantName)

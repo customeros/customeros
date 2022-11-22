@@ -222,7 +222,7 @@ type ComplexityRoot struct {
 		ContactTypes        func(childComplexity int) int
 		Contacts            func(childComplexity int, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) int
 		EntityDefinitions   func(childComplexity int, extends *model.EntityDefinitionExtension) int
-		Users               func(childComplexity int, pagination *model.Pagination) int
+		Users               func(childComplexity int, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) int
 	}
 
 	Result struct {
@@ -320,7 +320,7 @@ type QueryResolver interface {
 	ContactGroup(ctx context.Context, id string) (*model.ContactGroup, error)
 	ContactGroups(ctx context.Context, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) (*model.ContactGroupPage, error)
 	ContactTypes(ctx context.Context) ([]*model.ContactType, error)
-	Users(ctx context.Context, pagination *model.Pagination) (*model.UserPage, error)
+	Users(ctx context.Context, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) (*model.UserPage, error)
 }
 
 type executableSchema struct {
@@ -1406,7 +1406,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Query.Users(childComplexity, args["pagination"].(*model.Pagination)), true
+		return e.complexity.Query.Users(childComplexity, args["pagination"].(*model.Pagination), args["where"].(*model.Filter), args["sort"].([]*model.SortBy)), true
 
 	case "Result.result":
 		if e.complexity.Result.Result == nil {
@@ -2537,7 +2537,7 @@ scalar Int64
 
 scalar Any @goModel(model:"model.AnyTypeValue")`, BuiltIn: false},
 	{Name: "../schemas/user.graphqls", Input: `extend type Query {
-    users(pagination: Pagination): UserPage!
+    users(pagination: Pagination, where: Filter, sort: [SortBy!]): UserPage!
 }
 
 extend type Mutation {
@@ -3648,6 +3648,24 @@ func (ec *executionContext) field_Query_users_args(ctx context.Context, rawArgs 
 		}
 	}
 	args["pagination"] = arg0
+	var arg1 *model.Filter
+	if tmp, ok := rawArgs["where"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("where"))
+		arg1, err = ec.unmarshalOFilter2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐFilter(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["where"] = arg1
+	var arg2 []*model.SortBy
+	if tmp, ok := rawArgs["sort"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("sort"))
+		arg2, err = ec.unmarshalOSortBy2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐSortByᚄ(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["sort"] = arg2
 	return args, nil
 }
 
@@ -10090,7 +10108,7 @@ func (ec *executionContext) _Query_users(ctx context.Context, field graphql.Coll
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().Users(rctx, fc.Args["pagination"].(*model.Pagination))
+		return ec.resolvers.Query().Users(rctx, fc.Args["pagination"].(*model.Pagination), fc.Args["where"].(*model.Filter), fc.Args["sort"].([]*model.SortBy))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
