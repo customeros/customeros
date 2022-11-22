@@ -44,7 +44,7 @@ type ContactGroup {
     """
     name: String!
 
-    contacts(pagination: Pagination, sort: [SortBy!]): ContactsPage! @goField(forceResolver: true)
+    contacts(pagination: Pagination, where: Filter, sort: [SortBy!]): ContactsPage! @goField(forceResolver: true)
 }
 
 """

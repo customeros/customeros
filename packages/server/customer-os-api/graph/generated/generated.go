@@ -88,7 +88,7 @@ type ComplexityRoot struct {
 	}
 
 	ContactGroup struct {
-		Contacts func(childComplexity int, pagination *model.Pagination, sort []*model.SortBy) int
+		Contacts func(childComplexity int, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) int
 		ID       func(childComplexity int) int
 		Name     func(childComplexity int) int
 	}
@@ -256,7 +256,7 @@ type ContactResolver interface {
 	Owner(ctx context.Context, obj *model.Contact) (*model.User, error)
 }
 type ContactGroupResolver interface {
-	Contacts(ctx context.Context, obj *model.ContactGroup, pagination *model.Pagination, sort []*model.SortBy) (*model.ContactsPage, error)
+	Contacts(ctx context.Context, obj *model.ContactGroup, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) (*model.ContactsPage, error)
 }
 type CustomFieldResolver interface {
 	Definition(ctx context.Context, obj *model.CustomField) (*model.CustomFieldDefinition, error)
@@ -516,7 +516,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.ContactGroup.Contacts(childComplexity, args["pagination"].(*model.Pagination), args["sort"].([]*model.SortBy)), true
+		return e.complexity.ContactGroup.Contacts(childComplexity, args["pagination"].(*model.Pagination), args["where"].(*model.Filter), args["sort"].([]*model.SortBy)), true
 
 	case "ContactGroup.id":
 		if e.complexity.ContactGroup.ID == nil {
@@ -1923,7 +1923,7 @@ type ContactGroup {
     """
     name: String!
 
-    contacts(pagination: Pagination, sort: [SortBy!]): ContactsPage! @goField(forceResolver: true)
+    contacts(pagination: Pagination, where: Filter, sort: [SortBy!]): ContactsPage! @goField(forceResolver: true)
 }
 
 """
@@ -2652,15 +2652,24 @@ func (ec *executionContext) field_ContactGroup_contacts_args(ctx context.Context
 		}
 	}
 	args["pagination"] = arg0
-	var arg1 []*model.SortBy
-	if tmp, ok := rawArgs["sort"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("sort"))
-		arg1, err = ec.unmarshalOSortBy2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐSortByᚄ(ctx, tmp)
+	var arg1 *model.Filter
+	if tmp, ok := rawArgs["where"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("where"))
+		arg1, err = ec.unmarshalOFilter2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐFilter(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["sort"] = arg1
+	args["where"] = arg1
+	var arg2 []*model.SortBy
+	if tmp, ok := rawArgs["sort"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("sort"))
+		arg2, err = ec.unmarshalOSortBy2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐSortByᚄ(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["sort"] = arg2
 	return args, nil
 }
 
@@ -4923,7 +4932,7 @@ func (ec *executionContext) _ContactGroup_contacts(ctx context.Context, field gr
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.ContactGroup().Contacts(rctx, obj, fc.Args["pagination"].(*model.Pagination), fc.Args["sort"].([]*model.SortBy))
+		return ec.resolvers.ContactGroup().Contacts(rctx, obj, fc.Args["pagination"].(*model.Pagination), fc.Args["where"].(*model.Filter), fc.Args["sort"].([]*model.SortBy))
 	})
 	if err != nil {
 		ec.Error(ctx, err)

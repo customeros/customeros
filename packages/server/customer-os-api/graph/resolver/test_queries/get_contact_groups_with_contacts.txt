@@ -6,7 +6,9 @@ query GetContactGroups{
     content {
       id
       name
-      contacts(sort: [{by:"FIRST_NAME"}]) {
+      contacts(where: {NOT: {filter: {property:"FIRST_NAME" value:"TEST"}}}
+               sort: [{by:"FIRST_NAME"}]
+               ) {
         totalPages
         totalElements
         content {
