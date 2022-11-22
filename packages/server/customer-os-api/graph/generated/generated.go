@@ -2274,14 +2274,14 @@ type CustomFieldDefinition  implements Node {
 input EntityDefinitionInput {
     name: String!
     extends: EntityDefinitionExtension
-    fieldSets: [FieldSetDefinitionInput!]!
-    customFields: [CustomFieldDefinitionInput!]!
+    fieldSets: [FieldSetDefinitionInput!]
+    customFields: [CustomFieldDefinitionInput!]
 }
 
 input FieldSetDefinitionInput {
     name: String!
     order: Int!
-    customFields: [CustomFieldDefinitionInput!]!
+    customFields: [CustomFieldDefinitionInput!]
 }
 
 input CustomFieldDefinitionInput {
@@ -13213,7 +13213,7 @@ func (ec *executionContext) unmarshalInputEntityDefinitionInput(ctx context.Cont
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("fieldSets"))
-			it.FieldSets, err = ec.unmarshalNFieldSetDefinitionInput2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐFieldSetDefinitionInputᚄ(ctx, v)
+			it.FieldSets, err = ec.unmarshalOFieldSetDefinitionInput2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐFieldSetDefinitionInputᚄ(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -13221,7 +13221,7 @@ func (ec *executionContext) unmarshalInputEntityDefinitionInput(ctx context.Cont
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("customFields"))
-			it.CustomFields, err = ec.unmarshalNCustomFieldDefinitionInput2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐCustomFieldDefinitionInputᚄ(ctx, v)
+			it.CustomFields, err = ec.unmarshalOCustomFieldDefinitionInput2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐCustomFieldDefinitionInputᚄ(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -13265,7 +13265,7 @@ func (ec *executionContext) unmarshalInputFieldSetDefinitionInput(ctx context.Co
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("customFields"))
-			it.CustomFields, err = ec.unmarshalNCustomFieldDefinitionInput2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐCustomFieldDefinitionInputᚄ(ctx, v)
+			it.CustomFields, err = ec.unmarshalOCustomFieldDefinitionInput2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐCustomFieldDefinitionInputᚄ(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -16409,23 +16409,6 @@ func (ec *executionContext) marshalNCustomFieldDefinition2ᚖgithubᚗcomᚋopen
 	return ec._CustomFieldDefinition(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalNCustomFieldDefinitionInput2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐCustomFieldDefinitionInputᚄ(ctx context.Context, v interface{}) ([]*model.CustomFieldDefinitionInput, error) {
-	var vSlice []interface{}
-	if v != nil {
-		vSlice = graphql.CoerceList(v)
-	}
-	var err error
-	res := make([]*model.CustomFieldDefinitionInput, len(vSlice))
-	for i := range vSlice {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
-		res[i], err = ec.unmarshalNCustomFieldDefinitionInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐCustomFieldDefinitionInput(ctx, vSlice[i])
-		if err != nil {
-			return nil, err
-		}
-	}
-	return res, nil
-}
-
 func (ec *executionContext) unmarshalNCustomFieldDefinitionInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐCustomFieldDefinitionInput(ctx context.Context, v interface{}) (*model.CustomFieldDefinitionInput, error) {
 	res, err := ec.unmarshalInputCustomFieldDefinitionInput(ctx, v)
 	return &res, graphql.ErrorOnPath(ctx, err)
@@ -16703,23 +16686,6 @@ func (ec *executionContext) marshalNFieldSetDefinition2ᚖgithubᚗcomᚋopenlin
 		return graphql.Null
 	}
 	return ec._FieldSetDefinition(ctx, sel, v)
-}
-
-func (ec *executionContext) unmarshalNFieldSetDefinitionInput2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐFieldSetDefinitionInputᚄ(ctx context.Context, v interface{}) ([]*model.FieldSetDefinitionInput, error) {
-	var vSlice []interface{}
-	if v != nil {
-		vSlice = graphql.CoerceList(v)
-	}
-	var err error
-	res := make([]*model.FieldSetDefinitionInput, len(vSlice))
-	for i := range vSlice {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
-		res[i], err = ec.unmarshalNFieldSetDefinitionInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐFieldSetDefinitionInput(ctx, vSlice[i])
-		if err != nil {
-			return nil, err
-		}
-	}
-	return res, nil
 }
 
 func (ec *executionContext) unmarshalNFieldSetDefinitionInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐFieldSetDefinitionInput(ctx context.Context, v interface{}) (*model.FieldSetDefinitionInput, error) {
@@ -17315,6 +17281,26 @@ func (ec *executionContext) marshalOCustomFieldDefinition2ᚖgithubᚗcomᚋopen
 	return ec._CustomFieldDefinition(ctx, sel, v)
 }
 
+func (ec *executionContext) unmarshalOCustomFieldDefinitionInput2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐCustomFieldDefinitionInputᚄ(ctx context.Context, v interface{}) ([]*model.CustomFieldDefinitionInput, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var vSlice []interface{}
+	if v != nil {
+		vSlice = graphql.CoerceList(v)
+	}
+	var err error
+	res := make([]*model.CustomFieldDefinitionInput, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalNCustomFieldDefinitionInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐCustomFieldDefinitionInput(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
 func (ec *executionContext) unmarshalOCustomFieldInput2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐCustomFieldInputᚄ(ctx context.Context, v interface{}) ([]*model.CustomFieldInput, error) {
 	if v == nil {
 		return nil, nil
@@ -17378,6 +17364,26 @@ func (ec *executionContext) marshalOFieldSetDefinition2ᚖgithubᚗcomᚋopenlin
 		return graphql.Null
 	}
 	return ec._FieldSetDefinition(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalOFieldSetDefinitionInput2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐFieldSetDefinitionInputᚄ(ctx context.Context, v interface{}) ([]*model.FieldSetDefinitionInput, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var vSlice []interface{}
+	if v != nil {
+		vSlice = graphql.CoerceList(v)
+	}
+	var err error
+	res := make([]*model.FieldSetDefinitionInput, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalNFieldSetDefinitionInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐFieldSetDefinitionInput(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
 }
 
 func (ec *executionContext) unmarshalOFilter2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐFilterᚄ(ctx context.Context, v interface{}) ([]*model.Filter, error) {

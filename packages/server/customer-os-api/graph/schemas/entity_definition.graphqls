@@ -33,14 +33,14 @@ type CustomFieldDefinition  implements Node {
 input EntityDefinitionInput {
     name: String!
     extends: EntityDefinitionExtension
-    fieldSets: [FieldSetDefinitionInput!]!
-    customFields: [CustomFieldDefinitionInput!]!
+    fieldSets: [FieldSetDefinitionInput!]
+    customFields: [CustomFieldDefinitionInput!]
 }
 
 input FieldSetDefinitionInput {
     name: String!
     order: Int!
-    customFields: [CustomFieldDefinitionInput!]!
+    customFields: [CustomFieldDefinitionInput!]
 }
 
 input CustomFieldDefinitionInput {
