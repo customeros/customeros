@@ -45,7 +45,7 @@ func (r *conversationRepository) Create(tenant string, userId string, contactId 
 			MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}),
 				  (u:User {id:$userId})-[:USER_BELONGS_TO_TENANT]->(:Tenant {name:$tenant})
 			MERGE (c)-[:PARTICIPATES]->(o:Conversation {id:$conversationId})<-[:PARTICIPATES]-(u)
-            ON CREATE SET o.started=datetime({timezone: 'UTC'})
+            ON CREATE SET o.startedAt=datetime({timezone: 'UTC'})
 			RETURN o`,
 			map[string]interface{}{
 				"tenant":         tenant,

@@ -32,8 +32,7 @@ func NewConversationService(repository *repository.RepositoryContainer) Conversa
 func (s *conversationService) CreateNewConversation(ctx context.Context, userId string, contactId string, conversationId *string) (*entity.ConversationEntity, error) {
 	if conversationId == nil {
 		newUuid, _ := uuid.NewRandom()
-		strUuid := newUuid.String()
-		conversationId = &strUuid
+		conversationId = utils.StringPtr(newUuid.String())
 	}
 	record, err := s.repository.ConversationRepository.Create(common.GetContext(ctx).Tenant, userId, contactId, *conversationId)
 	if err != nil {
