@@ -7,6 +7,10 @@ extend type Mutation {
     customFieldMergeToFieldSet(contactId : ID!, fieldSetId : ID!, input: CustomFieldInput!): CustomField!
     customFieldUpdateInFieldSet(contactId : ID!, fieldSetId : ID!, input: CustomFieldUpdateInput!): CustomField!
     customFieldDeleteFromFieldSetById(contactId : ID!, fieldSetId : ID!, id: ID!): Result!
+
+    fieldSetMergeToContact(contactId : ID!, input: FieldSetInput!): FieldSet
+    fieldSetUpdateInContact(contactId : ID!, input: FieldSetUpdateInput!): FieldSet
+    fieldSetDeleteFromContact(contactId : ID!, id: ID!):Result!
 }
 
 """
@@ -105,4 +109,23 @@ enum CustomFieldDataType {
     DATETIME
     INTEGER
     DECIMAL
+}
+
+type FieldSet {
+    id: ID!
+    name: String!
+    added: Time!
+    customFields: [CustomField!]! @goField(forceResolver: true)
+    definition: FieldSetDefinition @goField(forceResolver: true)
+}
+
+input FieldSetInput {
+    name: String!
+    customFields: [CustomFieldInput!]
+    definitionId: ID
+}
+
+input FieldSetUpdateInput {
+    id: ID!
+    name: String!
 }

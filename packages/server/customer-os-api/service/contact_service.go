@@ -34,6 +34,7 @@ type ContactService interface {
 type ContactCreateData struct {
 	ContactEntity     *entity.ContactEntity
 	CustomFields      *entity.CustomFieldEntities
+	FieldSets         *entity.FieldSetEntities
 	EmailEntity       *entity.EmailEntity
 	PhoneNumberEntity *entity.PhoneNumberEntity
 	DefinitionId      *string
@@ -96,15 +97,45 @@ func (s *contactService) createContactInDBTxWork(ctx context.Context, newContact
 		}
 		if newContact.CustomFields != nil {
 			for _, customField := range *newContact.CustomFields {
-				queryResult, err := s.repository.CustomFieldRepository.MergeCustomFieldToContactInTx(tx, common.GetContext(ctx).Tenant, contactId, &customField)
+				dbNode, err := s.repository.CustomFieldRepository.MergeCustomFieldToContactInTx(tx, common.GetContext(ctx).Tenant, contactId, &customField)
 				if err != nil {
 					return nil, err
 				}
-				var fieldId = utils.GetPropsFromNode(*queryResult)["id"].(string)
 				if customField.DefinitionId != nil {
+					var fieldId = utils.GetPropsFromNode(*dbNode)["id"].(string)
 					err := s.repository.CustomFieldRepository.LinkWithCustomFieldDefinitionForContactInTx(tx, fieldId, contactId, *customField.DefinitionId)
 					if err != nil {
 						return nil, err
+					}
+				}
+			}
+		}
+		if newContact.FieldSets != nil {
+			for _, fieldSet := range *newContact.FieldSets {
+				setDbNode, _, err := s.repository.FieldSetRepository.MergeFieldSetToContactInTx(tx, common.GetContext(ctx).Tenant, contactId, &fieldSet)
+				if err != nil {
+					return nil, err
+				}
+				var fieldSetId = utils.GetPropsFromNode(*setDbNode)["id"].(string)
+				if fieldSet.DefinitionId != nil {
+					err := s.repository.FieldSetRepository.LinkWithFieldSetDefinitionInTx(tx, tenant, fieldSetId, *fieldSet.DefinitionId)
+					if err != nil {
+						return nil, err
+					}
+				}
+				if fieldSet.CustomFields != nil {
+					for _, customField := range *fieldSet.CustomFields {
+						fieldDbNode, err := s.repository.CustomFieldRepository.MergeCustomFieldToFieldSetInTx(tx, common.GetContext(ctx).Tenant, contactId, fieldSetId, &customField)
+						if err != nil {
+							return nil, err
+						}
+						if customField.DefinitionId != nil {
+							var fieldId = utils.GetPropsFromNode(*fieldDbNode)["id"].(string)
+							err := s.repository.CustomFieldRepository.LinkWithCustomFieldDefinitionForFieldSetInTx(tx, fieldId, fieldSetId, *customField.DefinitionId)
+							if err != nil {
+								return nil, err
+							}
+						}
 					}
 				}
 			}
@@ -178,7 +209,7 @@ func (s *contactService) Update(ctx context.Context, contactUpdateData *ContactU
 			}
 		}
 
-		return utils.ExtractSingleRecordFirstValueAsNodePtr(queryResult, err)
+		return utils.ExtractSingleRecordFirstValueAsNode(queryResult, err)
 	})
 	if err != nil {
 		return nil, err

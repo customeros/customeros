@@ -14,7 +14,7 @@ import (
 
 type FieldSetService interface {
 	FindAllForContact(ctx context.Context, contact *model.Contact) (*entity.FieldSetEntities, error)
-	MergeFieldSetToContact(ctx context.Context, contactId string, input *entity.FieldSetEntity, fieldSetDefinitionId *string) (*entity.FieldSetEntity, error)
+	MergeFieldSetToContact(ctx context.Context, contactId string, input *entity.FieldSetEntity) (*entity.FieldSetEntity, error)
 	UpdateFieldSetInContact(ctx context.Context, contactId string, input *entity.FieldSetEntity) (*entity.FieldSetEntity, error)
 	DeleteByIdFromContact(ctx context.Context, contactId string, fieldSetId string) (bool, error)
 	getDriver() neo4j.Driver
@@ -59,48 +59,57 @@ func (s *fieldSetService) FindAllForContact(ctx context.Context, contact *model.
 	fieldSetEntities := entity.FieldSetEntities{}
 
 	for _, dbRecord := range queryResult.([]*db.Record) {
-		fieldSetEntity := s.mapDbNodeToFieldSetEntity(dbRecord.Values[0].(dbtype.Node))
-		s.addDbRelationshipToEntity(dbRecord.Values[1].(dbtype.Relationship), fieldSetEntity)
+		fieldSetEntity := s.mapDbNodeToFieldSetEntity(utils.NodePtr(dbRecord.Values[0].(dbtype.Node)))
+		s.addDbRelationshipToEntity(utils.RelationshipPtr(dbRecord.Values[1].(dbtype.Relationship)), fieldSetEntity)
 		fieldSetEntities = append(fieldSetEntities, *fieldSetEntity)
 	}
 
 	return &fieldSetEntities, nil
 }
 
-func (s *fieldSetService) MergeFieldSetToContact(ctx context.Context, contactId string, input *entity.FieldSetEntity, fieldSetDefinitionId *string) (*entity.FieldSetEntity, error) {
+func (s *fieldSetService) MergeFieldSetToContact(ctx context.Context, contactId string, entity *entity.FieldSetEntity) (*entity.FieldSetEntity, error) {
 	session := utils.NewNeo4jWriteSession(s.getDriver())
 	defer session.Close()
 
-	queryResult, err := session.WriteTransaction(func(tx neo4j.Transaction) (interface{}, error) {
-		txResult, err := tx.Run(`
-			MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant})
-			MERGE (f:FieldSet {name: $name})<-[r:HAS_COMPLEX_PROPERTY]-(c)
-            ON CREATE SET f.id=randomUUID(), r.added=datetime({timezone: 'UTC'})
-			RETURN f, r`,
-			map[string]interface{}{
-				"tenant":    common.GetContext(ctx).Tenant,
-				"contactId": contactId,
-				"name":      input.Name,
-			})
-		records, err := txResult.Collect()
+	var fieldSetDbNode *dbtype.Node
+	var fieldSetDbRelationship *neo4j.Relationship
+
+	_, err := session.WriteTransaction(func(tx neo4j.Transaction) (interface{}, error) {
+		var err error
+		fieldSetDbNode, fieldSetDbRelationship, err = s.repository.FieldSetRepository.MergeFieldSetToContactInTx(tx, common.GetContext(ctx).Tenant, contactId, entity)
 		if err != nil {
 			return nil, err
 		}
-		if fieldSetDefinitionId != nil {
-			var fieldSetId = utils.GetPropsFromNode(records[0].Values[0].(dbtype.Node))["id"].(string)
-			err := s.repository.FieldSetRepository.LinkWithFieldSetDefinitionInTx(common.GetContext(ctx).Tenant, fieldSetId, *fieldSetDefinitionId, tx)
+		var fieldSetId = utils.GetPropsFromNode(*fieldSetDbNode)["id"].(string)
+		if entity.DefinitionId != nil {
+			err := s.repository.FieldSetRepository.LinkWithFieldSetDefinitionInTx(tx, common.GetContext(ctx).Tenant, fieldSetId, *entity.DefinitionId)
 			if err != nil {
 				return nil, err
 			}
 		}
-		return records, nil
+		if entity.CustomFields != nil {
+			for _, customField := range *entity.CustomFields {
+				dbNode, err := s.repository.CustomFieldRepository.MergeCustomFieldToFieldSetInTx(tx, common.GetContext(ctx).Tenant, contactId, fieldSetId, &customField)
+				if err != nil {
+					return nil, err
+				}
+				if customField.DefinitionId != nil {
+					var fieldId = utils.GetPropsFromNode(*dbNode)["id"].(string)
+					err := s.repository.CustomFieldRepository.LinkWithCustomFieldDefinitionForFieldSetInTx(tx, fieldId, fieldSetId, *customField.DefinitionId)
+					if err != nil {
+						return nil, err
+					}
+				}
+			}
+		}
+		return nil, nil
 	})
 	if err != nil {
 		return nil, err
 	}
 
-	var fieldSetEntity = s.mapDbNodeToFieldSetEntity((queryResult.([]*db.Record))[0].Values[0].(dbtype.Node))
-	s.addDbRelationshipToEntity((queryResult.([]*db.Record))[0].Values[1].(dbtype.Relationship), fieldSetEntity)
+	var fieldSetEntity = s.mapDbNodeToFieldSetEntity(fieldSetDbNode)
+	s.addDbRelationshipToEntity(fieldSetDbRelationship, fieldSetEntity)
 	return fieldSetEntity, nil
 }
 
@@ -130,8 +139,8 @@ func (s *fieldSetService) UpdateFieldSetInContact(ctx context.Context, contactId
 		return nil, err
 	}
 
-	var fieldSetEntity = s.mapDbNodeToFieldSetEntity((queryResult.([]*db.Record))[0].Values[0].(dbtype.Node))
-	s.addDbRelationshipToEntity((queryResult.([]*db.Record))[0].Values[1].(dbtype.Relationship), fieldSetEntity)
+	var fieldSetEntity = s.mapDbNodeToFieldSetEntity(utils.NodePtr((queryResult.([]*db.Record))[0].Values[0].(dbtype.Node)))
+	s.addDbRelationshipToEntity(utils.RelationshipPtr((queryResult.([]*db.Record))[0].Values[1].(dbtype.Relationship)), fieldSetEntity)
 	return fieldSetEntity, nil
 }
 
@@ -160,8 +169,8 @@ func (s *fieldSetService) DeleteByIdFromContact(ctx context.Context, contactId s
 	return queryResult.(bool), nil
 }
 
-func (s *fieldSetService) mapDbNodeToFieldSetEntity(node dbtype.Node) *entity.FieldSetEntity {
-	props := utils.GetPropsFromNode(node)
+func (s *fieldSetService) mapDbNodeToFieldSetEntity(node *dbtype.Node) *entity.FieldSetEntity {
+	props := utils.GetPropsFromNode(*node)
 	result := entity.FieldSetEntity{
 		Id:   utils.GetStringPropOrEmpty(props, "id"),
 		Name: utils.GetStringPropOrEmpty(props, "name"),
@@ -169,7 +178,7 @@ func (s *fieldSetService) mapDbNodeToFieldSetEntity(node dbtype.Node) *entity.Fi
 	return &result
 }
 
-func (s *fieldSetService) addDbRelationshipToEntity(relationship dbtype.Relationship, fieldSetEntity *entity.FieldSetEntity) {
-	props := utils.GetPropsFromRelationship(relationship)
+func (s *fieldSetService) addDbRelationshipToEntity(relationship *dbtype.Relationship, fieldSetEntity *entity.FieldSetEntity) {
+	props := utils.GetPropsFromRelationship(*relationship)
 	fieldSetEntity.Added = utils.GetTimePropOrNow(props, "added")
 }

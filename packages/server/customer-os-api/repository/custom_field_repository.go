@@ -50,7 +50,7 @@ func (r *customFieldRepository) MergeCustomFieldToContactInTx(tx neo4j.Transacti
 			"datatype":  entity.DataType,
 			"value":     entity.Value.RealValue(),
 		})
-	return utils.ExtractSingleRecordFirstValueAsNodePtr(queryResult, err)
+	return utils.ExtractSingleRecordFirstValueAsNode(queryResult, err)
 }
 
 func (r *customFieldRepository) MergeCustomFieldToFieldSetInTx(tx neo4j.Transaction, tenant, contactId, fieldSetId string, entity *entity.CustomFieldEntity) (*dbtype.Node, error) {
@@ -68,7 +68,7 @@ func (r *customFieldRepository) MergeCustomFieldToFieldSetInTx(tx neo4j.Transact
 			"datatype":   entity.DataType,
 			"value":      entity.Value.RealValue(),
 		})
-	return utils.ExtractSingleRecordFirstValueAsNodePtr(queryResult, err)
+	return utils.ExtractSingleRecordFirstValueAsNode(queryResult, err)
 }
 
 func (r *customFieldRepository) LinkWithCustomFieldDefinitionForContactInTx(tx neo4j.Transaction, fieldId, contactId, definitionId string) error {
@@ -208,7 +208,7 @@ func (r *customFieldRepository) UpdateForContact(session neo4j.Session, tenant, 
 				"name":      entity.Name,
 				"value":     entity.Value.RealValue(),
 			})
-		return utils.ExtractSingleRecordFirstValueAsNodePtr(queryResult, err)
+		return utils.ExtractSingleRecordFirstValueAsNode(queryResult, err)
 	})
 	return dbNode.(*dbtype.Node), err
 }
@@ -230,7 +230,7 @@ func (r *customFieldRepository) UpdateForFieldSet(session neo4j.Session, tenant,
 				"name":       entity.Name,
 				"value":      entity.Value.RealValue(),
 			})
-		return utils.ExtractSingleRecordFirstValueAsNodePtr(queryResult, err)
+		return utils.ExtractSingleRecordFirstValueAsNode(queryResult, err)
 	})
 	return dbNode.(*dbtype.Node), err
 }

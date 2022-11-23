@@ -85,7 +85,7 @@ func (r *contactRepository) Create(tx neo4j.Transaction, tenant string, newConta
 		}); err != nil {
 		return nil, err
 	} else {
-		return utils.ExtractSingleRecordFirstValueAsNodePtr(queryResult, err)
+		return utils.ExtractSingleRecordFirstValueAsNode(queryResult, err)
 	}
 }
 

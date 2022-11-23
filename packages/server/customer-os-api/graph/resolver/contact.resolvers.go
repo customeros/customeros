@@ -119,6 +119,7 @@ func (r *mutationResolver) ContactCreate(ctx context.Context, input model.Contac
 	contactNodeCreated, err := r.ServiceContainer.ContactService.Create(ctx, &service.ContactCreateData{
 		ContactEntity:     mapper.MapContactInputToEntity(input),
 		CustomFields:      mapper.MapCustomFieldInputsToEntities(input.CustomFields),
+		FieldSets:         mapper.MapFieldSetInputsToEntities(input.FieldSets),
 		PhoneNumberEntity: mapper.MapPhoneNumberInputToEntity(input.PhoneNumber),
 		EmailEntity:       mapper.MapEmailInputToEntity(input.Email),
 		DefinitionId:      input.DefinitionID,

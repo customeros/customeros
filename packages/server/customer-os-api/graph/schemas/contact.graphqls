@@ -184,7 +184,9 @@ input ContactInput {
     **Required.**
     """
     customFields: [CustomFieldInput!]
-    
+
+    fieldSets: [FieldSetInput!]
+
     "An email addresses associted with the contact."
     email: EmailInput
 

@@ -209,6 +209,7 @@ type ContactInput struct {
 	// User defined metadata appended to contact.
 	// **Required.**
 	CustomFields []*CustomFieldInput `json:"customFields"`
+	FieldSets    []*FieldSetInput    `json:"fieldSets"`
 	// An email addresses associted with the contact.
 	Email *EmailInput `json:"email"`
 	// A phone number associated with the contact.
@@ -483,8 +484,9 @@ type FieldSetDefinitionInput struct {
 }
 
 type FieldSetInput struct {
-	Name         string  `json:"name"`
-	DefinitionID *string `json:"definitionId"`
+	Name         string              `json:"name"`
+	CustomFields []*CustomFieldInput `json:"customFields"`
+	DefinitionID *string             `json:"definitionId"`
 }
 
 type FieldSetUpdateInput struct {
