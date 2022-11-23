@@ -34,6 +34,8 @@ spec:
             initialDelaySeconds: 5
             timeoutSeconds: 1
           env:
+            - name: CORS_URL
+              value: "*"
             - name: NEO4J_TARGET
               value: "neo4j://neo4j-customer-os.openline.svc.cluster.local:7687"
             - name: NEO4J_AUTH_USER
