@@ -22,16 +22,6 @@ func (r *mutationResolver) EntityDefinitionCreate(ctx context.Context, input mod
 	return mapper.MapEntityToEntityDefinition(entityDefinitionEntity), nil
 }
 
-// ConversationCreate is the resolver for the conversationCreate field.
-func (r *mutationResolver) ConversationCreate(ctx context.Context, input model.ConversationInput) (*model.Conversation, error) {
-	conversationEntity, err := r.ServiceContainer.ConversationService.CreateNewConversation(ctx, input.UserID, input.ContactID, input.ID)
-	if err != nil {
-		graphql.AddErrorf(ctx, "Failed to create conversation between user: %s and contact: %s", input.UserID, input.ContactID)
-		return nil, err
-	}
-	return mapper.MapEntityToConversation(conversationEntity), nil
-}
-
 // Mutation returns generated.MutationResolver implementation.
 func (r *Resolver) Mutation() generated.MutationResolver { return &mutationResolver{r} }
 

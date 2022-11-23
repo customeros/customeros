@@ -97,6 +97,23 @@ func (r *contactResolver) Owner(ctx context.Context, obj *model.Contact) (*model
 	return mapper.MapEntityToUser(owner), err
 }
 
+// Conversations is the resolver for the conversations field.
+func (r *contactResolver) Conversations(ctx context.Context, obj *model.Contact, pagination *model.Pagination, sort []*model.SortBy) (*model.ConversationPage, error) {
+	if pagination == nil {
+		pagination = &model.Pagination{Page: 0, Limit: 0}
+	}
+	paginatedResult, err := r.ServiceContainer.ConversationService.GetConversationsForContact(ctx, obj.ID, pagination.Page, pagination.Limit, sort)
+	if err != nil {
+		graphql.AddErrorf(ctx, "Failed to get contact %s conversations", obj.ID)
+		return nil, err
+	}
+	return &model.ConversationPage{
+		Content:       mapper.MapEntitiesToConversations(paginatedResult.Rows.(*entity.ConversationEntities)),
+		TotalPages:    paginatedResult.TotalPages,
+		TotalElements: paginatedResult.TotalRows,
+	}, err
+}
+
 // ContactCreate is the resolver for the contact_Create field.
 func (r *mutationResolver) ContactCreate(ctx context.Context, input model.ContactInput) (*model.Contact, error) {
 	contactNodeCreated, err := r.ServiceContainer.ContactService.Create(ctx, &service.ContactCreateData{

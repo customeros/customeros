@@ -1,8 +1,6 @@
 type Mutation {
     entityDefinitionCreate(input: EntityDefinitionInput!): EntityDefinition!
     # createEntityDefinitionNewVersion(id: ID!, input: EntityDefinitionInput!): EntityDefinition!
-
-    conversationCreate(input: ConversationInput!): Conversation!
 }
 
 

@@ -7,7 +7,9 @@ import (
 
 type ConversationEntity struct {
 	Id        string
-	StartedAt time.Time
+	StartedAt time.Time `neo4jDb:"property:startedAt;lookupName:STARTED_AT;supportCaseSensitive:false"`
+	ContactId string
+	UserId    string
 }
 
 func (conversation ConversationEntity) ToString() string {

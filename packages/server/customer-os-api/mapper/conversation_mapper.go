@@ -9,6 +9,8 @@ func MapEntityToConversation(entity *entity.ConversationEntity) *model.Conversat
 	return &model.Conversation{
 		ID:        entity.Id,
 		StartedAt: entity.StartedAt,
+		ContactID: entity.ContactId,
+		UserID:    entity.UserId,
 	}
 }
 

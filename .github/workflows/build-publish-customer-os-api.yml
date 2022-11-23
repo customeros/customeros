@@ -3,7 +3,11 @@ name: Build and publish customer-os-api
 on:
   push:
     paths:
-      - packages/server/customer-os-api/**
+      - 'packages/server/customer-os-api/**'
+      - '.github/workflows/build-publish-customer-os-api.yml'
+  pull_request:
+  release:
+    types: [ created, edited ]
 
 env:
   REGISTRY: ghcr.io

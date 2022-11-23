@@ -1,5 +1,6 @@
 extend type Query {
     users(pagination: Pagination, where: Filter, sort: [SortBy!]): UserPage!
+    user(id: ID!): User!
 }
 
 extend type Mutation {
@@ -41,6 +42,8 @@ type User {
     **Required**
     """
     createdAt: Time!
+
+    conversations(pagination: Pagination, sort: [SortBy!]): ConversationPage! @goField(forceResolver: true)
 }
 
 """
