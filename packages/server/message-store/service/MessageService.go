@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"fmt"
 	"github.com/machinebox/graphql"
 	c "github.com/openline-ai/openline-customer-os/packages/server/message-store/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/message-store/gen"
@@ -125,12 +124,13 @@ func parseEmail(email string) (string, string) {
 
 func getContactByEmail(graphqlClient *graphql.Client, email string) (*ContactInfo, error) {
 
-	graphqlRequest := graphql.NewRequest(fmt.Sprintf(`
-  				query {
-  					contactByEmail(email: "%s"){firstName,lastName,id}
+	graphqlRequest := graphql.NewRequest(`
+  				query ($email: String!) {
+  					contactByEmail(email: $email){firstName,lastName,id}
   				}
-    `, email))
+    `)
 
+	graphqlRequest.Var("email", email)
 	var graphqlResponse map[string]map[string]string
 	if err := graphqlClient.Run(context.Background(), graphqlRequest, &graphqlResponse); err != nil {
 		return nil, err
@@ -141,16 +141,19 @@ func getContactByEmail(graphqlClient *graphql.Client, email string) (*ContactInf
 }
 
 func createContact(graphqlClient *graphql.Client, firstName string, lastName string, email string) (string, error) {
-	graphqlRequest := graphql.NewRequest(fmt.Sprintf(`
-		mutation CreateContact {
-		  createContact(input: {firstName: "%s",
-			lastName: "%s",
-		  email:{email:  "%s", label: WORK}}) {
+	graphqlRequest := graphql.NewRequest(`
+		mutation CreateContact ($firstName: String!, $lastName: String! $email: String!) {
+		  contact_Create(input: {firstName: $firstName,
+			lastName: $lastName,
+		  email:{email:  $email, label: WORK}}) {
 			id
 		  }
 		}
-    `, firstName, lastName, email))
+    `)
 
+	graphqlRequest.Var("firstName", firstName)
+	graphqlRequest.Var("lastName", lastName)
+	graphqlRequest.Var("email", email)
 	var graphqlResponse map[string]map[string]string
 	if err := graphqlClient.Run(context.Background(), graphqlRequest, &graphqlResponse); err != nil {
 		return "", err
@@ -159,19 +162,22 @@ func createContact(graphqlClient *graphql.Client, firstName string, lastName str
 }
 
 func createConversation(graphqlClient *graphql.Client, userId string, contactId string, feedId int) (string, error) {
-	graphqlRequest := graphql.NewRequest(fmt.Sprintf(`
-			mutation CreateConversation {
+	graphqlRequest := graphql.NewRequest(`
+			mutation CreateConversation ($userId: String!, $contactId: String!, $feedId: Int!) {
 				createConversation(input: {
-					userId: "%s"
-					contactId: "%s"
-					id: "%d"
+					userId: $userId
+					contactId: $contactId
+					id: $feedId
 				}) {
 					id
 					startedAt
 				}
 			}
-    `, userId, contactId, feedId))
+    `)
 
+	graphqlRequest.Var("userId", userId)
+	graphqlRequest.Var("contactId", contactId)
+	graphqlRequest.Var("feedId", feedId)
 	var graphqlResponse map[string]map[string]string
 	if err := graphqlClient.Run(context.Background(), graphqlRequest, &graphqlResponse); err != nil {
 		return "", err
