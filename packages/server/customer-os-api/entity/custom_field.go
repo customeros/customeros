@@ -76,7 +76,7 @@ func (f *CustomFieldEntity) PropertyName() string {
 }
 
 func (f *CustomFieldEntity) ToString() string {
-	return fmt.Sprintf("id: %s\nname: %s\nvalue: %s", f.Id, f.Name, f.Value.RealValue())
+	return fmt.Sprintf("id: %v\nname: %s\nvalue: %s", f.Id, f.Name, f.Value.RealValue())
 }
 
 func (f *CustomFieldEntity) AdjustValueByDatatype() {
