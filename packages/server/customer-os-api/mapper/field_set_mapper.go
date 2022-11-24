@@ -5,9 +5,22 @@ import (
 	"github.com/openline-ai/openline-customer-os/customer-os-api/graph/model"
 )
 
+func MapFieldSetInputsToEntities(inputs []*model.FieldSetInput) *entity.FieldSetEntities {
+	if inputs == nil {
+		return nil
+	}
+	var result entity.FieldSetEntities
+	for _, singleInput := range inputs {
+		result = append(result, *MapFieldSetInputToEntity(singleInput))
+	}
+	return &result
+}
+
 func MapFieldSetInputToEntity(input *model.FieldSetInput) *entity.FieldSetEntity {
 	fieldSetEntity := entity.FieldSetEntity{
-		Name: input.Name,
+		Name:         input.Name,
+		DefinitionId: input.DefinitionID,
+		CustomFields: MapCustomFieldInputsToEntities(input.CustomFields),
 	}
 	return &fieldSetEntity
 }

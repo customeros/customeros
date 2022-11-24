@@ -227,6 +227,38 @@ func addFieldDefinitionToEntity(driver *neo4j.Driver, entityDefinitionId string)
 	return definitionId.String()
 }
 
+func addFieldDefinitionToSet(driver *neo4j.Driver, setDefinitionId string) string {
+	var definitionId, _ = uuid.NewRandom()
+	query := `MATCH (e:FieldSetDefinition {id:$setDefinitionId})
+			MERGE (f:CustomFieldDefinition {id:$definitionId})<-[:CONTAINS]-(e)
+			ON CREATE SET f.name=$name, f.type=$type, f.order=$order, f.mandatory=$mandatory`
+	integration_tests.ExecuteWriteQuery(driver, query, map[string]any{
+		"definitionId":    definitionId.String(),
+		"setDefinitionId": setDefinitionId,
+		"type":            "TEXT",
+		"order":           1,
+		"mandatory":       false,
+		"name":            "definition name",
+	})
+	return definitionId.String()
+}
+
+func addSetDefinitionToEntity(driver *neo4j.Driver, entityDefinitionId string) string {
+	var definitionId, _ = uuid.NewRandom()
+	query := `MATCH (e:EntityDefinition {id:$entityDefinitionId})
+			MERGE (f:FieldSetDefinition {id:$definitionId})<-[:CONTAINS]-(e)
+			ON CREATE SET f.name=$name, f.type=$type, f.order=$order, f.mandatory=$mandatory`
+	integration_tests.ExecuteWriteQuery(driver, query, map[string]any{
+		"definitionId":       definitionId.String(),
+		"entityDefinitionId": entityDefinitionId,
+		"type":               "TEXT",
+		"order":              1,
+		"mandatory":          false,
+		"name":               "set name",
+	})
+	return definitionId.String()
+}
+
 func createContactType(driver *neo4j.Driver, tenant, contactTypeName string) string {
 	var contactTypeId, _ = uuid.NewRandom()
 	query := `MATCH (t:Tenant {name:$tenant})

@@ -45,13 +45,24 @@ func ExtractSingleRecordFirstValue(result neo4j.Result, err error) (any, error) 
 	}
 }
 
-func ExtractSingleRecordFirstValueAsNodePtr(result neo4j.Result, err error) (*dbtype.Node, error) {
+func ExtractSingleRecordFirstValueAsNode(result neo4j.Result, err error) (*dbtype.Node, error) {
 	node, err := ExtractSingleRecordFirstValue(result, err)
 	if err != nil {
 		return nil, err
 	}
 	dbTypeNode := node.(dbtype.Node)
 	return &dbTypeNode, err
+}
+
+func ExtractSingleRecordNodeAndRelationship(result neo4j.Result, err error) (*dbtype.Node, *dbtype.Relationship, error) {
+	if err != nil {
+		return nil, nil, err
+	}
+	if record, err := result.Single(); err != nil {
+		return nil, nil, err
+	} else {
+		return NodePtr(record.Values[0].(dbtype.Node)), RelationshipPtr(record.Values[1].(dbtype.Relationship)), nil
+	}
 }
 
 func GetPropsFromNode(node dbtype.Node) map[string]any {

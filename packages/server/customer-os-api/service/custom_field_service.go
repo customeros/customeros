@@ -66,7 +66,7 @@ func (s *customFieldService) FindAllForFieldSet(ctx context.Context, fieldSet *m
 	session := utils.NewNeo4jReadSession(s.getDriver())
 	defer session.Close()
 
-	dbRecords, err := s.repository.CustomFieldRepository.FindAllForContact(session, common.GetContext(ctx).Tenant, fieldSet.ID)
+	dbRecords, err := s.repository.CustomFieldRepository.FindAllForFieldSet(session, common.GetContext(ctx).Tenant, fieldSet.ID)
 	if err != nil {
 		return nil, err
 	}

@@ -41,7 +41,7 @@ func (r *contactTypeRepository) Create(tenant string, contactType *entity.Contac
 				"tenant": tenant,
 				"name":   contactType.Name,
 			})
-		return utils.ExtractSingleRecordFirstValueAsNodePtr(queryResult, err)
+		return utils.ExtractSingleRecordFirstValueAsNode(queryResult, err)
 	}); err != nil {
 		return nil, err
 	} else {
@@ -63,7 +63,7 @@ func (r *contactTypeRepository) Update(tenant string, contactType *entity.Contac
 				"id":     contactType.Id,
 				"name":   contactType.Name,
 			})
-		return utils.ExtractSingleRecordFirstValueAsNodePtr(queryResult, err)
+		return utils.ExtractSingleRecordFirstValueAsNode(queryResult, err)
 	}); err != nil {
 		return nil, err
 	} else {

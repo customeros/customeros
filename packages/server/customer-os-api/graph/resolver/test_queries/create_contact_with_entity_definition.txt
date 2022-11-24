@@ -1,13 +1,20 @@
-mutation ($entityDefinitionId: ID!, $fieldDefinitionId: ID!){
+mutation ($entityDefinitionId: ID!, $fieldDefinitionId: ID!, $setDefinitionId: ID!, $fieldInSetDefinitionId: ID!){
 contact_Create(
     input: {
       title: MR
       firstName: "first"
       lastName: "last"
       customFields: [
-                            {name: "field1", value: "value1", datatype: TEXT, definitionId:$fieldDefinitionId},
-                            {name: "field2", value: "value2", datatype: TEXT}
-                        ]
+                        {name: "field1", value: "value1", datatype: TEXT, definitionId:$fieldDefinitionId},
+                        {name: "field2", value: "value2", datatype: TEXT}
+                    ]
+      fieldSets: [{ name:"set1"
+                    definitionId: $setDefinitionId
+                    customFields: [
+                                    {name: "field3InSet", value: "value3", datatype: TEXT, definitionId:$fieldInSetDefinitionId},
+                                    {name: "field4InSet", value: "value4", datatype: TEXT}
+                                  ]}
+                  {name:"set2"}]
       definitionId: $entityDefinitionId
     }
   ) {
@@ -26,6 +33,23 @@ contact_Create(
         datatype
         definition {
             id
+        }
+    }
+    fieldSets {
+        id
+        name
+        added
+        definition {
+            id
+        }
+        customFields {
+            id
+            name
+            value
+            datatype
+            definition {
+                id
+            }
         }
     }
   }
