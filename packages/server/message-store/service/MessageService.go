@@ -126,7 +126,7 @@ func getContactByEmail(graphqlClient *graphql.Client, email string) (*ContactInf
 
 	graphqlRequest := graphql.NewRequest(`
   				query ($email: String!) {
-  					contactByEmail(email: $email){firstName,lastName,id}
+  					contact_ByEmail(email: $email){firstName,lastName,id}
   				}
     `)
 
@@ -163,8 +163,8 @@ func createContact(graphqlClient *graphql.Client, firstName string, lastName str
 
 func createConversation(graphqlClient *graphql.Client, userId string, contactId string, feedId int) (string, error) {
 	graphqlRequest := graphql.NewRequest(`
-			mutation CreateConversation ($userId: String!, $contactId: String!, $feedId: Int!) {
-				createConversation(input: {
+			mutation CreateConversation ($userId: ID!, $contactId: ID!, $feedId: ID!) {
+				conversationCreate(input: {
 					userId: $userId
 					contactId: $contactId
 					id: $feedId
