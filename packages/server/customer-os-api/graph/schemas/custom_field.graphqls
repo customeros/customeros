@@ -1,4 +1,6 @@
 extend type Mutation {
+    customFieldsMergeAndUpdateInContact(contactId : ID!, customFields: [CustomFieldInput!], fieldSets: [FieldSetInput!]): Contact!
+
     customFieldMergeToContact(contactId : ID!, input: CustomFieldInput!): CustomField!
     customFieldUpdateInContact(contactId : ID!, input: CustomFieldUpdateInput!): CustomField!
     customFieldDeleteFromContactByName(contactId : ID!, fieldName: String!): Result!
@@ -50,6 +52,11 @@ Describes a custom, user-defined field associated with a `Contact` of type Strin
 **A `create` object.**
 """
 input CustomFieldInput {
+
+    """
+    The unique ID associated with the custom field.
+    """
+    id: ID
 
     """
     The name of the custom field.
@@ -120,6 +127,7 @@ type FieldSet {
 }
 
 input FieldSetInput {
+    id: ID
     name: String!
     customFields: [CustomFieldInput!]
     definitionId: ID

@@ -34,7 +34,7 @@ func (p propertyName) String() string {
 }
 
 type CustomFieldEntity struct {
-	Id           string
+	Id           *string
 	Name         string
 	DataType     string
 	Value        model.AnyTypeValue

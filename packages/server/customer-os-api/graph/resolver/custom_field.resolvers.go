@@ -48,6 +48,21 @@ func (r *fieldSetResolver) Definition(ctx context.Context, obj *model.FieldSet) 
 	return mapper.MapEntityToFieldSetDefinition(entity), err
 }
 
+// CustomFieldsMergeAndUpdateInContact is the resolver for the customFieldsMergeAndUpdateInContact field.
+func (r *mutationResolver) CustomFieldsMergeAndUpdateInContact(ctx context.Context, contactID string, customFields []*model.CustomFieldInput, fieldSets []*model.FieldSetInput) (*model.Contact, error) {
+	err := r.ServiceContainer.CustomFieldService.MergeAndUpdateCustomFieldsForContact(ctx, contactID, mapper.MapCustomFieldInputsToEntities(customFields), mapper.MapFieldSetInputsToEntities(fieldSets))
+	if err != nil {
+		graphql.AddErrorf(ctx, "Failed to merge and update custom fields for contact %s", contactID)
+		return nil, err
+	}
+	contactEntity, err := r.ServiceContainer.ContactService.FindContactById(ctx, contactID)
+	if err != nil || contactEntity == nil {
+		graphql.AddErrorf(ctx, "Contact with id %s not found", contactID)
+		return nil, err
+	}
+	return mapper.MapEntityToContact(contactEntity), nil
+}
+
 // CustomFieldMergeToContact is the resolver for the customFieldMergeToContact field.
 func (r *mutationResolver) CustomFieldMergeToContact(ctx context.Context, contactID string, input model.CustomFieldInput) (*model.CustomField, error) {
 	result, err := r.ServiceContainer.CustomFieldService.MergeCustomFieldToContact(ctx, contactID, mapper.MapCustomFieldInputToEntity(&input))

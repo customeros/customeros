@@ -3,6 +3,7 @@ package mapper
 import (
 	"github.com/openline-ai/openline-customer-os/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/customer-os-api/graph/model"
+	"github.com/openline-ai/openline-customer-os/customer-os-api/utils"
 )
 
 func MapFieldSetInputsToEntities(inputs []*model.FieldSetInput) *entity.FieldSetEntities {
@@ -18,6 +19,7 @@ func MapFieldSetInputsToEntities(inputs []*model.FieldSetInput) *entity.FieldSet
 
 func MapFieldSetInputToEntity(input *model.FieldSetInput) *entity.FieldSetEntity {
 	fieldSetEntity := entity.FieldSetEntity{
+		Id:           input.ID,
 		Name:         input.Name,
 		DefinitionId: input.DefinitionID,
 		CustomFields: MapCustomFieldInputsToEntities(input.CustomFields),
@@ -27,7 +29,7 @@ func MapFieldSetInputToEntity(input *model.FieldSetInput) *entity.FieldSetEntity
 
 func MapFieldSetUpdateInputToEntity(input *model.FieldSetUpdateInput) *entity.FieldSetEntity {
 	fieldSetEntity := entity.FieldSetEntity{
-		Id:   input.ID,
+		Id:   utils.StringPtr(input.ID),
 		Name: input.Name,
 	}
 	return &fieldSetEntity
@@ -43,7 +45,7 @@ func MapEntitiesToFieldSets(fieldSetEntities *entity.FieldSetEntities) []*model.
 
 func MapEntityToFieldSet(fieldSetEntity *entity.FieldSetEntity) *model.FieldSet {
 	return &model.FieldSet{
-		ID:    fieldSetEntity.Id,
+		ID:    *fieldSetEntity.Id,
 		Name:  fieldSetEntity.Name,
 		Added: fieldSetEntity.Added,
 	}

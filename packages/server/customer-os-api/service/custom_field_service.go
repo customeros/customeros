@@ -15,6 +15,8 @@ type CustomFieldService interface {
 	FindAllForContact(ctx context.Context, obj *model.Contact) (*entity.CustomFieldEntities, error)
 	FindAllForFieldSet(ctx context.Context, obj *model.FieldSet) (*entity.CustomFieldEntities, error)
 
+	MergeAndUpdateCustomFieldsForContact(ctx context.Context, contactId string, customFields *entity.CustomFieldEntities, fieldSets *entity.FieldSetEntities) error
+
 	MergeCustomFieldToContact(ctx context.Context, contactId string, entity *entity.CustomFieldEntity) (*entity.CustomFieldEntity, error)
 	MergeCustomFieldToFieldSet(ctx context.Context, contactId string, fieldSetId string, entity *entity.CustomFieldEntity) (*entity.CustomFieldEntity, error)
 
@@ -26,7 +28,6 @@ type CustomFieldService interface {
 	DeleteByIdFromFieldSet(ctx context.Context, contactId, fieldSetId, fieldId string) (bool, error)
 
 	mapDbNodeToCustomFieldEntity(node dbtype.Node) *entity.CustomFieldEntity
-	getDriver() neo4j.Driver
 }
 
 type customFieldService struct {
@@ -41,6 +42,86 @@ func NewCustomFieldService(repository *repository.RepositoryContainer) CustomFie
 
 func (s *customFieldService) getDriver() neo4j.Driver {
 	return *s.repository.Drivers.Neo4jDriver
+}
+
+func (s *customFieldService) MergeAndUpdateCustomFieldsForContact(ctx context.Context, contactId string, customFields *entity.CustomFieldEntities, fieldSets *entity.FieldSetEntities) error {
+	session := utils.NewNeo4jWriteSession(s.getDriver())
+	defer session.Close()
+
+	_, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
+		tenant := common.GetContext(ctx).Tenant
+		if customFields != nil {
+			for _, customField := range *customFields {
+				if customField.Id == nil {
+					dbNode, err := s.repository.CustomFieldRepository.MergeCustomFieldToContactInTx(tx, tenant, contactId, &customField)
+					if err != nil {
+						return nil, err
+					}
+					if customField.DefinitionId != nil {
+						var fieldId = utils.GetPropsFromNode(*dbNode)["id"].(string)
+						err := s.repository.CustomFieldRepository.LinkWithCustomFieldDefinitionForContactInTx(tx, fieldId, contactId, *customField.DefinitionId)
+						if err != nil {
+							return nil, err
+						}
+					}
+				} else {
+					_, err := s.repository.CustomFieldRepository.UpdateForContactInTx(tx, tenant, contactId, &customField)
+					if err != nil {
+						return nil, err
+					}
+				}
+			}
+		}
+		if fieldSets != nil {
+			for _, fieldSet := range *fieldSets {
+				var fieldSetId string
+				if fieldSet.Id == nil {
+					setDbNode, _, err := s.repository.FieldSetRepository.MergeFieldSetToContactInTx(tx, tenant, contactId, fieldSet)
+					if err != nil {
+						return nil, err
+					}
+					fieldSetId = utils.GetPropsFromNode(*setDbNode)["id"].(string)
+					if fieldSet.DefinitionId != nil {
+						err := s.repository.FieldSetRepository.LinkWithFieldSetDefinitionInTx(tx, tenant, fieldSetId, *fieldSet.DefinitionId)
+						if err != nil {
+							return nil, err
+						}
+					}
+				} else {
+					fieldSetDbNode, _, err := s.repository.FieldSetRepository.UpdateForContactInTx(tx, common.GetContext(ctx).Tenant, contactId, fieldSet)
+					if err != nil {
+						return nil, err
+					}
+					fieldSetId = utils.GetPropsFromNode(*fieldSetDbNode)["id"].(string)
+				}
+				if fieldSet.CustomFields != nil {
+					for _, customField := range *fieldSet.CustomFields {
+						if customField.Id == nil {
+							fieldDbNode, err := s.repository.CustomFieldRepository.MergeCustomFieldToFieldSetInTx(tx, tenant, contactId, fieldSetId, &customField)
+							if err != nil {
+								return nil, err
+							}
+							if customField.DefinitionId != nil {
+								var fieldId = utils.GetPropsFromNode(*fieldDbNode)["id"].(string)
+								err := s.repository.CustomFieldRepository.LinkWithCustomFieldDefinitionForFieldSetInTx(tx, fieldId, fieldSetId, *customField.DefinitionId)
+								if err != nil {
+									return nil, err
+								}
+							}
+						} else {
+							_, err := s.repository.CustomFieldRepository.UpdateForFieldSetInTx(tx, tenant, contactId, fieldSetId, &customField)
+							if err != nil {
+								return nil, err
+							}
+						}
+					}
+				}
+			}
+		}
+		return nil, nil
+	})
+
+	return err
 }
 
 func (s *customFieldService) FindAllForContact(ctx context.Context, contact *model.Contact) (*entity.CustomFieldEntities, error) {
@@ -133,22 +214,27 @@ func (s *customFieldService) UpdateCustomFieldForContact(ctx context.Context, co
 	session := utils.NewNeo4jWriteSession(s.getDriver())
 	defer session.Close()
 
-	customFieldDbNode, err := s.repository.CustomFieldRepository.UpdateForContact(session, common.GetContext(ctx).Tenant, contactId, entity)
+	customFieldDbNode, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
+		return s.repository.CustomFieldRepository.UpdateForContactInTx(tx, common.GetContext(ctx).Tenant, contactId, entity)
+	})
+
 	if err != nil {
 		return nil, err
 	}
-	return s.mapDbNodePtrToCustomFieldEntity(customFieldDbNode), nil
+	return s.mapDbNodePtrToCustomFieldEntity(customFieldDbNode.(*dbtype.Node)), nil
 }
 
 func (s *customFieldService) UpdateCustomFieldForFieldSet(ctx context.Context, contactId string, fieldSetId string, entity *entity.CustomFieldEntity) (*entity.CustomFieldEntity, error) {
 	session := utils.NewNeo4jWriteSession(s.getDriver())
 	defer session.Close()
 
-	customFieldDbNode, err := s.repository.CustomFieldRepository.UpdateForFieldSet(session, common.GetContext(ctx).Tenant, contactId, fieldSetId, entity)
+	customFieldDbNode, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
+		return s.repository.CustomFieldRepository.UpdateForFieldSetInTx(tx, common.GetContext(ctx).Tenant, contactId, fieldSetId, entity)
+	})
 	if err != nil {
 		return nil, err
 	}
-	return s.mapDbNodePtrToCustomFieldEntity(customFieldDbNode), nil
+	return s.mapDbNodePtrToCustomFieldEntity(customFieldDbNode.(*dbtype.Node)), nil
 }
 
 func (s *customFieldService) DeleteByNameFromContact(ctx context.Context, contactId, fieldName string) (bool, error) {
@@ -188,7 +274,7 @@ func (s *customFieldService) mapDbNodeToCustomFieldEntity(node dbtype.Node) *ent
 func (s *customFieldService) mapDbNodePtrToCustomFieldEntity(node *dbtype.Node) *entity.CustomFieldEntity {
 	props := utils.GetPropsFromNode(*node)
 	result := entity.CustomFieldEntity{
-		Id:       utils.GetStringPropOrEmpty(props, "id"),
+		Id:       utils.StringPtr(utils.GetStringPropOrEmpty(props, "id")),
 		Name:     utils.GetStringPropOrEmpty(props, "name"),
 		DataType: utils.GetStringPropOrEmpty(props, "datatype"),
 		Value: model.AnyTypeValue{

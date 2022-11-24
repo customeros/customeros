@@ -6,7 +6,7 @@ import (
 )
 
 type FieldSetEntity struct {
-	Id           string
+	Id           *string
 	Name         string
 	Added        time.Time
 	DefinitionId *string

@@ -76,7 +76,7 @@ func (s *fieldSetService) MergeFieldSetToContact(ctx context.Context, contactId 
 
 	_, err := session.WriteTransaction(func(tx neo4j.Transaction) (interface{}, error) {
 		var err error
-		fieldSetDbNode, fieldSetDbRelationship, err = s.repository.FieldSetRepository.MergeFieldSetToContactInTx(tx, common.GetContext(ctx).Tenant, contactId, entity)
+		fieldSetDbNode, fieldSetDbRelationship, err = s.repository.FieldSetRepository.MergeFieldSetToContactInTx(tx, common.GetContext(ctx).Tenant, contactId, *entity)
 		if err != nil {
 			return nil, err
 		}
@@ -113,34 +113,27 @@ func (s *fieldSetService) MergeFieldSetToContact(ctx context.Context, contactId 
 	return fieldSetEntity, nil
 }
 
-func (s *fieldSetService) UpdateFieldSetInContact(ctx context.Context, contactId string, input *entity.FieldSetEntity) (*entity.FieldSetEntity, error) {
+func (s *fieldSetService) UpdateFieldSetInContact(ctx context.Context, contactId string, entity *entity.FieldSetEntity) (*entity.FieldSetEntity, error) {
 	session := utils.NewNeo4jWriteSession(s.getDriver())
 	defer session.Close()
 
-	queryResult, err := session.WriteTransaction(func(tx neo4j.Transaction) (interface{}, error) {
-		txResult, err := tx.Run(`
-			MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}),
-					(c)-[r:HAS_COMPLEX_PROPERTY]->(s:FieldSet {id:$fieldSetId})
-            SET s.name=$name
-			RETURN s, r`,
-			map[string]interface{}{
-				"tenant":     common.GetContext(ctx).Tenant,
-				"contactId":  contactId,
-				"fieldSetId": input.Id,
-				"name":       input.Name,
-			})
-		records, err := txResult.Collect()
+	var fieldSetDbNode *dbtype.Node
+	var fieldSetDbRelationship *neo4j.Relationship
+
+	_, err := session.WriteTransaction(func(tx neo4j.Transaction) (interface{}, error) {
+		var err error
+		fieldSetDbNode, fieldSetDbRelationship, err = s.repository.FieldSetRepository.UpdateForContactInTx(tx, common.GetContext(ctx).Tenant, contactId, *entity)
 		if err != nil {
 			return nil, err
 		}
-		return records, nil
+		return nil, nil
 	})
 	if err != nil {
 		return nil, err
 	}
 
-	var fieldSetEntity = s.mapDbNodeToFieldSetEntity(utils.NodePtr((queryResult.([]*db.Record))[0].Values[0].(dbtype.Node)))
-	s.addDbRelationshipToEntity(utils.RelationshipPtr((queryResult.([]*db.Record))[0].Values[1].(dbtype.Relationship)), fieldSetEntity)
+	var fieldSetEntity = s.mapDbNodeToFieldSetEntity(fieldSetDbNode)
+	s.addDbRelationshipToEntity(fieldSetDbRelationship, fieldSetEntity)
 	return fieldSetEntity, nil
 }
 
@@ -172,7 +165,7 @@ func (s *fieldSetService) DeleteByIdFromContact(ctx context.Context, contactId s
 func (s *fieldSetService) mapDbNodeToFieldSetEntity(node *dbtype.Node) *entity.FieldSetEntity {
 	props := utils.GetPropsFromNode(*node)
 	result := entity.FieldSetEntity{
-		Id:   utils.GetStringPropOrEmpty(props, "id"),
+		Id:   utils.StringPtr(utils.GetStringPropOrEmpty(props, "id")),
 		Name: utils.GetStringPropOrEmpty(props, "name"),
 	}
 	return &result
