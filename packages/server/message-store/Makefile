@@ -6,7 +6,7 @@ build: generate
 	go build -v -o bin/message-store
 
 test:
-	go test -v
+	go test -v ./...
 
 install:
 	go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.28
