@@ -135,9 +135,9 @@ func getContactByEmail(graphqlClient *graphql.Client, email string) (*ContactInf
 	if err := graphqlClient.Run(context.Background(), graphqlRequest, &graphqlResponse); err != nil {
 		return nil, err
 	}
-	return &ContactInfo{firstName: graphqlResponse["contactByEmail"]["firstName"],
-		lastName: graphqlResponse["contactByEmail"]["lastName"],
-		id:       graphqlResponse["contactByEmail"]["id"]}, nil
+	return &ContactInfo{firstName: graphqlResponse["contact_ByEmail"]["firstName"],
+		lastName: graphqlResponse["contact_ByEmail"]["lastName"],
+		id:       graphqlResponse["contact_ByEmail"]["id"]}, nil
 }
 
 func createContact(graphqlClient *graphql.Client, firstName string, lastName string, email string) (string, error) {

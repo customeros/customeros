@@ -111,6 +111,9 @@ func (r *queryResolver) Contacts(ctx context.Context, pagination *model.Paginati
 
 // ContactByEmail is the resolver for the contact_ByEmail field.
 func (r *queryResolver) ContactByEmail(ctx context.Context, email string) (*model.Contact, error) {
+	if r.Resolver.GetContactByEmail != nil {
+		return r.Resolver.GetContactByEmail(ctx, email)
+	}
 	panic(fmt.Errorf("not implemented: ContactByEmail - contact_ByEmail"))
 }
 

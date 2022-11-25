@@ -23,6 +23,9 @@ func (r *conversationResolver) User(ctx context.Context, obj *model.Conversation
 
 // ConversationCreate is the resolver for the conversationCreate field.
 func (r *mutationResolver) ConversationCreate(ctx context.Context, input model.ConversationInput) (*model.Conversation, error) {
+	if r.Resolver.ConversationCreate != nil {
+		return r.Resolver.ConversationCreate(ctx, input)
+	}
 	panic(fmt.Errorf("not implemented: ConversationCreate - conversationCreate"))
 }
 
