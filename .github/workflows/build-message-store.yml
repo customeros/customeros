@@ -53,7 +53,7 @@ jobs:
 
       - name: Test
         working-directory: ./packages/server/message-store
-        run: make test
+        run: go test -v ./...
 
   publish:
     name: publish image
