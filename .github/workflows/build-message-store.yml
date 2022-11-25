@@ -2,7 +2,7 @@ name: Build Message Store
 
 on:
   push:
-    branches: [ "otter" ]
+    branches: [ "otter", "315-test-coverage-for-message-store" ]
     paths:
       - 'packages/server/message-store/**'
       - '.github/workflows/build-message-store.yml'
