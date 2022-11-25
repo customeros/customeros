@@ -165,6 +165,35 @@ func createCustomFieldInSet(driver *neo4j.Driver, fieldSetId string, customField
 	return fieldId.String()
 }
 
+func createDefaultCustomFieldInContact(driver *neo4j.Driver, contactId string) string {
+	return createCustomFieldInContact(driver, contactId,
+		entity.CustomFieldEntity{
+			Name:     "name",
+			DataType: model.CustomFieldDataTypeText.String(),
+			Value:    model.AnyTypeValue{Str: utils.StringPtr("value")}})
+}
+
+func createCustomFieldInContact(driver *neo4j.Driver, contactId string, customField entity.CustomFieldEntity) string {
+	var fieldId, _ = uuid.NewRandom()
+	customField.AdjustValueByDatatype()
+	query := fmt.Sprintf(
+		"MATCH (c:Contact {id:$contactId}) "+
+			" MERGE (:%s:CustomField { "+
+			"	  id: $fieldId, "+
+			"	  %s: $value, "+
+			"	  datatype: $datatype, "+
+			"	  name: $name "+
+			"	})<-[:HAS_PROPERTY]-(c)", customField.NodeLabel(), customField.PropertyName())
+	integration_tests.ExecuteWriteQuery(driver, query, map[string]any{
+		"contactId": contactId,
+		"fieldId":   fieldId.String(),
+		"name":      customField.Name,
+		"datatype":  customField.DataType,
+		"value":     customField.Value.RealValue(),
+	})
+	return fieldId.String()
+}
+
 func addEmailToContact(driver *neo4j.Driver, contactId string, email string, primary bool, label string) {
 	query := `
 			MATCH (c:Contact {id:$contactId})
@@ -209,6 +238,16 @@ func createEntityDefinition(driver *neo4j.Driver, tenant, extends string) string
 		"name":         "definition name",
 	})
 	return definitionId.String()
+}
+
+func linkEntityDefinitionToContact(driver *neo4j.Driver, entityDefinitionId, contactId string) {
+	query := `MATCH (c:Contact {id:$contactId}),
+			(e:EntityDefinition {id:$definitionId})
+			MERGE (c)-[:IS_DEFINED_BY]->(e)`
+	integration_tests.ExecuteWriteQuery(driver, query, map[string]any{
+		"definitionId": entityDefinitionId,
+		"contactId":    contactId,
+	})
 }
 
 func addFieldDefinitionToEntity(driver *neo4j.Driver, entityDefinitionId string) string {

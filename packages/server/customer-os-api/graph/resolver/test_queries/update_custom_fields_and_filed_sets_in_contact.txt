@@ -1,0 +1,49 @@
+mutation CustomFieldsMergeAndUpdateInContact($contactId: ID!, $customFieldId: ID!, $fieldSetId: ID!, $customFieldInSetId: ID!, $fieldDefinitionId: ID!, $setDefinitionId: ID!, $fieldInSetDefinitionId: ID!){
+customFieldsMergeAndUpdateInContact(
+      contactId: $contactId
+      customFields: [
+                        {id: $customFieldId, name: "field1", value: "value1", datatype: TEXT, definitionId: "IGNORED"},
+                        {name: "field2", value: "value2", datatype: TEXT, definitionId: $fieldDefinitionId}
+                    ]
+      fieldSets: [{ id: $fieldSetId
+                    name:"set1"
+                    definitionId: "IGNORED"
+                    customFields: [
+                                    {id: $customFieldInSetId, name: "field3", value: "value3", datatype: TEXT, definitionId:"IGNORED"},
+                                  ]}
+                  {name:"set2"
+                   definitionId: $setDefinitionId
+                   customFields: [{name: "field4", value: "value4", datatype: TEXT, definitionId: $fieldInSetDefinitionId}]}]
+  ) {
+    id
+    definition {
+        id
+    }
+    customFields {
+        id
+        name
+        value
+        datatype
+        definition {
+            id
+        }
+    }
+    fieldSets {
+        id
+        name
+        added
+        definition {
+            id
+        }
+        customFields {
+            id
+            name
+            value
+            datatype
+            definition {
+                id
+            }
+        }
+    }
+  }
+}

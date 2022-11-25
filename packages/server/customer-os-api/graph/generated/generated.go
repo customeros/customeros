@@ -203,6 +203,7 @@ type ComplexityRoot struct {
 		CustomFieldMergeToFieldSet             func(childComplexity int, contactID string, fieldSetID string, input model.CustomFieldInput) int
 		CustomFieldUpdateInContact             func(childComplexity int, contactID string, input model.CustomFieldUpdateInput) int
 		CustomFieldUpdateInFieldSet            func(childComplexity int, contactID string, fieldSetID string, input model.CustomFieldUpdateInput) int
+		CustomFieldsMergeAndUpdateInContact    func(childComplexity int, contactID string, customFields []*model.CustomFieldInput, fieldSets []*model.FieldSetInput) int
 		EmailMergeToContact                    func(childComplexity int, contactID string, input model.EmailInput) int
 		EmailRemoveFromContact                 func(childComplexity int, contactID string, email string) int
 		EmailRemoveFromContactByID             func(childComplexity int, contactID string, id string) int
@@ -311,6 +312,7 @@ type MutationResolver interface {
 	ContactTypeUpdate(ctx context.Context, input model.ContactTypeUpdateInput) (*model.ContactType, error)
 	ContactTypeDelete(ctx context.Context, id string) (*model.Result, error)
 	ConversationCreate(ctx context.Context, input model.ConversationInput) (*model.Conversation, error)
+	CustomFieldsMergeAndUpdateInContact(ctx context.Context, contactID string, customFields []*model.CustomFieldInput, fieldSets []*model.FieldSetInput) (*model.Contact, error)
 	CustomFieldMergeToContact(ctx context.Context, contactID string, input model.CustomFieldInput) (*model.CustomField, error)
 	CustomFieldUpdateInContact(ctx context.Context, contactID string, input model.CustomFieldUpdateInput) (*model.CustomField, error)
 	CustomFieldDeleteFromContactByName(ctx context.Context, contactID string, fieldName string) (*model.Result, error)
@@ -1194,6 +1196,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.CustomFieldUpdateInFieldSet(childComplexity, args["contactId"].(string), args["fieldSetId"].(string), args["input"].(model.CustomFieldUpdateInput)), true
+
+	case "Mutation.customFieldsMergeAndUpdateInContact":
+		if e.complexity.Mutation.CustomFieldsMergeAndUpdateInContact == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_customFieldsMergeAndUpdateInContact_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.CustomFieldsMergeAndUpdateInContact(childComplexity, args["contactId"].(string), args["customFields"].([]*model.CustomFieldInput), args["fieldSets"].([]*model.FieldSetInput)), true
 
 	case "Mutation.emailMergeToContact":
 		if e.complexity.Mutation.EmailMergeToContact == nil {
@@ -2145,6 +2159,8 @@ type ConversationPage implements Pages {
     totalElements: Int64!
 }`, BuiltIn: false},
 	{Name: "../schemas/custom_field.graphqls", Input: `extend type Mutation {
+    customFieldsMergeAndUpdateInContact(contactId : ID!, customFields: [CustomFieldInput!], fieldSets: [FieldSetInput!]): Contact!
+
     customFieldMergeToContact(contactId : ID!, input: CustomFieldInput!): CustomField!
     customFieldUpdateInContact(contactId : ID!, input: CustomFieldUpdateInput!): CustomField!
     customFieldDeleteFromContactByName(contactId : ID!, fieldName: String!): Result!
@@ -2196,6 +2212,11 @@ Describes a custom, user-defined field associated with a ` + "`" + `Contact` + "
 **A ` + "`" + `create` + "`" + ` object.**
 """
 input CustomFieldInput {
+
+    """
+    The unique ID associated with the custom field.
+    """
+    id: ID
 
     """
     The name of the custom field.
@@ -2266,6 +2287,7 @@ type FieldSet {
 }
 
 input FieldSetInput {
+    id: ID
     name: String!
     customFields: [CustomFieldInput!]
     definitionId: ID
@@ -3312,6 +3334,39 @@ func (ec *executionContext) field_Mutation_customFieldUpdateInFieldSet_args(ctx 
 		}
 	}
 	args["input"] = arg2
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_customFieldsMergeAndUpdateInContact_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["contactId"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("contactId"))
+		arg0, err = ec.unmarshalNID2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["contactId"] = arg0
+	var arg1 []*model.CustomFieldInput
+	if tmp, ok := rawArgs["customFields"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("customFields"))
+		arg1, err = ec.unmarshalOCustomFieldInput2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐCustomFieldInputᚄ(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["customFields"] = arg1
+	var arg2 []*model.FieldSetInput
+	if tmp, ok := rawArgs["fieldSets"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("fieldSets"))
+		arg2, err = ec.unmarshalOFieldSetInput2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐFieldSetInputᚄ(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["fieldSets"] = arg2
 	return args, nil
 }
 
@@ -8729,6 +8784,97 @@ func (ec *executionContext) fieldContext_Mutation_conversationCreate(ctx context
 	return fc, nil
 }
 
+func (ec *executionContext) _Mutation_customFieldsMergeAndUpdateInContact(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_customFieldsMergeAndUpdateInContact(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().CustomFieldsMergeAndUpdateInContact(rctx, fc.Args["contactId"].(string), fc.Args["customFields"].([]*model.CustomFieldInput), fc.Args["fieldSets"].([]*model.FieldSetInput))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.Contact)
+	fc.Result = res
+	return ec.marshalNContact2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐContact(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_customFieldsMergeAndUpdateInContact(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Contact_id(ctx, field)
+			case "title":
+				return ec.fieldContext_Contact_title(ctx, field)
+			case "firstName":
+				return ec.fieldContext_Contact_firstName(ctx, field)
+			case "lastName":
+				return ec.fieldContext_Contact_lastName(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Contact_createdAt(ctx, field)
+			case "label":
+				return ec.fieldContext_Contact_label(ctx, field)
+			case "notes":
+				return ec.fieldContext_Contact_notes(ctx, field)
+			case "contactType":
+				return ec.fieldContext_Contact_contactType(ctx, field)
+			case "companyPositions":
+				return ec.fieldContext_Contact_companyPositions(ctx, field)
+			case "groups":
+				return ec.fieldContext_Contact_groups(ctx, field)
+			case "phoneNumbers":
+				return ec.fieldContext_Contact_phoneNumbers(ctx, field)
+			case "emails":
+				return ec.fieldContext_Contact_emails(ctx, field)
+			case "customFields":
+				return ec.fieldContext_Contact_customFields(ctx, field)
+			case "fieldSets":
+				return ec.fieldContext_Contact_fieldSets(ctx, field)
+			case "definition":
+				return ec.fieldContext_Contact_definition(ctx, field)
+			case "owner":
+				return ec.fieldContext_Contact_owner(ctx, field)
+			case "conversations":
+				return ec.fieldContext_Contact_conversations(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Contact", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_customFieldsMergeAndUpdateInContact_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Mutation_customFieldMergeToContact(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Mutation_customFieldMergeToContact(ctx, field)
 	if err != nil {
@@ -13773,13 +13919,21 @@ func (ec *executionContext) unmarshalInputCustomFieldInput(ctx context.Context, 
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"name", "datatype", "value", "definitionId"}
+	fieldsInOrder := [...]string{"id", "name", "datatype", "value", "definitionId"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
 			continue
 		}
 		switch k {
+		case "id":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+			it.ID, err = ec.unmarshalOID2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
 		case "name":
 			var err error
 
@@ -14069,13 +14223,21 @@ func (ec *executionContext) unmarshalInputFieldSetInput(ctx context.Context, obj
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"name", "customFields", "definitionId"}
+	fieldsInOrder := [...]string{"id", "name", "customFields", "definitionId"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
 			continue
 		}
 		switch k {
+		case "id":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+			it.ID, err = ec.unmarshalOID2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
 		case "name":
 			var err error
 
@@ -15849,6 +16011,15 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_conversationCreate(ctx, field)
+			})
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "customFieldsMergeAndUpdateInContact":
+
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_customFieldsMergeAndUpdateInContact(ctx, field)
 			})
 
 			if out.Values[i] == graphql.Null {

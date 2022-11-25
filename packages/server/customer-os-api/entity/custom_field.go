@@ -34,7 +34,7 @@ func (p propertyName) String() string {
 }
 
 type CustomFieldEntity struct {
-	Id           string
+	Id           *string
 	Name         string
 	DataType     string
 	Value        model.AnyTypeValue
@@ -76,7 +76,7 @@ func (f *CustomFieldEntity) PropertyName() string {
 }
 
 func (f *CustomFieldEntity) ToString() string {
-	return fmt.Sprintf("id: %s\nname: %s\nvalue: %s", f.Id, f.Name, f.Value.RealValue())
+	return fmt.Sprintf("id: %v\nname: %s\nvalue: %s", f.Id, f.Name, f.Value.RealValue())
 }
 
 func (f *CustomFieldEntity) AdjustValueByDatatype() {

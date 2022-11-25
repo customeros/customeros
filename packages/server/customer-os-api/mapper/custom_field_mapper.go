@@ -3,6 +3,7 @@ package mapper
 import (
 	"github.com/openline-ai/openline-customer-os/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/customer-os-api/graph/model"
+	"github.com/openline-ai/openline-customer-os/customer-os-api/utils"
 )
 
 func MapCustomFieldInputsToEntities(inputs []*model.CustomFieldInput) *entity.CustomFieldEntities {
@@ -18,6 +19,7 @@ func MapCustomFieldInputsToEntities(inputs []*model.CustomFieldInput) *entity.Cu
 
 func MapCustomFieldInputToEntity(input *model.CustomFieldInput) *entity.CustomFieldEntity {
 	customFieldEntity := entity.CustomFieldEntity{
+		Id:           input.ID,
 		Name:         input.Name,
 		Value:        input.Value,
 		DataType:     input.Datatype.String(),
@@ -29,7 +31,7 @@ func MapCustomFieldInputToEntity(input *model.CustomFieldInput) *entity.CustomFi
 
 func MapCustomFieldUpdateInputToEntity(input *model.CustomFieldUpdateInput) *entity.CustomFieldEntity {
 	customFieldEntity := entity.CustomFieldEntity{
-		Id:       input.ID,
+		Id:       utils.StringPtr(input.ID),
 		Name:     input.Name,
 		DataType: input.Datatype.String(),
 		Value:    input.Value,
@@ -52,7 +54,7 @@ func MapEntityToCustomField(entity *entity.CustomFieldEntity) *model.CustomField
 		datatype = model.CustomFieldDataTypeText
 	}
 	return &model.CustomField{
-		ID:       entity.Id,
+		ID:       *entity.Id,
 		Name:     entity.Name,
 		Datatype: datatype,
 		Value:    entity.Value,

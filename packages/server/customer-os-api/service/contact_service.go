@@ -83,21 +83,21 @@ func (s *contactService) createContactInDBTxWork(ctx context.Context, newContact
 		var contactId = utils.GetPropsFromNode(*contactDbNode)["id"].(string)
 
 		if newContact.ContactTypeId != nil {
-			err := s.repository.ContactRepository.LinkWithContactTypeInTx(tx, common.GetContext(ctx).Tenant, contactId, *newContact.ContactTypeId)
+			err := s.repository.ContactRepository.LinkWithContactTypeInTx(tx, tenant, contactId, *newContact.ContactTypeId)
 			if err != nil {
 				return nil, err
 			}
 		}
 
 		if newContact.DefinitionId != nil {
-			err := s.repository.ContactRepository.LinkWithEntityDefinitionInTx(tx, common.GetContext(ctx).Tenant, contactId, *newContact.DefinitionId)
+			err := s.repository.ContactRepository.LinkWithEntityDefinitionInTx(tx, tenant, contactId, *newContact.DefinitionId)
 			if err != nil {
 				return nil, err
 			}
 		}
 		if newContact.CustomFields != nil {
 			for _, customField := range *newContact.CustomFields {
-				dbNode, err := s.repository.CustomFieldRepository.MergeCustomFieldToContactInTx(tx, common.GetContext(ctx).Tenant, contactId, &customField)
+				dbNode, err := s.repository.CustomFieldRepository.MergeCustomFieldToContactInTx(tx, tenant, contactId, &customField)
 				if err != nil {
 					return nil, err
 				}
@@ -112,7 +112,7 @@ func (s *contactService) createContactInDBTxWork(ctx context.Context, newContact
 		}
 		if newContact.FieldSets != nil {
 			for _, fieldSet := range *newContact.FieldSets {
-				setDbNode, _, err := s.repository.FieldSetRepository.MergeFieldSetToContactInTx(tx, common.GetContext(ctx).Tenant, contactId, &fieldSet)
+				setDbNode, _, err := s.repository.FieldSetRepository.MergeFieldSetToContactInTx(tx, tenant, contactId, fieldSet)
 				if err != nil {
 					return nil, err
 				}
@@ -125,7 +125,7 @@ func (s *contactService) createContactInDBTxWork(ctx context.Context, newContact
 				}
 				if fieldSet.CustomFields != nil {
 					for _, customField := range *fieldSet.CustomFields {
-						fieldDbNode, err := s.repository.CustomFieldRepository.MergeCustomFieldToFieldSetInTx(tx, common.GetContext(ctx).Tenant, contactId, fieldSetId, &customField)
+						fieldDbNode, err := s.repository.CustomFieldRepository.MergeCustomFieldToFieldSetInTx(tx, tenant, contactId, fieldSetId, &customField)
 						if err != nil {
 							return nil, err
 						}

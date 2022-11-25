@@ -362,6 +362,8 @@ type CustomFieldDefinitionInput struct {
 // Describes a custom, user-defined field associated with a `Contact` of type String.
 // **A `create` object.**
 type CustomFieldInput struct {
+	// The unique ID associated with the custom field.
+	ID *string `json:"id"`
 	// The name of the custom field.
 	// **Required**
 	Name string `json:"name"`
@@ -484,6 +486,7 @@ type FieldSetDefinitionInput struct {
 }
 
 type FieldSetInput struct {
+	ID           *string             `json:"id"`
 	Name         string              `json:"name"`
 	CustomFields []*CustomFieldInput `json:"customFields"`
 	DefinitionID *string             `json:"definitionId"`

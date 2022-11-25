@@ -6,7 +6,7 @@ import (
 )
 
 type FieldSetEntity struct {
-	Id           string
+	Id           *string
 	Name         string
 	Added        time.Time
 	DefinitionId *string
@@ -14,7 +14,7 @@ type FieldSetEntity struct {
 }
 
 func (set FieldSetEntity) ToString() string {
-	return fmt.Sprintf("id: %s\nname: %s", set.Id, set.Name)
+	return fmt.Sprintf("id: %v\nname: %s", set.Id, set.Name)
 }
 
 type FieldSetEntities []FieldSetEntity
