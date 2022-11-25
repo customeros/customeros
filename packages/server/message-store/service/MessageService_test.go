@@ -1,8 +1,35 @@
 package service
 
 import (
+	"context"
+	"github.com/gin-gonic/gin"
+	"github.com/machinebox/graphql"
+	"github.com/openline-ai/openline-customer-os/packages/server/message-store/test/graph"
+	"github.com/openline-ai/openline-customer-os/packages/server/message-store/test/graph/model"
+	"github.com/openline-ai/openline-customer-os/packages/server/message-store/test/graph/resolver"
+	"github.com/stretchr/testify/assert"
+	"google.golang.org/grpc/status"
+	"log"
+	"net/http/httptest"
 	"testing"
 )
+
+var graphqlClient *graphql.Client
+
+func NewWebServer(t *testing.T) (*httptest.Server, *graphql.Client, *resolver.Resolver) {
+	router := gin.Default()
+	server := httptest.NewServer(router)
+	handler, resolver := graph.GraphqlHandler()
+	router.POST("/query", handler)
+
+	graphqlClient = graphql.NewClient(server.URL + "/query")
+
+	t.Cleanup(func() {
+		log.Printf("Shutting down webserver")
+		server.Close()
+	})
+	return server, graphqlClient, resolver
+}
 
 func Test_parseEmail(t *testing.T) {
 	type args struct {
@@ -43,4 +70,29 @@ func Test_parseEmail(t *testing.T) {
 			}
 		})
 	}
+}
+
+func Test_getContact(t *testing.T) {
+	_, client, resolver := NewWebServer(t)
+	resolver.ContactCreate = func(ctx context.Context, input model.ContactInput) (*model.Contact, error) {
+		if !assert.Equal(t, input.FirstName, "Torrey") {
+			return nil, status.Error(500, "Unknown Firstname")
+		}
+		if !assert.Equal(t, input.LastName, "Searle") {
+			return nil, status.Error(500, "Unknown Firstname")
+		}
+		if !assert.Equal(t, input.Email.Email, "x@x.org") {
+			return nil, status.Error(500, "Email")
+		}
+		return &model.Contact{
+			FirstName: "Torrey",
+			LastName:  "Searle",
+			ID:        "12345678",
+		}, nil
+	}
+	result, err := createContact(client, "Torrey", "Searle", "x@x.org")
+	if err != nil {
+		log.Fatalf("Got an error: %s", err.Error())
+	}
+	assert.Equal(t, "12345678", result)
 }

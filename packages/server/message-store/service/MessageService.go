@@ -158,7 +158,7 @@ func createContact(graphqlClient *graphql.Client, firstName string, lastName str
 	if err := graphqlClient.Run(context.Background(), graphqlRequest, &graphqlResponse); err != nil {
 		return "", err
 	}
-	return graphqlResponse["createContact"]["id"], nil
+	return graphqlResponse["contact_Create"]["id"], nil
 }
 
 func createConversation(graphqlClient *graphql.Client, userId string, contactId string, feedId int) (string, error) {
@@ -182,7 +182,7 @@ func createConversation(graphqlClient *graphql.Client, userId string, contactId 
 	if err := graphqlClient.Run(context.Background(), graphqlRequest, &graphqlResponse); err != nil {
 		return "", err
 	}
-	return graphqlResponse["createConversation"]["id"], nil
+	return graphqlResponse["conversationCreate"]["id"], nil
 }
 
 func (s *messageService) SaveMessage(ctx context.Context, message *pb.Message) (*pb.Message, error) {
