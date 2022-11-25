@@ -63,24 +63,32 @@ func TestMutationResolver_CustomFieldsMergeAndUpdateInContact(t *testing.T) {
 	updatedContact := contact.CustomFieldsMergeAndUpdateInContact
 	require.Equal(t, entityDefinitionId, updatedContact.Definition.ID)
 	require.Equal(t, 2, len(updatedContact.CustomFields))
-	require.Equal(t, fieldInContactId, updatedContact.CustomFields[0].ID)
-	require.Equal(t, "field1", updatedContact.CustomFields[0].Name)
-	require.Equal(t, "value1", updatedContact.CustomFields[0].Value.RealValue())
-	require.Equal(t, "field2", updatedContact.CustomFields[1].Name)
-	require.Equal(t, "value2", updatedContact.CustomFields[1].Value.RealValue())
-	require.Equal(t, fieldDefinitionId, updatedContact.CustomFields[1].Definition.ID)
+	if updatedContact.CustomFields[0].ID == fieldInContactId {
+		checkCustomField(t, *updatedContact.CustomFields[0], "field1", "value1", nil)
+		checkCustomField(t, *updatedContact.CustomFields[1], "field2", "value2", &fieldDefinitionId)
+	} else {
+		checkCustomField(t, *updatedContact.CustomFields[1], "field1", "value1", nil)
+		checkCustomField(t, *updatedContact.CustomFields[0], "field2", "value2", &fieldDefinitionId)
+	}
 
 	require.Equal(t, 2, len(updatedContact.FieldSets))
-	require.Equal(t, fieldSetId, updatedContact.FieldSets[0].ID)
-	require.Equal(t, "set1", updatedContact.FieldSets[0].Name)
-	require.Equal(t, "set2", updatedContact.FieldSets[1].Name)
-	require.Equal(t, setDefinitionId, updatedContact.FieldSets[1].Definition.ID)
+	require.ElementsMatch(t, []string{"set1", "set2"}, []string{updatedContact.FieldSets[0].Name, updatedContact.FieldSets[1].Name})
 
-	require.Equal(t, fieldInSetId, updatedContact.FieldSets[0].CustomFields[0].ID)
-	require.Equal(t, "field3", updatedContact.FieldSets[0].CustomFields[0].Name)
-	require.Equal(t, "value3", updatedContact.FieldSets[0].CustomFields[0].Value.RealValue())
+	if updatedContact.FieldSets[0].Definition != nil {
+		require.Equal(t, fieldInSetId, updatedContact.FieldSets[1].CustomFields[0].ID)
+		checkCustomField(t, *updatedContact.FieldSets[1].CustomFields[0], "field3", "value3", nil)
+		checkCustomField(t, *updatedContact.FieldSets[0].CustomFields[0], "field4", "value4", &fieldInSetDefinitionId)
+	} else {
+		require.Equal(t, fieldInSetId, updatedContact.FieldSets[0].CustomFields[0].ID)
+		checkCustomField(t, *updatedContact.FieldSets[0].CustomFields[0], "field3", "value3", nil)
+		checkCustomField(t, *updatedContact.FieldSets[1].CustomFields[0], "field4", "value4", &fieldInSetDefinitionId)
+	}
+}
 
-	require.Equal(t, "field4", updatedContact.FieldSets[1].CustomFields[0].Name)
-	require.Equal(t, "value4", updatedContact.FieldSets[1].CustomFields[0].Value.RealValue())
-	require.Equal(t, fieldInSetDefinitionId, updatedContact.FieldSets[1].CustomFields[0].Definition.ID)
+func checkCustomField(t *testing.T, customField model.CustomField, name, value string, fieldDefinitionId *string) {
+	require.Equal(t, name, customField.Name)
+	require.Equal(t, value, customField.Value.RealValue())
+	if fieldDefinitionId != nil {
+		require.Equal(t, *fieldDefinitionId, customField.Definition.ID)
+	}
 }
