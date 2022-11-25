@@ -12,9 +12,9 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com.openline-ai.customer-os-analytics-api/graph/model"
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/99designs/gqlgen/graphql/introspection"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-analytics-api/graph/model"
 	gqlparser "github.com/vektah/gqlparser/v2"
 	"github.com/vektah/gqlparser/v2/ast"
 )
@@ -610,7 +610,7 @@ func (ec *executionContext) field_Application_sessions_args(ctx context.Context,
 	var arg0 model.TimeFilter
 	if tmp, ok := rawArgs["timeFilter"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("timeFilter"))
-		arg0, err = ec.unmarshalNTimeFilter2githubᚗcomᚗopenlineᚑaiᚗcustomerᚑosᚑanalyticsᚑapiᚋgraphᚋmodelᚐTimeFilter(ctx, tmp)
+		arg0, err = ec.unmarshalNTimeFilter2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑanalyticsᚑapiᚋgraphᚋmodelᚐTimeFilter(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -619,7 +619,7 @@ func (ec *executionContext) field_Application_sessions_args(ctx context.Context,
 	var arg1 []*model.AppSessionsDataFilter
 	if tmp, ok := rawArgs["dataFilter"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("dataFilter"))
-		arg1, err = ec.unmarshalOAppSessionsDataFilter2ᚕᚖgithubᚗcomᚗopenlineᚑaiᚗcustomerᚑosᚑanalyticsᚑapiᚋgraphᚋmodelᚐAppSessionsDataFilter(ctx, tmp)
+		arg1, err = ec.unmarshalOAppSessionsDataFilter2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑanalyticsᚑapiᚋgraphᚋmodelᚐAppSessionsDataFilter(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -628,7 +628,7 @@ func (ec *executionContext) field_Application_sessions_args(ctx context.Context,
 	var arg2 *model.Pagination
 	if tmp, ok := rawArgs["pagination"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("pagination"))
-		arg2, err = ec.unmarshalOPagination2ᚖgithubᚗcomᚗopenlineᚑaiᚗcustomerᚑosᚑanalyticsᚑapiᚋgraphᚋmodelᚐPagination(ctx, tmp)
+		arg2, err = ec.unmarshalOPagination2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑanalyticsᚑapiᚋgraphᚋmodelᚐPagination(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -1789,7 +1789,7 @@ func (ec *executionContext) _AppSession_pageViews(ctx context.Context, field gra
 	}
 	res := resTmp.([]*model.PageView)
 	fc.Result = res
-	return ec.marshalNPageView2ᚕᚖgithubᚗcomᚗopenlineᚑaiᚗcustomerᚑosᚑanalyticsᚑapiᚋgraphᚋmodelᚐPageViewᚄ(ctx, field.Selections, res)
+	return ec.marshalNPageView2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑanalyticsᚑapiᚋgraphᚋmodelᚐPageViewᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_AppSession_pageViews(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -1845,7 +1845,7 @@ func (ec *executionContext) _AppSessionsPage_content(ctx context.Context, field 
 	}
 	res := resTmp.([]*model.AppSession)
 	fc.Result = res
-	return ec.marshalNAppSession2ᚕᚖgithubᚗcomᚗopenlineᚑaiᚗcustomerᚑosᚑanalyticsᚑapiᚋgraphᚋmodelᚐAppSessionᚄ(ctx, field.Selections, res)
+	return ec.marshalNAppSession2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑanalyticsᚑapiᚋgraphᚋmodelᚐAppSessionᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_AppSessionsPage_content(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -2205,7 +2205,7 @@ func (ec *executionContext) _Application_sessions(ctx context.Context, field gra
 	}
 	res := resTmp.(*model.AppSessionsPage)
 	fc.Result = res
-	return ec.marshalNAppSessionsPage2ᚖgithubᚗcomᚗopenlineᚑaiᚗcustomerᚑosᚑanalyticsᚑapiᚋgraphᚋmodelᚐAppSessionsPage(ctx, field.Selections, res)
+	return ec.marshalNAppSessionsPage2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑanalyticsᚑapiᚋgraphᚋmodelᚐAppSessionsPage(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Application_sessions(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -2488,7 +2488,7 @@ func (ec *executionContext) _Query_application(ctx context.Context, field graphq
 	}
 	res := resTmp.(*model.Application)
 	fc.Result = res
-	return ec.marshalNApplication2ᚖgithubᚗcomᚗopenlineᚑaiᚗcustomerᚑosᚑanalyticsᚑapiᚋgraphᚋmodelᚐApplication(ctx, field.Selections, res)
+	return ec.marshalNApplication2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑanalyticsᚑapiᚋgraphᚋmodelᚐApplication(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_application(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -2555,7 +2555,7 @@ func (ec *executionContext) _Query_applications(ctx context.Context, field graph
 	}
 	res := resTmp.([]*model.Application)
 	fc.Result = res
-	return ec.marshalNApplication2ᚕᚖgithubᚗcomᚗopenlineᚑaiᚗcustomerᚑosᚑanalyticsᚑapiᚋgraphᚋmodelᚐApplicationᚄ(ctx, field.Selections, res)
+	return ec.marshalNApplication2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑanalyticsᚑapiᚋgraphᚋmodelᚐApplicationᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_applications(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -4503,7 +4503,7 @@ func (ec *executionContext) unmarshalInputAppSessionsDataFilter(ctx context.Cont
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("Field"))
-			it.Field, err = ec.unmarshalNAppSessionField2githubᚗcomᚗopenlineᚑaiᚗcustomerᚑosᚑanalyticsᚑapiᚋgraphᚋmodelᚐAppSessionField(ctx, v)
+			it.Field, err = ec.unmarshalNAppSessionField2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑanalyticsᚑapiᚋgraphᚋmodelᚐAppSessionField(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -4511,7 +4511,7 @@ func (ec *executionContext) unmarshalInputAppSessionsDataFilter(ctx context.Cont
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("Action"))
-			it.Action, err = ec.unmarshalNOperation2githubᚗcomᚗopenlineᚑaiᚗcustomerᚑosᚑanalyticsᚑapiᚋgraphᚋmodelᚐOperation(ctx, v)
+			it.Action, err = ec.unmarshalNOperation2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑanalyticsᚑapiᚋgraphᚋmodelᚐOperation(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -4583,7 +4583,7 @@ func (ec *executionContext) unmarshalInputTimeFilter(ctx context.Context, obj in
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("timePeriod"))
-			it.TimePeriod, err = ec.unmarshalNTimePeriod2githubᚗcomᚗopenlineᚑaiᚗcustomerᚑosᚑanalyticsᚑapiᚋgraphᚋmodelᚐTimePeriod(ctx, v)
+			it.TimePeriod, err = ec.unmarshalNTimePeriod2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑanalyticsᚑapiᚋgraphᚋmodelᚐTimePeriod(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -5415,7 +5415,7 @@ func (ec *executionContext) ___Type(ctx context.Context, sel ast.SelectionSet, o
 
 // region    ***************************** type.gotpl *****************************
 
-func (ec *executionContext) marshalNAppSession2ᚕᚖgithubᚗcomᚗopenlineᚑaiᚗcustomerᚑosᚑanalyticsᚑapiᚋgraphᚋmodelᚐAppSessionᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.AppSession) graphql.Marshaler {
+func (ec *executionContext) marshalNAppSession2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑanalyticsᚑapiᚋgraphᚋmodelᚐAppSessionᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.AppSession) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -5439,7 +5439,7 @@ func (ec *executionContext) marshalNAppSession2ᚕᚖgithubᚗcomᚗopenlineᚑa
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNAppSession2ᚖgithubᚗcomᚗopenlineᚑaiᚗcustomerᚑosᚑanalyticsᚑapiᚋgraphᚋmodelᚐAppSession(ctx, sel, v[i])
+			ret[i] = ec.marshalNAppSession2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑanalyticsᚑapiᚋgraphᚋmodelᚐAppSession(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -5459,7 +5459,7 @@ func (ec *executionContext) marshalNAppSession2ᚕᚖgithubᚗcomᚗopenlineᚑa
 	return ret
 }
 
-func (ec *executionContext) marshalNAppSession2ᚖgithubᚗcomᚗopenlineᚑaiᚗcustomerᚑosᚑanalyticsᚑapiᚋgraphᚋmodelᚐAppSession(ctx context.Context, sel ast.SelectionSet, v *model.AppSession) graphql.Marshaler {
+func (ec *executionContext) marshalNAppSession2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑanalyticsᚑapiᚋgraphᚋmodelᚐAppSession(ctx context.Context, sel ast.SelectionSet, v *model.AppSession) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -5469,21 +5469,21 @@ func (ec *executionContext) marshalNAppSession2ᚖgithubᚗcomᚗopenlineᚑai�
 	return ec._AppSession(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalNAppSessionField2githubᚗcomᚗopenlineᚑaiᚗcustomerᚑosᚑanalyticsᚑapiᚋgraphᚋmodelᚐAppSessionField(ctx context.Context, v interface{}) (model.AppSessionField, error) {
+func (ec *executionContext) unmarshalNAppSessionField2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑanalyticsᚑapiᚋgraphᚋmodelᚐAppSessionField(ctx context.Context, v interface{}) (model.AppSessionField, error) {
 	var res model.AppSessionField
 	err := res.UnmarshalGQL(v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNAppSessionField2githubᚗcomᚗopenlineᚑaiᚗcustomerᚑosᚑanalyticsᚑapiᚋgraphᚋmodelᚐAppSessionField(ctx context.Context, sel ast.SelectionSet, v model.AppSessionField) graphql.Marshaler {
+func (ec *executionContext) marshalNAppSessionField2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑanalyticsᚑapiᚋgraphᚋmodelᚐAppSessionField(ctx context.Context, sel ast.SelectionSet, v model.AppSessionField) graphql.Marshaler {
 	return v
 }
 
-func (ec *executionContext) marshalNAppSessionsPage2githubᚗcomᚗopenlineᚑaiᚗcustomerᚑosᚑanalyticsᚑapiᚋgraphᚋmodelᚐAppSessionsPage(ctx context.Context, sel ast.SelectionSet, v model.AppSessionsPage) graphql.Marshaler {
+func (ec *executionContext) marshalNAppSessionsPage2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑanalyticsᚑapiᚋgraphᚋmodelᚐAppSessionsPage(ctx context.Context, sel ast.SelectionSet, v model.AppSessionsPage) graphql.Marshaler {
 	return ec._AppSessionsPage(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNAppSessionsPage2ᚖgithubᚗcomᚗopenlineᚑaiᚗcustomerᚑosᚑanalyticsᚑapiᚋgraphᚋmodelᚐAppSessionsPage(ctx context.Context, sel ast.SelectionSet, v *model.AppSessionsPage) graphql.Marshaler {
+func (ec *executionContext) marshalNAppSessionsPage2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑanalyticsᚑapiᚋgraphᚋmodelᚐAppSessionsPage(ctx context.Context, sel ast.SelectionSet, v *model.AppSessionsPage) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -5493,11 +5493,11 @@ func (ec *executionContext) marshalNAppSessionsPage2ᚖgithubᚗcomᚗopenline�
 	return ec._AppSessionsPage(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNApplication2githubᚗcomᚗopenlineᚑaiᚗcustomerᚑosᚑanalyticsᚑapiᚋgraphᚋmodelᚐApplication(ctx context.Context, sel ast.SelectionSet, v model.Application) graphql.Marshaler {
+func (ec *executionContext) marshalNApplication2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑanalyticsᚑapiᚋgraphᚋmodelᚐApplication(ctx context.Context, sel ast.SelectionSet, v model.Application) graphql.Marshaler {
 	return ec._Application(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNApplication2ᚕᚖgithubᚗcomᚗopenlineᚑaiᚗcustomerᚑosᚑanalyticsᚑapiᚋgraphᚋmodelᚐApplicationᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Application) graphql.Marshaler {
+func (ec *executionContext) marshalNApplication2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑanalyticsᚑapiᚋgraphᚋmodelᚐApplicationᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Application) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -5521,7 +5521,7 @@ func (ec *executionContext) marshalNApplication2ᚕᚖgithubᚗcomᚗopenlineᚑ
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNApplication2ᚖgithubᚗcomᚗopenlineᚑaiᚗcustomerᚑosᚑanalyticsᚑapiᚋgraphᚋmodelᚐApplication(ctx, sel, v[i])
+			ret[i] = ec.marshalNApplication2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑanalyticsᚑapiᚋgraphᚋmodelᚐApplication(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -5541,7 +5541,7 @@ func (ec *executionContext) marshalNApplication2ᚕᚖgithubᚗcomᚗopenlineᚑ
 	return ret
 }
 
-func (ec *executionContext) marshalNApplication2ᚖgithubᚗcomᚗopenlineᚑaiᚗcustomerᚑosᚑanalyticsᚑapiᚋgraphᚋmodelᚐApplication(ctx context.Context, sel ast.SelectionSet, v *model.Application) graphql.Marshaler {
+func (ec *executionContext) marshalNApplication2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑanalyticsᚑapiᚋgraphᚋmodelᚐApplication(ctx context.Context, sel ast.SelectionSet, v *model.Application) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -5611,17 +5611,17 @@ func (ec *executionContext) marshalNInt642int64(ctx context.Context, sel ast.Sel
 	return res
 }
 
-func (ec *executionContext) unmarshalNOperation2githubᚗcomᚗopenlineᚑaiᚗcustomerᚑosᚑanalyticsᚑapiᚋgraphᚋmodelᚐOperation(ctx context.Context, v interface{}) (model.Operation, error) {
+func (ec *executionContext) unmarshalNOperation2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑanalyticsᚑapiᚋgraphᚋmodelᚐOperation(ctx context.Context, v interface{}) (model.Operation, error) {
 	var res model.Operation
 	err := res.UnmarshalGQL(v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNOperation2githubᚗcomᚗopenlineᚑaiᚗcustomerᚑosᚑanalyticsᚑapiᚋgraphᚋmodelᚐOperation(ctx context.Context, sel ast.SelectionSet, v model.Operation) graphql.Marshaler {
+func (ec *executionContext) marshalNOperation2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑanalyticsᚑapiᚋgraphᚋmodelᚐOperation(ctx context.Context, sel ast.SelectionSet, v model.Operation) graphql.Marshaler {
 	return v
 }
 
-func (ec *executionContext) marshalNPageView2ᚕᚖgithubᚗcomᚗopenlineᚑaiᚗcustomerᚑosᚑanalyticsᚑapiᚋgraphᚋmodelᚐPageViewᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.PageView) graphql.Marshaler {
+func (ec *executionContext) marshalNPageView2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑanalyticsᚑapiᚋgraphᚋmodelᚐPageViewᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.PageView) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -5645,7 +5645,7 @@ func (ec *executionContext) marshalNPageView2ᚕᚖgithubᚗcomᚗopenlineᚑai�
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNPageView2ᚖgithubᚗcomᚗopenlineᚑaiᚗcustomerᚑosᚑanalyticsᚑapiᚋgraphᚋmodelᚐPageView(ctx, sel, v[i])
+			ret[i] = ec.marshalNPageView2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑanalyticsᚑapiᚋgraphᚋmodelᚐPageView(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -5665,7 +5665,7 @@ func (ec *executionContext) marshalNPageView2ᚕᚖgithubᚗcomᚗopenlineᚑai�
 	return ret
 }
 
-func (ec *executionContext) marshalNPageView2ᚖgithubᚗcomᚗopenlineᚑaiᚗcustomerᚑosᚑanalyticsᚑapiᚋgraphᚋmodelᚐPageView(ctx context.Context, sel ast.SelectionSet, v *model.PageView) graphql.Marshaler {
+func (ec *executionContext) marshalNPageView2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑanalyticsᚑapiᚋgraphᚋmodelᚐPageView(ctx context.Context, sel ast.SelectionSet, v *model.PageView) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -5705,18 +5705,18 @@ func (ec *executionContext) marshalNTime2timeᚐTime(ctx context.Context, sel as
 	return res
 }
 
-func (ec *executionContext) unmarshalNTimeFilter2githubᚗcomᚗopenlineᚑaiᚗcustomerᚑosᚑanalyticsᚑapiᚋgraphᚋmodelᚐTimeFilter(ctx context.Context, v interface{}) (model.TimeFilter, error) {
+func (ec *executionContext) unmarshalNTimeFilter2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑanalyticsᚑapiᚋgraphᚋmodelᚐTimeFilter(ctx context.Context, v interface{}) (model.TimeFilter, error) {
 	res, err := ec.unmarshalInputTimeFilter(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalNTimePeriod2githubᚗcomᚗopenlineᚑaiᚗcustomerᚑosᚑanalyticsᚑapiᚋgraphᚋmodelᚐTimePeriod(ctx context.Context, v interface{}) (model.TimePeriod, error) {
+func (ec *executionContext) unmarshalNTimePeriod2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑanalyticsᚑapiᚋgraphᚋmodelᚐTimePeriod(ctx context.Context, v interface{}) (model.TimePeriod, error) {
 	var res model.TimePeriod
 	err := res.UnmarshalGQL(v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNTimePeriod2githubᚗcomᚗopenlineᚑaiᚗcustomerᚑosᚑanalyticsᚑapiᚋgraphᚋmodelᚐTimePeriod(ctx context.Context, sel ast.SelectionSet, v model.TimePeriod) graphql.Marshaler {
+func (ec *executionContext) marshalNTimePeriod2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑanalyticsᚑapiᚋgraphᚋmodelᚐTimePeriod(ctx context.Context, sel ast.SelectionSet, v model.TimePeriod) graphql.Marshaler {
 	return v
 }
 
@@ -5973,7 +5973,7 @@ func (ec *executionContext) marshalN__TypeKind2string(ctx context.Context, sel a
 	return res
 }
 
-func (ec *executionContext) unmarshalOAppSessionsDataFilter2ᚕᚖgithubᚗcomᚗopenlineᚑaiᚗcustomerᚑosᚑanalyticsᚑapiᚋgraphᚋmodelᚐAppSessionsDataFilter(ctx context.Context, v interface{}) ([]*model.AppSessionsDataFilter, error) {
+func (ec *executionContext) unmarshalOAppSessionsDataFilter2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑanalyticsᚑapiᚋgraphᚋmodelᚐAppSessionsDataFilter(ctx context.Context, v interface{}) ([]*model.AppSessionsDataFilter, error) {
 	if v == nil {
 		return nil, nil
 	}
@@ -5985,7 +5985,7 @@ func (ec *executionContext) unmarshalOAppSessionsDataFilter2ᚕᚖgithubᚗcom�
 	res := make([]*model.AppSessionsDataFilter, len(vSlice))
 	for i := range vSlice {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
-		res[i], err = ec.unmarshalOAppSessionsDataFilter2ᚖgithubᚗcomᚗopenlineᚑaiᚗcustomerᚑosᚑanalyticsᚑapiᚋgraphᚋmodelᚐAppSessionsDataFilter(ctx, vSlice[i])
+		res[i], err = ec.unmarshalOAppSessionsDataFilter2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑanalyticsᚑapiᚋgraphᚋmodelᚐAppSessionsDataFilter(ctx, vSlice[i])
 		if err != nil {
 			return nil, err
 		}
@@ -5993,7 +5993,7 @@ func (ec *executionContext) unmarshalOAppSessionsDataFilter2ᚕᚖgithubᚗcom�
 	return res, nil
 }
 
-func (ec *executionContext) unmarshalOAppSessionsDataFilter2ᚖgithubᚗcomᚗopenlineᚑaiᚗcustomerᚑosᚑanalyticsᚑapiᚋgraphᚋmodelᚐAppSessionsDataFilter(ctx context.Context, v interface{}) (*model.AppSessionsDataFilter, error) {
+func (ec *executionContext) unmarshalOAppSessionsDataFilter2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑanalyticsᚑapiᚋgraphᚋmodelᚐAppSessionsDataFilter(ctx context.Context, v interface{}) (*model.AppSessionsDataFilter, error) {
 	if v == nil {
 		return nil, nil
 	}
@@ -6043,7 +6043,7 @@ func (ec *executionContext) marshalOID2ᚖstring(ctx context.Context, sel ast.Se
 	return res
 }
 
-func (ec *executionContext) unmarshalOPagination2ᚖgithubᚗcomᚗopenlineᚑaiᚗcustomerᚑosᚑanalyticsᚑapiᚋgraphᚋmodelᚐPagination(ctx context.Context, v interface{}) (*model.Pagination, error) {
+func (ec *executionContext) unmarshalOPagination2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑanalyticsᚑapiᚋgraphᚋmodelᚐPagination(ctx context.Context, v interface{}) (*model.Pagination, error) {
 	if v == nil {
 		return nil, nil
 	}

@@ -1,9 +1,9 @@
 package service
 
 import (
-	"github.com/openline-ai/openline-customer-os/customer-os-api/entity"
-	"github.com/openline-ai/openline-customer-os/customer-os-api/graph/model"
-	"github.com/openline-ai/openline-customer-os/customer-os-api/utils"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils"
 	"github.com/stretchr/testify/require"
 	"reflect"
 	"testing"

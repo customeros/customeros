@@ -2,12 +2,12 @@ package resolver
 
 import (
 	"encoding/json"
-	"github.com.openline-ai.customer-os-analytics-api/graph/generated"
-	"github.com.openline-ai.customer-os-analytics-api/mocks"
-	"github.com.openline-ai.customer-os-analytics-api/repository"
-	"github.com.openline-ai.customer-os-analytics-api/repository/helper"
 	"github.com/99designs/gqlgen/client"
 	"github.com/99designs/gqlgen/graphql/handler"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-analytics-api/graph/generated"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-analytics-api/mocks"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-analytics-api/repository"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-analytics-api/repository/helper"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	"log"

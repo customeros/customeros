@@ -1,4 +1,4 @@
-module github.com/openline-ai/openline-customer-os/customer-os-api
+module github.com/openline-ai/openline-customer-os/packages/server/customer-os-api
 
 go 1.19
 

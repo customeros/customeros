@@ -2,7 +2,7 @@ package entity
 
 import (
 	"fmt"
-	"github.com/openline-ai/openline-customer-os/customer-os-api/graph/model"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 )
 
 type nodeLabel string

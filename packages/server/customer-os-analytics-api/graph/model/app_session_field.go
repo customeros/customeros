@@ -2,7 +2,7 @@ package model
 
 import (
 	"fmt"
-	"github.com.openline-ai.customer-os-analytics-api/repository/entity"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-analytics-api/repository/entity"
 )
 
 func (f *AppSessionField) GetColumnName() string {

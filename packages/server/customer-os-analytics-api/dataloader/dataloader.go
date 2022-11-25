@@ -3,12 +3,12 @@ package dataloader
 import (
 	"context"
 	"fmt"
-	"github.com.openline-ai.customer-os-analytics-api/graph/model"
-	"github.com.openline-ai.customer-os-analytics-api/mapper"
-	"github.com.openline-ai.customer-os-analytics-api/repository"
-	"github.com.openline-ai.customer-os-analytics-api/repository/entity"
 	"github.com/graph-gophers/dataloader"
 	gopher_dataloader "github.com/graph-gophers/dataloader"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-analytics-api/graph/model"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-analytics-api/mapper"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-analytics-api/repository"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-analytics-api/repository/entity"
 	"net/http"
 )
 

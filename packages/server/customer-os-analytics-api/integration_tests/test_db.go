@@ -3,8 +3,8 @@ package integration_tests
 import (
 	"context"
 	"fmt"
-	"github.com.openline-ai.customer-os-analytics-api/config"
-	"github.com.openline-ai.customer-os-analytics-api/repository/entity"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-analytics-api/config"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-analytics-api/repository/entity"
 	"github.com/testcontainers/testcontainers-go"
 	"gorm.io/gorm"
 	"log"

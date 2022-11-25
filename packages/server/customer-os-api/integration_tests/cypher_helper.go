@@ -2,7 +2,7 @@ package integration_tests
 
 import (
 	"github.com/neo4j/neo4j-go-driver/v4/neo4j"
-	"github.com/openline-ai/openline-customer-os/customer-os-api/utils"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils"
 	"log"
 )
 

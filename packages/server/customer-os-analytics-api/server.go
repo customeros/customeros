@@ -2,20 +2,20 @@ package main
 
 import (
 	"context"
-	common "github.com.openline-ai.customer-os-analytics-api/common"
-	"github.com.openline-ai.customer-os-analytics-api/config"
-	"github.com.openline-ai.customer-os-analytics-api/dataloader"
-	"github.com.openline-ai.customer-os-analytics-api/graph/resolver"
-	"github.com.openline-ai.customer-os-analytics-api/repository"
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/caarlos0/env/v6"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-analytics-api/common"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-analytics-api/config"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-analytics-api/dataloader"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-analytics-api/graph/generated"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-analytics-api/graph/resolver"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-analytics-api/repository"
 	"github.com/vektah/gqlparser/v2/gqlerror"
 	"log"
 	"os"
 
-	"github.com.openline-ai.customer-os-analytics-api/graph/generated"
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/playground"
 )

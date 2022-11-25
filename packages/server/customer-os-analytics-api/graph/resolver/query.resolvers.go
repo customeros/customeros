@@ -6,13 +6,13 @@ package resolver
 import (
 	"context"
 
-	"github.com.openline-ai.customer-os-analytics-api/dataloader"
-	"github.com.openline-ai.customer-os-analytics-api/graph/generated"
-	"github.com.openline-ai.customer-os-analytics-api/graph/model"
-	"github.com.openline-ai.customer-os-analytics-api/mapper"
-	"github.com.openline-ai.customer-os-analytics-api/repository/entity"
-	"github.com.openline-ai.customer-os-analytics-api/repository/helper"
 	"github.com/99designs/gqlgen/graphql"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-analytics-api/dataloader"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-analytics-api/graph/generated"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-analytics-api/graph/model"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-analytics-api/mapper"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-analytics-api/repository/entity"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-analytics-api/repository/helper"
 )
 
 // PageViews is the resolver for the pageViews field.

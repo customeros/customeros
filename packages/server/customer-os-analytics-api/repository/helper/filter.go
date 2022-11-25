@@ -2,7 +2,7 @@ package helper
 
 import (
 	"fmt"
-	"github.com.openline-ai.customer-os-analytics-api/graph/model"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-analytics-api/graph/model"
 	"gorm.io/gorm"
 )
 
