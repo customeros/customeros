@@ -10,5 +10,7 @@ import (
 // It serves as dependency injection for your app, add any dependencies you require here.
 
 type Resolver struct {
-	ContactCreate func(ctx context.Context, input model.ContactInput) (*model.Contact, error)
+	ContactCreate      func(ctx context.Context, input model.ContactInput) (*model.Contact, error)
+	ConversationCreate func(ctx context.Context, input model.ConversationInput) (*model.Conversation, error)
+	GetContactByEmail  func(ctx context.Context, email string) (*model.Contact, error)
 }

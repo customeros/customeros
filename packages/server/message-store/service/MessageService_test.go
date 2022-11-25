@@ -12,6 +12,7 @@ import (
 	"log"
 	"net/http/httptest"
 	"testing"
+	"time"
 )
 
 var graphqlClient *graphql.Client
@@ -72,7 +73,7 @@ func Test_parseEmail(t *testing.T) {
 	}
 }
 
-func Test_getContact(t *testing.T) {
+func Test_createContact(t *testing.T) {
 	_, client, resolver := NewWebServer(t)
 	resolver.ContactCreate = func(ctx context.Context, input model.ContactInput) (*model.Contact, error) {
 		if !assert.Equal(t, input.FirstName, "Torrey") {
@@ -95,4 +96,50 @@ func Test_getContact(t *testing.T) {
 		log.Fatalf("Got an error: %s", err.Error())
 	}
 	assert.Equal(t, "12345678", result)
+}
+
+func Test_createConversation(t *testing.T) {
+	_, client, resolver := NewWebServer(t)
+	resolver.ConversationCreate = func(ctx context.Context, input model.ConversationInput) (*model.Conversation, error) {
+		log.Print("Inside Conversation Create!")
+		if !assert.Equal(t, input.UserID, "agentsmith") {
+			return nil, status.Error(500, "Unknown userid")
+		}
+		if !assert.Equal(t, input.ContactID, "12345678") {
+			return nil, status.Error(500, "Unknown ContactID")
+		}
+		if !assert.Equal(t, *input.ID, "7") {
+			return nil, status.Error(500, "Unknown feedId")
+		}
+		return &model.Conversation{
+			ID:        "7",
+			Contact:   &model.Contact{ID: "12345678", FirstName: "Torrey", LastName: "Searle"},
+			StartedAt: time.Now(),
+			User:      &model.User{ID: "agentsmith", FirstName: "Agent", LastName: "Smith"},
+		}, nil
+	}
+	result, err := createConversation(client, "agentsmith", "12345678", 7)
+	if err != nil {
+		log.Fatalf("Got an error: %s", err.Error())
+	}
+	assert.Equal(t, "7", result)
+}
+
+func Test_getConversationByEmail(t *testing.T) {
+	_, client, resolver := NewWebServer(t)
+	resolver.GetContactByEmail = func(ctx context.Context, id string) (*model.Contact, error) {
+		if !assert.Equal(t, id, "x@x.org") {
+			return nil, status.Error(500, "Unexpected email address")
+		}
+		return &model.Contact{ID: "12345678", FirstName: "Torrey", LastName: "Searle"}, nil
+	}
+
+	result, err := getContactByEmail(client, "x@x.org")
+	if err != nil {
+		log.Fatalf("Got an error: %s", err.Error())
+	}
+	assert.Equal(t, result.firstName, "Torrey")
+	assert.Equal(t, result.lastName, "Searle")
+	assert.Equal(t, result.id, "12345678")
+
 }
