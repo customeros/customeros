@@ -2,9 +2,13 @@ name: Build Message Store
 
 on:
   push:
+    branches: [ "otter" ]
     paths:
       - 'packages/server/message-store/**'
       - '.github/workflows/build-message-store.yml'
+  pull_request:
+  release:
+    types: [created, edited]
 
 env:
   REGISTRY: ghcr.io
@@ -56,6 +60,7 @@ jobs:
     needs:
       - build
 
+    if: github.ref_name == 'otter' || github.event_name == 'release'
     runs-on: ubuntu-latest
 
     steps:
