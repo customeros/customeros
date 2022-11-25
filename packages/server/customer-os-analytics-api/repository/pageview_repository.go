@@ -1,8 +1,8 @@
 package repository
 
 import (
-	"github.com.openline-ai.customer-os-analytics-api/repository/entity"
-	"github.com.openline-ai.customer-os-analytics-api/repository/helper"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-analytics-api/repository/entity"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-analytics-api/repository/helper"
 	"gorm.io/gorm"
 )
 

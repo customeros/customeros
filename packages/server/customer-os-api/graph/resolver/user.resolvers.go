@@ -7,10 +7,10 @@ import (
 	"context"
 
 	"github.com/99designs/gqlgen/graphql"
-	"github.com/openline-ai/openline-customer-os/customer-os-api/entity"
-	"github.com/openline-ai/openline-customer-os/customer-os-api/graph/generated"
-	"github.com/openline-ai/openline-customer-os/customer-os-api/graph/model"
-	"github.com/openline-ai/openline-customer-os/customer-os-api/mapper"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/generated"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper"
 )
 
 // UserCreate is the resolver for the userCreate field.

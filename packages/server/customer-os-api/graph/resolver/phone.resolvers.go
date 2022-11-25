@@ -7,8 +7,8 @@ import (
 	"context"
 
 	"github.com/99designs/gqlgen/graphql"
-	"github.com/openline-ai/openline-customer-os/customer-os-api/graph/model"
-	"github.com/openline-ai/openline-customer-os/customer-os-api/mapper"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper"
 )
 
 // PhoneNumberMergeToContact is the resolver for the phoneNumberMergeToContact field.

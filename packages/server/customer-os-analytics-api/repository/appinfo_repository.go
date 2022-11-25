@@ -2,9 +2,9 @@ package repository
 
 import (
 	"context"
-	"github.com.openline-ai.customer-os-analytics-api/common"
-	"github.com.openline-ai.customer-os-analytics-api/repository/entity"
-	"github.com.openline-ai.customer-os-analytics-api/repository/helper"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-analytics-api/common"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-analytics-api/repository/entity"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-analytics-api/repository/helper"
 	"gorm.io/gorm"
 )
 

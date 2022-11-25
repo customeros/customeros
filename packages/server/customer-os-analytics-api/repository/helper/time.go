@@ -1,7 +1,7 @@
 package helper
 
 import (
-	"github.com.openline-ai.customer-os-analytics-api/graph/model"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-analytics-api/graph/model"
 	"time"
 )
 

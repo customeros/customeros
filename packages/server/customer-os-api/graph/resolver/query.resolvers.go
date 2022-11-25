@@ -6,10 +6,10 @@ package resolver
 import (
 	"context"
 
-	"github.com/openline-ai/openline-customer-os/customer-os-api/graph/generated"
-	"github.com/openline-ai/openline-customer-os/customer-os-api/graph/model"
-	"github.com/openline-ai/openline-customer-os/customer-os-api/mapper"
-	"github.com/openline-ai/openline-customer-os/customer-os-api/utils"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/generated"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils"
 )
 
 // EntityDefinitions is the resolver for the entityDefinitions field.

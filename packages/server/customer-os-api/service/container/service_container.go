@@ -2,8 +2,8 @@ package container
 
 import (
 	"github.com/neo4j/neo4j-go-driver/v4/neo4j"
-	"github.com/openline-ai/openline-customer-os/customer-os-api/repository"
-	"github.com/openline-ai/openline-customer-os/customer-os-api/service"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
 )
 
 type ServiceContainer struct {
