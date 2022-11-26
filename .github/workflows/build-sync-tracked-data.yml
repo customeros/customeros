@@ -1,18 +1,18 @@
-name: Build and publish customer-os-analytics-api
+name: Build and publish sync-tracked-data runner
 
 on:
   push:
     branches: [ "otter" ]
     paths:
-      - packages/server/customer-os-analytics-api/**
-      - .github/workflows/build-publish-analytics-api.yml
+      - packages/runner/sync-tracked-data/**
+      - .github/workflows/build-sync-tracked-data.yml
   pull_request:
   release:
     types: [ created, edited ]
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}/analytics-api
+  IMAGE_NAME: ${{ github.repository }}/customer-os-sync-tracked-data
 
 permissions:
   contents: read
@@ -21,7 +21,7 @@ permissions:
 
 defaults:
   run:
-    working-directory: ./packages/server/customer-os-analytics-api
+    working-directory: ./packages/runner/sync-tracked-data
 
 jobs:
   build:
@@ -44,7 +44,7 @@ jobs:
         uses: mikepenz/action-junit-report@v3
         if: always()    # run this step even if previous step failed
         with:
-          report_paths: ./packages/server/customer-os-analytics-api/unit-tests.xml    # Path to test results
+          report_paths: ./packages/runner/sync-tracked-data/unit-tests.xml    # Path to test results
           include_passed: true
           annotate_only: true
           detailed_summary: true
@@ -55,7 +55,6 @@ jobs:
           echo "|Filename|Function|Coverage|" >> $GITHUB_STEP_SUMMARY
           echo "|--------|--------|--------|" >> $GITHUB_STEP_SUMMARY
           go tool cover -func=cover.out |sed -r  's/[[:space:]]+/|/g'|sed -r 's/$/|/g'|sed -r 's/^/|/g' >> $GITHUB_STEP_SUMMARY
-
 
   publish:
     name: publish image
@@ -85,7 +84,7 @@ jobs:
       - name: Push Docker image
         uses: docker/build-push-action@v3
         with:
-          context: packages/server/customer-os-analytics-api/.
+          context: packages/runner/sync-tracked-data/.
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
