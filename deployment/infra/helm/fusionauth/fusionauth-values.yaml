@@ -32,9 +32,10 @@ kickstart:
     kickstart.json: |
       {
         "variables": {
-          "mainTenantId": "#{UUID()}",
+          "mainTenantId": "00000000-0000-0000-0000-000000000001",
           "adminEmail": "admin@openline.ai",
-          "adminPassword": "password"
+          "adminPassword": "password",
+          "launcher-app-id": "00000000-0000-0000-0000-100000000002"
         },
         "apiKeys": [
           {
@@ -65,6 +66,23 @@ kickstart:
                 "roles": [
                   "admin"
                 ]
+              }
+            }
+          },
+          {
+            "method": "POST",
+            "url": "/api/application/#{launcher-app-id}",
+            "tenantId": "#{mainTenantId}",
+            "body": {
+              "application": {
+                "name": "Customer OS Launcher",
+                "oauthConfiguration": {
+                  "clientId" : "100000-0000-0000-0000-000000000003",
+                  "clientSecret" : "XEBSZzdEke9GZTh1YiAzsirRM6FsB0DwN2R1XaUf_Zg",
+                  "authorizedRedirectURLs": ["http://localhost:3000"],
+                  "logoutUrl": "http://localhost:8080",
+                  "enabledGrants": ["authorization_code", "refresh_token"]
+                }
               }
             }
           }
