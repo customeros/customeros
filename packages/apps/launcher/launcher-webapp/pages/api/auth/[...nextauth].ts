@@ -6,10 +6,10 @@ export const authOptions: NextAuthOptions = {
     FusionAuth({
       id: "fusionauth",
       name: "Openline",
-      clientId: "a31080e4-002c-4ab9-9fb6-5a39ee2e6015",
-      clientSecret: "XEBSZzdEke9GZTh1YiAzsirRM6FsB0DwN2R1XaUf_Zg",
-      tenantId: "d1cc99c3-9f38-4261-8769-86cddbea71af",
-      issuer: "http://localhost:9011",
+      clientId: process.env.NEXTAUTH_OAUTH_CLIENT_ID as string,
+      clientSecret: process.env.NEXTAUTH_OAUTH_CLIENT_SECRET as string,
+      tenantId: process.env.NEXTAUTH_OAUTH_TENANT_ID as string,
+      issuer: process.env.NEXTAUTH_OAUTH_SERVER_URL,
       client: {
         authorization_signed_response_alg: 'HS256',
         id_token_signed_response_alg: 'HS256'

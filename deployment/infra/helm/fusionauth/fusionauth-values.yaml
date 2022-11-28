@@ -32,10 +32,22 @@ kickstart:
     kickstart.json: |
       {
         "variables": {
+          "adminUserId": "00000000-0000-0000-0000-000000111111",
           "mainTenantId": "00000000-0000-0000-0000-000000000001",
           "adminEmail": "admin@openline.ai",
           "adminPassword": "password",
-          "launcher-app-id": "00000000-0000-0000-0000-100000000002"
+          "launcher-app-id": "00000000-0000-0000-0000-200000000002",
+          "launcher-app-client-id": "00000000-0000-0000-1001-200000000002",
+          "launcher-app-client-secret": "XEBSZzdEke9GZTh1YiAzsirRM6FsB0DwN2R1XaUf_Zg",
+          "launcher-app-oauth-redirect-url": "http://localhost:3000/api/auth/callback/fusionauth",
+          "contacts-app-id": "00000000-0000-0000-0000-300000000003",
+          "contacts-app-client-id": "00000000-0000-0000-1001-300000000003",
+          "contacts-app-client-secret": "XEBSZzdEke9GZTh1YiAzsirRM6FsB0DwN2R1XaUf_Zg",
+          "contacts-app-oauth-redirect-url": "http://localhost:3010/api/auth/callback/fusionauth",
+          "oasis-app-id": "00000000-0000-0000-0000-400000000004",
+          "oasis-app-client-id": "00000000-0000-0000-1001-400000000004",
+          "oasis-app-client-secret": "XEBSZzdEke9GZTh1YiAzsirRM6FsB0DwN2R1XaUf_Zg",
+          "oasis-app-oauth-redirect-url": "http://localhost:3020/api/auth/callback/fusionauth"
         },
         "apiKeys": [
           {
@@ -55,7 +67,7 @@ kickstart:
           },
           {
             "method": "POST",
-            "url": "/api/user/registration",
+            "url": "/api/user/registration/#{adminUserId}",
             "body": {
               "user": {
                 "email": "#{adminEmail}",
@@ -77,12 +89,73 @@ kickstart:
               "application": {
                 "name": "Customer OS Launcher",
                 "oauthConfiguration": {
-                  "clientId" : "100000-0000-0000-0000-000000000003",
-                  "clientSecret" : "XEBSZzdEke9GZTh1YiAzsirRM6FsB0DwN2R1XaUf_Zg",
-                  "authorizedRedirectURLs": ["http://localhost:3000"],
+                  "clientId" : "#{launcher-app-client-id}",
+                  "clientSecret" : "#{launcher-app-client-secret}",
+                  "authorizedRedirectURLs": ["#{launcher-app-oauth-redirect-url}"],
                   "logoutUrl": "http://localhost:8080",
                   "enabledGrants": ["authorization_code", "refresh_token"]
                 }
+              }
+            }
+          },
+          {
+            "method": "POST",
+            "url": "/api/application/#{contacts-app-id}",
+            "tenantId": "#{mainTenantId}",
+            "body": {
+              "application": {
+                "name": "Openline Contacts App",
+                "oauthConfiguration": {
+                  "clientId" : "#{contacts-app-client-id}",
+                  "clientSecret" : "#{contacts-app-client-secret}",
+                  "authorizedRedirectURLs": ["#{contacts-app-oauth-redirect-url}"],
+                  "logoutUrl": "http://localhost:8080",
+                  "enabledGrants": ["authorization_code", "refresh_token"]
+                }
+              }
+            }
+          },
+          {
+            "method": "POST",
+            "url": "/api/application/#{oasis-app-id}",
+            "tenantId": "#{mainTenantId}",
+            "body": {
+              "application": {
+                "name": "Openline Oasis App",
+                "oauthConfiguration": {
+                  "clientId" : "#{oasis-app-client-id}",
+                  "clientSecret" : "#{oasis-app-client-secret}",
+                  "authorizedRedirectURLs": ["#{oasis-app-oauth-redirect-url}"],
+                  "logoutUrl": "http://localhost:8080",
+                  "enabledGrants": ["authorization_code", "refresh_token"]
+                }
+              }
+            }
+          },
+          {
+            "method": "POST",
+            "url": "/api/user/registration/#{adminUserId}",
+            "body": {
+              "registration": {
+                "applicationId": "#{launcher-app-id}"
+              }
+            }
+          },
+          {
+            "method": "POST",
+            "url": "/api/user/registration/#{adminUserId}",
+            "body": {
+              "registration": {
+                "applicationId": "#{contacts-app-id}"
+              }
+            }
+          },
+          {
+            "method": "POST",
+            "url": "/api/user/registration/#{adminUserId}",
+            "body": {
+              "registration": {
+                "applicationId": "#{oasis-app-id}"
               }
             }
           }
