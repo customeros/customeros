@@ -8,6 +8,7 @@ test:
 	go test -v ./...
 
 install:
+	go install gotest.tools/gotestsum@latest
 
 clean:
 	find gen -mindepth 1 -maxdepth 1 -exec rm -r {} \;
