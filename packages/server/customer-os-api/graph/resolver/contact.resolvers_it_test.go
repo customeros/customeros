@@ -224,7 +224,7 @@ func TestMutationResolver_ContactCreate_WithOwner(t *testing.T) {
 	err = decode.Decode(rawResponse.Data.(map[string]any), &contact)
 	require.Nil(t, err)
 	require.NotNil(t, contact)
-	require.Equal(t, "", "")
+	require.Equal(t, "", contact.Contact_Create.Title.String())
 	require.Equal(t, "first", contact.Contact_Create.FirstName)
 	require.Equal(t, "last", contact.Contact_Create.LastName)
 	require.Equal(t, userId, contact.Contact_Create.Owner.ID)
