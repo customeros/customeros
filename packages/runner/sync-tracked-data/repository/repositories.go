@@ -11,19 +11,21 @@ type DbDrivers struct {
 }
 
 type Repositories struct {
-	Drivers                     DbDrivers
-	ContactActionItemRepository ContactActionItemRepository
-	TrackedVisitorRepository    TrackedVisitorRepository
+	Drivers              DbDrivers
+	ContactRepository    ContactRepository
+	PageViewRepository   PageViewRepository
+	ActionItemRepository ActionItemRepository
 }
 
-func InitRepos(driver *neo4j.Driver, gormDb *gorm.DB) *Repositories {
-	container := Repositories{
+func InitRepos(driver *neo4j.Driver, db *gorm.DB) *Repositories {
+	repositories := Repositories{
 		Drivers: DbDrivers{
 			Neo4jDriver: driver,
-			GormDb:      gormDb,
+			GormDb:      db,
 		},
 	}
-	container.ContactActionItemRepository = NewContactActionItemRepository(driver, &container)
-	container.TrackedVisitorRepository = NewTrackedVisitorRepository(gormDb)
-	return &container
+	repositories.ContactRepository = NewContactRepository(driver)
+	repositories.PageViewRepository = NewPageViewRepository(db)
+	repositories.ActionItemRepository = NewActionItemRepository(driver)
+	return &repositories
 }

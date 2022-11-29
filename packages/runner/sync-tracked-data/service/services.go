@@ -7,8 +7,7 @@ import (
 )
 
 type Services struct {
-	SyncService    SyncService
-	VisitorService VisitorService
+	SyncService SyncService
 }
 
 func InitServices(driver *neo4j.Driver, gormDb *gorm.DB) *Services {
@@ -17,7 +16,6 @@ func InitServices(driver *neo4j.Driver, gormDb *gorm.DB) *Services {
 	services := new(Services)
 
 	services.SyncService = NewSyncService(repositories, services)
-	services.VisitorService = NewVisitorService(&repositories.TrackedVisitorRepository)
 
 	return services
 }

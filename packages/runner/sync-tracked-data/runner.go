@@ -53,17 +53,23 @@ func main() {
 		AddTask(func() {
 			runId, _ := uuid.NewRandom()
 			log.Printf("run id: %s syncing tracked data into customer-os at %v", runId.String(), time.Now().UTC())
-			serviceContainer.SyncService.Sync(runId.String())
-			log.Printf("run id: %s sync completed at %v", runId.String(), time.Now().UTC())
+			result := serviceContainer.SyncService.Sync(runId.String(), cfg.PageViewsBucketSize)
+			log.Printf("run id: %s sync completed at %v, processed %d records", runId.String(), time.Now().UTC(), result)
+
+			if result == 0 {
+				timeout := time.Second * time.Duration(cfg.TimeoutAfterTaskRun)
+				log.Printf("Waiting %v seconds before next run", timeout.Seconds())
+				time.Sleep(timeout)
+			}
+			// alexb delete me
+			log.Printf("Time to kill.....")
+			time.Sleep(time.Second * 120)
 		})
 	}
 
 	go func() {
 		for {
 			RunTasks()
-			timeout := time.Second * time.Duration(cfg.TimeoutAfterTaskRun)
-			log.Printf("Waiting %v seconds before next run", timeout.Seconds())
-			time.Sleep(timeout)
 		}
 	}()
 
