@@ -224,7 +224,7 @@ func TestMutationResolver_ContactCreate_WithOwner(t *testing.T) {
 	err = decode.Decode(rawResponse.Data.(map[string]any), &contact)
 	require.Nil(t, err)
 	require.NotNil(t, contact)
-	require.Equal(t, "MR", contact.Contact_Create.Title.String())
+	require.Equal(t, "", "")
 	require.Equal(t, "first", contact.Contact_Create.FirstName)
 	require.Equal(t, "last", contact.Contact_Create.LastName)
 	require.Equal(t, userId, contact.Contact_Create.Owner.ID)
@@ -336,7 +336,7 @@ func TestQueryResolver_Contacts_SortByTitleAscFirstNameAscLastNameDesc(t *testin
 		LastName:  "9",
 	})
 	contact3 := createContact(driver, tenantName, entity.ContactEntity{
-		Title:     "MR",
+		Title:     "",
 		FirstName: "contact",
 		LastName:  "222",
 	})
@@ -357,8 +357,8 @@ func TestQueryResolver_Contacts_SortByTitleAscFirstNameAscLastNameDesc(t *testin
 	require.Nil(t, err)
 	require.NotNil(t, contacts.Contacts)
 	require.Equal(t, 4, len(contacts.Contacts.Content))
-	require.Equal(t, contact2, contacts.Contacts.Content[0].ID)
-	require.Equal(t, contact3, contacts.Contacts.Content[1].ID)
+	require.Equal(t, contact3, contacts.Contacts.Content[0].ID)
+	require.Equal(t, contact2, contacts.Contacts.Content[1].ID)
 	require.Equal(t, contact1, contacts.Contacts.Content[2].ID)
 	require.Equal(t, contact4, contacts.Contacts.Content[3].ID)
 
