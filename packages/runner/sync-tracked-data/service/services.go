@@ -2,8 +2,8 @@ package service
 
 import (
 	"github.com/neo4j/neo4j-go-driver/v4/neo4j"
-	"github.com/openline-ai/openline-customer-os/packages/runner/sync-tracked-data/gen"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-tracked-data/repository"
+	"gorm.io/gorm"
 )
 
 type Services struct {
@@ -11,8 +11,8 @@ type Services struct {
 	VisitorService VisitorService
 }
 
-func InitServices(driver *neo4j.Driver, client *gen.Client) *Services {
-	repositories := repository.InitRepos(driver, client)
+func InitServices(driver *neo4j.Driver, gormDb *gorm.DB) *Services {
+	repositories := repository.InitRepos(driver, gormDb)
 
 	services := new(Services)
 

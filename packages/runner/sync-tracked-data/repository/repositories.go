@@ -2,12 +2,12 @@ package repository
 
 import (
 	"github.com/neo4j/neo4j-go-driver/v4/neo4j"
-	"github.com/openline-ai/openline-customer-os/packages/runner/sync-tracked-data/gen"
+	"gorm.io/gorm"
 )
 
 type DbDrivers struct {
 	Neo4jDriver *neo4j.Driver
-	EntClient   *gen.Client
+	GormDb      *gorm.DB
 }
 
 type Repositories struct {
@@ -16,14 +16,14 @@ type Repositories struct {
 	TrackedVisitorRepository    TrackedVisitorRepository
 }
 
-func InitRepos(driver *neo4j.Driver, client *gen.Client) *Repositories {
+func InitRepos(driver *neo4j.Driver, gormDb *gorm.DB) *Repositories {
 	container := Repositories{
 		Drivers: DbDrivers{
 			Neo4jDriver: driver,
-			EntClient:   client,
+			GormDb:      gormDb,
 		},
 	}
 	container.ContactActionItemRepository = NewContactActionItemRepository(driver, &container)
-	container.TrackedVisitorRepository = NewTrackedVisitorRepository(client)
+	container.TrackedVisitorRepository = NewTrackedVisitorRepository(gormDb)
 	return &container
 }

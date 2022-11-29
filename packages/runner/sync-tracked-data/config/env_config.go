@@ -10,12 +10,14 @@ type Config struct {
 		LogLevel              string `env:"NEO4J_LOG_LEVEL" envDefault:"WARNING"`
 	}
 	PostgresDb struct {
-		Host   string `env:"DB_HOST,required"`
-		Port   int    `env:"DB_PORT,required"`
-		Pwd    string `env:"DB_PWD,required,unset"`
-		Name   string `env:"DB_NAME,required"`
-		User   string `env:"DB_USER,required"`
-		Schema string `env:"DB_SCHEMA,required"`
+		Host            string `env:"DB_HOST,required"`
+		Port            int    `env:"DB_PORT,required"`
+		Pwd             string `env:"DB_PWD,required,unset"`
+		Name            string `env:"DB_NAME,required"`
+		User            string `env:"DB_USER,required"`
+		MaxConn         int    `env:"DB_MAX_CONN"`
+		MaxIdleConn     int    `env:"DB_MAX_IDLE_CONN"`
+		ConnMaxLifetime int    `env:"DB_CONN_MAX_LIFETIME"`
 	}
 	TimeoutAfterTaskRun int `env:"TIMEOUT_AFTER_TASK_RUN_SEC" envDefault:"60"`
 }

@@ -35,15 +35,11 @@ func RunTasks() {
 func main() {
 	cfg := loadConfiguration()
 
-	client, errClient := config.NewPostgresClient(cfg)
-	if errClient != nil {
-		log.Fatalf("failed opening connection to postgres: %v", errClient.Error())
+	sqlDb, gormDb, errPostgres := config.NewPostgresClient(cfg)
+	if errPostgres != nil {
+		log.Fatalf("failed opening connection to postgres: %v", errPostgres.Error())
 	}
-	defer client.Close()
-	//// Run the auto migration tool.
-	//if err := client.Schema.Create(context.Background()); err != nil {
-	//	log.Fatalf("failed creating schema resources: %v", err)
-	//}
+	defer sqlDb.Close()
 
 	neo4jDriver, errNeo4j := config.NewDriver(cfg)
 	if errNeo4j != nil {
@@ -51,9 +47,9 @@ func main() {
 	}
 	defer (*neo4jDriver).Close()
 
-	serviceContainer := service.InitServices(neo4jDriver, client)
+	serviceContainer := service.InitServices(neo4jDriver, gormDb)
 
-	if errClient == nil && errNeo4j == nil {
+	if errPostgres == nil && errNeo4j == nil {
 		AddTask(func() {
 			runId, _ := uuid.NewRandom()
 			log.Printf("run id: %s syncing tracked data into customer-os at %v", runId.String(), time.Now().UTC())

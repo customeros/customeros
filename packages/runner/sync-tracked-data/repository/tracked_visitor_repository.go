@@ -2,27 +2,32 @@ package repository
 
 import (
 	"context"
-	"github.com/openline-ai/openline-customer-os/packages/runner/sync-tracked-data/gen"
-	"github.com/openline-ai/openline-customer-os/packages/runner/sync-tracked-data/gen/visitor"
+	"github.com/openline-ai/openline-customer-os/packages/runner/sync-tracked-data/entity"
+	"gorm.io/gorm"
 )
 
 type TrackedVisitorRepository interface {
-	GetVisitorsWithSyncedFalse(context.Context) ([]*gen.Visitor, error)
+	GetVisitorsWithSyncedFalse(context.Context) ([]entity.Visitor, error)
 }
 
 type trackedVisitorRepository struct {
-	client *gen.Client
+	db *gorm.DB
 }
 
-func NewTrackedVisitorRepository(client *gen.Client) TrackedVisitorRepository {
+func NewTrackedVisitorRepository(gormDb *gorm.DB) TrackedVisitorRepository {
 	return &trackedVisitorRepository{
-		client: client,
+		db: gormDb,
 	}
 }
 
-func (t *trackedVisitorRepository) GetVisitorsWithSyncedFalse(ctx context.Context) ([]*gen.Visitor, error) {
-	return t.client.Visitor.Query().
-		Where(visitor.SyncedToCustomerOsEQ(false),
-			visitor.VisitorIDNotNil()).
-		All(ctx)
+func (r *trackedVisitorRepository) GetVisitorsWithSyncedFalse(ctx context.Context) ([]entity.Visitor, error) {
+	var visitors entity.Visitors
+
+	err := r.db.Where("visitor_id is not null and synced_to_customer_os = false").Find(&visitors).Error
+
+	if err != nil {
+		return nil, err
+	}
+
+	return visitors, nil
 }
