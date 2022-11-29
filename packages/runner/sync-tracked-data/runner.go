@@ -61,9 +61,6 @@ func main() {
 				log.Printf("Waiting %v seconds before next run", timeout.Seconds())
 				time.Sleep(timeout)
 			}
-			// alexb delete me
-			log.Printf("Time to kill.....")
-			time.Sleep(time.Second * 120)
 		})
 	}
 

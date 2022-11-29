@@ -1,12 +1,12 @@
 package service
 
 import (
-	"github.com/openline-ai/openline-customer-os/packages/runner/sync-tracked-data/async"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-tracked-data/entity"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-tracked-data/repository"
 	"log"
 	"regexp"
 	"strings"
+	"sync"
 )
 
 type SyncService interface {
@@ -36,21 +36,22 @@ func (s *syncService) Sync(runId string, bucketSize int) int {
 		log.Printf("ERROR run id: %s failed to sync page views. error fetching page views: %v", runId, err.Error())
 	}
 
+	if len(pageViewsToSync) == 0 {
+		return len(pageViewsToSync)
+	}
+
 	contactIds, err := s.prepareContactIds(pageViewsToSync)
 	if err != nil {
 		return 0
 	}
 
-	var futures []async.Future
+	var wg sync.WaitGroup
+	wg.Add(len(pageViewsToSync))
+
 	for _, v := range pageViewsToSync {
-		futures = append(futures, async.Exec(func() interface{} {
-			return syncPageView(s.repositories, runId, contactIds, v)
-		}))
+		go s.syncPageView(&wg, runId, contactIds, v)
 	}
-	for _, future := range futures {
-		pvId := future.Await()
-		log.Printf("run id: %s synced page view %s", runId, pvId)
-	}
+	wg.Wait()
 
 	return len(pageViewsToSync)
 }
@@ -78,16 +79,20 @@ func (s *syncService) prepareContactIds(pageViews entity.PageViews) (map[tenantV
 	return contactIds, nil
 }
 
-func syncPageView(repositories *repository.Repositories, runId string, contactIds map[tenantVisitor]string, pv entity.PageView) string {
+func (s *syncService) syncPageView(wg *sync.WaitGroup, runId string, contactIds map[tenantVisitor]string, pv entity.PageView) string {
+	defer wg.Done()
+
 	contact := contactIds[tenantVisitor{
 		tenant:    pv.Tenant,
 		visitorId: pv.VisitorID.String,
 	}]
-	if err := repositories.ActionItemRepository.CreatePageViewActionItem(contact, pv); err != nil {
+	if err := s.repositories.ActionItemRepository.CreatePageViewActionItem(contact, pv); err != nil {
 		log.Printf("ERROR run id: %s failed to create action item for page view %s error: %v", runId, pv.ID, err.Error())
 	} else {
-		if err = repositories.PageViewRepository.MarkSynced(pv); err != nil {
+		if err = s.repositories.PageViewRepository.MarkSynced(pv); err != nil {
 			log.Printf("ERROR run id: %s failed to mark as sycned page view %s error: %v", runId, pv.ID, err.Error())
+		} else {
+			log.Printf("run id: %s synced page view %s", runId, pv.ID)
 		}
 	}
 	return pv.ID
