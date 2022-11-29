@@ -28,6 +28,8 @@ type messageService struct {
 type ContactInfo struct {
 	firstName string
 	lastName  string
+	email     *string
+	phone     *string
 	id        string
 }
 
@@ -140,6 +142,53 @@ func getContactByEmail(graphqlClient *graphql.Client, email string) (*ContactInf
 		id:       graphqlResponse["contact_ByEmail"]["id"]}, nil
 }
 
+type contactResponse struct {
+	Contact struct {
+		FirstName    string `json:"firstName"`
+		LastName     string `json:"LastName"`
+		ID           string `json:"id"`
+		PhoneNumbers []struct {
+			E164 string `json:"e164"`
+		} `json:"phoneNumbers"`
+		Emails []struct {
+			Email string `json:"email"`
+		} `json:"emails"`
+	} `json:"contact"`
+}
+
+func getContactById(graphqlClient *graphql.Client, id string) (*ContactInfo, error) {
+
+	graphqlRequest := graphql.NewRequest(`
+  				query ($id: ID!) {
+  					contact(id: $id){
+						firstName,
+						lastName,
+						id,
+						phoneNumbers {
+						   e164
+						 }, emails {
+						   email
+						 }
+      				} 
+  				}
+    `)
+
+	graphqlRequest.Var("id", id)
+	var graphqlResponse contactResponse
+	if err := graphqlClient.Run(context.Background(), graphqlRequest, &graphqlResponse); err != nil {
+		return nil, err
+	}
+	contactInfo := &ContactInfo{firstName: graphqlResponse.Contact.FirstName,
+		lastName: graphqlResponse.Contact.LastName,
+		id:       graphqlResponse.Contact.ID}
+	if len(graphqlResponse.Contact.Emails) > 0 {
+		contactInfo.email = &graphqlResponse.Contact.Emails[0].Email
+	}
+	if len(graphqlResponse.Contact.PhoneNumbers) > 0 {
+		contactInfo.phone = &graphqlResponse.Contact.PhoneNumbers[0].E164
+	}
+	return contactInfo, nil
+}
 func createContact(graphqlClient *graphql.Client, firstName string, lastName string, email string) (string, error) {
 	graphqlRequest := graphql.NewRequest(`
 		mutation CreateContact ($firstName: String!, $lastName: String! $email: String!) {
@@ -411,7 +460,12 @@ func (s *messageService) GetFeeds(ctx context.Context, _ *pb.Empty) (*pb.FeedLis
 	for i, contact := range contacts {
 		var id int64 = int64(contact.ID)
 		log.Printf("Got an feed id of %d", id)
-		fl.Contact[i] = &pb.Contact{ContactId: contact.ContactId, FirstName: contact.FirstName, LastName: contact.LastName, Id: &id}
+		contactInfo, err := getContactById(s.graphqlClient, contact.ContactId)
+		if err != nil {
+			se, _ := status.FromError(err)
+			return nil, status.Errorf(se.Code(), "Error resolving contact")
+		}
+		fl.Contact[i] = &pb.Contact{ContactId: contact.ContactId, FirstName: contactInfo.firstName, LastName: contactInfo.lastName, Phone: contactInfo.phone, Email: contactInfo.email, Id: &id}
 	}
 	return fl, nil
 }
@@ -424,7 +478,12 @@ func (s *messageService) GetFeed(ctx context.Context, contact *pb.Contact) (*pb.
 			return nil, status.Errorf(se.Code(), "Error finding Feed")
 		}
 		var id int64 = int64(mf.ID)
-		return &pb.Contact{FirstName: mf.FirstName, LastName: mf.LastName, ContactId: mf.ContactId, Id: &id}, nil
+		contactInfo, err := getContactById(s.graphqlClient, mf.ContactId)
+		if err != nil {
+			se, _ := status.FromError(err)
+			return nil, status.Errorf(se.Code(), "Error resolving contact")
+		}
+		return &pb.Contact{FirstName: contactInfo.firstName, LastName: contactInfo.lastName, Phone: contactInfo.phone, Email: contactInfo.email, ContactId: mf.ContactId, Id: &id}, nil
 	} else {
 		log.Printf("Looking up messages for Contact name %s", contact.GetContactId())
 		mf, err := s.client.MessageFeed.Query().
@@ -435,7 +494,12 @@ func (s *messageService) GetFeed(ctx context.Context, contact *pb.Contact) (*pb.
 			return nil, status.Errorf(se.Code(), "Error finding Feed")
 		}
 		var id int64 = int64(mf.ID)
-		return &pb.Contact{FirstName: mf.FirstName, LastName: mf.LastName, ContactId: mf.ContactId, Id: &id}, nil
+		contactInfo, err := getContactById(s.graphqlClient, mf.ContactId)
+		if err != nil {
+			se, _ := status.FromError(err)
+			return nil, status.Errorf(se.Code(), "Error resolving contact")
+		}
+		return &pb.Contact{FirstName: contactInfo.firstName, LastName: contactInfo.lastName, Phone: contactInfo.phone, Email: contactInfo.email, ContactId: mf.ContactId, Id: &id}, nil
 	}
 }
 

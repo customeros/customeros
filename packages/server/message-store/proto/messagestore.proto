@@ -39,6 +39,8 @@ message Contact {
   string firstName = 2;
   string lastName = 3;
   optional int64 id = 4;
+  optional string email = 5;
+  optional string phone = 6;
 }
 
 message PageInfo {
