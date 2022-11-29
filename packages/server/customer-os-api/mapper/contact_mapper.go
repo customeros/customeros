@@ -43,9 +43,6 @@ func MapContactUpdateInputToEntity(input model.ContactUpdateInput) *entity.Conta
 
 func MapEntityToContact(contact *entity.ContactEntity) *model.Contact {
 	var title = model.PersonTitle(contact.Title)
-	if !title.IsValid() {
-		title = model.PersonTitleMr
-	}
 	return &model.Contact{
 		ID:        contact.Id,
 		Title:     &title,

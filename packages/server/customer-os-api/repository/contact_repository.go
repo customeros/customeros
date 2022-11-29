@@ -77,10 +77,10 @@ func (r *contactRepository) Create(tx neo4j.Transaction, tenant string, newConta
 			RETURN c`,
 		map[string]interface{}{
 			"tenant":    tenant,
+			"title":     newContact.Title,
 			"firstName": newContact.FirstName,
 			"lastName":  newContact.LastName,
 			"label":     newContact.Label,
-			"title":     newContact.Title,
 			"notes":     newContact.Notes,
 		}); err != nil {
 		return nil, err
