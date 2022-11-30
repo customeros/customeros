@@ -31,6 +31,10 @@ kickstart:
   data:
     kickstart.json: |
       {
+        "settings" : {
+            "connectTimeout": 15000,
+            "readTimeout": 15000
+        },
         "variables": {
           "adminUserId": "7850d8be-6fcd-11ed-a1eb-0242ac120002",
           "mainTenantId": "7c7b794e-6fcd-11ed-a1eb-0242ac120002",
