@@ -31,10 +31,24 @@ kickstart:
   data:
     kickstart.json: |
       {
+        "settings" : {
+            "connectTimeout": 15000,
+            "readTimeout": 15000
+        },
         "variables": {
-          "mainTenantId": "#{UUID()}",
+          "adminUserId": "7850d8be-6fcd-11ed-a1eb-0242ac120002",
+          "mainTenantId": "7c7b794e-6fcd-11ed-a1eb-0242ac120002",
           "adminEmail": "admin@openline.ai",
-          "adminPassword": "password"
+          "adminPassword": "password",
+          "launcher-app-id": "58cb8d2c-6fcd-11ed-a1eb-0242ac120002",
+          "launcher-app-client-secret": "XEBSZzdEke9GZTh1YiAzsirRM6FsB0DwN2R1XaUf_Zg",
+          "launcher-app-oauth-redirect-url": "http://localhost:3000/api/auth/callback/fusionauth",
+          "contacts-app-id": "82f629f4-6fcd-11ed-a1eb-0242ac120002",
+          "contacts-app-client-secret": "XEBSZzdEke9GZTh1YiAzsirRM6FsB0DwN2R1XaUf_Zg",
+          "contacts-app-oauth-redirect-url": "http://localhost:3010/api/auth/callback/fusionauth",
+          "oasis-app-id": "8f1f74c4-6fcd-11ed-a1eb-0242ac120002",
+          "oasis-app-client-secret": "XEBSZzdEke9GZTh1YiAzsirRM6FsB0DwN2R1XaUf_Zg",
+          "oasis-app-oauth-redirect-url": "http://localhost:3020/api/auth/callback/fusionauth"
         },
         "apiKeys": [
           {
@@ -54,7 +68,7 @@ kickstart:
           },
           {
             "method": "POST",
-            "url": "/api/user/registration",
+            "url": "/api/user/registration/#{adminUserId}",
             "body": {
               "user": {
                 "email": "#{adminEmail}",
@@ -64,6 +78,80 @@ kickstart:
                 "applicationId": "#{FUSIONAUTH_APPLICATION_ID}",
                 "roles": [
                   "admin"
+                ]
+              }
+            }
+          },
+          {
+            "method": "POST",
+            "url": "/api/application/58cb8d2c-6fcd-11ed-a1eb-0242ac120002",
+            "tenantId": "#{mainTenantId}",
+            "body": {
+              "application": {
+                "name": "Customer OS Launcher",
+                "oauthConfiguration": {
+                  "clientSecret" : "#{launcher-app-client-secret}",
+                  "authorizedRedirectURLs": ["#{launcher-app-oauth-redirect-url}"],
+                  "logoutUrl": "http://localhost:8080",
+                  "enabledGrants": ["authorization_code", "refresh_token"]
+                },
+                "registrationConfiguration": {
+                  "enabled": true
+                },
+                "roles": [
+                          {
+                            "isDefault": true,
+                            "isSuperRole": false,
+                            "name": "developer"
+                          }
+                        ]
+              }
+            }
+          },
+          {
+            "method": "POST",
+            "url": "/api/application/#{contacts-app-id}",
+            "tenantId": "#{mainTenantId}",
+            "body": {
+              "application": {
+                "name": "Openline Contacts App",
+                "oauthConfiguration": {
+                  "clientSecret" : "#{contacts-app-client-secret}",
+                  "authorizedRedirectURLs": ["#{contacts-app-oauth-redirect-url}"],
+                  "logoutUrl": "http://localhost:8080",
+                  "enabledGrants": ["authorization_code", "refresh_token"]
+                }
+              }
+            }
+          },
+          {
+            "method": "POST",
+            "url": "/api/application/#{oasis-app-id}",
+            "tenantId": "#{mainTenantId}",
+            "body": {
+              "application": {
+                "name": "Openline Oasis App",
+                "oauthConfiguration": {
+                  "clientSecret" : "#{oasis-app-client-secret}",
+                  "authorizedRedirectURLs": ["#{oasis-app-oauth-redirect-url}"],
+                  "logoutUrl": "http://localhost:8080",
+                  "enabledGrants": ["authorization_code", "refresh_token"]
+                }
+              }
+            }
+          },
+          {
+            "method": "POST",
+            "url": "/api/user/registration",
+            "body": {
+              "user": {
+                "email": "dev@openline.ai",
+                "password": "password"
+              },
+              "registration": {
+                "applicationId": "58cb8d2c-6fcd-11ed-a1eb-0242ac120002",
+                "roles": [
+                  "developer"
                 ]
               }
             }
