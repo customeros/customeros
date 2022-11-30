@@ -82,14 +82,14 @@ func (s *syncService) prepareContactIds(pageViews entity.PageViews) (map[tenantV
 func (s *syncService) syncPageView(wg *sync.WaitGroup, runId string, contactIds map[tenantVisitor]string, pv entity.PageView) string {
 	defer wg.Done()
 
-	contact := contactIds[tenantVisitor{
+	contactId := contactIds[tenantVisitor{
 		tenant:    pv.Tenant,
 		visitorId: pv.VisitorID.String,
 	}]
-	if err := s.repositories.ActionItemRepository.CreatePageViewActionItem(contact, pv); err != nil {
+	if err := s.repositories.ActionItemRepository.CreatePageViewActionItem(contactId, pv); err != nil {
 		log.Printf("ERROR run id: %s failed to create action item for page view %s error: %v", runId, pv.ID, err.Error())
 	} else {
-		if err = s.repositories.PageViewRepository.MarkSynced(pv); err != nil {
+		if err = s.repositories.PageViewRepository.MarkSynced(pv, contactId); err != nil {
 			log.Printf("ERROR run id: %s failed to mark as sycned page view %s error: %v", runId, pv.ID, err.Error())
 		} else {
 			log.Printf("run id: %s synced page view %s", runId, pv.ID)
