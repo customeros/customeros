@@ -62,7 +62,7 @@ kickstart:
             "url": "/api/tenant/#{mainTenantId}",
             "body": {
               "tenant": {
-                "name": "Openline"
+                "name": "openline"
               }
             }
           },
@@ -88,7 +88,7 @@ kickstart:
             "tenantId": "#{mainTenantId}",
             "body": {
               "application": {
-                "name": "Customer OS Launcher",
+                "name": "openline-launcher-gui",
                 "oauthConfiguration": {
                   "clientSecret" : "#{launcher-app-client-secret}",
                   "authorizedRedirectURLs": ["#{launcher-app-oauth-redirect-url}"],
@@ -114,7 +114,7 @@ kickstart:
             "tenantId": "#{mainTenantId}",
             "body": {
               "application": {
-                "name": "Openline Contacts App",
+                "name": "openline-contacts-gui",
                 "oauthConfiguration": {
                   "clientSecret" : "#{contacts-app-client-secret}",
                   "authorizedRedirectURLs": ["#{contacts-app-oauth-redirect-url}"],
@@ -130,7 +130,7 @@ kickstart:
             "tenantId": "#{mainTenantId}",
             "body": {
               "application": {
-                "name": "Openline Oasis App",
+                "name": "openline-oasis-gui",
                 "oauthConfiguration": {
                   "clientSecret" : "#{oasis-app-client-secret}",
                   "authorizedRedirectURLs": ["#{oasis-app-oauth-redirect-url}"],
