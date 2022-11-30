@@ -1,5 +1,6 @@
 
 generate:
+	export PATH="${PATH}:$(shell go env GOPATH)/bin";
 
 build: generate
 	go build -v -o bin/sync-tracked-data

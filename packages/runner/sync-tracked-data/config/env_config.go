@@ -20,5 +20,5 @@ type Config struct {
 		ConnMaxLifetime int    `env:"DB_CONN_MAX_LIFETIME"`
 	}
 	TimeoutAfterTaskRun int `env:"TIMEOUT_AFTER_TASK_RUN_SEC" envDefault:"60"`
-	PageViewsBucketSize int `env:"PAGE_VIEWS_BUCKET_SIZE" envDefault:"2"`
+	PageViewsBucketSize int `env:"PAGE_VIEWS_BUCKET_SIZE" envDefault:"100"`
 }

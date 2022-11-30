@@ -19,6 +19,7 @@ type PageView struct {
 	Start              time.Time      `gorm:"column:start_tstamp"`
 	End                time.Time      `gorm:"column:end_tstamp"`
 	SyncedToCustomerOs bool           `gorm:"column:synced_to_customer_os"`
+	ContactID          sql.NullString `gorm:"column:customer_os_contact_id"`
 }
 
 type PageViews []PageView

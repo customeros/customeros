@@ -1,13 +1,14 @@
 package repository
 
 import (
+	"database/sql"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-tracked-data/entity"
 	"gorm.io/gorm"
 )
 
 type PageViewRepository interface {
 	GetPageViewsForSync(bucketSize int) (entity.PageViews, error)
-	MarkSynced(pv entity.PageView) error
+	MarkSynced(pv entity.PageView, contactId string) error
 }
 
 type pageViewRepository struct {
@@ -25,7 +26,6 @@ func (r *pageViewRepository) GetPageViewsForSync(bucketSize int) (entity.PageVie
 
 	err := r.db.Limit(bucketSize).
 		Where("visitor_id is not null and visitor_id <> ? and synced_to_customer_os = false", "").
-		Order("start_tstamp DESC").
 		Find(&pageViews).Error
 	if err != nil {
 		return nil, err
@@ -34,6 +34,11 @@ func (r *pageViewRepository) GetPageViewsForSync(bucketSize int) (entity.PageVie
 	return pageViews, nil
 }
 
-func (r *pageViewRepository) MarkSynced(pv entity.PageView) error {
-	return r.db.Model(&pv).Updates(entity.PageView{SyncedToCustomerOs: true}).Error
+func (r *pageViewRepository) MarkSynced(pv entity.PageView, contactId string) error {
+	return r.db.Model(&pv).
+		Updates(entity.PageView{
+			SyncedToCustomerOs: true,
+			ContactID:          sql.NullString{String: contactId, Valid: true},
+		}).
+		Error
 }
