@@ -7,6 +7,9 @@ on:
       - 'packages/server/message-store/**'
       - '.github/workflows/build-message-store.yml'
   pull_request:
+    paths:
+      - 'packages/server/message-store/**'
+      - '.github/workflows/build-message-store.yml'
   release:
     types: [created, edited]
 
