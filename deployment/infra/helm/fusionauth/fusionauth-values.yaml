@@ -42,13 +42,13 @@ kickstart:
           "adminPassword": "password",
           "launcher-app-id": "58cb8d2c-6fcd-11ed-a1eb-0242ac120002",
           "launcher-app-client-secret": "XEBSZzdEke9GZTh1YiAzsirRM6FsB0DwN2R1XaUf_Zg",
-          "launcher-app-oauth-redirect-url": "http://localhost:3000/api/auth/callback/fusionauth",
+          "launcher-app-oauth-redirect-url": "http://localhost:3010/api/auth/callback/fusionauth",
           "contacts-app-id": "82f629f4-6fcd-11ed-a1eb-0242ac120002",
           "contacts-app-client-secret": "XEBSZzdEke9GZTh1YiAzsirRM6FsB0DwN2R1XaUf_Zg",
-          "contacts-app-oauth-redirect-url": "http://localhost:3010/api/auth/callback/fusionauth",
+          "contacts-app-oauth-redirect-url": "http://localhost:3000/api/auth/callback/fusionauth",
           "oasis-app-id": "8f1f74c4-6fcd-11ed-a1eb-0242ac120002",
           "oasis-app-client-secret": "XEBSZzdEke9GZTh1YiAzsirRM6FsB0DwN2R1XaUf_Zg",
-          "oasis-app-oauth-redirect-url": "http://localhost:3020/api/auth/callback/fusionauth"
+          "oasis-app-oauth-redirect-url": "http://localhost:3006/api/auth/callback/fusionauth"
         },
         "apiKeys": [
           {
