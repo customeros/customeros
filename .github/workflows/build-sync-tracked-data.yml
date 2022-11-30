@@ -7,6 +7,9 @@ on:
       - packages/runner/sync-tracked-data/**
       - .github/workflows/build-sync-tracked-data.yml
   pull_request:
+    paths:
+      - packages/runner/sync-tracked-data/**
+      - .github/workflows/build-sync-tracked-data.yml
   release:
     types: [ created, edited ]
 
