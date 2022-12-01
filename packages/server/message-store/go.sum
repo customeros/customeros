@@ -635,6 +635,8 @@ github.com/opencontainers/selinux v1.6.0/go.mod h1:VVGKuOLlE7v4PJyT6h7mNWvq1rzqi
 github.com/opencontainers/selinux v1.8.0/go.mod h1:RScLhm78qiWa2gbVCcGkC7tCGdgk3ogry1nUQF8Evvo=
 github.com/opencontainers/selinux v1.8.2/go.mod h1:MUIHuUEvKB1wtJjQdOyYRgOnLD2xAPP8dBsCoU0KuF8=
 github.com/opencontainers/selinux v1.10.0/go.mod h1:2i0OySw99QjzBBQByd1Gr9gSjvuho1lHsJxIJ3gGbJI=
+github.com/openline-ai/openline-customer-os/packages/server/customer-os-api v0.0.0-20221201135026-4b66dea18e83 h1:0hwwHGlBCVa8UKIFWPh7Z9SUe6kdikemjxx8G+81WHs=
+github.com/openline-ai/openline-customer-os/packages/server/customer-os-api v0.0.0-20221201135026-4b66dea18e83/go.mod h1:VvJPnkvD6UT/GDqS4/csszytDXV2S+Q0wnmkyfRhhjE=
 github.com/openline-ai/openline-customer-os/packages/server/customer-os-api v0.0.0-20221201143307-eb3ad3eaca76 h1:O62RfaL3Ler1+LRBu1gDXe8H+sVspWWqWkG9SpiLln8=
 github.com/openline-ai/openline-customer-os/packages/server/customer-os-api v0.0.0-20221201143307-eb3ad3eaca76/go.mod h1:VvJPnkvD6UT/GDqS4/csszytDXV2S+Q0wnmkyfRhhjE=
 github.com/pelletier/go-toml v1.2.0/go.mod h1:5z9KED0ma1S8pY6P1sdut58dfprrGBbd/94hg7ilaic=

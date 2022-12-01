@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"encoding/json"
 	"github.com/machinebox/graphql"
 	c "github.com/openline-ai/openline-customer-os/packages/server/message-store/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/message-store/gen"
@@ -176,6 +177,7 @@ func getContactById(graphqlClient *graphql.Client, id string) (*ContactInfo, err
 	graphqlRequest.Var("id", id)
 	var graphqlResponse contactResponse
 	if err := graphqlClient.Run(context.Background(), graphqlRequest, &graphqlResponse); err != nil {
+		log.Printf("Grapql got error %s", err.Error())
 		return nil, err
 	}
 	contactInfo := &ContactInfo{firstName: graphqlResponse.Contact.FirstName,
@@ -462,10 +464,13 @@ func (s *messageService) GetFeeds(ctx context.Context, _ *pb.Empty) (*pb.FeedLis
 		log.Printf("Got an feed id of %d", id)
 		contactInfo, err := getContactById(s.graphqlClient, contact.ContactId)
 		if err != nil {
-			se, _ := status.FromError(err)
-			return nil, status.Errorf(se.Code(), "Error resolving contact")
+			log.Printf("Unable to resolve contact, getting info from feed table")
+			fl.Contact[i] = &pb.Contact{ContactId: contact.ContactId, FirstName: contact.FirstName, LastName: contact.LastName, Id: &id}
+		} else {
+			fl.Contact[i] = &pb.Contact{ContactId: contact.ContactId, FirstName: contactInfo.firstName, LastName: contactInfo.lastName, Phone: contactInfo.phone, Email: contactInfo.email, Id: &id}
 		}
-		fl.Contact[i] = &pb.Contact{ContactId: contact.ContactId, FirstName: contactInfo.firstName, LastName: contactInfo.lastName, Phone: contactInfo.phone, Email: contactInfo.email, Id: &id}
+		msg, _ := json.Marshal(fl.Contact[i])
+		log.Printf("Got a contact of %s", msg)
 	}
 	return fl, nil
 }
@@ -480,8 +485,8 @@ func (s *messageService) GetFeed(ctx context.Context, contact *pb.Contact) (*pb.
 		var id int64 = int64(mf.ID)
 		contactInfo, err := getContactById(s.graphqlClient, mf.ContactId)
 		if err != nil {
-			se, _ := status.FromError(err)
-			return nil, status.Errorf(se.Code(), "Error resolving contact")
+			log.Printf("Unable to resolve contact, getting info from feed table")
+			return &pb.Contact{ContactId: mf.ContactId, FirstName: mf.FirstName, LastName: mf.LastName, Id: &id}, nil
 		}
 		return &pb.Contact{FirstName: contactInfo.firstName, LastName: contactInfo.lastName, Phone: contactInfo.phone, Email: contactInfo.email, ContactId: mf.ContactId, Id: &id}, nil
 	} else {
