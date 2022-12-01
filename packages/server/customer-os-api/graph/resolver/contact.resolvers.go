@@ -5,6 +5,8 @@ package resolver
 
 import (
 	"context"
+	"fmt"
+	"time"
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
@@ -112,6 +114,11 @@ func (r *contactResolver) Conversations(ctx context.Context, obj *model.Contact,
 		TotalPages:    paginatedResult.TotalPages,
 		TotalElements: paginatedResult.TotalRows,
 	}, err
+}
+
+// Actions is the resolver for the actions field.
+func (r *contactResolver) Actions(ctx context.Context, obj *model.Contact, from time.Time, to time.Time, actionTypes []model.ActionType) ([]model.Action, error) {
+	panic(fmt.Errorf("not implemented: Actions - actions"))
 }
 
 // ContactCreate is the resolver for the contact_Create field.

@@ -9,6 +9,10 @@ import (
 	"time"
 )
 
+type Action interface {
+	IsAction()
+}
+
 type ExtensibleEntity interface {
 	IsNode()
 	IsExtensibleEntity()
@@ -32,6 +36,27 @@ type Pages interface {
 	// **Required.**
 	GetTotalElements() int64
 }
+
+type CallAction struct {
+	ID        string    `json:"id"`
+	StartedAt time.Time `json:"startedAt"`
+	EndedAt   time.Time `json:"endedAt"`
+}
+
+func (CallAction) IsAction() {}
+
+func (CallAction) IsNode()            {}
+func (this CallAction) GetID() string { return this.ID }
+
+type ChatAction struct {
+	ID        string    `json:"id"`
+	StartedAt time.Time `json:"startedAt"`
+}
+
+func (ChatAction) IsAction() {}
+
+func (ChatAction) IsNode()            {}
+func (this ChatAction) GetID() string { return this.ID }
 
 type Company struct {
 	ID   string `json:"id"`
@@ -124,6 +149,7 @@ type Contact struct {
 	// Contact owner (user)
 	Owner         *User             `json:"owner"`
 	Conversations *ConversationPage `json:"conversations"`
+	Actions       []Action          `json:"actions"`
 }
 
 func (Contact) IsExtensibleEntity()                   {}
@@ -410,6 +436,16 @@ type Email struct {
 	Primary bool `json:"primary"`
 }
 
+type EmailAction struct {
+	ID        string    `json:"id"`
+	StartedAt time.Time `json:"startedAt"`
+}
+
+func (EmailAction) IsAction() {}
+
+func (EmailAction) IsNode()            {}
+func (this EmailAction) GetID() string { return this.ID }
+
 // Describes an email address associated with a `Contact` in customerOS.
 // **A `create` object.**
 type EmailInput struct {
@@ -510,6 +546,23 @@ type FilterItem struct {
 	Value         AnyTypeValue       `json:"value"`
 	CaseSensitive *bool              `json:"caseSensitive"`
 }
+
+type PageViewAction struct {
+	ID             string    `json:"id"`
+	StartedAt      time.Time `json:"startedAt"`
+	EndedAt        time.Time `json:"endedAt"`
+	PageTitle      *string   `json:"pageTitle"`
+	PageURL        *string   `json:"pageUrl"`
+	Application    string    `json:"application"`
+	OrderInSession int       `json:"orderInSession"`
+	EngagedTime    int       `json:"engagedTime"`
+	SessionID      string    `json:"sessionId"`
+}
+
+func (PageViewAction) IsAction() {}
+
+func (PageViewAction) IsNode()            {}
+func (this PageViewAction) GetID() string { return this.ID }
 
 // If provided as part of the request, results will be filtered down to the `page` and `limit` specified.
 type Pagination struct {
@@ -641,6 +694,51 @@ func (this UserPage) GetTotalPages() int { return this.TotalPages }
 // The total number of elements included in the query response.
 // **Required.**
 func (this UserPage) GetTotalElements() int64 { return this.TotalElements }
+
+type ActionType string
+
+const (
+	ActionTypePageView ActionType = "PAGE_VIEW"
+	ActionTypeCall     ActionType = "CALL"
+	ActionTypeEmail    ActionType = "EMAIL"
+	ActionTypeChat     ActionType = "CHAT"
+)
+
+var AllActionType = []ActionType{
+	ActionTypePageView,
+	ActionTypeCall,
+	ActionTypeEmail,
+	ActionTypeChat,
+}
+
+func (e ActionType) IsValid() bool {
+	switch e {
+	case ActionTypePageView, ActionTypeCall, ActionTypeEmail, ActionTypeChat:
+		return true
+	}
+	return false
+}
+
+func (e ActionType) String() string {
+	return string(e)
+}
+
+func (e *ActionType) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = ActionType(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid ActionType", str)
+	}
+	return nil
+}
+
+func (e ActionType) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
 
 type ComparisonOperator string
 

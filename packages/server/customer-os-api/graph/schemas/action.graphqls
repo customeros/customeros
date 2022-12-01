@@ -1,0 +1,36 @@
+union Action = PageViewAction | EmailAction | CallAction | ChatAction
+
+type PageViewAction implements Node {
+    id: ID!
+    startedAt: Time!
+    endedAt: Time!
+    pageTitle: String
+    pageUrl: String
+    application: String!
+    sessionId: ID!
+    orderInSession: Int!
+    engagedTime: Int!
+}
+
+type EmailAction implements Node {
+    id: ID!
+    startedAt: Time!
+}
+
+type CallAction implements Node {
+    id: ID!
+    startedAt: Time!
+    endedAt: Time!
+}
+
+type ChatAction implements Node {
+    id: ID!
+    startedAt: Time!
+}
+
+enum ActionType {
+    PAGE_VIEW
+    CALL
+    EMAIL
+    CHAT
+}
