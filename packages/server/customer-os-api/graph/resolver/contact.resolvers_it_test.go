@@ -141,7 +141,7 @@ func TestMutationResolver_ContactCreate(t *testing.T) {
 	require.Equal(t, 1, getCountOfNodes(driver, "ContactType"))
 }
 
-func TestMutationResolver_ContactCreate_WithEntityDefinition(t *testing.T) {
+func TestMutationResolver_ContactCreate_WithCustomFields(t *testing.T) {
 	defer setupTestCase()(t)
 	createTenant(driver, tenantName)
 	entityDefinitionId := createEntityDefinition(driver, tenantName, model.EntityDefinitionExtensionContact.String())
@@ -149,7 +149,7 @@ func TestMutationResolver_ContactCreate_WithEntityDefinition(t *testing.T) {
 	setDefinitionId := addSetDefinitionToEntity(driver, entityDefinitionId)
 	fieldInSetDefinitionId := addFieldDefinitionToSet(driver, setDefinitionId)
 
-	rawResponse, err := c.RawPost(getQuery("create_contact_with_entity_definition"),
+	rawResponse, err := c.RawPost(getQuery("create_contact_with_custom_fields"),
 		client.Var("entityDefinitionId", entityDefinitionId),
 		client.Var("fieldDefinitionId", fieldDefinitionId),
 		client.Var("setDefinitionId", setDefinitionId),
