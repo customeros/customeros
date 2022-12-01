@@ -32,7 +32,8 @@ func (r *actionItemRepository) CreatePageViewActionItem(contactId string, pv ent
 		"pvId":           pv.ID,
 		"start":          pv.Start,
 		"end":            pv.End,
-		"appId":          pv.AppId,
+		"application":    pv.Application,
+		"sessionId":      pv.SessionID,
 		"trackerName":    pv.TrackerName,
 		"pageUrl":        pv.Url,
 		"pageTitle":      pv.Title,
@@ -44,9 +45,10 @@ func (r *actionItemRepository) CreatePageViewActionItem(contactId string, pv ent
 		" ON CREATE SET " +
 		" a.startedAt=$start, " +
 		" a.endedAt=$end, " +
-		" a.appId=$appId, " +
+		" a.application=$application, " +
 		" a.pageUrl=$pageUrl, " +
 		" a.pageTitle=$pageTitle, " +
+		" a.sessionId=$sessionId, " +
 		" a.orderInSession=$orderInSession, " +
 		" a.engagedTime=$engagedTime"
 

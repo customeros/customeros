@@ -119,6 +119,8 @@ type Contact implements ExtensibleEntity & Node {
     owner: User @goField(forceResolver: true)
 
     conversations(pagination: Pagination, sort: [SortBy!]): ConversationPage! @goField(forceResolver: true)
+
+    actions(from: Time!, to: Time!, actionTypes: [ActionType!]): [Action!] @goField(forceResolver: true)
 }
 
 """

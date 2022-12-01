@@ -8,7 +8,7 @@ import (
 type PageView struct {
 	ID                 string         `gorm:"column:page_view_id;primaryKey"`
 	TrackerName        string         `gorm:"column:name_tracker;primaryKey"`
-	AppId              string         `gorm:"column:app_id"`
+	Application        string         `gorm:"column:app_id"`
 	Tenant             string         `gorm:"column:tenant"`
 	VisitorID          sql.NullString `gorm:"column:visitor_id"`
 	SessionID          string         `gorm:"column:domain_sessionid"`
