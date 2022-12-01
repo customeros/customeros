@@ -51,6 +51,9 @@ autobind:
 # modelgen, the others will be allowed when binding to fields. Configure them to
 # your liking
 models:
+  Any:
+    model:
+      - github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model.AnyTypeValue
   Time:
     model:
       - github.com/99designs/gqlgen/graphql.Time

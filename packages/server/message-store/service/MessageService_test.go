@@ -98,6 +98,41 @@ func Test_createContact(t *testing.T) {
 	assert.Equal(t, "12345678", result)
 }
 
+func Test_getContact(t *testing.T) {
+	_, client, resolver := NewWebServer(t)
+	resolver.GetContactById = func(ctx context.Context, id string) (*model.Contact, error) {
+		if !assert.Equal(t, id, "12345678") {
+			return nil, status.Error(500, "id incorrect")
+		}
+		return &model.Contact{
+			ID:        id,
+			FirstName: "Torrey",
+			LastName:  "Searle",
+		}, nil
+	}
+
+	resolver.PhoneNumbersByContact = func(ctx context.Context, obj *model.Contact) ([]*model.PhoneNumber, error) {
+		if !assert.Equal(t, obj.ID, "12345678") {
+			return nil, status.Error(500, "id incorrect")
+		}
+		return []*model.PhoneNumber{&model.PhoneNumber{E164: "+3228080000"}}, nil
+	}
+
+	resolver.EmailsByContact = func(ctx context.Context, obj *model.Contact) ([]*model.Email, error) {
+		if !assert.Equal(t, obj.ID, "12345678") {
+			return nil, status.Error(500, "id incorrect")
+		}
+		return []*model.Email{&model.Email{Email: "x@x.org"}}, nil
+	}
+
+	result, err := getContactById(client, "12345678")
+	if err != nil {
+		log.Fatalf("Got an error: %s", err.Error())
+	}
+	assert.Equal(t, "12345678", result.id)
+	assert.Equal(t, "+3228080000", *result.phone)
+	assert.Equal(t, "x@x.org", *result.email)
+}
 func Test_createConversation(t *testing.T) {
 	_, client, resolver := NewWebServer(t)
 	resolver.ConversationCreate = func(ctx context.Context, input model.ConversationInput) (*model.Conversation, error) {

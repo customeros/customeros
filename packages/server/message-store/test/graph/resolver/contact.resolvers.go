@@ -28,11 +28,17 @@ func (r *contactResolver) Groups(ctx context.Context, obj *model.Contact) ([]*mo
 
 // PhoneNumbers is the resolver for the phoneNumbers field.
 func (r *contactResolver) PhoneNumbers(ctx context.Context, obj *model.Contact) ([]*model.PhoneNumber, error) {
+	if r.Resolver.PhoneNumbersByContact != nil {
+		return r.Resolver.PhoneNumbersByContact(ctx, obj)
+	}
 	panic(fmt.Errorf("not implemented: PhoneNumbers - phoneNumbers"))
 }
 
 // Emails is the resolver for the emails field.
 func (r *contactResolver) Emails(ctx context.Context, obj *model.Contact) ([]*model.Email, error) {
+	if r.Resolver.EmailsByContact != nil {
+		return r.Resolver.EmailsByContact(ctx, obj)
+	}
 	panic(fmt.Errorf("not implemented: Emails - emails"))
 }
 
@@ -101,6 +107,9 @@ func (r *mutationResolver) ContactDeleteCompanyPosition(ctx context.Context, con
 
 // Contact is the resolver for the contact field.
 func (r *queryResolver) Contact(ctx context.Context, id string) (*model.Contact, error) {
+	if r.Resolver.GetContactById != nil {
+		return r.Resolver.GetContactById(ctx, id)
+	}
 	panic(fmt.Errorf("not implemented: Contact - contact"))
 }
 

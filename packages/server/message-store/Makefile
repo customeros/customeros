@@ -16,5 +16,7 @@ install:
 clean:
 	find gen -mindepth 1 -maxdepth 1 -exec rm -r {} \;
 	rm -rf bin
+	rm -rf test/graph/generated
+	rm test/graph/model/models_gen.go
 
 all: install build
