@@ -16,10 +16,10 @@ type CustomFieldDefinitionRepository interface {
 
 type customFieldDefinitionRepository struct {
 	driver *neo4j.Driver
-	repos  *RepositoryContainer
+	repos  *Repositories
 }
 
-func NewCustomFieldDefinitionRepository(driver *neo4j.Driver, repos *RepositoryContainer) CustomFieldDefinitionRepository {
+func NewCustomFieldDefinitionRepository(driver *neo4j.Driver, repos *Repositories) CustomFieldDefinitionRepository {
 	return &customFieldDefinitionRepository{
 		driver: driver,
 		repos:  repos,

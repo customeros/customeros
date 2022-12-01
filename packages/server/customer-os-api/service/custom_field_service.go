@@ -31,10 +31,10 @@ type CustomFieldService interface {
 }
 
 type customFieldService struct {
-	repository *repository.RepositoryContainer
+	repository *repository.Repositories
 }
 
-func NewCustomFieldService(repository *repository.RepositoryContainer) CustomFieldService {
+func NewCustomFieldService(repository *repository.Repositories) CustomFieldService {
 	return &customFieldService{
 		repository: repository,
 	}

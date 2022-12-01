@@ -17,10 +17,10 @@ type ContactTypeRepository interface {
 
 type contactTypeRepository struct {
 	driver *neo4j.Driver
-	repos  *RepositoryContainer
+	repos  *Repositories
 }
 
-func NewContactTypeRepository(driver *neo4j.Driver, repos *RepositoryContainer) ContactTypeRepository {
+func NewContactTypeRepository(driver *neo4j.Driver, repos *Repositories) ContactTypeRepository {
 	return &contactTypeRepository{
 		driver: driver,
 		repos:  repos,

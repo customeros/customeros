@@ -23,10 +23,10 @@ type CompanyService interface {
 }
 
 type companyService struct {
-	repository *repository.RepositoryContainer
+	repository *repository.Repositories
 }
 
-func NewCompanyService(repository *repository.RepositoryContainer) CompanyService {
+func NewCompanyService(repository *repository.Repositories) CompanyService {
 	return &companyService{
 		repository: repository,
 	}

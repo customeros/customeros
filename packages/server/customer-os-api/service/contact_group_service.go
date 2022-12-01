@@ -27,10 +27,10 @@ type ContactGroupService interface {
 }
 
 type contactGroupService struct {
-	repository *repository.RepositoryContainer
+	repository *repository.Repositories
 }
 
-func NewContactGroupService(repository *repository.RepositoryContainer) ContactGroupService {
+func NewContactGroupService(repository *repository.Repositories) ContactGroupService {
 	return &contactGroupService{
 		repository: repository,
 	}

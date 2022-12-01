@@ -26,10 +26,10 @@ type ConversationRepository interface {
 
 type conversationRepository struct {
 	driver *neo4j.Driver
-	repos  *RepositoryContainer
+	repos  *Repositories
 }
 
-func NewConversationRepository(driver *neo4j.Driver, repos *RepositoryContainer) ConversationRepository {
+func NewConversationRepository(driver *neo4j.Driver, repos *Repositories) ConversationRepository {
 	return &conversationRepository{
 		driver: driver,
 		repos:  repos,

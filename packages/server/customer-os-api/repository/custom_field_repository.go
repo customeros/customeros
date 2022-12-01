@@ -26,10 +26,10 @@ type CustomFieldRepository interface {
 
 type customFieldRepository struct {
 	driver *neo4j.Driver
-	repos  *RepositoryContainer
+	repos  *Repositories
 }
 
-func NewCustomFieldRepository(driver *neo4j.Driver, repos *RepositoryContainer) CustomFieldRepository {
+func NewCustomFieldRepository(driver *neo4j.Driver, repos *Repositories) CustomFieldRepository {
 	return &customFieldRepository{
 		driver: driver,
 		repos:  repos,

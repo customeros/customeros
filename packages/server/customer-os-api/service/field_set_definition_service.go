@@ -15,10 +15,10 @@ type FieldSetDefinitionService interface {
 }
 
 type fieldSetDefinitionService struct {
-	repository *repository.RepositoryContainer
+	repository *repository.Repositories
 }
 
-func NewFieldSetDefinitionService(repository *repository.RepositoryContainer) FieldSetDefinitionService {
+func NewFieldSetDefinitionService(repository *repository.Repositories) FieldSetDefinitionService {
 	return &fieldSetDefinitionService{
 		repository: repository,
 	}

@@ -16,10 +16,10 @@ type UserRepository interface {
 
 type userRepository struct {
 	driver *neo4j.Driver
-	repos  *RepositoryContainer
+	repos  *Repositories
 }
 
-func NewUserRepository(driver *neo4j.Driver, repos *RepositoryContainer) UserRepository {
+func NewUserRepository(driver *neo4j.Driver, repos *Repositories) UserRepository {
 	return &userRepository{
 		driver: driver,
 		repos:  repos,

@@ -18,10 +18,10 @@ type ContactTypeService interface {
 }
 
 type contactTypeService struct {
-	repository *repository.RepositoryContainer
+	repository *repository.Repositories
 }
 
-func NewContactTypeService(repository *repository.RepositoryContainer) ContactTypeService {
+func NewContactTypeService(repository *repository.Repositories) ContactTypeService {
 	return &contactTypeService{
 		repository: repository,
 	}

@@ -49,10 +49,10 @@ type ContactUpdateData struct {
 }
 
 type contactService struct {
-	repository *repository.RepositoryContainer
+	repository *repository.Repositories
 }
 
-func NewContactService(repository *repository.RepositoryContainer) ContactService {
+func NewContactService(repository *repository.Repositories) ContactService {
 	return &contactService{
 		repository: repository,
 	}

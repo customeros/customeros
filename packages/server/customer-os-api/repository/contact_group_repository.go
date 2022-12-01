@@ -12,10 +12,10 @@ type ContactGroupRepository interface {
 
 type contactGroupRepository struct {
 	driver *neo4j.Driver
-	repos  *RepositoryContainer
+	repos  *Repositories
 }
 
-func NewContactGroupRepository(driver *neo4j.Driver, repos *RepositoryContainer) ContactGroupRepository {
+func NewContactGroupRepository(driver *neo4j.Driver, repos *Repositories) ContactGroupRepository {
 	return &contactGroupRepository{
 		driver: driver,
 		repos:  repos,

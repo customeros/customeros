@@ -16,10 +16,10 @@ type CustomFieldDefinitionService interface {
 }
 
 type customFieldDefinitionService struct {
-	repository *repository.RepositoryContainer
+	repository *repository.Repositories
 }
 
-func NewCustomFieldDefinitionService(repository *repository.RepositoryContainer) CustomFieldDefinitionService {
+func NewCustomFieldDefinitionService(repository *repository.Repositories) CustomFieldDefinitionService {
 	return &customFieldDefinitionService{
 		repository: repository,
 	}

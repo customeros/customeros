@@ -20,10 +20,10 @@ type CompanyRepository interface {
 
 type companyRepository struct {
 	driver *neo4j.Driver
-	repos  *RepositoryContainer
+	repos  *Repositories
 }
 
-func NewCompanyRepository(driver *neo4j.Driver, repos *RepositoryContainer) CompanyRepository {
+func NewCompanyRepository(driver *neo4j.Driver, repos *Repositories) CompanyRepository {
 	return &companyRepository{
 		driver: driver,
 		repos:  repos,

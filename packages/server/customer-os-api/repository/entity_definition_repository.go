@@ -17,10 +17,10 @@ type EntityDefinitionRepository interface {
 
 type entityDefinitionRepository struct {
 	driver *neo4j.Driver
-	repos  *RepositoryContainer
+	repos  *Repositories
 }
 
-func NewEntityDefinitionRepository(driver *neo4j.Driver, repos *RepositoryContainer) EntityDefinitionRepository {
+func NewEntityDefinitionRepository(driver *neo4j.Driver, repos *Repositories) EntityDefinitionRepository {
 	return &entityDefinitionRepository{
 		driver: driver,
 		repos:  repos,

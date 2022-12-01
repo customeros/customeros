@@ -17,10 +17,10 @@ type EntityDefinitionService interface {
 }
 
 type entityDefinitionService struct {
-	repository *repository.RepositoryContainer
+	repository *repository.Repositories
 }
 
-func NewEntityDefinitionService(repository *repository.RepositoryContainer) EntityDefinitionService {
+func NewEntityDefinitionService(repository *repository.Repositories) EntityDefinitionService {
 	return &entityDefinitionService{
 		repository: repository,
 	}

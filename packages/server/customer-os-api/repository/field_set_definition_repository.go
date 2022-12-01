@@ -15,10 +15,10 @@ type FieldSetDefinitionRepository interface {
 
 type fieldSetDefinitionRepository struct {
 	driver *neo4j.Driver
-	repos  *RepositoryContainer
+	repos  *Repositories
 }
 
-func NewFieldSetDefinitionRepository(driver *neo4j.Driver, repos *RepositoryContainer) FieldSetDefinitionRepository {
+func NewFieldSetDefinitionRepository(driver *neo4j.Driver, repos *Repositories) FieldSetDefinitionRepository {
 	return &fieldSetDefinitionRepository{
 		driver: driver,
 		repos:  repos,
