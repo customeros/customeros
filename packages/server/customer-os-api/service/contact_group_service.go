@@ -17,27 +17,25 @@ type ContactGroupService interface {
 	Create(ctx context.Context, contactGroup *entity.ContactGroupEntity) (*entity.ContactGroupEntity, error)
 	Update(ctx context.Context, contactGroup *entity.ContactGroupEntity) (*entity.ContactGroupEntity, error)
 	Delete(ctx context.Context, id string) (bool, error)
-
 	FindContactGroupById(ctx context.Context, id string) (*entity.ContactGroupEntity, error)
 	FindAll(ctx context.Context, page, limit int, filter *model.Filter, sortBy []*model.SortBy) (*utils.Pagination, error)
 	FindAllForContact(ctx context.Context, contact *model.Contact) (*entity.ContactGroupEntities, error)
-
 	AddContactToGroup(ctx context.Context, contactId, groupId string) (bool, error)
 	RemoveContactFromGroup(ctx context.Context, contactId, groupId string) (bool, error)
 }
 
 type contactGroupService struct {
-	repository *repository.Repositories
+	repositories *repository.Repositories
 }
 
-func NewContactGroupService(repository *repository.Repositories) ContactGroupService {
+func NewContactGroupService(repositories *repository.Repositories) ContactGroupService {
 	return &contactGroupService{
-		repository: repository,
+		repositories: repositories,
 	}
 }
 
 func (s *contactGroupService) getDriver() neo4j.Driver {
-	return *s.repository.Drivers.Neo4jDriver
+	return *s.repositories.Drivers.Neo4jDriver
 }
 
 func (s *contactGroupService) Create(ctx context.Context, newContactGroup *entity.ContactGroupEntity) (*entity.ContactGroupEntity, error) {
@@ -135,7 +133,7 @@ func (s *contactGroupService) FindAll(ctx context.Context, page, limit int, filt
 		return nil, err
 	}
 
-	dbNodesWithTotalCount, err := s.repository.ContactGroupRepository.GetPaginatedContactGroups(
+	dbNodesWithTotalCount, err := s.repositories.ContactGroupRepository.GetPaginatedContactGroups(
 		session,
 		common.GetContext(ctx).Tenant,
 		paginatedResult.GetSkip(),

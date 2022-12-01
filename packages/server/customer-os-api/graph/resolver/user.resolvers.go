@@ -15,7 +15,7 @@ import (
 
 // UserCreate is the resolver for the userCreate field.
 func (r *mutationResolver) UserCreate(ctx context.Context, input model.UserInput) (*model.User, error) {
-	createdTenantEntity, err := r.ServiceContainer.UserService.Create(ctx, mapper.MapUserInputToEntity(input))
+	createdTenantEntity, err := r.Services.UserService.Create(ctx, mapper.MapUserInputToEntity(input))
 	if err != nil {
 		graphql.AddErrorf(ctx, "Failed to create user %s %s", input.FirstName, input.LastName)
 		return nil, err
@@ -28,7 +28,7 @@ func (r *queryResolver) Users(ctx context.Context, pagination *model.Pagination,
 	if pagination == nil {
 		pagination = &model.Pagination{Page: 0, Limit: 0}
 	}
-	paginatedResult, err := r.ServiceContainer.UserService.FindAll(ctx, pagination.Page, pagination.Limit, where, sort)
+	paginatedResult, err := r.Services.UserService.FindAll(ctx, pagination.Page, pagination.Limit, where, sort)
 	return &model.UserPage{
 		Content:       mapper.MapEntitiesToUsers(paginatedResult.Rows.(*entity.UserEntities)),
 		TotalPages:    paginatedResult.TotalPages,
@@ -38,7 +38,7 @@ func (r *queryResolver) Users(ctx context.Context, pagination *model.Pagination,
 
 // User is the resolver for the user field.
 func (r *queryResolver) User(ctx context.Context, id string) (*model.User, error) {
-	userEntity, err := r.ServiceContainer.UserService.FindUserById(ctx, id)
+	userEntity, err := r.Services.UserService.FindUserById(ctx, id)
 	if err != nil || userEntity == nil {
 		graphql.AddErrorf(ctx, "User with id %s not found", id)
 		return nil, err
@@ -51,7 +51,7 @@ func (r *userResolver) Conversations(ctx context.Context, obj *model.User, pagin
 	if pagination == nil {
 		pagination = &model.Pagination{Page: 0, Limit: 0}
 	}
-	paginatedResult, err := r.ServiceContainer.ConversationService.GetConversationsForUser(ctx, obj.ID, pagination.Page, pagination.Limit, sort)
+	paginatedResult, err := r.Services.ConversationService.GetConversationsForUser(ctx, obj.ID, pagination.Page, pagination.Limit, sort)
 	if err != nil {
 		graphql.AddErrorf(ctx, "Failed to get user %s conversations", obj.ID)
 		return nil, err

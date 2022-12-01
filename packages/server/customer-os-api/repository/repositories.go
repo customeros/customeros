@@ -6,6 +6,7 @@ import (
 
 type Repositories struct {
 	Drivers                         Drivers
+	ActionRepository                ActionRepository
 	CompanyRepository               CompanyRepository
 	ContactGroupRepository          ContactGroupRepository
 	ContactRepository               ContactRepository
@@ -29,16 +30,17 @@ func InitRepos(driver *neo4j.Driver) *Repositories {
 			Neo4jDriver: driver,
 		},
 	}
-	repositories.CompanyRepository = NewCompanyRepository(driver, &repositories)
-	repositories.ContactGroupRepository = NewContactGroupRepository(driver, &repositories)
-	repositories.ContactRepository = NewContactRepository(driver, &repositories)
-	repositories.ContactTypeRepository = NewContactTypeRepository(driver, &repositories)
-	repositories.ConversationRepository = NewConversationRepository(driver, &repositories)
-	repositories.CustomFieldDefinitionRepository = NewCustomFieldDefinitionRepository(driver, &repositories)
-	repositories.CustomFieldRepository = NewCustomFieldRepository(driver, &repositories)
+	repositories.ActionRepository = NewActionRepository(driver)
+	repositories.CompanyRepository = NewCompanyRepository(driver)
+	repositories.ContactGroupRepository = NewContactGroupRepository(driver)
+	repositories.ContactRepository = NewContactRepository(driver)
+	repositories.ContactTypeRepository = NewContactTypeRepository(driver)
+	repositories.ConversationRepository = NewConversationRepository(driver)
+	repositories.CustomFieldDefinitionRepository = NewCustomFieldDefinitionRepository(driver)
+	repositories.CustomFieldRepository = NewCustomFieldRepository(driver)
 	repositories.EntityDefinitionRepository = NewEntityDefinitionRepository(driver, &repositories)
 	repositories.FieldSetDefinitionRepository = NewFieldSetDefinitionRepository(driver, &repositories)
-	repositories.FieldSetRepository = NewFieldSetRepository(driver, &repositories)
-	repositories.UserRepository = NewUserRepository(driver, &repositories)
+	repositories.FieldSetRepository = NewFieldSetRepository(driver)
+	repositories.UserRepository = NewUserRepository(driver)
 	return &repositories
 }

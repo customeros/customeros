@@ -13,19 +13,19 @@ import (
 
 // FieldSets is the resolver for the fieldSets field.
 func (r *entityDefinitionResolver) FieldSets(ctx context.Context, obj *model.EntityDefinition) ([]*model.FieldSetDefinition, error) {
-	result, err := r.ServiceContainer.FieldSetDefinitionService.FindAll(obj.ID)
+	result, err := r.Services.FieldSetDefinitionService.FindAll(obj.ID)
 	return mapper.MapEntitiesToFieldSetDefinitions(result), err
 }
 
 // CustomFields is the resolver for the customFields field.
 func (r *entityDefinitionResolver) CustomFields(ctx context.Context, obj *model.EntityDefinition) ([]*model.CustomFieldDefinition, error) {
-	result, err := r.ServiceContainer.CustomFieldDefinitionService.FindAllForEntityDefinition(obj.ID)
+	result, err := r.Services.CustomFieldDefinitionService.FindAllForEntityDefinition(obj.ID)
 	return mapper.MapEntitiesToCustomFieldDefinitions(result), err
 }
 
 // CustomFields is the resolver for the customFields field.
 func (r *fieldSetDefinitionResolver) CustomFields(ctx context.Context, obj *model.FieldSetDefinition) ([]*model.CustomFieldDefinition, error) {
-	result, err := r.ServiceContainer.CustomFieldDefinitionService.FindAllForFieldSetDefinition(obj.ID)
+	result, err := r.Services.CustomFieldDefinitionService.FindAllForFieldSetDefinition(obj.ID)
 	return mapper.MapEntitiesToCustomFieldDefinitions(result), err
 }
 

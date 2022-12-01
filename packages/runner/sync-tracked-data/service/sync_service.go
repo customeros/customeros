@@ -86,7 +86,7 @@ func (s *syncService) syncPageView(wg *sync.WaitGroup, runId string, contactIds 
 		tenant:    pv.Tenant,
 		visitorId: pv.VisitorID.String,
 	}]
-	if err := s.repositories.ActionItemRepository.CreatePageViewActionItem(contactId, pv); err != nil {
+	if err := s.repositories.ActionRepository.CreatePageViewAction(contactId, pv); err != nil {
 		log.Printf("ERROR run id: %s failed to create action item for page view %s error: %v", runId, pv.ID, err.Error())
 	} else {
 		if err = s.repositories.PageViewRepository.MarkSynced(pv, contactId); err != nil {

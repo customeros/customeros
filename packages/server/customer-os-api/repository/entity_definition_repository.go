@@ -16,14 +16,14 @@ type EntityDefinitionRepository interface {
 }
 
 type entityDefinitionRepository struct {
-	driver *neo4j.Driver
-	repos  *Repositories
+	driver       *neo4j.Driver
+	repositories *Repositories
 }
 
-func NewEntityDefinitionRepository(driver *neo4j.Driver, repos *Repositories) EntityDefinitionRepository {
+func NewEntityDefinitionRepository(driver *neo4j.Driver, repositories *Repositories) EntityDefinitionRepository {
 	return &entityDefinitionRepository{
-		driver: driver,
-		repos:  repos,
+		driver:       driver,
+		repositories: repositories,
 	}
 }
 
@@ -122,13 +122,13 @@ func (r *entityDefinitionRepository) createFullEntityDefinitionInTxWork(tenant s
 		}
 		entityDefinitionId := utils.GetPropsFromNode(records[0].Values[0].(dbtype.Node))["id"].(string)
 		for _, v := range entity.FieldSets {
-			err := r.repos.FieldSetDefinitionRepository.createFieldSetDefinitionInTx(entityDefinitionId, v, tx)
+			err := r.repositories.FieldSetDefinitionRepository.createFieldSetDefinitionInTx(entityDefinitionId, v, tx)
 			if err != nil {
 				return nil, err
 			}
 		}
 		for _, v := range entity.CustomFields {
-			err := r.repos.CustomFieldDefinitionRepository.createCustomFieldDefinitionForEntityInTx(entityDefinitionId, v, tx)
+			err := r.repositories.CustomFieldDefinitionRepository.createCustomFieldDefinitionForEntityInTx(entityDefinitionId, v, tx)
 			if err != nil {
 				return nil, err
 			}

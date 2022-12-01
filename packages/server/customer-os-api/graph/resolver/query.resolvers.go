@@ -14,7 +14,7 @@ import (
 
 // EntityDefinitions is the resolver for the entityDefinitions field.
 func (r *queryResolver) EntityDefinitions(ctx context.Context, extends *model.EntityDefinitionExtension) ([]*model.EntityDefinition, error) {
-	result, err := r.ServiceContainer.EntityDefinitionService.FindAll(ctx, utils.StringPtr(extends.String()))
+	result, err := r.Services.EntityDefinitionService.FindAll(ctx, utils.StringPtr(extends.String()))
 	return mapper.MapEntitiesToEntityDefinitions(result), err
 }
 

@@ -22,7 +22,12 @@ type ContactRepository interface {
 
 type contactRepository struct {
 	driver *neo4j.Driver
-	repos  *Repositories
+}
+
+func NewContactRepository(driver *neo4j.Driver) ContactRepository {
+	return &contactRepository{
+		driver: driver,
+	}
 }
 
 func (r *contactRepository) SetOwner(tx neo4j.Transaction, tenant, contactId, userId string) error {
@@ -53,13 +58,6 @@ func (r *contactRepository) RemoveOwner(tx neo4j.Transaction, tenant, contactId 
 			"contactId": contactId,
 		})
 	return err
-}
-
-func NewContactRepository(driver *neo4j.Driver, repos *Repositories) ContactRepository {
-	return &contactRepository{
-		driver: driver,
-		repos:  repos,
-	}
 }
 
 func (r *contactRepository) Create(tx neo4j.Transaction, tenant string, newContact entity.ContactEntity) (*dbtype.Node, error) {

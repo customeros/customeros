@@ -14,7 +14,7 @@ import (
 
 // Contact is the resolver for the contact field.
 func (r *conversationResolver) Contact(ctx context.Context, obj *model.Conversation) (*model.Contact, error) {
-	contactEntity, err := r.ServiceContainer.ContactService.FindContactById(ctx, obj.ContactID)
+	contactEntity, err := r.Services.ContactService.FindContactById(ctx, obj.ContactID)
 	if err != nil || contactEntity == nil {
 		graphql.AddErrorf(ctx, "Contact with id %s not found", obj.ContactID)
 		return nil, err
@@ -24,7 +24,7 @@ func (r *conversationResolver) Contact(ctx context.Context, obj *model.Conversat
 
 // User is the resolver for the user field.
 func (r *conversationResolver) User(ctx context.Context, obj *model.Conversation) (*model.User, error) {
-	userEntity, err := r.ServiceContainer.UserService.FindUserById(ctx, obj.UserID)
+	userEntity, err := r.Services.UserService.FindUserById(ctx, obj.UserID)
 	if err != nil || userEntity == nil {
 		graphql.AddErrorf(ctx, "User with id %s not found", obj.UserID)
 		return nil, err
@@ -34,7 +34,7 @@ func (r *conversationResolver) User(ctx context.Context, obj *model.Conversation
 
 // ConversationCreate is the resolver for the conversationCreate field.
 func (r *mutationResolver) ConversationCreate(ctx context.Context, input model.ConversationInput) (*model.Conversation, error) {
-	conversationEntity, err := r.ServiceContainer.ConversationService.CreateNewConversation(ctx, input.UserID, input.ContactID, input.ID)
+	conversationEntity, err := r.Services.ConversationService.CreateNewConversation(ctx, input.UserID, input.ContactID, input.ID)
 	if err != nil {
 		graphql.AddErrorf(ctx, "Failed to create conversation between user: %s and contact: %s", input.UserID, input.ContactID)
 		return nil, err

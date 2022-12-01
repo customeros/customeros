@@ -120,7 +120,7 @@ type Contact implements ExtensibleEntity & Node {
 
     conversations(pagination: Pagination, sort: [SortBy!]): ConversationPage! @goField(forceResolver: true)
 
-    actions(from: Time!, to: Time!, actionTypes: [ActionType!]): [Action!] @goField(forceResolver: true)
+    actions(from: Time!, to: Time!, actionTypes: [ActionType!]): [Action!]! @goField(forceResolver: true)
 }
 
 """

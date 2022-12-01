@@ -11,10 +11,8 @@ import (
 type CustomFieldRepository interface {
 	MergeCustomFieldToContactInTx(tx neo4j.Transaction, tenant, contactId string, entity *entity.CustomFieldEntity) (*dbtype.Node, error)
 	MergeCustomFieldToFieldSetInTx(tx neo4j.Transaction, tenant, contactId, fieldSet string, entity *entity.CustomFieldEntity) (*dbtype.Node, error)
-
 	LinkWithCustomFieldDefinitionForContactInTx(tx neo4j.Transaction, fieldId, contactId, definitionId string) error
 	LinkWithCustomFieldDefinitionForFieldSetInTx(tx neo4j.Transaction, fieldId, fieldSetId, definitionId string) error
-
 	UpdateForContactInTx(tx neo4j.Transaction, tenant, contactId string, entity *entity.CustomFieldEntity) (*dbtype.Node, error)
 	UpdateForFieldSetInTx(tx neo4j.Transaction, tenant, contactId, fieldSetId string, entity *entity.CustomFieldEntity) (*dbtype.Node, error)
 	FindAllForContact(session neo4j.Session, tenant, contactId string) ([]*neo4j.Record, error)
@@ -26,13 +24,11 @@ type CustomFieldRepository interface {
 
 type customFieldRepository struct {
 	driver *neo4j.Driver
-	repos  *Repositories
 }
 
-func NewCustomFieldRepository(driver *neo4j.Driver, repos *Repositories) CustomFieldRepository {
+func NewCustomFieldRepository(driver *neo4j.Driver) CustomFieldRepository {
 	return &customFieldRepository{
 		driver: driver,
-		repos:  repos,
 	}
 }
 

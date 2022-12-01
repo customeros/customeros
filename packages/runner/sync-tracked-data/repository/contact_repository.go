@@ -30,7 +30,7 @@ func (r *contactRepository) GetOrCreateContactId(tenant, email, firstName, lastN
 		queryResult, err := tx.Run(`
 			MERGE (t:Tenant {name:$tenant})
 			MERGE (e:Email {email: $email})<-[r:EMAILED_AT]-(c:Contact)-[:CONTACT_BELONGS_TO_TENANT]->(t)
-            ON CREATE SET r.primary=true, e.id=randomUUID(), c.id=randomUUID(), c.firstName=$firstName, c.lastName=$lastName
+            ON CREATE SET r.primary=true, e.id=randomUUID(), c.id=randomUUID(), c.firstName=$firstName, c.lastName=$lastName, c.createdAt=datetime({timezone: 'UTC'})
 			RETURN c.id`,
 			map[string]interface{}{
 				"tenant":    tenant,
