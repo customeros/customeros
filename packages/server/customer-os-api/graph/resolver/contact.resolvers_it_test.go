@@ -7,6 +7,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils/decode"
 	"github.com/stretchr/testify/require"
 	"testing"
+	"time"
 )
 
 func TestQueryResolver_ContactByEmail(t *testing.T) {
@@ -435,8 +436,6 @@ func TestQueryResolver_Contact_WithConversations(t *testing.T) {
 
 	err = decode.Decode(rawResponse.Data.(map[string]any), &contact)
 	require.Nil(t, err)
-	err = decode.Decode(rawResponse.Data.(map[string]any), &contact)
-	require.Nil(t, err)
 	require.NotNil(t, contact)
 	require.Equal(t, contact1, contact.Contact.ID)
 	require.Equal(t, 1, contact.Contact.Conversations.TotalPages)
@@ -453,4 +452,82 @@ func TestQueryResolver_Contact_WithConversations(t *testing.T) {
 
 	require.NotNil(t, conv1_2)
 	require.NotNil(t, conv2_3)
+}
+
+func TestQueryResolver_Contact_WithActions(t *testing.T) {
+	defer setupTestCase()(t)
+	createTenant(driver, tenantName)
+
+	contactId := createDefaultContact(driver, tenantName)
+	contactId2 := createDefaultContact(driver, tenantName)
+
+	now := time.Now().UTC()
+	secAgo1 := now.Add(time.Duration(-1) * time.Second)
+	secAgo30 := now.Add(time.Duration(-30) * time.Second)
+	from := now.Add(time.Duration(-10) * time.Minute)
+
+	actionId1 := createPageViewAction(driver, contactId, entity.PageViewActionEntity{
+		StartedAt:      secAgo1,
+		EndedAt:        now,
+		TrackerName:    "tracker1",
+		SessionId:      "session1",
+		Application:    "application1",
+		PageTitle:      "page1",
+		PageUrl:        "http://app-1.ai",
+		OrderInSession: 1,
+		EngagedTime:    10,
+	})
+
+	actionId2 := createPageViewAction(driver, contactId, entity.PageViewActionEntity{
+		StartedAt:      secAgo30,
+		EndedAt:        now,
+		TrackerName:    "tracker2",
+		SessionId:      "session2",
+		Application:    "application2",
+		PageTitle:      "page2",
+		PageUrl:        "http://app-2.ai",
+		OrderInSession: 2,
+		EngagedTime:    20,
+	})
+
+	createPageViewAction(driver, contactId2, entity.PageViewActionEntity{})
+
+	require.Equal(t, 2, getCountOfNodes(driver, "Contact"))
+	require.Equal(t, 3, getCountOfNodes(driver, "Action"))
+	require.Equal(t, 3, getCountOfNodes(driver, "PageViewAction"))
+
+	rawResponse, err := c.RawPost(getQuery("get_contact_with_actions"),
+		client.Var("contactId", contactId),
+		client.Var("from", from),
+		client.Var("to", now))
+	assertRawResponseSuccess(t, rawResponse, err)
+
+	contact := rawResponse.Data.(map[string]interface{})["contact"]
+	require.Equal(t, contactId, contact.(map[string]interface{})["id"])
+
+	actions := contact.(map[string]interface{})["actions"].([]interface{})
+	require.Equal(t, 2, len(actions))
+	action1 := actions[0].(map[string]interface{})
+	require.Equal(t, "PageViewAction", action1["__typename"].(string))
+	require.Equal(t, actionId1, action1["id"].(string))
+	require.NotNil(t, action1["startedAt"].(string))
+	require.NotNil(t, action1["endedAt"].(string))
+	require.Equal(t, "session1", action1["sessionId"].(string))
+	require.Equal(t, "application1", action1["application"].(string))
+	require.Equal(t, "page1", action1["pageTitle"].(string))
+	require.Equal(t, "http://app-1.ai", action1["pageUrl"].(string))
+	require.Equal(t, float64(1), action1["orderInSession"].(float64))
+	require.Equal(t, float64(10), action1["engagedTime"].(float64))
+
+	action2 := actions[1].(map[string]interface{})
+	require.Equal(t, "PageViewAction", action2["__typename"].(string))
+	require.Equal(t, actionId2, action2["id"].(string))
+	require.NotNil(t, action2["startedAt"].(string))
+	require.NotNil(t, action2["endedAt"].(string))
+	require.Equal(t, "session2", action2["sessionId"].(string))
+	require.Equal(t, "application2", action2["application"].(string))
+	require.Equal(t, "page2", action2["pageTitle"].(string))
+	require.Equal(t, "http://app-2.ai", action2["pageUrl"].(string))
+	require.Equal(t, float64(2), action2["orderInSession"].(float64))
+	require.Equal(t, float64(20), action2["engagedTime"].(float64))
 }
