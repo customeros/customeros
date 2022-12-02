@@ -11,10 +11,10 @@ type DbDrivers struct {
 }
 
 type Repositories struct {
-	Drivers              DbDrivers
-	ContactRepository    ContactRepository
-	PageViewRepository   PageViewRepository
-	ActionItemRepository ActionItemRepository
+	Drivers            DbDrivers
+	ContactRepository  ContactRepository
+	PageViewRepository PageViewRepository
+	ActionRepository   ActionRepository
 }
 
 func InitRepos(driver *neo4j.Driver, db *gorm.DB) *Repositories {
@@ -26,6 +26,6 @@ func InitRepos(driver *neo4j.Driver, db *gorm.DB) *Repositories {
 	}
 	repositories.ContactRepository = NewContactRepository(driver)
 	repositories.PageViewRepository = NewPageViewRepository(db)
-	repositories.ActionItemRepository = NewActionItemRepository(driver)
+	repositories.ActionRepository = NewActionRepository(driver)
 	return &repositories
 }

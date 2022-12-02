@@ -11,9 +11,9 @@ import (
 // It serves as dependency injection for your app, add any dependencies you require here.
 
 type Resolver struct {
-	ServiceContainer *container.ServiceContainer
+	Services *container.Services
 }
 
-func NewResolver(serviceContainer *container.ServiceContainer) *Resolver {
-	return &Resolver{ServiceContainer: serviceContainer}
+func NewResolver(serviceContainer *container.Services) *Resolver {
+	return &Resolver{Services: serviceContainer}
 }

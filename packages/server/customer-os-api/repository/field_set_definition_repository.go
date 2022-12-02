@@ -14,14 +14,14 @@ type FieldSetDefinitionRepository interface {
 }
 
 type fieldSetDefinitionRepository struct {
-	driver *neo4j.Driver
-	repos  *RepositoryContainer
+	driver       *neo4j.Driver
+	repositories *Repositories
 }
 
-func NewFieldSetDefinitionRepository(driver *neo4j.Driver, repos *RepositoryContainer) FieldSetDefinitionRepository {
+func NewFieldSetDefinitionRepository(driver *neo4j.Driver, repositories *Repositories) FieldSetDefinitionRepository {
 	return &fieldSetDefinitionRepository{
-		driver: driver,
-		repos:  repos,
+		driver:       driver,
+		repositories: repositories,
 	}
 }
 
@@ -45,7 +45,7 @@ func (r *fieldSetDefinitionRepository) createFieldSetDefinitionInTx(entityDefId 
 	}
 	fieldSetDefinitionId := utils.GetPropsFromNode(record.Values[0].(dbtype.Node))["id"].(string)
 	for _, v := range entity.CustomFields {
-		err := r.repos.CustomFieldDefinitionRepository.createCustomFieldDefinitionForFieldSetInTx(fieldSetDefinitionId, v, tx)
+		err := r.repositories.CustomFieldDefinitionRepository.createCustomFieldDefinitionForFieldSetInTx(fieldSetDefinitionId, v, tx)
 		if err != nil {
 			return err
 		}

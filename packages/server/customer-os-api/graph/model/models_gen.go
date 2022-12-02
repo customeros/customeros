@@ -551,12 +551,12 @@ type PageViewAction struct {
 	ID             string    `json:"id"`
 	StartedAt      time.Time `json:"startedAt"`
 	EndedAt        time.Time `json:"endedAt"`
-	PageTitle      *string   `json:"pageTitle"`
-	PageURL        *string   `json:"pageUrl"`
+	PageTitle      string    `json:"pageTitle"`
+	PageURL        string    `json:"pageUrl"`
 	Application    string    `json:"application"`
-	OrderInSession int       `json:"orderInSession"`
-	EngagedTime    int       `json:"engagedTime"`
 	SessionID      string    `json:"sessionId"`
+	OrderInSession int64     `json:"orderInSession"`
+	EngagedTime    int64     `json:"engagedTime"`
 }
 
 func (PageViewAction) IsAction() {}

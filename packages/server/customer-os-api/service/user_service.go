@@ -18,14 +18,13 @@ type UserService interface {
 	FindAll(ctx context.Context, page, limit int, filter *model.Filter, sortBy []*model.SortBy) (*utils.Pagination, error)
 	FindContactOwner(ctx context.Context, contactId string) (*entity.UserEntity, error)
 	FindUserById(ctx context.Context, userId string) (*entity.UserEntity, error)
-	getDriver() neo4j.Driver
 }
 
 type userService struct {
-	repository *repository.RepositoryContainer
+	repository *repository.Repositories
 }
 
-func NewUserService(repository *repository.RepositoryContainer) UserService {
+func NewUserService(repository *repository.Repositories) UserService {
 	return &userService{
 		repository: repository,
 	}

@@ -20,10 +20,10 @@ type ConversationService interface {
 }
 
 type conversationService struct {
-	repository *repository.RepositoryContainer
+	repository *repository.Repositories
 }
 
-func NewConversationService(repository *repository.RepositoryContainer) ConversationService {
+func NewConversationService(repository *repository.Repositories) ConversationService {
 	return &conversationService{
 		repository: repository,
 	}

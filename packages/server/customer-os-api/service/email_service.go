@@ -22,10 +22,10 @@ type EmailService interface {
 }
 
 type emailService struct {
-	repository *repository.RepositoryContainer
+	repository *repository.Repositories
 }
 
-func NewEmailService(repository *repository.RepositoryContainer) EmailService {
+func NewEmailService(repository *repository.Repositories) EmailService {
 	return &emailService{
 		repository: repository,
 	}

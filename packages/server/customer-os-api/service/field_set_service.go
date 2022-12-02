@@ -21,10 +21,10 @@ type FieldSetService interface {
 }
 
 type fieldSetService struct {
-	repository *repository.RepositoryContainer
+	repository *repository.Repositories
 }
 
-func NewFieldSetService(repository *repository.RepositoryContainer) FieldSetService {
+func NewFieldSetService(repository *repository.Repositories) FieldSetService {
 	return &fieldSetService{
 		repository: repository,
 	}

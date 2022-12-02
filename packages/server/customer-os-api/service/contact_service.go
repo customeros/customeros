@@ -10,25 +10,18 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils"
 	"reflect"
-	"time"
 )
 
 type ContactService interface {
 	Create(ctx context.Context, contact *ContactCreateData) (*entity.ContactEntity, error)
-
 	Update(ctx context.Context, contactUpdateData *ContactUpdateData) (*entity.ContactEntity, error)
-
 	FindContactById(ctx context.Context, id string) (*entity.ContactEntity, error)
 	FindContactByEmail(ctx context.Context, email string) (*entity.ContactEntity, error)
 	FindContactByPhoneNumber(ctx context.Context, e164 string) (*entity.ContactEntity, error)
-
 	FindAll(ctx context.Context, page, limit int, filter *model.Filter, sortBy []*model.SortBy) (*utils.Pagination, error)
 	FindAllForContactGroup(ctx context.Context, page, limit int, filter *model.Filter, sortBy []*model.SortBy, contactGroupId string) (*utils.Pagination, error)
-
 	HardDelete(ctx context.Context, id string) (bool, error)
 	SoftDelete(ctx context.Context, id string) (bool, error)
-
-	getDriver() neo4j.Driver
 }
 
 type ContactCreateData struct {
@@ -49,21 +42,21 @@ type ContactUpdateData struct {
 }
 
 type contactService struct {
-	repository *repository.RepositoryContainer
+	repositories *repository.Repositories
 }
 
-func NewContactService(repository *repository.RepositoryContainer) ContactService {
+func NewContactService(repositories *repository.Repositories) ContactService {
 	return &contactService{
-		repository: repository,
+		repositories: repositories,
 	}
 }
 
-func (s *contactService) getDriver() neo4j.Driver {
-	return *s.repository.Drivers.Neo4jDriver
+func (s *contactService) getNeo4jDriver() neo4j.Driver {
+	return *s.repositories.Drivers.Neo4jDriver
 }
 
 func (s *contactService) Create(ctx context.Context, newContact *ContactCreateData) (*entity.ContactEntity, error) {
-	session := utils.NewNeo4jWriteSession(s.getDriver())
+	session := utils.NewNeo4jWriteSession(s.getNeo4jDriver())
 	defer session.Close()
 
 	contactDbNode, err := session.WriteTransaction(s.createContactInDBTxWork(ctx, newContact))
@@ -76,34 +69,34 @@ func (s *contactService) Create(ctx context.Context, newContact *ContactCreateDa
 func (s *contactService) createContactInDBTxWork(ctx context.Context, newContact *ContactCreateData) func(tx neo4j.Transaction) (any, error) {
 	return func(tx neo4j.Transaction) (any, error) {
 		tenant := common.GetContext(ctx).Tenant
-		contactDbNode, err := s.repository.ContactRepository.Create(tx, tenant, *newContact.ContactEntity)
+		contactDbNode, err := s.repositories.ContactRepository.Create(tx, tenant, *newContact.ContactEntity)
 		if err != nil {
 			return nil, err
 		}
 		var contactId = utils.GetPropsFromNode(*contactDbNode)["id"].(string)
 
 		if newContact.ContactTypeId != nil {
-			err := s.repository.ContactRepository.LinkWithContactTypeInTx(tx, tenant, contactId, *newContact.ContactTypeId)
+			err := s.repositories.ContactRepository.LinkWithContactTypeInTx(tx, tenant, contactId, *newContact.ContactTypeId)
 			if err != nil {
 				return nil, err
 			}
 		}
 
 		if newContact.DefinitionId != nil {
-			err := s.repository.ContactRepository.LinkWithEntityDefinitionInTx(tx, tenant, contactId, *newContact.DefinitionId)
+			err := s.repositories.ContactRepository.LinkWithEntityDefinitionInTx(tx, tenant, contactId, *newContact.DefinitionId)
 			if err != nil {
 				return nil, err
 			}
 		}
 		if newContact.CustomFields != nil {
 			for _, customField := range *newContact.CustomFields {
-				dbNode, err := s.repository.CustomFieldRepository.MergeCustomFieldToContactInTx(tx, tenant, contactId, &customField)
+				dbNode, err := s.repositories.CustomFieldRepository.MergeCustomFieldToContactInTx(tx, tenant, contactId, &customField)
 				if err != nil {
 					return nil, err
 				}
 				if customField.DefinitionId != nil {
 					var fieldId = utils.GetPropsFromNode(*dbNode)["id"].(string)
-					err := s.repository.CustomFieldRepository.LinkWithCustomFieldDefinitionForContactInTx(tx, fieldId, contactId, *customField.DefinitionId)
+					err := s.repositories.CustomFieldRepository.LinkWithCustomFieldDefinitionForContactInTx(tx, fieldId, contactId, *customField.DefinitionId)
 					if err != nil {
 						return nil, err
 					}
@@ -112,26 +105,26 @@ func (s *contactService) createContactInDBTxWork(ctx context.Context, newContact
 		}
 		if newContact.FieldSets != nil {
 			for _, fieldSet := range *newContact.FieldSets {
-				setDbNode, _, err := s.repository.FieldSetRepository.MergeFieldSetToContactInTx(tx, tenant, contactId, fieldSet)
+				setDbNode, _, err := s.repositories.FieldSetRepository.MergeFieldSetToContactInTx(tx, tenant, contactId, fieldSet)
 				if err != nil {
 					return nil, err
 				}
 				var fieldSetId = utils.GetPropsFromNode(*setDbNode)["id"].(string)
 				if fieldSet.DefinitionId != nil {
-					err := s.repository.FieldSetRepository.LinkWithFieldSetDefinitionInTx(tx, tenant, fieldSetId, *fieldSet.DefinitionId)
+					err := s.repositories.FieldSetRepository.LinkWithFieldSetDefinitionInTx(tx, tenant, fieldSetId, *fieldSet.DefinitionId)
 					if err != nil {
 						return nil, err
 					}
 				}
 				if fieldSet.CustomFields != nil {
 					for _, customField := range *fieldSet.CustomFields {
-						fieldDbNode, err := s.repository.CustomFieldRepository.MergeCustomFieldToFieldSetInTx(tx, tenant, contactId, fieldSetId, &customField)
+						fieldDbNode, err := s.repositories.CustomFieldRepository.MergeCustomFieldToFieldSetInTx(tx, tenant, contactId, fieldSetId, &customField)
 						if err != nil {
 							return nil, err
 						}
 						if customField.DefinitionId != nil {
 							var fieldId = utils.GetPropsFromNode(*fieldDbNode)["id"].(string)
-							err := s.repository.CustomFieldRepository.LinkWithCustomFieldDefinitionForFieldSetInTx(tx, fieldId, fieldSetId, *customField.DefinitionId)
+							err := s.repositories.CustomFieldRepository.LinkWithCustomFieldDefinitionForFieldSetInTx(tx, fieldId, fieldSetId, *customField.DefinitionId)
 							if err != nil {
 								return nil, err
 							}
@@ -153,7 +146,7 @@ func (s *contactService) createContactInDBTxWork(ctx context.Context, newContact
 			}
 		}
 		if newContact.OwnerUserId != nil {
-			err := s.repository.ContactRepository.SetOwner(tx, tenant, contactId, *newContact.OwnerUserId)
+			err := s.repositories.ContactRepository.SetOwner(tx, tenant, contactId, *newContact.OwnerUserId)
 			if err != nil {
 				return nil, err
 			}
@@ -163,7 +156,7 @@ func (s *contactService) createContactInDBTxWork(ctx context.Context, newContact
 }
 
 func (s *contactService) Update(ctx context.Context, contactUpdateData *ContactUpdateData) (*entity.ContactEntity, error) {
-	session := utils.NewNeo4jWriteSession(s.getDriver())
+	session := utils.NewNeo4jWriteSession(s.getNeo4jDriver())
 	defer session.Close()
 
 	contactDbNode, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
@@ -187,23 +180,23 @@ func (s *contactService) Update(ctx context.Context, contactUpdateData *ContactU
 				"notes":     contactUpdateData.ContactEntity.Notes,
 			})
 
-		err = s.repository.ContactRepository.UnlinkFromContactTypesInTx(tx, tenant, contactId)
+		err = s.repositories.ContactRepository.UnlinkFromContactTypesInTx(tx, tenant, contactId)
 		if err != nil {
 			return nil, err
 		}
 		if contactUpdateData.ContactTypeId != nil {
-			err := s.repository.ContactRepository.LinkWithContactTypeInTx(tx, tenant, contactId, *contactUpdateData.ContactTypeId)
+			err := s.repositories.ContactRepository.LinkWithContactTypeInTx(tx, tenant, contactId, *contactUpdateData.ContactTypeId)
 			if err != nil {
 				return nil, err
 			}
 		}
 
-		err = s.repository.ContactRepository.RemoveOwner(tx, tenant, contactId)
+		err = s.repositories.ContactRepository.RemoveOwner(tx, tenant, contactId)
 		if err != nil {
 			return nil, err
 		}
 		if contactUpdateData.OwnerUserId != nil {
-			err := s.repository.ContactRepository.SetOwner(tx, tenant, contactId, *contactUpdateData.OwnerUserId)
+			err := s.repositories.ContactRepository.SetOwner(tx, tenant, contactId, *contactUpdateData.OwnerUserId)
 			if err != nil {
 				return nil, err
 			}
@@ -219,7 +212,7 @@ func (s *contactService) Update(ctx context.Context, contactUpdateData *ContactU
 }
 
 func (s *contactService) HardDelete(ctx context.Context, contactId string) (bool, error) {
-	session := utils.NewNeo4jWriteSession(s.getDriver())
+	session := utils.NewNeo4jWriteSession(s.getNeo4jDriver())
 	defer session.Close()
 
 	queryResult, err := session.WriteTransaction(func(tx neo4j.Transaction) (interface{}, error) {
@@ -245,7 +238,7 @@ func (s *contactService) HardDelete(ctx context.Context, contactId string) (bool
 }
 
 func (s *contactService) SoftDelete(ctx context.Context, contactId string) (bool, error) {
-	session := utils.NewNeo4jWriteSession(s.getDriver())
+	session := utils.NewNeo4jWriteSession(s.getNeo4jDriver())
 	defer session.Close()
 
 	queryResult, err := session.WriteTransaction(func(tx neo4j.Transaction) (interface{}, error) {
@@ -270,7 +263,7 @@ func (s *contactService) SoftDelete(ctx context.Context, contactId string) (bool
 }
 
 func (s *contactService) FindContactById(ctx context.Context, id string) (*entity.ContactEntity, error) {
-	session := utils.NewNeo4jReadSession(s.getDriver())
+	session := utils.NewNeo4jReadSession(s.getNeo4jDriver())
 	defer session.Close()
 
 	queryResult, err := session.ReadTransaction(func(tx neo4j.Transaction) (interface{}, error) {
@@ -294,7 +287,7 @@ func (s *contactService) FindContactById(ctx context.Context, id string) (*entit
 }
 
 func (s *contactService) FindContactByEmail(ctx context.Context, email string) (*entity.ContactEntity, error) {
-	session := utils.NewNeo4jReadSession(s.getDriver())
+	session := utils.NewNeo4jReadSession(s.getNeo4jDriver())
 	defer session.Close()
 
 	queryResult, err := session.ReadTransaction(func(tx neo4j.Transaction) (interface{}, error) {
@@ -320,7 +313,7 @@ func (s *contactService) FindContactByEmail(ctx context.Context, email string) (
 }
 
 func (s *contactService) FindContactByPhoneNumber(ctx context.Context, e164 string) (*entity.ContactEntity, error) {
-	session := utils.NewNeo4jReadSession(s.getDriver())
+	session := utils.NewNeo4jReadSession(s.getNeo4jDriver())
 	defer session.Close()
 
 	queryResult, err := session.ReadTransaction(func(tx neo4j.Transaction) (interface{}, error) {
@@ -346,7 +339,7 @@ func (s *contactService) FindContactByPhoneNumber(ctx context.Context, e164 stri
 }
 
 func (s *contactService) FindAll(ctx context.Context, page, limit int, filter *model.Filter, sortBy []*model.SortBy) (*utils.Pagination, error) {
-	session := utils.NewNeo4jReadSession(s.getDriver())
+	session := utils.NewNeo4jReadSession(s.getNeo4jDriver())
 	defer session.Close()
 
 	var paginatedResult = utils.Pagination{
@@ -362,7 +355,7 @@ func (s *contactService) FindAll(ctx context.Context, page, limit int, filter *m
 		return nil, err
 	}
 
-	dbNodesWithTotalCount, err := s.repository.ContactRepository.GetPaginatedContacts(
+	dbNodesWithTotalCount, err := s.repositories.ContactRepository.GetPaginatedContacts(
 		session,
 		common.GetContext(ctx).Tenant,
 		paginatedResult.GetSkip(),
@@ -384,7 +377,7 @@ func (s *contactService) FindAll(ctx context.Context, page, limit int, filter *m
 }
 
 func (s *contactService) FindAllForContactGroup(ctx context.Context, page, limit int, filter *model.Filter, sortBy []*model.SortBy, contactGroupId string) (*utils.Pagination, error) {
-	session := utils.NewNeo4jReadSession(s.getDriver())
+	session := utils.NewNeo4jReadSession(s.getNeo4jDriver())
 	defer session.Close()
 
 	var paginatedResult = utils.Pagination{
@@ -400,7 +393,7 @@ func (s *contactService) FindAllForContactGroup(ctx context.Context, page, limit
 		return nil, err
 	}
 
-	dbNodesWithTotalCount, err := s.repository.ContactRepository.GetPaginatedContactsForContactGroup(
+	dbNodesWithTotalCount, err := s.repositories.ContactRepository.GetPaginatedContactsForContactGroup(
 		session,
 		common.GetContext(ctx).Tenant,
 		paginatedResult.GetSkip(),
@@ -431,7 +424,7 @@ func (s *contactService) mapDbNodeToContactEntity(dbContactNode *dbtype.Node) *e
 		Label:     utils.GetStringPropOrEmpty(props, "label"),
 		Title:     utils.GetStringPropOrEmpty(props, "title"),
 		Notes:     utils.GetStringPropOrEmpty(props, "notes"),
-		CreatedAt: props["createdAt"].(time.Time),
+		CreatedAt: utils.GetTimePropOrNow(props, "createdAt"),
 	}
 	return &contact
 }

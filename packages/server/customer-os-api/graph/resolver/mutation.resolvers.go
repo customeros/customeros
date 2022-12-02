@@ -14,7 +14,7 @@ import (
 
 // EntityDefinitionCreate is the resolver for the entityDefinitionCreate field.
 func (r *mutationResolver) EntityDefinitionCreate(ctx context.Context, input model.EntityDefinitionInput) (*model.EntityDefinition, error) {
-	entityDefinitionEntity, err := r.ServiceContainer.EntityDefinitionService.Create(ctx, mapper.MapEntityDefinitionInputToEntity(input))
+	entityDefinitionEntity, err := r.Services.EntityDefinitionService.Create(ctx, mapper.MapEntityDefinitionInputToEntity(input))
 	if err != nil {
 		graphql.AddErrorf(ctx, "Failed to create entity definition: %s", input.Name)
 		return nil, err

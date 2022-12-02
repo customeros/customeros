@@ -16,7 +16,7 @@ func (r *queryResolver) CompaniesByNameLike(ctx context.Context, pagination *mod
 	if pagination == nil {
 		pagination = &model.Pagination{Page: 0, Limit: 0}
 	}
-	paginatedResult, err := r.ServiceContainer.CompanyService.FindCompaniesByNameLike(ctx, pagination.Page, pagination.Limit, companyName)
+	paginatedResult, err := r.Services.CompanyService.FindCompaniesByNameLike(ctx, pagination.Page, pagination.Limit, companyName)
 	return &model.CompanyPage{
 		Content:       mapper.MapEntitiesToCompanies(paginatedResult.Rows.(*entity.CompanyEntities)),
 		TotalPages:    paginatedResult.TotalPages,

@@ -58,7 +58,7 @@ func main() {
 
 			if result == 0 {
 				timeout := time.Second * time.Duration(cfg.TimeoutAfterTaskRun)
-				log.Printf("Waiting %v seconds before next run", timeout.Seconds())
+				log.Printf("waiting %v seconds before next run", timeout.Seconds())
 				time.Sleep(timeout)
 			}
 		})

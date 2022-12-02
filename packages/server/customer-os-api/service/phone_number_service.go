@@ -22,10 +22,10 @@ type PhoneNumberService interface {
 }
 
 type phoneNumberService struct {
-	repository *repository.RepositoryContainer
+	repository *repository.Repositories
 }
 
-func NewPhoneNumberService(repository *repository.RepositoryContainer) PhoneNumberService {
+func NewPhoneNumberService(repository *repository.Repositories) PhoneNumberService {
 	return &phoneNumberService{
 		repository: repository,
 	}

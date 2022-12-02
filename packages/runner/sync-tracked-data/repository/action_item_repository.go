@@ -5,21 +5,21 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-tracked-data/entity"
 )
 
-type ActionItemRepository interface {
-	CreatePageViewActionItem(contactId string, pv entity.PageView) error
+type ActionRepository interface {
+	CreatePageViewAction(contactId string, pv entity.PageView) error
 }
 
-type actionItemRepository struct {
+type actionRepository struct {
 	driver *neo4j.Driver
 }
 
-func NewActionItemRepository(driver *neo4j.Driver) ActionItemRepository {
-	return &actionItemRepository{
+func NewActionRepository(driver *neo4j.Driver) ActionRepository {
+	return &actionRepository{
 		driver: driver,
 	}
 }
 
-func (r *actionItemRepository) CreatePageViewActionItem(contactId string, pv entity.PageView) error {
+func (r *actionRepository) CreatePageViewAction(contactId string, pv entity.PageView) error {
 	session := (*r.driver).NewSession(
 		neo4j.SessionConfig{
 			AccessMode: neo4j.AccessModeWrite,
@@ -41,7 +41,7 @@ func (r *actionItemRepository) CreatePageViewActionItem(contactId string, pv ent
 		"engagedTime":    pv.EngagedTime,
 	}
 	query := "MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant}) " +
-		" MERGE (c)-[:HAS_ACTION]->(a:ActionItem:PageViewAction {id:$pvId, trackerName:$trackerName})" +
+		" MERGE (c)-[:HAS_ACTION]->(a:Action:PageViewAction {id:$pvId, trackerName:$trackerName})" +
 		" ON CREATE SET " +
 		" a.startedAt=$start, " +
 		" a.endedAt=$end, " +

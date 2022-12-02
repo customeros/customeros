@@ -14,19 +14,16 @@ type CompanyRepository interface {
 	DeleteCompanyPositionInTx(tx neo4j.Transaction, tenant, contactId, companyPositionId string) error
 	GetCompanyPositionsForContact(session neo4j.Session, tenant, contactId string) ([]*CompanyWithPositionNode, error)
 	GetCompanyPositionForContact(session neo4j.Session, tenant, contactId, companyPositionId string) (*CompanyWithPositionNode, error)
-
 	GetPaginatedCompaniesWithNameLike(tenant, companyName string, skip, limit int) (*utils.DbNodesWithTotalCount, error)
 }
 
 type companyRepository struct {
 	driver *neo4j.Driver
-	repos  *RepositoryContainer
 }
 
-func NewCompanyRepository(driver *neo4j.Driver, repos *RepositoryContainer) CompanyRepository {
+func NewCompanyRepository(driver *neo4j.Driver) CompanyRepository {
 	return &companyRepository{
 		driver: driver,
-		repos:  repos,
 	}
 }
 
@@ -75,9 +72,6 @@ func (r *companyRepository) LinkExistingCompanyToContactInTx(tx neo4j.Transactio
 }
 
 func (r *companyRepository) UpdateCompanyPositionInTx(tx neo4j.Transaction, tenant, contactId, companyPositionId, jobTitle string) (*dbtype.Node, *dbtype.Relationship, error) {
-	session := utils.NewNeo4jWriteSession(*r.driver)
-	defer session.Close()
-
 	queryResult, err := tx.Run(`
 			MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant}),
 				  (c)-[r:WORKS_AT {id:$companyPositionId}]->(co:Company)

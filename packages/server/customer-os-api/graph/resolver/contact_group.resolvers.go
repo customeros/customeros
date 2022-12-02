@@ -18,7 +18,7 @@ func (r *contactGroupResolver) Contacts(ctx context.Context, obj *model.ContactG
 	if pagination == nil {
 		pagination = &model.Pagination{Page: 0, Limit: 0}
 	}
-	paginatedResult, err := r.ServiceContainer.ContactService.FindAllForContactGroup(ctx, pagination.Page, pagination.Limit, where, sort, obj.ID)
+	paginatedResult, err := r.Services.ContactService.FindAllForContactGroup(ctx, pagination.Page, pagination.Limit, where, sort, obj.ID)
 	return &model.ContactsPage{
 		Content:       mapper.MapEntitiesToContacts(paginatedResult.Rows.(*entity.ContactEntities)),
 		TotalPages:    paginatedResult.TotalPages,
@@ -28,7 +28,7 @@ func (r *contactGroupResolver) Contacts(ctx context.Context, obj *model.ContactG
 
 // ContactGroupCreate is the resolver for the contactGroupCreate field.
 func (r *mutationResolver) ContactGroupCreate(ctx context.Context, input model.ContactGroupInput) (*model.ContactGroup, error) {
-	contactGroupEntityCreated, err := r.ServiceContainer.ContactGroupService.Create(ctx, &entity.ContactGroupEntity{
+	contactGroupEntityCreated, err := r.Services.ContactGroupService.Create(ctx, &entity.ContactGroupEntity{
 		Name: input.Name,
 	})
 	if err != nil {
@@ -40,7 +40,7 @@ func (r *mutationResolver) ContactGroupCreate(ctx context.Context, input model.C
 
 // ContactGroupUpdate is the resolver for the contactGroupUpdate field.
 func (r *mutationResolver) ContactGroupUpdate(ctx context.Context, input model.ContactGroupUpdateInput) (*model.ContactGroup, error) {
-	updatedContactGroup, err := r.ServiceContainer.ContactGroupService.Update(ctx, &entity.ContactGroupEntity{
+	updatedContactGroup, err := r.Services.ContactGroupService.Update(ctx, &entity.ContactGroupEntity{
 		Id:   input.ID,
 		Name: input.Name,
 	})
@@ -53,7 +53,7 @@ func (r *mutationResolver) ContactGroupUpdate(ctx context.Context, input model.C
 
 // ContactGroupDeleteAndUnlinkAllContacts is the resolver for the contactGroupDeleteAndUnlinkAllContacts field.
 func (r *mutationResolver) ContactGroupDeleteAndUnlinkAllContacts(ctx context.Context, id string) (*model.Result, error) {
-	result, err := r.ServiceContainer.ContactGroupService.Delete(ctx, id)
+	result, err := r.Services.ContactGroupService.Delete(ctx, id)
 	if err != nil {
 		graphql.AddErrorf(ctx, "Could not delete contact group %s", id)
 		return nil, err
@@ -65,7 +65,7 @@ func (r *mutationResolver) ContactGroupDeleteAndUnlinkAllContacts(ctx context.Co
 
 // ContactGroupAddContact is the resolver for the contactGroupAddContact field.
 func (r *mutationResolver) ContactGroupAddContact(ctx context.Context, contactID string, groupID string) (*model.Result, error) {
-	result, err := r.ServiceContainer.ContactGroupService.AddContactToGroup(ctx, contactID, groupID)
+	result, err := r.Services.ContactGroupService.AddContactToGroup(ctx, contactID, groupID)
 	if err != nil {
 		graphql.AddErrorf(ctx, "Could not add contact to group")
 		return nil, err
@@ -77,7 +77,7 @@ func (r *mutationResolver) ContactGroupAddContact(ctx context.Context, contactID
 
 // ContactGroupRemoveContact is the resolver for the contactGroupRemoveContact field.
 func (r *mutationResolver) ContactGroupRemoveContact(ctx context.Context, contactID string, groupID string) (*model.Result, error) {
-	result, err := r.ServiceContainer.ContactGroupService.RemoveContactFromGroup(ctx, contactID, groupID)
+	result, err := r.Services.ContactGroupService.RemoveContactFromGroup(ctx, contactID, groupID)
 	if err != nil {
 		graphql.AddErrorf(ctx, "Could not remove contact from group")
 		return nil, err
@@ -89,7 +89,7 @@ func (r *mutationResolver) ContactGroupRemoveContact(ctx context.Context, contac
 
 // ContactGroup is the resolver for the contactGroup field.
 func (r *queryResolver) ContactGroup(ctx context.Context, id string) (*model.ContactGroup, error) {
-	contactGroupEntity, err := r.ServiceContainer.ContactGroupService.FindContactGroupById(ctx, id)
+	contactGroupEntity, err := r.Services.ContactGroupService.FindContactGroupById(ctx, id)
 	return mapper.MapEntityToContactGroup(contactGroupEntity), err
 }
 
@@ -98,7 +98,7 @@ func (r *queryResolver) ContactGroups(ctx context.Context, pagination *model.Pag
 	if pagination == nil {
 		pagination = &model.Pagination{Page: 0, Limit: 0}
 	}
-	paginatedResult, err := r.ServiceContainer.ContactGroupService.FindAll(ctx, pagination.Page, pagination.Limit, where, sort)
+	paginatedResult, err := r.Services.ContactGroupService.FindAll(ctx, pagination.Page, pagination.Limit, where, sort)
 	if err != nil {
 		graphql.AddErrorf(ctx, "Could not fetch contact groups")
 		return nil, err
