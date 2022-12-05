@@ -14,72 +14,67 @@ export default function Header() {
       <noscript>
         <style>{`.nojs-show { opacity: 1; top: 0; }`}</style>
       </noscript>
-      <div className={styles.signedInStatus}>
-        <p
-          className={`nojs-show ${
-            !session && loading ? styles.loading : styles.loaded
-          }`}
-        >
-          {!session && (
-            <>
-              <span className={styles.notSignedInText}>
-                You are not signed in
-              </span>
-              <a
-                href={`/api/auth/signin`}
-                className={styles.buttonPrimary}
-                onClick={(e) => {
-                  e.preventDefault()
-                  signIn()
-                }}
-              >
-                Sign in
-              </a>
-            </>
-          )}
-          {session?.user && (
-            <>
-              {session.user.image && (
-                <span
-                  style={{ backgroundImage: `url('${session.user.image}')` }}
-                  className={styles.avatar}
-                />
-              )}
-              <span className={styles.signedInText}>
-                <small>Signed in as</small>
-                <br />
-                <strong>{session.user.email ?? session.user.name}</strong>
-              </span>
-              <a
-                href={`/api/auth/signout`}
-                className={styles.button}
-                onClick={(e) => {
-                  e.preventDefault()
-                  signOut()
-                }}
-              >
-                Sign out
-              </a>
-            </>
-          )}
-        </p>
-      </div>
-      <nav>
-        <ul className={styles.navItems}>
-          <li className={styles.navItem}>
-            <Link href="/">Home</Link>
-          </li>
-          <li className={styles.navItem}>
-            <Link href="/client">Client</Link>
-          </li>
-          <li className={styles.navItem}>
-            <Link href="/server">Server</Link>
-          </li>
-          <li className={styles.navItem}>
-            <Link href="/protected">Protected</Link>
-          </li>
-        </ul>
-      </nav>
+
+        <nav className="navbar navbar--fixed-top">
+            <div className="navbar__inner">
+                <div className="navbar__items">
+                    <button aria-label="Toggle navigation bar" aria-expanded="false"
+                            className="navbar__toggle clean-btn" type="button">
+                        <svg width="30" height="30" viewBox="0 0 30 30" aria-hidden="true">
+                            <path stroke="currentColor" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"
+                                  d="M4 7h22M4 15h22M4 23h22"></path>
+                        </svg>
+                    </button>
+                    <a className="navbar__brand" target="_self" href="/">
+                        <div className="navbar__logo">
+                            <img src="../static/img/OpenlineLogoLightMode.svg" alt="Openline Logo" className="themedImage_ToTc themedImage--light_HNdA" />
+                        </div>
+                        <b className="navbar__title text--truncate">Openline</b></a>
+                    <div className="navbar__item dropdown dropdown--hoverable"><a href="#" aria-haspopup="true"
+                                                                                  aria-expanded="false" role="button"
+                                                                                  className="navbar__link">Developers</a>
+                        <ul className="dropdown__menu">
+                            <li><a className="dropdown__link" href="https://openline.ai/docs">Guides</a></li>
+                            <li><a className="dropdown__link" href="https://openline.ai//docs/reference">API reference</a></li>
+                            <li><a className="dropdown__link" href="https://openline.ai//docs/contribute">Community contributions</a></li>
+                        </ul>
+                    </div>
+                    <a className="navbar__item navbar__link" href="https://openline.ai/blog">Blog</a></div>
+                <div className="navbar__items navbar__items--right">
+                    <div className="button">
+                            {!session && (
+                                <>
+                                    <a href={`/api/auth/signin`}
+                                        onClick={(e) => {
+                                            e.preventDefault()
+                                            signIn()
+                                        }}
+                                    >
+                                        Sign in
+                                    </a>
+                                </>
+                            )}
+                            {session?.user && (
+                                <>
+                                    <a
+                                        href={`/api/auth/signout`}
+                                        onClick={(e) => {
+                                            e.preventDefault()
+                                            signOut()
+                                        }}
+                                    >
+                                        Sign out
+                                    </a>
+                                </>
+                            )}
+                    </div>
+                </div>
+            </div>
+            <div role="presentation" className="navbar-sidebar__backdrop"></div>
+
+
+
+        </nav>
     </header>
   )
 }
