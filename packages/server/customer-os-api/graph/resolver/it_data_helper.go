@@ -361,6 +361,36 @@ func createConversation(driver *neo4j.Driver, userId, contactId string) string {
 	return conversationId.String()
 }
 
+func createPageViewAction(driver *neo4j.Driver, contactId string, actionEntity entity.PageViewActionEntity) string {
+	var actionId, _ = uuid.NewRandom()
+	query := `MATCH (c:Contact {id:$contactId})
+			MERGE (c)-[:HAS_ACTION]->(a:Action:PageViewAction {id:$actionId})
+			ON CREATE SET
+				a.trackerName=$trackerName,
+				a.startedAt=$startedAt,
+				a.endedAt=$endedAt,
+				a.application=$application,
+				a.pageUrl=$pageUrl,
+				a.pageTitle=$pageTitle,
+				a.sessionId=$sessionId,
+				a.orderInSession=$orderInSession,
+				a.engagedTime=$engagedTime`
+	integration_tests.ExecuteWriteQuery(driver, query, map[string]any{
+		"contactId":      contactId,
+		"actionId":       actionId.String(),
+		"trackerName":    actionEntity.TrackerName,
+		"startedAt":      actionEntity.StartedAt,
+		"endedAt":        actionEntity.EndedAt,
+		"application":    actionEntity.Application,
+		"pageUrl":        actionEntity.PageUrl,
+		"pageTitle":      actionEntity.PageTitle,
+		"sessionId":      actionEntity.SessionId,
+		"orderInSession": actionEntity.OrderInSession,
+		"engagedTime":    actionEntity.EngagedTime,
+	})
+	return actionId.String()
+}
+
 func getCountOfNodes(driver *neo4j.Driver, nodeLabel string) int {
 	query := fmt.Sprintf(`MATCH (n:%s) RETURN count(n)`, nodeLabel)
 	result := integration_tests.ExecuteReadQueryWithSingleReturn(driver, query, map[string]any{})
