@@ -265,7 +265,7 @@ func (s *messageService) SaveMessage(ctx context.Context, message *pb.Message) (
 					id:        contactId,
 				}
 				if err != nil {
-					log.Printf("Unable to create contact! %v", err)
+					log.Printf("Unable to create contact! %s", err.Error())
 					return nil, err
 				}
 			}
@@ -294,7 +294,7 @@ func (s *messageService) SaveMessage(ctx context.Context, message *pb.Message) (
 		// can only reach here if message.Contact is nil & the contactId found in neo4j doesn't match a message any feed
 		se, _ := status.FromError(err)
 		if se.Code() != codes.Unknown {
-			return nil, status.Errorf(se.Code(), "Error upserting Feed")
+			return nil, status.Errorf(se.Code(), "Error upserting Feed: %s", err.Error())
 		} else {
 			feed, err = s.client.MessageFeed.
 				Create().
@@ -304,7 +304,7 @@ func (s *messageService) SaveMessage(ctx context.Context, message *pb.Message) (
 				Save(ctx)
 			if err != nil {
 				se, _ = status.FromError(err)
-				return nil, status.Errorf(se.Code(), "Error inserting new Feed")
+				return nil, status.Errorf(se.Code(), "Error inserting new Feed %s", err.Error())
 			}
 
 			conv, err := createConversation(s.graphqlClient, s.config.Identity.DefaultUserId, contact.id, feed.ID)
@@ -337,7 +337,7 @@ func (s *messageService) SaveMessage(ctx context.Context, message *pb.Message) (
 
 	if err != nil {
 		se, _ := status.FromError(err)
-		return nil, status.Errorf(se.Code(), "Error inserting message")
+		return nil, status.Errorf(se.Code(), "Error inserting message: %s", err.Error())
 	}
 
 	if t == nil {
@@ -376,6 +376,7 @@ func (s *messageService) GetMessage(ctx context.Context, msg *pb.Message) (*pb.M
 		se, _ := status.FromError(err)
 		return nil, status.Errorf(se.Code(), "Error finding Feed")
 	}
+	msgId := int64(mf.ID)
 	m := &pb.Message{
 		Type:      decodeType(mi.Type),
 		Message:   mi.Message,
@@ -384,7 +385,7 @@ func (s *messageService) GetMessage(ctx context.Context, msg *pb.Message) (*pb.M
 		Username:  mi.Username,
 		Id:        msg.Id,
 		Time:      timestamppb.New(mi.Time),
-		Contact:   &pb.Contact{ContactId: mf.ContactId, FirstName: mf.FirstName, LastName: mf.LastName},
+		Contact:   &pb.Contact{ContactId: mf.ContactId, Id: &msgId, FirstName: mf.FirstName, LastName: mf.LastName},
 	}
 	return m, nil
 }
@@ -414,16 +415,21 @@ func (s *messageService) GetMessages(ctx context.Context, pc *pb.PagedContact) (
 		}
 	}
 
-	if pageInfo.Before == nil {
+	limit := 100 // default to 100 if no pagination is specified
+	if pageInfo != nil {
+		limit = int(pageInfo.PageSize)
+	}
+
+	if pageInfo == nil || pageInfo.Before == nil {
 		messages, err = s.client.MessageFeed.QueryMessageItem(mf).
 			Order(gen.Desc(messageitem.FieldTime)).
-			Limit(int(pageInfo.PageSize)).
+			Limit(limit).
 			All(ctx)
 	} else {
 		messages, err = s.client.MessageFeed.QueryMessageItem(mf).
 			Order(gen.Desc(messageitem.FieldTime)).
 			Where(messageitem.TimeLT(pageInfo.Before.AsTime())).
-			Limit(int(pageInfo.PageSize)).
+			Limit(limit).
 			All(ctx)
 	}
 
@@ -436,6 +442,8 @@ func (s *messageService) GetMessages(ctx context.Context, pc *pb.PagedContact) (
 	for i, j := len(messages)-1, 0; i >= 0; i, j = i-1, j+1 {
 		message := messages[i]
 		var id int64 = int64(message.ID)
+		var mfid int64 = int64(mf.ID)
+
 		mi := &pb.Message{
 			Type:      decodeType(message.Type),
 			Message:   message.Message,
@@ -444,7 +452,7 @@ func (s *messageService) GetMessages(ctx context.Context, pc *pb.PagedContact) (
 			Username:  message.Username,
 			Id:        &id,
 			Time:      timestamppb.New(message.Time),
-			Contact:   &pb.Contact{ContactId: contact.ContactId},
+			Contact:   &pb.Contact{ContactId: mf.ContactId, Id: &mfid},
 		}
 		ml.Message[j] = mi
 	}
@@ -455,7 +463,7 @@ func (s *messageService) GetFeeds(ctx context.Context, _ *pb.Empty) (*pb.FeedLis
 	contacts, err := s.client.MessageFeed.Query().All(ctx)
 	if err != nil {
 		se, _ := status.FromError(err)
-		return nil, status.Errorf(se.Code(), "Error getting messages")
+		return nil, status.Errorf(se.Code(), "Error getting messages: %s", err.Error())
 	}
 	fl := &pb.FeedList{Contact: make([]*pb.Contact, len(contacts))}
 
@@ -496,13 +504,13 @@ func (s *messageService) GetFeed(ctx context.Context, contact *pb.Contact) (*pb.
 			First(ctx)
 		if err != nil {
 			se, _ := status.FromError(err)
-			return nil, status.Errorf(se.Code(), "Error finding Feed")
+			return nil, status.Errorf(se.Code(), "Error finding Feed: %s", err.Error())
 		}
 		var id int64 = int64(mf.ID)
 		contactInfo, err := getContactById(s.graphqlClient, mf.ContactId)
 		if err != nil {
 			se, _ := status.FromError(err)
-			return nil, status.Errorf(se.Code(), "Error resolving contact")
+			return nil, status.Errorf(se.Code(), "Error resolving contact: %s", err.Error())
 		}
 		return &pb.Contact{FirstName: contactInfo.firstName, LastName: contactInfo.lastName, Phone: contactInfo.phone, Email: contactInfo.email, ContactId: mf.ContactId, Id: &id}, nil
 	}

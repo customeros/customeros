@@ -4,32 +4,915 @@ import (
 	"context"
 	"github.com/gin-gonic/gin"
 	"github.com/machinebox/graphql"
+	_ "github.com/mattn/go-sqlite3"
+	c "github.com/openline-ai/openline-customer-os/packages/server/message-store/config"
+	"github.com/openline-ai/openline-customer-os/packages/server/message-store/gen"
+	"github.com/openline-ai/openline-customer-os/packages/server/message-store/gen/enttest"
+	"github.com/openline-ai/openline-customer-os/packages/server/message-store/gen/messageitem"
+	"github.com/openline-ai/openline-customer-os/packages/server/message-store/gen/proto"
 	"github.com/openline-ai/openline-customer-os/packages/server/message-store/test/graph"
 	"github.com/openline-ai/openline-customer-os/packages/server/message-store/test/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/message-store/test/graph/resolver"
 	"github.com/stretchr/testify/assert"
+	"google.golang.org/grpc"
 	"google.golang.org/grpc/status"
+	"google.golang.org/grpc/test/bufconn"
+	"google.golang.org/protobuf/types/known/timestamppb"
 	"log"
+	"net"
 	"net/http/httptest"
 	"testing"
 	"time"
 )
 
 var graphqlClient *graphql.Client
+var messageStoreService *messageService
 
-func NewWebServer(t *testing.T) (*httptest.Server, *graphql.Client, *resolver.Resolver) {
+func NewWebServer(t *testing.T) (*httptest.Server, *graphql.Client, *resolver.Resolver, *gen.Client) {
 	router := gin.Default()
 	server := httptest.NewServer(router)
 	handler, resolver := graph.GraphqlHandler()
 	router.POST("/query", handler)
-
+	dbClient := enttest.Open(t, "sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
 	graphqlClient = graphql.NewClient(server.URL + "/query")
 
+	conf := c.Config{}
+	conf.Identity.DefaultUserId = "agentsmith"
+	messageStoreService = NewMessageService(dbClient, graphqlClient, &conf)
 	t.Cleanup(func() {
 		log.Printf("Shutting down webserver")
 		server.Close()
+		dbClient.Close()
 	})
-	return server, graphqlClient, resolver
+	return server, graphqlClient, resolver, dbClient
+}
+func messageStoreDialer() (*grpc.ClientConn, error) {
+	listener := bufconn.Listen(1024 * 1024)
+
+	server := grpc.NewServer()
+
+	proto.RegisterMessageStoreServiceServer(server, messageStoreService)
+
+	go func() {
+		if err := server.Serve(listener); err != nil {
+			log.Fatal(err)
+		}
+	}()
+
+	dialFunc := func(context.Context, string) (net.Conn, error) {
+		return listener.Dial()
+	}
+	ctx := context.Background()
+	return grpc.DialContext(ctx, "", grpc.WithInsecure(), grpc.WithContextDialer(dialFunc))
+}
+
+func Test_SaveMessageNewContact(t *testing.T) {
+	_, _, resolver, dbClient := NewWebServer(t)
+	grpcConn, err := messageStoreDialer()
+	createCalled := false
+	createConversationCalled := false
+
+	if err != nil {
+		t.Fatalf("Unable to make GRPC service, %s", err.Error())
+	}
+
+	ctx := context.Background()
+
+	resolver.GetContactByEmail = func(ctx context.Context, id string) (*model.Contact, error) {
+		if !assert.Equal(t, id, "x@x.org") {
+			return nil, status.Error(500, "Unexpected email address")
+		}
+		return nil, status.Error(404, "Address Not Found")
+	}
+	resolver.ContactCreate = func(ctx context.Context, input model.ContactInput) (*model.Contact, error) {
+		createCalled = true
+		if !assert.Equal(t, input.FirstName, "Torrey") {
+			return nil, status.Error(500, "Unknown Firstname")
+		}
+		if !assert.Equal(t, input.LastName, "Searle") {
+			return nil, status.Error(500, "Unknown Firstname")
+		}
+		if !assert.Equal(t, input.Email.Email, "x@x.org") {
+			return nil, status.Error(500, "Email")
+		}
+		return &model.Contact{
+			FirstName: "Torrey",
+			LastName:  "Searle",
+			ID:        "12345678",
+		}, nil
+	}
+	resolver.ConversationCreate = func(ctx context.Context, input model.ConversationInput) (*model.Conversation, error) {
+		log.Print("Inside Conversation Create!")
+		createConversationCalled = true
+		if !assert.Equal(t, input.UserID, "agentsmith") {
+			return nil, status.Error(500, "Unknown userid")
+		}
+		if !assert.Equal(t, input.ContactID, "12345678") {
+			return nil, status.Error(500, "Unknown ContactID")
+		}
+		return &model.Conversation{
+			ID:        "7",
+			Contact:   &model.Contact{ID: "12345678", FirstName: "Torrey", LastName: "Searle"},
+			StartedAt: time.Now(),
+			User:      &model.User{ID: "agentsmith", FirstName: "Agent", LastName: "Smith"},
+		}, nil
+	}
+
+	grpcClient := proto.NewMessageStoreServiceClient(grpcConn)
+
+	result, err := grpcClient.SaveMessage(ctx, &proto.Message{Message: "Hello Torrey",
+		Direction: proto.MessageDirection_INBOUND,
+		Channel:   proto.MessageChannel_WIDGET,
+		Type:      proto.MessageType_MESSAGE,
+		Username:  "Torrey Searle <x@x.org>"})
+	if err != nil {
+		t.Fatalf("Error getting message: %s", err.Error())
+	}
+	log.Printf("Message saved with ID %d", *result.Id)
+
+	mi, err := dbClient.MessageItem.Get(ctx, int(*result.Id))
+
+	if err != nil {
+		t.Fatalf("Error finding Message %s", err.Error())
+	}
+	mf, err := dbClient.MessageItem.QueryMessageFeed(mi).First(ctx)
+
+	assert.True(t, createCalled)
+	assert.True(t, createConversationCalled)
+	assert.Equal(t, mi.Message, "Hello Torrey")
+	assert.Equal(t, mi.Direction, messageitem.DirectionINBOUND)
+	assert.Equal(t, mi.Channel, messageitem.ChannelCHAT)
+	assert.Equal(t, mi.Type, messageitem.TypeMESSAGE)
+	assert.Equal(t, mi.Username, "Torrey Searle <x@x.org>")
+	assert.Equal(t, mf.ContactId, "12345678")
+}
+
+func Test_SaveMessageMissingGraphContact(t *testing.T) {
+	_, _, resolver, dbClient := NewWebServer(t)
+	grpcConn, err := messageStoreDialer()
+	createCalled := false
+
+	if err != nil {
+		t.Fatalf("Unable to make GRPC service, %s", err.Error())
+	}
+
+	ctx := context.Background()
+
+	feed1, err := dbClient.MessageFeed.
+		Create().
+		SetFirstName("Torrey").
+		SetLastName("Searle").
+		SetContactId("12345678").
+		Save(ctx)
+	if err != nil {
+		t.Fatalf("Error inserting new Feed: %s", err.Error())
+	}
+
+	_, err = dbClient.MessageFeed.
+		Create().
+		SetFirstName("Echo").
+		SetLastName("Test").
+		SetContactId("echotest").
+		Save(ctx)
+	if err != nil {
+		t.Fatalf("Error inserting new Feed: %s", err.Error())
+	}
+	resolver.GetContactByEmail = func(ctx context.Context, id string) (*model.Contact, error) {
+		if !assert.Equal(t, id, "x@x.org") {
+			return nil, status.Error(500, "Unexpected email address")
+		}
+		return nil, status.Error(404, "Address Not Found")
+	}
+	resolver.ContactCreate = func(ctx context.Context, input model.ContactInput) (*model.Contact, error) {
+		createCalled = true
+		if !assert.Equal(t, input.FirstName, "Torrey") {
+			return nil, status.Error(500, "Unknown Firstname")
+		}
+		if !assert.Equal(t, input.LastName, "Searle") {
+			return nil, status.Error(500, "Unknown Firstname")
+		}
+		if !assert.Equal(t, input.Email.Email, "x@x.org") {
+			return nil, status.Error(500, "Email")
+		}
+		return &model.Contact{
+			FirstName: "Torrey",
+			LastName:  "Searle",
+			ID:        "12345678",
+		}, nil
+	}
+
+	grpcClient := proto.NewMessageStoreServiceClient(grpcConn)
+
+	result, err := grpcClient.SaveMessage(ctx, &proto.Message{Message: "Hello Torrey",
+		Direction: proto.MessageDirection_INBOUND,
+		Channel:   proto.MessageChannel_WIDGET,
+		Type:      proto.MessageType_MESSAGE,
+		Username:  "Torrey Searle <x@x.org>"})
+	if err != nil {
+		t.Fatalf("Error getting message: %s", err.Error())
+	}
+	log.Printf("Message saved with ID %d", *result.Id)
+
+	mi, err := dbClient.MessageItem.Get(ctx, int(*result.Id))
+
+	if err != nil {
+		t.Fatalf("Error finding Message %s", err.Error())
+	}
+	mf, err := dbClient.MessageItem.QueryMessageFeed(mi).First(ctx)
+
+	assert.True(t, createCalled)
+	assert.Equal(t, mi.Message, "Hello Torrey")
+	assert.Equal(t, mi.Direction, messageitem.DirectionINBOUND)
+	assert.Equal(t, mi.Channel, messageitem.ChannelCHAT)
+	assert.Equal(t, mi.Type, messageitem.TypeMESSAGE)
+	assert.Equal(t, mi.Username, "Torrey Searle <x@x.org>")
+	assert.Equal(t, mf.ID, feed1.ID)
+	assert.Equal(t, mf.ContactId, "12345678")
+}
+
+func Test_SaveMessageExistingContact(t *testing.T) {
+	_, _, resolver, dbClient := NewWebServer(t)
+	grpcConn, err := messageStoreDialer()
+
+	if err != nil {
+		t.Fatalf("Unable to make GRPC service, %s", err.Error())
+	}
+
+	ctx := context.Background()
+
+	feed1, err := dbClient.MessageFeed.
+		Create().
+		SetFirstName("Torrey").
+		SetLastName("Searle").
+		SetContactId("12345678").
+		Save(ctx)
+	if err != nil {
+		t.Fatalf("Error inserting new Feed: %s", err.Error())
+	}
+
+	_, err = dbClient.MessageFeed.
+		Create().
+		SetFirstName("Echo").
+		SetLastName("Test").
+		SetContactId("echotest").
+		Save(ctx)
+	if err != nil {
+		t.Fatalf("Error inserting new Feed: %s", err.Error())
+	}
+	resolver.GetContactByEmail = func(ctx context.Context, id string) (*model.Contact, error) {
+		if !assert.Equal(t, id, "x@x.org") {
+			return nil, status.Error(500, "Unexpected email address")
+		}
+		return &model.Contact{ID: "12345678", FirstName: "Torrey", LastName: "Searle"}, nil
+	}
+
+	grpcClient := proto.NewMessageStoreServiceClient(grpcConn)
+
+	result, err := grpcClient.SaveMessage(ctx, &proto.Message{Message: "Hello Torrey",
+		Direction: proto.MessageDirection_INBOUND,
+		Channel:   proto.MessageChannel_WIDGET,
+		Type:      proto.MessageType_MESSAGE,
+		Username:  "Torrey Searle <x@x.org>"})
+	if err != nil {
+		t.Fatalf("Error getting message: %s", err.Error())
+	}
+	log.Printf("Message saved with ID %d", *result.Id)
+
+	mi, err := dbClient.MessageItem.Get(ctx, int(*result.Id))
+
+	if err != nil {
+		t.Fatalf("Error finding Message %s", err.Error())
+	}
+	mf, err := dbClient.MessageItem.QueryMessageFeed(mi).First(ctx)
+
+	assert.Equal(t, mi.Message, "Hello Torrey")
+	assert.Equal(t, mi.Direction, messageitem.DirectionINBOUND)
+	assert.Equal(t, mi.Channel, messageitem.ChannelCHAT)
+	assert.Equal(t, mi.Type, messageitem.TypeMESSAGE)
+	assert.Equal(t, mi.Username, "Torrey Searle <x@x.org>")
+	assert.Equal(t, mf.ID, feed1.ID)
+	assert.Equal(t, mf.ContactId, "12345678")
+}
+
+func Test_SaveMessageSpecifiedContact(t *testing.T) {
+	_, _, resolver, dbClient := NewWebServer(t)
+	grpcConn, err := messageStoreDialer()
+
+	if err != nil {
+		t.Fatalf("Unable to make GRPC service, %s", err.Error())
+	}
+
+	ctx := context.Background()
+
+	feed1, err := dbClient.MessageFeed.
+		Create().
+		SetFirstName("Torrey").
+		SetLastName("Searle").
+		SetContactId("12345678").
+		Save(ctx)
+	if err != nil {
+		t.Fatalf("Error inserting new Feed: %s", err.Error())
+	}
+
+	id := int64(feed1.ID)
+
+	_, err = dbClient.MessageFeed.
+		Create().
+		SetFirstName("Echo").
+		SetLastName("Test").
+		SetContactId("echotest").
+		Save(ctx)
+	if err != nil {
+		t.Fatalf("Error inserting new Feed: %s", err.Error())
+	}
+
+	resolver.GetContactById = func(ctx context.Context, id string) (*model.Contact, error) {
+		if id == "12345678" {
+			return &model.Contact{
+				ID:        id,
+				FirstName: "Torrey",
+				LastName:  "Searle",
+			}, nil
+		} else if id == "echotest" {
+			return nil, status.Error(404, "id not found")
+		} else {
+			t.Errorf("Unexpected ID %s", id)
+			return nil, status.Error(500, "id incorrect")
+
+		}
+	}
+	resolver.PhoneNumbersByContact = func(ctx context.Context, obj *model.Contact) ([]*model.PhoneNumber, error) {
+		if !assert.Equal(t, obj.ID, "12345678") {
+			return nil, status.Error(500, "id incorrect")
+		}
+		return []*model.PhoneNumber{&model.PhoneNumber{E164: "+3228080000"}}, nil
+	}
+
+	resolver.EmailsByContact = func(ctx context.Context, obj *model.Contact) ([]*model.Email, error) {
+		if !assert.Equal(t, obj.ID, "12345678") {
+			return nil, status.Error(500, "id incorrect")
+		}
+		return []*model.Email{&model.Email{Email: "x@x.org"}}, nil
+	}
+
+	grpcClient := proto.NewMessageStoreServiceClient(grpcConn)
+
+	result, err := grpcClient.SaveMessage(ctx, &proto.Message{Message: "Hello Torrey",
+		Contact:   &proto.Contact{Id: &id},
+		Direction: proto.MessageDirection_INBOUND,
+		Channel:   proto.MessageChannel_WIDGET,
+		Type:      proto.MessageType_MESSAGE,
+		Username:  "x@x.org"})
+	if err != nil {
+		t.Fatalf("Error getting message: %s", err.Error())
+	}
+	log.Printf("Message saved with ID %d", *result.Id)
+
+	mi, err := dbClient.MessageItem.Get(ctx, int(*result.Id))
+
+	if err != nil {
+		t.Fatalf("Error finding Message %s", err.Error())
+	}
+	mf, err := dbClient.MessageItem.QueryMessageFeed(mi).First(ctx)
+
+	assert.Equal(t, mi.Message, "Hello Torrey")
+	assert.Equal(t, mi.Direction, messageitem.DirectionINBOUND)
+	assert.Equal(t, mi.Channel, messageitem.ChannelCHAT)
+	assert.Equal(t, mi.Type, messageitem.TypeMESSAGE)
+	assert.Equal(t, mi.Username, "x@x.org")
+	assert.Equal(t, mf.ID, feed1.ID)
+	assert.Equal(t, mf.ContactId, "12345678")
+}
+
+func Test_GetMessage(t *testing.T) {
+	_, _, _, dbClient := NewWebServer(t)
+	grpcConn, err := messageStoreDialer()
+
+	if err != nil {
+		t.Fatalf("Unable to make GRPC service, %s", err.Error())
+	}
+	ctx := context.Background()
+
+	feed1, err := dbClient.MessageFeed.
+		Create().
+		SetFirstName("Torrey").
+		SetLastName("Searle").
+		SetContactId("12345678").
+		Save(ctx)
+	if err != nil {
+		t.Fatalf("Error inserting new Feed: %s", err.Error())
+	}
+
+	oldTime := time.Now()
+	oldTime = oldTime.Add(-24 * time.Hour) // old time is yesterday
+	msg1, err := dbClient.MessageItem.
+		Create().
+		SetMessage("Hello Torrey").
+		SetMessageFeed(feed1).
+		SetChannel(messageitem.ChannelCHAT).
+		SetUsername("x@x.org").
+		SetNillableTime(&oldTime).
+		SetDirection(messageitem.DirectionINBOUND).
+		SetType(messageitem.TypeMESSAGE).
+		Save(ctx)
+
+	if err != nil {
+		t.Fatalf("Error inserting message: %s", err.Error())
+	}
+
+	msg2, err := dbClient.MessageItem.
+		Create().
+		SetMessage("How may I help you").
+		SetMessageFeed(feed1).
+		SetChannel(messageitem.ChannelMAIL).
+		SetUsername("x@x.org").
+		SetDirection(messageitem.DirectionOUTBOUND).
+		SetType(messageitem.TypeMESSAGE).
+		Save(ctx)
+
+	if err != nil {
+		t.Fatalf("Error inserting message: %s", err.Error())
+	}
+
+	grpcClient := proto.NewMessageStoreServiceClient(grpcConn)
+	msg1id := int64(msg1.ID)
+	message, err := grpcClient.GetMessage(ctx, &proto.Message{Id: &msg1id})
+	if err != nil {
+		t.Fatalf("Error getting message: %s", err.Error())
+	}
+	assert.Equal(t, "Hello Torrey", message.Message)
+	assert.Equal(t, "12345678", message.Contact.ContactId)
+	assert.Equal(t, int64(feed1.ID), *message.Id)
+	assert.Equal(t, proto.MessageDirection_INBOUND, message.Direction)
+	assert.Equal(t, proto.MessageChannel_WIDGET, message.Channel)
+	assert.Equal(t, "x@x.org", message.Username)
+
+	msg2id := int64(msg2.ID)
+	message, err = grpcClient.GetMessage(ctx, &proto.Message{Id: &msg2id})
+	if err != nil {
+		t.Fatalf("Error getting message: %s", err.Error())
+	}
+
+	assert.Equal(t, "How may I help you", message.Message)
+	assert.Equal(t, "12345678", message.Contact.ContactId)
+	assert.Equal(t, int64(feed1.ID), *message.Contact.Id)
+	assert.Equal(t, proto.MessageDirection_OUTBOUND, message.Direction)
+	assert.Equal(t, proto.MessageChannel_MAIL, message.Channel)
+	assert.Equal(t, "x@x.org", message.Username)
+
+}
+func Test_GetMessagesWithLimitBefore(t *testing.T) {
+	_, _, _, dbClient := NewWebServer(t)
+	grpcConn, err := messageStoreDialer()
+
+	if err != nil {
+		t.Fatalf("Unable to make GRPC service, %s", err.Error())
+	}
+	ctx := context.Background()
+
+	feed1, err := dbClient.MessageFeed.
+		Create().
+		SetFirstName("Torrey").
+		SetLastName("Searle").
+		SetContactId("12345678").
+		Save(ctx)
+	if err != nil {
+		t.Fatalf("Error inserting new Feed: %s", err.Error())
+	}
+
+	id := int64(feed1.ID)
+
+	feed2, err := dbClient.MessageFeed.
+		Create().
+		SetFirstName("Echo").
+		SetLastName("Test").
+		SetContactId("echotest").
+		Save(ctx)
+	if err != nil {
+		t.Fatalf("Error inserting new Feed: %s", err.Error())
+	}
+
+	oldTime := time.Now()
+	oldTime = oldTime.Add(-24 * time.Hour) // old time is yesterday
+	_, err = dbClient.MessageItem.
+		Create().
+		SetMessage("Hello Torrey").
+		SetMessageFeed(feed1).
+		SetChannel(messageitem.ChannelMAIL).
+		SetUsername("x@x.org").
+		SetNillableTime(&oldTime).
+		SetDirection(messageitem.DirectionINBOUND).
+		SetType(messageitem.TypeMESSAGE).
+		Save(ctx)
+
+	if err != nil {
+		t.Fatalf("Error inserting message: %s", err.Error())
+	}
+
+	_, err = dbClient.MessageItem.
+		Create().
+		SetMessage("How may I help you").
+		SetMessageFeed(feed1).
+		SetChannel(messageitem.ChannelMAIL).
+		SetUsername("x@x.org").
+		SetDirection(messageitem.DirectionOUTBOUND).
+		SetType(messageitem.TypeMESSAGE).
+		Save(ctx)
+
+	if err != nil {
+		t.Fatalf("Error inserting message: %s", err.Error())
+	}
+	_, err = dbClient.MessageItem.
+		Create().
+		SetMessage("Call Me").
+		SetMessageFeed(feed2).
+		SetChannel(messageitem.ChannelMAIL).
+		SetUsername("echo@oasis.openline.ai").
+		SetDirection(messageitem.DirectionINBOUND).
+		SetType(messageitem.TypeMESSAGE).
+		Save(ctx)
+
+	if err != nil {
+		t.Fatalf("Error inserting message: %s", err.Error())
+	}
+	grpcClient := proto.NewMessageStoreServiceClient(grpcConn)
+	pageTime := time.Now()
+	pageTime = pageTime.Add(-12 * time.Hour) // page between now and first message
+	before := timestamppb.New(pageTime)
+	messageList, err := grpcClient.GetMessages(ctx, &proto.PagedContact{Page: &proto.PageInfo{PageSize: 1, Before: before}, Contact: &proto.Contact{Id: &id}})
+
+	assert.Equal(t, 1, len(messageList.Message))
+	assert.Equal(t, "Hello Torrey", messageList.Message[0].Message)
+
+}
+
+func Test_GetMessagesWithLimit(t *testing.T) {
+	_, _, _, dbClient := NewWebServer(t)
+	grpcConn, err := messageStoreDialer()
+
+	if err != nil {
+		t.Fatalf("Unable to make GRPC service, %s", err.Error())
+	}
+	ctx := context.Background()
+
+	feed1, err := dbClient.MessageFeed.
+		Create().
+		SetFirstName("Torrey").
+		SetLastName("Searle").
+		SetContactId("12345678").
+		Save(ctx)
+	if err != nil {
+		t.Fatalf("Error inserting new Feed: %s", err.Error())
+	}
+
+	id := int64(feed1.ID)
+
+	feed2, err := dbClient.MessageFeed.
+		Create().
+		SetFirstName("Echo").
+		SetLastName("Test").
+		SetContactId("echotest").
+		Save(ctx)
+	if err != nil {
+		t.Fatalf("Error inserting new Feed: %s", err.Error())
+	}
+
+	oldTime := time.Now()
+	oldTime = oldTime.Add(-24 * time.Hour) // old time is yesterday
+	_, err = dbClient.MessageItem.
+		Create().
+		SetMessage("Hello Torrey").
+		SetMessageFeed(feed1).
+		SetChannel(messageitem.ChannelMAIL).
+		SetUsername("x@x.org").
+		SetNillableTime(&oldTime).
+		SetDirection(messageitem.DirectionINBOUND).
+		SetType(messageitem.TypeMESSAGE).
+		Save(ctx)
+
+	if err != nil {
+		t.Fatalf("Error inserting message: %s", err.Error())
+	}
+
+	_, err = dbClient.MessageItem.
+		Create().
+		SetMessage("How may I help you").
+		SetMessageFeed(feed1).
+		SetChannel(messageitem.ChannelMAIL).
+		SetUsername("x@x.org").
+		SetDirection(messageitem.DirectionOUTBOUND).
+		SetType(messageitem.TypeMESSAGE).
+		Save(ctx)
+
+	if err != nil {
+		t.Fatalf("Error inserting message: %s", err.Error())
+	}
+	_, err = dbClient.MessageItem.
+		Create().
+		SetMessage("Call Me").
+		SetMessageFeed(feed2).
+		SetChannel(messageitem.ChannelMAIL).
+		SetUsername("echo@oasis.openline.ai").
+		SetDirection(messageitem.DirectionINBOUND).
+		SetType(messageitem.TypeMESSAGE).
+		Save(ctx)
+
+	if err != nil {
+		t.Fatalf("Error inserting message: %s", err.Error())
+	}
+	grpcClient := proto.NewMessageStoreServiceClient(grpcConn)
+	messageList, err := grpcClient.GetMessages(ctx, &proto.PagedContact{Page: &proto.PageInfo{PageSize: 1}, Contact: &proto.Contact{Id: &id}})
+
+	assert.Equal(t, 1, len(messageList.Message))
+	assert.Equal(t, "How may I help you", messageList.Message[0].Message)
+}
+
+func Test_GetMessages(t *testing.T) {
+	_, _, _, dbClient := NewWebServer(t)
+	grpcConn, err := messageStoreDialer()
+
+	if err != nil {
+		t.Fatalf("Unable to make GRPC service, %s", err.Error())
+	}
+	ctx := context.Background()
+
+	feed1, err := dbClient.MessageFeed.
+		Create().
+		SetFirstName("Torrey").
+		SetLastName("Searle").
+		SetContactId("12345678").
+		Save(ctx)
+	if err != nil {
+		t.Fatalf("Error inserting new Feed: %s", err.Error())
+	}
+
+	id := int64(feed1.ID)
+
+	feed2, err := dbClient.MessageFeed.
+		Create().
+		SetFirstName("Echo").
+		SetLastName("Test").
+		SetContactId("echotest").
+		Save(ctx)
+	if err != nil {
+		t.Fatalf("Error inserting new Feed: %s", err.Error())
+	}
+
+	_, err = dbClient.MessageItem.
+		Create().
+		SetMessage("Hello Torrey").
+		SetMessageFeed(feed1).
+		SetChannel(messageitem.ChannelCHAT).
+		SetUsername("x@x.org").
+		SetDirection(messageitem.DirectionINBOUND).
+		SetType(messageitem.TypeMESSAGE).
+		Save(ctx)
+
+	if err != nil {
+		t.Fatalf("Error inserting message: %s", err.Error())
+	}
+
+	_, err = dbClient.MessageItem.
+		Create().
+		SetMessage("How may I help you").
+		SetMessageFeed(feed1).
+		SetChannel(messageitem.ChannelMAIL).
+		SetUsername("x@x.org").
+		SetDirection(messageitem.DirectionOUTBOUND).
+		SetType(messageitem.TypeMESSAGE).
+		Save(ctx)
+
+	if err != nil {
+		t.Fatalf("Error inserting message: %s", err.Error())
+	}
+	_, err = dbClient.MessageItem.
+		Create().
+		SetMessage("Call Me").
+		SetMessageFeed(feed2).
+		SetChannel(messageitem.ChannelMAIL).
+		SetUsername("echo@oasis.openline.ai").
+		SetDirection(messageitem.DirectionINBOUND).
+		SetType(messageitem.TypeMESSAGE).
+		Save(ctx)
+
+	if err != nil {
+		t.Fatalf("Error inserting message: %s", err.Error())
+	}
+	grpcClient := proto.NewMessageStoreServiceClient(grpcConn)
+	messageList, err := grpcClient.GetMessages(ctx, &proto.PagedContact{Contact: &proto.Contact{Id: &id}})
+
+	assert.Equal(t, 2, len(messageList.Message))
+	assert.Equal(t, "Hello Torrey", messageList.Message[0].Message)
+	assert.Equal(t, "12345678", messageList.Message[0].Contact.ContactId)
+	assert.Equal(t, int64(feed1.ID), *messageList.Message[0].Contact.Id)
+	assert.Equal(t, proto.MessageDirection_INBOUND, messageList.Message[0].Direction)
+	assert.Equal(t, proto.MessageChannel_WIDGET, messageList.Message[0].Channel)
+	assert.Equal(t, "x@x.org", messageList.Message[0].Username)
+
+	assert.Equal(t, "How may I help you", messageList.Message[1].Message)
+	assert.Equal(t, "12345678", messageList.Message[1].Contact.ContactId)
+	assert.Equal(t, int64(feed1.ID), *messageList.Message[1].Contact.Id)
+	assert.Equal(t, proto.MessageDirection_OUTBOUND, messageList.Message[1].Direction)
+	assert.Equal(t, proto.MessageChannel_MAIL, messageList.Message[1].Channel)
+	assert.Equal(t, "x@x.org", messageList.Message[1].Username)
+
+}
+func Test_GetFeeds(t *testing.T) {
+	_, _, resolver, dbClient := NewWebServer(t)
+	grpcConn, err := messageStoreDialer()
+
+	if err != nil {
+		t.Fatalf("Unable to make GRPC service, %s", err.Error())
+	}
+
+	ctx := context.Background()
+
+	feed, err := dbClient.MessageFeed.
+		Create().
+		SetFirstName("Torrey").
+		SetLastName("Searle").
+		SetContactId("12345678").
+		Save(ctx)
+	if err != nil {
+		t.Fatalf("Error inserting new Feed: %s", err.Error())
+	}
+
+	id := int64(feed.ID)
+
+	feed, err = dbClient.MessageFeed.
+		Create().
+		SetFirstName("Echo").
+		SetLastName("Test").
+		SetContactId("echotest").
+		Save(ctx)
+	if err != nil {
+		t.Fatalf("Error inserting new Feed: %s", err.Error())
+	}
+
+	resolver.GetContactById = func(ctx context.Context, id string) (*model.Contact, error) {
+		if id == "12345678" {
+			return &model.Contact{
+				ID:        id,
+				FirstName: "Torrey",
+				LastName:  "Searle",
+			}, nil
+		} else if id == "echotest" {
+			return nil, status.Error(404, "id not found")
+		} else {
+			t.Errorf("Unexpected ID %s", id)
+			return nil, status.Error(500, "id incorrect")
+
+		}
+	}
+	resolver.PhoneNumbersByContact = func(ctx context.Context, obj *model.Contact) ([]*model.PhoneNumber, error) {
+		if !assert.Equal(t, obj.ID, "12345678") {
+			return nil, status.Error(500, "id incorrect")
+		}
+		return []*model.PhoneNumber{&model.PhoneNumber{E164: "+3228080000"}}, nil
+	}
+
+	resolver.EmailsByContact = func(ctx context.Context, obj *model.Contact) ([]*model.Email, error) {
+		if !assert.Equal(t, obj.ID, "12345678") {
+			return nil, status.Error(500, "id incorrect")
+		}
+		return []*model.Email{&model.Email{Email: "x@x.org"}}, nil
+	}
+
+	grpcClient := proto.NewMessageStoreServiceClient(grpcConn)
+	contacts, err := grpcClient.GetFeeds(ctx, &proto.Empty{})
+	assert.Equal(t, 2, len(contacts.Contact))
+	if err != nil {
+		t.Fatalf("Error getting Feed %s", err.Error())
+	}
+
+	for i := range contacts.Contact {
+		if *contacts.Contact[i].Id == id {
+			assert.Equal(t, "12345678", contacts.Contact[i].ContactId)
+			assert.Equal(t, "Torrey", contacts.Contact[i].FirstName)
+			assert.Equal(t, "Searle", contacts.Contact[i].LastName)
+			assert.Equal(t, "x@x.org", *contacts.Contact[i].Email)
+			assert.Equal(t, "+3228080000", *contacts.Contact[i].Phone)
+		} else {
+			assert.Equal(t, "echotest", contacts.Contact[i].ContactId)
+			assert.Equal(t, "Echo", contacts.Contact[i].FirstName)
+			assert.Equal(t, "Test", contacts.Contact[i].LastName)
+		}
+	}
+}
+
+func Test_GetFeed(t *testing.T) {
+	_, _, resolver, dbClient := NewWebServer(t)
+	grpcConn, err := messageStoreDialer()
+
+	if err != nil {
+		t.Fatalf("Unable to make GRPC service, %s", err.Error())
+	}
+
+	ctx := context.Background()
+
+	feed, err := dbClient.MessageFeed.
+		Create().
+		SetFirstName("Torrey").
+		SetLastName("Searle").
+		SetContactId("12345678").
+		Save(ctx)
+	if err != nil {
+		t.Fatalf("Error inserting new Feed: %s", err.Error())
+	}
+	resolver.GetContactById = func(ctx context.Context, id string) (*model.Contact, error) {
+		if !assert.Equal(t, id, "12345678") {
+			return nil, status.Error(500, "id incorrect")
+		}
+		return &model.Contact{
+			ID:        id,
+			FirstName: "Torrey",
+			LastName:  "Searle",
+		}, nil
+	}
+
+	resolver.PhoneNumbersByContact = func(ctx context.Context, obj *model.Contact) ([]*model.PhoneNumber, error) {
+		if !assert.Equal(t, obj.ID, "12345678") {
+			return nil, status.Error(500, "id incorrect")
+		}
+		return []*model.PhoneNumber{&model.PhoneNumber{E164: "+3228080000"}}, nil
+	}
+
+	resolver.EmailsByContact = func(ctx context.Context, obj *model.Contact) ([]*model.Email, error) {
+		if !assert.Equal(t, obj.ID, "12345678") {
+			return nil, status.Error(500, "id incorrect")
+		}
+		return []*model.Email{&model.Email{Email: "x@x.org"}}, nil
+	}
+
+	grpcClient := proto.NewMessageStoreServiceClient(grpcConn)
+	var id int64 = int64(feed.ID)
+	contact, err := grpcClient.GetFeed(ctx, &proto.Contact{Id: &id})
+	if err != nil {
+		t.Fatalf("Error getting Feed %s", err.Error())
+	}
+	assert.Equal(t, "12345678", contact.ContactId)
+	assert.Equal(t, "Torrey", contact.FirstName)
+	assert.Equal(t, "Searle", contact.LastName)
+	assert.Equal(t, id, *contact.Id)
+	assert.Equal(t, "x@x.org", *contact.Email)
+	assert.Equal(t, "+3228080000", *contact.Phone)
+}
+
+func Test_GetFeedByContactId(t *testing.T) {
+	_, _, resolver, dbClient := NewWebServer(t)
+	grpcConn, err := messageStoreDialer()
+
+	if err != nil {
+		t.Fatalf("Unable to make GRPC service, %s", err.Error())
+	}
+
+	ctx := context.Background()
+
+	feed, err := dbClient.MessageFeed.
+		Create().
+		SetFirstName("Torrey").
+		SetLastName("Searle").
+		SetContactId("12345678").
+		Save(ctx)
+	if err != nil {
+		t.Fatalf("Error inserting new Feed: %s", err.Error())
+	}
+	resolver.GetContactById = func(ctx context.Context, id string) (*model.Contact, error) {
+		if !assert.Equal(t, id, "12345678") {
+			return nil, status.Error(500, "id incorrect")
+		}
+		return &model.Contact{
+			ID:        id,
+			FirstName: "Torrey",
+			LastName:  "Searle",
+		}, nil
+	}
+	resolver.PhoneNumbersByContact = func(ctx context.Context, obj *model.Contact) ([]*model.PhoneNumber, error) {
+		if !assert.Equal(t, obj.ID, "12345678") {
+			return nil, status.Error(500, "id incorrect")
+		}
+		return []*model.PhoneNumber{&model.PhoneNumber{E164: "+3228080000"}}, nil
+	}
+
+	resolver.EmailsByContact = func(ctx context.Context, obj *model.Contact) ([]*model.Email, error) {
+		if !assert.Equal(t, obj.ID, "12345678") {
+			return nil, status.Error(500, "id incorrect")
+		}
+		return []*model.Email{&model.Email{Email: "x@x.org"}}, nil
+	}
+
+	grpcClient := proto.NewMessageStoreServiceClient(grpcConn)
+	var id int64 = int64(feed.ID)
+	contact, err := grpcClient.GetFeed(ctx, &proto.Contact{ContactId: "12345678"})
+	if err != nil {
+		t.Fatalf("Error getting Feed %s", err.Error())
+	}
+	assert.Equal(t, "12345678", contact.ContactId)
+	assert.Equal(t, "Torrey", contact.FirstName)
+	assert.Equal(t, "Searle", contact.LastName)
+	assert.Equal(t, id, *contact.Id)
+	assert.Equal(t, "x@x.org", *contact.Email)
+	assert.Equal(t, "+3228080000", *contact.Phone)
 }
 
 func Test_parseEmail(t *testing.T) {
@@ -74,7 +957,7 @@ func Test_parseEmail(t *testing.T) {
 }
 
 func Test_createContact(t *testing.T) {
-	_, client, resolver := NewWebServer(t)
+	_, client, resolver, _ := NewWebServer(t)
 	resolver.ContactCreate = func(ctx context.Context, input model.ContactInput) (*model.Contact, error) {
 		if !assert.Equal(t, input.FirstName, "Torrey") {
 			return nil, status.Error(500, "Unknown Firstname")
@@ -99,7 +982,7 @@ func Test_createContact(t *testing.T) {
 }
 
 func Test_getContact(t *testing.T) {
-	_, client, resolver := NewWebServer(t)
+	_, client, resolver, _ := NewWebServer(t)
 	resolver.GetContactById = func(ctx context.Context, id string) (*model.Contact, error) {
 		if !assert.Equal(t, id, "12345678") {
 			return nil, status.Error(500, "id incorrect")
@@ -134,7 +1017,7 @@ func Test_getContact(t *testing.T) {
 	assert.Equal(t, "x@x.org", *result.email)
 }
 func Test_createConversation(t *testing.T) {
-	_, client, resolver := NewWebServer(t)
+	_, client, resolver, _ := NewWebServer(t)
 	resolver.ConversationCreate = func(ctx context.Context, input model.ConversationInput) (*model.Conversation, error) {
 		log.Print("Inside Conversation Create!")
 		if !assert.Equal(t, input.UserID, "agentsmith") {
@@ -161,7 +1044,7 @@ func Test_createConversation(t *testing.T) {
 }
 
 func Test_getConversationByEmail(t *testing.T) {
-	_, client, resolver := NewWebServer(t)
+	_, client, resolver, _ := NewWebServer(t)
 	resolver.GetContactByEmail = func(ctx context.Context, id string) (*model.Contact, error) {
 		if !assert.Equal(t, id, "x@x.org") {
 			return nil, status.Error(500, "Unexpected email address")

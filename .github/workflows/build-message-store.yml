@@ -56,7 +56,26 @@ jobs:
 
       - name: Test
         working-directory: ./packages/server/message-store
-        run: go test -v ./...
+        run: gotestsum --junitfile unit-tests.xml -- -coverprofile=cover.out ./...
+
+      - name: Test Report
+        uses: mikepenz/action-junit-report@v3
+        if: success() || failure()    # run this step even if previous step failed
+        with:
+          report_paths: packages/server/message-store/unit-tests.xml    # Path to test results
+          include_passed: true
+          annotate_only: true
+          detailed_summary: true
+
+      - name: Compute Code Coverage
+        working-directory: ./packages/server/message-store
+        run: |
+             echo "## Code Coverage" >> $GITHUB_STEP_SUMMARY
+             echo "|Filename|Function|Coverage|" >> $GITHUB_STEP_SUMMARY
+             echo "|--------|--------|--------|" >> $GITHUB_STEP_SUMMARY
+             go tool cover -func=cover.out |sed -r  's/[[:space:]]+/|/g'|sed -r 's/$/|/g'|sed -r 's/^/|/g' >> $GITHUB_STEP_SUMMARY
+
+
 
   publish:
     name: publish image
