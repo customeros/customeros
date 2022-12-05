@@ -18,7 +18,7 @@ NEO4J_HELM_CONFIG="https://raw.githubusercontent.com/openline-ai/openline-custom
 POSTGRESQL_HELM_CONFIG="https://raw.githubusercontent.com/openline-ai/openline-customer-os/otter/deployment/infra/helm/postgresql/postgresql-values.yaml"
 
 # Neo4j
-NEO4J_CYPHER="https://raw.githubusercontent.com/openline-ai/openline-customer-os/otter/packages/server/customer-os-api/customer-os.cypher"
+NEO4J_CYPHER="https://raw.githubusercontent.com/openline-ai/openline-customer-os/otter/deployment/scripts/neo4j/customer-os.cypher"
 
 # PostgreSQL
 SETUP_DB='https://raw.githubusercontent.com/openline-ai/openline-customer-os/otter/deployment/scripts/postgresql/setup.sql'
