@@ -5,7 +5,7 @@ import (
 	"time"
 )
 
-const LabelName_PageViewAction = ActionName_PageView
+const LabelName_PageViewAction = NodeLabel_PageView
 
 type PageViewActionEntity struct {
 	Id             string
@@ -30,5 +30,5 @@ func (pageViewAction PageViewActionEntity) Action() {
 }
 
 func (pageViewAction PageViewActionEntity) ActionName() string {
-	return ActionName_PageView
+	return NodeLabel_PageView
 }

@@ -9,7 +9,7 @@ import (
 
 func MapEntityToAction(actionEntity *entity.Action) any {
 	switch (*actionEntity).ActionName() {
-	case entity.ActionName_PageView:
+	case entity.NodeLabel_PageView:
 		pageViewActionEntityPtr := (*actionEntity).(*entity.PageViewActionEntity)
 		return MapEntityToPageViewAction(pageViewActionEntityPtr)
 	}

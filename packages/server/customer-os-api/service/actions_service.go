@@ -35,7 +35,12 @@ func (s *actionsService) GetContactActions(ctx context.Context, contactId string
 	session := utils.NewNeo4jReadSession(s.getNeo4jDriver())
 	defer session.Close()
 
-	dbNodes, err := s.repositories.ActionRepository.GetContactActions(session, common.GetContext(ctx).Tenant, contactId, from, to)
+	var nodeLabels = []string{}
+	for _, v := range types {
+		nodeLabels = append(nodeLabels, entity.NodeLabelsByActionType[v.String()])
+	}
+
+	dbNodes, err := s.repositories.ActionRepository.GetContactActions(session, common.GetContext(ctx).Tenant, contactId, from, to, nodeLabels)
 	if err != nil {
 		return nil, err
 	}
