@@ -41,7 +41,7 @@ func (r *actionRepository) CreatePageViewAction(contactId string, pv entity.Page
 		"engagedTime":    pv.EngagedTime,
 	}
 	query := "MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant}) " +
-		" MERGE (c)-[:HAS_ACTION]->(a:Action:PageViewAction {id:$pvId, trackerName:$trackerName})" +
+		" MERGE (c)-[:HAS_ACTION]->(a:Action:PageView {id:$pvId, trackerName:$trackerName})" +
 		" ON CREATE SET " +
 		" a.startedAt=$start, " +
 		" a.endedAt=$end, " +

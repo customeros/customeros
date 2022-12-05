@@ -35,14 +35,19 @@ func (s *actionsService) GetContactActions(ctx context.Context, contactId string
 	session := utils.NewNeo4jReadSession(s.getNeo4jDriver())
 	defer session.Close()
 
-	dbNodes, err := s.repositories.ActionRepository.GetContactActions(session, common.GetContext(ctx).Tenant, contactId, from, to)
+	var nodeLabels = []string{}
+	for _, v := range types {
+		nodeLabels = append(nodeLabels, entity.NodeLabelsByActionType[v.String()])
+	}
+
+	dbNodes, err := s.repositories.ActionRepository.GetContactActions(session, common.GetContext(ctx).Tenant, contactId, from, to, nodeLabels)
 	if err != nil {
 		return nil, err
 	}
 
 	actions := entity.ActionEntities{}
 	for _, v := range dbNodes {
-		if slices.Contains(v.Labels, entity.LabelName_PageViewAction) {
+		if slices.Contains(v.Labels, entity.LabelName_PageView) {
 			actions = append(actions, s.mapDbNodeToPageViewAction(v))
 		}
 	}
@@ -50,9 +55,9 @@ func (s *actionsService) GetContactActions(ctx context.Context, contactId string
 	return &actions, nil
 }
 
-func (s *actionsService) mapDbNodeToPageViewAction(node *dbtype.Node) *entity.PageViewActionEntity {
+func (s *actionsService) mapDbNodeToPageViewAction(node *dbtype.Node) *entity.PageViewEntity {
 	props := utils.GetPropsFromNode(*node)
-	pageViewAction := entity.PageViewActionEntity{
+	pageViewAction := entity.PageViewEntity{
 		Id:             utils.GetStringPropOrEmpty(props, "id"),
 		Application:    utils.GetStringPropOrEmpty(props, "application"),
 		TrackerName:    utils.GetStringPropOrEmpty(props, "trackerName"),

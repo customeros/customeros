@@ -466,7 +466,7 @@ func TestQueryResolver_Contact_WithActions(t *testing.T) {
 	secAgo30 := now.Add(time.Duration(-30) * time.Second)
 	from := now.Add(time.Duration(-10) * time.Minute)
 
-	actionId1 := createPageViewAction(driver, contactId, entity.PageViewActionEntity{
+	actionId1 := createPageViewAction(driver, contactId, entity.PageViewEntity{
 		StartedAt:      secAgo1,
 		EndedAt:        now,
 		TrackerName:    "tracker1",
@@ -478,7 +478,7 @@ func TestQueryResolver_Contact_WithActions(t *testing.T) {
 		EngagedTime:    10,
 	})
 
-	actionId2 := createPageViewAction(driver, contactId, entity.PageViewActionEntity{
+	actionId2 := createPageViewAction(driver, contactId, entity.PageViewEntity{
 		StartedAt:      secAgo30,
 		EndedAt:        now,
 		TrackerName:    "tracker2",
@@ -490,13 +490,13 @@ func TestQueryResolver_Contact_WithActions(t *testing.T) {
 		EngagedTime:    20,
 	})
 
-	createPageViewAction(driver, contactId2, entity.PageViewActionEntity{})
+	createPageViewAction(driver, contactId2, entity.PageViewEntity{})
 
 	require.Equal(t, 2, getCountOfNodes(driver, "Contact"))
 	require.Equal(t, 3, getCountOfNodes(driver, "Action"))
-	require.Equal(t, 3, getCountOfNodes(driver, "PageViewAction"))
+	require.Equal(t, 3, getCountOfNodes(driver, "PageView"))
 
-	rawResponse, err := c.RawPost(getQuery("get_contact_with_actions"),
+	rawResponse, err := c.RawPost(getQuery("get_contact_with_page_view_actions"),
 		client.Var("contactId", contactId),
 		client.Var("from", from),
 		client.Var("to", now))
@@ -530,4 +530,50 @@ func TestQueryResolver_Contact_WithActions(t *testing.T) {
 	require.Equal(t, "http://app-2.ai", action2["pageUrl"].(string))
 	require.Equal(t, float64(2), action2["orderInSession"].(float64))
 	require.Equal(t, float64(20), action2["engagedTime"].(float64))
+}
+
+func TestQueryResolver_Contact_WithActions_FilterByActionType(t *testing.T) {
+	defer setupTestCase()(t)
+	createTenant(driver, tenantName)
+
+	contactId := createDefaultContact(driver, tenantName)
+
+	now := time.Now().UTC()
+	secAgo1 := now.Add(time.Duration(-1) * time.Second)
+	from := now.Add(time.Duration(-10) * time.Minute)
+
+	actionId1 := createPageViewAction(driver, contactId, entity.PageViewEntity{
+		StartedAt:      secAgo1,
+		EndedAt:        now,
+		TrackerName:    "tracker1",
+		SessionId:      "session1",
+		Application:    "application1",
+		PageTitle:      "page1",
+		PageUrl:        "http://app-1.ai",
+		OrderInSession: 1,
+		EngagedTime:    10,
+	})
+
+	require.Equal(t, 1, getCountOfNodes(driver, "Contact"))
+	require.Equal(t, 1, getCountOfNodes(driver, "Action"))
+	require.Equal(t, 1, getCountOfNodes(driver, "PageView"))
+
+	types := []model.ActionType{}
+	types = append(types, model.ActionTypePageView)
+
+	rawResponse, err := c.RawPost(getQuery("get_contact_with_actions_filter_by_action_type"),
+		client.Var("contactId", contactId),
+		client.Var("from", from),
+		client.Var("to", now),
+		client.Var("types", types))
+	assertRawResponseSuccess(t, rawResponse, err)
+
+	contact := rawResponse.Data.(map[string]interface{})["contact"]
+	require.Equal(t, contactId, contact.(map[string]interface{})["id"])
+
+	actions := contact.(map[string]interface{})["actions"].([]interface{})
+	require.Equal(t, 1, len(actions))
+	action1 := actions[0].(map[string]interface{})
+	require.Equal(t, "PageViewAction", action1["__typename"].(string))
+	require.Equal(t, actionId1, action1["id"].(string))
 }

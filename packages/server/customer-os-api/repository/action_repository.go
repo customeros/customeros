@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v4/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v4/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils"
@@ -8,7 +9,7 @@ import (
 )
 
 type ActionRepository interface {
-	GetContactActions(session neo4j.Session, tenant, contactId string, from, to time.Time) ([]*dbtype.Node, error)
+	GetContactActions(session neo4j.Session, tenant, contactId string, from, to time.Time, labels []string) ([]*dbtype.Node, error)
 }
 
 type actionRepository struct {
@@ -21,19 +22,26 @@ func NewActionRepository(driver *neo4j.Driver) ActionRepository {
 	}
 }
 
-func (r *actionRepository) GetContactActions(session neo4j.Session, tenant, contactId string, from, to time.Time) ([]*dbtype.Node, error) {
+func (r *actionRepository) GetContactActions(session neo4j.Session, tenant, contactId string, from, to time.Time, labels []string) ([]*dbtype.Node, error) {
+	params := map[string]any{
+		"tenant":    tenant,
+		"contactId": contactId,
+		"from":      from,
+		"to":        to,
+	}
+	filterByTypeCypherFragment := ""
+	if len(labels) > 0 {
+		params["nodeLabels"] = labels
+		filterByTypeCypherFragment = "AND size([label IN labels(a) WHERE label IN $nodeLabels | 1]) > 0"
+	}
+	query := fmt.Sprintf("MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant}), "+
+		" (c)-[:HAS_ACTION]->(a:Action) "+
+		" WHERE a.startedAt >= datetime($from) AND a.startedAt <= datetime($to) "+
+		" %s "+
+		" RETURN a ORDER BY a.startedAt DESC", filterByTypeCypherFragment)
+
 	records, err := session.ReadTransaction(func(tx neo4j.Transaction) (any, error) {
-		queryResult, err := tx.Run(`
-			MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant}),
-				  (c)-[:HAS_ACTION]->(a:Action)
-				WHERE a.startedAt >= datetime($from) AND a.startedAt <= datetime($to)
-			RETURN a ORDER BY a.startedAt DESC`,
-			map[string]any{
-				"tenant":    tenant,
-				"contactId": contactId,
-				"from":      from,
-				"to":        to,
-			})
+		queryResult, err := tx.Run(query, params)
 		if err != nil {
 			return nil, err
 		}
