@@ -21,7 +21,7 @@ export default function Header() {
                     <button aria-label="Toggle navigation bar" aria-expanded="false"
                             className="navbar__toggle clean-btn" type="button">
                         <svg width="30" height="30" viewBox="0 0 30 30" aria-hidden="true">
-                            <path stroke="currentColor" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"
+                            <path stroke="currentColor" strokeLinecap="round" strokeMiterlimit="10" strokeWidth="2"
                                   d="M4 7h22M4 15h22M4 23h22"></path>
                         </svg>
                     </button>
