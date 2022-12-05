@@ -5,7 +5,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 )
 
-func MapEntityToPageViewAction(entity *entity.PageViewActionEntity) *model.PageViewAction {
+func MapEntityToPageViewAction(entity *entity.PageViewEntity) *model.PageViewAction {
 	return &model.PageViewAction{
 		ID:             entity.Id,
 		StartedAt:      entity.StartedAt,

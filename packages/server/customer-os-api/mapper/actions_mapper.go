@@ -10,7 +10,7 @@ import (
 func MapEntityToAction(actionEntity *entity.Action) any {
 	switch (*actionEntity).ActionName() {
 	case entity.NodeLabel_PageView:
-		pageViewActionEntityPtr := (*actionEntity).(*entity.PageViewActionEntity)
+		pageViewActionEntityPtr := (*actionEntity).(*entity.PageViewEntity)
 		return MapEntityToPageViewAction(pageViewActionEntityPtr)
 	}
 	fmt.Errorf("action of type %s not identified", reflect.TypeOf(actionEntity))

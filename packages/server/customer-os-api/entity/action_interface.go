@@ -3,7 +3,7 @@ package entity
 import "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 
 const (
-	NodeLabel_PageView = "PageViewAction"
+	NodeLabel_PageView = "PageView"
 )
 
 var NodeLabelsByActionType = map[string]string{

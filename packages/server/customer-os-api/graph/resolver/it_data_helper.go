@@ -361,10 +361,10 @@ func createConversation(driver *neo4j.Driver, userId, contactId string) string {
 	return conversationId.String()
 }
 
-func createPageViewAction(driver *neo4j.Driver, contactId string, actionEntity entity.PageViewActionEntity) string {
+func createPageViewAction(driver *neo4j.Driver, contactId string, actionEntity entity.PageViewEntity) string {
 	var actionId, _ = uuid.NewRandom()
 	query := `MATCH (c:Contact {id:$contactId})
-			MERGE (c)-[:HAS_ACTION]->(a:Action:PageViewAction {id:$actionId})
+			MERGE (c)-[:HAS_ACTION]->(a:Action:PageView {id:$actionId})
 			ON CREATE SET
 				a.trackerName=$trackerName,
 				a.startedAt=$startedAt,
