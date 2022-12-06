@@ -5,7 +5,8 @@ metadata:
 spec:
   type: LoadBalancer
   selector:
-    app: fusionauth
+    app.kubernetes.io/instance: fusionauth-customer-os
+    app.kubernetes.io/name: fusionauth
   ports:
     - name: http
       port: 9011
