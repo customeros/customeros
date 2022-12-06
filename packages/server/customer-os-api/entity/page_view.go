@@ -5,8 +5,6 @@ import (
 	"time"
 )
 
-const LabelName_PageView = NodeLabel_PageView
-
 type PageViewEntity struct {
 	Id             string
 	Application    string
@@ -26,9 +24,9 @@ func (pageView PageViewEntity) ToString() string {
 
 type PageViewEntities []PageViewEntity
 
-func (pageView PageViewEntity) Action() {
+func (PageViewEntity) Action() {
 }
 
-func (pageView PageViewEntity) ActionName() string {
+func (PageViewEntity) ActionName() string {
 	return NodeLabel_PageView
 }

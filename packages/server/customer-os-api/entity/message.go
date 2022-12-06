@@ -17,3 +17,10 @@ func (message MessageEntity) ToString() string {
 }
 
 type MessageEntities []MessageEntity
+
+func (MessageEntity) Action() {
+}
+
+func (MessageEntity) ActionName() string {
+	return NodeLabel_Message
+}

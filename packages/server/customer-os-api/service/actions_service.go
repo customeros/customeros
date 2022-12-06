@@ -47,8 +47,10 @@ func (s *actionsService) GetContactActions(ctx context.Context, contactId string
 
 	actions := entity.ActionEntities{}
 	for _, v := range dbNodes {
-		if slices.Contains(v.Labels, entity.LabelName_PageView) {
+		if slices.Contains(v.Labels, entity.NodeLabel_PageView) {
 			actions = append(actions, s.mapDbNodeToPageViewAction(v))
+		} else if slices.Contains(v.Labels, entity.NodeLabel_Message) {
+			actions = append(actions, s.mapDbNodeToMessageAction(v))
 		}
 	}
 
@@ -70,4 +72,15 @@ func (s *actionsService) mapDbNodeToPageViewAction(node *dbtype.Node) *entity.Pa
 		EndedAt:        utils.GetTimePropOrNow(props, "endedAt"),
 	}
 	return &pageViewAction
+}
+
+func (s *actionsService) mapDbNodeToMessageAction(node *dbtype.Node) *entity.MessageEntity {
+	props := utils.GetPropsFromNode(*node)
+	messageEntity := entity.MessageEntity{
+		Id:             utils.GetStringPropOrEmpty(props, "id"),
+		ConversationId: utils.GetStringPropOrEmpty(props, "conversationId"),
+		Channel:        utils.GetStringPropOrEmpty(props, "channel"),
+		StartedAt:      utils.GetTimePropOrNow(props, "startedAt"),
+	}
+	return &messageEntity
 }
