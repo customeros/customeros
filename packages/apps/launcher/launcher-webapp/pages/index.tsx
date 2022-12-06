@@ -1,8 +1,6 @@
 import Layout from "../components/layout"
-import {inspect} from "util";
 import styles from './index.module.css'
-import Link from "next/link";
-import {AbortController} from "next/dist/compiled/@edge-runtime/primitives/abort-controller";
+
 
 export default function IndexPage() {
   return (
@@ -13,25 +11,25 @@ export default function IndexPage() {
         <section>
             <div className="apps-container">
                 <div className="apps-container-list">
-                    <a href={`http://localhost:3006`}>
+                    <a href={process.env.NEXT_PUBLIC_OASIS_URL}>
                         <div className="apps-container-list-item">
                             <h3 className={styles.subtitle}>Oasis</h3>
                             <p className={styles.centeredtext}>Short description here</p>
                         </div>
                     </a>
-                    <a href={`http://localhost:3000`}>
+                    <a href={process.env.NEXT_PUBLIC_CONTACTS_URL}>
                         <div className="apps-container-list-item">
                             <h3 className={styles.subtitle}>Contacts</h3>
                             <p className={styles.centeredtext}>Short description here</p>
                         </div>
                     </a>
-                    <a href={`http://localhost:3000`}>
+                    <a href={`/`}>
                         <div className="apps-container-list-item">
                             <h3 className={styles.subtitle}>Settings</h3>
                             <p className={styles.centeredtext}>N/A For the moment</p>
                         </div>
                     </a>
-                    <a href={`http://localhost:9011`}>
+                    <a href={process.env.NEXT_PUBLIC_AUTH_ADMIN_URL}>
                         <div className="apps-container-list-item">
                             <h3 className={styles.subtitle}>Auth</h3>
                             <p className={styles.centeredtext}>Short description here</p>
