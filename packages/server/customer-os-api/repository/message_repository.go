@@ -8,7 +8,7 @@ import (
 )
 
 type MessageRepository interface {
-	CreateMessage(tenant string, conversationId string, entity *entity.MessageEntity) (*dbtype.Node, error)
+	CreateMessage(tenant string, entity *entity.MessageEntity) (*dbtype.Node, error)
 }
 
 type messageRepository struct {
@@ -21,7 +21,7 @@ func NewMessageRepository(driver *neo4j.Driver) MessageRepository {
 	}
 }
 
-func (r *messageRepository) CreateMessage(tenant string, conversationId string, entity *entity.MessageEntity) (*dbtype.Node, error) {
+func (r *messageRepository) CreateMessage(tenant string, entity *entity.MessageEntity) (*dbtype.Node, error) {
 	session := utils.NewNeo4jWriteSession(*r.driver)
 	defer session.Close()
 
@@ -33,7 +33,7 @@ func (r *messageRepository) CreateMessage(tenant string, conversationId string, 
 			RETURN m`,
 			map[string]any{
 				"tenant":         tenant,
-				"conversationId": conversationId,
+				"conversationId": entity.ConversationId,
 				"messageId":      entity.Id,
 				"channel":        entity.Channel,
 				"startedAt":      entity.StartedAt,

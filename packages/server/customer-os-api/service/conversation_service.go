@@ -16,7 +16,7 @@ type ConversationService interface {
 	CreateNewConversation(ctx context.Context, userId string, contactId string, conversationId *string) (*entity.ConversationEntity, error)
 	GetConversationsForUser(ctx context.Context, userId string, page, limit int, sortBy []*model.SortBy) (*utils.Pagination, error)
 	GetConversationsForContact(ctx context.Context, contactId string, page, limit int, sortBy []*model.SortBy) (*utils.Pagination, error)
-	AddMessageToConversation(ctx context.Context, conversationId string, input *entity.MessageEntity) (*entity.MessageEntity, error)
+	AddMessageToConversation(ctx context.Context, input *entity.MessageEntity) (*entity.MessageEntity, error)
 }
 
 type conversationService struct {
@@ -116,9 +116,8 @@ func (s *conversationService) GetConversationsForContact(ctx context.Context, co
 	return &paginatedResult, nil
 }
 
-// FIXME alexb add integration test
-func (s *conversationService) AddMessageToConversation(ctx context.Context, conversationId string, input *entity.MessageEntity) (*entity.MessageEntity, error) {
-	dbNode, err := s.repository.MessageRepository.CreateMessage(common.GetContext(ctx).Tenant, conversationId, input)
+func (s *conversationService) AddMessageToConversation(ctx context.Context, input *entity.MessageEntity) (*entity.MessageEntity, error) {
+	dbNode, err := s.repository.MessageRepository.CreateMessage(common.GetContext(ctx).Tenant, input)
 	if err != nil {
 		return nil, err
 	}

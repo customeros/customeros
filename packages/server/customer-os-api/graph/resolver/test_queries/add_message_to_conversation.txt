@@ -1,0 +1,12 @@
+mutation AddMessage($conversationId: ID!, $messageId: ID!, $channel: MessageChannel!) {
+  conversationAddMessage(
+  input: {
+    conversationId: $conversationId
+    id: $messageId
+    channel:$channel
+  }) {
+    id
+    startedAt
+    channel
+  }
+}

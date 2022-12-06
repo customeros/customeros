@@ -1,6 +1,6 @@
 extend type Mutation {
     conversationCreate(input: ConversationInput!): Conversation!
-    conversationAddMessage(conversationId: ID!, input: MessageInput!): Message!
+    conversationAddMessage(input: MessageInput!): Message!
 }
 
 type Conversation implements Node {
@@ -33,6 +33,7 @@ type Message implements Node {
 
 input MessageInput {
     id: ID!
+    conversationId: ID!
     channel: MessageChannel!
     startedAt: Time
 }

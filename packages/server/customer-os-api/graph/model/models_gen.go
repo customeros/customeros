@@ -539,9 +539,10 @@ func (MessageAction) IsNode()            {}
 func (this MessageAction) GetID() string { return this.ID }
 
 type MessageInput struct {
-	ID        string         `json:"id"`
-	Channel   MessageChannel `json:"channel"`
-	StartedAt *time.Time     `json:"startedAt"`
+	ID             string         `json:"id"`
+	ConversationID string         `json:"conversationId"`
+	Channel        MessageChannel `json:"channel"`
+	StartedAt      *time.Time     `json:"startedAt"`
 }
 
 type PageViewAction struct {

@@ -210,7 +210,7 @@ type ComplexityRoot struct {
 		ContactTypeUpdate                      func(childComplexity int, input model.ContactTypeUpdateInput) int
 		ContactUpdate                          func(childComplexity int, input model.ContactUpdateInput) int
 		ContactUpdateCompanyPosition           func(childComplexity int, contactID string, companyPositionID string, input model.CompanyPositionInput) int
-		ConversationAddMessage                 func(childComplexity int, conversationID string, input model.MessageInput) int
+		ConversationAddMessage                 func(childComplexity int, input model.MessageInput) int
 		ConversationCreate                     func(childComplexity int, input model.ConversationInput) int
 		CustomFieldDeleteFromContactByID       func(childComplexity int, contactID string, id string) int
 		CustomFieldDeleteFromContactByName     func(childComplexity int, contactID string, fieldName string) int
@@ -341,7 +341,7 @@ type MutationResolver interface {
 	ContactTypeUpdate(ctx context.Context, input model.ContactTypeUpdateInput) (*model.ContactType, error)
 	ContactTypeDelete(ctx context.Context, id string) (*model.Result, error)
 	ConversationCreate(ctx context.Context, input model.ConversationInput) (*model.Conversation, error)
-	ConversationAddMessage(ctx context.Context, conversationID string, input model.MessageInput) (*model.Message, error)
+	ConversationAddMessage(ctx context.Context, input model.MessageInput) (*model.Message, error)
 	CustomFieldsMergeAndUpdateInContact(ctx context.Context, contactID string, customFields []*model.CustomFieldInput, fieldSets []*model.FieldSetInput) (*model.Contact, error)
 	CustomFieldMergeToContact(ctx context.Context, contactID string, input model.CustomFieldInput) (*model.CustomField, error)
 	CustomFieldUpdateInContact(ctx context.Context, contactID string, input model.CustomFieldUpdateInput) (*model.CustomField, error)
@@ -1209,7 +1209,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.ConversationAddMessage(childComplexity, args["conversationId"].(string), args["input"].(model.MessageInput)), true
+		return e.complexity.Mutation.ConversationAddMessage(childComplexity, args["input"].(model.MessageInput)), true
 
 	case "Mutation.conversationCreate":
 		if e.complexity.Mutation.ConversationCreate == nil {
@@ -2337,7 +2337,7 @@ extend type Query {
 }`, BuiltIn: false},
 	{Name: "../schemas/conversation.graphqls", Input: `extend type Mutation {
     conversationCreate(input: ConversationInput!): Conversation!
-    conversationAddMessage(conversationId: ID!, input: MessageInput!): Message!
+    conversationAddMessage(input: MessageInput!): Message!
 }
 
 type Conversation implements Node {
@@ -2370,6 +2370,7 @@ type Message implements Node {
 
 input MessageInput {
     id: ID!
+    conversationId: ID!
     channel: MessageChannel!
     startedAt: Time
 }
@@ -3387,24 +3388,15 @@ func (ec *executionContext) field_Mutation_contact_Update_args(ctx context.Conte
 func (ec *executionContext) field_Mutation_conversationAddMessage_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 string
-	if tmp, ok := rawArgs["conversationId"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("conversationId"))
-		arg0, err = ec.unmarshalNID2string(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["conversationId"] = arg0
-	var arg1 model.MessageInput
+	var arg0 model.MessageInput
 	if tmp, ok := rawArgs["input"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-		arg1, err = ec.unmarshalNMessageInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐMessageInput(ctx, tmp)
+		arg0, err = ec.unmarshalNMessageInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐMessageInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["input"] = arg1
+	args["input"] = arg0
 	return args, nil
 }
 
@@ -9494,7 +9486,7 @@ func (ec *executionContext) _Mutation_conversationAddMessage(ctx context.Context
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().ConversationAddMessage(rctx, fc.Args["conversationId"].(string), fc.Args["input"].(model.MessageInput))
+		return ec.resolvers.Mutation().ConversationAddMessage(rctx, fc.Args["input"].(model.MessageInput))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -15587,7 +15579,7 @@ func (ec *executionContext) unmarshalInputMessageInput(ctx context.Context, obj 
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"id", "channel", "startedAt"}
+	fieldsInOrder := [...]string{"id", "conversationId", "channel", "startedAt"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -15599,6 +15591,14 @@ func (ec *executionContext) unmarshalInputMessageInput(ctx context.Context, obj 
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
 			it.ID, err = ec.unmarshalNID2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "conversationId":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("conversationId"))
+			it.ConversationID, err = ec.unmarshalNID2string(ctx, v)
 			if err != nil {
 				return it, err
 			}

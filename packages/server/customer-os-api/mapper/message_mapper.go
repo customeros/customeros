@@ -9,6 +9,7 @@ import (
 func MapMessageInputToEntity(input model.MessageInput) *entity.MessageEntity {
 	messageEntity := new(entity.MessageEntity)
 	messageEntity.Id = input.ID
+	messageEntity.ConversationId = input.ConversationID
 	messageEntity.Channel = MapMessageChannelFromModel(input.Channel)
 	if input.StartedAt == nil {
 		messageEntity.StartedAt = time.Now().UTC()
