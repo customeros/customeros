@@ -529,7 +529,7 @@ func (this Message) GetID() string { return this.ID }
 type MessageAction struct {
 	ID             string         `json:"id"`
 	StartedAt      time.Time      `json:"startedAt"`
-	Type           MessageChannel `json:"type"`
+	Channel        MessageChannel `json:"channel"`
 	ConversationID string         `json:"conversationId"`
 }
 
@@ -949,18 +949,26 @@ func (e EntityDefinitionExtension) MarshalGQL(w io.Writer) {
 type MessageChannel string
 
 const (
-	MessageChannelCall MessageChannel = "CALL"
-	MessageChannelMail MessageChannel = "MAIL"
+	MessageChannelVoice    MessageChannel = "VOICE"
+	MessageChannelMail     MessageChannel = "MAIL"
+	MessageChannelChat     MessageChannel = "CHAT"
+	MessageChannelWhatsapp MessageChannel = "WHATSAPP"
+	MessageChannelFacebook MessageChannel = "FACEBOOK"
+	MessageChannelTwitter  MessageChannel = "TWITTER"
 )
 
 var AllMessageChannel = []MessageChannel{
-	MessageChannelCall,
+	MessageChannelVoice,
 	MessageChannelMail,
+	MessageChannelChat,
+	MessageChannelWhatsapp,
+	MessageChannelFacebook,
+	MessageChannelTwitter,
 }
 
 func (e MessageChannel) IsValid() bool {
 	switch e {
-	case MessageChannelCall, MessageChannelMail:
+	case MessageChannelVoice, MessageChannelMail, MessageChannelChat, MessageChannelWhatsapp, MessageChannelFacebook, MessageChannelTwitter:
 		return true
 	}
 	return false

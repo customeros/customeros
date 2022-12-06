@@ -188,10 +188,10 @@ type ComplexityRoot struct {
 	}
 
 	MessageAction struct {
+		Channel        func(childComplexity int) int
 		ConversationID func(childComplexity int) int
 		ID             func(childComplexity int) int
 		StartedAt      func(childComplexity int) int
-		Type           func(childComplexity int) int
 	}
 
 	Mutation struct {
@@ -991,6 +991,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Message.StartedAt(childComplexity), true
 
+	case "MessageAction.channel":
+		if e.complexity.MessageAction.Channel == nil {
+			break
+		}
+
+		return e.complexity.MessageAction.Channel(childComplexity), true
+
 	case "MessageAction.conversationId":
 		if e.complexity.MessageAction.ConversationID == nil {
 			break
@@ -1011,13 +1018,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.MessageAction.StartedAt(childComplexity), true
-
-	case "MessageAction.type":
-		if e.complexity.MessageAction.Type == nil {
-			break
-		}
-
-		return e.complexity.MessageAction.Type(childComplexity), true
 
 	case "Mutation.contact_Create":
 		if e.complexity.Mutation.ContactCreate == nil {
@@ -1879,7 +1879,7 @@ type PageViewAction implements Node {
 type MessageAction implements Node {
     id: ID!
     startedAt: Time!
-    type: MessageChannel!
+    channel: MessageChannel!
     conversationId: ID!
 }
 
@@ -2375,8 +2375,12 @@ input MessageInput {
 }
 
 enum MessageChannel {
-    CALL
+    VOICE
     MAIL
+    CHAT
+    WHATSAPP
+    FACEBOOK
+    TWITTER
 }`, BuiltIn: false},
 	{Name: "../schemas/custom_field.graphqls", Input: `extend type Mutation {
     customFieldsMergeAndUpdateInContact(contactId : ID!, customFields: [CustomFieldInput!], fieldSets: [FieldSetInput!]): Contact!
@@ -8281,8 +8285,8 @@ func (ec *executionContext) fieldContext_MessageAction_startedAt(ctx context.Con
 	return fc, nil
 }
 
-func (ec *executionContext) _MessageAction_type(ctx context.Context, field graphql.CollectedField, obj *model.MessageAction) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_MessageAction_type(ctx, field)
+func (ec *executionContext) _MessageAction_channel(ctx context.Context, field graphql.CollectedField, obj *model.MessageAction) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_MessageAction_channel(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -8295,7 +8299,7 @@ func (ec *executionContext) _MessageAction_type(ctx context.Context, field graph
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Type, nil
+		return obj.Channel, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -8312,7 +8316,7 @@ func (ec *executionContext) _MessageAction_type(ctx context.Context, field graph
 	return ec.marshalNMessageChannel2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐMessageChannel(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_MessageAction_type(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_MessageAction_channel(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "MessageAction",
 		Field:      field,
@@ -17192,9 +17196,9 @@ func (ec *executionContext) _MessageAction(ctx context.Context, sel ast.Selectio
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
-		case "type":
+		case "channel":
 
-			out.Values[i] = ec._MessageAction_type(ctx, field, obj)
+			out.Values[i] = ec._MessageAction_channel(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
 				invalids++

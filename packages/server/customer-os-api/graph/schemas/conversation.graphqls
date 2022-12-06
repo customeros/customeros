@@ -38,6 +38,10 @@ input MessageInput {
 }
 
 enum MessageChannel {
-    CALL
+    VOICE
     MAIL
+    CHAT
+    WHATSAPP
+    FACEBOOK
+    TWITTER
 }

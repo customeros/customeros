@@ -16,7 +16,7 @@ type ConversationService interface {
 	CreateNewConversation(ctx context.Context, userId string, contactId string, conversationId *string) (*entity.ConversationEntity, error)
 	GetConversationsForUser(ctx context.Context, userId string, page, limit int, sortBy []*model.SortBy) (*utils.Pagination, error)
 	GetConversationsForContact(ctx context.Context, contactId string, page, limit int, sortBy []*model.SortBy) (*utils.Pagination, error)
-	//AddMessageToConversation(ctx context.Context, conversationId string, message entity.MessageEntity) (*entity.MessageEntity, error)
+	AddMessageToConversation(ctx context.Context, conversationId string, input *entity.MessageEntity) (*entity.MessageEntity, error)
 }
 
 type conversationService struct {
@@ -117,9 +117,12 @@ func (s *conversationService) GetConversationsForContact(ctx context.Context, co
 }
 
 // FIXME alexb add integration test
-func (s *conversationService) AddMessageToConversation(ctx context.Context, conversationId string, message entity.MessageEntity) {
-	//TODO implement me
-	panic("implement me")
+func (s *conversationService) AddMessageToConversation(ctx context.Context, conversationId string, input *entity.MessageEntity) (*entity.MessageEntity, error) {
+	dbNode, err := s.repository.MessageRepository.CreateMessage(common.GetContext(ctx).Tenant, conversationId, input)
+	if err != nil {
+		return nil, err
+	}
+	return s.mapDbNodeToMessageEntity(dbNode), nil
 }
 
 func (s *conversationService) mapDbNodeToConversationEntity(dbNode *dbtype.Node) *entity.ConversationEntity {
@@ -136,8 +139,8 @@ func (s *conversationService) mapDbNodeToMessageEntity(dbNode *dbtype.Node) *ent
 	messageEntity := entity.MessageEntity{
 		Id:             utils.GetStringPropOrEmpty(props, "id"),
 		StartedAt:      utils.GetTimePropOrNow(props, "startedAt"),
-		ConversationId: utils.GetStringPropOrEmpty(props, "conversationId"),
 		Channel:        utils.GetStringPropOrEmpty(props, "channel"),
+		ConversationId: utils.GetStringPropOrEmpty(props, "conversationId"),
 	}
 	return &messageEntity
 }
