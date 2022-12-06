@@ -37,27 +37,6 @@ type Pages interface {
 	GetTotalElements() int64
 }
 
-type CallAction struct {
-	ID        string    `json:"id"`
-	StartedAt time.Time `json:"startedAt"`
-	EndedAt   time.Time `json:"endedAt"`
-}
-
-func (CallAction) IsAction() {}
-
-func (CallAction) IsNode()            {}
-func (this CallAction) GetID() string { return this.ID }
-
-type ChatAction struct {
-	ID        string    `json:"id"`
-	StartedAt time.Time `json:"startedAt"`
-}
-
-func (ChatAction) IsAction() {}
-
-func (ChatAction) IsNode()            {}
-func (this ChatAction) GetID() string { return this.ID }
-
 type Company struct {
 	ID   string `json:"id"`
 	Name string `json:"name"`
@@ -436,16 +415,6 @@ type Email struct {
 	Primary bool `json:"primary"`
 }
 
-type EmailAction struct {
-	ID        string    `json:"id"`
-	StartedAt time.Time `json:"startedAt"`
-}
-
-func (EmailAction) IsAction() {}
-
-func (EmailAction) IsNode()            {}
-func (this EmailAction) GetID() string { return this.ID }
-
 // Describes an email address associated with a `Contact` in customerOS.
 // **A `create` object.**
 type EmailInput struct {
@@ -545,6 +514,34 @@ type FilterItem struct {
 	Operation     ComparisonOperator `json:"operation"`
 	Value         AnyTypeValue       `json:"value"`
 	CaseSensitive *bool              `json:"caseSensitive"`
+}
+
+type Message struct {
+	ID             string         `json:"id"`
+	Channel        MessageChannel `json:"channel"`
+	StartedAt      time.Time      `json:"startedAt"`
+	ConversationID string         `json:"conversationId"`
+}
+
+func (Message) IsNode()            {}
+func (this Message) GetID() string { return this.ID }
+
+type MessageAction struct {
+	ID             string         `json:"id"`
+	StartedAt      time.Time      `json:"startedAt"`
+	Type           MessageChannel `json:"type"`
+	ConversationID string         `json:"conversationId"`
+}
+
+func (MessageAction) IsAction() {}
+
+func (MessageAction) IsNode()            {}
+func (this MessageAction) GetID() string { return this.ID }
+
+type MessageInput struct {
+	ID        string         `json:"id"`
+	Channel   MessageChannel `json:"channel"`
+	StartedAt *time.Time     `json:"startedAt"`
 }
 
 type PageViewAction struct {
@@ -699,21 +696,17 @@ type ActionType string
 
 const (
 	ActionTypePageView ActionType = "PAGE_VIEW"
-	ActionTypeCall     ActionType = "CALL"
-	ActionTypeEmail    ActionType = "EMAIL"
-	ActionTypeChat     ActionType = "CHAT"
+	ActionTypeMessage  ActionType = "MESSAGE"
 )
 
 var AllActionType = []ActionType{
 	ActionTypePageView,
-	ActionTypeCall,
-	ActionTypeEmail,
-	ActionTypeChat,
+	ActionTypeMessage,
 }
 
 func (e ActionType) IsValid() bool {
 	switch e {
-	case ActionTypePageView, ActionTypeCall, ActionTypeEmail, ActionTypeChat:
+	case ActionTypePageView, ActionTypeMessage:
 		return true
 	}
 	return false
@@ -950,6 +943,47 @@ func (e *EntityDefinitionExtension) UnmarshalGQL(v interface{}) error {
 }
 
 func (e EntityDefinitionExtension) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+type MessageChannel string
+
+const (
+	MessageChannelCall MessageChannel = "CALL"
+	MessageChannelMail MessageChannel = "MAIL"
+)
+
+var AllMessageChannel = []MessageChannel{
+	MessageChannelCall,
+	MessageChannelMail,
+}
+
+func (e MessageChannel) IsValid() bool {
+	switch e {
+	case MessageChannelCall, MessageChannelMail:
+		return true
+	}
+	return false
+}
+
+func (e MessageChannel) String() string {
+	return string(e)
+}
+
+func (e *MessageChannel) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = MessageChannel(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid MessageChannel", str)
+	}
+	return nil
+}
+
+func (e MessageChannel) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
 }
 

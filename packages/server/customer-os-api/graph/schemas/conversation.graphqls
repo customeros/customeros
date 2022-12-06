@@ -1,5 +1,6 @@
 extend type Mutation {
     conversationCreate(input: ConversationInput!): Conversation!
+    conversationAddMessage(conversationId: ID!, input: MessageInput!): Message!
 }
 
 type Conversation implements Node {
@@ -21,4 +22,22 @@ type ConversationPage implements Pages {
     content: [Conversation!]!
     totalPages: Int!
     totalElements: Int64!
+}
+
+type Message implements Node {
+    id: ID!
+    channel: MessageChannel!
+    startedAt: Time!
+    conversationId: ID!
+}
+
+input MessageInput {
+    id: ID!
+    channel: MessageChannel!
+    startedAt: Time
+}
+
+enum MessageChannel {
+    CALL
+    MAIL
 }

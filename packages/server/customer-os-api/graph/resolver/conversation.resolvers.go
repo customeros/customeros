@@ -42,6 +42,17 @@ func (r *mutationResolver) ConversationCreate(ctx context.Context, input model.C
 	return mapper.MapEntityToConversation(conversationEntity), nil
 }
 
+// ConversationAddMessage is the resolver for the conversationAddMessage field.
+func (r *mutationResolver) ConversationAddMessage(ctx context.Context, conversationID string, input model.MessageInput) (*model.Message, error) {
+	//conversationEntity, err := r.Services.ConversationService.CreateNewConversation(ctx, input.UserID, input.ContactID, input.ID)
+	//if err != nil {
+	//	graphql.AddErrorf(ctx, "Failed to create conversation between user: %s and contact: %s", input.UserID, input.ContactID)
+	//	return nil, err
+	//}
+	//return mapper.MapEntityToConversation(conversationEntity), nil
+	return nil, nil
+}
+
 // Conversation returns generated.ConversationResolver implementation.
 func (r *Resolver) Conversation() generated.ConversationResolver { return &conversationResolver{r} }
 
