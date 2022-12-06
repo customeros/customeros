@@ -339,52 +339,6 @@ func TestQueryResolver_EntityDefinitions_FilterExtendsProperty(t *testing.T) {
 	require.Equal(t, 3, getCountOfNodes(driver, "EntityDefinition"))
 }
 
-func TestMutationResolver_ConversationCreate_AutogenerateID(t *testing.T) {
-	defer setupTestCase()(t)
-	createTenant(driver, tenantName)
-	userId := createDefaultUser(driver, tenantName)
-	contactId := createDefaultContact(driver, tenantName)
-
-	rawResponse, err := c.RawPost(getQuery("create_conversation"),
-		client.Var("contactId", contactId),
-		client.Var("userId", userId))
-	assertRawResponseSuccess(t, rawResponse, err)
-
-	var conversation struct {
-		ConversationCreate model.Conversation
-	}
-
-	err = decode.Decode(rawResponse.Data.(map[string]any), &conversation)
-	require.Nil(t, err)
-	require.NotNil(t, conversation)
-	require.NotNil(t, conversation.ConversationCreate.ID)
-	require.NotNil(t, conversation.ConversationCreate.StartedAt)
-}
-
-func TestMutationResolver_ConversationCreate_WithGivenID(t *testing.T) {
-	defer setupTestCase()(t)
-	createTenant(driver, tenantName)
-	conversationId := "Some conversation ID"
-	userId := createDefaultUser(driver, tenantName)
-	contactId := createDefaultContact(driver, tenantName)
-
-	rawResponse, err := c.RawPost(getQuery("create_conversation_with_id"),
-		client.Var("contactId", contactId),
-		client.Var("userId", userId),
-		client.Var("conversationId", conversationId))
-	assertRawResponseSuccess(t, rawResponse, err)
-
-	var conversation struct {
-		ConversationCreate model.Conversation
-	}
-
-	err = decode.Decode(rawResponse.Data.(map[string]any), &conversation)
-	require.Nil(t, err)
-	require.NotNil(t, conversation)
-	require.NotNil(t, conversation.ConversationCreate.StartedAt)
-	require.Equal(t, conversationId, conversation.ConversationCreate.ID)
-}
-
 func TestMutationResolver_ContactTypeCreate(t *testing.T) {
 	defer setupTestCase()(t)
 	createTenant(driver, tenantName)

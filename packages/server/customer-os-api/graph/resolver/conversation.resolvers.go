@@ -16,7 +16,7 @@ import (
 func (r *conversationResolver) Contact(ctx context.Context, obj *model.Conversation) (*model.Contact, error) {
 	contactEntity, err := r.Services.ContactService.FindContactById(ctx, obj.ContactID)
 	if err != nil || contactEntity == nil {
-		graphql.AddErrorf(ctx, "Contact with id %s not found", obj.ContactID)
+		graphql.AddErrorf(ctx, "contact with id %s not found", obj.ContactID)
 		return nil, err
 	}
 	return mapper.MapEntityToContact(contactEntity), nil
@@ -26,7 +26,7 @@ func (r *conversationResolver) Contact(ctx context.Context, obj *model.Conversat
 func (r *conversationResolver) User(ctx context.Context, obj *model.Conversation) (*model.User, error) {
 	userEntity, err := r.Services.UserService.FindUserById(ctx, obj.UserID)
 	if err != nil || userEntity == nil {
-		graphql.AddErrorf(ctx, "User with id %s not found", obj.UserID)
+		graphql.AddErrorf(ctx, "user with id %s not found", obj.UserID)
 		return nil, err
 	}
 	return mapper.MapEntityToUser(userEntity), nil
@@ -36,10 +36,20 @@ func (r *conversationResolver) User(ctx context.Context, obj *model.Conversation
 func (r *mutationResolver) ConversationCreate(ctx context.Context, input model.ConversationInput) (*model.Conversation, error) {
 	conversationEntity, err := r.Services.ConversationService.CreateNewConversation(ctx, input.UserID, input.ContactID, input.ID)
 	if err != nil {
-		graphql.AddErrorf(ctx, "Failed to create conversation between user: %s and contact: %s", input.UserID, input.ContactID)
+		graphql.AddErrorf(ctx, "failed to create conversation between user: %s and contact: %s", input.UserID, input.ContactID)
 		return nil, err
 	}
 	return mapper.MapEntityToConversation(conversationEntity), nil
+}
+
+// ConversationAddMessage is the resolver for the conversationAddMessage field.
+func (r *mutationResolver) ConversationAddMessage(ctx context.Context, input model.MessageInput) (*model.Message, error) {
+	messageEntity, err := r.Services.ConversationService.AddMessageToConversation(ctx, mapper.MapMessageInputToEntity(input))
+	if err != nil {
+		graphql.AddErrorf(ctx, "failed to create message %s in conversation %s", input.ID, input.ConversationID)
+		return nil, err
+	}
+	return mapper.MapEntityToMessage(messageEntity), nil
 }
 
 // Conversation returns generated.ConversationResolver implementation.
