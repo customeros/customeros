@@ -35,10 +35,11 @@ func (r *actionRepository) GetContactActions(session neo4j.Session, tenant, cont
 		filterByTypeCypherFragment = "AND size([label IN labels(a) WHERE label IN $nodeLabels | 1]) > 0"
 	}
 	query := fmt.Sprintf("MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant}), "+
-		" (c)-[:HAS_ACTION]->(a:Action) "+
-		" WHERE a.startedAt >= datetime($from) AND a.startedAt <= datetime($to) "+
+		" p = (c)-[*1..2]->(a:Action) "+
+		" WHERE all(r IN relationships(p) WHERE type(r) in ['HAS_ACTION','PARTICIPATES','CONSISTS_OF'])"+
+		" AND a.startedAt >= datetime($from) AND a.startedAt <= datetime($to) "+
 		" %s "+
-		" RETURN a ORDER BY a.startedAt DESC", filterByTypeCypherFragment)
+		" RETURN distinct a ORDER BY a.startedAt DESC", filterByTypeCypherFragment)
 
 	records, err := session.ReadTransaction(func(tx neo4j.Transaction) (any, error) {
 		queryResult, err := tx.Run(query, params)
@@ -52,7 +53,9 @@ func (r *actionRepository) GetContactActions(session neo4j.Session, tenant, cont
 	}
 	actionDbNodes := []*dbtype.Node{}
 	for _, v := range records.([]*neo4j.Record) {
-		actionDbNodes = append(actionDbNodes, utils.NodePtr(v.Values[0].(dbtype.Node)))
+		if v.Values[0] != nil {
+			actionDbNodes = append(actionDbNodes, utils.NodePtr(v.Values[0].(dbtype.Node)))
+		}
 	}
 	return actionDbNodes, err
 }

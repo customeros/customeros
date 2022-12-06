@@ -26,3 +26,12 @@ func MapEntityToMessage(entity *entity.MessageEntity) *model.Message {
 		Channel:   MapMessageChannelToModel(entity.Channel),
 	}
 }
+
+func MapEntityToMessageAction(entity *entity.MessageEntity) *model.MessageAction {
+	return &model.MessageAction{
+		ID:             entity.Id,
+		StartedAt:      entity.StartedAt,
+		ConversationID: entity.ConversationId,
+		Channel:        MapMessageChannelToModel(entity.Channel),
+	}
+}
