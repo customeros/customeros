@@ -366,7 +366,7 @@ func addMessageToConversation(driver *neo4j.Driver, conversationId, messageChann
 	var messageId, _ = uuid.NewRandom()
 	query := `MATCH (c:Conversation {id:$conversationId})
 			MERGE (c)-[:CONSISTS_OF]->(m:Message:Action {id:$messageId})
-			ON CREATE SET channel=$channel, startedAt=$time`
+			ON CREATE SET m.channel=$channel, m.startedAt=$startedAt, m.conversationId=$conversationId`
 	integration_tests.ExecuteWriteQuery(driver, query, map[string]any{
 		"conversationId": conversationId,
 		"messageId":      messageId.String(),
@@ -376,7 +376,7 @@ func addMessageToConversation(driver *neo4j.Driver, conversationId, messageChann
 	return messageId.String()
 }
 
-func createPageViewAction(driver *neo4j.Driver, contactId string, actionEntity entity.PageViewEntity) string {
+func createPageView(driver *neo4j.Driver, contactId string, actionEntity entity.PageViewEntity) string {
 	var actionId, _ = uuid.NewRandom()
 	query := `MATCH (c:Contact {id:$contactId})
 			MERGE (c)-[:HAS_ACTION]->(a:Action:PageView {id:$actionId})

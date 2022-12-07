@@ -4,6 +4,7 @@ import (
 	"github.com/99designs/gqlgen/client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils/decode"
 	"github.com/stretchr/testify/require"
 	"testing"
@@ -460,13 +461,18 @@ func TestQueryResolver_Contact_WithActions(t *testing.T) {
 
 	contactId := createDefaultContact(driver, tenantName)
 	contactId2 := createDefaultContact(driver, tenantName)
+	userId := createDefaultUser(driver, tenantName)
+	conversationId := createConversation(driver, userId, contactId)
 
 	now := time.Now().UTC()
 	secAgo1 := now.Add(time.Duration(-1) * time.Second)
 	secAgo30 := now.Add(time.Duration(-30) * time.Second)
+	secAgo60 := now.Add(time.Duration(-60) * time.Second)
 	from := now.Add(time.Duration(-10) * time.Minute)
 
-	actionId1 := createPageViewAction(driver, contactId, entity.PageViewEntity{
+	messageId := addMessageToConversation(driver, conversationId, mapper.MapMessageChannelFromModel(model.MessageChannelChat), secAgo60)
+
+	pageViewId1 := createPageView(driver, contactId, entity.PageViewEntity{
 		StartedAt:      secAgo1,
 		EndedAt:        now,
 		TrackerName:    "tracker1",
@@ -478,7 +484,7 @@ func TestQueryResolver_Contact_WithActions(t *testing.T) {
 		EngagedTime:    10,
 	})
 
-	actionId2 := createPageViewAction(driver, contactId, entity.PageViewEntity{
+	pageViewId2 := createPageView(driver, contactId, entity.PageViewEntity{
 		StartedAt:      secAgo30,
 		EndedAt:        now,
 		TrackerName:    "tracker2",
@@ -490,13 +496,16 @@ func TestQueryResolver_Contact_WithActions(t *testing.T) {
 		EngagedTime:    20,
 	})
 
-	createPageViewAction(driver, contactId2, entity.PageViewEntity{})
+	createPageView(driver, contactId2, entity.PageViewEntity{})
 
 	require.Equal(t, 2, getCountOfNodes(driver, "Contact"))
-	require.Equal(t, 3, getCountOfNodes(driver, "Action"))
+	require.Equal(t, 1, getCountOfNodes(driver, "User"))
+	require.Equal(t, 4, getCountOfNodes(driver, "Action"))
 	require.Equal(t, 3, getCountOfNodes(driver, "PageView"))
+	require.Equal(t, 1, getCountOfNodes(driver, "Conversation"))
+	require.Equal(t, 1, getCountOfNodes(driver, "Message"))
 
-	rawResponse, err := c.RawPost(getQuery("get_contact_with_page_view_actions"),
+	rawResponse, err := c.RawPost(getQuery("get_contact_with_actions"),
 		client.Var("contactId", contactId),
 		client.Var("from", from),
 		client.Var("to", now))
@@ -506,10 +515,10 @@ func TestQueryResolver_Contact_WithActions(t *testing.T) {
 	require.Equal(t, contactId, contact.(map[string]interface{})["id"])
 
 	actions := contact.(map[string]interface{})["actions"].([]interface{})
-	require.Equal(t, 2, len(actions))
+	require.Equal(t, 3, len(actions))
 	action1 := actions[0].(map[string]interface{})
 	require.Equal(t, "PageViewAction", action1["__typename"].(string))
-	require.Equal(t, actionId1, action1["id"].(string))
+	require.Equal(t, pageViewId1, action1["id"].(string))
 	require.NotNil(t, action1["startedAt"].(string))
 	require.NotNil(t, action1["endedAt"].(string))
 	require.Equal(t, "session1", action1["sessionId"].(string))
@@ -521,7 +530,7 @@ func TestQueryResolver_Contact_WithActions(t *testing.T) {
 
 	action2 := actions[1].(map[string]interface{})
 	require.Equal(t, "PageViewAction", action2["__typename"].(string))
-	require.Equal(t, actionId2, action2["id"].(string))
+	require.Equal(t, pageViewId2, action2["id"].(string))
 	require.NotNil(t, action2["startedAt"].(string))
 	require.NotNil(t, action2["endedAt"].(string))
 	require.Equal(t, "session2", action2["sessionId"].(string))
@@ -530,6 +539,13 @@ func TestQueryResolver_Contact_WithActions(t *testing.T) {
 	require.Equal(t, "http://app-2.ai", action2["pageUrl"].(string))
 	require.Equal(t, float64(2), action2["orderInSession"].(float64))
 	require.Equal(t, float64(20), action2["engagedTime"].(float64))
+
+	action3 := actions[2].(map[string]interface{})
+	require.Equal(t, "MessageAction", action3["__typename"].(string))
+	require.Equal(t, messageId, action3["id"].(string))
+	require.Equal(t, conversationId, action3["conversationId"].(string))
+	require.Equal(t, "CHAT", action3["channel"].(string))
+	require.NotNil(t, action3["startedAt"].(string))
 }
 
 func TestQueryResolver_Contact_WithActions_FilterByActionType(t *testing.T) {
@@ -537,12 +553,14 @@ func TestQueryResolver_Contact_WithActions_FilterByActionType(t *testing.T) {
 	createTenant(driver, tenantName)
 
 	contactId := createDefaultContact(driver, tenantName)
+	userId := createDefaultUser(driver, tenantName)
+	conversationId := createConversation(driver, userId, contactId)
 
 	now := time.Now().UTC()
 	secAgo1 := now.Add(time.Duration(-1) * time.Second)
 	from := now.Add(time.Duration(-10) * time.Minute)
 
-	actionId1 := createPageViewAction(driver, contactId, entity.PageViewEntity{
+	actionId1 := createPageView(driver, contactId, entity.PageViewEntity{
 		StartedAt:      secAgo1,
 		EndedAt:        now,
 		TrackerName:    "tracker1",
@@ -553,10 +571,12 @@ func TestQueryResolver_Contact_WithActions_FilterByActionType(t *testing.T) {
 		OrderInSession: 1,
 		EngagedTime:    10,
 	})
+	addMessageToConversation(driver, conversationId, mapper.MapMessageChannelFromModel(model.MessageChannelChat), secAgo1)
 
 	require.Equal(t, 1, getCountOfNodes(driver, "Contact"))
-	require.Equal(t, 1, getCountOfNodes(driver, "Action"))
+	require.Equal(t, 2, getCountOfNodes(driver, "Action"))
 	require.Equal(t, 1, getCountOfNodes(driver, "PageView"))
+	require.Equal(t, 1, getCountOfNodes(driver, "Message"))
 
 	types := []model.ActionType{}
 	types = append(types, model.ActionTypePageView)
