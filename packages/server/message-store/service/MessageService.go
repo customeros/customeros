@@ -143,6 +143,24 @@ func getContactByEmail(graphqlClient *graphql.Client, email string) (*ContactInf
 		id:       graphqlResponse["contact_ByEmail"]["id"]}, nil
 }
 
+func getContactByPhone(graphqlClient *graphql.Client, e164 string) (*ContactInfo, error) {
+
+	graphqlRequest := graphql.NewRequest(`
+  				query ($e164: String!) {
+  					contact_ByPhone(e164: $e164){firstName,lastName,id}
+  				}
+    `)
+
+	graphqlRequest.Var("e164", e164)
+	var graphqlResponse map[string]map[string]string
+	if err := graphqlClient.Run(context.Background(), graphqlRequest, &graphqlResponse); err != nil {
+		return nil, err
+	}
+	return &ContactInfo{firstName: graphqlResponse["contact_ByPhone"]["firstName"],
+		lastName: graphqlResponse["contact_ByPhone"]["lastName"],
+		id:       graphqlResponse["contact_ByPhone"]["id"]}, nil
+}
+
 type contactResponse struct {
 	Contact struct {
 		FirstName    string `json:"firstName"`
@@ -191,7 +209,7 @@ func getContactById(graphqlClient *graphql.Client, id string) (*ContactInfo, err
 	}
 	return contactInfo, nil
 }
-func createContact(graphqlClient *graphql.Client, firstName string, lastName string, email string) (string, error) {
+func createContactWithEmail(graphqlClient *graphql.Client, firstName string, lastName string, email string) (string, error) {
 	graphqlRequest := graphql.NewRequest(`
 		mutation CreateContact ($firstName: String!, $lastName: String! $email: String!) {
 		  contact_Create(input: {firstName: $firstName,
@@ -205,6 +223,29 @@ func createContact(graphqlClient *graphql.Client, firstName string, lastName str
 	graphqlRequest.Var("firstName", firstName)
 	graphqlRequest.Var("lastName", lastName)
 	graphqlRequest.Var("email", email)
+	var graphqlResponse map[string]map[string]string
+	if err := graphqlClient.Run(context.Background(), graphqlRequest, &graphqlResponse); err != nil {
+		return "", err
+	}
+	return graphqlResponse["contact_Create"]["id"], nil
+}
+
+func createContactWithPhone(graphqlClient *graphql.Client, firstName string, lastName string, phone string) (string, error) {
+	graphqlRequest := graphql.NewRequest(`
+		mutation CreateContact ($firstName: String!, $lastName: String!, $e164: String!) {
+		  contact_Create(input: {
+            firstName: $firstName,
+			lastName: $lastName,
+		    phoneNumber:{e164:  $e164, label: WORK}
+		  }) {
+			  id
+		  }
+		}
+    `)
+
+	graphqlRequest.Var("firstName", firstName)
+	graphqlRequest.Var("lastName", lastName)
+	graphqlRequest.Var("e164", phone)
 	var graphqlResponse map[string]map[string]string
 	if err := graphqlClient.Run(context.Background(), graphqlRequest, &graphqlResponse); err != nil {
 		return "", err
@@ -258,7 +299,7 @@ func (s *messageService) SaveMessage(ctx context.Context, message *pb.Message) (
 					}
 				}
 				log.Printf("Making a contact, firstName=%s lastName=%s email=%s", firstName, lastName, email)
-				contactId, err := createContact(s.graphqlClient, firstName, lastName, email)
+				contactId, err := createContactWithEmail(s.graphqlClient, firstName, lastName, email)
 				contact = &ContactInfo{
 					firstName: firstName,
 					lastName:  lastName,
@@ -274,6 +315,28 @@ func (s *messageService) SaveMessage(ctx context.Context, message *pb.Message) (
 				Where(messagefeed.ContactId(contact.id)).
 				First(ctx)
 
+		} else if message.GetChannel() == pb.MessageChannel_VOICE {
+			contact, err = getContactByPhone(s.graphqlClient, message.Username)
+			if err != nil {
+
+				log.Printf("Contact %s creating a new contact", message.Username)
+				firstName, lastName := "Unknown", "Caller"
+				log.Printf("Making a contact, firstName=%s lastName=%s email=%s", firstName, lastName, message.Username)
+				contactId, err := createContactWithPhone(s.graphqlClient, firstName, lastName, message.Username)
+				contact = &ContactInfo{
+					firstName: firstName,
+					lastName:  lastName,
+					id:        contactId,
+				}
+				if err != nil {
+					log.Printf("Unable to create contact! %s", err.Error())
+					return nil, err
+				}
+			}
+			feed, err = s.client.MessageFeed.
+				Query().
+				Where(messagefeed.ContactId(contact.id)).
+				First(ctx)
 		} else {
 			return nil, status.Errorf(codes.Unimplemented, "Contact mapping not implemented yet for %v", message.GetChannel())
 		}

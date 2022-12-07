@@ -147,6 +147,86 @@ func Test_SaveMessageNewContact(t *testing.T) {
 	assert.Equal(t, mf.ContactId, "12345678")
 }
 
+func Test_SaveMessageNewPhone(t *testing.T) {
+	_, _, resolver, dbClient := NewWebServer(t)
+	grpcConn, err := messageStoreDialer()
+	createCalled := false
+	createConversationCalled := false
+
+	if err != nil {
+		t.Fatalf("Unable to make GRPC service, %s", err.Error())
+	}
+
+	ctx := context.Background()
+	resolver.GetContactByPhone = func(ctx context.Context, id string) (*model.Contact, error) {
+		if !assert.Equal(t, id, "+3228080000") {
+			return nil, status.Error(500, "Unexpected email address")
+		}
+		return nil, status.Error(404, "Phone Number Not Found")
+	}
+	resolver.ContactCreate = func(ctx context.Context, input model.ContactInput) (*model.Contact, error) {
+		createCalled = true
+		if !assert.Equal(t, input.FirstName, "Unknown") {
+			return nil, status.Error(500, "Unknown Firstname")
+		}
+		if !assert.Equal(t, input.LastName, "Caller") {
+			return nil, status.Error(500, "Unknown Firstname")
+		}
+		if !assert.Equal(t, input.PhoneNumber.E164, "+3228080000") {
+			return nil, status.Error(500, "Email")
+		}
+		return &model.Contact{
+			FirstName: "Unknown",
+			LastName:  "Caller",
+			ID:        "12345678",
+		}, nil
+	}
+	resolver.ConversationCreate = func(ctx context.Context, input model.ConversationInput) (*model.Conversation, error) {
+		log.Print("Inside Conversation Create!")
+		createConversationCalled = true
+		if !assert.Equal(t, input.UserID, "agentsmith") {
+			return nil, status.Error(500, "Unknown userid")
+		}
+		if !assert.Equal(t, input.ContactID, "12345678") {
+			return nil, status.Error(500, "Unknown ContactID")
+		}
+		return &model.Conversation{
+			ID:        "7",
+			Contact:   &model.Contact{ID: "12345678", FirstName: "Torrey", LastName: "Searle"},
+			StartedAt: time.Now(),
+			User:      &model.User{ID: "agentsmith", FirstName: "Agent", LastName: "Smith"},
+		}, nil
+	}
+
+	grpcClient := proto.NewMessageStoreServiceClient(grpcConn)
+
+	result, err := grpcClient.SaveMessage(ctx, &proto.Message{Message: "Call, duration 5 Minutes",
+		Direction: proto.MessageDirection_INBOUND,
+		Channel:   proto.MessageChannel_VOICE,
+		Type:      proto.MessageType_MESSAGE,
+		Username:  "+3228080000"})
+	if err != nil {
+		t.Fatalf("Error getting message: %s", err.Error())
+	}
+	log.Printf("Message saved with ID %d", *result.Id)
+
+	mi, err := dbClient.MessageItem.Get(ctx, int(*result.Id))
+
+	if err != nil {
+		t.Fatalf("Error finding Message %s", err.Error())
+	}
+	mf, err := dbClient.MessageItem.QueryMessageFeed(mi).First(ctx)
+
+	assert.True(t, createCalled)
+	assert.True(t, createConversationCalled)
+	assert.Equal(t, mi.Message, "Call, duration 5 Minutes")
+	assert.Equal(t, mi.Direction, messageitem.DirectionINBOUND)
+	assert.Equal(t, mi.Channel, messageitem.ChannelVOICE)
+	assert.Equal(t, mi.Type, messageitem.TypeMESSAGE)
+	assert.Equal(t, mi.Username, "+3228080000")
+	assert.Equal(t, mf.ContactId, "12345678")
+}
+
 func Test_SaveMessageMissingGraphContact(t *testing.T) {
 	_, _, resolver, dbClient := NewWebServer(t)
 	grpcConn, err := messageStoreDialer()
@@ -290,6 +370,70 @@ func Test_SaveMessageExistingContact(t *testing.T) {
 	assert.Equal(t, mi.Channel, messageitem.ChannelCHAT)
 	assert.Equal(t, mi.Type, messageitem.TypeMESSAGE)
 	assert.Equal(t, mi.Username, "Torrey Searle <x@x.org>")
+	assert.Equal(t, mf.ID, feed1.ID)
+	assert.Equal(t, mf.ContactId, "12345678")
+}
+
+func Test_SaveMessageExistingPhoneContact(t *testing.T) {
+	_, _, resolver, dbClient := NewWebServer(t)
+	grpcConn, err := messageStoreDialer()
+
+	if err != nil {
+		t.Fatalf("Unable to make GRPC service, %s", err.Error())
+	}
+
+	ctx := context.Background()
+
+	feed1, err := dbClient.MessageFeed.
+		Create().
+		SetFirstName("Torrey").
+		SetLastName("Searle").
+		SetContactId("12345678").
+		Save(ctx)
+	if err != nil {
+		t.Fatalf("Error inserting new Feed: %s", err.Error())
+	}
+
+	_, err = dbClient.MessageFeed.
+		Create().
+		SetFirstName("Echo").
+		SetLastName("Test").
+		SetContactId("echotest").
+		Save(ctx)
+	if err != nil {
+		t.Fatalf("Error inserting new Feed: %s", err.Error())
+	}
+	resolver.GetContactByPhone = func(ctx context.Context, id string) (*model.Contact, error) {
+		if !assert.Equal(t, id, "+3228080000") {
+			return nil, status.Error(500, "Unexpected email address")
+		}
+		return &model.Contact{ID: "12345678", FirstName: "Torrey", LastName: "Searle"}, nil
+	}
+
+	grpcClient := proto.NewMessageStoreServiceClient(grpcConn)
+
+	result, err := grpcClient.SaveMessage(ctx, &proto.Message{Message: "Call, duration 5 Minutes",
+		Direction: proto.MessageDirection_INBOUND,
+		Channel:   proto.MessageChannel_VOICE,
+		Type:      proto.MessageType_MESSAGE,
+		Username:  "+3228080000"})
+	if err != nil {
+		t.Fatalf("Error getting message: %s", err.Error())
+	}
+	log.Printf("Message saved with ID %d", *result.Id)
+
+	mi, err := dbClient.MessageItem.Get(ctx, int(*result.Id))
+
+	if err != nil {
+		t.Fatalf("Error finding Message %s", err.Error())
+	}
+	mf, err := dbClient.MessageItem.QueryMessageFeed(mi).First(ctx)
+
+	assert.Equal(t, mi.Message, "Call, duration 5 Minutes")
+	assert.Equal(t, mi.Direction, messageitem.DirectionINBOUND)
+	assert.Equal(t, mi.Channel, messageitem.ChannelVOICE)
+	assert.Equal(t, mi.Type, messageitem.TypeMESSAGE)
+	assert.Equal(t, mi.Username, "+3228080000")
 	assert.Equal(t, mf.ID, feed1.ID)
 	assert.Equal(t, mf.ContactId, "12345678")
 }
@@ -956,7 +1100,7 @@ func Test_parseEmail(t *testing.T) {
 	}
 }
 
-func Test_createContact(t *testing.T) {
+func Test_createContactWithEmail(t *testing.T) {
 	_, client, resolver, _ := NewWebServer(t)
 	resolver.ContactCreate = func(ctx context.Context, input model.ContactInput) (*model.Contact, error) {
 		if !assert.Equal(t, input.FirstName, "Torrey") {
@@ -974,7 +1118,32 @@ func Test_createContact(t *testing.T) {
 			ID:        "12345678",
 		}, nil
 	}
-	result, err := createContact(client, "Torrey", "Searle", "x@x.org")
+	result, err := createContactWithEmail(client, "Torrey", "Searle", "x@x.org")
+	if err != nil {
+		log.Fatalf("Got an error: %s", err.Error())
+	}
+	assert.Equal(t, "12345678", result)
+}
+
+func Test_createContactWithPhone(t *testing.T) {
+	_, client, resolver, _ := NewWebServer(t)
+	resolver.ContactCreate = func(ctx context.Context, input model.ContactInput) (*model.Contact, error) {
+		if !assert.Equal(t, input.FirstName, "Torrey") {
+			return nil, status.Error(500, "Unknown Firstname")
+		}
+		if !assert.Equal(t, input.LastName, "Searle") {
+			return nil, status.Error(500, "Unknown Firstname")
+		}
+		if !assert.Equal(t, input.PhoneNumber.E164, "+328080000") {
+			return nil, status.Error(500, "Email")
+		}
+		return &model.Contact{
+			FirstName: "Torrey",
+			LastName:  "Searle",
+			ID:        "12345678",
+		}, nil
+	}
+	result, err := createContactWithPhone(client, "Torrey", "Searle", "+328080000")
 	if err != nil {
 		log.Fatalf("Got an error: %s", err.Error())
 	}
@@ -1053,6 +1222,25 @@ func Test_getConversationByEmail(t *testing.T) {
 	}
 
 	result, err := getContactByEmail(client, "x@x.org")
+	if err != nil {
+		log.Fatalf("Got an error: %s", err.Error())
+	}
+	assert.Equal(t, result.firstName, "Torrey")
+	assert.Equal(t, result.lastName, "Searle")
+	assert.Equal(t, result.id, "12345678")
+
+}
+
+func Test_getConversationByPhone(t *testing.T) {
+	_, client, resolver, _ := NewWebServer(t)
+	resolver.GetContactByPhone = func(ctx context.Context, id string) (*model.Contact, error) {
+		if !assert.Equal(t, id, "+3228080000") {
+			return nil, status.Error(500, "Unexpected email address")
+		}
+		return &model.Contact{ID: "12345678", FirstName: "Torrey", LastName: "Searle"}, nil
+	}
+
+	result, err := getContactByPhone(client, "+3228080000")
 	if err != nil {
 		log.Fatalf("Got an error: %s", err.Error())
 	}
