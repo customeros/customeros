@@ -7,10 +7,12 @@ require (
 	github.com/99designs/gqlgen v0.17.20
 	github.com/caarlos0/env/v6 v6.10.1
 	github.com/gin-gonic/gin v1.8.1
+	github.com/joho/godotenv v1.4.0
 	github.com/lib/pq v1.10.7
 	github.com/machinebox/graphql v0.2.2
 	github.com/mattn/go-sqlite3 v1.14.15
-	github.com/openline-ai/openline-customer-os/packages/server/customer-os-api v0.0.0-20221201135026-4b66dea18e83
+	github.com/neo4j/neo4j-go-driver/v4 v4.4.4
+	github.com/openline-ai/openline-customer-os/packages/server/customer-os-api v0.0.0-20221207095944-8be866e45613
 	github.com/stretchr/testify v1.8.1
 	github.com/vektah/gqlparser/v2 v2.5.1
 	google.golang.org/grpc v1.50.1
@@ -43,7 +45,6 @@ require (
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
-	github.com/neo4j/neo4j-go-driver/v4 v4.4.4 // indirect
 	github.com/pelletier/go-toml/v2 v2.0.1 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect

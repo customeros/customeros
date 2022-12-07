@@ -38,7 +38,7 @@ func NewWebServer(t *testing.T) (*httptest.Server, *graphql.Client, *resolver.Re
 
 	conf := c.Config{}
 	conf.Identity.DefaultUserId = "agentsmith"
-	messageStoreService = NewMessageService(dbClient, graphqlClient, &conf)
+	messageStoreService = NewMessageService(dbClient, nil, graphqlClient, &conf)
 	t.Cleanup(func() {
 		log.Printf("Shutting down webserver")
 		server.Close()
@@ -46,6 +46,7 @@ func NewWebServer(t *testing.T) (*httptest.Server, *graphql.Client, *resolver.Re
 	})
 	return server, graphqlClient, resolver, dbClient
 }
+
 func messageStoreDialer() (*grpc.ClientConn, error) {
 	listener := bufconn.Listen(1024 * 1024)
 
@@ -605,6 +606,7 @@ func Test_GetMessage(t *testing.T) {
 	assert.Equal(t, "x@x.org", message.Username)
 
 }
+
 func Test_GetMessagesWithLimitBefore(t *testing.T) {
 	_, _, _, dbClient := NewWebServer(t)
 	grpcConn, err := messageStoreDialer()
@@ -861,6 +863,7 @@ func Test_GetMessages(t *testing.T) {
 	assert.Equal(t, "x@x.org", messageList.Message[1].Username)
 
 }
+
 func Test_GetFeeds(t *testing.T) {
 	_, _, resolver, dbClient := NewWebServer(t)
 	grpcConn, err := messageStoreDialer()
@@ -1185,6 +1188,7 @@ func Test_getContact(t *testing.T) {
 	assert.Equal(t, "+3228080000", *result.phone)
 	assert.Equal(t, "x@x.org", *result.email)
 }
+
 func Test_createConversation(t *testing.T) {
 	_, client, resolver, _ := NewWebServer(t)
 	resolver.ConversationCreate = func(ctx context.Context, input model.ConversationInput) (*model.Conversation, error) {

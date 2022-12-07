@@ -8,6 +8,14 @@ type Config struct {
 		Name     string `env:"DB_NAME,required"`
 		Password string `env:"DB_PASSWORD,required,unset"`
 	}
+	Neo4jDb struct {
+		Target                string `env:"NEO4J_TARGET,required"`
+		User                  string `env:"NEO4J_AUTH_USER,required,unset"`
+		Pwd                   string `env:"NEO4J_AUTH_PWD,required,unset"`
+		Realm                 string `env:"NEO4J_AUTH_REALM"`
+		MaxConnectionPoolSize int    `env:"NEO4J_MAX_CONN_POOL_SIZE" envDefault:"100"`
+		LogLevel              string `env:"NEO4J_LOG_LEVEL" envDefault:"WARNING"`
+	}
 	Service struct {
 		ServerPort    int    `env:"MESSAGE_STORE_SERVER_PORT,required"`
 		CustomerOsAPI string `env:"CUSTOMER_OS_API,required"`
