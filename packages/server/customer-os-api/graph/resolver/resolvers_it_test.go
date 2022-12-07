@@ -10,8 +10,8 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/generated"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/integration_tests"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service/container"
+	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils/decode"
 	"github.com/stretchr/testify/require"
 	"github.com/testcontainers/testcontainers-go"
@@ -28,10 +28,10 @@ var (
 const tenantName = "openline"
 
 func TestMain(m *testing.M) {
-	neo4jContainer, driver = integration_tests.InitTestNeo4jDB()
+	neo4jContainer, driver = neo4jt.InitTestNeo4jDB()
 	defer func(dbContainer testcontainers.Container, driver neo4j.Driver, ctx context.Context) {
-		integration_tests.Close(driver, "Driver")
-		integration_tests.Terminate(dbContainer, ctx)
+		neo4jt.Close(driver, "Driver")
+		neo4jt.Terminate(dbContainer, ctx)
 	}(neo4jContainer, *driver, context.Background())
 
 	prepareClient()
@@ -39,10 +39,10 @@ func TestMain(m *testing.M) {
 	os.Exit(m.Run())
 }
 
-func setupTestCase() func(tb testing.TB) {
+func tearDownTestCase() func(tb testing.TB) {
 	return func(tb testing.TB) {
 		tb.Logf("Teardown test %v, cleaning neo4j DB", tb.Name())
-		cleanupAllData(driver)
+		neo4jt.CleanupAllData(driver)
 	}
 }
 
@@ -73,14 +73,14 @@ func assertRawResponseSuccess(t *testing.T, response *client.Response, err error
 }
 
 func TestMutationResolver_FieldSetMergeToContact_AllowMultipleFieldSetWithSameNameOnDifferentContacts(t *testing.T) {
-	defer setupTestCase()(t)
-	createTenant(driver, tenantName)
-	contactId1 := createContact(driver, tenantName, entity.ContactEntity{
+	defer tearDownTestCase()(t)
+	neo4jt.CreateTenant(driver, tenantName)
+	contactId1 := neo4jt.CreateContact(driver, tenantName, entity.ContactEntity{
 		Title:     model.PersonTitleMr.String(),
 		FirstName: "first",
 		LastName:  "last",
 	})
-	contactId2 := createContact(driver, tenantName, entity.ContactEntity{
+	contactId2 := neo4jt.CreateContact(driver, tenantName, entity.ContactEntity{
 		Title:     model.PersonTitleMr.String(),
 		FirstName: "first",
 		LastName:  "last",
@@ -113,14 +113,14 @@ func TestMutationResolver_FieldSetMergeToContact_AllowMultipleFieldSetWithSameNa
 	require.Equal(t, "some name", fieldSet2.FieldSetMergeToContact.Name)
 	require.NotNil(t, fieldSet2.FieldSetMergeToContact.Added)
 
-	require.Equal(t, 2, getCountOfNodes(driver, "FieldSet"))
+	require.Equal(t, 2, neo4jt.GetCountOfNodes(driver, "FieldSet"))
 }
 
 func TestMutationResolver_MergeCustomFieldToFieldSet(t *testing.T) {
-	defer setupTestCase()(t)
-	createTenant(driver, tenantName)
-	contactId := createDefaultContact(driver, tenantName)
-	fieldSetId := createDefaultFieldSet(driver, contactId)
+	defer tearDownTestCase()(t)
+	neo4jt.CreateTenant(driver, tenantName)
+	contactId := neo4jt.CreateDefaultContact(driver, tenantName)
+	fieldSetId := neo4jt.CreateDefaultFieldSet(driver, contactId)
 
 	rawResponse, err := c.RawPost(getQuery("merge_custom_field_to_field_set"),
 		client.Var("contactId", contactId), client.Var("fieldSetId", fieldSetId))
@@ -138,18 +138,18 @@ func TestMutationResolver_MergeCustomFieldToFieldSet(t *testing.T) {
 	require.Equal(t, model.CustomFieldDataTypeText, textField.CustomFieldMergeToFieldSet.Datatype)
 	require.NotNil(t, textField.CustomFieldMergeToFieldSet.ID)
 
-	require.Equal(t, 1, getCountOfNodes(driver, "Contact"))
-	require.Equal(t, 1, getCountOfNodes(driver, "FieldSet"))
-	require.Equal(t, 1, getCountOfNodes(driver, "CustomField"))
-	require.Equal(t, 1, getCountOfNodes(driver, "TextField"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Contact"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "FieldSet"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "CustomField"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "TextField"))
 }
 
 func TestMutationResolver_CustomFieldUpdateInFieldSet(t *testing.T) {
-	defer setupTestCase()(t)
-	createTenant(driver, tenantName)
-	contactId := createDefaultContact(driver, tenantName)
-	fieldSetId := createDefaultFieldSet(driver, contactId)
-	fieldId := createDefaultCustomFieldInSet(driver, fieldSetId)
+	defer tearDownTestCase()(t)
+	neo4jt.CreateTenant(driver, tenantName)
+	contactId := neo4jt.CreateDefaultContact(driver, tenantName)
+	fieldSetId := neo4jt.CreateDefaultFieldSet(driver, contactId)
+	fieldId := neo4jt.CreateDefaultCustomFieldInSet(driver, fieldSetId)
 
 	rawResponse, err := c.RawPost(getQuery("update_custom_field_in_field_set"),
 		client.Var("contactId", contactId),
@@ -169,17 +169,17 @@ func TestMutationResolver_CustomFieldUpdateInFieldSet(t *testing.T) {
 	require.Equal(t, model.CustomFieldDataTypeText, textField.CustomFieldUpdateInFieldSet.Datatype)
 	require.Equal(t, fieldId, textField.CustomFieldUpdateInFieldSet.ID)
 
-	require.Equal(t, 1, getCountOfNodes(driver, "Contact"))
-	require.Equal(t, 1, getCountOfNodes(driver, "FieldSet"))
-	require.Equal(t, 1, getCountOfNodes(driver, "CustomField"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Contact"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "FieldSet"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "CustomField"))
 }
 
 func TestMutationResolver_CustomFieldDeleteFromFieldSetByID(t *testing.T) {
-	defer setupTestCase()(t)
-	createTenant(driver, tenantName)
-	contactId := createDefaultContact(driver, tenantName)
-	fieldSetId := createDefaultFieldSet(driver, contactId)
-	fieldId := createDefaultCustomFieldInSet(driver, fieldSetId)
+	defer tearDownTestCase()(t)
+	neo4jt.CreateTenant(driver, tenantName)
+	contactId := neo4jt.CreateDefaultContact(driver, tenantName)
+	fieldSetId := neo4jt.CreateDefaultFieldSet(driver, contactId)
+	fieldId := neo4jt.CreateDefaultCustomFieldInSet(driver, fieldSetId)
 
 	rawResponse, err := c.RawPost(getQuery("delete_custom_field_from_field_set"),
 		client.Var("contactId", contactId),
@@ -196,21 +196,21 @@ func TestMutationResolver_CustomFieldDeleteFromFieldSetByID(t *testing.T) {
 
 	require.Equal(t, true, textField.CustomFieldDeleteFromFieldSetByID.Result)
 
-	require.Equal(t, 1, getCountOfNodes(driver, "Contact"))
-	require.Equal(t, 1, getCountOfNodes(driver, "FieldSet"))
-	require.Equal(t, 0, getCountOfNodes(driver, "CustomField"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Contact"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "FieldSet"))
+	require.Equal(t, 0, neo4jt.GetCountOfNodes(driver, "CustomField"))
 }
 
 func TestMutationResolver_FieldSetDeleteFromContact(t *testing.T) {
-	defer setupTestCase()(t)
-	createTenant(driver, tenantName)
-	contactId := createDefaultContact(driver, tenantName)
-	fieldSetId := createDefaultFieldSet(driver, contactId)
-	createDefaultCustomFieldInSet(driver, fieldSetId)
+	defer tearDownTestCase()(t)
+	neo4jt.CreateTenant(driver, tenantName)
+	contactId := neo4jt.CreateDefaultContact(driver, tenantName)
+	fieldSetId := neo4jt.CreateDefaultFieldSet(driver, contactId)
+	neo4jt.CreateDefaultCustomFieldInSet(driver, fieldSetId)
 
-	require.Equal(t, 1, getCountOfNodes(driver, "Contact"))
-	require.Equal(t, 1, getCountOfNodes(driver, "FieldSet"))
-	require.Equal(t, 1, getCountOfNodes(driver, "CustomField"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Contact"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "FieldSet"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "CustomField"))
 
 	rawResponse, err := c.RawPost(getQuery("delete_field_set_from_contact"),
 		client.Var("contactId", contactId),
@@ -226,15 +226,15 @@ func TestMutationResolver_FieldSetDeleteFromContact(t *testing.T) {
 
 	require.Equal(t, true, textField.FieldSetDeleteFromContact.Result)
 
-	require.Equal(t, 1, getCountOfNodes(driver, "Contact"))
-	require.Equal(t, 0, getCountOfNodes(driver, "FieldSet"))
-	require.Equal(t, 0, getCountOfNodes(driver, "CustomField"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Contact"))
+	require.Equal(t, 0, neo4jt.GetCountOfNodes(driver, "FieldSet"))
+	require.Equal(t, 0, neo4jt.GetCountOfNodes(driver, "CustomField"))
 }
 
 func TestMutationResolver_EntityDefinitionCreate(t *testing.T) {
-	defer setupTestCase()(t)
-	createTenant(driver, tenantName)
-	createTenant(driver, "other")
+	defer tearDownTestCase()(t)
+	neo4jt.CreateTenant(driver, tenantName)
+	neo4jt.CreateTenant(driver, "other")
 
 	rawResponse, err := c.RawPost(getQuery("create_entity_definition"))
 	assertRawResponseSuccess(t, rawResponse, err)
@@ -307,18 +307,18 @@ func TestMutationResolver_EntityDefinitionCreate(t *testing.T) {
 	require.Equal(t, 99, *field.Max)
 	require.Equal(t, 255, *field.Length)
 
-	require.Equal(t, 1, getCountOfNodes(driver, "EntityDefinition"))
-	require.Equal(t, 2, getCountOfNodes(driver, "FieldSetDefinition"))
-	require.Equal(t, 4, getCountOfNodes(driver, "CustomFieldDefinition"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "EntityDefinition"))
+	require.Equal(t, 2, neo4jt.GetCountOfNodes(driver, "FieldSetDefinition"))
+	require.Equal(t, 4, neo4jt.GetCountOfNodes(driver, "CustomFieldDefinition"))
 }
 
 func TestQueryResolver_EntityDefinitions_FilterExtendsProperty(t *testing.T) {
-	defer setupTestCase()(t)
-	createTenant(driver, tenantName)
+	defer tearDownTestCase()(t)
+	neo4jt.CreateTenant(driver, tenantName)
 
-	createEntityDefinition(driver, tenantName, "")
-	id2 := createEntityDefinition(driver, tenantName, model.EntityDefinitionExtensionContact.String())
-	id3 := createEntityDefinition(driver, tenantName, model.EntityDefinitionExtensionContact.String())
+	neo4jt.CreateEntityDefinition(driver, tenantName, "")
+	id2 := neo4jt.CreateEntityDefinition(driver, tenantName, model.EntityDefinitionExtensionContact.String())
+	id3 := neo4jt.CreateEntityDefinition(driver, tenantName, model.EntityDefinitionExtensionContact.String())
 
 	rawResponse, err := c.RawPost(getQuery("get_entity_definitions_filter_by_extends"),
 		client.Var("extends", model.EntityDefinitionExtensionContact.String()))
@@ -336,13 +336,13 @@ func TestQueryResolver_EntityDefinitions_FilterExtendsProperty(t *testing.T) {
 	require.Equal(t, "CONTACT", entityDefinition.EntityDefinitions[1].Extends.String())
 	require.ElementsMatch(t, []string{id2, id3}, []string{entityDefinition.EntityDefinitions[0].ID, entityDefinition.EntityDefinitions[1].ID})
 
-	require.Equal(t, 3, getCountOfNodes(driver, "EntityDefinition"))
+	require.Equal(t, 3, neo4jt.GetCountOfNodes(driver, "EntityDefinition"))
 }
 
 func TestMutationResolver_ContactTypeCreate(t *testing.T) {
-	defer setupTestCase()(t)
-	createTenant(driver, tenantName)
-	createTenant(driver, "otherTenantName")
+	defer tearDownTestCase()(t)
+	neo4jt.CreateTenant(driver, tenantName)
+	neo4jt.CreateTenant(driver, "otherTenantName")
 
 	rawResponse, err := c.RawPost(getQuery("create_contact_type"))
 	assertRawResponseSuccess(t, rawResponse, err)
@@ -357,13 +357,13 @@ func TestMutationResolver_ContactTypeCreate(t *testing.T) {
 	require.NotNil(t, contactType.ContactType_Create.ID)
 	require.Equal(t, "the contact type", contactType.ContactType_Create.Name)
 
-	require.Equal(t, 1, getCountOfNodes(driver, "ContactType"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "ContactType"))
 }
 
 func TestMutationResolver_ContactTypeUpdate(t *testing.T) {
-	defer setupTestCase()(t)
-	createTenant(driver, tenantName)
-	contactTypeId := createContactType(driver, tenantName, "original type")
+	defer tearDownTestCase()(t)
+	neo4jt.CreateTenant(driver, tenantName)
+	contactTypeId := neo4jt.CreateContactType(driver, tenantName, "original type")
 
 	rawResponse, err := c.RawPost(getQuery("update_contact_type"),
 		client.Var("contactTypeId", contactTypeId))
@@ -379,15 +379,15 @@ func TestMutationResolver_ContactTypeUpdate(t *testing.T) {
 	require.Equal(t, contactTypeId, contactType.ContactType_Update.ID)
 	require.Equal(t, "updated type", contactType.ContactType_Update.Name)
 
-	require.Equal(t, 1, getCountOfNodes(driver, "ContactType"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "ContactType"))
 }
 
 func TestMutationResolver_ContactTypeDelete(t *testing.T) {
-	defer setupTestCase()(t)
-	createTenant(driver, tenantName)
-	contactTypeId := createContactType(driver, tenantName, "the type")
+	defer tearDownTestCase()(t)
+	neo4jt.CreateTenant(driver, tenantName)
+	contactTypeId := neo4jt.CreateContactType(driver, tenantName, "the type")
 
-	require.Equal(t, 1, getCountOfNodes(driver, "ContactType"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "ContactType"))
 
 	rawResponse, err := c.RawPost(getQuery("delete_contact_type"),
 		client.Var("contactTypeId", contactTypeId))
@@ -402,18 +402,18 @@ func TestMutationResolver_ContactTypeDelete(t *testing.T) {
 	require.NotNil(t, result)
 	require.Equal(t, true, result.ContactType_Delete.Result)
 
-	require.Equal(t, 0, getCountOfNodes(driver, "ContactType"))
+	require.Equal(t, 0, neo4jt.GetCountOfNodes(driver, "ContactType"))
 }
 
 func TestQueryResolver_ContactTypes(t *testing.T) {
-	defer setupTestCase()(t)
-	createTenant(driver, tenantName)
-	createTenant(driver, "other")
-	contactTypeId1 := createContactType(driver, tenantName, "first")
-	contactTypeId2 := createContactType(driver, tenantName, "second")
-	createContactType(driver, "other", "contact type for other tenant")
+	defer tearDownTestCase()(t)
+	neo4jt.CreateTenant(driver, tenantName)
+	neo4jt.CreateTenant(driver, "other")
+	contactTypeId1 := neo4jt.CreateContactType(driver, tenantName, "first")
+	contactTypeId2 := neo4jt.CreateContactType(driver, tenantName, "second")
+	neo4jt.CreateContactType(driver, "other", "contact type for other tenant")
 
-	require.Equal(t, 3, getCountOfNodes(driver, "ContactType"))
+	require.Equal(t, 3, neo4jt.GetCountOfNodes(driver, "ContactType"))
 
 	rawResponse, err := c.RawPost(getQuery("get_contact_types"))
 	assertRawResponseSuccess(t, rawResponse, err)
@@ -433,9 +433,9 @@ func TestQueryResolver_ContactTypes(t *testing.T) {
 }
 
 func TestMutationResolver_ContactMergeCompanyPosition_NewCompany(t *testing.T) {
-	defer setupTestCase()(t)
-	createTenant(driver, tenantName)
-	contactId := createDefaultContact(driver, tenantName)
+	defer tearDownTestCase()(t)
+	neo4jt.CreateTenant(driver, tenantName)
+	contactId := neo4jt.CreateDefaultContact(driver, tenantName)
 
 	rawResponse, err := c.RawPost(getQuery("merge_new_company_to_contact"),
 		client.Var("contactId", contactId))
@@ -453,16 +453,16 @@ func TestMutationResolver_ContactMergeCompanyPosition_NewCompany(t *testing.T) {
 	require.Equal(t, "Openline", companyPosition.Contact_MergeCompanyPosition.Company.Name)
 	require.Equal(t, "CTO", *companyPosition.Contact_MergeCompanyPosition.JobTitle)
 
-	require.Equal(t, 1, getCountOfNodes(driver, "Contact"))
-	require.Equal(t, 1, getCountOfNodes(driver, "Company"))
-	require.Equal(t, 1, getCountOfRelationships(driver, "WORKS_AT"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Contact"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Company"))
+	require.Equal(t, 1, neo4jt.GetCountOfRelationships(driver, "WORKS_AT"))
 }
 
 func TestMutationResolver_ContactMergeCompanyPosition_ExistingCompany(t *testing.T) {
-	defer setupTestCase()(t)
-	createTenant(driver, tenantName)
-	contactId := createDefaultContact(driver, tenantName)
-	companyId := createCompany(driver, tenantName, "LLC LLC")
+	defer tearDownTestCase()(t)
+	neo4jt.CreateTenant(driver, tenantName)
+	contactId := neo4jt.CreateDefaultContact(driver, tenantName)
+	companyId := neo4jt.CreateCompany(driver, tenantName, "LLC LLC")
 
 	rawResponse, err := c.RawPost(getQuery("merge_existing_company_to_contact"),
 		client.Var("contactId", contactId),
@@ -481,19 +481,19 @@ func TestMutationResolver_ContactMergeCompanyPosition_ExistingCompany(t *testing
 	require.Equal(t, "LLC LLC", companyPosition.Contact_MergeCompanyPosition.Company.Name)
 	require.Equal(t, "CEO", *companyPosition.Contact_MergeCompanyPosition.JobTitle)
 
-	require.Equal(t, 1, getCountOfNodes(driver, "Contact"))
-	require.Equal(t, 1, getCountOfNodes(driver, "Company"))
-	require.Equal(t, 1, getCountOfRelationships(driver, "WORKS_AT"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Contact"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Company"))
+	require.Equal(t, 1, neo4jt.GetCountOfRelationships(driver, "WORKS_AT"))
 }
 
 func TestMutationResolver_ContactRemoveCompanyPosition(t *testing.T) {
-	defer setupTestCase()(t)
-	createTenant(driver, tenantName)
-	contactId := createDefaultContact(driver, tenantName)
-	companyId := createCompany(driver, tenantName, "LLC LLC")
-	positionId := contactWorksForCompany(driver, contactId, companyId, "CTO")
+	defer tearDownTestCase()(t)
+	neo4jt.CreateTenant(driver, tenantName)
+	contactId := neo4jt.CreateDefaultContact(driver, tenantName)
+	companyId := neo4jt.CreateCompany(driver, tenantName, "LLC LLC")
+	positionId := neo4jt.ContactWorksForCompany(driver, contactId, companyId, "CTO")
 
-	require.Equal(t, 1, getCountOfRelationships(driver, "WORKS_AT"))
+	require.Equal(t, 1, neo4jt.GetCountOfRelationships(driver, "WORKS_AT"))
 
 	rawResponse, err := c.RawPost(getQuery("delete_company_position"),
 		client.Var("contactId", contactId),
@@ -509,15 +509,15 @@ func TestMutationResolver_ContactRemoveCompanyPosition(t *testing.T) {
 	require.NotNil(t, result)
 	require.Equal(t, true, result.Contact_DeleteCompanyPosition.Result)
 
-	require.Equal(t, 0, getCountOfRelationships(driver, "WORKS_AT"))
+	require.Equal(t, 0, neo4jt.GetCountOfRelationships(driver, "WORKS_AT"))
 }
 
 func TestMutationResolver_ContactUpdateCompanyPosition_SameCompanyNewPosition(t *testing.T) {
-	defer setupTestCase()(t)
-	createTenant(driver, tenantName)
-	contactId := createDefaultContact(driver, tenantName)
-	companyId := createCompany(driver, tenantName, "LLC LLC")
-	positionId := contactWorksForCompany(driver, contactId, companyId, "CTO")
+	defer tearDownTestCase()(t)
+	neo4jt.CreateTenant(driver, tenantName)
+	contactId := neo4jt.CreateDefaultContact(driver, tenantName)
+	companyId := neo4jt.CreateCompany(driver, tenantName, "LLC LLC")
+	positionId := neo4jt.ContactWorksForCompany(driver, contactId, companyId, "CTO")
 
 	rawResponse, err := c.RawPost(getQuery("update_company_position_same_company"),
 		client.Var("contactId", contactId),
@@ -537,18 +537,18 @@ func TestMutationResolver_ContactUpdateCompanyPosition_SameCompanyNewPosition(t 
 	require.Equal(t, "LLC LLC", companyPosition.Contact_UpdateCompanyPosition.Company.Name)
 	require.Equal(t, "CEO", *companyPosition.Contact_UpdateCompanyPosition.JobTitle)
 
-	require.Equal(t, 1, getCountOfNodes(driver, "Contact"))
-	require.Equal(t, 1, getCountOfNodes(driver, "Company"))
-	require.Equal(t, 1, getCountOfRelationships(driver, "WORKS_AT"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Contact"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Company"))
+	require.Equal(t, 1, neo4jt.GetCountOfRelationships(driver, "WORKS_AT"))
 }
 
 func TestMutationResolver_ContactUpdateCompanyPosition_InOtherExistingCompany(t *testing.T) {
-	defer setupTestCase()(t)
-	createTenant(driver, tenantName)
-	contactId := createDefaultContact(driver, tenantName)
-	companyId := createCompany(driver, tenantName, "Current Company")
-	otherCompanyId := createCompany(driver, tenantName, "Other Company")
-	positionId := contactWorksForCompany(driver, contactId, companyId, "CTO")
+	defer tearDownTestCase()(t)
+	neo4jt.CreateTenant(driver, tenantName)
+	contactId := neo4jt.CreateDefaultContact(driver, tenantName)
+	companyId := neo4jt.CreateCompany(driver, tenantName, "Current Company")
+	otherCompanyId := neo4jt.CreateCompany(driver, tenantName, "Other Company")
+	positionId := neo4jt.ContactWorksForCompany(driver, contactId, companyId, "CTO")
 
 	rawResponse, err := c.RawPost(getQuery("update_company_position_other_company"),
 		client.Var("contactId", contactId),
@@ -568,17 +568,17 @@ func TestMutationResolver_ContactUpdateCompanyPosition_InOtherExistingCompany(t 
 	require.Equal(t, "Other Company", companyPosition.Contact_UpdateCompanyPosition.Company.Name)
 	require.Equal(t, "CEO", *companyPosition.Contact_UpdateCompanyPosition.JobTitle)
 
-	require.Equal(t, 1, getCountOfNodes(driver, "Contact"))
-	require.Equal(t, 2, getCountOfNodes(driver, "Company"))
-	require.Equal(t, 1, getCountOfRelationships(driver, "WORKS_AT"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Contact"))
+	require.Equal(t, 2, neo4jt.GetCountOfNodes(driver, "Company"))
+	require.Equal(t, 1, neo4jt.GetCountOfRelationships(driver, "WORKS_AT"))
 }
 
 func TestMutationResolver_ContactUpdateCompanyPosition_InNewCompany(t *testing.T) {
-	defer setupTestCase()(t)
-	createTenant(driver, tenantName)
-	contactId := createDefaultContact(driver, tenantName)
-	companyId := createCompany(driver, tenantName, "LLC LLC")
-	positionId := contactWorksForCompany(driver, contactId, companyId, "CTO")
+	defer tearDownTestCase()(t)
+	neo4jt.CreateTenant(driver, tenantName)
+	contactId := neo4jt.CreateDefaultContact(driver, tenantName)
+	companyId := neo4jt.CreateCompany(driver, tenantName, "LLC LLC")
+	positionId := neo4jt.ContactWorksForCompany(driver, contactId, companyId, "CTO")
 
 	rawResponse, err := c.RawPost(getQuery("update_company_position_new_company"),
 		client.Var("contactId", contactId),
@@ -597,21 +597,21 @@ func TestMutationResolver_ContactUpdateCompanyPosition_InNewCompany(t *testing.T
 	require.Equal(t, "new company", companyPosition.Contact_UpdateCompanyPosition.Company.Name)
 	require.Equal(t, "CEO", *companyPosition.Contact_UpdateCompanyPosition.JobTitle)
 
-	require.Equal(t, 1, getCountOfNodes(driver, "Contact"))
-	require.Equal(t, 2, getCountOfNodes(driver, "Company"))
-	require.Equal(t, 1, getCountOfRelationships(driver, "WORKS_AT"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Contact"))
+	require.Equal(t, 2, neo4jt.GetCountOfNodes(driver, "Company"))
+	require.Equal(t, 1, neo4jt.GetCountOfRelationships(driver, "WORKS_AT"))
 }
 
 func TestQueryResolver_CompaniesByNameLike(t *testing.T) {
-	defer setupTestCase()(t)
-	createTenant(driver, tenantName)
-	createCompany(driver, tenantName, "A closed company")
-	createCompany(driver, tenantName, "OPENLINE")
-	createCompany(driver, tenantName, "the openline")
-	createCompany(driver, tenantName, "some other open company")
-	createCompany(driver, tenantName, "OpEnLiNe")
+	defer tearDownTestCase()(t)
+	neo4jt.CreateTenant(driver, tenantName)
+	neo4jt.CreateCompany(driver, tenantName, "A closed company")
+	neo4jt.CreateCompany(driver, tenantName, "OPENLINE")
+	neo4jt.CreateCompany(driver, tenantName, "the openline")
+	neo4jt.CreateCompany(driver, tenantName, "some other open company")
+	neo4jt.CreateCompany(driver, tenantName, "OpEnLiNe")
 
-	require.Equal(t, 5, getCountOfNodes(driver, "Company"))
+	require.Equal(t, 5, neo4jt.GetCountOfNodes(driver, "Company"))
 
 	rawResponse, err := c.RawPost(getQuery("get_companies_by_name"),
 		client.Var("companyName", "oPeN"),

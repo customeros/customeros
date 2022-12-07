@@ -4,15 +4,16 @@ import (
 	"github.com/99designs/gqlgen/client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
+	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils/decode"
 	"github.com/stretchr/testify/require"
 	"testing"
 )
 
 func TestMutationResolver_UserCreate(t *testing.T) {
-	defer setupTestCase()(t)
-	createTenant(driver, tenantName)
-	createTenant(driver, "other")
+	defer tearDownTestCase()(t)
+	neo4jt.CreateTenant(driver, tenantName)
+	neo4jt.CreateTenant(driver, "other")
 
 	rawResponse, err := c.RawPost(getQuery("create_user"))
 	assertRawResponseSuccess(t, rawResponse, err)
@@ -32,16 +33,16 @@ func TestMutationResolver_UserCreate(t *testing.T) {
 }
 
 func TestQueryResolver_Users(t *testing.T) {
-	defer setupTestCase()(t)
+	defer tearDownTestCase()(t)
 	otherTenant := "other"
-	createTenant(driver, tenantName)
-	createTenant(driver, otherTenant)
-	createUser(driver, tenantName, entity.UserEntity{
+	neo4jt.CreateTenant(driver, tenantName)
+	neo4jt.CreateTenant(driver, otherTenant)
+	neo4jt.CreateUser(driver, tenantName, entity.UserEntity{
 		FirstName: "first",
 		LastName:  "last",
 		Email:     "test@openline.ai",
 	})
-	createUser(driver, otherTenant, entity.UserEntity{
+	neo4jt.CreateUser(driver, otherTenant, entity.UserEntity{
 		FirstName: "otherFirst",
 		LastName:  "otherLast",
 		Email:     "otherEmail",
@@ -66,31 +67,31 @@ func TestQueryResolver_Users(t *testing.T) {
 }
 
 func TestQueryResolver_Users_FilteredAndSorted(t *testing.T) {
-	defer setupTestCase()(t)
-	createTenant(driver, tenantName)
+	defer tearDownTestCase()(t)
+	neo4jt.CreateTenant(driver, tenantName)
 
-	createUser(driver, tenantName, entity.UserEntity{
+	neo4jt.CreateUser(driver, tenantName, entity.UserEntity{
 		FirstName: "first_f",
 		LastName:  "first_l",
 		Email:     "user1@openline.ai",
 	})
-	createUser(driver, tenantName, entity.UserEntity{
+	neo4jt.CreateUser(driver, tenantName, entity.UserEntity{
 		FirstName: "second_f",
 		LastName:  "second_l",
 		Email:     "user2@openline.ai",
 	})
-	createUser(driver, tenantName, entity.UserEntity{
+	neo4jt.CreateUser(driver, tenantName, entity.UserEntity{
 		FirstName: "third_f",
 		LastName:  "third_l",
 		Email:     "user3@openline.ai",
 	})
-	createUser(driver, tenantName, entity.UserEntity{
+	neo4jt.CreateUser(driver, tenantName, entity.UserEntity{
 		FirstName: "fourth_f",
 		LastName:  "fourth_l",
 		Email:     "user4@openline.ai",
 	})
 
-	require.Equal(t, 4, getCountOfNodes(driver, "User"))
+	require.Equal(t, 4, neo4jt.GetCountOfNodes(driver, "User"))
 
 	rawResponse, err := c.RawPost(getQuery("get_users_filtered_and_sorted"))
 	assertRawResponseSuccess(t, rawResponse, err)
@@ -111,21 +112,21 @@ func TestQueryResolver_Users_FilteredAndSorted(t *testing.T) {
 }
 
 func TestQueryResolver_User(t *testing.T) {
-	defer setupTestCase()(t)
-	createTenant(driver, tenantName)
+	defer tearDownTestCase()(t)
+	neo4jt.CreateTenant(driver, tenantName)
 
-	userId1 := createUser(driver, tenantName, entity.UserEntity{
+	userId1 := neo4jt.CreateUser(driver, tenantName, entity.UserEntity{
 		FirstName: "first",
 		LastName:  "user",
 		Email:     "user1@openline.ai",
 	})
-	createUser(driver, tenantName, entity.UserEntity{
+	neo4jt.CreateUser(driver, tenantName, entity.UserEntity{
 		FirstName: "second",
 		LastName:  "user",
 		Email:     "user2@openline.ai",
 	})
 
-	require.Equal(t, 2, getCountOfNodes(driver, "User"))
+	require.Equal(t, 2, neo4jt.GetCountOfNodes(driver, "User"))
 
 	rawResponse, err := c.RawPost(getQuery("get_user_by_id"),
 		client.Var("userId", userId1))
@@ -145,23 +146,23 @@ func TestQueryResolver_User(t *testing.T) {
 }
 
 func TestQueryResolver_User_WithConversations(t *testing.T) {
-	defer setupTestCase()(t)
-	createTenant(driver, tenantName)
+	defer tearDownTestCase()(t)
+	neo4jt.CreateTenant(driver, tenantName)
 
-	user1 := createDefaultUser(driver, tenantName)
-	user2 := createDefaultUser(driver, tenantName)
-	contact1 := createDefaultContact(driver, tenantName)
-	contact2 := createDefaultContact(driver, tenantName)
-	contact3 := createDefaultContact(driver, tenantName)
+	user1 := neo4jt.CreateDefaultUser(driver, tenantName)
+	user2 := neo4jt.CreateDefaultUser(driver, tenantName)
+	contact1 := neo4jt.CreateDefaultContact(driver, tenantName)
+	contact2 := neo4jt.CreateDefaultContact(driver, tenantName)
+	contact3 := neo4jt.CreateDefaultContact(driver, tenantName)
 
-	conv1_1 := createConversation(driver, user1, contact1)
-	conv1_2 := createConversation(driver, user1, contact2)
-	conv2_1 := createConversation(driver, user2, contact1)
-	conv2_3 := createConversation(driver, user2, contact3)
+	conv1_1 := neo4jt.CreateConversation(driver, user1, contact1)
+	conv1_2 := neo4jt.CreateConversation(driver, user1, contact2)
+	conv2_1 := neo4jt.CreateConversation(driver, user2, contact1)
+	conv2_3 := neo4jt.CreateConversation(driver, user2, contact3)
 
-	require.Equal(t, 2, getCountOfNodes(driver, "User"))
-	require.Equal(t, 3, getCountOfNodes(driver, "Contact"))
-	require.Equal(t, 4, getCountOfNodes(driver, "Conversation"))
+	require.Equal(t, 2, neo4jt.GetCountOfNodes(driver, "User"))
+	require.Equal(t, 3, neo4jt.GetCountOfNodes(driver, "Contact"))
+	require.Equal(t, 4, neo4jt.GetCountOfNodes(driver, "Conversation"))
 
 	rawResponse, err := c.RawPost(getQuery("get_user_with_conversations"),
 		client.Var("userId", user1))
