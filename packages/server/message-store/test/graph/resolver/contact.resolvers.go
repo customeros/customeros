@@ -128,6 +128,10 @@ func (r *queryResolver) ContactByEmail(ctx context.Context, email string) (*mode
 
 // ContactByPhone is the resolver for the contact_ByPhone field.
 func (r *queryResolver) ContactByPhone(ctx context.Context, e164 string) (*model.Contact, error) {
+	if r.Resolver.GetContactByPhone != nil {
+		return r.Resolver.GetContactByPhone(ctx, e164)
+	}
+
 	panic(fmt.Errorf("not implemented: ContactByPhone - contact_ByPhone"))
 }
 
