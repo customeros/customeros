@@ -3,6 +3,7 @@ package mapper
 import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils"
 )
 
 func MapEmailInputToEntity(input *model.EmailInput) *entity.EmailEntity {
@@ -10,13 +11,9 @@ func MapEmailInputToEntity(input *model.EmailInput) *entity.EmailEntity {
 		return nil
 	}
 	emailEntity := entity.EmailEntity{
-		Email: input.Email,
-		Label: input.Label.String(),
-	}
-	if input.Primary != nil {
-		emailEntity.Primary = *input.Primary
-	} else {
-		emailEntity.Primary = false
+		Email:   input.Email,
+		Label:   utils.IfNotNilString(input.Label, func() string { return input.Label.String() }),
+		Primary: utils.IfNotNilBool(input.Primary),
 	}
 	return &emailEntity
 }
@@ -26,14 +23,10 @@ func MapEmailUpdateInputToEntity(input *model.EmailUpdateInput) *entity.EmailEnt
 		return nil
 	}
 	emailEntity := entity.EmailEntity{
-		Id:    input.ID,
-		Email: input.Email,
-		Label: input.Label.String(),
-	}
-	if input.Primary != nil {
-		emailEntity.Primary = *input.Primary
-	} else {
-		emailEntity.Primary = false
+		Id:      input.ID,
+		Email:   input.Email,
+		Label:   utils.IfNotNilString(input.Label, func() string { return input.Label.String() }),
+		Primary: utils.IfNotNilBool(input.Primary),
 	}
 	return &emailEntity
 }
@@ -49,12 +42,12 @@ func MapEntitiesToEmails(entities *entity.EmailEntities) []*model.Email {
 func MapEntityToEmail(emailEntity *entity.EmailEntity) *model.Email {
 	var label = model.EmailLabel(emailEntity.Label)
 	if !label.IsValid() {
-		label = model.EmailLabelOther
+		label = ""
 	}
 	return &model.Email{
 		ID:      emailEntity.Id,
 		Email:   emailEntity.Email,
-		Label:   label,
+		Label:   &label,
 		Primary: emailEntity.Primary,
 	}
 }

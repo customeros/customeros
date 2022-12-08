@@ -410,8 +410,7 @@ type Email struct {
 	// **Required.**
 	Email string `json:"email"`
 	// Describes the type of email address (WORK, PERSONAL, etc).
-	// **Required.**
-	Label EmailLabel `json:"label"`
+	Label *EmailLabel `json:"label"`
 	// Identifies whether the email address is primary or not.
 	// **Required.**
 	Primary bool `json:"primary"`
@@ -424,8 +423,7 @@ type EmailInput struct {
 	// **Required.**
 	Email string `json:"email"`
 	// Describes the type of email address (WORK, PERSONAL, etc).
-	// **Required.**
-	Label EmailLabel `json:"label"`
+	Label *EmailLabel `json:"label"`
 	// Identifies whether the email address is primary or not.
 	// **Required.**
 	Primary *bool `json:"primary"`
@@ -441,8 +439,7 @@ type EmailUpdateInput struct {
 	// **Required.**
 	Email string `json:"email"`
 	// Describes the type of email address (WORK, PERSONAL, etc).
-	// **Required.**
-	Label EmailLabel `json:"label"`
+	Label *EmailLabel `json:"label"`
 	// Identifies whether the email address is primary or not.
 	// **Required.**
 	Primary *bool `json:"primary"`
@@ -584,8 +581,7 @@ type PhoneNumber struct {
 	// **Required**
 	E164 string `json:"e164"`
 	// Defines the type of phone number.
-	// **Required**
-	Label PhoneNumberLabel `json:"label"`
+	Label *PhoneNumberLabel `json:"label"`
 	// Determines if the phone number is primary or not.
 	// **Required**
 	Primary bool `json:"primary"`
@@ -598,8 +594,7 @@ type PhoneNumberInput struct {
 	// **Required**
 	E164 string `json:"e164"`
 	// Defines the type of phone number.
-	// **Required**
-	Label PhoneNumberLabel `json:"label"`
+	Label *PhoneNumberLabel `json:"label"`
 	// Determines if the phone number is primary or not.
 	// **Required**
 	Primary *bool `json:"primary"`
@@ -615,8 +610,7 @@ type PhoneNumberUpdateInput struct {
 	// **Required**
 	E164 string `json:"e164"`
 	// Defines the type of phone number.
-	// **Required**
-	Label PhoneNumberLabel `json:"label"`
+	Label *PhoneNumberLabel `json:"label"`
 	// Determines if the phone number is primary or not.
 	// **Required**
 	Primary *bool `json:"primary"`

@@ -2574,9 +2574,8 @@ type Email {
 
     """
     Describes the type of email address (WORK, PERSONAL, etc).
-    **Required.**
     """
-    label: EmailLabel!
+    label: EmailLabel
 
     """
     Identifies whether the email address is primary or not.
@@ -2599,9 +2598,8 @@ input EmailInput {
 
     """
     Describes the type of email address (WORK, PERSONAL, etc).
-    **Required.**
     """
-    label: EmailLabel!
+    label: EmailLabel
 
     """
     Identifies whether the email address is primary or not.
@@ -2630,9 +2628,8 @@ input EmailUpdateInput {
 
     """
     Describes the type of email address (WORK, PERSONAL, etc).
-    **Required.**
     """
-    label: EmailLabel!
+    label: EmailLabel
 
     """
     Identifies whether the email address is primary or not.
@@ -2826,9 +2823,8 @@ type PhoneNumber {
 
     """
     Defines the type of phone number.
-    **Required**
     """
-    label: PhoneNumberLabel!
+    label: PhoneNumberLabel
 
     """
     Determines if the phone number is primary or not.
@@ -2851,9 +2847,8 @@ input PhoneNumberInput {
 
     """
     Defines the type of phone number.
-    **Required**
     """
-    label: PhoneNumberLabel!
+    label: PhoneNumberLabel
 
     """
     Determines if the phone number is primary or not.
@@ -2882,9 +2877,8 @@ input PhoneNumberUpdateInput {
 
     """
     Defines the type of phone number.
-    **Required**
     """
-    label: PhoneNumberLabel!
+    label: PhoneNumberLabel
 
     """
     Determines if the phone number is primary or not.
@@ -7238,14 +7232,11 @@ func (ec *executionContext) _Email_label(ctx context.Context, field graphql.Coll
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
 		return graphql.Null
 	}
-	res := resTmp.(model.EmailLabel)
+	res := resTmp.(*model.EmailLabel)
 	fc.Result = res
-	return ec.marshalNEmailLabel2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐEmailLabel(ctx, field.Selections, res)
+	return ec.marshalOEmailLabel2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐEmailLabel(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Email_label(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -11396,14 +11387,11 @@ func (ec *executionContext) _PhoneNumber_label(ctx context.Context, field graphq
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
 		return graphql.Null
 	}
-	res := resTmp.(model.PhoneNumberLabel)
+	res := resTmp.(*model.PhoneNumberLabel)
 	fc.Result = res
-	return ec.marshalNPhoneNumberLabel2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐPhoneNumberLabel(ctx, field.Selections, res)
+	return ec.marshalOPhoneNumberLabel2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐPhoneNumberLabel(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_PhoneNumber_label(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -15301,7 +15289,7 @@ func (ec *executionContext) unmarshalInputEmailInput(ctx context.Context, obj in
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("label"))
-			it.Label, err = ec.unmarshalNEmailLabel2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐEmailLabel(ctx, v)
+			it.Label, err = ec.unmarshalOEmailLabel2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐEmailLabel(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -15353,7 +15341,7 @@ func (ec *executionContext) unmarshalInputEmailUpdateInput(ctx context.Context, 
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("label"))
-			it.Label, err = ec.unmarshalNEmailLabel2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐEmailLabel(ctx, v)
+			it.Label, err = ec.unmarshalOEmailLabel2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐEmailLabel(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -15780,7 +15768,7 @@ func (ec *executionContext) unmarshalInputPhoneNumberInput(ctx context.Context, 
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("label"))
-			it.Label, err = ec.unmarshalNPhoneNumberLabel2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐPhoneNumberLabel(ctx, v)
+			it.Label, err = ec.unmarshalOPhoneNumberLabel2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐPhoneNumberLabel(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -15832,7 +15820,7 @@ func (ec *executionContext) unmarshalInputPhoneNumberUpdateInput(ctx context.Con
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("label"))
-			it.Label, err = ec.unmarshalNPhoneNumberLabel2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐPhoneNumberLabel(ctx, v)
+			it.Label, err = ec.unmarshalOPhoneNumberLabel2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐPhoneNumberLabel(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -16963,9 +16951,6 @@ func (ec *executionContext) _Email(ctx context.Context, sel ast.SelectionSet, ob
 
 			out.Values[i] = ec._Email_label(ctx, field, obj)
 
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
 		case "primary":
 
 			out.Values[i] = ec._Email_primary(ctx, field, obj)
@@ -17788,9 +17773,6 @@ func (ec *executionContext) _PhoneNumber(ctx context.Context, sel ast.SelectionS
 
 			out.Values[i] = ec._PhoneNumber_label(ctx, field, obj)
 
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
 		case "primary":
 
 			out.Values[i] = ec._PhoneNumber_primary(ctx, field, obj)
@@ -19309,16 +19291,6 @@ func (ec *executionContext) unmarshalNEmailInput2githubᚗcomᚋopenlineᚑaiᚋ
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalNEmailLabel2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐEmailLabel(ctx context.Context, v interface{}) (model.EmailLabel, error) {
-	var res model.EmailLabel
-	err := res.UnmarshalGQL(v)
-	return res, graphql.ErrorOnPath(ctx, err)
-}
-
-func (ec *executionContext) marshalNEmailLabel2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐEmailLabel(ctx context.Context, sel ast.SelectionSet, v model.EmailLabel) graphql.Marshaler {
-	return v
-}
-
 func (ec *executionContext) unmarshalNEmailUpdateInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐEmailUpdateInput(ctx context.Context, v interface{}) (model.EmailUpdateInput, error) {
 	res, err := ec.unmarshalInputEmailUpdateInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -19655,16 +19627,6 @@ func (ec *executionContext) marshalNPhoneNumber2ᚖgithubᚗcomᚋopenlineᚑai�
 func (ec *executionContext) unmarshalNPhoneNumberInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐPhoneNumberInput(ctx context.Context, v interface{}) (model.PhoneNumberInput, error) {
 	res, err := ec.unmarshalInputPhoneNumberInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
-}
-
-func (ec *executionContext) unmarshalNPhoneNumberLabel2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐPhoneNumberLabel(ctx context.Context, v interface{}) (model.PhoneNumberLabel, error) {
-	var res model.PhoneNumberLabel
-	err := res.UnmarshalGQL(v)
-	return res, graphql.ErrorOnPath(ctx, err)
-}
-
-func (ec *executionContext) marshalNPhoneNumberLabel2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐPhoneNumberLabel(ctx context.Context, sel ast.SelectionSet, v model.PhoneNumberLabel) graphql.Marshaler {
-	return v
 }
 
 func (ec *executionContext) unmarshalNPhoneNumberUpdateInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐPhoneNumberUpdateInput(ctx context.Context, v interface{}) (model.PhoneNumberUpdateInput, error) {
@@ -20237,6 +20199,22 @@ func (ec *executionContext) unmarshalOEmailInput2ᚖgithubᚗcomᚋopenlineᚑai
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
+func (ec *executionContext) unmarshalOEmailLabel2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐEmailLabel(ctx context.Context, v interface{}) (*model.EmailLabel, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var res = new(model.EmailLabel)
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOEmailLabel2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐEmailLabel(ctx context.Context, sel ast.SelectionSet, v *model.EmailLabel) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return v
+}
+
 func (ec *executionContext) marshalOEntityDefinition2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐEntityDefinition(ctx context.Context, sel ast.SelectionSet, v *model.EntityDefinition) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
@@ -20412,6 +20390,22 @@ func (ec *executionContext) unmarshalOPhoneNumberInput2ᚖgithubᚗcomᚋopenlin
 	}
 	res, err := ec.unmarshalInputPhoneNumberInput(ctx, v)
 	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalOPhoneNumberLabel2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐPhoneNumberLabel(ctx context.Context, v interface{}) (*model.PhoneNumberLabel, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var res = new(model.PhoneNumberLabel)
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOPhoneNumberLabel2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐPhoneNumberLabel(ctx context.Context, sel ast.SelectionSet, v *model.PhoneNumberLabel) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return v
 }
 
 func (ec *executionContext) marshalOResult2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐResult(ctx context.Context, sel ast.SelectionSet, v *model.Result) graphql.Marshaler {
