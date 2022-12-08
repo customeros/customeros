@@ -37,3 +37,17 @@ updates:
     pull-request-branch-name:
       separator: "-"
     rebase-strategy: "auto"
+
+  - package-ecosystem: "gomod"
+    directory: "/packages/server/message-store"
+    schedule:
+      interval: "daily"
+      time: "07:00"
+    open-pull-requests-limit: 3
+    labels:
+      - "gomod"
+      - "dependencies"
+      - "message-store"
+    pull-request-branch-name:
+      separator: "-"
+    rebase-strategy: "auto"
