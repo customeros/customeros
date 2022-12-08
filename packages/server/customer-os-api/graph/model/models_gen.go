@@ -93,11 +93,9 @@ type Contact struct {
 	// The title associate with the contact in customerOS.
 	Title *PersonTitle `json:"title"`
 	// The first name of the contact in customerOS.
-	// **Required**"
-	FirstName string `json:"firstName"`
+	FirstName *string `json:"firstName"`
 	// The last name of the contact in customerOS.
-	// **Required**
-	LastName string `json:"lastName"`
+	LastName *string `json:"lastName"`
 	// An ISO8601 timestamp recording when the contact was created in customerOS.
 	// **Required**
 	CreatedAt time.Time `json:"createdAt"`
@@ -105,6 +103,8 @@ type Contact struct {
 	Label *string `json:"label"`
 	// User-defined notes associated with a contact in customerOS.
 	Notes *string `json:"notes"`
+	// Readonly indicator for a contact
+	Readonly bool `json:"readonly"`
 	// User-defined field that defines the relationship type the contact has with your business.  `Customer`, `Partner`, `Lead` are examples.
 	ContactType *ContactType `json:"contactType"`
 	// `companyName` and `jobTitle` of the contact if it has been associated with a company.
@@ -200,17 +200,19 @@ type ContactInput struct {
 	// The title of the contact.
 	Title *PersonTitle `json:"title"`
 	// The first name of the contact.
-	// **Required.**
-	FirstName string `json:"firstName"`
+	FirstName *string `json:"firstName"`
 	// The last name of the contact.
-	// **Required.**
-	LastName string `json:"lastName"`
+	LastName *string `json:"lastName"`
 	// A user-defined label attached to contact.
 	Label *string `json:"label"`
 	// User-defined notes associated with contact.
 	Notes *string `json:"notes"`
 	// User-defined field that defines the relationship type the contact has with your business.  `Customer`, `Partner`, `Lead` are examples.
 	ContactTypeID *string `json:"contactTypeId"`
+	// Readonly indicator for a contact
+	Readonly *bool `json:"readonly"`
+	// An ISO8601 timestamp recording when the contact was created in customerOS.
+	CreatedAt *time.Time `json:"createdAt"`
 	// User defined metadata appended to contact.
 	// **Required.**
 	CustomFields []*CustomFieldInput `json:"customFields"`
@@ -246,11 +248,9 @@ type ContactUpdateInput struct {
 	// The title associate with the contact in customerOS.
 	Title *PersonTitle `json:"title"`
 	// The first name of the contact in customerOS.
-	// **Required.**
-	FirstName string `json:"firstName"`
+	FirstName *string `json:"firstName"`
 	// The last name of the contact in customerOS.
-	// **Required.**
-	LastName string `json:"lastName"`
+	LastName *string `json:"lastName"`
 	// A user-defined label applied against a contact in customerOS.
 	Label *string `json:"label"`
 	// User-defined notes associated with contact.
@@ -259,6 +259,8 @@ type ContactUpdateInput struct {
 	ContactTypeID *string `json:"contactTypeId"`
 	// Id of the contact owner (user)
 	OwnerID *string `json:"ownerId"`
+	// Readonly indicator for a contact
+	Readonly *bool `json:"readonly"`
 }
 
 // Specifies how many pages of contact information has been returned in the query response.

@@ -4,7 +4,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-analytics-api/repository"
 )
 
-//go:generate go get github.com/99designs/gqlgen@v0.17.20
 //go:generate go run github.com/99designs/gqlgen
 // This file will not be regenerated automatically.
 //

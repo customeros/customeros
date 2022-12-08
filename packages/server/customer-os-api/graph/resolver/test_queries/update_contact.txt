@@ -9,6 +9,7 @@ mutation UpdateContact($contactId: ID!, $contactTypeId: ID, $ownerId: ID){
             label: "updated label"
             contactTypeId: $contactTypeId
             ownerId: $ownerId
+            readonly: true
         }
     ) {
         id
@@ -17,6 +18,7 @@ mutation UpdateContact($contactId: ID!, $contactTypeId: ID, $ownerId: ID){
         lastName
         label
         notes
+        readonly
         contactType {
             id
             name

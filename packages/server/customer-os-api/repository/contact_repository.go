@@ -7,10 +7,12 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils"
+	"time"
 )
 
 type ContactRepository interface {
 	Create(tx neo4j.Transaction, tenant string, newContact entity.ContactEntity) (*dbtype.Node, error)
+	Update(tx neo4j.Transaction, tenant, contactId string, contactDtls *entity.ContactEntity) (*dbtype.Node, error)
 	SetOwner(tx neo4j.Transaction, tenant, contactId, userId string) error
 	RemoveOwner(tx neo4j.Transaction, tenant, contactId string) error
 	LinkWithEntityDefinitionInTx(tx neo4j.Transaction, tenant, contactId, entityDefinitionId string) error
@@ -61,6 +63,12 @@ func (r *contactRepository) RemoveOwner(tx neo4j.Transaction, tenant, contactId 
 }
 
 func (r *contactRepository) Create(tx neo4j.Transaction, tenant string, newContact entity.ContactEntity) (*dbtype.Node, error) {
+	var createdAt time.Time
+	createdAt = time.Now().UTC()
+	if newContact.CreatedAt != nil {
+		createdAt = *newContact.CreatedAt
+	}
+
 	if queryResult, err := tx.Run(`
 			MATCH (t:Tenant {name:$tenant})
 			CREATE (c:Contact {
@@ -68,9 +76,10 @@ func (r *contactRepository) Create(tx neo4j.Transaction, tenant string, newConta
 				  title: $title,
 				  firstName: $firstName,
 				  lastName: $lastName,
+				  readonly: $readonly,
 				  label: $label,
 				  notes: $notes,
-                  createdAt :datetime({timezone: 'UTC'})
+                  createdAt :$createdAt
 			})-[:CONTACT_BELONGS_TO_TENANT]->(t)
 			RETURN c`,
 		map[string]interface{}{
@@ -78,8 +87,36 @@ func (r *contactRepository) Create(tx neo4j.Transaction, tenant string, newConta
 			"title":     newContact.Title,
 			"firstName": newContact.FirstName,
 			"lastName":  newContact.LastName,
+			"readonly":  newContact.Readonly,
 			"label":     newContact.Label,
 			"notes":     newContact.Notes,
+			"createdAt": createdAt,
+		}); err != nil {
+		return nil, err
+	} else {
+		return utils.ExtractSingleRecordFirstValueAsNode(queryResult, err)
+	}
+}
+
+func (r *contactRepository) Update(tx neo4j.Transaction, tenant, contactId string, contactDtls *entity.ContactEntity) (*dbtype.Node, error) {
+	if queryResult, err := tx.Run(`
+			MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant})
+			SET c.firstName=$firstName,
+				c.lastName=$lastName,
+				c.label=$label,
+				c.title=$title,
+				c.notes=$notes,
+			    c.readonly=$readonly
+			RETURN c`,
+		map[string]interface{}{
+			"tenant":    tenant,
+			"contactId": contactId,
+			"firstName": contactDtls.FirstName,
+			"lastName":  contactDtls.LastName,
+			"label":     contactDtls.Label,
+			"title":     contactDtls.Title,
+			"notes":     contactDtls.Notes,
+			"readonly":  contactDtls.Readonly,
 		}); err != nil {
 		return nil, err
 	} else {
