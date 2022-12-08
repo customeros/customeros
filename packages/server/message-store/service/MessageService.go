@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"github.com/machinebox/graphql"
+	"github.com/neo4j/neo4j-go-driver/v4/neo4j"
 	c "github.com/openline-ai/openline-customer-os/packages/server/message-store/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/message-store/gen"
 	"github.com/openline-ai/openline-customer-os/packages/server/message-store/gen/messagefeed"
@@ -15,6 +16,7 @@ import (
 	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
 	"log"
 	"regexp"
+	"strconv"
 	"strings"
 	time "time"
 )
@@ -24,6 +26,7 @@ type messageService struct {
 	client        *gen.Client
 	graphqlClient *graphql.Client
 	config        *c.Config
+	driver        *neo4j.Driver
 }
 
 type ContactInfo struct {
@@ -277,6 +280,32 @@ func createConversation(graphqlClient *graphql.Client, userId string, contactId 
 	return graphqlResponse["conversationCreate"]["id"], nil
 }
 
+func addMessageToConversationInGraphDb(driver *neo4j.Driver, conversationId string, msg *gen.MessageItem, t *time.Time) error {
+	session := (*driver).NewSession(
+		neo4j.SessionConfig{
+			AccessMode: neo4j.AccessModeWrite,
+			BoltLogger: neo4j.ConsoleBoltLogger()})
+	defer session.Close()
+
+	channel := msg.Channel.String()
+
+	params := map[string]interface{}{
+		"conversationId": conversationId,
+		"messageId":      strconv.Itoa(msg.ID),
+		"startedAt":      t.UTC(),
+		"channel":        channel,
+	}
+	query := "MATCH (c:Conversation {id:$conversationId})" +
+		" MERGE (c)-[:CONSISTS_OF]->(m:Message:Action {id:$messageId})" +
+		" ON CREATE SET m.channel=$channel, m.startedAt=$startedAt, m.conversationId=$conversationId"
+	_, err := session.WriteTransaction(func(tx neo4j.Transaction) (interface{}, error) {
+		_, err := tx.Run(query, params)
+		return nil, err
+	})
+
+	return err
+}
+
 func (s *messageService) SaveMessage(ctx context.Context, message *pb.Message) (*pb.Message, error) {
 	var contact *ContactInfo
 	var err error
@@ -408,8 +437,14 @@ func (s *messageService) SaveMessage(ctx context.Context, message *pb.Message) (
 		t = &timeRef
 	}
 
-	var id int64 = int64(msg.ID)
-	var feedId int64 = int64(feed.ID)
+	addMessageToConversationInGraphDb(s.driver, strconv.Itoa(feed.ID), msg, t)
+	if err != nil {
+		log.Printf("Error saving message metadata in graph %v", err)
+		return nil, err
+	}
+
+	var id = int64(msg.ID)
+	var feedId = int64(feed.ID)
 	mi := &pb.Message{
 		Type:      decodeType(msg.Type),
 		Message:   msg.Message,
@@ -531,7 +566,7 @@ func (s *messageService) GetFeeds(ctx context.Context, _ *pb.Empty) (*pb.FeedLis
 	fl := &pb.FeedList{Contact: make([]*pb.Contact, len(contacts))}
 
 	for i, contact := range contacts {
-		var id int64 = int64(contact.ID)
+		var id = int64(contact.ID)
 		log.Printf("Got an feed id of %d", id)
 		contactInfo, err := getContactById(s.graphqlClient, contact.ContactId)
 		if err != nil {
@@ -545,6 +580,7 @@ func (s *messageService) GetFeeds(ctx context.Context, _ *pb.Empty) (*pb.FeedLis
 	}
 	return fl, nil
 }
+
 func (s *messageService) GetFeed(ctx context.Context, contact *pb.Contact) (*pb.Contact, error) {
 	if contact.Id != nil {
 		log.Printf("Looking up messages for Contact id %d", *contact.Id)
@@ -553,7 +589,7 @@ func (s *messageService) GetFeed(ctx context.Context, contact *pb.Contact) (*pb.
 			se, _ := status.FromError(err)
 			return nil, status.Errorf(se.Code(), "Error finding Feed")
 		}
-		var id int64 = int64(mf.ID)
+		var id = int64(mf.ID)
 		contactInfo, err := getContactById(s.graphqlClient, mf.ContactId)
 		if err != nil {
 			log.Printf("Unable to resolve contact, getting info from feed table")
@@ -579,10 +615,11 @@ func (s *messageService) GetFeed(ctx context.Context, contact *pb.Contact) (*pb.
 	}
 }
 
-func NewMessageService(client *gen.Client, graphqlClient *graphql.Client, config *c.Config) *messageService {
+func NewMessageService(client *gen.Client, driver *neo4j.Driver, graphqlClient *graphql.Client, config *c.Config) *messageService {
 	ms := new(messageService)
 	ms.client = client
 	ms.graphqlClient = graphqlClient
 	ms.config = config
+	ms.driver = driver
 	return ms
 }

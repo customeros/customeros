@@ -29,6 +29,11 @@ func (r *mutationResolver) ConversationCreate(ctx context.Context, input model.C
 	panic(fmt.Errorf("not implemented: ConversationCreate - conversationCreate"))
 }
 
+// ConversationAddMessage is the resolver for the conversationAddMessage field.
+func (r *mutationResolver) ConversationAddMessage(ctx context.Context, input model.MessageInput) (*model.Message, error) {
+	panic(fmt.Errorf("not implemented: ConversationAddMessage - conversationAddMessage"))
+}
+
 // Conversation returns generated.ConversationResolver implementation.
 func (r *Resolver) Conversation() generated.ConversationResolver { return &conversationResolver{r} }
 

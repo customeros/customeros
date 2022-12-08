@@ -5,6 +5,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/machinebox/graphql"
 	_ "github.com/mattn/go-sqlite3"
+	"github.com/neo4j/neo4j-go-driver/v4/neo4j"
 	c "github.com/openline-ai/openline-customer-os/packages/server/message-store/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/message-store/gen"
 	"github.com/openline-ai/openline-customer-os/packages/server/message-store/gen/enttest"
@@ -13,7 +14,10 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/message-store/test/graph"
 	"github.com/openline-ai/openline-customer-os/packages/server/message-store/test/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/message-store/test/graph/resolver"
+	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/message-store/test/neo4j"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	"github.com/testcontainers/testcontainers-go"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/status"
 	"google.golang.org/grpc/test/bufconn"
@@ -21,12 +25,33 @@ import (
 	"log"
 	"net"
 	"net/http/httptest"
+	"os"
+	"strconv"
 	"testing"
 	"time"
 )
 
 var graphqlClient *graphql.Client
 var messageStoreService *messageService
+var neo4jContainer testcontainers.Container
+var driver *neo4j.Driver
+
+func TestMain(m *testing.M) {
+	neo4jContainer, driver = neo4jt.InitTestNeo4jDB()
+	defer func(dbContainer testcontainers.Container, driver neo4j.Driver, ctx context.Context) {
+		neo4jt.Close(driver, "Driver")
+		neo4jt.Terminate(dbContainer, ctx)
+	}(neo4jContainer, *driver, context.Background())
+
+	os.Exit(m.Run())
+}
+
+func tearDownTestCase() func(tb testing.TB) {
+	return func(tb testing.TB) {
+		tb.Logf("Teardown test %v, cleaning neo4j DB", tb.Name())
+		neo4jt.CleanupAllData(driver)
+	}
+}
 
 func NewWebServer(t *testing.T) (*httptest.Server, *graphql.Client, *resolver.Resolver, *gen.Client) {
 	router := gin.Default()
@@ -35,10 +60,9 @@ func NewWebServer(t *testing.T) (*httptest.Server, *graphql.Client, *resolver.Re
 	router.POST("/query", handler)
 	dbClient := enttest.Open(t, "sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
 	graphqlClient = graphql.NewClient(server.URL + "/query")
-
 	conf := c.Config{}
 	conf.Identity.DefaultUserId = "agentsmith"
-	messageStoreService = NewMessageService(dbClient, graphqlClient, &conf)
+	messageStoreService = NewMessageService(dbClient, driver, graphqlClient, &conf)
 	t.Cleanup(func() {
 		log.Printf("Shutting down webserver")
 		server.Close()
@@ -46,6 +70,7 @@ func NewWebServer(t *testing.T) (*httptest.Server, *graphql.Client, *resolver.Re
 	})
 	return server, graphqlClient, resolver, dbClient
 }
+
 func messageStoreDialer() (*grpc.ClientConn, error) {
 	listener := bufconn.Listen(1024 * 1024)
 
@@ -67,6 +92,7 @@ func messageStoreDialer() (*grpc.ClientConn, error) {
 }
 
 func Test_SaveMessageNewContact(t *testing.T) {
+	defer tearDownTestCase()(t)
 	_, _, resolver, dbClient := NewWebServer(t)
 	grpcConn, err := messageStoreDialer()
 	createCalled := false
@@ -119,6 +145,7 @@ func Test_SaveMessageNewContact(t *testing.T) {
 	}
 
 	grpcClient := proto.NewMessageStoreServiceClient(grpcConn)
+	neo4jt.CreateConversation(driver, "1")
 
 	result, err := grpcClient.SaveMessage(ctx, &proto.Message{Message: "Hello Torrey",
 		Direction: proto.MessageDirection_INBOUND,
@@ -145,9 +172,14 @@ func Test_SaveMessageNewContact(t *testing.T) {
 	assert.Equal(t, mi.Type, messageitem.TypeMESSAGE)
 	assert.Equal(t, mi.Username, "Torrey Searle <x@x.org>")
 	assert.Equal(t, mf.ContactId, "12345678")
+
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Message"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Action"))
+	require.Equal(t, 1, neo4jt.GetCountOfRelationships(driver, "CONSISTS_OF"))
 }
 
 func Test_SaveMessageNewPhone(t *testing.T) {
+	defer tearDownTestCase()(t)
 	_, _, resolver, dbClient := NewWebServer(t)
 	grpcConn, err := messageStoreDialer()
 	createCalled := false
@@ -198,6 +230,8 @@ func Test_SaveMessageNewPhone(t *testing.T) {
 		}, nil
 	}
 
+	neo4jt.CreateConversation(driver, "1")
+
 	grpcClient := proto.NewMessageStoreServiceClient(grpcConn)
 
 	result, err := grpcClient.SaveMessage(ctx, &proto.Message{Message: "Call, duration 5 Minutes",
@@ -225,9 +259,14 @@ func Test_SaveMessageNewPhone(t *testing.T) {
 	assert.Equal(t, mi.Type, messageitem.TypeMESSAGE)
 	assert.Equal(t, mi.Username, "+3228080000")
 	assert.Equal(t, mf.ContactId, "12345678")
+
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Message"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Action"))
+	require.Equal(t, 1, neo4jt.GetCountOfRelationships(driver, "CONSISTS_OF"))
 }
 
 func Test_SaveMessageMissingGraphContact(t *testing.T) {
+	defer tearDownTestCase()(t)
 	_, _, resolver, dbClient := NewWebServer(t)
 	grpcConn, err := messageStoreDialer()
 	createCalled := false
@@ -311,6 +350,7 @@ func Test_SaveMessageMissingGraphContact(t *testing.T) {
 }
 
 func Test_SaveMessageExistingContact(t *testing.T) {
+	defer tearDownTestCase()(t)
 	_, _, resolver, dbClient := NewWebServer(t)
 	grpcConn, err := messageStoreDialer()
 
@@ -329,6 +369,7 @@ func Test_SaveMessageExistingContact(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Error inserting new Feed: %s", err.Error())
 	}
+	neo4jt.CreateConversation(driver, strconv.Itoa(feed1.ID))
 
 	_, err = dbClient.MessageFeed.
 		Create().
@@ -372,9 +413,14 @@ func Test_SaveMessageExistingContact(t *testing.T) {
 	assert.Equal(t, mi.Username, "Torrey Searle <x@x.org>")
 	assert.Equal(t, mf.ID, feed1.ID)
 	assert.Equal(t, mf.ContactId, "12345678")
+
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Message"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Action"))
+	require.Equal(t, 1, neo4jt.GetCountOfRelationships(driver, "CONSISTS_OF"))
 }
 
 func Test_SaveMessageExistingPhoneContact(t *testing.T) {
+	defer tearDownTestCase()(t)
 	_, _, resolver, dbClient := NewWebServer(t)
 	grpcConn, err := messageStoreDialer()
 
@@ -439,6 +485,7 @@ func Test_SaveMessageExistingPhoneContact(t *testing.T) {
 }
 
 func Test_SaveMessageSpecifiedContact(t *testing.T) {
+	defer tearDownTestCase()(t)
 	_, _, resolver, dbClient := NewWebServer(t)
 	grpcConn, err := messageStoreDialer()
 
@@ -605,7 +652,9 @@ func Test_GetMessage(t *testing.T) {
 	assert.Equal(t, "x@x.org", message.Username)
 
 }
+
 func Test_GetMessagesWithLimitBefore(t *testing.T) {
+	defer tearDownTestCase()(t)
 	_, _, _, dbClient := NewWebServer(t)
 	grpcConn, err := messageStoreDialer()
 
@@ -861,6 +910,7 @@ func Test_GetMessages(t *testing.T) {
 	assert.Equal(t, "x@x.org", messageList.Message[1].Username)
 
 }
+
 func Test_GetFeeds(t *testing.T) {
 	_, _, resolver, dbClient := NewWebServer(t)
 	grpcConn, err := messageStoreDialer()
@@ -1185,7 +1235,9 @@ func Test_getContact(t *testing.T) {
 	assert.Equal(t, "+3228080000", *result.phone)
 	assert.Equal(t, "x@x.org", *result.email)
 }
+
 func Test_createConversation(t *testing.T) {
+	defer tearDownTestCase()(t)
 	_, client, resolver, _ := NewWebServer(t)
 	resolver.ConversationCreate = func(ctx context.Context, input model.ConversationInput) (*model.Conversation, error) {
 		log.Print("Inside Conversation Create!")

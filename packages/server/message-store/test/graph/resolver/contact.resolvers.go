@@ -6,6 +6,7 @@ package resolver
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/message-store/test/graph/generated"
 	"github.com/openline-ai/openline-customer-os/packages/server/message-store/test/graph/model"
@@ -65,6 +66,11 @@ func (r *contactResolver) Owner(ctx context.Context, obj *model.Contact) (*model
 // Conversations is the resolver for the conversations field.
 func (r *contactResolver) Conversations(ctx context.Context, obj *model.Contact, pagination *model.Pagination, sort []*model.SortBy) (*model.ConversationPage, error) {
 	panic(fmt.Errorf("not implemented: Conversations - conversations"))
+}
+
+// Actions is the resolver for the actions field.
+func (r *contactResolver) Actions(ctx context.Context, obj *model.Contact, from time.Time, to time.Time, actionTypes []model.ActionType) ([]model.Action, error) {
+	panic(fmt.Errorf("not implemented: Actions - actions"))
 }
 
 // ContactCreate is the resolver for the contact_Create field.
