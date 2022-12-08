@@ -138,7 +138,7 @@ func (r *mutationResolver) ContactCreate(ctx context.Context, input model.Contac
 		OwnerUserId:       input.OwnerID,
 	})
 	if err != nil {
-		graphql.AddErrorf(ctx, "Failed to create contact %s %s", input.FirstName, input.LastName)
+		graphql.AddErrorf(ctx, "Failed to create contact %s %s", *input.FirstName, *input.LastName)
 		return nil, err
 	}
 	return mapper.MapEntityToContact(contactNodeCreated), nil

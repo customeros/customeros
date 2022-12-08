@@ -58,6 +58,33 @@ func TestQueryResolver_ContactByPhone(t *testing.T) {
 	require.Equal(t, contactId1, contact.Contact_ByPhone.ID)
 }
 
+func TestMutationResolver_ContactCreate_Min(t *testing.T) {
+	defer tearDownTestCase()(t)
+	neo4jt.CreateTenant(driver, tenantName)
+
+	rawResponse, err := c.RawPost(getQuery("create_contact_min"))
+	assertRawResponseSuccess(t, rawResponse, err)
+
+	var contact struct {
+		Contact_Create model.Contact
+	}
+
+	err = decode.Decode(rawResponse.Data.(map[string]any), &contact)
+	require.Nil(t, err)
+	require.NotNil(t, contact)
+	require.Equal(t, "", contact.Contact_Create.Title.String())
+	require.Equal(t, "", *contact.Contact_Create.FirstName)
+	require.Equal(t, "", *contact.Contact_Create.LastName)
+	require.Equal(t, "", *contact.Contact_Create.Notes)
+	require.Equal(t, "", *contact.Contact_Create.Label)
+	require.Equal(t, false, contact.Contact_Create.Readonly)
+
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Tenant"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Contact"))
+	require.Equal(t, 2, neo4jt.GetTotalCountOfNodes(driver))
+
+}
+
 func TestMutationResolver_ContactCreate(t *testing.T) {
 	defer tearDownTestCase()(t)
 	neo4jt.CreateTenant(driver, tenantName)
@@ -76,8 +103,8 @@ func TestMutationResolver_ContactCreate(t *testing.T) {
 	require.Nil(t, err)
 	require.NotNil(t, contact)
 	require.Equal(t, "MR", contact.Contact_Create.Title.String())
-	require.Equal(t, "first", contact.Contact_Create.FirstName)
-	require.Equal(t, "last", contact.Contact_Create.LastName)
+	require.Equal(t, "first", *contact.Contact_Create.FirstName)
+	require.Equal(t, "last", *contact.Contact_Create.LastName)
 	require.Equal(t, contactTypeId, contact.Contact_Create.ContactType.ID)
 	require.Equal(t, "CUSTOMER", contact.Contact_Create.ContactType.Name)
 	require.Equal(t, "Some notes...", *contact.Contact_Create.Notes)
@@ -228,8 +255,8 @@ func TestMutationResolver_ContactCreate_WithOwner(t *testing.T) {
 	require.Nil(t, err)
 	require.NotNil(t, contact)
 	require.Equal(t, "", contact.Contact_Create.Title.String())
-	require.Equal(t, "first", contact.Contact_Create.FirstName)
-	require.Equal(t, "last", contact.Contact_Create.LastName)
+	require.Equal(t, "first", *contact.Contact_Create.FirstName)
+	require.Equal(t, "last", *contact.Contact_Create.LastName)
 	require.Equal(t, userId, contact.Contact_Create.Owner.ID)
 	require.Equal(t, "Agent", contact.Contact_Create.Owner.FirstName)
 	require.Equal(t, "Smith", contact.Contact_Create.Owner.LastName)
@@ -272,8 +299,8 @@ func TestMutationResolver_UpdateContact(t *testing.T) {
 	require.Nil(t, err)
 	require.NotNil(t, contact)
 	require.Equal(t, "DR", contact.Contact_Update.Title.String())
-	require.Equal(t, "updated first", contact.Contact_Update.FirstName)
-	require.Equal(t, "updated last", contact.Contact_Update.LastName)
+	require.Equal(t, "updated first", *contact.Contact_Update.FirstName)
+	require.Equal(t, "updated last", *contact.Contact_Update.LastName)
 	require.Equal(t, "updated notes", *contact.Contact_Update.Notes)
 	require.Equal(t, "updated label", *contact.Contact_Update.Label)
 	require.Equal(t, contactTypeIdUpdate, contact.Contact_Update.ContactType.ID)

@@ -3,6 +3,7 @@ package utils
 import (
 	"github.com/neo4j/neo4j-go-driver/v4/neo4j/dbtype"
 	"log"
+	"time"
 )
 
 func StringPtr(str string) *string {
@@ -11,6 +12,10 @@ func StringPtr(str string) *string {
 
 func BoolPtr(b bool) *bool {
 	return &b
+}
+
+func TimePtr(t time.Time) *time.Time {
+	return &t
 }
 
 func NodePtr(node dbtype.Node) *dbtype.Node {

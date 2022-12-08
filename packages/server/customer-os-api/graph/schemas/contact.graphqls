@@ -53,15 +53,13 @@ type Contact implements ExtensibleEntity & Node {
 
     """
     The first name of the contact in customerOS.
-    **Required**"
     """
-    firstName: String!
+    firstName: String
 
     """
     The last name of the contact in customerOS.
-    **Required**
     """
-    lastName: String!
+    lastName: String
 
     """
     An ISO8601 timestamp recording when the contact was created in customerOS.
@@ -74,6 +72,9 @@ type Contact implements ExtensibleEntity & Node {
 
     "User-defined notes associated with a contact in customerOS."
     notes: String
+
+    "Readonly indicator for a contact"
+    readonly: Boolean!
 
     "User-defined field that defines the relationship type the contact has with your business.  `Customer`, `Partner`, `Lead` are examples."
     contactType: ContactType @goField(forceResolver: true)
@@ -162,15 +163,13 @@ input ContactInput {
 
     """
     The first name of the contact.
-    **Required.**
     """
-    firstName: String!
+    firstName: String
 
     """
     The last name of the contact.
-    **Required.**
     """
-    lastName: String!
+    lastName: String
 
     "A user-defined label attached to contact."
     label: String
@@ -180,6 +179,14 @@ input ContactInput {
 
     "User-defined field that defines the relationship type the contact has with your business.  `Customer`, `Partner`, `Lead` are examples."
     contactTypeId: ID
+
+    "Readonly indicator for a contact"
+    readonly: Boolean
+
+    """
+    An ISO8601 timestamp recording when the contact was created in customerOS.
+    """
+    createdAt: Time
 
     """
     User defined metadata appended to contact.
@@ -216,15 +223,13 @@ input ContactUpdateInput {
 
     """
     The first name of the contact in customerOS.
-    **Required.**
     """
-    firstName: String!
+    firstName: String
 
     """
     The last name of the contact in customerOS.
-    **Required.**
     """
-    lastName: String!
+    lastName: String
 
     "A user-defined label applied against a contact in customerOS."
     label: String
@@ -237,6 +242,9 @@ input ContactUpdateInput {
 
     "Id of the contact owner (user)"
     ownerId: ID
+
+    "Readonly indicator for a contact"
+    readonly: Boolean
 }
 
 """

@@ -416,3 +416,9 @@ func GetCountOfRelationships(driver *neo4j.Driver, relationship string) int {
 	result := ExecuteReadQueryWithSingleReturn(driver, query, map[string]any{})
 	return int(result.(*db.Record).Values[0].(int64))
 }
+
+func GetTotalCountOfNodes(driver *neo4j.Driver) int {
+	query := `MATCH (n) RETURN count(n)`
+	result := ExecuteReadQueryWithSingleReturn(driver, query, map[string]any{})
+	return int(result.(*db.Record).Values[0].(int64))
+}

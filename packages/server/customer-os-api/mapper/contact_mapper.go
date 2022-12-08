@@ -7,9 +7,16 @@ import (
 )
 
 func MapContactInputToEntity(input model.ContactInput) *entity.ContactEntity {
-	contactEntity := entity.ContactEntity{
-		FirstName: input.FirstName,
-		LastName:  input.LastName,
+	contactEntity := new(entity.ContactEntity)
+	contactEntity.CreatedAt = input.CreatedAt
+	if input.FirstName != nil {
+		contactEntity.FirstName = *input.FirstName
+	}
+	if input.LastName != nil {
+		contactEntity.LastName = *input.LastName
+	}
+	if input.Readonly != nil {
+		contactEntity.Readonly = *input.Readonly
 	}
 	if input.Label != nil {
 		contactEntity.Label = *input.Label
@@ -20,14 +27,21 @@ func MapContactInputToEntity(input model.ContactInput) *entity.ContactEntity {
 	if input.Notes != nil {
 		contactEntity.Notes = *input.Notes
 	}
-	return &contactEntity
+	return contactEntity
 }
 
 func MapContactUpdateInputToEntity(input model.ContactUpdateInput) *entity.ContactEntity {
 	contactEntity := entity.ContactEntity{
-		Id:        input.ID,
-		FirstName: input.FirstName,
-		LastName:  input.LastName,
+		Id: input.ID,
+	}
+	if input.FirstName != nil {
+		contactEntity.FirstName = *input.FirstName
+	}
+	if input.LastName != nil {
+		contactEntity.LastName = *input.LastName
+	}
+	if input.Readonly != nil {
+		contactEntity.Readonly = *input.Readonly
 	}
 	if input.Label != nil {
 		contactEntity.Label = *input.Label
@@ -46,11 +60,12 @@ func MapEntityToContact(contact *entity.ContactEntity) *model.Contact {
 	return &model.Contact{
 		ID:        contact.Id,
 		Title:     &title,
-		FirstName: contact.FirstName,
-		LastName:  contact.LastName,
+		FirstName: utils.StringPtr(contact.FirstName),
+		LastName:  utils.StringPtr(contact.LastName),
 		Label:     utils.StringPtr(contact.Label),
 		Notes:     utils.StringPtr(contact.Notes),
-		CreatedAt: contact.CreatedAt,
+		Readonly:  contact.Readonly,
+		CreatedAt: *contact.CreatedAt,
 	}
 }
 

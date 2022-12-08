@@ -162,24 +162,11 @@ func (s *contactService) Update(ctx context.Context, contactUpdateData *ContactU
 	contactDbNode, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
 		tenant := common.GetContext(ctx).Tenant
 		contactId := contactUpdateData.ContactEntity.Id
-		queryResult, err := tx.Run(`
-			MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant})
-			SET c.firstName=$firstName,
-				c.lastName=$lastName,
-				c.label=$label,
-				c.title=$title,
-				c.notes=$notes
-			RETURN c`,
-			map[string]interface{}{
-				"tenant":    tenant,
-				"contactId": contactId,
-				"firstName": contactUpdateData.ContactEntity.FirstName,
-				"lastName":  contactUpdateData.ContactEntity.LastName,
-				"label":     contactUpdateData.ContactEntity.Label,
-				"title":     contactUpdateData.ContactEntity.Title,
-				"notes":     contactUpdateData.ContactEntity.Notes,
-			})
 
+		dbNode, err := s.repositories.ContactRepository.Update(tx, tenant, contactId, contactUpdateData.ContactEntity)
+		if err != nil {
+			return nil, err
+		}
 		err = s.repositories.ContactRepository.UnlinkFromContactTypesInTx(tx, tenant, contactId)
 		if err != nil {
 			return nil, err
@@ -202,7 +189,7 @@ func (s *contactService) Update(ctx context.Context, contactUpdateData *ContactU
 			}
 		}
 
-		return utils.ExtractSingleRecordFirstValueAsNode(queryResult, err)
+		return dbNode, nil
 	})
 	if err != nil {
 		return nil, err
@@ -424,7 +411,8 @@ func (s *contactService) mapDbNodeToContactEntity(dbContactNode *dbtype.Node) *e
 		Label:     utils.GetStringPropOrEmpty(props, "label"),
 		Title:     utils.GetStringPropOrEmpty(props, "title"),
 		Notes:     utils.GetStringPropOrEmpty(props, "notes"),
-		CreatedAt: utils.GetTimePropOrNow(props, "createdAt"),
+		CreatedAt: utils.GetTimePropOrNil(props, "createdAt"),
+		Readonly:  utils.GetBoolPropOrFalse(props, "readonly"),
 	}
 	return &contact
 }
