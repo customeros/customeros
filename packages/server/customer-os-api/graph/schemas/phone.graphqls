@@ -24,9 +24,8 @@ type PhoneNumber {
 
     """
     Defines the type of phone number.
-    **Required**
     """
-    label: PhoneNumberLabel!
+    label: PhoneNumberLabel
 
     """
     Determines if the phone number is primary or not.
@@ -49,9 +48,8 @@ input PhoneNumberInput {
 
     """
     Defines the type of phone number.
-    **Required**
     """
-    label: PhoneNumberLabel!
+    label: PhoneNumberLabel
 
     """
     Determines if the phone number is primary or not.
@@ -80,9 +78,8 @@ input PhoneNumberUpdateInput {
 
     """
     Defines the type of phone number.
-    **Required**
     """
-    label: PhoneNumberLabel!
+    label: PhoneNumberLabel
 
     """
     Determines if the phone number is primary or not.

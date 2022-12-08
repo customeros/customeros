@@ -11,10 +11,8 @@ func MapCompanyPositionInputToEntity(input *model.CompanyPositionInput) *entity.
 		return nil
 	}
 	companyPositionEntity := entity.CompanyPositionEntity{
-		Company: *MapCompanyInputToEntity(input.Company),
-	}
-	if input.JobTitle != nil {
-		companyPositionEntity.JobTitle = *input.JobTitle
+		Company:  *MapCompanyInputToEntity(input.Company),
+		JobTitle: utils.IfNotNilString(input.JobTitle),
 	}
 	return &companyPositionEntity
 }

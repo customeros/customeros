@@ -25,9 +25,8 @@ type Email {
 
     """
     Describes the type of email address (WORK, PERSONAL, etc).
-    **Required.**
     """
-    label: EmailLabel!
+    label: EmailLabel
 
     """
     Identifies whether the email address is primary or not.
@@ -50,9 +49,8 @@ input EmailInput {
 
     """
     Describes the type of email address (WORK, PERSONAL, etc).
-    **Required.**
     """
-    label: EmailLabel!
+    label: EmailLabel
 
     """
     Identifies whether the email address is primary or not.
@@ -81,9 +79,8 @@ input EmailUpdateInput {
 
     """
     Describes the type of email address (WORK, PERSONAL, etc).
-    **Required.**
     """
-    label: EmailLabel!
+    label: EmailLabel
 
     """
     Identifies whether the email address is primary or not.

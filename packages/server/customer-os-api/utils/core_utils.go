@@ -3,6 +3,7 @@ package utils
 import (
 	"github.com/neo4j/neo4j-go-driver/v4/neo4j/dbtype"
 	"log"
+	"reflect"
 	"time"
 )
 
@@ -66,4 +67,32 @@ func SurroundWithRoundParentheses(src string) string {
 
 func SurroundWith(src, surround string) string {
 	return surround + src + surround
+}
+
+func IfNotNilString(check any, valueExtractor ...func() string) string {
+	if reflect.ValueOf(check).Kind() == reflect.String {
+		return check.(string)
+	}
+	if reflect.ValueOf(check).Kind() == reflect.Pointer && reflect.ValueOf(check).IsNil() {
+		return ""
+	}
+	if len(valueExtractor) > 0 {
+		return valueExtractor[0]()
+	}
+	out := check.(*string)
+	return *out
+}
+
+func IfNotNilBool(check any, valueExtractor ...func() bool) bool {
+	if reflect.ValueOf(check).Kind() == reflect.Bool {
+		return check.(bool)
+	}
+	if reflect.ValueOf(check).Kind() == reflect.Pointer && reflect.ValueOf(check).IsNil() {
+		return false
+	}
+	if len(valueExtractor) > 0 {
+		return valueExtractor[0]()
+	}
+	out := check.(*bool)
+	return *out
 }
