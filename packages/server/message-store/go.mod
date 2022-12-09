@@ -10,7 +10,7 @@ require (
 	github.com/joho/godotenv v1.4.0
 	github.com/lib/pq v1.10.7
 	github.com/machinebox/graphql v0.2.2
-	github.com/mattn/go-sqlite3 v1.14.15
+	github.com/mattn/go-sqlite3 v1.14.16
 	github.com/neo4j/neo4j-go-driver/v4 v4.4.4
 	github.com/openline-ai/openline-customer-os/packages/server/customer-os-api v0.0.0-20221207095944-8be866e45613
 	github.com/stretchr/testify v1.8.1
