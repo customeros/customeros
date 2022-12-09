@@ -44,6 +44,9 @@ type CustomField implements Node {
     """
     value: Any!
 
+    "The source of the custom field value"
+    source: String
+
     definition: CustomFieldDefinition @goField(forceResolver: true)
 }
 
@@ -75,6 +78,9 @@ input CustomFieldInput {
     **Required**
     """
     value: Any!
+
+    "The source of the custom field value"
+    source: String
 
     definitionId: ID
 }
@@ -108,6 +114,9 @@ input CustomFieldUpdateInput {
     **Required**
     """
     value: Any!
+
+    "The source of the custom field value"
+    source: String
 }
 
 enum CustomFieldDataType {

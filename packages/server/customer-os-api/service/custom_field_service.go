@@ -277,6 +277,7 @@ func (s *customFieldService) mapDbNodePtrToCustomFieldEntity(node *dbtype.Node) 
 		Id:       utils.StringPtr(utils.GetStringPropOrEmpty(props, "id")),
 		Name:     utils.GetStringPropOrEmpty(props, "name"),
 		DataType: utils.GetStringPropOrEmpty(props, "datatype"),
+		Source:   utils.GetStringPropOrEmpty(props, "source"),
 		Value: model.AnyTypeValue{
 			Str:   utils.GetStringPropOrNil(props, entity.CustomFieldTextProperty.String()),
 			Time:  utils.GetTimePropOrNil(props, entity.CustomFieldTimeProperty.String()),

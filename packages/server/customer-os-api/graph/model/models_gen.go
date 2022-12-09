@@ -335,7 +335,9 @@ type CustomField struct {
 	Datatype CustomFieldDataType `json:"datatype"`
 	// The value of the custom field.
 	// **Required**
-	Value      AnyTypeValue           `json:"value"`
+	Value AnyTypeValue `json:"value"`
+	// The source of the custom field value
+	Source     *string                `json:"source"`
 	Definition *CustomFieldDefinition `json:"definition"`
 }
 
@@ -379,8 +381,10 @@ type CustomFieldInput struct {
 	Datatype CustomFieldDataType `json:"datatype"`
 	// The value of the custom field.
 	// **Required**
-	Value        AnyTypeValue `json:"value"`
-	DefinitionID *string      `json:"definitionId"`
+	Value AnyTypeValue `json:"value"`
+	// The source of the custom field value
+	Source       *string `json:"source"`
+	DefinitionID *string `json:"definitionId"`
 }
 
 // Describes a custom, user-defined field associated with a `Contact`.
@@ -398,6 +402,8 @@ type CustomFieldUpdateInput struct {
 	// The value of the custom field.
 	// **Required**
 	Value AnyTypeValue `json:"value"`
+	// The source of the custom field value
+	Source *string `json:"source"`
 }
 
 // Describes an email address associated with a `Contact` in customerOS.
