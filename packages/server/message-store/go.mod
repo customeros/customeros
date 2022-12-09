@@ -14,7 +14,7 @@ require (
 	github.com/openline-ai/openline-customer-os/packages/server/customer-os-api v0.0.0-20221207095944-8be866e45613
 	github.com/testcontainers/testcontainers-go v0.15.0
 	github.com/vektah/gqlparser/v2 v2.5.1
-	google.golang.org/grpc v1.50.1
+	google.golang.org/grpc v1.51.0
 	google.golang.org/protobuf v1.28.1
 )
 
