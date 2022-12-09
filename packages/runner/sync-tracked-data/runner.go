@@ -5,6 +5,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/joho/godotenv"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-tracked-data/config"
+	"github.com/openline-ai/openline-customer-os/packages/runner/sync-tracked-data/config/logger"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-tracked-data/service"
 	"log"
 	"sync"
@@ -32,6 +33,13 @@ func RunTasks() {
 	}
 }
 
+func init() {
+	logger.Logger = logger.New(log.New(log.Default().Writer(), "", log.Ldate|log.Ltime|log.Lmicroseconds), logger.Config{
+		Colorful: false,
+		LogLevel: logger.Info,
+	})
+}
+
 func main() {
 	cfg := loadConfiguration()
 
@@ -52,13 +60,13 @@ func main() {
 	if errPostgres == nil && errNeo4j == nil {
 		AddTask(func() {
 			runId, _ := uuid.NewRandom()
-			log.Printf("run id: %s syncing tracked data into customer-os at %v", runId.String(), time.Now().UTC())
+			logger.Logger.Info("run id: %s syncing tracked data into customer-os at %v", runId.String(), time.Now().UTC())
 			result := serviceContainer.SyncService.Sync(runId.String(), cfg.PageViewsBucketSize)
-			log.Printf("run id: %s sync completed at %v, processed %d records", runId.String(), time.Now().UTC(), result)
+			logger.Logger.Info("run id: %s sync completed at %v, processed %d records", runId.String(), time.Now().UTC(), result)
 
 			if result == 0 {
 				timeout := time.Second * time.Duration(cfg.TimeoutAfterTaskRun)
-				log.Printf("waiting %v seconds before next run", timeout.Seconds())
+				logger.Logger.Info("waiting %v seconds before next run", timeout.Seconds())
 				time.Sleep(timeout)
 			}
 		})
@@ -75,12 +83,12 @@ func main() {
 
 func loadConfiguration() *config.Config {
 	if err := godotenv.Load(); err != nil {
-		log.Println("[WARNING] Error loading .env file")
+		logger.Logger.Warn("Failed loading .env file")
 	}
 
 	cfg := config.Config{}
 	if err := env.Parse(&cfg); err != nil {
-		log.Printf("%+v\n", err)
+		logger.Logger.Warn("%+v", err)
 	}
 
 	return &cfg

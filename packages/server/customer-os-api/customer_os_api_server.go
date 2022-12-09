@@ -12,6 +12,7 @@ import (
 	"github.com/neo4j/neo4j-go-driver/v4/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/config"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/config/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/generated"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/resolver"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service/container"
@@ -55,6 +56,13 @@ func playgroundHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		h.ServeHTTP(c.Writer, c.Request)
 	}
+}
+
+func init() {
+	logger.Logger = logger.New(log.New(log.Default().Writer(), "", log.Ldate|log.Ltime|log.Lmicroseconds), logger.Config{
+		Colorful: true,
+		LogLevel: logger.Info,
+	})
 }
 
 func main() {
