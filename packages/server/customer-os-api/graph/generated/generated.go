@@ -135,6 +135,7 @@ type ComplexityRoot struct {
 		Definition func(childComplexity int) int
 		ID         func(childComplexity int) int
 		Name       func(childComplexity int) int
+		Source     func(childComplexity int) int
 		Value      func(childComplexity int) int
 	}
 
@@ -767,6 +768,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.CustomField.Name(childComplexity), true
+
+	case "CustomField.source":
+		if e.complexity.CustomField.Source == nil {
+			break
+		}
+
+		return e.complexity.CustomField.Source(childComplexity), true
 
 	case "CustomField.value":
 		if e.complexity.CustomField.Value == nil {
@@ -2445,6 +2453,9 @@ type CustomField implements Node {
     """
     value: Any!
 
+    "The source of the custom field value"
+    source: String
+
     definition: CustomFieldDefinition @goField(forceResolver: true)
 }
 
@@ -2476,6 +2487,9 @@ input CustomFieldInput {
     **Required**
     """
     value: Any!
+
+    "The source of the custom field value"
+    source: String
 
     definitionId: ID
 }
@@ -2509,6 +2523,9 @@ input CustomFieldUpdateInput {
     **Required**
     """
     value: Any!
+
+    "The source of the custom field value"
+    source: String
 }
 
 enum CustomFieldDataType {
@@ -5241,6 +5258,8 @@ func (ec *executionContext) fieldContext_Contact_customFields(ctx context.Contex
 				return ec.fieldContext_CustomField_datatype(ctx, field)
 			case "value":
 				return ec.fieldContext_CustomField_value(ctx, field)
+			case "source":
+				return ec.fieldContext_CustomField_source(ctx, field)
 			case "definition":
 				return ec.fieldContext_CustomField_definition(ctx, field)
 			}
@@ -6721,6 +6740,47 @@ func (ec *executionContext) fieldContext_CustomField_value(ctx context.Context, 
 	return fc, nil
 }
 
+func (ec *executionContext) _CustomField_source(ctx context.Context, field graphql.CollectedField, obj *model.CustomField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_CustomField_source(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Source, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_CustomField_source(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "CustomField",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _CustomField_definition(ctx context.Context, field graphql.CollectedField, obj *model.CustomField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_CustomField_definition(ctx, field)
 	if err != nil {
@@ -7808,6 +7868,8 @@ func (ec *executionContext) fieldContext_FieldSet_customFields(ctx context.Conte
 				return ec.fieldContext_CustomField_datatype(ctx, field)
 			case "value":
 				return ec.fieldContext_CustomField_value(ctx, field)
+			case "source":
+				return ec.fieldContext_CustomField_source(ctx, field)
 			case "definition":
 				return ec.fieldContext_CustomField_definition(ctx, field)
 			}
@@ -9732,6 +9794,8 @@ func (ec *executionContext) fieldContext_Mutation_customFieldMergeToContact(ctx 
 				return ec.fieldContext_CustomField_datatype(ctx, field)
 			case "value":
 				return ec.fieldContext_CustomField_value(ctx, field)
+			case "source":
+				return ec.fieldContext_CustomField_source(ctx, field)
 			case "definition":
 				return ec.fieldContext_CustomField_definition(ctx, field)
 			}
@@ -9799,6 +9863,8 @@ func (ec *executionContext) fieldContext_Mutation_customFieldUpdateInContact(ctx
 				return ec.fieldContext_CustomField_datatype(ctx, field)
 			case "value":
 				return ec.fieldContext_CustomField_value(ctx, field)
+			case "source":
+				return ec.fieldContext_CustomField_source(ctx, field)
 			case "definition":
 				return ec.fieldContext_CustomField_definition(ctx, field)
 			}
@@ -9984,6 +10050,8 @@ func (ec *executionContext) fieldContext_Mutation_customFieldMergeToFieldSet(ctx
 				return ec.fieldContext_CustomField_datatype(ctx, field)
 			case "value":
 				return ec.fieldContext_CustomField_value(ctx, field)
+			case "source":
+				return ec.fieldContext_CustomField_source(ctx, field)
 			case "definition":
 				return ec.fieldContext_CustomField_definition(ctx, field)
 			}
@@ -10051,6 +10119,8 @@ func (ec *executionContext) fieldContext_Mutation_customFieldUpdateInFieldSet(ct
 				return ec.fieldContext_CustomField_datatype(ctx, field)
 			case "value":
 				return ec.fieldContext_CustomField_value(ctx, field)
+			case "source":
+				return ec.fieldContext_CustomField_source(ctx, field)
 			case "definition":
 				return ec.fieldContext_CustomField_definition(ctx, field)
 			}
@@ -15158,7 +15228,7 @@ func (ec *executionContext) unmarshalInputCustomFieldInput(ctx context.Context, 
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"id", "name", "datatype", "value", "definitionId"}
+	fieldsInOrder := [...]string{"id", "name", "datatype", "value", "source", "definitionId"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -15197,6 +15267,14 @@ func (ec *executionContext) unmarshalInputCustomFieldInput(ctx context.Context, 
 			if err != nil {
 				return it, err
 			}
+		case "source":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("source"))
+			it.Source, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
 		case "definitionId":
 			var err error
 
@@ -15218,7 +15296,7 @@ func (ec *executionContext) unmarshalInputCustomFieldUpdateInput(ctx context.Con
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"id", "name", "datatype", "value"}
+	fieldsInOrder := [...]string{"id", "name", "datatype", "value", "source"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -15254,6 +15332,14 @@ func (ec *executionContext) unmarshalInputCustomFieldUpdateInput(ctx context.Con
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("value"))
 			it.Value, err = ec.unmarshalNAny2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐAnyTypeValue(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "source":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("source"))
+			it.Source, err = ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -16827,6 +16913,10 @@ func (ec *executionContext) _CustomField(ctx context.Context, sel ast.SelectionS
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&invalids, 1)
 			}
+		case "source":
+
+			out.Values[i] = ec._CustomField_source(ctx, field, obj)
+
 		case "definition":
 			field := field
 

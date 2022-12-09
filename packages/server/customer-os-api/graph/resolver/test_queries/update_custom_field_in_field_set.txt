@@ -4,12 +4,15 @@ mutation UpdateCustomFieldInFieldSet($contactId: ID!, $fieldSetId: ID!, $fieldId
         fieldSetId: $fieldSetId,
         input: {id: $fieldId
                 datatype: TEXT
-                name: "new name",
-                value: "new value"}
+                name: "new name"
+                value: "new value"
+                source: "new source"
+                }
      ) {
         id
         name
         value
         datatype
+        source
       }
 }

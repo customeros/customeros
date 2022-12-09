@@ -135,6 +135,7 @@ func TestMutationResolver_MergeCustomFieldToFieldSet(t *testing.T) {
 
 	require.Equal(t, "some name", textField.CustomFieldMergeToFieldSet.Name)
 	require.Equal(t, "some value", textField.CustomFieldMergeToFieldSet.Value.RealValue())
+	require.Equal(t, "manual", *textField.CustomFieldMergeToFieldSet.Source)
 	require.Equal(t, model.CustomFieldDataTypeText, textField.CustomFieldMergeToFieldSet.Datatype)
 	require.NotNil(t, textField.CustomFieldMergeToFieldSet.ID)
 
@@ -166,6 +167,7 @@ func TestMutationResolver_CustomFieldUpdateInFieldSet(t *testing.T) {
 
 	require.Equal(t, "new name", textField.CustomFieldUpdateInFieldSet.Name)
 	require.Equal(t, "new value", textField.CustomFieldUpdateInFieldSet.Value.RealValue())
+	require.Equal(t, "new source", *textField.CustomFieldUpdateInFieldSet.Source)
 	require.Equal(t, model.CustomFieldDataTypeText, textField.CustomFieldUpdateInFieldSet.Datatype)
 	require.Equal(t, fieldId, textField.CustomFieldUpdateInFieldSet.ID)
 

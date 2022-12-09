@@ -4,11 +4,13 @@ mutation MergeCustomFieldToFieldSet($contactId: ID!, $fieldSetId: ID!){
         fieldSetId: $fieldSetId,
         input: {name: "some name"
                 value: "some value"
-                datatype: TEXT}
+                datatype: TEXT
+                source: "manual"}
      ) {
         id
         name
         datatype
         value
+        source
       }
 }

@@ -39,6 +39,7 @@ type CustomFieldEntity struct {
 	DataType     string
 	Value        model.AnyTypeValue
 	DefinitionId *string
+	Source       string
 }
 
 type CustomFieldEntities []CustomFieldEntity
