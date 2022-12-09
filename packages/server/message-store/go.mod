@@ -4,7 +4,7 @@ go 1.19
 
 require (
 	entgo.io/ent v0.11.4-0.20221001062602-1029a2d3ba2a
-	github.com/99designs/gqlgen v0.17.20
+	github.com/99designs/gqlgen v0.17.22
 	github.com/caarlos0/env/v6 v6.10.1
 	github.com/gin-gonic/gin v1.8.1
 	github.com/joho/godotenv v1.4.0
