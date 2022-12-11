@@ -41,34 +41,28 @@
 ## 👋 Overview
 Openline customerOS is an open source development platform that enables the flexible and rapid development of customer-centric applications.
 
-- **Openline Auth** - End-to-end identity solution for easy user authentication, sign-in, and permissions using OAuth.
-- **customerDB** - Backend server that host your customer data in a secure, compliant, and standards based way.
-- **customerOS API** - GraphQL and gRPC API for reading, writing, and manipulating data.
-- **customerOS SDK** - Client libraries that simplify the process of interacting with the customerOS API [coming soon].
-- **Event trackers** - First party event trackers fully integrated with customerDB, allowing you full visibility into how your customers are engaging with your apps and content
-- **Web components** - A library of web components that make it easy to interact with customer data in your front end applications [coming soon].
-- **App launcher** - Web application with built in SSO to launch into any app built into customerOS
-- **Explorer app** - Web application where you can view your data and perform basic editing tasks [coming soon].
-- **Admin app** - Web application where you configure and administer all Openline services [coming soon]
-- **UI components** - A library of React components designed to help you quickly develop custom applications on customerOS [coming soon].
+| Feature            | Description | Status|
+|--------------------|-------------|-------|
+| **Openline Auth**  |End-to-end identity solution for easy user authentication, sign-in, and permissions using OAuth.| Demo |
+| **customerDB**     |Backend server that host your customer data in a secure, compliant, and standards based way. | Demo|
+| **customerOS API** |GraphQL and gRPC API for reading, writing, and manipulating data.| Demo|
+| **Event trackers** |First party event trackers fully integrated with customerDB, allowing you full visibility into how your customers are engaging with your apps and content | Preview|
+| **App launcher**   |Web application with built in SSO to launch into any app built into customerOS| Demo|
+| **Settings app**   |Web application where you configure and administer all Openline services| Roadmap|
+| **Web components** |A library of web components that make it easy to interact with customer data in your front end applications| Roadmap|
 
+- Roadmap: Feature is scheduled for future development
+- Demo: Code is available and undergoing testing
+- Preview: Code is available to users in evaluation mode
+- Stable: Code is available to all users in production
 
 ## 🚀 Installation
-Download and install customerOS using the following command
+1. Download and install the [Openline CLI][cli]
+2. Run the following command
 
-```terminal
-[coming soon]
+```sh-session
+openline dev start customer-os
 ```
-
-This command will walk you through the installation and setup of the five docker images that comprise customerOS:
-
-- customer-os-api
-- analytics-api
-- message-store
-- neo4j
-- postgreSQL
-
-For local deployments we use `minikube` to orchestrate and run the customerOS docker images.
 
 ## 🤝 Resources
 
@@ -96,7 +90,6 @@ openline-customer-os/
 │   └── scripts             # Deployment scripts
 └── packages
     ├── apps                # Front end web applications
-    │   ├── explorer        # customerOS data explorer
     │   ├── launcher        # customerOS app launcher & home screen
     │   └── settings        # customerOS system settings & app configuration
     ├── auth                # Authentication
@@ -147,6 +140,7 @@ A massive thank you goes out to all these wonderful people ([emoji key][emoji]):
 [apache2]: https://www.apache.org/licenses/LICENSE-2.0
 [call]: https://meetings-eu1.hubspot.com/matt2/customer-demos
 [careers]: https://openline.ai
+[cli]: https://www.openline.ai/docs
 [contributions]: https://github.com/openline-ai/community/blob/main/README.md
 [customerOS-repo]: https://github.com/openline-ai/openline-customer-os/
 [docs]: https://openline.ai
