@@ -1,20 +1,20 @@
 apiVersion: apps/v1
 kind: Deployment                 # Type of Kubernetes resource
 metadata:
-  name: message-store           # Name of the Kubernetes resource
+  name: message-store-api           # Name of the Kubernetes resource
 spec:
   replicas: 1                    # Number of pods to run at any given time
   selector:
     matchLabels:
-      app: message-store        # This deployment applies to any Pods matching the specified label
+      app: message-store-api        # This deployment applies to any Pods matching the specified label
   template:                      # This deployment will create a set of pods using the configurations in this template
     metadata:
       labels:                    # The labels that will be applied to all of the pods in this deployment
-        app: message-store
+        app: message-store-api
     spec:                        # Spec for the container which will run in the Pod
       containers:
         - image: ghcr.io/openline-ai/openline-customer-os/message-store:latest
-          name: message-store
+          name: message-store-api
           imagePullPolicy: Never
           ports:
             - containerPort: 8009  # Should match the port number that the Go application listens on
