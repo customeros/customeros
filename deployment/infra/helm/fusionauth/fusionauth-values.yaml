@@ -10,7 +10,7 @@ service:
 
 database:
   protocol: postgresql
-  host: postgresql-customer-os-dev.openline.svc.cluster.local
+  host: customer-db-postgresql.openline.svc.cluster.local
   port: 5432
   name: fusionauth
   user: "postgres"
