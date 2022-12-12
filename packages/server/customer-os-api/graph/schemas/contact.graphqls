@@ -204,6 +204,8 @@ input ContactInput {
 
     "Id of the contact owner (user)"
     ownerId: ID
+
+    externalReference: ExternalSystemReferenceInput
 }
 
 """

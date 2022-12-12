@@ -33,6 +33,7 @@ type ContactCreateData struct {
 	DefinitionId      *string
 	ContactTypeId     *string
 	OwnerUserId       *string
+	ExternalReference *entity.ExternalReferenceRelationship
 }
 
 type ContactUpdateData struct {
@@ -81,9 +82,14 @@ func (s *contactService) createContactInDBTxWork(ctx context.Context, newContact
 				return nil, err
 			}
 		}
-
 		if newContact.DefinitionId != nil {
 			err := s.repositories.ContactRepository.LinkWithEntityDefinitionInTx(tx, tenant, contactId, *newContact.DefinitionId)
+			if err != nil {
+				return nil, err
+			}
+		}
+		if newContact.ExternalReference != nil {
+			err := s.repositories.ExternalSystemRepository.LinkContactWithExternalSystemInTx(tx, tenant, contactId, *newContact.ExternalReference)
 			if err != nil {
 				return nil, err
 			}

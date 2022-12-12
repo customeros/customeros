@@ -11,7 +11,7 @@ const (
 	channelFacebook = "FACEBOOK"
 )
 
-var ChannelsByModel = map[model.MessageChannel]string{
+var channelsByModel = map[model.MessageChannel]string{
 	model.MessageChannelVoice:    channelVoice,
 	model.MessageChannelMail:     channelMail,
 	model.MessageChannelChat:     channelChat,
@@ -20,7 +20,7 @@ var ChannelsByModel = map[model.MessageChannel]string{
 	model.MessageChannelTwitter:  channelTwitter,
 }
 
-var ChannelsByValue = map[string]model.MessageChannel{
+var channelsByValue = map[string]model.MessageChannel{
 	channelVoice:    model.MessageChannelVoice,
 	channelMail:     model.MessageChannelMail,
 	channelChat:     model.MessageChannelChat,
@@ -30,9 +30,9 @@ var ChannelsByValue = map[string]model.MessageChannel{
 }
 
 func MapMessageChannelFromModel(input model.MessageChannel) string {
-	return ChannelsByModel[input]
+	return channelsByModel[input]
 }
 
 func MapMessageChannelToModel(input string) model.MessageChannel {
-	return ChannelsByValue[input]
+	return channelsByValue[input]
 }

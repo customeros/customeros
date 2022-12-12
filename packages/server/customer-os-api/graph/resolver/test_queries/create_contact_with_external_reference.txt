@@ -1,0 +1,13 @@
+mutation CreateContactWithExternalReference {
+contact_Create(
+    input: {
+        externalSystemReference: {
+            id: "123"
+            syncDate: "2022-11-12T13:14:15.678Z"
+            type: HUBSPOT
+        }
+    }
+  ) {
+    id
+  }
+}
