@@ -39,24 +39,28 @@
 
 
 ## 👋 Overview
+
 Openline customerOS is an open source development platform that enables the flexible and rapid development of customer-centric applications.
 
-| Feature            | Description | Status|
-|--------------------|-------------|-------|
-| **Openline Auth**  |End-to-end identity solution for easy user authentication, sign-in, and permissions using OAuth.| Demo |
-| **customerDB**     |Backend server that host your customer data in a secure, compliant, and standards based way. | Demo|
-| **customerOS API** |GraphQL and gRPC API for reading, writing, and manipulating data.| Demo|
-| **Event trackers** |First party event trackers fully integrated with customerDB, allowing you full visibility into how your customers are engaging with your apps and content | Preview|
-| **App launcher**   |Web application with built in SSO to launch into any app built into customerOS| Demo|
-| **Settings app**   |Web application where you configure and administer all Openline services| Roadmap|
-| **Web components** |A library of web components that make it easy to interact with customer data in your front end applications| Roadmap|
+| Feature               | Description | Status|
+|-----------------------|-------------|-------|
+| **Analytics API**     |Privacy-centric replacement for Google Analytics| Roadmap|
+| **Auth**              |End-to-end identity solution for easy user authentication, sign-in, and permissions using OAuth.| Demo |
+| **customerDB**        |Backend server that host your customer data in a secure, compliant, and standards based way. | Demo|
+| **customerOS API**    |GraphQL API for reading, writing, and manipulating customer data.| Demo|
+| **Event trackers**    |First party event trackers fully integrated with customerDB, allowing you full visibility into how your customers are engaging with your apps and content | Preview|
+| **Launcher**          |Web application with built in SSO to launch into any app built into customerOS| Demo|
+| **Message store API** |gRPC API for high-speed communication between customerOS and communications clients (like [Oasis][oasis]) | Demo|
+| **Settings**          |Web application where you configure and administer all Openline services| Roadmap|
+| **Web components**    |A library of web components that make it easy to interact with customer data in your front end applications| Roadmap|
 
-- Roadmap: Feature is scheduled for future development
-- Demo: Code is available and undergoing testing
-- Preview: Code is available to users in evaluation mode
-- Stable: Code is available to all users in production
+- Roadmap: Coming soon!
+- Demo: We're still working out the kinks
+- Preview: We're using it in Production.  So are Openline Insiders.
+- Stable: Everyone is using it in Production.
 
 ## 🚀 Installation
+
 1. Download and install the [Openline CLI][cli]
 2. Run the following command
 
@@ -136,15 +140,16 @@ A massive thank you goes out to all these wonderful people ([emoji key][emoji]):
 - Premium features (contained in the ee directory) require an Openline Enterprise license.  See our [pricing page][pricing] for more details.
 - Copyright &copy; Openline Technologies Inc. 2022
 
+<!--- References --->
 
 [apache2]: https://www.apache.org/licenses/LICENSE-2.0
 [call]: https://meetings-eu1.hubspot.com/matt2/customer-demos
-[careers]: https://openline.ai
 [cli]: https://www.openline.ai/docs
 [contributions]: https://github.com/openline-ai/community/blob/main/README.md
 [customerOS-repo]: https://github.com/openline-ai/openline-customer-os/
 [docs]: https://openline.ai
 [emoji]: https://allcontributors.org/docs/en/emoji-key
+[oasis]: https://github.com/openline-ai/openline-oasis
 [pricing]: https://openline.ai/pricing
 [slack]: https://join.slack.com/t/openline-ai/shared_invite/zt-1i6umaw6c-aaap4VwvGHeoJ1zz~ngCKQ
 [twitter]: https://twitter.com/OpenlineAI
