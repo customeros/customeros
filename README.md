@@ -57,7 +57,7 @@ Openline customerOS is an open source development platform that enables the flex
 - Roadmap: Coming soon!
 - Demo: We're still working out the kinks
 - Preview: We're using it in Production.  So are Openline Insiders.
-- Stable: Everyone is using it in Production.
+- Stable: Battle tested. Everyone is using it in Production.
 
 ## 🚀 Installation
 
