@@ -29,7 +29,7 @@ spec:
             - name: DB_NAME
               value: "openline"
             - name: DB_HOST
-              value: "postgresql-customer-os-dev.openline.svc.cluster.local"
+              value: "customer-db-postgresql.openline.svc.cluster.local"
             - name: DB_PORT
               value: "5432"
             - name: CUSTOMER_OS_API
@@ -37,7 +37,7 @@ spec:
             - name: MESSAGE_STORE_SERVER_PORT
               value: "9009"
             - name: NEO4J_TARGET
-              value: "neo4j://neo4j-customer-os.openline.svc.cluster.local:7687"
+              value: "neo4j://customer-db-neo4j.openline.svc.cluster.local:7687"
             - name: NEO4J_AUTH_USER
               value: "neo4j"
             - name: NEO4J_AUTH_PWD

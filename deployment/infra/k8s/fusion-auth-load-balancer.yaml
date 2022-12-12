@@ -1,11 +1,11 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: fusion-auth-loadbalancer
+  name: auth-fusionauth-loadbalancer
 spec:
   type: LoadBalancer
   selector:
-    app.kubernetes.io/instance: fusionauth-customer-os
+    app.kubernetes.io/instance: auth-fusionauth
     app.kubernetes.io/name: fusionauth
   ports:
     - name: http
