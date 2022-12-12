@@ -10,7 +10,7 @@ auth:
 primary:
   persistence:
     enabled: true
-    existingClaim: "efs-postgresql-claim"
+    existingClaim: "customer-db-postgresql-claim"
 
 volumePermissions:
   enabled: true
