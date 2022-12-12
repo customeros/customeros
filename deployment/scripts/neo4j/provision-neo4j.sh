@@ -5,7 +5,7 @@ NAMESPACE_NAME="openline"
 NEO4J_CYPHER="./openline-setup/customer-os.cypher"
 #########################################################
 
-VERSION=$(kubectl describe pod neo4j-customer-os-0 -n openline | grep HELM_NEO4J_VERSION | cut -b 33-38)
+VERSION=$(kubectl describe pod customer-db-neo4j-0 -n openline | grep HELM_NEO4J_VERSION | cut -b 33-38)
 
 neo_output="not empty"
 while  [ ! -z "$neo_output" ]; do
