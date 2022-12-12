@@ -2,6 +2,14 @@ CREATE CONSTRAINT tenant_name_unique IF NOT EXISTS ON (t:Tenant) ASSERT t.name I
 MERGE(t:Tenant {name: "openline"});
 
 MATCH (t:Tenant {name:"openline"})
+ MERGE (t)<-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]-(e:ExternalSystem {id:"hubspot"})
+ ON CREATE SET e.name="HubSpot";
+
+ MATCH (t:Tenant {name:"openline"})
+  MERGE (t)<-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]-(e:ExternalSystem {id:"zendesk"})
+  ON CREATE SET e.name="Zendesk";
+
+MATCH (t:Tenant {name:"openline"})
     MERGE (u:User {id:"AgentSmith"})-[:USER_BELONGS_TO_TENANT]->(t)
     ON CREATE SET
     		u.firstName ="Agent",
