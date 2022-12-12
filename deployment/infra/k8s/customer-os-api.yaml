@@ -37,7 +37,7 @@ spec:
             - name: CORS_URL
               value: "*"
             - name: NEO4J_TARGET
-              value: "neo4j://neo4j-customer-os.openline.svc.cluster.local:7687"
+              value: "neo4j://customer-db-neo4j.openline.svc.cluster.local:7687"
             - name: NEO4J_AUTH_USER
               value: "neo4j"
             - name: NEO4J_AUTH_PWD
