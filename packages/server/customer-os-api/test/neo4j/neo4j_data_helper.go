@@ -22,6 +22,15 @@ func CreateTenant(driver *neo4j.Driver, tenant string) {
 	})
 }
 
+func CreateHubspotExternalSystem(driver *neo4j.Driver, tenant string) {
+	query := `MATCH (t:Tenant {name:$tenant})
+			MERGE (e:ExternalSystem {id:$externalSystemId})-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]->(t)`
+	ExecuteWriteQuery(driver, query, map[string]any{
+		"tenant":           tenant,
+		"externalSystemId": "hubspot",
+	})
+}
+
 func CreateDefaultUser(driver *neo4j.Driver, tenant string) string {
 	return CreateUser(driver, tenant, entity.UserEntity{
 		FirstName: "first",

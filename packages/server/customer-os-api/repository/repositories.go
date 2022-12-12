@@ -19,6 +19,7 @@ type Repositories struct {
 	FieldSetDefinitionRepository    FieldSetDefinitionRepository
 	FieldSetRepository              FieldSetRepository
 	UserRepository                  UserRepository
+	ExternalSystemRepository        ExternalSystemRepository
 }
 
 type Drivers struct {
@@ -44,5 +45,6 @@ func InitRepos(driver *neo4j.Driver) *Repositories {
 	repositories.FieldSetDefinitionRepository = NewFieldSetDefinitionRepository(driver, &repositories)
 	repositories.FieldSetRepository = NewFieldSetRepository(driver)
 	repositories.UserRepository = NewUserRepository(driver)
+	repositories.ExternalSystemRepository = NewExternalSystemRepository(driver)
 	return &repositories
 }

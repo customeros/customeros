@@ -222,7 +222,8 @@ type ContactInput struct {
 	// A phone number associated with the contact.
 	PhoneNumber *PhoneNumberInput `json:"phoneNumber"`
 	// Id of the contact owner (user)
-	OwnerID *string `json:"ownerId"`
+	OwnerID                 *string                       `json:"ownerId"`
+	ExternalSystemReference *ExternalSystemReferenceInput `json:"externalSystemReference"`
 }
 
 type ContactType struct {
@@ -469,6 +470,12 @@ type EntityDefinitionInput struct {
 	Extends      *EntityDefinitionExtension    `json:"extends"`
 	FieldSets    []*FieldSetDefinitionInput    `json:"fieldSets"`
 	CustomFields []*CustomFieldDefinitionInput `json:"customFields"`
+}
+
+type ExternalSystemReferenceInput struct {
+	ID       string             `json:"id"`
+	SyncDate *time.Time         `json:"syncDate"`
+	Type     ExternalSystemType `json:"type"`
 }
 
 type FieldSet struct {
@@ -946,6 +953,47 @@ func (e *EntityDefinitionExtension) UnmarshalGQL(v interface{}) error {
 }
 
 func (e EntityDefinitionExtension) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+type ExternalSystemType string
+
+const (
+	ExternalSystemTypeHubspot ExternalSystemType = "HUBSPOT"
+	ExternalSystemTypeZendesk ExternalSystemType = "ZENDESK"
+)
+
+var AllExternalSystemType = []ExternalSystemType{
+	ExternalSystemTypeHubspot,
+	ExternalSystemTypeZendesk,
+}
+
+func (e ExternalSystemType) IsValid() bool {
+	switch e {
+	case ExternalSystemTypeHubspot, ExternalSystemTypeZendesk:
+		return true
+	}
+	return false
+}
+
+func (e ExternalSystemType) String() string {
+	return string(e)
+}
+
+func (e *ExternalSystemType) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = ExternalSystemType(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid ExternalSystemId", str)
+	}
+	return nil
+}
+
+func (e ExternalSystemType) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
 }
 

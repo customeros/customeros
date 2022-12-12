@@ -82,7 +82,6 @@ func TestMutationResolver_ContactCreate_Min(t *testing.T) {
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Tenant"))
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Contact"))
 	require.Equal(t, 2, neo4jt.GetTotalCountOfNodes(driver))
-
 }
 
 func TestMutationResolver_ContactCreate(t *testing.T) {
@@ -269,6 +268,30 @@ func TestMutationResolver_ContactCreate_WithOwner(t *testing.T) {
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "User"))
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Tenant"))
 	require.Equal(t, 1, neo4jt.GetCountOfRelationships(driver, "OWNS"))
+}
+
+func TestMutationResolver_ContactCreate_WithExternalReference(t *testing.T) {
+	defer tearDownTestCase()(t)
+	neo4jt.CreateTenant(driver, tenantName)
+	neo4jt.CreateHubspotExternalSystem(driver, tenantName)
+
+	rawResponse, err := c.RawPost(getQuery("create_contact_with_external_reference"))
+	assertRawResponseSuccess(t, rawResponse, err)
+
+	var contact struct {
+		Contact_Create model.Contact
+	}
+
+	err = decode.Decode(rawResponse.Data.(map[string]any), &contact)
+	require.Nil(t, err)
+	require.NotNil(t, contact)
+	require.NotNil(t, contact.Contact_Create.ID)
+
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Tenant"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Contact"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "ExternalSystem"))
+	require.Equal(t, 3, neo4jt.GetTotalCountOfNodes(driver))
+	require.Equal(t, 1, neo4jt.GetCountOfRelationships(driver, "IS_LINKED_WITH"))
 }
 
 func TestMutationResolver_UpdateContact(t *testing.T) {
