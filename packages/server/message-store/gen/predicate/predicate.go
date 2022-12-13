@@ -6,8 +6,8 @@ import (
 	"entgo.io/ent/dialect/sql"
 )
 
-// MessageFeed is the predicate function for messagefeed builders.
-type MessageFeed func(*sql.Selector)
+// Conversation is the predicate function for conversation builders.
+type Conversation func(*sql.Selector)
 
-// MessageItem is the predicate function for messageitem builders.
-type MessageItem func(*sql.Selector)
+// ConversationItem is the predicate function for conversationitem builders.
+type ConversationItem func(*sql.Selector)

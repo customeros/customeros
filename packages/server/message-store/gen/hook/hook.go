@@ -9,28 +9,28 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/message-store/gen"
 )
 
-// The MessageFeedFunc type is an adapter to allow the use of ordinary
-// function as MessageFeed mutator.
-type MessageFeedFunc func(context.Context, *gen.MessageFeedMutation) (gen.Value, error)
+// The ConversationFunc type is an adapter to allow the use of ordinary
+// function as Conversation mutator.
+type ConversationFunc func(context.Context, *gen.ConversationMutation) (gen.Value, error)
 
 // Mutate calls f(ctx, m).
-func (f MessageFeedFunc) Mutate(ctx context.Context, m gen.Mutation) (gen.Value, error) {
-	mv, ok := m.(*gen.MessageFeedMutation)
+func (f ConversationFunc) Mutate(ctx context.Context, m gen.Mutation) (gen.Value, error) {
+	mv, ok := m.(*gen.ConversationMutation)
 	if !ok {
-		return nil, fmt.Errorf("unexpected mutation type %T. expect *gen.MessageFeedMutation", m)
+		return nil, fmt.Errorf("unexpected mutation type %T. expect *gen.ConversationMutation", m)
 	}
 	return f(ctx, mv)
 }
 
-// The MessageItemFunc type is an adapter to allow the use of ordinary
-// function as MessageItem mutator.
-type MessageItemFunc func(context.Context, *gen.MessageItemMutation) (gen.Value, error)
+// The ConversationItemFunc type is an adapter to allow the use of ordinary
+// function as ConversationItem mutator.
+type ConversationItemFunc func(context.Context, *gen.ConversationItemMutation) (gen.Value, error)
 
 // Mutate calls f(ctx, m).
-func (f MessageItemFunc) Mutate(ctx context.Context, m gen.Mutation) (gen.Value, error) {
-	mv, ok := m.(*gen.MessageItemMutation)
+func (f ConversationItemFunc) Mutate(ctx context.Context, m gen.Mutation) (gen.Value, error) {
+	mv, ok := m.(*gen.ConversationItemMutation)
 	if !ok {
-		return nil, fmt.Errorf("unexpected mutation type %T. expect *gen.MessageItemMutation", m)
+		return nil, fmt.Errorf("unexpected mutation type %T. expect *gen.ConversationItemMutation", m)
 	}
 	return f(ctx, mv)
 }

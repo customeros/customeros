@@ -7,8 +7,8 @@ import (
 	"github.com/neo4j/neo4j-go-driver/v4/neo4j"
 	c "github.com/openline-ai/openline-customer-os/packages/server/message-store/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/message-store/gen"
-	"github.com/openline-ai/openline-customer-os/packages/server/message-store/gen/messagefeed"
-	"github.com/openline-ai/openline-customer-os/packages/server/message-store/gen/messageitem"
+	genConversation "github.com/openline-ai/openline-customer-os/packages/server/message-store/gen/conversation"
+	"github.com/openline-ai/openline-customer-os/packages/server/message-store/gen/conversationitem"
 	"github.com/openline-ai/openline-customer-os/packages/server/message-store/gen/proto"
 	pb "github.com/openline-ai/openline-customer-os/packages/server/message-store/gen/proto"
 	"google.golang.org/grpc/codes"
@@ -37,82 +37,120 @@ type ContactInfo struct {
 	id        string
 }
 
-func encodeChannel(channel pb.MessageChannel) messageitem.Channel {
+func encodeConversationState(feedState pb.FeedItemState) genConversation.State {
+	switch feedState {
+	case pb.FeedItemState_NEW:
+		return genConversation.StateNEW
+	case pb.FeedItemState_IN_PROGRESS:
+		return genConversation.StateIN_PROGRESS
+	case pb.FeedItemState_CLOSED:
+		return genConversation.StateCLOSED
+	default:
+		return genConversation.StateNEW
+	}
+}
+
+func decodeConversationState(feedState genConversation.State) pb.FeedItemState {
+	switch feedState {
+	case genConversation.StateNEW:
+		return pb.FeedItemState_NEW
+	case genConversation.StateIN_PROGRESS:
+		return pb.FeedItemState_IN_PROGRESS
+	case genConversation.StateCLOSED:
+		return pb.FeedItemState_CLOSED
+
+	default:
+		return pb.FeedItemState_NEW
+	}
+}
+
+func decodeSenderType(feedState genConversation.LastSenderType) pb.SenderType {
+	switch feedState {
+	case genConversation.LastSenderTypeCONTACT:
+		return pb.SenderType_CONTACT
+	case genConversation.LastSenderTypeUSER:
+		return pb.SenderType_USER
+	default:
+		return pb.SenderType_CONTACT
+	}
+}
+
+func encodeChannel(channel pb.MessageChannel) conversationitem.Channel {
 	switch channel {
 	case pb.MessageChannel_WIDGET:
-		return messageitem.ChannelCHAT
+		return conversationitem.ChannelCHAT
 	case pb.MessageChannel_MAIL:
-		return messageitem.ChannelMAIL
+		return conversationitem.ChannelMAIL
 	case pb.MessageChannel_WHATSAPP:
-		return messageitem.ChannelWHATSAPP
+		return conversationitem.ChannelWHATSAPP
 	case pb.MessageChannel_FACEBOOK:
-		return messageitem.ChannelFACEBOOK
+		return conversationitem.ChannelFACEBOOK
 	case pb.MessageChannel_TWITTER:
-		return messageitem.ChannelTWITTER
+		return conversationitem.ChannelTWITTER
 	case pb.MessageChannel_VOICE:
-		return messageitem.ChannelVOICE
+		return conversationitem.ChannelVOICE
 	default:
-		return messageitem.ChannelCHAT
+		return conversationitem.ChannelCHAT
 	}
 }
 
-func encodeDirection(direction pb.MessageDirection) messageitem.Direction {
+func encodeDirection(direction pb.MessageDirection) conversationitem.Direction {
 	switch direction {
 	case pb.MessageDirection_INBOUND:
-		return messageitem.DirectionINBOUND
+		return conversationitem.DirectionINBOUND
 	case pb.MessageDirection_OUTBOUND:
-		return messageitem.DirectionOUTBOUND
+		return conversationitem.DirectionOUTBOUND
 	default:
-		return messageitem.DirectionOUTBOUND
+		return conversationitem.DirectionOUTBOUND
 	}
 }
 
-func encodeType(t pb.MessageType) messageitem.Type {
+func encodeType(t pb.MessageType) conversationitem.Type {
 	switch t {
 	case pb.MessageType_MESSAGE:
-		return messageitem.TypeMESSAGE
+		return conversationitem.TypeMESSAGE
 	case pb.MessageType_FILE:
-		return messageitem.TypeFILE
+		return conversationitem.TypeFILE
 	default:
-		return messageitem.TypeMESSAGE
+		return conversationitem.TypeMESSAGE
 	}
 }
 
-func decodeType(t messageitem.Type) pb.MessageType {
+func decodeType(t conversationitem.Type) pb.MessageType {
 	switch t {
-	case messageitem.TypeMESSAGE:
+	case conversationitem.TypeMESSAGE:
 		return pb.MessageType_MESSAGE
-	case messageitem.TypeFILE:
+	case conversationitem.TypeFILE:
 		return pb.MessageType_FILE
 	default:
 		return pb.MessageType_MESSAGE
 	}
 }
 
-func decodeDirection(direction messageitem.Direction) pb.MessageDirection {
+func decodeDirection(direction conversationitem.Direction) pb.MessageDirection {
 	switch direction {
-	case messageitem.DirectionINBOUND:
+	case conversationitem.DirectionINBOUND:
 		return pb.MessageDirection_INBOUND
-	case messageitem.DirectionOUTBOUND:
+	case conversationitem.DirectionOUTBOUND:
 		return pb.MessageDirection_OUTBOUND
 	default:
 		return pb.MessageDirection_OUTBOUND
 	}
 }
 
-func decodeChannel(channel messageitem.Channel) pb.MessageChannel {
+func decodeChannel(channel conversationitem.Channel) pb.MessageChannel {
 	switch channel {
-	case messageitem.ChannelCHAT:
+	case conversationitem.ChannelCHAT:
 		return pb.MessageChannel_WIDGET
-	case messageitem.ChannelMAIL:
+	case conversationitem.ChannelMAIL:
 		return pb.MessageChannel_MAIL
-	case messageitem.ChannelWHATSAPP:
+	case conversationitem.ChannelWHATSAPP:
 		return pb.MessageChannel_WHATSAPP
-	case messageitem.ChannelFACEBOOK:
+	case conversationitem.ChannelFACEBOOK:
 		return pb.MessageChannel_FACEBOOK
-	case messageitem.ChannelTWITTER:
+	case conversationitem.ChannelTWITTER:
 		return pb.MessageChannel_TWITTER
-	case messageitem.ChannelVOICE:
+	case conversationitem.ChannelVOICE:
 		return pb.MessageChannel_VOICE
 	default:
 		return pb.MessageChannel_WIDGET
@@ -280,7 +318,7 @@ func createConversation(graphqlClient *graphql.Client, userId string, contactId 
 	return graphqlResponse["conversationCreate"]["id"], nil
 }
 
-func addMessageToConversationInGraphDb(driver *neo4j.Driver, conversationId string, msg *gen.MessageItem, t *time.Time) error {
+func addMessageToConversationInGraphDb(driver *neo4j.Driver, conversationId string, msg *gen.ConversationItem, t *time.Time) error {
 	session := (*driver).NewSession(
 		neo4j.SessionConfig{
 			AccessMode: neo4j.AccessModeWrite,
@@ -309,17 +347,17 @@ func addMessageToConversationInGraphDb(driver *neo4j.Driver, conversationId stri
 func (s *messageService) SaveMessage(ctx context.Context, message *pb.Message) (*pb.Message, error) {
 	var contact *ContactInfo
 	var err error
-	var feed *gen.MessageFeed
+	var conversation *gen.Conversation
 
-	if message.Contact == nil {
+	if message.ContactId == nil {
 		if message.GetChannel() == pb.MessageChannel_MAIL || message.GetChannel() == pb.MessageChannel_WIDGET {
-			displayName, email := parseEmail(message.Username)
+			displayName, email := parseEmail(*message.Username)
 			contact, err = getContactByEmail(s.graphqlClient, email)
 
 			if err != nil {
 
 				log.Printf("Contact %s creating a new contact", email)
-				firstName, lastName := "Unknown", "User"
+				firstName, lastName := "", ""
 				if displayName != "" {
 					parts := strings.SplitN(displayName, " ", 2)
 					firstName = parts[0]
@@ -339,19 +377,18 @@ func (s *messageService) SaveMessage(ctx context.Context, message *pb.Message) (
 					return nil, err
 				}
 			}
-			feed, err = s.client.MessageFeed.
+			conversation, err = s.client.Conversation.
 				Query().
-				Where(messagefeed.ContactId(contact.id)).
+				Where(genConversation.ContactId(contact.id)).
 				First(ctx)
-
 		} else if message.GetChannel() == pb.MessageChannel_VOICE {
-			contact, err = getContactByPhone(s.graphqlClient, message.Username)
+			contact, err = getContactByPhone(s.graphqlClient, *message.Username)
 			if err != nil {
 
-				log.Printf("Contact %s creating a new contact", message.Username)
+				log.Printf("Contact %s creating a new contact", *message.Username)
 				firstName, lastName := "Unknown", "Caller"
-				log.Printf("Making a contact, firstName=%s lastName=%s email=%s", firstName, lastName, message.Username)
-				contactId, err := createContactWithPhone(s.graphqlClient, firstName, lastName, message.Username)
+				log.Printf("Making a contact, firstName=%s lastName=%s email=%s", firstName, lastName, *message.Username)
+				contactId, err := createContactWithPhone(s.graphqlClient, firstName, lastName, *message.Username)
 				contact = &ContactInfo{
 					firstName: firstName,
 					lastName:  lastName,
@@ -362,44 +399,65 @@ func (s *messageService) SaveMessage(ctx context.Context, message *pb.Message) (
 					return nil, err
 				}
 			}
-			feed, err = s.client.MessageFeed.
+			conversation, err = s.client.Conversation.
 				Query().
-				Where(messagefeed.ContactId(contact.id)).
+				Where(genConversation.ContactId(contact.id)).
 				First(ctx)
 		} else {
 			return nil, status.Errorf(codes.Unimplemented, "Contact mapping not implemented yet for %v", message.GetChannel())
 		}
 	} else {
-		feed, err = s.client.MessageFeed.
-			Get(ctx, int(*message.Contact.Id))
+		contact, err = getContactById(s.graphqlClient, *message.ContactId)
 		if err != nil {
-			return nil, status.Errorf(codes.NotFound, "Couldn't find a feed for id of %d", *message.Contact.Id)
+			return nil, status.Errorf(codes.NotFound, "Couldn't find a contact for id of %s", *message.ContactId)
 		}
 
-		contact = &ContactInfo{firstName: feed.FirstName,
-			lastName: feed.LastName,
-			id:       feed.ContactId,
+		conversation, err = s.client.Conversation.Query().Where(genConversation.ContactId(contact.id)).First(ctx)
+		if err != nil {
+			return nil, status.Errorf(codes.NotFound, "Couldn't find a feed for id of %s", *message.ContactId)
+		}
+
+		contact = &ContactInfo{firstName: contact.firstName,
+			lastName: contact.lastName,
+			id:       contact.id,
 		}
 	}
 
+	now := time.Now()
 	if err != nil {
 		// can only reach here if message.Contact is nil & the contactId found in neo4j doesn't match a message any feed
 		se, _ := status.FromError(err)
 		if se.Code() != codes.Unknown {
 			return nil, status.Errorf(se.Code(), "Error upserting Feed: %s", err.Error())
 		} else {
-			feed, err = s.client.MessageFeed.
+
+			conversationCreate := s.client.Conversation.
 				Create().
-				SetFirstName(contact.firstName).
-				SetLastName(contact.lastName).
 				SetContactId(contact.id).
-				Save(ctx)
+				SetState(genConversation.StateNEW).
+				SetCreatedOn(now).
+				SetUpdatedOn(now).
+				SetLastMessage(message.Message).
+				SetLastSenderId(contact.id).
+				SetLastSenderType(genConversation.LastSenderTypeCONTACT)
+
+			if message.GetDirection() == pb.MessageDirection_INBOUND {
+				conversationCreate = conversationCreate.SetLastSenderId(contact.id)
+				conversationCreate = conversationCreate.SetLastSenderType(genConversation.LastSenderTypeCONTACT)
+			} else {
+				conversationCreate = conversationCreate.SetLastSenderId(*message.UserId)
+				conversationCreate = conversationCreate.SetLastSenderType(genConversation.LastSenderTypeUSER)
+			}
+
+			newConversation, err := conversationCreate.Save(ctx)
+			conversation = newConversation
+
 			if err != nil {
 				se, _ = status.FromError(err)
 				return nil, status.Errorf(se.Code(), "Error inserting new Feed %s", err.Error())
 			}
 
-			conv, err := createConversation(s.graphqlClient, s.config.Identity.DefaultUserId, contact.id, feed.ID)
+			conv, err := createConversation(s.graphqlClient, s.config.Identity.DefaultUserId, contact.id, conversation.ID)
 
 			if err != nil {
 				log.Printf("Error making conversation %v", err)
@@ -411,122 +469,146 @@ func (s *messageService) SaveMessage(ctx context.Context, message *pb.Message) (
 		}
 	}
 
-	var t *time.Time = nil
-	if message.GetTime() != nil {
-		var timeref = message.GetTime().AsTime()
-		t = &timeref
-	}
-	msg, err := s.client.MessageItem.
+	conversationItemCreate := s.client.ConversationItem.
 		Create().
 		SetMessage(message.GetMessage()).
-		SetMessageFeed(feed).
+		SetConversationID(conversation.ID).
 		SetChannel(encodeChannel(message.GetChannel())).
-		SetNillableTime(t).
-		SetUsername(message.GetUsername()).
 		SetDirection(encodeDirection(message.GetDirection())).
 		SetType(encodeType(message.GetType())).
-		Save(ctx)
+		SetTime(now)
+
+	if message.GetDirection() == pb.MessageDirection_INBOUND {
+		conversationItemCreate.SetSenderId(contact.id)
+		conversationItemCreate.SetSenderType(conversationitem.SenderTypeCONTACT)
+	} else {
+		conversationItemCreate.SetSenderId(*message.UserId)
+		conversationItemCreate.SetSenderType(conversationitem.SenderTypeUSER)
+	}
+
+	conversationItem, err := conversationItemCreate.Save(ctx)
 
 	if err != nil {
 		se, _ := status.FromError(err)
 		return nil, status.Errorf(se.Code(), "Error inserting message: %s", err.Error())
 	}
 
-	if t == nil {
-		var timeRef = time.Now()
-		t = &timeRef
+	//on the first reply of a user, we mark the conversation as in progress
+	if (conversation.State == genConversation.StateNEW) && (message.GetDirection() == pb.MessageDirection_OUTBOUND) {
+		conversation.State = genConversation.StateIN_PROGRESS
 	}
 
-	addMessageToConversationInGraphDb(s.driver, strconv.Itoa(feed.ID), msg, t)
+	conversation.LastMessage = message.GetMessage()
+
+	if message.GetDirection() == pb.MessageDirection_INBOUND {
+		conversation.LastSenderId = contact.id
+	} else {
+		conversation.LastSenderId = *message.UserId
+	}
+
+	conversation.UpdatedOn = message.Time.AsTime()
+	conversation.Update()
+
+	if err != nil {
+		se, _ := status.FromError(err)
+		return nil, status.Errorf(se.Code(), "Error inserting message: %s", err.Error())
+	}
+
+	addMessageToConversationInGraphDb(s.driver, strconv.Itoa(conversation.ID), conversationItem, &now)
 	if err != nil {
 		log.Printf("Error saving message metadata in graph %v", err)
 		return nil, err
 	}
 
-	var id = int64(msg.ID)
-	var feedId = int64(feed.ID)
+	var id = int64(conversationItem.ID)
+	var conversationid = int64(conversation.ID)
 	mi := &pb.Message{
-		Type:      decodeType(msg.Type),
-		Message:   msg.Message,
-		Direction: decodeDirection(msg.Direction),
-		Channel:   decodeChannel(msg.Channel),
-		Username:  msg.Username,
+		Type:      decodeType(conversationItem.Type),
+		Message:   conversationItem.Message,
+		Direction: decodeDirection(conversationItem.Direction),
+		Channel:   decodeChannel(conversationItem.Channel),
+		Username:  message.Username,
+		UserId:    message.UserId,
+		ContactId: message.ContactId,
 		Id:        &id,
-		Contact:   &pb.Contact{ContactId: contact.id, Id: &feedId, FirstName: contact.firstName, LastName: contact.lastName},
-		Time:      timestamppb.New(*t),
+		FeedId:    &conversationid,
+		Time:      timestamppb.New(now),
 	}
 	return mi, nil
 }
 
-func (s *messageService) GetMessage(ctx context.Context, msg *pb.Message) (*pb.Message, error) {
-	if msg.Id == nil {
+func (s *messageService) GetMessage(ctx context.Context, msgId *pb.Id) (*pb.Message, error) {
+	if msgId == nil || msgId.GetId() == 0 {
 		return nil, status.Errorf(codes.InvalidArgument, "Message ID must be specified")
 	}
 
-	mi, err := s.client.MessageItem.Get(ctx, int(msg.GetId()))
+	mi, err := s.client.ConversationItem.Get(ctx, int(msgId.GetId()))
 	if err != nil {
 		se, _ := status.FromError(err)
 		return nil, status.Errorf(se.Code(), "Error finding Message")
 	}
 
-	mf, err := s.client.MessageItem.QueryMessageFeed(mi).First(ctx)
+	mf, err := s.client.ConversationItem.QueryConversation(mi).First(ctx)
 	if err != nil {
 		se, _ := status.FromError(err)
 		return nil, status.Errorf(se.Code(), "Error finding Feed")
 	}
-	msgId := int64(mf.ID)
+
+	messageId := int64(mi.ID)
+	conversationid := int64(mf.ID)
+
+	contactById, err := getContactById(s.graphqlClient, mf.ContactId)
+
 	m := &pb.Message{
 		Type:      decodeType(mi.Type),
 		Message:   mi.Message,
 		Direction: decodeDirection(mi.Direction),
 		Channel:   decodeChannel(mi.Channel),
-		Username:  mi.Username,
-		Id:        msg.Id,
+		Username:  contactById.email,
+		ContactId: &mf.ContactId,
+		Id:        &messageId,
+		FeedId:    &conversationid,
 		Time:      timestamppb.New(mi.Time),
-		Contact:   &pb.Contact{ContactId: mf.ContactId, Id: &msgId, FirstName: mf.FirstName, LastName: mf.LastName},
 	}
+
+	if mi.Direction == conversationitem.DirectionOUTBOUND {
+		m.UserId = &mi.SenderId
+	}
+
 	return m, nil
 }
 
-func (s *messageService) GetMessages(ctx context.Context, pc *pb.PagedContact) (*pb.MessageList, error) {
-	var messages []*gen.MessageItem
+func (s *messageService) GetMessages(ctx context.Context, messagesRequest *pb.GetMessagesRequest) (*pb.MessagePagedResponse, error) {
+	var messages []*gen.ConversationItem
 	var err error
-	var mf *gen.MessageFeed
-	contact := pc.Contact
-	pageInfo := pc.Page
+	var conversation *gen.Conversation
 
-	if contact.Id != nil {
-		log.Printf("Looking up messages for Contact id %d", *contact.Id)
-		mf, err = s.client.MessageFeed.Get(ctx, int(*contact.Id))
+	if messagesRequest != nil {
+		log.Printf("Looking up messages for conversation with id %d", messagesRequest.GetConversationId())
+		conversation, err = s.client.Conversation.Get(ctx, int(messagesRequest.GetConversationId()))
 		if err != nil {
 			se, _ := status.FromError(err)
-			return nil, status.Errorf(se.Code(), "Error finding Feed")
+			return nil, status.Errorf(se.Code(), "Error finding conversation with id  %d", messagesRequest.GetConversationId())
 		}
 	} else {
-		log.Printf("Looking up messages for Contact name %s", contact.GetContactId())
-		mf, err = s.client.MessageFeed.Query().
-			Where(messagefeed.ContactId(contact.GetContactId())).
-			First(ctx)
-		if err != nil {
-			se, _ := status.FromError(err)
-			return nil, status.Errorf(se.Code(), "Error finding Feed")
-		}
+		log.Printf("Conversation id is required")
+		return nil, status.Errorf(1, "Conversation id is required")
 	}
 
 	limit := 100 // default to 100 if no pagination is specified
-	if pageInfo != nil {
-		limit = int(pageInfo.PageSize)
+	if messagesRequest.GetPageSize() != 0 {
+		limit = int(messagesRequest.GetPageSize())
 	}
 
-	if pageInfo == nil || pageInfo.Before == nil {
-		messages, err = s.client.MessageFeed.QueryMessageItem(mf).
-			Order(gen.Desc(messageitem.FieldTime)).
+	if messagesRequest.GetBefore() == nil {
+		messages, err = s.client.Conversation.QueryConversationItem(conversation).
+			Order(gen.Desc(conversationitem.FieldTime)).
 			Limit(limit).
 			All(ctx)
 	} else {
-		messages, err = s.client.MessageFeed.QueryMessageItem(mf).
-			Order(gen.Desc(messageitem.FieldTime)).
-			Where(messageitem.TimeLT(pageInfo.Before.AsTime())).
+		messages, err = s.client.Conversation.QueryConversationItem(conversation).
+			Order(gen.Desc(conversationitem.FieldTime)).
+			Where(conversationitem.TimeLT(messagesRequest.GetBefore().AsTime())).
 			Limit(limit).
 			All(ctx)
 	}
@@ -535,84 +617,114 @@ func (s *messageService) GetMessages(ctx context.Context, pc *pb.PagedContact) (
 		se, _ := status.FromError(err)
 		return nil, status.Errorf(se.Code(), "Error getting messages")
 	}
-	ml := &pb.MessageList{Message: make([]*pb.Message, len(messages))}
+	ml := &pb.MessagePagedResponse{Message: make([]*pb.Message, len(messages))}
+
+	conversationId := int64(conversation.ID)
 
 	for i, j := len(messages)-1, 0; i >= 0; i, j = i-1, j+1 {
-		message := messages[i]
-		var id int64 = int64(message.ID)
-		var mfid int64 = int64(mf.ID)
-
+		var mid = int64(messages[i].ID)
 		mi := &pb.Message{
-			Type:      decodeType(message.Type),
-			Message:   message.Message,
-			Direction: decodeDirection(message.Direction),
-			Channel:   decodeChannel(message.Channel),
-			Username:  message.Username,
-			Id:        &id,
-			Time:      timestamppb.New(message.Time),
-			Contact:   &pb.Contact{ContactId: mf.ContactId, Id: &mfid},
+			Type:      decodeType(messages[i].Type),
+			Message:   messages[i].Message,
+			Direction: decodeDirection(messages[i].Direction),
+			Channel:   decodeChannel(messages[i].Channel),
+			Username:  nil,
+			ContactId: &conversation.ContactId,
+			Id:        &mid,
+			FeedId:    &conversationId,
+			Time:      timestamppb.New(messages[i].Time),
 		}
 		ml.Message[j] = mi
 	}
 	return ml, nil
 }
 
-func (s *messageService) GetFeeds(ctx context.Context, _ *pb.Empty) (*pb.FeedList, error) {
-	contacts, err := s.client.MessageFeed.Query().All(ctx)
-	if err != nil {
+func (s *messageService) GetFeeds(ctx context.Context, feedRequest *pb.GetFeedsPagedRequest) (*pb.FeedItemPagedResponse, error) {
+	query := s.client.Conversation.Query()
+
+	if feedRequest.GetStateIn() != nil {
+		stateIn := make([]genConversation.State, 0, len(feedRequest.GetStateIn()))
+		for _, state := range feedRequest.GetStateIn() {
+			stateIn = append(stateIn, encodeConversationState(state))
+		}
+		query.Where(genConversation.StateIn(stateIn...))
+	}
+
+	limit := 100 // default to 100 if no pagination is specified
+	if feedRequest.GetPageSize() != 0 {
+		limit = int(feedRequest.GetPageSize())
+	}
+	offset := limit * int(feedRequest.GetPage())
+
+	conversations, err := query.Limit(limit).Offset(offset).All(ctx)
+	count, err2 := query.Count(ctx)
+
+	if err != nil || err2 != nil {
 		se, _ := status.FromError(err)
 		return nil, status.Errorf(se.Code(), "Error getting messages: %s", err.Error())
 	}
-	fl := &pb.FeedList{Contact: make([]*pb.Contact, len(contacts))}
+	fl := &pb.FeedItemPagedResponse{FeedItems: make([]*pb.FeedItem, len(conversations))}
+	fl.TotalElements = int32(count)
 
-	for i, contact := range contacts {
-		var id = int64(contact.ID)
-		log.Printf("Got an feed id of %d", id)
-		contactInfo, err := getContactById(s.graphqlClient, contact.ContactId)
+	for i, conversation := range conversations {
+		var id = int64(conversation.ID)
+		log.Printf("Got a conversation id of %d", id)
+
+		contactById, err := getContactById(s.graphqlClient, conversation.ContactId)
+
 		if err != nil {
-			log.Printf("Unable to resolve contact, getting info from feed table")
-			fl.Contact[i] = &pb.Contact{ContactId: contact.ContactId, FirstName: contact.FirstName, LastName: contact.LastName, Id: &id}
-		} else {
-			fl.Contact[i] = &pb.Contact{ContactId: contact.ContactId, FirstName: contactInfo.firstName, LastName: contactInfo.lastName, Phone: contactInfo.phone, Email: contactInfo.email, Id: &id}
+			se, _ := status.FromError(err)
+			return nil, status.Errorf(se.Code(), "Error getting messages: %s", err.Error())
 		}
-		msg, _ := json.Marshal(fl.Contact[i])
-		log.Printf("Got a contact of %s", msg)
+
+		fl.FeedItems[i] = &pb.FeedItem{
+			Id:               int64(conversation.ID),
+			ContactId:        contactById.id,
+			ContactFirstName: contactById.firstName,
+			ContactLastName:  contactById.lastName,
+			ContactEmail:     *contactById.email,
+			State:            decodeConversationState(conversation.State),
+			LastSenderId:     conversation.LastSenderId,
+			LastSenderType:   decodeSenderType(conversation.LastSenderType),
+			Message:          conversation.LastMessage,
+			UpdatedOn:        timestamppb.New(conversation.UpdatedOn),
+		}
+
+		msg, _ := json.Marshal(fl.FeedItems[i])
+		log.Printf("Got a feed item of %s", msg)
 	}
 	return fl, nil
 }
 
-func (s *messageService) GetFeed(ctx context.Context, contact *pb.Contact) (*pb.Contact, error) {
-	if contact.Id != nil {
-		log.Printf("Looking up messages for Contact id %d", *contact.Id)
-		mf, err := s.client.MessageFeed.Get(ctx, int(*contact.Id))
-		if err != nil {
-			se, _ := status.FromError(err)
-			return nil, status.Errorf(se.Code(), "Error finding Feed")
-		}
-		var id = int64(mf.ID)
-		contactInfo, err := getContactById(s.graphqlClient, mf.ContactId)
-		if err != nil {
-			log.Printf("Unable to resolve contact, getting info from feed table")
-			return &pb.Contact{ContactId: mf.ContactId, FirstName: mf.FirstName, LastName: mf.LastName, Id: &id}, nil
-		}
-		return &pb.Contact{FirstName: contactInfo.firstName, LastName: contactInfo.lastName, Phone: contactInfo.phone, Email: contactInfo.email, ContactId: mf.ContactId, Id: &id}, nil
-	} else {
-		log.Printf("Looking up messages for Contact name %s", contact.GetContactId())
-		mf, err := s.client.MessageFeed.Query().
-			Where(messagefeed.ContactId(contact.GetContactId())).
-			First(ctx)
-		if err != nil {
-			se, _ := status.FromError(err)
-			return nil, status.Errorf(se.Code(), "Error finding Feed: %s", err.Error())
-		}
-		var id int64 = int64(mf.ID)
-		contactInfo, err := getContactById(s.graphqlClient, mf.ContactId)
-		if err != nil {
-			se, _ := status.FromError(err)
-			return nil, status.Errorf(se.Code(), "Error resolving contact: %s", err.Error())
-		}
-		return &pb.Contact{FirstName: contactInfo.firstName, LastName: contactInfo.lastName, Phone: contactInfo.phone, Email: contactInfo.email, ContactId: mf.ContactId, Id: &id}, nil
+func (s *messageService) GetFeed(ctx context.Context, feedIdRequest *pb.Id) (*pb.FeedItem, error) {
+	if feedIdRequest == nil || feedIdRequest.GetId() == 0 {
+		return nil, status.Errorf(codes.InvalidArgument, "Feed ID must be specified")
 	}
+
+	conversation, err := s.client.Conversation.Get(ctx, int(feedIdRequest.GetId()))
+	if err != nil {
+		se, _ := status.FromError(err)
+		return nil, status.Errorf(se.Code(), "Error finding conversation")
+	}
+
+	contactById, err := getContactById(s.graphqlClient, conversation.ContactId)
+	if err != nil {
+		se, _ := status.FromError(err)
+		return nil, status.Errorf(se.Code(), "Error getting messages: %s", err.Error())
+	}
+
+	return &pb.FeedItem{
+		Id:               int64(conversation.ID),
+		ContactId:        contactById.id,
+		ContactFirstName: contactById.firstName,
+		ContactLastName:  contactById.lastName,
+		ContactEmail:     *contactById.email,
+		State:            decodeConversationState(conversation.State),
+		LastSenderId:     conversation.LastSenderId,
+		LastSenderType:   decodeSenderType(conversation.LastSenderType),
+		Message:          conversation.LastMessage,
+		UpdatedOn:        timestamppb.New(conversation.UpdatedOn),
+	}, nil
 }
 
 func NewMessageService(client *gen.Client, driver *neo4j.Driver, graphqlClient *graphql.Client, config *c.Config) *messageService {

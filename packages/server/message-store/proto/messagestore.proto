@@ -5,6 +5,15 @@ option go_package = "github.com/openline-ai/openline-customer-os/packages/server
 import "google/protobuf/timestamp.proto";
 
 
+enum FeedItemState {
+  NEW = 0;
+  IN_PROGRESS = 1;
+  CLOSED = 2;
+}
+enum SenderType {
+  CONTACT = 0;
+  USER = 1;
+}
 enum MessageType {
   MESSAGE = 0;
   FILE = 1;
@@ -13,7 +22,6 @@ enum MessageDirection {
   INBOUND = 0;
   OUTBOUND = 1;
 }
-
 enum MessageChannel {
   WIDGET = 0;
   MAIL = 1;
@@ -26,50 +34,58 @@ enum MessageChannel {
 message Message {
   MessageType type = 1;
   string message = 2;
-  string username = 3;
-  MessageChannel channel = 4;
-  MessageDirection direction = 5;
-  optional google.protobuf.Timestamp time = 6;
-  optional int64 id = 7;
-  optional Contact contact = 8;
+  MessageChannel channel = 3;
+  MessageDirection direction = 4;
+  optional google.protobuf.Timestamp time = 5;
+  optional int64 id = 6;
+  optional int64 feedId = 7;
+  optional string username = 8;
+  optional string userId = 9;
+  optional string contactId = 10;
 }
-
-message Contact {
-  string contactId = 1;
-  string firstName = 2;
-  string lastName = 3;
-  optional int64 id = 4;
-  optional string email = 5;
-  optional string phone = 6;
-}
-
-message PageInfo {
-  optional google.protobuf.Timestamp before = 1;
-  int32 pageSize = 2;
-}
-
-message PagedContact {
-  Contact contact = 1;
-  PageInfo page = 2;
-}
-
-message MessageList {
+message MessagePagedResponse {
   repeated Message message = 1;
+  optional google.protobuf.Timestamp before = 2;
+  int32 pageSize = 3;
 }
 
-message FeedList {
-  repeated Contact contact = 1;
+message FeedItem {
+  int64 id = 1;
+  string contactId= 2;
+  string contactFirstName = 3;
+  string contactLastName = 4;
+  string contactEmail = 5;
+  FeedItemState state = 6;
+  string lastSenderId = 7;
+  SenderType lastSenderType = 8;
+  string message = 9;
+  google.protobuf.Timestamp updatedOn = 10;
+}
+message FeedItemPagedResponse {
+  repeated FeedItem feedItems = 1;
+  int32 totalElements = 2;
 }
 
-message Empty {
+message Id {
+  int64 id = 1;
+}
+
+message GetMessagesRequest {
+  int64 conversationId = 1;
+  optional google.protobuf.Timestamp before = 2;
+  int32 pageSize = 3;
+}
+
+message GetFeedsPagedRequest {
+  repeated FeedItemState stateIn = 1;
+  int32 page = 2;
+  int32 pageSize = 3;
 }
 
 service MessageStoreService {
   rpc saveMessage(Message) returns (Message) {};
-  rpc getMessages(PagedContact) returns (MessageList) {};
-  rpc getMessage(Message) returns (Message) {};
-  rpc getFeeds(Empty) returns (FeedList) {};
-  rpc getFeed(Contact) returns (Contact) {};
-
-
+  rpc getMessages(GetMessagesRequest) returns (MessagePagedResponse) {};
+  rpc getMessage(Id) returns (Message) {};
+  rpc getFeeds(GetFeedsPagedRequest) returns (FeedItemPagedResponse) {};
+  rpc getFeed(Id) returns (FeedItem) {};
 }

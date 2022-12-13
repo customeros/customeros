@@ -12,10 +12,10 @@ import (
 // Tx is a transactional client that is created by calling Client.Tx().
 type Tx struct {
 	config
-	// MessageFeed is the client for interacting with the MessageFeed builders.
-	MessageFeed *MessageFeedClient
-	// MessageItem is the client for interacting with the MessageItem builders.
-	MessageItem *MessageItemClient
+	// Conversation is the client for interacting with the Conversation builders.
+	Conversation *ConversationClient
+	// ConversationItem is the client for interacting with the ConversationItem builders.
+	ConversationItem *ConversationItemClient
 
 	// lazily loaded.
 	client     *Client
@@ -147,8 +147,8 @@ func (tx *Tx) Client() *Client {
 }
 
 func (tx *Tx) init() {
-	tx.MessageFeed = NewMessageFeedClient(tx.config)
-	tx.MessageItem = NewMessageItemClient(tx.config)
+	tx.Conversation = NewConversationClient(tx.config)
+	tx.ConversationItem = NewConversationItemClient(tx.config)
 }
 
 // txDriver wraps the given dialect.Tx with a nop dialect.Driver implementation.
@@ -158,7 +158,7 @@ func (tx *Tx) init() {
 // of them in order to commit or rollback the transaction.
 //
 // If a closed transaction is embedded in one of the generated entities, and the entity
-// applies a query, for example: MessageFeed.QueryXXX(), the query will be executed
+// applies a query, for example: Conversation.QueryXXX(), the query will be executed
 // through the driver which created this transaction.
 //
 // Note that txDriver is not goroutine safe.
