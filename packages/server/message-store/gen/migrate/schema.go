@@ -8,65 +8,70 @@ import (
 )
 
 var (
-	// MessageFeedsColumns holds the columns for the "message_feeds" table.
-	MessageFeedsColumns = []*schema.Column{
+	// ConversationsColumns holds the columns for the "conversations" table.
+	ConversationsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
 		{Name: "contact_id", Type: field.TypeString, Unique: true},
-		{Name: "first_name", Type: field.TypeString},
-		{Name: "last_name", Type: field.TypeString},
+		{Name: "created_on", Type: field.TypeTime, Default: "CURRENT_TIMESTAMP"},
+		{Name: "updated_on", Type: field.TypeTime, Default: "CURRENT_TIMESTAMP"},
+		{Name: "state", Type: field.TypeEnum, Enums: []string{"NEW", "IN_PROGRESS", "CLOSED"}},
+		{Name: "last_message", Type: field.TypeString, SchemaType: map[string]string{"postgres": "text"}},
+		{Name: "last_sender_id", Type: field.TypeString},
+		{Name: "last_sender_type", Type: field.TypeEnum, Enums: []string{"CONTACT", "USER"}},
 	}
-	// MessageFeedsTable holds the schema information for the "message_feeds" table.
-	MessageFeedsTable = &schema.Table{
-		Name:       "message_feeds",
-		Columns:    MessageFeedsColumns,
-		PrimaryKey: []*schema.Column{MessageFeedsColumns[0]},
+	// ConversationsTable holds the schema information for the "conversations" table.
+	ConversationsTable = &schema.Table{
+		Name:       "conversations",
+		Columns:    ConversationsColumns,
+		PrimaryKey: []*schema.Column{ConversationsColumns[0]},
 		Indexes: []*schema.Index{
 			{
-				Name:    "messagefeed_contact_id",
+				Name:    "conversation_contact_id",
 				Unique:  true,
-				Columns: []*schema.Column{MessageFeedsColumns[1]},
+				Columns: []*schema.Column{ConversationsColumns[1]},
 			},
 		},
 	}
-	// MessageItemsColumns holds the columns for the "message_items" table.
-	MessageItemsColumns = []*schema.Column{
+	// ConversationItemsColumns holds the columns for the "conversation_items" table.
+	ConversationItemsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
 		{Name: "type", Type: field.TypeEnum, Enums: []string{"MESSAGE", "FILE"}},
-		{Name: "username", Type: field.TypeString},
+		{Name: "sender_id", Type: field.TypeString},
+		{Name: "sender_type", Type: field.TypeEnum, Enums: []string{"CONTACT", "USER"}},
 		{Name: "message", Type: field.TypeString, SchemaType: map[string]string{"postgres": "text"}},
 		{Name: "channel", Type: field.TypeEnum, Enums: []string{"CHAT", "MAIL", "WHATSAPP", "FACEBOOK", "TWITTER", "VOICE"}},
 		{Name: "direction", Type: field.TypeEnum, Enums: []string{"INBOUND", "OUTBOUND"}},
-		{Name: "time", Type: field.TypeTime, Nullable: true, Default: "CURRENT_TIMESTAMP"},
-		{Name: "message_feed_message_item", Type: field.TypeInt},
+		{Name: "time", Type: field.TypeTime, Default: "CURRENT_TIMESTAMP"},
+		{Name: "conversation_conversation_item", Type: field.TypeInt},
 	}
-	// MessageItemsTable holds the schema information for the "message_items" table.
-	MessageItemsTable = &schema.Table{
-		Name:       "message_items",
-		Columns:    MessageItemsColumns,
-		PrimaryKey: []*schema.Column{MessageItemsColumns[0]},
+	// ConversationItemsTable holds the schema information for the "conversation_items" table.
+	ConversationItemsTable = &schema.Table{
+		Name:       "conversation_items",
+		Columns:    ConversationItemsColumns,
+		PrimaryKey: []*schema.Column{ConversationItemsColumns[0]},
 		ForeignKeys: []*schema.ForeignKey{
 			{
-				Symbol:     "message_items_message_feeds_message_item",
-				Columns:    []*schema.Column{MessageItemsColumns[7]},
-				RefColumns: []*schema.Column{MessageFeedsColumns[0]},
+				Symbol:     "conversation_items_conversations_conversation_item",
+				Columns:    []*schema.Column{ConversationItemsColumns[8]},
+				RefColumns: []*schema.Column{ConversationsColumns[0]},
 				OnDelete:   schema.NoAction,
 			},
 		},
 		Indexes: []*schema.Index{
 			{
-				Name:    "messageitem_time_message_feed_message_item",
+				Name:    "conversationitem_time_conversation_conversation_item",
 				Unique:  false,
-				Columns: []*schema.Column{MessageItemsColumns[6], MessageItemsColumns[7]},
+				Columns: []*schema.Column{ConversationItemsColumns[7], ConversationItemsColumns[8]},
 			},
 		},
 	}
 	// Tables holds all the tables in the schema.
 	Tables = []*schema.Table{
-		MessageFeedsTable,
-		MessageItemsTable,
+		ConversationsTable,
+		ConversationItemsTable,
 	}
 )
 
 func init() {
-	MessageItemsTable.ForeignKeys[0].RefTable = MessageFeedsTable
+	ConversationItemsTable.ForeignKeys[0].RefTable = ConversationsTable
 }

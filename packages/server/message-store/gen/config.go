@@ -24,8 +24,8 @@ type config struct {
 
 // hooks per client, for fast access.
 type hooks struct {
-	MessageFeed []ent.Hook
-	MessageItem []ent.Hook
+	Conversation     []ent.Hook
+	ConversationItem []ent.Hook
 }
 
 // Options applies the options on the config object.

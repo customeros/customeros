@@ -10,8 +10,8 @@ import (
 
 	"github.com/openline-ai/openline-customer-os/packages/server/message-store/gen/migrate"
 
-	"github.com/openline-ai/openline-customer-os/packages/server/message-store/gen/messagefeed"
-	"github.com/openline-ai/openline-customer-os/packages/server/message-store/gen/messageitem"
+	"github.com/openline-ai/openline-customer-os/packages/server/message-store/gen/conversation"
+	"github.com/openline-ai/openline-customer-os/packages/server/message-store/gen/conversationitem"
 
 	"entgo.io/ent/dialect"
 	"entgo.io/ent/dialect/sql"
@@ -23,10 +23,10 @@ type Client struct {
 	config
 	// Schema is the client for creating, migrating and dropping schema.
 	Schema *migrate.Schema
-	// MessageFeed is the client for interacting with the MessageFeed builders.
-	MessageFeed *MessageFeedClient
-	// MessageItem is the client for interacting with the MessageItem builders.
-	MessageItem *MessageItemClient
+	// Conversation is the client for interacting with the Conversation builders.
+	Conversation *ConversationClient
+	// ConversationItem is the client for interacting with the ConversationItem builders.
+	ConversationItem *ConversationItemClient
 }
 
 // NewClient creates a new client configured with the given options.
@@ -40,8 +40,8 @@ func NewClient(opts ...Option) *Client {
 
 func (c *Client) init() {
 	c.Schema = migrate.NewSchema(c.driver)
-	c.MessageFeed = NewMessageFeedClient(c.config)
-	c.MessageItem = NewMessageItemClient(c.config)
+	c.Conversation = NewConversationClient(c.config)
+	c.ConversationItem = NewConversationItemClient(c.config)
 }
 
 // Open opens a database/sql.DB specified by the driver name and
@@ -73,10 +73,10 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 	cfg := c.config
 	cfg.driver = tx
 	return &Tx{
-		ctx:         ctx,
-		config:      cfg,
-		MessageFeed: NewMessageFeedClient(cfg),
-		MessageItem: NewMessageItemClient(cfg),
+		ctx:              ctx,
+		config:           cfg,
+		Conversation:     NewConversationClient(cfg),
+		ConversationItem: NewConversationItemClient(cfg),
 	}, nil
 }
 
@@ -94,17 +94,17 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 	cfg := c.config
 	cfg.driver = &txDriver{tx: tx, drv: c.driver}
 	return &Tx{
-		ctx:         ctx,
-		config:      cfg,
-		MessageFeed: NewMessageFeedClient(cfg),
-		MessageItem: NewMessageItemClient(cfg),
+		ctx:              ctx,
+		config:           cfg,
+		Conversation:     NewConversationClient(cfg),
+		ConversationItem: NewConversationItemClient(cfg),
 	}, nil
 }
 
 // Debug returns a new debug-client. It's used to get verbose logging on specific operations.
 //
 //	client.Debug().
-//		MessageFeed.
+//		Conversation.
 //		Query().
 //		Count(ctx)
 func (c *Client) Debug() *Client {
@@ -126,88 +126,88 @@ func (c *Client) Close() error {
 // Use adds the mutation hooks to all the entity clients.
 // In order to add hooks to a specific client, call: `client.Node.Use(...)`.
 func (c *Client) Use(hooks ...Hook) {
-	c.MessageFeed.Use(hooks...)
-	c.MessageItem.Use(hooks...)
+	c.Conversation.Use(hooks...)
+	c.ConversationItem.Use(hooks...)
 }
 
-// MessageFeedClient is a client for the MessageFeed schema.
-type MessageFeedClient struct {
+// ConversationClient is a client for the Conversation schema.
+type ConversationClient struct {
 	config
 }
 
-// NewMessageFeedClient returns a client for the MessageFeed from the given config.
-func NewMessageFeedClient(c config) *MessageFeedClient {
-	return &MessageFeedClient{config: c}
+// NewConversationClient returns a client for the Conversation from the given config.
+func NewConversationClient(c config) *ConversationClient {
+	return &ConversationClient{config: c}
 }
 
 // Use adds a list of mutation hooks to the hooks stack.
-// A call to `Use(f, g, h)` equals to `messagefeed.Hooks(f(g(h())))`.
-func (c *MessageFeedClient) Use(hooks ...Hook) {
-	c.hooks.MessageFeed = append(c.hooks.MessageFeed, hooks...)
+// A call to `Use(f, g, h)` equals to `conversation.Hooks(f(g(h())))`.
+func (c *ConversationClient) Use(hooks ...Hook) {
+	c.hooks.Conversation = append(c.hooks.Conversation, hooks...)
 }
 
-// Create returns a builder for creating a MessageFeed entity.
-func (c *MessageFeedClient) Create() *MessageFeedCreate {
-	mutation := newMessageFeedMutation(c.config, OpCreate)
-	return &MessageFeedCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+// Create returns a builder for creating a Conversation entity.
+func (c *ConversationClient) Create() *ConversationCreate {
+	mutation := newConversationMutation(c.config, OpCreate)
+	return &ConversationCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
 
-// CreateBulk returns a builder for creating a bulk of MessageFeed entities.
-func (c *MessageFeedClient) CreateBulk(builders ...*MessageFeedCreate) *MessageFeedCreateBulk {
-	return &MessageFeedCreateBulk{config: c.config, builders: builders}
+// CreateBulk returns a builder for creating a bulk of Conversation entities.
+func (c *ConversationClient) CreateBulk(builders ...*ConversationCreate) *ConversationCreateBulk {
+	return &ConversationCreateBulk{config: c.config, builders: builders}
 }
 
-// Update returns an update builder for MessageFeed.
-func (c *MessageFeedClient) Update() *MessageFeedUpdate {
-	mutation := newMessageFeedMutation(c.config, OpUpdate)
-	return &MessageFeedUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+// Update returns an update builder for Conversation.
+func (c *ConversationClient) Update() *ConversationUpdate {
+	mutation := newConversationMutation(c.config, OpUpdate)
+	return &ConversationUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
 
 // UpdateOne returns an update builder for the given entity.
-func (c *MessageFeedClient) UpdateOne(mf *MessageFeed) *MessageFeedUpdateOne {
-	mutation := newMessageFeedMutation(c.config, OpUpdateOne, withMessageFeed(mf))
-	return &MessageFeedUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+func (c *ConversationClient) UpdateOne(co *Conversation) *ConversationUpdateOne {
+	mutation := newConversationMutation(c.config, OpUpdateOne, withConversation(co))
+	return &ConversationUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
 
 // UpdateOneID returns an update builder for the given id.
-func (c *MessageFeedClient) UpdateOneID(id int) *MessageFeedUpdateOne {
-	mutation := newMessageFeedMutation(c.config, OpUpdateOne, withMessageFeedID(id))
-	return &MessageFeedUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+func (c *ConversationClient) UpdateOneID(id int) *ConversationUpdateOne {
+	mutation := newConversationMutation(c.config, OpUpdateOne, withConversationID(id))
+	return &ConversationUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
 
-// Delete returns a delete builder for MessageFeed.
-func (c *MessageFeedClient) Delete() *MessageFeedDelete {
-	mutation := newMessageFeedMutation(c.config, OpDelete)
-	return &MessageFeedDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+// Delete returns a delete builder for Conversation.
+func (c *ConversationClient) Delete() *ConversationDelete {
+	mutation := newConversationMutation(c.config, OpDelete)
+	return &ConversationDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
 
 // DeleteOne returns a builder for deleting the given entity.
-func (c *MessageFeedClient) DeleteOne(mf *MessageFeed) *MessageFeedDeleteOne {
-	return c.DeleteOneID(mf.ID)
+func (c *ConversationClient) DeleteOne(co *Conversation) *ConversationDeleteOne {
+	return c.DeleteOneID(co.ID)
 }
 
 // DeleteOne returns a builder for deleting the given entity by its id.
-func (c *MessageFeedClient) DeleteOneID(id int) *MessageFeedDeleteOne {
-	builder := c.Delete().Where(messagefeed.ID(id))
+func (c *ConversationClient) DeleteOneID(id int) *ConversationDeleteOne {
+	builder := c.Delete().Where(conversation.ID(id))
 	builder.mutation.id = &id
 	builder.mutation.op = OpDeleteOne
-	return &MessageFeedDeleteOne{builder}
+	return &ConversationDeleteOne{builder}
 }
 
-// Query returns a query builder for MessageFeed.
-func (c *MessageFeedClient) Query() *MessageFeedQuery {
-	return &MessageFeedQuery{
+// Query returns a query builder for Conversation.
+func (c *ConversationClient) Query() *ConversationQuery {
+	return &ConversationQuery{
 		config: c.config,
 	}
 }
 
-// Get returns a MessageFeed entity by its id.
-func (c *MessageFeedClient) Get(ctx context.Context, id int) (*MessageFeed, error) {
-	return c.Query().Where(messagefeed.ID(id)).Only(ctx)
+// Get returns a Conversation entity by its id.
+func (c *ConversationClient) Get(ctx context.Context, id int) (*Conversation, error) {
+	return c.Query().Where(conversation.ID(id)).Only(ctx)
 }
 
 // GetX is like Get, but panics if an error occurs.
-func (c *MessageFeedClient) GetX(ctx context.Context, id int) *MessageFeed {
+func (c *ConversationClient) GetX(ctx context.Context, id int) *Conversation {
 	obj, err := c.Get(ctx, id)
 	if err != nil {
 		panic(err)
@@ -215,105 +215,105 @@ func (c *MessageFeedClient) GetX(ctx context.Context, id int) *MessageFeed {
 	return obj
 }
 
-// QueryMessageItem queries the message_item edge of a MessageFeed.
-func (c *MessageFeedClient) QueryMessageItem(mf *MessageFeed) *MessageItemQuery {
-	query := &MessageItemQuery{config: c.config}
+// QueryConversationItem queries the conversation_item edge of a Conversation.
+func (c *ConversationClient) QueryConversationItem(co *Conversation) *ConversationItemQuery {
+	query := &ConversationItemQuery{config: c.config}
 	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
-		id := mf.ID
+		id := co.ID
 		step := sqlgraph.NewStep(
-			sqlgraph.From(messagefeed.Table, messagefeed.FieldID, id),
-			sqlgraph.To(messageitem.Table, messageitem.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, messagefeed.MessageItemTable, messagefeed.MessageItemColumn),
+			sqlgraph.From(conversation.Table, conversation.FieldID, id),
+			sqlgraph.To(conversationitem.Table, conversationitem.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, conversation.ConversationItemTable, conversation.ConversationItemColumn),
 		)
-		fromV = sqlgraph.Neighbors(mf.driver.Dialect(), step)
+		fromV = sqlgraph.Neighbors(co.driver.Dialect(), step)
 		return fromV, nil
 	}
 	return query
 }
 
 // Hooks returns the client hooks.
-func (c *MessageFeedClient) Hooks() []Hook {
-	return c.hooks.MessageFeed
+func (c *ConversationClient) Hooks() []Hook {
+	return c.hooks.Conversation
 }
 
-// MessageItemClient is a client for the MessageItem schema.
-type MessageItemClient struct {
+// ConversationItemClient is a client for the ConversationItem schema.
+type ConversationItemClient struct {
 	config
 }
 
-// NewMessageItemClient returns a client for the MessageItem from the given config.
-func NewMessageItemClient(c config) *MessageItemClient {
-	return &MessageItemClient{config: c}
+// NewConversationItemClient returns a client for the ConversationItem from the given config.
+func NewConversationItemClient(c config) *ConversationItemClient {
+	return &ConversationItemClient{config: c}
 }
 
 // Use adds a list of mutation hooks to the hooks stack.
-// A call to `Use(f, g, h)` equals to `messageitem.Hooks(f(g(h())))`.
-func (c *MessageItemClient) Use(hooks ...Hook) {
-	c.hooks.MessageItem = append(c.hooks.MessageItem, hooks...)
+// A call to `Use(f, g, h)` equals to `conversationitem.Hooks(f(g(h())))`.
+func (c *ConversationItemClient) Use(hooks ...Hook) {
+	c.hooks.ConversationItem = append(c.hooks.ConversationItem, hooks...)
 }
 
-// Create returns a builder for creating a MessageItem entity.
-func (c *MessageItemClient) Create() *MessageItemCreate {
-	mutation := newMessageItemMutation(c.config, OpCreate)
-	return &MessageItemCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+// Create returns a builder for creating a ConversationItem entity.
+func (c *ConversationItemClient) Create() *ConversationItemCreate {
+	mutation := newConversationItemMutation(c.config, OpCreate)
+	return &ConversationItemCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
 
-// CreateBulk returns a builder for creating a bulk of MessageItem entities.
-func (c *MessageItemClient) CreateBulk(builders ...*MessageItemCreate) *MessageItemCreateBulk {
-	return &MessageItemCreateBulk{config: c.config, builders: builders}
+// CreateBulk returns a builder for creating a bulk of ConversationItem entities.
+func (c *ConversationItemClient) CreateBulk(builders ...*ConversationItemCreate) *ConversationItemCreateBulk {
+	return &ConversationItemCreateBulk{config: c.config, builders: builders}
 }
 
-// Update returns an update builder for MessageItem.
-func (c *MessageItemClient) Update() *MessageItemUpdate {
-	mutation := newMessageItemMutation(c.config, OpUpdate)
-	return &MessageItemUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+// Update returns an update builder for ConversationItem.
+func (c *ConversationItemClient) Update() *ConversationItemUpdate {
+	mutation := newConversationItemMutation(c.config, OpUpdate)
+	return &ConversationItemUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
 
 // UpdateOne returns an update builder for the given entity.
-func (c *MessageItemClient) UpdateOne(mi *MessageItem) *MessageItemUpdateOne {
-	mutation := newMessageItemMutation(c.config, OpUpdateOne, withMessageItem(mi))
-	return &MessageItemUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+func (c *ConversationItemClient) UpdateOne(ci *ConversationItem) *ConversationItemUpdateOne {
+	mutation := newConversationItemMutation(c.config, OpUpdateOne, withConversationItem(ci))
+	return &ConversationItemUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
 
 // UpdateOneID returns an update builder for the given id.
-func (c *MessageItemClient) UpdateOneID(id int) *MessageItemUpdateOne {
-	mutation := newMessageItemMutation(c.config, OpUpdateOne, withMessageItemID(id))
-	return &MessageItemUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+func (c *ConversationItemClient) UpdateOneID(id int) *ConversationItemUpdateOne {
+	mutation := newConversationItemMutation(c.config, OpUpdateOne, withConversationItemID(id))
+	return &ConversationItemUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
 
-// Delete returns a delete builder for MessageItem.
-func (c *MessageItemClient) Delete() *MessageItemDelete {
-	mutation := newMessageItemMutation(c.config, OpDelete)
-	return &MessageItemDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+// Delete returns a delete builder for ConversationItem.
+func (c *ConversationItemClient) Delete() *ConversationItemDelete {
+	mutation := newConversationItemMutation(c.config, OpDelete)
+	return &ConversationItemDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
 
 // DeleteOne returns a builder for deleting the given entity.
-func (c *MessageItemClient) DeleteOne(mi *MessageItem) *MessageItemDeleteOne {
-	return c.DeleteOneID(mi.ID)
+func (c *ConversationItemClient) DeleteOne(ci *ConversationItem) *ConversationItemDeleteOne {
+	return c.DeleteOneID(ci.ID)
 }
 
 // DeleteOne returns a builder for deleting the given entity by its id.
-func (c *MessageItemClient) DeleteOneID(id int) *MessageItemDeleteOne {
-	builder := c.Delete().Where(messageitem.ID(id))
+func (c *ConversationItemClient) DeleteOneID(id int) *ConversationItemDeleteOne {
+	builder := c.Delete().Where(conversationitem.ID(id))
 	builder.mutation.id = &id
 	builder.mutation.op = OpDeleteOne
-	return &MessageItemDeleteOne{builder}
+	return &ConversationItemDeleteOne{builder}
 }
 
-// Query returns a query builder for MessageItem.
-func (c *MessageItemClient) Query() *MessageItemQuery {
-	return &MessageItemQuery{
+// Query returns a query builder for ConversationItem.
+func (c *ConversationItemClient) Query() *ConversationItemQuery {
+	return &ConversationItemQuery{
 		config: c.config,
 	}
 }
 
-// Get returns a MessageItem entity by its id.
-func (c *MessageItemClient) Get(ctx context.Context, id int) (*MessageItem, error) {
-	return c.Query().Where(messageitem.ID(id)).Only(ctx)
+// Get returns a ConversationItem entity by its id.
+func (c *ConversationItemClient) Get(ctx context.Context, id int) (*ConversationItem, error) {
+	return c.Query().Where(conversationitem.ID(id)).Only(ctx)
 }
 
 // GetX is like Get, but panics if an error occurs.
-func (c *MessageItemClient) GetX(ctx context.Context, id int) *MessageItem {
+func (c *ConversationItemClient) GetX(ctx context.Context, id int) *ConversationItem {
 	obj, err := c.Get(ctx, id)
 	if err != nil {
 		panic(err)
@@ -321,23 +321,23 @@ func (c *MessageItemClient) GetX(ctx context.Context, id int) *MessageItem {
 	return obj
 }
 
-// QueryMessageFeed queries the message_feed edge of a MessageItem.
-func (c *MessageItemClient) QueryMessageFeed(mi *MessageItem) *MessageFeedQuery {
-	query := &MessageFeedQuery{config: c.config}
+// QueryConversation queries the conversation edge of a ConversationItem.
+func (c *ConversationItemClient) QueryConversation(ci *ConversationItem) *ConversationQuery {
+	query := &ConversationQuery{config: c.config}
 	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
-		id := mi.ID
+		id := ci.ID
 		step := sqlgraph.NewStep(
-			sqlgraph.From(messageitem.Table, messageitem.FieldID, id),
-			sqlgraph.To(messagefeed.Table, messagefeed.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, messageitem.MessageFeedTable, messageitem.MessageFeedColumn),
+			sqlgraph.From(conversationitem.Table, conversationitem.FieldID, id),
+			sqlgraph.To(conversation.Table, conversation.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, conversationitem.ConversationTable, conversationitem.ConversationColumn),
 		)
-		fromV = sqlgraph.Neighbors(mi.driver.Dialect(), step)
+		fromV = sqlgraph.Neighbors(ci.driver.Dialect(), step)
 		return fromV, nil
 	}
 	return query
 }
 
 // Hooks returns the client hooks.
-func (c *MessageItemClient) Hooks() []Hook {
-	return c.hooks.MessageItem
+func (c *ConversationItemClient) Hooks() []Hook {
+	return c.hooks.ConversationItem
 }

@@ -23,10 +23,10 @@ const _ = grpc.SupportPackageIsVersion7
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type MessageStoreServiceClient interface {
 	SaveMessage(ctx context.Context, in *Message, opts ...grpc.CallOption) (*Message, error)
-	GetMessages(ctx context.Context, in *PagedContact, opts ...grpc.CallOption) (*MessageList, error)
-	GetMessage(ctx context.Context, in *Message, opts ...grpc.CallOption) (*Message, error)
-	GetFeeds(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*FeedList, error)
-	GetFeed(ctx context.Context, in *Contact, opts ...grpc.CallOption) (*Contact, error)
+	GetMessages(ctx context.Context, in *GetMessagesRequest, opts ...grpc.CallOption) (*MessagePagedResponse, error)
+	GetMessage(ctx context.Context, in *Id, opts ...grpc.CallOption) (*Message, error)
+	GetFeeds(ctx context.Context, in *GetFeedsPagedRequest, opts ...grpc.CallOption) (*FeedItemPagedResponse, error)
+	GetFeed(ctx context.Context, in *Id, opts ...grpc.CallOption) (*FeedItem, error)
 }
 
 type messageStoreServiceClient struct {
@@ -46,8 +46,8 @@ func (c *messageStoreServiceClient) SaveMessage(ctx context.Context, in *Message
 	return out, nil
 }
 
-func (c *messageStoreServiceClient) GetMessages(ctx context.Context, in *PagedContact, opts ...grpc.CallOption) (*MessageList, error) {
-	out := new(MessageList)
+func (c *messageStoreServiceClient) GetMessages(ctx context.Context, in *GetMessagesRequest, opts ...grpc.CallOption) (*MessagePagedResponse, error) {
+	out := new(MessagePagedResponse)
 	err := c.cc.Invoke(ctx, "/MessageStoreService/getMessages", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -55,7 +55,7 @@ func (c *messageStoreServiceClient) GetMessages(ctx context.Context, in *PagedCo
 	return out, nil
 }
 
-func (c *messageStoreServiceClient) GetMessage(ctx context.Context, in *Message, opts ...grpc.CallOption) (*Message, error) {
+func (c *messageStoreServiceClient) GetMessage(ctx context.Context, in *Id, opts ...grpc.CallOption) (*Message, error) {
 	out := new(Message)
 	err := c.cc.Invoke(ctx, "/MessageStoreService/getMessage", in, out, opts...)
 	if err != nil {
@@ -64,8 +64,8 @@ func (c *messageStoreServiceClient) GetMessage(ctx context.Context, in *Message,
 	return out, nil
 }
 
-func (c *messageStoreServiceClient) GetFeeds(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*FeedList, error) {
-	out := new(FeedList)
+func (c *messageStoreServiceClient) GetFeeds(ctx context.Context, in *GetFeedsPagedRequest, opts ...grpc.CallOption) (*FeedItemPagedResponse, error) {
+	out := new(FeedItemPagedResponse)
 	err := c.cc.Invoke(ctx, "/MessageStoreService/getFeeds", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -73,8 +73,8 @@ func (c *messageStoreServiceClient) GetFeeds(ctx context.Context, in *Empty, opt
 	return out, nil
 }
 
-func (c *messageStoreServiceClient) GetFeed(ctx context.Context, in *Contact, opts ...grpc.CallOption) (*Contact, error) {
-	out := new(Contact)
+func (c *messageStoreServiceClient) GetFeed(ctx context.Context, in *Id, opts ...grpc.CallOption) (*FeedItem, error) {
+	out := new(FeedItem)
 	err := c.cc.Invoke(ctx, "/MessageStoreService/getFeed", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -87,10 +87,10 @@ func (c *messageStoreServiceClient) GetFeed(ctx context.Context, in *Contact, op
 // for forward compatibility
 type MessageStoreServiceServer interface {
 	SaveMessage(context.Context, *Message) (*Message, error)
-	GetMessages(context.Context, *PagedContact) (*MessageList, error)
-	GetMessage(context.Context, *Message) (*Message, error)
-	GetFeeds(context.Context, *Empty) (*FeedList, error)
-	GetFeed(context.Context, *Contact) (*Contact, error)
+	GetMessages(context.Context, *GetMessagesRequest) (*MessagePagedResponse, error)
+	GetMessage(context.Context, *Id) (*Message, error)
+	GetFeeds(context.Context, *GetFeedsPagedRequest) (*FeedItemPagedResponse, error)
+	GetFeed(context.Context, *Id) (*FeedItem, error)
 	mustEmbedUnimplementedMessageStoreServiceServer()
 }
 
@@ -101,16 +101,16 @@ type UnimplementedMessageStoreServiceServer struct {
 func (UnimplementedMessageStoreServiceServer) SaveMessage(context.Context, *Message) (*Message, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SaveMessage not implemented")
 }
-func (UnimplementedMessageStoreServiceServer) GetMessages(context.Context, *PagedContact) (*MessageList, error) {
+func (UnimplementedMessageStoreServiceServer) GetMessages(context.Context, *GetMessagesRequest) (*MessagePagedResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetMessages not implemented")
 }
-func (UnimplementedMessageStoreServiceServer) GetMessage(context.Context, *Message) (*Message, error) {
+func (UnimplementedMessageStoreServiceServer) GetMessage(context.Context, *Id) (*Message, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetMessage not implemented")
 }
-func (UnimplementedMessageStoreServiceServer) GetFeeds(context.Context, *Empty) (*FeedList, error) {
+func (UnimplementedMessageStoreServiceServer) GetFeeds(context.Context, *GetFeedsPagedRequest) (*FeedItemPagedResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetFeeds not implemented")
 }
-func (UnimplementedMessageStoreServiceServer) GetFeed(context.Context, *Contact) (*Contact, error) {
+func (UnimplementedMessageStoreServiceServer) GetFeed(context.Context, *Id) (*FeedItem, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetFeed not implemented")
 }
 func (UnimplementedMessageStoreServiceServer) mustEmbedUnimplementedMessageStoreServiceServer() {}
@@ -145,7 +145,7 @@ func _MessageStoreService_SaveMessage_Handler(srv interface{}, ctx context.Conte
 }
 
 func _MessageStoreService_GetMessages_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(PagedContact)
+	in := new(GetMessagesRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -157,13 +157,13 @@ func _MessageStoreService_GetMessages_Handler(srv interface{}, ctx context.Conte
 		FullMethod: "/MessageStoreService/getMessages",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MessageStoreServiceServer).GetMessages(ctx, req.(*PagedContact))
+		return srv.(MessageStoreServiceServer).GetMessages(ctx, req.(*GetMessagesRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _MessageStoreService_GetMessage_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(Message)
+	in := new(Id)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -175,13 +175,13 @@ func _MessageStoreService_GetMessage_Handler(srv interface{}, ctx context.Contex
 		FullMethod: "/MessageStoreService/getMessage",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MessageStoreServiceServer).GetMessage(ctx, req.(*Message))
+		return srv.(MessageStoreServiceServer).GetMessage(ctx, req.(*Id))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _MessageStoreService_GetFeeds_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(Empty)
+	in := new(GetFeedsPagedRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -193,13 +193,13 @@ func _MessageStoreService_GetFeeds_Handler(srv interface{}, ctx context.Context,
 		FullMethod: "/MessageStoreService/getFeeds",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MessageStoreServiceServer).GetFeeds(ctx, req.(*Empty))
+		return srv.(MessageStoreServiceServer).GetFeeds(ctx, req.(*GetFeedsPagedRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _MessageStoreService_GetFeed_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(Contact)
+	in := new(Id)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -211,7 +211,7 @@ func _MessageStoreService_GetFeed_Handler(srv interface{}, ctx context.Context, 
 		FullMethod: "/MessageStoreService/getFeed",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MessageStoreServiceServer).GetFeed(ctx, req.(*Contact))
+		return srv.(MessageStoreServiceServer).GetFeed(ctx, req.(*Id))
 	}
 	return interceptor(ctx, in, info, handler)
 }
