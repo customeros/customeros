@@ -385,9 +385,9 @@ func (s *messageService) SaveMessage(ctx context.Context, message *pb.Message) (
 			contact, err = getContactByPhone(s.graphqlClient, *message.Username)
 			if err != nil {
 
-				log.Printf("Contact %s creating a new contact", message.Username)
+				log.Printf("Contact %s creating a new contact", *message.Username)
 				firstName, lastName := "Unknown", "Caller"
-				log.Printf("Making a contact, firstName=%s lastName=%s email=%s", firstName, lastName, message.Username)
+				log.Printf("Making a contact, firstName=%s lastName=%s email=%s", firstName, lastName, *message.Username)
 				contactId, err := createContactWithPhone(s.graphqlClient, firstName, lastName, *message.Username)
 				contact = &ContactInfo{
 					firstName: firstName,
@@ -409,12 +409,12 @@ func (s *messageService) SaveMessage(ctx context.Context, message *pb.Message) (
 	} else {
 		contact, err = getContactById(s.graphqlClient, *message.ContactId)
 		if err != nil {
-			return nil, status.Errorf(codes.NotFound, "Couldn't find a contact for id of %d", *message.ContactId)
+			return nil, status.Errorf(codes.NotFound, "Couldn't find a contact for id of %s", *message.ContactId)
 		}
 
 		conversation, err = s.client.Conversation.Query().Where(genConversation.ContactId(contact.id)).First(ctx)
 		if err != nil {
-			return nil, status.Errorf(codes.NotFound, "Couldn't find a feed for id of %d", *message.ContactId)
+			return nil, status.Errorf(codes.NotFound, "Couldn't find a feed for id of %s", *message.ContactId)
 		}
 
 		contact = &ContactInfo{firstName: contact.firstName,
