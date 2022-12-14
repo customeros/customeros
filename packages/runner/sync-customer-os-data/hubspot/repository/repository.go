@@ -5,9 +5,7 @@ import (
 	"gorm.io/gorm"
 )
 
-const RecordsLimit = 100
-
-func GetContacts(db *gorm.DB) (entity.Contacts, error) {
+func GetContacts(db *gorm.DB, limit int) (entity.Contacts, error) {
 	var contacts entity.Contacts
 
 	cte := `
@@ -17,13 +15,21 @@ func GetContacts(db *gorm.DB) (entity.Contacts, error) {
 		)`
 	err := db.
 		Raw(cte+"SELECT * FROM UpToDateData WHERE row_num = ? and (synced_to_customer_os is null or synced_to_customer_os = ?) "+
-			" limit ?", 1, false, RecordsLimit).
+			" limit ?", 1, false, limit).
 		Find(&contacts).Error
 
 	if err != nil {
 		return nil, err
 	}
 	return contacts, nil
+}
+
+func GetContactProperties(db *gorm.DB, airbyteAbId, airbyteContactsHashId string) (entity.ContactProperties, error) {
+	contactProperties := entity.ContactProperties{}
+	err := db.Table(entity.ContactProperties{}.TableName()).
+		Where(&entity.ContactProperties{AirbyteAbId: airbyteAbId, AirbyteContactsHashid: airbyteContactsHashId}).
+		First(&contactProperties).Error
+	return contactProperties, err
 }
 
 func MarkSynced(db *gorm.DB, contact entity.Contact) error {

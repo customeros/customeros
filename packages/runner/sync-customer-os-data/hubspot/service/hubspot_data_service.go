@@ -15,14 +15,27 @@ type hubspotDataService struct {
 	tenant         string
 }
 
-func (s *hubspotDataService) GetContactsForSync() []entity.ContactEntity {
-	s.refresh()
-	contacts, err := repository.GetContacts(s.getDb())
+func (s *hubspotDataService) GetContactsForSync(batchSize int) []entity.ContactEntity {
+	hubspotContacts, err := repository.GetContacts(s.getDb(), batchSize)
 	if err != nil {
+		log.Print(err)
 		return nil
 	}
-	log.Printf("%v", len(contacts))
-	return []entity.ContactEntity{}
+	customerOsContacts := []entity.ContactEntity{}
+	for _, v := range hubspotContacts {
+		hubspotContactProperties, err := repository.GetContactProperties(s.getDb(), v.AirbyteAbId, v.AirbyteContactsHashid)
+		if err != nil {
+			log.Print(err)
+			continue
+		}
+		customerOsContacts = append(customerOsContacts, entity.ContactEntity{
+			ExternalReference: v.Id,
+			ExternalSystem:    "hubspot",
+			FirstName:         hubspotContactProperties.FirstName,
+			LastName:          hubspotContactProperties.LastName,
+		})
+	}
+	return customerOsContacts
 }
 
 func NewHubspotDataService(airbyteStoreDb *config.AirbyteStoreDB, tenant string) common.DataService {
@@ -32,7 +45,7 @@ func NewHubspotDataService(airbyteStoreDb *config.AirbyteStoreDB, tenant string)
 	}
 }
 
-func (s *hubspotDataService) refresh() {
+func (s *hubspotDataService) Refresh() {
 	// TODO automigrate only if table exists
 	err := s.getDb().AutoMigrate(&hubspotEntity.Contact{})
 	if err != nil {
