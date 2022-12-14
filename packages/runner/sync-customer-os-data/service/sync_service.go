@@ -9,6 +9,8 @@ import (
 	"log"
 )
 
+const batchSize = 100
+
 type SyncService interface {
 	Sync()
 }
@@ -36,16 +38,27 @@ func (s *syncService) Sync() {
 		if err != nil {
 			continue
 		}
-		dataService.GetContactsForSync()
+		syncContacts(dataService)
 	}
 
 	log.Printf("found %d tenants to sync", len(tenantsToSync))
 }
 
+func syncContacts(dataService common.DataService) {
+	for {
+		contacts := dataService.GetContactsForSync(batchSize)
+		if len(contacts) < batchSize {
+			break
+		}
+	}
+}
+
 func (s *syncService) dataService(tenantToSync entity.TenantSyncSettings) (common.DataService, error) {
 	switch tenantToSync.Source {
 	case entity.HUBSPOT:
-		return service.NewHubspotDataService(s.repositories.Dbs.AirbyteStoreDB, tenantToSync.Tenant), nil
+		dataService := service.NewHubspotDataService(s.repositories.Dbs.AirbyteStoreDB, tenantToSync.Tenant)
+		dataService.Refresh()
+		return dataService, nil
 	}
 	return nil, fmt.Errorf("unkown airbyte source %v, skipping sync for tenant %v", tenantToSync.Source, tenantToSync.Tenant)
 }
