@@ -46,6 +46,7 @@ func (s *hubspotDataService) GetContactsForSync(batchSize int) []entity.ContactD
 			CreatedAt:        v.CreateDate.UTC(),
 			PrimaryEmail:     hubspotContactProperties.Email,
 			AdditionalEmails: strings.Split(hubspotContactProperties.AdditionalEmails, ";"),
+			PrimaryE164:      hubspotContactProperties.PhoneNumber,
 			Readonly:         true,
 		})
 		s.contacts[v.Id] = v

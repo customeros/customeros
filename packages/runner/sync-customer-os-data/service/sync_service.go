@@ -60,30 +60,37 @@ func (s *syncService) syncContacts(dataService common.DataService, syncDate time
 		log.Printf("syncing %d contacts from %s for tenant %s", len(contacts), dataService.SourceName(), tenant)
 
 		for _, v := range contacts {
-			var errorInSync = false
+			var failedSync = false
 
 			contactId, err := s.repositories.ContactRepository.MergeContact(tenant, syncDate, v)
 			if err != nil {
-				errorInSync = true
+				failedSync = true
 				log.Printf("failed merge contact with external reference %v for tenant %v :%v", v.ExternalId, tenant, err)
 			}
 
 			if len(v.PrimaryEmail) > 0 {
 				if err = s.repositories.ContactRepository.MergePrimaryEmail(tenant, contactId, v.PrimaryEmail); err != nil {
-					errorInSync = true
+					failedSync = true
 					log.Printf("failed merge primary email for contact with external reference %v , tenant %v :%v", v.ExternalId, tenant, err)
 				}
 			}
 
 			for _, additionalEmail := range v.AdditionalEmails {
 				if err = s.repositories.ContactRepository.MergeAdditionalEmail(tenant, contactId, additionalEmail); err != nil {
-					errorInSync = true
+					failedSync = true
 					log.Printf("failed merge additional email for contact with external reference %v , tenant %v :%v", v.ExternalId, tenant, err)
 				}
 			}
 
+			if len(v.PrimaryE164) > 0 {
+				if err = s.repositories.ContactRepository.MergePrimaryPhoneNumber(tenant, contactId, v.PrimaryE164); err != nil {
+					failedSync = true
+					log.Printf("failed merge primary phone number for contact with external reference %v , tenant %v :%v", v.ExternalId, tenant, err)
+				}
+			}
+
 			log.Printf("successfully merged contact with id %v for tenant %v from %v", contactId, tenant, dataService.SourceName())
-			if err := dataService.MarkContactProcessed(v.ExternalId, errorInSync == false); err != nil {
+			if err := dataService.MarkContactProcessed(v.ExternalId, failedSync == false); err != nil {
 				continue
 			}
 		}
