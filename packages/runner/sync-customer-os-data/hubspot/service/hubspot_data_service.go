@@ -13,6 +13,15 @@ import (
 type hubspotDataService struct {
 	airbyteStoreDb *config.AirbyteStoreDB
 	tenant         string
+	contacts       map[string]hubspotEntity.Contact
+}
+
+func NewHubspotDataService(airbyteStoreDb *config.AirbyteStoreDB, tenant string) common.DataService {
+	return &hubspotDataService{
+		airbyteStoreDb: airbyteStoreDb,
+		tenant:         tenant,
+		contacts:       map[string]hubspotEntity.Contact{},
+	}
 }
 
 func (s *hubspotDataService) GetContactsForSync(batchSize int) []entity.ContactEntity {
@@ -29,27 +38,32 @@ func (s *hubspotDataService) GetContactsForSync(batchSize int) []entity.ContactE
 			continue
 		}
 		customerOsContacts = append(customerOsContacts, entity.ContactEntity{
-			ExternalReference: v.Id,
-			ExternalSystem:    "hubspot",
-			FirstName:         hubspotContactProperties.FirstName,
-			LastName:          hubspotContactProperties.LastName,
+			ExternalId:     v.Id,
+			ExternalSystem: "hubspot",
+			FirstName:      hubspotContactProperties.FirstName,
+			LastName:       hubspotContactProperties.LastName,
 		})
+		s.contacts[v.Id] = v
 	}
 	return customerOsContacts
 }
 
-func NewHubspotDataService(airbyteStoreDb *config.AirbyteStoreDB, tenant string) common.DataService {
-	return &hubspotDataService{
-		airbyteStoreDb: airbyteStoreDb,
-		tenant:         tenant,
+func (s *hubspotDataService) MarkContactSynced(externalId string) {
+	contact, ok := s.contacts[externalId]
+	if ok {
+		err := repository.MarkContactSynced(s.getDb(), contact)
+		if err != nil {
+			log.Printf("error while marking contact with external reference %s as synced for hubspot", externalId)
+		}
 	}
 }
 
 func (s *hubspotDataService) Refresh() {
-	// TODO automigrate only if table exists
-	err := s.getDb().AutoMigrate(&hubspotEntity.Contact{})
-	if err != nil {
-		log.Print(err)
+	if s.getDb().Migrator().HasTable(hubspotEntity.Contact{}.TableName()) {
+		err := s.getDb().AutoMigrate(&hubspotEntity.Contact{})
+		if err != nil {
+			log.Print(err)
+		}
 	}
 }
 
@@ -57,4 +71,8 @@ func (s *hubspotDataService) getDb() *gorm.DB {
 	return s.airbyteStoreDb.GetDBHandler(&config.Context{
 		Schema: config.CommonSchemaPrefix + s.tenant,
 	})
+}
+
+func (s *hubspotDataService) SourceName() string {
+	return "hubspot"
 }
