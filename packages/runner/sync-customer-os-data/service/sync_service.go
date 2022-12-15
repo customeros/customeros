@@ -7,6 +7,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/hubspot/service"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/repository"
 	"log"
+	"time"
 )
 
 const batchSize = 100
@@ -27,22 +28,29 @@ func NewSyncService(repositories *repository.Repositories, services *Services) S
 	}
 }
 
+// TODO automatically create external system in neo4j and link with tenant
 func (s *syncService) Sync() {
 	tenantsToSync, err := s.repositories.TenantSyncSettingsRepository.GetTenantsForSync()
 	if err != nil {
 		log.Print("failed to get tenants for sync")
 		return
 	}
+
 	for _, v := range tenantsToSync {
 		dataService, err := s.dataService(v)
 		if err != nil {
+			log.Printf("failed to get data service for tenant %v: %v", v.Tenant, err)
 			continue
 		}
-		syncContacts(dataService, v.Tenant)
+
+		defer dataService.Close()
+
+		syncDate := time.Now().UTC()
+		s.syncContacts(dataService, syncDate, v.Tenant)
 	}
 }
 
-func syncContacts(dataService common.DataService, tenant string) {
+func (s *syncService) syncContacts(dataService common.DataService, syncDate time.Time, tenant string) {
 	for {
 		contacts := dataService.GetContactsForSync(batchSize)
 		if len(contacts) == 0 {
@@ -50,8 +58,18 @@ func syncContacts(dataService common.DataService, tenant string) {
 			break
 		}
 		log.Printf("syncing %d contacts from %s for tenant %s", len(contacts), dataService.SourceName(), tenant)
+
 		for _, v := range contacts {
-			dataService.MarkContactSynced(v.ExternalId)
+			contactId, err := s.repositories.ContactRepository.MergeContact(tenant, syncDate, v)
+			if err != nil {
+				log.Printf("failed merge contact with external reference %v for tenant %v :%v", v.ExternalId, tenant, err)
+			} else {
+				log.Printf("successfully merged contact with id %v for tenant %v from %v", contactId, tenant, dataService.SourceName())
+			}
+
+			if err := dataService.MarkContactProcessed(v.ExternalId, err == nil); err != nil {
+				continue
+			}
 		}
 		if len(contacts) < batchSize {
 			break
@@ -60,11 +78,26 @@ func syncContacts(dataService common.DataService, tenant string) {
 }
 
 func (s *syncService) dataService(tenantToSync entity.TenantSyncSettings) (common.DataService, error) {
-	switch tenantToSync.Source {
-	case entity.HUBSPOT:
-		dataService := service.NewHubspotDataService(s.repositories.Dbs.AirbyteStoreDB, tenantToSync.Tenant)
-		dataService.Refresh()
-		return dataService, nil
+	// Use a map to store the different implementations of common.DataService as functions.
+	dataServiceMap := map[entity.AirbyteSource]func() common.DataService{
+		entity.HUBSPOT: func() common.DataService {
+			return service.NewHubspotDataService(s.repositories.Dbs.AirbyteStoreDB, tenantToSync.Tenant)
+		},
+		// Add additional implementations here.
 	}
-	return nil, fmt.Errorf("unkown airbyte source %v, skipping sync for tenant %v", tenantToSync.Source, tenantToSync.Tenant)
+
+	// Look up the corresponding implementation in the map using the tenantToSync.Source value.
+	createDataService, ok := dataServiceMap[tenantToSync.Source]
+	if !ok {
+		// Return an error if the tenantToSync.Source value is not recognized.
+		return nil, fmt.Errorf("unknown airbyte source %v, skipping sync for tenant %v", tenantToSync.Source, tenantToSync.Tenant)
+	}
+
+	// Call the createDataService function to create a new instance of common.DataService.
+	dataService := createDataService()
+
+	// Call the Refresh method on the dataService instance.
+	dataService.Refresh()
+
+	return dataService, nil
 }

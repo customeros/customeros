@@ -42,20 +42,24 @@ func (s *hubspotDataService) GetContactsForSync(batchSize int) []entity.ContactE
 			ExternalSystem: "hubspot",
 			FirstName:      hubspotContactProperties.FirstName,
 			LastName:       hubspotContactProperties.LastName,
+			CreatedAt:      v.CreateDate.UTC(),
+			Readonly:       true,
 		})
 		s.contacts[v.Id] = v
 	}
 	return customerOsContacts
 }
 
-func (s *hubspotDataService) MarkContactSynced(externalId string) {
+func (s *hubspotDataService) MarkContactProcessed(externalId string, synced bool) error {
 	contact, ok := s.contacts[externalId]
 	if ok {
-		err := repository.MarkContactSynced(s.getDb(), contact)
+		err := repository.MarkContactProcessed(s.getDb(), contact, synced)
 		if err != nil {
 			log.Printf("error while marking contact with external reference %s as synced for hubspot", externalId)
 		}
+		return err
 	}
+	return nil
 }
 
 func (s *hubspotDataService) Refresh() {
@@ -75,4 +79,8 @@ func (s *hubspotDataService) getDb() *gorm.DB {
 
 func (s *hubspotDataService) SourceName() string {
 	return "hubspot"
+}
+
+func (s *hubspotDataService) Close() {
+	s.contacts = make(map[string]hubspotEntity.Contact)
 }
