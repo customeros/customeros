@@ -6,6 +6,6 @@ type DataService interface {
 	Refresh()
 	Close()
 	SourceName() string
-	GetContactsForSync(batchSize int) []entity.ContactEntity
+	GetContactsForSync(batchSize int) []entity.ContactData
 	MarkContactProcessed(externalId string, synced bool) error
 }

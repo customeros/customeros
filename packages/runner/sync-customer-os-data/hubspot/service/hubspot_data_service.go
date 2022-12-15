@@ -8,6 +8,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/hubspot/repository"
 	"gorm.io/gorm"
 	"log"
+	"strings"
 )
 
 type hubspotDataService struct {
@@ -24,26 +25,28 @@ func NewHubspotDataService(airbyteStoreDb *config.AirbyteStoreDB, tenant string)
 	}
 }
 
-func (s *hubspotDataService) GetContactsForSync(batchSize int) []entity.ContactEntity {
+func (s *hubspotDataService) GetContactsForSync(batchSize int) []entity.ContactData {
 	hubspotContacts, err := repository.GetContacts(s.getDb(), batchSize)
 	if err != nil {
 		log.Print(err)
 		return nil
 	}
-	customerOsContacts := []entity.ContactEntity{}
+	customerOsContacts := []entity.ContactData{}
 	for _, v := range hubspotContacts {
 		hubspotContactProperties, err := repository.GetContactProperties(s.getDb(), v.AirbyteAbId, v.AirbyteContactsHashid)
 		if err != nil {
 			log.Print(err)
 			continue
 		}
-		customerOsContacts = append(customerOsContacts, entity.ContactEntity{
-			ExternalId:     v.Id,
-			ExternalSystem: "hubspot",
-			FirstName:      hubspotContactProperties.FirstName,
-			LastName:       hubspotContactProperties.LastName,
-			CreatedAt:      v.CreateDate.UTC(),
-			Readonly:       true,
+		customerOsContacts = append(customerOsContacts, entity.ContactData{
+			ExternalId:       v.Id,
+			ExternalSystem:   "hubspot",
+			FirstName:        hubspotContactProperties.FirstName,
+			LastName:         hubspotContactProperties.LastName,
+			CreatedAt:        v.CreateDate.UTC(),
+			PrimaryEmail:     hubspotContactProperties.Email,
+			AdditionalEmails: strings.Split(hubspotContactProperties.AdditionalEmails, ";"),
+			Readonly:         true,
 		})
 		s.contacts[v.Id] = v
 	}
@@ -63,11 +66,9 @@ func (s *hubspotDataService) MarkContactProcessed(externalId string, synced bool
 }
 
 func (s *hubspotDataService) Refresh() {
-	if s.getDb().Migrator().HasTable(hubspotEntity.Contact{}.TableName()) {
-		err := s.getDb().AutoMigrate(&hubspotEntity.Contact{})
-		if err != nil {
-			log.Print(err)
-		}
+	err := s.getDb().AutoMigrate(&hubspotEntity.SyncStatusContact{})
+	if err != nil {
+		log.Print(err)
 	}
 }
 

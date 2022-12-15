@@ -15,10 +15,11 @@ func GetContacts(db *gorm.DB, limit int) (hubspotEntity.Contacts, error) {
     		FROM contacts
 		)`
 	err := db.
-		Raw(cte+" SELECT * FROM UpToDateData "+
-			" WHERE row_num = ? "+
-			" and (synced_to_customer_os is null or synced_to_customer_os = ?) "+
-			" and (synced_to_customer_os_attempt is null or synced_to_customer_os_attempt < ?) "+
+		Raw(cte+" SELECT u.* FROM UpToDateData u left join openline_sync_status_contacts s "+
+			" on u.id = s.id and u._airbyte_ab_id = s._airbyte_ab_id and u._airbyte_contacts_hashid = s._airbyte_contacts_hashid "+
+			" WHERE u.row_num = ? "+
+			" and (s.synced_to_customer_os is null or s.synced_to_customer_os = ?) "+
+			" and (s.synced_to_customer_os_attempt is null or s.synced_to_customer_os_attempt < ?) "+
 			" limit ?", 1, false, 10, limit).
 		Find(&contacts).Error
 
@@ -37,12 +38,18 @@ func GetContactProperties(db *gorm.DB, airbyteAbId, airbyteContactsHashId string
 }
 
 func MarkContactProcessed(db *gorm.DB, contact hubspotEntity.Contact, synced bool) error {
-	return db.Model(&contact).
-		Where(&hubspotEntity.ContactProperties{AirbyteAbId: contact.AirbyteAbId, AirbyteContactsHashid: contact.AirbyteContactsHashid}).
-		Updates(hubspotEntity.Contact{
+	syncStatusContact := hubspotEntity.SyncStatusContact{
+		Id:                    contact.Id,
+		AirbyteAbId:           contact.AirbyteAbId,
+		AirbyteContactsHashid: contact.AirbyteContactsHashid,
+	}
+	db.FirstOrCreate(&syncStatusContact, syncStatusContact)
+
+	return db.Model(&syncStatusContact).
+		Where(&hubspotEntity.SyncStatusContact{Id: contact.Id, AirbyteAbId: contact.AirbyteAbId, AirbyteContactsHashid: contact.AirbyteContactsHashid}).
+		Updates(hubspotEntity.SyncStatusContact{
 			SyncedToCustomerOs: synced,
 			SyncedAt:           time.Now(),
-			SyncAttempt:        contact.SyncAttempt + 1,
-		}).
-		Error
+			SyncAttempt:        syncStatusContact.SyncAttempt + 1,
+		}).Error
 }
