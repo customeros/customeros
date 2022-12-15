@@ -4,7 +4,8 @@ import "github.com/openline-ai/openline-customer-os/packages/runner/sync-custome
 
 type DataService interface {
 	Refresh()
+	Close()
 	SourceName() string
 	GetContactsForSync(batchSize int) []entity.ContactEntity
-	MarkContactSynced(externalId string)
+	MarkContactProcessed(externalId string, synced bool) error
 }

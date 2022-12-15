@@ -36,16 +36,13 @@ func GetContactProperties(db *gorm.DB, airbyteAbId, airbyteContactsHashId string
 	return contactProperties, err
 }
 
-func MarkContactSynced(db *gorm.DB, contact hubspotEntity.Contact) error {
+func MarkContactProcessed(db *gorm.DB, contact hubspotEntity.Contact, synced bool) error {
 	return db.Model(&contact).
 		Where(&hubspotEntity.ContactProperties{AirbyteAbId: contact.AirbyteAbId, AirbyteContactsHashid: contact.AirbyteContactsHashid}).
 		Updates(hubspotEntity.Contact{
-			SyncedToCustomerOs: true,
+			SyncedToCustomerOs: synced,
 			SyncedAt:           time.Now(),
 			SyncAttempt:        contact.SyncAttempt + 1,
 		}).
 		Error
 }
-
-// Query the "Latest" CTE and select only rows where the row_number is 1
-// and the died column is either NULL or FALSE.

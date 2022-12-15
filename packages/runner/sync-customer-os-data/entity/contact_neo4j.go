@@ -9,8 +9,8 @@ type ContactEntity struct {
 	LastName       string
 	Label          string
 	Notes          string
-	CreatedAt      *time.Time
-	UpdatedAt      *time.Time
+	CreatedAt      time.Time
+	UpdatedAt      time.Time
 	Readonly       bool
 	ExternalId     string
 	ExternalSystem string
