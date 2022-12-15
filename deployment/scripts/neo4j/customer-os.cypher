@@ -24,13 +24,9 @@ MATCH (t:Tenant {name:"openline"})
             c.lastName="Test",
     		c.createdAt=datetime({timezone: 'UTC'});
 MATCH (c:Contact {id:"echotest"})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:"openline"})
-			MERGE (c)-[r:EMAILED_AT]->(e:Email {email: "echo.test@openline.ninja"})
+			MERGE (c)-[r:EMAILED_AT]->(e:Email {email: "echo@oasis.openline.ai"})
             ON CREATE SET e.label="MAIN", r.primary=true, e.id=randomUUID()
             ON MATCH SET e.label="MAIN", r.primary=true;
-MATCH (c:Contact {id:"echotest"})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:"openline"})
-			MERGE (c)-[r:CALLED_AT]->(p:PhoneNumber {e164: "+12345678910"})
-            ON CREATE SET p.label="MAIN", r.primary=true, p.id=randomUUID()
-            ON MATCH SET p.label="MAIN", r.primary=true;
 
 CREATE INDEX contact_id_idx IF NOT EXISTS FOR (n:Contact) ON (n.id);
 CREATE INDEX contact_group_id_idx IF NOT EXISTS FOR (n:ContactGroup) ON (n.id);
