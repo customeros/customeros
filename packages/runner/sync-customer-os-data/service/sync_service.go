@@ -38,15 +38,21 @@ func (s *syncService) Sync() {
 		if err != nil {
 			continue
 		}
-		syncContacts(dataService)
+		syncContacts(dataService, v.Tenant)
 	}
-
-	log.Printf("found %d tenants to sync", len(tenantsToSync))
 }
 
-func syncContacts(dataService common.DataService) {
+func syncContacts(dataService common.DataService, tenant string) {
 	for {
 		contacts := dataService.GetContactsForSync(batchSize)
+		if len(contacts) == 0 {
+			log.Printf("no contacts found for sync from %s for tenant %s", dataService.SourceName(), tenant)
+			break
+		}
+		log.Printf("syncing %d contacts from %s for tenant %s", len(contacts), dataService.SourceName(), tenant)
+		for _, v := range contacts {
+			dataService.MarkContactSynced(v.ExternalId)
+		}
 		if len(contacts) < batchSize {
 			break
 		}
