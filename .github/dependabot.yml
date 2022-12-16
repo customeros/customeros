@@ -65,3 +65,17 @@ updates:
     pull-request-branch-name:
       separator: "-"
     rebase-strategy: "auto"
+
+  - package-ecosystem: "gomod"
+    directory: "/packages/runner/sync-customer-os-data"
+    schedule:
+      interval: "daily"
+      time: "07:00"
+    open-pull-requests-limit: 3
+    labels:
+      - "gomod"
+      - "dependencies"
+      - "sync-customer-os-data"
+    pull-request-branch-name:
+      separator: "-"
+    rebase-strategy: "auto"

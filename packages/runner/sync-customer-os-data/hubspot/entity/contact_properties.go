@@ -7,6 +7,7 @@ type ContactProperties struct {
 	LastName              string `gorm:"column:lastname"`
 	Email                 string `gorm:"column:email"`
 	AdditionalEmails      string `gorm:"column:hs_additional_emails"`
+	PhoneNumber           string `gorm:"column:phone"`
 }
 
 type ContactPropertiesList []ContactProperties
