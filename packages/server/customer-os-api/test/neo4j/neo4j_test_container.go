@@ -8,6 +8,7 @@ import (
 	"github.com/testcontainers/testcontainers-go/wait"
 	"io"
 	"log"
+	"time"
 )
 
 const username = "neo4j"
@@ -18,7 +19,7 @@ func startContainer(ctx context.Context, username, password string) (testcontain
 		Image:        "neo4j",
 		ExposedPorts: []string{"7687/tcp"},
 		Env:          map[string]string{"NEO4J_AUTH": fmt.Sprintf("%s/%s", username, password)},
-		WaitingFor:   wait.ForListeningPort("7687/tcp"),
+		WaitingFor:   wait.ForLog("Bolt enabled").WithStartupTimeout(120 * time.Second),
 	}
 	return testcontainers.GenericContainer(ctx, testcontainers.GenericContainerRequest{
 		ContainerRequest: request,
