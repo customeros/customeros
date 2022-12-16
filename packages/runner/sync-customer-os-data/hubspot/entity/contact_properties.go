@@ -5,6 +5,8 @@ type ContactProperties struct {
 	AirbyteContactsHashid string `gorm:"column:_airbyte_contacts_hashid"`
 	FirstName             string `gorm:"column:firstname"`
 	LastName              string `gorm:"column:lastname"`
+	Email                 string `gorm:"column:email"`
+	AdditionalEmails      string `gorm:"column:hs_additional_emails"`
 }
 
 type ContactPropertiesList []ContactProperties
