@@ -79,7 +79,7 @@ func (s *hubspotDataService) getDb() *gorm.DB {
 	})
 }
 
-func (s *hubspotDataService) SourceName() string {
+func (s *hubspotDataService) SourceId() string {
 	return "hubspot"
 }
 
