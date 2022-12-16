@@ -18,7 +18,7 @@ func startContainer(ctx context.Context, username, password string) (testcontain
 		Image:        "neo4j",
 		ExposedPorts: []string{"7687/tcp"},
 		Env:          map[string]string{"NEO4J_AUTH": fmt.Sprintf("%s/%s", username, password)},
-		WaitingFor:   wait.ForLog("Bolt enabled"),
+		WaitingFor:   wait.ForListeningPort("7687/tcp"),
 	}
 	return testcontainers.GenericContainer(ctx, testcontainers.GenericContainerRequest{
 		ContainerRequest: request,
@@ -32,16 +32,15 @@ func InitTestNeo4jDB() (testcontainers.Container, *neo4j.Driver) {
 	neo4jContainer, err := startContainer(ctx, username, password)
 	if err != nil {
 		log.Panic(err)
-		//log.Panic("Container should start")
 	}
 	port, err := neo4jContainer.MappedPort(ctx, "7687")
 	if err != nil {
-		log.Panic("Port should be resolved")
+		log.Panic(err)
 	}
 	address := fmt.Sprintf("bolt://localhost:%d", port.Int())
 	driver, err := neo4j.NewDriver(address, neo4j.BasicAuth(username, password, ""))
 	if err != nil {
-		log.Panic("Driver should be created")
+		log.Panic(err)
 	}
 	return neo4jContainer, &driver
 }
