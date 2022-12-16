@@ -46,6 +46,9 @@ func (s *syncService) Sync() {
 		defer dataService.Close()
 
 		syncDate := time.Now().UTC()
+
+		_ = s.repositories.ExternalSystemRepository.Merge(v.Tenant, dataService.SourceId())
+
 		s.syncContacts(dataService, syncDate, v.Tenant)
 	}
 }
@@ -54,10 +57,10 @@ func (s *syncService) syncContacts(dataService common.DataService, syncDate time
 	for {
 		contacts := dataService.GetContactsForSync(batchSize)
 		if len(contacts) == 0 {
-			log.Printf("no contacts found for sync from %s for tenant %s", dataService.SourceName(), tenant)
+			log.Printf("no contacts found for sync from %s for tenant %s", dataService.SourceId(), tenant)
 			break
 		}
-		log.Printf("syncing %d contacts from %s for tenant %s", len(contacts), dataService.SourceName(), tenant)
+		log.Printf("syncing %d contacts from %s for tenant %s", len(contacts), dataService.SourceId(), tenant)
 
 		for _, v := range contacts {
 			var failedSync = false
@@ -89,7 +92,7 @@ func (s *syncService) syncContacts(dataService common.DataService, syncDate time
 				}
 			}
 
-			log.Printf("successfully merged contact with id %v for tenant %v from %v", contactId, tenant, dataService.SourceName())
+			log.Printf("successfully merged contact with id %v for tenant %v from %v", contactId, tenant, dataService.SourceId())
 			if err := dataService.MarkContactProcessed(v.ExternalId, failedSync == false); err != nil {
 				continue
 			}
