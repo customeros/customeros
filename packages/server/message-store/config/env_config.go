@@ -17,8 +17,9 @@ type Config struct {
 		LogLevel              string `env:"NEO4J_LOG_LEVEL" envDefault:"WARNING"`
 	}
 	Service struct {
-		ServerPort    int    `env:"MESSAGE_STORE_SERVER_PORT,required"`
-		CustomerOsAPI string `env:"CUSTOMER_OS_API,required"`
+		ServerPort       int    `env:"MESSAGE_STORE_SERVER_PORT,required"`
+		CustomerOsAPI    string `env:"CUSTOMER_OS_API,required"`
+		CustomerOsAPIKey string `env:"CUSTOMER_OS_API_KEY,required"`
 	}
 	Identity struct {
 		DefaultUserId string `env:"DEFAULT_USER_ID" envDefault:"AgentSmith"`

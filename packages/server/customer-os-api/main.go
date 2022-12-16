@@ -15,18 +15,34 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/config/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/generated"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/resolver"
+	repository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository/postgres"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository/postgres/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service/container"
 	"github.com/vektah/gqlparser/v2/gqlerror"
 	"log"
-	"strings"
 )
 
 const customerOSApiPort = "10000"
 
-func graphqlHandler(driver neo4j.Driver) gin.HandlerFunc {
+func InitDB(cfg *config.Config) (db *config.StorageDB, err error) {
+	if db, err = config.NewDBConn(
+		cfg.Postgres.Host,
+		cfg.Postgres.Port,
+		cfg.Postgres.Db,
+		cfg.Postgres.User,
+		cfg.Postgres.Password,
+		cfg.Postgres.MaxConn,
+		cfg.Postgres.MaxIdleConn,
+		cfg.Postgres.ConnMaxLifetime); err != nil {
+		log.Fatalf("Coud not open db connection: %s", err.Error())
+	}
+	return
+}
+
+func graphqlHandler(driver neo4j.Driver, repositoryContainer *repository.PostgresRepositoryContainer) gin.HandlerFunc {
 	serviceContainer := container.InitServices(&driver)
 	// instantiate graph resolver
-	graphResolver := resolver.NewResolver(serviceContainer)
+	graphResolver := resolver.NewResolver(serviceContainer, repositoryContainer)
 
 	srv := handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: graphResolver}))
 
@@ -65,8 +81,46 @@ func init() {
 	})
 }
 
+// Declare a simple handler for pingpong as a request accepting behavior
+func ApiKeyChecker(appKeyRepo repository.AppKeyRepository) func(c *gin.Context) {
+	return func(c *gin.Context) {
+		kh := c.GetHeader("X-Openline-APP-KEY")
+		if kh != "" {
+
+			keyResult := appKeyRepo.FindByKey(c, kh)
+
+			if keyResult.Error != nil {
+				c.AbortWithStatus(401)
+				return
+			}
+
+			appKey := keyResult.Result.(*entity.AppKeyEntity)
+
+			if appKey == nil {
+				c.AbortWithStatus(401)
+				return
+			} else {
+				// todo set tenant in context
+			}
+
+			c.Next()
+			// illegal request, terminate the current process
+		} else {
+			c.AbortWithStatus(401)
+			return
+		}
+
+	}
+}
+
 func main() {
 	cfg := loadConfiguration()
+
+	db, _ := InitDB(cfg)
+	defer db.SqlDB.Close()
+
+	repositoryContainer := repository.InitRepositories(db.GormDB)
+
 	neo4jDriver, err := config.NewDriver(cfg)
 	if err != nil {
 		log.Fatalf("Could not establish connection with neo4j at: %v, error: %v", cfg.Neo4j.Target, err.Error())
@@ -77,10 +131,10 @@ func main() {
 	r := gin.Default()
 
 	corsConfig := cors.DefaultConfig()
-	corsConfig.AllowOrigins = strings.Split(cfg.CorsUrl, " ")
+	corsConfig.AllowOrigins = []string{"*"}
 	r.Use(cors.New(corsConfig))
 
-	r.POST("/query", graphqlHandler(neo4jDriver))
+	r.POST("/query", ApiKeyChecker(repositoryContainer.AppKeyRepo), graphqlHandler(neo4jDriver, repositoryContainer))
 	if cfg.GraphQL.PlaygroundEnabled {
 		r.GET("/", playgroundHandler())
 	}
