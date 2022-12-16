@@ -31,7 +31,8 @@ func InitTestNeo4jDB() (testcontainers.Container, *neo4j.Driver) {
 	var err error
 	neo4jContainer, err := startContainer(ctx, username, password)
 	if err != nil {
-		log.Panic("Container should start")
+		log.Panic(err)
+		//log.Panic("Container should start")
 	}
 	port, err := neo4jContainer.MappedPort(ctx, "7687")
 	if err != nil {
