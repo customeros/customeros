@@ -16,14 +16,6 @@ import (
 	"time"
 )
 
-type TestContainerDbConfig struct {
-	Host string
-	Port string
-	Name string
-	User string
-	Pwd  string
-}
-
 func startPostgresContainer(ctx context.Context) (testcontainers.Container, error) {
 	request := testcontainers.ContainerRequest{
 		Image:        "postgres:latest",

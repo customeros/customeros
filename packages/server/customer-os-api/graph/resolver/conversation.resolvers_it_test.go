@@ -11,9 +11,9 @@ import (
 
 func TestMutationResolver_ConversationCreate_AutogenerateID(t *testing.T) {
 	defer tearDownTestCase()(t)
-	neo4jt.CreateTenant(neo4jDriver, tenantName)
-	userId := neo4jt.CreateDefaultUser(neo4jDriver, tenantName)
-	contactId := neo4jt.CreateDefaultContact(neo4jDriver, tenantName)
+	neo4jt.CreateTenant(driver, tenantName)
+	userId := neo4jt.CreateDefaultUser(driver, tenantName)
+	contactId := neo4jt.CreateDefaultContact(driver, tenantName)
 
 	rawResponse, err := c.RawPost(getQuery("create_conversation"),
 		client.Var("contactId", contactId),
@@ -33,10 +33,10 @@ func TestMutationResolver_ConversationCreate_AutogenerateID(t *testing.T) {
 
 func TestMutationResolver_ConversationCreate_WithGivenID(t *testing.T) {
 	defer tearDownTestCase()(t)
-	neo4jt.CreateTenant(neo4jDriver, tenantName)
+	neo4jt.CreateTenant(driver, tenantName)
 	conversationId := "Some conversation ID"
-	userId := neo4jt.CreateDefaultUser(neo4jDriver, tenantName)
-	contactId := neo4jt.CreateDefaultContact(neo4jDriver, tenantName)
+	userId := neo4jt.CreateDefaultUser(driver, tenantName)
+	contactId := neo4jt.CreateDefaultContact(driver, tenantName)
 
 	rawResponse, err := c.RawPost(getQuery("create_conversation_with_id"),
 		client.Var("contactId", contactId),
@@ -57,15 +57,15 @@ func TestMutationResolver_ConversationCreate_WithGivenID(t *testing.T) {
 
 func TestMutationResolver_ConversationAddMessage(t *testing.T) {
 	defer tearDownTestCase()(t)
-	neo4jt.CreateTenant(neo4jDriver, tenantName)
+	neo4jt.CreateTenant(driver, tenantName)
 	messageId := "A message ID"
-	userId := neo4jt.CreateDefaultUser(neo4jDriver, tenantName)
-	contactId := neo4jt.CreateDefaultContact(neo4jDriver, tenantName)
-	conversationId := neo4jt.CreateConversation(neo4jDriver, userId, contactId)
+	userId := neo4jt.CreateDefaultUser(driver, tenantName)
+	contactId := neo4jt.CreateDefaultContact(driver, tenantName)
+	conversationId := neo4jt.CreateConversation(driver, userId, contactId)
 
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(neo4jDriver, "Contact"))
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(neo4jDriver, "User"))
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(neo4jDriver, "Conversation"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Contact"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "User"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Conversation"))
 
 	rawResponse, err := c.RawPost(getQuery("add_message_to_conversation"),
 		client.Var("conversationId", conversationId),
@@ -85,6 +85,6 @@ func TestMutationResolver_ConversationAddMessage(t *testing.T) {
 	require.Equal(t, messageId, createdMessage.ID)
 	require.Equal(t, model.MessageChannelFacebook, createdMessage.Channel)
 
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(neo4jDriver, "Message"))
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(neo4jDriver, "Action"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Message"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Action"))
 }
