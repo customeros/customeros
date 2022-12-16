@@ -11,26 +11,26 @@ import (
 
 func TestMutationResolver_CustomFieldsMergeAndUpdateInContact(t *testing.T) {
 	defer tearDownTestCase()(t)
-	neo4jt.CreateTenant(driver, tenantName)
-	contactId := neo4jt.CreateDefaultContact(driver, tenantName)
-	entityDefinitionId := neo4jt.CreateEntityDefinition(driver, tenantName, model.EntityDefinitionExtensionContact.String())
-	fieldDefinitionId := neo4jt.AddFieldDefinitionToEntity(driver, entityDefinitionId)
-	setDefinitionId := neo4jt.AddSetDefinitionToEntity(driver, entityDefinitionId)
-	fieldInSetDefinitionId := neo4jt.AddFieldDefinitionToSet(driver, setDefinitionId)
-	neo4jt.LinkEntityDefinitionToContact(driver, entityDefinitionId, contactId)
-	fieldInContactId := neo4jt.CreateDefaultCustomFieldInContact(driver, contactId)
-	fieldSetId := neo4jt.CreateDefaultFieldSet(driver, contactId)
-	fieldInSetId := neo4jt.CreateDefaultCustomFieldInSet(driver, fieldSetId)
+	neo4jt.CreateTenant(neo4jDriver, tenantName)
+	contactId := neo4jt.CreateDefaultContact(neo4jDriver, tenantName)
+	entityDefinitionId := neo4jt.CreateEntityDefinition(neo4jDriver, tenantName, model.EntityDefinitionExtensionContact.String())
+	fieldDefinitionId := neo4jt.AddFieldDefinitionToEntity(neo4jDriver, entityDefinitionId)
+	setDefinitionId := neo4jt.AddSetDefinitionToEntity(neo4jDriver, entityDefinitionId)
+	fieldInSetDefinitionId := neo4jt.AddFieldDefinitionToSet(neo4jDriver, setDefinitionId)
+	neo4jt.LinkEntityDefinitionToContact(neo4jDriver, entityDefinitionId, contactId)
+	fieldInContactId := neo4jt.CreateDefaultCustomFieldInContact(neo4jDriver, contactId)
+	fieldSetId := neo4jt.CreateDefaultFieldSet(neo4jDriver, contactId)
+	fieldInSetId := neo4jt.CreateDefaultCustomFieldInSet(neo4jDriver, fieldSetId)
 
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Contact"))
-	require.Equal(t, 2, neo4jt.GetCountOfNodes(driver, "CustomField"))
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "FieldSet"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(neo4jDriver, "Contact"))
+	require.Equal(t, 2, neo4jt.GetCountOfNodes(neo4jDriver, "CustomField"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(neo4jDriver, "FieldSet"))
 
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "EntityDefinition"))
-	require.Equal(t, 2, neo4jt.GetCountOfNodes(driver, "CustomFieldDefinition"))
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "FieldSetDefinition"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(neo4jDriver, "EntityDefinition"))
+	require.Equal(t, 2, neo4jt.GetCountOfNodes(neo4jDriver, "CustomFieldDefinition"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(neo4jDriver, "FieldSetDefinition"))
 
-	require.Equal(t, 1, neo4jt.GetCountOfRelationships(driver, "IS_DEFINED_BY"))
+	require.Equal(t, 1, neo4jt.GetCountOfRelationships(neo4jDriver, "IS_DEFINED_BY"))
 
 	rawResponse, err := c.RawPost(getQuery("update_custom_fields_and_filed_sets_in_contact"),
 		client.Var("contactId", contactId),
@@ -43,15 +43,15 @@ func TestMutationResolver_CustomFieldsMergeAndUpdateInContact(t *testing.T) {
 	)
 	assertRawResponseSuccess(t, rawResponse, err)
 
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Contact"))
-	require.Equal(t, 4, neo4jt.GetCountOfNodes(driver, "CustomField"))
-	require.Equal(t, 2, neo4jt.GetCountOfNodes(driver, "FieldSet"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(neo4jDriver, "Contact"))
+	require.Equal(t, 4, neo4jt.GetCountOfNodes(neo4jDriver, "CustomField"))
+	require.Equal(t, 2, neo4jt.GetCountOfNodes(neo4jDriver, "FieldSet"))
 
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "EntityDefinition"))
-	require.Equal(t, 2, neo4jt.GetCountOfNodes(driver, "CustomFieldDefinition"))
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "FieldSetDefinition"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(neo4jDriver, "EntityDefinition"))
+	require.Equal(t, 2, neo4jt.GetCountOfNodes(neo4jDriver, "CustomFieldDefinition"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(neo4jDriver, "FieldSetDefinition"))
 
-	require.Equal(t, 4, neo4jt.GetCountOfRelationships(driver, "IS_DEFINED_BY"))
+	require.Equal(t, 4, neo4jt.GetCountOfRelationships(neo4jDriver, "IS_DEFINED_BY"))
 
 	var contact struct {
 		CustomFieldsMergeAndUpdateInContact model.Contact
