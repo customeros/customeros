@@ -15,7 +15,7 @@ const password = "s3cr3t"
 
 func startContainer(ctx context.Context, username, password string) (testcontainers.Container, error) {
 	request := testcontainers.ContainerRequest{
-		Image:        "neo4j",
+		Image:        "neo4j:5.2.0-community",
 		ExposedPorts: []string{"7687/tcp"},
 		Env:          map[string]string{"NEO4J_AUTH": fmt.Sprintf("%s/%s", username, password)},
 		WaitingFor:   wait.ForLog("Bolt enabled"),

@@ -166,7 +166,7 @@ func parseEmail(email string) (string, string) {
 	return "", email
 }
 
-func getContactByEmail(graphqlClient *graphql.Client, email string) (*ContactInfo, error) {
+func getContactByEmail(graphqlClient *graphql.Client, email string, customerOsApiKey string) (*ContactInfo, error) {
 
 	graphqlRequest := graphql.NewRequest(`
   				query ($email: String!) {
@@ -175,6 +175,7 @@ func getContactByEmail(graphqlClient *graphql.Client, email string) (*ContactInf
     `)
 
 	graphqlRequest.Var("email", email)
+	graphqlRequest.Header.Add("X-Openline-APP-KEY", customerOsApiKey)
 	var graphqlResponse map[string]map[string]string
 	if err := graphqlClient.Run(context.Background(), graphqlRequest, &graphqlResponse); err != nil {
 		return nil, err
@@ -184,7 +185,7 @@ func getContactByEmail(graphqlClient *graphql.Client, email string) (*ContactInf
 		id:       graphqlResponse["contact_ByEmail"]["id"]}, nil
 }
 
-func getContactByPhone(graphqlClient *graphql.Client, e164 string) (*ContactInfo, error) {
+func getContactByPhone(graphqlClient *graphql.Client, e164 string, customerOsApiKey string) (*ContactInfo, error) {
 
 	graphqlRequest := graphql.NewRequest(`
   				query ($e164: String!) {
@@ -193,6 +194,7 @@ func getContactByPhone(graphqlClient *graphql.Client, e164 string) (*ContactInfo
     `)
 
 	graphqlRequest.Var("e164", e164)
+	graphqlRequest.Header.Add("X-Openline-APP-KEY", customerOsApiKey)
 	var graphqlResponse map[string]map[string]string
 	if err := graphqlClient.Run(context.Background(), graphqlRequest, &graphqlResponse); err != nil {
 		return nil, err
@@ -216,7 +218,7 @@ type contactResponse struct {
 	} `json:"contact"`
 }
 
-func getContactById(graphqlClient *graphql.Client, id string) (*ContactInfo, error) {
+func getContactById(graphqlClient *graphql.Client, id string, customerOsApiKey string) (*ContactInfo, error) {
 
 	graphqlRequest := graphql.NewRequest(`
   				query ($id: ID!) {
@@ -234,6 +236,7 @@ func getContactById(graphqlClient *graphql.Client, id string) (*ContactInfo, err
     `)
 
 	graphqlRequest.Var("id", id)
+	graphqlRequest.Header.Add("X-Openline-APP-KEY", customerOsApiKey)
 	var graphqlResponse contactResponse
 	if err := graphqlClient.Run(context.Background(), graphqlRequest, &graphqlResponse); err != nil {
 		log.Printf("Grapql got error %s", err.Error())
@@ -250,7 +253,7 @@ func getContactById(graphqlClient *graphql.Client, id string) (*ContactInfo, err
 	}
 	return contactInfo, nil
 }
-func createContactWithEmail(graphqlClient *graphql.Client, firstName string, lastName string, email string) (string, error) {
+func createContactWithEmail(graphqlClient *graphql.Client, firstName string, lastName string, email string, customerOsApiKey string) (string, error) {
 	graphqlRequest := graphql.NewRequest(`
 		mutation CreateContact ($firstName: String!, $lastName: String! $email: String!) {
 		  contact_Create(input: {firstName: $firstName,
@@ -264,6 +267,7 @@ func createContactWithEmail(graphqlClient *graphql.Client, firstName string, las
 	graphqlRequest.Var("firstName", firstName)
 	graphqlRequest.Var("lastName", lastName)
 	graphqlRequest.Var("email", email)
+	graphqlRequest.Header.Add("X-Openline-APP-KEY", customerOsApiKey)
 	var graphqlResponse map[string]map[string]string
 	if err := graphqlClient.Run(context.Background(), graphqlRequest, &graphqlResponse); err != nil {
 		return "", err
@@ -271,7 +275,7 @@ func createContactWithEmail(graphqlClient *graphql.Client, firstName string, las
 	return graphqlResponse["contact_Create"]["id"], nil
 }
 
-func createContactWithPhone(graphqlClient *graphql.Client, firstName string, lastName string, phone string) (string, error) {
+func createContactWithPhone(graphqlClient *graphql.Client, firstName string, lastName string, phone string, customerOsApiKey string) (string, error) {
 	graphqlRequest := graphql.NewRequest(`
 		mutation CreateContact ($firstName: String!, $lastName: String!, $e164: String!) {
 		  contact_Create(input: {
@@ -287,6 +291,7 @@ func createContactWithPhone(graphqlClient *graphql.Client, firstName string, las
 	graphqlRequest.Var("firstName", firstName)
 	graphqlRequest.Var("lastName", lastName)
 	graphqlRequest.Var("e164", phone)
+	graphqlRequest.Header.Add("X-Openline-APP-KEY", customerOsApiKey)
 	var graphqlResponse map[string]map[string]string
 	if err := graphqlClient.Run(context.Background(), graphqlRequest, &graphqlResponse); err != nil {
 		return "", err
@@ -294,7 +299,7 @@ func createContactWithPhone(graphqlClient *graphql.Client, firstName string, las
 	return graphqlResponse["contact_Create"]["id"], nil
 }
 
-func createConversation(graphqlClient *graphql.Client, userId string, contactId string, feedId int) (string, error) {
+func createConversation(graphqlClient *graphql.Client, userId string, contactId string, feedId int, customerOsApiKey string) (string, error) {
 	graphqlRequest := graphql.NewRequest(`
 			mutation CreateConversation ($userId: ID!, $contactId: ID!, $feedId: ID!) {
 				conversationCreate(input: {
@@ -311,6 +316,7 @@ func createConversation(graphqlClient *graphql.Client, userId string, contactId 
 	graphqlRequest.Var("userId", userId)
 	graphqlRequest.Var("contactId", contactId)
 	graphqlRequest.Var("feedId", feedId)
+	graphqlRequest.Header.Add("X-Openline-APP-KEY", customerOsApiKey)
 	var graphqlResponse map[string]map[string]string
 	if err := graphqlClient.Run(context.Background(), graphqlRequest, &graphqlResponse); err != nil {
 		return "", err
@@ -352,7 +358,7 @@ func (s *messageService) SaveMessage(ctx context.Context, message *pb.Message) (
 	if message.ContactId == nil {
 		if message.GetChannel() == pb.MessageChannel_MAIL || message.GetChannel() == pb.MessageChannel_WIDGET {
 			displayName, email := parseEmail(*message.Username)
-			contact, err = getContactByEmail(s.graphqlClient, email)
+			contact, err = getContactByEmail(s.graphqlClient, email, s.config.Service.CustomerOsAPIKey)
 
 			if err != nil {
 
@@ -366,7 +372,7 @@ func (s *messageService) SaveMessage(ctx context.Context, message *pb.Message) (
 					}
 				}
 				log.Printf("Making a contact, firstName=%s lastName=%s email=%s", firstName, lastName, email)
-				contactId, err := createContactWithEmail(s.graphqlClient, firstName, lastName, email)
+				contactId, err := createContactWithEmail(s.graphqlClient, firstName, lastName, email, s.config.Service.CustomerOsAPIKey)
 				contact = &ContactInfo{
 					firstName: firstName,
 					lastName:  lastName,
@@ -382,13 +388,13 @@ func (s *messageService) SaveMessage(ctx context.Context, message *pb.Message) (
 				Where(genConversation.ContactId(contact.id)).
 				First(ctx)
 		} else if message.GetChannel() == pb.MessageChannel_VOICE {
-			contact, err = getContactByPhone(s.graphqlClient, *message.Username)
+			contact, err = getContactByPhone(s.graphqlClient, *message.Username, s.config.Service.CustomerOsAPIKey)
 			if err != nil {
 
 				log.Printf("Contact %s creating a new contact", *message.Username)
 				firstName, lastName := "Unknown", "Caller"
 				log.Printf("Making a contact, firstName=%s lastName=%s email=%s", firstName, lastName, *message.Username)
-				contactId, err := createContactWithPhone(s.graphqlClient, firstName, lastName, *message.Username)
+				contactId, err := createContactWithPhone(s.graphqlClient, firstName, lastName, *message.Username, s.config.Service.CustomerOsAPIKey)
 				contact = &ContactInfo{
 					firstName: firstName,
 					lastName:  lastName,
@@ -407,7 +413,7 @@ func (s *messageService) SaveMessage(ctx context.Context, message *pb.Message) (
 			return nil, status.Errorf(codes.Unimplemented, "Contact mapping not implemented yet for %v", message.GetChannel())
 		}
 	} else {
-		contact, err = getContactById(s.graphqlClient, *message.ContactId)
+		contact, err = getContactById(s.graphqlClient, *message.ContactId, s.config.Service.CustomerOsAPIKey)
 		if err != nil {
 			return nil, status.Errorf(codes.NotFound, "Couldn't find a contact for id of %s", *message.ContactId)
 		}
@@ -457,7 +463,7 @@ func (s *messageService) SaveMessage(ctx context.Context, message *pb.Message) (
 				return nil, status.Errorf(se.Code(), "Error inserting new Feed %s", err.Error())
 			}
 
-			conv, err := createConversation(s.graphqlClient, s.config.Identity.DefaultUserId, contact.id, conversation.ID)
+			conv, err := createConversation(s.graphqlClient, s.config.Identity.DefaultUserId, contact.id, conversation.ID, s.config.Service.CustomerOsAPIKey)
 
 			if err != nil {
 				log.Printf("Error making conversation %v", err)
@@ -557,7 +563,7 @@ func (s *messageService) GetMessage(ctx context.Context, msgId *pb.Id) (*pb.Mess
 	messageId := int64(mi.ID)
 	conversationid := int64(mf.ID)
 
-	contactById, err := getContactById(s.graphqlClient, mf.ContactId)
+	contactById, err := getContactById(s.graphqlClient, mf.ContactId, s.config.Service.CustomerOsAPIKey)
 
 	m := &pb.Message{
 		Type:      decodeType(mi.Type),
@@ -670,7 +676,7 @@ func (s *messageService) GetFeeds(ctx context.Context, feedRequest *pb.GetFeedsP
 		var id = int64(conversation.ID)
 		log.Printf("Got a conversation id of %d", id)
 
-		contactById, err := getContactById(s.graphqlClient, conversation.ContactId)
+		contactById, err := getContactById(s.graphqlClient, conversation.ContactId, s.config.Service.CustomerOsAPIKey)
 
 		if err != nil {
 			se, _ := status.FromError(err)
@@ -707,7 +713,7 @@ func (s *messageService) GetFeed(ctx context.Context, feedIdRequest *pb.Id) (*pb
 		return nil, status.Errorf(se.Code(), "Error finding conversation")
 	}
 
-	contactById, err := getContactById(s.graphqlClient, conversation.ContactId)
+	contactById, err := getContactById(s.graphqlClient, conversation.ContactId, s.config.Service.CustomerOsAPIKey)
 	if err != nil {
 		se, _ := status.FromError(err)
 		return nil, status.Errorf(se.Code(), "Error getting messages: %s", err.Error())

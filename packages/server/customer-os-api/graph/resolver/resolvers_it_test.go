@@ -2,6 +2,7 @@ package resolver
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"github.com/99designs/gqlgen/client"
 	"github.com/99designs/gqlgen/graphql/handler"
@@ -10,11 +11,15 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/generated"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
+	repository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository/postgres"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service/container"
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/neo4j"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/postgres"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils/decode"
 	"github.com/stretchr/testify/require"
 	"github.com/testcontainers/testcontainers-go"
+	"gorm.io/gorm"
+	"log"
 	"os"
 	"testing"
 )
@@ -22,7 +27,11 @@ import (
 var (
 	neo4jContainer testcontainers.Container
 	driver         *neo4j.Driver
-	c              *client.Client
+
+	postgresContainer testcontainers.Container
+	postgresGormDB    *gorm.DB
+	postgresSqlDB     *sql.DB
+	c                 *client.Client
 )
 
 const tenantName = "openline"
@@ -33,6 +42,14 @@ func TestMain(m *testing.M) {
 		neo4jt.Close(driver, "Driver")
 		neo4jt.Terminate(dbContainer, ctx)
 	}(neo4jContainer, *driver, context.Background())
+
+	postgresContainer, postgresGormDB, postgresSqlDB = postgres.InitTestDB()
+	defer func(postgresContainer testcontainers.Container, ctx context.Context) {
+		err := postgresContainer.Terminate(ctx)
+		if err != nil {
+			log.Fatal("Error during container termination")
+		}
+	}(postgresContainer, context.Background())
 
 	prepareClient()
 
@@ -47,8 +64,9 @@ func tearDownTestCase() func(tb testing.TB) {
 }
 
 func prepareClient() {
+	repositoryContainer := repository.InitRepositories(postgresGormDB)
 	serviceContainer := container.InitServices(driver)
-	graphResolver := NewResolver(serviceContainer)
+	graphResolver := NewResolver(serviceContainer, repositoryContainer)
 	customCtx := &common.CustomContext{
 		Tenant: tenantName,
 	}
