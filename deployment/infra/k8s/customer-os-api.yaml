@@ -44,9 +44,27 @@ spec:
               value: ""
             - name: NEO4J_MAX_CONN_POOL_SIZE
               value: "100"
-            - name: GRAPHQL_PLAYGROUND_ENABLED
-              value: "true"
             - name: NEO4J_LOG_LEVEL
               value: "INFO"
+
+            - name: POSTGRES_USER
+              value: "openline"
+            - name: POSTGRES_PASSWORD
+              value: "password"
+            - name: POSTGRES_DB
+              value: "openline"
+            - name: POSTGRES_HOST
+              value: "customer-db-postgresql.openline.svc.cluster.local"
+            - name: POSTGRES_PORT
+              value: "5432"
+            - name: POSTGRES_MAX_CONN
+              value: "25"
+            - name: POSTGRES_MAX_IDLE_CONN
+              value: "10"
+            - name: POSTGRES_CONN_MAX_LIFETIME
+              value: "0"
+
             - name: PORT
               value: "10000"
+            - name: GRAPHQL_PLAYGROUND_ENABLED
+              value: "true"
