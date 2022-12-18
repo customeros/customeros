@@ -84,7 +84,7 @@ func init() {
 // Declare a simple handler for pingpong as a request accepting behavior
 func ApiKeyChecker(appKeyRepo repository.AppKeyRepository) func(c *gin.Context) {
 	return func(c *gin.Context) {
-		kh := c.GetHeader("X-Openline-APP-KEY")
+		kh := c.GetHeader("X-Openline-API-KEY")
 		if kh != "" {
 
 			keyResult := appKeyRepo.FindByKey(c, kh)
