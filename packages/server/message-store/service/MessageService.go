@@ -175,7 +175,7 @@ func getContactByEmail(graphqlClient *graphql.Client, email string, customerOsAp
     `)
 
 	graphqlRequest.Var("email", email)
-	graphqlRequest.Header.Add("X-Openline-APP-KEY", customerOsApiKey)
+	graphqlRequest.Header.Add("X-Openline-API-KEY", customerOsApiKey)
 	var graphqlResponse map[string]map[string]string
 	if err := graphqlClient.Run(context.Background(), graphqlRequest, &graphqlResponse); err != nil {
 		return nil, err
@@ -194,7 +194,7 @@ func getContactByPhone(graphqlClient *graphql.Client, e164 string, customerOsApi
     `)
 
 	graphqlRequest.Var("e164", e164)
-	graphqlRequest.Header.Add("X-Openline-APP-KEY", customerOsApiKey)
+	graphqlRequest.Header.Add("X-Openline-API-KEY", customerOsApiKey)
 	var graphqlResponse map[string]map[string]string
 	if err := graphqlClient.Run(context.Background(), graphqlRequest, &graphqlResponse); err != nil {
 		return nil, err
@@ -236,7 +236,7 @@ func getContactById(graphqlClient *graphql.Client, id string, customerOsApiKey s
     `)
 
 	graphqlRequest.Var("id", id)
-	graphqlRequest.Header.Add("X-Openline-APP-KEY", customerOsApiKey)
+	graphqlRequest.Header.Add("X-Openline-API-KEY", customerOsApiKey)
 	var graphqlResponse contactResponse
 	if err := graphqlClient.Run(context.Background(), graphqlRequest, &graphqlResponse); err != nil {
 		log.Printf("Grapql got error %s", err.Error())
@@ -267,7 +267,7 @@ func createContactWithEmail(graphqlClient *graphql.Client, firstName string, las
 	graphqlRequest.Var("firstName", firstName)
 	graphqlRequest.Var("lastName", lastName)
 	graphqlRequest.Var("email", email)
-	graphqlRequest.Header.Add("X-Openline-APP-KEY", customerOsApiKey)
+	graphqlRequest.Header.Add("X-Openline-API-KEY", customerOsApiKey)
 	var graphqlResponse map[string]map[string]string
 	if err := graphqlClient.Run(context.Background(), graphqlRequest, &graphqlResponse); err != nil {
 		return "", err
@@ -291,7 +291,7 @@ func createContactWithPhone(graphqlClient *graphql.Client, firstName string, las
 	graphqlRequest.Var("firstName", firstName)
 	graphqlRequest.Var("lastName", lastName)
 	graphqlRequest.Var("e164", phone)
-	graphqlRequest.Header.Add("X-Openline-APP-KEY", customerOsApiKey)
+	graphqlRequest.Header.Add("X-Openline-API-KEY", customerOsApiKey)
 	var graphqlResponse map[string]map[string]string
 	if err := graphqlClient.Run(context.Background(), graphqlRequest, &graphqlResponse); err != nil {
 		return "", err
@@ -316,7 +316,7 @@ func createConversation(graphqlClient *graphql.Client, userId string, contactId 
 	graphqlRequest.Var("userId", userId)
 	graphqlRequest.Var("contactId", contactId)
 	graphqlRequest.Var("feedId", feedId)
-	graphqlRequest.Header.Add("X-Openline-APP-KEY", customerOsApiKey)
+	graphqlRequest.Header.Add("X-Openline-API-KEY", customerOsApiKey)
 	var graphqlResponse map[string]map[string]string
 	if err := graphqlClient.Run(context.Background(), graphqlRequest, &graphqlResponse); err != nil {
 		return "", err
