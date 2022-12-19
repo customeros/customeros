@@ -49,6 +49,7 @@ func (s *syncService) Sync() {
 
 		_ = s.repositories.ExternalSystemRepository.Merge(v.Tenant, dataService.SourceId())
 
+		s.syncCompanies(dataService, syncDate, v.Tenant)
 		s.syncContacts(dataService, syncDate, v.Tenant)
 	}
 }
@@ -98,6 +99,35 @@ func (s *syncService) syncContacts(dataService common.DataService, syncDate time
 			}
 		}
 		if len(contacts) < batchSize {
+			break
+		}
+	}
+}
+
+func (s *syncService) syncCompanies(dataService common.DataService, syncDate time.Time, tenant string) {
+	for {
+		companies := dataService.GetCompaniesForSync(batchSize)
+		if len(companies) == 0 {
+			log.Printf("no companies found for sync from %s for tenant %s", dataService.SourceId(), tenant)
+			break
+		}
+		log.Printf("syncing %d companies from %s for tenant %s", len(companies), dataService.SourceId(), tenant)
+
+		for _, v := range companies {
+			var failedSync = false
+
+			companyId, err := s.repositories.CompanyRepository.MergeCompany(tenant, syncDate, v)
+			if err != nil {
+				failedSync = true
+				log.Printf("failed merge company with external reference %v for tenant %v :%v", v.ExternalId, tenant, err)
+			}
+
+			log.Printf("successfully merged company with id %v for tenant %v from %v", companyId, tenant, dataService.SourceId())
+			if err := dataService.MarkCompanyProcessed(v.ExternalId, failedSync == false); err != nil {
+				continue
+			}
+		}
+		if len(companies) < batchSize {
 			break
 		}
 	}

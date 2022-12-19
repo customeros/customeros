@@ -17,6 +17,7 @@ type Repositories struct {
 	TenantSyncSettingsRepository TenantSyncSettingsRepository
 	ContactRepository            ContactRepository
 	ExternalSystemRepository     ExternalSystemRepository
+	CompanyRepository            CompanyRepository
 }
 
 func InitRepos(driver *neo4j.Driver, controlDb *gorm.DB, airbyteStoreDb *config.AirbyteStoreDB) *Repositories {
@@ -29,6 +30,7 @@ func InitRepos(driver *neo4j.Driver, controlDb *gorm.DB, airbyteStoreDb *config.
 		TenantSyncSettingsRepository: NewTenantSyncSettingsRepository(controlDb),
 		ContactRepository:            NewContactRepository(driver),
 		ExternalSystemRepository:     NewExternalSystemRepository(driver),
+		CompanyRepository:            NewCompanyRepository(driver),
 	}
 	return &repositories
 }

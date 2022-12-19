@@ -15,6 +15,7 @@ type hubspotDataService struct {
 	airbyteStoreDb *config.AirbyteStoreDB
 	tenant         string
 	contacts       map[string]hubspotEntity.Contact
+	companies      map[string]hubspotEntity.Company
 }
 
 func NewHubspotDataService(airbyteStoreDb *config.AirbyteStoreDB, tenant string) common.DataService {
@@ -22,6 +23,7 @@ func NewHubspotDataService(airbyteStoreDb *config.AirbyteStoreDB, tenant string)
 		airbyteStoreDb: airbyteStoreDb,
 		tenant:         tenant,
 		contacts:       map[string]hubspotEntity.Contact{},
+		companies:      map[string]hubspotEntity.Company{},
 	}
 }
 
@@ -40,7 +42,7 @@ func (s *hubspotDataService) GetContactsForSync(batchSize int) []entity.ContactD
 		}
 		customerOsContacts = append(customerOsContacts, entity.ContactData{
 			ExternalId:       v.Id,
-			ExternalSystem:   "hubspot",
+			ExternalSystem:   s.SourceId(),
 			FirstName:        hubspotContactProperties.FirstName,
 			LastName:         hubspotContactProperties.LastName,
 			CreatedAt:        v.CreateDate.UTC(),
@@ -52,6 +54,36 @@ func (s *hubspotDataService) GetContactsForSync(batchSize int) []entity.ContactD
 		s.contacts[v.Id] = v
 	}
 	return customerOsContacts
+}
+
+func (s *hubspotDataService) GetCompaniesForSync(batchSize int) []entity.CompanyData {
+	hubspotCompanies, err := repository.GetCompanies(s.getDb(), batchSize)
+	if err != nil {
+		log.Print(err)
+		return nil
+	}
+	customerOsCompanies := []entity.CompanyData{}
+	for _, v := range hubspotCompanies {
+		hubspotCompanyProperties, err := repository.GetCompanyProperties(s.getDb(), v.AirbyteAbId, v.AirbyteCompaniesHashid)
+		if err != nil {
+			log.Print(err)
+			continue
+		}
+		customerOsCompanies = append(customerOsCompanies, entity.CompanyData{
+			ExternalId:     v.Id,
+			ExternalSystem: s.SourceId(),
+			Name:           hubspotCompanyProperties.Name,
+			Description:    hubspotCompanyProperties.Description,
+			Domain:         hubspotCompanyProperties.Domain,
+			Website:        hubspotCompanyProperties.Website,
+			Industry:       hubspotCompanyProperties.Industry,
+			IsPublic:       hubspotCompanyProperties.IsPublic,
+			CreatedAt:      v.CreateDate.UTC(),
+			Readonly:       true,
+		})
+		s.companies[v.Id] = v
+	}
+	return customerOsCompanies
 }
 
 func (s *hubspotDataService) MarkContactProcessed(externalId string, synced bool) error {
@@ -66,8 +98,25 @@ func (s *hubspotDataService) MarkContactProcessed(externalId string, synced bool
 	return nil
 }
 
+func (s *hubspotDataService) MarkCompanyProcessed(externalId string, synced bool) error {
+	company, ok := s.companies[externalId]
+	if ok {
+		err := repository.MarkCompanyProcessed(s.getDb(), company, synced)
+		if err != nil {
+			log.Printf("error while marking company with external reference %s as synced for hubspot", externalId)
+		}
+		return err
+	}
+	return nil
+}
+
 func (s *hubspotDataService) Refresh() {
 	err := s.getDb().AutoMigrate(&hubspotEntity.SyncStatusContact{})
+	if err != nil {
+		log.Print(err)
+	}
+
+	err = s.getDb().AutoMigrate(&hubspotEntity.SyncStatusCompany{})
 	if err != nil {
 		log.Print(err)
 	}
@@ -85,4 +134,5 @@ func (s *hubspotDataService) SourceId() string {
 
 func (s *hubspotDataService) Close() {
 	s.contacts = make(map[string]hubspotEntity.Contact)
+	s.companies = make(map[string]hubspotEntity.Company)
 }
