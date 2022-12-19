@@ -7,5 +7,7 @@ type DataService interface {
 	Close()
 	SourceId() string
 	GetContactsForSync(batchSize int) []entity.ContactData
+	GetCompaniesForSync(batchSize int) []entity.CompanyData
 	MarkContactProcessed(externalId string, synced bool) error
+	MarkCompanyProcessed(externalId string, synced bool) error
 }

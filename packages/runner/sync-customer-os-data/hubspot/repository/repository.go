@@ -53,3 +53,51 @@ func MarkContactProcessed(db *gorm.DB, contact hubspotEntity.Contact, synced boo
 			SyncAttempt:        syncStatusContact.SyncAttempt + 1,
 		}).Error
 }
+
+func GetCompanies(db *gorm.DB, limit int) (hubspotEntity.Companies, error) {
+	var companies hubspotEntity.Companies
+
+	cte := `
+		WITH UpToDateData AS (
+    		SELECT row_number() OVER (PARTITION BY id ORDER BY updatedat DESC) AS row_num, *
+    		FROM companies
+		)`
+	err := db.
+		Raw(cte+" SELECT u.* FROM UpToDateData u left join openline_sync_status_companies s "+
+			" on u.id = s.id and u._airbyte_ab_id = s._airbyte_ab_id and u._airbyte_companies_hashid = s._airbyte_companies_hashid "+
+			" WHERE u.row_num = ? "+
+			" and (s.synced_to_customer_os is null or s.synced_to_customer_os = ?) "+
+			" and (s.synced_to_customer_os_attempt is null or s.synced_to_customer_os_attempt < ?) "+
+			" limit ?", 1, false, 10, limit).
+		Find(&companies).Error
+
+	if err != nil {
+		return nil, err
+	}
+	return companies, nil
+}
+
+func GetCompanyProperties(db *gorm.DB, airbyteAbId, airbyteCompaniesHashId string) (hubspotEntity.CompanyProperties, error) {
+	companyProperties := hubspotEntity.CompanyProperties{}
+	err := db.Table(hubspotEntity.CompanyProperties{}.TableName()).
+		Where(&hubspotEntity.CompanyProperties{AirbyteAbId: airbyteAbId, AirbyteCompaniesHashid: airbyteCompaniesHashId}).
+		First(&companyProperties).Error
+	return companyProperties, err
+}
+
+func MarkCompanyProcessed(db *gorm.DB, company hubspotEntity.Company, synced bool) error {
+	syncStatusCompany := hubspotEntity.SyncStatusCompany{
+		Id:                   company.Id,
+		AirbyteAbId:          company.AirbyteAbId,
+		AirbyteCompanyHashid: company.AirbyteCompaniesHashid,
+	}
+	db.FirstOrCreate(&syncStatusCompany, syncStatusCompany)
+
+	return db.Model(&syncStatusCompany).
+		Where(&hubspotEntity.SyncStatusCompany{Id: company.Id, AirbyteAbId: company.AirbyteAbId, AirbyteCompanyHashid: company.AirbyteCompaniesHashid}).
+		Updates(hubspotEntity.SyncStatusCompany{
+			SyncedToCustomerOs: synced,
+			SyncedAt:           time.Now(),
+			SyncAttempt:        syncStatusCompany.SyncAttempt + 1,
+		}).Error
+}
