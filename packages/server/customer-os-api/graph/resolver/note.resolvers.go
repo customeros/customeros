@@ -16,7 +16,7 @@ import (
 func (r *mutationResolver) NoteMergeToContact(ctx context.Context, contactID string, input model.NoteInput) (*model.Note, error) {
 	result, err := r.Services.NoteService.MergeNoteToContact(ctx, contactID, mapper.MapNoteInputToEntity(&input))
 	if err != nil {
-		graphql.AddErrorf(ctx, "Could not add note %s to contact %s", input.Text, contactID)
+		graphql.AddErrorf(ctx, "Could not add note %s to contact %s", input.HTML, contactID)
 		return nil, err
 	}
 	return mapper.MapEntityToNote(result), nil

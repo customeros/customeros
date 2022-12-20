@@ -555,11 +555,11 @@ type MessageInput struct {
 
 type Note struct {
 	ID   string `json:"id"`
-	Text string `json:"text"`
+	HTML string `json:"html"`
 }
 
 type NoteInput struct {
-	Text string `json:"text"`
+	HTML string `json:"html"`
 }
 
 type NotePage struct {
@@ -580,7 +580,7 @@ func (this NotePage) GetTotalElements() int64 { return this.TotalElements }
 
 type NoteUpdateInput struct {
 	ID   string `json:"id"`
-	Text string `json:"text"`
+	HTML string `json:"html"`
 }
 
 type PageViewAction struct {

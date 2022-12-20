@@ -241,8 +241,8 @@ type ComplexityRoot struct {
 	}
 
 	Note struct {
+		HTML func(childComplexity int) int
 		ID   func(childComplexity int) int
-		Text func(childComplexity int) int
 	}
 
 	NotePage struct {
@@ -1550,19 +1550,19 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.UserCreate(childComplexity, args["input"].(model.UserInput)), true
 
+	case "Note.html":
+		if e.complexity.Note.HTML == nil {
+			break
+		}
+
+		return e.complexity.Note.HTML(childComplexity), true
+
 	case "Note.id":
 		if e.complexity.Note.ID == nil {
 			break
 		}
 
 		return e.complexity.Note.ID(childComplexity), true
-
-	case "Note.text":
-		if e.complexity.Note.Text == nil {
-			break
-		}
-
-		return e.complexity.Note.Text(childComplexity), true
 
 	case "NotePage.content":
 		if e.complexity.NotePage.Content == nil {
@@ -2924,7 +2924,7 @@ interface ExtensibleEntity implements Node {
 
 type Note {
     id: ID!
-    text: String!
+    html: String!
 }
 
 type NotePage implements Pages {
@@ -2934,12 +2934,12 @@ type NotePage implements Pages {
 }
 
 input NoteInput {
-    text: String!
+    html: String!
 }
 
 input NoteUpdateInput {
     id: ID!
-    text: String!
+    html: String!
 }`, BuiltIn: false},
 	{Name: "../schemas/phone.graphqls", Input: `extend type Mutation {
     phoneNumberMergeToContact(contactId : ID!, input: PhoneNumberInput!): PhoneNumber!
@@ -10912,8 +10912,8 @@ func (ec *executionContext) fieldContext_Mutation_note_MergeToContact(ctx contex
 			switch field.Name {
 			case "id":
 				return ec.fieldContext_Note_id(ctx, field)
-			case "text":
-				return ec.fieldContext_Note_text(ctx, field)
+			case "html":
+				return ec.fieldContext_Note_html(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Note", field.Name)
 		},
@@ -10973,8 +10973,8 @@ func (ec *executionContext) fieldContext_Mutation_note_UpdateInContact(ctx conte
 			switch field.Name {
 			case "id":
 				return ec.fieldContext_Note_id(ctx, field)
-			case "text":
-				return ec.fieldContext_Note_text(ctx, field)
+			case "html":
+				return ec.fieldContext_Note_html(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Note", field.Name)
 		},
@@ -11413,8 +11413,8 @@ func (ec *executionContext) fieldContext_Note_id(ctx context.Context, field grap
 	return fc, nil
 }
 
-func (ec *executionContext) _Note_text(ctx context.Context, field graphql.CollectedField, obj *model.Note) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Note_text(ctx, field)
+func (ec *executionContext) _Note_html(ctx context.Context, field graphql.CollectedField, obj *model.Note) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Note_html(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -11427,7 +11427,7 @@ func (ec *executionContext) _Note_text(ctx context.Context, field graphql.Collec
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Text, nil
+		return obj.HTML, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -11444,7 +11444,7 @@ func (ec *executionContext) _Note_text(ctx context.Context, field graphql.Collec
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Note_text(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Note_html(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Note",
 		Field:      field,
@@ -11498,8 +11498,8 @@ func (ec *executionContext) fieldContext_NotePage_content(ctx context.Context, f
 			switch field.Name {
 			case "id":
 				return ec.fieldContext_Note_id(ctx, field)
-			case "text":
-				return ec.fieldContext_Note_text(ctx, field)
+			case "html":
+				return ec.fieldContext_Note_html(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Note", field.Name)
 		},
@@ -16478,18 +16478,18 @@ func (ec *executionContext) unmarshalInputNoteInput(ctx context.Context, obj int
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"text"}
+	fieldsInOrder := [...]string{"html"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
 			continue
 		}
 		switch k {
-		case "text":
+		case "html":
 			var err error
 
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("text"))
-			it.Text, err = ec.unmarshalNString2string(ctx, v)
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("html"))
+			it.HTML, err = ec.unmarshalNString2string(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -16506,7 +16506,7 @@ func (ec *executionContext) unmarshalInputNoteUpdateInput(ctx context.Context, o
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"id", "text"}
+	fieldsInOrder := [...]string{"id", "html"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -16521,11 +16521,11 @@ func (ec *executionContext) unmarshalInputNoteUpdateInput(ctx context.Context, o
 			if err != nil {
 				return it, err
 			}
-		case "text":
+		case "html":
 			var err error
 
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("text"))
-			it.Text, err = ec.unmarshalNString2string(ctx, v)
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("html"))
+			it.HTML, err = ec.unmarshalNString2string(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -18561,9 +18561,9 @@ func (ec *executionContext) _Note(ctx context.Context, sel ast.SelectionSet, obj
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
-		case "text":
+		case "html":
 
-			out.Values[i] = ec._Note_text(ctx, field, obj)
+			out.Values[i] = ec._Note_html(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
 				invalids++

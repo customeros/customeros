@@ -6,11 +6,11 @@ import (
 
 type NoteEntity struct {
 	Id   string
-	Text string
+	Html string
 }
 
 func (note NoteEntity) ToString() string {
-	return fmt.Sprintf("id: %s\ntext: %s", note.Id, note.Text)
+	return fmt.Sprintf("id: %s\nhtml: %s", note.Id, note.Html)
 }
 
 type NoteEntities []NoteEntity

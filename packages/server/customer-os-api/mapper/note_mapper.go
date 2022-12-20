@@ -10,7 +10,7 @@ func MapNoteInputToEntity(input *model.NoteInput) *entity.NoteEntity {
 		return nil
 	}
 	noteEntity := entity.NoteEntity{
-		Text: input.Text,
+		Html: input.HTML,
 	}
 	return &noteEntity
 }
@@ -21,7 +21,7 @@ func MapNoteUpdateInputToEntity(input *model.NoteUpdateInput) *entity.NoteEntity
 	}
 	emailEntity := entity.NoteEntity{
 		Id:   input.ID,
-		Text: input.Text,
+		Html: input.HTML,
 	}
 	return &emailEntity
 }
@@ -29,7 +29,7 @@ func MapNoteUpdateInputToEntity(input *model.NoteUpdateInput) *entity.NoteEntity
 func MapEntityToNote(entity *entity.NoteEntity) *model.Note {
 	return &model.Note{
 		ID:   entity.Id,
-		Text: entity.Text,
+		HTML: entity.Html,
 	}
 }
 
