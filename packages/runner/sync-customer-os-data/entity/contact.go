@@ -8,6 +8,7 @@ type ContactData struct {
 	FirstName string
 	LastName  string
 	Label     string
+	JobTitle  string
 	CreatedAt time.Time
 	UpdatedAt time.Time
 	Readonly  bool
@@ -19,4 +20,7 @@ type ContactData struct {
 	AdditionalEmails []string
 
 	PrimaryE164 string
+
+	CompaniesExternalIds     []string
+	PrimaryCompanyExternalId string
 }

@@ -80,9 +80,11 @@ func (s *syncService) syncContacts(dataService common.DataService, syncDate time
 			}
 
 			for _, additionalEmail := range v.AdditionalEmails {
-				if err = s.repositories.ContactRepository.MergeAdditionalEmail(tenant, contactId, additionalEmail); err != nil {
-					failedSync = true
-					log.Printf("failed merge additional email for contact with external reference %v , tenant %v :%v", v.ExternalId, tenant, err)
+				if len(additionalEmail) > 0 {
+					if err = s.repositories.ContactRepository.MergeAdditionalEmail(tenant, contactId, additionalEmail); err != nil {
+						failedSync = true
+						log.Printf("failed merge additional email for contact with external reference %v , tenant %v :%v", v.ExternalId, tenant, err)
+					}
 				}
 			}
 
@@ -90,6 +92,25 @@ func (s *syncService) syncContacts(dataService common.DataService, syncDate time
 				if err = s.repositories.ContactRepository.MergePrimaryPhoneNumber(tenant, contactId, v.PrimaryE164); err != nil {
 					failedSync = true
 					log.Printf("failed merge primary phone number for contact with external reference %v , tenant %v :%v", v.ExternalId, tenant, err)
+				}
+			}
+
+			for _, companyExternalId := range v.CompaniesExternalIds {
+				if err = s.repositories.RoleRepository.MergeRole(tenant, contactId, companyExternalId, dataService.SourceId()); err != nil {
+					failedSync = true
+					log.Printf("failed merge role for contact %v, tenant %v :%v", contactId, tenant, err)
+				}
+			}
+
+			if err = s.repositories.RoleRepository.RemoveOutdatedRoles(tenant, contactId, dataService.SourceId(), v.CompaniesExternalIds); err != nil {
+				failedSync = true
+				log.Printf("failed removing outdated roles for contact %v, tenant %v :%v", contactId, tenant, err)
+			}
+
+			if len(v.PrimaryCompanyExternalId) > 0 {
+				if err = s.repositories.RoleRepository.MergePrimaryRole(tenant, contactId, v.JobTitle, v.PrimaryCompanyExternalId, dataService.SourceId()); err != nil {
+					failedSync = true
+					log.Printf("failed merge primary role for contact %v, tenant %v :%v", contactId, tenant, err)
 				}
 			}
 
