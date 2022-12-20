@@ -8,6 +8,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/hubspot/repository"
 	"gorm.io/gorm"
 	"log"
+	"strconv"
 	"strings"
 )
 
@@ -40,17 +41,36 @@ func (s *hubspotDataService) GetContactsForSync(batchSize int) []entity.ContactD
 			log.Print(err)
 			continue
 		}
-		customerOsContacts = append(customerOsContacts, entity.ContactData{
+		// set main contact fields
+		contactForCustomerOs := entity.ContactData{
 			ExternalId:       v.Id,
 			ExternalSystem:   s.SourceId(),
 			FirstName:        hubspotContactProperties.FirstName,
 			LastName:         hubspotContactProperties.LastName,
+			JobTitle:         hubspotContactProperties.JobTitle,
 			CreatedAt:        v.CreateDate.UTC(),
 			PrimaryEmail:     hubspotContactProperties.Email,
 			AdditionalEmails: strings.Split(hubspotContactProperties.AdditionalEmails, ";"),
 			PrimaryE164:      hubspotContactProperties.PhoneNumber,
 			Readonly:         true,
-		})
+		}
+		// set reference to primary company
+		if hubspotContactProperties.PrimaryCompanyExternalId.Valid {
+			contactForCustomerOs.PrimaryCompanyExternalId = strconv.FormatFloat(hubspotContactProperties.PrimaryCompanyExternalId.Float64, 'f', 0, 64)
+		}
+		// set reference to all linked companies
+		var companiesExternalIds []int64
+		v.CompaniesExternalIds.AssignTo(&companiesExternalIds)
+		if companiesExternalIds != nil {
+			var strCompaniesExternalIds []string
+			for _, v := range companiesExternalIds {
+				companyExternalId := strconv.FormatInt(v, 10)
+				strCompaniesExternalIds = append(strCompaniesExternalIds, companyExternalId)
+			}
+			contactForCustomerOs.CompaniesExternalIds = strCompaniesExternalIds
+		}
+
+		customerOsContacts = append(customerOsContacts, contactForCustomerOs)
 		s.contacts[v.Id] = v
 	}
 	return customerOsContacts
