@@ -6,7 +6,7 @@ extend type Mutation {
 
 type Note {
     id: ID!
-    text: String!
+    html: String!
 }
 
 type NotePage implements Pages {
@@ -16,10 +16,10 @@ type NotePage implements Pages {
 }
 
 input NoteInput {
-    text: String!
+    html: String!
 }
 
 input NoteUpdateInput {
     id: ID!
-    text: String!
+    html: String!
 }

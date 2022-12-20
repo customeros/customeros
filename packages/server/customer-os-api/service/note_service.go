@@ -69,12 +69,12 @@ func (s *noteService) MergeNoteToContact(ctx context.Context, contactId string, 
 	queryResult, err := session.WriteTransaction(func(tx neo4j.Transaction) (interface{}, error) {
 		queryResult, err := tx.Run(`
 			MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant})
-			MERGE (c)-[:NOTED]->(n:Note {id:randomUUID(), text: $text})
+			MERGE (c)-[:NOTED]->(n:Note {id:randomUUID(), html: $html})
 			RETURN n`,
 			map[string]any{
 				"tenant":    common.GetContext(ctx).Tenant,
 				"contactId": contactId,
-				"text":      entity.Text,
+				"html":      entity.Html,
 			})
 		if err != nil {
 			return nil, err
@@ -97,13 +97,13 @@ func (s *noteService) UpdateNoteInContact(ctx context.Context, contactId string,
 		txResult, err := tx.Run(`
 			MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}),
 				(c)-[r:NOTED]->(n:Note {id:$noteId})
-			SET n.text=$text
+			SET n.html=$html
 			RETURN n`,
 			map[string]interface{}{
 				"tenant":    common.GetContext(ctx).Tenant,
 				"contactId": contactId,
 				"noteId":    entity.Id,
-				"text":      entity.Text,
+				"html":      entity.Html,
 			})
 		record, err := txResult.Single()
 		if err != nil {
@@ -149,7 +149,7 @@ func (s *noteService) mapDbNodeTNoteEntity(node *dbtype.Node) *entity.NoteEntity
 	props := utils.GetPropsFromNode(*node)
 	result := entity.NoteEntity{
 		Id:   utils.GetStringPropOrEmpty(props, "id"),
-		Text: utils.GetStringPropOrEmpty(props, "text"),
+		Html: utils.GetStringPropOrEmpty(props, "html"),
 	}
 	return &result
 }
