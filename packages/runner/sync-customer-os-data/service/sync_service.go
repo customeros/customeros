@@ -28,7 +28,6 @@ func NewSyncService(repositories *repository.Repositories, services *Services) S
 	}
 }
 
-// TODO automatically create external system in neo4j and link with tenant
 func (s *syncService) Sync() {
 	tenantsToSync, err := s.repositories.TenantSyncSettingsRepository.GetTenantsForSync()
 	if err != nil {
@@ -43,15 +42,21 @@ func (s *syncService) Sync() {
 			continue
 		}
 
-		defer dataService.Close()
+		defer func() {
+			dataService.Close()
+		}()
 
 		syncDate := time.Now().UTC()
 
-		_ = s.repositories.ExternalSystemRepository.Merge(v.Tenant, dataService.SourceId())
-
+		s.syncExternalSystem(dataService, v.Tenant)
+		s.syncUsers(dataService, syncDate, v.Tenant)
 		s.syncCompanies(dataService, syncDate, v.Tenant)
 		s.syncContacts(dataService, syncDate, v.Tenant)
 	}
+}
+
+func (s *syncService) syncExternalSystem(dataService common.DataService, tenant string) {
+	_ = s.repositories.ExternalSystemRepository.Merge(tenant, dataService.SourceId())
 }
 
 func (s *syncService) syncContacts(dataService common.DataService, syncDate time.Time, tenant string) {
@@ -149,6 +154,35 @@ func (s *syncService) syncCompanies(dataService common.DataService, syncDate tim
 			}
 		}
 		if len(companies) < batchSize {
+			break
+		}
+	}
+}
+
+func (s *syncService) syncUsers(dataService common.DataService, syncDate time.Time, tenant string) {
+	for {
+		users := dataService.GetUsersForSync(batchSize)
+		if len(users) == 0 {
+			log.Printf("no users found for sync from %s for tenant %s", dataService.SourceId(), tenant)
+			break
+		}
+		log.Printf("syncing %d users from %s for tenant %s", len(users), dataService.SourceId(), tenant)
+
+		for _, v := range users {
+			var failedSync = false
+
+			userId, err := s.repositories.UserRepository.MergeUser(tenant, syncDate, v)
+			if err != nil {
+				failedSync = true
+				log.Printf("failed merging user with external reference %v for tenant %v :%v", v.ExternalId, tenant, err)
+			}
+
+			log.Printf("successfully merged user with id %v for tenant %v from %v", userId, tenant, dataService.SourceId())
+			if err := dataService.MarkUserProcessed(v.ExternalId, failedSync == false); err != nil {
+				continue
+			}
+		}
+		if len(users) < batchSize {
 			break
 		}
 	}

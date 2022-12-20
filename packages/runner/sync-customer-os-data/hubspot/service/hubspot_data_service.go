@@ -17,6 +17,7 @@ type hubspotDataService struct {
 	tenant         string
 	contacts       map[string]hubspotEntity.Contact
 	companies      map[string]hubspotEntity.Company
+	owners         map[string]hubspotEntity.Owner
 }
 
 func NewHubspotDataService(airbyteStoreDb *config.AirbyteStoreDB, tenant string) common.DataService {
@@ -25,6 +26,7 @@ func NewHubspotDataService(airbyteStoreDb *config.AirbyteStoreDB, tenant string)
 		tenant:         tenant,
 		contacts:       map[string]hubspotEntity.Contact{},
 		companies:      map[string]hubspotEntity.Company{},
+		owners:         map[string]hubspotEntity.Owner{},
 	}
 }
 
@@ -106,6 +108,28 @@ func (s *hubspotDataService) GetCompaniesForSync(batchSize int) []entity.Company
 	return customerOsCompanies
 }
 
+func (s *hubspotDataService) GetUsersForSync(batchSize int) []entity.UserData {
+	hubspotOwners, err := repository.GetOwners(s.getDb(), batchSize)
+	if err != nil {
+		log.Print(err)
+		return nil
+	}
+	customerOsUsers := []entity.UserData{}
+	for _, v := range hubspotOwners {
+		customerOsUsers = append(customerOsUsers, entity.UserData{
+			ExternalId:     v.Id,
+			ExternalSystem: s.SourceId(),
+			FirstName:      v.FirstName,
+			LastName:       v.LastName,
+			Email:          v.Email,
+			CreatedAt:      v.CreateDate.UTC(),
+			Readonly:       true,
+		})
+		s.owners[v.Id] = v
+	}
+	return customerOsUsers
+}
+
 func (s *hubspotDataService) MarkContactProcessed(externalId string, synced bool) error {
 	contact, ok := s.contacts[externalId]
 	if ok {
@@ -130,13 +154,28 @@ func (s *hubspotDataService) MarkCompanyProcessed(externalId string, synced bool
 	return nil
 }
 
+func (s *hubspotDataService) MarkUserProcessed(externalId string, synced bool) error {
+	owner, ok := s.owners[externalId]
+	if ok {
+		err := repository.MarkOwnerProcessed(s.getDb(), owner, synced)
+		if err != nil {
+			log.Printf("error while marking owner with external reference %s as synced for hubspot", externalId)
+		}
+		return err
+	}
+	return nil
+}
+
 func (s *hubspotDataService) Refresh() {
 	err := s.getDb().AutoMigrate(&hubspotEntity.SyncStatusContact{})
 	if err != nil {
 		log.Print(err)
 	}
-
 	err = s.getDb().AutoMigrate(&hubspotEntity.SyncStatusCompany{})
+	if err != nil {
+		log.Print(err)
+	}
+	err = s.getDb().AutoMigrate(&hubspotEntity.SyncStatusOwner{})
 	if err != nil {
 		log.Print(err)
 	}
@@ -155,4 +194,5 @@ func (s *hubspotDataService) SourceId() string {
 func (s *hubspotDataService) Close() {
 	s.contacts = make(map[string]hubspotEntity.Contact)
 	s.companies = make(map[string]hubspotEntity.Company)
+	s.owners = make(map[string]hubspotEntity.Owner)
 }
