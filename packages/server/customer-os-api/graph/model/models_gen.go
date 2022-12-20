@@ -101,8 +101,6 @@ type Contact struct {
 	CreatedAt time.Time `json:"createdAt"`
 	// A user-defined label applied against a contact in customerOS.
 	Label *string `json:"label"`
-	// User-defined notes associated with a contact in customerOS.
-	Notes *string `json:"notes"`
 	// Readonly indicator for a contact
 	Readonly bool `json:"readonly"`
 	// User-defined field that defines the relationship type the contact has with your business.  `Customer`, `Partner`, `Lead` are examples.
@@ -126,7 +124,9 @@ type Contact struct {
 	// Definition of the contact in customerOS.
 	Definition *EntityDefinition `json:"definition"`
 	// Contact owner (user)
-	Owner         *User             `json:"owner"`
+	Owner *User `json:"owner"`
+	// Contact notes
+	Notes         *NotePage         `json:"notes"`
 	Conversations *ConversationPage `json:"conversations"`
 	Actions       []Action          `json:"actions"`
 }
@@ -205,8 +205,6 @@ type ContactInput struct {
 	LastName *string `json:"lastName"`
 	// A user-defined label attached to contact.
 	Label *string `json:"label"`
-	// User-defined notes associated with contact.
-	Notes *string `json:"notes"`
 	// User-defined field that defines the relationship type the contact has with your business.  `Customer`, `Partner`, `Lead` are examples.
 	ContactTypeID *string `json:"contactTypeId"`
 	// Readonly indicator for a contact
@@ -222,8 +220,8 @@ type ContactInput struct {
 	// A phone number associated with the contact.
 	PhoneNumber *PhoneNumberInput `json:"phoneNumber"`
 	// Id of the contact owner (user)
-	OwnerID                 *string                       `json:"ownerId"`
-	ExternalSystemReference *ExternalSystemReferenceInput `json:"externalSystemReference"`
+	OwnerID           *string                       `json:"ownerId"`
+	ExternalReference *ExternalSystemReferenceInput `json:"externalReference"`
 }
 
 type ContactType struct {
@@ -254,8 +252,6 @@ type ContactUpdateInput struct {
 	LastName *string `json:"lastName"`
 	// A user-defined label applied against a contact in customerOS.
 	Label *string `json:"label"`
-	// User-defined notes associated with contact.
-	Notes *string `json:"notes"`
 	// User-defined field that defines the relationship type the contact has with your business.  `Customer`, `Partner`, `Lead` are examples.
 	ContactTypeID *string `json:"contactTypeId"`
 	// Id of the contact owner (user)
@@ -555,6 +551,36 @@ type MessageInput struct {
 	ConversationID string         `json:"conversationId"`
 	Channel        MessageChannel `json:"channel"`
 	StartedAt      *time.Time     `json:"startedAt"`
+}
+
+type Note struct {
+	ID   string `json:"id"`
+	Text string `json:"text"`
+}
+
+type NoteInput struct {
+	Text string `json:"text"`
+}
+
+type NotePage struct {
+	Content       []*Note `json:"content"`
+	TotalPages    int     `json:"totalPages"`
+	TotalElements int64   `json:"totalElements"`
+}
+
+func (NotePage) IsPages() {}
+
+// The total number of pages included in the query response.
+// **Required.**
+func (this NotePage) GetTotalPages() int { return this.TotalPages }
+
+// The total number of elements included in the query response.
+// **Required.**
+func (this NotePage) GetTotalElements() int64 { return this.TotalElements }
+
+type NoteUpdateInput struct {
+	ID   string `json:"id"`
+	Text string `json:"text"`
 }
 
 type PageViewAction struct {
@@ -988,7 +1014,7 @@ func (e *ExternalSystemType) UnmarshalGQL(v interface{}) error {
 
 	*e = ExternalSystemType(str)
 	if !e.IsValid() {
-		return fmt.Errorf("%s is not a valid ExternalSystemId", str)
+		return fmt.Errorf("%s is not a valid ExternalSystemType", str)
 	}
 	return nil
 }

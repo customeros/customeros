@@ -21,6 +21,7 @@ type Services struct {
 	ConversationService          service.ConversationService
 	ContactTypeService           service.ContactTypeService
 	ActionsService               service.ActionsService
+	NoteService                  service.NoteService
 }
 
 func InitServices(driver *neo4j.Driver) *Services {
@@ -41,5 +42,6 @@ func InitServices(driver *neo4j.Driver) *Services {
 		ConversationService:          service.NewConversationService(repositories),
 		ContactTypeService:           service.NewContactTypeService(repositories),
 		ActionsService:               service.NewActionsService(repositories),
+		NoteService:                  service.NewNoteService(repositories),
 	}
 }

@@ -18,7 +18,6 @@ extend type Query {
      - FIRST_NAME
      - LAST_NAME
      - LABEL
-     - NOTES
      - CREATED_AT
     """
     contacts(pagination: Pagination, where: Filter, sort: [SortBy!]): ContactsPage!
@@ -70,9 +69,6 @@ type Contact implements ExtensibleEntity & Node {
     "A user-defined label applied against a contact in customerOS."
     label: String
 
-    "User-defined notes associated with a contact in customerOS."
-    notes: String
-
     "Readonly indicator for a contact"
     readonly: Boolean!
 
@@ -118,6 +114,9 @@ type Contact implements ExtensibleEntity & Node {
 
     "Contact owner (user)"
     owner: User @goField(forceResolver: true)
+
+    "Contact notes"
+    notes(pagination: Pagination): NotePage! @goField(forceResolver: true)
 
     conversations(pagination: Pagination, sort: [SortBy!]): ConversationPage! @goField(forceResolver: true)
 
@@ -173,9 +172,6 @@ input ContactInput {
 
     "A user-defined label attached to contact."
     label: String
-
-    "User-defined notes associated with contact."
-    notes: String
 
     "User-defined field that defines the relationship type the contact has with your business.  `Customer`, `Partner`, `Lead` are examples."
     contactTypeId: ID
@@ -235,9 +231,6 @@ input ContactUpdateInput {
 
     "A user-defined label applied against a contact in customerOS."
     label: String
-
-    "User-defined notes associated with contact."
-    notes: String
 
     "User-defined field that defines the relationship type the contact has with your business.  `Customer`, `Partner`, `Lead` are examples."
     contactTypeId: ID

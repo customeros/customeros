@@ -416,7 +416,6 @@ func (s *contactService) mapDbNodeToContactEntity(dbContactNode *dbtype.Node) *e
 		LastName:  utils.GetStringPropOrEmpty(props, "lastName"),
 		Label:     utils.GetStringPropOrEmpty(props, "label"),
 		Title:     utils.GetStringPropOrEmpty(props, "title"),
-		Notes:     utils.GetStringPropOrEmpty(props, "notes"),
 		CreatedAt: utils.GetTimePropOrNil(props, "createdAt"),
 		Readonly:  utils.GetBoolPropOrFalse(props, "readonly"),
 	}

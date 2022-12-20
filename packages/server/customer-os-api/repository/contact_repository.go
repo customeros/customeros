@@ -78,7 +78,6 @@ func (r *contactRepository) Create(tx neo4j.Transaction, tenant string, newConta
 				  lastName: $lastName,
 				  readonly: $readonly,
 				  label: $label,
-				  notes: $notes,
                   createdAt :$createdAt
 			})-[:CONTACT_BELONGS_TO_TENANT]->(t)
 			RETURN c`,
@@ -89,7 +88,6 @@ func (r *contactRepository) Create(tx neo4j.Transaction, tenant string, newConta
 			"lastName":  newContact.LastName,
 			"readonly":  newContact.Readonly,
 			"label":     newContact.Label,
-			"notes":     newContact.Notes,
 			"createdAt": createdAt,
 		}); err != nil {
 		return nil, err
@@ -105,7 +103,6 @@ func (r *contactRepository) Update(tx neo4j.Transaction, tenant, contactId strin
 				c.lastName=$lastName,
 				c.label=$label,
 				c.title=$title,
-				c.notes=$notes,
 			    c.readonly=$readonly
 			RETURN c`,
 		map[string]interface{}{
@@ -115,7 +112,6 @@ func (r *contactRepository) Update(tx neo4j.Transaction, tenant, contactId strin
 			"lastName":  contactDtls.LastName,
 			"label":     contactDtls.Label,
 			"title":     contactDtls.Title,
-			"notes":     contactDtls.Notes,
 			"readonly":  contactDtls.Readonly,
 		}); err != nil {
 		return nil, err

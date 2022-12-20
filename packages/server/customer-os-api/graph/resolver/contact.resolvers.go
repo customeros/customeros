@@ -99,6 +99,23 @@ func (r *contactResolver) Owner(ctx context.Context, obj *model.Contact) (*model
 	return mapper.MapEntityToUser(owner), err
 }
 
+// Notes is the resolver for the notes field.
+func (r *contactResolver) Notes(ctx context.Context, obj *model.Contact, pagination *model.Pagination) (*model.NotePage, error) {
+	if pagination == nil {
+		pagination = &model.Pagination{Page: 0, Limit: 0}
+	}
+	paginatedResult, err := r.Services.NoteService.GetNotesForContact(ctx, obj.ID, pagination.Page, pagination.Limit)
+	if err != nil {
+		graphql.AddErrorf(ctx, "Failed to get contact %s notes", obj.ID)
+		return nil, err
+	}
+	return &model.NotePage{
+		Content:       mapper.MapEntitiesToNotes(paginatedResult.Rows.(*entity.NoteEntities)),
+		TotalPages:    paginatedResult.TotalPages,
+		TotalElements: paginatedResult.TotalRows,
+	}, err
+}
+
 // Conversations is the resolver for the conversations field.
 func (r *contactResolver) Conversations(ctx context.Context, obj *model.Contact, pagination *model.Pagination, sort []*model.SortBy) (*model.ConversationPage, error) {
 	if pagination == nil {
@@ -134,7 +151,7 @@ func (r *mutationResolver) ContactCreate(ctx context.Context, input model.Contac
 		FieldSets:         mapper.MapFieldSetInputsToEntities(input.FieldSets),
 		PhoneNumberEntity: mapper.MapPhoneNumberInputToEntity(input.PhoneNumber),
 		EmailEntity:       mapper.MapEmailInputToEntity(input.Email),
-		ExternalReference: mapper.MapExternalSystemReferenceInputToRelationship(input.ExternalSystemReference),
+		ExternalReference: mapper.MapExternalSystemReferenceInputToRelationship(input.ExternalReference),
 		DefinitionId:      input.DefinitionID,
 		ContactTypeId:     input.ContactTypeID,
 		OwnerUserId:       input.OwnerID,
