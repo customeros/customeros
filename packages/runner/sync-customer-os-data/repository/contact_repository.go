@@ -12,6 +12,7 @@ type ContactRepository interface {
 	MergePrimaryEmail(tenant, contactId, email string) error
 	MergeAdditionalEmail(tenant, contactId, email string) error
 	MergePrimaryPhoneNumber(tenant, contactId, phoneNumber string) error
+	SetOwnerRelationship(tenant, contactId, userExternalId, externalSystemId string) error
 }
 
 type contactRepository struct {
@@ -126,6 +127,34 @@ func (r *contactRepository) MergePrimaryPhoneNumber(tenant, contactId, e164 stri
 				"e164":      e164,
 			})
 		return nil, err
+	})
+	return err
+}
+
+func (r *contactRepository) SetOwnerRelationship(tenant, contactId, userExternalId, externalSystemId string) error {
+	session := utils.NewNeo4jWriteSession(*r.driver)
+	defer session.Close()
+
+	_, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
+		queryResult, err := tx.Run(`
+			MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant})
+			MATCH (u:User)-[:IS_LINKED_WITH {externalId:$userExternalId}]->(e:ExternalSystem {id:$externalSystemId})-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]->(t)
+			MERGE (u)-[r:OWNS]->(c)
+			return r`,
+			map[string]interface{}{
+				"tenant":           tenant,
+				"contactId":        contactId,
+				"externalSystemId": externalSystemId,
+				"userExternalId":   userExternalId,
+			})
+		if err != nil {
+			return nil, err
+		}
+		_, err = queryResult.Single()
+		if err != nil {
+			return nil, err
+		}
+		return nil, nil
 	})
 	return err
 }

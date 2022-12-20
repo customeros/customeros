@@ -45,16 +45,17 @@ func (s *hubspotDataService) GetContactsForSync(batchSize int) []entity.ContactD
 		}
 		// set main contact fields
 		contactForCustomerOs := entity.ContactData{
-			ExternalId:       v.Id,
-			ExternalSystem:   s.SourceId(),
-			FirstName:        hubspotContactProperties.FirstName,
-			LastName:         hubspotContactProperties.LastName,
-			JobTitle:         hubspotContactProperties.JobTitle,
-			CreatedAt:        v.CreateDate.UTC(),
-			PrimaryEmail:     hubspotContactProperties.Email,
-			AdditionalEmails: strings.Split(hubspotContactProperties.AdditionalEmails, ";"),
-			PrimaryE164:      hubspotContactProperties.PhoneNumber,
-			Readonly:         true,
+			ExternalId:          v.Id,
+			ExternalSystem:      s.SourceId(),
+			FirstName:           hubspotContactProperties.FirstName,
+			LastName:            hubspotContactProperties.LastName,
+			JobTitle:            hubspotContactProperties.JobTitle,
+			CreatedAt:           v.CreateDate.UTC(),
+			PrimaryEmail:        hubspotContactProperties.Email,
+			AdditionalEmails:    strings.Split(hubspotContactProperties.AdditionalEmails, ";"),
+			PrimaryE164:         hubspotContactProperties.PhoneNumber,
+			UserOwnerExternalId: hubspotContactProperties.OwnerId,
+			Readonly:            true,
 		}
 		// set reference to primary company
 		if hubspotContactProperties.PrimaryCompanyExternalId.Valid {

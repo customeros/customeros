@@ -23,4 +23,6 @@ type ContactData struct {
 
 	CompaniesExternalIds     []string
 	PrimaryCompanyExternalId string
+
+	UserOwnerExternalId string
 }

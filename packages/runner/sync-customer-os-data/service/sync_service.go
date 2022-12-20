@@ -119,6 +119,13 @@ func (s *syncService) syncContacts(dataService common.DataService, syncDate time
 				}
 			}
 
+			if len(v.UserOwnerExternalId) > 0 {
+				if err = s.repositories.ContactRepository.SetOwnerRelationship(tenant, contactId, v.UserOwnerExternalId, dataService.SourceId()); err != nil {
+					failedSync = true
+					log.Printf("failed set owner user for contact %v, tenant %v :%v", contactId, tenant, err)
+				}
+			}
+
 			log.Printf("successfully merged contact with id %v for tenant %v from %v", contactId, tenant, dataService.SourceId())
 			if err := dataService.MarkContactProcessed(v.ExternalId, failedSync == false); err != nil {
 				continue
