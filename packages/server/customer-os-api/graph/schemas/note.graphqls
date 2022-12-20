@@ -1,0 +1,25 @@
+extend type Mutation {
+    note_MergeToContact(contactId : ID!, input: NoteInput!): Note!
+    note_UpdateInContact(contactId : ID!, input: NoteUpdateInput!): Note!
+    note_DeleteFromContact(contactId : ID!, noteId: ID!): Result!
+}
+
+type Note {
+    id: ID!
+    text: String!
+}
+
+type NotePage implements Pages {
+    content: [Note!]!
+    totalPages: Int!
+    totalElements: Int64!
+}
+
+input NoteInput {
+    text: String!
+}
+
+input NoteUpdateInput {
+    id: ID!
+    text: String!
+}

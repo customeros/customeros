@@ -1,7 +1,6 @@
 mutation CreateContactMin() {
 contact_Create(
     input: {
-    notes: ""
     }
   ) {
     id
@@ -9,7 +8,6 @@ contact_Create(
     firstName
     lastName
     label
-    notes
     readonly
     createdAt
   }

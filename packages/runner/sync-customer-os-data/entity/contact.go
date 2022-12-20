@@ -8,7 +8,6 @@ type ContactData struct {
 	FirstName string
 	LastName  string
 	Label     string
-	Notes     string
 	CreatedAt time.Time
 	UpdatedAt time.Time
 	Readonly  bool

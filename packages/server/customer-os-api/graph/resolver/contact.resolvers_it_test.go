@@ -75,7 +75,6 @@ func TestMutationResolver_ContactCreate_Min(t *testing.T) {
 	require.Equal(t, "", contact.Contact_Create.Title.String())
 	require.Equal(t, "", *contact.Contact_Create.FirstName)
 	require.Equal(t, "", *contact.Contact_Create.LastName)
-	require.Equal(t, "", *contact.Contact_Create.Notes)
 	require.Equal(t, "", *contact.Contact_Create.Label)
 	require.Equal(t, false, contact.Contact_Create.Readonly)
 
@@ -106,7 +105,6 @@ func TestMutationResolver_ContactCreate(t *testing.T) {
 	require.Equal(t, "last", *contact.Contact_Create.LastName)
 	require.Equal(t, contactTypeId, contact.Contact_Create.ContactType.ID)
 	require.Equal(t, "CUSTOMER", contact.Contact_Create.ContactType.Name)
-	require.Equal(t, "Some notes...", *contact.Contact_Create.Notes)
 	require.Equal(t, "Some label", *contact.Contact_Create.Label)
 
 	require.Equal(t, 5, len(contact.Contact_Create.CustomFields))
@@ -304,7 +302,6 @@ func TestMutationResolver_UpdateContact(t *testing.T) {
 		FirstName: "first",
 		LastName:  "last",
 		Label:     "label",
-		Notes:     "notes",
 	})
 	contactTypeIdOrig := neo4jt.CreateContactType(driver, tenantName, "ORIG")
 	contactTypeIdUpdate := neo4jt.CreateContactType(driver, tenantName, "UPDATED")
@@ -328,7 +325,6 @@ func TestMutationResolver_UpdateContact(t *testing.T) {
 	require.Equal(t, "DR", contact.Contact_Update.Title.String())
 	require.Equal(t, "updated first", *contact.Contact_Update.FirstName)
 	require.Equal(t, "updated last", *contact.Contact_Update.LastName)
-	require.Equal(t, "updated notes", *contact.Contact_Update.Notes)
 	require.Equal(t, "updated label", *contact.Contact_Update.Label)
 	require.Equal(t, contactTypeIdUpdate, contact.Contact_Update.ContactType.ID)
 	require.Equal(t, "UPDATED", contact.Contact_Update.ContactType.Name)

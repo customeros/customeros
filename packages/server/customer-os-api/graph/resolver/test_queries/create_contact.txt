@@ -6,7 +6,6 @@ contact_Create(
       lastName: "last",
       label: "Some label"
       contactTypeId: $contactTypeId,
-      notes: "Some notes...",
       readonly: true,
       createdAt: "2023-01-02T03:04:05.000Z"
       customFields: [ {name: "textField", value: "value1", datatype: TEXT},
@@ -32,7 +31,6 @@ contact_Create(
     firstName
     lastName
     label
-    notes
     readonly
     owner {
         id
