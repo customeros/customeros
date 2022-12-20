@@ -8,7 +8,7 @@ import (
 )
 
 type CompanyRepository interface {
-	MergeCompany(tenant string, syncDate time.Time, contact entity.CompanyData) (string, error)
+	MergeCompany(tenant string, syncDate time.Time, company entity.CompanyData) (string, error)
 }
 
 type companyRepository struct {
@@ -16,12 +16,12 @@ type companyRepository struct {
 }
 
 func NewCompanyRepository(driver *neo4j.Driver) CompanyRepository {
-	return &contactRepository{
+	return &companyRepository{
 		driver: driver,
 	}
 }
 
-func (r *contactRepository) MergeCompany(tenant string, syncDate time.Time, company entity.CompanyData) (string, error) {
+func (r *companyRepository) MergeCompany(tenant string, syncDate time.Time, company entity.CompanyData) (string, error) {
 	session := utils.NewNeo4jWriteSession(*r.driver)
 	defer session.Close()
 
