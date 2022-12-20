@@ -13,6 +13,7 @@ type ContactProperties struct {
 	PrimaryCompanyExternalId sql.NullFloat64 `gorm:"column:associatedcompanyid"`
 	JobTitle                 string          `gorm:"column:jobtitle"`
 	OwnerId                  string          `gorm:"column:hubspot_owner_id"`
+	LifecycleStage           string          `gorm:"column:lifecyclestage"`
 }
 
 type ContactPropertiesList []ContactProperties
