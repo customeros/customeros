@@ -13,6 +13,7 @@ type ContactRepository interface {
 	MergeAdditionalEmail(tenant, contactId, email string) error
 	MergePrimaryPhoneNumber(tenant, contactId, phoneNumber string) error
 	SetOwnerRelationship(tenant, contactId, userExternalId, externalSystemId string) error
+	MergeTextCustomField(tenant, contactId string, field entity.TextCustomField) error
 }
 
 type contactRepository struct {
@@ -155,6 +156,30 @@ func (r *contactRepository) SetOwnerRelationship(tenant, contactId, userExternal
 			return nil, err
 		}
 		return nil, nil
+	})
+	return err
+}
+
+func (r *contactRepository) MergeTextCustomField(tenant, contactId string, field entity.TextCustomField) error {
+	session := utils.NewNeo4jWriteSession(*r.driver)
+	defer session.Close()
+
+	_, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
+		_, err := tx.Run(`
+			MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) 
+			MERGE (f:TextField:CustomField {name: $name, datatype:$datatype})<-[:HAS_PROPERTY]-(c) 
+			ON CREATE SET f.textValue=$value, f.id=randomUUID(), f.source=$source
+			ON MATCH SET f.textValue=$value, f.source=$source
+			`,
+			map[string]interface{}{
+				"tenant":    tenant,
+				"contactId": contactId,
+				"name":      field.Name,
+				"value":     field.Value,
+				"source":    field.Source,
+				"datatype":  "TEXT",
+			})
+		return nil, err
 	})
 	return err
 }

@@ -126,6 +126,13 @@ func (s *syncService) syncContacts(dataService common.DataService, syncDate time
 				}
 			}
 
+			for _, f := range v.TextCustomFields {
+				if err = s.repositories.ContactRepository.MergeTextCustomField(tenant, contactId, f); err != nil {
+					failedSync = true
+					log.Printf("failed merge custom field %v for contact %v, tenant %v :%v", f.Name, contactId, tenant, err)
+				}
+			}
+
 			log.Printf("successfully merged contact with id %v for tenant %v from %v", contactId, tenant, dataService.SourceId())
 			if err := dataService.MarkContactProcessed(v.ExternalId, failedSync == false); err != nil {
 				continue

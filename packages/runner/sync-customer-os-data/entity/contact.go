@@ -2,8 +2,13 @@ package entity
 
 import "time"
 
+type TextCustomField struct {
+	Name   string
+	Value  string
+	Source string
+}
+
 type ContactData struct {
-	Id        string
 	Title     string
 	FirstName string
 	LastName  string
@@ -25,4 +30,6 @@ type ContactData struct {
 	PrimaryCompanyExternalId string
 
 	UserOwnerExternalId string
+
+	TextCustomFields []TextCustomField
 }

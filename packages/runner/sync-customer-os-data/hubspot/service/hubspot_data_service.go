@@ -72,6 +72,14 @@ func (s *hubspotDataService) GetContactsForSync(batchSize int) []entity.ContactD
 			}
 			contactForCustomerOs.CompaniesExternalIds = strCompaniesExternalIds
 		}
+		// set custom fields
+		var textCustomFields []entity.TextCustomField
+		textCustomFields = append(textCustomFields, entity.TextCustomField{
+			Name:   "Hubspot Lifecycle Stage",
+			Value:  hubspotContactProperties.LifecycleStage,
+			Source: s.SourceId(),
+		})
+		contactForCustomerOs.TextCustomFields = textCustomFields
 
 		customerOsContacts = append(customerOsContacts, contactForCustomerOs)
 		s.contacts[v.Id] = v
