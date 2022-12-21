@@ -141,3 +141,52 @@ func MarkOwnerProcessed(db *gorm.DB, owner hubspotEntity.Owner, synced bool) err
 			SyncAttempt:        syncStatusOwner.SyncAttempt + 1,
 		}).Error
 }
+
+func GetNotes(db *gorm.DB, limit int) (hubspotEntity.Notes, error) {
+	var notes hubspotEntity.Notes
+
+	cte := `
+		WITH UpToDateData AS (
+    		SELECT row_number() OVER (PARTITION BY id ORDER BY updatedat DESC) AS row_num, *
+    		FROM engagements_notes
+		)`
+	err := db.
+		Raw(cte+" SELECT u.* FROM UpToDateData u left join openline_sync_status_notes s "+
+			" on u.id = s.id and u._airbyte_ab_id = s._airbyte_ab_id and u._airbyte_engagements_notes_hashid = s._airbyte_engagements_notes_hashid "+
+			" WHERE u.row_num = ? "+
+			" and (u.contacts is not null) "+
+			" and (s.synced_to_customer_os is null or s.synced_to_customer_os = ?) "+
+			" and (s.synced_to_customer_os_attempt is null or s.synced_to_customer_os_attempt < ?) "+
+			" limit ?", 1, false, 10, limit).
+		Find(&notes).Error
+
+	if err != nil {
+		return nil, err
+	}
+	return notes, nil
+}
+
+func GetNoteProperties(db *gorm.DB, airbyteAbId, airbyteNotesHashId string) (hubspotEntity.NoteProperties, error) {
+	noteProperties := hubspotEntity.NoteProperties{}
+	err := db.Table(hubspotEntity.NoteProperties{}.TableName()).
+		Where(&hubspotEntity.NoteProperties{AirbyteAbId: airbyteAbId, AirbyteNotesHashid: airbyteNotesHashId}).
+		First(&noteProperties).Error
+	return noteProperties, err
+}
+
+func MarkNoteProcessed(db *gorm.DB, note hubspotEntity.Note, synced bool) error {
+	syncStatusNote := hubspotEntity.SyncStatusNote{
+		Id:                 note.Id,
+		AirbyteAbId:        note.AirbyteAbId,
+		AirbyteNotesHashid: note.AirbyteNotesHashid,
+	}
+	db.FirstOrCreate(&syncStatusNote, syncStatusNote)
+
+	return db.Model(&syncStatusNote).
+		Where(&hubspotEntity.SyncStatusNote{Id: note.Id, AirbyteAbId: note.AirbyteAbId, AirbyteNotesHashid: note.AirbyteNotesHashid}).
+		Updates(hubspotEntity.SyncStatusNote{
+			SyncedToCustomerOs: synced,
+			SyncedAt:           time.Now(),
+			SyncAttempt:        syncStatusNote.SyncAttempt + 1,
+		}).Error
+}

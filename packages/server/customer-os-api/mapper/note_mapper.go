@@ -28,8 +28,9 @@ func MapNoteUpdateInputToEntity(input *model.NoteUpdateInput) *entity.NoteEntity
 
 func MapEntityToNote(entity *entity.NoteEntity) *model.Note {
 	return &model.Note{
-		ID:   entity.Id,
-		HTML: entity.Html,
+		ID:        entity.Id,
+		HTML:      entity.Html,
+		CreatedAt: *entity.CreatedAt,
 	}
 }
 

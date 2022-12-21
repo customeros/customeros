@@ -241,8 +241,9 @@ type ComplexityRoot struct {
 	}
 
 	Note struct {
-		HTML func(childComplexity int) int
-		ID   func(childComplexity int) int
+		CreatedAt func(childComplexity int) int
+		HTML      func(childComplexity int) int
+		ID        func(childComplexity int) int
 	}
 
 	NotePage struct {
@@ -1549,6 +1550,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.UserCreate(childComplexity, args["input"].(model.UserInput)), true
+
+	case "Note.createdAt":
+		if e.complexity.Note.CreatedAt == nil {
+			break
+		}
+
+		return e.complexity.Note.CreatedAt(childComplexity), true
 
 	case "Note.html":
 		if e.complexity.Note.HTML == nil {
@@ -2925,6 +2933,7 @@ interface ExtensibleEntity implements Node {
 type Note {
     id: ID!
     html: String!
+    createdAt: Time!
 }
 
 type NotePage implements Pages {
@@ -10914,6 +10923,8 @@ func (ec *executionContext) fieldContext_Mutation_note_MergeToContact(ctx contex
 				return ec.fieldContext_Note_id(ctx, field)
 			case "html":
 				return ec.fieldContext_Note_html(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Note_createdAt(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Note", field.Name)
 		},
@@ -10975,6 +10986,8 @@ func (ec *executionContext) fieldContext_Mutation_note_UpdateInContact(ctx conte
 				return ec.fieldContext_Note_id(ctx, field)
 			case "html":
 				return ec.fieldContext_Note_html(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Note_createdAt(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Note", field.Name)
 		},
@@ -11457,6 +11470,50 @@ func (ec *executionContext) fieldContext_Note_html(ctx context.Context, field gr
 	return fc, nil
 }
 
+func (ec *executionContext) _Note_createdAt(ctx context.Context, field graphql.CollectedField, obj *model.Note) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Note_createdAt(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.CreatedAt, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(time.Time)
+	fc.Result = res
+	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Note_createdAt(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Note",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _NotePage_content(ctx context.Context, field graphql.CollectedField, obj *model.NotePage) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_NotePage_content(ctx, field)
 	if err != nil {
@@ -11500,6 +11557,8 @@ func (ec *executionContext) fieldContext_NotePage_content(ctx context.Context, f
 				return ec.fieldContext_Note_id(ctx, field)
 			case "html":
 				return ec.fieldContext_Note_html(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Note_createdAt(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Note", field.Name)
 		},
@@ -18564,6 +18623,13 @@ func (ec *executionContext) _Note(ctx context.Context, sel ast.SelectionSet, obj
 		case "html":
 
 			out.Values[i] = ec._Note_html(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "createdAt":
+
+			out.Values[i] = ec._Note_createdAt(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
 				invalids++

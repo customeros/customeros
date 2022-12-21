@@ -4,7 +4,9 @@ import (
 	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v4/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v4/neo4j/dbtype"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils"
+	"time"
 )
 
 type NoteDbNodeWithParentId struct {
@@ -19,6 +21,7 @@ type NoteDbNodesWithTotalCount struct {
 
 type NoteRepository interface {
 	GetPaginatedNotesForContact(session neo4j.Session, tenant, contactId string, skip, limit int) (*NoteDbNodesWithTotalCount, error)
+	MergeNote(session neo4j.Session, tenant, contactId string, entity entity.NoteEntity) (*dbtype.Node, error)
 }
 
 type noteRepository struct {
@@ -71,4 +74,26 @@ func (r *noteRepository) GetPaginatedNotesForContact(session neo4j.Session, tena
 		result.Nodes = append(result.Nodes, noteDBNodeWithParentId)
 	}
 	return result, nil
+}
+
+func (r *noteRepository) MergeNote(session neo4j.Session, tenant, contactId string, entity entity.NoteEntity) (*dbtype.Node, error) {
+	result, err := session.WriteTransaction(func(tx neo4j.Transaction) (interface{}, error) {
+		queryResult, err := tx.Run(`
+			MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant})
+			MERGE (c)-[:NOTED]->(n:Note {id:randomUUID()})
+			ON CREATE SET html=$html, createdAt=$createdAt
+			ON MATCH SET html=$html
+			RETURN n`,
+			map[string]any{
+				"tenant":    tenant,
+				"contactId": contactId,
+				"html":      entity.Html,
+				"createdAt": time.Now().UTC(),
+			})
+		return utils.ExtractSingleRecordFirstValueAsNode(queryResult, err)
+	})
+	if err != nil {
+		return nil, err
+	}
+	return result.(*dbtype.Node), nil
 }

@@ -7,6 +7,7 @@ extend type Mutation {
 type Note {
     id: ID!
     html: String!
+    createdAt: Time!
 }
 
 type NotePage implements Pages {

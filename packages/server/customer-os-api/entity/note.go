@@ -2,11 +2,13 @@ package entity
 
 import (
 	"fmt"
+	"time"
 )
 
 type NoteEntity struct {
-	Id   string
-	Html string
+	Id        string
+	Html      string
+	CreatedAt *time.Time
 }
 
 func (note NoteEntity) ToString() string {
