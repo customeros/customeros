@@ -11,11 +11,11 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/generated"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
-	repository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository/postgres"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service/container"
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/postgres"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils/decode"
+	commonRepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/repository/postgres"
 	"github.com/stretchr/testify/require"
 	"github.com/testcontainers/testcontainers-go"
 	"gorm.io/gorm"
@@ -64,7 +64,7 @@ func tearDownTestCase() func(tb testing.TB) {
 }
 
 func prepareClient() {
-	repositoryContainer := repository.InitRepositories(postgresGormDB)
+	repositoryContainer := commonRepository.InitCommonRepositories(postgresGormDB)
 	serviceContainer := container.InitServices(driver)
 	graphResolver := NewResolver(serviceContainer, repositoryContainer)
 	customCtx := &common.CustomContext{
