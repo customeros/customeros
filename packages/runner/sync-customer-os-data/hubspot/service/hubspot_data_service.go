@@ -6,8 +6,8 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/entity"
 	hubspotEntity "github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/hubspot/entity"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/hubspot/repository"
+	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
-	"log"
 	"strconv"
 	"strings"
 )
@@ -35,14 +35,14 @@ func NewHubspotDataService(airbyteStoreDb *config.AirbyteStoreDB, tenant string)
 func (s *hubspotDataService) GetContactsForSync(batchSize int) []entity.ContactData {
 	hubspotContacts, err := repository.GetContacts(s.getDb(), batchSize)
 	if err != nil {
-		log.Print(err)
+		logrus.Error(err)
 		return nil
 	}
 	customerOsContacts := []entity.ContactData{}
 	for _, v := range hubspotContacts {
 		hubspotContactProperties, err := repository.GetContactProperties(s.getDb(), v.AirbyteAbId, v.AirbyteContactsHashid)
 		if err != nil {
-			log.Print(err)
+			logrus.Error(err)
 			continue
 		}
 		// set main contact fields
@@ -92,14 +92,14 @@ func (s *hubspotDataService) GetContactsForSync(batchSize int) []entity.ContactD
 func (s *hubspotDataService) GetCompaniesForSync(batchSize int) []entity.CompanyData {
 	hubspotCompanies, err := repository.GetCompanies(s.getDb(), batchSize)
 	if err != nil {
-		log.Print(err)
+		logrus.Error(err)
 		return nil
 	}
 	customerOsCompanies := []entity.CompanyData{}
 	for _, v := range hubspotCompanies {
 		hubspotCompanyProperties, err := repository.GetCompanyProperties(s.getDb(), v.AirbyteAbId, v.AirbyteCompaniesHashid)
 		if err != nil {
-			log.Print(err)
+			logrus.Error(err)
 			continue
 		}
 		customerOsCompanies = append(customerOsCompanies, entity.CompanyData{
@@ -122,7 +122,7 @@ func (s *hubspotDataService) GetCompaniesForSync(batchSize int) []entity.Company
 func (s *hubspotDataService) GetUsersForSync(batchSize int) []entity.UserData {
 	hubspotOwners, err := repository.GetOwners(s.getDb(), batchSize)
 	if err != nil {
-		log.Print(err)
+		logrus.Error(err)
 		return nil
 	}
 	customerOsUsers := []entity.UserData{}
@@ -144,14 +144,14 @@ func (s *hubspotDataService) GetUsersForSync(batchSize int) []entity.UserData {
 func (s *hubspotDataService) GetNotesForSync(batchSize int) []entity.NoteData {
 	hubspotNotes, err := repository.GetNotes(s.getDb(), batchSize)
 	if err != nil {
-		log.Print(err)
+		logrus.Error(err)
 		return nil
 	}
 	customerOsNotes := []entity.NoteData{}
 	for _, v := range hubspotNotes {
 		hubspotNoteProperties, err := repository.GetNoteProperties(s.getDb(), v.AirbyteAbId, v.AirbyteNotesHashid)
 		if err != nil {
-			log.Print(err)
+			logrus.Error(err)
 			continue
 		}
 		// set main fields
@@ -189,7 +189,7 @@ func (s *hubspotDataService) MarkContactProcessed(externalId string, synced bool
 	if ok {
 		err := repository.MarkContactProcessed(s.getDb(), contact, synced)
 		if err != nil {
-			log.Printf("error while marking contact with external reference %s as synced for hubspot", externalId)
+			logrus.Errorf("error while marking contact with external reference %s as synced for hubspot", externalId)
 		}
 		return err
 	}
@@ -201,7 +201,7 @@ func (s *hubspotDataService) MarkCompanyProcessed(externalId string, synced bool
 	if ok {
 		err := repository.MarkCompanyProcessed(s.getDb(), company, synced)
 		if err != nil {
-			log.Printf("error while marking company with external reference %s as synced for hubspot", externalId)
+			logrus.Errorf("error while marking company with external reference %s as synced for hubspot", externalId)
 		}
 		return err
 	}
@@ -213,7 +213,7 @@ func (s *hubspotDataService) MarkUserProcessed(externalId string, synced bool) e
 	if ok {
 		err := repository.MarkOwnerProcessed(s.getDb(), owner, synced)
 		if err != nil {
-			log.Printf("error while marking owner with external reference %s as synced for hubspot", externalId)
+			logrus.Errorf("error while marking owner with external reference %s as synced for hubspot", externalId)
 		}
 		return err
 	}
@@ -225,7 +225,7 @@ func (s *hubspotDataService) MarkNoteProcessed(externalId string, synced bool) e
 	if ok {
 		err := repository.MarkNoteProcessed(s.getDb(), note, synced)
 		if err != nil {
-			log.Printf("error while marking note with external reference %s as synced for hubspot", externalId)
+			logrus.Errorf("error while marking note with external reference %s as synced for hubspot", externalId)
 		}
 		return err
 	}
@@ -235,19 +235,19 @@ func (s *hubspotDataService) MarkNoteProcessed(externalId string, synced bool) e
 func (s *hubspotDataService) Refresh() {
 	err := s.getDb().AutoMigrate(&hubspotEntity.SyncStatusContact{})
 	if err != nil {
-		log.Print(err)
+		logrus.Error(err)
 	}
 	err = s.getDb().AutoMigrate(&hubspotEntity.SyncStatusCompany{})
 	if err != nil {
-		log.Print(err)
+		logrus.Error(err)
 	}
 	err = s.getDb().AutoMigrate(&hubspotEntity.SyncStatusOwner{})
 	if err != nil {
-		log.Print(err)
+		logrus.Error(err)
 	}
 	err = s.getDb().AutoMigrate(&hubspotEntity.SyncStatusNote{})
 	if err != nil {
-		log.Print(err)
+		logrus.Error(err)
 	}
 }
 
