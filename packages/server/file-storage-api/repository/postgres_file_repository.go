@@ -13,6 +13,7 @@ type FileRepo struct {
 
 type FileRepository interface {
 	FindById(ctx context.Context, id string, tenantId string) helper.QueryResult
+	Save(ctx context.Context, file entity.File) helper.QueryResult
 }
 
 func NewFileRepo(db *gorm.DB) *FileRepo {
@@ -20,15 +21,26 @@ func NewFileRepo(db *gorm.DB) *FileRepo {
 }
 
 func (r *FileRepo) FindById(ctx context.Context, id string, tenantId string) helper.QueryResult {
-	var file entity.FileEntity
+	var file entity.File
 
 	err := r.db.
 		Where("id = ?", id).
-		Where("tenantId = ?", tenantId).
+		Where("tenant_id = ?", tenantId).
 		First(&file).Error
 
 	if err != nil {
 		return helper.QueryResult{Error: err}
+	}
+
+	return helper.QueryResult{Result: &file}
+}
+
+func (r *FileRepo) Save(ctx context.Context, file entity.File) helper.QueryResult {
+
+	result := r.db.Create(&file)
+
+	if result.Error != nil {
+		return helper.QueryResult{Error: result.Error}
 	}
 
 	return helper.QueryResult{Result: &file}

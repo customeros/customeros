@@ -1,14 +1,22 @@
 package main
 
 import (
+	"fmt"
 	"github.com/caarlos0/env/v6"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+	"github.com/h2non/filetype"
 	"github.com/joho/godotenv"
 	"github.com/openline-ai/openline-customer-os/packages/server/file-storage-api/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/file-storage-api/config/logger"
+	"github.com/openline-ai/openline-customer-os/packages/server/file-storage-api/dto"
+	"github.com/openline-ai/openline-customer-os/packages/server/file-storage-api/mapper"
 	"github.com/openline-ai/openline-customer-os/packages/server/file-storage-api/repository"
+	"github.com/openline-ai/openline-customer-os/packages/server/file-storage-api/repository/entity"
+	"github.com/openline-ai/openline-customer-os/packages/server/file-storage-api/repository/helper"
+	"gorm.io/gorm"
 	"log"
+	"os"
 )
 
 const apiPort = "10000"
@@ -81,14 +89,92 @@ func main() {
 
 	// Setting up Gin
 	r := gin.Default()
+	r.MaxMultipartMemory = cfg.MaxFileSizeMB << 20
 
 	corsConfig := cors.DefaultConfig()
 	corsConfig.AllowOrigins = []string{"*"}
 	r.Use(cors.New(corsConfig))
 
-	r.GET("/", (func(c *gin.Context) {
-		c.JSON(200, gin.H{"status": "OK"})
-	}))
+	r.POST("/file", func(c *gin.Context) {
+		// single file
+		multipartFile, _ := c.FormFile("file")
+		log.Println(multipartFile.Filename)
+
+		file, err := multipartFile.Open()
+
+		if err != nil {
+			c.AbortWithStatus(500) //todo
+			return
+		}
+
+		head := make([]byte, 1024)
+		_, err = file.Read(head)
+		if err != nil {
+			c.AbortWithStatus(500) //todo
+			return
+		}
+
+		//TODO docx is not recognized
+		//https://github.com/h2non/filetype/issues/121
+		kind, _ := filetype.Match(head)
+		if kind == filetype.Unknown {
+			fmt.Println("Unknown file type")
+			return
+		}
+
+		e := entity.File{
+			Name:      multipartFile.Filename,
+			Extension: kind.Extension,
+			MIME:      kind.MIME.Value,
+		}
+
+		err = db.GormDB.Transaction(func(tx *gorm.DB) error {
+			result := repositoryContainer.FileRepo.Save(c, e)
+
+			if result.Error != nil {
+				return err
+			}
+
+			c.JSON(200, MapFileEntityToDTO(cfg, result))
+			return nil
+		})
+		if err != nil {
+			c.AbortWithStatus(500) //todo
+			return
+		}
+	})
+
+	r.GET("/file/:id", func(c *gin.Context) {
+		id := c.Param("id")
+
+		result := repositoryContainer.FileRepo.FindById(c, id, "")
+
+		if result.Error != nil {
+			c.AbortWithStatus(500) //todo
+			return
+		}
+
+		c.JSON(200, MapFileEntityToDTO(cfg, result))
+	})
+
+	r.GET("/file/:id/download", func(c *gin.Context) {
+		id := c.Param("id")
+
+		result := repositoryContainer.FileRepo.FindById(c, id, "")
+
+		if result.Error != nil {
+			c.AbortWithStatus(500) //todo
+			return
+		}
+
+		contents, _ := os.ReadFile("main.go") //TODO
+
+		file := result.Result.(*entity.File)
+		c.Header("Content-Disposition", "attachment; filename="+file.Name)
+		c.Header("Content-Type", file.MIME)
+		c.Header("Accept-Length", fmt.Sprintf("%d", len(contents)))
+		c.Writer.Write(contents)
+	})
 
 	r.GET("/health", healthCheckHandler)
 	r.GET("/readiness", healthCheckHandler)
@@ -116,4 +202,9 @@ func loadConfiguration() *config.Config {
 
 func healthCheckHandler(c *gin.Context) {
 	c.JSON(200, gin.H{"status": "OK"})
+}
+
+func MapFileEntityToDTO(cfg *config.Config, result helper.QueryResult) *dto.File {
+	serviceUrl := fmt.Sprintf("%s:%s/file", cfg.ApiBaseUrl, cfg.ApiPort)
+	return mapper.MapFileEntityToDTO(result.Result.(*entity.File), serviceUrl)
 }
