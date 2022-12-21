@@ -1,8 +1,10 @@
 package config
 
 type Config struct {
-	ApiPort  string `env:"PORT"`
-	Postgres struct {
+	ApiPort       string `env:"PORT"`
+	ApiBaseUrl    string `env:"BASE_URL"`
+	MaxFileSizeMB int64  `env:"MAX_FILE_SIZE_MB"`
+	Postgres      struct {
 		Host            string `env:"POSTGRES_HOST,required"`
 		Port            string `env:"POSTGRES_PORT,required"`
 		User            string `env:"POSTGRES_USER,required,unset"`
