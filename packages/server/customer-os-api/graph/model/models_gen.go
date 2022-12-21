@@ -554,8 +554,9 @@ type MessageInput struct {
 }
 
 type Note struct {
-	ID   string `json:"id"`
-	HTML string `json:"html"`
+	ID        string    `json:"id"`
+	HTML      string    `json:"html"`
+	CreatedAt time.Time `json:"createdAt"`
 }
 
 type NoteInput struct {

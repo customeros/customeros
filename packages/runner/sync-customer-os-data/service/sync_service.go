@@ -52,6 +52,7 @@ func (s *syncService) Sync() {
 		s.syncUsers(dataService, syncDate, v.Tenant)
 		s.syncCompanies(dataService, syncDate, v.Tenant)
 		s.syncContacts(dataService, syncDate, v.Tenant)
+		s.syncNotes(dataService, syncDate, v.Tenant)
 	}
 }
 
@@ -197,6 +198,51 @@ func (s *syncService) syncUsers(dataService common.DataService, syncDate time.Ti
 			}
 		}
 		if len(users) < batchSize {
+			break
+		}
+	}
+}
+
+func (s *syncService) syncNotes(dataService common.DataService, syncDate time.Time, tenant string) {
+	for {
+		notes := dataService.GetNotesForSync(batchSize)
+		if len(notes) == 0 {
+			log.Printf("no notes found for sync from %s for tenant %s", dataService.SourceId(), tenant)
+			break
+		}
+		log.Printf("syncing %d notes from %s for tenant %s", len(notes), dataService.SourceId(), tenant)
+
+		for _, note := range notes {
+			var failedSync = false
+
+			noteId, err := s.repositories.NoteRepository.MergeNote(tenant, syncDate, note)
+			if err != nil {
+				failedSync = true
+				log.Printf("failed merge note with external reference %v for tenant %v :%v", note.ExternalId, tenant, err)
+			}
+
+			for _, contactExternalId := range note.ContactsExternalIds {
+				err = s.repositories.NoteRepository.NoteLinkWithContactByExternalId(tenant, noteId, contactExternalId, dataService.SourceId())
+				if err != nil {
+					failedSync = true
+					log.Printf("failed link note %v with contact for tenant %v :%v", noteId, tenant, err)
+				}
+			}
+
+			if len(note.UserExternalId) > 0 {
+				err = s.repositories.NoteRepository.NoteLinkWithUserByExternalId(tenant, noteId, note.UserExternalId, dataService.SourceId())
+				if err != nil {
+					failedSync = true
+					log.Printf("failed link note %v with user for tenant %v :%v", noteId, tenant, err)
+				}
+			}
+
+			log.Printf("successfully merged note with id %v for tenant %v from %v", noteId, tenant, dataService.SourceId())
+			if err := dataService.MarkNoteProcessed(note.ExternalId, failedSync == false); err != nil {
+				continue
+			}
+		}
+		if len(notes) < batchSize {
 			break
 		}
 	}

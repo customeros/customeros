@@ -55,7 +55,7 @@ func (s *noteService) GetNotesForContact(ctx context.Context, contactId string, 
 	entities := entity.NoteEntities{}
 
 	for _, v := range noteDbNodesWithTotalCount.Nodes {
-		noteEntity := *s.mapDbNodeTNoteEntity(v.Node)
+		noteEntity := *s.mapDbNodeToNoteEntity(v.Node)
 		entities = append(entities, noteEntity)
 	}
 	paginatedResult.SetRows(&entities)
@@ -66,27 +66,11 @@ func (s *noteService) MergeNoteToContact(ctx context.Context, contactId string, 
 	session := utils.NewNeo4jWriteSession(s.getDriver())
 	defer session.Close()
 
-	queryResult, err := session.WriteTransaction(func(tx neo4j.Transaction) (interface{}, error) {
-		queryResult, err := tx.Run(`
-			MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant})
-			MERGE (c)-[:NOTED]->(n:Note {id:randomUUID(), html: $html})
-			RETURN n`,
-			map[string]any{
-				"tenant":    common.GetContext(ctx).Tenant,
-				"contactId": contactId,
-				"html":      entity.Html,
-			})
-		if err != nil {
-			return nil, err
-		}
-		return queryResult.Single()
-	})
+	dbNode, err := s.repository.NoteRepository.MergeNote(session, common.GetContext(ctx).Tenant, contactId, *entity)
 	if err != nil {
 		return nil, err
 	}
-
-	node := queryResult.(*db.Record).Values[0].(dbtype.Node)
-	return s.mapDbNodeTNoteEntity(&node), nil
+	return s.mapDbNodeToNoteEntity(dbNode), nil
 }
 
 func (s *noteService) UpdateNoteInContact(ctx context.Context, contactId string, entity *entity.NoteEntity) (*entity.NoteEntity, error) {
@@ -116,7 +100,7 @@ func (s *noteService) UpdateNoteInContact(ctx context.Context, contactId string,
 	}
 
 	node := queryResult.(*db.Record).Values[0].(dbtype.Node)
-	var emailEntity = s.mapDbNodeTNoteEntity(&node)
+	var emailEntity = s.mapDbNodeToNoteEntity(&node)
 	return emailEntity, nil
 }
 
@@ -145,11 +129,12 @@ func (s *noteService) DeleteFromContact(ctx context.Context, contactId string, n
 	return queryResult.(bool), nil
 }
 
-func (s *noteService) mapDbNodeTNoteEntity(node *dbtype.Node) *entity.NoteEntity {
+func (s *noteService) mapDbNodeToNoteEntity(node *dbtype.Node) *entity.NoteEntity {
 	props := utils.GetPropsFromNode(*node)
 	result := entity.NoteEntity{
-		Id:   utils.GetStringPropOrEmpty(props, "id"),
-		Html: utils.GetStringPropOrEmpty(props, "html"),
+		Id:        utils.GetStringPropOrEmpty(props, "id"),
+		Html:      utils.GetStringPropOrEmpty(props, "html"),
+		CreatedAt: utils.GetTimePropOrNil(props, "createdAt"),
 	}
 	return &result
 }

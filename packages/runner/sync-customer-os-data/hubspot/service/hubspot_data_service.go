@@ -18,6 +18,7 @@ type hubspotDataService struct {
 	contacts       map[string]hubspotEntity.Contact
 	companies      map[string]hubspotEntity.Company
 	owners         map[string]hubspotEntity.Owner
+	notes          map[string]hubspotEntity.Note
 }
 
 func NewHubspotDataService(airbyteStoreDb *config.AirbyteStoreDB, tenant string) common.DataService {
@@ -27,6 +28,7 @@ func NewHubspotDataService(airbyteStoreDb *config.AirbyteStoreDB, tenant string)
 		contacts:       map[string]hubspotEntity.Contact{},
 		companies:      map[string]hubspotEntity.Company{},
 		owners:         map[string]hubspotEntity.Owner{},
+		notes:          map[string]hubspotEntity.Note{},
 	}
 }
 
@@ -139,6 +141,49 @@ func (s *hubspotDataService) GetUsersForSync(batchSize int) []entity.UserData {
 	return customerOsUsers
 }
 
+func (s *hubspotDataService) GetNotesForSync(batchSize int) []entity.NoteData {
+	hubspotNotes, err := repository.GetNotes(s.getDb(), batchSize)
+	if err != nil {
+		log.Print(err)
+		return nil
+	}
+	customerOsNotes := []entity.NoteData{}
+	for _, v := range hubspotNotes {
+		hubspotNoteProperties, err := repository.GetNoteProperties(s.getDb(), v.AirbyteAbId, v.AirbyteNotesHashid)
+		if err != nil {
+			log.Print(err)
+			continue
+		}
+		// set main fields
+		noteForCustomerOs := entity.NoteData{
+			ExternalId:     v.Id,
+			Source:         s.SourceId(),
+			CreatedAt:      v.CreateDate.UTC(),
+			Html:           hubspotNoteProperties.NoteBody,
+			UserExternalId: hubspotNoteProperties.OwnerId,
+		}
+		// set reference to all linked contacts
+		var contactsExternalIds []any
+		v.ContactsExternalIds.AssignTo(&contactsExternalIds)
+		var strContactsExternalIds []string
+		for _, c := range contactsExternalIds {
+			if _, ok := c.(string); ok {
+				strContactsExternalIds = append(strContactsExternalIds, c.(string))
+			} else if _, ok := c.(int64); ok {
+				contactExternalId := strconv.FormatInt(c.(int64), 10)
+				strContactsExternalIds = append(strContactsExternalIds, contactExternalId)
+			} else if _, ok := c.(float64); ok {
+				contactExternalId := strconv.FormatFloat(c.(float64), 'f', 0, 64)
+				strContactsExternalIds = append(strContactsExternalIds, contactExternalId)
+			}
+		}
+		noteForCustomerOs.ContactsExternalIds = strContactsExternalIds
+		customerOsNotes = append(customerOsNotes, noteForCustomerOs)
+		s.notes[v.Id] = v
+	}
+	return customerOsNotes
+}
+
 func (s *hubspotDataService) MarkContactProcessed(externalId string, synced bool) error {
 	contact, ok := s.contacts[externalId]
 	if ok {
@@ -175,6 +220,18 @@ func (s *hubspotDataService) MarkUserProcessed(externalId string, synced bool) e
 	return nil
 }
 
+func (s *hubspotDataService) MarkNoteProcessed(externalId string, synced bool) error {
+	note, ok := s.notes[externalId]
+	if ok {
+		err := repository.MarkNoteProcessed(s.getDb(), note, synced)
+		if err != nil {
+			log.Printf("error while marking note with external reference %s as synced for hubspot", externalId)
+		}
+		return err
+	}
+	return nil
+}
+
 func (s *hubspotDataService) Refresh() {
 	err := s.getDb().AutoMigrate(&hubspotEntity.SyncStatusContact{})
 	if err != nil {
@@ -185,6 +242,10 @@ func (s *hubspotDataService) Refresh() {
 		log.Print(err)
 	}
 	err = s.getDb().AutoMigrate(&hubspotEntity.SyncStatusOwner{})
+	if err != nil {
+		log.Print(err)
+	}
+	err = s.getDb().AutoMigrate(&hubspotEntity.SyncStatusNote{})
 	if err != nil {
 		log.Print(err)
 	}
@@ -204,4 +265,5 @@ func (s *hubspotDataService) Close() {
 	s.contacts = make(map[string]hubspotEntity.Contact)
 	s.companies = make(map[string]hubspotEntity.Company)
 	s.owners = make(map[string]hubspotEntity.Owner)
+	s.notes = make(map[string]hubspotEntity.Note)
 }
