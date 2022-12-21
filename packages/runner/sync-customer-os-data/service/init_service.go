@@ -3,8 +3,8 @@ package service
 import (
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/entity"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/repository"
+	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
-	"log"
 )
 
 type InitService interface {
@@ -30,14 +30,12 @@ func (s *initService) Init() {
 
 	err := db.AutoMigrate(&entity.TenantSyncSettings{})
 	if err != nil {
-		log.Print(err)
-		panic(err)
+		logrus.Fatal(err)
 	}
 
 	err = db.AutoMigrate(&entity.SyncRun{})
 	if err != nil {
-		log.Print(err)
-		panic(err)
+		logrus.Fatal(err)
 	}
 }
 

@@ -6,7 +6,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/entity"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/hubspot/service"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/repository"
-	"log"
+	"github.com/sirupsen/logrus"
 	"time"
 )
 
@@ -31,14 +31,14 @@ func NewSyncService(repositories *repository.Repositories, services *Services) S
 func (s *syncService) Sync() {
 	tenantsToSync, err := s.repositories.TenantSyncSettingsRepository.GetTenantsForSync()
 	if err != nil {
-		log.Print("failed to get tenants for sync")
+		logrus.Error("failed to get tenants for sync")
 		return
 	}
 
 	for _, v := range tenantsToSync {
 		dataService, err := s.dataService(v)
 		if err != nil {
-			log.Printf("failed to get data service for tenant %v: %v", v.Tenant, err)
+			logrus.Errorf("failed to get data service for tenant %v: %v", v.Tenant, err)
 			continue
 		}
 
@@ -64,10 +64,10 @@ func (s *syncService) syncContacts(dataService common.DataService, syncDate time
 	for {
 		contacts := dataService.GetContactsForSync(batchSize)
 		if len(contacts) == 0 {
-			log.Printf("no contacts found for sync from %s for tenant %s", dataService.SourceId(), tenant)
+			logrus.Debugf("no contacts found for sync from %s for tenant %s", dataService.SourceId(), tenant)
 			break
 		}
-		log.Printf("syncing %d contacts from %s for tenant %s", len(contacts), dataService.SourceId(), tenant)
+		logrus.Infof("syncing %d contacts from %s for tenant %s", len(contacts), dataService.SourceId(), tenant)
 
 		for _, v := range contacts {
 			var failedSync = false
@@ -75,13 +75,13 @@ func (s *syncService) syncContacts(dataService common.DataService, syncDate time
 			contactId, err := s.repositories.ContactRepository.MergeContact(tenant, syncDate, v)
 			if err != nil {
 				failedSync = true
-				log.Printf("failed merge contact with external reference %v for tenant %v :%v", v.ExternalId, tenant, err)
+				logrus.Errorf("failed merge contact with external reference %v for tenant %v :%v", v.ExternalId, tenant, err)
 			}
 
 			if len(v.PrimaryEmail) > 0 {
 				if err = s.repositories.ContactRepository.MergePrimaryEmail(tenant, contactId, v.PrimaryEmail); err != nil {
 					failedSync = true
-					log.Printf("failed merge primary email for contact with external reference %v , tenant %v :%v", v.ExternalId, tenant, err)
+					logrus.Errorf("failed merge primary email for contact with external reference %v , tenant %v :%v", v.ExternalId, tenant, err)
 				}
 			}
 
@@ -89,7 +89,7 @@ func (s *syncService) syncContacts(dataService common.DataService, syncDate time
 				if len(additionalEmail) > 0 {
 					if err = s.repositories.ContactRepository.MergeAdditionalEmail(tenant, contactId, additionalEmail); err != nil {
 						failedSync = true
-						log.Printf("failed merge additional email for contact with external reference %v , tenant %v :%v", v.ExternalId, tenant, err)
+						logrus.Errorf("failed merge additional email for contact with external reference %v , tenant %v :%v", v.ExternalId, tenant, err)
 					}
 				}
 			}
@@ -97,44 +97,44 @@ func (s *syncService) syncContacts(dataService common.DataService, syncDate time
 			if len(v.PrimaryE164) > 0 {
 				if err = s.repositories.ContactRepository.MergePrimaryPhoneNumber(tenant, contactId, v.PrimaryE164); err != nil {
 					failedSync = true
-					log.Printf("failed merge primary phone number for contact with external reference %v , tenant %v :%v", v.ExternalId, tenant, err)
+					logrus.Errorf("failed merge primary phone number for contact with external reference %v , tenant %v :%v", v.ExternalId, tenant, err)
 				}
 			}
 
 			for _, companyExternalId := range v.CompaniesExternalIds {
 				if err = s.repositories.RoleRepository.MergeRole(tenant, contactId, companyExternalId, dataService.SourceId()); err != nil {
 					failedSync = true
-					log.Printf("failed merge role for contact %v, tenant %v :%v", contactId, tenant, err)
+					logrus.Errorf("failed merge role for contact %v, tenant %v :%v", contactId, tenant, err)
 				}
 			}
 
 			if err = s.repositories.RoleRepository.RemoveOutdatedRoles(tenant, contactId, dataService.SourceId(), v.CompaniesExternalIds); err != nil {
 				failedSync = true
-				log.Printf("failed removing outdated roles for contact %v, tenant %v :%v", contactId, tenant, err)
+				logrus.Errorf("failed removing outdated roles for contact %v, tenant %v :%v", contactId, tenant, err)
 			}
 
 			if len(v.PrimaryCompanyExternalId) > 0 {
 				if err = s.repositories.RoleRepository.MergePrimaryRole(tenant, contactId, v.JobTitle, v.PrimaryCompanyExternalId, dataService.SourceId()); err != nil {
 					failedSync = true
-					log.Printf("failed merge primary role for contact %v, tenant %v :%v", contactId, tenant, err)
+					logrus.Errorf("failed merge primary role for contact %v, tenant %v :%v", contactId, tenant, err)
 				}
 			}
 
 			if len(v.UserOwnerExternalId) > 0 {
 				if err = s.repositories.ContactRepository.SetOwnerRelationship(tenant, contactId, v.UserOwnerExternalId, dataService.SourceId()); err != nil {
 					failedSync = true
-					log.Printf("failed set owner user for contact %v, tenant %v :%v", contactId, tenant, err)
+					logrus.Errorf("failed set owner user for contact %v, tenant %v :%v", contactId, tenant, err)
 				}
 			}
 
 			for _, f := range v.TextCustomFields {
 				if err = s.repositories.ContactRepository.MergeTextCustomField(tenant, contactId, f); err != nil {
 					failedSync = true
-					log.Printf("failed merge custom field %v for contact %v, tenant %v :%v", f.Name, contactId, tenant, err)
+					logrus.Errorf("failed merge custom field %v for contact %v, tenant %v :%v", f.Name, contactId, tenant, err)
 				}
 			}
 
-			log.Printf("successfully merged contact with id %v for tenant %v from %v", contactId, tenant, dataService.SourceId())
+			logrus.Debugf("successfully merged contact with id %v for tenant %v from %v", contactId, tenant, dataService.SourceId())
 			if err := dataService.MarkContactProcessed(v.ExternalId, failedSync == false); err != nil {
 				continue
 			}
@@ -149,10 +149,10 @@ func (s *syncService) syncCompanies(dataService common.DataService, syncDate tim
 	for {
 		companies := dataService.GetCompaniesForSync(batchSize)
 		if len(companies) == 0 {
-			log.Printf("no companies found for sync from %s for tenant %s", dataService.SourceId(), tenant)
+			logrus.Debugf("no companies found for sync from %s for tenant %s", dataService.SourceId(), tenant)
 			break
 		}
-		log.Printf("syncing %d companies from %s for tenant %s", len(companies), dataService.SourceId(), tenant)
+		logrus.Infof("syncing %d companies from %s for tenant %s", len(companies), dataService.SourceId(), tenant)
 
 		for _, v := range companies {
 			var failedSync = false
@@ -160,10 +160,10 @@ func (s *syncService) syncCompanies(dataService common.DataService, syncDate tim
 			companyId, err := s.repositories.CompanyRepository.MergeCompany(tenant, syncDate, v)
 			if err != nil {
 				failedSync = true
-				log.Printf("failed merge company with external reference %v for tenant %v :%v", v.ExternalId, tenant, err)
+				logrus.Errorf("failed merge company with external reference %v for tenant %v :%v", v.ExternalId, tenant, err)
 			}
 
-			log.Printf("successfully merged company with id %v for tenant %v from %v", companyId, tenant, dataService.SourceId())
+			logrus.Debugf("successfully merged company with id %v for tenant %v from %v", companyId, tenant, dataService.SourceId())
 			if err := dataService.MarkCompanyProcessed(v.ExternalId, failedSync == false); err != nil {
 				continue
 			}
@@ -178,10 +178,10 @@ func (s *syncService) syncUsers(dataService common.DataService, syncDate time.Ti
 	for {
 		users := dataService.GetUsersForSync(batchSize)
 		if len(users) == 0 {
-			log.Printf("no users found for sync from %s for tenant %s", dataService.SourceId(), tenant)
+			logrus.Debugf("no users found for sync from %s for tenant %s", dataService.SourceId(), tenant)
 			break
 		}
-		log.Printf("syncing %d users from %s for tenant %s", len(users), dataService.SourceId(), tenant)
+		logrus.Infof("syncing %d users from %s for tenant %s", len(users), dataService.SourceId(), tenant)
 
 		for _, v := range users {
 			var failedSync = false
@@ -189,10 +189,10 @@ func (s *syncService) syncUsers(dataService common.DataService, syncDate time.Ti
 			userId, err := s.repositories.UserRepository.MergeUser(tenant, syncDate, v)
 			if err != nil {
 				failedSync = true
-				log.Printf("failed merging user with external reference %v for tenant %v :%v", v.ExternalId, tenant, err)
+				logrus.Errorf("failed merging user with external reference %v for tenant %v :%v", v.ExternalId, tenant, err)
 			}
 
-			log.Printf("successfully merged user with id %v for tenant %v from %v", userId, tenant, dataService.SourceId())
+			logrus.Debugf("successfully merged user with id %v for tenant %v from %v", userId, tenant, dataService.SourceId())
 			if err := dataService.MarkUserProcessed(v.ExternalId, failedSync == false); err != nil {
 				continue
 			}
@@ -207,10 +207,10 @@ func (s *syncService) syncNotes(dataService common.DataService, syncDate time.Ti
 	for {
 		notes := dataService.GetNotesForSync(batchSize)
 		if len(notes) == 0 {
-			log.Printf("no notes found for sync from %s for tenant %s", dataService.SourceId(), tenant)
+			logrus.Debugf("no notes found for sync from %s for tenant %s", dataService.SourceId(), tenant)
 			break
 		}
-		log.Printf("syncing %d notes from %s for tenant %s", len(notes), dataService.SourceId(), tenant)
+		logrus.Infof("syncing %d notes from %s for tenant %s", len(notes), dataService.SourceId(), tenant)
 
 		for _, note := range notes {
 			var failedSync = false
@@ -218,14 +218,14 @@ func (s *syncService) syncNotes(dataService common.DataService, syncDate time.Ti
 			noteId, err := s.repositories.NoteRepository.MergeNote(tenant, syncDate, note)
 			if err != nil {
 				failedSync = true
-				log.Printf("failed merge note with external reference %v for tenant %v :%v", note.ExternalId, tenant, err)
+				logrus.Errorf("failed merge note with external reference %v for tenant %v :%v", note.ExternalId, tenant, err)
 			}
 
 			for _, contactExternalId := range note.ContactsExternalIds {
 				err = s.repositories.NoteRepository.NoteLinkWithContactByExternalId(tenant, noteId, contactExternalId, dataService.SourceId())
 				if err != nil {
 					failedSync = true
-					log.Printf("failed link note %v with contact for tenant %v :%v", noteId, tenant, err)
+					logrus.Errorf("failed link note %v with contact for tenant %v :%v", noteId, tenant, err)
 				}
 			}
 
@@ -233,11 +233,11 @@ func (s *syncService) syncNotes(dataService common.DataService, syncDate time.Ti
 				err = s.repositories.NoteRepository.NoteLinkWithUserByExternalId(tenant, noteId, note.UserExternalId, dataService.SourceId())
 				if err != nil {
 					failedSync = true
-					log.Printf("failed link note %v with user for tenant %v :%v", noteId, tenant, err)
+					logrus.Errorf("failed link note %v with user for tenant %v :%v", noteId, tenant, err)
 				}
 			}
 
-			log.Printf("successfully merged note with id %v for tenant %v from %v", noteId, tenant, dataService.SourceId())
+			logrus.Debugf("successfully merged note with id %v for tenant %v from %v", noteId, tenant, dataService.SourceId())
 			if err := dataService.MarkNoteProcessed(note.ExternalId, failedSync == false); err != nil {
 				continue
 			}
