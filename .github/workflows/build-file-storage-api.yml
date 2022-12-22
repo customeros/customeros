@@ -64,7 +64,7 @@ jobs:
     needs:
       - build
 
-#    if: github.ref_name == 'otter' || github.event_name == 'release'
+    if: github.ref_name == 'otter' || github.event_name == 'release'
     runs-on: ubuntu-latest
 
     steps:
@@ -77,7 +77,8 @@ jobs:
           mkdir tmp-sources/customer-os-common-module
           mkdir tmp-sources/file-storage-api
           
-          cp -rv `ls -A | grep -vE "tmp-sources|tmp-sources/file-storage-api"` tmp-sources/file-storage-api
+          rsync -av --progress --exclude="tmp-sources" * tmp-sources/file-storage-api
+          cp .env tmp-sources/file-storage-api/.env
           cp -r ../customer-os-common-module/* tmp-sources/customer-os-common-module
           
           cp Dockerfile tmp-sources/Dockerfile
