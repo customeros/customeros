@@ -1,26 +1,27 @@
 package repository
 
 import (
-	"context"
 	"github.com/openline-ai/openline-customer-os/packages/server/file-storage-api/repository/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/file-storage-api/repository/helper"
 	"gorm.io/gorm"
 )
 
-type FileRepo struct {
+type FileRepository interface {
+	FindById(tenantId string, id string) helper.QueryResult
+	Save(file *entity.File) helper.QueryResult
+}
+
+type fileRepo struct {
 	db *gorm.DB
 }
 
-type FileRepository interface {
-	FindById(ctx context.Context, id string, tenantId string) helper.QueryResult
-	Save(ctx context.Context, file *entity.File) helper.QueryResult
+func NewFileRepo(db *gorm.DB) FileRepository {
+	return &fileRepo{
+		db: db,
+	}
 }
 
-func NewFileRepo(db *gorm.DB) *FileRepo {
-	return &FileRepo{db: db}
-}
-
-func (r *FileRepo) FindById(ctx context.Context, id string, tenantId string) helper.QueryResult {
+func (r *fileRepo) FindById(tenantId string, id string) helper.QueryResult {
 	var file entity.File
 
 	err := r.db.
@@ -35,7 +36,7 @@ func (r *FileRepo) FindById(ctx context.Context, id string, tenantId string) hel
 	return helper.QueryResult{Result: &file}
 }
 
-func (r *FileRepo) Save(ctx context.Context, file *entity.File) helper.QueryResult {
+func (r *fileRepo) Save(file *entity.File) helper.QueryResult {
 
 	result := r.db.Create(&file)
 

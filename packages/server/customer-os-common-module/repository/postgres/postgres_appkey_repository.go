@@ -12,18 +12,18 @@ type AppKeyRepo struct {
 }
 
 type AppKeyRepository interface {
-	FindByKey(ctx context.Context, key string) helper.QueryResult
+	FindByKey(ctx context.Context, app string, key string) helper.QueryResult
 }
 
 func NewAppKeyRepo(db *gorm.DB) *AppKeyRepo {
 	return &AppKeyRepo{db: db}
 }
 
-func (r *AppKeyRepo) FindByKey(ctx context.Context, key string) helper.QueryResult {
-	var appKey entity.AppKeyEntity
+func (r *AppKeyRepo) FindByKey(ctx context.Context, app string, key string) helper.QueryResult {
+	var appKey entity.AppKey
 
 	err := r.db.
-		Where("app_id = ?", "customer-os-api").
+		Where("app_id = ?", app).
 		Where("key = ?", key).
 		Where("active = ?", true).
 		First(&appKey).Error

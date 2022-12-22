@@ -6,19 +6,26 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/repository/postgres/entity"
 )
 
-func ApiKeyChecker(appKeyRepo repository.AppKeyRepository) func(c *gin.Context) {
+type App string
+
+const (
+	CUSTOMER_OS_API  App = "customer-os-api"
+	FILE_STORAGE_API App = "file-storage-api"
+)
+
+func ApiKeyChecker(appKeyRepo repository.AppKeyRepository, app App) func(c *gin.Context) {
 	return func(c *gin.Context) {
 		kh := c.GetHeader("X-Openline-API-KEY")
 		if kh != "" {
 
-			keyResult := appKeyRepo.FindByKey(c, kh)
+			keyResult := appKeyRepo.FindByKey(c, string(app), kh)
 
 			if keyResult.Error != nil {
 				c.AbortWithStatus(401)
 				return
 			}
 
-			appKey := keyResult.Result.(*entity.AppKeyEntity)
+			appKey := keyResult.Result.(*entity.AppKey)
 
 			if appKey == nil {
 				c.AbortWithStatus(401)

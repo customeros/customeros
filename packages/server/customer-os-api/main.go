@@ -102,7 +102,7 @@ func main() {
 	corsConfig.AllowOrigins = []string{"*"}
 	r.Use(cors.New(corsConfig))
 
-	r.POST("/query", commonService.ApiKeyChecker(repositoryContainer.AppKeyRepo), graphqlHandler(neo4jDriver, repositoryContainer))
+	r.POST("/query", commonService.ApiKeyChecker(repositoryContainer.AppKeyRepo, commonService.CUSTOMER_OS_API), graphqlHandler(neo4jDriver, repositoryContainer))
 	if cfg.GraphQL.PlaygroundEnabled {
 		r.GET("/", playgroundHandler())
 	}

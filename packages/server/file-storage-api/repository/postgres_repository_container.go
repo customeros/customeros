@@ -6,13 +6,13 @@ import (
 	"log"
 )
 
-type PostgresRepositoryContainer struct {
-	FileRepo FileRepository
+type PostgresRepositories struct {
+	FileRepository FileRepository
 }
 
-func InitRepositories(db *gorm.DB) *PostgresRepositoryContainer {
-	p := &PostgresRepositoryContainer{
-		FileRepo: NewFileRepo(db),
+func InitRepositories(db *gorm.DB) *PostgresRepositories {
+	p := &PostgresRepositories{
+		FileRepository: NewFileRepo(db),
 	}
 
 	err := db.AutoMigrate(&entity.File{})
