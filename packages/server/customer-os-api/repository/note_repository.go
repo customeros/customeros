@@ -81,8 +81,8 @@ func (r *noteRepository) MergeNote(session neo4j.Session, tenant, contactId stri
 		queryResult, err := tx.Run(`
 			MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant})
 			MERGE (c)-[:NOTED]->(n:Note {id:randomUUID()})
-			ON CREATE SET html=$html, createdAt=$createdAt
-			ON MATCH SET html=$html
+			ON CREATE SET n.html=$html, n.createdAt=$createdAt
+			ON MATCH SET n.html=$html
 			RETURN n`,
 			map[string]any{
 				"tenant":    tenant,
