@@ -14,6 +14,12 @@ type ContactProperties struct {
 	JobTitle                 string          `gorm:"column:jobtitle"`
 	OwnerId                  string          `gorm:"column:hubspot_owner_id"`
 	LifecycleStage           string          `gorm:"column:lifecyclestage"`
+	Country                  string          `gorm:"column:country"`
+	State                    string          `gorm:"column:state"`
+	City                     string          `gorm:"column:city"`
+	Address                  string          `gorm:"column:address"`
+	Zip                      string          `gorm:"column:zip"`
+	Fax                      string          `gorm:"column:fax"`
 }
 
 type ContactPropertiesList []ContactProperties

@@ -134,6 +134,12 @@ func (s *syncService) syncContacts(dataService common.DataService, syncDate time
 				}
 			}
 
+			err = s.repositories.ContactRepository.MergeContactAddress(tenant, contactId, v)
+			if err != nil {
+				failedSync = true
+				logrus.Errorf("failed merge address for contact %v, tenant %v :%v", contactId, tenant, err)
+			}
+
 			logrus.Debugf("successfully merged contact with id %v for tenant %v from %v", contactId, tenant, dataService.SourceId())
 			if err := dataService.MarkContactProcessed(v.ExternalId, runId, failedSync == false); err != nil {
 				continue
@@ -161,6 +167,12 @@ func (s *syncService) syncCompanies(dataService common.DataService, syncDate tim
 			if err != nil {
 				failedSync = true
 				logrus.Errorf("failed merge company with external reference %v for tenant %v :%v", v.ExternalId, tenant, err)
+			}
+
+			err = s.repositories.CompanyRepository.MergeCompanyAddress(tenant, companyId, v)
+			if err != nil {
+				failedSync = true
+				logrus.Errorf("failed merge company' address with external reference %v for tenant %v :%v", v.ExternalId, tenant, err)
 			}
 
 			logrus.Debugf("successfully merged company with id %v for tenant %v from %v", companyId, tenant, dataService.SourceId())

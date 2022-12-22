@@ -32,4 +32,11 @@ type ContactData struct {
 	UserOwnerExternalId string
 
 	TextCustomFields []TextCustomField
+
+	Country string
+	State   string
+	City    string
+	Address string
+	Zip     string
+	Fax     string
 }
