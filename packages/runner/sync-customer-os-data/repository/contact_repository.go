@@ -14,6 +14,7 @@ type ContactRepository interface {
 	MergePrimaryPhoneNumber(tenant, contactId, phoneNumber string) error
 	SetOwnerRelationship(tenant, contactId, userExternalId, externalSystemId string) error
 	MergeTextCustomField(tenant, contactId string, field entity.TextCustomField) error
+	MergeContactAddress(tenant, contactId string, contact entity.ContactData) error
 }
 
 type contactRepository struct {
@@ -178,6 +179,36 @@ func (r *contactRepository) MergeTextCustomField(tenant, contactId string, field
 				"value":     field.Value,
 				"source":    field.Source,
 				"datatype":  "TEXT",
+			})
+		return nil, err
+	})
+	return err
+}
+
+func (r *contactRepository) MergeContactAddress(tenant, contactId string, contact entity.ContactData) error {
+	session := utils.NewNeo4jWriteSession(*r.driver)
+	defer session.Close()
+
+	_, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
+		_, err := tx.Run(`
+			MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant})
+			MERGE (c)-[:LOCATED_AT]->(a:Address {source:$source})
+            ON CREATE SET a.id=randomUUID(), a.source=$source,
+							a.country=$country, a.state=$state, a.city=$city, a.address=$address,
+							a.zip=$zip, a.fax=$fax
+            ON MATCH SET 	a.country=$country, a.state=$state, a.city=$city, a.address=$address,
+							a.zip=$zip, a.fax=$fax
+			`,
+			map[string]interface{}{
+				"tenant":    tenant,
+				"contactId": contactId,
+				"source":    contact.ExternalSystem,
+				"country":   contact.Country,
+				"state":     contact.State,
+				"city":      contact.City,
+				"address":   contact.Address,
+				"zip":       contact.Zip,
+				"fax":       contact.Fax,
 			})
 		return nil, err
 	})
