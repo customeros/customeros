@@ -15,7 +15,7 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}/customer-os-api
+  IMAGE_NAME: ${{ github.repository }}/file-storage-api
 
 permissions:
   contents: read

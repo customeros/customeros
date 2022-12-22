@@ -120,7 +120,7 @@ func (s *fileService) DownloadSingleFile(tenantId string, id string) (*entity.Fi
 	_, err = downloader.Download(aws.NewWriteAtBuffer(fileBytes),
 		&s3.GetObjectInput{
 			Bucket: aws.String(s.cfg.AWS.Bucket),
-			Key:    aws.String(fmt.Sprintf("%d", fileEntity.ID)),
+			Key:    aws.String(fileEntity.ID),
 		})
 	if err != nil {
 		return nil, nil, err
@@ -129,7 +129,7 @@ func (s *fileService) DownloadSingleFile(tenantId string, id string) (*entity.Fi
 	return fileEntity, fileBytes, nil
 }
 
-func uploadFileToS3(cfg *config.Config, session *awsSes.Session, fileId uint64, multipartFile *multipart.FileHeader) error {
+func uploadFileToS3(cfg *config.Config, session *awsSes.Session, fileId string, multipartFile *multipart.FileHeader) error {
 	open, err := multipartFile.Open()
 	if err != nil {
 		log.Fatal(err)
@@ -143,7 +143,7 @@ func uploadFileToS3(cfg *config.Config, session *awsSes.Session, fileId uint64, 
 
 	_, err2 := s3.New(session).PutObject(&s3.PutObjectInput{
 		Bucket:               aws.String(cfg.AWS.Bucket),
-		Key:                  aws.String(fmt.Sprintf("%d", fileId)),
+		Key:                  aws.String(fileId),
 		ACL:                  aws.String("private"),
 		Body:                 bytes.NewReader(fileBytes),
 		ContentLength:        aws.Int64(int64(len(fileBytes))),

@@ -6,4 +6,5 @@ INSERT INTO conversation_items(type, sender_id, sender_type, message, channel, d
 INSERT INTO conversation_items(type, sender_id, sender_type, message, channel, direction, "time", conversation_conversation_item)
     (SELECT 'MESSAGE','1', 'CONTACT', 'here would be the transcription for the phone call', 'VOICE', 'INBOUND', now(), id FROM conversations WHERE contact_id='echotest');
 
-INSERT INTO public.app_keys (tenant_id, app_id, key, active) VALUES ('2086420f-05fd-42c8-a7f3-a9688e65fe53', 'customer-os-api', 'dd9d2474-b4a9-4799-b96f-73cd0a2917e4', true);
+INSERT INTO app_keys (tenant_id, app_id, key, active) VALUES ('2086420f-05fd-42c8-a7f3-a9688e65fe53', 'customer-os-api', 'dd9d2474-b4a9-4799-b96f-73cd0a2917e4', true);
+INSERT INTO app_keys (tenant_id, app_id, key, active) VALUES ('2086420f-05fd-42c8-a7f3-a9688e65fe53', 'file-storage-api', '9eb87aa2-75e7-45b2-a1e6-53ed297d0ba8', true);

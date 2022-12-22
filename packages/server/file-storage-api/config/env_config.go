@@ -2,7 +2,7 @@ package config
 
 type Config struct {
 	ApiPort       string `env:"PORT"`
-	ApiBaseUrl    string `env:"BASE_URL"`
+	ApiServiceUrl string `env:"SERVICE_URL"`
 	MaxFileSizeMB int64  `env:"MAX_FILE_SIZE_MB"`
 
 	AWS struct {
