@@ -90,7 +90,7 @@ func main() {
 		}
 
 		c.Header("Content-Disposition", "attachment; filename="+byId.Name)
-		c.Header("Content-Type", fmt.Sprintf("", byId.MIME))
+		c.Header("Content-Type", fmt.Sprintf("%s", byId.MIME))
 		c.Header("Accept-Length", fmt.Sprintf("%d", len(bytes)))
 		c.Writer.Write(bytes)
 	})
