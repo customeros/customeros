@@ -82,7 +82,7 @@ func createAllTables(db *gorm.DB) {
 	var err error
 	err = db.AutoMigrate(&entity.AppKey{})
 	if err != nil {
-		log.Panicf("Error creating %v table", entity.AppKeyEntity{}.TableName())
+		log.Panicf("Error creating %v table", entity.AppKey{}.TableName())
 	}
 }
 
