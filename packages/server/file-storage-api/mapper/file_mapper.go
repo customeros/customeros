@@ -16,8 +16,8 @@ func MapFileEntityToDTO(input *entity.File, serviceUrl string) *dto.File {
 		Extension:   input.Extension,
 		Mime:        input.MIME,
 		Length:      input.Length,
-		MetadataUrl: fmt.Sprintf("%s/%d", serviceUrl, input.ID),
-		DownloadUrl: fmt.Sprintf("%s/%d/%s", serviceUrl, input.ID, "download"),
+		MetadataUrl: fmt.Sprintf("%s/file/%s", serviceUrl, input.ID),
+		DownloadUrl: fmt.Sprintf("%s/file/%s/download", serviceUrl, input.ID),
 	}
 	return &file
 }

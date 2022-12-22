@@ -124,6 +124,5 @@ func healthCheckHandler(c *gin.Context) {
 }
 
 func MapFileEntityToDTO(cfg *config.Config, fileEntity *entity.File) *dto.File {
-	serviceUrl := fmt.Sprintf("%s:%s/file", cfg.ApiBaseUrl, cfg.ApiPort)
-	return mapper.MapFileEntityToDTO(fileEntity, serviceUrl)
+	return mapper.MapFileEntityToDTO(fileEntity, cfg.ApiServiceUrl)
 }
