@@ -1,17 +1,17 @@
 name: Build and publish file-storage-api
 
 on:
-  push
-#    branches: [ "otter" ]
-#    paths:
-#      - packages/server/file-storage-api/**
-#      - .github/workflows/build-file-storage-api.yml
-#  pull_request:
-#    paths:
-#      - packages/server/file-storage-api/**
-#      - .github/workflows/build-file-storage-api.yml
-#  release:
-#    types: [ created, edited ]
+  push:
+    branches: [ "otter" ]
+    paths:
+      - packages/server/file-storage-api/**
+      - .github/workflows/build-file-storage-api.yml
+  pull_request:
+    paths:
+      - packages/server/file-storage-api/**
+      - .github/workflows/build-file-storage-api.yml
+  release:
+    types: [ created, edited ]
 
 env:
   REGISTRY: ghcr.io
