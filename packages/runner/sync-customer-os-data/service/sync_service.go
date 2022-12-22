@@ -13,7 +13,7 @@ import (
 const batchSize = 100
 
 type SyncService interface {
-	Sync()
+	Sync(runId string)
 }
 
 type syncService struct {
@@ -28,7 +28,7 @@ func NewSyncService(repositories *repository.Repositories, services *Services) S
 	}
 }
 
-func (s *syncService) Sync() {
+func (s *syncService) Sync(runId string) {
 	tenantsToSync, err := s.repositories.TenantSyncSettingsRepository.GetTenantsForSync()
 	if err != nil {
 		logrus.Error("failed to get tenants for sync")
@@ -49,10 +49,10 @@ func (s *syncService) Sync() {
 		syncDate := time.Now().UTC()
 
 		s.syncExternalSystem(dataService, v.Tenant)
-		s.syncUsers(dataService, syncDate, v.Tenant)
-		s.syncCompanies(dataService, syncDate, v.Tenant)
-		s.syncContacts(dataService, syncDate, v.Tenant)
-		s.syncNotes(dataService, syncDate, v.Tenant)
+		s.syncUsers(dataService, syncDate, v.Tenant, runId)
+		s.syncCompanies(dataService, syncDate, v.Tenant, runId)
+		s.syncContacts(dataService, syncDate, v.Tenant, runId)
+		s.syncNotes(dataService, syncDate, v.Tenant, runId)
 	}
 }
 
@@ -60,9 +60,9 @@ func (s *syncService) syncExternalSystem(dataService common.DataService, tenant 
 	_ = s.repositories.ExternalSystemRepository.Merge(tenant, dataService.SourceId())
 }
 
-func (s *syncService) syncContacts(dataService common.DataService, syncDate time.Time, tenant string) {
+func (s *syncService) syncContacts(dataService common.DataService, syncDate time.Time, tenant, runId string) {
 	for {
-		contacts := dataService.GetContactsForSync(batchSize)
+		contacts := dataService.GetContactsForSync(batchSize, runId)
 		if len(contacts) == 0 {
 			logrus.Debugf("no contacts found for sync from %s for tenant %s", dataService.SourceId(), tenant)
 			break
@@ -135,7 +135,7 @@ func (s *syncService) syncContacts(dataService common.DataService, syncDate time
 			}
 
 			logrus.Debugf("successfully merged contact with id %v for tenant %v from %v", contactId, tenant, dataService.SourceId())
-			if err := dataService.MarkContactProcessed(v.ExternalId, failedSync == false); err != nil {
+			if err := dataService.MarkContactProcessed(v.ExternalId, runId, failedSync == false); err != nil {
 				continue
 			}
 		}
@@ -145,9 +145,9 @@ func (s *syncService) syncContacts(dataService common.DataService, syncDate time
 	}
 }
 
-func (s *syncService) syncCompanies(dataService common.DataService, syncDate time.Time, tenant string) {
+func (s *syncService) syncCompanies(dataService common.DataService, syncDate time.Time, tenant, runId string) {
 	for {
-		companies := dataService.GetCompaniesForSync(batchSize)
+		companies := dataService.GetCompaniesForSync(batchSize, runId)
 		if len(companies) == 0 {
 			logrus.Debugf("no companies found for sync from %s for tenant %s", dataService.SourceId(), tenant)
 			break
@@ -164,7 +164,7 @@ func (s *syncService) syncCompanies(dataService common.DataService, syncDate tim
 			}
 
 			logrus.Debugf("successfully merged company with id %v for tenant %v from %v", companyId, tenant, dataService.SourceId())
-			if err := dataService.MarkCompanyProcessed(v.ExternalId, failedSync == false); err != nil {
+			if err := dataService.MarkCompanyProcessed(v.ExternalId, runId, failedSync == false); err != nil {
 				continue
 			}
 		}
@@ -174,9 +174,9 @@ func (s *syncService) syncCompanies(dataService common.DataService, syncDate tim
 	}
 }
 
-func (s *syncService) syncUsers(dataService common.DataService, syncDate time.Time, tenant string) {
+func (s *syncService) syncUsers(dataService common.DataService, syncDate time.Time, tenant, runId string) {
 	for {
-		users := dataService.GetUsersForSync(batchSize)
+		users := dataService.GetUsersForSync(batchSize, runId)
 		if len(users) == 0 {
 			logrus.Debugf("no users found for sync from %s for tenant %s", dataService.SourceId(), tenant)
 			break
@@ -193,7 +193,7 @@ func (s *syncService) syncUsers(dataService common.DataService, syncDate time.Ti
 			}
 
 			logrus.Debugf("successfully merged user with id %v for tenant %v from %v", userId, tenant, dataService.SourceId())
-			if err := dataService.MarkUserProcessed(v.ExternalId, failedSync == false); err != nil {
+			if err := dataService.MarkUserProcessed(v.ExternalId, runId, failedSync == false); err != nil {
 				continue
 			}
 		}
@@ -203,9 +203,9 @@ func (s *syncService) syncUsers(dataService common.DataService, syncDate time.Ti
 	}
 }
 
-func (s *syncService) syncNotes(dataService common.DataService, syncDate time.Time, tenant string) {
+func (s *syncService) syncNotes(dataService common.DataService, syncDate time.Time, tenant, runId string) {
 	for {
-		notes := dataService.GetNotesForSync(batchSize)
+		notes := dataService.GetNotesForSync(batchSize, runId)
 		if len(notes) == 0 {
 			logrus.Debugf("no notes found for sync from %s for tenant %s", dataService.SourceId(), tenant)
 			break
@@ -238,7 +238,7 @@ func (s *syncService) syncNotes(dataService common.DataService, syncDate time.Ti
 			}
 
 			logrus.Debugf("successfully merged note with id %v for tenant %v from %v", noteId, tenant, dataService.SourceId())
-			if err := dataService.MarkNoteProcessed(note.ExternalId, failedSync == false); err != nil {
+			if err := dataService.MarkNoteProcessed(note.ExternalId, runId, failedSync == false); err != nil {
 				continue
 			}
 		}

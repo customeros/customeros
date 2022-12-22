@@ -62,7 +62,7 @@ func main() {
 		AddTask(func() {
 			runId, _ := uuid.NewRandom()
 			logrus.Infof("run id: %s syncing data into customer-os at %v", runId.String(), time.Now().UTC())
-			services.SyncService.Sync()
+			services.SyncService.Sync(runId.String())
 			logrus.Infof("run id: %s sync completed at %v", runId.String(), time.Now().UTC())
 
 			timeout := time.Second * time.Duration(cfg.TimeoutAfterTaskRun)
