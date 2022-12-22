@@ -71,6 +71,17 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
+      - name: Prepare sources for docker build
+        run: |
+          mkdir tmp-sources
+          mkdir tmp-sources/customer-os-common-module
+          mkdir tmp-sources/file-storage-api
+          
+          cp -rv `ls -A | grep -vE "tmp-sources|tmp-sources/customer-os-api"` tmp-sources/customer-os-api
+          cp -r ../customer-os-common-module/* tmp-sources/customer-os-common-module
+          
+          cp Dockerfile tmp-sources/Dockerfile
+
       - name: Log in to the Container registry
         uses: docker/login-action@v2
         with:
@@ -87,7 +98,7 @@ jobs:
       - name: Push Docker image
         uses: docker/build-push-action@v3
         with:
-          context: packages/server/customer-os-api/.
+          context: packages/server/customer-os-api/tmp-sources/.
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
