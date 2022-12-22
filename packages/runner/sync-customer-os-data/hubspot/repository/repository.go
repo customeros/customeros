@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-func GetContacts(db *gorm.DB, limit int) (hubspotEntity.Contacts, error) {
+func GetContacts(db *gorm.DB, limit int, runId string) (hubspotEntity.Contacts, error) {
 	var contacts hubspotEntity.Contacts
 
 	cte := `
@@ -20,7 +20,8 @@ func GetContacts(db *gorm.DB, limit int) (hubspotEntity.Contacts, error) {
 			" WHERE u.row_num = ? "+
 			" and (s.synced_to_customer_os is null or s.synced_to_customer_os = ?) "+
 			" and (s.synced_to_customer_os_attempt is null or s.synced_to_customer_os_attempt < ?) "+
-			" limit ?", 1, false, 10, limit).
+			" and (s.run_id is null or s.run_id <> ?) "+
+			" limit ?", 1, false, 10, runId, limit).
 		Find(&contacts).Error
 
 	if err != nil {
@@ -37,7 +38,7 @@ func GetContactProperties(db *gorm.DB, airbyteAbId, airbyteContactsHashId string
 	return contactProperties, err
 }
 
-func MarkContactProcessed(db *gorm.DB, contact hubspotEntity.Contact, synced bool) error {
+func MarkContactProcessed(db *gorm.DB, contact hubspotEntity.Contact, synced bool, runId string) error {
 	syncStatusContact := hubspotEntity.SyncStatusContact{
 		Id:                    contact.Id,
 		AirbyteAbId:           contact.AirbyteAbId,
@@ -51,10 +52,11 @@ func MarkContactProcessed(db *gorm.DB, contact hubspotEntity.Contact, synced boo
 			SyncedToCustomerOs: synced,
 			SyncedAt:           time.Now(),
 			SyncAttempt:        syncStatusContact.SyncAttempt + 1,
+			RunId:              runId,
 		}).Error
 }
 
-func GetCompanies(db *gorm.DB, limit int) (hubspotEntity.Companies, error) {
+func GetCompanies(db *gorm.DB, limit int, runId string) (hubspotEntity.Companies, error) {
 	var companies hubspotEntity.Companies
 
 	cte := `
@@ -68,7 +70,8 @@ func GetCompanies(db *gorm.DB, limit int) (hubspotEntity.Companies, error) {
 			" WHERE u.row_num = ? "+
 			" and (s.synced_to_customer_os is null or s.synced_to_customer_os = ?) "+
 			" and (s.synced_to_customer_os_attempt is null or s.synced_to_customer_os_attempt < ?) "+
-			" limit ?", 1, false, 10, limit).
+			" and (s.run_id is null or s.run_id <> ?) "+
+			" limit ?", 1, false, 10, runId, limit).
 		Find(&companies).Error
 
 	if err != nil {
@@ -85,7 +88,7 @@ func GetCompanyProperties(db *gorm.DB, airbyteAbId, airbyteCompaniesHashId strin
 	return companyProperties, err
 }
 
-func MarkCompanyProcessed(db *gorm.DB, company hubspotEntity.Company, synced bool) error {
+func MarkCompanyProcessed(db *gorm.DB, company hubspotEntity.Company, synced bool, runId string) error {
 	syncStatusCompany := hubspotEntity.SyncStatusCompany{
 		Id:                     company.Id,
 		AirbyteAbId:            company.AirbyteAbId,
@@ -99,10 +102,11 @@ func MarkCompanyProcessed(db *gorm.DB, company hubspotEntity.Company, synced boo
 			SyncedToCustomerOs: synced,
 			SyncedAt:           time.Now(),
 			SyncAttempt:        syncStatusCompany.SyncAttempt + 1,
+			RunId:              runId,
 		}).Error
 }
 
-func GetOwners(db *gorm.DB, limit int) (hubspotEntity.Owners, error) {
+func GetOwners(db *gorm.DB, limit int, runId string) (hubspotEntity.Owners, error) {
 	var owners hubspotEntity.Owners
 
 	cte := `
@@ -116,7 +120,8 @@ func GetOwners(db *gorm.DB, limit int) (hubspotEntity.Owners, error) {
 			" WHERE u.row_num = ? "+
 			" and (s.synced_to_customer_os is null or s.synced_to_customer_os = ?) "+
 			" and (s.synced_to_customer_os_attempt is null or s.synced_to_customer_os_attempt < ?) "+
-			" limit ?", 1, false, 10, limit).
+			" and (s.run_id is null or s.run_id <> ?) "+
+			" limit ?", 1, false, 10, runId, limit).
 		Find(&owners).Error
 
 	if err != nil {
@@ -125,7 +130,7 @@ func GetOwners(db *gorm.DB, limit int) (hubspotEntity.Owners, error) {
 	return owners, nil
 }
 
-func MarkOwnerProcessed(db *gorm.DB, owner hubspotEntity.Owner, synced bool) error {
+func MarkOwnerProcessed(db *gorm.DB, owner hubspotEntity.Owner, synced bool, runId string) error {
 	syncStatusOwner := hubspotEntity.SyncStatusOwner{
 		Id:                  owner.Id,
 		AirbyteAbId:         owner.AirbyteAbId,
@@ -139,10 +144,11 @@ func MarkOwnerProcessed(db *gorm.DB, owner hubspotEntity.Owner, synced bool) err
 			SyncedToCustomerOs: synced,
 			SyncedAt:           time.Now(),
 			SyncAttempt:        syncStatusOwner.SyncAttempt + 1,
+			RunId:              runId,
 		}).Error
 }
 
-func GetNotes(db *gorm.DB, limit int) (hubspotEntity.Notes, error) {
+func GetNotes(db *gorm.DB, limit int, runId string) (hubspotEntity.Notes, error) {
 	var notes hubspotEntity.Notes
 
 	cte := `
@@ -157,7 +163,8 @@ func GetNotes(db *gorm.DB, limit int) (hubspotEntity.Notes, error) {
 			" and (u.contacts is not null) "+
 			" and (s.synced_to_customer_os is null or s.synced_to_customer_os = ?) "+
 			" and (s.synced_to_customer_os_attempt is null or s.synced_to_customer_os_attempt < ?) "+
-			" limit ?", 1, false, 10, limit).
+			" and (s.run_id is null or s.run_id <> ?) "+
+			" limit ?", 1, false, 10, runId, limit).
 		Find(&notes).Error
 
 	if err != nil {
@@ -174,7 +181,7 @@ func GetNoteProperties(db *gorm.DB, airbyteAbId, airbyteNotesHashId string) (hub
 	return noteProperties, err
 }
 
-func MarkNoteProcessed(db *gorm.DB, note hubspotEntity.Note, synced bool) error {
+func MarkNoteProcessed(db *gorm.DB, note hubspotEntity.Note, synced bool, runId string) error {
 	syncStatusNote := hubspotEntity.SyncStatusNote{
 		Id:                 note.Id,
 		AirbyteAbId:        note.AirbyteAbId,
@@ -188,5 +195,6 @@ func MarkNoteProcessed(db *gorm.DB, note hubspotEntity.Note, synced bool) error 
 			SyncedToCustomerOs: synced,
 			SyncedAt:           time.Now(),
 			SyncAttempt:        syncStatusNote.SyncAttempt + 1,
+			RunId:              runId,
 		}).Error
 }

@@ -32,8 +32,8 @@ func NewHubspotDataService(airbyteStoreDb *config.AirbyteStoreDB, tenant string)
 	}
 }
 
-func (s *hubspotDataService) GetContactsForSync(batchSize int) []entity.ContactData {
-	hubspotContacts, err := repository.GetContacts(s.getDb(), batchSize)
+func (s *hubspotDataService) GetContactsForSync(batchSize int, runId string) []entity.ContactData {
+	hubspotContacts, err := repository.GetContacts(s.getDb(), batchSize, runId)
 	if err != nil {
 		logrus.Error(err)
 		return nil
@@ -64,16 +64,21 @@ func (s *hubspotDataService) GetContactsForSync(batchSize int) []entity.ContactD
 			contactForCustomerOs.PrimaryCompanyExternalId = strconv.FormatFloat(hubspotContactProperties.PrimaryCompanyExternalId.Float64, 'f', 0, 64)
 		}
 		// set reference to all linked companies
-		var companiesExternalIds []int64
+		var companiesExternalIds []any
 		v.CompaniesExternalIds.AssignTo(&companiesExternalIds)
-		if companiesExternalIds != nil {
-			var strCompaniesExternalIds []string
-			for _, v := range companiesExternalIds {
-				companyExternalId := strconv.FormatInt(v, 10)
+		var strCompaniesExternalIds []string
+		for _, c := range companiesExternalIds {
+			if _, ok := c.(string); ok {
+				strCompaniesExternalIds = append(strCompaniesExternalIds, c.(string))
+			} else if _, ok := c.(int64); ok {
+				companyExternalId := strconv.FormatInt(c.(int64), 10)
+				strCompaniesExternalIds = append(strCompaniesExternalIds, companyExternalId)
+			} else if _, ok := c.(float64); ok {
+				companyExternalId := strconv.FormatFloat(c.(float64), 'f', 0, 64)
 				strCompaniesExternalIds = append(strCompaniesExternalIds, companyExternalId)
 			}
-			contactForCustomerOs.CompaniesExternalIds = strCompaniesExternalIds
 		}
+		contactForCustomerOs.CompaniesExternalIds = strCompaniesExternalIds
 		// set custom fields
 		var textCustomFields []entity.TextCustomField
 		textCustomFields = append(textCustomFields, entity.TextCustomField{
@@ -89,8 +94,8 @@ func (s *hubspotDataService) GetContactsForSync(batchSize int) []entity.ContactD
 	return customerOsContacts
 }
 
-func (s *hubspotDataService) GetCompaniesForSync(batchSize int) []entity.CompanyData {
-	hubspotCompanies, err := repository.GetCompanies(s.getDb(), batchSize)
+func (s *hubspotDataService) GetCompaniesForSync(batchSize int, runId string) []entity.CompanyData {
+	hubspotCompanies, err := repository.GetCompanies(s.getDb(), batchSize, runId)
 	if err != nil {
 		logrus.Error(err)
 		return nil
@@ -119,8 +124,8 @@ func (s *hubspotDataService) GetCompaniesForSync(batchSize int) []entity.Company
 	return customerOsCompanies
 }
 
-func (s *hubspotDataService) GetUsersForSync(batchSize int) []entity.UserData {
-	hubspotOwners, err := repository.GetOwners(s.getDb(), batchSize)
+func (s *hubspotDataService) GetUsersForSync(batchSize int, runId string) []entity.UserData {
+	hubspotOwners, err := repository.GetOwners(s.getDb(), batchSize, runId)
 	if err != nil {
 		logrus.Error(err)
 		return nil
@@ -141,8 +146,8 @@ func (s *hubspotDataService) GetUsersForSync(batchSize int) []entity.UserData {
 	return customerOsUsers
 }
 
-func (s *hubspotDataService) GetNotesForSync(batchSize int) []entity.NoteData {
-	hubspotNotes, err := repository.GetNotes(s.getDb(), batchSize)
+func (s *hubspotDataService) GetNotesForSync(batchSize int, runId string) []entity.NoteData {
+	hubspotNotes, err := repository.GetNotes(s.getDb(), batchSize, runId)
 	if err != nil {
 		logrus.Error(err)
 		return nil
@@ -184,10 +189,10 @@ func (s *hubspotDataService) GetNotesForSync(batchSize int) []entity.NoteData {
 	return customerOsNotes
 }
 
-func (s *hubspotDataService) MarkContactProcessed(externalId string, synced bool) error {
+func (s *hubspotDataService) MarkContactProcessed(externalId, runId string, synced bool) error {
 	contact, ok := s.contacts[externalId]
 	if ok {
-		err := repository.MarkContactProcessed(s.getDb(), contact, synced)
+		err := repository.MarkContactProcessed(s.getDb(), contact, synced, runId)
 		if err != nil {
 			logrus.Errorf("error while marking contact with external reference %s as synced for hubspot", externalId)
 		}
@@ -196,10 +201,10 @@ func (s *hubspotDataService) MarkContactProcessed(externalId string, synced bool
 	return nil
 }
 
-func (s *hubspotDataService) MarkCompanyProcessed(externalId string, synced bool) error {
+func (s *hubspotDataService) MarkCompanyProcessed(externalId, runId string, synced bool) error {
 	company, ok := s.companies[externalId]
 	if ok {
-		err := repository.MarkCompanyProcessed(s.getDb(), company, synced)
+		err := repository.MarkCompanyProcessed(s.getDb(), company, synced, runId)
 		if err != nil {
 			logrus.Errorf("error while marking company with external reference %s as synced for hubspot", externalId)
 		}
@@ -208,10 +213,10 @@ func (s *hubspotDataService) MarkCompanyProcessed(externalId string, synced bool
 	return nil
 }
 
-func (s *hubspotDataService) MarkUserProcessed(externalId string, synced bool) error {
+func (s *hubspotDataService) MarkUserProcessed(externalId, runId string, synced bool) error {
 	owner, ok := s.owners[externalId]
 	if ok {
-		err := repository.MarkOwnerProcessed(s.getDb(), owner, synced)
+		err := repository.MarkOwnerProcessed(s.getDb(), owner, synced, runId)
 		if err != nil {
 			logrus.Errorf("error while marking owner with external reference %s as synced for hubspot", externalId)
 		}
@@ -220,10 +225,10 @@ func (s *hubspotDataService) MarkUserProcessed(externalId string, synced bool) e
 	return nil
 }
 
-func (s *hubspotDataService) MarkNoteProcessed(externalId string, synced bool) error {
+func (s *hubspotDataService) MarkNoteProcessed(externalId, runId string, synced bool) error {
 	note, ok := s.notes[externalId]
 	if ok {
-		err := repository.MarkNoteProcessed(s.getDb(), note, synced)
+		err := repository.MarkNoteProcessed(s.getDb(), note, synced, runId)
 		if err != nil {
 			logrus.Errorf("error while marking note with external reference %s as synced for hubspot", externalId)
 		}
