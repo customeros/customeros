@@ -4,7 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository/postgres/entity"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/repository/postgres/entity"
 	"github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/wait"
 	"gorm.io/driver/postgres"
@@ -82,7 +82,7 @@ func createAllTables(db *gorm.DB) {
 	var err error
 	err = db.AutoMigrate(&entity.AppKey{})
 	if err != nil {
-		log.Panicf("Error creating %v table", entity.AppKeyEntity{}.TableName())
+		log.Panicf("Error creating %v table", entity.AppKey{}.TableName())
 	}
 }
 

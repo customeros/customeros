@@ -2,6 +2,8 @@ module github.com/openline-ai/openline-customer-os/packages/server/file-storage-
 
 go 1.19
 
+replace github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module => ../customer-os-common-module
+
 require (
 	github.com/aws/aws-sdk-go v1.44.164
 	github.com/caarlos0/env/v6 v6.10.1
@@ -9,6 +11,7 @@ require (
 	github.com/gin-gonic/gin v1.8.1
 	github.com/h2non/filetype v1.1.3
 	github.com/joho/godotenv v1.4.0
+	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-00010101000000-000000000000
 	gorm.io/driver/postgres v1.4.5
 	gorm.io/gorm v1.24.2
 )

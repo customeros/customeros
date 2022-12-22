@@ -2,6 +2,8 @@ module github.com/openline-ai/openline-customer-os/packages/server/customer-os-a
 
 go 1.19
 
+replace github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module => ../customer-os-common-module
+
 require (
 	github.com/99designs/gqlgen v0.17.22
 	github.com/caarlos0/env/v6 v6.10.1
@@ -11,6 +13,7 @@ require (
 	github.com/joho/godotenv v1.4.0
 	github.com/mitchellh/mapstructure v1.5.0
 	github.com/neo4j/neo4j-go-driver/v4 v4.4.4
+	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-00010101000000-000000000000
 	github.com/stretchr/testify v1.8.1
 	github.com/testcontainers/testcontainers-go v0.15.0
 	github.com/vektah/gqlparser/v2 v2.5.1
@@ -78,7 +81,7 @@ require (
 	go.opencensus.io v0.23.0 // indirect
 	golang.org/x/crypto v0.1.0 // indirect
 	golang.org/x/mod v0.7.0 // indirect
-	golang.org/x/net v0.3.0 // indirect
+	golang.org/x/net v0.4.0 // indirect
 	golang.org/x/sys v0.3.0 // indirect
 	golang.org/x/text v0.5.0 // indirect
 	golang.org/x/time v0.0.0-20220224211638-0e9765cccd65 // indirect

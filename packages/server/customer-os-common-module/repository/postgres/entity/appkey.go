@@ -8,8 +8,6 @@ type AppKey struct {
 	Active   bool   `gorm:"column:active;type:bool;NOT NULL" json:"active" binding:"required"`
 }
 
-type AppKeyEntity AppKey
-
-func (AppKeyEntity) TableName() string {
+func (AppKey) TableName() string {
 	return "app_keys"
 }
