@@ -1,17 +1,17 @@
 name: Build and publish file-storage-api
 
 on:
-  push
-#    branches: [ "otter" ]
-#    paths:
-#      - packages/server/file-storage-api/**
-#      - .github/workflows/build-file-storage-api.yml
-#  pull_request:
-#    paths:
-#      - packages/server/file-storage-api/**
-#      - .github/workflows/build-file-storage-api.yml
-#  release:
-#    types: [ created, edited ]
+  push:
+    branches: [ "otter" ]
+    paths:
+      - packages/server/file-storage-api/**
+      - .github/workflows/build-file-storage-api.yml
+  pull_request:
+    paths:
+      - packages/server/file-storage-api/**
+      - .github/workflows/build-file-storage-api.yml
+  release:
+    types: [ created, edited ]
 
 env:
   REGISTRY: ghcr.io
@@ -64,7 +64,7 @@ jobs:
     needs:
       - build
 
-#    if: github.ref_name == 'otter' || github.event_name == 'release'
+    if: github.ref_name == 'otter' || github.event_name == 'release'
     runs-on: ubuntu-latest
 
     steps:
