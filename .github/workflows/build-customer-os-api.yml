@@ -73,6 +73,7 @@ jobs:
 
       - name: Prepare sources for docker build
         run: |
+          man rsync
           mkdir tmp-sources
           mkdir tmp-sources/customer-os-common-module
           mkdir tmp-sources/customer-os-api
