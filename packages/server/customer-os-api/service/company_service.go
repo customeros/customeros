@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"github.com/neo4j/neo4j-go-driver/v4/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v4/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
@@ -16,7 +15,6 @@ type CompanyService interface {
 
 	MergeCompanyToContact(ctx context.Context, contactId string, input *entity.CompanyPositionEntity) (*entity.CompanyPositionEntity, error)
 	UpdateCompanyPosition(ctx context.Context, contactId, companyPositionId string, input *entity.CompanyPositionEntity) (*entity.CompanyPositionEntity, error)
-	DeleteCompanyPositionFromContact(ctx context.Context, contactId, companyPositionId string) (bool, error)
 	FindCompaniesByNameLike(ctx context.Context, page, limit int, companyName string) (*utils.Pagination, error)
 }
 
@@ -94,18 +92,6 @@ func (s *companyService) UpdateCompanyPosition(ctx context.Context, contactId, c
 	//
 	//return updatedPosition.(*entity.CompanyPositionEntity), err
 	return nil, nil
-}
-
-func (s *companyService) DeleteCompanyPositionFromContact(ctx context.Context, contactId, companyPositionId string) (bool, error) {
-	session := utils.NewNeo4jWriteSession(*s.repositories.Drivers.Neo4jDriver)
-	defer session.Close()
-	_, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
-		return nil, s.repositories.CompanyRepository.DeleteCompanyPositionInTx(tx, common.GetContext(ctx).Tenant, contactId, companyPositionId)
-	})
-	if err != nil {
-		return false, err
-	}
-	return true, nil
 }
 
 func (s *companyService) FindCompaniesByNameLike(ctx context.Context, page, limit int, companyName string) (*utils.Pagination, error) {

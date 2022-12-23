@@ -1,3 +1,7 @@
+extend type Mutation {
+    contactRole_Delete(contactId : ID!, roleId: ID!): Result!
+}
+
 """
 Describes the relationship a Contact has with a Company.
 **A `return` object**

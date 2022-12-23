@@ -1,0 +1,6 @@
+mutation DeleteContactRole($contactId:ID!, $roleId: ID!) {
+  contactRole_Delete(contactId: $contactId, roleId: $roleId)
+    {
+      result
+    }
+}

@@ -12,6 +12,7 @@ import (
 
 type ContactRoleService interface {
 	FindAllForContact(ctx context.Context, contactId string) (*entity.ContactRoleEntities, error)
+	DeleteContactRole(ctx context.Context, contactId, roleId string) (bool, error)
 }
 
 type contactRoleService struct {
@@ -42,6 +43,18 @@ func (s *contactRoleService) FindAllForContact(ctx context.Context, contactId st
 		contactRoleEntities = append(contactRoleEntities, *s.mapDbNodeToContactRoleEntity(dbNode))
 	}
 	return &contactRoleEntities, nil
+}
+
+func (s *contactRoleService) DeleteContactRole(ctx context.Context, contactId, roleId string) (bool, error) {
+	session := utils.NewNeo4jWriteSession(*s.repositories.Drivers.Neo4jDriver)
+	defer session.Close()
+	_, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
+		return nil, s.repositories.ContactRoleRepository.DeleteContactRoleInTx(tx, common.GetContext(ctx).Tenant, contactId, roleId)
+	})
+	if err != nil {
+		return false, err
+	}
+	return true, nil
 }
 
 func (s *contactRoleService) mapDbNodeToContactRoleEntity(node *dbtype.Node) *entity.ContactRoleEntity {

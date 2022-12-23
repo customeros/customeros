@@ -8,6 +8,7 @@ import (
 
 type ContactRoleRepository interface {
 	GetRolesForContact(session neo4j.Session, tenant, contactId string) ([]*dbtype.Node, error)
+	DeleteContactRoleInTx(tx neo4j.Transaction, tenant, contactId, roleId string) error
 }
 
 type contactRoleRepository struct {
@@ -45,4 +46,17 @@ func (r *contactRoleRepository) GetRolesForContact(session neo4j.Session, tenant
 		}
 	}
 	return dbNodes, err
+}
+
+func (r *contactRoleRepository) DeleteContactRoleInTx(tx neo4j.Transaction, tenant, contactId, roleId string) error {
+	_, err := tx.Run(`
+			MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant}),
+					(c)-[:HAS_ROLE]->(r:Role {id:$roleId})
+			DETACH DELETE r`,
+		map[string]any{
+			"tenant":    tenant,
+			"contactId": contactId,
+			"roleId":    roleId,
+		})
+	return err
 }

@@ -14,7 +14,6 @@ type CompanyRepository interface {
 	LinkNewCompanyToContactInTx(tx neo4j.Transaction, tenant, contactId, companyName, jobTitle string) (*dbtype.Node, *dbtype.Relationship, error)
 	LinkExistingCompanyToContactInTx(tx neo4j.Transaction, tenant, contactId, companyId, jobTitle string) (*dbtype.Node, *dbtype.Relationship, error)
 	UpdateCompanyPositionInTx(tx neo4j.Transaction, tenant, contactId, companyPositionId, jobTitle string) (*dbtype.Node, *dbtype.Relationship, error)
-	DeleteCompanyPositionInTx(tx neo4j.Transaction, tenant, contactId, companyPositionId string) error
 }
 
 type companyRepository struct {
@@ -112,19 +111,6 @@ func (r *companyRepository) UpdateCompanyPositionInTx(tx neo4j.Transaction, tena
 	}
 	dbRecord, err := queryResult.Single()
 	return utils.NodePtr(dbRecord.Values[0].(dbtype.Node)), utils.RelationshipPtr(dbRecord.Values[1].(dbtype.Relationship)), err
-}
-
-func (r *companyRepository) DeleteCompanyPositionInTx(tx neo4j.Transaction, tenant, contactId, companyPositionId string) error {
-	_, err := tx.Run(`
-			MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant}),
-					(c)-[r:WORKS_AT {id:$companyPositionId}]->(co:Company)
-			DELETE r`,
-		map[string]any{
-			"tenant":            tenant,
-			"contactId":         contactId,
-			"companyPositionId": companyPositionId,
-		})
-	return err
 }
 
 func (r *companyRepository) GetPaginatedCompaniesWithNameLike(tenant, companyName string, skip, limit int) (*utils.DbNodesWithTotalCount, error) {

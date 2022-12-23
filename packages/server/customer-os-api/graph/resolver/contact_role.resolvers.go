@@ -6,7 +6,6 @@ package resolver
 
 import (
 	"context"
-
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/generated"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
@@ -24,6 +23,18 @@ func (r *contactRoleResolver) Company(ctx context.Context, obj *model.ContactRol
 		return nil, nil
 	}
 	return mapper.MapEntityToCompany(companyEntity), nil
+}
+
+// ContactRoleDelete is the resolver for the contactRole_Delete field.
+func (r *mutationResolver) ContactRoleDelete(ctx context.Context, contactID string, roleID string) (*model.Result, error) {
+	result, err := r.Services.ContactRoleService.DeleteContactRole(ctx, contactID, roleID)
+	if err != nil {
+		graphql.AddErrorf(ctx, "Could not remove contact role %s from contact %s", roleID, contactID)
+		return nil, err
+	}
+	return &model.Result{
+		Result: result,
+	}, nil
 }
 
 // ContactRole returns generated.ContactRoleResolver implementation.

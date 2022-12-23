@@ -506,32 +506,6 @@ func TestMutationResolver_ContactMergeCompanyPosition_ExistingCompany(t *testing
 	require.Equal(t, 1, neo4jt.GetCountOfRelationships(driver, "WORKS_AT"))
 }
 
-func TestMutationResolver_ContactRemoveCompanyPosition(t *testing.T) {
-	defer tearDownTestCase()(t)
-	neo4jt.CreateTenant(driver, tenantName)
-	contactId := neo4jt.CreateDefaultContact(driver, tenantName)
-	companyId := neo4jt.CreateCompany(driver, tenantName, "LLC LLC")
-	positionId := neo4jt.ContactWorksForCompany(driver, contactId, companyId, "CTO", true)
-
-	require.Equal(t, 1, neo4jt.GetCountOfRelationships(driver, "WORKS_AT"))
-
-	rawResponse, err := c.RawPost(getQuery("delete_company_position"),
-		client.Var("contactId", contactId),
-		client.Var("companyPositionId", positionId))
-	assertRawResponseSuccess(t, rawResponse, err)
-
-	var result struct {
-		Contact_DeleteCompanyPosition model.Result
-	}
-
-	err = decode.Decode(rawResponse.Data.(map[string]any), &result)
-	require.Nil(t, err)
-	require.NotNil(t, result)
-	require.Equal(t, true, result.Contact_DeleteCompanyPosition.Result)
-
-	require.Equal(t, 0, neo4jt.GetCountOfRelationships(driver, "WORKS_AT"))
-}
-
 func TestMutationResolver_ContactUpdateCompanyPosition_SameCompanyNewPosition(t *testing.T) {
 	defer tearDownTestCase()(t)
 	neo4jt.CreateTenant(driver, tenantName)
