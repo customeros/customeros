@@ -16,10 +16,10 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/postgres"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils/decode"
 	commonRepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/repository/postgres"
+	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/require"
 	"github.com/testcontainers/testcontainers-go"
 	"gorm.io/gorm"
-	"log"
 	"os"
 	"testing"
 )
@@ -47,7 +47,7 @@ func TestMain(m *testing.M) {
 	defer func(postgresContainer testcontainers.Container, ctx context.Context) {
 		err := postgresContainer.Terminate(ctx)
 		if err != nil {
-			log.Fatal("Error during container termination")
+			logrus.Fatal("Error during container termination")
 		}
 	}(postgresContainer, context.Background())
 

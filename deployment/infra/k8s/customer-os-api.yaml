@@ -63,8 +63,12 @@ spec:
               value: "10"
             - name: POSTGRES_CONN_MAX_LIFETIME
               value: "0"
+            - name: POSTGRES_LOG_LEVEL
+              value: "WARN"
 
             - name: PORT
               value: "10000"
+            - name: LOG_LEVEL
+              value: "INFO"
             - name: GRAPHQL_PLAYGROUND_ENABLED
               value: "true"
