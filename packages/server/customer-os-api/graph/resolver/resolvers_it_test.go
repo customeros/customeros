@@ -462,7 +462,7 @@ func TestMutationResolver_ContactMergeCompanyPosition_NewCompany(t *testing.T) {
 	assertRawResponseSuccess(t, rawResponse, err)
 
 	var companyPosition struct {
-		Contact_MergeCompanyPosition model.CompanyPosition
+		Contact_MergeCompanyPosition model.ContactRole
 	}
 
 	err = decode.Decode(rawResponse.Data.(map[string]any), &companyPosition)
@@ -490,7 +490,7 @@ func TestMutationResolver_ContactMergeCompanyPosition_ExistingCompany(t *testing
 	assertRawResponseSuccess(t, rawResponse, err)
 
 	var companyPosition struct {
-		Contact_MergeCompanyPosition model.CompanyPosition
+		Contact_MergeCompanyPosition model.ContactRole
 	}
 
 	err = decode.Decode(rawResponse.Data.(map[string]any), &companyPosition)
@@ -511,7 +511,7 @@ func TestMutationResolver_ContactRemoveCompanyPosition(t *testing.T) {
 	neo4jt.CreateTenant(driver, tenantName)
 	contactId := neo4jt.CreateDefaultContact(driver, tenantName)
 	companyId := neo4jt.CreateCompany(driver, tenantName, "LLC LLC")
-	positionId := neo4jt.ContactWorksForCompany(driver, contactId, companyId, "CTO")
+	positionId := neo4jt.ContactWorksForCompany(driver, contactId, companyId, "CTO", true)
 
 	require.Equal(t, 1, neo4jt.GetCountOfRelationships(driver, "WORKS_AT"))
 
@@ -537,7 +537,7 @@ func TestMutationResolver_ContactUpdateCompanyPosition_SameCompanyNewPosition(t 
 	neo4jt.CreateTenant(driver, tenantName)
 	contactId := neo4jt.CreateDefaultContact(driver, tenantName)
 	companyId := neo4jt.CreateCompany(driver, tenantName, "LLC LLC")
-	positionId := neo4jt.ContactWorksForCompany(driver, contactId, companyId, "CTO")
+	positionId := neo4jt.ContactWorksForCompany(driver, contactId, companyId, "CTO", true)
 
 	rawResponse, err := c.RawPost(getQuery("update_company_position_same_company"),
 		client.Var("contactId", contactId),
@@ -546,7 +546,7 @@ func TestMutationResolver_ContactUpdateCompanyPosition_SameCompanyNewPosition(t 
 	assertRawResponseSuccess(t, rawResponse, err)
 
 	var companyPosition struct {
-		Contact_UpdateCompanyPosition model.CompanyPosition
+		Contact_UpdateCompanyPosition model.ContactRole
 	}
 
 	err = decode.Decode(rawResponse.Data.(map[string]any), &companyPosition)
@@ -568,7 +568,7 @@ func TestMutationResolver_ContactUpdateCompanyPosition_InOtherExistingCompany(t 
 	contactId := neo4jt.CreateDefaultContact(driver, tenantName)
 	companyId := neo4jt.CreateCompany(driver, tenantName, "Current Company")
 	otherCompanyId := neo4jt.CreateCompany(driver, tenantName, "Other Company")
-	positionId := neo4jt.ContactWorksForCompany(driver, contactId, companyId, "CTO")
+	positionId := neo4jt.ContactWorksForCompany(driver, contactId, companyId, "CTO", false)
 
 	rawResponse, err := c.RawPost(getQuery("update_company_position_other_company"),
 		client.Var("contactId", contactId),
@@ -577,7 +577,7 @@ func TestMutationResolver_ContactUpdateCompanyPosition_InOtherExistingCompany(t 
 	assertRawResponseSuccess(t, rawResponse, err)
 
 	var companyPosition struct {
-		Contact_UpdateCompanyPosition model.CompanyPosition
+		Contact_UpdateCompanyPosition model.ContactRole
 	}
 
 	err = decode.Decode(rawResponse.Data.(map[string]any), &companyPosition)
@@ -598,7 +598,7 @@ func TestMutationResolver_ContactUpdateCompanyPosition_InNewCompany(t *testing.T
 	neo4jt.CreateTenant(driver, tenantName)
 	contactId := neo4jt.CreateDefaultContact(driver, tenantName)
 	companyId := neo4jt.CreateCompany(driver, tenantName, "LLC LLC")
-	positionId := neo4jt.ContactWorksForCompany(driver, contactId, companyId, "CTO")
+	positionId := neo4jt.ContactWorksForCompany(driver, contactId, companyId, "CTO", false)
 
 	rawResponse, err := c.RawPost(getQuery("update_company_position_new_company"),
 		client.Var("contactId", contactId),
@@ -606,7 +606,7 @@ func TestMutationResolver_ContactUpdateCompanyPosition_InNewCompany(t *testing.T
 	assertRawResponseSuccess(t, rawResponse, err)
 
 	var companyPosition struct {
-		Contact_UpdateCompanyPosition model.CompanyPosition
+		Contact_UpdateCompanyPosition model.ContactRole
 	}
 
 	err = decode.Decode(rawResponse.Data.(map[string]any), &companyPosition)

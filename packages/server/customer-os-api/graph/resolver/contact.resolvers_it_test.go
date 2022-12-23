@@ -337,16 +337,23 @@ func TestMutationResolver_UpdateContact(t *testing.T) {
 	require.Equal(t, 1, neo4jt.GetCountOfRelationships(driver, "OWNS"))
 }
 
-func TestQueryResolver_Contact(t *testing.T) {
+// FIXME alexb add company when implemented
+func TestQueryResolver_Contact_WithRoles_ById(t *testing.T) {
 	defer tearDownTestCase()(t)
 	neo4jt.CreateTenant(driver, tenantName)
 	contactId := neo4jt.CreateDefaultContact(driver, tenantName)
 	companyId1 := neo4jt.CreateCompany(driver, tenantName, "ABC")
 	companyId2 := neo4jt.CreateCompany(driver, tenantName, "XYZ")
-	positionId1 := neo4jt.ContactWorksForCompany(driver, contactId, companyId1, "CTO")
-	positionId2 := neo4jt.ContactWorksForCompany(driver, contactId, companyId2, "CEO")
+	role1 := neo4jt.ContactWorksForCompany(driver, contactId, companyId1, "CTO", false)
+	role2 := neo4jt.ContactWorksForCompany(driver, contactId, companyId2, "CEO", true)
 
-	rawResponse, err := c.RawPost(getQuery("get_contact_by_id"),
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Contact"))
+	require.Equal(t, 2, neo4jt.GetCountOfNodes(driver, "Company"))
+	require.Equal(t, 2, neo4jt.GetCountOfNodes(driver, "Role"))
+	require.Equal(t, 2, neo4jt.GetCountOfRelationships(driver, "WORKS"))
+	require.Equal(t, 2, neo4jt.GetCountOfRelationships(driver, "HAS_ROLE"))
+
+	rawResponse, err := c.RawPost(getQuery("get_contact_with_roles_by_id"),
 		client.Var("contactId", contactId))
 	assertRawResponseSuccess(t, rawResponse, err)
 
@@ -358,20 +365,26 @@ func TestQueryResolver_Contact(t *testing.T) {
 	require.Nil(t, err)
 	require.Equal(t, contactId, searchedContact.Contact.ID)
 
-	companyPositions := searchedContact.Contact.CompanyPositions
-	require.Equal(t, 2, len(companyPositions))
-	require.Equal(t, positionId1, companyPositions[0].ID)
-	require.Equal(t, "CTO", *companyPositions[0].JobTitle)
-	require.Equal(t, companyId1, companyPositions[0].Company.ID)
-	require.Equal(t, "ABC", companyPositions[0].Company.Name)
-	require.Equal(t, positionId2, companyPositions[1].ID)
-	require.Equal(t, "CEO", *companyPositions[1].JobTitle)
-	require.Equal(t, companyId2, companyPositions[1].Company.ID)
-	require.Equal(t, "XYZ", companyPositions[1].Company.Name)
-
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Contact"))
-	require.Equal(t, 2, neo4jt.GetCountOfNodes(driver, "Company"))
-	require.Equal(t, 2, neo4jt.GetCountOfRelationships(driver, "WORKS_AT"))
+	roles := searchedContact.Contact.Roles
+	require.Equal(t, 2, len(roles))
+	var cto, ceo *model.ContactRole
+	if role1 == roles[0].ID {
+		cto = roles[0]
+		ceo = roles[1]
+	} else {
+		cto = roles[1]
+		ceo = roles[0]
+	}
+	require.Equal(t, role1, cto.ID)
+	require.Equal(t, "CTO", *cto.JobTitle)
+	require.Equal(t, false, cto.Primary)
+	//require.Equal(t, companyId1, companyPositions[0].Company.ID)
+	//require.Equal(t, "ABC", companyPositions[0].Company.Name)
+	require.Equal(t, role2, ceo.ID)
+	require.Equal(t, "CEO", *ceo.JobTitle)
+	require.Equal(t, true, ceo.Primary)
+	//require.Equal(t, companyId2, companyPositions[1].Company.ID)
+	//require.Equal(t, "XYZ", companyPositions[1].Company.Name)
 }
 
 func TestQueryResolver_Contacts_SortByTitleAscFirstNameAscLastNameDesc(t *testing.T) {

@@ -331,18 +331,20 @@ func CreateCompany(driver *neo4j.Driver, tenant, companyName string) string {
 	return companyId.String()
 }
 
-func ContactWorksForCompany(driver *neo4j.Driver, contactId, companyId, jobTitle string) string {
-	var positionId, _ = uuid.NewRandom()
+func ContactWorksForCompany(driver *neo4j.Driver, contactId, companyId, jobTitle string, primary bool) string {
+	var roleId, _ = uuid.NewRandom()
 	query := `MATCH (c:Contact {id:$contactId}),
 			        (co:Company {id:$companyId})
-			MERGE (c)-[:WORKS_AT {id:$id, jobTitle:$jobTitle}]->(co)`
+			MERGE (c)-[:HAS_ROLE]->(r:Role)-[:WORKS]->(co)
+			ON CREATE SET r.id=$id, r.jobTitle=$jobTitle, r.primary=$primary`
 	ExecuteWriteQuery(driver, query, map[string]any{
-		"id":        positionId.String(),
+		"id":        roleId.String(),
 		"contactId": contactId,
 		"companyId": companyId,
 		"jobTitle":  jobTitle,
+		"primary":   primary,
 	})
-	return positionId.String()
+	return roleId.String()
 }
 
 func UserOwnsContact(driver *neo4j.Driver, userId, contactId string) {
