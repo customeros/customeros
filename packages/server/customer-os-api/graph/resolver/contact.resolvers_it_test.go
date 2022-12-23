@@ -337,13 +337,26 @@ func TestMutationResolver_UpdateContact(t *testing.T) {
 	require.Equal(t, 1, neo4jt.GetCountOfRelationships(driver, "OWNS"))
 }
 
-// FIXME alexb add company when implemented
 func TestQueryResolver_Contact_WithRoles_ById(t *testing.T) {
 	defer tearDownTestCase()(t)
 	neo4jt.CreateTenant(driver, tenantName)
 	contactId := neo4jt.CreateDefaultContact(driver, tenantName)
-	companyId1 := neo4jt.CreateCompany(driver, tenantName, "ABC")
-	companyId2 := neo4jt.CreateCompany(driver, tenantName, "XYZ")
+	companyId1 := neo4jt.CreateFullCompany(driver, tenantName, entity.CompanyEntity{
+		Name:        "name1",
+		Description: "description1",
+		Domain:      "domain1",
+		Website:     "website1",
+		Industry:    "industry1",
+		IsPublic:    true,
+	})
+	companyId2 := neo4jt.CreateFullCompany(driver, tenantName, entity.CompanyEntity{
+		Name:        "name2",
+		Description: "description2",
+		Domain:      "domain2",
+		Website:     "website2",
+		Industry:    "industry2",
+		IsPublic:    false,
+	})
 	role1 := neo4jt.ContactWorksForCompany(driver, contactId, companyId1, "CTO", false)
 	role2 := neo4jt.ContactWorksForCompany(driver, contactId, companyId2, "CEO", true)
 
@@ -378,13 +391,26 @@ func TestQueryResolver_Contact_WithRoles_ById(t *testing.T) {
 	require.Equal(t, role1, cto.ID)
 	require.Equal(t, "CTO", *cto.JobTitle)
 	require.Equal(t, false, cto.Primary)
-	//require.Equal(t, companyId1, companyPositions[0].Company.ID)
-	//require.Equal(t, "ABC", companyPositions[0].Company.Name)
+	require.Equal(t, companyId1, cto.Company.ID)
+	require.Equal(t, "name1", cto.Company.Name)
+	require.Equal(t, "description1", *cto.Company.Description)
+	require.Equal(t, "domain1", *cto.Company.Domain)
+	require.Equal(t, "website1", *cto.Company.Website)
+	require.Equal(t, "industry1", *cto.Company.Industry)
+	require.Equal(t, true, *cto.Company.IsPublic)
+	require.NotNil(t, cto.Company.CreatedAt)
+
 	require.Equal(t, role2, ceo.ID)
 	require.Equal(t, "CEO", *ceo.JobTitle)
 	require.Equal(t, true, ceo.Primary)
-	//require.Equal(t, companyId2, companyPositions[1].Company.ID)
-	//require.Equal(t, "XYZ", companyPositions[1].Company.Name)
+	require.Equal(t, companyId2, ceo.Company.ID)
+	require.Equal(t, "name2", ceo.Company.Name)
+	require.Equal(t, "description2", *ceo.Company.Description)
+	require.Equal(t, "domain2", *ceo.Company.Domain)
+	require.Equal(t, "website2", *ceo.Company.Website)
+	require.Equal(t, "industry2", *ceo.Company.Industry)
+	require.Equal(t, false, *ceo.Company.IsPublic)
+	require.NotNil(t, ceo.Company.CreatedAt)
 }
 
 func TestQueryResolver_Contacts_SortByTitleAscFirstNameAscLastNameDesc(t *testing.T) {

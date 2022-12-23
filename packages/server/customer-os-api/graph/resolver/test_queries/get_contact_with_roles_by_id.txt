@@ -5,6 +5,15 @@ query GetContactById($contactId: ID!){
         id
         jobTitle
         primary
+        company {
+            id
+            name
+            description
+            website
+            domain
+            isPublic
+            industry
+        }
     }
   }
 }

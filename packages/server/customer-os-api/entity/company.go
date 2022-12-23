@@ -2,11 +2,18 @@ package entity
 
 import (
 	"fmt"
+	"time"
 )
 
 type CompanyEntity struct {
-	Id   string
-	Name string
+	Id          string
+	Name        string
+	Description string
+	Domain      string
+	Website     string
+	Industry    string
+	IsPublic    bool
+	CreatedAt   time.Time
 }
 
 func (company CompanyEntity) ToString() string {

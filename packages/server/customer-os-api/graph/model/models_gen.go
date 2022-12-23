@@ -38,8 +38,14 @@ type Pages interface {
 }
 
 type Company struct {
-	ID   string `json:"id"`
-	Name string `json:"name"`
+	ID          string    `json:"id"`
+	Name        string    `json:"name"`
+	Description *string   `json:"description"`
+	Domain      *string   `json:"domain"`
+	Website     *string   `json:"website"`
+	Industry    *string   `json:"industry"`
+	IsPublic    *bool     `json:"isPublic"`
+	CreatedAt   time.Time `json:"createdAt"`
 }
 
 type CompanyInput struct {

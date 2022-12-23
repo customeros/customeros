@@ -55,8 +55,14 @@ type DirectiveRoot struct {
 
 type ComplexityRoot struct {
 	Company struct {
-		ID   func(childComplexity int) int
-		Name func(childComplexity int) int
+		CreatedAt   func(childComplexity int) int
+		Description func(childComplexity int) int
+		Domain      func(childComplexity int) int
+		ID          func(childComplexity int) int
+		Industry    func(childComplexity int) int
+		IsPublic    func(childComplexity int) int
+		Name        func(childComplexity int) int
+		Website     func(childComplexity int) int
 	}
 
 	CompanyPage struct {
@@ -415,6 +421,27 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 	_ = ec
 	switch typeName + "." + field {
 
+	case "Company.createdAt":
+		if e.complexity.Company.CreatedAt == nil {
+			break
+		}
+
+		return e.complexity.Company.CreatedAt(childComplexity), true
+
+	case "Company.description":
+		if e.complexity.Company.Description == nil {
+			break
+		}
+
+		return e.complexity.Company.Description(childComplexity), true
+
+	case "Company.domain":
+		if e.complexity.Company.Domain == nil {
+			break
+		}
+
+		return e.complexity.Company.Domain(childComplexity), true
+
 	case "Company.id":
 		if e.complexity.Company.ID == nil {
 			break
@@ -422,12 +449,33 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Company.ID(childComplexity), true
 
+	case "Company.industry":
+		if e.complexity.Company.Industry == nil {
+			break
+		}
+
+		return e.complexity.Company.Industry(childComplexity), true
+
+	case "Company.isPublic":
+		if e.complexity.Company.IsPublic == nil {
+			break
+		}
+
+		return e.complexity.Company.IsPublic(childComplexity), true
+
 	case "Company.name":
 		if e.complexity.Company.Name == nil {
 			break
 		}
 
 		return e.complexity.Company.Name(childComplexity), true
+
+	case "Company.website":
+		if e.complexity.Company.Website == nil {
+			break
+		}
+
+		return e.complexity.Company.Website(childComplexity), true
 
 	case "CompanyPage.content":
 		if e.complexity.CompanyPage.Content == nil {
@@ -1992,6 +2040,12 @@ enum ActionType {
 type Company {
     id: ID!
     name: String!
+    description: String
+    domain:      String
+    website:     String
+    industry:    String
+    isPublic:    Boolean
+    createdAt:   Time!
 }
 
 type CompanyPage implements Pages {
@@ -4457,6 +4511,255 @@ func (ec *executionContext) fieldContext_Company_name(ctx context.Context, field
 	return fc, nil
 }
 
+func (ec *executionContext) _Company_description(ctx context.Context, field graphql.CollectedField, obj *model.Company) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Company_description(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Description, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Company_description(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Company",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Company_domain(ctx context.Context, field graphql.CollectedField, obj *model.Company) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Company_domain(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Domain, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Company_domain(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Company",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Company_website(ctx context.Context, field graphql.CollectedField, obj *model.Company) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Company_website(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Website, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Company_website(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Company",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Company_industry(ctx context.Context, field graphql.CollectedField, obj *model.Company) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Company_industry(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Industry, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Company_industry(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Company",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Company_isPublic(ctx context.Context, field graphql.CollectedField, obj *model.Company) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Company_isPublic(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.IsPublic, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*bool)
+	fc.Result = res
+	return ec.marshalOBoolean2ᚖbool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Company_isPublic(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Company",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Company_createdAt(ctx context.Context, field graphql.CollectedField, obj *model.Company) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Company_createdAt(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.CreatedAt, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(time.Time)
+	fc.Result = res
+	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Company_createdAt(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Company",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _CompanyPage_content(ctx context.Context, field graphql.CollectedField, obj *model.CompanyPage) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_CompanyPage_content(ctx, field)
 	if err != nil {
@@ -4500,6 +4803,18 @@ func (ec *executionContext) fieldContext_CompanyPage_content(ctx context.Context
 				return ec.fieldContext_Company_id(ctx, field)
 			case "name":
 				return ec.fieldContext_Company_name(ctx, field)
+			case "description":
+				return ec.fieldContext_Company_description(ctx, field)
+			case "domain":
+				return ec.fieldContext_Company_domain(ctx, field)
+			case "website":
+				return ec.fieldContext_Company_website(ctx, field)
+			case "industry":
+				return ec.fieldContext_Company_industry(ctx, field)
+			case "isPublic":
+				return ec.fieldContext_Company_isPublic(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Company_createdAt(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Company", field.Name)
 		},
@@ -5934,6 +6249,18 @@ func (ec *executionContext) fieldContext_ContactRole_company(ctx context.Context
 				return ec.fieldContext_Company_id(ctx, field)
 			case "name":
 				return ec.fieldContext_Company_name(ctx, field)
+			case "description":
+				return ec.fieldContext_Company_description(ctx, field)
+			case "domain":
+				return ec.fieldContext_Company_domain(ctx, field)
+			case "website":
+				return ec.fieldContext_Company_website(ctx, field)
+			case "industry":
+				return ec.fieldContext_Company_industry(ctx, field)
+			case "isPublic":
+				return ec.fieldContext_Company_isPublic(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Company_createdAt(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Company", field.Name)
 		},
@@ -16774,6 +17101,33 @@ func (ec *executionContext) _Company(ctx context.Context, sel ast.SelectionSet, 
 		case "name":
 
 			out.Values[i] = ec._Company_name(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "description":
+
+			out.Values[i] = ec._Company_description(ctx, field, obj)
+
+		case "domain":
+
+			out.Values[i] = ec._Company_domain(ctx, field, obj)
+
+		case "website":
+
+			out.Values[i] = ec._Company_website(ctx, field, obj)
+
+		case "industry":
+
+			out.Values[i] = ec._Company_industry(ctx, field, obj)
+
+		case "isPublic":
+
+			out.Values[i] = ec._Company_isPublic(ctx, field, obj)
+
+		case "createdAt":
+
+			out.Values[i] = ec._Company_createdAt(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
 				invalids++

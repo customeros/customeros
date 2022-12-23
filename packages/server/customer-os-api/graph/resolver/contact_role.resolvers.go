@@ -6,15 +6,24 @@ package resolver
 
 import (
 	"context"
-	"fmt"
 
+	"github.com/99designs/gqlgen/graphql"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/generated"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper"
 )
 
 // Company is the resolver for the company field.
 func (r *contactRoleResolver) Company(ctx context.Context, obj *model.ContactRole) (*model.Company, error) {
-	panic(fmt.Errorf("not implemented: Company - company"))
+	companyEntity, err := r.Services.CompanyService.GetCompanyForRole(ctx, obj.ID)
+	if err != nil {
+		graphql.AddErrorf(ctx, "Failed to get company for role %s", obj.ID)
+		return nil, err
+	}
+	if companyEntity == nil {
+		return nil, nil
+	}
+	return mapper.MapEntityToCompany(companyEntity), nil
 }
 
 // ContactRole returns generated.ContactRoleResolver implementation.

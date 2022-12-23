@@ -12,6 +12,12 @@ input CompanyInput {
 type Company {
     id: ID!
     name: String!
+    description: String
+    domain:      String
+    website:     String
+    industry:    String
+    isPublic:    Boolean
+    createdAt:   Time!
 }
 
 type CompanyPage implements Pages {

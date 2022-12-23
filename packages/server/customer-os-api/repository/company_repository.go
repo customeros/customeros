@@ -2,23 +2,47 @@ package repository
 
 import (
 	"github.com/neo4j/neo4j-go-driver/v4/neo4j"
-	"github.com/neo4j/neo4j-go-driver/v4/neo4j/db"
 	"github.com/neo4j/neo4j-go-driver/v4/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils"
 )
 
+// TODO alexb refactor all
 type CompanyRepository interface {
+	GetCompanyForRole(session neo4j.Session, tenant, roleId string) (*dbtype.Node, error)
+	GetPaginatedCompaniesWithNameLike(tenant, companyName string, skip, limit int) (*utils.DbNodesWithTotalCount, error)
+
 	LinkNewCompanyToContactInTx(tx neo4j.Transaction, tenant, contactId, companyName, jobTitle string) (*dbtype.Node, *dbtype.Relationship, error)
 	LinkExistingCompanyToContactInTx(tx neo4j.Transaction, tenant, contactId, companyId, jobTitle string) (*dbtype.Node, *dbtype.Relationship, error)
 	UpdateCompanyPositionInTx(tx neo4j.Transaction, tenant, contactId, companyPositionId, jobTitle string) (*dbtype.Node, *dbtype.Relationship, error)
 	DeleteCompanyPositionInTx(tx neo4j.Transaction, tenant, contactId, companyPositionId string) error
-	GetCompanyPositionsForContact(session neo4j.Session, tenant, contactId string) ([]*CompanyWithPositionNode, error)
-	GetCompanyPositionForContact(session neo4j.Session, tenant, contactId, companyPositionId string) (*CompanyWithPositionNode, error)
-	GetPaginatedCompaniesWithNameLike(tenant, companyName string, skip, limit int) (*utils.DbNodesWithTotalCount, error)
 }
 
 type companyRepository struct {
 	driver *neo4j.Driver
+}
+
+func (r *companyRepository) GetCompanyForRole(session neo4j.Session, tenant, roleId string) (*dbtype.Node, error) {
+	dbRecords, err := session.ReadTransaction(func(tx neo4j.Transaction) (any, error) {
+		if queryResult, err := tx.Run(`
+			MATCH (r:Role {id:$roleId})-[:WORKS]->(co:Company)-[:COMPANY_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant})
+			RETURN co`,
+			map[string]any{
+				"tenant": tenant,
+				"roleId": roleId,
+			}); err != nil {
+			return nil, err
+		} else {
+			return queryResult.Collect()
+		}
+	})
+	if err != nil {
+		return nil, err
+	}
+	if len(dbRecords.([]*neo4j.Record)) == 0 {
+		return nil, nil
+	}
+	return utils.NodePtr(dbRecords.([]*neo4j.Record)[0].Values[0].(dbtype.Node)), nil
+
 }
 
 func NewCompanyRepository(driver *neo4j.Driver) CompanyRepository {
@@ -101,62 +125,6 @@ func (r *companyRepository) DeleteCompanyPositionInTx(tx neo4j.Transaction, tena
 			"companyPositionId": companyPositionId,
 		})
 	return err
-}
-
-func (r *companyRepository) GetCompanyPositionsForContact(session neo4j.Session, tenant, contactId string) ([]*CompanyWithPositionNode, error) {
-	dbRecords, err := session.ReadTransaction(func(tx neo4j.Transaction) (any, error) {
-		if queryResult, err := tx.Run(`
-			MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant}),
-					(c)-[r:WORKS_AT]->(co:Company)
-			RETURN co, r ORDER BY co.name, r.jobTitle`,
-			map[string]any{
-				"tenant":    tenant,
-				"contactId": contactId,
-			}); err != nil {
-			return nil, err
-		} else {
-			return queryResult.Collect()
-		}
-	})
-	if err != nil {
-		return nil, err
-	} else if len(dbRecords.([]*neo4j.Record)) == 0 {
-		return nil, nil
-	} else {
-		companyWithPositionNodes := []*CompanyWithPositionNode{}
-		for _, v := range dbRecords.([]*neo4j.Record) {
-			singleCompanyWithPositionNodes := new(CompanyWithPositionNode)
-			singleCompanyWithPositionNodes.Company = utils.NodePtr(v.Values[0].(dbtype.Node))
-			singleCompanyWithPositionNodes.Position = utils.RelationshipPtr(v.Values[1].(dbtype.Relationship))
-			companyWithPositionNodes = append(companyWithPositionNodes, singleCompanyWithPositionNodes)
-		}
-		return companyWithPositionNodes, nil
-	}
-}
-
-func (r *companyRepository) GetCompanyPositionForContact(session neo4j.Session, tenant, contactId, companyPositionId string) (*CompanyWithPositionNode, error) {
-	dbRecord, err := session.ReadTransaction(func(tx neo4j.Transaction) (any, error) {
-		if queryResult, err := tx.Run(`
-			MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant}),
-					(c)-[r:WORKS_AT {id:$companyPositionId}]->(co:Company)
-			RETURN co, r ORDER BY co.name, r.jobTitle`,
-			map[string]any{
-				"tenant":            tenant,
-				"contactId":         contactId,
-				"companyPositionId": companyPositionId,
-			}); err != nil {
-			return nil, err
-		} else {
-			return queryResult.Single()
-		}
-	})
-	if err != nil {
-		return nil, err
-	}
-	singleCompanyWithPositionNodes := new(CompanyWithPositionNode)
-	singleCompanyWithPositionNodes.Company = utils.NodePtr(dbRecord.(*db.Record).Values[0].(dbtype.Node))
-	singleCompanyWithPositionNodes.Position = utils.RelationshipPtr(dbRecord.(*db.Record).Values[1].(dbtype.Relationship))
-	return singleCompanyWithPositionNodes, nil
 }
 
 func (r *companyRepository) GetPaginatedCompaniesWithNameLike(tenant, companyName string, skip, limit int) (*utils.DbNodesWithTotalCount, error) {
