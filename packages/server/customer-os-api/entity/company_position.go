@@ -4,6 +4,7 @@ import (
 	"fmt"
 )
 
+// TODO alexb delete
 type CompanyPositionEntity struct {
 	Id       string
 	Company  CompanyEntity
