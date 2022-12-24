@@ -29,7 +29,7 @@ func (r *roleRepository) MergeRole(tenant, contactId, companyExternalId, externa
 		queryResult, err := tx.Run(`
 			MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant})
 			MATCH (e:ExternalSystem {id:$externalSystemId})<-[:IS_LINKED_WITH {externalId:$companyExternalId}]-(co:Company)-[:COMPANY_BELONGS_TO_TENANT]->(t)
-			MERGE (c)-[:HAS_ROLE]->(r:Role)-[:IS_LINKED_WITH]->(co)
+			MERGE (c)-[:HAS_ROLE]->(r:Role)-[:WORKS]->(co)
             ON CREATE SET r.primary=false, r.id=randomUUID()
 			RETURN r`,
 			map[string]interface{}{
@@ -61,7 +61,7 @@ func (r *roleRepository) MergePrimaryRole(tenant, contactId, jobTitle, companyEx
 			SET r.primary=false
 			REMOVE r.jobTitle
 			WITH distinct c
-			MATCH (c)-[:HAS_ROLE]->(r:Role)-[:IS_LINKED_WITH]->(co:Company)-[:IS_LINKED_WITH {externalId:$companyExternalId}]->(e:ExternalSystem {id:$externalSystemId})
+			MATCH (c)-[:HAS_ROLE]->(r:Role)-[:WORKS]->(co:Company)-[:IS_LINKED_WITH {externalId:$companyExternalId}]->(e:ExternalSystem {id:$externalSystemId})
 			SET r.primary=true, r.jobTitle=$jobTitle
 			return r`,
 			map[string]interface{}{
@@ -90,7 +90,7 @@ func (r *roleRepository) RemoveOutdatedRoles(tenant, contactId, externalSystemId
 	_, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
 		_, err := tx.Run(`
 			MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant})
-			MATCH (c)-[:HAS_ROLE]->(r:Role)-[:IS_LINKED_WITH]->(:Company)-[er:IS_LINKED_WITH]->(e:ExternalSystem {id:$externalSystemId})
+			MATCH (c)-[:HAS_ROLE]->(r:Role)-[:WORKS]->(:Company)-[er:IS_LINKED_WITH]->(e:ExternalSystem {id:$externalSystemId})
 			WHERE NOT er.externalId in $companiesExternalIds
 			DETACH DELETE r`,
 			map[string]interface{}{

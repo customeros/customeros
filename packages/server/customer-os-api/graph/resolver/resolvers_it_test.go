@@ -16,10 +16,10 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/postgres"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils/decode"
 	commonRepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/repository/postgres"
+	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/require"
 	"github.com/testcontainers/testcontainers-go"
 	"gorm.io/gorm"
-	"log"
 	"os"
 	"testing"
 )
@@ -47,7 +47,7 @@ func TestMain(m *testing.M) {
 	defer func(postgresContainer testcontainers.Container, ctx context.Context) {
 		err := postgresContainer.Terminate(ctx)
 		if err != nil {
-			log.Fatal("Error during container termination")
+			logrus.Fatal("Error during container termination")
 		}
 	}(postgresContainer, context.Background())
 
@@ -450,176 +450,6 @@ func TestQueryResolver_ContactTypes(t *testing.T) {
 	require.Equal(t, "first", contactType.ContactTypes[0].Name)
 	require.Equal(t, contactTypeId2, contactType.ContactTypes[1].ID)
 	require.Equal(t, "second", contactType.ContactTypes[1].Name)
-}
-
-func TestMutationResolver_ContactMergeCompanyPosition_NewCompany(t *testing.T) {
-	defer tearDownTestCase()(t)
-	neo4jt.CreateTenant(driver, tenantName)
-	contactId := neo4jt.CreateDefaultContact(driver, tenantName)
-
-	rawResponse, err := c.RawPost(getQuery("merge_new_company_to_contact"),
-		client.Var("contactId", contactId))
-	assertRawResponseSuccess(t, rawResponse, err)
-
-	var companyPosition struct {
-		Contact_MergeCompanyPosition model.CompanyPosition
-	}
-
-	err = decode.Decode(rawResponse.Data.(map[string]any), &companyPosition)
-	require.Nil(t, err)
-
-	require.NotNil(t, companyPosition.Contact_MergeCompanyPosition.ID)
-	require.NotNil(t, companyPosition.Contact_MergeCompanyPosition.Company.ID)
-	require.Equal(t, "Openline", companyPosition.Contact_MergeCompanyPosition.Company.Name)
-	require.Equal(t, "CTO", *companyPosition.Contact_MergeCompanyPosition.JobTitle)
-
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Contact"))
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Company"))
-	require.Equal(t, 1, neo4jt.GetCountOfRelationships(driver, "WORKS_AT"))
-}
-
-func TestMutationResolver_ContactMergeCompanyPosition_ExistingCompany(t *testing.T) {
-	defer tearDownTestCase()(t)
-	neo4jt.CreateTenant(driver, tenantName)
-	contactId := neo4jt.CreateDefaultContact(driver, tenantName)
-	companyId := neo4jt.CreateCompany(driver, tenantName, "LLC LLC")
-
-	rawResponse, err := c.RawPost(getQuery("merge_existing_company_to_contact"),
-		client.Var("contactId", contactId),
-		client.Var("companyId", companyId))
-	assertRawResponseSuccess(t, rawResponse, err)
-
-	var companyPosition struct {
-		Contact_MergeCompanyPosition model.CompanyPosition
-	}
-
-	err = decode.Decode(rawResponse.Data.(map[string]any), &companyPosition)
-	require.Nil(t, err)
-
-	require.NotNil(t, companyPosition.Contact_MergeCompanyPosition.ID)
-	require.Equal(t, companyId, companyPosition.Contact_MergeCompanyPosition.Company.ID)
-	require.Equal(t, "LLC LLC", companyPosition.Contact_MergeCompanyPosition.Company.Name)
-	require.Equal(t, "CEO", *companyPosition.Contact_MergeCompanyPosition.JobTitle)
-
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Contact"))
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Company"))
-	require.Equal(t, 1, neo4jt.GetCountOfRelationships(driver, "WORKS_AT"))
-}
-
-func TestMutationResolver_ContactRemoveCompanyPosition(t *testing.T) {
-	defer tearDownTestCase()(t)
-	neo4jt.CreateTenant(driver, tenantName)
-	contactId := neo4jt.CreateDefaultContact(driver, tenantName)
-	companyId := neo4jt.CreateCompany(driver, tenantName, "LLC LLC")
-	positionId := neo4jt.ContactWorksForCompany(driver, contactId, companyId, "CTO")
-
-	require.Equal(t, 1, neo4jt.GetCountOfRelationships(driver, "WORKS_AT"))
-
-	rawResponse, err := c.RawPost(getQuery("delete_company_position"),
-		client.Var("contactId", contactId),
-		client.Var("companyPositionId", positionId))
-	assertRawResponseSuccess(t, rawResponse, err)
-
-	var result struct {
-		Contact_DeleteCompanyPosition model.Result
-	}
-
-	err = decode.Decode(rawResponse.Data.(map[string]any), &result)
-	require.Nil(t, err)
-	require.NotNil(t, result)
-	require.Equal(t, true, result.Contact_DeleteCompanyPosition.Result)
-
-	require.Equal(t, 0, neo4jt.GetCountOfRelationships(driver, "WORKS_AT"))
-}
-
-func TestMutationResolver_ContactUpdateCompanyPosition_SameCompanyNewPosition(t *testing.T) {
-	defer tearDownTestCase()(t)
-	neo4jt.CreateTenant(driver, tenantName)
-	contactId := neo4jt.CreateDefaultContact(driver, tenantName)
-	companyId := neo4jt.CreateCompany(driver, tenantName, "LLC LLC")
-	positionId := neo4jt.ContactWorksForCompany(driver, contactId, companyId, "CTO")
-
-	rawResponse, err := c.RawPost(getQuery("update_company_position_same_company"),
-		client.Var("contactId", contactId),
-		client.Var("companyId", companyId),
-		client.Var("companyPositionId", positionId))
-	assertRawResponseSuccess(t, rawResponse, err)
-
-	var companyPosition struct {
-		Contact_UpdateCompanyPosition model.CompanyPosition
-	}
-
-	err = decode.Decode(rawResponse.Data.(map[string]any), &companyPosition)
-	require.Nil(t, err)
-
-	require.NotNil(t, companyPosition.Contact_UpdateCompanyPosition.ID)
-	require.Equal(t, companyId, companyPosition.Contact_UpdateCompanyPosition.Company.ID)
-	require.Equal(t, "LLC LLC", companyPosition.Contact_UpdateCompanyPosition.Company.Name)
-	require.Equal(t, "CEO", *companyPosition.Contact_UpdateCompanyPosition.JobTitle)
-
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Contact"))
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Company"))
-	require.Equal(t, 1, neo4jt.GetCountOfRelationships(driver, "WORKS_AT"))
-}
-
-func TestMutationResolver_ContactUpdateCompanyPosition_InOtherExistingCompany(t *testing.T) {
-	defer tearDownTestCase()(t)
-	neo4jt.CreateTenant(driver, tenantName)
-	contactId := neo4jt.CreateDefaultContact(driver, tenantName)
-	companyId := neo4jt.CreateCompany(driver, tenantName, "Current Company")
-	otherCompanyId := neo4jt.CreateCompany(driver, tenantName, "Other Company")
-	positionId := neo4jt.ContactWorksForCompany(driver, contactId, companyId, "CTO")
-
-	rawResponse, err := c.RawPost(getQuery("update_company_position_other_company"),
-		client.Var("contactId", contactId),
-		client.Var("companyId", otherCompanyId),
-		client.Var("companyPositionId", positionId))
-	assertRawResponseSuccess(t, rawResponse, err)
-
-	var companyPosition struct {
-		Contact_UpdateCompanyPosition model.CompanyPosition
-	}
-
-	err = decode.Decode(rawResponse.Data.(map[string]any), &companyPosition)
-	require.Nil(t, err)
-
-	require.NotNil(t, companyPosition.Contact_UpdateCompanyPosition.ID)
-	require.Equal(t, otherCompanyId, companyPosition.Contact_UpdateCompanyPosition.Company.ID)
-	require.Equal(t, "Other Company", companyPosition.Contact_UpdateCompanyPosition.Company.Name)
-	require.Equal(t, "CEO", *companyPosition.Contact_UpdateCompanyPosition.JobTitle)
-
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Contact"))
-	require.Equal(t, 2, neo4jt.GetCountOfNodes(driver, "Company"))
-	require.Equal(t, 1, neo4jt.GetCountOfRelationships(driver, "WORKS_AT"))
-}
-
-func TestMutationResolver_ContactUpdateCompanyPosition_InNewCompany(t *testing.T) {
-	defer tearDownTestCase()(t)
-	neo4jt.CreateTenant(driver, tenantName)
-	contactId := neo4jt.CreateDefaultContact(driver, tenantName)
-	companyId := neo4jt.CreateCompany(driver, tenantName, "LLC LLC")
-	positionId := neo4jt.ContactWorksForCompany(driver, contactId, companyId, "CTO")
-
-	rawResponse, err := c.RawPost(getQuery("update_company_position_new_company"),
-		client.Var("contactId", contactId),
-		client.Var("companyPositionId", positionId))
-	assertRawResponseSuccess(t, rawResponse, err)
-
-	var companyPosition struct {
-		Contact_UpdateCompanyPosition model.CompanyPosition
-	}
-
-	err = decode.Decode(rawResponse.Data.(map[string]any), &companyPosition)
-	require.Nil(t, err)
-
-	require.NotNil(t, companyPosition.Contact_UpdateCompanyPosition.ID)
-	require.NotEqual(t, companyId, companyPosition.Contact_UpdateCompanyPosition.Company.ID)
-	require.Equal(t, "new company", companyPosition.Contact_UpdateCompanyPosition.Company.Name)
-	require.Equal(t, "CEO", *companyPosition.Contact_UpdateCompanyPosition.JobTitle)
-
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Contact"))
-	require.Equal(t, 2, neo4jt.GetCountOfNodes(driver, "Company"))
-	require.Equal(t, 1, neo4jt.GetCountOfRelationships(driver, "WORKS_AT"))
 }
 
 func TestQueryResolver_CompaniesByNameLike(t *testing.T) {

@@ -3,7 +3,7 @@ package neo4j
 import (
 	"github.com/neo4j/neo4j-go-driver/v4/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils"
-	"log"
+	"github.com/sirupsen/logrus"
 )
 
 func ExecuteWriteQuery(driver *neo4j.Driver, query string, params map[string]interface{}) {
@@ -18,7 +18,7 @@ func ExecuteWriteQuery(driver *neo4j.Driver, query string, params map[string]int
 		return nil, nil
 	})
 	if err != nil {
-		log.Fatalf("Failed executing query: %s\n Error: %s", query, err)
+		logrus.Errorf("Failed executing query: %s\n Error: %s", query, err)
 	}
 }
 
@@ -29,12 +29,12 @@ func ExecuteReadQueryWithSingleReturn(driver *neo4j.Driver, query string, params
 	queryResult, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
 		record, err := tx.Run(query, params)
 		if err != nil {
-			log.Fatalf("Error executing query %s", query)
+			logrus.Errorf("Error executing query %s", query)
 		}
 		return record.Single()
 	})
 	if err != nil {
-		log.Fatalf("Error executing query %s", query)
+		logrus.Errorf("Error executing query %s", query)
 	}
 	return queryResult
 }

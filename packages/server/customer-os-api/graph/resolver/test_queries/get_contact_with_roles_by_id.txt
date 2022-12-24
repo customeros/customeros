@@ -1,12 +1,18 @@
 query GetContactById($contactId: ID!){
   contact(id: $contactId) {
     id
-    companyPositions {
+    roles {
         id
         jobTitle
+        primary
         company {
             id
             name
+            description
+            website
+            domain
+            isPublic
+            industry
         }
     }
   }

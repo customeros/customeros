@@ -15,8 +15,14 @@ func MapCompanyInputToEntity(input *model.CompanyInput) *entity.CompanyEntity {
 
 func MapEntityToCompany(entity *entity.CompanyEntity) *model.Company {
 	return &model.Company{
-		ID:   entity.Id,
-		Name: entity.Name,
+		ID:          entity.Id,
+		Name:        entity.Name,
+		Description: utils.StringPtr(entity.Description),
+		Domain:      utils.StringPtr(entity.Domain),
+		Website:     utils.StringPtr(entity.Website),
+		Industry:    utils.StringPtr(entity.Industry),
+		IsPublic:    utils.BoolPtr(entity.IsPublic),
+		CreatedAt:   entity.CreatedAt,
 	}
 }
 

@@ -1,33 +1,3 @@
-"""
-Describes the relationship a Contact has with a Company.
-**A `return` object**
-"""
-type CompanyPosition {
-
-    id: ID!
-
-    """
-    Company associated with a Contact.
-    **Required.**
-    """
-    company: Company!
-
-    "The Contact's job title."
-    jobTitle: String
-}
-
-"""
-Describes the relationship a Contact has with a Company.
-**A `create` object**
-"""
-input CompanyPositionInput {
-
-    company: CompanyInput!
-
-    "The Contact's job title."
-    jobTitle: String
-}
-
 input CompanyInput {
 
     id: ID
@@ -42,6 +12,12 @@ input CompanyInput {
 type Company {
     id: ID!
     name: String!
+    description: String
+    domain:      String
+    website:     String
+    industry:    String
+    isPublic:    Boolean
+    createdAt:   Time!
 }
 
 type CompanyPage implements Pages {

@@ -30,10 +30,6 @@ extend type Mutation {
     contact_Update(input: ContactUpdateInput!): Contact!
     contact_HardDelete(contactId: ID!): Result!
     contact_SoftDelete(contactId: ID!): Result!
-
-    contact_MergeCompanyPosition(contactId : ID!, input: CompanyPositionInput!): CompanyPosition!
-    contact_UpdateCompanyPosition(contactId : ID!, companyPositionId: ID!, input: CompanyPositionInput!): CompanyPosition!
-    contact_DeleteCompanyPosition(contactId : ID!, companyPositionId: ID!): Result!
 }
 
 """
@@ -79,7 +75,7 @@ type Contact implements ExtensibleEntity & Node {
     `companyName` and `jobTitle` of the contact if it has been associated with a company.
     **Required.  If no values it returns an empty array.**
     """
-    companyPositions: [CompanyPosition!]! @goField(forceResolver: true)
+    roles: [ContactRole!]! @goField(forceResolver: true)
 
     """
     Identifies any contact groups the contact is associated with.

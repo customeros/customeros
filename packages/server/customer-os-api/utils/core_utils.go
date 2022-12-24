@@ -2,7 +2,7 @@ package utils
 
 import (
 	"github.com/neo4j/neo4j-go-driver/v4/neo4j/dbtype"
-	"log"
+	"github.com/sirupsen/logrus"
 	"reflect"
 	"time"
 )
@@ -49,7 +49,7 @@ func IntPtrToInt64Ptr(v *int) *int64 {
 
 func MergeMapToMap(src, dst map[string]any) {
 	if dst == nil {
-		log.Panic("expecting not nil map")
+		logrus.Error("expecting not nil map")
 	} else if src != nil {
 		for k, v := range src {
 			dst[k] = v

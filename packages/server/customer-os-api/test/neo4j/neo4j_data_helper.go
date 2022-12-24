@@ -331,18 +331,40 @@ func CreateCompany(driver *neo4j.Driver, tenant, companyName string) string {
 	return companyId.String()
 }
 
-func ContactWorksForCompany(driver *neo4j.Driver, contactId, companyId, jobTitle string) string {
-	var positionId, _ = uuid.NewRandom()
+func CreateFullCompany(driver *neo4j.Driver, tenant string, company entity.CompanyEntity) string {
+	var companyId, _ = uuid.NewRandom()
+	query := `MATCH (t:Tenant {name:$tenant})
+			MERGE (t)<-[:COMPANY_BELONGS_TO_TENANT]-(co:Company {id:$id})
+			ON CREATE SET co.name=$name, co.description=$description, co.domain=$domain, co.website=$website,
+							co.industry=$industry, co.isPublic=$isPublic, co.createdAt=datetime({timezone: 'UTC'})
+`
+	ExecuteWriteQuery(driver, query, map[string]any{
+		"id":          companyId.String(),
+		"tenant":      tenant,
+		"name":        company.Name,
+		"description": company.Description,
+		"domain":      company.Domain,
+		"website":     company.Website,
+		"industry":    company.Industry,
+		"isPublic":    company.IsPublic,
+	})
+	return companyId.String()
+}
+
+func ContactWorksForCompany(driver *neo4j.Driver, contactId, companyId, jobTitle string, primary bool) string {
+	var roleId, _ = uuid.NewRandom()
 	query := `MATCH (c:Contact {id:$contactId}),
 			        (co:Company {id:$companyId})
-			MERGE (c)-[:WORKS_AT {id:$id, jobTitle:$jobTitle}]->(co)`
+			MERGE (c)-[:HAS_ROLE]->(r:Role)-[:WORKS]->(co)
+			ON CREATE SET r.id=$id, r.jobTitle=$jobTitle, r.primary=$primary`
 	ExecuteWriteQuery(driver, query, map[string]any{
-		"id":        positionId.String(),
+		"id":        roleId.String(),
 		"contactId": contactId,
 		"companyId": companyId,
 		"jobTitle":  jobTitle,
+		"primary":   primary,
 	})
-	return positionId.String()
+	return roleId.String()
 }
 
 func UserOwnsContact(driver *neo4j.Driver, userId, contactId string) {

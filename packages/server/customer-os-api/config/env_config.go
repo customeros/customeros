@@ -1,8 +1,9 @@
 package config
 
 type Config struct {
-	ApiPort string `env:"PORT"`
-	GraphQL struct {
+	ApiPort  string `env:"PORT"`
+	LogLevel string `env:"LOG_LEVEL" envDefault:"INFO"`
+	GraphQL  struct {
 		PlaygroundEnabled bool `env:"GRAPHQL_PLAYGROUND_ENABLED" envDefault:"false"`
 	}
 	Postgres struct {
@@ -14,6 +15,7 @@ type Config struct {
 		MaxConn         int    `env:"POSTGRES_DB_MAX_CONN"`
 		MaxIdleConn     int    `env:"POSTGRES_DB_MAX_IDLE_CONN"`
 		ConnMaxLifetime int    `env:"POSTGRES_DB_CONN_MAX_LIFETIME"`
+		LogLevel        string `env:"POSTGRES_LOG_LEVEL" envDefault:"WARN"`
 	}
 	Neo4j struct {
 		Target                string `env:"NEO4J_TARGET,required"`

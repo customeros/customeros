@@ -1,0 +1,16 @@
+mutation ContactRoleUpdate($contactId: ID!, $roleId: ID!){
+     contactRole_Update(
+        contactId: $contactId
+        roleId: $roleId
+        input: {
+                    jobTitle: "CEO"
+                    primary: true
+               }
+     ) {
+        company {
+            id
+        }
+        jobTitle
+        primary
+      }
+}

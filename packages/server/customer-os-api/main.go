@@ -12,29 +12,20 @@ import (
 	"github.com/neo4j/neo4j-go-driver/v4/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/config"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/config/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/generated"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/resolver"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service/container"
 	commonRepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/repository/postgres"
 	commonService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
+	"github.com/sirupsen/logrus"
 	"github.com/vektah/gqlparser/v2/gqlerror"
-	"log"
 )
 
 const customerOSApiPort = "10000"
 
 func InitDB(cfg *config.Config) (db *config.StorageDB, err error) {
-	if db, err = config.NewDBConn(
-		cfg.Postgres.Host,
-		cfg.Postgres.Port,
-		cfg.Postgres.Db,
-		cfg.Postgres.User,
-		cfg.Postgres.Password,
-		cfg.Postgres.MaxConn,
-		cfg.Postgres.MaxIdleConn,
-		cfg.Postgres.ConnMaxLifetime); err != nil {
-		log.Fatalf("Coud not open db connection: %s", err.Error())
+	if db, err = config.NewDBConn(cfg); err != nil {
+		logrus.Fatalf("Coud not open db connection: %s", err.Error())
 	}
 	return
 }
@@ -75,14 +66,11 @@ func playgroundHandler() gin.HandlerFunc {
 }
 
 func init() {
-	logger.Logger = logger.New(log.New(log.Default().Writer(), "", log.Ldate|log.Ltime|log.Lmicroseconds), logger.Config{
-		Colorful: true,
-		LogLevel: logger.Info,
-	})
 }
 
 func main() {
 	cfg := loadConfiguration()
+	config.InitLogger(cfg)
 
 	db, _ := InitDB(cfg)
 	defer db.SqlDB.Close()
@@ -91,7 +79,7 @@ func main() {
 
 	neo4jDriver, err := config.NewDriver(cfg)
 	if err != nil {
-		log.Fatalf("Could not establish connection with neo4j at: %v, error: %v", cfg.Neo4j.Target, err.Error())
+		logrus.Fatalf("Could not establish connection with neo4j at: %v, error: %v", cfg.Neo4j.Target, err.Error())
 	}
 	defer neo4jDriver.Close()
 
@@ -119,12 +107,12 @@ func main() {
 
 func loadConfiguration() *config.Config {
 	if err := godotenv.Load(); err != nil {
-		log.Println("[WARNING] Error loading .env file")
+		logrus.Warn("Error loading .env file")
 	}
 
 	cfg := config.Config{}
 	if err := env.Parse(&cfg); err != nil {
-		log.Printf("%+v\n", err)
+		logrus.Errorf("%+v\n", err)
 	}
 
 	return &cfg

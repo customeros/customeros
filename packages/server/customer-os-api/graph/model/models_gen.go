@@ -38,8 +38,14 @@ type Pages interface {
 }
 
 type Company struct {
-	ID   string `json:"id"`
-	Name string `json:"name"`
+	ID          string    `json:"id"`
+	Name        string    `json:"name"`
+	Description *string   `json:"description"`
+	Domain      *string   `json:"domain"`
+	Website     *string   `json:"website"`
+	Industry    *string   `json:"industry"`
+	IsPublic    *bool     `json:"isPublic"`
+	CreatedAt   time.Time `json:"createdAt"`
 }
 
 type CompanyInput struct {
@@ -65,25 +71,6 @@ func (this CompanyPage) GetTotalPages() int { return this.TotalPages }
 // **Required.**
 func (this CompanyPage) GetTotalElements() int64 { return this.TotalElements }
 
-// Describes the relationship a Contact has with a Company.
-// **A `return` object**
-type CompanyPosition struct {
-	ID string `json:"id"`
-	// Company associated with a Contact.
-	// **Required.**
-	Company *Company `json:"company"`
-	// The Contact's job title.
-	JobTitle *string `json:"jobTitle"`
-}
-
-// Describes the relationship a Contact has with a Company.
-// **A `create` object**
-type CompanyPositionInput struct {
-	Company *CompanyInput `json:"company"`
-	// The Contact's job title.
-	JobTitle *string `json:"jobTitle"`
-}
-
 // A contact represents an individual in customerOS.
 // **A `response` object.**
 type Contact struct {
@@ -107,7 +94,7 @@ type Contact struct {
 	ContactType *ContactType `json:"contactType"`
 	// `companyName` and `jobTitle` of the contact if it has been associated with a company.
 	// **Required.  If no values it returns an empty array.**
-	CompanyPositions []*CompanyPosition `json:"companyPositions"`
+	Roles []*ContactRole `json:"roles"`
 	// Identifies any contact groups the contact is associated with.
 	//  **Required.  If no values it returns an empty array.**
 	Groups []*ContactGroup `json:"groups"`
@@ -222,6 +209,27 @@ type ContactInput struct {
 	// Id of the contact owner (user)
 	OwnerID           *string                       `json:"ownerId"`
 	ExternalReference *ExternalSystemReferenceInput `json:"externalReference"`
+}
+
+// Describes the relationship a Contact has with a Company.
+// **A `return` object**
+type ContactRole struct {
+	ID string `json:"id"`
+	// Company associated with a Contact.
+	// **Required.**
+	Company *Company `json:"company"`
+	// The Contact's job title.
+	JobTitle *string `json:"jobTitle"`
+	Primary  bool    `json:"primary"`
+}
+
+// Describes the relationship a Contact has with a Company.
+// **A `create` object**
+type ContactRoleInput struct {
+	CompanyID *string `json:"companyId"`
+	// The Contact's job title.
+	JobTitle *string `json:"jobTitle"`
+	Primary  *bool   `json:"primary"`
 }
 
 type ContactType struct {
