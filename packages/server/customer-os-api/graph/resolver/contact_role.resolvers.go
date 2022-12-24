@@ -6,7 +6,6 @@ package resolver
 
 import (
 	"context"
-
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/generated"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
@@ -30,7 +29,7 @@ func (r *contactRoleResolver) Company(ctx context.Context, obj *model.ContactRol
 func (r *mutationResolver) ContactRoleDelete(ctx context.Context, contactID string, roleID string) (*model.Result, error) {
 	result, err := r.Services.ContactRoleService.DeleteContactRole(ctx, contactID, roleID)
 	if err != nil {
-		graphql.AddErrorf(ctx, "Could not remove contact role %s from contact %s", roleID, contactID)
+		graphql.AddErrorf(ctx, "Failed remove contact role %s from contact %s", roleID, contactID)
 		return nil, err
 	}
 	return &model.Result{
@@ -42,7 +41,17 @@ func (r *mutationResolver) ContactRoleDelete(ctx context.Context, contactID stri
 func (r *mutationResolver) ContactRoleCreate(ctx context.Context, contactID string, input model.ContactRoleInput) (*model.ContactRole, error) {
 	result, err := r.Services.ContactRoleService.CreateContactRole(ctx, contactID, input.CompanyID, mapper.MapContactRoleInputToEntity(&input))
 	if err != nil {
-		graphql.AddErrorf(ctx, "Could not add role to contact %s", contactID)
+		graphql.AddErrorf(ctx, "Failed add role to contact %s", contactID)
+		return nil, err
+	}
+	return mapper.MapEntityToContactRole(result), nil
+}
+
+// ContactRoleUpdate is the resolver for the contactRole_Update field.
+func (r *mutationResolver) ContactRoleUpdate(ctx context.Context, contactID string, roleID string, input model.ContactRoleInput) (*model.ContactRole, error) {
+	result, err := r.Services.ContactRoleService.UpdateContactRole(ctx, contactID, roleID, input.CompanyID, mapper.MapContactRoleInputToEntity(&input))
+	if err != nil {
+		graphql.AddErrorf(ctx, "Failed update role %s", roleID)
 		return nil, err
 	}
 	return mapper.MapEntityToContactRole(result), nil

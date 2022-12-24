@@ -10,9 +10,10 @@ import (
 type ContactRoleRepository interface {
 	GetRolesForContact(session neo4j.Session, tenant, contactId string) ([]*dbtype.Node, error)
 	DeleteContactRoleInTx(tx neo4j.Transaction, tenant, contactId, roleId string) error
-	SetOtherRolesNonPrimaryInTx(tx neo4j.Transaction, tenant, contactId string) error
-	CreateContactRole(tx neo4j.Transaction, tenant string, contactId string, input *entity.ContactRoleEntity) (*dbtype.Node, error)
-	LinkWithCompany(tx neo4j.Transaction, tenant string, roleId string, companyId string) error
+	SetOtherRolesNonPrimaryInTx(tx neo4j.Transaction, tenant, contactId, skipRoleId string) error
+	CreateContactRole(tx neo4j.Transaction, tenant, contactId string, input *entity.ContactRoleEntity) (*dbtype.Node, error)
+	UpdateContactRoleDetails(tx neo4j.Transaction, tenant, contactId, roleId string, input *entity.ContactRoleEntity) (*dbtype.Node, error)
+	LinkWithCompany(tx neo4j.Transaction, tenant, roleId, companyId string) error
 }
 
 type contactRoleRepository struct {
@@ -70,6 +71,25 @@ func (r *contactRoleRepository) CreateContactRole(tx neo4j.Transaction, tenant s
 	}
 }
 
+func (r *contactRoleRepository) UpdateContactRoleDetails(tx neo4j.Transaction, tenant, contactId, roleId string, input *entity.ContactRoleEntity) (*dbtype.Node, error) {
+	if queryResult, err := tx.Run(`
+			MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}),
+					(c)-[:HAS_ROLE]->(r:Role {id:$roleId})
+			SET r.jobTitle=$jobTitle, r.primary=$primary
+			RETURN r`,
+		map[string]interface{}{
+			"tenant":    tenant,
+			"contactId": contactId,
+			"roleId":    roleId,
+			"jobTitle":  input.JobTitle,
+			"primary":   input.Primary,
+		}); err != nil {
+		return nil, err
+	} else {
+		return utils.ExtractSingleRecordFirstValueAsNode(queryResult, err)
+	}
+}
+
 func (r *contactRoleRepository) DeleteContactRoleInTx(tx neo4j.Transaction, tenant, contactId, roleId string) error {
 	_, err := tx.Run(`
 			MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant}),
@@ -83,14 +103,16 @@ func (r *contactRoleRepository) DeleteContactRoleInTx(tx neo4j.Transaction, tena
 	return err
 }
 
-func (r *contactRoleRepository) SetOtherRolesNonPrimaryInTx(tx neo4j.Transaction, tenant, contactId string) error {
+func (r *contactRoleRepository) SetOtherRolesNonPrimaryInTx(tx neo4j.Transaction, tenant, contactId, skipRoleId string) error {
 	_, err := tx.Run(`
 			MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}),
 				 (c)-[:HAS_ROLE]->(r:Role)
+			WHERE r.id <> $skipRoleId
             SET r.primary=false`,
 		map[string]interface{}{
-			"tenant":    tenant,
-			"contactId": contactId,
+			"tenant":     tenant,
+			"contactId":  contactId,
+			"skipRoleId": skipRoleId,
 		})
 	return err
 }
@@ -99,6 +121,10 @@ func (r *contactRoleRepository) LinkWithCompany(tx neo4j.Transaction, tenant str
 	_, err := tx.Run(`
 			MATCH (co:Company {id:$companyId})-[:COMPANY_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}),
 					(r:Role {id:$roleId})<-[:HAS_ROLE]-(c:Contact)-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant})
+			OPTIONAL MATCH (r)-[rel:WORKS]->(co2:Company)
+				WHERE co2.id <> co.id
+			DELETE rel
+			WITH r, co
 			MERGE (r)-[:WORKS]->(co)
 			`,
 		map[string]interface{}{
