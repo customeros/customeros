@@ -9,12 +9,9 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils"
 )
 
-// TODO alexb refactor company service to contain only company related
 type CompanyService interface {
 	GetCompanyForRole(ctx context.Context, roleId string) (*entity.CompanyEntity, error)
 
-	MergeCompanyToContact(ctx context.Context, contactId string, input *entity.CompanyPositionEntity) (*entity.CompanyPositionEntity, error)
-	UpdateCompanyPosition(ctx context.Context, contactId, companyPositionId string, input *entity.CompanyPositionEntity) (*entity.CompanyPositionEntity, error)
 	FindCompaniesByNameLike(ctx context.Context, page, limit int, companyName string) (*utils.Pagination, error)
 }
 
@@ -26,72 +23,6 @@ func NewCompanyService(repositories *repository.Repositories) CompanyService {
 	return &companyService{
 		repositories: repositories,
 	}
-}
-
-func (s *companyService) MergeCompanyToContact(ctx context.Context, contactId string, input *entity.CompanyPositionEntity) (*entity.CompanyPositionEntity, error) {
-	//var err error
-	//var companyDbNode *dbtype.Node
-	//var positionDbRelationship *dbtype.Relationship
-	//
-	//session := utils.NewNeo4jWriteSession(*s.repositories.Drivers.Neo4jDriver)
-	//defer session.Close()
-	//
-	//newPosition, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
-	//	if len(input.Company.Id) == 0 {
-	//		companyDbNode, positionDbRelationship, err = s.repositories.CompanyRepository.LinkNewCompanyToContactInTx(tx, common.GetContext(ctx).Tenant, contactId, input.Company.Name, input.JobTitle)
-	//	} else {
-	//		companyDbNode, positionDbRelationship, err = s.repositories.CompanyRepository.LinkExistingCompanyToContactInTx(tx, common.GetContext(ctx).Tenant, contactId, input.Company.Id, input.JobTitle)
-	//	}
-	//	if err != nil {
-	//		return nil, err
-	//	}
-	//	companyPositionEntity := s.mapCompanyPositionDbRelationshipToEntity(positionDbRelationship)
-	//	companyPositionEntity.Company = *s.mapCompanyDbNodeToEntity(companyDbNode)
-	//	return companyPositionEntity, nil
-	//})
-	//
-	//return newPosition.(*entity.CompanyPositionEntity), nil
-	return nil, nil
-}
-
-func (s *companyService) UpdateCompanyPosition(ctx context.Context, contactId, companyPositionId string, input *entity.CompanyPositionEntity) (*entity.CompanyPositionEntity, error) {
-	//var err error
-	//var companyDbNode *dbtype.Node
-	//var positionDbRelationship *dbtype.Relationship
-	//tenant := common.GetContext(ctx).Tenant
-	//
-	//session := utils.NewNeo4jWriteSession(*s.repositories.Drivers.Neo4jDriver)
-	//defer session.Close()
-	//
-	//currentPositionDtls, err := s.repositories.CompanyRepository.GetCompanyPositionForContact(session, tenant, contactId, companyPositionId)
-	//if err != nil {
-	//	return nil, err
-	//}
-	//currentPositionId := utils.GetStringPropOrEmpty(utils.GetPropsFromRelationship(*currentPositionDtls.Position), "id")
-	//
-	//updatedPosition, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
-	//	if len(input.Company.Id) == 0 {
-	//		err := s.repositories.CompanyRepository.DeleteCompanyPositionInTx(tx, tenant, contactId, currentPositionId)
-	//		if err != nil {
-	//			return nil, err
-	//		}
-	//		companyDbNode, positionDbRelationship, err = s.repositories.CompanyRepository.LinkNewCompanyToContactInTx(tx, tenant, contactId, input.Company.Name, input.JobTitle)
-	//	} else if input.Company.Id == currentPositionId {
-	//		companyDbNode, positionDbRelationship, err = s.repositories.CompanyRepository.UpdateCompanyPositionInTx(tx, common.GetContext(ctx).Tenant, contactId, companyPositionId, input.JobTitle)
-	//	} else {
-	//		err := s.repositories.CompanyRepository.DeleteCompanyPositionInTx(tx, tenant, contactId, currentPositionId)
-	//		if err != nil {
-	//			return nil, err
-	//		}
-	//		companyDbNode, positionDbRelationship, err = s.repositories.CompanyRepository.LinkExistingCompanyToContactInTx(tx, tenant, contactId, input.Company.Id, input.JobTitle)
-	//	}
-	//	companyPositionEntity := s.mapCompanyPositionDbRelationshipToEntity(positionDbRelationship)
-	//	companyPositionEntity.Company = *s.mapCompanyDbNodeToEntity(companyDbNode)
-	//	return companyPositionEntity, nil
-	//})
-	//
-	//return updatedPosition.(*entity.CompanyPositionEntity), err
-	return nil, nil
 }
 
 func (s *companyService) FindCompaniesByNameLike(ctx context.Context, page, limit int, companyName string) (*utils.Pagination, error) {

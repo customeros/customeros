@@ -6,14 +6,9 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils"
 )
 
-// TODO alexb refactor all
 type CompanyRepository interface {
 	GetCompanyForRole(session neo4j.Session, tenant, roleId string) (*dbtype.Node, error)
 	GetPaginatedCompaniesWithNameLike(tenant, companyName string, skip, limit int) (*utils.DbNodesWithTotalCount, error)
-
-	LinkNewCompanyToContactInTx(tx neo4j.Transaction, tenant, contactId, companyName, jobTitle string) (*dbtype.Node, *dbtype.Relationship, error)
-	LinkExistingCompanyToContactInTx(tx neo4j.Transaction, tenant, contactId, companyId, jobTitle string) (*dbtype.Node, *dbtype.Relationship, error)
-	UpdateCompanyPositionInTx(tx neo4j.Transaction, tenant, contactId, companyPositionId, jobTitle string) (*dbtype.Node, *dbtype.Relationship, error)
 }
 
 type companyRepository struct {
@@ -48,69 +43,6 @@ func NewCompanyRepository(driver *neo4j.Driver) CompanyRepository {
 	return &companyRepository{
 		driver: driver,
 	}
-}
-
-type CompanyWithPositionNode struct {
-	Company  *dbtype.Node
-	Position *dbtype.Relationship
-}
-
-func (r *companyRepository) LinkNewCompanyToContactInTx(tx neo4j.Transaction, tenant, contactId, companyName, jobTitle string) (*dbtype.Node, *dbtype.Relationship, error) {
-	queryResult, err := tx.Run(`
-			MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant})
-			MERGE (co:Company {id:randomUUID(), name: $companyName})-[:COMPANY_BELONGS_TO_TENANT]->(t)
-			MERGE (c)-[r:WORKS_AT {id:randomUUID(), jobTitle:$jobTitle}]->(co)
-			RETURN co, r`,
-		map[string]any{
-			"tenant":      tenant,
-			"contactId":   contactId,
-			"companyName": companyName,
-			"jobTitle":    jobTitle,
-		})
-	if err != nil {
-		return nil, nil, err
-	}
-	dbRecord, err := queryResult.Single()
-	return utils.NodePtr(dbRecord.Values[0].(dbtype.Node)), utils.RelationshipPtr(dbRecord.Values[1].(dbtype.Relationship)), err
-}
-
-func (r *companyRepository) LinkExistingCompanyToContactInTx(tx neo4j.Transaction, tenant, contactId, companyId, jobTitle string) (*dbtype.Node, *dbtype.Relationship, error) {
-	queryResult, err := tx.Run(`
-			MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant}),
-				  (co:Company {id:$companyId})-[:COMPANY_BELONGS_TO_TENANT]->(t)
-			MERGE (c)-[r:WORKS_AT {id:randomUUID(), jobTitle:$jobTitle}]->(co)
-			RETURN co, r`,
-		map[string]any{
-			"tenant":    tenant,
-			"contactId": contactId,
-			"companyId": companyId,
-			"jobTitle":  jobTitle,
-		})
-	if err != nil {
-		return nil, nil, err
-	}
-	dbRecord, err := queryResult.Single()
-
-	return utils.NodePtr(dbRecord.Values[0].(dbtype.Node)), utils.RelationshipPtr(dbRecord.Values[1].(dbtype.Relationship)), err
-}
-
-func (r *companyRepository) UpdateCompanyPositionInTx(tx neo4j.Transaction, tenant, contactId, companyPositionId, jobTitle string) (*dbtype.Node, *dbtype.Relationship, error) {
-	queryResult, err := tx.Run(`
-			MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant}),
-				  (c)-[r:WORKS_AT {id:$companyPositionId}]->(co:Company)
-			SET r.jobTitle=$jobTitle
-			RETURN co, r`,
-		map[string]any{
-			"tenant":            tenant,
-			"contactId":         contactId,
-			"companyPositionId": companyPositionId,
-			"jobTitle":          jobTitle,
-		})
-	if err != nil {
-		return nil, nil, err
-	}
-	dbRecord, err := queryResult.Single()
-	return utils.NodePtr(dbRecord.Values[0].(dbtype.Node)), utils.RelationshipPtr(dbRecord.Values[1].(dbtype.Relationship)), err
 }
 
 func (r *companyRepository) GetPaginatedCompaniesWithNameLike(tenant, companyName string, skip, limit int) (*utils.DbNodesWithTotalCount, error) {

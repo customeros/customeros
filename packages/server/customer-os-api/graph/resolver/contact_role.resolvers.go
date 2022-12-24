@@ -6,6 +6,7 @@ package resolver
 
 import (
 	"context"
+
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/generated"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
@@ -35,6 +36,16 @@ func (r *mutationResolver) ContactRoleDelete(ctx context.Context, contactID stri
 	return &model.Result{
 		Result: result,
 	}, nil
+}
+
+// ContactRoleCreate is the resolver for the contactRole_Create field.
+func (r *mutationResolver) ContactRoleCreate(ctx context.Context, contactID string, input model.ContactRoleInput) (*model.ContactRole, error) {
+	result, err := r.Services.ContactRoleService.CreateContactRole(ctx, contactID, input.CompanyID, mapper.MapContactRoleInputToEntity(&input))
+	if err != nil {
+		graphql.AddErrorf(ctx, "Could not add role to contact %s", contactID)
+		return nil, err
+	}
+	return mapper.MapEntityToContactRole(result), nil
 }
 
 // ContactRole returns generated.ContactRoleResolver implementation.

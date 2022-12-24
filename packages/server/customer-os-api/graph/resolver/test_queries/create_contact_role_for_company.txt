@@ -1,0 +1,15 @@
+mutation CreateContactRole($contactId: ID!, $companyId: ID!){
+     contactRole_Create(
+        contactId: $contactId
+        input: {companyId: $companyId
+                jobTitle: "CEO"
+                primary: true}
+     ) {
+        company {
+            id
+            name
+        }
+        jobTitle
+        primary
+      }
+}

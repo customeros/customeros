@@ -6,16 +6,16 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils"
 )
 
-//func MapContactRoleInputToEntity(input *model.ContactRoleInput) *entity.CompanyPositionEntity {
-//	if input == nil {
-//		return nil
-//	}
-//	companyPositionEntity := entity.CompanyPositionEntity{
-//		Company:  *MapCompanyInputToEntity(input.Company),
-//		JobTitle: utils.IfNotNilString(input.JobTitle),
-//	}
-//	return &companyPositionEntity
-//}
+func MapContactRoleInputToEntity(input *model.ContactRoleInput) *entity.ContactRoleEntity {
+	if input == nil {
+		return nil
+	}
+	contactRoleEntity := entity.ContactRoleEntity{
+		JobTitle: utils.IfNotNilString(input.JobTitle),
+		Primary:  utils.IfNotNilBool(input.Primary),
+	}
+	return &contactRoleEntity
+}
 
 func MapEntityToContactRole(entity *entity.ContactRoleEntity) *model.ContactRole {
 	contactRole := model.ContactRole{

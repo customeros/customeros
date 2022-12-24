@@ -1,5 +1,6 @@
 extend type Mutation {
     contactRole_Delete(contactId : ID!, roleId: ID!): Result!
+    contactRole_Create(contactId : ID!, input: ContactRoleInput!): ContactRole!
 }
 
 """

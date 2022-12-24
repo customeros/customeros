@@ -30,10 +30,6 @@ extend type Mutation {
     contact_Update(input: ContactUpdateInput!): Contact!
     contact_HardDelete(contactId: ID!): Result!
     contact_SoftDelete(contactId: ID!): Result!
-
-#    TODO alexb replace with new set
-#    contact_MergeCompanyPosition(contactId : ID!, input: CompanyPositionInput!): CompanyPosition!
-#    contact_UpdateCompanyPosition(contactId : ID!, companyPositionId: ID!, input: CompanyPositionInput!): CompanyPosition!
 }
 
 """

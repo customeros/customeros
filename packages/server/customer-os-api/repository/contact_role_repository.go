@@ -3,12 +3,16 @@ package repository
 import (
 	"github.com/neo4j/neo4j-go-driver/v4/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v4/neo4j/dbtype"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils"
 )
 
 type ContactRoleRepository interface {
 	GetRolesForContact(session neo4j.Session, tenant, contactId string) ([]*dbtype.Node, error)
 	DeleteContactRoleInTx(tx neo4j.Transaction, tenant, contactId, roleId string) error
+	SetOtherRolesNonPrimaryInTx(tx neo4j.Transaction, tenant, contactId string) error
+	CreateContactRole(tx neo4j.Transaction, tenant string, contactId string, input *entity.ContactRoleEntity) (*dbtype.Node, error)
+	LinkWithCompany(tx neo4j.Transaction, tenant string, roleId string, companyId string) error
 }
 
 type contactRoleRepository struct {
@@ -48,6 +52,24 @@ func (r *contactRoleRepository) GetRolesForContact(session neo4j.Session, tenant
 	return dbNodes, err
 }
 
+func (r *contactRoleRepository) CreateContactRole(tx neo4j.Transaction, tenant string, contactId string, input *entity.ContactRoleEntity) (*dbtype.Node, error) {
+	if queryResult, err := tx.Run(`
+			MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant})
+			MERGE (c)-[:HAS_ROLE]->(r:Role)
+			ON CREATE SET r.id=randomUUID(), r.jobTitle=$jobTitle, r.primary=$primary
+			RETURN r`,
+		map[string]interface{}{
+			"tenant":    tenant,
+			"contactId": contactId,
+			"jobTitle":  input.JobTitle,
+			"primary":   input.Primary,
+		}); err != nil {
+		return nil, err
+	} else {
+		return utils.ExtractSingleRecordFirstValueAsNode(queryResult, err)
+	}
+}
+
 func (r *contactRoleRepository) DeleteContactRoleInTx(tx neo4j.Transaction, tenant, contactId, roleId string) error {
 	_, err := tx.Run(`
 			MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant}),
@@ -57,6 +79,32 @@ func (r *contactRoleRepository) DeleteContactRoleInTx(tx neo4j.Transaction, tena
 			"tenant":    tenant,
 			"contactId": contactId,
 			"roleId":    roleId,
+		})
+	return err
+}
+
+func (r *contactRoleRepository) SetOtherRolesNonPrimaryInTx(tx neo4j.Transaction, tenant, contactId string) error {
+	_, err := tx.Run(`
+			MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}),
+				 (c)-[:HAS_ROLE]->(r:Role)
+            SET r.primary=false`,
+		map[string]interface{}{
+			"tenant":    tenant,
+			"contactId": contactId,
+		})
+	return err
+}
+
+func (r *contactRoleRepository) LinkWithCompany(tx neo4j.Transaction, tenant string, roleId string, companyId string) error {
+	_, err := tx.Run(`
+			MATCH (co:Company {id:$companyId})-[:COMPANY_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}),
+					(r:Role {id:$roleId})<-[:HAS_ROLE]-(c:Contact)-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant})
+			MERGE (r)-[:WORKS]->(co)
+			`,
+		map[string]interface{}{
+			"tenant":    tenant,
+			"roleId":    roleId,
+			"companyId": companyId,
 		})
 	return err
 }

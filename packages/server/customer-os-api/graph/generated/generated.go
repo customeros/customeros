@@ -212,6 +212,7 @@ type ComplexityRoot struct {
 		ContactGroupRemoveContact              func(childComplexity int, contactID string, groupID string) int
 		ContactGroupUpdate                     func(childComplexity int, input model.ContactGroupUpdateInput) int
 		ContactHardDelete                      func(childComplexity int, contactID string) int
+		ContactRoleCreate                      func(childComplexity int, contactID string, input model.ContactRoleInput) int
 		ContactRoleDelete                      func(childComplexity int, contactID string, roleID string) int
 		ContactSoftDelete                      func(childComplexity int, contactID string) int
 		ContactTypeCreate                      func(childComplexity int, input model.ContactTypeInput) int
@@ -362,6 +363,7 @@ type MutationResolver interface {
 	ContactGroupAddContact(ctx context.Context, contactID string, groupID string) (*model.Result, error)
 	ContactGroupRemoveContact(ctx context.Context, contactID string, groupID string) (*model.Result, error)
 	ContactRoleDelete(ctx context.Context, contactID string, roleID string) (*model.Result, error)
+	ContactRoleCreate(ctx context.Context, contactID string, input model.ContactRoleInput) (*model.ContactRole, error)
 	ContactTypeCreate(ctx context.Context, input model.ContactTypeInput) (*model.ContactType, error)
 	ContactTypeUpdate(ctx context.Context, input model.ContactTypeUpdateInput) (*model.ContactType, error)
 	ContactTypeDelete(ctx context.Context, id string) (*model.Result, error)
@@ -1198,6 +1200,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.ContactHardDelete(childComplexity, args["contactId"].(string)), true
+
+	case "Mutation.contactRole_Create":
+		if e.complexity.Mutation.ContactRoleCreate == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_contactRole_Create_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.ContactRoleCreate(childComplexity, args["contactId"].(string), args["input"].(model.ContactRoleInput)), true
 
 	case "Mutation.contactRole_Delete":
 		if e.complexity.Mutation.ContactRoleDelete == nil {
@@ -2105,10 +2119,6 @@ extend type Mutation {
     contact_Update(input: ContactUpdateInput!): Contact!
     contact_HardDelete(contactId: ID!): Result!
     contact_SoftDelete(contactId: ID!): Result!
-
-#    TODO alexb replace with new set
-#    contact_MergeCompanyPosition(contactId : ID!, input: CompanyPositionInput!): CompanyPosition!
-#    contact_UpdateCompanyPosition(contactId : ID!, companyPositionId: ID!, input: CompanyPositionInput!): CompanyPosition!
 }
 
 """
@@ -2446,6 +2456,7 @@ type ContactGroupPage implements Pages {
 `, BuiltIn: false},
 	{Name: "../schemas/contact_role.graphqls", Input: `extend type Mutation {
     contactRole_Delete(contactId : ID!, roleId: ID!): Result!
+    contactRole_Create(contactId : ID!, input: ContactRoleInput!): ContactRole!
 }
 
 """
@@ -3418,6 +3429,30 @@ func (ec *executionContext) field_Mutation_contactGroupUpdate_args(ctx context.C
 		}
 	}
 	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_contactRole_Create_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["contactId"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("contactId"))
+		arg0, err = ec.unmarshalNID2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["contactId"] = arg0
+	var arg1 model.ContactRoleInput
+	if tmp, ok := rawArgs["input"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+		arg1, err = ec.unmarshalNContactRoleInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐContactRoleInput(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg1
 	return args, nil
 }
 
@@ -9759,6 +9794,71 @@ func (ec *executionContext) fieldContext_Mutation_contactRole_Delete(ctx context
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Mutation_contactRole_Delete_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_contactRole_Create(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_contactRole_Create(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().ContactRoleCreate(rctx, fc.Args["contactId"].(string), fc.Args["input"].(model.ContactRoleInput))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.ContactRole)
+	fc.Result = res
+	return ec.marshalNContactRole2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐContactRole(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_contactRole_Create(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_ContactRole_id(ctx, field)
+			case "company":
+				return ec.fieldContext_ContactRole_company(ctx, field)
+			case "jobTitle":
+				return ec.fieldContext_ContactRole_jobTitle(ctx, field)
+			case "primary":
+				return ec.fieldContext_ContactRole_primary(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type ContactRole", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_contactRole_Create_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return
 	}
@@ -18563,6 +18663,15 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
+		case "contactRole_Create":
+
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_contactRole_Create(ctx, field)
+			})
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		case "contactType_Create":
 
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
@@ -20081,6 +20190,10 @@ func (ec *executionContext) unmarshalNContactInput2githubᚗcomᚋopenlineᚑai�
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
+func (ec *executionContext) marshalNContactRole2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐContactRole(ctx context.Context, sel ast.SelectionSet, v model.ContactRole) graphql.Marshaler {
+	return ec._ContactRole(ctx, sel, &v)
+}
+
 func (ec *executionContext) marshalNContactRole2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐContactRoleᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.ContactRole) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
@@ -20133,6 +20246,11 @@ func (ec *executionContext) marshalNContactRole2ᚖgithubᚗcomᚋopenlineᚑai�
 		return graphql.Null
 	}
 	return ec._ContactRole(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalNContactRoleInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐContactRoleInput(ctx context.Context, v interface{}) (model.ContactRoleInput, error) {
+	res, err := ec.unmarshalInputContactRoleInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) marshalNContactType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐContactType(ctx context.Context, sel ast.SelectionSet, v model.ContactType) graphql.Marshaler {
