@@ -18,7 +18,7 @@ func ExecuteWriteQuery(driver *neo4j.Driver, query string, params map[string]int
 		return nil, nil
 	})
 	if err != nil {
-		logrus.Error("Failed executing query: %s\n Error: %s", query, err)
+		logrus.Errorf("Failed executing query: %s\n Error: %s", query, err)
 	}
 }
 
