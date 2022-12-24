@@ -94,6 +94,16 @@ func main() {
 		c.Header("Accept-Length", fmt.Sprintf("%d", len(bytes)))
 		c.Writer.Write(bytes)
 	})
+	r.GET("/file/:id/base64", commonService.ApiKeyChecker(repositoryContainer.AppKeyRepo, commonService.FILE_STORAGE_API), func(c *gin.Context) {
+		base64Encoded, err := services.FileService.Base64Image("", c.Param("id"))
+		if err != nil {
+			c.AbortWithStatus(500) //todo
+			return
+		}
+
+		bytes := []byte(*base64Encoded)
+		c.Writer.Write(bytes)
+	})
 
 	r.GET("/health", healthCheckHandler)
 	r.GET("/readiness", healthCheckHandler)
