@@ -2,6 +2,7 @@ package service
 
 import (
 	"bytes"
+	"encoding/base64"
 	"fmt"
 	"github.com/aws/aws-sdk-go/aws"
 	awsSes "github.com/aws/aws-sdk-go/aws/session"
@@ -21,6 +22,7 @@ type FileService interface {
 	GetById(tenantId string, id string) (*entity.File, error)
 	UploadSingleFile(tenantId string, multipartFileHeader *multipart.FileHeader) (*entity.File, error)
 	DownloadSingleFile(tenantId string, id string) (*entity.File, []byte, error)
+	Base64Image(tenantId string, id string) (*string, error)
 }
 
 type fileService struct {
@@ -127,6 +129,53 @@ func (s *fileService) DownloadSingleFile(tenantId string, id string) (*entity.Fi
 	}
 
 	return fileEntity, fileBytes, nil
+}
+
+func (s *fileService) Base64Image(tenantId string, id string) (*string, error) {
+	byId := s.repositories.FileRepository.FindById(tenantId, id)
+	if byId.Error != nil {
+		return nil, byId.Error
+	}
+
+	fileEntity := byId.Result.(*entity.File)
+
+	session, err := awsSes.NewSession(&aws.Config{Region: aws.String(s.cfg.AWS.Region)})
+	if err != nil {
+		log.Fatal(err)
+	}
+	downloader := s3manager.NewDownloader(session)
+
+	fileBytes := make([]byte, fileEntity.Length)
+	_, err = downloader.Download(aws.NewWriteAtBuffer(fileBytes),
+		&s3.GetObjectInput{
+			Bucket: aws.String(s.cfg.AWS.Bucket),
+			Key:    aws.String(fileEntity.ID),
+		})
+	if err != nil {
+		return nil, err
+	}
+
+	var base64Encoding string
+
+	// Determine the content type of the image file
+	mimeType := http.DetectContentType(fileBytes)
+
+	// Prepend the appropriate URI scheme header depending
+	// on the MIME type
+	switch mimeType {
+	case "image/jpeg":
+		base64Encoding += "data:image/jpeg;base64,"
+		break
+	case "image/png":
+		base64Encoding += "data:image/png;base64,"
+		break
+	default:
+		return nil, err // TODO say that the file can not be preview
+	}
+
+	// Append the base64 encoded output
+	base64Encoding += base64.StdEncoding.EncodeToString(fileBytes)
+	return &base64Encoding, nil
 }
 
 func uploadFileToS3(cfg *config.Config, session *awsSes.Session, fileId string, multipartFile *multipart.FileHeader) error {
