@@ -2,6 +2,10 @@ module github.com/openline-ai/openline-customer-os/packages/server/customer-os-a
 
 go 1.19
 
+replace (
+	github.com/docker/docker => github.com/docker/docker v20.10.3-0.20221013203545-33ab36d6b304+incompatible // 22.06 branch
+)
+
 require (
 	github.com/99designs/gqlgen v0.17.22
 	github.com/caarlos0/env/v6 v6.10.1
