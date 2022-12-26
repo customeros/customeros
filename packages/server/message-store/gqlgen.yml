@@ -53,7 +53,7 @@ autobind:
 models:
   Any:
     model:
-      - github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model.AnyTypeValue
+      - github.com/openline-ai/openline-customer-os/packages/server/message-store/test/graph/model.AnyTypeValue
   Time:
     model:
       - github.com/99designs/gqlgen/graphql.Time
