@@ -1,0 +1,22 @@
+query GetCompanies($companyName: String!, $page: Int!, $limit: Int!){
+  companies_ByNameLike(pagination: {page: $page, limit: $limit}, companyName: $companyName) {
+    totalPages
+    totalElements
+    content {
+      id
+      name
+      addresses {
+              id
+              source
+              country
+              state
+              city
+              address
+              address2
+              zip
+              phone
+              fax
+          }
+    }
+  }
+}

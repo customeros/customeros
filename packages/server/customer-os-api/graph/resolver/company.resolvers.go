@@ -6,11 +6,23 @@ package resolver
 
 import (
 	"context"
+	"github.com/99designs/gqlgen/graphql"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/generated"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper"
 )
+
+// Addresses is the resolver for the addresses field.
+func (r *companyResolver) Addresses(ctx context.Context, obj *model.Company) ([]*model.Address, error) {
+	addressEntities, err := r.Services.AddressService.FindAllForCompany(ctx, obj.ID)
+	if err != nil {
+		graphql.AddErrorf(ctx, "Failed to get addresses for company %s", obj.ID)
+		return nil, err
+	}
+	return mapper.MapEntitiesToAddresses(addressEntities), err
+}
 
 // CompaniesByNameLike is the resolver for the companies_ByNameLike field.
 func (r *queryResolver) CompaniesByNameLike(ctx context.Context, pagination *model.Pagination, companyName string) (*model.CompanyPage, error) {
@@ -24,3 +36,8 @@ func (r *queryResolver) CompaniesByNameLike(ctx context.Context, pagination *mod
 		TotalElements: paginatedResult.TotalRows,
 	}, err
 }
+
+// Company returns generated.CompanyResolver implementation.
+func (r *Resolver) Company() generated.CompanyResolver { return &companyResolver{r} }
+
+type companyResolver struct{ *Resolver }

@@ -413,6 +413,60 @@ func TestQueryResolver_Contact_WithRoles_ById(t *testing.T) {
 	require.NotNil(t, ceo.Company.CreatedAt)
 }
 
+func TestQueryResolver_Contact_WithAddresses_ById(t *testing.T) {
+	defer tearDownTestCase()(t)
+	neo4jt.CreateTenant(driver, tenantName)
+	contactId := neo4jt.CreateDefaultContact(driver, tenantName)
+	anotherContactId := neo4jt.CreateDefaultContact(driver, tenantName)
+	addressInput := entity.AddressEntity{
+		Source:   "hubspot",
+		Country:  "testCountry",
+		State:    "testState",
+		City:     "testCity",
+		Address:  "testAddress",
+		Address2: "testAddress2",
+		Zip:      "testZip",
+		Phone:    "testPhone",
+		Fax:      "testFax",
+	}
+	address1 := neo4jt.CreateAddress(driver, addressInput)
+	address2 := neo4jt.CreateAddress(driver, entity.AddressEntity{
+		Source: "manual",
+	})
+	neo4jt.ContactHasAddress(driver, contactId, address1)
+	neo4jt.ContactHasAddress(driver, anotherContactId, address2)
+
+	require.Equal(t, 2, neo4jt.GetCountOfNodes(driver, "Contact"))
+	require.Equal(t, 2, neo4jt.GetCountOfNodes(driver, "Address"))
+	require.Equal(t, 2, neo4jt.GetCountOfRelationships(driver, "LOCATED_AT"))
+
+	rawResponse, err := c.RawPost(getQuery("get_contact_with_addresses_by_id"),
+		client.Var("contactId", contactId))
+	assertRawResponseSuccess(t, rawResponse, err)
+
+	var searchedContact struct {
+		Contact model.Contact
+	}
+
+	err = decode.Decode(rawResponse.Data.(map[string]any), &searchedContact)
+	require.Nil(t, err)
+	require.Equal(t, contactId, searchedContact.Contact.ID)
+
+	addresses := searchedContact.Contact.Addresses
+	require.Equal(t, 1, len(addresses))
+	address := addresses[0]
+	require.Equal(t, address1, address.ID)
+	require.Equal(t, addressInput.Source, *address.Source)
+	require.Equal(t, addressInput.Country, *address.Country)
+	require.Equal(t, addressInput.City, *address.City)
+	require.Equal(t, addressInput.State, *address.State)
+	require.Equal(t, addressInput.Address, *address.Address)
+	require.Equal(t, addressInput.Address2, *address.Address2)
+	require.Equal(t, addressInput.Fax, *address.Fax)
+	require.Equal(t, addressInput.Phone, *address.Phone)
+	require.Equal(t, addressInput.Zip, *address.Zip)
+}
+
 func TestQueryResolver_Contacts_SortByTitleAscFirstNameAscLastNameDesc(t *testing.T) {
 	defer tearDownTestCase()(t)
 	neo4jt.CreateTenant(driver, tenantName)

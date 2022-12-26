@@ -1,12 +1,5 @@
-input CompanyInput {
-
-    id: ID
-
-    """
-    The name of the company associated with a Contact.
-    **Required.**
-    """
-    name: String
+extend type Query {
+    companies_ByNameLike(pagination: Pagination, companyName: String!): CompanyPage
 }
 
 type Company {
@@ -18,6 +11,12 @@ type Company {
     industry:    String
     isPublic:    Boolean
     createdAt:   Time!
+
+    """
+    All addresses associated with a company in customerOS.
+    **Required.  If no values it returns an empty array.**
+    """
+    addresses: [Address!]! @goField(forceResolver: true)
 }
 
 type CompanyPage implements Pages {
@@ -26,7 +25,13 @@ type CompanyPage implements Pages {
     totalElements: Int64!
 }
 
-extend type Query {
-    companies_ByNameLike(pagination: Pagination, companyName: String!): CompanyPage
-}
+input CompanyInput {
 
+    id: ID
+
+    """
+    The name of the company associated with a Contact.
+    **Required.**
+    """
+    name: String
+}
