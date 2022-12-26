@@ -122,7 +122,7 @@ func (r *contactRepository) Update(tx neo4j.Transaction, tenant, contactId strin
 
 func (r *contactRepository) LinkWithEntityDefinitionInTx(tx neo4j.Transaction, tenant, contactId, entityDefinitionId string) error {
 	queryResult, err := tx.Run(`
-			MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant})-[:USES_ENTITY_DEFINITION]->(e:EntityDefinition {id:$entityDefinitionId})
+			MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant})<-[:ENTITY_DEFINITION_BELONGS_TO_TENANT]-(e:EntityDefinition {id:$entityDefinitionId})
 			WHERE e.extends=$extends
 			MERGE (c)-[r:IS_DEFINED_BY]->(e)
 			RETURN r`,
@@ -141,7 +141,7 @@ func (r *contactRepository) LinkWithEntityDefinitionInTx(tx neo4j.Transaction, t
 
 func (r *contactRepository) LinkWithContactTypeInTx(tx neo4j.Transaction, tenant, contactId, contactTypeId string) error {
 	queryResult, err := tx.Run(`
-			MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant})-[:USES_CONTACT_TYPE]->(e:ContactType {id:$contactTypeId})
+			MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant})<-[:CONTACT_TYPE_BELONGS_TO_TENANT]-(e:ContactType {id:$contactTypeId})
 			MERGE (c)-[r:IS_OF_TYPE]->(e)
 			RETURN r`,
 		map[string]any{

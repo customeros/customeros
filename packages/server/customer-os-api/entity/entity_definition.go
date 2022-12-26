@@ -20,3 +20,7 @@ func (entityDefinition EntityDefinitionEntity) ToString() string {
 }
 
 type EntityDefinitionEntities []EntityDefinitionEntity
+
+func (entityDefinition EntityDefinitionEntity) Labels() []string {
+	return []string{"EntityDefinition"}
+}

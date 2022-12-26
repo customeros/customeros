@@ -9,8 +9,12 @@ type ContactGroupEntity struct {
 	Name string `neo4jDb:"property:name;lookupName:NAME;supportCaseSensitive:true"`
 }
 
-func (contactGroupEntity ContactGroupEntity) ToString() string {
-	return fmt.Sprintf("id: %s\nname: %s", contactGroupEntity.Id, contactGroupEntity.Name)
+func (contactGroup ContactGroupEntity) ToString() string {
+	return fmt.Sprintf("id: %s\nname: %s", contactGroup.Id, contactGroup.Name)
 }
 
 type ContactGroupEntities []ContactGroupEntity
+
+func (contactGroup ContactGroupEntity) Labels() []string {
+	return []string{"ContactGroup"}
+}

@@ -15,3 +15,7 @@ func (contactRole ContactRoleEntity) ToString() string {
 }
 
 type ContactRoleEntities []ContactRoleEntity
+
+func (contactRole ContactRoleEntity) Labels() []string {
+	return []string{"Role"}
+}

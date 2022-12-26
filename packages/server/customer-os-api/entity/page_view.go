@@ -30,3 +30,7 @@ func (PageViewEntity) Action() {
 func (PageViewEntity) ActionName() string {
 	return NodeLabel_PageView
 }
+
+func (pageView PageViewEntity) Labels() []string {
+	return []string{"PageView", "Action"}
+}

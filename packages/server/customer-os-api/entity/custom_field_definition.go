@@ -20,3 +20,7 @@ func (definition CustomFieldDefinitionEntity) ToString() string {
 }
 
 type CustomFieldDefinitionEntities []CustomFieldDefinitionEntity
+
+func (definition CustomFieldDefinitionEntity) Labels() []string {
+	return []string{"CustomFieldDefinition"}
+}

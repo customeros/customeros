@@ -15,6 +15,7 @@ type ContactRepository interface {
 	SetOwnerRelationship(tenant, contactId, userExternalId, externalSystemId string) error
 	MergeTextCustomField(tenant, contactId string, field entity.TextCustomField) error
 	MergeContactAddress(tenant, contactId string, contact entity.ContactData) error
+	MergeContactType(tenant, contactId, contactTypeName string) error
 }
 
 type contactRepository struct {
@@ -211,6 +212,33 @@ func (r *contactRepository) MergeContactAddress(tenant, contactId string, contac
 				"fax":       contact.Fax,
 			})
 		return nil, err
+	})
+	return err
+}
+
+func (r *contactRepository) MergeContactType(tenant, contactId, contactTypeName string) error {
+	session := utils.NewNeo4jWriteSession(*r.driver)
+	defer session.Close()
+
+	_, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
+		queryResult, err := tx.Run(`
+			MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant})
+			MATCH (ct:ContactType {name:$contactTypeName})-[:CONTACT_TYPE_BELONGS_TO_TENANT]->(t)
+			MERGE (c)-[r:IS_OF_TYPE]->(ct)
+			return r`,
+			map[string]interface{}{
+				"tenant":          tenant,
+				"contactId":       contactId,
+				"contactTypeName": contactTypeName,
+			})
+		if err != nil {
+			return nil, err
+		}
+		_, err = queryResult.Single()
+		if err != nil {
+			return nil, err
+		}
+		return nil, nil
 	})
 	return err
 }

@@ -24,3 +24,7 @@ func (MessageEntity) Action() {
 func (MessageEntity) ActionName() string {
 	return NodeLabel_Message
 }
+
+func (message MessageEntity) Labels() []string {
+	return []string{"Message", "Action"}
+}

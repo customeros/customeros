@@ -236,7 +236,7 @@ func AddPhoneNumberToContact(driver *neo4j.Driver, contactId string, e164 string
 func CreateEntityDefinition(driver *neo4j.Driver, tenant, extends string) string {
 	var definitionId, _ = uuid.NewRandom()
 	query := `MATCH (t:Tenant {name:$tenant})
-			MERGE (e:EntityDefinition {id:$definitionId})<-[:USES_ENTITY_DEFINITION]-(t)
+			MERGE (e:EntityDefinition {id:$definitionId})-[:ENTITY_DEFINITION_BELONGS_TO_TENANT]->(t)
 			ON CREATE SET e.extends=$extends, e.name=$name`
 	ExecuteWriteQuery(driver, query, map[string]any{
 		"definitionId": definitionId.String(),
@@ -308,7 +308,7 @@ func AddSetDefinitionToEntity(driver *neo4j.Driver, entityDefinitionId string) s
 func CreateContactType(driver *neo4j.Driver, tenant, contactTypeName string) string {
 	var contactTypeId, _ = uuid.NewRandom()
 	query := `MATCH (t:Tenant {name:$tenant})
-			MERGE (t)-[:USES_CONTACT_TYPE]->(c:ContactType {id:$id})
+			MERGE (t)<-[:CONTACT_TYPE_BELONGS_TO_TENANT]-(c:ContactType {id:$id})
 			ON CREATE SET c.name=$name`
 	ExecuteWriteQuery(driver, query, map[string]any{
 		"id":     contactTypeId.String(),

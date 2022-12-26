@@ -16,3 +16,7 @@ func (phone PhoneNumberEntity) ToString() string {
 }
 
 type PhoneNumberEntities []PhoneNumberEntity
+
+func (phone PhoneNumberEntity) Labels() []string {
+	return []string{"PhoneNumber"}
+}
