@@ -434,6 +434,53 @@ func CreatePageView(driver *neo4j.Driver, contactId string, actionEntity entity.
 	return actionId.String()
 }
 
+func CreateAddress(driver *neo4j.Driver, address entity.AddressEntity) string {
+	var addressId, _ = uuid.NewRandom()
+	query := `MERGE (a:Address {id:$id})
+			ON CREATE SET a.source=$source, a.country=$country, a.state=$state, a.city=$city, a.address=$address,
+							a.address2=$address2, a.zip=$zip, a.fax=$fax, a.phone=$phone
+`
+	ExecuteWriteQuery(driver, query, map[string]any{
+		"id":       addressId.String(),
+		"source":   address.Source,
+		"country":  address.Country,
+		"state":    address.State,
+		"city":     address.City,
+		"address":  address.Address,
+		"address2": address.Address2,
+		"zip":      address.Zip,
+		"phone":    address.Phone,
+		"fax":      address.Fax,
+	})
+	return addressId.String()
+}
+
+func ContactHasAddress(driver *neo4j.Driver, contactId, addressId string) string {
+	var roleId, _ = uuid.NewRandom()
+	query := `MATCH (c:Contact {id:$contactId}),
+			        (a:Address {id:$addressId})
+			MERGE (c)-[:LOCATED_AT]->(a)`
+	ExecuteWriteQuery(driver, query, map[string]any{
+		"id":        roleId.String(),
+		"contactId": contactId,
+		"addressId": addressId,
+	})
+	return roleId.String()
+}
+
+func CompanyHasAddress(driver *neo4j.Driver, companyId, addressId string) string {
+	var roleId, _ = uuid.NewRandom()
+	query := `MATCH (c:Company {id:$companyId}),
+			        (a:Address {id:$addressId})
+			MERGE (c)-[:LOCATED_AT]->(a)`
+	ExecuteWriteQuery(driver, query, map[string]any{
+		"id":        roleId.String(),
+		"companyId": companyId,
+		"addressId": addressId,
+	})
+	return roleId.String()
+}
+
 func GetCountOfNodes(driver *neo4j.Driver, nodeLabel string) int {
 	query := fmt.Sprintf(`MATCH (n:%s) RETURN count(n)`, nodeLabel)
 	result := ExecuteReadQueryWithSingleReturn(driver, query, map[string]any{})

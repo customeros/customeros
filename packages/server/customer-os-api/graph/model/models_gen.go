@@ -37,6 +37,19 @@ type Pages interface {
 	GetTotalElements() int64
 }
 
+type Address struct {
+	ID       string  `json:"id"`
+	Source   *string `json:"source"`
+	Country  *string `json:"country"`
+	State    *string `json:"state"`
+	City     *string `json:"city"`
+	Address  *string `json:"address"`
+	Address2 *string `json:"address2"`
+	Zip      *string `json:"zip"`
+	Phone    *string `json:"phone"`
+	Fax      *string `json:"fax"`
+}
+
 type Company struct {
 	ID          string    `json:"id"`
 	Name        string    `json:"name"`
@@ -46,6 +59,9 @@ type Company struct {
 	Industry    *string   `json:"industry"`
 	IsPublic    *bool     `json:"isPublic"`
 	CreatedAt   time.Time `json:"createdAt"`
+	// All addresses associated with a company in customerOS.
+	// **Required.  If no values it returns an empty array.**
+	Addresses []*Address `json:"addresses"`
 }
 
 type CompanyInput struct {
@@ -104,6 +120,9 @@ type Contact struct {
 	// All email addresses assocaited with a contact in customerOS.
 	// **Required.  If no values it returns an empty array.**
 	Emails []*Email `json:"emails"`
+	// All addresses associated with a contact in customerOS.
+	// **Required.  If no values it returns an empty array.**
+	Addresses []*Address `json:"addresses"`
 	// User defined metadata appended to the contact record in customerOS.
 	// **Required.  If no values it returns an empty array.**
 	CustomFields []*CustomField `json:"customFields"`
