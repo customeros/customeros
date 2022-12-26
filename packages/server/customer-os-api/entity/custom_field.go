@@ -124,3 +124,7 @@ func (f *CustomFieldEntity) AdjustValueByDatatype() {
 		}
 	}
 }
+
+func (f *CustomFieldEntity) Labels() []string {
+	return []string{"CustomField", f.NodeLabel()}
+}

@@ -140,6 +140,14 @@ func (s *syncService) syncContacts(dataService common.DataService, syncDate time
 				logrus.Errorf("failed merge address for contact %v, tenant %v :%v", contactId, tenant, err)
 			}
 
+			if len(v.ContactTypeName) > 0 {
+				err = s.repositories.ContactRepository.MergeContactType(tenant, contactId, v.ContactTypeName)
+				if err != nil {
+					failedSync = true
+					logrus.Errorf("failed merge contact type for contact %v, tenant %v :%v", contactId, tenant, err)
+				}
+			}
+
 			logrus.Debugf("successfully merged contact with id %v for tenant %v from %v", contactId, tenant, dataService.SourceId())
 			if err := dataService.MarkContactProcessed(v.ExternalId, runId, failedSync == false); err != nil {
 				continue

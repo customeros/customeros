@@ -16,3 +16,7 @@ func (definition FieldSetDefinitionEntity) ToString() string {
 }
 
 type FieldSetDefinitionEntities []FieldSetDefinitionEntity
+
+func (definition FieldSetDefinitionEntity) Labels() []string {
+	return []string{"FieldSetDefinition"}
+}

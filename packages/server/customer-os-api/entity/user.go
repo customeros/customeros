@@ -18,3 +18,7 @@ func (User UserEntity) ToString() string {
 }
 
 type UserEntities []UserEntity
+
+func (user UserEntity) Labels() []string {
+	return []string{"User"}
+}

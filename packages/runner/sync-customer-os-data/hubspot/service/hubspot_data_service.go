@@ -87,17 +87,33 @@ func (s *hubspotDataService) GetContactsForSync(batchSize int, runId string) []e
 		contactForCustomerOs.CompaniesExternalIds = strCompaniesExternalIds
 		// set custom fields
 		var textCustomFields []entity.TextCustomField
-		textCustomFields = append(textCustomFields, entity.TextCustomField{
-			Name:   "Hubspot Lifecycle Stage",
-			Value:  hubspotContactProperties.LifecycleStage,
-			Source: s.SourceId(),
-		})
+		if len(hubspotContactProperties.LifecycleStage) > 0 {
+			textCustomFields = append(textCustomFields, entity.TextCustomField{
+				Name:   "Hubspot Lifecycle Stage",
+				Value:  hubspotContactProperties.LifecycleStage,
+				Source: s.SourceId(),
+			})
+		}
 		contactForCustomerOs.TextCustomFields = textCustomFields
+
+		// set contact type
+		if isCustomerContactType(hubspotContactProperties.LifecycleStage) {
+			contactForCustomerOs.ContactTypeName = "CUSTOMER"
+		} else {
+			contactForCustomerOs.ContactTypeName = "NOT_SET"
+		}
 
 		customerOsContacts = append(customerOsContacts, contactForCustomerOs)
 		s.contacts[v.Id] = v
 	}
 	return customerOsContacts
+}
+
+func isCustomerContactType(hubspotLifecycleStage string) bool {
+	customerLifecycleStages := map[string]bool{
+		"lead": true, "subscriber": true, "marketingqualifiedlead": true, "salesqualifiedlead": true,
+		"opportunity": true, "evangelist": true, "customer": true}
+	return customerLifecycleStages[hubspotLifecycleStage]
 }
 
 func (s *hubspotDataService) GetCompaniesForSync(batchSize int, runId string) []entity.CompanyData {

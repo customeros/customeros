@@ -16,3 +16,7 @@ func (email EmailEntity) ToString() string {
 }
 
 type EmailEntities []EmailEntity
+
+func (email EmailEntity) Labels() []string {
+	return []string{"Email"}
+}

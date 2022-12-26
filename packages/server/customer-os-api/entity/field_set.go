@@ -18,3 +18,7 @@ func (set FieldSetEntity) ToString() string {
 }
 
 type FieldSetEntities []FieldSetEntity
+
+func (set FieldSetEntity) Labels() []string {
+	return []string{"FieldSet"}
+}

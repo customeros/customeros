@@ -5,9 +5,25 @@ MATCH (t:Tenant {name:"openline"})
  MERGE (t)<-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]-(e:ExternalSystem {id:"hubspot"})
  ON CREATE SET e.name="HubSpot";
 
- MATCH (t:Tenant {name:"openline"})
+MATCH (t:Tenant {name:"openline"})
   MERGE (t)<-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]-(e:ExternalSystem {id:"zendesk"})
   ON CREATE SET e.name="Zendesk";
+
+MATCH (t:Tenant {name:"openline"})
+  MERGE (t)<-[:CONTACT_TYPE_BELONGS_TO_TENANT]-(ct:ContactType {name:"CUSTOMER"})
+  ON CREATE SET ct.id=randomUUID();
+
+MATCH (t:Tenant {name:"openline"})
+  MERGE (t)<-[:CONTACT_TYPE_BELONGS_TO_TENANT]-(ct:ContactType {name:"SUPPLIER"})
+  ON CREATE SET ct.id=randomUUID();
+
+MATCH (t:Tenant {name:"openline"})
+  MERGE (t)<-[:CONTACT_TYPE_BELONGS_TO_TENANT]-(ct:ContactType {name:"INVESTOR"})
+  ON CREATE SET ct.id=randomUUID();
+
+MATCH (t:Tenant {name:"openline"})
+  MERGE (t)<-[:CONTACT_TYPE_BELONGS_TO_TENANT]-(ct:ContactType {name:"NOT_SET"})
+  ON CREATE SET ct.id=randomUUID();
 
 MATCH (t:Tenant {name:"openline"})
     MERGE (u:User {id:"AgentSmith"})-[:USER_BELONGS_TO_TENANT]->(t)
@@ -29,6 +45,7 @@ MATCH (c:Contact {id:"echotest"})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:"
             ON MATCH SET e.label="MAIN", r.primary=true;
 
 CREATE INDEX contact_id_idx IF NOT EXISTS FOR (n:Contact) ON (n.id);
+CREATE INDEX contact_type_id_idx IF NOT EXISTS FOR (n:ContactType) ON (n.id);
 CREATE INDEX contact_group_id_idx IF NOT EXISTS FOR (n:ContactGroup) ON (n.id);
 CREATE INDEX company_id_idx IF NOT EXISTS FOR (n:Company) ON (n.id);
 CREATE INDEX company_name_idx IF NOT EXISTS FOR (n:Company) ON (n.name);

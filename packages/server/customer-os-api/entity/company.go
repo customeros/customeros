@@ -21,3 +21,7 @@ func (company CompanyEntity) ToString() string {
 }
 
 type CompanyEntities []CompanyEntity
+
+func (company CompanyEntity) Labels() []string {
+	return []string{"Company"}
+}

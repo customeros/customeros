@@ -17,3 +17,7 @@ func (conversation ConversationEntity) ToString() string {
 }
 
 type ConversationEntities []ConversationEntity
+
+func (conversation ConversationEntity) Labels() []string {
+	return []string{"Conversation"}
+}

@@ -32,7 +32,7 @@ func (r *contactTypeRepository) Create(tenant string, contactType *entity.Contac
 	if result, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
 		queryResult, err := tx.Run(`
 			MATCH (t:Tenant {name:$tenant})
-			MERGE (t)-[:USES_CONTACT_TYPE]->(c:ContactType {id:randomUUID()})
+			MERGE (t)<-[:CONTACT_TYPE_BELONGS_TO_TENANT]-(c:ContactType {id:randomUUID()})
 			ON CREATE SET c.name=$name
 			RETURN c`,
 			map[string]any{
@@ -53,7 +53,7 @@ func (r *contactTypeRepository) Update(tenant string, contactType *entity.Contac
 
 	if result, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
 		queryResult, err := tx.Run(`
-			MATCH (t:Tenant {name:$tenant})-[:USES_CONTACT_TYPE]->(c:ContactType {id:$id})
+			MATCH (t:Tenant {name:$tenant})<-[:CONTACT_TYPE_BELONGS_TO_TENANT]-(c:ContactType {id:$id})
 			SET c.name=$name
 			RETURN c`,
 			map[string]any{
@@ -75,7 +75,7 @@ func (r *contactTypeRepository) Delete(tenant string, id string) error {
 
 	if _, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
 		_, err := tx.Run(`
-			MATCH (t:Tenant {name:$tenant})-[r:USES_CONTACT_TYPE]->(c:ContactType {id:$id})
+			MATCH (t:Tenant {name:$tenant})<-[r:CONTACT_TYPE_BELONGS_TO_TENANT]-(c:ContactType {id:$id})
 			DELETE r, c`,
 			map[string]any{
 				"tenant": tenant,
@@ -95,7 +95,7 @@ func (r *contactTypeRepository) FindAll(tenant string) ([]*dbtype.Node, error) {
 
 	records, err := session.ReadTransaction(func(tx neo4j.Transaction) (any, error) {
 		if queryResult, err := tx.Run(`
-			MATCH (t:Tenant {name:$tenant})-[:USES_CONTACT_TYPE]->(c:ContactType)
+			MATCH (t:Tenant {name:$tenant})<-[:CONTACT_TYPE_BELONGS_TO_TENANT]-(c:ContactType)
 			RETURN c ORDER BY c.name`,
 			map[string]any{
 				"tenant": tenant,

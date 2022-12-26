@@ -16,3 +16,7 @@ func (note NoteEntity) ToString() string {
 }
 
 type NoteEntities []NoteEntity
+
+func (note NoteEntity) Labels() []string {
+	return []string{"Note"}
+}

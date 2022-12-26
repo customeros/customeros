@@ -41,7 +41,7 @@ func (r *entityDefinitionRepository) Create(tenant string, entity *entity.Entity
 func (r *entityDefinitionRepository) FindAllByTenant(session neo4j.Session, tenant string) ([]*db.Record, error) {
 	if result, err := session.ReadTransaction(func(tx neo4j.Transaction) (any, error) {
 		queryResult, err := tx.Run(`
-				MATCH (:Tenant {name:$tenant})-[r:USES_ENTITY_DEFINITION]->(e:EntityDefinition) RETURN e, r`,
+				MATCH (:Tenant {name:$tenant})<-[r:ENTITY_DEFINITION_BELONGS_TO_TENANT]-(e:EntityDefinition) RETURN e, r`,
 			map[string]any{
 				"tenant": tenant,
 			})
@@ -59,7 +59,7 @@ func (r *entityDefinitionRepository) FindAllByTenant(session neo4j.Session, tena
 func (r *entityDefinitionRepository) FindAllByTenantAndExtends(session neo4j.Session, tenant, extends string) ([]*db.Record, error) {
 	if result, err := session.ReadTransaction(func(tx neo4j.Transaction) (any, error) {
 		queryResult, err := tx.Run(`
-				MATCH (:Tenant {name:$tenant})-[r:USES_ENTITY_DEFINITION]->(e:EntityDefinition) 
+				MATCH (:Tenant {name:$tenant})<-[r:ENTITY_DEFINITION_BELONGS_TO_TENANT]-(e:EntityDefinition) 
 					WHERE e.extends=$extends
 				RETURN e, r`,
 			map[string]any{
@@ -83,7 +83,7 @@ func (r *entityDefinitionRepository) FindByContactId(tenant string, contactId st
 
 	return session.ReadTransaction(func(tx neo4j.Transaction) (any, error) {
 		queryResult, err := tx.Run(`
-				MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant})-[r:USES_ENTITY_DEFINITION]->(e:EntityDefinition),
+				MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant})<-[r:ENTITY_DEFINITION_BELONGS_TO_TENANT]->(e:EntityDefinition),
 					(c)-[:IS_DEFINED_BY]->(e)
 					RETURN e, r`,
 			map[string]any{
@@ -101,7 +101,7 @@ func (r *entityDefinitionRepository) createFullEntityDefinitionInTxWork(tenant s
 	return func(tx neo4j.Transaction) (any, error) {
 		txResult, err := tx.Run(`
 			MATCH (t:Tenant {name:$tenant})
-			MERGE (t)-[r:USES_ENTITY_DEFINITION {added:datetime({timezone: 'UTC'})}]->(e:EntityDefinition {
+			MERGE (t)<-[r:ENTITY_DEFINITION_BELONGS_TO_TENANT {added:datetime({timezone: 'UTC'})}]-(e:EntityDefinition {
 				  id: randomUUID(),
 				  name: $name,
 				  version: $version
