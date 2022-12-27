@@ -46,12 +46,12 @@ func graphqlHandler(driver neo4j.Driver, repositoryContainer *commonRepository.P
 		return err
 	})
 
-	customCtx := &common.CustomContext{
-		Tenant: "openline", // TODO replace with tenant from authentication
-	}
-	h := common.CreateContext(customCtx, srv)
-
 	return func(c *gin.Context) {
+		customCtx := &common.CustomContext{
+			Tenant: c.Keys["tenant"].(string),
+		}
+		h := common.CreateContext(customCtx, srv)
+
 		h.ServeHTTP(c.Writer, c.Request)
 	}
 }
