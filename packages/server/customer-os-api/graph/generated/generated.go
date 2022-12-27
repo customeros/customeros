@@ -47,6 +47,7 @@ type ResolverRoot interface {
 	FieldSet() FieldSetResolver
 	FieldSetDefinition() FieldSetDefinitionResolver
 	Mutation() MutationResolver
+	Note() NoteResolver
 	Query() QueryResolver
 	User() UserResolver
 }
@@ -266,6 +267,7 @@ type ComplexityRoot struct {
 
 	Note struct {
 		CreatedAt func(childComplexity int) int
+		CreatedBy func(childComplexity int) int
 		HTML      func(childComplexity int) int
 		ID        func(childComplexity int) int
 	}
@@ -414,6 +416,9 @@ type MutationResolver interface {
 	PhoneNumberDeleteFromContact(ctx context.Context, contactID string, e164 string) (*model.Result, error)
 	PhoneNumberDeleteFromContactByID(ctx context.Context, contactID string, id string) (*model.Result, error)
 	UserCreate(ctx context.Context, input model.UserInput) (*model.User, error)
+}
+type NoteResolver interface {
+	CreatedBy(ctx context.Context, obj *model.Note) (*model.User, error)
 }
 type QueryResolver interface {
 	EntityDefinitions(ctx context.Context, extends *model.EntityDefinitionExtension) ([]*model.EntityDefinition, error)
@@ -1722,6 +1727,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Note.CreatedAt(childComplexity), true
 
+	case "Note.createdBy":
+		if e.complexity.Note.CreatedBy == nil {
+			break
+		}
+
+		return e.complexity.Note.CreatedBy(childComplexity), true
+
 	case "Note.html":
 		if e.complexity.Note.HTML == nil {
 			break
@@ -2184,15 +2196,8 @@ enum ActionType {
     phone: String
     fax: String
 }`, BuiltIn: false},
-	{Name: "../schemas/company.graphqls", Input: `input CompanyInput {
-
-    id: ID
-
-    """
-    The name of the company associated with a Contact.
-    **Required.**
-    """
-    name: String
+	{Name: "../schemas/company.graphqls", Input: `extend type Query {
+    companies_ByNameLike(pagination: Pagination, companyName: String!): CompanyPage
 }
 
 type Company {
@@ -2218,11 +2223,16 @@ type CompanyPage implements Pages {
     totalElements: Int64!
 }
 
-extend type Query {
-    companies_ByNameLike(pagination: Pagination, companyName: String!): CompanyPage
-}
+input CompanyInput {
 
-`, BuiltIn: false},
+    id: ID
+
+    """
+    The name of the company associated with a Contact.
+    **Required.**
+    """
+    name: String
+}`, BuiltIn: false},
 	{Name: "../schemas/contact.graphqls", Input: `extend type Query {
     """
     Fetch a single contact from customerOS by contact ID.
@@ -3132,6 +3142,7 @@ type Note {
     id: ID!
     html: String!
     createdAt: Time!
+    createdBy: User @goField(forceResolver: true)
 }
 
 type NotePage implements Pages {
@@ -12002,6 +12013,8 @@ func (ec *executionContext) fieldContext_Mutation_note_MergeToContact(ctx contex
 				return ec.fieldContext_Note_html(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_Note_createdAt(ctx, field)
+			case "createdBy":
+				return ec.fieldContext_Note_createdBy(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Note", field.Name)
 		},
@@ -12065,6 +12078,8 @@ func (ec *executionContext) fieldContext_Mutation_note_UpdateInContact(ctx conte
 				return ec.fieldContext_Note_html(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_Note_createdAt(ctx, field)
+			case "createdBy":
+				return ec.fieldContext_Note_createdBy(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Note", field.Name)
 		},
@@ -12591,6 +12606,61 @@ func (ec *executionContext) fieldContext_Note_createdAt(ctx context.Context, fie
 	return fc, nil
 }
 
+func (ec *executionContext) _Note_createdBy(ctx context.Context, field graphql.CollectedField, obj *model.Note) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Note_createdBy(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Note().CreatedBy(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.User)
+	fc.Result = res
+	return ec.marshalOUser2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐUser(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Note_createdBy(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Note",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_User_id(ctx, field)
+			case "firstName":
+				return ec.fieldContext_User_firstName(ctx, field)
+			case "lastName":
+				return ec.fieldContext_User_lastName(ctx, field)
+			case "email":
+				return ec.fieldContext_User_email(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_User_createdAt(ctx, field)
+			case "conversations":
+				return ec.fieldContext_User_conversations(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _NotePage_content(ctx context.Context, field graphql.CollectedField, obj *model.NotePage) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_NotePage_content(ctx, field)
 	if err != nil {
@@ -12636,6 +12706,8 @@ func (ec *executionContext) fieldContext_NotePage_content(ctx context.Context, f
 				return ec.fieldContext_Note_html(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_Note_createdAt(ctx, field)
+			case "createdBy":
+				return ec.fieldContext_Note_createdBy(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Note", field.Name)
 		},
@@ -19857,22 +19929,39 @@ func (ec *executionContext) _Note(ctx context.Context, sel ast.SelectionSet, obj
 			out.Values[i] = ec._Note_id(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "html":
 
 			out.Values[i] = ec._Note_html(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "createdAt":
 
 			out.Values[i] = ec._Note_createdAt(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
+		case "createdBy":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Note_createdBy(ctx, field, obj)
+				return res
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}

@@ -16,8 +16,10 @@ import (
 type UserService interface {
 	Create(ctx context.Context, user *entity.UserEntity) (*entity.UserEntity, error)
 	FindAll(ctx context.Context, page, limit int, filter *model.Filter, sortBy []*model.SortBy) (*utils.Pagination, error)
-	FindContactOwner(ctx context.Context, contactId string) (*entity.UserEntity, error)
 	FindUserById(ctx context.Context, userId string) (*entity.UserEntity, error)
+
+	FindContactOwner(ctx context.Context, contactId string) (*entity.UserEntity, error)
+	FindNoteCreator(ctx context.Context, noteId string) (*entity.UserEntity, error)
 }
 
 type userService struct {
@@ -119,6 +121,22 @@ func (s *userService) FindContactOwner(ctx context.Context, contactId string) (*
 		return nil, nil
 	} else {
 		return s.mapDbNodeToUserEntity(ownerDbNode.(*dbtype.Node)), nil
+	}
+}
+
+func (s *userService) FindNoteCreator(ctx context.Context, noteId string) (*entity.UserEntity, error) {
+	session := utils.NewNeo4jReadSession(s.getDriver())
+	defer session.Close()
+
+	userDbNode, err := session.ReadTransaction(func(tx neo4j.Transaction) (any, error) {
+		return s.repository.UserRepository.FindCreatorForNote(tx, common.GetContext(ctx).Tenant, noteId)
+	})
+	if err != nil {
+		return nil, err
+	} else if userDbNode.(*dbtype.Node) == nil {
+		return nil, nil
+	} else {
+		return s.mapDbNodeToUserEntity(userDbNode.(*dbtype.Node)), nil
 	}
 }
 

@@ -8,6 +8,7 @@ type Note {
     id: ID!
     html: String!
     createdAt: Time!
+    createdBy: User @goField(forceResolver: true)
 }
 
 type NotePage implements Pages {

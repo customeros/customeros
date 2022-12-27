@@ -6,8 +6,8 @@ package resolver
 
 import (
 	"context"
-
 	"github.com/99designs/gqlgen/graphql"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/generated"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper"
 )
@@ -43,3 +43,21 @@ func (r *mutationResolver) NoteDeleteFromContact(ctx context.Context, contactID 
 		Result: result,
 	}, nil
 }
+
+// CreatedBy is the resolver for the createdBy field.
+func (r *noteResolver) CreatedBy(ctx context.Context, obj *model.Note) (*model.User, error) {
+	creator, err := r.Services.UserService.FindNoteCreator(ctx, obj.ID)
+	if err != nil {
+		graphql.AddErrorf(ctx, "Failed to get creator for note %s", obj.ID)
+		return nil, err
+	}
+	if creator == nil {
+		return nil, nil
+	}
+	return mapper.MapEntityToUser(creator), err
+}
+
+// Note returns generated.NoteResolver implementation.
+func (r *Resolver) Note() generated.NoteResolver { return &noteResolver{r} }
+
+type noteResolver struct{ *Resolver }

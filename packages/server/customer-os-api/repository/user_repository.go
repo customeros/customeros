@@ -10,6 +10,7 @@ import (
 
 type UserRepository interface {
 	FindOwnerForContact(tx neo4j.Transaction, tenant, contactId string) (*dbtype.Node, error)
+	FindCreatorForNote(tx neo4j.Transaction, tenant, noteId string) (*dbtype.Node, error)
 	GetPaginatedUsers(session neo4j.Session, tenant string, skip, limit int, filter *utils.CypherFilter, sort *utils.CypherSort) (*utils.DbNodesWithTotalCount, error)
 	GetById(session neo4j.Session, tenant, userId string) (*dbtype.Node, error)
 }
@@ -31,6 +32,27 @@ func (r *userRepository) FindOwnerForContact(tx neo4j.Transaction, tenant, conta
 		map[string]any{
 			"tenant":    tenant,
 			"contactId": contactId,
+		}); err != nil {
+		return nil, err
+	} else {
+		dbRecords, err := queryResult.Collect()
+		if err != nil {
+			return nil, err
+		} else if len(dbRecords) == 0 {
+			return nil, nil
+		} else {
+			return utils.NodePtr(dbRecords[0].Values[0].(dbtype.Node)), nil
+		}
+	}
+}
+
+func (r *userRepository) FindCreatorForNote(tx neo4j.Transaction, tenant, noteId string) (*dbtype.Node, error) {
+	if queryResult, err := tx.Run(`
+			MATCH (t:Tenant {name:$tenant})<-[:USER_BELONGS_TO_TENANT]-(u:User)-[:CREATED]->(n:Note {id:$noteId})
+			RETURN u`,
+		map[string]any{
+			"tenant": tenant,
+			"noteId": noteId,
 		}); err != nil {
 		return nil, err
 	} else {
