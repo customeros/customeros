@@ -11,11 +11,8 @@ type CustomContext struct {
 
 var customContextKey = "CUSTOM_CONTEXT"
 
-func CreateContext(args *CustomContext, next http.Handler) http.Handler {
+func WithContext(customContext *CustomContext, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		customContext := &CustomContext{
-			Tenant: args.Tenant,
-		}
 		requestWithCtx := r.WithContext(context.WithValue(r.Context(), customContextKey, customContext))
 		next.ServeHTTP(w, requestWithCtx)
 	})

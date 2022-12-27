@@ -71,7 +71,7 @@ func prepareClient() {
 		Tenant: tenantName,
 	}
 	server := handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: graphResolver}))
-	h := common.CreateContext(customCtx, server)
+	h := common.WithContext(customCtx, server)
 	c = client.New(h)
 }
 

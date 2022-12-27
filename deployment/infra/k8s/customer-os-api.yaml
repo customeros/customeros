@@ -72,3 +72,5 @@ spec:
               value: "INFO"
             - name: GRAPHQL_PLAYGROUND_ENABLED
               value: "true"
+            - name: GRAPHQL_FIXED_COMPLEXITY_LIMIT
+              value: "100"

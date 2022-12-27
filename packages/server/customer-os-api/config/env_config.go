@@ -4,7 +4,8 @@ type Config struct {
 	ApiPort  string `env:"PORT"`
 	LogLevel string `env:"LOG_LEVEL" envDefault:"INFO"`
 	GraphQL  struct {
-		PlaygroundEnabled bool `env:"GRAPHQL_PLAYGROUND_ENABLED" envDefault:"false"`
+		PlaygroundEnabled    bool `env:"GRAPHQL_PLAYGROUND_ENABLED" envDefault:"false"`
+		FixedComplexityLimit int  `env:"GRAPHQL_FIXED_COMPLEXITY_LIMIT" envDefault:"100"`
 	}
 	Postgres struct {
 		Host            string `env:"POSTGRES_HOST,required"`
