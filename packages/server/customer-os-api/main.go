@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/99designs/gqlgen/graphql/handler"
+	"github.com/99designs/gqlgen/graphql/handler/extension"
 	"github.com/99designs/gqlgen/graphql/playground"
 	"github.com/caarlos0/env/v6"
 	"github.com/gin-contrib/cors"
@@ -30,13 +31,14 @@ func InitDB(cfg *config.Config) (db *config.StorageDB, err error) {
 	return
 }
 
-func graphqlHandler(driver neo4j.Driver, repositoryContainer *commonRepository.PostgresCommonRepositoryContainer) gin.HandlerFunc {
+func graphqlHandler(cfg *config.Config, driver neo4j.Driver, repositoryContainer *commonRepository.PostgresCommonRepositoryContainer) gin.HandlerFunc {
 	serviceContainer := container.InitServices(&driver)
 	// instantiate graph resolver
 	graphResolver := resolver.NewResolver(serviceContainer, repositoryContainer)
 
-	srv := handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: graphResolver}))
+	schemaConfig := generated.Config{Resolvers: graphResolver}
 
+	srv := handler.NewDefaultServer(generated.NewExecutableSchema(schemaConfig))
 	srv.SetRecoverFunc(func(ctx context.Context, err interface{}) error {
 		return gqlerror.Errorf("Internal server error!")
 	})
@@ -45,12 +47,13 @@ func graphqlHandler(driver neo4j.Driver, repositoryContainer *commonRepository.P
 		// Error hook place, Returned error can be customized. Check https://gqlgen.com/reference/errors/
 		return err
 	})
+	srv.Use(extension.FixedComplexityLimit(cfg.GraphQL.FixedComplexityLimit))
 
 	return func(c *gin.Context) {
 		customCtx := &common.CustomContext{
 			Tenant: c.Keys["tenant"].(string),
 		}
-		h := common.CreateContext(customCtx, srv)
+		h := common.WithContext(customCtx, srv)
 
 		h.ServeHTTP(c.Writer, c.Request)
 	}
@@ -90,7 +93,9 @@ func main() {
 	corsConfig.AllowOrigins = []string{"*"}
 	r.Use(cors.New(corsConfig))
 
-	r.POST("/query", commonService.ApiKeyChecker(repositoryContainer.AppKeyRepo, commonService.CUSTOMER_OS_API), graphqlHandler(neo4jDriver, repositoryContainer))
+	r.POST("/query",
+		commonService.ApiKeyChecker(repositoryContainer.AppKeyRepo, commonService.CUSTOMER_OS_API),
+		graphqlHandler(cfg, neo4jDriver, repositoryContainer))
 	if cfg.GraphQL.PlaygroundEnabled {
 		r.GET("/", playgroundHandler())
 	}
