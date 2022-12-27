@@ -413,6 +413,57 @@ func TestQueryResolver_Contact_WithRoles_ById(t *testing.T) {
 	require.NotNil(t, ceo.Company.CreatedAt)
 }
 
+func TestQueryResolver_Contact_WithNotes_ById(t *testing.T) {
+	defer tearDownTestCase()(t)
+	neo4jt.CreateTenant(driver, tenantName)
+	contactId := neo4jt.CreateDefaultContact(driver, tenantName)
+	userId := neo4jt.CreateDefaultUser(driver, tenantName)
+	noteId1 := neo4jt.CreateNoteForContact(driver, contactId, "note1")
+	noteId2 := neo4jt.CreateNoteForContact(driver, contactId, "note2")
+	neo4jt.NoteCreatedByUser(driver, noteId1, userId)
+
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Contact"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "User"))
+	require.Equal(t, 2, neo4jt.GetCountOfNodes(driver, "Note"))
+	require.Equal(t, 2, neo4jt.GetCountOfRelationships(driver, "NOTED"))
+	require.Equal(t, 1, neo4jt.GetCountOfRelationships(driver, "CREATED"))
+
+	rawResponse, err := c.RawPost(getQuery("get_contact_with_notes_by_id"),
+		client.Var("contactId", contactId))
+	assertRawResponseSuccess(t, rawResponse, err)
+
+	var searchedContact struct {
+		Contact model.Contact
+	}
+
+	err = decode.Decode(rawResponse.Data.(map[string]any), &searchedContact)
+	require.Nil(t, err)
+	require.Equal(t, contactId, searchedContact.Contact.ID)
+
+	notes := searchedContact.Contact.Notes.Content
+	require.Equal(t, 2, len(notes))
+	var noteWithUser, noteWithoutUser *model.Note
+	if noteId1 == notes[0].ID {
+		noteWithUser = notes[0]
+		noteWithoutUser = notes[1]
+	} else {
+		noteWithUser = notes[1]
+		noteWithoutUser = notes[0]
+	}
+	require.Equal(t, noteId1, noteWithUser.ID)
+	require.Equal(t, "note1", noteWithUser.HTML)
+	require.NotNil(t, noteWithUser.CreatedAt)
+	require.NotNil(t, noteWithUser.CreatedBy)
+	require.Equal(t, userId, noteWithUser.CreatedBy.ID)
+	require.Equal(t, "first", noteWithUser.CreatedBy.FirstName)
+	require.Equal(t, "last", noteWithUser.CreatedBy.LastName)
+
+	require.Equal(t, noteId2, noteWithoutUser.ID)
+	require.Equal(t, "note2", noteWithoutUser.HTML)
+	require.NotNil(t, noteWithoutUser.CreatedAt)
+	require.Nil(t, noteWithoutUser.CreatedBy)
+}
+
 func TestQueryResolver_Contact_WithAddresses_ById(t *testing.T) {
 	defer tearDownTestCase()(t)
 	neo4jt.CreateTenant(driver, tenantName)

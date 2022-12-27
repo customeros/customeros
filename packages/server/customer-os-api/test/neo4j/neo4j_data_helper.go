@@ -481,6 +481,31 @@ func CompanyHasAddress(driver *neo4j.Driver, companyId, addressId string) string
 	return roleId.String()
 }
 
+func CreateNoteForContact(driver *neo4j.Driver, contactId, html string) string {
+	var noteId, _ = uuid.NewRandom()
+	query := `MATCH (c:Contact {id:$contactId})
+			MERGE (c)-[:NOTED]->(n:Note {id:$id})
+			ON CREATE SET n.html=$html, n.createdAt=datetime({timezone: 'UTC'})
+`
+	ExecuteWriteQuery(driver, query, map[string]any{
+		"id":        noteId.String(),
+		"contactId": contactId,
+		"html":      html,
+	})
+	return noteId.String()
+}
+
+func NoteCreatedByUser(driver *neo4j.Driver, noteId, userId string) {
+	query := `MATCH (u:User {id:$userId})
+				MATCH (n:Note {id:$noteId})
+			MERGE (u)-[:CREATED]->(n)
+`
+	ExecuteWriteQuery(driver, query, map[string]any{
+		"noteId": noteId,
+		"userId": userId,
+	})
+}
+
 func GetCountOfNodes(driver *neo4j.Driver, nodeLabel string) int {
 	query := fmt.Sprintf(`MATCH (n:%s) RETURN count(n)`, nodeLabel)
 	result := ExecuteReadQueryWithSingleReturn(driver, query, map[string]any{})
