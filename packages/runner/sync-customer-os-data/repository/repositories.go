@@ -15,6 +15,7 @@ type Dbs struct {
 type Repositories struct {
 	Dbs                          Dbs
 	TenantSyncSettingsRepository TenantSyncSettingsRepository
+	SyncRunRepository            SyncRunRepository
 	ContactRepository            ContactRepository
 	ExternalSystemRepository     ExternalSystemRepository
 	CompanyRepository            CompanyRepository
@@ -31,6 +32,7 @@ func InitRepos(driver *neo4j.Driver, controlDb *gorm.DB, airbyteStoreDb *config.
 			AirbyteStoreDB: airbyteStoreDb,
 		},
 		TenantSyncSettingsRepository: NewTenantSyncSettingsRepository(controlDb),
+		SyncRunRepository:            NewSyncRunRepository(controlDb),
 		ContactRepository:            NewContactRepository(driver),
 		ExternalSystemRepository:     NewExternalSystemRepository(driver),
 		CompanyRepository:            NewCompanyRepository(driver),
