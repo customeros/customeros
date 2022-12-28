@@ -21,16 +21,16 @@ func (r *companyRepository) MergeCompanyAddress(tenant, companyId string, compan
 	session := utils.NewNeo4jWriteSession(*r.driver)
 	defer session.Close()
 
+	query := "MATCH (co:Company {id:$companyId})-[:COMPANY_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) " +
+		" MERGE (co)-[:LOCATED_AT]->(a:Address {source:$source}) " +
+		" ON CREATE SET a.id=randomUUID(), a.source=$source, " +
+		"	a.country=$country, a.state=$state, a.city=$city, a.address=$address, " +
+		"	a.address2=$address2, a.zip=$zip, a.phone=$phone, a:%s " +
+		" ON MATCH SET 	a.country=$country, a.state=$state, a.city=$city, a.address=$address, " +
+		"	a.address2=$address2, a.zip=$zip, a.phone=$phone"
+
 	_, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
-		_, err := tx.Run(`
-			MATCH (co:Company {id:$companyId})-[:COMPANY_BELONGS_TO_TENANT]->(:Tenant {name:$tenant})
-			MERGE (co)-[:LOCATED_AT]->(a:Address {source:$source})
-            ON CREATE SET a.id=randomUUID(), a.source=$source,
-							a.country=$country, a.state=$state, a.city=$city, a.address=$address,
-							a.address2=$address2, a.zip=$zip, a.phone=$phone
-            ON MATCH SET 	a.country=$country, a.state=$state, a.city=$city, a.address=$address,
-							a.address2=$address2, a.zip=$zip, a.phone=$phone
-			`,
+		_, err := tx.Run(fmt.Sprintf(query, "Address_"+tenant),
 			map[string]interface{}{
 				"tenant":    tenant,
 				"companyId": companyId,
