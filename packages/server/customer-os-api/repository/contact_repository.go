@@ -69,18 +69,18 @@ func (r *contactRepository) Create(tx neo4j.Transaction, tenant string, newConta
 		createdAt = *newContact.CreatedAt
 	}
 
-	if queryResult, err := tx.Run(`
-			MATCH (t:Tenant {name:$tenant})
-			CREATE (c:Contact {
-				  id: randomUUID(),
-				  title: $title,
-				  firstName: $firstName,
-				  lastName: $lastName,
-				  readonly: $readonly,
-				  label: $label,
-                  createdAt :$createdAt
-			})-[:CONTACT_BELONGS_TO_TENANT]->(t)
-			RETURN c`,
+	query := "MATCH (t:Tenant {name:$tenant}) " +
+		" MERGE (c:Contact {id:randomUUID()})-[:CONTACT_BELONGS_TO_TENANT]->(t) ON CREATE SET" +
+		" c.title=$title, " +
+		" c.firstName=$firstName, " +
+		" c.lastName=$lastName, " +
+		" c.readonly=$readonly, " +
+		" c.label=$label, " +
+		" c.createdAt=$createdAt, " +
+		" c:%s " +
+		" RETURN c"
+
+	if queryResult, err := tx.Run(fmt.Sprintf(query, "Contact_"+tenant),
 		map[string]interface{}{
 			"tenant":    tenant,
 			"title":     newContact.Title,
