@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v4/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/entity"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/utils"
@@ -57,18 +58,19 @@ func (r *companyRepository) MergeCompany(tenant string, syncDate time.Time, comp
 	session := utils.NewNeo4jWriteSession(*r.driver)
 	defer session.Close()
 
+	query := "MATCH (t:Tenant {name:$tenant})<-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]-(e:ExternalSystem {id:$externalSystem}) " +
+		" MERGE (c:Company)-[r:IS_LINKED_WITH {externalId:$externalId}]->(e) " +
+		" ON CREATE SET r.externalId=$externalId, c.id=randomUUID(), c.createdAt=$createdAt, " +
+		"               c.name=$name, c.description=$description, r.syncDate=$syncDate, c.readonly=$readonly, " +
+		"               c.domain=$domain, c.website=$website, c.industry=$industry, c.isPublic=$isPublic, c:%s " +
+		" ON MATCH SET c.name=$name, c.description=$description, r.syncDate=$syncDate, c.readonly=$readonly, " +
+		"              c.domain=$domain, c.website=$website, c.industry=$industry, c.isPublic=$isPublic " +
+		" WITH c, t " +
+		" MERGE (c)-[:COMPANY_BELONGS_TO_TENANT]->(t) " +
+		" RETURN c.id"
+
 	dbRecord, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
-		queryResult, err := tx.Run(`
-				MATCH (t:Tenant {name:$tenant})<-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]-(e:ExternalSystem {id:$externalSystem})
-				MERGE (c:Company)-[r:IS_LINKED_WITH {externalId:$externalId}]->(e)
-				ON CREATE SET r.externalId=$externalId, c.id=randomUUID(), c.createdAt=$createdAt,
-								c.name=$name, c.description=$description, r.syncDate=$syncDate, c.readonly=$readonly,
-								c.domain=$domain, c.website=$website, c.industry=$industry, c.isPublic=$isPublic
-				ON MATCH SET 	c.name=$name, c.description=$description, r.syncDate=$syncDate, c.readonly=$readonly,
-								c.domain=$domain, c.website=$website, c.industry=$industry, c.isPublic=$isPublic
-				WITH c, t
-				MERGE (c)-[:COMPANY_BELONGS_TO_TENANT]->(t)
-				RETURN c.id`,
+		queryResult, err := tx.Run(fmt.Sprintf(query, "Company_"+tenant),
 			map[string]interface{}{
 				"tenant":         tenant,
 				"externalSystem": company.ExternalSystem,

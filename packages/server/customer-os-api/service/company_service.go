@@ -40,7 +40,7 @@ func (s *companyService) FindCompaniesByNameLike(ctx context.Context, page, limi
 	companyEntities := entity.CompanyEntities{}
 
 	for _, v := range dbNodesWithTotalCount.Nodes {
-		companyEntities = append(companyEntities, *s.mapCompanyDbNodeToEntity(v))
+		companyEntities = append(companyEntities, *s.mapCompanyDbNodeToEntity(*v))
 	}
 	paginatedResult.SetRows(&companyEntities)
 	return &paginatedResult, nil
@@ -54,11 +54,11 @@ func (s *companyService) GetCompanyForRole(ctx context.Context, roleId string) (
 	if dbNode == nil || err != nil {
 		return nil, err
 	}
-	return s.mapCompanyDbNodeToEntity(dbNode), nil
+	return s.mapCompanyDbNodeToEntity(*dbNode), nil
 }
 
-func (s *companyService) mapCompanyDbNodeToEntity(node *dbtype.Node) *entity.CompanyEntity {
-	props := utils.GetPropsFromNode(*node)
+func (s *companyService) mapCompanyDbNodeToEntity(node dbtype.Node) *entity.CompanyEntity {
+	props := utils.GetPropsFromNode(node)
 	companyEntity := new(entity.CompanyEntity)
 	companyEntity.Id = utils.GetStringPropOrEmpty(props, "id")
 	companyEntity.Name = utils.GetStringPropOrEmpty(props, "name")
