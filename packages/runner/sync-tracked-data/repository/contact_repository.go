@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v4/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v4/neo4j/db"
 )
@@ -27,11 +28,12 @@ func (r *contactRepository) GetOrCreateContactId(tenant, email, firstName, lastN
 	defer session.Close()
 
 	record, err := session.WriteTransaction(func(tx neo4j.Transaction) (interface{}, error) {
-		queryResult, err := tx.Run(`
-			MERGE (t:Tenant {name:$tenant})
-			MERGE (e:Email {email: $email})<-[r:EMAILED_AT]-(c:Contact)-[:CONTACT_BELONGS_TO_TENANT]->(t)
-            ON CREATE SET r.primary=true, e.id=randomUUID(), c.id=randomUUID(), c.firstName=$firstName, c.lastName=$lastName, c.createdAt=datetime({timezone: 'UTC'})
-			RETURN c.id`,
+		queryResult, err := tx.Run(fmt.Sprintf(
+			" MERGE (t:Tenant {name:$tenant}) "+
+				" MERGE (e:Email {email: $email})<-[r:EMAILED_AT]-(c:Contact)-[:CONTACT_BELONGS_TO_TENANT]->(t) "+
+				" ON CREATE SET r.primary=true, e.id=randomUUID(), c.id=randomUUID(), c.firstName=$firstName, c.lastName=$lastName, "+
+				"               c.createdAt=datetime({timezone: 'UTC'}), c:%s "+
+				" RETURN c.id", "Contact_"+tenant),
 			map[string]interface{}{
 				"tenant":    tenant,
 				"email":     email,

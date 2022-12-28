@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v4/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/entity"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/utils"
@@ -33,16 +34,16 @@ func (r *contactRepository) MergeContact(tenant string, syncDate time.Time, cont
 	defer session.Close()
 
 	dbRecord, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
-		queryResult, err := tx.Run(`
-				MATCH (t:Tenant {name:$tenant})<-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]-(e:ExternalSystem {id:$externalSystem})
-				MERGE (c:Contact)-[r:IS_LINKED_WITH {externalId:$externalId}]->(e)
-				ON CREATE SET r.externalId=$externalId, c.id=randomUUID(), 
-								c.firstName=$firstName, c.lastName=$lastName, r.syncDate=$syncDate, c.readonly=$readonly,
-								c.createdAt=$createdAt
-				ON MATCH SET 	c.firstName=$firstName, c.lastName=$lastName, r.syncDate=$syncDate, c.readonly=$readonly
-				WITH c, t
-				MERGE (c)-[:CONTACT_BELONGS_TO_TENANT]->(t)
-				RETURN c.id`,
+		queryResult, err := tx.Run(fmt.Sprintf(
+			"MATCH (t:Tenant {name:$tenant})<-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]-(e:ExternalSystem {id:$externalSystem}) "+
+				" MERGE (c:Contact)-[r:IS_LINKED_WITH {externalId:$externalId}]->(e) "+
+				" ON CREATE SET r.externalId=$externalId, c.id=randomUUID(), "+
+				"				c.firstName=$firstName, c.lastName=$lastName, r.syncDate=$syncDate, c.readonly=$readonly, "+
+				" 				c.createdAt=$createdAt, c:%s "+
+				" ON MATCH SET 	c.firstName=$firstName, c.lastName=$lastName, r.syncDate=$syncDate, c.readonly=$readonly "+
+				" WITH c, t "+
+				" MERGE (c)-[:CONTACT_BELONGS_TO_TENANT]->(t) "+
+				" RETURN c.id", "Contact_"+tenant),
 			map[string]interface{}{
 				"tenant":         tenant,
 				"externalSystem": contact.ExternalSystem,

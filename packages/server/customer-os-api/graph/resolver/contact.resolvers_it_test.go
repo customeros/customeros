@@ -80,6 +80,7 @@ func TestMutationResolver_ContactCreate_Min(t *testing.T) {
 
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Tenant"))
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Contact"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Contact_"+tenantName))
 	require.Equal(t, 2, neo4jt.GetTotalCountOfNodes(driver))
 }
 
@@ -156,6 +157,7 @@ func TestMutationResolver_ContactCreate(t *testing.T) {
 
 	require.Equal(t, 2, neo4jt.GetCountOfNodes(driver, "Tenant"))
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Contact"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Contact_"+tenantName))
 	require.Equal(t, 0, neo4jt.GetCountOfNodes(driver, "ContactGroup"))
 	require.Equal(t, 5, neo4jt.GetCountOfNodes(driver, "CustomField"))
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "TextField"))
@@ -166,6 +168,7 @@ func TestMutationResolver_ContactCreate(t *testing.T) {
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Email"))
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "PhoneNumber"))
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "ContactType"))
+	require.Equal(t, 11, neo4jt.GetTotalCountOfNodes(driver))
 }
 
 func TestMutationResolver_ContactCreate_WithCustomFields(t *testing.T) {
@@ -183,7 +186,9 @@ func TestMutationResolver_ContactCreate_WithCustomFields(t *testing.T) {
 		client.Var("fieldInSetDefinitionId", fieldInSetDefinitionId))
 	assertRawResponseSuccess(t, rawResponse, err)
 
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Tenant"))
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Contact"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Contact_"+tenantName))
 	require.Equal(t, 0, neo4jt.GetCountOfNodes(driver, "ContactGroup"))
 	require.Equal(t, 0, neo4jt.GetCountOfNodes(driver, "Company"))
 	require.Equal(t, 4, neo4jt.GetCountOfNodes(driver, "CustomField"))
@@ -193,6 +198,7 @@ func TestMutationResolver_ContactCreate_WithCustomFields(t *testing.T) {
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "EntityDefinition"))
 	require.Equal(t, 2, neo4jt.GetCountOfNodes(driver, "CustomFieldDefinition"))
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "FieldSetDefinition"))
+	require.Equal(t, 12, neo4jt.GetTotalCountOfNodes(driver))
 
 	var contact struct {
 		Contact_Create model.Contact
@@ -271,8 +277,10 @@ func TestMutationResolver_ContactCreate_WithOwner(t *testing.T) {
 	require.Equal(t, "Smith", contact.Contact_Create.Owner.LastName)
 
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Contact"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Contact_"+tenantName))
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "User"))
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Tenant"))
+	require.Equal(t, 3, neo4jt.GetTotalCountOfNodes(driver))
 	require.Equal(t, 1, neo4jt.GetCountOfRelationships(driver, "OWNS"))
 }
 
@@ -295,6 +303,7 @@ func TestMutationResolver_ContactCreate_WithExternalReference(t *testing.T) {
 
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Tenant"))
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Contact"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Contact_"+tenantName))
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "ExternalSystem"))
 	require.Equal(t, 3, neo4jt.GetTotalCountOfNodes(driver))
 	require.Equal(t, 1, neo4jt.GetCountOfRelationships(driver, "IS_LINKED_WITH"))
