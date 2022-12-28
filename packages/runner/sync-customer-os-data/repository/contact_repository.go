@@ -73,15 +73,16 @@ func (r *contactRepository) MergePrimaryEmail(tenant, contactId, email string) e
 	session := utils.NewNeo4jWriteSession(*r.driver)
 	defer session.Close()
 
+	query := "MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) " +
+		" OPTIONAL MATCH (c)-[r:EMAILED_AT]->(e:Email) " +
+		" SET r.primary=false " +
+		" WITH c " +
+		" MERGE (c)-[r:EMAILED_AT]->(e:Email {email: $email}) " +
+		" ON CREATE SET r.primary=true, e.id=randomUUID(), e:%s " +
+		" ON MATCH SET r.primary=true"
+
 	_, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
-		_, err := tx.Run(`
-			MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant})
-			OPTIONAL MATCH (c)-[r:EMAILED_AT]->(e:Email)
-			SET r.primary=false
-			WITH c
-			MERGE (c)-[r:EMAILED_AT]->(e:Email {email: $email})
-            ON CREATE SET r.primary=true, e.id=randomUUID()
-            ON MATCH SET r.primary=true`,
+		_, err := tx.Run(fmt.Sprintf(query, "Email_"+tenant),
 			map[string]interface{}{
 				"tenant":    tenant,
 				"contactId": contactId,
@@ -96,12 +97,13 @@ func (r *contactRepository) MergeAdditionalEmail(tenant, contactId, email string
 	session := utils.NewNeo4jWriteSession(*r.driver)
 	defer session.Close()
 
+	query := "MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) " +
+		" MERGE (c)-[r:EMAILED_AT]->(e:Email {email:$email}) " +
+		" ON CREATE SET r.primary=false, e.id=randomUUID(), e:%s " +
+		" ON MATCH SET r.primary=false"
+
 	_, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
-		_, err := tx.Run(`
-			MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant})
-			MERGE (c)-[r:EMAILED_AT]->(e:Email {email:$email})
-            ON CREATE SET r.primary=false, e.id=randomUUID()
-            ON MATCH SET r.primary=false`,
+		_, err := tx.Run(fmt.Sprintf(query, "Email_"+tenant),
 			map[string]interface{}{
 				"tenant":    tenant,
 				"contactId": contactId,

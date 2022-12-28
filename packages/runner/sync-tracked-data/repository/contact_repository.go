@@ -32,8 +32,8 @@ func (r *contactRepository) GetOrCreateContactId(tenant, email, firstName, lastN
 			" MERGE (t:Tenant {name:$tenant}) "+
 				" MERGE (e:Email {email: $email})<-[r:EMAILED_AT]-(c:Contact)-[:CONTACT_BELONGS_TO_TENANT]->(t) "+
 				" ON CREATE SET r.primary=true, e.id=randomUUID(), c.id=randomUUID(), c.firstName=$firstName, c.lastName=$lastName, "+
-				"               c.createdAt=datetime({timezone: 'UTC'}), c:%s "+
-				" RETURN c.id", "Contact_"+tenant),
+				"               c.createdAt=datetime({timezone: 'UTC'}), c:%s, e:%s "+
+				" RETURN c.id", "Contact_"+tenant, "Email_"+tenant),
 			map[string]interface{}{
 				"tenant":    tenant,
 				"email":     email,
