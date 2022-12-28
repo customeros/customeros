@@ -14,25 +14,25 @@ import (
 
 type EmailService interface {
 	FindAllForContact(ctx context.Context, obj *model.Contact) (*entity.EmailEntities, error)
-	MergeEmailToContact(ctx context.Context, id string, toEntity *entity.EmailEntity) (*entity.EmailEntity, error)
-	UpdateEmailInContact(ctx context.Context, id string, toEntity *entity.EmailEntity) (*entity.EmailEntity, error)
+	MergeEmailToContact(ctx context.Context, id string, entity *entity.EmailEntity) (*entity.EmailEntity, error)
+	UpdateEmailInContact(ctx context.Context, id string, entity *entity.EmailEntity) (*entity.EmailEntity, error)
 	Delete(ctx context.Context, contactId string, email string) (bool, error)
 	DeleteById(ctx context.Context, contactId string, emailId string) (bool, error)
 	getDriver() neo4j.Driver
 }
 
 type emailService struct {
-	repository *repository.Repositories
+	repositories *repository.Repositories
 }
 
 func NewEmailService(repository *repository.Repositories) EmailService {
 	return &emailService{
-		repository: repository,
+		repositories: repository,
 	}
 }
 
 func (s *emailService) getDriver() neo4j.Driver {
-	return *s.repository.Drivers.Neo4jDriver
+	return *s.repositories.Drivers.Neo4jDriver
 }
 
 func (s *emailService) FindAllForContact(ctx context.Context, contact *model.Contact) (*entity.EmailEntities, error) {
@@ -72,38 +72,26 @@ func (s *emailService) MergeEmailToContact(ctx context.Context, contactId string
 	session := utils.NewNeo4jWriteSession(s.getDriver())
 	defer session.Close()
 
-	queryResult, err := session.WriteTransaction(func(tx neo4j.Transaction) (interface{}, error) {
+	var err error
+	var emailNode *dbtype.Node
+	var emailRelation *dbtype.Relationship
+
+	_, err = session.WriteTransaction(func(tx neo4j.Transaction) (interface{}, error) {
 		if entity.Primary == true {
 			err := setOtherContactEmailsNonPrimaryInTx(ctx, contactId, entity.Email, tx)
 			if err != nil {
 				return nil, err
 			}
 		}
-		txResult, err := tx.Run(`
-			MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant})
-			MERGE (c)-[r:EMAILED_AT]->(e:Email {email: $email})
-            ON CREATE SET e.label=$label, r.primary=$primary, e.id=randomUUID()
-            ON MATCH SET e.label=$label, r.primary=$primary
-			RETURN e, r`,
-			map[string]interface{}{
-				"tenant":    common.GetContext(ctx).Tenant,
-				"contactId": contactId,
-				"email":     entity.Email,
-				"label":     entity.Label,
-				"primary":   entity.Primary,
-			})
-		record, err := txResult.Single()
-		if err != nil {
-			return nil, err
-		}
-		return record, nil
+		emailNode, emailRelation, err = s.repositories.EmailRepository.MergeEmailToContactInTx(tx, common.GetContext(ctx).Tenant, contactId, *entity)
+		return nil, err
 	})
 	if err != nil {
 		return nil, err
 	}
 
-	var emailEntity = s.mapDbNodeToEmailEntity(queryResult.(*db.Record).Values[0].(dbtype.Node))
-	s.addDbRelationshipToEmailEntity(queryResult.(*db.Record).Values[1].(dbtype.Relationship), emailEntity)
+	var emailEntity = s.mapDbNodeToEmailEntity(*emailNode)
+	s.addDbRelationshipToEmailEntity(*emailRelation, emailEntity)
 	return emailEntity, nil
 }
 
@@ -196,24 +184,6 @@ func (s *emailService) DeleteById(ctx context.Context, contactId string, emailId
 	}
 
 	return queryResult.(bool), nil
-}
-
-func addEmailToContactInTx(ctx context.Context, contactId string, input entity.EmailEntity, tx neo4j.Transaction) error {
-	_, err := tx.Run(`
-			MATCH (c:Contact {id:$contactId})
-			MERGE (e:Email {
-				id: randomUUID(),
-				email: $email,
-				label: $label
-			})<-[:EMAILED_AT {primary:$primary}]-(c)
-			RETURN e`,
-		map[string]interface{}{
-			"contactId": contactId,
-			"primary":   input.Primary,
-			"email":     input.Email,
-			"label":     input.Label,
-		})
-	return err
 }
 
 func setOtherContactEmailsNonPrimaryInTx(ctx context.Context, contactId string, email string, tx neo4j.Transaction) error {
