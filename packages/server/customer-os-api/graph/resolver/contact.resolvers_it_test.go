@@ -217,23 +217,31 @@ func TestMutationResolver_ContactCreate_WithCustomFields(t *testing.T) {
 	require.Equal(t, "hubspot", *createdContact.CustomFields[1].Source)
 	require.NotNil(t, createdContact.CustomFields[1].GetID())
 	require.Equal(t, 2, len(createdContact.FieldSets))
-	require.NotNil(t, createdContact.FieldSets[0].ID)
-	require.NotNil(t, createdContact.FieldSets[0].Added)
-	require.Equal(t, "set1", createdContact.FieldSets[0].Name)
-	require.Equal(t, 2, len(createdContact.FieldSets[0].CustomFields))
-	require.Equal(t, "field3InSet", createdContact.FieldSets[0].CustomFields[0].Name)
-	require.Equal(t, "value3", createdContact.FieldSets[0].CustomFields[0].Value.RealValue())
-	require.Equal(t, "", *createdContact.FieldSets[0].CustomFields[0].Source)
-	require.Equal(t, "TEXT", createdContact.FieldSets[0].CustomFields[0].Datatype.String())
-	require.Equal(t, fieldInSetDefinitionId, createdContact.FieldSets[0].CustomFields[0].Definition.ID)
-	require.Equal(t, "field4InSet", createdContact.FieldSets[0].CustomFields[1].Name)
-	require.Equal(t, "value4", createdContact.FieldSets[0].CustomFields[1].Value.RealValue())
-	require.Equal(t, "zendesk", *createdContact.FieldSets[0].CustomFields[1].Source)
-	require.Equal(t, "TEXT", createdContact.FieldSets[0].CustomFields[1].Datatype.String())
-	require.Nil(t, createdContact.FieldSets[0].CustomFields[1].Definition)
-	require.NotNil(t, createdContact.FieldSets[1].ID)
-	require.NotNil(t, createdContact.FieldSets[1].Added)
-	require.Equal(t, "set2", createdContact.FieldSets[1].Name)
+	var set1, set2 *model.FieldSet
+	if createdContact.FieldSets[0].Name == "set1" {
+		set1 = createdContact.FieldSets[0]
+		set2 = createdContact.FieldSets[1]
+	} else {
+		set1 = createdContact.FieldSets[1]
+		set2 = createdContact.FieldSets[0]
+	}
+	require.NotNil(t, set1.ID)
+	require.NotNil(t, set1.Added)
+	require.Equal(t, "set1", set1.Name)
+	require.Equal(t, 2, len(set1.CustomFields))
+	require.Equal(t, "field3InSet", set1.CustomFields[0].Name)
+	require.Equal(t, "value3", set1.CustomFields[0].Value.RealValue())
+	require.Equal(t, "", *set1.CustomFields[0].Source)
+	require.Equal(t, "TEXT", set1.CustomFields[0].Datatype.String())
+	require.Equal(t, fieldInSetDefinitionId, set1.CustomFields[0].Definition.ID)
+	require.Equal(t, "field4InSet", set1.CustomFields[1].Name)
+	require.Equal(t, "value4", set1.CustomFields[1].Value.RealValue())
+	require.Equal(t, "zendesk", *set1.CustomFields[1].Source)
+	require.Equal(t, "TEXT", set1.CustomFields[1].Datatype.String())
+	require.Nil(t, set1.CustomFields[1].Definition)
+	require.NotNil(t, set2.ID)
+	require.NotNil(t, set2.Added)
+	require.Equal(t, "set2", set2.Name)
 }
 
 func TestMutationResolver_ContactCreate_WithOwner(t *testing.T) {
