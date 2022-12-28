@@ -67,6 +67,7 @@ func TestMutationResolver_ContactRoleCreate_WithCompany(t *testing.T) {
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Contact"))
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Company"))
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Role"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Role_"+tenantName))
 	require.Equal(t, 1, neo4jt.GetCountOfRelationships(driver, "WORKS"))
 	require.Equal(t, 1, neo4jt.GetCountOfRelationships(driver, "HAS_ROLE"))
 }
@@ -96,6 +97,7 @@ func TestMutationResolver_ContactRoleCreate_WithoutCompany(t *testing.T) {
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Contact"))
 	require.Equal(t, 0, neo4jt.GetCountOfNodes(driver, "Company"))
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Role"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Role_"+tenantName))
 	require.Equal(t, 0, neo4jt.GetCountOfRelationships(driver, "WORKS"))
 	require.Equal(t, 1, neo4jt.GetCountOfRelationships(driver, "HAS_ROLE"))
 }

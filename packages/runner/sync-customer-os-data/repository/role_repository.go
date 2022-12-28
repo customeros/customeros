@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v4/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/utils"
 )
@@ -25,13 +26,14 @@ func (r *roleRepository) MergeRole(tenant, contactId, companyExternalId, externa
 	session := utils.NewNeo4jWriteSession(*r.driver)
 	defer session.Close()
 
+	query := "MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant}) " +
+		" MATCH (e:ExternalSystem {id:$externalSystemId})<-[:IS_LINKED_WITH {externalId:$companyExternalId}]-(co:Company)-[:COMPANY_BELONGS_TO_TENANT]->(t) " +
+		" MERGE (c)-[:HAS_ROLE]->(r:Role)-[:WORKS]->(co) " +
+		" ON CREATE SET r.primary=false, r.id=randomUUID(), r:%s " +
+		" RETURN r"
+
 	_, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
-		queryResult, err := tx.Run(`
-			MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant})
-			MATCH (e:ExternalSystem {id:$externalSystemId})<-[:IS_LINKED_WITH {externalId:$companyExternalId}]-(co:Company)-[:COMPANY_BELONGS_TO_TENANT]->(t)
-			MERGE (c)-[:HAS_ROLE]->(r:Role)-[:WORKS]->(co)
-            ON CREATE SET r.primary=false, r.id=randomUUID()
-			RETURN r`,
+		queryResult, err := tx.Run(fmt.Sprintf(query, "Role_"+tenant),
 			map[string]interface{}{
 				"tenant":            tenant,
 				"contactId":         contactId,

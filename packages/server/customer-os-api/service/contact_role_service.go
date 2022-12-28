@@ -13,8 +13,8 @@ import (
 type ContactRoleService interface {
 	FindAllForContact(ctx context.Context, contactId string) (*entity.ContactRoleEntities, error)
 	DeleteContactRole(ctx context.Context, contactId, roleId string) (bool, error)
-	CreateContactRole(ctx context.Context, contactId string, companyId *string, input *entity.ContactRoleEntity) (*entity.ContactRoleEntity, error)
-	UpdateContactRole(ctx context.Context, contactId, roleId string, companyId *string, input *entity.ContactRoleEntity) (*entity.ContactRoleEntity, error)
+	CreateContactRole(ctx context.Context, contactId string, companyId *string, entity *entity.ContactRoleEntity) (*entity.ContactRoleEntity, error)
+	UpdateContactRole(ctx context.Context, contactId, roleId string, companyId *string, entity *entity.ContactRoleEntity) (*entity.ContactRoleEntity, error)
 }
 
 type contactRoleService struct {
@@ -42,21 +42,21 @@ func (s *contactRoleService) FindAllForContact(ctx context.Context, contactId st
 
 	contactRoleEntities := entity.ContactRoleEntities{}
 	for _, dbNode := range dbNodes {
-		contactRoleEntities = append(contactRoleEntities, *s.mapDbNodeToContactRoleEntity(dbNode))
+		contactRoleEntities = append(contactRoleEntities, *s.mapDbNodeToContactRoleEntity(*dbNode))
 	}
 	return &contactRoleEntities, nil
 }
 
-func (s *contactRoleService) CreateContactRole(ctx context.Context, contactId string, companyId *string, input *entity.ContactRoleEntity) (*entity.ContactRoleEntity, error) {
+func (s *contactRoleService) CreateContactRole(ctx context.Context, contactId string, companyId *string, entity *entity.ContactRoleEntity) (*entity.ContactRoleEntity, error) {
 	session := utils.NewNeo4jWriteSession(*s.repositories.Drivers.Neo4jDriver)
 	defer session.Close()
 
 	dbNode, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
-		if input.Primary == true {
+		if entity.Primary == true {
 			s.repositories.ContactRoleRepository.SetOtherRolesNonPrimaryInTx(tx, common.GetContext(ctx).Tenant, contactId, "")
 		}
 
-		roleDbNode, err := s.repositories.ContactRoleRepository.CreateContactRole(tx, common.GetContext(ctx).Tenant, contactId, input)
+		roleDbNode, err := s.repositories.ContactRoleRepository.CreateContactRole(tx, common.GetContext(ctx).Tenant, contactId, *entity)
 		if err != nil {
 			return nil, err
 		}
@@ -73,19 +73,19 @@ func (s *contactRoleService) CreateContactRole(ctx context.Context, contactId st
 		return nil, err
 	}
 
-	return s.mapDbNodeToContactRoleEntity(dbNode.(*dbtype.Node)), nil
+	return s.mapDbNodeToContactRoleEntity(*dbNode.(*dbtype.Node)), nil
 }
 
-func (s *contactRoleService) UpdateContactRole(ctx context.Context, contactId, roleId string, companyId *string, input *entity.ContactRoleEntity) (*entity.ContactRoleEntity, error) {
+func (s *contactRoleService) UpdateContactRole(ctx context.Context, contactId, roleId string, companyId *string, entity *entity.ContactRoleEntity) (*entity.ContactRoleEntity, error) {
 	session := utils.NewNeo4jWriteSession(*s.repositories.Drivers.Neo4jDriver)
 	defer session.Close()
 
 	dbNode, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
-		if input.Primary == true {
+		if entity.Primary == true {
 			s.repositories.ContactRoleRepository.SetOtherRolesNonPrimaryInTx(tx, common.GetContext(ctx).Tenant, contactId, roleId)
 		}
 
-		roleDbNode, err := s.repositories.ContactRoleRepository.UpdateContactRoleDetails(tx, common.GetContext(ctx).Tenant, contactId, roleId, input)
+		roleDbNode, err := s.repositories.ContactRoleRepository.UpdateContactRoleDetails(tx, common.GetContext(ctx).Tenant, contactId, roleId, *entity)
 		if err != nil {
 			return nil, err
 		}
@@ -101,7 +101,7 @@ func (s *contactRoleService) UpdateContactRole(ctx context.Context, contactId, r
 		return nil, err
 	}
 
-	return s.mapDbNodeToContactRoleEntity(dbNode.(*dbtype.Node)), nil
+	return s.mapDbNodeToContactRoleEntity(*dbNode.(*dbtype.Node)), nil
 }
 
 func (s *contactRoleService) DeleteContactRole(ctx context.Context, contactId, roleId string) (bool, error) {
@@ -116,8 +116,8 @@ func (s *contactRoleService) DeleteContactRole(ctx context.Context, contactId, r
 	return true, nil
 }
 
-func (s *contactRoleService) mapDbNodeToContactRoleEntity(node *dbtype.Node) *entity.ContactRoleEntity {
-	props := utils.GetPropsFromNode(*node)
+func (s *contactRoleService) mapDbNodeToContactRoleEntity(node dbtype.Node) *entity.ContactRoleEntity {
+	props := utils.GetPropsFromNode(node)
 	result := entity.ContactRoleEntity{
 		Id:       utils.GetStringPropOrEmpty(props, "id"),
 		JobTitle: utils.GetStringPropOrEmpty(props, "jobTitle"),
