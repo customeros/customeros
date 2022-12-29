@@ -36,9 +36,9 @@ func (r *customFieldRepository) MergeCustomFieldToContactInTx(tx neo4j.Transacti
 	queryResult, err := tx.Run(
 		fmt.Sprintf("MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) "+
 			" MERGE (f:%s:CustomField {name: $name, datatype:$datatype})<-[:HAS_PROPERTY]-(c) "+
-			" ON CREATE SET f.%s=$value, f.id=randomUUID(), f.source=$source "+
+			" ON CREATE SET f.%s=$value, f.id=randomUUID(), f.source=$source, f:%s "+
 			" ON MATCH SET f.%s=$value, f.source=$source "+
-			" RETURN f", entity.NodeLabel(), entity.PropertyName(), entity.PropertyName()),
+			" RETURN f", entity.NodeLabel(), entity.PropertyName(), "CustomField_"+tenant, entity.PropertyName()),
 		map[string]any{
 			"tenant":    tenant,
 			"contactId": contactId,
@@ -54,9 +54,9 @@ func (r *customFieldRepository) MergeCustomFieldToFieldSetInTx(tx neo4j.Transact
 	queryResult, err := tx.Run(
 		fmt.Sprintf(" MATCH (s:FieldSet {id:$fieldSetId})<-[:HAS_COMPLEX_PROPERTY]-(c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) "+
 			" MERGE (f:%s:CustomField {name: $name, datatype:$datatype})<-[:HAS_PROPERTY]-(s)"+
-			" ON CREATE SET f.%s=$value, f.id=randomUUID(), f.source=$source "+
+			" ON CREATE SET f.%s=$value, f.id=randomUUID(), f.source=$source, f:%s "+
 			" ON MATCH SET f.%s=$value, f.source=$source "+
-			" RETURN f", entity.NodeLabel(), entity.PropertyName(), entity.PropertyName()),
+			" RETURN f", entity.NodeLabel(), entity.PropertyName(), "CustomField_"+tenant, entity.PropertyName()),
 		map[string]any{
 			"tenant":     tenant,
 			"contactId":  contactId,

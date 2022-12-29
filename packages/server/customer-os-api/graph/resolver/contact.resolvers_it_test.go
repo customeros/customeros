@@ -162,6 +162,7 @@ func TestMutationResolver_ContactCreate(t *testing.T) {
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Contact_"+tenantName))
 	require.Equal(t, 0, neo4jt.GetCountOfNodes(driver, "ContactGroup"))
 	require.Equal(t, 5, neo4jt.GetCountOfNodes(driver, "CustomField"))
+	require.Equal(t, 5, neo4jt.GetCountOfNodes(driver, "CustomField_"+tenantName))
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "TextField"))
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "IntField"))
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "FloatField"))
@@ -176,7 +177,7 @@ func TestMutationResolver_ContactCreate(t *testing.T) {
 
 	assertNeo4jLabels(t, driver, []string{"Tenant", "Contact", "Contact_" + tenantName, "ContactType",
 		"Email", "Email_" + tenantName, "PhoneNumber", "PhoneNumber_" + tenantName,
-		"CustomField", "BoolField", "TextField", "FloatField", "TimeField", "IntField"})
+		"CustomField", "BoolField", "TextField", "FloatField", "TimeField", "IntField", "CustomField_" + tenantName})
 }
 
 func TestMutationResolver_ContactCreate_WithCustomFields(t *testing.T) {
@@ -200,6 +201,7 @@ func TestMutationResolver_ContactCreate_WithCustomFields(t *testing.T) {
 	require.Equal(t, 0, neo4jt.GetCountOfNodes(driver, "ContactGroup"))
 	require.Equal(t, 0, neo4jt.GetCountOfNodes(driver, "Company"))
 	require.Equal(t, 4, neo4jt.GetCountOfNodes(driver, "CustomField"))
+	require.Equal(t, 4, neo4jt.GetCountOfNodes(driver, "CustomField_"+tenantName))
 	require.Equal(t, 4, neo4jt.GetCountOfNodes(driver, "TextField"))
 	require.Equal(t, 0, neo4jt.GetCountOfNodes(driver, "Email"))
 	require.Equal(t, 0, neo4jt.GetCountOfNodes(driver, "PhoneNumber"))
@@ -261,7 +263,7 @@ func TestMutationResolver_ContactCreate_WithCustomFields(t *testing.T) {
 
 	assertNeo4jLabels(t, driver, []string{"Tenant", "Contact", "Contact_" + tenantName,
 		"CustomFieldDefinition", "EntityDefinition", "FieldSet", "FieldSet_" + tenantName, "FieldSetDefinition",
-		"CustomField", "TextField"})
+		"CustomField", "TextField", "CustomField_" + tenantName})
 }
 
 func TestMutationResolver_ContactCreate_WithOwner(t *testing.T) {
