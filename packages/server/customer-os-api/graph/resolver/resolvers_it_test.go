@@ -88,6 +88,9 @@ func getQuery(fileName string) string {
 func assertRawResponseSuccess(t *testing.T, response *client.Response, err error) {
 	require.Nil(t, err)
 	require.NotNil(t, response)
+	if response.Errors != nil {
+		logrus.Errorf("Error in response: %v", string(response.Errors))
+	}
 	require.NotNil(t, response.Data)
 	require.Nil(t, response.Errors)
 }

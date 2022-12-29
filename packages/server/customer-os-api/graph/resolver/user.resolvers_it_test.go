@@ -31,7 +31,10 @@ func TestMutationResolver_UserCreate(t *testing.T) {
 	require.NotNil(t, user.UserCreate.CreatedAt)
 	require.NotNil(t, user.UserCreate.ID)
 
-	assertNeo4jLabels(t, driver, []string{"Tenant", "User"})
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "User"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "User_"+tenantName))
+
+	assertNeo4jLabels(t, driver, []string{"Tenant", "User", "User_" + tenantName})
 }
 
 func TestQueryResolver_Users(t *testing.T) {

@@ -5,10 +5,12 @@ import (
 	"github.com/neo4j/neo4j-go-driver/v4/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v4/neo4j/db"
 	"github.com/neo4j/neo4j-go-driver/v4/neo4j/dbtype"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils"
 )
 
 type UserRepository interface {
+	Create(session neo4j.Session, tenant string, entity entity.UserEntity) (*dbtype.Node, error)
 	FindOwnerForContact(tx neo4j.Transaction, tenant, contactId string) (*dbtype.Node, error)
 	FindCreatorForNote(tx neo4j.Transaction, tenant, noteId string) (*dbtype.Node, error)
 	GetPaginatedUsers(session neo4j.Session, tenant string, skip, limit int, filter *utils.CypherFilter, sort *utils.CypherSort) (*utils.DbNodesWithTotalCount, error)
@@ -23,6 +25,28 @@ func NewUserRepository(driver *neo4j.Driver) UserRepository {
 	return &userRepository{
 		driver: driver,
 	}
+}
+
+func (r *userRepository) Create(session neo4j.Session, tenant string, entity entity.UserEntity) (*dbtype.Node, error) {
+	query := "MATCH (t:Tenant {name:$tenant}) " +
+		" MERGE (u:User {id: randomUUID()})-[:USER_BELONGS_TO_TENANT]->(t) " +
+		" ON CREATE SET u.firstName=$firstName, u.lastName=$lastName, u.email=$email, u.createdAt=datetime({timezone: 'UTC'}), u:%s" +
+		" RETURN u"
+
+	result, err := session.WriteTransaction(func(tx neo4j.Transaction) (interface{}, error) {
+		queryResult, err := tx.Run(fmt.Sprintf(query, "User_"+tenant),
+			map[string]any{
+				"tenant":    tenant,
+				"firstName": entity.FirstName,
+				"lastName":  entity.LastName,
+				"email":     entity.Email,
+			})
+		return utils.ExtractSingleRecordFirstValueAsNode(queryResult, err)
+	})
+	if err != nil {
+		return nil, err
+	}
+	return result.(*dbtype.Node), nil
 }
 
 func (r *userRepository) FindOwnerForContact(tx neo4j.Transaction, tenant, contactId string) (*dbtype.Node, error) {
