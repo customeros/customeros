@@ -10,6 +10,61 @@ import (
 	"testing"
 )
 
+func TestMutationResolver_ContactGroupRemoveContact(t *testing.T) {
+	defer tearDownTestCase()(t)
+	neo4jt.CreateTenant(driver, tenantName)
+	contactId1 := neo4jt.CreateDefaultContact(driver, tenantName)
+	contactId2 := neo4jt.CreateDefaultContact(driver, tenantName)
+	groupId := neo4jt.CreateContactGroup(driver, tenantName, "Group1")
+	neo4jt.AddContactToGroup(driver, contactId1, groupId)
+	neo4jt.AddContactToGroup(driver, contactId2, groupId)
+
+	require.Equal(t, 2, neo4jt.GetCountOfNodes(driver, "Contact"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "ContactGroup"))
+	require.Equal(t, 2, neo4jt.GetCountOfRelationships(driver, "BELONGS_TO_GROUP"))
+
+	rawResponse, err := c.RawPost(getQuery("remove_contact_from_group"),
+		client.Var("contactId", contactId1),
+		client.Var("groupId", groupId))
+	assertRawResponseSuccess(t, rawResponse, err)
+
+	var result struct {
+		ContactGroupRemoveContact model.Result
+	}
+
+	err = decode.Decode(rawResponse.Data.(map[string]any), &result)
+	require.Nil(t, err)
+	require.NotNil(t, result)
+	require.Equal(t, true, result.ContactGroupRemoveContact.Result)
+
+	require.Equal(t, 1, neo4jt.GetCountOfRelationships(driver, "BELONGS_TO_GROUP"))
+
+	assertNeo4jLabels(t, driver, []string{"Tenant", "Contact", "ContactGroup"})
+}
+
+func TestMutationResolver_ContactGroupCreate(t *testing.T) {
+	defer tearDownTestCase()(t)
+	neo4jt.CreateTenant(driver, tenantName)
+
+	rawResponse, err := c.RawPost(getQuery("create_contact_group"))
+	assertRawResponseSuccess(t, rawResponse, err)
+
+	var contactGroup struct {
+		ContactGroupCreate model.ContactGroup
+	}
+
+	err = decode.Decode(rawResponse.Data.(map[string]any), &contactGroup)
+	require.Nil(t, err)
+	require.NotNil(t, contactGroup)
+	require.NotNil(t, contactGroup.ContactGroupCreate.ID)
+	require.Equal(t, "the contact group", contactGroup.ContactGroupCreate.Name)
+
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "ContactGroup"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "ContactGroup_"+tenantName))
+
+	assertNeo4jLabels(t, driver, []string{"Tenant", "ContactGroup", "ContactGroup_" + tenantName})
+}
+
 func TestQueryResolver_ContactGroups(t *testing.T) {
 	defer tearDownTestCase()(t)
 	neo4jt.CreateTenant(driver, tenantName)
@@ -141,38 +196,6 @@ func TestQueryResolver_Contacts_ForContactGroup(t *testing.T) {
 	require.Equal(t, int64(0), thirdGroup.Contacts.TotalElements)
 	require.Equal(t, 0, thirdGroup.Contacts.TotalPages)
 	require.Equal(t, 0, len(thirdGroup.Contacts.Content))
-}
-
-func TestMutationResolver_ContactGroupRemoveContact(t *testing.T) {
-	defer tearDownTestCase()(t)
-	neo4jt.CreateTenant(driver, tenantName)
-	contactId1 := neo4jt.CreateDefaultContact(driver, tenantName)
-	contactId2 := neo4jt.CreateDefaultContact(driver, tenantName)
-	groupId := neo4jt.CreateContactGroup(driver, tenantName, "Group1")
-	neo4jt.AddContactToGroup(driver, contactId1, groupId)
-	neo4jt.AddContactToGroup(driver, contactId2, groupId)
-
-	require.Equal(t, 2, neo4jt.GetCountOfNodes(driver, "Contact"))
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "ContactGroup"))
-	require.Equal(t, 2, neo4jt.GetCountOfRelationships(driver, "BELONGS_TO_GROUP"))
-
-	rawResponse, err := c.RawPost(getQuery("remove_contact_from_group"),
-		client.Var("contactId", contactId1),
-		client.Var("groupId", groupId))
-	assertRawResponseSuccess(t, rawResponse, err)
-
-	var result struct {
-		ContactGroupRemoveContact model.Result
-	}
-
-	err = decode.Decode(rawResponse.Data.(map[string]any), &result)
-	require.Nil(t, err)
-	require.NotNil(t, result)
-	require.Equal(t, true, result.ContactGroupRemoveContact.Result)
-
-	require.Equal(t, 1, neo4jt.GetCountOfRelationships(driver, "BELONGS_TO_GROUP"))
-
-	assertNeo4jLabels(t, driver, []string{"Tenant", "Contact", "ContactGroup"})
 }
 
 func TestQueryResolver_ContactGroups_MultipleFiltersByName(t *testing.T) {

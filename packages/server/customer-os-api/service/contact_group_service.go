@@ -14,7 +14,7 @@ import (
 )
 
 type ContactGroupService interface {
-	Create(ctx context.Context, contactGroup *entity.ContactGroupEntity) (*entity.ContactGroupEntity, error)
+	Create(ctx context.Context, entity *entity.ContactGroupEntity) (*entity.ContactGroupEntity, error)
 	Update(ctx context.Context, contactGroup *entity.ContactGroupEntity) (*entity.ContactGroupEntity, error)
 	Delete(ctx context.Context, id string) (bool, error)
 	FindContactGroupById(ctx context.Context, id string) (*entity.ContactGroupEntity, error)
@@ -38,32 +38,15 @@ func (s *contactGroupService) getDriver() neo4j.Driver {
 	return *s.repositories.Drivers.Neo4jDriver
 }
 
-func (s *contactGroupService) Create(ctx context.Context, newContactGroup *entity.ContactGroupEntity) (*entity.ContactGroupEntity, error) {
+func (s *contactGroupService) Create(ctx context.Context, entity *entity.ContactGroupEntity) (*entity.ContactGroupEntity, error) {
 	session := utils.NewNeo4jWriteSession(s.getDriver())
 	defer session.Close()
 
-	queryResult, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
-		result, err := tx.Run(`
-			MATCH (t:Tenant {name:$tenant})
-			CREATE (g:ContactGroup {
-				  id: randomUUID(),
-				  name: $name})-[:GROUP_BELONGS_TO_TENANT]->(t)
-			RETURN g`,
-			map[string]any{
-				"name":   newContactGroup.Name,
-				"tenant": common.GetContext(ctx).Tenant,
-			})
-
-		record, err := result.Single()
-		if err != nil {
-			return nil, err
-		}
-		return record.Values[0], nil
-	})
+	dbNode, err := s.repositories.ContactGroupRepository.Create(session, common.GetContext(ctx).Tenant, *entity)
 	if err != nil {
 		return nil, err
 	}
-	return s.mapDbNodeToContactGroup(utils.NodePtr(queryResult.(dbtype.Node))), nil
+	return s.mapDbNodeToContactGroupEntity(*dbNode), nil
 }
 
 func (s *contactGroupService) Update(ctx context.Context, contactGroup *entity.ContactGroupEntity) (*entity.ContactGroupEntity, error) {
@@ -90,7 +73,7 @@ func (s *contactGroupService) Update(ctx context.Context, contactGroup *entity.C
 	if err != nil {
 		return nil, err
 	}
-	return s.mapDbNodeToContactGroup(utils.NodePtr(queryResult.(dbtype.Node))), nil
+	return s.mapDbNodeToContactGroupEntity(queryResult.(dbtype.Node)), nil
 }
 
 func (s *contactGroupService) Delete(ctx context.Context, id string) (bool, error) {
@@ -148,7 +131,7 @@ func (s *contactGroupService) FindAll(ctx context.Context, page, limit int, filt
 	contactGroups := entity.ContactGroupEntities{}
 
 	for _, v := range dbNodesWithTotalCount.Nodes {
-		contactGroups = append(contactGroups, *s.mapDbNodeToContactGroup(v))
+		contactGroups = append(contactGroups, *s.mapDbNodeToContactGroupEntity(*v))
 	}
 	paginatedResult.SetRows(&contactGroups)
 	return &paginatedResult, nil
@@ -175,7 +158,7 @@ func (s *contactGroupService) FindContactGroupById(ctx context.Context, id strin
 		return nil, err
 	}
 
-	return s.mapDbNodeToContactGroup(utils.NodePtr(queryResult.(dbtype.Node))), nil
+	return s.mapDbNodeToContactGroupEntity(queryResult.(dbtype.Node)), nil
 }
 
 func (s *contactGroupService) FindAllForContact(ctx context.Context, contact *model.Contact) (*entity.ContactGroupEntities, error) {
@@ -203,7 +186,7 @@ func (s *contactGroupService) FindAllForContact(ctx context.Context, contact *mo
 	contactGroups := entity.ContactGroupEntities{}
 
 	for _, dbRecord := range queryResult.([]*db.Record) {
-		contactGroup := s.mapDbNodeToContactGroup(utils.NodePtr(dbRecord.Values[0].(dbtype.Node)))
+		contactGroup := s.mapDbNodeToContactGroupEntity(dbRecord.Values[0].(dbtype.Node))
 		contactGroups = append(contactGroups, *contactGroup)
 	}
 
@@ -259,8 +242,8 @@ func (s *contactGroupService) RemoveContactFromGroup(ctx context.Context, contac
 	return queryResult.(bool), nil
 }
 
-func (s *contactGroupService) mapDbNodeToContactGroup(dbContactGroupNode *dbtype.Node) *entity.ContactGroupEntity {
-	props := utils.GetPropsFromNode(*dbContactGroupNode)
+func (s *contactGroupService) mapDbNodeToContactGroupEntity(node dbtype.Node) *entity.ContactGroupEntity {
+	props := utils.GetPropsFromNode(node)
 	contactGroup := entity.ContactGroupEntity{
 		Id:   utils.GetStringPropOrEmpty(props, "id"),
 		Name: utils.GetStringPropOrEmpty(props, "name"),
