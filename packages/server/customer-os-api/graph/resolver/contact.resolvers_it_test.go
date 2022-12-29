@@ -202,11 +202,12 @@ func TestMutationResolver_ContactCreate_WithCustomFields(t *testing.T) {
 	require.Equal(t, 4, neo4jt.GetCountOfNodes(driver, "CustomField"))
 	require.Equal(t, 4, neo4jt.GetCountOfNodes(driver, "TextField"))
 	require.Equal(t, 0, neo4jt.GetCountOfNodes(driver, "Email"))
-	require.Equal(t, 0, neo4jt.GetCountOfNodes(driver, "Email_"+tenantName))
 	require.Equal(t, 0, neo4jt.GetCountOfNodes(driver, "PhoneNumber"))
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "EntityDefinition"))
 	require.Equal(t, 2, neo4jt.GetCountOfNodes(driver, "CustomFieldDefinition"))
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "FieldSetDefinition"))
+	require.Equal(t, 2, neo4jt.GetCountOfNodes(driver, "FieldSet"))
+	require.Equal(t, 2, neo4jt.GetCountOfNodes(driver, "FieldSet_"+tenantName))
 	require.Equal(t, 12, neo4jt.GetTotalCountOfNodes(driver))
 
 	var contact struct {
@@ -259,7 +260,7 @@ func TestMutationResolver_ContactCreate_WithCustomFields(t *testing.T) {
 	require.Equal(t, "set2", set2.Name)
 
 	assertNeo4jLabels(t, driver, []string{"Tenant", "Contact", "Contact_" + tenantName,
-		"CustomFieldDefinition", "EntityDefinition", "FieldSet", "FieldSetDefinition",
+		"CustomFieldDefinition", "EntityDefinition", "FieldSet", "FieldSet_" + tenantName, "FieldSetDefinition",
 		"CustomField", "TextField"})
 }
 
