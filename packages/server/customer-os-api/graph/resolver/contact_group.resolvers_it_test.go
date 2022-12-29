@@ -171,6 +171,8 @@ func TestMutationResolver_ContactGroupRemoveContact(t *testing.T) {
 	require.Equal(t, true, result.ContactGroupRemoveContact.Result)
 
 	require.Equal(t, 1, neo4jt.GetCountOfRelationships(driver, "BELONGS_TO_GROUP"))
+
+	assertNeo4jLabels(t, driver, []string{"Tenant", "Contact", "ContactGroup"})
 }
 
 func TestQueryResolver_ContactGroups_MultipleFiltersByName(t *testing.T) {

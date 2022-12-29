@@ -29,6 +29,8 @@ func TestMutationResolver_ConversationCreate_AutogenerateID(t *testing.T) {
 	require.NotNil(t, conversation)
 	require.NotNil(t, conversation.ConversationCreate.ID)
 	require.NotNil(t, conversation.ConversationCreate.StartedAt)
+
+	assertNeo4jLabels(t, driver, []string{"Tenant", "Contact", "Conversation", "User"})
 }
 
 func TestMutationResolver_ConversationCreate_WithGivenID(t *testing.T) {
@@ -53,6 +55,8 @@ func TestMutationResolver_ConversationCreate_WithGivenID(t *testing.T) {
 	require.NotNil(t, conversation)
 	require.NotNil(t, conversation.ConversationCreate.StartedAt)
 	require.Equal(t, conversationId, conversation.ConversationCreate.ID)
+
+	assertNeo4jLabels(t, driver, []string{"Tenant", "Contact", "Conversation", "User"})
 }
 
 func TestMutationResolver_ConversationAddMessage(t *testing.T) {

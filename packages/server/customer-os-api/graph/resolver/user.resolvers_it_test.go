@@ -30,6 +30,8 @@ func TestMutationResolver_UserCreate(t *testing.T) {
 	require.Equal(t, "user@openline.ai", user.UserCreate.Email)
 	require.NotNil(t, user.UserCreate.CreatedAt)
 	require.NotNil(t, user.UserCreate.ID)
+
+	assertNeo4jLabels(t, driver, []string{"Tenant", "User"})
 }
 
 func TestQueryResolver_Users(t *testing.T) {

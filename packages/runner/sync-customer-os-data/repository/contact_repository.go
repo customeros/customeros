@@ -118,15 +118,16 @@ func (r *contactRepository) MergePrimaryPhoneNumber(tenant, contactId, e164 stri
 	session := utils.NewNeo4jWriteSession(*r.driver)
 	defer session.Close()
 
+	query := "MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) " +
+		" OPTIONAL MATCH (c)-[r:CALLED_AT]->(p:PhoneNumber) " +
+		" SET r.primary=false " +
+		" WITH c " +
+		" MERGE (c)-[r:CALLED_AT]->(p:PhoneNumber {e164: $e164}) " +
+		" ON CREATE SET r.primary=true, p.id=randomUUID(), p:%s " +
+		" ON MATCH SET r.primary=true"
+
 	_, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
-		_, err := tx.Run(`
-			MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant})
-			OPTIONAL MATCH (c)-[r:CALLED_AT]->(p:PhoneNumber)
-			SET r.primary=false
-			WITH c
-			MERGE (c)-[r:CALLED_AT]->(p:PhoneNumber {e164: $e164})
-            ON CREATE SET r.primary=true, p.id=randomUUID()
-            ON MATCH SET r.primary=true`,
+		_, err := tx.Run(fmt.Sprintf(query, "PhoneNumber_"+tenant),
 			map[string]interface{}{
 				"tenant":    tenant,
 				"contactId": contactId,

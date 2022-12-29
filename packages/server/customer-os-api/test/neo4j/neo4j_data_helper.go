@@ -523,3 +523,28 @@ func GetTotalCountOfNodes(driver *neo4j.Driver) int {
 	result := ExecuteReadQueryWithSingleReturn(driver, query, map[string]any{})
 	return int(result.(*db.Record).Values[0].(int64))
 }
+
+func GetAllLabels(driver *neo4j.Driver) []string {
+	query := `MATCH (n) RETURN DISTINCT labels(n)`
+	dbRecords := ExecuteReadQueryWithCollectionReturn(driver, query, map[string]any{})
+	labels := []string{}
+	for _, v := range dbRecords {
+		for _, nodeLabels := range v.Values {
+			for _, label := range nodeLabels.([]interface{}) {
+				if !contains(labels, label.(string)) {
+					labels = append(labels, label.(string))
+				}
+			}
+		}
+	}
+	return labels
+}
+
+func contains(slice []string, value string) bool {
+	for _, v := range slice {
+		if v == value {
+			return true
+		}
+	}
+	return false
+}

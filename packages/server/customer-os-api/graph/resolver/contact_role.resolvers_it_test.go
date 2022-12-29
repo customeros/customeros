@@ -37,6 +37,8 @@ func TestMutationResolver_ContactRoleDelete(t *testing.T) {
 	require.Equal(t, 0, neo4jt.GetCountOfRelationships(driver, "HAS_ROLE"))
 	require.Equal(t, 0, neo4jt.GetCountOfRelationships(driver, "WORKS"))
 	require.Equal(t, 0, neo4jt.GetCountOfNodes(driver, "Role"))
+
+	assertNeo4jLabels(t, driver, []string{"Tenant", "Contact", "Company"})
 }
 
 func TestMutationResolver_ContactRoleCreate_WithCompany(t *testing.T) {
@@ -70,6 +72,8 @@ func TestMutationResolver_ContactRoleCreate_WithCompany(t *testing.T) {
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Role_"+tenantName))
 	require.Equal(t, 1, neo4jt.GetCountOfRelationships(driver, "WORKS"))
 	require.Equal(t, 1, neo4jt.GetCountOfRelationships(driver, "HAS_ROLE"))
+
+	assertNeo4jLabels(t, driver, []string{"Tenant", "Contact", "Company", "Role", "Role_" + tenantName})
 }
 
 func TestMutationResolver_ContactRoleCreate_WithoutCompany(t *testing.T) {
@@ -100,6 +104,8 @@ func TestMutationResolver_ContactRoleCreate_WithoutCompany(t *testing.T) {
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Role_"+tenantName))
 	require.Equal(t, 0, neo4jt.GetCountOfRelationships(driver, "WORKS"))
 	require.Equal(t, 1, neo4jt.GetCountOfRelationships(driver, "HAS_ROLE"))
+
+	assertNeo4jLabels(t, driver, []string{"Tenant", "Contact", "Role", "Role_" + tenantName})
 }
 
 func TestMutationResolver_ContactRoleUpdate(t *testing.T) {
@@ -131,6 +137,8 @@ func TestMutationResolver_ContactRoleUpdate(t *testing.T) {
 	require.Equal(t, true, updatedRole.Primary)
 	require.Equal(t, "CEO", *updatedRole.JobTitle)
 	require.Equal(t, companyId, updatedRole.Company.ID)
+
+	assertNeo4jLabels(t, driver, []string{"Tenant", "Contact", "Company", "Role"})
 }
 
 func TestMutationResolver_ContactRoleUpdate_ChangeCompany(t *testing.T) {
@@ -164,4 +172,6 @@ func TestMutationResolver_ContactRoleUpdate_ChangeCompany(t *testing.T) {
 	require.Equal(t, 1, neo4jt.GetCountOfRelationships(driver, "HAS_ROLE"))
 	require.Equal(t, 1, neo4jt.GetCountOfRelationships(driver, "WORKS"))
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Role"))
+
+	assertNeo4jLabels(t, driver, []string{"Tenant", "Contact", "Company", "Role"})
 }
