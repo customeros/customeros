@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v4/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v4/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
@@ -29,12 +30,13 @@ func (r *contactTypeRepository) Create(tenant string, contactType *entity.Contac
 	session := utils.NewNeo4jWriteSession(*r.driver)
 	defer session.Close()
 
+	query := "MATCH (t:Tenant {name:$tenant})" +
+		" MERGE (t)<-[:CONTACT_TYPE_BELONGS_TO_TENANT]-(c:ContactType {id:randomUUID()})" +
+		" ON CREATE SET c.name=$name, c:%s" +
+		" RETURN c"
+
 	if result, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
-		queryResult, err := tx.Run(`
-			MATCH (t:Tenant {name:$tenant})
-			MERGE (t)<-[:CONTACT_TYPE_BELONGS_TO_TENANT]-(c:ContactType {id:randomUUID()})
-			ON CREATE SET c.name=$name
-			RETURN c`,
+		queryResult, err := tx.Run(fmt.Sprintf(query, "ContactType_"+tenant),
 			map[string]any{
 				"tenant": tenant,
 				"name":   contactType.Name,
