@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v4/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/entity"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/utils"
@@ -27,14 +28,15 @@ func (r *noteRepository) MergeNote(tenant string, syncDate time.Time, note entit
 	session := utils.NewNeo4jWriteSession(*r.driver)
 	defer session.Close()
 
+	query := "MATCH (t:Tenant {name:$tenant})<-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]-(e:ExternalSystem {id:$externalSystem}) " +
+		" MERGE (n:Note)-[r:IS_LINKED_WITH {externalId:$externalId}]->(e) " +
+		" ON CREATE SET n.externalId=$externalId, n.id=randomUUID(), n.createdAt=$createdAt, n.source=$source, " +
+		"               r.syncDate=$syncDate, n.html=$html, n:%s " +
+		" ON MATCH SET r.syncDate=$syncDate, n.html=$html " +
+		" RETURN n.id"
+
 	dbRecord, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
-		queryResult, err := tx.Run(`
-				MATCH (t:Tenant {name:$tenant})<-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]-(e:ExternalSystem {id:$externalSystem})
-				MERGE (n:Note)-[r:IS_LINKED_WITH {externalId:$externalId}]->(e)
-				ON CREATE SET n.externalId=$externalId, n.id=randomUUID(), n.createdAt=$createdAt, n.source=$source,
-								r.syncDate=$syncDate, n.html=$html
-				ON MATCH SET 	r.syncDate=$syncDate, n.html=$html
-				RETURN n.id`,
+		queryResult, err := tx.Run(fmt.Sprintf(query, "Note_"+tenant),
 			map[string]interface{}{
 				"tenant":         tenant,
 				"source":         note.Source,

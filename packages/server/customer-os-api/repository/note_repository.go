@@ -77,13 +77,14 @@ func (r *noteRepository) GetPaginatedNotesForContact(session neo4j.Session, tena
 }
 
 func (r *noteRepository) MergeNote(session neo4j.Session, tenant, contactId string, entity entity.NoteEntity) (*dbtype.Node, error) {
+	query := "MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant}) " +
+		" MERGE (c)-[:NOTED]->(n:Note {id:randomUUID()}) " +
+		" ON CREATE SET n.html=$html, n.createdAt=$createdAt, n:%s " +
+		" ON MATCH SET n.html=$html " +
+		" RETURN n"
+
 	result, err := session.WriteTransaction(func(tx neo4j.Transaction) (interface{}, error) {
-		queryResult, err := tx.Run(`
-			MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant})
-			MERGE (c)-[:NOTED]->(n:Note {id:randomUUID()})
-			ON CREATE SET n.html=$html, n.createdAt=$createdAt
-			ON MATCH SET n.html=$html
-			RETURN n`,
+		queryResult, err := tx.Run(fmt.Sprintf(query, "Note_"+tenant),
 			map[string]any{
 				"tenant":    tenant,
 				"contactId": contactId,
