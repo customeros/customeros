@@ -393,6 +393,8 @@ func TestMutationResolver_ContactTypeCreate(t *testing.T) {
 
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "ContactType"))
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "ContactType_"+tenantName))
+
+	assertNeo4jLabels(t, driver, []string{"Tenant", "ContactType", "ContactType_" + tenantName})
 }
 
 func TestMutationResolver_ContactTypeUpdate(t *testing.T) {
