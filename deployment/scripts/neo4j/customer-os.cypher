@@ -31,7 +31,8 @@ MATCH (t:Tenant {name:"openline"})
     		u.firstName ="Agent",
             u.lastName="Smith",
             u.email="AgentSmith@oasis.openline.ninja",
-    		u.createdAt=datetime({timezone: 'UTC'});
+    		u.createdAt=datetime({timezone: 'UTC'})
+    		u:User_openline;
 
 MATCH (t:Tenant {name:"openline"})
     MERGE (c:Contact {id:"echotest"})-[:CONTACT_BELONGS_TO_TENANT]->(t)
