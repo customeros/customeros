@@ -222,12 +222,13 @@ func (r *contactRepository) MergeContactType(tenant, contactId, contactTypeName 
 	session := utils.NewNeo4jWriteSession(*r.driver)
 	defer session.Close()
 
+	query := "MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant}) " +
+		" MATCH (ct:ContactType {name:$contactTypeName})-[:CONTACT_TYPE_BELONGS_TO_TENANT]->(t) " +
+		" MERGE (c)-[r:IS_OF_TYPE]->(ct) " +
+		" return r"
+
 	_, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
-		queryResult, err := tx.Run(`
-			MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant})
-			MATCH (ct:ContactType {name:$contactTypeName})-[:CONTACT_TYPE_BELONGS_TO_TENANT]->(t)
-			MERGE (c)-[r:IS_OF_TYPE]->(ct)
-			return r`,
+		queryResult, err := tx.Run(query,
 			map[string]interface{}{
 				"tenant":          tenant,
 				"contactId":       contactId,
