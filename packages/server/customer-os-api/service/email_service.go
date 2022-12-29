@@ -74,7 +74,7 @@ func (s *emailService) MergeEmailToContact(ctx context.Context, contactId string
 
 	var err error
 	var emailNode *dbtype.Node
-	var emailRelation *dbtype.Relationship
+	var emailRelationship *dbtype.Relationship
 
 	_, err = session.WriteTransaction(func(tx neo4j.Transaction) (interface{}, error) {
 		if entity.Primary == true {
@@ -83,7 +83,7 @@ func (s *emailService) MergeEmailToContact(ctx context.Context, contactId string
 				return nil, err
 			}
 		}
-		emailNode, emailRelation, err = s.repositories.EmailRepository.MergeEmailToContactInTx(tx, common.GetContext(ctx).Tenant, contactId, *entity)
+		emailNode, emailRelationship, err = s.repositories.EmailRepository.MergeEmailToContactInTx(tx, common.GetContext(ctx).Tenant, contactId, *entity)
 		return nil, err
 	})
 	if err != nil {
@@ -91,7 +91,7 @@ func (s *emailService) MergeEmailToContact(ctx context.Context, contactId string
 	}
 
 	var emailEntity = s.mapDbNodeToEmailEntity(*emailNode)
-	s.addDbRelationshipToEmailEntity(*emailRelation, emailEntity)
+	s.addDbRelationshipToEmailEntity(*emailRelationship, emailEntity)
 	return emailEntity, nil
 }
 

@@ -38,4 +38,6 @@ func TestMutationResolver_EmailMergeToContact(t *testing.T) {
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Email_"+tenantName))
 	require.Equal(t, 3, neo4jt.GetTotalCountOfNodes(driver))
 	require.Equal(t, 1, neo4jt.GetCountOfRelationships(driver, "EMAILED_AT"))
+
+	assertNeo4jLabels(t, driver, []string{"Tenant", "Contact", "Email", "Email_" + tenantName})
 }

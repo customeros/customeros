@@ -84,6 +84,9 @@ func TestMutationResolver_CustomFieldsMergeAndUpdateInContact(t *testing.T) {
 		checkCustomField(t, *updatedContact.FieldSets[0].CustomFields[0], "field3", "value3", nil)
 		checkCustomField(t, *updatedContact.FieldSets[1].CustomFields[0], "field4", "value4", &fieldInSetDefinitionId)
 	}
+
+	assertNeo4jLabels(t, driver, []string{"Tenant", "Contact", "EntityDefinition", "CustomFieldDefinition",
+		"FieldSetDefinition", "TextField", "CustomField", "FieldSet"})
 }
 
 func checkCustomField(t *testing.T, customField model.CustomField, name, value string, fieldDefinitionId *string) {

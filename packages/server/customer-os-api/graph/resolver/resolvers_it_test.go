@@ -21,6 +21,8 @@ import (
 	"github.com/testcontainers/testcontainers-go"
 	"gorm.io/gorm"
 	"os"
+	"reflect"
+	"sort"
 	"testing"
 )
 
@@ -88,6 +90,15 @@ func assertRawResponseSuccess(t *testing.T, response *client.Response, err error
 	require.NotNil(t, response)
 	require.NotNil(t, response.Data)
 	require.Nil(t, response.Errors)
+}
+
+func assertNeo4jLabels(t *testing.T, driver *neo4j.Driver, expectedLabels []string) {
+	actualLabels := neo4jt.GetAllLabels(driver)
+	sort.Strings(expectedLabels)
+	sort.Strings(actualLabels)
+	if !reflect.DeepEqual(actualLabels, expectedLabels) {
+		t.Errorf("Expected labels: %v, \nActual labels: %v", expectedLabels, actualLabels)
+	}
 }
 
 func TestMutationResolver_FieldSetMergeToContact_AllowMultipleFieldSetWithSameNameOnDifferentContacts(t *testing.T) {

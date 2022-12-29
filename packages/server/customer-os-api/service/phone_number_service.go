@@ -18,21 +18,20 @@ type PhoneNumberService interface {
 	UpdatePhoneNumberInContact(ctx context.Context, id string, toEntity *entity.PhoneNumberEntity) (*entity.PhoneNumberEntity, error)
 	Delete(ctx context.Context, contactId string, e164 string) (bool, error)
 	DeleteById(ctx context.Context, contactId string, phoneId string) (bool, error)
-	getDriver() neo4j.Driver
 }
 
 type phoneNumberService struct {
-	repository *repository.Repositories
+	repositories *repository.Repositories
 }
 
-func NewPhoneNumberService(repository *repository.Repositories) PhoneNumberService {
+func NewPhoneNumberService(repositories *repository.Repositories) PhoneNumberService {
 	return &phoneNumberService{
-		repository: repository,
+		repositories: repositories,
 	}
 }
 
 func (s *phoneNumberService) getDriver() neo4j.Driver {
-	return *s.repository.Drivers.Neo4jDriver
+	return *s.repositories.Drivers.Neo4jDriver
 }
 
 func (s *phoneNumberService) FindAllForContact(ctx context.Context, contact *model.Contact) (*entity.PhoneNumberEntities, error) {
@@ -72,38 +71,26 @@ func (s *phoneNumberService) MergePhoneNumberToContact(ctx context.Context, cont
 	session := utils.NewNeo4jWriteSession(s.getDriver())
 	defer session.Close()
 
-	queryResult, err := session.WriteTransaction(func(tx neo4j.Transaction) (interface{}, error) {
+	var err error
+	var phoneNumberNode *dbtype.Node
+	var phoneNumberRelationship *dbtype.Relationship
+
+	_, err = session.WriteTransaction(func(tx neo4j.Transaction) (interface{}, error) {
 		if entity.Primary == true {
 			err := setOtherContactPhoneNumbersNonPrimaryInTx(ctx, contactId, entity.E164, tx)
 			if err != nil {
 				return nil, err
 			}
 		}
-		txResult, err := tx.Run(`
-			MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant})
-			MERGE (c)-[r:CALLED_AT]->(p:PhoneNumber {e164: $e164})
-            ON CREATE SET p.label=$label, r.primary=$primary, p.id=randomUUID()
-            ON MATCH SET p.label=$label, r.primary=$primary
-			RETURN p, r`,
-			map[string]interface{}{
-				"tenant":    common.GetContext(ctx).Tenant,
-				"contactId": contactId,
-				"e164":      entity.E164,
-				"label":     entity.Label,
-				"primary":   entity.Primary,
-			})
-		record, err := txResult.Single()
-		if err != nil {
-			return nil, err
-		}
-		return record, nil
+		phoneNumberNode, phoneNumberRelationship, err = s.repositories.PhoneNumberRepository.MergePhoneNumberToContactInTx(tx, common.GetContext(ctx).Tenant, contactId, *entity)
+		return nil, err
 	})
 	if err != nil {
 		return nil, err
 	}
 
-	var phoneNumberEntity = s.mapDbNodeToPhoneNumberEntity(queryResult.(*db.Record).Values[0].(dbtype.Node))
-	s.addDbRelationshipToPhoneNumberEntity(queryResult.(*db.Record).Values[1].(dbtype.Relationship), phoneNumberEntity)
+	var phoneNumberEntity = s.mapDbNodeToPhoneNumberEntity(*phoneNumberNode)
+	s.addDbRelationshipToPhoneNumberEntity(*phoneNumberRelationship, phoneNumberEntity)
 	return phoneNumberEntity, nil
 }
 
@@ -146,24 +133,6 @@ func (s *phoneNumberService) UpdatePhoneNumberInContact(ctx context.Context, con
 	var phoneNumberEntity = s.mapDbNodeToPhoneNumberEntity(queryResult.(*db.Record).Values[0].(dbtype.Node))
 	s.addDbRelationshipToPhoneNumberEntity(queryResult.(*db.Record).Values[1].(dbtype.Relationship), phoneNumberEntity)
 	return phoneNumberEntity, nil
-}
-
-func addPhoneNumberToContactInTx(ctx context.Context, contactId string, input entity.PhoneNumberEntity, tx neo4j.Transaction) error {
-	_, err := tx.Run(`
-			MATCH (c:Contact {id:$contactId})
-			MERGE (p:PhoneNumber {
-				id: randomUUID(),
-				e164: $e164,
-				label: $label
-			})<-[:CALLED_AT {primary:$primary}]-(c)
-			RETURN p`,
-		map[string]interface{}{
-			"contactId": contactId,
-			"e164":      input.E164,
-			"label":     input.Label,
-			"primary":   input.Primary,
-		})
-	return err
 }
 
 func setOtherContactPhoneNumbersNonPrimaryInTx(ctx context.Context, contactId string, e164 string, tx neo4j.Transaction) error {
