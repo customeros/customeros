@@ -45,7 +45,9 @@ func TestMutationResolver_CustomFieldsMergeAndUpdateInContact(t *testing.T) {
 
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Contact"))
 	require.Equal(t, 4, neo4jt.GetCountOfNodes(driver, "CustomField"))
+	require.Equal(t, 2, neo4jt.GetCountOfNodes(driver, "CustomField_"+tenantName))
 	require.Equal(t, 2, neo4jt.GetCountOfNodes(driver, "FieldSet"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "FieldSet_"+tenantName))
 
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "EntityDefinition"))
 	require.Equal(t, 2, neo4jt.GetCountOfNodes(driver, "CustomFieldDefinition"))
@@ -86,7 +88,7 @@ func TestMutationResolver_CustomFieldsMergeAndUpdateInContact(t *testing.T) {
 	}
 
 	assertNeo4jLabels(t, driver, []string{"Tenant", "Contact", "EntityDefinition", "CustomFieldDefinition",
-		"FieldSetDefinition", "TextField", "CustomField", "FieldSet"})
+		"FieldSetDefinition", "TextField", "CustomField", "CustomField_" + tenantName, "FieldSet", "FieldSet_" + tenantName})
 }
 
 func checkCustomField(t *testing.T, customField model.CustomField, name, value string, fieldDefinitionId *string) {
