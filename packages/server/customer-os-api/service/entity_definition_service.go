@@ -33,7 +33,6 @@ func (s *entityDefinitionService) Create(ctx context.Context, entity *entity.Ent
 		return nil, err
 	}
 	entityDefinition := s.mapDbNodeToEntityDefinition((record.([]*db.Record)[0]).Values[0].(dbtype.Node))
-	s.addDbRelationshipToEntity((record.([]*db.Record)[0]).Values[1].(dbtype.Relationship), entityDefinition)
 	return entityDefinition, nil
 }
 
@@ -54,7 +53,6 @@ func (s *entityDefinitionService) FindAll(ctx context.Context, extends *string) 
 	entityDefinitionEntities := entity.EntityDefinitionEntities{}
 	for _, dbRecord := range entityDefinitionsDbRecords {
 		entityDefinitionEntity := s.mapDbNodeToEntityDefinition(dbRecord.Values[0].(dbtype.Node))
-		s.addDbRelationshipToEntity(dbRecord.Values[1].(dbtype.Relationship), entityDefinitionEntity)
 		entityDefinitionEntities = append(entityDefinitionEntities, *entityDefinitionEntity)
 	}
 	return &entityDefinitionEntities, nil
@@ -69,22 +67,17 @@ func (s *entityDefinitionService) FindLinkedWithContact(ctx context.Context, con
 		return nil, nil
 	}
 	entityDefinitionEntity := s.mapDbNodeToEntityDefinition((queryResult.([]*db.Record))[0].Values[0].(dbtype.Node))
-	s.addDbRelationshipToEntity((queryResult.([]*db.Record))[0].Values[1].(dbtype.Relationship), entityDefinitionEntity)
 	return entityDefinitionEntity, nil
 }
 
 func (s *entityDefinitionService) mapDbNodeToEntityDefinition(dbNode dbtype.Node) *entity.EntityDefinitionEntity {
 	props := utils.GetPropsFromNode(dbNode)
 	entityDefinition := entity.EntityDefinitionEntity{
-		Id:      utils.GetStringPropOrEmpty(props, "id"),
-		Name:    utils.GetStringPropOrEmpty(props, "name"),
-		Extends: utils.GetStringPropOrNil(props, "extends"),
-		Version: utils.GetIntPropOrMinusOne(props, "version"),
+		Id:        utils.GetStringPropOrEmpty(props, "id"),
+		Name:      utils.GetStringPropOrEmpty(props, "name"),
+		Extends:   utils.GetStringPropOrNil(props, "extends"),
+		Version:   utils.GetIntPropOrMinusOne(props, "version"),
+		CreatedAt: utils.GetTimePropOrNow(props, "createdAt"),
 	}
 	return &entityDefinition
-}
-
-func (s *entityDefinitionService) addDbRelationshipToEntity(relationship dbtype.Relationship, entityDefinition *entity.EntityDefinitionEntity) {
-	props := utils.GetPropsFromRelationship(relationship)
-	entityDefinition.Added = utils.GetTimePropOrNow(props, "added")
 }

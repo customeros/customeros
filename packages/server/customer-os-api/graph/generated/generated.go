@@ -183,7 +183,7 @@ type ComplexityRoot struct {
 	}
 
 	EntityDefinition struct {
-		Added        func(childComplexity int) int
+		CreatedAt    func(childComplexity int) int
 		CustomFields func(childComplexity int) int
 		Extends      func(childComplexity int) int
 		FieldSets    func(childComplexity int) int
@@ -1060,12 +1060,12 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Email.Primary(childComplexity), true
 
-	case "EntityDefinition.added":
-		if e.complexity.EntityDefinition.Added == nil {
+	case "EntityDefinition.createdAt":
+		if e.complexity.EntityDefinition.CreatedAt == nil {
 			break
 		}
 
-		return e.complexity.EntityDefinition.Added(childComplexity), true
+		return e.complexity.EntityDefinition.CreatedAt(childComplexity), true
 
 	case "EntityDefinition.customFields":
 		if e.complexity.EntityDefinition.CustomFields == nil {
@@ -2986,7 +2986,7 @@ type EntityDefinition implements Node {
     extends: EntityDefinitionExtension
     fieldSets: [FieldSetDefinition!]! @goField(forceResolver: true)
     customFields: [CustomFieldDefinition!]! @goField(forceResolver: true)
-    added: Time!
+    createdAt: Time!
 }
 
 type FieldSetDefinition  implements Node {
@@ -6439,8 +6439,8 @@ func (ec *executionContext) fieldContext_Contact_definition(ctx context.Context,
 				return ec.fieldContext_EntityDefinition_fieldSets(ctx, field)
 			case "customFields":
 				return ec.fieldContext_EntityDefinition_customFields(ctx, field)
-			case "added":
-				return ec.fieldContext_EntityDefinition_added(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_EntityDefinition_createdAt(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type EntityDefinition", field.Name)
 		},
@@ -8968,8 +8968,8 @@ func (ec *executionContext) fieldContext_EntityDefinition_customFields(ctx conte
 	return fc, nil
 }
 
-func (ec *executionContext) _EntityDefinition_added(ctx context.Context, field graphql.CollectedField, obj *model.EntityDefinition) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_EntityDefinition_added(ctx, field)
+func (ec *executionContext) _EntityDefinition_createdAt(ctx context.Context, field graphql.CollectedField, obj *model.EntityDefinition) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_EntityDefinition_createdAt(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -8982,7 +8982,7 @@ func (ec *executionContext) _EntityDefinition_added(ctx context.Context, field g
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Added, nil
+		return obj.CreatedAt, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -8999,7 +8999,7 @@ func (ec *executionContext) _EntityDefinition_added(ctx context.Context, field g
 	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_EntityDefinition_added(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_EntityDefinition_createdAt(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "EntityDefinition",
 		Field:      field,
@@ -9850,8 +9850,8 @@ func (ec *executionContext) fieldContext_Mutation_entityDefinitionCreate(ctx con
 				return ec.fieldContext_EntityDefinition_fieldSets(ctx, field)
 			case "customFields":
 				return ec.fieldContext_EntityDefinition_customFields(ctx, field)
-			case "added":
-				return ec.fieldContext_EntityDefinition_added(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_EntityDefinition_createdAt(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type EntityDefinition", field.Name)
 		},
@@ -13423,8 +13423,8 @@ func (ec *executionContext) fieldContext_Query_entityDefinitions(ctx context.Con
 				return ec.fieldContext_EntityDefinition_fieldSets(ctx, field)
 			case "customFields":
 				return ec.fieldContext_EntityDefinition_customFields(ctx, field)
-			case "added":
-				return ec.fieldContext_EntityDefinition_added(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_EntityDefinition_createdAt(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type EntityDefinition", field.Name)
 		},
@@ -19270,9 +19270,9 @@ func (ec *executionContext) _EntityDefinition(ctx context.Context, sel ast.Selec
 				return innerFunc(ctx)
 
 			})
-		case "added":
+		case "createdAt":
 
-			out.Values[i] = ec._EntityDefinition_added(ctx, field, obj)
+			out.Values[i] = ec._EntityDefinition_createdAt(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&invalids, 1)

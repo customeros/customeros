@@ -24,10 +24,10 @@ func MapEntityDefinitionInputToEntity(input model.EntityDefinitionInput) *entity
 
 func MapEntityToEntityDefinition(entity *entity.EntityDefinitionEntity) *model.EntityDefinition {
 	output := model.EntityDefinition{
-		ID:      entity.Id,
-		Name:    entity.Name,
-		Version: int(entity.Version),
-		Added:   entity.Added,
+		ID:        entity.Id,
+		Name:      entity.Name,
+		Version:   int(entity.Version),
+		CreatedAt: entity.CreatedAt,
 	}
 	if entity.Extends != nil {
 		extends := model.EntityDefinitionExtension(*entity.Extends)
