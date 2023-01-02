@@ -20,7 +20,7 @@ mutation CreateEntityDefinition {
     id
     name
     extends
-    added
+    createdAt
     version
     fieldSets {
           id

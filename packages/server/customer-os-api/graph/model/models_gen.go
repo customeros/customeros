@@ -482,7 +482,7 @@ type EntityDefinition struct {
 	Extends      *EntityDefinitionExtension `json:"extends"`
 	FieldSets    []*FieldSetDefinition      `json:"fieldSets"`
 	CustomFields []*CustomFieldDefinition   `json:"customFields"`
-	Added        time.Time                  `json:"added"`
+	CreatedAt    time.Time                  `json:"createdAt"`
 }
 
 func (EntityDefinition) IsNode()            {}

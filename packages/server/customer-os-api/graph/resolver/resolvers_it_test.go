@@ -282,7 +282,7 @@ func TestMutationResolver_EntityDefinitionCreate(t *testing.T) {
 	require.Nil(t, err)
 	require.NotNil(t, actual)
 	require.NotNil(t, actual.ID)
-	require.NotNil(t, actual.Added)
+	require.NotNil(t, actual.CreatedAt)
 	require.Equal(t, "the entity definition name", actual.Name)
 	require.Equal(t, 1, actual.Version)
 	require.Nil(t, actual.Extends)

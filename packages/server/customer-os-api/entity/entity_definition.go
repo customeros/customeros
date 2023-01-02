@@ -10,7 +10,7 @@ type EntityDefinitionEntity struct {
 	Name         string
 	Extends      *string
 	Version      int64
-	Added        time.Time
+	CreatedAt    time.Time
 	CustomFields []*CustomFieldDefinitionEntity
 	FieldSets    []*FieldSetDefinitionEntity
 }

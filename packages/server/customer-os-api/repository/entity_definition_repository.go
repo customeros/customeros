@@ -41,7 +41,7 @@ func (r *entityDefinitionRepository) Create(tenant string, entity *entity.Entity
 func (r *entityDefinitionRepository) FindAllByTenant(session neo4j.Session, tenant string) ([]*db.Record, error) {
 	if result, err := session.ReadTransaction(func(tx neo4j.Transaction) (any, error) {
 		queryResult, err := tx.Run(`
-				MATCH (:Tenant {name:$tenant})<-[r:ENTITY_DEFINITION_BELONGS_TO_TENANT]-(e:EntityDefinition) RETURN e, r`,
+				MATCH (:Tenant {name:$tenant})<-[r:ENTITY_DEFINITION_BELONGS_TO_TENANT]-(e:EntityDefinition) RETURN e`,
 			map[string]any{
 				"tenant": tenant,
 			})
@@ -61,7 +61,7 @@ func (r *entityDefinitionRepository) FindAllByTenantAndExtends(session neo4j.Ses
 		queryResult, err := tx.Run(`
 				MATCH (:Tenant {name:$tenant})<-[r:ENTITY_DEFINITION_BELONGS_TO_TENANT]-(e:EntityDefinition) 
 					WHERE e.extends=$extends
-				RETURN e, r`,
+				RETURN e`,
 			map[string]any{
 				"tenant":  tenant,
 				"extends": extends,
@@ -85,7 +85,7 @@ func (r *entityDefinitionRepository) FindByContactId(tenant string, contactId st
 		queryResult, err := tx.Run(`
 				MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant})<-[r:ENTITY_DEFINITION_BELONGS_TO_TENANT]->(e:EntityDefinition),
 					(c)-[:IS_DEFINED_BY]->(e)
-					RETURN e, r`,
+					RETURN e`,
 			map[string]any{
 				"tenant":    tenant,
 				"contactId": contactId,
@@ -101,12 +101,9 @@ func (r *entityDefinitionRepository) createFullEntityDefinitionInTxWork(tenant s
 	return func(tx neo4j.Transaction) (any, error) {
 		txResult, err := tx.Run(`
 			MATCH (t:Tenant {name:$tenant})
-			MERGE (t)<-[r:ENTITY_DEFINITION_BELONGS_TO_TENANT {added:datetime({timezone: 'UTC'})}]-(e:EntityDefinition {
-				  id: randomUUID(),
-				  name: $name,
-				  version: $version
-			}) ON CREATE SET e.extends=$extends
-			RETURN e, r`,
+			MERGE (t)<-[r:ENTITY_DEFINITION_BELONGS_TO_TENANT]-(e:EntityDefinition {id: randomUUID()}) 
+			ON CREATE SET e.extends=$extends, e.createdAt=datetime({timezone: 'UTC'}), e.name=$name, e.version=$version
+			RETURN e`,
 			map[string]any{
 				"tenant":  tenant,
 				"name":    entity.Name,
