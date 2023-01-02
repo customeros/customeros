@@ -80,8 +80,8 @@ func (s *fieldSetService) MergeFieldSetToContact(ctx context.Context, contactId 
 			return nil, err
 		}
 		var fieldSetId = utils.GetPropsFromNode(*fieldSetDbNode)["id"].(string)
-		if entity.DefinitionId != nil {
-			err := s.repository.FieldSetRepository.LinkWithFieldSetDefinitionInTx(tx, common.GetContext(ctx).Tenant, fieldSetId, *entity.DefinitionId)
+		if entity.TemplateId != nil {
+			err := s.repository.FieldSetRepository.LinkWithFieldSetTemplateInTx(tx, common.GetContext(ctx).Tenant, fieldSetId, *entity.TemplateId)
 			if err != nil {
 				return nil, err
 			}
@@ -92,9 +92,9 @@ func (s *fieldSetService) MergeFieldSetToContact(ctx context.Context, contactId 
 				if err != nil {
 					return nil, err
 				}
-				if customField.DefinitionId != nil {
+				if customField.TemplateId != nil {
 					var fieldId = utils.GetPropsFromNode(*dbNode)["id"].(string)
-					err := s.repository.CustomFieldRepository.LinkWithCustomFieldDefinitionForFieldSetInTx(tx, fieldId, fieldSetId, *customField.DefinitionId)
+					err := s.repository.CustomFieldRepository.LinkWithCustomFieldTemplateForFieldSetInTx(tx, fieldId, fieldSetId, *customField.TemplateId)
 					if err != nil {
 						return nil, err
 					}

@@ -13,10 +13,10 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils"
 )
 
-// EntityDefinitions is the resolver for the entityDefinitions field.
-func (r *queryResolver) EntityDefinitions(ctx context.Context, extends *model.EntityDefinitionExtension) ([]*model.EntityDefinition, error) {
-	result, err := r.Services.EntityDefinitionService.FindAll(ctx, utils.StringPtr(extends.String()))
-	return mapper.MapEntitiesToEntityDefinitions(result), err
+// EntityTemplates is the resolver for the entityTemplates field.
+func (r *queryResolver) EntityTemplates(ctx context.Context, extends *model.EntityTemplateExtension) ([]*model.EntityTemplate, error) {
+	result, err := r.Services.EntityTemplateService.FindAll(ctx, utils.StringPtr(extends.String()))
+	return mapper.MapEntitiesToEntityTemplates(result), err
 }
 
 // Query returns generated.QueryResolver implementation.

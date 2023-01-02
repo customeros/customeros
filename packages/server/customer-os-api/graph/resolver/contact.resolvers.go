@@ -83,17 +83,17 @@ func (r *contactResolver) FieldSets(ctx context.Context, obj *model.Contact) ([]
 	return mapper.MapEntitiesToFieldSets(fieldSetEntities), err
 }
 
-// Definition is the resolver for the definition field.
-func (r *contactResolver) Definition(ctx context.Context, obj *model.Contact) (*model.EntityDefinition, error) {
-	definitionEntity, err := r.Services.EntityDefinitionService.FindLinkedWithContact(ctx, obj.ID)
+// Template is the resolver for the template field.
+func (r *contactResolver) Template(ctx context.Context, obj *model.Contact) (*model.EntityTemplate, error) {
+	templateEntity, err := r.Services.EntityTemplateService.FindLinkedWithContact(ctx, obj.ID)
 	if err != nil {
-		graphql.AddErrorf(ctx, "Failed to get contact definition for contact %s", obj.ID)
+		graphql.AddErrorf(ctx, "Failed to get contact template for contact %s", obj.ID)
 		return nil, err
 	}
-	if definitionEntity == nil {
+	if templateEntity == nil {
 		return nil, nil
 	}
-	return mapper.MapEntityToEntityDefinition(definitionEntity), err
+	return mapper.MapEntityToEntityTemplate(templateEntity), err
 }
 
 // Owner is the resolver for the owner field.
@@ -162,7 +162,7 @@ func (r *mutationResolver) ContactCreate(ctx context.Context, input model.Contac
 		PhoneNumberEntity: mapper.MapPhoneNumberInputToEntity(input.PhoneNumber),
 		EmailEntity:       mapper.MapEmailInputToEntity(input.Email),
 		ExternalReference: mapper.MapExternalSystemReferenceInputToRelationship(input.ExternalReference),
-		DefinitionId:      input.DefinitionID,
+		TemplateId:        input.TemplateID,
 		ContactTypeId:     input.ContactTypeID,
 		OwnerUserId:       input.OwnerID,
 	})

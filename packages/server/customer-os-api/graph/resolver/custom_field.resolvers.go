@@ -13,17 +13,17 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper"
 )
 
-// Definition is the resolver for the definition field.
-func (r *customFieldResolver) Definition(ctx context.Context, obj *model.CustomField) (*model.CustomFieldDefinition, error) {
-	entity, err := r.Services.CustomFieldDefinitionService.FindLinkedWithCustomField(ctx, obj.ID)
+// Template is the resolver for the template field.
+func (r *customFieldResolver) Template(ctx context.Context, obj *model.CustomField) (*model.CustomFieldTemplate, error) {
+	entity, err := r.Services.CustomFieldTemplateService.FindLinkedWithCustomField(ctx, obj.ID)
 	if err != nil {
-		graphql.AddErrorf(ctx, "Failed to get contact definition for custom field <%s>", obj.ID)
+		graphql.AddErrorf(ctx, "Failed to get contact template for custom field <%s>", obj.ID)
 		return nil, err
 	}
 	if entity == nil {
 		return nil, nil
 	}
-	return mapper.MapEntityToCustomFieldDefinition(entity), err
+	return mapper.MapEntityToCustomFieldTemplate(entity), err
 }
 
 // CustomFields is the resolver for the customFields field.
@@ -36,17 +36,17 @@ func (r *fieldSetResolver) CustomFields(ctx context.Context, obj *model.FieldSet
 	return customFields, err
 }
 
-// Definition is the resolver for the definition field.
-func (r *fieldSetResolver) Definition(ctx context.Context, obj *model.FieldSet) (*model.FieldSetDefinition, error) {
-	entity, err := r.Services.FieldSetDefinitionService.FindLinkedWithFieldSet(ctx, obj.ID)
+// Template is the resolver for the template field.
+func (r *fieldSetResolver) Template(ctx context.Context, obj *model.FieldSet) (*model.FieldSetTemplate, error) {
+	entity, err := r.Services.FieldSetTemplateService.FindLinkedWithFieldSet(ctx, obj.ID)
 	if err != nil {
-		graphql.AddErrorf(ctx, "Failed to get contact definition for field set <%s>", obj.ID)
+		graphql.AddErrorf(ctx, "Failed to get contact template for field set <%s>", obj.ID)
 		return nil, err
 	}
 	if entity == nil {
 		return nil, nil
 	}
-	return mapper.MapEntityToFieldSetDefinition(entity), err
+	return mapper.MapEntityToFieldSetTemplate(entity), err
 }
 
 // CustomFieldsMergeAndUpdateInContact is the resolver for the customFieldsMergeAndUpdateInContact field.

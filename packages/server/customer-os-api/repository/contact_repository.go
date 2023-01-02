@@ -15,7 +15,7 @@ type ContactRepository interface {
 	Update(tx neo4j.Transaction, tenant, contactId string, contactDtls *entity.ContactEntity) (*dbtype.Node, error)
 	SetOwner(tx neo4j.Transaction, tenant, contactId, userId string) error
 	RemoveOwner(tx neo4j.Transaction, tenant, contactId string) error
-	LinkWithEntityDefinitionInTx(tx neo4j.Transaction, tenant, contactId, entityDefinitionId string) error
+	LinkWithEntityTemplateInTx(tx neo4j.Transaction, tenant, contactId, entityTemplateId string) error
 	LinkWithContactTypeInTx(tx neo4j.Transaction, tenant, contactId, contactTypeId string) error
 	UnlinkFromContactTypesInTx(tx neo4j.Transaction, tenant, contactId string) error
 	GetPaginatedContacts(session neo4j.Session, tenant string, skip, limit int, filter *utils.CypherFilter, sort *utils.CypherSort) (*utils.DbNodesWithTotalCount, error)
@@ -120,17 +120,17 @@ func (r *contactRepository) Update(tx neo4j.Transaction, tenant, contactId strin
 	}
 }
 
-func (r *contactRepository) LinkWithEntityDefinitionInTx(tx neo4j.Transaction, tenant, contactId, entityDefinitionId string) error {
+func (r *contactRepository) LinkWithEntityTemplateInTx(tx neo4j.Transaction, tenant, contactId, entityTemplateId string) error {
 	queryResult, err := tx.Run(`
-			MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant})<-[:ENTITY_DEFINITION_BELONGS_TO_TENANT]-(e:EntityDefinition {id:$entityDefinitionId})
+			MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant})<-[:ENTITY_TEMPLATE_BELONGS_TO_TENANT]-(e:EntityTemplate {id:$entityTemplateId})
 			WHERE e.extends=$extends
 			MERGE (c)-[r:IS_DEFINED_BY]->(e)
 			RETURN r`,
 		map[string]any{
-			"entityDefinitionId": entityDefinitionId,
-			"contactId":          contactId,
-			"tenant":             tenant,
-			"extends":            model.EntityDefinitionExtensionContact,
+			"entityTemplateId": entityTemplateId,
+			"contactId":        contactId,
+			"tenant":           tenant,
+			"extends":          model.EntityTemplateExtensionContact,
 		})
 	if err != nil {
 		return err

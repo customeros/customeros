@@ -1,0 +1,66 @@
+enum EntityTemplateExtension {
+    CONTACT
+}
+
+type EntityTemplate implements Node {
+    id: ID!
+    version: Int!
+    name: String!
+    extends: EntityTemplateExtension
+    fieldSets: [FieldSetTemplate!]! @goField(forceResolver: true)
+    customFields: [CustomFieldTemplate!]! @goField(forceResolver: true)
+    createdAt: Time!
+}
+
+type FieldSetTemplate  implements Node {
+    id: ID!
+    name: String!
+    order: Int!
+    customFields: [CustomFieldTemplate!]! @goField(forceResolver: true)
+}
+
+type CustomFieldTemplate  implements Node {
+    id: ID!
+    name: String!
+    type: CustomFieldTemplateType!
+    order: Int!
+    mandatory: Boolean!
+    length: Int
+    min: Int
+    max: Int
+}
+
+input EntityTemplateInput {
+    name: String!
+    extends: EntityTemplateExtension
+    fieldSets: [FieldSetTemplateInput!]
+    customFields: [CustomFieldTemplateInput!]
+}
+
+input FieldSetTemplateInput {
+    name: String!
+    order: Int!
+    customFields: [CustomFieldTemplateInput!]
+}
+
+input CustomFieldTemplateInput {
+    name: String!
+    type: CustomFieldTemplateType!
+    order: Int!
+    mandatory: Boolean!
+    length: Int
+    min: Int
+    max: Int
+}
+
+enum CustomFieldTemplateType {
+    TEXT
+    #    INTEGER
+    #    DECIMAL
+    #    DATE
+    #    DATETIME
+    #    TIME
+    #    BOOL
+    #    ENUM
+    #    ENTITY
+}

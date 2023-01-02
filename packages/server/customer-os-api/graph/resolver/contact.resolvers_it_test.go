@@ -183,16 +183,16 @@ func TestMutationResolver_ContactCreate(t *testing.T) {
 func TestMutationResolver_ContactCreate_WithCustomFields(t *testing.T) {
 	defer tearDownTestCase()(t)
 	neo4jt.CreateTenant(driver, tenantName)
-	entityDefinitionId := neo4jt.CreateEntityDefinition(driver, tenantName, model.EntityDefinitionExtensionContact.String())
-	fieldDefinitionId := neo4jt.AddFieldDefinitionToEntity(driver, entityDefinitionId)
-	setDefinitionId := neo4jt.AddSetDefinitionToEntity(driver, entityDefinitionId)
-	fieldInSetDefinitionId := neo4jt.AddFieldDefinitionToSet(driver, setDefinitionId)
+	entityTemplateId := neo4jt.CreateEntityTemplate(driver, tenantName, model.EntityTemplateExtensionContact.String())
+	fieldTemplateId := neo4jt.AddFieldTemplateToEntity(driver, entityTemplateId)
+	setTemplateId := neo4jt.AddSetTemplateToEntity(driver, entityTemplateId)
+	fieldInSetTemplateId := neo4jt.AddFieldTemplateToSet(driver, setTemplateId)
 
 	rawResponse, err := c.RawPost(getQuery("create_contact_with_custom_fields"),
-		client.Var("entityDefinitionId", entityDefinitionId),
-		client.Var("fieldDefinitionId", fieldDefinitionId),
-		client.Var("setDefinitionId", setDefinitionId),
-		client.Var("fieldInSetDefinitionId", fieldInSetDefinitionId))
+		client.Var("entityTemplateId", entityTemplateId),
+		client.Var("fieldTemplateId", fieldTemplateId),
+		client.Var("setTemplateId", setTemplateId),
+		client.Var("fieldInSetTemplateId", fieldInSetTemplateId))
 	assertRawResponseSuccess(t, rawResponse, err)
 
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Tenant"))
@@ -205,9 +205,9 @@ func TestMutationResolver_ContactCreate_WithCustomFields(t *testing.T) {
 	require.Equal(t, 4, neo4jt.GetCountOfNodes(driver, "TextField"))
 	require.Equal(t, 0, neo4jt.GetCountOfNodes(driver, "Email"))
 	require.Equal(t, 0, neo4jt.GetCountOfNodes(driver, "PhoneNumber"))
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "EntityDefinition"))
-	require.Equal(t, 2, neo4jt.GetCountOfNodes(driver, "CustomFieldDefinition"))
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "FieldSetDefinition"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "EntityTemplate"))
+	require.Equal(t, 2, neo4jt.GetCountOfNodes(driver, "CustomFieldTemplate"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "FieldSetTemplate"))
 	require.Equal(t, 2, neo4jt.GetCountOfNodes(driver, "FieldSet"))
 	require.Equal(t, 2, neo4jt.GetCountOfNodes(driver, "FieldSet_"+tenantName))
 	require.Equal(t, 12, neo4jt.GetTotalCountOfNodes(driver))
@@ -221,13 +221,13 @@ func TestMutationResolver_ContactCreate_WithCustomFields(t *testing.T) {
 	require.NotNil(t, contact)
 
 	createdContact := contact.Contact_Create
-	require.Equal(t, entityDefinitionId, createdContact.Definition.ID)
+	require.Equal(t, entityTemplateId, createdContact.Template.ID)
 	require.Equal(t, 2, len(createdContact.CustomFields))
 	require.Equal(t, "field1", createdContact.CustomFields[0].Name)
 	require.Equal(t, "TEXT", createdContact.CustomFields[0].Datatype.String())
 	require.Equal(t, "value1", createdContact.CustomFields[0].Value.RealValue())
 	require.Equal(t, "", *createdContact.CustomFields[0].Source)
-	require.Equal(t, fieldDefinitionId, createdContact.CustomFields[0].Definition.ID)
+	require.Equal(t, fieldTemplateId, createdContact.CustomFields[0].Template.ID)
 	require.NotNil(t, createdContact.CustomFields[0].GetID())
 	require.Equal(t, "field2", createdContact.CustomFields[1].Name)
 	require.Equal(t, "TEXT", createdContact.CustomFields[1].Datatype.String())
@@ -251,18 +251,18 @@ func TestMutationResolver_ContactCreate_WithCustomFields(t *testing.T) {
 	require.Equal(t, "value3", set1.CustomFields[0].Value.RealValue())
 	require.Equal(t, "", *set1.CustomFields[0].Source)
 	require.Equal(t, "TEXT", set1.CustomFields[0].Datatype.String())
-	require.Equal(t, fieldInSetDefinitionId, set1.CustomFields[0].Definition.ID)
+	require.Equal(t, fieldInSetTemplateId, set1.CustomFields[0].Template.ID)
 	require.Equal(t, "field4InSet", set1.CustomFields[1].Name)
 	require.Equal(t, "value4", set1.CustomFields[1].Value.RealValue())
 	require.Equal(t, "zendesk", *set1.CustomFields[1].Source)
 	require.Equal(t, "TEXT", set1.CustomFields[1].Datatype.String())
-	require.Nil(t, set1.CustomFields[1].Definition)
+	require.Nil(t, set1.CustomFields[1].Template)
 	require.NotNil(t, set2.ID)
 	require.NotNil(t, set2.Added)
 	require.Equal(t, "set2", set2.Name)
 
 	assertNeo4jLabels(t, driver, []string{"Tenant", "Contact", "Contact_" + tenantName,
-		"CustomFieldDefinition", "EntityDefinition", "FieldSet", "FieldSet_" + tenantName, "FieldSetDefinition",
+		"CustomFieldTemplate", "EntityTemplate", "FieldSet", "FieldSet_" + tenantName, "FieldSetTemplate",
 		"CustomField", "TextField", "CustomField_" + tenantName})
 }
 

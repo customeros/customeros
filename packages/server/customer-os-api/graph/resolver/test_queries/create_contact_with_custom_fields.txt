@@ -1,21 +1,21 @@
-mutation ($entityDefinitionId: ID!, $fieldDefinitionId: ID!, $setDefinitionId: ID!, $fieldInSetDefinitionId: ID!){
+mutation ($entityTemplateId: ID!, $fieldTemplateId: ID!, $setTemplateId: ID!, $fieldInSetTemplateId: ID!){
 contact_Create(
     input: {
       title: MR
       firstName: "first"
       lastName: "last"
       customFields: [
-                        {name: "field1", value: "value1", datatype: TEXT, definitionId:$fieldDefinitionId},
+                        {name: "field1", value: "value1", datatype: TEXT, templateId:$fieldTemplateId},
                         {name: "field2", value: "value2", datatype: TEXT, source: "hubspot"}
                     ]
       fieldSets: [{ name:"set1"
-                    definitionId: $setDefinitionId
+                    templateId: $setTemplateId
                     customFields: [
-                                    {name: "field3InSet", value: "value3", datatype: TEXT, definitionId:$fieldInSetDefinitionId},
+                                    {name: "field3InSet", value: "value3", datatype: TEXT, templateId:$fieldInSetTemplateId},
                                     {name: "field4InSet", value: "value4", datatype: TEXT, source: "zendesk"}
                                   ]}
                   {name:"set2"}]
-      definitionId: $entityDefinitionId
+      templateId: $entityTemplateId
     }
   ) {
     id
@@ -23,7 +23,7 @@ contact_Create(
     firstName
     lastName
     createdAt
-    definition {
+    template {
         id
     }
     customFields {
@@ -32,7 +32,7 @@ contact_Create(
         value
         datatype
         source
-        definition {
+        template {
             id
         }
     }
@@ -40,7 +40,7 @@ contact_Create(
         id
         name
         added
-        definition {
+        template {
             id
         }
         customFields {
@@ -49,7 +49,7 @@ contact_Create(
             value
             datatype
             source
-            definition {
+            template {
                 id
             }
         }

@@ -30,7 +30,7 @@ type ContactCreateData struct {
 	FieldSets         *entity.FieldSetEntities
 	EmailEntity       *entity.EmailEntity
 	PhoneNumberEntity *entity.PhoneNumberEntity
-	DefinitionId      *string
+	TemplateId        *string
 	ContactTypeId     *string
 	OwnerUserId       *string
 	ExternalReference *entity.ExternalReferenceRelationship
@@ -82,8 +82,8 @@ func (s *contactService) createContactInDBTxWork(ctx context.Context, newContact
 				return nil, err
 			}
 		}
-		if newContact.DefinitionId != nil {
-			err := s.repositories.ContactRepository.LinkWithEntityDefinitionInTx(tx, tenant, contactId, *newContact.DefinitionId)
+		if newContact.TemplateId != nil {
+			err := s.repositories.ContactRepository.LinkWithEntityTemplateInTx(tx, tenant, contactId, *newContact.TemplateId)
 			if err != nil {
 				return nil, err
 			}
@@ -100,9 +100,9 @@ func (s *contactService) createContactInDBTxWork(ctx context.Context, newContact
 				if err != nil {
 					return nil, err
 				}
-				if customField.DefinitionId != nil {
+				if customField.TemplateId != nil {
 					var fieldId = utils.GetPropsFromNode(*dbNode)["id"].(string)
-					err := s.repositories.CustomFieldRepository.LinkWithCustomFieldDefinitionForContactInTx(tx, fieldId, contactId, *customField.DefinitionId)
+					err := s.repositories.CustomFieldRepository.LinkWithCustomFieldTemplateForContactInTx(tx, fieldId, contactId, *customField.TemplateId)
 					if err != nil {
 						return nil, err
 					}
@@ -116,8 +116,8 @@ func (s *contactService) createContactInDBTxWork(ctx context.Context, newContact
 					return nil, err
 				}
 				var fieldSetId = utils.GetPropsFromNode(*setDbNode)["id"].(string)
-				if fieldSet.DefinitionId != nil {
-					err := s.repositories.FieldSetRepository.LinkWithFieldSetDefinitionInTx(tx, tenant, fieldSetId, *fieldSet.DefinitionId)
+				if fieldSet.TemplateId != nil {
+					err := s.repositories.FieldSetRepository.LinkWithFieldSetTemplateInTx(tx, tenant, fieldSetId, *fieldSet.TemplateId)
 					if err != nil {
 						return nil, err
 					}
@@ -128,9 +128,9 @@ func (s *contactService) createContactInDBTxWork(ctx context.Context, newContact
 						if err != nil {
 							return nil, err
 						}
-						if customField.DefinitionId != nil {
+						if customField.TemplateId != nil {
 							var fieldId = utils.GetPropsFromNode(*fieldDbNode)["id"].(string)
-							err := s.repositories.CustomFieldRepository.LinkWithCustomFieldDefinitionForFieldSetInTx(tx, fieldId, fieldSetId, *customField.DefinitionId)
+							err := s.repositories.CustomFieldRepository.LinkWithCustomFieldTemplateForFieldSetInTx(tx, fieldId, fieldSetId, *customField.TemplateId)
 							if err != nil {
 								return nil, err
 							}

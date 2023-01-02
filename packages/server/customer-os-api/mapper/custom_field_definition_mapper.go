@@ -6,8 +6,8 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils"
 )
 
-func MapCustomFieldDefinitionInputToEntity(input model.CustomFieldDefinitionInput) *entity.CustomFieldDefinitionEntity {
-	definitionEntity := entity.CustomFieldDefinitionEntity{
+func MapCustomFieldTemplateInputToEntity(input model.CustomFieldTemplateInput) *entity.CustomFieldTemplateEntity {
+	templateEntity := entity.CustomFieldTemplateEntity{
 		Name:      input.Name,
 		Type:      input.Type.String(),
 		Order:     int64(input.Order),
@@ -16,15 +16,15 @@ func MapCustomFieldDefinitionInputToEntity(input model.CustomFieldDefinitionInpu
 		Min:       utils.IntPtrToInt64Ptr(input.Min),
 		Max:       utils.IntPtrToInt64Ptr(input.Max),
 	}
-	return &definitionEntity
+	return &templateEntity
 }
 
-func MapEntityToCustomFieldDefinition(entity *entity.CustomFieldDefinitionEntity) *model.CustomFieldDefinition {
-	fieldType := model.CustomFieldDefinitionType(entity.Type)
+func MapEntityToCustomFieldTemplate(entity *entity.CustomFieldTemplateEntity) *model.CustomFieldTemplate {
+	fieldType := model.CustomFieldTemplateType(entity.Type)
 	if !fieldType.IsValid() {
-		fieldType = model.CustomFieldDefinitionTypeText
+		fieldType = model.CustomFieldTemplateTypeText
 	}
-	output := model.CustomFieldDefinition{
+	output := model.CustomFieldTemplate{
 		ID:        entity.Id,
 		Name:      entity.Name,
 		Type:      fieldType,
@@ -37,10 +37,10 @@ func MapEntityToCustomFieldDefinition(entity *entity.CustomFieldDefinitionEntity
 	return &output
 }
 
-func MapEntitiesToCustomFieldDefinitions(entities *entity.CustomFieldDefinitionEntities) []*model.CustomFieldDefinition {
-	var customFieldDefinitions []*model.CustomFieldDefinition
+func MapEntitiesToCustomFieldTemplates(entities *entity.CustomFieldTemplateEntities) []*model.CustomFieldTemplate {
+	var customFieldTemplates []*model.CustomFieldTemplate
 	for _, v := range *entities {
-		customFieldDefinitions = append(customFieldDefinitions, MapEntityToCustomFieldDefinition(&v))
+		customFieldTemplates = append(customFieldTemplates, MapEntityToCustomFieldTemplate(&v))
 	}
-	return customFieldDefinitions
+	return customFieldTemplates
 }

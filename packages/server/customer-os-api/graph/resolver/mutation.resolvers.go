@@ -13,14 +13,14 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper"
 )
 
-// EntityDefinitionCreate is the resolver for the entityDefinitionCreate field.
-func (r *mutationResolver) EntityDefinitionCreate(ctx context.Context, input model.EntityDefinitionInput) (*model.EntityDefinition, error) {
-	entityDefinitionEntity, err := r.Services.EntityDefinitionService.Create(ctx, mapper.MapEntityDefinitionInputToEntity(input))
+// EntityTemplateCreate is the resolver for the entityTemplateCreate field.
+func (r *mutationResolver) EntityTemplateCreate(ctx context.Context, input model.EntityTemplateInput) (*model.EntityTemplate, error) {
+	entityTemplateEntity, err := r.Services.EntityTemplateService.Create(ctx, mapper.MapEntityTemplateInputToEntity(input))
 	if err != nil {
-		graphql.AddErrorf(ctx, "Failed to create entity definition: %s", input.Name)
+		graphql.AddErrorf(ctx, "Failed to create entity template: %s", input.Name)
 		return nil, err
 	}
-	return mapper.MapEntityToEntityDefinition(entityDefinitionEntity), nil
+	return mapper.MapEntityToEntityTemplate(entityTemplateEntity), nil
 }
 
 // Mutation returns generated.MutationResolver implementation.

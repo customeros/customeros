@@ -17,7 +17,7 @@ type ExtensibleEntity interface {
 	IsNode()
 	IsExtensibleEntity()
 	GetID() string
-	GetDefinition() *EntityDefinition
+	GetTemplate() *EntityTemplate
 }
 
 type Node interface {
@@ -127,8 +127,8 @@ type Contact struct {
 	// **Required.  If no values it returns an empty array.**
 	CustomFields []*CustomField `json:"customFields"`
 	FieldSets    []*FieldSet    `json:"fieldSets"`
-	// Definition of the contact in customerOS.
-	Definition *EntityDefinition `json:"definition"`
+	// Template of the contact in customerOS.
+	Template *EntityTemplate `json:"template"`
 	// Contact owner (user)
 	Owner *User `json:"owner"`
 	// Contact notes
@@ -137,9 +137,9 @@ type Contact struct {
 	Actions       []Action          `json:"actions"`
 }
 
-func (Contact) IsExtensibleEntity()                   {}
-func (this Contact) GetID() string                    { return this.ID }
-func (this Contact) GetDefinition() *EntityDefinition { return this.Definition }
+func (Contact) IsExtensibleEntity()               {}
+func (this Contact) GetID() string                { return this.ID }
+func (this Contact) GetTemplate() *EntityTemplate { return this.Template }
 
 func (Contact) IsNode() {}
 
@@ -201,8 +201,8 @@ type ContactGroupUpdateInput struct {
 // Create an individual in customerOS.
 // **A `create` object.**
 type ContactInput struct {
-	// The unique ID associated with the definition of the contact in customerOS.
-	DefinitionID *string `json:"definitionId"`
+	// The unique ID associated with the template of the contact in customerOS.
+	TemplateID *string `json:"templateId"`
 	// The title of the contact.
 	Title *PersonTitle `json:"title"`
 	// The first name of the contact.
@@ -361,36 +361,12 @@ type CustomField struct {
 	// **Required**
 	Value AnyTypeValue `json:"value"`
 	// The source of the custom field value
-	Source     *string                `json:"source"`
-	Definition *CustomFieldDefinition `json:"definition"`
+	Source   *string              `json:"source"`
+	Template *CustomFieldTemplate `json:"template"`
 }
 
 func (CustomField) IsNode()            {}
 func (this CustomField) GetID() string { return this.ID }
-
-type CustomFieldDefinition struct {
-	ID        string                    `json:"id"`
-	Name      string                    `json:"name"`
-	Type      CustomFieldDefinitionType `json:"type"`
-	Order     int                       `json:"order"`
-	Mandatory bool                      `json:"mandatory"`
-	Length    *int                      `json:"length"`
-	Min       *int                      `json:"min"`
-	Max       *int                      `json:"max"`
-}
-
-func (CustomFieldDefinition) IsNode()            {}
-func (this CustomFieldDefinition) GetID() string { return this.ID }
-
-type CustomFieldDefinitionInput struct {
-	Name      string                    `json:"name"`
-	Type      CustomFieldDefinitionType `json:"type"`
-	Order     int                       `json:"order"`
-	Mandatory bool                      `json:"mandatory"`
-	Length    *int                      `json:"length"`
-	Min       *int                      `json:"min"`
-	Max       *int                      `json:"max"`
-}
 
 // Describes a custom, user-defined field associated with a `Contact` of type String.
 // **A `create` object.**
@@ -407,8 +383,32 @@ type CustomFieldInput struct {
 	// **Required**
 	Value AnyTypeValue `json:"value"`
 	// The source of the custom field value
-	Source       *string `json:"source"`
-	DefinitionID *string `json:"definitionId"`
+	Source     *string `json:"source"`
+	TemplateID *string `json:"templateId"`
+}
+
+type CustomFieldTemplate struct {
+	ID        string                  `json:"id"`
+	Name      string                  `json:"name"`
+	Type      CustomFieldTemplateType `json:"type"`
+	Order     int                     `json:"order"`
+	Mandatory bool                    `json:"mandatory"`
+	Length    *int                    `json:"length"`
+	Min       *int                    `json:"min"`
+	Max       *int                    `json:"max"`
+}
+
+func (CustomFieldTemplate) IsNode()            {}
+func (this CustomFieldTemplate) GetID() string { return this.ID }
+
+type CustomFieldTemplateInput struct {
+	Name      string                  `json:"name"`
+	Type      CustomFieldTemplateType `json:"type"`
+	Order     int                     `json:"order"`
+	Mandatory bool                    `json:"mandatory"`
+	Length    *int                    `json:"length"`
+	Min       *int                    `json:"min"`
+	Max       *int                    `json:"max"`
 }
 
 // Describes a custom, user-defined field associated with a `Contact`.
@@ -475,24 +475,24 @@ type EmailUpdateInput struct {
 	Primary *bool `json:"primary"`
 }
 
-type EntityDefinition struct {
-	ID           string                     `json:"id"`
-	Version      int                        `json:"version"`
-	Name         string                     `json:"name"`
-	Extends      *EntityDefinitionExtension `json:"extends"`
-	FieldSets    []*FieldSetDefinition      `json:"fieldSets"`
-	CustomFields []*CustomFieldDefinition   `json:"customFields"`
-	CreatedAt    time.Time                  `json:"createdAt"`
+type EntityTemplate struct {
+	ID           string                   `json:"id"`
+	Version      int                      `json:"version"`
+	Name         string                   `json:"name"`
+	Extends      *EntityTemplateExtension `json:"extends"`
+	FieldSets    []*FieldSetTemplate      `json:"fieldSets"`
+	CustomFields []*CustomFieldTemplate   `json:"customFields"`
+	CreatedAt    time.Time                `json:"createdAt"`
 }
 
-func (EntityDefinition) IsNode()            {}
-func (this EntityDefinition) GetID() string { return this.ID }
+func (EntityTemplate) IsNode()            {}
+func (this EntityTemplate) GetID() string { return this.ID }
 
-type EntityDefinitionInput struct {
-	Name         string                        `json:"name"`
-	Extends      *EntityDefinitionExtension    `json:"extends"`
-	FieldSets    []*FieldSetDefinitionInput    `json:"fieldSets"`
-	CustomFields []*CustomFieldDefinitionInput `json:"customFields"`
+type EntityTemplateInput struct {
+	Name         string                      `json:"name"`
+	Extends      *EntityTemplateExtension    `json:"extends"`
+	FieldSets    []*FieldSetTemplateInput    `json:"fieldSets"`
+	CustomFields []*CustomFieldTemplateInput `json:"customFields"`
 }
 
 type ExternalSystemReferenceInput struct {
@@ -502,34 +502,34 @@ type ExternalSystemReferenceInput struct {
 }
 
 type FieldSet struct {
-	ID           string              `json:"id"`
-	Name         string              `json:"name"`
-	Added        time.Time           `json:"added"`
-	CustomFields []*CustomField      `json:"customFields"`
-	Definition   *FieldSetDefinition `json:"definition"`
-}
-
-type FieldSetDefinition struct {
-	ID           string                   `json:"id"`
-	Name         string                   `json:"name"`
-	Order        int                      `json:"order"`
-	CustomFields []*CustomFieldDefinition `json:"customFields"`
-}
-
-func (FieldSetDefinition) IsNode()            {}
-func (this FieldSetDefinition) GetID() string { return this.ID }
-
-type FieldSetDefinitionInput struct {
-	Name         string                        `json:"name"`
-	Order        int                           `json:"order"`
-	CustomFields []*CustomFieldDefinitionInput `json:"customFields"`
+	ID           string            `json:"id"`
+	Name         string            `json:"name"`
+	Added        time.Time         `json:"added"`
+	CustomFields []*CustomField    `json:"customFields"`
+	Template     *FieldSetTemplate `json:"template"`
 }
 
 type FieldSetInput struct {
 	ID           *string             `json:"id"`
 	Name         string              `json:"name"`
 	CustomFields []*CustomFieldInput `json:"customFields"`
-	DefinitionID *string             `json:"definitionId"`
+	TemplateID   *string             `json:"templateId"`
+}
+
+type FieldSetTemplate struct {
+	ID           string                 `json:"id"`
+	Name         string                 `json:"name"`
+	Order        int                    `json:"order"`
+	CustomFields []*CustomFieldTemplate `json:"customFields"`
+}
+
+func (FieldSetTemplate) IsNode()            {}
+func (this FieldSetTemplate) GetID() string { return this.ID }
+
+type FieldSetTemplateInput struct {
+	Name         string                      `json:"name"`
+	Order        int                         `json:"order"`
+	CustomFields []*CustomFieldTemplateInput `json:"customFields"`
 }
 
 type FieldSetUpdateInput struct {
@@ -886,42 +886,42 @@ func (e CustomFieldDataType) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
 }
 
-type CustomFieldDefinitionType string
+type CustomFieldTemplateType string
 
 const (
-	CustomFieldDefinitionTypeText CustomFieldDefinitionType = "TEXT"
+	CustomFieldTemplateTypeText CustomFieldTemplateType = "TEXT"
 )
 
-var AllCustomFieldDefinitionType = []CustomFieldDefinitionType{
-	CustomFieldDefinitionTypeText,
+var AllCustomFieldTemplateType = []CustomFieldTemplateType{
+	CustomFieldTemplateTypeText,
 }
 
-func (e CustomFieldDefinitionType) IsValid() bool {
+func (e CustomFieldTemplateType) IsValid() bool {
 	switch e {
-	case CustomFieldDefinitionTypeText:
+	case CustomFieldTemplateTypeText:
 		return true
 	}
 	return false
 }
 
-func (e CustomFieldDefinitionType) String() string {
+func (e CustomFieldTemplateType) String() string {
 	return string(e)
 }
 
-func (e *CustomFieldDefinitionType) UnmarshalGQL(v interface{}) error {
+func (e *CustomFieldTemplateType) UnmarshalGQL(v interface{}) error {
 	str, ok := v.(string)
 	if !ok {
 		return fmt.Errorf("enums must be strings")
 	}
 
-	*e = CustomFieldDefinitionType(str)
+	*e = CustomFieldTemplateType(str)
 	if !e.IsValid() {
-		return fmt.Errorf("%s is not a valid CustomFieldDefinitionType", str)
+		return fmt.Errorf("%s is not a valid CustomFieldTemplateType", str)
 	}
 	return nil
 }
 
-func (e CustomFieldDefinitionType) MarshalGQL(w io.Writer) {
+func (e CustomFieldTemplateType) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
 }
 
@@ -972,42 +972,42 @@ func (e EmailLabel) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
 }
 
-type EntityDefinitionExtension string
+type EntityTemplateExtension string
 
 const (
-	EntityDefinitionExtensionContact EntityDefinitionExtension = "CONTACT"
+	EntityTemplateExtensionContact EntityTemplateExtension = "CONTACT"
 )
 
-var AllEntityDefinitionExtension = []EntityDefinitionExtension{
-	EntityDefinitionExtensionContact,
+var AllEntityTemplateExtension = []EntityTemplateExtension{
+	EntityTemplateExtensionContact,
 }
 
-func (e EntityDefinitionExtension) IsValid() bool {
+func (e EntityTemplateExtension) IsValid() bool {
 	switch e {
-	case EntityDefinitionExtensionContact:
+	case EntityTemplateExtensionContact:
 		return true
 	}
 	return false
 }
 
-func (e EntityDefinitionExtension) String() string {
+func (e EntityTemplateExtension) String() string {
 	return string(e)
 }
 
-func (e *EntityDefinitionExtension) UnmarshalGQL(v interface{}) error {
+func (e *EntityTemplateExtension) UnmarshalGQL(v interface{}) error {
 	str, ok := v.(string)
 	if !ok {
 		return fmt.Errorf("enums must be strings")
 	}
 
-	*e = EntityDefinitionExtension(str)
+	*e = EntityTemplateExtension(str)
 	if !e.IsValid() {
-		return fmt.Errorf("%s is not a valid EntityDefinitionExtension", str)
+		return fmt.Errorf("%s is not a valid EntityTemplateExtension", str)
 	}
 	return nil
 }
 
-func (e EntityDefinitionExtension) MarshalGQL(w io.Writer) {
+func (e EntityTemplateExtension) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
 }
 
