@@ -1,8 +1,15 @@
 extend type Query {
     companies_ByNameLike(pagination: Pagination, companyName: String!): CompanyPage
+    company(id: ID!): Company
 }
 
-type Company {
+extend type Mutation {
+    company_Create(input: CompanyInput!): Company!
+    company_Update(id: ID!, input: CompanyInput!): Company!
+    company_Delete(id: ID!): Result
+}
+
+type Company implements Node {
     id: ID!
     name: String!
     description: String
@@ -11,6 +18,7 @@ type Company {
     industry:    String
     isPublic:    Boolean
     createdAt:   Time!
+    readonly:    Boolean
 
     """
     All addresses associated with a company in customerOS.
@@ -26,12 +34,14 @@ type CompanyPage implements Pages {
 }
 
 input CompanyInput {
-
-    id: ID
-
     """
     The name of the company associated with a Contact.
     **Required.**
     """
-    name: String
+    name: String!
+    description: String
+    domain:      String
+    website:     String
+    industry:    String
+    isPublic:    Boolean
 }

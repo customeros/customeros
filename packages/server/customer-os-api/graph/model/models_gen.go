@@ -59,16 +59,24 @@ type Company struct {
 	Industry    *string   `json:"industry"`
 	IsPublic    *bool     `json:"isPublic"`
 	CreatedAt   time.Time `json:"createdAt"`
+	Readonly    *bool     `json:"readonly"`
 	// All addresses associated with a company in customerOS.
 	// **Required.  If no values it returns an empty array.**
 	Addresses []*Address `json:"addresses"`
 }
 
+func (Company) IsNode()            {}
+func (this Company) GetID() string { return this.ID }
+
 type CompanyInput struct {
-	ID *string `json:"id"`
 	// The name of the company associated with a Contact.
 	// **Required.**
-	Name *string `json:"name"`
+	Name        string  `json:"name"`
+	Description *string `json:"description"`
+	Domain      *string `json:"domain"`
+	Website     *string `json:"website"`
+	Industry    *string `json:"industry"`
+	IsPublic    *bool   `json:"isPublic"`
 }
 
 type CompanyPage struct {

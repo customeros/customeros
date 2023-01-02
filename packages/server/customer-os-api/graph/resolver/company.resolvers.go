@@ -6,6 +6,7 @@ package resolver
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
@@ -24,6 +25,26 @@ func (r *companyResolver) Addresses(ctx context.Context, obj *model.Company) ([]
 	return mapper.MapEntitiesToAddresses(addressEntities), err
 }
 
+// CompanyCreate is the resolver for the company_Create field.
+func (r *mutationResolver) CompanyCreate(ctx context.Context, input model.CompanyInput) (*model.Company, error) {
+	createdCompanyEntity, err := r.Services.CompanyService.Create(ctx, mapper.MapCompanyInputToEntity(&input))
+	if err != nil {
+		graphql.AddErrorf(ctx, "Failed to create contact type %s", input.Name)
+		return nil, err
+	}
+	return mapper.MapEntityToCompany(createdCompanyEntity), nil
+}
+
+// CompanyUpdate is the resolver for the company_Update field.
+func (r *mutationResolver) CompanyUpdate(ctx context.Context, id string, input model.CompanyInput) (*model.Company, error) {
+	panic(fmt.Errorf("not implemented: CompanyUpdate - company_Update"))
+}
+
+// CompanyDelete is the resolver for the company_Delete field.
+func (r *mutationResolver) CompanyDelete(ctx context.Context, id string) (*model.Result, error) {
+	panic(fmt.Errorf("not implemented: CompanyDelete - company_Delete"))
+}
+
 // CompaniesByNameLike is the resolver for the companies_ByNameLike field.
 func (r *queryResolver) CompaniesByNameLike(ctx context.Context, pagination *model.Pagination, companyName string) (*model.CompanyPage, error) {
 	if pagination == nil {
@@ -35,6 +56,16 @@ func (r *queryResolver) CompaniesByNameLike(ctx context.Context, pagination *mod
 		TotalPages:    paginatedResult.TotalPages,
 		TotalElements: paginatedResult.TotalRows,
 	}, err
+}
+
+// Company is the resolver for the company field.
+func (r *queryResolver) Company(ctx context.Context, id string) (*model.Company, error) {
+	companyEntity, err := r.Services.CompanyService.GetCompanyById(ctx, id)
+	if err != nil {
+		graphql.AddErrorf(ctx, "Failed to get company by id %s", id)
+		return nil, err
+	}
+	return mapper.MapEntityToCompany(companyEntity), nil
 }
 
 // Company returns generated.CompanyResolver implementation.

@@ -14,6 +14,7 @@ type CompanyEntity struct {
 	Industry    string
 	IsPublic    bool
 	CreatedAt   time.Time
+	Readonly    bool
 }
 
 func (company CompanyEntity) ToString() string {

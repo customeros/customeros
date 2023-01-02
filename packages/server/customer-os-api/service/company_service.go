@@ -10,8 +10,10 @@ import (
 )
 
 type CompanyService interface {
-	GetCompanyForRole(ctx context.Context, roleId string) (*entity.CompanyEntity, error)
+	Create(ctx context.Context, input *entity.CompanyEntity) (*entity.CompanyEntity, error)
 
+	GetCompanyForRole(ctx context.Context, roleId string) (*entity.CompanyEntity, error)
+	GetCompanyById(ctx context.Context, companyId string) (*entity.CompanyEntity, error)
 	FindCompaniesByNameLike(ctx context.Context, page, limit int, companyName string) (*utils.Pagination, error)
 }
 
@@ -23,6 +25,17 @@ func NewCompanyService(repositories *repository.Repositories) CompanyService {
 	return &companyService{
 		repositories: repositories,
 	}
+}
+
+func (s *companyService) Create(ctx context.Context, input *entity.CompanyEntity) (*entity.CompanyEntity, error) {
+	session := utils.NewNeo4jWriteSession(*s.repositories.Drivers.Neo4jDriver)
+	defer session.Close()
+
+	dbNodePtr, err := s.repositories.CompanyRepository.Create(session, common.GetContext(ctx).Tenant, input)
+	if err != nil {
+		return nil, err
+	}
+	return s.mapDbNodeToCompanyEntity(*dbNodePtr), nil
 }
 
 func (s *companyService) FindCompaniesByNameLike(ctx context.Context, page, limit int, companyName string) (*utils.Pagination, error) {
@@ -40,7 +53,7 @@ func (s *companyService) FindCompaniesByNameLike(ctx context.Context, page, limi
 	companyEntities := entity.CompanyEntities{}
 
 	for _, v := range dbNodesWithTotalCount.Nodes {
-		companyEntities = append(companyEntities, *s.mapCompanyDbNodeToEntity(*v))
+		companyEntities = append(companyEntities, *s.mapDbNodeToCompanyEntity(*v))
 	}
 	paginatedResult.SetRows(&companyEntities)
 	return &paginatedResult, nil
@@ -54,10 +67,21 @@ func (s *companyService) GetCompanyForRole(ctx context.Context, roleId string) (
 	if dbNode == nil || err != nil {
 		return nil, err
 	}
-	return s.mapCompanyDbNodeToEntity(*dbNode), nil
+	return s.mapDbNodeToCompanyEntity(*dbNode), nil
 }
 
-func (s *companyService) mapCompanyDbNodeToEntity(node dbtype.Node) *entity.CompanyEntity {
+func (s *companyService) GetCompanyById(ctx context.Context, companyId string) (*entity.CompanyEntity, error) {
+	session := utils.NewNeo4jReadSession(*s.repositories.Drivers.Neo4jDriver)
+	defer session.Close()
+
+	dbNode, err := s.repositories.CompanyRepository.GetCompanyById(session, common.GetContext(ctx).Tenant, companyId)
+	if err != nil {
+		return nil, err
+	}
+	return s.mapDbNodeToCompanyEntity(*dbNode), nil
+}
+
+func (s *companyService) mapDbNodeToCompanyEntity(node dbtype.Node) *entity.CompanyEntity {
 	props := utils.GetPropsFromNode(node)
 	companyEntity := new(entity.CompanyEntity)
 	companyEntity.Id = utils.GetStringPropOrEmpty(props, "id")
@@ -68,5 +92,6 @@ func (s *companyService) mapCompanyDbNodeToEntity(node dbtype.Node) *entity.Comp
 	companyEntity.Industry = utils.GetStringPropOrEmpty(props, "industry")
 	companyEntity.IsPublic = utils.GetBoolPropOrFalse(props, "isPublic")
 	companyEntity.CreatedAt = utils.GetTimePropOrNow(props, "createdAt")
+	companyEntity.Readonly = utils.GetBoolPropOrFalse(props, "readonly")
 	return companyEntity
 }
