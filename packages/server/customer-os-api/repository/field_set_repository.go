@@ -9,7 +9,7 @@ import (
 )
 
 type FieldSetRepository interface {
-	LinkWithFieldSetDefinitionInTx(tx neo4j.Transaction, tenant, fieldSetId, definitionId string) error
+	LinkWithFieldSetTemplateInTx(tx neo4j.Transaction, tenant, fieldSetId, templateId string) error
 	MergeFieldSetToContactInTx(tx neo4j.Transaction, tenant, contactId string, entity entity.FieldSetEntity) (*dbtype.Node, *dbtype.Relationship, error)
 
 	UpdateForContactInTx(tx neo4j.Transaction, tenant, contactId string, entity entity.FieldSetEntity) (*dbtype.Node, *dbtype.Relationship, error)
@@ -25,16 +25,16 @@ func NewFieldSetRepository(driver *neo4j.Driver) FieldSetRepository {
 	}
 }
 
-func (r *fieldSetRepository) LinkWithFieldSetDefinitionInTx(tx neo4j.Transaction, tenant, fieldSetId, definitionId string) error {
+func (r *fieldSetRepository) LinkWithFieldSetTemplateInTx(tx neo4j.Transaction, tenant, fieldSetId, templateId string) error {
 	txResult, err := tx.Run(`
 			MATCH (f:FieldSet {id:$fieldSetId})<-[:HAS_COMPLEX_PROPERTY]-(c:Contact)-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}),
-					(c)-[:IS_DEFINED_BY]->(e:EntityDefinition)-[:CONTAINS]->(d:FieldSetDefinition {id:$definitionId})
+					(c)-[:IS_DEFINED_BY]->(e:EntityTemplate)-[:CONTAINS]->(d:FieldSetTemplate {id:$templateId})
 			MERGE (f)-[r:IS_DEFINED_BY]->(d)
 			RETURN r`,
 		map[string]any{
-			"definitionId": definitionId,
-			"fieldSetId":   fieldSetId,
-			"tenant":       tenant,
+			"templateId": templateId,
+			"fieldSetId": fieldSetId,
+			"tenant":     tenant,
 		})
 	if err != nil {
 		return err

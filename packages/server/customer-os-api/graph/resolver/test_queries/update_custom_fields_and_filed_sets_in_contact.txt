@@ -1,22 +1,22 @@
-mutation CustomFieldsMergeAndUpdateInContact($contactId: ID!, $customFieldId: ID!, $fieldSetId: ID!, $customFieldInSetId: ID!, $fieldDefinitionId: ID!, $setDefinitionId: ID!, $fieldInSetDefinitionId: ID!){
+mutation CustomFieldsMergeAndUpdateInContact($contactId: ID!, $customFieldId: ID!, $fieldSetId: ID!, $customFieldInSetId: ID!, $fieldTemplateId: ID!, $setTemplateId: ID!, $fieldInSetTemplateId: ID!){
 customFieldsMergeAndUpdateInContact(
       contactId: $contactId
       customFields: [
-                        {id: $customFieldId, name: "field1", value: "value1", datatype: TEXT, definitionId: "IGNORED"},
-                        {name: "field2", value: "value2", datatype: TEXT, definitionId: $fieldDefinitionId}
+                        {id: $customFieldId, name: "field1", value: "value1", datatype: TEXT, templateId: "IGNORED"},
+                        {name: "field2", value: "value2", datatype: TEXT, templateId: $fieldTemplateId}
                     ]
       fieldSets: [{ id: $fieldSetId
                     name:"set1"
-                    definitionId: "IGNORED"
+                    templateId: "IGNORED"
                     customFields: [
-                                    {id: $customFieldInSetId, name: "field3", value: "value3", datatype: TEXT, definitionId:"IGNORED"},
+                                    {id: $customFieldInSetId, name: "field3", value: "value3", datatype: TEXT, templateId:"IGNORED"},
                                   ]}
                   {name:"set2"
-                   definitionId: $setDefinitionId
-                   customFields: [{name: "field4", value: "value4", datatype: TEXT, definitionId: $fieldInSetDefinitionId}]}]
+                   templateId: $setTemplateId
+                   customFields: [{name: "field4", value: "value4", datatype: TEXT, templateId: $fieldInSetTemplateId}]}]
   ) {
     id
-    definition {
+    template {
         id
     }
     customFields {
@@ -24,7 +24,7 @@ customFieldsMergeAndUpdateInContact(
         name
         value
         datatype
-        definition {
+        template {
             id
         }
     }
@@ -32,7 +32,7 @@ customFieldsMergeAndUpdateInContact(
         id
         name
         added
-        definition {
+        template {
             id
         }
         customFields {
@@ -40,7 +40,7 @@ customFieldsMergeAndUpdateInContact(
             name
             value
             datatype
-            definition {
+            template {
                 id
             }
         }

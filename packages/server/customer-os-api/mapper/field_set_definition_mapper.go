@@ -5,19 +5,19 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 )
 
-func MapFieldSetDefinitionInputToEntity(input model.FieldSetDefinitionInput) *entity.FieldSetDefinitionEntity {
-	definitionEntity := entity.FieldSetDefinitionEntity{
+func MapFieldSetTemplateInputToEntity(input model.FieldSetTemplateInput) *entity.FieldSetTemplateEntity {
+	templateEntity := entity.FieldSetTemplateEntity{
 		Name:  input.Name,
 		Order: int64(input.Order),
 	}
 	for _, v := range input.CustomFields {
-		definitionEntity.CustomFields = append(definitionEntity.CustomFields, MapCustomFieldDefinitionInputToEntity(*v))
+		templateEntity.CustomFields = append(templateEntity.CustomFields, MapCustomFieldTemplateInputToEntity(*v))
 	}
-	return &definitionEntity
+	return &templateEntity
 }
 
-func MapEntityToFieldSetDefinition(entity *entity.FieldSetDefinitionEntity) *model.FieldSetDefinition {
-	output := model.FieldSetDefinition{
+func MapEntityToFieldSetTemplate(entity *entity.FieldSetTemplateEntity) *model.FieldSetTemplate {
+	output := model.FieldSetTemplate{
 		ID:    entity.Id,
 		Name:  entity.Name,
 		Order: int(entity.Order),
@@ -25,10 +25,10 @@ func MapEntityToFieldSetDefinition(entity *entity.FieldSetDefinitionEntity) *mod
 	return &output
 }
 
-func MapEntitiesToFieldSetDefinitions(entities *entity.FieldSetDefinitionEntities) []*model.FieldSetDefinition {
-	var fieldSetDefinitions []*model.FieldSetDefinition
+func MapEntitiesToFieldSetTemplates(entities *entity.FieldSetTemplateEntities) []*model.FieldSetTemplate {
+	var fieldSetTemplates []*model.FieldSetTemplate
 	for _, v := range *entities {
-		fieldSetDefinitions = append(fieldSetDefinitions, MapEntityToFieldSetDefinition(&v))
+		fieldSetTemplates = append(fieldSetTemplates, MapEntityToFieldSetTemplate(&v))
 	}
-	return fieldSetDefinitions
+	return fieldSetTemplates
 }

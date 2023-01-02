@@ -11,8 +11,8 @@ import (
 type CustomFieldRepository interface {
 	MergeCustomFieldToContactInTx(tx neo4j.Transaction, tenant, contactId string, entity *entity.CustomFieldEntity) (*dbtype.Node, error)
 	MergeCustomFieldToFieldSetInTx(tx neo4j.Transaction, tenant, contactId, fieldSet string, entity *entity.CustomFieldEntity) (*dbtype.Node, error)
-	LinkWithCustomFieldDefinitionForContactInTx(tx neo4j.Transaction, fieldId, contactId, definitionId string) error
-	LinkWithCustomFieldDefinitionForFieldSetInTx(tx neo4j.Transaction, fieldId, fieldSetId, definitionId string) error
+	LinkWithCustomFieldTemplateForContactInTx(tx neo4j.Transaction, fieldId, contactId, templateId string) error
+	LinkWithCustomFieldTemplateForFieldSetInTx(tx neo4j.Transaction, fieldId, fieldSetId, templateId string) error
 	UpdateForContactInTx(tx neo4j.Transaction, tenant, contactId string, entity *entity.CustomFieldEntity) (*dbtype.Node, error)
 	UpdateForFieldSetInTx(tx neo4j.Transaction, tenant, contactId, fieldSetId string, entity *entity.CustomFieldEntity) (*dbtype.Node, error)
 	FindAllForContact(session neo4j.Session, tenant, contactId string) ([]*neo4j.Record, error)
@@ -69,17 +69,17 @@ func (r *customFieldRepository) MergeCustomFieldToFieldSetInTx(tx neo4j.Transact
 	return utils.ExtractSingleRecordFirstValueAsNode(queryResult, err)
 }
 
-func (r *customFieldRepository) LinkWithCustomFieldDefinitionForContactInTx(tx neo4j.Transaction, fieldId, contactId, definitionId string) error {
+func (r *customFieldRepository) LinkWithCustomFieldTemplateForContactInTx(tx neo4j.Transaction, fieldId, contactId, templateId string) error {
 	queryResult, err := tx.Run(`
 			MATCH (f:CustomField {id:$fieldId})<-[:HAS_PROPERTY]-(c:Contact {id:$contactId}),
-				  (c)-[:IS_DEFINED_BY]->(e:EntityDefinition),
-				  (e)-[:CONTAINS]->(d:CustomFieldDefinition {id:$customFieldDefinitionId})
+				  (c)-[:IS_DEFINED_BY]->(e:EntityTemplate),
+				  (e)-[:CONTAINS]->(d:CustomFieldTemplate {id:$customFieldTemplateId})
 			MERGE (f)-[r:IS_DEFINED_BY]->(d)
 			RETURN r`,
 		map[string]any{
-			"customFieldDefinitionId": definitionId,
-			"fieldId":                 fieldId,
-			"contactId":               contactId,
+			"customFieldTemplateId": templateId,
+			"fieldId":               fieldId,
+			"contactId":             contactId,
 		})
 	if err != nil {
 		return err
@@ -88,17 +88,17 @@ func (r *customFieldRepository) LinkWithCustomFieldDefinitionForContactInTx(tx n
 	return err
 }
 
-func (r *customFieldRepository) LinkWithCustomFieldDefinitionForFieldSetInTx(tx neo4j.Transaction, fieldId, fieldSetId, definitionId string) error {
+func (r *customFieldRepository) LinkWithCustomFieldTemplateForFieldSetInTx(tx neo4j.Transaction, fieldId, fieldSetId, templateId string) error {
 	queryResult, err := tx.Run(`
 			MATCH (f:CustomField {id:$fieldId})<-[:HAS_PROPERTY]-(s:FieldSet {id:$fieldSetId}),
-				  (s)-[:IS_DEFINED_BY]->(e:FieldSetDefinition),
-				  (e)-[:CONTAINS]->(d:CustomFieldDefinition {id:$customFieldDefinitionId})
+				  (s)-[:IS_DEFINED_BY]->(e:FieldSetTemplate),
+				  (e)-[:CONTAINS]->(d:CustomFieldTemplate {id:$customFieldTemplateId})
 			MERGE (f)-[r:IS_DEFINED_BY]->(d)
 			RETURN r`,
 		map[string]any{
-			"customFieldDefinitionId": definitionId,
-			"fieldId":                 fieldId,
-			"fieldSetId":              fieldSetId,
+			"customFieldTemplateId": templateId,
+			"fieldId":               fieldId,
+			"fieldSetId":            fieldSetId,
 		})
 	if err != nil {
 		return err

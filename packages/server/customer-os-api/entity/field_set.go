@@ -9,7 +9,7 @@ type FieldSetEntity struct {
 	Id           *string
 	Name         string
 	Added        time.Time
-	DefinitionId *string
+	TemplateId   *string
 	CustomFields *CustomFieldEntities
 }
 

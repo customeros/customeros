@@ -233,76 +233,76 @@ func AddPhoneNumberToContact(driver *neo4j.Driver, contactId string, e164 string
 	})
 }
 
-func CreateEntityDefinition(driver *neo4j.Driver, tenant, extends string) string {
-	var definitionId, _ = uuid.NewRandom()
+func CreateEntityTemplate(driver *neo4j.Driver, tenant, extends string) string {
+	var templateId, _ = uuid.NewRandom()
 	query := `MATCH (t:Tenant {name:$tenant})
-			MERGE (e:EntityDefinition {id:$definitionId})-[:ENTITY_DEFINITION_BELONGS_TO_TENANT]->(t)
+			MERGE (e:EntityTemplate {id:$templateId})-[:ENTITY_TEMPLATE_BELONGS_TO_TENANT]->(t)
 			ON CREATE SET e.extends=$extends, e.name=$name`
 	ExecuteWriteQuery(driver, query, map[string]any{
-		"definitionId": definitionId.String(),
-		"tenant":       tenant,
-		"extends":      extends,
-		"name":         "definition name",
+		"templateId": templateId.String(),
+		"tenant":     tenant,
+		"extends":    extends,
+		"name":       "template name",
 	})
-	return definitionId.String()
+	return templateId.String()
 }
 
-func LinkEntityDefinitionToContact(driver *neo4j.Driver, entityDefinitionId, contactId string) {
+func LinkEntityTemplateToContact(driver *neo4j.Driver, entityTemplateId, contactId string) {
 	query := `MATCH (c:Contact {id:$contactId}),
-			(e:EntityDefinition {id:$definitionId})
+			(e:EntityTemplate {id:$TemplateId})
 			MERGE (c)-[:IS_DEFINED_BY]->(e)`
 	ExecuteWriteQuery(driver, query, map[string]any{
-		"definitionId": entityDefinitionId,
-		"contactId":    contactId,
+		"TemplateId": entityTemplateId,
+		"contactId":  contactId,
 	})
 }
 
-func AddFieldDefinitionToEntity(driver *neo4j.Driver, entityDefinitionId string) string {
-	var definitionId, _ = uuid.NewRandom()
-	query := `MATCH (e:EntityDefinition {id:$entityDefinitionId})
-			MERGE (f:CustomFieldDefinition {id:$definitionId})<-[:CONTAINS]-(e)
+func AddFieldTemplateToEntity(driver *neo4j.Driver, entityTemplateId string) string {
+	var templateId, _ = uuid.NewRandom()
+	query := `MATCH (e:EntityTemplate {id:$entityTemplateId})
+			MERGE (f:CustomFieldTemplate {id:$templateId})<-[:CONTAINS]-(e)
 			ON CREATE SET f.name=$name, f.type=$type, f.order=$order, f.mandatory=$mandatory`
 	ExecuteWriteQuery(driver, query, map[string]any{
-		"definitionId":       definitionId.String(),
-		"entityDefinitionId": entityDefinitionId,
-		"type":               "TEXT",
-		"order":              1,
-		"mandatory":          false,
-		"name":               "definition name",
+		"templateId":       templateId.String(),
+		"entityTemplateId": entityTemplateId,
+		"type":             "TEXT",
+		"order":            1,
+		"mandatory":        false,
+		"name":             "template name",
 	})
-	return definitionId.String()
+	return templateId.String()
 }
 
-func AddFieldDefinitionToSet(driver *neo4j.Driver, setDefinitionId string) string {
-	var definitionId, _ = uuid.NewRandom()
-	query := `MATCH (e:FieldSetDefinition {id:$setDefinitionId})
-			MERGE (f:CustomFieldDefinition {id:$definitionId})<-[:CONTAINS]-(e)
+func AddFieldTemplateToSet(driver *neo4j.Driver, setTemplateId string) string {
+	var templateId, _ = uuid.NewRandom()
+	query := `MATCH (e:FieldSetTemplate {id:$setTemplateId})
+			MERGE (f:CustomFieldTemplate {id:$templateId})<-[:CONTAINS]-(e)
 			ON CREATE SET f.name=$name, f.type=$type, f.order=$order, f.mandatory=$mandatory`
 	ExecuteWriteQuery(driver, query, map[string]any{
-		"definitionId":    definitionId.String(),
-		"setDefinitionId": setDefinitionId,
-		"type":            "TEXT",
-		"order":           1,
-		"mandatory":       false,
-		"name":            "definition name",
+		"templateId":    templateId.String(),
+		"setTemplateId": setTemplateId,
+		"type":          "TEXT",
+		"order":         1,
+		"mandatory":     false,
+		"name":          "template name",
 	})
-	return definitionId.String()
+	return templateId.String()
 }
 
-func AddSetDefinitionToEntity(driver *neo4j.Driver, entityDefinitionId string) string {
-	var definitionId, _ = uuid.NewRandom()
-	query := `MATCH (e:EntityDefinition {id:$entityDefinitionId})
-			MERGE (f:FieldSetDefinition {id:$definitionId})<-[:CONTAINS]-(e)
+func AddSetTemplateToEntity(driver *neo4j.Driver, entityTemplateId string) string {
+	var templateId, _ = uuid.NewRandom()
+	query := `MATCH (e:EntityTemplate {id:$entityTemplateId})
+			MERGE (f:FieldSetTemplate {id:$templateId})<-[:CONTAINS]-(e)
 			ON CREATE SET f.name=$name, f.type=$type, f.order=$order, f.mandatory=$mandatory`
 	ExecuteWriteQuery(driver, query, map[string]any{
-		"definitionId":       definitionId.String(),
-		"entityDefinitionId": entityDefinitionId,
-		"type":               "TEXT",
-		"order":              1,
-		"mandatory":          false,
-		"name":               "set name",
+		"templateId":       templateId.String(),
+		"entityTemplateId": entityTemplateId,
+		"type":             "TEXT",
+		"order":            1,
+		"mandatory":        false,
+		"name":             "set name",
 	})
-	return definitionId.String()
+	return templateId.String()
 }
 
 func CreateContactType(driver *neo4j.Driver, tenant, contactTypeName string) string {

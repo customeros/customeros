@@ -265,25 +265,25 @@ func TestMutationResolver_FieldSetDeleteFromContact(t *testing.T) {
 	require.Equal(t, 0, neo4jt.GetCountOfNodes(driver, "CustomField"))
 }
 
-func TestMutationResolver_EntityDefinitionCreate(t *testing.T) {
+func TestMutationResolver_EntityTemplateCreate(t *testing.T) {
 	defer tearDownTestCase()(t)
 	neo4jt.CreateTenant(driver, tenantName)
 	neo4jt.CreateTenant(driver, "other")
 
-	rawResponse, err := c.RawPost(getQuery("create_entity_definition"))
+	rawResponse, err := c.RawPost(getQuery("create_entity_template"))
 	assertRawResponseSuccess(t, rawResponse, err)
 
-	var entityDefinition struct {
-		EntityDefinitionCreate model.EntityDefinition
+	var entityTemplate struct {
+		EntityTemplateCreate model.EntityTemplate
 	}
 
-	err = decode.Decode(rawResponse.Data.(map[string]any), &entityDefinition)
-	actual := entityDefinition.EntityDefinitionCreate
+	err = decode.Decode(rawResponse.Data.(map[string]any), &entityTemplate)
+	actual := entityTemplate.EntityTemplateCreate
 	require.Nil(t, err)
 	require.NotNil(t, actual)
 	require.NotNil(t, actual.ID)
 	require.NotNil(t, actual.CreatedAt)
-	require.Equal(t, "the entity definition name", actual.Name)
+	require.Equal(t, "the entity template name", actual.Name)
 	require.Equal(t, 1, actual.Version)
 	require.Nil(t, actual.Extends)
 
@@ -300,7 +300,7 @@ func TestMutationResolver_EntityDefinitionCreate(t *testing.T) {
 	require.Equal(t, "field 3", field.Name)
 	require.Equal(t, 1, field.Order)
 	require.Equal(t, true, field.Mandatory)
-	require.Equal(t, model.CustomFieldDefinitionTypeText, field.Type)
+	require.Equal(t, model.CustomFieldTemplateTypeText, field.Type)
 	require.Nil(t, field.Min)
 	require.Nil(t, field.Max)
 	require.Nil(t, field.Length)
@@ -310,7 +310,7 @@ func TestMutationResolver_EntityDefinitionCreate(t *testing.T) {
 	require.Equal(t, "field 4", field.Name)
 	require.Equal(t, 2, field.Order)
 	require.Equal(t, false, field.Mandatory)
-	require.Equal(t, model.CustomFieldDefinitionTypeText, field.Type)
+	require.Equal(t, model.CustomFieldTemplateTypeText, field.Type)
 	require.Equal(t, 10, *field.Min)
 	require.Equal(t, 990, *field.Max)
 	require.Equal(t, 2550, *field.Length)
@@ -326,7 +326,7 @@ func TestMutationResolver_EntityDefinitionCreate(t *testing.T) {
 	require.Equal(t, "field 1", field.Name)
 	require.Equal(t, 1, field.Order)
 	require.Equal(t, true, field.Mandatory)
-	require.Equal(t, model.CustomFieldDefinitionTypeText, field.Type)
+	require.Equal(t, model.CustomFieldTemplateTypeText, field.Type)
 	require.Nil(t, field.Min)
 	require.Nil(t, field.Max)
 	require.Nil(t, field.Length)
@@ -336,41 +336,41 @@ func TestMutationResolver_EntityDefinitionCreate(t *testing.T) {
 	require.Equal(t, "field 2", field.Name)
 	require.Equal(t, 2, field.Order)
 	require.Equal(t, false, field.Mandatory)
-	require.Equal(t, model.CustomFieldDefinitionTypeText, field.Type)
+	require.Equal(t, model.CustomFieldTemplateTypeText, field.Type)
 	require.Equal(t, 1, *field.Min)
 	require.Equal(t, 99, *field.Max)
 	require.Equal(t, 255, *field.Length)
 
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "EntityDefinition"))
-	require.Equal(t, 2, neo4jt.GetCountOfNodes(driver, "FieldSetDefinition"))
-	require.Equal(t, 4, neo4jt.GetCountOfNodes(driver, "CustomFieldDefinition"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "EntityTemplate"))
+	require.Equal(t, 2, neo4jt.GetCountOfNodes(driver, "FieldSetTemplate"))
+	require.Equal(t, 4, neo4jt.GetCountOfNodes(driver, "CustomFieldTemplate"))
 }
 
-func TestQueryResolver_EntityDefinitions_FilterExtendsProperty(t *testing.T) {
+func TestQueryResolver_EntityTemplates_FilterExtendsProperty(t *testing.T) {
 	defer tearDownTestCase()(t)
 	neo4jt.CreateTenant(driver, tenantName)
 
-	neo4jt.CreateEntityDefinition(driver, tenantName, "")
-	id2 := neo4jt.CreateEntityDefinition(driver, tenantName, model.EntityDefinitionExtensionContact.String())
-	id3 := neo4jt.CreateEntityDefinition(driver, tenantName, model.EntityDefinitionExtensionContact.String())
+	neo4jt.CreateEntityTemplate(driver, tenantName, "")
+	id2 := neo4jt.CreateEntityTemplate(driver, tenantName, model.EntityTemplateExtensionContact.String())
+	id3 := neo4jt.CreateEntityTemplate(driver, tenantName, model.EntityTemplateExtensionContact.String())
 
-	rawResponse, err := c.RawPost(getQuery("get_entity_definitions_filter_by_extends"),
-		client.Var("extends", model.EntityDefinitionExtensionContact.String()))
+	rawResponse, err := c.RawPost(getQuery("get_entity_templates_filter_by_extends"),
+		client.Var("extends", model.EntityTemplateExtensionContact.String()))
 	assertRawResponseSuccess(t, rawResponse, err)
 
-	var entityDefinition struct {
-		EntityDefinitions []model.EntityDefinition
+	var entityTemplate struct {
+		EntityTemplates []model.EntityTemplate
 	}
 
-	err = decode.Decode(rawResponse.Data.(map[string]any), &entityDefinition)
+	err = decode.Decode(rawResponse.Data.(map[string]any), &entityTemplate)
 	require.Nil(t, err)
-	require.NotNil(t, entityDefinition.EntityDefinitions)
-	require.Equal(t, 2, len(entityDefinition.EntityDefinitions))
-	require.Equal(t, "CONTACT", entityDefinition.EntityDefinitions[0].Extends.String())
-	require.Equal(t, "CONTACT", entityDefinition.EntityDefinitions[1].Extends.String())
-	require.ElementsMatch(t, []string{id2, id3}, []string{entityDefinition.EntityDefinitions[0].ID, entityDefinition.EntityDefinitions[1].ID})
+	require.NotNil(t, entityTemplate.EntityTemplates)
+	require.Equal(t, 2, len(entityTemplate.EntityTemplates))
+	require.Equal(t, "CONTACT", entityTemplate.EntityTemplates[0].Extends.String())
+	require.Equal(t, "CONTACT", entityTemplate.EntityTemplates[1].Extends.String())
+	require.ElementsMatch(t, []string{id2, id3}, []string{entityTemplate.EntityTemplates[0].ID, entityTemplate.EntityTemplates[1].ID})
 
-	require.Equal(t, 3, neo4jt.GetCountOfNodes(driver, "EntityDefinition"))
+	require.Equal(t, 3, neo4jt.GetCountOfNodes(driver, "EntityTemplate"))
 }
 
 func TestMutationResolver_ContactTypeCreate(t *testing.T) {

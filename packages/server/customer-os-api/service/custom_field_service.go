@@ -57,9 +57,9 @@ func (s *customFieldService) MergeAndUpdateCustomFieldsForContact(ctx context.Co
 					if err != nil {
 						return nil, err
 					}
-					if customField.DefinitionId != nil {
+					if customField.TemplateId != nil {
 						var fieldId = utils.GetPropsFromNode(*dbNode)["id"].(string)
-						err := s.repository.CustomFieldRepository.LinkWithCustomFieldDefinitionForContactInTx(tx, fieldId, contactId, *customField.DefinitionId)
+						err := s.repository.CustomFieldRepository.LinkWithCustomFieldTemplateForContactInTx(tx, fieldId, contactId, *customField.TemplateId)
 						if err != nil {
 							return nil, err
 						}
@@ -81,8 +81,8 @@ func (s *customFieldService) MergeAndUpdateCustomFieldsForContact(ctx context.Co
 						return nil, err
 					}
 					fieldSetId = utils.GetPropsFromNode(*setDbNode)["id"].(string)
-					if fieldSet.DefinitionId != nil {
-						err := s.repository.FieldSetRepository.LinkWithFieldSetDefinitionInTx(tx, tenant, fieldSetId, *fieldSet.DefinitionId)
+					if fieldSet.TemplateId != nil {
+						err := s.repository.FieldSetRepository.LinkWithFieldSetTemplateInTx(tx, tenant, fieldSetId, *fieldSet.TemplateId)
 						if err != nil {
 							return nil, err
 						}
@@ -101,9 +101,9 @@ func (s *customFieldService) MergeAndUpdateCustomFieldsForContact(ctx context.Co
 							if err != nil {
 								return nil, err
 							}
-							if customField.DefinitionId != nil {
+							if customField.TemplateId != nil {
 								var fieldId = utils.GetPropsFromNode(*fieldDbNode)["id"].(string)
-								err := s.repository.CustomFieldRepository.LinkWithCustomFieldDefinitionForFieldSetInTx(tx, fieldId, fieldSetId, *customField.DefinitionId)
+								err := s.repository.CustomFieldRepository.LinkWithCustomFieldTemplateForFieldSetInTx(tx, fieldId, fieldSetId, *customField.TemplateId)
 								if err != nil {
 									return nil, err
 								}
@@ -171,9 +171,9 @@ func (s *customFieldService) MergeCustomFieldToContact(ctx context.Context, cont
 		if err != nil {
 			return nil, err
 		}
-		if entity.DefinitionId != nil {
+		if entity.TemplateId != nil {
 			var fieldId = utils.GetPropsFromNode(*customFieldDbNode)["id"].(string)
-			if err = s.repository.CustomFieldRepository.LinkWithCustomFieldDefinitionForContactInTx(tx, fieldId, contactId, *entity.DefinitionId); err != nil {
+			if err = s.repository.CustomFieldRepository.LinkWithCustomFieldTemplateForContactInTx(tx, fieldId, contactId, *entity.TemplateId); err != nil {
 				return nil, err
 			}
 		}
@@ -195,9 +195,9 @@ func (s *customFieldService) MergeCustomFieldToFieldSet(ctx context.Context, con
 		if err != nil {
 			return nil, err
 		}
-		if entity.DefinitionId != nil {
+		if entity.TemplateId != nil {
 			var fieldId = utils.GetPropsFromNode(*customFieldNode)["id"].(string)
-			if err = s.repository.CustomFieldRepository.LinkWithCustomFieldDefinitionForFieldSetInTx(tx, fieldId, fieldSetId, *entity.DefinitionId); err != nil {
+			if err = s.repository.CustomFieldRepository.LinkWithCustomFieldTemplateForFieldSetInTx(tx, fieldId, fieldSetId, *entity.TemplateId); err != nil {
 				return nil, err
 			}
 		}

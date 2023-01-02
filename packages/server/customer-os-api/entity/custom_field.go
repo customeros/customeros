@@ -34,12 +34,12 @@ func (p propertyName) String() string {
 }
 
 type CustomFieldEntity struct {
-	Id           *string
-	Name         string
-	DataType     string
-	Value        model.AnyTypeValue
-	DefinitionId *string
-	Source       string
+	Id         *string
+	Name       string
+	DataType   string
+	Value      model.AnyTypeValue
+	TemplateId *string
+	Source     string
 }
 
 type CustomFieldEntities []CustomFieldEntity

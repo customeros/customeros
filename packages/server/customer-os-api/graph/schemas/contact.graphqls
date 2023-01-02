@@ -110,9 +110,9 @@ type Contact implements ExtensibleEntity & Node {
     fieldSets: [FieldSet!]! @goField(forceResolver: true)
 
     """
-    Definition of the contact in customerOS.
+    Template of the contact in customerOS.
     """
-    definition: EntityDefinition @goField(forceResolver: true)
+    template: EntityTemplate @goField(forceResolver: true)
 
     "Contact owner (user)"
     owner: User @goField(forceResolver: true)
@@ -156,8 +156,8 @@ Create an individual in customerOS.
 """
 input ContactInput {
 
-    "The unique ID associated with the definition of the contact in customerOS."
-    definitionId: ID
+    "The unique ID associated with the template of the contact in customerOS."
+    templateId: ID
 
     "The title of the contact."
     title: PersonTitle

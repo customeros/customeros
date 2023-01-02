@@ -21,7 +21,7 @@ func MapFieldSetInputToEntity(input *model.FieldSetInput) *entity.FieldSetEntity
 	fieldSetEntity := entity.FieldSetEntity{
 		Id:           input.ID,
 		Name:         input.Name,
-		DefinitionId: input.DefinitionID,
+		TemplateId:   input.TemplateID,
 		CustomFields: MapCustomFieldInputsToEntities(input.CustomFields),
 	}
 	return &fieldSetEntity
