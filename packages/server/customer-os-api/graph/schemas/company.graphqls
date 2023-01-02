@@ -1,5 +1,5 @@
 extend type Query {
-    companies_ByNameLike(pagination: Pagination, companyName: String!): CompanyPage
+    companies(pagination: Pagination, where: Filter, sort: [SortBy!]): CompanyPage!
     company(id: ID!): Company
 }
 

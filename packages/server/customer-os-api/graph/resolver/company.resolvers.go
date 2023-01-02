@@ -7,9 +7,9 @@ package resolver
 import (
 	"context"
 	"fmt"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 
 	"github.com/99designs/gqlgen/graphql"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/generated"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper"
@@ -45,12 +45,16 @@ func (r *mutationResolver) CompanyDelete(ctx context.Context, id string) (*model
 	panic(fmt.Errorf("not implemented: CompanyDelete - company_Delete"))
 }
 
-// CompaniesByNameLike is the resolver for the companies_ByNameLike field.
-func (r *queryResolver) CompaniesByNameLike(ctx context.Context, pagination *model.Pagination, companyName string) (*model.CompanyPage, error) {
+// Companies is the resolver for the companies field.
+func (r *queryResolver) Companies(ctx context.Context, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) (*model.CompanyPage, error) {
 	if pagination == nil {
 		pagination = &model.Pagination{Page: 0, Limit: 0}
 	}
-	paginatedResult, err := r.Services.CompanyService.FindCompaniesByNameLike(ctx, pagination.Page, pagination.Limit, companyName)
+	paginatedResult, err := r.Services.CompanyService.FindAll(ctx, pagination.Page, pagination.Limit, where, sort)
+	if err != nil {
+		graphql.AddErrorf(ctx, "Could not fetch companies")
+		return nil, err
+	}
 	return &model.CompanyPage{
 		Content:       mapper.MapEntitiesToCompanies(paginatedResult.Rows.(*entity.CompanyEntities)),
 		TotalPages:    paginatedResult.TotalPages,

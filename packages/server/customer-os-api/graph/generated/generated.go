@@ -302,18 +302,18 @@ type ComplexityRoot struct {
 	}
 
 	Query struct {
-		CompaniesByNameLike func(childComplexity int, pagination *model.Pagination, companyName string) int
-		Company             func(childComplexity int, id string) int
-		Contact             func(childComplexity int, id string) int
-		ContactByEmail      func(childComplexity int, email string) int
-		ContactByPhone      func(childComplexity int, e164 string) int
-		ContactGroup        func(childComplexity int, id string) int
-		ContactGroups       func(childComplexity int, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) int
-		ContactTypes        func(childComplexity int) int
-		Contacts            func(childComplexity int, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) int
-		EntityTemplates     func(childComplexity int, extends *model.EntityTemplateExtension) int
-		User                func(childComplexity int, id string) int
-		Users               func(childComplexity int, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) int
+		Companies       func(childComplexity int, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) int
+		Company         func(childComplexity int, id string) int
+		Contact         func(childComplexity int, id string) int
+		ContactByEmail  func(childComplexity int, email string) int
+		ContactByPhone  func(childComplexity int, e164 string) int
+		ContactGroup    func(childComplexity int, id string) int
+		ContactGroups   func(childComplexity int, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) int
+		ContactTypes    func(childComplexity int) int
+		Contacts        func(childComplexity int, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) int
+		EntityTemplates func(childComplexity int, extends *model.EntityTemplateExtension) int
+		User            func(childComplexity int, id string) int
+		Users           func(childComplexity int, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) int
 	}
 
 	Result struct {
@@ -430,7 +430,7 @@ type NoteResolver interface {
 }
 type QueryResolver interface {
 	EntityTemplates(ctx context.Context, extends *model.EntityTemplateExtension) ([]*model.EntityTemplate, error)
-	CompaniesByNameLike(ctx context.Context, pagination *model.Pagination, companyName string) (*model.CompanyPage, error)
+	Companies(ctx context.Context, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) (*model.CompanyPage, error)
 	Company(ctx context.Context, id string) (*model.Company, error)
 	Contact(ctx context.Context, id string) (*model.Contact, error)
 	Contacts(ctx context.Context, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) (*model.ContactsPage, error)
@@ -1912,17 +1912,17 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.PhoneNumber.Primary(childComplexity), true
 
-	case "Query.companies_ByNameLike":
-		if e.complexity.Query.CompaniesByNameLike == nil {
+	case "Query.companies":
+		if e.complexity.Query.Companies == nil {
 			break
 		}
 
-		args, err := ec.field_Query_companies_ByNameLike_args(context.TODO(), rawArgs)
+		args, err := ec.field_Query_companies_args(context.TODO(), rawArgs)
 		if err != nil {
 			return 0, false
 		}
 
-		return e.complexity.Query.CompaniesByNameLike(childComplexity, args["pagination"].(*model.Pagination), args["companyName"].(string)), true
+		return e.complexity.Query.Companies(childComplexity, args["pagination"].(*model.Pagination), args["where"].(*model.Filter), args["sort"].([]*model.SortBy)), true
 
 	case "Query.company":
 		if e.complexity.Query.Company == nil {
@@ -2261,7 +2261,7 @@ enum ActionType {
     fax: String
 }`, BuiltIn: false},
 	{Name: "../schemas/company.graphqls", Input: `extend type Query {
-    companies_ByNameLike(pagination: Pagination, companyName: String!): CompanyPage
+    companies(pagination: Pagination, where: Filter, sort: [SortBy!]): CompanyPage!
     company(id: ID!): Company
 }
 
@@ -4539,7 +4539,7 @@ func (ec *executionContext) field_Query___type_args(ctx context.Context, rawArgs
 	return args, nil
 }
 
-func (ec *executionContext) field_Query_companies_ByNameLike_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+func (ec *executionContext) field_Query_companies_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
 	var arg0 *model.Pagination
@@ -4551,15 +4551,24 @@ func (ec *executionContext) field_Query_companies_ByNameLike_args(ctx context.Co
 		}
 	}
 	args["pagination"] = arg0
-	var arg1 string
-	if tmp, ok := rawArgs["companyName"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("companyName"))
-		arg1, err = ec.unmarshalNString2string(ctx, tmp)
+	var arg1 *model.Filter
+	if tmp, ok := rawArgs["where"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("where"))
+		arg1, err = ec.unmarshalOFilter2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐFilter(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["companyName"] = arg1
+	args["where"] = arg1
+	var arg2 []*model.SortBy
+	if tmp, ok := rawArgs["sort"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("sort"))
+		arg2, err = ec.unmarshalOSortBy2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐSortByᚄ(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["sort"] = arg2
 	return args, nil
 }
 
@@ -13841,8 +13850,8 @@ func (ec *executionContext) fieldContext_Query_entityTemplates(ctx context.Conte
 	return fc, nil
 }
 
-func (ec *executionContext) _Query_companies_ByNameLike(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Query_companies_ByNameLike(ctx, field)
+func (ec *executionContext) _Query_companies(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_companies(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -13855,21 +13864,24 @@ func (ec *executionContext) _Query_companies_ByNameLike(ctx context.Context, fie
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().CompaniesByNameLike(rctx, fc.Args["pagination"].(*model.Pagination), fc.Args["companyName"].(string))
+		return ec.resolvers.Query().Companies(rctx, fc.Args["pagination"].(*model.Pagination), fc.Args["where"].(*model.Filter), fc.Args["sort"].([]*model.SortBy))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
 		return graphql.Null
 	}
 	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
 		return graphql.Null
 	}
 	res := resTmp.(*model.CompanyPage)
 	fc.Result = res
-	return ec.marshalOCompanyPage2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐCompanyPage(ctx, field.Selections, res)
+	return ec.marshalNCompanyPage2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐCompanyPage(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Query_companies_ByNameLike(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Query_companies(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Query",
 		Field:      field,
@@ -13894,7 +13906,7 @@ func (ec *executionContext) fieldContext_Query_companies_ByNameLike(ctx context.
 		}
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Query_companies_ByNameLike_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+	if fc.Args, err = ec.field_Query_companies_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return
 	}
@@ -20726,7 +20738,7 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			out.Concurrently(i, func() graphql.Marshaler {
 				return rrm(innerCtx)
 			})
-		case "companies_ByNameLike":
+		case "companies":
 			field := field
 
 			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
@@ -20735,7 +20747,10 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 						ec.Error(ctx, ec.Recover(ctx, r))
 					}
 				}()
-				res = ec._Query_companies_ByNameLike(ctx, field)
+				res = ec._Query_companies(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
 				return res
 			}
 
@@ -21663,6 +21678,20 @@ func (ec *executionContext) marshalNCompany2ᚖgithubᚗcomᚋopenlineᚑaiᚋop
 func (ec *executionContext) unmarshalNCompanyInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐCompanyInput(ctx context.Context, v interface{}) (model.CompanyInput, error) {
 	res, err := ec.unmarshalInputCompanyInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNCompanyPage2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐCompanyPage(ctx context.Context, sel ast.SelectionSet, v model.CompanyPage) graphql.Marshaler {
+	return ec._CompanyPage(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNCompanyPage2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐCompanyPage(ctx context.Context, sel ast.SelectionSet, v *model.CompanyPage) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._CompanyPage(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalNComparisonOperator2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐComparisonOperator(ctx context.Context, v interface{}) (model.ComparisonOperator, error) {
@@ -23184,13 +23213,6 @@ func (ec *executionContext) marshalOCompany2ᚖgithubᚗcomᚋopenlineᚑaiᚋop
 		return graphql.Null
 	}
 	return ec._Company(ctx, sel, v)
-}
-
-func (ec *executionContext) marshalOCompanyPage2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐCompanyPage(ctx context.Context, sel ast.SelectionSet, v *model.CompanyPage) graphql.Marshaler {
-	if v == nil {
-		return graphql.Null
-	}
-	return ec._CompanyPage(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalOContact2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐContact(ctx context.Context, sel ast.SelectionSet, v *model.Contact) graphql.Marshaler {

@@ -13,7 +13,7 @@ type CompanyRepository interface {
 	Create(session neo4j.Session, tenant string, company *entity.CompanyEntity) (*dbtype.Node, error)
 	GetCompanyForRole(session neo4j.Session, tenant, roleId string) (*dbtype.Node, error)
 	GetCompanyById(session neo4j.Session, tenant, companyId string) (*dbtype.Node, error)
-	GetPaginatedCompaniesWithNameLike(tenant, companyName string, skip, limit int) (*utils.DbNodesWithTotalCount, error)
+	GetPaginatedCompanies(session neo4j.Session, tenant string, skip, limit int, filter *utils.CypherFilter, sorting *utils.CypherSort) (*utils.DbNodesWithTotalCount, error)
 }
 
 type companyRepository struct {
@@ -97,46 +97,48 @@ func (r *companyRepository) GetCompanyById(session neo4j.Session, tenant, compan
 	return utils.NodePtr(dbRecord.(*db.Record).Values[0].(dbtype.Node)), nil
 }
 
-func (r *companyRepository) GetPaginatedCompaniesWithNameLike(tenant, companyName string, skip, limit int) (*utils.DbNodesWithTotalCount, error) {
-	session := utils.NewNeo4jReadSession(*r.driver)
-	defer session.Close()
-
+func (r *companyRepository) GetPaginatedCompanies(session neo4j.Session, tenant string, skip, limit int, filter *utils.CypherFilter, sorting *utils.CypherSort) (*utils.DbNodesWithTotalCount, error) {
 	dbNodesWithTotalCount := new(utils.DbNodesWithTotalCount)
 
 	dbRecords, err := session.ReadTransaction(func(tx neo4j.Transaction) (any, error) {
-		queryResult, err := tx.Run(`
-				MATCH (:Tenant {name:$tenant})<-[:COMPANY_BELONGS_TO_TENANT]-(co:Company) 
-				WHERE toLower(co.name) CONTAINS toLower($companyName)
-				RETURN count(co) as count`,
-			map[string]interface{}{
-				"tenant":      tenant,
-				"companyName": companyName,
-			})
+		filterCypherStr, filterParams := filter.CypherFilterFragment("c")
+		countParams := map[string]any{
+			"tenant": tenant,
+		}
+		utils.MergeMapToMap(filterParams, countParams)
+
+		queryResult, err := tx.Run(fmt.Sprintf(
+			" MATCH (:Tenant {name:$tenant})<-[:COMPANY_BELONGS_TO_TENANT]-(c:Company) "+
+				" %s "+
+				" RETURN count(c) as count", filterCypherStr),
+			countParams)
 		if err != nil {
 			return nil, err
 		}
 		count, _ := queryResult.Single()
 		dbNodesWithTotalCount.Count = count.Values[0].(int64)
 
-		queryResult, err = tx.Run(`
-				MATCH (:Tenant {name:$tenant})<-[:COMPANY_BELONGS_TO_TENANT]-(co:Company) 
-                WHERE toLower(co.name) CONTAINS toLower($companyName)
-				RETURN co ORDER BY co.name SKIP $skip LIMIT $limit`,
-			map[string]interface{}{
-				"tenant":      tenant,
-				"companyName": companyName,
-				"skip":        skip,
-				"limit":       limit,
-			})
+		params := map[string]any{
+			"tenant": tenant,
+			"skip":   skip,
+			"limit":  limit,
+		}
+		utils.MergeMapToMap(filterParams, params)
+
+		queryResult, err = tx.Run(fmt.Sprintf(
+			" MATCH (:Tenant {name:$tenant})<-[:COMPANY_BELONGS_TO_TENANT]-(c:Company) "+
+				" %s "+
+				" RETURN c "+
+				" %s "+
+				" SKIP $skip LIMIT $limit", filterCypherStr, sorting.SortingCypherFragment("c")),
+			params)
 		return queryResult.Collect()
 	})
 	if err != nil {
 		return nil, err
 	}
-
 	for _, v := range dbRecords.([]*neo4j.Record) {
 		dbNodesWithTotalCount.Nodes = append(dbNodesWithTotalCount.Nodes, utils.NodePtr(v.Values[0].(neo4j.Node)))
 	}
-
 	return dbNodesWithTotalCount, nil
 }

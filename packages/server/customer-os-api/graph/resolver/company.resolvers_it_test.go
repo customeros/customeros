@@ -10,7 +10,7 @@ import (
 	"testing"
 )
 
-func TestQueryResolver_CompaniesByNameLike(t *testing.T) {
+func TestQueryResolver_Companies_FilterByNameLike(t *testing.T) {
 	defer tearDownTestCase()(t)
 	neo4jt.CreateTenant(driver, tenantName)
 	neo4jt.CreateCompany(driver, tenantName, "A closed company")
@@ -21,21 +21,20 @@ func TestQueryResolver_CompaniesByNameLike(t *testing.T) {
 
 	require.Equal(t, 5, neo4jt.GetCountOfNodes(driver, "Company"))
 
-	rawResponse, err := c.RawPost(getQuery("get_companies_by_name"),
-		client.Var("companyName", "oPeN"),
+	rawResponse, err := c.RawPost(getQuery("get_companies"),
 		client.Var("page", 1),
 		client.Var("limit", 3),
 	)
 	assertRawResponseSuccess(t, rawResponse, err)
 
 	var companies struct {
-		Companies_ByNameLike model.CompanyPage
+		Companies model.CompanyPage
 	}
 
 	err = decode.Decode(rawResponse.Data.(map[string]any), &companies)
 	require.Nil(t, err)
 	require.NotNil(t, companies)
-	pagedCompanies := companies.Companies_ByNameLike
+	pagedCompanies := companies.Companies
 	require.Equal(t, 2, pagedCompanies.TotalPages)
 	require.Equal(t, int64(4), pagedCompanies.TotalElements)
 	require.Equal(t, "OPENLINE", pagedCompanies.Content[0].Name)
@@ -80,7 +79,7 @@ func TestQueryResolver_Company(t *testing.T) {
 	require.NotNil(t, company.Company.CreatedAt)
 }
 
-func TestQueryResolver_CompaniesByNameLike_WithAddresses(t *testing.T) {
+func TestQueryResolver_Companies_WithAddresses(t *testing.T) {
 	defer tearDownTestCase()(t)
 	neo4jt.CreateTenant(driver, tenantName)
 	company1 := neo4jt.CreateCompany(driver, tenantName, "OPENLINE")
@@ -108,23 +107,22 @@ func TestQueryResolver_CompaniesByNameLike_WithAddresses(t *testing.T) {
 	require.Equal(t, 2, neo4jt.GetCountOfRelationships(driver, "LOCATED_AT"))
 
 	rawResponse, err := c.RawPost(getQuery("get_companies_with_addresses"),
-		client.Var("companyName", "openline"),
 		client.Var("page", 1),
 		client.Var("limit", 3),
 	)
 	assertRawResponseSuccess(t, rawResponse, err)
 
 	var companies struct {
-		Companies_ByNameLike model.CompanyPage
+		Companies model.CompanyPage
 	}
 
 	err = decode.Decode(rawResponse.Data.(map[string]any), &companies)
 	require.Nil(t, err)
 	require.NotNil(t, companies)
-	pagedCompanies := companies.Companies_ByNameLike
+	pagedCompanies := companies.Companies
 	require.Equal(t, int64(1), pagedCompanies.TotalElements)
-	require.Equal(t, 1, len(companies.Companies_ByNameLike.Content[0].Addresses))
-	address := companies.Companies_ByNameLike.Content[0].Addresses[0]
+	require.Equal(t, 1, len(companies.Companies.Content[0].Addresses))
+	address := companies.Companies.Content[0].Addresses[0]
 	require.Equal(t, address1, address.ID)
 	require.Equal(t, addressInput.Source, *address.Source)
 	require.Equal(t, addressInput.Country, *address.Country)

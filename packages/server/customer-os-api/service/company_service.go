@@ -5,8 +5,10 @@ import (
 	"github.com/neo4j/neo4j-go-driver/v4/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils"
+	"reflect"
 )
 
 type CompanyService interface {
@@ -14,7 +16,7 @@ type CompanyService interface {
 
 	GetCompanyForRole(ctx context.Context, roleId string) (*entity.CompanyEntity, error)
 	GetCompanyById(ctx context.Context, companyId string) (*entity.CompanyEntity, error)
-	FindCompaniesByNameLike(ctx context.Context, page, limit int, companyName string) (*utils.Pagination, error)
+	FindAll(ctx context.Context, page, limit int, filter *model.Filter, sortBy []*model.SortBy) (*utils.Pagination, error)
 }
 
 type companyService struct {
@@ -38,13 +40,30 @@ func (s *companyService) Create(ctx context.Context, input *entity.CompanyEntity
 	return s.mapDbNodeToCompanyEntity(*dbNodePtr), nil
 }
 
-func (s *companyService) FindCompaniesByNameLike(ctx context.Context, page, limit int, companyName string) (*utils.Pagination, error) {
+func (s *companyService) FindAll(ctx context.Context, page, limit int, filter *model.Filter, sortBy []*model.SortBy) (*utils.Pagination, error) {
+	session := utils.NewNeo4jReadSession(*s.repositories.Drivers.Neo4jDriver)
+	defer session.Close()
+
 	var paginatedResult = utils.Pagination{
 		Limit: limit,
 		Page:  page,
 	}
+	cypherSort, err := buildSort(sortBy, reflect.TypeOf(entity.ContactGroupEntity{}))
+	if err != nil {
+		return nil, err
+	}
+	cypherFilter, err := buildFilter(filter, reflect.TypeOf(entity.ContactGroupEntity{}))
+	if err != nil {
+		return nil, err
+	}
 
-	dbNodesWithTotalCount, err := s.repositories.CompanyRepository.GetPaginatedCompaniesWithNameLike(common.GetContext(ctx).Tenant, companyName, paginatedResult.GetSkip(), paginatedResult.GetLimit())
+	dbNodesWithTotalCount, err := s.repositories.CompanyRepository.GetPaginatedCompanies(
+		session,
+		common.GetContext(ctx).Tenant,
+		paginatedResult.GetSkip(),
+		paginatedResult.GetLimit(),
+		cypherFilter,
+		cypherSort)
 	if err != nil {
 		return nil, err
 	}
