@@ -29,7 +29,7 @@ func (r *companyResolver) Addresses(ctx context.Context, obj *model.Company) ([]
 func (r *mutationResolver) CompanyCreate(ctx context.Context, input model.CompanyInput) (*model.Company, error) {
 	createdCompanyEntity, err := r.Services.CompanyService.Create(ctx, mapper.MapCompanyInputToEntity(&input))
 	if err != nil {
-		graphql.AddErrorf(ctx, "Failed to create contact type %s", input.Name)
+		graphql.AddErrorf(ctx, "Failed to create company %s", input.Name)
 		return nil, err
 	}
 	return mapper.MapEntityToCompany(createdCompanyEntity), nil
@@ -37,7 +37,14 @@ func (r *mutationResolver) CompanyCreate(ctx context.Context, input model.Compan
 
 // CompanyUpdate is the resolver for the company_Update field.
 func (r *mutationResolver) CompanyUpdate(ctx context.Context, id string, input model.CompanyInput) (*model.Company, error) {
-	panic(fmt.Errorf("not implemented: CompanyUpdate - company_Update"))
+	company := mapper.MapCompanyInputToEntity(&input)
+	company.Id = id
+	updatedCompanyEntity, err := r.Services.CompanyService.Update(ctx, company)
+	if err != nil {
+		graphql.AddErrorf(ctx, "Failed to update company %s", id)
+		return nil, err
+	}
+	return mapper.MapEntityToCompany(updatedCompanyEntity), nil
 }
 
 // CompanyDelete is the resolver for the company_Delete field.

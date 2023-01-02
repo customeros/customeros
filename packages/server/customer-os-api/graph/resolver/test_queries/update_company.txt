@@ -1,0 +1,21 @@
+mutation UpdateCompany($companyId: ID!) {
+  company_Update(
+        id: $companyId
+        input: {
+            name: "updated name"
+            description: "updated description"
+            domain: "updated domain"
+            website: "updated website"
+            industry: "updated industry"
+            isPublic: true
+        }) {
+      id
+      name
+      description
+      domain
+      website
+      industry
+      isPublic
+      createdAt
+    }
+}

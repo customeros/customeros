@@ -160,4 +160,39 @@ func TestMutationResolver_CompanyCreate(t *testing.T) {
 	require.Equal(t, "company industry", *company.Company_Create.Industry)
 	require.Equal(t, true, *company.Company_Create.IsPublic)
 	require.Equal(t, false, *company.Company_Create.Readonly)
+
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Company"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Company_"+tenantName))
+
+	assertNeo4jLabels(t, driver, []string{"Tenant", "Company", "Company_" + tenantName})
+}
+
+func TestMutationResolver_CompanyUpdate(t *testing.T) {
+	defer tearDownTestCase()(t)
+	neo4jt.CreateTenant(driver, tenantName)
+	companyId := neo4jt.CreateCompany(driver, tenantName, "some company")
+
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Company"))
+
+	rawResponse, err := c.RawPost(getQuery("update_company"),
+		client.Var("companyId", companyId))
+	assertRawResponseSuccess(t, rawResponse, err)
+
+	var company struct {
+		Company_Update model.Company
+	}
+	err = decode.Decode(rawResponse.Data.(map[string]any), &company)
+	require.Nil(t, err)
+	require.NotNil(t, company)
+	require.Equal(t, companyId, company.Company_Update.ID)
+	require.NotNil(t, company.Company_Update.CreatedAt)
+	require.Equal(t, "updated name", company.Company_Update.Name)
+	require.Equal(t, "updated description", *company.Company_Update.Description)
+	require.Equal(t, "updated domain", *company.Company_Update.Domain)
+	require.Equal(t, "updated website", *company.Company_Update.Website)
+	require.Equal(t, "updated industry", *company.Company_Update.Industry)
+	require.Equal(t, true, *company.Company_Update.IsPublic)
+
+	// Check still single company node exists after update, no new node created
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Company"))
 }

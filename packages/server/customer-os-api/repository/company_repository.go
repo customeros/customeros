@@ -10,7 +10,8 @@ import (
 )
 
 type CompanyRepository interface {
-	Create(session neo4j.Session, tenant string, company *entity.CompanyEntity) (*dbtype.Node, error)
+	Create(session neo4j.Session, tenant string, company entity.CompanyEntity) (*dbtype.Node, error)
+	Update(session neo4j.Session, tenant string, company entity.CompanyEntity) (*dbtype.Node, error)
 	GetCompanyForRole(session neo4j.Session, tenant, roleId string) (*dbtype.Node, error)
 	GetCompanyById(session neo4j.Session, tenant, companyId string) (*dbtype.Node, error)
 	GetPaginatedCompanies(session neo4j.Session, tenant string, skip, limit int, filter *utils.CypherFilter, sorting *utils.CypherSort) (*utils.DbNodesWithTotalCount, error)
@@ -26,7 +27,7 @@ func NewCompanyRepository(driver *neo4j.Driver) CompanyRepository {
 	}
 }
 
-func (r *companyRepository) Create(session neo4j.Session, tenant string, company *entity.CompanyEntity) (*dbtype.Node, error) {
+func (r *companyRepository) Create(session neo4j.Session, tenant string, company entity.CompanyEntity) (*dbtype.Node, error) {
 	query := "MATCH (t:Tenant {name:$tenant})" +
 		" MERGE (t)<-[:COMPANY_BELONGS_TO_TENANT]-(c:Company {id:randomUUID()})" +
 		" ON CREATE SET c.name=$name, c.description=$description, c.readonly=false," +
@@ -40,6 +41,33 @@ func (r *companyRepository) Create(session neo4j.Session, tenant string, company
 				"name":        company.Name,
 				"description": company.Description,
 				"readonly":    false,
+				"domain":      company.Domain,
+				"website":     company.Website,
+				"industry":    company.Industry,
+				"isPublic":    company.IsPublic,
+			})
+		return utils.ExtractSingleRecordFirstValueAsNode(queryResult, err)
+	}); err != nil {
+		return nil, err
+	} else {
+		return result.(*dbtype.Node), nil
+	}
+}
+
+func (r *companyRepository) Update(session neo4j.Session, tenant string, company entity.CompanyEntity) (*dbtype.Node, error) {
+	query :=
+		" MATCH (t:Tenant {name:$tenant})<-[:COMPANY_BELONGS_TO_TENANT]-(c:Company {id:$companyId})" +
+			" SET c.name=$name, c.description=$description, c.domain=$domain, c.website=$website, " +
+			" c.industry=$industry, c.isPublic=$isPublic " +
+			" RETURN c"
+
+	if result, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
+		queryResult, err := tx.Run(query,
+			map[string]any{
+				"tenant":      tenant,
+				"companyId":   company.Id,
+				"name":        company.Name,
+				"description": company.Description,
 				"domain":      company.Domain,
 				"website":     company.Website,
 				"industry":    company.Industry,

@@ -13,6 +13,7 @@ import (
 
 type CompanyService interface {
 	Create(ctx context.Context, input *entity.CompanyEntity) (*entity.CompanyEntity, error)
+	Update(ctx context.Context, input *entity.CompanyEntity) (*entity.CompanyEntity, error)
 
 	GetCompanyForRole(ctx context.Context, roleId string) (*entity.CompanyEntity, error)
 	GetCompanyById(ctx context.Context, companyId string) (*entity.CompanyEntity, error)
@@ -33,7 +34,18 @@ func (s *companyService) Create(ctx context.Context, input *entity.CompanyEntity
 	session := utils.NewNeo4jWriteSession(*s.repositories.Drivers.Neo4jDriver)
 	defer session.Close()
 
-	dbNodePtr, err := s.repositories.CompanyRepository.Create(session, common.GetContext(ctx).Tenant, input)
+	dbNodePtr, err := s.repositories.CompanyRepository.Create(session, common.GetContext(ctx).Tenant, *input)
+	if err != nil {
+		return nil, err
+	}
+	return s.mapDbNodeToCompanyEntity(*dbNodePtr), nil
+}
+
+func (s *companyService) Update(ctx context.Context, input *entity.CompanyEntity) (*entity.CompanyEntity, error) {
+	session := utils.NewNeo4jWriteSession(*s.repositories.Drivers.Neo4jDriver)
+	defer session.Close()
+
+	dbNodePtr, err := s.repositories.CompanyRepository.Update(session, common.GetContext(ctx).Tenant, *input)
 	if err != nil {
 		return nil, err
 	}
