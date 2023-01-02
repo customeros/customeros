@@ -13,6 +13,7 @@ import (
 type ContactRepository interface {
 	Create(tx neo4j.Transaction, tenant string, newContact entity.ContactEntity) (*dbtype.Node, error)
 	Update(tx neo4j.Transaction, tenant, contactId string, contactDtls *entity.ContactEntity) (*dbtype.Node, error)
+	Delete(session neo4j.Session, tenant, contactId string) error
 	SetOwner(tx neo4j.Transaction, tenant, contactId, userId string) error
 	RemoveOwner(tx neo4j.Transaction, tenant, contactId string) error
 	LinkWithEntityTemplateInTx(tx neo4j.Transaction, tenant, contactId, entityTemplateId string) error
@@ -257,4 +258,24 @@ func (r *contactRepository) GetPaginatedContactsForContactGroup(session neo4j.Se
 		dbNodesWithTotalCount.Nodes = append(dbNodesWithTotalCount.Nodes, utils.NodePtr(v.Values[0].(neo4j.Node)))
 	}
 	return dbNodesWithTotalCount, nil
+}
+
+func (r *contactRepository) Delete(session neo4j.Session, tenant, contactId string) error {
+	_, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
+		_, err := tx.Run(`
+			MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant})
+			OPTIONAL MATCH (c)-[:HAS_PROPERTY]->(f:CustomField)
+			OPTIONAL MATCH (c)-[:CALLED_AT]->(p:PhoneNumber)
+			OPTIONAL MATCH (c)-[:EMAILED_AT]->(e:Email)
+			OPTIONAL MATCH (c)-[:LOCATED_AT]->(a:Address)
+			OPTIONAL MATCH (c)-[:HAS_COMPLEX_PROPERTY]->(fs:FieldSet)
+			OPTIONAL MATCH (c)-[:HAS_ROLE]->(r:Role)
+            DETACH DELETE p, e, f, fs, a, r, c`,
+			map[string]interface{}{
+				"contactId": contactId,
+				"tenant":    tenant,
+			})
+		return nil, err
+	})
+	return err
 }

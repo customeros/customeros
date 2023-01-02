@@ -15,10 +15,26 @@ type CompanyRepository interface {
 	GetCompanyForRole(session neo4j.Session, tenant, roleId string) (*dbtype.Node, error)
 	GetCompanyById(session neo4j.Session, tenant, companyId string) (*dbtype.Node, error)
 	GetPaginatedCompanies(session neo4j.Session, tenant string, skip, limit int, filter *utils.CypherFilter, sorting *utils.CypherSort) (*utils.DbNodesWithTotalCount, error)
+	Delete(session neo4j.Session, tenant, companyId string) error
 }
 
 type companyRepository struct {
 	driver *neo4j.Driver
+}
+
+func (r *companyRepository) Delete(session neo4j.Session, tenant, companyId string) error {
+	_, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
+		_, err := tx.Run(`
+			MATCH (c:Company {id:$companyId})-[:COMPANY_BELONGS_TO_TENANT]->(:Tenant {name:$tenant})
+			OPTIONAL MATCH (c)-[:LOCATED_AT]->(a:Address)
+            DETACH DELETE a, c`,
+			map[string]interface{}{
+				"companyId": companyId,
+				"tenant":    tenant,
+			})
+		return nil, err
+	})
+	return err
 }
 
 func NewCompanyRepository(driver *neo4j.Driver) CompanyRepository {

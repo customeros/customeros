@@ -6,7 +6,6 @@ package resolver
 
 import (
 	"context"
-	"fmt"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 
 	"github.com/99designs/gqlgen/graphql"
@@ -49,7 +48,14 @@ func (r *mutationResolver) CompanyUpdate(ctx context.Context, id string, input m
 
 // CompanyDelete is the resolver for the company_Delete field.
 func (r *mutationResolver) CompanyDelete(ctx context.Context, id string) (*model.Result, error) {
-	panic(fmt.Errorf("not implemented: CompanyDelete - company_Delete"))
+	result, err := r.Services.CompanyService.PermanentDelete(ctx, id)
+	if err != nil {
+		graphql.AddErrorf(ctx, "Failed to delete company %s", id)
+		return nil, err
+	}
+	return &model.Result{
+		Result: result,
+	}, nil
 }
 
 // Companies is the resolver for the companies field.

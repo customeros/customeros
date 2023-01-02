@@ -14,10 +14,10 @@ import (
 type CompanyService interface {
 	Create(ctx context.Context, input *entity.CompanyEntity) (*entity.CompanyEntity, error)
 	Update(ctx context.Context, input *entity.CompanyEntity) (*entity.CompanyEntity, error)
-
 	GetCompanyForRole(ctx context.Context, roleId string) (*entity.CompanyEntity, error)
 	GetCompanyById(ctx context.Context, companyId string) (*entity.CompanyEntity, error)
 	FindAll(ctx context.Context, page, limit int, filter *model.Filter, sortBy []*model.SortBy) (*utils.Pagination, error)
+	PermanentDelete(ctx context.Context, companyId string) (bool, error)
 }
 
 type companyService struct {
@@ -110,6 +110,19 @@ func (s *companyService) GetCompanyById(ctx context.Context, companyId string) (
 		return nil, err
 	}
 	return s.mapDbNodeToCompanyEntity(*dbNode), nil
+}
+
+func (s *companyService) PermanentDelete(ctx context.Context, companyId string) (bool, error) {
+	session := utils.NewNeo4jWriteSession(*s.repositories.Drivers.Neo4jDriver)
+	defer session.Close()
+
+	err := s.repositories.CompanyRepository.Delete(session, common.GetContext(ctx).Tenant, companyId)
+
+	if err != nil {
+		return false, err
+	}
+
+	return true, nil
 }
 
 func (s *companyService) mapDbNodeToCompanyEntity(node dbtype.Node) *entity.CompanyEntity {

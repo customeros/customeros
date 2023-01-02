@@ -196,3 +196,37 @@ func TestMutationResolver_CompanyUpdate(t *testing.T) {
 	// Check still single company node exists after update, no new node created
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Company"))
 }
+
+func TestMutationResolver_CompanyDelete(t *testing.T) {
+	defer tearDownTestCase()(t)
+	neo4jt.CreateTenant(driver, tenantName)
+
+	companyId := neo4jt.CreateCompany(driver, tenantName, "LLC LLC")
+	addressId := neo4jt.CreateAddress(driver, entity.AddressEntity{
+		Source: "manual",
+	})
+	neo4jt.CompanyHasAddress(driver, companyId, addressId)
+
+	require.Equal(t, 1, neo4jt.GetCountOfRelationships(driver, "LOCATED_AT"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Address"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Company"))
+
+	rawResponse, err := c.RawPost(getQuery("delete_company"),
+		client.Var("companyId", companyId))
+	assertRawResponseSuccess(t, rawResponse, err)
+
+	var result struct {
+		Company_Delete model.Result
+	}
+
+	err = decode.Decode(rawResponse.Data.(map[string]any), &result)
+	require.Nil(t, err)
+	require.NotNil(t, result)
+	require.Equal(t, true, result.Company_Delete.Result)
+
+	require.Equal(t, 0, neo4jt.GetCountOfRelationships(driver, "LOCATED_AT"))
+	require.Equal(t, 0, neo4jt.GetCountOfNodes(driver, "Address"))
+	require.Equal(t, 0, neo4jt.GetCountOfNodes(driver, "Company"))
+
+	assertNeo4jLabels(t, driver, []string{"Tenant"})
+}

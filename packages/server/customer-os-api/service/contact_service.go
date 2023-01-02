@@ -20,7 +20,7 @@ type ContactService interface {
 	FindContactByPhoneNumber(ctx context.Context, e164 string) (*entity.ContactEntity, error)
 	FindAll(ctx context.Context, page, limit int, filter *model.Filter, sortBy []*model.SortBy) (*utils.Pagination, error)
 	FindAllForContactGroup(ctx context.Context, page, limit int, filter *model.Filter, sortBy []*model.SortBy, contactGroupId string) (*utils.Pagination, error)
-	HardDelete(ctx context.Context, id string) (bool, error)
+	PermanentDelete(ctx context.Context, id string) (bool, error)
 	SoftDelete(ctx context.Context, id string) (bool, error)
 }
 
@@ -204,30 +204,17 @@ func (s *contactService) Update(ctx context.Context, contactUpdateData *ContactU
 	return s.mapDbNodeToContactEntity(contactDbNode.(*dbtype.Node)), nil
 }
 
-func (s *contactService) HardDelete(ctx context.Context, contactId string) (bool, error) {
+func (s *contactService) PermanentDelete(ctx context.Context, contactId string) (bool, error) {
 	session := utils.NewNeo4jWriteSession(s.getNeo4jDriver())
 	defer session.Close()
 
-	queryResult, err := session.WriteTransaction(func(tx neo4j.Transaction) (interface{}, error) {
-		_, err := tx.Run(`
-			MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant})
-			OPTIONAL MATCH (c)-[:HAS_PROPERTY]->(f:CustomField)
-			OPTIONAL MATCH (c)-[:CALLED_AT]->(p:PhoneNumber)
-			OPTIONAL MATCH (c)-[:EMAILED_AT]->(e:Email)
-            DETACH DELETE p, e, f, c
-			`,
-			map[string]interface{}{
-				"contactId": contactId,
-				"tenant":    common.GetContext(ctx).Tenant,
-			})
+	err := s.repositories.ContactRepository.Delete(session, common.GetContext(ctx).Tenant, contactId)
 
-		return true, err
-	})
 	if err != nil {
 		return false, err
 	}
 
-	return queryResult.(bool), nil
+	return true, nil
 }
 
 func (s *contactService) SoftDelete(ctx context.Context, contactId string) (bool, error) {
