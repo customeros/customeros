@@ -11,10 +11,17 @@ import (
 type OrganizationRepository interface {
 	MergeOrganization(tenant string, syncDate time.Time, organization entity.OrganizationData) (string, error)
 	MergeOrganizationAddress(tenant, organizationId string, organization entity.OrganizationData) error
+	MergeOrganizationType(tenant, organizationId, organizationTypeName string) error
 }
 
 type organizationRepository struct {
 	driver *neo4j.Driver
+}
+
+func NewOrganizationRepository(driver *neo4j.Driver) OrganizationRepository {
+	return &organizationRepository{
+		driver: driver,
+	}
 }
 
 func (r *organizationRepository) MergeOrganizationAddress(tenant, organizationId string, organization entity.OrganizationData) error {
@@ -46,12 +53,6 @@ func (r *organizationRepository) MergeOrganizationAddress(tenant, organizationId
 		return nil, err
 	})
 	return err
-}
-
-func NewOrganizationRepository(driver *neo4j.Driver) OrganizationRepository {
-	return &organizationRepository{
-		driver: driver,
-	}
 }
 
 func (r *organizationRepository) MergeOrganization(tenant string, syncDate time.Time, organization entity.OrganizationData) (string, error) {
@@ -98,4 +99,34 @@ func (r *organizationRepository) MergeOrganization(tenant string, syncDate time.
 		return "", err
 	}
 	return dbRecord.(string), nil
+}
+
+func (r *organizationRepository) MergeOrganizationType(tenant, organizationId, organizationTypeName string) error {
+	session := utils.NewNeo4jWriteSession(*r.driver)
+	defer session.Close()
+
+	query := "MATCH (org:Organization {id:$organizationId})-[:ORGANIZATION_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant}) " +
+		" MERGE (ot:OrganizationType {name:$organizationTypeName})-[:ORGANIZATION_TYPE_BELONGS_TO_TENANT]->(t) " +
+		" ON CREATE SET ot.id=randomUUID() " +
+		" WITH org, ot " +
+		" MERGE (org)-[r:IS_OF_TYPE]->(ot) " +
+		" return r"
+
+	_, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
+		queryResult, err := tx.Run(query,
+			map[string]interface{}{
+				"tenant":               tenant,
+				"organizationId":       organizationId,
+				"organizationTypeName": organizationTypeName,
+			})
+		if err != nil {
+			return nil, err
+		}
+		_, err = queryResult.Single()
+		if err != nil {
+			return nil, err
+		}
+		return nil, nil
+	})
+	return err
 }

@@ -224,7 +224,9 @@ func (r *contactRepository) MergeContactType(tenant, contactId, contactTypeName 
 	defer session.Close()
 
 	query := "MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant}) " +
-		" MATCH (ct:ContactType {name:$contactTypeName})-[:CONTACT_TYPE_BELONGS_TO_TENANT]->(t) " +
+		" MERGE (ct:ContactType {name:$contactTypeName})-[:CONTACT_TYPE_BELONGS_TO_TENANT]->(t) " +
+		" ON CREATE SET ct.id=randomUUID() " +
+		" WITH c, ct " +
 		" MERGE (c)-[r:IS_OF_TYPE]->(ct) " +
 		" return r"
 
