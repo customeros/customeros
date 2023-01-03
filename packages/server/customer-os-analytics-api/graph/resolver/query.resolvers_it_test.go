@@ -2,38 +2,41 @@ package resolver
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"github.com/99designs/gqlgen/client"
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/go-testfixtures/testfixtures/v3"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-analytics-api/common"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-analytics-api/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-analytics-api/dataloader"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-analytics-api/graph/generated"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-analytics-api/graph/model"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-analytics-api/integration_tests"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-analytics-api/repository"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-analytics-api/test"
+	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/require"
 	"github.com/testcontainers/testcontainers-go"
+	"gorm.io/gorm"
 	"log"
 	"os"
 	"testing"
 )
 
 var (
-	dbContainer testcontainers.Container
-	db          *config.StorageDB
-	c           *client.Client
+	postgresContainer testcontainers.Container
+	postgresGormDB    *gorm.DB
+	postgresSqlDB     *sql.DB
+	c                 *client.Client
 )
 
 func TestMain(m *testing.M) {
-	dbContainer, db = integration_tests.InitTestDB()
-	defer func(dbContainer testcontainers.Container, ctx context.Context) {
-		err := dbContainer.Terminate(ctx)
+	postgresContainer, postgresGormDB, postgresSqlDB = test.InitTestDB()
+	defer func(postgresContainer testcontainers.Container, ctx context.Context) {
+		err := postgresContainer.Terminate(ctx)
 		if err != nil {
-			log.Fatal("Error during container termination")
+			logrus.Fatal("Error during container termination")
 		}
-	}(dbContainer, context.Background())
+	}(postgresContainer, context.Background())
 
 	prepareClient()
 
@@ -41,7 +44,7 @@ func TestMain(m *testing.M) {
 }
 
 func prepareClient() {
-	repositoryContainer := repository.InitRepositories(db.GormDB)
+	repositoryContainer := repository.InitRepositories(postgresGormDB)
 	graphResolver := NewResolver(repositoryContainer)
 	loader := dataloader.NewDataLoader(repositoryContainer)
 	customCtx := &common.CustomContext{
@@ -55,7 +58,7 @@ func prepareClient() {
 
 func prepareTestDatabase(resourceFolder string) {
 	fixtures, err := testfixtures.New(
-		testfixtures.Database(db.SqlDB),
+		testfixtures.Database(postgresSqlDB),
 		testfixtures.Dialect("postgres"),
 		testfixtures.Directory(fmt.Sprintf("testdata/%s", resourceFolder)),
 	)
