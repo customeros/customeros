@@ -10,7 +10,7 @@ require (
 	github.com/neo4j/neo4j-go-driver/v4 v4.4.4
 	github.com/sirupsen/logrus v1.9.0
 	gorm.io/driver/postgres v1.4.5
-	gorm.io/gorm v1.24.2
+	gorm.io/gorm v1.24.3
 	zgo.at/zcache v1.2.0
 )
 
