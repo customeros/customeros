@@ -1,6 +1,0 @@
-mutation DeleteCompany($companyId: ID!) {
-  company_Delete(id: $companyId)
-    {
-      result
-    }
-}

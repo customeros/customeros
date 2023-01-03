@@ -50,51 +50,6 @@ type Address struct {
 	Fax      *string `json:"fax"`
 }
 
-type Company struct {
-	ID          string    `json:"id"`
-	Name        string    `json:"name"`
-	Description *string   `json:"description"`
-	Domain      *string   `json:"domain"`
-	Website     *string   `json:"website"`
-	Industry    *string   `json:"industry"`
-	IsPublic    *bool     `json:"isPublic"`
-	CreatedAt   time.Time `json:"createdAt"`
-	Readonly    *bool     `json:"readonly"`
-	// All addresses associated with a company in customerOS.
-	// **Required.  If no values it returns an empty array.**
-	Addresses []*Address `json:"addresses"`
-}
-
-func (Company) IsNode()            {}
-func (this Company) GetID() string { return this.ID }
-
-type CompanyInput struct {
-	// The name of the company associated with a Contact.
-	// **Required.**
-	Name        string  `json:"name"`
-	Description *string `json:"description"`
-	Domain      *string `json:"domain"`
-	Website     *string `json:"website"`
-	Industry    *string `json:"industry"`
-	IsPublic    *bool   `json:"isPublic"`
-}
-
-type CompanyPage struct {
-	Content       []*Company `json:"content"`
-	TotalPages    int        `json:"totalPages"`
-	TotalElements int64      `json:"totalElements"`
-}
-
-func (CompanyPage) IsPages() {}
-
-// The total number of pages included in the query response.
-// **Required.**
-func (this CompanyPage) GetTotalPages() int { return this.TotalPages }
-
-// The total number of elements included in the query response.
-// **Required.**
-func (this CompanyPage) GetTotalElements() int64 { return this.TotalElements }
-
 // A contact represents an individual in customerOS.
 // **A `response` object.**
 type Contact struct {
@@ -116,7 +71,7 @@ type Contact struct {
 	Readonly bool `json:"readonly"`
 	// User-defined field that defines the relationship type the contact has with your business.  `Customer`, `Partner`, `Lead` are examples.
 	ContactType *ContactType `json:"contactType"`
-	// `companyName` and `jobTitle` of the contact if it has been associated with a company.
+	// `organizationName` and `jobTitle` of the contact if it has been associated with an organization.
 	// **Required.  If no values it returns an empty array.**
 	Roles []*ContactRole `json:"roles"`
 	// Identifies any contact groups the contact is associated with.
@@ -238,22 +193,22 @@ type ContactInput struct {
 	ExternalReference *ExternalSystemReferenceInput `json:"externalReference"`
 }
 
-// Describes the relationship a Contact has with a Company.
+// Describes the relationship a Contact has with a Organization.
 // **A `return` object**
 type ContactRole struct {
 	ID string `json:"id"`
-	// Company associated with a Contact.
+	// Organization associated with a Contact.
 	// **Required.**
-	Company *Company `json:"company"`
+	Organization *Organization `json:"organization"`
 	// The Contact's job title.
 	JobTitle *string `json:"jobTitle"`
 	Primary  bool    `json:"primary"`
 }
 
-// Describes the relationship a Contact has with a Company.
+// Describes the relationship a Contact has with an Organization.
 // **A `create` object**
 type ContactRoleInput struct {
-	CompanyID *string `json:"companyId"`
+	OrganizationID *string `json:"organizationId"`
 	// The Contact's job title.
 	JobTitle *string `json:"jobTitle"`
 	Primary  *bool   `json:"primary"`
@@ -619,6 +574,51 @@ type NoteUpdateInput struct {
 	ID   string `json:"id"`
 	HTML string `json:"html"`
 }
+
+type Organization struct {
+	ID          string    `json:"id"`
+	Name        string    `json:"name"`
+	Description *string   `json:"description"`
+	Domain      *string   `json:"domain"`
+	Website     *string   `json:"website"`
+	Industry    *string   `json:"industry"`
+	IsPublic    *bool     `json:"isPublic"`
+	CreatedAt   time.Time `json:"createdAt"`
+	Readonly    *bool     `json:"readonly"`
+	// All addresses associated with an organization in customerOS.
+	// **Required.  If no values it returns an empty array.**
+	Addresses []*Address `json:"addresses"`
+}
+
+func (Organization) IsNode()            {}
+func (this Organization) GetID() string { return this.ID }
+
+type OrganizationInput struct {
+	// The name of the organization associated with a Contact.
+	// **Required.**
+	Name        string  `json:"name"`
+	Description *string `json:"description"`
+	Domain      *string `json:"domain"`
+	Website     *string `json:"website"`
+	Industry    *string `json:"industry"`
+	IsPublic    *bool   `json:"isPublic"`
+}
+
+type OrganizationPage struct {
+	Content       []*Organization `json:"content"`
+	TotalPages    int             `json:"totalPages"`
+	TotalElements int64           `json:"totalElements"`
+}
+
+func (OrganizationPage) IsPages() {}
+
+// The total number of pages included in the query response.
+// **Required.**
+func (this OrganizationPage) GetTotalPages() int { return this.TotalPages }
+
+// The total number of elements included in the query response.
+// **Required.**
+func (this OrganizationPage) GetTotalElements() int64 { return this.TotalElements }
 
 type PageViewAction struct {
 	ID             string    `json:"id"`

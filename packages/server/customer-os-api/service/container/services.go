@@ -8,7 +8,7 @@ import (
 
 type Services struct {
 	ContactService             service.ContactService
-	CompanyService             service.CompanyService
+	OrganizationService        service.OrganizationService
 	ContactGroupService        service.ContactGroupService
 	CustomFieldService         service.CustomFieldService
 	PhoneNumberService         service.PhoneNumberService
@@ -31,7 +31,7 @@ func InitServices(driver *neo4j.Driver) *Services {
 
 	return &Services{
 		ContactService:             service.NewContactService(repositories),
-		CompanyService:             service.NewCompanyService(repositories),
+		OrganizationService:        service.NewOrganizationService(repositories),
 		ContactGroupService:        service.NewContactGroupService(repositories),
 		CustomFieldService:         service.NewCustomFieldService(repositories),
 		PhoneNumberService:         service.NewPhoneNumberService(repositories),

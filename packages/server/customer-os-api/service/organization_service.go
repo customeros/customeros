@@ -11,26 +11,26 @@ import (
 	"reflect"
 )
 
-type CompanyService interface {
+type OrganizationService interface {
 	Create(ctx context.Context, input *entity.OrganizationEntity) (*entity.OrganizationEntity, error)
 	Update(ctx context.Context, input *entity.OrganizationEntity) (*entity.OrganizationEntity, error)
-	GetCompanyForRole(ctx context.Context, roleId string) (*entity.OrganizationEntity, error)
-	GetCompanyById(ctx context.Context, companyId string) (*entity.OrganizationEntity, error)
+	GetOrganizationForRole(ctx context.Context, roleId string) (*entity.OrganizationEntity, error)
+	GetOrganizationById(ctx context.Context, organizationId string) (*entity.OrganizationEntity, error)
 	FindAll(ctx context.Context, page, limit int, filter *model.Filter, sortBy []*model.SortBy) (*utils.Pagination, error)
-	PermanentDelete(ctx context.Context, companyId string) (bool, error)
+	PermanentDelete(ctx context.Context, organizationId string) (bool, error)
 }
 
-type companyService struct {
+type organizationService struct {
 	repositories *repository.Repositories
 }
 
-func NewCompanyService(repositories *repository.Repositories) CompanyService {
-	return &companyService{
+func NewOrganizationService(repositories *repository.Repositories) OrganizationService {
+	return &organizationService{
 		repositories: repositories,
 	}
 }
 
-func (s *companyService) Create(ctx context.Context, input *entity.OrganizationEntity) (*entity.OrganizationEntity, error) {
+func (s *organizationService) Create(ctx context.Context, input *entity.OrganizationEntity) (*entity.OrganizationEntity, error) {
 	session := utils.NewNeo4jWriteSession(*s.repositories.Drivers.Neo4jDriver)
 	defer session.Close()
 
@@ -38,10 +38,10 @@ func (s *companyService) Create(ctx context.Context, input *entity.OrganizationE
 	if err != nil {
 		return nil, err
 	}
-	return s.mapDbNodeToCompanyEntity(*dbNodePtr), nil
+	return s.mapDbNodeToOrganizationEntity(*dbNodePtr), nil
 }
 
-func (s *companyService) Update(ctx context.Context, input *entity.OrganizationEntity) (*entity.OrganizationEntity, error) {
+func (s *organizationService) Update(ctx context.Context, input *entity.OrganizationEntity) (*entity.OrganizationEntity, error) {
 	session := utils.NewNeo4jWriteSession(*s.repositories.Drivers.Neo4jDriver)
 	defer session.Close()
 
@@ -49,10 +49,10 @@ func (s *companyService) Update(ctx context.Context, input *entity.OrganizationE
 	if err != nil {
 		return nil, err
 	}
-	return s.mapDbNodeToCompanyEntity(*dbNodePtr), nil
+	return s.mapDbNodeToOrganizationEntity(*dbNodePtr), nil
 }
 
-func (s *companyService) FindAll(ctx context.Context, page, limit int, filter *model.Filter, sortBy []*model.SortBy) (*utils.Pagination, error) {
+func (s *organizationService) FindAll(ctx context.Context, page, limit int, filter *model.Filter, sortBy []*model.SortBy) (*utils.Pagination, error) {
 	session := utils.NewNeo4jReadSession(*s.repositories.Drivers.Neo4jDriver)
 	defer session.Close()
 
@@ -81,16 +81,16 @@ func (s *companyService) FindAll(ctx context.Context, page, limit int, filter *m
 	}
 	paginatedResult.SetTotalRows(dbNodesWithTotalCount.Count)
 
-	companyEntities := entity.OrganizationEntities{}
+	organizationEntities := entity.OrganizationEntities{}
 
 	for _, v := range dbNodesWithTotalCount.Nodes {
-		companyEntities = append(companyEntities, *s.mapDbNodeToCompanyEntity(*v))
+		organizationEntities = append(organizationEntities, *s.mapDbNodeToOrganizationEntity(*v))
 	}
-	paginatedResult.SetRows(&companyEntities)
+	paginatedResult.SetRows(&organizationEntities)
 	return &paginatedResult, nil
 }
 
-func (s *companyService) GetCompanyForRole(ctx context.Context, roleId string) (*entity.OrganizationEntity, error) {
+func (s *organizationService) GetOrganizationForRole(ctx context.Context, roleId string) (*entity.OrganizationEntity, error) {
 	session := utils.NewNeo4jReadSession(*s.repositories.Drivers.Neo4jDriver)
 	defer session.Close()
 
@@ -98,25 +98,25 @@ func (s *companyService) GetCompanyForRole(ctx context.Context, roleId string) (
 	if dbNode == nil || err != nil {
 		return nil, err
 	}
-	return s.mapDbNodeToCompanyEntity(*dbNode), nil
+	return s.mapDbNodeToOrganizationEntity(*dbNode), nil
 }
 
-func (s *companyService) GetCompanyById(ctx context.Context, companyId string) (*entity.OrganizationEntity, error) {
+func (s *organizationService) GetOrganizationById(ctx context.Context, organizationId string) (*entity.OrganizationEntity, error) {
 	session := utils.NewNeo4jReadSession(*s.repositories.Drivers.Neo4jDriver)
 	defer session.Close()
 
-	dbNode, err := s.repositories.OrganizationRepository.GetOrganizationById(session, common.GetContext(ctx).Tenant, companyId)
+	dbNode, err := s.repositories.OrganizationRepository.GetOrganizationById(session, common.GetContext(ctx).Tenant, organizationId)
 	if err != nil {
 		return nil, err
 	}
-	return s.mapDbNodeToCompanyEntity(*dbNode), nil
+	return s.mapDbNodeToOrganizationEntity(*dbNode), nil
 }
 
-func (s *companyService) PermanentDelete(ctx context.Context, companyId string) (bool, error) {
+func (s *organizationService) PermanentDelete(ctx context.Context, organizationId string) (bool, error) {
 	session := utils.NewNeo4jWriteSession(*s.repositories.Drivers.Neo4jDriver)
 	defer session.Close()
 
-	err := s.repositories.OrganizationRepository.Delete(session, common.GetContext(ctx).Tenant, companyId)
+	err := s.repositories.OrganizationRepository.Delete(session, common.GetContext(ctx).Tenant, organizationId)
 
 	if err != nil {
 		return false, err
@@ -125,17 +125,17 @@ func (s *companyService) PermanentDelete(ctx context.Context, companyId string) 
 	return true, nil
 }
 
-func (s *companyService) mapDbNodeToCompanyEntity(node dbtype.Node) *entity.OrganizationEntity {
+func (s *organizationService) mapDbNodeToOrganizationEntity(node dbtype.Node) *entity.OrganizationEntity {
 	props := utils.GetPropsFromNode(node)
-	companyEntity := new(entity.OrganizationEntity)
-	companyEntity.Id = utils.GetStringPropOrEmpty(props, "id")
-	companyEntity.Name = utils.GetStringPropOrEmpty(props, "name")
-	companyEntity.Description = utils.GetStringPropOrEmpty(props, "description")
-	companyEntity.Domain = utils.GetStringPropOrEmpty(props, "domain")
-	companyEntity.Website = utils.GetStringPropOrEmpty(props, "website")
-	companyEntity.Industry = utils.GetStringPropOrEmpty(props, "industry")
-	companyEntity.IsPublic = utils.GetBoolPropOrFalse(props, "isPublic")
-	companyEntity.CreatedAt = utils.GetTimePropOrNow(props, "createdAt")
-	companyEntity.Readonly = utils.GetBoolPropOrFalse(props, "readonly")
-	return companyEntity
+	organizationEntityPtr := new(entity.OrganizationEntity)
+	organizationEntityPtr.Id = utils.GetStringPropOrEmpty(props, "id")
+	organizationEntityPtr.Name = utils.GetStringPropOrEmpty(props, "name")
+	organizationEntityPtr.Description = utils.GetStringPropOrEmpty(props, "description")
+	organizationEntityPtr.Domain = utils.GetStringPropOrEmpty(props, "domain")
+	organizationEntityPtr.Website = utils.GetStringPropOrEmpty(props, "website")
+	organizationEntityPtr.Industry = utils.GetStringPropOrEmpty(props, "industry")
+	organizationEntityPtr.IsPublic = utils.GetBoolPropOrFalse(props, "isPublic")
+	organizationEntityPtr.CreatedAt = utils.GetTimePropOrNow(props, "createdAt")
+	organizationEntityPtr.Readonly = utils.GetBoolPropOrFalse(props, "readonly")
+	return organizationEntityPtr
 }

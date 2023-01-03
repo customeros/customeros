@@ -199,7 +199,7 @@ func TestMutationResolver_ContactCreate_WithCustomFields(t *testing.T) {
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Contact"))
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Contact_"+tenantName))
 	require.Equal(t, 0, neo4jt.GetCountOfNodes(driver, "ContactGroup"))
-	require.Equal(t, 0, neo4jt.GetCountOfNodes(driver, "Company"))
+	require.Equal(t, 0, neo4jt.GetCountOfNodes(driver, "Organization"))
 	require.Equal(t, 4, neo4jt.GetCountOfNodes(driver, "CustomField"))
 	require.Equal(t, 4, neo4jt.GetCountOfNodes(driver, "CustomField_"+tenantName))
 	require.Equal(t, 4, neo4jt.GetCountOfNodes(driver, "TextField"))
@@ -380,7 +380,7 @@ func TestQueryResolver_Contact_WithRoles_ById(t *testing.T) {
 	defer tearDownTestCase()(t)
 	neo4jt.CreateTenant(driver, tenantName)
 	contactId := neo4jt.CreateDefaultContact(driver, tenantName)
-	companyId1 := neo4jt.CreateFullOrganization(driver, tenantName, entity.OrganizationEntity{
+	organizationId1 := neo4jt.CreateFullOrganization(driver, tenantName, entity.OrganizationEntity{
 		Name:        "name1",
 		Description: "description1",
 		Domain:      "domain1",
@@ -388,7 +388,7 @@ func TestQueryResolver_Contact_WithRoles_ById(t *testing.T) {
 		Industry:    "industry1",
 		IsPublic:    true,
 	})
-	companyId2 := neo4jt.CreateFullOrganization(driver, tenantName, entity.OrganizationEntity{
+	organizationId2 := neo4jt.CreateFullOrganization(driver, tenantName, entity.OrganizationEntity{
 		Name:        "name2",
 		Description: "description2",
 		Domain:      "domain2",
@@ -396,11 +396,11 @@ func TestQueryResolver_Contact_WithRoles_ById(t *testing.T) {
 		Industry:    "industry2",
 		IsPublic:    false,
 	})
-	role1 := neo4jt.ContactWorksForOrganization(driver, contactId, companyId1, "CTO", false)
-	role2 := neo4jt.ContactWorksForOrganization(driver, contactId, companyId2, "CEO", true)
+	role1 := neo4jt.ContactWorksForOrganization(driver, contactId, organizationId1, "CTO", false)
+	role2 := neo4jt.ContactWorksForOrganization(driver, contactId, organizationId2, "CEO", true)
 
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Contact"))
-	require.Equal(t, 2, neo4jt.GetCountOfNodes(driver, "Company"))
+	require.Equal(t, 2, neo4jt.GetCountOfNodes(driver, "Organization"))
 	require.Equal(t, 2, neo4jt.GetCountOfNodes(driver, "Role"))
 	require.Equal(t, 2, neo4jt.GetCountOfRelationships(driver, "WORKS"))
 	require.Equal(t, 2, neo4jt.GetCountOfRelationships(driver, "HAS_ROLE"))
@@ -430,26 +430,26 @@ func TestQueryResolver_Contact_WithRoles_ById(t *testing.T) {
 	require.Equal(t, role1, cto.ID)
 	require.Equal(t, "CTO", *cto.JobTitle)
 	require.Equal(t, false, cto.Primary)
-	require.Equal(t, companyId1, cto.Company.ID)
-	require.Equal(t, "name1", cto.Company.Name)
-	require.Equal(t, "description1", *cto.Company.Description)
-	require.Equal(t, "domain1", *cto.Company.Domain)
-	require.Equal(t, "website1", *cto.Company.Website)
-	require.Equal(t, "industry1", *cto.Company.Industry)
-	require.Equal(t, true, *cto.Company.IsPublic)
-	require.NotNil(t, cto.Company.CreatedAt)
+	require.Equal(t, organizationId1, cto.Organization.ID)
+	require.Equal(t, "name1", cto.Organization.Name)
+	require.Equal(t, "description1", *cto.Organization.Description)
+	require.Equal(t, "domain1", *cto.Organization.Domain)
+	require.Equal(t, "website1", *cto.Organization.Website)
+	require.Equal(t, "industry1", *cto.Organization.Industry)
+	require.Equal(t, true, *cto.Organization.IsPublic)
+	require.NotNil(t, cto.Organization.CreatedAt)
 
 	require.Equal(t, role2, ceo.ID)
 	require.Equal(t, "CEO", *ceo.JobTitle)
 	require.Equal(t, true, ceo.Primary)
-	require.Equal(t, companyId2, ceo.Company.ID)
-	require.Equal(t, "name2", ceo.Company.Name)
-	require.Equal(t, "description2", *ceo.Company.Description)
-	require.Equal(t, "domain2", *ceo.Company.Domain)
-	require.Equal(t, "website2", *ceo.Company.Website)
-	require.Equal(t, "industry2", *ceo.Company.Industry)
-	require.Equal(t, false, *ceo.Company.IsPublic)
-	require.NotNil(t, ceo.Company.CreatedAt)
+	require.Equal(t, organizationId2, ceo.Organization.ID)
+	require.Equal(t, "name2", ceo.Organization.Name)
+	require.Equal(t, "description2", *ceo.Organization.Description)
+	require.Equal(t, "domain2", *ceo.Organization.Domain)
+	require.Equal(t, "website2", *ceo.Organization.Website)
+	require.Equal(t, "industry2", *ceo.Organization.Industry)
+	require.Equal(t, false, *ceo.Organization.IsPublic)
+	require.NotNil(t, ceo.Organization.CreatedAt)
 }
 
 func TestQueryResolver_Contact_WithNotes_ById(t *testing.T) {

@@ -1,15 +1,15 @@
 extend type Query {
-    companies(pagination: Pagination, where: Filter, sort: [SortBy!]): CompanyPage!
-    company(id: ID!): Company
+    organizations(pagination: Pagination, where: Filter, sort: [SortBy!]): OrganizationPage!
+    organization(id: ID!): Organization
 }
 
 extend type Mutation {
-    company_Create(input: CompanyInput!): Company!
-    company_Update(id: ID!, input: CompanyInput!): Company!
-    company_Delete(id: ID!): Result
+    organization_Create(input: OrganizationInput!): Organization!
+    organization_Update(id: ID!, input: OrganizationInput!): Organization!
+    organization_Delete(id: ID!): Result
 }
 
-type Company implements Node {
+type Organization implements Node {
     id: ID!
     name: String!
     description: String
@@ -21,21 +21,21 @@ type Company implements Node {
     readonly:    Boolean
 
     """
-    All addresses associated with a company in customerOS.
+    All addresses associated with an organization in customerOS.
     **Required.  If no values it returns an empty array.**
     """
     addresses: [Address!]! @goField(forceResolver: true)
 }
 
-type CompanyPage implements Pages {
-    content: [Company!]!
+type OrganizationPage implements Pages {
+    content: [Organization!]!
     totalPages: Int!
     totalElements: Int64!
 }
 
-input CompanyInput {
+input OrganizationInput {
     """
-    The name of the company associated with a Contact.
+    The name of the organization associated with a Contact.
     **Required.**
     """
     name: String!

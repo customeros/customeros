@@ -5,7 +5,7 @@ query GetContactById($contactId: ID!){
         id
         jobTitle
         primary
-        company {
+        organization {
             id
             name
             description

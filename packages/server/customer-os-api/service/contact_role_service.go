@@ -13,8 +13,8 @@ import (
 type ContactRoleService interface {
 	FindAllForContact(ctx context.Context, contactId string) (*entity.ContactRoleEntities, error)
 	DeleteContactRole(ctx context.Context, contactId, roleId string) (bool, error)
-	CreateContactRole(ctx context.Context, contactId string, companyId *string, entity *entity.ContactRoleEntity) (*entity.ContactRoleEntity, error)
-	UpdateContactRole(ctx context.Context, contactId, roleId string, companyId *string, entity *entity.ContactRoleEntity) (*entity.ContactRoleEntity, error)
+	CreateContactRole(ctx context.Context, contactId string, organizationId *string, entity *entity.ContactRoleEntity) (*entity.ContactRoleEntity, error)
+	UpdateContactRole(ctx context.Context, contactId, roleId string, organizationId *string, entity *entity.ContactRoleEntity) (*entity.ContactRoleEntity, error)
 }
 
 type contactRoleService struct {
@@ -47,7 +47,7 @@ func (s *contactRoleService) FindAllForContact(ctx context.Context, contactId st
 	return &contactRoleEntities, nil
 }
 
-func (s *contactRoleService) CreateContactRole(ctx context.Context, contactId string, companyId *string, entity *entity.ContactRoleEntity) (*entity.ContactRoleEntity, error) {
+func (s *contactRoleService) CreateContactRole(ctx context.Context, contactId string, organizationId *string, entity *entity.ContactRoleEntity) (*entity.ContactRoleEntity, error) {
 	session := utils.NewNeo4jWriteSession(*s.repositories.Drivers.Neo4jDriver)
 	defer session.Close()
 
@@ -62,8 +62,8 @@ func (s *contactRoleService) CreateContactRole(ctx context.Context, contactId st
 		}
 		var roleId = utils.GetPropsFromNode(*roleDbNode)["id"].(string)
 
-		if companyId != nil {
-			if err = s.repositories.ContactRoleRepository.LinkWithOrganization(tx, common.GetContext(ctx).Tenant, roleId, *companyId); err != nil {
+		if organizationId != nil {
+			if err = s.repositories.ContactRoleRepository.LinkWithOrganization(tx, common.GetContext(ctx).Tenant, roleId, *organizationId); err != nil {
 				return nil, err
 			}
 		}
@@ -76,7 +76,7 @@ func (s *contactRoleService) CreateContactRole(ctx context.Context, contactId st
 	return s.mapDbNodeToContactRoleEntity(*dbNode.(*dbtype.Node)), nil
 }
 
-func (s *contactRoleService) UpdateContactRole(ctx context.Context, contactId, roleId string, companyId *string, entity *entity.ContactRoleEntity) (*entity.ContactRoleEntity, error) {
+func (s *contactRoleService) UpdateContactRole(ctx context.Context, contactId, roleId string, organizationId *string, entity *entity.ContactRoleEntity) (*entity.ContactRoleEntity, error) {
 	session := utils.NewNeo4jWriteSession(*s.repositories.Drivers.Neo4jDriver)
 	defer session.Close()
 
@@ -90,8 +90,8 @@ func (s *contactRoleService) UpdateContactRole(ctx context.Context, contactId, r
 			return nil, err
 		}
 
-		if companyId != nil {
-			if err = s.repositories.ContactRoleRepository.LinkWithOrganization(tx, common.GetContext(ctx).Tenant, roleId, *companyId); err != nil {
+		if organizationId != nil {
+			if err = s.repositories.ContactRoleRepository.LinkWithOrganization(tx, common.GetContext(ctx).Tenant, roleId, *organizationId); err != nil {
 				return nil, err
 			}
 		}
