@@ -1,4 +1,4 @@
-mutation CreateOrganization() {
+mutation CreateOrganization($organizationTypeId: ID) {
   organization_Create(input: {
             name: "organization name"
             description: "organization description"
@@ -6,6 +6,7 @@ mutation CreateOrganization() {
             website: "organization website"
             industry: "organization industry"
             isPublic: true
+            organizationTypeId: $organizationTypeId,
         }) {
       id
       name
@@ -16,5 +17,9 @@ mutation CreateOrganization() {
       isPublic
       readonly
       createdAt
+      organizationType {
+        id
+        name
+      }
     }
 }

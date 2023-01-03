@@ -10,16 +10,66 @@ import (
 )
 
 type OrganizationRepository interface {
-	Create(session neo4j.Session, tenant string, organization entity.OrganizationEntity) (*dbtype.Node, error)
-	Update(session neo4j.Session, tenant string, organization entity.OrganizationEntity) (*dbtype.Node, error)
+	Create(tx neo4j.Transaction, tenant string, organization entity.OrganizationEntity) (*dbtype.Node, error)
+	Update(tx neo4j.Transaction, tenant string, organization entity.OrganizationEntity) (*dbtype.Node, error)
 	GetOrganizationForRole(session neo4j.Session, tenant, roleId string) (*dbtype.Node, error)
 	GetOrganizationById(session neo4j.Session, tenant, organizationId string) (*dbtype.Node, error)
 	GetPaginatedOrganizations(session neo4j.Session, tenant string, skip, limit int, filter *utils.CypherFilter, sorting *utils.CypherSort) (*utils.DbNodesWithTotalCount, error)
 	Delete(session neo4j.Session, tenant, organizationId string) error
+	LinkWithOrganizationTypeInTx(tx neo4j.Transaction, tenant, organizationId, organizationTypeId string) error
+	UnlinkFromOrganizationTypesInTx(tx neo4j.Transaction, tenant, organizationId string) error
 }
 
 type organizationRepository struct {
 	driver *neo4j.Driver
+}
+
+func NewOrganizationRepository(driver *neo4j.Driver) OrganizationRepository {
+	return &organizationRepository{
+		driver: driver,
+	}
+}
+
+func (r *organizationRepository) Create(tx neo4j.Transaction, tenant string, organization entity.OrganizationEntity) (*dbtype.Node, error) {
+	query := "MATCH (t:Tenant {name:$tenant})" +
+		" MERGE (t)<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {id:randomUUID()})" +
+		" ON CREATE SET org.name=$name, org.description=$description, org.readonly=false," +
+		" org.domain=$domain, org.website=$website, org.industry=$industry, org.isPublic=$isPublic, org:%s" +
+		" RETURN org"
+
+	queryResult, err := tx.Run(fmt.Sprintf(query, "Organization_"+tenant),
+		map[string]any{
+			"tenant":      tenant,
+			"name":        organization.Name,
+			"description": organization.Description,
+			"readonly":    false,
+			"domain":      organization.Domain,
+			"website":     organization.Website,
+			"industry":    organization.Industry,
+			"isPublic":    organization.IsPublic,
+		})
+	return utils.ExtractSingleRecordFirstValueAsNode(queryResult, err)
+}
+
+func (r *organizationRepository) Update(tx neo4j.Transaction, tenant string, organization entity.OrganizationEntity) (*dbtype.Node, error) {
+	query :=
+		" MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {id:$organizationId})" +
+			" SET org.name=$name, org.description=$description, org.domain=$domain, org.website=$website, " +
+			" org.industry=$industry, org.isPublic=$isPublic " +
+			" RETURN org"
+
+	queryResult, err := tx.Run(query,
+		map[string]any{
+			"tenant":         tenant,
+			"organizationId": organization.Id,
+			"name":           organization.Name,
+			"description":    organization.Description,
+			"domain":         organization.Domain,
+			"website":        organization.Website,
+			"industry":       organization.Industry,
+			"isPublic":       organization.IsPublic,
+		})
+	return utils.ExtractSingleRecordFirstValueAsNode(queryResult, err)
 }
 
 func (r *organizationRepository) Delete(session neo4j.Session, tenant, organizationId string) error {
@@ -35,66 +85,6 @@ func (r *organizationRepository) Delete(session neo4j.Session, tenant, organizat
 		return nil, err
 	})
 	return err
-}
-
-func NewOrganizationRepository(driver *neo4j.Driver) OrganizationRepository {
-	return &organizationRepository{
-		driver: driver,
-	}
-}
-
-func (r *organizationRepository) Create(session neo4j.Session, tenant string, organization entity.OrganizationEntity) (*dbtype.Node, error) {
-	query := "MATCH (t:Tenant {name:$tenant})" +
-		" MERGE (t)<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {id:randomUUID()})" +
-		" ON CREATE SET org.name=$name, org.description=$description, org.readonly=false," +
-		" org.domain=$domain, org.website=$website, org.industry=$industry, org.isPublic=$isPublic, org:%s" +
-		" RETURN org"
-
-	if result, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
-		queryResult, err := tx.Run(fmt.Sprintf(query, "Organization_"+tenant),
-			map[string]any{
-				"tenant":      tenant,
-				"name":        organization.Name,
-				"description": organization.Description,
-				"readonly":    false,
-				"domain":      organization.Domain,
-				"website":     organization.Website,
-				"industry":    organization.Industry,
-				"isPublic":    organization.IsPublic,
-			})
-		return utils.ExtractSingleRecordFirstValueAsNode(queryResult, err)
-	}); err != nil {
-		return nil, err
-	} else {
-		return result.(*dbtype.Node), nil
-	}
-}
-
-func (r *organizationRepository) Update(session neo4j.Session, tenant string, organization entity.OrganizationEntity) (*dbtype.Node, error) {
-	query :=
-		" MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {id:$organizationId})" +
-			" SET org.name=$name, org.description=$description, org.domain=$domain, org.website=$website, " +
-			" org.industry=$industry, org.isPublic=$isPublic " +
-			" RETURN org"
-
-	if result, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
-		queryResult, err := tx.Run(query,
-			map[string]any{
-				"tenant":         tenant,
-				"organizationId": organization.Id,
-				"name":           organization.Name,
-				"description":    organization.Description,
-				"domain":         organization.Domain,
-				"website":        organization.Website,
-				"industry":       organization.Industry,
-				"isPublic":       organization.IsPublic,
-			})
-		return utils.ExtractSingleRecordFirstValueAsNode(queryResult, err)
-	}); err != nil {
-		return nil, err
-	} else {
-		return result.(*dbtype.Node), nil
-	}
 }
 
 func (r *organizationRepository) GetOrganizationForRole(session neo4j.Session, tenant, roleId string) (*dbtype.Node, error) {
@@ -185,4 +175,35 @@ func (r *organizationRepository) GetPaginatedOrganizations(session neo4j.Session
 		dbNodesWithTotalCount.Nodes = append(dbNodesWithTotalCount.Nodes, utils.NodePtr(v.Values[0].(neo4j.Node)))
 	}
 	return dbNodesWithTotalCount, nil
+}
+
+func (r *organizationRepository) LinkWithOrganizationTypeInTx(tx neo4j.Transaction, tenant, organizationId, organizationTypeId string) error {
+	queryResult, err := tx.Run(`
+			MATCH (org:Organization {id:$organizationId})-[:ORGANIZATION_BELONGS_TO_TENANT]->(:Tenant {name:$tenant})<-[:ORGANIZATION_TYPE_BELONGS_TO_TENANT]-(ot:OrganizationType {id:$organizationTypeId})
+			MERGE (org)-[r:IS_OF_TYPE]->(ot)
+			RETURN r`,
+		map[string]any{
+			"tenant":             tenant,
+			"organizationId":     organizationId,
+			"organizationTypeId": organizationTypeId,
+		})
+	if err != nil {
+		return err
+	}
+	_, err = queryResult.Single()
+	return err
+}
+
+func (r *organizationRepository) UnlinkFromOrganizationTypesInTx(tx neo4j.Transaction, tenant, organizationId string) error {
+	if _, err := tx.Run(`
+			MATCH (org:Organization {id:$organizationId})-[:ORGANIZATION_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}),
+				(org)-[r:IS_OF_TYPE]->(:OrganizationType)
+			DELETE r`,
+		map[string]any{
+			"tenant":         tenant,
+			"organizationId": organizationId,
+		}); err != nil {
+		return err
+	}
+	return nil
 }

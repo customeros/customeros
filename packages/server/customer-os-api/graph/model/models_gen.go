@@ -576,15 +576,16 @@ type NoteUpdateInput struct {
 }
 
 type Organization struct {
-	ID          string    `json:"id"`
-	Name        string    `json:"name"`
-	Description *string   `json:"description"`
-	Domain      *string   `json:"domain"`
-	Website     *string   `json:"website"`
-	Industry    *string   `json:"industry"`
-	IsPublic    *bool     `json:"isPublic"`
-	CreatedAt   time.Time `json:"createdAt"`
-	Readonly    *bool     `json:"readonly"`
+	ID               string            `json:"id"`
+	Name             string            `json:"name"`
+	Description      *string           `json:"description"`
+	Domain           *string           `json:"domain"`
+	Website          *string           `json:"website"`
+	Industry         *string           `json:"industry"`
+	IsPublic         *bool             `json:"isPublic"`
+	CreatedAt        time.Time         `json:"createdAt"`
+	Readonly         *bool             `json:"readonly"`
+	OrganizationType *OrganizationType `json:"organizationType"`
 	// All addresses associated with an organization in customerOS.
 	// **Required.  If no values it returns an empty array.**
 	Addresses []*Address `json:"addresses"`
@@ -594,14 +595,15 @@ func (Organization) IsNode()            {}
 func (this Organization) GetID() string { return this.ID }
 
 type OrganizationInput struct {
-	// The name of the organization associated with a Contact.
+	// The name of the organization.
 	// **Required.**
-	Name        string  `json:"name"`
-	Description *string `json:"description"`
-	Domain      *string `json:"domain"`
-	Website     *string `json:"website"`
-	Industry    *string `json:"industry"`
-	IsPublic    *bool   `json:"isPublic"`
+	Name               string  `json:"name"`
+	Description        *string `json:"description"`
+	Domain             *string `json:"domain"`
+	Website            *string `json:"website"`
+	Industry           *string `json:"industry"`
+	IsPublic           *bool   `json:"isPublic"`
+	OrganizationTypeID *string `json:"organizationTypeId"`
 }
 
 type OrganizationPage struct {
@@ -619,6 +621,20 @@ func (this OrganizationPage) GetTotalPages() int { return this.TotalPages }
 // The total number of elements included in the query response.
 // **Required.**
 func (this OrganizationPage) GetTotalElements() int64 { return this.TotalElements }
+
+type OrganizationType struct {
+	ID   string `json:"id"`
+	Name string `json:"name"`
+}
+
+type OrganizationTypeInput struct {
+	Name string `json:"name"`
+}
+
+type OrganizationTypeUpdateInput struct {
+	ID   string `json:"id"`
+	Name string `json:"name"`
+}
 
 type PageViewAction struct {
 	ID             string    `json:"id"`

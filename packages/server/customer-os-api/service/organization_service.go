@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"github.com/neo4j/neo4j-go-driver/v4/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v4/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
@@ -12,12 +13,22 @@ import (
 )
 
 type OrganizationService interface {
-	Create(ctx context.Context, input *entity.OrganizationEntity) (*entity.OrganizationEntity, error)
-	Update(ctx context.Context, input *entity.OrganizationEntity) (*entity.OrganizationEntity, error)
+	Create(ctx context.Context, input *OrganizationCreateData) (*entity.OrganizationEntity, error)
+	Update(ctx context.Context, input *OrganizationUpdateData) (*entity.OrganizationEntity, error)
 	GetOrganizationForRole(ctx context.Context, roleId string) (*entity.OrganizationEntity, error)
 	GetOrganizationById(ctx context.Context, organizationId string) (*entity.OrganizationEntity, error)
 	FindAll(ctx context.Context, page, limit int, filter *model.Filter, sortBy []*model.SortBy) (*utils.Pagination, error)
 	PermanentDelete(ctx context.Context, organizationId string) (bool, error)
+}
+
+type OrganizationCreateData struct {
+	OrganizationEntity *entity.OrganizationEntity
+	OrganizationTypeId *string
+}
+
+type OrganizationUpdateData struct {
+	OrganizationEntity *entity.OrganizationEntity
+	OrganizationTypeId *string
 }
 
 type organizationService struct {
@@ -30,26 +41,62 @@ func NewOrganizationService(repositories *repository.Repositories) OrganizationS
 	}
 }
 
-func (s *organizationService) Create(ctx context.Context, input *entity.OrganizationEntity) (*entity.OrganizationEntity, error) {
+func (s *organizationService) Create(ctx context.Context, input *OrganizationCreateData) (*entity.OrganizationEntity, error) {
 	session := utils.NewNeo4jWriteSession(*s.repositories.Drivers.Neo4jDriver)
 	defer session.Close()
 
-	dbNodePtr, err := s.repositories.OrganizationRepository.Create(session, common.GetContext(ctx).Tenant, *input)
+	organizationDbNodePtr, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
+		tenant := common.GetContext(ctx).Tenant
+		organizationDbNodePtr, err := s.repositories.OrganizationRepository.Create(tx, tenant, *input.OrganizationEntity)
+		if err != nil {
+			return nil, err
+		}
+		var organizationId = utils.GetPropsFromNode(*organizationDbNodePtr)["id"].(string)
+
+		if input.OrganizationTypeId != nil {
+			err = s.repositories.OrganizationRepository.LinkWithOrganizationTypeInTx(tx, tenant, organizationId, *input.OrganizationTypeId)
+			if err != nil {
+				return nil, err
+			}
+		}
+
+		return organizationDbNodePtr, nil
+	})
 	if err != nil {
 		return nil, err
 	}
-	return s.mapDbNodeToOrganizationEntity(*dbNodePtr), nil
+	return s.mapDbNodeToOrganizationEntity(*organizationDbNodePtr.(*dbtype.Node)), nil
 }
 
-func (s *organizationService) Update(ctx context.Context, input *entity.OrganizationEntity) (*entity.OrganizationEntity, error) {
+func (s *organizationService) Update(ctx context.Context, input *OrganizationUpdateData) (*entity.OrganizationEntity, error) {
 	session := utils.NewNeo4jWriteSession(*s.repositories.Drivers.Neo4jDriver)
 	defer session.Close()
 
-	dbNodePtr, err := s.repositories.OrganizationRepository.Update(session, common.GetContext(ctx).Tenant, *input)
+	organizationDbNodePtr, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
+		tenant := common.GetContext(ctx).Tenant
+		organizationDbNodePtr, err := s.repositories.OrganizationRepository.Update(tx, tenant, *input.OrganizationEntity)
+		if err != nil {
+			return nil, err
+		}
+		var organizationId = utils.GetPropsFromNode(*organizationDbNodePtr)["id"].(string)
+
+		err = s.repositories.OrganizationRepository.UnlinkFromOrganizationTypesInTx(tx, tenant, organizationId)
+		if err != nil {
+			return nil, err
+		}
+		if input.OrganizationTypeId != nil {
+			err := s.repositories.OrganizationRepository.LinkWithOrganizationTypeInTx(tx, tenant, organizationId, *input.OrganizationTypeId)
+			if err != nil {
+				return nil, err
+			}
+		}
+
+		return organizationDbNodePtr, nil
+	})
 	if err != nil {
 		return nil, err
 	}
-	return s.mapDbNodeToOrganizationEntity(*dbNodePtr), nil
+	return s.mapDbNodeToOrganizationEntity(*organizationDbNodePtr.(*dbtype.Node)), nil
 }
 
 func (s *organizationService) FindAll(ctx context.Context, page, limit int, filter *model.Filter, sortBy []*model.SortBy) (*utils.Pagination, error) {

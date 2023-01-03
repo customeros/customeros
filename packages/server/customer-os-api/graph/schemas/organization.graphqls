@@ -19,6 +19,7 @@ type Organization implements Node {
     isPublic:    Boolean
     createdAt:   Time!
     readonly:    Boolean
+    organizationType: OrganizationType @goField(forceResolver: true)
 
     """
     All addresses associated with an organization in customerOS.
@@ -35,7 +36,7 @@ type OrganizationPage implements Pages {
 
 input OrganizationInput {
     """
-    The name of the organization associated with a Contact.
+    The name of the organization.
     **Required.**
     """
     name: String!
@@ -44,4 +45,5 @@ input OrganizationInput {
     website:     String
     industry:    String
     isPublic:    Boolean
+    organizationTypeId: ID
 }

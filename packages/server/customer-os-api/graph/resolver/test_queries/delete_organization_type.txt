@@ -1,0 +1,6 @@
+mutation DeleteOrganizationType($organizationTypeId: ID!) {
+  organizationType_Delete(id: $organizationTypeId)
+    {
+      result
+    }
+}

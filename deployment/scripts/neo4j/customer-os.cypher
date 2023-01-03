@@ -26,6 +26,10 @@ MATCH (t:Tenant {name:"openline"})
   ON CREATE SET ct.id=randomUUID(), ct:ContactType_openline;
 
 MATCH (t:Tenant {name:"openline"})
+  MERGE (t)<-[:ORGANIZATION_TYPE_BELONGS_TO_TENANT]-(ot:OrganizationType {name:"COMPANY"})
+  ON CREATE SET ot.id=randomUUID(), ot:OrganizationType_openline;
+
+MATCH (t:Tenant {name:"openline"})
     MERGE (u:User {id:"AgentSmith"})-[:USER_BELONGS_TO_TENANT]->(t)
     ON CREATE SET
     		u.firstName ="Agent",
