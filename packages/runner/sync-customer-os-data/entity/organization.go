@@ -22,4 +22,6 @@ type OrganizationData struct {
 	Address2       string
 	Zip            string
 	Phone          string
+
+	OrganizationTypeName string
 }

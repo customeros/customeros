@@ -212,6 +212,14 @@ func (s *syncService) syncOrganizations(dataService common.DataService, syncDate
 				logrus.Errorf("failed merge organization' address with external reference %v for tenant %v :%v", v.ExternalId, tenant, err)
 			}
 
+			if len(v.OrganizationTypeName) > 0 {
+				err = s.repositories.OrganizationRepository.MergeOrganizationType(tenant, organizationId, v.OrganizationTypeName)
+				if err != nil {
+					failedSync = true
+					logrus.Errorf("failed merge organization type for organization %v, tenant %v :%v", organizationId, tenant, err)
+				}
+			}
+
 			logrus.Debugf("successfully merged organization with id %v for tenant %v from %v", organizationId, tenant, dataService.SourceId())
 			if err := dataService.MarkOrganizationProcessed(v.ExternalId, runId, failedSync == false); err != nil {
 				failed++
