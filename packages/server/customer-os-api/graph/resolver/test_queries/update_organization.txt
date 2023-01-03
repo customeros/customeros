@@ -1,6 +1,6 @@
-mutation UpdateCompany($companyId: ID!) {
-  company_Update(
-        id: $companyId
+mutation UpdateOrganization($organizationId: ID!) {
+  organization_Update(
+        id: $organizationId
         input: {
             name: "updated name"
             description: "updated description"

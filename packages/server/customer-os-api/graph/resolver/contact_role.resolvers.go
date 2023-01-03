@@ -13,17 +13,17 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper"
 )
 
-// Company is the resolver for the company field.
-func (r *contactRoleResolver) Company(ctx context.Context, obj *model.ContactRole) (*model.Company, error) {
-	companyEntity, err := r.Services.CompanyService.GetCompanyForRole(ctx, obj.ID)
+// Organization is the resolver for the organization field.
+func (r *contactRoleResolver) Organization(ctx context.Context, obj *model.ContactRole) (*model.Organization, error) {
+	OrganizationEntity, err := r.Services.OrganizationService.GetOrganizationForRole(ctx, obj.ID)
 	if err != nil {
-		graphql.AddErrorf(ctx, "Failed to get company for role %s", obj.ID)
+		graphql.AddErrorf(ctx, "Failed to get organization for role %s", obj.ID)
 		return nil, err
 	}
-	if companyEntity == nil {
+	if OrganizationEntity == nil {
 		return nil, nil
 	}
-	return mapper.MapEntityToCompany(companyEntity), nil
+	return mapper.MapEntityToOrganization(OrganizationEntity), nil
 }
 
 // ContactRoleDelete is the resolver for the contactRole_Delete field.
@@ -40,7 +40,7 @@ func (r *mutationResolver) ContactRoleDelete(ctx context.Context, contactID stri
 
 // ContactRoleCreate is the resolver for the contactRole_Create field.
 func (r *mutationResolver) ContactRoleCreate(ctx context.Context, contactID string, input model.ContactRoleInput) (*model.ContactRole, error) {
-	result, err := r.Services.ContactRoleService.CreateContactRole(ctx, contactID, input.CompanyID, mapper.MapContactRoleInputToEntity(&input))
+	result, err := r.Services.ContactRoleService.CreateContactRole(ctx, contactID, input.OrganizationID, mapper.MapContactRoleInputToEntity(&input))
 	if err != nil {
 		graphql.AddErrorf(ctx, "Failed add role to contact %s", contactID)
 		return nil, err
@@ -50,7 +50,7 @@ func (r *mutationResolver) ContactRoleCreate(ctx context.Context, contactID stri
 
 // ContactRoleUpdate is the resolver for the contactRole_Update field.
 func (r *mutationResolver) ContactRoleUpdate(ctx context.Context, contactID string, roleID string, input model.ContactRoleInput) (*model.ContactRole, error) {
-	result, err := r.Services.ContactRoleService.UpdateContactRole(ctx, contactID, roleID, input.CompanyID, mapper.MapContactRoleInputToEntity(&input))
+	result, err := r.Services.ContactRoleService.UpdateContactRole(ctx, contactID, roleID, input.OrganizationID, mapper.MapContactRoleInputToEntity(&input))
 	if err != nil {
 		graphql.AddErrorf(ctx, "Failed update role %s", roleID)
 		return nil, err

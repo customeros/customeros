@@ -1,5 +1,5 @@
-query GetCompany($companyId: ID!){
-  company(id: $companyId) {
+query GetOrganization($organizationId: ID!){
+  organization(id: $organizationId) {
     id
     name
     description

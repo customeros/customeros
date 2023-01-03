@@ -5,7 +5,7 @@ import (
 	"time"
 )
 
-type CompanyEntity struct {
+type OrganizationEntity struct {
 	Id          string
 	Name        string `neo4jDb:"property:name;lookupName:NAME;supportCaseSensitive:true"`
 	Description string `neo4jDb:"property:description;lookupName:DESCRIPTION;supportCaseSensitive:true"`
@@ -17,12 +17,12 @@ type CompanyEntity struct {
 	Readonly    bool
 }
 
-func (company CompanyEntity) ToString() string {
-	return fmt.Sprintf("id: %s\nname: %s", company.Id, company.Name)
+func (organization OrganizationEntity) ToString() string {
+	return fmt.Sprintf("id: %s\nname: %s", organization.Id, organization.Name)
 }
 
-type CompanyEntities []CompanyEntity
+type OrganizationEntities []OrganizationEntity
 
-func (company CompanyEntity) Labels() []string {
-	return []string{"Company"}
+func (organization OrganizationEntity) Labels() []string {
+	return []string{"Organization"}
 }

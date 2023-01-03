@@ -13,8 +13,8 @@ func TestMutationResolver_ContactRoleDelete(t *testing.T) {
 	defer tearDownTestCase()(t)
 	neo4jt.CreateTenant(driver, tenantName)
 	contactId := neo4jt.CreateDefaultContact(driver, tenantName)
-	companyId := neo4jt.CreateCompany(driver, tenantName, "LLC LLC")
-	roleId := neo4jt.ContactWorksForCompany(driver, contactId, companyId, "CTO", false)
+	organizationId := neo4jt.CreateOrganization(driver, tenantName, "LLC LLC")
+	roleId := neo4jt.ContactWorksForOrganization(driver, contactId, organizationId, "CTO", false)
 
 	require.Equal(t, 1, neo4jt.GetCountOfRelationships(driver, "HAS_ROLE"))
 	require.Equal(t, 1, neo4jt.GetCountOfRelationships(driver, "WORKS"))
@@ -38,18 +38,18 @@ func TestMutationResolver_ContactRoleDelete(t *testing.T) {
 	require.Equal(t, 0, neo4jt.GetCountOfRelationships(driver, "WORKS"))
 	require.Equal(t, 0, neo4jt.GetCountOfNodes(driver, "Role"))
 
-	assertNeo4jLabels(t, driver, []string{"Tenant", "Contact", "Company"})
+	assertNeo4jLabels(t, driver, []string{"Tenant", "Contact", "Organization"})
 }
 
-func TestMutationResolver_ContactRoleCreate_WithCompany(t *testing.T) {
+func TestMutationResolver_ContactRoleCreate_WithOrganization(t *testing.T) {
 	defer tearDownTestCase()(t)
 	neo4jt.CreateTenant(driver, tenantName)
 	contactId := neo4jt.CreateDefaultContact(driver, tenantName)
-	companyId := neo4jt.CreateCompany(driver, tenantName, "LLC LLC")
+	organizationId := neo4jt.CreateOrganization(driver, tenantName, "LLC LLC")
 
-	rawResponse, err := c.RawPost(getQuery("create_contact_role_for_company"),
+	rawResponse, err := c.RawPost(getQuery("create_contact_role_for_organization"),
 		client.Var("contactId", contactId),
-		client.Var("companyId", companyId))
+		client.Var("organizationId", organizationId))
 	assertRawResponseSuccess(t, rawResponse, err)
 
 	var contactRole struct {
@@ -62,26 +62,26 @@ func TestMutationResolver_ContactRoleCreate_WithCompany(t *testing.T) {
 	createdRole := contactRole.ContactRole_Create
 
 	require.NotNil(t, createdRole.ID)
-	require.Equal(t, companyId, createdRole.Company.ID)
+	require.Equal(t, organizationId, createdRole.Organization.ID)
 	require.Equal(t, "CEO", *createdRole.JobTitle)
 	require.Equal(t, true, createdRole.Primary)
 
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Contact"))
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Company"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Organization"))
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Role"))
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Role_"+tenantName))
 	require.Equal(t, 1, neo4jt.GetCountOfRelationships(driver, "WORKS"))
 	require.Equal(t, 1, neo4jt.GetCountOfRelationships(driver, "HAS_ROLE"))
 
-	assertNeo4jLabels(t, driver, []string{"Tenant", "Contact", "Company", "Role", "Role_" + tenantName})
+	assertNeo4jLabels(t, driver, []string{"Tenant", "Contact", "Organization", "Role", "Role_" + tenantName})
 }
 
-func TestMutationResolver_ContactRoleCreate_WithoutCompany(t *testing.T) {
+func TestMutationResolver_ContactRoleCreate_WithoutOrganization(t *testing.T) {
 	defer tearDownTestCase()(t)
 	neo4jt.CreateTenant(driver, tenantName)
 	contactId := neo4jt.CreateDefaultContact(driver, tenantName)
 
-	rawResponse, err := c.RawPost(getQuery("create_contact_role_without_company"),
+	rawResponse, err := c.RawPost(getQuery("create_contact_role_without_organization"),
 		client.Var("contactId", contactId))
 	assertRawResponseSuccess(t, rawResponse, err)
 
@@ -99,7 +99,7 @@ func TestMutationResolver_ContactRoleCreate_WithoutCompany(t *testing.T) {
 	require.Equal(t, true, createdRole.Primary)
 
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Contact"))
-	require.Equal(t, 0, neo4jt.GetCountOfNodes(driver, "Company"))
+	require.Equal(t, 0, neo4jt.GetCountOfNodes(driver, "Organization"))
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Role"))
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Role_"+tenantName))
 	require.Equal(t, 0, neo4jt.GetCountOfRelationships(driver, "WORKS"))
@@ -112,8 +112,8 @@ func TestMutationResolver_ContactRoleUpdate(t *testing.T) {
 	defer tearDownTestCase()(t)
 	neo4jt.CreateTenant(driver, tenantName)
 	contactId := neo4jt.CreateDefaultContact(driver, tenantName)
-	companyId := neo4jt.CreateCompany(driver, tenantName, "LLC LLC")
-	roleId := neo4jt.ContactWorksForCompany(driver, contactId, companyId, "CTO", false)
+	organizationId := neo4jt.CreateOrganization(driver, tenantName, "LLC LLC")
+	roleId := neo4jt.ContactWorksForOrganization(driver, contactId, organizationId, "CTO", false)
 
 	require.Equal(t, 1, neo4jt.GetCountOfRelationships(driver, "HAS_ROLE"))
 	require.Equal(t, 1, neo4jt.GetCountOfRelationships(driver, "WORKS"))
@@ -136,23 +136,23 @@ func TestMutationResolver_ContactRoleUpdate(t *testing.T) {
 	require.NotNil(t, updatedRole)
 	require.Equal(t, true, updatedRole.Primary)
 	require.Equal(t, "CEO", *updatedRole.JobTitle)
-	require.Equal(t, companyId, updatedRole.Company.ID)
+	require.Equal(t, organizationId, updatedRole.Organization.ID)
 
-	assertNeo4jLabels(t, driver, []string{"Tenant", "Contact", "Company", "Role"})
+	assertNeo4jLabels(t, driver, []string{"Tenant", "Contact", "Organization", "Role"})
 }
 
-func TestMutationResolver_ContactRoleUpdate_ChangeCompany(t *testing.T) {
+func TestMutationResolver_ContactRoleUpdate_ChangeOrganization(t *testing.T) {
 	defer tearDownTestCase()(t)
 	neo4jt.CreateTenant(driver, tenantName)
 	contactId := neo4jt.CreateDefaultContact(driver, tenantName)
-	companyId := neo4jt.CreateCompany(driver, tenantName, "LLC LLC")
-	newCompanyId := neo4jt.CreateCompany(driver, tenantName, "NEW CO")
-	roleId := neo4jt.ContactWorksForCompany(driver, contactId, companyId, "CTO", false)
+	organizationId := neo4jt.CreateOrganization(driver, tenantName, "LLC LLC")
+	newOrganizationId := neo4jt.CreateOrganization(driver, tenantName, "NEW CO")
+	roleId := neo4jt.ContactWorksForOrganization(driver, contactId, organizationId, "CTO", false)
 
-	rawResponse, err := c.RawPost(getQuery("update_contact_role_change_company"),
+	rawResponse, err := c.RawPost(getQuery("update_contact_role_change_organization"),
 		client.Var("contactId", contactId),
 		client.Var("roleId", roleId),
-		client.Var("companyId", newCompanyId))
+		client.Var("organizationId", newOrganizationId))
 	assertRawResponseSuccess(t, rawResponse, err)
 
 	var contactRole struct {
@@ -167,11 +167,11 @@ func TestMutationResolver_ContactRoleUpdate_ChangeCompany(t *testing.T) {
 	require.NotNil(t, updatedRole)
 	require.Equal(t, true, updatedRole.Primary)
 	require.Equal(t, "CEO", *updatedRole.JobTitle)
-	require.Equal(t, newCompanyId, updatedRole.Company.ID)
+	require.Equal(t, newOrganizationId, updatedRole.Organization.ID)
 
 	require.Equal(t, 1, neo4jt.GetCountOfRelationships(driver, "HAS_ROLE"))
 	require.Equal(t, 1, neo4jt.GetCountOfRelationships(driver, "WORKS"))
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Role"))
 
-	assertNeo4jLabels(t, driver, []string{"Tenant", "Contact", "Company", "Role"})
+	assertNeo4jLabels(t, driver, []string{"Tenant", "Contact", "Organization", "Role"})
 }

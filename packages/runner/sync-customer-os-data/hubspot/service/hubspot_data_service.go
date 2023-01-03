@@ -67,7 +67,7 @@ func (s *hubspotDataService) GetContactsForSync(batchSize int, runId string) []e
 		}
 		// set reference to primary company
 		if hubspotContactProperties.PrimaryCompanyExternalId.Valid {
-			contactForCustomerOs.PrimaryCompanyExternalId = strconv.FormatFloat(hubspotContactProperties.PrimaryCompanyExternalId.Float64, 'f', 0, 64)
+			contactForCustomerOs.PrimaryOrganizationExternalId = strconv.FormatFloat(hubspotContactProperties.PrimaryCompanyExternalId.Float64, 'f', 0, 64)
 		}
 		// set reference to all linked companies
 		var companiesExternalIds []any
@@ -84,7 +84,7 @@ func (s *hubspotDataService) GetContactsForSync(batchSize int, runId string) []e
 				strCompaniesExternalIds = append(strCompaniesExternalIds, companyExternalId)
 			}
 		}
-		contactForCustomerOs.CompaniesExternalIds = strCompaniesExternalIds
+		contactForCustomerOs.OrganizationsExternalIds = strCompaniesExternalIds
 		// set custom fields
 		var textCustomFields []entity.TextCustomField
 		if len(hubspotContactProperties.LifecycleStage) > 0 {
@@ -116,20 +116,20 @@ func isCustomerContactType(hubspotLifecycleStage string) bool {
 	return customerLifecycleStages[hubspotLifecycleStage]
 }
 
-func (s *hubspotDataService) GetCompaniesForSync(batchSize int, runId string) []entity.CompanyData {
+func (s *hubspotDataService) GetOrganizationsForSync(batchSize int, runId string) []entity.OrganizationData {
 	hubspotCompanies, err := repository.GetCompanies(s.getDb(), batchSize, runId)
 	if err != nil {
 		logrus.Error(err)
 		return nil
 	}
-	customerOsCompanies := []entity.CompanyData{}
+	customerOsOrganizations := []entity.OrganizationData{}
 	for _, v := range hubspotCompanies {
 		hubspotCompanyProperties, err := repository.GetCompanyProperties(s.getDb(), v.AirbyteAbId, v.AirbyteCompaniesHashid)
 		if err != nil {
 			logrus.Error(err)
 			continue
 		}
-		customerOsCompanies = append(customerOsCompanies, entity.CompanyData{
+		customerOsOrganizations = append(customerOsOrganizations, entity.OrganizationData{
 			ExternalId:     v.Id,
 			ExternalSystem: s.SourceId(),
 			Name:           hubspotCompanyProperties.Name,
@@ -150,7 +150,7 @@ func (s *hubspotDataService) GetCompaniesForSync(batchSize int, runId string) []
 		})
 		s.companies[v.Id] = v
 	}
-	return customerOsCompanies
+	return customerOsOrganizations
 }
 
 func (s *hubspotDataService) GetUsersForSync(batchSize int, runId string) []entity.UserData {
@@ -230,7 +230,7 @@ func (s *hubspotDataService) MarkContactProcessed(externalId, runId string, sync
 	return nil
 }
 
-func (s *hubspotDataService) MarkCompanyProcessed(externalId, runId string, synced bool) error {
+func (s *hubspotDataService) MarkOrganizationProcessed(externalId, runId string, synced bool) error {
 	company, ok := s.companies[externalId]
 	if ok {
 		err := repository.MarkCompanyProcessed(s.getDb(), company, synced, runId)

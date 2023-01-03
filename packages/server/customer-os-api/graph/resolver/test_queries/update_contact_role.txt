@@ -7,7 +7,7 @@ mutation ContactRoleUpdate($contactId: ID!, $roleId: ID!){
                     primary: true
                }
      ) {
-        company {
+        organization {
             id
         }
         jobTitle

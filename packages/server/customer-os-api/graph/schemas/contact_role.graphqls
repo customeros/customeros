@@ -5,17 +5,17 @@ extend type Mutation {
 }
 
 """
-Describes the relationship a Contact has with a Company.
+Describes the relationship a Contact has with a Organization.
 **A `return` object**
 """
 type ContactRole {
     id: ID!
 
     """
-    Company associated with a Contact.
+    Organization associated with a Contact.
     **Required.**
     """
-    company: Company @goField(forceResolver: true)
+    organization: Organization @goField(forceResolver: true)
 
     "The Contact's job title."
     jobTitle: String
@@ -24,12 +24,12 @@ type ContactRole {
 }
 
 """
-Describes the relationship a Contact has with a Company.
+Describes the relationship a Contact has with an Organization.
 **A `create` object**
 """
 input ContactRoleInput {
 
-    companyId: ID
+    organizationId: ID
 
     "The Contact's job title."
     jobTitle: String

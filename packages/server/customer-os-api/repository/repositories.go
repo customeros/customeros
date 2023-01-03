@@ -7,7 +7,7 @@ import (
 type Repositories struct {
 	Drivers                       Drivers
 	ActionRepository              ActionRepository
-	CompanyRepository             CompanyRepository
+	OrganizationRepository        OrganizationRepository
 	ContactGroupRepository        ContactGroupRepository
 	ContactRepository             ContactRepository
 	ContactTypeRepository         ContactTypeRepository
@@ -38,7 +38,7 @@ func InitRepos(driver *neo4j.Driver) *Repositories {
 		},
 	}
 	repositories.ActionRepository = NewActionRepository(driver)
-	repositories.CompanyRepository = NewCompanyRepository(driver)
+	repositories.OrganizationRepository = NewOrganizationRepository(driver)
 	repositories.ContactGroupRepository = NewContactGroupRepository(driver)
 	repositories.ContactRepository = NewContactRepository(driver)
 	repositories.ContactTypeRepository = NewContactTypeRepository(driver)

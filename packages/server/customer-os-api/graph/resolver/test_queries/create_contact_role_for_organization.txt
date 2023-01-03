@@ -1,11 +1,11 @@
-mutation CreateContactRole($contactId: ID!, $companyId: ID!){
+mutation CreateContactRole($contactId: ID!, $organizationId: ID!){
      contactRole_Create(
         contactId: $contactId
-        input: {companyId: $companyId
+        input: {organizationId: $organizationId
                 jobTitle: "CEO"
                 primary: true}
      ) {
-        company {
+        organization {
             id
             name
         }

@@ -72,7 +72,7 @@ type Contact implements ExtensibleEntity & Node {
     contactType: ContactType @goField(forceResolver: true)
 
     """
-    `companyName` and `jobTitle` of the contact if it has been associated with a company.
+    `organizationName` and `jobTitle` of the contact if it has been associated with an organization.
     **Required.  If no values it returns an empty array.**
     """
     roles: [ContactRole!]! @goField(forceResolver: true)

@@ -318,51 +318,51 @@ func CreateContactType(driver *neo4j.Driver, tenant, contactTypeName string) str
 	return contactTypeId.String()
 }
 
-func CreateCompany(driver *neo4j.Driver, tenant, companyName string) string {
-	var companyId, _ = uuid.NewRandom()
+func CreateOrganization(driver *neo4j.Driver, tenant, organizationName string) string {
+	var organizationId, _ = uuid.NewRandom()
 	query := `MATCH (t:Tenant {name:$tenant})
-			MERGE (t)<-[:COMPANY_BELONGS_TO_TENANT]-(co:Company {id:$id})
-			ON CREATE SET co.name=$name`
+			MERGE (t)<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {id:$id})
+			ON CREATE SET org.name=$name`
 	ExecuteWriteQuery(driver, query, map[string]any{
-		"id":     companyId.String(),
+		"id":     organizationId.String(),
 		"tenant": tenant,
-		"name":   companyName,
+		"name":   organizationName,
 	})
-	return companyId.String()
+	return organizationId.String()
 }
 
-func CreateFullCompany(driver *neo4j.Driver, tenant string, company entity.CompanyEntity) string {
-	var companyId, _ = uuid.NewRandom()
+func CreateFullOrganization(driver *neo4j.Driver, tenant string, organization entity.OrganizationEntity) string {
+	var organizationId, _ = uuid.NewRandom()
 	query := `MATCH (t:Tenant {name:$tenant})
-			MERGE (t)<-[:COMPANY_BELONGS_TO_TENANT]-(co:Company {id:$id})
-			ON CREATE SET co.name=$name, co.description=$description, co.domain=$domain, co.website=$website,
-							co.industry=$industry, co.isPublic=$isPublic, co.createdAt=datetime({timezone: 'UTC'})
+			MERGE (t)<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {id:$id})
+			ON CREATE SET org.name=$name, org.description=$description, org.domain=$domain, org.website=$website,
+							org.industry=$industry, org.isPublic=$isPublic, org.createdAt=datetime({timezone: 'UTC'})
 `
 	ExecuteWriteQuery(driver, query, map[string]any{
-		"id":          companyId.String(),
+		"id":          organizationId.String(),
 		"tenant":      tenant,
-		"name":        company.Name,
-		"description": company.Description,
-		"domain":      company.Domain,
-		"website":     company.Website,
-		"industry":    company.Industry,
-		"isPublic":    company.IsPublic,
+		"name":        organization.Name,
+		"description": organization.Description,
+		"domain":      organization.Domain,
+		"website":     organization.Website,
+		"industry":    organization.Industry,
+		"isPublic":    organization.IsPublic,
 	})
-	return companyId.String()
+	return organizationId.String()
 }
 
-func ContactWorksForCompany(driver *neo4j.Driver, contactId, companyId, jobTitle string, primary bool) string {
+func ContactWorksForOrganization(driver *neo4j.Driver, contactId, organizationId, jobTitle string, primary bool) string {
 	var roleId, _ = uuid.NewRandom()
 	query := `MATCH (c:Contact {id:$contactId}),
-			        (co:Company {id:$companyId})
-			MERGE (c)-[:HAS_ROLE]->(r:Role)-[:WORKS]->(co)
+			        (org:Organization {id:$organizationId})
+			MERGE (c)-[:HAS_ROLE]->(r:Role)-[:WORKS]->(org)
 			ON CREATE SET r.id=$id, r.jobTitle=$jobTitle, r.primary=$primary`
 	ExecuteWriteQuery(driver, query, map[string]any{
-		"id":        roleId.String(),
-		"contactId": contactId,
-		"companyId": companyId,
-		"jobTitle":  jobTitle,
-		"primary":   primary,
+		"id":             roleId.String(),
+		"contactId":      contactId,
+		"organizationId": organizationId,
+		"jobTitle":       jobTitle,
+		"primary":        primary,
 	})
 	return roleId.String()
 }
@@ -468,15 +468,15 @@ func ContactHasAddress(driver *neo4j.Driver, contactId, addressId string) string
 	return roleId.String()
 }
 
-func CompanyHasAddress(driver *neo4j.Driver, companyId, addressId string) string {
+func OrganizationHasAddress(driver *neo4j.Driver, organizationId, addressId string) string {
 	var roleId, _ = uuid.NewRandom()
-	query := `MATCH (c:Company {id:$companyId}),
+	query := `MATCH (org:Organization {id:$organizationId}),
 			        (a:Address {id:$addressId})
-			MERGE (c)-[:LOCATED_AT]->(a)`
+			MERGE (org)-[:LOCATED_AT]->(a)`
 	ExecuteWriteQuery(driver, query, map[string]any{
-		"id":        roleId.String(),
-		"companyId": companyId,
-		"addressId": addressId,
+		"id":             roleId.String(),
+		"organizationId": organizationId,
+		"addressId":      addressId,
 	})
 	return roleId.String()
 }

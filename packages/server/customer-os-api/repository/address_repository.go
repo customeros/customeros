@@ -8,7 +8,7 @@ import (
 
 type AddressRepository interface {
 	FindAllForContact(session neo4j.Session, tenant, contactId string) ([]*dbtype.Node, error)
-	FindAllForCompany(session neo4j.Session, tenant, companyId string) ([]*dbtype.Node, error)
+	FindAllForOrganization(session neo4j.Session, tenant, organizationId string) ([]*dbtype.Node, error)
 }
 
 type addressRepository struct {
@@ -47,14 +47,14 @@ func (r *addressRepository) FindAllForContact(session neo4j.Session, tenant, con
 	return dbNodes, err
 }
 
-func (r *addressRepository) FindAllForCompany(session neo4j.Session, tenant, companyId string) ([]*dbtype.Node, error) {
+func (r *addressRepository) FindAllForOrganization(session neo4j.Session, tenant, organizationId string) ([]*dbtype.Node, error) {
 	dbRecords, err := session.ReadTransaction(func(tx neo4j.Transaction) (any, error) {
 		if queryResult, err := tx.Run(`
-			MATCH (t:Tenant {name:$tenant})<-[:COMPANY_BELONGS_TO_TENANT]-(c:Company {id:$companyId})-[:LOCATED_AT]->(a:Address)
+			MATCH (:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(:Organization {id:$organizationId})-[:LOCATED_AT]->(a:Address)
 			RETURN a`,
 			map[string]any{
-				"tenant":    tenant,
-				"companyId": companyId,
+				"tenant":         tenant,
+				"organizationId": organizationId,
 			}); err != nil {
 			return nil, err
 		} else {

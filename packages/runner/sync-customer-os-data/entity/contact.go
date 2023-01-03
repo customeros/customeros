@@ -26,8 +26,8 @@ type ContactData struct {
 
 	PrimaryE164 string
 
-	CompaniesExternalIds     []string
-	PrimaryCompanyExternalId string
+	OrganizationsExternalIds      []string
+	PrimaryOrganizationExternalId string
 
 	UserOwnerExternalId string
 

@@ -6,8 +6,8 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils"
 )
 
-func MapCompanyInputToEntity(input *model.CompanyInput) *entity.CompanyEntity {
-	return &entity.CompanyEntity{
+func MapOrganizationInputToEntity(input *model.OrganizationInput) *entity.OrganizationEntity {
+	return &entity.OrganizationEntity{
 		Name:        input.Name,
 		Description: utils.IfNotNilString(input.Description),
 		Domain:      utils.IfNotNilString(input.Domain),
@@ -17,8 +17,8 @@ func MapCompanyInputToEntity(input *model.CompanyInput) *entity.CompanyEntity {
 	}
 }
 
-func MapEntityToCompany(entity *entity.CompanyEntity) *model.Company {
-	return &model.Company{
+func MapEntityToOrganization(entity *entity.OrganizationEntity) *model.Organization {
+	return &model.Organization{
 		ID:          entity.Id,
 		Name:        entity.Name,
 		Description: utils.StringPtr(entity.Description),
@@ -31,10 +31,10 @@ func MapEntityToCompany(entity *entity.CompanyEntity) *model.Company {
 	}
 }
 
-func MapEntitiesToCompanies(companyEntities *entity.CompanyEntities) []*model.Company {
-	var companies []*model.Company
-	for _, companyEntity := range *companyEntities {
-		companies = append(companies, MapEntityToCompany(&companyEntity))
+func MapEntitiesToOrganizations(organizationEntities *entity.OrganizationEntities) []*model.Organization {
+	var organizations []*model.Organization
+	for _, organizationEntity := range *organizationEntities {
+		organizations = append(organizations, MapEntityToOrganization(&organizationEntity))
 	}
-	return companies
+	return organizations
 }

@@ -1,0 +1,20 @@
+mutation CreateOrganization() {
+  organization_Create(input: {
+            name: "organization name"
+            description: "organization description"
+            domain: "organization domain"
+            website: "organization website"
+            industry: "organization industry"
+            isPublic: true
+        }) {
+      id
+      name
+      description
+      domain
+      website
+      industry
+      isPublic
+      readonly
+      createdAt
+    }
+}
