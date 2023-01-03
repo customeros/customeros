@@ -13,13 +13,13 @@ import (
 func TestQueryResolver_Companies_FilterByNameLike(t *testing.T) {
 	defer tearDownTestCase()(t)
 	neo4jt.CreateTenant(driver, tenantName)
-	neo4jt.CreateCompany(driver, tenantName, "A closed company")
-	neo4jt.CreateCompany(driver, tenantName, "OPENLINE")
-	neo4jt.CreateCompany(driver, tenantName, "the openline")
-	neo4jt.CreateCompany(driver, tenantName, "some other open company")
-	neo4jt.CreateCompany(driver, tenantName, "OpEnLiNe")
+	neo4jt.CreateOrganization(driver, tenantName, "A closed company")
+	neo4jt.CreateOrganization(driver, tenantName, "OPENLINE")
+	neo4jt.CreateOrganization(driver, tenantName, "the openline")
+	neo4jt.CreateOrganization(driver, tenantName, "some other open company")
+	neo4jt.CreateOrganization(driver, tenantName, "OpEnLiNe")
 
-	require.Equal(t, 5, neo4jt.GetCountOfNodes(driver, "Company"))
+	require.Equal(t, 5, neo4jt.GetCountOfNodes(driver, "Organization"))
 
 	rawResponse, err := c.RawPost(getQuery("get_companies"),
 		client.Var("page", 1),
@@ -45,7 +45,7 @@ func TestQueryResolver_Companies_FilterByNameLike(t *testing.T) {
 func TestQueryResolver_Company(t *testing.T) {
 	defer tearDownTestCase()(t)
 	neo4jt.CreateTenant(driver, tenantName)
-	companyInput := entity.CompanyEntity{
+	companyInput := entity.OrganizationEntity{
 		Name:        "Company name",
 		Description: "Company description",
 		Domain:      "Company domain",
@@ -53,10 +53,10 @@ func TestQueryResolver_Company(t *testing.T) {
 		Industry:    "tech",
 		IsPublic:    true,
 	}
-	companyId1 := neo4jt.CreateFullCompany(driver, tenantName, companyInput)
-	neo4jt.CreateCompany(driver, tenantName, "otherCompany")
+	companyId1 := neo4jt.CreateFullOrganization(driver, tenantName, companyInput)
+	neo4jt.CreateOrganization(driver, tenantName, "otherCompany")
 
-	require.Equal(t, 2, neo4jt.GetCountOfNodes(driver, "Company"))
+	require.Equal(t, 2, neo4jt.GetCountOfNodes(driver, "Organization"))
 
 	rawResponse, err := c.RawPost(getQuery("get_company_by_id"),
 		client.Var("companyId", companyId1),
@@ -82,8 +82,8 @@ func TestQueryResolver_Company(t *testing.T) {
 func TestQueryResolver_Companies_WithAddresses(t *testing.T) {
 	defer tearDownTestCase()(t)
 	neo4jt.CreateTenant(driver, tenantName)
-	company1 := neo4jt.CreateCompany(driver, tenantName, "OPENLINE")
-	company2 := neo4jt.CreateCompany(driver, tenantName, "some other company")
+	company1 := neo4jt.CreateOrganization(driver, tenantName, "OPENLINE")
+	company2 := neo4jt.CreateOrganization(driver, tenantName, "some other company")
 	addressInput := entity.AddressEntity{
 		Source:   "hubspot",
 		Country:  "testCountry",
@@ -99,10 +99,10 @@ func TestQueryResolver_Companies_WithAddresses(t *testing.T) {
 	address2 := neo4jt.CreateAddress(driver, entity.AddressEntity{
 		Source: "manual",
 	})
-	neo4jt.CompanyHasAddress(driver, company1, address1)
-	neo4jt.CompanyHasAddress(driver, company2, address2)
+	neo4jt.OrganizationHasAddress(driver, company1, address1)
+	neo4jt.OrganizationHasAddress(driver, company2, address2)
 
-	require.Equal(t, 2, neo4jt.GetCountOfNodes(driver, "Company"))
+	require.Equal(t, 2, neo4jt.GetCountOfNodes(driver, "Organization"))
 	require.Equal(t, 2, neo4jt.GetCountOfNodes(driver, "Address"))
 	require.Equal(t, 2, neo4jt.GetCountOfRelationships(driver, "LOCATED_AT"))
 
@@ -161,18 +161,18 @@ func TestMutationResolver_CompanyCreate(t *testing.T) {
 	require.Equal(t, true, *company.Company_Create.IsPublic)
 	require.Equal(t, false, *company.Company_Create.Readonly)
 
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Company"))
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Company_"+tenantName))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Organization"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Organization_"+tenantName))
 
-	assertNeo4jLabels(t, driver, []string{"Tenant", "Company", "Company_" + tenantName})
+	assertNeo4jLabels(t, driver, []string{"Tenant", "Organization", "Organization_" + tenantName})
 }
 
 func TestMutationResolver_CompanyUpdate(t *testing.T) {
 	defer tearDownTestCase()(t)
 	neo4jt.CreateTenant(driver, tenantName)
-	companyId := neo4jt.CreateCompany(driver, tenantName, "some company")
+	companyId := neo4jt.CreateOrganization(driver, tenantName, "some organization")
 
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Company"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Organization"))
 
 	rawResponse, err := c.RawPost(getQuery("update_company"),
 		client.Var("companyId", companyId))
@@ -194,22 +194,22 @@ func TestMutationResolver_CompanyUpdate(t *testing.T) {
 	require.Equal(t, true, *company.Company_Update.IsPublic)
 
 	// Check still single company node exists after update, no new node created
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Company"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Organization"))
 }
 
 func TestMutationResolver_CompanyDelete(t *testing.T) {
 	defer tearDownTestCase()(t)
 	neo4jt.CreateTenant(driver, tenantName)
 
-	companyId := neo4jt.CreateCompany(driver, tenantName, "LLC LLC")
+	companyId := neo4jt.CreateOrganization(driver, tenantName, "LLC LLC")
 	addressId := neo4jt.CreateAddress(driver, entity.AddressEntity{
 		Source: "manual",
 	})
-	neo4jt.CompanyHasAddress(driver, companyId, addressId)
+	neo4jt.OrganizationHasAddress(driver, companyId, addressId)
 
 	require.Equal(t, 1, neo4jt.GetCountOfRelationships(driver, "LOCATED_AT"))
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Address"))
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Company"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Organization"))
 
 	rawResponse, err := c.RawPost(getQuery("delete_company"),
 		client.Var("companyId", companyId))
@@ -226,7 +226,7 @@ func TestMutationResolver_CompanyDelete(t *testing.T) {
 
 	require.Equal(t, 0, neo4jt.GetCountOfRelationships(driver, "LOCATED_AT"))
 	require.Equal(t, 0, neo4jt.GetCountOfNodes(driver, "Address"))
-	require.Equal(t, 0, neo4jt.GetCountOfNodes(driver, "Company"))
+	require.Equal(t, 0, neo4jt.GetCountOfNodes(driver, "Organization"))
 
 	assertNeo4jLabels(t, driver, []string{"Tenant"})
 }

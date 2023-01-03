@@ -12,7 +12,7 @@ import (
 
 type AddressService interface {
 	FindAllForContact(ctx context.Context, contactId string) (*entity.AddressEntities, error)
-	FindAllForCompany(ctx context.Context, companyId string) (*entity.AddressEntities, error)
+	FindAllForOrganization(ctx context.Context, organizationId string) (*entity.AddressEntities, error)
 }
 
 type addressService struct {
@@ -45,11 +45,11 @@ func (s *addressService) FindAllForContact(ctx context.Context, contactId string
 	return &addressEntities, nil
 }
 
-func (s *addressService) FindAllForCompany(ctx context.Context, companyId string) (*entity.AddressEntities, error) {
+func (s *addressService) FindAllForOrganization(ctx context.Context, organizationId string) (*entity.AddressEntities, error) {
 	session := utils.NewNeo4jReadSession(s.getDriver())
 	defer session.Close()
 
-	dbNodes, err := s.repositories.AddressRepository.FindAllForCompany(session, common.GetContext(ctx).Tenant, companyId)
+	dbNodes, err := s.repositories.AddressRepository.FindAllForOrganization(session, common.GetContext(ctx).Tenant, organizationId)
 	if err != nil {
 		return nil, err
 	}

@@ -16,7 +16,7 @@ import (
 
 // Addresses is the resolver for the addresses field.
 func (r *companyResolver) Addresses(ctx context.Context, obj *model.Company) ([]*model.Address, error) {
-	addressEntities, err := r.Services.AddressService.FindAllForCompany(ctx, obj.ID)
+	addressEntities, err := r.Services.AddressService.FindAllForOrganization(ctx, obj.ID)
 	if err != nil {
 		graphql.AddErrorf(ctx, "Failed to get addresses for company %s", obj.ID)
 		return nil, err
@@ -69,7 +69,7 @@ func (r *queryResolver) Companies(ctx context.Context, pagination *model.Paginat
 		return nil, err
 	}
 	return &model.CompanyPage{
-		Content:       mapper.MapEntitiesToCompanies(paginatedResult.Rows.(*entity.CompanyEntities)),
+		Content:       mapper.MapEntitiesToCompanies(paginatedResult.Rows.(*entity.OrganizationEntities)),
 		TotalPages:    paginatedResult.TotalPages,
 		TotalElements: paginatedResult.TotalRows,
 	}, err

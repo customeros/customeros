@@ -63,7 +63,7 @@ func (s *contactRoleService) CreateContactRole(ctx context.Context, contactId st
 		var roleId = utils.GetPropsFromNode(*roleDbNode)["id"].(string)
 
 		if companyId != nil {
-			if err = s.repositories.ContactRoleRepository.LinkWithCompany(tx, common.GetContext(ctx).Tenant, roleId, *companyId); err != nil {
+			if err = s.repositories.ContactRoleRepository.LinkWithOrganization(tx, common.GetContext(ctx).Tenant, roleId, *companyId); err != nil {
 				return nil, err
 			}
 		}
@@ -91,7 +91,7 @@ func (s *contactRoleService) UpdateContactRole(ctx context.Context, contactId, r
 		}
 
 		if companyId != nil {
-			if err = s.repositories.ContactRoleRepository.LinkWithCompany(tx, common.GetContext(ctx).Tenant, roleId, *companyId); err != nil {
+			if err = s.repositories.ContactRoleRepository.LinkWithOrganization(tx, common.GetContext(ctx).Tenant, roleId, *companyId); err != nil {
 				return nil, err
 			}
 		}

@@ -14,7 +14,7 @@ type ContactRoleRepository interface {
 	SetOtherRolesNonPrimaryInTx(tx neo4j.Transaction, tenant, contactId, skipRoleId string) error
 	CreateContactRole(tx neo4j.Transaction, tenant, contactId string, input entity.ContactRoleEntity) (*dbtype.Node, error)
 	UpdateContactRoleDetails(tx neo4j.Transaction, tenant, contactId, roleId string, input entity.ContactRoleEntity) (*dbtype.Node, error)
-	LinkWithCompany(tx neo4j.Transaction, tenant, roleId, companyId string) error
+	LinkWithOrganization(tx neo4j.Transaction, tenant, roleId, organizationId string) error
 }
 
 type contactRoleRepository struct {
@@ -119,20 +119,20 @@ func (r *contactRoleRepository) SetOtherRolesNonPrimaryInTx(tx neo4j.Transaction
 	return err
 }
 
-func (r *contactRoleRepository) LinkWithCompany(tx neo4j.Transaction, tenant string, roleId string, companyId string) error {
+func (r *contactRoleRepository) LinkWithOrganization(tx neo4j.Transaction, tenant string, roleId string, organizationId string) error {
 	_, err := tx.Run(`
-			MATCH (co:Company {id:$companyId})-[:COMPANY_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}),
+			MATCH (org:Organization {id:$organizationId})-[:ORGANIZATION_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}),
 					(r:Role {id:$roleId})<-[:HAS_ROLE]-(c:Contact)-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant})
-			OPTIONAL MATCH (r)-[rel:WORKS]->(co2:Company)
-				WHERE co2.id <> co.id
+			OPTIONAL MATCH (r)-[rel:WORKS]->(org2:Organization)
+				WHERE org2.id <> org.id
 			DELETE rel
-			WITH r, co
-			MERGE (r)-[:WORKS]->(co)
+			WITH r, org
+			MERGE (r)-[:WORKS]->(org)
 			`,
 		map[string]interface{}{
-			"tenant":    tenant,
-			"roleId":    roleId,
-			"companyId": companyId,
+			"tenant":         tenant,
+			"roleId":         roleId,
+			"organizationId": organizationId,
 		})
 	return err
 }

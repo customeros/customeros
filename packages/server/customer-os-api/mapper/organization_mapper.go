@@ -6,8 +6,8 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils"
 )
 
-func MapCompanyInputToEntity(input *model.CompanyInput) *entity.CompanyEntity {
-	return &entity.CompanyEntity{
+func MapCompanyInputToEntity(input *model.CompanyInput) *entity.OrganizationEntity {
+	return &entity.OrganizationEntity{
 		Name:        input.Name,
 		Description: utils.IfNotNilString(input.Description),
 		Domain:      utils.IfNotNilString(input.Domain),
@@ -17,7 +17,7 @@ func MapCompanyInputToEntity(input *model.CompanyInput) *entity.CompanyEntity {
 	}
 }
 
-func MapEntityToCompany(entity *entity.CompanyEntity) *model.Company {
+func MapEntityToCompany(entity *entity.OrganizationEntity) *model.Company {
 	return &model.Company{
 		ID:          entity.Id,
 		Name:        entity.Name,
@@ -31,7 +31,7 @@ func MapEntityToCompany(entity *entity.CompanyEntity) *model.Company {
 	}
 }
 
-func MapEntitiesToCompanies(companyEntities *entity.CompanyEntities) []*model.Company {
+func MapEntitiesToCompanies(companyEntities *entity.OrganizationEntities) []*model.Company {
 	var companies []*model.Company
 	for _, companyEntity := range *companyEntities {
 		companies = append(companies, MapEntityToCompany(&companyEntity))

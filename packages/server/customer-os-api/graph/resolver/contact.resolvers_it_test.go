@@ -380,7 +380,7 @@ func TestQueryResolver_Contact_WithRoles_ById(t *testing.T) {
 	defer tearDownTestCase()(t)
 	neo4jt.CreateTenant(driver, tenantName)
 	contactId := neo4jt.CreateDefaultContact(driver, tenantName)
-	companyId1 := neo4jt.CreateFullCompany(driver, tenantName, entity.CompanyEntity{
+	companyId1 := neo4jt.CreateFullOrganization(driver, tenantName, entity.OrganizationEntity{
 		Name:        "name1",
 		Description: "description1",
 		Domain:      "domain1",
@@ -388,7 +388,7 @@ func TestQueryResolver_Contact_WithRoles_ById(t *testing.T) {
 		Industry:    "industry1",
 		IsPublic:    true,
 	})
-	companyId2 := neo4jt.CreateFullCompany(driver, tenantName, entity.CompanyEntity{
+	companyId2 := neo4jt.CreateFullOrganization(driver, tenantName, entity.OrganizationEntity{
 		Name:        "name2",
 		Description: "description2",
 		Domain:      "domain2",
@@ -396,8 +396,8 @@ func TestQueryResolver_Contact_WithRoles_ById(t *testing.T) {
 		Industry:    "industry2",
 		IsPublic:    false,
 	})
-	role1 := neo4jt.ContactWorksForCompany(driver, contactId, companyId1, "CTO", false)
-	role2 := neo4jt.ContactWorksForCompany(driver, contactId, companyId2, "CEO", true)
+	role1 := neo4jt.ContactWorksForOrganization(driver, contactId, companyId1, "CTO", false)
+	role2 := neo4jt.ContactWorksForOrganization(driver, contactId, companyId2, "CEO", true)
 
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Contact"))
 	require.Equal(t, 2, neo4jt.GetCountOfNodes(driver, "Company"))

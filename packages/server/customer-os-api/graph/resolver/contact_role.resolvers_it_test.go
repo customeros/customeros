@@ -13,8 +13,8 @@ func TestMutationResolver_ContactRoleDelete(t *testing.T) {
 	defer tearDownTestCase()(t)
 	neo4jt.CreateTenant(driver, tenantName)
 	contactId := neo4jt.CreateDefaultContact(driver, tenantName)
-	companyId := neo4jt.CreateCompany(driver, tenantName, "LLC LLC")
-	roleId := neo4jt.ContactWorksForCompany(driver, contactId, companyId, "CTO", false)
+	companyId := neo4jt.CreateOrganization(driver, tenantName, "LLC LLC")
+	roleId := neo4jt.ContactWorksForOrganization(driver, contactId, companyId, "CTO", false)
 
 	require.Equal(t, 1, neo4jt.GetCountOfRelationships(driver, "HAS_ROLE"))
 	require.Equal(t, 1, neo4jt.GetCountOfRelationships(driver, "WORKS"))
@@ -45,7 +45,7 @@ func TestMutationResolver_ContactRoleCreate_WithCompany(t *testing.T) {
 	defer tearDownTestCase()(t)
 	neo4jt.CreateTenant(driver, tenantName)
 	contactId := neo4jt.CreateDefaultContact(driver, tenantName)
-	companyId := neo4jt.CreateCompany(driver, tenantName, "LLC LLC")
+	companyId := neo4jt.CreateOrganization(driver, tenantName, "LLC LLC")
 
 	rawResponse, err := c.RawPost(getQuery("create_contact_role_for_company"),
 		client.Var("contactId", contactId),
@@ -112,8 +112,8 @@ func TestMutationResolver_ContactRoleUpdate(t *testing.T) {
 	defer tearDownTestCase()(t)
 	neo4jt.CreateTenant(driver, tenantName)
 	contactId := neo4jt.CreateDefaultContact(driver, tenantName)
-	companyId := neo4jt.CreateCompany(driver, tenantName, "LLC LLC")
-	roleId := neo4jt.ContactWorksForCompany(driver, contactId, companyId, "CTO", false)
+	companyId := neo4jt.CreateOrganization(driver, tenantName, "LLC LLC")
+	roleId := neo4jt.ContactWorksForOrganization(driver, contactId, companyId, "CTO", false)
 
 	require.Equal(t, 1, neo4jt.GetCountOfRelationships(driver, "HAS_ROLE"))
 	require.Equal(t, 1, neo4jt.GetCountOfRelationships(driver, "WORKS"))
@@ -145,9 +145,9 @@ func TestMutationResolver_ContactRoleUpdate_ChangeCompany(t *testing.T) {
 	defer tearDownTestCase()(t)
 	neo4jt.CreateTenant(driver, tenantName)
 	contactId := neo4jt.CreateDefaultContact(driver, tenantName)
-	companyId := neo4jt.CreateCompany(driver, tenantName, "LLC LLC")
-	newCompanyId := neo4jt.CreateCompany(driver, tenantName, "NEW CO")
-	roleId := neo4jt.ContactWorksForCompany(driver, contactId, companyId, "CTO", false)
+	companyId := neo4jt.CreateOrganization(driver, tenantName, "LLC LLC")
+	newCompanyId := neo4jt.CreateOrganization(driver, tenantName, "NEW CO")
+	roleId := neo4jt.ContactWorksForOrganization(driver, contactId, companyId, "CTO", false)
 
 	rawResponse, err := c.RawPost(getQuery("update_contact_role_change_company"),
 		client.Var("contactId", contactId),
