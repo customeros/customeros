@@ -19,7 +19,7 @@ import (
 
 func startPostgresContainer(ctx context.Context) (testcontainers.Container, error) {
 	request := testcontainers.ContainerRequest{
-		Image:        "postgres:latest",
+		Image:        "postgres:15.1-alpine",
 		ExposedPorts: []string{"5432/tcp"},
 		WaitingFor:   wait.ForListeningPort("5432/tcp"),
 		Env: map[string]string{
