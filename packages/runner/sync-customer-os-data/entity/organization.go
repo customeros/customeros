@@ -2,7 +2,7 @@ package entity
 
 import "time"
 
-type CompanyData struct {
+type OrganizationData struct {
 	Id             string
 	Name           string
 	Description    string

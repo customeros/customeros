@@ -57,7 +57,7 @@ func (s *syncService) Sync(runId string) {
 
 		s.syncExternalSystem(dataService, v.Tenant)
 		completedUserCount, failedUserCount := s.syncUsers(dataService, syncDate, v.Tenant, runId)
-		completedCompanyCount, failedCompanyCount := s.syncCompanies(dataService, syncDate, v.Tenant, runId)
+		completedOrganizationCount, failedOrganizationCount := s.syncOrganizations(dataService, syncDate, v.Tenant, runId)
 		completedContactCount, failedContactCount := s.syncContacts(dataService, syncDate, v.Tenant, runId)
 		completedNoteCount, failedNoteCount := s.syncNotes(dataService, syncDate, v.Tenant, runId)
 
@@ -65,8 +65,8 @@ func (s *syncService) Sync(runId string) {
 		syncRunDtls.FailedContacts = failedContactCount
 		syncRunDtls.CompletedUsers = completedUserCount
 		syncRunDtls.FailedUsers = failedUserCount
-		syncRunDtls.CompletedCompanies = completedCompanyCount
-		syncRunDtls.FailedCompanies = failedCompanyCount
+		syncRunDtls.CompletedOrganizations = completedOrganizationCount
+		syncRunDtls.FailedOrganizations = failedOrganizationCount
 		syncRunDtls.CompletedNotes = completedNoteCount
 		syncRunDtls.FailedNotes = failedNoteCount
 
@@ -122,20 +122,20 @@ func (s *syncService) syncContacts(dataService common.DataService, syncDate time
 				}
 			}
 
-			for _, companyExternalId := range v.CompaniesExternalIds {
-				if err = s.repositories.RoleRepository.MergeRole(tenant, contactId, companyExternalId, dataService.SourceId()); err != nil {
+			for _, organizationExternalId := range v.OrganizationsExternalIds {
+				if err = s.repositories.RoleRepository.MergeRole(tenant, contactId, organizationExternalId, dataService.SourceId()); err != nil {
 					failedSync = true
 					logrus.Errorf("failed merge role for contact %v, tenant %v :%v", contactId, tenant, err)
 				}
 			}
 
-			if err = s.repositories.RoleRepository.RemoveOutdatedRoles(tenant, contactId, dataService.SourceId(), v.CompaniesExternalIds); err != nil {
+			if err = s.repositories.RoleRepository.RemoveOutdatedRoles(tenant, contactId, dataService.SourceId(), v.OrganizationsExternalIds); err != nil {
 				failedSync = true
 				logrus.Errorf("failed removing outdated roles for contact %v, tenant %v :%v", contactId, tenant, err)
 			}
 
-			if len(v.PrimaryCompanyExternalId) > 0 {
-				if err = s.repositories.RoleRepository.MergePrimaryRole(tenant, contactId, v.JobTitle, v.PrimaryCompanyExternalId, dataService.SourceId()); err != nil {
+			if len(v.PrimaryOrganizationExternalId) > 0 {
+				if err = s.repositories.RoleRepository.MergePrimaryRole(tenant, contactId, v.JobTitle, v.PrimaryOrganizationExternalId, dataService.SourceId()); err != nil {
 					failedSync = true
 					logrus.Errorf("failed merge primary role for contact %v, tenant %v :%v", contactId, tenant, err)
 				}
@@ -187,33 +187,33 @@ func (s *syncService) syncContacts(dataService common.DataService, syncDate time
 	return completed, failed
 }
 
-func (s *syncService) syncCompanies(dataService common.DataService, syncDate time.Time, tenant, runId string) (int, int) {
+func (s *syncService) syncOrganizations(dataService common.DataService, syncDate time.Time, tenant, runId string) (int, int) {
 	completed, failed := 0, 0
 	for {
-		companies := dataService.GetCompaniesForSync(batchSize, runId)
-		if len(companies) == 0 {
-			logrus.Debugf("no companies found for sync from %s for tenant %s", dataService.SourceId(), tenant)
+		organizations := dataService.GetOrganizationsForSync(batchSize, runId)
+		if len(organizations) == 0 {
+			logrus.Debugf("no organizations found for sync from %s for tenant %s", dataService.SourceId(), tenant)
 			break
 		}
-		logrus.Infof("syncing %d companies from %s for tenant %s", len(companies), dataService.SourceId(), tenant)
+		logrus.Infof("syncing %d organizations from %s for tenant %s", len(organizations), dataService.SourceId(), tenant)
 
-		for _, v := range companies {
+		for _, v := range organizations {
 			var failedSync = false
 
-			companyId, err := s.repositories.CompanyRepository.MergeCompany(tenant, syncDate, v)
+			organizationId, err := s.repositories.OrganizationRepository.MergeOrganization(tenant, syncDate, v)
 			if err != nil {
 				failedSync = true
-				logrus.Errorf("failed merge company with external reference %v for tenant %v :%v", v.ExternalId, tenant, err)
+				logrus.Errorf("failed merge organization with external reference %v for tenant %v :%v", v.ExternalId, tenant, err)
 			}
 
-			err = s.repositories.CompanyRepository.MergeCompanyAddress(tenant, companyId, v)
+			err = s.repositories.OrganizationRepository.MergeOrganizationAddress(tenant, organizationId, v)
 			if err != nil {
 				failedSync = true
-				logrus.Errorf("failed merge company' address with external reference %v for tenant %v :%v", v.ExternalId, tenant, err)
+				logrus.Errorf("failed merge organization' address with external reference %v for tenant %v :%v", v.ExternalId, tenant, err)
 			}
 
-			logrus.Debugf("successfully merged company with id %v for tenant %v from %v", companyId, tenant, dataService.SourceId())
-			if err := dataService.MarkCompanyProcessed(v.ExternalId, runId, failedSync == false); err != nil {
+			logrus.Debugf("successfully merged organization with id %v for tenant %v from %v", organizationId, tenant, dataService.SourceId())
+			if err := dataService.MarkOrganizationProcessed(v.ExternalId, runId, failedSync == false); err != nil {
 				failed++
 				continue
 			}
@@ -223,7 +223,7 @@ func (s *syncService) syncCompanies(dataService common.DataService, syncDate tim
 				completed++
 			}
 		}
-		if len(companies) < batchSize {
+		if len(organizations) < batchSize {
 			break
 		}
 	}

@@ -7,11 +7,11 @@ type DataService interface {
 	Close()
 	SourceId() string
 	GetContactsForSync(batchSize int, runId string) []entity.ContactData
-	GetCompaniesForSync(batchSize int, runId string) []entity.CompanyData
+	GetOrganizationsForSync(batchSize int, runId string) []entity.OrganizationData
 	GetUsersForSync(batchSize int, runId string) []entity.UserData
 	GetNotesForSync(batchSize int, runId string) []entity.NoteData
 	MarkContactProcessed(externalId, runId string, synced bool) error
-	MarkCompanyProcessed(externalId, runId string, synced bool) error
+	MarkOrganizationProcessed(externalId, runId string, synced bool) error
 	MarkUserProcessed(externalId, runId string, synced bool) error
 	MarkNoteProcessed(externalId, runId string, synced bool) error
 }
