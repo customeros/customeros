@@ -6,17 +6,23 @@ package resolver
 
 import (
 	"context"
-
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/generated"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
 )
 
+// FIXME alexb test
+// FIXME alexb consider contact type
 // OrganizationCreate is the resolver for the organization_Create field.
 func (r *mutationResolver) OrganizationCreate(ctx context.Context, input model.OrganizationInput) (*model.Organization, error) {
-	createdOrganizationEntity, err := r.Services.OrganizationService.Create(ctx, mapper.MapOrganizationInputToEntity(&input))
+	createdOrganizationEntity, err := r.Services.OrganizationService.Create(ctx,
+		&service.OrganizationCreateData{
+			OrganizationEntity: mapper.MapOrganizationInputToEntity(&input),
+			OrganizationTypeId: input.OrganizationTypeID,
+		})
 	if err != nil {
 		graphql.AddErrorf(ctx, "Failed to create organization %s", input.Name)
 		return nil, err
@@ -24,11 +30,16 @@ func (r *mutationResolver) OrganizationCreate(ctx context.Context, input model.O
 	return mapper.MapEntityToOrganization(createdOrganizationEntity), nil
 }
 
+// FIXME alexb test
+// FIXME alexb consider contact type
 // OrganizationUpdate is the resolver for the organization_Update field.
 func (r *mutationResolver) OrganizationUpdate(ctx context.Context, id string, input model.OrganizationInput) (*model.Organization, error) {
 	organization := mapper.MapOrganizationInputToEntity(&input)
 	organization.Id = id
-	updatedOrganizationEntity, err := r.Services.OrganizationService.Update(ctx, organization)
+	updatedOrganizationEntity, err := r.Services.OrganizationService.Update(ctx, &service.OrganizationUpdateData{
+		OrganizationEntity: organization,
+		OrganizationTypeId: input.OrganizationTypeID,
+	})
 	if err != nil {
 		graphql.AddErrorf(ctx, "Failed to update organization %s", id)
 		return nil, err
@@ -46,6 +57,20 @@ func (r *mutationResolver) OrganizationDelete(ctx context.Context, id string) (*
 	return &model.Result{
 		Result: result,
 	}, nil
+}
+
+// FIXME alexb add test
+// OrganizationType is the resolver for the organizationType field.
+func (r *organizationResolver) OrganizationType(ctx context.Context, obj *model.Organization) (*model.OrganizationType, error) {
+	organizationTypeEntity, err := r.Services.OrganizationTypeService.FindOrganizationTypeForOrganization(ctx, obj.ID)
+	if err != nil {
+		graphql.AddErrorf(ctx, "Failed to get organization type for organization %s", obj.ID)
+		return nil, err
+	}
+	if organizationTypeEntity == nil {
+		return nil, nil
+	}
+	return mapper.MapEntityToOrganizationType(organizationTypeEntity), nil
 }
 
 // Addresses is the resolver for the addresses field.

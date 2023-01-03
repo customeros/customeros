@@ -173,6 +173,7 @@ func (s *contactService) Update(ctx context.Context, contactUpdateData *ContactU
 		if err != nil {
 			return nil, err
 		}
+
 		err = s.repositories.ContactRepository.UnlinkFromContactTypesInTx(tx, tenant, contactId)
 		if err != nil {
 			return nil, err

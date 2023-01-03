@@ -242,6 +242,9 @@ type ComplexityRoot struct {
 		NoteUpdateInContact                    func(childComplexity int, contactID string, input model.NoteUpdateInput) int
 		OrganizationCreate                     func(childComplexity int, input model.OrganizationInput) int
 		OrganizationDelete                     func(childComplexity int, id string) int
+		OrganizationTypeCreate                 func(childComplexity int, input model.OrganizationTypeInput) int
+		OrganizationTypeDelete                 func(childComplexity int, id string) int
+		OrganizationTypeUpdate                 func(childComplexity int, input model.OrganizationTypeUpdateInput) int
 		OrganizationUpdate                     func(childComplexity int, id string, input model.OrganizationInput) int
 		PhoneNumberDeleteFromContact           func(childComplexity int, contactID string, e164 string) int
 		PhoneNumberDeleteFromContactByID       func(childComplexity int, contactID string, id string) int
@@ -264,22 +267,28 @@ type ComplexityRoot struct {
 	}
 
 	Organization struct {
-		Addresses   func(childComplexity int) int
-		CreatedAt   func(childComplexity int) int
-		Description func(childComplexity int) int
-		Domain      func(childComplexity int) int
-		ID          func(childComplexity int) int
-		Industry    func(childComplexity int) int
-		IsPublic    func(childComplexity int) int
-		Name        func(childComplexity int) int
-		Readonly    func(childComplexity int) int
-		Website     func(childComplexity int) int
+		Addresses        func(childComplexity int) int
+		CreatedAt        func(childComplexity int) int
+		Description      func(childComplexity int) int
+		Domain           func(childComplexity int) int
+		ID               func(childComplexity int) int
+		Industry         func(childComplexity int) int
+		IsPublic         func(childComplexity int) int
+		Name             func(childComplexity int) int
+		OrganizationType func(childComplexity int) int
+		Readonly         func(childComplexity int) int
+		Website          func(childComplexity int) int
 	}
 
 	OrganizationPage struct {
 		Content       func(childComplexity int) int
 		TotalElements func(childComplexity int) int
 		TotalPages    func(childComplexity int) int
+	}
+
+	OrganizationType struct {
+		ID   func(childComplexity int) int
+		Name func(childComplexity int) int
 	}
 
 	PageViewAction struct {
@@ -302,18 +311,19 @@ type ComplexityRoot struct {
 	}
 
 	Query struct {
-		Contact         func(childComplexity int, id string) int
-		ContactByEmail  func(childComplexity int, email string) int
-		ContactByPhone  func(childComplexity int, e164 string) int
-		ContactGroup    func(childComplexity int, id string) int
-		ContactGroups   func(childComplexity int, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) int
-		ContactTypes    func(childComplexity int) int
-		Contacts        func(childComplexity int, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) int
-		EntityTemplates func(childComplexity int, extends *model.EntityTemplateExtension) int
-		Organization    func(childComplexity int, id string) int
-		Organizations   func(childComplexity int, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) int
-		User            func(childComplexity int, id string) int
-		Users           func(childComplexity int, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) int
+		Contact           func(childComplexity int, id string) int
+		ContactByEmail    func(childComplexity int, email string) int
+		ContactByPhone    func(childComplexity int, e164 string) int
+		ContactGroup      func(childComplexity int, id string) int
+		ContactGroups     func(childComplexity int, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) int
+		ContactTypes      func(childComplexity int) int
+		Contacts          func(childComplexity int, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) int
+		EntityTemplates   func(childComplexity int, extends *model.EntityTemplateExtension) int
+		Organization      func(childComplexity int, id string) int
+		OrganizationTypes func(childComplexity int) int
+		Organizations     func(childComplexity int, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) int
+		User              func(childComplexity int, id string) int
+		Users             func(childComplexity int, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) int
 	}
 
 	Result struct {
@@ -416,6 +426,9 @@ type MutationResolver interface {
 	OrganizationCreate(ctx context.Context, input model.OrganizationInput) (*model.Organization, error)
 	OrganizationUpdate(ctx context.Context, id string, input model.OrganizationInput) (*model.Organization, error)
 	OrganizationDelete(ctx context.Context, id string) (*model.Result, error)
+	OrganizationTypeCreate(ctx context.Context, input model.OrganizationTypeInput) (*model.OrganizationType, error)
+	OrganizationTypeUpdate(ctx context.Context, input model.OrganizationTypeUpdateInput) (*model.OrganizationType, error)
+	OrganizationTypeDelete(ctx context.Context, id string) (*model.Result, error)
 	PhoneNumberMergeToContact(ctx context.Context, contactID string, input model.PhoneNumberInput) (*model.PhoneNumber, error)
 	PhoneNumberUpdateInContact(ctx context.Context, contactID string, input model.PhoneNumberUpdateInput) (*model.PhoneNumber, error)
 	PhoneNumberDeleteFromContact(ctx context.Context, contactID string, e164 string) (*model.Result, error)
@@ -426,6 +439,7 @@ type NoteResolver interface {
 	CreatedBy(ctx context.Context, obj *model.Note) (*model.User, error)
 }
 type OrganizationResolver interface {
+	OrganizationType(ctx context.Context, obj *model.Organization) (*model.OrganizationType, error)
 	Addresses(ctx context.Context, obj *model.Organization) ([]*model.Address, error)
 }
 type QueryResolver interface {
@@ -439,6 +453,7 @@ type QueryResolver interface {
 	ContactTypes(ctx context.Context) ([]*model.ContactType, error)
 	Organizations(ctx context.Context, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) (*model.OrganizationPage, error)
 	Organization(ctx context.Context, id string) (*model.Organization, error)
+	OrganizationTypes(ctx context.Context) ([]*model.OrganizationType, error)
 	Users(ctx context.Context, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) (*model.UserPage, error)
 	User(ctx context.Context, id string) (*model.User, error)
 }
@@ -1609,6 +1624,42 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.OrganizationDelete(childComplexity, args["id"].(string)), true
 
+	case "Mutation.organizationType_Create":
+		if e.complexity.Mutation.OrganizationTypeCreate == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_organizationType_Create_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.OrganizationTypeCreate(childComplexity, args["input"].(model.OrganizationTypeInput)), true
+
+	case "Mutation.organizationType_Delete":
+		if e.complexity.Mutation.OrganizationTypeDelete == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_organizationType_Delete_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.OrganizationTypeDelete(childComplexity, args["id"].(string)), true
+
+	case "Mutation.organizationType_Update":
+		if e.complexity.Mutation.OrganizationTypeUpdate == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_organizationType_Update_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.OrganizationTypeUpdate(childComplexity, args["input"].(model.OrganizationTypeUpdateInput)), true
+
 	case "Mutation.organization_Update":
 		if e.complexity.Mutation.OrganizationUpdate == nil {
 			break
@@ -1786,6 +1837,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Organization.Name(childComplexity), true
 
+	case "Organization.organizationType":
+		if e.complexity.Organization.OrganizationType == nil {
+			break
+		}
+
+		return e.complexity.Organization.OrganizationType(childComplexity), true
+
 	case "Organization.readonly":
 		if e.complexity.Organization.Readonly == nil {
 			break
@@ -1820,6 +1878,20 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.OrganizationPage.TotalPages(childComplexity), true
+
+	case "OrganizationType.id":
+		if e.complexity.OrganizationType.ID == nil {
+			break
+		}
+
+		return e.complexity.OrganizationType.ID(childComplexity), true
+
+	case "OrganizationType.name":
+		if e.complexity.OrganizationType.Name == nil {
+			break
+		}
+
+		return e.complexity.OrganizationType.Name(childComplexity), true
 
 	case "PageViewAction.application":
 		if e.complexity.PageViewAction.Application == nil {
@@ -2015,6 +2087,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.Organization(childComplexity, args["id"].(string)), true
 
+	case "Query.organizationTypes":
+		if e.complexity.Query.OrganizationTypes == nil {
+			break
+		}
+
+		return e.complexity.Query.OrganizationTypes(childComplexity), true
+
 	case "Query.organizations":
 		if e.complexity.Query.Organizations == nil {
 			break
@@ -2158,6 +2237,8 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputNoteInput,
 		ec.unmarshalInputNoteUpdateInput,
 		ec.unmarshalInputOrganizationInput,
+		ec.unmarshalInputOrganizationTypeInput,
+		ec.unmarshalInputOrganizationTypeUpdateInput,
 		ec.unmarshalInputPagination,
 		ec.unmarshalInputPhoneNumberInput,
 		ec.unmarshalInputPhoneNumberUpdateInput,
@@ -3207,6 +3288,7 @@ type Organization implements Node {
     isPublic:    Boolean
     createdAt:   Time!
     readonly:    Boolean
+    organizationType: OrganizationType @goField(forceResolver: true)
 
     """
     All addresses associated with an organization in customerOS.
@@ -3223,7 +3305,7 @@ type OrganizationPage implements Pages {
 
 input OrganizationInput {
     """
-    The name of the organization associated with a Contact.
+    The name of the organization.
     **Required.**
     """
     name: String!
@@ -3232,6 +3314,30 @@ input OrganizationInput {
     website:     String
     industry:    String
     isPublic:    Boolean
+    organizationTypeId: ID
+}`, BuiltIn: false},
+	{Name: "../schemas/organization_type.graphqls", Input: `extend type Mutation {
+    organizationType_Create(input: OrganizationTypeInput!): OrganizationType!
+    organizationType_Update(input: OrganizationTypeUpdateInput!): OrganizationType
+    organizationType_Delete(id: ID!): Result
+}
+
+extend type Query {
+    organizationTypes: [OrganizationType!]!
+}
+
+type OrganizationType {
+    id: ID!
+    name: String!
+}
+
+input OrganizationTypeInput {
+    name: String!
+}
+
+input OrganizationTypeUpdateInput {
+    id: ID!
+    name: String!
 }`, BuiltIn: false},
 	{Name: "../schemas/phone.graphqls", Input: `extend type Mutation {
     phoneNumberMergeToContact(contactId : ID!, input: PhoneNumberInput!): PhoneNumber!
@@ -4356,6 +4462,51 @@ func (ec *executionContext) field_Mutation_note_UpdateInContact_args(ctx context
 		}
 	}
 	args["input"] = arg1
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_organizationType_Create_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 model.OrganizationTypeInput
+	if tmp, ok := rawArgs["input"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+		arg0, err = ec.unmarshalNOrganizationTypeInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOrganizationTypeInput(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_organizationType_Delete_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["id"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+		arg0, err = ec.unmarshalNID2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["id"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_organizationType_Update_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 model.OrganizationTypeUpdateInput
+	if tmp, ok := rawArgs["input"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+		arg0, err = ec.unmarshalNOrganizationTypeUpdateInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOrganizationTypeUpdateInput(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg0
 	return args, nil
 }
 
@@ -6670,6 +6821,8 @@ func (ec *executionContext) fieldContext_ContactRole_organization(ctx context.Co
 				return ec.fieldContext_Organization_createdAt(ctx, field)
 			case "readonly":
 				return ec.fieldContext_Organization_readonly(ctx, field)
+			case "organizationType":
+				return ec.fieldContext_Organization_organizationType(ctx, field)
 			case "addresses":
 				return ec.fieldContext_Organization_addresses(ctx, field)
 			}
@@ -11813,6 +11966,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_Create(ctx contex
 				return ec.fieldContext_Organization_createdAt(ctx, field)
 			case "readonly":
 				return ec.fieldContext_Organization_readonly(ctx, field)
+			case "organizationType":
+				return ec.fieldContext_Organization_organizationType(ctx, field)
 			case "addresses":
 				return ec.fieldContext_Organization_addresses(ctx, field)
 			}
@@ -11890,6 +12045,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_Update(ctx contex
 				return ec.fieldContext_Organization_createdAt(ctx, field)
 			case "readonly":
 				return ec.fieldContext_Organization_readonly(ctx, field)
+			case "organizationType":
+				return ec.fieldContext_Organization_organizationType(ctx, field)
 			case "addresses":
 				return ec.fieldContext_Organization_addresses(ctx, field)
 			}
@@ -11960,6 +12117,181 @@ func (ec *executionContext) fieldContext_Mutation_organization_Delete(ctx contex
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Mutation_organization_Delete_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_organizationType_Create(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_organizationType_Create(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().OrganizationTypeCreate(rctx, fc.Args["input"].(model.OrganizationTypeInput))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.OrganizationType)
+	fc.Result = res
+	return ec.marshalNOrganizationType2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOrganizationType(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_organizationType_Create(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_OrganizationType_id(ctx, field)
+			case "name":
+				return ec.fieldContext_OrganizationType_name(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type OrganizationType", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_organizationType_Create_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_organizationType_Update(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_organizationType_Update(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().OrganizationTypeUpdate(rctx, fc.Args["input"].(model.OrganizationTypeUpdateInput))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.OrganizationType)
+	fc.Result = res
+	return ec.marshalOOrganizationType2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOrganizationType(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_organizationType_Update(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_OrganizationType_id(ctx, field)
+			case "name":
+				return ec.fieldContext_OrganizationType_name(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type OrganizationType", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_organizationType_Update_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_organizationType_Delete(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_organizationType_Delete(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().OrganizationTypeDelete(rctx, fc.Args["id"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.Result)
+	fc.Result = res
+	return ec.marshalOResult2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐResult(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_organizationType_Delete(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "result":
+				return ec.fieldContext_Result_result(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Result", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_organizationType_Delete_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return
 	}
@@ -12990,6 +13322,53 @@ func (ec *executionContext) fieldContext_Organization_readonly(ctx context.Conte
 	return fc, nil
 }
 
+func (ec *executionContext) _Organization_organizationType(ctx context.Context, field graphql.CollectedField, obj *model.Organization) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Organization_organizationType(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Organization().OrganizationType(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.OrganizationType)
+	fc.Result = res
+	return ec.marshalOOrganizationType2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOrganizationType(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Organization_organizationType(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Organization",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_OrganizationType_id(ctx, field)
+			case "name":
+				return ec.fieldContext_OrganizationType_name(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type OrganizationType", field.Name)
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Organization_addresses(ctx context.Context, field graphql.CollectedField, obj *model.Organization) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Organization_addresses(ctx, field)
 	if err != nil {
@@ -13113,6 +13492,8 @@ func (ec *executionContext) fieldContext_OrganizationPage_content(ctx context.Co
 				return ec.fieldContext_Organization_createdAt(ctx, field)
 			case "readonly":
 				return ec.fieldContext_Organization_readonly(ctx, field)
+			case "organizationType":
+				return ec.fieldContext_Organization_organizationType(ctx, field)
 			case "addresses":
 				return ec.fieldContext_Organization_addresses(ctx, field)
 			}
@@ -13205,6 +13586,94 @@ func (ec *executionContext) fieldContext_OrganizationPage_totalElements(ctx cont
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type Int64 does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _OrganizationType_id(ctx context.Context, field graphql.CollectedField, obj *model.OrganizationType) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_OrganizationType_id(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNID2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_OrganizationType_id(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "OrganizationType",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _OrganizationType_name(ctx context.Context, field graphql.CollectedField, obj *model.OrganizationType) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_OrganizationType_name(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Name, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_OrganizationType_name(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "OrganizationType",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
 		},
 	}
 	return fc, nil
@@ -14491,6 +14960,8 @@ func (ec *executionContext) fieldContext_Query_organization(ctx context.Context,
 				return ec.fieldContext_Organization_createdAt(ctx, field)
 			case "readonly":
 				return ec.fieldContext_Organization_readonly(ctx, field)
+			case "organizationType":
+				return ec.fieldContext_Organization_organizationType(ctx, field)
 			case "addresses":
 				return ec.fieldContext_Organization_addresses(ctx, field)
 			}
@@ -14507,6 +14978,56 @@ func (ec *executionContext) fieldContext_Query_organization(ctx context.Context,
 	if fc.Args, err = ec.field_Query_organization_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_organizationTypes(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_organizationTypes(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().OrganizationTypes(rctx)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.OrganizationType)
+	fc.Result = res
+	return ec.marshalNOrganizationType2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOrganizationTypeᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_organizationTypes(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_OrganizationType_id(ctx, field)
+			case "name":
+				return ec.fieldContext_OrganizationType_name(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type OrganizationType", field.Name)
+		},
 	}
 	return fc, nil
 }
@@ -18212,7 +18733,7 @@ func (ec *executionContext) unmarshalInputOrganizationInput(ctx context.Context,
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"name", "description", "domain", "website", "industry", "isPublic"}
+	fieldsInOrder := [...]string{"name", "description", "domain", "website", "industry", "isPublic", "organizationTypeId"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -18264,6 +18785,78 @@ func (ec *executionContext) unmarshalInputOrganizationInput(ctx context.Context,
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("isPublic"))
 			it.IsPublic, err = ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "organizationTypeId":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("organizationTypeId"))
+			it.OrganizationTypeID, err = ec.unmarshalOID2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputOrganizationTypeInput(ctx context.Context, obj interface{}) (model.OrganizationTypeInput, error) {
+	var it model.OrganizationTypeInput
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"name"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "name":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
+			it.Name, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputOrganizationTypeUpdateInput(ctx context.Context, obj interface{}) (model.OrganizationTypeUpdateInput, error) {
+	var it model.OrganizationTypeUpdateInput
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"id", "name"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "id":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+			it.ID, err = ec.unmarshalNID2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "name":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
+			it.Name, err = ec.unmarshalNString2string(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -20281,6 +20874,27 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 				return ec._Mutation_organization_Delete(ctx, field)
 			})
 
+		case "organizationType_Create":
+
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_organizationType_Create(ctx, field)
+			})
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "organizationType_Update":
+
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_organizationType_Update(ctx, field)
+			})
+
+		case "organizationType_Delete":
+
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_organizationType_Delete(ctx, field)
+			})
+
 		case "phoneNumberMergeToContact":
 
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
@@ -20493,6 +21107,23 @@ func (ec *executionContext) _Organization(ctx context.Context, sel ast.Selection
 
 			out.Values[i] = ec._Organization_readonly(ctx, field, obj)
 
+		case "organizationType":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Organization_organizationType(ctx, field, obj)
+				return res
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
 		case "addresses":
 			field := field
 
@@ -20551,6 +21182,41 @@ func (ec *executionContext) _OrganizationPage(ctx context.Context, sel ast.Selec
 		case "totalElements":
 
 			out.Values[i] = ec._OrganizationPage_totalElements(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var organizationTypeImplementors = []string{"OrganizationType"}
+
+func (ec *executionContext) _OrganizationType(ctx context.Context, sel ast.SelectionSet, obj *model.OrganizationType) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, organizationTypeImplementors)
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("OrganizationType")
+		case "id":
+
+			out.Values[i] = ec._OrganizationType_id(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "name":
+
+			out.Values[i] = ec._OrganizationType_name(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
 				invalids++
@@ -20926,6 +21592,29 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_organization(ctx, field)
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx, innerFunc)
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return rrm(innerCtx)
+			})
+		case "organizationTypes":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_organizationTypes(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
 				return res
 			}
 
@@ -22658,6 +23347,74 @@ func (ec *executionContext) marshalNOrganizationPage2ᚖgithubᚗcomᚋopenline�
 	return ec._OrganizationPage(ctx, sel, v)
 }
 
+func (ec *executionContext) marshalNOrganizationType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOrganizationType(ctx context.Context, sel ast.SelectionSet, v model.OrganizationType) graphql.Marshaler {
+	return ec._OrganizationType(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNOrganizationType2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOrganizationTypeᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.OrganizationType) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNOrganizationType2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOrganizationType(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNOrganizationType2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOrganizationType(ctx context.Context, sel ast.SelectionSet, v *model.OrganizationType) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._OrganizationType(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalNOrganizationTypeInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOrganizationTypeInput(ctx context.Context, v interface{}) (model.OrganizationTypeInput, error) {
+	res, err := ec.unmarshalInputOrganizationTypeInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalNOrganizationTypeUpdateInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOrganizationTypeUpdateInput(ctx context.Context, v interface{}) (model.OrganizationTypeUpdateInput, error) {
+	res, err := ec.unmarshalInputOrganizationTypeUpdateInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
 func (ec *executionContext) marshalNPhoneNumber2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐPhoneNumber(ctx context.Context, sel ast.SelectionSet, v model.PhoneNumber) graphql.Marshaler {
 	return ec._PhoneNumber(ctx, sel, &v)
 }
@@ -23458,6 +24215,13 @@ func (ec *executionContext) marshalOOrganization2ᚖgithubᚗcomᚋopenlineᚑai
 		return graphql.Null
 	}
 	return ec._Organization(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalOOrganizationType2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOrganizationType(ctx context.Context, sel ast.SelectionSet, v *model.OrganizationType) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._OrganizationType(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalOPagination2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐPagination(ctx context.Context, v interface{}) (*model.Pagination, error) {
