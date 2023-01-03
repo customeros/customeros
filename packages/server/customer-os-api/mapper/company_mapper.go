@@ -8,8 +8,12 @@ import (
 
 func MapCompanyInputToEntity(input *model.CompanyInput) *entity.CompanyEntity {
 	return &entity.CompanyEntity{
-		Id:   utils.IfNotNilString(input.ID),
-		Name: utils.IfNotNilString(input.Name),
+		Name:        input.Name,
+		Description: utils.IfNotNilString(input.Description),
+		Domain:      utils.IfNotNilString(input.Domain),
+		Website:     utils.IfNotNilString(input.Website),
+		Industry:    utils.IfNotNilString(input.Industry),
+		IsPublic:    utils.IfNotNilBool(input.IsPublic),
 	}
 }
 
@@ -23,6 +27,7 @@ func MapEntityToCompany(entity *entity.CompanyEntity) *model.Company {
 		Industry:    utils.StringPtr(entity.Industry),
 		IsPublic:    utils.BoolPtr(entity.IsPublic),
 		CreatedAt:   entity.CreatedAt,
+		Readonly:    utils.BoolPtr(entity.Readonly),
 	}
 }
 

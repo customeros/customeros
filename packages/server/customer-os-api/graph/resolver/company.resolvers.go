@@ -6,9 +6,9 @@ package resolver
 
 import (
 	"context"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 
 	"github.com/99designs/gqlgen/graphql"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/generated"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper"
@@ -24,17 +24,65 @@ func (r *companyResolver) Addresses(ctx context.Context, obj *model.Company) ([]
 	return mapper.MapEntitiesToAddresses(addressEntities), err
 }
 
-// CompaniesByNameLike is the resolver for the companies_ByNameLike field.
-func (r *queryResolver) CompaniesByNameLike(ctx context.Context, pagination *model.Pagination, companyName string) (*model.CompanyPage, error) {
+// CompanyCreate is the resolver for the company_Create field.
+func (r *mutationResolver) CompanyCreate(ctx context.Context, input model.CompanyInput) (*model.Company, error) {
+	createdCompanyEntity, err := r.Services.CompanyService.Create(ctx, mapper.MapCompanyInputToEntity(&input))
+	if err != nil {
+		graphql.AddErrorf(ctx, "Failed to create company %s", input.Name)
+		return nil, err
+	}
+	return mapper.MapEntityToCompany(createdCompanyEntity), nil
+}
+
+// CompanyUpdate is the resolver for the company_Update field.
+func (r *mutationResolver) CompanyUpdate(ctx context.Context, id string, input model.CompanyInput) (*model.Company, error) {
+	company := mapper.MapCompanyInputToEntity(&input)
+	company.Id = id
+	updatedCompanyEntity, err := r.Services.CompanyService.Update(ctx, company)
+	if err != nil {
+		graphql.AddErrorf(ctx, "Failed to update company %s", id)
+		return nil, err
+	}
+	return mapper.MapEntityToCompany(updatedCompanyEntity), nil
+}
+
+// CompanyDelete is the resolver for the company_Delete field.
+func (r *mutationResolver) CompanyDelete(ctx context.Context, id string) (*model.Result, error) {
+	result, err := r.Services.CompanyService.PermanentDelete(ctx, id)
+	if err != nil {
+		graphql.AddErrorf(ctx, "Failed to delete company %s", id)
+		return nil, err
+	}
+	return &model.Result{
+		Result: result,
+	}, nil
+}
+
+// Companies is the resolver for the companies field.
+func (r *queryResolver) Companies(ctx context.Context, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) (*model.CompanyPage, error) {
 	if pagination == nil {
 		pagination = &model.Pagination{Page: 0, Limit: 0}
 	}
-	paginatedResult, err := r.Services.CompanyService.FindCompaniesByNameLike(ctx, pagination.Page, pagination.Limit, companyName)
+	paginatedResult, err := r.Services.CompanyService.FindAll(ctx, pagination.Page, pagination.Limit, where, sort)
+	if err != nil {
+		graphql.AddErrorf(ctx, "Could not fetch companies")
+		return nil, err
+	}
 	return &model.CompanyPage{
 		Content:       mapper.MapEntitiesToCompanies(paginatedResult.Rows.(*entity.CompanyEntities)),
 		TotalPages:    paginatedResult.TotalPages,
 		TotalElements: paginatedResult.TotalRows,
 	}, err
+}
+
+// Company is the resolver for the company field.
+func (r *queryResolver) Company(ctx context.Context, id string) (*model.Company, error) {
+	companyEntity, err := r.Services.CompanyService.GetCompanyById(ctx, id)
+	if err != nil {
+		graphql.AddErrorf(ctx, "Failed to get company by id %s", id)
+		return nil, err
+	}
+	return mapper.MapEntityToCompany(companyEntity), nil
 }
 
 // Company returns generated.CompanyResolver implementation.

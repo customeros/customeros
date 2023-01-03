@@ -189,7 +189,7 @@ func (r *mutationResolver) ContactUpdate(ctx context.Context, input model.Contac
 
 // ContactHardDelete is the resolver for the contact_HardDelete field.
 func (r *mutationResolver) ContactHardDelete(ctx context.Context, contactID string) (*model.Result, error) {
-	result, err := r.Services.ContactService.HardDelete(ctx, contactID)
+	result, err := r.Services.ContactService.PermanentDelete(ctx, contactID)
 	if err != nil {
 		graphql.AddErrorf(ctx, "Could not hard delete contact %s", contactID)
 		return nil, err

@@ -1,0 +1,20 @@
+mutation CreateCompany() {
+  company_Create(input: {
+            name: "company name"
+            description: "company description"
+            domain: "company domain"
+            website: "company website"
+            industry: "company industry"
+            isPublic: true
+        }) {
+      id
+      name
+      description
+      domain
+      website
+      industry
+      isPublic
+      readonly
+      createdAt
+    }
+}
