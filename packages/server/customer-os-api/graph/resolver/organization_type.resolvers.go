@@ -6,13 +6,12 @@ package resolver
 
 import (
 	"context"
-	"github.com/99designs/gqlgen/graphql"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper"
 
+	"github.com/99designs/gqlgen/graphql"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper"
 )
 
-// FIXME alexb add test
 // OrganizationTypeCreate is the resolver for the organizationType_Create field.
 func (r *mutationResolver) OrganizationTypeCreate(ctx context.Context, input model.OrganizationTypeInput) (*model.OrganizationType, error) {
 	createdOrganizationType, err := r.Services.OrganizationTypeService.Create(ctx, mapper.MapOrganizationTypeInputToEntity(input))
@@ -23,7 +22,6 @@ func (r *mutationResolver) OrganizationTypeCreate(ctx context.Context, input mod
 	return mapper.MapEntityToOrganizationType(createdOrganizationType), nil
 }
 
-// FIXME alexb add test
 // OrganizationTypeUpdate is the resolver for the organizationType_Update field.
 func (r *mutationResolver) OrganizationTypeUpdate(ctx context.Context, input model.OrganizationTypeUpdateInput) (*model.OrganizationType, error) {
 	updatedOrganizationType, err := r.Services.OrganizationTypeService.Update(ctx, mapper.MapOrganizationTypeUpdateInputToEntity(input))
@@ -34,7 +32,6 @@ func (r *mutationResolver) OrganizationTypeUpdate(ctx context.Context, input mod
 	return mapper.MapEntityToOrganizationType(updatedOrganizationType), nil
 }
 
-// FIXME alexb add test
 // OrganizationTypeDelete is the resolver for the organizationType_Delete field.
 func (r *mutationResolver) OrganizationTypeDelete(ctx context.Context, id string) (*model.Result, error) {
 	result, err := r.Services.OrganizationTypeService.Delete(ctx, id)
@@ -47,7 +44,6 @@ func (r *mutationResolver) OrganizationTypeDelete(ctx context.Context, id string
 	}, nil
 }
 
-// FIXME alexb add test
 // OrganizationTypes is the resolver for the organizationTypes field.
 func (r *queryResolver) OrganizationTypes(ctx context.Context) ([]*model.OrganizationType, error) {
 	organizationTypes, err := r.Services.OrganizationTypeService.GetAll(ctx)

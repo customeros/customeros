@@ -138,11 +138,14 @@ func TestQueryResolver_Organizations_WithAddresses(t *testing.T) {
 func TestMutationResolver_OrganizationCreate(t *testing.T) {
 	defer tearDownTestCase()(t)
 	neo4jt.CreateTenant(driver, tenantName)
+	organizationTypeId := neo4jt.CreateOrganizationType(driver, tenantName, "COMPANY")
 
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Tenant"))
-	require.Equal(t, 1, neo4jt.GetTotalCountOfNodes(driver))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "OrganizationType"))
+	require.Equal(t, 2, neo4jt.GetTotalCountOfNodes(driver))
 
-	rawResponse, err := c.RawPost(getQuery("create_organization"))
+	rawResponse, err := c.RawPost(getQuery("create_organization"),
+		client.Var("organizationTypeId", organizationTypeId))
 	assertRawResponseSuccess(t, rawResponse, err)
 
 	var organization struct {
@@ -160,22 +163,29 @@ func TestMutationResolver_OrganizationCreate(t *testing.T) {
 	require.Equal(t, "organization industry", *organization.Organization_Create.Industry)
 	require.Equal(t, true, *organization.Organization_Create.IsPublic)
 	require.Equal(t, false, *organization.Organization_Create.Readonly)
+	require.Equal(t, organizationTypeId, organization.Organization_Create.OrganizationType.ID)
+	require.Equal(t, "COMPANY", organization.Organization_Create.OrganizationType.Name)
 
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Organization"))
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Organization_"+tenantName))
 
-	assertNeo4jLabels(t, driver, []string{"Tenant", "Organization", "Organization_" + tenantName})
+	assertNeo4jLabels(t, driver, []string{"Tenant", "OrganizationType", "Organization", "Organization_" + tenantName})
 }
 
 func TestMutationResolver_OrganizationUpdate(t *testing.T) {
 	defer tearDownTestCase()(t)
 	neo4jt.CreateTenant(driver, tenantName)
 	organizationId := neo4jt.CreateOrganization(driver, tenantName, "some organization")
+	organizationTypeIdOrig := neo4jt.CreateOrganizationType(driver, tenantName, "ORIG")
+	organizationTypeIdUpdate := neo4jt.CreateOrganizationType(driver, tenantName, "UPDATED")
+	neo4jt.SetContactTypeForContact(driver, organizationTypeIdOrig, organizationTypeIdOrig)
 
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Organization"))
+	require.Equal(t, 2, neo4jt.GetCountOfNodes(driver, "OrganizationType"))
 
 	rawResponse, err := c.RawPost(getQuery("update_organization"),
-		client.Var("organizationId", organizationId))
+		client.Var("organizationId", organizationId),
+		client.Var("organizationTypeId", organizationTypeIdUpdate))
 	assertRawResponseSuccess(t, rawResponse, err)
 
 	var organization struct {
@@ -192,6 +202,8 @@ func TestMutationResolver_OrganizationUpdate(t *testing.T) {
 	require.Equal(t, "updated website", *organization.Organization_Update.Website)
 	require.Equal(t, "updated industry", *organization.Organization_Update.Industry)
 	require.Equal(t, true, *organization.Organization_Update.IsPublic)
+	require.Equal(t, organizationTypeIdUpdate, organization.Organization_Update.OrganizationType.ID)
+	require.Equal(t, "UPDATED", organization.Organization_Update.OrganizationType.Name)
 
 	// Check still single organization node exists after update, no new node created
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Organization"))

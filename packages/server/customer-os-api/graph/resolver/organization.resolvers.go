@@ -6,6 +6,7 @@ package resolver
 
 import (
 	"context"
+
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/generated"
@@ -14,8 +15,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
 )
 
-// FIXME alexb test
-// FIXME alexb consider contact type
 // OrganizationCreate is the resolver for the organization_Create field.
 func (r *mutationResolver) OrganizationCreate(ctx context.Context, input model.OrganizationInput) (*model.Organization, error) {
 	createdOrganizationEntity, err := r.Services.OrganizationService.Create(ctx,
@@ -30,8 +29,6 @@ func (r *mutationResolver) OrganizationCreate(ctx context.Context, input model.O
 	return mapper.MapEntityToOrganization(createdOrganizationEntity), nil
 }
 
-// FIXME alexb test
-// FIXME alexb consider contact type
 // OrganizationUpdate is the resolver for the organization_Update field.
 func (r *mutationResolver) OrganizationUpdate(ctx context.Context, id string, input model.OrganizationInput) (*model.Organization, error) {
 	organization := mapper.MapOrganizationInputToEntity(&input)
@@ -59,7 +56,6 @@ func (r *mutationResolver) OrganizationDelete(ctx context.Context, id string) (*
 	}, nil
 }
 
-// FIXME alexb add test
 // OrganizationType is the resolver for the organizationType field.
 func (r *organizationResolver) OrganizationType(ctx context.Context, obj *model.Organization) (*model.OrganizationType, error) {
 	organizationTypeEntity, err := r.Services.OrganizationTypeService.FindOrganizationTypeForOrganization(ctx, obj.ID)

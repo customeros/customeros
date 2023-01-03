@@ -331,6 +331,19 @@ func CreateOrganization(driver *neo4j.Driver, tenant, organizationName string) s
 	return organizationId.String()
 }
 
+func CreateOrganizationType(driver *neo4j.Driver, tenant, organizationTypeName string) string {
+	var organizationTypeId, _ = uuid.NewRandom()
+	query := `MATCH (t:Tenant {name:$tenant})
+			MERGE (t)<-[:ORGANIZATION_TYPE_BELONGS_TO_TENANT]-(ot:OrganizationType {id:$id})
+			ON CREATE SET ot.name=$name`
+	ExecuteWriteQuery(driver, query, map[string]any{
+		"id":     organizationTypeId.String(),
+		"tenant": tenant,
+		"name":   organizationTypeName,
+	})
+	return organizationTypeId.String()
+}
+
 func CreateFullOrganization(driver *neo4j.Driver, tenant string, organization entity.OrganizationEntity) string {
 	var organizationId, _ = uuid.NewRandom()
 	query := `MATCH (t:Tenant {name:$tenant})
@@ -365,6 +378,17 @@ func ContactWorksForOrganization(driver *neo4j.Driver, contactId, organizationId
 		"primary":        primary,
 	})
 	return roleId.String()
+}
+
+func SetOrganizationTypeForOrganization(driver *neo4j.Driver, organizationId, organizationTypeId string) {
+	query := `
+			MATCH (org:Organization {id:$organizationId}),
+				  (ot:OrganizationType {id:$organizationTypeId})
+			MERGE (org)-[:IS_OF_TYPE]->(ot)`
+	ExecuteWriteQuery(driver, query, map[string]any{
+		"organizationId":     organizationId,
+		"organizationTypeId": organizationTypeId,
+	})
 }
 
 func UserOwnsContact(driver *neo4j.Driver, userId, contactId string) {
