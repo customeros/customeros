@@ -4,7 +4,7 @@ go 1.19
 
 require (
 	github.com/gin-gonic/gin v1.8.2
-	gorm.io/gorm v1.24.2
+	gorm.io/gorm v1.24.3
 )
 
 require (
