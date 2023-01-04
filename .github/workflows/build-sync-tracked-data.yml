@@ -15,7 +15,7 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}/customer-os-sync-tracked-data
+  IMAGE_NAME: ${{ github.repository }}/sync-tracked-data
 
 permissions:
   contents: read

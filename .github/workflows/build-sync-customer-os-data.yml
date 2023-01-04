@@ -15,7 +15,7 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}/customer-os-sync-customer-os-data
+  IMAGE_NAME: ${{ github.repository }}/sync-customer-os-data
 
 permissions:
   contents: read
