@@ -11,9 +11,9 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/message-store/test/graph/model"
 )
 
-// Definition is the resolver for the definition field.
-func (r *customFieldResolver) Definition(ctx context.Context, obj *model.CustomField) (*model.CustomFieldDefinition, error) {
-	panic(fmt.Errorf("not implemented: Definition - definition"))
+// Template is the resolver for the template field.
+func (r *customFieldResolver) Template(ctx context.Context, obj *model.CustomField) (*model.CustomFieldTemplate, error) {
+	panic(fmt.Errorf("not implemented: Template - template"))
 }
 
 // CustomFields is the resolver for the customFields field.
@@ -21,9 +21,9 @@ func (r *fieldSetResolver) CustomFields(ctx context.Context, obj *model.FieldSet
 	panic(fmt.Errorf("not implemented: CustomFields - customFields"))
 }
 
-// Definition is the resolver for the definition field.
-func (r *fieldSetResolver) Definition(ctx context.Context, obj *model.FieldSet) (*model.FieldSetDefinition, error) {
-	panic(fmt.Errorf("not implemented: Definition - definition"))
+// Template is the resolver for the template field.
+func (r *fieldSetResolver) Template(ctx context.Context, obj *model.FieldSet) (*model.FieldSetTemplate, error) {
+	panic(fmt.Errorf("not implemented: Template - template"))
 }
 
 // CustomFieldsMergeAndUpdateInContact is the resolver for the customFieldsMergeAndUpdateInContact field.

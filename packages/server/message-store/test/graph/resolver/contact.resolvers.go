@@ -43,6 +43,11 @@ func (r *contactResolver) Emails(ctx context.Context, obj *model.Contact) ([]*mo
 	panic(fmt.Errorf("not implemented: Emails - emails"))
 }
 
+// Addresses is the resolver for the addresses field.
+func (r *contactResolver) Addresses(ctx context.Context, obj *model.Contact) ([]*model.Address, error) {
+	panic(fmt.Errorf("not implemented: Addresses - addresses"))
+}
+
 // CustomFields is the resolver for the customFields field.
 func (r *contactResolver) CustomFields(ctx context.Context, obj *model.Contact) ([]*model.CustomField, error) {
 	panic(fmt.Errorf("not implemented: CustomFields - customFields"))
@@ -53,9 +58,9 @@ func (r *contactResolver) FieldSets(ctx context.Context, obj *model.Contact) ([]
 	panic(fmt.Errorf("not implemented: FieldSets - fieldSets"))
 }
 
-// Definition is the resolver for the definition field.
-func (r *contactResolver) Definition(ctx context.Context, obj *model.Contact) (*model.EntityDefinition, error) {
-	panic(fmt.Errorf("not implemented: Definition - definition"))
+// Template is the resolver for the template field.
+func (r *contactResolver) Template(ctx context.Context, obj *model.Contact) (*model.EntityTemplate, error) {
+	panic(fmt.Errorf("not implemented: Template - template"))
 }
 
 // Owner is the resolver for the owner field.

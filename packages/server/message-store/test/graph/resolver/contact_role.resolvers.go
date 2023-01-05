@@ -11,9 +11,9 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/message-store/test/graph/model"
 )
 
-// Company is the resolver for the company field.
-func (r *contactRoleResolver) Company(ctx context.Context, obj *model.ContactRole) (*model.Company, error) {
-	panic(fmt.Errorf("not implemented: Company - company"))
+// Organization is the resolver for the organization field.
+func (r *contactRoleResolver) Organization(ctx context.Context, obj *model.ContactRole) (*model.Organization, error) {
+	panic(fmt.Errorf("not implemented: Organization - organization"))
 }
 
 // ContactRoleDelete is the resolver for the contactRole_Delete field.

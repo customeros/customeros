@@ -11,6 +11,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/message-store/gen/conversationitem"
 	"github.com/openline-ai/openline-customer-os/packages/server/message-store/gen/proto"
 	pb "github.com/openline-ai/openline-customer-os/packages/server/message-store/gen/proto"
+	"github.com/openline-ai/openline-customer-os/packages/server/message-store/repository"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
@@ -23,10 +24,11 @@ import (
 
 type messageService struct {
 	proto.UnimplementedMessageStoreServiceServer
-	client        *gen.Client
-	graphqlClient *graphql.Client
-	config        *c.Config
-	driver        *neo4j.Driver
+	client               *gen.Client
+	graphqlClient        *graphql.Client
+	config               *c.Config
+	driver               *neo4j.Driver
+	postgresRepositories *repository.PostgresRepositories
 }
 
 type ContactInfo struct {
@@ -303,8 +305,10 @@ func createConversation(graphqlClient *graphql.Client, userId string, contactId 
 	graphqlRequest := graphql.NewRequest(`
 			mutation CreateConversation ($userId: ID!, $contactId: ID!, $feedId: ID!) {
 				conversationCreate(input: {
-					userId: $userId
-					contactId: $contactId
+					senderId: $userId
+					senderType: $userId
+					receiverId: $contactId
+					receiverType: $contactId
 					id: $feedId
 				}) {
 					id
@@ -733,11 +737,12 @@ func (s *messageService) GetFeed(ctx context.Context, feedIdRequest *pb.Id) (*pb
 	}, nil
 }
 
-func NewMessageService(client *gen.Client, driver *neo4j.Driver, graphqlClient *graphql.Client, config *c.Config) *messageService {
+func NewMessageService(client *gen.Client, driver *neo4j.Driver, graphqlClient *graphql.Client, postgresRepositories *repository.PostgresRepositories, config *c.Config) *messageService {
 	ms := new(messageService)
 	ms.client = client
 	ms.graphqlClient = graphqlClient
 	ms.config = config
 	ms.driver = driver
+	ms.postgresRepositories = postgresRepositories
 	return ms
 }
