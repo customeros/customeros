@@ -1,11 +1,16 @@
 extend type Mutation {
-    conversationCreate(input: ConversationInput!): Conversation!
+    conversation_Create(input: ConversationInput!): Conversation!
     conversationAddMessage(input: MessageInput!): Message!
 }
 
 type Conversation implements Node {
     id: ID!
     startedAt: Time!
+    endedAt: Time
+    status: ConversationStatus!
+    channel: String
+    itemCount: Int64!
+# alexb replace below with optional lists
     contactId: ID!
     contact: Contact @goField(forceResolver: true)
     userId: ID!
@@ -13,15 +18,31 @@ type Conversation implements Node {
 }
 
 input ConversationInput {
-    userId: ID!
-    contactId: ID!
     id: ID
+    startedAt: Time
+    status: ConversationStatus! = ACTIVE
+    userIds: [ID!]
+    contactIds: [ID!]
+    channel: String
+}
+
+input ConversationUpdateInput {
+    id: ID!
+    userIds: [ID!]
+    contactId: [ID!]
+    status: ConversationStatus
+    skipItemIncrement: Boolean = false
 }
 
 type ConversationPage implements Pages {
     content: [Conversation!]!
     totalPages: Int!
     totalElements: Int64!
+}
+
+enum ConversationStatus {
+    ACTIVE
+    CLOSED
 }
 
 type Message implements Node {

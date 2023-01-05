@@ -95,7 +95,7 @@ func GetIntPropOrMinusOne(props map[string]any, key string) int64 {
 	return -1
 }
 
-func GetIntPropOrZero(props map[string]any, key string) int64 {
+func GetInt64PropOrZero(props map[string]any, key string) int64 {
 	if props[key] != nil {
 		return props[key].(int64)
 	}

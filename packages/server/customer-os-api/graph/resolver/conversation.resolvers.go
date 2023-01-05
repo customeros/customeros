@@ -35,9 +35,9 @@ func (r *conversationResolver) User(ctx context.Context, obj *model.Conversation
 
 // ConversationCreate is the resolver for the conversationCreate field.
 func (r *mutationResolver) ConversationCreate(ctx context.Context, input model.ConversationInput) (*model.Conversation, error) {
-	conversationEntity, err := r.Services.ConversationService.CreateNewConversation(ctx, input.UserID, input.ContactID, input.ID)
+	conversationEntity, err := r.Services.ConversationService.CreateNewConversation(ctx, input.UserIds, input.ContactIds, mapper.MapConversationInputToEntity(input))
 	if err != nil {
-		graphql.AddErrorf(ctx, "failed to create conversation between user: %s and contact: %s", input.UserID, input.ContactID)
+		graphql.AddErrorf(ctx, "failed to create conversation between users: %v and contacts: %v", input.UserIds, input.ContactIds)
 		return nil, err
 	}
 	return mapper.MapEntityToConversation(conversationEntity), nil

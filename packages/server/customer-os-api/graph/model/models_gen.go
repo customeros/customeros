@@ -275,21 +275,28 @@ func (this ContactsPage) GetTotalPages() int { return this.TotalPages }
 func (this ContactsPage) GetTotalElements() int64 { return this.TotalElements }
 
 type Conversation struct {
-	ID        string    `json:"id"`
-	StartedAt time.Time `json:"startedAt"`
-	ContactID string    `json:"contactId"`
-	Contact   *Contact  `json:"contact"`
-	UserID    string    `json:"userId"`
-	User      *User     `json:"user"`
+	ID        string             `json:"id"`
+	StartedAt time.Time          `json:"startedAt"`
+	EndedAt   *time.Time         `json:"endedAt"`
+	Status    ConversationStatus `json:"status"`
+	Channel   *string            `json:"channel"`
+	ItemCount int64              `json:"itemCount"`
+	ContactID string             `json:"contactId"`
+	Contact   *Contact           `json:"contact"`
+	UserID    string             `json:"userId"`
+	User      *User              `json:"user"`
 }
 
 func (Conversation) IsNode()            {}
 func (this Conversation) GetID() string { return this.ID }
 
 type ConversationInput struct {
-	UserID    string  `json:"userId"`
-	ContactID string  `json:"contactId"`
-	ID        *string `json:"id"`
+	ID         *string            `json:"id"`
+	StartedAt  *time.Time         `json:"startedAt"`
+	Status     ConversationStatus `json:"status"`
+	UserIds    []string           `json:"userIds"`
+	ContactIds []string           `json:"contactIds"`
+	Channel    *string            `json:"channel"`
 }
 
 type ConversationPage struct {
@@ -307,6 +314,14 @@ func (this ConversationPage) GetTotalPages() int { return this.TotalPages }
 // The total number of elements included in the query response.
 // **Required.**
 func (this ConversationPage) GetTotalElements() int64 { return this.TotalElements }
+
+type ConversationUpdateInput struct {
+	ID                string              `json:"id"`
+	UserIds           []string            `json:"userIds"`
+	ContactID         []string            `json:"contactId"`
+	Status            *ConversationStatus `json:"status"`
+	SkipItemIncrement *bool               `json:"skipItemIncrement"`
+}
 
 // Describes a custom, user-defined field associated with a `Contact`.
 // **A `return` object.**
@@ -860,6 +875,47 @@ func (e *ComparisonOperator) UnmarshalGQL(v interface{}) error {
 }
 
 func (e ComparisonOperator) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+type ConversationStatus string
+
+const (
+	ConversationStatusActive ConversationStatus = "ACTIVE"
+	ConversationStatusClosed ConversationStatus = "CLOSED"
+)
+
+var AllConversationStatus = []ConversationStatus{
+	ConversationStatusActive,
+	ConversationStatusClosed,
+}
+
+func (e ConversationStatus) IsValid() bool {
+	switch e {
+	case ConversationStatusActive, ConversationStatusClosed:
+		return true
+	}
+	return false
+}
+
+func (e ConversationStatus) String() string {
+	return string(e)
+}
+
+func (e *ConversationStatus) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = ConversationStatus(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid ConversationStatus", str)
+	}
+	return nil
+}
+
+func (e ConversationStatus) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
 }
 

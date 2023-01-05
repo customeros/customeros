@@ -9,54 +9,75 @@ import (
 	"testing"
 )
 
-func TestMutationResolver_ConversationCreate_AutogenerateID(t *testing.T) {
+func TestMutationResolver_ConversationCreate_Min(t *testing.T) {
 	defer tearDownTestCase()(t)
 	neo4jt.CreateTenant(driver, tenantName)
-	userId := neo4jt.CreateDefaultUser(driver, tenantName)
 	contactId := neo4jt.CreateDefaultContact(driver, tenantName)
 
-	rawResponse, err := c.RawPost(getQuery("create_conversation"),
-		client.Var("contactId", contactId),
-		client.Var("userId", userId))
+	rawResponse, err := c.RawPost(getQuery("create_conversation_min"),
+		client.Var("contactId", contactId))
 	assertRawResponseSuccess(t, rawResponse, err)
 
 	var conversation struct {
-		ConversationCreate model.Conversation
+		Conversation_Create model.Conversation
 	}
 
 	err = decode.Decode(rawResponse.Data.(map[string]any), &conversation)
 	require.Nil(t, err)
 	require.NotNil(t, conversation)
-	require.NotNil(t, conversation.ConversationCreate.ID)
-	require.NotNil(t, conversation.ConversationCreate.StartedAt)
+	require.NotNil(t, conversation.Conversation_Create.ID)
+	require.NotNil(t, conversation.Conversation_Create.StartedAt)
+	require.Nil(t, conversation.Conversation_Create.EndedAt)
+	require.Equal(t, model.ConversationStatusActive, conversation.Conversation_Create.Status)
+	require.Equal(t, "", *conversation.Conversation_Create.Channel)
+	require.Equal(t, int64(0), conversation.Conversation_Create.ItemCount)
 
-	assertNeo4jLabels(t, driver, []string{"Tenant", "Contact", "Conversation", "User"})
+	//FIXME alexb check contacts / users
+
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Conversation"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Conversation_"+tenantName))
+	require.Equal(t, 1, neo4jt.GetCountOfRelationships(driver, "PARTICIPATES"))
+	assertNeo4jLabels(t, driver, []string{"Tenant", "Contact", "Conversation", "Conversation_" + tenantName})
 }
 
-func TestMutationResolver_ConversationCreate_WithGivenID(t *testing.T) {
+func TestMutationResolver_ConversationCreate_WithGivenIdAndMultipleParticipants(t *testing.T) {
 	defer tearDownTestCase()(t)
 	neo4jt.CreateTenant(driver, tenantName)
-	conversationId := "Some conversation ID"
-	userId := neo4jt.CreateDefaultUser(driver, tenantName)
-	contactId := neo4jt.CreateDefaultContact(driver, tenantName)
+	conversationId := "Some given conversation ID"
+	userId1 := neo4jt.CreateDefaultUser(driver, tenantName)
+	userId2 := neo4jt.CreateDefaultUser(driver, tenantName)
+	contactId1 := neo4jt.CreateDefaultContact(driver, tenantName)
+	contactId2 := neo4jt.CreateDefaultContact(driver, tenantName)
 
-	rawResponse, err := c.RawPost(getQuery("create_conversation_with_id"),
-		client.Var("contactId", contactId),
-		client.Var("userId", userId),
+	rawResponse, err := c.RawPost(getQuery("create_conversation_with_multiple_participants"),
+		client.Var("contactId1", contactId1),
+		client.Var("contactId2", contactId2),
+		client.Var("userId1", userId1),
+		client.Var("userId2", userId2),
 		client.Var("conversationId", conversationId))
 	assertRawResponseSuccess(t, rawResponse, err)
 
 	var conversation struct {
-		ConversationCreate model.Conversation
+		Conversation_Create model.Conversation
 	}
 
 	err = decode.Decode(rawResponse.Data.(map[string]any), &conversation)
 	require.Nil(t, err)
 	require.NotNil(t, conversation)
-	require.NotNil(t, conversation.ConversationCreate.StartedAt)
-	require.Equal(t, conversationId, conversation.ConversationCreate.ID)
+	require.Equal(t, conversationId, conversation.Conversation_Create.ID)
+	require.NotNil(t, conversation.Conversation_Create.StartedAt)
+	require.Equal(t, "2023-01-02 03:04:05 +0000 UTC", conversation.Conversation_Create.StartedAt.String())
+	require.Nil(t, conversation.Conversation_Create.EndedAt)
+	require.Equal(t, model.ConversationStatusClosed, conversation.Conversation_Create.Status)
+	require.Equal(t, "EMAIL", *conversation.Conversation_Create.Channel)
+	require.Equal(t, int64(0), conversation.Conversation_Create.ItemCount)
 
-	assertNeo4jLabels(t, driver, []string{"Tenant", "Contact", "Conversation", "User"})
+	require.Equal(t, 2, neo4jt.GetCountOfNodes(driver, "Contact"))
+	require.Equal(t, 2, neo4jt.GetCountOfNodes(driver, "User"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Conversation"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Conversation_"+tenantName))
+	require.Equal(t, 4, neo4jt.GetCountOfRelationships(driver, "PARTICIPATES"))
+	assertNeo4jLabels(t, driver, []string{"Tenant", "Contact", "User", "Conversation", "Conversation_" + tenantName})
 }
 
 func TestMutationResolver_ConversationAddMessage(t *testing.T) {

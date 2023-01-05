@@ -66,8 +66,8 @@ func (s *actionsService) mapDbNodeToPageViewAction(node *dbtype.Node) *entity.Pa
 		SessionId:      utils.GetStringPropOrEmpty(props, "sessionId"),
 		PageUrl:        utils.GetStringPropOrEmpty(props, "pageUrl"),
 		PageTitle:      utils.GetStringPropOrEmpty(props, "pageTitle"),
-		OrderInSession: utils.GetIntPropOrZero(props, "orderInSession"),
-		EngagedTime:    utils.GetIntPropOrZero(props, "engagedTime"),
+		OrderInSession: utils.GetInt64PropOrZero(props, "orderInSession"),
+		EngagedTime:    utils.GetInt64PropOrZero(props, "engagedTime"),
 		StartedAt:      utils.GetTimePropOrNow(props, "startedAt"),
 		EndedAt:        utils.GetTimePropOrNow(props, "endedAt"),
 	}

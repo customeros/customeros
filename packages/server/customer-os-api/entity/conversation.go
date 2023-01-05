@@ -7,9 +7,11 @@ import (
 
 type ConversationEntity struct {
 	Id        string
-	StartedAt time.Time `neo4jDb:"property:startedAt;lookupName:STARTED_AT;supportCaseSensitive:false"`
-	ContactId string
-	UserId    string
+	StartedAt time.Time  `neo4jDb:"property:startedAt;lookupName:STARTED_AT;supportCaseSensitive:false"`
+	EndedAt   *time.Time `neo4jDb:"property:endedAt;lookupName:ENDED_AT;supportCaseSensitive:false"`
+	Status    string
+	Channel   string
+	ItemCount int64
 }
 
 func (conversation ConversationEntity) ToString() string {
