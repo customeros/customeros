@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"github.com/machinebox/graphql"
 	"github.com/neo4j/neo4j-go-driver/v4/neo4j"
 	c "github.com/openline-ai/openline-customer-os/packages/server/message-store/config"
@@ -12,6 +13,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/message-store/gen/proto"
 	pb "github.com/openline-ai/openline-customer-os/packages/server/message-store/gen/proto"
 	"github.com/openline-ai/openline-customer-os/packages/server/message-store/repository"
+	"github.com/openline-ai/openline-customer-os/packages/server/message-store/repository/entity"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
@@ -77,18 +79,25 @@ func decodeSenderType(feedState genConversation.LastSenderType) pb.SenderType {
 	}
 }
 
+func encodeConversationEventType(channel pb.MessageChannel) entity.EventType {
+	switch channel {
+	case pb.MessageChannel_WIDGET:
+		return entity.WEB_CHAT
+	case pb.MessageChannel_MAIL:
+		return entity.EMAIL
+	case pb.MessageChannel_VOICE:
+		return entity.VOICE
+	default:
+		return entity.WEB_CHAT
+	}
+}
+
 func encodeChannel(channel pb.MessageChannel) conversationitem.Channel {
 	switch channel {
 	case pb.MessageChannel_WIDGET:
 		return conversationitem.ChannelCHAT
 	case pb.MessageChannel_MAIL:
 		return conversationitem.ChannelMAIL
-	case pb.MessageChannel_WHATSAPP:
-		return conversationitem.ChannelWHATSAPP
-	case pb.MessageChannel_FACEBOOK:
-		return conversationitem.ChannelFACEBOOK
-	case pb.MessageChannel_TWITTER:
-		return conversationitem.ChannelTWITTER
 	case pb.MessageChannel_VOICE:
 		return conversationitem.ChannelVOICE
 	default:
@@ -104,6 +113,17 @@ func encodeDirection(direction pb.MessageDirection) conversationitem.Direction {
 		return conversationitem.DirectionOUTBOUND
 	default:
 		return conversationitem.DirectionOUTBOUND
+	}
+}
+
+func encodeConversationEventDirection(direction pb.MessageDirection) entity.Direction {
+	switch direction {
+	case pb.MessageDirection_INBOUND:
+		return entity.INBOUND
+	case pb.MessageDirection_OUTBOUND:
+		return entity.OUTBOUND
+	default:
+		return entity.OUTBOUND
 	}
 }
 
@@ -146,12 +166,6 @@ func decodeChannel(channel conversationitem.Channel) pb.MessageChannel {
 		return pb.MessageChannel_WIDGET
 	case conversationitem.ChannelMAIL:
 		return pb.MessageChannel_MAIL
-	case conversationitem.ChannelWHATSAPP:
-		return pb.MessageChannel_WHATSAPP
-	case conversationitem.ChannelFACEBOOK:
-		return pb.MessageChannel_FACEBOOK
-	case conversationitem.ChannelTWITTER:
-		return pb.MessageChannel_TWITTER
 	case conversationitem.ChannelVOICE:
 		return pb.MessageChannel_VOICE
 	default:
@@ -467,14 +481,15 @@ func (s *messageService) SaveMessage(ctx context.Context, message *pb.Message) (
 				return nil, status.Errorf(se.Code(), "Error inserting new Feed %s", err.Error())
 			}
 
-			conv, err := createConversation(s.graphqlClient, s.config.Identity.DefaultUserId, contact.id, conversation.ID, s.config.Service.CustomerOsAPIKey)
+			//TODO
+			//conv, err := createConversation(s.graphqlClient, s.config.Identity.DefaultUserId, contact.id, conversation.ID, s.config.Service.CustomerOsAPIKey)
 
-			if err != nil {
-				log.Printf("Error making conversation %v", err)
-				return nil, err
-			}
+			//if err != nil {
+			//	log.Printf("Error making conversation %v", err)
+			//	return nil, err
+			//}
 
-			log.Printf("Created conversation %s", conv)
+			//log.Printf("Created conversation %s", conv)
 
 		}
 	}
@@ -496,12 +511,33 @@ func (s *messageService) SaveMessage(ctx context.Context, message *pb.Message) (
 		conversationItemCreate.SetSenderType(conversationitem.SenderTypeUSER)
 	}
 
+	//old way
 	conversationItem, err := conversationItemCreate.Save(ctx)
-
 	if err != nil {
 		se, _ := status.FromError(err)
 		return nil, status.Errorf(se.Code(), "Error inserting message: %s", err.Error())
 	}
+
+	//new way
+	conversationEvent := entity.ConversationEvent{
+		TenantId:       "openline", //todo
+		ConversationId: fmt.Sprintf("%d", conversation.ID),
+		Type:           encodeConversationEventType(message.Channel),
+		Content:        message.Message,
+		Source:         entity.SYSTEM, //TODO
+		Direction:      encodeConversationEventDirection(message.Direction),
+		CreateDate:     time.Time{},
+	}
+
+	if message.GetDirection() == pb.MessageDirection_INBOUND {
+		conversationEvent.SenderId = contact.id
+		conversationEvent.SenderType = entity.CONTACT
+	} else {
+		conversationEvent.SenderId = *message.UserId
+		conversationEvent.SenderType = entity.USER
+	}
+
+	s.postgresRepositories.ConversationEventRepository.Save(&conversationEvent)
 
 	//on the first reply of a user, we mark the conversation as in progress
 	if (conversation.State == genConversation.StateNEW) && (message.GetDirection() == pb.MessageDirection_OUTBOUND) {
