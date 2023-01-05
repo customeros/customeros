@@ -2,35 +2,36 @@ package entity
 
 import "time"
 
-type eventType string
+type EventType string
 
 const (
-	EMAIL      eventType = "EMAIL"
-	MESSAGE    eventType = "MESSAGE"
-	PHONE_CALL eventType = "PHONE_CALL"
+	WEB_CHAT EventType = "WEB_CHAT"
+	EMAIL    EventType = "EMAIL"
+	MESSAGE  EventType = "MESSAGE"
+	VOICE    EventType = "VOICE"
 )
 
-type source string
+type Source string
 
 const (
-	HUBSPOT source = "HUBSPOT"
-	ZENDESK source = "ZENDESK"
-	MANUAL  source = "MANUAL"
-	SYSTEM  source = "SYSTEM"
+	HUBSPOT Source = "HUBSPOT"
+	ZENDESK Source = "ZENDESK"
+	MANUAL  Source = "MANUAL"
+	SYSTEM  Source = "SYSTEM"
 )
 
-type senderType string
+type SenderType string
 
 const (
-	CONTACT senderType = "CONTACT"
-	USER    senderType = "USER"
+	CONTACT SenderType = "CONTACT"
+	USER    SenderType = "USER"
 )
 
-type direction string
+type Direction string
 
 const (
-	INBOUND  direction = "INBOUND"
-	OUTBOUND direction = "OUTBOUND"
+	INBOUND  Direction = "INBOUND"
+	OUTBOUND Direction = "OUTBOUND"
 )
 
 type ConversationEvent struct {
@@ -38,12 +39,12 @@ type ConversationEvent struct {
 	EventUUID      string     `gorm:"type:uuid;default:gen_random_uuid()" json:"eventUuid"`
 	TenantId       string     `gorm:"column:tenant_id;type:varchar(50);NOT NULL" json:"tenantId" binding:"required"`
 	ConversationId string     `gorm:"column:conversation_id;type:varchar(50);NOT NULL" json:"conversationId" binding:"required"`
-	Type           eventType  `gorm:"column:type;type:varchar(50);NOT NULL;" json:"type" binding:"required"`
+	Type           EventType  `gorm:"column:type;type:varchar(50);NOT NULL;" json:"type" binding:"required"`
 	SenderId       string     `gorm:"column:sender_id;type:varchar(50);NOT NULL" json:"senderId" binding:"required"`
-	SenderType     senderType `gorm:"column:sender_type;type:varchar(50);NOT NULL" json:"senderType" binding:"required"`
+	SenderType     SenderType `gorm:"column:sender_type;type:varchar(50);NOT NULL" json:"senderType" binding:"required"`
 	Content        string     `gorm:"column:content;type:text;NOT NULL;" json:"content" binding:"required"`
-	Source         source     `gorm:"column:source;type:varchar(50);NOT NULL;" json:"source" binding:"required"`
-	Direction      direction  `gorm:"column:direction;type:varchar(10);NOT NULL;" json:"direction" binding:"required"`
+	Source         Source     `gorm:"column:source;type:varchar(50);NOT NULL;" json:"source" binding:"required"`
+	Direction      Direction  `gorm:"column:direction;type:varchar(10);NOT NULL;" json:"direction" binding:"required"`
 	CreateDate     time.Time  `gorm:"column:created_at"`
 }
 

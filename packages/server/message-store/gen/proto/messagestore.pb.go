@@ -211,12 +211,9 @@ func (MessageDirection) EnumDescriptor() ([]byte, []int) {
 type MessageChannel int32
 
 const (
-	MessageChannel_WIDGET   MessageChannel = 0
-	MessageChannel_MAIL     MessageChannel = 1
-	MessageChannel_WHATSAPP MessageChannel = 2
-	MessageChannel_FACEBOOK MessageChannel = 3
-	MessageChannel_TWITTER  MessageChannel = 4
-	MessageChannel_VOICE    MessageChannel = 5
+	MessageChannel_WIDGET MessageChannel = 0
+	MessageChannel_MAIL   MessageChannel = 1
+	MessageChannel_VOICE  MessageChannel = 5
 )
 
 // Enum value maps for MessageChannel.
