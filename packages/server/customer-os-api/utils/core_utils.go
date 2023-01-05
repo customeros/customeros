@@ -96,3 +96,11 @@ func IfNotNilBool(check any, valueExtractor ...func() bool) bool {
 	out := check.(*bool)
 	return *out
 }
+
+func ReverseMap[K comparable, V comparable](in map[K]V) map[V]K {
+	out := map[V]K{}
+	for k, v := range in {
+		out[v] = k
+	}
+	return out
+}

@@ -20,6 +20,7 @@ type ContactService interface {
 	FindContactByPhoneNumber(ctx context.Context, e164 string) (*entity.ContactEntity, error)
 	FindAll(ctx context.Context, page, limit int, filter *model.Filter, sortBy []*model.SortBy) (*utils.Pagination, error)
 	FindAllForContactGroup(ctx context.Context, page, limit int, filter *model.Filter, sortBy []*model.SortBy, contactGroupId string) (*utils.Pagination, error)
+	GetAllForConversation(ctx context.Context, conversationId string) (*entity.ContactEntities, error)
 	PermanentDelete(ctx context.Context, id string) (bool, error)
 	SoftDelete(ctx context.Context, id string) (bool, error)
 }
@@ -64,7 +65,7 @@ func (s *contactService) Create(ctx context.Context, newContact *ContactCreateDa
 	if err != nil {
 		return nil, err
 	}
-	return s.mapDbNodeToContactEntity(contactDbNode.(*dbtype.Node)), nil
+	return s.mapDbNodeToContactEntity(*contactDbNode.(*dbtype.Node)), nil
 }
 
 func (s *contactService) createContactInDBTxWork(ctx context.Context, newContact *ContactCreateData) func(tx neo4j.Transaction) (any, error) {
@@ -202,7 +203,7 @@ func (s *contactService) Update(ctx context.Context, contactUpdateData *ContactU
 		return nil, err
 	}
 
-	return s.mapDbNodeToContactEntity(contactDbNode.(*dbtype.Node)), nil
+	return s.mapDbNodeToContactEntity(*contactDbNode.(*dbtype.Node)), nil
 }
 
 func (s *contactService) PermanentDelete(ctx context.Context, contactId string) (bool, error) {
@@ -264,7 +265,7 @@ func (s *contactService) FindContactById(ctx context.Context, id string) (*entit
 		return nil, err
 	}
 
-	return s.mapDbNodeToContactEntity(utils.NodePtr(queryResult.(dbtype.Node))), nil
+	return s.mapDbNodeToContactEntity(queryResult.(dbtype.Node)), nil
 }
 
 func (s *contactService) FindContactByEmail(ctx context.Context, email string) (*entity.ContactEntity, error) {
@@ -290,7 +291,7 @@ func (s *contactService) FindContactByEmail(ctx context.Context, email string) (
 		return nil, err
 	}
 
-	return s.mapDbNodeToContactEntity(utils.NodePtr(queryResult.(dbtype.Node))), nil
+	return s.mapDbNodeToContactEntity(queryResult.(dbtype.Node)), nil
 }
 
 func (s *contactService) FindContactByPhoneNumber(ctx context.Context, e164 string) (*entity.ContactEntity, error) {
@@ -316,7 +317,7 @@ func (s *contactService) FindContactByPhoneNumber(ctx context.Context, e164 stri
 		return nil, err
 	}
 
-	return s.mapDbNodeToContactEntity(utils.NodePtr(queryResult.(dbtype.Node))), nil
+	return s.mapDbNodeToContactEntity(queryResult.(dbtype.Node)), nil
 }
 
 func (s *contactService) FindAll(ctx context.Context, page, limit int, filter *model.Filter, sortBy []*model.SortBy) (*utils.Pagination, error) {
@@ -351,7 +352,7 @@ func (s *contactService) FindAll(ctx context.Context, page, limit int, filter *m
 	contacts := entity.ContactEntities{}
 
 	for _, v := range dbNodesWithTotalCount.Nodes {
-		contacts = append(contacts, *s.mapDbNodeToContactEntity(v))
+		contacts = append(contacts, *s.mapDbNodeToContactEntity(*v))
 	}
 	paginatedResult.SetRows(&contacts)
 	return &paginatedResult, nil
@@ -390,14 +391,30 @@ func (s *contactService) FindAllForContactGroup(ctx context.Context, page, limit
 	contacts := entity.ContactEntities{}
 
 	for _, v := range dbNodesWithTotalCount.Nodes {
-		contacts = append(contacts, *s.mapDbNodeToContactEntity(v))
+		contacts = append(contacts, *s.mapDbNodeToContactEntity(*v))
 	}
 	paginatedResult.SetRows(&contacts)
 	return &paginatedResult, nil
 }
 
-func (s *contactService) mapDbNodeToContactEntity(dbContactNode *dbtype.Node) *entity.ContactEntity {
-	props := utils.GetPropsFromNode(*dbContactNode)
+func (s *contactService) GetAllForConversation(ctx context.Context, conversationId string) (*entity.ContactEntities, error) {
+	session := utils.NewNeo4jReadSession(s.getNeo4jDriver())
+	defer session.Close()
+
+	dbNodes, err := s.repositories.ContactRepository.GetAllForConversation(session, common.GetContext(ctx).Tenant, conversationId)
+	if err != nil {
+		return nil, err
+	}
+
+	contactEntities := entity.ContactEntities{}
+	for _, dbNode := range dbNodes {
+		contactEntities = append(contactEntities, *s.mapDbNodeToContactEntity(*dbNode))
+	}
+	return &contactEntities, nil
+}
+
+func (s *contactService) mapDbNodeToContactEntity(dbContactNode dbtype.Node) *entity.ContactEntity {
+	props := utils.GetPropsFromNode(dbContactNode)
 	contact := entity.ContactEntity{
 		Id:        utils.GetStringPropOrEmpty(props, "id"),
 		FirstName: utils.GetStringPropOrEmpty(props, "firstName"),

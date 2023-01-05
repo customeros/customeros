@@ -1,27 +1,46 @@
 extend type Mutation {
-    conversationCreate(input: ConversationInput!): Conversation!
+    conversation_Create(input: ConversationInput!): Conversation!
     conversationAddMessage(input: MessageInput!): Message!
 }
 
 type Conversation implements Node {
     id: ID!
     startedAt: Time!
-    contactId: ID!
-    contact: Contact @goField(forceResolver: true)
-    userId: ID!
-    user: User @goField(forceResolver: true)
+    endedAt: Time
+    status: ConversationStatus!
+    channel: String
+    itemCount: Int64!
+    contacts: [Contact!] @goField(forceResolver: true)
+    users: [User!] @goField(forceResolver: true)
 }
 
 input ConversationInput {
-    userId: ID!
-    contactId: ID!
     id: ID
+    startedAt: Time
+    status: ConversationStatus! = ACTIVE
+    userIds: [ID!]
+    contactIds: [ID!]
+    channel: String
+}
+
+input ConversationUpdateInput {
+    id: ID!
+    userIds: [ID!]
+    contactId: [ID!]
+    status: ConversationStatus
+    channel: String
+    skipItemIncrement: Boolean = false
 }
 
 type ConversationPage implements Pages {
     content: [Conversation!]!
     totalPages: Int!
     totalElements: Int64!
+}
+
+enum ConversationStatus {
+    ACTIVE
+    CLOSED
 }
 
 type Message implements Node {

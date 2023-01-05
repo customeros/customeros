@@ -123,12 +123,14 @@ type ComplexityRoot struct {
 	}
 
 	Conversation struct {
-		Contact   func(childComplexity int) int
-		ContactID func(childComplexity int) int
+		Channel   func(childComplexity int) int
+		Contacts  func(childComplexity int) int
+		EndedAt   func(childComplexity int) int
 		ID        func(childComplexity int) int
+		ItemCount func(childComplexity int) int
 		StartedAt func(childComplexity int) int
-		User      func(childComplexity int) int
-		UserID    func(childComplexity int) int
+		Status    func(childComplexity int) int
+		Users     func(childComplexity int) int
 	}
 
 	ConversationPage struct {
@@ -368,9 +370,8 @@ type ContactRoleResolver interface {
 	Organization(ctx context.Context, obj *model.ContactRole) (*model.Organization, error)
 }
 type ConversationResolver interface {
-	Contact(ctx context.Context, obj *model.Conversation) (*model.Contact, error)
-
-	User(ctx context.Context, obj *model.Conversation) (*model.User, error)
+	Contacts(ctx context.Context, obj *model.Conversation) ([]*model.Contact, error)
+	Users(ctx context.Context, obj *model.Conversation) ([]*model.User, error)
 }
 type CustomFieldResolver interface {
 	Template(ctx context.Context, obj *model.CustomField) (*model.CustomFieldTemplate, error)
@@ -811,19 +812,26 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.ContactsPage.TotalPages(childComplexity), true
 
-	case "Conversation.contact":
-		if e.complexity.Conversation.Contact == nil {
+	case "Conversation.channel":
+		if e.complexity.Conversation.Channel == nil {
 			break
 		}
 
-		return e.complexity.Conversation.Contact(childComplexity), true
+		return e.complexity.Conversation.Channel(childComplexity), true
 
-	case "Conversation.contactId":
-		if e.complexity.Conversation.ContactID == nil {
+	case "Conversation.contacts":
+		if e.complexity.Conversation.Contacts == nil {
 			break
 		}
 
-		return e.complexity.Conversation.ContactID(childComplexity), true
+		return e.complexity.Conversation.Contacts(childComplexity), true
+
+	case "Conversation.endedAt":
+		if e.complexity.Conversation.EndedAt == nil {
+			break
+		}
+
+		return e.complexity.Conversation.EndedAt(childComplexity), true
 
 	case "Conversation.id":
 		if e.complexity.Conversation.ID == nil {
@@ -832,6 +840,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Conversation.ID(childComplexity), true
 
+	case "Conversation.itemCount":
+		if e.complexity.Conversation.ItemCount == nil {
+			break
+		}
+
+		return e.complexity.Conversation.ItemCount(childComplexity), true
+
 	case "Conversation.startedAt":
 		if e.complexity.Conversation.StartedAt == nil {
 			break
@@ -839,19 +854,19 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Conversation.StartedAt(childComplexity), true
 
-	case "Conversation.user":
-		if e.complexity.Conversation.User == nil {
+	case "Conversation.status":
+		if e.complexity.Conversation.Status == nil {
 			break
 		}
 
-		return e.complexity.Conversation.User(childComplexity), true
+		return e.complexity.Conversation.Status(childComplexity), true
 
-	case "Conversation.userId":
-		if e.complexity.Conversation.UserID == nil {
+	case "Conversation.users":
+		if e.complexity.Conversation.Users == nil {
 			break
 		}
 
-		return e.complexity.Conversation.UserID(childComplexity), true
+		return e.complexity.Conversation.Users(childComplexity), true
 
 	case "ConversationPage.content":
 		if e.complexity.ConversationPage.Content == nil {
@@ -1360,12 +1375,12 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.ConversationAddMessage(childComplexity, args["input"].(model.MessageInput)), true
 
-	case "Mutation.conversationCreate":
+	case "Mutation.conversation_Create":
 		if e.complexity.Mutation.ConversationCreate == nil {
 			break
 		}
 
-		args, err := ec.field_Mutation_conversationCreate_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_conversation_Create_args(context.TODO(), rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -2221,6 +2236,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputContactTypeUpdateInput,
 		ec.unmarshalInputContactUpdateInput,
 		ec.unmarshalInputConversationInput,
+		ec.unmarshalInputConversationUpdateInput,
 		ec.unmarshalInputCustomFieldInput,
 		ec.unmarshalInputCustomFieldTemplateInput,
 		ec.unmarshalInputCustomFieldUpdateInput,
@@ -2776,29 +2792,48 @@ extend type Query {
     contactTypes: [ContactType!]!
 }`, BuiltIn: false},
 	{Name: "../schemas/conversation.graphqls", Input: `extend type Mutation {
-    conversationCreate(input: ConversationInput!): Conversation!
+    conversation_Create(input: ConversationInput!): Conversation!
     conversationAddMessage(input: MessageInput!): Message!
 }
 
 type Conversation implements Node {
     id: ID!
     startedAt: Time!
-    contactId: ID!
-    contact: Contact @goField(forceResolver: true)
-    userId: ID!
-    user: User @goField(forceResolver: true)
+    endedAt: Time
+    status: ConversationStatus!
+    channel: String
+    itemCount: Int64!
+    contacts: [Contact!] @goField(forceResolver: true)
+    users: [User!] @goField(forceResolver: true)
 }
 
 input ConversationInput {
-    userId: ID!
-    contactId: ID!
     id: ID
+    startedAt: Time
+    status: ConversationStatus! = ACTIVE
+    userIds: [ID!]
+    contactIds: [ID!]
+    channel: String
+}
+
+input ConversationUpdateInput {
+    id: ID!
+    userIds: [ID!]
+    contactId: [ID!]
+    status: ConversationStatus
+    channel: String
+    skipItemIncrement: Boolean = false
 }
 
 type ConversationPage implements Pages {
     content: [Conversation!]!
     totalPages: Int!
     totalElements: Int64!
+}
+
+enum ConversationStatus {
+    ACTIVE
+    CLOSED
 }
 
 type Message implements Node {
@@ -3967,7 +4002,7 @@ func (ec *executionContext) field_Mutation_conversationAddMessage_args(ctx conte
 	return args, nil
 }
 
-func (ec *executionContext) field_Mutation_conversationCreate_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+func (ec *executionContext) field_Mutation_conversation_Create_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
 	var arg0 model.ConversationInput
@@ -7267,8 +7302,8 @@ func (ec *executionContext) fieldContext_Conversation_startedAt(ctx context.Cont
 	return fc, nil
 }
 
-func (ec *executionContext) _Conversation_contactId(ctx context.Context, field graphql.CollectedField, obj *model.Conversation) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Conversation_contactId(ctx, field)
+func (ec *executionContext) _Conversation_endedAt(ctx context.Context, field graphql.CollectedField, obj *model.Conversation) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Conversation_endedAt(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -7281,7 +7316,48 @@ func (ec *executionContext) _Conversation_contactId(ctx context.Context, field g
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.ContactID, nil
+		return obj.EndedAt, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*time.Time)
+	fc.Result = res
+	return ec.marshalOTime2ᚖtimeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Conversation_endedAt(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Conversation",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Conversation_status(ctx context.Context, field graphql.CollectedField, obj *model.Conversation) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Conversation_status(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Status, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -7293,26 +7369,26 @@ func (ec *executionContext) _Conversation_contactId(ctx context.Context, field g
 		}
 		return graphql.Null
 	}
-	res := resTmp.(string)
+	res := resTmp.(model.ConversationStatus)
 	fc.Result = res
-	return ec.marshalNID2string(ctx, field.Selections, res)
+	return ec.marshalNConversationStatus2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐConversationStatus(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Conversation_contactId(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Conversation_status(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Conversation",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type ID does not have child fields")
+			return nil, errors.New("field of type ConversationStatus does not have child fields")
 		},
 	}
 	return fc, nil
 }
 
-func (ec *executionContext) _Conversation_contact(ctx context.Context, field graphql.CollectedField, obj *model.Conversation) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Conversation_contact(ctx, field)
+func (ec *executionContext) _Conversation_channel(ctx context.Context, field graphql.CollectedField, obj *model.Conversation) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Conversation_channel(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -7325,7 +7401,7 @@ func (ec *executionContext) _Conversation_contact(ctx context.Context, field gra
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Conversation().Contact(rctx, obj)
+		return obj.Channel, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -7334,12 +7410,97 @@ func (ec *executionContext) _Conversation_contact(ctx context.Context, field gra
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.(*model.Contact)
+	res := resTmp.(*string)
 	fc.Result = res
-	return ec.marshalOContact2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐContact(ctx, field.Selections, res)
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Conversation_contact(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Conversation_channel(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Conversation",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Conversation_itemCount(ctx context.Context, field graphql.CollectedField, obj *model.Conversation) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Conversation_itemCount(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ItemCount, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int64)
+	fc.Result = res
+	return ec.marshalNInt642int64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Conversation_itemCount(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Conversation",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int64 does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Conversation_contacts(ctx context.Context, field graphql.CollectedField, obj *model.Conversation) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Conversation_contacts(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Conversation().Contacts(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.([]*model.Contact)
+	fc.Result = res
+	return ec.marshalOContact2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐContactᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Conversation_contacts(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Conversation",
 		Field:      field,
@@ -7394,8 +7555,8 @@ func (ec *executionContext) fieldContext_Conversation_contact(ctx context.Contex
 	return fc, nil
 }
 
-func (ec *executionContext) _Conversation_userId(ctx context.Context, field graphql.CollectedField, obj *model.Conversation) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Conversation_userId(ctx, field)
+func (ec *executionContext) _Conversation_users(ctx context.Context, field graphql.CollectedField, obj *model.Conversation) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Conversation_users(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -7408,51 +7569,7 @@ func (ec *executionContext) _Conversation_userId(ctx context.Context, field grap
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.UserID, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNID2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Conversation_userId(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Conversation",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type ID does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Conversation_user(ctx context.Context, field graphql.CollectedField, obj *model.Conversation) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Conversation_user(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Conversation().User(rctx, obj)
+		return ec.resolvers.Conversation().Users(rctx, obj)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -7461,12 +7578,12 @@ func (ec *executionContext) _Conversation_user(ctx context.Context, field graphq
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.(*model.User)
+	res := resTmp.([]*model.User)
 	fc.Result = res
-	return ec.marshalOUser2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐUser(ctx, field.Selections, res)
+	return ec.marshalOUser2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐUserᚄ(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Conversation_user(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Conversation_users(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Conversation",
 		Field:      field,
@@ -7536,14 +7653,18 @@ func (ec *executionContext) fieldContext_ConversationPage_content(ctx context.Co
 				return ec.fieldContext_Conversation_id(ctx, field)
 			case "startedAt":
 				return ec.fieldContext_Conversation_startedAt(ctx, field)
-			case "contactId":
-				return ec.fieldContext_Conversation_contactId(ctx, field)
-			case "contact":
-				return ec.fieldContext_Conversation_contact(ctx, field)
-			case "userId":
-				return ec.fieldContext_Conversation_userId(ctx, field)
-			case "user":
-				return ec.fieldContext_Conversation_user(ctx, field)
+			case "endedAt":
+				return ec.fieldContext_Conversation_endedAt(ctx, field)
+			case "status":
+				return ec.fieldContext_Conversation_status(ctx, field)
+			case "channel":
+				return ec.fieldContext_Conversation_channel(ctx, field)
+			case "itemCount":
+				return ec.fieldContext_Conversation_itemCount(ctx, field)
+			case "contacts":
+				return ec.fieldContext_Conversation_contacts(ctx, field)
+			case "users":
+				return ec.fieldContext_Conversation_users(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Conversation", field.Name)
 		},
@@ -10601,8 +10722,8 @@ func (ec *executionContext) fieldContext_Mutation_contactType_Delete(ctx context
 	return fc, nil
 }
 
-func (ec *executionContext) _Mutation_conversationCreate(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_conversationCreate(ctx, field)
+func (ec *executionContext) _Mutation_conversation_Create(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_conversation_Create(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -10632,7 +10753,7 @@ func (ec *executionContext) _Mutation_conversationCreate(ctx context.Context, fi
 	return ec.marshalNConversation2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐConversation(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Mutation_conversationCreate(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Mutation_conversation_Create(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Mutation",
 		Field:      field,
@@ -10644,14 +10765,18 @@ func (ec *executionContext) fieldContext_Mutation_conversationCreate(ctx context
 				return ec.fieldContext_Conversation_id(ctx, field)
 			case "startedAt":
 				return ec.fieldContext_Conversation_startedAt(ctx, field)
-			case "contactId":
-				return ec.fieldContext_Conversation_contactId(ctx, field)
-			case "contact":
-				return ec.fieldContext_Conversation_contact(ctx, field)
-			case "userId":
-				return ec.fieldContext_Conversation_userId(ctx, field)
-			case "user":
-				return ec.fieldContext_Conversation_user(ctx, field)
+			case "endedAt":
+				return ec.fieldContext_Conversation_endedAt(ctx, field)
+			case "status":
+				return ec.fieldContext_Conversation_status(ctx, field)
+			case "channel":
+				return ec.fieldContext_Conversation_channel(ctx, field)
+			case "itemCount":
+				return ec.fieldContext_Conversation_itemCount(ctx, field)
+			case "contacts":
+				return ec.fieldContext_Conversation_contacts(ctx, field)
+			case "users":
+				return ec.fieldContext_Conversation_users(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Conversation", field.Name)
 		},
@@ -10663,7 +10788,7 @@ func (ec *executionContext) fieldContext_Mutation_conversationCreate(ctx context
 		}
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_conversationCreate_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+	if fc.Args, err = ec.field_Mutation_conversation_Create_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return
 	}
@@ -17934,18 +18059,102 @@ func (ec *executionContext) unmarshalInputConversationInput(ctx context.Context,
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"userId", "contactId", "id"}
+	if _, present := asMap["status"]; !present {
+		asMap["status"] = "ACTIVE"
+	}
+
+	fieldsInOrder := [...]string{"id", "startedAt", "status", "userIds", "contactIds", "channel"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
 			continue
 		}
 		switch k {
-		case "userId":
+		case "id":
 			var err error
 
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("userId"))
-			it.UserID, err = ec.unmarshalNID2string(ctx, v)
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+			it.ID, err = ec.unmarshalOID2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "startedAt":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("startedAt"))
+			it.StartedAt, err = ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "status":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("status"))
+			it.Status, err = ec.unmarshalNConversationStatus2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐConversationStatus(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "userIds":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("userIds"))
+			it.UserIds, err = ec.unmarshalOID2ᚕstringᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "contactIds":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("contactIds"))
+			it.ContactIds, err = ec.unmarshalOID2ᚕstringᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "channel":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("channel"))
+			it.Channel, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputConversationUpdateInput(ctx context.Context, obj interface{}) (model.ConversationUpdateInput, error) {
+	var it model.ConversationUpdateInput
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	if _, present := asMap["skipItemIncrement"]; !present {
+		asMap["skipItemIncrement"] = false
+	}
+
+	fieldsInOrder := [...]string{"id", "userIds", "contactId", "status", "channel", "skipItemIncrement"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "id":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+			it.ID, err = ec.unmarshalNID2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "userIds":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("userIds"))
+			it.UserIds, err = ec.unmarshalOID2ᚕstringᚄ(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -17953,15 +18162,31 @@ func (ec *executionContext) unmarshalInputConversationInput(ctx context.Context,
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("contactId"))
-			it.ContactID, err = ec.unmarshalNID2string(ctx, v)
+			it.ContactID, err = ec.unmarshalOID2ᚕstringᚄ(ctx, v)
 			if err != nil {
 				return it, err
 			}
-		case "id":
+		case "status":
 			var err error
 
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
-			it.ID, err = ec.unmarshalOID2ᚖstring(ctx, v)
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("status"))
+			it.Status, err = ec.unmarshalOConversationStatus2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐConversationStatus(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "channel":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("channel"))
+			it.Channel, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "skipItemIncrement":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("skipItemIncrement"))
+			it.SkipItemIncrement, err = ec.unmarshalOBoolean2ᚖbool(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -19902,14 +20127,29 @@ func (ec *executionContext) _Conversation(ctx context.Context, sel ast.Selection
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&invalids, 1)
 			}
-		case "contactId":
+		case "endedAt":
 
-			out.Values[i] = ec._Conversation_contactId(ctx, field, obj)
+			out.Values[i] = ec._Conversation_endedAt(ctx, field, obj)
+
+		case "status":
+
+			out.Values[i] = ec._Conversation_status(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&invalids, 1)
 			}
-		case "contact":
+		case "channel":
+
+			out.Values[i] = ec._Conversation_channel(ctx, field, obj)
+
+		case "itemCount":
+
+			out.Values[i] = ec._Conversation_itemCount(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "contacts":
 			field := field
 
 			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
@@ -19918,7 +20158,7 @@ func (ec *executionContext) _Conversation(ctx context.Context, sel ast.Selection
 						ec.Error(ctx, ec.Recover(ctx, r))
 					}
 				}()
-				res = ec._Conversation_contact(ctx, field, obj)
+				res = ec._Conversation_contacts(ctx, field, obj)
 				return res
 			}
 
@@ -19926,14 +20166,7 @@ func (ec *executionContext) _Conversation(ctx context.Context, sel ast.Selection
 				return innerFunc(ctx)
 
 			})
-		case "userId":
-
-			out.Values[i] = ec._Conversation_userId(ctx, field, obj)
-
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&invalids, 1)
-			}
-		case "user":
+		case "users":
 			field := field
 
 			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
@@ -19942,7 +20175,7 @@ func (ec *executionContext) _Conversation(ctx context.Context, sel ast.Selection
 						ec.Error(ctx, ec.Recover(ctx, r))
 					}
 				}()
-				res = ec._Conversation_user(ctx, field, obj)
+				res = ec._Conversation_users(ctx, field, obj)
 				return res
 			}
 
@@ -20676,10 +20909,10 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 				return ec._Mutation_contactType_Delete(ctx, field)
 			})
 
-		case "conversationCreate":
+		case "conversation_Create":
 
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_conversationCreate(ctx, field)
+				return ec._Mutation_conversation_Create(ctx, field)
 			})
 
 			if out.Values[i] == graphql.Null {
@@ -22688,6 +22921,16 @@ func (ec *executionContext) marshalNConversationPage2ᚖgithubᚗcomᚋopenline�
 	return ec._ConversationPage(ctx, sel, v)
 }
 
+func (ec *executionContext) unmarshalNConversationStatus2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐConversationStatus(ctx context.Context, v interface{}) (model.ConversationStatus, error) {
+	var res model.ConversationStatus
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNConversationStatus2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐConversationStatus(ctx context.Context, sel ast.SelectionSet, v model.ConversationStatus) graphql.Marshaler {
+	return v
+}
+
 func (ec *executionContext) marshalNCustomField2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐCustomField(ctx context.Context, sel ast.SelectionSet, v model.CustomField) graphql.Marshaler {
 	return ec._CustomField(ctx, sel, &v)
 }
@@ -23965,6 +24208,53 @@ func (ec *executionContext) marshalOBoolean2ᚖbool(ctx context.Context, sel ast
 	return res
 }
 
+func (ec *executionContext) marshalOContact2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐContactᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Contact) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNContact2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐContact(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
 func (ec *executionContext) marshalOContact2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐContact(ctx context.Context, sel ast.SelectionSet, v *model.Contact) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
@@ -23984,6 +24274,22 @@ func (ec *executionContext) marshalOContactType2ᚖgithubᚗcomᚋopenlineᚑai�
 		return graphql.Null
 	}
 	return ec._ContactType(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalOConversationStatus2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐConversationStatus(ctx context.Context, v interface{}) (*model.ConversationStatus, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var res = new(model.ConversationStatus)
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOConversationStatus2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐConversationStatus(ctx context.Context, sel ast.SelectionSet, v *model.ConversationStatus) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return v
 }
 
 func (ec *executionContext) unmarshalOCustomFieldInput2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐCustomFieldInputᚄ(ctx context.Context, v interface{}) ([]*model.CustomFieldInput, error) {
@@ -24178,6 +24484,44 @@ func (ec *executionContext) unmarshalOFilterItem2ᚖgithubᚗcomᚋopenlineᚑai
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
+func (ec *executionContext) unmarshalOID2ᚕstringᚄ(ctx context.Context, v interface{}) ([]string, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var vSlice []interface{}
+	if v != nil {
+		vSlice = graphql.CoerceList(v)
+	}
+	var err error
+	res := make([]string, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalNID2string(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
+func (ec *executionContext) marshalOID2ᚕstringᚄ(ctx context.Context, sel ast.SelectionSet, v []string) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	ret := make(graphql.Array, len(v))
+	for i := range v {
+		ret[i] = ec.marshalNID2string(ctx, sel, v[i])
+	}
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
 func (ec *executionContext) unmarshalOID2ᚖstring(ctx context.Context, v interface{}) (*string, error) {
 	if v == nil {
 		return nil, nil
@@ -24367,6 +24711,53 @@ func (ec *executionContext) marshalOTime2ᚖtimeᚐTime(ctx context.Context, sel
 	}
 	res := graphql.MarshalTime(*v)
 	return res
+}
+
+func (ec *executionContext) marshalOUser2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐUserᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.User) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNUser2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐUser(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
 }
 
 func (ec *executionContext) marshalOUser2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐUser(ctx context.Context, sel ast.SelectionSet, v *model.User) graphql.Marshaler {

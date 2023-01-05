@@ -1,0 +1,18 @@
+mutation CreateConversation($contactId: ID!) {
+  conversation_Create(input: {
+    contactIds: [$contactId]
+  }) {
+    id
+    startedAt
+    endedAt
+    status
+    channel
+    itemCount
+    contacts {
+      id
+    }
+    users {
+      id
+    }
+  }
+}

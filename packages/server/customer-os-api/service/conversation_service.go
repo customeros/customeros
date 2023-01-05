@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"errors"
 	"github.com/google/uuid"
 	"github.com/neo4j/neo4j-go-driver/v4/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
@@ -9,11 +10,12 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils"
+	"github.com/sirupsen/logrus"
 	"reflect"
 )
 
 type ConversationService interface {
-	CreateNewConversation(ctx context.Context, userId string, contactId string, conversationId *string) (*entity.ConversationEntity, error)
+	CreateNewConversation(ctx context.Context, userIds, contactIds []string, input *entity.ConversationEntity) (*entity.ConversationEntity, error)
 	GetConversationsForUser(ctx context.Context, userId string, page, limit int, sortBy []*model.SortBy) (*utils.Pagination, error)
 	GetConversationsForContact(ctx context.Context, contactId string, page, limit int, sortBy []*model.SortBy) (*utils.Pagination, error)
 	AddMessageToConversation(ctx context.Context, input *entity.MessageEntity) (*entity.MessageEntity, error)
@@ -29,16 +31,21 @@ func NewConversationService(repository *repository.Repositories) ConversationSer
 	}
 }
 
-func (s *conversationService) CreateNewConversation(ctx context.Context, userId string, contactId string, conversationId *string) (*entity.ConversationEntity, error) {
-	if conversationId == nil {
-		newUuid, _ := uuid.NewRandom()
-		conversationId = utils.StringPtr(newUuid.String())
+func (s *conversationService) CreateNewConversation(ctx context.Context, userIds, contactIds []string, input *entity.ConversationEntity) (*entity.ConversationEntity, error) {
+	if len(userIds) == 0 && len(contactIds) == 0 {
+		msg := "Missing participants for new conversation"
+		logrus.Error(msg)
+		return nil, errors.New(msg)
 	}
-	record, err := s.repository.ConversationRepository.Create(common.GetContext(ctx).Tenant, userId, contactId, *conversationId)
+	if len(input.Id) == 0 {
+		newUuid, _ := uuid.NewRandom()
+		input.Id = newUuid.String()
+	}
+	record, err := s.repository.ConversationRepository.Create(common.GetContext(ctx).Tenant, userIds, contactIds, *input)
 	if err != nil {
 		return nil, err
 	}
-	conversationEntity := s.mapDbNodeToConversationEntity(utils.NodePtr(record.(dbtype.Node)))
+	conversationEntity := s.mapDbNodeToConversationEntity(record.(dbtype.Node))
 	return conversationEntity, nil
 }
 
@@ -70,9 +77,7 @@ func (s *conversationService) GetConversationsForUser(ctx context.Context, userI
 	conversationEntities := entity.ConversationEntities{}
 
 	for _, v := range conversationDbNodesWithTotalCount.Nodes {
-		conversationEntity := *s.mapDbNodeToConversationEntity(v.Node)
-		conversationEntity.UserId = v.UserId
-		conversationEntity.ContactId = v.ContactId
+		conversationEntity := *s.mapDbNodeToConversationEntity(*v.Node)
 		conversationEntities = append(conversationEntities, conversationEntity)
 	}
 	paginatedResult.SetRows(&conversationEntities)
@@ -107,9 +112,7 @@ func (s *conversationService) GetConversationsForContact(ctx context.Context, co
 	conversationEntities := entity.ConversationEntities{}
 
 	for _, v := range conversationDbNodesWithTotalCount.Nodes {
-		conversationEntity := *s.mapDbNodeToConversationEntity(v.Node)
-		conversationEntity.UserId = v.UserId
-		conversationEntity.ContactId = v.ContactId
+		conversationEntity := *s.mapDbNodeToConversationEntity(*v.Node)
 		conversationEntities = append(conversationEntities, conversationEntity)
 	}
 	paginatedResult.SetRows(&conversationEntities)
@@ -124,11 +127,15 @@ func (s *conversationService) AddMessageToConversation(ctx context.Context, inpu
 	return s.mapDbNodeToMessageEntity(dbNode), nil
 }
 
-func (s *conversationService) mapDbNodeToConversationEntity(dbNode *dbtype.Node) *entity.ConversationEntity {
-	props := utils.GetPropsFromNode(*dbNode)
+func (s *conversationService) mapDbNodeToConversationEntity(dbNode dbtype.Node) *entity.ConversationEntity {
+	props := utils.GetPropsFromNode(dbNode)
 	conversationEntity := entity.ConversationEntity{
 		Id:        utils.GetStringPropOrEmpty(props, "id"),
+		Channel:   utils.GetStringPropOrEmpty(props, "channel"),
+		Status:    utils.GetStringPropOrEmpty(props, "status"),
 		StartedAt: utils.GetTimePropOrNow(props, "startedAt"),
+		EndedAt:   utils.GetTimePropOrNil(props, "endedAt"),
+		ItemCount: utils.GetInt64PropOrZero(props, "itemCount"),
 	}
 	return &conversationEntity
 }

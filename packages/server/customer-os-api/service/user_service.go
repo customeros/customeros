@@ -10,7 +10,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils"
 	"reflect"
-	"time"
 )
 
 type UserService interface {
@@ -20,6 +19,8 @@ type UserService interface {
 
 	FindContactOwner(ctx context.Context, contactId string) (*entity.UserEntity, error)
 	FindNoteCreator(ctx context.Context, noteId string) (*entity.UserEntity, error)
+
+	GetAllForConversation(ctx context.Context, conversationId string) (*entity.UserEntities, error)
 }
 
 type userService struct {
@@ -32,12 +33,12 @@ func NewUserService(repositories *repository.Repositories) UserService {
 	}
 }
 
-func (s *userService) getDriver() neo4j.Driver {
+func (s *userService) getNeo4jDriver() neo4j.Driver {
 	return *s.repositories.Drivers.Neo4jDriver
 }
 
 func (s *userService) Create(ctx context.Context, entity *entity.UserEntity) (*entity.UserEntity, error) {
-	session := utils.NewNeo4jWriteSession(s.getDriver())
+	session := utils.NewNeo4jWriteSession(s.getNeo4jDriver())
 	defer session.Close()
 
 	userDbNode, err := s.repositories.UserRepository.Create(session, common.GetContext(ctx).Tenant, *entity)
@@ -48,7 +49,7 @@ func (s *userService) Create(ctx context.Context, entity *entity.UserEntity) (*e
 }
 
 func (s *userService) FindAll(ctx context.Context, page, limit int, filter *model.Filter, sortBy []*model.SortBy) (*utils.Pagination, error) {
-	session := utils.NewNeo4jReadSession(s.getDriver())
+	session := utils.NewNeo4jReadSession(s.getNeo4jDriver())
 	defer session.Close()
 
 	var paginatedResult = utils.Pagination{
@@ -86,7 +87,7 @@ func (s *userService) FindAll(ctx context.Context, page, limit int, filter *mode
 }
 
 func (s *userService) FindContactOwner(ctx context.Context, contactId string) (*entity.UserEntity, error) {
-	session := utils.NewNeo4jReadSession(s.getDriver())
+	session := utils.NewNeo4jReadSession(s.getNeo4jDriver())
 	defer session.Close()
 
 	ownerDbNode, err := session.ReadTransaction(func(tx neo4j.Transaction) (any, error) {
@@ -102,7 +103,7 @@ func (s *userService) FindContactOwner(ctx context.Context, contactId string) (*
 }
 
 func (s *userService) FindNoteCreator(ctx context.Context, noteId string) (*entity.UserEntity, error) {
-	session := utils.NewNeo4jReadSession(s.getDriver())
+	session := utils.NewNeo4jReadSession(s.getNeo4jDriver())
 	defer session.Close()
 
 	userDbNode, err := session.ReadTransaction(func(tx neo4j.Transaction) (any, error) {
@@ -118,7 +119,7 @@ func (s *userService) FindNoteCreator(ctx context.Context, noteId string) (*enti
 }
 
 func (s *userService) FindUserById(ctx context.Context, userId string) (*entity.UserEntity, error) {
-	session := utils.NewNeo4jReadSession(s.getDriver())
+	session := utils.NewNeo4jReadSession(s.getNeo4jDriver())
 	defer session.Close()
 
 	if userDbNode, err := s.repositories.UserRepository.GetById(session, common.GetContext(ctx).Tenant, userId); err != nil {
@@ -128,14 +129,29 @@ func (s *userService) FindUserById(ctx context.Context, userId string) (*entity.
 	}
 }
 
+func (s *userService) GetAllForConversation(ctx context.Context, conversationId string) (*entity.UserEntities, error) {
+	session := utils.NewNeo4jReadSession(s.getNeo4jDriver())
+	defer session.Close()
+
+	dbNodes, err := s.repositories.UserRepository.GetAllForConversation(session, common.GetContext(ctx).Tenant, conversationId)
+	if err != nil {
+		return nil, err
+	}
+
+	userEntities := entity.UserEntities{}
+	for _, dbNode := range dbNodes {
+		userEntities = append(userEntities, *s.mapDbNodeToUserEntity(*dbNode))
+	}
+	return &userEntities, nil
+}
+
 func (s *userService) mapDbNodeToUserEntity(dbNode dbtype.Node) *entity.UserEntity {
 	props := utils.GetPropsFromNode(dbNode)
-	userEntity := entity.UserEntity{
+	return &entity.UserEntity{
 		Id:        utils.GetStringPropOrEmpty(props, "id"),
 		FirstName: utils.GetStringPropOrEmpty(props, "firstName"),
 		LastName:  utils.GetStringPropOrEmpty(props, "lastName"),
 		Email:     utils.GetStringPropOrEmpty(props, "email"),
-		CreatedAt: props["createdAt"].(time.Time),
+		CreatedAt: utils.GetTimePropOrNow(props, "createdAt"),
 	}
-	return &userEntity
 }
