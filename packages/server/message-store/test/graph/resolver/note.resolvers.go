@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/openline-ai/openline-customer-os/packages/server/message-store/test/graph/generated"
 	"github.com/openline-ai/openline-customer-os/packages/server/message-store/test/graph/model"
 )
 
@@ -24,3 +25,13 @@ func (r *mutationResolver) NoteUpdateInContact(ctx context.Context, contactID st
 func (r *mutationResolver) NoteDeleteFromContact(ctx context.Context, contactID string, noteID string) (*model.Result, error) {
 	panic(fmt.Errorf("not implemented: NoteDeleteFromContact - note_DeleteFromContact"))
 }
+
+// CreatedBy is the resolver for the createdBy field.
+func (r *noteResolver) CreatedBy(ctx context.Context, obj *model.Note) (*model.User, error) {
+	panic(fmt.Errorf("not implemented: CreatedBy - createdBy"))
+}
+
+// Note returns generated.NoteResolver implementation.
+func (r *Resolver) Note() generated.NoteResolver { return &noteResolver{r} }
+
+type noteResolver struct{ *Resolver }

@@ -11,9 +11,9 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/message-store/test/graph/model"
 )
 
-// EntityDefinitionCreate is the resolver for the entityDefinitionCreate field.
-func (r *mutationResolver) EntityDefinitionCreate(ctx context.Context, input model.EntityDefinitionInput) (*model.EntityDefinition, error) {
-	panic(fmt.Errorf("not implemented: EntityDefinitionCreate - entityDefinitionCreate"))
+// EntityTemplateCreate is the resolver for the entityTemplateCreate field.
+func (r *mutationResolver) EntityTemplateCreate(ctx context.Context, input model.EntityTemplateInput) (*model.EntityTemplate, error) {
+	panic(fmt.Errorf("not implemented: EntityTemplateCreate - entityTemplateCreate"))
 }
 
 // Mutation returns generated.MutationResolver implementation.
