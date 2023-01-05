@@ -281,7 +281,6 @@ func (r *contactRepository) Delete(session neo4j.Session, tenant, contactId stri
 	return err
 }
 
-// FIXME alexb test
 func (r *contactRepository) GetAllForConversation(session neo4j.Session, tenant, conversationId string) ([]*dbtype.Node, error) {
 	dbRecords, err := session.ReadTransaction(func(tx neo4j.Transaction) (any, error) {
 		if queryResult, err := tx.Run(`

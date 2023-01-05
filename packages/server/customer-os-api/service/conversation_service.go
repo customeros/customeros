@@ -4,10 +4,12 @@ import (
 	"context"
 	"errors"
 	"github.com/google/uuid"
+	"github.com/neo4j/neo4j-go-driver/v4/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v4/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils"
 	"github.com/sirupsen/logrus"
@@ -19,6 +21,7 @@ type ConversationService interface {
 	GetConversationsForUser(ctx context.Context, userId string, page, limit int, sortBy []*model.SortBy) (*utils.Pagination, error)
 	GetConversationsForContact(ctx context.Context, contactId string, page, limit int, sortBy []*model.SortBy) (*utils.Pagination, error)
 	AddMessageToConversation(ctx context.Context, input *entity.MessageEntity) (*entity.MessageEntity, error)
+	CloseConversation(ctx context.Context, conversationId string) (*entity.ConversationEntity, error)
 }
 
 type conversationService struct {
@@ -31,6 +34,10 @@ func NewConversationService(repository *repository.Repositories) ConversationSer
 	}
 }
 
+func (s *conversationService) getNeo4jDriver() *neo4j.Driver {
+	return s.repository.Drivers.Neo4jDriver
+}
+
 func (s *conversationService) CreateNewConversation(ctx context.Context, userIds, contactIds []string, input *entity.ConversationEntity) (*entity.ConversationEntity, error) {
 	if len(userIds) == 0 && len(contactIds) == 0 {
 		msg := "Missing participants for new conversation"
@@ -41,16 +48,20 @@ func (s *conversationService) CreateNewConversation(ctx context.Context, userIds
 		newUuid, _ := uuid.NewRandom()
 		input.Id = newUuid.String()
 	}
-	record, err := s.repository.ConversationRepository.Create(common.GetContext(ctx).Tenant, userIds, contactIds, *input)
+
+	session := utils.NewNeo4jReadSession(*s.getNeo4jDriver())
+	defer session.Close()
+
+	dbNodePtr, err := s.repository.ConversationRepository.Create(session, common.GetContext(ctx).Tenant, userIds, contactIds, *input)
 	if err != nil {
 		return nil, err
 	}
-	conversationEntity := s.mapDbNodeToConversationEntity(record.(dbtype.Node))
+	conversationEntity := s.mapDbNodeToConversationEntity(*dbNodePtr)
 	return conversationEntity, nil
 }
 
 func (s *conversationService) GetConversationsForUser(ctx context.Context, userId string, page, limit int, sortBy []*model.SortBy) (*utils.Pagination, error) {
-	session := utils.NewNeo4jReadSession(*s.repository.Drivers.Neo4jDriver)
+	session := utils.NewNeo4jReadSession(*s.getNeo4jDriver())
 	defer session.Close()
 
 	var paginatedResult = utils.Pagination{
@@ -85,7 +96,7 @@ func (s *conversationService) GetConversationsForUser(ctx context.Context, userI
 }
 
 func (s *conversationService) GetConversationsForContact(ctx context.Context, contactId string, page, limit int, sortBy []*model.SortBy) (*utils.Pagination, error) {
-	session := utils.NewNeo4jReadSession(*s.repository.Drivers.Neo4jDriver)
+	session := utils.NewNeo4jReadSession(*s.getNeo4jDriver())
 	defer session.Close()
 
 	var paginatedResult = utils.Pagination{
@@ -117,6 +128,18 @@ func (s *conversationService) GetConversationsForContact(ctx context.Context, co
 	}
 	paginatedResult.SetRows(&conversationEntities)
 	return &paginatedResult, nil
+}
+
+func (s *conversationService) CloseConversation(ctx context.Context, conversationId string) (*entity.ConversationEntity, error) {
+	session := utils.NewNeo4jReadSession(*s.getNeo4jDriver())
+	defer session.Close()
+
+	dbNodePtr, err := s.repository.ConversationRepository.Close(session, common.GetContext(ctx).Tenant, conversationId, mapper.MapConversationStatusFromModel(model.ConversationStatusClosed))
+	if err != nil {
+		return nil, err
+	}
+	conversationEntity := s.mapDbNodeToConversationEntity(*dbNodePtr)
+	return conversationEntity, nil
 }
 
 func (s *conversationService) AddMessageToConversation(ctx context.Context, input *entity.MessageEntity) (*entity.MessageEntity, error) {

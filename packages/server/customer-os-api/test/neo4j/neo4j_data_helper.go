@@ -405,7 +405,8 @@ func CreateConversation(driver *neo4j.Driver, userId, contactId string) string {
 	var conversationId, _ = uuid.NewRandom()
 	query := `MATCH (c:Contact {id:$contactId}),
 			        (u:User {id:$userId})
-			MERGE (u)-[:PARTICIPATES]->(o:Conversation {id:$conversationId, startedAt:datetime({timezone: 'UTC'})})<-[:PARTICIPATES]-(c)`
+			MERGE (u)-[:PARTICIPATES]->(o:Conversation {id:$conversationId})<-[:PARTICIPATES]-(c)
+			ON CREATE SET o.startedAt=datetime({timezone: 'UTC'}), o.status="ACTIVE"`
 	ExecuteWriteQuery(driver, query, map[string]any{
 		"contactId":      contactId,
 		"userId":         userId,

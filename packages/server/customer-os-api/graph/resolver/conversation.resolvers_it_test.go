@@ -98,6 +98,37 @@ func TestMutationResolver_ConversationCreate_WithoutParticipants_ShouldFail(t *t
 	require.Equal(t, 0, neo4jt.GetCountOfNodes(driver, "Conversation"))
 }
 
+func TestMutationResolver_ConversationClose(t *testing.T) {
+	defer tearDownTestCase()(t)
+	neo4jt.CreateTenant(driver, tenantName)
+	contactId := neo4jt.CreateDefaultContact(driver, tenantName)
+	userId := neo4jt.CreateDefaultUser(driver, tenantName)
+	conversationId := neo4jt.CreateConversation(driver, userId, contactId)
+
+	rawResponse, err := c.RawPost(getQuery("close_conversation"),
+		client.Var("conversationId", conversationId))
+	assertRawResponseSuccess(t, rawResponse, err)
+
+	var conversation struct {
+		Conversation_Close model.Conversation
+	}
+
+	err = decode.Decode(rawResponse.Data.(map[string]any), &conversation)
+	require.Nil(t, err)
+	require.NotNil(t, conversation)
+	require.Equal(t, conversationId, conversation.Conversation_Close.ID)
+	require.NotNil(t, conversation.Conversation_Close.StartedAt)
+	require.NotNil(t, conversation.Conversation_Close.EndedAt)
+	require.Equal(t, model.ConversationStatusClosed, conversation.Conversation_Close.Status)
+	require.Equal(t, contactId, conversation.Conversation_Close.Contacts[0].ID)
+	require.Equal(t, userId, conversation.Conversation_Close.Users[0].ID)
+
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Conversation"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Contact"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "User"))
+	require.Equal(t, 2, neo4jt.GetCountOfRelationships(driver, "PARTICIPATES"))
+}
+
 func TestMutationResolver_ConversationAddMessage(t *testing.T) {
 	defer tearDownTestCase()(t)
 	neo4jt.CreateTenant(driver, tenantName)

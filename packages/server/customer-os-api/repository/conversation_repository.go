@@ -20,9 +20,10 @@ type ConversationDbNodesWithTotalCount struct {
 }
 
 type ConversationRepository interface {
-	Create(tenant string, userIds, contactIds []string, entity entity.ConversationEntity) (any, error)
+	Create(session neo4j.Session, tenant string, userIds, contactIds []string, entity entity.ConversationEntity) (*dbtype.Node, error)
 	GetPaginatedConversationsForUser(session neo4j.Session, tenant, userId string, skip, limit int, sort *utils.CypherSort) (*ConversationDbNodesWithTotalCount, error)
 	GetPaginatedConversationsForContact(session neo4j.Session, tenant, contactId string, skip, limit int, sort *utils.CypherSort) (*ConversationDbNodesWithTotalCount, error)
+	Close(session neo4j.Session, tenant string, conversationId string, status string) (*dbtype.Node, error)
 }
 
 type conversationRepository struct {
@@ -35,11 +36,8 @@ func NewConversationRepository(driver *neo4j.Driver) ConversationRepository {
 	}
 }
 
-func (r *conversationRepository) Create(tenant string, userIds, contactIds []string, entity entity.ConversationEntity) (any, error) {
-	session := utils.NewNeo4jWriteSession(*r.driver)
-	defer session.Close()
-
-	return session.WriteTransaction(func(tx neo4j.Transaction) (interface{}, error) {
+func (r *conversationRepository) Create(session neo4j.Session, tenant string, userIds, contactIds []string, entity entity.ConversationEntity) (*dbtype.Node, error) {
+	if result, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
 		query := "MATCH (t:Tenant {name:$tenant}) " +
 			" MERGE (o:Conversation {id:$conversationId}) " +
 			" ON CREATE SET o.startedAt=$startedAt, o.itemCount=0, o.channel=$channel, o.status=$status, o:%s " +
@@ -57,7 +55,7 @@ func (r *conversationRepository) Create(tenant string, userIds, contactIds []str
 				" OPTIONAL MATCH (u:User)-[:USER_BELONGS_TO_TENANT]->(t) WHERE u.id in $userIds " +
 				" MERGE (u)-[:PARTICIPATES]->(o) "
 		}
-		txResult, err := tx.Run(fmt.Sprintf(query, "Conversation_"+tenant, queryLinkWithContacts, queryLinkWithUsers),
+		queryResult, err := tx.Run(fmt.Sprintf(query, "Conversation_"+tenant, queryLinkWithContacts, queryLinkWithUsers),
 			map[string]interface{}{
 				"tenant":         tenant,
 				"status":         entity.Status,
@@ -67,12 +65,32 @@ func (r *conversationRepository) Create(tenant string, userIds, contactIds []str
 				"contactIds":     contactIds,
 				"userIds":        userIds,
 			})
-		record, err := txResult.Single()
-		if err != nil {
-			return nil, err
-		}
-		return record.Values[0], nil
-	})
+		return utils.ExtractSingleRecordFirstValueAsNode(queryResult, err)
+	}); err != nil {
+		return nil, err
+	} else {
+		return result.(*dbtype.Node), nil
+	}
+}
+
+func (r *conversationRepository) Close(session neo4j.Session, tenant string, conversationId string, status string) (*dbtype.Node, error) {
+	if result, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
+		query := "MATCH (o:Conversation {id:$conversationId})--(p)--(t:Tenant {name:$tenant}) " +
+			" WHERE 'Contact' IN labels(p) OR 'User' IN labels(p) " +
+			" SET o.endedAt=datetime({timezone: 'UTC'}), o.status=$status" +
+			" RETURN DISTINCT o"
+		queryResult, err := tx.Run(query,
+			map[string]interface{}{
+				"tenant":         tenant,
+				"conversationId": conversationId,
+				"status":         status,
+			})
+		return utils.ExtractSingleRecordFirstValueAsNode(queryResult, err)
+	}); err != nil {
+		return nil, err
+	} else {
+		return result.(*dbtype.Node), nil
+	}
 }
 
 func (r *conversationRepository) GetPaginatedConversationsForUser(session neo4j.Session, tenant, userId string, skip, limit int, sort *utils.CypherSort) (*ConversationDbNodesWithTotalCount, error) {

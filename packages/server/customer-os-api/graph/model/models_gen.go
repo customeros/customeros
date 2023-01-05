@@ -291,9 +291,9 @@ func (this Conversation) GetID() string { return this.ID }
 type ConversationInput struct {
 	ID         *string            `json:"id"`
 	StartedAt  *time.Time         `json:"startedAt"`
-	Status     ConversationStatus `json:"status"`
-	UserIds    []string           `json:"userIds"`
 	ContactIds []string           `json:"contactIds"`
+	UserIds    []string           `json:"userIds"`
+	Status     ConversationStatus `json:"status"`
 	Channel    *string            `json:"channel"`
 }
 
@@ -315,8 +315,8 @@ func (this ConversationPage) GetTotalElements() int64 { return this.TotalElement
 
 type ConversationUpdateInput struct {
 	ID                string              `json:"id"`
+	ContactIds        []string            `json:"contactIds"`
 	UserIds           []string            `json:"userIds"`
-	ContactID         []string            `json:"contactId"`
 	Status            *ConversationStatus `json:"status"`
 	Channel           *string             `json:"channel"`
 	SkipItemIncrement *bool               `json:"skipItemIncrement"`

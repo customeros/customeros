@@ -1,5 +1,7 @@
 extend type Mutation {
     conversation_Create(input: ConversationInput!): Conversation!
+    conversation_Update(input: ConversationUpdateInput!): Conversation!
+    conversation_Close(conversationId: ID!): Conversation!
     conversationAddMessage(input: MessageInput!): Message!
 }
 
@@ -17,16 +19,16 @@ type Conversation implements Node {
 input ConversationInput {
     id: ID
     startedAt: Time
-    status: ConversationStatus! = ACTIVE
-    userIds: [ID!]
     contactIds: [ID!]
+    userIds: [ID!]
+    status: ConversationStatus! = ACTIVE
     channel: String
 }
 
 input ConversationUpdateInput {
     id: ID!
+    contactIds: [ID!]
     userIds: [ID!]
-    contactId: [ID!]
     status: ConversationStatus
     channel: String
     skipItemIncrement: Boolean = false

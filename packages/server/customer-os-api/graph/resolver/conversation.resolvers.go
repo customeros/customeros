@@ -6,6 +6,7 @@ package resolver
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/generated"
@@ -38,6 +39,21 @@ func (r *mutationResolver) ConversationCreate(ctx context.Context, input model.C
 	conversationEntity, err := r.Services.ConversationService.CreateNewConversation(ctx, input.UserIds, input.ContactIds, mapper.MapConversationInputToEntity(input))
 	if err != nil {
 		graphql.AddErrorf(ctx, "failed to create conversation between users: %v and contacts: %v", input.UserIds, input.ContactIds)
+		return nil, err
+	}
+	return mapper.MapEntityToConversation(conversationEntity), nil
+}
+
+// ConversationUpdate is the resolver for the conversation_Update field.
+func (r *mutationResolver) ConversationUpdate(ctx context.Context, input model.ConversationUpdateInput) (*model.Conversation, error) {
+	panic(fmt.Errorf("not implemented: ConversationUpdate - conversation_Update"))
+}
+
+// ConversationClose is the resolver for the conversation_Close field.
+func (r *mutationResolver) ConversationClose(ctx context.Context, conversationID string) (*model.Conversation, error) {
+	conversationEntity, err := r.Services.ConversationService.CloseConversation(ctx, conversationID)
+	if err != nil {
+		graphql.AddErrorf(ctx, "failed to close conversation %s", conversationID)
 		return nil, err
 	}
 	return mapper.MapEntityToConversation(conversationEntity), nil

@@ -222,7 +222,9 @@ type ComplexityRoot struct {
 		ContactTypeUpdate                      func(childComplexity int, input model.ContactTypeUpdateInput) int
 		ContactUpdate                          func(childComplexity int, input model.ContactUpdateInput) int
 		ConversationAddMessage                 func(childComplexity int, input model.MessageInput) int
+		ConversationClose                      func(childComplexity int, conversationID string) int
 		ConversationCreate                     func(childComplexity int, input model.ConversationInput) int
+		ConversationUpdate                     func(childComplexity int, input model.ConversationUpdateInput) int
 		CustomFieldDeleteFromContactByID       func(childComplexity int, contactID string, id string) int
 		CustomFieldDeleteFromContactByName     func(childComplexity int, contactID string, fieldName string) int
 		CustomFieldDeleteFromFieldSetByID      func(childComplexity int, contactID string, fieldSetID string, id string) int
@@ -405,6 +407,8 @@ type MutationResolver interface {
 	ContactTypeUpdate(ctx context.Context, input model.ContactTypeUpdateInput) (*model.ContactType, error)
 	ContactTypeDelete(ctx context.Context, id string) (*model.Result, error)
 	ConversationCreate(ctx context.Context, input model.ConversationInput) (*model.Conversation, error)
+	ConversationUpdate(ctx context.Context, input model.ConversationUpdateInput) (*model.Conversation, error)
+	ConversationClose(ctx context.Context, conversationID string) (*model.Conversation, error)
 	ConversationAddMessage(ctx context.Context, input model.MessageInput) (*model.Message, error)
 	CustomFieldsMergeAndUpdateInContact(ctx context.Context, contactID string, customFields []*model.CustomFieldInput, fieldSets []*model.FieldSetInput) (*model.Contact, error)
 	CustomFieldMergeToContact(ctx context.Context, contactID string, input model.CustomFieldInput) (*model.CustomField, error)
@@ -1375,6 +1379,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.ConversationAddMessage(childComplexity, args["input"].(model.MessageInput)), true
 
+	case "Mutation.conversation_Close":
+		if e.complexity.Mutation.ConversationClose == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_conversation_Close_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.ConversationClose(childComplexity, args["conversationId"].(string)), true
+
 	case "Mutation.conversation_Create":
 		if e.complexity.Mutation.ConversationCreate == nil {
 			break
@@ -1386,6 +1402,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.ConversationCreate(childComplexity, args["input"].(model.ConversationInput)), true
+
+	case "Mutation.conversation_Update":
+		if e.complexity.Mutation.ConversationUpdate == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_conversation_Update_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.ConversationUpdate(childComplexity, args["input"].(model.ConversationUpdateInput)), true
 
 	case "Mutation.customFieldDeleteFromContactById":
 		if e.complexity.Mutation.CustomFieldDeleteFromContactByID == nil {
@@ -2793,6 +2821,8 @@ extend type Query {
 }`, BuiltIn: false},
 	{Name: "../schemas/conversation.graphqls", Input: `extend type Mutation {
     conversation_Create(input: ConversationInput!): Conversation!
+    conversation_Update(input: ConversationUpdateInput!): Conversation!
+    conversation_Close(conversationId: ID!): Conversation!
     conversationAddMessage(input: MessageInput!): Message!
 }
 
@@ -2810,16 +2840,16 @@ type Conversation implements Node {
 input ConversationInput {
     id: ID
     startedAt: Time
-    status: ConversationStatus! = ACTIVE
-    userIds: [ID!]
     contactIds: [ID!]
+    userIds: [ID!]
+    status: ConversationStatus! = ACTIVE
     channel: String
 }
 
 input ConversationUpdateInput {
     id: ID!
+    contactIds: [ID!]
     userIds: [ID!]
-    contactId: [ID!]
     status: ConversationStatus
     channel: String
     skipItemIncrement: Boolean = false
@@ -4002,6 +4032,21 @@ func (ec *executionContext) field_Mutation_conversationAddMessage_args(ctx conte
 	return args, nil
 }
 
+func (ec *executionContext) field_Mutation_conversation_Close_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["conversationId"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("conversationId"))
+		arg0, err = ec.unmarshalNID2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["conversationId"] = arg0
+	return args, nil
+}
+
 func (ec *executionContext) field_Mutation_conversation_Create_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
@@ -4009,6 +4054,21 @@ func (ec *executionContext) field_Mutation_conversation_Create_args(ctx context.
 	if tmp, ok := rawArgs["input"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
 		arg0, err = ec.unmarshalNConversationInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐConversationInput(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_conversation_Update_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 model.ConversationUpdateInput
+	if tmp, ok := rawArgs["input"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+		arg0, err = ec.unmarshalNConversationUpdateInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐConversationUpdateInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -10789,6 +10849,152 @@ func (ec *executionContext) fieldContext_Mutation_conversation_Create(ctx contex
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Mutation_conversation_Create_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_conversation_Update(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_conversation_Update(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().ConversationUpdate(rctx, fc.Args["input"].(model.ConversationUpdateInput))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.Conversation)
+	fc.Result = res
+	return ec.marshalNConversation2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐConversation(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_conversation_Update(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Conversation_id(ctx, field)
+			case "startedAt":
+				return ec.fieldContext_Conversation_startedAt(ctx, field)
+			case "endedAt":
+				return ec.fieldContext_Conversation_endedAt(ctx, field)
+			case "status":
+				return ec.fieldContext_Conversation_status(ctx, field)
+			case "channel":
+				return ec.fieldContext_Conversation_channel(ctx, field)
+			case "itemCount":
+				return ec.fieldContext_Conversation_itemCount(ctx, field)
+			case "contacts":
+				return ec.fieldContext_Conversation_contacts(ctx, field)
+			case "users":
+				return ec.fieldContext_Conversation_users(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Conversation", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_conversation_Update_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_conversation_Close(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_conversation_Close(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().ConversationClose(rctx, fc.Args["conversationId"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.Conversation)
+	fc.Result = res
+	return ec.marshalNConversation2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐConversation(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_conversation_Close(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Conversation_id(ctx, field)
+			case "startedAt":
+				return ec.fieldContext_Conversation_startedAt(ctx, field)
+			case "endedAt":
+				return ec.fieldContext_Conversation_endedAt(ctx, field)
+			case "status":
+				return ec.fieldContext_Conversation_status(ctx, field)
+			case "channel":
+				return ec.fieldContext_Conversation_channel(ctx, field)
+			case "itemCount":
+				return ec.fieldContext_Conversation_itemCount(ctx, field)
+			case "contacts":
+				return ec.fieldContext_Conversation_contacts(ctx, field)
+			case "users":
+				return ec.fieldContext_Conversation_users(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Conversation", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_conversation_Close_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return
 	}
@@ -18063,7 +18269,7 @@ func (ec *executionContext) unmarshalInputConversationInput(ctx context.Context,
 		asMap["status"] = "ACTIVE"
 	}
 
-	fieldsInOrder := [...]string{"id", "startedAt", "status", "userIds", "contactIds", "channel"}
+	fieldsInOrder := [...]string{"id", "startedAt", "contactIds", "userIds", "status", "channel"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -18086,11 +18292,11 @@ func (ec *executionContext) unmarshalInputConversationInput(ctx context.Context,
 			if err != nil {
 				return it, err
 			}
-		case "status":
+		case "contactIds":
 			var err error
 
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("status"))
-			it.Status, err = ec.unmarshalNConversationStatus2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐConversationStatus(ctx, v)
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("contactIds"))
+			it.ContactIds, err = ec.unmarshalOID2ᚕstringᚄ(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -18102,11 +18308,11 @@ func (ec *executionContext) unmarshalInputConversationInput(ctx context.Context,
 			if err != nil {
 				return it, err
 			}
-		case "contactIds":
+		case "status":
 			var err error
 
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("contactIds"))
-			it.ContactIds, err = ec.unmarshalOID2ᚕstringᚄ(ctx, v)
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("status"))
+			it.Status, err = ec.unmarshalNConversationStatus2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐConversationStatus(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -18135,7 +18341,7 @@ func (ec *executionContext) unmarshalInputConversationUpdateInput(ctx context.Co
 		asMap["skipItemIncrement"] = false
 	}
 
-	fieldsInOrder := [...]string{"id", "userIds", "contactId", "status", "channel", "skipItemIncrement"}
+	fieldsInOrder := [...]string{"id", "contactIds", "userIds", "status", "channel", "skipItemIncrement"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -18150,19 +18356,19 @@ func (ec *executionContext) unmarshalInputConversationUpdateInput(ctx context.Co
 			if err != nil {
 				return it, err
 			}
+		case "contactIds":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("contactIds"))
+			it.ContactIds, err = ec.unmarshalOID2ᚕstringᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
 		case "userIds":
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("userIds"))
 			it.UserIds, err = ec.unmarshalOID2ᚕstringᚄ(ctx, v)
-			if err != nil {
-				return it, err
-			}
-		case "contactId":
-			var err error
-
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("contactId"))
-			it.ContactID, err = ec.unmarshalOID2ᚕstringᚄ(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -20918,6 +21124,24 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
+		case "conversation_Update":
+
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_conversation_Update(ctx, field)
+			})
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "conversation_Close":
+
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_conversation_Close(ctx, field)
+			})
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		case "conversationAddMessage":
 
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
@@ -22929,6 +23153,11 @@ func (ec *executionContext) unmarshalNConversationStatus2githubᚗcomᚋopenline
 
 func (ec *executionContext) marshalNConversationStatus2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐConversationStatus(ctx context.Context, sel ast.SelectionSet, v model.ConversationStatus) graphql.Marshaler {
 	return v
+}
+
+func (ec *executionContext) unmarshalNConversationUpdateInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐConversationUpdateInput(ctx context.Context, v interface{}) (model.ConversationUpdateInput, error) {
+	res, err := ec.unmarshalInputConversationUpdateInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) marshalNCustomField2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐCustomField(ctx context.Context, sel ast.SelectionSet, v model.CustomField) graphql.Marshaler {
