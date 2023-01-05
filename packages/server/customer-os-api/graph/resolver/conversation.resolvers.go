@@ -13,24 +13,24 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper"
 )
 
-// Contact is the resolver for the contact field.
-func (r *conversationResolver) Contact(ctx context.Context, obj *model.Conversation) (*model.Contact, error) {
-	contactEntity, err := r.Services.ContactService.FindContactById(ctx, obj.ContactID)
-	if err != nil || contactEntity == nil {
-		graphql.AddErrorf(ctx, "contact with id %s not found", obj.ContactID)
+// Contacts is the resolver for the contacts field.
+func (r *conversationResolver) Contacts(ctx context.Context, obj *model.Conversation) ([]*model.Contact, error) {
+	contactEntities, err := r.Services.ContactService.GetAllForConversation(ctx, obj.ID)
+	if err != nil {
+		graphql.AddErrorf(ctx, "failed to fetch contacts for conversation %s", obj.ID)
 		return nil, err
 	}
-	return mapper.MapEntityToContact(contactEntity), nil
+	return mapper.MapEntitiesToContacts(contactEntities), nil
 }
 
-// User is the resolver for the user field.
-func (r *conversationResolver) User(ctx context.Context, obj *model.Conversation) (*model.User, error) {
-	userEntity, err := r.Services.UserService.FindUserById(ctx, obj.UserID)
-	if err != nil || userEntity == nil {
-		graphql.AddErrorf(ctx, "user with id %s not found", obj.UserID)
+// Users is the resolver for the users field.
+func (r *conversationResolver) Users(ctx context.Context, obj *model.Conversation) ([]*model.User, error) {
+	userEntities, err := r.Services.UserService.GetAllForConversation(ctx, obj.ID)
+	if err != nil {
+		graphql.AddErrorf(ctx, "failed to fetch users for conversation %s", obj.ID)
 		return nil, err
 	}
-	return mapper.MapEntityToUser(userEntity), nil
+	return mapper.MapEntitiesToUsers(userEntities), nil
 }
 
 // ConversationCreate is the resolver for the conversationCreate field.

@@ -8,5 +8,11 @@ mutation CreateConversation($contactId: ID!) {
     status
     channel
     itemCount
+    contacts {
+      id
+    }
+    users {
+      id
+    }
   }
 }

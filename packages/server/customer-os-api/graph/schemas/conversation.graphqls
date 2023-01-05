@@ -10,11 +10,8 @@ type Conversation implements Node {
     status: ConversationStatus!
     channel: String
     itemCount: Int64!
-# alexb replace below with optional lists
-    contactId: ID!
-    contact: Contact @goField(forceResolver: true)
-    userId: ID!
-    user: User @goField(forceResolver: true)
+    contacts: [Contact!] @goField(forceResolver: true)
+    users: [User!] @goField(forceResolver: true)
 }
 
 input ConversationInput {
@@ -31,6 +28,7 @@ input ConversationUpdateInput {
     userIds: [ID!]
     contactId: [ID!]
     status: ConversationStatus
+    channel: String
     skipItemIncrement: Boolean = false
 }
 

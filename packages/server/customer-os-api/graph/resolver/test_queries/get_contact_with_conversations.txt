@@ -7,12 +7,10 @@ query GetContactById($contactId: ID!){
         content {
             id
             startedAt
-            contactId
-            userId
-            contact {
+            contacts {
                 id
             }
-            user {
+            users {
                 id
             }
         }

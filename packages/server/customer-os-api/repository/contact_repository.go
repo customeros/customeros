@@ -21,6 +21,7 @@ type ContactRepository interface {
 	UnlinkFromContactTypesInTx(tx neo4j.Transaction, tenant, contactId string) error
 	GetPaginatedContacts(session neo4j.Session, tenant string, skip, limit int, filter *utils.CypherFilter, sort *utils.CypherSort) (*utils.DbNodesWithTotalCount, error)
 	GetPaginatedContactsForContactGroup(session neo4j.Session, tenant string, skip, limit int, filter *utils.CypherFilter, sort *utils.CypherSort, contactGroupId string) (*utils.DbNodesWithTotalCount, error)
+	GetAllForConversation(session neo4j.Session, tenant, conversationId string) ([]*dbtype.Node, error)
 }
 
 type contactRepository struct {
@@ -278,4 +279,31 @@ func (r *contactRepository) Delete(session neo4j.Session, tenant, contactId stri
 		return nil, err
 	})
 	return err
+}
+
+// FIXME alexb test
+func (r *contactRepository) GetAllForConversation(session neo4j.Session, tenant, conversationId string) ([]*dbtype.Node, error) {
+	dbRecords, err := session.ReadTransaction(func(tx neo4j.Transaction) (any, error) {
+		if queryResult, err := tx.Run(`
+			MATCH (t:Tenant {name:$tenant})<-[:CONTACT_BELONGS_TO_TENANT]-(c:Contact)-[:PARTICIPATES]->(o:Conversation {id:$conversationId})
+			RETURN c`,
+			map[string]any{
+				"tenant":         tenant,
+				"conversationId": conversationId,
+			}); err != nil {
+			return nil, err
+		} else {
+			return queryResult.Collect()
+		}
+	})
+	if err != nil {
+		return nil, err
+	}
+	dbNodes := []*dbtype.Node{}
+	for _, v := range dbRecords.([]*neo4j.Record) {
+		if v.Values[0] != nil {
+			dbNodes = append(dbNodes, utils.NodePtr(v.Values[0].(dbtype.Node)))
+		}
+	}
+	return dbNodes, err
 }

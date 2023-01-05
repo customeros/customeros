@@ -31,8 +31,8 @@ func TestMutationResolver_ConversationCreate_Min(t *testing.T) {
 	require.Equal(t, model.ConversationStatusActive, conversation.Conversation_Create.Status)
 	require.Equal(t, "", *conversation.Conversation_Create.Channel)
 	require.Equal(t, int64(0), conversation.Conversation_Create.ItemCount)
-
-	//FIXME alexb check contacts / users
+	require.Empty(t, conversation.Conversation_Create.Users)
+	require.Equal(t, contactId, conversation.Conversation_Create.Contacts[0].ID)
 
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Conversation"))
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Conversation_"+tenantName))
@@ -71,6 +71,10 @@ func TestMutationResolver_ConversationCreate_WithGivenIdAndMultipleParticipants(
 	require.Equal(t, model.ConversationStatusClosed, conversation.Conversation_Create.Status)
 	require.Equal(t, "EMAIL", *conversation.Conversation_Create.Channel)
 	require.Equal(t, int64(0), conversation.Conversation_Create.ItemCount)
+	require.ElementsMatch(t, []string{contactId1, contactId2},
+		[]string{conversation.Conversation_Create.Contacts[0].ID, conversation.Conversation_Create.Contacts[1].ID})
+	require.ElementsMatch(t, []string{userId1, userId2},
+		[]string{conversation.Conversation_Create.Users[0].ID, conversation.Conversation_Create.Users[1].ID})
 
 	require.Equal(t, 2, neo4jt.GetCountOfNodes(driver, "Contact"))
 	require.Equal(t, 2, neo4jt.GetCountOfNodes(driver, "User"))
@@ -78,6 +82,20 @@ func TestMutationResolver_ConversationCreate_WithGivenIdAndMultipleParticipants(
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Conversation_"+tenantName))
 	require.Equal(t, 4, neo4jt.GetCountOfRelationships(driver, "PARTICIPATES"))
 	assertNeo4jLabels(t, driver, []string{"Tenant", "Contact", "User", "Conversation", "Conversation_" + tenantName})
+}
+
+func TestMutationResolver_ConversationCreate_WithoutParticipants_ShouldFail(t *testing.T) {
+	defer tearDownTestCase()(t)
+	neo4jt.CreateTenant(driver, tenantName)
+
+	rawResponse, err := c.RawPost(getQuery("create_conversation_without_participants"))
+
+	require.Nil(t, err)
+	require.Nil(t, rawResponse.Data)
+	require.NotNil(t, rawResponse.Errors)
+	require.Contains(t, string(rawResponse.Errors), "Missing participants for new conversation")
+
+	require.Equal(t, 0, neo4jt.GetCountOfNodes(driver, "Conversation"))
 }
 
 func TestMutationResolver_ConversationAddMessage(t *testing.T) {

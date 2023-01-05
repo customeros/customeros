@@ -13,5 +13,11 @@ mutation CreateConversation($contactId1: ID!, $contactId2: ID!, $userId1: ID!, $
       status
       channel
       itemCount
+      contacts {
+        id
+      }
+      users {
+        id
+      }
     }
   }

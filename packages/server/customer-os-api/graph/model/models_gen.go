@@ -281,10 +281,8 @@ type Conversation struct {
 	Status    ConversationStatus `json:"status"`
 	Channel   *string            `json:"channel"`
 	ItemCount int64              `json:"itemCount"`
-	ContactID string             `json:"contactId"`
-	Contact   *Contact           `json:"contact"`
-	UserID    string             `json:"userId"`
-	User      *User              `json:"user"`
+	Contacts  []*Contact         `json:"contacts"`
+	Users     []*User            `json:"users"`
 }
 
 func (Conversation) IsNode()            {}
@@ -320,6 +318,7 @@ type ConversationUpdateInput struct {
 	UserIds           []string            `json:"userIds"`
 	ContactID         []string            `json:"contactId"`
 	Status            *ConversationStatus `json:"status"`
+	Channel           *string             `json:"channel"`
 	SkipItemIncrement *bool               `json:"skipItemIncrement"`
 }
 

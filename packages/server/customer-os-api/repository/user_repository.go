@@ -15,6 +15,7 @@ type UserRepository interface {
 	FindCreatorForNote(tx neo4j.Transaction, tenant, noteId string) (*dbtype.Node, error)
 	GetPaginatedUsers(session neo4j.Session, tenant string, skip, limit int, filter *utils.CypherFilter, sort *utils.CypherSort) (*utils.DbNodesWithTotalCount, error)
 	GetById(session neo4j.Session, tenant, userId string) (*dbtype.Node, error)
+	GetAllForConversation(session neo4j.Session, tenant, conversationId string) ([]*dbtype.Node, error)
 }
 
 type userRepository struct {
@@ -148,4 +149,30 @@ func (r *userRepository) GetById(session neo4j.Session, tenant, userId string) (
 		return queryResult.Single()
 	})
 	return utils.NodePtr(dbRecord.(*db.Record).Values[0].(dbtype.Node)), err
+}
+
+func (r *userRepository) GetAllForConversation(session neo4j.Session, tenant, conversationId string) ([]*dbtype.Node, error) {
+	dbRecords, err := session.ReadTransaction(func(tx neo4j.Transaction) (any, error) {
+		if queryResult, err := tx.Run(`
+			MATCH (t:Tenant {name:$tenant})<-[:USER_BELONGS_TO_TENANT]-(u:User)-[:PARTICIPATES]->(o:Conversation {id:$conversationId})
+			RETURN u`,
+			map[string]any{
+				"tenant":         tenant,
+				"conversationId": conversationId,
+			}); err != nil {
+			return nil, err
+		} else {
+			return queryResult.Collect()
+		}
+	})
+	if err != nil {
+		return nil, err
+	}
+	dbNodes := []*dbtype.Node{}
+	for _, v := range dbRecords.([]*neo4j.Record) {
+		if v.Values[0] != nil {
+			dbNodes = append(dbNodes, utils.NodePtr(v.Values[0].(dbtype.Node)))
+		}
+	}
+	return dbNodes, err
 }

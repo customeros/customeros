@@ -31,7 +31,6 @@ func NewConversationService(repository *repository.Repositories) ConversationSer
 	}
 }
 
-// FIXME alexb add test with missing participants
 func (s *conversationService) CreateNewConversation(ctx context.Context, userIds, contactIds []string, input *entity.ConversationEntity) (*entity.ConversationEntity, error) {
 	if len(userIds) == 0 && len(contactIds) == 0 {
 		msg := "Missing participants for new conversation"
@@ -79,9 +78,6 @@ func (s *conversationService) GetConversationsForUser(ctx context.Context, userI
 
 	for _, v := range conversationDbNodesWithTotalCount.Nodes {
 		conversationEntity := *s.mapDbNodeToConversationEntity(*v.Node)
-		// FIXME alexb
-		//conversationEntity.UserId = v.UserId
-		//conversationEntity.ContactId = v.ContactId
 		conversationEntities = append(conversationEntities, conversationEntity)
 	}
 	paginatedResult.SetRows(&conversationEntities)
@@ -117,9 +113,6 @@ func (s *conversationService) GetConversationsForContact(ctx context.Context, co
 
 	for _, v := range conversationDbNodesWithTotalCount.Nodes {
 		conversationEntity := *s.mapDbNodeToConversationEntity(*v.Node)
-		// FIXME alexb
-		//conversationEntity.UserId = v.UserId
-		//conversationEntity.ContactId = v.ContactId
 		conversationEntities = append(conversationEntities, conversationEntity)
 	}
 	paginatedResult.SetRows(&conversationEntities)
