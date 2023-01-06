@@ -109,7 +109,7 @@ func (s *syncService) parseEmail(email string) (string, string) {
 
 func (s *syncService) prepareFirstAndLastNames(email string) (string, string) {
 	displayName, _ := s.parseEmail(email)
-	firstName, lastName := "Unknown", "User"
+	firstName, lastName := "", ""
 	if displayName != "" {
 		parts := strings.SplitN(displayName, " ", 2)
 		firstName = parts[0]
