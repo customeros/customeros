@@ -6,7 +6,7 @@ import (
 )
 
 func NewDriver(cfg *Config) (*neo4j.Driver, error) {
-	logrus.Info("Connecting to neo4j database %s", cfg.Neo4jDb.Target)
+	logrus.Infof("Connecting to neo4j database %s", cfg.Neo4jDb.Target)
 	neo4jDriver, err := neo4j.NewDriver(
 		cfg.Neo4jDb.Target,
 		neo4j.BasicAuth(cfg.Neo4jDb.User, cfg.Neo4jDb.Pwd, cfg.Neo4jDb.Realm),

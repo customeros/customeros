@@ -54,13 +54,13 @@ func main() {
 	if errPostgres == nil && errNeo4j == nil {
 		AddTask(func() {
 			runId, _ := uuid.NewRandom()
-			logrus.Info("run id: %s syncing tracked data into customer-os at %v", runId.String(), time.Now().UTC())
+			logrus.Infof("run id: %s syncing tracked data into customer-os at %v", runId.String(), time.Now().UTC())
 			result := serviceContainer.SyncService.Sync(runId.String(), cfg.PageViewsBucketSize)
-			logrus.Info("run id: %s sync completed at %v, processed %d records", runId.String(), time.Now().UTC(), result)
+			logrus.Infof("run id: %s sync completed at %v, processed %d records", runId.String(), time.Now().UTC(), result)
 
 			if result == 0 {
 				timeout := time.Second * time.Duration(cfg.TimeoutAfterTaskRun)
-				logrus.Info("waiting %v seconds before next run", timeout.Seconds())
+				logrus.Infof("waiting %v seconds before next run", timeout.Seconds())
 				time.Sleep(timeout)
 			}
 		})
