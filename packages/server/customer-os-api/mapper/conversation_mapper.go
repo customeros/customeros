@@ -21,14 +21,25 @@ func MapConversationInputToEntity(input model.ConversationInput) *entity.Convers
 	return &conversationEntity
 }
 
+func MapConversationUpdateInputToEntity(input model.ConversationUpdateInput) *entity.ConversationEntity {
+	conversationEntity := entity.ConversationEntity{
+		Id:      utils.IfNotNilString(input.ID),
+		Channel: utils.IfNotNilString(input.Channel),
+	}
+	if input.Status != nil {
+		conversationEntity.Status = MapConversationStatusFromModel(*input.Status)
+	}
+	return &conversationEntity
+}
+
 func MapEntityToConversation(entity *entity.ConversationEntity) *model.Conversation {
 	return &model.Conversation{
-		ID:        entity.Id,
-		StartedAt: entity.StartedAt,
-		EndedAt:   entity.EndedAt,
-		Status:    MapConversationStatusToModel(entity.Status),
-		Channel:   utils.StringPtr(entity.Channel),
-		ItemCount: entity.ItemCount,
+		ID:           entity.Id,
+		StartedAt:    entity.StartedAt,
+		EndedAt:      entity.EndedAt,
+		Status:       MapConversationStatusToModel(entity.Status),
+		Channel:      utils.StringPtr(entity.Channel),
+		MessageCount: entity.MessageCount,
 	}
 }
 

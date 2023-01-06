@@ -6,7 +6,6 @@ package resolver
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/generated"
@@ -46,7 +45,13 @@ func (r *mutationResolver) ConversationCreate(ctx context.Context, input model.C
 
 // ConversationUpdate is the resolver for the conversation_Update field.
 func (r *mutationResolver) ConversationUpdate(ctx context.Context, input model.ConversationUpdateInput) (*model.Conversation, error) {
-	panic(fmt.Errorf("not implemented: ConversationUpdate - conversation_Update"))
+	conversationEntity, err := r.Services.ConversationService.UpdateConversation(
+		ctx, input.UserIds, input.ContactIds, mapper.MapConversationUpdateInputToEntity(input), input.SkipMessageCountIncrement)
+	if err != nil {
+		graphql.AddErrorf(ctx, "failed to update conversation %s", input.ID)
+		return nil, err
+	}
+	return mapper.MapEntityToConversation(conversationEntity), nil
 }
 
 // ConversationClose is the resolver for the conversation_Close field.

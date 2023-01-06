@@ -123,14 +123,14 @@ type ComplexityRoot struct {
 	}
 
 	Conversation struct {
-		Channel   func(childComplexity int) int
-		Contacts  func(childComplexity int) int
-		EndedAt   func(childComplexity int) int
-		ID        func(childComplexity int) int
-		ItemCount func(childComplexity int) int
-		StartedAt func(childComplexity int) int
-		Status    func(childComplexity int) int
-		Users     func(childComplexity int) int
+		Channel      func(childComplexity int) int
+		Contacts     func(childComplexity int) int
+		EndedAt      func(childComplexity int) int
+		ID           func(childComplexity int) int
+		MessageCount func(childComplexity int) int
+		StartedAt    func(childComplexity int) int
+		Status       func(childComplexity int) int
+		Users        func(childComplexity int) int
 	}
 
 	ConversationPage struct {
@@ -844,12 +844,12 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Conversation.ID(childComplexity), true
 
-	case "Conversation.itemCount":
-		if e.complexity.Conversation.ItemCount == nil {
+	case "Conversation.messageCount":
+		if e.complexity.Conversation.MessageCount == nil {
 			break
 		}
 
-		return e.complexity.Conversation.ItemCount(childComplexity), true
+		return e.complexity.Conversation.MessageCount(childComplexity), true
 
 	case "Conversation.startedAt":
 		if e.complexity.Conversation.StartedAt == nil {
@@ -2832,7 +2832,7 @@ type Conversation implements Node {
     endedAt: Time
     status: ConversationStatus!
     channel: String
-    itemCount: Int64!
+    messageCount: Int64!
     contacts: [Contact!] @goField(forceResolver: true)
     users: [User!] @goField(forceResolver: true)
 }
@@ -2852,7 +2852,7 @@ input ConversationUpdateInput {
     userIds: [ID!]
     status: ConversationStatus
     channel: String
-    skipItemIncrement: Boolean = false
+    skipMessageCountIncrement: Boolean! = false
 }
 
 type ConversationPage implements Pages {
@@ -7488,8 +7488,8 @@ func (ec *executionContext) fieldContext_Conversation_channel(ctx context.Contex
 	return fc, nil
 }
 
-func (ec *executionContext) _Conversation_itemCount(ctx context.Context, field graphql.CollectedField, obj *model.Conversation) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Conversation_itemCount(ctx, field)
+func (ec *executionContext) _Conversation_messageCount(ctx context.Context, field graphql.CollectedField, obj *model.Conversation) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Conversation_messageCount(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -7502,7 +7502,7 @@ func (ec *executionContext) _Conversation_itemCount(ctx context.Context, field g
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.ItemCount, nil
+		return obj.MessageCount, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -7519,7 +7519,7 @@ func (ec *executionContext) _Conversation_itemCount(ctx context.Context, field g
 	return ec.marshalNInt642int64(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Conversation_itemCount(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Conversation_messageCount(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Conversation",
 		Field:      field,
@@ -7719,8 +7719,8 @@ func (ec *executionContext) fieldContext_ConversationPage_content(ctx context.Co
 				return ec.fieldContext_Conversation_status(ctx, field)
 			case "channel":
 				return ec.fieldContext_Conversation_channel(ctx, field)
-			case "itemCount":
-				return ec.fieldContext_Conversation_itemCount(ctx, field)
+			case "messageCount":
+				return ec.fieldContext_Conversation_messageCount(ctx, field)
 			case "contacts":
 				return ec.fieldContext_Conversation_contacts(ctx, field)
 			case "users":
@@ -10831,8 +10831,8 @@ func (ec *executionContext) fieldContext_Mutation_conversation_Create(ctx contex
 				return ec.fieldContext_Conversation_status(ctx, field)
 			case "channel":
 				return ec.fieldContext_Conversation_channel(ctx, field)
-			case "itemCount":
-				return ec.fieldContext_Conversation_itemCount(ctx, field)
+			case "messageCount":
+				return ec.fieldContext_Conversation_messageCount(ctx, field)
 			case "contacts":
 				return ec.fieldContext_Conversation_contacts(ctx, field)
 			case "users":
@@ -10904,8 +10904,8 @@ func (ec *executionContext) fieldContext_Mutation_conversation_Update(ctx contex
 				return ec.fieldContext_Conversation_status(ctx, field)
 			case "channel":
 				return ec.fieldContext_Conversation_channel(ctx, field)
-			case "itemCount":
-				return ec.fieldContext_Conversation_itemCount(ctx, field)
+			case "messageCount":
+				return ec.fieldContext_Conversation_messageCount(ctx, field)
 			case "contacts":
 				return ec.fieldContext_Conversation_contacts(ctx, field)
 			case "users":
@@ -10977,8 +10977,8 @@ func (ec *executionContext) fieldContext_Mutation_conversation_Close(ctx context
 				return ec.fieldContext_Conversation_status(ctx, field)
 			case "channel":
 				return ec.fieldContext_Conversation_channel(ctx, field)
-			case "itemCount":
-				return ec.fieldContext_Conversation_itemCount(ctx, field)
+			case "messageCount":
+				return ec.fieldContext_Conversation_messageCount(ctx, field)
 			case "contacts":
 				return ec.fieldContext_Conversation_contacts(ctx, field)
 			case "users":
@@ -18337,11 +18337,11 @@ func (ec *executionContext) unmarshalInputConversationUpdateInput(ctx context.Co
 		asMap[k] = v
 	}
 
-	if _, present := asMap["skipItemIncrement"]; !present {
-		asMap["skipItemIncrement"] = false
+	if _, present := asMap["skipMessageCountIncrement"]; !present {
+		asMap["skipMessageCountIncrement"] = false
 	}
 
-	fieldsInOrder := [...]string{"id", "contactIds", "userIds", "status", "channel", "skipItemIncrement"}
+	fieldsInOrder := [...]string{"id", "contactIds", "userIds", "status", "channel", "skipMessageCountIncrement"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -18388,11 +18388,11 @@ func (ec *executionContext) unmarshalInputConversationUpdateInput(ctx context.Co
 			if err != nil {
 				return it, err
 			}
-		case "skipItemIncrement":
+		case "skipMessageCountIncrement":
 			var err error
 
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("skipItemIncrement"))
-			it.SkipItemIncrement, err = ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("skipMessageCountIncrement"))
+			it.SkipMessageCountIncrement, err = ec.unmarshalNBoolean2bool(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -20348,9 +20348,9 @@ func (ec *executionContext) _Conversation(ctx context.Context, sel ast.Selection
 
 			out.Values[i] = ec._Conversation_channel(ctx, field, obj)
 
-		case "itemCount":
+		case "messageCount":
 
-			out.Values[i] = ec._Conversation_itemCount(ctx, field, obj)
+			out.Values[i] = ec._Conversation_messageCount(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&invalids, 1)

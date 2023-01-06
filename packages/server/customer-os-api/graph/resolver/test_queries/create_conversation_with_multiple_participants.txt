@@ -12,7 +12,7 @@ mutation CreateConversation($contactId1: ID!, $contactId2: ID!, $userId1: ID!, $
       endedAt
       status
       channel
-      itemCount
+      messageCount
       contacts {
         id
       }

@@ -1,0 +1,19 @@
+mutation UpdateConversation($conversationId: ID!) {
+  conversation_Update(input: {
+        id: $conversationId
+        skipMessageCountIncrement: true
+  }) {
+    id
+    startedAt
+    endedAt
+    status
+    channel
+    messageCount
+    contacts {
+      id
+    }
+    users {
+      id
+    }
+  }
+}

@@ -6,6 +6,6 @@ mutation CreateConversation() {
       endedAt
       status
       channel
-      itemCount
+      messageCount
     }
   }

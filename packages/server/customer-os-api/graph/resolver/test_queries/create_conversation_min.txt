@@ -7,7 +7,7 @@ mutation CreateConversation($contactId: ID!) {
     endedAt
     status
     channel
-    itemCount
+    messageCount
     contacts {
       id
     }

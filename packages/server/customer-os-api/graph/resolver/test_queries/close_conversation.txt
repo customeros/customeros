@@ -1,11 +1,11 @@
-mutation CreateConversation($conversationId: ID!) {
+mutation CloseConversation($conversationId: ID!) {
   conversation_Close(conversationId: $conversationId) {
     id
     startedAt
     endedAt
     status
     channel
-    itemCount
+    messageCount
     contacts {
       id
     }

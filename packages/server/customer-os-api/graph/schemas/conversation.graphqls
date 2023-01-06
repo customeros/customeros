@@ -11,7 +11,7 @@ type Conversation implements Node {
     endedAt: Time
     status: ConversationStatus!
     channel: String
-    itemCount: Int64!
+    messageCount: Int64!
     contacts: [Contact!] @goField(forceResolver: true)
     users: [User!] @goField(forceResolver: true)
 }
@@ -31,7 +31,7 @@ input ConversationUpdateInput {
     userIds: [ID!]
     status: ConversationStatus
     channel: String
-    skipItemIncrement: Boolean = false
+    skipMessageCountIncrement: Boolean! = false
 }
 
 type ConversationPage implements Pages {

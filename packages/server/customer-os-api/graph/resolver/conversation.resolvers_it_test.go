@@ -30,7 +30,7 @@ func TestMutationResolver_ConversationCreate_Min(t *testing.T) {
 	require.Nil(t, conversation.Conversation_Create.EndedAt)
 	require.Equal(t, model.ConversationStatusActive, conversation.Conversation_Create.Status)
 	require.Equal(t, "", *conversation.Conversation_Create.Channel)
-	require.Equal(t, int64(0), conversation.Conversation_Create.ItemCount)
+	require.Equal(t, int64(0), conversation.Conversation_Create.MessageCount)
 	require.Empty(t, conversation.Conversation_Create.Users)
 	require.Equal(t, contactId, conversation.Conversation_Create.Contacts[0].ID)
 
@@ -70,7 +70,7 @@ func TestMutationResolver_ConversationCreate_WithGivenIdAndMultipleParticipants(
 	require.Nil(t, conversation.Conversation_Create.EndedAt)
 	require.Equal(t, model.ConversationStatusClosed, conversation.Conversation_Create.Status)
 	require.Equal(t, "EMAIL", *conversation.Conversation_Create.Channel)
-	require.Equal(t, int64(0), conversation.Conversation_Create.ItemCount)
+	require.Equal(t, int64(0), conversation.Conversation_Create.MessageCount)
 	require.ElementsMatch(t, []string{contactId1, contactId2},
 		[]string{conversation.Conversation_Create.Contacts[0].ID, conversation.Conversation_Create.Contacts[1].ID})
 	require.ElementsMatch(t, []string{userId1, userId2},
@@ -127,6 +127,82 @@ func TestMutationResolver_ConversationClose(t *testing.T) {
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Contact"))
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "User"))
 	require.Equal(t, 2, neo4jt.GetCountOfRelationships(driver, "PARTICIPATES"))
+}
+
+func TestMutationResolver_ConversationUpdate_NoChanges(t *testing.T) {
+	defer tearDownTestCase()(t)
+	neo4jt.CreateTenant(driver, tenantName)
+	contactId := neo4jt.CreateDefaultContact(driver, tenantName)
+	userId := neo4jt.CreateDefaultUser(driver, tenantName)
+	conversationId := neo4jt.CreateConversation(driver, userId, contactId)
+
+	rawResponse, err := c.RawPost(getQuery("update_conversation_no_changes"),
+		client.Var("conversationId", conversationId))
+	assertRawResponseSuccess(t, rawResponse, err)
+
+	var conversation struct {
+		Conversation_Update model.Conversation
+	}
+
+	err = decode.Decode(rawResponse.Data.(map[string]any), &conversation)
+	require.Nil(t, err)
+	require.NotNil(t, conversation)
+	require.Equal(t, conversationId, conversation.Conversation_Update.ID)
+	require.NotNil(t, conversation.Conversation_Update.StartedAt)
+	require.Nil(t, conversation.Conversation_Update.EndedAt)
+	require.Equal(t, model.ConversationStatusActive, conversation.Conversation_Update.Status)
+	require.Equal(t, "VOICE", *conversation.Conversation_Update.Channel)
+	require.Equal(t, int64(0), conversation.Conversation_Update.MessageCount)
+	require.Equal(t, contactId, conversation.Conversation_Update.Contacts[0].ID)
+	require.Equal(t, userId, conversation.Conversation_Update.Users[0].ID)
+
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Conversation"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Contact"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "User"))
+	require.Equal(t, 2, neo4jt.GetCountOfRelationships(driver, "PARTICIPATES"))
+}
+
+func TestMutationResolver_ConversationUpdate_ChangeAllFieldsAndAddNewParticipants(t *testing.T) {
+	defer tearDownTestCase()(t)
+	neo4jt.CreateTenant(driver, tenantName)
+	contactId1 := neo4jt.CreateDefaultContact(driver, tenantName)
+	contactId2 := neo4jt.CreateDefaultContact(driver, tenantName)
+	userId1 := neo4jt.CreateDefaultUser(driver, tenantName)
+	userId2 := neo4jt.CreateDefaultUser(driver, tenantName)
+	conversationId := neo4jt.CreateConversation(driver, userId1, contactId1)
+
+	require.Equal(t, 2, neo4jt.GetCountOfRelationships(driver, "PARTICIPATES"))
+
+	rawResponse, err := c.RawPost(getQuery("update_conversation_new_participants"),
+		client.Var("conversationId", conversationId),
+		client.Var("contactId1", contactId1),
+		client.Var("contactId2", contactId2),
+		client.Var("userId1", userId1),
+		client.Var("userId2", userId2))
+	assertRawResponseSuccess(t, rawResponse, err)
+
+	var conversation struct {
+		Conversation_Update model.Conversation
+	}
+
+	err = decode.Decode(rawResponse.Data.(map[string]any), &conversation)
+	require.Nil(t, err)
+	require.NotNil(t, conversation)
+	require.Equal(t, conversationId, conversation.Conversation_Update.ID)
+	require.NotNil(t, conversation.Conversation_Update.StartedAt)
+	require.Nil(t, conversation.Conversation_Update.EndedAt)
+	require.Equal(t, model.ConversationStatusClosed, conversation.Conversation_Update.Status)
+	require.Equal(t, "SMS", *conversation.Conversation_Update.Channel)
+	require.Equal(t, int64(1), conversation.Conversation_Update.MessageCount)
+	require.ElementsMatch(t, []string{contactId1, contactId2},
+		[]string{conversation.Conversation_Update.Contacts[0].ID, conversation.Conversation_Update.Contacts[1].ID})
+	require.ElementsMatch(t, []string{userId1, userId2},
+		[]string{conversation.Conversation_Update.Users[0].ID, conversation.Conversation_Update.Users[1].ID})
+
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Conversation"))
+	require.Equal(t, 2, neo4jt.GetCountOfNodes(driver, "Contact"))
+	require.Equal(t, 2, neo4jt.GetCountOfNodes(driver, "User"))
+	require.Equal(t, 4, neo4jt.GetCountOfRelationships(driver, "PARTICIPATES"))
 }
 
 func TestMutationResolver_ConversationAddMessage(t *testing.T) {

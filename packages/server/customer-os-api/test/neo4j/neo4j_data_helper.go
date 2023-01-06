@@ -406,7 +406,7 @@ func CreateConversation(driver *neo4j.Driver, userId, contactId string) string {
 	query := `MATCH (c:Contact {id:$contactId}),
 			        (u:User {id:$userId})
 			MERGE (u)-[:PARTICIPATES]->(o:Conversation {id:$conversationId})<-[:PARTICIPATES]-(c)
-			ON CREATE SET o.startedAt=datetime({timezone: 'UTC'}), o.status="ACTIVE"`
+			ON CREATE SET o.startedAt=datetime({timezone: 'UTC'}), o.status="ACTIVE", o.channel="VOICE", o.messageCount=0 `
 	ExecuteWriteQuery(driver, query, map[string]any{
 		"contactId":      contactId,
 		"userId":         userId,

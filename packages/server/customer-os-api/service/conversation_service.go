@@ -18,10 +18,11 @@ import (
 
 type ConversationService interface {
 	CreateNewConversation(ctx context.Context, userIds, contactIds []string, input *entity.ConversationEntity) (*entity.ConversationEntity, error)
+	UpdateConversation(ctx context.Context, userIds, contactIds []string, input *entity.ConversationEntity, skipMessageCountIncrement bool) (*entity.ConversationEntity, error)
+	CloseConversation(ctx context.Context, conversationId string) (*entity.ConversationEntity, error)
 	GetConversationsForUser(ctx context.Context, userId string, page, limit int, sortBy []*model.SortBy) (*utils.Pagination, error)
 	GetConversationsForContact(ctx context.Context, contactId string, page, limit int, sortBy []*model.SortBy) (*utils.Pagination, error)
 	AddMessageToConversation(ctx context.Context, input *entity.MessageEntity) (*entity.MessageEntity, error)
-	CloseConversation(ctx context.Context, conversationId string) (*entity.ConversationEntity, error)
 }
 
 type conversationService struct {
@@ -53,6 +54,30 @@ func (s *conversationService) CreateNewConversation(ctx context.Context, userIds
 	defer session.Close()
 
 	dbNodePtr, err := s.repository.ConversationRepository.Create(session, common.GetContext(ctx).Tenant, userIds, contactIds, *input)
+	if err != nil {
+		return nil, err
+	}
+	conversationEntity := s.mapDbNodeToConversationEntity(*dbNodePtr)
+	return conversationEntity, nil
+}
+
+func (s *conversationService) UpdateConversation(ctx context.Context, userIds, contactIds []string, input *entity.ConversationEntity, skipMessageCountIncrement bool) (*entity.ConversationEntity, error) {
+	session := utils.NewNeo4jReadSession(*s.getNeo4jDriver())
+	defer session.Close()
+
+	dbNodePtr, err := s.repository.ConversationRepository.Update(session, common.GetContext(ctx).Tenant, userIds, contactIds, skipMessageCountIncrement, *input)
+	if err != nil {
+		return nil, err
+	}
+	conversationEntity := s.mapDbNodeToConversationEntity(*dbNodePtr)
+	return conversationEntity, nil
+}
+
+func (s *conversationService) CloseConversation(ctx context.Context, conversationId string) (*entity.ConversationEntity, error) {
+	session := utils.NewNeo4jReadSession(*s.getNeo4jDriver())
+	defer session.Close()
+
+	dbNodePtr, err := s.repository.ConversationRepository.Close(session, common.GetContext(ctx).Tenant, conversationId, mapper.MapConversationStatusFromModel(model.ConversationStatusClosed))
 	if err != nil {
 		return nil, err
 	}
@@ -130,18 +155,6 @@ func (s *conversationService) GetConversationsForContact(ctx context.Context, co
 	return &paginatedResult, nil
 }
 
-func (s *conversationService) CloseConversation(ctx context.Context, conversationId string) (*entity.ConversationEntity, error) {
-	session := utils.NewNeo4jReadSession(*s.getNeo4jDriver())
-	defer session.Close()
-
-	dbNodePtr, err := s.repository.ConversationRepository.Close(session, common.GetContext(ctx).Tenant, conversationId, mapper.MapConversationStatusFromModel(model.ConversationStatusClosed))
-	if err != nil {
-		return nil, err
-	}
-	conversationEntity := s.mapDbNodeToConversationEntity(*dbNodePtr)
-	return conversationEntity, nil
-}
-
 func (s *conversationService) AddMessageToConversation(ctx context.Context, input *entity.MessageEntity) (*entity.MessageEntity, error) {
 	dbNode, err := s.repository.MessageRepository.CreateMessage(common.GetContext(ctx).Tenant, input)
 	if err != nil {
@@ -153,12 +166,12 @@ func (s *conversationService) AddMessageToConversation(ctx context.Context, inpu
 func (s *conversationService) mapDbNodeToConversationEntity(dbNode dbtype.Node) *entity.ConversationEntity {
 	props := utils.GetPropsFromNode(dbNode)
 	conversationEntity := entity.ConversationEntity{
-		Id:        utils.GetStringPropOrEmpty(props, "id"),
-		Channel:   utils.GetStringPropOrEmpty(props, "channel"),
-		Status:    utils.GetStringPropOrEmpty(props, "status"),
-		StartedAt: utils.GetTimePropOrNow(props, "startedAt"),
-		EndedAt:   utils.GetTimePropOrNil(props, "endedAt"),
-		ItemCount: utils.GetInt64PropOrZero(props, "itemCount"),
+		Id:           utils.GetStringPropOrEmpty(props, "id"),
+		Channel:      utils.GetStringPropOrEmpty(props, "channel"),
+		Status:       utils.GetStringPropOrEmpty(props, "status"),
+		StartedAt:    utils.GetTimePropOrNow(props, "startedAt"),
+		EndedAt:      utils.GetTimePropOrNil(props, "endedAt"),
+		MessageCount: utils.GetInt64PropOrZero(props, "messageCount"),
 	}
 	return &conversationEntity
 }
