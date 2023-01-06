@@ -13,7 +13,6 @@ type Repositories struct {
 	ContactRepository             ContactRepository
 	ContactTypeRepository         ContactTypeRepository
 	ConversationRepository        ConversationRepository
-	MessageRepository             MessageRepository
 	CustomFieldTemplateRepository CustomFieldTemplateRepository
 	CustomFieldRepository         CustomFieldRepository
 	EntityTemplateRepository      EntityTemplateRepository
@@ -44,7 +43,6 @@ func InitRepos(driver *neo4j.Driver) *Repositories {
 	repositories.ContactRepository = NewContactRepository(driver)
 	repositories.ContactTypeRepository = NewContactTypeRepository(driver)
 	repositories.ConversationRepository = NewConversationRepository(driver)
-	repositories.MessageRepository = NewMessageRepository(driver)
 	repositories.CustomFieldTemplateRepository = NewCustomFieldTemplateRepository(driver)
 	repositories.CustomFieldRepository = NewCustomFieldRepository(driver)
 	repositories.EntityTemplateRepository = NewEntityTemplateRepository(driver, &repositories)

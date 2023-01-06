@@ -2,7 +2,6 @@ extend type Mutation {
     conversation_Create(input: ConversationInput!): Conversation!
     conversation_Update(input: ConversationUpdateInput!): Conversation!
     conversation_Close(conversationId: ID!): Conversation!
-    conversationAddMessage(input: MessageInput!): Message!
 }
 
 type Conversation implements Node {
@@ -43,27 +42,4 @@ type ConversationPage implements Pages {
 enum ConversationStatus {
     ACTIVE
     CLOSED
-}
-
-type Message implements Node {
-    id: ID!
-    channel: MessageChannel!
-    startedAt: Time!
-    conversationId: ID!
-}
-
-input MessageInput {
-    id: ID!
-    conversationId: ID!
-    channel: MessageChannel!
-    startedAt: Time
-}
-
-enum MessageChannel {
-    VOICE
-    MAIL
-    CHAT
-    WHATSAPP
-    FACEBOOK
-    TWITTER
 }

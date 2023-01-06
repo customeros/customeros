@@ -528,35 +528,6 @@ type FilterItem struct {
 	CaseSensitive *bool              `json:"caseSensitive"`
 }
 
-type Message struct {
-	ID             string         `json:"id"`
-	Channel        MessageChannel `json:"channel"`
-	StartedAt      time.Time      `json:"startedAt"`
-	ConversationID string         `json:"conversationId"`
-}
-
-func (Message) IsNode()            {}
-func (this Message) GetID() string { return this.ID }
-
-type MessageAction struct {
-	ID             string         `json:"id"`
-	StartedAt      time.Time      `json:"startedAt"`
-	Channel        MessageChannel `json:"channel"`
-	ConversationID string         `json:"conversationId"`
-}
-
-func (MessageAction) IsAction() {}
-
-func (MessageAction) IsNode()            {}
-func (this MessageAction) GetID() string { return this.ID }
-
-type MessageInput struct {
-	ID             string         `json:"id"`
-	ConversationID string         `json:"conversationId"`
-	Channel        MessageChannel `json:"channel"`
-	StartedAt      *time.Time     `json:"startedAt"`
-}
-
 type Note struct {
 	ID        string    `json:"id"`
 	HTML      string    `json:"html"`
@@ -799,17 +770,15 @@ type ActionType string
 
 const (
 	ActionTypePageView ActionType = "PAGE_VIEW"
-	ActionTypeMessage  ActionType = "MESSAGE"
 )
 
 var AllActionType = []ActionType{
 	ActionTypePageView,
-	ActionTypeMessage,
 }
 
 func (e ActionType) IsValid() bool {
 	switch e {
-	case ActionTypePageView, ActionTypeMessage:
+	case ActionTypePageView:
 		return true
 	}
 	return false
@@ -1128,55 +1097,6 @@ func (e *ExternalSystemType) UnmarshalGQL(v interface{}) error {
 }
 
 func (e ExternalSystemType) MarshalGQL(w io.Writer) {
-	fmt.Fprint(w, strconv.Quote(e.String()))
-}
-
-type MessageChannel string
-
-const (
-	MessageChannelVoice    MessageChannel = "VOICE"
-	MessageChannelMail     MessageChannel = "MAIL"
-	MessageChannelChat     MessageChannel = "CHAT"
-	MessageChannelWhatsapp MessageChannel = "WHATSAPP"
-	MessageChannelFacebook MessageChannel = "FACEBOOK"
-	MessageChannelTwitter  MessageChannel = "TWITTER"
-)
-
-var AllMessageChannel = []MessageChannel{
-	MessageChannelVoice,
-	MessageChannelMail,
-	MessageChannelChat,
-	MessageChannelWhatsapp,
-	MessageChannelFacebook,
-	MessageChannelTwitter,
-}
-
-func (e MessageChannel) IsValid() bool {
-	switch e {
-	case MessageChannelVoice, MessageChannelMail, MessageChannelChat, MessageChannelWhatsapp, MessageChannelFacebook, MessageChannelTwitter:
-		return true
-	}
-	return false
-}
-
-func (e MessageChannel) String() string {
-	return string(e)
-}
-
-func (e *MessageChannel) UnmarshalGQL(v interface{}) error {
-	str, ok := v.(string)
-	if !ok {
-		return fmt.Errorf("enums must be strings")
-	}
-
-	*e = MessageChannel(str)
-	if !e.IsValid() {
-		return fmt.Errorf("%s is not a valid MessageChannel", str)
-	}
-	return nil
-}
-
-func (e MessageChannel) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
 }
 

@@ -14,13 +14,6 @@ query GetContactById($contactId: ID!, $from: Time!, $to: Time!){
               orderInSession
               sessionId
             }
-            __typename
-            ... on MessageAction {
-              id
-              conversationId
-              startedAt
-              channel
-            }
           }
   }
 }

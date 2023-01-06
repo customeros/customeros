@@ -4,7 +4,6 @@ import (
 	"github.com/99designs/gqlgen/client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper"
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils/decode"
 	"github.com/stretchr/testify/require"
@@ -693,15 +692,13 @@ func TestQueryResolver_Contact_WithActions(t *testing.T) {
 	contactId := neo4jt.CreateDefaultContact(driver, tenantName)
 	contactId2 := neo4jt.CreateDefaultContact(driver, tenantName)
 	userId := neo4jt.CreateDefaultUser(driver, tenantName)
-	conversationId := neo4jt.CreateConversation(driver, userId, contactId)
+	// Use below conversation when conversation is converted to Action
+	neo4jt.CreateConversation(driver, userId, contactId)
 
 	now := time.Now().UTC()
 	secAgo1 := now.Add(time.Duration(-1) * time.Second)
 	secAgo30 := now.Add(time.Duration(-30) * time.Second)
-	secAgo60 := now.Add(time.Duration(-60) * time.Second)
 	from := now.Add(time.Duration(-10) * time.Minute)
-
-	messageId := neo4jt.AddMessageToConversation(driver, conversationId, mapper.MapMessageChannelFromModel(model.MessageChannelChat), secAgo60)
 
 	pageViewId1 := neo4jt.CreatePageView(driver, contactId, entity.PageViewEntity{
 		StartedAt:      secAgo1,
@@ -731,10 +728,9 @@ func TestQueryResolver_Contact_WithActions(t *testing.T) {
 
 	require.Equal(t, 2, neo4jt.GetCountOfNodes(driver, "Contact"))
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "User"))
-	require.Equal(t, 4, neo4jt.GetCountOfNodes(driver, "Action"))
+	require.Equal(t, 3, neo4jt.GetCountOfNodes(driver, "Action"))
 	require.Equal(t, 3, neo4jt.GetCountOfNodes(driver, "PageView"))
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Conversation"))
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Message"))
 
 	rawResponse, err := c.RawPost(getQuery("get_contact_with_actions"),
 		client.Var("contactId", contactId),
@@ -746,7 +742,7 @@ func TestQueryResolver_Contact_WithActions(t *testing.T) {
 	require.Equal(t, contactId, contact.(map[string]interface{})["id"])
 
 	actions := contact.(map[string]interface{})["actions"].([]interface{})
-	require.Equal(t, 3, len(actions))
+	require.Equal(t, 2, len(actions))
 	action1 := actions[0].(map[string]interface{})
 	require.Equal(t, "PageViewAction", action1["__typename"].(string))
 	require.Equal(t, pageViewId1, action1["id"].(string))
@@ -770,13 +766,6 @@ func TestQueryResolver_Contact_WithActions(t *testing.T) {
 	require.Equal(t, "http://app-2.ai", action2["pageUrl"].(string))
 	require.Equal(t, float64(2), action2["orderInSession"].(float64))
 	require.Equal(t, float64(20), action2["engagedTime"].(float64))
-
-	action3 := actions[2].(map[string]interface{})
-	require.Equal(t, "MessageAction", action3["__typename"].(string))
-	require.Equal(t, messageId, action3["id"].(string))
-	require.Equal(t, conversationId, action3["conversationId"].(string))
-	require.Equal(t, "CHAT", action3["channel"].(string))
-	require.NotNil(t, action3["startedAt"].(string))
 }
 
 func TestQueryResolver_Contact_WithActions_FilterByActionType(t *testing.T) {
@@ -784,8 +773,6 @@ func TestQueryResolver_Contact_WithActions_FilterByActionType(t *testing.T) {
 	neo4jt.CreateTenant(driver, tenantName)
 
 	contactId := neo4jt.CreateDefaultContact(driver, tenantName)
-	userId := neo4jt.CreateDefaultUser(driver, tenantName)
-	conversationId := neo4jt.CreateConversation(driver, userId, contactId)
 
 	now := time.Now().UTC()
 	secAgo1 := now.Add(time.Duration(-1) * time.Second)
@@ -802,12 +789,10 @@ func TestQueryResolver_Contact_WithActions_FilterByActionType(t *testing.T) {
 		OrderInSession: 1,
 		EngagedTime:    10,
 	})
-	neo4jt.AddMessageToConversation(driver, conversationId, mapper.MapMessageChannelFromModel(model.MessageChannelChat), secAgo1)
 
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Contact"))
-	require.Equal(t, 2, neo4jt.GetCountOfNodes(driver, "Action"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Action"))
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "PageView"))
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Message"))
 
 	types := []model.ActionType{}
 	types = append(types, model.ActionTypePageView)
