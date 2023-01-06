@@ -43,6 +43,27 @@ func (r *mutationResolver) ConversationCreate(ctx context.Context, input model.C
 	return mapper.MapEntityToConversation(conversationEntity), nil
 }
 
+// ConversationUpdate is the resolver for the conversation_Update field.
+func (r *mutationResolver) ConversationUpdate(ctx context.Context, input model.ConversationUpdateInput) (*model.Conversation, error) {
+	conversationEntity, err := r.Services.ConversationService.UpdateConversation(
+		ctx, input.UserIds, input.ContactIds, mapper.MapConversationUpdateInputToEntity(input), input.SkipMessageCountIncrement)
+	if err != nil {
+		graphql.AddErrorf(ctx, "failed to update conversation %s", input.ID)
+		return nil, err
+	}
+	return mapper.MapEntityToConversation(conversationEntity), nil
+}
+
+// ConversationClose is the resolver for the conversation_Close field.
+func (r *mutationResolver) ConversationClose(ctx context.Context, conversationID string) (*model.Conversation, error) {
+	conversationEntity, err := r.Services.ConversationService.CloseConversation(ctx, conversationID)
+	if err != nil {
+		graphql.AddErrorf(ctx, "failed to close conversation %s", conversationID)
+		return nil, err
+	}
+	return mapper.MapEntityToConversation(conversationEntity), nil
+}
+
 // ConversationAddMessage is the resolver for the conversationAddMessage field.
 func (r *mutationResolver) ConversationAddMessage(ctx context.Context, input model.MessageInput) (*model.Message, error) {
 	messageEntity, err := r.Services.ConversationService.AddMessageToConversation(ctx, mapper.MapMessageInputToEntity(input))

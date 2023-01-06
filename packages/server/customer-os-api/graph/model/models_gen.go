@@ -275,14 +275,14 @@ func (this ContactsPage) GetTotalPages() int { return this.TotalPages }
 func (this ContactsPage) GetTotalElements() int64 { return this.TotalElements }
 
 type Conversation struct {
-	ID        string             `json:"id"`
-	StartedAt time.Time          `json:"startedAt"`
-	EndedAt   *time.Time         `json:"endedAt"`
-	Status    ConversationStatus `json:"status"`
-	Channel   *string            `json:"channel"`
-	ItemCount int64              `json:"itemCount"`
-	Contacts  []*Contact         `json:"contacts"`
-	Users     []*User            `json:"users"`
+	ID           string             `json:"id"`
+	StartedAt    time.Time          `json:"startedAt"`
+	EndedAt      *time.Time         `json:"endedAt"`
+	Status       ConversationStatus `json:"status"`
+	Channel      *string            `json:"channel"`
+	MessageCount int64              `json:"messageCount"`
+	Contacts     []*Contact         `json:"contacts"`
+	Users        []*User            `json:"users"`
 }
 
 func (Conversation) IsNode()            {}
@@ -291,9 +291,9 @@ func (this Conversation) GetID() string { return this.ID }
 type ConversationInput struct {
 	ID         *string            `json:"id"`
 	StartedAt  *time.Time         `json:"startedAt"`
-	Status     ConversationStatus `json:"status"`
-	UserIds    []string           `json:"userIds"`
 	ContactIds []string           `json:"contactIds"`
+	UserIds    []string           `json:"userIds"`
+	Status     ConversationStatus `json:"status"`
 	Channel    *string            `json:"channel"`
 }
 
@@ -314,12 +314,12 @@ func (this ConversationPage) GetTotalPages() int { return this.TotalPages }
 func (this ConversationPage) GetTotalElements() int64 { return this.TotalElements }
 
 type ConversationUpdateInput struct {
-	ID                string              `json:"id"`
-	UserIds           []string            `json:"userIds"`
-	ContactID         []string            `json:"contactId"`
-	Status            *ConversationStatus `json:"status"`
-	Channel           *string             `json:"channel"`
-	SkipItemIncrement *bool               `json:"skipItemIncrement"`
+	ID                        string              `json:"id"`
+	ContactIds                []string            `json:"contactIds"`
+	UserIds                   []string            `json:"userIds"`
+	Status                    *ConversationStatus `json:"status"`
+	Channel                   *string             `json:"channel"`
+	SkipMessageCountIncrement bool                `json:"skipMessageCountIncrement"`
 }
 
 // Describes a custom, user-defined field associated with a `Contact`.

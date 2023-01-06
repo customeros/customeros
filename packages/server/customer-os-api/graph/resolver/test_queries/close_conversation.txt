@@ -1,7 +1,5 @@
-mutation CreateConversation($contactId: ID!) {
-  conversation_Create(input: {
-    contactIds: [$contactId]
-  }) {
+mutation CloseConversation($conversationId: ID!) {
+  conversation_Close(conversationId: $conversationId) {
     id
     startedAt
     endedAt
