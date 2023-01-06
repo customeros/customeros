@@ -8,7 +8,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils"
-	"time"
 )
 
 func CleanupAllData(driver *neo4j.Driver) {
@@ -413,20 +412,6 @@ func CreateConversation(driver *neo4j.Driver, userId, contactId string) string {
 		"conversationId": conversationId.String(),
 	})
 	return conversationId.String()
-}
-
-func AddMessageToConversation(driver *neo4j.Driver, conversationId, messageChannel string, time time.Time) string {
-	var messageId, _ = uuid.NewRandom()
-	query := `MATCH (c:Conversation {id:$conversationId})
-			MERGE (c)-[:CONSISTS_OF]->(m:Message:Action {id:$messageId})
-			ON CREATE SET m.channel=$channel, m.startedAt=$startedAt, m.conversationId=$conversationId`
-	ExecuteWriteQuery(driver, query, map[string]any{
-		"conversationId": conversationId,
-		"messageId":      messageId.String(),
-		"channel":        messageChannel,
-		"startedAt":      time,
-	})
-	return messageId.String()
 }
 
 func CreatePageView(driver *neo4j.Driver, contactId string, actionEntity entity.PageViewEntity) string {

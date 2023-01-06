@@ -4,12 +4,10 @@ import "github.com/openline-ai/openline-customer-os/packages/server/customer-os-
 
 const (
 	NodeLabel_PageView = "PageView"
-	NodeLabel_Message  = "Message"
 )
 
 var NodeLabelsByActionType = map[string]string{
 	model.ActionTypePageView.String(): NodeLabel_PageView,
-	model.ActionTypeMessage.String():  NodeLabel_Message,
 }
 
 type Action interface {

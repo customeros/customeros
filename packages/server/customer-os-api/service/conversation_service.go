@@ -22,7 +22,6 @@ type ConversationService interface {
 	CloseConversation(ctx context.Context, conversationId string) (*entity.ConversationEntity, error)
 	GetConversationsForUser(ctx context.Context, userId string, page, limit int, sortBy []*model.SortBy) (*utils.Pagination, error)
 	GetConversationsForContact(ctx context.Context, contactId string, page, limit int, sortBy []*model.SortBy) (*utils.Pagination, error)
-	AddMessageToConversation(ctx context.Context, input *entity.MessageEntity) (*entity.MessageEntity, error)
 }
 
 type conversationService struct {
@@ -93,7 +92,7 @@ func (s *conversationService) GetConversationsForUser(ctx context.Context, userI
 		Limit: limit,
 		Page:  page,
 	}
-	cypherSort, err := buildSort(sortBy, reflect.TypeOf(entity.MessageEntity{}))
+	cypherSort, err := buildSort(sortBy, reflect.TypeOf(entity.ConversationEntity{}))
 	if err != nil {
 		return nil, err
 	}
@@ -128,7 +127,7 @@ func (s *conversationService) GetConversationsForContact(ctx context.Context, co
 		Limit: limit,
 		Page:  page,
 	}
-	cypherSort, err := buildSort(sortBy, reflect.TypeOf(entity.MessageEntity{}))
+	cypherSort, err := buildSort(sortBy, reflect.TypeOf(entity.ConversationEntity{}))
 	if err != nil {
 		return nil, err
 	}
@@ -155,14 +154,6 @@ func (s *conversationService) GetConversationsForContact(ctx context.Context, co
 	return &paginatedResult, nil
 }
 
-func (s *conversationService) AddMessageToConversation(ctx context.Context, input *entity.MessageEntity) (*entity.MessageEntity, error) {
-	dbNode, err := s.repository.MessageRepository.CreateMessage(common.GetContext(ctx).Tenant, input)
-	if err != nil {
-		return nil, err
-	}
-	return s.mapDbNodeToMessageEntity(dbNode), nil
-}
-
 func (s *conversationService) mapDbNodeToConversationEntity(dbNode dbtype.Node) *entity.ConversationEntity {
 	props := utils.GetPropsFromNode(dbNode)
 	conversationEntity := entity.ConversationEntity{
@@ -174,15 +165,4 @@ func (s *conversationService) mapDbNodeToConversationEntity(dbNode dbtype.Node) 
 		MessageCount: utils.GetInt64PropOrZero(props, "messageCount"),
 	}
 	return &conversationEntity
-}
-
-func (s *conversationService) mapDbNodeToMessageEntity(dbNode *dbtype.Node) *entity.MessageEntity {
-	props := utils.GetPropsFromNode(*dbNode)
-	messageEntity := entity.MessageEntity{
-		Id:             utils.GetStringPropOrEmpty(props, "id"),
-		StartedAt:      utils.GetTimePropOrNow(props, "startedAt"),
-		Channel:        utils.GetStringPropOrEmpty(props, "channel"),
-		ConversationId: utils.GetStringPropOrEmpty(props, "conversationId"),
-	}
-	return &messageEntity
 }
