@@ -29,7 +29,7 @@ func (r *contactRepository) GetOrCreateContactId(tenant, email, firstName, lastN
 
 	record, err := session.WriteTransaction(func(tx neo4j.Transaction) (interface{}, error) {
 		queryResult, err := tx.Run(fmt.Sprintf(
-			" MERGE (t:Tenant {name:$tenant}) "+
+			" MATCH (t:Tenant {name:$tenant}) "+
 				" MERGE (e:Email {email: $email})<-[r:EMAILED_AT]-(c:Contact)-[:CONTACT_BELONGS_TO_TENANT]->(t) "+
 				" ON CREATE SET r.primary=true, e.id=randomUUID(), c.id=randomUUID(), c.firstName=$firstName, c.lastName=$lastName, "+
 				"               c.createdAt=datetime({timezone: 'UTC'}), c:%s, e:%s "+
