@@ -88,7 +88,7 @@ func (s *fieldSetService) MergeFieldSetToContact(ctx context.Context, contactId 
 		}
 		if entity.CustomFields != nil {
 			for _, customField := range *entity.CustomFields {
-				dbNode, err := s.repository.CustomFieldRepository.MergeCustomFieldToFieldSetInTx(tx, common.GetContext(ctx).Tenant, contactId, fieldSetId, &customField)
+				dbNode, err := s.repository.CustomFieldRepository.MergeCustomFieldToFieldSetInTx(tx, common.GetContext(ctx).Tenant, contactId, fieldSetId, customField)
 				if err != nil {
 					return nil, err
 				}
@@ -140,25 +140,11 @@ func (s *fieldSetService) DeleteByIdFromContact(ctx context.Context, contactId s
 	session := utils.NewNeo4jWriteSession(s.getDriver())
 	defer session.Close()
 
-	queryResult, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
-		_, err := tx.Run(`
-			MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}),
-                  (c)-[:HAS_COMPLEX_PROPERTY]->(s:FieldSet {id:$fieldSetId}),
-				  (s)-[:HAS_PROPERTY]->(f:CustomField)
-            DETACH DELETE f, s`,
-			map[string]any{
-				"contactId":  contactId,
-				"fieldSetId": fieldSetId,
-				"tenant":     common.GetContext(ctx).Tenant,
-			})
-
-		return true, err
-	})
+	err := s.repository.FieldSetRepository.DeleteByIdFromContact(session, common.GetContext(ctx).Tenant, contactId, fieldSetId)
 	if err != nil {
 		return false, err
 	}
-
-	return queryResult.(bool), nil
+	return true, nil
 }
 
 func (s *fieldSetService) mapDbNodeToFieldSetEntity(node *dbtype.Node) *entity.FieldSetEntity {

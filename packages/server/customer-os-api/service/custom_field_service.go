@@ -26,8 +26,6 @@ type CustomFieldService interface {
 	DeleteByNameFromContact(ctx context.Context, contactId, fieldName string) (bool, error)
 	DeleteByIdFromContact(ctx context.Context, contactId, fieldId string) (bool, error)
 	DeleteByIdFromFieldSet(ctx context.Context, contactId, fieldSetId, fieldId string) (bool, error)
-
-	mapDbNodeToCustomFieldEntity(node dbtype.Node) *entity.CustomFieldEntity
 }
 
 type customFieldService struct {
@@ -53,7 +51,7 @@ func (s *customFieldService) MergeAndUpdateCustomFieldsForContact(ctx context.Co
 		if customFields != nil {
 			for _, customField := range *customFields {
 				if customField.Id == nil {
-					dbNode, err := s.repository.CustomFieldRepository.MergeCustomFieldToContactInTx(tx, tenant, contactId, &customField)
+					dbNode, err := s.repository.CustomFieldRepository.MergeCustomFieldToContactInTx(tx, tenant, contactId, customField)
 					if err != nil {
 						return nil, err
 					}
@@ -65,7 +63,7 @@ func (s *customFieldService) MergeAndUpdateCustomFieldsForContact(ctx context.Co
 						}
 					}
 				} else {
-					_, err := s.repository.CustomFieldRepository.UpdateForContactInTx(tx, tenant, contactId, &customField)
+					_, err := s.repository.CustomFieldRepository.UpdateForContactInTx(tx, tenant, contactId, customField)
 					if err != nil {
 						return nil, err
 					}
@@ -97,7 +95,7 @@ func (s *customFieldService) MergeAndUpdateCustomFieldsForContact(ctx context.Co
 				if fieldSet.CustomFields != nil {
 					for _, customField := range *fieldSet.CustomFields {
 						if customField.Id == nil {
-							fieldDbNode, err := s.repository.CustomFieldRepository.MergeCustomFieldToFieldSetInTx(tx, tenant, contactId, fieldSetId, &customField)
+							fieldDbNode, err := s.repository.CustomFieldRepository.MergeCustomFieldToFieldSetInTx(tx, tenant, contactId, fieldSetId, customField)
 							if err != nil {
 								return nil, err
 							}
@@ -109,7 +107,7 @@ func (s *customFieldService) MergeAndUpdateCustomFieldsForContact(ctx context.Co
 								}
 							}
 						} else {
-							_, err := s.repository.CustomFieldRepository.UpdateForFieldSetInTx(tx, tenant, contactId, fieldSetId, &customField)
+							_, err := s.repository.CustomFieldRepository.UpdateForFieldSetInTx(tx, tenant, contactId, fieldSetId, customField)
 							if err != nil {
 								return nil, err
 							}
@@ -167,7 +165,7 @@ func (s *customFieldService) MergeCustomFieldToContact(ctx context.Context, cont
 	defer session.Close()
 
 	customFieldNode, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
-		customFieldDbNode, err := s.repository.CustomFieldRepository.MergeCustomFieldToContactInTx(tx, common.GetContext(ctx).Tenant, contactId, entity)
+		customFieldDbNode, err := s.repository.CustomFieldRepository.MergeCustomFieldToContactInTx(tx, common.GetContext(ctx).Tenant, contactId, *entity)
 		if err != nil {
 			return nil, err
 		}
@@ -183,7 +181,7 @@ func (s *customFieldService) MergeCustomFieldToContact(ctx context.Context, cont
 		return nil, err
 	}
 
-	return s.mapDbNodePtrToCustomFieldEntity(customFieldNode.(*dbtype.Node)), nil
+	return s.mapDbNodeToCustomFieldEntity(*customFieldNode.(*dbtype.Node)), nil
 }
 
 func (s *customFieldService) MergeCustomFieldToFieldSet(ctx context.Context, contactId string, fieldSetId string, entity *entity.CustomFieldEntity) (*entity.CustomFieldEntity, error) {
@@ -191,7 +189,7 @@ func (s *customFieldService) MergeCustomFieldToFieldSet(ctx context.Context, con
 	defer session.Close()
 
 	customFieldNode, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
-		customFieldNode, err := s.repository.CustomFieldRepository.MergeCustomFieldToFieldSetInTx(tx, common.GetContext(ctx).Tenant, contactId, fieldSetId, entity)
+		customFieldNode, err := s.repository.CustomFieldRepository.MergeCustomFieldToFieldSetInTx(tx, common.GetContext(ctx).Tenant, contactId, fieldSetId, *entity)
 		if err != nil {
 			return nil, err
 		}
@@ -207,7 +205,7 @@ func (s *customFieldService) MergeCustomFieldToFieldSet(ctx context.Context, con
 		return nil, err
 	}
 
-	return s.mapDbNodePtrToCustomFieldEntity(customFieldNode.(*dbtype.Node)), nil
+	return s.mapDbNodeToCustomFieldEntity(*customFieldNode.(*dbtype.Node)), nil
 }
 
 func (s *customFieldService) UpdateCustomFieldForContact(ctx context.Context, contactId string, entity *entity.CustomFieldEntity) (*entity.CustomFieldEntity, error) {
@@ -215,13 +213,13 @@ func (s *customFieldService) UpdateCustomFieldForContact(ctx context.Context, co
 	defer session.Close()
 
 	customFieldDbNode, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
-		return s.repository.CustomFieldRepository.UpdateForContactInTx(tx, common.GetContext(ctx).Tenant, contactId, entity)
+		return s.repository.CustomFieldRepository.UpdateForContactInTx(tx, common.GetContext(ctx).Tenant, contactId, *entity)
 	})
 
 	if err != nil {
 		return nil, err
 	}
-	return s.mapDbNodePtrToCustomFieldEntity(customFieldDbNode.(*dbtype.Node)), nil
+	return s.mapDbNodeToCustomFieldEntity(*customFieldDbNode.(*dbtype.Node)), nil
 }
 
 func (s *customFieldService) UpdateCustomFieldForFieldSet(ctx context.Context, contactId string, fieldSetId string, entity *entity.CustomFieldEntity) (*entity.CustomFieldEntity, error) {
@@ -229,12 +227,12 @@ func (s *customFieldService) UpdateCustomFieldForFieldSet(ctx context.Context, c
 	defer session.Close()
 
 	customFieldDbNode, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
-		return s.repository.CustomFieldRepository.UpdateForFieldSetInTx(tx, common.GetContext(ctx).Tenant, contactId, fieldSetId, entity)
+		return s.repository.CustomFieldRepository.UpdateForFieldSetInTx(tx, common.GetContext(ctx).Tenant, contactId, fieldSetId, *entity)
 	})
 	if err != nil {
 		return nil, err
 	}
-	return s.mapDbNodePtrToCustomFieldEntity(customFieldDbNode.(*dbtype.Node)), nil
+	return s.mapDbNodeToCustomFieldEntity(*customFieldDbNode.(*dbtype.Node)), nil
 }
 
 func (s *customFieldService) DeleteByNameFromContact(ctx context.Context, contactId, fieldName string) (bool, error) {
@@ -268,16 +266,13 @@ func (s *customFieldService) DeleteByIdFromFieldSet(ctx context.Context, contact
 }
 
 func (s *customFieldService) mapDbNodeToCustomFieldEntity(node dbtype.Node) *entity.CustomFieldEntity {
-	return s.mapDbNodePtrToCustomFieldEntity(&node)
-}
-
-func (s *customFieldService) mapDbNodePtrToCustomFieldEntity(node *dbtype.Node) *entity.CustomFieldEntity {
-	props := utils.GetPropsFromNode(*node)
+	props := utils.GetPropsFromNode(node)
 	result := entity.CustomFieldEntity{
-		Id:       utils.StringPtr(utils.GetStringPropOrEmpty(props, "id")),
-		Name:     utils.GetStringPropOrEmpty(props, "name"),
-		DataType: utils.GetStringPropOrEmpty(props, "datatype"),
-		Source:   utils.GetStringPropOrEmpty(props, "source"),
+		Id:            utils.StringPtr(utils.GetStringPropOrEmpty(props, "id")),
+		Name:          utils.GetStringPropOrEmpty(props, "name"),
+		DataType:      utils.GetStringPropOrEmpty(props, "datatype"),
+		Source:        entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
+		SourceOfTruth: entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
 		Value: model.AnyTypeValue{
 			Str:   utils.GetStringPropOrNil(props, entity.CustomFieldTextProperty.String()),
 			Time:  utils.GetTimePropOrNil(props, entity.CustomFieldTimeProperty.String()),

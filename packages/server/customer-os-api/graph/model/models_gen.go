@@ -339,7 +339,7 @@ type CustomField struct {
 	// **Required**
 	Value AnyTypeValue `json:"value"`
 	// The source of the custom field value
-	Source   *string              `json:"source"`
+	Source   DataSource           `json:"source"`
 	Template *CustomFieldTemplate `json:"template"`
 }
 
@@ -359,10 +359,8 @@ type CustomFieldInput struct {
 	Datatype CustomFieldDataType `json:"datatype"`
 	// The value of the custom field.
 	// **Required**
-	Value AnyTypeValue `json:"value"`
-	// The source of the custom field value
-	Source     *string `json:"source"`
-	TemplateID *string `json:"templateId"`
+	Value      AnyTypeValue `json:"value"`
+	TemplateID *string      `json:"templateId"`
 }
 
 type CustomFieldTemplate struct {
@@ -404,8 +402,6 @@ type CustomFieldUpdateInput struct {
 	// The value of the custom field.
 	// **Required**
 	Value AnyTypeValue `json:"value"`
-	// The source of the custom field value
-	Source *string `json:"source"`
 }
 
 // Describes an email address associated with a `Contact` in customerOS.

@@ -45,7 +45,7 @@ type CustomField implements Node {
     value: Any!
 
     "The source of the custom field value"
-    source: String
+    source: DataSource!
 
     template: CustomFieldTemplate @goField(forceResolver: true)
 }
@@ -79,9 +79,6 @@ input CustomFieldInput {
     """
     value: Any!
 
-    "The source of the custom field value"
-    source: String
-
     templateId: ID
 }
 
@@ -114,9 +111,6 @@ input CustomFieldUpdateInput {
     **Required**
     """
     value: Any!
-
-    "The source of the custom field value"
-    source: String
 }
 
 enum CustomFieldDataType {

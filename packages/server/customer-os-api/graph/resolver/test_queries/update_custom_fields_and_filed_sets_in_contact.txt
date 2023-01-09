@@ -24,6 +24,7 @@ customFieldsMergeAndUpdateInContact(
         name
         value
         datatype
+        source
         template {
             id
         }
@@ -40,6 +41,7 @@ customFieldsMergeAndUpdateInContact(
             name
             value
             datatype
+            source
             template {
                 id
             }

@@ -145,9 +145,11 @@ func CreateFieldSet(driver *neo4j.Driver, contactId string, fieldSet entity.Fiel
 func CreateDefaultCustomFieldInSet(driver *neo4j.Driver, fieldSetId string) string {
 	return createCustomFieldInSet(driver, fieldSetId,
 		entity.CustomFieldEntity{
-			Name:     "name",
-			DataType: model.CustomFieldDataTypeText.String(),
-			Value:    model.AnyTypeValue{Str: utils.StringPtr("value")}})
+			Name:          "name",
+			Source:        entity.DataSourceOpenline,
+			SourceOfTruth: entity.DataSourceOpenline,
+			DataType:      model.CustomFieldDataTypeText.String(),
+			Value:         model.AnyTypeValue{Str: utils.StringPtr("value")}})
 }
 
 func createCustomFieldInSet(driver *neo4j.Driver, fieldSetId string, customField entity.CustomFieldEntity) string {
@@ -159,14 +161,18 @@ func createCustomFieldInSet(driver *neo4j.Driver, fieldSetId string, customField
 			"	  id: $fieldId, "+
 			"	  %s: $value, "+
 			"	  datatype: $datatype, "+
-			"	  name: $name "+
+			"	  name: $name, "+
+			"	  source: $source, "+
+			"	  sourceOfTruth: $sourceOfTruth "+
 			"	})<-[:HAS_PROPERTY]-(s)", customField.NodeLabel(), customField.PropertyName())
 	ExecuteWriteQuery(driver, query, map[string]any{
-		"fieldSetId": fieldSetId,
-		"fieldId":    fieldId.String(),
-		"name":       customField.Name,
-		"datatype":   customField.DataType,
-		"value":      customField.Value.RealValue(),
+		"fieldSetId":    fieldSetId,
+		"fieldId":       fieldId.String(),
+		"name":          customField.Name,
+		"datatype":      customField.DataType,
+		"value":         customField.Value.RealValue(),
+		"source":        customField.Source,
+		"sourceOfTruth": customField.SourceOfTruth,
 	})
 	return fieldId.String()
 }
@@ -174,9 +180,11 @@ func createCustomFieldInSet(driver *neo4j.Driver, fieldSetId string, customField
 func CreateDefaultCustomFieldInContact(driver *neo4j.Driver, contactId string) string {
 	return createCustomFieldInContact(driver, contactId,
 		entity.CustomFieldEntity{
-			Name:     "name",
-			DataType: model.CustomFieldDataTypeText.String(),
-			Value:    model.AnyTypeValue{Str: utils.StringPtr("value")}})
+			Name:          "name",
+			DataType:      model.CustomFieldDataTypeText.String(),
+			Source:        entity.DataSourceOpenline,
+			SourceOfTruth: entity.DataSourceOpenline,
+			Value:         model.AnyTypeValue{Str: utils.StringPtr("value")}})
 }
 
 func createCustomFieldInContact(driver *neo4j.Driver, contactId string, customField entity.CustomFieldEntity) string {
@@ -188,14 +196,18 @@ func createCustomFieldInContact(driver *neo4j.Driver, contactId string, customFi
 			"	  id: $fieldId, "+
 			"	  %s: $value, "+
 			"	  datatype: $datatype, "+
-			"	  name: $name "+
+			"	  name: $name, "+
+			"	  source: $source, "+
+			"	  sourceOfTruth: $sourceOfTruth "+
 			"	})<-[:HAS_PROPERTY]-(c)", customField.NodeLabel(), customField.PropertyName())
 	ExecuteWriteQuery(driver, query, map[string]any{
-		"contactId": contactId,
-		"fieldId":   fieldId.String(),
-		"name":      customField.Name,
-		"datatype":  customField.DataType,
-		"value":     customField.Value.RealValue(),
+		"contactId":     contactId,
+		"fieldId":       fieldId.String(),
+		"name":          customField.Name,
+		"datatype":      customField.DataType,
+		"value":         customField.Value.RealValue(),
+		"source":        customField.Source,
+		"sourceOfTruth": customField.SourceOfTruth,
 	})
 	return fieldId.String()
 }

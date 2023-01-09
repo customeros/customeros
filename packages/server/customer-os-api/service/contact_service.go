@@ -99,7 +99,7 @@ func (s *contactService) createContactInDBTxWork(ctx context.Context, newContact
 		}
 		if newContact.CustomFields != nil {
 			for _, customField := range *newContact.CustomFields {
-				dbNode, err := s.repositories.CustomFieldRepository.MergeCustomFieldToContactInTx(tx, tenant, contactId, &customField)
+				dbNode, err := s.repositories.CustomFieldRepository.MergeCustomFieldToContactInTx(tx, tenant, contactId, customField)
 				if err != nil {
 					return nil, err
 				}
@@ -127,7 +127,7 @@ func (s *contactService) createContactInDBTxWork(ctx context.Context, newContact
 				}
 				if fieldSet.CustomFields != nil {
 					for _, customField := range *fieldSet.CustomFields {
-						fieldDbNode, err := s.repositories.CustomFieldRepository.MergeCustomFieldToFieldSetInTx(tx, tenant, contactId, fieldSetId, &customField)
+						fieldDbNode, err := s.repositories.CustomFieldRepository.MergeCustomFieldToFieldSetInTx(tx, tenant, contactId, fieldSetId, customField)
 						if err != nil {
 							return nil, err
 						}

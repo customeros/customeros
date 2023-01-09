@@ -5,7 +5,7 @@ mutation MergeCustomFieldToFieldSet($contactId: ID!, $fieldSetId: ID!){
         input: {name: "some name"
                 value: "some value"
                 datatype: TEXT
-                source: "manual"}
+                }
      ) {
         id
         name

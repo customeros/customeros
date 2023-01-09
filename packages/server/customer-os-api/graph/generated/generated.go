@@ -2829,7 +2829,7 @@ type CustomField implements Node {
     value: Any!
 
     "The source of the custom field value"
-    source: String
+    source: DataSource!
 
     template: CustomFieldTemplate @goField(forceResolver: true)
 }
@@ -2863,9 +2863,6 @@ input CustomFieldInput {
     """
     value: Any!
 
-    "The source of the custom field value"
-    source: String
-
     templateId: ID
 }
 
@@ -2898,9 +2895,6 @@ input CustomFieldUpdateInput {
     **Required**
     """
     value: Any!
-
-    "The source of the custom field value"
-    source: String
 }
 
 enum CustomFieldDataType {
@@ -7950,11 +7944,14 @@ func (ec *executionContext) _CustomField_source(ctx context.Context, field graph
 		return graphql.Null
 	}
 	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
 		return graphql.Null
 	}
-	res := resTmp.(*string)
+	res := resTmp.(model.DataSource)
 	fc.Result = res
-	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+	return ec.marshalNDataSource2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐDataSource(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_CustomField_source(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -7964,7 +7961,7 @@ func (ec *executionContext) fieldContext_CustomField_source(ctx context.Context,
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
+			return nil, errors.New("field of type DataSource does not have child fields")
 		},
 	}
 	return fc, nil
@@ -17937,7 +17934,7 @@ func (ec *executionContext) unmarshalInputCustomFieldInput(ctx context.Context, 
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"id", "name", "datatype", "value", "source", "templateId"}
+	fieldsInOrder := [...]string{"id", "name", "datatype", "value", "templateId"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -17973,14 +17970,6 @@ func (ec *executionContext) unmarshalInputCustomFieldInput(ctx context.Context, 
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("value"))
 			it.Value, err = ec.unmarshalNAny2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐAnyTypeValue(ctx, v)
-			if err != nil {
-				return it, err
-			}
-		case "source":
-			var err error
-
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("source"))
-			it.Source, err = ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -18081,7 +18070,7 @@ func (ec *executionContext) unmarshalInputCustomFieldUpdateInput(ctx context.Con
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"id", "name", "datatype", "value", "source"}
+	fieldsInOrder := [...]string{"id", "name", "datatype", "value"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -18117,14 +18106,6 @@ func (ec *executionContext) unmarshalInputCustomFieldUpdateInput(ctx context.Con
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("value"))
 			it.Value, err = ec.unmarshalNAny2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐAnyTypeValue(ctx, v)
-			if err != nil {
-				return it, err
-			}
-		case "source":
-			var err error
-
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("source"))
-			it.Source, err = ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -19946,6 +19927,9 @@ func (ec *executionContext) _CustomField(ctx context.Context, sel ast.SelectionS
 
 			out.Values[i] = ec._CustomField_source(ctx, field, obj)
 
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
 		case "template":
 			field := field
 

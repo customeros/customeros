@@ -13,6 +13,7 @@ type FieldSetRepository interface {
 	MergeFieldSetToContactInTx(tx neo4j.Transaction, tenant, contactId string, entity entity.FieldSetEntity) (*dbtype.Node, *dbtype.Relationship, error)
 
 	UpdateForContactInTx(tx neo4j.Transaction, tenant, contactId string, entity entity.FieldSetEntity) (*dbtype.Node, *dbtype.Relationship, error)
+	DeleteByIdFromContact(session neo4j.Session, tenant, contactId, fieldSetId string) error
 }
 
 type fieldSetRepository struct {
@@ -70,4 +71,21 @@ func (r *fieldSetRepository) UpdateForContactInTx(tx neo4j.Transaction, tenant, 
 			"name":       entity.Name,
 		})
 	return utils.ExtractSingleRecordNodeAndRelationship(queryResult, err)
+}
+
+func (r *fieldSetRepository) DeleteByIdFromContact(session neo4j.Session, tenant, contactId, fieldSetId string) error {
+	_, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
+		_, err := tx.Run(`
+			MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}),
+                  (c)-[:HAS_COMPLEX_PROPERTY]->(s:FieldSet {id:$fieldSetId}),
+				  (s)-[:HAS_PROPERTY]->(f:CustomField)
+            DETACH DELETE f, s`,
+			map[string]any{
+				"contactId":  contactId,
+				"fieldSetId": fieldSetId,
+				"tenant":     tenant,
+			})
+		return nil, err
+	})
+	return err
 }
