@@ -418,7 +418,8 @@ type Email struct {
 	Label *EmailLabel `json:"label"`
 	// Identifies whether the email address is primary or not.
 	// **Required.**
-	Primary bool `json:"primary"`
+	Primary bool       `json:"primary"`
+	Source  DataSource `json:"source"`
 }
 
 // Describes an email address associated with a `Contact` in customerOS.
@@ -660,7 +661,8 @@ type PhoneNumber struct {
 	Label *PhoneNumberLabel `json:"label"`
 	// Determines if the phone number is primary or not.
 	// **Required**
-	Primary bool `json:"primary"`
+	Primary bool       `json:"primary"`
+	Source  DataSource `json:"source"`
 }
 
 // Describes a phone number associated with a `Contact` in customerOS.

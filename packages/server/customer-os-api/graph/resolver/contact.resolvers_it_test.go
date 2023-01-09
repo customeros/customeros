@@ -149,12 +149,14 @@ func TestMutationResolver_ContactCreate(t *testing.T) {
 	require.Equal(t, "contact@abc.com", contact.Contact_Create.Emails[0].Email)
 	require.Equal(t, "WORK", contact.Contact_Create.Emails[0].Label.String())
 	require.Equal(t, false, contact.Contact_Create.Emails[0].Primary)
+	require.Equal(t, model.DataSourceOpenline, contact.Contact_Create.Emails[0].Source)
 
 	require.Equal(t, 1, len(contact.Contact_Create.PhoneNumbers))
 	require.NotNil(t, contact.Contact_Create.PhoneNumbers[0].ID)
 	require.Equal(t, "+1234567890", contact.Contact_Create.PhoneNumbers[0].E164)
 	require.Equal(t, "MOBILE", contact.Contact_Create.PhoneNumbers[0].Label.String())
 	require.Equal(t, true, contact.Contact_Create.PhoneNumbers[0].Primary)
+	require.Equal(t, model.DataSourceOpenline, contact.Contact_Create.PhoneNumbers[0].Source)
 
 	require.Equal(t, 0, len(contact.Contact_Create.Groups))
 

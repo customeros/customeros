@@ -51,12 +51,15 @@ contact_Create(
       id
       email
       label
+      primary
+      source
     }
     phoneNumbers {
       id
       primary
       e164
       label
+      source
     }
     groups {
       id
