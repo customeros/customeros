@@ -49,31 +49,15 @@ func (s *contactGroupService) Create(ctx context.Context, entity *entity.Contact
 	return s.mapDbNodeToContactGroupEntity(*dbNode), nil
 }
 
-func (s *contactGroupService) Update(ctx context.Context, contactGroup *entity.ContactGroupEntity) (*entity.ContactGroupEntity, error) {
+func (s *contactGroupService) Update(ctx context.Context, entity *entity.ContactGroupEntity) (*entity.ContactGroupEntity, error) {
 	session := utils.NewNeo4jWriteSession(s.getDriver())
 	defer session.Close()
 
-	queryResult, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
-		result, err := tx.Run(`
-			MATCH (g:ContactGroup {id:$groupId})-[:GROUP_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant})
-			SET g.name=$name
-			RETURN g`,
-			map[string]any{
-				"tenant":  common.GetContext(ctx).Tenant,
-				"groupId": contactGroup.Id,
-				"name":    contactGroup.Name,
-			})
-
-		record, err := result.Single()
-		if err != nil {
-			return nil, err
-		}
-		return record.Values[0], nil
-	})
+	dbNode, err := s.repositories.ContactGroupRepository.Update(session, common.GetContext(ctx).Tenant, *entity)
 	if err != nil {
 		return nil, err
 	}
-	return s.mapDbNodeToContactGroupEntity(queryResult.(dbtype.Node)), nil
+	return s.mapDbNodeToContactGroupEntity(*dbNode), nil
 }
 
 func (s *contactGroupService) Delete(ctx context.Context, id string) (bool, error) {

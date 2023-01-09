@@ -116,6 +116,7 @@ type ContactGroup struct {
 	// The name of the `ContactGroup`.
 	// **Required**
 	Name     string        `json:"name"`
+	Source   DataSource    `json:"source"`
 	Contacts *ContactsPage `json:"contacts"`
 }
 

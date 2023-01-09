@@ -97,6 +97,7 @@ type ComplexityRoot struct {
 		Contacts func(childComplexity int, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) int
 		ID       func(childComplexity int) int
 		Name     func(childComplexity int) int
+		Source   func(childComplexity int) int
 	}
 
 	ContactGroupPage struct {
@@ -724,6 +725,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.ContactGroup.Name(childComplexity), true
+
+	case "ContactGroup.source":
+		if e.complexity.ContactGroup.Source == nil {
+			break
+		}
+
+		return e.complexity.ContactGroup.Source(childComplexity), true
 
 	case "ContactGroupPage.content":
 		if e.complexity.ContactGroupPage.Content == nil {
@@ -2610,18 +2618,20 @@ A collection of groups that a Contact belongs to.  Groups are user-defined entit
 **A ` + "`" + `return` + "`" + ` object.**
 """
 type ContactGroup {
-    
+
     """
-    The unique ID associated with the ` + "`" + `ContactGroup` + "`" + ` in customerOS. 
+    The unique ID associated with the ` + "`" + `ContactGroup` + "`" + ` in customerOS.
     **Required**
     """
     id: ID!
 
     """
-    The name of the ` + "`" + `ContactGroup` + "`" + `. 
+    The name of the ` + "`" + `ContactGroup` + "`" + `.
     **Required**
     """
     name: String!
+
+    source: DataSource!
 
     contacts(pagination: Pagination, where: Filter, sort: [SortBy!]): ContactsPage! @goField(forceResolver: true)
 }
@@ -2631,9 +2641,9 @@ Create a groups that can be associated with a ` + "`" + `Contact` + "`" + ` in c
 **A ` + "`" + `create` + "`" + ` object.**
 """
 input ContactGroupInput {
-    
+
     """
-    The name of the ` + "`" + `ContactGroup` + "`" + `. 
+    The name of the ` + "`" + `ContactGroup` + "`" + `.
     **Required**
     """
     name: String!
@@ -2642,17 +2652,17 @@ input ContactGroupInput {
 """
 Update a group that can be associated with a ` + "`" + `Contact` + "`" + ` in customerOS.
 **A ` + "`" + `update` + "`" + ` object.**
-"""    
+"""
 input ContactGroupUpdateInput {
-    
+
     """
-    The unique ID associated with the ` + "`" + `ContactGroup` + "`" + ` in customerOS. 
+    The unique ID associated with the ` + "`" + `ContactGroup` + "`" + ` in customerOS.
     **Required**
     """
     id: ID!
 
     """
-    The name of the ` + "`" + `ContactGroup` + "`" + `. 
+    The name of the ` + "`" + `ContactGroup` + "`" + `.
     **Required**
     """
     name: String!
@@ -2661,9 +2671,9 @@ input ContactGroupUpdateInput {
 """
 Specifies how many pages of ` + "`" + `ContactGroup` + "`" + ` information has been returned in the query response.
 **A ` + "`" + `response` + "`" + ` object.**
-"""   
+"""
 type ContactGroupPage implements Pages {
-    
+
     """
     A collection of groups that a Contact belongs to.  Groups are user-defined entities.
     **Required.  If no values it returns an empty array.**
@@ -5869,6 +5879,8 @@ func (ec *executionContext) fieldContext_Contact_groups(ctx context.Context, fie
 				return ec.fieldContext_ContactGroup_id(ctx, field)
 			case "name":
 				return ec.fieldContext_ContactGroup_name(ctx, field)
+			case "source":
+				return ec.fieldContext_ContactGroup_source(ctx, field)
 			case "contacts":
 				return ec.fieldContext_ContactGroup_contacts(ctx, field)
 			}
@@ -6549,6 +6561,50 @@ func (ec *executionContext) fieldContext_ContactGroup_name(ctx context.Context, 
 	return fc, nil
 }
 
+func (ec *executionContext) _ContactGroup_source(ctx context.Context, field graphql.CollectedField, obj *model.ContactGroup) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ContactGroup_source(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Source, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(model.DataSource)
+	fc.Result = res
+	return ec.marshalNDataSource2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐDataSource(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_ContactGroup_source(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ContactGroup",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type DataSource does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _ContactGroup_contacts(ctx context.Context, field graphql.CollectedField, obj *model.ContactGroup) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_ContactGroup_contacts(ctx, field)
 	if err != nil {
@@ -6655,6 +6711,8 @@ func (ec *executionContext) fieldContext_ContactGroupPage_content(ctx context.Co
 				return ec.fieldContext_ContactGroup_id(ctx, field)
 			case "name":
 				return ec.fieldContext_ContactGroup_name(ctx, field)
+			case "source":
+				return ec.fieldContext_ContactGroup_source(ctx, field)
 			case "contacts":
 				return ec.fieldContext_ContactGroup_contacts(ctx, field)
 			}
@@ -9795,6 +9853,8 @@ func (ec *executionContext) fieldContext_Mutation_contactGroupCreate(ctx context
 				return ec.fieldContext_ContactGroup_id(ctx, field)
 			case "name":
 				return ec.fieldContext_ContactGroup_name(ctx, field)
+			case "source":
+				return ec.fieldContext_ContactGroup_source(ctx, field)
 			case "contacts":
 				return ec.fieldContext_ContactGroup_contacts(ctx, field)
 			}
@@ -9858,6 +9918,8 @@ func (ec *executionContext) fieldContext_Mutation_contactGroupUpdate(ctx context
 				return ec.fieldContext_ContactGroup_id(ctx, field)
 			case "name":
 				return ec.fieldContext_ContactGroup_name(ctx, field)
+			case "source":
+				return ec.fieldContext_ContactGroup_source(ctx, field)
 			case "contacts":
 				return ec.fieldContext_ContactGroup_contacts(ctx, field)
 			}
@@ -14625,6 +14687,8 @@ func (ec *executionContext) fieldContext_Query_contactGroup(ctx context.Context,
 				return ec.fieldContext_ContactGroup_id(ctx, field)
 			case "name":
 				return ec.fieldContext_ContactGroup_name(ctx, field)
+			case "source":
+				return ec.fieldContext_ContactGroup_source(ctx, field)
 			case "contacts":
 				return ec.fieldContext_ContactGroup_contacts(ctx, field)
 			}
@@ -19601,6 +19665,13 @@ func (ec *executionContext) _ContactGroup(ctx context.Context, sel ast.Selection
 		case "name":
 
 			out.Values[i] = ec._ContactGroup_name(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "source":
+
+			out.Values[i] = ec._ContactGroup_source(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&invalids, 1)

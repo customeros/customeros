@@ -10,6 +10,7 @@ import (
 
 type ContactGroupRepository interface {
 	Create(session neo4j.Session, tenant string, entity entity.ContactGroupEntity) (*dbtype.Node, error)
+	Update(session neo4j.Session, tenant string, entity entity.ContactGroupEntity) (*dbtype.Node, error)
 	GetPaginatedContactGroups(session neo4j.Session, tenant string, skip, limit int, filter *utils.CypherFilter, sorting *utils.CypherSort) (*utils.DbNodesWithTotalCount, error)
 }
 
@@ -26,14 +27,16 @@ func NewContactGroupRepository(driver *neo4j.Driver) ContactGroupRepository {
 func (r *contactGroupRepository) Create(session neo4j.Session, tenant string, entity entity.ContactGroupEntity) (*dbtype.Node, error) {
 	query := "MATCH (t:Tenant {name:$tenant}) " +
 		" MERGE (g:ContactGroup {id: randomUUID()})-[:GROUP_BELONGS_TO_TENANT]->(t)" +
-		" ON CREATE SET g.name=$name, g:%s " +
+		" ON CREATE SET g.name=$name, g.source=$source, g.sourceOfTruth=$sourceOfTruth, g:%s " +
 		" RETURN g"
 
 	result, err := session.WriteTransaction(func(tx neo4j.Transaction) (interface{}, error) {
 		queryResult, err := tx.Run(fmt.Sprintf(query, "ContactGroup_"+tenant),
 			map[string]any{
-				"tenant": tenant,
-				"name":   entity.Name,
+				"tenant":        tenant,
+				"name":          entity.Name,
+				"source":        entity.Source,
+				"sourceOfTruth": entity.SourceOfTruth,
 			})
 		return utils.ExtractSingleRecordFirstValueAsNode(queryResult, err)
 	})
@@ -41,6 +44,26 @@ func (r *contactGroupRepository) Create(session neo4j.Session, tenant string, en
 		return nil, err
 	}
 	return result.(*dbtype.Node), nil
+}
+
+func (r *contactGroupRepository) Update(session neo4j.Session, tenant string, entity entity.ContactGroupEntity) (*dbtype.Node, error) {
+	dbNode, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
+		queryResult, err := tx.Run(`
+			MATCH (g:ContactGroup {id:$groupId})-[:GROUP_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant})
+			SET g.name=$name, g.sourceOfTruth=$sourceOfTruth
+			RETURN g`,
+			map[string]any{
+				"tenant":        tenant,
+				"groupId":       entity.Id,
+				"name":          entity.Name,
+				"sourceOfTruth": entity.SourceOfTruth,
+			})
+		return utils.ExtractSingleRecordFirstValueAsNode(queryResult, err)
+	})
+	if err != nil {
+		return nil, err
+	}
+	return dbNode.(*dbtype.Node), nil
 }
 
 func (r *contactGroupRepository) GetPaginatedContactGroups(session neo4j.Session, tenant string, skip, limit int, filter *utils.CypherFilter, sorting *utils.CypherSort) (*utils.DbNodesWithTotalCount, error) {
