@@ -88,6 +88,7 @@ type ComplexityRoot struct {
 		PhoneNumbers  func(childComplexity int) int
 		Readonly      func(childComplexity int) int
 		Roles         func(childComplexity int) int
+		Source        func(childComplexity int) int
 		Template      func(childComplexity int) int
 		Title         func(childComplexity int) int
 	}
@@ -675,6 +676,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Contact.Roles(childComplexity), true
+
+	case "Contact.source":
+		if e.complexity.Contact.Source == nil {
+			break
+		}
+
+		return e.complexity.Contact.Source(childComplexity), true
 
 	case "Contact.template":
 		if e.complexity.Contact.Template == nil {
@@ -2362,6 +2370,8 @@ type Contact implements ExtensibleEntity & Node {
     "Readonly indicator for a contact"
     readonly: Boolean!
 
+    source: DataSource!
+
     "User-defined field that defines the relationship type the contact has with your business.  ` + "`" + `Customer` + "`" + `, ` + "`" + `Partner` + "`" + `, ` + "`" + `Lead` + "`" + ` are examples."
     contactType: ContactType @goField(forceResolver: true)
 
@@ -3410,6 +3420,12 @@ type Result {
 scalar Int64
 
 scalar Any @goModel(model:"model.AnyTypeValue")`, BuiltIn: false},
+	{Name: "../schemas/source.graphqls", Input: `enum DataSource {
+    NA,
+    OPENLINE
+    HUBSPOT
+    ZENDESK
+}`, BuiltIn: false},
 	{Name: "../schemas/user.graphqls", Input: `extend type Query {
     users(pagination: Pagination, where: Filter, sort: [SortBy!]): UserPage!
     user(id: ID!): User!
@@ -5662,6 +5678,50 @@ func (ec *executionContext) fieldContext_Contact_readonly(ctx context.Context, f
 	return fc, nil
 }
 
+func (ec *executionContext) _Contact_source(ctx context.Context, field graphql.CollectedField, obj *model.Contact) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Contact_source(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Source, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(model.DataSource)
+	fc.Result = res
+	return ec.marshalNDataSource2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐDataSource(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Contact_source(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Contact",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type DataSource does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Contact_contactType(ctx context.Context, field graphql.CollectedField, obj *model.Contact) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Contact_contactType(ctx, field)
 	if err != nil {
@@ -7022,6 +7082,8 @@ func (ec *executionContext) fieldContext_ContactsPage_content(ctx context.Contex
 				return ec.fieldContext_Contact_label(ctx, field)
 			case "readonly":
 				return ec.fieldContext_Contact_readonly(ctx, field)
+			case "source":
+				return ec.fieldContext_Contact_source(ctx, field)
 			case "contactType":
 				return ec.fieldContext_Contact_contactType(ctx, field)
 			case "roles":
@@ -7451,6 +7513,8 @@ func (ec *executionContext) fieldContext_Conversation_contacts(ctx context.Conte
 				return ec.fieldContext_Contact_label(ctx, field)
 			case "readonly":
 				return ec.fieldContext_Contact_readonly(ctx, field)
+			case "source":
+				return ec.fieldContext_Contact_source(ctx, field)
 			case "contactType":
 				return ec.fieldContext_Contact_contactType(ctx, field)
 			case "roles":
@@ -9373,6 +9437,8 @@ func (ec *executionContext) fieldContext_Mutation_contact_Create(ctx context.Con
 				return ec.fieldContext_Contact_label(ctx, field)
 			case "readonly":
 				return ec.fieldContext_Contact_readonly(ctx, field)
+			case "source":
+				return ec.fieldContext_Contact_source(ctx, field)
 			case "contactType":
 				return ec.fieldContext_Contact_contactType(ctx, field)
 			case "roles":
@@ -9470,6 +9536,8 @@ func (ec *executionContext) fieldContext_Mutation_contact_Update(ctx context.Con
 				return ec.fieldContext_Contact_label(ctx, field)
 			case "readonly":
 				return ec.fieldContext_Contact_readonly(ctx, field)
+			case "source":
+				return ec.fieldContext_Contact_source(ctx, field)
 			case "contactType":
 				return ec.fieldContext_Contact_contactType(ctx, field)
 			case "roles":
@@ -10571,6 +10639,8 @@ func (ec *executionContext) fieldContext_Mutation_customFieldsMergeAndUpdateInCo
 				return ec.fieldContext_Contact_label(ctx, field)
 			case "readonly":
 				return ec.fieldContext_Contact_readonly(ctx, field)
+			case "source":
+				return ec.fieldContext_Contact_source(ctx, field)
 			case "contactType":
 				return ec.fieldContext_Contact_contactType(ctx, field)
 			case "roles":
@@ -14152,6 +14222,8 @@ func (ec *executionContext) fieldContext_Query_contact(ctx context.Context, fiel
 				return ec.fieldContext_Contact_label(ctx, field)
 			case "readonly":
 				return ec.fieldContext_Contact_readonly(ctx, field)
+			case "source":
+				return ec.fieldContext_Contact_source(ctx, field)
 			case "contactType":
 				return ec.fieldContext_Contact_contactType(ctx, field)
 			case "roles":
@@ -14312,6 +14384,8 @@ func (ec *executionContext) fieldContext_Query_contact_ByEmail(ctx context.Conte
 				return ec.fieldContext_Contact_label(ctx, field)
 			case "readonly":
 				return ec.fieldContext_Contact_readonly(ctx, field)
+			case "source":
+				return ec.fieldContext_Contact_source(ctx, field)
 			case "contactType":
 				return ec.fieldContext_Contact_contactType(ctx, field)
 			case "roles":
@@ -14409,6 +14483,8 @@ func (ec *executionContext) fieldContext_Query_contact_ByPhone(ctx context.Conte
 				return ec.fieldContext_Contact_label(ctx, field)
 			case "readonly":
 				return ec.fieldContext_Contact_readonly(ctx, field)
+			case "source":
+				return ec.fieldContext_Contact_source(ctx, field)
 			case "contactType":
 				return ec.fieldContext_Contact_contactType(ctx, field)
 			case "roles":
@@ -19196,6 +19272,13 @@ func (ec *executionContext) _Contact(ctx context.Context, sel ast.SelectionSet, 
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&invalids, 1)
 			}
+		case "source":
+
+			out.Values[i] = ec._Contact_source(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
 		case "contactType":
 			field := field
 
@@ -22582,6 +22665,16 @@ func (ec *executionContext) marshalNCustomFieldTemplateType2githubᚗcomᚋopenl
 func (ec *executionContext) unmarshalNCustomFieldUpdateInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐCustomFieldUpdateInput(ctx context.Context, v interface{}) (model.CustomFieldUpdateInput, error) {
 	res, err := ec.unmarshalInputCustomFieldUpdateInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalNDataSource2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐDataSource(ctx context.Context, v interface{}) (model.DataSource, error) {
+	var res model.DataSource
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNDataSource2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐDataSource(ctx context.Context, sel ast.SelectionSet, v model.DataSource) graphql.Marshaler {
+	return v
 }
 
 func (ec *executionContext) marshalNEmail2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐEmail(ctx context.Context, sel ast.SelectionSet, v model.Email) graphql.Marshaler {

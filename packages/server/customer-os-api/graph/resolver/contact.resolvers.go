@@ -165,6 +165,8 @@ func (r *mutationResolver) ContactCreate(ctx context.Context, input model.Contac
 		TemplateId:        input.TemplateID,
 		ContactTypeId:     input.ContactTypeID,
 		OwnerUserId:       input.OwnerID,
+		Source:            entity.DataSourceOpenline,
+		SourceOfTruth:     entity.DataSourceOpenline,
 	})
 	if err != nil {
 		graphql.AddErrorf(ctx, "Failed to create contact %s %s", *input.FirstName, *input.LastName)

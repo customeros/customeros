@@ -7,6 +7,10 @@ import (
 	"time"
 )
 
+func ToPtr[T any](obj T) *T {
+	return &obj
+}
+
 func StringPtr(str string) *string {
 	return &str
 }

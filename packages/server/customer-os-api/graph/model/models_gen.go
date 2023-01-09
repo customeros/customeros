@@ -68,7 +68,8 @@ type Contact struct {
 	// A user-defined label applied against a contact in customerOS.
 	Label *string `json:"label"`
 	// Readonly indicator for a contact
-	Readonly bool `json:"readonly"`
+	Readonly bool       `json:"readonly"`
+	Source   DataSource `json:"source"`
 	// User-defined field that defines the relationship type the contact has with your business.  `Customer`, `Partner`, `Lead` are examples.
 	ContactType *ContactType `json:"contactType"`
 	// `organizationName` and `jobTitle` of the contact if it has been associated with an organization.
@@ -970,6 +971,51 @@ func (e *CustomFieldTemplateType) UnmarshalGQL(v interface{}) error {
 }
 
 func (e CustomFieldTemplateType) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+type DataSource string
+
+const (
+	DataSourceNa       DataSource = "NA"
+	DataSourceOpenline DataSource = "OPENLINE"
+	DataSourceHubspot  DataSource = "HUBSPOT"
+	DataSourceZendesk  DataSource = "ZENDESK"
+)
+
+var AllDataSource = []DataSource{
+	DataSourceNa,
+	DataSourceOpenline,
+	DataSourceHubspot,
+	DataSourceZendesk,
+}
+
+func (e DataSource) IsValid() bool {
+	switch e {
+	case DataSourceNa, DataSourceOpenline, DataSourceHubspot, DataSourceZendesk:
+		return true
+	}
+	return false
+}
+
+func (e DataSource) String() string {
+	return string(e)
+}
+
+func (e *DataSource) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = DataSource(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid DataSource", str)
+	}
+	return nil
+}
+
+func (e DataSource) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
 }
 

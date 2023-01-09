@@ -76,6 +76,7 @@ func TestMutationResolver_ContactCreate_Min(t *testing.T) {
 	require.Equal(t, "", *contact.Contact_Create.LastName)
 	require.Equal(t, "", *contact.Contact_Create.Label)
 	require.Equal(t, false, contact.Contact_Create.Readonly)
+	require.Equal(t, model.DataSourceOpenline, contact.Contact_Create.Source)
 
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Tenant"))
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Contact"))
@@ -108,6 +109,7 @@ func TestMutationResolver_ContactCreate(t *testing.T) {
 	require.Equal(t, contactTypeId, contact.Contact_Create.ContactType.ID)
 	require.Equal(t, "CUSTOMER", contact.Contact_Create.ContactType.Name)
 	require.Equal(t, "Some label", *contact.Contact_Create.Label)
+	require.Equal(t, model.DataSourceOpenline, contact.Contact_Create.Source)
 
 	require.Equal(t, 5, len(contact.Contact_Create.CustomFields))
 
@@ -220,6 +222,7 @@ func TestMutationResolver_ContactCreate_WithCustomFields(t *testing.T) {
 	require.NotNil(t, contact)
 
 	createdContact := contact.Contact_Create
+	require.Equal(t, model.DataSourceOpenline, createdContact.Source)
 	require.Equal(t, entityTemplateId, createdContact.Template.ID)
 	require.Equal(t, 2, len(createdContact.CustomFields))
 	require.Equal(t, "field1", createdContact.CustomFields[0].Name)
@@ -284,12 +287,14 @@ func TestMutationResolver_ContactCreate_WithOwner(t *testing.T) {
 	err = decode.Decode(rawResponse.Data.(map[string]any), &contact)
 	require.Nil(t, err)
 	require.NotNil(t, contact)
-	require.Equal(t, "", contact.Contact_Create.Title.String())
-	require.Equal(t, "first", *contact.Contact_Create.FirstName)
-	require.Equal(t, "last", *contact.Contact_Create.LastName)
-	require.Equal(t, userId, contact.Contact_Create.Owner.ID)
-	require.Equal(t, "Agent", contact.Contact_Create.Owner.FirstName)
-	require.Equal(t, "Smith", contact.Contact_Create.Owner.LastName)
+	createdContact := contact.Contact_Create
+	require.Equal(t, "", createdContact.Title.String())
+	require.Equal(t, "first", *createdContact.FirstName)
+	require.Equal(t, "last", *createdContact.LastName)
+	require.Equal(t, userId, createdContact.Owner.ID)
+	require.Equal(t, "Agent", createdContact.Owner.FirstName)
+	require.Equal(t, "Smith", createdContact.Owner.LastName)
+	require.Equal(t, model.DataSourceOpenline, createdContact.Source)
 
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Contact"))
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Contact_"+tenantName))
@@ -317,6 +322,7 @@ func TestMutationResolver_ContactCreate_WithExternalReference(t *testing.T) {
 	require.Nil(t, err)
 	require.NotNil(t, contact)
 	require.NotNil(t, contact.Contact_Create.ID)
+	require.Equal(t, model.DataSourceOpenline, contact.Contact_Create.Source)
 
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Tenant"))
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Contact"))
