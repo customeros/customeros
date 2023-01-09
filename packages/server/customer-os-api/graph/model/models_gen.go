@@ -190,7 +190,7 @@ type ContactInput struct {
 	Email *EmailInput `json:"email"`
 	// A phone number associated with the contact.
 	PhoneNumber *PhoneNumberInput `json:"phoneNumber"`
-	// Id of the contact owner (user)
+	// ID of the contact owner (user)
 	OwnerID           *string                       `json:"ownerId"`
 	ExternalReference *ExternalSystemReferenceInput `json:"externalReference"`
 }
@@ -246,7 +246,7 @@ type ContactUpdateInput struct {
 	Label *string `json:"label"`
 	// User-defined field that defines the relationship type the contact has with your business.  `Customer`, `Partner`, `Lead` are examples.
 	ContactTypeID *string `json:"contactTypeId"`
-	// Id of the contact owner (user)
+	// ID of the contact owner (user)
 	OwnerID *string `json:"ownerId"`
 	// Readonly indicator for a contact
 	Readonly *bool `json:"readonly"`
@@ -574,6 +574,7 @@ type Organization struct {
 	// All addresses associated with an organization in customerOS.
 	// **Required.  If no values it returns an empty array.**
 	Addresses []*Address `json:"addresses"`
+	Source    DataSource `json:"source"`
 }
 
 func (Organization) IsNode()            {}

@@ -140,35 +140,46 @@ func TestMutationResolver_OrganizationCreate(t *testing.T) {
 	neo4jt.CreateTenant(driver, tenantName)
 	organizationTypeId := neo4jt.CreateOrganizationType(driver, tenantName, "COMPANY")
 
+	// Ensure that the tenant and organization type nodes were created in the database.
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Tenant"))
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "OrganizationType"))
 	require.Equal(t, 2, neo4jt.GetTotalCountOfNodes(driver))
 
+	// Call the "create_organization" mutation.
 	rawResponse, err := c.RawPost(getQuery("create_organization"),
 		client.Var("organizationTypeId", organizationTypeId))
 	assertRawResponseSuccess(t, rawResponse, err)
 
+	// Unmarshal the response data into the "organization" struct.
 	var organization struct {
 		Organization_Create model.Organization
 	}
 	err = decode.Decode(rawResponse.Data.(map[string]any), &organization)
 	require.Nil(t, err)
 	require.NotNil(t, organization)
-	require.NotNil(t, organization.Organization_Create.ID)
-	require.NotNil(t, organization.Organization_Create.CreatedAt)
-	require.Equal(t, "organization name", organization.Organization_Create.Name)
-	require.Equal(t, "organization description", *organization.Organization_Create.Description)
-	require.Equal(t, "organization domain", *organization.Organization_Create.Domain)
-	require.Equal(t, "organization website", *organization.Organization_Create.Website)
-	require.Equal(t, "organization industry", *organization.Organization_Create.Industry)
-	require.Equal(t, true, *organization.Organization_Create.IsPublic)
-	require.Equal(t, false, *organization.Organization_Create.Readonly)
-	require.Equal(t, organizationTypeId, organization.Organization_Create.OrganizationType.ID)
-	require.Equal(t, "COMPANY", organization.Organization_Create.OrganizationType.Name)
 
+	// Assign the organization to a shorter variable for easier reference.
+	org := organization.Organization_Create
+
+	// Ensure that the organization was created correctly.
+	require.NotNil(t, org.ID)
+	require.NotNil(t, org.CreatedAt)
+	require.Equal(t, "organization name", org.Name)
+	require.Equal(t, "organization description", *org.Description)
+	require.Equal(t, "organization domain", *org.Domain)
+	require.Equal(t, "organization website", *org.Website)
+	require.Equal(t, "organization industry", *org.Industry)
+	require.Equal(t, true, *org.IsPublic)
+	require.Equal(t, false, *org.Readonly)
+	require.Equal(t, organizationTypeId, org.OrganizationType.ID)
+	require.Equal(t, "COMPANY", org.OrganizationType.Name)
+	require.Equal(t, model.DataSourceOpenline, org.Source)
+
+	// Check the number of nodes and relationships in the Neo4j database
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Organization"))
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Organization_"+tenantName))
 
+	// Check the labels on the nodes in the Neo4j database
 	assertNeo4jLabels(t, driver, []string{"Tenant", "OrganizationType", "Organization", "Organization_" + tenantName})
 }
 

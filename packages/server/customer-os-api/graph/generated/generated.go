@@ -270,6 +270,7 @@ type ComplexityRoot struct {
 		Name             func(childComplexity int) int
 		OrganizationType func(childComplexity int) int
 		Readonly         func(childComplexity int) int
+		Source           func(childComplexity int) int
 		Website          func(childComplexity int) int
 	}
 
@@ -1843,6 +1844,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Organization.Readonly(childComplexity), true
 
+	case "Organization.source":
+		if e.complexity.Organization.Source == nil {
+			break
+		}
+
+		return e.complexity.Organization.Source(childComplexity), true
+
 	case "Organization.website":
 		if e.complexity.Organization.Website == nil {
 			break
@@ -2536,7 +2544,7 @@ input ContactInput {
     "A phone number associated with the contact."
     phoneNumber: PhoneNumberInput
 
-    "Id of the contact owner (user)"
+    "ID of the contact owner (user)"
     ownerId: ID
 
     externalReference: ExternalSystemReferenceInput
@@ -2573,7 +2581,7 @@ input ContactUpdateInput {
     "User-defined field that defines the relationship type the contact has with your business.  ` + "`" + `Customer` + "`" + `, ` + "`" + `Partner` + "`" + `, ` + "`" + `Lead` + "`" + ` are examples."
     contactTypeId: ID
 
-    "Id of the contact owner (user)"
+    "ID of the contact owner (user)"
     ownerId: ID
 
     "Readonly indicator for a contact"
@@ -3285,6 +3293,7 @@ type Organization implements Node {
     **Required.  If no values it returns an empty array.**
     """
     addresses: [Address!]! @goField(forceResolver: true)
+    source: DataSource!
 }
 
 type OrganizationPage implements Pages {
@@ -6936,6 +6945,8 @@ func (ec *executionContext) fieldContext_ContactRole_organization(ctx context.Co
 				return ec.fieldContext_Organization_organizationType(ctx, field)
 			case "addresses":
 				return ec.fieldContext_Organization_addresses(ctx, field)
+			case "source":
+				return ec.fieldContext_Organization_source(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Organization", field.Name)
 		},
@@ -12013,6 +12024,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_Create(ctx contex
 				return ec.fieldContext_Organization_organizationType(ctx, field)
 			case "addresses":
 				return ec.fieldContext_Organization_addresses(ctx, field)
+			case "source":
+				return ec.fieldContext_Organization_source(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Organization", field.Name)
 		},
@@ -12092,6 +12105,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_Update(ctx contex
 				return ec.fieldContext_Organization_organizationType(ctx, field)
 			case "addresses":
 				return ec.fieldContext_Organization_addresses(ctx, field)
+			case "source":
+				return ec.fieldContext_Organization_source(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Organization", field.Name)
 		},
@@ -13482,6 +13497,50 @@ func (ec *executionContext) fieldContext_Organization_addresses(ctx context.Cont
 	return fc, nil
 }
 
+func (ec *executionContext) _Organization_source(ctx context.Context, field graphql.CollectedField, obj *model.Organization) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Organization_source(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Source, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(model.DataSource)
+	fc.Result = res
+	return ec.marshalNDataSource2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐDataSource(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Organization_source(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Organization",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type DataSource does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _OrganizationPage_content(ctx context.Context, field graphql.CollectedField, obj *model.OrganizationPage) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_OrganizationPage_content(ctx, field)
 	if err != nil {
@@ -13543,6 +13602,8 @@ func (ec *executionContext) fieldContext_OrganizationPage_content(ctx context.Co
 				return ec.fieldContext_Organization_organizationType(ctx, field)
 			case "addresses":
 				return ec.fieldContext_Organization_addresses(ctx, field)
+			case "source":
+				return ec.fieldContext_Organization_source(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Organization", field.Name)
 		},
@@ -15063,6 +15124,8 @@ func (ec *executionContext) fieldContext_Query_organization(ctx context.Context,
 				return ec.fieldContext_Organization_organizationType(ctx, field)
 			case "addresses":
 				return ec.fieldContext_Organization_addresses(ctx, field)
+			case "source":
+				return ec.fieldContext_Organization_source(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Organization", field.Name)
 		},
@@ -21204,6 +21267,13 @@ func (ec *executionContext) _Organization(ctx context.Context, sel ast.Selection
 				return innerFunc(ctx)
 
 			})
+		case "source":
+
+			out.Values[i] = ec._Organization_source(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}

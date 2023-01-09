@@ -34,19 +34,23 @@ func (r *organizationRepository) Create(tx neo4j.Transaction, tenant string, org
 	query := "MATCH (t:Tenant {name:$tenant})" +
 		" MERGE (t)<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {id:randomUUID()})" +
 		" ON CREATE SET org.name=$name, org.description=$description, org.readonly=false," +
-		" org.domain=$domain, org.website=$website, org.industry=$industry, org.isPublic=$isPublic, org:%s" +
+		" org.domain=$domain, org.website=$website, org.industry=$industry, org.isPublic=$isPublic, " +
+		" org.source=$source, org.sourceOfTruth=$sourceOfTruth," +
+		" org:%s" +
 		" RETURN org"
 
 	queryResult, err := tx.Run(fmt.Sprintf(query, "Organization_"+tenant),
 		map[string]any{
-			"tenant":      tenant,
-			"name":        organization.Name,
-			"description": organization.Description,
-			"readonly":    false,
-			"domain":      organization.Domain,
-			"website":     organization.Website,
-			"industry":    organization.Industry,
-			"isPublic":    organization.IsPublic,
+			"tenant":        tenant,
+			"name":          organization.Name,
+			"description":   organization.Description,
+			"readonly":      false,
+			"domain":        organization.Domain,
+			"website":       organization.Website,
+			"industry":      organization.Industry,
+			"isPublic":      organization.IsPublic,
+			"source":        organization.Source,
+			"sourceOfTruth": organization.SourceOfTruth,
 		})
 	return utils.ExtractSingleRecordFirstValueAsNode(queryResult, err)
 }
@@ -55,19 +59,20 @@ func (r *organizationRepository) Update(tx neo4j.Transaction, tenant string, org
 	query :=
 		" MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {id:$organizationId})" +
 			" SET org.name=$name, org.description=$description, org.domain=$domain, org.website=$website, " +
-			" org.industry=$industry, org.isPublic=$isPublic " +
+			" org.industry=$industry, org.isPublic=$isPublic, org.sourceOfTruth=$sourceOfTruth " +
 			" RETURN org"
 
 	queryResult, err := tx.Run(query,
 		map[string]any{
 			"tenant":         tenant,
-			"organizationId": organization.Id,
+			"organizationId": organization.ID,
 			"name":           organization.Name,
 			"description":    organization.Description,
 			"domain":         organization.Domain,
 			"website":        organization.Website,
 			"industry":       organization.Industry,
 			"isPublic":       organization.IsPublic,
+			"sourceOfTruth":  organization.SourceOfTruth,
 		})
 	return utils.ExtractSingleRecordFirstValueAsNode(queryResult, err)
 }

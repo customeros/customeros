@@ -26,6 +26,7 @@ type Organization implements Node {
     **Required.  If no values it returns an empty array.**
     """
     addresses: [Address!]! @goField(forceResolver: true)
+    source: DataSource!
 }
 
 type OrganizationPage implements Pages {
