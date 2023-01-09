@@ -178,10 +178,11 @@ type ComplexityRoot struct {
 	}
 
 	FieldSet struct {
-		Added        func(childComplexity int) int
+		CreatedAt    func(childComplexity int) int
 		CustomFields func(childComplexity int) int
 		ID           func(childComplexity int) int
 		Name         func(childComplexity int) int
+		Source       func(childComplexity int) int
 		Template     func(childComplexity int) int
 	}
 
@@ -1060,12 +1061,12 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.EntityTemplate.Version(childComplexity), true
 
-	case "FieldSet.added":
-		if e.complexity.FieldSet.Added == nil {
+	case "FieldSet.createdAt":
+		if e.complexity.FieldSet.CreatedAt == nil {
 			break
 		}
 
-		return e.complexity.FieldSet.Added(childComplexity), true
+		return e.complexity.FieldSet.CreatedAt(childComplexity), true
 
 	case "FieldSet.customFields":
 		if e.complexity.FieldSet.CustomFields == nil {
@@ -1087,6 +1088,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.FieldSet.Name(childComplexity), true
+
+	case "FieldSet.source":
+		if e.complexity.FieldSet.Source == nil {
+			break
+		}
+
+		return e.complexity.FieldSet.Source(childComplexity), true
 
 	case "FieldSet.template":
 		if e.complexity.FieldSet.Template == nil {
@@ -2908,9 +2916,10 @@ enum CustomFieldDataType {
 type FieldSet {
     id: ID!
     name: String!
-    added: Time!
+    createdAt: Time!
     customFields: [CustomField!]! @goField(forceResolver: true)
     template: FieldSetTemplate @goField(forceResolver: true)
+    source: DataSource!
 }
 
 input FieldSetInput {
@@ -6144,12 +6153,14 @@ func (ec *executionContext) fieldContext_Contact_fieldSets(ctx context.Context, 
 				return ec.fieldContext_FieldSet_id(ctx, field)
 			case "name":
 				return ec.fieldContext_FieldSet_name(ctx, field)
-			case "added":
-				return ec.fieldContext_FieldSet_added(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_FieldSet_createdAt(ctx, field)
 			case "customFields":
 				return ec.fieldContext_FieldSet_customFields(ctx, field)
 			case "template":
 				return ec.fieldContext_FieldSet_template(ctx, field)
+			case "source":
+				return ec.fieldContext_FieldSet_source(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type FieldSet", field.Name)
 		},
@@ -8963,8 +8974,8 @@ func (ec *executionContext) fieldContext_FieldSet_name(ctx context.Context, fiel
 	return fc, nil
 }
 
-func (ec *executionContext) _FieldSet_added(ctx context.Context, field graphql.CollectedField, obj *model.FieldSet) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_FieldSet_added(ctx, field)
+func (ec *executionContext) _FieldSet_createdAt(ctx context.Context, field graphql.CollectedField, obj *model.FieldSet) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_FieldSet_createdAt(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -8977,7 +8988,7 @@ func (ec *executionContext) _FieldSet_added(ctx context.Context, field graphql.C
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Added, nil
+		return obj.CreatedAt, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -8994,7 +9005,7 @@ func (ec *executionContext) _FieldSet_added(ctx context.Context, field graphql.C
 	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_FieldSet_added(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_FieldSet_createdAt(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "FieldSet",
 		Field:      field,
@@ -9111,6 +9122,50 @@ func (ec *executionContext) fieldContext_FieldSet_template(ctx context.Context, 
 				return ec.fieldContext_FieldSetTemplate_customFields(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type FieldSetTemplate", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _FieldSet_source(ctx context.Context, field graphql.CollectedField, obj *model.FieldSet) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_FieldSet_source(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Source, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(model.DataSource)
+	fc.Result = res
+	return ec.marshalNDataSource2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐDataSource(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_FieldSet_source(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "FieldSet",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type DataSource does not have child fields")
 		},
 	}
 	return fc, nil
@@ -11175,12 +11230,14 @@ func (ec *executionContext) fieldContext_Mutation_fieldSetMergeToContact(ctx con
 				return ec.fieldContext_FieldSet_id(ctx, field)
 			case "name":
 				return ec.fieldContext_FieldSet_name(ctx, field)
-			case "added":
-				return ec.fieldContext_FieldSet_added(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_FieldSet_createdAt(ctx, field)
 			case "customFields":
 				return ec.fieldContext_FieldSet_customFields(ctx, field)
 			case "template":
 				return ec.fieldContext_FieldSet_template(ctx, field)
+			case "source":
+				return ec.fieldContext_FieldSet_source(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type FieldSet", field.Name)
 		},
@@ -11239,12 +11296,14 @@ func (ec *executionContext) fieldContext_Mutation_fieldSetUpdateInContact(ctx co
 				return ec.fieldContext_FieldSet_id(ctx, field)
 			case "name":
 				return ec.fieldContext_FieldSet_name(ctx, field)
-			case "added":
-				return ec.fieldContext_FieldSet_added(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_FieldSet_createdAt(ctx, field)
 			case "customFields":
 				return ec.fieldContext_FieldSet_customFields(ctx, field)
 			case "template":
 				return ec.fieldContext_FieldSet_template(ctx, field)
+			case "source":
+				return ec.fieldContext_FieldSet_source(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type FieldSet", field.Name)
 		},
@@ -20189,9 +20248,9 @@ func (ec *executionContext) _FieldSet(ctx context.Context, sel ast.SelectionSet,
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&invalids, 1)
 			}
-		case "added":
+		case "createdAt":
 
-			out.Values[i] = ec._FieldSet_added(ctx, field, obj)
+			out.Values[i] = ec._FieldSet_createdAt(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&invalids, 1)
@@ -20233,6 +20292,13 @@ func (ec *executionContext) _FieldSet(ctx context.Context, sel ast.SelectionSet,
 				return innerFunc(ctx)
 
 			})
+		case "source":
+
+			out.Values[i] = ec._FieldSet_source(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}

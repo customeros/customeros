@@ -478,9 +478,10 @@ type ExternalSystemReferenceInput struct {
 type FieldSet struct {
 	ID           string            `json:"id"`
 	Name         string            `json:"name"`
-	Added        time.Time         `json:"added"`
+	CreatedAt    time.Time         `json:"createdAt"`
 	CustomFields []*CustomField    `json:"customFields"`
 	Template     *FieldSetTemplate `json:"template"`
+	Source       DataSource        `json:"source"`
 }
 
 type FieldSetInput struct {

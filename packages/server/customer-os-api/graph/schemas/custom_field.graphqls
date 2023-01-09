@@ -124,9 +124,10 @@ enum CustomFieldDataType {
 type FieldSet {
     id: ID!
     name: String!
-    added: Time!
+    createdAt: Time!
     customFields: [CustomField!]! @goField(forceResolver: true)
     template: FieldSetTemplate @goField(forceResolver: true)
+    source: DataSource!
 }
 
 input FieldSetInput {

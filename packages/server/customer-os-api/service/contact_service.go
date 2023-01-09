@@ -114,7 +114,7 @@ func (s *contactService) createContactInDBTxWork(ctx context.Context, newContact
 		}
 		if newContact.FieldSets != nil {
 			for _, fieldSet := range *newContact.FieldSets {
-				setDbNode, _, err := s.repositories.FieldSetRepository.MergeFieldSetToContactInTx(tx, tenant, contactId, fieldSet)
+				setDbNode, err := s.repositories.FieldSetRepository.MergeFieldSetToContactInTx(tx, tenant, contactId, fieldSet)
 				if err != nil {
 					return nil, err
 				}

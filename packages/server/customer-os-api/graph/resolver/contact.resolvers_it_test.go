@@ -246,7 +246,7 @@ func TestMutationResolver_ContactCreate_WithCustomFields(t *testing.T) {
 		set2 = createdContact.FieldSets[0]
 	}
 	require.NotNil(t, set1.ID)
-	require.NotNil(t, set1.Added)
+	require.NotNil(t, set1.CreatedAt)
 	require.Equal(t, "set1", set1.Name)
 	require.Equal(t, 2, len(set1.CustomFields))
 	require.Equal(t, "field3InSet", set1.CustomFields[0].Name)
@@ -259,9 +259,11 @@ func TestMutationResolver_ContactCreate_WithCustomFields(t *testing.T) {
 	require.Equal(t, model.DataSourceOpenline, set1.CustomFields[1].Source)
 	require.Equal(t, "TEXT", set1.CustomFields[1].Datatype.String())
 	require.Nil(t, set1.CustomFields[1].Template)
+	require.Equal(t, model.DataSourceOpenline, set1.Source)
 	require.NotNil(t, set2.ID)
-	require.NotNil(t, set2.Added)
+	require.NotNil(t, set2.CreatedAt)
 	require.Equal(t, "set2", set2.Name)
+	require.Equal(t, model.DataSourceOpenline, set2.Source)
 
 	assertNeo4jLabels(t, driver, []string{"Tenant", "Contact", "Contact_" + tenantName,
 		"CustomFieldTemplate", "EntityTemplate", "FieldSet", "FieldSet_" + tenantName, "FieldSetTemplate",

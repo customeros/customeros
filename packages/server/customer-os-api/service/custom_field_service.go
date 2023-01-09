@@ -74,7 +74,7 @@ func (s *customFieldService) MergeAndUpdateCustomFieldsForContact(ctx context.Co
 			for _, fieldSet := range *fieldSets {
 				var fieldSetId string
 				if fieldSet.Id == nil {
-					setDbNode, _, err := s.repository.FieldSetRepository.MergeFieldSetToContactInTx(tx, tenant, contactId, fieldSet)
+					setDbNode, err := s.repository.FieldSetRepository.MergeFieldSetToContactInTx(tx, tenant, contactId, fieldSet)
 					if err != nil {
 						return nil, err
 					}
@@ -86,7 +86,7 @@ func (s *customFieldService) MergeAndUpdateCustomFieldsForContact(ctx context.Co
 						}
 					}
 				} else {
-					fieldSetDbNode, _, err := s.repository.FieldSetRepository.UpdateForContactInTx(tx, common.GetContext(ctx).Tenant, contactId, fieldSet)
+					fieldSetDbNode, err := s.repository.FieldSetRepository.UpdateFieldSetForContactInTx(tx, common.GetContext(ctx).Tenant, contactId, fieldSet)
 					if err != nil {
 						return nil, err
 					}

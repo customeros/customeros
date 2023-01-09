@@ -6,11 +6,13 @@ import (
 )
 
 type FieldSetEntity struct {
-	Id           *string
-	Name         string
-	Added        time.Time
-	TemplateId   *string
-	CustomFields *CustomFieldEntities
+	Id            *string
+	Name          string
+	CreatedAt     time.Time
+	TemplateId    *string
+	CustomFields  *CustomFieldEntities
+	Source        DataSource
+	SourceOfTruth DataSource
 }
 
 func (set FieldSetEntity) ToString() string {

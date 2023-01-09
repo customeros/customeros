@@ -32,7 +32,8 @@ customFieldsMergeAndUpdateInContact(
     fieldSets {
         id
         name
-        added
+        source
+        createdAt
         template {
             id
         }

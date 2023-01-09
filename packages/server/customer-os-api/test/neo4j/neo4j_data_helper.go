@@ -123,7 +123,7 @@ func AddContactToGroup(driver *neo4j.Driver, contactId, groupId string) {
 }
 
 func CreateDefaultFieldSet(driver *neo4j.Driver, contactId string) string {
-	return CreateFieldSet(driver, contactId, entity.FieldSetEntity{Name: "name"})
+	return CreateFieldSet(driver, contactId, entity.FieldSetEntity{Name: "name", Source: entity.DataSourceOpenline, SourceOfTruth: entity.DataSourceOpenline})
 }
 
 func CreateFieldSet(driver *neo4j.Driver, contactId string, fieldSet entity.FieldSetEntity) string {
@@ -131,13 +131,18 @@ func CreateFieldSet(driver *neo4j.Driver, contactId string, fieldSet entity.Fiel
 	query := `
 			MATCH (c:Contact {id:$contactId})
 			MERGE (s:FieldSet {
-				  id: $fieldSetId,
-				  name: $name
-				})<-[:HAS_COMPLEX_PROPERTY {added:datetime({timezone: 'UTC'})}]-(c)`
+				  	id: $fieldSetId,
+				  	name: $name,
+					source: $source,
+					sourceOfTruth: $sourceOfTruth,
+					createdAt :datetime({timezone: 'UTC'})
+				})<-[:HAS_COMPLEX_PROPERTY]-(c)`
 	ExecuteWriteQuery(driver, query, map[string]any{
-		"contactId":  contactId,
-		"fieldSetId": fieldSetId.String(),
-		"name":       fieldSet.Name,
+		"contactId":     contactId,
+		"fieldSetId":    fieldSetId.String(),
+		"name":          fieldSet.Name,
+		"source":        fieldSet.Source,
+		"sourceOfTruth": fieldSet.SourceOfTruth,
 	})
 	return fieldSetId.String()
 }
