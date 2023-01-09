@@ -15,7 +15,7 @@ import (
 func NewPostgresClient(cfg *Config) (*sql.DB, *gorm.DB, error) {
 	connectString := fmt.Sprintf("host=%s port=%d dbname=%s user=%s password=%s ",
 		cfg.PostgresDb.Host, cfg.PostgresDb.Port, cfg.PostgresDb.Name, cfg.PostgresDb.User, cfg.PostgresDb.Pwd)
-	gormDb, err := gorm.Open(postgres.Open(connectString), initConfig())
+	gormDb, err := gorm.Open(postgres.Open(connectString), initConfig(cfg))
 
 	var sqlDb *sql.DB
 	if err != nil {
@@ -36,19 +36,27 @@ func NewPostgresClient(cfg *Config) (*sql.DB, *gorm.DB, error) {
 }
 
 // initConfig Initialize Config
-func initConfig() *gorm.Config {
+func initConfig(cfg *Config) *gorm.Config {
 	return &gorm.Config{
 		AllowGlobalUpdate: true,
-		Logger:            initLog(),
+		Logger:            initLog(cfg),
 	}
 }
 
 // initLog Connection Log Configuration
-func initLog() logger.Interface {
-	//f, _ := os.Create("gorm.log")
+func initLog(cfg *Config) logger.Interface {
+	var logLevel = logger.Silent
+	switch cfg.PostgresLogLevel {
+	case "ERROR":
+		logLevel = logger.Error
+	case "WARN":
+		logLevel = logger.Warn
+	case "INFO":
+		logLevel = logger.Info
+	}
 	newLogger := logger.New(log.New(io.MultiWriter(os.Stdout), "\r\n", log.LstdFlags), logger.Config{
 		Colorful:      true,
-		LogLevel:      logger.Info,
+		LogLevel:      logLevel,
 		SlowThreshold: time.Second,
 	})
 	return newLogger

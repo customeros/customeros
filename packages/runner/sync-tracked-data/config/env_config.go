@@ -22,4 +22,5 @@ type Config struct {
 	TimeoutAfterTaskRun int    `env:"TIMEOUT_AFTER_TASK_RUN_SEC" envDefault:"60"`
 	PageViewsBucketSize int    `env:"PAGE_VIEWS_BUCKET_SIZE" envDefault:"100"`
 	LogLevel            string `env:"LOG_LEVEL" envDefault:"INFO"`
+	PostgresLogLevel    string `env:"POSTGRES_LOG_LEVEL" envDefault:"WARN"`
 }
