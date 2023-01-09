@@ -447,20 +447,21 @@ func CreatePageView(driver *neo4j.Driver, contactId string, actionEntity entity.
 func CreateAddress(driver *neo4j.Driver, address entity.AddressEntity) string {
 	var addressId, _ = uuid.NewRandom()
 	query := `MERGE (a:Address {id:$id})
-			ON CREATE SET a.source=$source, a.country=$country, a.state=$state, a.city=$city, a.address=$address,
-							a.address2=$address2, a.zip=$zip, a.fax=$fax, a.phone=$phone
-`
+			ON CREATE SET  a.country=$country, a.state=$state, a.city=$city, a.address=$address,
+							a.address2=$address2, a.zip=$zip, a.fax=$fax, a.phone=$phone,
+							a.source=$source, a.sourceOfTruth=$sourceOfTruth`
 	ExecuteWriteQuery(driver, query, map[string]any{
-		"id":       addressId.String(),
-		"source":   address.Source,
-		"country":  address.Country,
-		"state":    address.State,
-		"city":     address.City,
-		"address":  address.Address,
-		"address2": address.Address2,
-		"zip":      address.Zip,
-		"phone":    address.Phone,
-		"fax":      address.Fax,
+		"id":            addressId.String(),
+		"source":        address.Source,
+		"sourceOfTruth": address.Source,
+		"country":       address.Country,
+		"state":         address.State,
+		"city":          address.City,
+		"address":       address.Address,
+		"address2":      address.Address2,
+		"zip":           address.Zip,
+		"phone":         address.Phone,
+		"fax":           address.Fax,
 	})
 	return addressId.String()
 }

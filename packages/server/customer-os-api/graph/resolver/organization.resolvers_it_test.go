@@ -85,7 +85,7 @@ func TestQueryResolver_Organizations_WithAddresses(t *testing.T) {
 	organization1 := neo4jt.CreateOrganization(driver, tenantName, "OPENLINE")
 	organization2 := neo4jt.CreateOrganization(driver, tenantName, "some other organization")
 	addressInput := entity.AddressEntity{
-		Source:   "hubspot",
+		Source:   entity.DataSourceOpenline,
 		Country:  "testCountry",
 		State:    "testState",
 		City:     "testCity",
@@ -124,7 +124,7 @@ func TestQueryResolver_Organizations_WithAddresses(t *testing.T) {
 	require.Equal(t, 1, len(organizations.Organizations.Content[0].Addresses))
 	address := organizations.Organizations.Content[0].Addresses[0]
 	require.Equal(t, address1, address.ID)
-	require.Equal(t, addressInput.Source, *address.Source)
+	require.Equal(t, model.DataSourceOpenline, *address.Source)
 	require.Equal(t, addressInput.Country, *address.Country)
 	require.Equal(t, addressInput.City, *address.City)
 	require.Equal(t, addressInput.State, *address.State)

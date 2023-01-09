@@ -38,16 +38,16 @@ type Pages interface {
 }
 
 type Address struct {
-	ID       string  `json:"id"`
-	Source   *string `json:"source"`
-	Country  *string `json:"country"`
-	State    *string `json:"state"`
-	City     *string `json:"city"`
-	Address  *string `json:"address"`
-	Address2 *string `json:"address2"`
-	Zip      *string `json:"zip"`
-	Phone    *string `json:"phone"`
-	Fax      *string `json:"fax"`
+	ID       string      `json:"id"`
+	Country  *string     `json:"country"`
+	State    *string     `json:"state"`
+	City     *string     `json:"city"`
+	Address  *string     `json:"address"`
+	Address2 *string     `json:"address2"`
+	Zip      *string     `json:"zip"`
+	Phone    *string     `json:"phone"`
+	Fax      *string     `json:"fax"`
+	Source   *DataSource `json:"source"`
 }
 
 // A contact represents an individual in customerOS.

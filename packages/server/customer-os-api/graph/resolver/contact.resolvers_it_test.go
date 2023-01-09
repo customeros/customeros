@@ -514,15 +514,16 @@ func TestQueryResolver_Contact_WithAddresses_ById(t *testing.T) {
 	contactId := neo4jt.CreateDefaultContact(driver, tenantName)
 	anotherContactId := neo4jt.CreateDefaultContact(driver, tenantName)
 	addressInput := entity.AddressEntity{
-		Source:   "hubspot",
-		Country:  "testCountry",
-		State:    "testState",
-		City:     "testCity",
-		Address:  "testAddress",
-		Address2: "testAddress2",
-		Zip:      "testZip",
-		Phone:    "testPhone",
-		Fax:      "testFax",
+		Source:        entity.DataSourceHubspot,
+		SourceOfTruth: entity.DataSourceHubspot,
+		Country:       "testCountry",
+		State:         "testState",
+		City:          "testCity",
+		Address:       "testAddress",
+		Address2:      "testAddress2",
+		Zip:           "testZip",
+		Phone:         "testPhone",
+		Fax:           "testFax",
 	}
 	address1 := neo4jt.CreateAddress(driver, addressInput)
 	address2 := neo4jt.CreateAddress(driver, entity.AddressEntity{
@@ -551,7 +552,7 @@ func TestQueryResolver_Contact_WithAddresses_ById(t *testing.T) {
 	require.Equal(t, 1, len(addresses))
 	address := addresses[0]
 	require.Equal(t, address1, address.ID)
-	require.Equal(t, addressInput.Source, *address.Source)
+	require.Equal(t, model.DataSourceHubspot, *address.Source)
 	require.Equal(t, addressInput.Country, *address.Country)
 	require.Equal(t, addressInput.City, *address.City)
 	require.Equal(t, addressInput.State, *address.State)

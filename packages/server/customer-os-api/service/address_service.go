@@ -64,16 +64,17 @@ func (s *addressService) FindAllForOrganization(ctx context.Context, organizatio
 func (s *addressService) mapDbNodeToAddressEntity(node *dbtype.Node) *entity.AddressEntity {
 	props := utils.GetPropsFromNode(*node)
 	result := entity.AddressEntity{
-		Id:       utils.GetStringPropOrEmpty(props, "id"),
-		Source:   utils.GetStringPropOrEmpty(props, "source"),
-		Country:  utils.GetStringPropOrEmpty(props, "country"),
-		State:    utils.GetStringPropOrEmpty(props, "state"),
-		City:     utils.GetStringPropOrEmpty(props, "city"),
-		Address:  utils.GetStringPropOrEmpty(props, "address"),
-		Address2: utils.GetStringPropOrEmpty(props, "address2"),
-		Zip:      utils.GetStringPropOrEmpty(props, "zip"),
-		Phone:    utils.GetStringPropOrEmpty(props, "phone"),
-		Fax:      utils.GetStringPropOrEmpty(props, "fax"),
+		Id:            utils.GetStringPropOrEmpty(props, "id"),
+		Country:       utils.GetStringPropOrEmpty(props, "country"),
+		State:         utils.GetStringPropOrEmpty(props, "state"),
+		City:          utils.GetStringPropOrEmpty(props, "city"),
+		Address:       utils.GetStringPropOrEmpty(props, "address"),
+		Address2:      utils.GetStringPropOrEmpty(props, "address2"),
+		Zip:           utils.GetStringPropOrEmpty(props, "zip"),
+		Phone:         utils.GetStringPropOrEmpty(props, "phone"),
+		Fax:           utils.GetStringPropOrEmpty(props, "fax"),
+		Source:        entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
+		SourceOfTruth: entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
 	}
 	return &result
 }
