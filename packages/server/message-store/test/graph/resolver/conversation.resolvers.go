@@ -11,14 +11,14 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/message-store/test/graph/model"
 )
 
-// Contact is the resolver for the contact field.
-func (r *conversationResolver) Contact(ctx context.Context, obj *model.Conversation) (*model.Contact, error) {
-	panic(fmt.Errorf("not implemented: Contact - contact"))
+// Contacts is the resolver for the contacts field.
+func (r *conversationResolver) Contacts(ctx context.Context, obj *model.Conversation) ([]*model.Contact, error) {
+	panic(fmt.Errorf("not implemented: Contacts - contacts"))
 }
 
-// User is the resolver for the user field.
-func (r *conversationResolver) User(ctx context.Context, obj *model.Conversation) (*model.User, error) {
-	panic(fmt.Errorf("not implemented: User - user"))
+// Users is the resolver for the users field.
+func (r *conversationResolver) Users(ctx context.Context, obj *model.Conversation) ([]*model.User, error) {
+	panic(fmt.Errorf("not implemented: Users - users"))
 }
 
 // ConversationCreate is the resolver for the conversationCreate field.
@@ -29,9 +29,14 @@ func (r *mutationResolver) ConversationCreate(ctx context.Context, input model.C
 	panic(fmt.Errorf("not implemented: ConversationCreate - conversationCreate"))
 }
 
-// ConversationAddMessage is the resolver for the conversationAddMessage field.
-func (r *mutationResolver) ConversationAddMessage(ctx context.Context, input model.MessageInput) (*model.Message, error) {
-	panic(fmt.Errorf("not implemented: ConversationAddMessage - conversationAddMessage"))
+// ConversationUpdate is the resolver for the conversation_Update field.
+func (r *mutationResolver) ConversationUpdate(ctx context.Context, input model.ConversationUpdateInput) (*model.Conversation, error) {
+	panic(fmt.Errorf("not implemented: ConversationUpdate - conversation_Update"))
+}
+
+// ConversationClose is the resolver for the conversation_Close field.
+func (r *mutationResolver) ConversationClose(ctx context.Context, conversationID string) (*model.Conversation, error) {
+	panic(fmt.Errorf("not implemented: ConversationClose - conversation_Close"))
 }
 
 // Conversation returns generated.ConversationResolver implementation.
