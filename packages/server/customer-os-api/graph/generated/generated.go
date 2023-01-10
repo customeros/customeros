@@ -111,6 +111,7 @@ type ComplexityRoot struct {
 		JobTitle     func(childComplexity int) int
 		Organization func(childComplexity int) int
 		Primary      func(childComplexity int) int
+		Source       func(childComplexity int) int
 	}
 
 	ContactType struct {
@@ -784,6 +785,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.ContactRole.Primary(childComplexity), true
+
+	case "ContactRole.source":
+		if e.complexity.ContactRole.Source == nil {
+			break
+		}
+
+		return e.complexity.ContactRole.Source(childComplexity), true
 
 	case "ContactType.id":
 		if e.complexity.ContactType.ID == nil {
@@ -2544,7 +2552,7 @@ input ContactInput {
     "A phone number associated with the contact."
     phoneNumber: PhoneNumberInput
 
-    "ID of the contact owner (user)"
+    "Id of the contact owner (user)"
     ownerId: ID
 
     externalReference: ExternalSystemReferenceInput
@@ -2581,7 +2589,7 @@ input ContactUpdateInput {
     "User-defined field that defines the relationship type the contact has with your business.  ` + "`" + `Customer` + "`" + `, ` + "`" + `Partner` + "`" + `, ` + "`" + `Lead` + "`" + ` are examples."
     contactTypeId: ID
 
-    "ID of the contact owner (user)"
+    "Id of the contact owner (user)"
     ownerId: ID
 
     "Readonly indicator for a contact"
@@ -2740,6 +2748,8 @@ type ContactRole {
     jobTitle: String
 
     primary: Boolean!
+
+    source: DataSource!
 }
 
 """
@@ -5858,6 +5868,8 @@ func (ec *executionContext) fieldContext_Contact_roles(ctx context.Context, fiel
 				return ec.fieldContext_ContactRole_jobTitle(ctx, field)
 			case "primary":
 				return ec.fieldContext_ContactRole_primary(ctx, field)
+			case "source":
+				return ec.fieldContext_ContactRole_source(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type ContactRole", field.Name)
 		},
@@ -7034,6 +7046,50 @@ func (ec *executionContext) fieldContext_ContactRole_primary(ctx context.Context
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ContactRole_source(ctx context.Context, field graphql.CollectedField, obj *model.ContactRole) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ContactRole_source(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Source, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(model.DataSource)
+	fc.Result = res
+	return ec.marshalNDataSource2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐDataSource(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_ContactRole_source(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ContactRole",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type DataSource does not have child fields")
 		},
 	}
 	return fc, nil
@@ -10302,6 +10358,8 @@ func (ec *executionContext) fieldContext_Mutation_contactRole_Create(ctx context
 				return ec.fieldContext_ContactRole_jobTitle(ctx, field)
 			case "primary":
 				return ec.fieldContext_ContactRole_primary(ctx, field)
+			case "source":
+				return ec.fieldContext_ContactRole_source(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type ContactRole", field.Name)
 		},
@@ -10367,6 +10425,8 @@ func (ec *executionContext) fieldContext_Mutation_contactRole_Update(ctx context
 				return ec.fieldContext_ContactRole_jobTitle(ctx, field)
 			case "primary":
 				return ec.fieldContext_ContactRole_primary(ctx, field)
+			case "source":
+				return ec.fieldContext_ContactRole_source(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type ContactRole", field.Name)
 		},
@@ -19973,6 +20033,13 @@ func (ec *executionContext) _ContactRole(ctx context.Context, sel ast.SelectionS
 		case "primary":
 
 			out.Values[i] = ec._ContactRole_primary(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "source":
+
+			out.Values[i] = ec._ContactRole_source(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&invalids, 1)

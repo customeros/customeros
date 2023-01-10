@@ -190,7 +190,7 @@ type ContactInput struct {
 	Email *EmailInput `json:"email"`
 	// A phone number associated with the contact.
 	PhoneNumber *PhoneNumberInput `json:"phoneNumber"`
-	// ID of the contact owner (user)
+	// Id of the contact owner (user)
 	OwnerID           *string                       `json:"ownerId"`
 	ExternalReference *ExternalSystemReferenceInput `json:"externalReference"`
 }
@@ -203,8 +203,9 @@ type ContactRole struct {
 	// **Required.**
 	Organization *Organization `json:"organization"`
 	// The Contact's job title.
-	JobTitle *string `json:"jobTitle"`
-	Primary  bool    `json:"primary"`
+	JobTitle *string    `json:"jobTitle"`
+	Primary  bool       `json:"primary"`
+	Source   DataSource `json:"source"`
 }
 
 // Describes the relationship a Contact has with an Organization.
@@ -246,7 +247,7 @@ type ContactUpdateInput struct {
 	Label *string `json:"label"`
 	// User-defined field that defines the relationship type the contact has with your business.  `Customer`, `Partner`, `Lead` are examples.
 	ContactTypeID *string `json:"contactTypeId"`
-	// ID of the contact owner (user)
+	// Id of the contact owner (user)
 	OwnerID *string `json:"ownerId"`
 	// Readonly indicator for a contact
 	Readonly *bool `json:"readonly"`

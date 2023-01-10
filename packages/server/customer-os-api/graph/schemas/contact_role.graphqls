@@ -21,6 +21,8 @@ type ContactRole {
     jobTitle: String
 
     primary: Boolean!
+
+    source: DataSource!
 }
 
 """

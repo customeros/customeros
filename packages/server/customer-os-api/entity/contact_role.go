@@ -5,9 +5,11 @@ import (
 )
 
 type ContactRoleEntity struct {
-	Id       string
-	JobTitle string
-	Primary  bool
+	Id            string
+	JobTitle      string
+	Primary       bool
+	Source        DataSource
+	SourceOfTruth DataSource
 }
 
 func (contactRole ContactRoleEntity) ToString() string {
