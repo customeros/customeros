@@ -9,5 +9,5 @@ type NoteData struct {
 	UserExternalId      string
 	ContactsExternalIds []string
 	ExternalId          string
-	Source              string
+	ExternalSystem      string
 }

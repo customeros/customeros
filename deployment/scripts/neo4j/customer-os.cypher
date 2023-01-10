@@ -36,6 +36,9 @@ MATCH (t:Tenant {name:"openline"})
             u.lastName="Smith",
             u.email="AgentSmith@oasis.openline.ninja",
     		u.createdAt=datetime({timezone: 'UTC'}),
+    		u.source="openline",
+    		u.sourceOfTruth="openline",
+    		u.appSource="manual",
     		u:User_openline;
 
 MATCH (t:Tenant {name:"openline"})
@@ -43,11 +46,16 @@ MATCH (t:Tenant {name:"openline"})
     ON CREATE SET
     		c.firstName ="Echo",
             c.lastName="Test",
-    		c.createdAt=datetime({timezone: 'UTC'});
+    		c.createdAt=datetime({timezone: 'UTC'}),
+    		c.source="openline",
+            c.sourceOfTruth="openline",
+            c.appSource="manual",
+            c:Contact_openline;
 
 MATCH (c:Contact {id:"echotest"})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:"openline"})
 			MERGE (c)-[r:EMAILED_AT]->(e:Email {email: "echo@oasis.openline.ai"})
-            ON CREATE SET e.label="MAIN", r.primary=true, e.id=randomUUID(), e:Email_openline
+            ON CREATE SET e.label="MAIN", r.primary=true, e.id=randomUUID(), e.createdAt=datetime({timezone: 'UTC'}),
+                e.source="openline", e.sourceOfTruth="openline", e.appSource="manual", e:Email_openline
             ON MATCH SET e.label="MAIN", r.primary=true;
 
 CREATE INDEX contact_id_idx IF NOT EXISTS FOR (n:Contact) ON (n.id);

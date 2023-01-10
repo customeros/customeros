@@ -30,7 +30,7 @@ func (r *organizationRepository) MergeOrganizationAddress(tenant, organizationId
 
 	query := "MATCH (org:Organization {id:$organizationId})-[:ORGANIZATION_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) " +
 		" MERGE (org)-[:LOCATED_AT]->(a:Address {source:$source}) " +
-		" ON CREATE SET a.id=randomUUID(), a.source=$source, " +
+		" ON CREATE SET a.id=randomUUID(), a.appSource=$appSource, a.sourceOfTruth=$sourceOfTruth, " +
 		"	a.country=$country, a.state=$state, a.city=$city, a.address=$address, " +
 		"	a.address2=$address2, a.zip=$zip, a.phone=$phone, a:%s " +
 		" ON MATCH SET 	a.country=$country, a.state=$state, a.city=$city, a.address=$address, " +
@@ -41,7 +41,6 @@ func (r *organizationRepository) MergeOrganizationAddress(tenant, organizationId
 			map[string]interface{}{
 				"tenant":         tenant,
 				"organizationId": organizationId,
-				"source":         organization.ExternalSystem,
 				"country":        organization.Country,
 				"state":          organization.State,
 				"city":           organization.City,
@@ -49,6 +48,9 @@ func (r *organizationRepository) MergeOrganizationAddress(tenant, organizationId
 				"address2":       organization.Address2,
 				"zip":            organization.Zip,
 				"phone":          organization.Phone,
+				"source":         organization.ExternalSystem,
+				"sourceOfTruth":  organization.ExternalSystem,
+				"appSource":      organization.ExternalSystem,
 			})
 		return nil, err
 	})
@@ -60,15 +62,17 @@ func (r *organizationRepository) MergeOrganization(tenant string, syncDate time.
 	defer session.Close()
 
 	query := "MATCH (t:Tenant {name:$tenant})<-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]-(e:ExternalSystem {id:$externalSystem}) " +
-		" MERGE (c:Organization)-[r:IS_LINKED_WITH {externalId:$externalId}]->(e) " +
-		" ON CREATE SET r.externalId=$externalId, c.id=randomUUID(), c.createdAt=$createdAt, " +
-		"               c.name=$name, c.description=$description, r.syncDate=$syncDate, c.readonly=$readonly, " +
-		"               c.domain=$domain, c.website=$website, c.industry=$industry, c.isPublic=$isPublic, c:%s " +
-		" ON MATCH SET c.name=$name, c.description=$description, r.syncDate=$syncDate, c.readonly=$readonly, " +
-		"              c.domain=$domain, c.website=$website, c.industry=$industry, c.isPublic=$isPublic " +
-		" WITH c, t " +
-		" MERGE (c)-[:ORGANIZATION_BELONGS_TO_TENANT]->(t) " +
-		" RETURN c.id"
+		" MERGE (org:Organization)-[r:IS_LINKED_WITH {externalId:$externalId}]->(e) " +
+		" ON CREATE SET r.externalId=$externalId, org.id=randomUUID(), org.createdAt=$createdAt, " +
+		"               org.name=$name, org.description=$description, r.syncDate=$syncDate, org.readonly=$readonly, " +
+		"               org.domain=$domain, org.website=$website, org.industry=$industry, org.isPublic=$isPublic, " +
+		"				org.source=$source, org.sourceOfTruth=$sourceOfTruth, org.appSource=$appSource, " +
+		"				org:%s " +
+		" ON MATCH SET org.name=$name, org.description=$description, r.syncDate=$syncDate, org.readonly=$readonly, " +
+		"              org.domain=$domain, org.website=$website, org.industry=$industry, org.isPublic=$isPublic " +
+		" WITH org, t " +
+		" MERGE (org)-[:ORGANIZATION_BELONGS_TO_TENANT]->(t) " +
+		" RETURN org.id"
 
 	dbRecord, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
 		queryResult, err := tx.Run(fmt.Sprintf(query, "Organization_"+tenant),
@@ -85,6 +89,9 @@ func (r *organizationRepository) MergeOrganization(tenant string, syncDate time.
 				"website":        organization.Website,
 				"industry":       organization.Industry,
 				"isPublic":       organization.IsPublic,
+				"source":         organization.ExternalSystem,
+				"sourceOfTruth":  organization.ExternalSystem,
+				"appSource":      organization.ExternalSystem,
 			})
 		if err != nil {
 			return nil, err
