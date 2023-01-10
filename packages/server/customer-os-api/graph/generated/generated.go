@@ -333,6 +333,7 @@ type ComplexityRoot struct {
 		FirstName     func(childComplexity int) int
 		ID            func(childComplexity int) int
 		LastName      func(childComplexity int) int
+		Source        func(childComplexity int) int
 	}
 
 	UserPage struct {
@@ -2199,6 +2200,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.User.LastName(childComplexity), true
 
+	case "User.source":
+		if e.complexity.User.Source == nil {
+			break
+		}
+
+		return e.complexity.User.Source(childComplexity), true
+
 	case "UserPage.content":
 		if e.complexity.UserPage.Content == nil {
 			break
@@ -3522,6 +3530,8 @@ type User {
     **Required**
     """
     createdAt: Time!
+
+    source: DataSource!
 
     conversations(pagination: Pagination, sort: [SortBy!]): ConversationPage! @goField(forceResolver: true)
 }
@@ -6328,6 +6338,8 @@ func (ec *executionContext) fieldContext_Contact_owner(ctx context.Context, fiel
 				return ec.fieldContext_User_email(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_User_createdAt(ctx, field)
+			case "source":
+				return ec.fieldContext_User_source(ctx, field)
 			case "conversations":
 				return ec.fieldContext_User_conversations(ctx, field)
 			}
@@ -7748,6 +7760,8 @@ func (ec *executionContext) fieldContext_Conversation_users(ctx context.Context,
 				return ec.fieldContext_User_email(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_User_createdAt(ctx, field)
+			case "source":
+				return ec.fieldContext_User_source(ctx, field)
 			case "conversations":
 				return ec.fieldContext_User_conversations(ctx, field)
 			}
@@ -12717,6 +12731,8 @@ func (ec *executionContext) fieldContext_Mutation_userCreate(ctx context.Context
 				return ec.fieldContext_User_email(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_User_createdAt(ctx, field)
+			case "source":
+				return ec.fieldContext_User_source(ctx, field)
 			case "conversations":
 				return ec.fieldContext_User_conversations(ctx, field)
 			}
@@ -12915,6 +12931,8 @@ func (ec *executionContext) fieldContext_Note_createdBy(ctx context.Context, fie
 				return ec.fieldContext_User_email(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_User_createdAt(ctx, field)
+			case "source":
+				return ec.fieldContext_User_source(ctx, field)
 			case "conversations":
 				return ec.fieldContext_User_conversations(ctx, field)
 			}
@@ -15366,6 +15384,8 @@ func (ec *executionContext) fieldContext_Query_user(ctx context.Context, field g
 				return ec.fieldContext_User_email(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_User_createdAt(ctx, field)
+			case "source":
+				return ec.fieldContext_User_source(ctx, field)
 			case "conversations":
 				return ec.fieldContext_User_conversations(ctx, field)
 			}
@@ -15779,6 +15799,50 @@ func (ec *executionContext) fieldContext_User_createdAt(ctx context.Context, fie
 	return fc, nil
 }
 
+func (ec *executionContext) _User_source(ctx context.Context, field graphql.CollectedField, obj *model.User) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_User_source(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Source, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(model.DataSource)
+	fc.Result = res
+	return ec.marshalNDataSource2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐDataSource(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_User_source(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "User",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type DataSource does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _User_conversations(ctx context.Context, field graphql.CollectedField, obj *model.User) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_User_conversations(ctx, field)
 	if err != nil {
@@ -15891,6 +15955,8 @@ func (ec *executionContext) fieldContext_UserPage_content(ctx context.Context, f
 				return ec.fieldContext_User_email(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_User_createdAt(ctx, field)
+			case "source":
+				return ec.fieldContext_User_source(ctx, field)
 			case "conversations":
 				return ec.fieldContext_User_conversations(ctx, field)
 			}
@@ -21967,6 +22033,13 @@ func (ec *executionContext) _User(ctx context.Context, sel ast.SelectionSet, obj
 		case "createdAt":
 
 			out.Values[i] = ec._User_createdAt(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "source":
+
+			out.Values[i] = ec._User_source(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&invalids, 1)

@@ -25,15 +25,20 @@ func TestMutationResolver_UserCreate(t *testing.T) {
 	err = decode.Decode(rawResponse.Data.(map[string]any), &user)
 	require.Nil(t, err)
 	require.NotNil(t, user)
-	require.Equal(t, "first", user.UserCreate.FirstName)
-	require.Equal(t, "last", user.UserCreate.LastName)
-	require.Equal(t, "user@openline.ai", user.UserCreate.Email)
-	require.NotNil(t, user.UserCreate.CreatedAt)
-	require.NotNil(t, user.UserCreate.ID)
 
+	createdUser := user.UserCreate
+	require.NotNil(t, createdUser.ID)
+	require.NotNil(t, createdUser.CreatedAt)
+	require.Equal(t, "first", createdUser.FirstName)
+	require.Equal(t, "last", createdUser.LastName)
+	require.Equal(t, "user@openline.ai", createdUser.Email)
+	require.Equal(t, model.DataSourceOpenline, createdUser.Source)
+
+	// Check the number of nodes and relationships in the Neo4j database
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "User"))
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "User_"+tenantName))
 
+	// Check the labels on the nodes in the Neo4j database
 	assertNeo4jLabels(t, driver, []string{"Tenant", "User", "User_" + tenantName})
 }
 

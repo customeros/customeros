@@ -728,6 +728,7 @@ type User struct {
 	// Timestamp of user creation.
 	// **Required**
 	CreatedAt     time.Time         `json:"createdAt"`
+	Source        DataSource        `json:"source"`
 	Conversations *ConversationPage `json:"conversations"`
 }
 
