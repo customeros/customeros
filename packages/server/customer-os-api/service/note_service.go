@@ -3,7 +3,6 @@ package service
 import (
 	"context"
 	"github.com/neo4j/neo4j-go-driver/v4/neo4j"
-	"github.com/neo4j/neo4j-go-driver/v4/neo4j/db"
 	"github.com/neo4j/neo4j-go-driver/v4/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
@@ -16,32 +15,31 @@ type NoteService interface {
 	MergeNoteToContact(ctx context.Context, contactId string, toEntity *entity.NoteEntity) (*entity.NoteEntity, error)
 	UpdateNoteInContact(ctx context.Context, contactId string, toEntity *entity.NoteEntity) (*entity.NoteEntity, error)
 	DeleteFromContact(ctx context.Context, contactId string, noteId string) (bool, error)
-	getDriver() neo4j.Driver
 }
 
 type noteService struct {
-	repository *repository.Repositories
+	repositories *repository.Repositories
 }
 
-func NewNoteService(repository *repository.Repositories) NoteService {
+func NewNoteService(repositories *repository.Repositories) NoteService {
 	return &noteService{
-		repository: repository,
+		repositories: repositories,
 	}
 }
 
-func (s *noteService) getDriver() neo4j.Driver {
-	return *s.repository.Drivers.Neo4jDriver
+func (s *noteService) getNeo4jDriver() neo4j.Driver {
+	return *s.repositories.Drivers.Neo4jDriver
 }
 
 func (s *noteService) GetNotesForContact(ctx context.Context, contactId string, page, limit int) (*utils.Pagination, error) {
-	session := utils.NewNeo4jReadSession(*s.repository.Drivers.Neo4jDriver)
+	session := utils.NewNeo4jReadSession(*s.repositories.Drivers.Neo4jDriver)
 	defer session.Close()
 
 	var paginatedResult = utils.Pagination{
 		Limit: limit,
 		Page:  page,
 	}
-	noteDbNodesWithTotalCount, err := s.repository.NoteRepository.GetPaginatedNotesForContact(
+	noteDbNodesWithTotalCount, err := s.repositories.NoteRepository.GetPaginatedNotesForContact(
 		session,
 		common.GetContext(ctx).Tenant,
 		contactId,
@@ -55,7 +53,7 @@ func (s *noteService) GetNotesForContact(ctx context.Context, contactId string, 
 	entities := entity.NoteEntities{}
 
 	for _, v := range noteDbNodesWithTotalCount.Nodes {
-		noteEntity := *s.mapDbNodeToNoteEntity(v.Node)
+		noteEntity := *s.mapDbNodeToNoteEntity(*v.Node)
 		entities = append(entities, noteEntity)
 	}
 	paginatedResult.SetRows(&entities)
@@ -63,78 +61,49 @@ func (s *noteService) GetNotesForContact(ctx context.Context, contactId string, 
 }
 
 func (s *noteService) MergeNoteToContact(ctx context.Context, contactId string, entity *entity.NoteEntity) (*entity.NoteEntity, error) {
-	session := utils.NewNeo4jWriteSession(s.getDriver())
+	session := utils.NewNeo4jWriteSession(s.getNeo4jDriver())
 	defer session.Close()
 
-	dbNode, err := s.repository.NoteRepository.MergeNote(session, common.GetContext(ctx).Tenant, contactId, *entity)
+	dbNodePtr, err := s.repositories.NoteRepository.MergeNote(session, common.GetContext(ctx).Tenant, contactId, *entity)
 	if err != nil {
 		return nil, err
 	}
-	return s.mapDbNodeToNoteEntity(dbNode), nil
+	return s.mapDbNodeToNoteEntity(*dbNodePtr), nil
 }
 
 func (s *noteService) UpdateNoteInContact(ctx context.Context, contactId string, entity *entity.NoteEntity) (*entity.NoteEntity, error) {
-	session := utils.NewNeo4jWriteSession(s.getDriver())
+	session := utils.NewNeo4jWriteSession(s.getNeo4jDriver())
 	defer session.Close()
 
-	queryResult, err := session.WriteTransaction(func(tx neo4j.Transaction) (interface{}, error) {
-		txResult, err := tx.Run(`
-			MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}),
-				(c)-[r:NOTED]->(n:Note {id:$noteId})
-			SET n.html=$html
-			RETURN n`,
-			map[string]interface{}{
-				"tenant":    common.GetContext(ctx).Tenant,
-				"contactId": contactId,
-				"noteId":    entity.Id,
-				"html":      entity.Html,
-			})
-		record, err := txResult.Single()
-		if err != nil {
-			return nil, err
-		}
-		return record, nil
-	})
+	dbNodePtr, err := s.repositories.NoteRepository.UpdateNoteForContact(session, common.GetContext(ctx).Tenant, contactId, *entity)
 	if err != nil {
 		return nil, err
 	}
 
-	node := queryResult.(*db.Record).Values[0].(dbtype.Node)
-	var emailEntity = s.mapDbNodeToNoteEntity(&node)
+	var emailEntity = s.mapDbNodeToNoteEntity(*dbNodePtr)
 	return emailEntity, nil
 }
 
 func (s *noteService) DeleteFromContact(ctx context.Context, contactId string, noteId string) (bool, error) {
-	session := utils.NewNeo4jWriteSession(s.getDriver())
+	session := utils.NewNeo4jWriteSession(s.getNeo4jDriver())
 	defer session.Close()
 
-	queryResult, err := session.WriteTransaction(func(tx neo4j.Transaction) (interface{}, error) {
-		_, err := tx.Run(`
-			MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}),
-                  (c:Contact {id:$contactId})-[:NOTED]->(n:Note {id:$noteId})
-            DETACH DELETE n
-			`,
-			map[string]interface{}{
-				"tenant":    common.GetContext(ctx).Tenant,
-				"contactId": contactId,
-				"noteId":    noteId,
-			})
-
-		return true, err
-	})
+	err := s.repositories.NoteRepository.Delete(session, common.GetContext(ctx).Tenant, contactId, noteId)
 	if err != nil {
 		return false, err
 	}
 
-	return queryResult.(bool), nil
+	return true, nil
 }
 
-func (s *noteService) mapDbNodeToNoteEntity(node *dbtype.Node) *entity.NoteEntity {
-	props := utils.GetPropsFromNode(*node)
+func (s *noteService) mapDbNodeToNoteEntity(node dbtype.Node) *entity.NoteEntity {
+	props := utils.GetPropsFromNode(node)
 	result := entity.NoteEntity{
-		Id:        utils.GetStringPropOrEmpty(props, "id"),
-		Html:      utils.GetStringPropOrEmpty(props, "html"),
-		CreatedAt: utils.GetTimePropOrNil(props, "createdAt"),
+		Id:            utils.GetStringPropOrEmpty(props, "id"),
+		Html:          utils.GetStringPropOrEmpty(props, "html"),
+		CreatedAt:     utils.GetTimePropOrNil(props, "createdAt"),
+		Source:        entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
+		SourceOfTruth: entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
 	}
 	return &result
 }

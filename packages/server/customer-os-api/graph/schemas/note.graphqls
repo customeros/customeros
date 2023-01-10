@@ -9,6 +9,7 @@ type Note {
     html: String!
     createdAt: Time!
     createdBy: User @goField(forceResolver: true)
+    source: DataSource!
 }
 
 type NotePage implements Pages {

@@ -530,10 +530,11 @@ type FilterItem struct {
 }
 
 type Note struct {
-	ID        string    `json:"id"`
-	HTML      string    `json:"html"`
-	CreatedAt time.Time `json:"createdAt"`
-	CreatedBy *User     `json:"createdBy"`
+	ID        string     `json:"id"`
+	HTML      string     `json:"html"`
+	CreatedAt time.Time  `json:"createdAt"`
+	CreatedBy *User      `json:"createdBy"`
+	Source    DataSource `json:"source"`
 }
 
 type NoteInput struct {

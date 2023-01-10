@@ -252,6 +252,7 @@ type ComplexityRoot struct {
 		CreatedBy func(childComplexity int) int
 		HTML      func(childComplexity int) int
 		ID        func(childComplexity int) int
+		Source    func(childComplexity int) int
 	}
 
 	NotePage struct {
@@ -1762,6 +1763,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Note.ID(childComplexity), true
 
+	case "Note.source":
+		if e.complexity.Note.Source == nil {
+			break
+		}
+
+		return e.complexity.Note.Source(childComplexity), true
+
 	case "NotePage.content":
 		if e.complexity.NotePage.Content == nil {
 			break
@@ -3267,6 +3275,7 @@ type Note {
     html: String!
     createdAt: Time!
     createdBy: User @goField(forceResolver: true)
+    source: DataSource!
 }
 
 type NotePage implements Pages {
@@ -11895,6 +11904,8 @@ func (ec *executionContext) fieldContext_Mutation_note_MergeToContact(ctx contex
 				return ec.fieldContext_Note_createdAt(ctx, field)
 			case "createdBy":
 				return ec.fieldContext_Note_createdBy(ctx, field)
+			case "source":
+				return ec.fieldContext_Note_source(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Note", field.Name)
 		},
@@ -11960,6 +11971,8 @@ func (ec *executionContext) fieldContext_Mutation_note_UpdateInContact(ctx conte
 				return ec.fieldContext_Note_createdAt(ctx, field)
 			case "createdBy":
 				return ec.fieldContext_Note_createdBy(ctx, field)
+			case "source":
+				return ec.fieldContext_Note_source(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Note", field.Name)
 		},
@@ -12942,6 +12955,50 @@ func (ec *executionContext) fieldContext_Note_createdBy(ctx context.Context, fie
 	return fc, nil
 }
 
+func (ec *executionContext) _Note_source(ctx context.Context, field graphql.CollectedField, obj *model.Note) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Note_source(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Source, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(model.DataSource)
+	fc.Result = res
+	return ec.marshalNDataSource2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐDataSource(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Note_source(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Note",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type DataSource does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _NotePage_content(ctx context.Context, field graphql.CollectedField, obj *model.NotePage) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_NotePage_content(ctx, field)
 	if err != nil {
@@ -12989,6 +13046,8 @@ func (ec *executionContext) fieldContext_NotePage_content(ctx context.Context, f
 				return ec.fieldContext_Note_createdAt(ctx, field)
 			case "createdBy":
 				return ec.fieldContext_Note_createdBy(ctx, field)
+			case "source":
+				return ec.fieldContext_Note_source(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Note", field.Name)
 		},
@@ -21255,6 +21314,13 @@ func (ec *executionContext) _Note(ctx context.Context, sel ast.SelectionSet, obj
 				return innerFunc(ctx)
 
 			})
+		case "source":
+
+			out.Values[i] = ec._Note_source(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}

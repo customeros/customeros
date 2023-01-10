@@ -1,0 +1,16 @@
+mutation CreateNote($contactId: ID!) {
+  note_MergeToContact(
+    contactId: $contactId,
+    input: {
+      html: "Note content"
+    }
+  ) {
+    id
+    html
+    createdAt
+    source
+    createdBy {
+      id
+    }
+  }
+}
