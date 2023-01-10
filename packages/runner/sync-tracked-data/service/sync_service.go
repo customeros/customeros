@@ -68,7 +68,7 @@ func (s *syncService) prepareContactIds(pageViews entity.PageViews) (map[tenantV
 		}
 		if _, ok := contactIds[tenantVisitor]; !ok {
 			firstName, lastName := s.prepareFirstAndLastNames(email)
-			id, err := s.repositories.ContactRepository.GetOrCreateContactId(v.Tenant, email, firstName, lastName)
+			id, err := s.repositories.ContactRepository.GetOrCreateContactId(v.Tenant, email, firstName, lastName, v.Application)
 			if err != nil {
 				return nil, err
 			}
