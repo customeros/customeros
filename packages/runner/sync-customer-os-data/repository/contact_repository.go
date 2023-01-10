@@ -10,11 +10,11 @@ import (
 
 type ContactRepository interface {
 	MergeContact(tenant string, syncDate time.Time, contact entity.ContactData) (string, error)
-	MergePrimaryEmail(tenant, contactId, email string) error
-	MergeAdditionalEmail(tenant, contactId, email string) error
-	MergePrimaryPhoneNumber(tenant, contactId, phoneNumber string) error
+	MergePrimaryEmail(tenant, contactId, email, externalSystem string, createdAt time.Time) error
+	MergeAdditionalEmail(tenant, contactId, email, externalSystem string, createdAt time.Time) error
+	MergePrimaryPhoneNumber(tenant, contactId, phoneNumber, externalSystem string, createdAt time.Time) error
 	SetOwnerRelationship(tenant, contactId, userExternalId, externalSystemId string) error
-	MergeTextCustomField(tenant, contactId string, field entity.TextCustomField) error
+	MergeTextCustomField(tenant, contactId string, field entity.TextCustomField, createdAt time.Time) error
 	MergeContactAddress(tenant, contactId string, contact entity.ContactData) error
 	MergeContactType(tenant, contactId, contactTypeName string) error
 }
@@ -37,9 +37,10 @@ func (r *contactRepository) MergeContact(tenant string, syncDate time.Time, cont
 		queryResult, err := tx.Run(fmt.Sprintf(
 			"MATCH (t:Tenant {name:$tenant})<-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]-(e:ExternalSystem {id:$externalSystem}) "+
 				" MERGE (c:Contact)-[r:IS_LINKED_WITH {externalId:$externalId}]->(e) "+
-				" ON CREATE SET r.externalId=$externalId, c.id=randomUUID(), "+
+				" ON CREATE SET r.externalId=$externalId, c.id=randomUUID(), c.createdAt=$createdAt, "+
 				"				c.firstName=$firstName, c.lastName=$lastName, r.syncDate=$syncDate, c.readonly=$readonly, "+
-				" 				c.createdAt=$createdAt, c:%s "+
+				"				c.source=$source, c.sourceOfTruth=$sourceOfTruth, c.appSource=$appSource, "+
+				" 				c:%s "+
 				" ON MATCH SET 	c.firstName=$firstName, c.lastName=$lastName, r.syncDate=$syncDate, c.readonly=$readonly "+
 				" WITH c, t "+
 				" MERGE (c)-[:CONTACT_BELONGS_TO_TENANT]->(t) "+
@@ -53,6 +54,9 @@ func (r *contactRepository) MergeContact(tenant string, syncDate time.Time, cont
 				"syncDate":       syncDate,
 				"readonly":       contact.Readonly,
 				"createdAt":      contact.CreatedAt,
+				"source":         contact.ExternalSystem,
+				"sourceOfTruth":  contact.ExternalSystem,
+				"appSource":      contact.ExternalSystem,
 			})
 		if err != nil {
 			return nil, err
@@ -69,7 +73,7 @@ func (r *contactRepository) MergeContact(tenant string, syncDate time.Time, cont
 	return dbRecord.(string), nil
 }
 
-func (r *contactRepository) MergePrimaryEmail(tenant, contactId, email string) error {
+func (r *contactRepository) MergePrimaryEmail(tenant, contactId, email, externalSystem string, createdAt time.Time) error {
 	session := utils.NewNeo4jWriteSession(*r.driver)
 	defer session.Close()
 
@@ -78,43 +82,51 @@ func (r *contactRepository) MergePrimaryEmail(tenant, contactId, email string) e
 		" SET r.primary=false " +
 		" WITH c " +
 		" MERGE (c)-[r:EMAILED_AT]->(e:Email {email: $email}) " +
-		" ON CREATE SET r.primary=true, e.id=randomUUID(), e:%s " +
+		" ON CREATE SET r.primary=true, e.id=randomUUID(), e.createdAt=$createdAt, e.source=$source, e.sourceOfTruth=$sourceOfTruth, e.appSource=$appSource, e:%s " +
 		" ON MATCH SET r.primary=true"
 
 	_, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
 		_, err := tx.Run(fmt.Sprintf(query, "Email_"+tenant),
 			map[string]interface{}{
-				"tenant":    tenant,
-				"contactId": contactId,
-				"email":     email,
+				"tenant":        tenant,
+				"contactId":     contactId,
+				"email":         email,
+				"createdAt":     createdAt,
+				"source":        externalSystem,
+				"sourceOfTruth": externalSystem,
+				"appSource":     externalSystem,
 			})
 		return nil, err
 	})
 	return err
 }
 
-func (r *contactRepository) MergeAdditionalEmail(tenant, contactId, email string) error {
+func (r *contactRepository) MergeAdditionalEmail(tenant, contactId, email, externalSystem string, createdAt time.Time) error {
 	session := utils.NewNeo4jWriteSession(*r.driver)
 	defer session.Close()
 
 	query := "MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) " +
 		" MERGE (c)-[r:EMAILED_AT]->(e:Email {email:$email}) " +
-		" ON CREATE SET r.primary=false, e.id=randomUUID(), e:%s " +
+		" ON CREATE SET r.primary=false, e.id=randomUUID(), e.createdAt=$createdAt, e.source=$source, e.sourceOfTruth=$sourceOfTruth, e.appSource=$appSource, e:%s " +
 		" ON MATCH SET r.primary=false"
 
 	_, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
 		_, err := tx.Run(fmt.Sprintf(query, "Email_"+tenant),
 			map[string]interface{}{
-				"tenant":    tenant,
-				"contactId": contactId,
-				"email":     email,
+				"tenant":        tenant,
+				"contactId":     contactId,
+				"email":         email,
+				"createdAt":     createdAt,
+				"source":        externalSystem,
+				"sourceOfTruth": externalSystem,
+				"appSource":     externalSystem,
 			})
 		return nil, err
 	})
 	return err
 }
 
-func (r *contactRepository) MergePrimaryPhoneNumber(tenant, contactId, e164 string) error {
+func (r *contactRepository) MergePrimaryPhoneNumber(tenant, contactId, e164, externalSystem string, createdAt time.Time) error {
 	session := utils.NewNeo4jWriteSession(*r.driver)
 	defer session.Close()
 
@@ -123,15 +135,19 @@ func (r *contactRepository) MergePrimaryPhoneNumber(tenant, contactId, e164 stri
 		" SET r.primary=false " +
 		" WITH c " +
 		" MERGE (c)-[r:CALLED_AT]->(p:PhoneNumber {e164: $e164}) " +
-		" ON CREATE SET r.primary=true, p.id=randomUUID(), p:%s " +
+		" ON CREATE SET r.primary=true, p.id=randomUUID(), p.createdAt=$createdAt, p.source=$source, p.sourceOfTruth=$sourceOfTruth, p.appSource=$appSource, p:%s " +
 		" ON MATCH SET r.primary=true"
 
 	_, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
 		_, err := tx.Run(fmt.Sprintf(query, "PhoneNumber_"+tenant),
 			map[string]interface{}{
-				"tenant":    tenant,
-				"contactId": contactId,
-				"e164":      e164,
+				"tenant":        tenant,
+				"contactId":     contactId,
+				"e164":          e164,
+				"createdAt":     createdAt,
+				"source":        externalSystem,
+				"sourceOfTruth": externalSystem,
+				"appSource":     externalSystem,
 			})
 		return nil, err
 	})
@@ -166,25 +182,27 @@ func (r *contactRepository) SetOwnerRelationship(tenant, contactId, userExternal
 	return err
 }
 
-func (r *contactRepository) MergeTextCustomField(tenant, contactId string, field entity.TextCustomField) error {
+func (r *contactRepository) MergeTextCustomField(tenant, contactId string, field entity.TextCustomField, createdAt time.Time) error {
 	session := utils.NewNeo4jWriteSession(*r.driver)
 	defer session.Close()
 
 	query := "MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) " +
 		" MERGE (f:TextField:CustomField {name: $name, datatype:$datatype})<-[:HAS_PROPERTY]-(c) " +
-		" ON CREATE SET f.textValue=$value, f.id=randomUUID(), f.createdAt=$createdAt, f.source=$source, f:%s " +
-		" ON MATCH SET f.textValue=$value, f.source=$source"
+		" ON CREATE SET f.textValue=$value, f.id=randomUUID(), f.createdAt=$createdAt, f.source=$source, f.sourceOfTruth=$sourceOfTruth, f.appSource=$appSource, f:%s " +
+		" ON MATCH SET f.textValue=$value"
 
 	_, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
 		_, err := tx.Run(fmt.Sprintf(query, "CustomField_"+tenant),
 			map[string]interface{}{
-				"tenant":    tenant,
-				"contactId": contactId,
-				"name":      field.Name,
-				"value":     field.Value,
-				"source":    field.Source,
-				"datatype":  "TEXT",
-				"createdAt": time.Now().UTC(),
+				"tenant":        tenant,
+				"contactId":     contactId,
+				"name":          field.Name,
+				"value":         field.Value,
+				"datatype":      "TEXT",
+				"createdAt":     createdAt,
+				"source":        field.ExternalSystem,
+				"sourceOfTruth": field.ExternalSystem,
+				"appSource":     field.ExternalSystem,
 			})
 		return nil, err
 	})
@@ -197,7 +215,8 @@ func (r *contactRepository) MergeContactAddress(tenant, contactId string, contac
 
 	query := "MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) " +
 		" MERGE (c)-[:LOCATED_AT]->(a:Address {source:$source}) " +
-		" ON CREATE SET a.id=randomUUID(), a.source=$source, " +
+		" ON CREATE SET a.id=randomUUID(), a.createdAt=$createdAt, " +
+		"	a.source=$source, a.sourceOfTruth=$sourceOfTruth, a.appSource=$appSource, " +
 		"	a.country=$country, a.state=$state, a.city=$city, a.address=$address, a.zip=$zip, a.fax=$fax, a:%s " +
 		" ON MATCH SET 	" +
 		"   a.country=$country, a.state=$state, a.city=$city, a.address=$address, a.zip=$zip, a.fax=$fax"
@@ -205,15 +224,18 @@ func (r *contactRepository) MergeContactAddress(tenant, contactId string, contac
 	_, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
 		_, err := tx.Run(fmt.Sprintf(query, "Address_"+tenant),
 			map[string]interface{}{
-				"tenant":    tenant,
-				"contactId": contactId,
-				"source":    contact.ExternalSystem,
-				"country":   contact.Country,
-				"state":     contact.State,
-				"city":      contact.City,
-				"address":   contact.Address,
-				"zip":       contact.Zip,
-				"fax":       contact.Fax,
+				"tenant":        tenant,
+				"contactId":     contactId,
+				"country":       contact.Country,
+				"state":         contact.State,
+				"city":          contact.City,
+				"address":       contact.Address,
+				"zip":           contact.Zip,
+				"fax":           contact.Fax,
+				"createdAt":     contact.CreatedAt,
+				"source":        contact.ExternalSystem,
+				"sourceOfTruth": contact.ExternalSystem,
+				"appSource":     contact.ExternalSystem,
 			})
 		return nil, err
 	})

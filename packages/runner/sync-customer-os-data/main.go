@@ -11,26 +11,34 @@ import (
 	"time"
 )
 
-var (
-	taskFunctions      []func()
-	taskFunctionsMutex sync.Mutex
-	services           *service.Services
-)
-
-func AddTask(function func()) {
-	defer taskFunctionsMutex.Unlock()
-	taskFunctionsMutex.Lock()
-
-	taskFunctions = append(taskFunctions, function)
+type taskQueue struct {
+	taskFunctions []func()
+	mutex         sync.Mutex
+	waitGroup     sync.WaitGroup
 }
 
-func RunTasks() {
-	defer taskFunctionsMutex.Unlock()
-	taskFunctionsMutex.Lock()
+func (t *taskQueue) AddTask(function func()) {
+	t.mutex.Lock()
+	defer t.mutex.Unlock()
+	t.taskFunctions = append(t.taskFunctions, function)
+}
 
-	for _, t := range taskFunctions {
-		t()
+func (t *taskQueue) RunTasks() {
+	t.mutex.Lock()
+	defer t.mutex.Unlock()
+	if len(t.taskFunctions) == 0 {
+		logrus.Warn("No task found, exiting")
+		return
 	}
+	for _, task := range t.taskFunctions {
+		t.waitGroup.Add(1)
+		go func(fn func()) {
+			defer t.waitGroup.Done()
+			fn()
+		}(task)
+	}
+	t.taskFunctions = nil
+	t.waitGroup.Wait()
 }
 
 func main() {
@@ -54,30 +62,26 @@ func main() {
 	// init airbyte postgres db pool
 	airbyteStoreDb := config.InitPoolManager(cfg)
 
-	services = service.InitServices(neo4jDriver, gormDb, airbyteStoreDb)
+	services := service.InitServices(neo4jDriver, gormDb, airbyteStoreDb)
 
 	services.InitService.Init()
 
-	if errPostgres == nil && errNeo4j == nil {
-		AddTask(func() {
-			runId, _ := uuid.NewRandom()
-			logrus.Infof("run id: %s syncing data into customer-os at %v", runId.String(), time.Now().UTC())
-			services.SyncService.Sync(runId.String())
-			logrus.Infof("run id: %s sync completed at %v", runId.String(), time.Now().UTC())
+	var taskQueue = &taskQueue{}
+	for {
+		if errPostgres == nil && errNeo4j == nil {
+			taskQueue.AddTask(func() {
+				runId, _ := uuid.NewRandom()
+				logrus.Infof("run id: %s syncing data into customer-os at %v", runId.String(), time.Now().UTC())
+				services.SyncService.Sync(runId.String())
+				logrus.Infof("run id: %s sync completed at %v", runId.String(), time.Now().UTC())
 
-			timeout := time.Second * time.Duration(cfg.TimeoutAfterTaskRun)
-			logrus.Infof("waiting %v seconds before next run", timeout.Seconds())
-			time.Sleep(timeout)
-		})
-	}
-
-	go func() {
-		for {
-			RunTasks()
+				timeout := time.Second * time.Duration(cfg.TimeoutAfterTaskRun)
+				logrus.Infof("waiting %v seconds before next run", timeout.Seconds())
+				time.Sleep(timeout)
+			})
 		}
-	}()
-
-	select {}
+		taskQueue.RunTasks()
+	}
 }
 
 func loadConfiguration() *config.Config {

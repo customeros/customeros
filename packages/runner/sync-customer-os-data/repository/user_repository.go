@@ -30,6 +30,7 @@ func (r *userRepository) MergeUser(tenant string, syncDate time.Time, user entit
 		" MERGE (u:User)-[r:IS_LINKED_WITH {externalId:$externalId}]->(e) " +
 		" ON CREATE SET r.externalId=$externalId, u.id=randomUUID(), u.createdAt=$createdAt, " +
 		"               u.firstName=$firstName, u.lastName=$lastName, u.readonly=$readonly, r.syncDate=$syncDate, " +
+		"               u.source=$source, u.sourceOfTruth=$sourceOfTruth, u.appSource=$appSource, " +
 		"               u.email=$email, u:%s" +
 		" ON MATCH SET u.firstName=$firstName, u.lastName=$lastName, u.readonly=$readonly, r.syncDate=$syncDate, " +
 		"              u.email=$email " +
@@ -49,6 +50,9 @@ func (r *userRepository) MergeUser(tenant string, syncDate time.Time, user entit
 				"email":          user.Email,
 				"createdAt":      user.CreatedAt,
 				"readonly":       user.Readonly,
+				"source":         user.ExternalSystem,
+				"sourceOfTruth":  user.ExternalSystem,
+				"appSource":      user.ExternalSystem,
 			})
 		if err != nil {
 			return nil, err

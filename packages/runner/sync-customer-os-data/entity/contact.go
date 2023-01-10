@@ -3,9 +3,9 @@ package entity
 import "time"
 
 type TextCustomField struct {
-	Name   string
-	Value  string
-	Source string
+	Name           string
+	Value          string
+	ExternalSystem string
 }
 
 type ContactData struct {

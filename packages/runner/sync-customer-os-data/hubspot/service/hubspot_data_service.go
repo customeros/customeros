@@ -89,9 +89,9 @@ func (s *hubspotDataService) GetContactsForSync(batchSize int, runId string) []e
 		var textCustomFields []entity.TextCustomField
 		if len(hubspotContactProperties.LifecycleStage) > 0 {
 			textCustomFields = append(textCustomFields, entity.TextCustomField{
-				Name:   "Hubspot Lifecycle Stage",
-				Value:  hubspotContactProperties.LifecycleStage,
-				Source: s.SourceId(),
+				Name:           "Hubspot Lifecycle Stage",
+				Value:          hubspotContactProperties.LifecycleStage,
+				ExternalSystem: s.SourceId(),
 			})
 		}
 		contactForCustomerOs.TextCustomFields = textCustomFields
@@ -192,7 +192,7 @@ func (s *hubspotDataService) GetNotesForSync(batchSize int, runId string) []enti
 		// set main fields
 		noteForCustomerOs := entity.NoteData{
 			ExternalId:     v.Id,
-			Source:         s.SourceId(),
+			ExternalSystem: s.SourceId(),
 			CreatedAt:      v.CreateDate.UTC(),
 			Html:           hubspotNoteProperties.NoteBody,
 			UserExternalId: hubspotNoteProperties.OwnerId,

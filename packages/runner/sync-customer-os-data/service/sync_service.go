@@ -100,7 +100,7 @@ func (s *syncService) syncContacts(dataService common.DataService, syncDate time
 			}
 
 			if len(v.PrimaryEmail) > 0 {
-				if err = s.repositories.ContactRepository.MergePrimaryEmail(tenant, contactId, v.PrimaryEmail); err != nil {
+				if err = s.repositories.ContactRepository.MergePrimaryEmail(tenant, contactId, v.PrimaryEmail, v.ExternalSystem, v.CreatedAt); err != nil {
 					failedSync = true
 					logrus.Errorf("failed merge primary email for contact with external reference %v , tenant %v :%v", v.ExternalId, tenant, err)
 				}
@@ -108,7 +108,7 @@ func (s *syncService) syncContacts(dataService common.DataService, syncDate time
 
 			for _, additionalEmail := range v.AdditionalEmails {
 				if len(additionalEmail) > 0 {
-					if err = s.repositories.ContactRepository.MergeAdditionalEmail(tenant, contactId, additionalEmail); err != nil {
+					if err = s.repositories.ContactRepository.MergeAdditionalEmail(tenant, contactId, additionalEmail, v.ExternalSystem, v.CreatedAt); err != nil {
 						failedSync = true
 						logrus.Errorf("failed merge additional email for contact with external reference %v , tenant %v :%v", v.ExternalId, tenant, err)
 					}
@@ -116,7 +116,7 @@ func (s *syncService) syncContacts(dataService common.DataService, syncDate time
 			}
 
 			if len(v.PrimaryE164) > 0 {
-				if err = s.repositories.ContactRepository.MergePrimaryPhoneNumber(tenant, contactId, v.PrimaryE164); err != nil {
+				if err = s.repositories.ContactRepository.MergePrimaryPhoneNumber(tenant, contactId, v.PrimaryE164, v.ExternalSystem, v.CreatedAt); err != nil {
 					failedSync = true
 					logrus.Errorf("failed merge primary phone number for contact with external reference %v , tenant %v :%v", v.ExternalId, tenant, err)
 				}
@@ -149,7 +149,7 @@ func (s *syncService) syncContacts(dataService common.DataService, syncDate time
 			}
 
 			for _, f := range v.TextCustomFields {
-				if err = s.repositories.ContactRepository.MergeTextCustomField(tenant, contactId, f); err != nil {
+				if err = s.repositories.ContactRepository.MergeTextCustomField(tenant, contactId, f, v.CreatedAt); err != nil {
 					failedSync = true
 					logrus.Errorf("failed merge custom field %v for contact %v, tenant %v :%v", f.Name, contactId, tenant, err)
 				}
