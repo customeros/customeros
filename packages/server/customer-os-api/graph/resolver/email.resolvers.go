@@ -24,7 +24,7 @@ func (r *mutationResolver) EmailMergeToContact(ctx context.Context, contactID st
 
 // EmailUpdateInContact is the resolver for the emailUpdateInContact field.
 func (r *mutationResolver) EmailUpdateInContact(ctx context.Context, contactID string, input model.EmailUpdateInput) (*model.Email, error) {
-	result, err := r.Services.EmailService.UpdateEmailInContact(ctx, contactID, mapper.MapEmailUpdateInputToEntity(&input))
+	result, err := r.Services.EmailService.UpdateEmailForContact(ctx, contactID, mapper.MapEmailUpdateInputToEntity(&input))
 	if err != nil {
 		graphql.AddErrorf(ctx, "Could not update email %s in contact %s", input.ID, contactID)
 		return nil, err

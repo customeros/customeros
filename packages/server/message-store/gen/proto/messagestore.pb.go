@@ -654,7 +654,7 @@ func (x *Id) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use Id.ProtoReflect.Descriptor instead.
+// Deprecated: Use ID.ProtoReflect.Descriptor instead.
 func (*Id) Descriptor() ([]byte, []int) {
 	return file_messagestore_proto_rawDescGZIP(), []int{4}
 }
@@ -949,7 +949,7 @@ var file_messagestore_proto_goTypes = []interface{}{
 	(*MessagePagedResponse)(nil),  // 6: MessagePagedResponse
 	(*FeedItem)(nil),              // 7: FeedItem
 	(*FeedItemPagedResponse)(nil), // 8: FeedItemPagedResponse
-	(*Id)(nil),                    // 9: Id
+	(*Id)(nil),                    // 9: ID
 	(*GetMessagesRequest)(nil),    // 10: GetMessagesRequest
 	(*GetFeedsPagedRequest)(nil),  // 11: GetFeedsPagedRequest
 	(*timestamppb.Timestamp)(nil), // 12: google.protobuf.Timestamp
@@ -969,9 +969,9 @@ var file_messagestore_proto_depIdxs = []int32{
 	0,  // 11: GetFeedsPagedRequest.stateIn:type_name -> FeedItemState
 	5,  // 12: MessageStoreService.saveMessage:input_type -> Message
 	10, // 13: MessageStoreService.getMessages:input_type -> GetMessagesRequest
-	9,  // 14: MessageStoreService.getMessage:input_type -> Id
+	9,  // 14: MessageStoreService.getMessage:input_type -> ID
 	11, // 15: MessageStoreService.getFeeds:input_type -> GetFeedsPagedRequest
-	9,  // 16: MessageStoreService.getFeed:input_type -> Id
+	9,  // 16: MessageStoreService.getFeed:input_type -> ID
 	5,  // 17: MessageStoreService.saveMessage:output_type -> Message
 	6,  // 18: MessageStoreService.getMessages:output_type -> MessagePagedResponse
 	5,  // 19: MessageStoreService.getMessage:output_type -> Message

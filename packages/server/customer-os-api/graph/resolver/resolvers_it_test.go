@@ -141,9 +141,11 @@ func TestMutationResolver_FieldSetMergeToContact_AllowMultipleFieldSetWithSameNa
 	require.NotNil(t, fieldSet2.FieldSetMergeToContact.ID)
 	require.NotEqual(t, fieldSet1.FieldSetMergeToContact.ID, fieldSet2.FieldSetMergeToContact.ID)
 	require.Equal(t, "some name", fieldSet1.FieldSetMergeToContact.Name)
-	require.NotNil(t, fieldSet1.FieldSetMergeToContact.Added)
+	require.NotNil(t, fieldSet1.FieldSetMergeToContact.CreatedAt)
 	require.Equal(t, "some name", fieldSet2.FieldSetMergeToContact.Name)
-	require.NotNil(t, fieldSet2.FieldSetMergeToContact.Added)
+	require.NotNil(t, fieldSet2.FieldSetMergeToContact.CreatedAt)
+	require.Equal(t, model.DataSourceOpenline, fieldSet1.FieldSetMergeToContact.Source)
+	require.Equal(t, model.DataSourceOpenline, fieldSet2.FieldSetMergeToContact.Source)
 
 	require.Equal(t, 2, neo4jt.GetCountOfNodes(driver, "FieldSet"))
 }
@@ -167,7 +169,7 @@ func TestMutationResolver_MergeCustomFieldToFieldSet(t *testing.T) {
 
 	require.Equal(t, "some name", textField.CustomFieldMergeToFieldSet.Name)
 	require.Equal(t, "some value", textField.CustomFieldMergeToFieldSet.Value.RealValue())
-	require.Equal(t, "manual", *textField.CustomFieldMergeToFieldSet.Source)
+	require.Equal(t, model.DataSourceOpenline, textField.CustomFieldMergeToFieldSet.Source)
 	require.Equal(t, model.CustomFieldDataTypeText, textField.CustomFieldMergeToFieldSet.Datatype)
 	require.NotNil(t, textField.CustomFieldMergeToFieldSet.ID)
 
@@ -199,7 +201,7 @@ func TestMutationResolver_CustomFieldUpdateInFieldSet(t *testing.T) {
 
 	require.Equal(t, "new name", textField.CustomFieldUpdateInFieldSet.Name)
 	require.Equal(t, "new value", textField.CustomFieldUpdateInFieldSet.Value.RealValue())
-	require.Equal(t, "new source", *textField.CustomFieldUpdateInFieldSet.Source)
+	require.Equal(t, model.DataSourceOpenline, textField.CustomFieldUpdateInFieldSet.Source)
 	require.Equal(t, model.CustomFieldDataTypeText, textField.CustomFieldUpdateInFieldSet.Datatype)
 	require.Equal(t, fieldId, textField.CustomFieldUpdateInFieldSet.ID)
 

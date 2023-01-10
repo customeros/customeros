@@ -24,6 +24,7 @@ customFieldsMergeAndUpdateInContact(
         name
         value
         datatype
+        source
         template {
             id
         }
@@ -31,7 +32,8 @@ customFieldsMergeAndUpdateInContact(
     fieldSets {
         id
         name
-        added
+        source
+        createdAt
         template {
             id
         }
@@ -40,6 +42,7 @@ customFieldsMergeAndUpdateInContact(
             name
             value
             datatype
+            source
             template {
                 id
             }

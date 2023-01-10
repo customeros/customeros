@@ -75,6 +75,8 @@ func TestMutationResolver_CustomFieldsMergeAndUpdateInContact(t *testing.T) {
 	}
 
 	require.Equal(t, 2, len(updatedContact.FieldSets))
+	require.Equal(t, model.DataSourceOpenline, updatedContact.FieldSets[0].Source)
+	require.Equal(t, model.DataSourceOpenline, updatedContact.FieldSets[1].Source)
 	require.ElementsMatch(t, []string{"set1", "set2"}, []string{updatedContact.FieldSets[0].Name, updatedContact.FieldSets[1].Name})
 
 	if updatedContact.FieldSets[0].Template != nil {
@@ -94,6 +96,7 @@ func TestMutationResolver_CustomFieldsMergeAndUpdateInContact(t *testing.T) {
 func checkCustomField(t *testing.T, customField model.CustomField, name, value string, fieldTemplateId *string) {
 	require.Equal(t, name, customField.Name)
 	require.Equal(t, value, customField.Value.RealValue())
+	require.Equal(t, model.DataSourceOpenline, customField.Source)
 	if fieldTemplateId != nil {
 		require.Equal(t, *fieldTemplateId, customField.Template.ID)
 	}

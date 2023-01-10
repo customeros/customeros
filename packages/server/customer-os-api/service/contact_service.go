@@ -35,6 +35,8 @@ type ContactCreateData struct {
 	ContactTypeId     *string
 	OwnerUserId       *string
 	ExternalReference *entity.ExternalReferenceRelationship
+	Source            entity.DataSource
+	SourceOfTruth     entity.DataSource
 }
 
 type ContactUpdateData struct {
@@ -71,7 +73,7 @@ func (s *contactService) Create(ctx context.Context, newContact *ContactCreateDa
 func (s *contactService) createContactInDBTxWork(ctx context.Context, newContact *ContactCreateData) func(tx neo4j.Transaction) (any, error) {
 	return func(tx neo4j.Transaction) (any, error) {
 		tenant := common.GetContext(ctx).Tenant
-		contactDbNode, err := s.repositories.ContactRepository.Create(tx, tenant, *newContact.ContactEntity)
+		contactDbNode, err := s.repositories.ContactRepository.Create(tx, tenant, *newContact.ContactEntity, newContact.Source, newContact.SourceOfTruth)
 		if err != nil {
 			return nil, err
 		}
@@ -97,7 +99,7 @@ func (s *contactService) createContactInDBTxWork(ctx context.Context, newContact
 		}
 		if newContact.CustomFields != nil {
 			for _, customField := range *newContact.CustomFields {
-				dbNode, err := s.repositories.CustomFieldRepository.MergeCustomFieldToContactInTx(tx, tenant, contactId, &customField)
+				dbNode, err := s.repositories.CustomFieldRepository.MergeCustomFieldToContactInTx(tx, tenant, contactId, customField)
 				if err != nil {
 					return nil, err
 				}
@@ -112,7 +114,7 @@ func (s *contactService) createContactInDBTxWork(ctx context.Context, newContact
 		}
 		if newContact.FieldSets != nil {
 			for _, fieldSet := range *newContact.FieldSets {
-				setDbNode, _, err := s.repositories.FieldSetRepository.MergeFieldSetToContactInTx(tx, tenant, contactId, fieldSet)
+				setDbNode, err := s.repositories.FieldSetRepository.MergeFieldSetToContactInTx(tx, tenant, contactId, fieldSet)
 				if err != nil {
 					return nil, err
 				}
@@ -125,7 +127,7 @@ func (s *contactService) createContactInDBTxWork(ctx context.Context, newContact
 				}
 				if fieldSet.CustomFields != nil {
 					for _, customField := range *fieldSet.CustomFields {
-						fieldDbNode, err := s.repositories.CustomFieldRepository.MergeCustomFieldToFieldSetInTx(tx, tenant, contactId, fieldSetId, &customField)
+						fieldDbNode, err := s.repositories.CustomFieldRepository.MergeCustomFieldToFieldSetInTx(tx, tenant, contactId, fieldSetId, customField)
 						if err != nil {
 							return nil, err
 						}
@@ -416,13 +418,15 @@ func (s *contactService) GetAllForConversation(ctx context.Context, conversation
 func (s *contactService) mapDbNodeToContactEntity(dbContactNode dbtype.Node) *entity.ContactEntity {
 	props := utils.GetPropsFromNode(dbContactNode)
 	contact := entity.ContactEntity{
-		Id:        utils.GetStringPropOrEmpty(props, "id"),
-		FirstName: utils.GetStringPropOrEmpty(props, "firstName"),
-		LastName:  utils.GetStringPropOrEmpty(props, "lastName"),
-		Label:     utils.GetStringPropOrEmpty(props, "label"),
-		Title:     utils.GetStringPropOrEmpty(props, "title"),
-		CreatedAt: utils.GetTimePropOrNil(props, "createdAt"),
-		Readonly:  utils.GetBoolPropOrFalse(props, "readonly"),
+		Id:            utils.GetStringPropOrEmpty(props, "id"),
+		FirstName:     utils.GetStringPropOrEmpty(props, "firstName"),
+		LastName:      utils.GetStringPropOrEmpty(props, "lastName"),
+		Label:         utils.GetStringPropOrEmpty(props, "label"),
+		Title:         utils.GetStringPropOrEmpty(props, "title"),
+		CreatedAt:     utils.GetTimePropOrNil(props, "createdAt"),
+		Readonly:      utils.GetBoolPropOrFalse(props, "readonly"),
+		Source:        entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
+		SourceOfTruth: entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
 	}
 	return &contact
 }

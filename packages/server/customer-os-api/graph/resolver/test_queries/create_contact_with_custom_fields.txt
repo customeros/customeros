@@ -6,13 +6,13 @@ contact_Create(
       lastName: "last"
       customFields: [
                         {name: "field1", value: "value1", datatype: TEXT, templateId:$fieldTemplateId},
-                        {name: "field2", value: "value2", datatype: TEXT, source: "hubspot"}
+                        {name: "field2", value: "value2", datatype: TEXT}
                     ]
       fieldSets: [{ name:"set1"
                     templateId: $setTemplateId
                     customFields: [
                                     {name: "field3InSet", value: "value3", datatype: TEXT, templateId:$fieldInSetTemplateId},
-                                    {name: "field4InSet", value: "value4", datatype: TEXT, source: "zendesk"}
+                                    {name: "field4InSet", value: "value4", datatype: TEXT}
                                   ]}
                   {name:"set2"}]
       templateId: $entityTemplateId
@@ -23,6 +23,7 @@ contact_Create(
     firstName
     lastName
     createdAt
+    source
     template {
         id
     }
@@ -39,7 +40,8 @@ contact_Create(
     fieldSets {
         id
         name
-        added
+        createdAt
+        source
         template {
             id
         }

@@ -8,18 +8,20 @@ import (
 
 func MapOrganizationInputToEntity(input *model.OrganizationInput) *entity.OrganizationEntity {
 	return &entity.OrganizationEntity{
-		Name:        input.Name,
-		Description: utils.IfNotNilString(input.Description),
-		Domain:      utils.IfNotNilString(input.Domain),
-		Website:     utils.IfNotNilString(input.Website),
-		Industry:    utils.IfNotNilString(input.Industry),
-		IsPublic:    utils.IfNotNilBool(input.IsPublic),
+		Name:          input.Name,
+		Description:   utils.IfNotNilString(input.Description),
+		Domain:        utils.IfNotNilString(input.Domain),
+		Website:       utils.IfNotNilString(input.Website),
+		Industry:      utils.IfNotNilString(input.Industry),
+		IsPublic:      utils.IfNotNilBool(input.IsPublic),
+		Source:        entity.DataSourceOpenline,
+		SourceOfTruth: entity.DataSourceOpenline,
 	}
 }
 
 func MapEntityToOrganization(entity *entity.OrganizationEntity) *model.Organization {
 	return &model.Organization{
-		ID:          entity.Id,
+		ID:          entity.ID,
 		Name:        entity.Name,
 		Description: utils.StringPtr(entity.Description),
 		Domain:      utils.StringPtr(entity.Domain),
@@ -28,6 +30,7 @@ func MapEntityToOrganization(entity *entity.OrganizationEntity) *model.Organizat
 		IsPublic:    utils.BoolPtr(entity.IsPublic),
 		CreatedAt:   entity.CreatedAt,
 		Readonly:    utils.BoolPtr(entity.Readonly),
+		Source:      MapDataSourceToModel(entity.Source),
 	}
 }
 

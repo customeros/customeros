@@ -57,15 +57,17 @@ func (r *contactRoleRepository) GetRolesForContact(session neo4j.Session, tenant
 func (r *contactRoleRepository) CreateContactRole(tx neo4j.Transaction, tenant string, contactId string, input entity.ContactRoleEntity) (*dbtype.Node, error) {
 	query := "MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) " +
 		" MERGE (c)-[:HAS_ROLE]->(r:Role) " +
-		" ON CREATE SET r.id=randomUUID(), r.jobTitle=$jobTitle, r.primary=$primary, r:%s " +
+		" ON CREATE SET r.id=randomUUID(), r.jobTitle=$jobTitle, r.primary=$primary, r.source=$source, r.sourceOfTruth=$sourceOfTruth, r:%s " +
 		" RETURN r"
 
 	if queryResult, err := tx.Run(fmt.Sprintf(query, "Role_"+tenant),
 		map[string]interface{}{
-			"tenant":    tenant,
-			"contactId": contactId,
-			"jobTitle":  input.JobTitle,
-			"primary":   input.Primary,
+			"tenant":        tenant,
+			"contactId":     contactId,
+			"jobTitle":      input.JobTitle,
+			"primary":       input.Primary,
+			"source":        input.Source,
+			"sourceOfTruth": input.SourceOfTruth,
 		}); err != nil {
 		return nil, err
 	} else {
@@ -77,14 +79,15 @@ func (r *contactRoleRepository) UpdateContactRoleDetails(tx neo4j.Transaction, t
 	if queryResult, err := tx.Run(`
 			MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}),
 					(c)-[:HAS_ROLE]->(r:Role {id:$roleId})
-			SET r.jobTitle=$jobTitle, r.primary=$primary
+			SET r.jobTitle=$jobTitle, r.primary=$primary, r.sourceOfTruth=$sourceOfTruth
 			RETURN r`,
 		map[string]interface{}{
-			"tenant":    tenant,
-			"contactId": contactId,
-			"roleId":    roleId,
-			"jobTitle":  input.JobTitle,
-			"primary":   input.Primary,
+			"tenant":        tenant,
+			"contactId":     contactId,
+			"roleId":        roleId,
+			"jobTitle":      input.JobTitle,
+			"primary":       input.Primary,
+			"sourceOfTruth": input.SourceOfTruth,
 		}); err != nil {
 		return nil, err
 	} else {

@@ -50,6 +50,7 @@ func MapEntityToContact(contact *entity.ContactEntity) *model.Contact {
 		Label:     utils.StringPtr(contact.Label),
 		Readonly:  contact.Readonly,
 		CreatedAt: *contact.CreatedAt,
+		Source:    MapDataSourceToModel(contact.Source),
 	}
 }
 

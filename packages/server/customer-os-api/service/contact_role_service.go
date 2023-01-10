@@ -107,6 +107,7 @@ func (s *contactRoleService) UpdateContactRole(ctx context.Context, contactId, r
 func (s *contactRoleService) DeleteContactRole(ctx context.Context, contactId, roleId string) (bool, error) {
 	session := utils.NewNeo4jWriteSession(*s.repositories.Drivers.Neo4jDriver)
 	defer session.Close()
+
 	_, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
 		return nil, s.repositories.ContactRoleRepository.DeleteContactRoleInTx(tx, common.GetContext(ctx).Tenant, contactId, roleId)
 	})
@@ -119,9 +120,11 @@ func (s *contactRoleService) DeleteContactRole(ctx context.Context, contactId, r
 func (s *contactRoleService) mapDbNodeToContactRoleEntity(node dbtype.Node) *entity.ContactRoleEntity {
 	props := utils.GetPropsFromNode(node)
 	result := entity.ContactRoleEntity{
-		Id:       utils.GetStringPropOrEmpty(props, "id"),
-		JobTitle: utils.GetStringPropOrEmpty(props, "jobTitle"),
-		Primary:  utils.GetBoolPropOrFalse(props, "primary"),
+		Id:            utils.GetStringPropOrEmpty(props, "id"),
+		JobTitle:      utils.GetStringPropOrEmpty(props, "jobTitle"),
+		Primary:       utils.GetBoolPropOrFalse(props, "primary"),
+		Source:        entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
+		SourceOfTruth: entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
 	}
 	return &result
 }

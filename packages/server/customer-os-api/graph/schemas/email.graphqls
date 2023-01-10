@@ -33,6 +33,8 @@ type Email {
     **Required.**
     """
     primary: Boolean!
+
+    source: DataSource!
 }
 
 """

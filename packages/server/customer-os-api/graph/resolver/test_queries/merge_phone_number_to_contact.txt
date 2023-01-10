@@ -10,5 +10,6 @@ mutation MergePhoneNumberToContact($contactId: ID!){
         e164
         label
         primary
+        source
       }
 }

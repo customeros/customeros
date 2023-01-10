@@ -38,16 +38,16 @@ type Pages interface {
 }
 
 type Address struct {
-	ID       string  `json:"id"`
-	Source   *string `json:"source"`
-	Country  *string `json:"country"`
-	State    *string `json:"state"`
-	City     *string `json:"city"`
-	Address  *string `json:"address"`
-	Address2 *string `json:"address2"`
-	Zip      *string `json:"zip"`
-	Phone    *string `json:"phone"`
-	Fax      *string `json:"fax"`
+	ID       string      `json:"id"`
+	Country  *string     `json:"country"`
+	State    *string     `json:"state"`
+	City     *string     `json:"city"`
+	Address  *string     `json:"address"`
+	Address2 *string     `json:"address2"`
+	Zip      *string     `json:"zip"`
+	Phone    *string     `json:"phone"`
+	Fax      *string     `json:"fax"`
+	Source   *DataSource `json:"source"`
 }
 
 // A contact represents an individual in customerOS.
@@ -68,7 +68,8 @@ type Contact struct {
 	// A user-defined label applied against a contact in customerOS.
 	Label *string `json:"label"`
 	// Readonly indicator for a contact
-	Readonly bool `json:"readonly"`
+	Readonly bool       `json:"readonly"`
+	Source   DataSource `json:"source"`
 	// User-defined field that defines the relationship type the contact has with your business.  `Customer`, `Partner`, `Lead` are examples.
 	ContactType *ContactType `json:"contactType"`
 	// `organizationName` and `jobTitle` of the contact if it has been associated with an organization.
@@ -115,6 +116,7 @@ type ContactGroup struct {
 	// The name of the `ContactGroup`.
 	// **Required**
 	Name     string        `json:"name"`
+	Source   DataSource    `json:"source"`
 	Contacts *ContactsPage `json:"contacts"`
 }
 
@@ -201,8 +203,9 @@ type ContactRole struct {
 	// **Required.**
 	Organization *Organization `json:"organization"`
 	// The Contact's job title.
-	JobTitle *string `json:"jobTitle"`
-	Primary  bool    `json:"primary"`
+	JobTitle *string    `json:"jobTitle"`
+	Primary  bool       `json:"primary"`
+	Source   DataSource `json:"source"`
 }
 
 // Describes the relationship a Contact has with an Organization.
@@ -338,7 +341,7 @@ type CustomField struct {
 	// **Required**
 	Value AnyTypeValue `json:"value"`
 	// The source of the custom field value
-	Source   *string              `json:"source"`
+	Source   DataSource           `json:"source"`
 	Template *CustomFieldTemplate `json:"template"`
 }
 
@@ -358,10 +361,8 @@ type CustomFieldInput struct {
 	Datatype CustomFieldDataType `json:"datatype"`
 	// The value of the custom field.
 	// **Required**
-	Value AnyTypeValue `json:"value"`
-	// The source of the custom field value
-	Source     *string `json:"source"`
-	TemplateID *string `json:"templateId"`
+	Value      AnyTypeValue `json:"value"`
+	TemplateID *string      `json:"templateId"`
 }
 
 type CustomFieldTemplate struct {
@@ -403,8 +404,6 @@ type CustomFieldUpdateInput struct {
 	// The value of the custom field.
 	// **Required**
 	Value AnyTypeValue `json:"value"`
-	// The source of the custom field value
-	Source *string `json:"source"`
 }
 
 // Describes an email address associated with a `Contact` in customerOS.
@@ -420,7 +419,8 @@ type Email struct {
 	Label *EmailLabel `json:"label"`
 	// Identifies whether the email address is primary or not.
 	// **Required.**
-	Primary bool `json:"primary"`
+	Primary bool       `json:"primary"`
+	Source  DataSource `json:"source"`
 }
 
 // Describes an email address associated with a `Contact` in customerOS.
@@ -481,9 +481,10 @@ type ExternalSystemReferenceInput struct {
 type FieldSet struct {
 	ID           string            `json:"id"`
 	Name         string            `json:"name"`
-	Added        time.Time         `json:"added"`
+	CreatedAt    time.Time         `json:"createdAt"`
 	CustomFields []*CustomField    `json:"customFields"`
 	Template     *FieldSetTemplate `json:"template"`
+	Source       DataSource        `json:"source"`
 }
 
 type FieldSetInput struct {
@@ -529,10 +530,11 @@ type FilterItem struct {
 }
 
 type Note struct {
-	ID        string    `json:"id"`
-	HTML      string    `json:"html"`
-	CreatedAt time.Time `json:"createdAt"`
-	CreatedBy *User     `json:"createdBy"`
+	ID        string     `json:"id"`
+	HTML      string     `json:"html"`
+	CreatedAt time.Time  `json:"createdAt"`
+	CreatedBy *User      `json:"createdBy"`
+	Source    DataSource `json:"source"`
 }
 
 type NoteInput struct {
@@ -574,6 +576,7 @@ type Organization struct {
 	// All addresses associated with an organization in customerOS.
 	// **Required.  If no values it returns an empty array.**
 	Addresses []*Address `json:"addresses"`
+	Source    DataSource `json:"source"`
 }
 
 func (Organization) IsNode()            {}
@@ -661,7 +664,8 @@ type PhoneNumber struct {
 	Label *PhoneNumberLabel `json:"label"`
 	// Determines if the phone number is primary or not.
 	// **Required**
-	Primary bool `json:"primary"`
+	Primary bool       `json:"primary"`
+	Source  DataSource `json:"source"`
 }
 
 // Describes a phone number associated with a `Contact` in customerOS.
@@ -725,6 +729,7 @@ type User struct {
 	// Timestamp of user creation.
 	// **Required**
 	CreatedAt     time.Time         `json:"createdAt"`
+	Source        DataSource        `json:"source"`
 	Conversations *ConversationPage `json:"conversations"`
 }
 
@@ -970,6 +975,51 @@ func (e *CustomFieldTemplateType) UnmarshalGQL(v interface{}) error {
 }
 
 func (e CustomFieldTemplateType) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+type DataSource string
+
+const (
+	DataSourceNa       DataSource = "NA"
+	DataSourceOpenline DataSource = "OPENLINE"
+	DataSourceHubspot  DataSource = "HUBSPOT"
+	DataSourceZendesk  DataSource = "ZENDESK"
+)
+
+var AllDataSource = []DataSource{
+	DataSourceNa,
+	DataSourceOpenline,
+	DataSourceHubspot,
+	DataSourceZendesk,
+}
+
+func (e DataSource) IsValid() bool {
+	switch e {
+	case DataSourceNa, DataSourceOpenline, DataSourceHubspot, DataSourceZendesk:
+		return true
+	}
+	return false
+}
+
+func (e DataSource) String() string {
+	return string(e)
+}
+
+func (e *DataSource) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = DataSource(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid DataSource", str)
+	}
+	return nil
+}
+
+func (e DataSource) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
 }
 

@@ -9,7 +9,6 @@ import (
 func MapEntityToAddress(entity *entity.AddressEntity) *model.Address {
 	address := model.Address{
 		ID:       entity.Id,
-		Source:   utils.StringPtr(entity.Source),
 		Country:  utils.StringPtr(entity.Country),
 		State:    utils.StringPtr(entity.State),
 		City:     utils.StringPtr(entity.City),
@@ -18,6 +17,7 @@ func MapEntityToAddress(entity *entity.AddressEntity) *model.Address {
 		Zip:      utils.StringPtr(entity.Zip),
 		Phone:    utils.StringPtr(entity.Phone),
 		Fax:      utils.StringPtr(entity.Fax),
+		Source:   utils.ToPtr(MapDataSourceToModel(entity.Source)),
 	}
 	return &address
 }

@@ -23,12 +23,12 @@ type OrganizationService interface {
 
 type OrganizationCreateData struct {
 	OrganizationEntity *entity.OrganizationEntity
-	OrganizationTypeId *string
+	OrganizationTypeID *string
 }
 
 type OrganizationUpdateData struct {
 	OrganizationEntity *entity.OrganizationEntity
-	OrganizationTypeId *string
+	OrganizationTypeID *string
 }
 
 type organizationService struct {
@@ -53,8 +53,8 @@ func (s *organizationService) Create(ctx context.Context, input *OrganizationCre
 		}
 		var organizationId = utils.GetPropsFromNode(*organizationDbNodePtr)["id"].(string)
 
-		if input.OrganizationTypeId != nil {
-			err = s.repositories.OrganizationRepository.LinkWithOrganizationTypeInTx(tx, tenant, organizationId, *input.OrganizationTypeId)
+		if input.OrganizationTypeID != nil {
+			err = s.repositories.OrganizationRepository.LinkWithOrganizationTypeInTx(tx, tenant, organizationId, *input.OrganizationTypeID)
 			if err != nil {
 				return nil, err
 			}
@@ -84,8 +84,8 @@ func (s *organizationService) Update(ctx context.Context, input *OrganizationUpd
 		if err != nil {
 			return nil, err
 		}
-		if input.OrganizationTypeId != nil {
-			err := s.repositories.OrganizationRepository.LinkWithOrganizationTypeInTx(tx, tenant, organizationId, *input.OrganizationTypeId)
+		if input.OrganizationTypeID != nil {
+			err := s.repositories.OrganizationRepository.LinkWithOrganizationTypeInTx(tx, tenant, organizationId, *input.OrganizationTypeID)
 			if err != nil {
 				return nil, err
 			}
@@ -173,9 +173,9 @@ func (s *organizationService) PermanentDelete(ctx context.Context, organizationI
 }
 
 func (s *organizationService) mapDbNodeToOrganizationEntity(node dbtype.Node) *entity.OrganizationEntity {
-	props := utils.GetPropsFromNode(node)
 	organizationEntityPtr := new(entity.OrganizationEntity)
-	organizationEntityPtr.Id = utils.GetStringPropOrEmpty(props, "id")
+	props := utils.GetPropsFromNode(node)
+	organizationEntityPtr.ID = utils.GetStringPropOrEmpty(props, "id")
 	organizationEntityPtr.Name = utils.GetStringPropOrEmpty(props, "name")
 	organizationEntityPtr.Description = utils.GetStringPropOrEmpty(props, "description")
 	organizationEntityPtr.Domain = utils.GetStringPropOrEmpty(props, "domain")
@@ -184,5 +184,7 @@ func (s *organizationService) mapDbNodeToOrganizationEntity(node dbtype.Node) *e
 	organizationEntityPtr.IsPublic = utils.GetBoolPropOrFalse(props, "isPublic")
 	organizationEntityPtr.CreatedAt = utils.GetTimePropOrNow(props, "createdAt")
 	organizationEntityPtr.Readonly = utils.GetBoolPropOrFalse(props, "readonly")
+	organizationEntityPtr.Source = entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source"))
+	organizationEntityPtr.SourceOfTruth = entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth"))
 	return organizationEntityPtr
 }

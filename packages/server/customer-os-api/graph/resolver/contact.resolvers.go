@@ -47,13 +47,13 @@ func (r *contactResolver) Groups(ctx context.Context, obj *model.Contact) ([]*mo
 
 // PhoneNumbers is the resolver for the phoneNumbers field.
 func (r *contactResolver) PhoneNumbers(ctx context.Context, obj *model.Contact) ([]*model.PhoneNumber, error) {
-	phoneNumberEntities, err := r.Services.PhoneNumberService.FindAllForContact(ctx, obj)
+	phoneNumberEntities, err := r.Services.PhoneNumberService.FindAllForContact(ctx, obj.ID)
 	return mapper.MapEntitiesToPhoneNumbers(phoneNumberEntities), err
 }
 
 // Emails is the resolver for the emails field.
 func (r *contactResolver) Emails(ctx context.Context, obj *model.Contact) ([]*model.Email, error) {
-	emailEntities, err := r.Services.EmailService.FindAllForContact(ctx, obj)
+	emailEntities, err := r.Services.EmailService.FindAllForContact(ctx, obj.ID)
 	return mapper.MapEntitiesToEmails(emailEntities), err
 }
 
@@ -165,6 +165,8 @@ func (r *mutationResolver) ContactCreate(ctx context.Context, input model.Contac
 		TemplateId:        input.TemplateID,
 		ContactTypeId:     input.ContactTypeID,
 		OwnerUserId:       input.OwnerID,
+		Source:            entity.DataSourceOpenline,
+		SourceOfTruth:     entity.DataSourceOpenline,
 	})
 	if err != nil {
 		graphql.AddErrorf(ctx, "Failed to create contact %s %s", *input.FirstName, *input.LastName)

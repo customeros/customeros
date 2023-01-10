@@ -148,10 +148,12 @@ func (s *userService) GetAllForConversation(ctx context.Context, conversationId 
 func (s *userService) mapDbNodeToUserEntity(dbNode dbtype.Node) *entity.UserEntity {
 	props := utils.GetPropsFromNode(dbNode)
 	return &entity.UserEntity{
-		Id:        utils.GetStringPropOrEmpty(props, "id"),
-		FirstName: utils.GetStringPropOrEmpty(props, "firstName"),
-		LastName:  utils.GetStringPropOrEmpty(props, "lastName"),
-		Email:     utils.GetStringPropOrEmpty(props, "email"),
-		CreatedAt: utils.GetTimePropOrNow(props, "createdAt"),
+		Id:            utils.GetStringPropOrEmpty(props, "id"),
+		FirstName:     utils.GetStringPropOrEmpty(props, "firstName"),
+		LastName:      utils.GetStringPropOrEmpty(props, "lastName"),
+		Email:         utils.GetStringPropOrEmpty(props, "email"),
+		CreatedAt:     utils.GetTimePropOrNow(props, "createdAt"),
+		Source:        entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
+		SourceOfTruth: entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
 	}
 }

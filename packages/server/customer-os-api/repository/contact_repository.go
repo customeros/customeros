@@ -11,7 +11,7 @@ import (
 )
 
 type ContactRepository interface {
-	Create(tx neo4j.Transaction, tenant string, newContact entity.ContactEntity) (*dbtype.Node, error)
+	Create(tx neo4j.Transaction, tenant string, newContact entity.ContactEntity, source, sourceOfTruth entity.DataSource) (*dbtype.Node, error)
 	Update(tx neo4j.Transaction, tenant, contactId string, contactDtls *entity.ContactEntity) (*dbtype.Node, error)
 	Delete(session neo4j.Session, tenant, contactId string) error
 	SetOwner(tx neo4j.Transaction, tenant, contactId, userId string) error
@@ -64,7 +64,7 @@ func (r *contactRepository) RemoveOwner(tx neo4j.Transaction, tenant, contactId 
 	return err
 }
 
-func (r *contactRepository) Create(tx neo4j.Transaction, tenant string, newContact entity.ContactEntity) (*dbtype.Node, error) {
+func (r *contactRepository) Create(tx neo4j.Transaction, tenant string, newContact entity.ContactEntity, source, sourceOfTruth entity.DataSource) (*dbtype.Node, error) {
 	var createdAt time.Time
 	createdAt = time.Now().UTC()
 	if newContact.CreatedAt != nil {
@@ -79,18 +79,22 @@ func (r *contactRepository) Create(tx neo4j.Transaction, tenant string, newConta
 		" c.readonly=$readonly, " +
 		" c.label=$label, " +
 		" c.createdAt=$createdAt, " +
+		" c.source=$source, " +
+		" c.sourceOfTruth=$sourceOfTruth, " +
 		" c:%s " +
 		" RETURN c"
 
 	if queryResult, err := tx.Run(fmt.Sprintf(query, "Contact_"+tenant),
 		map[string]interface{}{
-			"tenant":    tenant,
-			"title":     newContact.Title,
-			"firstName": newContact.FirstName,
-			"lastName":  newContact.LastName,
-			"readonly":  newContact.Readonly,
-			"label":     newContact.Label,
-			"createdAt": createdAt,
+			"tenant":        tenant,
+			"title":         newContact.Title,
+			"firstName":     newContact.FirstName,
+			"lastName":      newContact.LastName,
+			"readonly":      newContact.Readonly,
+			"label":         newContact.Label,
+			"source":        source,
+			"sourceOfTruth": sourceOfTruth,
+			"createdAt":     createdAt,
 		}); err != nil {
 		return nil, err
 	} else {

@@ -88,6 +88,7 @@ type ComplexityRoot struct {
 		PhoneNumbers  func(childComplexity int) int
 		Readonly      func(childComplexity int) int
 		Roles         func(childComplexity int) int
+		Source        func(childComplexity int) int
 		Template      func(childComplexity int) int
 		Title         func(childComplexity int) int
 	}
@@ -96,6 +97,7 @@ type ComplexityRoot struct {
 		Contacts func(childComplexity int, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) int
 		ID       func(childComplexity int) int
 		Name     func(childComplexity int) int
+		Source   func(childComplexity int) int
 	}
 
 	ContactGroupPage struct {
@@ -109,6 +111,7 @@ type ComplexityRoot struct {
 		JobTitle     func(childComplexity int) int
 		Organization func(childComplexity int) int
 		Primary      func(childComplexity int) int
+		Source       func(childComplexity int) int
 	}
 
 	ContactType struct {
@@ -164,6 +167,7 @@ type ComplexityRoot struct {
 		ID      func(childComplexity int) int
 		Label   func(childComplexity int) int
 		Primary func(childComplexity int) int
+		Source  func(childComplexity int) int
 	}
 
 	EntityTemplate struct {
@@ -177,10 +181,11 @@ type ComplexityRoot struct {
 	}
 
 	FieldSet struct {
-		Added        func(childComplexity int) int
+		CreatedAt    func(childComplexity int) int
 		CustomFields func(childComplexity int) int
 		ID           func(childComplexity int) int
 		Name         func(childComplexity int) int
+		Source       func(childComplexity int) int
 		Template     func(childComplexity int) int
 	}
 
@@ -247,6 +252,7 @@ type ComplexityRoot struct {
 		CreatedBy func(childComplexity int) int
 		HTML      func(childComplexity int) int
 		ID        func(childComplexity int) int
+		Source    func(childComplexity int) int
 	}
 
 	NotePage struct {
@@ -266,6 +272,7 @@ type ComplexityRoot struct {
 		Name             func(childComplexity int) int
 		OrganizationType func(childComplexity int) int
 		Readonly         func(childComplexity int) int
+		Source           func(childComplexity int) int
 		Website          func(childComplexity int) int
 	}
 
@@ -297,6 +304,7 @@ type ComplexityRoot struct {
 		ID      func(childComplexity int) int
 		Label   func(childComplexity int) int
 		Primary func(childComplexity int) int
+		Source  func(childComplexity int) int
 	}
 
 	Query struct {
@@ -326,6 +334,7 @@ type ComplexityRoot struct {
 		FirstName     func(childComplexity int) int
 		ID            func(childComplexity int) int
 		LastName      func(childComplexity int) int
+		Source        func(childComplexity int) int
 	}
 
 	UserPage struct {
@@ -676,6 +685,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Contact.Roles(childComplexity), true
 
+	case "Contact.source":
+		if e.complexity.Contact.Source == nil {
+			break
+		}
+
+		return e.complexity.Contact.Source(childComplexity), true
+
 	case "Contact.template":
 		if e.complexity.Contact.Template == nil {
 			break
@@ -715,6 +731,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.ContactGroup.Name(childComplexity), true
+
+	case "ContactGroup.source":
+		if e.complexity.ContactGroup.Source == nil {
+			break
+		}
+
+		return e.complexity.ContactGroup.Source(childComplexity), true
 
 	case "ContactGroupPage.content":
 		if e.complexity.ContactGroupPage.Content == nil {
@@ -764,6 +787,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.ContactRole.Primary(childComplexity), true
+
+	case "ContactRole.source":
+		if e.complexity.ContactRole.Source == nil {
+			break
+		}
+
+		return e.complexity.ContactRole.Source(childComplexity), true
 
 	case "ContactType.id":
 		if e.complexity.ContactType.ID == nil {
@@ -1003,6 +1033,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Email.Primary(childComplexity), true
 
+	case "Email.source":
+		if e.complexity.Email.Source == nil {
+			break
+		}
+
+		return e.complexity.Email.Source(childComplexity), true
+
 	case "EntityTemplate.createdAt":
 		if e.complexity.EntityTemplate.CreatedAt == nil {
 			break
@@ -1052,12 +1089,12 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.EntityTemplate.Version(childComplexity), true
 
-	case "FieldSet.added":
-		if e.complexity.FieldSet.Added == nil {
+	case "FieldSet.createdAt":
+		if e.complexity.FieldSet.CreatedAt == nil {
 			break
 		}
 
-		return e.complexity.FieldSet.Added(childComplexity), true
+		return e.complexity.FieldSet.CreatedAt(childComplexity), true
 
 	case "FieldSet.customFields":
 		if e.complexity.FieldSet.CustomFields == nil {
@@ -1079,6 +1116,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.FieldSet.Name(childComplexity), true
+
+	case "FieldSet.source":
+		if e.complexity.FieldSet.Source == nil {
+			break
+		}
+
+		return e.complexity.FieldSet.Source(childComplexity), true
 
 	case "FieldSet.template":
 		if e.complexity.FieldSet.Template == nil {
@@ -1719,6 +1763,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Note.ID(childComplexity), true
 
+	case "Note.source":
+		if e.complexity.Note.Source == nil {
+			break
+		}
+
+		return e.complexity.Note.Source(childComplexity), true
+
 	case "NotePage.content":
 		if e.complexity.NotePage.Content == nil {
 			break
@@ -1809,6 +1860,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Organization.Readonly(childComplexity), true
+
+	case "Organization.source":
+		if e.complexity.Organization.Source == nil {
+			break
+		}
+
+		return e.complexity.Organization.Source(childComplexity), true
 
 	case "Organization.website":
 		if e.complexity.Organization.Website == nil {
@@ -1942,6 +2000,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.PhoneNumber.Primary(childComplexity), true
+
+	case "PhoneNumber.source":
+		if e.complexity.PhoneNumber.Source == nil {
+			break
+		}
+
+		return e.complexity.PhoneNumber.Source(childComplexity), true
 
 	case "Query.contact":
 		if e.complexity.Query.Contact == nil {
@@ -2143,6 +2208,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.User.LastName(childComplexity), true
 
+	case "User.source":
+		if e.complexity.User.Source == nil {
+			break
+		}
+
+		return e.complexity.User.Source(childComplexity), true
+
 	case "UserPage.content":
 		if e.complexity.UserPage.Content == nil {
 			break
@@ -2282,7 +2354,6 @@ enum ActionType {
 }`, BuiltIn: false},
 	{Name: "../schemas/address.graphqls", Input: `type Address {
     id: ID!
-    source: String
     country: String
     state: String
     city: String
@@ -2291,6 +2362,7 @@ enum ActionType {
     zip: String
     phone: String
     fax: String
+    source: DataSource
 }`, BuiltIn: false},
 	{Name: "../schemas/contact.graphqls", Input: `extend type Query {
     """
@@ -2361,6 +2433,8 @@ type Contact implements ExtensibleEntity & Node {
 
     "Readonly indicator for a contact"
     readonly: Boolean!
+
+    source: DataSource!
 
     "User-defined field that defines the relationship type the contact has with your business.  ` + "`" + `Customer` + "`" + `, ` + "`" + `Partner` + "`" + `, ` + "`" + `Lead` + "`" + ` are examples."
     contactType: ContactType @goField(forceResolver: true)
@@ -2592,18 +2666,20 @@ A collection of groups that a Contact belongs to.  Groups are user-defined entit
 **A ` + "`" + `return` + "`" + ` object.**
 """
 type ContactGroup {
-    
+
     """
-    The unique ID associated with the ` + "`" + `ContactGroup` + "`" + ` in customerOS. 
+    The unique ID associated with the ` + "`" + `ContactGroup` + "`" + ` in customerOS.
     **Required**
     """
     id: ID!
 
     """
-    The name of the ` + "`" + `ContactGroup` + "`" + `. 
+    The name of the ` + "`" + `ContactGroup` + "`" + `.
     **Required**
     """
     name: String!
+
+    source: DataSource!
 
     contacts(pagination: Pagination, where: Filter, sort: [SortBy!]): ContactsPage! @goField(forceResolver: true)
 }
@@ -2613,9 +2689,9 @@ Create a groups that can be associated with a ` + "`" + `Contact` + "`" + ` in c
 **A ` + "`" + `create` + "`" + ` object.**
 """
 input ContactGroupInput {
-    
+
     """
-    The name of the ` + "`" + `ContactGroup` + "`" + `. 
+    The name of the ` + "`" + `ContactGroup` + "`" + `.
     **Required**
     """
     name: String!
@@ -2624,17 +2700,17 @@ input ContactGroupInput {
 """
 Update a group that can be associated with a ` + "`" + `Contact` + "`" + ` in customerOS.
 **A ` + "`" + `update` + "`" + ` object.**
-"""    
+"""
 input ContactGroupUpdateInput {
-    
+
     """
-    The unique ID associated with the ` + "`" + `ContactGroup` + "`" + ` in customerOS. 
+    The unique ID associated with the ` + "`" + `ContactGroup` + "`" + ` in customerOS.
     **Required**
     """
     id: ID!
 
     """
-    The name of the ` + "`" + `ContactGroup` + "`" + `. 
+    The name of the ` + "`" + `ContactGroup` + "`" + `.
     **Required**
     """
     name: String!
@@ -2643,9 +2719,9 @@ input ContactGroupUpdateInput {
 """
 Specifies how many pages of ` + "`" + `ContactGroup` + "`" + ` information has been returned in the query response.
 **A ` + "`" + `response` + "`" + ` object.**
-"""   
+"""
 type ContactGroupPage implements Pages {
-    
+
     """
     A collection of groups that a Contact belongs to.  Groups are user-defined entities.
     **Required.  If no values it returns an empty array.**
@@ -2688,6 +2764,8 @@ type ContactRole {
     jobTitle: String
 
     primary: Boolean!
+
+    source: DataSource!
 }
 
 """
@@ -2819,7 +2897,7 @@ type CustomField implements Node {
     value: Any!
 
     "The source of the custom field value"
-    source: String
+    source: DataSource!
 
     template: CustomFieldTemplate @goField(forceResolver: true)
 }
@@ -2853,9 +2931,6 @@ input CustomFieldInput {
     """
     value: Any!
 
-    "The source of the custom field value"
-    source: String
-
     templateId: ID
 }
 
@@ -2888,9 +2963,6 @@ input CustomFieldUpdateInput {
     **Required**
     """
     value: Any!
-
-    "The source of the custom field value"
-    source: String
 }
 
 enum CustomFieldDataType {
@@ -2904,9 +2976,10 @@ enum CustomFieldDataType {
 type FieldSet {
     id: ID!
     name: String!
-    added: Time!
+    createdAt: Time!
     customFields: [CustomField!]! @goField(forceResolver: true)
     template: FieldSetTemplate @goField(forceResolver: true)
+    source: DataSource!
 }
 
 input FieldSetInput {
@@ -2964,6 +3037,8 @@ type Email {
     **Required.**
     """
     primary: Boolean!
+
+    source: DataSource!
 }
 
 """
@@ -3200,6 +3275,7 @@ type Note {
     html: String!
     createdAt: Time!
     createdBy: User @goField(forceResolver: true)
+    source: DataSource!
 }
 
 type NotePage implements Pages {
@@ -3244,6 +3320,7 @@ type Organization implements Node {
     **Required.  If no values it returns an empty array.**
     """
     addresses: [Address!]! @goField(forceResolver: true)
+    source: DataSource!
 }
 
 type OrganizationPage implements Pages {
@@ -3322,6 +3399,8 @@ type PhoneNumber {
     **Required**
     """
     primary: Boolean!
+
+    source: DataSource!
 }
 
 """
@@ -3410,6 +3489,12 @@ type Result {
 scalar Int64
 
 scalar Any @goModel(model:"model.AnyTypeValue")`, BuiltIn: false},
+	{Name: "../schemas/source.graphqls", Input: `enum DataSource {
+    NA,
+    OPENLINE
+    HUBSPOT
+    ZENDESK
+}`, BuiltIn: false},
 	{Name: "../schemas/user.graphqls", Input: `extend type Query {
     users(pagination: Pagination, where: Filter, sort: [SortBy!]): UserPage!
     user(id: ID!): User!
@@ -3454,6 +3539,8 @@ type User {
     **Required**
     """
     createdAt: Time!
+
+    source: DataSource!
 
     conversations(pagination: Pagination, sort: [SortBy!]): ConversationPage! @goField(forceResolver: true)
 }
@@ -4997,47 +5084,6 @@ func (ec *executionContext) fieldContext_Address_id(ctx context.Context, field g
 	return fc, nil
 }
 
-func (ec *executionContext) _Address_source(ctx context.Context, field graphql.CollectedField, obj *model.Address) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Address_source(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Source, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*string)
-	fc.Result = res
-	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Address_source(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Address",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
 func (ec *executionContext) _Address_country(ctx context.Context, field graphql.CollectedField, obj *model.Address) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Address_country(ctx, field)
 	if err != nil {
@@ -5366,6 +5412,47 @@ func (ec *executionContext) fieldContext_Address_fax(ctx context.Context, field 
 	return fc, nil
 }
 
+func (ec *executionContext) _Address_source(ctx context.Context, field graphql.CollectedField, obj *model.Address) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Address_source(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Source, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.DataSource)
+	fc.Result = res
+	return ec.marshalODataSource2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐDataSource(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Address_source(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Address",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type DataSource does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Contact_id(ctx context.Context, field graphql.CollectedField, obj *model.Contact) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Contact_id(ctx, field)
 	if err != nil {
@@ -5662,6 +5749,50 @@ func (ec *executionContext) fieldContext_Contact_readonly(ctx context.Context, f
 	return fc, nil
 }
 
+func (ec *executionContext) _Contact_source(ctx context.Context, field graphql.CollectedField, obj *model.Contact) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Contact_source(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Source, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(model.DataSource)
+	fc.Result = res
+	return ec.marshalNDataSource2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐDataSource(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Contact_source(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Contact",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type DataSource does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Contact_contactType(ctx context.Context, field graphql.CollectedField, obj *model.Contact) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Contact_contactType(ctx, field)
 	if err != nil {
@@ -5756,6 +5887,8 @@ func (ec *executionContext) fieldContext_Contact_roles(ctx context.Context, fiel
 				return ec.fieldContext_ContactRole_jobTitle(ctx, field)
 			case "primary":
 				return ec.fieldContext_ContactRole_primary(ctx, field)
+			case "source":
+				return ec.fieldContext_ContactRole_source(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type ContactRole", field.Name)
 		},
@@ -5806,6 +5939,8 @@ func (ec *executionContext) fieldContext_Contact_groups(ctx context.Context, fie
 				return ec.fieldContext_ContactGroup_id(ctx, field)
 			case "name":
 				return ec.fieldContext_ContactGroup_name(ctx, field)
+			case "source":
+				return ec.fieldContext_ContactGroup_source(ctx, field)
 			case "contacts":
 				return ec.fieldContext_ContactGroup_contacts(ctx, field)
 			}
@@ -5862,6 +5997,8 @@ func (ec *executionContext) fieldContext_Contact_phoneNumbers(ctx context.Contex
 				return ec.fieldContext_PhoneNumber_label(ctx, field)
 			case "primary":
 				return ec.fieldContext_PhoneNumber_primary(ctx, field)
+			case "source":
+				return ec.fieldContext_PhoneNumber_source(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type PhoneNumber", field.Name)
 		},
@@ -5916,6 +6053,8 @@ func (ec *executionContext) fieldContext_Contact_emails(ctx context.Context, fie
 				return ec.fieldContext_Email_label(ctx, field)
 			case "primary":
 				return ec.fieldContext_Email_primary(ctx, field)
+			case "source":
+				return ec.fieldContext_Email_source(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Email", field.Name)
 		},
@@ -5964,8 +6103,6 @@ func (ec *executionContext) fieldContext_Contact_addresses(ctx context.Context, 
 			switch field.Name {
 			case "id":
 				return ec.fieldContext_Address_id(ctx, field)
-			case "source":
-				return ec.fieldContext_Address_source(ctx, field)
 			case "country":
 				return ec.fieldContext_Address_country(ctx, field)
 			case "state":
@@ -5982,6 +6119,8 @@ func (ec *executionContext) fieldContext_Contact_addresses(ctx context.Context, 
 				return ec.fieldContext_Address_phone(ctx, field)
 			case "fax":
 				return ec.fieldContext_Address_fax(ctx, field)
+			case "source":
+				return ec.fieldContext_Address_source(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Address", field.Name)
 		},
@@ -6090,12 +6229,14 @@ func (ec *executionContext) fieldContext_Contact_fieldSets(ctx context.Context, 
 				return ec.fieldContext_FieldSet_id(ctx, field)
 			case "name":
 				return ec.fieldContext_FieldSet_name(ctx, field)
-			case "added":
-				return ec.fieldContext_FieldSet_added(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_FieldSet_createdAt(ctx, field)
 			case "customFields":
 				return ec.fieldContext_FieldSet_customFields(ctx, field)
 			case "template":
 				return ec.fieldContext_FieldSet_template(ctx, field)
+			case "source":
+				return ec.fieldContext_FieldSet_source(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type FieldSet", field.Name)
 		},
@@ -6206,6 +6347,8 @@ func (ec *executionContext) fieldContext_Contact_owner(ctx context.Context, fiel
 				return ec.fieldContext_User_email(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_User_createdAt(ctx, field)
+			case "source":
+				return ec.fieldContext_User_source(ctx, field)
 			case "conversations":
 				return ec.fieldContext_User_conversations(ctx, field)
 			}
@@ -6484,6 +6627,50 @@ func (ec *executionContext) fieldContext_ContactGroup_name(ctx context.Context, 
 	return fc, nil
 }
 
+func (ec *executionContext) _ContactGroup_source(ctx context.Context, field graphql.CollectedField, obj *model.ContactGroup) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ContactGroup_source(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Source, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(model.DataSource)
+	fc.Result = res
+	return ec.marshalNDataSource2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐDataSource(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_ContactGroup_source(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ContactGroup",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type DataSource does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _ContactGroup_contacts(ctx context.Context, field graphql.CollectedField, obj *model.ContactGroup) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_ContactGroup_contacts(ctx, field)
 	if err != nil {
@@ -6590,6 +6777,8 @@ func (ec *executionContext) fieldContext_ContactGroupPage_content(ctx context.Co
 				return ec.fieldContext_ContactGroup_id(ctx, field)
 			case "name":
 				return ec.fieldContext_ContactGroup_name(ctx, field)
+			case "source":
+				return ec.fieldContext_ContactGroup_source(ctx, field)
 			case "contacts":
 				return ec.fieldContext_ContactGroup_contacts(ctx, field)
 			}
@@ -6789,6 +6978,8 @@ func (ec *executionContext) fieldContext_ContactRole_organization(ctx context.Co
 				return ec.fieldContext_Organization_organizationType(ctx, field)
 			case "addresses":
 				return ec.fieldContext_Organization_addresses(ctx, field)
+			case "source":
+				return ec.fieldContext_Organization_source(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Organization", field.Name)
 		},
@@ -6876,6 +7067,50 @@ func (ec *executionContext) fieldContext_ContactRole_primary(ctx context.Context
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ContactRole_source(ctx context.Context, field graphql.CollectedField, obj *model.ContactRole) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ContactRole_source(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Source, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(model.DataSource)
+	fc.Result = res
+	return ec.marshalNDataSource2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐDataSource(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_ContactRole_source(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ContactRole",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type DataSource does not have child fields")
 		},
 	}
 	return fc, nil
@@ -7022,6 +7257,8 @@ func (ec *executionContext) fieldContext_ContactsPage_content(ctx context.Contex
 				return ec.fieldContext_Contact_label(ctx, field)
 			case "readonly":
 				return ec.fieldContext_Contact_readonly(ctx, field)
+			case "source":
+				return ec.fieldContext_Contact_source(ctx, field)
 			case "contactType":
 				return ec.fieldContext_Contact_contactType(ctx, field)
 			case "roles":
@@ -7451,6 +7688,8 @@ func (ec *executionContext) fieldContext_Conversation_contacts(ctx context.Conte
 				return ec.fieldContext_Contact_label(ctx, field)
 			case "readonly":
 				return ec.fieldContext_Contact_readonly(ctx, field)
+			case "source":
+				return ec.fieldContext_Contact_source(ctx, field)
 			case "contactType":
 				return ec.fieldContext_Contact_contactType(ctx, field)
 			case "roles":
@@ -7530,6 +7769,8 @@ func (ec *executionContext) fieldContext_Conversation_users(ctx context.Context,
 				return ec.fieldContext_User_email(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_User_createdAt(ctx, field)
+			case "source":
+				return ec.fieldContext_User_source(ctx, field)
 			case "conversations":
 				return ec.fieldContext_User_conversations(ctx, field)
 			}
@@ -7886,11 +8127,14 @@ func (ec *executionContext) _CustomField_source(ctx context.Context, field graph
 		return graphql.Null
 	}
 	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
 		return graphql.Null
 	}
-	res := resTmp.(*string)
+	res := resTmp.(model.DataSource)
 	fc.Result = res
-	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+	return ec.marshalNDataSource2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐDataSource(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_CustomField_source(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -7900,7 +8144,7 @@ func (ec *executionContext) fieldContext_CustomField_source(ctx context.Context,
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
+			return nil, errors.New("field of type DataSource does not have child fields")
 		},
 	}
 	return fc, nil
@@ -8481,6 +8725,50 @@ func (ec *executionContext) fieldContext_Email_primary(ctx context.Context, fiel
 	return fc, nil
 }
 
+func (ec *executionContext) _Email_source(ctx context.Context, field graphql.CollectedField, obj *model.Email) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Email_source(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Source, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(model.DataSource)
+	fc.Result = res
+	return ec.marshalNDataSource2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐDataSource(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Email_source(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Email",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type DataSource does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _EntityTemplate_id(ctx context.Context, field graphql.CollectedField, obj *model.EntityTemplate) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_EntityTemplate_id(ctx, field)
 	if err != nil {
@@ -8902,8 +9190,8 @@ func (ec *executionContext) fieldContext_FieldSet_name(ctx context.Context, fiel
 	return fc, nil
 }
 
-func (ec *executionContext) _FieldSet_added(ctx context.Context, field graphql.CollectedField, obj *model.FieldSet) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_FieldSet_added(ctx, field)
+func (ec *executionContext) _FieldSet_createdAt(ctx context.Context, field graphql.CollectedField, obj *model.FieldSet) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_FieldSet_createdAt(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -8916,7 +9204,7 @@ func (ec *executionContext) _FieldSet_added(ctx context.Context, field graphql.C
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Added, nil
+		return obj.CreatedAt, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -8933,7 +9221,7 @@ func (ec *executionContext) _FieldSet_added(ctx context.Context, field graphql.C
 	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_FieldSet_added(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_FieldSet_createdAt(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "FieldSet",
 		Field:      field,
@@ -9050,6 +9338,50 @@ func (ec *executionContext) fieldContext_FieldSet_template(ctx context.Context, 
 				return ec.fieldContext_FieldSetTemplate_customFields(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type FieldSetTemplate", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _FieldSet_source(ctx context.Context, field graphql.CollectedField, obj *model.FieldSet) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_FieldSet_source(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Source, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(model.DataSource)
+	fc.Result = res
+	return ec.marshalNDataSource2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐDataSource(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_FieldSet_source(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "FieldSet",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type DataSource does not have child fields")
 		},
 	}
 	return fc, nil
@@ -9373,6 +9705,8 @@ func (ec *executionContext) fieldContext_Mutation_contact_Create(ctx context.Con
 				return ec.fieldContext_Contact_label(ctx, field)
 			case "readonly":
 				return ec.fieldContext_Contact_readonly(ctx, field)
+			case "source":
+				return ec.fieldContext_Contact_source(ctx, field)
 			case "contactType":
 				return ec.fieldContext_Contact_contactType(ctx, field)
 			case "roles":
@@ -9470,6 +9804,8 @@ func (ec *executionContext) fieldContext_Mutation_contact_Update(ctx context.Con
 				return ec.fieldContext_Contact_label(ctx, field)
 			case "readonly":
 				return ec.fieldContext_Contact_readonly(ctx, field)
+			case "source":
+				return ec.fieldContext_Contact_source(ctx, field)
 			case "contactType":
 				return ec.fieldContext_Contact_contactType(ctx, field)
 			case "roles":
@@ -9675,6 +10011,8 @@ func (ec *executionContext) fieldContext_Mutation_contactGroupCreate(ctx context
 				return ec.fieldContext_ContactGroup_id(ctx, field)
 			case "name":
 				return ec.fieldContext_ContactGroup_name(ctx, field)
+			case "source":
+				return ec.fieldContext_ContactGroup_source(ctx, field)
 			case "contacts":
 				return ec.fieldContext_ContactGroup_contacts(ctx, field)
 			}
@@ -9738,6 +10076,8 @@ func (ec *executionContext) fieldContext_Mutation_contactGroupUpdate(ctx context
 				return ec.fieldContext_ContactGroup_id(ctx, field)
 			case "name":
 				return ec.fieldContext_ContactGroup_name(ctx, field)
+			case "source":
+				return ec.fieldContext_ContactGroup_source(ctx, field)
 			case "contacts":
 				return ec.fieldContext_ContactGroup_contacts(ctx, field)
 			}
@@ -10041,6 +10381,8 @@ func (ec *executionContext) fieldContext_Mutation_contactRole_Create(ctx context
 				return ec.fieldContext_ContactRole_jobTitle(ctx, field)
 			case "primary":
 				return ec.fieldContext_ContactRole_primary(ctx, field)
+			case "source":
+				return ec.fieldContext_ContactRole_source(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type ContactRole", field.Name)
 		},
@@ -10106,6 +10448,8 @@ func (ec *executionContext) fieldContext_Mutation_contactRole_Update(ctx context
 				return ec.fieldContext_ContactRole_jobTitle(ctx, field)
 			case "primary":
 				return ec.fieldContext_ContactRole_primary(ctx, field)
+			case "source":
+				return ec.fieldContext_ContactRole_source(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type ContactRole", field.Name)
 		},
@@ -10571,6 +10915,8 @@ func (ec *executionContext) fieldContext_Mutation_customFieldsMergeAndUpdateInCo
 				return ec.fieldContext_Contact_label(ctx, field)
 			case "readonly":
 				return ec.fieldContext_Contact_readonly(ctx, field)
+			case "source":
+				return ec.fieldContext_Contact_source(ctx, field)
 			case "contactType":
 				return ec.fieldContext_Contact_contactType(ctx, field)
 			case "roles":
@@ -11108,12 +11454,14 @@ func (ec *executionContext) fieldContext_Mutation_fieldSetMergeToContact(ctx con
 				return ec.fieldContext_FieldSet_id(ctx, field)
 			case "name":
 				return ec.fieldContext_FieldSet_name(ctx, field)
-			case "added":
-				return ec.fieldContext_FieldSet_added(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_FieldSet_createdAt(ctx, field)
 			case "customFields":
 				return ec.fieldContext_FieldSet_customFields(ctx, field)
 			case "template":
 				return ec.fieldContext_FieldSet_template(ctx, field)
+			case "source":
+				return ec.fieldContext_FieldSet_source(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type FieldSet", field.Name)
 		},
@@ -11172,12 +11520,14 @@ func (ec *executionContext) fieldContext_Mutation_fieldSetUpdateInContact(ctx co
 				return ec.fieldContext_FieldSet_id(ctx, field)
 			case "name":
 				return ec.fieldContext_FieldSet_name(ctx, field)
-			case "added":
-				return ec.fieldContext_FieldSet_added(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_FieldSet_createdAt(ctx, field)
 			case "customFields":
 				return ec.fieldContext_FieldSet_customFields(ctx, field)
 			case "template":
 				return ec.fieldContext_FieldSet_template(ctx, field)
+			case "source":
+				return ec.fieldContext_FieldSet_source(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type FieldSet", field.Name)
 		},
@@ -11302,6 +11652,8 @@ func (ec *executionContext) fieldContext_Mutation_emailMergeToContact(ctx contex
 				return ec.fieldContext_Email_label(ctx, field)
 			case "primary":
 				return ec.fieldContext_Email_primary(ctx, field)
+			case "source":
+				return ec.fieldContext_Email_source(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Email", field.Name)
 		},
@@ -11367,6 +11719,8 @@ func (ec *executionContext) fieldContext_Mutation_emailUpdateInContact(ctx conte
 				return ec.fieldContext_Email_label(ctx, field)
 			case "primary":
 				return ec.fieldContext_Email_primary(ctx, field)
+			case "source":
+				return ec.fieldContext_Email_source(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Email", field.Name)
 		},
@@ -11550,6 +11904,8 @@ func (ec *executionContext) fieldContext_Mutation_note_MergeToContact(ctx contex
 				return ec.fieldContext_Note_createdAt(ctx, field)
 			case "createdBy":
 				return ec.fieldContext_Note_createdBy(ctx, field)
+			case "source":
+				return ec.fieldContext_Note_source(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Note", field.Name)
 		},
@@ -11615,6 +11971,8 @@ func (ec *executionContext) fieldContext_Mutation_note_UpdateInContact(ctx conte
 				return ec.fieldContext_Note_createdAt(ctx, field)
 			case "createdBy":
 				return ec.fieldContext_Note_createdBy(ctx, field)
+			case "source":
+				return ec.fieldContext_Note_source(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Note", field.Name)
 		},
@@ -11753,6 +12111,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_Create(ctx contex
 				return ec.fieldContext_Organization_organizationType(ctx, field)
 			case "addresses":
 				return ec.fieldContext_Organization_addresses(ctx, field)
+			case "source":
+				return ec.fieldContext_Organization_source(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Organization", field.Name)
 		},
@@ -11832,6 +12192,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_Update(ctx contex
 				return ec.fieldContext_Organization_organizationType(ctx, field)
 			case "addresses":
 				return ec.fieldContext_Organization_addresses(ctx, field)
+			case "source":
+				return ec.fieldContext_Organization_source(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Organization", field.Name)
 		},
@@ -12128,6 +12490,8 @@ func (ec *executionContext) fieldContext_Mutation_phoneNumberMergeToContact(ctx 
 				return ec.fieldContext_PhoneNumber_label(ctx, field)
 			case "primary":
 				return ec.fieldContext_PhoneNumber_primary(ctx, field)
+			case "source":
+				return ec.fieldContext_PhoneNumber_source(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type PhoneNumber", field.Name)
 		},
@@ -12193,6 +12557,8 @@ func (ec *executionContext) fieldContext_Mutation_phoneNumberUpdateInContact(ctx
 				return ec.fieldContext_PhoneNumber_label(ctx, field)
 			case "primary":
 				return ec.fieldContext_PhoneNumber_primary(ctx, field)
+			case "source":
+				return ec.fieldContext_PhoneNumber_source(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type PhoneNumber", field.Name)
 		},
@@ -12378,6 +12744,8 @@ func (ec *executionContext) fieldContext_Mutation_userCreate(ctx context.Context
 				return ec.fieldContext_User_email(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_User_createdAt(ctx, field)
+			case "source":
+				return ec.fieldContext_User_source(ctx, field)
 			case "conversations":
 				return ec.fieldContext_User_conversations(ctx, field)
 			}
@@ -12576,10 +12944,56 @@ func (ec *executionContext) fieldContext_Note_createdBy(ctx context.Context, fie
 				return ec.fieldContext_User_email(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_User_createdAt(ctx, field)
+			case "source":
+				return ec.fieldContext_User_source(ctx, field)
 			case "conversations":
 				return ec.fieldContext_User_conversations(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Note_source(ctx context.Context, field graphql.CollectedField, obj *model.Note) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Note_source(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Source, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(model.DataSource)
+	fc.Result = res
+	return ec.marshalNDataSource2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐDataSource(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Note_source(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Note",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type DataSource does not have child fields")
 		},
 	}
 	return fc, nil
@@ -12632,6 +13046,8 @@ func (ec *executionContext) fieldContext_NotePage_content(ctx context.Context, f
 				return ec.fieldContext_Note_createdAt(ctx, field)
 			case "createdBy":
 				return ec.fieldContext_Note_createdBy(ctx, field)
+			case "source":
+				return ec.fieldContext_Note_source(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Note", field.Name)
 		},
@@ -13193,8 +13609,6 @@ func (ec *executionContext) fieldContext_Organization_addresses(ctx context.Cont
 			switch field.Name {
 			case "id":
 				return ec.fieldContext_Address_id(ctx, field)
-			case "source":
-				return ec.fieldContext_Address_source(ctx, field)
 			case "country":
 				return ec.fieldContext_Address_country(ctx, field)
 			case "state":
@@ -13211,8 +13625,54 @@ func (ec *executionContext) fieldContext_Organization_addresses(ctx context.Cont
 				return ec.fieldContext_Address_phone(ctx, field)
 			case "fax":
 				return ec.fieldContext_Address_fax(ctx, field)
+			case "source":
+				return ec.fieldContext_Address_source(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Address", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Organization_source(ctx context.Context, field graphql.CollectedField, obj *model.Organization) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Organization_source(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Source, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(model.DataSource)
+	fc.Result = res
+	return ec.marshalNDataSource2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐDataSource(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Organization_source(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Organization",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type DataSource does not have child fields")
 		},
 	}
 	return fc, nil
@@ -13279,6 +13739,8 @@ func (ec *executionContext) fieldContext_OrganizationPage_content(ctx context.Co
 				return ec.fieldContext_Organization_organizationType(ctx, field)
 			case "addresses":
 				return ec.fieldContext_Organization_addresses(ctx, field)
+			case "source":
+				return ec.fieldContext_Organization_source(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Organization", field.Name)
 		},
@@ -14031,6 +14493,50 @@ func (ec *executionContext) fieldContext_PhoneNumber_primary(ctx context.Context
 	return fc, nil
 }
 
+func (ec *executionContext) _PhoneNumber_source(ctx context.Context, field graphql.CollectedField, obj *model.PhoneNumber) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_PhoneNumber_source(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Source, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(model.DataSource)
+	fc.Result = res
+	return ec.marshalNDataSource2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐDataSource(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_PhoneNumber_source(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PhoneNumber",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type DataSource does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Query_entityTemplates(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Query_entityTemplates(ctx, field)
 	if err != nil {
@@ -14152,6 +14658,8 @@ func (ec *executionContext) fieldContext_Query_contact(ctx context.Context, fiel
 				return ec.fieldContext_Contact_label(ctx, field)
 			case "readonly":
 				return ec.fieldContext_Contact_readonly(ctx, field)
+			case "source":
+				return ec.fieldContext_Contact_source(ctx, field)
 			case "contactType":
 				return ec.fieldContext_Contact_contactType(ctx, field)
 			case "roles":
@@ -14312,6 +14820,8 @@ func (ec *executionContext) fieldContext_Query_contact_ByEmail(ctx context.Conte
 				return ec.fieldContext_Contact_label(ctx, field)
 			case "readonly":
 				return ec.fieldContext_Contact_readonly(ctx, field)
+			case "source":
+				return ec.fieldContext_Contact_source(ctx, field)
 			case "contactType":
 				return ec.fieldContext_Contact_contactType(ctx, field)
 			case "roles":
@@ -14409,6 +14919,8 @@ func (ec *executionContext) fieldContext_Query_contact_ByPhone(ctx context.Conte
 				return ec.fieldContext_Contact_label(ctx, field)
 			case "readonly":
 				return ec.fieldContext_Contact_readonly(ctx, field)
+			case "source":
+				return ec.fieldContext_Contact_source(ctx, field)
 			case "contactType":
 				return ec.fieldContext_Contact_contactType(ctx, field)
 			case "roles":
@@ -14493,6 +15005,8 @@ func (ec *executionContext) fieldContext_Query_contactGroup(ctx context.Context,
 				return ec.fieldContext_ContactGroup_id(ctx, field)
 			case "name":
 				return ec.fieldContext_ContactGroup_name(ctx, field)
+			case "source":
+				return ec.fieldContext_ContactGroup_source(ctx, field)
 			case "contacts":
 				return ec.fieldContext_ContactGroup_contacts(ctx, field)
 			}
@@ -14747,6 +15261,8 @@ func (ec *executionContext) fieldContext_Query_organization(ctx context.Context,
 				return ec.fieldContext_Organization_organizationType(ctx, field)
 			case "addresses":
 				return ec.fieldContext_Organization_addresses(ctx, field)
+			case "source":
+				return ec.fieldContext_Organization_source(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Organization", field.Name)
 		},
@@ -14927,6 +15443,8 @@ func (ec *executionContext) fieldContext_Query_user(ctx context.Context, field g
 				return ec.fieldContext_User_email(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_User_createdAt(ctx, field)
+			case "source":
+				return ec.fieldContext_User_source(ctx, field)
 			case "conversations":
 				return ec.fieldContext_User_conversations(ctx, field)
 			}
@@ -15340,6 +15858,50 @@ func (ec *executionContext) fieldContext_User_createdAt(ctx context.Context, fie
 	return fc, nil
 }
 
+func (ec *executionContext) _User_source(ctx context.Context, field graphql.CollectedField, obj *model.User) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_User_source(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Source, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(model.DataSource)
+	fc.Result = res
+	return ec.marshalNDataSource2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐDataSource(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_User_source(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "User",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type DataSource does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _User_conversations(ctx context.Context, field graphql.CollectedField, obj *model.User) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_User_conversations(ctx, field)
 	if err != nil {
@@ -15452,6 +16014,8 @@ func (ec *executionContext) fieldContext_UserPage_content(ctx context.Context, f
 				return ec.fieldContext_User_email(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_User_createdAt(ctx, field)
+			case "source":
+				return ec.fieldContext_User_source(ctx, field)
 			case "conversations":
 				return ec.fieldContext_User_conversations(ctx, field)
 			}
@@ -17861,7 +18425,7 @@ func (ec *executionContext) unmarshalInputCustomFieldInput(ctx context.Context, 
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"id", "name", "datatype", "value", "source", "templateId"}
+	fieldsInOrder := [...]string{"id", "name", "datatype", "value", "templateId"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -17897,14 +18461,6 @@ func (ec *executionContext) unmarshalInputCustomFieldInput(ctx context.Context, 
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("value"))
 			it.Value, err = ec.unmarshalNAny2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐAnyTypeValue(ctx, v)
-			if err != nil {
-				return it, err
-			}
-		case "source":
-			var err error
-
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("source"))
-			it.Source, err = ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -18005,7 +18561,7 @@ func (ec *executionContext) unmarshalInputCustomFieldUpdateInput(ctx context.Con
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"id", "name", "datatype", "value", "source"}
+	fieldsInOrder := [...]string{"id", "name", "datatype", "value"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -18041,14 +18597,6 @@ func (ec *executionContext) unmarshalInputCustomFieldUpdateInput(ctx context.Con
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("value"))
 			it.Value, err = ec.unmarshalNAny2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐAnyTypeValue(ctx, v)
-			if err != nil {
-				return it, err
-			}
-		case "source":
-			var err error
-
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("source"))
-			it.Source, err = ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -19102,10 +19650,6 @@ func (ec *executionContext) _Address(ctx context.Context, sel ast.SelectionSet, 
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
-		case "source":
-
-			out.Values[i] = ec._Address_source(ctx, field, obj)
-
 		case "country":
 
 			out.Values[i] = ec._Address_country(ctx, field, obj)
@@ -19137,6 +19681,10 @@ func (ec *executionContext) _Address(ctx context.Context, sel ast.SelectionSet, 
 		case "fax":
 
 			out.Values[i] = ec._Address_fax(ctx, field, obj)
+
+		case "source":
+
+			out.Values[i] = ec._Address_source(ctx, field, obj)
 
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
@@ -19192,6 +19740,13 @@ func (ec *executionContext) _Contact(ctx context.Context, sel ast.SelectionSet, 
 		case "readonly":
 
 			out.Values[i] = ec._Contact_readonly(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "source":
+
+			out.Values[i] = ec._Contact_source(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&invalids, 1)
@@ -19482,6 +20037,13 @@ func (ec *executionContext) _ContactGroup(ctx context.Context, sel ast.Selection
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&invalids, 1)
 			}
+		case "source":
+
+			out.Values[i] = ec._ContactGroup_source(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
 		case "contacts":
 			field := field
 
@@ -19596,6 +20158,13 @@ func (ec *executionContext) _ContactRole(ctx context.Context, sel ast.SelectionS
 		case "primary":
 
 			out.Values[i] = ec._ContactRole_primary(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "source":
+
+			out.Values[i] = ec._ContactRole_source(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&invalids, 1)
@@ -19863,6 +20432,9 @@ func (ec *executionContext) _CustomField(ctx context.Context, sel ast.SelectionS
 
 			out.Values[i] = ec._CustomField_source(ctx, field, obj)
 
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
 		case "template":
 			field := field
 
@@ -19990,6 +20562,13 @@ func (ec *executionContext) _Email(ctx context.Context, sel ast.SelectionSet, ob
 		case "primary":
 
 			out.Values[i] = ec._Email_primary(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "source":
+
+			out.Values[i] = ec._Email_source(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
 				invalids++
@@ -20122,9 +20701,9 @@ func (ec *executionContext) _FieldSet(ctx context.Context, sel ast.SelectionSet,
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&invalids, 1)
 			}
-		case "added":
+		case "createdAt":
 
-			out.Values[i] = ec._FieldSet_added(ctx, field, obj)
+			out.Values[i] = ec._FieldSet_createdAt(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&invalids, 1)
@@ -20166,6 +20745,13 @@ func (ec *executionContext) _FieldSet(ctx context.Context, sel ast.SelectionSet,
 				return innerFunc(ctx)
 
 			})
+		case "source":
+
+			out.Values[i] = ec._FieldSet_source(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -20728,6 +21314,13 @@ func (ec *executionContext) _Note(ctx context.Context, sel ast.SelectionSet, obj
 				return innerFunc(ctx)
 
 			})
+		case "source":
+
+			out.Values[i] = ec._Note_source(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -20873,6 +21466,13 @@ func (ec *executionContext) _Organization(ctx context.Context, sel ast.Selection
 				return innerFunc(ctx)
 
 			})
+		case "source":
+
+			out.Values[i] = ec._Organization_source(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -21076,6 +21676,13 @@ func (ec *executionContext) _PhoneNumber(ctx context.Context, sel ast.SelectionS
 		case "primary":
 
 			out.Values[i] = ec._PhoneNumber_primary(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "source":
+
+			out.Values[i] = ec._PhoneNumber_source(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
 				invalids++
@@ -21492,6 +22099,13 @@ func (ec *executionContext) _User(ctx context.Context, sel ast.SelectionSet, obj
 		case "createdAt":
 
 			out.Values[i] = ec._User_createdAt(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "source":
+
+			out.Values[i] = ec._User_source(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&invalids, 1)
@@ -22582,6 +23196,16 @@ func (ec *executionContext) marshalNCustomFieldTemplateType2githubᚗcomᚋopenl
 func (ec *executionContext) unmarshalNCustomFieldUpdateInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐCustomFieldUpdateInput(ctx context.Context, v interface{}) (model.CustomFieldUpdateInput, error) {
 	res, err := ec.unmarshalInputCustomFieldUpdateInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalNDataSource2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐDataSource(ctx context.Context, v interface{}) (model.DataSource, error) {
+	var res model.DataSource
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNDataSource2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐDataSource(ctx context.Context, sel ast.SelectionSet, v model.DataSource) graphql.Marshaler {
+	return v
 }
 
 func (ec *executionContext) marshalNEmail2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐEmail(ctx context.Context, sel ast.SelectionSet, v model.Email) graphql.Marshaler {
@@ -23809,6 +24433,22 @@ func (ec *executionContext) unmarshalOCustomFieldTemplateInput2ᚕᚖgithubᚗco
 		}
 	}
 	return res, nil
+}
+
+func (ec *executionContext) unmarshalODataSource2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐDataSource(ctx context.Context, v interface{}) (*model.DataSource, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var res = new(model.DataSource)
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalODataSource2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐDataSource(ctx context.Context, sel ast.SelectionSet, v *model.DataSource) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return v
 }
 
 func (ec *executionContext) unmarshalOEmailInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐEmailInput(ctx context.Context, v interface{}) (*model.EmailInput, error) {

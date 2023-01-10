@@ -31,16 +31,19 @@ func NewUserRepository(driver *neo4j.Driver) UserRepository {
 func (r *userRepository) Create(session neo4j.Session, tenant string, entity entity.UserEntity) (*dbtype.Node, error) {
 	query := "MATCH (t:Tenant {name:$tenant}) " +
 		" MERGE (u:User {id: randomUUID()})-[:USER_BELONGS_TO_TENANT]->(t) " +
-		" ON CREATE SET u.firstName=$firstName, u.lastName=$lastName, u.email=$email, u.createdAt=datetime({timezone: 'UTC'}), u:%s" +
+		" ON CREATE SET u.firstName=$firstName, u.lastName=$lastName, u.email=$email, u.createdAt=datetime({timezone: 'UTC'}), " +
+		" u.source=$source, u.sourceOfTruth=$sourceOfTruth, u:%s" +
 		" RETURN u"
 
 	result, err := session.WriteTransaction(func(tx neo4j.Transaction) (interface{}, error) {
 		queryResult, err := tx.Run(fmt.Sprintf(query, "User_"+tenant),
 			map[string]any{
-				"tenant":    tenant,
-				"firstName": entity.FirstName,
-				"lastName":  entity.LastName,
-				"email":     entity.Email,
+				"tenant":        tenant,
+				"firstName":     entity.FirstName,
+				"lastName":      entity.LastName,
+				"email":         entity.Email,
+				"source":        entity.Source,
+				"sourceOfTruth": entity.SourceOfTruth,
 			})
 		return utils.ExtractSingleRecordFirstValueAsNode(queryResult, err)
 	})

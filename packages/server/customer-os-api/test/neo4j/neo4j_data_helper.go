@@ -123,7 +123,7 @@ func AddContactToGroup(driver *neo4j.Driver, contactId, groupId string) {
 }
 
 func CreateDefaultFieldSet(driver *neo4j.Driver, contactId string) string {
-	return CreateFieldSet(driver, contactId, entity.FieldSetEntity{Name: "name"})
+	return CreateFieldSet(driver, contactId, entity.FieldSetEntity{Name: "name", Source: entity.DataSourceOpenline, SourceOfTruth: entity.DataSourceOpenline})
 }
 
 func CreateFieldSet(driver *neo4j.Driver, contactId string, fieldSet entity.FieldSetEntity) string {
@@ -131,13 +131,18 @@ func CreateFieldSet(driver *neo4j.Driver, contactId string, fieldSet entity.Fiel
 	query := `
 			MATCH (c:Contact {id:$contactId})
 			MERGE (s:FieldSet {
-				  id: $fieldSetId,
-				  name: $name
-				})<-[:HAS_COMPLEX_PROPERTY {added:datetime({timezone: 'UTC'})}]-(c)`
+				  	id: $fieldSetId,
+				  	name: $name,
+					source: $source,
+					sourceOfTruth: $sourceOfTruth,
+					createdAt :datetime({timezone: 'UTC'})
+				})<-[:HAS_COMPLEX_PROPERTY]-(c)`
 	ExecuteWriteQuery(driver, query, map[string]any{
-		"contactId":  contactId,
-		"fieldSetId": fieldSetId.String(),
-		"name":       fieldSet.Name,
+		"contactId":     contactId,
+		"fieldSetId":    fieldSetId.String(),
+		"name":          fieldSet.Name,
+		"source":        fieldSet.Source,
+		"sourceOfTruth": fieldSet.SourceOfTruth,
 	})
 	return fieldSetId.String()
 }
@@ -145,9 +150,11 @@ func CreateFieldSet(driver *neo4j.Driver, contactId string, fieldSet entity.Fiel
 func CreateDefaultCustomFieldInSet(driver *neo4j.Driver, fieldSetId string) string {
 	return createCustomFieldInSet(driver, fieldSetId,
 		entity.CustomFieldEntity{
-			Name:     "name",
-			DataType: model.CustomFieldDataTypeText.String(),
-			Value:    model.AnyTypeValue{Str: utils.StringPtr("value")}})
+			Name:          "name",
+			Source:        entity.DataSourceOpenline,
+			SourceOfTruth: entity.DataSourceOpenline,
+			DataType:      model.CustomFieldDataTypeText.String(),
+			Value:         model.AnyTypeValue{Str: utils.StringPtr("value")}})
 }
 
 func createCustomFieldInSet(driver *neo4j.Driver, fieldSetId string, customField entity.CustomFieldEntity) string {
@@ -159,14 +166,18 @@ func createCustomFieldInSet(driver *neo4j.Driver, fieldSetId string, customField
 			"	  id: $fieldId, "+
 			"	  %s: $value, "+
 			"	  datatype: $datatype, "+
-			"	  name: $name "+
+			"	  name: $name, "+
+			"	  source: $source, "+
+			"	  sourceOfTruth: $sourceOfTruth "+
 			"	})<-[:HAS_PROPERTY]-(s)", customField.NodeLabel(), customField.PropertyName())
 	ExecuteWriteQuery(driver, query, map[string]any{
-		"fieldSetId": fieldSetId,
-		"fieldId":    fieldId.String(),
-		"name":       customField.Name,
-		"datatype":   customField.DataType,
-		"value":      customField.Value.RealValue(),
+		"fieldSetId":    fieldSetId,
+		"fieldId":       fieldId.String(),
+		"name":          customField.Name,
+		"datatype":      customField.DataType,
+		"value":         customField.Value.RealValue(),
+		"source":        customField.Source,
+		"sourceOfTruth": customField.SourceOfTruth,
 	})
 	return fieldId.String()
 }
@@ -174,9 +185,11 @@ func createCustomFieldInSet(driver *neo4j.Driver, fieldSetId string, customField
 func CreateDefaultCustomFieldInContact(driver *neo4j.Driver, contactId string) string {
 	return createCustomFieldInContact(driver, contactId,
 		entity.CustomFieldEntity{
-			Name:     "name",
-			DataType: model.CustomFieldDataTypeText.String(),
-			Value:    model.AnyTypeValue{Str: utils.StringPtr("value")}})
+			Name:          "name",
+			DataType:      model.CustomFieldDataTypeText.String(),
+			Source:        entity.DataSourceOpenline,
+			SourceOfTruth: entity.DataSourceOpenline,
+			Value:         model.AnyTypeValue{Str: utils.StringPtr("value")}})
 }
 
 func createCustomFieldInContact(driver *neo4j.Driver, contactId string, customField entity.CustomFieldEntity) string {
@@ -188,14 +201,18 @@ func createCustomFieldInContact(driver *neo4j.Driver, contactId string, customFi
 			"	  id: $fieldId, "+
 			"	  %s: $value, "+
 			"	  datatype: $datatype, "+
-			"	  name: $name "+
+			"	  name: $name, "+
+			"	  source: $source, "+
+			"	  sourceOfTruth: $sourceOfTruth "+
 			"	})<-[:HAS_PROPERTY]-(c)", customField.NodeLabel(), customField.PropertyName())
 	ExecuteWriteQuery(driver, query, map[string]any{
-		"contactId": contactId,
-		"fieldId":   fieldId.String(),
-		"name":      customField.Name,
-		"datatype":  customField.DataType,
-		"value":     customField.Value.RealValue(),
+		"contactId":     contactId,
+		"fieldId":       fieldId.String(),
+		"name":          customField.Name,
+		"datatype":      customField.DataType,
+		"value":         customField.Value.RealValue(),
+		"source":        customField.Source,
+		"sourceOfTruth": customField.SourceOfTruth,
 	})
 	return fieldId.String()
 }
@@ -447,20 +464,21 @@ func CreatePageView(driver *neo4j.Driver, contactId string, actionEntity entity.
 func CreateAddress(driver *neo4j.Driver, address entity.AddressEntity) string {
 	var addressId, _ = uuid.NewRandom()
 	query := `MERGE (a:Address {id:$id})
-			ON CREATE SET a.source=$source, a.country=$country, a.state=$state, a.city=$city, a.address=$address,
-							a.address2=$address2, a.zip=$zip, a.fax=$fax, a.phone=$phone
-`
+			ON CREATE SET  a.country=$country, a.state=$state, a.city=$city, a.address=$address,
+							a.address2=$address2, a.zip=$zip, a.fax=$fax, a.phone=$phone,
+							a.source=$source, a.sourceOfTruth=$sourceOfTruth`
 	ExecuteWriteQuery(driver, query, map[string]any{
-		"id":       addressId.String(),
-		"source":   address.Source,
-		"country":  address.Country,
-		"state":    address.State,
-		"city":     address.City,
-		"address":  address.Address,
-		"address2": address.Address2,
-		"zip":      address.Zip,
-		"phone":    address.Phone,
-		"fax":      address.Fax,
+		"id":            addressId.String(),
+		"source":        address.Source,
+		"sourceOfTruth": address.Source,
+		"country":       address.Country,
+		"state":         address.State,
+		"city":          address.City,
+		"address":       address.Address,
+		"address2":      address.Address2,
+		"zip":           address.Zip,
+		"phone":         address.Phone,
+		"fax":           address.Fax,
 	})
 	return addressId.String()
 }

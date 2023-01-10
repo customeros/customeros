@@ -7,13 +7,12 @@ import (
 	"github.com/neo4j/neo4j-go-driver/v4/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils"
 )
 
 type PhoneNumberService interface {
-	FindAllForContact(ctx context.Context, obj *model.Contact) (*entity.PhoneNumberEntities, error)
+	FindAllForContact(ctx context.Context, contactId string) (*entity.PhoneNumberEntities, error)
 	MergePhoneNumberToContact(ctx context.Context, id string, toEntity *entity.PhoneNumberEntity) (*entity.PhoneNumberEntity, error)
 	UpdatePhoneNumberInContact(ctx context.Context, id string, toEntity *entity.PhoneNumberEntity) (*entity.PhoneNumberEntity, error)
 	Delete(ctx context.Context, contactId string, e164 string) (bool, error)
@@ -34,24 +33,11 @@ func (s *phoneNumberService) getDriver() neo4j.Driver {
 	return *s.repositories.Drivers.Neo4jDriver
 }
 
-func (s *phoneNumberService) FindAllForContact(ctx context.Context, contact *model.Contact) (*entity.PhoneNumberEntities, error) {
+func (s *phoneNumberService) FindAllForContact(ctx context.Context, contactId string) (*entity.PhoneNumberEntities, error) {
 	session := utils.NewNeo4jReadSession(s.getDriver())
 	defer session.Close()
 
-	queryResult, err := session.ReadTransaction(func(tx neo4j.Transaction) (interface{}, error) {
-		result, err := tx.Run(`
-				MATCH (c:Contact {id:$id})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}),
-              			(c:Contact {id:$id})-[r:CALLED_AT]->(p:PhoneNumber) 
-				RETURN p, r`,
-			map[string]interface{}{
-				"id":     contact.ID,
-				"tenant": common.GetContext(ctx).Tenant})
-		records, err := result.Collect()
-		if err != nil {
-			return nil, err
-		}
-		return records, nil
-	})
+	queryResult, err := s.repositories.PhoneNumberRepository.FindAllForContact(session, common.GetContext(ctx).Tenant, contactId)
 	if err != nil {
 		return nil, err
 	}
@@ -98,23 +84,13 @@ func (s *phoneNumberService) UpdatePhoneNumberInContact(ctx context.Context, con
 	session := utils.NewNeo4jWriteSession(s.getDriver())
 	defer session.Close()
 
-	queryResult, err := session.WriteTransaction(func(tx neo4j.Transaction) (interface{}, error) {
-		txResult, err := tx.Run(`
-			MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}),
-				(c)-[r:CALLED_AT]->(p:PhoneNumber {id: $phoneId})
-            SET p.e164=$e164,
-				p.label=$label,
-				r.primary=$primary
-			RETURN p, r`,
-			map[string]interface{}{
-				"tenant":    common.GetContext(ctx).Tenant,
-				"contactId": contactId,
-				"phoneId":   entity.Id,
-				"e164":      entity.E164,
-				"label":     entity.Label,
-				"primary":   entity.Primary,
-			})
-		record, err := txResult.Single()
+	var err error
+	var phoneNumberNode *dbtype.Node
+	var phoneNumberRelationship *dbtype.Relationship
+
+	_, err = session.WriteTransaction(func(tx neo4j.Transaction) (interface{}, error) {
+		phoneNumberNode, phoneNumberRelationship, err = s.repositories.PhoneNumberRepository.UpdatePhoneNumberByContactInTx(tx, common.GetContext(ctx).Tenant, contactId, *entity)
+
 		if err != nil {
 			return nil, err
 		}
@@ -124,14 +100,14 @@ func (s *phoneNumberService) UpdatePhoneNumberInContact(ctx context.Context, con
 				return nil, err
 			}
 		}
-		return record, nil
+		return nil, nil
 	})
 	if err != nil {
 		return nil, err
 	}
 
-	var phoneNumberEntity = s.mapDbNodeToPhoneNumberEntity(queryResult.(*db.Record).Values[0].(dbtype.Node))
-	s.addDbRelationshipToPhoneNumberEntity(queryResult.(*db.Record).Values[1].(dbtype.Relationship), phoneNumberEntity)
+	var phoneNumberEntity = s.mapDbNodeToPhoneNumberEntity(*phoneNumberNode)
+	s.addDbRelationshipToPhoneNumberEntity(*phoneNumberRelationship, phoneNumberEntity)
 	return phoneNumberEntity, nil
 }
 
@@ -202,9 +178,11 @@ func (s *phoneNumberService) DeleteById(ctx context.Context, contactId string, p
 func (s *phoneNumberService) mapDbNodeToPhoneNumberEntity(node dbtype.Node) *entity.PhoneNumberEntity {
 	props := utils.GetPropsFromNode(node)
 	result := entity.PhoneNumberEntity{
-		Id:    utils.GetStringPropOrEmpty(props, "id"),
-		E164:  utils.GetStringPropOrEmpty(props, "e164"),
-		Label: utils.GetStringPropOrEmpty(props, "label"),
+		Id:            utils.GetStringPropOrEmpty(props, "id"),
+		E164:          utils.GetStringPropOrEmpty(props, "e164"),
+		Label:         utils.GetStringPropOrEmpty(props, "label"),
+		Source:        entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
+		SourceOfTruth: entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
 	}
 	return &result
 }

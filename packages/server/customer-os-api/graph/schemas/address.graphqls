@@ -1,6 +1,5 @@
 type Address {
     id: ID!
-    source: String
     country: String
     state: String
     city: String
@@ -9,4 +8,5 @@ type Address {
     zip: String
     phone: String
     fax: String
+    source: DataSource
 }

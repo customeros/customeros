@@ -5,16 +5,17 @@ import (
 )
 
 type AddressEntity struct {
-	Id       string
-	Source   string
-	Country  string
-	State    string
-	City     string
-	Address  string
-	Address2 string
-	Zip      string
-	Phone    string
-	Fax      string
+	Id            string
+	Country       string
+	State         string
+	City          string
+	Address       string
+	Address2      string
+	Zip           string
+	Phone         string
+	Fax           string
+	Source        DataSource
+	SourceOfTruth DataSource
 }
 
 func (address AddressEntity) ToString() string {
