@@ -273,6 +273,7 @@ func (s *customFieldService) mapDbNodeToCustomFieldEntity(node dbtype.Node) *ent
 		DataType:      utils.GetStringPropOrEmpty(props, "datatype"),
 		Source:        entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
 		SourceOfTruth: entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
+		CreatedAt:     utils.GetTimePropOrNow(props, "createdAt"),
 		Value: model.AnyTypeValue{
 			Str:   utils.GetStringPropOrNil(props, entity.CustomFieldTextProperty.String()),
 			Time:  utils.GetTimePropOrNil(props, entity.CustomFieldTimeProperty.String()),
