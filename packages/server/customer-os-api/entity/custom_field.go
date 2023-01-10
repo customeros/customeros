@@ -3,6 +3,7 @@ package entity
 import (
 	"fmt"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
+	"time"
 )
 
 type nodeLabel string
@@ -41,6 +42,7 @@ type CustomFieldEntity struct {
 	TemplateId    *string
 	Source        DataSource
 	SourceOfTruth DataSource
+	CreatedAt     time.Time
 }
 
 type CustomFieldEntities []CustomFieldEntity

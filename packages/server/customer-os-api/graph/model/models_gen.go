@@ -341,8 +341,9 @@ type CustomField struct {
 	// **Required**
 	Value AnyTypeValue `json:"value"`
 	// The source of the custom field value
-	Source   DataSource           `json:"source"`
-	Template *CustomFieldTemplate `json:"template"`
+	Source    DataSource           `json:"source"`
+	CreatedAt time.Time            `json:"createdAt"`
+	Template  *CustomFieldTemplate `json:"template"`
 }
 
 func (CustomField) IsNode()            {}

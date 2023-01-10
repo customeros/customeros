@@ -221,7 +221,6 @@ func TestMutationResolver_ContactCreate_WithCustomFields(t *testing.T) {
 
 	err = decode.Decode(rawResponse.Data.(map[string]any), &contact)
 	require.Nil(t, err)
-	require.NotNil(t, contact)
 
 	createdContact := contact.Contact_Create
 	require.Equal(t, model.DataSourceOpenline, createdContact.Source)
@@ -232,12 +231,14 @@ func TestMutationResolver_ContactCreate_WithCustomFields(t *testing.T) {
 	require.Equal(t, "value1", createdContact.CustomFields[0].Value.RealValue())
 	require.Equal(t, model.DataSourceOpenline, createdContact.CustomFields[0].Source)
 	require.Equal(t, fieldTemplateId, createdContact.CustomFields[0].Template.ID)
-	require.NotNil(t, createdContact.CustomFields[0].GetID())
+	require.NotNil(t, createdContact.CustomFields[0].ID)
+	require.NotNil(t, createdContact.CustomFields[0].CreatedAt)
 	require.Equal(t, "field2", createdContact.CustomFields[1].Name)
 	require.Equal(t, "TEXT", createdContact.CustomFields[1].Datatype.String())
 	require.Equal(t, "value2", createdContact.CustomFields[1].Value.RealValue())
 	require.Equal(t, model.DataSourceOpenline, createdContact.CustomFields[1].Source)
-	require.NotNil(t, createdContact.CustomFields[1].GetID())
+	require.NotNil(t, createdContact.CustomFields[1].ID)
+	require.NotNil(t, createdContact.CustomFields[1].CreatedAt)
 	require.Equal(t, 2, len(createdContact.FieldSets))
 	var set1, set2 *model.FieldSet
 	if createdContact.FieldSets[0].Name == "set1" {
@@ -251,11 +252,13 @@ func TestMutationResolver_ContactCreate_WithCustomFields(t *testing.T) {
 	require.NotNil(t, set1.CreatedAt)
 	require.Equal(t, "set1", set1.Name)
 	require.Equal(t, 2, len(set1.CustomFields))
+	require.NotNil(t, set1.CustomFields[0].CreatedAt)
 	require.Equal(t, "field3InSet", set1.CustomFields[0].Name)
 	require.Equal(t, "value3", set1.CustomFields[0].Value.RealValue())
 	require.Equal(t, model.DataSourceOpenline, set1.CustomFields[0].Source)
 	require.Equal(t, "TEXT", set1.CustomFields[0].Datatype.String())
 	require.Equal(t, fieldInSetTemplateId, set1.CustomFields[0].Template.ID)
+	require.NotNil(t, set1.CustomFields[1].CreatedAt)
 	require.Equal(t, "field4InSet", set1.CustomFields[1].Name)
 	require.Equal(t, "value4", set1.CustomFields[1].Value.RealValue())
 	require.Equal(t, model.DataSourceOpenline, set1.CustomFields[1].Source)

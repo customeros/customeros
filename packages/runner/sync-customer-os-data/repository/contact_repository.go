@@ -172,7 +172,7 @@ func (r *contactRepository) MergeTextCustomField(tenant, contactId string, field
 
 	query := "MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) " +
 		" MERGE (f:TextField:CustomField {name: $name, datatype:$datatype})<-[:HAS_PROPERTY]-(c) " +
-		" ON CREATE SET f.textValue=$value, f.id=randomUUID(), f.source=$source, f:%s " +
+		" ON CREATE SET f.textValue=$value, f.id=randomUUID(), f.createdAt=$createdAt, f.source=$source, f:%s " +
 		" ON MATCH SET f.textValue=$value, f.source=$source"
 
 	_, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
@@ -184,6 +184,7 @@ func (r *contactRepository) MergeTextCustomField(tenant, contactId string, field
 				"value":     field.Value,
 				"source":    field.Source,
 				"datatype":  "TEXT",
+				"createdAt": time.Now().UTC(),
 			})
 		return nil, err
 	})

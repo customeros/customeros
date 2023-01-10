@@ -57,10 +57,11 @@ func MapEntityToCustomField(entity *entity.CustomFieldEntity) *model.CustomField
 		datatype = model.CustomFieldDataTypeText
 	}
 	return &model.CustomField{
-		ID:       *entity.Id,
-		Name:     entity.Name,
-		Datatype: datatype,
-		Value:    entity.Value,
-		Source:   MapDataSourceToModel(entity.Source),
+		ID:        *entity.Id,
+		Name:      entity.Name,
+		Datatype:  datatype,
+		Value:     entity.Value,
+		Source:    MapDataSourceToModel(entity.Source),
+		CreatedAt: entity.CreatedAt,
 	}
 }

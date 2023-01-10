@@ -47,6 +47,8 @@ type CustomField implements Node {
     "The source of the custom field value"
     source: DataSource!
 
+    createdAt: Time!
+
     template: CustomFieldTemplate @goField(forceResolver: true)
 }
 
