@@ -28,13 +28,23 @@ func (r *noteRepository) MergeNote(tenant string, syncDate time.Time, note entit
 	session := utils.NewNeo4jWriteSession(*r.driver)
 	defer session.Close()
 
+	// Create new Note if it does not exist
+	// If Note exists, and sourceOfTruth is acceptable then update Note.
+	//   otherwise create/update AlternateNote for incoming source, with a new relationship 'ALTERNATE_FOR'
 	query := "MATCH (t:Tenant {name:$tenant})<-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]-(e:ExternalSystem {id:$externalSystem}) " +
-		" MERGE (n:Note)-[r:IS_LINKED_WITH {externalId:$externalId}]->(e) " +
-		" ON CREATE SET n.id=randomUUID(), n.createdAt=$createdAt, " +
-		"               n.source=$source, n.sourceOfTruth=$sourceOfTruth, n.appSource=$appSource, " +
-		"               r.syncDate=$syncDate, n.html=$html, n:%s " +
-		" ON MATCH SET r.syncDate=$syncDate, n.html=$html " +
-		" RETURN n.id"
+		"MERGE (n:Note)-[r:IS_LINKED_WITH {externalId:$externalId}]->(e) " +
+		"ON CREATE SET r.syncDate=$syncDate, n.id=randomUUID(), n.createdAt=$createdAt, " +
+		"              n.source=$source, n.sourceOfTruth=$sourceOfTruth, n.appSource=$appSource, " +
+		"              n.html=$html, n:%s " +
+		"ON MATCH SET r.syncDate = CASE WHEN n.sourceOfTruth=$sourceOfTruth THEN $syncDate ELSE r.syncDate END, " +
+		"             n.html = CASE WHEN n.sourceOfTruth=$sourceOfTruth THEN $html ELSE n.html END " +
+		"WITH n " +
+		"FOREACH (x in CASE WHEN n.sourceOfTruth <> $source THEN [n] ELSE [] END | " +
+		"  MERGE (x)-[:ALTERNATE_FOR]->(alt:AlternateNote {source:$source, id:x.id}) " +
+		"    ON CREATE SET alt.updatedAt=$now, alt.appSource=$appSource, alt.html=$html " +
+		"    ON MATCH SET alt.updatedAt=$now, alt.appSource=$appSource, alt.html=$html " +
+		") " +
+		"RETURN n.id"
 
 	dbRecord, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
 		queryResult, err := tx.Run(fmt.Sprintf(query, "Note_"+tenant),
@@ -48,6 +58,7 @@ func (r *noteRepository) MergeNote(tenant string, syncDate time.Time, note entit
 				"syncDate":       syncDate,
 				"html":           note.Html,
 				"createdAt":      note.CreatedAt,
+				"now":            time.Now().UTC(),
 			})
 		if err != nil {
 			return nil, err
