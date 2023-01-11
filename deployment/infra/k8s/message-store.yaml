@@ -22,15 +22,15 @@ spec:
             - containerPort: 9009  # Should match the port number that the Go application listens on
               name: grpc-port
           env:
-            - name: DB_USER
+            - name: POSTGRES_USER
               value: "openline"
-            - name: DB_PASSWORD
+            - name: POSTGRES_PASSWORD
               value: "password"
-            - name: DB_NAME
+            - name: POSTGRES_DB
               value: "openline"
-            - name: DB_HOST
+            - name: POSTGRES_HOST
               value: "customer-db-postgresql.openline.svc.cluster.local"
-            - name: DB_PORT
+            - name: POSTGRES_PORT
               value: "5432"
 
             - name: NEO4J_TARGET
