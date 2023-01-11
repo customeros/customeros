@@ -141,8 +141,8 @@ func (s *syncService) syncContacts(dataService common.DataService, syncDate time
 				}
 			}
 
-			if len(v.UserOwnerExternalId) > 0 {
-				if err = s.repositories.ContactRepository.SetOwnerRelationship(tenant, contactId, v.UserOwnerExternalId, dataService.SourceId()); err != nil {
+			if len(v.UserExternalOwnerId) > 0 {
+				if err = s.repositories.ContactRepository.SetOwnerRelationship(tenant, contactId, v.UserExternalOwnerId, dataService.SourceId()); err != nil {
 					failedSync = true
 					logrus.Errorf("failed set owner user for contact %v, tenant %v :%v", contactId, tenant, err)
 				}
@@ -258,7 +258,7 @@ func (s *syncService) syncUsers(dataService common.DataService, syncDate time.Ti
 			}
 
 			logrus.Debugf("successfully merged user with id %v for tenant %v from %v", userId, tenant, dataService.SourceId())
-			if err := dataService.MarkUserProcessed(v.ExternalId, runId, failedSync == false); err != nil {
+			if err := dataService.MarkUserProcessed(v.ExternalOwnerId, runId, failedSync == false); err != nil {
 				failed++
 				continue
 			}
@@ -304,6 +304,12 @@ func (s *syncService) syncNotes(dataService common.DataService, syncDate time.Ti
 
 			if len(note.UserExternalId) > 0 {
 				err = s.repositories.NoteRepository.NoteLinkWithUserByExternalId(tenant, noteId, note.UserExternalId, dataService.SourceId())
+				if err != nil {
+					failedSync = true
+					logrus.Errorf("failed link note %v with user for tenant %v :%v", noteId, tenant, err)
+				}
+			} else if len(note.UserExternalOwnerId) > 0 {
+				err = s.repositories.NoteRepository.NoteLinkWithUserByExternalOwnerId(tenant, noteId, note.UserExternalOwnerId, dataService.SourceId())
 				if err != nil {
 					failedSync = true
 					logrus.Errorf("failed link note %v with user for tenant %v :%v", noteId, tenant, err)

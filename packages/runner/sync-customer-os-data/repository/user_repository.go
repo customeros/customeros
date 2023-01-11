@@ -32,7 +32,7 @@ func (r *userRepository) MergeUser(tenant string, syncDate time.Time, user entit
 	// Link User with Tenant
 	query := "MATCH (t:Tenant {name:$tenant})<-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]-(e:ExternalSystem {id:$externalSystem}) " +
 		" MERGE (u:User)-[r:IS_LINKED_WITH {externalId:$externalId}]->(e) " +
-		" ON CREATE SET r.externalId=$externalId, r.syncDate=$syncDate, u.id=randomUUID(), u.createdAt=$createdAt, " +
+		" ON CREATE SET r.externalId=$externalId, r.externalOwnerId=$externalOwnerId, r.syncDate=$syncDate, u.id=randomUUID(), u.createdAt=$createdAt, " +
 		"               u.firstName=$firstName, u.lastName=$lastName, u.email=$email, " +
 		"               u.source=$source, u.sourceOfTruth=$sourceOfTruth, u.appSource=$appSource, " +
 		"               u:%s" +
@@ -52,18 +52,19 @@ func (r *userRepository) MergeUser(tenant string, syncDate time.Time, user entit
 	dbRecord, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
 		queryResult, err := tx.Run(fmt.Sprintf(query, "User_"+tenant),
 			map[string]interface{}{
-				"tenant":         tenant,
-				"externalSystem": user.ExternalSystem,
-				"externalId":     user.ExternalId,
-				"syncDate":       syncDate,
-				"firstName":      user.FirstName,
-				"lastName":       user.LastName,
-				"email":          user.Email,
-				"createdAt":      user.CreatedAt,
-				"source":         user.ExternalSystem,
-				"sourceOfTruth":  user.ExternalSystem,
-				"appSource":      user.ExternalSystem,
-				"now":            time.Now().UTC(),
+				"tenant":          tenant,
+				"externalSystem":  user.ExternalSystem,
+				"externalId":      user.ExternalId,
+				"externalOwnerId": user.ExternalOwnerId,
+				"syncDate":        syncDate,
+				"firstName":       user.FirstName,
+				"lastName":        user.LastName,
+				"email":           user.Email,
+				"createdAt":       user.CreatedAt,
+				"source":          user.ExternalSystem,
+				"sourceOfTruth":   user.ExternalSystem,
+				"appSource":       user.ExternalSystem,
+				"now":             time.Now().UTC(),
 			})
 		if err != nil {
 			return nil, err

@@ -9,6 +9,7 @@ type UserData struct {
 	Email     string
 	CreatedAt time.Time
 
-	ExternalId     string
-	ExternalSystem string
+	ExternalId      string
+	ExternalOwnerId string
+	ExternalSystem  string
 }

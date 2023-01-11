@@ -13,7 +13,7 @@ type ContactRepository interface {
 	MergePrimaryEmail(tenant, contactId, email, externalSystem string, createdAt time.Time) error
 	MergeAdditionalEmail(tenant, contactId, email, externalSystem string, createdAt time.Time) error
 	MergePrimaryPhoneNumber(tenant, contactId, phoneNumber, externalSystem string, createdAt time.Time) error
-	SetOwnerRelationship(tenant, contactId, userExternalId, externalSystemId string) error
+	SetOwnerRelationship(tenant, contactId, userExternalOwnerId, externalSystemId string) error
 	MergeTextCustomField(tenant, contactId string, field entity.TextCustomField, createdAt time.Time) error
 	MergeContactAddress(tenant, contactId string, contact entity.ContactData) error
 	MergeContactType(tenant, contactId, contactTypeName string) error
@@ -167,21 +167,21 @@ func (r *contactRepository) MergePrimaryPhoneNumber(tenant, contactId, e164, ext
 	return err
 }
 
-func (r *contactRepository) SetOwnerRelationship(tenant, contactId, userExternalId, externalSystemId string) error {
+func (r *contactRepository) SetOwnerRelationship(tenant, contactId, userExternalOwnerId, externalSystemId string) error {
 	session := utils.NewNeo4jWriteSession(*r.driver)
 	defer session.Close()
 
 	_, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
 		queryResult, err := tx.Run(`
 			MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant})
-			MATCH (u:User)-[:IS_LINKED_WITH {externalId:$userExternalId}]->(e:ExternalSystem {id:$externalSystemId})-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]->(t)
+			MATCH (u:User)-[:IS_LINKED_WITH {externalOwnerId:$userExternalOwnerId}]->(e:ExternalSystem {id:$externalSystemId})-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]->(t)
 			MERGE (u)-[r:OWNS]->(c)
 			return r`,
 			map[string]interface{}{
-				"tenant":           tenant,
-				"contactId":        contactId,
-				"externalSystemId": externalSystemId,
-				"userExternalId":   userExternalId,
+				"tenant":              tenant,
+				"contactId":           contactId,
+				"externalSystemId":    externalSystemId,
+				"userExternalOwnerId": userExternalOwnerId,
 			})
 		if err != nil {
 			return nil, err

@@ -28,7 +28,7 @@ type ContactData struct {
 	OrganizationsExternalIds      []string
 	PrimaryOrganizationExternalId string
 
-	UserOwnerExternalId string
+	UserExternalOwnerId string
 
 	TextCustomFields []TextCustomField
 

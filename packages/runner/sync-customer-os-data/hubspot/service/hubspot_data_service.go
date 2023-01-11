@@ -56,7 +56,7 @@ func (s *hubspotDataService) GetContactsForSync(batchSize int, runId string) []e
 			PrimaryEmail:        hubspotContactProperties.Email,
 			AdditionalEmails:    strings.Split(hubspotContactProperties.AdditionalEmails, ";"),
 			PrimaryE164:         hubspotContactProperties.PhoneNumber,
-			UserOwnerExternalId: hubspotContactProperties.OwnerId,
+			UserExternalOwnerId: hubspotContactProperties.OwnerId,
 			Country:             hubspotContactProperties.Country,
 			State:               hubspotContactProperties.State,
 			City:                hubspotContactProperties.City,
@@ -161,12 +161,13 @@ func (s *hubspotDataService) GetUsersForSync(batchSize int, runId string) []enti
 	customerOsUsers := []entity.UserData{}
 	for _, v := range hubspotOwners {
 		customerOsUsers = append(customerOsUsers, entity.UserData{
-			ExternalId:     v.Id,
-			ExternalSystem: s.SourceId(),
-			FirstName:      v.FirstName,
-			LastName:       v.LastName,
-			Email:          v.Email,
-			CreatedAt:      v.CreateDate.UTC(),
+			ExternalId:      strconv.FormatInt(v.UserId, 10),
+			ExternalOwnerId: v.Id,
+			ExternalSystem:  s.SourceId(),
+			FirstName:       v.FirstName,
+			LastName:        v.LastName,
+			Email:           v.Email,
+			CreatedAt:       v.CreateDate.UTC(),
 		})
 		s.owners[v.Id] = v
 	}
@@ -188,11 +189,14 @@ func (s *hubspotDataService) GetNotesForSync(batchSize int, runId string) []enti
 		}
 		// set main fields
 		noteForCustomerOs := entity.NoteData{
-			ExternalId:     v.Id,
-			ExternalSystem: s.SourceId(),
-			CreatedAt:      v.CreateDate.UTC(),
-			Html:           hubspotNoteProperties.NoteBody,
-			UserExternalId: hubspotNoteProperties.OwnerId,
+			ExternalId:          v.Id,
+			ExternalSystem:      s.SourceId(),
+			CreatedAt:           v.CreateDate.UTC(),
+			Html:                hubspotNoteProperties.NoteBody,
+			UserExternalOwnerId: hubspotNoteProperties.OwnerId,
+		}
+		if hubspotNoteProperties.CreatedByUserId.Valid {
+			noteForCustomerOs.UserExternalId = strconv.FormatFloat(hubspotNoteProperties.CreatedByUserId.Float64, 'f', 0, 64)
 		}
 		// set reference to all linked contacts
 		var contactsExternalIds []any
