@@ -2,135 +2,151 @@ package service
 
 import (
 	"context"
+	"errors"
 	"github.com/neo4j/neo4j-go-driver/v4/neo4j"
-	"github.com/openline-ai/openline-customer-os/packages/server/message-store/gen/proto"
-	pb "github.com/openline-ai/openline-customer-os/packages/server/message-store/gen/proto"
+	msProto "github.com/openline-ai/openline-customer-os/packages/server/message-store/proto/generated"
 	"github.com/openline-ai/openline-customer-os/packages/server/message-store/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/message-store/repository/entity"
 	"time"
 )
 
 type webChatMessageStoreService struct {
-	proto.UnimplementedWebChatMessageStoreServiceServer
+	msProto.UnimplementedWebChatMessageStoreServiceServer
 	driver               *neo4j.Driver
 	postgresRepositories *repository.PostgresRepositories
 	customerOSService    *customerOSService
+	commonStoreService   *commonStoreService
 }
 
-// sender == contact -> find contact by email
-// sender == user -> find user by email
-
-// sender == contact -> find conversation by initiator = contact and channel = webchat
-// sender == user -> find conversation by id
-func (s *webChatMessageStoreService) SaveMessage(ctx context.Context, input *pb.WebChatInputMessage) (*pb.Message, error) {
+func (s *webChatMessageStoreService) SaveMessage(ctx context.Context, input *msProto.WebChatInputMessage) (*msProto.Message, error) {
 	//var err error
 	//var conversation *gen.Conversation
 	//
-	var contactId string
-	var userId string
-	var initiatorId string
+	var conversation *Conversation
+	var participantId string
+	var participantUsername string
 
-	if input.Email == "" {
-		return nil, nil // TODO: return error
+	if input.ConversationId == nil && input.Email == nil {
+		return nil, errors.New("conversationId or email must be provided")
 	}
 	if input.Message == nil && input.Bytes == nil {
-		return nil, nil // TODO: return error
+		return nil, errors.New("message or bytes must be provided")
 	}
 
-	if input.SenderType == pb.SenderType_CONTACT {
-		contact, err := s.customerOSService.GetContactByEmail(input.Email)
-		if err != nil {
-			contactId, err = s.customerOSService.CreateContactWithEmail("openline", input.Email)
-			if err != nil {
-				return nil, err
-			}
-		} else {
-			contactId = contact.Id
-		}
-		initiatorId = contactId
-	} else if input.SenderType == pb.SenderType_USER {
-		user, err := s.customerOSService.GetUserByEmail(input.Email)
+	tenant := "openline" //TODO get tenant from context
+
+	if input.ConversationId != nil {
+		conv, err := s.customerOSService.GetConversationById(tenant, *input.ConversationId)
 		if err != nil {
 			return nil, err
-		} else {
-			userId = user.Id
 		}
-		initiatorId = userId
+		conversation = conv
 	}
 
-	//todo
-	//conversationId, err := s.customerOSService.GetWebChatConversationIdWithContactInitiator(contactId)
-	//if err != nil {
-
-	//todo
-	conversationId, err := s.customerOSService.CreateConversation("openline", initiatorId, convertSenderTypeToConversationSenderType(input.SenderType), entity.WEB_CHAT)
-	if err != nil {
-		return nil, err
+	if input.SenderType == msProto.SenderType_CONTACT {
+		contactId, err := s.getContactIdWithEmailOrCreate(tenant, *input.Email)
+		if err != nil {
+			return nil, err
+		}
+		participantId = contactId
+	} else if input.SenderType == msProto.SenderType_USER {
+		user, err := s.customerOSService.GetUserByEmail(*input.Email)
+		if err != nil {
+			return nil, err
+		}
+		participantId = user.Id
 	}
-	//}
+
+	if participantId == "" {
+		return nil, errors.New("participant not found")
+	}
+
+	participantUsername = *input.Email
+
+	if input.ConversationId == nil {
+		conv, err := s.getActiveConversationOrCreate(tenant, participantId, *input.Email, input.SenderType)
+		if err != nil {
+			return nil, err
+		}
+		conversation = conv
+	}
 
 	conversationEvent := entity.ConversationEvent{
-		TenantId:       "openline", //todo
-		ConversationId: conversationId,
+		TenantName:     tenant,
+		ConversationId: conversation.Id,
 		Type:           entity.WEB_CHAT,
+		Subtype:        s.commonStoreService.ConvertMSSubtypeToEntitySubtype(input.Subtype),
 		Content:        *input.Message,
 		Source:         entity.OPENLINE,
-		Direction:      encodeConversationEventDirection(input.Direction),
-		CreateDate:     time.Time{},
+		Direction:      s.commonStoreService.ConvertMSDirectionToEntityDirection(input.Direction),
+		CreateDate:     time.Now(),
+
+		InitiatorUsername: conversation.InitiatorUsername,
+
+		SenderId:       participantId,
+		SenderUsername: participantUsername,
+
+		OriginalJson: "TODO",
 	}
 
-	if input.GetDirection() == pb.MessageDirection_INBOUND {
-		conversationEvent.SenderId = contactId
+	if input.GetDirection() == msProto.MessageDirection_INBOUND {
 		conversationEvent.SenderType = entity.CONTACT
 	} else {
-		conversationEvent.SenderId = userId
 		conversationEvent.SenderType = entity.USER
 	}
 
 	s.postgresRepositories.ConversationEventRepository.Save(&conversationEvent)
 
-	//id := int64(conversationEvent.ID)
-	//mi := &pb.Message{
-	//	Id:        id,
-	//	FeedId:    &conversationid,
-	//	Type:      pb.MessageType_MESSAGE,
-	//	Message:   conversationItem.Message,
-	//	Direction: decodeDirection(conversationItem.Direction),
-	//	Channel:   decodeChannel(conversationItem.Channel),
-	//	Username:  message.Username,
-	//	UserId:    userId,
-	//	ContactId: contactId,
-	//	Time:      timestamppb.New(now),
-	//}
-	return nil, nil
+	_, err := s.customerOSService.UpdateConversation(tenant, conversation.Id, participantId, s.commonStoreService.ConvertMSSenderTypeToEntitySenderType(input.SenderType))
+	if err != nil {
+		return nil, err
+	}
+
+	return s.commonStoreService.EncodeConversationEventToMS(conversationEvent), nil
 }
 
-func convertSenderTypeToConversationSenderType(senderType pb.SenderType) entity.SenderType {
-	switch senderType {
-	case pb.SenderType_CONTACT:
-		return entity.CONTACT
-	case pb.SenderType_USER:
-		return entity.USER
-	default:
-		return entity.CONTACT
+func (s *webChatMessageStoreService) getContactIdWithEmailOrCreate(tenant string, email string) (string, error) {
+	contact, err := s.customerOSService.GetContactByEmail(email)
+	if err != nil {
+		contactId, err := s.customerOSService.CreateContactWithEmail(tenant, email)
+		if err != nil {
+			return "", err
+		}
+		return contactId, nil
+	} else {
+		return contact.Id, nil
 	}
 }
 
-func encodeConversationEventDirection(direction pb.MessageDirection) entity.Direction {
-	switch direction {
-	case pb.MessageDirection_INBOUND:
-		return entity.INBOUND
-	case pb.MessageDirection_OUTBOUND:
-		return entity.OUTBOUND
-	default:
-		return entity.OUTBOUND
+func (s *webChatMessageStoreService) getActiveConversationOrCreate(tenant string, participantId string, initiatorUsername string, senderType msProto.SenderType) (*Conversation, error) {
+	var conversation *Conversation
+	var err error
+
+	if senderType == msProto.SenderType_CONTACT {
+		conversation, err = s.customerOSService.GetWebChatConversationWithContactInitiator(tenant, participantId)
+	} else if senderType == msProto.SenderType_USER {
+		conversation, err = s.customerOSService.GetWebChatConversationWithUserInitiator(tenant, participantId)
 	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if conversation == nil {
+		conversation, err = s.customerOSService.CreateConversation(tenant, participantId, initiatorUsername, s.commonStoreService.ConvertMSSenderTypeToEntitySenderType(senderType), entity.WEB_CHAT)
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	return conversation, nil
 }
 
-func NewWebChatMessageStoreService(driver *neo4j.Driver, postgresRepositories *repository.PostgresRepositories, customerOSService *customerOSService) *webChatMessageStoreService {
+func NewWebChatMessageStoreService(driver *neo4j.Driver, postgresRepositories *repository.PostgresRepositories, customerOSService *customerOSService, commonStoreService *commonStoreService) *webChatMessageStoreService {
 	ms := new(webChatMessageStoreService)
 	ms.driver = driver
 	ms.postgresRepositories = postgresRepositories
 	ms.customerOSService = customerOSService
+	ms.commonStoreService = commonStoreService
 	return ms
 }
