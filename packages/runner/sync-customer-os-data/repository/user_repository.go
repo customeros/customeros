@@ -43,7 +43,7 @@ func (r *userRepository) MergeUser(tenant string, syncDate time.Time, user entit
 		" WITH u, t " +
 		" MERGE (u)-[:USER_BELONGS_TO_TENANT]->(t)" +
 		" WITH u " +
-		"FOREACH (x in CASE WHEN u.sourceOfTruth <> $source THEN [u] ELSE [] END | " +
+		" FOREACH (x in CASE WHEN u.sourceOfTruth <> $source THEN [u] ELSE [] END | " +
 		"  MERGE (x)-[:ALTERNATE]->(alt:AlternateUser {source:$source, id:x.id}) " +
 		"    SET alt.updatedAt=$now, alt.appSource=$appSource, alt.email=$email, alt.firstName=$firstName, alt.lastName=$lastName " +
 		") " +
