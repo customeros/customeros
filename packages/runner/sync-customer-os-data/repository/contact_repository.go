@@ -201,8 +201,14 @@ func (r *contactRepository) MergeTextCustomField(tenant, contactId string, field
 
 	query := "MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) " +
 		" MERGE (f:TextField:CustomField {name: $name, datatype:$datatype})<-[:HAS_PROPERTY]-(c) " +
-		" ON CREATE SET f.textValue=$value, f.id=randomUUID(), f.createdAt=$createdAt, f.source=$source, f.sourceOfTruth=$sourceOfTruth, f.appSource=$appSource, f:%s " +
-		" ON MATCH SET f.textValue=$value"
+		" ON CREATE SET f.textValue=$value, f.id=randomUUID(), f.createdAt=$createdAt, " +
+		"				f.source=$source, f.sourceOfTruth=$sourceOfTruth, f.appSource=$appSource, f:%s " +
+		" ON MATCH SET 	f.textValue = CASE WHEN f.sourceOfTruth=$sourceOfTruth THEN $value ELSE f.textValue END " +
+		" WITH f " +
+		" FOREACH (x in CASE WHEN f.sourceOfTruth <> $source THEN [f] ELSE [] END | " +
+		"  MERGE (x)-[:ALTERNATE]->(alt:AlternateCustomField:AlternateTextField {source:$source, id:x.id}) " +
+		"    SET alt.updatedAt=$now, alt.appSource=$appSource, alt.textValue=$value " +
+		" ) "
 
 	_, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
 		_, err := tx.Run(fmt.Sprintf(query, "CustomField_"+tenant),
@@ -216,6 +222,7 @@ func (r *contactRepository) MergeTextCustomField(tenant, contactId string, field
 				"source":        field.ExternalSystem,
 				"sourceOfTruth": field.ExternalSystem,
 				"appSource":     field.ExternalSystem,
+				"now":           time.Now().UTC(),
 			})
 		return nil, err
 	})
