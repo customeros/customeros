@@ -7,15 +7,25 @@ import (
 )
 
 type PostgresCommonRepositoryContainer struct {
-	AppKeyRepo AppKeyRepository
+	AppKeyRepo       AppKeyRepository
+	UserToTenantRepo UserToTenantRepository
 }
 
 func InitCommonRepositories(db *gorm.DB) *PostgresCommonRepositoryContainer {
 	p := &PostgresCommonRepositoryContainer{
-		AppKeyRepo: NewAppKeyRepo(db),
+		AppKeyRepo:       NewAppKeyRepo(db),
+		UserToTenantRepo: NewUserToTenantRepo(db),
 	}
 
-	err := db.AutoMigrate(&entity.AppKey{})
+	var err error
+
+	err = db.AutoMigrate(&entity.AppKey{})
+	if err != nil {
+		log.Print(err)
+		panic(err)
+	}
+
+	err = db.AutoMigrate(&entity.UserToTenant{})
 	if err != nil {
 		log.Print(err)
 		panic(err)
