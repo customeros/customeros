@@ -13,7 +13,7 @@ require (
 	github.com/lib/pq v1.10.7
 	github.com/machinebox/graphql v0.2.2
 	github.com/neo4j/neo4j-go-driver/v4 v4.4.4
-	github.com/openline-ai/openline-customer-os/packages/server/customer-os-api v0.0.0-20230111092901-0080ace6a6b6
+	github.com/openline-ai/openline-customer-os/packages/server/customer-os-api v0.0.0-20230111103821-4169626191c1
 	github.com/sirupsen/logrus v1.9.0
 	github.com/testcontainers/testcontainers-go v0.17.0
 	github.com/vektah/gqlparser/v2 v2.5.1
