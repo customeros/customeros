@@ -4,6 +4,7 @@ import "time"
 
 type Owner struct {
 	Id                  string    `gorm:"column:id"`
+	UserId              int64     `gorm:"column:userid"`
 	AirbyteAbId         string    `gorm:"column:_airbyte_ab_id"`
 	AirbyteOwnersHashid string    `gorm:"column:_airbyte_owners_hashid"`
 	CreateDate          time.Time `gorm:"column:createdat"`

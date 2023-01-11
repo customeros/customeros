@@ -7,6 +7,7 @@ type NoteData struct {
 	Html                string
 	CreatedAt           time.Time
 	UserExternalId      string
+	UserExternalOwnerId string
 	ContactsExternalIds []string
 	ExternalId          string
 	ExternalSystem      string
