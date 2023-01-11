@@ -30,7 +30,7 @@ func (r *noteRepository) MergeNote(tenant string, syncDate time.Time, note entit
 
 	// Create new Note if it does not exist
 	// If Note exists, and sourceOfTruth is acceptable then update Note.
-	//   otherwise create/update AlternateNote for incoming source, with a new relationship 'ALTERNATE_FOR'
+	//   otherwise create/update AlternateNote for incoming source, with a new relationship 'ALTERNATE'
 	query := "MATCH (t:Tenant {name:$tenant})<-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]-(e:ExternalSystem {id:$externalSystem}) " +
 		"MERGE (n:Note)-[r:IS_LINKED_WITH {externalId:$externalId}]->(e) " +
 		"ON CREATE SET r.syncDate=$syncDate, n.id=randomUUID(), n.createdAt=$createdAt, " +
@@ -40,9 +40,8 @@ func (r *noteRepository) MergeNote(tenant string, syncDate time.Time, note entit
 		"             n.html = CASE WHEN n.sourceOfTruth=$sourceOfTruth THEN $html ELSE n.html END " +
 		"WITH n " +
 		"FOREACH (x in CASE WHEN n.sourceOfTruth <> $source THEN [n] ELSE [] END | " +
-		"  MERGE (x)-[:ALTERNATE_FOR]->(alt:AlternateNote {source:$source, id:x.id}) " +
-		"    ON CREATE SET alt.updatedAt=$now, alt.appSource=$appSource, alt.html=$html " +
-		"    ON MATCH SET alt.updatedAt=$now, alt.appSource=$appSource, alt.html=$html " +
+		"  MERGE (x)-[:ALTERNATE]->(alt:AlternateNote {source:$source, id:x.id}) " +
+		"    SET alt.updatedAt=$now, alt.appSource=$appSource, alt.html=$html " +
 		") " +
 		"RETURN n.id"
 

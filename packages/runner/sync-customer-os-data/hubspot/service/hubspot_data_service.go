@@ -169,7 +169,6 @@ func (s *hubspotDataService) GetUsersForSync(batchSize int, runId string) []enti
 			LastName:       v.LastName,
 			Email:          v.Email,
 			CreatedAt:      v.CreateDate.UTC(),
-			Readonly:       true,
 		})
 		s.owners[v.Id] = v
 	}
