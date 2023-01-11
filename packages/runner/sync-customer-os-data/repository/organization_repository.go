@@ -28,13 +28,28 @@ func (r *organizationRepository) MergeOrganizationAddress(tenant, organizationId
 	session := utils.NewNeo4jWriteSession(*r.driver)
 	defer session.Close()
 
+	// Create new Address if it does not exist with given source
+	// If Address exists, and sourceOfTruth is acceptable then update it.
+	//   otherwise create/update AlternateAddress for incoming source, with a new relationship 'ALTERNATE'
 	query := "MATCH (org:Organization {id:$organizationId})-[:ORGANIZATION_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) " +
 		" MERGE (org)-[:LOCATED_AT]->(a:Address {source:$source}) " +
 		" ON CREATE SET a.id=randomUUID(), a.appSource=$appSource, a.sourceOfTruth=$sourceOfTruth, " +
-		"	a.country=$country, a.state=$state, a.city=$city, a.address=$address, " +
-		"	a.address2=$address2, a.zip=$zip, a.phone=$phone, a:%s " +
-		" ON MATCH SET 	a.country=$country, a.state=$state, a.city=$city, a.address=$address, " +
-		"	a.address2=$address2, a.zip=$zip, a.phone=$phone"
+		"				a.country=$country, a.state=$state, a.city=$city, a.address=$address, " +
+		"				a.address2=$address2, a.zip=$zip, a.phone=$phone, a:%s " +
+		" ON MATCH SET 	" +
+		"             a.country = CASE WHEN a.sourceOfTruth=$sourceOfTruth THEN $country ELSE a.country END, " +
+		"             a.state = CASE WHEN a.sourceOfTruth=$sourceOfTruth THEN $state ELSE a.state END, " +
+		"             a.city = CASE WHEN a.sourceOfTruth=$sourceOfTruth THEN $city ELSE a.city END, " +
+		"             a.address = CASE WHEN a.sourceOfTruth=$sourceOfTruth THEN $address ELSE a.address END, " +
+		"             a.address2 = CASE WHEN a.sourceOfTruth=$sourceOfTruth THEN $address2 ELSE a.address2 END, " +
+		"             a.zip = CASE WHEN a.sourceOfTruth=$sourceOfTruth THEN $zip ELSE a.zip END, " +
+		"             a.phone = CASE WHEN a.sourceOfTruth=$sourceOfTruth THEN $phone ELSE a.phone END " +
+		" WITH a " +
+		" FOREACH (x in CASE WHEN a.sourceOfTruth <> $source THEN [a] ELSE [] END | " +
+		"  MERGE (x)-[:ALTERNATE]->(alt:AlternateAddress {source:$source, id:x.id}) " +
+		"    SET alt.updatedAt=$now, alt.appSource=$appSource, " +
+		" alt.country=$country, alt.state=$state, alt.city=$city, alt.address=$address, alt.address2=$address2, alt.zip=$zip, alt.phone=$phone " +
+		") "
 
 	_, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
 		_, err := tx.Run(fmt.Sprintf(query, "Address_"+tenant),
@@ -51,6 +66,7 @@ func (r *organizationRepository) MergeOrganizationAddress(tenant, organizationId
 				"source":         organization.ExternalSystem,
 				"sourceOfTruth":  organization.ExternalSystem,
 				"appSource":      organization.ExternalSystem,
+				"now":            time.Now().UTC(),
 			})
 		return nil, err
 	})
