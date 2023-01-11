@@ -27,7 +27,7 @@ func (r *userRepository) MergeUser(tenant string, syncDate time.Time, user entit
 	defer session.Close()
 
 	// Create new User if it does not exist
-	// If User exists, and sourceOfTruth is acceptable then update User.
+	// If User exists, and sourceOfTruth is acceptable then update it.
 	//   otherwise create/update AlternateUser for incoming source, with a new relationship 'ALTERNATE'
 	// Link User with Tenant
 	query := "MATCH (t:Tenant {name:$tenant})<-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]-(e:ExternalSystem {id:$externalSystem}) " +

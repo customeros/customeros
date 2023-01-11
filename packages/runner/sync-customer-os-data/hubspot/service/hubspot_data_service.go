@@ -57,7 +57,6 @@ func (s *hubspotDataService) GetContactsForSync(batchSize int, runId string) []e
 			AdditionalEmails:    strings.Split(hubspotContactProperties.AdditionalEmails, ";"),
 			PrimaryE164:         hubspotContactProperties.PhoneNumber,
 			UserOwnerExternalId: hubspotContactProperties.OwnerId,
-			Readonly:            true,
 			Country:             hubspotContactProperties.Country,
 			State:               hubspotContactProperties.State,
 			City:                hubspotContactProperties.City,

@@ -33,18 +33,31 @@ func (r *contactRepository) MergeContact(tenant string, syncDate time.Time, cont
 	session := utils.NewNeo4jWriteSession(*r.driver)
 	defer session.Close()
 
+	// Create new Contact if it does not exist
+	// If Contact exists, and sourceOfTruth is acceptable then update it.
+	//   otherwise create/update AlternateContact for incoming source, with a new relationship 'ALTERNATE'
+	// Link Contact with Tenant
+	query := "MATCH (t:Tenant {name:$tenant})<-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]-(e:ExternalSystem {id:$externalSystem}) " +
+		" MERGE (c:Contact)-[r:IS_LINKED_WITH {externalId:$externalId}]->(e) " +
+		" ON CREATE SET r.externalId=$externalId, r.syncDate=$syncDate, c.id=randomUUID(), c.createdAt=$createdAt, " +
+		"				c.source=$source, c.sourceOfTruth=$sourceOfTruth, c.appSource=$appSource, " +
+		"				c.firstName=$firstName, c.lastName=$lastName,  " +
+		" 				c:%s " +
+		" ON MATCH SET 	r.syncDate = CASE WHEN c.sourceOfTruth=$sourceOfTruth THEN $syncDate ELSE r.syncDate END, " +
+		"				c.firstName = CASE WHEN c.sourceOfTruth=$sourceOfTruth THEN $firstName ELSE c.firstName END, " +
+		"				c.lastName = CASE WHEN c.sourceOfTruth=$sourceOfTruth THEN $lastName ELSE c.lastName END " +
+		" WITH c, t " +
+		" MERGE (c)-[:CONTACT_BELONGS_TO_TENANT]->(t) " +
+		" WITH c " +
+		" FOREACH (x in CASE WHEN c.sourceOfTruth <> $source THEN [c] ELSE [] END | " +
+		"  MERGE (x)-[:ALTERNATE]->(alt:AlternateContact {source:$source, id:x.id}) " +
+		"    SET alt.updatedAt=$now, alt.appSource=$appSource, alt.firstName=$firstName, alt.lastName=$lastName " +
+		" ) " +
+		" RETURN c.id"
+
 	dbRecord, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
 		queryResult, err := tx.Run(fmt.Sprintf(
-			"MATCH (t:Tenant {name:$tenant})<-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]-(e:ExternalSystem {id:$externalSystem}) "+
-				" MERGE (c:Contact)-[r:IS_LINKED_WITH {externalId:$externalId}]->(e) "+
-				" ON CREATE SET r.externalId=$externalId, c.id=randomUUID(), c.createdAt=$createdAt, "+
-				"				c.firstName=$firstName, c.lastName=$lastName, r.syncDate=$syncDate, c.readonly=$readonly, "+
-				"				c.source=$source, c.sourceOfTruth=$sourceOfTruth, c.appSource=$appSource, "+
-				" 				c:%s "+
-				" ON MATCH SET 	c.firstName=$firstName, c.lastName=$lastName, r.syncDate=$syncDate, c.readonly=$readonly "+
-				" WITH c, t "+
-				" MERGE (c)-[:CONTACT_BELONGS_TO_TENANT]->(t) "+
-				" RETURN c.id", "Contact_"+tenant),
+			query, "Contact_"+tenant),
 			map[string]interface{}{
 				"tenant":         tenant,
 				"externalSystem": contact.ExternalSystem,
@@ -52,11 +65,11 @@ func (r *contactRepository) MergeContact(tenant string, syncDate time.Time, cont
 				"firstName":      contact.FirstName,
 				"lastName":       contact.LastName,
 				"syncDate":       syncDate,
-				"readonly":       contact.Readonly,
 				"createdAt":      contact.CreatedAt,
 				"source":         contact.ExternalSystem,
 				"sourceOfTruth":  contact.ExternalSystem,
 				"appSource":      contact.ExternalSystem,
+				"now":            time.Now().UTC(),
 			})
 		if err != nil {
 			return nil, err
