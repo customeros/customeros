@@ -50,7 +50,7 @@ func (r *organizationRepository) MergeOrganization(tenant string, syncDate time.
 		" WITH org, t " +
 		" MERGE (org)-[:ORGANIZATION_BELONGS_TO_TENANT]->(t) " +
 		" WITH org " +
-		" FOREACH (x in CASE WHEN org.sourceOfTruth <> $source THEN [org] ELSE [] END | " +
+		" FOREACH (x in CASE WHEN org.sourceOfTruth <> $sourceOfTruth THEN [org] ELSE [] END | " +
 		"  MERGE (x)-[:ALTERNATE]->(alt:AlternateOrganization {source:$source, id:x.id}) " +
 		"    SET alt.updatedAt=$now, alt.appSource=$appSource, " +
 		" 		alt.name=$name, alt.description=$description, org.domain=$domain, org.website=$website, org.industry=$industry, org.isPublic=$isPublic " +
@@ -142,7 +142,7 @@ func (r *organizationRepository) MergeOrganizationAddress(tenant, organizationId
 		"             a.zip = CASE WHEN a.sourceOfTruth=$sourceOfTruth THEN $zip ELSE a.zip END, " +
 		"             a.phone = CASE WHEN a.sourceOfTruth=$sourceOfTruth THEN $phone ELSE a.phone END " +
 		" WITH a " +
-		" FOREACH (x in CASE WHEN a.sourceOfTruth <> $source THEN [a] ELSE [] END | " +
+		" FOREACH (x in CASE WHEN a.sourceOfTruth <> $sourceOfTruth THEN [a] ELSE [] END | " +
 		"  MERGE (x)-[:ALTERNATE]->(alt:AlternateAddress {source:$source, id:x.id}) " +
 		"    SET alt.updatedAt=$now, alt.appSource=$appSource, " +
 		" alt.country=$country, alt.state=$state, alt.city=$city, alt.address=$address, alt.address2=$address2, alt.zip=$zip, alt.phone=$phone " +

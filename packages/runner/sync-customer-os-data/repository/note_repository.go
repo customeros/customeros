@@ -39,7 +39,7 @@ func (r *noteRepository) MergeNote(tenant string, syncDate time.Time, note entit
 		"ON MATCH SET r.syncDate = CASE WHEN n.sourceOfTruth=$sourceOfTruth THEN $syncDate ELSE r.syncDate END, " +
 		"             n.html = CASE WHEN n.sourceOfTruth=$sourceOfTruth THEN $html ELSE n.html END " +
 		"WITH n " +
-		"FOREACH (x in CASE WHEN n.sourceOfTruth <> $source THEN [n] ELSE [] END | " +
+		"FOREACH (x in CASE WHEN n.sourceOfTruth <> $sourceOfTruth THEN [n] ELSE [] END | " +
 		"  MERGE (x)-[:ALTERNATE]->(alt:AlternateNote {source:$source, id:x.id}) " +
 		"    SET alt.updatedAt=$now, alt.appSource=$appSource, alt.html=$html " +
 		") " +

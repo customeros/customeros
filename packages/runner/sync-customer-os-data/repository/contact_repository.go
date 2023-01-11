@@ -49,7 +49,7 @@ func (r *contactRepository) MergeContact(tenant string, syncDate time.Time, cont
 		" WITH c, t " +
 		" MERGE (c)-[:CONTACT_BELONGS_TO_TENANT]->(t) " +
 		" WITH c " +
-		" FOREACH (x in CASE WHEN c.sourceOfTruth <> $source THEN [c] ELSE [] END | " +
+		" FOREACH (x in CASE WHEN c.sourceOfTruth <> $sourceOfTruth THEN [c] ELSE [] END | " +
 		"  MERGE (x)-[:ALTERNATE]->(alt:AlternateContact {source:$source, id:x.id}) " +
 		"    SET alt.updatedAt=$now, alt.appSource=$appSource, alt.firstName=$firstName, alt.lastName=$lastName " +
 		" ) " +
@@ -205,7 +205,7 @@ func (r *contactRepository) MergeTextCustomField(tenant, contactId string, field
 		"				f.source=$source, f.sourceOfTruth=$sourceOfTruth, f.appSource=$appSource, f:%s " +
 		" ON MATCH SET 	f.textValue = CASE WHEN f.sourceOfTruth=$sourceOfTruth THEN $value ELSE f.textValue END " +
 		" WITH f " +
-		" FOREACH (x in CASE WHEN f.sourceOfTruth <> $source THEN [f] ELSE [] END | " +
+		" FOREACH (x in CASE WHEN f.sourceOfTruth <> $sourceOfTruth THEN [f] ELSE [] END | " +
 		"  MERGE (x)-[:ALTERNATE]->(alt:AlternateCustomField:AlternateTextField {source:$source, id:x.id}) " +
 		"    SET alt.updatedAt=$now, alt.appSource=$appSource, alt.textValue=$value " +
 		" ) "
@@ -248,7 +248,7 @@ func (r *contactRepository) MergeContactAddress(tenant, contactId string, contac
 		"             a.zip = CASE WHEN a.sourceOfTruth=$sourceOfTruth THEN $zip ELSE a.zip END, " +
 		"             a.fax = CASE WHEN a.sourceOfTruth=$sourceOfTruth THEN $fax ELSE a.fax END " +
 		" WITH a " +
-		" FOREACH (x in CASE WHEN a.sourceOfTruth <> $source THEN [a] ELSE [] END | " +
+		" FOREACH (x in CASE WHEN a.sourceOfTruth <> $sourceOfTruth THEN [a] ELSE [] END | " +
 		"  MERGE (x)-[:ALTERNATE]->(alt:AlternateAddress {source:$source, id:x.id}) " +
 		"    SET alt.updatedAt=$now, alt.appSource=$appSource, " +
 		" alt.country=$country, alt.state=$state, alt.city=$city, alt.address=$address, alt.zip=$zip, alt.fax=$fax " +
