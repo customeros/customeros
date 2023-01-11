@@ -16,7 +16,6 @@ type ContactData struct {
 	JobTitle  string
 	CreatedAt time.Time
 	UpdatedAt time.Time
-	Readonly  bool
 
 	ExternalId     string
 	ExternalSystem string

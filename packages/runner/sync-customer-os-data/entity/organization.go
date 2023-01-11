@@ -12,7 +12,6 @@ type OrganizationData struct {
 	IsPublic       bool
 	CreatedAt      time.Time
 	UpdatedAt      time.Time
-	Readonly       bool
 	ExternalId     string
 	ExternalSystem string
 	Country        string

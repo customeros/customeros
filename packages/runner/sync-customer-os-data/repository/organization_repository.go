@@ -10,8 +10,8 @@ import (
 
 type OrganizationRepository interface {
 	MergeOrganization(tenant string, syncDate time.Time, organization entity.OrganizationData) (string, error)
-	MergeOrganizationAddress(tenant, organizationId string, organization entity.OrganizationData) error
 	MergeOrganizationType(tenant, organizationId, organizationTypeName string) error
+	MergeOrganizationAddress(tenant, organizationId string, organization entity.OrganizationData) error
 }
 
 type organizationRepository struct {
@@ -24,54 +24,37 @@ func NewOrganizationRepository(driver *neo4j.Driver) OrganizationRepository {
 	}
 }
 
-func (r *organizationRepository) MergeOrganizationAddress(tenant, organizationId string, organization entity.OrganizationData) error {
-	session := utils.NewNeo4jWriteSession(*r.driver)
-	defer session.Close()
-
-	query := "MATCH (org:Organization {id:$organizationId})-[:ORGANIZATION_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) " +
-		" MERGE (org)-[:LOCATED_AT]->(a:Address {source:$source}) " +
-		" ON CREATE SET a.id=randomUUID(), a.appSource=$appSource, a.sourceOfTruth=$sourceOfTruth, " +
-		"	a.country=$country, a.state=$state, a.city=$city, a.address=$address, " +
-		"	a.address2=$address2, a.zip=$zip, a.phone=$phone, a:%s " +
-		" ON MATCH SET 	a.country=$country, a.state=$state, a.city=$city, a.address=$address, " +
-		"	a.address2=$address2, a.zip=$zip, a.phone=$phone"
-
-	_, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
-		_, err := tx.Run(fmt.Sprintf(query, "Address_"+tenant),
-			map[string]interface{}{
-				"tenant":         tenant,
-				"organizationId": organizationId,
-				"country":        organization.Country,
-				"state":          organization.State,
-				"city":           organization.City,
-				"address":        organization.Address,
-				"address2":       organization.Address2,
-				"zip":            organization.Zip,
-				"phone":          organization.Phone,
-				"source":         organization.ExternalSystem,
-				"sourceOfTruth":  organization.ExternalSystem,
-				"appSource":      organization.ExternalSystem,
-			})
-		return nil, err
-	})
-	return err
-}
-
 func (r *organizationRepository) MergeOrganization(tenant string, syncDate time.Time, organization entity.OrganizationData) (string, error) {
 	session := utils.NewNeo4jWriteSession(*r.driver)
 	defer session.Close()
 
+	// Create new Organization if it does not exist
+	// If Organization exists, and sourceOfTruth is acceptable then update it.
+	//   otherwise create/update AlternateOrganization for incoming source, with a new relationship 'ALTERNATE'
+	// Link Organization with Tenant
 	query := "MATCH (t:Tenant {name:$tenant})<-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]-(e:ExternalSystem {id:$externalSystem}) " +
 		" MERGE (org:Organization)-[r:IS_LINKED_WITH {externalId:$externalId}]->(e) " +
-		" ON CREATE SET r.externalId=$externalId, org.id=randomUUID(), org.createdAt=$createdAt, " +
-		"               org.name=$name, org.description=$description, r.syncDate=$syncDate, org.readonly=$readonly, " +
-		"               org.domain=$domain, org.website=$website, org.industry=$industry, org.isPublic=$isPublic, " +
+		" ON CREATE SET r.externalId=$externalId, r.syncDate=$syncDate, " +
+		"				org.id=randomUUID(), org.createdAt=$createdAt, " +
+		"               org.name=$name, org.description=$description, org.domain=$domain, " +
+		"               org.website=$website, org.industry=$industry, org.isPublic=$isPublic, " +
 		"				org.source=$source, org.sourceOfTruth=$sourceOfTruth, org.appSource=$appSource, " +
 		"				org:%s " +
-		" ON MATCH SET org.name=$name, org.description=$description, r.syncDate=$syncDate, org.readonly=$readonly, " +
-		"              org.domain=$domain, org.website=$website, org.industry=$industry, org.isPublic=$isPublic " +
+		" ON MATCH SET 	r.syncDate = CASE WHEN org.sourceOfTruth=$sourceOfTruth THEN $syncDate ELSE r.syncDate END, " +
+		"				org.name = CASE WHEN org.sourceOfTruth=$sourceOfTruth THEN $name ELSE org.name END, " +
+		"				org.description = CASE WHEN org.sourceOfTruth=$sourceOfTruth THEN $description ELSE org.description END, " +
+		"				org.domain = CASE WHEN org.sourceOfTruth=$sourceOfTruth THEN $domain ELSE org.domain END, " +
+		"				org.website = CASE WHEN org.sourceOfTruth=$sourceOfTruth THEN $website ELSE org.website END, " +
+		"				org.industry = CASE WHEN org.sourceOfTruth=$sourceOfTruth THEN $industry ELSE org.industry END, " +
+		"				org.isPublic = CASE WHEN org.sourceOfTruth=$sourceOfTruth THEN $isPublic ELSE org.isPublic END " +
 		" WITH org, t " +
 		" MERGE (org)-[:ORGANIZATION_BELONGS_TO_TENANT]->(t) " +
+		" WITH org " +
+		" FOREACH (x in CASE WHEN org.sourceOfTruth <> $sourceOfTruth THEN [org] ELSE [] END | " +
+		"  MERGE (x)-[:ALTERNATE]->(alt:AlternateOrganization {source:$source, id:x.id}) " +
+		"    SET alt.updatedAt=$now, alt.appSource=$appSource, " +
+		" 		alt.name=$name, alt.description=$description, org.domain=$domain, org.website=$website, org.industry=$industry, org.isPublic=$isPublic " +
+		") " +
 		" RETURN org.id"
 
 	dbRecord, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
@@ -83,7 +66,6 @@ func (r *organizationRepository) MergeOrganization(tenant string, syncDate time.
 				"syncDate":       syncDate,
 				"name":           organization.Name,
 				"description":    organization.Description,
-				"readonly":       organization.Readonly,
 				"createdAt":      organization.CreatedAt,
 				"domain":         organization.Domain,
 				"website":        organization.Website,
@@ -92,6 +74,7 @@ func (r *organizationRepository) MergeOrganization(tenant string, syncDate time.
 				"source":         organization.ExternalSystem,
 				"sourceOfTruth":  organization.ExternalSystem,
 				"appSource":      organization.ExternalSystem,
+				"now":            time.Now().UTC(),
 			})
 		if err != nil {
 			return nil, err
@@ -134,6 +117,55 @@ func (r *organizationRepository) MergeOrganizationType(tenant, organizationId, o
 			return nil, err
 		}
 		return nil, nil
+	})
+	return err
+}
+
+func (r *organizationRepository) MergeOrganizationAddress(tenant, organizationId string, organization entity.OrganizationData) error {
+	session := utils.NewNeo4jWriteSession(*r.driver)
+	defer session.Close()
+
+	// Create new Address if it does not exist with given source
+	// If Address exists, and sourceOfTruth is acceptable then update it.
+	//   otherwise create/update AlternateAddress for incoming source, with a new relationship 'ALTERNATE'
+	query := "MATCH (org:Organization {id:$organizationId})-[:ORGANIZATION_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) " +
+		" MERGE (org)-[:LOCATED_AT]->(a:Address {source:$source}) " +
+		" ON CREATE SET a.id=randomUUID(), a.appSource=$appSource, a.sourceOfTruth=$sourceOfTruth, " +
+		"				a.country=$country, a.state=$state, a.city=$city, a.address=$address, " +
+		"				a.address2=$address2, a.zip=$zip, a.phone=$phone, a:%s " +
+		" ON MATCH SET 	" +
+		"             a.country = CASE WHEN a.sourceOfTruth=$sourceOfTruth THEN $country ELSE a.country END, " +
+		"             a.state = CASE WHEN a.sourceOfTruth=$sourceOfTruth THEN $state ELSE a.state END, " +
+		"             a.city = CASE WHEN a.sourceOfTruth=$sourceOfTruth THEN $city ELSE a.city END, " +
+		"             a.address = CASE WHEN a.sourceOfTruth=$sourceOfTruth THEN $address ELSE a.address END, " +
+		"             a.address2 = CASE WHEN a.sourceOfTruth=$sourceOfTruth THEN $address2 ELSE a.address2 END, " +
+		"             a.zip = CASE WHEN a.sourceOfTruth=$sourceOfTruth THEN $zip ELSE a.zip END, " +
+		"             a.phone = CASE WHEN a.sourceOfTruth=$sourceOfTruth THEN $phone ELSE a.phone END " +
+		" WITH a " +
+		" FOREACH (x in CASE WHEN a.sourceOfTruth <> $sourceOfTruth THEN [a] ELSE [] END | " +
+		"  MERGE (x)-[:ALTERNATE]->(alt:AlternateAddress {source:$source, id:x.id}) " +
+		"    SET alt.updatedAt=$now, alt.appSource=$appSource, " +
+		" alt.country=$country, alt.state=$state, alt.city=$city, alt.address=$address, alt.address2=$address2, alt.zip=$zip, alt.phone=$phone " +
+		") "
+
+	_, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
+		_, err := tx.Run(fmt.Sprintf(query, "Address_"+tenant),
+			map[string]interface{}{
+				"tenant":         tenant,
+				"organizationId": organizationId,
+				"country":        organization.Country,
+				"state":          organization.State,
+				"city":           organization.City,
+				"address":        organization.Address,
+				"address2":       organization.Address2,
+				"zip":            organization.Zip,
+				"phone":          organization.Phone,
+				"source":         organization.ExternalSystem,
+				"sourceOfTruth":  organization.ExternalSystem,
+				"appSource":      organization.ExternalSystem,
+				"now":            time.Now().UTC(),
+			})
+		return nil, err
 	})
 	return err
 }

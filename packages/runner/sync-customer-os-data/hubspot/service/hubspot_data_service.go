@@ -57,7 +57,6 @@ func (s *hubspotDataService) GetContactsForSync(batchSize int, runId string) []e
 			AdditionalEmails:    strings.Split(hubspotContactProperties.AdditionalEmails, ";"),
 			PrimaryE164:         hubspotContactProperties.PhoneNumber,
 			UserOwnerExternalId: hubspotContactProperties.OwnerId,
-			Readonly:            true,
 			Country:             hubspotContactProperties.Country,
 			State:               hubspotContactProperties.State,
 			City:                hubspotContactProperties.City,
@@ -139,7 +138,6 @@ func (s *hubspotDataService) GetOrganizationsForSync(batchSize int, runId string
 			Industry:             hubspotCompanyProperties.Industry,
 			IsPublic:             hubspotCompanyProperties.IsPublic,
 			CreatedAt:            v.CreateDate.UTC(),
-			Readonly:             true,
 			Country:              hubspotCompanyProperties.Country,
 			State:                hubspotCompanyProperties.State,
 			City:                 hubspotCompanyProperties.City,
@@ -169,7 +167,6 @@ func (s *hubspotDataService) GetUsersForSync(batchSize int, runId string) []enti
 			LastName:       v.LastName,
 			Email:          v.Email,
 			CreatedAt:      v.CreateDate.UTC(),
-			Readonly:       true,
 		})
 		s.owners[v.Id] = v
 	}
