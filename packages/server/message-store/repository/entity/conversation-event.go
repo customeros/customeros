@@ -14,10 +14,10 @@ const (
 type Source string
 
 const (
-	HUBSPOT Source = "HUBSPOT"
-	ZENDESK Source = "ZENDESK"
-	MANUAL  Source = "MANUAL"
-	SYSTEM  Source = "SYSTEM"
+	HUBSPOT  Source = "HUBSPOT"
+	ZENDESK  Source = "ZENDESK"
+	MANUAL   Source = "MANUAL"
+	OPENLINE Source = "OPENLINE"
 )
 
 type SenderType string

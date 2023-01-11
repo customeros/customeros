@@ -39,7 +39,7 @@ func NewMessageStoreServiceClient(cc grpc.ClientConnInterface) MessageStoreServi
 
 func (c *messageStoreServiceClient) SaveMessage(ctx context.Context, in *Message, opts ...grpc.CallOption) (*Message, error) {
 	out := new(Message)
-	err := c.cc.Invoke(ctx, "/MessageStoreService/saveMessage", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/proto.MessageStoreService/saveMessage", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -48,7 +48,7 @@ func (c *messageStoreServiceClient) SaveMessage(ctx context.Context, in *Message
 
 func (c *messageStoreServiceClient) GetMessages(ctx context.Context, in *GetMessagesRequest, opts ...grpc.CallOption) (*MessagePagedResponse, error) {
 	out := new(MessagePagedResponse)
-	err := c.cc.Invoke(ctx, "/MessageStoreService/getMessages", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/proto.MessageStoreService/getMessages", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -57,7 +57,7 @@ func (c *messageStoreServiceClient) GetMessages(ctx context.Context, in *GetMess
 
 func (c *messageStoreServiceClient) GetMessage(ctx context.Context, in *Id, opts ...grpc.CallOption) (*Message, error) {
 	out := new(Message)
-	err := c.cc.Invoke(ctx, "/MessageStoreService/getMessage", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/proto.MessageStoreService/getMessage", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -66,7 +66,7 @@ func (c *messageStoreServiceClient) GetMessage(ctx context.Context, in *Id, opts
 
 func (c *messageStoreServiceClient) GetFeeds(ctx context.Context, in *GetFeedsPagedRequest, opts ...grpc.CallOption) (*FeedItemPagedResponse, error) {
 	out := new(FeedItemPagedResponse)
-	err := c.cc.Invoke(ctx, "/MessageStoreService/getFeeds", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/proto.MessageStoreService/getFeeds", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -75,7 +75,7 @@ func (c *messageStoreServiceClient) GetFeeds(ctx context.Context, in *GetFeedsPa
 
 func (c *messageStoreServiceClient) GetFeed(ctx context.Context, in *Id, opts ...grpc.CallOption) (*FeedItem, error) {
 	out := new(FeedItem)
-	err := c.cc.Invoke(ctx, "/MessageStoreService/getFeed", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/proto.MessageStoreService/getFeed", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -136,7 +136,7 @@ func _MessageStoreService_SaveMessage_Handler(srv interface{}, ctx context.Conte
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/MessageStoreService/saveMessage",
+		FullMethod: "/proto.MessageStoreService/saveMessage",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(MessageStoreServiceServer).SaveMessage(ctx, req.(*Message))
@@ -154,7 +154,7 @@ func _MessageStoreService_GetMessages_Handler(srv interface{}, ctx context.Conte
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/MessageStoreService/getMessages",
+		FullMethod: "/proto.MessageStoreService/getMessages",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(MessageStoreServiceServer).GetMessages(ctx, req.(*GetMessagesRequest))
@@ -172,7 +172,7 @@ func _MessageStoreService_GetMessage_Handler(srv interface{}, ctx context.Contex
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/MessageStoreService/getMessage",
+		FullMethod: "/proto.MessageStoreService/getMessage",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(MessageStoreServiceServer).GetMessage(ctx, req.(*Id))
@@ -190,7 +190,7 @@ func _MessageStoreService_GetFeeds_Handler(srv interface{}, ctx context.Context,
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/MessageStoreService/getFeeds",
+		FullMethod: "/proto.MessageStoreService/getFeeds",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(MessageStoreServiceServer).GetFeeds(ctx, req.(*GetFeedsPagedRequest))
@@ -208,7 +208,7 @@ func _MessageStoreService_GetFeed_Handler(srv interface{}, ctx context.Context, 
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/MessageStoreService/getFeed",
+		FullMethod: "/proto.MessageStoreService/getFeed",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(MessageStoreServiceServer).GetFeed(ctx, req.(*Id))
@@ -220,7 +220,7 @@ func _MessageStoreService_GetFeed_Handler(srv interface{}, ctx context.Context, 
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
 var MessageStoreService_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "MessageStoreService",
+	ServiceName: "proto.MessageStoreService",
 	HandlerType: (*MessageStoreServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
