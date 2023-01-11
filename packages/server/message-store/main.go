@@ -6,7 +6,7 @@ import (
 	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
 	"github.com/openline-ai/openline-customer-os/packages/server/message-store/config"
-	pb "github.com/openline-ai/openline-customer-os/packages/server/message-store/gen/proto"
+	msProto "github.com/openline-ai/openline-customer-os/packages/server/message-store/proto/generated"
 	"github.com/openline-ai/openline-customer-os/packages/server/message-store/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/message-store/service"
 	"google.golang.org/grpc"
@@ -47,10 +47,11 @@ func main() {
 
 	repositories := repository.InitRepositories(db.GormDB)
 	customerOSService := service.NewCustomerOSService(neo4jDriver, repositories)
+	commonStoreService := service.NewCommonStoreService()
 
 	// Register the Message Item service with the server.
-	pb.RegisterMessageStoreServiceServer(server, service.NewMessageService(neo4jDriver, repositories))
-	pb.RegisterWebChatMessageStoreServiceServer(server, service.NewWebChatMessageStoreService(neo4jDriver, repositories, customerOSService))
+	msProto.RegisterMessageStoreServiceServer(server, service.NewMessageService(neo4jDriver, repositories, customerOSService, commonStoreService))
+	msProto.RegisterWebChatMessageStoreServiceServer(server, service.NewWebChatMessageStoreService(neo4jDriver, repositories, customerOSService, commonStoreService))
 
 	// Open port for listening to traffic.
 	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", conf.Service.ServerPort))
