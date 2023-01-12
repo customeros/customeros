@@ -28,7 +28,7 @@ func TestContactSyncSettings(t *testing.T) {
 			ID:        1,
 			CreatedAt: time.Now(),
 			Tenant:    "tenant1",
-			Source:    HUBSPOT,
+			Source:    AirbyteSourceHubspot,
 			Enabled:   true,
 		}
 
@@ -40,8 +40,8 @@ func TestContactSyncSettings(t *testing.T) {
 			t.Errorf("Unexpected tenant: got %v, want %v", css.Tenant, "tenant1")
 		}
 
-		if css.Source != HUBSPOT {
-			t.Errorf("Unexpected source: got %v, want %v", css.Source, HUBSPOT)
+		if css.Source != AirbyteSourceHubspot {
+			t.Errorf("Unexpected source: got %v, want %v", css.Source, AirbyteSourceHubspot)
 		}
 
 		if css.Enabled != true {

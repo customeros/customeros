@@ -37,6 +37,11 @@ func (s *initService) Init() {
 	if err != nil {
 		logrus.Fatal(err)
 	}
+
+	err = db.AutoMigrate(&entity.ConversationEvent{})
+	if err != nil {
+		logrus.Fatal(err)
+	}
 }
 
 func createAirbyteSourceEnum(db *gorm.DB) *gorm.DB {

@@ -3,10 +3,23 @@ package entity
 import "time"
 
 type EmailMessageData struct {
-	Id                  string
-	Html                string
-	CreatedAt           time.Time
+	Html      string
+	Subject   string
+	CreatedAt time.Time
+
 	ContactsExternalIds []string
+	UserExternalId      string
+	EmailThreadId       string
 	ExternalId          string
 	ExternalSystem      string
+
+	FromEmail string
+	ToEmail   []string
+	CcEmail   []string
+	BccEmail  []string
+
+	Direction Direction
+
+	FromFirstName string
+	FromLastName  string
 }

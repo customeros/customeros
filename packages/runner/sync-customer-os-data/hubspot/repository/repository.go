@@ -210,7 +210,10 @@ func GetEmails(db *gorm.DB, limit int, runId string) (hubspotEntity.Emails, erro
 	err := db.
 		Raw(cte+" SELECT u.* FROM UpToDateData u left join openline_sync_status_emails s "+
 			" on u.id = s.id and u._airbyte_ab_id = s._airbyte_ab_id and u._airbyte_engagements_emails_hashid = s._airbyte_engagements_emails_hashid "+
+			" left join engagements_emails_properties p "+
+			" on u._airbyte_ab_id = p._airbyte_ab_id and u._airbyte_engagements_emails_hashid = p._airbyte_engagements_emails_hashid "+
 			" WHERE u.row_num = ? "+
+			" and (p.hs_email_status = 'SENT' and p.hs_email_thread_id is not null) "+
 			" and (s.synced_to_customer_os is null or s.synced_to_customer_os = ?) "+
 			" and (s.synced_to_customer_os_attempt is null or s.synced_to_customer_os_attempt < ?) "+
 			" and (s.run_id is null or s.run_id <> ?) "+

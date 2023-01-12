@@ -237,10 +237,28 @@ func (s *hubspotDataService) GetEmailMessagesForSync(batchSize int, runId string
 		}
 		// set main fields
 		emailForCustomerOS := entity.EmailMessageData{
+			Html:           hubspotEmailProperties.EmailHtml,
+			Subject:        hubspotEmailProperties.EmailSubject,
+			CreatedAt:      v.CreateDate.UTC(),
 			ExternalId:     v.Id,
 			ExternalSystem: s.SourceId(),
-			CreatedAt:      v.CreateDate.UTC(),
-			Html:           hubspotEmailProperties.EmailHtml,
+			EmailThreadId:  hubspotEmailProperties.EmailThreadId,
+			FromEmail:      hubspotEmailProperties.EmailFromEmail,
+			ToEmail:        emailsStringToArray(hubspotEmailProperties.EmailToEmail),
+			CcEmail:        emailsStringToArray(hubspotEmailProperties.EmailCcEmail),
+			BccEmail:       emailsStringToArray(hubspotEmailProperties.EmailBccEmail),
+			FromFirstName:  hubspotEmailProperties.EmailFromFirstName,
+			FromLastName:   hubspotEmailProperties.EmailFromLastName,
+		}
+		// set user id
+		if hubspotEmailProperties.CreatedByUserId.Valid {
+			emailForCustomerOS.UserExternalId = strconv.FormatFloat(hubspotEmailProperties.CreatedByUserId.Float64, 'f', 0, 64)
+		}
+		// set email message direction
+		if hubspotEmailProperties.EmailDirection == "INCOMING_EMAIL" {
+			emailForCustomerOS.Direction = entity.INBOUND
+		} else {
+			emailForCustomerOS.Direction = entity.OUTBOUND
 		}
 		// set reference to all linked contacts
 		var contactsExternalIds []any
@@ -262,6 +280,13 @@ func (s *hubspotDataService) GetEmailMessagesForSync(batchSize int, runId string
 		s.emails[v.Id] = v
 	}
 	return customerOsEmails
+}
+
+func emailsStringToArray(str string) []string {
+	if str == "" {
+		return []string{}
+	}
+	return strings.Split(str, ";")
 }
 
 func (s *hubspotDataService) MarkContactProcessed(externalId, runId string, synced bool) error {

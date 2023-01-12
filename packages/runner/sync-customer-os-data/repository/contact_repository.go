@@ -3,6 +3,7 @@ package repository
 import (
 	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v4/neo4j"
+	"github.com/neo4j/neo4j-go-driver/v4/neo4j/db"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/entity"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/utils"
 	"time"
@@ -17,6 +18,7 @@ type ContactRepository interface {
 	MergeTextCustomField(tenant, contactId string, field entity.TextCustomField, createdAt time.Time) error
 	MergeContactAddress(tenant, contactId string, contact entity.ContactData) error
 	MergeContactType(tenant, contactId, contactTypeName string) error
+	GetOrCreateContactId(tenant, email, firstName, lastName, source string) (string, error)
 }
 
 type contactRepository struct {
@@ -304,4 +306,41 @@ func (r *contactRepository) MergeContactType(tenant, contactId, contactTypeName 
 		return nil, nil
 	})
 	return err
+}
+
+func (r *contactRepository) GetOrCreateContactId(tenant, email, firstName, lastName, source string) (string, error) {
+	session := (*r.driver).NewSession(
+		neo4j.SessionConfig{
+			AccessMode: neo4j.AccessModeWrite,
+			BoltLogger: neo4j.ConsoleBoltLogger()})
+	defer session.Close()
+
+	record, err := session.WriteTransaction(func(tx neo4j.Transaction) (interface{}, error) {
+		queryResult, err := tx.Run(fmt.Sprintf(
+			" MATCH (t:Tenant {name:$tenant}) "+
+				" MERGE (e:Email {email: $email})<-[r:EMAILED_AT]-(c:Contact)-[:CONTACT_BELONGS_TO_TENANT]->(t) "+
+				" ON CREATE SET r.primary=true, e.id=randomUUID(), e.createdAt=$createdAt, "+
+				"				c.id=randomUUID(), c.firstName=$firstName, c.lastName=$lastName, c.createdAt=$createdAt, "+
+				"				e.source=$source, e.sourceOfTruth=$sourceOfTruth, e.appSource=$appSource, "+
+				"				c.source=$source, c.sourceOfTruth=$sourceOfTruth, c.appSource=$appSource, "+
+				"               c:%s, e:%s "+
+				" RETURN c.id", "Contact_"+tenant, "Email_"+tenant),
+			map[string]interface{}{
+				"tenant":        tenant,
+				"email":         email,
+				"firstName":     firstName,
+				"lastName":      lastName,
+				"source":        source,
+				"sourceOfTruth": source,
+				"appSource":     source,
+				"createdAt":     time.Now().UTC(),
+			})
+		record, err := queryResult.Single()
+		if err != nil {
+			return nil, err
+		}
+		return record, nil
+	})
+
+	return record.(*db.Record).Values[0].(string), err
 }
