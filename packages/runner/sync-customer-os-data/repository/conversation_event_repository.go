@@ -6,7 +6,7 @@ import (
 )
 
 type ConversationEventRepository interface {
-	Save(entity entity.ConversationEvent)
+	Save(entity entity.ConversationEvent) error
 }
 
 type conversationEventRepository struct {
@@ -19,6 +19,10 @@ func NewConversationEventRepository(gormDb *gorm.DB) ConversationEventRepository
 	}
 }
 
-func (r *conversationEventRepository) Save(entity entity.ConversationEvent) {
-	r.db.Create(&entity)
+func (r *conversationEventRepository) Save(entity entity.ConversationEvent) error {
+	err := r.db.Create(&entity).Error
+	if err != nil {
+		return err
+	}
+	return nil
 }

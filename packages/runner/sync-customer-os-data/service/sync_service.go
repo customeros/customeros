@@ -1,12 +1,15 @@
 package service
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/common"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/entity"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/hubspot/service"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/repository"
 	"github.com/sirupsen/logrus"
+	"strings"
 	"time"
 )
 
@@ -363,7 +366,7 @@ func (s *syncService) syncEmailMessages(dataService common.DataService, syncDate
 					tenant, message.FromEmail, message.FromFirstName, message.FromLastName, message.ExternalSystem)
 				if err != nil {
 					failedSync = true
-					logrus.Errorf("failed creating contact with email %v and tenant %v :%v", message.FromEmail, tenant, err)
+					logrus.Errorf("failed creating contact with email %v for tenant %v :%v", message.FromEmail, tenant, err)
 				}
 			}
 
@@ -373,13 +376,13 @@ func (s *syncService) syncEmailMessages(dataService common.DataService, syncDate
 					err := s.repositories.ConversationRepository.UserInitiateConversation(tenant, conversationId, message.UserExternalId, message.ExternalSystem)
 					if err != nil {
 						failedSync = true
-						logrus.Errorf("failed set user initiator for conversation %v and tenant %v :%v", conversationId, tenant, err)
+						logrus.Errorf("failed set user initiator for conversation %v in tenant %v :%v", conversationId, tenant, err)
 					}
 				} else if message.Direction == entity.INBOUND {
 					err := s.repositories.ConversationRepository.ContactInitiateConversation(tenant, conversationId, fromContactId)
 					if err != nil {
 						failedSync = true
-						logrus.Errorf("failed set contact initiator for conversation %v and tenant %v :%v", conversationId, tenant, err)
+						logrus.Errorf("failed set contact initiator for conversation %v in tenant %v :%v", conversationId, tenant, err)
 					}
 				}
 			}
@@ -389,14 +392,14 @@ func (s *syncService) syncEmailMessages(dataService common.DataService, syncDate
 				err := s.repositories.ConversationRepository.ContactByIdParticipateInConversation(tenant, conversationId, fromContactId)
 				if err != nil {
 					failedSync = true
-					logrus.Errorf("failed set contact participat %v for conversation %v and tenant %v :%v", fromContactId, conversationId, tenant, err)
+					logrus.Errorf("failed set contact participat %v for conversation %v in tenant %v :%v", fromContactId, conversationId, tenant, err)
 				}
 			}
 			if len(message.ContactsExternalIds) > 0 {
 				err := s.repositories.ConversationRepository.ContactsByExternalIdParticipateInConversation(tenant, conversationId, message.ExternalSystem, message.ContactsExternalIds)
 				if err != nil {
 					failedSync = true
-					logrus.Errorf("failed set contact participants by external id %v for conversation %v and tenant %v :%v", message.ContactsExternalIds, conversationId, tenant, err)
+					logrus.Errorf("failed set contact participants by external id %v for conversation %v in tenant %v :%v", message.ContactsExternalIds, conversationId, tenant, err)
 				}
 			}
 
@@ -405,14 +408,14 @@ func (s *syncService) syncEmailMessages(dataService common.DataService, syncDate
 				err := s.repositories.ConversationRepository.UserByExternalIdParticipateInConversation(tenant, conversationId, message.ExternalSystem, message.UserExternalId)
 				if err != nil {
 					failedSync = true
-					logrus.Errorf("failed set user participant by external id %v for conversation %v and tenant %v :%v", message.UserExternalId, conversationId, tenant, err)
+					logrus.Errorf("failed set user participant by external id %v for conversation %v in tenant %v :%v", message.UserExternalId, conversationId, tenant, err)
 				}
 			}
 			if len(message.ToEmail) > 0 && message.Direction == entity.INBOUND {
 				err := s.repositories.ConversationRepository.UsersByEmailParticipateInConversation(tenant, conversationId, message.ToEmail)
 				if err != nil {
 					failedSync = true
-					logrus.Errorf("failed set contact participants by external id %v for conversation %v and tenant %v :%v", message.ContactsExternalIds, conversationId, tenant, err)
+					logrus.Errorf("failed set contact participants by external id %v for conversation %v in tenant %v :%v", message.ContactsExternalIds, conversationId, tenant, err)
 				}
 			}
 
@@ -421,12 +424,55 @@ func (s *syncService) syncEmailMessages(dataService common.DataService, syncDate
 				err = s.repositories.ConversationRepository.IncrementMessageCount(tenant, conversationId)
 				if err != nil {
 					failedSync = true
-					logrus.Errorf("failed set contact participants by external id %v for conversation %v for tenant %v :%v", message.ContactsExternalIds, conversationId, tenant, err)
+					logrus.Errorf("failed set contact participants by external id %v for conversation %v in tenant %v :%v", message.ContactsExternalIds, conversationId, tenant, err)
 				}
 			}
 
 			if failedSync == false {
-				// TODO same message to postgres DB
+				conversationEvent := entity.ConversationEvent{
+					TenantName:     tenant,
+					ConversationId: conversationId,
+					Type:           entity.EMAIL,
+					Subtype:        message.EmailThreadId,
+					Source:         message.ExternalSystem,
+					ExternalId:     message.ExternalId,
+					CreateDate:     message.CreatedAt,
+				}
+				if message.Direction == entity.INBOUND {
+					conversationEvent.Direction = entity.INBOUND
+					conversationEvent.SenderType = entity.CONTACT
+					conversationEvent.SenderId = fromContactId
+				} else {
+					conversationEvent.Direction = entity.OUTBOUND
+					conversationEvent.SenderType = entity.USER
+					userId, err := s.repositories.UserRepository.GetUserIdForExternalId(tenant, message.UserExternalId, message.ExternalSystem)
+					if err != nil {
+						failedSync = true
+						logrus.Errorf("failed to get user id for external id %v for tenant %v :%v", message.UserExternalId, tenant, err)
+					}
+					conversationEvent.SenderId = userId
+				}
+				emailContent := entity.EmailContent{
+					Subject: message.Subject,
+					Html:    message.Html,
+					From:    message.FromEmail,
+					To:      message.ToEmail,
+					Cc:      message.CcEmail,
+					Bcc:     message.BccEmail,
+				}
+				jsonContent, err := JSONMarshalWithoutEscapeHtml(emailContent)
+				if err != nil {
+					failedSync = true
+					logrus.Errorf("failed to marshal email content with external id %v for conversation %v in tenant %v :%v", message.ExternalId, conversationId, tenant, err)
+				}
+				r := strings.NewReplacer(`\n`, "\n")
+				conversationEvent.Content = r.Replace(string(jsonContent))
+
+				err = s.repositories.ConversationEventRepository.Save(conversationEvent)
+				if err != nil {
+					failedSync = true
+					logrus.Errorf("failed save message with external id %v in message store for conversation %v in tenant %v :%v", message.ExternalId, conversationId, tenant, err)
+				}
 			}
 
 			logrus.Debugf("successfully merged email message with external id %v to conversation %v for tenant %v from %v", message.ExternalId, conversationId, tenant, dataService.SourceId())
@@ -445,6 +491,15 @@ func (s *syncService) syncEmailMessages(dataService common.DataService, syncDate
 		}
 	}
 	return completed, failed
+}
+
+func JSONMarshalWithoutEscapeHtml(t interface{}) ([]byte, error) {
+	buffer := &bytes.Buffer{}
+	encoder := json.NewEncoder(buffer)
+	encoder.SetEscapeHTML(false)
+	encoder.SetIndent("", "  ")
+	err := encoder.Encode(t)
+	return buffer.Bytes(), err
 }
 
 func (s *syncService) dataService(tenantToSync entity.TenantSyncSettings) (common.DataService, error) {
