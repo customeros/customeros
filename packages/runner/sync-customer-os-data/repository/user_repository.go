@@ -10,6 +10,7 @@ import (
 
 type UserRepository interface {
 	MergeUser(tenant string, syncDate time.Time, user entity.UserData) (string, error)
+	GetUserIdForExternalId(tenant, userExternalId, externalSystem string) (string, error)
 }
 
 type userRepository struct {
@@ -65,6 +66,35 @@ func (r *userRepository) MergeUser(tenant string, syncDate time.Time, user entit
 				"sourceOfTruth":   user.ExternalSystem,
 				"appSource":       user.ExternalSystem,
 				"now":             time.Now().UTC(),
+			})
+		if err != nil {
+			return nil, err
+		}
+		record, err := queryResult.Single()
+		if err != nil {
+			return nil, err
+		}
+		return record.Values[0], nil
+	})
+	if err != nil {
+		return "", err
+	}
+	return dbRecord.(string), nil
+}
+
+func (r *userRepository) GetUserIdForExternalId(tenant, userExternalId, externalSystem string) (string, error) {
+	session := utils.NewNeo4jWriteSession(*r.driver)
+	defer session.Close()
+
+	query := " MATCH (:Tenant {name:$tenant})<-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]-(e:ExternalSystem {id:$externalSystem}) " +
+		" MATCH (u:User)-[:IS_LINKED_WITH {externalId:$userExternalId}]->(e) " +
+		" RETURN u.id "
+	dbRecord, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
+		queryResult, err := tx.Run(query,
+			map[string]interface{}{
+				"tenant":         tenant,
+				"externalSystem": externalSystem,
+				"userExternalId": userExternalId,
 			})
 		if err != nil {
 			return nil, err
