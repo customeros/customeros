@@ -16,12 +16,15 @@ type Repositories struct {
 	Dbs                          Dbs
 	TenantSyncSettingsRepository TenantSyncSettingsRepository
 	SyncRunRepository            SyncRunRepository
-	ContactRepository            ContactRepository
-	ExternalSystemRepository     ExternalSystemRepository
-	OrganizationRepository       OrganizationRepository
-	RoleRepository               RoleRepository
-	UserRepository               UserRepository
-	NoteRepository               NoteRepository
+	ConversationEventRepository  ConversationEventRepository
+
+	ContactRepository        ContactRepository
+	ExternalSystemRepository ExternalSystemRepository
+	OrganizationRepository   OrganizationRepository
+	RoleRepository           RoleRepository
+	UserRepository           UserRepository
+	NoteRepository           NoteRepository
+	ConversationRepository   ConversationRepository
 }
 
 func InitRepos(driver *neo4j.Driver, controlDb *gorm.DB, airbyteStoreDb *config.AirbyteStoreDB) *Repositories {
@@ -33,12 +36,14 @@ func InitRepos(driver *neo4j.Driver, controlDb *gorm.DB, airbyteStoreDb *config.
 		},
 		TenantSyncSettingsRepository: NewTenantSyncSettingsRepository(controlDb),
 		SyncRunRepository:            NewSyncRunRepository(controlDb),
+		ConversationEventRepository:  NewConversationEventRepository(controlDb),
 		ContactRepository:            NewContactRepository(driver),
 		ExternalSystemRepository:     NewExternalSystemRepository(driver),
 		OrganizationRepository:       NewOrganizationRepository(driver),
 		RoleRepository:               NewRoleRepository(driver),
 		UserRepository:               NewUserRepository(driver),
 		NoteRepository:               NewNoteRepository(driver),
+		ConversationRepository:       NewConversationRepository(driver),
 	}
 	return &repositories
 }

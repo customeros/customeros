@@ -8,8 +8,8 @@ import (
 type AirbyteSource string
 
 const (
-	HUBSPOT AirbyteSource = "hubspot"
-	ZENDESK AirbyteSource = "zendesk"
+	AirbyteSourceHubspot AirbyteSource = "hubspot"
+	AirbyteSourceZendesk AirbyteSource = "zendesk"
 )
 
 type TenantSyncSettings struct {

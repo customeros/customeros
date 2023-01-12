@@ -19,6 +19,7 @@ type hubspotDataService struct {
 	companies      map[string]hubspotEntity.Company
 	owners         map[string]hubspotEntity.Owner
 	notes          map[string]hubspotEntity.Note
+	emails         map[string]hubspotEntity.Email
 }
 
 func NewHubspotDataService(airbyteStoreDb *config.AirbyteStoreDB, tenant string) common.DataService {
@@ -29,6 +30,7 @@ func NewHubspotDataService(airbyteStoreDb *config.AirbyteStoreDB, tenant string)
 		companies:      map[string]hubspotEntity.Company{},
 		owners:         map[string]hubspotEntity.Owner{},
 		notes:          map[string]hubspotEntity.Note{},
+		emails:         map[string]hubspotEntity.Email{},
 	}
 }
 
@@ -220,6 +222,73 @@ func (s *hubspotDataService) GetNotesForSync(batchSize int, runId string) []enti
 	return customerOsNotes
 }
 
+func (s *hubspotDataService) GetEmailMessagesForSync(batchSize int, runId string) []entity.EmailMessageData {
+	hubspotEmails, err := repository.GetEmails(s.getDb(), batchSize, runId)
+	if err != nil {
+		logrus.Error(err)
+		return nil
+	}
+	customerOsEmails := []entity.EmailMessageData{}
+	for _, v := range hubspotEmails {
+		hubspotEmailProperties, err := repository.GetEmailProperties(s.getDb(), v.AirbyteAbId, v.AirbyteEmailsHashid)
+		if err != nil {
+			logrus.Error(err)
+			continue
+		}
+		// set main fields
+		emailForCustomerOS := entity.EmailMessageData{
+			Html:           hubspotEmailProperties.EmailHtml,
+			Subject:        hubspotEmailProperties.EmailSubject,
+			CreatedAt:      v.CreateDate.UTC(),
+			ExternalId:     v.Id,
+			ExternalSystem: s.SourceId(),
+			EmailThreadId:  hubspotEmailProperties.EmailThreadId,
+			FromEmail:      hubspotEmailProperties.EmailFromEmail,
+			ToEmail:        emailsStringToArray(hubspotEmailProperties.EmailToEmail),
+			CcEmail:        emailsStringToArray(hubspotEmailProperties.EmailCcEmail),
+			BccEmail:       emailsStringToArray(hubspotEmailProperties.EmailBccEmail),
+			FromFirstName:  hubspotEmailProperties.EmailFromFirstName,
+			FromLastName:   hubspotEmailProperties.EmailFromLastName,
+		}
+		// set user id
+		if hubspotEmailProperties.CreatedByUserId.Valid {
+			emailForCustomerOS.UserExternalId = strconv.FormatFloat(hubspotEmailProperties.CreatedByUserId.Float64, 'f', 0, 64)
+		}
+		// set email message direction
+		if hubspotEmailProperties.EmailDirection == "INCOMING_EMAIL" {
+			emailForCustomerOS.Direction = entity.INBOUND
+		} else {
+			emailForCustomerOS.Direction = entity.OUTBOUND
+		}
+		// set reference to all linked contacts
+		var contactsExternalIds []any
+		v.ContactsExternalIds.AssignTo(&contactsExternalIds)
+		var strContactsExternalIds []string
+		for _, c := range contactsExternalIds {
+			if _, ok := c.(string); ok {
+				strContactsExternalIds = append(strContactsExternalIds, c.(string))
+			} else if _, ok := c.(int64); ok {
+				contactExternalId := strconv.FormatInt(c.(int64), 10)
+				strContactsExternalIds = append(strContactsExternalIds, contactExternalId)
+			} else if _, ok := c.(float64); ok {
+				contactExternalId := strconv.FormatFloat(c.(float64), 'f', 0, 64)
+				strContactsExternalIds = append(strContactsExternalIds, contactExternalId)
+			}
+		}
+		emailForCustomerOS.ContactsExternalIds = strContactsExternalIds
+		customerOsEmails = append(customerOsEmails, emailForCustomerOS)
+		s.emails[v.Id] = v
+	}
+	return customerOsEmails
+}
+
+func emailsStringToArray(str string) []string {
+	if str == "" {
+		return []string{}
+	}
+	return strings.Split(str, ";")
+}
+
 func (s *hubspotDataService) MarkContactProcessed(externalId, runId string, synced bool) error {
 	contact, ok := s.contacts[externalId]
 	if ok {
@@ -268,6 +337,18 @@ func (s *hubspotDataService) MarkNoteProcessed(externalId, runId string, synced 
 	return nil
 }
 
+func (s *hubspotDataService) MarkEmailMessageProcessed(externalId, runId string, synced bool) error {
+	email, ok := s.emails[externalId]
+	if ok {
+		err := repository.MarkEmailProcessed(s.getDb(), email, synced, runId)
+		if err != nil {
+			logrus.Errorf("error while marking email with external reference %s as synced for hubspot", externalId)
+		}
+		return err
+	}
+	return nil
+}
+
 func (s *hubspotDataService) Refresh() {
 	err := s.getDb().AutoMigrate(&hubspotEntity.SyncStatusContact{})
 	if err != nil {
@@ -282,6 +363,10 @@ func (s *hubspotDataService) Refresh() {
 		logrus.Error(err)
 	}
 	err = s.getDb().AutoMigrate(&hubspotEntity.SyncStatusNote{})
+	if err != nil {
+		logrus.Error(err)
+	}
+	err = s.getDb().AutoMigrate(&hubspotEntity.SyncStatusEmail{})
 	if err != nil {
 		logrus.Error(err)
 	}
@@ -302,4 +387,5 @@ func (s *hubspotDataService) Close() {
 	s.companies = make(map[string]hubspotEntity.Company)
 	s.owners = make(map[string]hubspotEntity.Owner)
 	s.notes = make(map[string]hubspotEntity.Note)
+	s.emails = make(map[string]hubspotEntity.Email)
 }

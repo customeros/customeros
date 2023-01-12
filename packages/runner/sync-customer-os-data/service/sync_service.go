@@ -60,6 +60,7 @@ func (s *syncService) Sync(runId string) {
 		completedOrganizationCount, failedOrganizationCount := s.syncOrganizations(dataService, syncDate, v.Tenant, runId)
 		completedContactCount, failedContactCount := s.syncContacts(dataService, syncDate, v.Tenant, runId)
 		completedNoteCount, failedNoteCount := s.syncNotes(dataService, syncDate, v.Tenant, runId)
+		completedEmailMessageCount, failedEmailMessageCount := s.syncEmailMessages(dataService, syncDate, v.Tenant, runId)
 
 		syncRunDtls.CompletedContacts = completedContactCount
 		syncRunDtls.FailedContacts = failedContactCount
@@ -69,6 +70,8 @@ func (s *syncService) Sync(runId string) {
 		syncRunDtls.FailedOrganizations = failedOrganizationCount
 		syncRunDtls.CompletedNotes = completedNoteCount
 		syncRunDtls.FailedNotes = failedNoteCount
+		syncRunDtls.CompletedEmailMessages = completedEmailMessageCount
+		syncRunDtls.FailedEmailMessages = failedEmailMessageCount
 
 		syncRunDtls.EndAt = time.Now().UTC()
 
@@ -334,10 +337,120 @@ func (s *syncService) syncNotes(dataService common.DataService, syncDate time.Ti
 	return completed, failed
 }
 
+func (s *syncService) syncEmailMessages(dataService common.DataService, syncDate time.Time, tenant, runId string) (int, int) {
+	completed, failed := 0, 0
+	for {
+		messages := dataService.GetEmailMessagesForSync(batchSize, runId)
+		if len(messages) == 0 {
+			logrus.Debugf("no email messages found for sync from %s for tenant %s", dataService.SourceId(), tenant)
+			break
+		}
+		logrus.Infof("syncing %d email messages from %s for tenant %s", len(messages), dataService.SourceId(), tenant)
+
+		for _, message := range messages {
+			var failedSync = false
+
+			conversationId, messageCount, err := s.repositories.ConversationRepository.MergeEmailConversation(tenant, syncDate, message)
+			if err != nil {
+				failedSync = true
+				logrus.Errorf("failed merge email message with external reference %v for tenant %v :%v", message.ExternalId, tenant, err)
+			}
+
+			var fromContactId string
+
+			if message.Direction == entity.INBOUND {
+				fromContactId, err = s.repositories.ContactRepository.GetOrCreateContactId(
+					tenant, message.FromEmail, message.FromFirstName, message.FromLastName, message.ExternalSystem)
+				if err != nil {
+					failedSync = true
+					logrus.Errorf("failed creating contact with email %v and tenant %v :%v", message.FromEmail, tenant, err)
+				}
+			}
+
+			// set initiator for new conversation
+			if messageCount == 0 {
+				if message.Direction == entity.OUTBOUND {
+					err := s.repositories.ConversationRepository.UserInitiateConversation(tenant, conversationId, message.UserExternalId, message.ExternalSystem)
+					if err != nil {
+						failedSync = true
+						logrus.Errorf("failed set user initiator for conversation %v and tenant %v :%v", conversationId, tenant, err)
+					}
+				} else if message.Direction == entity.INBOUND {
+					err := s.repositories.ConversationRepository.ContactInitiateConversation(tenant, conversationId, fromContactId)
+					if err != nil {
+						failedSync = true
+						logrus.Errorf("failed set contact initiator for conversation %v and tenant %v :%v", conversationId, tenant, err)
+					}
+				}
+			}
+
+			// set contact participants
+			if len(fromContactId) > 0 {
+				err := s.repositories.ConversationRepository.ContactByIdParticipateInConversation(tenant, conversationId, fromContactId)
+				if err != nil {
+					failedSync = true
+					logrus.Errorf("failed set contact participat %v for conversation %v and tenant %v :%v", fromContactId, conversationId, tenant, err)
+				}
+			}
+			if len(message.ContactsExternalIds) > 0 {
+				err := s.repositories.ConversationRepository.ContactsByExternalIdParticipateInConversation(tenant, conversationId, message.ExternalSystem, message.ContactsExternalIds)
+				if err != nil {
+					failedSync = true
+					logrus.Errorf("failed set contact participants by external id %v for conversation %v and tenant %v :%v", message.ContactsExternalIds, conversationId, tenant, err)
+				}
+			}
+
+			// set user participants
+			if len(message.UserExternalId) > 0 {
+				err := s.repositories.ConversationRepository.UserByExternalIdParticipateInConversation(tenant, conversationId, message.ExternalSystem, message.UserExternalId)
+				if err != nil {
+					failedSync = true
+					logrus.Errorf("failed set user participant by external id %v for conversation %v and tenant %v :%v", message.UserExternalId, conversationId, tenant, err)
+				}
+			}
+			if len(message.ToEmail) > 0 && message.Direction == entity.INBOUND {
+				err := s.repositories.ConversationRepository.UsersByEmailParticipateInConversation(tenant, conversationId, message.ToEmail)
+				if err != nil {
+					failedSync = true
+					logrus.Errorf("failed set contact participants by external id %v for conversation %v and tenant %v :%v", message.ContactsExternalIds, conversationId, tenant, err)
+				}
+			}
+
+			// increment message count
+			if failedSync == false {
+				err = s.repositories.ConversationRepository.IncrementMessageCount(tenant, conversationId)
+				if err != nil {
+					failedSync = true
+					logrus.Errorf("failed set contact participants by external id %v for conversation %v for tenant %v :%v", message.ContactsExternalIds, conversationId, tenant, err)
+				}
+			}
+
+			if failedSync == false {
+				// TODO same message to postgres DB
+			}
+
+			logrus.Debugf("successfully merged email message with external id %v to conversation %v for tenant %v from %v", message.ExternalId, conversationId, tenant, dataService.SourceId())
+			if err := dataService.MarkEmailMessageProcessed(message.ExternalId, runId, failedSync == false); err != nil {
+				failed++
+				continue
+			}
+			if failedSync == true {
+				failed++
+			} else {
+				completed++
+			}
+		}
+		if len(messages) < batchSize {
+			break
+		}
+	}
+	return completed, failed
+}
+
 func (s *syncService) dataService(tenantToSync entity.TenantSyncSettings) (common.DataService, error) {
 	// Use a map to store the different implementations of common.DataService as functions.
 	dataServiceMap := map[entity.AirbyteSource]func() common.DataService{
-		entity.HUBSPOT: func() common.DataService {
+		entity.AirbyteSourceHubspot: func() common.DataService {
 			return service.NewHubspotDataService(s.repositories.Dbs.AirbyteStoreDB, tenantToSync.Tenant)
 		},
 		// Add additional implementations here.
