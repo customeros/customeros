@@ -21,17 +21,18 @@ message FeedId {
 }
 message FeedItem {
   string id = 1;
-  string senderId = 2;
-  string senderType = 3;
 
-  string firstName = 4;
-  string lastName = 5;
-  string username = 6;
-  string email = 7;
-  string phone = 8;
+  //used to produce a record in the feed
+  string initiatorFirstName = 2;
+  string initiatorLastName = 3;
+  string initiatorUsername = 4;
 
-  string preview = 9;
-  google.protobuf.Timestamp updatedOn = 10;
+  //used to produce the preview in the feed
+  string lastSenderFirstName = 5;
+  string lastSenderLastName = 6;
+
+  string lastContentPreview = 7;
+  google.protobuf.Timestamp lastTimestamp = 8;
 }
 message FeedItemPagedResponse {
   repeated FeedItem feedItems = 1;

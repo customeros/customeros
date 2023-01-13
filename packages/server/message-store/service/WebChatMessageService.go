@@ -24,6 +24,8 @@ func (s *webChatMessageStoreService) SaveMessage(ctx context.Context, input *msP
 	//
 	var conversation *Conversation
 	var participantId string
+	var participantFirstName string
+	var participantLastName string
 	var participantUsername string
 
 	if input.ConversationId == nil && input.Email == nil {
@@ -36,7 +38,7 @@ func (s *webChatMessageStoreService) SaveMessage(ctx context.Context, input *msP
 	tenant := "openline" //TODO get tenant from context
 
 	if input.ConversationId != nil {
-		conv, err := s.customerOSService.GetConversationById(tenant, *input.ConversationId)
+		conv, err := s.customerOSService.GetConversationById(*input.ConversationId)
 		if err != nil {
 			return nil, err
 		}
@@ -44,11 +46,11 @@ func (s *webChatMessageStoreService) SaveMessage(ctx context.Context, input *msP
 	}
 
 	if input.SenderType == msProto.SenderType_CONTACT {
-		contactId, err := s.getContactIdWithEmailOrCreate(tenant, *input.Email)
+		contact, err := s.getContactWithEmailOrCreate(tenant, *input.Email)
 		if err != nil {
 			return nil, err
 		}
-		participantId = contactId
+		participantId = contact.Id
 	} else if input.SenderType == msProto.SenderType_USER {
 		user, err := s.customerOSService.GetUserByEmail(*input.Email)
 		if err != nil {
@@ -64,7 +66,7 @@ func (s *webChatMessageStoreService) SaveMessage(ctx context.Context, input *msP
 	participantUsername = *input.Email
 
 	if input.ConversationId == nil {
-		conv, err := s.getActiveConversationOrCreate(tenant, participantId, *input.Email, input.SenderType)
+		conv, err := s.getActiveConversationOrCreate(tenant, participantId, participantFirstName, participantLastName, *input.Email, input.SenderType)
 		if err != nil {
 			return nil, err
 		}
@@ -97,7 +99,18 @@ func (s *webChatMessageStoreService) SaveMessage(ctx context.Context, input *msP
 
 	s.postgresRepositories.ConversationEventRepository.Save(&conversationEvent)
 
-	_, err := s.customerOSService.UpdateConversation(tenant, conversation.Id, participantId, s.commonStoreService.ConvertMSSenderTypeToEntitySenderType(input.SenderType))
+	senderType := s.commonStoreService.ConvertMSSenderTypeToEntitySenderType(input.SenderType)
+
+	previewMessage := ""
+	if input.Message != nil {
+		s := *input.Message
+		len := len(s)
+		if len > 20 {
+			len = 20
+		}
+		previewMessage = s[0:len]
+	}
+	_, err := s.customerOSService.UpdateConversation(tenant, conversation.Id, participantId, senderType, participantFirstName, participantLastName, previewMessage)
 	if err != nil {
 		return nil, err
 	}
@@ -105,20 +118,30 @@ func (s *webChatMessageStoreService) SaveMessage(ctx context.Context, input *msP
 	return s.commonStoreService.EncodeConversationEventToMS(conversationEvent), nil
 }
 
-func (s *webChatMessageStoreService) getContactIdWithEmailOrCreate(tenant string, email string) (string, error) {
+func (s *webChatMessageStoreService) getContactWithEmailOrCreate(tenant string, email string) (Contact, error) {
 	contact, err := s.customerOSService.GetContactByEmail(email)
 	if err != nil {
-		contactId, err := s.customerOSService.CreateContactWithEmail(tenant, email)
+		contact, err = s.customerOSService.CreateContactWithEmail(tenant, email)
 		if err != nil {
-			return "", err
+			return Contact{}, err
 		}
-		return contactId, nil
+		if contact == nil {
+			return Contact{}, errors.New("contact not found and could not be created")
+		}
+		return *contact, nil
 	} else {
-		return contact.Id, nil
+		return *contact, nil
 	}
 }
 
-func (s *webChatMessageStoreService) getActiveConversationOrCreate(tenant string, participantId string, initiatorUsername string, senderType msProto.SenderType) (*Conversation, error) {
+func (s *webChatMessageStoreService) getActiveConversationOrCreate(
+	tenant string,
+	participantId string,
+	firstName string,
+	lastname string,
+	username string,
+	senderType msProto.SenderType,
+) (*Conversation, error) {
 	var conversation *Conversation
 	var err error
 
@@ -133,7 +156,7 @@ func (s *webChatMessageStoreService) getActiveConversationOrCreate(tenant string
 	}
 
 	if conversation == nil {
-		conversation, err = s.customerOSService.CreateConversation(tenant, participantId, initiatorUsername, s.commonStoreService.ConvertMSSenderTypeToEntitySenderType(senderType), entity.WEB_CHAT)
+		conversation, err = s.customerOSService.CreateConversation(tenant, participantId, firstName, lastname, username, s.commonStoreService.ConvertMSSenderTypeToEntitySenderType(senderType), entity.WEB_CHAT)
 	}
 	if err != nil {
 		return nil, err

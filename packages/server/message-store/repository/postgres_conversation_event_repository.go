@@ -44,7 +44,7 @@ func (r *conversationEventRepository) GetEventsForConversation(conversationId st
 
 	err := r.db.Where("conversation_id = ?", conversationId).
 		Find(&entity.ConversationEvent{}).
-		Order(clause.OrderByColumn{Column: clause.Column{Name: "created_at"}, Desc: true}).
+		Order(clause.OrderByColumn{Column: clause.Column{Name: "created_at"}, Desc: false}).
 		Find(&rows).
 		Error
 

@@ -23,38 +23,54 @@ type CustomerOSService interface {
 	ContactByIdExists(contactId string) (bool, error)
 	ContactByPhoneExists(e164 string) (bool, error)
 
-	GetUserByEmail(email string) (*UserInfo, error)
-	GetContactByEmail(email string) (*ContactInfo, error)
+	GetUserByEmail(email string) (*User, error)
+	GetContactById(id string) (*Contact, error)
+	GetContactByEmail(email string) (*Contact, error)
 
-	CreateContactWithEmail(tenant string, email string) (string, error)
-	CreateContactWithPhone(phone string) (string, error)
+	CreateContactWithEmail(tenant string, email string) (*Contact, error)
+	CreateContactWithPhone(tenant string, phone string) (*Contact, error)
 
 	ConversationByIdExists(tenant string, conversationId string) (bool, error)
 
 	GetConversations(tenant string) ([]Conversation, error)
-	GetConversationById(tenant string, conversationId string) (Conversation, error)
+	GetConversationById(conversationId string) (Conversation, error)
 
-	GetWebChatConversationWithContactInitiator(tenant string, contactId string) (string, error)
-	GetWebChatConversationWithUserInitiator(tenant string, userId string) (string, error)
+	GetWebChatConversationWithContactInitiator(tenant string, contactId string) (*Conversation, error)
+	GetWebChatConversationWithUserInitiator(tenant string, userId string) (*Conversation, error)
 
-	CreateConversation(tenant string, initiatorId string, initiatorType entity.SenderType, channel entity.EventType) (string, error)
-	UpdateConversation(tenant string, conversationId string, participantId string, participantType entity.SenderType) (string, error)
+	CreateConversation(tenant string, initiatorId string, initiatorFirstName string, initiatorLastName string, initiatorUsername string, initiatorType entity.SenderType, channel entity.EventType) (*Conversation, error)
+	UpdateConversation(tenant string, conversationId string, participantId string, participantType entity.SenderType, lastSenderFirstName string, lastSenderLastName string, lastContentPreview string) (string, error)
 }
 
-type UserInfo struct {
-	Id string
+type User struct {
+	Id        string
+	FirstName string
+	LastName  string
+	Email     string
 }
 
-type ContactInfo struct {
-	Id string
+type Contact struct {
+	Id        string
+	FirstName string
+	LastName  string
+	Email     string
 }
 
 type Conversation struct {
-	Id                string
-	StartedAt         time.Time
-	Channel           string
-	Status            string
-	InitiatorUsername string
+	Id        string
+	StartedAt time.Time
+	UpdatedAt time.Time
+	Channel   string
+	Status    string
+
+	InitiatorFirstName  string
+	InitiatorLastName   string
+	InitiatorUsername   string
+	LastSenderId        string
+	LastSenderType      string
+	LastSenderFirstName string
+	LastSenderLastName  string
+	LastContentPreview  string
 }
 
 func parseEmail(email string) (string, string) {
@@ -107,7 +123,7 @@ func (s *customerOSService) ContactByPhoneExists(e164 string) (bool, error) {
 	return true, nil
 }
 
-func (s *customerOSService) GetUserByEmail(email string) (*UserInfo, error) {
+func (s *customerOSService) GetUserByEmail(email string) (*User, error) {
 	session := (*s.driver).NewSession(
 		neo4j.SessionConfig{
 			AccessMode: neo4j.AccessModeWrite,
@@ -130,15 +146,46 @@ func (s *customerOSService) GetUserByEmail(email string) (*UserInfo, error) {
 	if len(dbRecords.([]*db.Record)) == 0 {
 		return nil, errors.New("user not found")
 	}
+
 	dbNode := (dbRecords.([]*db.Record))[0].Values[0].(dbtype.Node)
-	props := utils.GetPropsFromNode(dbNode)
-
-	userInfo := UserInfo{Id: utils.GetStringPropOrEmpty(props, "id")}
-
-	return &userInfo, nil
+	return mapNodeToUser(&dbNode), nil
 }
 
-func (s *customerOSService) GetContactByEmail(email string) (*ContactInfo, error) {
+func (s *customerOSService) GetContactById(id string) (*Contact, error) {
+	session := (*s.driver).NewSession(
+		neo4j.SessionConfig{
+			AccessMode: neo4j.AccessModeWrite,
+			BoltLogger: neo4j.ConsoleBoltLogger()})
+	defer session.Close()
+
+	dbRecords, err := session.ReadTransaction(func(tx neo4j.Transaction) (any, error) {
+		if queryResult, err := tx.Run(`MATCH (c:Contact{id: $id})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}),
+                  (c:Contact)-[:EMAILED_AT]->(p:Email{primary: true})
+            RETURN c.id, c.firstName, c.lastName, p.email`,
+			map[string]any{
+				"tenant": "openline", //TODO discuss with customerOS team
+				"id":     id,
+			}); err != nil {
+			return nil, err
+		} else {
+			return queryResult.Collect()
+		}
+	})
+	if err != nil {
+		return nil, err
+	}
+	if len(dbRecords.([]*db.Record)) == 0 {
+		return nil, errors.New("no contact found")
+	}
+
+	idd := (dbRecords.([]*db.Record))[0].Values[0].(string)
+	firstName := (dbRecords.([]*db.Record))[0].Values[1].(string)
+	lastName := (dbRecords.([]*db.Record))[0].Values[2].(string)
+	em := (dbRecords.([]*db.Record))[0].Values[3].(string)
+	return mapNodeToContact(idd, firstName, lastName, em), nil
+}
+
+func (s *customerOSService) GetContactByEmail(email string) (*Contact, error) {
 	session := (*s.driver).NewSession(
 		neo4j.SessionConfig{
 			AccessMode: neo4j.AccessModeWrite,
@@ -148,7 +195,7 @@ func (s *customerOSService) GetContactByEmail(email string) (*ContactInfo, error
 	dbRecords, err := session.ReadTransaction(func(tx neo4j.Transaction) (any, error) {
 		if queryResult, err := tx.Run(`MATCH (c:Contact)-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}),
                   (c:Contact)-[:EMAILED_AT]->(p:Email {email:$email})
-            RETURN c`,
+            RETURN c.id, c.firstName, c.lastName, p.email`,
 			map[string]any{
 				"tenant": "openline", //TODO discuss with customerOS team
 				"email":  email,
@@ -164,22 +211,39 @@ func (s *customerOSService) GetContactByEmail(email string) (*ContactInfo, error
 	if len(dbRecords.([]*db.Record)) == 0 {
 		return nil, errors.New("no contact found")
 	}
-	dbNode := (dbRecords.([]*db.Record))[0].Values[0].(dbtype.Node)
-	props := utils.GetPropsFromNode(dbNode)
 
-	contactInfo := ContactInfo{Id: utils.GetStringPropOrEmpty(props, "id")}
+	id := (dbRecords.([]*db.Record))[0].Values[0].(string)
+	var firstName string
+	var lastName string
+	var em string
 
-	return &contactInfo, nil
+	if (dbRecords.([]*db.Record))[0].Values[1] == nil {
+		firstName = ""
+	} else {
+		firstName = (dbRecords.([]*db.Record))[0].Values[1].(string)
+	}
+	if (dbRecords.([]*db.Record))[0].Values[2] == nil {
+		lastName = ""
+	} else {
+		lastName = (dbRecords.([]*db.Record))[0].Values[2].(string)
+	}
+	if (dbRecords.([]*db.Record))[0].Values[3] == nil {
+		em = ""
+	} else {
+		em = (dbRecords.([]*db.Record))[0].Values[3].(string)
+	}
+
+	return mapNodeToContact(id, firstName, lastName, em), nil
 }
 
-func (s *customerOSService) CreateContactWithEmail(tenant string, email string) (string, error) {
+func (s *customerOSService) CreateContactWithEmail(tenant string, email string) (*Contact, error) {
 	session := (*s.driver).NewSession(
 		neo4j.SessionConfig{
 			AccessMode: neo4j.AccessModeWrite,
 			BoltLogger: neo4j.ConsoleBoltLogger()})
 	defer session.Close()
 
-	result, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
+	contact, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
 		//create the contact
 		contactQuery := "MATCH (t:Tenant {name:$tenant}) " +
 			" MERGE (c:Contact {id:randomUUID()})-[:CONTACT_BELONGS_TO_TENANT]->(t) ON CREATE SET" +
@@ -187,7 +251,7 @@ func (s *customerOSService) CreateContactWithEmail(tenant string, email string) 
 			" c.source=$source, " +
 			" c.sourceOfTruth=$sourceOfTruth, " +
 			" c:%s " +
-			" RETURN c"
+			" RETURN c.id, c.firstName, c.lastName"
 
 		contactQueryResult, err := tx.Run(fmt.Sprintf(contactQuery, "Contact_"+tenant),
 			map[string]interface{}{
@@ -197,7 +261,8 @@ func (s *customerOSService) CreateContactWithEmail(tenant string, email string) 
 				"sourceOfTruth": "openline",
 			})
 
-		node, err := utils.ExtractSingleRecordFirstValueAsNode(contactQueryResult, err)
+		contact, err := contactQueryResult.Single()
+
 		if err != nil {
 			return nil, err
 		}
@@ -207,9 +272,9 @@ func (s *customerOSService) CreateContactWithEmail(tenant string, email string) 
 			" MERGE (c)-[r:EMAILED_AT]->(e:Email {email: $email}) " +
 			" ON CREATE SET e.label=$label, r.primary=$primary, e.id=randomUUID(), e:%s " +
 			" ON MATCH SET e.label=$label, r.primary=$primary " +
-			" RETURN e, r"
+			" RETURN e"
 
-		contactId := utils.GetPropsFromNode(*node)["id"].(string)
+		contactId := contact.Values[0].(string)
 		_, err = tx.Run(fmt.Sprintf(emailQuery, "Email_"+tenant),
 			map[string]interface{}{
 				"tenant":    tenant,
@@ -223,16 +288,16 @@ func (s *customerOSService) CreateContactWithEmail(tenant string, email string) 
 			return nil, err
 		}
 
-		return contactId, nil
+		return mapNodeToContact(contactId, "", "", email), nil
 	})
 	if err != nil {
-		return "", err
+		return nil, err
 	} else {
-		return result.(string), nil
+		return contact.(*Contact), nil
 	}
 }
 
-func (s *customerOSService) CreateContactWithPhone(phone string) (string, error) {
+func (s *customerOSService) CreateContactWithPhone(tenant string, phone string) (*Contact, error) {
 	//graphqlRequest := graphql.NewRequest(`
 	//	mutation CreateContact ($firstName: String!, $lastName: String!, $e164: String!) {
 	//	  contact_Create(input: {
@@ -254,7 +319,7 @@ func (s *customerOSService) CreateContactWithPhone(phone string) (string, error)
 	//	return "", err
 	//}
 	//return graphqlResponse["contact_Create"]["id"], nil
-	return "", nil
+	return nil, nil
 }
 
 func (s *customerOSService) ConversationByIdExists(tenant string, conversationId string) (bool, error) {
@@ -296,7 +361,8 @@ func (s *customerOSService) GetConversations(tenant string) ([]Conversation, err
 
 	dbRecords, err := session.ReadTransaction(func(tx neo4j.Transaction) (any, error) {
 
-		if queryResult, err := tx.Run("MATCH (c:Conversation_"+tenant+") RETURN c", map[string]any{
+		//todo move order by as param
+		if queryResult, err := tx.Run("MATCH (c:Conversation_"+tenant+") RETURN c order by c.updatedAt desc", map[string]any{
 			"tenant": tenant,
 		}); err != nil {
 			return nil, err
@@ -311,19 +377,14 @@ func (s *customerOSService) GetConversations(tenant string) ([]Conversation, err
 
 	var conversations []Conversation
 	for _, v := range dbRecords.([]*neo4j.Record) {
-		node := utils.NodePtr(v.Values[0].(neo4j.Node))
-		conversation := new(Conversation)
-		conversation.Id = utils.GetPropsFromNode(*node)["id"].(string)
-		conversation.Status = utils.GetPropsFromNode(*node)["status"].(string)
-		conversation.Channel = utils.GetPropsFromNode(*node)["channel"].(string)
-		conversation.StartedAt = utils.GetPropsFromNode(*node)["startedAt"].(time.Time)
-		conversations = append(conversations, *conversation)
+		node := v.Values[0].(neo4j.Node)
+		conversations = append(conversations, *mapNodeToConversation(&node))
 	}
 
 	return conversations, nil
 }
 
-func (s *customerOSService) GetConversationById(tenant string, conversationId string) (*Conversation, error) {
+func (s *customerOSService) GetConversationById(conversationId string) (*Conversation, error) {
 	session := (*s.driver).NewSession(
 		neo4j.SessionConfig{
 			AccessMode: neo4j.AccessModeWrite,
@@ -332,8 +393,7 @@ func (s *customerOSService) GetConversationById(tenant string, conversationId st
 
 	conversationNode, err := session.ReadTransaction(func(tx neo4j.Transaction) (any, error) {
 
-		if queryResult, err := tx.Run("MATCH (c:Conversation_"+tenant+"{id: $conversationId}) RETURN c", map[string]any{
-			"tenant":         tenant,
+		if queryResult, err := tx.Run("MATCH (c:Conversation{id: $conversationId}) RETURN c", map[string]any{
 			"conversationId": conversationId,
 		}); err != nil {
 			return nil, err
@@ -356,7 +416,6 @@ func (s *customerOSService) GetConversationById(tenant string, conversationId st
 	return mapNodeToConversation(conversationNode.(*dbtype.Node)), nil
 }
 
-// returns the conversation if exists otherwise nil
 func (s *customerOSService) GetWebChatConversationWithContactInitiator(tenant string, contactId string) (*Conversation, error) {
 	session := (*s.driver).NewSession(
 		neo4j.SessionConfig{
@@ -396,7 +455,6 @@ func (s *customerOSService) GetWebChatConversationWithContactInitiator(tenant st
 	}
 }
 
-// returns the conversation if exists otherwise nil
 func (s *customerOSService) GetWebChatConversationWithUserInitiator(tenant string, userId string) (*Conversation, error) {
 	session := (*s.driver).NewSession(
 		neo4j.SessionConfig{
@@ -436,7 +494,7 @@ func (s *customerOSService) GetWebChatConversationWithUserInitiator(tenant strin
 	}
 }
 
-func (s *customerOSService) CreateConversation(tenant string, initiatorId string, initiatorUsername string, initiatorType entity.SenderType, channel entity.EventType) (*Conversation, error) {
+func (s *customerOSService) CreateConversation(tenant string, initiatorId string, initiatorFirstName string, initiatorLastName string, initiatorUsername string, initiatorType entity.SenderType, channel entity.EventType) (*Conversation, error) {
 	session := (*s.driver).NewSession(
 		neo4j.SessionConfig{
 			AccessMode: neo4j.AccessModeWrite,
@@ -455,7 +513,12 @@ func (s *customerOSService) CreateConversation(tenant string, initiatorId string
 	if result, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
 		query := "MATCH (t:Tenant {name:$tenant}) " +
 			" MERGE (o:Conversation {id:randomUUID()}) " +
-			" ON CREATE SET o.initiatorUsername=$initiatorUsername, o.startedAt=$startedAt, o.messageCount=0, o.channel=$channel, o.status=$status, o.source=$source, o.sourceOfTruth=$sourceOfTruth, o.appSource=$appSource, o:%s " +
+			" ON CREATE SET o.startedAt=$startedAt, o.updatedAt=$updatedAt, " +
+			" o.messageCount=0, o.channel=$channel, o.status=$status, o.source=$source, o.sourceOfTruth=$sourceOfTruth, " +
+			" o.initiatorFirstName=$initiatorFirstName, o.initiatorLastName=$initiatorLastName, o.initiatorUsername=$initiatorUsername, " +
+			" o.source=$source, o.sourceOfTruth=$sourceOfTruth, " +
+			" o.lastSenderId=$lastSenderId, o.lastSenderType=$lastSenderType, o.lastSenderFirstName=$lastSenderFirstName, o.lastSenderLastName=$lastSenderLastName, o.lastContentPreview=$lastContentPreview, " +
+			" o.appSource=$appSource, o:%s " +
 			" %s %s " +
 			" RETURN DISTINCT o"
 		queryLinkWithContacts := ""
@@ -476,19 +539,29 @@ func (s *customerOSService) CreateConversation(tenant string, initiatorId string
 				" OPTIONAL MATCH (u:User)-[:USER_BELONGS_TO_TENANT]->(t) WHERE u.id in $userIds " +
 				" MERGE (u)-[:INITIATED]->(o) "
 		}
+		utc := time.Now().UTC()
 		queryResult, err := tx.Run(fmt.Sprintf(query, "Conversation_"+tenant, queryLinkWithContacts, queryLinkWithUsers),
 			map[string]interface{}{
-				"tenant":            tenant,
-				"source":            "openline",
-				"sourceOfTruth":     "openline",
-				"appSource":         "manual",
-				"status":            "ACTIVE",
-				"initiatorUsername": initiatorUsername,
-				"startedAt":         time.Now().UTC(),
-				"channel":           channel,
-				"contactIds":        contactIds,
-				"userIds":           userIds,
+				"tenant":              tenant,
+				"source":              "openline",
+				"sourceOfTruth":       "openline",
+				"appSource":           "manual",
+				"status":              "ACTIVE",
+				"initiatorFirstName":  initiatorFirstName,
+				"initiatorLastName":   initiatorLastName,
+				"initiatorUsername":   initiatorUsername,
+				"startedAt":           utc,
+				"updatedAt":           utc,
+				"channel":             channel,
+				"contactIds":          contactIds,
+				"userIds":             userIds,
+				"lastSenderId":        "",
+				"lastSenderType":      "",
+				"lastSenderFirstName": "",
+				"lastSenderLastName":  "",
+				"lastContentPreview":  "",
 			})
+
 		return utils.ExtractSingleRecordFirstValueAsNode(queryResult, err)
 	}); err != nil {
 		return nil, err
@@ -498,7 +571,7 @@ func (s *customerOSService) CreateConversation(tenant string, initiatorId string
 	}
 }
 
-func (s *customerOSService) UpdateConversation(tenant string, conversationId string, participantId string, participantType entity.SenderType) (string, error) {
+func (s *customerOSService) UpdateConversation(tenant string, conversationId string, participantId string, participantType entity.SenderType, lastSenderFirstName string, lastSenderLastName string, lastContentPreview string) (string, error) {
 	session := (*s.driver).NewSession(
 		neo4j.SessionConfig{
 			AccessMode: neo4j.AccessModeWrite,
@@ -507,17 +580,23 @@ func (s *customerOSService) UpdateConversation(tenant string, conversationId str
 
 	contactIds := []string{}
 	userIds := []string{}
+	participantTypeString := ""
 
 	if participantType == entity.CONTACT {
 		contactIds = append(contactIds, participantId)
+		participantTypeString = "CONTACT"
 	} else if participantType == entity.USER {
 		userIds = append(userIds, participantId)
+		participantTypeString = "USER"
 	}
 
 	if result, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
 		query := "MATCH (t:Tenant {name:$tenant}) " +
 			" MERGE (o:Conversation {id:$conversationId}) " +
-			" ON MATCH SET o.messageCount=o.messageCount+1, o:%s " +
+			" ON MATCH SET " +
+			" o.messageCount=o.messageCount+1, o.updatedAt=$updatedAt, " +
+			" o.lastSenderId=$lastSenderId, o.lastSenderType=$lastSenderType, o.lastSenderFirstName=$lastSenderFirstName, o.lastSenderLastName=$lastSenderLastName, o.lastContentPreview=$lastContentPreview, " +
+			" o:%s " +
 			" %s %s " +
 			" RETURN DISTINCT o"
 		queryLinkWithContacts := ""
@@ -534,10 +613,16 @@ func (s *customerOSService) UpdateConversation(tenant string, conversationId str
 		}
 		queryResult, err := tx.Run(fmt.Sprintf(query, "Conversation_"+tenant, queryLinkWithContacts, queryLinkWithUsers),
 			map[string]interface{}{
-				"tenant":         tenant,
-				"conversationId": conversationId,
-				"contactIds":     contactIds,
-				"userIds":        userIds,
+				"tenant":              tenant,
+				"conversationId":      conversationId,
+				"updatedAt":           time.Now().UTC(),
+				"contactIds":          contactIds,
+				"userIds":             userIds,
+				"lastSenderId":        participantId,
+				"lastSenderType":      participantTypeString,
+				"lastSenderFirstName": lastSenderFirstName,
+				"lastSenderLastName":  lastSenderLastName,
+				"lastContentPreview":  lastContentPreview,
 			})
 		return utils.ExtractSingleRecordFirstValueAsNode(queryResult, err)
 	}); err != nil {
@@ -553,14 +638,51 @@ func mapNodeToConversation(node *dbtype.Node) *Conversation {
 		return nil
 	}
 
+	props := utils.GetPropsFromNode(*node)
+
 	conversation := new(Conversation)
 	conversation.Id = utils.GetPropsFromNode(*node)["id"].(string)
 	conversation.Status = utils.GetPropsFromNode(*node)["status"].(string)
 	conversation.Channel = utils.GetPropsFromNode(*node)["channel"].(string)
 	conversation.StartedAt = utils.GetPropsFromNode(*node)["startedAt"].(time.Time)
+	conversation.UpdatedAt = utils.GetPropsFromNode(*node)["updatedAt"].(time.Time)
+	conversation.InitiatorFirstName = utils.GetPropsFromNode(*node)["initiatorFirstName"].(string)
+	conversation.InitiatorLastName = utils.GetPropsFromNode(*node)["initiatorLastName"].(string)
 	conversation.InitiatorUsername = utils.GetPropsFromNode(*node)["initiatorUsername"].(string)
 
+	conversation.LastSenderId = utils.GetStringPropOrEmpty(props, "lastSenderId")
+	conversation.LastSenderType = utils.GetStringPropOrEmpty(props, "lastSenderType")
+	conversation.LastSenderFirstName = utils.GetStringPropOrEmpty(props, "lastSenderFirstName")
+	conversation.LastSenderLastName = utils.GetStringPropOrEmpty(props, "lastSenderLastName")
+	conversation.LastContentPreview = utils.GetStringPropOrEmpty(props, "lastContentPreview")
+
 	return conversation
+}
+
+func mapNodeToContact(id string, firstName string, lastName string, email string) *Contact {
+	user := new(Contact)
+	user.Id = id
+	user.FirstName = firstName
+	user.LastName = lastName
+	user.Email = email
+
+	return user
+}
+
+func mapNodeToUser(node *dbtype.Node) *User {
+	if node == nil {
+		return nil
+	}
+
+	props := utils.GetPropsFromNode(*node)
+
+	user := new(User)
+	user.Id = utils.GetPropsFromNode(*node)["id"].(string)
+	user.FirstName = utils.GetStringPropOrEmpty(props, "firstName")
+	user.LastName = utils.GetStringPropOrEmpty(props, "lastName")
+	user.Email = utils.GetStringPropOrEmpty(props, "email")
+
+	return user
 }
 
 func NewCustomerOSService(driver *neo4j.Driver, postgresRepositories *repository.PostgresRepositories) *customerOSService {

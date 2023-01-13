@@ -22,6 +22,7 @@ type CommonStoreService interface {
 	ConvertEntityDirectionToMSDirection(direction entity.Direction) msProto.MessageDirection
 	ConvertMSDirectionToEntityDirection(direction msProto.MessageDirection) entity.Direction
 
+	EncodeConversationToMS(conversation Conversation) *msProto.FeedItem
 	EncodeConversationEventToMS(conversationEvent entity.ConversationEvent) *msProto.Message
 }
 
@@ -38,6 +39,19 @@ func (s *commonStoreService) EncodeConversationEventToMS(conversationEvent entit
 		SenderId:                      conversationEvent.SenderId,
 		SenderType:                    s.ConvertEntitySenderTypeToMSSenderType(conversationEvent.SenderType),
 		SenderUsername:                conversationEvent.SenderUsername,
+	}
+}
+
+func (s *commonStoreService) EncodeConversationToMS(conversation Conversation) *msProto.FeedItem {
+	return &msProto.FeedItem{
+		Id:                  conversation.Id,
+		InitiatorFirstName:  conversation.InitiatorFirstName,
+		InitiatorLastName:   conversation.InitiatorLastName,
+		InitiatorUsername:   conversation.InitiatorUsername,
+		LastSenderFirstName: conversation.LastSenderFirstName,
+		LastSenderLastName:  conversation.LastSenderLastName,
+		LastContentPreview:  conversation.LastContentPreview,
+		LastTimestamp:       timestamppb.New(conversation.UpdatedAt),
 	}
 }
 
