@@ -1,0 +1,54 @@
+syntax = "proto3";
+package proto;
+
+import "google/protobuf/timestamp.proto";
+import "Message.proto";
+
+option go_package = "github.com/openline-ai/openline-customer-os/packages/server/message-store/proto/generated/";
+
+enum FeedItemState {
+  NEW = 0;
+  IN_PROGRESS = 1;
+  CLOSED = 2;
+}
+
+message MessageListResponse {
+  repeated Message messages = 1;
+}
+
+message FeedId {
+  string id = 1;
+}
+message FeedItem {
+  string id = 1;
+
+  //used to produce a record in the feed
+  string initiatorFirstName = 2;
+  string initiatorLastName = 3;
+  string initiatorUsername = 4;
+
+  //used to produce the preview in the feed
+  string lastSenderFirstName = 5;
+  string lastSenderLastName = 6;
+
+  string lastContentPreview = 7;
+  google.protobuf.Timestamp lastTimestamp = 8;
+}
+message FeedItemPagedResponse {
+  repeated FeedItem feedItems = 1;
+  int32 totalElements = 2;
+}
+
+message GetFeedsPagedRequest {
+  repeated FeedItemState stateIn = 1;
+  int32 page = 2;
+  int32 pageSize = 3;
+}
+
+service MessageStoreService {
+  rpc getFeeds(GetFeedsPagedRequest) returns (FeedItemPagedResponse) {};
+  rpc getFeed(FeedId) returns (FeedItem) {};
+
+  rpc getMessagesForFeed(FeedId) returns (MessageListResponse) {};
+  rpc getMessage(MessageId) returns (Message) {};
+}
