@@ -13,6 +13,8 @@ type Conversation implements Node {
     messageCount: Int64!
     contacts: [Contact!] @goField(forceResolver: true)
     users: [User!] @goField(forceResolver: true)
+    source: DataSource!
+    appSource: String
 }
 
 input ConversationInput {
@@ -22,6 +24,7 @@ input ConversationInput {
     userIds: [ID!]
     status: ConversationStatus! = ACTIVE
     channel: String
+    appSource: String
 }
 
 input ConversationUpdateInput {

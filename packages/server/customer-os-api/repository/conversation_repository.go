@@ -21,7 +21,7 @@ type ConversationDbNodesWithTotalCount struct {
 
 type ConversationRepository interface {
 	Create(session neo4j.Session, tenant string, userIds, contactIds []string, entity entity.ConversationEntity) (*dbtype.Node, error)
-	Close(session neo4j.Session, tenant string, conversationId string, status string) (*dbtype.Node, error)
+	Close(session neo4j.Session, tenant, conversationId, status string, sourceOfTruth entity.DataSource) (*dbtype.Node, error)
 	Update(session neo4j.Session, tenant string, userIds, contactIds []string, skipMessageCountIncrement bool, entity entity.ConversationEntity) (*dbtype.Node, error)
 	GetPaginatedConversationsForUser(session neo4j.Session, tenant, userId string, skip, limit int, sort *utils.CypherSort) (*ConversationDbNodesWithTotalCount, error)
 	GetPaginatedConversationsForContact(session neo4j.Session, tenant, contactId string, skip, limit int, sort *utils.CypherSort) (*ConversationDbNodesWithTotalCount, error)
@@ -41,20 +41,23 @@ func (r *conversationRepository) Create(session neo4j.Session, tenant string, us
 	if result, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
 		query := "MATCH (t:Tenant {name:$tenant}) " +
 			" MERGE (o:Conversation {id:$conversationId}) " +
-			" ON CREATE SET o.startedAt=$startedAt, o.messageCount=0, o.channel=$channel, o.status=$status, o:%s " +
+			" ON CREATE SET o.startedAt=$startedAt, o.messageCount=0, o.channel=$channel, o.status=$status, " +
+			" 				o.source=$source, o.sourceOfTruth=$sourceOfTruth, o.appSource=$appSource, o:%s " +
 			" %s %s " +
 			" RETURN DISTINCT o"
 		queryLinkWithContacts := ""
 		if len(contactIds) > 0 {
 			queryLinkWithContacts = " WITH DISTINCT t, o " +
 				" OPTIONAL MATCH (c:Contact)-[:CONTACT_BELONGS_TO_TENANT]->(t) WHERE c.id in $contactIds " +
-				" MERGE (c)-[:PARTICIPATES]->(o) "
+				" WITH t, o, COLLECT(c) as participants " +
+				" FOREACH (x in participants | MERGE (x)-[:PARTICIPATES]->(o) )"
 		}
 		queryLinkWithUsers := ""
 		if len(userIds) > 0 {
 			queryLinkWithUsers = " WITH DISTINCT t, o " +
 				" OPTIONAL MATCH (u:User)-[:USER_BELONGS_TO_TENANT]->(t) WHERE u.id in $userIds " +
-				" MERGE (u)-[:PARTICIPATES]->(o) "
+				" WITH t, o, COLLECT(u) as participants " +
+				" FOREACH (x in participants | MERGE (x)-[:PARTICIPATES]->(o) )"
 		}
 		queryResult, err := tx.Run(fmt.Sprintf(query, "Conversation_"+tenant, queryLinkWithContacts, queryLinkWithUsers),
 			map[string]interface{}{
@@ -65,6 +68,9 @@ func (r *conversationRepository) Create(session neo4j.Session, tenant string, us
 				"conversationId": entity.Id,
 				"contactIds":     contactIds,
 				"userIds":        userIds,
+				"source":         entity.Source,
+				"sourceOfTruth":  entity.SourceOfTruth,
+				"appSource":      entity.AppSource,
 			})
 		return utils.ExtractSingleRecordFirstValueAsNode(queryResult, err)
 	}); err != nil {
@@ -81,19 +87,21 @@ func (r *conversationRepository) Update(session neo4j.Session, tenant string, us
 			" %s " +
 			" %s " +
 			" WITH DISTINCT o " +
-			" SET o.startedAt=o.startedAt %s" +
+			" SET o.sourceOfTruth=$sourceOfTruth %s" +
 			" RETURN o"
 		queryLinkWithContacts := ""
 		if len(contactIds) > 0 {
 			queryLinkWithContacts = " WITH DISTINCT t, o " +
 				" OPTIONAL MATCH (c:Contact)-[:CONTACT_BELONGS_TO_TENANT]->(t) WHERE c.id in $contactIds " +
-				" MERGE (c)-[:PARTICIPATES]->(o) "
+				" WITH t, o, COLLECT(c) as participants " +
+				" FOREACH (x in participants | MERGE (x)-[:PARTICIPATES]->(o) )"
 		}
 		queryLinkWithUsers := ""
 		if len(userIds) > 0 {
 			queryLinkWithUsers = " WITH DISTINCT t, o " +
 				" OPTIONAL MATCH (u:User)-[:USER_BELONGS_TO_TENANT]->(t) WHERE u.id in $userIds " +
-				" MERGE (u)-[:PARTICIPATES]->(o) "
+				" WITH t, o, COLLECT(u) as participants " +
+				" FOREACH (x in participants | MERGE (x)-[:PARTICIPATES]->(o) )"
 		}
 
 		querySets := ""
@@ -114,6 +122,7 @@ func (r *conversationRepository) Update(session neo4j.Session, tenant string, us
 				"conversationId": entity.Id,
 				"contactIds":     contactIds,
 				"userIds":        userIds,
+				"sourceOfTruth":  entity.SourceOfTruth,
 			})
 		return utils.ExtractSingleRecordFirstValueAsNode(queryResult, err)
 	}); err != nil {
@@ -123,17 +132,18 @@ func (r *conversationRepository) Update(session neo4j.Session, tenant string, us
 	}
 }
 
-func (r *conversationRepository) Close(session neo4j.Session, tenant string, conversationId string, status string) (*dbtype.Node, error) {
+func (r *conversationRepository) Close(session neo4j.Session, tenant, conversationId, status string, sourceOfTruth entity.DataSource) (*dbtype.Node, error) {
 	if result, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
 		query := "MATCH (o:Conversation {id:$conversationId})--(p)--(t:Tenant {name:$tenant}) " +
 			" WHERE 'Contact' IN labels(p) OR 'User' IN labels(p) " +
-			" SET o.endedAt=datetime({timezone: 'UTC'}), o.status=$status" +
+			" SET o.endedAt=datetime({timezone: 'UTC'}), o.status=$status, o.sourceOfTruth=$sourceOfTruth" +
 			" RETURN DISTINCT o"
 		queryResult, err := tx.Run(query,
 			map[string]interface{}{
 				"tenant":         tenant,
 				"conversationId": conversationId,
 				"status":         status,
+				"sourceOfTruth":  sourceOfTruth,
 			})
 		return utils.ExtractSingleRecordFirstValueAsNode(queryResult, err)
 	}); err != nil {

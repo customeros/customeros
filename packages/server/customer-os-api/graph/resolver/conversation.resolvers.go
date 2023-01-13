@@ -8,6 +8,7 @@ import (
 	"context"
 
 	"github.com/99designs/gqlgen/graphql"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/generated"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper"
@@ -56,7 +57,7 @@ func (r *mutationResolver) ConversationUpdate(ctx context.Context, input model.C
 
 // ConversationClose is the resolver for the conversation_Close field.
 func (r *mutationResolver) ConversationClose(ctx context.Context, conversationID string) (*model.Conversation, error) {
-	conversationEntity, err := r.Services.ConversationService.CloseConversation(ctx, conversationID)
+	conversationEntity, err := r.Services.ConversationService.CloseConversation(ctx, conversationID, entity.DataSourceOpenline)
 	if err != nil {
 		graphql.AddErrorf(ctx, "failed to close conversation %s", conversationID)
 		return nil, err

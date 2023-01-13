@@ -286,6 +286,8 @@ type Conversation struct {
 	MessageCount int64              `json:"messageCount"`
 	Contacts     []*Contact         `json:"contacts"`
 	Users        []*User            `json:"users"`
+	Source       DataSource         `json:"source"`
+	AppSource    *string            `json:"appSource"`
 }
 
 func (Conversation) IsNode()            {}
@@ -298,6 +300,7 @@ type ConversationInput struct {
 	UserIds    []string           `json:"userIds"`
 	Status     ConversationStatus `json:"status"`
 	Channel    *string            `json:"channel"`
+	AppSource  *string            `json:"appSource"`
 }
 
 type ConversationPage struct {

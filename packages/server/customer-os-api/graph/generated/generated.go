@@ -126,11 +126,13 @@ type ComplexityRoot struct {
 	}
 
 	Conversation struct {
+		AppSource    func(childComplexity int) int
 		Channel      func(childComplexity int) int
 		Contacts     func(childComplexity int) int
 		EndedAt      func(childComplexity int) int
 		ID           func(childComplexity int) int
 		MessageCount func(childComplexity int) int
+		Source       func(childComplexity int) int
 		StartedAt    func(childComplexity int) int
 		Status       func(childComplexity int) int
 		Users        func(childComplexity int) int
@@ -831,6 +833,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.ContactsPage.TotalPages(childComplexity), true
 
+	case "Conversation.appSource":
+		if e.complexity.Conversation.AppSource == nil {
+			break
+		}
+
+		return e.complexity.Conversation.AppSource(childComplexity), true
+
 	case "Conversation.channel":
 		if e.complexity.Conversation.Channel == nil {
 			break
@@ -865,6 +874,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Conversation.MessageCount(childComplexity), true
+
+	case "Conversation.source":
+		if e.complexity.Conversation.Source == nil {
+			break
+		}
+
+		return e.complexity.Conversation.Source(childComplexity), true
 
 	case "Conversation.startedAt":
 		if e.complexity.Conversation.StartedAt == nil {
@@ -2827,6 +2843,8 @@ type Conversation implements Node {
     messageCount: Int64!
     contacts: [Contact!] @goField(forceResolver: true)
     users: [User!] @goField(forceResolver: true)
+    source: DataSource!
+    appSource: String
 }
 
 input ConversationInput {
@@ -2836,6 +2854,7 @@ input ConversationInput {
     userIds: [ID!]
     status: ConversationStatus! = ACTIVE
     channel: String
+    appSource: String
 }
 
 input ConversationUpdateInput {
@@ -7792,6 +7811,91 @@ func (ec *executionContext) fieldContext_Conversation_users(ctx context.Context,
 	return fc, nil
 }
 
+func (ec *executionContext) _Conversation_source(ctx context.Context, field graphql.CollectedField, obj *model.Conversation) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Conversation_source(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Source, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(model.DataSource)
+	fc.Result = res
+	return ec.marshalNDataSource2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐDataSource(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Conversation_source(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Conversation",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type DataSource does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Conversation_appSource(ctx context.Context, field graphql.CollectedField, obj *model.Conversation) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Conversation_appSource(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.AppSource, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Conversation_appSource(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Conversation",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _ConversationPage_content(ctx context.Context, field graphql.CollectedField, obj *model.ConversationPage) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_ConversationPage_content(ctx, field)
 	if err != nil {
@@ -7847,6 +7951,10 @@ func (ec *executionContext) fieldContext_ConversationPage_content(ctx context.Co
 				return ec.fieldContext_Conversation_contacts(ctx, field)
 			case "users":
 				return ec.fieldContext_Conversation_users(ctx, field)
+			case "source":
+				return ec.fieldContext_Conversation_source(ctx, field)
+			case "appSource":
+				return ec.fieldContext_Conversation_appSource(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Conversation", field.Name)
 		},
@@ -10756,6 +10864,10 @@ func (ec *executionContext) fieldContext_Mutation_conversation_Create(ctx contex
 				return ec.fieldContext_Conversation_contacts(ctx, field)
 			case "users":
 				return ec.fieldContext_Conversation_users(ctx, field)
+			case "source":
+				return ec.fieldContext_Conversation_source(ctx, field)
+			case "appSource":
+				return ec.fieldContext_Conversation_appSource(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Conversation", field.Name)
 		},
@@ -10829,6 +10941,10 @@ func (ec *executionContext) fieldContext_Mutation_conversation_Update(ctx contex
 				return ec.fieldContext_Conversation_contacts(ctx, field)
 			case "users":
 				return ec.fieldContext_Conversation_users(ctx, field)
+			case "source":
+				return ec.fieldContext_Conversation_source(ctx, field)
+			case "appSource":
+				return ec.fieldContext_Conversation_appSource(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Conversation", field.Name)
 		},
@@ -10902,6 +11018,10 @@ func (ec *executionContext) fieldContext_Mutation_conversation_Close(ctx context
 				return ec.fieldContext_Conversation_contacts(ctx, field)
 			case "users":
 				return ec.fieldContext_Conversation_users(ctx, field)
+			case "source":
+				return ec.fieldContext_Conversation_source(ctx, field)
+			case "appSource":
+				return ec.fieldContext_Conversation_appSource(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Conversation", field.Name)
 		},
@@ -18351,7 +18471,7 @@ func (ec *executionContext) unmarshalInputConversationInput(ctx context.Context,
 		asMap["status"] = "ACTIVE"
 	}
 
-	fieldsInOrder := [...]string{"id", "startedAt", "contactIds", "userIds", "status", "channel"}
+	fieldsInOrder := [...]string{"id", "startedAt", "contactIds", "userIds", "status", "channel", "appSource"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -18403,6 +18523,14 @@ func (ec *executionContext) unmarshalInputConversationInput(ctx context.Context,
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("channel"))
 			it.Channel, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "appSource":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("appSource"))
+			it.AppSource, err = ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -20403,6 +20531,17 @@ func (ec *executionContext) _Conversation(ctx context.Context, sel ast.Selection
 				return innerFunc(ctx)
 
 			})
+		case "source":
+
+			out.Values[i] = ec._Conversation_source(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "appSource":
+
+			out.Values[i] = ec._Conversation_appSource(ctx, field, obj)
+
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
