@@ -9,15 +9,24 @@ import (
 	"time"
 )
 
+type ConversationInitiator struct {
+	Id             string
+	ExternalId     string
+	ExternalSystem string
+	FirstName      string
+	LastName       string
+	Email          string
+}
+
 type ConversationRepository interface {
 	MergeEmailConversation(tenant string, date time.Time, message entity.EmailMessageData) (string, int64, error)
-	UserInitiateConversation(tenant, conversationId, userExternalI, externalSystem string) error
-	ContactInitiateConversation(tenant, conversationId, contactId string) error
+	UserInitiateConversation(tenant, conversationId string, initiator ConversationInitiator) error
+	ContactInitiateConversation(tenant, conversationId string, initiator ConversationInitiator) error
 	ContactByIdParticipateInConversation(tenant, conversationId, contactId string) error
 	ContactsByExternalIdParticipateInConversation(tenant, conversationId, externalSystem string, contactExternalIds []string) error
 	UserByExternalIdParticipateInConversation(tenant, conversationId, externalSystem, userExternalId string) error
 	UsersByEmailParticipateInConversation(tenant, conversationId string, userEmails []string) error
-	IncrementMessageCount(tenant, conversationId string) error
+	IncrementMessageCount(tenant, conversationId string, updatedAt time.Time) error
 }
 
 type conversationRepository struct {
@@ -34,15 +43,15 @@ func (r *conversationRepository) MergeEmailConversation(tenant string, syncDate 
 	session := utils.NewNeo4jWriteSession(*r.driver)
 	defer session.Close()
 
-	query := "MERGE (c:Conversation_%s {threadId:$threadId, source:$source, channel:$channel}) " +
-		" ON CREATE SET c:Conversation, " +
-		" 				c.syncDate=$syncDate, c.id=randomUUID(), c.startedAt=$createdAt, " +
-		"             	c.sourceOfTruth=$sourceOfTruth, c.appSource=$appSource, c.status=$status," +
-		"				c.messageCount=0 " +
-		" ON MATCH SET 	c.syncDate=$syncDate, c.status=$status " +
-		" WITH c " +
-		" REMOVE c.endedAt " +
-		" RETURN c.id, c.messageCount"
+	query := "MERGE (o:Conversation_%s {threadId:$threadId, source:$source, channel:$channel}) " +
+		" ON CREATE SET o:Conversation, " +
+		" 				o.syncDate=$syncDate, o.id=randomUUID(), o.startedAt=$createdAt, " +
+		"             	o.sourceOfTruth=$sourceOfTruth, o.appSource=$appSource, o.status=$status," +
+		"				o.messageCount=0 " +
+		" ON MATCH SET 	o.syncDate=$syncDate, o.status=$status " +
+		" WITH o " +
+		" REMOVE o.endedAt " +
+		" RETURN o.id, o.messageCount"
 
 	dbRecord, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
 		queryResult, err := tx.Run(fmt.Sprintf(query, tenant),
@@ -72,40 +81,48 @@ func (r *conversationRepository) MergeEmailConversation(tenant string, syncDate 
 	return dbRecord.(*db.Record).Values[0].(string), dbRecord.(*db.Record).Values[1].(int64), nil
 }
 
-func (r *conversationRepository) UserInitiateConversation(tenant, conversationId, userExternalId, externalSystem string) error {
+func (r *conversationRepository) UserInitiateConversation(tenant, conversationId string, initiator ConversationInitiator) error {
 	session := utils.NewNeo4jWriteSession(*r.driver)
 	defer session.Close()
 
 	query := "MATCH (o:Conversation_%s {id:$conversationId}) " +
 		" MATCH (:Tenant {name:$tenant})<-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]-(e:ExternalSystem {id:$externalSystem}) " +
 		" MATCH (u:User)-[:IS_LINKED_WITH {externalId:$userExternalId}]->(e)" +
-		" MERGE (u)-[:INITIATED]->(o) "
+		" MERGE (u)-[:INITIATED]->(o) " +
+		" SET o.initiatorFirstName=$firstName, o.initiatorLastName=$lastName, o.initiatorUsername=$email "
 	_, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
 		_, err := tx.Run(fmt.Sprintf(query, tenant),
 			map[string]interface{}{
 				"tenant":         tenant,
 				"conversationId": conversationId,
-				"userExternalId": userExternalId,
-				"externalSystem": externalSystem,
+				"userExternalId": initiator.ExternalId,
+				"externalSystem": initiator.ExternalSystem,
+				"firstName":      initiator.FirstName,
+				"lastName":       initiator.LastName,
+				"email":          initiator.Email,
 			})
 		return nil, err
 	})
 	return err
 }
 
-func (r *conversationRepository) ContactInitiateConversation(tenant, conversationId, contactId string) error {
+func (r *conversationRepository) ContactInitiateConversation(tenant, conversationId string, initiator ConversationInitiator) error {
 	session := utils.NewNeo4jWriteSession(*r.driver)
 	defer session.Close()
 
 	query := "MATCH (o:Conversation_%s {id:$conversationId}) " +
 		" MATCH (:Tenant {name:$tenant})<-[:CONTACT_BELONGS_TO_TENANT]-(c:Contact {id:$contactId}) " +
-		" MERGE (c)-[:INITIATED]->(o) "
+		" MERGE (c)-[:INITIATED]->(o) " +
+		" SET o.initiatorFirstName=$firstName, o.initiatorLastName=$lastName, o.initiatorUsername=$email "
 	_, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
 		_, err := tx.Run(fmt.Sprintf(query, tenant),
 			map[string]interface{}{
 				"tenant":         tenant,
 				"conversationId": conversationId,
-				"contactId":      contactId,
+				"contactId":      initiator.Id,
+				"firstName":      initiator.FirstName,
+				"lastName":       initiator.LastName,
+				"email":          initiator.Email,
 			})
 		return nil, err
 	})
@@ -192,17 +209,18 @@ func (r *conversationRepository) UsersByEmailParticipateInConversation(tenant, c
 	return err
 }
 
-func (r *conversationRepository) IncrementMessageCount(tenant, conversationId string) error {
+func (r *conversationRepository) IncrementMessageCount(tenant, conversationId string, updatedAt time.Time) error {
 	session := utils.NewNeo4jWriteSession(*r.driver)
 	defer session.Close()
 
 	query := "MATCH (o:Conversation_%s {id:$conversationId}) " +
-		" SET o.messageCount=o.messageCount+1 "
+		" SET o.messageCount=o.messageCount+1, o.updatedAt=$updatedAt "
 	_, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
 		_, err := tx.Run(fmt.Sprintf(query, tenant),
 			map[string]interface{}{
 				"tenant":         tenant,
 				"conversationId": conversationId,
+				"updatedAt":      updatedAt,
 			})
 		return nil, err
 	})
