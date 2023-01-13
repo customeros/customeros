@@ -30,11 +30,11 @@ MATCH (t:Tenant {name:"openline"})
   ON CREATE SET ot.id=randomUUID();
 
 MATCH (t:Tenant {name:"openline"})
-    MERGE (u:User {id:"AgentSmith"})-[:USER_BELONGS_TO_TENANT]->(t)
+    MERGE (u:User {id:"dev@openline.ai"})-[:USER_BELONGS_TO_TENANT]->(t)
     ON CREATE SET
-    		u.firstName ="Agent",
-            u.lastName="Smith",
-            u.email="AgentSmith@oasis.openline.ninja",
+    		u.firstName ="Dev",
+            u.lastName="User",
+            u.email="dev@openline.ai",
     		u.createdAt=datetime({timezone: 'UTC'}),
     		u.source="openline",
     		u.sourceOfTruth="openline",
@@ -55,6 +55,10 @@ MATCH (c:Contact {id:"echotest"})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:"
             ON CREATE SET e.label="MAIN", r.primary=true, e.id=randomUUID(), e.createdAt=datetime({timezone: 'UTC'}),
                 e.source="openline", e.sourceOfTruth="openline", e.appSource="manual"
             ON MATCH SET e.label="MAIN", r.primary=true;
+
+MATCH (t:Tenant {name:"openline"})
+MERGE (o:Conversation{id:"echotest"}) ON CREATE SET  o:Conversation_openline, o.messageCount=1, o.updatedAt=datetime({timezone: 'UTC'}), o.startedAt=datetime({timezone: 'UTC'}), o.initiatorFirstName="", o.initiatorLastName="", o.initiatorUsername="echo@oasis.openline.ai", o.initiatorType="CONTACT", o.lastSenderId="echo@oasis.openline.ai", o.lastSenderType="", o.lastSenderFirstName="", o.lastSenderLastName="", o.lastContentPreview="Hello world!", o.status="ACTIVE", o.channel="WEB_CHAT",  o:Conversation_openline WITH DISTINCT t, o
+OPTIONAL MATCH (c:Contact)-[:CONTACT_BELONGS_TO_TENANT]->(t) WHERE c.id ="echotest"  MERGE (c)-[:PARTICIPATES]->(o)  RETURN o;
 
 MATCH (t:Tenant {name:"openline"})<-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]-(e:ExternalSystem) SET e:ExternalSystem_openline;
 MATCH (t:Tenant {name:"openline"})<-[:CONTACT_TYPE_BELONGS_TO_TENANT]-(ct:ContactType) SET ct:ContactType_openline;

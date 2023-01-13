@@ -24,7 +24,4 @@ type Config struct {
 		CustomerOsAPI    string `env:"CUSTOMER_OS_API,required"`
 		CustomerOsAPIKey string `env:"CUSTOMER_OS_API_KEY,required"`
 	}
-	Identity struct {
-		DefaultUserId string `env:"DEFAULT_USER_ID" envDefault:"AgentSmith"`
-	}
 }
