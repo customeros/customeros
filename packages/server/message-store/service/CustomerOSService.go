@@ -66,6 +66,7 @@ type Conversation struct {
 	InitiatorFirstName  string
 	InitiatorLastName   string
 	InitiatorUsername   string
+	InitiatorType       string
 	LastSenderId        string
 	LastSenderType      string
 	LastSenderFirstName string
@@ -503,11 +504,14 @@ func (s *customerOSService) CreateConversation(tenant string, initiatorId string
 
 	contactIds := []string{}
 	userIds := []string{}
+	initiatorTypeStr := ""
 
 	if initiatorType == entity.CONTACT {
 		contactIds = append(contactIds, initiatorId)
+		initiatorTypeStr = "CONTACT"
 	} else if initiatorType == entity.USER {
 		userIds = append(userIds, initiatorId)
+		initiatorTypeStr = "USER"
 	}
 
 	if result, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
@@ -515,7 +519,7 @@ func (s *customerOSService) CreateConversation(tenant string, initiatorId string
 			" MERGE (o:Conversation {id:randomUUID()}) " +
 			" ON CREATE SET o.startedAt=$startedAt, o.updatedAt=$updatedAt, " +
 			" o.messageCount=0, o.channel=$channel, o.status=$status, o.source=$source, o.sourceOfTruth=$sourceOfTruth, " +
-			" o.initiatorFirstName=$initiatorFirstName, o.initiatorLastName=$initiatorLastName, o.initiatorUsername=$initiatorUsername, " +
+			" o.initiatorFirstName=$initiatorFirstName, o.initiatorLastName=$initiatorLastName, o.initiatorUsername=$initiatorUsername, o.initiatorType=$initiatorType, " +
 			" o.source=$source, o.sourceOfTruth=$sourceOfTruth, " +
 			" o.lastSenderId=$lastSenderId, o.lastSenderType=$lastSenderType, o.lastSenderFirstName=$lastSenderFirstName, o.lastSenderLastName=$lastSenderLastName, o.lastContentPreview=$lastContentPreview, " +
 			" o.appSource=$appSource, o:%s " +
@@ -550,6 +554,7 @@ func (s *customerOSService) CreateConversation(tenant string, initiatorId string
 				"initiatorFirstName":  initiatorFirstName,
 				"initiatorLastName":   initiatorLastName,
 				"initiatorUsername":   initiatorUsername,
+				"initiatorType":       initiatorTypeStr,
 				"startedAt":           utc,
 				"updatedAt":           utc,
 				"channel":             channel,
@@ -649,6 +654,7 @@ func mapNodeToConversation(node *dbtype.Node) *Conversation {
 	conversation.InitiatorFirstName = utils.GetPropsFromNode(*node)["initiatorFirstName"].(string)
 	conversation.InitiatorLastName = utils.GetPropsFromNode(*node)["initiatorLastName"].(string)
 	conversation.InitiatorUsername = utils.GetPropsFromNode(*node)["initiatorUsername"].(string)
+	conversation.InitiatorType = utils.GetPropsFromNode(*node)["initiatorType"].(string)
 
 	conversation.LastSenderId = utils.GetStringPropOrEmpty(props, "lastSenderId")
 	conversation.LastSenderType = utils.GetStringPropOrEmpty(props, "lastSenderType")
