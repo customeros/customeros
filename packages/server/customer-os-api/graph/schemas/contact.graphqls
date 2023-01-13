@@ -65,9 +65,6 @@ type Contact implements ExtensibleEntity & Node {
     "A user-defined label applied against a contact in customerOS."
     label: String
 
-    "Readonly indicator for a contact"
-    readonly: Boolean!
-
     source: DataSource!
 
     "User-defined field that defines the relationship type the contact has with your business.  `Customer`, `Partner`, `Lead` are examples."
@@ -180,9 +177,6 @@ input ContactInput {
     "User-defined field that defines the relationship type the contact has with your business.  `Customer`, `Partner`, `Lead` are examples."
     contactTypeId: ID
 
-    "Readonly indicator for a contact"
-    readonly: Boolean
-
     """
     An ISO8601 timestamp recording when the contact was created in customerOS.
     """
@@ -241,9 +235,6 @@ input ContactUpdateInput {
 
     "Id of the contact owner (user)"
     ownerId: ID
-
-    "Readonly indicator for a contact"
-    readonly: Boolean
 }
 
 """

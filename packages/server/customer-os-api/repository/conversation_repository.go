@@ -41,8 +41,9 @@ func (r *conversationRepository) Create(session neo4j.Session, tenant string, us
 	if result, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
 		query := "MATCH (t:Tenant {name:$tenant}) " +
 			" MERGE (o:Conversation {id:$conversationId}) " +
-			" ON CREATE SET o.startedAt=$startedAt, o.messageCount=0, o.channel=$channel, o.status=$status, " +
-			" 				o.source=$source, o.sourceOfTruth=$sourceOfTruth, o.appSource=$appSource, o:%s " +
+			" ON CREATE SET o:%s, " +
+			"				o.startedAt=$startedAt, o.messageCount=0, o.channel=$channel, o.status=$status, " +
+			" 				o.source=$source, o.sourceOfTruth=$sourceOfTruth, o.appSource=$appSource " +
 			" %s %s " +
 			" RETURN DISTINCT o"
 		queryLinkWithContacts := ""

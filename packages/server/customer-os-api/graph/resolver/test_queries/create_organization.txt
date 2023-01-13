@@ -15,7 +15,6 @@ mutation CreateOrganization($organizationTypeId: ID) {
       website
       industry
       isPublic
-      readonly
       createdAt
       organizationType {
         id

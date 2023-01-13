@@ -75,7 +75,6 @@ func TestMutationResolver_ContactCreate_Min(t *testing.T) {
 	require.Equal(t, "", *contact.Contact_Create.FirstName)
 	require.Equal(t, "", *contact.Contact_Create.LastName)
 	require.Equal(t, "", *contact.Contact_Create.Label)
-	require.Equal(t, false, contact.Contact_Create.Readonly)
 	require.Equal(t, model.DataSourceOpenline, contact.Contact_Create.Source)
 
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Tenant"))
@@ -335,10 +334,11 @@ func TestMutationResolver_ContactCreate_WithExternalReference(t *testing.T) {
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Contact"))
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Contact_"+tenantName))
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "ExternalSystem"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "ExternalSystem_"+tenantName))
 	require.Equal(t, 3, neo4jt.GetTotalCountOfNodes(driver))
 	require.Equal(t, 1, neo4jt.GetCountOfRelationships(driver, "IS_LINKED_WITH"))
 
-	assertNeo4jLabels(t, driver, []string{"Tenant", "Contact", "Contact_" + tenantName, "ExternalSystem"})
+	assertNeo4jLabels(t, driver, []string{"Tenant", "Contact", "Contact_" + tenantName, "ExternalSystem", "ExternalSystem_" + tenantName})
 }
 
 func TestMutationResolver_UpdateContact(t *testing.T) {

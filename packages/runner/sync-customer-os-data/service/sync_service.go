@@ -373,13 +373,26 @@ func (s *syncService) syncEmailMessages(dataService common.DataService, syncDate
 			// set initiator for new conversation
 			if messageCount == 0 {
 				if message.Direction == entity.OUTBOUND {
-					err := s.repositories.ConversationRepository.UserInitiateConversation(tenant, conversationId, message.UserExternalId, message.ExternalSystem)
+					initiator := repository.ConversationInitiator{
+						ExternalSystem: message.ExternalSystem,
+						ExternalId:     message.UserExternalId,
+						FirstName:      message.FromFirstName,
+						LastName:       message.FromLastName,
+						Email:          message.FromEmail,
+					}
+					err := s.repositories.ConversationRepository.UserInitiateConversation(tenant, conversationId, initiator)
 					if err != nil {
 						failedSync = true
 						logrus.Errorf("failed set user initiator for conversation %v in tenant %v :%v", conversationId, tenant, err)
 					}
 				} else if message.Direction == entity.INBOUND {
-					err := s.repositories.ConversationRepository.ContactInitiateConversation(tenant, conversationId, fromContactId)
+					initiator := repository.ConversationInitiator{
+						Id:        fromContactId,
+						FirstName: message.FromFirstName,
+						LastName:  message.FromLastName,
+						Email:     message.FromEmail,
+					}
+					err := s.repositories.ConversationRepository.ContactInitiateConversation(tenant, conversationId, initiator)
 					if err != nil {
 						failedSync = true
 						logrus.Errorf("failed set contact initiator for conversation %v in tenant %v :%v", conversationId, tenant, err)
@@ -421,7 +434,7 @@ func (s *syncService) syncEmailMessages(dataService common.DataService, syncDate
 
 			// increment message count
 			if failedSync == false {
-				err = s.repositories.ConversationRepository.IncrementMessageCount(tenant, conversationId)
+				err = s.repositories.ConversationRepository.IncrementMessageCount(tenant, conversationId, message.CreatedAt)
 				if err != nil {
 					failedSync = true
 					logrus.Errorf("failed set contact participants by external id %v for conversation %v in tenant %v :%v", message.ContactsExternalIds, conversationId, tenant, err)

@@ -18,7 +18,6 @@ type Organization implements Node {
     industry:    String
     isPublic:    Boolean
     createdAt:   Time!
-    readonly:    Boolean
     organizationType: OrganizationType @goField(forceResolver: true)
 
     """
