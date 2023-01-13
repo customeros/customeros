@@ -26,13 +26,14 @@ message FeedItem {
   string initiatorFirstName = 2;
   string initiatorLastName = 3;
   string initiatorUsername = 4;
+  string initiatorType = 5;
 
   //used to produce the preview in the feed
-  string lastSenderFirstName = 5;
-  string lastSenderLastName = 6;
+  string lastSenderFirstName = 6;
+  string lastSenderLastName = 7;
 
-  string lastContentPreview = 7;
-  google.protobuf.Timestamp lastTimestamp = 8;
+  string lastContentPreview = 8;
+  google.protobuf.Timestamp lastTimestamp = 9;
 }
 message FeedItemPagedResponse {
   repeated FeedItem feedItems = 1;

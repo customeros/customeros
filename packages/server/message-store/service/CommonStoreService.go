@@ -48,6 +48,7 @@ func (s *commonStoreService) EncodeConversationToMS(conversation Conversation) *
 		InitiatorFirstName:  conversation.InitiatorFirstName,
 		InitiatorLastName:   conversation.InitiatorLastName,
 		InitiatorUsername:   conversation.InitiatorUsername,
+		InitiatorType:       conversation.InitiatorType,
 		LastSenderFirstName: conversation.LastSenderFirstName,
 		LastSenderLastName:  conversation.LastSenderLastName,
 		LastContentPreview:  conversation.LastContentPreview,
