@@ -8,7 +8,6 @@ contact_Create(
     firstName
     lastName
     label
-    readonly
     source
     createdAt
   }

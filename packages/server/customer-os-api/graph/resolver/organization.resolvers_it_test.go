@@ -170,7 +170,6 @@ func TestMutationResolver_OrganizationCreate(t *testing.T) {
 	require.Equal(t, "organization website", *org.Website)
 	require.Equal(t, "organization industry", *org.Industry)
 	require.Equal(t, true, *org.IsPublic)
-	require.Equal(t, false, *org.Readonly)
 	require.Equal(t, organizationTypeId, org.OrganizationType.ID)
 	require.Equal(t, "COMPANY", org.OrganizationType.Name)
 	require.Equal(t, model.DataSourceOpenline, org.Source)

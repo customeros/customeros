@@ -86,7 +86,6 @@ type ComplexityRoot struct {
 		Notes         func(childComplexity int, pagination *model.Pagination) int
 		Owner         func(childComplexity int) int
 		PhoneNumbers  func(childComplexity int) int
-		Readonly      func(childComplexity int) int
 		Roles         func(childComplexity int) int
 		Source        func(childComplexity int) int
 		Template      func(childComplexity int) int
@@ -274,7 +273,6 @@ type ComplexityRoot struct {
 		IsPublic         func(childComplexity int) int
 		Name             func(childComplexity int) int
 		OrganizationType func(childComplexity int) int
-		Readonly         func(childComplexity int) int
 		Source           func(childComplexity int) int
 		Website          func(childComplexity int) int
 	}
@@ -673,13 +671,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Contact.PhoneNumbers(childComplexity), true
-
-	case "Contact.readonly":
-		if e.complexity.Contact.Readonly == nil {
-			break
-		}
-
-		return e.complexity.Contact.Readonly(childComplexity), true
 
 	case "Contact.roles":
 		if e.complexity.Contact.Roles == nil {
@@ -1878,13 +1869,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Organization.OrganizationType(childComplexity), true
 
-	case "Organization.readonly":
-		if e.complexity.Organization.Readonly == nil {
-			break
-		}
-
-		return e.complexity.Organization.Readonly(childComplexity), true
-
 	case "Organization.source":
 		if e.complexity.Organization.Source == nil {
 			break
@@ -2455,9 +2439,6 @@ type Contact implements ExtensibleEntity & Node {
     "A user-defined label applied against a contact in customerOS."
     label: String
 
-    "Readonly indicator for a contact"
-    readonly: Boolean!
-
     source: DataSource!
 
     "User-defined field that defines the relationship type the contact has with your business.  ` + "`" + `Customer` + "`" + `, ` + "`" + `Partner` + "`" + `, ` + "`" + `Lead` + "`" + ` are examples."
@@ -2570,9 +2551,6 @@ input ContactInput {
     "User-defined field that defines the relationship type the contact has with your business.  ` + "`" + `Customer` + "`" + `, ` + "`" + `Partner` + "`" + `, ` + "`" + `Lead` + "`" + ` are examples."
     contactTypeId: ID
 
-    "Readonly indicator for a contact"
-    readonly: Boolean
-
     """
     An ISO8601 timestamp recording when the contact was created in customerOS.
     """
@@ -2631,9 +2609,6 @@ input ContactUpdateInput {
 
     "Id of the contact owner (user)"
     ownerId: ID
-
-    "Readonly indicator for a contact"
-    readonly: Boolean
 }
 
 """
@@ -3341,7 +3316,6 @@ type Organization implements Node {
     industry:    String
     isPublic:    Boolean
     createdAt:   Time!
-    readonly:    Boolean
     organizationType: OrganizationType @goField(forceResolver: true)
 
     """
@@ -5734,50 +5708,6 @@ func (ec *executionContext) fieldContext_Contact_label(ctx context.Context, fiel
 	return fc, nil
 }
 
-func (ec *executionContext) _Contact_readonly(ctx context.Context, field graphql.CollectedField, obj *model.Contact) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Contact_readonly(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Readonly, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(bool)
-	fc.Result = res
-	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Contact_readonly(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Contact",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Boolean does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
 func (ec *executionContext) _Contact_source(ctx context.Context, field graphql.CollectedField, obj *model.Contact) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Contact_source(ctx, field)
 	if err != nil {
@@ -7003,8 +6933,6 @@ func (ec *executionContext) fieldContext_ContactRole_organization(ctx context.Co
 				return ec.fieldContext_Organization_isPublic(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_Organization_createdAt(ctx, field)
-			case "readonly":
-				return ec.fieldContext_Organization_readonly(ctx, field)
 			case "organizationType":
 				return ec.fieldContext_Organization_organizationType(ctx, field)
 			case "addresses":
@@ -7286,8 +7214,6 @@ func (ec *executionContext) fieldContext_ContactsPage_content(ctx context.Contex
 				return ec.fieldContext_Contact_createdAt(ctx, field)
 			case "label":
 				return ec.fieldContext_Contact_label(ctx, field)
-			case "readonly":
-				return ec.fieldContext_Contact_readonly(ctx, field)
 			case "source":
 				return ec.fieldContext_Contact_source(ctx, field)
 			case "contactType":
@@ -7717,8 +7643,6 @@ func (ec *executionContext) fieldContext_Conversation_contacts(ctx context.Conte
 				return ec.fieldContext_Contact_createdAt(ctx, field)
 			case "label":
 				return ec.fieldContext_Contact_label(ctx, field)
-			case "readonly":
-				return ec.fieldContext_Contact_readonly(ctx, field)
 			case "source":
 				return ec.fieldContext_Contact_source(ctx, field)
 			case "contactType":
@@ -9869,8 +9793,6 @@ func (ec *executionContext) fieldContext_Mutation_contact_Create(ctx context.Con
 				return ec.fieldContext_Contact_createdAt(ctx, field)
 			case "label":
 				return ec.fieldContext_Contact_label(ctx, field)
-			case "readonly":
-				return ec.fieldContext_Contact_readonly(ctx, field)
 			case "source":
 				return ec.fieldContext_Contact_source(ctx, field)
 			case "contactType":
@@ -9968,8 +9890,6 @@ func (ec *executionContext) fieldContext_Mutation_contact_Update(ctx context.Con
 				return ec.fieldContext_Contact_createdAt(ctx, field)
 			case "label":
 				return ec.fieldContext_Contact_label(ctx, field)
-			case "readonly":
-				return ec.fieldContext_Contact_readonly(ctx, field)
 			case "source":
 				return ec.fieldContext_Contact_source(ctx, field)
 			case "contactType":
@@ -11091,8 +11011,6 @@ func (ec *executionContext) fieldContext_Mutation_customFieldsMergeAndUpdateInCo
 				return ec.fieldContext_Contact_createdAt(ctx, field)
 			case "label":
 				return ec.fieldContext_Contact_label(ctx, field)
-			case "readonly":
-				return ec.fieldContext_Contact_readonly(ctx, field)
 			case "source":
 				return ec.fieldContext_Contact_source(ctx, field)
 			case "contactType":
@@ -12291,8 +12209,6 @@ func (ec *executionContext) fieldContext_Mutation_organization_Create(ctx contex
 				return ec.fieldContext_Organization_isPublic(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_Organization_createdAt(ctx, field)
-			case "readonly":
-				return ec.fieldContext_Organization_readonly(ctx, field)
 			case "organizationType":
 				return ec.fieldContext_Organization_organizationType(ctx, field)
 			case "addresses":
@@ -12372,8 +12288,6 @@ func (ec *executionContext) fieldContext_Mutation_organization_Update(ctx contex
 				return ec.fieldContext_Organization_isPublic(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_Organization_createdAt(ctx, field)
-			case "readonly":
-				return ec.fieldContext_Organization_readonly(ctx, field)
 			case "organizationType":
 				return ec.fieldContext_Organization_organizationType(ctx, field)
 			case "addresses":
@@ -13666,47 +13580,6 @@ func (ec *executionContext) fieldContext_Organization_createdAt(ctx context.Cont
 	return fc, nil
 }
 
-func (ec *executionContext) _Organization_readonly(ctx context.Context, field graphql.CollectedField, obj *model.Organization) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Organization_readonly(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Readonly, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*bool)
-	fc.Result = res
-	return ec.marshalOBoolean2ᚖbool(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Organization_readonly(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Organization",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Boolean does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
 func (ec *executionContext) _Organization_organizationType(ctx context.Context, field graphql.CollectedField, obj *model.Organization) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Organization_organizationType(ctx, field)
 	if err != nil {
@@ -13919,8 +13792,6 @@ func (ec *executionContext) fieldContext_OrganizationPage_content(ctx context.Co
 				return ec.fieldContext_Organization_isPublic(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_Organization_createdAt(ctx, field)
-			case "readonly":
-				return ec.fieldContext_Organization_readonly(ctx, field)
 			case "organizationType":
 				return ec.fieldContext_Organization_organizationType(ctx, field)
 			case "addresses":
@@ -14842,8 +14713,6 @@ func (ec *executionContext) fieldContext_Query_contact(ctx context.Context, fiel
 				return ec.fieldContext_Contact_createdAt(ctx, field)
 			case "label":
 				return ec.fieldContext_Contact_label(ctx, field)
-			case "readonly":
-				return ec.fieldContext_Contact_readonly(ctx, field)
 			case "source":
 				return ec.fieldContext_Contact_source(ctx, field)
 			case "contactType":
@@ -15004,8 +14873,6 @@ func (ec *executionContext) fieldContext_Query_contact_ByEmail(ctx context.Conte
 				return ec.fieldContext_Contact_createdAt(ctx, field)
 			case "label":
 				return ec.fieldContext_Contact_label(ctx, field)
-			case "readonly":
-				return ec.fieldContext_Contact_readonly(ctx, field)
 			case "source":
 				return ec.fieldContext_Contact_source(ctx, field)
 			case "contactType":
@@ -15103,8 +14970,6 @@ func (ec *executionContext) fieldContext_Query_contact_ByPhone(ctx context.Conte
 				return ec.fieldContext_Contact_createdAt(ctx, field)
 			case "label":
 				return ec.fieldContext_Contact_label(ctx, field)
-			case "readonly":
-				return ec.fieldContext_Contact_readonly(ctx, field)
 			case "source":
 				return ec.fieldContext_Contact_source(ctx, field)
 			case "contactType":
@@ -15441,8 +15306,6 @@ func (ec *executionContext) fieldContext_Query_organization(ctx context.Context,
 				return ec.fieldContext_Organization_isPublic(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_Organization_createdAt(ctx, field)
-			case "readonly":
-				return ec.fieldContext_Organization_readonly(ctx, field)
 			case "organizationType":
 				return ec.fieldContext_Organization_organizationType(ctx, field)
 			case "addresses":
@@ -18143,7 +18006,7 @@ func (ec *executionContext) unmarshalInputContactInput(ctx context.Context, obj 
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"templateId", "title", "firstName", "lastName", "label", "contactTypeId", "readonly", "createdAt", "customFields", "fieldSets", "email", "phoneNumber", "ownerId", "externalReference"}
+	fieldsInOrder := [...]string{"templateId", "title", "firstName", "lastName", "label", "contactTypeId", "createdAt", "customFields", "fieldSets", "email", "phoneNumber", "ownerId", "externalReference"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -18195,14 +18058,6 @@ func (ec *executionContext) unmarshalInputContactInput(ctx context.Context, obj 
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("contactTypeId"))
 			it.ContactTypeID, err = ec.unmarshalOID2ᚖstring(ctx, v)
-			if err != nil {
-				return it, err
-			}
-		case "readonly":
-			var err error
-
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("readonly"))
-			it.Readonly, err = ec.unmarshalOBoolean2ᚖbool(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -18383,7 +18238,7 @@ func (ec *executionContext) unmarshalInputContactUpdateInput(ctx context.Context
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"id", "title", "firstName", "lastName", "label", "contactTypeId", "ownerId", "readonly"}
+	fieldsInOrder := [...]string{"id", "title", "firstName", "lastName", "label", "contactTypeId", "ownerId"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -18443,14 +18298,6 @@ func (ec *executionContext) unmarshalInputContactUpdateInput(ctx context.Context
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("ownerId"))
 			it.OwnerID, err = ec.unmarshalOID2ᚖstring(ctx, v)
-			if err != nil {
-				return it, err
-			}
-		case "readonly":
-			var err error
-
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("readonly"))
-			it.Readonly, err = ec.unmarshalOBoolean2ᚖbool(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -19931,13 +19778,6 @@ func (ec *executionContext) _Contact(ctx context.Context, sel ast.SelectionSet, 
 
 			out.Values[i] = ec._Contact_label(ctx, field, obj)
 
-		case "readonly":
-
-			out.Values[i] = ec._Contact_readonly(ctx, field, obj)
-
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&invalids, 1)
-			}
 		case "source":
 
 			out.Values[i] = ec._Contact_source(ctx, field, obj)
@@ -21637,10 +21477,6 @@ func (ec *executionContext) _Organization(ctx context.Context, sel ast.Selection
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&invalids, 1)
 			}
-		case "readonly":
-
-			out.Values[i] = ec._Organization_readonly(ctx, field, obj)
-
 		case "organizationType":
 			field := field
 
