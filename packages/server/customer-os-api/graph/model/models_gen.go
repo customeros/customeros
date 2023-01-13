@@ -66,10 +66,8 @@ type Contact struct {
 	// **Required**
 	CreatedAt time.Time `json:"createdAt"`
 	// A user-defined label applied against a contact in customerOS.
-	Label *string `json:"label"`
-	// Readonly indicator for a contact
-	Readonly bool       `json:"readonly"`
-	Source   DataSource `json:"source"`
+	Label  *string    `json:"label"`
+	Source DataSource `json:"source"`
 	// User-defined field that defines the relationship type the contact has with your business.  `Customer`, `Partner`, `Lead` are examples.
 	ContactType *ContactType `json:"contactType"`
 	// `organizationName` and `jobTitle` of the contact if it has been associated with an organization.
@@ -178,8 +176,6 @@ type ContactInput struct {
 	Label *string `json:"label"`
 	// User-defined field that defines the relationship type the contact has with your business.  `Customer`, `Partner`, `Lead` are examples.
 	ContactTypeID *string `json:"contactTypeId"`
-	// Readonly indicator for a contact
-	Readonly *bool `json:"readonly"`
 	// An ISO8601 timestamp recording when the contact was created in customerOS.
 	CreatedAt *time.Time `json:"createdAt"`
 	// User defined metadata appended to contact.
@@ -249,8 +245,6 @@ type ContactUpdateInput struct {
 	ContactTypeID *string `json:"contactTypeId"`
 	// Id of the contact owner (user)
 	OwnerID *string `json:"ownerId"`
-	// Readonly indicator for a contact
-	Readonly *bool `json:"readonly"`
 }
 
 // Specifies how many pages of contact information has been returned in the query response.
@@ -575,7 +569,6 @@ type Organization struct {
 	Industry         *string           `json:"industry"`
 	IsPublic         *bool             `json:"isPublic"`
 	CreatedAt        time.Time         `json:"createdAt"`
-	Readonly         *bool             `json:"readonly"`
 	OrganizationType *OrganizationType `json:"organizationType"`
 	// All addresses associated with an organization in customerOS.
 	// **Required.  If no values it returns an empty array.**

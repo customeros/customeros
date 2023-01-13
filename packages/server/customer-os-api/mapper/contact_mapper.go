@@ -11,7 +11,6 @@ func MapContactInputToEntity(input model.ContactInput) *entity.ContactEntity {
 		CreatedAt: input.CreatedAt,
 		FirstName: utils.IfNotNilString(input.FirstName),
 		LastName:  utils.IfNotNilString(input.LastName),
-		Readonly:  utils.IfNotNilBool(input.Readonly),
 		Label:     utils.IfNotNilString(input.Label),
 		Title:     utils.IfNotNilString(input.Title, func() string { return input.Title.String() }),
 	}
@@ -27,9 +26,6 @@ func MapContactUpdateInputToEntity(input model.ContactUpdateInput) *entity.Conta
 	}
 	if input.LastName != nil {
 		contactEntity.LastName = *input.LastName
-	}
-	if input.Readonly != nil {
-		contactEntity.Readonly = *input.Readonly
 	}
 	if input.Label != nil {
 		contactEntity.Label = *input.Label
@@ -48,7 +44,6 @@ func MapEntityToContact(contact *entity.ContactEntity) *model.Contact {
 		FirstName: utils.StringPtr(contact.FirstName),
 		LastName:  utils.StringPtr(contact.LastName),
 		Label:     utils.StringPtr(contact.Label),
-		Readonly:  contact.Readonly,
 		CreatedAt: *contact.CreatedAt,
 		Source:    MapDataSourceToModel(contact.Source),
 	}

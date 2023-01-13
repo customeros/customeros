@@ -29,7 +29,6 @@ func MapEntityToOrganization(entity *entity.OrganizationEntity) *model.Organizat
 		Industry:    utils.StringPtr(entity.Industry),
 		IsPublic:    utils.BoolPtr(entity.IsPublic),
 		CreatedAt:   entity.CreatedAt,
-		Readonly:    utils.BoolPtr(entity.Readonly),
 		Source:      MapDataSourceToModel(entity.Source),
 	}
 }

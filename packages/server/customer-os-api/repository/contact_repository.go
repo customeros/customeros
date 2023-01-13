@@ -76,21 +76,19 @@ func (r *contactRepository) Create(tx neo4j.Transaction, tenant string, newConta
 		" c.title=$title, " +
 		" c.firstName=$firstName, " +
 		" c.lastName=$lastName, " +
-		" c.readonly=$readonly, " +
 		" c.label=$label, " +
 		" c.createdAt=$createdAt, " +
 		" c.source=$source, " +
 		" c.sourceOfTruth=$sourceOfTruth, " +
-		" c:%s " +
+		" c:Contact_%s " +
 		" RETURN c"
 
-	if queryResult, err := tx.Run(fmt.Sprintf(query, "Contact_"+tenant),
+	if queryResult, err := tx.Run(fmt.Sprintf(query, tenant),
 		map[string]interface{}{
 			"tenant":        tenant,
 			"title":         newContact.Title,
 			"firstName":     newContact.FirstName,
 			"lastName":      newContact.LastName,
-			"readonly":      newContact.Readonly,
 			"label":         newContact.Label,
 			"source":        source,
 			"sourceOfTruth": sourceOfTruth,
@@ -108,8 +106,7 @@ func (r *contactRepository) Update(tx neo4j.Transaction, tenant, contactId strin
 			SET c.firstName=$firstName,
 				c.lastName=$lastName,
 				c.label=$label,
-				c.title=$title,
-			    c.readonly=$readonly
+				c.title=$title
 			RETURN c`,
 		map[string]interface{}{
 			"tenant":    tenant,
@@ -118,7 +115,6 @@ func (r *contactRepository) Update(tx neo4j.Transaction, tenant, contactId strin
 			"lastName":  contactDtls.LastName,
 			"label":     contactDtls.Label,
 			"title":     contactDtls.Title,
-			"readonly":  contactDtls.Readonly,
 		}); err != nil {
 		return nil, err
 	} else {
