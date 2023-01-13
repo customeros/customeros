@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v4/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v4/neo4j/db"
 	"github.com/neo4j/neo4j-go-driver/v4/neo4j/dbtype"
@@ -99,11 +100,12 @@ func (r *entityTemplateRepository) FindByContactId(tenant string, contactId stri
 
 func (r *entityTemplateRepository) createFullEntityTemplateInTxWork(tenant string, entity *entity.EntityTemplateEntity) func(tx neo4j.Transaction) (any, error) {
 	return func(tx neo4j.Transaction) (any, error) {
-		txResult, err := tx.Run(`
-			MATCH (t:Tenant {name:$tenant})
-			MERGE (t)<-[r:ENTITY_TEMPLATE_BELONGS_TO_TENANT]-(e:EntityTemplate {id: randomUUID()}) 
-			ON CREATE SET e.extends=$extends, e.createdAt=datetime({timezone: 'UTC'}), e.name=$name, e.version=$version
-			RETURN e`,
+		query := "MATCH (t:Tenant {name:$tenant}) " +
+			" MERGE (t)<-[r:ENTITY_TEMPLATE_BELONGS_TO_TENANT]-(e:EntityTemplate {id: randomUUID()}) " +
+			" ON CREATE SET e:%s, " +
+			" e.extends=$extends, e.createdAt=datetime({timezone: 'UTC'}), e.name=$name, e.version=$version" +
+			" RETURN e"
+		txResult, err := tx.Run(fmt.Sprintf(query, "EntityTemplate_"+tenant),
 			map[string]any{
 				"tenant":  tenant,
 				"name":    entity.Name,
@@ -119,13 +121,13 @@ func (r *entityTemplateRepository) createFullEntityTemplateInTxWork(tenant strin
 		}
 		entityTemplateId := utils.GetPropsFromNode(records[0].Values[0].(dbtype.Node))["id"].(string)
 		for _, v := range entity.FieldSets {
-			err := r.repositories.FieldSetTemplateRepository.createFieldSetTemplateInTx(entityTemplateId, v, tx)
+			err := r.repositories.FieldSetTemplateRepository.createFieldSetTemplateInTx(tx, tenant, entityTemplateId, v)
 			if err != nil {
 				return nil, err
 			}
 		}
 		for _, v := range entity.CustomFields {
-			err := r.repositories.CustomFieldTemplateRepository.createCustomFieldTemplateForEntityInTx(entityTemplateId, v, tx)
+			err := r.repositories.CustomFieldTemplateRepository.createCustomFieldTemplateForEntityInTx(tx, tenant, entityTemplateId, v)
 			if err != nil {
 				return nil, err
 			}
