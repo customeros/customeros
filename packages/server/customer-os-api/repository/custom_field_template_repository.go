@@ -1,14 +1,15 @@
 package repository
 
 import (
+	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v4/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils"
 )
 
 type CustomFieldTemplateRepository interface {
-	createCustomFieldTemplateForEntityInTx(entityTemplateId string, entity *entity.CustomFieldTemplateEntity, tx neo4j.Transaction) error
-	createCustomFieldTemplateForFieldSetInTx(fieldSetTemplateId string, entity *entity.CustomFieldTemplateEntity, tx neo4j.Transaction) error
+	createCustomFieldTemplateForEntityInTx(tx neo4j.Transaction, tenant, entityTemplateId string, entity *entity.CustomFieldTemplateEntity) error
+	createCustomFieldTemplateForFieldSetInTx(tx neo4j.Transaction, tenant, fieldSetTemplateId string, entity *entity.CustomFieldTemplateEntity) error
 	FindAllByEntityTemplateId(entityTemplateId string) (any, error)
 	FindAllByEntityFieldSetTemplateId(fieldSetTemplateId string) (any, error)
 	FindByCustomFieldId(fieldSetId string) (any, error)
@@ -24,19 +25,14 @@ func NewCustomFieldTemplateRepository(driver *neo4j.Driver) CustomFieldTemplateR
 	}
 }
 
-func (r *customFieldTemplateRepository) createCustomFieldTemplateForEntityInTx(entityTemplateId string, entity *entity.CustomFieldTemplateEntity, tx neo4j.Transaction) error {
-	_, err := tx.Run(`
-			MATCH (e:EntityTemplate {id:$entityTemplateId})
-			MERGE (e)-[:CONTAINS]->(f:CustomFieldTemplate {
-				id: randomUUID(),
-				name: $name
-			}) ON CREATE SET 
-				f.order=$order, 
-				f.mandatory=$mandatory,
-				f.type=$type,
-				f.length=$length,
-				f.min=$min,
-				f.max=$max`,
+func (r *customFieldTemplateRepository) createCustomFieldTemplateForEntityInTx(tx neo4j.Transaction, tenant, entityTemplateId string, entity *entity.CustomFieldTemplateEntity) error {
+	query := "MATCH (e:EntityTemplate {id:$entityTemplateId}) " +
+		" MERGE (e)-[:CONTAINS]->(f:CustomFieldTemplate {id:randomUUID(), name:$name}) " +
+		" ON CREATE SET f:%s, " +
+		"  				f.order=$order, f.mandatory=$mandatory, f.type=$type, f.length=$length, " +
+		"  				f.min=$min, f.max=$max"
+
+	_, err := tx.Run(fmt.Sprintf(query, "CustomFieldTemplate_"+tenant),
 		map[string]any{
 			"entityTemplateId": entityTemplateId,
 			"name":             entity.Name,
@@ -51,19 +47,12 @@ func (r *customFieldTemplateRepository) createCustomFieldTemplateForEntityInTx(e
 	return err
 }
 
-func (r *customFieldTemplateRepository) createCustomFieldTemplateForFieldSetInTx(fieldSetTemplateId string, entity *entity.CustomFieldTemplateEntity, tx neo4j.Transaction) error {
-	_, err := tx.Run(`
-			MATCH (d:FieldSetTemplate {id:$fieldSetTemplateId})
-			MERGE (d)-[:CONTAINS]->(f:CustomFieldTemplate {
-				id: randomUUID(),
-				name: $name
-			}) ON CREATE SET 
-				f.order=$order, 
-				f.mandatory=$mandatory,
-				f.type=$type,
-				f.length=$length,
-				f.min=$min,
-				f.max=$max`,
+func (r *customFieldTemplateRepository) createCustomFieldTemplateForFieldSetInTx(tx neo4j.Transaction, tenant, fieldSetTemplateId string, entity *entity.CustomFieldTemplateEntity) error {
+	query := "MATCH (d:FieldSetTemplate {id:$fieldSetTemplateId}) " +
+		" MERGE (d)-[:CONTAINS]->(f:CustomFieldTemplate {id:randomUUID(), name:$name}) " +
+		" ON CREATE SET f:%s, " +
+		"				f.order=$order, f.mandatory=$mandatory, f.type=$type, f.length=$length, f.min=$min, f.max=$max"
+	_, err := tx.Run(fmt.Sprintf(query, "CustomFieldTemplate_"+tenant),
 		map[string]any{
 			"fieldSetTemplateId": fieldSetTemplateId,
 			"name":               entity.Name,

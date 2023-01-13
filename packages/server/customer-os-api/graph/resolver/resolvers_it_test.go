@@ -344,8 +344,14 @@ func TestMutationResolver_EntityTemplateCreate(t *testing.T) {
 	require.Equal(t, 255, *field.Length)
 
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "EntityTemplate"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "EntityTemplate_"+tenantName))
 	require.Equal(t, 2, neo4jt.GetCountOfNodes(driver, "FieldSetTemplate"))
+	require.Equal(t, 2, neo4jt.GetCountOfNodes(driver, "FieldSetTemplate_"+tenantName))
 	require.Equal(t, 4, neo4jt.GetCountOfNodes(driver, "CustomFieldTemplate"))
+	require.Equal(t, 4, neo4jt.GetCountOfNodes(driver, "CustomFieldTemplate_"+tenantName))
+
+	assertNeo4jLabels(t, driver, []string{"Tenant", "EntityTemplate", "EntityTemplate_" + tenantName,
+		"FieldSetTemplate", "FieldSetTemplate_" + tenantName, "CustomFieldTemplate", "CustomFieldTemplate_" + tenantName})
 }
 
 func TestQueryResolver_EntityTemplates_FilterExtendsProperty(t *testing.T) {

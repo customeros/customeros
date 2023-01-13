@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v4/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v4/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
@@ -8,7 +9,7 @@ import (
 )
 
 type FieldSetTemplateRepository interface {
-	createFieldSetTemplateInTx(entityTemplateId string, entity *entity.FieldSetTemplateEntity, tx neo4j.Transaction) error
+	createFieldSetTemplateInTx(tx neo4j.Transaction, tenant, entityTemplateId string, entity *entity.FieldSetTemplateEntity) error
 	FindAllByEntityTemplateId(entityTemplateId string) (any, error)
 	FindByFieldSetId(fieldSetId string) (any, error)
 }
@@ -25,14 +26,13 @@ func NewFieldSetTemplateRepository(driver *neo4j.Driver, repositories *Repositor
 	}
 }
 
-func (r *fieldSetTemplateRepository) createFieldSetTemplateInTx(entityTemplateId string, entity *entity.FieldSetTemplateEntity, tx neo4j.Transaction) error {
-	queryResult, err := tx.Run(`
-			MATCH (e:EntityTemplate {id:$entityTemplateId})
-			MERGE (e)-[:CONTAINS]->(f:FieldSetTemplate {
-				id: randomUUID(),
-				name: $name
-			}) ON CREATE SET f.order=$order
-			RETURN f`,
+func (r *fieldSetTemplateRepository) createFieldSetTemplateInTx(tx neo4j.Transaction, tenant, entityTemplateId string, entity *entity.FieldSetTemplateEntity) error {
+	query := "MATCH (e:EntityTemplate {id:$entityTemplateId}) " +
+		" MERGE (e)-[:CONTAINS]->(f:FieldSetTemplate {id:randomUUID(), name:$name}) " +
+		" ON CREATE SET f:%s, f.order=$order" +
+		" RETURN f"
+
+	queryResult, err := tx.Run(fmt.Sprintf(query, "FieldSetTemplate_"+tenant),
 		map[string]any{
 			"entityTemplateId": entityTemplateId,
 			"name":             entity.Name,
@@ -45,7 +45,7 @@ func (r *fieldSetTemplateRepository) createFieldSetTemplateInTx(entityTemplateId
 	}
 	fieldSetTemplateId := utils.GetPropsFromNode(record.Values[0].(dbtype.Node))["id"].(string)
 	for _, v := range entity.CustomFields {
-		err := r.repositories.CustomFieldTemplateRepository.createCustomFieldTemplateForFieldSetInTx(fieldSetTemplateId, v, tx)
+		err := r.repositories.CustomFieldTemplateRepository.createCustomFieldTemplateForFieldSetInTx(tx, tenant, fieldSetTemplateId, v)
 		if err != nil {
 			return err
 		}
