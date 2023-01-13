@@ -33,6 +33,8 @@ func TestMutationResolver_ConversationCreate_Min(t *testing.T) {
 	require.Equal(t, int64(0), conversation.Conversation_Create.MessageCount)
 	require.Empty(t, conversation.Conversation_Create.Users)
 	require.Equal(t, contactId, conversation.Conversation_Create.Contacts[0].ID)
+	require.Equal(t, model.DataSourceOpenline, conversation.Conversation_Create.Source)
+	require.Equal(t, "func test", *conversation.Conversation_Create.AppSource)
 
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Conversation"))
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Conversation_"+tenantName))

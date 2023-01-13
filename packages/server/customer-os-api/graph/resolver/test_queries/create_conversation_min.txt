@@ -1,6 +1,7 @@
 mutation CreateConversation($contactId: ID!) {
   conversation_Create(input: {
     contactIds: [$contactId]
+    appSource: "func test"
   }) {
     id
     startedAt
@@ -8,6 +9,8 @@ mutation CreateConversation($contactId: ID!) {
     status
     channel
     messageCount
+    source
+    appSource
     contacts {
       id
     }

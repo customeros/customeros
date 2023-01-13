@@ -19,7 +19,7 @@ import (
 type ConversationService interface {
 	CreateNewConversation(ctx context.Context, userIds, contactIds []string, input *entity.ConversationEntity) (*entity.ConversationEntity, error)
 	UpdateConversation(ctx context.Context, userIds, contactIds []string, input *entity.ConversationEntity, skipMessageCountIncrement bool) (*entity.ConversationEntity, error)
-	CloseConversation(ctx context.Context, conversationId string) (*entity.ConversationEntity, error)
+	CloseConversation(ctx context.Context, conversationId string, sourceOfTruth entity.DataSource) (*entity.ConversationEntity, error)
 	GetConversationsForUser(ctx context.Context, userId string, page, limit int, sortBy []*model.SortBy) (*utils.Pagination, error)
 	GetConversationsForContact(ctx context.Context, contactId string, page, limit int, sortBy []*model.SortBy) (*utils.Pagination, error)
 }
@@ -72,11 +72,11 @@ func (s *conversationService) UpdateConversation(ctx context.Context, userIds, c
 	return conversationEntity, nil
 }
 
-func (s *conversationService) CloseConversation(ctx context.Context, conversationId string) (*entity.ConversationEntity, error) {
+func (s *conversationService) CloseConversation(ctx context.Context, conversationId string, sourceOfTruth entity.DataSource) (*entity.ConversationEntity, error) {
 	session := utils.NewNeo4jReadSession(*s.getNeo4jDriver())
 	defer session.Close()
 
-	dbNodePtr, err := s.repository.ConversationRepository.Close(session, common.GetContext(ctx).Tenant, conversationId, mapper.MapConversationStatusFromModel(model.ConversationStatusClosed))
+	dbNodePtr, err := s.repository.ConversationRepository.Close(session, common.GetContext(ctx).Tenant, conversationId, mapper.MapConversationStatusFromModel(model.ConversationStatusClosed), sourceOfTruth)
 	if err != nil {
 		return nil, err
 	}
@@ -157,12 +157,15 @@ func (s *conversationService) GetConversationsForContact(ctx context.Context, co
 func (s *conversationService) mapDbNodeToConversationEntity(dbNode dbtype.Node) *entity.ConversationEntity {
 	props := utils.GetPropsFromNode(dbNode)
 	conversationEntity := entity.ConversationEntity{
-		Id:           utils.GetStringPropOrEmpty(props, "id"),
-		Channel:      utils.GetStringPropOrEmpty(props, "channel"),
-		Status:       utils.GetStringPropOrEmpty(props, "status"),
-		StartedAt:    utils.GetTimePropOrNow(props, "startedAt"),
-		EndedAt:      utils.GetTimePropOrNil(props, "endedAt"),
-		MessageCount: utils.GetInt64PropOrZero(props, "messageCount"),
+		Id:            utils.GetStringPropOrEmpty(props, "id"),
+		Channel:       utils.GetStringPropOrEmpty(props, "channel"),
+		Status:        utils.GetStringPropOrEmpty(props, "status"),
+		StartedAt:     utils.GetTimePropOrNow(props, "startedAt"),
+		EndedAt:       utils.GetTimePropOrNil(props, "endedAt"),
+		MessageCount:  utils.GetInt64PropOrZero(props, "messageCount"),
+		Source:        entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
+		SourceOfTruth: entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
+		AppSource:     utils.GetStringPropOrEmpty(props, "appSource"),
 	}
 	return &conversationEntity
 }
