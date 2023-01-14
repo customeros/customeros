@@ -272,16 +272,23 @@ func (this ContactsPage) GetTotalPages() int { return this.TotalPages }
 func (this ContactsPage) GetTotalElements() int64 { return this.TotalElements }
 
 type Conversation struct {
-	ID           string             `json:"id"`
-	StartedAt    time.Time          `json:"startedAt"`
-	EndedAt      *time.Time         `json:"endedAt"`
-	Status       ConversationStatus `json:"status"`
-	Channel      *string            `json:"channel"`
-	MessageCount int64              `json:"messageCount"`
-	Contacts     []*Contact         `json:"contacts"`
-	Users        []*User            `json:"users"`
-	Source       DataSource         `json:"source"`
-	AppSource    *string            `json:"appSource"`
+	ID                 string             `json:"id"`
+	StartedAt          time.Time          `json:"startedAt"`
+	UpdatedAt          time.Time          `json:"updatedAt"`
+	EndedAt            *time.Time         `json:"endedAt"`
+	Status             ConversationStatus `json:"status"`
+	Channel            *string            `json:"channel"`
+	MessageCount       int64              `json:"messageCount"`
+	Contacts           []*Contact         `json:"contacts"`
+	Users              []*User            `json:"users"`
+	Source             DataSource         `json:"source"`
+	SourceOfTruth      DataSource         `json:"sourceOfTruth"`
+	AppSource          *string            `json:"appSource"`
+	InitiatorFirstName *string            `json:"initiatorFirstName"`
+	InitiatorLastName  *string            `json:"initiatorLastName"`
+	InitiatorUsername  *string            `json:"initiatorUsername"`
+	InitiatorType      *string            `json:"initiatorType"`
+	ThreadID           *string            `json:"threadId"`
 }
 
 func (Conversation) IsNode()            {}

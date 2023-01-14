@@ -157,15 +157,21 @@ func (s *conversationService) GetConversationsForContact(ctx context.Context, co
 func (s *conversationService) mapDbNodeToConversationEntity(dbNode dbtype.Node) *entity.ConversationEntity {
 	props := utils.GetPropsFromNode(dbNode)
 	conversationEntity := entity.ConversationEntity{
-		Id:            utils.GetStringPropOrEmpty(props, "id"),
-		Channel:       utils.GetStringPropOrEmpty(props, "channel"),
-		Status:        utils.GetStringPropOrEmpty(props, "status"),
-		StartedAt:     utils.GetTimePropOrNow(props, "startedAt"),
-		EndedAt:       utils.GetTimePropOrNil(props, "endedAt"),
-		MessageCount:  utils.GetInt64PropOrZero(props, "messageCount"),
-		Source:        entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
-		SourceOfTruth: entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
-		AppSource:     utils.GetStringPropOrEmpty(props, "appSource"),
+		Id:                 utils.GetStringPropOrEmpty(props, "id"),
+		StartedAt:          utils.GetTimePropOrNow(props, "startedAt"),
+		UpdatedAt:          utils.GetTimePropOrNow(props, "updatedAt"),
+		EndedAt:            utils.GetTimePropOrNil(props, "endedAt"),
+		Channel:            utils.GetStringPropOrEmpty(props, "channel"),
+		Status:             utils.GetStringPropOrEmpty(props, "status"),
+		MessageCount:       utils.GetInt64PropOrZero(props, "messageCount"),
+		Source:             entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
+		SourceOfTruth:      entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
+		AppSource:          utils.GetStringPropOrEmpty(props, "appSource"),
+		ThreadId:           utils.GetStringPropOrEmpty(props, "threadId"),
+		InitiatorFirstName: utils.GetStringPropOrEmpty(props, "initiatorFirstName"),
+		InitiatorLastName:  utils.GetStringPropOrEmpty(props, "initiatorLastName"),
+		InitiatorType:      utils.GetStringPropOrEmpty(props, "initiatorType"),
+		InitiatorUsername:  utils.GetStringPropOrEmpty(props, "initiatorUsername"),
 	}
 	return &conversationEntity
 }
