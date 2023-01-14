@@ -353,7 +353,8 @@ func (s *syncService) syncEmailMessages(dataService common.DataService, syncDate
 		for _, message := range messages {
 			var failedSync = false
 
-			conversationId, messageCount, err := s.repositories.ConversationRepository.MergeEmailConversation(tenant, syncDate, message)
+			var initiatorUsername = ""
+			conversationId, messageCount, initiatorUsername, err := s.repositories.ConversationRepository.MergeEmailConversation(tenant, syncDate, message)
 			if err != nil {
 				failedSync = true
 				logrus.Errorf("failed merge email message with external reference %v for tenant %v :%v", message.ExternalId, tenant, err)
@@ -372,6 +373,8 @@ func (s *syncService) syncEmailMessages(dataService common.DataService, syncDate
 
 			// set initiator for new conversation
 			if messageCount == 0 {
+				initiatorUsername = message.FromEmail
+
 				if message.Direction == entity.OUTBOUND {
 					initiator := repository.ConversationInitiator{
 						ExternalSystem: message.ExternalSystem,
@@ -443,13 +446,15 @@ func (s *syncService) syncEmailMessages(dataService common.DataService, syncDate
 
 			if failedSync == false {
 				conversationEvent := entity.ConversationEvent{
-					TenantName:     tenant,
-					ConversationId: conversationId,
-					Type:           entity.EMAIL,
-					Subtype:        message.EmailThreadId,
-					Source:         message.ExternalSystem,
-					ExternalId:     message.ExternalId,
-					CreateDate:     message.CreatedAt,
+					TenantName:        tenant,
+					ConversationId:    conversationId,
+					Type:              entity.EMAIL,
+					Subtype:           message.EmailThreadId,
+					Source:            message.ExternalSystem,
+					ExternalId:        message.ExternalId,
+					CreateDate:        message.CreatedAt,
+					SenderUsername:    message.FromEmail,
+					InitiatorUsername: initiatorUsername,
 				}
 				if message.Direction == entity.INBOUND {
 					conversationEvent.Direction = entity.INBOUND

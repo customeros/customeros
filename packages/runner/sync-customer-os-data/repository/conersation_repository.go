@@ -19,7 +19,7 @@ type ConversationInitiator struct {
 }
 
 type ConversationRepository interface {
-	MergeEmailConversation(tenant string, date time.Time, message entity.EmailMessageData) (string, int64, error)
+	MergeEmailConversation(tenant string, date time.Time, message entity.EmailMessageData) (string, int64, string, error)
 	UserInitiateConversation(tenant, conversationId string, initiator ConversationInitiator) error
 	ContactInitiateConversation(tenant, conversationId string, initiator ConversationInitiator) error
 	ContactByIdParticipateInConversation(tenant, conversationId, contactId string) error
@@ -39,7 +39,7 @@ func NewConversationRepository(driver *neo4j.Driver) ConversationRepository {
 	}
 }
 
-func (r *conversationRepository) MergeEmailConversation(tenant string, syncDate time.Time, message entity.EmailMessageData) (string, int64, error) {
+func (r *conversationRepository) MergeEmailConversation(tenant string, syncDate time.Time, message entity.EmailMessageData) (string, int64, string, error) {
 	session := utils.NewNeo4jWriteSession(*r.driver)
 	defer session.Close()
 
@@ -51,20 +51,21 @@ func (r *conversationRepository) MergeEmailConversation(tenant string, syncDate 
 		" ON MATCH SET 	o.syncDate=$syncDate, o.status=$status " +
 		" WITH o " +
 		" REMOVE o.endedAt " +
-		" RETURN o.id, o.messageCount"
+		" RETURN o.id, o.messageCount, coalesce(o.initiatorUsername, $emptyInitiator) "
 
 	dbRecord, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
 		queryResult, err := tx.Run(fmt.Sprintf(query, tenant),
 			map[string]interface{}{
-				"tenant":        tenant,
-				"source":        message.ExternalSystem,
-				"sourceOfTruth": message.ExternalSystem,
-				"appSource":     message.ExternalSystem,
-				"threadId":      message.EmailThreadId,
-				"syncDate":      syncDate,
-				"createdAt":     message.CreatedAt,
-				"status":        "ACTIVE",
-				"channel":       "EMAIL",
+				"tenant":         tenant,
+				"source":         message.ExternalSystem,
+				"sourceOfTruth":  message.ExternalSystem,
+				"appSource":      message.ExternalSystem,
+				"threadId":       message.EmailThreadId,
+				"syncDate":       syncDate,
+				"createdAt":      message.CreatedAt,
+				"status":         "ACTIVE",
+				"channel":        "EMAIL",
+				"emptyInitiator": "",
 			})
 		if err != nil {
 			return nil, err
@@ -76,9 +77,9 @@ func (r *conversationRepository) MergeEmailConversation(tenant string, syncDate 
 		return record, nil
 	})
 	if err != nil {
-		return "", 0, err
+		return "", 0, "", err
 	}
-	return dbRecord.(*db.Record).Values[0].(string), dbRecord.(*db.Record).Values[1].(int64), nil
+	return dbRecord.(*db.Record).Values[0].(string), dbRecord.(*db.Record).Values[1].(int64), dbRecord.(*db.Record).Values[2].(string), nil
 }
 
 func (r *conversationRepository) UserInitiateConversation(tenant, conversationId string, initiator ConversationInitiator) error {
