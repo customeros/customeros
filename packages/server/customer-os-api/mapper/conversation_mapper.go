@@ -38,13 +38,21 @@ func MapConversationUpdateInputToEntity(input model.ConversationUpdateInput) *en
 
 func MapEntityToConversation(entity *entity.ConversationEntity) *model.Conversation {
 	conversationModel := model.Conversation{
-		ID:           entity.Id,
-		StartedAt:    entity.StartedAt,
-		EndedAt:      entity.EndedAt,
-		Status:       MapConversationStatusToModel(entity.Status),
-		Channel:      utils.StringPtr(entity.Channel),
-		MessageCount: entity.MessageCount,
-		Source:       MapDataSourceToModel(entity.Source),
+		ID:                 entity.Id,
+		StartedAt:          entity.StartedAt,
+		UpdatedAt:          entity.UpdatedAt,
+		EndedAt:            entity.EndedAt,
+		Status:             MapConversationStatusToModel(entity.Status),
+		Channel:            utils.StringPtr(entity.Channel),
+		MessageCount:       entity.MessageCount,
+		Source:             MapDataSourceToModel(entity.Source),
+		SourceOfTruth:      MapDataSourceToModel(entity.SourceOfTruth),
+		AppSource:          utils.StringPtr(entity.AppSource),
+		InitiatorFirstName: utils.StringPtr(entity.InitiatorFirstName),
+		InitiatorLastName:  utils.StringPtr(entity.InitiatorLastName),
+		InitiatorType:      utils.StringPtr(entity.InitiatorType),
+		InitiatorUsername:  utils.StringPtr(entity.InitiatorUsername),
+		ThreadID:           utils.StringPtr(entity.ThreadId),
 	}
 	if len(entity.AppSource) > 0 {
 		conversationModel.AppSource = utils.StringPtr(entity.AppSource)
