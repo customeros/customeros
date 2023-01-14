@@ -9,19 +9,10 @@ import (
 	"time"
 )
 
-type ConversationInitiator struct {
-	Id             string
-	ExternalId     string
-	ExternalSystem string
-	FirstName      string
-	LastName       string
-	Email          string
-}
-
 type ConversationRepository interface {
 	MergeEmailConversation(tenant string, date time.Time, message entity.EmailMessageData) (string, int64, string, error)
-	UserInitiateConversation(tenant, conversationId string, initiator ConversationInitiator) error
-	ContactInitiateConversation(tenant, conversationId string, initiator ConversationInitiator) error
+	UserInitiateConversation(tenant, conversationId string, initiator entity.ConversationInitiator) error
+	ContactInitiateConversation(tenant, conversationId string, initiator entity.ConversationInitiator) error
 	ContactByIdParticipateInConversation(tenant, conversationId, contactId string) error
 	ContactsByExternalIdParticipateInConversation(tenant, conversationId, externalSystem string, contactExternalIds []string) error
 	UserByExternalIdParticipateInConversation(tenant, conversationId, externalSystem, userExternalId string) error
@@ -82,7 +73,7 @@ func (r *conversationRepository) MergeEmailConversation(tenant string, syncDate 
 	return dbRecord.(*db.Record).Values[0].(string), dbRecord.(*db.Record).Values[1].(int64), dbRecord.(*db.Record).Values[2].(string), nil
 }
 
-func (r *conversationRepository) UserInitiateConversation(tenant, conversationId string, initiator ConversationInitiator) error {
+func (r *conversationRepository) UserInitiateConversation(tenant, conversationId string, initiator entity.ConversationInitiator) error {
 	session := utils.NewNeo4jWriteSession(*r.driver)
 	defer session.Close()
 
@@ -90,7 +81,7 @@ func (r *conversationRepository) UserInitiateConversation(tenant, conversationId
 		" MATCH (:Tenant {name:$tenant})<-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]-(e:ExternalSystem {id:$externalSystem}) " +
 		" MATCH (u:User)-[:IS_LINKED_WITH {externalId:$userExternalId}]->(e)" +
 		" MERGE (u)-[:INITIATED]->(o) " +
-		" SET o.initiatorFirstName=$firstName, o.initiatorLastName=$lastName, o.initiatorUsername=$email "
+		" SET o.initiatorFirstName=$firstName, o.initiatorLastName=$lastName, o.initiatorUsername=$email, o.initiatorType=$initiatorType "
 	_, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
 		_, err := tx.Run(fmt.Sprintf(query, tenant),
 			map[string]interface{}{
@@ -101,20 +92,21 @@ func (r *conversationRepository) UserInitiateConversation(tenant, conversationId
 				"firstName":      initiator.FirstName,
 				"lastName":       initiator.LastName,
 				"email":          initiator.Email,
+				"initiatorType":  initiator.InitiatorType,
 			})
 		return nil, err
 	})
 	return err
 }
 
-func (r *conversationRepository) ContactInitiateConversation(tenant, conversationId string, initiator ConversationInitiator) error {
+func (r *conversationRepository) ContactInitiateConversation(tenant, conversationId string, initiator entity.ConversationInitiator) error {
 	session := utils.NewNeo4jWriteSession(*r.driver)
 	defer session.Close()
 
 	query := "MATCH (o:Conversation_%s {id:$conversationId}) " +
 		" MATCH (:Tenant {name:$tenant})<-[:CONTACT_BELONGS_TO_TENANT]-(c:Contact {id:$contactId}) " +
 		" MERGE (c)-[:INITIATED]->(o) " +
-		" SET o.initiatorFirstName=$firstName, o.initiatorLastName=$lastName, o.initiatorUsername=$email "
+		" SET o.initiatorFirstName=$firstName, o.initiatorLastName=$lastName, o.initiatorUsername=$email, o.initiatorType=$initiatorType "
 	_, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
 		_, err := tx.Run(fmt.Sprintf(query, tenant),
 			map[string]interface{}{
@@ -124,6 +116,7 @@ func (r *conversationRepository) ContactInitiateConversation(tenant, conversatio
 				"firstName":      initiator.FirstName,
 				"lastName":       initiator.LastName,
 				"email":          initiator.Email,
+				"initiatorType":  initiator.InitiatorType,
 			})
 		return nil, err
 	})

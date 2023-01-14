@@ -52,11 +52,11 @@ type ConversationEvent struct {
 	Subtype EventSubtype `gorm:"column:subtype;type:varchar(50);NOT NULL;" json:"subtype" binding:"required"`
 
 	//used in websockets for web chat messages
-	InitiatorUsername string `gorm:"column:initiator_username;type:varchar(50);NOT NULL" json:"initiatorUsername" binding:"required"`
+	InitiatorUsername string `gorm:"column:initiator_username;type:varchar(320);NOT NULL" json:"initiatorUsername" binding:"required"`
 
 	SenderId       string     `gorm:"column:sender_id;type:varchar(50);NOT NULL" json:"senderId" binding:"required"`
 	SenderType     SenderType `gorm:"column:sender_type;type:varchar(50);NOT NULL" json:"senderType" binding:"required"`
-	SenderUsername string     `gorm:"column:sender_username;type:varchar(50);NOT NULL" json:"senderUsername" binding:"required"`
+	SenderUsername string     `gorm:"column:sender_username;type:varchar(320);NOT NULL" json:"senderUsername" binding:"required"`
 
 	//vezi mai jos json
 	Content    string `gorm:"column:content;type:text;NOT NULL;" json:"content" binding:"required"`

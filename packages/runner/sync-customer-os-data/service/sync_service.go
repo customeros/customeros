@@ -376,12 +376,13 @@ func (s *syncService) syncEmailMessages(dataService common.DataService, syncDate
 				initiatorUsername = message.FromEmail
 
 				if message.Direction == entity.OUTBOUND {
-					initiator := repository.ConversationInitiator{
+					initiator := entity.ConversationInitiator{
 						ExternalSystem: message.ExternalSystem,
 						ExternalId:     message.UserExternalId,
 						FirstName:      message.FromFirstName,
 						LastName:       message.FromLastName,
 						Email:          message.FromEmail,
+						InitiatorType:  entity.USER,
 					}
 					err := s.repositories.ConversationRepository.UserInitiateConversation(tenant, conversationId, initiator)
 					if err != nil {
@@ -389,11 +390,12 @@ func (s *syncService) syncEmailMessages(dataService common.DataService, syncDate
 						logrus.Errorf("failed set user initiator for conversation %v in tenant %v :%v", conversationId, tenant, err)
 					}
 				} else if message.Direction == entity.INBOUND {
-					initiator := repository.ConversationInitiator{
-						Id:        fromContactId,
-						FirstName: message.FromFirstName,
-						LastName:  message.FromLastName,
-						Email:     message.FromEmail,
+					initiator := entity.ConversationInitiator{
+						Id:            fromContactId,
+						FirstName:     message.FromFirstName,
+						LastName:      message.FromLastName,
+						Email:         message.FromEmail,
+						InitiatorType: entity.CONTACT,
 					}
 					err := s.repositories.ConversationRepository.ContactInitiateConversation(tenant, conversationId, initiator)
 					if err != nil {

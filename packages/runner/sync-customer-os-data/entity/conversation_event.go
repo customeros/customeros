@@ -48,8 +48,8 @@ type ConversationEvent struct {
 	Direction         Direction  `gorm:"column:direction;type:varchar(10);NOT NULL;" json:"direction" binding:"required"`
 	CreateDate        time.Time  `gorm:"column:created_at"`
 	Content           string     `gorm:"column:content;type:text;NOT NULL;" json:"content" binding:"required"`
-	InitiatorUsername string     `gorm:"column:initiator_username;type:varchar(50);NOT NULL" json:"initiatorUsername" binding:"required"`
-	SenderUsername    string     `gorm:"column:sender_username;type:varchar(50);NOT NULL" json:"senderUsername" binding:"required"`
+	InitiatorUsername string     `gorm:"column:initiator_username;type:varchar(320);NOT NULL" json:"initiatorUsername" binding:"required"`
+	SenderUsername    string     `gorm:"column:sender_username;type:varchar(320);NOT NULL" json:"senderUsername" binding:"required"`
 }
 
 func (ConversationEvent) TableName() string {
