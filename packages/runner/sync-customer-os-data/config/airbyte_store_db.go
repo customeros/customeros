@@ -12,8 +12,6 @@ import (
 
 var cacheHandler *gocache.Cache
 
-const CommonSchemaPrefix = "tenant_"
-
 type AirbyteStoreDB struct {
 	CreationMutex sync.Mutex
 	cache         *gocache.Cache
