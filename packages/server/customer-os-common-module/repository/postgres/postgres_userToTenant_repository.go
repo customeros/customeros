@@ -30,5 +30,5 @@ func (r *UserToTenantRepo) FindTenantByUsername(ctx context.Context, username st
 		return helper.QueryResult{Error: err}
 	}
 
-	return helper.QueryResult{Result: &e.Tenant}
+	return helper.QueryResult{Result: e.Tenant}
 }
