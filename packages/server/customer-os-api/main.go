@@ -125,5 +125,6 @@ func loadConfiguration() *config.Config {
 }
 
 func healthCheckHandler(c *gin.Context) {
+
 	c.JSON(200, gin.H{"status": "OK"})
 }
