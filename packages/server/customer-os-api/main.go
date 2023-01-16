@@ -94,8 +94,8 @@ func main() {
 	r.Use(cors.New(corsConfig))
 
 	r.POST("/query",
-		commonService.ApiKeyChecker(repositoryContainer.AppKeyRepo, commonService.CUSTOMER_OS_API),
 		commonService.UserToTenantEnhancer(repositoryContainer.UserToTenantRepo),
+		commonService.ApiKeyChecker(repositoryContainer.AppKeyRepo, commonService.CUSTOMER_OS_API),
 		graphqlHandler(cfg, neo4jDriver, repositoryContainer))
 	if cfg.GraphQL.PlaygroundEnabled {
 		r.GET("/", playgroundHandler())

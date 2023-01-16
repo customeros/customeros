@@ -30,11 +30,6 @@ func ApiKeyChecker(appKeyRepo repository.AppKeyRepository, app App) func(c *gin.
 			if appKey == nil {
 				c.AbortWithStatus(401)
 				return
-			} else {
-				if c.Keys == nil {
-					c.Keys = map[string]any{}
-				}
-				c.Keys["tenant"] = "openline" // TODO alexb replace with tenant from DB
 			}
 
 			c.Next()
