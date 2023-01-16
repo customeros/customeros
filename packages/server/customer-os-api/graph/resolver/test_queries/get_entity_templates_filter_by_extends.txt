@@ -1,0 +1,6 @@
+query GetEntityTemplates($extends: EntityTemplateExtension) {
+  entityTemplates(extends: $extends) {
+    id
+    extends
+  }
+}

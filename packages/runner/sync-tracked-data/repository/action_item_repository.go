@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v4/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-tracked-data/entity"
 )
@@ -39,10 +40,15 @@ func (r *actionRepository) CreatePageViewAction(contactId string, pv entity.Page
 		"pageTitle":      pv.Title,
 		"orderInSession": pv.OrderInSession,
 		"engagedTime":    pv.EngagedTime,
+		"source":         "openline",
+		"sourceOfTruth":  "openline",
+		"appSource":      pv.Application,
 	}
+
 	query := "MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant}) " +
 		" MERGE (c)-[:HAS_ACTION]->(a:Action:PageView {id:$pvId, trackerName:$trackerName})" +
 		" ON CREATE SET " +
+		" a:%s, a:%s, " +
 		" a.startedAt=$start, " +
 		" a.endedAt=$end, " +
 		" a.application=$application, " +
@@ -50,10 +56,13 @@ func (r *actionRepository) CreatePageViewAction(contactId string, pv entity.Page
 		" a.pageTitle=$pageTitle, " +
 		" a.sessionId=$sessionId, " +
 		" a.orderInSession=$orderInSession, " +
-		" a.engagedTime=$engagedTime"
+		" a.engagedTime=$engagedTime, " +
+		" a.source=$source, " +
+		" a.sourceOfTruth=$sourceOfTruth, " +
+		" a.appSource=$appSource "
 
 	_, err := session.WriteTransaction(func(tx neo4j.Transaction) (interface{}, error) {
-		_, err := tx.Run(query, params)
+		_, err := tx.Run(fmt.Sprintf(query, "PageView_"+pv.Tenant, "Action_"+pv.Tenant), params)
 		return nil, err
 	})
 

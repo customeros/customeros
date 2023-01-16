@@ -1,0 +1,25 @@
+mutation CreateOrganization($organizationTypeId: ID) {
+  organization_Create(input: {
+            name: "organization name"
+            description: "organization description"
+            domain: "organization domain"
+            website: "organization website"
+            industry: "organization industry"
+            isPublic: true
+            organizationTypeId: $organizationTypeId,
+        }) {
+      id
+      name
+      description
+      domain
+      website
+      industry
+      isPublic
+      createdAt
+      organizationType {
+        id
+        name
+      }
+      source
+    }
+}

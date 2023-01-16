@@ -1,0 +1,15 @@
+mutation MergeEmailToContact($contactId: ID!){
+     emailMergeToContact(
+        contactId: $contactId
+        input: {email: "test@gmail.com"
+                label: WORK
+                primary: true
+        }
+     ) {
+        id
+        email
+        label
+        primary
+        source
+      }
+}

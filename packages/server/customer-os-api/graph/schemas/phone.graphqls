@@ -32,6 +32,8 @@ type PhoneNumber {
     **Required**
     """
     primary: Boolean!
+
+    source: DataSource!
 }
 
 """

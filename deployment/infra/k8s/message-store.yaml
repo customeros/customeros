@@ -1,20 +1,20 @@
 apiVersion: apps/v1
 kind: Deployment                 # Type of Kubernetes resource
 metadata:
-  name: message-store           # Name of the Kubernetes resource
+  name: message-store-api           # Name of the Kubernetes resource
 spec:
   replicas: 1                    # Number of pods to run at any given time
   selector:
     matchLabels:
-      app: message-store        # This deployment applies to any Pods matching the specified label
+      app: message-store-api        # This deployment applies to any Pods matching the specified label
   template:                      # This deployment will create a set of pods using the configurations in this template
     metadata:
       labels:                    # The labels that will be applied to all of the pods in this deployment
-        app: message-store
+        app: message-store-api
     spec:                        # Spec for the container which will run in the Pod
       containers:
         - image: ghcr.io/openline-ai/openline-customer-os/message-store:latest
-          name: message-store
+          name: message-store-api
           imagePullPolicy: Never
           ports:
             - containerPort: 8009  # Should match the port number that the Go application listens on
@@ -22,22 +22,19 @@ spec:
             - containerPort: 9009  # Should match the port number that the Go application listens on
               name: grpc-port
           env:
-            - name: DB_USER
+            - name: POSTGRES_USER
               value: "openline"
-            - name: DB_PASSWORD
+            - name: POSTGRES_PASSWORD
               value: "password"
-            - name: DB_NAME
+            - name: POSTGRES_DB
               value: "openline"
-            - name: DB_HOST
-              value: "postgresql-customer-os-dev.openline.svc.cluster.local"
-            - name: DB_PORT
+            - name: POSTGRES_HOST
+              value: "customer-db-postgresql.openline.svc.cluster.local"
+            - name: POSTGRES_PORT
               value: "5432"
-            - name: CUSTOMER_OS_API
-              value: "http://customer-os-api-service.openline.svc.cluster.local:10000/query"
-            - name: MESSAGE_STORE_SERVER_PORT
-              value: "9009"
+
             - name: NEO4J_TARGET
-              value: "neo4j://neo4j-customer-os.openline.svc.cluster.local:7687"
+              value: "neo4j://customer-db-neo4j.openline.svc.cluster.local:7687"
             - name: NEO4J_AUTH_USER
               value: "neo4j"
             - name: NEO4J_AUTH_PWD
@@ -48,3 +45,10 @@ spec:
               value: "100"
             - name: NEO4J_LOG_LEVEL
               value: "INFO"
+
+            - name: CUSTOMER_OS_API
+              value: "http://customer-os-api-service.openline.svc.cluster.local:10000/query"
+            - name: CUSTOMER_OS_API_KEY
+              value: "dd9d2474-b4a9-4799-b96f-73cd0a2917e4"
+            - name: MESSAGE_STORE_SERVER_PORT
+              value: "9009"

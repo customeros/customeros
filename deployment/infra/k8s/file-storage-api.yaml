@@ -1,0 +1,57 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: file-storage-api
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: file-storage-api
+  template:
+    metadata:
+      labels:
+        app: file-storage-api
+    spec:
+      containers:
+        - image: ghcr.io/openline-ai/openline-customer-os/file-storage-api:latest
+          name: file-storage-api
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 10001
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 10000
+              scheme: HTTP
+            initialDelaySeconds: 5
+            periodSeconds: 15
+            timeoutSeconds: 5
+          readinessProbe: # To check if the Pod is ready to serve traffic or not
+            httpGet:
+              path: /readiness
+              port: 10001
+              scheme: HTTP
+            initialDelaySeconds: 5
+            timeoutSeconds: 1
+          env:
+            - name: POSTGRES_USER
+              value: "openline"
+            - name: POSTGRES_PASSWORD
+              value: "password"
+            - name: POSTGRES_DB
+              value: "openline"
+            - name: POSTGRES_HOST
+              value: "customer-db-postgresql.openline.svc.cluster.local"
+            - name: POSTGRES_PORT
+              value: "5432"
+            - name: POSTGRES_MAX_CONN
+              value: "25"
+            - name: POSTGRES_MAX_IDLE_CONN
+              value: "10"
+            - name: POSTGRES_CONN_MAX_LIFETIME
+              value: "0"
+
+            - name: PORT
+              value: "10001"
+            - name: BASE_URL
+              value: "http://localhost:10001"

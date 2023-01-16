@@ -13,11 +13,11 @@ func TestMutationResolver_CustomFieldsMergeAndUpdateInContact(t *testing.T) {
 	defer tearDownTestCase()(t)
 	neo4jt.CreateTenant(driver, tenantName)
 	contactId := neo4jt.CreateDefaultContact(driver, tenantName)
-	entityDefinitionId := neo4jt.CreateEntityDefinition(driver, tenantName, model.EntityDefinitionExtensionContact.String())
-	fieldDefinitionId := neo4jt.AddFieldDefinitionToEntity(driver, entityDefinitionId)
-	setDefinitionId := neo4jt.AddSetDefinitionToEntity(driver, entityDefinitionId)
-	fieldInSetDefinitionId := neo4jt.AddFieldDefinitionToSet(driver, setDefinitionId)
-	neo4jt.LinkEntityDefinitionToContact(driver, entityDefinitionId, contactId)
+	entityTemplateId := neo4jt.CreateEntityTemplate(driver, tenantName, model.EntityTemplateExtensionContact.String())
+	fieldTemplateId := neo4jt.AddFieldTemplateToEntity(driver, entityTemplateId)
+	setTemplateId := neo4jt.AddSetTemplateToEntity(driver, entityTemplateId)
+	fieldInSetTemplateId := neo4jt.AddFieldTemplateToSet(driver, setTemplateId)
+	neo4jt.LinkEntityTemplateToContact(driver, entityTemplateId, contactId)
 	fieldInContactId := neo4jt.CreateDefaultCustomFieldInContact(driver, contactId)
 	fieldSetId := neo4jt.CreateDefaultFieldSet(driver, contactId)
 	fieldInSetId := neo4jt.CreateDefaultCustomFieldInSet(driver, fieldSetId)
@@ -26,9 +26,9 @@ func TestMutationResolver_CustomFieldsMergeAndUpdateInContact(t *testing.T) {
 	require.Equal(t, 2, neo4jt.GetCountOfNodes(driver, "CustomField"))
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "FieldSet"))
 
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "EntityDefinition"))
-	require.Equal(t, 2, neo4jt.GetCountOfNodes(driver, "CustomFieldDefinition"))
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "FieldSetDefinition"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "EntityTemplate"))
+	require.Equal(t, 2, neo4jt.GetCountOfNodes(driver, "CustomFieldTemplate"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "FieldSetTemplate"))
 
 	require.Equal(t, 1, neo4jt.GetCountOfRelationships(driver, "IS_DEFINED_BY"))
 
@@ -37,19 +37,21 @@ func TestMutationResolver_CustomFieldsMergeAndUpdateInContact(t *testing.T) {
 		client.Var("customFieldId", fieldInContactId),
 		client.Var("fieldSetId", fieldSetId),
 		client.Var("customFieldInSetId", fieldInSetId),
-		client.Var("fieldDefinitionId", fieldDefinitionId),
-		client.Var("setDefinitionId", setDefinitionId),
-		client.Var("fieldInSetDefinitionId", fieldInSetDefinitionId),
+		client.Var("fieldTemplateId", fieldTemplateId),
+		client.Var("setTemplateId", setTemplateId),
+		client.Var("fieldInSetTemplateId", fieldInSetTemplateId),
 	)
 	assertRawResponseSuccess(t, rawResponse, err)
 
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Contact"))
 	require.Equal(t, 4, neo4jt.GetCountOfNodes(driver, "CustomField"))
+	require.Equal(t, 2, neo4jt.GetCountOfNodes(driver, "CustomField_"+tenantName))
 	require.Equal(t, 2, neo4jt.GetCountOfNodes(driver, "FieldSet"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "FieldSet_"+tenantName))
 
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "EntityDefinition"))
-	require.Equal(t, 2, neo4jt.GetCountOfNodes(driver, "CustomFieldDefinition"))
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "FieldSetDefinition"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "EntityTemplate"))
+	require.Equal(t, 2, neo4jt.GetCountOfNodes(driver, "CustomFieldTemplate"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "FieldSetTemplate"))
 
 	require.Equal(t, 4, neo4jt.GetCountOfRelationships(driver, "IS_DEFINED_BY"))
 
@@ -62,34 +64,40 @@ func TestMutationResolver_CustomFieldsMergeAndUpdateInContact(t *testing.T) {
 	require.NotNil(t, contact)
 
 	updatedContact := contact.CustomFieldsMergeAndUpdateInContact
-	require.Equal(t, entityDefinitionId, updatedContact.Definition.ID)
+	require.Equal(t, entityTemplateId, updatedContact.Template.ID)
 	require.Equal(t, 2, len(updatedContact.CustomFields))
 	if updatedContact.CustomFields[0].ID == fieldInContactId {
 		checkCustomField(t, *updatedContact.CustomFields[0], "field1", "value1", nil)
-		checkCustomField(t, *updatedContact.CustomFields[1], "field2", "value2", &fieldDefinitionId)
+		checkCustomField(t, *updatedContact.CustomFields[1], "field2", "value2", &fieldTemplateId)
 	} else {
 		checkCustomField(t, *updatedContact.CustomFields[1], "field1", "value1", nil)
-		checkCustomField(t, *updatedContact.CustomFields[0], "field2", "value2", &fieldDefinitionId)
+		checkCustomField(t, *updatedContact.CustomFields[0], "field2", "value2", &fieldTemplateId)
 	}
 
 	require.Equal(t, 2, len(updatedContact.FieldSets))
+	require.Equal(t, model.DataSourceOpenline, updatedContact.FieldSets[0].Source)
+	require.Equal(t, model.DataSourceOpenline, updatedContact.FieldSets[1].Source)
 	require.ElementsMatch(t, []string{"set1", "set2"}, []string{updatedContact.FieldSets[0].Name, updatedContact.FieldSets[1].Name})
 
-	if updatedContact.FieldSets[0].Definition != nil {
+	if updatedContact.FieldSets[0].Template != nil {
 		require.Equal(t, fieldInSetId, updatedContact.FieldSets[1].CustomFields[0].ID)
 		checkCustomField(t, *updatedContact.FieldSets[1].CustomFields[0], "field3", "value3", nil)
-		checkCustomField(t, *updatedContact.FieldSets[0].CustomFields[0], "field4", "value4", &fieldInSetDefinitionId)
+		checkCustomField(t, *updatedContact.FieldSets[0].CustomFields[0], "field4", "value4", &fieldInSetTemplateId)
 	} else {
 		require.Equal(t, fieldInSetId, updatedContact.FieldSets[0].CustomFields[0].ID)
 		checkCustomField(t, *updatedContact.FieldSets[0].CustomFields[0], "field3", "value3", nil)
-		checkCustomField(t, *updatedContact.FieldSets[1].CustomFields[0], "field4", "value4", &fieldInSetDefinitionId)
+		checkCustomField(t, *updatedContact.FieldSets[1].CustomFields[0], "field4", "value4", &fieldInSetTemplateId)
 	}
+
+	assertNeo4jLabels(t, driver, []string{"Tenant", "Contact", "EntityTemplate", "CustomFieldTemplate",
+		"FieldSetTemplate", "TextField", "CustomField", "CustomField_" + tenantName, "FieldSet", "FieldSet_" + tenantName})
 }
 
-func checkCustomField(t *testing.T, customField model.CustomField, name, value string, fieldDefinitionId *string) {
+func checkCustomField(t *testing.T, customField model.CustomField, name, value string, fieldTemplateId *string) {
 	require.Equal(t, name, customField.Name)
 	require.Equal(t, value, customField.Value.RealValue())
-	if fieldDefinitionId != nil {
-		require.Equal(t, *fieldDefinitionId, customField.Definition.ID)
+	require.Equal(t, model.DataSourceOpenline, customField.Source)
+	if fieldTemplateId != nil {
+		require.Equal(t, *fieldTemplateId, customField.Template.ID)
 	}
 }

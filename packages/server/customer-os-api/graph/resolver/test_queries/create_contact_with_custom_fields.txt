@@ -1,46 +1,32 @@
-mutation ($entityDefinitionId: ID!, $fieldDefinitionId: ID!, $setDefinitionId: ID!, $fieldInSetDefinitionId: ID!){
-contact_Create(
-    input: {
-      title: MR
-      firstName: "first"
-      lastName: "last"
-      customFields: [
-                        {name: "field1", value: "value1", datatype: TEXT, definitionId:$fieldDefinitionId},
-                        {name: "field2", value: "value2", datatype: TEXT, source: "hubspot"}
-                    ]
-      fieldSets: [{ name:"set1"
-                    definitionId: $setDefinitionId
-                    customFields: [
-                                    {name: "field3InSet", value: "value3", datatype: TEXT, definitionId:$fieldInSetDefinitionId},
-                                    {name: "field4InSet", value: "value4", datatype: TEXT, source: "zendesk"}
-                                  ]}
-                  {name:"set2"}]
-      definitionId: $entityDefinitionId
-    }
-  ) {
-    id
-    title
-    firstName
-    lastName
-    createdAt
-    definition {
+mutation ($entityTemplateId: ID!, $fieldTemplateId: ID!, $setTemplateId: ID!, $fieldInSetTemplateId: ID!) {
+    contact_Create(input: {
+        title: MR
+        firstName: "first"
+        lastName: "last"
+        customFields: [
+            {name: "field1", value: "value1", datatype: TEXT, templateId: $fieldTemplateId},
+            {name: "field2", value: "value2", datatype: TEXT}
+        ]
+        fieldSets: [
+            {
+                name: "set1",
+                templateId: $setTemplateId,
+                customFields: [
+                    {name: "field3InSet", value: "value3", datatype: TEXT, templateId: $fieldInSetTemplateId},
+                    {name: "field4InSet", value: "value4", datatype: TEXT}
+                ]
+            },
+            {name: "set2"}
+        ]
+        templateId: $entityTemplateId
+    }) {
         id
-    }
-    customFields {
-        id
-        name
-        value
-        datatype
+        title
+        firstName
+        lastName
+        createdAt
         source
-        definition {
-            id
-        }
-    }
-    fieldSets {
-        id
-        name
-        added
-        definition {
+        template {
             id
         }
         customFields {
@@ -49,10 +35,30 @@ contact_Create(
             value
             datatype
             source
-            definition {
+            createdAt
+            template {
                 id
             }
         }
+        fieldSets {
+            id
+            name
+            createdAt
+            source
+            template {
+                id
+            }
+            customFields {
+                id
+                name
+                value
+                datatype
+                source
+                createdAt
+                template {
+                    id
+                }
+            }
+        }
     }
-  }
 }

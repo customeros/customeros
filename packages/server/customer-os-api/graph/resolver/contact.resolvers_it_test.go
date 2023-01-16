@@ -4,7 +4,6 @@ import (
 	"github.com/99designs/gqlgen/client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper"
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils/decode"
 	"github.com/stretchr/testify/require"
@@ -75,14 +74,15 @@ func TestMutationResolver_ContactCreate_Min(t *testing.T) {
 	require.Equal(t, "", contact.Contact_Create.Title.String())
 	require.Equal(t, "", *contact.Contact_Create.FirstName)
 	require.Equal(t, "", *contact.Contact_Create.LastName)
-	require.Equal(t, "", *contact.Contact_Create.Notes)
 	require.Equal(t, "", *contact.Contact_Create.Label)
-	require.Equal(t, false, contact.Contact_Create.Readonly)
+	require.Equal(t, model.DataSourceOpenline, contact.Contact_Create.Source)
 
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Tenant"))
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Contact"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Contact_"+tenantName))
 	require.Equal(t, 2, neo4jt.GetTotalCountOfNodes(driver))
 
+	assertNeo4jLabels(t, driver, []string{"Tenant", "Contact", "Contact_" + tenantName})
 }
 
 func TestMutationResolver_ContactCreate(t *testing.T) {
@@ -107,8 +107,8 @@ func TestMutationResolver_ContactCreate(t *testing.T) {
 	require.Equal(t, "last", *contact.Contact_Create.LastName)
 	require.Equal(t, contactTypeId, contact.Contact_Create.ContactType.ID)
 	require.Equal(t, "CUSTOMER", contact.Contact_Create.ContactType.Name)
-	require.Equal(t, "Some notes...", *contact.Contact_Create.Notes)
 	require.Equal(t, "Some label", *contact.Contact_Create.Label)
+	require.Equal(t, model.DataSourceOpenline, contact.Contact_Create.Source)
 
 	require.Equal(t, 5, len(contact.Contact_Create.CustomFields))
 
@@ -148,54 +148,71 @@ func TestMutationResolver_ContactCreate(t *testing.T) {
 	require.Equal(t, "contact@abc.com", contact.Contact_Create.Emails[0].Email)
 	require.Equal(t, "WORK", contact.Contact_Create.Emails[0].Label.String())
 	require.Equal(t, false, contact.Contact_Create.Emails[0].Primary)
+	require.Equal(t, model.DataSourceOpenline, contact.Contact_Create.Emails[0].Source)
 
 	require.Equal(t, 1, len(contact.Contact_Create.PhoneNumbers))
 	require.NotNil(t, contact.Contact_Create.PhoneNumbers[0].ID)
 	require.Equal(t, "+1234567890", contact.Contact_Create.PhoneNumbers[0].E164)
 	require.Equal(t, "MOBILE", contact.Contact_Create.PhoneNumbers[0].Label.String())
 	require.Equal(t, true, contact.Contact_Create.PhoneNumbers[0].Primary)
+	require.Equal(t, model.DataSourceOpenline, contact.Contact_Create.PhoneNumbers[0].Source)
 
 	require.Equal(t, 0, len(contact.Contact_Create.Groups))
 
 	require.Equal(t, 2, neo4jt.GetCountOfNodes(driver, "Tenant"))
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Contact"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Contact_"+tenantName))
 	require.Equal(t, 0, neo4jt.GetCountOfNodes(driver, "ContactGroup"))
 	require.Equal(t, 5, neo4jt.GetCountOfNodes(driver, "CustomField"))
+	require.Equal(t, 5, neo4jt.GetCountOfNodes(driver, "CustomField_"+tenantName))
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "TextField"))
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "IntField"))
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "FloatField"))
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "BoolField"))
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "TimeField"))
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Email"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Email_"+tenantName))
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "PhoneNumber"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "PhoneNumber_"+tenantName))
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "ContactType"))
+	require.Equal(t, 11, neo4jt.GetTotalCountOfNodes(driver))
+
+	assertNeo4jLabels(t, driver, []string{"Tenant", "Contact", "Contact_" + tenantName, "ContactType",
+		"Email", "Email_" + tenantName, "PhoneNumber", "PhoneNumber_" + tenantName,
+		"CustomField", "BoolField", "TextField", "FloatField", "TimeField", "IntField", "CustomField_" + tenantName})
 }
 
 func TestMutationResolver_ContactCreate_WithCustomFields(t *testing.T) {
 	defer tearDownTestCase()(t)
 	neo4jt.CreateTenant(driver, tenantName)
-	entityDefinitionId := neo4jt.CreateEntityDefinition(driver, tenantName, model.EntityDefinitionExtensionContact.String())
-	fieldDefinitionId := neo4jt.AddFieldDefinitionToEntity(driver, entityDefinitionId)
-	setDefinitionId := neo4jt.AddSetDefinitionToEntity(driver, entityDefinitionId)
-	fieldInSetDefinitionId := neo4jt.AddFieldDefinitionToSet(driver, setDefinitionId)
+	entityTemplateId := neo4jt.CreateEntityTemplate(driver, tenantName, model.EntityTemplateExtensionContact.String())
+	fieldTemplateId := neo4jt.AddFieldTemplateToEntity(driver, entityTemplateId)
+	setTemplateId := neo4jt.AddSetTemplateToEntity(driver, entityTemplateId)
+	fieldInSetTemplateId := neo4jt.AddFieldTemplateToSet(driver, setTemplateId)
 
 	rawResponse, err := c.RawPost(getQuery("create_contact_with_custom_fields"),
-		client.Var("entityDefinitionId", entityDefinitionId),
-		client.Var("fieldDefinitionId", fieldDefinitionId),
-		client.Var("setDefinitionId", setDefinitionId),
-		client.Var("fieldInSetDefinitionId", fieldInSetDefinitionId))
+		client.Var("entityTemplateId", entityTemplateId),
+		client.Var("fieldTemplateId", fieldTemplateId),
+		client.Var("setTemplateId", setTemplateId),
+		client.Var("fieldInSetTemplateId", fieldInSetTemplateId))
 	assertRawResponseSuccess(t, rawResponse, err)
 
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Tenant"))
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Contact"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Contact_"+tenantName))
 	require.Equal(t, 0, neo4jt.GetCountOfNodes(driver, "ContactGroup"))
-	require.Equal(t, 0, neo4jt.GetCountOfNodes(driver, "Company"))
+	require.Equal(t, 0, neo4jt.GetCountOfNodes(driver, "Organization"))
 	require.Equal(t, 4, neo4jt.GetCountOfNodes(driver, "CustomField"))
+	require.Equal(t, 4, neo4jt.GetCountOfNodes(driver, "CustomField_"+tenantName))
 	require.Equal(t, 4, neo4jt.GetCountOfNodes(driver, "TextField"))
 	require.Equal(t, 0, neo4jt.GetCountOfNodes(driver, "Email"))
 	require.Equal(t, 0, neo4jt.GetCountOfNodes(driver, "PhoneNumber"))
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "EntityDefinition"))
-	require.Equal(t, 2, neo4jt.GetCountOfNodes(driver, "CustomFieldDefinition"))
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "FieldSetDefinition"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "EntityTemplate"))
+	require.Equal(t, 2, neo4jt.GetCountOfNodes(driver, "CustomFieldTemplate"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "FieldSetTemplate"))
+	require.Equal(t, 2, neo4jt.GetCountOfNodes(driver, "FieldSet"))
+	require.Equal(t, 2, neo4jt.GetCountOfNodes(driver, "FieldSet_"+tenantName))
+	require.Equal(t, 12, neo4jt.GetTotalCountOfNodes(driver))
 
 	var contact struct {
 		Contact_Create model.Contact
@@ -203,40 +220,58 @@ func TestMutationResolver_ContactCreate_WithCustomFields(t *testing.T) {
 
 	err = decode.Decode(rawResponse.Data.(map[string]any), &contact)
 	require.Nil(t, err)
-	require.NotNil(t, contact)
 
 	createdContact := contact.Contact_Create
-	require.Equal(t, entityDefinitionId, createdContact.Definition.ID)
+	require.Equal(t, model.DataSourceOpenline, createdContact.Source)
+	require.Equal(t, entityTemplateId, createdContact.Template.ID)
 	require.Equal(t, 2, len(createdContact.CustomFields))
 	require.Equal(t, "field1", createdContact.CustomFields[0].Name)
 	require.Equal(t, "TEXT", createdContact.CustomFields[0].Datatype.String())
 	require.Equal(t, "value1", createdContact.CustomFields[0].Value.RealValue())
-	require.Equal(t, "", *createdContact.CustomFields[0].Source)
-	require.Equal(t, fieldDefinitionId, createdContact.CustomFields[0].Definition.ID)
-	require.NotNil(t, createdContact.CustomFields[0].GetID())
+	require.Equal(t, model.DataSourceOpenline, createdContact.CustomFields[0].Source)
+	require.Equal(t, fieldTemplateId, createdContact.CustomFields[0].Template.ID)
+	require.NotNil(t, createdContact.CustomFields[0].ID)
+	require.NotNil(t, createdContact.CustomFields[0].CreatedAt)
 	require.Equal(t, "field2", createdContact.CustomFields[1].Name)
 	require.Equal(t, "TEXT", createdContact.CustomFields[1].Datatype.String())
 	require.Equal(t, "value2", createdContact.CustomFields[1].Value.RealValue())
-	require.Equal(t, "hubspot", *createdContact.CustomFields[1].Source)
-	require.NotNil(t, createdContact.CustomFields[1].GetID())
+	require.Equal(t, model.DataSourceOpenline, createdContact.CustomFields[1].Source)
+	require.NotNil(t, createdContact.CustomFields[1].ID)
+	require.NotNil(t, createdContact.CustomFields[1].CreatedAt)
 	require.Equal(t, 2, len(createdContact.FieldSets))
-	require.NotNil(t, createdContact.FieldSets[0].ID)
-	require.NotNil(t, createdContact.FieldSets[0].Added)
-	require.Equal(t, "set1", createdContact.FieldSets[0].Name)
-	require.Equal(t, 2, len(createdContact.FieldSets[0].CustomFields))
-	require.Equal(t, "field3InSet", createdContact.FieldSets[0].CustomFields[0].Name)
-	require.Equal(t, "value3", createdContact.FieldSets[0].CustomFields[0].Value.RealValue())
-	require.Equal(t, "", *createdContact.FieldSets[0].CustomFields[0].Source)
-	require.Equal(t, "TEXT", createdContact.FieldSets[0].CustomFields[0].Datatype.String())
-	require.Equal(t, fieldInSetDefinitionId, createdContact.FieldSets[0].CustomFields[0].Definition.ID)
-	require.Equal(t, "field4InSet", createdContact.FieldSets[0].CustomFields[1].Name)
-	require.Equal(t, "value4", createdContact.FieldSets[0].CustomFields[1].Value.RealValue())
-	require.Equal(t, "zendesk", *createdContact.FieldSets[0].CustomFields[1].Source)
-	require.Equal(t, "TEXT", createdContact.FieldSets[0].CustomFields[1].Datatype.String())
-	require.Nil(t, createdContact.FieldSets[0].CustomFields[1].Definition)
-	require.NotNil(t, createdContact.FieldSets[1].ID)
-	require.NotNil(t, createdContact.FieldSets[1].Added)
-	require.Equal(t, "set2", createdContact.FieldSets[1].Name)
+	var set1, set2 *model.FieldSet
+	if createdContact.FieldSets[0].Name == "set1" {
+		set1 = createdContact.FieldSets[0]
+		set2 = createdContact.FieldSets[1]
+	} else {
+		set1 = createdContact.FieldSets[1]
+		set2 = createdContact.FieldSets[0]
+	}
+	require.NotNil(t, set1.ID)
+	require.NotNil(t, set1.CreatedAt)
+	require.Equal(t, "set1", set1.Name)
+	require.Equal(t, 2, len(set1.CustomFields))
+	require.NotNil(t, set1.CustomFields[0].CreatedAt)
+	require.Equal(t, "field3InSet", set1.CustomFields[0].Name)
+	require.Equal(t, "value3", set1.CustomFields[0].Value.RealValue())
+	require.Equal(t, model.DataSourceOpenline, set1.CustomFields[0].Source)
+	require.Equal(t, "TEXT", set1.CustomFields[0].Datatype.String())
+	require.Equal(t, fieldInSetTemplateId, set1.CustomFields[0].Template.ID)
+	require.NotNil(t, set1.CustomFields[1].CreatedAt)
+	require.Equal(t, "field4InSet", set1.CustomFields[1].Name)
+	require.Equal(t, "value4", set1.CustomFields[1].Value.RealValue())
+	require.Equal(t, model.DataSourceOpenline, set1.CustomFields[1].Source)
+	require.Equal(t, "TEXT", set1.CustomFields[1].Datatype.String())
+	require.Nil(t, set1.CustomFields[1].Template)
+	require.Equal(t, model.DataSourceOpenline, set1.Source)
+	require.NotNil(t, set2.ID)
+	require.NotNil(t, set2.CreatedAt)
+	require.Equal(t, "set2", set2.Name)
+	require.Equal(t, model.DataSourceOpenline, set2.Source)
+
+	assertNeo4jLabels(t, driver, []string{"Tenant", "Contact", "Contact_" + tenantName,
+		"CustomFieldTemplate", "EntityTemplate", "FieldSet", "FieldSet_" + tenantName, "FieldSetTemplate",
+		"CustomField", "TextField", "CustomField_" + tenantName})
 }
 
 func TestMutationResolver_ContactCreate_WithOwner(t *testing.T) {
@@ -258,17 +293,52 @@ func TestMutationResolver_ContactCreate_WithOwner(t *testing.T) {
 	err = decode.Decode(rawResponse.Data.(map[string]any), &contact)
 	require.Nil(t, err)
 	require.NotNil(t, contact)
-	require.Equal(t, "", contact.Contact_Create.Title.String())
-	require.Equal(t, "first", *contact.Contact_Create.FirstName)
-	require.Equal(t, "last", *contact.Contact_Create.LastName)
-	require.Equal(t, userId, contact.Contact_Create.Owner.ID)
-	require.Equal(t, "Agent", contact.Contact_Create.Owner.FirstName)
-	require.Equal(t, "Smith", contact.Contact_Create.Owner.LastName)
+	createdContact := contact.Contact_Create
+	require.Equal(t, "", createdContact.Title.String())
+	require.Equal(t, "first", *createdContact.FirstName)
+	require.Equal(t, "last", *createdContact.LastName)
+	require.Equal(t, userId, createdContact.Owner.ID)
+	require.Equal(t, "Agent", createdContact.Owner.FirstName)
+	require.Equal(t, "Smith", createdContact.Owner.LastName)
+	require.Equal(t, model.DataSourceOpenline, createdContact.Source)
 
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Contact"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Contact_"+tenantName))
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "User"))
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Tenant"))
+	require.Equal(t, 3, neo4jt.GetTotalCountOfNodes(driver))
 	require.Equal(t, 1, neo4jt.GetCountOfRelationships(driver, "OWNS"))
+
+	assertNeo4jLabels(t, driver, []string{"Tenant", "Contact", "Contact_" + tenantName, "User"})
+}
+
+func TestMutationResolver_ContactCreate_WithExternalReference(t *testing.T) {
+	defer tearDownTestCase()(t)
+	neo4jt.CreateTenant(driver, tenantName)
+	neo4jt.CreateHubspotExternalSystem(driver, tenantName)
+
+	rawResponse, err := c.RawPost(getQuery("create_contact_with_external_reference"))
+	assertRawResponseSuccess(t, rawResponse, err)
+
+	var contact struct {
+		Contact_Create model.Contact
+	}
+
+	err = decode.Decode(rawResponse.Data.(map[string]any), &contact)
+	require.Nil(t, err)
+	require.NotNil(t, contact)
+	require.NotNil(t, contact.Contact_Create.ID)
+	require.Equal(t, model.DataSourceOpenline, contact.Contact_Create.Source)
+
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Tenant"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Contact"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Contact_"+tenantName))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "ExternalSystem"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "ExternalSystem_"+tenantName))
+	require.Equal(t, 3, neo4jt.GetTotalCountOfNodes(driver))
+	require.Equal(t, 1, neo4jt.GetCountOfRelationships(driver, "IS_LINKED_WITH"))
+
+	assertNeo4jLabels(t, driver, []string{"Tenant", "Contact", "Contact_" + tenantName, "ExternalSystem", "ExternalSystem_" + tenantName})
 }
 
 func TestMutationResolver_UpdateContact(t *testing.T) {
@@ -281,7 +351,6 @@ func TestMutationResolver_UpdateContact(t *testing.T) {
 		FirstName: "first",
 		LastName:  "last",
 		Label:     "label",
-		Notes:     "notes",
 	})
 	contactTypeIdOrig := neo4jt.CreateContactType(driver, tenantName, "ORIG")
 	contactTypeIdUpdate := neo4jt.CreateContactType(driver, tenantName, "UPDATED")
@@ -305,7 +374,6 @@ func TestMutationResolver_UpdateContact(t *testing.T) {
 	require.Equal(t, "DR", contact.Contact_Update.Title.String())
 	require.Equal(t, "updated first", *contact.Contact_Update.FirstName)
 	require.Equal(t, "updated last", *contact.Contact_Update.LastName)
-	require.Equal(t, "updated notes", *contact.Contact_Update.Notes)
 	require.Equal(t, "updated label", *contact.Contact_Update.Label)
 	require.Equal(t, contactTypeIdUpdate, contact.Contact_Update.ContactType.ID)
 	require.Equal(t, "UPDATED", contact.Contact_Update.ContactType.Name)
@@ -316,18 +384,40 @@ func TestMutationResolver_UpdateContact(t *testing.T) {
 	require.Equal(t, 2, neo4jt.GetCountOfNodes(driver, "User"))
 	require.Equal(t, 1, neo4jt.GetCountOfRelationships(driver, "IS_OF_TYPE"))
 	require.Equal(t, 1, neo4jt.GetCountOfRelationships(driver, "OWNS"))
+
+	assertNeo4jLabels(t, driver, []string{"Tenant", "Contact", "ContactType", "User"})
 }
 
-func TestQueryResolver_Contact(t *testing.T) {
+func TestQueryResolver_Contact_WithRoles_ById(t *testing.T) {
 	defer tearDownTestCase()(t)
 	neo4jt.CreateTenant(driver, tenantName)
 	contactId := neo4jt.CreateDefaultContact(driver, tenantName)
-	companyId1 := neo4jt.CreateCompany(driver, tenantName, "ABC")
-	companyId2 := neo4jt.CreateCompany(driver, tenantName, "XYZ")
-	positionId1 := neo4jt.ContactWorksForCompany(driver, contactId, companyId1, "CTO")
-	positionId2 := neo4jt.ContactWorksForCompany(driver, contactId, companyId2, "CEO")
+	organizationId1 := neo4jt.CreateFullOrganization(driver, tenantName, entity.OrganizationEntity{
+		Name:        "name1",
+		Description: "description1",
+		Domain:      "domain1",
+		Website:     "website1",
+		Industry:    "industry1",
+		IsPublic:    true,
+	})
+	organizationId2 := neo4jt.CreateFullOrganization(driver, tenantName, entity.OrganizationEntity{
+		Name:        "name2",
+		Description: "description2",
+		Domain:      "domain2",
+		Website:     "website2",
+		Industry:    "industry2",
+		IsPublic:    false,
+	})
+	role1 := neo4jt.ContactWorksForOrganization(driver, contactId, organizationId1, "CTO", false)
+	role2 := neo4jt.ContactWorksForOrganization(driver, contactId, organizationId2, "CEO", true)
 
-	rawResponse, err := c.RawPost(getQuery("get_contact_by_id"),
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Contact"))
+	require.Equal(t, 2, neo4jt.GetCountOfNodes(driver, "Organization"))
+	require.Equal(t, 2, neo4jt.GetCountOfNodes(driver, "Role"))
+	require.Equal(t, 2, neo4jt.GetCountOfRelationships(driver, "WORKS"))
+	require.Equal(t, 2, neo4jt.GetCountOfRelationships(driver, "HAS_ROLE"))
+
+	rawResponse, err := c.RawPost(getQuery("get_contact_with_roles_by_id"),
 		client.Var("contactId", contactId))
 	assertRawResponseSuccess(t, rawResponse, err)
 
@@ -339,20 +429,145 @@ func TestQueryResolver_Contact(t *testing.T) {
 	require.Nil(t, err)
 	require.Equal(t, contactId, searchedContact.Contact.ID)
 
-	companyPositions := searchedContact.Contact.CompanyPositions
-	require.Equal(t, 2, len(companyPositions))
-	require.Equal(t, positionId1, companyPositions[0].ID)
-	require.Equal(t, "CTO", *companyPositions[0].JobTitle)
-	require.Equal(t, companyId1, companyPositions[0].Company.ID)
-	require.Equal(t, "ABC", companyPositions[0].Company.Name)
-	require.Equal(t, positionId2, companyPositions[1].ID)
-	require.Equal(t, "CEO", *companyPositions[1].JobTitle)
-	require.Equal(t, companyId2, companyPositions[1].Company.ID)
-	require.Equal(t, "XYZ", companyPositions[1].Company.Name)
+	roles := searchedContact.Contact.Roles
+	require.Equal(t, 2, len(roles))
+	var cto, ceo *model.ContactRole
+	if role1 == roles[0].ID {
+		cto = roles[0]
+		ceo = roles[1]
+	} else {
+		cto = roles[1]
+		ceo = roles[0]
+	}
+	require.Equal(t, role1, cto.ID)
+	require.Equal(t, "CTO", *cto.JobTitle)
+	require.Equal(t, false, cto.Primary)
+	require.Equal(t, organizationId1, cto.Organization.ID)
+	require.Equal(t, "name1", cto.Organization.Name)
+	require.Equal(t, "description1", *cto.Organization.Description)
+	require.Equal(t, "domain1", *cto.Organization.Domain)
+	require.Equal(t, "website1", *cto.Organization.Website)
+	require.Equal(t, "industry1", *cto.Organization.Industry)
+	require.Equal(t, true, *cto.Organization.IsPublic)
+	require.NotNil(t, cto.Organization.CreatedAt)
+
+	require.Equal(t, role2, ceo.ID)
+	require.Equal(t, "CEO", *ceo.JobTitle)
+	require.Equal(t, true, ceo.Primary)
+	require.Equal(t, organizationId2, ceo.Organization.ID)
+	require.Equal(t, "name2", ceo.Organization.Name)
+	require.Equal(t, "description2", *ceo.Organization.Description)
+	require.Equal(t, "domain2", *ceo.Organization.Domain)
+	require.Equal(t, "website2", *ceo.Organization.Website)
+	require.Equal(t, "industry2", *ceo.Organization.Industry)
+	require.Equal(t, false, *ceo.Organization.IsPublic)
+	require.NotNil(t, ceo.Organization.CreatedAt)
+}
+
+func TestQueryResolver_Contact_WithNotes_ById(t *testing.T) {
+	defer tearDownTestCase()(t)
+	neo4jt.CreateTenant(driver, tenantName)
+	contactId := neo4jt.CreateDefaultContact(driver, tenantName)
+	userId := neo4jt.CreateDefaultUser(driver, tenantName)
+	noteId1 := neo4jt.CreateNoteForContact(driver, contactId, "note1")
+	noteId2 := neo4jt.CreateNoteForContact(driver, contactId, "note2")
+	neo4jt.NoteCreatedByUser(driver, noteId1, userId)
 
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Contact"))
-	require.Equal(t, 2, neo4jt.GetCountOfNodes(driver, "Company"))
-	require.Equal(t, 2, neo4jt.GetCountOfRelationships(driver, "WORKS_AT"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "User"))
+	require.Equal(t, 2, neo4jt.GetCountOfNodes(driver, "Note"))
+	require.Equal(t, 2, neo4jt.GetCountOfRelationships(driver, "NOTED"))
+	require.Equal(t, 1, neo4jt.GetCountOfRelationships(driver, "CREATED"))
+
+	rawResponse, err := c.RawPost(getQuery("get_contact_with_notes_by_id"),
+		client.Var("contactId", contactId))
+	assertRawResponseSuccess(t, rawResponse, err)
+
+	var searchedContact struct {
+		Contact model.Contact
+	}
+
+	err = decode.Decode(rawResponse.Data.(map[string]any), &searchedContact)
+	require.Nil(t, err)
+	require.Equal(t, contactId, searchedContact.Contact.ID)
+
+	notes := searchedContact.Contact.Notes.Content
+	require.Equal(t, 2, len(notes))
+	var noteWithUser, noteWithoutUser *model.Note
+	if noteId1 == notes[0].ID {
+		noteWithUser = notes[0]
+		noteWithoutUser = notes[1]
+	} else {
+		noteWithUser = notes[1]
+		noteWithoutUser = notes[0]
+	}
+	require.Equal(t, noteId1, noteWithUser.ID)
+	require.Equal(t, "note1", noteWithUser.HTML)
+	require.NotNil(t, noteWithUser.CreatedAt)
+	require.NotNil(t, noteWithUser.CreatedBy)
+	require.Equal(t, userId, noteWithUser.CreatedBy.ID)
+	require.Equal(t, "first", noteWithUser.CreatedBy.FirstName)
+	require.Equal(t, "last", noteWithUser.CreatedBy.LastName)
+
+	require.Equal(t, noteId2, noteWithoutUser.ID)
+	require.Equal(t, "note2", noteWithoutUser.HTML)
+	require.NotNil(t, noteWithoutUser.CreatedAt)
+	require.Nil(t, noteWithoutUser.CreatedBy)
+}
+
+func TestQueryResolver_Contact_WithAddresses_ById(t *testing.T) {
+	defer tearDownTestCase()(t)
+	neo4jt.CreateTenant(driver, tenantName)
+	contactId := neo4jt.CreateDefaultContact(driver, tenantName)
+	anotherContactId := neo4jt.CreateDefaultContact(driver, tenantName)
+	addressInput := entity.AddressEntity{
+		Source:        entity.DataSourceHubspot,
+		SourceOfTruth: entity.DataSourceHubspot,
+		Country:       "testCountry",
+		State:         "testState",
+		City:          "testCity",
+		Address:       "testAddress",
+		Address2:      "testAddress2",
+		Zip:           "testZip",
+		Phone:         "testPhone",
+		Fax:           "testFax",
+	}
+	address1 := neo4jt.CreateAddress(driver, addressInput)
+	address2 := neo4jt.CreateAddress(driver, entity.AddressEntity{
+		Source: "manual",
+	})
+	neo4jt.ContactHasAddress(driver, contactId, address1)
+	neo4jt.ContactHasAddress(driver, anotherContactId, address2)
+
+	require.Equal(t, 2, neo4jt.GetCountOfNodes(driver, "Contact"))
+	require.Equal(t, 2, neo4jt.GetCountOfNodes(driver, "Address"))
+	require.Equal(t, 2, neo4jt.GetCountOfRelationships(driver, "LOCATED_AT"))
+
+	rawResponse, err := c.RawPost(getQuery("get_contact_with_addresses_by_id"),
+		client.Var("contactId", contactId))
+	assertRawResponseSuccess(t, rawResponse, err)
+
+	var searchedContact struct {
+		Contact model.Contact
+	}
+
+	err = decode.Decode(rawResponse.Data.(map[string]any), &searchedContact)
+	require.Nil(t, err)
+	require.Equal(t, contactId, searchedContact.Contact.ID)
+
+	addresses := searchedContact.Contact.Addresses
+	require.Equal(t, 1, len(addresses))
+	address := addresses[0]
+	require.Equal(t, address1, address.ID)
+	require.Equal(t, model.DataSourceHubspot, *address.Source)
+	require.Equal(t, addressInput.Country, *address.Country)
+	require.Equal(t, addressInput.City, *address.City)
+	require.Equal(t, addressInput.State, *address.State)
+	require.Equal(t, addressInput.Address, *address.Address)
+	require.Equal(t, addressInput.Address2, *address.Address2)
+	require.Equal(t, addressInput.Fax, *address.Fax)
+	require.Equal(t, addressInput.Phone, *address.Phone)
+	require.Equal(t, addressInput.Zip, *address.Zip)
 }
 
 func TestQueryResolver_Contacts_SortByTitleAscFirstNameAscLastNameDesc(t *testing.T) {
@@ -476,12 +691,9 @@ func TestQueryResolver_Contact_WithConversations(t *testing.T) {
 	require.Equal(t, 2, len(contact.Contact.Conversations.Content))
 	conversations := contact.Contact.Conversations.Content
 	require.ElementsMatch(t, []string{conv1_1, conv2_1}, []string{conversations[0].ID, conversations[1].ID})
-	require.ElementsMatch(t, []string{user1, user2}, []string{conversations[0].User.ID, conversations[1].User.ID})
-	require.ElementsMatch(t, []string{user1, user2}, []string{conversations[0].UserID, conversations[1].UserID})
-	require.Equal(t, contact1, conversations[0].Contact.ID)
-	require.Equal(t, contact1, conversations[1].Contact.ID)
-	require.Equal(t, contact1, conversations[0].ContactID)
-	require.Equal(t, contact1, conversations[1].ContactID)
+	require.ElementsMatch(t, []string{user1, user2}, []string{conversations[0].Users[0].ID, conversations[1].Users[0].ID})
+	require.Equal(t, contact1, conversations[0].Contacts[0].ID)
+	require.Equal(t, contact1, conversations[1].Contacts[0].ID)
 
 	require.NotNil(t, conv1_2)
 	require.NotNil(t, conv2_3)
@@ -494,15 +706,13 @@ func TestQueryResolver_Contact_WithActions(t *testing.T) {
 	contactId := neo4jt.CreateDefaultContact(driver, tenantName)
 	contactId2 := neo4jt.CreateDefaultContact(driver, tenantName)
 	userId := neo4jt.CreateDefaultUser(driver, tenantName)
-	conversationId := neo4jt.CreateConversation(driver, userId, contactId)
+	// Use below conversation when conversation is converted to Action
+	neo4jt.CreateConversation(driver, userId, contactId)
 
 	now := time.Now().UTC()
 	secAgo1 := now.Add(time.Duration(-1) * time.Second)
 	secAgo30 := now.Add(time.Duration(-30) * time.Second)
-	secAgo60 := now.Add(time.Duration(-60) * time.Second)
 	from := now.Add(time.Duration(-10) * time.Minute)
-
-	messageId := neo4jt.AddMessageToConversation(driver, conversationId, mapper.MapMessageChannelFromModel(model.MessageChannelChat), secAgo60)
 
 	pageViewId1 := neo4jt.CreatePageView(driver, contactId, entity.PageViewEntity{
 		StartedAt:      secAgo1,
@@ -532,10 +742,9 @@ func TestQueryResolver_Contact_WithActions(t *testing.T) {
 
 	require.Equal(t, 2, neo4jt.GetCountOfNodes(driver, "Contact"))
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "User"))
-	require.Equal(t, 4, neo4jt.GetCountOfNodes(driver, "Action"))
+	require.Equal(t, 3, neo4jt.GetCountOfNodes(driver, "Action"))
 	require.Equal(t, 3, neo4jt.GetCountOfNodes(driver, "PageView"))
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Conversation"))
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Message"))
 
 	rawResponse, err := c.RawPost(getQuery("get_contact_with_actions"),
 		client.Var("contactId", contactId),
@@ -547,7 +756,7 @@ func TestQueryResolver_Contact_WithActions(t *testing.T) {
 	require.Equal(t, contactId, contact.(map[string]interface{})["id"])
 
 	actions := contact.(map[string]interface{})["actions"].([]interface{})
-	require.Equal(t, 3, len(actions))
+	require.Equal(t, 2, len(actions))
 	action1 := actions[0].(map[string]interface{})
 	require.Equal(t, "PageViewAction", action1["__typename"].(string))
 	require.Equal(t, pageViewId1, action1["id"].(string))
@@ -571,13 +780,6 @@ func TestQueryResolver_Contact_WithActions(t *testing.T) {
 	require.Equal(t, "http://app-2.ai", action2["pageUrl"].(string))
 	require.Equal(t, float64(2), action2["orderInSession"].(float64))
 	require.Equal(t, float64(20), action2["engagedTime"].(float64))
-
-	action3 := actions[2].(map[string]interface{})
-	require.Equal(t, "MessageAction", action3["__typename"].(string))
-	require.Equal(t, messageId, action3["id"].(string))
-	require.Equal(t, conversationId, action3["conversationId"].(string))
-	require.Equal(t, "CHAT", action3["channel"].(string))
-	require.NotNil(t, action3["startedAt"].(string))
 }
 
 func TestQueryResolver_Contact_WithActions_FilterByActionType(t *testing.T) {
@@ -585,8 +787,6 @@ func TestQueryResolver_Contact_WithActions_FilterByActionType(t *testing.T) {
 	neo4jt.CreateTenant(driver, tenantName)
 
 	contactId := neo4jt.CreateDefaultContact(driver, tenantName)
-	userId := neo4jt.CreateDefaultUser(driver, tenantName)
-	conversationId := neo4jt.CreateConversation(driver, userId, contactId)
 
 	now := time.Now().UTC()
 	secAgo1 := now.Add(time.Duration(-1) * time.Second)
@@ -603,12 +803,10 @@ func TestQueryResolver_Contact_WithActions_FilterByActionType(t *testing.T) {
 		OrderInSession: 1,
 		EngagedTime:    10,
 	})
-	neo4jt.AddMessageToConversation(driver, conversationId, mapper.MapMessageChannelFromModel(model.MessageChannelChat), secAgo1)
 
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Contact"))
-	require.Equal(t, 2, neo4jt.GetCountOfNodes(driver, "Action"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Action"))
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "PageView"))
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Message"))
 
 	types := []model.ActionType{}
 	types = append(types, model.ActionTypePageView)

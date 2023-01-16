@@ -12,3 +12,7 @@ func (contactType ContactTypeEntity) ToString() string {
 }
 
 type ContactTypeEntities []ContactTypeEntity
+
+func (contactType ContactTypeEntity) Labels() []string {
+	return []string{"ContactType"}
+}

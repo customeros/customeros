@@ -1,0 +1,6 @@
+query {
+  organizationTypes {
+    id
+    name
+  }
+}

@@ -5,20 +5,26 @@ import (
 )
 
 type Repositories struct {
-	Drivers                         Drivers
-	ActionRepository                ActionRepository
-	CompanyRepository               CompanyRepository
-	ContactGroupRepository          ContactGroupRepository
-	ContactRepository               ContactRepository
-	ContactTypeRepository           ContactTypeRepository
-	ConversationRepository          ConversationRepository
-	MessageRepository               MessageRepository
-	CustomFieldDefinitionRepository CustomFieldDefinitionRepository
-	CustomFieldRepository           CustomFieldRepository
-	EntityDefinitionRepository      EntityDefinitionRepository
-	FieldSetDefinitionRepository    FieldSetDefinitionRepository
-	FieldSetRepository              FieldSetRepository
-	UserRepository                  UserRepository
+	Drivers                       Drivers
+	ActionRepository              ActionRepository
+	OrganizationRepository        OrganizationRepository
+	OrganizationTypeRepository    OrganizationTypeRepository
+	ContactGroupRepository        ContactGroupRepository
+	ContactRepository             ContactRepository
+	ContactTypeRepository         ContactTypeRepository
+	ConversationRepository        ConversationRepository
+	CustomFieldTemplateRepository CustomFieldTemplateRepository
+	CustomFieldRepository         CustomFieldRepository
+	EntityTemplateRepository      EntityTemplateRepository
+	FieldSetTemplateRepository    FieldSetTemplateRepository
+	FieldSetRepository            FieldSetRepository
+	UserRepository                UserRepository
+	ExternalSystemRepository      ExternalSystemRepository
+	NoteRepository                NoteRepository
+	ContactRoleRepository         ContactRoleRepository
+	AddressRepository             AddressRepository
+	EmailRepository               EmailRepository
+	PhoneNumberRepository         PhoneNumberRepository
 }
 
 type Drivers struct {
@@ -32,17 +38,23 @@ func InitRepos(driver *neo4j.Driver) *Repositories {
 		},
 	}
 	repositories.ActionRepository = NewActionRepository(driver)
-	repositories.CompanyRepository = NewCompanyRepository(driver)
+	repositories.OrganizationRepository = NewOrganizationRepository(driver)
 	repositories.ContactGroupRepository = NewContactGroupRepository(driver)
 	repositories.ContactRepository = NewContactRepository(driver)
 	repositories.ContactTypeRepository = NewContactTypeRepository(driver)
 	repositories.ConversationRepository = NewConversationRepository(driver)
-	repositories.MessageRepository = NewMessageRepository(driver)
-	repositories.CustomFieldDefinitionRepository = NewCustomFieldDefinitionRepository(driver)
+	repositories.CustomFieldTemplateRepository = NewCustomFieldTemplateRepository(driver)
 	repositories.CustomFieldRepository = NewCustomFieldRepository(driver)
-	repositories.EntityDefinitionRepository = NewEntityDefinitionRepository(driver, &repositories)
-	repositories.FieldSetDefinitionRepository = NewFieldSetDefinitionRepository(driver, &repositories)
+	repositories.EntityTemplateRepository = NewEntityTemplateRepository(driver, &repositories)
+	repositories.FieldSetTemplateRepository = NewFieldSetTemplateRepository(driver, &repositories)
 	repositories.FieldSetRepository = NewFieldSetRepository(driver)
 	repositories.UserRepository = NewUserRepository(driver)
+	repositories.ExternalSystemRepository = NewExternalSystemRepository(driver)
+	repositories.NoteRepository = NewNoteRepository(driver)
+	repositories.ContactRoleRepository = NewContactRoleRepository(driver)
+	repositories.AddressRepository = NewAddressRepository(driver)
+	repositories.EmailRepository = NewEmailRepository(driver)
+	repositories.PhoneNumberRepository = NewPhoneNumberRepository(driver)
+	repositories.OrganizationTypeRepository = NewOrganizationTypeRepository(driver)
 	return &repositories
 }

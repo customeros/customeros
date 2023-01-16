@@ -1,6 +1,0 @@
-query GetEntityDefinitions($extends: EntityDefinitionExtension) {
-  entityDefinitions(extends: $extends) {
-    id
-    extends
-  }
-}

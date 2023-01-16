@@ -1,0 +1,49 @@
+extend type Query {
+    organizations(pagination: Pagination, where: Filter, sort: [SortBy!]): OrganizationPage!
+    organization(id: ID!): Organization
+}
+
+extend type Mutation {
+    organization_Create(input: OrganizationInput!): Organization!
+    organization_Update(id: ID!, input: OrganizationInput!): Organization!
+    organization_Delete(id: ID!): Result
+}
+
+type Organization implements Node {
+    id: ID!
+    name: String!
+    description: String
+    domain:      String
+    website:     String
+    industry:    String
+    isPublic:    Boolean
+    createdAt:   Time!
+    organizationType: OrganizationType @goField(forceResolver: true)
+
+    """
+    All addresses associated with an organization in customerOS.
+    **Required.  If no values it returns an empty array.**
+    """
+    addresses: [Address!]! @goField(forceResolver: true)
+    source: DataSource!
+}
+
+type OrganizationPage implements Pages {
+    content: [Organization!]!
+    totalPages: Int!
+    totalElements: Int64!
+}
+
+input OrganizationInput {
+    """
+    The name of the organization.
+    **Required.**
+    """
+    name: String!
+    description: String
+    domain:      String
+    website:     String
+    industry:    String
+    isPublic:    Boolean
+    organizationTypeId: ID
+}

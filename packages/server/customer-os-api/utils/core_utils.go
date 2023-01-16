@@ -2,10 +2,14 @@ package utils
 
 import (
 	"github.com/neo4j/neo4j-go-driver/v4/neo4j/dbtype"
-	"log"
+	"github.com/sirupsen/logrus"
 	"reflect"
 	"time"
 )
+
+func ToPtr[T any](obj T) *T {
+	return &obj
+}
 
 func StringPtr(str string) *string {
 	return &str
@@ -49,7 +53,7 @@ func IntPtrToInt64Ptr(v *int) *int64 {
 
 func MergeMapToMap(src, dst map[string]any) {
 	if dst == nil {
-		log.Panic("expecting not nil map")
+		logrus.Error("expecting not nil map")
 	} else if src != nil {
 		for k, v := range src {
 			dst[k] = v
@@ -95,4 +99,12 @@ func IfNotNilBool(check any, valueExtractor ...func() bool) bool {
 	}
 	out := check.(*bool)
 	return *out
+}
+
+func ReverseMap[K comparable, V comparable](in map[K]V) map[V]K {
+	out := map[V]K{}
+	for k, v := range in {
+		out[v] = k
+	}
+	return out
 }

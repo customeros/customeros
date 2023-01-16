@@ -5,6 +5,7 @@ mutation MergeFieldSetToContact($contactId: ID!){
      ) {
         name
         id
-        added
+        createdAt
+        source
       }
 }

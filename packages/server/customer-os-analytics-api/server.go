@@ -8,6 +8,7 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-analytics-api/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-analytics-api/config"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-analytics-api/config/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-analytics-api/dataloader"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-analytics-api/graph/generated"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-analytics-api/graph/resolver"
@@ -78,6 +79,13 @@ func playgroundHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		h.ServeHTTP(c.Writer, c.Request)
 	}
+}
+
+func init() {
+	logger.Logger = logger.New(log.New(log.Default().Writer(), "", log.Ldate|log.Ltime|log.Lmicroseconds), logger.Config{
+		Colorful: true,
+		LogLevel: logger.Info,
+	})
 }
 
 func main() {

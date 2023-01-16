@@ -3,7 +3,7 @@ package service
 import (
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-tracked-data/entity"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-tracked-data/repository"
-	"log"
+	"github.com/sirupsen/logrus"
 	"regexp"
 	"strings"
 	"sync"
@@ -33,7 +33,7 @@ func NewSyncService(repositories *repository.Repositories, services *Services) S
 func (s *syncService) Sync(runId string, bucketSize int) int {
 	pageViewsToSync, err := s.repositories.PageViewRepository.GetPageViewsForSync(bucketSize)
 	if err != nil {
-		log.Printf("ERROR run id: %s failed to sync page views. error fetching page views: %v", runId, err.Error())
+		logrus.Errorf("ERROR run id: %s failed to sync page views. error fetching page views: %v", runId, err.Error())
 	}
 
 	if len(pageViewsToSync) == 0 {
@@ -68,7 +68,7 @@ func (s *syncService) prepareContactIds(pageViews entity.PageViews) (map[tenantV
 		}
 		if _, ok := contactIds[tenantVisitor]; !ok {
 			firstName, lastName := s.prepareFirstAndLastNames(email)
-			id, err := s.repositories.ContactRepository.GetOrCreateContactId(v.Tenant, email, firstName, lastName)
+			id, err := s.repositories.ContactRepository.GetOrCreateContactId(v.Tenant, email, firstName, lastName, v.Application)
 			if err != nil {
 				return nil, err
 			}
@@ -87,12 +87,12 @@ func (s *syncService) syncPageView(wg *sync.WaitGroup, runId string, contactIds 
 		visitorId: pv.VisitorID.String,
 	}]
 	if err := s.repositories.ActionRepository.CreatePageViewAction(contactId, pv); err != nil {
-		log.Printf("ERROR run id: %s failed to create action item for page view %s error: %v", runId, pv.ID, err.Error())
+		logrus.Errorf("ERROR run id: %s failed to create action item for page view %s error: %v", runId, pv.ID, err.Error())
 	} else {
 		if err = s.repositories.PageViewRepository.MarkSynced(pv, contactId); err != nil {
-			log.Printf("ERROR run id: %s failed to mark as sycned page view %s error: %v", runId, pv.ID, err.Error())
+			logrus.Errorf("ERROR run id: %s failed to mark as sycned page view %s error: %v", runId, pv.ID, err.Error())
 		} else {
-			log.Printf("run id: %s synced page view %s", runId, pv.ID)
+			logrus.Infof("run id: %s synced page view %s", runId, pv.ID)
 		}
 	}
 	return pv.ID
@@ -109,7 +109,7 @@ func (s *syncService) parseEmail(email string) (string, string) {
 
 func (s *syncService) prepareFirstAndLastNames(email string) (string, string) {
 	displayName, _ := s.parseEmail(email)
-	firstName, lastName := "Unknown", "User"
+	firstName, lastName := "", ""
 	if displayName != "" {
 		parts := strings.SplitN(displayName, " ", 2)
 		firstName = parts[0]

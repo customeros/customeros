@@ -5,10 +5,12 @@ import (
 )
 
 type EmailEntity struct {
-	Id      string
-	Email   string
-	Label   string
-	Primary bool
+	Id            string
+	Email         string
+	Label         string
+	Primary       bool
+	Source        DataSource
+	SourceOfTruth DataSource
 }
 
 func (email EmailEntity) ToString() string {
@@ -16,3 +18,7 @@ func (email EmailEntity) ToString() string {
 }
 
 type EmailEntities []EmailEntity
+
+func (email EmailEntity) Labels() []string {
+	return []string{"Email"}
+}

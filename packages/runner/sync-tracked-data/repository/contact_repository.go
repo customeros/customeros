@@ -1,12 +1,14 @@
 package repository
 
 import (
+	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v4/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v4/neo4j/db"
+	"time"
 )
 
 type ContactRepository interface {
-	GetOrCreateContactId(tenant, email, firstName, lastName string) (string, error)
+	GetOrCreateContactId(tenant, email, firstName, lastName, application string) (string, error)
 }
 
 type contactRepository struct {
@@ -19,7 +21,7 @@ func NewContactRepository(driver *neo4j.Driver) ContactRepository {
 	}
 }
 
-func (r *contactRepository) GetOrCreateContactId(tenant, email, firstName, lastName string) (string, error) {
+func (r *contactRepository) GetOrCreateContactId(tenant, email, firstName, lastName, application string) (string, error) {
 	session := (*r.driver).NewSession(
 		neo4j.SessionConfig{
 			AccessMode: neo4j.AccessModeWrite,
@@ -27,16 +29,24 @@ func (r *contactRepository) GetOrCreateContactId(tenant, email, firstName, lastN
 	defer session.Close()
 
 	record, err := session.WriteTransaction(func(tx neo4j.Transaction) (interface{}, error) {
-		queryResult, err := tx.Run(`
-			MERGE (t:Tenant {name:$tenant})
-			MERGE (e:Email {email: $email})<-[r:EMAILED_AT]-(c:Contact)-[:CONTACT_BELONGS_TO_TENANT]->(t)
-            ON CREATE SET r.primary=true, e.id=randomUUID(), c.id=randomUUID(), c.firstName=$firstName, c.lastName=$lastName, c.createdAt=datetime({timezone: 'UTC'})
-			RETURN c.id`,
+		queryResult, err := tx.Run(fmt.Sprintf(
+			" MATCH (t:Tenant {name:$tenant}) "+
+				" MERGE (e:Email {email: $email})<-[r:EMAILED_AT]-(c:Contact)-[:CONTACT_BELONGS_TO_TENANT]->(t) "+
+				" ON CREATE SET r.primary=true, e.id=randomUUID(), e.createdAt=$createdAt, "+
+				"				c.id=randomUUID(), c.firstName=$firstName, c.lastName=$lastName, c.createdAt=$createdAt, "+
+				"				e.source=$source, e.sourceOfTruth=$sourceOfTruth, e.appSource=$appSource, "+
+				"				c.source=$source, c.sourceOfTruth=$sourceOfTruth, c.appSource=$appSource, "+
+				"               c:%s, e:%s "+
+				" RETURN c.id", "Contact_"+tenant, "Email_"+tenant),
 			map[string]interface{}{
-				"tenant":    tenant,
-				"email":     email,
-				"firstName": firstName,
-				"lastName":  lastName,
+				"tenant":        tenant,
+				"email":         email,
+				"firstName":     firstName,
+				"lastName":      lastName,
+				"source":        "openline",
+				"sourceOfTruth": "openline",
+				"appSource":     application,
+				"createdAt":     time.Now().UTC(),
 			})
 		record, err := queryResult.Single()
 		if err != nil {

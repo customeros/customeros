@@ -1,0 +1,40 @@
+extend type Mutation {
+    contactRole_Delete(contactId : ID!, roleId: ID!): Result!
+    contactRole_Create(contactId : ID!, input: ContactRoleInput!): ContactRole!
+    contactRole_Update(contactId : ID!, roleId : ID!, input: ContactRoleInput!): ContactRole!
+}
+
+"""
+Describes the relationship a Contact has with a Organization.
+**A `return` object**
+"""
+type ContactRole {
+    id: ID!
+
+    """
+    Organization associated with a Contact.
+    **Required.**
+    """
+    organization: Organization @goField(forceResolver: true)
+
+    "The Contact's job title."
+    jobTitle: String
+
+    primary: Boolean!
+
+    source: DataSource!
+}
+
+"""
+Describes the relationship a Contact has with an Organization.
+**A `create` object**
+"""
+input ContactRoleInput {
+
+    organizationId: ID
+
+    "The Contact's job title."
+    jobTitle: String
+
+    primary: Boolean
+}

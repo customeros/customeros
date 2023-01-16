@@ -5,10 +5,12 @@ import (
 )
 
 type PhoneNumberEntity struct {
-	Id      string
-	E164    string
-	Label   string
-	Primary bool
+	Id            string
+	E164          string
+	Label         string
+	Primary       bool
+	Source        DataSource
+	SourceOfTruth DataSource
 }
 
 func (phone PhoneNumberEntity) ToString() string {
@@ -16,3 +18,7 @@ func (phone PhoneNumberEntity) ToString() string {
 }
 
 type PhoneNumberEntities []PhoneNumberEntity
+
+func (phone PhoneNumberEntity) Labels() []string {
+	return []string{"PhoneNumber"}
+}

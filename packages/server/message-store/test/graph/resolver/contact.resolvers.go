@@ -17,9 +17,9 @@ func (r *contactResolver) ContactType(ctx context.Context, obj *model.Contact) (
 	panic(fmt.Errorf("not implemented: ContactType - contactType"))
 }
 
-// CompanyPositions is the resolver for the companyPositions field.
-func (r *contactResolver) CompanyPositions(ctx context.Context, obj *model.Contact) ([]*model.CompanyPosition, error) {
-	panic(fmt.Errorf("not implemented: CompanyPositions - companyPositions"))
+// Roles is the resolver for the roles field.
+func (r *contactResolver) Roles(ctx context.Context, obj *model.Contact) ([]*model.ContactRole, error) {
+	panic(fmt.Errorf("not implemented: Roles - roles"))
 }
 
 // Groups is the resolver for the groups field.
@@ -43,6 +43,11 @@ func (r *contactResolver) Emails(ctx context.Context, obj *model.Contact) ([]*mo
 	panic(fmt.Errorf("not implemented: Emails - emails"))
 }
 
+// Addresses is the resolver for the addresses field.
+func (r *contactResolver) Addresses(ctx context.Context, obj *model.Contact) ([]*model.Address, error) {
+	panic(fmt.Errorf("not implemented: Addresses - addresses"))
+}
+
 // CustomFields is the resolver for the customFields field.
 func (r *contactResolver) CustomFields(ctx context.Context, obj *model.Contact) ([]*model.CustomField, error) {
 	panic(fmt.Errorf("not implemented: CustomFields - customFields"))
@@ -53,14 +58,19 @@ func (r *contactResolver) FieldSets(ctx context.Context, obj *model.Contact) ([]
 	panic(fmt.Errorf("not implemented: FieldSets - fieldSets"))
 }
 
-// Definition is the resolver for the definition field.
-func (r *contactResolver) Definition(ctx context.Context, obj *model.Contact) (*model.EntityDefinition, error) {
-	panic(fmt.Errorf("not implemented: Definition - definition"))
+// Template is the resolver for the template field.
+func (r *contactResolver) Template(ctx context.Context, obj *model.Contact) (*model.EntityTemplate, error) {
+	panic(fmt.Errorf("not implemented: Template - template"))
 }
 
 // Owner is the resolver for the owner field.
 func (r *contactResolver) Owner(ctx context.Context, obj *model.Contact) (*model.User, error) {
 	panic(fmt.Errorf("not implemented: Owner - owner"))
+}
+
+// Notes is the resolver for the notes field.
+func (r *contactResolver) Notes(ctx context.Context, obj *model.Contact, pagination *model.Pagination) (*model.NotePage, error) {
+	panic(fmt.Errorf("not implemented: Notes - notes"))
 }
 
 // Conversations is the resolver for the conversations field.
@@ -94,21 +104,6 @@ func (r *mutationResolver) ContactHardDelete(ctx context.Context, contactID stri
 // ContactSoftDelete is the resolver for the contact_SoftDelete field.
 func (r *mutationResolver) ContactSoftDelete(ctx context.Context, contactID string) (*model.Result, error) {
 	panic(fmt.Errorf("not implemented: ContactSoftDelete - contact_SoftDelete"))
-}
-
-// ContactMergeCompanyPosition is the resolver for the contact_MergeCompanyPosition field.
-func (r *mutationResolver) ContactMergeCompanyPosition(ctx context.Context, contactID string, input model.CompanyPositionInput) (*model.CompanyPosition, error) {
-	panic(fmt.Errorf("not implemented: ContactMergeCompanyPosition - contact_MergeCompanyPosition"))
-}
-
-// ContactUpdateCompanyPosition is the resolver for the contact_UpdateCompanyPosition field.
-func (r *mutationResolver) ContactUpdateCompanyPosition(ctx context.Context, contactID string, companyPositionID string, input model.CompanyPositionInput) (*model.CompanyPosition, error) {
-	panic(fmt.Errorf("not implemented: ContactUpdateCompanyPosition - contact_UpdateCompanyPosition"))
-}
-
-// ContactDeleteCompanyPosition is the resolver for the contact_DeleteCompanyPosition field.
-func (r *mutationResolver) ContactDeleteCompanyPosition(ctx context.Context, contactID string, companyPositionID string) (*model.Result, error) {
-	panic(fmt.Errorf("not implemented: ContactDeleteCompanyPosition - contact_DeleteCompanyPosition"))
 }
 
 // Contact is the resolver for the contact field.

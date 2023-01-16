@@ -1,21 +1,49 @@
 extend type Mutation {
-    conversationCreate(input: ConversationInput!): Conversation!
-    conversationAddMessage(input: MessageInput!): Message!
+#    DO NOT USE THIS IN PRODUCTION
+    conversation_Create(input: ConversationInput!): Conversation!
+    conversation_Update(input: ConversationUpdateInput!): Conversation!
+    conversation_Close(conversationId: ID!): Conversation!
 }
 
 type Conversation implements Node {
     id: ID!
     startedAt: Time!
-    contactId: ID!
-    contact: Contact @goField(forceResolver: true)
-    userId: ID!
-    user: User @goField(forceResolver: true)
+    updatedAt: Time!
+    endedAt: Time
+    status: ConversationStatus!
+    channel: String
+    messageCount: Int64!
+    contacts: [Contact!] @goField(forceResolver: true)
+    users: [User!] @goField(forceResolver: true)
+
+    source: DataSource!
+    sourceOfTruth: DataSource!
+    appSource: String
+
+    initiatorFirstName: String
+    initiatorLastName: String
+    initiatorUsername: String
+    initiatorType: String
+    threadId: String
 }
 
 input ConversationInput {
-    userId: ID!
-    contactId: ID!
     id: ID
+    startedAt: Time
+    contactIds: [ID!]
+    userIds: [ID!]
+    status: ConversationStatus! = ACTIVE
+    channel: String
+    appSource: String
+}
+
+input ConversationUpdateInput {
+    id: ID!
+    contactIds: [ID!]
+    userIds: [ID!]
+    status: ConversationStatus
+    channel: String
+    skipMessageCountIncrement: Boolean! = false
 }
 
 type ConversationPage implements Pages {
@@ -24,25 +52,7 @@ type ConversationPage implements Pages {
     totalElements: Int64!
 }
 
-type Message implements Node {
-    id: ID!
-    channel: MessageChannel!
-    startedAt: Time!
-    conversationId: ID!
-}
-
-input MessageInput {
-    id: ID!
-    conversationId: ID!
-    channel: MessageChannel!
-    startedAt: Time
-}
-
-enum MessageChannel {
-    VOICE
-    MAIL
-    CHAT
-    WHATSAPP
-    FACEBOOK
-    TWITTER
+enum ConversationStatus {
+    ACTIVE
+    CLOSED
 }

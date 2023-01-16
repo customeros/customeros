@@ -1,0 +1,17 @@
+query GetContactById($contactId: ID!){
+  contact(id: $contactId) {
+    id
+    notes {
+        content {
+            id
+            html
+            createdAt
+            createdBy {
+                id
+                firstName
+                lastName
+            }
+        }
+    }
+  }
+}

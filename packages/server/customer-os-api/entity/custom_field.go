@@ -3,6 +3,7 @@ package entity
 import (
 	"fmt"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
+	"time"
 )
 
 type nodeLabel string
@@ -34,12 +35,14 @@ func (p propertyName) String() string {
 }
 
 type CustomFieldEntity struct {
-	Id           *string
-	Name         string
-	DataType     string
-	Value        model.AnyTypeValue
-	DefinitionId *string
-	Source       string
+	Id            *string
+	Name          string
+	DataType      string
+	Value         model.AnyTypeValue
+	TemplateId    *string
+	Source        DataSource
+	SourceOfTruth DataSource
+	CreatedAt     time.Time
 }
 
 type CustomFieldEntities []CustomFieldEntity
@@ -123,4 +126,8 @@ func (f *CustomFieldEntity) AdjustValueByDatatype() {
 			}
 		}
 	}
+}
+
+func (f *CustomFieldEntity) Labels() []string {
+	return []string{"CustomField", f.NodeLabel()}
 }

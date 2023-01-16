@@ -1,0 +1,16 @@
+mutation CloseConversation($conversationId: ID!) {
+  conversation_Close(conversationId: $conversationId) {
+    id
+    startedAt
+    endedAt
+    status
+    channel
+    messageCount
+    contacts {
+      id
+    }
+    users {
+      id
+    }
+  }
+}

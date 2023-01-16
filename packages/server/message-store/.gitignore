@@ -1,3 +1,7 @@
 bin
+message-store
 test/graph/generated/
 test/graph/model/models_gen.go
+
+cover.out
+unit-tests.xml

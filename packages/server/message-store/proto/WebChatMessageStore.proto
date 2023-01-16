@@ -1,0 +1,21 @@
+syntax = "proto3";
+package proto;
+
+import "Message.proto";
+
+option go_package = "github.com/openline-ai/openline-customer-os/packages/server/message-store/proto/generated/";
+
+message WebChatInputMessage {
+  optional string conversationId = 1;
+  optional string email = 2;
+  SenderType senderType = 3;
+  MessageType type = 4;
+  MessageSubtype subtype = 5;
+  optional string message = 6;
+  optional string bytes = 7;
+  MessageDirection direction = 8;
+}
+
+service WebChatMessageStoreService {
+  rpc saveMessage(WebChatInputMessage) returns (Message) {};
+}

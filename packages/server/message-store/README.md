@@ -66,7 +66,6 @@ To run this service to run on your laptop you need the following environemnt var
 | DB_PASS                   | the database password                                                                  |
 | MESSAGE_STORE_SERVER_PORT | port to bind for GRPC communications should be set to "9009"                           |
 | CUSTOMER_OS_API           | URL to access the Customer OS API                                                      |
-| DEFAULT_USER_ID           | ID of user to associate conversations with in grapql, optional, defaults to AgentSmith |
 
 
 ## 🙌 Features

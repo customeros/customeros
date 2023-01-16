@@ -1,0 +1,15 @@
+mutation MergePhoneNumberToContact($contactId: ID!){
+     phoneNumberMergeToContact(
+        contactId: $contactId
+        input: {e164: "+1234567890"
+                label: WORK
+                primary: true
+        }
+     ) {
+        id
+        e164
+        label
+        primary
+        source
+      }
+}

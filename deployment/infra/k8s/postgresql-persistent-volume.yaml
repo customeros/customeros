@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: PersistentVolume # Create a PV
 metadata:
-  name: postgresql-customer-os-data # Sets PV's name
+  name: customer-db-postgresql # Sets PV's name
   labels:
     type: local # Sets PV's type to local
 spec:

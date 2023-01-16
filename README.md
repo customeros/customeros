@@ -39,36 +39,34 @@
 
 
 ## 👋 Overview
+
 Openline customerOS is an open source development platform that enables the flexible and rapid development of customer-centric applications.
 
-- **Openline Auth** - End-to-end identity solution for easy user authentication, sign-in, and permissions using OAuth.
-- **customerDB** - Backend server that host your customer data in a secure, compliant, and standards based way.
-- **customerOS API** - GraphQL and gRPC API for reading, writing, and manipulating data.
-- **customerOS SDK** - Client libraries that simplify the process of interacting with the customerOS API [coming soon].
-- **Event trackers** - First party event trackers fully integrated with customerDB, allowing you full visibility into how your customers are engaging with your apps and content
-- **Web components** - A library of web components that make it easy to interact with customer data in your front end applications [coming soon].
-- **App launcher** - Web application with built in SSO to launch into any app built into customerOS
-- **Explorer app** - Web application where you can view your data and perform basic editing tasks [coming soon].
-- **Admin app** - Web application where you configure and administer all Openline services [coming soon]
-- **UI components** - A library of React components designed to help you quickly develop custom applications on customerOS [coming soon].
+| Feature               | Description | Status|
+|-----------------------|-------------|-------|
+| **Analytics API**     |Privacy-centric replacement for Google Analytics| Roadmap|
+| **Auth**              |End-to-end identity solution for easy user authentication, sign-in, and permissions using OAuth.| Demo |
+| **customerDB**        |Backend server that host your customer data in a secure, compliant, and standards based way. | Demo|
+| **customerOS API**    |GraphQL API for reading, writing, and manipulating customer data.| Demo|
+| **Event trackers**    |First party event trackers fully integrated with customerDB, allowing you full visibility into how your customers are engaging with your apps and content | Preview|
+| **Launcher**          |Web application with built in SSO to launch into any app built into customerOS| Demo|
+| **Message store API** |gRPC API for high-speed communication between customerOS and communications clients (like [Oasis][oasis]) | Demo|
+| **Settings**          |Web application where you configure and administer all Openline services| Roadmap|
+| **Web components**    |A library of web components that make it easy to interact with customer data in your front end applications| Roadmap|
 
+- Roadmap: Coming soon!
+- Demo: We're still working out the kinks
+- Preview: We're using it in Production.  So are Openline Insiders.
+- Stable: Battle tested. Everyone is using it in Production.
 
 ## 🚀 Installation
-Download and install customerOS using the following command
 
-```terminal
-[coming soon]
+1. Download and install the [Openline CLI][cli]
+2. Run the following command
+
+```sh-session
+openline dev start customer-os
 ```
-
-This command will walk you through the installation and setup of the five docker images that comprise customerOS:
-
-- customer-os-api
-- analytics-api
-- message-store
-- neo4j
-- postgreSQL
-
-For local deployments we use `minikube` to orchestrate and run the customerOS docker images.
 
 ## 🤝 Resources
 
@@ -96,7 +94,6 @@ openline-customer-os/
 │   └── scripts             # Deployment scripts
 └── packages
     ├── apps                # Front end web applications
-    │   ├── explorer        # customerOS data explorer
     │   ├── launcher        # customerOS app launcher & home screen
     │   └── settings        # customerOS system settings & app configuration
     ├── auth                # Authentication
@@ -143,14 +140,16 @@ A massive thank you goes out to all these wonderful people ([emoji key][emoji]):
 - Premium features (contained in the ee directory) require an Openline Enterprise license.  See our [pricing page][pricing] for more details.
 - Copyright &copy; Openline Technologies Inc. 2022
 
+<!--- References --->
 
 [apache2]: https://www.apache.org/licenses/LICENSE-2.0
 [call]: https://meetings-eu1.hubspot.com/matt2/customer-demos
-[careers]: https://openline.ai
+[cli]: https://www.openline.ai/docs
 [contributions]: https://github.com/openline-ai/community/blob/main/README.md
 [customerOS-repo]: https://github.com/openline-ai/openline-customer-os/
 [docs]: https://openline.ai
 [emoji]: https://allcontributors.org/docs/en/emoji-key
+[oasis]: https://github.com/openline-ai/openline-oasis
 [pricing]: https://openline.ai/pricing
 [slack]: https://join.slack.com/t/openline-ai/shared_invite/zt-1i6umaw6c-aaap4VwvGHeoJ1zz~ngCKQ
 [twitter]: https://twitter.com/OpenlineAI

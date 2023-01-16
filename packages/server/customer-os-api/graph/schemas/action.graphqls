@@ -1,4 +1,4 @@
-union Action = PageViewAction | MessageAction
+union Action = PageViewAction
 
 type PageViewAction implements Node {
     id: ID!
@@ -12,14 +12,6 @@ type PageViewAction implements Node {
     engagedTime: Int64!
 }
 
-type MessageAction implements Node {
-    id: ID!
-    startedAt: Time!
-    channel: MessageChannel!
-    conversationId: ID!
-}
-
 enum ActionType {
     PAGE_VIEW
-    MESSAGE
 }

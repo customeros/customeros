@@ -5,13 +5,17 @@ import (
 	"github.com/neo4j/neo4j-go-driver/v4/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v4/neo4j/db"
 	"github.com/neo4j/neo4j-go-driver/v4/neo4j/dbtype"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils"
 )
 
 type UserRepository interface {
+	Create(session neo4j.Session, tenant string, entity entity.UserEntity) (*dbtype.Node, error)
 	FindOwnerForContact(tx neo4j.Transaction, tenant, contactId string) (*dbtype.Node, error)
+	FindCreatorForNote(tx neo4j.Transaction, tenant, noteId string) (*dbtype.Node, error)
 	GetPaginatedUsers(session neo4j.Session, tenant string, skip, limit int, filter *utils.CypherFilter, sort *utils.CypherSort) (*utils.DbNodesWithTotalCount, error)
 	GetById(session neo4j.Session, tenant, userId string) (*dbtype.Node, error)
+	GetAllForConversation(session neo4j.Session, tenant, conversationId string) ([]*dbtype.Node, error)
 }
 
 type userRepository struct {
@@ -24,6 +28,31 @@ func NewUserRepository(driver *neo4j.Driver) UserRepository {
 	}
 }
 
+func (r *userRepository) Create(session neo4j.Session, tenant string, entity entity.UserEntity) (*dbtype.Node, error) {
+	query := "MATCH (t:Tenant {name:$tenant}) " +
+		" MERGE (u:User {id: randomUUID()})-[:USER_BELONGS_TO_TENANT]->(t) " +
+		" ON CREATE SET u.firstName=$firstName, u.lastName=$lastName, u.email=$email, u.createdAt=datetime({timezone: 'UTC'}), " +
+		" u.source=$source, u.sourceOfTruth=$sourceOfTruth, u:%s" +
+		" RETURN u"
+
+	result, err := session.WriteTransaction(func(tx neo4j.Transaction) (interface{}, error) {
+		queryResult, err := tx.Run(fmt.Sprintf(query, "User_"+tenant),
+			map[string]any{
+				"tenant":        tenant,
+				"firstName":     entity.FirstName,
+				"lastName":      entity.LastName,
+				"email":         entity.Email,
+				"source":        entity.Source,
+				"sourceOfTruth": entity.SourceOfTruth,
+			})
+		return utils.ExtractSingleRecordFirstValueAsNode(queryResult, err)
+	})
+	if err != nil {
+		return nil, err
+	}
+	return result.(*dbtype.Node), nil
+}
+
 func (r *userRepository) FindOwnerForContact(tx neo4j.Transaction, tenant, contactId string) (*dbtype.Node, error) {
 	if queryResult, err := tx.Run(`
 			MATCH (t:Tenant {name:$tenant})<-[:CONTACT_BELONGS_TO_TENANT]-(c:Contact {id:$contactId})<-[:OWNS]-(u:User)
@@ -31,6 +60,27 @@ func (r *userRepository) FindOwnerForContact(tx neo4j.Transaction, tenant, conta
 		map[string]any{
 			"tenant":    tenant,
 			"contactId": contactId,
+		}); err != nil {
+		return nil, err
+	} else {
+		dbRecords, err := queryResult.Collect()
+		if err != nil {
+			return nil, err
+		} else if len(dbRecords) == 0 {
+			return nil, nil
+		} else {
+			return utils.NodePtr(dbRecords[0].Values[0].(dbtype.Node)), nil
+		}
+	}
+}
+
+func (r *userRepository) FindCreatorForNote(tx neo4j.Transaction, tenant, noteId string) (*dbtype.Node, error) {
+	if queryResult, err := tx.Run(`
+			MATCH (t:Tenant {name:$tenant})<-[:USER_BELONGS_TO_TENANT]-(u:User)-[:CREATED]->(n:Note {id:$noteId})
+			RETURN u`,
+		map[string]any{
+			"tenant": tenant,
+			"noteId": noteId,
 		}); err != nil {
 		return nil, err
 	} else {
@@ -102,4 +152,30 @@ func (r *userRepository) GetById(session neo4j.Session, tenant, userId string) (
 		return queryResult.Single()
 	})
 	return utils.NodePtr(dbRecord.(*db.Record).Values[0].(dbtype.Node)), err
+}
+
+func (r *userRepository) GetAllForConversation(session neo4j.Session, tenant, conversationId string) ([]*dbtype.Node, error) {
+	dbRecords, err := session.ReadTransaction(func(tx neo4j.Transaction) (any, error) {
+		if queryResult, err := tx.Run(`
+			MATCH (t:Tenant {name:$tenant})<-[:USER_BELONGS_TO_TENANT]-(u:User)-[:PARTICIPATES]->(o:Conversation {id:$conversationId})
+			RETURN u`,
+			map[string]any{
+				"tenant":         tenant,
+				"conversationId": conversationId,
+			}); err != nil {
+			return nil, err
+		} else {
+			return queryResult.Collect()
+		}
+	})
+	if err != nil {
+		return nil, err
+	}
+	dbNodes := []*dbtype.Node{}
+	for _, v := range dbRecords.([]*neo4j.Record) {
+		if v.Values[0] != nil {
+			dbNodes = append(dbNodes, utils.NodePtr(v.Values[0].(dbtype.Node)))
+		}
+	}
+	return dbNodes, err
 }

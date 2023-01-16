@@ -11,9 +11,9 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/message-store/test/graph/model"
 )
 
-// EntityDefinitions is the resolver for the entityDefinitions field.
-func (r *queryResolver) EntityDefinitions(ctx context.Context, extends *model.EntityDefinitionExtension) ([]*model.EntityDefinition, error) {
-	panic(fmt.Errorf("not implemented: EntityDefinitions - entityDefinitions"))
+// EntityTemplates is the resolver for the entityTemplates field.
+func (r *queryResolver) EntityTemplates(ctx context.Context, extends *model.EntityTemplateExtension) ([]*model.EntityTemplate, error) {
+	panic(fmt.Errorf("not implemented: EntityTemplates - entityTemplates"))
 }
 
 // Query returns generated.QueryResolver implementation.

@@ -18,7 +18,6 @@ extend type Query {
      - FIRST_NAME
      - LAST_NAME
      - LABEL
-     - NOTES
      - CREATED_AT
     """
     contacts(pagination: Pagination, where: Filter, sort: [SortBy!]): ContactsPage!
@@ -31,10 +30,6 @@ extend type Mutation {
     contact_Update(input: ContactUpdateInput!): Contact!
     contact_HardDelete(contactId: ID!): Result!
     contact_SoftDelete(contactId: ID!): Result!
-
-    contact_MergeCompanyPosition(contactId : ID!, input: CompanyPositionInput!): CompanyPosition!
-    contact_UpdateCompanyPosition(contactId : ID!, companyPositionId: ID!, input: CompanyPositionInput!): CompanyPosition!
-    contact_DeleteCompanyPosition(contactId : ID!, companyPositionId: ID!): Result!
 }
 
 """
@@ -70,20 +65,16 @@ type Contact implements ExtensibleEntity & Node {
     "A user-defined label applied against a contact in customerOS."
     label: String
 
-    "User-defined notes associated with a contact in customerOS."
-    notes: String
-
-    "Readonly indicator for a contact"
-    readonly: Boolean!
+    source: DataSource!
 
     "User-defined field that defines the relationship type the contact has with your business.  `Customer`, `Partner`, `Lead` are examples."
     contactType: ContactType @goField(forceResolver: true)
 
     """
-    `companyName` and `jobTitle` of the contact if it has been associated with a company.
+    `organizationName` and `jobTitle` of the contact if it has been associated with an organization.
     **Required.  If no values it returns an empty array.**
     """
-    companyPositions: [CompanyPosition!]! @goField(forceResolver: true)
+    roles: [ContactRole!]! @goField(forceResolver: true)
 
     """
     Identifies any contact groups the contact is associated with.
@@ -104,6 +95,12 @@ type Contact implements ExtensibleEntity & Node {
     emails: [Email!]! @goField(forceResolver: true)
 
     """
+    All addresses associated with a contact in customerOS.
+    **Required.  If no values it returns an empty array.**
+    """
+    addresses: [Address!]! @goField(forceResolver: true)
+
+    """
     User defined metadata appended to the contact record in customerOS.
     **Required.  If no values it returns an empty array.**
     """
@@ -112,12 +109,15 @@ type Contact implements ExtensibleEntity & Node {
     fieldSets: [FieldSet!]! @goField(forceResolver: true)
 
     """
-    Definition of the contact in customerOS.
+    Template of the contact in customerOS.
     """
-    definition: EntityDefinition @goField(forceResolver: true)
+    template: EntityTemplate @goField(forceResolver: true)
 
     "Contact owner (user)"
     owner: User @goField(forceResolver: true)
+
+    "Contact notes"
+    notes(pagination: Pagination): NotePage! @goField(forceResolver: true)
 
     conversations(pagination: Pagination, sort: [SortBy!]): ConversationPage! @goField(forceResolver: true)
 
@@ -155,8 +155,8 @@ Create an individual in customerOS.
 """
 input ContactInput {
 
-    "The unique ID associated with the definition of the contact in customerOS."
-    definitionId: ID
+    "The unique ID associated with the template of the contact in customerOS."
+    templateId: ID
 
     "The title of the contact."
     title: PersonTitle
@@ -174,14 +174,8 @@ input ContactInput {
     "A user-defined label attached to contact."
     label: String
 
-    "User-defined notes associated with contact."
-    notes: String
-
     "User-defined field that defines the relationship type the contact has with your business.  `Customer`, `Partner`, `Lead` are examples."
     contactTypeId: ID
-
-    "Readonly indicator for a contact"
-    readonly: Boolean
 
     """
     An ISO8601 timestamp recording when the contact was created in customerOS.
@@ -204,6 +198,8 @@ input ContactInput {
 
     "Id of the contact owner (user)"
     ownerId: ID
+
+    externalReference: ExternalSystemReferenceInput
 }
 
 """
@@ -234,17 +230,11 @@ input ContactUpdateInput {
     "A user-defined label applied against a contact in customerOS."
     label: String
 
-    "User-defined notes associated with contact."
-    notes: String
-
     "User-defined field that defines the relationship type the contact has with your business.  `Customer`, `Partner`, `Lead` are examples."
     contactTypeId: ID
 
     "Id of the contact owner (user)"
     ownerId: ID
-
-    "Readonly indicator for a contact"
-    readonly: Boolean
 }
 
 """

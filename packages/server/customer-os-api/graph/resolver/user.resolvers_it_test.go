@@ -25,11 +25,21 @@ func TestMutationResolver_UserCreate(t *testing.T) {
 	err = decode.Decode(rawResponse.Data.(map[string]any), &user)
 	require.Nil(t, err)
 	require.NotNil(t, user)
-	require.Equal(t, "first", user.UserCreate.FirstName)
-	require.Equal(t, "last", user.UserCreate.LastName)
-	require.Equal(t, "user@openline.ai", user.UserCreate.Email)
-	require.NotNil(t, user.UserCreate.CreatedAt)
-	require.NotNil(t, user.UserCreate.ID)
+
+	createdUser := user.UserCreate
+	require.NotNil(t, createdUser.ID)
+	require.NotNil(t, createdUser.CreatedAt)
+	require.Equal(t, "first", createdUser.FirstName)
+	require.Equal(t, "last", createdUser.LastName)
+	require.Equal(t, "user@openline.ai", createdUser.Email)
+	require.Equal(t, model.DataSourceOpenline, createdUser.Source)
+
+	// Check the number of nodes and relationships in the Neo4j database
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "User"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "User_"+tenantName))
+
+	// Check the labels on the nodes in the Neo4j database
+	assertNeo4jLabels(t, driver, []string{"Tenant", "User", "User_" + tenantName})
 }
 
 func TestQueryResolver_Users(t *testing.T) {
@@ -183,12 +193,9 @@ func TestQueryResolver_User_WithConversations(t *testing.T) {
 	require.Equal(t, 2, len(user.User.Conversations.Content))
 	conversations := user.User.Conversations.Content
 	require.ElementsMatch(t, []string{conv1_1, conv1_2}, []string{conversations[0].ID, conversations[1].ID})
-	require.ElementsMatch(t, []string{contact1, contact2}, []string{conversations[0].Contact.ID, conversations[1].Contact.ID})
-	require.ElementsMatch(t, []string{contact1, contact2}, []string{conversations[0].ContactID, conversations[1].ContactID})
-	require.Equal(t, user1, conversations[0].User.ID)
-	require.Equal(t, user1, conversations[1].User.ID)
-	require.Equal(t, user1, conversations[0].UserID)
-	require.Equal(t, user1, conversations[1].UserID)
+	require.ElementsMatch(t, []string{contact1, contact2}, []string{conversations[0].Contacts[0].ID, conversations[1].Contacts[0].ID})
+	require.Equal(t, user1, conversations[0].Users[0].ID)
+	require.Equal(t, user1, conversations[1].Users[0].ID)
 
 	require.NotNil(t, conv2_1)
 	require.NotNil(t, conv2_3)

@@ -19,18 +19,21 @@ func MapFieldSetInputsToEntities(inputs []*model.FieldSetInput) *entity.FieldSet
 
 func MapFieldSetInputToEntity(input *model.FieldSetInput) *entity.FieldSetEntity {
 	fieldSetEntity := entity.FieldSetEntity{
-		Id:           input.ID,
-		Name:         input.Name,
-		DefinitionId: input.DefinitionID,
-		CustomFields: MapCustomFieldInputsToEntities(input.CustomFields),
+		Id:            input.ID,
+		Name:          input.Name,
+		TemplateId:    input.TemplateID,
+		Source:        entity.DataSourceOpenline,
+		SourceOfTruth: entity.DataSourceOpenline,
+		CustomFields:  MapCustomFieldInputsToEntities(input.CustomFields),
 	}
 	return &fieldSetEntity
 }
 
 func MapFieldSetUpdateInputToEntity(input *model.FieldSetUpdateInput) *entity.FieldSetEntity {
 	fieldSetEntity := entity.FieldSetEntity{
-		Id:   utils.StringPtr(input.ID),
-		Name: input.Name,
+		Id:            utils.StringPtr(input.ID),
+		Name:          input.Name,
+		SourceOfTruth: entity.DataSourceOpenline,
 	}
 	return &fieldSetEntity
 }
@@ -45,8 +48,9 @@ func MapEntitiesToFieldSets(fieldSetEntities *entity.FieldSetEntities) []*model.
 
 func MapEntityToFieldSet(fieldSetEntity *entity.FieldSetEntity) *model.FieldSet {
 	return &model.FieldSet{
-		ID:    *fieldSetEntity.Id,
-		Name:  fieldSetEntity.Name,
-		Added: fieldSetEntity.Added,
+		ID:        *fieldSetEntity.Id,
+		Name:      fieldSetEntity.Name,
+		CreatedAt: fieldSetEntity.CreatedAt,
+		Source:    MapDataSourceToModel(fieldSetEntity.Source),
 	}
 }

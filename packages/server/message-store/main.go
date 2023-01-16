@@ -1,53 +1,57 @@
 package main
 
 import (
-	"context"
 	"fmt"
 	"github.com/caarlos0/env/v6"
 	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
-	"github.com/machinebox/graphql"
-	c "github.com/openline-ai/openline-customer-os/packages/server/message-store/config"
-	"github.com/openline-ai/openline-customer-os/packages/server/message-store/gen"
-	pb "github.com/openline-ai/openline-customer-os/packages/server/message-store/gen/proto"
+	"github.com/openline-ai/openline-customer-os/packages/server/message-store/config"
+	msProto "github.com/openline-ai/openline-customer-os/packages/server/message-store/proto/generated"
+	"github.com/openline-ai/openline-customer-os/packages/server/message-store/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/message-store/service"
 	"google.golang.org/grpc"
 	"log"
 	"net"
 )
 
+func InitDB(cfg *config.Config) (db *config.StorageDB, err error) {
+	if db, err = config.NewDBConn(
+		cfg.Postgres.Host,
+		cfg.Postgres.Port,
+		cfg.Postgres.Db,
+		cfg.Postgres.User,
+		cfg.Postgres.Password,
+		cfg.Postgres.MaxConn,
+		cfg.Postgres.MaxIdleConn,
+		cfg.Postgres.ConnMaxLifetime); err != nil {
+		log.Fatalf("Coud not open db connection: %s", err.Error())
+	}
+	return
+}
+
 func main() {
 	conf := loadConfiguration()
 
-	var connUrl = fmt.Sprintf("host=%s port=%d user=%s dbname=%s password=%s sslmode=disable", conf.DB.Host, conf.DB.Port, conf.DB.User, conf.DB.Name, conf.DB.Password)
-	log.Printf("Connecting to database %s", connUrl)
-	client, err := gen.Open("postgres", connUrl)
-	if err != nil {
-		log.Fatalf("failed opening connection to postgres: %v", err)
-	}
-	defer client.Close()
+	//GORM
+	db, _ := InitDB(conf)
+	defer db.SqlDB.Close()
 
-	neo4jDriver, err := c.NewDriver(conf)
+	neo4jDriver, err := config.NewDriver(conf)
 	if err != nil {
 		log.Fatalf("failed opening connection to neo4j: %v", err.Error())
 	}
 	defer (*neo4jDriver).Close()
 
-	// Run the auto migration tool.
-	if err := client.Schema.Create(context.Background()); err != nil {
-		log.Fatalf("failed creating schema resources: %v", err)
-	}
-
-	graphqlClient := graphql.NewClient(conf.Service.CustomerOsAPI)
-
-	// Initialize the generated User service.
-	svc := service.NewMessageService(client, neo4jDriver, graphqlClient, conf)
-
 	// Create a new gRPC server (you can wire multiple services to a single server).
 	server := grpc.NewServer()
 
+	repositories := repository.InitRepositories(db.GormDB)
+	customerOSService := service.NewCustomerOSService(neo4jDriver, repositories)
+	commonStoreService := service.NewCommonStoreService()
+
 	// Register the Message Item service with the server.
-	pb.RegisterMessageStoreServiceServer(server, svc)
+	msProto.RegisterMessageStoreServiceServer(server, service.NewMessageService(neo4jDriver, repositories, customerOSService, commonStoreService))
+	msProto.RegisterWebChatMessageStoreServiceServer(server, service.NewWebChatMessageStoreService(neo4jDriver, repositories, customerOSService, commonStoreService))
 
 	// Open port for listening to traffic.
 	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", conf.Service.ServerPort))
@@ -63,12 +67,12 @@ func main() {
 	}
 }
 
-func loadConfiguration() *c.Config {
+func loadConfiguration() *config.Config {
 	if err := godotenv.Load(); err != nil {
 		log.Println("[WARNING] Error loading .env file")
 	}
 
-	cfg := c.Config{}
+	cfg := config.Config{}
 	if err := env.Parse(&cfg); err != nil {
 		log.Printf("%+v", err)
 	}

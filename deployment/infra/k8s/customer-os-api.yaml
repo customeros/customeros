@@ -34,10 +34,8 @@ spec:
             initialDelaySeconds: 5
             timeoutSeconds: 1
           env:
-            - name: CORS_URL
-              value: "*"
             - name: NEO4J_TARGET
-              value: "neo4j://neo4j-customer-os.openline.svc.cluster.local:7687"
+              value: "neo4j://customer-db-neo4j.openline.svc.cluster.local:7687"
             - name: NEO4J_AUTH_USER
               value: "neo4j"
             - name: NEO4J_AUTH_PWD
@@ -46,9 +44,33 @@ spec:
               value: ""
             - name: NEO4J_MAX_CONN_POOL_SIZE
               value: "100"
-            - name: GRAPHQL_PLAYGROUND_ENABLED
-              value: "true"
             - name: NEO4J_LOG_LEVEL
               value: "INFO"
+
+            - name: POSTGRES_USER
+              value: "openline"
+            - name: POSTGRES_PASSWORD
+              value: "password"
+            - name: POSTGRES_DB
+              value: "openline"
+            - name: POSTGRES_HOST
+              value: "customer-db-postgresql.openline.svc.cluster.local"
+            - name: POSTGRES_PORT
+              value: "5432"
+            - name: POSTGRES_MAX_CONN
+              value: "25"
+            - name: POSTGRES_MAX_IDLE_CONN
+              value: "10"
+            - name: POSTGRES_CONN_MAX_LIFETIME
+              value: "0"
+            - name: POSTGRES_LOG_LEVEL
+              value: "WARN"
+
             - name: PORT
               value: "10000"
+            - name: LOG_LEVEL
+              value: "INFO"
+            - name: GRAPHQL_PLAYGROUND_ENABLED
+              value: "true"
+            - name: GRAPHQL_FIXED_COMPLEXITY_LIMIT
+              value: "100"

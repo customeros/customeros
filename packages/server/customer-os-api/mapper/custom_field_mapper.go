@@ -19,12 +19,13 @@ func MapCustomFieldInputsToEntities(inputs []*model.CustomFieldInput) *entity.Cu
 
 func MapCustomFieldInputToEntity(input *model.CustomFieldInput) *entity.CustomFieldEntity {
 	customFieldEntity := entity.CustomFieldEntity{
-		Id:           input.ID,
-		Name:         input.Name,
-		Value:        input.Value,
-		DataType:     input.Datatype.String(),
-		DefinitionId: input.DefinitionID,
-		Source:       utils.IfNotNilString(input.Source),
+		Id:            input.ID,
+		Name:          input.Name,
+		Value:         input.Value,
+		DataType:      input.Datatype.String(),
+		TemplateId:    input.TemplateID,
+		Source:        entity.DataSourceOpenline,
+		SourceOfTruth: entity.DataSourceOpenline,
 	}
 	customFieldEntity.AdjustValueByDatatype()
 	return &customFieldEntity
@@ -32,11 +33,11 @@ func MapCustomFieldInputToEntity(input *model.CustomFieldInput) *entity.CustomFi
 
 func MapCustomFieldUpdateInputToEntity(input *model.CustomFieldUpdateInput) *entity.CustomFieldEntity {
 	customFieldEntity := entity.CustomFieldEntity{
-		Id:       utils.StringPtr(input.ID),
-		Name:     input.Name,
-		DataType: input.Datatype.String(),
-		Value:    input.Value,
-		Source:   utils.IfNotNilString(input.Source),
+		Id:            utils.StringPtr(input.ID),
+		Name:          input.Name,
+		DataType:      input.Datatype.String(),
+		Value:         input.Value,
+		SourceOfTruth: entity.DataSourceOpenline,
 	}
 	customFieldEntity.AdjustValueByDatatype()
 	return &customFieldEntity
@@ -56,10 +57,11 @@ func MapEntityToCustomField(entity *entity.CustomFieldEntity) *model.CustomField
 		datatype = model.CustomFieldDataTypeText
 	}
 	return &model.CustomField{
-		ID:       *entity.Id,
-		Name:     entity.Name,
-		Datatype: datatype,
-		Value:    entity.Value,
-		Source:   utils.StringPtr(entity.Source),
+		ID:        *entity.Id,
+		Name:      entity.Name,
+		Datatype:  datatype,
+		Value:     entity.Value,
+		Source:    MapDataSourceToModel(entity.Source),
+		CreatedAt: entity.CreatedAt,
 	}
 }

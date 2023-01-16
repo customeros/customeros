@@ -45,9 +45,11 @@ type CustomField implements Node {
     value: Any!
 
     "The source of the custom field value"
-    source: String
+    source: DataSource!
 
-    definition: CustomFieldDefinition @goField(forceResolver: true)
+    createdAt: Time!
+
+    template: CustomFieldTemplate @goField(forceResolver: true)
 }
 
 """
@@ -79,10 +81,7 @@ input CustomFieldInput {
     """
     value: Any!
 
-    "The source of the custom field value"
-    source: String
-
-    definitionId: ID
+    templateId: ID
 }
 
 """
@@ -90,9 +89,9 @@ Describes a custom, user-defined field associated with a `Contact`.
 **An `update` object.**
 """
 input CustomFieldUpdateInput {
-    
+
     """
-    The unique ID associated with the custom field. 
+    The unique ID associated with the custom field.
     **Required**
     """
     id: ID!
@@ -114,9 +113,6 @@ input CustomFieldUpdateInput {
     **Required**
     """
     value: Any!
-
-    "The source of the custom field value"
-    source: String
 }
 
 enum CustomFieldDataType {
@@ -130,16 +126,17 @@ enum CustomFieldDataType {
 type FieldSet {
     id: ID!
     name: String!
-    added: Time!
+    createdAt: Time!
     customFields: [CustomField!]! @goField(forceResolver: true)
-    definition: FieldSetDefinition @goField(forceResolver: true)
+    template: FieldSetTemplate @goField(forceResolver: true)
+    source: DataSource!
 }
 
 input FieldSetInput {
     id: ID
     name: String!
     customFields: [CustomFieldInput!]
-    definitionId: ID
+    templateId: ID
 }
 
 input FieldSetUpdateInput {

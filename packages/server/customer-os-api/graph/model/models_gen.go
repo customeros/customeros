@@ -17,7 +17,7 @@ type ExtensibleEntity interface {
 	IsNode()
 	IsExtensibleEntity()
 	GetID() string
-	GetDefinition() *EntityDefinition
+	GetTemplate() *EntityTemplate
 }
 
 type Node interface {
@@ -37,51 +37,17 @@ type Pages interface {
 	GetTotalElements() int64
 }
 
-type Company struct {
-	ID   string `json:"id"`
-	Name string `json:"name"`
-}
-
-type CompanyInput struct {
-	ID *string `json:"id"`
-	// The name of the company associated with a Contact.
-	// **Required.**
-	Name *string `json:"name"`
-}
-
-type CompanyPage struct {
-	Content       []*Company `json:"content"`
-	TotalPages    int        `json:"totalPages"`
-	TotalElements int64      `json:"totalElements"`
-}
-
-func (CompanyPage) IsPages() {}
-
-// The total number of pages included in the query response.
-// **Required.**
-func (this CompanyPage) GetTotalPages() int { return this.TotalPages }
-
-// The total number of elements included in the query response.
-// **Required.**
-func (this CompanyPage) GetTotalElements() int64 { return this.TotalElements }
-
-// Describes the relationship a Contact has with a Company.
-// **A `return` object**
-type CompanyPosition struct {
-	ID string `json:"id"`
-	// Company associated with a Contact.
-	// **Required.**
-	Company *Company `json:"company"`
-	// The Contact's job title.
-	JobTitle *string `json:"jobTitle"`
-}
-
-// Describes the relationship a Contact has with a Company.
-// **A `create` object**
-type CompanyPositionInput struct {
-	Company *CompanyInput `json:"company"`
-	// The Contact's job title.
-	JobTitle *string `json:"jobTitle"`
+type Address struct {
+	ID       string      `json:"id"`
+	Country  *string     `json:"country"`
+	State    *string     `json:"state"`
+	City     *string     `json:"city"`
+	Address  *string     `json:"address"`
+	Address2 *string     `json:"address2"`
+	Zip      *string     `json:"zip"`
+	Phone    *string     `json:"phone"`
+	Fax      *string     `json:"fax"`
+	Source   *DataSource `json:"source"`
 }
 
 // A contact represents an individual in customerOS.
@@ -100,16 +66,13 @@ type Contact struct {
 	// **Required**
 	CreatedAt time.Time `json:"createdAt"`
 	// A user-defined label applied against a contact in customerOS.
-	Label *string `json:"label"`
-	// User-defined notes associated with a contact in customerOS.
-	Notes *string `json:"notes"`
-	// Readonly indicator for a contact
-	Readonly bool `json:"readonly"`
+	Label  *string    `json:"label"`
+	Source DataSource `json:"source"`
 	// User-defined field that defines the relationship type the contact has with your business.  `Customer`, `Partner`, `Lead` are examples.
 	ContactType *ContactType `json:"contactType"`
-	// `companyName` and `jobTitle` of the contact if it has been associated with a company.
+	// `organizationName` and `jobTitle` of the contact if it has been associated with an organization.
 	// **Required.  If no values it returns an empty array.**
-	CompanyPositions []*CompanyPosition `json:"companyPositions"`
+	Roles []*ContactRole `json:"roles"`
 	// Identifies any contact groups the contact is associated with.
 	//  **Required.  If no values it returns an empty array.**
 	Groups []*ContactGroup `json:"groups"`
@@ -119,21 +82,26 @@ type Contact struct {
 	// All email addresses assocaited with a contact in customerOS.
 	// **Required.  If no values it returns an empty array.**
 	Emails []*Email `json:"emails"`
+	// All addresses associated with a contact in customerOS.
+	// **Required.  If no values it returns an empty array.**
+	Addresses []*Address `json:"addresses"`
 	// User defined metadata appended to the contact record in customerOS.
 	// **Required.  If no values it returns an empty array.**
 	CustomFields []*CustomField `json:"customFields"`
 	FieldSets    []*FieldSet    `json:"fieldSets"`
-	// Definition of the contact in customerOS.
-	Definition *EntityDefinition `json:"definition"`
+	// Template of the contact in customerOS.
+	Template *EntityTemplate `json:"template"`
 	// Contact owner (user)
-	Owner         *User             `json:"owner"`
+	Owner *User `json:"owner"`
+	// Contact notes
+	Notes         *NotePage         `json:"notes"`
 	Conversations *ConversationPage `json:"conversations"`
 	Actions       []Action          `json:"actions"`
 }
 
-func (Contact) IsExtensibleEntity()                   {}
-func (this Contact) GetID() string                    { return this.ID }
-func (this Contact) GetDefinition() *EntityDefinition { return this.Definition }
+func (Contact) IsExtensibleEntity()               {}
+func (this Contact) GetID() string                { return this.ID }
+func (this Contact) GetTemplate() *EntityTemplate { return this.Template }
 
 func (Contact) IsNode() {}
 
@@ -146,6 +114,7 @@ type ContactGroup struct {
 	// The name of the `ContactGroup`.
 	// **Required**
 	Name     string        `json:"name"`
+	Source   DataSource    `json:"source"`
 	Contacts *ContactsPage `json:"contacts"`
 }
 
@@ -195,8 +164,8 @@ type ContactGroupUpdateInput struct {
 // Create an individual in customerOS.
 // **A `create` object.**
 type ContactInput struct {
-	// The unique ID associated with the definition of the contact in customerOS.
-	DefinitionID *string `json:"definitionId"`
+	// The unique ID associated with the template of the contact in customerOS.
+	TemplateID *string `json:"templateId"`
 	// The title of the contact.
 	Title *PersonTitle `json:"title"`
 	// The first name of the contact.
@@ -205,12 +174,8 @@ type ContactInput struct {
 	LastName *string `json:"lastName"`
 	// A user-defined label attached to contact.
 	Label *string `json:"label"`
-	// User-defined notes associated with contact.
-	Notes *string `json:"notes"`
 	// User-defined field that defines the relationship type the contact has with your business.  `Customer`, `Partner`, `Lead` are examples.
 	ContactTypeID *string `json:"contactTypeId"`
-	// Readonly indicator for a contact
-	Readonly *bool `json:"readonly"`
 	// An ISO8601 timestamp recording when the contact was created in customerOS.
 	CreatedAt *time.Time `json:"createdAt"`
 	// User defined metadata appended to contact.
@@ -222,7 +187,30 @@ type ContactInput struct {
 	// A phone number associated with the contact.
 	PhoneNumber *PhoneNumberInput `json:"phoneNumber"`
 	// Id of the contact owner (user)
-	OwnerID *string `json:"ownerId"`
+	OwnerID           *string                       `json:"ownerId"`
+	ExternalReference *ExternalSystemReferenceInput `json:"externalReference"`
+}
+
+// Describes the relationship a Contact has with a Organization.
+// **A `return` object**
+type ContactRole struct {
+	ID string `json:"id"`
+	// Organization associated with a Contact.
+	// **Required.**
+	Organization *Organization `json:"organization"`
+	// The Contact's job title.
+	JobTitle *string    `json:"jobTitle"`
+	Primary  bool       `json:"primary"`
+	Source   DataSource `json:"source"`
+}
+
+// Describes the relationship a Contact has with an Organization.
+// **A `create` object**
+type ContactRoleInput struct {
+	OrganizationID *string `json:"organizationId"`
+	// The Contact's job title.
+	JobTitle *string `json:"jobTitle"`
+	Primary  *bool   `json:"primary"`
 }
 
 type ContactType struct {
@@ -253,14 +241,10 @@ type ContactUpdateInput struct {
 	LastName *string `json:"lastName"`
 	// A user-defined label applied against a contact in customerOS.
 	Label *string `json:"label"`
-	// User-defined notes associated with contact.
-	Notes *string `json:"notes"`
 	// User-defined field that defines the relationship type the contact has with your business.  `Customer`, `Partner`, `Lead` are examples.
 	ContactTypeID *string `json:"contactTypeId"`
 	// Id of the contact owner (user)
 	OwnerID *string `json:"ownerId"`
-	// Readonly indicator for a contact
-	Readonly *bool `json:"readonly"`
 }
 
 // Specifies how many pages of contact information has been returned in the query response.
@@ -288,21 +272,36 @@ func (this ContactsPage) GetTotalPages() int { return this.TotalPages }
 func (this ContactsPage) GetTotalElements() int64 { return this.TotalElements }
 
 type Conversation struct {
-	ID        string    `json:"id"`
-	StartedAt time.Time `json:"startedAt"`
-	ContactID string    `json:"contactId"`
-	Contact   *Contact  `json:"contact"`
-	UserID    string    `json:"userId"`
-	User      *User     `json:"user"`
+	ID                 string             `json:"id"`
+	StartedAt          time.Time          `json:"startedAt"`
+	UpdatedAt          time.Time          `json:"updatedAt"`
+	EndedAt            *time.Time         `json:"endedAt"`
+	Status             ConversationStatus `json:"status"`
+	Channel            *string            `json:"channel"`
+	MessageCount       int64              `json:"messageCount"`
+	Contacts           []*Contact         `json:"contacts"`
+	Users              []*User            `json:"users"`
+	Source             DataSource         `json:"source"`
+	SourceOfTruth      DataSource         `json:"sourceOfTruth"`
+	AppSource          *string            `json:"appSource"`
+	InitiatorFirstName *string            `json:"initiatorFirstName"`
+	InitiatorLastName  *string            `json:"initiatorLastName"`
+	InitiatorUsername  *string            `json:"initiatorUsername"`
+	InitiatorType      *string            `json:"initiatorType"`
+	ThreadID           *string            `json:"threadId"`
 }
 
 func (Conversation) IsNode()            {}
 func (this Conversation) GetID() string { return this.ID }
 
 type ConversationInput struct {
-	UserID    string  `json:"userId"`
-	ContactID string  `json:"contactId"`
-	ID        *string `json:"id"`
+	ID         *string            `json:"id"`
+	StartedAt  *time.Time         `json:"startedAt"`
+	ContactIds []string           `json:"contactIds"`
+	UserIds    []string           `json:"userIds"`
+	Status     ConversationStatus `json:"status"`
+	Channel    *string            `json:"channel"`
+	AppSource  *string            `json:"appSource"`
 }
 
 type ConversationPage struct {
@@ -321,6 +320,15 @@ func (this ConversationPage) GetTotalPages() int { return this.TotalPages }
 // **Required.**
 func (this ConversationPage) GetTotalElements() int64 { return this.TotalElements }
 
+type ConversationUpdateInput struct {
+	ID                        string              `json:"id"`
+	ContactIds                []string            `json:"contactIds"`
+	UserIds                   []string            `json:"userIds"`
+	Status                    *ConversationStatus `json:"status"`
+	Channel                   *string             `json:"channel"`
+	SkipMessageCountIncrement bool                `json:"skipMessageCountIncrement"`
+}
+
 // Describes a custom, user-defined field associated with a `Contact`.
 // **A `return` object.**
 type CustomField struct {
@@ -337,36 +345,13 @@ type CustomField struct {
 	// **Required**
 	Value AnyTypeValue `json:"value"`
 	// The source of the custom field value
-	Source     *string                `json:"source"`
-	Definition *CustomFieldDefinition `json:"definition"`
+	Source    DataSource           `json:"source"`
+	CreatedAt time.Time            `json:"createdAt"`
+	Template  *CustomFieldTemplate `json:"template"`
 }
 
 func (CustomField) IsNode()            {}
 func (this CustomField) GetID() string { return this.ID }
-
-type CustomFieldDefinition struct {
-	ID        string                    `json:"id"`
-	Name      string                    `json:"name"`
-	Type      CustomFieldDefinitionType `json:"type"`
-	Order     int                       `json:"order"`
-	Mandatory bool                      `json:"mandatory"`
-	Length    *int                      `json:"length"`
-	Min       *int                      `json:"min"`
-	Max       *int                      `json:"max"`
-}
-
-func (CustomFieldDefinition) IsNode()            {}
-func (this CustomFieldDefinition) GetID() string { return this.ID }
-
-type CustomFieldDefinitionInput struct {
-	Name      string                    `json:"name"`
-	Type      CustomFieldDefinitionType `json:"type"`
-	Order     int                       `json:"order"`
-	Mandatory bool                      `json:"mandatory"`
-	Length    *int                      `json:"length"`
-	Min       *int                      `json:"min"`
-	Max       *int                      `json:"max"`
-}
 
 // Describes a custom, user-defined field associated with a `Contact` of type String.
 // **A `create` object.**
@@ -381,10 +366,32 @@ type CustomFieldInput struct {
 	Datatype CustomFieldDataType `json:"datatype"`
 	// The value of the custom field.
 	// **Required**
-	Value AnyTypeValue `json:"value"`
-	// The source of the custom field value
-	Source       *string `json:"source"`
-	DefinitionID *string `json:"definitionId"`
+	Value      AnyTypeValue `json:"value"`
+	TemplateID *string      `json:"templateId"`
+}
+
+type CustomFieldTemplate struct {
+	ID        string                  `json:"id"`
+	Name      string                  `json:"name"`
+	Type      CustomFieldTemplateType `json:"type"`
+	Order     int                     `json:"order"`
+	Mandatory bool                    `json:"mandatory"`
+	Length    *int                    `json:"length"`
+	Min       *int                    `json:"min"`
+	Max       *int                    `json:"max"`
+}
+
+func (CustomFieldTemplate) IsNode()            {}
+func (this CustomFieldTemplate) GetID() string { return this.ID }
+
+type CustomFieldTemplateInput struct {
+	Name      string                  `json:"name"`
+	Type      CustomFieldTemplateType `json:"type"`
+	Order     int                     `json:"order"`
+	Mandatory bool                    `json:"mandatory"`
+	Length    *int                    `json:"length"`
+	Min       *int                    `json:"min"`
+	Max       *int                    `json:"max"`
 }
 
 // Describes a custom, user-defined field associated with a `Contact`.
@@ -402,8 +409,6 @@ type CustomFieldUpdateInput struct {
 	// The value of the custom field.
 	// **Required**
 	Value AnyTypeValue `json:"value"`
-	// The source of the custom field value
-	Source *string `json:"source"`
 }
 
 // Describes an email address associated with a `Contact` in customerOS.
@@ -419,7 +424,8 @@ type Email struct {
 	Label *EmailLabel `json:"label"`
 	// Identifies whether the email address is primary or not.
 	// **Required.**
-	Primary bool `json:"primary"`
+	Primary bool       `json:"primary"`
+	Source  DataSource `json:"source"`
 }
 
 // Describes an email address associated with a `Contact` in customerOS.
@@ -451,55 +457,62 @@ type EmailUpdateInput struct {
 	Primary *bool `json:"primary"`
 }
 
-type EntityDefinition struct {
-	ID           string                     `json:"id"`
-	Version      int                        `json:"version"`
-	Name         string                     `json:"name"`
-	Extends      *EntityDefinitionExtension `json:"extends"`
-	FieldSets    []*FieldSetDefinition      `json:"fieldSets"`
-	CustomFields []*CustomFieldDefinition   `json:"customFields"`
-	Added        time.Time                  `json:"added"`
+type EntityTemplate struct {
+	ID           string                   `json:"id"`
+	Version      int                      `json:"version"`
+	Name         string                   `json:"name"`
+	Extends      *EntityTemplateExtension `json:"extends"`
+	FieldSets    []*FieldSetTemplate      `json:"fieldSets"`
+	CustomFields []*CustomFieldTemplate   `json:"customFields"`
+	CreatedAt    time.Time                `json:"createdAt"`
 }
 
-func (EntityDefinition) IsNode()            {}
-func (this EntityDefinition) GetID() string { return this.ID }
+func (EntityTemplate) IsNode()            {}
+func (this EntityTemplate) GetID() string { return this.ID }
 
-type EntityDefinitionInput struct {
-	Name         string                        `json:"name"`
-	Extends      *EntityDefinitionExtension    `json:"extends"`
-	FieldSets    []*FieldSetDefinitionInput    `json:"fieldSets"`
-	CustomFields []*CustomFieldDefinitionInput `json:"customFields"`
+type EntityTemplateInput struct {
+	Name         string                      `json:"name"`
+	Extends      *EntityTemplateExtension    `json:"extends"`
+	FieldSets    []*FieldSetTemplateInput    `json:"fieldSets"`
+	CustomFields []*CustomFieldTemplateInput `json:"customFields"`
+}
+
+type ExternalSystemReferenceInput struct {
+	ID       string             `json:"id"`
+	SyncDate *time.Time         `json:"syncDate"`
+	Type     ExternalSystemType `json:"type"`
 }
 
 type FieldSet struct {
-	ID           string              `json:"id"`
-	Name         string              `json:"name"`
-	Added        time.Time           `json:"added"`
-	CustomFields []*CustomField      `json:"customFields"`
-	Definition   *FieldSetDefinition `json:"definition"`
-}
-
-type FieldSetDefinition struct {
-	ID           string                   `json:"id"`
-	Name         string                   `json:"name"`
-	Order        int                      `json:"order"`
-	CustomFields []*CustomFieldDefinition `json:"customFields"`
-}
-
-func (FieldSetDefinition) IsNode()            {}
-func (this FieldSetDefinition) GetID() string { return this.ID }
-
-type FieldSetDefinitionInput struct {
-	Name         string                        `json:"name"`
-	Order        int                           `json:"order"`
-	CustomFields []*CustomFieldDefinitionInput `json:"customFields"`
+	ID           string            `json:"id"`
+	Name         string            `json:"name"`
+	CreatedAt    time.Time         `json:"createdAt"`
+	CustomFields []*CustomField    `json:"customFields"`
+	Template     *FieldSetTemplate `json:"template"`
+	Source       DataSource        `json:"source"`
 }
 
 type FieldSetInput struct {
 	ID           *string             `json:"id"`
 	Name         string              `json:"name"`
 	CustomFields []*CustomFieldInput `json:"customFields"`
-	DefinitionID *string             `json:"definitionId"`
+	TemplateID   *string             `json:"templateId"`
+}
+
+type FieldSetTemplate struct {
+	ID           string                 `json:"id"`
+	Name         string                 `json:"name"`
+	Order        int                    `json:"order"`
+	CustomFields []*CustomFieldTemplate `json:"customFields"`
+}
+
+func (FieldSetTemplate) IsNode()            {}
+func (this FieldSetTemplate) GetID() string { return this.ID }
+
+type FieldSetTemplateInput struct {
+	Name         string                      `json:"name"`
+	Order        int                         `json:"order"`
+	CustomFields []*CustomFieldTemplateInput `json:"customFields"`
 }
 
 type FieldSetUpdateInput struct {
@@ -521,33 +534,98 @@ type FilterItem struct {
 	CaseSensitive *bool              `json:"caseSensitive"`
 }
 
-type Message struct {
-	ID             string         `json:"id"`
-	Channel        MessageChannel `json:"channel"`
-	StartedAt      time.Time      `json:"startedAt"`
-	ConversationID string         `json:"conversationId"`
+type Note struct {
+	ID        string     `json:"id"`
+	HTML      string     `json:"html"`
+	CreatedAt time.Time  `json:"createdAt"`
+	CreatedBy *User      `json:"createdBy"`
+	Source    DataSource `json:"source"`
 }
 
-func (Message) IsNode()            {}
-func (this Message) GetID() string { return this.ID }
-
-type MessageAction struct {
-	ID             string         `json:"id"`
-	StartedAt      time.Time      `json:"startedAt"`
-	Channel        MessageChannel `json:"channel"`
-	ConversationID string         `json:"conversationId"`
+type NoteInput struct {
+	HTML string `json:"html"`
 }
 
-func (MessageAction) IsAction() {}
+type NotePage struct {
+	Content       []*Note `json:"content"`
+	TotalPages    int     `json:"totalPages"`
+	TotalElements int64   `json:"totalElements"`
+}
 
-func (MessageAction) IsNode()            {}
-func (this MessageAction) GetID() string { return this.ID }
+func (NotePage) IsPages() {}
 
-type MessageInput struct {
-	ID             string         `json:"id"`
-	ConversationID string         `json:"conversationId"`
-	Channel        MessageChannel `json:"channel"`
-	StartedAt      *time.Time     `json:"startedAt"`
+// The total number of pages included in the query response.
+// **Required.**
+func (this NotePage) GetTotalPages() int { return this.TotalPages }
+
+// The total number of elements included in the query response.
+// **Required.**
+func (this NotePage) GetTotalElements() int64 { return this.TotalElements }
+
+type NoteUpdateInput struct {
+	ID   string `json:"id"`
+	HTML string `json:"html"`
+}
+
+type Organization struct {
+	ID               string            `json:"id"`
+	Name             string            `json:"name"`
+	Description      *string           `json:"description"`
+	Domain           *string           `json:"domain"`
+	Website          *string           `json:"website"`
+	Industry         *string           `json:"industry"`
+	IsPublic         *bool             `json:"isPublic"`
+	CreatedAt        time.Time         `json:"createdAt"`
+	OrganizationType *OrganizationType `json:"organizationType"`
+	// All addresses associated with an organization in customerOS.
+	// **Required.  If no values it returns an empty array.**
+	Addresses []*Address `json:"addresses"`
+	Source    DataSource `json:"source"`
+}
+
+func (Organization) IsNode()            {}
+func (this Organization) GetID() string { return this.ID }
+
+type OrganizationInput struct {
+	// The name of the organization.
+	// **Required.**
+	Name               string  `json:"name"`
+	Description        *string `json:"description"`
+	Domain             *string `json:"domain"`
+	Website            *string `json:"website"`
+	Industry           *string `json:"industry"`
+	IsPublic           *bool   `json:"isPublic"`
+	OrganizationTypeID *string `json:"organizationTypeId"`
+}
+
+type OrganizationPage struct {
+	Content       []*Organization `json:"content"`
+	TotalPages    int             `json:"totalPages"`
+	TotalElements int64           `json:"totalElements"`
+}
+
+func (OrganizationPage) IsPages() {}
+
+// The total number of pages included in the query response.
+// **Required.**
+func (this OrganizationPage) GetTotalPages() int { return this.TotalPages }
+
+// The total number of elements included in the query response.
+// **Required.**
+func (this OrganizationPage) GetTotalElements() int64 { return this.TotalElements }
+
+type OrganizationType struct {
+	ID   string `json:"id"`
+	Name string `json:"name"`
+}
+
+type OrganizationTypeInput struct {
+	Name string `json:"name"`
+}
+
+type OrganizationTypeUpdateInput struct {
+	ID   string `json:"id"`
+	Name string `json:"name"`
 }
 
 type PageViewAction struct {
@@ -590,7 +668,8 @@ type PhoneNumber struct {
 	Label *PhoneNumberLabel `json:"label"`
 	// Determines if the phone number is primary or not.
 	// **Required**
-	Primary bool `json:"primary"`
+	Primary bool       `json:"primary"`
+	Source  DataSource `json:"source"`
 }
 
 // Describes a phone number associated with a `Contact` in customerOS.
@@ -654,6 +733,7 @@ type User struct {
 	// Timestamp of user creation.
 	// **Required**
 	CreatedAt     time.Time         `json:"createdAt"`
+	Source        DataSource        `json:"source"`
 	Conversations *ConversationPage `json:"conversations"`
 }
 
@@ -699,17 +779,15 @@ type ActionType string
 
 const (
 	ActionTypePageView ActionType = "PAGE_VIEW"
-	ActionTypeMessage  ActionType = "MESSAGE"
 )
 
 var AllActionType = []ActionType{
 	ActionTypePageView,
-	ActionTypeMessage,
 }
 
 func (e ActionType) IsValid() bool {
 	switch e {
-	case ActionTypePageView, ActionTypeMessage:
+	case ActionTypePageView:
 		return true
 	}
 	return false
@@ -777,6 +855,47 @@ func (e ComparisonOperator) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
 }
 
+type ConversationStatus string
+
+const (
+	ConversationStatusActive ConversationStatus = "ACTIVE"
+	ConversationStatusClosed ConversationStatus = "CLOSED"
+)
+
+var AllConversationStatus = []ConversationStatus{
+	ConversationStatusActive,
+	ConversationStatusClosed,
+}
+
+func (e ConversationStatus) IsValid() bool {
+	switch e {
+	case ConversationStatusActive, ConversationStatusClosed:
+		return true
+	}
+	return false
+}
+
+func (e ConversationStatus) String() string {
+	return string(e)
+}
+
+func (e *ConversationStatus) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = ConversationStatus(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid ConversationStatus", str)
+	}
+	return nil
+}
+
+func (e ConversationStatus) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
 type CustomFieldDataType string
 
 const (
@@ -824,42 +943,87 @@ func (e CustomFieldDataType) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
 }
 
-type CustomFieldDefinitionType string
+type CustomFieldTemplateType string
 
 const (
-	CustomFieldDefinitionTypeText CustomFieldDefinitionType = "TEXT"
+	CustomFieldTemplateTypeText CustomFieldTemplateType = "TEXT"
 )
 
-var AllCustomFieldDefinitionType = []CustomFieldDefinitionType{
-	CustomFieldDefinitionTypeText,
+var AllCustomFieldTemplateType = []CustomFieldTemplateType{
+	CustomFieldTemplateTypeText,
 }
 
-func (e CustomFieldDefinitionType) IsValid() bool {
+func (e CustomFieldTemplateType) IsValid() bool {
 	switch e {
-	case CustomFieldDefinitionTypeText:
+	case CustomFieldTemplateTypeText:
 		return true
 	}
 	return false
 }
 
-func (e CustomFieldDefinitionType) String() string {
+func (e CustomFieldTemplateType) String() string {
 	return string(e)
 }
 
-func (e *CustomFieldDefinitionType) UnmarshalGQL(v interface{}) error {
+func (e *CustomFieldTemplateType) UnmarshalGQL(v interface{}) error {
 	str, ok := v.(string)
 	if !ok {
 		return fmt.Errorf("enums must be strings")
 	}
 
-	*e = CustomFieldDefinitionType(str)
+	*e = CustomFieldTemplateType(str)
 	if !e.IsValid() {
-		return fmt.Errorf("%s is not a valid CustomFieldDefinitionType", str)
+		return fmt.Errorf("%s is not a valid CustomFieldTemplateType", str)
 	}
 	return nil
 }
 
-func (e CustomFieldDefinitionType) MarshalGQL(w io.Writer) {
+func (e CustomFieldTemplateType) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+type DataSource string
+
+const (
+	DataSourceNa       DataSource = "NA"
+	DataSourceOpenline DataSource = "OPENLINE"
+	DataSourceHubspot  DataSource = "HUBSPOT"
+	DataSourceZendesk  DataSource = "ZENDESK"
+)
+
+var AllDataSource = []DataSource{
+	DataSourceNa,
+	DataSourceOpenline,
+	DataSourceHubspot,
+	DataSourceZendesk,
+}
+
+func (e DataSource) IsValid() bool {
+	switch e {
+	case DataSourceNa, DataSourceOpenline, DataSourceHubspot, DataSourceZendesk:
+		return true
+	}
+	return false
+}
+
+func (e DataSource) String() string {
+	return string(e)
+}
+
+func (e *DataSource) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = DataSource(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid DataSource", str)
+	}
+	return nil
+}
+
+func (e DataSource) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
 }
 
@@ -910,91 +1074,83 @@ func (e EmailLabel) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
 }
 
-type EntityDefinitionExtension string
+type EntityTemplateExtension string
 
 const (
-	EntityDefinitionExtensionContact EntityDefinitionExtension = "CONTACT"
+	EntityTemplateExtensionContact EntityTemplateExtension = "CONTACT"
 )
 
-var AllEntityDefinitionExtension = []EntityDefinitionExtension{
-	EntityDefinitionExtensionContact,
+var AllEntityTemplateExtension = []EntityTemplateExtension{
+	EntityTemplateExtensionContact,
 }
 
-func (e EntityDefinitionExtension) IsValid() bool {
+func (e EntityTemplateExtension) IsValid() bool {
 	switch e {
-	case EntityDefinitionExtensionContact:
+	case EntityTemplateExtensionContact:
 		return true
 	}
 	return false
 }
 
-func (e EntityDefinitionExtension) String() string {
+func (e EntityTemplateExtension) String() string {
 	return string(e)
 }
 
-func (e *EntityDefinitionExtension) UnmarshalGQL(v interface{}) error {
+func (e *EntityTemplateExtension) UnmarshalGQL(v interface{}) error {
 	str, ok := v.(string)
 	if !ok {
 		return fmt.Errorf("enums must be strings")
 	}
 
-	*e = EntityDefinitionExtension(str)
+	*e = EntityTemplateExtension(str)
 	if !e.IsValid() {
-		return fmt.Errorf("%s is not a valid EntityDefinitionExtension", str)
+		return fmt.Errorf("%s is not a valid EntityTemplateExtension", str)
 	}
 	return nil
 }
 
-func (e EntityDefinitionExtension) MarshalGQL(w io.Writer) {
+func (e EntityTemplateExtension) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
 }
 
-type MessageChannel string
+type ExternalSystemType string
 
 const (
-	MessageChannelVoice    MessageChannel = "VOICE"
-	MessageChannelMail     MessageChannel = "MAIL"
-	MessageChannelChat     MessageChannel = "CHAT"
-	MessageChannelWhatsapp MessageChannel = "WHATSAPP"
-	MessageChannelFacebook MessageChannel = "FACEBOOK"
-	MessageChannelTwitter  MessageChannel = "TWITTER"
+	ExternalSystemTypeHubspot ExternalSystemType = "HUBSPOT"
+	ExternalSystemTypeZendesk ExternalSystemType = "ZENDESK"
 )
 
-var AllMessageChannel = []MessageChannel{
-	MessageChannelVoice,
-	MessageChannelMail,
-	MessageChannelChat,
-	MessageChannelWhatsapp,
-	MessageChannelFacebook,
-	MessageChannelTwitter,
+var AllExternalSystemType = []ExternalSystemType{
+	ExternalSystemTypeHubspot,
+	ExternalSystemTypeZendesk,
 }
 
-func (e MessageChannel) IsValid() bool {
+func (e ExternalSystemType) IsValid() bool {
 	switch e {
-	case MessageChannelVoice, MessageChannelMail, MessageChannelChat, MessageChannelWhatsapp, MessageChannelFacebook, MessageChannelTwitter:
+	case ExternalSystemTypeHubspot, ExternalSystemTypeZendesk:
 		return true
 	}
 	return false
 }
 
-func (e MessageChannel) String() string {
+func (e ExternalSystemType) String() string {
 	return string(e)
 }
 
-func (e *MessageChannel) UnmarshalGQL(v interface{}) error {
+func (e *ExternalSystemType) UnmarshalGQL(v interface{}) error {
 	str, ok := v.(string)
 	if !ok {
 		return fmt.Errorf("enums must be strings")
 	}
 
-	*e = MessageChannel(str)
+	*e = ExternalSystemType(str)
 	if !e.IsValid() {
-		return fmt.Errorf("%s is not a valid MessageChannel", str)
+		return fmt.Errorf("%s is not a valid ExternalSystemType", str)
 	}
 	return nil
 }
 
-func (e MessageChannel) MarshalGQL(w io.Writer) {
+func (e ExternalSystemType) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
 }
 

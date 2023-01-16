@@ -19,6 +19,8 @@ type Config struct {
 		MaxIdleConn     int    `env:"DB_MAX_IDLE_CONN"`
 		ConnMaxLifetime int    `env:"DB_CONN_MAX_LIFETIME"`
 	}
-	TimeoutAfterTaskRun int `env:"TIMEOUT_AFTER_TASK_RUN_SEC" envDefault:"60"`
-	PageViewsBucketSize int `env:"PAGE_VIEWS_BUCKET_SIZE" envDefault:"100"`
+	TimeoutAfterTaskRun int    `env:"TIMEOUT_AFTER_TASK_RUN_SEC" envDefault:"60"`
+	PageViewsBucketSize int    `env:"PAGE_VIEWS_BUCKET_SIZE" envDefault:"100"`
+	LogLevel            string `env:"LOG_LEVEL" envDefault:"INFO"`
+	PostgresLogLevel    string `env:"POSTGRES_LOG_LEVEL" envDefault:"WARN"`
 }

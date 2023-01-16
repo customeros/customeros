@@ -20,7 +20,8 @@ type ContactService interface {
 	FindContactByPhoneNumber(ctx context.Context, e164 string) (*entity.ContactEntity, error)
 	FindAll(ctx context.Context, page, limit int, filter *model.Filter, sortBy []*model.SortBy) (*utils.Pagination, error)
 	FindAllForContactGroup(ctx context.Context, page, limit int, filter *model.Filter, sortBy []*model.SortBy, contactGroupId string) (*utils.Pagination, error)
-	HardDelete(ctx context.Context, id string) (bool, error)
+	GetAllForConversation(ctx context.Context, conversationId string) (*entity.ContactEntities, error)
+	PermanentDelete(ctx context.Context, id string) (bool, error)
 	SoftDelete(ctx context.Context, id string) (bool, error)
 }
 
@@ -30,9 +31,12 @@ type ContactCreateData struct {
 	FieldSets         *entity.FieldSetEntities
 	EmailEntity       *entity.EmailEntity
 	PhoneNumberEntity *entity.PhoneNumberEntity
-	DefinitionId      *string
+	TemplateId        *string
 	ContactTypeId     *string
 	OwnerUserId       *string
+	ExternalReference *entity.ExternalReferenceRelationship
+	Source            entity.DataSource
+	SourceOfTruth     entity.DataSource
 }
 
 type ContactUpdateData struct {
@@ -63,13 +67,13 @@ func (s *contactService) Create(ctx context.Context, newContact *ContactCreateDa
 	if err != nil {
 		return nil, err
 	}
-	return s.mapDbNodeToContactEntity(contactDbNode.(*dbtype.Node)), nil
+	return s.mapDbNodeToContactEntity(*contactDbNode.(*dbtype.Node)), nil
 }
 
 func (s *contactService) createContactInDBTxWork(ctx context.Context, newContact *ContactCreateData) func(tx neo4j.Transaction) (any, error) {
 	return func(tx neo4j.Transaction) (any, error) {
 		tenant := common.GetContext(ctx).Tenant
-		contactDbNode, err := s.repositories.ContactRepository.Create(tx, tenant, *newContact.ContactEntity)
+		contactDbNode, err := s.repositories.ContactRepository.Create(tx, tenant, *newContact.ContactEntity, newContact.Source, newContact.SourceOfTruth)
 		if err != nil {
 			return nil, err
 		}
@@ -81,22 +85,27 @@ func (s *contactService) createContactInDBTxWork(ctx context.Context, newContact
 				return nil, err
 			}
 		}
-
-		if newContact.DefinitionId != nil {
-			err := s.repositories.ContactRepository.LinkWithEntityDefinitionInTx(tx, tenant, contactId, *newContact.DefinitionId)
+		if newContact.TemplateId != nil {
+			err := s.repositories.ContactRepository.LinkWithEntityTemplateInTx(tx, tenant, contactId, *newContact.TemplateId)
+			if err != nil {
+				return nil, err
+			}
+		}
+		if newContact.ExternalReference != nil {
+			err := s.repositories.ExternalSystemRepository.LinkContactWithExternalSystemInTx(tx, tenant, contactId, *newContact.ExternalReference)
 			if err != nil {
 				return nil, err
 			}
 		}
 		if newContact.CustomFields != nil {
 			for _, customField := range *newContact.CustomFields {
-				dbNode, err := s.repositories.CustomFieldRepository.MergeCustomFieldToContactInTx(tx, tenant, contactId, &customField)
+				dbNode, err := s.repositories.CustomFieldRepository.MergeCustomFieldToContactInTx(tx, tenant, contactId, customField)
 				if err != nil {
 					return nil, err
 				}
-				if customField.DefinitionId != nil {
+				if customField.TemplateId != nil {
 					var fieldId = utils.GetPropsFromNode(*dbNode)["id"].(string)
-					err := s.repositories.CustomFieldRepository.LinkWithCustomFieldDefinitionForContactInTx(tx, fieldId, contactId, *customField.DefinitionId)
+					err := s.repositories.CustomFieldRepository.LinkWithCustomFieldTemplateForContactInTx(tx, fieldId, contactId, *customField.TemplateId)
 					if err != nil {
 						return nil, err
 					}
@@ -105,26 +114,26 @@ func (s *contactService) createContactInDBTxWork(ctx context.Context, newContact
 		}
 		if newContact.FieldSets != nil {
 			for _, fieldSet := range *newContact.FieldSets {
-				setDbNode, _, err := s.repositories.FieldSetRepository.MergeFieldSetToContactInTx(tx, tenant, contactId, fieldSet)
+				setDbNode, err := s.repositories.FieldSetRepository.MergeFieldSetToContactInTx(tx, tenant, contactId, fieldSet)
 				if err != nil {
 					return nil, err
 				}
 				var fieldSetId = utils.GetPropsFromNode(*setDbNode)["id"].(string)
-				if fieldSet.DefinitionId != nil {
-					err := s.repositories.FieldSetRepository.LinkWithFieldSetDefinitionInTx(tx, tenant, fieldSetId, *fieldSet.DefinitionId)
+				if fieldSet.TemplateId != nil {
+					err := s.repositories.FieldSetRepository.LinkWithFieldSetTemplateInTx(tx, tenant, fieldSetId, *fieldSet.TemplateId)
 					if err != nil {
 						return nil, err
 					}
 				}
 				if fieldSet.CustomFields != nil {
 					for _, customField := range *fieldSet.CustomFields {
-						fieldDbNode, err := s.repositories.CustomFieldRepository.MergeCustomFieldToFieldSetInTx(tx, tenant, contactId, fieldSetId, &customField)
+						fieldDbNode, err := s.repositories.CustomFieldRepository.MergeCustomFieldToFieldSetInTx(tx, tenant, contactId, fieldSetId, customField)
 						if err != nil {
 							return nil, err
 						}
-						if customField.DefinitionId != nil {
+						if customField.TemplateId != nil {
 							var fieldId = utils.GetPropsFromNode(*fieldDbNode)["id"].(string)
-							err := s.repositories.CustomFieldRepository.LinkWithCustomFieldDefinitionForFieldSetInTx(tx, fieldId, fieldSetId, *customField.DefinitionId)
+							err := s.repositories.CustomFieldRepository.LinkWithCustomFieldTemplateForFieldSetInTx(tx, fieldId, fieldSetId, *customField.TemplateId)
 							if err != nil {
 								return nil, err
 							}
@@ -134,13 +143,13 @@ func (s *contactService) createContactInDBTxWork(ctx context.Context, newContact
 			}
 		}
 		if newContact.EmailEntity != nil {
-			err := addEmailToContactInTx(ctx, contactId, *newContact.EmailEntity, tx)
+			_, _, err := s.repositories.EmailRepository.MergeEmailToContactInTx(tx, tenant, contactId, *newContact.EmailEntity)
 			if err != nil {
 				return nil, err
 			}
 		}
 		if newContact.PhoneNumberEntity != nil {
-			err := addPhoneNumberToContactInTx(ctx, contactId, *newContact.PhoneNumberEntity, tx)
+			_, _, err := s.repositories.PhoneNumberRepository.MergePhoneNumberToContactInTx(tx, tenant, contactId, *newContact.PhoneNumberEntity)
 			if err != nil {
 				return nil, err
 			}
@@ -167,6 +176,7 @@ func (s *contactService) Update(ctx context.Context, contactUpdateData *ContactU
 		if err != nil {
 			return nil, err
 		}
+
 		err = s.repositories.ContactRepository.UnlinkFromContactTypesInTx(tx, tenant, contactId)
 		if err != nil {
 			return nil, err
@@ -195,33 +205,20 @@ func (s *contactService) Update(ctx context.Context, contactUpdateData *ContactU
 		return nil, err
 	}
 
-	return s.mapDbNodeToContactEntity(contactDbNode.(*dbtype.Node)), nil
+	return s.mapDbNodeToContactEntity(*contactDbNode.(*dbtype.Node)), nil
 }
 
-func (s *contactService) HardDelete(ctx context.Context, contactId string) (bool, error) {
+func (s *contactService) PermanentDelete(ctx context.Context, contactId string) (bool, error) {
 	session := utils.NewNeo4jWriteSession(s.getNeo4jDriver())
 	defer session.Close()
 
-	queryResult, err := session.WriteTransaction(func(tx neo4j.Transaction) (interface{}, error) {
-		_, err := tx.Run(`
-			MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant})
-			OPTIONAL MATCH (c)-[:HAS_PROPERTY]->(f:CustomField)
-			OPTIONAL MATCH (c)-[:CALLED_AT]->(p:PhoneNumber)
-			OPTIONAL MATCH (c)-[:EMAILED_AT]->(e:Email)
-            DETACH DELETE p, e, f, c
-			`,
-			map[string]interface{}{
-				"contactId": contactId,
-				"tenant":    common.GetContext(ctx).Tenant,
-			})
+	err := s.repositories.ContactRepository.Delete(session, common.GetContext(ctx).Tenant, contactId)
 
-		return true, err
-	})
 	if err != nil {
 		return false, err
 	}
 
-	return queryResult.(bool), nil
+	return true, nil
 }
 
 func (s *contactService) SoftDelete(ctx context.Context, contactId string) (bool, error) {
@@ -270,7 +267,7 @@ func (s *contactService) FindContactById(ctx context.Context, id string) (*entit
 		return nil, err
 	}
 
-	return s.mapDbNodeToContactEntity(utils.NodePtr(queryResult.(dbtype.Node))), nil
+	return s.mapDbNodeToContactEntity(queryResult.(dbtype.Node)), nil
 }
 
 func (s *contactService) FindContactByEmail(ctx context.Context, email string) (*entity.ContactEntity, error) {
@@ -296,7 +293,7 @@ func (s *contactService) FindContactByEmail(ctx context.Context, email string) (
 		return nil, err
 	}
 
-	return s.mapDbNodeToContactEntity(utils.NodePtr(queryResult.(dbtype.Node))), nil
+	return s.mapDbNodeToContactEntity(queryResult.(dbtype.Node)), nil
 }
 
 func (s *contactService) FindContactByPhoneNumber(ctx context.Context, e164 string) (*entity.ContactEntity, error) {
@@ -322,7 +319,7 @@ func (s *contactService) FindContactByPhoneNumber(ctx context.Context, e164 stri
 		return nil, err
 	}
 
-	return s.mapDbNodeToContactEntity(utils.NodePtr(queryResult.(dbtype.Node))), nil
+	return s.mapDbNodeToContactEntity(queryResult.(dbtype.Node)), nil
 }
 
 func (s *contactService) FindAll(ctx context.Context, page, limit int, filter *model.Filter, sortBy []*model.SortBy) (*utils.Pagination, error) {
@@ -357,7 +354,7 @@ func (s *contactService) FindAll(ctx context.Context, page, limit int, filter *m
 	contacts := entity.ContactEntities{}
 
 	for _, v := range dbNodesWithTotalCount.Nodes {
-		contacts = append(contacts, *s.mapDbNodeToContactEntity(v))
+		contacts = append(contacts, *s.mapDbNodeToContactEntity(*v))
 	}
 	paginatedResult.SetRows(&contacts)
 	return &paginatedResult, nil
@@ -396,23 +393,39 @@ func (s *contactService) FindAllForContactGroup(ctx context.Context, page, limit
 	contacts := entity.ContactEntities{}
 
 	for _, v := range dbNodesWithTotalCount.Nodes {
-		contacts = append(contacts, *s.mapDbNodeToContactEntity(v))
+		contacts = append(contacts, *s.mapDbNodeToContactEntity(*v))
 	}
 	paginatedResult.SetRows(&contacts)
 	return &paginatedResult, nil
 }
 
-func (s *contactService) mapDbNodeToContactEntity(dbContactNode *dbtype.Node) *entity.ContactEntity {
-	props := utils.GetPropsFromNode(*dbContactNode)
+func (s *contactService) GetAllForConversation(ctx context.Context, conversationId string) (*entity.ContactEntities, error) {
+	session := utils.NewNeo4jReadSession(s.getNeo4jDriver())
+	defer session.Close()
+
+	dbNodes, err := s.repositories.ContactRepository.GetAllForConversation(session, common.GetContext(ctx).Tenant, conversationId)
+	if err != nil {
+		return nil, err
+	}
+
+	contactEntities := entity.ContactEntities{}
+	for _, dbNode := range dbNodes {
+		contactEntities = append(contactEntities, *s.mapDbNodeToContactEntity(*dbNode))
+	}
+	return &contactEntities, nil
+}
+
+func (s *contactService) mapDbNodeToContactEntity(dbContactNode dbtype.Node) *entity.ContactEntity {
+	props := utils.GetPropsFromNode(dbContactNode)
 	contact := entity.ContactEntity{
-		Id:        utils.GetStringPropOrEmpty(props, "id"),
-		FirstName: utils.GetStringPropOrEmpty(props, "firstName"),
-		LastName:  utils.GetStringPropOrEmpty(props, "lastName"),
-		Label:     utils.GetStringPropOrEmpty(props, "label"),
-		Title:     utils.GetStringPropOrEmpty(props, "title"),
-		Notes:     utils.GetStringPropOrEmpty(props, "notes"),
-		CreatedAt: utils.GetTimePropOrNil(props, "createdAt"),
-		Readonly:  utils.GetBoolPropOrFalse(props, "readonly"),
+		Id:            utils.GetStringPropOrEmpty(props, "id"),
+		FirstName:     utils.GetStringPropOrEmpty(props, "firstName"),
+		LastName:      utils.GetStringPropOrEmpty(props, "lastName"),
+		Label:         utils.GetStringPropOrEmpty(props, "label"),
+		Title:         utils.GetStringPropOrEmpty(props, "title"),
+		CreatedAt:     utils.GetTimePropOrNil(props, "createdAt"),
+		Source:        entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
+		SourceOfTruth: entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
 	}
 	return &contact
 }

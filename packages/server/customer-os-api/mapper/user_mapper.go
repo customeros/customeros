@@ -7,9 +7,11 @@ import (
 
 func MapUserInputToEntity(input model.UserInput) *entity.UserEntity {
 	userEntity := entity.UserEntity{
-		FirstName: input.FirstName,
-		LastName:  input.LastName,
-		Email:     input.Email,
+		FirstName:     input.FirstName,
+		LastName:      input.LastName,
+		Email:         input.Email,
+		Source:        entity.DataSourceOpenline,
+		SourceOfTruth: entity.DataSourceOpenline,
 	}
 	return &userEntity
 }
@@ -21,6 +23,7 @@ func MapEntityToUser(userEntity *entity.UserEntity) *model.User {
 		LastName:  userEntity.LastName,
 		Email:     userEntity.Email,
 		CreatedAt: userEntity.CreatedAt,
+		Source:    MapDataSourceToModel(userEntity.Source),
 	}
 }
 
