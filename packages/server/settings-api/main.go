@@ -64,6 +64,10 @@ func main() {
 				c.AbortWithStatus(500) //todo
 				return
 			}
+			if qr.Result == nil {
+				c.AbortWithStatus(404)
+				return
+			}
 
 			settings := qr.Result.(entity.TenantSettings)
 			c.JSON(200, mapper.MapTenantSettingsEntityToDTO(&settings))
