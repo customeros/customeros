@@ -1,4 +1,4 @@
-name: Build and publish settings-api
+name: Publish settings-api
 
 on:
   push:

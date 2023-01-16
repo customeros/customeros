@@ -49,7 +49,6 @@ func main() {
 
 	// Setting up Gin
 	r := gin.Default()
-	r.MaxMultipartMemory = cfg.MaxFileSizeMB << 20
 
 	corsConfig := cors.DefaultConfig()
 	corsConfig.AllowOrigins = []string{"*"}
