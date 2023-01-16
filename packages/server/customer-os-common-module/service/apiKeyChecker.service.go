@@ -11,6 +11,7 @@ type App string
 const (
 	CUSTOMER_OS_API  App = "customer-os-api"
 	FILE_STORAGE_API App = "file-storage-api"
+	SETTINGS_API     App = "settings-api"
 )
 
 func ApiKeyChecker(appKeyRepo repository.AppKeyRepository, app App) func(c *gin.Context) {
