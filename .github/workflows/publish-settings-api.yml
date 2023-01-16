@@ -2,11 +2,15 @@ name: Build and publish settings-api
 
 on:
   push:
+    branches: [ "otter" ]
     paths:
       - packages/server/settings-api/**
       - .github/workflows/build-settings-api.yml
       - .github/workflows/publish-settings-api.yml
-
+  pull_request:
+    paths:
+      - packages/server/settings-api/**
+      - .github/workflows/build-settings-api.yml
   release:
     types: [ created, edited ]
 
@@ -85,6 +89,6 @@ jobs:
         uses: docker/build-push-action@v3
         with:
           context: packages/server/settings-api/tmp-sources/.
-          push: false
+          push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}

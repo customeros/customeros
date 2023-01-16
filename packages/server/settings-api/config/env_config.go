@@ -1,14 +1,7 @@
 package config
 
 type Config struct {
-	ApiPort       string `env:"PORT"`
-	ApiServiceUrl string `env:"SERVICE_URL"`
-	MaxFileSizeMB int64  `env:"MAX_FILE_SIZE_MB"`
-
-	AWS struct {
-		Region string `env:"AWS_S3_REGION,required"`
-		Bucket string `env:"AWS_S3_BUCKET,required"`
-	}
+	ApiPort string `env:"PORT"`
 
 	Postgres struct {
 		Host            string `env:"POSTGRES_HOST,required"`
