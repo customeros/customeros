@@ -17,16 +17,16 @@ func UserToTenantEnhancer(userToTenantRepository repository.UserToTenantReposito
 				return
 			}
 
-			tenant := tenantResult.Result.(*string)
+			tenant := tenantResult.Result.(string)
 
-			if tenant == nil {
+			if len(tenant) == 0 {
 				c.AbortWithStatus(401)
 				return
 			} else {
 				if c.Keys == nil {
 					c.Keys = map[string]any{}
 				}
-				c.Keys["Tenant"] = tenant
+				c.Keys["TenantName"] = tenant
 			}
 
 			c.Next()
