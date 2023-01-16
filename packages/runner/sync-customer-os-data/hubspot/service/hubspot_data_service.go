@@ -15,6 +15,7 @@ import (
 type hubspotDataService struct {
 	airbyteStoreDb *config.AirbyteStoreDB
 	tenant         string
+	instance       string
 	contacts       map[string]hubspotEntity.Contact
 	companies      map[string]hubspotEntity.Company
 	owners         map[string]hubspotEntity.Owner
@@ -373,8 +374,14 @@ func (s *hubspotDataService) Refresh() {
 }
 
 func (s *hubspotDataService) getDb() *gorm.DB {
+	schemaName := s.SourceId()
+
+	if len(s.instance) > 0 {
+		schemaName = schemaName + "_" + s.instance
+	}
+	schemaName = schemaName + "_" + s.tenant
 	return s.airbyteStoreDb.GetDBHandler(&config.Context{
-		Schema: config.CommonSchemaPrefix + s.tenant,
+		Schema: schemaName,
 	})
 }
 

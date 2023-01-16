@@ -17,7 +17,8 @@ type TenantSyncSettings struct {
 	CreatedAt time.Time     `gorm:"default:CURRENT_TIMESTAMP"`
 	Tenant    string        `gorm:"column:tenant;not null"`
 	Source    AirbyteSource `gorm:"type:airbyte_source;column:source;not null"`
-	Enabled   bool          `gorm:"column:enabled;not null"`
+	Instance  string        `gorm:"column:instance;not null,default:''"`
+	Enabled   bool          `gorm:"column:enabled;not null,default:false"`
 }
 
 func (as *AirbyteSource) Scan(value interface{}) error {
