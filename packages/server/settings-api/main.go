@@ -11,8 +11,8 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/settings-api/config/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/settings-api/dto"
 	"github.com/openline-ai/openline-customer-os/packages/server/settings-api/mapper"
-	"github.com/openline-ai/openline-customer-os/packages/server/settings-api/repository"
-	"github.com/openline-ai/openline-customer-os/packages/server/settings-api/repository/entity"
+	//"github.com/openline-ai/openline-customer-os/packages/server/settings-api/repository/entity"
+	"github.com/openline-ai/openline-customer-os/packages/server/settings-api/service"
 	"log"
 )
 
@@ -45,7 +45,7 @@ func main() {
 	defer db.SqlDB.Close()
 
 	commonRepositoryContainer := commonRepository.InitCommonRepositories(db.GormDB)
-	repositories := repository.InitRepositories(db.GormDB)
+	services := service.InitServices(db.GormDB)
 
 	// Setting up Gin
 	r := gin.Default()
@@ -59,25 +59,22 @@ func main() {
 		commonService.ApiKeyChecker(commonRepositoryContainer.AppKeyRepo, commonService.SETTINGS_API),
 		func(c *gin.Context) {
 			tenantName := c.Keys["TenantName"].(string)
-			qr := repositories.TenantSettingsRepository.FindForTenantName(tenantName)
-			if qr.Error != nil {
-				c.AbortWithStatus(500) //todo
-				return
-			}
-			if qr.Result == nil {
-				c.AbortWithStatus(404)
+
+			tenant, err := services.TenantSettingsService.GetForTenant(tenantName)
+
+			if err != nil {
+				c.JSON(500, gin.H{"error": err.Error()})
 				return
 			}
 
-			settings := qr.Result.(entity.TenantSettings)
-			c.JSON(200, mapper.MapTenantSettingsEntityToDTO(&settings))
+			c.JSON(200, mapper.MapTenantSettingsEntityToDTO(tenant))
 		})
 
 	r.POST("/settings/hubspot",
 		commonService.UserToTenantEnhancer(commonRepositoryContainer.UserToTenantRepo),
 		commonService.ApiKeyChecker(commonRepositoryContainer.AppKeyRepo, commonService.SETTINGS_API),
 		func(c *gin.Context) {
-			var request dto.TenantSettingsDTO
+			var request dto.TenantSettingsHubspotDTO
 
 			if err := c.BindJSON(&request); err != nil {
 				println(err.Error())
@@ -85,49 +82,37 @@ func main() {
 				return
 			}
 
-			id := c.Keys["TenantName"].(string)
+			tenantName := c.Keys["TenantName"].(string)
 
-			settingsForTenant := repositories.TenantSettingsRepository.FindForTenantName(id)
-			if settingsForTenant.Error != nil {
-				println(settingsForTenant.Error.Error())
-				c.AbortWithStatus(500) //todo
+			data, err := services.TenantSettingsService.SaveHubspotData(tenantName, request)
+			if err != nil {
+				c.JSON(500, gin.H{"error": err.Error()})
 				return
 			}
 
-			var savedSettings entity.TenantSettings
-			if settingsForTenant.Result == nil {
-				e := new(entity.TenantSettings)
-				e.TenantId = id
-				e.HubspotPrivateAppKey = request.HubspotPrivateAppKey
+			c.JSON(200, mapper.MapTenantSettingsEntityToDTO(data))
+		})
 
-				qr := repositories.TenantSettingsRepository.Save(*e)
+	r.DELETE("/settings/hubspot",
+		commonService.UserToTenantEnhancer(commonRepositoryContainer.UserToTenantRepo),
+		commonService.ApiKeyChecker(commonRepositoryContainer.AppKeyRepo, commonService.SETTINGS_API),
+		func(c *gin.Context) {
+			tenantName := c.Keys["TenantName"].(string)
 
-				if qr.Error != nil {
-					println(qr.Error.Error())
-					c.AbortWithStatus(500) //todo
-					return
-				}
-				savedSettings = qr.Result.(entity.TenantSettings)
-			} else {
-				existingSettings := settingsForTenant.Result.(entity.TenantSettings)
-				existingSettings.HubspotPrivateAppKey = request.HubspotPrivateAppKey
-				qr := repositories.TenantSettingsRepository.Save(existingSettings)
-				if qr.Error != nil {
-					println(qr.Error.Error())
-					c.AbortWithStatus(500) //todo
-					return
-				}
-				savedSettings = qr.Result.(entity.TenantSettings)
+			data, err := services.TenantSettingsService.ClearHubspotData(tenantName)
+			if err != nil {
+				c.JSON(500, gin.H{"error": err.Error()})
+				return
 			}
 
-			c.JSON(200, mapper.MapTenantSettingsEntityToDTO(&savedSettings))
+			c.JSON(200, mapper.MapTenantSettingsEntityToDTO(data))
 		})
 
 	r.POST("/settings/zendesk",
 		commonService.UserToTenantEnhancer(commonRepositoryContainer.UserToTenantRepo),
 		commonService.ApiKeyChecker(commonRepositoryContainer.AppKeyRepo, commonService.SETTINGS_API),
 		func(c *gin.Context) {
-			var request dto.TenantSettingsDTO
+			var request dto.TenantSettingsZendeskDTO
 
 			if err := c.BindJSON(&request); err != nil {
 				println(err.Error())
@@ -135,48 +120,68 @@ func main() {
 				return
 			}
 
-			id := c.Keys["TenantName"].(string)
+			tenantName := c.Keys["TenantName"].(string)
 
-			//find
-			settingsForTenant := repositories.TenantSettingsRepository.FindForTenantName(id)
-			if settingsForTenant.Error != nil {
-				println(settingsForTenant.Error.Error())
+			data, err := services.TenantSettingsService.SaveZendeskData(tenantName, request)
+			if err != nil {
+				c.JSON(500, gin.H{"error": err.Error()})
+				return
+			}
+
+			c.JSON(200, mapper.MapTenantSettingsEntityToDTO(data))
+		})
+
+	r.DELETE("/settings/zendesk",
+		commonService.UserToTenantEnhancer(commonRepositoryContainer.UserToTenantRepo),
+		commonService.ApiKeyChecker(commonRepositoryContainer.AppKeyRepo, commonService.SETTINGS_API),
+		func(c *gin.Context) {
+			tenantName := c.Keys["TenantName"].(string)
+
+			data, err := services.TenantSettingsService.ClearZendeskData(tenantName)
+			if err != nil {
+				c.JSON(500, gin.H{"error": err.Error()})
+				return
+			}
+
+			c.JSON(200, mapper.MapTenantSettingsEntityToDTO(data))
+		})
+
+	r.POST("/settings/smartSheet",
+		commonService.UserToTenantEnhancer(commonRepositoryContainer.UserToTenantRepo),
+		commonService.ApiKeyChecker(commonRepositoryContainer.AppKeyRepo, commonService.SETTINGS_API),
+		func(c *gin.Context) {
+			var request dto.TenantSettingsSmartSheetDTO
+
+			if err := c.BindJSON(&request); err != nil {
+				println(err.Error())
 				c.AbortWithStatus(500) //todo
 				return
 			}
 
-			//if new, create
-			var savedSettings entity.TenantSettings
-			if settingsForTenant.Result == nil {
-				e := new(entity.TenantSettings)
-				e.TenantId = id
-				e.ZendeskAPIKey = request.ZendeskAPIKey
-				e.ZendeskAdminEmail = request.ZendeskAdminEmail
-				e.ZendeskSubdomain = request.ZendeskSubdomain
+			tenantName := c.Keys["TenantName"].(string)
 
-				qr := repositories.TenantSettingsRepository.Save(*e)
-				if qr.Error != nil {
-					println(qr.Error.Error())
-					c.AbortWithStatus(500) //todo
-					return
-				}
-				savedSettings = qr.Result.(entity.TenantSettings)
-			} else {
-				existingSettings := settingsForTenant.Result.(entity.TenantSettings)
-
-				existingSettings.ZendeskAPIKey = request.ZendeskAPIKey
-				existingSettings.ZendeskAdminEmail = request.ZendeskAdminEmail
-				existingSettings.ZendeskSubdomain = request.ZendeskSubdomain
-				qr := repositories.TenantSettingsRepository.Save(existingSettings)
-				if qr.Error != nil {
-					println(qr.Error.Error())
-					c.AbortWithStatus(500) //todo
-					return
-				}
-				savedSettings = qr.Result.(entity.TenantSettings)
+			data, err := services.TenantSettingsService.SaveSmartSheetData(tenantName, request)
+			if err != nil {
+				c.JSON(500, gin.H{"error": err.Error()})
+				return
 			}
 
-			c.JSON(200, mapper.MapTenantSettingsEntityToDTO(&savedSettings))
+			c.JSON(200, mapper.MapTenantSettingsEntityToDTO(data))
+		})
+
+	r.DELETE("/settings/smartSheet",
+		commonService.UserToTenantEnhancer(commonRepositoryContainer.UserToTenantRepo),
+		commonService.ApiKeyChecker(commonRepositoryContainer.AppKeyRepo, commonService.SETTINGS_API),
+		func(c *gin.Context) {
+			tenantName := c.Keys["TenantName"].(string)
+
+			data, err := services.TenantSettingsService.ClearSmartSheetData(tenantName)
+			if err != nil {
+				c.JSON(500, gin.H{"error": err.Error()})
+				return
+			}
+
+			c.JSON(200, mapper.MapTenantSettingsEntityToDTO(data))
 		})
 
 	r.GET("/health", healthCheckHandler)

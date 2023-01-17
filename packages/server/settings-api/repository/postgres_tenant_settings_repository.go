@@ -7,8 +7,8 @@ import (
 )
 
 type TenantSettingsRepository interface {
-	FindForTenantName(tenantId string) helper.QueryResult
-	Save(tenantSettings entity.TenantSettings) helper.QueryResult
+	FindForTenantName(tenantName string) helper.QueryResult
+	Save(tenantSettings *entity.TenantSettings) helper.QueryResult
 }
 
 type tenantSettingsRepo struct {
@@ -21,11 +21,11 @@ func NewTenantSettingsRepository(db *gorm.DB) TenantSettingsRepository {
 	}
 }
 
-func (r *tenantSettingsRepo) FindForTenantName(tenantId string) helper.QueryResult {
+func (r *tenantSettingsRepo) FindForTenantName(tenantName string) helper.QueryResult {
 	var tenantSettings entity.TenantSettings
 
 	err := r.db.
-		Where("tenant_id = ?", tenantId).
+		Where("tenant_name = ?", tenantName).
 		First(&tenantSettings).Error
 
 	if err != nil && err != gorm.ErrRecordNotFound {
@@ -38,9 +38,9 @@ func (r *tenantSettingsRepo) FindForTenantName(tenantId string) helper.QueryResu
 	return helper.QueryResult{Result: tenantSettings}
 }
 
-func (r *tenantSettingsRepo) Save(tenantSettings entity.TenantSettings) helper.QueryResult {
+func (r *tenantSettingsRepo) Save(tenantSettings *entity.TenantSettings) helper.QueryResult {
 
-	result := r.db.Save(&tenantSettings)
+	result := r.db.Save(tenantSettings)
 
 	if result.Error != nil {
 		return helper.QueryResult{Error: result.Error}
