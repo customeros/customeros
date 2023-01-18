@@ -524,8 +524,8 @@ func JSONMarshalWithoutEscapeHtml(t interface{}) ([]byte, error) {
 
 func (s *syncService) dataService(tenantToSync entity.TenantSyncSettings) (common.DataService, error) {
 	// Use a map to store the different implementations of common.DataService as functions.
-	dataServiceMap := map[entity.AirbyteSource]func() common.DataService{
-		entity.AirbyteSourceHubspot: func() common.DataService {
+	dataServiceMap := map[string]func() common.DataService{
+		string(entity.AirbyteSourceHubspot): func() common.DataService {
 			return service.NewHubspotDataService(s.repositories.Dbs.AirbyteStoreDB, tenantToSync.Tenant)
 		},
 		// Add additional implementations here.

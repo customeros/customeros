@@ -6,8 +6,12 @@ MATCH (t:Tenant {name:"openline"})
  ON CREATE SET e.name="HubSpot";
 
 MATCH (t:Tenant {name:"openline"})
-  MERGE (t)<-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]-(e:ExternalSystem {id:"zendesk"})
-  ON CREATE SET e.name="Zendesk";
+  MERGE (t)<-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]-(e:ExternalSystem {id:"zendesk_support"})
+  ON CREATE SET e.name="Zendesk Support";
+
+MATCH (t:Tenant {name:"openline"})
+  MERGE (t)<-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]-(e:ExternalSystem {id:"zendesk_sell"})
+  ON CREATE SET e.name="Zendesk Sell";
 
 MATCH (t:Tenant {name:"openline"})
   MERGE (t)<-[:CONTACT_TYPE_BELONGS_TO_TENANT]-(ct:ContactType {name:"CUSTOMER"})
