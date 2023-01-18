@@ -8,17 +8,18 @@ import (
 type AirbyteSource string
 
 const (
-	AirbyteSourceHubspot AirbyteSource = "hubspot"
-	AirbyteSourceZendesk AirbyteSource = "zendesk"
+	AirbyteSourceHubspot        AirbyteSource = "hubspot"
+	AirbyteSourceZendeskSupport AirbyteSource = "zendesk_support"
+	AirbyteSourceZendeskSell    AirbyteSource = "zendesk_sell"
 )
 
 type TenantSyncSettings struct {
-	ID        uint          `gorm:"primarykey"`
-	CreatedAt time.Time     `gorm:"default:CURRENT_TIMESTAMP"`
-	Tenant    string        `gorm:"column:tenant;not null;uniqueIndex:uix_tenant_source_instance"`
-	Source    AirbyteSource `gorm:"type:airbyte_source;column:source;not null;uniqueIndex:uix_tenant_source_instance"`
-	Instance  string        `gorm:"column:instance;not null;default:'';uniqueIndex:uix_tenant_source_instance"`
-	Enabled   bool          `gorm:"column:enabled;not null;default:false"`
+	ID        uint      `gorm:"primarykey"`
+	CreatedAt time.Time `gorm:"default:CURRENT_TIMESTAMP"`
+	Tenant    string    `gorm:"column:tenant;not null;uniqueIndex:uix_tenant_source_instance"`
+	Source    string    `gorm:"type:string;column:source;not null;uniqueIndex:uix_tenant_source_instance"`
+	Instance  string    `gorm:"column:instance;not null;default:'';uniqueIndex:uix_tenant_source_instance"`
+	Enabled   bool      `gorm:"column:enabled;not null;default:false"`
 }
 
 func (as *AirbyteSource) Scan(value interface{}) error {
