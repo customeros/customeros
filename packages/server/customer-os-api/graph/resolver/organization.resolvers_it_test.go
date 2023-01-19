@@ -252,3 +252,51 @@ func TestMutationResolver_OrganizationDelete(t *testing.T) {
 
 	assertNeo4jLabels(t, driver, []string{"Tenant"})
 }
+
+func TestQueryResolver_Organization_WithRoles_ById(t *testing.T) {
+	defer tearDownTestCase()(t)
+	neo4jt.CreateTenant(driver, tenantName)
+	contactId1 := neo4jt.CreateDefaultContact(driver, tenantName)
+	contactId2 := neo4jt.CreateDefaultContact(driver, tenantName)
+	organizationId := neo4jt.CreateOrganization(driver, tenantName, "some organization")
+	role1 := neo4jt.ContactWorksForOrganization(driver, contactId1, organizationId, "CTO", false)
+	role2 := neo4jt.ContactWorksForOrganization(driver, contactId2, organizationId, "CEO", true)
+
+	require.Equal(t, 2, neo4jt.GetCountOfNodes(driver, "Contact"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Organization"))
+	require.Equal(t, 2, neo4jt.GetCountOfNodes(driver, "Role"))
+	require.Equal(t, 2, neo4jt.GetCountOfRelationships(driver, "WORKS"))
+	require.Equal(t, 2, neo4jt.GetCountOfRelationships(driver, "HAS_ROLE"))
+
+	rawResponse, err := c.RawPost(getQuery("get_organization_with_roles_by_id"),
+		client.Var("organizationId", organizationId))
+	assertRawResponseSuccess(t, rawResponse, err)
+
+	var searchedOrganization struct {
+		Organization model.Organization
+	}
+
+	err = decode.Decode(rawResponse.Data.(map[string]any), &searchedOrganization)
+	require.Nil(t, err)
+	require.Equal(t, organizationId, searchedOrganization.Organization.ID)
+
+	roles := searchedOrganization.Organization.ContactRoles
+	require.Equal(t, 2, len(roles))
+	var cto, ceo *model.ContactRole
+	if role1 == roles[0].ID {
+		cto = roles[0]
+		ceo = roles[1]
+	} else {
+		cto = roles[1]
+		ceo = roles[0]
+	}
+	require.Equal(t, role1, cto.ID)
+	require.Equal(t, "CTO", *cto.JobTitle)
+	require.Equal(t, false, cto.Primary)
+	require.Equal(t, contactId1, cto.Contact.ID)
+
+	require.Equal(t, role2, ceo.ID)
+	require.Equal(t, "CEO", *ceo.JobTitle)
+	require.Equal(t, true, ceo.Primary)
+	require.Equal(t, contactId2, ceo.Contact.ID)
+}

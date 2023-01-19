@@ -15,7 +15,7 @@ import (
 type ContactService interface {
 	Create(ctx context.Context, contact *ContactCreateData) (*entity.ContactEntity, error)
 	Update(ctx context.Context, contactUpdateData *ContactUpdateData) (*entity.ContactEntity, error)
-	FindContactById(ctx context.Context, id string) (*entity.ContactEntity, error)
+	GetContactById(ctx context.Context, id string) (*entity.ContactEntity, error)
 	FindContactByEmail(ctx context.Context, email string) (*entity.ContactEntity, error)
 	FindContactByPhoneNumber(ctx context.Context, e164 string) (*entity.ContactEntity, error)
 	FindAll(ctx context.Context, page, limit int, filter *model.Filter, sortBy []*model.SortBy) (*utils.Pagination, error)
@@ -23,6 +23,7 @@ type ContactService interface {
 	GetAllForConversation(ctx context.Context, conversationId string) (*entity.ContactEntities, error)
 	PermanentDelete(ctx context.Context, id string) (bool, error)
 	SoftDelete(ctx context.Context, id string) (bool, error)
+	GetContactForRole(ctx context.Context, roleId string) (*entity.ContactEntity, error)
 }
 
 type ContactCreateData struct {
@@ -246,7 +247,7 @@ func (s *contactService) SoftDelete(ctx context.Context, contactId string) (bool
 	return queryResult.(bool), nil
 }
 
-func (s *contactService) FindContactById(ctx context.Context, id string) (*entity.ContactEntity, error) {
+func (s *contactService) GetContactById(ctx context.Context, id string) (*entity.ContactEntity, error) {
 	session := utils.NewNeo4jReadSession(s.getNeo4jDriver())
 	defer session.Close()
 
@@ -413,6 +414,17 @@ func (s *contactService) GetAllForConversation(ctx context.Context, conversation
 		contactEntities = append(contactEntities, *s.mapDbNodeToContactEntity(*dbNode))
 	}
 	return &contactEntities, nil
+}
+
+func (s *contactService) GetContactForRole(ctx context.Context, roleId string) (*entity.ContactEntity, error) {
+	session := utils.NewNeo4jWriteSession(s.getNeo4jDriver())
+	defer session.Close()
+
+	dbNode, err := s.repositories.ContactRepository.GetContactForRole(session, common.GetContext(ctx).Tenant, roleId)
+	if dbNode == nil || err != nil {
+		return nil, err
+	}
+	return s.mapDbNodeToContactEntity(*dbNode), nil
 }
 
 func (s *contactService) mapDbNodeToContactEntity(dbContactNode dbtype.Node) *entity.ContactEntity {

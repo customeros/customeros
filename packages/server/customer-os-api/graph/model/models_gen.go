@@ -198,6 +198,7 @@ type ContactRole struct {
 	// Organization associated with a Contact.
 	// **Required.**
 	Organization *Organization `json:"organization"`
+	Contact      *Contact      `json:"contact"`
 	// The Contact's job title.
 	JobTitle *string    `json:"jobTitle"`
 	Primary  bool       `json:"primary"`
@@ -579,8 +580,9 @@ type Organization struct {
 	OrganizationType *OrganizationType `json:"organizationType"`
 	// All addresses associated with an organization in customerOS.
 	// **Required.  If no values it returns an empty array.**
-	Addresses []*Address `json:"addresses"`
-	Source    DataSource `json:"source"`
+	Addresses    []*Address     `json:"addresses"`
+	Source       DataSource     `json:"source"`
+	ContactRoles []*ContactRole `json:"contactRoles"`
 }
 
 func (Organization) IsNode()            {}

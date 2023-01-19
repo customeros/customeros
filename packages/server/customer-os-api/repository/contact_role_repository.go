@@ -10,6 +10,7 @@ import (
 
 type ContactRoleRepository interface {
 	GetRolesForContact(session neo4j.Session, tenant, contactId string) ([]*dbtype.Node, error)
+	GetRolesForOrganization(session neo4j.Session, tenant, organizationId string) ([]*dbtype.Node, error)
 	DeleteContactRoleInTx(tx neo4j.Transaction, tenant, contactId, roleId string) error
 	SetOtherRolesNonPrimaryInTx(tx neo4j.Transaction, tenant, contactId, skipRoleId string) error
 	CreateContactRole(tx neo4j.Transaction, tenant, contactId string, input entity.ContactRoleEntity) (*dbtype.Node, error)
@@ -36,6 +37,33 @@ func (r *contactRoleRepository) GetRolesForContact(session neo4j.Session, tenant
 			map[string]interface{}{
 				"contactId": contactId,
 				"tenant":    tenant,
+			})
+		if err != nil {
+			return nil, err
+		}
+		return queryResult.Collect()
+	})
+	if err != nil {
+		return nil, err
+	}
+	dbNodes := []*dbtype.Node{}
+	for _, v := range records.([]*neo4j.Record) {
+		if v.Values[0] != nil {
+			dbNodes = append(dbNodes, utils.NodePtr(v.Values[0].(dbtype.Node)))
+		}
+	}
+	return dbNodes, err
+}
+
+func (r *contactRoleRepository) GetRolesForOrganization(session neo4j.Session, tenant, organizationId string) ([]*dbtype.Node, error) {
+	records, err := session.ReadTransaction(func(tx neo4j.Transaction) (interface{}, error) {
+		queryResult, err := tx.Run(`
+				MATCH (org:Organization {id:$organizationId})-[:ORGANIZATION_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}),
+              			(org)<-[:WORKS]-(r:Role) 
+				RETURN r`,
+			map[string]interface{}{
+				"organizationId": organizationId,
+				"tenant":         tenant,
 			})
 		if err != nil {
 			return nil, err

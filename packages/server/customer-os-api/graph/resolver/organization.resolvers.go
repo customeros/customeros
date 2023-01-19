@@ -81,6 +81,16 @@ func (r *organizationResolver) Addresses(ctx context.Context, obj *model.Organiz
 	return mapper.MapEntitiesToAddresses(addressEntities), err
 }
 
+// ContactRoles is the resolver for the contactRoles field.
+func (r *organizationResolver) ContactRoles(ctx context.Context, obj *model.Organization) ([]*model.ContactRole, error) {
+	contactRoleEntities, err := r.Services.ContactRoleService.FindAllForOrganization(ctx, obj.ID)
+	if err != nil {
+		graphql.AddErrorf(ctx, "Failed to get roles for organization %s", obj.ID)
+		return nil, err
+	}
+	return mapper.MapEntitiesToContactRoles(contactRoleEntities), err
+}
+
 // Organizations is the resolver for the organizations field.
 func (r *queryResolver) Organizations(ctx context.Context, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) (*model.OrganizationPage, error) {
 	if pagination == nil {

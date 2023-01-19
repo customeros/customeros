@@ -215,7 +215,7 @@ func (r *mutationResolver) ContactSoftDelete(ctx context.Context, contactID stri
 
 // Contact is the resolver for the contact field.
 func (r *queryResolver) Contact(ctx context.Context, id string) (*model.Contact, error) {
-	contactEntity, err := r.Services.ContactService.FindContactById(ctx, id)
+	contactEntity, err := r.Services.ContactService.GetContactById(ctx, id)
 	if err != nil || contactEntity == nil {
 		graphql.AddErrorf(ctx, "Contact with id %s not found", id)
 		return nil, err

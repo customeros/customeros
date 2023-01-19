@@ -15,15 +15,28 @@ import (
 
 // Organization is the resolver for the organization field.
 func (r *contactRoleResolver) Organization(ctx context.Context, obj *model.ContactRole) (*model.Organization, error) {
-	OrganizationEntity, err := r.Services.OrganizationService.GetOrganizationForRole(ctx, obj.ID)
+	organizationEntity, err := r.Services.OrganizationService.FindOrganizationForRole(ctx, obj.ID)
 	if err != nil {
 		graphql.AddErrorf(ctx, "Failed to get organization for role %s", obj.ID)
 		return nil, err
 	}
-	if OrganizationEntity == nil {
+	if organizationEntity == nil {
 		return nil, nil
 	}
-	return mapper.MapEntityToOrganization(OrganizationEntity), nil
+	return mapper.MapEntityToOrganization(organizationEntity), nil
+}
+
+// Contact is the resolver for the contact field.
+func (r *contactRoleResolver) Contact(ctx context.Context, obj *model.ContactRole) (*model.Contact, error) {
+	contactEntity, err := r.Services.ContactService.GetContactForRole(ctx, obj.ID)
+	if err != nil {
+		graphql.AddErrorf(ctx, "Failed to get contact for role %s", obj.ID)
+		return nil, err
+	}
+	if contactEntity == nil {
+		return nil, nil
+	}
+	return mapper.MapEntityToContact(contactEntity), nil
 }
 
 // ContactRoleDelete is the resolver for the contactRole_Delete field.

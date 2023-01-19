@@ -22,6 +22,7 @@ type ContactRepository interface {
 	GetPaginatedContacts(session neo4j.Session, tenant string, skip, limit int, filter *utils.CypherFilter, sort *utils.CypherSort) (*utils.DbNodesWithTotalCount, error)
 	GetPaginatedContactsForContactGroup(session neo4j.Session, tenant string, skip, limit int, filter *utils.CypherFilter, sort *utils.CypherSort, contactGroupId string) (*utils.DbNodesWithTotalCount, error)
 	GetAllForConversation(session neo4j.Session, tenant, conversationId string) ([]*dbtype.Node, error)
+	GetContactForRole(session neo4j.Session, tenant, roleId string) (*dbtype.Node, error)
 }
 
 type contactRepository struct {
@@ -305,4 +306,24 @@ func (r *contactRepository) GetAllForConversation(session neo4j.Session, tenant,
 		}
 	}
 	return dbNodes, err
+}
+
+func (r *contactRepository) GetContactForRole(session neo4j.Session, tenant, roleId string) (*dbtype.Node, error) {
+	result, err := session.ReadTransaction(func(tx neo4j.Transaction) (any, error) {
+		if queryResult, err := tx.Run(`
+			MATCH (:Role {id:$roleId})<-[:HAS_ROLE]-(c:Contact)-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant})
+			RETURN c`,
+			map[string]any{
+				"tenant": tenant,
+				"roleId": roleId,
+			}); err != nil {
+			return nil, err
+		} else {
+			return utils.ExtractSingleRecordFirstValueAsNode(queryResult, err)
+		}
+	})
+	if err != nil {
+		return nil, err
+	}
+	return result.(*dbtype.Node), nil
 }

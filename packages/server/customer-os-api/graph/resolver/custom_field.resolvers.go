@@ -56,7 +56,7 @@ func (r *mutationResolver) CustomFieldsMergeAndUpdateInContact(ctx context.Conte
 		graphql.AddErrorf(ctx, "Failed to merge and update custom fields for contact %s", contactID)
 		return nil, err
 	}
-	contactEntity, err := r.Services.ContactService.FindContactById(ctx, contactID)
+	contactEntity, err := r.Services.ContactService.GetContactById(ctx, contactID)
 	if err != nil || contactEntity == nil {
 		graphql.AddErrorf(ctx, "Contact with id %s not found", contactID)
 		return nil, err
