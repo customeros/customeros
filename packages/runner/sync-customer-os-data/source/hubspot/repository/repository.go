@@ -1,13 +1,13 @@
 package repository
 
 import (
-	hubspotEntity "github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/hubspot/entity"
+	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/source/hubspot/entity"
 	"gorm.io/gorm"
 	"time"
 )
 
-func GetContacts(db *gorm.DB, limit int, runId string) (hubspotEntity.Contacts, error) {
-	var contacts hubspotEntity.Contacts
+func GetContacts(db *gorm.DB, limit int, runId string) (entity.Contacts, error) {
+	var contacts entity.Contacts
 
 	cte := `
 		WITH UpToDateData AS (
@@ -30,16 +30,16 @@ func GetContacts(db *gorm.DB, limit int, runId string) (hubspotEntity.Contacts, 
 	return contacts, nil
 }
 
-func GetContactProperties(db *gorm.DB, airbyteAbId, airbyteContactsHashId string) (hubspotEntity.ContactProperties, error) {
-	contactProperties := hubspotEntity.ContactProperties{}
-	err := db.Table(hubspotEntity.ContactProperties{}.TableName()).
-		Where(&hubspotEntity.ContactProperties{AirbyteAbId: airbyteAbId, AirbyteContactsHashid: airbyteContactsHashId}).
+func GetContactProperties(db *gorm.DB, airbyteAbId, airbyteContactsHashId string) (entity.ContactProperties, error) {
+	contactProperties := entity.ContactProperties{}
+	err := db.Table(entity.ContactProperties{}.TableName()).
+		Where(&entity.ContactProperties{AirbyteAbId: airbyteAbId, AirbyteContactsHashid: airbyteContactsHashId}).
 		First(&contactProperties).Error
 	return contactProperties, err
 }
 
-func MarkContactProcessed(db *gorm.DB, contact hubspotEntity.Contact, synced bool, runId string) error {
-	syncStatusContact := hubspotEntity.SyncStatusContact{
+func MarkContactProcessed(db *gorm.DB, contact entity.Contact, synced bool, runId string) error {
+	syncStatusContact := entity.SyncStatusContact{
 		Id:                    contact.Id,
 		AirbyteAbId:           contact.AirbyteAbId,
 		AirbyteContactsHashid: contact.AirbyteContactsHashid,
@@ -47,8 +47,8 @@ func MarkContactProcessed(db *gorm.DB, contact hubspotEntity.Contact, synced boo
 	db.FirstOrCreate(&syncStatusContact, syncStatusContact)
 
 	return db.Model(&syncStatusContact).
-		Where(&hubspotEntity.SyncStatusContact{Id: contact.Id, AirbyteAbId: contact.AirbyteAbId, AirbyteContactsHashid: contact.AirbyteContactsHashid}).
-		Updates(hubspotEntity.SyncStatusContact{
+		Where(&entity.SyncStatusContact{Id: contact.Id, AirbyteAbId: contact.AirbyteAbId, AirbyteContactsHashid: contact.AirbyteContactsHashid}).
+		Updates(entity.SyncStatusContact{
 			SyncedToCustomerOs: synced,
 			SyncedAt:           time.Now(),
 			SyncAttempt:        syncStatusContact.SyncAttempt + 1,
@@ -56,8 +56,8 @@ func MarkContactProcessed(db *gorm.DB, contact hubspotEntity.Contact, synced boo
 		}).Error
 }
 
-func GetCompanies(db *gorm.DB, limit int, runId string) (hubspotEntity.Companies, error) {
-	var companies hubspotEntity.Companies
+func GetCompanies(db *gorm.DB, limit int, runId string) (entity.Companies, error) {
+	var companies entity.Companies
 
 	cte := `
 		WITH UpToDateData AS (
@@ -80,16 +80,16 @@ func GetCompanies(db *gorm.DB, limit int, runId string) (hubspotEntity.Companies
 	return companies, nil
 }
 
-func GetCompanyProperties(db *gorm.DB, airbyteAbId, airbyteCompaniesHashId string) (hubspotEntity.CompanyProperties, error) {
-	companyProperties := hubspotEntity.CompanyProperties{}
-	err := db.Table(hubspotEntity.CompanyProperties{}.TableName()).
-		Where(&hubspotEntity.CompanyProperties{AirbyteAbId: airbyteAbId, AirbyteCompaniesHashid: airbyteCompaniesHashId}).
+func GetCompanyProperties(db *gorm.DB, airbyteAbId, airbyteCompaniesHashId string) (entity.CompanyProperties, error) {
+	companyProperties := entity.CompanyProperties{}
+	err := db.Table(entity.CompanyProperties{}.TableName()).
+		Where(&entity.CompanyProperties{AirbyteAbId: airbyteAbId, AirbyteCompaniesHashid: airbyteCompaniesHashId}).
 		First(&companyProperties).Error
 	return companyProperties, err
 }
 
-func MarkCompanyProcessed(db *gorm.DB, company hubspotEntity.Company, synced bool, runId string) error {
-	syncStatusCompany := hubspotEntity.SyncStatusCompany{
+func MarkCompanyProcessed(db *gorm.DB, company entity.Company, synced bool, runId string) error {
+	syncStatusCompany := entity.SyncStatusCompany{
 		Id:                     company.Id,
 		AirbyteAbId:            company.AirbyteAbId,
 		AirbyteCompaniesHashid: company.AirbyteCompaniesHashid,
@@ -97,8 +97,8 @@ func MarkCompanyProcessed(db *gorm.DB, company hubspotEntity.Company, synced boo
 	db.FirstOrCreate(&syncStatusCompany, syncStatusCompany)
 
 	return db.Model(&syncStatusCompany).
-		Where(&hubspotEntity.SyncStatusCompany{Id: company.Id, AirbyteAbId: company.AirbyteAbId, AirbyteCompaniesHashid: company.AirbyteCompaniesHashid}).
-		Updates(hubspotEntity.SyncStatusCompany{
+		Where(&entity.SyncStatusCompany{Id: company.Id, AirbyteAbId: company.AirbyteAbId, AirbyteCompaniesHashid: company.AirbyteCompaniesHashid}).
+		Updates(entity.SyncStatusCompany{
 			SyncedToCustomerOs: synced,
 			SyncedAt:           time.Now(),
 			SyncAttempt:        syncStatusCompany.SyncAttempt + 1,
@@ -106,8 +106,8 @@ func MarkCompanyProcessed(db *gorm.DB, company hubspotEntity.Company, synced boo
 		}).Error
 }
 
-func GetOwners(db *gorm.DB, limit int, runId string) (hubspotEntity.Owners, error) {
-	var owners hubspotEntity.Owners
+func GetOwners(db *gorm.DB, limit int, runId string) (entity.Owners, error) {
+	var owners entity.Owners
 
 	cte := `
 		WITH UpToDateData AS (
@@ -130,8 +130,8 @@ func GetOwners(db *gorm.DB, limit int, runId string) (hubspotEntity.Owners, erro
 	return owners, nil
 }
 
-func MarkOwnerProcessed(db *gorm.DB, owner hubspotEntity.Owner, synced bool, runId string) error {
-	syncStatusOwner := hubspotEntity.SyncStatusOwner{
+func MarkOwnerProcessed(db *gorm.DB, owner entity.Owner, synced bool, runId string) error {
+	syncStatusOwner := entity.SyncStatusOwner{
 		Id:                  owner.Id,
 		AirbyteAbId:         owner.AirbyteAbId,
 		AirbyteOwnersHashid: owner.AirbyteOwnersHashid,
@@ -139,8 +139,8 @@ func MarkOwnerProcessed(db *gorm.DB, owner hubspotEntity.Owner, synced bool, run
 	db.FirstOrCreate(&syncStatusOwner, syncStatusOwner)
 
 	return db.Model(&syncStatusOwner).
-		Where(&hubspotEntity.SyncStatusOwner{Id: owner.Id, AirbyteAbId: owner.AirbyteAbId, AirbyteOwnersHashid: owner.AirbyteOwnersHashid}).
-		Updates(hubspotEntity.SyncStatusOwner{
+		Where(&entity.SyncStatusOwner{Id: owner.Id, AirbyteAbId: owner.AirbyteAbId, AirbyteOwnersHashid: owner.AirbyteOwnersHashid}).
+		Updates(entity.SyncStatusOwner{
 			SyncedToCustomerOs: synced,
 			SyncedAt:           time.Now(),
 			SyncAttempt:        syncStatusOwner.SyncAttempt + 1,
@@ -148,8 +148,8 @@ func MarkOwnerProcessed(db *gorm.DB, owner hubspotEntity.Owner, synced bool, run
 		}).Error
 }
 
-func GetNotes(db *gorm.DB, limit int, runId string) (hubspotEntity.Notes, error) {
-	var notes hubspotEntity.Notes
+func GetNotes(db *gorm.DB, limit int, runId string) (entity.Notes, error) {
+	var notes entity.Notes
 
 	cte := `
 		WITH UpToDateData AS (
@@ -173,16 +173,16 @@ func GetNotes(db *gorm.DB, limit int, runId string) (hubspotEntity.Notes, error)
 	return notes, nil
 }
 
-func GetNoteProperties(db *gorm.DB, airbyteAbId, airbyteNotesHashId string) (hubspotEntity.NoteProperties, error) {
-	noteProperties := hubspotEntity.NoteProperties{}
-	err := db.Table(hubspotEntity.NoteProperties{}.TableName()).
-		Where(&hubspotEntity.NoteProperties{AirbyteAbId: airbyteAbId, AirbyteNotesHashid: airbyteNotesHashId}).
+func GetNoteProperties(db *gorm.DB, airbyteAbId, airbyteNotesHashId string) (entity.NoteProperties, error) {
+	noteProperties := entity.NoteProperties{}
+	err := db.Table(entity.NoteProperties{}.TableName()).
+		Where(&entity.NoteProperties{AirbyteAbId: airbyteAbId, AirbyteNotesHashid: airbyteNotesHashId}).
 		First(&noteProperties).Error
 	return noteProperties, err
 }
 
-func MarkNoteProcessed(db *gorm.DB, note hubspotEntity.Note, synced bool, runId string) error {
-	syncStatusNote := hubspotEntity.SyncStatusNote{
+func MarkNoteProcessed(db *gorm.DB, note entity.Note, synced bool, runId string) error {
+	syncStatusNote := entity.SyncStatusNote{
 		Id:                 note.Id,
 		AirbyteAbId:        note.AirbyteAbId,
 		AirbyteNotesHashid: note.AirbyteNotesHashid,
@@ -190,8 +190,8 @@ func MarkNoteProcessed(db *gorm.DB, note hubspotEntity.Note, synced bool, runId 
 	db.FirstOrCreate(&syncStatusNote, syncStatusNote)
 
 	return db.Model(&syncStatusNote).
-		Where(&hubspotEntity.SyncStatusNote{Id: note.Id, AirbyteAbId: note.AirbyteAbId, AirbyteNotesHashid: note.AirbyteNotesHashid}).
-		Updates(hubspotEntity.SyncStatusNote{
+		Where(&entity.SyncStatusNote{Id: note.Id, AirbyteAbId: note.AirbyteAbId, AirbyteNotesHashid: note.AirbyteNotesHashid}).
+		Updates(entity.SyncStatusNote{
 			SyncedToCustomerOs: synced,
 			SyncedAt:           time.Now(),
 			SyncAttempt:        syncStatusNote.SyncAttempt + 1,
@@ -199,8 +199,8 @@ func MarkNoteProcessed(db *gorm.DB, note hubspotEntity.Note, synced bool, runId 
 		}).Error
 }
 
-func GetEmails(db *gorm.DB, limit int, runId string) (hubspotEntity.Emails, error) {
-	var emails hubspotEntity.Emails
+func GetEmails(db *gorm.DB, limit int, runId string) (entity.Emails, error) {
+	var emails entity.Emails
 
 	cte := `
 		WITH UpToDateData AS (
@@ -227,16 +227,16 @@ func GetEmails(db *gorm.DB, limit int, runId string) (hubspotEntity.Emails, erro
 	return emails, nil
 }
 
-func GetEmailProperties(db *gorm.DB, airbyteAbId, airbyteEmailsHashId string) (hubspotEntity.EmailProperties, error) {
-	emailProperties := hubspotEntity.EmailProperties{}
-	err := db.Table(hubspotEntity.EmailProperties{}.TableName()).
-		Where(&hubspotEntity.EmailProperties{AirbyteAbId: airbyteAbId, AirbyteEmailsHashid: airbyteEmailsHashId}).
+func GetEmailProperties(db *gorm.DB, airbyteAbId, airbyteEmailsHashId string) (entity.EmailProperties, error) {
+	emailProperties := entity.EmailProperties{}
+	err := db.Table(entity.EmailProperties{}.TableName()).
+		Where(&entity.EmailProperties{AirbyteAbId: airbyteAbId, AirbyteEmailsHashid: airbyteEmailsHashId}).
 		First(&emailProperties).Error
 	return emailProperties, err
 }
 
-func MarkEmailProcessed(db *gorm.DB, email hubspotEntity.Email, synced bool, runId string) error {
-	syncStatusEmail := hubspotEntity.SyncStatusEmail{
+func MarkEmailProcessed(db *gorm.DB, email entity.Email, synced bool, runId string) error {
+	syncStatusEmail := entity.SyncStatusEmail{
 		Id:                  email.Id,
 		AirbyteAbId:         email.AirbyteAbId,
 		AirbyteEmailsHashid: email.AirbyteEmailsHashid,
@@ -244,8 +244,8 @@ func MarkEmailProcessed(db *gorm.DB, email hubspotEntity.Email, synced bool, run
 	db.FirstOrCreate(&syncStatusEmail, syncStatusEmail)
 
 	return db.Model(&syncStatusEmail).
-		Where(&hubspotEntity.SyncStatusEmail{Id: email.Id, AirbyteAbId: email.AirbyteAbId, AirbyteEmailsHashid: email.AirbyteEmailsHashid}).
-		Updates(hubspotEntity.SyncStatusEmail{
+		Where(&entity.SyncStatusEmail{Id: email.Id, AirbyteAbId: email.AirbyteAbId, AirbyteEmailsHashid: email.AirbyteEmailsHashid}).
+		Updates(entity.SyncStatusEmail{
 			SyncedToCustomerOs: synced,
 			SyncedAt:           time.Now(),
 			SyncAttempt:        syncStatusEmail.SyncAttempt + 1,

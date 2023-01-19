@@ -4,8 +4,8 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/common"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/config"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/entity"
-	hubspotEntity "github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/hubspot/entity"
-	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/hubspot/repository"
+	localEntity "github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/source/hubspot/entity"
+	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/source/hubspot/repository"
 	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 	"strconv"
@@ -16,22 +16,22 @@ type hubspotDataService struct {
 	airbyteStoreDb *config.AirbyteStoreDB
 	tenant         string
 	instance       string
-	contacts       map[string]hubspotEntity.Contact
-	companies      map[string]hubspotEntity.Company
-	owners         map[string]hubspotEntity.Owner
-	notes          map[string]hubspotEntity.Note
-	emails         map[string]hubspotEntity.Email
+	contacts       map[string]localEntity.Contact
+	companies      map[string]localEntity.Company
+	owners         map[string]localEntity.Owner
+	notes          map[string]localEntity.Note
+	emails         map[string]localEntity.Email
 }
 
 func NewHubspotDataService(airbyteStoreDb *config.AirbyteStoreDB, tenant string) common.DataService {
 	return &hubspotDataService{
 		airbyteStoreDb: airbyteStoreDb,
 		tenant:         tenant,
-		contacts:       map[string]hubspotEntity.Contact{},
-		companies:      map[string]hubspotEntity.Company{},
-		owners:         map[string]hubspotEntity.Owner{},
-		notes:          map[string]hubspotEntity.Note{},
-		emails:         map[string]hubspotEntity.Email{},
+		contacts:       map[string]localEntity.Contact{},
+		companies:      map[string]localEntity.Company{},
+		owners:         map[string]localEntity.Owner{},
+		notes:          map[string]localEntity.Note{},
+		emails:         map[string]localEntity.Email{},
 	}
 }
 
@@ -351,23 +351,23 @@ func (s *hubspotDataService) MarkEmailMessageProcessed(externalId, runId string,
 }
 
 func (s *hubspotDataService) Refresh() {
-	err := s.getDb().AutoMigrate(&hubspotEntity.SyncStatusContact{})
+	err := s.getDb().AutoMigrate(&localEntity.SyncStatusContact{})
 	if err != nil {
 		logrus.Error(err)
 	}
-	err = s.getDb().AutoMigrate(&hubspotEntity.SyncStatusCompany{})
+	err = s.getDb().AutoMigrate(&localEntity.SyncStatusCompany{})
 	if err != nil {
 		logrus.Error(err)
 	}
-	err = s.getDb().AutoMigrate(&hubspotEntity.SyncStatusOwner{})
+	err = s.getDb().AutoMigrate(&localEntity.SyncStatusOwner{})
 	if err != nil {
 		logrus.Error(err)
 	}
-	err = s.getDb().AutoMigrate(&hubspotEntity.SyncStatusNote{})
+	err = s.getDb().AutoMigrate(&localEntity.SyncStatusNote{})
 	if err != nil {
 		logrus.Error(err)
 	}
-	err = s.getDb().AutoMigrate(&hubspotEntity.SyncStatusEmail{})
+	err = s.getDb().AutoMigrate(&localEntity.SyncStatusEmail{})
 	if err != nil {
 		logrus.Error(err)
 	}
@@ -390,9 +390,9 @@ func (s *hubspotDataService) SourceId() string {
 }
 
 func (s *hubspotDataService) Close() {
-	s.contacts = make(map[string]hubspotEntity.Contact)
-	s.companies = make(map[string]hubspotEntity.Company)
-	s.owners = make(map[string]hubspotEntity.Owner)
-	s.notes = make(map[string]hubspotEntity.Note)
-	s.emails = make(map[string]hubspotEntity.Email)
+	s.contacts = make(map[string]localEntity.Contact)
+	s.companies = make(map[string]localEntity.Company)
+	s.owners = make(map[string]localEntity.Owner)
+	s.notes = make(map[string]localEntity.Note)
+	s.emails = make(map[string]localEntity.Email)
 }
