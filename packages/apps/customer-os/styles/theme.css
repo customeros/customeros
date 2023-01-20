@@ -1,0 +1,74 @@
+:root {
+    /* COLORS */
+    --color-blue-100: #00BFFF;
+    --color-blue-80: #0BB1FC;
+    --color-blue-60: #268EF4;
+    --color-blue-40: #3E6FEC;
+
+    --color-purple-100: #9400D3;
+    --color-purple-80: #6142E2;
+    --color-purple-60: #6E31DE;
+    --color-purple-40: #7F1CD9;
+
+    --color-gray-100: #333333;
+    --color-gray-80: #474747;
+    --color-gray-60: #515151;
+    --color-gray-40: #5E5E5E;
+
+    --color-white-100: #fff;
+    --color-white-80: #ededed;
+    --color-white-60: #e0e0e0;
+    --color-white-40: #d3d3d3;
+
+    --color-primary: var(--color-blue-100);
+    --color-primary-hover: var(--color-blue-80);
+    --text-on-primary: var(--color-white-100);
+
+    --color-secondary: var(--color-purple-100);
+    --color-secondary-hover: var(--color-purple-80);
+    --text-on-secondary: var(--color-white-100);
+
+    --text-dark-on-light-bg: var(--color-gray-100);
+    --text-default-on-light-bg: var(--color-gray-80);
+    --text-light-on-light-bg: var(--color-gray-40);
+
+    --text-dark-on-dark-bg: var(--color-white-40);
+    --text-default-on-dark-bg: var(--color-white-80);
+    --text-light-on-dark-bg: var(--color-white-100);
+
+    /* SPACING */
+
+    --spacing-xxxs: 2px;
+    --spacing-xxs: 4px;
+    --spacing-xs: 8px;
+    --spacing-s: 12px;
+    --spacing-m: 16px;
+    --spacing-lg: 24px;
+    --spacing-xl: 32px;
+    --spacing-xxl: 40px;
+    --spacing-xxxl: 48px;
+
+    --padding-xxs: var(--spacing-xxxs) var(--spacing-xxs);
+    --padding-xs: var(--spacing-xxs) var(--spacing-xs);
+    --padding-s: var(--spacing-xs) var(--spacing-s);
+    --padding-m: var(--spacing-s) var(--spacing-m);
+    --padding-lg: var(--spacing-m) var(--spacing-lg);
+    --padding-xl: var(--spacing-lg) var(--spacing-xl);
+
+    /* TYPOGRAPHY */
+    --font-size-xxs: 0.625rem;
+    --font-size-xs: 0.75rem;
+    --font-size-s: 0.875rem;
+    --font-size-m: 1rem;
+    --font-size-l: 1.125rem;
+    --font-size-xl: 1.25rem;
+    --font-size-xxl: 1.5rem;
+    --font-size-xxxl: 1.75rem;
+
+    --heading-main: var(--font-size-xxl);
+    --heading-secondary: var(--font-size-xl);
+    --heading-tertiary: var(--font-size-l);
+    --normal-text: var(--font-size-m);
+    --small-text: var(--font-size-s);
+    --hint-text: var(--font-size-xs);
+}
