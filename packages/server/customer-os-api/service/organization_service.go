@@ -15,7 +15,7 @@ import (
 type OrganizationService interface {
 	Create(ctx context.Context, input *OrganizationCreateData) (*entity.OrganizationEntity, error)
 	Update(ctx context.Context, input *OrganizationUpdateData) (*entity.OrganizationEntity, error)
-	GetOrganizationForRole(ctx context.Context, roleId string) (*entity.OrganizationEntity, error)
+	FindOrganizationForRole(ctx context.Context, roleId string) (*entity.OrganizationEntity, error)
 	GetOrganizationById(ctx context.Context, organizationId string) (*entity.OrganizationEntity, error)
 	FindAll(ctx context.Context, page, limit int, filter *model.Filter, sortBy []*model.SortBy) (*utils.Pagination, error)
 	PermanentDelete(ctx context.Context, organizationId string) (bool, error)
@@ -137,11 +137,11 @@ func (s *organizationService) FindAll(ctx context.Context, page, limit int, filt
 	return &paginatedResult, nil
 }
 
-func (s *organizationService) GetOrganizationForRole(ctx context.Context, roleId string) (*entity.OrganizationEntity, error) {
+func (s *organizationService) FindOrganizationForRole(ctx context.Context, roleId string) (*entity.OrganizationEntity, error) {
 	session := utils.NewNeo4jReadSession(*s.repositories.Drivers.Neo4jDriver)
 	defer session.Close()
 
-	dbNode, err := s.repositories.OrganizationRepository.GetOrganizationForRole(session, common.GetContext(ctx).Tenant, roleId)
+	dbNode, err := s.repositories.OrganizationRepository.FindOrganizationForRole(session, common.GetContext(ctx).Tenant, roleId)
 	if dbNode == nil || err != nil {
 		return nil, err
 	}

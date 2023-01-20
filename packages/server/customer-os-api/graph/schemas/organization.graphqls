@@ -26,6 +26,7 @@ type Organization implements Node {
     """
     addresses: [Address!]! @goField(forceResolver: true)
     source: DataSource!
+    contactRoles: [ContactRole!]! @goField(forceResolver: true)
 }
 
 type OrganizationPage implements Pages {

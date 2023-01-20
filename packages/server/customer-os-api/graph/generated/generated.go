@@ -106,6 +106,7 @@ type ComplexityRoot struct {
 	}
 
 	ContactRole struct {
+		Contact      func(childComplexity int) int
 		ID           func(childComplexity int) int
 		JobTitle     func(childComplexity int) int
 		Organization func(childComplexity int) int
@@ -272,6 +273,7 @@ type ComplexityRoot struct {
 
 	Organization struct {
 		Addresses        func(childComplexity int) int
+		ContactRoles     func(childComplexity int) int
 		CreatedAt        func(childComplexity int) int
 		Description      func(childComplexity int) int
 		Domain           func(childComplexity int) int
@@ -372,6 +374,7 @@ type ContactGroupResolver interface {
 }
 type ContactRoleResolver interface {
 	Organization(ctx context.Context, obj *model.ContactRole) (*model.Organization, error)
+	Contact(ctx context.Context, obj *model.ContactRole) (*model.Contact, error)
 }
 type ConversationResolver interface {
 	Contacts(ctx context.Context, obj *model.Conversation) ([]*model.Contact, error)
@@ -447,6 +450,8 @@ type NoteResolver interface {
 type OrganizationResolver interface {
 	OrganizationType(ctx context.Context, obj *model.Organization) (*model.OrganizationType, error)
 	Addresses(ctx context.Context, obj *model.Organization) ([]*model.Address, error)
+
+	ContactRoles(ctx context.Context, obj *model.Organization) ([]*model.ContactRole, error)
 }
 type QueryResolver interface {
 	EntityTemplates(ctx context.Context, extends *model.EntityTemplateExtension) ([]*model.EntityTemplate, error)
@@ -760,6 +765,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.ContactGroupPage.TotalPages(childComplexity), true
+
+	case "ContactRole.contact":
+		if e.complexity.ContactRole.Contact == nil {
+			break
+		}
+
+		return e.complexity.ContactRole.Contact(childComplexity), true
 
 	case "ContactRole.id":
 		if e.complexity.ContactRole.ID == nil {
@@ -1869,6 +1881,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Organization.Addresses(childComplexity), true
 
+	case "Organization.contactRoles":
+		if e.complexity.Organization.ContactRoles == nil {
+			break
+		}
+
+		return e.complexity.Organization.ContactRoles(childComplexity), true
+
 	case "Organization.createdAt":
 		if e.complexity.Organization.CreatedAt == nil {
 			break
@@ -2815,6 +2834,8 @@ type ContactRole {
     """
     organization: Organization @goField(forceResolver: true)
 
+    contact: Contact @goField(forceResolver: true)
+
     "The Contact's job title."
     jobTitle: String
 
@@ -3390,6 +3411,7 @@ type Organization implements Node {
     """
     addresses: [Address!]! @goField(forceResolver: true)
     source: DataSource!
+    contactRoles: [ContactRole!]! @goField(forceResolver: true)
 }
 
 type OrganizationPage implements Pages {
@@ -5908,6 +5930,8 @@ func (ec *executionContext) fieldContext_Contact_roles(ctx context.Context, fiel
 				return ec.fieldContext_ContactRole_id(ctx, field)
 			case "organization":
 				return ec.fieldContext_ContactRole_organization(ctx, field)
+			case "contact":
+				return ec.fieldContext_ContactRole_contact(ctx, field)
 			case "jobTitle":
 				return ec.fieldContext_ContactRole_jobTitle(ctx, field)
 			case "primary":
@@ -7005,8 +7029,93 @@ func (ec *executionContext) fieldContext_ContactRole_organization(ctx context.Co
 				return ec.fieldContext_Organization_addresses(ctx, field)
 			case "source":
 				return ec.fieldContext_Organization_source(ctx, field)
+			case "contactRoles":
+				return ec.fieldContext_Organization_contactRoles(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Organization", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ContactRole_contact(ctx context.Context, field graphql.CollectedField, obj *model.ContactRole) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ContactRole_contact(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.ContactRole().Contact(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.Contact)
+	fc.Result = res
+	return ec.marshalOContact2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐContact(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_ContactRole_contact(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ContactRole",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Contact_id(ctx, field)
+			case "title":
+				return ec.fieldContext_Contact_title(ctx, field)
+			case "firstName":
+				return ec.fieldContext_Contact_firstName(ctx, field)
+			case "lastName":
+				return ec.fieldContext_Contact_lastName(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Contact_createdAt(ctx, field)
+			case "label":
+				return ec.fieldContext_Contact_label(ctx, field)
+			case "source":
+				return ec.fieldContext_Contact_source(ctx, field)
+			case "contactType":
+				return ec.fieldContext_Contact_contactType(ctx, field)
+			case "roles":
+				return ec.fieldContext_Contact_roles(ctx, field)
+			case "groups":
+				return ec.fieldContext_Contact_groups(ctx, field)
+			case "phoneNumbers":
+				return ec.fieldContext_Contact_phoneNumbers(ctx, field)
+			case "emails":
+				return ec.fieldContext_Contact_emails(ctx, field)
+			case "addresses":
+				return ec.fieldContext_Contact_addresses(ctx, field)
+			case "customFields":
+				return ec.fieldContext_Contact_customFields(ctx, field)
+			case "fieldSets":
+				return ec.fieldContext_Contact_fieldSets(ctx, field)
+			case "template":
+				return ec.fieldContext_Contact_template(ctx, field)
+			case "owner":
+				return ec.fieldContext_Contact_owner(ctx, field)
+			case "notes":
+				return ec.fieldContext_Contact_notes(ctx, field)
+			case "conversations":
+				return ec.fieldContext_Contact_conversations(ctx, field)
+			case "actions":
+				return ec.fieldContext_Contact_actions(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Contact", field.Name)
 		},
 	}
 	return fc, nil
@@ -10836,6 +10945,8 @@ func (ec *executionContext) fieldContext_Mutation_contactRole_Create(ctx context
 				return ec.fieldContext_ContactRole_id(ctx, field)
 			case "organization":
 				return ec.fieldContext_ContactRole_organization(ctx, field)
+			case "contact":
+				return ec.fieldContext_ContactRole_contact(ctx, field)
 			case "jobTitle":
 				return ec.fieldContext_ContactRole_jobTitle(ctx, field)
 			case "primary":
@@ -10903,6 +11014,8 @@ func (ec *executionContext) fieldContext_Mutation_contactRole_Update(ctx context
 				return ec.fieldContext_ContactRole_id(ctx, field)
 			case "organization":
 				return ec.fieldContext_ContactRole_organization(ctx, field)
+			case "contact":
+				return ec.fieldContext_ContactRole_contact(ctx, field)
 			case "jobTitle":
 				return ec.fieldContext_ContactRole_jobTitle(ctx, field)
 			case "primary":
@@ -12630,6 +12743,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_Create(ctx contex
 				return ec.fieldContext_Organization_addresses(ctx, field)
 			case "source":
 				return ec.fieldContext_Organization_source(ctx, field)
+			case "contactRoles":
+				return ec.fieldContext_Organization_contactRoles(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Organization", field.Name)
 		},
@@ -12709,6 +12824,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_Update(ctx contex
 				return ec.fieldContext_Organization_addresses(ctx, field)
 			case "source":
 				return ec.fieldContext_Organization_source(ctx, field)
+			case "contactRoles":
+				return ec.fieldContext_Organization_contactRoles(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Organization", field.Name)
 		},
@@ -14152,6 +14269,64 @@ func (ec *executionContext) fieldContext_Organization_source(ctx context.Context
 	return fc, nil
 }
 
+func (ec *executionContext) _Organization_contactRoles(ctx context.Context, field graphql.CollectedField, obj *model.Organization) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Organization_contactRoles(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Organization().ContactRoles(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.ContactRole)
+	fc.Result = res
+	return ec.marshalNContactRole2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐContactRoleᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Organization_contactRoles(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Organization",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_ContactRole_id(ctx, field)
+			case "organization":
+				return ec.fieldContext_ContactRole_organization(ctx, field)
+			case "contact":
+				return ec.fieldContext_ContactRole_contact(ctx, field)
+			case "jobTitle":
+				return ec.fieldContext_ContactRole_jobTitle(ctx, field)
+			case "primary":
+				return ec.fieldContext_ContactRole_primary(ctx, field)
+			case "source":
+				return ec.fieldContext_ContactRole_source(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type ContactRole", field.Name)
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _OrganizationPage_content(ctx context.Context, field graphql.CollectedField, obj *model.OrganizationPage) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_OrganizationPage_content(ctx, field)
 	if err != nil {
@@ -14213,6 +14388,8 @@ func (ec *executionContext) fieldContext_OrganizationPage_content(ctx context.Co
 				return ec.fieldContext_Organization_addresses(ctx, field)
 			case "source":
 				return ec.fieldContext_Organization_source(ctx, field)
+			case "contactRoles":
+				return ec.fieldContext_Organization_contactRoles(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Organization", field.Name)
 		},
@@ -15727,6 +15904,8 @@ func (ec *executionContext) fieldContext_Query_organization(ctx context.Context,
 				return ec.fieldContext_Organization_addresses(ctx, field)
 			case "source":
 				return ec.fieldContext_Organization_source(ctx, field)
+			case "contactRoles":
+				return ec.fieldContext_Organization_contactRoles(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Organization", field.Name)
 		},
@@ -20600,6 +20779,23 @@ func (ec *executionContext) _ContactRole(ctx context.Context, sel ast.SelectionS
 				return innerFunc(ctx)
 
 			})
+		case "contact":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._ContactRole_contact(ctx, field, obj)
+				return res
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
 		case "jobTitle":
 
 			out.Values[i] = ec._ContactRole_jobTitle(ctx, field, obj)
@@ -21970,6 +22166,26 @@ func (ec *executionContext) _Organization(ctx context.Context, sel ast.Selection
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&invalids, 1)
 			}
+		case "contactRoles":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Organization_contactRoles(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}

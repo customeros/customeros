@@ -17,6 +17,8 @@ type ContactRole {
     """
     organization: Organization @goField(forceResolver: true)
 
+    contact: Contact @goField(forceResolver: true)
+
     "The Contact's job title."
     jobTitle: String
 

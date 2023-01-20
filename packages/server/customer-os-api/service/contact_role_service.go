@@ -12,6 +12,7 @@ import (
 
 type ContactRoleService interface {
 	FindAllForContact(ctx context.Context, contactId string) (*entity.ContactRoleEntities, error)
+	FindAllForOrganization(ctx context.Context, organizationId string) (*entity.ContactRoleEntities, error)
 	DeleteContactRole(ctx context.Context, contactId, roleId string) (bool, error)
 	CreateContactRole(ctx context.Context, contactId string, organizationId *string, entity *entity.ContactRoleEntity) (*entity.ContactRoleEntity, error)
 	UpdateContactRole(ctx context.Context, contactId, roleId string, organizationId *string, entity *entity.ContactRoleEntity) (*entity.ContactRoleEntity, error)
@@ -36,6 +37,22 @@ func (s *contactRoleService) FindAllForContact(ctx context.Context, contactId st
 	defer session.Close()
 
 	dbNodes, err := s.repositories.ContactRoleRepository.GetRolesForContact(session, common.GetContext(ctx).Tenant, contactId)
+	if err != nil {
+		return nil, err
+	}
+
+	contactRoleEntities := entity.ContactRoleEntities{}
+	for _, dbNode := range dbNodes {
+		contactRoleEntities = append(contactRoleEntities, *s.mapDbNodeToContactRoleEntity(*dbNode))
+	}
+	return &contactRoleEntities, nil
+}
+
+func (s *contactRoleService) FindAllForOrganization(ctx context.Context, organizationId string) (*entity.ContactRoleEntities, error) {
+	session := utils.NewNeo4jReadSession(s.getDriver())
+	defer session.Close()
+
+	dbNodes, err := s.repositories.ContactRoleRepository.GetRolesForOrganization(session, common.GetContext(ctx).Tenant, organizationId)
 	if err != nil {
 		return nil, err
 	}

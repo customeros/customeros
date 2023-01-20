@@ -1,0 +1,13 @@
+query GetOrganizationById($organizationId: ID!){
+  organization(id: $organizationId) {
+    id
+    contactRoles {
+        id
+        jobTitle
+        primary
+        contact {
+            id
+        }
+    }
+  }
+}
