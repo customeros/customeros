@@ -16,7 +16,7 @@ type ContactRepository interface {
 	MergePrimaryPhoneNumber(tenant, contactId, phoneNumber, externalSystem string, createdAt time.Time) error
 	SetOwnerRelationship(tenant, contactId, userExternalOwnerId, externalSystemId string) error
 	MergeTextCustomField(tenant, contactId string, field entity.TextCustomField, createdAt time.Time) error
-	MergeContactAddress(tenant, contactId string, contact entity.ContactData) error
+	MergeContactDefaultPlace(tenant, contactId string, contact entity.ContactData) error
 	MergeContactType(tenant, contactId, contactTypeName string) error
 	GetOrCreateContactId(tenant, email, firstName, lastName, source string) (string, error)
 }
@@ -231,33 +231,38 @@ func (r *contactRepository) MergeTextCustomField(tenant, contactId string, field
 	return err
 }
 
-func (r *contactRepository) MergeContactAddress(tenant, contactId string, contact entity.ContactData) error {
+func (r *contactRepository) MergeContactDefaultPlace(tenant, contactId string, contact entity.ContactData) error {
 	session := utils.NewNeo4jWriteSession(*r.driver)
 	defer session.Close()
 
-	// Create new Address if it does not exist with given source property
-	// If Address exists, and sourceOfTruth is acceptable then update it.
-	//   otherwise create/update AlternateAddress for incoming source, with a new relationship 'ALTERNATE'
+	// Create new Place and Location if it does not exist with given source property
+	// If Place exists, and sourceOfTruth is acceptable then update it.
+	//   otherwise create/update AlternatePlace for incoming source, with a new relationship 'ALTERNATE'
+	// !!! Current assumption - there is single Location and place with source of externalSystem
 	query := "MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) " +
-		" MERGE (c)-[:LOCATED_AT]->(a:Address {source:$source}) " +
-		" ON CREATE SET a.id=randomUUID(), a.createdAt=$createdAt, a.source=$source, a.sourceOfTruth=$sourceOfTruth, a.appSource=$appSource, " +
-		"				a.country=$country, a.state=$state, a.city=$city, a.address=$address, a.zip=$zip, a.fax=$fax, a:%s " +
+		" MERGE (c)-[:ASSOCIATED_WITH]->(loc:Location {source:$source})-[:LOCATED_AT]->(p:Place {source:$source}) " +
+		" ON CREATE SET p.id=randomUUID(), p.createdAt=$createdAt, p.updatedAt=$createdAt, p.sourceOfTruth=$sourceOfTruth, p.appSource=$appSource, " +
+		"				p.country=$country, p.state=$state, p.city=$city, p.address=$address, p.zip=$zip, p.fax=$fax, p:%s," +
+		"				loc.id=randomUUID(), loc.appSource=$appSource, loc.sourceOfTruth=$sourceOfTruth, loc.name=$locationName, " +
+		"				loc.createdAt=$createdAt, loc.updatedAt=$createdAt, loc:%s " +
 		" ON MATCH SET 	" +
-		"             a.country = CASE WHEN a.sourceOfTruth=$sourceOfTruth THEN $country ELSE a.country END, " +
-		"             a.state = CASE WHEN a.sourceOfTruth=$sourceOfTruth THEN $state ELSE a.state END, " +
-		"             a.city = CASE WHEN a.sourceOfTruth=$sourceOfTruth THEN $city ELSE a.city END, " +
-		"             a.address = CASE WHEN a.sourceOfTruth=$sourceOfTruth THEN $address ELSE a.address END, " +
-		"             a.zip = CASE WHEN a.sourceOfTruth=$sourceOfTruth THEN $zip ELSE a.zip END, " +
-		"             a.fax = CASE WHEN a.sourceOfTruth=$sourceOfTruth THEN $fax ELSE a.fax END " +
-		" WITH a " +
-		" FOREACH (x in CASE WHEN a.sourceOfTruth <> $sourceOfTruth THEN [a] ELSE [] END | " +
-		"  MERGE (x)-[:ALTERNATE]->(alt:AlternateAddress {source:$source, id:x.id}) " +
+		"             p.country = CASE WHEN p.sourceOfTruth=$sourceOfTruth THEN $country ELSE p.country END, " +
+		"             p.state = CASE WHEN p.sourceOfTruth=$sourceOfTruth THEN $state ELSE p.state END, " +
+		"             p.city = CASE WHEN p.sourceOfTruth=$sourceOfTruth THEN $city ELSE p.city END, " +
+		"             p.address = CASE WHEN p.sourceOfTruth=$sourceOfTruth THEN $address ELSE p.address END, " +
+		"             p.zip = CASE WHEN p.sourceOfTruth=$sourceOfTruth THEN $zip ELSE p.zip END, " +
+		"             p.fax = CASE WHEN p.sourceOfTruth=$sourceOfTruth THEN $fax ELSE p.fax END, " +
+		"             p.updatedAt = CASE WHEN p.sourceOfTruth=$sourceOfTruth THEN $now ELSE p.updatedAt END, " +
+		"             loc.updatedAt = CASE WHEN p.sourceOfTruth=$sourceOfTruth THEN $now ELSE loc.updatedAt END " +
+		" WITH p " +
+		" FOREACH (x in CASE WHEN p.sourceOfTruth <> $sourceOfTruth THEN [p] ELSE [] END | " +
+		"  MERGE (x)-[:ALTERNATE]->(alt:AlternatePlace {source:$source, id:x.id}) " +
 		"    SET alt.updatedAt=$now, alt.appSource=$appSource, " +
 		" alt.country=$country, alt.state=$state, alt.city=$city, alt.address=$address, alt.zip=$zip, alt.fax=$fax " +
 		") "
 
 	_, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
-		_, err := tx.Run(fmt.Sprintf(query, "Address_"+tenant),
+		_, err := tx.Run(fmt.Sprintf(query, "Place_"+tenant, "Location_"+tenant),
 			map[string]interface{}{
 				"tenant":        tenant,
 				"contactId":     contactId,
@@ -271,6 +276,7 @@ func (r *contactRepository) MergeContactAddress(tenant, contactId string, contac
 				"source":        contact.ExternalSystem,
 				"sourceOfTruth": contact.ExternalSystem,
 				"appSource":     contact.ExternalSystem,
+				"locationName":  contact.DefaultLocationName,
 				"now":           time.Now().UTC(),
 			})
 		return nil, err

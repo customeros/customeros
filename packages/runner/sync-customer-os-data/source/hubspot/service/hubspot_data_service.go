@@ -66,6 +66,7 @@ func (s *hubspotDataService) GetContactsForSync(batchSize int, runId string) []e
 			Address:             hubspotContactProperties.Address,
 			Zip:                 hubspotContactProperties.Zip,
 			Fax:                 hubspotContactProperties.Fax,
+			DefaultLocationName: "Default location",
 		}
 		// set reference to primary company
 		if hubspotContactProperties.PrimaryCompanyExternalId.Valid {
@@ -149,6 +150,7 @@ func (s *hubspotDataService) GetOrganizationsForSync(batchSize int, runId string
 			Zip:                  hubspotCompanyProperties.Zip,
 			Phone:                hubspotCompanyProperties.Phone,
 			OrganizationTypeName: "COMPANY",
+			DefaultLocationName:  "Default location",
 		})
 		s.companies[v.Id] = v
 	}

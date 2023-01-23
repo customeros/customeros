@@ -14,13 +14,15 @@ type OrganizationData struct {
 	UpdatedAt      time.Time
 	ExternalId     string
 	ExternalSystem string
-	Country        string
-	State          string
-	City           string
-	Address        string
-	Address2       string
-	Zip            string
-	Phone          string
+
+	DefaultLocationName string
+	Country             string
+	State               string
+	City                string
+	Address             string
+	Address2            string
+	Zip                 string
+	Phone               string
 
 	OrganizationTypeName string
 }
