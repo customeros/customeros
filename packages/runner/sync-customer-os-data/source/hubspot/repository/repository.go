@@ -160,7 +160,7 @@ func GetNotes(db *gorm.DB, limit int, runId string) (entity.Notes, error) {
 		Raw(cte+" SELECT u.* FROM UpToDateData u left join openline_sync_status_notes s "+
 			" on u.id = s.id and u._airbyte_ab_id = s._airbyte_ab_id and u._airbyte_engagements_notes_hashid = s._airbyte_engagements_notes_hashid "+
 			" WHERE u.row_num = ? "+
-			" and (u.contacts is not null) "+
+			" and (u.contacts is not null or u.companies is not null) "+
 			" and (s.synced_to_customer_os is null or s.synced_to_customer_os = ?) "+
 			" and (s.synced_to_customer_os_attempt is null or s.synced_to_customer_os_attempt < ?) "+
 			" and (s.run_id is null or s.run_id <> ?) "+
