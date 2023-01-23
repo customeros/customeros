@@ -34,10 +34,11 @@ type ContactData struct {
 
 	ContactTypeName string
 
-	Country string
-	State   string
-	City    string
-	Address string
-	Zip     string
-	Fax     string
+	DefaultLocationName string
+	Country             string
+	State               string
+	City                string
+	Address             string
+	Zip                 string
+	Fax                 string
 }
