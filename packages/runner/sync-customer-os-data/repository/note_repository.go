@@ -11,6 +11,7 @@ import (
 type NoteRepository interface {
 	MergeNote(tenant string, syncDate time.Time, note entity.NoteData) (string, error)
 	NoteLinkWithContactByExternalId(tenant, noteId, contactExternalId, externalSystem string) error
+	NoteLinkWithOrganizationByExternalId(tenant, noteId, organizationExternalId, externalSystem string) error
 	NoteLinkWithUserByExternalId(tenant, noteId, userExternalId, externalSystem string) error
 	NoteLinkWithUserByExternalOwnerId(tenant, noteId, userExternalOwnerId, externalSystem string) error
 }
@@ -34,11 +35,12 @@ func (r *noteRepository) MergeNote(tenant string, syncDate time.Time, note entit
 	//   otherwise create/update AlternateNote for incoming source, with a new relationship 'ALTERNATE'
 	query := "MATCH (t:Tenant {name:$tenant})<-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]-(e:ExternalSystem {id:$externalSystem}) " +
 		"MERGE (n:Note)-[r:IS_LINKED_WITH {externalId:$externalId}]->(e) " +
-		"ON CREATE SET r.syncDate=$syncDate, n.id=randomUUID(), n.createdAt=$createdAt, " +
+		"ON CREATE SET r.syncDate=$syncDate, n.id=randomUUID(), n.createdAt=$createdAt, n.updatedAt=$createdAt, " +
 		"              n.source=$source, n.sourceOfTruth=$sourceOfTruth, n.appSource=$appSource, " +
 		"              n.html=$html, n:%s " +
 		"ON MATCH SET r.syncDate = CASE WHEN n.sourceOfTruth=$sourceOfTruth THEN $syncDate ELSE r.syncDate END, " +
-		"             n.html = CASE WHEN n.sourceOfTruth=$sourceOfTruth THEN $html ELSE n.html END " +
+		"             n.html = CASE WHEN n.sourceOfTruth=$sourceOfTruth THEN $html ELSE n.html END, " +
+		"             n.updatedAt = CASE WHEN n.sourceOfTruth=$sourceOfTruth THEN $now ELSE n.updatedAt END " +
 		"WITH n " +
 		"FOREACH (x in CASE WHEN n.sourceOfTruth <> $sourceOfTruth THEN [n] ELSE [] END | " +
 		"  MERGE (x)-[:ALTERNATE]->(alt:AlternateNote {source:$source, id:x.id}) " +
@@ -90,6 +92,27 @@ func (r *noteRepository) NoteLinkWithContactByExternalId(tenant, noteId, contact
 				"externalSystem":    externalSystem,
 				"noteId":            noteId,
 				"contactExternalId": contactExternalId,
+			})
+		return nil, err
+	})
+	return err
+}
+
+func (r *noteRepository) NoteLinkWithOrganizationByExternalId(tenant, noteId, organizationExternalId, externalSystem string) error {
+	session := utils.NewNeo4jWriteSession(*r.driver)
+	defer session.Close()
+
+	_, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
+		_, err := tx.Run(`
+				MATCH (t:Tenant {name:$tenant})<-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]-(e:ExternalSystem {id:$externalSystem})<-[:IS_LINKED_WITH {externalId:$organizationExternalId}]-(org:Organization)
+				MATCH (n:Note {id:$noteId})-[:IS_LINKED_WITH]->(e)
+				MERGE (org)-[:NOTED]->(n)
+				`,
+			map[string]interface{}{
+				"tenant":                 tenant,
+				"externalSystem":         externalSystem,
+				"noteId":                 noteId,
+				"organizationExternalId": organizationExternalId,
 			})
 		return nil, err
 	})

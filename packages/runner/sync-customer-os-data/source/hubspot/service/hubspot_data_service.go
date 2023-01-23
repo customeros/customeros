@@ -73,21 +73,7 @@ func (s *hubspotDataService) GetContactsForSync(batchSize int, runId string) []e
 			contactForCustomerOs.PrimaryOrganizationExternalId = strconv.FormatFloat(hubspotContactProperties.PrimaryCompanyExternalId.Float64, 'f', 0, 64)
 		}
 		// set reference to all linked companies
-		var companiesExternalIds []any
-		v.CompaniesExternalIds.AssignTo(&companiesExternalIds)
-		var strCompaniesExternalIds []string
-		for _, c := range companiesExternalIds {
-			if _, ok := c.(string); ok {
-				strCompaniesExternalIds = append(strCompaniesExternalIds, c.(string))
-			} else if _, ok := c.(int64); ok {
-				companyExternalId := strconv.FormatInt(c.(int64), 10)
-				strCompaniesExternalIds = append(strCompaniesExternalIds, companyExternalId)
-			} else if _, ok := c.(float64); ok {
-				companyExternalId := strconv.FormatFloat(c.(float64), 'f', 0, 64)
-				strCompaniesExternalIds = append(strCompaniesExternalIds, companyExternalId)
-			}
-		}
-		contactForCustomerOs.OrganizationsExternalIds = strCompaniesExternalIds
+		contactForCustomerOs.OrganizationsExternalIds = ConvertJsonbToStringSlice(v.CompaniesExternalIds)
 		// set custom fields
 		var textCustomFields []entity.TextCustomField
 		if len(hubspotContactProperties.LifecycleStage) > 0 {
@@ -204,21 +190,10 @@ func (s *hubspotDataService) GetNotesForSync(batchSize int, runId string) []enti
 			noteForCustomerOs.UserExternalId = strconv.FormatFloat(hubspotNoteProperties.CreatedByUserId.Float64, 'f', 0, 64)
 		}
 		// set reference to all linked contacts
-		var contactsExternalIds []any
-		v.ContactsExternalIds.AssignTo(&contactsExternalIds)
-		var strContactsExternalIds []string
-		for _, c := range contactsExternalIds {
-			if _, ok := c.(string); ok {
-				strContactsExternalIds = append(strContactsExternalIds, c.(string))
-			} else if _, ok := c.(int64); ok {
-				contactExternalId := strconv.FormatInt(c.(int64), 10)
-				strContactsExternalIds = append(strContactsExternalIds, contactExternalId)
-			} else if _, ok := c.(float64); ok {
-				contactExternalId := strconv.FormatFloat(c.(float64), 'f', 0, 64)
-				strContactsExternalIds = append(strContactsExternalIds, contactExternalId)
-			}
-		}
-		noteForCustomerOs.ContactsExternalIds = strContactsExternalIds
+		noteForCustomerOs.ContactsExternalIds = ConvertJsonbToStringSlice(v.ContactsExternalIds)
+		// set reference to all linked companies
+		noteForCustomerOs.OrganizationsExternalIds = ConvertJsonbToStringSlice(v.CompaniesExternalIds)
+
 		customerOsNotes = append(customerOsNotes, noteForCustomerOs)
 		s.notes[v.Id] = v
 	}
@@ -264,21 +239,7 @@ func (s *hubspotDataService) GetEmailMessagesForSync(batchSize int, runId string
 			emailForCustomerOS.Direction = entity.OUTBOUND
 		}
 		// set reference to all linked contacts
-		var contactsExternalIds []any
-		v.ContactsExternalIds.AssignTo(&contactsExternalIds)
-		var strContactsExternalIds []string
-		for _, c := range contactsExternalIds {
-			if _, ok := c.(string); ok {
-				strContactsExternalIds = append(strContactsExternalIds, c.(string))
-			} else if _, ok := c.(int64); ok {
-				contactExternalId := strconv.FormatInt(c.(int64), 10)
-				strContactsExternalIds = append(strContactsExternalIds, contactExternalId)
-			} else if _, ok := c.(float64); ok {
-				contactExternalId := strconv.FormatFloat(c.(float64), 'f', 0, 64)
-				strContactsExternalIds = append(strContactsExternalIds, contactExternalId)
-			}
-		}
-		emailForCustomerOS.ContactsExternalIds = strContactsExternalIds
+		emailForCustomerOS.ContactsExternalIds = ConvertJsonbToStringSlice(v.ContactsExternalIds)
 		customerOsEmails = append(customerOsEmails, emailForCustomerOS)
 		s.emails[v.Id] = v
 	}

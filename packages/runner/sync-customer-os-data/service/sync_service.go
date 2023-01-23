@@ -300,29 +300,40 @@ func (s *syncService) syncNotes(dataService common.DataService, syncDate time.Ti
 				logrus.Errorf("failed merge note with external reference %v for tenant %v :%v", note.ExternalId, tenant, err)
 			}
 
-			for _, contactExternalId := range note.ContactsExternalIds {
-				err = s.repositories.NoteRepository.NoteLinkWithContactByExternalId(tenant, noteId, contactExternalId, dataService.SourceId())
-				if err != nil {
-					failedSync = true
-					logrus.Errorf("failed link note %v with contact for tenant %v :%v", noteId, tenant, err)
+			if len(noteId) > 0 {
+				for _, contactExternalId := range note.ContactsExternalIds {
+					err = s.repositories.NoteRepository.NoteLinkWithContactByExternalId(tenant, noteId, contactExternalId, dataService.SourceId())
+					if err != nil {
+						failedSync = true
+						logrus.Errorf("failed link note %v with contact for tenant %v :%v", noteId, tenant, err)
+					}
+				}
+
+				for _, organizationExternalId := range note.OrganizationsExternalIds {
+					err = s.repositories.NoteRepository.NoteLinkWithOrganizationByExternalId(tenant, noteId, organizationExternalId, dataService.SourceId())
+					if err != nil {
+						failedSync = true
+						logrus.Errorf("failed link note %v with organization for tenant %v :%v", noteId, tenant, err)
+					}
+				}
+
+				if len(note.UserExternalId) > 0 {
+					err = s.repositories.NoteRepository.NoteLinkWithUserByExternalId(tenant, noteId, note.UserExternalId, dataService.SourceId())
+					if err != nil {
+						failedSync = true
+						logrus.Errorf("failed link note %v with user for tenant %v :%v", noteId, tenant, err)
+					}
+				} else if len(note.UserExternalOwnerId) > 0 {
+					err = s.repositories.NoteRepository.NoteLinkWithUserByExternalOwnerId(tenant, noteId, note.UserExternalOwnerId, dataService.SourceId())
+					if err != nil {
+						failedSync = true
+						logrus.Errorf("failed link note %v with user for tenant %v :%v", noteId, tenant, err)
+					}
 				}
 			}
-
-			if len(note.UserExternalId) > 0 {
-				err = s.repositories.NoteRepository.NoteLinkWithUserByExternalId(tenant, noteId, note.UserExternalId, dataService.SourceId())
-				if err != nil {
-					failedSync = true
-					logrus.Errorf("failed link note %v with user for tenant %v :%v", noteId, tenant, err)
-				}
-			} else if len(note.UserExternalOwnerId) > 0 {
-				err = s.repositories.NoteRepository.NoteLinkWithUserByExternalOwnerId(tenant, noteId, note.UserExternalOwnerId, dataService.SourceId())
-				if err != nil {
-					failedSync = true
-					logrus.Errorf("failed link note %v with user for tenant %v :%v", noteId, tenant, err)
-				}
+			if failedSync == false {
+				logrus.Debugf("successfully merged note with id %v for tenant %v from %v", noteId, tenant, dataService.SourceId())
 			}
-
-			logrus.Debugf("successfully merged note with id %v for tenant %v from %v", noteId, tenant, dataService.SourceId())
 			if err := dataService.MarkNoteProcessed(note.ExternalId, runId, failedSync == false); err != nil {
 				failed++
 				continue
