@@ -50,9 +50,10 @@ func (s *fieldSetTemplateService) FindLinkedWithFieldSet(ctx context.Context, fi
 func (s *fieldSetTemplateService) mapDbNodeToFieldSetTemplate(dbNode dbtype.Node) *entity.FieldSetTemplateEntity {
 	props := utils.GetPropsFromNode(dbNode)
 	fieldSetTemplate := entity.FieldSetTemplateEntity{
-		Id:    utils.GetStringPropOrEmpty(props, "id"),
-		Name:  utils.GetStringPropOrEmpty(props, "name"),
-		Order: utils.GetIntPropOrMinusOne(props, "order"),
+		Id:        utils.GetStringPropOrEmpty(props, "id"),
+		Name:      utils.GetStringPropOrEmpty(props, "name"),
+		Order:     utils.GetIntPropOrMinusOne(props, "order"),
+		CreatedAt: utils.GetTimePropOrNow(props, "createdAt"),
 	}
 	return &fieldSetTemplate
 }

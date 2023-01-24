@@ -71,6 +71,7 @@ func (s *customFieldTemplateService) mapDbNodeToCustomFieldTemplate(dbNode dbtyp
 		Length:    utils.GetIntPropOrNil(props, "length"),
 		Min:       utils.GetIntPropOrNil(props, "min"),
 		Max:       utils.GetIntPropOrNil(props, "max"),
+		CreatedAt: utils.GetTimePropOrNow(props, "createdAt"),
 	}
 	return &customFieldTemplate
 }

@@ -373,6 +373,7 @@ type CustomFieldInput struct {
 
 type CustomFieldTemplate struct {
 	ID        string                  `json:"id"`
+	CreatedAt time.Time               `json:"createdAt"`
 	Name      string                  `json:"name"`
 	Type      CustomFieldTemplateType `json:"type"`
 	Order     int                     `json:"order"`
@@ -507,6 +508,7 @@ type FieldSetInput struct {
 
 type FieldSetTemplate struct {
 	ID           string                 `json:"id"`
+	CreatedAt    time.Time              `json:"createdAt"`
 	Name         string                 `json:"name"`
 	Order        int                    `json:"order"`
 	CustomFields []*CustomFieldTemplate `json:"customFields"`

@@ -2,10 +2,12 @@ package entity
 
 import (
 	"fmt"
+	"time"
 )
 
 type FieldSetTemplateEntity struct {
 	Id           string
+	CreatedAt    time.Time
 	Name         string
 	Order        int64
 	CustomFields []*CustomFieldTemplateEntity

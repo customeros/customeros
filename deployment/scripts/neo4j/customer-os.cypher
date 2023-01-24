@@ -1,37 +1,37 @@
-CREATE CONSTRAINT tenant_name_unique IF NOT EXISTS ON (t:Tenant) ASSERT t.name IS UNIQUE;
-MERGE(t:Tenant {id:"2086420f-05fd-42c8-a7f3-a9688e65fe53", name: "openline"});
+MERGE(t:Tenant {id:"2086420f-05fd-42c8-a7f3-a9688e65fe53", name: "openline"})
+ ON CREATE SET t.createdAt=datetime({timezone: 'UTC'});
 
 MATCH (t:Tenant {name:"openline"})
  MERGE (t)<-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]-(e:ExternalSystem {id:"hubspot"})
- ON CREATE SET e.name="HubSpot";
+ ON CREATE SET e.name="HubSpot", e.createdAt=datetime({timezone: 'UTC'});
 
 MATCH (t:Tenant {name:"openline"})
   MERGE (t)<-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]-(e:ExternalSystem {id:"zendesk_support"})
-  ON CREATE SET e.name="Zendesk Support";
+  ON CREATE SET e.name="Zendesk Support", e.createdAt=datetime({timezone: 'UTC'});
 
 MATCH (t:Tenant {name:"openline"})
   MERGE (t)<-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]-(e:ExternalSystem {id:"zendesk_sell"})
-  ON CREATE SET e.name="Zendesk Sell";
+  ON CREATE SET e.name="Zendesk Sell", e.createdAt=datetime({timezone: 'UTC'});
 
 MATCH (t:Tenant {name:"openline"})
   MERGE (t)<-[:CONTACT_TYPE_BELONGS_TO_TENANT]-(ct:ContactType {name:"CUSTOMER"})
-  ON CREATE SET ct.id=randomUUID();
+  ON CREATE SET ct.id=randomUUID(), ct.createdAt=datetime({timezone: 'UTC'});
 
 MATCH (t:Tenant {name:"openline"})
   MERGE (t)<-[:CONTACT_TYPE_BELONGS_TO_TENANT]-(ct:ContactType {name:"SUPPLIER"})
-  ON CREATE SET ct.id=randomUUID();
+  ON CREATE SET ct.id=randomUUID(), ct.createdAt=datetime({timezone: 'UTC'});
 
 MATCH (t:Tenant {name:"openline"})
   MERGE (t)<-[:CONTACT_TYPE_BELONGS_TO_TENANT]-(ct:ContactType {name:"INVESTOR"})
-  ON CREATE SET ct.id=randomUUID();
+  ON CREATE SET ct.id=randomUUID(), ct.createdAt=datetime({timezone: 'UTC'});
 
 MATCH (t:Tenant {name:"openline"})
   MERGE (t)<-[:CONTACT_TYPE_BELONGS_TO_TENANT]-(ct:ContactType {name:"NOT_SET"})
-  ON CREATE SET ct.id=randomUUID();
+  ON CREATE SET ct.id=randomUUID(), ct.createdAt=datetime({timezone: 'UTC'});
 
 MATCH (t:Tenant {name:"openline"})
   MERGE (t)<-[:ORGANIZATION_TYPE_BELONGS_TO_TENANT]-(ot:OrganizationType {name:"COMPANY"})
-  ON CREATE SET ot.id=randomUUID();
+  ON CREATE SET ot.id=randomUUID(), ot.createdAt=datetime({timezone: 'UTC'});
 
 MATCH (t:Tenant {name:"openline"})
     MERGE (u:User {id:"dev@openline.ai"})-[:USER_BELONGS_TO_TENANT]->(t)
@@ -71,6 +71,7 @@ MATCH (t:Tenant {name:"openline"})<-[:USER_BELONGS_TO_TENANT]-(u:User) SET u:Use
 MATCH (t:Tenant {name:"openline"})<-[:CONTACT_BELONGS_TO_TENANT]-(c:Contact) SET c:Contact_openline;
 MATCH (c:Contact_openline)-[:EMAILED_AT]->(e:Email) SET e:Email_openline;
 
+CREATE CONSTRAINT tenant_name_unique IF NOT EXISTS ON (t:Tenant) ASSERT t.name IS UNIQUE;
 CREATE INDEX contact_id_idx IF NOT EXISTS FOR (n:Contact) ON (n.id);
 CREATE INDEX contact_type_id_idx IF NOT EXISTS FOR (n:ContactType) ON (n.id);
 CREATE INDEX contact_group_id_idx IF NOT EXISTS FOR (n:ContactGroup) ON (n.id);

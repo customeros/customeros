@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v4/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/utils"
+	"time"
 )
 
 type RoleRepository interface {
@@ -29,7 +30,8 @@ func (r *roleRepository) MergeRole(tenant, contactId, organizationExternalId, ex
 	query := "MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant}) " +
 		" MATCH (e:ExternalSystem {id:$externalSystemId})<-[:IS_LINKED_WITH {externalId:$organizationExternalId}]-(org:Organization)-[:ORGANIZATION_BELONGS_TO_TENANT]->(t) " +
 		" MERGE (c)-[:HAS_ROLE]->(r:Role)-[:WORKS]->(org) " +
-		" ON CREATE SET r.primary=false, r.id=randomUUID(), r.source=$source, r.sourceOfTruth=$sourceOfTruth, r.appSource=$appSource, r:%s " +
+		" ON CREATE SET r.primary=false, r.id=randomUUID(), r.source=$source, r.sourceOfTruth=$sourceOfTruth, r.appSource=$appSource, " +
+		"				r.createdAt=$now, r:%s " +
 		" RETURN r"
 
 	_, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
@@ -42,6 +44,7 @@ func (r *roleRepository) MergeRole(tenant, contactId, organizationExternalId, ex
 				"source":                 externalSystemId,
 				"sourceOfTruth":          externalSystemId,
 				"appSource":              externalSystemId,
+				"now":                    time.Now().UTC(),
 			})
 		if err != nil {
 			return nil, err

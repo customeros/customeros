@@ -18,9 +18,10 @@ func MapFieldSetTemplateInputToEntity(input model.FieldSetTemplateInput) *entity
 
 func MapEntityToFieldSetTemplate(entity *entity.FieldSetTemplateEntity) *model.FieldSetTemplate {
 	output := model.FieldSetTemplate{
-		ID:    entity.Id,
-		Name:  entity.Name,
-		Order: int(entity.Order),
+		ID:        entity.Id,
+		CreatedAt: entity.CreatedAt,
+		Name:      entity.Name,
+		Order:     int(entity.Order),
 	}
 	return &output
 }

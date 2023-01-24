@@ -97,7 +97,7 @@ func (r *organizationRepository) MergeOrganizationType(tenant, organizationId, o
 
 	query := "MATCH (org:Organization {id:$organizationId})-[:ORGANIZATION_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant}) " +
 		" MERGE (ot:OrganizationType {name:$organizationTypeName})-[:ORGANIZATION_TYPE_BELONGS_TO_TENANT]->(t) " +
-		" ON CREATE SET ot.id=randomUUID() " +
+		" ON CREATE SET ot.id=randomUUID(), ot.createdAt=$now " +
 		" WITH org, ot " +
 		" MERGE (org)-[r:IS_OF_TYPE]->(ot) " +
 		" return r"
@@ -108,6 +108,7 @@ func (r *organizationRepository) MergeOrganizationType(tenant, organizationId, o
 				"tenant":               tenant,
 				"organizationId":       organizationId,
 				"organizationTypeName": organizationTypeName,
+				"now":                  time.Now().UTC(),
 			})
 		if err != nil {
 			return nil, err

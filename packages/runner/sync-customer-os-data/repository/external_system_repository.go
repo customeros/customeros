@@ -3,6 +3,7 @@ package repository
 import (
 	"github.com/neo4j/neo4j-go-driver/v4/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/utils"
+	"time"
 )
 
 type ExternalSystemRepository interface {
@@ -27,11 +28,12 @@ func (r *externalSystemRepository) Merge(tenant, externalSystem string) error {
 		_, err := tx.Run(`
 				MATCH (t:Tenant {name:$tenant})
 				MERGE (t)<-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]-(e:ExternalSystem {id:$externalSystem})
-				ON CREATE SET e.name=$externalSystem
+				ON CREATE SET e.name=$externalSystem, e.createdAt=$now
 				`,
 			map[string]interface{}{
 				"tenant":         tenant,
 				"externalSystem": externalSystem,
+				"now":            time.Now().UTC(),
 			})
 		return nil, err
 	})
