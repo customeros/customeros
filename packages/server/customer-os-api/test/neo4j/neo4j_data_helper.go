@@ -32,9 +32,11 @@ func CreateHubspotExternalSystem(driver *neo4j.Driver, tenant string) {
 
 func CreateDefaultUser(driver *neo4j.Driver, tenant string) string {
 	return CreateUser(driver, tenant, entity.UserEntity{
-		FirstName: "first",
-		LastName:  "last",
-		Email:     "user@openline.ai",
+		FirstName:     "first",
+		LastName:      "last",
+		Email:         "user@openline.ai",
+		Source:        "openline",
+		SourceOfTruth: "openline",
 	})
 }
 
@@ -43,18 +45,22 @@ func CreateUser(driver *neo4j.Driver, tenant string, user entity.UserEntity) str
 	query := `
 		MATCH (t:Tenant {name:$tenant})
 			MERGE (u:User {
-				  id: $userId,
-				  firstName: $firstName,
-				  lastName: $lastName,
-				  email: $email,
-				  createdAt :datetime({timezone: 'UTC'})
+				  	id: $userId,
+				  	firstName: $firstName,
+				  	lastName: $lastName,
+				  	email: $email,
+					createdAt :datetime({timezone: 'UTC'}),
+					source: $source,
+					sourceOfTruth: $sourceOfTruth
 				})-[:USER_BELONGS_TO_TENANT]->(t)`
 	ExecuteWriteQuery(driver, query, map[string]any{
-		"tenant":    tenant,
-		"userId":    userId.String(),
-		"firstName": user.FirstName,
-		"lastName":  user.LastName,
-		"email":     user.Email,
+		"tenant":        tenant,
+		"userId":        userId.String(),
+		"firstName":     user.FirstName,
+		"lastName":      user.LastName,
+		"email":         user.Email,
+		"source":        user.Source,
+		"sourceOfTruth": user.SourceOfTruth,
 	})
 	return userId.String()
 }

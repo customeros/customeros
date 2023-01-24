@@ -14,6 +14,7 @@ import (
 
 type UserService interface {
 	Create(ctx context.Context, user *entity.UserEntity) (*entity.UserEntity, error)
+	Update(ctx context.Context, user *entity.UserEntity) (*entity.UserEntity, error)
 	FindAll(ctx context.Context, page, limit int, filter *model.Filter, sortBy []*model.SortBy) (*utils.Pagination, error)
 	FindUserById(ctx context.Context, userId string) (*entity.UserEntity, error)
 
@@ -42,6 +43,17 @@ func (s *userService) Create(ctx context.Context, entity *entity.UserEntity) (*e
 	defer session.Close()
 
 	userDbNode, err := s.repositories.UserRepository.Create(session, common.GetContext(ctx).Tenant, *entity)
+	if err != nil {
+		return nil, err
+	}
+	return s.mapDbNodeToUserEntity(*userDbNode), nil
+}
+
+func (s *userService) Update(ctx context.Context, entity *entity.UserEntity) (*entity.UserEntity, error) {
+	session := utils.NewNeo4jWriteSession(s.getNeo4jDriver())
+	defer session.Close()
+
+	userDbNode, err := s.repositories.UserRepository.Update(session, common.GetContext(ctx).Tenant, *entity)
 	if err != nil {
 		return nil, err
 	}

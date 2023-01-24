@@ -19,14 +19,14 @@ func TestMutationResolver_UserCreate(t *testing.T) {
 	assertRawResponseSuccess(t, rawResponse, err)
 
 	var user struct {
-		UserCreate model.User
+		User_Create model.User
 	}
 
 	err = decode.Decode(rawResponse.Data.(map[string]any), &user)
 	require.Nil(t, err)
 	require.NotNil(t, user)
 
-	createdUser := user.UserCreate
+	createdUser := user.User_Create
 	require.NotNil(t, createdUser.ID)
 	require.NotNil(t, createdUser.CreatedAt)
 	require.Equal(t, "first", createdUser.FirstName)
@@ -40,6 +40,35 @@ func TestMutationResolver_UserCreate(t *testing.T) {
 
 	// Check the labels on the nodes in the Neo4j database
 	assertNeo4jLabels(t, driver, []string{"Tenant", "User", "User_" + tenantName})
+}
+
+func TestMutationResolver_UserUpdate(t *testing.T) {
+	defer tearDownTestCase()(t)
+	neo4jt.CreateTenant(driver, tenantName)
+	userId := neo4jt.CreateDefaultUser(driver, tenantName)
+
+	rawResponse, err := c.RawPost(getQuery("update_user"),
+		client.Var("userId", userId))
+	assertRawResponseSuccess(t, rawResponse, err)
+
+	var user struct {
+		User_Update model.User
+	}
+
+	err = decode.Decode(rawResponse.Data.(map[string]any), &user)
+	require.Nil(t, err)
+	require.NotNil(t, user)
+
+	updatedUser := user.User_Update
+	require.Equal(t, userId, updatedUser.ID)
+	require.Equal(t, "firstUpdated", updatedUser.FirstName)
+	require.Equal(t, "lastUpdated", updatedUser.LastName)
+	require.Equal(t, "userUpdated@openline.ai", updatedUser.Email)
+	require.Equal(t, model.DataSourceOpenline, updatedUser.Source)
+
+	// Check the number of nodes and relationships in the Neo4j database
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "User"))
+	require.Equal(t, 1, neo4jt.GetCountOfRelationships(driver, "USER_BELONGS_TO_TENANT"))
 }
 
 func TestQueryResolver_Users(t *testing.T) {

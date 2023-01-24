@@ -16,6 +16,17 @@ func MapUserInputToEntity(input model.UserInput) *entity.UserEntity {
 	return &userEntity
 }
 
+func MapUserUpdateInputToEntity(input model.UserUpdateInput) *entity.UserEntity {
+	userEntity := entity.UserEntity{
+		Id:            input.ID,
+		FirstName:     input.FirstName,
+		LastName:      input.LastName,
+		Email:         input.Email,
+		SourceOfTruth: entity.DataSourceOpenline,
+	}
+	return &userEntity
+}
+
 func MapEntityToUser(userEntity *entity.UserEntity) *model.User {
 	return &model.User{
 		ID:        userEntity.Id,

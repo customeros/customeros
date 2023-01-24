@@ -790,6 +790,19 @@ func (this UserPage) GetTotalPages() int { return this.TotalPages }
 // **Required.**
 func (this UserPage) GetTotalElements() int64 { return this.TotalElements }
 
+type UserUpdateInput struct {
+	ID string `json:"id"`
+	// The first name of the customerOS user.
+	// **Required**
+	FirstName string `json:"firstName"`
+	// The last name of the customerOS user.
+	// **Required**
+	LastName string `json:"lastName"`
+	// The email address of the customerOS user.
+	// **Required**
+	Email string `json:"email"`
+}
+
 type ActionType string
 
 const (
