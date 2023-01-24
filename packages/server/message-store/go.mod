@@ -7,7 +7,7 @@ replace github.com/docker/docker => github.com/docker/docker v20.10.3-0.20221013
 replace github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module => ../customer-os-common-module
 
 require (
-	github.com/99designs/gqlgen v0.17.22
+	github.com/99designs/gqlgen v0.17.24
 	github.com/caarlos0/env/v6 v6.10.1
 	github.com/gin-gonic/gin v1.8.2
 	github.com/joho/godotenv v1.4.0
