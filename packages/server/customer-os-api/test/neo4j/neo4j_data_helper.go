@@ -217,11 +217,12 @@ func createCustomFieldInContact(driver *neo4j.Driver, contactId string, customFi
 	return fieldId.String()
 }
 
-func AddEmailToContact(driver *neo4j.Driver, contactId string, email string, primary bool, label string) {
+func AddEmailToContact(driver *neo4j.Driver, contactId string, email string, primary bool, label string) string {
+	var emailId, _ = uuid.NewRandom()
 	query := `
 			MATCH (c:Contact {id:$contactId})
 			MERGE (:Email {
-				  id: randomUUID(),
+				  id: $emailId,
 				  email: $email,
 				  label: $label
 				})<-[:EMAILED_AT {primary:$primary}]-(c)`
@@ -230,7 +231,9 @@ func AddEmailToContact(driver *neo4j.Driver, contactId string, email string, pri
 		"primary":   primary,
 		"email":     email,
 		"label":     label,
+		"emailId":   emailId.String(),
 	})
+	return emailId.String()
 }
 
 func AddPhoneNumberToContact(driver *neo4j.Driver, contactId string, e164 string, primary bool, label string) {

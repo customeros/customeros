@@ -63,7 +63,7 @@ func (s *emailService) MergeEmailToContact(ctx context.Context, contactId string
 
 	_, err = session.WriteTransaction(func(tx neo4j.Transaction) (interface{}, error) {
 		if entity.Primary == true {
-			err := setOtherContactEmailsNonPrimaryInTx(ctx, contactId, entity.Email, tx)
+			err := s.repositories.EmailRepository.SetOtherContactEmailsNonPrimaryInTx(tx, common.GetContext(ctx).Tenant, contactId, entity.Email)
 			if err != nil {
 				return nil, err
 			}
@@ -94,7 +94,7 @@ func (s *emailService) UpdateEmailForContact(ctx context.Context, contactId stri
 			return nil, err
 		}
 		if entity.Primary == true {
-			err := setOtherContactEmailsNonPrimaryInTx(ctx, contactId, entity.Email, tx)
+			err := s.repositories.EmailRepository.SetOtherContactEmailsNonPrimaryInTx(tx, common.GetContext(ctx).Tenant, contactId, entity.Email)
 			if err != nil {
 				return nil, err
 			}
@@ -160,20 +160,6 @@ func (s *emailService) DeleteById(ctx context.Context, contactId string, emailId
 	return queryResult.(bool), nil
 }
 
-func setOtherContactEmailsNonPrimaryInTx(ctx context.Context, contactId string, email string, tx neo4j.Transaction) error {
-	_, err := tx.Run(`
-			MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}),
-				 (c)-[r:EMAILED_AT]->(e:Email)
-			WHERE e.email <> $email
-            SET r.primary=false`,
-		map[string]interface{}{
-			"tenant":    common.GetContext(ctx).Tenant,
-			"contactId": contactId,
-			"email":     email,
-		})
-	return err
-}
-
 func (s *emailService) mapDbNodeToEmailEntity(node dbtype.Node) *entity.EmailEntity {
 	props := utils.GetPropsFromNode(node)
 	result := entity.EmailEntity{
@@ -182,6 +168,9 @@ func (s *emailService) mapDbNodeToEmailEntity(node dbtype.Node) *entity.EmailEnt
 		Label:         utils.GetStringPropOrEmpty(props, "label"),
 		Source:        entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
 		SourceOfTruth: entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
+		AppSource:     utils.GetStringPropOrEmpty(props, "appSource"),
+		CreatedAt:     utils.GetTimePropOrNil(props, "createdAt"),
+		UpdatedAt:     utils.GetTimePropOrNil(props, "updatedAt"),
 	}
 	return &result
 }

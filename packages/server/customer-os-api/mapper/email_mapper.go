@@ -1,6 +1,7 @@
 package mapper
 
 import (
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils"
@@ -16,6 +17,10 @@ func MapEmailInputToEntity(input *model.EmailInput) *entity.EmailEntity {
 		Primary:       utils.IfNotNilBool(input.Primary),
 		Source:        entity.DataSourceOpenline,
 		SourceOfTruth: entity.DataSourceOpenline,
+		AppSource:     utils.IfNotNilString(input.AppSource),
+	}
+	if len(emailEntity.AppSource) == 0 {
+		emailEntity.AppSource = common.AppSourceCustomerOsApi
 	}
 	return &emailEntity
 }
@@ -42,16 +47,20 @@ func MapEntitiesToEmails(entities *entity.EmailEntities) []*model.Email {
 	return emails
 }
 
-func MapEntityToEmail(emailEntity *entity.EmailEntity) *model.Email {
-	var label = model.EmailLabel(emailEntity.Label)
+func MapEntityToEmail(entity *entity.EmailEntity) *model.Email {
+	var label = model.EmailLabel(entity.Label)
 	if !label.IsValid() {
 		label = ""
 	}
 	return &model.Email{
-		ID:      emailEntity.Id,
-		Email:   emailEntity.Email,
-		Label:   &label,
-		Primary: emailEntity.Primary,
-		Source:  MapDataSourceToModel(emailEntity.Source),
+		ID:            entity.Id,
+		Email:         entity.Email,
+		Label:         &label,
+		Primary:       entity.Primary,
+		Source:        MapDataSourceToModel(entity.Source),
+		SourceOfTruth: MapDataSourceToModel(entity.SourceOfTruth),
+		AppSource:     entity.AppSource,
+		CreatedAt:     entity.CreatedAt,
+		UpdatedAt:     entity.UpdatedAt,
 	}
 }
