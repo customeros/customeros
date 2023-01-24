@@ -11,20 +11,20 @@ extend type Mutation {
 
 type Organization implements Node {
     id: ID!
+    createdAt:   Time!
     name: String!
     description: String
     domain:      String
     website:     String
     industry:    String
     isPublic:    Boolean
-    createdAt:   Time!
     organizationType: OrganizationType @goField(forceResolver: true)
 
     """
     All addresses associated with an organization in customerOS.
     **Required.  If no values it returns an empty array.**
     """
-    addresses: [Address!]! @goField(forceResolver: true)
+    addresses: [Place!]! @goField(forceResolver: true)
     source: DataSource!
     contactRoles: [ContactRole!]! @goField(forceResolver: true)
 }

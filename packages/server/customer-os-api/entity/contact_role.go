@@ -2,6 +2,7 @@ package entity
 
 import (
 	"fmt"
+	"time"
 )
 
 type ContactRoleEntity struct {
@@ -10,6 +11,7 @@ type ContactRoleEntity struct {
 	Primary       bool
 	Source        DataSource
 	SourceOfTruth DataSource
+	CreatedAt     time.Time
 }
 
 func (contactRole ContactRoleEntity) ToString() string {

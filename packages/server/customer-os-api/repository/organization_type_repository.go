@@ -32,7 +32,9 @@ func (r *organizationTypeRepository) Create(tenant string, organizationType *ent
 
 	query := "MATCH (t:Tenant {name:$tenant})" +
 		" MERGE (t)<-[:ORGANIZATION_TYPE_BELONGS_TO_TENANT]-(ot:OrganizationType {id:randomUUID()})" +
-		" ON CREATE SET ot.name=$name, ot:%s" +
+		" ON CREATE SET ot.name=$name, " +
+		"				ot.createdAt=datetime({timezone: 'UTC'}), " +
+		"				ot:%s" +
 		" RETURN ot"
 
 	if result, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {

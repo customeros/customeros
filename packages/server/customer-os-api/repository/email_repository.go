@@ -29,9 +29,19 @@ func NewEmailRepository(driver *neo4j.Driver) EmailRepository {
 func (r *emailRepository) MergeEmailToContactInTx(tx neo4j.Transaction, tenant, contactId string, entity entity.EmailEntity) (*dbtype.Node, *dbtype.Relationship, error) {
 	query := "MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) " +
 		" MERGE (c)-[r:EMAILED_AT]->(e:Email {email: $email}) " +
-		" ON CREATE SET e.label=$label, r.primary=$primary, e.id=randomUUID(), e.source=$source, e.sourceOfTruth=$sourceOfTruth, " +
-		" 				e.appSource=$appSource, e.createdAt=$now, e.updatedAt=$now, e:%s " +
-		" ON MATCH SET e.label=$label, r.primary=$primary, e.sourceOfTruth=$sourceOfTruth, e.updatedAt=$now " +
+		" ON CREATE SET e.label=$label, " +
+		"				r.primary=$primary, " +
+		"				e.id=randomUUID(), " +
+		"				e.source=$source, " +
+		"				e.sourceOfTruth=$sourceOfTruth, " +
+		" 				e.appSource=$appSource, " +
+		"				e.createdAt=$now, " +
+		"				e.updatedAt=$now, " +
+		"				e:%s " +
+		" ON MATCH SET 	e.label=$label, " +
+		"				r.primary=$primary, " +
+		"				e.sourceOfTruth=$sourceOfTruth, " +
+		"				e.updatedAt=$now " +
 		" RETURN e, r"
 
 	queryResult, err := tx.Run(fmt.Sprintf(query, "Email_"+tenant),
@@ -94,7 +104,8 @@ func (r *emailRepository) SetOtherContactEmailsNonPrimaryInTx(tx neo4j.Transacti
 			MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}),
 				 (c)-[r:EMAILED_AT]->(e:Email)
 			WHERE e.email <> $email
-            SET r.primary=false, e.updatedAt=$now`,
+            SET r.primary=false, 
+				e.updatedAt=$now`,
 		map[string]interface{}{
 			"tenant":    tenantId,
 			"contactId": contactId,

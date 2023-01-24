@@ -13,8 +13,8 @@ type EmailEntity struct {
 	Source        DataSource
 	SourceOfTruth DataSource
 	AppSource     string
-	CreatedAt     *time.Time
-	UpdatedAt     *time.Time
+	CreatedAt     time.Time
+	UpdatedAt     time.Time
 }
 
 func (email EmailEntity) ToString() string {

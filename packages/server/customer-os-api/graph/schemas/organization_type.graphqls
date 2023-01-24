@@ -11,6 +11,7 @@ extend type Query {
 type OrganizationType {
     id: ID!
     name: String!
+    createdAt: Time!
 }
 
 input OrganizationTypeInput {

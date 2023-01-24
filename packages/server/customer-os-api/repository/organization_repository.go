@@ -33,10 +33,17 @@ func NewOrganizationRepository(driver *neo4j.Driver) OrganizationRepository {
 func (r *organizationRepository) Create(tx neo4j.Transaction, tenant string, organization entity.OrganizationEntity) (*dbtype.Node, error) {
 	query := "MATCH (t:Tenant {name:$tenant})" +
 		" MERGE (t)<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {id:randomUUID()})" +
-		" ON CREATE SET org.name=$name, org.description=$description, org.readonly=false," +
-		" org.domain=$domain, org.website=$website, org.industry=$industry, org.isPublic=$isPublic, " +
-		" org.source=$source, org.sourceOfTruth=$sourceOfTruth," +
-		" org:%s" +
+		" ON CREATE SET org.name=$name, " +
+		"				org.description=$description, " +
+		"				org.readonly=false, " +
+		" 				org.domain=$domain, " +
+		"				org.website=$website, " +
+		"				org.industry=$industry, " +
+		"				org.isPublic=$isPublic, " +
+		" 				org.source=$source, " +
+		"				org.sourceOfTruth=$sourceOfTruth, " +
+		"				org.createdAt=datetime({timezone: 'UTC'}), " +
+		" 				org:%s" +
 		" RETURN org"
 
 	queryResult, err := tx.Run(fmt.Sprintf(query, "Organization_"+tenant),

@@ -46,6 +46,8 @@ type ContactGroup {
 
     source: DataSource!
 
+    createdAt: Time!
+
     contacts(pagination: Pagination, where: Filter, sort: [SortBy!]): ContactsPage! @goField(forceResolver: true)
 }
 

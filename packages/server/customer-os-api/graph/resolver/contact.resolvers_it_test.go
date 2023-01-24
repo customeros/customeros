@@ -520,7 +520,7 @@ func TestQueryResolver_Contact_WithAddresses_ById(t *testing.T) {
 	neo4jt.CreateTenant(driver, tenantName)
 	contactId := neo4jt.CreateDefaultContact(driver, tenantName)
 	anotherContactId := neo4jt.CreateDefaultContact(driver, tenantName)
-	addressInput := entity.AddressEntity{
+	addressInput := entity.PlaceEntity{
 		Source:        entity.DataSourceHubspot,
 		SourceOfTruth: entity.DataSourceHubspot,
 		Country:       "testCountry",
@@ -533,7 +533,7 @@ func TestQueryResolver_Contact_WithAddresses_ById(t *testing.T) {
 		Fax:           "testFax",
 	}
 	address1 := neo4jt.CreateAddress(driver, addressInput)
-	address2 := neo4jt.CreateAddress(driver, entity.AddressEntity{
+	address2 := neo4jt.CreateAddress(driver, entity.PlaceEntity{
 		Source: "manual",
 	})
 	neo4jt.ContactHasAddress(driver, contactId, address1)

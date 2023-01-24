@@ -1,5 +1,6 @@
-type Address {
+type Place {
     id: ID!
+    createdAt: Time!
     country: String
     state: String
     city: String

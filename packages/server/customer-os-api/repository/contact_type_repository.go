@@ -32,7 +32,9 @@ func (r *contactTypeRepository) Create(tenant string, contactType *entity.Contac
 
 	query := "MATCH (t:Tenant {name:$tenant})" +
 		" MERGE (t)<-[:CONTACT_TYPE_BELONGS_TO_TENANT]-(c:ContactType {id:randomUUID()})" +
-		" ON CREATE SET c.name=$name, c:%s" +
+		" ON CREATE SET c.name=$name, " +
+		"				c.createdAt=datetime({timezone: 'UTC'}), " +
+		"				c:%s" +
 		" RETURN c"
 
 	if result, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {

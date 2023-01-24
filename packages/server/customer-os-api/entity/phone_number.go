@@ -2,6 +2,7 @@ package entity
 
 import (
 	"fmt"
+	"time"
 )
 
 type PhoneNumberEntity struct {
@@ -11,6 +12,7 @@ type PhoneNumberEntity struct {
 	Primary       bool
 	Source        DataSource
 	SourceOfTruth DataSource
+	CreatedAt     time.Time
 }
 
 func (phone PhoneNumberEntity) ToString() string {

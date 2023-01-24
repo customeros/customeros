@@ -21,17 +21,18 @@ func MapContactGroupUpdateInputToEntity(input model.ContactGroupUpdateInput) *en
 	}
 }
 
-func MapEntityToContactGroup(contactGroup *entity.ContactGroupEntity) *model.ContactGroup {
+func MapEntityToContactGroup(entity *entity.ContactGroupEntity) *model.ContactGroup {
 	return &model.ContactGroup{
-		ID:     contactGroup.Id,
-		Name:   contactGroup.Name,
-		Source: MapDataSourceToModel(contactGroup.Source),
+		ID:        entity.Id,
+		Name:      entity.Name,
+		Source:    MapDataSourceToModel(entity.Source),
+		CreatedAt: entity.CreatedAt,
 	}
 }
 
-func MapEntitiesToContactGroups(contactGroupEntities *entity.ContactGroupEntities) []*model.ContactGroup {
+func MapEntitiesToContactGroups(entities *entity.ContactGroupEntities) []*model.ContactGroup {
 	var contactGroups []*model.ContactGroup
-	for _, contactGroupEntity := range *contactGroupEntities {
+	for _, contactGroupEntity := range *entities {
 		contactGroups = append(contactGroups, MapEntityToContactGroup(&contactGroupEntity))
 	}
 	return contactGroups

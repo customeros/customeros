@@ -1,10 +1,14 @@
 package entity
 
-import "fmt"
+import (
+	"fmt"
+	"time"
+)
 
 type ContactTypeEntity struct {
-	Id   string
-	Name string
+	Id        string
+	Name      string
+	CreatedAt time.Time
 }
 
 func (contactType ContactTypeEntity) ToString() string {

@@ -28,9 +28,14 @@ func NewCustomFieldTemplateRepository(driver *neo4j.Driver) CustomFieldTemplateR
 func (r *customFieldTemplateRepository) createCustomFieldTemplateForEntityInTx(tx neo4j.Transaction, tenant, entityTemplateId string, entity *entity.CustomFieldTemplateEntity) error {
 	query := "MATCH (e:EntityTemplate {id:$entityTemplateId}) " +
 		" MERGE (e)-[:CONTAINS]->(f:CustomFieldTemplate {id:randomUUID(), name:$name}) " +
-		" ON CREATE SET f:%s, f.createdAt=datetime({timezone: 'UTC'}), " +
-		"  				f.order=$order, f.mandatory=$mandatory, f.type=$type, f.length=$length, " +
-		"  				f.min=$min, f.max=$max"
+		" ON CREATE SET f:%s, " +
+		"				f.createdAt=datetime({timezone: 'UTC'}), " +
+		"  				f.order=$order, " +
+		"				f.mandatory=$mandatory, " +
+		"				f.type=$type, " +
+		"				f.length=$length, " +
+		"  				f.min=$min, " +
+		"				f.max=$max"
 
 	_, err := tx.Run(fmt.Sprintf(query, "CustomFieldTemplate_"+tenant),
 		map[string]any{
@@ -50,8 +55,14 @@ func (r *customFieldTemplateRepository) createCustomFieldTemplateForEntityInTx(t
 func (r *customFieldTemplateRepository) createCustomFieldTemplateForFieldSetInTx(tx neo4j.Transaction, tenant, fieldSetTemplateId string, entity *entity.CustomFieldTemplateEntity) error {
 	query := "MATCH (d:FieldSetTemplate {id:$fieldSetTemplateId}) " +
 		" MERGE (d)-[:CONTAINS]->(f:CustomFieldTemplate {id:randomUUID(), name:$name}) " +
-		" ON CREATE SET f:%s, f.createdAt=datetime({timezone: 'UTC'}), " +
-		"				f.order=$order, f.mandatory=$mandatory, f.type=$type, f.length=$length, f.min=$min, f.max=$max"
+		" ON CREATE SET f:%s, " +
+		"				f.createdAt=datetime({timezone: 'UTC'}), " +
+		"				f.order=$order, " +
+		"				f.mandatory=$mandatory, " +
+		"				f.type=$type, " +
+		"				f.length=$length, " +
+		"				f.min=$min, " +
+		"				f.max=$max"
 	_, err := tx.Run(fmt.Sprintf(query, "CustomFieldTemplate_"+tenant),
 		map[string]any{
 			"fieldSetTemplateId": fieldSetTemplateId,

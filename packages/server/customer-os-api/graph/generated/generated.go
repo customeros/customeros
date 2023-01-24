@@ -56,19 +56,6 @@ type DirectiveRoot struct {
 }
 
 type ComplexityRoot struct {
-	Address struct {
-		Address  func(childComplexity int) int
-		Address2 func(childComplexity int) int
-		City     func(childComplexity int) int
-		Country  func(childComplexity int) int
-		Fax      func(childComplexity int) int
-		ID       func(childComplexity int) int
-		Phone    func(childComplexity int) int
-		Source   func(childComplexity int) int
-		State    func(childComplexity int) int
-		Zip      func(childComplexity int) int
-	}
-
 	Contact struct {
 		Actions       func(childComplexity int, from time.Time, to time.Time, actionTypes []model.ActionType) int
 		Addresses     func(childComplexity int) int
@@ -93,10 +80,11 @@ type ComplexityRoot struct {
 	}
 
 	ContactGroup struct {
-		Contacts func(childComplexity int, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) int
-		ID       func(childComplexity int) int
-		Name     func(childComplexity int) int
-		Source   func(childComplexity int) int
+		Contacts  func(childComplexity int, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) int
+		CreatedAt func(childComplexity int) int
+		ID        func(childComplexity int) int
+		Name      func(childComplexity int) int
+		Source    func(childComplexity int) int
 	}
 
 	ContactGroupPage struct {
@@ -107,6 +95,7 @@ type ComplexityRoot struct {
 
 	ContactRole struct {
 		Contact      func(childComplexity int) int
+		CreatedAt    func(childComplexity int) int
 		ID           func(childComplexity int) int
 		JobTitle     func(childComplexity int) int
 		Organization func(childComplexity int) int
@@ -115,8 +104,9 @@ type ComplexityRoot struct {
 	}
 
 	ContactType struct {
-		ID   func(childComplexity int) int
-		Name func(childComplexity int) int
+		CreatedAt func(childComplexity int) int
+		ID        func(childComplexity int) int
+		Name      func(childComplexity int) int
 	}
 
 	ContactsPage struct {
@@ -299,8 +289,9 @@ type ComplexityRoot struct {
 	}
 
 	OrganizationType struct {
-		ID   func(childComplexity int) int
-		Name func(childComplexity int) int
+		CreatedAt func(childComplexity int) int
+		ID        func(childComplexity int) int
+		Name      func(childComplexity int) int
 	}
 
 	PageViewAction struct {
@@ -316,11 +307,26 @@ type ComplexityRoot struct {
 	}
 
 	PhoneNumber struct {
-		E164    func(childComplexity int) int
-		ID      func(childComplexity int) int
-		Label   func(childComplexity int) int
-		Primary func(childComplexity int) int
-		Source  func(childComplexity int) int
+		CreatedAt func(childComplexity int) int
+		E164      func(childComplexity int) int
+		ID        func(childComplexity int) int
+		Label     func(childComplexity int) int
+		Primary   func(childComplexity int) int
+		Source    func(childComplexity int) int
+	}
+
+	Place struct {
+		Address   func(childComplexity int) int
+		Address2  func(childComplexity int) int
+		City      func(childComplexity int) int
+		Country   func(childComplexity int) int
+		CreatedAt func(childComplexity int) int
+		Fax       func(childComplexity int) int
+		ID        func(childComplexity int) int
+		Phone     func(childComplexity int) int
+		Source    func(childComplexity int) int
+		State     func(childComplexity int) int
+		Zip       func(childComplexity int) int
 	}
 
 	Query struct {
@@ -366,7 +372,7 @@ type ContactResolver interface {
 	Groups(ctx context.Context, obj *model.Contact) ([]*model.ContactGroup, error)
 	PhoneNumbers(ctx context.Context, obj *model.Contact) ([]*model.PhoneNumber, error)
 	Emails(ctx context.Context, obj *model.Contact) ([]*model.Email, error)
-	Addresses(ctx context.Context, obj *model.Contact) ([]*model.Address, error)
+	Addresses(ctx context.Context, obj *model.Contact) ([]*model.Place, error)
 	CustomFields(ctx context.Context, obj *model.Contact) ([]*model.CustomField, error)
 	FieldSets(ctx context.Context, obj *model.Contact) ([]*model.FieldSet, error)
 	Template(ctx context.Context, obj *model.Contact) (*model.EntityTemplate, error)
@@ -455,7 +461,7 @@ type NoteResolver interface {
 }
 type OrganizationResolver interface {
 	OrganizationType(ctx context.Context, obj *model.Organization) (*model.OrganizationType, error)
-	Addresses(ctx context.Context, obj *model.Organization) ([]*model.Address, error)
+	Addresses(ctx context.Context, obj *model.Organization) ([]*model.Place, error)
 
 	ContactRoles(ctx context.Context, obj *model.Organization) ([]*model.ContactRole, error)
 }
@@ -492,76 +498,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 	ec := executionContext{nil, e}
 	_ = ec
 	switch typeName + "." + field {
-
-	case "Address.address":
-		if e.complexity.Address.Address == nil {
-			break
-		}
-
-		return e.complexity.Address.Address(childComplexity), true
-
-	case "Address.address2":
-		if e.complexity.Address.Address2 == nil {
-			break
-		}
-
-		return e.complexity.Address.Address2(childComplexity), true
-
-	case "Address.city":
-		if e.complexity.Address.City == nil {
-			break
-		}
-
-		return e.complexity.Address.City(childComplexity), true
-
-	case "Address.country":
-		if e.complexity.Address.Country == nil {
-			break
-		}
-
-		return e.complexity.Address.Country(childComplexity), true
-
-	case "Address.fax":
-		if e.complexity.Address.Fax == nil {
-			break
-		}
-
-		return e.complexity.Address.Fax(childComplexity), true
-
-	case "Address.id":
-		if e.complexity.Address.ID == nil {
-			break
-		}
-
-		return e.complexity.Address.ID(childComplexity), true
-
-	case "Address.phone":
-		if e.complexity.Address.Phone == nil {
-			break
-		}
-
-		return e.complexity.Address.Phone(childComplexity), true
-
-	case "Address.source":
-		if e.complexity.Address.Source == nil {
-			break
-		}
-
-		return e.complexity.Address.Source(childComplexity), true
-
-	case "Address.state":
-		if e.complexity.Address.State == nil {
-			break
-		}
-
-		return e.complexity.Address.State(childComplexity), true
-
-	case "Address.zip":
-		if e.complexity.Address.Zip == nil {
-			break
-		}
-
-		return e.complexity.Address.Zip(childComplexity), true
 
 	case "Contact.actions":
 		if e.complexity.Contact.Actions == nil {
@@ -730,6 +666,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.ContactGroup.Contacts(childComplexity, args["pagination"].(*model.Pagination), args["where"].(*model.Filter), args["sort"].([]*model.SortBy)), true
 
+	case "ContactGroup.createdAt":
+		if e.complexity.ContactGroup.CreatedAt == nil {
+			break
+		}
+
+		return e.complexity.ContactGroup.CreatedAt(childComplexity), true
+
 	case "ContactGroup.id":
 		if e.complexity.ContactGroup.ID == nil {
 			break
@@ -779,6 +722,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.ContactRole.Contact(childComplexity), true
 
+	case "ContactRole.createdAt":
+		if e.complexity.ContactRole.CreatedAt == nil {
+			break
+		}
+
+		return e.complexity.ContactRole.CreatedAt(childComplexity), true
+
 	case "ContactRole.id":
 		if e.complexity.ContactRole.ID == nil {
 			break
@@ -813,6 +763,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.ContactRole.Source(childComplexity), true
+
+	case "ContactType.createdAt":
+		if e.complexity.ContactType.CreatedAt == nil {
+			break
+		}
+
+		return e.complexity.ContactType.CreatedAt(childComplexity), true
 
 	case "ContactType.id":
 		if e.complexity.ContactType.ID == nil {
@@ -2027,6 +1984,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.OrganizationPage.TotalPages(childComplexity), true
 
+	case "OrganizationType.createdAt":
+		if e.complexity.OrganizationType.CreatedAt == nil {
+			break
+		}
+
+		return e.complexity.OrganizationType.CreatedAt(childComplexity), true
+
 	case "OrganizationType.id":
 		if e.complexity.OrganizationType.ID == nil {
 			break
@@ -2104,6 +2068,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.PageViewAction.StartedAt(childComplexity), true
 
+	case "PhoneNumber.createdAt":
+		if e.complexity.PhoneNumber.CreatedAt == nil {
+			break
+		}
+
+		return e.complexity.PhoneNumber.CreatedAt(childComplexity), true
+
 	case "PhoneNumber.e164":
 		if e.complexity.PhoneNumber.E164 == nil {
 			break
@@ -2138,6 +2109,83 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.PhoneNumber.Source(childComplexity), true
+
+	case "Place.address":
+		if e.complexity.Place.Address == nil {
+			break
+		}
+
+		return e.complexity.Place.Address(childComplexity), true
+
+	case "Place.address2":
+		if e.complexity.Place.Address2 == nil {
+			break
+		}
+
+		return e.complexity.Place.Address2(childComplexity), true
+
+	case "Place.city":
+		if e.complexity.Place.City == nil {
+			break
+		}
+
+		return e.complexity.Place.City(childComplexity), true
+
+	case "Place.country":
+		if e.complexity.Place.Country == nil {
+			break
+		}
+
+		return e.complexity.Place.Country(childComplexity), true
+
+	case "Place.createdAt":
+		if e.complexity.Place.CreatedAt == nil {
+			break
+		}
+
+		return e.complexity.Place.CreatedAt(childComplexity), true
+
+	case "Place.fax":
+		if e.complexity.Place.Fax == nil {
+			break
+		}
+
+		return e.complexity.Place.Fax(childComplexity), true
+
+	case "Place.id":
+		if e.complexity.Place.ID == nil {
+			break
+		}
+
+		return e.complexity.Place.ID(childComplexity), true
+
+	case "Place.phone":
+		if e.complexity.Place.Phone == nil {
+			break
+		}
+
+		return e.complexity.Place.Phone(childComplexity), true
+
+	case "Place.source":
+		if e.complexity.Place.Source == nil {
+			break
+		}
+
+		return e.complexity.Place.Source(childComplexity), true
+
+	case "Place.state":
+		if e.complexity.Place.State == nil {
+			break
+		}
+
+		return e.complexity.Place.State(childComplexity), true
+
+	case "Place.zip":
+		if e.complexity.Place.Zip == nil {
+			break
+		}
+
+		return e.complexity.Place.Zip(childComplexity), true
 
 	case "Query.contact":
 		if e.complexity.Query.Contact == nil {
@@ -2483,8 +2531,9 @@ type PageViewAction implements Node {
 enum ActionType {
     PAGE_VIEW
 }`, BuiltIn: false},
-	{Name: "../schemas/address.graphqls", Input: `type Address {
+	{Name: "../schemas/address.graphqls", Input: `type Place {
     id: ID!
+    createdAt: Time!
     country: String
     state: String
     city: String
@@ -2595,7 +2644,7 @@ type Contact implements ExtensibleEntity & Node {
     All addresses associated with a contact in customerOS.
     **Required.  If no values it returns an empty array.**
     """
-    addresses: [Address!]! @goField(forceResolver: true)
+    addresses: [Place!]! @goField(forceResolver: true)
 
     """
     User defined metadata appended to the contact record in customerOS.
@@ -2803,6 +2852,8 @@ type ContactGroup {
 
     source: DataSource!
 
+    createdAt: Time!
+
     contacts(pagination: Pagination, where: Filter, sort: [SortBy!]): ContactsPage! @goField(forceResolver: true)
 }
 
@@ -2875,6 +2926,7 @@ Describes the relationship a Contact has with a Organization.
 """
 type ContactRole {
     id: ID!
+    createdAt: Time!
 
     """
     Organization associated with a Contact.
@@ -2905,8 +2957,19 @@ input ContactRoleInput {
 
     primary: Boolean
 }`, BuiltIn: false},
-	{Name: "../schemas/contact_type.graphqls", Input: `type ContactType {
+	{Name: "../schemas/contact_type.graphqls", Input: `extend type Query {
+    contactTypes: [ContactType!]!
+}
+
+extend type Mutation {
+    contactType_Create(input: ContactTypeInput!): ContactType!
+    contactType_Update(input: ContactTypeUpdateInput!): ContactType
+    contactType_Delete(id: ID!): Result
+}
+
+type ContactType {
     id: ID!
+    createdAt: Time!
     name: String!
 }
 
@@ -2917,16 +2980,6 @@ input ContactTypeInput {
 input ContactTypeUpdateInput {
     id: ID!
     name: String!
-}
-
-extend type Mutation {
-    contactType_Create(input: ContactTypeInput!): ContactType!
-    contactType_Update(input: ContactTypeUpdateInput!): ContactType
-    contactType_Delete(id: ID!): Result
-}
-
-extend type Query {
-    contactTypes: [ContactType!]!
 }`, BuiltIn: false},
 	{Name: "../schemas/conversation.graphqls", Input: `extend type Mutation {
 #    DO NOT USE THIS IN PRODUCTION
@@ -3183,9 +3236,9 @@ type Email {
 
     appSource: String!
 
-    createdAt: Time
+    createdAt: Time!
 
-    updatedAt: Time
+    updatedAt: Time!
 }
 
 """
@@ -3456,20 +3509,20 @@ extend type Mutation {
 
 type Organization implements Node {
     id: ID!
+    createdAt:   Time!
     name: String!
     description: String
     domain:      String
     website:     String
     industry:    String
     isPublic:    Boolean
-    createdAt:   Time!
     organizationType: OrganizationType @goField(forceResolver: true)
 
     """
     All addresses associated with an organization in customerOS.
     **Required.  If no values it returns an empty array.**
     """
-    addresses: [Address!]! @goField(forceResolver: true)
+    addresses: [Place!]! @goField(forceResolver: true)
     source: DataSource!
     contactRoles: [ContactRole!]! @goField(forceResolver: true)
 }
@@ -3506,6 +3559,7 @@ extend type Query {
 type OrganizationType {
     id: ID!
     name: String!
+    createdAt: Time!
 }
 
 input OrganizationTypeInput {
@@ -3550,6 +3604,8 @@ type PhoneNumber {
     **Required**
     """
     primary: Boolean!
+
+    createdAt: Time!
 
     source: DataSource!
 }
@@ -5191,419 +5247,6 @@ func (ec *executionContext) field___Type_fields_args(ctx context.Context, rawArg
 
 // region    **************************** field.gotpl *****************************
 
-func (ec *executionContext) _Address_id(ctx context.Context, field graphql.CollectedField, obj *model.Address) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Address_id(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.ID, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNID2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Address_id(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Address",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type ID does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Address_country(ctx context.Context, field graphql.CollectedField, obj *model.Address) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Address_country(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Country, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*string)
-	fc.Result = res
-	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Address_country(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Address",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Address_state(ctx context.Context, field graphql.CollectedField, obj *model.Address) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Address_state(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.State, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*string)
-	fc.Result = res
-	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Address_state(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Address",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Address_city(ctx context.Context, field graphql.CollectedField, obj *model.Address) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Address_city(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.City, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*string)
-	fc.Result = res
-	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Address_city(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Address",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Address_address(ctx context.Context, field graphql.CollectedField, obj *model.Address) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Address_address(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Address, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*string)
-	fc.Result = res
-	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Address_address(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Address",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Address_address2(ctx context.Context, field graphql.CollectedField, obj *model.Address) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Address_address2(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Address2, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*string)
-	fc.Result = res
-	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Address_address2(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Address",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Address_zip(ctx context.Context, field graphql.CollectedField, obj *model.Address) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Address_zip(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Zip, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*string)
-	fc.Result = res
-	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Address_zip(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Address",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Address_phone(ctx context.Context, field graphql.CollectedField, obj *model.Address) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Address_phone(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Phone, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*string)
-	fc.Result = res
-	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Address_phone(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Address",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Address_fax(ctx context.Context, field graphql.CollectedField, obj *model.Address) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Address_fax(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Fax, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*string)
-	fc.Result = res
-	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Address_fax(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Address",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Address_source(ctx context.Context, field graphql.CollectedField, obj *model.Address) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Address_source(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Source, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*model.DataSource)
-	fc.Result = res
-	return ec.marshalODataSource2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐDataSource(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Address_source(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Address",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type DataSource does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
 func (ec *executionContext) _Contact_id(ctx context.Context, field graphql.CollectedField, obj *model.Contact) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Contact_id(ctx, field)
 	if err != nil {
@@ -5938,6 +5581,8 @@ func (ec *executionContext) fieldContext_Contact_contactType(ctx context.Context
 			switch field.Name {
 			case "id":
 				return ec.fieldContext_ContactType_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_ContactType_createdAt(ctx, field)
 			case "name":
 				return ec.fieldContext_ContactType_name(ctx, field)
 			}
@@ -5988,6 +5633,8 @@ func (ec *executionContext) fieldContext_Contact_roles(ctx context.Context, fiel
 			switch field.Name {
 			case "id":
 				return ec.fieldContext_ContactRole_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_ContactRole_createdAt(ctx, field)
 			case "organization":
 				return ec.fieldContext_ContactRole_organization(ctx, field)
 			case "contact":
@@ -6050,6 +5697,8 @@ func (ec *executionContext) fieldContext_Contact_groups(ctx context.Context, fie
 				return ec.fieldContext_ContactGroup_name(ctx, field)
 			case "source":
 				return ec.fieldContext_ContactGroup_source(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_ContactGroup_createdAt(ctx, field)
 			case "contacts":
 				return ec.fieldContext_ContactGroup_contacts(ctx, field)
 			}
@@ -6106,6 +5755,8 @@ func (ec *executionContext) fieldContext_Contact_phoneNumbers(ctx context.Contex
 				return ec.fieldContext_PhoneNumber_label(ctx, field)
 			case "primary":
 				return ec.fieldContext_PhoneNumber_primary(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_PhoneNumber_createdAt(ctx, field)
 			case "source":
 				return ec.fieldContext_PhoneNumber_source(ctx, field)
 			}
@@ -6205,9 +5856,9 @@ func (ec *executionContext) _Contact_addresses(ctx context.Context, field graphq
 		}
 		return graphql.Null
 	}
-	res := resTmp.([]*model.Address)
+	res := resTmp.([]*model.Place)
 	fc.Result = res
-	return ec.marshalNAddress2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐAddressᚄ(ctx, field.Selections, res)
+	return ec.marshalNPlace2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐPlaceᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Contact_addresses(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -6219,27 +5870,29 @@ func (ec *executionContext) fieldContext_Contact_addresses(ctx context.Context, 
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
 			case "id":
-				return ec.fieldContext_Address_id(ctx, field)
+				return ec.fieldContext_Place_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Place_createdAt(ctx, field)
 			case "country":
-				return ec.fieldContext_Address_country(ctx, field)
+				return ec.fieldContext_Place_country(ctx, field)
 			case "state":
-				return ec.fieldContext_Address_state(ctx, field)
+				return ec.fieldContext_Place_state(ctx, field)
 			case "city":
-				return ec.fieldContext_Address_city(ctx, field)
+				return ec.fieldContext_Place_city(ctx, field)
 			case "address":
-				return ec.fieldContext_Address_address(ctx, field)
+				return ec.fieldContext_Place_address(ctx, field)
 			case "address2":
-				return ec.fieldContext_Address_address2(ctx, field)
+				return ec.fieldContext_Place_address2(ctx, field)
 			case "zip":
-				return ec.fieldContext_Address_zip(ctx, field)
+				return ec.fieldContext_Place_zip(ctx, field)
 			case "phone":
-				return ec.fieldContext_Address_phone(ctx, field)
+				return ec.fieldContext_Place_phone(ctx, field)
 			case "fax":
-				return ec.fieldContext_Address_fax(ctx, field)
+				return ec.fieldContext_Place_fax(ctx, field)
 			case "source":
-				return ec.fieldContext_Address_source(ctx, field)
+				return ec.fieldContext_Place_source(ctx, field)
 			}
-			return nil, fmt.Errorf("no field named %q was found under type Address", field.Name)
+			return nil, fmt.Errorf("no field named %q was found under type Place", field.Name)
 		},
 	}
 	return fc, nil
@@ -6790,6 +6443,50 @@ func (ec *executionContext) fieldContext_ContactGroup_source(ctx context.Context
 	return fc, nil
 }
 
+func (ec *executionContext) _ContactGroup_createdAt(ctx context.Context, field graphql.CollectedField, obj *model.ContactGroup) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ContactGroup_createdAt(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.CreatedAt, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(time.Time)
+	fc.Result = res
+	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_ContactGroup_createdAt(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ContactGroup",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _ContactGroup_contacts(ctx context.Context, field graphql.CollectedField, obj *model.ContactGroup) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_ContactGroup_contacts(ctx, field)
 	if err != nil {
@@ -6898,6 +6595,8 @@ func (ec *executionContext) fieldContext_ContactGroupPage_content(ctx context.Co
 				return ec.fieldContext_ContactGroup_name(ctx, field)
 			case "source":
 				return ec.fieldContext_ContactGroup_source(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_ContactGroup_createdAt(ctx, field)
 			case "contacts":
 				return ec.fieldContext_ContactGroup_contacts(ctx, field)
 			}
@@ -7039,6 +6738,50 @@ func (ec *executionContext) fieldContext_ContactRole_id(ctx context.Context, fie
 	return fc, nil
 }
 
+func (ec *executionContext) _ContactRole_createdAt(ctx context.Context, field graphql.CollectedField, obj *model.ContactRole) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ContactRole_createdAt(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.CreatedAt, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(time.Time)
+	fc.Result = res
+	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_ContactRole_createdAt(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ContactRole",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _ContactRole_organization(ctx context.Context, field graphql.CollectedField, obj *model.ContactRole) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_ContactRole_organization(ctx, field)
 	if err != nil {
@@ -7077,6 +6820,8 @@ func (ec *executionContext) fieldContext_ContactRole_organization(ctx context.Co
 			switch field.Name {
 			case "id":
 				return ec.fieldContext_Organization_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Organization_createdAt(ctx, field)
 			case "name":
 				return ec.fieldContext_Organization_name(ctx, field)
 			case "description":
@@ -7089,8 +6834,6 @@ func (ec *executionContext) fieldContext_ContactRole_organization(ctx context.Co
 				return ec.fieldContext_Organization_industry(ctx, field)
 			case "isPublic":
 				return ec.fieldContext_Organization_isPublic(ctx, field)
-			case "createdAt":
-				return ec.fieldContext_Organization_createdAt(ctx, field)
 			case "organizationType":
 				return ec.fieldContext_Organization_organizationType(ctx, field)
 			case "addresses":
@@ -7357,6 +7100,50 @@ func (ec *executionContext) fieldContext_ContactType_id(ctx context.Context, fie
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ContactType_createdAt(ctx context.Context, field graphql.CollectedField, obj *model.ContactType) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ContactType_createdAt(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.CreatedAt, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(time.Time)
+	fc.Result = res
+	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_ContactType_createdAt(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ContactType",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
 		},
 	}
 	return fc, nil
@@ -9562,11 +9349,14 @@ func (ec *executionContext) _Email_createdAt(ctx context.Context, field graphql.
 		return graphql.Null
 	}
 	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
 		return graphql.Null
 	}
-	res := resTmp.(*time.Time)
+	res := resTmp.(time.Time)
 	fc.Result = res
-	return ec.marshalOTime2ᚖtimeᚐTime(ctx, field.Selections, res)
+	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Email_createdAt(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -9603,11 +9393,14 @@ func (ec *executionContext) _Email_updatedAt(ctx context.Context, field graphql.
 		return graphql.Null
 	}
 	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
 		return graphql.Null
 	}
-	res := resTmp.(*time.Time)
+	res := resTmp.(time.Time)
 	fc.Result = res
-	return ec.marshalOTime2ᚖtimeᚐTime(ctx, field.Selections, res)
+	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Email_updatedAt(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -10911,6 +10704,8 @@ func (ec *executionContext) fieldContext_Mutation_contactGroupCreate(ctx context
 				return ec.fieldContext_ContactGroup_name(ctx, field)
 			case "source":
 				return ec.fieldContext_ContactGroup_source(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_ContactGroup_createdAt(ctx, field)
 			case "contacts":
 				return ec.fieldContext_ContactGroup_contacts(ctx, field)
 			}
@@ -10975,6 +10770,8 @@ func (ec *executionContext) fieldContext_Mutation_contactGroupUpdate(ctx context
 				return ec.fieldContext_ContactGroup_name(ctx, field)
 			case "source":
 				return ec.fieldContext_ContactGroup_source(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_ContactGroup_createdAt(ctx, field)
 			case "contacts":
 				return ec.fieldContext_ContactGroup_contacts(ctx, field)
 			}
@@ -11267,6 +11064,8 @@ func (ec *executionContext) fieldContext_Mutation_contactRole_Create(ctx context
 			switch field.Name {
 			case "id":
 				return ec.fieldContext_ContactRole_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_ContactRole_createdAt(ctx, field)
 			case "organization":
 				return ec.fieldContext_ContactRole_organization(ctx, field)
 			case "contact":
@@ -11335,6 +11134,8 @@ func (ec *executionContext) fieldContext_Mutation_contactRole_Update(ctx context
 			switch field.Name {
 			case "id":
 				return ec.fieldContext_ContactRole_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_ContactRole_createdAt(ctx, field)
 			case "organization":
 				return ec.fieldContext_ContactRole_organization(ctx, field)
 			case "contact":
@@ -11403,6 +11204,8 @@ func (ec *executionContext) fieldContext_Mutation_contactType_Create(ctx context
 			switch field.Name {
 			case "id":
 				return ec.fieldContext_ContactType_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_ContactType_createdAt(ctx, field)
 			case "name":
 				return ec.fieldContext_ContactType_name(ctx, field)
 			}
@@ -11460,6 +11263,8 @@ func (ec *executionContext) fieldContext_Mutation_contactType_Update(ctx context
 			switch field.Name {
 			case "id":
 				return ec.fieldContext_ContactType_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_ContactType_createdAt(ctx, field)
 			case "name":
 				return ec.fieldContext_ContactType_name(ctx, field)
 			}
@@ -13037,6 +12842,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_Create(ctx contex
 			switch field.Name {
 			case "id":
 				return ec.fieldContext_Organization_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Organization_createdAt(ctx, field)
 			case "name":
 				return ec.fieldContext_Organization_name(ctx, field)
 			case "description":
@@ -13049,8 +12856,6 @@ func (ec *executionContext) fieldContext_Mutation_organization_Create(ctx contex
 				return ec.fieldContext_Organization_industry(ctx, field)
 			case "isPublic":
 				return ec.fieldContext_Organization_isPublic(ctx, field)
-			case "createdAt":
-				return ec.fieldContext_Organization_createdAt(ctx, field)
 			case "organizationType":
 				return ec.fieldContext_Organization_organizationType(ctx, field)
 			case "addresses":
@@ -13117,6 +12922,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_Update(ctx contex
 			switch field.Name {
 			case "id":
 				return ec.fieldContext_Organization_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Organization_createdAt(ctx, field)
 			case "name":
 				return ec.fieldContext_Organization_name(ctx, field)
 			case "description":
@@ -13129,8 +12936,6 @@ func (ec *executionContext) fieldContext_Mutation_organization_Update(ctx contex
 				return ec.fieldContext_Organization_industry(ctx, field)
 			case "isPublic":
 				return ec.fieldContext_Organization_isPublic(ctx, field)
-			case "createdAt":
-				return ec.fieldContext_Organization_createdAt(ctx, field)
 			case "organizationType":
 				return ec.fieldContext_Organization_organizationType(ctx, field)
 			case "addresses":
@@ -13254,6 +13059,8 @@ func (ec *executionContext) fieldContext_Mutation_organizationType_Create(ctx co
 				return ec.fieldContext_OrganizationType_id(ctx, field)
 			case "name":
 				return ec.fieldContext_OrganizationType_name(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_OrganizationType_createdAt(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type OrganizationType", field.Name)
 		},
@@ -13311,6 +13118,8 @@ func (ec *executionContext) fieldContext_Mutation_organizationType_Update(ctx co
 				return ec.fieldContext_OrganizationType_id(ctx, field)
 			case "name":
 				return ec.fieldContext_OrganizationType_name(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_OrganizationType_createdAt(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type OrganizationType", field.Name)
 		},
@@ -13430,6 +13239,8 @@ func (ec *executionContext) fieldContext_Mutation_phoneNumberMergeToContact(ctx 
 				return ec.fieldContext_PhoneNumber_label(ctx, field)
 			case "primary":
 				return ec.fieldContext_PhoneNumber_primary(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_PhoneNumber_createdAt(ctx, field)
 			case "source":
 				return ec.fieldContext_PhoneNumber_source(ctx, field)
 			}
@@ -13496,6 +13307,8 @@ func (ec *executionContext) fieldContext_Mutation_phoneNumberUpdateInContact(ctx
 				return ec.fieldContext_PhoneNumber_label(ctx, field)
 			case "primary":
 				return ec.fieldContext_PhoneNumber_primary(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_PhoneNumber_createdAt(ctx, field)
 			case "source":
 				return ec.fieldContext_PhoneNumber_source(ctx, field)
 			}
@@ -14123,6 +13936,50 @@ func (ec *executionContext) fieldContext_Organization_id(ctx context.Context, fi
 	return fc, nil
 }
 
+func (ec *executionContext) _Organization_createdAt(ctx context.Context, field graphql.CollectedField, obj *model.Organization) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Organization_createdAt(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.CreatedAt, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(time.Time)
+	fc.Result = res
+	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Organization_createdAt(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Organization",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Organization_name(ctx context.Context, field graphql.CollectedField, obj *model.Organization) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Organization_name(ctx, field)
 	if err != nil {
@@ -14372,50 +14229,6 @@ func (ec *executionContext) fieldContext_Organization_isPublic(ctx context.Conte
 	return fc, nil
 }
 
-func (ec *executionContext) _Organization_createdAt(ctx context.Context, field graphql.CollectedField, obj *model.Organization) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Organization_createdAt(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.CreatedAt, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(time.Time)
-	fc.Result = res
-	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Organization_createdAt(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Organization",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Time does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
 func (ec *executionContext) _Organization_organizationType(ctx context.Context, field graphql.CollectedField, obj *model.Organization) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Organization_organizationType(ctx, field)
 	if err != nil {
@@ -14456,6 +14269,8 @@ func (ec *executionContext) fieldContext_Organization_organizationType(ctx conte
 				return ec.fieldContext_OrganizationType_id(ctx, field)
 			case "name":
 				return ec.fieldContext_OrganizationType_name(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_OrganizationType_createdAt(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type OrganizationType", field.Name)
 		},
@@ -14489,9 +14304,9 @@ func (ec *executionContext) _Organization_addresses(ctx context.Context, field g
 		}
 		return graphql.Null
 	}
-	res := resTmp.([]*model.Address)
+	res := resTmp.([]*model.Place)
 	fc.Result = res
-	return ec.marshalNAddress2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐAddressᚄ(ctx, field.Selections, res)
+	return ec.marshalNPlace2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐPlaceᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Organization_addresses(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -14503,27 +14318,29 @@ func (ec *executionContext) fieldContext_Organization_addresses(ctx context.Cont
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
 			case "id":
-				return ec.fieldContext_Address_id(ctx, field)
+				return ec.fieldContext_Place_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Place_createdAt(ctx, field)
 			case "country":
-				return ec.fieldContext_Address_country(ctx, field)
+				return ec.fieldContext_Place_country(ctx, field)
 			case "state":
-				return ec.fieldContext_Address_state(ctx, field)
+				return ec.fieldContext_Place_state(ctx, field)
 			case "city":
-				return ec.fieldContext_Address_city(ctx, field)
+				return ec.fieldContext_Place_city(ctx, field)
 			case "address":
-				return ec.fieldContext_Address_address(ctx, field)
+				return ec.fieldContext_Place_address(ctx, field)
 			case "address2":
-				return ec.fieldContext_Address_address2(ctx, field)
+				return ec.fieldContext_Place_address2(ctx, field)
 			case "zip":
-				return ec.fieldContext_Address_zip(ctx, field)
+				return ec.fieldContext_Place_zip(ctx, field)
 			case "phone":
-				return ec.fieldContext_Address_phone(ctx, field)
+				return ec.fieldContext_Place_phone(ctx, field)
 			case "fax":
-				return ec.fieldContext_Address_fax(ctx, field)
+				return ec.fieldContext_Place_fax(ctx, field)
 			case "source":
-				return ec.fieldContext_Address_source(ctx, field)
+				return ec.fieldContext_Place_source(ctx, field)
 			}
-			return nil, fmt.Errorf("no field named %q was found under type Address", field.Name)
+			return nil, fmt.Errorf("no field named %q was found under type Place", field.Name)
 		},
 	}
 	return fc, nil
@@ -14614,6 +14431,8 @@ func (ec *executionContext) fieldContext_Organization_contactRoles(ctx context.C
 			switch field.Name {
 			case "id":
 				return ec.fieldContext_ContactRole_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_ContactRole_createdAt(ctx, field)
 			case "organization":
 				return ec.fieldContext_ContactRole_organization(ctx, field)
 			case "contact":
@@ -14672,6 +14491,8 @@ func (ec *executionContext) fieldContext_OrganizationPage_content(ctx context.Co
 			switch field.Name {
 			case "id":
 				return ec.fieldContext_Organization_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Organization_createdAt(ctx, field)
 			case "name":
 				return ec.fieldContext_Organization_name(ctx, field)
 			case "description":
@@ -14684,8 +14505,6 @@ func (ec *executionContext) fieldContext_OrganizationPage_content(ctx context.Co
 				return ec.fieldContext_Organization_industry(ctx, field)
 			case "isPublic":
 				return ec.fieldContext_Organization_isPublic(ctx, field)
-			case "createdAt":
-				return ec.fieldContext_Organization_createdAt(ctx, field)
 			case "organizationType":
 				return ec.fieldContext_Organization_organizationType(ctx, field)
 			case "addresses":
@@ -14872,6 +14691,50 @@ func (ec *executionContext) fieldContext_OrganizationType_name(ctx context.Conte
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _OrganizationType_createdAt(ctx context.Context, field graphql.CollectedField, obj *model.OrganizationType) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_OrganizationType_createdAt(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.CreatedAt, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(time.Time)
+	fc.Result = res
+	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_OrganizationType_createdAt(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "OrganizationType",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
 		},
 	}
 	return fc, nil
@@ -15446,6 +15309,50 @@ func (ec *executionContext) fieldContext_PhoneNumber_primary(ctx context.Context
 	return fc, nil
 }
 
+func (ec *executionContext) _PhoneNumber_createdAt(ctx context.Context, field graphql.CollectedField, obj *model.PhoneNumber) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_PhoneNumber_createdAt(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.CreatedAt, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(time.Time)
+	fc.Result = res
+	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_PhoneNumber_createdAt(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PhoneNumber",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _PhoneNumber_source(ctx context.Context, field graphql.CollectedField, obj *model.PhoneNumber) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_PhoneNumber_source(ctx, field)
 	if err != nil {
@@ -15480,6 +15387,463 @@ func (ec *executionContext) _PhoneNumber_source(ctx context.Context, field graph
 func (ec *executionContext) fieldContext_PhoneNumber_source(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "PhoneNumber",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type DataSource does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Place_id(ctx context.Context, field graphql.CollectedField, obj *model.Place) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Place_id(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNID2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Place_id(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Place",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Place_createdAt(ctx context.Context, field graphql.CollectedField, obj *model.Place) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Place_createdAt(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.CreatedAt, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(time.Time)
+	fc.Result = res
+	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Place_createdAt(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Place",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Place_country(ctx context.Context, field graphql.CollectedField, obj *model.Place) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Place_country(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Country, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Place_country(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Place",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Place_state(ctx context.Context, field graphql.CollectedField, obj *model.Place) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Place_state(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.State, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Place_state(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Place",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Place_city(ctx context.Context, field graphql.CollectedField, obj *model.Place) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Place_city(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.City, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Place_city(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Place",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Place_address(ctx context.Context, field graphql.CollectedField, obj *model.Place) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Place_address(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Address, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Place_address(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Place",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Place_address2(ctx context.Context, field graphql.CollectedField, obj *model.Place) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Place_address2(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Address2, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Place_address2(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Place",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Place_zip(ctx context.Context, field graphql.CollectedField, obj *model.Place) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Place_zip(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Zip, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Place_zip(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Place",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Place_phone(ctx context.Context, field graphql.CollectedField, obj *model.Place) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Place_phone(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Phone, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Place_phone(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Place",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Place_fax(ctx context.Context, field graphql.CollectedField, obj *model.Place) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Place_fax(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Fax, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Place_fax(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Place",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Place_source(ctx context.Context, field graphql.CollectedField, obj *model.Place) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Place_source(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Source, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.DataSource)
+	fc.Result = res
+	return ec.marshalODataSource2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐDataSource(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Place_source(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Place",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -15948,6 +16312,8 @@ func (ec *executionContext) fieldContext_Query_contactGroup(ctx context.Context,
 				return ec.fieldContext_ContactGroup_name(ctx, field)
 			case "source":
 				return ec.fieldContext_ContactGroup_source(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_ContactGroup_createdAt(ctx, field)
 			case "contacts":
 				return ec.fieldContext_ContactGroup_contacts(ctx, field)
 			}
@@ -16070,6 +16436,8 @@ func (ec *executionContext) fieldContext_Query_contactTypes(ctx context.Context,
 			switch field.Name {
 			case "id":
 				return ec.fieldContext_ContactType_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_ContactType_createdAt(ctx, field)
 			case "name":
 				return ec.fieldContext_ContactType_name(ctx, field)
 			}
@@ -16178,6 +16546,8 @@ func (ec *executionContext) fieldContext_Query_organization(ctx context.Context,
 			switch field.Name {
 			case "id":
 				return ec.fieldContext_Organization_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Organization_createdAt(ctx, field)
 			case "name":
 				return ec.fieldContext_Organization_name(ctx, field)
 			case "description":
@@ -16190,8 +16560,6 @@ func (ec *executionContext) fieldContext_Query_organization(ctx context.Context,
 				return ec.fieldContext_Organization_industry(ctx, field)
 			case "isPublic":
 				return ec.fieldContext_Organization_isPublic(ctx, field)
-			case "createdAt":
-				return ec.fieldContext_Organization_createdAt(ctx, field)
 			case "organizationType":
 				return ec.fieldContext_Organization_organizationType(ctx, field)
 			case "addresses":
@@ -16260,6 +16628,8 @@ func (ec *executionContext) fieldContext_Query_organizationTypes(ctx context.Con
 				return ec.fieldContext_OrganizationType_id(ctx, field)
 			case "name":
 				return ec.fieldContext_OrganizationType_name(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_OrganizationType_createdAt(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type OrganizationType", field.Name)
 		},
@@ -20565,70 +20935,6 @@ func (ec *executionContext) _Pages(ctx context.Context, sel ast.SelectionSet, ob
 
 // region    **************************** object.gotpl ****************************
 
-var addressImplementors = []string{"Address"}
-
-func (ec *executionContext) _Address(ctx context.Context, sel ast.SelectionSet, obj *model.Address) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.OperationContext, sel, addressImplementors)
-	out := graphql.NewFieldSet(fields)
-	var invalids uint32
-	for i, field := range fields {
-		switch field.Name {
-		case "__typename":
-			out.Values[i] = graphql.MarshalString("Address")
-		case "id":
-
-			out.Values[i] = ec._Address_id(ctx, field, obj)
-
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
-		case "country":
-
-			out.Values[i] = ec._Address_country(ctx, field, obj)
-
-		case "state":
-
-			out.Values[i] = ec._Address_state(ctx, field, obj)
-
-		case "city":
-
-			out.Values[i] = ec._Address_city(ctx, field, obj)
-
-		case "address":
-
-			out.Values[i] = ec._Address_address(ctx, field, obj)
-
-		case "address2":
-
-			out.Values[i] = ec._Address_address2(ctx, field, obj)
-
-		case "zip":
-
-			out.Values[i] = ec._Address_zip(ctx, field, obj)
-
-		case "phone":
-
-			out.Values[i] = ec._Address_phone(ctx, field, obj)
-
-		case "fax":
-
-			out.Values[i] = ec._Address_fax(ctx, field, obj)
-
-		case "source":
-
-			out.Values[i] = ec._Address_source(ctx, field, obj)
-
-		default:
-			panic("unknown field " + strconv.Quote(field.Name))
-		}
-	}
-	out.Dispatch()
-	if invalids > 0 {
-		return graphql.Null
-	}
-	return out
-}
-
 var contactImplementors = []string{"Contact", "ExtensibleEntity", "Node"}
 
 func (ec *executionContext) _Contact(ctx context.Context, sel ast.SelectionSet, obj *model.Contact) graphql.Marshaler {
@@ -20969,6 +21275,13 @@ func (ec *executionContext) _ContactGroup(ctx context.Context, sel ast.Selection
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&invalids, 1)
 			}
+		case "createdAt":
+
+			out.Values[i] = ec._ContactGroup_createdAt(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
 		case "contacts":
 			field := field
 
@@ -21059,6 +21372,13 @@ func (ec *executionContext) _ContactRole(ctx context.Context, sel ast.SelectionS
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&invalids, 1)
 			}
+		case "createdAt":
+
+			out.Values[i] = ec._ContactRole_createdAt(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
 		case "organization":
 			field := field
 
@@ -21135,6 +21455,13 @@ func (ec *executionContext) _ContactType(ctx context.Context, sel ast.SelectionS
 		case "id":
 
 			out.Values[i] = ec._ContactType_id(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "createdAt":
+
+			out.Values[i] = ec._ContactType_createdAt(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
 				invalids++
@@ -21592,10 +21919,16 @@ func (ec *executionContext) _Email(ctx context.Context, sel ast.SelectionSet, ob
 
 			out.Values[i] = ec._Email_createdAt(ctx, field, obj)
 
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		case "updatedAt":
 
 			out.Values[i] = ec._Email_updatedAt(ctx, field, obj)
 
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -22294,6 +22627,13 @@ func (ec *executionContext) _Organization(ctx context.Context, sel ast.Selection
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&invalids, 1)
 			}
+		case "createdAt":
+
+			out.Values[i] = ec._Organization_createdAt(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
 		case "name":
 
 			out.Values[i] = ec._Organization_name(ctx, field, obj)
@@ -22321,13 +22661,6 @@ func (ec *executionContext) _Organization(ctx context.Context, sel ast.Selection
 
 			out.Values[i] = ec._Organization_isPublic(ctx, field, obj)
 
-		case "createdAt":
-
-			out.Values[i] = ec._Organization_createdAt(ctx, field, obj)
-
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&invalids, 1)
-			}
 		case "organizationType":
 			field := field
 
@@ -22469,6 +22802,13 @@ func (ec *executionContext) _OrganizationType(ctx context.Context, sel ast.Selec
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
+		case "createdAt":
+
+			out.Values[i] = ec._OrganizationType_createdAt(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -22599,6 +22939,13 @@ func (ec *executionContext) _PhoneNumber(ctx context.Context, sel ast.SelectionS
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
+		case "createdAt":
+
+			out.Values[i] = ec._PhoneNumber_createdAt(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		case "source":
 
 			out.Values[i] = ec._PhoneNumber_source(ctx, field, obj)
@@ -22606,6 +22953,77 @@ func (ec *executionContext) _PhoneNumber(ctx context.Context, sel ast.SelectionS
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var placeImplementors = []string{"Place"}
+
+func (ec *executionContext) _Place(ctx context.Context, sel ast.SelectionSet, obj *model.Place) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, placeImplementors)
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("Place")
+		case "id":
+
+			out.Values[i] = ec._Place_id(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "createdAt":
+
+			out.Values[i] = ec._Place_createdAt(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "country":
+
+			out.Values[i] = ec._Place_country(ctx, field, obj)
+
+		case "state":
+
+			out.Values[i] = ec._Place_state(ctx, field, obj)
+
+		case "city":
+
+			out.Values[i] = ec._Place_city(ctx, field, obj)
+
+		case "address":
+
+			out.Values[i] = ec._Place_address(ctx, field, obj)
+
+		case "address2":
+
+			out.Values[i] = ec._Place_address2(ctx, field, obj)
+
+		case "zip":
+
+			out.Values[i] = ec._Place_zip(ctx, field, obj)
+
+		case "phone":
+
+			out.Values[i] = ec._Place_phone(ctx, field, obj)
+
+		case "fax":
+
+			out.Values[i] = ec._Place_fax(ctx, field, obj)
+
+		case "source":
+
+			out.Values[i] = ec._Place_source(ctx, field, obj)
+
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -23448,60 +23866,6 @@ func (ec *executionContext) unmarshalNActionType2githubᚗcomᚋopenlineᚑaiᚋ
 
 func (ec *executionContext) marshalNActionType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐActionType(ctx context.Context, sel ast.SelectionSet, v model.ActionType) graphql.Marshaler {
 	return v
-}
-
-func (ec *executionContext) marshalNAddress2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐAddressᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Address) graphql.Marshaler {
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalNAddress2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐAddress(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
-
-	for _, e := range ret {
-		if e == graphql.Null {
-			return graphql.Null
-		}
-	}
-
-	return ret
-}
-
-func (ec *executionContext) marshalNAddress2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐAddress(ctx context.Context, sel ast.SelectionSet, v *model.Address) graphql.Marshaler {
-	if v == nil {
-		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
-		}
-		return graphql.Null
-	}
-	return ec._Address(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalNAny2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐAnyTypeValue(ctx context.Context, v interface{}) (model.AnyTypeValue, error) {
@@ -24705,6 +25069,60 @@ func (ec *executionContext) unmarshalNPhoneNumberInput2githubᚗcomᚋopenline�
 func (ec *executionContext) unmarshalNPhoneNumberUpdateInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐPhoneNumberUpdateInput(ctx context.Context, v interface{}) (model.PhoneNumberUpdateInput, error) {
 	res, err := ec.unmarshalInputPhoneNumberUpdateInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNPlace2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐPlaceᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Place) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNPlace2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐPlace(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNPlace2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐPlace(ctx context.Context, sel ast.SelectionSet, v *model.Place) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._Place(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalNResult2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐResult(ctx context.Context, sel ast.SelectionSet, v model.Result) graphql.Marshaler {

@@ -9,5 +9,6 @@ mutation CreateContactRole($contactId: ID!) {
     jobTitle
     primary
     source
+    createdAt
   }
 }

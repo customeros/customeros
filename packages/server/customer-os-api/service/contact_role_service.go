@@ -142,6 +142,7 @@ func (s *contactRoleService) mapDbNodeToContactRoleEntity(node dbtype.Node) *ent
 		Primary:       utils.GetBoolPropOrFalse(props, "primary"),
 		Source:        entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
 		SourceOfTruth: entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
+		CreatedAt:     utils.GetTimePropOrNow(props, "createdAt"),
 	}
 	return &result
 }

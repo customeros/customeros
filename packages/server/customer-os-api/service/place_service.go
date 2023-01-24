@@ -10,26 +10,26 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils"
 )
 
-type AddressService interface {
-	FindAllForContact(ctx context.Context, contactId string) (*entity.AddressEntities, error)
-	FindAllForOrganization(ctx context.Context, organizationId string) (*entity.AddressEntities, error)
+type PlaceService interface {
+	FindAllForContact(ctx context.Context, contactId string) (*entity.PlaceEntities, error)
+	FindAllForOrganization(ctx context.Context, organizationId string) (*entity.PlaceEntities, error)
 }
 
-type addressService struct {
+type placeService struct {
 	repositories *repository.Repositories
 }
 
-func NewAddressService(repositories *repository.Repositories) AddressService {
-	return &addressService{
+func NewPlaceService(repositories *repository.Repositories) PlaceService {
+	return &placeService{
 		repositories: repositories,
 	}
 }
 
-func (s *addressService) getDriver() neo4j.Driver {
+func (s *placeService) getDriver() neo4j.Driver {
 	return *s.repositories.Drivers.Neo4jDriver
 }
 
-func (s *addressService) FindAllForContact(ctx context.Context, contactId string) (*entity.AddressEntities, error) {
+func (s *placeService) FindAllForContact(ctx context.Context, contactId string) (*entity.PlaceEntities, error) {
 	session := utils.NewNeo4jReadSession(s.getDriver())
 	defer session.Close()
 
@@ -38,14 +38,14 @@ func (s *addressService) FindAllForContact(ctx context.Context, contactId string
 		return nil, err
 	}
 
-	addressEntities := entity.AddressEntities{}
+	addressEntities := entity.PlaceEntities{}
 	for _, dbNode := range dbNodes {
 		addressEntities = append(addressEntities, *s.mapDbNodeToAddressEntity(dbNode))
 	}
 	return &addressEntities, nil
 }
 
-func (s *addressService) FindAllForOrganization(ctx context.Context, organizationId string) (*entity.AddressEntities, error) {
+func (s *placeService) FindAllForOrganization(ctx context.Context, organizationId string) (*entity.PlaceEntities, error) {
 	session := utils.NewNeo4jReadSession(s.getDriver())
 	defer session.Close()
 
@@ -54,17 +54,18 @@ func (s *addressService) FindAllForOrganization(ctx context.Context, organizatio
 		return nil, err
 	}
 
-	addressEntities := entity.AddressEntities{}
+	addressEntities := entity.PlaceEntities{}
 	for _, dbNode := range dbNodes {
 		addressEntities = append(addressEntities, *s.mapDbNodeToAddressEntity(dbNode))
 	}
 	return &addressEntities, nil
 }
 
-func (s *addressService) mapDbNodeToAddressEntity(node *dbtype.Node) *entity.AddressEntity {
+func (s *placeService) mapDbNodeToAddressEntity(node *dbtype.Node) *entity.PlaceEntity {
 	props := utils.GetPropsFromNode(*node)
-	result := entity.AddressEntity{
+	result := entity.PlaceEntity{
 		Id:            utils.GetStringPropOrEmpty(props, "id"),
+		CreatedAt:     utils.GetTimePropOrNow(props, "createdAt"),
 		Country:       utils.GetStringPropOrEmpty(props, "country"),
 		State:         utils.GetStringPropOrEmpty(props, "state"),
 		City:          utils.GetStringPropOrEmpty(props, "city"),

@@ -24,7 +24,9 @@ func (e *externalSystemRepository) LinkContactWithExternalSystemInTx(tx neo4j.Tr
 	query := "MATCH (e:ExternalSystem {id:$externalSystemId})-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]->(:Tenant {name:$tenant})," +
 		" (c:Contact {id:$contactId}) " +
 		" MERGE (c)-[r:IS_LINKED_WITH {id:$referenceId}]->(e) " +
-		" ON CREATE SET e:%s, r.syncDate=$syncDate " +
+		" ON CREATE SET e:%s, " +
+		"				r.syncDate=$syncDate, " +
+		"				e.createdAt=datetime({timezone: 'UTC'}) " +
 		" ON MATCH SET r.syncDate=$syncDate " +
 		" RETURN r"
 

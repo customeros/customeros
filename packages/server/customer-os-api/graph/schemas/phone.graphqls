@@ -33,6 +33,8 @@ type PhoneNumber {
     """
     primary: Boolean!
 
+    createdAt: Time!
+
     source: DataSource!
 }
 

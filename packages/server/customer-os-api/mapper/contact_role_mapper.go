@@ -21,9 +21,10 @@ func MapContactRoleInputToEntity(input *model.ContactRoleInput) *entity.ContactR
 
 func MapEntityToContactRole(entity *entity.ContactRoleEntity) *model.ContactRole {
 	contactRole := model.ContactRole{
-		ID:      entity.Id,
-		Primary: entity.Primary,
-		Source:  MapDataSourceToModel(entity.Source),
+		ID:        entity.Id,
+		Primary:   entity.Primary,
+		Source:    MapDataSourceToModel(entity.Source),
+		CreatedAt: entity.CreatedAt,
 	}
 	if len(entity.JobTitle) > 0 {
 		contactRole.JobTitle = utils.StringPtr(entity.JobTitle)
