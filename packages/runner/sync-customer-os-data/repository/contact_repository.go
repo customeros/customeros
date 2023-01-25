@@ -152,8 +152,8 @@ func (r *contactRepository) MergePrimaryPhoneNumber(tenant, contactId, e164, ext
 		" SET r.primary=false " +
 		" WITH c " +
 		" MERGE (c)-[r:CALLED_AT]->(p:PhoneNumber {e164: $e164}) " +
-		" ON CREATE SET r.primary=true, p.id=randomUUID(), p.createdAt=$createdAt, p.source=$source, p.sourceOfTruth=$sourceOfTruth, p.appSource=$appSource, p:%s " +
-		" ON MATCH SET r.primary=true"
+		" ON CREATE SET r.primary=true, p.id=randomUUID(), p.createdAt=$createdAt, p.updatedAt=$createdAt, p.source=$source, p.sourceOfTruth=$sourceOfTruth, p.appSource=$appSource, p:%s " +
+		" ON MATCH SET r.primary=true, p.updatedAt=$now "
 
 	_, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
 		_, err := tx.Run(fmt.Sprintf(query, "PhoneNumber_"+tenant),
@@ -165,6 +165,7 @@ func (r *contactRepository) MergePrimaryPhoneNumber(tenant, contactId, e164, ext
 				"source":        externalSystem,
 				"sourceOfTruth": externalSystem,
 				"appSource":     externalSystem,
+				"now":           time.Now().UTC(),
 			})
 		return nil, err
 	})
@@ -205,9 +206,10 @@ func (r *contactRepository) MergeTextCustomField(tenant, contactId string, field
 
 	query := "MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) " +
 		" MERGE (f:TextField:CustomField {name: $name, datatype:$datatype})<-[:HAS_PROPERTY]-(c) " +
-		" ON CREATE SET f.textValue=$value, f.id=randomUUID(), f.createdAt=$createdAt, " +
+		" ON CREATE SET f.textValue=$value, f.id=randomUUID(), f.createdAt=$createdAt, f.updatedAt=$createdAt, " +
 		"				f.source=$source, f.sourceOfTruth=$sourceOfTruth, f.appSource=$appSource, f:%s " +
-		" ON MATCH SET 	f.textValue = CASE WHEN f.sourceOfTruth=$sourceOfTruth THEN $value ELSE f.textValue END " +
+		" ON MATCH SET 	f.textValue = CASE WHEN f.sourceOfTruth=$sourceOfTruth THEN $value ELSE f.textValue END," +
+		"				f.updatedAt = CASE WHEN f.sourceOfTruth=$sourceOfTruth THEN $now ELSE f.updatedAt END " +
 		" WITH f " +
 		" FOREACH (x in CASE WHEN f.sourceOfTruth <> $sourceOfTruth THEN [f] ELSE [] END | " +
 		"  MERGE (x)-[:ALTERNATE]->(alt:AlternateCustomField:AlternateTextField {source:$source, id:x.id}) " +
@@ -292,7 +294,7 @@ func (r *contactRepository) MergeContactType(tenant, contactId, contactTypeName 
 
 	query := "MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant}) " +
 		" MERGE (ct:ContactType {name:$contactTypeName})-[:CONTACT_TYPE_BELONGS_TO_TENANT]->(t) " +
-		" ON CREATE SET ct.id=randomUUID() " +
+		" ON CREATE SET ct.id=randomUUID(), ct.createdAt=$now, ct.updatedAt=$now " +
 		" WITH c, ct " +
 		" MERGE (c)-[r:IS_OF_TYPE]->(ct) " +
 		" return r"
@@ -303,6 +305,7 @@ func (r *contactRepository) MergeContactType(tenant, contactId, contactTypeName 
 				"tenant":          tenant,
 				"contactId":       contactId,
 				"contactTypeName": contactTypeName,
+				"now":             time.Now().UTC(),
 			})
 		if err != nil {
 			return nil, err
@@ -327,10 +330,10 @@ func (r *contactRepository) GetOrCreateContactId(tenant, email, firstName, lastN
 		queryResult, err := tx.Run(fmt.Sprintf(
 			" MATCH (t:Tenant {name:$tenant}) "+
 				" MERGE (e:Email {email: $email})<-[r:EMAILED_AT]-(c:Contact)-[:CONTACT_BELONGS_TO_TENANT]->(t) "+
-				" ON CREATE SET r.primary=true, e.id=randomUUID(), e.createdAt=$createdAt, e.updatedAt=$createdAt, "+
+				" ON CREATE SET r.primary=true, e.id=randomUUID(), e.createdAt=$now, e.updatedAt=$now, "+
 				"				e.source=$source, e.sourceOfTruth=$sourceOfTruth, e.appSource=$appSource, "+
 				"				c.id=randomUUID(), c.firstName=$firstName, c.lastName=$lastName, "+
-				"				c.createdAt=$createdAt, c.updatedAt=$createdAt, "+
+				"				c.createdAt=$now, c.updatedAt=$now, "+
 				"				c.source=$source, c.sourceOfTruth=$sourceOfTruth, c.appSource=$appSource, "+
 				"               c:%s, e:%s "+
 				" RETURN c.id", "Contact_"+tenant, "Email_"+tenant),
@@ -342,7 +345,7 @@ func (r *contactRepository) GetOrCreateContactId(tenant, email, firstName, lastN
 				"source":        source,
 				"sourceOfTruth": source,
 				"appSource":     source,
-				"createdAt":     time.Now().UTC(),
+				"now":           time.Now().UTC(),
 			})
 		record, err := queryResult.Single()
 		if err != nil {

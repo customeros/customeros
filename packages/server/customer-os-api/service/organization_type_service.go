@@ -78,8 +78,9 @@ func (s *organizationTypeService) FindOrganizationTypeForOrganization(ctx contex
 func (s *organizationTypeService) mapDbNodeToOrganizationTypeEntity(dbNode *dbtype.Node) *entity.OrganizationTypeEntity {
 	props := utils.GetPropsFromNode(*dbNode)
 	organizationType := entity.OrganizationTypeEntity{
-		Id:   utils.GetStringPropOrEmpty(props, "id"),
-		Name: utils.GetStringPropOrEmpty(props, "name"),
+		Id:        utils.GetStringPropOrEmpty(props, "id"),
+		Name:      utils.GetStringPropOrEmpty(props, "name"),
+		CreatedAt: utils.GetTimePropOrNow(props, "createdAt"),
 	}
 	return &organizationType
 }

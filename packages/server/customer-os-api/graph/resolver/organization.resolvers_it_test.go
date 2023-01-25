@@ -84,7 +84,7 @@ func TestQueryResolver_Organizations_WithAddresses(t *testing.T) {
 	neo4jt.CreateTenant(driver, tenantName)
 	organization1 := neo4jt.CreateOrganization(driver, tenantName, "OPENLINE")
 	organization2 := neo4jt.CreateOrganization(driver, tenantName, "some other organization")
-	addressInput := entity.AddressEntity{
+	addressInput := entity.PlaceEntity{
 		Source:   entity.DataSourceOpenline,
 		Country:  "testCountry",
 		State:    "testState",
@@ -96,7 +96,7 @@ func TestQueryResolver_Organizations_WithAddresses(t *testing.T) {
 		Fax:      "testFax",
 	}
 	address1 := neo4jt.CreateAddress(driver, addressInput)
-	address2 := neo4jt.CreateAddress(driver, entity.AddressEntity{
+	address2 := neo4jt.CreateAddress(driver, entity.PlaceEntity{
 		Source: "manual",
 	})
 	neo4jt.OrganizationHasAddress(driver, organization1, address1)
@@ -224,7 +224,7 @@ func TestMutationResolver_OrganizationDelete(t *testing.T) {
 	neo4jt.CreateTenant(driver, tenantName)
 
 	organizationId := neo4jt.CreateOrganization(driver, tenantName, "LLC LLC")
-	addressId := neo4jt.CreateAddress(driver, entity.AddressEntity{
+	addressId := neo4jt.CreateAddress(driver, entity.PlaceEntity{
 		Source: "manual",
 	})
 	neo4jt.OrganizationHasAddress(driver, organizationId, addressId)

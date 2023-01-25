@@ -49,7 +49,11 @@ func (r *fieldSetRepository) LinkWithFieldSetTemplateInTx(tx neo4j.Transaction, 
 func (r *fieldSetRepository) MergeFieldSetToContactInTx(tx neo4j.Transaction, tenant, contactId string, entity entity.FieldSetEntity) (*dbtype.Node, error) {
 	query := "MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) " +
 		" MERGE (f:FieldSet {name: $name})<-[r:HAS_COMPLEX_PROPERTY]-(c) " +
-		" ON CREATE SET f.id=randomUUID(), f.createdAt=$createdAt, f.source=$source, f.sourceOfTruth=$sourceOfTruth, f:%s " +
+		" ON CREATE SET f.id=randomUUID(), " +
+		"				f.createdAt=$createdAt, " +
+		"				f.source=$source, " +
+		"				f.sourceOfTruth=$sourceOfTruth, " +
+		"				f:%s " +
 		" RETURN f"
 	queryResult, err := tx.Run(fmt.Sprintf(query, "FieldSet_"+tenant),
 		map[string]interface{}{

@@ -6,22 +6,22 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils"
 )
 
-type AddressRepository interface {
+type PlaceRepository interface {
 	FindAllForContact(session neo4j.Session, tenant, contactId string) ([]*dbtype.Node, error)
 	FindAllForOrganization(session neo4j.Session, tenant, organizationId string) ([]*dbtype.Node, error)
 }
 
-type addressRepository struct {
+type placeRepository struct {
 	driver *neo4j.Driver
 }
 
-func NewAddressRepository(driver *neo4j.Driver) AddressRepository {
-	return &addressRepository{
+func NewPlaceRepository(driver *neo4j.Driver) PlaceRepository {
+	return &placeRepository{
 		driver: driver,
 	}
 }
 
-func (r *addressRepository) FindAllForContact(session neo4j.Session, tenant, contactId string) ([]*dbtype.Node, error) {
+func (r *placeRepository) FindAllForContact(session neo4j.Session, tenant, contactId string) ([]*dbtype.Node, error) {
 	dbRecords, err := session.ReadTransaction(func(tx neo4j.Transaction) (any, error) {
 		if queryResult, err := tx.Run(`
 			MATCH (t:Tenant {name:$tenant})<-[:CONTACT_BELONGS_TO_TENANT]-(c:Contact {id:$contactId})-[:LOCATED_AT]->(a:Address)
@@ -47,7 +47,7 @@ func (r *addressRepository) FindAllForContact(session neo4j.Session, tenant, con
 	return dbNodes, err
 }
 
-func (r *addressRepository) FindAllForOrganization(session neo4j.Session, tenant, organizationId string) ([]*dbtype.Node, error) {
+func (r *placeRepository) FindAllForOrganization(session neo4j.Session, tenant, organizationId string) ([]*dbtype.Node, error) {
 	dbRecords, err := session.ReadTransaction(func(tx neo4j.Transaction) (any, error) {
 		if queryResult, err := tx.Run(`
 			MATCH (:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(:Organization {id:$organizationId})-[:LOCATED_AT]->(a:Address)

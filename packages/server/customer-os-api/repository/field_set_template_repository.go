@@ -29,7 +29,9 @@ func NewFieldSetTemplateRepository(driver *neo4j.Driver, repositories *Repositor
 func (r *fieldSetTemplateRepository) createFieldSetTemplateInTx(tx neo4j.Transaction, tenant, entityTemplateId string, entity *entity.FieldSetTemplateEntity) error {
 	query := "MATCH (e:EntityTemplate {id:$entityTemplateId}) " +
 		" MERGE (e)-[:CONTAINS]->(f:FieldSetTemplate {id:randomUUID(), name:$name}) " +
-		" ON CREATE SET f:%s, f.order=$order" +
+		" ON CREATE SET f:%s, " +
+		"				f.order=$order, " +
+		"				f.createdAt=datetime({timezone: 'UTC'})" +
 		" RETURN f"
 
 	queryResult, err := tx.Run(fmt.Sprintf(query, "FieldSetTemplate_"+tenant),

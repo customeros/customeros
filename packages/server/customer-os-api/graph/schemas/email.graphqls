@@ -40,9 +40,9 @@ type Email {
 
     appSource: String!
 
-    createdAt: Time
+    createdAt: Time!
 
-    updatedAt: Time
+    updatedAt: Time!
 }
 
 """

@@ -464,7 +464,7 @@ func CreatePageView(driver *neo4j.Driver, contactId string, actionEntity entity.
 	return actionId.String()
 }
 
-func CreateAddress(driver *neo4j.Driver, address entity.AddressEntity) string {
+func CreateAddress(driver *neo4j.Driver, address entity.PlaceEntity) string {
 	var addressId, _ = uuid.NewRandom()
 	query := `MERGE (a:Address {id:$id})
 			ON CREATE SET  a.country=$country, a.state=$state, a.city=$city, a.address=$address,

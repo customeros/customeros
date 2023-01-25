@@ -85,7 +85,13 @@ func (r *contactRoleRepository) GetRolesForOrganization(session neo4j.Session, t
 func (r *contactRoleRepository) CreateContactRole(tx neo4j.Transaction, tenant string, contactId string, input entity.ContactRoleEntity) (*dbtype.Node, error) {
 	query := "MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) " +
 		" MERGE (c)-[:HAS_ROLE]->(r:Role) " +
-		" ON CREATE SET r.id=randomUUID(), r.jobTitle=$jobTitle, r.primary=$primary, r.source=$source, r.sourceOfTruth=$sourceOfTruth, r:%s " +
+		" ON CREATE SET r.id=randomUUID(), " +
+		"				r.jobTitle=$jobTitle, " +
+		"				r.primary=$primary, " +
+		"				r.source=$source, " +
+		"				r.sourceOfTruth=$sourceOfTruth, " +
+		"				r.createdAt=datetime({timezone: 'UTC'}), " +
+		"				r:%s " +
 		" RETURN r"
 
 	if queryResult, err := tx.Run(fmt.Sprintf(query, "Role_"+tenant),

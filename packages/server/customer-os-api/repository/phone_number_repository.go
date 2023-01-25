@@ -12,6 +12,7 @@ type PhoneNumberRepository interface {
 	MergePhoneNumberToContactInTx(tx neo4j.Transaction, tenant, contactId string, entity entity.PhoneNumberEntity) (*dbtype.Node, *dbtype.Relationship, error)
 	UpdatePhoneNumberByContactInTx(tx neo4j.Transaction, tenant, contactId string, entity entity.PhoneNumberEntity) (*dbtype.Node, *dbtype.Relationship, error)
 	FindAllForContact(session neo4j.Session, tenant, contactId string) (any, error)
+	SetOtherContactPhoneNumbersNonPrimaryInTx(tx neo4j.Transaction, tenant, contactId, e164 string) error
 }
 
 type phoneNumberRepository struct {
@@ -27,8 +28,16 @@ func NewPhoneNumberRepository(driver *neo4j.Driver) PhoneNumberRepository {
 func (r *phoneNumberRepository) MergePhoneNumberToContactInTx(tx neo4j.Transaction, tenant, contactId string, entity entity.PhoneNumberEntity) (*dbtype.Node, *dbtype.Relationship, error) {
 	query := "MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) " +
 		" MERGE (c)-[r:CALLED_AT]->(p:PhoneNumber {e164: $e164}) " +
-		" ON CREATE SET p.label=$label, r.primary=$primary, p.id=randomUUID(), p.source=$source, p.sourceOfTruth=$sourceOfTruth, p:%s " +
-		" ON MATCH SET p.label=$label, r.primary=$primary, p.sourceOfTruth=$sourceOfTruth " +
+		" ON CREATE SET p.label=$label, " +
+		"				r.primary=$primary, " +
+		"				p.id=randomUUID(), " +
+		"				p.source=$source, " +
+		"				p.sourceOfTruth=$sourceOfTruth, " +
+		"				p.createdAt=datetime({timezone: 'UTC'}), " +
+		"				p:%s " +
+		" ON MATCH SET 	p.label=$label, " +
+		"				r.primary=$primary, " +
+		"				p.sourceOfTruth=$sourceOfTruth " +
 		" RETURN p, r"
 
 	queryResult, err := tx.Run(fmt.Sprintf(query, "PhoneNumber_"+tenant),
@@ -81,4 +90,18 @@ func (r *phoneNumberRepository) FindAllForContact(session neo4j.Session, tenant,
 		}
 		return records, nil
 	})
+}
+
+func (r *phoneNumberRepository) SetOtherContactPhoneNumbersNonPrimaryInTx(tx neo4j.Transaction, tenant, contactId, e164 string) error {
+	_, err := tx.Run(`
+			MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}),
+				 (c)-[r:CALLED_AT]->(p:PhoneNumber)
+			WHERE p.e164 <> $e164
+            SET r.primary=false`,
+		map[string]interface{}{
+			"tenant":    tenant,
+			"contactId": contactId,
+			"e164":      e164,
+		})
+	return err
 }

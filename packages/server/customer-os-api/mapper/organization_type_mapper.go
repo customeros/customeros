@@ -22,8 +22,9 @@ func MapOrganizationTypeUpdateInputToEntity(input model.OrganizationTypeUpdateIn
 
 func MapEntityToOrganizationType(entity *entity.OrganizationTypeEntity) *model.OrganizationType {
 	return &model.OrganizationType{
-		ID:   entity.Id,
-		Name: entity.Name,
+		ID:        entity.Id,
+		Name:      entity.Name,
+		CreatedAt: entity.CreatedAt,
 	}
 }
 

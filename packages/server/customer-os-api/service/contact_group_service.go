@@ -229,8 +229,9 @@ func (s *contactGroupService) RemoveContactFromGroup(ctx context.Context, contac
 func (s *contactGroupService) mapDbNodeToContactGroupEntity(node dbtype.Node) *entity.ContactGroupEntity {
 	props := utils.GetPropsFromNode(node)
 	contactGroup := entity.ContactGroupEntity{
-		Id:   utils.GetStringPropOrEmpty(props, "id"),
-		Name: utils.GetStringPropOrEmpty(props, "name"),
+		Id:        utils.GetStringPropOrEmpty(props, "id"),
+		Name:      utils.GetStringPropOrEmpty(props, "name"),
+		CreatedAt: utils.GetTimePropOrNow(props, "createdAt"),
 	}
 	return &contactGroup
 }

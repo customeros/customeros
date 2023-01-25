@@ -169,8 +169,8 @@ func (s *emailService) mapDbNodeToEmailEntity(node dbtype.Node) *entity.EmailEnt
 		Source:        entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
 		SourceOfTruth: entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
 		AppSource:     utils.GetStringPropOrEmpty(props, "appSource"),
-		CreatedAt:     utils.GetTimePropOrNil(props, "createdAt"),
-		UpdatedAt:     utils.GetTimePropOrNil(props, "updatedAt"),
+		CreatedAt:     utils.GetTimePropOrNow(props, "createdAt"),
+		UpdatedAt:     utils.GetTimePropOrNow(props, "updatedAt"),
 	}
 	return &result
 }

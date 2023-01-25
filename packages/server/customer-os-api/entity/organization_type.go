@@ -1,10 +1,14 @@
 package entity
 
-import "fmt"
+import (
+	"fmt"
+	"time"
+)
 
 type OrganizationTypeEntity struct {
-	Id   string
-	Name string
+	Id        string
+	Name      string
+	CreatedAt time.Time
 }
 
 func (organizationType OrganizationTypeEntity) ToString() string {

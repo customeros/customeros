@@ -78,8 +78,9 @@ func (s *contactTypeService) FindContactTypeForContact(ctx context.Context, cont
 func (s *contactTypeService) mapDbNodeToContactTypeEntity(dbNode *dbtype.Node) *entity.ContactTypeEntity {
 	props := utils.GetPropsFromNode(*dbNode)
 	contactType := entity.ContactTypeEntity{
-		Id:   utils.GetStringPropOrEmpty(props, "id"),
-		Name: utils.GetStringPropOrEmpty(props, "name"),
+		Id:        utils.GetStringPropOrEmpty(props, "id"),
+		Name:      utils.GetStringPropOrEmpty(props, "name"),
+		CreatedAt: utils.GetTimePropOrNow(props, "createdAt"),
 	}
 	return &contactType
 }

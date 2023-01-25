@@ -293,12 +293,14 @@ func TestMutationResolver_EntityTemplateCreate(t *testing.T) {
 
 	set := actual.FieldSets[0]
 	require.NotNil(t, set.ID)
+	require.NotNil(t, set.CreatedAt)
 	require.Equal(t, "set 1", set.Name)
 	require.Equal(t, 1, set.Order)
 	require.Equal(t, 2, len(set.CustomFields))
 
 	field := set.CustomFields[0]
 	require.NotNil(t, field)
+	require.NotNil(t, field.CreatedAt)
 	require.Equal(t, "field 3", field.Name)
 	require.Equal(t, 1, field.Order)
 	require.Equal(t, true, field.Mandatory)
@@ -309,6 +311,7 @@ func TestMutationResolver_EntityTemplateCreate(t *testing.T) {
 
 	field = set.CustomFields[1]
 	require.NotNil(t, field)
+	require.NotNil(t, field.CreatedAt)
 	require.Equal(t, "field 4", field.Name)
 	require.Equal(t, 2, field.Order)
 	require.Equal(t, false, field.Mandatory)
@@ -319,12 +322,14 @@ func TestMutationResolver_EntityTemplateCreate(t *testing.T) {
 
 	set = actual.FieldSets[1]
 	require.NotNil(t, set.ID)
+	require.NotNil(t, set.CreatedAt)
 	require.Equal(t, "set 2", set.Name)
 	require.Equal(t, 2, set.Order)
 	require.Equal(t, 0, len(set.CustomFields))
 
 	field = actual.CustomFields[0]
 	require.NotNil(t, field)
+	require.NotNil(t, field.CreatedAt)
 	require.Equal(t, "field 1", field.Name)
 	require.Equal(t, 1, field.Order)
 	require.Equal(t, true, field.Mandatory)
@@ -335,6 +340,7 @@ func TestMutationResolver_EntityTemplateCreate(t *testing.T) {
 
 	field = actual.CustomFields[1]
 	require.NotNil(t, field)
+	require.NotNil(t, field.CreatedAt)
 	require.Equal(t, "field 2", field.Name)
 	require.Equal(t, 2, field.Order)
 	require.Equal(t, false, field.Mandatory)

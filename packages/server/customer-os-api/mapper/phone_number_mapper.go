@@ -42,16 +42,17 @@ func MapEntitiesToPhoneNumbers(entities *entity.PhoneNumberEntities) []*model.Ph
 	return phoneNumbers
 }
 
-func MapEntityToPhoneNumber(phoneNumberEntity *entity.PhoneNumberEntity) *model.PhoneNumber {
-	var label = model.PhoneNumberLabel(phoneNumberEntity.Label)
+func MapEntityToPhoneNumber(entity *entity.PhoneNumberEntity) *model.PhoneNumber {
+	var label = model.PhoneNumberLabel(entity.Label)
 	if !label.IsValid() {
 		label = ""
 	}
 	return &model.PhoneNumber{
-		ID:      phoneNumberEntity.Id,
-		E164:    phoneNumberEntity.E164,
-		Label:   &label,
-		Primary: phoneNumberEntity.Primary,
-		Source:  MapDataSourceToModel(phoneNumberEntity.Source),
+		ID:        entity.Id,
+		E164:      entity.E164,
+		Label:     &label,
+		Primary:   entity.Primary,
+		Source:    MapDataSourceToModel(entity.Source),
+		CreatedAt: entity.CreatedAt,
 	}
 }

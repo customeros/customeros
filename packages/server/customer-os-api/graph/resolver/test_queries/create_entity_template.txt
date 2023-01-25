@@ -26,8 +26,10 @@ mutation CreateEntityTemplate {
           id
           name
           order
+          createdAt
           customFields {
             id
+            createdAt
             name
             order
             type
@@ -39,6 +41,7 @@ mutation CreateEntityTemplate {
         }
         customFields {
             id
+            createdAt
             name
             order
             type

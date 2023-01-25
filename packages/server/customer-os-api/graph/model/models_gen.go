@@ -37,19 +37,6 @@ type Pages interface {
 	GetTotalElements() int64
 }
 
-type Address struct {
-	ID       string      `json:"id"`
-	Country  *string     `json:"country"`
-	State    *string     `json:"state"`
-	City     *string     `json:"city"`
-	Address  *string     `json:"address"`
-	Address2 *string     `json:"address2"`
-	Zip      *string     `json:"zip"`
-	Phone    *string     `json:"phone"`
-	Fax      *string     `json:"fax"`
-	Source   *DataSource `json:"source"`
-}
-
 // A contact represents an individual in customerOS.
 // **A `response` object.**
 type Contact struct {
@@ -84,7 +71,7 @@ type Contact struct {
 	Emails []*Email `json:"emails"`
 	// All addresses associated with a contact in customerOS.
 	// **Required.  If no values it returns an empty array.**
-	Addresses []*Address `json:"addresses"`
+	Addresses []*Place `json:"addresses"`
 	// User defined metadata appended to the contact record in customerOS.
 	// **Required.  If no values it returns an empty array.**
 	CustomFields []*CustomField `json:"customFields"`
@@ -113,9 +100,10 @@ type ContactGroup struct {
 	ID string `json:"id"`
 	// The name of the `ContactGroup`.
 	// **Required**
-	Name     string        `json:"name"`
-	Source   DataSource    `json:"source"`
-	Contacts *ContactsPage `json:"contacts"`
+	Name      string        `json:"name"`
+	Source    DataSource    `json:"source"`
+	CreatedAt time.Time     `json:"createdAt"`
+	Contacts  *ContactsPage `json:"contacts"`
 }
 
 // Create a groups that can be associated with a `Contact` in customerOS.
@@ -194,7 +182,8 @@ type ContactInput struct {
 // Describes the relationship a Contact has with a Organization.
 // **A `return` object**
 type ContactRole struct {
-	ID string `json:"id"`
+	ID        string    `json:"id"`
+	CreatedAt time.Time `json:"createdAt"`
 	// Organization associated with a Contact.
 	// **Required.**
 	Organization *Organization `json:"organization"`
@@ -215,8 +204,9 @@ type ContactRoleInput struct {
 }
 
 type ContactType struct {
-	ID   string `json:"id"`
-	Name string `json:"name"`
+	ID        string    `json:"id"`
+	CreatedAt time.Time `json:"createdAt"`
+	Name      string    `json:"name"`
 }
 
 type ContactTypeInput struct {
@@ -373,6 +363,7 @@ type CustomFieldInput struct {
 
 type CustomFieldTemplate struct {
 	ID        string                  `json:"id"`
+	CreatedAt time.Time               `json:"createdAt"`
 	Name      string                  `json:"name"`
 	Type      CustomFieldTemplateType `json:"type"`
 	Order     int                     `json:"order"`
@@ -429,8 +420,8 @@ type Email struct {
 	Source        DataSource `json:"source"`
 	SourceOfTruth DataSource `json:"sourceOfTruth"`
 	AppSource     string     `json:"appSource"`
-	CreatedAt     *time.Time `json:"createdAt"`
-	UpdatedAt     *time.Time `json:"updatedAt"`
+	CreatedAt     time.Time  `json:"createdAt"`
+	UpdatedAt     time.Time  `json:"updatedAt"`
 }
 
 // Describes an email address associated with a `Contact` in customerOS.
@@ -507,6 +498,7 @@ type FieldSetInput struct {
 
 type FieldSetTemplate struct {
 	ID           string                 `json:"id"`
+	CreatedAt    time.Time              `json:"createdAt"`
 	Name         string                 `json:"name"`
 	Order        int                    `json:"order"`
 	CustomFields []*CustomFieldTemplate `json:"customFields"`
@@ -575,17 +567,17 @@ type NoteUpdateInput struct {
 
 type Organization struct {
 	ID               string            `json:"id"`
+	CreatedAt        time.Time         `json:"createdAt"`
 	Name             string            `json:"name"`
 	Description      *string           `json:"description"`
 	Domain           *string           `json:"domain"`
 	Website          *string           `json:"website"`
 	Industry         *string           `json:"industry"`
 	IsPublic         *bool             `json:"isPublic"`
-	CreatedAt        time.Time         `json:"createdAt"`
 	OrganizationType *OrganizationType `json:"organizationType"`
 	// All addresses associated with an organization in customerOS.
 	// **Required.  If no values it returns an empty array.**
-	Addresses    []*Address     `json:"addresses"`
+	Addresses    []*Place       `json:"addresses"`
 	Source       DataSource     `json:"source"`
 	ContactRoles []*ContactRole `json:"contactRoles"`
 }
@@ -622,8 +614,9 @@ func (this OrganizationPage) GetTotalPages() int { return this.TotalPages }
 func (this OrganizationPage) GetTotalElements() int64 { return this.TotalElements }
 
 type OrganizationType struct {
-	ID   string `json:"id"`
-	Name string `json:"name"`
+	ID        string    `json:"id"`
+	Name      string    `json:"name"`
+	CreatedAt time.Time `json:"createdAt"`
 }
 
 type OrganizationTypeInput struct {
@@ -675,8 +668,9 @@ type PhoneNumber struct {
 	Label *PhoneNumberLabel `json:"label"`
 	// Determines if the phone number is primary or not.
 	// **Required**
-	Primary bool       `json:"primary"`
-	Source  DataSource `json:"source"`
+	Primary   bool       `json:"primary"`
+	CreatedAt time.Time  `json:"createdAt"`
+	Source    DataSource `json:"source"`
 }
 
 // Describes a phone number associated with a `Contact` in customerOS.
@@ -706,6 +700,20 @@ type PhoneNumberUpdateInput struct {
 	// Determines if the phone number is primary or not.
 	// **Required**
 	Primary *bool `json:"primary"`
+}
+
+type Place struct {
+	ID        string      `json:"id"`
+	CreatedAt time.Time   `json:"createdAt"`
+	Country   *string     `json:"country"`
+	State     *string     `json:"state"`
+	City      *string     `json:"city"`
+	Address   *string     `json:"address"`
+	Address2  *string     `json:"address2"`
+	Zip       *string     `json:"zip"`
+	Phone     *string     `json:"phone"`
+	Fax       *string     `json:"fax"`
+	Source    *DataSource `json:"source"`
 }
 
 // Describes the success or failure of the GraphQL call.

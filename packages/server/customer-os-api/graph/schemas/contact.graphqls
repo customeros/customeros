@@ -98,7 +98,7 @@ type Contact implements ExtensibleEntity & Node {
     All addresses associated with a contact in customerOS.
     **Required.  If no values it returns an empty array.**
     """
-    addresses: [Address!]! @goField(forceResolver: true)
+    addresses: [Place!]! @goField(forceResolver: true)
 
     """
     User defined metadata appended to the contact record in customerOS.

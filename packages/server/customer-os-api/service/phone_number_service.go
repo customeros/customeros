@@ -63,7 +63,7 @@ func (s *phoneNumberService) MergePhoneNumberToContact(ctx context.Context, cont
 
 	_, err = session.WriteTransaction(func(tx neo4j.Transaction) (interface{}, error) {
 		if entity.Primary == true {
-			err := setOtherContactPhoneNumbersNonPrimaryInTx(ctx, contactId, entity.E164, tx)
+			err := s.repositories.PhoneNumberRepository.SetOtherContactPhoneNumbersNonPrimaryInTx(tx, common.GetContext(ctx).Tenant, contactId, entity.E164)
 			if err != nil {
 				return nil, err
 			}
@@ -95,7 +95,7 @@ func (s *phoneNumberService) UpdatePhoneNumberInContact(ctx context.Context, con
 			return nil, err
 		}
 		if entity.Primary == true {
-			err := setOtherContactPhoneNumbersNonPrimaryInTx(ctx, contactId, entity.E164, tx)
+			err := s.repositories.PhoneNumberRepository.SetOtherContactPhoneNumbersNonPrimaryInTx(tx, common.GetContext(ctx).Tenant, contactId, entity.E164)
 			if err != nil {
 				return nil, err
 			}
@@ -109,20 +109,6 @@ func (s *phoneNumberService) UpdatePhoneNumberInContact(ctx context.Context, con
 	var phoneNumberEntity = s.mapDbNodeToPhoneNumberEntity(*phoneNumberNode)
 	s.addDbRelationshipToPhoneNumberEntity(*phoneNumberRelationship, phoneNumberEntity)
 	return phoneNumberEntity, nil
-}
-
-func setOtherContactPhoneNumbersNonPrimaryInTx(ctx context.Context, contactId string, e164 string, tx neo4j.Transaction) error {
-	_, err := tx.Run(`
-			MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}),
-				 (c)-[r:CALLED_AT]->(p:PhoneNumber)
-			WHERE p.e164 <> $e164
-            SET r.primary=false`,
-		map[string]interface{}{
-			"tenant":    common.GetContext(ctx).Tenant,
-			"contactId": contactId,
-			"e164":      e164,
-		})
-	return err
 }
 
 func (s *phoneNumberService) Delete(ctx context.Context, contactId string, e164 string) (bool, error) {
@@ -183,6 +169,7 @@ func (s *phoneNumberService) mapDbNodeToPhoneNumberEntity(node dbtype.Node) *ent
 		Label:         utils.GetStringPropOrEmpty(props, "label"),
 		Source:        entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
 		SourceOfTruth: entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
+		CreatedAt:     utils.GetTimePropOrNow(props, "createdAt"),
 	}
 	return &result
 }

@@ -2,9 +2,10 @@ package entity
 
 import (
 	"fmt"
+	"time"
 )
 
-type AddressEntity struct {
+type PlaceEntity struct {
 	Id            string
 	Country       string
 	State         string
@@ -14,16 +15,17 @@ type AddressEntity struct {
 	Zip           string
 	Phone         string
 	Fax           string
+	CreatedAt     time.Time
 	Source        DataSource
 	SourceOfTruth DataSource
 }
 
-func (address AddressEntity) ToString() string {
+func (address PlaceEntity) ToString() string {
 	return fmt.Sprintf("id: %s", address.Id)
 }
 
-type AddressEntities []AddressEntity
+type PlaceEntities []PlaceEntity
 
-func (address AddressEntity) Labels() []string {
+func (address PlaceEntity) Labels() []string {
 	return []string{"Address"}
 }

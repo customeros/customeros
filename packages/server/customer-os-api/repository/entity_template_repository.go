@@ -103,7 +103,10 @@ func (r *entityTemplateRepository) createFullEntityTemplateInTxWork(tenant strin
 		query := "MATCH (t:Tenant {name:$tenant}) " +
 			" MERGE (t)<-[r:ENTITY_TEMPLATE_BELONGS_TO_TENANT]-(e:EntityTemplate {id: randomUUID()}) " +
 			" ON CREATE SET e:%s, " +
-			" e.extends=$extends, e.createdAt=datetime({timezone: 'UTC'}), e.name=$name, e.version=$version" +
+			" 				e.extends=$extends, " +
+			"				e.createdAt=datetime({timezone: 'UTC'}), " +
+			"				e.name=$name, " +
+			"				e.version=$version" +
 			" RETURN e"
 		txResult, err := tx.Run(fmt.Sprintf(query, "EntityTemplate_"+tenant),
 			map[string]any{

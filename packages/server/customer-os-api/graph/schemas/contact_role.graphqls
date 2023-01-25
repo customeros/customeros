@@ -10,6 +10,7 @@ Describes the relationship a Contact has with a Organization.
 """
 type ContactRole {
     id: ID!
+    createdAt: Time!
 
     """
     Organization associated with a Contact.

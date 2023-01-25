@@ -27,11 +27,15 @@ func NewContactGroupRepository(driver *neo4j.Driver) ContactGroupRepository {
 func (r *contactGroupRepository) Create(session neo4j.Session, tenant string, entity entity.ContactGroupEntity) (*dbtype.Node, error) {
 	query := "MATCH (t:Tenant {name:$tenant}) " +
 		" MERGE (g:ContactGroup {id: randomUUID()})-[:GROUP_BELONGS_TO_TENANT]->(t)" +
-		" ON CREATE SET g.name=$name, g.source=$source, g.sourceOfTruth=$sourceOfTruth, g:ContactGroup_%s " +
+		" ON CREATE SET g.name=$name, " +
+		"				g.source=$source, " +
+		"				g.sourceOfTruth=$sourceOfTruth, " +
+		" 				g.createdAt=datetime({timezone: 'UTC'}), " +
+		"				g:%s " +
 		" RETURN g"
 
 	result, err := session.WriteTransaction(func(tx neo4j.Transaction) (interface{}, error) {
-		queryResult, err := tx.Run(fmt.Sprintf(query, tenant),
+		queryResult, err := tx.Run(fmt.Sprintf(query, "ContactGroup_"+tenant),
 			map[string]any{
 				"tenant":        tenant,
 				"name":          entity.Name,
@@ -50,7 +54,8 @@ func (r *contactGroupRepository) Update(session neo4j.Session, tenant string, en
 	dbNode, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
 		queryResult, err := tx.Run(`
 			MATCH (g:ContactGroup {id:$groupId})-[:GROUP_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant})
-			SET g.name=$name, g.sourceOfTruth=$sourceOfTruth
+			SET g.name=$name, 
+				g.sourceOfTruth=$sourceOfTruth
 			RETURN g`,
 			map[string]any{
 				"tenant":        tenant,
