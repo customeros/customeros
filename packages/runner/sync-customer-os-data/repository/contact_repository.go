@@ -97,8 +97,8 @@ func (r *contactRepository) MergePrimaryEmail(tenant, contactId, email, external
 		" SET r.primary=false " +
 		" WITH c " +
 		" MERGE (c)-[r:EMAILED_AT]->(e:Email {email: $email}) " +
-		" ON CREATE SET r.primary=true, e.id=randomUUID(), e.createdAt=$createdAt, e.source=$source, e.sourceOfTruth=$sourceOfTruth, e.appSource=$appSource, e:%s " +
-		" ON MATCH SET r.primary=true"
+		" ON CREATE SET r.primary=true, e.id=randomUUID(), e.createdAt=$createdAt, e.updatedAt=$createdAt, e.source=$source, e.sourceOfTruth=$sourceOfTruth, e.appSource=$appSource, e:%s " +
+		" ON MATCH SET r.primary=true, e.updatedAt=$now "
 
 	_, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
 		_, err := tx.Run(fmt.Sprintf(query, "Email_"+tenant),
@@ -110,6 +110,7 @@ func (r *contactRepository) MergePrimaryEmail(tenant, contactId, email, external
 				"source":        externalSystem,
 				"sourceOfTruth": externalSystem,
 				"appSource":     externalSystem,
+				"now":           time.Now().UTC(),
 			})
 		return nil, err
 	})
@@ -122,8 +123,8 @@ func (r *contactRepository) MergeAdditionalEmail(tenant, contactId, email, exter
 
 	query := "MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) " +
 		" MERGE (c)-[r:EMAILED_AT]->(e:Email {email:$email}) " +
-		" ON CREATE SET r.primary=false, e.id=randomUUID(), e.createdAt=$createdAt, e.source=$source, e.sourceOfTruth=$sourceOfTruth, e.appSource=$appSource, e:%s " +
-		" ON MATCH SET r.primary=false"
+		" ON CREATE SET r.primary=false, e.id=randomUUID(), e.createdAt=$createdAt, e.updatedAt=$createdAt, e.source=$source, e.sourceOfTruth=$sourceOfTruth, e.appSource=$appSource, e:%s " +
+		" ON MATCH SET r.primary=false, e.updatedAt=$now "
 
 	_, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
 		_, err := tx.Run(fmt.Sprintf(query, "Email_"+tenant),
@@ -135,6 +136,7 @@ func (r *contactRepository) MergeAdditionalEmail(tenant, contactId, email, exter
 				"source":        externalSystem,
 				"sourceOfTruth": externalSystem,
 				"appSource":     externalSystem,
+				"now":           time.Now().UTC(),
 			})
 		return nil, err
 	})
@@ -325,9 +327,10 @@ func (r *contactRepository) GetOrCreateContactId(tenant, email, firstName, lastN
 		queryResult, err := tx.Run(fmt.Sprintf(
 			" MATCH (t:Tenant {name:$tenant}) "+
 				" MERGE (e:Email {email: $email})<-[r:EMAILED_AT]-(c:Contact)-[:CONTACT_BELONGS_TO_TENANT]->(t) "+
-				" ON CREATE SET r.primary=true, e.id=randomUUID(), e.createdAt=$createdAt, "+
-				"				c.id=randomUUID(), c.firstName=$firstName, c.lastName=$lastName, c.createdAt=$createdAt, "+
+				" ON CREATE SET r.primary=true, e.id=randomUUID(), e.createdAt=$createdAt, e.updatedAt=$createdAt, "+
 				"				e.source=$source, e.sourceOfTruth=$sourceOfTruth, e.appSource=$appSource, "+
+				"				c.id=randomUUID(), c.firstName=$firstName, c.lastName=$lastName, "+
+				"				c.createdAt=$createdAt, c.updatedAt=$createdAt, "+
 				"				c.source=$source, c.sourceOfTruth=$sourceOfTruth, c.appSource=$appSource, "+
 				"               c:%s, e:%s "+
 				" RETURN c.id", "Contact_"+tenant, "Email_"+tenant),

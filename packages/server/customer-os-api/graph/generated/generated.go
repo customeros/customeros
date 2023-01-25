@@ -173,11 +173,15 @@ type ComplexityRoot struct {
 	}
 
 	Email struct {
-		Email   func(childComplexity int) int
-		ID      func(childComplexity int) int
-		Label   func(childComplexity int) int
-		Primary func(childComplexity int) int
-		Source  func(childComplexity int) int
+		AppSource     func(childComplexity int) int
+		CreatedAt     func(childComplexity int) int
+		Email         func(childComplexity int) int
+		ID            func(childComplexity int) int
+		Label         func(childComplexity int) int
+		Primary       func(childComplexity int) int
+		Source        func(childComplexity int) int
+		SourceOfTruth func(childComplexity int) int
+		UpdatedAt     func(childComplexity int) int
 	}
 
 	EntityTemplate struct {
@@ -1088,6 +1092,20 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.CustomFieldTemplate.Type(childComplexity), true
 
+	case "Email.appSource":
+		if e.complexity.Email.AppSource == nil {
+			break
+		}
+
+		return e.complexity.Email.AppSource(childComplexity), true
+
+	case "Email.createdAt":
+		if e.complexity.Email.CreatedAt == nil {
+			break
+		}
+
+		return e.complexity.Email.CreatedAt(childComplexity), true
+
 	case "Email.email":
 		if e.complexity.Email.Email == nil {
 			break
@@ -1122,6 +1140,20 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Email.Source(childComplexity), true
+
+	case "Email.sourceOfTruth":
+		if e.complexity.Email.SourceOfTruth == nil {
+			break
+		}
+
+		return e.complexity.Email.SourceOfTruth(childComplexity), true
+
+	case "Email.updatedAt":
+		if e.complexity.Email.UpdatedAt == nil {
+			break
+		}
+
+		return e.complexity.Email.UpdatedAt(childComplexity), true
 
 	case "EntityTemplate.createdAt":
 		if e.complexity.EntityTemplate.CreatedAt == nil {
@@ -3130,6 +3162,14 @@ type Email {
     primary: Boolean!
 
     source: DataSource!
+
+    sourceOfTruth: DataSource!
+
+    appSource: String!
+
+    createdAt: Time
+
+    updatedAt: Time
 }
 
 """
@@ -3154,6 +3194,8 @@ input EmailInput {
     **Required.**
     """
     primary: Boolean
+
+    appSource: String
 }
 
 """
@@ -6104,6 +6146,14 @@ func (ec *executionContext) fieldContext_Contact_emails(ctx context.Context, fie
 				return ec.fieldContext_Email_primary(ctx, field)
 			case "source":
 				return ec.fieldContext_Email_source(ctx, field)
+			case "sourceOfTruth":
+				return ec.fieldContext_Email_sourceOfTruth(ctx, field)
+			case "appSource":
+				return ec.fieldContext_Email_appSource(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Email_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_Email_updatedAt(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Email", field.Name)
 		},
@@ -9339,6 +9389,176 @@ func (ec *executionContext) fieldContext_Email_source(ctx context.Context, field
 	return fc, nil
 }
 
+func (ec *executionContext) _Email_sourceOfTruth(ctx context.Context, field graphql.CollectedField, obj *model.Email) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Email_sourceOfTruth(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.SourceOfTruth, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(model.DataSource)
+	fc.Result = res
+	return ec.marshalNDataSource2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐDataSource(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Email_sourceOfTruth(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Email",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type DataSource does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Email_appSource(ctx context.Context, field graphql.CollectedField, obj *model.Email) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Email_appSource(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.AppSource, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Email_appSource(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Email",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Email_createdAt(ctx context.Context, field graphql.CollectedField, obj *model.Email) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Email_createdAt(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.CreatedAt, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*time.Time)
+	fc.Result = res
+	return ec.marshalOTime2ᚖtimeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Email_createdAt(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Email",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Email_updatedAt(ctx context.Context, field graphql.CollectedField, obj *model.Email) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Email_updatedAt(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.UpdatedAt, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*time.Time)
+	fc.Result = res
+	return ec.marshalOTime2ᚖtimeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Email_updatedAt(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Email",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _EntityTemplate_id(ctx context.Context, field graphql.CollectedField, obj *model.EntityTemplate) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_EntityTemplate_id(ctx, field)
 	if err != nil {
@@ -12286,6 +12506,14 @@ func (ec *executionContext) fieldContext_Mutation_emailMergeToContact(ctx contex
 				return ec.fieldContext_Email_primary(ctx, field)
 			case "source":
 				return ec.fieldContext_Email_source(ctx, field)
+			case "sourceOfTruth":
+				return ec.fieldContext_Email_sourceOfTruth(ctx, field)
+			case "appSource":
+				return ec.fieldContext_Email_appSource(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Email_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_Email_updatedAt(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Email", field.Name)
 		},
@@ -12353,6 +12581,14 @@ func (ec *executionContext) fieldContext_Mutation_emailUpdateInContact(ctx conte
 				return ec.fieldContext_Email_primary(ctx, field)
 			case "source":
 				return ec.fieldContext_Email_source(ctx, field)
+			case "sourceOfTruth":
+				return ec.fieldContext_Email_sourceOfTruth(ctx, field)
+			case "appSource":
+				return ec.fieldContext_Email_appSource(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Email_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_Email_updatedAt(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Email", field.Name)
 		},
@@ -19248,7 +19484,7 @@ func (ec *executionContext) unmarshalInputEmailInput(ctx context.Context, obj in
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"email", "label", "primary"}
+	fieldsInOrder := [...]string{"email", "label", "primary", "appSource"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -19276,6 +19512,14 @@ func (ec *executionContext) unmarshalInputEmailInput(ctx context.Context, obj in
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("primary"))
 			it.Primary, err = ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "appSource":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("appSource"))
+			it.AppSource, err = ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -21270,6 +21514,28 @@ func (ec *executionContext) _Email(ctx context.Context, sel ast.SelectionSet, ob
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
+		case "sourceOfTruth":
+
+			out.Values[i] = ec._Email_sourceOfTruth(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "appSource":
+
+			out.Values[i] = ec._Email_appSource(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "createdAt":
+
+			out.Values[i] = ec._Email_createdAt(ctx, field, obj)
+
+		case "updatedAt":
+
+			out.Values[i] = ec._Email_updatedAt(ctx, field, obj)
+
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}

@@ -4,6 +4,7 @@ mutation MergeEmailToContact($contactId: ID!){
         input: {email: "test@gmail.com"
                 label: WORK
                 primary: true
+                appSource: "test"
         }
      ) {
         id
@@ -11,5 +12,9 @@ mutation MergeEmailToContact($contactId: ID!){
         label
         primary
         source
+        sourceOfTruth
+        appSource
+        createdAt
+        updatedAt
       }
 }

@@ -425,8 +425,12 @@ type Email struct {
 	Label *EmailLabel `json:"label"`
 	// Identifies whether the email address is primary or not.
 	// **Required.**
-	Primary bool       `json:"primary"`
-	Source  DataSource `json:"source"`
+	Primary       bool       `json:"primary"`
+	Source        DataSource `json:"source"`
+	SourceOfTruth DataSource `json:"sourceOfTruth"`
+	AppSource     string     `json:"appSource"`
+	CreatedAt     *time.Time `json:"createdAt"`
+	UpdatedAt     *time.Time `json:"updatedAt"`
 }
 
 // Describes an email address associated with a `Contact` in customerOS.
@@ -439,7 +443,8 @@ type EmailInput struct {
 	Label *EmailLabel `json:"label"`
 	// Identifies whether the email address is primary or not.
 	// **Required.**
-	Primary *bool `json:"primary"`
+	Primary   *bool   `json:"primary"`
+	AppSource *string `json:"appSource"`
 }
 
 // Describes an email address associated with a `Contact` in customerOS.

@@ -2,6 +2,7 @@ package entity
 
 import (
 	"fmt"
+	"time"
 )
 
 type EmailEntity struct {
@@ -11,6 +12,9 @@ type EmailEntity struct {
 	Primary       bool
 	Source        DataSource
 	SourceOfTruth DataSource
+	AppSource     string
+	CreatedAt     *time.Time
+	UpdatedAt     *time.Time
 }
 
 func (email EmailEntity) ToString() string {

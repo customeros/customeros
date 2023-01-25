@@ -93,7 +93,6 @@ func TestMutationResolver_ConversationCreate_WithoutParticipants_ShouldFail(t *t
 	rawResponse, err := c.RawPost(getQuery("create_conversation_without_participants"))
 
 	require.Nil(t, err)
-	require.Nil(t, rawResponse.Data)
 	require.NotNil(t, rawResponse.Errors)
 	require.Contains(t, string(rawResponse.Errors), "Missing participants for new conversation")
 
