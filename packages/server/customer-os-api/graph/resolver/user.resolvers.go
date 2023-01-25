@@ -6,7 +6,6 @@ package resolver
 
 import (
 	"context"
-
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/generated"
@@ -16,12 +15,22 @@ import (
 
 // UserCreate is the resolver for the userCreate field.
 func (r *mutationResolver) UserCreate(ctx context.Context, input model.UserInput) (*model.User, error) {
-	createdTenantEntity, err := r.Services.UserService.Create(ctx, mapper.MapUserInputToEntity(input))
+	createdUserEntity, err := r.Services.UserService.Create(ctx, mapper.MapUserInputToEntity(input))
 	if err != nil {
 		graphql.AddErrorf(ctx, "Failed to create user %s %s", input.FirstName, input.LastName)
 		return nil, err
 	}
-	return mapper.MapEntityToUser(createdTenantEntity), nil
+	return mapper.MapEntityToUser(createdUserEntity), nil
+}
+
+// UserUpdate is the resolver for the user_Update field.
+func (r *mutationResolver) UserUpdate(ctx context.Context, input model.UserUpdateInput) (*model.User, error) {
+	updatedUserEntity, err := r.Services.UserService.Update(ctx, mapper.MapUserUpdateInputToEntity(input))
+	if err != nil {
+		graphql.AddErrorf(ctx, "Failed to update user %s", input.ID)
+		return nil, err
+	}
+	return mapper.MapEntityToUser(updatedUserEntity), nil
 }
 
 // Users is the resolver for the users field.

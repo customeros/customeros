@@ -251,6 +251,7 @@ type ComplexityRoot struct {
 		PhoneNumberMergeToContact              func(childComplexity int, contactID string, input model.PhoneNumberInput) int
 		PhoneNumberUpdateInContact             func(childComplexity int, contactID string, input model.PhoneNumberUpdateInput) int
 		UserCreate                             func(childComplexity int, input model.UserInput) int
+		UserUpdate                             func(childComplexity int, input model.UserUpdateInput) int
 	}
 
 	Note struct {
@@ -455,6 +456,7 @@ type MutationResolver interface {
 	PhoneNumberDeleteFromContact(ctx context.Context, contactID string, e164 string) (*model.Result, error)
 	PhoneNumberDeleteFromContactByID(ctx context.Context, contactID string, id string) (*model.Result, error)
 	UserCreate(ctx context.Context, input model.UserInput) (*model.User, error)
+	UserUpdate(ctx context.Context, input model.UserUpdateInput) (*model.User, error)
 }
 type NoteResolver interface {
 	CreatedBy(ctx context.Context, obj *model.Note) (*model.User, error)
@@ -1811,17 +1813,29 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.PhoneNumberUpdateInContact(childComplexity, args["contactId"].(string), args["input"].(model.PhoneNumberUpdateInput)), true
 
-	case "Mutation.userCreate":
+	case "Mutation.user_Create":
 		if e.complexity.Mutation.UserCreate == nil {
 			break
 		}
 
-		args, err := ec.field_Mutation_userCreate_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_user_Create_args(context.TODO(), rawArgs)
 		if err != nil {
 			return 0, false
 		}
 
 		return e.complexity.Mutation.UserCreate(childComplexity, args["input"].(model.UserInput)), true
+
+	case "Mutation.user_Update":
+		if e.complexity.Mutation.UserUpdate == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_user_Update_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.UserUpdate(childComplexity, args["input"].(model.UserUpdateInput)), true
 
 	case "Note.createdAt":
 		if e.complexity.Note.CreatedAt == nil {
@@ -2454,6 +2468,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputPhoneNumberUpdateInput,
 		ec.unmarshalInputSortBy,
 		ec.unmarshalInputUserInput,
+		ec.unmarshalInputUserUpdateInput,
 	)
 	first := true
 
@@ -3708,7 +3723,8 @@ scalar Any @goModel(model:"model.AnyTypeValue")`, BuiltIn: false},
 }
 
 extend type Mutation {
-    userCreate(input: UserInput!): User!
+    user_Create(input: UserInput!): User!
+    user_Update(input: UserUpdateInput!): User!
 }
 
 """
@@ -3802,7 +3818,27 @@ input UserInput {
     email: String!
 }
 
+input UserUpdateInput {
 
+    id: ID!
+    """
+    The first name of the customerOS user.
+    **Required**
+    """
+    firstName: String!
+
+    """
+    The last name of the customerOS user.
+    **Required**
+    """
+    lastName: String!
+
+    """
+    The email address of the customerOS user.
+    **Required**
+    """
+    email: String!
+}
 `, BuiltIn: false},
 }
 var parsedSchema = gqlparser.MustLoadSchema(sources...)
@@ -4918,13 +4954,28 @@ func (ec *executionContext) field_Mutation_phoneNumberUpdateInContact_args(ctx c
 	return args, nil
 }
 
-func (ec *executionContext) field_Mutation_userCreate_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+func (ec *executionContext) field_Mutation_user_Create_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
 	var arg0 model.UserInput
 	if tmp, ok := rawArgs["input"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
 		arg0, err = ec.unmarshalNUserInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐUserInput(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_user_Update_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 model.UserUpdateInput
+	if tmp, ok := rawArgs["input"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+		arg0, err = ec.unmarshalNUserUpdateInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐUserUpdateInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -13445,8 +13496,8 @@ func (ec *executionContext) fieldContext_Mutation_phoneNumberDeleteFromContactBy
 	return fc, nil
 }
 
-func (ec *executionContext) _Mutation_userCreate(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_userCreate(ctx, field)
+func (ec *executionContext) _Mutation_user_Create(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_user_Create(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -13475,7 +13526,7 @@ func (ec *executionContext) _Mutation_userCreate(ctx context.Context, field grap
 	return ec.marshalNUser2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐUser(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Mutation_userCreate(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Mutation_user_Create(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Mutation",
 		Field:      field,
@@ -13508,7 +13559,77 @@ func (ec *executionContext) fieldContext_Mutation_userCreate(ctx context.Context
 		}
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_userCreate_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+	if fc.Args, err = ec.field_Mutation_user_Create_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_user_Update(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_user_Update(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().UserUpdate(rctx, fc.Args["input"].(model.UserUpdateInput))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.User)
+	fc.Result = res
+	return ec.marshalNUser2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐUser(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_user_Update(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_User_id(ctx, field)
+			case "firstName":
+				return ec.fieldContext_User_firstName(ctx, field)
+			case "lastName":
+				return ec.fieldContext_User_lastName(ctx, field)
+			case "email":
+				return ec.fieldContext_User_email(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_User_createdAt(ctx, field)
+			case "source":
+				return ec.fieldContext_User_source(ctx, field)
+			case "conversations":
+				return ec.fieldContext_User_conversations(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_user_Update_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return
 	}
@@ -20774,6 +20895,58 @@ func (ec *executionContext) unmarshalInputUserInput(ctx context.Context, obj int
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputUserUpdateInput(ctx context.Context, obj interface{}) (model.UserUpdateInput, error) {
+	var it model.UserUpdateInput
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"id", "firstName", "lastName", "email"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "id":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+			it.ID, err = ec.unmarshalNID2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "firstName":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("firstName"))
+			it.FirstName, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "lastName":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("lastName"))
+			it.LastName, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "email":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("email"))
+			it.Email, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
 // endregion **************************** input.gotpl *****************************
 
 // region    ************************** interface.gotpl ***************************
@@ -22488,10 +22661,16 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 				return ec._Mutation_phoneNumberDeleteFromContactById(ctx, field)
 			})
 
-		case "userCreate":
+		case "user_Create":
 
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_userCreate(ctx, field)
+				return ec._Mutation_user_Create(ctx, field)
+			})
+
+		case "user_Update":
+
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_user_Update(ctx, field)
 			})
 
 		default:
@@ -25259,6 +25438,11 @@ func (ec *executionContext) marshalNUserPage2ᚖgithubᚗcomᚋopenlineᚑaiᚋo
 		return graphql.Null
 	}
 	return ec._UserPage(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalNUserUpdateInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐUserUpdateInput(ctx context.Context, v interface{}) (model.UserUpdateInput, error) {
+	res, err := ec.unmarshalInputUserUpdateInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) marshalN__Directive2githubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐDirective(ctx context.Context, sel ast.SelectionSet, v introspection.Directive) graphql.Marshaler {

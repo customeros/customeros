@@ -4,7 +4,8 @@ extend type Query {
 }
 
 extend type Mutation {
-    userCreate(input: UserInput!): User!
+    user_Create(input: UserInput!): User!
+    user_Update(input: UserUpdateInput!): User!
 }
 
 """
@@ -98,4 +99,24 @@ input UserInput {
     email: String!
 }
 
+input UserUpdateInput {
 
+    id: ID!
+    """
+    The first name of the customerOS user.
+    **Required**
+    """
+    firstName: String!
+
+    """
+    The last name of the customerOS user.
+    **Required**
+    """
+    lastName: String!
+
+    """
+    The email address of the customerOS user.
+    **Required**
+    """
+    email: String!
+}

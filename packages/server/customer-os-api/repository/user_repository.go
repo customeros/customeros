@@ -11,6 +11,7 @@ import (
 
 type UserRepository interface {
 	Create(session neo4j.Session, tenant string, entity entity.UserEntity) (*dbtype.Node, error)
+	Update(session neo4j.Session, tenant string, entity entity.UserEntity) (*dbtype.Node, error)
 	FindOwnerForContact(tx neo4j.Transaction, tenant, contactId string) (*dbtype.Node, error)
 	FindCreatorForNote(tx neo4j.Transaction, tenant, noteId string) (*dbtype.Node, error)
 	GetPaginatedUsers(session neo4j.Session, tenant string, skip, limit int, filter *utils.CypherFilter, sort *utils.CypherSort) (*utils.DbNodesWithTotalCount, error)
@@ -48,6 +49,33 @@ func (r *userRepository) Create(session neo4j.Session, tenant string, entity ent
 				"lastName":      entity.LastName,
 				"email":         entity.Email,
 				"source":        entity.Source,
+				"sourceOfTruth": entity.SourceOfTruth,
+			})
+		return utils.ExtractSingleRecordFirstValueAsNode(queryResult, err)
+	})
+	if err != nil {
+		return nil, err
+	}
+	return result.(*dbtype.Node), nil
+}
+
+func (r *userRepository) Update(session neo4j.Session, tenant string, entity entity.UserEntity) (*dbtype.Node, error) {
+	query := "MATCH (u:User {id:$userId})-[:USER_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant}) " +
+		" SET 	u.firstName=$firstName, " +
+		"		u.lastName=$lastName, " +
+		"		u.email=$email, " +
+		"		u.updatedAt=datetime({timezone: 'UTC'}), " +
+		"		u.sourceOfTruth=$sourceOfTruth " +
+		" RETURN u"
+
+	result, err := session.WriteTransaction(func(tx neo4j.Transaction) (interface{}, error) {
+		queryResult, err := tx.Run(query,
+			map[string]any{
+				"userId":        entity.Id,
+				"tenant":        tenant,
+				"firstName":     entity.FirstName,
+				"lastName":      entity.LastName,
+				"email":         entity.Email,
 				"sourceOfTruth": entity.SourceOfTruth,
 			})
 		return utils.ExtractSingleRecordFirstValueAsNode(queryResult, err)
