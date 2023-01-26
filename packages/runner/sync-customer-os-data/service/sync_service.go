@@ -1,7 +1,6 @@
 package service
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/common"
@@ -9,7 +8,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/repository"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/source/hubspot/service"
 	"github.com/sirupsen/logrus"
-	"strings"
 	"time"
 )
 
@@ -491,18 +489,18 @@ func (s *syncService) syncEmailMessages(dataService common.DataService, syncDate
 					Cc:      message.CcEmail,
 					Bcc:     message.BccEmail,
 				}
-				jsonContent, err := JSONMarshalWithoutEscapeHtml(emailContent)
+				jsonContent, err := json.Marshal(emailContent)
 				if err != nil {
 					failedSync = true
 					logrus.Errorf("failed to marshal email content with external id %v for conversation %v in tenant %v :%v", message.ExternalId, conversationId, tenant, err)
 				}
-				r := strings.NewReplacer(`\n`, "\n")
-				conversationEvent.Content = r.Replace(string(jsonContent))
-
-				err = s.repositories.ConversationEventRepository.Save(conversationEvent)
-				if err != nil {
-					failedSync = true
-					logrus.Errorf("failed save message with external id %v in message store for conversation %v in tenant %v :%v", message.ExternalId, conversationId, tenant, err)
+				if failedSync == false {
+					conversationEvent.Content = string(jsonContent)
+					err = s.repositories.ConversationEventRepository.Save(conversationEvent)
+					if err != nil {
+						failedSync = true
+						logrus.Errorf("failed save message with external id %v in message store for conversation %v in tenant %v :%v", message.ExternalId, conversationId, tenant, err)
+					}
 				}
 			}
 
@@ -522,15 +520,6 @@ func (s *syncService) syncEmailMessages(dataService common.DataService, syncDate
 		}
 	}
 	return completed, failed
-}
-
-func JSONMarshalWithoutEscapeHtml(t interface{}) ([]byte, error) {
-	buffer := &bytes.Buffer{}
-	encoder := json.NewEncoder(buffer)
-	encoder.SetEscapeHTML(false)
-	encoder.SetIndent("", "  ")
-	err := encoder.Encode(t)
-	return buffer.Bytes(), err
 }
 
 func (s *syncService) dataService(tenantToSync entity.TenantSyncSettings) (common.DataService, error) {
