@@ -60,7 +60,7 @@ func main() {
 
 	r.POST("/file",
 		commonService.UserToTenantEnhancer(commonRepositoryContainer.UserToTenantRepo),
-		commonService.ApiKeyChecker(commonRepositoryContainer.AppKeyRepo, commonService.FILE_STORAGE_API),
+		commonService.ApiKeyCheckerHTTP(commonRepositoryContainer.AppKeyRepo, commonService.FILE_STORAGE_API),
 		func(c *gin.Context) {
 			tenantName := c.Keys["TenantName"].(string)
 
@@ -80,7 +80,7 @@ func main() {
 		})
 	r.GET("/file/:id",
 		commonService.UserToTenantEnhancer(commonRepositoryContainer.UserToTenantRepo),
-		commonService.ApiKeyChecker(commonRepositoryContainer.AppKeyRepo, commonService.FILE_STORAGE_API),
+		commonService.ApiKeyCheckerHTTP(commonRepositoryContainer.AppKeyRepo, commonService.FILE_STORAGE_API),
 		func(c *gin.Context) {
 			tenantName := c.Keys["TenantName"].(string)
 
@@ -98,7 +98,7 @@ func main() {
 		})
 	r.GET("/file/:id/download",
 		commonService.UserToTenantEnhancer(commonRepositoryContainer.UserToTenantRepo),
-		commonService.ApiKeyChecker(commonRepositoryContainer.AppKeyRepo, commonService.FILE_STORAGE_API),
+		commonService.ApiKeyCheckerHTTP(commonRepositoryContainer.AppKeyRepo, commonService.FILE_STORAGE_API),
 		func(c *gin.Context) {
 			tenantName := c.Keys["TenantName"].(string)
 
@@ -119,7 +119,7 @@ func main() {
 		})
 	r.GET("/file/:id/base64",
 		commonService.UserToTenantEnhancer(commonRepositoryContainer.UserToTenantRepo),
-		commonService.ApiKeyChecker(commonRepositoryContainer.AppKeyRepo, commonService.FILE_STORAGE_API),
+		commonService.ApiKeyCheckerHTTP(commonRepositoryContainer.AppKeyRepo, commonService.FILE_STORAGE_API),
 		func(c *gin.Context) {
 			tenantName := c.Keys["TenantName"].(string)
 

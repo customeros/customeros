@@ -33,7 +33,7 @@ type CustomerOSService interface {
 	ConversationByIdExists(tenant string, conversationId string) (bool, error)
 
 	GetConversations(tenant string) ([]Conversation, error)
-	GetConversationById(conversationId string) (Conversation, error)
+	GetConversationById(tenant string, conversationId string) (Conversation, error)
 
 	GetWebChatConversationWithContactInitiator(tenant string, contactId string) (*Conversation, error)
 	GetWebChatConversationWithUserInitiator(tenant string, userId string) (*Conversation, error)
@@ -339,9 +339,8 @@ func (s *customerOSService) ConversationByIdExists(tenant string, conversationId
 	defer session.Close()
 
 	dbRecords, err := session.ReadTransaction(func(tx neo4j.Transaction) (any, error) {
-		if queryResult, err := tx.Run(`MATCH (c:Conversation {id:$conversationId}) RETURN c`, //TODO need to filter by tenant
+		if queryResult, err := tx.Run("MATCH (c:Conversation_"+tenant+"{id:$conversationId}) RETURN c",
 			map[string]any{
-				"tenant":         tenant,
 				"conversationId": conversationId,
 			}); err != nil {
 			return nil, err
@@ -393,7 +392,7 @@ func (s *customerOSService) GetConversations(tenant string) ([]Conversation, err
 	return conversations, nil
 }
 
-func (s *customerOSService) GetConversationById(conversationId string) (*Conversation, error) {
+func (s *customerOSService) GetConversationById(tenant string, conversationId string) (*Conversation, error) {
 	session := (*s.driver).NewSession(
 		neo4j.SessionConfig{
 			AccessMode: neo4j.AccessModeWrite,
@@ -402,7 +401,7 @@ func (s *customerOSService) GetConversationById(conversationId string) (*Convers
 
 	conversationNode, err := session.ReadTransaction(func(tx neo4j.Transaction) (any, error) {
 
-		if queryResult, err := tx.Run("MATCH (c:Conversation{id: $conversationId}) RETURN c", map[string]any{
+		if queryResult, err := tx.Run("MATCH (c:Conversation_"+tenant+"{id: $conversationId}) RETURN c", map[string]any{
 			"conversationId": conversationId,
 		}); err != nil {
 			return nil, err

@@ -56,7 +56,7 @@ func main() {
 
 	r.GET("/settings",
 		commonService.UserToTenantEnhancer(commonRepositoryContainer.UserToTenantRepo),
-		commonService.ApiKeyChecker(commonRepositoryContainer.AppKeyRepo, commonService.SETTINGS_API),
+		commonService.ApiKeyCheckerHTTP(commonRepositoryContainer.AppKeyRepo, commonService.SETTINGS_API),
 		func(c *gin.Context) {
 			tenantName := c.Keys["TenantName"].(string)
 
@@ -72,7 +72,7 @@ func main() {
 
 	r.POST("/settings/hubspot",
 		commonService.UserToTenantEnhancer(commonRepositoryContainer.UserToTenantRepo),
-		commonService.ApiKeyChecker(commonRepositoryContainer.AppKeyRepo, commonService.SETTINGS_API),
+		commonService.ApiKeyCheckerHTTP(commonRepositoryContainer.AppKeyRepo, commonService.SETTINGS_API),
 		func(c *gin.Context) {
 			var request dto.TenantSettingsHubspotDTO
 
@@ -95,7 +95,7 @@ func main() {
 
 	r.DELETE("/settings/hubspot",
 		commonService.UserToTenantEnhancer(commonRepositoryContainer.UserToTenantRepo),
-		commonService.ApiKeyChecker(commonRepositoryContainer.AppKeyRepo, commonService.SETTINGS_API),
+		commonService.ApiKeyCheckerHTTP(commonRepositoryContainer.AppKeyRepo, commonService.SETTINGS_API),
 		func(c *gin.Context) {
 			tenantName := c.Keys["TenantName"].(string)
 
@@ -110,7 +110,7 @@ func main() {
 
 	r.POST("/settings/zendesk",
 		commonService.UserToTenantEnhancer(commonRepositoryContainer.UserToTenantRepo),
-		commonService.ApiKeyChecker(commonRepositoryContainer.AppKeyRepo, commonService.SETTINGS_API),
+		commonService.ApiKeyCheckerHTTP(commonRepositoryContainer.AppKeyRepo, commonService.SETTINGS_API),
 		func(c *gin.Context) {
 			var request dto.TenantSettingsZendeskDTO
 
@@ -133,7 +133,7 @@ func main() {
 
 	r.DELETE("/settings/zendesk",
 		commonService.UserToTenantEnhancer(commonRepositoryContainer.UserToTenantRepo),
-		commonService.ApiKeyChecker(commonRepositoryContainer.AppKeyRepo, commonService.SETTINGS_API),
+		commonService.ApiKeyCheckerHTTP(commonRepositoryContainer.AppKeyRepo, commonService.SETTINGS_API),
 		func(c *gin.Context) {
 			tenantName := c.Keys["TenantName"].(string)
 
@@ -148,7 +148,7 @@ func main() {
 
 	r.POST("/settings/smartSheet",
 		commonService.UserToTenantEnhancer(commonRepositoryContainer.UserToTenantRepo),
-		commonService.ApiKeyChecker(commonRepositoryContainer.AppKeyRepo, commonService.SETTINGS_API),
+		commonService.ApiKeyCheckerHTTP(commonRepositoryContainer.AppKeyRepo, commonService.SETTINGS_API),
 		func(c *gin.Context) {
 			var request dto.TenantSettingsSmartSheetDTO
 
@@ -171,7 +171,7 @@ func main() {
 
 	r.DELETE("/settings/smartSheet",
 		commonService.UserToTenantEnhancer(commonRepositoryContainer.UserToTenantRepo),
-		commonService.ApiKeyChecker(commonRepositoryContainer.AppKeyRepo, commonService.SETTINGS_API),
+		commonService.ApiKeyCheckerHTTP(commonRepositoryContainer.AppKeyRepo, commonService.SETTINGS_API),
 		func(c *gin.Context) {
 			tenantName := c.Keys["TenantName"].(string)
 
