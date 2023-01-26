@@ -249,8 +249,10 @@ func (s *customerOSService) CreateContactWithEmail(tenant string, email string) 
 		contactQuery := "MATCH (t:Tenant {name:$tenant}) " +
 			" MERGE (c:Contact {id:randomUUID()})-[:CONTACT_BELONGS_TO_TENANT]->(t) ON CREATE SET" +
 			" c.createdAt=$createdAt, " +
+			" c.updatedAt=$createdAt, " +
 			" c.source=$source, " +
 			" c.sourceOfTruth=$sourceOfTruth, " +
+			" c.appSource=$appSource, " +
 			" c:%s " +
 			" RETURN c.id, c.firstName, c.lastName"
 
@@ -260,6 +262,7 @@ func (s *customerOSService) CreateContactWithEmail(tenant string, email string) 
 				"createdAt":     time.Now().UTC(),
 				"source":        "openline",
 				"sourceOfTruth": "openline",
+				"appSource":     "message-store",
 			})
 
 		contact, err := contactQueryResult.Single()
@@ -271,18 +274,23 @@ func (s *customerOSService) CreateContactWithEmail(tenant string, email string) 
 		//create the email
 		emailQuery := "MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) " +
 			" MERGE (c)-[r:EMAILED_AT]->(e:Email {email: $email}) " +
-			" ON CREATE SET e.label=$label, r.primary=$primary, e.id=randomUUID(), e:%s " +
-			" ON MATCH SET e.label=$label, r.primary=$primary " +
+			" ON CREATE SET e.label=$label, r.primary=$primary, e.id=randomUUID(), e.createdAt=$now, e.updatedAt=$now," +
+			" e.source=$source, e.sourceOfTruth=$sourceOfTruth, e.appSource=$appSource, e:%s " +
+			" ON MATCH SET e.label=$label, r.primary=$primary, e.updatedAt=$now " +
 			" RETURN e"
 
 		contactId := contact.Values[0].(string)
 		_, err = tx.Run(fmt.Sprintf(emailQuery, "Email_"+tenant),
 			map[string]interface{}{
-				"tenant":    tenant,
-				"contactId": contactId,
-				"email":     email,
-				"label":     "WORK",
-				"primary":   true,
+				"tenant":        tenant,
+				"contactId":     contactId,
+				"email":         email,
+				"label":         "WORK",
+				"primary":       true,
+				"source":        "openline",
+				"sourceOfTruth": "openline",
+				"appSource":     "message-store",
+				"now":           time.Now().UTC(),
 			})
 
 		if err != nil {
