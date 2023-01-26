@@ -32,8 +32,13 @@ func (r *organizationResolver) OrganizationType(ctx context.Context, obj *model.
 }
 
 // Addresses is the resolver for the addresses field.
-func (r *organizationResolver) Addresses(ctx context.Context, obj *model.Organization) ([]*model.Address, error) {
+func (r *organizationResolver) Addresses(ctx context.Context, obj *model.Organization) ([]*model.Place, error) {
 	panic(fmt.Errorf("not implemented: Addresses - addresses"))
+}
+
+// ContactRoles is the resolver for the contactRoles field.
+func (r *organizationResolver) ContactRoles(ctx context.Context, obj *model.Organization) ([]*model.ContactRole, error) {
+	panic(fmt.Errorf("not implemented: ContactRoles - contactRoles"))
 }
 
 // Organizations is the resolver for the organizations field.
