@@ -38,7 +38,7 @@ func (s *webChatMessageStoreService) SaveMessage(ctx context.Context, input *msP
 	tenant := "openline" //TODO get tenant from context
 
 	if input.ConversationId != nil {
-		conv, err := s.customerOSService.GetConversationById(*input.ConversationId)
+		conv, err := s.customerOSService.GetConversationById(tenant, *input.ConversationId)
 		if err != nil {
 			return nil, err
 		}

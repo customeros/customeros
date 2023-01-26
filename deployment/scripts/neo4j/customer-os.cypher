@@ -45,6 +45,17 @@ MATCH (t:Tenant {name:"openline"})
     		u.appSource="manual";
 
 MATCH (t:Tenant {name:"openline"})
+    MERGE (u:User {id:"development@openline.ai"})-[:USER_BELONGS_TO_TENANT]->(t)
+    ON CREATE SET
+    		u.firstName ="Development",
+            u.lastName="User",
+            u.email="development@openline.ai",
+    		u.createdAt=datetime({timezone: 'UTC'}),
+    		u.source="openline",
+    		u.sourceOfTruth="openline",
+    		u.appSource="manual";
+
+MATCH (t:Tenant {name:"openline"})
     MERGE (c:Contact {id:"echotest"})-[:CONTACT_BELONGS_TO_TENANT]->(t)
     ON CREATE SET
     		c.firstName ="Echo",

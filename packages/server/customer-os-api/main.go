@@ -95,7 +95,7 @@ func main() {
 
 	r.POST("/query",
 		commonService.UserToTenantEnhancer(repositoryContainer.UserToTenantRepo),
-		commonService.ApiKeyChecker(repositoryContainer.AppKeyRepo, commonService.CUSTOMER_OS_API),
+		commonService.ApiKeyCheckerHTTP(repositoryContainer.AppKeyRepo, commonService.CUSTOMER_OS_API),
 		graphqlHandler(cfg, neo4jDriver, repositoryContainer))
 	if cfg.GraphQL.PlaygroundEnabled {
 		r.GET("/", playgroundHandler())
