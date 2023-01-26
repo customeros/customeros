@@ -7,7 +7,7 @@ import (
 )
 
 type FileRepository interface {
-	FindById(tenantId string, id string) helper.QueryResult
+	FindById(tenantName string, id string) helper.QueryResult
 	Save(file *entity.File) helper.QueryResult
 }
 
@@ -21,12 +21,12 @@ func NewFileRepo(db *gorm.DB) FileRepository {
 	}
 }
 
-func (r *fileRepo) FindById(tenantId string, id string) helper.QueryResult {
+func (r *fileRepo) FindById(tenantName string, id string) helper.QueryResult {
 	var file entity.File
 
 	err := r.db.
 		Where("id = ?", id).
-		Where("tenant_id = ?", tenantId).
+		Where("tenant_name = ?", tenantName).
 		First(&file).Error
 
 	if err != nil {
