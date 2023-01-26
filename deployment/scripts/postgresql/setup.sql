@@ -1,5 +1,6 @@
 INSERT INTO app_keys (app_id, key, active) VALUES ('customer-os-api', 'dd9d2474-b4a9-4799-b96f-73cd0a2917e4', true);
 INSERT INTO app_keys (app_id, key, active) VALUES ('file-storage-api', '9eb87aa2-75e7-45b2-a1e6-53ed297d0ba8', true);
+INSERT INTO app_keys (app_id, key, active) VALUES ('settings-api', '8b010f38-e5ca-4923-a62e-9f073c5c7dbf', true);
 
 INSERT INTO public.user_to_tenant (username, tenant) VALUES ('dev@openline.ai', 'openline');
 

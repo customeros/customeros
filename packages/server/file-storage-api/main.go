@@ -47,7 +47,7 @@ func main() {
 	db, _ := InitDB(cfg)
 	defer db.SqlDB.Close()
 
-	repositoryContainer := commonRepository.InitCommonRepositories(db.GormDB)
+	commonRepositoryContainer := commonRepository.InitCommonRepositories(db.GormDB)
 	services := service.InitServices(cfg, db.GormDB)
 
 	// Setting up Gin
@@ -58,52 +58,84 @@ func main() {
 	corsConfig.AllowOrigins = []string{"*"}
 	r.Use(cors.New(corsConfig))
 
-	r.POST("/file", commonService.ApiKeyChecker(repositoryContainer.AppKeyRepo, commonService.FILE_STORAGE_API), func(c *gin.Context) {
-		multipartFileHeader, err := c.FormFile("file")
-		if err != nil {
-			c.AbortWithStatus(500) //todo
-			return
-		}
+	r.POST("/file",
+		commonService.UserToTenantEnhancer(commonRepositoryContainer.UserToTenantRepo),
+		commonService.ApiKeyChecker(commonRepositoryContainer.AppKeyRepo, commonService.FILE_STORAGE_API),
+		func(c *gin.Context) {
+			tenantName := c.Keys["TenantName"].(string)
 
-		fileEntity, err := services.FileService.UploadSingleFile("", multipartFileHeader)
-		if err != nil {
-			c.AbortWithStatus(500) //todo
-			return
-		}
+			multipartFileHeader, err := c.FormFile("file")
+			if err != nil {
+				c.AbortWithStatus(500) //todo
+				return
+			}
 
-		c.JSON(200, MapFileEntityToDTO(cfg, fileEntity))
-	})
-	r.GET("/file/:id", commonService.ApiKeyChecker(repositoryContainer.AppKeyRepo, commonService.FILE_STORAGE_API), func(c *gin.Context) {
-		byId, err := services.FileService.GetById("", c.Param("id"))
-		if err != nil {
-			c.AbortWithStatus(500) //todo
-			return
-		}
+			fileEntity, err := services.FileService.UploadSingleFile(tenantName, multipartFileHeader)
+			if err != nil {
+				c.AbortWithStatus(500) //todo
+				return
+			}
 
-		c.JSON(200, MapFileEntityToDTO(cfg, byId))
-	})
-	r.GET("/file/:id/download", commonService.ApiKeyChecker(repositoryContainer.AppKeyRepo, commonService.FILE_STORAGE_API), func(c *gin.Context) {
-		byId, bytes, err := services.FileService.DownloadSingleFile("", c.Param("id"))
-		if err != nil {
-			c.AbortWithStatus(500) //todo
-			return
-		}
+			c.JSON(200, MapFileEntityToDTO(cfg, fileEntity))
+		})
+	r.GET("/file/:id",
+		commonService.UserToTenantEnhancer(commonRepositoryContainer.UserToTenantRepo),
+		commonService.ApiKeyChecker(commonRepositoryContainer.AppKeyRepo, commonService.FILE_STORAGE_API),
+		func(c *gin.Context) {
+			tenantName := c.Keys["TenantName"].(string)
 
-		c.Header("Content-Disposition", "attachment; filename="+byId.Name)
-		c.Header("Content-Type", fmt.Sprintf("%s", byId.MIME))
-		c.Header("Accept-Length", fmt.Sprintf("%d", len(bytes)))
-		c.Writer.Write(bytes)
-	})
-	r.GET("/file/:id/base64", commonService.ApiKeyChecker(repositoryContainer.AppKeyRepo, commonService.FILE_STORAGE_API), func(c *gin.Context) {
-		base64Encoded, err := services.FileService.Base64Image("", c.Param("id"))
-		if err != nil {
-			c.AbortWithStatus(500) //todo
-			return
-		}
+			byId, err := services.FileService.GetById(tenantName, c.Param("id"))
+			if err != nil && err.Error() != "record not found" {
+				c.AbortWithStatus(500) //todo
+				return
+			}
+			if err != nil && err.Error() == "record not found" {
+				c.AbortWithStatus(404)
+				return
+			}
 
-		bytes := []byte(*base64Encoded)
-		c.Writer.Write(bytes)
-	})
+			c.JSON(200, MapFileEntityToDTO(cfg, byId))
+		})
+	r.GET("/file/:id/download",
+		commonService.UserToTenantEnhancer(commonRepositoryContainer.UserToTenantRepo),
+		commonService.ApiKeyChecker(commonRepositoryContainer.AppKeyRepo, commonService.FILE_STORAGE_API),
+		func(c *gin.Context) {
+			tenantName := c.Keys["TenantName"].(string)
+
+			byId, bytes, err := services.FileService.DownloadSingleFile(tenantName, c.Param("id"))
+			if err != nil && err.Error() != "record not found" {
+				c.AbortWithStatus(500) //todo
+				return
+			}
+			if err != nil && err.Error() == "record not found" {
+				c.AbortWithStatus(404)
+				return
+			}
+
+			c.Header("Content-Disposition", "attachment; filename="+byId.Name)
+			c.Header("Content-Type", fmt.Sprintf("%s", byId.MIME))
+			c.Header("Accept-Length", fmt.Sprintf("%d", len(bytes)))
+			c.Writer.Write(bytes)
+		})
+	r.GET("/file/:id/base64",
+		commonService.UserToTenantEnhancer(commonRepositoryContainer.UserToTenantRepo),
+		commonService.ApiKeyChecker(commonRepositoryContainer.AppKeyRepo, commonService.FILE_STORAGE_API),
+		func(c *gin.Context) {
+			tenantName := c.Keys["TenantName"].(string)
+
+			base64Encoded, err := services.FileService.Base64Image(tenantName, c.Param("id"))
+			if err != nil && err.Error() != "record not found" {
+				c.AbortWithStatus(500) //todo
+				return
+			}
+			if err != nil && err.Error() == "record not found" {
+				c.AbortWithStatus(404)
+				return
+			}
+
+			bytes := []byte(*base64Encoded)
+			c.Writer.Write(bytes)
+		})
 
 	r.GET("/health", healthCheckHandler)
 	r.GET("/readiness", healthCheckHandler)

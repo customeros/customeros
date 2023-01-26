@@ -3,6 +3,7 @@ package service
 import (
 	"bytes"
 	"encoding/base64"
+	"errors"
 	"fmt"
 	"github.com/aws/aws-sdk-go/aws"
 	awsSes "github.com/aws/aws-sdk-go/aws/session"
@@ -19,10 +20,10 @@ import (
 )
 
 type FileService interface {
-	GetById(tenantId string, id string) (*entity.File, error)
-	UploadSingleFile(tenantId string, multipartFileHeader *multipart.FileHeader) (*entity.File, error)
-	DownloadSingleFile(tenantId string, id string) (*entity.File, []byte, error)
-	Base64Image(tenantId string, id string) (*string, error)
+	GetById(tenantName string, id string) (*entity.File, error)
+	UploadSingleFile(tenantName string, multipartFileHeader *multipart.FileHeader) (*entity.File, error)
+	DownloadSingleFile(tenantName string, id string) (*entity.File, []byte, error)
+	Base64Image(tenantName string, id string) (*string, error)
 }
 
 type fileService struct {
@@ -39,8 +40,8 @@ func NewFileService(cfg *config.Config, db *gorm.DB, repositories *repository.Po
 	}
 }
 
-func (s *fileService) GetById(tenantId string, id string) (*entity.File, error) {
-	byId := s.repositories.FileRepository.FindById(tenantId, id)
+func (s *fileService) GetById(tenantName string, id string) (*entity.File, error) {
+	byId := s.repositories.FileRepository.FindById(tenantName, id)
 	if byId.Error != nil {
 		return nil, byId.Error
 	}
@@ -48,7 +49,7 @@ func (s *fileService) GetById(tenantId string, id string) (*entity.File, error) 
 	return byId.Result.(*entity.File), nil
 }
 
-func (s *fileService) UploadSingleFile(tenantId string, multipartFileHeader *multipart.FileHeader) (*entity.File, error) {
+func (s *fileService) UploadSingleFile(tenantName string, multipartFileHeader *multipart.FileHeader) (*entity.File, error) {
 	multipartFile, err := multipartFileHeader.Open()
 	if err != nil {
 		return nil, err
@@ -65,14 +66,15 @@ func (s *fileService) UploadSingleFile(tenantId string, multipartFileHeader *mul
 	kind, _ := filetype.Match(head)
 	if kind == filetype.Unknown {
 		fmt.Println("Unknown multipartFile type")
-		return nil, nil //TODO
+		return nil, errors.New("Unknown multipartFile type")
 	}
 
 	fileEntity := entity.File{
-		Name:      multipartFileHeader.Filename,
-		Extension: kind.Extension,
-		MIME:      kind.MIME.Value,
-		Length:    multipartFileHeader.Size,
+		TenantName: tenantName,
+		Name:       multipartFileHeader.Filename,
+		Extension:  kind.Extension,
+		MIME:       kind.MIME.Value,
+		Length:     multipartFileHeader.Size,
 	}
 
 	session, err := awsSes.NewSession(&aws.Config{Region: aws.String(s.cfg.AWS.Region)})
@@ -104,8 +106,8 @@ func (s *fileService) UploadSingleFile(tenantId string, multipartFileHeader *mul
 	return &fileEntity, nil
 }
 
-func (s *fileService) DownloadSingleFile(tenantId string, id string) (*entity.File, []byte, error) {
-	byId := s.repositories.FileRepository.FindById(tenantId, id)
+func (s *fileService) DownloadSingleFile(tenantName string, id string) (*entity.File, []byte, error) {
+	byId := s.repositories.FileRepository.FindById(tenantName, id)
 	if byId.Error != nil {
 		return nil, nil, byId.Error
 	}
@@ -131,8 +133,8 @@ func (s *fileService) DownloadSingleFile(tenantId string, id string) (*entity.Fi
 	return fileEntity, fileBytes, nil
 }
 
-func (s *fileService) Base64Image(tenantId string, id string) (*string, error) {
-	byId := s.repositories.FileRepository.FindById(tenantId, id)
+func (s *fileService) Base64Image(tenantName string, id string) (*string, error) {
+	byId := s.repositories.FileRepository.FindById(tenantName, id)
 	if byId.Error != nil {
 		return nil, byId.Error
 	}
