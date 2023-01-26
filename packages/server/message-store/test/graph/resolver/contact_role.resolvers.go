@@ -16,6 +16,11 @@ func (r *contactRoleResolver) Organization(ctx context.Context, obj *model.Conta
 	panic(fmt.Errorf("not implemented: Organization - organization"))
 }
 
+// Contact is the resolver for the contact field.
+func (r *contactRoleResolver) Contact(ctx context.Context, obj *model.ContactRole) (*model.Contact, error) {
+	panic(fmt.Errorf("not implemented: Contact - contact"))
+}
+
 // ContactRoleDelete is the resolver for the contactRole_Delete field.
 func (r *mutationResolver) ContactRoleDelete(ctx context.Context, contactID string, roleID string) (*model.Result, error) {
 	panic(fmt.Errorf("not implemented: ContactRoleDelete - contactRole_Delete"))

@@ -16,6 +16,11 @@ func (r *mutationResolver) UserCreate(ctx context.Context, input model.UserInput
 	panic(fmt.Errorf("not implemented: UserCreate - userCreate"))
 }
 
+// UserUpdate is the resolver for the user_Update field.
+func (r *mutationResolver) UserUpdate(ctx context.Context, input model.UserUpdateInput) (*model.User, error) {
+	panic(fmt.Errorf("not implemented: UserUpdate - user_Update"))
+}
+
 // Users is the resolver for the users field.
 func (r *queryResolver) Users(ctx context.Context, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) (*model.UserPage, error) {
 	panic(fmt.Errorf("not implemented: Users - users"))

@@ -44,7 +44,7 @@ func (r *contactResolver) Emails(ctx context.Context, obj *model.Contact) ([]*mo
 }
 
 // Addresses is the resolver for the addresses field.
-func (r *contactResolver) Addresses(ctx context.Context, obj *model.Contact) ([]*model.Address, error) {
+func (r *contactResolver) Addresses(ctx context.Context, obj *model.Contact) ([]*model.Place, error) {
 	panic(fmt.Errorf("not implemented: Addresses - addresses"))
 }
 
