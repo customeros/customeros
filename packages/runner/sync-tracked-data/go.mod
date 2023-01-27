@@ -6,7 +6,7 @@ require (
 	github.com/caarlos0/env/v6 v6.10.1
 	github.com/google/uuid v1.3.0
 	github.com/joho/godotenv v1.4.0
-	github.com/neo4j/neo4j-go-driver/v4 v4.4.4
+	github.com/neo4j/neo4j-go-driver/v4 v4.4.5
 	github.com/sirupsen/logrus v1.9.0
 	gorm.io/driver/postgres v1.4.6
 	gorm.io/gorm v1.24.3
