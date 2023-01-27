@@ -4,25 +4,23 @@ import (
 	"context"
 	"errors"
 	"github.com/gin-gonic/gin"
-	repository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/repository/postgres"
+	repository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/repository/neo4j"
 	"google.golang.org/grpc/metadata"
 )
 
 const UsernameHeader = "X-Openline-USERNAME"
 
-func UserToTenantEnhancer(userToTenantRepository repository.UserToTenantRepository) func(c *gin.Context) {
+func UserToTenantEnhancer(userRepository repository.UserRepository) func(c *gin.Context) {
 	return func(c *gin.Context) {
-		uh := c.GetHeader(UsernameHeader)
-		if uh != "" {
+		usernameHeader := c.GetHeader(UsernameHeader)
+		if usernameHeader != "" {
 
-			tenantResult := userToTenantRepository.FindTenantByUsername(uh)
+			userId, tenant, err := userRepository.FindUserByEmail(usernameHeader)
 
-			if tenantResult.Error != nil {
+			if err != nil {
 				c.AbortWithStatus(401)
 				return
 			}
-
-			tenant := tenantResult.Result.(string)
 
 			if len(tenant) == 0 {
 				c.AbortWithStatus(401)
@@ -32,6 +30,8 @@ func UserToTenantEnhancer(userToTenantRepository repository.UserToTenantReposito
 					c.Keys = map[string]any{}
 				}
 				c.Keys["TenantName"] = tenant
+				c.Keys["UserId"] = userId
+				c.Keys["UserEmail"] = usernameHeader
 			}
 
 			c.Next()
@@ -57,7 +57,7 @@ func GetUsernameMetadataForGRPC(ctx context.Context) (*string, error) {
 	return nil, errors.New("no username header")
 }
 
-func GetTenantForUsernameForGRPC(ctx context.Context, userToTenantRepository repository.UserToTenantRepository) (*string, error) {
+func GetTenantForUsernameForGRPC(ctx context.Context, userRepository repository.UserRepository) (*string, error) {
 	md, ok := metadata.FromIncomingContext(ctx)
 	if !ok {
 		return nil, errors.New("no metadata")
@@ -65,14 +65,17 @@ func GetTenantForUsernameForGRPC(ctx context.Context, userToTenantRepository rep
 
 	kh := md.Get(UsernameHeader)
 	if kh != nil && len(kh) == 1 {
-		tenantResult := userToTenantRepository.FindTenantByUsername(kh[0])
+		_, tenant, err := userRepository.FindUserByEmail(kh[0])
 
-		if tenantResult.Error != nil && tenantResult.Error.Error() != "record not found" {
-			return nil, tenantResult.Error
+		if err != nil {
+			return nil, err
 		}
 
-		tenantName := tenantResult.Result.(string)
-		return &tenantName, nil
+		if len(tenant) == 0 {
+			return nil, errors.New("no user found")
+		}
+
+		return &tenant, nil
 	}
 	return nil, errors.New("no username header")
 }

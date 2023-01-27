@@ -9,7 +9,9 @@ require (
 	github.com/gin-contrib/cors v1.4.0
 	github.com/gin-gonic/gin v1.8.2
 	github.com/joho/godotenv v1.4.0
+	github.com/neo4j/neo4j-go-driver/v4 v4.4.4
 	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20221226052956-566ca6192766
+	github.com/sirupsen/logrus v1.9.0
 	gorm.io/driver/postgres v1.4.5
 	gorm.io/gorm v1.24.3
 )

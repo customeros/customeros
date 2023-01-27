@@ -20,4 +20,13 @@ type Config struct {
 		MaxIdleConn     int    `env:"POSTGRES_DB_MAX_IDLE_CONN"`
 		ConnMaxLifetime int    `env:"POSTGRES_DB_CONN_MAX_LIFETIME"`
 	}
+
+	Neo4j struct {
+		Target                string `env:"NEO4J_TARGET,required"`
+		User                  string `env:"NEO4J_AUTH_USER,required,unset"`
+		Pwd                   string `env:"NEO4J_AUTH_PWD,required,unset"`
+		Realm                 string `env:"NEO4J_AUTH_REALM"`
+		MaxConnectionPoolSize int    `env:"NEO4J_MAX_CONN_POOL_SIZE" envDefault:"100"`
+		LogLevel              string `env:"NEO4J_LOG_LEVEL" envDefault:"WARNING"`
+	}
 }

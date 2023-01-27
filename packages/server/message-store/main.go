@@ -45,7 +45,7 @@ func main() {
 	// Create a new gRPC server (you can wire multiple services to a single server).
 	server := grpc.NewServer()
 
-	repositories := repository.InitRepositories(db.GormDB)
+	repositories := repository.InitRepositories(db.GormDB, neo4jDriver)
 	customerOSService := service.NewCustomerOSService(neo4jDriver, repositories)
 	commonStoreService := service.NewCommonStoreService()
 

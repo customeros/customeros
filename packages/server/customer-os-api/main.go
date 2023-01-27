@@ -16,7 +16,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/generated"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/resolver"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service/container"
-	commonRepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/repository/postgres"
+	commonRepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/repository"
 	commonService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 	"github.com/sirupsen/logrus"
 	"github.com/vektah/gqlparser/v2/gqlerror"
@@ -31,7 +31,7 @@ func InitDB(cfg *config.Config) (db *config.StorageDB, err error) {
 	return
 }
 
-func graphqlHandler(cfg *config.Config, driver neo4j.Driver, repositoryContainer *commonRepository.PostgresCommonRepositoryContainer) gin.HandlerFunc {
+func graphqlHandler(cfg *config.Config, driver neo4j.Driver, repositoryContainer *commonRepository.Repositories) gin.HandlerFunc {
 	serviceContainer := container.InitServices(&driver)
 	// instantiate graph resolver
 	graphResolver := resolver.NewResolver(serviceContainer, repositoryContainer)
@@ -78,13 +78,13 @@ func main() {
 	db, _ := InitDB(cfg)
 	defer db.SqlDB.Close()
 
-	repositoryContainer := commonRepository.InitCommonRepositories(db.GormDB)
-
 	neo4jDriver, err := config.NewDriver(cfg)
 	if err != nil {
 		logrus.Fatalf("Could not establish connection with neo4j at: %v, error: %v", cfg.Neo4j.Target, err.Error())
 	}
 	defer neo4jDriver.Close()
+
+	repositoryContainer := commonRepository.InitRepositories(db.GormDB, &neo4jDriver)
 
 	// Setting up Gin
 	r := gin.Default()
@@ -94,7 +94,7 @@ func main() {
 	r.Use(cors.New(corsConfig))
 
 	r.POST("/query",
-		commonService.UserToTenantEnhancer(repositoryContainer.UserToTenantRepo),
+		commonService.UserToTenantEnhancer(repositoryContainer.UserRepo),
 		commonService.ApiKeyCheckerHTTP(repositoryContainer.AppKeyRepo, commonService.CUSTOMER_OS_API),
 		graphqlHandler(cfg, neo4jDriver, repositoryContainer))
 	if cfg.GraphQL.PlaygroundEnabled {

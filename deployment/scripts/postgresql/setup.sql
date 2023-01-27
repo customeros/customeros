@@ -4,9 +4,6 @@ INSERT INTO app_keys (app_id, key, active) VALUES ('settings-api', '8b010f38-e5c
 INSERT INTO app_keys (app_id, key, active) VALUES ('message-store-api', 'f6e26f68-7e69-42fb-9aee-624becc29897', true);
 INSERT INTO app_keys (app_id, key, active) VALUES ('oasis-api', '10a6747a-97cd-4a6c-bcf5-e4ee89a12567', true);
 
-INSERT INTO public.user_to_tenant (username, tenant) VALUES ('dev@openline.ai', 'openline'); --TODO remove
-INSERT INTO public.user_to_tenant (username, tenant) VALUES ('development@openline.ai', 'openline');
-
 INSERT INTO public.conversation_event (event_uuid, tenant_name, conversation_id, type, subtype, initiator_username, sender_id,
                                        sender_type, sender_username, content, source, external_id, direction, created_at) VALUES
 ('481876a4-cd17-4b89-a67d-60660b9d9b87', 'openline', 'echotest',
