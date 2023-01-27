@@ -5,7 +5,7 @@ import (
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
-	commonRepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/repository/postgres"
+	commonRepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/repository"
 	commonService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/settings-api/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/settings-api/config/logger"
@@ -44,7 +44,7 @@ func main() {
 	db, _ := InitDB(cfg)
 	defer db.SqlDB.Close()
 
-	commonRepositoryContainer := commonRepository.InitCommonRepositories(db.GormDB)
+	commonRepositoryContainer := commonRepository.InitRepositories(db.GormDB)
 	services := service.InitServices(db.GormDB)
 
 	// Setting up Gin

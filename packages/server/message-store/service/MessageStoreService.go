@@ -25,7 +25,7 @@ func (s *messageService) GetMessage(ctx context.Context, msgId *msProto.MessageI
 		return nil, status.Errorf(codes.Unauthenticated, "Invalid API Key")
 	}
 
-	tenantName, err := commonModuleService.GetTenantForUsernameForGRPC(ctx, s.postgresRepositories.CommonRepositories.UserToTenantRepo)
+	tenantName, err := commonModuleService.GetTenantForUsernameForGRPC(ctx, s.postgresRepositories.CommonRepositories.UserRepo)
 	if err != nil {
 		return nil, err
 	}
@@ -58,7 +58,7 @@ func (s *messageService) GetMessagesForFeed(ctx context.Context, feedIdRequest *
 		return nil, status.Errorf(codes.Unauthenticated, "Invalid API Key")
 	}
 
-	tenantName, err := commonModuleService.GetTenantForUsernameForGRPC(ctx, s.postgresRepositories.CommonRepositories.UserToTenantRepo)
+	tenantName, err := commonModuleService.GetTenantForUsernameForGRPC(ctx, s.postgresRepositories.CommonRepositories.UserRepo)
 	if err != nil {
 		return nil, err
 	}
@@ -97,7 +97,7 @@ func (s *messageService) GetFeeds(ctx context.Context, request *msProto.GetFeeds
 		return nil, status.Errorf(codes.Unauthenticated, "Invalid API Key")
 	}
 
-	tenantName, err := commonModuleService.GetTenantForUsernameForGRPC(ctx, s.postgresRepositories.CommonRepositories.UserToTenantRepo)
+	tenantName, err := commonModuleService.GetTenantForUsernameForGRPC(ctx, s.postgresRepositories.CommonRepositories.UserRepo)
 	if err != nil {
 		return nil, err
 	}
@@ -137,7 +137,7 @@ func (s *messageService) GetFeed(ctx context.Context, feedIdRequest *msProto.Fee
 		return nil, status.Errorf(codes.Unauthenticated, "Invalid API Key")
 	}
 
-	tenantName, err := commonModuleService.GetTenantForUsernameForGRPC(ctx, s.postgresRepositories.CommonRepositories.UserToTenantRepo)
+	tenantName, err := commonModuleService.GetTenantForUsernameForGRPC(ctx, s.postgresRepositories.CommonRepositories.UserRepo)
 	if err != nil {
 		return nil, err
 	}
