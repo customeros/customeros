@@ -1,17 +1,11 @@
-name: Build and publish customer-os-api
+name: Build customer-os-api
 
 on:
   push:
-    branches: [ "otter" ]
     paths:
+      - packages/server/customer-os-common-module/**
       - packages/server/customer-os-api/**
       - .github/workflows/build-customer-os-api.yml
-  pull_request:
-    paths:
-      - packages/server/customer-os-api/**
-      - .github/workflows/build-customer-os-api.yml
-  release:
-    types: [ created, edited ]
 
 env:
   REGISTRY: ghcr.io
@@ -59,18 +53,6 @@ jobs:
           echo "|--------|--------|--------|" >> $GITHUB_STEP_SUMMARY
           go tool cover -func=cover.out |sed -r  's/[[:space:]]+/|/g'|sed -r 's/$/|/g'|sed -r 's/^/|/g' >> $GITHUB_STEP_SUMMARY
 
-  publish:
-    name: publish image
-    needs:
-      - build
-
-    if: github.ref_name == 'otter' || github.event_name == 'release'
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-
       - name: Prepare sources for docker build
         run: |
           mkdir tmp-sources
@@ -96,10 +78,10 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
 
-      - name: Push Docker image
+      - name: Build docker image ( no push )
         uses: docker/build-push-action@v3
         with:
           context: packages/server/customer-os-api/tmp-sources/.
-          push: true
+          push: false
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}

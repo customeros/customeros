@@ -53,7 +53,7 @@ updates:
     rebase-strategy: "auto"
 
   - package-ecosystem: "gomod"
-    directory: "/packages/server/message-store"
+    directory: "/packages/server/message-store-api"
     schedule:
       interval: "daily"
       time: "07:00"
@@ -61,7 +61,7 @@ updates:
     labels:
       - "gomod"
       - "dependencies"
-      - "message-store"
+      - "message-store-api"
     pull-request-branch-name:
       separator: "-"
     rebase-strategy: "auto"

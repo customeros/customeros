@@ -12,7 +12,7 @@ type App string
 
 const (
 	CUSTOMER_OS_API   App = "customer-os-api"
-	FILE_STORAGE_API  App = "file-storage-api"
+	FILE_STORE_API    App = "file-store-api"
 	SETTINGS_API      App = "settings-api"
 	MESSAGE_STORE_API App = "message-store-api"
 	OASIS_API         App = "oasis-api"

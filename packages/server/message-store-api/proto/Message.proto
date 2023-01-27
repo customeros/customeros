@@ -1,0 +1,43 @@
+syntax = "proto3";
+package proto;
+
+import "google/protobuf/timestamp.proto";
+
+option go_package = "github.com/openline-ai/openline-customer-os/packages/server/message-store-api/proto/generated/";
+
+enum SenderType {
+  CONTACT = 0;
+  USER = 1;
+}
+enum MessageSubtype {
+  MESSAGE = 0;
+  FILE = 1;
+}
+enum MessageDirection {
+  INBOUND = 0;
+  OUTBOUND = 1;
+}
+enum MessageType {
+  WEB_CHAT = 0;
+  EMAIL = 1;
+  VOICE = 2;
+}
+
+message MessageId {
+  string id = 1;
+}
+
+message Message {
+  string id = 1;
+  string conversationId = 2;
+  string conversationInitiatorUsername = 3;
+  MessageType type = 4;
+  MessageSubtype subtype = 5;
+  string content = 6;
+  MessageDirection direction = 7;
+  google.protobuf.Timestamp time = 8;
+
+  SenderType senderType = 9;
+  string senderId = 10;
+  string senderUsername = 11;
+}
