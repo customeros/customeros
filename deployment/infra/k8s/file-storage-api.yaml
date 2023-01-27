@@ -21,7 +21,7 @@ spec:
           livenessProbe:
             httpGet:
               path: /health
-              port: 10000
+              port: 10001
               scheme: HTTP
             initialDelaySeconds: 5
             periodSeconds: 15
@@ -50,6 +50,19 @@ spec:
               value: "10"
             - name: POSTGRES_CONN_MAX_LIFETIME
               value: "0"
+
+            - name: NEO4J_TARGET
+              value: "neo4j://customer-db-neo4j.openline.svc.cluster.local:7687"
+            - name: NEO4J_AUTH_USER
+              value: "neo4j"
+            - name: NEO4J_AUTH_PWD
+              value: "StrongLocalPa$$$"
+            - name: NEO4J_AUTH_REALM
+              value: ""
+            - name: NEO4J_MAX_CONN_POOL_SIZE
+              value: "100"
+            - name: NEO4J_LOG_LEVEL
+              value: "INFO"
 
             - name: PORT
               value: "10001"

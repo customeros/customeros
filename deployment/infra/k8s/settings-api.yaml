@@ -53,5 +53,18 @@ spec:
             - name: POSTGRES_LOG_LEVEL
               value: "WARN"
 
+            - name: NEO4J_TARGET
+              value: "neo4j://customer-db-neo4j.openline.svc.cluster.local:7687"
+            - name: NEO4J_AUTH_USER
+              value: "neo4j"
+            - name: NEO4J_AUTH_PWD
+              value: "StrongLocalPa$$$"
+            - name: NEO4J_AUTH_REALM
+              value: ""
+            - name: NEO4J_MAX_CONN_POOL_SIZE
+              value: "100"
+            - name: NEO4J_LOG_LEVEL
+              value: "INFO"
+
             - name: PORT
               value: "10002"
