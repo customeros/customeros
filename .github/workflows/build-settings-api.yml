@@ -3,12 +3,9 @@ name: Build settings-api
 on:
   push:
     paths:
+      - packages/server/customer-os-common-module/**
       - packages/server/settings-api/**
       - .github/workflows/build-settings-api.yml
-      - .github/workflows/publish-settings-api.yml
-
-  release:
-    types: [ created, edited ]
 
 env:
   REGISTRY: ghcr.io
@@ -81,7 +78,7 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
 
-      - name: Push Docker image
+      - name: Build docker image ( no push )
         uses: docker/build-push-action@v3
         with:
           context: packages/server/settings-api/tmp-sources/.

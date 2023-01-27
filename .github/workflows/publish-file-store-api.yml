@@ -1,18 +1,18 @@
-name: Publish settings-api
+name: Publish file-store-api
 
 on:
   push:
     branches: [ "otter" ]
     paths:
       - packages/server/customer-os-common-module/**
-      - packages/server/settings-api/**
-      - .github/workflows/publish-settings-api.yml
+      - packages/server/file-store-api/**
+      - .github/workflows/publish-file-store-api.yml
   release:
     types: [ created, edited ]
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}/settings-api
+  IMAGE_NAME: ${{ github.repository }}/file-store-api
 
 permissions:
   contents: read
@@ -21,7 +21,7 @@ permissions:
 
 defaults:
   run:
-    working-directory: ./packages/server/settings-api
+    working-directory: ./packages/server/file-store-api
 
 jobs:
   build:
@@ -44,7 +44,7 @@ jobs:
         uses: mikepenz/action-junit-report@v3
         if: always()    # run this step even if previous step failed
         with:
-          report_paths: ./packages/server/settings-api/unit-tests.xml    # Path to test results
+          report_paths: ./packages/server/file-store-api/unit-tests.xml    # Path to test results
           include_passed: true
           annotate_only: true
           detailed_summary: true
@@ -56,14 +56,26 @@ jobs:
           echo "|--------|--------|--------|" >> $GITHUB_STEP_SUMMARY
           go tool cover -func=cover.out |sed -r  's/[[:space:]]+/|/g'|sed -r 's/$/|/g'|sed -r 's/^/|/g' >> $GITHUB_STEP_SUMMARY
 
+  publish:
+    name: publish image
+    needs:
+      - build
+
+    if: github.ref_name == 'otter' || github.event_name == 'release'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
       - name: Prepare sources for docker build
         run: |
           mkdir tmp-sources
           mkdir tmp-sources/customer-os-common-module
-          mkdir tmp-sources/settings-api
+          mkdir tmp-sources/file-store-api
           
-          rsync -av --progress --exclude="tmp-sources" * tmp-sources/settings-api
-          cp .env tmp-sources/settings-api/.env
+          rsync -av --progress --exclude="tmp-sources" * tmp-sources/file-store-api
+          cp .env tmp-sources/file-store-api/.env
           cp -r ../customer-os-common-module/* tmp-sources/customer-os-common-module
           
           cp Dockerfile tmp-sources/Dockerfile
@@ -84,7 +96,7 @@ jobs:
       - name: Push Docker image
         uses: docker/build-push-action@v3
         with:
-          context: packages/server/settings-api/tmp-sources/.
+          context: packages/server/file-store-api/tmp-sources/.
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
