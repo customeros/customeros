@@ -66,7 +66,7 @@ func tearDownTestCase() func(tb testing.TB) {
 }
 
 func prepareClient() {
-	repositoryContainer := commonRepository.InitRepositories(postgresGormDB)
+	repositoryContainer := commonRepository.InitRepositories(postgresGormDB, driver)
 	serviceContainer := container.InitServices(driver)
 	graphResolver := NewResolver(serviceContainer, repositoryContainer)
 	customCtx := &common.CustomContext{
