@@ -388,6 +388,32 @@ func TestMutationResolver_UpdateContact(t *testing.T) {
 	assertNeo4jLabels(t, driver, []string{"Tenant", "Contact", "ContactType", "User"})
 }
 
+func TestMutationResolver_UpdateContact_ClearTitle(t *testing.T) {
+	defer tearDownTestCase()(t)
+	neo4jt.CreateTenant(driver, tenantName)
+	contactId := neo4jt.CreateContact(driver, tenantName, entity.ContactEntity{
+		Title:     model.PersonTitleMr.String(),
+		FirstName: "first",
+		LastName:  "last",
+	})
+
+	rawResponse, err := c.RawPost(getQuery("update_contact_clear_title"),
+		client.Var("contactId", contactId))
+	assertRawResponseSuccess(t, rawResponse, err)
+
+	var contact struct {
+		Contact_Update model.Contact
+	}
+
+	err = decode.Decode(rawResponse.Data.(map[string]any), &contact)
+	require.Nil(t, err)
+	require.NotNil(t, contact)
+	updatedContact := contact.Contact_Update
+	require.Equal(t, "", updatedContact.Title.String())
+	require.Equal(t, "updated first", *updatedContact.FirstName)
+	require.Equal(t, "updated last", *updatedContact.LastName)
+}
+
 func TestQueryResolver_Contact_WithRoles_ById(t *testing.T) {
 	defer tearDownTestCase()(t)
 	neo4jt.CreateTenant(driver, tenantName)
