@@ -1,7 +1,7 @@
 extend type Mutation {
     contactRole_Delete(contactId : ID!, roleId: ID!): Result!
     contactRole_Create(contactId : ID!, input: ContactRoleInput!): ContactRole!
-    contactRole_Update(contactId : ID!, roleId : ID!, input: ContactRoleInput!): ContactRole!
+    contactRole_Update(contactId : ID!, input: ContactRoleUpdateInput!): ContactRole!
 }
 
 """
@@ -11,6 +11,7 @@ Describes the relationship a Contact has with a Organization.
 type ContactRole {
     id: ID!
     createdAt: Time!
+    updatedAt: Time!
 
     """
     Organization associated with a Contact.
@@ -25,7 +26,11 @@ type ContactRole {
 
     primary: Boolean!
 
+    responsibilityLevel: Int64!
+
     source: DataSource!
+    sourceOfTruth: DataSource!
+    appSource: String!
 }
 
 """
@@ -40,4 +45,25 @@ input ContactRoleInput {
     jobTitle: String
 
     primary: Boolean
+
+    responsibilityLevel: Int64
+
+    appSource: String
+}
+
+"""
+Describes the relationship a Contact has with an Organization.
+**A `create` object**
+"""
+input ContactRoleUpdateInput {
+    id: ID!
+
+    organizationId: ID
+
+    "The Contact's job title."
+    jobTitle: String
+
+    primary: Boolean
+
+    responsibilityLevel: Int64
 }

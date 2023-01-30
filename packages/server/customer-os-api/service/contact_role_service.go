@@ -15,7 +15,7 @@ type ContactRoleService interface {
 	FindAllForOrganization(ctx context.Context, organizationId string) (*entity.ContactRoleEntities, error)
 	DeleteContactRole(ctx context.Context, contactId, roleId string) (bool, error)
 	CreateContactRole(ctx context.Context, contactId string, organizationId *string, entity *entity.ContactRoleEntity) (*entity.ContactRoleEntity, error)
-	UpdateContactRole(ctx context.Context, contactId, roleId string, organizationId *string, entity *entity.ContactRoleEntity) (*entity.ContactRoleEntity, error)
+	UpdateContactRole(ctx context.Context, contactId string, organizationId *string, entity *entity.ContactRoleEntity) (*entity.ContactRoleEntity, error)
 }
 
 type contactRoleService struct {
@@ -93,22 +93,22 @@ func (s *contactRoleService) CreateContactRole(ctx context.Context, contactId st
 	return s.mapDbNodeToContactRoleEntity(*dbNode.(*dbtype.Node)), nil
 }
 
-func (s *contactRoleService) UpdateContactRole(ctx context.Context, contactId, roleId string, organizationId *string, entity *entity.ContactRoleEntity) (*entity.ContactRoleEntity, error) {
+func (s *contactRoleService) UpdateContactRole(ctx context.Context, contactId string, organizationId *string, entity *entity.ContactRoleEntity) (*entity.ContactRoleEntity, error) {
 	session := utils.NewNeo4jWriteSession(*s.repositories.Drivers.Neo4jDriver)
 	defer session.Close()
 
 	dbNode, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
 		if entity.Primary == true {
-			s.repositories.ContactRoleRepository.SetOtherRolesNonPrimaryInTx(tx, common.GetContext(ctx).Tenant, contactId, roleId)
+			s.repositories.ContactRoleRepository.SetOtherRolesNonPrimaryInTx(tx, common.GetContext(ctx).Tenant, contactId, entity.Id)
 		}
 
-		roleDbNode, err := s.repositories.ContactRoleRepository.UpdateContactRoleDetails(tx, common.GetContext(ctx).Tenant, contactId, roleId, *entity)
+		roleDbNode, err := s.repositories.ContactRoleRepository.UpdateContactRoleDetails(tx, common.GetContext(ctx).Tenant, contactId, entity.Id, *entity)
 		if err != nil {
 			return nil, err
 		}
 
 		if organizationId != nil {
-			if err = s.repositories.ContactRoleRepository.LinkWithOrganization(tx, common.GetContext(ctx).Tenant, roleId, *organizationId); err != nil {
+			if err = s.repositories.ContactRoleRepository.LinkWithOrganization(tx, common.GetContext(ctx).Tenant, entity.Id, *organizationId); err != nil {
 				return nil, err
 			}
 		}
@@ -137,12 +137,15 @@ func (s *contactRoleService) DeleteContactRole(ctx context.Context, contactId, r
 func (s *contactRoleService) mapDbNodeToContactRoleEntity(node dbtype.Node) *entity.ContactRoleEntity {
 	props := utils.GetPropsFromNode(node)
 	result := entity.ContactRoleEntity{
-		Id:            utils.GetStringPropOrEmpty(props, "id"),
-		JobTitle:      utils.GetStringPropOrEmpty(props, "jobTitle"),
-		Primary:       utils.GetBoolPropOrFalse(props, "primary"),
-		Source:        entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
-		SourceOfTruth: entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
-		CreatedAt:     utils.GetTimePropOrNow(props, "createdAt"),
+		Id:                  utils.GetStringPropOrEmpty(props, "id"),
+		JobTitle:            utils.GetStringPropOrEmpty(props, "jobTitle"),
+		Primary:             utils.GetBoolPropOrFalse(props, "primary"),
+		ResponsibilityLevel: utils.GetInt64PropOrZero(props, "responsibilityLevel"),
+		Source:              entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
+		SourceOfTruth:       entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
+		AppSource:           utils.GetStringPropOrEmpty(props, "appSource"),
+		CreatedAt:           utils.GetTimePropOrNow(props, "createdAt"),
+		UpdatedAt:           utils.GetTimePropOrNow(props, "updatedAt"),
 	}
 	return &result
 }

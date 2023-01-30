@@ -87,6 +87,20 @@ func IfNotNilString(check any, valueExtractor ...func() string) string {
 	return *out
 }
 
+func IfNotNilInt64(check any, valueExtractor ...func() int64) int64 {
+	if reflect.ValueOf(check).Kind() == reflect.Int64 {
+		return check.(int64)
+	}
+	if reflect.ValueOf(check).Kind() == reflect.Pointer && reflect.ValueOf(check).IsNil() {
+		return 0
+	}
+	if len(valueExtractor) > 0 {
+		return valueExtractor[0]()
+	}
+	out := check.(*int64)
+	return *out
+}
+
 func IfNotNilBool(check any, valueExtractor ...func() bool) bool {
 	if reflect.ValueOf(check).Kind() == reflect.Bool {
 		return check.(bool)

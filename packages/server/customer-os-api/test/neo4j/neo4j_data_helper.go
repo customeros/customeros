@@ -394,13 +394,16 @@ func ContactWorksForOrganization(driver *neo4j.Driver, contactId, organizationId
 	query := `MATCH (c:Contact {id:$contactId}),
 			        (org:Organization {id:$organizationId})
 			MERGE (c)-[:HAS_ROLE]->(r:Role)-[:WORKS]->(org)
-			ON CREATE SET r.id=$id, r.jobTitle=$jobTitle, r.primary=$primary`
+			ON CREATE SET r.id=$id, r.jobTitle=$jobTitle, r.primary=$primary, r.responsibilityLevel=$responsibilityLevel,
+							r.createdAt=datetime({timezone: 'UTC'}), r.appSource=$appSource`
 	ExecuteWriteQuery(driver, query, map[string]any{
-		"id":             roleId.String(),
-		"contactId":      contactId,
-		"organizationId": organizationId,
-		"jobTitle":       jobTitle,
-		"primary":        primary,
+		"id":                  roleId.String(),
+		"contactId":           contactId,
+		"organizationId":      organizationId,
+		"jobTitle":            jobTitle,
+		"primary":             primary,
+		"responsibilityLevel": 1,
+		"appSource":           "test",
 	})
 	return roleId.String()
 }
