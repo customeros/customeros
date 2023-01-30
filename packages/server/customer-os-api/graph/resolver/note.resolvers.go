@@ -6,6 +6,7 @@ package resolver
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/generated"
@@ -23,14 +24,9 @@ func (r *mutationResolver) NoteMergeToContact(ctx context.Context, contactID str
 	return mapper.MapEntityToNote(result), nil
 }
 
-// NoteUpdateInContact is the resolver for the note_UpdateInContact field.
-func (r *mutationResolver) NoteUpdateInContact(ctx context.Context, contactID string, input model.NoteUpdateInput) (*model.Note, error) {
-	result, err := r.Services.NoteService.UpdateNoteInContact(ctx, contactID, mapper.MapNoteUpdateInputToEntity(&input))
-	if err != nil {
-		graphql.AddErrorf(ctx, "Could not update note %s in contact %s", input.ID, contactID)
-		return nil, err
-	}
-	return mapper.MapEntityToNote(result), nil
+// NoteUpdate is the resolver for the note_Update field.
+func (r *mutationResolver) NoteUpdate(ctx context.Context, input model.NoteUpdateInput) (*model.Note, error) {
+	panic(fmt.Errorf("not implemented: NoteUpdate - note_Update"))
 }
 
 // NoteDelete is the resolver for the note_Delete field.
@@ -62,3 +58,18 @@ func (r *noteResolver) CreatedBy(ctx context.Context, obj *model.Note) (*model.U
 func (r *Resolver) Note() generated.NoteResolver { return &noteResolver{r} }
 
 type noteResolver struct{ *Resolver }
+
+// !!! WARNING !!!
+// The code below was going to be deleted when updating resolvers. It has been copied here so you have
+// one last chance to move it out of harms way if you want. There are two reasons this happens:
+//   - When renaming or deleting a resolver the old code will be put in here. You can safely delete
+//     it when you're done.
+//   - You have helper methods in this file. Move them out to keep these resolver files clean.
+func (r *mutationResolver) NoteUpdateInContact(ctx context.Context, contactID string, input model.NoteUpdateInput) (*model.Note, error) {
+	result, err := r.Services.NoteService.UpdateNoteInContact(ctx, contactID, mapper.MapNoteUpdateInputToEntity(&input))
+	if err != nil {
+		graphql.AddErrorf(ctx, "Could not update note %s in contact %s", input.ID, contactID)
+		return nil, err
+	}
+	return mapper.MapEntityToNote(result), nil
+}

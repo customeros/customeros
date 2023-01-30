@@ -21,7 +21,7 @@ type NoteDbNodesWithTotalCount struct {
 
 type NoteRepository interface {
 	GetPaginatedNotesForContact(session neo4j.Session, tenant, contactId string, skip, limit int) (*NoteDbNodesWithTotalCount, error)
-	MergeNote(session neo4j.Session, tenant, contactId string, entity entity.NoteEntity) (*dbtype.Node, error)
+	CreateNote(session neo4j.Session, tenant, contactId string, entity entity.NoteEntity) (*dbtype.Node, error)
 	UpdateNoteForContact(session neo4j.Session, tenant, contactId string, entity entity.NoteEntity) (*dbtype.Node, error)
 	Delete(session neo4j.Session, tenant, noteId string) error
 }
@@ -83,7 +83,7 @@ func (r *noteRepository) UpdateNoteForContact(session neo4j.Session, tenant, con
 		txResult, err := tx.Run(`
 			MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}),
 				(c)-[:NOTED]->(n:Note {id:$noteId})
-			SET n.html=$html, n.sourceOfTruth=$sourceOfTruth
+			SET n.html=$html, n.sourceOfTruth=$sourceOfTruth, n.updatedAt=$now
 			RETURN n`,
 			map[string]interface{}{
 				"tenant":        tenant,
@@ -91,6 +91,7 @@ func (r *noteRepository) UpdateNoteForContact(session neo4j.Session, tenant, con
 				"noteId":        entity.Id,
 				"html":          entity.Html,
 				"sourceOfTruth": entity.SourceOfTruth,
+				"now":           time.Now().UTC(),
 			})
 		return utils.ExtractSingleRecordFirstValueAsNode(txResult, err)
 	})
@@ -100,16 +101,16 @@ func (r *noteRepository) UpdateNoteForContact(session neo4j.Session, tenant, con
 	return queryResult.(*dbtype.Node), nil
 }
 
-func (r *noteRepository) MergeNote(session neo4j.Session, tenant, contactId string, entity entity.NoteEntity) (*dbtype.Node, error) {
+func (r *noteRepository) CreateNote(session neo4j.Session, tenant, contactId string, entity entity.NoteEntity) (*dbtype.Node, error) {
 	query := "MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant}) " +
 		" MERGE (c)-[:NOTED]->(n:Note {id:randomUUID()}) " +
 		" ON CREATE SET n.html=$html, " +
 		"				n.createdAt=$createdAt, " +
+		"				n.updatedAt=$createdAt, " +
 		"				n.source=$source, " +
 		"				n.sourceOfTruth=$sourceOfTruth, " +
+		"				n.appSource=$appSource, " +
 		"				n:%s " +
-		" ON MATCH SET 	n.html=$html, " +
-		"				n.sourceOfTruth=$sourceOfTruth " +
 		" RETURN n"
 
 	result, err := session.WriteTransaction(func(tx neo4j.Transaction) (interface{}, error) {
@@ -121,6 +122,7 @@ func (r *noteRepository) MergeNote(session neo4j.Session, tenant, contactId stri
 				"createdAt":     time.Now().UTC(),
 				"source":        entity.Source,
 				"sourceOfTruth": entity.SourceOfTruth,
+				"appSource":     entity.AppSource,
 			})
 		return utils.ExtractSingleRecordFirstValueAsNode(queryResult, err)
 	})

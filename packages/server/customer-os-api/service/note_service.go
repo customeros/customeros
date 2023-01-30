@@ -64,7 +64,7 @@ func (s *noteService) MergeNoteToContact(ctx context.Context, contactId string, 
 	session := utils.NewNeo4jWriteSession(s.getNeo4jDriver())
 	defer session.Close()
 
-	dbNodePtr, err := s.repositories.NoteRepository.MergeNote(session, common.GetContext(ctx).Tenant, contactId, *entity)
+	dbNodePtr, err := s.repositories.NoteRepository.CreateNote(session, common.GetContext(ctx).Tenant, contactId, *entity)
 	if err != nil {
 		return nil, err
 	}
@@ -101,9 +101,11 @@ func (s *noteService) mapDbNodeToNoteEntity(node dbtype.Node) *entity.NoteEntity
 	result := entity.NoteEntity{
 		Id:            utils.GetStringPropOrEmpty(props, "id"),
 		Html:          utils.GetStringPropOrEmpty(props, "html"),
-		CreatedAt:     utils.GetTimePropOrNil(props, "createdAt"),
+		CreatedAt:     utils.GetTimePropOrNow(props, "createdAt"),
+		UpdatedAt:     utils.GetTimePropOrNow(props, "updatedAt"),
 		Source:        entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
 		SourceOfTruth: entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
+		AppSource:     utils.GetStringPropOrEmpty(props, "appSource"),
 	}
 	return &result
 }

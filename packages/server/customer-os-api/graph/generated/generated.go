@@ -243,7 +243,7 @@ type ComplexityRoot struct {
 		FieldSetUpdateInContact                func(childComplexity int, contactID string, input model.FieldSetUpdateInput) int
 		NoteDelete                             func(childComplexity int, id string) int
 		NoteMergeToContact                     func(childComplexity int, contactID string, input model.NoteInput) int
-		NoteUpdateInContact                    func(childComplexity int, contactID string, input model.NoteUpdateInput) int
+		NoteUpdate                             func(childComplexity int, input model.NoteUpdateInput) int
 		OrganizationCreate                     func(childComplexity int, input model.OrganizationInput) int
 		OrganizationDelete                     func(childComplexity int, id string) int
 		OrganizationTypeCreate                 func(childComplexity int, input model.OrganizationTypeInput) int
@@ -259,11 +259,14 @@ type ComplexityRoot struct {
 	}
 
 	Note struct {
-		CreatedAt func(childComplexity int) int
-		CreatedBy func(childComplexity int) int
-		HTML      func(childComplexity int) int
-		ID        func(childComplexity int) int
-		Source    func(childComplexity int) int
+		AppSource     func(childComplexity int) int
+		CreatedAt     func(childComplexity int) int
+		CreatedBy     func(childComplexity int) int
+		HTML          func(childComplexity int) int
+		ID            func(childComplexity int) int
+		Source        func(childComplexity int) int
+		SourceOfTruth func(childComplexity int) int
+		UpdatedAt     func(childComplexity int) int
 	}
 
 	NotePage struct {
@@ -450,7 +453,7 @@ type MutationResolver interface {
 	EmailRemoveFromContact(ctx context.Context, contactID string, email string) (*model.Result, error)
 	EmailRemoveFromContactByID(ctx context.Context, contactID string, id string) (*model.Result, error)
 	NoteMergeToContact(ctx context.Context, contactID string, input model.NoteInput) (*model.Note, error)
-	NoteUpdateInContact(ctx context.Context, contactID string, input model.NoteUpdateInput) (*model.Note, error)
+	NoteUpdate(ctx context.Context, input model.NoteUpdateInput) (*model.Note, error)
 	NoteDelete(ctx context.Context, id string) (*model.Result, error)
 	OrganizationCreate(ctx context.Context, input model.OrganizationInput) (*model.Organization, error)
 	OrganizationUpdate(ctx context.Context, input model.OrganizationUpdateInput) (*model.Organization, error)
@@ -1716,17 +1719,17 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.NoteMergeToContact(childComplexity, args["contactId"].(string), args["input"].(model.NoteInput)), true
 
-	case "Mutation.note_UpdateInContact":
-		if e.complexity.Mutation.NoteUpdateInContact == nil {
+	case "Mutation.note_Update":
+		if e.complexity.Mutation.NoteUpdate == nil {
 			break
 		}
 
-		args, err := ec.field_Mutation_note_UpdateInContact_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_note_Update_args(context.TODO(), rawArgs)
 		if err != nil {
 			return 0, false
 		}
 
-		return e.complexity.Mutation.NoteUpdateInContact(childComplexity, args["contactId"].(string), args["input"].(model.NoteUpdateInput)), true
+		return e.complexity.Mutation.NoteUpdate(childComplexity, args["input"].(model.NoteUpdateInput)), true
 
 	case "Mutation.organization_Create":
 		if e.complexity.Mutation.OrganizationCreate == nil {
@@ -1872,6 +1875,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.UserUpdate(childComplexity, args["input"].(model.UserUpdateInput)), true
 
+	case "Note.appSource":
+		if e.complexity.Note.AppSource == nil {
+			break
+		}
+
+		return e.complexity.Note.AppSource(childComplexity), true
+
 	case "Note.createdAt":
 		if e.complexity.Note.CreatedAt == nil {
 			break
@@ -1906,6 +1916,20 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Note.Source(childComplexity), true
+
+	case "Note.sourceOfTruth":
+		if e.complexity.Note.SourceOfTruth == nil {
+			break
+		}
+
+		return e.complexity.Note.SourceOfTruth(childComplexity), true
+
+	case "Note.updatedAt":
+		if e.complexity.Note.UpdatedAt == nil {
+			break
+		}
+
+		return e.complexity.Note.UpdatedAt(childComplexity), true
 
 	case "NotePage.content":
 		if e.complexity.NotePage.Content == nil {
@@ -3569,7 +3593,7 @@ interface ExtensibleEntity implements Node {
 `, BuiltIn: false},
 	{Name: "../schemas/note.graphqls", Input: `extend type Mutation {
     note_MergeToContact(contactId : ID!, input: NoteInput!): Note!
-    note_UpdateInContact(contactId : ID!, input: NoteUpdateInput!): Note!
+    note_Update(input: NoteUpdateInput!): Note!
     note_Delete(id: ID!): Result!
 }
 
@@ -3577,8 +3601,11 @@ type Note {
     id: ID!
     html: String!
     createdAt: Time!
+    updatedAt: Time!
     createdBy: User @goField(forceResolver: true)
     source: DataSource!
+    sourceOfTruth: DataSource!
+    appSource: String!
 }
 
 type NotePage implements Pages {
@@ -3589,6 +3616,7 @@ type NotePage implements Pages {
 
 input NoteInput {
     html: String!
+    appSource: String
 }
 
 input NoteUpdateInput {
@@ -4816,27 +4844,18 @@ func (ec *executionContext) field_Mutation_note_MergeToContact_args(ctx context.
 	return args, nil
 }
 
-func (ec *executionContext) field_Mutation_note_UpdateInContact_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+func (ec *executionContext) field_Mutation_note_Update_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 string
-	if tmp, ok := rawArgs["contactId"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("contactId"))
-		arg0, err = ec.unmarshalNID2string(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["contactId"] = arg0
-	var arg1 model.NoteUpdateInput
+	var arg0 model.NoteUpdateInput
 	if tmp, ok := rawArgs["input"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-		arg1, err = ec.unmarshalNNoteUpdateInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐNoteUpdateInput(ctx, tmp)
+		arg0, err = ec.unmarshalNNoteUpdateInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐNoteUpdateInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["input"] = arg1
+	args["input"] = arg0
 	return args, nil
 }
 
@@ -12985,10 +13004,16 @@ func (ec *executionContext) fieldContext_Mutation_note_MergeToContact(ctx contex
 				return ec.fieldContext_Note_html(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_Note_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_Note_updatedAt(ctx, field)
 			case "createdBy":
 				return ec.fieldContext_Note_createdBy(ctx, field)
 			case "source":
 				return ec.fieldContext_Note_source(ctx, field)
+			case "sourceOfTruth":
+				return ec.fieldContext_Note_sourceOfTruth(ctx, field)
+			case "appSource":
+				return ec.fieldContext_Note_appSource(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Note", field.Name)
 		},
@@ -13007,8 +13032,8 @@ func (ec *executionContext) fieldContext_Mutation_note_MergeToContact(ctx contex
 	return fc, nil
 }
 
-func (ec *executionContext) _Mutation_note_UpdateInContact(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_note_UpdateInContact(ctx, field)
+func (ec *executionContext) _Mutation_note_Update(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_note_Update(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -13021,7 +13046,7 @@ func (ec *executionContext) _Mutation_note_UpdateInContact(ctx context.Context, 
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().NoteUpdateInContact(rctx, fc.Args["contactId"].(string), fc.Args["input"].(model.NoteUpdateInput))
+		return ec.resolvers.Mutation().NoteUpdate(rctx, fc.Args["input"].(model.NoteUpdateInput))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -13037,7 +13062,7 @@ func (ec *executionContext) _Mutation_note_UpdateInContact(ctx context.Context, 
 	return ec.marshalNNote2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐNote(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Mutation_note_UpdateInContact(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Mutation_note_Update(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Mutation",
 		Field:      field,
@@ -13051,10 +13076,16 @@ func (ec *executionContext) fieldContext_Mutation_note_UpdateInContact(ctx conte
 				return ec.fieldContext_Note_html(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_Note_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_Note_updatedAt(ctx, field)
 			case "createdBy":
 				return ec.fieldContext_Note_createdBy(ctx, field)
 			case "source":
 				return ec.fieldContext_Note_source(ctx, field)
+			case "sourceOfTruth":
+				return ec.fieldContext_Note_sourceOfTruth(ctx, field)
+			case "appSource":
+				return ec.fieldContext_Note_appSource(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Note", field.Name)
 		},
@@ -13066,7 +13097,7 @@ func (ec *executionContext) fieldContext_Mutation_note_UpdateInContact(ctx conte
 		}
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_note_UpdateInContact_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+	if fc.Args, err = ec.field_Mutation_note_Update_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return
 	}
@@ -14058,6 +14089,50 @@ func (ec *executionContext) fieldContext_Note_createdAt(ctx context.Context, fie
 	return fc, nil
 }
 
+func (ec *executionContext) _Note_updatedAt(ctx context.Context, field graphql.CollectedField, obj *model.Note) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Note_updatedAt(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.UpdatedAt, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(time.Time)
+	fc.Result = res
+	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Note_updatedAt(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Note",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Note_createdBy(ctx context.Context, field graphql.CollectedField, obj *model.Note) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Note_createdBy(ctx, field)
 	if err != nil {
@@ -14159,6 +14234,94 @@ func (ec *executionContext) fieldContext_Note_source(ctx context.Context, field 
 	return fc, nil
 }
 
+func (ec *executionContext) _Note_sourceOfTruth(ctx context.Context, field graphql.CollectedField, obj *model.Note) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Note_sourceOfTruth(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.SourceOfTruth, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(model.DataSource)
+	fc.Result = res
+	return ec.marshalNDataSource2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐDataSource(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Note_sourceOfTruth(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Note",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type DataSource does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Note_appSource(ctx context.Context, field graphql.CollectedField, obj *model.Note) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Note_appSource(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.AppSource, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Note_appSource(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Note",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _NotePage_content(ctx context.Context, field graphql.CollectedField, obj *model.NotePage) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_NotePage_content(ctx, field)
 	if err != nil {
@@ -14204,10 +14367,16 @@ func (ec *executionContext) fieldContext_NotePage_content(ctx context.Context, f
 				return ec.fieldContext_Note_html(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_Note_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_Note_updatedAt(ctx, field)
 			case "createdBy":
 				return ec.fieldContext_Note_createdBy(ctx, field)
 			case "source":
 				return ec.fieldContext_Note_source(ctx, field)
+			case "sourceOfTruth":
+				return ec.fieldContext_Note_sourceOfTruth(ctx, field)
+			case "appSource":
+				return ec.fieldContext_Note_appSource(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Note", field.Name)
 		},
@@ -20989,7 +21158,7 @@ func (ec *executionContext) unmarshalInputNoteInput(ctx context.Context, obj int
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"html"}
+	fieldsInOrder := [...]string{"html", "appSource"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -21001,6 +21170,14 @@ func (ec *executionContext) unmarshalInputNoteInput(ctx context.Context, obj int
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("html"))
 			it.HTML, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "appSource":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("appSource"))
+			it.AppSource, err = ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -23227,10 +23404,10 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 				return ec._Mutation_note_MergeToContact(ctx, field)
 			})
 
-		case "note_UpdateInContact":
+		case "note_Update":
 
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_note_UpdateInContact(ctx, field)
+				return ec._Mutation_note_Update(ctx, field)
 			})
 
 		case "note_Delete":
@@ -23350,6 +23527,13 @@ func (ec *executionContext) _Note(ctx context.Context, sel ast.SelectionSet, obj
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&invalids, 1)
 			}
+		case "updatedAt":
+
+			out.Values[i] = ec._Note_updatedAt(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
 		case "createdBy":
 			field := field
 
@@ -23370,6 +23554,20 @@ func (ec *executionContext) _Note(ctx context.Context, sel ast.SelectionSet, obj
 		case "source":
 
 			out.Values[i] = ec._Note_source(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "sourceOfTruth":
+
+			out.Values[i] = ec._Note_sourceOfTruth(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "appSource":
+
+			out.Values[i] = ec._Note_appSource(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&invalids, 1)

@@ -550,15 +550,19 @@ type FilterItem struct {
 }
 
 type Note struct {
-	ID        string     `json:"id"`
-	HTML      string     `json:"html"`
-	CreatedAt time.Time  `json:"createdAt"`
-	CreatedBy *User      `json:"createdBy"`
-	Source    DataSource `json:"source"`
+	ID            string     `json:"id"`
+	HTML          string     `json:"html"`
+	CreatedAt     time.Time  `json:"createdAt"`
+	UpdatedAt     time.Time  `json:"updatedAt"`
+	CreatedBy     *User      `json:"createdBy"`
+	Source        DataSource `json:"source"`
+	SourceOfTruth DataSource `json:"sourceOfTruth"`
+	AppSource     string     `json:"appSource"`
 }
 
 type NoteInput struct {
-	HTML string `json:"html"`
+	HTML      string  `json:"html"`
+	AppSource *string `json:"appSource"`
 }
 
 type NotePage struct {

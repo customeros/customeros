@@ -8,9 +8,11 @@ import (
 type NoteEntity struct {
 	Id            string
 	Html          string
-	CreatedAt     *time.Time
+	CreatedAt     time.Time
+	UpdatedAt     time.Time
 	Source        DataSource
 	SourceOfTruth DataSource
+	AppSource     string
 }
 
 func (note NoteEntity) ToString() string {
