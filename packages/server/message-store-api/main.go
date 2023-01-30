@@ -46,12 +46,11 @@ func main() {
 	server := grpc.NewServer()
 
 	repositories := repository.InitRepositories(db.GormDB, neo4jDriver)
-	customerOSService := service.NewCustomerOSService(neo4jDriver, repositories)
 	commonStoreService := service.NewCommonStoreService()
+	customerOSService := service.NewCustomerOSService(neo4jDriver, repositories, commonStoreService)
 
 	// Register the Message Item service with the server.
 	msProto.RegisterMessageStoreServiceServer(server, service.NewMessageService(neo4jDriver, repositories, customerOSService, commonStoreService))
-	msProto.RegisterWebChatMessageStoreServiceServer(server, service.NewWebChatMessageStoreService(neo4jDriver, repositories, customerOSService, commonStoreService))
 
 	// Open port for listening to traffic.
 	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", conf.Service.ServerPort))

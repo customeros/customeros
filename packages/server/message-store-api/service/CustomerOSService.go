@@ -7,6 +7,7 @@ import (
 	"github.com/neo4j/neo4j-go-driver/v4/neo4j/db"
 	"github.com/neo4j/neo4j-go-driver/v4/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	msProto "github.com/openline-ai/openline-customer-os/packages/server/message-store-api/proto/generated"
 	"github.com/openline-ai/openline-customer-os/packages/server/message-store-api/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/message-store-api/repository/entity"
 	"regexp"
@@ -17,6 +18,7 @@ import (
 type customerOSService struct {
 	driver               *neo4j.Driver
 	postgresRepositories *repository.PostgresRepositories
+	commonStoreService   *commonStoreService
 }
 
 type CustomerOSService interface {
@@ -698,9 +700,57 @@ func mapNodeToUser(node *dbtype.Node) *User {
 	return user
 }
 
-func NewCustomerOSService(driver *neo4j.Driver, postgresRepositories *repository.PostgresRepositories) *customerOSService {
+func (s *customerOSService) GetContactWithEmailOrCreate(tenant string, email string) (Contact, error) {
+	contact, err := s.GetContactByEmail(email)
+	if err != nil {
+		contact, err = s.CreateContactWithEmail(tenant, email)
+		if err != nil {
+			return Contact{}, err
+		}
+		if contact == nil {
+			return Contact{}, errors.New("contact not found and could not be created")
+		}
+		return *contact, nil
+	} else {
+		return *contact, nil
+	}
+}
+
+func (s *customerOSService) GetActiveConversationOrCreate(
+	tenant string,
+	participantId string,
+	firstName string,
+	lastname string,
+	username string,
+	senderType msProto.SenderType,
+) (*Conversation, error) {
+	var conversation *Conversation
+	var err error
+
+	if senderType == msProto.SenderType_CONTACT {
+		conversation, err = s.GetWebChatConversationWithContactInitiator(tenant, participantId)
+	} else if senderType == msProto.SenderType_USER {
+		conversation, err = s.GetWebChatConversationWithUserInitiator(tenant, participantId)
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if conversation == nil {
+		conversation, err = s.CreateConversation(tenant, participantId, firstName, lastname, username, s.commonStoreService.ConvertMSSenderTypeToEntitySenderType(senderType), entity.WEB_CHAT)
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	return conversation, nil
+}
+
+func NewCustomerOSService(driver *neo4j.Driver, postgresRepositories *repository.PostgresRepositories, commonStoreService *commonStoreService) *customerOSService {
 	customerOsService := new(customerOSService)
 	customerOsService.driver = driver
 	customerOsService.postgresRepositories = postgresRepositories
+	customerOsService.commonStoreService = commonStoreService
 	return customerOsService
 }

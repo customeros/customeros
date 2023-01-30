@@ -52,4 +52,5 @@ service MessageStoreService {
 
   rpc getMessagesForFeed(FeedId) returns (MessageListResponse) {};
   rpc getMessage(MessageId) returns (Message) {};
+  rpc saveMessage(InputMessage) returns (MessageId) {};
 }

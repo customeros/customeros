@@ -13,7 +13,7 @@ require (
 	github.com/joho/godotenv v1.4.0
 	github.com/lib/pq v1.10.7
 	github.com/neo4j/neo4j-go-driver/v4 v4.4.5
-	github.com/openline-ai/openline-customer-os/packages/server/customer-os-api v0.0.0-20230126163153-815420eadd8f
+	github.com/openline-ai/openline-customer-os/packages/server/customer-os-api v0.0.0-20230128185314-0611f94d0cf5
 	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20221226052956-566ca6192766
 	github.com/sirupsen/logrus v1.9.0
 	github.com/testcontainers/testcontainers-go v0.17.0
