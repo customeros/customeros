@@ -25,19 +25,30 @@ enum MessageType {
 
 message MessageId {
   string id = 1;
+  string conversationId = 2;
 }
 
 message Message {
-  string id = 1;
-  string conversationId = 2;
-  string conversationInitiatorUsername = 3;
+  MessageId messageId = 1;
+  string conversationInitiatorUsername = 2;
+  MessageType type = 3;
+  MessageSubtype subtype = 4;
+  string content = 5;
+  MessageDirection direction = 6;
+  google.protobuf.Timestamp time = 7;
+
+  SenderType senderType = 8;
+  string senderId = 9;
+  string senderUsername = 10;
+}
+
+message InputMessage {
+  optional string conversationId = 1;
+  optional string email = 2;
+  SenderType senderType = 3;
   MessageType type = 4;
   MessageSubtype subtype = 5;
-  string content = 6;
-  MessageDirection direction = 7;
-  google.protobuf.Timestamp time = 8;
-
-  SenderType senderType = 9;
-  string senderId = 10;
-  string senderUsername = 11;
+  optional string message = 6;
+  optional string bytes = 7;
+  MessageDirection direction = 8;
 }
