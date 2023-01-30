@@ -274,6 +274,7 @@ type ComplexityRoot struct {
 
 	Organization struct {
 		Addresses        func(childComplexity int) int
+		AppSource        func(childComplexity int) int
 		ContactRoles     func(childComplexity int) int
 		CreatedAt        func(childComplexity int) int
 		Description      func(childComplexity int) int
@@ -284,6 +285,7 @@ type ComplexityRoot struct {
 		Name             func(childComplexity int) int
 		OrganizationType func(childComplexity int) int
 		Source           func(childComplexity int) int
+		SourceOfTruth    func(childComplexity int) int
 		UpdatedAt        func(childComplexity int) int
 		Website          func(childComplexity int) int
 	}
@@ -468,8 +470,8 @@ type NoteResolver interface {
 }
 type OrganizationResolver interface {
 	OrganizationType(ctx context.Context, obj *model.Organization) (*model.OrganizationType, error)
-	Addresses(ctx context.Context, obj *model.Organization) ([]*model.Place, error)
 
+	Addresses(ctx context.Context, obj *model.Organization) ([]*model.Place, error)
 	ContactRoles(ctx context.Context, obj *model.Organization) ([]*model.ContactRole, error)
 }
 type QueryResolver interface {
@@ -1933,6 +1935,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Organization.Addresses(childComplexity), true
 
+	case "Organization.appSource":
+		if e.complexity.Organization.AppSource == nil {
+			break
+		}
+
+		return e.complexity.Organization.AppSource(childComplexity), true
+
 	case "Organization.contactRoles":
 		if e.complexity.Organization.ContactRoles == nil {
 			break
@@ -2002,6 +2011,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Organization.Source(childComplexity), true
+
+	case "Organization.sourceOfTruth":
+		if e.complexity.Organization.SourceOfTruth == nil {
+			break
+		}
+
+		return e.complexity.Organization.SourceOfTruth(childComplexity), true
 
 	case "Organization.updatedAt":
 		if e.complexity.Organization.UpdatedAt == nil {
@@ -3601,13 +3617,15 @@ type Organization implements Node {
     industry:    String
     isPublic:    Boolean
     organizationType: OrganizationType @goField(forceResolver: true)
+    source: DataSource!
+    sourceOfTruth: DataSource!
+    appSource: String!
 
     """
     All addresses associated with an organization in customerOS.
     **Required.  If no values it returns an empty array.**
     """
     addresses: [Place!]! @goField(forceResolver: true)
-    source: DataSource!
     contactRoles: [ContactRole!]! @goField(forceResolver: true)
 }
 
@@ -3629,6 +3647,7 @@ input OrganizationInput {
     industry:    String
     isPublic:    Boolean
     organizationTypeId: ID
+    appSource: String
 }
 
 input OrganizationUpdateInput {
@@ -7003,10 +7022,14 @@ func (ec *executionContext) fieldContext_ContactRole_organization(ctx context.Co
 				return ec.fieldContext_Organization_isPublic(ctx, field)
 			case "organizationType":
 				return ec.fieldContext_Organization_organizationType(ctx, field)
-			case "addresses":
-				return ec.fieldContext_Organization_addresses(ctx, field)
 			case "source":
 				return ec.fieldContext_Organization_source(ctx, field)
+			case "sourceOfTruth":
+				return ec.fieldContext_Organization_sourceOfTruth(ctx, field)
+			case "appSource":
+				return ec.fieldContext_Organization_appSource(ctx, field)
+			case "addresses":
+				return ec.fieldContext_Organization_addresses(ctx, field)
 			case "contactRoles":
 				return ec.fieldContext_Organization_contactRoles(ctx, field)
 			}
@@ -13175,10 +13198,14 @@ func (ec *executionContext) fieldContext_Mutation_organization_Create(ctx contex
 				return ec.fieldContext_Organization_isPublic(ctx, field)
 			case "organizationType":
 				return ec.fieldContext_Organization_organizationType(ctx, field)
-			case "addresses":
-				return ec.fieldContext_Organization_addresses(ctx, field)
 			case "source":
 				return ec.fieldContext_Organization_source(ctx, field)
+			case "sourceOfTruth":
+				return ec.fieldContext_Organization_sourceOfTruth(ctx, field)
+			case "appSource":
+				return ec.fieldContext_Organization_appSource(ctx, field)
+			case "addresses":
+				return ec.fieldContext_Organization_addresses(ctx, field)
 			case "contactRoles":
 				return ec.fieldContext_Organization_contactRoles(ctx, field)
 			}
@@ -13257,10 +13284,14 @@ func (ec *executionContext) fieldContext_Mutation_organization_Update(ctx contex
 				return ec.fieldContext_Organization_isPublic(ctx, field)
 			case "organizationType":
 				return ec.fieldContext_Organization_organizationType(ctx, field)
-			case "addresses":
-				return ec.fieldContext_Organization_addresses(ctx, field)
 			case "source":
 				return ec.fieldContext_Organization_source(ctx, field)
+			case "sourceOfTruth":
+				return ec.fieldContext_Organization_sourceOfTruth(ctx, field)
+			case "appSource":
+				return ec.fieldContext_Organization_appSource(ctx, field)
+			case "addresses":
+				return ec.fieldContext_Organization_addresses(ctx, field)
 			case "contactRoles":
 				return ec.fieldContext_Organization_contactRoles(ctx, field)
 			}
@@ -14711,6 +14742,138 @@ func (ec *executionContext) fieldContext_Organization_organizationType(ctx conte
 	return fc, nil
 }
 
+func (ec *executionContext) _Organization_source(ctx context.Context, field graphql.CollectedField, obj *model.Organization) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Organization_source(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Source, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(model.DataSource)
+	fc.Result = res
+	return ec.marshalNDataSource2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐDataSource(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Organization_source(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Organization",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type DataSource does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Organization_sourceOfTruth(ctx context.Context, field graphql.CollectedField, obj *model.Organization) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Organization_sourceOfTruth(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.SourceOfTruth, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(model.DataSource)
+	fc.Result = res
+	return ec.marshalNDataSource2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐDataSource(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Organization_sourceOfTruth(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Organization",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type DataSource does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Organization_appSource(ctx context.Context, field graphql.CollectedField, obj *model.Organization) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Organization_appSource(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.AppSource, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Organization_appSource(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Organization",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Organization_addresses(ctx context.Context, field graphql.CollectedField, obj *model.Organization) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Organization_addresses(ctx, field)
 	if err != nil {
@@ -14774,50 +14937,6 @@ func (ec *executionContext) fieldContext_Organization_addresses(ctx context.Cont
 				return ec.fieldContext_Place_source(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Place", field.Name)
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Organization_source(ctx context.Context, field graphql.CollectedField, obj *model.Organization) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Organization_source(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Source, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(model.DataSource)
-	fc.Result = res
-	return ec.marshalNDataSource2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐDataSource(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Organization_source(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Organization",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type DataSource does not have child fields")
 		},
 	}
 	return fc, nil
@@ -14950,10 +15069,14 @@ func (ec *executionContext) fieldContext_OrganizationPage_content(ctx context.Co
 				return ec.fieldContext_Organization_isPublic(ctx, field)
 			case "organizationType":
 				return ec.fieldContext_Organization_organizationType(ctx, field)
-			case "addresses":
-				return ec.fieldContext_Organization_addresses(ctx, field)
 			case "source":
 				return ec.fieldContext_Organization_source(ctx, field)
+			case "sourceOfTruth":
+				return ec.fieldContext_Organization_sourceOfTruth(ctx, field)
+			case "appSource":
+				return ec.fieldContext_Organization_appSource(ctx, field)
+			case "addresses":
+				return ec.fieldContext_Organization_addresses(ctx, field)
 			case "contactRoles":
 				return ec.fieldContext_Organization_contactRoles(ctx, field)
 			}
@@ -17007,10 +17130,14 @@ func (ec *executionContext) fieldContext_Query_organization(ctx context.Context,
 				return ec.fieldContext_Organization_isPublic(ctx, field)
 			case "organizationType":
 				return ec.fieldContext_Organization_organizationType(ctx, field)
-			case "addresses":
-				return ec.fieldContext_Organization_addresses(ctx, field)
 			case "source":
 				return ec.fieldContext_Organization_source(ctx, field)
+			case "sourceOfTruth":
+				return ec.fieldContext_Organization_sourceOfTruth(ctx, field)
+			case "appSource":
+				return ec.fieldContext_Organization_appSource(ctx, field)
+			case "addresses":
+				return ec.fieldContext_Organization_addresses(ctx, field)
 			case "contactRoles":
 				return ec.fieldContext_Organization_contactRoles(ctx, field)
 			}
@@ -20935,7 +21062,7 @@ func (ec *executionContext) unmarshalInputOrganizationInput(ctx context.Context,
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"name", "description", "domain", "website", "industry", "isPublic", "organizationTypeId"}
+	fieldsInOrder := [...]string{"name", "description", "domain", "website", "industry", "isPublic", "organizationTypeId", "appSource"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -20995,6 +21122,14 @@ func (ec *executionContext) unmarshalInputOrganizationInput(ctx context.Context,
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("organizationTypeId"))
 			it.OrganizationTypeID, err = ec.unmarshalOID2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "appSource":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("appSource"))
+			it.AppSource, err = ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -23376,6 +23511,27 @@ func (ec *executionContext) _Organization(ctx context.Context, sel ast.Selection
 				return innerFunc(ctx)
 
 			})
+		case "source":
+
+			out.Values[i] = ec._Organization_source(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "sourceOfTruth":
+
+			out.Values[i] = ec._Organization_sourceOfTruth(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "appSource":
+
+			out.Values[i] = ec._Organization_appSource(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
 		case "addresses":
 			field := field
 
@@ -23396,13 +23552,6 @@ func (ec *executionContext) _Organization(ctx context.Context, sel ast.Selection
 				return innerFunc(ctx)
 
 			})
-		case "source":
-
-			out.Values[i] = ec._Organization_source(ctx, field, obj)
-
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&invalids, 1)
-			}
 		case "contactRoles":
 			field := field
 

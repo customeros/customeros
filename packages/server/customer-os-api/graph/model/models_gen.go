@@ -593,10 +593,12 @@ type Organization struct {
 	Industry         *string           `json:"industry"`
 	IsPublic         *bool             `json:"isPublic"`
 	OrganizationType *OrganizationType `json:"organizationType"`
+	Source           DataSource        `json:"source"`
+	SourceOfTruth    DataSource        `json:"sourceOfTruth"`
+	AppSource        string            `json:"appSource"`
 	// All addresses associated with an organization in customerOS.
 	// **Required.  If no values it returns an empty array.**
 	Addresses    []*Place       `json:"addresses"`
-	Source       DataSource     `json:"source"`
 	ContactRoles []*ContactRole `json:"contactRoles"`
 }
 
@@ -613,6 +615,7 @@ type OrganizationInput struct {
 	Industry           *string `json:"industry"`
 	IsPublic           *bool   `json:"isPublic"`
 	OrganizationTypeID *string `json:"organizationTypeId"`
+	AppSource          *string `json:"appSource"`
 }
 
 type OrganizationPage struct {

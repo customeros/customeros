@@ -43,6 +43,7 @@ func (r *organizationRepository) Create(tx neo4j.Transaction, tenant string, org
 		"				org.isPublic=$isPublic, " +
 		" 				org.source=$source, " +
 		"				org.sourceOfTruth=$sourceOfTruth, " +
+		"				org.appSource=$appSource, " +
 		"				org.createdAt=$now, " +
 		"				org.updatedAt=$now, " +
 		" 				org:%s" +
@@ -60,6 +61,7 @@ func (r *organizationRepository) Create(tx neo4j.Transaction, tenant string, org
 			"isPublic":      organization.IsPublic,
 			"source":        organization.Source,
 			"sourceOfTruth": organization.SourceOfTruth,
+			"appSource":     organization.AppSource,
 			"now":           time.Now().UTC(),
 		})
 	return utils.ExtractSingleRecordFirstValueAsNode(queryResult, err)

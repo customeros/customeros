@@ -186,5 +186,6 @@ func (s *organizationService) mapDbNodeToOrganizationEntity(node dbtype.Node) *e
 	organizationEntityPtr.UpdatedAt = utils.GetTimePropOrNow(props, "updatedAt")
 	organizationEntityPtr.Source = entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source"))
 	organizationEntityPtr.SourceOfTruth = entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth"))
+	organizationEntityPtr.AppSource = utils.GetStringPropOrEmpty(props, "appSource")
 	return organizationEntityPtr
 }

@@ -19,6 +19,7 @@ mutation UpdateOrganization($organizationId: ID!, $organizationTypeId: ID) {
       isPublic
       createdAt
       updatedAt
+      sourceOfTruth
       organizationType {
         id
         name

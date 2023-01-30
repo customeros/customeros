@@ -20,13 +20,15 @@ type Organization implements Node {
     industry:    String
     isPublic:    Boolean
     organizationType: OrganizationType @goField(forceResolver: true)
+    source: DataSource!
+    sourceOfTruth: DataSource!
+    appSource: String!
 
     """
     All addresses associated with an organization in customerOS.
     **Required.  If no values it returns an empty array.**
     """
     addresses: [Place!]! @goField(forceResolver: true)
-    source: DataSource!
     contactRoles: [ContactRole!]! @goField(forceResolver: true)
 }
 
@@ -48,6 +50,7 @@ input OrganizationInput {
     industry:    String
     isPublic:    Boolean
     organizationTypeId: ID
+    appSource: String
 }
 
 input OrganizationUpdateInput {

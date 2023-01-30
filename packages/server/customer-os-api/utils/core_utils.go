@@ -87,6 +87,17 @@ func IfNotNilString(check any, valueExtractor ...func() string) string {
 	return *out
 }
 
+func IfNotNilStringWithDefault(check any, defaultValue string) string {
+	if reflect.ValueOf(check).Kind() == reflect.String {
+		return check.(string)
+	}
+	if reflect.ValueOf(check).Kind() == reflect.Pointer && reflect.ValueOf(check).IsNil() {
+		return defaultValue
+	}
+	out := check.(*string)
+	return *out
+}
+
 func IfNotNilInt64(check any, valueExtractor ...func() int64) int64 {
 	if reflect.ValueOf(check).Kind() == reflect.Int64 {
 		return check.(int64)

@@ -174,6 +174,8 @@ func TestMutationResolver_OrganizationCreate(t *testing.T) {
 	require.Equal(t, organizationTypeId, org.OrganizationType.ID)
 	require.Equal(t, "COMPANY", org.OrganizationType.Name)
 	require.Equal(t, model.DataSourceOpenline, org.Source)
+	require.Equal(t, model.DataSourceOpenline, org.SourceOfTruth)
+	require.Equal(t, "test", org.AppSource)
 
 	// Check the number of nodes and relationships in the Neo4j database
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Organization"))
@@ -216,6 +218,7 @@ func TestMutationResolver_OrganizationUpdate(t *testing.T) {
 	require.Equal(t, true, *organization.Organization_Update.IsPublic)
 	require.Equal(t, organizationTypeIdUpdate, organization.Organization_Update.OrganizationType.ID)
 	require.Equal(t, "UPDATED", organization.Organization_Update.OrganizationType.Name)
+	require.Equal(t, model.DataSourceOpenline, organization.Organization_Update.SourceOfTruth)
 
 	// Check still single organization node exists after update, no new node created
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Organization"))
