@@ -1,15 +1,19 @@
 extend type Mutation {
-    note_MergeToContact(contactId : ID!, input: NoteInput!): Note!
-    note_UpdateInContact(contactId : ID!, input: NoteUpdateInput!): Note!
-    note_DeleteFromContact(contactId : ID!, noteId: ID!): Result!
+    note_CreateForContact(contactId : ID!, input: NoteInput!): Note!
+    note_CreateForOrganization(organizationId : ID!, input: NoteInput!): Note!
+    note_Update(input: NoteUpdateInput!): Note!
+    note_Delete(id: ID!): Result!
 }
 
 type Note {
     id: ID!
     html: String!
     createdAt: Time!
+    updatedAt: Time!
     createdBy: User @goField(forceResolver: true)
     source: DataSource!
+    sourceOfTruth: DataSource!
+    appSource: String!
 }
 
 type NotePage implements Pages {
@@ -20,6 +24,7 @@ type NotePage implements Pages {
 
 input NoteInput {
     html: String!
+    appSource: String
 }
 
 input NoteUpdateInput {

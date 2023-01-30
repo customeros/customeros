@@ -21,9 +21,12 @@ type NoteDbNodesWithTotalCount struct {
 
 type NoteRepository interface {
 	GetPaginatedNotesForContact(session neo4j.Session, tenant, contactId string, skip, limit int) (*NoteDbNodesWithTotalCount, error)
-	MergeNote(session neo4j.Session, tenant, contactId string, entity entity.NoteEntity) (*dbtype.Node, error)
-	UpdateNoteForContact(session neo4j.Session, tenant, contactId string, entity entity.NoteEntity) (*dbtype.Node, error)
-	Delete(session neo4j.Session, tenant, contactId, noteId string) error
+	GetPaginatedNotesForOrganization(session neo4j.Session, tenant, organizationId string, skip, limit int) (*NoteDbNodesWithTotalCount, error)
+	CreateNoteForContact(session neo4j.Session, tenant, contactId string, entity entity.NoteEntity) (*dbtype.Node, error)
+	CreateNoteForOrganization(session neo4j.Session, tenant, organization string, entity entity.NoteEntity) (*dbtype.Node, error)
+	UpdateNote(session neo4j.Session, tenant string, entity entity.NoteEntity) (*dbtype.Node, error)
+	Delete(session neo4j.Session, tenant, noteId string) error
+	SetNoteCreator(session neo4j.Session, tenant, userId, noteId string) error
 }
 
 type noteRepository struct {
@@ -78,19 +81,62 @@ func (r *noteRepository) GetPaginatedNotesForContact(session neo4j.Session, tena
 	return result, nil
 }
 
-func (r *noteRepository) UpdateNoteForContact(session neo4j.Session, tenant, contactId string, entity entity.NoteEntity) (*dbtype.Node, error) {
+func (r *noteRepository) GetPaginatedNotesForOrganization(session neo4j.Session, tenant, organizationId string, skip, limit int) (*NoteDbNodesWithTotalCount, error) {
+	result := new(NoteDbNodesWithTotalCount)
+
+	dbRecords, err := session.ReadTransaction(func(tx neo4j.Transaction) (any, error) {
+		queryResult, err := tx.Run(`MATCH (org:Organization {id:$organizationId})-[:ORGANIZATION_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}), 
+											(org)-[:NOTED]->(n:Note)
+											RETURN count(n) as count`,
+			map[string]any{
+				"tenant":         tenant,
+				"organizationId": organizationId,
+			})
+		if err != nil {
+			return nil, err
+		}
+		count, _ := queryResult.Single()
+		result.Count = count.Values[0].(int64)
+
+		queryResult, err = tx.Run(fmt.Sprintf(
+			"MATCH (org:Organization {id:$organizationId})-[:ORGANIZATION_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}), "+
+				" (org)-[:NOTED]->(n:Note)"+
+				" RETURN n, org.id "+
+				" SKIP $skip LIMIT $limit"),
+			map[string]any{
+				"tenant":         tenant,
+				"organizationId": organizationId,
+				"skip":           skip,
+				"limit":          limit,
+			})
+		return queryResult.Collect()
+	})
+	if err != nil {
+		return nil, err
+	}
+	for _, v := range dbRecords.([]*neo4j.Record) {
+		noteDBNodeWithParentId := new(NoteDbNodeWithParentId)
+		noteDBNodeWithParentId.Node = utils.NodePtr(v.Values[0].(neo4j.Node))
+		noteDBNodeWithParentId.ParentId = v.Values[1].(string)
+		result.Nodes = append(result.Nodes, noteDBNodeWithParentId)
+	}
+	return result, nil
+}
+
+func (r *noteRepository) UpdateNote(session neo4j.Session, tenant string, entity entity.NoteEntity) (*dbtype.Node, error) {
+	query := "MATCH (n:%s {id:$noteId}) " +
+		" SET 	n.html=$html, " +
+		"		n.sourceOfTruth=$sourceOfTruth, " +
+		"		n.updatedAt=$now " +
+		" RETURN n"
 	queryResult, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
-		txResult, err := tx.Run(`
-			MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}),
-				(c)-[:NOTED]->(n:Note {id:$noteId})
-			SET n.html=$html, n.sourceOfTruth=$sourceOfTruth
-			RETURN n`,
+		txResult, err := tx.Run(fmt.Sprintf(query, "Note_"+tenant),
 			map[string]interface{}{
 				"tenant":        tenant,
-				"contactId":     contactId,
 				"noteId":        entity.Id,
 				"html":          entity.Html,
 				"sourceOfTruth": entity.SourceOfTruth,
+				"now":           time.Now().UTC(),
 			})
 		return utils.ExtractSingleRecordFirstValueAsNode(txResult, err)
 	})
@@ -100,16 +146,16 @@ func (r *noteRepository) UpdateNoteForContact(session neo4j.Session, tenant, con
 	return queryResult.(*dbtype.Node), nil
 }
 
-func (r *noteRepository) MergeNote(session neo4j.Session, tenant, contactId string, entity entity.NoteEntity) (*dbtype.Node, error) {
+func (r *noteRepository) CreateNoteForContact(session neo4j.Session, tenant, contactId string, entity entity.NoteEntity) (*dbtype.Node, error) {
 	query := "MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant}) " +
 		" MERGE (c)-[:NOTED]->(n:Note {id:randomUUID()}) " +
 		" ON CREATE SET n.html=$html, " +
 		"				n.createdAt=$createdAt, " +
+		"				n.updatedAt=$createdAt, " +
 		"				n.source=$source, " +
 		"				n.sourceOfTruth=$sourceOfTruth, " +
+		"				n.appSource=$appSource, " +
 		"				n:%s " +
-		" ON MATCH SET 	n.html=$html, " +
-		"				n.sourceOfTruth=$sourceOfTruth " +
 		" RETURN n"
 
 	result, err := session.WriteTransaction(func(tx neo4j.Transaction) (interface{}, error) {
@@ -121,6 +167,7 @@ func (r *noteRepository) MergeNote(session neo4j.Session, tenant, contactId stri
 				"createdAt":     time.Now().UTC(),
 				"source":        entity.Source,
 				"sourceOfTruth": entity.SourceOfTruth,
+				"appSource":     entity.AppSource,
 			})
 		return utils.ExtractSingleRecordFirstValueAsNode(queryResult, err)
 	})
@@ -130,17 +177,60 @@ func (r *noteRepository) MergeNote(session neo4j.Session, tenant, contactId stri
 	return result.(*dbtype.Node), nil
 }
 
-func (r *noteRepository) Delete(session neo4j.Session, tenant, contactId, noteId string) error {
+func (r *noteRepository) CreateNoteForOrganization(session neo4j.Session, tenant, organizationId string, entity entity.NoteEntity) (*dbtype.Node, error) {
+	query := "MATCH (org:Organization {id:$organizationId})-[:ORGANIZATION_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant}) " +
+		" MERGE (org)-[:NOTED]->(n:Note {id:randomUUID()}) " +
+		" ON CREATE SET n.html=$html, " +
+		"				n.createdAt=$createdAt, " +
+		"				n.updatedAt=$createdAt, " +
+		"				n.source=$source, " +
+		"				n.sourceOfTruth=$sourceOfTruth, " +
+		"				n.appSource=$appSource, " +
+		"				n:%s " +
+		" RETURN n"
+
+	result, err := session.WriteTransaction(func(tx neo4j.Transaction) (interface{}, error) {
+		queryResult, err := tx.Run(fmt.Sprintf(query, "Note_"+tenant),
+			map[string]any{
+				"tenant":         tenant,
+				"organizationId": organizationId,
+				"html":           entity.Html,
+				"createdAt":      time.Now().UTC(),
+				"source":         entity.Source,
+				"sourceOfTruth":  entity.SourceOfTruth,
+				"appSource":      entity.AppSource,
+			})
+		return utils.ExtractSingleRecordFirstValueAsNode(queryResult, err)
+	})
+	if err != nil {
+		return nil, err
+	}
+	return result.(*dbtype.Node), nil
+}
+
+func (r *noteRepository) Delete(session neo4j.Session, tenant, noteId string) error {
+	query := "MATCH (n:%s {id:$noteId}) DETACH DELETE n"
 	_, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
-		_, err := tx.Run(`
-			MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}),
-                  (c:Contact {id:$contactId})-[:NOTED]->(n:Note {id:$noteId})
-            DETACH DELETE n
-			`,
+		_, err := tx.Run(fmt.Sprintf(query, "Note_"+tenant),
 			map[string]interface{}{
-				"contactId": contactId,
-				"tenant":    tenant,
-				"noteId":    noteId,
+				"tenant": tenant,
+				"noteId": noteId,
+			})
+		return nil, err
+	})
+	return err
+}
+
+func (r *noteRepository) SetNoteCreator(session neo4j.Session, tenant, userId, noteId string) error {
+	query := "MATCH (u:User {id:$userId})-[:USER_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}), " +
+		" (n:Note {id:$noteId})" +
+		"  MERGE (u)-[:CREATED]->(n) "
+	_, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
+		_, err := tx.Run(query,
+			map[string]interface{}{
+				"tenant": tenant,
+				"userId": userId,
+				"noteId": noteId,
 			})
 		return nil, err
 	})

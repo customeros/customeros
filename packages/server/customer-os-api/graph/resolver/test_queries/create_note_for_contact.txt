@@ -1,5 +1,5 @@
 mutation CreateNote($contactId: ID!) {
-  note_MergeToContact(
+  note_CreateForContact(
     contactId: $contactId,
     input: {
       html: "Note content"
@@ -8,7 +8,10 @@ mutation CreateNote($contactId: ID!) {
     id
     html
     createdAt
+    updatedAt
     source
+    sourceOfTruth
+    appSource
     createdBy {
       id
     }

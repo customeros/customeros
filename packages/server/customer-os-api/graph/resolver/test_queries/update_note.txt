@@ -1,0 +1,12 @@
+mutation UpdateNote($noteId: ID!) {
+  note_Update(
+        input: {
+            id: $noteId
+            html: "updated content"
+        }) {
+      id
+      html
+      updatedAt
+      sourceOfTruth
+    }
+}

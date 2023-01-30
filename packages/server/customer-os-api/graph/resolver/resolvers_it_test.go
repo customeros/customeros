@@ -37,6 +37,7 @@ var (
 )
 
 const tenantName = "openline"
+const testUserId = "test-user-id"
 
 func TestMain(m *testing.M) {
 	neo4jContainer, driver = neo4jt.InitTestNeo4jDB()
@@ -71,6 +72,7 @@ func prepareClient() {
 	graphResolver := NewResolver(serviceContainer, repositoryContainer)
 	customCtx := &common.CustomContext{
 		Tenant: tenantName,
+		UserId: testUserId,
 	}
 	server := handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: graphResolver}))
 	h := common.WithContext(customCtx, server)

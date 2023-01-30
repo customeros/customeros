@@ -40,8 +40,25 @@ func CreateDefaultUser(driver *neo4j.Driver, tenant string) string {
 	})
 }
 
+func CreateDefaultUserWithId(driver *neo4j.Driver, tenant, userId string) string {
+	return CreateUserWithId(driver, tenant, userId, entity.UserEntity{
+		FirstName:     "first",
+		LastName:      "last",
+		Email:         "user@openline.ai",
+		Source:        "openline",
+		SourceOfTruth: "openline",
+	})
+}
+
 func CreateUser(driver *neo4j.Driver, tenant string, user entity.UserEntity) string {
-	var userId, _ = uuid.NewRandom()
+	return CreateUserWithId(driver, tenant, "", user)
+}
+
+func CreateUserWithId(driver *neo4j.Driver, tenant, userId string, user entity.UserEntity) string {
+	if len(userId) == 0 {
+		userUuid, _ := uuid.NewRandom()
+		userId = userUuid.String()
+	}
 	query := `
 		MATCH (t:Tenant {name:$tenant})
 			MERGE (u:User {
@@ -55,14 +72,14 @@ func CreateUser(driver *neo4j.Driver, tenant string, user entity.UserEntity) str
 				})-[:USER_BELONGS_TO_TENANT]->(t)`
 	ExecuteWriteQuery(driver, query, map[string]any{
 		"tenant":        tenant,
-		"userId":        userId.String(),
+		"userId":        userId,
 		"firstName":     user.FirstName,
 		"lastName":      user.LastName,
 		"email":         user.Email,
 		"source":        user.Source,
 		"sourceOfTruth": user.SourceOfTruth,
 	})
-	return userId.String()
+	return userId
 }
 
 func CreateDefaultContact(driver *neo4j.Driver, tenant string) string {
@@ -521,16 +538,28 @@ func OrganizationHasAddress(driver *neo4j.Driver, organizationId, addressId stri
 	return roleId.String()
 }
 
-func CreateNoteForContact(driver *neo4j.Driver, contactId, html string) string {
+func CreateNoteForContact(driver *neo4j.Driver, tenant, contactId, html string) string {
 	var noteId, _ = uuid.NewRandom()
-	query := `MATCH (c:Contact {id:$contactId})
-			MERGE (c)-[:NOTED]->(n:Note {id:$id})
-			ON CREATE SET n.html=$html, n.createdAt=datetime({timezone: 'UTC'})
-`
-	ExecuteWriteQuery(driver, query, map[string]any{
+	query := "MATCH (c:Contact {id:$contactId}) " +
+		"		MERGE (c)-[:NOTED]->(n:Note {id:$id}) " +
+		"		ON CREATE SET n.html=$html, n.createdAt=datetime({timezone: 'UTC'}), n:%s"
+	ExecuteWriteQuery(driver, fmt.Sprintf(query, "Note_"+tenant), map[string]any{
 		"id":        noteId.String(),
 		"contactId": contactId,
 		"html":      html,
+	})
+	return noteId.String()
+}
+
+func CreateNoteForOrganization(driver *neo4j.Driver, tenant, organizationId, html string) string {
+	var noteId, _ = uuid.NewRandom()
+	query := "MATCH (org:Organization {id:$organizationId}) " +
+		"		MERGE (org)-[:NOTED]->(n:Note {id:$id}) " +
+		"		ON CREATE SET n.html=$html, n.createdAt=datetime({timezone: 'UTC'}), n:%s"
+	ExecuteWriteQuery(driver, fmt.Sprintf(query, "Note_"+tenant), map[string]any{
+		"id":             noteId.String(),
+		"organizationId": organizationId,
+		"html":           html,
 	})
 	return noteId.String()
 }

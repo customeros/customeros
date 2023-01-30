@@ -135,6 +135,57 @@ func TestQueryResolver_Organizations_WithAddresses(t *testing.T) {
 	require.Equal(t, addressInput.Zip, *address.Zip)
 }
 
+func TestQueryResolver_Organization_WithNotes_ById(t *testing.T) {
+	defer tearDownTestCase()(t)
+	neo4jt.CreateTenant(driver, tenantName)
+	organizationId := neo4jt.CreateOrganization(driver, tenantName, "test org")
+	userId := neo4jt.CreateDefaultUserWithId(driver, tenantName, testUserId)
+	noteId1 := neo4jt.CreateNoteForOrganization(driver, tenantName, organizationId, "note1")
+	noteId2 := neo4jt.CreateNoteForOrganization(driver, tenantName, organizationId, "note2")
+	neo4jt.NoteCreatedByUser(driver, noteId1, userId)
+
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Organization"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "User"))
+	require.Equal(t, 2, neo4jt.GetCountOfNodes(driver, "Note"))
+	require.Equal(t, 2, neo4jt.GetCountOfRelationships(driver, "NOTED"))
+	require.Equal(t, 1, neo4jt.GetCountOfRelationships(driver, "CREATED"))
+
+	rawResponse, err := c.RawPost(getQuery("get_organization_with_notes_by_id"),
+		client.Var("organizationId", organizationId))
+	assertRawResponseSuccess(t, rawResponse, err)
+
+	var searchedOrganization struct {
+		Organization model.Organization
+	}
+
+	err = decode.Decode(rawResponse.Data.(map[string]any), &searchedOrganization)
+	require.Nil(t, err)
+	require.Equal(t, organizationId, searchedOrganization.Organization.ID)
+
+	notes := searchedOrganization.Organization.Notes.Content
+	require.Equal(t, 2, len(notes))
+	var noteWithUser, noteWithoutUser *model.Note
+	if noteId1 == notes[0].ID {
+		noteWithUser = notes[0]
+		noteWithoutUser = notes[1]
+	} else {
+		noteWithUser = notes[1]
+		noteWithoutUser = notes[0]
+	}
+	require.Equal(t, noteId1, noteWithUser.ID)
+	require.Equal(t, "note1", noteWithUser.HTML)
+	require.NotNil(t, noteWithUser.CreatedAt)
+	require.NotNil(t, noteWithUser.CreatedBy)
+	require.Equal(t, userId, noteWithUser.CreatedBy.ID)
+	require.Equal(t, "first", noteWithUser.CreatedBy.FirstName)
+	require.Equal(t, "last", noteWithUser.CreatedBy.LastName)
+
+	require.Equal(t, noteId2, noteWithoutUser.ID)
+	require.Equal(t, "note2", noteWithoutUser.HTML)
+	require.NotNil(t, noteWithoutUser.CreatedAt)
+	require.Nil(t, noteWithoutUser.CreatedBy)
+}
+
 func TestMutationResolver_OrganizationCreate(t *testing.T) {
 	defer tearDownTestCase()(t)
 	neo4jt.CreateTenant(driver, tenantName)
@@ -164,6 +215,7 @@ func TestMutationResolver_OrganizationCreate(t *testing.T) {
 	// Ensure that the organization was created correctly.
 	require.NotNil(t, org.ID)
 	require.NotNil(t, org.CreatedAt)
+	require.NotNil(t, org.UpdatedAt)
 	require.Equal(t, "organization name", org.Name)
 	require.Equal(t, "organization description", *org.Description)
 	require.Equal(t, "organization domain", *org.Domain)
@@ -173,6 +225,8 @@ func TestMutationResolver_OrganizationCreate(t *testing.T) {
 	require.Equal(t, organizationTypeId, org.OrganizationType.ID)
 	require.Equal(t, "COMPANY", org.OrganizationType.Name)
 	require.Equal(t, model.DataSourceOpenline, org.Source)
+	require.Equal(t, model.DataSourceOpenline, org.SourceOfTruth)
+	require.Equal(t, "test", org.AppSource)
 
 	// Check the number of nodes and relationships in the Neo4j database
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Organization"))
@@ -206,6 +260,7 @@ func TestMutationResolver_OrganizationUpdate(t *testing.T) {
 	require.NotNil(t, organization)
 	require.Equal(t, organizationId, organization.Organization_Update.ID)
 	require.NotNil(t, organization.Organization_Update.CreatedAt)
+	require.NotNil(t, organization.Organization_Update.UpdatedAt)
 	require.Equal(t, "updated name", organization.Organization_Update.Name)
 	require.Equal(t, "updated description", *organization.Organization_Update.Description)
 	require.Equal(t, "updated domain", *organization.Organization_Update.Domain)
@@ -214,6 +269,7 @@ func TestMutationResolver_OrganizationUpdate(t *testing.T) {
 	require.Equal(t, true, *organization.Organization_Update.IsPublic)
 	require.Equal(t, organizationTypeIdUpdate, organization.Organization_Update.OrganizationType.ID)
 	require.Equal(t, "UPDATED", organization.Organization_Update.OrganizationType.Name)
+	require.Equal(t, model.DataSourceOpenline, organization.Organization_Update.SourceOfTruth)
 
 	// Check still single organization node exists after update, no new node created
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Organization"))

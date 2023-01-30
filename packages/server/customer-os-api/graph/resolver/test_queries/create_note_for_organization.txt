@@ -1,0 +1,20 @@
+mutation CreateNote($organizationId: ID!) {
+  note_CreateForOrganization(
+    organizationId: $organizationId,
+    input: {
+      html: "Note content"
+      appSource: "test"
+    }
+  ) {
+    id
+    html
+    createdAt
+    updatedAt
+    source
+    sourceOfTruth
+    appSource
+    createdBy {
+      id
+    }
+  }
+}

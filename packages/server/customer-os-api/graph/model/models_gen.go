@@ -550,15 +550,19 @@ type FilterItem struct {
 }
 
 type Note struct {
-	ID        string     `json:"id"`
-	HTML      string     `json:"html"`
-	CreatedAt time.Time  `json:"createdAt"`
-	CreatedBy *User      `json:"createdBy"`
-	Source    DataSource `json:"source"`
+	ID            string     `json:"id"`
+	HTML          string     `json:"html"`
+	CreatedAt     time.Time  `json:"createdAt"`
+	UpdatedAt     time.Time  `json:"updatedAt"`
+	CreatedBy     *User      `json:"createdBy"`
+	Source        DataSource `json:"source"`
+	SourceOfTruth DataSource `json:"sourceOfTruth"`
+	AppSource     string     `json:"appSource"`
 }
 
 type NoteInput struct {
-	HTML string `json:"html"`
+	HTML      string  `json:"html"`
+	AppSource *string `json:"appSource"`
 }
 
 type NotePage struct {
@@ -585,6 +589,7 @@ type NoteUpdateInput struct {
 type Organization struct {
 	ID               string            `json:"id"`
 	CreatedAt        time.Time         `json:"createdAt"`
+	UpdatedAt        time.Time         `json:"updatedAt"`
 	Name             string            `json:"name"`
 	Description      *string           `json:"description"`
 	Domain           *string           `json:"domain"`
@@ -592,11 +597,15 @@ type Organization struct {
 	Industry         *string           `json:"industry"`
 	IsPublic         *bool             `json:"isPublic"`
 	OrganizationType *OrganizationType `json:"organizationType"`
+	Source           DataSource        `json:"source"`
+	SourceOfTruth    DataSource        `json:"sourceOfTruth"`
+	AppSource        string            `json:"appSource"`
 	// All addresses associated with an organization in customerOS.
 	// **Required.  If no values it returns an empty array.**
 	Addresses    []*Place       `json:"addresses"`
-	Source       DataSource     `json:"source"`
 	ContactRoles []*ContactRole `json:"contactRoles"`
+	// Organization notes
+	Notes *NotePage `json:"notes"`
 }
 
 func (Organization) IsNode()            {}
@@ -612,6 +621,7 @@ type OrganizationInput struct {
 	Industry           *string `json:"industry"`
 	IsPublic           *bool   `json:"isPublic"`
 	OrganizationTypeID *string `json:"organizationTypeId"`
+	AppSource          *string `json:"appSource"`
 }
 
 type OrganizationPage struct {
@@ -643,6 +653,17 @@ type OrganizationTypeInput struct {
 type OrganizationTypeUpdateInput struct {
 	ID   string `json:"id"`
 	Name string `json:"name"`
+}
+
+type OrganizationUpdateInput struct {
+	ID                 string  `json:"id"`
+	Name               string  `json:"name"`
+	Description        *string `json:"description"`
+	Domain             *string `json:"domain"`
+	Website            *string `json:"website"`
+	Industry           *string `json:"industry"`
+	IsPublic           *bool   `json:"isPublic"`
+	OrganizationTypeID *string `json:"organizationTypeId"`
 }
 
 type PageViewAction struct {

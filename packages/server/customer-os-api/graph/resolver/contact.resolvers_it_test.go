@@ -495,8 +495,8 @@ func TestQueryResolver_Contact_WithNotes_ById(t *testing.T) {
 	neo4jt.CreateTenant(driver, tenantName)
 	contactId := neo4jt.CreateDefaultContact(driver, tenantName)
 	userId := neo4jt.CreateDefaultUser(driver, tenantName)
-	noteId1 := neo4jt.CreateNoteForContact(driver, contactId, "note1")
-	noteId2 := neo4jt.CreateNoteForContact(driver, contactId, "note2")
+	noteId1 := neo4jt.CreateNoteForContact(driver, tenantName, contactId, "note1")
+	noteId2 := neo4jt.CreateNoteForContact(driver, tenantName, contactId, "note2")
 	neo4jt.NoteCreatedByUser(driver, noteId1, userId)
 
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Contact"))

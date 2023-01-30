@@ -31,7 +31,7 @@ func (r *roleRepository) MergeRole(tenant, contactId, organizationExternalId, ex
 		" MATCH (e:ExternalSystem {id:$externalSystemId})<-[:IS_LINKED_WITH {externalId:$organizationExternalId}]-(org:Organization)-[:ORGANIZATION_BELONGS_TO_TENANT]->(t) " +
 		" MERGE (c)-[:HAS_ROLE]->(r:Role)-[:WORKS]->(org) " +
 		" ON CREATE SET r.primary=false, r.id=randomUUID(), r.source=$source, r.sourceOfTruth=$sourceOfTruth, r.appSource=$appSource, " +
-		"				r.createdAt=$now, r:%s " +
+		"				r.createdAt=$now, r.updatedAt=$now, r:%s " +
 		" RETURN r"
 
 	_, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
@@ -70,7 +70,7 @@ func (r *roleRepository) MergePrimaryRole(tenant, contactId, jobTitle, organizat
 			REMOVE r.jobTitle
 			WITH distinct c
 			MATCH (c)-[:HAS_ROLE]->(r:Role)-[:WORKS]->(org:Organization)-[:IS_LINKED_WITH {externalId:$organizationExternalId}]->(e:ExternalSystem {id:$externalSystemId})
-			SET r.primary=true, r.jobTitle=$jobTitle
+			SET r.primary=true, r.jobTitle=$jobTitle, r.updatedAt=$now
 			return r`,
 			map[string]interface{}{
 				"tenant":                 tenant,
@@ -78,6 +78,7 @@ func (r *roleRepository) MergePrimaryRole(tenant, contactId, jobTitle, organizat
 				"jobTitle":               jobTitle,
 				"externalSystemId":       externalSystemId,
 				"organizationExternalId": organizationExternalId,
+				"now":                    time.Now().UTC(),
 			})
 		if err != nil {
 			return nil, err

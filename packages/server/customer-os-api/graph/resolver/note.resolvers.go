@@ -13,9 +13,9 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper"
 )
 
-// NoteMergeToContact is the resolver for the note_MergeToContact field.
-func (r *mutationResolver) NoteMergeToContact(ctx context.Context, contactID string, input model.NoteInput) (*model.Note, error) {
-	result, err := r.Services.NoteService.MergeNoteToContact(ctx, contactID, mapper.MapNoteInputToEntity(&input))
+// NoteCreateForContact is the resolver for the note_CreateForContact field.
+func (r *mutationResolver) NoteCreateForContact(ctx context.Context, contactID string, input model.NoteInput) (*model.Note, error) {
+	result, err := r.Services.NoteService.CreateNoteForContact(ctx, contactID, mapper.MapNoteInputToEntity(&input))
 	if err != nil {
 		graphql.AddErrorf(ctx, "Could not add note %s to contact %s", input.HTML, contactID)
 		return nil, err
@@ -23,21 +23,31 @@ func (r *mutationResolver) NoteMergeToContact(ctx context.Context, contactID str
 	return mapper.MapEntityToNote(result), nil
 }
 
-// NoteUpdateInContact is the resolver for the note_UpdateInContact field.
-func (r *mutationResolver) NoteUpdateInContact(ctx context.Context, contactID string, input model.NoteUpdateInput) (*model.Note, error) {
-	result, err := r.Services.NoteService.UpdateNoteInContact(ctx, contactID, mapper.MapNoteUpdateInputToEntity(&input))
+// NoteCreateForOrganization is the resolver for the note_CreateForOrganization field.
+func (r *mutationResolver) NoteCreateForOrganization(ctx context.Context, organizationID string, input model.NoteInput) (*model.Note, error) {
+	result, err := r.Services.NoteService.CreateNoteForOrganization(ctx, organizationID, mapper.MapNoteInputToEntity(&input))
 	if err != nil {
-		graphql.AddErrorf(ctx, "Could not update note %s in contact %s", input.ID, contactID)
+		graphql.AddErrorf(ctx, "Could not add note %s to organization %s", input.HTML, organizationID)
 		return nil, err
 	}
 	return mapper.MapEntityToNote(result), nil
 }
 
-// NoteDeleteFromContact is the resolver for the note_DeleteFromContact field.
-func (r *mutationResolver) NoteDeleteFromContact(ctx context.Context, contactID string, noteID string) (*model.Result, error) {
-	result, err := r.Services.NoteService.DeleteFromContact(ctx, contactID, noteID)
+// NoteUpdate is the resolver for the note_Update field.
+func (r *mutationResolver) NoteUpdate(ctx context.Context, input model.NoteUpdateInput) (*model.Note, error) {
+	result, err := r.Services.NoteService.UpdateNote(ctx, mapper.MapNoteUpdateInputToEntity(&input))
 	if err != nil {
-		graphql.AddErrorf(ctx, "Could not remove note %s from contact %s", noteID, contactID)
+		graphql.AddErrorf(ctx, "Failed to update note %s", input.ID)
+		return nil, err
+	}
+	return mapper.MapEntityToNote(result), nil
+}
+
+// NoteDelete is the resolver for the note_Delete field.
+func (r *mutationResolver) NoteDelete(ctx context.Context, id string) (*model.Result, error) {
+	result, err := r.Services.NoteService.DeleteNote(ctx, id)
+	if err != nil {
+		graphql.AddErrorf(ctx, "Failed to delete note %s", id)
 		return nil, err
 	}
 	return &model.Result{

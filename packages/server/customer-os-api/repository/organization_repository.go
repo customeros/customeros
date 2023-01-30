@@ -7,6 +7,7 @@ import (
 	"github.com/neo4j/neo4j-go-driver/v4/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils"
+	"time"
 )
 
 type OrganizationRepository interface {
@@ -42,7 +43,9 @@ func (r *organizationRepository) Create(tx neo4j.Transaction, tenant string, org
 		"				org.isPublic=$isPublic, " +
 		" 				org.source=$source, " +
 		"				org.sourceOfTruth=$sourceOfTruth, " +
-		"				org.createdAt=datetime({timezone: 'UTC'}), " +
+		"				org.appSource=$appSource, " +
+		"				org.createdAt=$now, " +
+		"				org.updatedAt=$now, " +
 		" 				org:%s" +
 		" RETURN org"
 
@@ -58,6 +61,8 @@ func (r *organizationRepository) Create(tx neo4j.Transaction, tenant string, org
 			"isPublic":      organization.IsPublic,
 			"source":        organization.Source,
 			"sourceOfTruth": organization.SourceOfTruth,
+			"appSource":     organization.AppSource,
+			"now":           time.Now().UTC(),
 		})
 	return utils.ExtractSingleRecordFirstValueAsNode(queryResult, err)
 }
@@ -65,8 +70,14 @@ func (r *organizationRepository) Create(tx neo4j.Transaction, tenant string, org
 func (r *organizationRepository) Update(tx neo4j.Transaction, tenant string, organization entity.OrganizationEntity) (*dbtype.Node, error) {
 	query :=
 		" MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {id:$organizationId})" +
-			" SET org.name=$name, org.description=$description, org.domain=$domain, org.website=$website, " +
-			" org.industry=$industry, org.isPublic=$isPublic, org.sourceOfTruth=$sourceOfTruth " +
+			" SET 	org.name=$name, " +
+			"		org.description=$description, " +
+			"		org.domain=$domain, " +
+			"		org.website=$website, " +
+			" 		org.industry=$industry, " +
+			"		org.isPublic=$isPublic, " +
+			"		org.sourceOfTruth=$sourceOfTruth," +
+			"		org.updatedAt=datetime({timezone: 'UTC'}) " +
 			" RETURN org"
 
 	queryResult, err := tx.Run(query,
