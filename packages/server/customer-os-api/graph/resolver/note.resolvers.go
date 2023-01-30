@@ -6,8 +6,6 @@ package resolver
 
 import (
 	"context"
-	"fmt"
-
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/generated"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
@@ -16,7 +14,7 @@ import (
 
 // NoteCreateForContact is the resolver for the note_CreateForContact field.
 func (r *mutationResolver) NoteCreateForContact(ctx context.Context, contactID string, input model.NoteInput) (*model.Note, error) {
-	result, err := r.Services.NoteService.MergeNoteToContact(ctx, contactID, mapper.MapNoteInputToEntity(&input))
+	result, err := r.Services.NoteService.CreateNoteForContact(ctx, contactID, mapper.MapNoteInputToEntity(&input))
 	if err != nil {
 		graphql.AddErrorf(ctx, "Could not add note %s to contact %s", input.HTML, contactID)
 		return nil, err
@@ -26,7 +24,12 @@ func (r *mutationResolver) NoteCreateForContact(ctx context.Context, contactID s
 
 // NoteCreateForOrganization is the resolver for the note_CreateForOrganization field.
 func (r *mutationResolver) NoteCreateForOrganization(ctx context.Context, organizationID string, input model.NoteInput) (*model.Note, error) {
-	panic(fmt.Errorf("not implemented: NoteCreateForOrganization - note_CreateForOrganization"))
+	result, err := r.Services.NoteService.CreateNoteForOrganization(ctx, organizationID, mapper.MapNoteInputToEntity(&input))
+	if err != nil {
+		graphql.AddErrorf(ctx, "Could not add note %s to organization %s", input.HTML, organizationID)
+		return nil, err
+	}
+	return mapper.MapEntityToNote(result), nil
 }
 
 // NoteUpdate is the resolver for the note_Update field.

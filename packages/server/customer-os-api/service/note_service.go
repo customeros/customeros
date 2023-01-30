@@ -12,7 +12,8 @@ import (
 
 type NoteService interface {
 	GetNotesForContact(ctx context.Context, contactId string, page, limit int) (*utils.Pagination, error)
-	MergeNoteToContact(ctx context.Context, contactId string, toEntity *entity.NoteEntity) (*entity.NoteEntity, error)
+	CreateNoteForContact(ctx context.Context, contactId string, entity *entity.NoteEntity) (*entity.NoteEntity, error)
+	CreateNoteForOrganization(ctx context.Context, organizationId string, entity *entity.NoteEntity) (*entity.NoteEntity, error)
 	UpdateNote(ctx context.Context, entity *entity.NoteEntity) (*entity.NoteEntity, error)
 	DeleteNote(ctx context.Context, noteId string) (bool, error)
 }
@@ -60,11 +61,22 @@ func (s *noteService) GetNotesForContact(ctx context.Context, contactId string, 
 	return &paginatedResult, nil
 }
 
-func (s *noteService) MergeNoteToContact(ctx context.Context, contactId string, entity *entity.NoteEntity) (*entity.NoteEntity, error) {
+func (s *noteService) CreateNoteForContact(ctx context.Context, contactId string, entity *entity.NoteEntity) (*entity.NoteEntity, error) {
 	session := utils.NewNeo4jWriteSession(s.getNeo4jDriver())
 	defer session.Close()
 
 	dbNodePtr, err := s.repositories.NoteRepository.CreateNoteForContact(session, common.GetContext(ctx).Tenant, contactId, *entity)
+	if err != nil {
+		return nil, err
+	}
+	return s.mapDbNodeToNoteEntity(*dbNodePtr), nil
+}
+
+func (s *noteService) CreateNoteForOrganization(ctx context.Context, organization string, entity *entity.NoteEntity) (*entity.NoteEntity, error) {
+	session := utils.NewNeo4jWriteSession(s.getNeo4jDriver())
+	defer session.Close()
+
+	dbNodePtr, err := s.repositories.NoteRepository.CreateNoteForOrganization(session, common.GetContext(ctx).Tenant, organization, *entity)
 	if err != nil {
 		return nil, err
 	}

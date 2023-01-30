@@ -22,6 +22,7 @@ type NoteDbNodesWithTotalCount struct {
 type NoteRepository interface {
 	GetPaginatedNotesForContact(session neo4j.Session, tenant, contactId string, skip, limit int) (*NoteDbNodesWithTotalCount, error)
 	CreateNoteForContact(session neo4j.Session, tenant, contactId string, entity entity.NoteEntity) (*dbtype.Node, error)
+	CreateNoteForOrganization(session neo4j.Session, tenant, organization string, entity entity.NoteEntity) (*dbtype.Node, error)
 	UpdateNote(session neo4j.Session, tenant string, entity entity.NoteEntity) (*dbtype.Node, error)
 	Delete(session neo4j.Session, tenant, noteId string) error
 }
@@ -123,6 +124,37 @@ func (r *noteRepository) CreateNoteForContact(session neo4j.Session, tenant, con
 				"source":        entity.Source,
 				"sourceOfTruth": entity.SourceOfTruth,
 				"appSource":     entity.AppSource,
+			})
+		return utils.ExtractSingleRecordFirstValueAsNode(queryResult, err)
+	})
+	if err != nil {
+		return nil, err
+	}
+	return result.(*dbtype.Node), nil
+}
+
+func (r *noteRepository) CreateNoteForOrganization(session neo4j.Session, tenant, organizationId string, entity entity.NoteEntity) (*dbtype.Node, error) {
+	query := "MATCH (org:Organization {id:$organizationId})-[:ORGANIZATION_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant}) " +
+		" MERGE (org)-[:NOTED]->(n:Note {id:randomUUID()}) " +
+		" ON CREATE SET n.html=$html, " +
+		"				n.createdAt=$createdAt, " +
+		"				n.updatedAt=$createdAt, " +
+		"				n.source=$source, " +
+		"				n.sourceOfTruth=$sourceOfTruth, " +
+		"				n.appSource=$appSource, " +
+		"				n:%s " +
+		" RETURN n"
+
+	result, err := session.WriteTransaction(func(tx neo4j.Transaction) (interface{}, error) {
+		queryResult, err := tx.Run(fmt.Sprintf(query, "Note_"+tenant),
+			map[string]any{
+				"tenant":         tenant,
+				"organizationId": organizationId,
+				"html":           entity.Html,
+				"createdAt":      time.Now().UTC(),
+				"source":         entity.Source,
+				"sourceOfTruth":  entity.SourceOfTruth,
+				"appSource":      entity.AppSource,
 			})
 		return utils.ExtractSingleRecordFirstValueAsNode(queryResult, err)
 	})
