@@ -6,7 +6,6 @@ package resolver
 
 import (
 	"context"
-
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/generated"
@@ -88,6 +87,23 @@ func (r *organizationResolver) ContactRoles(ctx context.Context, obj *model.Orga
 		return nil, err
 	}
 	return mapper.MapEntitiesToContactRoles(contactRoleEntities), err
+}
+
+// Notes is the resolver for the notes field.
+func (r *organizationResolver) Notes(ctx context.Context, obj *model.Organization, pagination *model.Pagination) (*model.NotePage, error) {
+	if pagination == nil {
+		pagination = &model.Pagination{Page: 0, Limit: 0}
+	}
+	paginatedResult, err := r.Services.NoteService.GetNotesForOrganization(ctx, obj.ID, pagination.Page, pagination.Limit)
+	if err != nil {
+		graphql.AddErrorf(ctx, "Failed to get organization %s notes", obj.ID)
+		return nil, err
+	}
+	return &model.NotePage{
+		Content:       mapper.MapEntitiesToNotes(paginatedResult.Rows.(*entity.NoteEntities)),
+		TotalPages:    paginatedResult.TotalPages,
+		TotalElements: paginatedResult.TotalRows,
+	}, err
 }
 
 // Organizations is the resolver for the organizations field.

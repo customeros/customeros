@@ -551,6 +551,19 @@ func CreateNoteForContact(driver *neo4j.Driver, tenant, contactId, html string) 
 	return noteId.String()
 }
 
+func CreateNoteForOrganization(driver *neo4j.Driver, tenant, organizationId, html string) string {
+	var noteId, _ = uuid.NewRandom()
+	query := "MATCH (org:Organization {id:$organizationId}) " +
+		"		MERGE (org)-[:NOTED]->(n:Note {id:$id}) " +
+		"		ON CREATE SET n.html=$html, n.createdAt=datetime({timezone: 'UTC'}), n:%s"
+	ExecuteWriteQuery(driver, fmt.Sprintf(query, "Note_"+tenant), map[string]any{
+		"id":             noteId.String(),
+		"organizationId": organizationId,
+		"html":           html,
+	})
+	return noteId.String()
+}
+
 func NoteCreatedByUser(driver *neo4j.Driver, noteId, userId string) {
 	query := `MATCH (u:User {id:$userId})
 				MATCH (n:Note {id:$noteId})

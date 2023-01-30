@@ -21,6 +21,7 @@ type NoteDbNodesWithTotalCount struct {
 
 type NoteRepository interface {
 	GetPaginatedNotesForContact(session neo4j.Session, tenant, contactId string, skip, limit int) (*NoteDbNodesWithTotalCount, error)
+	GetPaginatedNotesForOrganization(session neo4j.Session, tenant, organizationId string, skip, limit int) (*NoteDbNodesWithTotalCount, error)
 	CreateNoteForContact(session neo4j.Session, tenant, contactId string, entity entity.NoteEntity) (*dbtype.Node, error)
 	CreateNoteForOrganization(session neo4j.Session, tenant, organization string, entity entity.NoteEntity) (*dbtype.Node, error)
 	UpdateNote(session neo4j.Session, tenant string, entity entity.NoteEntity) (*dbtype.Node, error)
@@ -65,6 +66,48 @@ func (r *noteRepository) GetPaginatedNotesForContact(session neo4j.Session, tena
 				"contactId": contactId,
 				"skip":      skip,
 				"limit":     limit,
+			})
+		return queryResult.Collect()
+	})
+	if err != nil {
+		return nil, err
+	}
+	for _, v := range dbRecords.([]*neo4j.Record) {
+		noteDBNodeWithParentId := new(NoteDbNodeWithParentId)
+		noteDBNodeWithParentId.Node = utils.NodePtr(v.Values[0].(neo4j.Node))
+		noteDBNodeWithParentId.ParentId = v.Values[1].(string)
+		result.Nodes = append(result.Nodes, noteDBNodeWithParentId)
+	}
+	return result, nil
+}
+
+func (r *noteRepository) GetPaginatedNotesForOrganization(session neo4j.Session, tenant, organizationId string, skip, limit int) (*NoteDbNodesWithTotalCount, error) {
+	result := new(NoteDbNodesWithTotalCount)
+
+	dbRecords, err := session.ReadTransaction(func(tx neo4j.Transaction) (any, error) {
+		queryResult, err := tx.Run(`MATCH (org:Organization {id:$organizationId})-[:ORGANIZATION_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}), 
+											(org)-[:NOTED]->(n:Note)
+											RETURN count(n) as count`,
+			map[string]any{
+				"tenant":         tenant,
+				"organizationId": organizationId,
+			})
+		if err != nil {
+			return nil, err
+		}
+		count, _ := queryResult.Single()
+		result.Count = count.Values[0].(int64)
+
+		queryResult, err = tx.Run(fmt.Sprintf(
+			"MATCH (org:Organization {id:$organizationId})-[:ORGANIZATION_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}), "+
+				" (org)-[:NOTED]->(n:Note)"+
+				" RETURN n, org.id "+
+				" SKIP $skip LIMIT $limit"),
+			map[string]any{
+				"tenant":         tenant,
+				"organizationId": organizationId,
+				"skip":           skip,
+				"limit":          limit,
 			})
 		return queryResult.Collect()
 	})

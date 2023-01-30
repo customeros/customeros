@@ -604,6 +604,8 @@ type Organization struct {
 	// **Required.  If no values it returns an empty array.**
 	Addresses    []*Place       `json:"addresses"`
 	ContactRoles []*ContactRole `json:"contactRoles"`
+	// Organization notes
+	Notes *NotePage `json:"notes"`
 }
 
 func (Organization) IsNode()            {}

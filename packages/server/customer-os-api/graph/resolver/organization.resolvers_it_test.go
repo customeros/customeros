@@ -135,6 +135,57 @@ func TestQueryResolver_Organizations_WithAddresses(t *testing.T) {
 	require.Equal(t, addressInput.Zip, *address.Zip)
 }
 
+func TestQueryResolver_Organization_WithNotes_ById(t *testing.T) {
+	defer tearDownTestCase()(t)
+	neo4jt.CreateTenant(driver, tenantName)
+	organizationId := neo4jt.CreateOrganization(driver, tenantName, "test org")
+	userId := neo4jt.CreateDefaultUserWithId(driver, tenantName, testUserId)
+	noteId1 := neo4jt.CreateNoteForOrganization(driver, tenantName, organizationId, "note1")
+	noteId2 := neo4jt.CreateNoteForOrganization(driver, tenantName, organizationId, "note2")
+	neo4jt.NoteCreatedByUser(driver, noteId1, userId)
+
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Organization"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "User"))
+	require.Equal(t, 2, neo4jt.GetCountOfNodes(driver, "Note"))
+	require.Equal(t, 2, neo4jt.GetCountOfRelationships(driver, "NOTED"))
+	require.Equal(t, 1, neo4jt.GetCountOfRelationships(driver, "CREATED"))
+
+	rawResponse, err := c.RawPost(getQuery("get_organization_with_notes_by_id"),
+		client.Var("organizationId", organizationId))
+	assertRawResponseSuccess(t, rawResponse, err)
+
+	var searchedOrganization struct {
+		Organization model.Organization
+	}
+
+	err = decode.Decode(rawResponse.Data.(map[string]any), &searchedOrganization)
+	require.Nil(t, err)
+	require.Equal(t, organizationId, searchedOrganization.Organization.ID)
+
+	notes := searchedOrganization.Organization.Notes.Content
+	require.Equal(t, 2, len(notes))
+	var noteWithUser, noteWithoutUser *model.Note
+	if noteId1 == notes[0].ID {
+		noteWithUser = notes[0]
+		noteWithoutUser = notes[1]
+	} else {
+		noteWithUser = notes[1]
+		noteWithoutUser = notes[0]
+	}
+	require.Equal(t, noteId1, noteWithUser.ID)
+	require.Equal(t, "note1", noteWithUser.HTML)
+	require.NotNil(t, noteWithUser.CreatedAt)
+	require.NotNil(t, noteWithUser.CreatedBy)
+	require.Equal(t, userId, noteWithUser.CreatedBy.ID)
+	require.Equal(t, "first", noteWithUser.CreatedBy.FirstName)
+	require.Equal(t, "last", noteWithUser.CreatedBy.LastName)
+
+	require.Equal(t, noteId2, noteWithoutUser.ID)
+	require.Equal(t, "note2", noteWithoutUser.HTML)
+	require.NotNil(t, noteWithoutUser.CreatedAt)
+	require.Nil(t, noteWithoutUser.CreatedBy)
+}
+
 func TestMutationResolver_OrganizationCreate(t *testing.T) {
 	defer tearDownTestCase()(t)
 	neo4jt.CreateTenant(driver, tenantName)

@@ -12,6 +12,7 @@ import (
 
 type NoteService interface {
 	GetNotesForContact(ctx context.Context, contactId string, page, limit int) (*utils.Pagination, error)
+	GetNotesForOrganization(ctx context.Context, organizationId string, page, limit int) (*utils.Pagination, error)
 	CreateNoteForContact(ctx context.Context, contactId string, entity *entity.NoteEntity) (*entity.NoteEntity, error)
 	CreateNoteForOrganization(ctx context.Context, organizationId string, entity *entity.NoteEntity) (*entity.NoteEntity, error)
 	UpdateNote(ctx context.Context, entity *entity.NoteEntity) (*entity.NoteEntity, error)
@@ -44,6 +45,35 @@ func (s *noteService) GetNotesForContact(ctx context.Context, contactId string, 
 		session,
 		common.GetContext(ctx).Tenant,
 		contactId,
+		paginatedResult.GetSkip(),
+		paginatedResult.GetLimit())
+	if err != nil {
+		return nil, err
+	}
+	paginatedResult.SetTotalRows(noteDbNodesWithTotalCount.Count)
+
+	entities := entity.NoteEntities{}
+
+	for _, v := range noteDbNodesWithTotalCount.Nodes {
+		noteEntity := *s.mapDbNodeToNoteEntity(*v.Node)
+		entities = append(entities, noteEntity)
+	}
+	paginatedResult.SetRows(&entities)
+	return &paginatedResult, nil
+}
+
+func (s *noteService) GetNotesForOrganization(ctx context.Context, organizationId string, page, limit int) (*utils.Pagination, error) {
+	session := utils.NewNeo4jReadSession(*s.repositories.Drivers.Neo4jDriver)
+	defer session.Close()
+
+	var paginatedResult = utils.Pagination{
+		Limit: limit,
+		Page:  page,
+	}
+	noteDbNodesWithTotalCount, err := s.repositories.NoteRepository.GetPaginatedNotesForOrganization(
+		session,
+		common.GetContext(ctx).Tenant,
+		organizationId,
 		paginatedResult.GetSkip(),
 		paginatedResult.GetLimit())
 	if err != nil {

@@ -287,6 +287,7 @@ type ComplexityRoot struct {
 		Industry         func(childComplexity int) int
 		IsPublic         func(childComplexity int) int
 		Name             func(childComplexity int) int
+		Notes            func(childComplexity int, pagination *model.Pagination) int
 		OrganizationType func(childComplexity int) int
 		Source           func(childComplexity int) int
 		SourceOfTruth    func(childComplexity int) int
@@ -478,6 +479,7 @@ type OrganizationResolver interface {
 
 	Addresses(ctx context.Context, obj *model.Organization) ([]*model.Place, error)
 	ContactRoles(ctx context.Context, obj *model.Organization) ([]*model.ContactRole, error)
+	Notes(ctx context.Context, obj *model.Organization, pagination *model.Pagination) (*model.NotePage, error)
 }
 type QueryResolver interface {
 	EntityTemplates(ctx context.Context, extends *model.EntityTemplateExtension) ([]*model.EntityTemplate, error)
@@ -2035,6 +2037,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Organization.Name(childComplexity), true
+
+	case "Organization.notes":
+		if e.complexity.Organization.Notes == nil {
+			break
+		}
+
+		args, err := ec.field_Organization_notes_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Organization.Notes(childComplexity, args["pagination"].(*model.Pagination)), true
 
 	case "Organization.organizationType":
 		if e.complexity.Organization.OrganizationType == nil {
@@ -3670,6 +3684,8 @@ type Organization implements Node {
     """
     addresses: [Place!]! @goField(forceResolver: true)
     contactRoles: [ContactRole!]! @goField(forceResolver: true)
+    "Organization notes"
+    notes(pagination: Pagination): NotePage! @goField(forceResolver: true)
 }
 
 type OrganizationPage implements Pages {
@@ -5111,6 +5127,21 @@ func (ec *executionContext) field_Mutation_user_Update_args(ctx context.Context,
 		}
 	}
 	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Organization_notes_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 *model.Pagination
+	if tmp, ok := rawArgs["pagination"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("pagination"))
+		arg0, err = ec.unmarshalOPagination2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐPagination(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["pagination"] = arg0
 	return args, nil
 }
 
@@ -7081,6 +7112,8 @@ func (ec *executionContext) fieldContext_ContactRole_organization(ctx context.Co
 				return ec.fieldContext_Organization_addresses(ctx, field)
 			case "contactRoles":
 				return ec.fieldContext_Organization_contactRoles(ctx, field)
+			case "notes":
+				return ec.fieldContext_Organization_notes(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Organization", field.Name)
 		},
@@ -13341,6 +13374,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_Create(ctx contex
 				return ec.fieldContext_Organization_addresses(ctx, field)
 			case "contactRoles":
 				return ec.fieldContext_Organization_contactRoles(ctx, field)
+			case "notes":
+				return ec.fieldContext_Organization_notes(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Organization", field.Name)
 		},
@@ -13427,6 +13462,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_Update(ctx contex
 				return ec.fieldContext_Organization_addresses(ctx, field)
 			case "contactRoles":
 				return ec.fieldContext_Organization_contactRoles(ctx, field)
+			case "notes":
+				return ec.fieldContext_Organization_notes(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Organization", field.Name)
 		},
@@ -15281,6 +15318,69 @@ func (ec *executionContext) fieldContext_Organization_contactRoles(ctx context.C
 	return fc, nil
 }
 
+func (ec *executionContext) _Organization_notes(ctx context.Context, field graphql.CollectedField, obj *model.Organization) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Organization_notes(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Organization().Notes(rctx, obj, fc.Args["pagination"].(*model.Pagination))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.NotePage)
+	fc.Result = res
+	return ec.marshalNNotePage2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐNotePage(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Organization_notes(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Organization",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "content":
+				return ec.fieldContext_NotePage_content(ctx, field)
+			case "totalPages":
+				return ec.fieldContext_NotePage_totalPages(ctx, field)
+			case "totalElements":
+				return ec.fieldContext_NotePage_totalElements(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type NotePage", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Organization_notes_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _OrganizationPage_content(ctx context.Context, field graphql.CollectedField, obj *model.OrganizationPage) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_OrganizationPage_content(ctx, field)
 	if err != nil {
@@ -15350,6 +15450,8 @@ func (ec *executionContext) fieldContext_OrganizationPage_content(ctx context.Co
 				return ec.fieldContext_Organization_addresses(ctx, field)
 			case "contactRoles":
 				return ec.fieldContext_Organization_contactRoles(ctx, field)
+			case "notes":
+				return ec.fieldContext_Organization_notes(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Organization", field.Name)
 		},
@@ -17411,6 +17513,8 @@ func (ec *executionContext) fieldContext_Query_organization(ctx context.Context,
 				return ec.fieldContext_Organization_addresses(ctx, field)
 			case "contactRoles":
 				return ec.fieldContext_Organization_contactRoles(ctx, field)
+			case "notes":
+				return ec.fieldContext_Organization_notes(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Organization", field.Name)
 		},
@@ -23868,6 +23972,26 @@ func (ec *executionContext) _Organization(ctx context.Context, sel ast.Selection
 					}
 				}()
 				res = ec._Organization_contactRoles(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
+		case "notes":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Organization_notes(ctx, field, obj)
 				if res == graphql.Null {
 					atomic.AddUint32(&invalids, 1)
 				}

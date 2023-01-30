@@ -30,6 +30,8 @@ type Organization implements Node {
     """
     addresses: [Place!]! @goField(forceResolver: true)
     contactRoles: [ContactRole!]! @goField(forceResolver: true)
+    "Organization notes"
+    notes(pagination: Pagination): NotePage! @goField(forceResolver: true)
 }
 
 type OrganizationPage implements Pages {
