@@ -249,7 +249,7 @@ func AddPhoneNumberToContact(driver *neo4j.Driver, contactId string, e164 string
 				  id: randomUUID(),
 				  e164: $e164,
 				  label: $label
-				})<-[:CALLED_AT {primary:$primary}]-(c)`
+				})<-[:PHONE_ASSOCIATED_WITH {primary:$primary}]-(c)`
 	ExecuteWriteQuery(driver, query, map[string]any{
 		"contactId": contactId,
 		"primary":   primary,

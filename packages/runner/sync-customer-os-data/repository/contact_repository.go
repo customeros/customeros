@@ -148,10 +148,10 @@ func (r *contactRepository) MergePrimaryPhoneNumber(tenant, contactId, e164, ext
 	defer session.Close()
 
 	query := "MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) " +
-		" OPTIONAL MATCH (c)-[r:CALLED_AT]->(p:PhoneNumber) " +
+		" OPTIONAL MATCH (c)-[r:PHONE_ASSOCIATED_WITH]->(p:PhoneNumber) " +
 		" SET r.primary=false " +
 		" WITH c " +
-		" MERGE (c)-[r:CALLED_AT]->(p:PhoneNumber {e164: $e164}) " +
+		" MERGE (c)-[r:PHONE_ASSOCIATED_WITH]->(p:PhoneNumber {e164: $e164}) " +
 		" ON CREATE SET r.primary=true, p.id=randomUUID(), p.createdAt=$createdAt, p.updatedAt=$createdAt, p.source=$source, p.sourceOfTruth=$sourceOfTruth, p.appSource=$appSource, p:%s " +
 		" ON MATCH SET r.primary=true, p.updatedAt=$now "
 

@@ -118,7 +118,7 @@ func (s *phoneNumberService) Delete(ctx context.Context, contactId string, e164 
 	queryResult, err := session.WriteTransaction(func(tx neo4j.Transaction) (interface{}, error) {
 		_, err := tx.Run(`
 			MATCH (c:Contact {id:$id})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}),
-                  (c:Contact {id:$id})-[:CALLED_AT]->(p:PhoneNumber {e164:$e164})
+                  (c:Contact {id:$id})-[:PHONE_ASSOCIATED_WITH]->(p:PhoneNumber {e164:$e164})
             DETACH DELETE p
 			`,
 			map[string]interface{}{
@@ -143,7 +143,7 @@ func (s *phoneNumberService) DeleteById(ctx context.Context, contactId string, p
 	queryResult, err := session.WriteTransaction(func(tx neo4j.Transaction) (interface{}, error) {
 		_, err := tx.Run(`
 			MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}),
-                  (c:Contact {id:$contactId})-[:CALLED_AT]->(p:PhoneNumber {id:$phoneId})
+                  (c:Contact {id:$contactId})-[:PHONE_ASSOCIATED_WITH]->(p:PhoneNumber {id:$phoneId})
             DETACH DELETE p
 			`,
 			map[string]interface{}{
