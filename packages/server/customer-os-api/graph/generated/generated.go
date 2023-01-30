@@ -241,7 +241,7 @@ type ComplexityRoot struct {
 		FieldSetDeleteFromContact              func(childComplexity int, contactID string, id string) int
 		FieldSetMergeToContact                 func(childComplexity int, contactID string, input model.FieldSetInput) int
 		FieldSetUpdateInContact                func(childComplexity int, contactID string, input model.FieldSetUpdateInput) int
-		NoteDeleteFromContact                  func(childComplexity int, contactID string, noteID string) int
+		NoteDelete                             func(childComplexity int, id string) int
 		NoteMergeToContact                     func(childComplexity int, contactID string, input model.NoteInput) int
 		NoteUpdateInContact                    func(childComplexity int, contactID string, input model.NoteUpdateInput) int
 		OrganizationCreate                     func(childComplexity int, input model.OrganizationInput) int
@@ -451,7 +451,7 @@ type MutationResolver interface {
 	EmailRemoveFromContactByID(ctx context.Context, contactID string, id string) (*model.Result, error)
 	NoteMergeToContact(ctx context.Context, contactID string, input model.NoteInput) (*model.Note, error)
 	NoteUpdateInContact(ctx context.Context, contactID string, input model.NoteUpdateInput) (*model.Note, error)
-	NoteDeleteFromContact(ctx context.Context, contactID string, noteID string) (*model.Result, error)
+	NoteDelete(ctx context.Context, id string) (*model.Result, error)
 	OrganizationCreate(ctx context.Context, input model.OrganizationInput) (*model.Organization, error)
 	OrganizationUpdate(ctx context.Context, input model.OrganizationUpdateInput) (*model.Organization, error)
 	OrganizationDelete(ctx context.Context, id string) (*model.Result, error)
@@ -1692,17 +1692,17 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.FieldSetUpdateInContact(childComplexity, args["contactId"].(string), args["input"].(model.FieldSetUpdateInput)), true
 
-	case "Mutation.note_DeleteFromContact":
-		if e.complexity.Mutation.NoteDeleteFromContact == nil {
+	case "Mutation.note_Delete":
+		if e.complexity.Mutation.NoteDelete == nil {
 			break
 		}
 
-		args, err := ec.field_Mutation_note_DeleteFromContact_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_note_Delete_args(context.TODO(), rawArgs)
 		if err != nil {
 			return 0, false
 		}
 
-		return e.complexity.Mutation.NoteDeleteFromContact(childComplexity, args["contactId"].(string), args["noteId"].(string)), true
+		return e.complexity.Mutation.NoteDelete(childComplexity, args["id"].(string)), true
 
 	case "Mutation.note_MergeToContact":
 		if e.complexity.Mutation.NoteMergeToContact == nil {
@@ -3570,7 +3570,7 @@ interface ExtensibleEntity implements Node {
 	{Name: "../schemas/note.graphqls", Input: `extend type Mutation {
     note_MergeToContact(contactId : ID!, input: NoteInput!): Note!
     note_UpdateInContact(contactId : ID!, input: NoteUpdateInput!): Note!
-    note_DeleteFromContact(contactId : ID!, noteId: ID!): Result!
+    note_Delete(id: ID!): Result!
 }
 
 type Note {
@@ -4777,27 +4777,18 @@ func (ec *executionContext) field_Mutation_fieldSetUpdateInContact_args(ctx cont
 	return args, nil
 }
 
-func (ec *executionContext) field_Mutation_note_DeleteFromContact_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+func (ec *executionContext) field_Mutation_note_Delete_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
 	var arg0 string
-	if tmp, ok := rawArgs["contactId"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("contactId"))
+	if tmp, ok := rawArgs["id"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
 		arg0, err = ec.unmarshalNID2string(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["contactId"] = arg0
-	var arg1 string
-	if tmp, ok := rawArgs["noteId"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("noteId"))
-		arg1, err = ec.unmarshalNID2string(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["noteId"] = arg1
+	args["id"] = arg0
 	return args, nil
 }
 
@@ -13082,8 +13073,8 @@ func (ec *executionContext) fieldContext_Mutation_note_UpdateInContact(ctx conte
 	return fc, nil
 }
 
-func (ec *executionContext) _Mutation_note_DeleteFromContact(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_note_DeleteFromContact(ctx, field)
+func (ec *executionContext) _Mutation_note_Delete(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_note_Delete(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -13096,7 +13087,7 @@ func (ec *executionContext) _Mutation_note_DeleteFromContact(ctx context.Context
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().NoteDeleteFromContact(rctx, fc.Args["contactId"].(string), fc.Args["noteId"].(string))
+		return ec.resolvers.Mutation().NoteDelete(rctx, fc.Args["id"].(string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -13112,7 +13103,7 @@ func (ec *executionContext) _Mutation_note_DeleteFromContact(ctx context.Context
 	return ec.marshalNResult2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐResult(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Mutation_note_DeleteFromContact(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Mutation_note_Delete(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Mutation",
 		Field:      field,
@@ -13133,7 +13124,7 @@ func (ec *executionContext) fieldContext_Mutation_note_DeleteFromContact(ctx con
 		}
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_note_DeleteFromContact_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+	if fc.Args, err = ec.field_Mutation_note_Delete_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return
 	}
@@ -23242,10 +23233,10 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 				return ec._Mutation_note_UpdateInContact(ctx, field)
 			})
 
-		case "note_DeleteFromContact":
+		case "note_Delete":
 
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_note_DeleteFromContact(ctx, field)
+				return ec._Mutation_note_Delete(ctx, field)
 			})
 
 		case "organization_Create":

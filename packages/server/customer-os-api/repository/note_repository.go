@@ -23,7 +23,7 @@ type NoteRepository interface {
 	GetPaginatedNotesForContact(session neo4j.Session, tenant, contactId string, skip, limit int) (*NoteDbNodesWithTotalCount, error)
 	MergeNote(session neo4j.Session, tenant, contactId string, entity entity.NoteEntity) (*dbtype.Node, error)
 	UpdateNoteForContact(session neo4j.Session, tenant, contactId string, entity entity.NoteEntity) (*dbtype.Node, error)
-	Delete(session neo4j.Session, tenant, contactId, noteId string) error
+	Delete(session neo4j.Session, tenant, noteId string) error
 }
 
 type noteRepository struct {
@@ -130,17 +130,13 @@ func (r *noteRepository) MergeNote(session neo4j.Session, tenant, contactId stri
 	return result.(*dbtype.Node), nil
 }
 
-func (r *noteRepository) Delete(session neo4j.Session, tenant, contactId, noteId string) error {
+func (r *noteRepository) Delete(session neo4j.Session, tenant, noteId string) error {
+	query := "MATCH (n:%s {id:$noteId}) DETACH DELETE n"
 	_, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
-		_, err := tx.Run(`
-			MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}),
-                  (c:Contact {id:$contactId})-[:NOTED]->(n:Note {id:$noteId})
-            DETACH DELETE n
-			`,
+		_, err := tx.Run(fmt.Sprintf(query, "Note_"+tenant),
 			map[string]interface{}{
-				"contactId": contactId,
-				"tenant":    tenant,
-				"noteId":    noteId,
+				"tenant": tenant,
+				"noteId": noteId,
 			})
 		return nil, err
 	})

@@ -528,13 +528,12 @@ func OrganizationHasAddress(driver *neo4j.Driver, organizationId, addressId stri
 	return roleId.String()
 }
 
-func CreateNoteForContact(driver *neo4j.Driver, contactId, html string) string {
+func CreateNoteForContact(driver *neo4j.Driver, tenant, contactId, html string) string {
 	var noteId, _ = uuid.NewRandom()
-	query := `MATCH (c:Contact {id:$contactId})
-			MERGE (c)-[:NOTED]->(n:Note {id:$id})
-			ON CREATE SET n.html=$html, n.createdAt=datetime({timezone: 'UTC'})
-`
-	ExecuteWriteQuery(driver, query, map[string]any{
+	query := "MATCH (c:Contact {id:$contactId}) " +
+		"		MERGE (c)-[:NOTED]->(n:Note {id:$id}) " +
+		"		ON CREATE SET n.html=$html, n.createdAt=datetime({timezone: 'UTC'}), n:%s"
+	ExecuteWriteQuery(driver, fmt.Sprintf(query, "Note_"+tenant), map[string]any{
 		"id":        noteId.String(),
 		"contactId": contactId,
 		"html":      html,

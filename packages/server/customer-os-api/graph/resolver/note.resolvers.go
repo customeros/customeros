@@ -33,11 +33,11 @@ func (r *mutationResolver) NoteUpdateInContact(ctx context.Context, contactID st
 	return mapper.MapEntityToNote(result), nil
 }
 
-// NoteDeleteFromContact is the resolver for the note_DeleteFromContact field.
-func (r *mutationResolver) NoteDeleteFromContact(ctx context.Context, contactID string, noteID string) (*model.Result, error) {
-	result, err := r.Services.NoteService.DeleteFromContact(ctx, contactID, noteID)
+// NoteDelete is the resolver for the note_Delete field.
+func (r *mutationResolver) NoteDelete(ctx context.Context, id string) (*model.Result, error) {
+	result, err := r.Services.NoteService.Delete(ctx, id)
 	if err != nil {
-		graphql.AddErrorf(ctx, "Could not remove note %s from contact %s", noteID, contactID)
+		graphql.AddErrorf(ctx, "Failed to delete note %s", id)
 		return nil, err
 	}
 	return &model.Result{

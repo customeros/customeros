@@ -43,3 +43,38 @@ func TestMutationResolver_NoteMergeToContact(t *testing.T) {
 	// Check the labels on the nodes in the Neo4j database
 	assertNeo4jLabels(t, driver, []string{"Tenant", "Contact", "Note", "Note_" + tenantName})
 }
+
+func TestMutationResolver_NoteDelete(t *testing.T) {
+	defer tearDownTestCase()(t)
+
+	neo4jt.CreateTenant(driver, tenantName)
+	contactId := neo4jt.CreateDefaultContact(driver, tenantName)
+	noteId := neo4jt.CreateNoteForContact(driver, tenantName, contactId, "Note content")
+
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Contact"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Note"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Note_"+tenantName))
+	require.Equal(t, 1, neo4jt.GetCountOfRelationships(driver, "NOTED"))
+
+	rawResponse, err := c.RawPost(getQuery("delete_note"),
+		client.Var("noteId", noteId))
+	assertRawResponseSuccess(t, rawResponse, err)
+
+	var result struct {
+		Note_Delete model.Result
+	}
+
+	err = decode.Decode(rawResponse.Data.(map[string]any), &result)
+	require.Nil(t, err)
+	require.NotNil(t, result)
+	require.Equal(t, true, result.Note_Delete.Result)
+
+	// Check the number of nodes and relationships in the Neo4j database
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Contact"))
+	require.Equal(t, 0, neo4jt.GetCountOfNodes(driver, "Note"))
+	require.Equal(t, 0, neo4jt.GetCountOfNodes(driver, "Note_"+tenantName))
+	require.Equal(t, 0, neo4jt.GetCountOfRelationships(driver, "NOTED"))
+
+	// Check the labels on the nodes in the Neo4j database
+	assertNeo4jLabels(t, driver, []string{"Tenant", "Contact"})
+}

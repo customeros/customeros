@@ -1,7 +1,7 @@
 extend type Mutation {
     note_MergeToContact(contactId : ID!, input: NoteInput!): Note!
     note_UpdateInContact(contactId : ID!, input: NoteUpdateInput!): Note!
-    note_DeleteFromContact(contactId : ID!, noteId: ID!): Result!
+    note_Delete(id: ID!): Result!
 }
 
 type Note {

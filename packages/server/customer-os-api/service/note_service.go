@@ -14,7 +14,7 @@ type NoteService interface {
 	GetNotesForContact(ctx context.Context, contactId string, page, limit int) (*utils.Pagination, error)
 	MergeNoteToContact(ctx context.Context, contactId string, toEntity *entity.NoteEntity) (*entity.NoteEntity, error)
 	UpdateNoteInContact(ctx context.Context, contactId string, toEntity *entity.NoteEntity) (*entity.NoteEntity, error)
-	DeleteFromContact(ctx context.Context, contactId string, noteId string) (bool, error)
+	Delete(ctx context.Context, noteId string) (bool, error)
 }
 
 type noteService struct {
@@ -84,11 +84,11 @@ func (s *noteService) UpdateNoteInContact(ctx context.Context, contactId string,
 	return emailEntity, nil
 }
 
-func (s *noteService) DeleteFromContact(ctx context.Context, contactId string, noteId string) (bool, error) {
+func (s *noteService) Delete(ctx context.Context, noteId string) (bool, error) {
 	session := utils.NewNeo4jWriteSession(s.getNeo4jDriver())
 	defer session.Close()
 
-	err := s.repositories.NoteRepository.Delete(session, common.GetContext(ctx).Tenant, contactId, noteId)
+	err := s.repositories.NoteRepository.Delete(session, common.GetTenantFromContext(ctx), noteId)
 	if err != nil {
 		return false, err
 	}
