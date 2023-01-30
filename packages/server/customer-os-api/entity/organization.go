@@ -14,6 +14,7 @@ type OrganizationEntity struct {
 	Industry      string `neo4jDb:"property:industry;lookupName:INDUSTRY;supportCaseSensitive:true"`
 	IsPublic      bool
 	CreatedAt     time.Time
+	UpdatedAt     time.Time
 	Source        DataSource
 	SourceOfTruth DataSource
 }

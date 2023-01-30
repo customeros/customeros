@@ -12,6 +12,7 @@ extend type Mutation {
 type Organization implements Node {
     id: ID!
     createdAt:   Time!
+    updatedAt:   Time!
     name: String!
     description: String
     domain:      String

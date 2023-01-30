@@ -52,6 +52,7 @@ func graphqlHandler(cfg *config.Config, driver neo4j.Driver, repositoryContainer
 	return func(c *gin.Context) {
 		customCtx := &common.CustomContext{
 			Tenant: c.Keys["TenantName"].(string),
+			UserId: c.Keys["UserId"].(string),
 		}
 		h := common.WithContext(customCtx, srv)
 

@@ -183,6 +183,7 @@ func (s *organizationService) mapDbNodeToOrganizationEntity(node dbtype.Node) *e
 	organizationEntityPtr.Industry = utils.GetStringPropOrEmpty(props, "industry")
 	organizationEntityPtr.IsPublic = utils.GetBoolPropOrFalse(props, "isPublic")
 	organizationEntityPtr.CreatedAt = utils.GetTimePropOrNow(props, "createdAt")
+	organizationEntityPtr.UpdatedAt = utils.GetTimePropOrNow(props, "updatedAt")
 	organizationEntityPtr.Source = entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source"))
 	organizationEntityPtr.SourceOfTruth = entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth"))
 	return organizationEntityPtr

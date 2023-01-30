@@ -284,6 +284,7 @@ type ComplexityRoot struct {
 		Name             func(childComplexity int) int
 		OrganizationType func(childComplexity int) int
 		Source           func(childComplexity int) int
+		UpdatedAt        func(childComplexity int) int
 		Website          func(childComplexity int) int
 	}
 
@@ -2002,6 +2003,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Organization.Source(childComplexity), true
 
+	case "Organization.updatedAt":
+		if e.complexity.Organization.UpdatedAt == nil {
+			break
+		}
+
+		return e.complexity.Organization.UpdatedAt(childComplexity), true
+
 	case "Organization.website":
 		if e.complexity.Organization.Website == nil {
 			break
@@ -3584,6 +3592,7 @@ extend type Mutation {
 type Organization implements Node {
     id: ID!
     createdAt:   Time!
+    updatedAt:   Time!
     name: String!
     description: String
     domain:      String
@@ -6975,6 +6984,8 @@ func (ec *executionContext) fieldContext_ContactRole_organization(ctx context.Co
 				return ec.fieldContext_Organization_id(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_Organization_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_Organization_updatedAt(ctx, field)
 			case "name":
 				return ec.fieldContext_Organization_name(ctx, field)
 			case "description":
@@ -13145,6 +13156,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_Create(ctx contex
 				return ec.fieldContext_Organization_id(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_Organization_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_Organization_updatedAt(ctx, field)
 			case "name":
 				return ec.fieldContext_Organization_name(ctx, field)
 			case "description":
@@ -13225,6 +13238,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_Update(ctx contex
 				return ec.fieldContext_Organization_id(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_Organization_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_Organization_updatedAt(ctx, field)
 			case "name":
 				return ec.fieldContext_Organization_name(ctx, field)
 			case "description":
@@ -14351,6 +14366,50 @@ func (ec *executionContext) fieldContext_Organization_createdAt(ctx context.Cont
 	return fc, nil
 }
 
+func (ec *executionContext) _Organization_updatedAt(ctx context.Context, field graphql.CollectedField, obj *model.Organization) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Organization_updatedAt(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.UpdatedAt, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(time.Time)
+	fc.Result = res
+	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Organization_updatedAt(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Organization",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Organization_name(ctx context.Context, field graphql.CollectedField, obj *model.Organization) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Organization_name(ctx, field)
 	if err != nil {
@@ -14872,6 +14931,8 @@ func (ec *executionContext) fieldContext_OrganizationPage_content(ctx context.Co
 				return ec.fieldContext_Organization_id(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_Organization_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_Organization_updatedAt(ctx, field)
 			case "name":
 				return ec.fieldContext_Organization_name(ctx, field)
 			case "description":
@@ -16927,6 +16988,8 @@ func (ec *executionContext) fieldContext_Query_organization(ctx context.Context,
 				return ec.fieldContext_Organization_id(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_Organization_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_Organization_updatedAt(ctx, field)
 			case "name":
 				return ec.fieldContext_Organization_name(ctx, field)
 			case "description":
@@ -23171,6 +23234,13 @@ func (ec *executionContext) _Organization(ctx context.Context, sel ast.Selection
 		case "createdAt":
 
 			out.Values[i] = ec._Organization_createdAt(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "updatedAt":
+
+			out.Values[i] = ec._Organization_updatedAt(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&invalids, 1)

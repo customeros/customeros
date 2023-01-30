@@ -585,6 +585,7 @@ type NoteUpdateInput struct {
 type Organization struct {
 	ID               string            `json:"id"`
 	CreatedAt        time.Time         `json:"createdAt"`
+	UpdatedAt        time.Time         `json:"updatedAt"`
 	Name             string            `json:"name"`
 	Description      *string           `json:"description"`
 	Domain           *string           `json:"domain"`

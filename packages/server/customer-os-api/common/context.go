@@ -7,6 +7,7 @@ import (
 
 type CustomContext struct {
 	Tenant string
+	UserId string
 }
 
 var customContextKey = "CUSTOM_CONTEXT"
@@ -24,4 +25,12 @@ func GetContext(ctx context.Context) *CustomContext {
 		return nil
 	}
 	return customContext
+}
+
+func GetTenantFromContext(ctx context.Context) string {
+	return GetContext(ctx).Tenant
+}
+
+func GetUserIdFromContext(ctx context.Context) string {
+	return GetContext(ctx).UserId
 }

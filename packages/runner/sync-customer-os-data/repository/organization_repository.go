@@ -35,7 +35,7 @@ func (r *organizationRepository) MergeOrganization(tenant string, syncDate time.
 	query := "MATCH (t:Tenant {name:$tenant})<-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]-(e:ExternalSystem {id:$externalSystem}) " +
 		" MERGE (org:Organization)-[r:IS_LINKED_WITH {externalId:$externalId}]->(e) " +
 		" ON CREATE SET r.externalId=$externalId, r.syncDate=$syncDate, " +
-		"				org.id=randomUUID(), org.createdAt=$createdAt, " +
+		"				org.id=randomUUID(), org.createdAt=$createdAt, org.updatedAt=$createdAt, " +
 		"               org.name=$name, org.description=$description, org.domain=$domain, " +
 		"               org.website=$website, org.industry=$industry, org.isPublic=$isPublic, " +
 		"				org.source=$source, org.sourceOfTruth=$sourceOfTruth, org.appSource=$appSource, " +
@@ -46,7 +46,8 @@ func (r *organizationRepository) MergeOrganization(tenant string, syncDate time.
 		"				org.domain = CASE WHEN org.sourceOfTruth=$sourceOfTruth THEN $domain ELSE org.domain END, " +
 		"				org.website = CASE WHEN org.sourceOfTruth=$sourceOfTruth THEN $website ELSE org.website END, " +
 		"				org.industry = CASE WHEN org.sourceOfTruth=$sourceOfTruth THEN $industry ELSE org.industry END, " +
-		"				org.isPublic = CASE WHEN org.sourceOfTruth=$sourceOfTruth THEN $isPublic ELSE org.isPublic END " +
+		"				org.isPublic = CASE WHEN org.sourceOfTruth=$sourceOfTruth THEN $isPublic ELSE org.isPublic END, " +
+		"				org.updatedAt = CASE WHEN org.sourceOfTruth=$sourceOfTruth THEN $now ELSE org.updatedAt END " +
 		" WITH org, t " +
 		" MERGE (org)-[:ORGANIZATION_BELONGS_TO_TENANT]->(t) " +
 		" WITH org " +

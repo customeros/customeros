@@ -164,6 +164,7 @@ func TestMutationResolver_OrganizationCreate(t *testing.T) {
 	// Ensure that the organization was created correctly.
 	require.NotNil(t, org.ID)
 	require.NotNil(t, org.CreatedAt)
+	require.NotNil(t, org.UpdatedAt)
 	require.Equal(t, "organization name", org.Name)
 	require.Equal(t, "organization description", *org.Description)
 	require.Equal(t, "organization domain", *org.Domain)
@@ -206,6 +207,7 @@ func TestMutationResolver_OrganizationUpdate(t *testing.T) {
 	require.NotNil(t, organization)
 	require.Equal(t, organizationId, organization.Organization_Update.ID)
 	require.NotNil(t, organization.Organization_Update.CreatedAt)
+	require.NotNil(t, organization.Organization_Update.UpdatedAt)
 	require.Equal(t, "updated name", organization.Organization_Update.Name)
 	require.Equal(t, "updated description", *organization.Organization_Update.Description)
 	require.Equal(t, "updated domain", *organization.Organization_Update.Domain)

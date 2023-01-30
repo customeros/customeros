@@ -41,7 +41,14 @@ func CreateDefaultUser(driver *neo4j.Driver, tenant string) string {
 }
 
 func CreateUser(driver *neo4j.Driver, tenant string, user entity.UserEntity) string {
-	var userId, _ = uuid.NewRandom()
+	return CreateUserWithId(driver, tenant, "", user)
+}
+
+func CreateUserWithId(driver *neo4j.Driver, tenant, userId string, user entity.UserEntity) string {
+	if len(userId) == 0 {
+		userUuid, _ := uuid.NewRandom()
+		userId = userUuid.String()
+	}
 	query := `
 		MATCH (t:Tenant {name:$tenant})
 			MERGE (u:User {
@@ -55,14 +62,14 @@ func CreateUser(driver *neo4j.Driver, tenant string, user entity.UserEntity) str
 				})-[:USER_BELONGS_TO_TENANT]->(t)`
 	ExecuteWriteQuery(driver, query, map[string]any{
 		"tenant":        tenant,
-		"userId":        userId.String(),
+		"userId":        userId,
 		"firstName":     user.FirstName,
 		"lastName":      user.LastName,
 		"email":         user.Email,
 		"source":        user.Source,
 		"sourceOfTruth": user.SourceOfTruth,
 	})
-	return userId.String()
+	return userId
 }
 
 func CreateDefaultContact(driver *neo4j.Driver, tenant string) string {
