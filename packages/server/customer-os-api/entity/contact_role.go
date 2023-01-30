@@ -6,12 +6,15 @@ import (
 )
 
 type ContactRoleEntity struct {
-	Id            string
-	JobTitle      string
-	Primary       bool
-	Source        DataSource
-	SourceOfTruth DataSource
-	CreatedAt     time.Time
+	Id                  string
+	JobTitle            string
+	Primary             bool
+	ResponsibilityLevel int64
+	Source              DataSource
+	SourceOfTruth       DataSource
+	AppSource           string
+	CreatedAt           time.Time
+	UpdatedAt           time.Time
 }
 
 func (contactRole ContactRoleEntity) ToString() string {

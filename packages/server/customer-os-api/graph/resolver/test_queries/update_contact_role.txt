@@ -1,16 +1,20 @@
 mutation ContactRoleUpdate($contactId: ID!, $roleId: ID!){
      contactRole_Update(
         contactId: $contactId
-        roleId: $roleId
         input: {
+                    id: $roleId
                     jobTitle: "CEO"
                     primary: true
+                    responsibilityLevel: 1
                }
      ) {
         organization {
             id
         }
+        updatedAt
         jobTitle
         primary
+        responsibilityLevel
+        sourceOfTruth
       }
 }

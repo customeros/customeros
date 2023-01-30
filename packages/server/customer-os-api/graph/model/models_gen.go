@@ -184,14 +184,18 @@ type ContactInput struct {
 type ContactRole struct {
 	ID        string    `json:"id"`
 	CreatedAt time.Time `json:"createdAt"`
+	UpdatedAt time.Time `json:"updatedAt"`
 	// Organization associated with a Contact.
 	// **Required.**
 	Organization *Organization `json:"organization"`
 	Contact      *Contact      `json:"contact"`
 	// The Contact's job title.
-	JobTitle *string    `json:"jobTitle"`
-	Primary  bool       `json:"primary"`
-	Source   DataSource `json:"source"`
+	JobTitle            *string    `json:"jobTitle"`
+	Primary             bool       `json:"primary"`
+	ResponsibilityLevel int64      `json:"responsibilityLevel"`
+	Source              DataSource `json:"source"`
+	SourceOfTruth       DataSource `json:"sourceOfTruth"`
+	AppSource           string     `json:"appSource"`
 }
 
 // Describes the relationship a Contact has with an Organization.
@@ -199,8 +203,21 @@ type ContactRole struct {
 type ContactRoleInput struct {
 	OrganizationID *string `json:"organizationId"`
 	// The Contact's job title.
-	JobTitle *string `json:"jobTitle"`
-	Primary  *bool   `json:"primary"`
+	JobTitle            *string `json:"jobTitle"`
+	Primary             *bool   `json:"primary"`
+	ResponsibilityLevel *int64  `json:"responsibilityLevel"`
+	AppSource           *string `json:"appSource"`
+}
+
+// Describes the relationship a Contact has with an Organization.
+// **A `create` object**
+type ContactRoleUpdateInput struct {
+	ID             string  `json:"id"`
+	OrganizationID *string `json:"organizationId"`
+	// The Contact's job title.
+	JobTitle            *string `json:"jobTitle"`
+	Primary             *bool   `json:"primary"`
+	ResponsibilityLevel *int64  `json:"responsibilityLevel"`
 }
 
 type ContactType struct {

@@ -9,40 +9,6 @@ import (
 	"testing"
 )
 
-func TestMutationResolver_ContactRoleDelete(t *testing.T) {
-	defer tearDownTestCase()(t)
-	neo4jt.CreateTenant(driver, tenantName)
-	contactId := neo4jt.CreateDefaultContact(driver, tenantName)
-	organizationId := neo4jt.CreateOrganization(driver, tenantName, "LLC LLC")
-	roleId := neo4jt.ContactWorksForOrganization(driver, contactId, organizationId, "CTO", false)
-
-	require.Equal(t, 1, neo4jt.GetCountOfRelationships(driver, "HAS_ROLE"))
-	require.Equal(t, 1, neo4jt.GetCountOfRelationships(driver, "WORKS"))
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Role"))
-
-	rawResponse, err := c.RawPost(getQuery("delete_contact_role"),
-		client.Var("contactId", contactId),
-		client.Var("roleId", roleId))
-	assertRawResponseSuccess(t, rawResponse, err)
-
-	var result struct {
-		ContactRole_Delete model.Result
-	}
-
-	err = decode.Decode(rawResponse.Data.(map[string]any), &result)
-	require.Nil(t, err)
-	require.NotNil(t, result)
-	require.Equal(t, true, result.ContactRole_Delete.Result)
-
-	// Check the number of nodes and relationships in the Neo4j database
-	require.Equal(t, 0, neo4jt.GetCountOfRelationships(driver, "HAS_ROLE"))
-	require.Equal(t, 0, neo4jt.GetCountOfRelationships(driver, "WORKS"))
-	require.Equal(t, 0, neo4jt.GetCountOfNodes(driver, "Role"))
-
-	// Check the labels on the nodes in the Neo4j database
-	assertNeo4jLabels(t, driver, []string{"Tenant", "Contact", "Organization"})
-}
-
 func TestMutationResolver_ContactRoleCreate_WithOrganization(t *testing.T) {
 	defer tearDownTestCase()(t)
 	neo4jt.CreateTenant(driver, tenantName)
@@ -64,10 +30,15 @@ func TestMutationResolver_ContactRoleCreate_WithOrganization(t *testing.T) {
 	createdRole := contactRole.ContactRole_Create
 
 	require.NotNil(t, createdRole.ID)
+	require.NotNil(t, createdRole.CreatedAt)
+	require.NotNil(t, createdRole.UpdatedAt)
 	require.Equal(t, organizationId, createdRole.Organization.ID)
 	require.Equal(t, "CEO", *createdRole.JobTitle)
 	require.Equal(t, true, createdRole.Primary)
+	require.Equal(t, int64(2), createdRole.ResponsibilityLevel)
 	require.Equal(t, model.DataSourceOpenline, createdRole.Source)
+	require.Equal(t, model.DataSourceOpenline, createdRole.SourceOfTruth)
+	require.Equal(t, "Hubspot", createdRole.AppSource)
 
 	// Check the number of nodes and relationships in the Neo4j database
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Contact"))
@@ -100,9 +71,14 @@ func TestMutationResolver_ContactRoleCreate_WithoutOrganization(t *testing.T) {
 	createdRole := contactRole.ContactRole_Create
 
 	require.NotNil(t, createdRole.ID)
+	require.NotNil(t, createdRole.CreatedAt)
+	require.NotNil(t, createdRole.UpdatedAt)
 	require.Equal(t, "CEO", *createdRole.JobTitle)
 	require.Equal(t, true, createdRole.Primary)
+	require.Equal(t, int64(0), createdRole.ResponsibilityLevel)
 	require.Equal(t, model.DataSourceOpenline, createdRole.Source)
+	require.Equal(t, model.DataSourceOpenline, createdRole.SourceOfTruth)
+	require.Equal(t, "customer-os-api", createdRole.AppSource)
 
 	// Check the number of nodes and relationships in the Neo4j database
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Contact"))
@@ -142,9 +118,12 @@ func TestMutationResolver_ContactRoleUpdate(t *testing.T) {
 	updatedRole := contactRole.ContactRole_Update
 
 	require.NotNil(t, updatedRole)
+	require.NotNil(t, updatedRole.UpdatedAt)
 	require.Equal(t, true, updatedRole.Primary)
+	require.Equal(t, int64(1), updatedRole.ResponsibilityLevel)
 	require.Equal(t, "CEO", *updatedRole.JobTitle)
 	require.Equal(t, organizationId, updatedRole.Organization.ID)
+	require.Equal(t, model.DataSourceOpenline, updatedRole.SourceOfTruth)
 
 	// Check the labels on the nodes in the Neo4j database
 	assertNeo4jLabels(t, driver, []string{"Tenant", "Contact", "Organization", "Role"})
@@ -174,9 +153,12 @@ func TestMutationResolver_ContactRoleUpdate_ChangeOrganization(t *testing.T) {
 	updatedRole := contactRole.ContactRole_Update
 
 	require.NotNil(t, updatedRole)
+	require.NotNil(t, updatedRole.UpdatedAt)
 	require.Equal(t, true, updatedRole.Primary)
+	require.Equal(t, int64(0), updatedRole.ResponsibilityLevel)
 	require.Equal(t, "CEO", *updatedRole.JobTitle)
 	require.Equal(t, newOrganizationId, updatedRole.Organization.ID)
+	require.Equal(t, model.DataSourceOpenline, updatedRole.SourceOfTruth)
 
 	// Check the number of nodes and relationships in the Neo4j database
 	require.Equal(t, 1, neo4jt.GetCountOfRelationships(driver, "HAS_ROLE"))
@@ -185,4 +167,38 @@ func TestMutationResolver_ContactRoleUpdate_ChangeOrganization(t *testing.T) {
 
 	// Check the labels on the nodes in the Neo4j database
 	assertNeo4jLabels(t, driver, []string{"Tenant", "Contact", "Organization", "Role"})
+}
+
+func TestMutationResolver_ContactRoleDelete(t *testing.T) {
+	defer tearDownTestCase()(t)
+	neo4jt.CreateTenant(driver, tenantName)
+	contactId := neo4jt.CreateDefaultContact(driver, tenantName)
+	organizationId := neo4jt.CreateOrganization(driver, tenantName, "LLC LLC")
+	roleId := neo4jt.ContactWorksForOrganization(driver, contactId, organizationId, "CTO", false)
+
+	require.Equal(t, 1, neo4jt.GetCountOfRelationships(driver, "HAS_ROLE"))
+	require.Equal(t, 1, neo4jt.GetCountOfRelationships(driver, "WORKS"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Role"))
+
+	rawResponse, err := c.RawPost(getQuery("delete_contact_role"),
+		client.Var("contactId", contactId),
+		client.Var("roleId", roleId))
+	assertRawResponseSuccess(t, rawResponse, err)
+
+	var result struct {
+		ContactRole_Delete model.Result
+	}
+
+	err = decode.Decode(rawResponse.Data.(map[string]any), &result)
+	require.Nil(t, err)
+	require.NotNil(t, result)
+	require.Equal(t, true, result.ContactRole_Delete.Result)
+
+	// Check the number of nodes and relationships in the Neo4j database
+	require.Equal(t, 0, neo4jt.GetCountOfRelationships(driver, "HAS_ROLE"))
+	require.Equal(t, 0, neo4jt.GetCountOfRelationships(driver, "WORKS"))
+	require.Equal(t, 0, neo4jt.GetCountOfNodes(driver, "Role"))
+
+	// Check the labels on the nodes in the Neo4j database
+	assertNeo4jLabels(t, driver, []string{"Tenant", "Contact", "Organization"})
 }

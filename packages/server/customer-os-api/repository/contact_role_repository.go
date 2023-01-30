@@ -6,6 +6,7 @@ import (
 	"github.com/neo4j/neo4j-go-driver/v4/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils"
+	"time"
 )
 
 type ContactRoleRepository interface {
@@ -88,20 +89,26 @@ func (r *contactRoleRepository) CreateContactRole(tx neo4j.Transaction, tenant s
 		" ON CREATE SET r.id=randomUUID(), " +
 		"				r.jobTitle=$jobTitle, " +
 		"				r.primary=$primary, " +
+		"				r.responsibilityLevel=$responsibilityLevel, " +
 		"				r.source=$source, " +
 		"				r.sourceOfTruth=$sourceOfTruth, " +
-		"				r.createdAt=datetime({timezone: 'UTC'}), " +
+		"				r.appSource=$appSource, " +
+		"				r.createdAt=$now, " +
+		"				r.updatedAt=$now, " +
 		"				r:%s " +
 		" RETURN r"
 
 	if queryResult, err := tx.Run(fmt.Sprintf(query, "Role_"+tenant),
 		map[string]interface{}{
-			"tenant":        tenant,
-			"contactId":     contactId,
-			"jobTitle":      input.JobTitle,
-			"primary":       input.Primary,
-			"source":        input.Source,
-			"sourceOfTruth": input.SourceOfTruth,
+			"tenant":              tenant,
+			"contactId":           contactId,
+			"jobTitle":            input.JobTitle,
+			"primary":             input.Primary,
+			"responsibilityLevel": input.ResponsibilityLevel,
+			"source":              input.Source,
+			"sourceOfTruth":       input.SourceOfTruth,
+			"appSource":           input.AppSource,
+			"now":                 time.Now().UTC(),
 		}); err != nil {
 		return nil, err
 	} else {
@@ -113,15 +120,20 @@ func (r *contactRoleRepository) UpdateContactRoleDetails(tx neo4j.Transaction, t
 	if queryResult, err := tx.Run(`
 			MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}),
 					(c)-[:HAS_ROLE]->(r:Role {id:$roleId})
-			SET r.jobTitle=$jobTitle, r.primary=$primary, r.sourceOfTruth=$sourceOfTruth
+			SET r.jobTitle=$jobTitle, 
+				r.primary=$primary,
+				r.responsibilityLevel=$responsibilityLevel,
+				r.sourceOfTruth=$sourceOfTruth,
+				r.updatedAt=datetime({timezone: 'UTC'})
 			RETURN r`,
 		map[string]interface{}{
-			"tenant":        tenant,
-			"contactId":     contactId,
-			"roleId":        roleId,
-			"jobTitle":      input.JobTitle,
-			"primary":       input.Primary,
-			"sourceOfTruth": input.SourceOfTruth,
+			"tenant":              tenant,
+			"contactId":           contactId,
+			"roleId":              roleId,
+			"jobTitle":            input.JobTitle,
+			"primary":             input.Primary,
+			"responsibilityLevel": input.ResponsibilityLevel,
+			"sourceOfTruth":       input.SourceOfTruth,
 		}); err != nil {
 		return nil, err
 	} else {
@@ -147,7 +159,8 @@ func (r *contactRoleRepository) SetOtherRolesNonPrimaryInTx(tx neo4j.Transaction
 			MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}),
 				 (c)-[:HAS_ROLE]->(r:Role)
 			WHERE r.id <> $skipRoleId
-            SET r.primary=false`,
+            SET r.primary=false,
+				r.updatedAt=datetime({timezone: 'UTC'})`,
 		map[string]interface{}{
 			"tenant":     tenant,
 			"contactId":  contactId,

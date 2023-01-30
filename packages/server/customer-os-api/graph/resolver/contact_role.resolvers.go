@@ -62,10 +62,10 @@ func (r *mutationResolver) ContactRoleCreate(ctx context.Context, contactID stri
 }
 
 // ContactRoleUpdate is the resolver for the contactRole_Update field.
-func (r *mutationResolver) ContactRoleUpdate(ctx context.Context, contactID string, roleID string, input model.ContactRoleInput) (*model.ContactRole, error) {
-	result, err := r.Services.ContactRoleService.UpdateContactRole(ctx, contactID, roleID, input.OrganizationID, mapper.MapContactRoleInputToEntity(&input))
+func (r *mutationResolver) ContactRoleUpdate(ctx context.Context, contactID string, input model.ContactRoleUpdateInput) (*model.ContactRole, error) {
+	result, err := r.Services.ContactRoleService.UpdateContactRole(ctx, contactID, input.OrganizationID, mapper.MapContactRoleUpdateInputToEntity(&input))
 	if err != nil {
-		graphql.AddErrorf(ctx, "Failed update role %s", roleID)
+		graphql.AddErrorf(ctx, "Failed update role %s", input.ID)
 		return nil, err
 	}
 	return mapper.MapEntityToContactRole(result), nil

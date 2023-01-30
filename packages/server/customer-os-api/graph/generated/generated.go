@@ -94,13 +94,17 @@ type ComplexityRoot struct {
 	}
 
 	ContactRole struct {
-		Contact      func(childComplexity int) int
-		CreatedAt    func(childComplexity int) int
-		ID           func(childComplexity int) int
-		JobTitle     func(childComplexity int) int
-		Organization func(childComplexity int) int
-		Primary      func(childComplexity int) int
-		Source       func(childComplexity int) int
+		AppSource           func(childComplexity int) int
+		Contact             func(childComplexity int) int
+		CreatedAt           func(childComplexity int) int
+		ID                  func(childComplexity int) int
+		JobTitle            func(childComplexity int) int
+		Organization        func(childComplexity int) int
+		Primary             func(childComplexity int) int
+		ResponsibilityLevel func(childComplexity int) int
+		Source              func(childComplexity int) int
+		SourceOfTruth       func(childComplexity int) int
+		UpdatedAt           func(childComplexity int) int
 	}
 
 	ContactType struct {
@@ -212,7 +216,7 @@ type ComplexityRoot struct {
 		ContactHardDelete                      func(childComplexity int, contactID string) int
 		ContactRoleCreate                      func(childComplexity int, contactID string, input model.ContactRoleInput) int
 		ContactRoleDelete                      func(childComplexity int, contactID string, roleID string) int
-		ContactRoleUpdate                      func(childComplexity int, contactID string, roleID string, input model.ContactRoleInput) int
+		ContactRoleUpdate                      func(childComplexity int, contactID string, input model.ContactRoleUpdateInput) int
 		ContactSoftDelete                      func(childComplexity int, contactID string) int
 		ContactTypeCreate                      func(childComplexity int, input model.ContactTypeInput) int
 		ContactTypeDelete                      func(childComplexity int, id string) int
@@ -420,7 +424,7 @@ type MutationResolver interface {
 	ContactGroupRemoveContact(ctx context.Context, contactID string, groupID string) (*model.Result, error)
 	ContactRoleDelete(ctx context.Context, contactID string, roleID string) (*model.Result, error)
 	ContactRoleCreate(ctx context.Context, contactID string, input model.ContactRoleInput) (*model.ContactRole, error)
-	ContactRoleUpdate(ctx context.Context, contactID string, roleID string, input model.ContactRoleInput) (*model.ContactRole, error)
+	ContactRoleUpdate(ctx context.Context, contactID string, input model.ContactRoleUpdateInput) (*model.ContactRole, error)
 	ContactTypeCreate(ctx context.Context, input model.ContactTypeInput) (*model.ContactType, error)
 	ContactTypeUpdate(ctx context.Context, input model.ContactTypeUpdateInput) (*model.ContactType, error)
 	ContactTypeDelete(ctx context.Context, id string) (*model.Result, error)
@@ -717,6 +721,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.ContactGroupPage.TotalPages(childComplexity), true
 
+	case "ContactRole.appSource":
+		if e.complexity.ContactRole.AppSource == nil {
+			break
+		}
+
+		return e.complexity.ContactRole.AppSource(childComplexity), true
+
 	case "ContactRole.contact":
 		if e.complexity.ContactRole.Contact == nil {
 			break
@@ -759,12 +770,33 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.ContactRole.Primary(childComplexity), true
 
+	case "ContactRole.responsibilityLevel":
+		if e.complexity.ContactRole.ResponsibilityLevel == nil {
+			break
+		}
+
+		return e.complexity.ContactRole.ResponsibilityLevel(childComplexity), true
+
 	case "ContactRole.source":
 		if e.complexity.ContactRole.Source == nil {
 			break
 		}
 
 		return e.complexity.ContactRole.Source(childComplexity), true
+
+	case "ContactRole.sourceOfTruth":
+		if e.complexity.ContactRole.SourceOfTruth == nil {
+			break
+		}
+
+		return e.complexity.ContactRole.SourceOfTruth(childComplexity), true
+
+	case "ContactRole.updatedAt":
+		if e.complexity.ContactRole.UpdatedAt == nil {
+			break
+		}
+
+		return e.complexity.ContactRole.UpdatedAt(childComplexity), true
 
 	case "ContactType.createdAt":
 		if e.complexity.ContactType.CreatedAt == nil {
@@ -1367,7 +1399,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.ContactRoleUpdate(childComplexity, args["contactId"].(string), args["roleId"].(string), args["input"].(model.ContactRoleInput)), true
+		return e.complexity.Mutation.ContactRoleUpdate(childComplexity, args["contactId"].(string), args["input"].(model.ContactRoleUpdateInput)), true
 
 	case "Mutation.contact_SoftDelete":
 		if e.complexity.Mutation.ContactSoftDelete == nil {
@@ -2441,6 +2473,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputContactGroupUpdateInput,
 		ec.unmarshalInputContactInput,
 		ec.unmarshalInputContactRoleInput,
+		ec.unmarshalInputContactRoleUpdateInput,
 		ec.unmarshalInputContactTypeInput,
 		ec.unmarshalInputContactTypeUpdateInput,
 		ec.unmarshalInputContactUpdateInput,
@@ -2932,7 +2965,7 @@ type ContactGroupPage implements Pages {
 	{Name: "../schemas/contact_role.graphqls", Input: `extend type Mutation {
     contactRole_Delete(contactId : ID!, roleId: ID!): Result!
     contactRole_Create(contactId : ID!, input: ContactRoleInput!): ContactRole!
-    contactRole_Update(contactId : ID!, roleId : ID!, input: ContactRoleInput!): ContactRole!
+    contactRole_Update(contactId : ID!, input: ContactRoleUpdateInput!): ContactRole!
 }
 
 """
@@ -2942,6 +2975,7 @@ Describes the relationship a Contact has with a Organization.
 type ContactRole {
     id: ID!
     createdAt: Time!
+    updatedAt: Time!
 
     """
     Organization associated with a Contact.
@@ -2956,7 +2990,11 @@ type ContactRole {
 
     primary: Boolean!
 
+    responsibilityLevel: Int64!
+
     source: DataSource!
+    sourceOfTruth: DataSource!
+    appSource: String!
 }
 
 """
@@ -2971,6 +3009,27 @@ input ContactRoleInput {
     jobTitle: String
 
     primary: Boolean
+
+    responsibilityLevel: Int64
+
+    appSource: String
+}
+
+"""
+Describes the relationship a Contact has with an Organization.
+**A ` + "`" + `create` + "`" + ` object**
+"""
+input ContactRoleUpdateInput {
+    id: ID!
+
+    organizationId: ID
+
+    "The Contact's job title."
+    jobTitle: String
+
+    primary: Boolean
+
+    responsibilityLevel: Int64
 }`, BuiltIn: false},
 	{Name: "../schemas/contact_type.graphqls", Input: `extend type Query {
     contactTypes: [ContactType!]!
@@ -4105,24 +4164,15 @@ func (ec *executionContext) field_Mutation_contactRole_Update_args(ctx context.C
 		}
 	}
 	args["contactId"] = arg0
-	var arg1 string
-	if tmp, ok := rawArgs["roleId"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("roleId"))
-		arg1, err = ec.unmarshalNID2string(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["roleId"] = arg1
-	var arg2 model.ContactRoleInput
+	var arg1 model.ContactRoleUpdateInput
 	if tmp, ok := rawArgs["input"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-		arg2, err = ec.unmarshalNContactRoleInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐContactRoleInput(ctx, tmp)
+		arg1, err = ec.unmarshalNContactRoleUpdateInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐContactRoleUpdateInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["input"] = arg2
+	args["input"] = arg1
 	return args, nil
 }
 
@@ -5686,6 +5736,8 @@ func (ec *executionContext) fieldContext_Contact_roles(ctx context.Context, fiel
 				return ec.fieldContext_ContactRole_id(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_ContactRole_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_ContactRole_updatedAt(ctx, field)
 			case "organization":
 				return ec.fieldContext_ContactRole_organization(ctx, field)
 			case "contact":
@@ -5694,8 +5746,14 @@ func (ec *executionContext) fieldContext_Contact_roles(ctx context.Context, fiel
 				return ec.fieldContext_ContactRole_jobTitle(ctx, field)
 			case "primary":
 				return ec.fieldContext_ContactRole_primary(ctx, field)
+			case "responsibilityLevel":
+				return ec.fieldContext_ContactRole_responsibilityLevel(ctx, field)
 			case "source":
 				return ec.fieldContext_ContactRole_source(ctx, field)
+			case "sourceOfTruth":
+				return ec.fieldContext_ContactRole_sourceOfTruth(ctx, field)
+			case "appSource":
+				return ec.fieldContext_ContactRole_appSource(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type ContactRole", field.Name)
 		},
@@ -6833,6 +6891,50 @@ func (ec *executionContext) fieldContext_ContactRole_createdAt(ctx context.Conte
 	return fc, nil
 }
 
+func (ec *executionContext) _ContactRole_updatedAt(ctx context.Context, field graphql.CollectedField, obj *model.ContactRole) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ContactRole_updatedAt(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.UpdatedAt, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(time.Time)
+	fc.Result = res
+	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_ContactRole_updatedAt(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ContactRole",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _ContactRole_organization(ctx context.Context, field graphql.CollectedField, obj *model.ContactRole) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_ContactRole_organization(ctx, field)
 	if err != nil {
@@ -7068,6 +7170,50 @@ func (ec *executionContext) fieldContext_ContactRole_primary(ctx context.Context
 	return fc, nil
 }
 
+func (ec *executionContext) _ContactRole_responsibilityLevel(ctx context.Context, field graphql.CollectedField, obj *model.ContactRole) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ContactRole_responsibilityLevel(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ResponsibilityLevel, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int64)
+	fc.Result = res
+	return ec.marshalNInt642int64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_ContactRole_responsibilityLevel(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ContactRole",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int64 does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _ContactRole_source(ctx context.Context, field graphql.CollectedField, obj *model.ContactRole) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_ContactRole_source(ctx, field)
 	if err != nil {
@@ -7107,6 +7253,94 @@ func (ec *executionContext) fieldContext_ContactRole_source(ctx context.Context,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type DataSource does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ContactRole_sourceOfTruth(ctx context.Context, field graphql.CollectedField, obj *model.ContactRole) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ContactRole_sourceOfTruth(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.SourceOfTruth, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(model.DataSource)
+	fc.Result = res
+	return ec.marshalNDataSource2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐDataSource(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_ContactRole_sourceOfTruth(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ContactRole",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type DataSource does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ContactRole_appSource(ctx context.Context, field graphql.CollectedField, obj *model.ContactRole) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ContactRole_appSource(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.AppSource, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_ContactRole_appSource(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ContactRole",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
 		},
 	}
 	return fc, nil
@@ -11117,6 +11351,8 @@ func (ec *executionContext) fieldContext_Mutation_contactRole_Create(ctx context
 				return ec.fieldContext_ContactRole_id(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_ContactRole_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_ContactRole_updatedAt(ctx, field)
 			case "organization":
 				return ec.fieldContext_ContactRole_organization(ctx, field)
 			case "contact":
@@ -11125,8 +11361,14 @@ func (ec *executionContext) fieldContext_Mutation_contactRole_Create(ctx context
 				return ec.fieldContext_ContactRole_jobTitle(ctx, field)
 			case "primary":
 				return ec.fieldContext_ContactRole_primary(ctx, field)
+			case "responsibilityLevel":
+				return ec.fieldContext_ContactRole_responsibilityLevel(ctx, field)
 			case "source":
 				return ec.fieldContext_ContactRole_source(ctx, field)
+			case "sourceOfTruth":
+				return ec.fieldContext_ContactRole_sourceOfTruth(ctx, field)
+			case "appSource":
+				return ec.fieldContext_ContactRole_appSource(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type ContactRole", field.Name)
 		},
@@ -11159,7 +11401,7 @@ func (ec *executionContext) _Mutation_contactRole_Update(ctx context.Context, fi
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().ContactRoleUpdate(rctx, fc.Args["contactId"].(string), fc.Args["roleId"].(string), fc.Args["input"].(model.ContactRoleInput))
+		return ec.resolvers.Mutation().ContactRoleUpdate(rctx, fc.Args["contactId"].(string), fc.Args["input"].(model.ContactRoleUpdateInput))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -11187,6 +11429,8 @@ func (ec *executionContext) fieldContext_Mutation_contactRole_Update(ctx context
 				return ec.fieldContext_ContactRole_id(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_ContactRole_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_ContactRole_updatedAt(ctx, field)
 			case "organization":
 				return ec.fieldContext_ContactRole_organization(ctx, field)
 			case "contact":
@@ -11195,8 +11439,14 @@ func (ec *executionContext) fieldContext_Mutation_contactRole_Update(ctx context
 				return ec.fieldContext_ContactRole_jobTitle(ctx, field)
 			case "primary":
 				return ec.fieldContext_ContactRole_primary(ctx, field)
+			case "responsibilityLevel":
+				return ec.fieldContext_ContactRole_responsibilityLevel(ctx, field)
 			case "source":
 				return ec.fieldContext_ContactRole_source(ctx, field)
+			case "sourceOfTruth":
+				return ec.fieldContext_ContactRole_sourceOfTruth(ctx, field)
+			case "appSource":
+				return ec.fieldContext_ContactRole_appSource(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type ContactRole", field.Name)
 		},
@@ -14554,6 +14804,8 @@ func (ec *executionContext) fieldContext_Organization_contactRoles(ctx context.C
 				return ec.fieldContext_ContactRole_id(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_ContactRole_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_ContactRole_updatedAt(ctx, field)
 			case "organization":
 				return ec.fieldContext_ContactRole_organization(ctx, field)
 			case "contact":
@@ -14562,8 +14814,14 @@ func (ec *executionContext) fieldContext_Organization_contactRoles(ctx context.C
 				return ec.fieldContext_ContactRole_jobTitle(ctx, field)
 			case "primary":
 				return ec.fieldContext_ContactRole_primary(ctx, field)
+			case "responsibilityLevel":
+				return ec.fieldContext_ContactRole_responsibilityLevel(ctx, field)
 			case "source":
 				return ec.fieldContext_ContactRole_source(ctx, field)
+			case "sourceOfTruth":
+				return ec.fieldContext_ContactRole_sourceOfTruth(ctx, field)
+			case "appSource":
+				return ec.fieldContext_ContactRole_appSource(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type ContactRole", field.Name)
 		},
@@ -19504,7 +19762,7 @@ func (ec *executionContext) unmarshalInputContactRoleInput(ctx context.Context, 
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"organizationId", "jobTitle", "primary"}
+	fieldsInOrder := [...]string{"organizationId", "jobTitle", "primary", "responsibilityLevel", "appSource"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -19532,6 +19790,82 @@ func (ec *executionContext) unmarshalInputContactRoleInput(ctx context.Context, 
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("primary"))
 			it.Primary, err = ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "responsibilityLevel":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("responsibilityLevel"))
+			it.ResponsibilityLevel, err = ec.unmarshalOInt642ᚖint64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "appSource":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("appSource"))
+			it.AppSource, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputContactRoleUpdateInput(ctx context.Context, obj interface{}) (model.ContactRoleUpdateInput, error) {
+	var it model.ContactRoleUpdateInput
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"id", "organizationId", "jobTitle", "primary", "responsibilityLevel"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "id":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+			it.ID, err = ec.unmarshalNID2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "organizationId":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("organizationId"))
+			it.OrganizationID, err = ec.unmarshalOID2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "jobTitle":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("jobTitle"))
+			it.JobTitle, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "primary":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("primary"))
+			it.Primary, err = ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "responsibilityLevel":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("responsibilityLevel"))
+			it.ResponsibilityLevel, err = ec.unmarshalOInt642ᚖint64(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -21552,6 +21886,13 @@ func (ec *executionContext) _ContactRole(ctx context.Context, sel ast.SelectionS
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&invalids, 1)
 			}
+		case "updatedAt":
+
+			out.Values[i] = ec._ContactRole_updatedAt(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
 		case "organization":
 			field := field
 
@@ -21597,9 +21938,30 @@ func (ec *executionContext) _ContactRole(ctx context.Context, sel ast.SelectionS
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&invalids, 1)
 			}
+		case "responsibilityLevel":
+
+			out.Values[i] = ec._ContactRole_responsibilityLevel(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
 		case "source":
 
 			out.Values[i] = ec._ContactRole_source(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "sourceOfTruth":
+
+			out.Values[i] = ec._ContactRole_sourceOfTruth(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "appSource":
+
+			out.Values[i] = ec._ContactRole_appSource(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&invalids, 1)
@@ -24295,6 +24657,11 @@ func (ec *executionContext) unmarshalNContactRoleInput2githubᚗcomᚋopenline�
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
+func (ec *executionContext) unmarshalNContactRoleUpdateInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐContactRoleUpdateInput(ctx context.Context, v interface{}) (model.ContactRoleUpdateInput, error) {
+	res, err := ec.unmarshalInputContactRoleUpdateInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
 func (ec *executionContext) marshalNContactType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐContactType(ctx context.Context, sel ast.SelectionSet, v model.ContactType) graphql.Marshaler {
 	return ec._ContactType(ctx, sel, &v)
 }
@@ -26150,6 +26517,22 @@ func (ec *executionContext) marshalOInt2ᚖint(ctx context.Context, sel ast.Sele
 		return graphql.Null
 	}
 	res := graphql.MarshalInt(*v)
+	return res
+}
+
+func (ec *executionContext) unmarshalOInt642ᚖint64(ctx context.Context, v interface{}) (*int64, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := graphql.UnmarshalInt64(v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOInt642ᚖint64(ctx context.Context, sel ast.SelectionSet, v *int64) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	res := graphql.MarshalInt64(*v)
 	return res
 }
 
