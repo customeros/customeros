@@ -27,7 +27,7 @@ func NewPhoneNumberRepository(driver *neo4j.Driver) PhoneNumberRepository {
 
 func (r *phoneNumberRepository) MergePhoneNumberToContactInTx(tx neo4j.Transaction, tenant, contactId string, entity entity.PhoneNumberEntity) (*dbtype.Node, *dbtype.Relationship, error) {
 	query := "MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) " +
-		" MERGE (c)-[r:CALLED_AT]->(p:PhoneNumber {e164: $e164}) " +
+		" MERGE (c)-[r:PHONE_ASSOCIATED_WITH]->(p:PhoneNumber {e164: $e164}) " +
 		" ON CREATE SET p.label=$label, " +
 		"				r.primary=$primary, " +
 		"				p.id=randomUUID(), " +
@@ -56,7 +56,7 @@ func (r *phoneNumberRepository) MergePhoneNumberToContactInTx(tx neo4j.Transacti
 func (r *phoneNumberRepository) UpdatePhoneNumberByContactInTx(tx neo4j.Transaction, tenant, contactId string, entity entity.PhoneNumberEntity) (*dbtype.Node, *dbtype.Relationship, error) {
 	queryResult, err := tx.Run(`
 			MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}),
-				(c)-[r:CALLED_AT]->(p:PhoneNumber {id: $phoneId})
+				(c)-[r:PHONE_ASSOCIATED_WITH]->(p:PhoneNumber {id: $phoneId})
             SET p.e164=$e164,
 				p.label=$label,
 				r.primary=$primary,
@@ -78,7 +78,7 @@ func (r *phoneNumberRepository) FindAllForContact(session neo4j.Session, tenant,
 	return session.ReadTransaction(func(tx neo4j.Transaction) (any, error) {
 		result, err := tx.Run(`
 				MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}),
-              			(c)-[r:CALLED_AT]->(p:PhoneNumber)
+              			(c)-[r:PHONE_ASSOCIATED_WITH]->(p:PhoneNumber)
 				RETURN p, r`,
 			map[string]interface{}{
 				"contactId": contactId,
@@ -95,7 +95,7 @@ func (r *phoneNumberRepository) FindAllForContact(session neo4j.Session, tenant,
 func (r *phoneNumberRepository) SetOtherContactPhoneNumbersNonPrimaryInTx(tx neo4j.Transaction, tenant, contactId, e164 string) error {
 	_, err := tx.Run(`
 			MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}),
-				 (c)-[r:CALLED_AT]->(p:PhoneNumber)
+				 (c)-[r:PHONE_ASSOCIATED_WITH]->(p:PhoneNumber)
 			WHERE p.e164 <> $e164
             SET r.primary=false`,
 		map[string]interface{}{
