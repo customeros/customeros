@@ -14,8 +14,8 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper"
 )
 
-// NoteMergeToContact is the resolver for the note_MergeToContact field.
-func (r *mutationResolver) NoteMergeToContact(ctx context.Context, contactID string, input model.NoteInput) (*model.Note, error) {
+// NoteCreateForContact is the resolver for the note_CreateForContact field.
+func (r *mutationResolver) NoteCreateForContact(ctx context.Context, contactID string, input model.NoteInput) (*model.Note, error) {
 	result, err := r.Services.NoteService.MergeNoteToContact(ctx, contactID, mapper.MapNoteInputToEntity(&input))
 	if err != nil {
 		graphql.AddErrorf(ctx, "Could not add note %s to contact %s", input.HTML, contactID)
@@ -24,14 +24,24 @@ func (r *mutationResolver) NoteMergeToContact(ctx context.Context, contactID str
 	return mapper.MapEntityToNote(result), nil
 }
 
+// NoteCreateForOrganization is the resolver for the note_CreateForOrganization field.
+func (r *mutationResolver) NoteCreateForOrganization(ctx context.Context, organizationID string, input model.NoteInput) (*model.Note, error) {
+	panic(fmt.Errorf("not implemented: NoteCreateForOrganization - note_CreateForOrganization"))
+}
+
 // NoteUpdate is the resolver for the note_Update field.
 func (r *mutationResolver) NoteUpdate(ctx context.Context, input model.NoteUpdateInput) (*model.Note, error) {
-	panic(fmt.Errorf("not implemented: NoteUpdate - note_Update"))
+	result, err := r.Services.NoteService.UpdateNote(ctx, mapper.MapNoteUpdateInputToEntity(&input))
+	if err != nil {
+		graphql.AddErrorf(ctx, "Failed to update note %s", input.ID)
+		return nil, err
+	}
+	return mapper.MapEntityToNote(result), nil
 }
 
 // NoteDelete is the resolver for the note_Delete field.
 func (r *mutationResolver) NoteDelete(ctx context.Context, id string) (*model.Result, error) {
-	result, err := r.Services.NoteService.Delete(ctx, id)
+	result, err := r.Services.NoteService.DeleteNote(ctx, id)
 	if err != nil {
 		graphql.AddErrorf(ctx, "Failed to delete note %s", id)
 		return nil, err
@@ -58,18 +68,3 @@ func (r *noteResolver) CreatedBy(ctx context.Context, obj *model.Note) (*model.U
 func (r *Resolver) Note() generated.NoteResolver { return &noteResolver{r} }
 
 type noteResolver struct{ *Resolver }
-
-// !!! WARNING !!!
-// The code below was going to be deleted when updating resolvers. It has been copied here so you have
-// one last chance to move it out of harms way if you want. There are two reasons this happens:
-//   - When renaming or deleting a resolver the old code will be put in here. You can safely delete
-//     it when you're done.
-//   - You have helper methods in this file. Move them out to keep these resolver files clean.
-func (r *mutationResolver) NoteUpdateInContact(ctx context.Context, contactID string, input model.NoteUpdateInput) (*model.Note, error) {
-	result, err := r.Services.NoteService.UpdateNoteInContact(ctx, contactID, mapper.MapNoteUpdateInputToEntity(&input))
-	if err != nil {
-		graphql.AddErrorf(ctx, "Could not update note %s in contact %s", input.ID, contactID)
-		return nil, err
-	}
-	return mapper.MapEntityToNote(result), nil
-}

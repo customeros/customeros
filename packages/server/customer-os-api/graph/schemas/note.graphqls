@@ -1,5 +1,6 @@
 extend type Mutation {
-    note_MergeToContact(contactId : ID!, input: NoteInput!): Note!
+    note_CreateForContact(contactId : ID!, input: NoteInput!): Note!
+    note_CreateForOrganization(organizationId : ID!, input: NoteInput!): Note!
     note_Update(input: NoteUpdateInput!): Note!
     note_Delete(id: ID!): Result!
 }

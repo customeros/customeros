@@ -241,8 +241,9 @@ type ComplexityRoot struct {
 		FieldSetDeleteFromContact              func(childComplexity int, contactID string, id string) int
 		FieldSetMergeToContact                 func(childComplexity int, contactID string, input model.FieldSetInput) int
 		FieldSetUpdateInContact                func(childComplexity int, contactID string, input model.FieldSetUpdateInput) int
+		NoteCreateForContact                   func(childComplexity int, contactID string, input model.NoteInput) int
+		NoteCreateForOrganization              func(childComplexity int, organizationID string, input model.NoteInput) int
 		NoteDelete                             func(childComplexity int, id string) int
-		NoteMergeToContact                     func(childComplexity int, contactID string, input model.NoteInput) int
 		NoteUpdate                             func(childComplexity int, input model.NoteUpdateInput) int
 		OrganizationCreate                     func(childComplexity int, input model.OrganizationInput) int
 		OrganizationDelete                     func(childComplexity int, id string) int
@@ -452,7 +453,8 @@ type MutationResolver interface {
 	EmailUpdateInContact(ctx context.Context, contactID string, input model.EmailUpdateInput) (*model.Email, error)
 	EmailRemoveFromContact(ctx context.Context, contactID string, email string) (*model.Result, error)
 	EmailRemoveFromContactByID(ctx context.Context, contactID string, id string) (*model.Result, error)
-	NoteMergeToContact(ctx context.Context, contactID string, input model.NoteInput) (*model.Note, error)
+	NoteCreateForContact(ctx context.Context, contactID string, input model.NoteInput) (*model.Note, error)
+	NoteCreateForOrganization(ctx context.Context, organizationID string, input model.NoteInput) (*model.Note, error)
 	NoteUpdate(ctx context.Context, input model.NoteUpdateInput) (*model.Note, error)
 	NoteDelete(ctx context.Context, id string) (*model.Result, error)
 	OrganizationCreate(ctx context.Context, input model.OrganizationInput) (*model.Organization, error)
@@ -1695,6 +1697,30 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.FieldSetUpdateInContact(childComplexity, args["contactId"].(string), args["input"].(model.FieldSetUpdateInput)), true
 
+	case "Mutation.note_CreateForContact":
+		if e.complexity.Mutation.NoteCreateForContact == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_note_CreateForContact_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.NoteCreateForContact(childComplexity, args["contactId"].(string), args["input"].(model.NoteInput)), true
+
+	case "Mutation.note_CreateForOrganization":
+		if e.complexity.Mutation.NoteCreateForOrganization == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_note_CreateForOrganization_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.NoteCreateForOrganization(childComplexity, args["organizationId"].(string), args["input"].(model.NoteInput)), true
+
 	case "Mutation.note_Delete":
 		if e.complexity.Mutation.NoteDelete == nil {
 			break
@@ -1706,18 +1732,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.NoteDelete(childComplexity, args["id"].(string)), true
-
-	case "Mutation.note_MergeToContact":
-		if e.complexity.Mutation.NoteMergeToContact == nil {
-			break
-		}
-
-		args, err := ec.field_Mutation_note_MergeToContact_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Mutation.NoteMergeToContact(childComplexity, args["contactId"].(string), args["input"].(model.NoteInput)), true
 
 	case "Mutation.note_Update":
 		if e.complexity.Mutation.NoteUpdate == nil {
@@ -3592,7 +3606,8 @@ interface ExtensibleEntity implements Node {
 
 `, BuiltIn: false},
 	{Name: "../schemas/note.graphqls", Input: `extend type Mutation {
-    note_MergeToContact(contactId : ID!, input: NoteInput!): Note!
+    note_CreateForContact(contactId : ID!, input: NoteInput!): Note!
+    note_CreateForOrganization(organizationId : ID!, input: NoteInput!): Note!
     note_Update(input: NoteUpdateInput!): Note!
     note_Delete(id: ID!): Result!
 }
@@ -4805,22 +4820,7 @@ func (ec *executionContext) field_Mutation_fieldSetUpdateInContact_args(ctx cont
 	return args, nil
 }
 
-func (ec *executionContext) field_Mutation_note_Delete_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
-	var err error
-	args := map[string]interface{}{}
-	var arg0 string
-	if tmp, ok := rawArgs["id"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
-		arg0, err = ec.unmarshalNID2string(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["id"] = arg0
-	return args, nil
-}
-
-func (ec *executionContext) field_Mutation_note_MergeToContact_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+func (ec *executionContext) field_Mutation_note_CreateForContact_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
 	var arg0 string
@@ -4841,6 +4841,45 @@ func (ec *executionContext) field_Mutation_note_MergeToContact_args(ctx context.
 		}
 	}
 	args["input"] = arg1
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_note_CreateForOrganization_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["organizationId"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("organizationId"))
+		arg0, err = ec.unmarshalNID2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["organizationId"] = arg0
+	var arg1 model.NoteInput
+	if tmp, ok := rawArgs["input"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+		arg1, err = ec.unmarshalNNoteInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐNoteInput(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg1
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_note_Delete_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["id"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+		arg0, err = ec.unmarshalNID2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["id"] = arg0
 	return args, nil
 }
 
@@ -12960,8 +12999,8 @@ func (ec *executionContext) fieldContext_Mutation_emailRemoveFromContactById(ctx
 	return fc, nil
 }
 
-func (ec *executionContext) _Mutation_note_MergeToContact(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_note_MergeToContact(ctx, field)
+func (ec *executionContext) _Mutation_note_CreateForContact(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_note_CreateForContact(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -12974,7 +13013,7 @@ func (ec *executionContext) _Mutation_note_MergeToContact(ctx context.Context, f
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().NoteMergeToContact(rctx, fc.Args["contactId"].(string), fc.Args["input"].(model.NoteInput))
+		return ec.resolvers.Mutation().NoteCreateForContact(rctx, fc.Args["contactId"].(string), fc.Args["input"].(model.NoteInput))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -12990,7 +13029,7 @@ func (ec *executionContext) _Mutation_note_MergeToContact(ctx context.Context, f
 	return ec.marshalNNote2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐNote(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Mutation_note_MergeToContact(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Mutation_note_CreateForContact(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Mutation",
 		Field:      field,
@@ -13025,7 +13064,79 @@ func (ec *executionContext) fieldContext_Mutation_note_MergeToContact(ctx contex
 		}
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_note_MergeToContact_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+	if fc.Args, err = ec.field_Mutation_note_CreateForContact_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_note_CreateForOrganization(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_note_CreateForOrganization(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().NoteCreateForOrganization(rctx, fc.Args["organizationId"].(string), fc.Args["input"].(model.NoteInput))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.Note)
+	fc.Result = res
+	return ec.marshalNNote2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐNote(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_note_CreateForOrganization(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Note_id(ctx, field)
+			case "html":
+				return ec.fieldContext_Note_html(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Note_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_Note_updatedAt(ctx, field)
+			case "createdBy":
+				return ec.fieldContext_Note_createdBy(ctx, field)
+			case "source":
+				return ec.fieldContext_Note_source(ctx, field)
+			case "sourceOfTruth":
+				return ec.fieldContext_Note_sourceOfTruth(ctx, field)
+			case "appSource":
+				return ec.fieldContext_Note_appSource(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Note", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_note_CreateForOrganization_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return
 	}
@@ -23398,10 +23509,16 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 				return ec._Mutation_emailRemoveFromContactById(ctx, field)
 			})
 
-		case "note_MergeToContact":
+		case "note_CreateForContact":
 
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_note_MergeToContact(ctx, field)
+				return ec._Mutation_note_CreateForContact(ctx, field)
+			})
+
+		case "note_CreateForOrganization":
+
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_note_CreateForOrganization(ctx, field)
 			})
 
 		case "note_Update":

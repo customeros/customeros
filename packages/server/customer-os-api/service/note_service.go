@@ -13,8 +13,8 @@ import (
 type NoteService interface {
 	GetNotesForContact(ctx context.Context, contactId string, page, limit int) (*utils.Pagination, error)
 	MergeNoteToContact(ctx context.Context, contactId string, toEntity *entity.NoteEntity) (*entity.NoteEntity, error)
-	UpdateNoteInContact(ctx context.Context, contactId string, toEntity *entity.NoteEntity) (*entity.NoteEntity, error)
-	Delete(ctx context.Context, noteId string) (bool, error)
+	UpdateNote(ctx context.Context, entity *entity.NoteEntity) (*entity.NoteEntity, error)
+	DeleteNote(ctx context.Context, noteId string) (bool, error)
 }
 
 type noteService struct {
@@ -64,18 +64,18 @@ func (s *noteService) MergeNoteToContact(ctx context.Context, contactId string, 
 	session := utils.NewNeo4jWriteSession(s.getNeo4jDriver())
 	defer session.Close()
 
-	dbNodePtr, err := s.repositories.NoteRepository.CreateNote(session, common.GetContext(ctx).Tenant, contactId, *entity)
+	dbNodePtr, err := s.repositories.NoteRepository.CreateNoteForContact(session, common.GetContext(ctx).Tenant, contactId, *entity)
 	if err != nil {
 		return nil, err
 	}
 	return s.mapDbNodeToNoteEntity(*dbNodePtr), nil
 }
 
-func (s *noteService) UpdateNoteInContact(ctx context.Context, contactId string, entity *entity.NoteEntity) (*entity.NoteEntity, error) {
+func (s *noteService) UpdateNote(ctx context.Context, entity *entity.NoteEntity) (*entity.NoteEntity, error) {
 	session := utils.NewNeo4jWriteSession(s.getNeo4jDriver())
 	defer session.Close()
 
-	dbNodePtr, err := s.repositories.NoteRepository.UpdateNoteForContact(session, common.GetContext(ctx).Tenant, contactId, *entity)
+	dbNodePtr, err := s.repositories.NoteRepository.UpdateNote(session, common.GetTenantFromContext(ctx), *entity)
 	if err != nil {
 		return nil, err
 	}
@@ -84,7 +84,7 @@ func (s *noteService) UpdateNoteInContact(ctx context.Context, contactId string,
 	return emailEntity, nil
 }
 
-func (s *noteService) Delete(ctx context.Context, noteId string) (bool, error) {
+func (s *noteService) DeleteNote(ctx context.Context, noteId string) (bool, error) {
 	session := utils.NewNeo4jWriteSession(s.getNeo4jDriver())
 	defer session.Close()
 
