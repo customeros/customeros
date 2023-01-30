@@ -249,7 +249,7 @@ type ComplexityRoot struct {
 		OrganizationTypeCreate                 func(childComplexity int, input model.OrganizationTypeInput) int
 		OrganizationTypeDelete                 func(childComplexity int, id string) int
 		OrganizationTypeUpdate                 func(childComplexity int, input model.OrganizationTypeUpdateInput) int
-		OrganizationUpdate                     func(childComplexity int, id string, input model.OrganizationInput) int
+		OrganizationUpdate                     func(childComplexity int, input model.OrganizationUpdateInput) int
 		PhoneNumberDeleteFromContact           func(childComplexity int, contactID string, e164 string) int
 		PhoneNumberDeleteFromContactByID       func(childComplexity int, contactID string, id string) int
 		PhoneNumberMergeToContact              func(childComplexity int, contactID string, input model.PhoneNumberInput) int
@@ -451,7 +451,7 @@ type MutationResolver interface {
 	NoteUpdateInContact(ctx context.Context, contactID string, input model.NoteUpdateInput) (*model.Note, error)
 	NoteDeleteFromContact(ctx context.Context, contactID string, noteID string) (*model.Result, error)
 	OrganizationCreate(ctx context.Context, input model.OrganizationInput) (*model.Organization, error)
-	OrganizationUpdate(ctx context.Context, id string, input model.OrganizationInput) (*model.Organization, error)
+	OrganizationUpdate(ctx context.Context, input model.OrganizationUpdateInput) (*model.Organization, error)
 	OrganizationDelete(ctx context.Context, id string) (*model.Result, error)
 	OrganizationTypeCreate(ctx context.Context, input model.OrganizationTypeInput) (*model.OrganizationType, error)
 	OrganizationTypeUpdate(ctx context.Context, input model.OrganizationTypeUpdateInput) (*model.OrganizationType, error)
@@ -1796,7 +1796,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.OrganizationUpdate(childComplexity, args["id"].(string), args["input"].(model.OrganizationInput)), true
+		return e.complexity.Mutation.OrganizationUpdate(childComplexity, args["input"].(model.OrganizationUpdateInput)), true
 
 	case "Mutation.phoneNumberDeleteFromContact":
 		if e.complexity.Mutation.PhoneNumberDeleteFromContact == nil {
@@ -2504,6 +2504,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputOrganizationInput,
 		ec.unmarshalInputOrganizationTypeInput,
 		ec.unmarshalInputOrganizationTypeUpdateInput,
+		ec.unmarshalInputOrganizationUpdateInput,
 		ec.unmarshalInputPagination,
 		ec.unmarshalInputPhoneNumberInput,
 		ec.unmarshalInputPhoneNumberUpdateInput,
@@ -3585,7 +3586,7 @@ input NoteUpdateInput {
 
 extend type Mutation {
     organization_Create(input: OrganizationInput!): Organization!
-    organization_Update(id: ID!, input: OrganizationInput!): Organization!
+    organization_Update(input: OrganizationUpdateInput!): Organization!
     organization_Delete(id: ID!): Result
 }
 
@@ -3621,6 +3622,17 @@ input OrganizationInput {
     The name of the organization.
     **Required.**
     """
+    name: String!
+    description: String
+    domain:      String
+    website:     String
+    industry:    String
+    isPublic:    Boolean
+    organizationTypeId: ID
+}
+
+input OrganizationUpdateInput {
+    id: ID!
     name: String!
     description: String
     domain:      String
@@ -4896,24 +4908,15 @@ func (ec *executionContext) field_Mutation_organization_Delete_args(ctx context.
 func (ec *executionContext) field_Mutation_organization_Update_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 string
-	if tmp, ok := rawArgs["id"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
-		arg0, err = ec.unmarshalNID2string(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["id"] = arg0
-	var arg1 model.OrganizationInput
+	var arg0 model.OrganizationUpdateInput
 	if tmp, ok := rawArgs["input"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-		arg1, err = ec.unmarshalNOrganizationInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOrganizationInput(ctx, tmp)
+		arg0, err = ec.unmarshalNOrganizationUpdateInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOrganizationUpdateInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["input"] = arg1
+	args["input"] = arg0
 	return args, nil
 }
 
@@ -13210,7 +13213,7 @@ func (ec *executionContext) _Mutation_organization_Update(ctx context.Context, f
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().OrganizationUpdate(rctx, fc.Args["id"].(string), fc.Args["input"].(model.OrganizationInput))
+		return ec.resolvers.Mutation().OrganizationUpdate(rctx, fc.Args["input"].(model.OrganizationUpdateInput))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -21065,6 +21068,90 @@ func (ec *executionContext) unmarshalInputOrganizationTypeUpdateInput(ctx contex
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputOrganizationUpdateInput(ctx context.Context, obj interface{}) (model.OrganizationUpdateInput, error) {
+	var it model.OrganizationUpdateInput
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"id", "name", "description", "domain", "website", "industry", "isPublic", "organizationTypeId"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "id":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+			it.ID, err = ec.unmarshalNID2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "name":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
+			it.Name, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "description":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("description"))
+			it.Description, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "domain":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("domain"))
+			it.Domain, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "website":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("website"))
+			it.Website, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "industry":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("industry"))
+			it.Industry, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "isPublic":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("isPublic"))
+			it.IsPublic, err = ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "organizationTypeId":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("organizationTypeId"))
+			it.OrganizationTypeID, err = ec.unmarshalOID2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputPagination(ctx context.Context, obj interface{}) (model.Pagination, error) {
 	var it model.Pagination
 	asMap := map[string]interface{}{}
@@ -25616,6 +25703,11 @@ func (ec *executionContext) unmarshalNOrganizationTypeInput2githubᚗcomᚋopenl
 
 func (ec *executionContext) unmarshalNOrganizationTypeUpdateInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOrganizationTypeUpdateInput(ctx context.Context, v interface{}) (model.OrganizationTypeUpdateInput, error) {
 	res, err := ec.unmarshalInputOrganizationTypeUpdateInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalNOrganizationUpdateInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOrganizationUpdateInput(ctx context.Context, v interface{}) (model.OrganizationUpdateInput, error) {
+	res, err := ec.unmarshalInputOrganizationUpdateInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 

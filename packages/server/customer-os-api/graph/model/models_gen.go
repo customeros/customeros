@@ -646,6 +646,17 @@ type OrganizationTypeUpdateInput struct {
 	Name string `json:"name"`
 }
 
+type OrganizationUpdateInput struct {
+	ID                 string  `json:"id"`
+	Name               string  `json:"name"`
+	Description        *string `json:"description"`
+	Domain             *string `json:"domain"`
+	Website            *string `json:"website"`
+	Industry           *string `json:"industry"`
+	IsPublic           *bool   `json:"isPublic"`
+	OrganizationTypeID *string `json:"organizationTypeId"`
+}
+
 type PageViewAction struct {
 	ID             string    `json:"id"`
 	StartedAt      time.Time `json:"startedAt"`

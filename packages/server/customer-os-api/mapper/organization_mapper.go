@@ -19,6 +19,19 @@ func MapOrganizationInputToEntity(input *model.OrganizationInput) *entity.Organi
 	}
 }
 
+func MapOrganizationUpdateInputToEntity(input *model.OrganizationUpdateInput) *entity.OrganizationEntity {
+	return &entity.OrganizationEntity{
+		ID:            input.ID,
+		Name:          input.Name,
+		Description:   utils.IfNotNilString(input.Description),
+		Domain:        utils.IfNotNilString(input.Domain),
+		Website:       utils.IfNotNilString(input.Website),
+		Industry:      utils.IfNotNilString(input.Industry),
+		IsPublic:      utils.IfNotNilBool(input.IsPublic),
+		SourceOfTruth: entity.DataSourceOpenline,
+	}
+}
+
 func MapEntityToOrganization(entity *entity.OrganizationEntity) *model.Organization {
 	return &model.Organization{
 		ID:          entity.ID,

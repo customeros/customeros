@@ -5,7 +5,7 @@ extend type Query {
 
 extend type Mutation {
     organization_Create(input: OrganizationInput!): Organization!
-    organization_Update(id: ID!, input: OrganizationInput!): Organization!
+    organization_Update(input: OrganizationUpdateInput!): Organization!
     organization_Delete(id: ID!): Result
 }
 
@@ -41,6 +41,17 @@ input OrganizationInput {
     The name of the organization.
     **Required.**
     """
+    name: String!
+    description: String
+    domain:      String
+    website:     String
+    industry:    String
+    isPublic:    Boolean
+    organizationTypeId: ID
+}
+
+input OrganizationUpdateInput {
+    id: ID!
     name: String!
     description: String
     domain:      String

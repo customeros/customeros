@@ -30,9 +30,8 @@ func (r *mutationResolver) OrganizationCreate(ctx context.Context, input model.O
 }
 
 // OrganizationUpdate is the resolver for the organization_Update field.
-func (r *mutationResolver) OrganizationUpdate(ctx context.Context, id string, input model.OrganizationInput) (*model.Organization, error) {
-	organization := mapper.MapOrganizationInputToEntity(&input)
-	organization.ID = id
+func (r *mutationResolver) OrganizationUpdate(ctx context.Context, input model.OrganizationUpdateInput) (*model.Organization, error) {
+	organization := mapper.MapOrganizationUpdateInputToEntity(&input)
 
 	updatedOrganizationEntity, err := r.Services.OrganizationService.Update(ctx,
 		&service.OrganizationUpdateData{
@@ -40,7 +39,7 @@ func (r *mutationResolver) OrganizationUpdate(ctx context.Context, id string, in
 			OrganizationTypeID: input.OrganizationTypeID,
 		})
 	if err != nil {
-		graphql.AddErrorf(ctx, "Failed to update organization %s", id)
+		graphql.AddErrorf(ctx, "Failed to update organization %s", input.ID)
 		return nil, err
 	}
 	return mapper.MapEntityToOrganization(updatedOrganizationEntity), nil

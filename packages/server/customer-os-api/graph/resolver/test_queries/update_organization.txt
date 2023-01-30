@@ -1,7 +1,7 @@
 mutation UpdateOrganization($organizationId: ID!, $organizationTypeId: ID) {
   organization_Update(
-        id: $organizationId
         input: {
+            id: $organizationId
             name: "updated name"
             description: "updated description"
             domain: "updated domain"
