@@ -69,6 +69,12 @@ func (s *noteService) CreateNoteForContact(ctx context.Context, contactId string
 	if err != nil {
 		return nil, err
 	}
+	// set note creator
+	if len(common.GetUserIdFromContext(ctx)) > 0 {
+		props := utils.GetPropsFromNode(*dbNodePtr)
+		noteId := utils.GetStringPropOrEmpty(props, "id")
+		s.repositories.NoteRepository.SetNoteCreator(session, common.GetTenantFromContext(ctx), common.GetUserIdFromContext(ctx), noteId)
+	}
 	return s.mapDbNodeToNoteEntity(*dbNodePtr), nil
 }
 
@@ -79,6 +85,12 @@ func (s *noteService) CreateNoteForOrganization(ctx context.Context, organizatio
 	dbNodePtr, err := s.repositories.NoteRepository.CreateNoteForOrganization(session, common.GetContext(ctx).Tenant, organization, *entity)
 	if err != nil {
 		return nil, err
+	}
+	// set note creator
+	if len(common.GetUserIdFromContext(ctx)) > 0 {
+		props := utils.GetPropsFromNode(*dbNodePtr)
+		noteId := utils.GetStringPropOrEmpty(props, "id")
+		s.repositories.NoteRepository.SetNoteCreator(session, common.GetTenantFromContext(ctx), common.GetUserIdFromContext(ctx), noteId)
 	}
 	return s.mapDbNodeToNoteEntity(*dbNodePtr), nil
 }

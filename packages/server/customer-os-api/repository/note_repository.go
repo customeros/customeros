@@ -25,6 +25,7 @@ type NoteRepository interface {
 	CreateNoteForOrganization(session neo4j.Session, tenant, organization string, entity entity.NoteEntity) (*dbtype.Node, error)
 	UpdateNote(session neo4j.Session, tenant string, entity entity.NoteEntity) (*dbtype.Node, error)
 	Delete(session neo4j.Session, tenant, noteId string) error
+	SetNoteCreator(session neo4j.Session, tenant, userId, noteId string) error
 }
 
 type noteRepository struct {
@@ -170,6 +171,22 @@ func (r *noteRepository) Delete(session neo4j.Session, tenant, noteId string) er
 		_, err := tx.Run(fmt.Sprintf(query, "Note_"+tenant),
 			map[string]interface{}{
 				"tenant": tenant,
+				"noteId": noteId,
+			})
+		return nil, err
+	})
+	return err
+}
+
+func (r *noteRepository) SetNoteCreator(session neo4j.Session, tenant, userId, noteId string) error {
+	query := "MATCH (u:User {id:$userId})-[:USER_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}), " +
+		" (n:Note {id:$noteId})" +
+		"  MERGE (u)-[:CREATED]->(n) "
+	_, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
+		_, err := tx.Run(query,
+			map[string]interface{}{
+				"tenant": tenant,
+				"userId": userId,
 				"noteId": noteId,
 			})
 		return nil, err

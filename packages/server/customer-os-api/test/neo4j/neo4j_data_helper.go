@@ -40,6 +40,16 @@ func CreateDefaultUser(driver *neo4j.Driver, tenant string) string {
 	})
 }
 
+func CreateDefaultUserWithId(driver *neo4j.Driver, tenant, userId string) string {
+	return CreateUserWithId(driver, tenant, userId, entity.UserEntity{
+		FirstName:     "first",
+		LastName:      "last",
+		Email:         "user@openline.ai",
+		Source:        "openline",
+		SourceOfTruth: "openline",
+	})
+}
+
 func CreateUser(driver *neo4j.Driver, tenant string, user entity.UserEntity) string {
 	return CreateUserWithId(driver, tenant, "", user)
 }
