@@ -723,6 +723,7 @@ func (s *customerOSService) GetActiveConversationOrCreate(
 	lastname string,
 	username string,
 	senderType msProto.SenderType,
+	eventType entity.EventType,
 ) (*Conversation, error) {
 	var conversation *Conversation
 	var err error
@@ -738,7 +739,7 @@ func (s *customerOSService) GetActiveConversationOrCreate(
 	}
 
 	if conversation == nil {
-		conversation, err = s.CreateConversation(tenant, participantId, firstName, lastname, username, s.commonStoreService.ConvertMSSenderTypeToEntitySenderType(senderType), entity.WEB_CHAT)
+		conversation, err = s.CreateConversation(tenant, participantId, firstName, lastname, username, s.commonStoreService.ConvertMSSenderTypeToEntitySenderType(senderType), eventType)
 	}
 	if err != nil {
 		return nil, err
