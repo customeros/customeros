@@ -6,8 +6,9 @@ import (
 )
 
 type DbDrivers struct {
-	Neo4jDriver *neo4j.Driver
-	GormDb      *gorm.DB
+	Neo4jDriver    *neo4j.Driver
+	GormDb         *gorm.DB
+	GormTrackingDb *gorm.DB
 }
 
 type Repositories struct {
@@ -15,17 +16,20 @@ type Repositories struct {
 	ContactRepository  ContactRepository
 	PageViewRepository PageViewRepository
 	ActionRepository   ActionRepository
+	SyncRunRepository  SyncRunRepository
 }
 
-func InitRepos(driver *neo4j.Driver, db *gorm.DB) *Repositories {
+func InitRepos(driver *neo4j.Driver, gormDb *gorm.DB, gormTrackingDb *gorm.DB) *Repositories {
 	repositories := Repositories{
 		Drivers: DbDrivers{
-			Neo4jDriver: driver,
-			GormDb:      db,
+			Neo4jDriver:    driver,
+			GormDb:         gormDb,
+			GormTrackingDb: gormTrackingDb,
 		},
 	}
 	repositories.ContactRepository = NewContactRepository(driver)
-	repositories.PageViewRepository = NewPageViewRepository(db)
 	repositories.ActionRepository = NewActionRepository(driver)
+	repositories.PageViewRepository = NewPageViewRepository(gormTrackingDb)
+	repositories.SyncRunRepository = NewSyncRunRepository(gormDb)
 	return &repositories
 }
