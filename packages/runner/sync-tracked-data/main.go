@@ -51,7 +51,7 @@ func main() {
 	}
 	defer sqlDb.Close()
 
-	sqlTrackingDb, gormTrackingDb, errPostgres := config.NewPostgresClient(cfg)
+	sqlTrackingDb, gormTrackingDb, errPostgres := config.NewPostgresTrackingClient(cfg)
 	if errPostgres != nil {
 		logrus.Fatalf("failed opening connection to postgres: %v", errPostgres.Error())
 	}
