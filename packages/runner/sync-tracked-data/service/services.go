@@ -8,14 +8,16 @@ import (
 
 type Services struct {
 	SyncService SyncService
+	InitService InitService
 }
 
-func InitServices(driver *neo4j.Driver, gormDb *gorm.DB) *Services {
-	repositories := repository.InitRepos(driver, gormDb)
+func InitServices(driver *neo4j.Driver, gormDb *gorm.DB, gormTrackingDb *gorm.DB) *Services {
+	repositories := repository.InitRepos(driver, gormDb, gormTrackingDb)
 
 	services := new(Services)
 
 	services.SyncService = NewSyncService(repositories, services)
+	services.InitService = NewInitService(repositories)
 
 	return services
 }

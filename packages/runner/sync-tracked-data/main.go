@@ -51,13 +51,20 @@ func main() {
 	}
 	defer sqlDb.Close()
 
+	sqlTrackingDb, gormTrackingDb, errPostgres := config.NewPostgresClient(cfg)
+	if errPostgres != nil {
+		logrus.Fatalf("failed opening connection to postgres: %v", errPostgres.Error())
+	}
+	defer sqlTrackingDb.Close()
+
 	neo4jDriver, errNeo4j := config.NewDriver(cfg)
 	if errNeo4j != nil {
 		logrus.Fatalf("failed opening connection to neo4j: %v", errNeo4j.Error())
 	}
 	defer (*neo4jDriver).Close()
 
-	serviceContainer := service.InitServices(neo4jDriver, gormDb)
+	serviceContainer := service.InitServices(neo4jDriver, gormDb, gormTrackingDb)
+	serviceContainer.InitService.Init()
 
 	var taskQueue = &taskQueue{}
 	for {

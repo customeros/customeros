@@ -48,18 +48,22 @@ func (r *actionRepository) CreatePageViewAction(contactId string, pv entity.Page
 	query := "MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant}) " +
 		" MERGE (c)-[:HAS_ACTION]->(a:Action:PageView {id:$pvId, trackerName:$trackerName})" +
 		" ON CREATE SET " +
-		" a:%s, a:%s, " +
-		" a.startedAt=$start, " +
-		" a.endedAt=$end, " +
-		" a.application=$application, " +
-		" a.pageUrl=$pageUrl, " +
-		" a.pageTitle=$pageTitle, " +
-		" a.sessionId=$sessionId, " +
-		" a.orderInSession=$orderInSession, " +
-		" a.engagedTime=$engagedTime, " +
-		" a.source=$source, " +
-		" a.sourceOfTruth=$sourceOfTruth, " +
-		" a.appSource=$appSource "
+		" 	a:%s, a:%s, " +
+		" 	a.startedAt=$start, " +
+		" 	a.endedAt=$end, " +
+		" 	a.application=$application, " +
+		" 	a.pageUrl=$pageUrl, " +
+		" 	a.pageTitle=$pageTitle, " +
+		" 	a.sessionId=$sessionId, " +
+		" 	a.orderInSession=$orderInSession, " +
+		" 	a.engagedTime=$engagedTime, " +
+		" 	a.source=$source, " +
+		" 	a.sourceOfTruth=$sourceOfTruth, " +
+		" 	a.appSource=$appSource " +
+		" ON MATCH SET " +
+		" 	a.endedAt=$end, " +
+		" 	a.engagedTime=$engagedTime, " +
+		" 	a.orderInSession=$orderInSession "
 
 	_, err := session.WriteTransaction(func(tx neo4j.Transaction) (interface{}, error) {
 		_, err := tx.Run(fmt.Sprintf(query, "PageView_"+pv.Tenant, "Action_"+pv.Tenant), params)

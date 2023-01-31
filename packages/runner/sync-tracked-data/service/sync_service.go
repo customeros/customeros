@@ -7,6 +7,7 @@ import (
 	"regexp"
 	"strings"
 	"sync"
+	"time"
 )
 
 type SyncService interface {
@@ -31,27 +32,35 @@ func NewSyncService(repositories *repository.Repositories, services *Services) S
 }
 
 func (s *syncService) Sync(runId string, bucketSize int) int {
+
+	syncRunDtls := entity.SyncRun{
+		StarAt: time.Now().UTC(),
+		RunId:  runId,
+	}
+
 	pageViewsToSync, err := s.repositories.PageViewRepository.GetPageViewsForSync(bucketSize)
 	if err != nil {
 		logrus.Errorf("ERROR run id: %s failed to sync page views. error fetching page views: %v", runId, err.Error())
 	}
 
-	if len(pageViewsToSync) == 0 {
-		return len(pageViewsToSync)
-	}
+	if len(pageViewsToSync) != 0 {
+		contactIds, err := s.prepareContactIds(pageViewsToSync)
+		if err != nil {
+			return 0
+		}
 
-	contactIds, err := s.prepareContactIds(pageViewsToSync)
-	if err != nil {
-		return 0
-	}
+		var wg sync.WaitGroup
+		wg.Add(len(pageViewsToSync))
 
-	var wg sync.WaitGroup
-	wg.Add(len(pageViewsToSync))
-
-	for _, v := range pageViewsToSync {
-		go s.syncPageView(&wg, runId, contactIds, v)
+		for _, v := range pageViewsToSync {
+			go s.syncPageView(&wg, runId, contactIds, v)
+		}
+		wg.Wait()
 	}
-	wg.Wait()
+	syncRunDtls.EndAt = time.Now().UTC()
+	syncRunDtls.SyncedPageViews = len(pageViewsToSync)
+
+	s.repositories.SyncRunRepository.Save(syncRunDtls)
 
 	return len(pageViewsToSync)
 }
