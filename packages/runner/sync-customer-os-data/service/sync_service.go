@@ -482,12 +482,13 @@ func (s *syncService) syncEmailMessages(dataService common.DataService, syncDate
 					conversationEvent.SenderId = userId
 				}
 				emailContent := entity.EmailContent{
-					Subject: message.Subject,
-					Html:    message.Html,
-					From:    message.FromEmail,
-					To:      message.ToEmail,
-					Cc:      message.CcEmail,
-					Bcc:     message.BccEmail,
+					MessageId: message.EmailMessageId,
+					Subject:   message.Subject,
+					Html:      message.Html,
+					From:      message.FromEmail,
+					To:        message.ToEmail,
+					Cc:        message.CcEmail,
+					Bcc:       message.BccEmail,
 				}
 				jsonContent, err := json.Marshal(emailContent)
 				if err != nil {

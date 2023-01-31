@@ -9,6 +9,7 @@ type EmailMessageData struct {
 
 	ContactsExternalIds []string
 	UserExternalId      string
+	EmailMessageId      string
 	EmailThreadId       string
 	ExternalId          string
 	ExternalSystem      string

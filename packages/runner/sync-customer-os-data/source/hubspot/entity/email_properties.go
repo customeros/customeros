@@ -16,6 +16,7 @@ type EmailProperties struct {
 	EmailFromFirstName  string          `gorm:"column:hs_email_from_firstname"`
 	EmailFromLastName   string          `gorm:"column:hs_email_from_lastname"`
 	CreatedByUserId     sql.NullFloat64 `gorm:"column:hs_created_by_user_id"`
+	EmailMessageId      string          `gorm:"column:hs_email_message_id"`
 }
 
 type EmailPropertiesList []EmailProperties

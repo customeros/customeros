@@ -221,6 +221,7 @@ func (s *hubspotDataService) GetEmailMessagesForSync(batchSize int, runId string
 			ExternalId:     v.Id,
 			ExternalSystem: s.SourceId(),
 			EmailThreadId:  hubspotEmailProperties.EmailThreadId,
+			EmailMessageId: hubspotEmailProperties.EmailMessageId,
 			FromEmail:      hubspotEmailProperties.EmailFromEmail,
 			ToEmail:        emailsStringToArray(hubspotEmailProperties.EmailToEmail),
 			CcEmail:        emailsStringToArray(hubspotEmailProperties.EmailCcEmail),
