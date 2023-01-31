@@ -19,6 +19,7 @@ type ContactRepository interface {
 	MergeContactDefaultPlace(tenant, contactId string, contact entity.ContactData) error
 	MergeContactType(tenant, contactId, contactTypeName string) error
 	GetOrCreateContactId(tenant, email, firstName, lastName, source string) (string, error)
+	LinkContactWithOrganization(tenant, contactId, organizationExternalId, source string) error
 }
 
 type contactRepository struct {
@@ -355,4 +356,27 @@ func (r *contactRepository) GetOrCreateContactId(tenant, email, firstName, lastN
 	})
 
 	return record.(*db.Record).Values[0].(string), err
+}
+
+func (r *contactRepository) LinkContactWithOrganization(tenant, contactId, organizationExternalId, source string) error {
+	session := utils.NewNeo4jWriteSession(*r.driver)
+	defer session.Close()
+
+	query := "MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant}) " +
+		" MATCH (t)<-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]-(e:ExternalSystem {id:$externalSystemId})<-[:IS_LINKED_WITH {externalId:$organizationExternalId}]-(org:Organization) " +
+		" MERGE (c)-[:CONTACT_OF]->(org)"
+	_, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
+		_, err := tx.Run(query,
+			map[string]interface{}{
+				"tenant":                 tenant,
+				"contactId":              contactId,
+				"externalSystemId":       source,
+				"organizationExternalId": organizationExternalId,
+			})
+		if err != nil {
+			return nil, err
+		}
+		return nil, nil
+	})
+	return err
 }

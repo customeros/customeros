@@ -6,6 +6,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/entity"
 	localEntity "github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/source/hubspot/entity"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/source/hubspot/repository"
+	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/utils"
 	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 	"strconv"
@@ -68,12 +69,17 @@ func (s *hubspotDataService) GetContactsForSync(batchSize int, runId string) []e
 			Fax:                 hubspotContactProperties.Fax,
 			DefaultLocationName: "Default location",
 		}
-		// set reference to primary company
+		// set reference to linked organizations
+		contactForCustomerOs.OrganizationsExternalIds = utils.ConvertJsonbToStringSlice(v.CompaniesExternalIds)
+		// set reference to primary organization
 		if hubspotContactProperties.PrimaryCompanyExternalId.Valid {
 			contactForCustomerOs.PrimaryOrganizationExternalId = strconv.FormatFloat(hubspotContactProperties.PrimaryCompanyExternalId.Float64, 'f', 0, 64)
 		}
-		// set reference to all linked companies
-		contactForCustomerOs.OrganizationsExternalIds = ConvertJsonbToStringSlice(v.CompaniesExternalIds)
+		// add primary organization to organizations list
+		contactForCustomerOs.OrganizationsExternalIds = append(contactForCustomerOs.OrganizationsExternalIds, contactForCustomerOs.PrimaryOrganizationExternalId)
+		// remove any duplicated organizations
+		contactForCustomerOs.OrganizationsExternalIds = utils.RemoveDuplicates(contactForCustomerOs.OrganizationsExternalIds)
+
 		// set custom fields
 		var textCustomFields []entity.TextCustomField
 		if len(hubspotContactProperties.LifecycleStage) > 0 {
@@ -190,9 +196,9 @@ func (s *hubspotDataService) GetNotesForSync(batchSize int, runId string) []enti
 			noteForCustomerOs.UserExternalId = strconv.FormatFloat(hubspotNoteProperties.CreatedByUserId.Float64, 'f', 0, 64)
 		}
 		// set reference to all linked contacts
-		noteForCustomerOs.ContactsExternalIds = ConvertJsonbToStringSlice(v.ContactsExternalIds)
+		noteForCustomerOs.ContactsExternalIds = utils.ConvertJsonbToStringSlice(v.ContactsExternalIds)
 		// set reference to all linked companies
-		noteForCustomerOs.OrganizationsExternalIds = ConvertJsonbToStringSlice(v.CompaniesExternalIds)
+		noteForCustomerOs.OrganizationsExternalIds = utils.ConvertJsonbToStringSlice(v.CompaniesExternalIds)
 
 		customerOsNotes = append(customerOsNotes, noteForCustomerOs)
 		s.notes[v.Id] = v
@@ -240,7 +246,7 @@ func (s *hubspotDataService) GetEmailMessagesForSync(batchSize int, runId string
 			emailForCustomerOS.Direction = entity.OUTBOUND
 		}
 		// set reference to all linked contacts
-		emailForCustomerOS.ContactsExternalIds = ConvertJsonbToStringSlice(v.ContactsExternalIds)
+		emailForCustomerOS.ContactsExternalIds = utils.ConvertJsonbToStringSlice(v.ContactsExternalIds)
 		customerOsEmails = append(customerOsEmails, emailForCustomerOS)
 		s.emails[v.Id] = v
 	}
