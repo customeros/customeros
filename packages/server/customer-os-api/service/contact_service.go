@@ -144,7 +144,7 @@ func (s *contactService) createContactInDBTxWork(ctx context.Context, newContact
 			}
 		}
 		if newContact.EmailEntity != nil {
-			_, _, err := s.repositories.EmailRepository.MergeEmailToContactInTx(tx, tenant, contactId, *newContact.EmailEntity)
+			_, _, err := s.repositories.EmailRepository.MergeEmailToInTx(tx, tenant, repository.CONTACT, contactId, *newContact.EmailEntity)
 			if err != nil {
 				return nil, err
 			}

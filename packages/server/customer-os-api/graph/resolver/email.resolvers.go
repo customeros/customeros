@@ -6,6 +6,7 @@ package resolver
 
 import (
 	"context"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
@@ -14,7 +15,7 @@ import (
 
 // EmailMergeToContact is the resolver for the emailMergeToContact field.
 func (r *mutationResolver) EmailMergeToContact(ctx context.Context, contactID string, input model.EmailInput) (*model.Email, error) {
-	result, err := r.Services.EmailService.MergeEmailToContact(ctx, contactID, mapper.MapEmailInputToEntity(&input))
+	result, err := r.Services.EmailService.MergeEmailTo(ctx, repository.CONTACT, contactID, mapper.MapEmailInputToEntity(&input))
 	if err != nil {
 		graphql.AddErrorf(ctx, "Could not add email %s to contact %s", input.Email, contactID)
 		return nil, err

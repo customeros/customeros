@@ -13,7 +13,7 @@ import (
 
 type EmailService interface {
 	FindAllForContact(ctx context.Context, contactId string) (*entity.EmailEntities, error)
-	MergeEmailToContact(ctx context.Context, id string, entity *entity.EmailEntity) (*entity.EmailEntity, error)
+	MergeEmailTo(ctx context.Context, entityType repository.EntityType, entityId string, entity *entity.EmailEntity) (*entity.EmailEntity, error)
 	UpdateEmailForContact(ctx context.Context, id string, entity *entity.EmailEntity) (*entity.EmailEntity, error)
 	Delete(ctx context.Context, contactId string, email string) (bool, error)
 	DeleteById(ctx context.Context, contactId string, emailId string) (bool, error)
@@ -53,7 +53,7 @@ func (s *emailService) FindAllForContact(ctx context.Context, contactId string) 
 	return &emailEntities, nil
 }
 
-func (s *emailService) MergeEmailToContact(ctx context.Context, contactId string, entity *entity.EmailEntity) (*entity.EmailEntity, error) {
+func (s *emailService) MergeEmailTo(ctx context.Context, entityType repository.EntityType, entityId string, entity *entity.EmailEntity) (*entity.EmailEntity, error) {
 	session := utils.NewNeo4jWriteSession(s.getDriver())
 	defer session.Close()
 
@@ -63,12 +63,12 @@ func (s *emailService) MergeEmailToContact(ctx context.Context, contactId string
 
 	_, err = session.WriteTransaction(func(tx neo4j.Transaction) (interface{}, error) {
 		if entity.Primary == true {
-			err := s.repositories.EmailRepository.SetOtherContactEmailsNonPrimaryInTx(tx, common.GetContext(ctx).Tenant, contactId, entity.Email)
+			err := s.repositories.EmailRepository.SetOtherContactEmailsNonPrimaryInTx(tx, common.GetContext(ctx).Tenant, entityId, entity.Email)
 			if err != nil {
 				return nil, err
 			}
 		}
-		emailNode, emailRelationship, err = s.repositories.EmailRepository.MergeEmailToContactInTx(tx, common.GetContext(ctx).Tenant, contactId, *entity)
+		emailNode, emailRelationship, err = s.repositories.EmailRepository.MergeEmailToInTx(tx, common.GetContext(ctx).Tenant, entityType, entityId, *entity)
 		return nil, err
 	})
 	if err != nil {

@@ -9,8 +9,16 @@ import (
 	"time"
 )
 
+type EntityType string
+
+const (
+	CONTACT      EntityType = "CONTACT"
+	USER         EntityType = "USER"
+	ORGANIZATION EntityType = "ORGANIZATION"
+)
+
 type EmailRepository interface {
-	MergeEmailToContactInTx(tx neo4j.Transaction, tenant, contactId string, entity entity.EmailEntity) (*dbtype.Node, *dbtype.Relationship, error)
+	MergeEmailToInTx(tx neo4j.Transaction, tenant string, entityType EntityType, entityId string, entity entity.EmailEntity) (*dbtype.Node, *dbtype.Relationship, error)
 	UpdateEmailByContactInTx(tx neo4j.Transaction, tenant, contactId string, entity entity.EmailEntity) (*dbtype.Node, *dbtype.Relationship, error)
 	SetOtherContactEmailsNonPrimaryInTx(tx neo4j.Transaction, tenantId, contactId, email string) error
 	FindAllForContact(session neo4j.Session, tenant, contactId string) (any, error)
@@ -26,9 +34,20 @@ func NewEmailRepository(driver *neo4j.Driver) EmailRepository {
 	}
 }
 
-func (r *emailRepository) MergeEmailToContactInTx(tx neo4j.Transaction, tenant, contactId string, entity entity.EmailEntity) (*dbtype.Node, *dbtype.Relationship, error) {
-	query := "MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) " +
-		" MERGE (c)-[r:EMAILED_AT]->(e:Email {email: $email}) " +
+func (r *emailRepository) MergeEmailToInTx(tx neo4j.Transaction, tenant string, entityType EntityType, entityId string, entity entity.EmailEntity) (*dbtype.Node, *dbtype.Relationship, error) {
+	query := ""
+
+	switch entityType {
+	case CONTACT:
+		query = `MATCH (entity:Contact {id:$entityId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) `
+	case USER:
+		query = `MATCH (entity:User {id:$entityId})-[:USER_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) `
+	case ORGANIZATION:
+		query = `MATCH (entity:Organization {id:$entityId})-[:ORGANIZATION_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) `
+	}
+
+	query = query +
+		" MERGE (entity)-[r:EMAILED_AT]->(e:Email {email: $email}) " +
 		" ON CREATE SET e.label=$label, " +
 		"				r.primary=$primary, " +
 		"				e.id=randomUUID(), " +
@@ -47,7 +66,7 @@ func (r *emailRepository) MergeEmailToContactInTx(tx neo4j.Transaction, tenant, 
 	queryResult, err := tx.Run(fmt.Sprintf(query, "Email_"+tenant),
 		map[string]interface{}{
 			"tenant":        tenant,
-			"contactId":     contactId,
+			"entityId":      entityId,
 			"email":         entity.Email,
 			"label":         entity.Label,
 			"primary":       entity.Primary,
