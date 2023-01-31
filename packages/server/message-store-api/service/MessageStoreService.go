@@ -204,7 +204,8 @@ func (s *messageService) SaveMessage(ctx context.Context, input *msProto.InputMe
 	participantUsername = *input.Email
 
 	if input.ConversationId == nil {
-		conv, err := s.customerOSService.GetActiveConversationOrCreate(tenant, participantId, participantFirstName, participantLastName, *input.Email, input.SenderType)
+		entityType := s.commonStoreService.ConvertMSTypeToEntityType(input.Type)
+		conv, err := s.customerOSService.GetActiveConversationOrCreate(tenant, participantId, participantFirstName, participantLastName, *input.Email, input.SenderType, entityType)
 		if err != nil {
 			return nil, err
 		}
