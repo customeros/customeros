@@ -5,12 +5,13 @@ import (
 )
 
 type EmailContent struct {
-	Html    string   `json:"html"`
-	Subject string   `json:"subject"`
-	From    string   `json:"from"`
-	To      []string `json:"to"`
-	Cc      []string `json:"cc"`
-	Bcc     []string `json:"bcc"`
+	MessageId string   `json:"messageId"`
+	Html      string   `json:"html"`
+	Subject   string   `json:"subject"`
+	From      string   `json:"from"`
+	To        []string `json:"to"`
+	Cc        []string `json:"cc"`
+	Bcc       []string `json:"bcc"`
 }
 
 type EventType string
