@@ -36,7 +36,6 @@ MATCH (t:Tenant {name:"openline"})
 MATCH (t:Tenant {name:"openline"})
     MERGE (u:User {id:"development@openline.ai"})-[:USER_BELONGS_TO_TENANT]->(t)
     ON CREATE SET
-            u.id=randomUUID(),
     		u.firstName ="Development",
             u.lastName="User",
     		u.createdAt=datetime({timezone: 'UTC'}),
