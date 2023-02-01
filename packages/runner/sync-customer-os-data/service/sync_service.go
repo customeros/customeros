@@ -131,19 +131,15 @@ func (s *syncService) syncContacts(dataService common.DataService, syncDate time
 					failedSync = true
 					logrus.Errorf("failed link contact %v to organization with external id %v, tenant %v :%v", contactId, organizationExternalId, tenant, err)
 				}
-				if err = s.repositories.RoleRepository.MergeRole(tenant, contactId, organizationExternalId, dataService.SourceId()); err != nil {
-					failedSync = true
-					logrus.Errorf("failed merge role for contact %v, tenant %v :%v", contactId, tenant, err)
-				}
 			}
 
-			if err = s.repositories.RoleRepository.RemoveOutdatedRoles(tenant, contactId, dataService.SourceId(), v.OrganizationsExternalIds); err != nil {
+			if err = s.repositories.RoleRepository.RemoveOutdatedJobRoles(tenant, contactId, dataService.SourceId(), v.PrimaryOrganizationExternalId); err != nil {
 				failedSync = true
 				logrus.Errorf("failed removing outdated roles for contact %v, tenant %v :%v", contactId, tenant, err)
 			}
 
 			if len(v.PrimaryOrganizationExternalId) > 0 {
-				if err = s.repositories.RoleRepository.MergePrimaryRole(tenant, contactId, v.JobTitle, v.PrimaryOrganizationExternalId, dataService.SourceId()); err != nil {
+				if err = s.repositories.RoleRepository.MergeJobRole(tenant, contactId, v.JobTitle, v.PrimaryOrganizationExternalId, dataService.SourceId()); err != nil {
 					failedSync = true
 					logrus.Errorf("failed merge primary role for contact %v, tenant %v :%v", contactId, tenant, err)
 				}
@@ -151,7 +147,7 @@ func (s *syncService) syncContacts(dataService common.DataService, syncDate time
 
 			if len(v.UserExternalOwnerId) > 0 {
 				if err = s.repositories.ContactRepository.SetOwnerRelationship(tenant, contactId, v.UserExternalOwnerId, dataService.SourceId()); err != nil {
-					failedSync = true
+					// Do not mark sync as failed in case owner relationship is not set
 					logrus.Errorf("failed set owner user for contact %v, tenant %v :%v", contactId, tenant, err)
 				}
 			}
