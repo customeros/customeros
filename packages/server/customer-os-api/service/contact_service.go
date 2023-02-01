@@ -277,7 +277,7 @@ func (s *contactService) FindContactByEmail(ctx context.Context, email string) (
 
 	queryResult, err := session.ReadTransaction(func(tx neo4j.Transaction) (interface{}, error) {
 		result, err := tx.Run(`
-			MATCH (:Email {email:$email})<-[:EMAILED_AT]-(c:Contact),
+			MATCH (:Email {email:$email})<-[:EMAIL_ASSOCIATED_WITH]-(c:Contact),
 					(c)-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) 
 			RETURN c`,
 			map[string]interface{}{

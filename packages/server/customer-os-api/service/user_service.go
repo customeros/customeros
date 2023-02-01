@@ -153,7 +153,7 @@ func (s *userService) FindUserByEmail(ctx context.Context, email string) (*entit
 
 	queryResult, err := session.ReadTransaction(func(tx neo4j.Transaction) (interface{}, error) {
 		result, err := tx.Run(`
-			MATCH (:Email {email:$email})<-[:EMAILED_AT]-(u:User),
+			MATCH (:Email {email:$email})<-[:EMAIL_ASSOCIATED_WITH]-(u:User),
 					(u)-[:USER_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) 
 			RETURN u`,
 			map[string]interface{}{

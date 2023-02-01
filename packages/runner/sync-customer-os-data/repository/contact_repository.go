@@ -94,10 +94,10 @@ func (r *contactRepository) MergePrimaryEmail(tenant, contactId, email, external
 	defer session.Close()
 
 	query := "MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) " +
-		" OPTIONAL MATCH (c)-[r:EMAILED_AT]->(e:Email) " +
+		" OPTIONAL MATCH (c)-[r:EMAIL_ASSOCIATED_WITH]->(e:Email) " +
 		" SET r.primary=false " +
 		" WITH c " +
-		" MERGE (c)-[r:EMAILED_AT]->(e:Email {email: $email}) " +
+		" MERGE (c)-[r:EMAIL_ASSOCIATED_WITH]->(e:Email {email: $email}) " +
 		" ON CREATE SET r.primary=true, e.id=randomUUID(), e.createdAt=$createdAt, e.updatedAt=$createdAt, e.source=$source, e.sourceOfTruth=$sourceOfTruth, e.appSource=$appSource, e:%s " +
 		" ON MATCH SET r.primary=true, e.updatedAt=$now "
 
@@ -123,7 +123,7 @@ func (r *contactRepository) MergeAdditionalEmail(tenant, contactId, email, exter
 	defer session.Close()
 
 	query := "MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) " +
-		" MERGE (c)-[r:EMAILED_AT]->(e:Email {email:$email}) " +
+		" MERGE (c)-[r:EMAIL_ASSOCIATED_WITH]->(e:Email {email:$email}) " +
 		" ON CREATE SET r.primary=false, e.id=randomUUID(), e.createdAt=$createdAt, e.updatedAt=$createdAt, e.source=$source, e.sourceOfTruth=$sourceOfTruth, e.appSource=$appSource, e:%s " +
 		" ON MATCH SET r.primary=false, e.updatedAt=$now "
 
@@ -330,7 +330,7 @@ func (r *contactRepository) GetOrCreateContactId(tenant, email, firstName, lastN
 	record, err := session.WriteTransaction(func(tx neo4j.Transaction) (interface{}, error) {
 		queryResult, err := tx.Run(fmt.Sprintf(
 			" MATCH (t:Tenant {name:$tenant}) "+
-				" MERGE (e:Email {email: $email})<-[r:EMAILED_AT]-(c:Contact)-[:CONTACT_BELONGS_TO_TENANT]->(t) "+
+				" MERGE (e:Email {email: $email})<-[r:EMAIL_ASSOCIATED_WITH]-(c:Contact)-[:CONTACT_BELONGS_TO_TENANT]->(t) "+
 				" ON CREATE SET r.primary=true, e.id=randomUUID(), e.createdAt=$now, e.updatedAt=$now, "+
 				"				e.source=$source, e.sourceOfTruth=$sourceOfTruth, e.appSource=$appSource, "+
 				"				c.id=randomUUID(), c.firstName=$firstName, c.lastName=$lastName, "+
