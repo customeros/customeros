@@ -24,6 +24,7 @@ type ContactService interface {
 	PermanentDelete(ctx context.Context, id string) (bool, error)
 	SoftDelete(ctx context.Context, id string) (bool, error)
 	GetContactForRole(ctx context.Context, roleId string) (*entity.ContactEntity, error)
+	GetContactsForOrganization(ctx context.Context, organizationId string, page, limit int, filter *model.Filter, sortBy []*model.SortBy) (*utils.Pagination, error)
 }
 
 type ContactCreateData struct {
@@ -425,6 +426,45 @@ func (s *contactService) GetContactForRole(ctx context.Context, roleId string) (
 		return nil, err
 	}
 	return s.mapDbNodeToContactEntity(*dbNode), nil
+}
+
+func (s *contactService) GetContactsForOrganization(ctx context.Context, organizationId string, page, limit int, filter *model.Filter, sortBy []*model.SortBy) (*utils.Pagination, error) {
+	session := utils.NewNeo4jReadSession(s.getNeo4jDriver())
+	defer session.Close()
+
+	var paginatedResult = utils.Pagination{
+		Limit: limit,
+		Page:  page,
+	}
+	cypherSort, err := buildSort(sortBy, reflect.TypeOf(entity.ContactEntity{}))
+	if err != nil {
+		return nil, err
+	}
+	cypherFilter, err := buildFilter(filter, reflect.TypeOf(entity.ContactEntity{}))
+	if err != nil {
+		return nil, err
+	}
+
+	dbNodesWithTotalCount, err := s.repositories.ContactRepository.GetPaginatedContactsForOrganization(
+		session,
+		common.GetTenantFromContext(ctx),
+		organizationId,
+		paginatedResult.GetSkip(),
+		paginatedResult.GetLimit(),
+		cypherFilter,
+		cypherSort)
+	if err != nil {
+		return nil, err
+	}
+	paginatedResult.SetTotalRows(dbNodesWithTotalCount.Count)
+
+	contacts := entity.ContactEntities{}
+
+	for _, v := range dbNodesWithTotalCount.Nodes {
+		contacts = append(contacts, *s.mapDbNodeToContactEntity(*v))
+	}
+	paginatedResult.SetRows(&contacts)
+	return &paginatedResult, nil
 }
 
 func (s *contactService) mapDbNodeToContactEntity(dbContactNode dbtype.Node) *entity.ContactEntity {

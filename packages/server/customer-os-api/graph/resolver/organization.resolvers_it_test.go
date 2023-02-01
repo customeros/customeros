@@ -356,3 +356,43 @@ func TestQueryResolver_Organization_WithRoles_ById(t *testing.T) {
 	require.Equal(t, true, ceo.Primary)
 	require.Equal(t, contactId2, ceo.Contact.ID)
 }
+
+func TestQueryResolver_Organization_WithContacts_ById(t *testing.T) {
+	defer tearDownTestCase()(t)
+	neo4jt.CreateTenant(driver, tenantName)
+	organizationId := neo4jt.CreateOrganization(driver, tenantName, "organization1")
+	organizationId2 := neo4jt.CreateOrganization(driver, tenantName, "organization2")
+	contactId1 := neo4jt.CreateDefaultContact(driver, tenantName)
+	contactId2 := neo4jt.CreateDefaultContact(driver, tenantName)
+	contactId3 := neo4jt.CreateDefaultContact(driver, tenantName)
+	contactId4 := neo4jt.CreateDefaultContact(driver, tenantName)
+	neo4jt.LinkContactWithOrganization(driver, contactId1, organizationId)
+	neo4jt.LinkContactWithOrganization(driver, contactId2, organizationId)
+	neo4jt.LinkContactWithOrganization(driver, contactId3, organizationId)
+	neo4jt.LinkContactWithOrganization(driver, contactId4, organizationId2)
+
+	require.Equal(t, 4, neo4jt.GetCountOfNodes(driver, "Contact"))
+	require.Equal(t, 2, neo4jt.GetCountOfNodes(driver, "Organization"))
+	require.Equal(t, 4, neo4jt.GetCountOfRelationships(driver, "CONTACT_OF"))
+
+	rawResponse, err := c.RawPost(getQuery("get_organization_with_contacts_by_id"),
+		client.Var("organizationId", organizationId),
+		client.Var("limit", 1),
+		client.Var("page", 1),
+	)
+	assertRawResponseSuccess(t, rawResponse, err)
+
+	var searchedOrganization struct {
+		Organization model.Organization
+	}
+
+	err = decode.Decode(rawResponse.Data.(map[string]any), &searchedOrganization)
+	require.Nil(t, err)
+	require.Equal(t, organizationId, searchedOrganization.Organization.ID)
+	require.Equal(t, 3, searchedOrganization.Organization.Contacts.TotalPages)
+	require.Equal(t, int64(3), searchedOrganization.Organization.Contacts.TotalElements)
+
+	contacts := searchedOrganization.Organization.Contacts.Content
+	require.Equal(t, 1, len(contacts))
+	require.Equal(t, contactId1, contacts[0].ID)
+}

@@ -854,3 +854,44 @@ func TestQueryResolver_Contact_WithActions_FilterByActionType(t *testing.T) {
 	require.Equal(t, "PageViewAction", action1["__typename"].(string))
 	require.Equal(t, actionId1, action1["id"].(string))
 }
+
+func TestQueryResolver_Contact_WithOrganizations_ById(t *testing.T) {
+	defer tearDownTestCase()(t)
+	neo4jt.CreateTenant(driver, tenantName)
+	contactId := neo4jt.CreateDefaultContact(driver, tenantName)
+	contactId2 := neo4jt.CreateDefaultContact(driver, tenantName)
+	organizationId1 := neo4jt.CreateOrganization(driver, tenantName, "organization1")
+	organizationId2 := neo4jt.CreateOrganization(driver, tenantName, "organization2")
+	organizationId3 := neo4jt.CreateOrganization(driver, tenantName, "organization3")
+	organizationId0 := neo4jt.CreateOrganization(driver, tenantName, "organization0")
+	neo4jt.LinkContactWithOrganization(driver, contactId, organizationId1)
+	neo4jt.LinkContactWithOrganization(driver, contactId, organizationId2)
+	neo4jt.LinkContactWithOrganization(driver, contactId, organizationId3)
+	neo4jt.LinkContactWithOrganization(driver, contactId2, organizationId0)
+
+	require.Equal(t, 2, neo4jt.GetCountOfNodes(driver, "Contact"))
+	require.Equal(t, 4, neo4jt.GetCountOfNodes(driver, "Organization"))
+	require.Equal(t, 4, neo4jt.GetCountOfRelationships(driver, "CONTACT_OF"))
+
+	rawResponse, err := c.RawPost(getQuery("get_contact_with_organizations_by_id"),
+		client.Var("contactId", contactId),
+		client.Var("limit", 2),
+		client.Var("page", 1),
+	)
+	assertRawResponseSuccess(t, rawResponse, err)
+
+	var searchedContact struct {
+		Contact model.Contact
+	}
+
+	err = decode.Decode(rawResponse.Data.(map[string]any), &searchedContact)
+	require.Nil(t, err)
+	require.Equal(t, contactId, searchedContact.Contact.ID)
+	require.Equal(t, 2, searchedContact.Contact.Organizations.TotalPages)
+	require.Equal(t, int64(3), searchedContact.Contact.Organizations.TotalElements)
+
+	organizations := searchedContact.Contact.Organizations.Content
+	require.Equal(t, 2, len(organizations))
+	require.Equal(t, organizationId1, organizations[0].ID)
+	require.Equal(t, organizationId2, organizations[1].ID)
+}

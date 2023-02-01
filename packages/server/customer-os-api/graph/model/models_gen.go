@@ -59,9 +59,10 @@ type Contact struct {
 	ContactType *ContactType `json:"contactType"`
 	// `organizationName` and `jobTitle` of the contact if it has been associated with an organization.
 	// **Required.  If no values it returns an empty array.**
-	Roles []*ContactRole `json:"roles"`
+	Roles         []*ContactRole    `json:"roles"`
+	Organizations *OrganizationPage `json:"organizations"`
 	// Identifies any contact groups the contact is associated with.
-	//  **Required.  If no values it returns an empty array.**
+	// **Required.  If no values it returns an empty array.**
 	Groups []*ContactGroup `json:"groups"`
 	// All phone numbers associated with a contact in customerOS.
 	// **Required.  If no values it returns an empty array.**
@@ -603,6 +604,7 @@ type Organization struct {
 	// All addresses associated with an organization in customerOS.
 	// **Required.  If no values it returns an empty array.**
 	Addresses    []*Place       `json:"addresses"`
+	Contacts     *ContactsPage  `json:"contacts"`
 	ContactRoles []*ContactRole `json:"contactRoles"`
 	// Organization notes
 	Notes *NotePage `json:"notes"`

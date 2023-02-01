@@ -18,6 +18,7 @@ type OrganizationService interface {
 	FindOrganizationForRole(ctx context.Context, roleId string) (*entity.OrganizationEntity, error)
 	GetOrganizationById(ctx context.Context, organizationId string) (*entity.OrganizationEntity, error)
 	FindAll(ctx context.Context, page, limit int, filter *model.Filter, sortBy []*model.SortBy) (*utils.Pagination, error)
+	GetOrganizationsForContact(ctx context.Context, contactId string, page, limit int, filter *model.Filter, sortBy []*model.SortBy) (*utils.Pagination, error)
 	PermanentDelete(ctx context.Context, organizationId string) (bool, error)
 }
 
@@ -107,11 +108,11 @@ func (s *organizationService) FindAll(ctx context.Context, page, limit int, filt
 		Limit: limit,
 		Page:  page,
 	}
-	cypherSort, err := buildSort(sortBy, reflect.TypeOf(entity.ContactGroupEntity{}))
+	cypherSort, err := buildSort(sortBy, reflect.TypeOf(entity.OrganizationEntity{}))
 	if err != nil {
 		return nil, err
 	}
-	cypherFilter, err := buildFilter(filter, reflect.TypeOf(entity.ContactGroupEntity{}))
+	cypherFilter, err := buildFilter(filter, reflect.TypeOf(entity.OrganizationEntity{}))
 	if err != nil {
 		return nil, err
 	}
@@ -119,6 +120,45 @@ func (s *organizationService) FindAll(ctx context.Context, page, limit int, filt
 	dbNodesWithTotalCount, err := s.repositories.OrganizationRepository.GetPaginatedOrganizations(
 		session,
 		common.GetContext(ctx).Tenant,
+		paginatedResult.GetSkip(),
+		paginatedResult.GetLimit(),
+		cypherFilter,
+		cypherSort)
+	if err != nil {
+		return nil, err
+	}
+	paginatedResult.SetTotalRows(dbNodesWithTotalCount.Count)
+
+	organizationEntities := entity.OrganizationEntities{}
+
+	for _, v := range dbNodesWithTotalCount.Nodes {
+		organizationEntities = append(organizationEntities, *s.mapDbNodeToOrganizationEntity(*v))
+	}
+	paginatedResult.SetRows(&organizationEntities)
+	return &paginatedResult, nil
+}
+
+func (s *organizationService) GetOrganizationsForContact(ctx context.Context, contactId string, page, limit int, filter *model.Filter, sortBy []*model.SortBy) (*utils.Pagination, error) {
+	session := utils.NewNeo4jReadSession(*s.repositories.Drivers.Neo4jDriver)
+	defer session.Close()
+
+	var paginatedResult = utils.Pagination{
+		Limit: limit,
+		Page:  page,
+	}
+	cypherSort, err := buildSort(sortBy, reflect.TypeOf(entity.OrganizationEntity{}))
+	if err != nil {
+		return nil, err
+	}
+	cypherFilter, err := buildFilter(filter, reflect.TypeOf(entity.OrganizationEntity{}))
+	if err != nil {
+		return nil, err
+	}
+
+	dbNodesWithTotalCount, err := s.repositories.OrganizationRepository.GetPaginatedOrganizationsForContact(
+		session,
+		common.GetTenantFromContext(ctx),
+		contactId,
 		paginatedResult.GetSkip(),
 		paginatedResult.GetLimit(),
 		cypherFilter,

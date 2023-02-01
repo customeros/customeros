@@ -14,11 +14,11 @@ extend type Query {
     """
     Fetch paginated list of contacts
     Possible values for sort:
-     - TITLE
-     - FIRST_NAME
-     - LAST_NAME
-     - LABEL
-     - CREATED_AT
+    - TITLE
+    - FIRST_NAME
+    - LAST_NAME
+    - LABEL
+    - CREATED_AT
     """
     contacts(pagination: Pagination, where: Filter, sort: [SortBy!]): ContactsPage!
     contact_ByEmail(email: String!) :Contact!
@@ -76,9 +76,11 @@ type Contact implements ExtensibleEntity & Node {
     """
     roles: [ContactRole!]! @goField(forceResolver: true)
 
+    organizations(pagination: Pagination, where: Filter, sort: [SortBy!]): OrganizationPage! @goField(forceResolver: true)
+
     """
     Identifies any contact groups the contact is associated with.
-     **Required.  If no values it returns an empty array.**
+    **Required.  If no values it returns an empty array.**
     """
     groups: [ContactGroup!]! @goField(forceResolver: true)
 
@@ -129,7 +131,7 @@ Specifies how many pages of contact information has been returned in the query r
 **A `response` object.**
 """
 type ContactsPage implements Pages {
-    
+
     """
     A contact entity in customerOS.
     **Required.  If no values it returns an empty array.**
@@ -207,7 +209,7 @@ Updates data fields associated with an existing customer record in customerOS.
 **An `update` object.**
 """
 input ContactUpdateInput {
-    
+
     """
     The unique ID associated with the contact in customerOS.
     **Required.**
@@ -242,7 +244,7 @@ The honorific title of an individual.
 **A `response` object.**
 """
 enum PersonTitle {
-    
+
     "For men, regardless of marital status."
     MR
 

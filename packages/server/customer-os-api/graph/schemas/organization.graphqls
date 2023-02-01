@@ -29,6 +29,7 @@ type Organization implements Node {
     **Required.  If no values it returns an empty array.**
     """
     addresses: [Place!]! @goField(forceResolver: true)
+    contacts(pagination: Pagination, where: Filter, sort: [SortBy!]): ContactsPage! @goField(forceResolver: true)
     contactRoles: [ContactRole!]! @goField(forceResolver: true)
     "Organization notes"
     notes(pagination: Pagination): NotePage! @goField(forceResolver: true)
