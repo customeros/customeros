@@ -7,6 +7,7 @@ import (
 	"github.com/neo4j/neo4j-go-driver/v4/neo4j/db"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils"
 )
 
@@ -34,7 +35,6 @@ func CreateDefaultUser(driver *neo4j.Driver, tenant string) string {
 	return CreateUser(driver, tenant, entity.UserEntity{
 		FirstName:     "first",
 		LastName:      "last",
-		Email:         "user@openline.ai",
 		Source:        "openline",
 		SourceOfTruth: "openline",
 	})
@@ -44,7 +44,6 @@ func CreateDefaultUserWithId(driver *neo4j.Driver, tenant, userId string) string
 	return CreateUserWithId(driver, tenant, userId, entity.UserEntity{
 		FirstName:     "first",
 		LastName:      "last",
-		Email:         "user@openline.ai",
 		Source:        "openline",
 		SourceOfTruth: "openline",
 	})
@@ -65,7 +64,6 @@ func CreateUserWithId(driver *neo4j.Driver, tenant, userId string, user entity.U
 				  	id: $userId,
 				  	firstName: $firstName,
 				  	lastName: $lastName,
-				  	email: $email,
 					createdAt :datetime({timezone: 'UTC'}),
 					source: $source,
 					sourceOfTruth: $sourceOfTruth
@@ -75,7 +73,6 @@ func CreateUserWithId(driver *neo4j.Driver, tenant, userId string, user entity.U
 		"userId":        userId,
 		"firstName":     user.FirstName,
 		"lastName":      user.LastName,
-		"email":         user.Email,
 		"source":        user.Source,
 		"sourceOfTruth": user.SourceOfTruth,
 	})
@@ -240,21 +237,31 @@ func createCustomFieldInContact(driver *neo4j.Driver, contactId string, customFi
 	return fieldId.String()
 }
 
-func AddEmailToContact(driver *neo4j.Driver, contactId string, email string, primary bool, label string) string {
+func AddEmailTo(driver *neo4j.Driver, entityType repository.EntityType, entityId string, email string, primary bool, label string) string {
+	query := ""
+
+	switch entityType {
+	case repository.CONTACT:
+		query = `MATCH (entity:Contact {id:$entityId}) `
+	case repository.USER:
+		query = `MATCH (entity:User {id:$entityId}) `
+	case repository.ORGANIZATION:
+		query = `MATCH (entity:Organization {id:$entityId}) `
+	}
+
 	var emailId, _ = uuid.NewRandom()
-	query := `
-			MATCH (c:Contact {id:$contactId})
+	query = query + `
 			MERGE (:Email {
 				  id: $emailId,
 				  email: $email,
 				  label: $label
-				})<-[:EMAILED_AT {primary:$primary}]-(c)`
+				})<-[:EMAILED_AT {primary:$primary}]-(entity)`
 	ExecuteWriteQuery(driver, query, map[string]any{
-		"contactId": contactId,
-		"primary":   primary,
-		"email":     email,
-		"label":     label,
-		"emailId":   emailId.String(),
+		"entityId": entityId,
+		"primary":  primary,
+		"email":    email,
+		"label":    label,
+		"emailId":  emailId.String(),
 	})
 	return emailId.String()
 }

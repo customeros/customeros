@@ -134,7 +134,9 @@ func (s *customerOSService) GetUserByEmail(email string) (*User, error) {
 	defer session.Close()
 
 	dbRecords, err := session.ReadTransaction(func(tx neo4j.Transaction) (any, error) {
-		if queryResult, err := tx.Run(`MATCH (u:User{email:$email}) return u`,
+		if queryResult, err := tx.Run(`
+			MATCH (:Email {email:$email})<-[:EMAILED_AT]-(u:User)
+			RETURN u`,
 			map[string]any{
 				"email": email,
 			}); err != nil {

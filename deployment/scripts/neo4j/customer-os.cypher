@@ -34,26 +34,27 @@ MATCH (t:Tenant {name:"openline"})
   ON CREATE SET ot.id=randomUUID(), ot.createdAt=datetime({timezone: 'UTC'});
 
 MATCH (t:Tenant {name:"openline"})
-    MERGE (u:User {id:"dev@openline.ai"})-[:USER_BELONGS_TO_TENANT]->(t)
+    MERGE (u:User {id:"development@openline.ai"})-[:USER_BELONGS_TO_TENANT]->(t)
     ON CREATE SET
-    		u.firstName ="Dev",
+            u.id=randomUUID(),
+    		u.firstName ="Development",
             u.lastName="User",
-            u.email="dev@openline.ai",
     		u.createdAt=datetime({timezone: 'UTC'}),
     		u.source="openline",
     		u.sourceOfTruth="openline",
     		u.appSource="manual";
 
-MATCH (t:Tenant {name:"openline"})
-    MERGE (u:User {id:"development@openline.ai"})-[:USER_BELONGS_TO_TENANT]->(t)
-    ON CREATE SET
-    		u.firstName ="Development",
-            u.lastName="User",
-            u.email="development@openline.ai",
-    		u.createdAt=datetime({timezone: 'UTC'}),
-    		u.source="openline",
-    		u.sourceOfTruth="openline",
-    		u.appSource="manual";
+MATCH (u:User {id:"development@openline.ai"})
+    MERGE (:Email {
+                      id: randomUUID(),
+                      email: "development@openline.ai",
+                      label: "WORK",
+                      u.source="openline",
+                      u.sourceOfTruth="openline",
+                      u.appSource="manual",
+                      u.createdAt=datetime({timezone: 'UTC'}),
+                      u.updatedAt=datetime({timezone: 'UTC'})
+                    })<-[:EMAILED_AT {primary:true}]-(u);
 
 MATCH (t:Tenant {name:"openline"})
     MERGE (c:Contact {id:"echotest"})-[:CONTACT_BELONGS_TO_TENANT]->(t)

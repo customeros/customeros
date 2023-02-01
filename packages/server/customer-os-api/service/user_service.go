@@ -13,15 +13,21 @@ import (
 )
 
 type UserService interface {
-	Create(ctx context.Context, user *entity.UserEntity) (*entity.UserEntity, error)
+	Create(ctx context.Context, userCreateData *UserCreateData) (*entity.UserEntity, error)
 	Update(ctx context.Context, user *entity.UserEntity) (*entity.UserEntity, error)
 	FindAll(ctx context.Context, page, limit int, filter *model.Filter, sortBy []*model.SortBy) (*utils.Pagination, error)
 	FindUserById(ctx context.Context, userId string) (*entity.UserEntity, error)
+	FindUserByEmail(ctx context.Context, email string) (*entity.UserEntity, error)
 
 	FindContactOwner(ctx context.Context, contactId string) (*entity.UserEntity, error)
 	FindNoteCreator(ctx context.Context, noteId string) (*entity.UserEntity, error)
 
 	GetAllForConversation(ctx context.Context, conversationId string) (*entity.UserEntities, error)
+}
+
+type UserCreateData struct {
+	UserEntity  *entity.UserEntity
+	EmailEntity *entity.EmailEntity
 }
 
 type userService struct {
@@ -38,15 +44,15 @@ func (s *userService) getNeo4jDriver() neo4j.Driver {
 	return *s.repositories.Drivers.Neo4jDriver
 }
 
-func (s *userService) Create(ctx context.Context, entity *entity.UserEntity) (*entity.UserEntity, error) {
+func (s *userService) Create(ctx context.Context, userCreateData *UserCreateData) (*entity.UserEntity, error) {
 	session := utils.NewNeo4jWriteSession(s.getNeo4jDriver())
 	defer session.Close()
 
-	userDbNode, err := s.repositories.UserRepository.Create(session, common.GetContext(ctx).Tenant, *entity)
+	userDbNode, err := session.WriteTransaction(s.createUserInDBTxWork(ctx, userCreateData))
 	if err != nil {
 		return nil, err
 	}
-	return s.mapDbNodeToUserEntity(*userDbNode), nil
+	return s.mapDbNodeToUserEntity(*userDbNode.(*dbtype.Node)), nil
 }
 
 func (s *userService) Update(ctx context.Context, entity *entity.UserEntity) (*entity.UserEntity, error) {
@@ -141,6 +147,32 @@ func (s *userService) FindUserById(ctx context.Context, userId string) (*entity.
 	}
 }
 
+func (s *userService) FindUserByEmail(ctx context.Context, email string) (*entity.UserEntity, error) {
+	session := utils.NewNeo4jReadSession(s.getNeo4jDriver())
+	defer session.Close()
+
+	queryResult, err := session.ReadTransaction(func(tx neo4j.Transaction) (interface{}, error) {
+		result, err := tx.Run(`
+			MATCH (:Email {email:$email})<-[:EMAILED_AT]-(u:User),
+					(u)-[:USER_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) 
+			RETURN u`,
+			map[string]interface{}{
+				"email":  email,
+				"tenant": common.GetContext(ctx).Tenant,
+			})
+		record, err := result.Single()
+		if err != nil {
+			return nil, err
+		}
+		return record.Values[0], nil
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return s.mapDbNodeToUserEntity(queryResult.(dbtype.Node)), nil
+}
+
 func (s *userService) GetAllForConversation(ctx context.Context, conversationId string) (*entity.UserEntities, error) {
 	session := utils.NewNeo4jReadSession(s.getNeo4jDriver())
 	defer session.Close()
@@ -157,13 +189,31 @@ func (s *userService) GetAllForConversation(ctx context.Context, conversationId 
 	return &userEntities, nil
 }
 
+func (s *userService) createUserInDBTxWork(ctx context.Context, newUser *UserCreateData) func(tx neo4j.Transaction) (any, error) {
+	return func(tx neo4j.Transaction) (any, error) {
+		tenant := common.GetContext(ctx).Tenant
+		userDbNode, err := s.repositories.UserRepository.Create(tx, tenant, *newUser.UserEntity)
+		if err != nil {
+			return nil, err
+		}
+		var userId = utils.GetPropsFromNode(*userDbNode)["id"].(string)
+
+		if newUser.EmailEntity != nil {
+			_, _, err := s.repositories.EmailRepository.MergeEmailToInTx(tx, tenant, repository.USER, userId, *newUser.EmailEntity)
+			if err != nil {
+				return nil, err
+			}
+		}
+		return userDbNode, nil
+	}
+}
+
 func (s *userService) mapDbNodeToUserEntity(dbNode dbtype.Node) *entity.UserEntity {
 	props := utils.GetPropsFromNode(dbNode)
 	return &entity.UserEntity{
 		Id:            utils.GetStringPropOrEmpty(props, "id"),
 		FirstName:     utils.GetStringPropOrEmpty(props, "firstName"),
 		LastName:      utils.GetStringPropOrEmpty(props, "lastName"),
-		Email:         utils.GetStringPropOrEmpty(props, "email"),
 		CreatedAt:     utils.GetTimePropOrNow(props, "createdAt"),
 		Source:        entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
 		SourceOfTruth: entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),

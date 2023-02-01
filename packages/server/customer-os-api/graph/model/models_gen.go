@@ -66,7 +66,7 @@ type Contact struct {
 	// All phone numbers associated with a contact in customerOS.
 	// **Required.  If no values it returns an empty array.**
 	PhoneNumbers []*PhoneNumber `json:"phoneNumbers"`
-	// All email addresses assocaited with a contact in customerOS.
+	// All email addresses associated with a contact in customerOS.
 	// **Required.  If no values it returns an empty array.**
 	Emails []*Email `json:"emails"`
 	// All addresses associated with a contact in customerOS.
@@ -780,9 +780,9 @@ type User struct {
 	// The last name of the customerOS user.
 	// **Required**
 	LastName string `json:"lastName"`
-	// The email address of the customerOS user.
-	// **Required**
-	Email string `json:"email"`
+	// All email addresses associated with a user in customerOS.
+	// **Required.  If no values it returns an empty array.**
+	Emails []*Email `json:"emails"`
 	// Timestamp of user creation.
 	// **Required**
 	CreatedAt     time.Time         `json:"createdAt"`
@@ -801,7 +801,7 @@ type UserInput struct {
 	LastName string `json:"lastName"`
 	// The email address of the customerOS user.
 	// **Required**
-	Email string `json:"email"`
+	Email *EmailInput `json:"email"`
 }
 
 // Specifies how many pages of `User` information has been returned in the query response.
@@ -836,9 +836,6 @@ type UserUpdateInput struct {
 	// The last name of the customerOS user.
 	// **Required**
 	LastName string `json:"lastName"`
-	// The email address of the customerOS user.
-	// **Required**
-	Email string `json:"email"`
 }
 
 type ActionType string
