@@ -53,7 +53,7 @@ func TestMutationResolver_EmailMergeToContact(t *testing.T) {
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Email"), "Incorrect number of Email nodes in Neo4j")
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Email_"+tenantName), "Incorrect number of Email_%s nodes in Neo4j", tenantName)
 	require.Equal(t, 3, neo4jt.GetTotalCountOfNodes(driver), "Incorrect total number of nodes in Neo4j")
-	require.Equal(t, 1, neo4jt.GetCountOfRelationships(driver, "EMAIL_ASSOCIATED_WITH"), "Incorrect number of EMAIL_ASSOCIATED_WITH relationships in Neo4j")
+	require.Equal(t, 1, neo4jt.GetCountOfRelationships(driver, "HAS"), "Incorrect number of HAS relationships in Neo4j")
 
 	// Check the labels on the nodes in the Neo4j database
 	assertNeo4jLabels(t, driver, []string{"Tenant", "Contact", "Email", "Email_" + tenantName})
@@ -96,7 +96,7 @@ func TestMutationResolver_EmailUpdateInContact(t *testing.T) {
 	}
 
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Email"), "Incorrect number of Email nodes in Neo4j")
-	require.Equal(t, 1, neo4jt.GetCountOfRelationships(driver, "EMAIL_ASSOCIATED_WITH"), "Incorrect number of EMAIL_ASSOCIATED_WITH relationships in Neo4j")
+	require.Equal(t, 1, neo4jt.GetCountOfRelationships(driver, "HAS"), "Incorrect number of HAS relationships in Neo4j")
 }
 
 func TestMutationResolver_EmailMergeToUser(t *testing.T) {
@@ -142,7 +142,7 @@ func TestMutationResolver_EmailMergeToUser(t *testing.T) {
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Email"), "Incorrect number of Email nodes in Neo4j")
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Email_"+tenantName), "Incorrect number of Email_%s nodes in Neo4j", tenantName)
 	require.Equal(t, 3, neo4jt.GetTotalCountOfNodes(driver), "Incorrect total number of nodes in Neo4j")
-	require.Equal(t, 1, neo4jt.GetCountOfRelationships(driver, "EMAIL_ASSOCIATED_WITH"), "Incorrect number of EMAIL_ASSOCIATED_WITH relationships in Neo4j")
+	require.Equal(t, 1, neo4jt.GetCountOfRelationships(driver, "HAS"), "Incorrect number of HAS relationships in Neo4j")
 
 	// Check the labels on the nodes in the Neo4j database
 	assertNeo4jLabels(t, driver, []string{"Tenant", "User", "Email", "Email_" + tenantName})
@@ -185,5 +185,5 @@ func TestMutationResolver_EmailUpdateInUser(t *testing.T) {
 	}
 
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Email"), "Incorrect number of Email nodes in Neo4j")
-	require.Equal(t, 1, neo4jt.GetCountOfRelationships(driver, "EMAIL_ASSOCIATED_WITH"), "Incorrect number of EMAIL_ASSOCIATED_WITH relationships in Neo4j")
+	require.Equal(t, 1, neo4jt.GetCountOfRelationships(driver, "HAS"), "Incorrect number of HAS relationships in Neo4j")
 }

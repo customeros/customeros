@@ -29,7 +29,7 @@ func (u *userRepository) FindUserByEmail(email string) (string, string, error) {
 
 	records, err := session.ReadTransaction(func(tx neo4j.Transaction) (any, error) {
 		queryResult, err := tx.Run(`
-			MATCH (e:Email {email:$email})<-[:EMAIL_ASSOCIATED_WITH]-(u:User)-[:USER_BELONGS_TO_TENANT]->(t:Tenant)
+			MATCH (e:Email {email:$email})<-[:HAS]-(u:User)-[:USER_BELONGS_TO_TENANT]->(t:Tenant)
 			RETURN t.name, u.id`,
 			map[string]interface{}{
 				"email": email,

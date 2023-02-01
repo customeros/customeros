@@ -47,7 +47,7 @@ func (r *emailRepository) MergeEmailToInTx(tx neo4j.Transaction, tenant string, 
 	}
 
 	query = query +
-		" MERGE (entity)-[r:EMAIL_ASSOCIATED_WITH]->(e:Email {email: $email}) " +
+		" MERGE (entity)-[r:HAS]->(e:Email {email: $email}) " +
 		" ON CREATE SET e.label=$label, " +
 		"				r.primary=$primary, " +
 		"				e.id=randomUUID(), " +
@@ -90,7 +90,7 @@ func (r *emailRepository) UpdateEmailByInTx(tx neo4j.Transaction, tenant string,
 		query = `MATCH (entity:Organization {id:$entityId})-[:ORGANIZATION_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) `
 	}
 
-	queryResult, err := tx.Run(query+`, (c)-[r:EMAIL_ASSOCIATED_WITH]->(e:Email {id:$emailId}) 
+	queryResult, err := tx.Run(query+`, (c)-[r:HAS]->(e:Email {id:$emailId}) 
 			SET e.email=$email,
 				e.label=$label,
 				r.primary=$primary,
@@ -123,7 +123,7 @@ func (r *emailRepository) FindAllFor(session neo4j.Session, tenant string, entit
 			query = `MATCH (entity:Organization {id:$entityId})-[:ORGANIZATION_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) `
 		}
 
-		result, err := tx.Run(query+`, (entity)-[r:EMAIL_ASSOCIATED_WITH]->(e:Email) 				
+		result, err := tx.Run(query+`, (entity)-[r:HAS]->(e:Email) 				
 				RETURN e, r`,
 			map[string]interface{}{
 				"entityId": entityId,
@@ -149,7 +149,7 @@ func (r *emailRepository) SetOtherEmailsNonPrimaryInTx(tx neo4j.Transaction, ten
 		query = `MATCH (entity:Organization {id:$entityId})-[:ORGANIZATION_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) `
 	}
 
-	_, err := tx.Run(query+`, (c)-[r:EMAIL_ASSOCIATED_WITH]->(e:Email)
+	_, err := tx.Run(query+`, (c)-[r:HAS]->(e:Email)
 			WHERE e.email <> $email
             SET r.primary=false, 
 				e.updatedAt=$now`,

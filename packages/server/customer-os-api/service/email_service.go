@@ -117,7 +117,7 @@ func (s *emailService) Delete(ctx context.Context, contactId string, email strin
 	queryResult, err := session.WriteTransaction(func(tx neo4j.Transaction) (interface{}, error) {
 		_, err := tx.Run(`
 			MATCH (c:Contact {id:$id})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}),
-                  (c:Contact {id:$id})-[:EMAIL_ASSOCIATED_WITH]->(p:Email {email:$email})
+                  (c:Contact {id:$id})-[:HAS]->(p:Email {email:$email})
             DETACH DELETE p
 			`,
 			map[string]interface{}{
@@ -142,7 +142,7 @@ func (s *emailService) DeleteById(ctx context.Context, contactId string, emailId
 	queryResult, err := session.WriteTransaction(func(tx neo4j.Transaction) (interface{}, error) {
 		_, err := tx.Run(`
 			MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}),
-                  (c:Contact {id:$contactId})-[:EMAIL_ASSOCIATED_WITH]->(p:Email {id:$emailId})
+                  (c:Contact {id:$contactId})-[:HAS]->(p:Email {id:$emailId})
             DETACH DELETE p
 			`,
 			map[string]interface{}{

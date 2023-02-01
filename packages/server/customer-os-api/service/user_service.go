@@ -151,26 +151,11 @@ func (s *userService) FindUserByEmail(ctx context.Context, email string) (*entit
 	session := utils.NewNeo4jReadSession(s.getNeo4jDriver())
 	defer session.Close()
 
-	queryResult, err := session.ReadTransaction(func(tx neo4j.Transaction) (interface{}, error) {
-		result, err := tx.Run(`
-			MATCH (:Email {email:$email})<-[:EMAIL_ASSOCIATED_WITH]-(u:User),
-					(u)-[:USER_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) 
-			RETURN u`,
-			map[string]interface{}{
-				"email":  email,
-				"tenant": common.GetContext(ctx).Tenant,
-			})
-		record, err := result.Single()
-		if err != nil {
-			return nil, err
-		}
-		return record.Values[0], nil
-	})
+	userDbNode, err := s.repositories.UserRepository.FindUserByEmail(session, common.GetContext(ctx).Tenant, email)
 	if err != nil {
 		return nil, err
 	}
-
-	return s.mapDbNodeToUserEntity(queryResult.(dbtype.Node)), nil
+	return s.mapDbNodeToUserEntity(*userDbNode), nil
 }
 
 func (s *userService) GetAllForConversation(ctx context.Context, conversationId string) (*entity.UserEntities, error) {

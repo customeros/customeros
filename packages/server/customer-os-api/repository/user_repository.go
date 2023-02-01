@@ -12,6 +12,7 @@ import (
 type UserRepository interface {
 	Create(tx neo4j.Transaction, tenant string, entity entity.UserEntity) (*dbtype.Node, error)
 	Update(session neo4j.Session, tenant string, entity entity.UserEntity) (*dbtype.Node, error)
+	FindUserByEmail(session neo4j.Session, tenant string, email string) (*dbtype.Node, error)
 	FindOwnerForContact(tx neo4j.Transaction, tenant, contactId string) (*dbtype.Node, error)
 	FindCreatorForNote(tx neo4j.Transaction, tenant, noteId string) (*dbtype.Node, error)
 	GetPaginatedUsers(session neo4j.Session, tenant string, skip, limit int, filter *utils.CypherFilter, sort *utils.CypherSort) (*utils.DbNodesWithTotalCount, error)
@@ -67,6 +68,24 @@ func (r *userRepository) Update(session neo4j.Session, tenant string, entity ent
 				"firstName":     entity.FirstName,
 				"lastName":      entity.LastName,
 				"sourceOfTruth": entity.SourceOfTruth,
+			})
+		return utils.ExtractSingleRecordFirstValueAsNode(queryResult, err)
+	})
+	if err != nil {
+		return nil, err
+	}
+	return result.(*dbtype.Node), nil
+}
+
+func (r *userRepository) FindUserByEmail(session neo4j.Session, tenant string, email string) (*dbtype.Node, error) {
+	result, err := session.WriteTransaction(func(tx neo4j.Transaction) (interface{}, error) {
+		queryResult, err := tx.Run(`
+			MATCH (:Email {email:$email})<-[:HAS]-(u:User),
+			(u)-[:USER_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) 
+			RETURN u`,
+			map[string]any{
+				"tenant": tenant,
+				"email":  email,
 			})
 		return utils.ExtractSingleRecordFirstValueAsNode(queryResult, err)
 	})

@@ -255,7 +255,7 @@ func AddEmailTo(driver *neo4j.Driver, entityType repository.EntityType, entityId
 				  id: $emailId,
 				  email: $email,
 				  label: $label
-				})<-[:EMAIL_ASSOCIATED_WITH {primary:$primary}]-(entity)`
+				})<-[:HAS {primary:$primary}]-(entity)`
 	ExecuteWriteQuery(driver, query, map[string]any{
 		"entityId": entityId,
 		"primary":  primary,

@@ -53,7 +53,7 @@ MATCH (u:User {id:"development@openline.ai"})
                       u.appSource="manual",
                       u.createdAt=datetime({timezone: 'UTC'}),
                       u.updatedAt=datetime({timezone: 'UTC'})
-                    })<-[:EMAIL_ASSOCIATED_WITH {primary:true}]-(u);
+                    })<-[:HAS {primary:true}]-(u);
 
 MATCH (t:Tenant {name:"openline"})
     MERGE (c:Contact {id:"echotest"})-[:CONTACT_BELONGS_TO_TENANT]->(t)
@@ -66,7 +66,7 @@ MATCH (t:Tenant {name:"openline"})
             c.appSource="manual";
 
 MATCH (c:Contact {id:"echotest"})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:"openline"})
-			MERGE (c)-[r:EMAIL_ASSOCIATED_WITH]->(e:Email {email: "echo@oasis.openline.ai"})
+			MERGE (c)-[r:HAS]->(e:Email {email: "echo@oasis.openline.ai"})
             ON CREATE SET e.label="MAIN", r.primary=true, e.id=randomUUID(), e.createdAt=datetime({timezone: 'UTC'}),
                 e.source="openline", e.sourceOfTruth="openline", e.appSource="manual"
             ON MATCH SET e.label="MAIN", r.primary=true;
@@ -80,7 +80,7 @@ MATCH (t:Tenant {name:"openline"})<-[:CONTACT_TYPE_BELONGS_TO_TENANT]-(ct:Contac
 MATCH (t:Tenant {name:"openline"})<-[:ORGANIZATION_TYPE_BELONGS_TO_TENANT]-(ot:OrganizationType) SET ot:OrganizationType_openline;
 MATCH (t:Tenant {name:"openline"})<-[:USER_BELONGS_TO_TENANT]-(u:User) SET u:User_openline;
 MATCH (t:Tenant {name:"openline"})<-[:CONTACT_BELONGS_TO_TENANT]-(c:Contact) SET c:Contact_openline;
-MATCH (c:Contact_openline)-[:EMAIL_ASSOCIATED_WITH]->(e:Email) SET e:Email_openline;
+MATCH (c:Contact_openline)-[:HAS]->(e:Email) SET e:Email_openline;
 
 CREATE CONSTRAINT tenant_name_unique IF NOT EXISTS ON (t:Tenant) ASSERT t.name IS UNIQUE;
 CREATE INDEX contact_id_idx IF NOT EXISTS FOR (n:Contact) ON (n.id);
