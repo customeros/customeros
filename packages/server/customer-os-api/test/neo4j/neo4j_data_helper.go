@@ -582,6 +582,16 @@ func NoteCreatedByUser(driver *neo4j.Driver, noteId, userId string) {
 	})
 }
 
+func LinkContactWithOrganization(driver *neo4j.Driver, contactId, organizationId string) {
+	query := `MATCH (c:Contact {id:$contactId}),
+			(org:Organization {id:$organizationId})
+			MERGE (c)-[:CONTACT_OF]->(org)`
+	ExecuteWriteQuery(driver, query, map[string]any{
+		"organizationId": organizationId,
+		"contactId":      contactId,
+	})
+}
+
 func GetCountOfNodes(driver *neo4j.Driver, nodeLabel string) int {
 	query := fmt.Sprintf(`MATCH (n:%s) RETURN count(n)`, nodeLabel)
 	result := ExecuteReadQueryWithSingleReturn(driver, query, map[string]any{})

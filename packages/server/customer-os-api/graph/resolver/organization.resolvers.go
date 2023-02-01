@@ -6,7 +6,6 @@ package resolver
 
 import (
 	"context"
-
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/generated"
@@ -78,6 +77,23 @@ func (r *organizationResolver) Addresses(ctx context.Context, obj *model.Organiz
 		return nil, err
 	}
 	return mapper.MapEntitiesToPlaces(addressEntities), err
+}
+
+// Contacts is the resolver for the contacts field.
+func (r *organizationResolver) Contacts(ctx context.Context, obj *model.Organization, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) (*model.ContactsPage, error) {
+	if pagination == nil {
+		pagination = &model.Pagination{Page: 0, Limit: 0}
+	}
+	paginatedResult, err := r.Services.ContactService.GetContactsForOrganization(ctx, obj.ID, pagination.Page, pagination.Limit, where, sort)
+	if err != nil {
+		graphql.AddErrorf(ctx, "Could not fetch contacts for organization %s", obj.ID)
+		return nil, err
+	}
+	return &model.ContactsPage{
+		Content:       mapper.MapEntitiesToContacts(paginatedResult.Rows.(*entity.ContactEntities)),
+		TotalPages:    paginatedResult.TotalPages,
+		TotalElements: paginatedResult.TotalRows,
+	}, err
 }
 
 // ContactRoles is the resolver for the contactRoles field.

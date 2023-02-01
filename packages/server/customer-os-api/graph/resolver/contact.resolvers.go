@@ -40,6 +40,23 @@ func (r *contactResolver) Roles(ctx context.Context, obj *model.Contact) ([]*mod
 	return mapper.MapEntitiesToContactRoles(contactRoleEntities), err
 }
 
+// Organizations is the resolver for the organizations field.
+func (r *contactResolver) Organizations(ctx context.Context, obj *model.Contact, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) (*model.OrganizationPage, error) {
+	if pagination == nil {
+		pagination = &model.Pagination{Page: 0, Limit: 0}
+	}
+	paginatedResult, err := r.Services.OrganizationService.GetOrganizationsForContact(ctx, obj.ID, pagination.Page, pagination.Limit, where, sort)
+	if err != nil {
+		graphql.AddErrorf(ctx, "Could not fetch organizations for contact %s", obj.ID)
+		return nil, err
+	}
+	return &model.OrganizationPage{
+		Content:       mapper.MapEntitiesToOrganizations(paginatedResult.Rows.(*entity.OrganizationEntities)),
+		TotalPages:    paginatedResult.TotalPages,
+		TotalElements: paginatedResult.TotalRows,
+	}, err
+}
+
 // Groups is the resolver for the groups field.
 func (r *contactResolver) Groups(ctx context.Context, obj *model.Contact) ([]*model.ContactGroup, error) {
 	contactGroupEntities, err := r.Services.ContactGroupService.FindAllForContact(ctx, obj)

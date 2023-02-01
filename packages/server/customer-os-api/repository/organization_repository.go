@@ -16,6 +16,7 @@ type OrganizationRepository interface {
 	FindOrganizationForRole(session neo4j.Session, tenant, roleId string) (*dbtype.Node, error)
 	GetOrganizationById(session neo4j.Session, tenant, organizationId string) (*dbtype.Node, error)
 	GetPaginatedOrganizations(session neo4j.Session, tenant string, skip, limit int, filter *utils.CypherFilter, sorting *utils.CypherSort) (*utils.DbNodesWithTotalCount, error)
+	GetPaginatedOrganizationsForContact(session neo4j.Session, tenant, contactId string, skip, limit int, filter *utils.CypherFilter, sorting *utils.CypherSort) (*utils.DbNodesWithTotalCount, error)
 	Delete(session neo4j.Session, tenant, organizationId string) error
 	LinkWithOrganizationTypeInTx(tx neo4j.Transaction, tenant, organizationId, organizationTypeId string) error
 	UnlinkFromOrganizationTypesInTx(tx neo4j.Transaction, tenant, organizationId string) error
@@ -183,6 +184,54 @@ func (r *organizationRepository) GetPaginatedOrganizations(session neo4j.Session
 
 		queryResult, err = tx.Run(fmt.Sprintf(
 			" MATCH (:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization) "+
+				" %s "+
+				" RETURN org "+
+				" %s "+
+				" SKIP $skip LIMIT $limit", filterCypherStr, sorting.SortingCypherFragment("org")),
+			params)
+		return queryResult.Collect()
+	})
+	if err != nil {
+		return nil, err
+	}
+	for _, v := range dbRecords.([]*neo4j.Record) {
+		dbNodesWithTotalCount.Nodes = append(dbNodesWithTotalCount.Nodes, utils.NodePtr(v.Values[0].(neo4j.Node)))
+	}
+	return dbNodesWithTotalCount, nil
+}
+
+func (r *organizationRepository) GetPaginatedOrganizationsForContact(session neo4j.Session, tenant, contactId string, skip, limit int, filter *utils.CypherFilter, sorting *utils.CypherSort) (*utils.DbNodesWithTotalCount, error) {
+	dbNodesWithTotalCount := new(utils.DbNodesWithTotalCount)
+
+	dbRecords, err := session.ReadTransaction(func(tx neo4j.Transaction) (any, error) {
+		filterCypherStr, filterParams := filter.CypherFilterFragment("org")
+		countParams := map[string]any{
+			"tenant":    tenant,
+			"contactId": contactId,
+		}
+		utils.MergeMapToMap(filterParams, countParams)
+
+		queryResult, err := tx.Run(fmt.Sprintf(
+			" MATCH (:Tenant {name:$tenant})<-[:CONTACT_BELONGS_TO_TENANT]-(c:Contact {id:$contactId})--(org:Organization) "+
+				" %s "+
+				" RETURN count(org) as count", filterCypherStr),
+			countParams)
+		if err != nil {
+			return nil, err
+		}
+		count, _ := queryResult.Single()
+		dbNodesWithTotalCount.Count = count.Values[0].(int64)
+
+		params := map[string]any{
+			"tenant":    tenant,
+			"contactId": contactId,
+			"skip":      skip,
+			"limit":     limit,
+		}
+		utils.MergeMapToMap(filterParams, params)
+
+		queryResult, err = tx.Run(fmt.Sprintf(
+			" MATCH (:Tenant {name:$tenant})<-[:CONTACT_BELONGS_TO_TENANT]-(c:Contact {id:$contactId})--(org:Organization) "+
 				" %s "+
 				" RETURN org "+
 				" %s "+

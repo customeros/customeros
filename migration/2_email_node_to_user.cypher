@@ -20,7 +20,7 @@ e.appSource=u.appSource,  e.createdAt=u.createdAt, e.updatedAt=u.updatedAt, e:Em
 match (u:User)-[r:HAS]->(e:Email) return u, e, r
 
 #Remove relation if wrong
-match (u:User)-[r:HAS]->(e:Email) detach delete e,r;
+#match (u:User)-[r:HAS]->(e:Email) detach delete e,r;
 
 #Remove email property from user
 #match (u:User)-[r:HAS]->(e:Email) REMOVE u.email RETURN u
