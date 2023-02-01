@@ -476,7 +476,7 @@ func (s *syncService) syncEmailMessages(dataService common.DataService, syncDate
 					conversationEvent.SenderType = entity.USER
 					userId, err := s.repositories.UserRepository.GetUserIdForExternalId(tenant, message.UserExternalId, message.ExternalSystem)
 					if err != nil {
-						failedSync = true
+						// Do not mark sync as failed if user is not found. There will
 						logrus.Errorf("failed to get user id for external id %v for tenant %v :%v", message.UserExternalId, tenant, err)
 					}
 					conversationEvent.SenderId = userId
