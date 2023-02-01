@@ -380,3 +380,5 @@ func (r *contactRepository) LinkContactWithOrganization(tenant, contactId, organ
 	})
 	return err
 }
+
+// TODO implement removing outdated linked companies
