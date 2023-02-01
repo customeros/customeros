@@ -4,6 +4,7 @@ import (
 	"github.com/99designs/gqlgen/client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils/decode"
 	"github.com/stretchr/testify/require"
@@ -18,8 +19,8 @@ func TestQueryResolver_ContactByEmail(t *testing.T) {
 	neo4jt.CreateTenant(driver, otherTenant)
 	contactId1 := neo4jt.CreateDefaultContact(driver, tenantName)
 	contactId2 := neo4jt.CreateDefaultContact(driver, otherTenant)
-	neo4jt.AddEmailToContact(driver, contactId1, "test@test.com", true, "MAIN")
-	neo4jt.AddEmailToContact(driver, contactId2, "test@test.com", true, "MAIN")
+	neo4jt.AddEmailTo(driver, repository.CONTACT, contactId1, "test@test.com", true, "MAIN")
+	neo4jt.AddEmailTo(driver, repository.CONTACT, contactId2, "test@test.com", true, "MAIN")
 
 	rawResponse, err := c.RawPost(getQuery("get_contact_by_email"), client.Var("email", "test@test.com"))
 	assertRawResponseSuccess(t, rawResponse, err)

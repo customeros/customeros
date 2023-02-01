@@ -3,12 +3,10 @@ mutation UpdateUser($userId: ID!) {
     id: $userId
     firstName: "firstUpdated"
     lastName: "lastUpdated"
-    email: "userUpdated@openline.ai"
   }) {
     id
     firstName
     lastName
-    email
     source
   }
 }

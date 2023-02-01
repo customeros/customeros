@@ -6,7 +6,10 @@ query {
       id
       firstName
       lastName
-      email
+      emails {
+        id
+        email
+      }
       createdAt
     }
   }

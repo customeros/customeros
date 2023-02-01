@@ -10,8 +10,9 @@ import (
 )
 
 type UserRepository interface {
-	Create(session neo4j.Session, tenant string, entity entity.UserEntity) (*dbtype.Node, error)
+	Create(tx neo4j.Transaction, tenant string, entity entity.UserEntity) (*dbtype.Node, error)
 	Update(session neo4j.Session, tenant string, entity entity.UserEntity) (*dbtype.Node, error)
+	FindUserByEmail(session neo4j.Session, tenant string, email string) (*dbtype.Node, error)
 	FindOwnerForContact(tx neo4j.Transaction, tenant, contactId string) (*dbtype.Node, error)
 	FindCreatorForNote(tx neo4j.Transaction, tenant, noteId string) (*dbtype.Node, error)
 	GetPaginatedUsers(session neo4j.Session, tenant string, skip, limit int, filter *utils.CypherFilter, sort *utils.CypherSort) (*utils.DbNodesWithTotalCount, error)
@@ -29,41 +30,32 @@ func NewUserRepository(driver *neo4j.Driver) UserRepository {
 	}
 }
 
-func (r *userRepository) Create(session neo4j.Session, tenant string, entity entity.UserEntity) (*dbtype.Node, error) {
+func (r *userRepository) Create(tx neo4j.Transaction, tenant string, entity entity.UserEntity) (*dbtype.Node, error) {
 	query := "MATCH (t:Tenant {name:$tenant}) " +
 		" MERGE (u:User {id: randomUUID()})-[:USER_BELONGS_TO_TENANT]->(t) " +
 		" ON CREATE SET u.firstName=$firstName, " +
 		"				u.lastName=$lastName, " +
-		"				u.email=$email, " +
 		"				u.createdAt=datetime({timezone: 'UTC'}), " +
 		" 				u.source=$source, " +
 		"				u.sourceOfTruth=$sourceOfTruth, " +
 		"				u:%s" +
 		" RETURN u"
 
-	result, err := session.WriteTransaction(func(tx neo4j.Transaction) (interface{}, error) {
-		queryResult, err := tx.Run(fmt.Sprintf(query, "User_"+tenant),
-			map[string]any{
-				"tenant":        tenant,
-				"firstName":     entity.FirstName,
-				"lastName":      entity.LastName,
-				"email":         entity.Email,
-				"source":        entity.Source,
-				"sourceOfTruth": entity.SourceOfTruth,
-			})
-		return utils.ExtractSingleRecordFirstValueAsNode(queryResult, err)
-	})
-	if err != nil {
-		return nil, err
-	}
-	return result.(*dbtype.Node), nil
+	queryResult, err := tx.Run(fmt.Sprintf(query, "User_"+tenant),
+		map[string]any{
+			"tenant":        tenant,
+			"firstName":     entity.FirstName,
+			"lastName":      entity.LastName,
+			"source":        entity.Source,
+			"sourceOfTruth": entity.SourceOfTruth,
+		})
+	return utils.ExtractSingleRecordFirstValueAsNode(queryResult, err)
 }
 
 func (r *userRepository) Update(session neo4j.Session, tenant string, entity entity.UserEntity) (*dbtype.Node, error) {
 	query := "MATCH (u:User {id:$userId})-[:USER_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant}) " +
 		" SET 	u.firstName=$firstName, " +
 		"		u.lastName=$lastName, " +
-		"		u.email=$email, " +
 		"		u.updatedAt=datetime({timezone: 'UTC'}), " +
 		"		u.sourceOfTruth=$sourceOfTruth " +
 		" RETURN u"
@@ -75,8 +67,25 @@ func (r *userRepository) Update(session neo4j.Session, tenant string, entity ent
 				"tenant":        tenant,
 				"firstName":     entity.FirstName,
 				"lastName":      entity.LastName,
-				"email":         entity.Email,
 				"sourceOfTruth": entity.SourceOfTruth,
+			})
+		return utils.ExtractSingleRecordFirstValueAsNode(queryResult, err)
+	})
+	if err != nil {
+		return nil, err
+	}
+	return result.(*dbtype.Node), nil
+}
+
+func (r *userRepository) FindUserByEmail(session neo4j.Session, tenant string, email string) (*dbtype.Node, error) {
+	result, err := session.WriteTransaction(func(tx neo4j.Transaction) (interface{}, error) {
+		queryResult, err := tx.Run(`
+			MATCH (:Email {email:$email})<-[:HAS]-(u:User),
+			(u)-[:USER_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) 
+			RETURN u`,
+			map[string]any{
+				"tenant": tenant,
+				"email":  email,
 			})
 		return utils.ExtractSingleRecordFirstValueAsNode(queryResult, err)
 	})

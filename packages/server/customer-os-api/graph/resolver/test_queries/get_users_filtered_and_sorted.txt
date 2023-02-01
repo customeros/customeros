@@ -3,7 +3,6 @@ query {
             OR: [
                 {filter: {property:"FIRST_NAME" value:"first_f"}}
                 {filter: {property:"LAST_NAME" value:"second_l"}}
-                {filter: {property:"EMAIL" value:"user3@openline.ai"}}
             ]
         }
         sort:[{by: "FIRST_NAME" direction:DESC }]) {
@@ -13,7 +12,10 @@ query {
       id
       firstName
       lastName
-      email
+      emails {
+        id
+        email
+      }
       createdAt
     }
   }

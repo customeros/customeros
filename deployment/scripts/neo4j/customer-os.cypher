@@ -34,26 +34,26 @@ MATCH (t:Tenant {name:"openline"})
   ON CREATE SET ot.id=randomUUID(), ot.createdAt=datetime({timezone: 'UTC'});
 
 MATCH (t:Tenant {name:"openline"})
-    MERGE (u:User {id:"dev@openline.ai"})-[:USER_BELONGS_TO_TENANT]->(t)
+    MERGE (u:User {id:"development@openline.ai"})-[:USER_BELONGS_TO_TENANT]->(t)
     ON CREATE SET
-    		u.firstName ="Dev",
+    		u.firstName ="Development",
             u.lastName="User",
-            u.email="dev@openline.ai",
     		u.createdAt=datetime({timezone: 'UTC'}),
     		u.source="openline",
     		u.sourceOfTruth="openline",
     		u.appSource="manual";
 
-MATCH (t:Tenant {name:"openline"})
-    MERGE (u:User {id:"development@openline.ai"})-[:USER_BELONGS_TO_TENANT]->(t)
-    ON CREATE SET
-    		u.firstName ="Development",
-            u.lastName="User",
-            u.email="development@openline.ai",
-    		u.createdAt=datetime({timezone: 'UTC'}),
-    		u.source="openline",
-    		u.sourceOfTruth="openline",
-    		u.appSource="manual";
+MATCH (u:User {id:"development@openline.ai"})
+    MERGE (:Email {
+                      id: randomUUID(),
+                      email: "development@openline.ai",
+                      label: "WORK",
+                      u.source="openline",
+                      u.sourceOfTruth="openline",
+                      u.appSource="manual",
+                      u.createdAt=datetime({timezone: 'UTC'}),
+                      u.updatedAt=datetime({timezone: 'UTC'})
+                    })<-[:HAS {primary:true}]-(u);
 
 MATCH (t:Tenant {name:"openline"})
     MERGE (c:Contact {id:"echotest"})-[:CONTACT_BELONGS_TO_TENANT]->(t)
@@ -66,7 +66,7 @@ MATCH (t:Tenant {name:"openline"})
             c.appSource="manual";
 
 MATCH (c:Contact {id:"echotest"})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:"openline"})
-			MERGE (c)-[r:EMAILED_AT]->(e:Email {email: "echo@oasis.openline.ai"})
+			MERGE (c)-[r:HAS]->(e:Email {email: "echo@oasis.openline.ai"})
             ON CREATE SET e.label="MAIN", r.primary=true, e.id=randomUUID(), e.createdAt=datetime({timezone: 'UTC'}),
                 e.source="openline", e.sourceOfTruth="openline", e.appSource="manual"
             ON MATCH SET e.label="MAIN", r.primary=true;
@@ -80,7 +80,7 @@ MATCH (t:Tenant {name:"openline"})<-[:CONTACT_TYPE_BELONGS_TO_TENANT]-(ct:Contac
 MATCH (t:Tenant {name:"openline"})<-[:ORGANIZATION_TYPE_BELONGS_TO_TENANT]-(ot:OrganizationType) SET ot:OrganizationType_openline;
 MATCH (t:Tenant {name:"openline"})<-[:USER_BELONGS_TO_TENANT]-(u:User) SET u:User_openline;
 MATCH (t:Tenant {name:"openline"})<-[:CONTACT_BELONGS_TO_TENANT]-(c:Contact) SET c:Contact_openline;
-MATCH (c:Contact_openline)-[:EMAILED_AT]->(e:Email) SET e:Email_openline;
+MATCH (c:Contact_openline)-[:HAS]->(e:Email) SET e:Email_openline;
 
 CREATE CONSTRAINT tenant_name_unique IF NOT EXISTS ON (t:Tenant) ASSERT t.name IS UNIQUE;
 CREATE INDEX contact_id_idx IF NOT EXISTS FOR (n:Contact) ON (n.id);

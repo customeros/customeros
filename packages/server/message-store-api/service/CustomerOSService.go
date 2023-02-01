@@ -134,7 +134,9 @@ func (s *customerOSService) GetUserByEmail(email string) (*User, error) {
 	defer session.Close()
 
 	dbRecords, err := session.ReadTransaction(func(tx neo4j.Transaction) (any, error) {
-		if queryResult, err := tx.Run(`MATCH (u:User{email:$email}) return u`,
+		if queryResult, err := tx.Run(`
+			MATCH (:Email {email:$email})<-[:HAS]-(u:User)
+			RETURN u`,
 			map[string]any{
 				"email": email,
 			}); err != nil {
@@ -163,7 +165,7 @@ func (s *customerOSService) GetContactById(id string) (*Contact, error) {
 
 	dbRecords, err := session.ReadTransaction(func(tx neo4j.Transaction) (any, error) {
 		if queryResult, err := tx.Run(`MATCH (c:Contact{id: $id})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}),
-                  (c:Contact)-[:EMAILED_AT]->(p:Email{primary: true})
+                  (c:Contact)-[:HAS]->(p:Email{primary: true})
             RETURN c.id, c.firstName, c.lastName, p.email`,
 			map[string]any{
 				"tenant": "openline", //TODO discuss with customerOS team
@@ -197,7 +199,7 @@ func (s *customerOSService) GetContactByEmail(email string) (*Contact, error) {
 
 	dbRecords, err := session.ReadTransaction(func(tx neo4j.Transaction) (any, error) {
 		if queryResult, err := tx.Run(`MATCH (c:Contact)-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}),
-                  (c:Contact)-[:EMAILED_AT]->(p:Email {email:$email})
+                  (c:Contact)-[:HAS]->(p:Email {email:$email})
             RETURN c.id, c.firstName, c.lastName, p.email`,
 			map[string]any{
 				"tenant": "openline", //TODO discuss with customerOS team
@@ -275,7 +277,7 @@ func (s *customerOSService) CreateContactWithEmail(tenant string, email string) 
 
 		//create the email
 		emailQuery := "MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) " +
-			" MERGE (c)-[r:EMAILED_AT]->(e:Email {email: $email}) " +
+			" MERGE (c)-[r:HAS]->(e:Email {email: $email}) " +
 			" ON CREATE SET e.label=$label, r.primary=$primary, e.id=randomUUID(), e.createdAt=$now, e.updatedAt=$now," +
 			" e.source=$source, e.sourceOfTruth=$sourceOfTruth, e.appSource=$appSource, e:%s " +
 			" ON MATCH SET e.label=$label, r.primary=$primary, e.updatedAt=$now " +

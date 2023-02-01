@@ -89,7 +89,7 @@ type Contact implements ExtensibleEntity & Node {
     phoneNumbers: [PhoneNumber!]! @goField(forceResolver: true)
 
     """
-    All email addresses assocaited with a contact in customerOS.
+    All email addresses associated with a contact in customerOS.
     **Required.  If no values it returns an empty array.**
     """
     emails: [Email!]! @goField(forceResolver: true)

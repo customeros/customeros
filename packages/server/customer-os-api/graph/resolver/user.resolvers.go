@@ -12,11 +12,16 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/generated"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
 )
 
 // UserCreate is the resolver for the userCreate field.
 func (r *mutationResolver) UserCreate(ctx context.Context, input model.UserInput) (*model.User, error) {
-	createdUserEntity, err := r.Services.UserService.Create(ctx, mapper.MapUserInputToEntity(input))
+	createdUserEntity, err := r.Services.UserService.Create(ctx, &service.UserCreateData{
+		UserEntity:  mapper.MapUserInputToEntity(input),
+		EmailEntity: mapper.MapEmailInputToEntity(input.Email),
+	})
 	if err != nil {
 		graphql.AddErrorf(ctx, "Failed to create user %s %s", input.FirstName, input.LastName)
 		return nil, err
@@ -55,6 +60,22 @@ func (r *queryResolver) User(ctx context.Context, id string) (*model.User, error
 		return nil, err
 	}
 	return mapper.MapEntityToUser(userEntity), nil
+}
+
+// UserByEmail is the resolver for the user_ByEmail field.
+func (r *queryResolver) UserByEmail(ctx context.Context, email string) (*model.User, error) {
+	userEntity, err := r.Services.UserService.FindUserByEmail(ctx, email)
+	if err != nil || userEntity == nil {
+		graphql.AddErrorf(ctx, "User with email %s not identified", email)
+		return nil, err
+	}
+	return mapper.MapEntityToUser(userEntity), nil
+}
+
+// Emails is the resolver for the emails field.
+func (r *userResolver) Emails(ctx context.Context, obj *model.User) ([]*model.Email, error) {
+	emailEntities, err := r.Services.EmailService.FindAllFor(ctx, repository.USER, obj.ID)
+	return mapper.MapEntitiesToEmails(emailEntities), err
 }
 
 // Conversations is the resolver for the conversations field.

@@ -144,7 +144,7 @@ func (s *contactService) createContactInDBTxWork(ctx context.Context, newContact
 			}
 		}
 		if newContact.EmailEntity != nil {
-			_, _, err := s.repositories.EmailRepository.MergeEmailToContactInTx(tx, tenant, contactId, *newContact.EmailEntity)
+			_, _, err := s.repositories.EmailRepository.MergeEmailToInTx(tx, tenant, repository.CONTACT, contactId, *newContact.EmailEntity)
 			if err != nil {
 				return nil, err
 			}
@@ -277,7 +277,7 @@ func (s *contactService) FindContactByEmail(ctx context.Context, email string) (
 
 	queryResult, err := session.ReadTransaction(func(tx neo4j.Transaction) (interface{}, error) {
 		result, err := tx.Run(`
-			MATCH (:Email {email:$email})<-[:EMAILED_AT]-(c:Contact),
+			MATCH (:Email {email:$email})<-[:HAS]-(c:Contact),
 					(c)-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) 
 			RETURN c`,
 			map[string]interface{}{

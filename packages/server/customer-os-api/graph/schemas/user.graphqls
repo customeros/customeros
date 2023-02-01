@@ -1,6 +1,8 @@
 extend type Query {
     users(pagination: Pagination, where: Filter, sort: [SortBy!]): UserPage!
     user(id: ID!): User!
+
+    user_ByEmail(email: String!) :User!
 }
 
 extend type Mutation {
@@ -33,10 +35,10 @@ type User {
     lastName: String!
 
     """
-    The email address of the customerOS user. 
-    **Required**
+    All email addresses associated with a user in customerOS.
+    **Required.  If no values it returns an empty array.**
     """
-    email: String!
+    emails: [Email!] @goField(forceResolver: true)
 
     """
     Timestamp of user creation.
@@ -96,7 +98,7 @@ input UserInput {
     The email address of the customerOS user. 
     **Required**
     """
-    email: String!
+    email: EmailInput!
 }
 
 input UserUpdateInput {
@@ -113,10 +115,4 @@ input UserUpdateInput {
     **Required**
     """
     lastName: String!
-
-    """
-    The email address of the customerOS user.
-    **Required**
-    """
-    email: String!
 }

@@ -12,9 +12,9 @@ import (
 )
 
 type EmailService interface {
-	FindAllForContact(ctx context.Context, contactId string) (*entity.EmailEntities, error)
-	MergeEmailToContact(ctx context.Context, id string, entity *entity.EmailEntity) (*entity.EmailEntity, error)
-	UpdateEmailForContact(ctx context.Context, id string, entity *entity.EmailEntity) (*entity.EmailEntity, error)
+	FindAllFor(ctx context.Context, entityType repository.EntityType, entityId string) (*entity.EmailEntities, error)
+	MergeEmailTo(ctx context.Context, entityType repository.EntityType, entityId string, entity *entity.EmailEntity) (*entity.EmailEntity, error)
+	UpdateEmailFor(ctx context.Context, entityType repository.EntityType, entityId string, entity *entity.EmailEntity) (*entity.EmailEntity, error)
 	Delete(ctx context.Context, contactId string, email string) (bool, error)
 	DeleteById(ctx context.Context, contactId string, emailId string) (bool, error)
 }
@@ -33,11 +33,11 @@ func (s *emailService) getDriver() neo4j.Driver {
 	return *s.repositories.Drivers.Neo4jDriver
 }
 
-func (s *emailService) FindAllForContact(ctx context.Context, contactId string) (*entity.EmailEntities, error) {
+func (s *emailService) FindAllFor(ctx context.Context, entityType repository.EntityType, entityId string) (*entity.EmailEntities, error) {
 	session := utils.NewNeo4jReadSession(s.getDriver())
 	defer session.Close()
 
-	queryResult, err := s.repositories.EmailRepository.FindAllForContact(session, common.GetContext(ctx).Tenant, contactId)
+	queryResult, err := s.repositories.EmailRepository.FindAllFor(session, common.GetContext(ctx).Tenant, entityType, entityId)
 	if err != nil {
 		return nil, err
 	}
@@ -53,7 +53,7 @@ func (s *emailService) FindAllForContact(ctx context.Context, contactId string) 
 	return &emailEntities, nil
 }
 
-func (s *emailService) MergeEmailToContact(ctx context.Context, contactId string, entity *entity.EmailEntity) (*entity.EmailEntity, error) {
+func (s *emailService) MergeEmailTo(ctx context.Context, entityType repository.EntityType, entityId string, entity *entity.EmailEntity) (*entity.EmailEntity, error) {
 	session := utils.NewNeo4jWriteSession(s.getDriver())
 	defer session.Close()
 
@@ -63,12 +63,12 @@ func (s *emailService) MergeEmailToContact(ctx context.Context, contactId string
 
 	_, err = session.WriteTransaction(func(tx neo4j.Transaction) (interface{}, error) {
 		if entity.Primary == true {
-			err := s.repositories.EmailRepository.SetOtherContactEmailsNonPrimaryInTx(tx, common.GetContext(ctx).Tenant, contactId, entity.Email)
+			err := s.repositories.EmailRepository.SetOtherEmailsNonPrimaryInTx(tx, common.GetContext(ctx).Tenant, entityType, entityId, entity.Email)
 			if err != nil {
 				return nil, err
 			}
 		}
-		emailNode, emailRelationship, err = s.repositories.EmailRepository.MergeEmailToContactInTx(tx, common.GetContext(ctx).Tenant, contactId, *entity)
+		emailNode, emailRelationship, err = s.repositories.EmailRepository.MergeEmailToInTx(tx, common.GetContext(ctx).Tenant, entityType, entityId, *entity)
 		return nil, err
 	})
 	if err != nil {
@@ -80,7 +80,7 @@ func (s *emailService) MergeEmailToContact(ctx context.Context, contactId string
 	return emailEntity, nil
 }
 
-func (s *emailService) UpdateEmailForContact(ctx context.Context, contactId string, entity *entity.EmailEntity) (*entity.EmailEntity, error) {
+func (s *emailService) UpdateEmailFor(ctx context.Context, entityType repository.EntityType, entityId string, entity *entity.EmailEntity) (*entity.EmailEntity, error) {
 	session := utils.NewNeo4jWriteSession(s.getDriver())
 	defer session.Close()
 
@@ -89,12 +89,12 @@ func (s *emailService) UpdateEmailForContact(ctx context.Context, contactId stri
 	var emailRelationship *dbtype.Relationship
 
 	_, err = session.WriteTransaction(func(tx neo4j.Transaction) (interface{}, error) {
-		emailNode, emailRelationship, err = s.repositories.EmailRepository.UpdateEmailByContactInTx(tx, common.GetContext(ctx).Tenant, contactId, *entity)
+		emailNode, emailRelationship, err = s.repositories.EmailRepository.UpdateEmailByInTx(tx, common.GetContext(ctx).Tenant, entityType, entityId, *entity)
 		if err != nil {
 			return nil, err
 		}
 		if entity.Primary == true {
-			err := s.repositories.EmailRepository.SetOtherContactEmailsNonPrimaryInTx(tx, common.GetContext(ctx).Tenant, contactId, entity.Email)
+			err := s.repositories.EmailRepository.SetOtherEmailsNonPrimaryInTx(tx, common.GetContext(ctx).Tenant, entityType, entityId, entity.Email)
 			if err != nil {
 				return nil, err
 			}
@@ -117,7 +117,7 @@ func (s *emailService) Delete(ctx context.Context, contactId string, email strin
 	queryResult, err := session.WriteTransaction(func(tx neo4j.Transaction) (interface{}, error) {
 		_, err := tx.Run(`
 			MATCH (c:Contact {id:$id})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}),
-                  (c:Contact {id:$id})-[:EMAILED_AT]->(p:Email {email:$email})
+                  (c:Contact {id:$id})-[:HAS]->(p:Email {email:$email})
             DETACH DELETE p
 			`,
 			map[string]interface{}{
@@ -142,7 +142,7 @@ func (s *emailService) DeleteById(ctx context.Context, contactId string, emailId
 	queryResult, err := session.WriteTransaction(func(tx neo4j.Transaction) (interface{}, error) {
 		_, err := tx.Run(`
 			MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}),
-                  (c:Contact {id:$contactId})-[:EMAILED_AT]->(p:Email {id:$emailId})
+                  (c:Contact {id:$contactId})-[:HAS]->(p:Email {id:$emailId})
             DETACH DELETE p
 			`,
 			map[string]interface{}{

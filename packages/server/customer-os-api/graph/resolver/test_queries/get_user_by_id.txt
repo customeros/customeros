@@ -3,6 +3,9 @@ query GetUserById($userId: ID!){
     id
     firstName
     lastName
-    email
+    emails {
+      id
+      email
+    }
   }
 }

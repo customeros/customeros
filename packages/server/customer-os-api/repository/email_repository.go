@@ -9,11 +9,19 @@ import (
 	"time"
 )
 
+type EntityType string
+
+const (
+	CONTACT      EntityType = "CONTACT"
+	USER         EntityType = "USER"
+	ORGANIZATION EntityType = "ORGANIZATION"
+)
+
 type EmailRepository interface {
-	MergeEmailToContactInTx(tx neo4j.Transaction, tenant, contactId string, entity entity.EmailEntity) (*dbtype.Node, *dbtype.Relationship, error)
-	UpdateEmailByContactInTx(tx neo4j.Transaction, tenant, contactId string, entity entity.EmailEntity) (*dbtype.Node, *dbtype.Relationship, error)
-	SetOtherContactEmailsNonPrimaryInTx(tx neo4j.Transaction, tenantId, contactId, email string) error
-	FindAllForContact(session neo4j.Session, tenant, contactId string) (any, error)
+	MergeEmailToInTx(tx neo4j.Transaction, tenant string, entityType EntityType, entityId string, entity entity.EmailEntity) (*dbtype.Node, *dbtype.Relationship, error)
+	UpdateEmailByInTx(tx neo4j.Transaction, tenant string, entityType EntityType, entityId string, entity entity.EmailEntity) (*dbtype.Node, *dbtype.Relationship, error)
+	SetOtherEmailsNonPrimaryInTx(tx neo4j.Transaction, tenantId string, entityType EntityType, entityId string, email string) error
+	FindAllFor(session neo4j.Session, tenant string, entityType EntityType, entityId string) (any, error)
 }
 
 type emailRepository struct {
@@ -26,9 +34,20 @@ func NewEmailRepository(driver *neo4j.Driver) EmailRepository {
 	}
 }
 
-func (r *emailRepository) MergeEmailToContactInTx(tx neo4j.Transaction, tenant, contactId string, entity entity.EmailEntity) (*dbtype.Node, *dbtype.Relationship, error) {
-	query := "MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) " +
-		" MERGE (c)-[r:EMAILED_AT]->(e:Email {email: $email}) " +
+func (r *emailRepository) MergeEmailToInTx(tx neo4j.Transaction, tenant string, entityType EntityType, entityId string, entity entity.EmailEntity) (*dbtype.Node, *dbtype.Relationship, error) {
+	query := ""
+
+	switch entityType {
+	case CONTACT:
+		query = `MATCH (entity:Contact {id:$entityId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) `
+	case USER:
+		query = `MATCH (entity:User {id:$entityId})-[:USER_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) `
+	case ORGANIZATION:
+		query = `MATCH (entity:Organization {id:$entityId})-[:ORGANIZATION_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) `
+	}
+
+	query = query +
+		" MERGE (entity)-[r:HAS]->(e:Email {email: $email}) " +
 		" ON CREATE SET e.label=$label, " +
 		"				r.primary=$primary, " +
 		"				e.id=randomUUID(), " +
@@ -47,7 +66,7 @@ func (r *emailRepository) MergeEmailToContactInTx(tx neo4j.Transaction, tenant, 
 	queryResult, err := tx.Run(fmt.Sprintf(query, "Email_"+tenant),
 		map[string]interface{}{
 			"tenant":        tenant,
-			"contactId":     contactId,
+			"entityId":      entityId,
 			"email":         entity.Email,
 			"label":         entity.Label,
 			"primary":       entity.Primary,
@@ -59,9 +78,19 @@ func (r *emailRepository) MergeEmailToContactInTx(tx neo4j.Transaction, tenant, 
 	return utils.ExtractSingleRecordNodeAndRelationship(queryResult, err)
 }
 
-func (r *emailRepository) UpdateEmailByContactInTx(tx neo4j.Transaction, tenant, contactId string, entity entity.EmailEntity) (*dbtype.Node, *dbtype.Relationship, error) {
-	queryResult, err := tx.Run(`MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}),
-				(c)-[r:EMAILED_AT]->(e:Email {id:$emailId}) 
+func (r *emailRepository) UpdateEmailByInTx(tx neo4j.Transaction, tenant string, entityType EntityType, entityId string, entity entity.EmailEntity) (*dbtype.Node, *dbtype.Relationship, error) {
+	query := ""
+
+	switch entityType {
+	case CONTACT:
+		query = `MATCH (entity:Contact {id:$entityId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) `
+	case USER:
+		query = `MATCH (entity:User {id:$entityId})-[:USER_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) `
+	case ORGANIZATION:
+		query = `MATCH (entity:Organization {id:$entityId})-[:ORGANIZATION_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) `
+	}
+
+	queryResult, err := tx.Run(query+`, (c)-[r:HAS]->(e:Email {id:$emailId}) 
 			SET e.email=$email,
 				e.label=$label,
 				r.primary=$primary,
@@ -70,7 +99,7 @@ func (r *emailRepository) UpdateEmailByContactInTx(tx neo4j.Transaction, tenant,
 			RETURN e, r`,
 		map[string]interface{}{
 			"tenant":        tenant,
-			"contactId":     contactId,
+			"entityId":      entityId,
 			"emailId":       entity.Id,
 			"email":         entity.Email,
 			"label":         entity.Label,
@@ -81,15 +110,24 @@ func (r *emailRepository) UpdateEmailByContactInTx(tx neo4j.Transaction, tenant,
 	return utils.ExtractSingleRecordNodeAndRelationship(queryResult, err)
 }
 
-func (r *emailRepository) FindAllForContact(session neo4j.Session, tenant, contactId string) (any, error) {
+func (r *emailRepository) FindAllFor(session neo4j.Session, tenant string, entityType EntityType, entityId string) (any, error) {
 	return session.ReadTransaction(func(tx neo4j.Transaction) (any, error) {
-		result, err := tx.Run(`
-				MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}),
-              			(c)-[r:EMAILED_AT]->(e:Email) 				
+		query := ""
+
+		switch entityType {
+		case CONTACT:
+			query = `MATCH (entity:Contact {id:$entityId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) `
+		case USER:
+			query = `MATCH (entity:User {id:$entityId})-[:USER_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) `
+		case ORGANIZATION:
+			query = `MATCH (entity:Organization {id:$entityId})-[:ORGANIZATION_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) `
+		}
+
+		result, err := tx.Run(query+`, (entity)-[r:HAS]->(e:Email) 				
 				RETURN e, r`,
 			map[string]interface{}{
-				"contactId": contactId,
-				"tenant":    tenant,
+				"entityId": entityId,
+				"tenant":   tenant,
 			})
 		records, err := result.Collect()
 		if err != nil {
@@ -99,18 +137,27 @@ func (r *emailRepository) FindAllForContact(session neo4j.Session, tenant, conta
 	})
 }
 
-func (r *emailRepository) SetOtherContactEmailsNonPrimaryInTx(tx neo4j.Transaction, tenantId, contactId, email string) error {
-	_, err := tx.Run(`
-			MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}),
-				 (c)-[r:EMAILED_AT]->(e:Email)
+func (r *emailRepository) SetOtherEmailsNonPrimaryInTx(tx neo4j.Transaction, tenantId string, entityType EntityType, entityId string, email string) error {
+	query := ""
+
+	switch entityType {
+	case CONTACT:
+		query = `MATCH (entity:Contact {id:$entityId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) `
+	case USER:
+		query = `MATCH (entity:User {id:$entityId})-[:USER_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) `
+	case ORGANIZATION:
+		query = `MATCH (entity:Organization {id:$entityId})-[:ORGANIZATION_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) `
+	}
+
+	_, err := tx.Run(query+`, (c)-[r:HAS]->(e:Email)
 			WHERE e.email <> $email
             SET r.primary=false, 
 				e.updatedAt=$now`,
 		map[string]interface{}{
-			"tenant":    tenantId,
-			"contactId": contactId,
-			"email":     email,
-			"now":       time.Now().UTC(),
+			"tenant":   tenantId,
+			"entityId": entityId,
+			"email":    email,
+			"now":      time.Now().UTC(),
 		})
 	return err
 }

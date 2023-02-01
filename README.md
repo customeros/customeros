@@ -73,7 +73,7 @@ openline dev start customer-os
 - Our [docs site][docs] has numerous guides and reference material for to make building on customerOS easy.
 - For help, feature requests, or chat with fellow Openline enthusiasts, check out our [slack community][slack]!
 
-## 👩‍💻 Codebase
+## Codebase
 
 ### Technologies
 
