@@ -127,6 +127,10 @@ func (s *syncService) syncContacts(dataService common.DataService, syncDate time
 			}
 
 			for _, organizationExternalId := range v.OrganizationsExternalIds {
+				if err = s.repositories.ContactRepository.LinkContactWithOrganization(tenant, contactId, organizationExternalId, dataService.SourceId()); err != nil {
+					failedSync = true
+					logrus.Errorf("failed link contact %v to organization with external id %v, tenant %v :%v", contactId, organizationExternalId, tenant, err)
+				}
 				if err = s.repositories.RoleRepository.MergeRole(tenant, contactId, organizationExternalId, dataService.SourceId()); err != nil {
 					failedSync = true
 					logrus.Errorf("failed merge role for contact %v, tenant %v :%v", contactId, tenant, err)

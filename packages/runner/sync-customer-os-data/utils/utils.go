@@ -1,4 +1,4 @@
-package service
+package utils
 
 import (
 	"github.com/jackc/pgtype"
@@ -26,4 +26,19 @@ func ConvertJsonbToStringSlice(input pgtype.JSONB) []string {
 		}
 	}
 	return output
+}
+
+func RemoveDuplicates[V comparable](input []V) []V {
+	m := make(map[V]bool)
+	for _, item := range input {
+		if _, ok := m[item]; !ok {
+			m[item] = true
+		}
+	}
+
+	result := make([]V, 0, len(m))
+	for key := range m {
+		result = append(result, key)
+	}
+	return result
 }
