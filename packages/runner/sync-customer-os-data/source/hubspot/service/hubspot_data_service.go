@@ -91,11 +91,11 @@ func (s *hubspotDataService) GetContactsForSync(batchSize int, runId string) []e
 		}
 		contactForCustomerOs.TextCustomFields = textCustomFields
 
-		// set contact type
-		if isCustomerContactType(hubspotContactProperties.LifecycleStage) {
-			contactForCustomerOs.ContactTypeName = "CUSTOMER"
+		// set contact's tags
+		if isCustomerTag(hubspotContactProperties.LifecycleStage) {
+			contactForCustomerOs.TagName = "CUSTOMER"
 		} else {
-			contactForCustomerOs.ContactTypeName = "NOT_SET"
+			contactForCustomerOs.TagName = "NOT_SET"
 		}
 
 		customerOsContacts = append(customerOsContacts, contactForCustomerOs)
@@ -104,7 +104,7 @@ func (s *hubspotDataService) GetContactsForSync(batchSize int, runId string) []e
 	return customerOsContacts
 }
 
-func isCustomerContactType(hubspotLifecycleStage string) bool {
+func isCustomerTag(hubspotLifecycleStage string) bool {
 	customerLifecycleStages := map[string]bool{
 		"lead": true, "subscriber": true, "marketingqualifiedlead": true, "salesqualifiedlead": true,
 		"opportunity": true, "evangelist": true, "customer": true}

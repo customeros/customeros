@@ -32,7 +32,7 @@ type ContactData struct {
 
 	TextCustomFields []TextCustomField
 
-	ContactTypeName string
+	TagName string
 
 	DefaultLocationName string
 	Country             string
