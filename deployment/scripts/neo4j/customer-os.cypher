@@ -19,7 +19,6 @@ MATCH (t:Tenant {name:"openline"})
                 tag.createdAt=datetime({timezone: 'UTC'}),
                 tag.updatedAt=datetime({timezone: 'UTC'}),
                 tag.source="openline",
-                tag.sourceOfTruth="openline",
                 tag.appSource="manual";
 
 MATCH (t:Tenant {name:"openline"})
@@ -28,7 +27,6 @@ MATCH (t:Tenant {name:"openline"})
                 tag.createdAt=datetime({timezone: 'UTC'}),
                 tag.updatedAt=datetime({timezone: 'UTC'}),
                 tag.source="openline",
-                tag.sourceOfTruth="openline",
                 tag.appSource="manual";
 
 MATCH (t:Tenant {name:"openline"})
@@ -37,7 +35,6 @@ MATCH (t:Tenant {name:"openline"})
                 tag.createdAt=datetime({timezone: 'UTC'}),
                 tag.updatedAt=datetime({timezone: 'UTC'}),
                 tag.source="openline",
-                tag.sourceOfTruth="openline",
                 tag.appSource="manual";
 
 MATCH (t:Tenant {name:"openline"})
@@ -46,7 +43,6 @@ MATCH (t:Tenant {name:"openline"})
                 tag.createdAt=datetime({timezone: 'UTC'}),
                 tag.updatedAt=datetime({timezone: 'UTC'}),
                 tag.source="openline",
-                tag.sourceOfTruth="openline",
                 tag.appSource="manual";
 
 MATCH (t:Tenant {name:"openline"})

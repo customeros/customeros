@@ -6,6 +6,7 @@ package resolver
 
 import (
 	"context"
+
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/generated"
@@ -71,7 +72,7 @@ func (r *organizationResolver) OrganizationType(ctx context.Context, obj *model.
 
 // Addresses is the resolver for the addresses field.
 func (r *organizationResolver) Addresses(ctx context.Context, obj *model.Organization) ([]*model.Place, error) {
-	addressEntities, err := r.Services.AddressService.FindAllForOrganization(ctx, obj.ID)
+	addressEntities, err := r.Services.PlaceService.FindAllForOrganization(ctx, obj.ID)
 	if err != nil {
 		graphql.AddErrorf(ctx, "Failed to get addresses for organization %s", obj.ID)
 		return nil, err

@@ -299,7 +299,6 @@ func (r *contactRepository) MergeTagForContact(tenant, contactId, tagName, sourc
 		"				tag.createdAt=$now, " +
 		"				tag.updatedAt=$now, " +
 		"				tag.source=$source," +
-		"				tag.sourceOfTruth=$source," +
 		"				tag.appSource=$source," +
 		"				tag:%s  " +
 		" WITH c, tag " +

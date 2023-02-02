@@ -1,0 +1,13 @@
+mutation {
+  tag_Create(input: {
+                        name: "the tag"
+                        appSource: "test"
+                    }) {
+      id
+      name
+      createdAt
+      updatedAt
+      source
+      appSource
+    }
+}

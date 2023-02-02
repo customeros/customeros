@@ -30,6 +30,8 @@ extend type Mutation {
     contact_Update(input: ContactUpdateInput!): Contact!
     contact_HardDelete(contactId: ID!): Result!
     contact_SoftDelete(contactId: ID!): Result!
+    contact_AddTagById(input: ContactTagInput): Contact!
+    contact_RemoveTagById(input: ContactTagInput): Contact!
 }
 
 """
@@ -69,6 +71,8 @@ type Contact implements ExtensibleEntity & Node {
 
     "User-defined field that defines the relationship type the contact has with your business.  `Customer`, `Partner`, `Lead` are examples."
     contactType: ContactType @goField(forceResolver: true)
+
+    tags: [Tag!] @goField(forceResolver: true)
 
     """
     `organizationName` and `jobTitle` of the contact if it has been associated with an organization.
@@ -237,6 +241,11 @@ input ContactUpdateInput {
 
     "Id of the contact owner (user)"
     ownerId: ID
+}
+
+input ContactTagInput {
+    contactId: ID!
+    tagId: ID!
 }
 
 """

@@ -6,6 +6,7 @@ package resolver
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/99designs/gqlgen/graphql"
@@ -28,6 +29,12 @@ func (r *contactResolver) ContactType(ctx context.Context, obj *model.Contact) (
 		return nil, nil
 	}
 	return mapper.MapEntityToContactType(contactTypeEntity), nil
+}
+
+// Tags is the resolver for the tags field.
+func (r *contactResolver) Tags(ctx context.Context, obj *model.Contact) ([]*model.Tag, error) {
+	// FIXME alexb add test
+	panic(fmt.Errorf("not implemented: Tags - tags"))
 }
 
 // Roles is the resolver for the roles field.
@@ -77,7 +84,7 @@ func (r *contactResolver) Emails(ctx context.Context, obj *model.Contact) ([]*mo
 
 // Addresses is the resolver for the addresses field.
 func (r *contactResolver) Addresses(ctx context.Context, obj *model.Contact) ([]*model.Place, error) {
-	addressEntities, err := r.Services.AddressService.FindAllForContact(ctx, obj.ID)
+	addressEntities, err := r.Services.PlaceService.FindAllForContact(ctx, obj.ID)
 	if err != nil {
 		graphql.AddErrorf(ctx, "Failed to get addresses for contact %s", obj.ID)
 		return nil, err
@@ -229,6 +236,18 @@ func (r *mutationResolver) ContactSoftDelete(ctx context.Context, contactID stri
 	return &model.Result{
 		Result: result,
 	}, nil
+}
+
+// ContactAddTagByID is the resolver for the contact_AddTagById field.
+func (r *mutationResolver) ContactAddTagByID(ctx context.Context, input *model.ContactTagInput) (*model.Contact, error) {
+	// FIXME alexb add test
+	panic(fmt.Errorf("not implemented: ContactAddTagByID - contact_AddTagById"))
+}
+
+// ContactRemoveTagByID is the resolver for the contact_RemoveTagById field.
+func (r *mutationResolver) ContactRemoveTagByID(ctx context.Context, input *model.ContactTagInput) (*model.Contact, error) {
+	// FIXME alexb add test
+	panic(fmt.Errorf("not implemented: ContactRemoveTagByID - contact_RemoveTagById"))
 }
 
 // Contact is the resolver for the contact field.
