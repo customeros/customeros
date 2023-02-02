@@ -35,8 +35,14 @@ func (r *mutationResolver) TagUpdate(ctx context.Context, input model.TagUpdateI
 
 // TagDelete is the resolver for the tag_Delete field.
 func (r *mutationResolver) TagDelete(ctx context.Context, id string) (*model.Result, error) {
-	// FIXME alexb add test
-	panic(fmt.Errorf("not implemented: TagDelete - tag_Delete"))
+	result, err := r.Services.TagService.UnlinkAndDelete(ctx, id)
+	if err != nil {
+		graphql.AddErrorf(ctx, "Failed to delete tag %s", id)
+		return nil, err
+	}
+	return &model.Result{
+		Result: result,
+	}, nil
 }
 
 // Tags is the resolver for the tags field.

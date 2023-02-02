@@ -65,3 +65,35 @@ func TestMutationResolver_TagUpdate(t *testing.T) {
 
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Tag"))
 }
+
+func TestMutationResolver_TagDelete(t *testing.T) {
+	defer tearDownTestCase()(t)
+	neo4jt.CreateTenant(driver, tenantName)
+	tagId := neo4jt.CreateTag(driver, tenantName, "original tag")
+	contactId := neo4jt.CreateDefaultContact(driver, tenantName)
+	neo4jt.TagContact(driver, contactId, tagId)
+
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Contact"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Tag"))
+	require.Equal(t, 1, neo4jt.GetCountOfRelationships(driver, "TAGGED"))
+	require.Equal(t, 1, neo4jt.GetCountOfRelationships(driver, "TAG_BELONGS_TO_TENANT"))
+
+	rawResponse, err := c.RawPost(getQuery("delete_tag"),
+		client.Var("tagId", tagId),
+	)
+	assertRawResponseSuccess(t, rawResponse, err)
+
+	var result struct {
+		Tag_Delete model.Result
+	}
+
+	err = decode.Decode(rawResponse.Data.(map[string]any), &result)
+	require.Nil(t, err)
+	require.NotNil(t, result)
+	require.Equal(t, true, result.Tag_Delete.Result)
+
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Contact"))
+	require.Equal(t, 0, neo4jt.GetCountOfNodes(driver, "Tag"))
+	require.Equal(t, 0, neo4jt.GetCountOfRelationships(driver, "TAGGED"))
+	require.Equal(t, 0, neo4jt.GetCountOfRelationships(driver, "TAG_BELONGS_TO_TENANT"))
+}

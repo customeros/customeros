@@ -11,8 +11,7 @@ import (
 type TagRepository interface {
 	Merge(tenant string, tag entity.TagEntity) (*dbtype.Node, error)
 	Update(tenant string, tag entity.TagEntity) (*dbtype.Node, error)
-	// FIXME alexb refactor
-	Delete(tenant string, id string) error
+	UnlinkAndDelete(tenant string, tagId string) error
 	// FIXME alexb refactor
 	FindAll(tenant string) ([]*dbtype.Node, error)
 	// FIXME alexb refactor
@@ -84,17 +83,17 @@ func (r *tagRepository) Update(tenant string, tag entity.TagEntity) (*dbtype.Nod
 	}
 }
 
-func (r *tagRepository) Delete(tenant string, id string) error {
+func (r *tagRepository) UnlinkAndDelete(tenant string, tagId string) error {
 	session := utils.NewNeo4jWriteSession(*r.driver)
 	defer session.Close()
 
 	if _, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
 		_, err := tx.Run(`
-			MATCH (t:Tenant {name:$tenant})<-[r:TAG_BELONGS_TO_TENANT]-(c:Tag {id:$id})
-			DELETE r, c`,
+			MATCH (t:Tenant {name:$tenant})<-[:TAG_BELONGS_TO_TENANT]-(tag:Tag {id:$id})
+			DETACH DELETE tag`,
 			map[string]any{
 				"tenant": tenant,
-				"id":     id,
+				"id":     tagId,
 			})
 		return nil, err
 	}); err != nil {

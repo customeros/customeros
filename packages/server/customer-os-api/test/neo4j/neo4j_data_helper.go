@@ -383,6 +383,16 @@ func CreateTag(driver *neo4j.Driver, tenant, tagName string) string {
 	return tagId.String()
 }
 
+func TagContact(driver *neo4j.Driver, contactId, tagId string) {
+	query := `MATCH (c:Contact {id:$contactId}), (tag:Tag {id:$tagId})
+			MERGE (c)-[r:TAGGED]->(tag)
+			ON CREATE SET r.taggedAt=datetime({timezone: 'UTC'})`
+	ExecuteWriteQuery(driver, query, map[string]any{
+		"tagId":     tagId,
+		"contactId": contactId,
+	})
+}
+
 func CreateOrganization(driver *neo4j.Driver, tenant, organizationName string) string {
 	var organizationId, _ = uuid.NewRandom()
 	query := `MATCH (t:Tenant {name:$tenant})

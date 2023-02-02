@@ -1,0 +1,6 @@
+mutation DeleteTag($tagId: ID!) {
+  tag_Delete(id: $tagId)
+  {
+      result
+  }
+}

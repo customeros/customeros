@@ -12,8 +12,7 @@ import (
 type TagService interface {
 	Merge(ctx context.Context, tag *entity.TagEntity) (*entity.TagEntity, error)
 	Update(ctx context.Context, tag *entity.TagEntity) (*entity.TagEntity, error)
-	// FIXME alexb refactor
-	Delete(ctx context.Context, id string) (bool, error)
+	UnlinkAndDelete(ctx context.Context, id string) (bool, error)
 	// FIXME alexb refactor
 	GetAll(ctx context.Context) (*entity.TagEntities, error)
 	// FIXME alexb refactor
@@ -46,8 +45,8 @@ func (s *tagService) Update(ctx context.Context, tag *entity.TagEntity) (*entity
 	return s.mapDbNodeToTagEntity(*tagNodePtr), nil
 }
 
-func (s *tagService) Delete(ctx context.Context, id string) (bool, error) {
-	err := s.repository.TagRepository.Delete(common.GetContext(ctx).Tenant, id)
+func (s *tagService) UnlinkAndDelete(ctx context.Context, id string) (bool, error) {
+	err := s.repository.TagRepository.UnlinkAndDelete(common.GetTenantFromContext(ctx), id)
 	if err != nil {
 		return false, err
 	}
