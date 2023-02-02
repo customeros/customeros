@@ -13,9 +13,9 @@ MATCH (t:Tenant {name:"openline"})
 
 #Create email node associated with a user (for all tenants)
 
-match (u:User)-[:USER_BELONGS_TO_TENANT]-(t:Tenant{name:"test"}) MERGE (u)-[r:HAS]->(e:Email)
+match (u:User)-[:USER_BELONGS_TO_TENANT]-(t:Tenant{name:"openline"}) MERGE (u)-[r:HAS]->(e:Email)
 ON CREATE SET e.email=u.email, e.label="WORK", r.primary=true, e.id=randomUUID(), e.source=u.source, e.sourceOfTruth=u.sourceOfTruth,
-e.appSource=u.appSource,  e.createdAt=u.createdAt, e.updatedAt=u.updatedAt, e:Email_test return u, r, e;
+e.appSource=u.appSource,  e.createdAt=u.createdAt, e.updatedAt=u.updatedAt, e:Email_openline return u, r, e;
 
 #Check the new relation
 match (u:User)-[r:HAS]->(e:Email) return u, e, r
