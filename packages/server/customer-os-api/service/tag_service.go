@@ -11,7 +11,6 @@ import (
 
 type TagService interface {
 	Merge(ctx context.Context, tag *entity.TagEntity) (*entity.TagEntity, error)
-	// FIXME alexb refactor
 	Update(ctx context.Context, tag *entity.TagEntity) (*entity.TagEntity, error)
 	// FIXME alexb refactor
 	Delete(ctx context.Context, id string) (bool, error)
@@ -40,11 +39,11 @@ func (s *tagService) Merge(ctx context.Context, tag *entity.TagEntity) (*entity.
 }
 
 func (s *tagService) Update(ctx context.Context, tag *entity.TagEntity) (*entity.TagEntity, error) {
-	tagNode, err := s.repository.TagRepository.Update(common.GetContext(ctx).Tenant, tag)
+	tagNodePtr, err := s.repository.TagRepository.Update(common.GetTenantFromContext(ctx), *tag)
 	if err != nil {
 		return nil, err
 	}
-	return s.mapDbNodeToTagEntity(*tagNode), nil
+	return s.mapDbNodeToTagEntity(*tagNodePtr), nil
 }
 
 func (s *tagService) Delete(ctx context.Context, id string) (bool, error) {

@@ -10,8 +10,7 @@ import (
 
 type TagRepository interface {
 	Merge(tenant string, tag entity.TagEntity) (*dbtype.Node, error)
-	// FIXME alexb refactor
-	Update(tenant string, tag *entity.TagEntity) (*dbtype.Node, error)
+	Update(tenant string, tag entity.TagEntity) (*dbtype.Node, error)
 	// FIXME alexb refactor
 	Delete(tenant string, id string) error
 	// FIXME alexb refactor
@@ -62,19 +61,20 @@ func (r *tagRepository) Merge(tenant string, tag entity.TagEntity) (*dbtype.Node
 	}
 }
 
-func (r *tagRepository) Update(tenant string, tag *entity.TagEntity) (*dbtype.Node, error) {
+func (r *tagRepository) Update(tenant string, tag entity.TagEntity) (*dbtype.Node, error) {
 	session := utils.NewNeo4jWriteSession(*r.driver)
 	defer session.Close()
 
 	if result, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
 		queryResult, err := tx.Run(`
-			MATCH (t:Tenant {name:$tenant})<-[:TAG_BELONGS_TO_TENANT]-(c:Tag {id:$id})
-			SET c.name=$name
-			RETURN c`,
+			MATCH (t:Tenant {name:$tenant})<-[:TAG_BELONGS_TO_TENANT]-(tag:Tag {id:$id})
+			SET tag.name=$name, tag.updatedAt=$now
+			RETURN tag`,
 			map[string]any{
 				"tenant": tenant,
 				"id":     tag.Id,
 				"name":   tag.Name,
+				"now":    utils.Now(),
 			})
 		return utils.ExtractSingleRecordFirstValueAsNode(queryResult, err)
 	}); err != nil {

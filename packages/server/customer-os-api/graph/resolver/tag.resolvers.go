@@ -25,8 +25,12 @@ func (r *mutationResolver) TagCreate(ctx context.Context, input model.TagInput) 
 
 // TagUpdate is the resolver for the tag_Update field.
 func (r *mutationResolver) TagUpdate(ctx context.Context, input model.TagUpdateInput) (*model.Tag, error) {
-	// FIXME alexb add test
-	panic(fmt.Errorf("not implemented: TagUpdate - tag_Update"))
+	updatedTag, err := r.Services.TagService.Update(ctx, mapper.MapTagUpdateInputToEntity(input))
+	if err != nil {
+		graphql.AddErrorf(ctx, "Failed to update tag %s", input.ID)
+		return nil, err
+	}
+	return mapper.MapEntityToTag(updatedTag), nil
 }
 
 // TagDelete is the resolver for the tag_Delete field.

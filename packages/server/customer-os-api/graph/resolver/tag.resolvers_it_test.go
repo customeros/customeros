@@ -1,6 +1,7 @@
 package resolver
 
 import (
+	"github.com/99designs/gqlgen/client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils/decode"
@@ -37,4 +38,30 @@ func TestMutationResolver_TagCreate(t *testing.T) {
 	require.Equal(t, 1, neo4jt.GetCountOfRelationships(driver, "TAG_BELONGS_TO_TENANT"))
 
 	assertNeo4jLabels(t, driver, []string{"Tenant", "Tag", "Tag_" + tenantName})
+}
+
+func TestMutationResolver_TagUpdate(t *testing.T) {
+	defer tearDownTestCase()(t)
+	neo4jt.CreateTenant(driver, tenantName)
+	tagId := neo4jt.CreateTag(driver, tenantName, "original tag")
+
+	rawResponse, err := c.RawPost(getQuery("update_tag"),
+		client.Var("tagId", tagId),
+		client.Var("tagName", "new tag name"),
+	)
+	assertRawResponseSuccess(t, rawResponse, err)
+
+	var tag struct {
+		Tag_Update model.Tag
+	}
+
+	err = decode.Decode(rawResponse.Data.(map[string]any), &tag)
+	updatedTag := tag.Tag_Update
+	require.Nil(t, err)
+	require.NotNil(t, updatedTag)
+	require.NotNil(t, updatedTag.UpdatedAt)
+	require.Equal(t, tagId, updatedTag.ID)
+	require.Equal(t, "new tag name", updatedTag.Name)
+
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Tag"))
 }
