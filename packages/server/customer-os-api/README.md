@@ -11,3 +11,16 @@
 | NEO4J_AUTH_PWD             | *REQUIRED* passowrd to connect to neo4j database                                                         |
 | NEO4J_AUTH_REALM           | specify a Neo4J realm (optional, can be set to empty string)                                             |
 | NEO4J_MAX_CONN_POOL_SIZE   | Neo4j connection pool size, optional defaults to 100                                                     |
+
+
+## Adding new users (local development)
+A script is available in
+```
+/deployment/scripts/neo4j
+```
+
+run
+```
+./adduser.sh
+```
+from that directory
