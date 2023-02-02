@@ -17,7 +17,7 @@ type ContactRepository interface {
 	SetOwnerRelationship(tenant, contactId, userExternalOwnerId, externalSystemId string) error
 	MergeTextCustomField(tenant, contactId string, field entity.TextCustomField, createdAt time.Time) error
 	MergeContactDefaultPlace(tenant, contactId string, contact entity.ContactData) error
-	MergeContactType(tenant, contactId, contactTypeName string) error
+	MergeTagForContact(tenant, contactId, tagName, sourceApp string) error
 	GetOrCreateContactId(tenant, email, firstName, lastName, source string) (string, error)
 	LinkContactWithOrganization(tenant, contactId, organizationExternalId, source string) error
 }
@@ -289,24 +289,32 @@ func (r *contactRepository) MergeContactDefaultPlace(tenant, contactId string, c
 	return err
 }
 
-func (r *contactRepository) MergeContactType(tenant, contactId, contactTypeName string) error {
+func (r *contactRepository) MergeTagForContact(tenant, contactId, tagName, source string) error {
 	session := utils.NewNeo4jWriteSession(*r.driver)
 	defer session.Close()
 
 	query := "MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant}) " +
-		" MERGE (ct:ContactType {name:$contactTypeName})-[:CONTACT_TYPE_BELONGS_TO_TENANT]->(t) " +
-		" ON CREATE SET ct.id=randomUUID(), ct.createdAt=$now, ct.updatedAt=$now " +
-		" WITH c, ct " +
-		" MERGE (c)-[r:IS_OF_TYPE]->(ct) " +
+		" MERGE (tag:Tag {name:$tagName})-[:TAG_BELONGS_TO_TENANT]->(t) " +
+		" ON CREATE SET tag.id=randomUUID(), " +
+		"				tag.createdAt=$now, " +
+		"				tag.updatedAt=$now, " +
+		"				tag.source=$source," +
+		"				tag.sourceOfTruth=$source," +
+		"				tag.appSource=$source," +
+		"				tag:%s  " +
+		" WITH c, tag " +
+		" MERGE (c)-[r:TAGGED]->(tag) " +
+		"	ON CREATE SET r.taggedAt=$now " +
 		" return r"
 
 	_, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
-		queryResult, err := tx.Run(query,
+		queryResult, err := tx.Run(fmt.Sprintf(query, "Tag_"+tenant),
 			map[string]interface{}{
-				"tenant":          tenant,
-				"contactId":       contactId,
-				"contactTypeName": contactTypeName,
-				"now":             time.Now().UTC(),
+				"tenant":    tenant,
+				"contactId": contactId,
+				"tagName":   tagName,
+				"source":    source,
+				"now":       time.Now().UTC(),
 			})
 		if err != nil {
 			return nil, err

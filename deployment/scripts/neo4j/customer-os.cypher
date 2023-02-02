@@ -14,20 +14,40 @@ MATCH (t:Tenant {name:"openline"})
   ON CREATE SET e.name="Zendesk Sell", e.createdAt=datetime({timezone: 'UTC'});
 
 MATCH (t:Tenant {name:"openline"})
-  MERGE (t)<-[:CONTACT_TYPE_BELONGS_TO_TENANT]-(ct:ContactType {name:"CUSTOMER"})
-  ON CREATE SET ct.id=randomUUID(), ct.createdAt=datetime({timezone: 'UTC'});
+  MERGE (t)<-[:TAG_BELONGS_TO_TENANT]-(tag:Tag {name:"CUSTOMER"})
+  ON CREATE SET tag.id=randomUUID(),
+                tag.createdAt=datetime({timezone: 'UTC'}),
+                tag.updatedAt=datetime({timezone: 'UTC'}),
+                tag.source="openline",
+                tag.sourceOfTruth="openline",
+                tag.appSource="manual";
 
 MATCH (t:Tenant {name:"openline"})
-  MERGE (t)<-[:CONTACT_TYPE_BELONGS_TO_TENANT]-(ct:ContactType {name:"SUPPLIER"})
-  ON CREATE SET ct.id=randomUUID(), ct.createdAt=datetime({timezone: 'UTC'});
+  MERGE (t)<-[:TAG_BELONGS_TO_TENANT]-(tag:Tag {name:"SUPPLIER"})
+  ON CREATE SET tag.id=randomUUID(),
+                tag.createdAt=datetime({timezone: 'UTC'}),
+                tag.updatedAt=datetime({timezone: 'UTC'}),
+                tag.source="openline",
+                tag.sourceOfTruth="openline",
+                tag.appSource="manual";
 
 MATCH (t:Tenant {name:"openline"})
-  MERGE (t)<-[:CONTACT_TYPE_BELONGS_TO_TENANT]-(ct:ContactType {name:"INVESTOR"})
-  ON CREATE SET ct.id=randomUUID(), ct.createdAt=datetime({timezone: 'UTC'});
+  MERGE (t)<-[:TAG_BELONGS_TO_TENANT]-(tag:Tag {name:"INVESTOR"})
+  ON CREATE SET tag.id=randomUUID(),
+                tag.createdAt=datetime({timezone: 'UTC'}),
+                tag.updatedAt=datetime({timezone: 'UTC'}),
+                tag.source="openline",
+                tag.sourceOfTruth="openline",
+                tag.appSource="manual";
 
 MATCH (t:Tenant {name:"openline"})
-  MERGE (t)<-[:CONTACT_TYPE_BELONGS_TO_TENANT]-(ct:ContactType {name:"NOT_SET"})
-  ON CREATE SET ct.id=randomUUID(), ct.createdAt=datetime({timezone: 'UTC'});
+  MERGE (t)<-[:TAG_BELONGS_TO_TENANT]-(tag:Tag {name:"NOT_SET"})
+  ON CREATE SET tag.id=randomUUID(),
+                tag.createdAt=datetime({timezone: 'UTC'}),
+                tag.updatedAt=datetime({timezone: 'UTC'}),
+                tag.source="openline",
+                tag.sourceOfTruth="openline",
+                tag.appSource="manual";
 
 MATCH (t:Tenant {name:"openline"})
   MERGE (t)<-[:ORGANIZATION_TYPE_BELONGS_TO_TENANT]-(ot:OrganizationType {name:"COMPANY"})
@@ -76,7 +96,7 @@ MERGE (o:Conversation{id:"echotest"}) ON CREATE SET  o:Conversation_openline, o.
 OPTIONAL MATCH (c:Contact)-[:CONTACT_BELONGS_TO_TENANT]->(t) WHERE c.id ="echotest"  MERGE (c)-[:PARTICIPATES]->(o)  RETURN o;
 
 MATCH (t:Tenant {name:"openline"})<-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]-(e:ExternalSystem) SET e:ExternalSystem_openline;
-MATCH (t:Tenant {name:"openline"})<-[:CONTACT_TYPE_BELONGS_TO_TENANT]-(ct:ContactType) SET ct:ContactType_openline;
+MATCH (t:Tenant {name:"openline"})<-[:TAG_BELONGS_TO_TENANT]-(tag:Tag) SET tag:Tag_openline;
 MATCH (t:Tenant {name:"openline"})<-[:ORGANIZATION_TYPE_BELONGS_TO_TENANT]-(ot:OrganizationType) SET ot:OrganizationType_openline;
 MATCH (t:Tenant {name:"openline"})<-[:USER_BELONGS_TO_TENANT]-(u:User) SET u:User_openline;
 MATCH (t:Tenant {name:"openline"})<-[:CONTACT_BELONGS_TO_TENANT]-(c:Contact) SET c:Contact_openline;
@@ -84,8 +104,7 @@ MATCH (c:Contact_openline)-[:HAS]->(e:Email) SET e:Email_openline;
 
 CREATE CONSTRAINT tenant_name_unique IF NOT EXISTS ON (t:Tenant) ASSERT t.name IS UNIQUE;
 CREATE INDEX contact_id_idx IF NOT EXISTS FOR (n:Contact) ON (n.id);
-CREATE INDEX contact_type_id_idx IF NOT EXISTS FOR (n:ContactType) ON (n.id);
-CREATE INDEX contact_group_id_idx IF NOT EXISTS FOR (n:ContactGroup) ON (n.id);
+CREATE INDEX tag_id_idx IF NOT EXISTS FOR (n:Tag) ON (n.id);
 CREATE INDEX organization_id_idx IF NOT EXISTS FOR (n:Organization) ON (n.id);
 CREATE INDEX custom_field_id_idx IF NOT EXISTS FOR (n:CustomField) ON (n.id);
 CREATE INDEX field_set_id_idx IF NOT EXISTS FOR (n:FieldSet) ON (n.id);
@@ -93,9 +112,6 @@ CREATE INDEX email_id_idx IF NOT EXISTS FOR (n:Email) ON (n.id);
 CREATE INDEX email_email_idx IF NOT EXISTS FOR (n:Email) ON (n.email);
 CREATE INDEX phone_id_idx IF NOT EXISTS FOR (n:PhoneNumber) ON (n.id);
 CREATE INDEX phone_e164_idx IF NOT EXISTS FOR (n:PhoneNumber) ON (n.e164);
-CREATE INDEX entity_definition_id_idx IF NOT EXISTS FOR (n:EntityDefinition) ON (n.id);
-CREATE INDEX field_set_definition_id_idx IF NOT EXISTS FOR (n:FieldSetDefinition) ON (n.id);
-CREATE INDEX custom_field_definition_id_idx IF NOT EXISTS FOR (n:CustomFieldDefinition) ON (n.id);
 CREATE INDEX conversation_id_idx IF NOT EXISTS FOR (n:Conversation) ON (n.id);
 
 :exit;
