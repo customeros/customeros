@@ -11,10 +11,11 @@ MATCH (t:Tenant {name:"openline"})
     		u.sourceOfTruth="openline",
     		u.appSource="manual";
 
-#Create email node associated with a user
-match (u:User)-[:USER_BELONGS_TO_TENANT]-(t:Tenant{name:"openline"}) MERGE (u)-[r:HAS]->(e:Email)
+#Create email node associated with a user (for all tenants)
+
+match (u:User)-[:USER_BELONGS_TO_TENANT]-(t:Tenant{name:"test"}) MERGE (u)-[r:HAS]->(e:Email)
 ON CREATE SET e.email=u.email, e.label="WORK", r.primary=true, e.id=randomUUID(), e.source=u.source, e.sourceOfTruth=u.sourceOfTruth,
-e.appSource=u.appSource,  e.createdAt=u.createdAt, e.updatedAt=u.updatedAt, e:Email_openline return u, r, e;
+e.appSource=u.appSource,  e.createdAt=u.createdAt, e.updatedAt=u.updatedAt, e:Email_test return u, r, e;
 
 #Check the new relation
 match (u:User)-[r:HAS]->(e:Email) return u, e, r
@@ -23,7 +24,7 @@ match (u:User)-[r:HAS]->(e:Email) return u, e, r
 #match (u:User)-[r:HAS]->(e:Email) detach delete e,r;
 
 #Remove email property from user
-#match (u:User)-[r:HAS]->(e:Email) REMOVE u.email RETURN u
+match (u:User)-[r:HAS]->(e:Email) REMOVE u.email RETURN u
 
 #Rename existing relations
 MATCH (n)-[r:EMAILED_AT]->(m)

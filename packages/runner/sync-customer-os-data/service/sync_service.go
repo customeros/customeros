@@ -261,6 +261,12 @@ func (s *syncService) syncUsers(dataService common.DataService, syncDate time.Ti
 				logrus.Errorf("failed merging user with external reference %v for tenant %v :%v", v.ExternalId, tenant, err)
 			}
 
+			err = s.repositories.UserRepository.MergeEmail(tenant, userId, v.Email, v.ExternalSystem, v.CreatedAt)
+			if err != nil {
+				failedSync = true
+				logrus.Errorf("failed merging email for user with id %v for tenant %v :%v", userId, tenant, err)
+			}
+
 			logrus.Debugf("successfully merged user with id %v for tenant %v from %v", userId, tenant, dataService.SourceId())
 			if err := dataService.MarkUserProcessed(v.ExternalOwnerId, runId, failedSync == false); err != nil {
 				failed++
