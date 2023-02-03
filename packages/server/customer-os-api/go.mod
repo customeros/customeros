@@ -23,7 +23,7 @@ require (
 	github.com/vektah/gqlparser/v2 v2.5.1
 	golang.org/x/exp v0.0.0-20230131160201-f062dba9d201
 	gorm.io/driver/postgres v1.4.6
-	gorm.io/gorm v1.24.4
+	gorm.io/gorm v1.24.5
 )
 
 require (
