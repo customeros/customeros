@@ -14,8 +14,7 @@ type TagService interface {
 	Update(ctx context.Context, tag *entity.TagEntity) (*entity.TagEntity, error)
 	UnlinkAndDelete(ctx context.Context, id string) (bool, error)
 	GetAll(ctx context.Context) (*entity.TagEntities, error)
-	// FIXME alexb refactor
-	FindTagForContact(ctx context.Context, contactId string) (*entity.TagEntity, error)
+	GetTagsForContact(ctx context.Context, contactId string) (*entity.TagEntities, error)
 }
 
 type tagService struct {
@@ -53,26 +52,27 @@ func (s *tagService) UnlinkAndDelete(ctx context.Context, id string) (bool, erro
 }
 
 func (s *tagService) GetAll(ctx context.Context) (*entity.TagEntities, error) {
-	tagDbNodesPtr, err := s.repository.TagRepository.GetAll(common.GetContext(ctx).Tenant)
+	tagDbNodes, err := s.repository.TagRepository.GetAll(common.GetContext(ctx).Tenant)
 	if err != nil {
 		return nil, err
 	}
 	tagEntities := entity.TagEntities{}
-	for _, dbNodePtr := range tagDbNodesPtr {
+	for _, dbNodePtr := range tagDbNodes {
 		tagEntities = append(tagEntities, *s.mapDbNodeToTagEntity(*dbNodePtr))
 	}
 	return &tagEntities, nil
 }
 
-func (s *tagService) FindTagForContact(ctx context.Context, contactId string) (*entity.TagEntity, error) {
-	tagDbNode, err := s.repository.TagRepository.FindForContact(common.GetContext(ctx).Tenant, contactId)
+func (s *tagService) GetTagsForContact(ctx context.Context, contactId string) (*entity.TagEntities, error) {
+	tagDbNodes, err := s.repository.TagRepository.GetForContact(common.GetTenantFromContext(ctx), contactId)
 	if err != nil {
 		return nil, err
-	} else if tagDbNode == nil {
-		return nil, nil
-	} else {
-		return s.mapDbNodeToTagEntity(*tagDbNode), nil
 	}
+	tagEntities := entity.TagEntities{}
+	for _, dbNodePtr := range tagDbNodes {
+		tagEntities = append(tagEntities, *s.mapDbNodeToTagEntity(*dbNodePtr))
+	}
+	return &tagEntities, nil
 }
 
 func (s *tagService) mapDbNodeToTagEntity(dbNode dbtype.Node) *entity.TagEntity {

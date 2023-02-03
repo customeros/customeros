@@ -13,8 +13,7 @@ type TagRepository interface {
 	Update(tenant string, tag entity.TagEntity) (*dbtype.Node, error)
 	UnlinkAndDelete(tenant string, tagId string) error
 	GetAll(tenant string) ([]*dbtype.Node, error)
-	// FIXME alexb refactor
-	FindForContact(tenant, contactId string) (*dbtype.Node, error)
+	GetForContact(tenant, contactId string) ([]*dbtype.Node, error)
 }
 
 type tagRepository struct {
@@ -121,28 +120,22 @@ func (r *tagRepository) GetAll(tenant string) ([]*dbtype.Node, error) {
 	return result.([]*dbtype.Node), err
 }
 
-func (r *tagRepository) FindForContact(tenant, contactId string) (*dbtype.Node, error) {
+func (r *tagRepository) GetForContact(tenant, contactId string) ([]*dbtype.Node, error) {
 	session := utils.NewNeo4jReadSession(*r.driver)
 	defer session.Close()
 
-	dbRecords, err := session.ReadTransaction(func(tx neo4j.Transaction) (any, error) {
+	result, err := session.ReadTransaction(func(tx neo4j.Transaction) (any, error) {
 		if queryResult, err := tx.Run(`
-			MATCH (t:Tenant {name:$tenant})<-[:CONTACT_BELONGS_TO_TENANT]-(c:Contact {id:$contactId})-[:IS_OF_TYPE]->(o:Tag)
-			RETURN o`,
+			MATCH (t:Tenant {name:$tenant})<-[:CONTACT_BELONGS_TO_TENANT]-(c:Contact {id:$contactId})-[:TAGGED]->(tag:Tag)
+			RETURN tag ORDER BY tag.name`,
 			map[string]any{
 				"tenant":    tenant,
 				"contactId": contactId,
 			}); err != nil {
 			return nil, err
 		} else {
-			return queryResult.Collect()
+			return utils.ExtractAllRecordsFirstValueAsNodePtrs(queryResult, err)
 		}
 	})
-	if err != nil {
-		return nil, err
-	} else if len(dbRecords.([]*neo4j.Record)) == 0 {
-		return nil, nil
-	} else {
-		return utils.NodePtr(dbRecords.([]*neo4j.Record)[0].Values[0].(dbtype.Node)), nil
-	}
+	return result.([]*dbtype.Node), err
 }

@@ -33,8 +33,12 @@ func (r *contactResolver) ContactType(ctx context.Context, obj *model.Contact) (
 
 // Tags is the resolver for the tags field.
 func (r *contactResolver) Tags(ctx context.Context, obj *model.Contact) ([]*model.Tag, error) {
-	// FIXME alexb add test
-	panic(fmt.Errorf("not implemented: Tags - tags"))
+	tagEntities, err := r.Services.TagService.GetTagsForContact(ctx, obj.ID)
+	if err != nil {
+		graphql.AddErrorf(ctx, "Failed to get tags for contact %s", obj.ID)
+		return nil, err
+	}
+	return mapper.MapEntitiesToTags(tagEntities), nil
 }
 
 // Roles is the resolver for the roles field.

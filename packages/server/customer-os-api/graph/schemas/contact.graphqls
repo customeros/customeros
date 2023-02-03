@@ -30,6 +30,7 @@ extend type Mutation {
     contact_Update(input: ContactUpdateInput!): Contact!
     contact_HardDelete(contactId: ID!): Result!
     contact_SoftDelete(contactId: ID!): Result!
+
     contact_AddTagById(input: ContactTagInput): Contact!
     contact_RemoveTagById(input: ContactTagInput): Contact!
 }
