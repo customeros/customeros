@@ -57,6 +57,7 @@ type Contact struct {
 	Source DataSource `json:"source"`
 	// User-defined field that defines the relationship type the contact has with your business.  `Customer`, `Partner`, `Lead` are examples.
 	ContactType *ContactType `json:"contactType"`
+	Tags        []*Tag       `json:"tags"`
 	// `organizationName` and `jobTitle` of the contact if it has been associated with an organization.
 	// **Required.  If no values it returns an empty array.**
 	Roles         []*ContactRole    `json:"roles"`
@@ -219,6 +220,11 @@ type ContactRoleUpdateInput struct {
 	JobTitle            *string `json:"jobTitle"`
 	Primary             *bool   `json:"primary"`
 	ResponsibilityLevel *int64  `json:"responsibilityLevel"`
+}
+
+type ContactTagInput struct {
+	ContactID string `json:"contactId"`
+	TagID     string `json:"tagId"`
 }
 
 type ContactType struct {
@@ -768,6 +774,25 @@ type SortBy struct {
 	By            string           `json:"by"`
 	Direction     SortingDirection `json:"direction"`
 	CaseSensitive *bool            `json:"caseSensitive"`
+}
+
+type Tag struct {
+	ID        string     `json:"id"`
+	Name      string     `json:"name"`
+	CreatedAt time.Time  `json:"createdAt"`
+	UpdatedAt time.Time  `json:"updatedAt"`
+	Source    DataSource `json:"source"`
+	AppSource string     `json:"appSource"`
+}
+
+type TagInput struct {
+	Name      string  `json:"name"`
+	AppSource *string `json:"appSource"`
+}
+
+type TagUpdateInput struct {
+	ID   string `json:"id"`
+	Name string `json:"name"`
 }
 
 // Describes the User of customerOS.  A user is the person who logs into the Openline platform.

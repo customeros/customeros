@@ -1,5 +1,5 @@
 package entity
 
 type Neo4jNode interface {
-	Labels() []string
+	Labels(tenant string) []string
 }

@@ -1,0 +1,13 @@
+mutation UpdateTag($tagId: ID!, $tagName: String!) {
+  tag_Update(input: {
+                                id: $tagId
+                                name: $tagName
+                            }) {
+      id
+      name
+      createdAt
+      updatedAt
+      source
+      appSource
+    }
+}

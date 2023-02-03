@@ -3,6 +3,7 @@ package utils
 import (
 	"github.com/neo4j/neo4j-go-driver/v4/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v4/neo4j/dbtype"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"time"
 )
 
@@ -43,6 +44,21 @@ func ExtractSingleRecordFirstValue(result neo4j.Result, err error) (any, error) 
 	} else {
 		return record.Values[0], nil
 	}
+}
+
+func ExtractAllRecordsFirstValueAsNodePtrs(result neo4j.Result, err error) ([]*dbtype.Node, error) {
+	if err != nil {
+		return nil, err
+	}
+	dbNodes := []*dbtype.Node{}
+	records, err := result.Collect()
+	if err != nil {
+		return nil, err
+	}
+	for _, v := range records {
+		dbNodes = append(dbNodes, utils.NodePtr(v.Values[0].(dbtype.Node)))
+	}
+	return dbNodes, nil
 }
 
 func ExtractSingleRecordFirstValueAsNode(result neo4j.Result, err error) (*dbtype.Node, error) {

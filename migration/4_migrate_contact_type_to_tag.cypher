@@ -6,7 +6,6 @@ MERGE (t)<-[:TAG_BELONGS_TO_TENANT]-(tg:Tag {name: ct.name})-[:TEMP_LINK]->(ct)
 ON CREATE SET   tg.createdAt=datetime({timezone: 'UTC'}),
                 tg.updatedAt=datetime({timezone: 'UTC'}),
                 tg.source=ct.source,
-                tg.sourceOfTruth=ct.sourceOfTruth,
                 tg.appSource=ct.appSource,
                 tg.id=randomUUID(),
                 tg.tenant=t.name;

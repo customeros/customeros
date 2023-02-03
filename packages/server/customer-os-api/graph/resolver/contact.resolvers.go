@@ -30,6 +30,16 @@ func (r *contactResolver) ContactType(ctx context.Context, obj *model.Contact) (
 	return mapper.MapEntityToContactType(contactTypeEntity), nil
 }
 
+// Tags is the resolver for the tags field.
+func (r *contactResolver) Tags(ctx context.Context, obj *model.Contact) ([]*model.Tag, error) {
+	tagEntities, err := r.Services.TagService.GetTagsForContact(ctx, obj.ID)
+	if err != nil {
+		graphql.AddErrorf(ctx, "Failed to get tags for contact %s", obj.ID)
+		return nil, err
+	}
+	return mapper.MapEntitiesToTags(tagEntities), nil
+}
+
 // Roles is the resolver for the roles field.
 func (r *contactResolver) Roles(ctx context.Context, obj *model.Contact) ([]*model.ContactRole, error) {
 	contactRoleEntities, err := r.Services.ContactRoleService.FindAllForContact(ctx, obj.ID)
@@ -77,7 +87,7 @@ func (r *contactResolver) Emails(ctx context.Context, obj *model.Contact) ([]*mo
 
 // Addresses is the resolver for the addresses field.
 func (r *contactResolver) Addresses(ctx context.Context, obj *model.Contact) ([]*model.Place, error) {
-	addressEntities, err := r.Services.AddressService.FindAllForContact(ctx, obj.ID)
+	addressEntities, err := r.Services.PlaceService.FindAllForContact(ctx, obj.ID)
 	if err != nil {
 		graphql.AddErrorf(ctx, "Failed to get addresses for contact %s", obj.ID)
 		return nil, err
@@ -229,6 +239,26 @@ func (r *mutationResolver) ContactSoftDelete(ctx context.Context, contactID stri
 	return &model.Result{
 		Result: result,
 	}, nil
+}
+
+// ContactAddTagByID is the resolver for the contact_AddTagById field.
+func (r *mutationResolver) ContactAddTagByID(ctx context.Context, input *model.ContactTagInput) (*model.Contact, error) {
+	updatedContact, err := r.Services.ContactService.AddTag(ctx, input.ContactID, input.TagID)
+	if err != nil {
+		graphql.AddErrorf(ctx, "Failed to add tag %s to contact %s", input.TagID, input.ContactID)
+		return nil, err
+	}
+	return mapper.MapEntityToContact(updatedContact), nil
+}
+
+// ContactRemoveTagByID is the resolver for the contact_RemoveTagById field.
+func (r *mutationResolver) ContactRemoveTagByID(ctx context.Context, input *model.ContactTagInput) (*model.Contact, error) {
+	updatedContact, err := r.Services.ContactService.RemoveTag(ctx, input.ContactID, input.TagID)
+	if err != nil {
+		graphql.AddErrorf(ctx, "Failed to remove tag %s from contact %s", input.TagID, input.ContactID)
+		return nil, err
+	}
+	return mapper.MapEntityToContact(updatedContact), nil
 }
 
 // Contact is the resolver for the contact field.

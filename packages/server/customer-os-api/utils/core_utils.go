@@ -133,3 +133,7 @@ func ReverseMap[K comparable, V comparable](in map[K]V) map[V]K {
 	}
 	return out
 }
+
+func Now() time.Time {
+	return time.Now().UTC()
+}

@@ -542,6 +542,44 @@ func TestQueryResolver_Contact_WithNotes_ById(t *testing.T) {
 	require.Nil(t, noteWithoutUser.CreatedBy)
 }
 
+func TestQueryResolver_Contact_WithTags_ById(t *testing.T) {
+	defer tearDownTestCase()(t)
+	neo4jt.CreateTenant(driver, tenantName)
+	contactId := neo4jt.CreateDefaultContact(driver, tenantName)
+	contactId2 := neo4jt.CreateDefaultContact(driver, tenantName)
+	tagId1 := neo4jt.CreateTag(driver, tenantName, "tag1")
+	tagId2 := neo4jt.CreateTag(driver, tenantName, "tag2")
+	tagId3 := neo4jt.CreateTag(driver, tenantName, "tag3")
+	neo4jt.TagContact(driver, contactId, tagId1)
+	neo4jt.TagContact(driver, contactId, tagId2)
+	neo4jt.TagContact(driver, contactId2, tagId3)
+
+	require.Equal(t, 2, neo4jt.GetCountOfNodes(driver, "Contact"))
+	require.Equal(t, 3, neo4jt.GetCountOfNodes(driver, "Tag"))
+	require.Equal(t, 3, neo4jt.GetCountOfRelationships(driver, "TAGGED"))
+
+	rawResponse, err := c.RawPost(getQuery("get_contact_with_tags_by_id"),
+		client.Var("contactId", contactId))
+	assertRawResponseSuccess(t, rawResponse, err)
+
+	var contactStruct struct {
+		Contact model.Contact
+	}
+
+	err = decode.Decode(rawResponse.Data.(map[string]any), &contactStruct)
+	contact := contactStruct.Contact
+
+	require.Nil(t, err)
+	require.Equal(t, contactId, contact.ID)
+
+	tags := contact.Tags
+	require.Equal(t, 2, len(tags))
+	require.Equal(t, tagId1, tags[0].ID)
+	require.Equal(t, "tag1", tags[0].Name)
+	require.Equal(t, tagId2, tags[1].ID)
+	require.Equal(t, "tag2", tags[1].Name)
+}
+
 func TestQueryResolver_Contact_WithAddresses_ById(t *testing.T) {
 	defer tearDownTestCase()(t)
 	neo4jt.CreateTenant(driver, tenantName)
@@ -894,4 +932,75 @@ func TestQueryResolver_Contact_WithOrganizations_ById(t *testing.T) {
 	require.Equal(t, 2, len(organizations))
 	require.Equal(t, organizationId1, organizations[0].ID)
 	require.Equal(t, organizationId2, organizations[1].ID)
+}
+
+func TestMutationResolver_ContactAddTagByID(t *testing.T) {
+	defer tearDownTestCase()(t)
+	neo4jt.CreateTenant(driver, tenantName)
+
+	contactId := neo4jt.CreateDefaultContact(driver, tenantName)
+	tagId1 := neo4jt.CreateTag(driver, tenantName, "tag1")
+	tagId2 := neo4jt.CreateTag(driver, tenantName, "tag2")
+	neo4jt.TagContact(driver, contactId, tagId1)
+
+	rawResponse, err := c.RawPost(getQuery("add_tag_to_contact"),
+		client.Var("contactId", contactId),
+		client.Var("tagId", tagId2),
+	)
+	assertRawResponseSuccess(t, rawResponse, err)
+
+	var contactStruct struct {
+		Contact_AddTagById model.Contact
+	}
+
+	err = decode.Decode(rawResponse.Data.(map[string]any), &contactStruct)
+	require.Nil(t, err)
+	require.NotNil(t, contactStruct)
+	tags := contactStruct.Contact_AddTagById.Tags
+	require.Equal(t, contactId, contactStruct.Contact_AddTagById.ID)
+	require.Equal(t, 2, len(tags))
+	require.Equal(t, tagId1, tags[0].ID)
+	require.Equal(t, "tag1", tags[0].Name)
+	require.Equal(t, tagId2, tags[1].ID)
+	require.Equal(t, "tag2", tags[1].Name)
+
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Contact"))
+	require.Equal(t, 2, neo4jt.GetCountOfNodes(driver, "Tag"))
+	require.Equal(t, 2, neo4jt.GetCountOfRelationships(driver, "TAGGED"))
+}
+
+func TestMutationResolver_ContactRemoveTagByID(t *testing.T) {
+	defer tearDownTestCase()(t)
+	neo4jt.CreateTenant(driver, tenantName)
+
+	contactId := neo4jt.CreateDefaultContact(driver, tenantName)
+	tagId1 := neo4jt.CreateTag(driver, tenantName, "tag1")
+	tagId2 := neo4jt.CreateTag(driver, tenantName, "tag2")
+	neo4jt.TagContact(driver, contactId, tagId1)
+	neo4jt.TagContact(driver, contactId, tagId2)
+
+	require.Equal(t, 2, neo4jt.GetCountOfRelationships(driver, "TAGGED"))
+
+	rawResponse, err := c.RawPost(getQuery("remove_tag_from_contact"),
+		client.Var("contactId", contactId),
+		client.Var("tagId", tagId2),
+	)
+	assertRawResponseSuccess(t, rawResponse, err)
+
+	var contactStruct struct {
+		Contact_RemoveTagById model.Contact
+	}
+
+	err = decode.Decode(rawResponse.Data.(map[string]any), &contactStruct)
+	require.Nil(t, err)
+	require.NotNil(t, contactStruct)
+	tags := contactStruct.Contact_RemoveTagById.Tags
+	require.Equal(t, contactId, contactStruct.Contact_RemoveTagById.ID)
+	require.Equal(t, 1, len(tags))
+	require.Equal(t, tagId1, tags[0].ID)
+	require.Equal(t, "tag1", tags[0].Name)
+
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Contact"))
+	require.Equal(t, 2, neo4jt.GetCountOfNodes(driver, "Tag"))
+	require.Equal(t, 1, neo4jt.GetCountOfRelationships(driver, "TAGGED"))
 }
