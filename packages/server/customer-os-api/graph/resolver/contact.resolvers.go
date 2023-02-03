@@ -6,7 +6,6 @@ package resolver
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"github.com/99designs/gqlgen/graphql"
@@ -244,14 +243,22 @@ func (r *mutationResolver) ContactSoftDelete(ctx context.Context, contactID stri
 
 // ContactAddTagByID is the resolver for the contact_AddTagById field.
 func (r *mutationResolver) ContactAddTagByID(ctx context.Context, input *model.ContactTagInput) (*model.Contact, error) {
-	// FIXME alexb add test
-	panic(fmt.Errorf("not implemented: ContactAddTagByID - contact_AddTagById"))
+	updatedContact, err := r.Services.ContactService.AddTag(ctx, input.ContactID, input.TagID)
+	if err != nil {
+		graphql.AddErrorf(ctx, "Failed to add tag %s to contact %s", input.TagID, input.ContactID)
+		return nil, err
+	}
+	return mapper.MapEntityToContact(updatedContact), nil
 }
 
 // ContactRemoveTagByID is the resolver for the contact_RemoveTagById field.
 func (r *mutationResolver) ContactRemoveTagByID(ctx context.Context, input *model.ContactTagInput) (*model.Contact, error) {
-	// FIXME alexb add test
-	panic(fmt.Errorf("not implemented: ContactRemoveTagByID - contact_RemoveTagById"))
+	updatedContact, err := r.Services.ContactService.RemoveTag(ctx, input.ContactID, input.TagID)
+	if err != nil {
+		graphql.AddErrorf(ctx, "Failed to remove tag %s from contact %s", input.TagID, input.ContactID)
+		return nil, err
+	}
+	return mapper.MapEntityToContact(updatedContact), nil
 }
 
 // Contact is the resolver for the contact field.

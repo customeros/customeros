@@ -45,7 +45,6 @@ func (r *mutationResolver) TagDelete(ctx context.Context, id string) (*model.Res
 
 // Tags is the resolver for the tags field.
 func (r *queryResolver) Tags(ctx context.Context) ([]*model.Tag, error) {
-	// FIXME alexb add test
 	tags, err := r.Services.TagService.GetAll(ctx)
 	if err != nil {
 		graphql.AddErrorf(ctx, "Failed to fetch tags")

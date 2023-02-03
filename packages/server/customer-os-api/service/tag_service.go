@@ -18,17 +18,17 @@ type TagService interface {
 }
 
 type tagService struct {
-	repository *repository.Repositories
+	repositories *repository.Repositories
 }
 
 func NewTagService(repository *repository.Repositories) TagService {
 	return &tagService{
-		repository: repository,
+		repositories: repository,
 	}
 }
 
 func (s *tagService) Merge(ctx context.Context, tag *entity.TagEntity) (*entity.TagEntity, error) {
-	tagNodePtr, err := s.repository.TagRepository.Merge(common.GetTenantFromContext(ctx), *tag)
+	tagNodePtr, err := s.repositories.TagRepository.Merge(common.GetTenantFromContext(ctx), *tag)
 	if err != nil {
 		return nil, err
 	}
@@ -36,7 +36,7 @@ func (s *tagService) Merge(ctx context.Context, tag *entity.TagEntity) (*entity.
 }
 
 func (s *tagService) Update(ctx context.Context, tag *entity.TagEntity) (*entity.TagEntity, error) {
-	tagNodePtr, err := s.repository.TagRepository.Update(common.GetTenantFromContext(ctx), *tag)
+	tagNodePtr, err := s.repositories.TagRepository.Update(common.GetTenantFromContext(ctx), *tag)
 	if err != nil {
 		return nil, err
 	}
@@ -44,7 +44,7 @@ func (s *tagService) Update(ctx context.Context, tag *entity.TagEntity) (*entity
 }
 
 func (s *tagService) UnlinkAndDelete(ctx context.Context, id string) (bool, error) {
-	err := s.repository.TagRepository.UnlinkAndDelete(common.GetTenantFromContext(ctx), id)
+	err := s.repositories.TagRepository.UnlinkAndDelete(common.GetTenantFromContext(ctx), id)
 	if err != nil {
 		return false, err
 	}
@@ -52,7 +52,7 @@ func (s *tagService) UnlinkAndDelete(ctx context.Context, id string) (bool, erro
 }
 
 func (s *tagService) GetAll(ctx context.Context) (*entity.TagEntities, error) {
-	tagDbNodes, err := s.repository.TagRepository.GetAll(common.GetContext(ctx).Tenant)
+	tagDbNodes, err := s.repositories.TagRepository.GetAll(common.GetContext(ctx).Tenant)
 	if err != nil {
 		return nil, err
 	}
@@ -64,7 +64,7 @@ func (s *tagService) GetAll(ctx context.Context) (*entity.TagEntities, error) {
 }
 
 func (s *tagService) GetTagsForContact(ctx context.Context, contactId string) (*entity.TagEntities, error) {
-	tagDbNodes, err := s.repository.TagRepository.GetForContact(common.GetTenantFromContext(ctx), contactId)
+	tagDbNodes, err := s.repositories.TagRepository.GetForContact(common.GetTenantFromContext(ctx), contactId)
 	if err != nil {
 		return nil, err
 	}

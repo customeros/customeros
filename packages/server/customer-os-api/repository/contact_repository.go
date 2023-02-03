@@ -24,6 +24,8 @@ type ContactRepository interface {
 	GetPaginatedContactsForOrganization(session neo4j.Session, tenant, organizationId string, skip, limit int, filter *utils.CypherFilter, sort *utils.CypherSort) (*utils.DbNodesWithTotalCount, error)
 	GetAllForConversation(session neo4j.Session, tenant, conversationId string) ([]*dbtype.Node, error)
 	GetContactForRole(session neo4j.Session, tenant, roleId string) (*dbtype.Node, error)
+	AddTag(tenant, contactId, tagId string) (*dbtype.Node, error)
+	RemoveTag(tenant, contactId, tagId string) (*dbtype.Node, error)
 }
 
 type contactRepository struct {
@@ -373,4 +375,57 @@ func (r *contactRepository) GetContactForRole(session neo4j.Session, tenant, rol
 		return nil, err
 	}
 	return result.(*dbtype.Node), nil
+}
+
+func (r *contactRepository) AddTag(tenant, contactId, tagId string) (*dbtype.Node, error) {
+	session := utils.NewNeo4jWriteSession(*r.driver)
+	defer session.Close()
+
+	query := "MATCH (t:Tenant {name:$tenant}), " +
+		" (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(t), " +
+		" (tag:Tag {id:$tagId})-[:TAG_BELONGS_TO_TENANT]->(t) " +
+		" MERGE (c)-[rel:TAGGED]->(tag) " +
+		" ON CREATE SET rel.taggedAt=$now " +
+		" RETURN c"
+
+	if result, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
+		queryResult, err := tx.Run(query,
+			map[string]any{
+				"tenant":    tenant,
+				"contactId": contactId,
+				"tagId":     tagId,
+				"now":       utils.Now(),
+			})
+		return utils.ExtractSingleRecordFirstValueAsNode(queryResult, err)
+	}); err != nil {
+		return nil, err
+	} else {
+		return result.(*dbtype.Node), nil
+	}
+}
+
+func (r *contactRepository) RemoveTag(tenant, contactId, tagId string) (*dbtype.Node, error) {
+	session := utils.NewNeo4jWriteSession(*r.driver)
+	defer session.Close()
+
+	query := "MATCH (t:Tenant {name:$tenant}), " +
+		" (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(t), " +
+		" (tag:Tag {id:$tagId})-[:TAG_BELONGS_TO_TENANT]->(t) " +
+		" OPTIONAL MATCH (c)-[rel:TAGGED]->(tag) " +
+		" DELETE rel " +
+		" RETURN c"
+
+	if result, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
+		queryResult, err := tx.Run(query,
+			map[string]any{
+				"tenant":    tenant,
+				"contactId": contactId,
+				"tagId":     tagId,
+			})
+		return utils.ExtractSingleRecordFirstValueAsNode(queryResult, err)
+	}); err != nil {
+		return nil, err
+	} else {
+		return result.(*dbtype.Node), nil
+	}
 }

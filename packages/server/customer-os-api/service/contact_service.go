@@ -25,6 +25,9 @@ type ContactService interface {
 	SoftDelete(ctx context.Context, id string) (bool, error)
 	GetContactForRole(ctx context.Context, roleId string) (*entity.ContactEntity, error)
 	GetContactsForOrganization(ctx context.Context, organizationId string, page, limit int, filter *model.Filter, sortBy []*model.SortBy) (*utils.Pagination, error)
+
+	AddTag(ctx context.Context, contactId string, tagId string) (*entity.ContactEntity, error)
+	RemoveTag(ctx context.Context, contactId string, tagId string) (*entity.ContactEntity, error)
 }
 
 type ContactCreateData struct {
@@ -465,6 +468,22 @@ func (s *contactService) GetContactsForOrganization(ctx context.Context, organiz
 	}
 	paginatedResult.SetRows(&contacts)
 	return &paginatedResult, nil
+}
+
+func (s *contactService) AddTag(ctx context.Context, contactId string, tagId string) (*entity.ContactEntity, error) {
+	contactNodePtr, err := s.repositories.ContactRepository.AddTag(common.GetTenantFromContext(ctx), contactId, tagId)
+	if err != nil {
+		return nil, err
+	}
+	return s.mapDbNodeToContactEntity(*contactNodePtr), nil
+}
+
+func (s *contactService) RemoveTag(ctx context.Context, contactId string, tagId string) (*entity.ContactEntity, error) {
+	contactNodePtr, err := s.repositories.ContactRepository.RemoveTag(common.GetTenantFromContext(ctx), contactId, tagId)
+	if err != nil {
+		return nil, err
+	}
+	return s.mapDbNodeToContactEntity(*contactNodePtr), nil
 }
 
 func (s *contactService) mapDbNodeToContactEntity(dbContactNode dbtype.Node) *entity.ContactEntity {
