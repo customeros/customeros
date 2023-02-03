@@ -13,7 +13,6 @@ type TagService interface {
 	Merge(ctx context.Context, tag *entity.TagEntity) (*entity.TagEntity, error)
 	Update(ctx context.Context, tag *entity.TagEntity) (*entity.TagEntity, error)
 	UnlinkAndDelete(ctx context.Context, id string) (bool, error)
-	// FIXME alexb refactor
 	GetAll(ctx context.Context) (*entity.TagEntities, error)
 	// FIXME alexb refactor
 	FindTagForContact(ctx context.Context, contactId string) (*entity.TagEntity, error)
@@ -54,14 +53,13 @@ func (s *tagService) UnlinkAndDelete(ctx context.Context, id string) (bool, erro
 }
 
 func (s *tagService) GetAll(ctx context.Context) (*entity.TagEntities, error) {
-	tagDbNodes, err := s.repository.TagRepository.FindAll(common.GetContext(ctx).Tenant)
+	tagDbNodesPtr, err := s.repository.TagRepository.GetAll(common.GetContext(ctx).Tenant)
 	if err != nil {
 		return nil, err
 	}
 	tagEntities := entity.TagEntities{}
-	for _, dbNode := range tagDbNodes {
-		tagEntity := s.mapDbNodeToTagEntity(*dbNode)
-		tagEntities = append(tagEntities, *tagEntity)
+	for _, dbNodePtr := range tagDbNodesPtr {
+		tagEntities = append(tagEntities, *s.mapDbNodeToTagEntity(*dbNodePtr))
 	}
 	return &tagEntities, nil
 }

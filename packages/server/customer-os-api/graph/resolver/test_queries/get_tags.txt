@@ -1,0 +1,10 @@
+query {
+  tags {
+    id
+    name
+    createdAt
+    updatedAt
+    source
+    appSource
+  }
+}

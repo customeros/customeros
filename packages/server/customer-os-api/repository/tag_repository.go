@@ -12,8 +12,7 @@ type TagRepository interface {
 	Merge(tenant string, tag entity.TagEntity) (*dbtype.Node, error)
 	Update(tenant string, tag entity.TagEntity) (*dbtype.Node, error)
 	UnlinkAndDelete(tenant string, tagId string) error
-	// FIXME alexb refactor
-	FindAll(tenant string) ([]*dbtype.Node, error)
+	GetAll(tenant string) ([]*dbtype.Node, error)
 	// FIXME alexb refactor
 	FindForContact(tenant, contactId string) (*dbtype.Node, error)
 }
@@ -103,27 +102,23 @@ func (r *tagRepository) UnlinkAndDelete(tenant string, tagId string) error {
 	}
 }
 
-func (r *tagRepository) FindAll(tenant string) ([]*dbtype.Node, error) {
+func (r *tagRepository) GetAll(tenant string) ([]*dbtype.Node, error) {
 	session := utils.NewNeo4jReadSession(*r.driver)
 	defer session.Close()
 
-	records, err := session.ReadTransaction(func(tx neo4j.Transaction) (any, error) {
+	result, err := session.ReadTransaction(func(tx neo4j.Transaction) (any, error) {
 		if queryResult, err := tx.Run(`
-			MATCH (t:Tenant {name:$tenant})<-[:TAG_BELONGS_TO_TENANT]-(c:Tag)
-			RETURN c ORDER BY c.name`,
+			MATCH (t:Tenant {name:$tenant})<-[:TAG_BELONGS_TO_TENANT]-(tag:Tag)
+			RETURN tag ORDER BY tag.name`,
 			map[string]any{
 				"tenant": tenant,
 			}); err != nil {
 			return nil, err
 		} else {
-			return queryResult.Collect()
+			return utils.ExtractAllRecordsFirstValueAsNodePtrs(queryResult, err)
 		}
 	})
-	tagDbNodes := []*dbtype.Node{}
-	for _, v := range records.([]*neo4j.Record) {
-		tagDbNodes = append(tagDbNodes, utils.NodePtr(v.Values[0].(dbtype.Node)))
-	}
-	return tagDbNodes, err
+	return result.([]*dbtype.Node), err
 }
 
 func (r *tagRepository) FindForContact(tenant, contactId string) (*dbtype.Node, error) {

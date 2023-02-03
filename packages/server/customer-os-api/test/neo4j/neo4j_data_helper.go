@@ -371,7 +371,7 @@ func CreateTag(driver *neo4j.Driver, tenant, tagName string) string {
 	var tagId, _ = uuid.NewRandom()
 	query := `MATCH (t:Tenant {name:$tenant})
 			MERGE (t)<-[:TAG_BELONGS_TO_TENANT]-(tag:Tag {id:$id})
-			ON CREATE SET tag.name=$name, tag.source=$source, tag.appSource=$appSource, tag.createdAt=$now`
+			ON CREATE SET tag.name=$name, tag.source=$source, tag.appSource=$appSource, tag.createdAt=$now, tag.updatedAt=$now`
 	ExecuteWriteQuery(driver, query, map[string]any{
 		"id":        tagId.String(),
 		"tenant":    tenant,

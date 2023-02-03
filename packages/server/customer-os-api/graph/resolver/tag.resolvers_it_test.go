@@ -60,6 +60,7 @@ func TestMutationResolver_TagUpdate(t *testing.T) {
 	require.Nil(t, err)
 	require.NotNil(t, updatedTag)
 	require.NotNil(t, updatedTag.UpdatedAt)
+	require.NotEqual(t, updatedTag.UpdatedAt, updatedTag.CreatedAt)
 	require.Equal(t, tagId, updatedTag.ID)
 	require.Equal(t, "new tag name", updatedTag.Name)
 
@@ -96,4 +97,31 @@ func TestMutationResolver_TagDelete(t *testing.T) {
 	require.Equal(t, 0, neo4jt.GetCountOfNodes(driver, "Tag"))
 	require.Equal(t, 0, neo4jt.GetCountOfRelationships(driver, "TAGGED"))
 	require.Equal(t, 0, neo4jt.GetCountOfRelationships(driver, "TAG_BELONGS_TO_TENANT"))
+}
+
+func TestQueryResolver_Tags(t *testing.T) {
+	defer tearDownTestCase()(t)
+	neo4jt.CreateTenant(driver, tenantName)
+	neo4jt.CreateTenant(driver, "other")
+	tagId1 := neo4jt.CreateTag(driver, tenantName, "tag B")
+	tagId2 := neo4jt.CreateTag(driver, tenantName, "tag A")
+	neo4jt.CreateTag(driver, "other", "contact type for other tenant")
+
+	require.Equal(t, 3, neo4jt.GetCountOfNodes(driver, "Tag"))
+
+	rawResponse, err := c.RawPost(getQuery("get_tags"))
+	assertRawResponseSuccess(t, rawResponse, err)
+
+	var tagStruct struct {
+		Tags []model.Tag
+	}
+
+	err = decode.Decode(rawResponse.Data.(map[string]any), &tagStruct)
+	tags := tagStruct.Tags
+	require.Nil(t, err)
+	require.Equal(t, 2, len(tags))
+	require.Equal(t, tagId2, tags[0].ID)
+	require.Equal(t, "tag A", tags[0].Name)
+	require.Equal(t, tagId1, tags[1].ID)
+	require.Equal(t, "tag B", tags[1].Name)
 }
