@@ -293,6 +293,7 @@ type Conversation struct {
 	EndedAt            *time.Time         `json:"endedAt"`
 	Status             ConversationStatus `json:"status"`
 	Channel            *string            `json:"channel"`
+	Subject            *string            `json:"subject"`
 	MessageCount       int64              `json:"messageCount"`
 	Contacts           []*Contact         `json:"contacts"`
 	Users              []*User            `json:"users"`

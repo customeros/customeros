@@ -44,6 +44,7 @@ func MapEntityToConversation(entity *entity.ConversationEntity) *model.Conversat
 		EndedAt:            entity.EndedAt,
 		Status:             MapConversationStatusToModel(entity.Status),
 		Channel:            utils.StringPtr(entity.Channel),
+		Subject:            utils.StringPtrNillable(entity.Subject),
 		MessageCount:       entity.MessageCount,
 		Source:             MapDataSourceToModel(entity.Source),
 		SourceOfTruth:      MapDataSourceToModel(entity.SourceOfTruth),

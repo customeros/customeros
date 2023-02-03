@@ -136,6 +136,7 @@ type ComplexityRoot struct {
 		SourceOfTruth      func(childComplexity int) int
 		StartedAt          func(childComplexity int) int
 		Status             func(childComplexity int) int
+		Subject            func(childComplexity int) int
 		ThreadID           func(childComplexity int) int
 		UpdatedAt          func(childComplexity int) int
 		Users              func(childComplexity int) int
@@ -1003,6 +1004,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Conversation.Status(childComplexity), true
+
+	case "Conversation.subject":
+		if e.complexity.Conversation.Subject == nil {
+			break
+		}
+
+		return e.complexity.Conversation.Subject(childComplexity), true
 
 	case "Conversation.threadId":
 		if e.complexity.Conversation.ThreadID == nil {
@@ -2929,6 +2937,7 @@ extend type Mutation {
     contact_Update(input: ContactUpdateInput!): Contact!
     contact_HardDelete(contactId: ID!): Result!
     contact_SoftDelete(contactId: ID!): Result!
+
     contact_AddTagById(input: ContactTagInput): Contact!
     contact_RemoveTagById(input: ContactTagInput): Contact!
 }
@@ -3385,6 +3394,7 @@ type Conversation implements Node {
     endedAt: Time
     status: ConversationStatus!
     channel: String
+    subject: String
     messageCount: Int64!
     contacts: [Contact!] @goField(forceResolver: true)
     users: [User!] @goField(forceResolver: true)
@@ -8653,6 +8663,47 @@ func (ec *executionContext) fieldContext_Conversation_channel(ctx context.Contex
 	return fc, nil
 }
 
+func (ec *executionContext) _Conversation_subject(ctx context.Context, field graphql.CollectedField, obj *model.Conversation) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Conversation_subject(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Subject, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Conversation_subject(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Conversation",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Conversation_messageCount(ctx context.Context, field graphql.CollectedField, obj *model.Conversation) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Conversation_messageCount(ctx, field)
 	if err != nil {
@@ -9226,6 +9277,8 @@ func (ec *executionContext) fieldContext_ConversationPage_content(ctx context.Co
 				return ec.fieldContext_Conversation_status(ctx, field)
 			case "channel":
 				return ec.fieldContext_Conversation_channel(ctx, field)
+			case "subject":
+				return ec.fieldContext_Conversation_subject(ctx, field)
 			case "messageCount":
 				return ec.fieldContext_Conversation_messageCount(ctx, field)
 			case "contacts":
@@ -12646,6 +12699,8 @@ func (ec *executionContext) fieldContext_Mutation_conversation_Create(ctx contex
 				return ec.fieldContext_Conversation_status(ctx, field)
 			case "channel":
 				return ec.fieldContext_Conversation_channel(ctx, field)
+			case "subject":
+				return ec.fieldContext_Conversation_subject(ctx, field)
 			case "messageCount":
 				return ec.fieldContext_Conversation_messageCount(ctx, field)
 			case "contacts":
@@ -12736,6 +12791,8 @@ func (ec *executionContext) fieldContext_Mutation_conversation_Update(ctx contex
 				return ec.fieldContext_Conversation_status(ctx, field)
 			case "channel":
 				return ec.fieldContext_Conversation_channel(ctx, field)
+			case "subject":
+				return ec.fieldContext_Conversation_subject(ctx, field)
 			case "messageCount":
 				return ec.fieldContext_Conversation_messageCount(ctx, field)
 			case "contacts":
@@ -12826,6 +12883,8 @@ func (ec *executionContext) fieldContext_Mutation_conversation_Close(ctx context
 				return ec.fieldContext_Conversation_status(ctx, field)
 			case "channel":
 				return ec.fieldContext_Conversation_channel(ctx, field)
+			case "subject":
+				return ec.fieldContext_Conversation_subject(ctx, field)
 			case "messageCount":
 				return ec.fieldContext_Conversation_messageCount(ctx, field)
 			case "contacts":
@@ -24636,6 +24695,10 @@ func (ec *executionContext) _Conversation(ctx context.Context, sel ast.Selection
 		case "channel":
 
 			out.Values[i] = ec._Conversation_channel(ctx, field, obj)
+
+		case "subject":
+
+			out.Values[i] = ec._Conversation_subject(ctx, field, obj)
 
 		case "messageCount":
 

@@ -15,6 +15,13 @@ func StringPtr(str string) *string {
 	return &str
 }
 
+func StringPtrNillable(str string) *string {
+	if len(str) == 0 {
+		return nil
+	}
+	return &str
+}
+
 func BoolPtr(b bool) *bool {
 	return &b
 }

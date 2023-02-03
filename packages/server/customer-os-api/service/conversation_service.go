@@ -162,6 +162,7 @@ func (s *conversationService) mapDbNodeToConversationEntity(dbNode dbtype.Node) 
 		UpdatedAt:          utils.GetTimePropOrNow(props, "updatedAt"),
 		EndedAt:            utils.GetTimePropOrNil(props, "endedAt"),
 		Channel:            utils.GetStringPropOrEmpty(props, "channel"),
+		Subject:            utils.GetStringPropOrEmpty(props, "subject"),
 		Status:             utils.GetStringPropOrEmpty(props, "status"),
 		MessageCount:       utils.GetInt64PropOrZero(props, "messageCount"),
 		Source:             entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),

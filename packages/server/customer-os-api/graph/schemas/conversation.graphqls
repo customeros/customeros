@@ -12,6 +12,7 @@ type Conversation implements Node {
     endedAt: Time
     status: ConversationStatus!
     channel: String
+    subject: String
     messageCount: Int64!
     contacts: [Contact!] @goField(forceResolver: true)
     users: [User!] @goField(forceResolver: true)
