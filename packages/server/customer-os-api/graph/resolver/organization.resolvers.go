@@ -97,14 +97,14 @@ func (r *organizationResolver) Contacts(ctx context.Context, obj *model.Organiza
 	}, err
 }
 
-// ContactRoles is the resolver for the contactRoles field.
-func (r *organizationResolver) ContactRoles(ctx context.Context, obj *model.Organization) ([]*model.ContactRole, error) {
-	contactRoleEntities, err := r.Services.ContactRoleService.FindAllForOrganization(ctx, obj.ID)
+// JobRoles is the resolver for the jobRoles field.
+func (r *organizationResolver) JobRoles(ctx context.Context, obj *model.Organization) ([]*model.JobRole, error) {
+	jobRoleEntities, err := r.Services.JobRoleService.GetAllForOrganization(ctx, obj.ID)
 	if err != nil {
 		graphql.AddErrorf(ctx, "Failed to get roles for organization %s", obj.ID)
 		return nil, err
 	}
-	return mapper.MapEntitiesToContactRoles(contactRoleEntities), err
+	return mapper.MapEntitiesToJobRoles(jobRoleEntities), err
 }
 
 // Notes is the resolver for the notes field.

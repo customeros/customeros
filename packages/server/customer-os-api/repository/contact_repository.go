@@ -10,7 +10,7 @@ import (
 	"time"
 )
 
-type ContactRepository interface {
+type JobRepository interface {
 	Create(tx neo4j.Transaction, tenant string, newContact entity.ContactEntity, source, sourceOfTruth entity.DataSource) (*dbtype.Node, error)
 	Update(tx neo4j.Transaction, tenant, contactId string, contactDtls *entity.ContactEntity) (*dbtype.Node, error)
 	Delete(session neo4j.Session, tenant, contactId string) error
@@ -32,7 +32,7 @@ type contactRepository struct {
 	driver *neo4j.Driver
 }
 
-func NewContactRepository(driver *neo4j.Driver) ContactRepository {
+func NewJobRepository(driver *neo4j.Driver) JobRepository {
 	return &contactRepository{
 		driver: driver,
 	}
@@ -320,8 +320,8 @@ func (r *contactRepository) Delete(session neo4j.Session, tenant, contactId stri
 			OPTIONAL MATCH (c)-[:HAS]->(e:Email)
 			OPTIONAL MATCH (c)-[:LOCATED_AT]->(a:Address)
 			OPTIONAL MATCH (c)-[:HAS_COMPLEX_PROPERTY]->(fs:FieldSet)
-			OPTIONAL MATCH (c)-[:HAS_ROLE]->(r:Role)
-            DETACH DELETE p, e, f, fs, a, r, c`,
+			OPTIONAL MATCH (c)-[:WORKS_AS]->(j:JobRole)
+            DETACH DELETE p, e, f, fs, a, j, c`,
 			map[string]interface{}{
 				"contactId": contactId,
 				"tenant":    tenant,
@@ -360,7 +360,7 @@ func (r *contactRepository) GetAllForConversation(session neo4j.Session, tenant,
 func (r *contactRepository) GetContactForRole(session neo4j.Session, tenant, roleId string) (*dbtype.Node, error) {
 	result, err := session.ReadTransaction(func(tx neo4j.Transaction) (any, error) {
 		if queryResult, err := tx.Run(`
-			MATCH (:Role {id:$roleId})<-[:HAS_ROLE]-(c:Contact)-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant})
+			MATCH (:JobRole {id:$roleId})<-[:WORKS_AS]-(c:Contact)-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant})
 			RETURN c`,
 			map[string]any{
 				"tenant": tenant,

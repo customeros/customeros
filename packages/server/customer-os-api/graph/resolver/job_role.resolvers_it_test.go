@@ -9,25 +9,25 @@ import (
 	"testing"
 )
 
-func TestMutationResolver_ContactRoleCreate_WithOrganization(t *testing.T) {
+func TestMutationResolver_JobRoleCreate_WithOrganization(t *testing.T) {
 	defer tearDownTestCase()(t)
 	neo4jt.CreateTenant(driver, tenantName)
 	contactId := neo4jt.CreateDefaultContact(driver, tenantName)
 	organizationId := neo4jt.CreateOrganization(driver, tenantName, "LLC LLC")
 
-	rawResponse, err := c.RawPost(getQuery("create_contact_role_for_organization"),
+	rawResponse, err := c.RawPost(getQuery("create_job_role_for_organization"),
 		client.Var("contactId", contactId),
 		client.Var("organizationId", organizationId))
 	assertRawResponseSuccess(t, rawResponse, err)
 
-	var contactRole struct {
-		ContactRole_Create model.ContactRole
+	var jobRoleStruct struct {
+		JobRole_Create model.JobRole
 	}
 
-	err = decode.Decode(rawResponse.Data.(map[string]any), &contactRole)
+	err = decode.Decode(rawResponse.Data.(map[string]any), &jobRoleStruct)
 	require.Nil(t, err)
 
-	createdRole := contactRole.ContactRole_Create
+	createdRole := jobRoleStruct.JobRole_Create
 
 	require.NotNil(t, createdRole.ID)
 	require.NotNil(t, createdRole.CreatedAt)
@@ -43,32 +43,32 @@ func TestMutationResolver_ContactRoleCreate_WithOrganization(t *testing.T) {
 	// Check the number of nodes and relationships in the Neo4j database
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Contact"))
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Organization"))
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Role"))
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Role_"+tenantName))
-	require.Equal(t, 1, neo4jt.GetCountOfRelationships(driver, "WORKS"))
-	require.Equal(t, 1, neo4jt.GetCountOfRelationships(driver, "HAS_ROLE"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "JobRole"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "JobRole_"+tenantName))
+	require.Equal(t, 1, neo4jt.GetCountOfRelationships(driver, "ROLE_IN"))
+	require.Equal(t, 1, neo4jt.GetCountOfRelationships(driver, "WORKS_AS"))
 
 	// Check the labels on the nodes in the Neo4j database
-	assertNeo4jLabels(t, driver, []string{"Tenant", "Contact", "Organization", "Role", "Role_" + tenantName})
+	assertNeo4jLabels(t, driver, []string{"Tenant", "Contact", "Organization", "JobRole", "JobRole_" + tenantName})
 }
 
-func TestMutationResolver_ContactRoleCreate_WithoutOrganization(t *testing.T) {
+func TestMutationResolver_JobRoleCreate_WithoutOrganization(t *testing.T) {
 	defer tearDownTestCase()(t)
 	neo4jt.CreateTenant(driver, tenantName)
 	contactId := neo4jt.CreateDefaultContact(driver, tenantName)
 
-	rawResponse, err := c.RawPost(getQuery("create_contact_role_without_organization"),
+	rawResponse, err := c.RawPost(getQuery("create_job_role_without_organization"),
 		client.Var("contactId", contactId))
 	assertRawResponseSuccess(t, rawResponse, err)
 
-	var contactRole struct {
-		ContactRole_Create model.ContactRole
+	var jobRoleStruct struct {
+		JobRole_Create model.JobRole
 	}
 
-	err = decode.Decode(rawResponse.Data.(map[string]any), &contactRole)
+	err = decode.Decode(rawResponse.Data.(map[string]any), &jobRoleStruct)
 	require.Nil(t, err)
 
-	createdRole := contactRole.ContactRole_Create
+	createdRole := jobRoleStruct.JobRole_Create
 
 	require.NotNil(t, createdRole.ID)
 	require.NotNil(t, createdRole.CreatedAt)
@@ -83,39 +83,39 @@ func TestMutationResolver_ContactRoleCreate_WithoutOrganization(t *testing.T) {
 	// Check the number of nodes and relationships in the Neo4j database
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Contact"))
 	require.Equal(t, 0, neo4jt.GetCountOfNodes(driver, "Organization"))
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Role"))
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Role_"+tenantName))
-	require.Equal(t, 0, neo4jt.GetCountOfRelationships(driver, "WORKS"))
-	require.Equal(t, 1, neo4jt.GetCountOfRelationships(driver, "HAS_ROLE"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "JobRole"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "JobRole_"+tenantName))
+	require.Equal(t, 0, neo4jt.GetCountOfRelationships(driver, "ROLE_IN"))
+	require.Equal(t, 1, neo4jt.GetCountOfRelationships(driver, "WORKS_AS"))
 
 	// Check the labels on the nodes in the Neo4j database
-	assertNeo4jLabels(t, driver, []string{"Tenant", "Contact", "Role", "Role_" + tenantName})
+	assertNeo4jLabels(t, driver, []string{"Tenant", "Contact", "JobRole", "JobRole_" + tenantName})
 }
 
-func TestMutationResolver_ContactRoleUpdate(t *testing.T) {
+func TestMutationResolver_JobRoleUpdate(t *testing.T) {
 	defer tearDownTestCase()(t)
 	neo4jt.CreateTenant(driver, tenantName)
 	contactId := neo4jt.CreateDefaultContact(driver, tenantName)
 	organizationId := neo4jt.CreateOrganization(driver, tenantName, "LLC LLC")
 	roleId := neo4jt.ContactWorksForOrganization(driver, contactId, organizationId, "CTO", false)
 
-	require.Equal(t, 1, neo4jt.GetCountOfRelationships(driver, "HAS_ROLE"))
-	require.Equal(t, 1, neo4jt.GetCountOfRelationships(driver, "WORKS"))
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Role"))
+	require.Equal(t, 1, neo4jt.GetCountOfRelationships(driver, "WORKS_AS"))
+	require.Equal(t, 1, neo4jt.GetCountOfRelationships(driver, "ROLE_IN"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "JobRole"))
 
-	rawResponse, err := c.RawPost(getQuery("update_contact_role"),
+	rawResponse, err := c.RawPost(getQuery("update_job_role"),
 		client.Var("contactId", contactId),
 		client.Var("roleId", roleId))
 	assertRawResponseSuccess(t, rawResponse, err)
 
-	var contactRole struct {
-		ContactRole_Update model.ContactRole
+	var jobRoleStruct struct {
+		JobRole_Update model.JobRole
 	}
 
-	err = decode.Decode(rawResponse.Data.(map[string]any), &contactRole)
+	err = decode.Decode(rawResponse.Data.(map[string]any), &jobRoleStruct)
 	require.Nil(t, err)
 
-	updatedRole := contactRole.ContactRole_Update
+	updatedRole := jobRoleStruct.JobRole_Update
 
 	require.NotNil(t, updatedRole)
 	require.NotNil(t, updatedRole.UpdatedAt)
@@ -126,10 +126,10 @@ func TestMutationResolver_ContactRoleUpdate(t *testing.T) {
 	require.Equal(t, model.DataSourceOpenline, updatedRole.SourceOfTruth)
 
 	// Check the labels on the nodes in the Neo4j database
-	assertNeo4jLabels(t, driver, []string{"Tenant", "Contact", "Organization", "Role"})
+	assertNeo4jLabels(t, driver, []string{"Tenant", "Contact", "Organization", "JobRole"})
 }
 
-func TestMutationResolver_ContactRoleUpdate_ChangeOrganization(t *testing.T) {
+func TestMutationResolver_JobRoleUpdate_ChangeOrganization(t *testing.T) {
 	defer tearDownTestCase()(t)
 	neo4jt.CreateTenant(driver, tenantName)
 	contactId := neo4jt.CreateDefaultContact(driver, tenantName)
@@ -137,20 +137,20 @@ func TestMutationResolver_ContactRoleUpdate_ChangeOrganization(t *testing.T) {
 	newOrganizationId := neo4jt.CreateOrganization(driver, tenantName, "NEW CO")
 	roleId := neo4jt.ContactWorksForOrganization(driver, contactId, organizationId, "CTO", false)
 
-	rawResponse, err := c.RawPost(getQuery("update_contact_role_change_organization"),
+	rawResponse, err := c.RawPost(getQuery("update_job_role_change_organization"),
 		client.Var("contactId", contactId),
 		client.Var("roleId", roleId),
 		client.Var("organizationId", newOrganizationId))
 	assertRawResponseSuccess(t, rawResponse, err)
 
-	var contactRole struct {
-		ContactRole_Update model.ContactRole
+	var jobRoleStruct struct {
+		JobRole_Update model.JobRole
 	}
 
-	err = decode.Decode(rawResponse.Data.(map[string]any), &contactRole)
+	err = decode.Decode(rawResponse.Data.(map[string]any), &jobRoleStruct)
 	require.Nil(t, err)
 
-	updatedRole := contactRole.ContactRole_Update
+	updatedRole := jobRoleStruct.JobRole_Update
 
 	require.NotNil(t, updatedRole)
 	require.NotNil(t, updatedRole.UpdatedAt)
@@ -161,43 +161,43 @@ func TestMutationResolver_ContactRoleUpdate_ChangeOrganization(t *testing.T) {
 	require.Equal(t, model.DataSourceOpenline, updatedRole.SourceOfTruth)
 
 	// Check the number of nodes and relationships in the Neo4j database
-	require.Equal(t, 1, neo4jt.GetCountOfRelationships(driver, "HAS_ROLE"))
-	require.Equal(t, 1, neo4jt.GetCountOfRelationships(driver, "WORKS"))
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Role"))
+	require.Equal(t, 1, neo4jt.GetCountOfRelationships(driver, "WORKS_AS"))
+	require.Equal(t, 1, neo4jt.GetCountOfRelationships(driver, "ROLE_IN"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "JobRole"))
 
 	// Check the labels on the nodes in the Neo4j database
-	assertNeo4jLabels(t, driver, []string{"Tenant", "Contact", "Organization", "Role"})
+	assertNeo4jLabels(t, driver, []string{"Tenant", "Contact", "Organization", "JobRole"})
 }
 
-func TestMutationResolver_ContactRoleDelete(t *testing.T) {
+func TestMutationResolver_JobRoleDelete(t *testing.T) {
 	defer tearDownTestCase()(t)
 	neo4jt.CreateTenant(driver, tenantName)
 	contactId := neo4jt.CreateDefaultContact(driver, tenantName)
 	organizationId := neo4jt.CreateOrganization(driver, tenantName, "LLC LLC")
 	roleId := neo4jt.ContactWorksForOrganization(driver, contactId, organizationId, "CTO", false)
 
-	require.Equal(t, 1, neo4jt.GetCountOfRelationships(driver, "HAS_ROLE"))
-	require.Equal(t, 1, neo4jt.GetCountOfRelationships(driver, "WORKS"))
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Role"))
+	require.Equal(t, 1, neo4jt.GetCountOfRelationships(driver, "WORKS_AS"))
+	require.Equal(t, 1, neo4jt.GetCountOfRelationships(driver, "ROLE_IN"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "JobRole"))
 
-	rawResponse, err := c.RawPost(getQuery("delete_contact_role"),
+	rawResponse, err := c.RawPost(getQuery("delete_job_role"),
 		client.Var("contactId", contactId),
 		client.Var("roleId", roleId))
 	assertRawResponseSuccess(t, rawResponse, err)
 
-	var result struct {
-		ContactRole_Delete model.Result
+	var resultStruct struct {
+		JobRole_Delete model.Result
 	}
 
-	err = decode.Decode(rawResponse.Data.(map[string]any), &result)
+	err = decode.Decode(rawResponse.Data.(map[string]any), &resultStruct)
 	require.Nil(t, err)
-	require.NotNil(t, result)
-	require.Equal(t, true, result.ContactRole_Delete.Result)
+	require.NotNil(t, resultStruct)
+	require.Equal(t, true, resultStruct.JobRole_Delete.Result)
 
 	// Check the number of nodes and relationships in the Neo4j database
-	require.Equal(t, 0, neo4jt.GetCountOfRelationships(driver, "HAS_ROLE"))
-	require.Equal(t, 0, neo4jt.GetCountOfRelationships(driver, "WORKS"))
-	require.Equal(t, 0, neo4jt.GetCountOfNodes(driver, "Role"))
+	require.Equal(t, 0, neo4jt.GetCountOfRelationships(driver, "WORKS_AS"))
+	require.Equal(t, 0, neo4jt.GetCountOfRelationships(driver, "ROLE_IN"))
+	require.Equal(t, 0, neo4jt.GetCountOfNodes(driver, "JobRole"))
 
 	// Check the labels on the nodes in the Neo4j database
 	assertNeo4jLabels(t, driver, []string{"Tenant", "Contact", "Organization"})

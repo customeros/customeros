@@ -60,7 +60,7 @@ type Contact struct {
 	Tags        []*Tag       `json:"tags"`
 	// `organizationName` and `jobTitle` of the contact if it has been associated with an organization.
 	// **Required.  If no values it returns an empty array.**
-	Roles         []*ContactRole    `json:"roles"`
+	JobRoles      []*JobRole        `json:"jobRoles"`
 	Organizations *OrganizationPage `json:"organizations"`
 	// Identifies any contact groups the contact is associated with.
 	// **Required.  If no values it returns an empty array.**
@@ -179,47 +179,6 @@ type ContactInput struct {
 	// Id of the contact owner (user)
 	OwnerID           *string                       `json:"ownerId"`
 	ExternalReference *ExternalSystemReferenceInput `json:"externalReference"`
-}
-
-// Describes the relationship a Contact has with a Organization.
-// **A `return` object**
-type ContactRole struct {
-	ID        string    `json:"id"`
-	CreatedAt time.Time `json:"createdAt"`
-	UpdatedAt time.Time `json:"updatedAt"`
-	// Organization associated with a Contact.
-	// **Required.**
-	Organization *Organization `json:"organization"`
-	Contact      *Contact      `json:"contact"`
-	// The Contact's job title.
-	JobTitle            *string    `json:"jobTitle"`
-	Primary             bool       `json:"primary"`
-	ResponsibilityLevel int64      `json:"responsibilityLevel"`
-	Source              DataSource `json:"source"`
-	SourceOfTruth       DataSource `json:"sourceOfTruth"`
-	AppSource           string     `json:"appSource"`
-}
-
-// Describes the relationship a Contact has with an Organization.
-// **A `create` object**
-type ContactRoleInput struct {
-	OrganizationID *string `json:"organizationId"`
-	// The Contact's job title.
-	JobTitle            *string `json:"jobTitle"`
-	Primary             *bool   `json:"primary"`
-	ResponsibilityLevel *int64  `json:"responsibilityLevel"`
-	AppSource           *string `json:"appSource"`
-}
-
-// Describes the relationship a Contact has with an Organization.
-// **A `create` object**
-type ContactRoleUpdateInput struct {
-	ID             string  `json:"id"`
-	OrganizationID *string `json:"organizationId"`
-	// The Contact's job title.
-	JobTitle            *string `json:"jobTitle"`
-	Primary             *bool   `json:"primary"`
-	ResponsibilityLevel *int64  `json:"responsibilityLevel"`
 }
 
 type ContactTagInput struct {
@@ -557,6 +516,47 @@ type FilterItem struct {
 	CaseSensitive *bool              `json:"caseSensitive"`
 }
 
+// Describes the relationship a Contact has with a Organization.
+// **A `return` object**
+type JobRole struct {
+	ID        string    `json:"id"`
+	CreatedAt time.Time `json:"createdAt"`
+	UpdatedAt time.Time `json:"updatedAt"`
+	// Organization associated with a Contact.
+	// **Required.**
+	Organization *Organization `json:"organization"`
+	Contact      *Contact      `json:"contact"`
+	// The Contact's job title.
+	JobTitle            *string    `json:"jobTitle"`
+	Primary             bool       `json:"primary"`
+	ResponsibilityLevel int64      `json:"responsibilityLevel"`
+	Source              DataSource `json:"source"`
+	SourceOfTruth       DataSource `json:"sourceOfTruth"`
+	AppSource           string     `json:"appSource"`
+}
+
+// Describes the relationship a Contact has with an Organization.
+// **A `create` object**
+type JobRoleInput struct {
+	OrganizationID *string `json:"organizationId"`
+	// The Contact's job title.
+	JobTitle            *string `json:"jobTitle"`
+	Primary             *bool   `json:"primary"`
+	ResponsibilityLevel *int64  `json:"responsibilityLevel"`
+	AppSource           *string `json:"appSource"`
+}
+
+// Describes the relationship a Contact has with an Organization.
+// **A `create` object**
+type JobRoleUpdateInput struct {
+	ID             string  `json:"id"`
+	OrganizationID *string `json:"organizationId"`
+	// The Contact's job title.
+	JobTitle            *string `json:"jobTitle"`
+	Primary             *bool   `json:"primary"`
+	ResponsibilityLevel *int64  `json:"responsibilityLevel"`
+}
+
 type Note struct {
 	ID            string     `json:"id"`
 	HTML          string     `json:"html"`
@@ -610,9 +610,9 @@ type Organization struct {
 	AppSource        string            `json:"appSource"`
 	// All addresses associated with an organization in customerOS.
 	// **Required.  If no values it returns an empty array.**
-	Addresses    []*Place       `json:"addresses"`
-	Contacts     *ContactsPage  `json:"contacts"`
-	ContactRoles []*ContactRole `json:"contactRoles"`
+	Addresses []*Place      `json:"addresses"`
+	Contacts  *ContactsPage `json:"contacts"`
+	JobRoles  []*JobRole    `json:"jobRoles"`
 	// Organization notes
 	Notes *NotePage `json:"notes"`
 }

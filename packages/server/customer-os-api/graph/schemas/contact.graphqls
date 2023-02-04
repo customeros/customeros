@@ -79,7 +79,7 @@ type Contact implements ExtensibleEntity & Node {
     `organizationName` and `jobTitle` of the contact if it has been associated with an organization.
     **Required.  If no values it returns an empty array.**
     """
-    roles: [ContactRole!]! @goField(forceResolver: true)
+    jobRoles: [JobRole!]! @goField(forceResolver: true)
 
     organizations(pagination: Pagination, where: Filter, sort: [SortBy!]): OrganizationPage! @goField(forceResolver: true)
 

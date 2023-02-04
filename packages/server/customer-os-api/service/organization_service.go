@@ -15,7 +15,7 @@ import (
 type OrganizationService interface {
 	Create(ctx context.Context, input *OrganizationCreateData) (*entity.OrganizationEntity, error)
 	Update(ctx context.Context, input *OrganizationUpdateData) (*entity.OrganizationEntity, error)
-	FindOrganizationForRole(ctx context.Context, roleId string) (*entity.OrganizationEntity, error)
+	GetOrganizationForJobRole(ctx context.Context, roleId string) (*entity.OrganizationEntity, error)
 	GetOrganizationById(ctx context.Context, organizationId string) (*entity.OrganizationEntity, error)
 	FindAll(ctx context.Context, page, limit int, filter *model.Filter, sortBy []*model.SortBy) (*utils.Pagination, error)
 	GetOrganizationsForContact(ctx context.Context, contactId string, page, limit int, filter *model.Filter, sortBy []*model.SortBy) (*utils.Pagination, error)
@@ -177,11 +177,11 @@ func (s *organizationService) GetOrganizationsForContact(ctx context.Context, co
 	return &paginatedResult, nil
 }
 
-func (s *organizationService) FindOrganizationForRole(ctx context.Context, roleId string) (*entity.OrganizationEntity, error) {
+func (s *organizationService) GetOrganizationForJobRole(ctx context.Context, roleId string) (*entity.OrganizationEntity, error) {
 	session := utils.NewNeo4jReadSession(*s.repositories.Drivers.Neo4jDriver)
 	defer session.Close()
 
-	dbNode, err := s.repositories.OrganizationRepository.FindOrganizationForRole(session, common.GetContext(ctx).Tenant, roleId)
+	dbNode, err := s.repositories.OrganizationRepository.GetOrganizationForJobRole(session, common.GetContext(ctx).Tenant, roleId)
 	if dbNode == nil || err != nil {
 		return nil, err
 	}

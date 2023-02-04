@@ -1,14 +1,14 @@
 extend type Mutation {
-    contactRole_Delete(contactId : ID!, roleId: ID!): Result!
-    contactRole_Create(contactId : ID!, input: ContactRoleInput!): ContactRole!
-    contactRole_Update(contactId : ID!, input: ContactRoleUpdateInput!): ContactRole!
+    jobRole_Delete(contactId : ID!, roleId: ID!): Result!
+    jobRole_Create(contactId : ID!, input: JobRoleInput!): JobRole!
+    jobRole_Update(contactId : ID!, input: JobRoleUpdateInput!): JobRole!
 }
 
 """
 Describes the relationship a Contact has with a Organization.
 **A `return` object**
 """
-type ContactRole {
+type JobRole {
     id: ID!
     createdAt: Time!
     updatedAt: Time!
@@ -37,7 +37,7 @@ type ContactRole {
 Describes the relationship a Contact has with an Organization.
 **A `create` object**
 """
-input ContactRoleInput {
+input JobRoleInput {
 
     organizationId: ID
 
@@ -55,7 +55,7 @@ input ContactRoleInput {
 Describes the relationship a Contact has with an Organization.
 **A `create` object**
 """
-input ContactRoleUpdateInput {
+input JobRoleUpdateInput {
     id: ID!
 
     organizationId: ID

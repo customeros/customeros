@@ -34,7 +34,7 @@ func (r *jobRoleRepository) MergeJobRole(tenant, contactId, jobTitle, organizati
 		"				j.source=$source, " +
 		"				j.sourceOfTruth=$sourceOfTruth, " +
 		"				j.appSource=$appSource, " +
-		"				j.title=$jobTitle, " +
+		"				j.jobTitle=$jobTitle, " +
 		"				j.createdAt=$now, " +
 		"				j.updatedAt=$now, " +
 		"				j:%s " +

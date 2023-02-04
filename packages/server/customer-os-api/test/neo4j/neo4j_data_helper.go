@@ -443,7 +443,7 @@ func ContactWorksForOrganization(driver *neo4j.Driver, contactId, organizationId
 	var roleId, _ = uuid.NewRandom()
 	query := `MATCH (c:Contact {id:$contactId}),
 			        (org:Organization {id:$organizationId})
-			MERGE (c)-[:HAS_ROLE]->(r:Role)-[:WORKS]->(org)
+			MERGE (c)-[:WORKS_AS]->(r:JobRole)-[:ROLE_IN]->(org)
 			ON CREATE SET r.id=$id, r.jobTitle=$jobTitle, r.primary=$primary, r.responsibilityLevel=$responsibilityLevel,
 							r.createdAt=datetime({timezone: 'UTC'}), r.appSource=$appSource`
 	ExecuteWriteQuery(driver, query, map[string]any{
