@@ -10,7 +10,7 @@ require (
 	github.com/gin-gonic/gin v1.8.2
 	github.com/go-testfixtures/testfixtures/v3 v3.8.1
 	github.com/graph-gophers/dataloader v5.0.0+incompatible
-	github.com/joho/godotenv v1.4.0
+	github.com/joho/godotenv v1.5.1
 	github.com/sirupsen/logrus v1.9.0
 	github.com/stretchr/testify v1.8.1
 	github.com/testcontainers/testcontainers-go v0.17.0
