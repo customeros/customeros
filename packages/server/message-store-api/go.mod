@@ -10,7 +10,7 @@ require (
 	github.com/99designs/gqlgen v0.17.24
 	github.com/caarlos0/env/v6 v6.10.1
 	github.com/gin-gonic/gin v1.8.2
-	github.com/joho/godotenv v1.4.0
+	github.com/joho/godotenv v1.5.1
 	github.com/lib/pq v1.10.7
 	github.com/neo4j/neo4j-go-driver/v4 v4.4.5
 	github.com/openline-ai/openline-customer-os/packages/server/customer-os-api v0.0.0-20230128185314-0611f94d0cf5
