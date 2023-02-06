@@ -17,9 +17,19 @@ func (r *contactResolver) ContactType(ctx context.Context, obj *model.Contact) (
 	panic(fmt.Errorf("not implemented: ContactType - contactType"))
 }
 
-// Roles is the resolver for the roles field.
-func (r *contactResolver) Roles(ctx context.Context, obj *model.Contact) ([]*model.ContactRole, error) {
-	panic(fmt.Errorf("not implemented: Roles - roles"))
+// Tags is the resolver for the tags field.
+func (r *contactResolver) Tags(ctx context.Context, obj *model.Contact) ([]*model.Tag, error) {
+	panic(fmt.Errorf("not implemented: Tags - tags"))
+}
+
+// JobRoles is the resolver for the jobRoles field.
+func (r *contactResolver) JobRoles(ctx context.Context, obj *model.Contact) ([]*model.JobRole, error) {
+	panic(fmt.Errorf("not implemented: JobRoles - jobRoles"))
+}
+
+// Organizations is the resolver for the organizations field.
+func (r *contactResolver) Organizations(ctx context.Context, obj *model.Contact, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) (*model.OrganizationPage, error) {
+	panic(fmt.Errorf("not implemented: Organizations - organizations"))
 }
 
 // Groups is the resolver for the groups field.
@@ -104,6 +114,16 @@ func (r *mutationResolver) ContactHardDelete(ctx context.Context, contactID stri
 // ContactSoftDelete is the resolver for the contact_SoftDelete field.
 func (r *mutationResolver) ContactSoftDelete(ctx context.Context, contactID string) (*model.Result, error) {
 	panic(fmt.Errorf("not implemented: ContactSoftDelete - contact_SoftDelete"))
+}
+
+// ContactAddTagByID is the resolver for the contact_AddTagById field.
+func (r *mutationResolver) ContactAddTagByID(ctx context.Context, input *model.ContactTagInput) (*model.Contact, error) {
+	panic(fmt.Errorf("not implemented: ContactAddTagByID - contact_AddTagById"))
+}
+
+// ContactRemoveTagByID is the resolver for the contact_RemoveTagById field.
+func (r *mutationResolver) ContactRemoveTagByID(ctx context.Context, input *model.ContactTagInput) (*model.Contact, error) {
+	panic(fmt.Errorf("not implemented: ContactRemoveTagByID - contact_RemoveTagById"))
 }
 
 // Contact is the resolver for the contact field.
