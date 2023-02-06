@@ -35,11 +35,19 @@ func (r *conversationRepository) MergeEmailConversation(tenant string, syncDate 
 	defer session.Close()
 
 	query := "MERGE (o:Conversation_%s {threadId:$threadId, source:$source, channel:$channel}) " +
-		" ON CREATE SET o:Conversation, " +
-		" 				o.syncDate=$syncDate, o.id=randomUUID(), o.startedAt=$createdAt, " +
-		"             	o.sourceOfTruth=$sourceOfTruth, o.appSource=$appSource, o.status=$status," +
-		"				o.messageCount=0 " +
-		" ON MATCH SET 	o.syncDate=$syncDate, o.status=$status " +
+		" ON CREATE SET " +
+		"  o:Conversation, " +
+		"  o.syncDate=$syncDate, " +
+		"  o.id=randomUUID(), " +
+		"  o.subject=$subject, " +
+		"  o.startedAt=$createdAt, " +
+		"  o.sourceOfTruth=$sourceOfTruth, " +
+		"  o.appSource=$appSource, " +
+		"  o.status=$status," +
+		"  o.messageCount=0 " +
+		" ON MATCH SET 	" +
+		"  o.syncDate=$syncDate, " +
+		"  o.status=$status " +
 		" WITH o " +
 		" REMOVE o.endedAt " +
 		" RETURN o.id, o.messageCount, coalesce(o.initiatorUsername, $emptyInitiator) "
@@ -48,6 +56,7 @@ func (r *conversationRepository) MergeEmailConversation(tenant string, syncDate 
 		queryResult, err := tx.Run(fmt.Sprintf(query, tenant),
 			map[string]interface{}{
 				"tenant":         tenant,
+				"subject":        message.Subject,
 				"source":         message.ExternalSystem,
 				"sourceOfTruth":  message.ExternalSystem,
 				"appSource":      message.ExternalSystem,
