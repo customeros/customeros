@@ -1,7 +1,7 @@
 query GetContactById($contactId: ID!){
   contact(id: $contactId) {
     id
-    roles {
+    jobRoles {
         id
         jobTitle
         primary

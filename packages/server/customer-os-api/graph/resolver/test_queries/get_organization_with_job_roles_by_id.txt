@@ -1,7 +1,7 @@
 query GetOrganizationById($organizationId: ID!){
   organization(id: $organizationId) {
     id
-    contactRoles {
+    jobRoles {
         id
         jobTitle
         primary

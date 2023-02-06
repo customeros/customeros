@@ -1,11 +1,11 @@
-mutation ContactRoleUpdate($contactId: ID!, $roleId: ID!, $organizationId: ID!){
-     contactRole_Update(
+mutation JobRoleUpdate($contactId: ID!, $roleId: ID!){
+     jobRole_Update(
         contactId: $contactId
         input: {
                     id: $roleId
-                    organizationId: $organizationId
                     jobTitle: "CEO"
                     primary: true
+                    responsibilityLevel: 1
                }
      ) {
         organization {

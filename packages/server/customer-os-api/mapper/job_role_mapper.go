@@ -7,11 +7,11 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils"
 )
 
-func MapContactRoleInputToEntity(input *model.ContactRoleInput) *entity.ContactRoleEntity {
+func MapJobRoleInputToEntity(input *model.JobRoleInput) *entity.JobRoleEntity {
 	if input == nil {
 		return nil
 	}
-	contactRoleEntity := entity.ContactRoleEntity{
+	jobRoleEntity := entity.JobRoleEntity{
 		JobTitle:            utils.IfNotNilString(input.JobTitle),
 		Primary:             utils.IfNotNilBool(input.Primary),
 		ResponsibilityLevel: utils.IfNotNilInt64(input.ResponsibilityLevel),
@@ -19,28 +19,28 @@ func MapContactRoleInputToEntity(input *model.ContactRoleInput) *entity.ContactR
 		SourceOfTruth:       entity.DataSourceOpenline,
 		AppSource:           utils.IfNotNilString(input.AppSource),
 	}
-	if len(contactRoleEntity.AppSource) == 0 {
-		contactRoleEntity.AppSource = common.AppSourceCustomerOsApi
+	if len(jobRoleEntity.AppSource) == 0 {
+		jobRoleEntity.AppSource = common.AppSourceCustomerOsApi
 	}
-	return &contactRoleEntity
+	return &jobRoleEntity
 }
 
-func MapContactRoleUpdateInputToEntity(input *model.ContactRoleUpdateInput) *entity.ContactRoleEntity {
+func MapJobRoleUpdateInputToEntity(input *model.JobRoleUpdateInput) *entity.JobRoleEntity {
 	if input == nil {
 		return nil
 	}
-	contactRoleEntity := entity.ContactRoleEntity{
+	jobRoleEntity := entity.JobRoleEntity{
 		Id:                  input.ID,
 		JobTitle:            utils.IfNotNilString(input.JobTitle),
 		Primary:             utils.IfNotNilBool(input.Primary),
 		ResponsibilityLevel: utils.IfNotNilInt64(input.ResponsibilityLevel),
 		SourceOfTruth:       entity.DataSourceOpenline,
 	}
-	return &contactRoleEntity
+	return &jobRoleEntity
 }
 
-func MapEntityToContactRole(entity *entity.ContactRoleEntity) *model.ContactRole {
-	contactRole := model.ContactRole{
+func MapEntityToJobRole(entity *entity.JobRoleEntity) *model.JobRole {
+	jobRole := model.JobRole{
 		ID:                  entity.Id,
 		Primary:             entity.Primary,
 		Source:              MapDataSourceToModel(entity.Source),
@@ -51,15 +51,15 @@ func MapEntityToContactRole(entity *entity.ContactRoleEntity) *model.ContactRole
 		UpdatedAt:           entity.UpdatedAt,
 	}
 	if len(entity.JobTitle) > 0 {
-		contactRole.JobTitle = utils.StringPtr(entity.JobTitle)
+		jobRole.JobTitle = utils.StringPtr(entity.JobTitle)
 	}
-	return &contactRole
+	return &jobRole
 }
 
-func MapEntitiesToContactRoles(entities *entity.ContactRoleEntities) []*model.ContactRole {
-	var contactRoles []*model.ContactRole
-	for _, contactRoleEntity := range *entities {
-		contactRoles = append(contactRoles, MapEntityToContactRole(&contactRoleEntity))
+func MapEntitiesToJobRoles(entities *entity.JobRoleEntities) []*model.JobRole {
+	var jobRoles []*model.JobRole
+	for _, jobRoleEntity := range *entities {
+		jobRoles = append(jobRoles, MapEntityToJobRole(&jobRoleEntity))
 	}
-	return contactRoles
+	return jobRoles
 }

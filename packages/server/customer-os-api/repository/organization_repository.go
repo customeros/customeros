@@ -13,7 +13,7 @@ import (
 type OrganizationRepository interface {
 	Create(tx neo4j.Transaction, tenant string, organization entity.OrganizationEntity) (*dbtype.Node, error)
 	Update(tx neo4j.Transaction, tenant string, organization entity.OrganizationEntity) (*dbtype.Node, error)
-	FindOrganizationForRole(session neo4j.Session, tenant, roleId string) (*dbtype.Node, error)
+	GetOrganizationForJobRole(session neo4j.Session, tenant, roleId string) (*dbtype.Node, error)
 	GetOrganizationById(session neo4j.Session, tenant, organizationId string) (*dbtype.Node, error)
 	GetPaginatedOrganizations(session neo4j.Session, tenant string, skip, limit int, filter *utils.CypherFilter, sorting *utils.CypherSort) (*utils.DbNodesWithTotalCount, error)
 	GetPaginatedOrganizationsForContact(session neo4j.Session, tenant, contactId string, skip, limit int, filter *utils.CypherFilter, sorting *utils.CypherSort) (*utils.DbNodesWithTotalCount, error)
@@ -111,10 +111,10 @@ func (r *organizationRepository) Delete(session neo4j.Session, tenant, organizat
 	return err
 }
 
-func (r *organizationRepository) FindOrganizationForRole(session neo4j.Session, tenant, roleId string) (*dbtype.Node, error) {
+func (r *organizationRepository) GetOrganizationForJobRole(session neo4j.Session, tenant, roleId string) (*dbtype.Node, error) {
 	dbRecords, err := session.ReadTransaction(func(tx neo4j.Transaction) (any, error) {
 		if queryResult, err := tx.Run(`
-			MATCH (:Role {id:$roleId})-[:WORKS]->(org:Organization)-[:ORGANIZATION_BELONGS_TO_TENANT]->(:Tenant {name:$tenant})
+			MATCH (:JobRole {id:$roleId})-[:ROLE_IN]->(org:Organization)-[:ORGANIZATION_BELONGS_TO_TENANT]->(:Tenant {name:$tenant})
 			RETURN org`,
 			map[string]any{
 				"tenant": tenant,

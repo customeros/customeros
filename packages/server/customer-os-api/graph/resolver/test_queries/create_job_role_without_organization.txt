@@ -1,5 +1,5 @@
-mutation CreateContactRole($contactId: ID!) {
-  contactRole_Create(
+mutation CreateJobRole($contactId: ID!) {
+  jobRole_Create(
     contactId: $contactId,
     input: {
       jobTitle: "CEO",

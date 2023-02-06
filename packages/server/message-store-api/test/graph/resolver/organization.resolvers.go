@@ -17,7 +17,7 @@ func (r *mutationResolver) OrganizationCreate(ctx context.Context, input model.O
 }
 
 // OrganizationUpdate is the resolver for the organization_Update field.
-func (r *mutationResolver) OrganizationUpdate(ctx context.Context, id string, input model.OrganizationInput) (*model.Organization, error) {
+func (r *mutationResolver) OrganizationUpdate(ctx context.Context, input model.OrganizationUpdateInput) (*model.Organization, error) {
 	panic(fmt.Errorf("not implemented: OrganizationUpdate - organization_Update"))
 }
 
@@ -36,9 +36,19 @@ func (r *organizationResolver) Addresses(ctx context.Context, obj *model.Organiz
 	panic(fmt.Errorf("not implemented: Addresses - addresses"))
 }
 
-// ContactRoles is the resolver for the contactRoles field.
-func (r *organizationResolver) ContactRoles(ctx context.Context, obj *model.Organization) ([]*model.ContactRole, error) {
-	panic(fmt.Errorf("not implemented: ContactRoles - contactRoles"))
+// Contacts is the resolver for the contacts field.
+func (r *organizationResolver) Contacts(ctx context.Context, obj *model.Organization, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) (*model.ContactsPage, error) {
+	panic(fmt.Errorf("not implemented: Contacts - contacts"))
+}
+
+// JobRoles is the resolver for the jobRoles field.
+func (r *organizationResolver) JobRoles(ctx context.Context, obj *model.Organization) ([]*model.JobRole, error) {
+	panic(fmt.Errorf("not implemented: JobRoles - jobRoles"))
+}
+
+// Notes is the resolver for the notes field.
+func (r *organizationResolver) Notes(ctx context.Context, obj *model.Organization, pagination *model.Pagination) (*model.NotePage, error) {
+	panic(fmt.Errorf("not implemented: Notes - notes"))
 }
 
 // Organizations is the resolver for the organizations field.

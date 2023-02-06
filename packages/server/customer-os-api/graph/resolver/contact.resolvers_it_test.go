@@ -415,7 +415,7 @@ func TestMutationResolver_UpdateContact_ClearTitle(t *testing.T) {
 	require.Equal(t, "updated last", *updatedContact.LastName)
 }
 
-func TestQueryResolver_Contact_WithRoles_ById(t *testing.T) {
+func TestQueryResolver_Contact_WithJobRoles_ById(t *testing.T) {
 	defer tearDownTestCase()(t)
 	neo4jt.CreateTenant(driver, tenantName)
 	contactId := neo4jt.CreateDefaultContact(driver, tenantName)
@@ -440,11 +440,11 @@ func TestQueryResolver_Contact_WithRoles_ById(t *testing.T) {
 
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Contact"))
 	require.Equal(t, 2, neo4jt.GetCountOfNodes(driver, "Organization"))
-	require.Equal(t, 2, neo4jt.GetCountOfNodes(driver, "Role"))
-	require.Equal(t, 2, neo4jt.GetCountOfRelationships(driver, "WORKS"))
-	require.Equal(t, 2, neo4jt.GetCountOfRelationships(driver, "HAS_ROLE"))
+	require.Equal(t, 2, neo4jt.GetCountOfNodes(driver, "JobRole"))
+	require.Equal(t, 2, neo4jt.GetCountOfRelationships(driver, "ROLE_IN"))
+	require.Equal(t, 2, neo4jt.GetCountOfRelationships(driver, "WORKS_AS"))
 
-	rawResponse, err := c.RawPost(getQuery("get_contact_with_roles_by_id"),
+	rawResponse, err := c.RawPost(getQuery("get_contact_with_job_roles_by_id"),
 		client.Var("contactId", contactId))
 	assertRawResponseSuccess(t, rawResponse, err)
 
@@ -456,16 +456,11 @@ func TestQueryResolver_Contact_WithRoles_ById(t *testing.T) {
 	require.Nil(t, err)
 	require.Equal(t, contactId, searchedContact.Contact.ID)
 
-	roles := searchedContact.Contact.Roles
+	roles := searchedContact.Contact.JobRoles
 	require.Equal(t, 2, len(roles))
-	var cto, ceo *model.ContactRole
-	if role1 == roles[0].ID {
-		cto = roles[0]
-		ceo = roles[1]
-	} else {
-		cto = roles[1]
-		ceo = roles[0]
-	}
+	var cto, ceo *model.JobRole
+	ceo = roles[0]
+	cto = roles[1]
 	require.Equal(t, role1, cto.ID)
 	require.Equal(t, "CTO", *cto.JobTitle)
 	require.Equal(t, false, cto.Primary)

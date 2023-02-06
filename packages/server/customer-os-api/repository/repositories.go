@@ -10,7 +10,7 @@ type Repositories struct {
 	OrganizationRepository        OrganizationRepository
 	OrganizationTypeRepository    OrganizationTypeRepository
 	ContactGroupRepository        ContactGroupRepository
-	ContactRepository             ContactRepository
+	JobRepository                 JobRepository
 	ContactTypeRepository         ContactTypeRepository
 	ConversationRepository        ConversationRepository
 	CustomFieldTemplateRepository CustomFieldTemplateRepository
@@ -21,7 +21,7 @@ type Repositories struct {
 	UserRepository                UserRepository
 	ExternalSystemRepository      ExternalSystemRepository
 	NoteRepository                NoteRepository
-	ContactRoleRepository         ContactRoleRepository
+	JobRoleRepository             JobRoleRepository
 	AddressRepository             PlaceRepository
 	EmailRepository               EmailRepository
 	PhoneNumberRepository         PhoneNumberRepository
@@ -41,7 +41,7 @@ func InitRepos(driver *neo4j.Driver) *Repositories {
 	repositories.ActionRepository = NewActionRepository(driver)
 	repositories.OrganizationRepository = NewOrganizationRepository(driver)
 	repositories.ContactGroupRepository = NewContactGroupRepository(driver)
-	repositories.ContactRepository = NewContactRepository(driver)
+	repositories.JobRepository = NewJobRepository(driver)
 	repositories.ContactTypeRepository = NewContactTypeRepository(driver)
 	repositories.ConversationRepository = NewConversationRepository(driver)
 	repositories.CustomFieldTemplateRepository = NewCustomFieldTemplateRepository(driver)
@@ -52,7 +52,7 @@ func InitRepos(driver *neo4j.Driver) *Repositories {
 	repositories.UserRepository = NewUserRepository(driver)
 	repositories.ExternalSystemRepository = NewExternalSystemRepository(driver)
 	repositories.NoteRepository = NewNoteRepository(driver)
-	repositories.ContactRoleRepository = NewContactRoleRepository(driver)
+	repositories.JobRoleRepository = NewJobRoleRepository(driver)
 	repositories.AddressRepository = NewPlaceRepository(driver)
 	repositories.EmailRepository = NewEmailRepository(driver)
 	repositories.PhoneNumberRepository = NewPhoneNumberRepository(driver)

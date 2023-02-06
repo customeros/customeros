@@ -40,14 +40,14 @@ func (r *contactResolver) Tags(ctx context.Context, obj *model.Contact) ([]*mode
 	return mapper.MapEntitiesToTags(tagEntities), nil
 }
 
-// Roles is the resolver for the roles field.
-func (r *contactResolver) Roles(ctx context.Context, obj *model.Contact) ([]*model.ContactRole, error) {
-	contactRoleEntities, err := r.Services.ContactRoleService.FindAllForContact(ctx, obj.ID)
+// JobRoles is the resolver for the jobRoles field.
+func (r *contactResolver) JobRoles(ctx context.Context, obj *model.Contact) ([]*model.JobRole, error) {
+	jobRoleEntities, err := r.Services.JobRoleService.GetAllForContact(ctx, obj.ID)
 	if err != nil {
-		graphql.AddErrorf(ctx, "Failed to get roles for contact %s", obj.ID)
+		graphql.AddErrorf(ctx, "Failed to get job roles for contact %s", obj.ID)
 		return nil, err
 	}
-	return mapper.MapEntitiesToContactRoles(contactRoleEntities), err
+	return mapper.MapEntitiesToJobRoles(jobRoleEntities), err
 }
 
 // Organizations is the resolver for the organizations field.

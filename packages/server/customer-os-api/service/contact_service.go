@@ -78,20 +78,20 @@ func (s *contactService) Create(ctx context.Context, newContact *ContactCreateDa
 func (s *contactService) createContactInDBTxWork(ctx context.Context, newContact *ContactCreateData) func(tx neo4j.Transaction) (any, error) {
 	return func(tx neo4j.Transaction) (any, error) {
 		tenant := common.GetContext(ctx).Tenant
-		contactDbNode, err := s.repositories.ContactRepository.Create(tx, tenant, *newContact.ContactEntity, newContact.Source, newContact.SourceOfTruth)
+		contactDbNode, err := s.repositories.JobRepository.Create(tx, tenant, *newContact.ContactEntity, newContact.Source, newContact.SourceOfTruth)
 		if err != nil {
 			return nil, err
 		}
 		var contactId = utils.GetPropsFromNode(*contactDbNode)["id"].(string)
 
 		if newContact.ContactTypeId != nil {
-			err := s.repositories.ContactRepository.LinkWithContactTypeInTx(tx, tenant, contactId, *newContact.ContactTypeId)
+			err := s.repositories.JobRepository.LinkWithContactTypeInTx(tx, tenant, contactId, *newContact.ContactTypeId)
 			if err != nil {
 				return nil, err
 			}
 		}
 		if newContact.TemplateId != nil {
-			err := s.repositories.ContactRepository.LinkWithEntityTemplateInTx(tx, tenant, contactId, *newContact.TemplateId)
+			err := s.repositories.JobRepository.LinkWithEntityTemplateInTx(tx, tenant, contactId, *newContact.TemplateId)
 			if err != nil {
 				return nil, err
 			}
@@ -160,7 +160,7 @@ func (s *contactService) createContactInDBTxWork(ctx context.Context, newContact
 			}
 		}
 		if newContact.OwnerUserId != nil {
-			err := s.repositories.ContactRepository.SetOwner(tx, tenant, contactId, *newContact.OwnerUserId)
+			err := s.repositories.JobRepository.SetOwner(tx, tenant, contactId, *newContact.OwnerUserId)
 			if err != nil {
 				return nil, err
 			}
@@ -177,28 +177,28 @@ func (s *contactService) Update(ctx context.Context, contactUpdateData *ContactU
 		tenant := common.GetContext(ctx).Tenant
 		contactId := contactUpdateData.ContactEntity.Id
 
-		dbNode, err := s.repositories.ContactRepository.Update(tx, tenant, contactId, contactUpdateData.ContactEntity)
+		dbNode, err := s.repositories.JobRepository.Update(tx, tenant, contactId, contactUpdateData.ContactEntity)
 		if err != nil {
 			return nil, err
 		}
 
-		err = s.repositories.ContactRepository.UnlinkFromContactTypesInTx(tx, tenant, contactId)
+		err = s.repositories.JobRepository.UnlinkFromContactTypesInTx(tx, tenant, contactId)
 		if err != nil {
 			return nil, err
 		}
 		if contactUpdateData.ContactTypeId != nil {
-			err := s.repositories.ContactRepository.LinkWithContactTypeInTx(tx, tenant, contactId, *contactUpdateData.ContactTypeId)
+			err := s.repositories.JobRepository.LinkWithContactTypeInTx(tx, tenant, contactId, *contactUpdateData.ContactTypeId)
 			if err != nil {
 				return nil, err
 			}
 		}
 
-		err = s.repositories.ContactRepository.RemoveOwner(tx, tenant, contactId)
+		err = s.repositories.JobRepository.RemoveOwner(tx, tenant, contactId)
 		if err != nil {
 			return nil, err
 		}
 		if contactUpdateData.OwnerUserId != nil {
-			err := s.repositories.ContactRepository.SetOwner(tx, tenant, contactId, *contactUpdateData.OwnerUserId)
+			err := s.repositories.JobRepository.SetOwner(tx, tenant, contactId, *contactUpdateData.OwnerUserId)
 			if err != nil {
 				return nil, err
 			}
@@ -217,7 +217,7 @@ func (s *contactService) PermanentDelete(ctx context.Context, contactId string) 
 	session := utils.NewNeo4jWriteSession(s.getNeo4jDriver())
 	defer session.Close()
 
-	err := s.repositories.ContactRepository.Delete(session, common.GetContext(ctx).Tenant, contactId)
+	err := s.repositories.JobRepository.Delete(session, common.GetContext(ctx).Tenant, contactId)
 
 	if err != nil {
 		return false, err
@@ -344,7 +344,7 @@ func (s *contactService) FindAll(ctx context.Context, page, limit int, filter *m
 		return nil, err
 	}
 
-	dbNodesWithTotalCount, err := s.repositories.ContactRepository.GetPaginatedContacts(
+	dbNodesWithTotalCount, err := s.repositories.JobRepository.GetPaginatedContacts(
 		session,
 		common.GetContext(ctx).Tenant,
 		paginatedResult.GetSkip(),
@@ -382,7 +382,7 @@ func (s *contactService) FindAllForContactGroup(ctx context.Context, page, limit
 		return nil, err
 	}
 
-	dbNodesWithTotalCount, err := s.repositories.ContactRepository.GetPaginatedContactsForContactGroup(
+	dbNodesWithTotalCount, err := s.repositories.JobRepository.GetPaginatedContactsForContactGroup(
 		session,
 		common.GetContext(ctx).Tenant,
 		paginatedResult.GetSkip(),
@@ -408,7 +408,7 @@ func (s *contactService) GetAllForConversation(ctx context.Context, conversation
 	session := utils.NewNeo4jReadSession(s.getNeo4jDriver())
 	defer session.Close()
 
-	dbNodes, err := s.repositories.ContactRepository.GetAllForConversation(session, common.GetContext(ctx).Tenant, conversationId)
+	dbNodes, err := s.repositories.JobRepository.GetAllForConversation(session, common.GetContext(ctx).Tenant, conversationId)
 	if err != nil {
 		return nil, err
 	}
@@ -424,7 +424,7 @@ func (s *contactService) GetContactForRole(ctx context.Context, roleId string) (
 	session := utils.NewNeo4jWriteSession(s.getNeo4jDriver())
 	defer session.Close()
 
-	dbNode, err := s.repositories.ContactRepository.GetContactForRole(session, common.GetContext(ctx).Tenant, roleId)
+	dbNode, err := s.repositories.JobRepository.GetContactForRole(session, common.GetContext(ctx).Tenant, roleId)
 	if dbNode == nil || err != nil {
 		return nil, err
 	}
@@ -448,7 +448,7 @@ func (s *contactService) GetContactsForOrganization(ctx context.Context, organiz
 		return nil, err
 	}
 
-	dbNodesWithTotalCount, err := s.repositories.ContactRepository.GetPaginatedContactsForOrganization(
+	dbNodesWithTotalCount, err := s.repositories.JobRepository.GetPaginatedContactsForOrganization(
 		session,
 		common.GetTenantFromContext(ctx),
 		organizationId,
@@ -471,7 +471,7 @@ func (s *contactService) GetContactsForOrganization(ctx context.Context, organiz
 }
 
 func (s *contactService) AddTag(ctx context.Context, contactId string, tagId string) (*entity.ContactEntity, error) {
-	contactNodePtr, err := s.repositories.ContactRepository.AddTag(common.GetTenantFromContext(ctx), contactId, tagId)
+	contactNodePtr, err := s.repositories.JobRepository.AddTag(common.GetTenantFromContext(ctx), contactId, tagId)
 	if err != nil {
 		return nil, err
 	}
@@ -479,7 +479,7 @@ func (s *contactService) AddTag(ctx context.Context, contactId string, tagId str
 }
 
 func (s *contactService) RemoveTag(ctx context.Context, contactId string, tagId string) (*entity.ContactEntity, error) {
-	contactNodePtr, err := s.repositories.ContactRepository.RemoveTag(common.GetTenantFromContext(ctx), contactId, tagId)
+	contactNodePtr, err := s.repositories.JobRepository.RemoveTag(common.GetTenantFromContext(ctx), contactId, tagId)
 	if err != nil {
 		return nil, err
 	}

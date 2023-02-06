@@ -31,6 +31,16 @@ func (r *queryResolver) User(ctx context.Context, id string) (*model.User, error
 	panic(fmt.Errorf("not implemented: User - user"))
 }
 
+// UserByEmail is the resolver for the user_ByEmail field.
+func (r *queryResolver) UserByEmail(ctx context.Context, email string) (*model.User, error) {
+	panic(fmt.Errorf("not implemented: UserByEmail - user_ByEmail"))
+}
+
+// Emails is the resolver for the emails field.
+func (r *userResolver) Emails(ctx context.Context, obj *model.User) ([]*model.Email, error) {
+	panic(fmt.Errorf("not implemented: Emails - emails"))
+}
+
 // Conversations is the resolver for the conversations field.
 func (r *userResolver) Conversations(ctx context.Context, obj *model.User, pagination *model.Pagination, sort []*model.SortBy) (*model.ConversationPage, error) {
 	panic(fmt.Errorf("not implemented: Conversations - conversations"))
