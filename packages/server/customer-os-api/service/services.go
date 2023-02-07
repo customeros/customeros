@@ -18,7 +18,6 @@ type Services struct {
 	FieldSetTemplateService    FieldSetTemplateService
 	CustomFieldTemplateService CustomFieldTemplateService
 	ConversationService        ConversationService
-	ContactTypeService         ContactTypeService
 	OrganizationTypeService    OrganizationTypeService
 	ActionsService             ActionsService
 	NoteService                NoteService
@@ -44,7 +43,6 @@ func InitServices(driver *neo4j.Driver) *Services {
 		FieldSetTemplateService:    NewFieldSetTemplateService(repositories),
 		CustomFieldTemplateService: NewCustomFieldTemplateService(repositories),
 		ConversationService:        NewConversationService(repositories),
-		ContactTypeService:         NewContactTypeService(repositories),
 		OrganizationTypeService:    NewOrganizationTypeService(repositories),
 		ActionsService:             NewActionsService(repositories),
 		NoteService:                NewNoteService(repositories),

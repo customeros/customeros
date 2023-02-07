@@ -59,9 +59,7 @@ type Contact struct {
 	// A user-defined label applied against a contact in customerOS.
 	Label  *string    `json:"label"`
 	Source DataSource `json:"source"`
-	// User-defined field that defines the relationship type the contact has with your business.  `Customer`, `Partner`, `Lead` are examples.
-	ContactType *ContactType `json:"contactType"`
-	Tags        []*Tag       `json:"tags"`
+	Tags   []*Tag     `json:"tags"`
 	// `organizationName` and `jobTitle` of the contact if it has been associated with an organization.
 	// **Required.  If no values it returns an empty array.**
 	JobRoles      []*JobRole        `json:"jobRoles"`
@@ -170,8 +168,6 @@ type ContactInput struct {
 	LastName *string `json:"lastName"`
 	// A user-defined label attached to contact.
 	Label *string `json:"label"`
-	// User-defined field that defines the relationship type the contact has with your business.  `Customer`, `Partner`, `Lead` are examples.
-	ContactTypeID *string `json:"contactTypeId"`
 	// An ISO8601 timestamp recording when the contact was created in customerOS.
 	CreatedAt *time.Time `json:"createdAt"`
 	// User defined metadata appended to contact.
@@ -192,21 +188,6 @@ type ContactTagInput struct {
 	TagID     string `json:"tagId"`
 }
 
-type ContactType struct {
-	ID        string    `json:"id"`
-	CreatedAt time.Time `json:"createdAt"`
-	Name      string    `json:"name"`
-}
-
-type ContactTypeInput struct {
-	Name string `json:"name"`
-}
-
-type ContactTypeUpdateInput struct {
-	ID   string `json:"id"`
-	Name string `json:"name"`
-}
-
 // Updates data fields associated with an existing customer record in customerOS.
 // **An `update` object.**
 type ContactUpdateInput struct {
@@ -221,8 +202,6 @@ type ContactUpdateInput struct {
 	LastName *string `json:"lastName"`
 	// A user-defined label applied against a contact in customerOS.
 	Label *string `json:"label"`
-	// User-defined field that defines the relationship type the contact has with your business.  `Customer`, `Partner`, `Lead` are examples.
-	ContactTypeID *string `json:"contactTypeId"`
 	// Id of the contact owner (user)
 	OwnerID *string `json:"ownerId"`
 }

@@ -22,7 +22,7 @@ func TestQueryResolver_ContactByEmail(t *testing.T) {
 	neo4jt.AddEmailTo(driver, repository.CONTACT, tenantName, contactId1, "test@test.com", true, "MAIN")
 	neo4jt.AddEmailTo(driver, repository.CONTACT, otherTenant, contactId2, "test@test.com", true, "MAIN")
 
-	rawResponse, err := c.RawPost(getQuery("get_contact_by_email"), client.Var("email", "test@test.com"))
+	rawResponse, err := c.RawPost(getQuery("contact/get_contact_by_email"), client.Var("email", "test@test.com"))
 	assertRawResponseSuccess(t, rawResponse, err)
 
 	var contact struct {
@@ -45,7 +45,7 @@ func TestQueryResolver_ContactByPhone(t *testing.T) {
 	neo4jt.AddPhoneNumberToContact(driver, contactId1, "+1234567890", false, "OTHER")
 	neo4jt.AddPhoneNumberToContact(driver, contactId2, "+1234567890", true, "MAIN")
 
-	rawResponse, err := c.RawPost(getQuery("get_contact_by_phone"), client.Var("e164", "+1234567890"))
+	rawResponse, err := c.RawPost(getQuery("contact/get_contact_by_phone"), client.Var("e164", "+1234567890"))
 	assertRawResponseSuccess(t, rawResponse, err)
 
 	var contact struct {
@@ -62,7 +62,7 @@ func TestMutationResolver_ContactCreate_Min(t *testing.T) {
 	defer tearDownTestCase()(t)
 	neo4jt.CreateTenant(driver, tenantName)
 
-	rawResponse, err := c.RawPost(getQuery("create_contact_min"))
+	rawResponse, err := c.RawPost(getQuery("contact/create_contact_min"))
 	assertRawResponseSuccess(t, rawResponse, err)
 
 	var contact struct {
@@ -90,10 +90,8 @@ func TestMutationResolver_ContactCreate(t *testing.T) {
 	defer tearDownTestCase()(t)
 	neo4jt.CreateTenant(driver, tenantName)
 	neo4jt.CreateTenant(driver, "otherTenant")
-	contactTypeId := neo4jt.CreateContactType(driver, tenantName, "CUSTOMER")
 
-	rawResponse, err := c.RawPost(getQuery("create_contact"),
-		client.Var("contactTypeId", contactTypeId))
+	rawResponse, err := c.RawPost(getQuery("contact/create_contact"))
 	assertRawResponseSuccess(t, rawResponse, err)
 
 	var contact struct {
@@ -106,8 +104,6 @@ func TestMutationResolver_ContactCreate(t *testing.T) {
 	require.Equal(t, "MR", contact.Contact_Create.Title.String())
 	require.Equal(t, "first", *contact.Contact_Create.FirstName)
 	require.Equal(t, "last", *contact.Contact_Create.LastName)
-	require.Equal(t, contactTypeId, contact.Contact_Create.ContactType.ID)
-	require.Equal(t, "CUSTOMER", contact.Contact_Create.ContactType.Name)
 	require.Equal(t, "Some label", *contact.Contact_Create.Label)
 	require.Equal(t, model.DataSourceOpenline, contact.Contact_Create.Source)
 
@@ -175,10 +171,9 @@ func TestMutationResolver_ContactCreate(t *testing.T) {
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Email_"+tenantName))
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "PhoneNumber"))
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "PhoneNumber_"+tenantName))
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "ContactType"))
-	require.Equal(t, 11, neo4jt.GetTotalCountOfNodes(driver))
+	require.Equal(t, 10, neo4jt.GetTotalCountOfNodes(driver))
 
-	assertNeo4jLabels(t, driver, []string{"Tenant", "Contact", "Contact_" + tenantName, "ContactType",
+	assertNeo4jLabels(t, driver, []string{"Tenant", "Contact", "Contact_" + tenantName,
 		"Email", "Email_" + tenantName, "PhoneNumber", "PhoneNumber_" + tenantName,
 		"CustomField", "BoolField", "TextField", "FloatField", "TimeField", "IntField", "CustomField_" + tenantName})
 }
@@ -191,7 +186,7 @@ func TestMutationResolver_ContactCreate_WithCustomFields(t *testing.T) {
 	setTemplateId := neo4jt.AddSetTemplateToEntity(driver, entityTemplateId)
 	fieldInSetTemplateId := neo4jt.AddFieldTemplateToSet(driver, setTemplateId)
 
-	rawResponse, err := c.RawPost(getQuery("create_contact_with_custom_fields"),
+	rawResponse, err := c.RawPost(getQuery("contact/create_contact_with_custom_fields"),
 		client.Var("entityTemplateId", entityTemplateId),
 		client.Var("fieldTemplateId", fieldTemplateId),
 		client.Var("setTemplateId", setTemplateId),
@@ -283,7 +278,7 @@ func TestMutationResolver_ContactCreate_WithOwner(t *testing.T) {
 		LastName:  "Smith",
 	})
 
-	rawResponse, err := c.RawPost(getQuery("create_contact_with_owner"),
+	rawResponse, err := c.RawPost(getQuery("contact/create_contact_with_owner"),
 		client.Var("ownerId", userId))
 	assertRawResponseSuccess(t, rawResponse, err)
 
@@ -318,7 +313,7 @@ func TestMutationResolver_ContactCreate_WithExternalReference(t *testing.T) {
 	neo4jt.CreateTenant(driver, tenantName)
 	neo4jt.CreateHubspotExternalSystem(driver, tenantName)
 
-	rawResponse, err := c.RawPost(getQuery("create_contact_with_external_reference"))
+	rawResponse, err := c.RawPost(getQuery("contact/create_contact_with_external_reference"))
 	assertRawResponseSuccess(t, rawResponse, err)
 
 	var contact struct {
@@ -353,15 +348,11 @@ func TestMutationResolver_UpdateContact(t *testing.T) {
 		LastName:  "last",
 		Label:     "label",
 	})
-	contactTypeIdOrig := neo4jt.CreateContactType(driver, tenantName, "ORIG")
-	contactTypeIdUpdate := neo4jt.CreateContactType(driver, tenantName, "UPDATED")
 
-	neo4jt.SetContactTypeForContact(driver, contactId, contactTypeIdOrig)
 	neo4jt.UserOwnsContact(driver, origOwnerId, contactId)
 
-	rawResponse, err := c.RawPost(getQuery("update_contact"),
+	rawResponse, err := c.RawPost(getQuery("contact/update_contact"),
 		client.Var("contactId", contactId),
-		client.Var("contactTypeId", contactTypeIdUpdate),
 		client.Var("ownerId", newOwnerId))
 	assertRawResponseSuccess(t, rawResponse, err)
 
@@ -376,18 +367,14 @@ func TestMutationResolver_UpdateContact(t *testing.T) {
 	require.Equal(t, "updated first", *contact.Contact_Update.FirstName)
 	require.Equal(t, "updated last", *contact.Contact_Update.LastName)
 	require.Equal(t, "updated label", *contact.Contact_Update.Label)
-	require.Equal(t, contactTypeIdUpdate, contact.Contact_Update.ContactType.ID)
-	require.Equal(t, "UPDATED", contact.Contact_Update.ContactType.Name)
 	require.Equal(t, newOwnerId, contact.Contact_Update.Owner.ID)
 
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Contact"))
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Contact_"+tenantName))
-	require.Equal(t, 2, neo4jt.GetCountOfNodes(driver, "ContactType"))
 	require.Equal(t, 2, neo4jt.GetCountOfNodes(driver, "User"))
-	require.Equal(t, 1, neo4jt.GetCountOfRelationships(driver, "IS_OF_TYPE"))
 	require.Equal(t, 1, neo4jt.GetCountOfRelationships(driver, "OWNS"))
 
-	assertNeo4jLabels(t, driver, []string{"Tenant", "Contact", "Contact_" + tenantName, "ContactType", "User"})
+	assertNeo4jLabels(t, driver, []string{"Tenant", "Contact", "Contact_" + tenantName, "User"})
 }
 
 func TestMutationResolver_UpdateContact_ClearTitle(t *testing.T) {
@@ -399,7 +386,7 @@ func TestMutationResolver_UpdateContact_ClearTitle(t *testing.T) {
 		LastName:  "last",
 	})
 
-	rawResponse, err := c.RawPost(getQuery("update_contact_clear_title"),
+	rawResponse, err := c.RawPost(getQuery("contact/update_contact_clear_title"),
 		client.Var("contactId", contactId))
 	assertRawResponseSuccess(t, rawResponse, err)
 
@@ -445,7 +432,7 @@ func TestQueryResolver_Contact_WithJobRoles_ById(t *testing.T) {
 	require.Equal(t, 2, neo4jt.GetCountOfRelationships(driver, "ROLE_IN"))
 	require.Equal(t, 2, neo4jt.GetCountOfRelationships(driver, "WORKS_AS"))
 
-	rawResponse, err := c.RawPost(getQuery("get_contact_with_job_roles_by_id"),
+	rawResponse, err := c.RawPost(getQuery("contact/get_contact_with_job_roles_by_id"),
 		client.Var("contactId", contactId))
 	assertRawResponseSuccess(t, rawResponse, err)
 
@@ -502,7 +489,7 @@ func TestQueryResolver_Contact_WithNotes_ById(t *testing.T) {
 	require.Equal(t, 2, neo4jt.GetCountOfRelationships(driver, "NOTED"))
 	require.Equal(t, 1, neo4jt.GetCountOfRelationships(driver, "CREATED"))
 
-	rawResponse, err := c.RawPost(getQuery("get_contact_with_notes_by_id"),
+	rawResponse, err := c.RawPost(getQuery("contact/get_contact_with_notes_by_id"),
 		client.Var("contactId", contactId))
 	assertRawResponseSuccess(t, rawResponse, err)
 
@@ -554,7 +541,7 @@ func TestQueryResolver_Contact_WithTags_ById(t *testing.T) {
 	require.Equal(t, 3, neo4jt.GetCountOfNodes(driver, "Tag"))
 	require.Equal(t, 3, neo4jt.GetCountOfRelationships(driver, "TAGGED"))
 
-	rawResponse, err := c.RawPost(getQuery("get_contact_with_tags_by_id"),
+	rawResponse, err := c.RawPost(getQuery("contact/get_contact_with_tags_by_id"),
 		client.Var("contactId", contactId))
 	assertRawResponseSuccess(t, rawResponse, err)
 
@@ -604,7 +591,7 @@ func TestQueryResolver_Contact_WithAddresses_ById(t *testing.T) {
 	require.Equal(t, 2, neo4jt.GetCountOfNodes(driver, "Address"))
 	require.Equal(t, 2, neo4jt.GetCountOfRelationships(driver, "LOCATED_AT"))
 
-	rawResponse, err := c.RawPost(getQuery("get_contact_with_addresses_by_id"),
+	rawResponse, err := c.RawPost(getQuery("contact/get_contact_with_addresses_by_id"),
 		client.Var("contactId", contactId))
 	assertRawResponseSuccess(t, rawResponse, err)
 
@@ -656,7 +643,7 @@ func TestQueryResolver_Contacts_SortByTitleAscFirstNameAscLastNameDesc(t *testin
 		LastName:  "A",
 	})
 
-	rawResponse, err := c.RawPost(getQuery("get_contacts_with_sorting"))
+	rawResponse, err := c.RawPost(getQuery("contact/get_contacts_with_sorting"))
 	assertRawResponseSuccess(t, rawResponse, err)
 
 	var contacts struct {
@@ -697,7 +684,7 @@ func TestQueryResolver_Contact_BasicFilters_FindContactWithLetterAInName(t *test
 
 	require.Equal(t, 3, neo4jt.GetCountOfNodes(driver, "Contact"))
 
-	rawResponse, err := c.RawPost(getQuery("get_contacts_basic_filters"))
+	rawResponse, err := c.RawPost(getQuery("contact/get_contacts_basic_filters"))
 	assertRawResponseSuccess(t, rawResponse, err)
 
 	var contacts struct {
@@ -735,7 +722,7 @@ func TestQueryResolver_Contact_WithConversations(t *testing.T) {
 	require.Equal(t, 3, neo4jt.GetCountOfNodes(driver, "Contact"))
 	require.Equal(t, 4, neo4jt.GetCountOfNodes(driver, "Conversation"))
 
-	rawResponse, err := c.RawPost(getQuery("get_contact_with_conversations"),
+	rawResponse, err := c.RawPost(getQuery("contact/get_contact_with_conversations"),
 		client.Var("contactId", contact1))
 	assertRawResponseSuccess(t, rawResponse, err)
 
@@ -809,7 +796,7 @@ func TestQueryResolver_Contact_WithActions(t *testing.T) {
 	require.Equal(t, 3, neo4jt.GetCountOfNodes(driver, "PageView"))
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Conversation"))
 
-	rawResponse, err := c.RawPost(getQuery("get_contact_with_actions"),
+	rawResponse, err := c.RawPost(getQuery("contact/get_contact_with_actions"),
 		client.Var("contactId", contactId),
 		client.Var("from", from),
 		client.Var("to", now))
@@ -874,7 +861,7 @@ func TestQueryResolver_Contact_WithActions_FilterByActionType(t *testing.T) {
 	types := []model.ActionType{}
 	types = append(types, model.ActionTypePageView)
 
-	rawResponse, err := c.RawPost(getQuery("get_contact_with_actions_filter_by_action_type"),
+	rawResponse, err := c.RawPost(getQuery("contact/get_contact_with_actions_filter_by_action_type"),
 		client.Var("contactId", contactId),
 		client.Var("from", from),
 		client.Var("to", now),
@@ -909,7 +896,7 @@ func TestQueryResolver_Contact_WithOrganizations_ById(t *testing.T) {
 	require.Equal(t, 4, neo4jt.GetCountOfNodes(driver, "Organization"))
 	require.Equal(t, 4, neo4jt.GetCountOfRelationships(driver, "CONTACT_OF"))
 
-	rawResponse, err := c.RawPost(getQuery("get_contact_with_organizations_by_id"),
+	rawResponse, err := c.RawPost(getQuery("contact/get_contact_with_organizations_by_id"),
 		client.Var("contactId", contactId),
 		client.Var("limit", 2),
 		client.Var("page", 1),
@@ -941,7 +928,7 @@ func TestMutationResolver_ContactAddTagByID(t *testing.T) {
 	tagId2 := neo4jt.CreateTag(driver, tenantName, "tag2")
 	neo4jt.TagContact(driver, contactId, tagId1)
 
-	rawResponse, err := c.RawPost(getQuery("add_tag_to_contact"),
+	rawResponse, err := c.RawPost(getQuery("contact/add_tag_to_contact"),
 		client.Var("contactId", contactId),
 		client.Var("tagId", tagId2),
 	)
@@ -979,7 +966,7 @@ func TestMutationResolver_ContactRemoveTagByID(t *testing.T) {
 
 	require.Equal(t, 2, neo4jt.GetCountOfRelationships(driver, "TAGGED"))
 
-	rawResponse, err := c.RawPost(getQuery("remove_tag_from_contact"),
+	rawResponse, err := c.RawPost(getQuery("contact/remove_tag_from_contact"),
 		client.Var("contactId", contactId),
 		client.Var("tagId", tagId2),
 	)

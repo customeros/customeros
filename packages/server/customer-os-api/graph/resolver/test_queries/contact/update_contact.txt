@@ -1,4 +1,4 @@
-mutation UpdateContact($contactId: ID!, $contactTypeId: ID, $ownerId: ID){
+mutation UpdateContact($contactId: ID!, $ownerId: ID){
     contact_Update(
         input: {
             id: $contactId
@@ -6,7 +6,6 @@ mutation UpdateContact($contactId: ID!, $contactTypeId: ID, $ownerId: ID){
             firstName: "updated first"
             lastName: "updated last"
             label: "updated label"
-            contactTypeId: $contactTypeId
             ownerId: $ownerId
         }
     ) {
@@ -15,10 +14,6 @@ mutation UpdateContact($contactId: ID!, $contactTypeId: ID, $ownerId: ID){
         firstName
         lastName
         label
-        contactType {
-            id
-            name
-        }
         owner {
             id
         }

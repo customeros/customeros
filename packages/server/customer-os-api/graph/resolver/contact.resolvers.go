@@ -17,19 +17,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
 )
 
-// ContactType is the resolver for the contactType field.
-func (r *contactResolver) ContactType(ctx context.Context, obj *model.Contact) (*model.ContactType, error) {
-	contactTypeEntity, err := r.Services.ContactTypeService.FindContactTypeForContact(ctx, obj.ID)
-	if err != nil {
-		graphql.AddErrorf(ctx, "Failed to get contact type for contact %s", obj.ID)
-		return nil, err
-	}
-	if contactTypeEntity == nil {
-		return nil, nil
-	}
-	return mapper.MapEntityToContactType(contactTypeEntity), nil
-}
-
 // Tags is the resolver for the tags field.
 func (r *contactResolver) Tags(ctx context.Context, obj *model.Contact) ([]*model.Tag, error) {
 	tagEntities, err := r.Services.TagService.GetTagsForContact(ctx, obj.ID)
@@ -191,7 +178,6 @@ func (r *mutationResolver) ContactCreate(ctx context.Context, input model.Contac
 		EmailEntity:       mapper.MapEmailInputToEntity(input.Email),
 		ExternalReference: mapper.MapExternalSystemReferenceInputToRelationship(input.ExternalReference),
 		TemplateId:        input.TemplateID,
-		ContactTypeId:     input.ContactTypeID,
 		OwnerUserId:       input.OwnerID,
 		Source:            entity.DataSourceOpenline,
 		SourceOfTruth:     entity.DataSourceOpenline,
@@ -207,7 +193,6 @@ func (r *mutationResolver) ContactCreate(ctx context.Context, input model.Contac
 func (r *mutationResolver) ContactUpdate(ctx context.Context, input model.ContactUpdateInput) (*model.Contact, error) {
 	updatedContact, err := r.Services.ContactService.Update(ctx, &service.ContactUpdateData{
 		ContactEntity: mapper.MapContactUpdateInputToEntity(input),
-		ContactTypeId: input.ContactTypeID,
 		OwnerUserId:   input.OwnerID,
 	})
 	if err != nil {

@@ -116,17 +116,6 @@ func CreateContact(driver *neo4j.Driver, tenant string, contact entity.ContactEn
 	return contactId.String()
 }
 
-func SetContactTypeForContact(driver *neo4j.Driver, contactId, contactTypeId string) {
-	query := `
-			MATCH (c:Contact {id:$contactId}),
-				  (o:ContactType {id:$contactTypeId})
-			MERGE (c)-[:IS_OF_TYPE]->(o)`
-	ExecuteWriteQuery(driver, query, map[string]any{
-		"contactId":     contactId,
-		"contactTypeId": contactTypeId,
-	})
-}
-
 func CreateContactGroup(driver *neo4j.Driver, tenant, name string) string {
 	var contactGroupId, _ = uuid.NewRandom()
 	query := `
@@ -358,19 +347,6 @@ func AddSetTemplateToEntity(driver *neo4j.Driver, entityTemplateId string) strin
 		"name":             "set name",
 	})
 	return templateId.String()
-}
-
-func CreateContactType(driver *neo4j.Driver, tenant, contactTypeName string) string {
-	var contactTypeId, _ = uuid.NewRandom()
-	query := `MATCH (t:Tenant {name:$tenant})
-			MERGE (t)<-[:CONTACT_TYPE_BELONGS_TO_TENANT]-(c:ContactType {id:$id})
-			ON CREATE SET c.name=$name`
-	ExecuteWriteQuery(driver, query, map[string]any{
-		"id":     contactTypeId.String(),
-		"tenant": tenant,
-		"name":   contactTypeName,
-	})
-	return contactTypeId.String()
 }
 
 func CreateTag(driver *neo4j.Driver, tenant, tagName string) string {

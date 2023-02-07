@@ -242,7 +242,7 @@ func TestMutationResolver_OrganizationUpdate(t *testing.T) {
 	organizationId := neo4jt.CreateOrganization(driver, tenantName, "some organization")
 	organizationTypeIdOrig := neo4jt.CreateOrganizationType(driver, tenantName, "ORIG")
 	organizationTypeIdUpdate := neo4jt.CreateOrganizationType(driver, tenantName, "UPDATED")
-	neo4jt.SetContactTypeForContact(driver, organizationTypeIdOrig, organizationTypeIdOrig)
+	neo4jt.SetOrganizationTypeForOrganization(driver, organizationTypeIdOrig, organizationTypeIdOrig)
 
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Organization"))
 	require.Equal(t, 2, neo4jt.GetCountOfNodes(driver, "OrganizationType"))

@@ -1,7 +1,0 @@
-mutation {
-  contactType_Create(input: {name:"the contact type"}) {
-      id
-      name
-      createdAt
-    }
-}
