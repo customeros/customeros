@@ -3,7 +3,7 @@ name: Bug report
 about: Something not working as expected?  Let us look into it.
 title: ''
 labels: bug
-assignees: alexopenline, edifirut, xvasi
+assignees: 
 
 ---
 
