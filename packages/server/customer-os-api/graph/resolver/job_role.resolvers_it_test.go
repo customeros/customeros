@@ -49,7 +49,8 @@ func TestMutationResolver_JobRoleCreate_WithOrganization(t *testing.T) {
 	require.Equal(t, 1, neo4jt.GetCountOfRelationships(driver, "WORKS_AS"))
 
 	// Check the labels on the nodes in the Neo4j database
-	assertNeo4jLabels(t, driver, []string{"Tenant", "Contact", "Organization", "JobRole", "JobRole_" + tenantName})
+	assertNeo4jLabels(t, driver, []string{"Tenant", "Contact", "Contact_" + tenantName,
+		"Organization", "Organization_" + tenantName, "JobRole", "JobRole_" + tenantName})
 }
 
 func TestMutationResolver_JobRoleCreate_WithoutOrganization(t *testing.T) {
@@ -89,7 +90,7 @@ func TestMutationResolver_JobRoleCreate_WithoutOrganization(t *testing.T) {
 	require.Equal(t, 1, neo4jt.GetCountOfRelationships(driver, "WORKS_AS"))
 
 	// Check the labels on the nodes in the Neo4j database
-	assertNeo4jLabels(t, driver, []string{"Tenant", "Contact", "JobRole", "JobRole_" + tenantName})
+	assertNeo4jLabels(t, driver, []string{"Tenant", "Contact", "Contact_" + tenantName, "JobRole", "JobRole_" + tenantName})
 }
 
 func TestMutationResolver_JobRoleUpdate(t *testing.T) {
@@ -126,7 +127,8 @@ func TestMutationResolver_JobRoleUpdate(t *testing.T) {
 	require.Equal(t, model.DataSourceOpenline, updatedRole.SourceOfTruth)
 
 	// Check the labels on the nodes in the Neo4j database
-	assertNeo4jLabels(t, driver, []string{"Tenant", "Contact", "Organization", "JobRole"})
+	assertNeo4jLabels(t, driver, []string{"Tenant", "Contact", "Contact_" + tenantName,
+		"Organization", "Organization_" + tenantName, "JobRole"})
 }
 
 func TestMutationResolver_JobRoleUpdate_ChangeOrganization(t *testing.T) {
@@ -166,7 +168,8 @@ func TestMutationResolver_JobRoleUpdate_ChangeOrganization(t *testing.T) {
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "JobRole"))
 
 	// Check the labels on the nodes in the Neo4j database
-	assertNeo4jLabels(t, driver, []string{"Tenant", "Contact", "Organization", "JobRole"})
+	assertNeo4jLabels(t, driver, []string{"Tenant", "Contact", "Contact_" + tenantName,
+		"Organization", "Organization_" + tenantName, "JobRole"})
 }
 
 func TestMutationResolver_JobRoleDelete(t *testing.T) {
@@ -200,5 +203,5 @@ func TestMutationResolver_JobRoleDelete(t *testing.T) {
 	require.Equal(t, 0, neo4jt.GetCountOfNodes(driver, "JobRole"))
 
 	// Check the labels on the nodes in the Neo4j database
-	assertNeo4jLabels(t, driver, []string{"Tenant", "Contact", "Organization"})
+	assertNeo4jLabels(t, driver, []string{"Tenant", "Contact", "Contact_" + tenantName, "Organization", "Organization_" + tenantName})
 }

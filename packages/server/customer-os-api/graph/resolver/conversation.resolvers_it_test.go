@@ -14,7 +14,7 @@ func TestMutationResolver_ConversationCreate_Min(t *testing.T) {
 	neo4jt.CreateTenant(driver, tenantName)
 	contactId := neo4jt.CreateDefaultContact(driver, tenantName)
 
-	rawResponse, err := c.RawPost(getQuery("create_conversation_min"),
+	rawResponse, err := c.RawPost(getQuery("conversation/create_conversation_min"),
 		client.Var("contactId", contactId))
 	assertRawResponseSuccess(t, rawResponse, err)
 
@@ -39,7 +39,7 @@ func TestMutationResolver_ConversationCreate_Min(t *testing.T) {
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Conversation"))
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Conversation_"+tenantName))
 	require.Equal(t, 1, neo4jt.GetCountOfRelationships(driver, "PARTICIPATES"))
-	assertNeo4jLabels(t, driver, []string{"Tenant", "Contact", "Conversation", "Conversation_" + tenantName})
+	assertNeo4jLabels(t, driver, []string{"Tenant", "Contact", "Contact_" + tenantName, "Conversation", "Conversation_" + tenantName})
 }
 
 func TestMutationResolver_ConversationCreate_WithGivenIdAndMultipleParticipants(t *testing.T) {
@@ -51,7 +51,7 @@ func TestMutationResolver_ConversationCreate_WithGivenIdAndMultipleParticipants(
 	contactId1 := neo4jt.CreateDefaultContact(driver, tenantName)
 	contactId2 := neo4jt.CreateDefaultContact(driver, tenantName)
 
-	rawResponse, err := c.RawPost(getQuery("create_conversation_with_multiple_participants"),
+	rawResponse, err := c.RawPost(getQuery("conversation/create_conversation_with_multiple_participants"),
 		client.Var("contactId1", contactId1),
 		client.Var("contactId2", contactId2),
 		client.Var("userId1", userId1),
@@ -79,18 +79,19 @@ func TestMutationResolver_ConversationCreate_WithGivenIdAndMultipleParticipants(
 		[]string{conversation.Conversation_Create.Users[0].ID, conversation.Conversation_Create.Users[1].ID})
 
 	require.Equal(t, 2, neo4jt.GetCountOfNodes(driver, "Contact"))
+	require.Equal(t, 2, neo4jt.GetCountOfNodes(driver, "Contact_"+tenantName))
 	require.Equal(t, 2, neo4jt.GetCountOfNodes(driver, "User"))
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Conversation"))
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Conversation_"+tenantName))
 	require.Equal(t, 4, neo4jt.GetCountOfRelationships(driver, "PARTICIPATES"))
-	assertNeo4jLabels(t, driver, []string{"Tenant", "Contact", "User", "Conversation", "Conversation_" + tenantName})
+	assertNeo4jLabels(t, driver, []string{"Tenant", "Contact", "Contact_" + tenantName, "User", "Conversation", "Conversation_" + tenantName})
 }
 
 func TestMutationResolver_ConversationCreate_WithoutParticipants_ShouldFail(t *testing.T) {
 	defer tearDownTestCase()(t)
 	neo4jt.CreateTenant(driver, tenantName)
 
-	rawResponse, err := c.RawPost(getQuery("create_conversation_without_participants"))
+	rawResponse, err := c.RawPost(getQuery("conversation/create_conversation_without_participants"))
 
 	require.Nil(t, err)
 	require.NotNil(t, rawResponse.Errors)
@@ -106,7 +107,7 @@ func TestMutationResolver_ConversationClose(t *testing.T) {
 	userId := neo4jt.CreateDefaultUser(driver, tenantName)
 	conversationId := neo4jt.CreateConversation(driver, userId, contactId)
 
-	rawResponse, err := c.RawPost(getQuery("close_conversation"),
+	rawResponse, err := c.RawPost(getQuery("conversation/close_conversation"),
 		client.Var("conversationId", conversationId))
 	assertRawResponseSuccess(t, rawResponse, err)
 
@@ -137,7 +138,7 @@ func TestMutationResolver_ConversationUpdate_NoChanges(t *testing.T) {
 	userId := neo4jt.CreateDefaultUser(driver, tenantName)
 	conversationId := neo4jt.CreateConversation(driver, userId, contactId)
 
-	rawResponse, err := c.RawPost(getQuery("update_conversation_no_changes"),
+	rawResponse, err := c.RawPost(getQuery("conversation/update_conversation_no_changes"),
 		client.Var("conversationId", conversationId))
 	assertRawResponseSuccess(t, rawResponse, err)
 
@@ -174,7 +175,7 @@ func TestMutationResolver_ConversationUpdate_ChangeAllFieldsAndAddNewParticipant
 
 	require.Equal(t, 2, neo4jt.GetCountOfRelationships(driver, "PARTICIPATES"))
 
-	rawResponse, err := c.RawPost(getQuery("update_conversation_new_participants"),
+	rawResponse, err := c.RawPost(getQuery("conversation/update_conversation_new_participants"),
 		client.Var("conversationId", conversationId),
 		client.Var("contactId1", contactId1),
 		client.Var("contactId2", contactId2),

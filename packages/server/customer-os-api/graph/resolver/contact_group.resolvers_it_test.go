@@ -20,6 +20,7 @@ func TestMutationResolver_ContactGroupRemoveContact(t *testing.T) {
 	neo4jt.AddContactToGroup(driver, contactId2, groupId)
 
 	require.Equal(t, 2, neo4jt.GetCountOfNodes(driver, "Contact"))
+	require.Equal(t, 2, neo4jt.GetCountOfNodes(driver, "Contact_"+tenantName))
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "ContactGroup"))
 	require.Equal(t, 2, neo4jt.GetCountOfRelationships(driver, "BELONGS_TO_GROUP"))
 
@@ -39,7 +40,7 @@ func TestMutationResolver_ContactGroupRemoveContact(t *testing.T) {
 
 	require.Equal(t, 1, neo4jt.GetCountOfRelationships(driver, "BELONGS_TO_GROUP"))
 
-	assertNeo4jLabels(t, driver, []string{"Tenant", "Contact", "ContactGroup"})
+	assertNeo4jLabels(t, driver, []string{"Tenant", "Contact", "Contact_" + tenantName, "ContactGroup"})
 }
 
 func TestMutationResolver_ContactGroupCreate(t *testing.T) {
