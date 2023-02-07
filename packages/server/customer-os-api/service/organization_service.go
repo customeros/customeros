@@ -20,6 +20,8 @@ type OrganizationService interface {
 	FindAll(ctx context.Context, page, limit int, filter *model.Filter, sortBy []*model.SortBy) (*utils.Pagination, error)
 	GetOrganizationsForContact(ctx context.Context, contactId string, page, limit int, filter *model.Filter, sortBy []*model.SortBy) (*utils.Pagination, error)
 	PermanentDelete(ctx context.Context, organizationId string) (bool, error)
+
+	mapDbNodeToOrganizationEntity(node dbtype.Node) *entity.OrganizationEntity
 }
 
 type OrganizationCreateData struct {

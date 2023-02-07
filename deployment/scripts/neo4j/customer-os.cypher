@@ -98,6 +98,24 @@ MATCH (t:Tenant {name:"openline"})<-[:USER_BELONGS_TO_TENANT]-(u:User) SET u:Use
 MATCH (t:Tenant {name:"openline"})<-[:CONTACT_BELONGS_TO_TENANT]-(c:Contact) SET c:Contact_openline;
 MATCH (c:Contact_openline)-[:HAS]->(e:Email) SET e:Email_openline;
 
+DROP INDEX basicSearchStandard_openline IF EXISTS;
+CREATE FULLTEXT INDEX basicSearchStandard_openline FOR (n:Contact_openline|Email_openline|Organization_openline) ON EACH [n.firstName, n.lastName, n.name, n.email]
+OPTIONS {
+  indexConfig: {
+    `fulltext.analyzer`: 'standard',
+    `fulltext.eventually_consistent`: true
+  }
+};
+
+DROP INDEX basicSearchSimple_openline IF EXISTS;
+CREATE FULLTEXT INDEX basicSearchSimple_openline FOR (n:Contact_openline|Email_openline|Organization_openline) ON EACH [n.firstName, n.lastName, n.email, n.name]
+OPTIONS {
+  indexConfig: {
+    `fulltext.analyzer`: 'simple',
+    `fulltext.eventually_consistent`: true
+  }
+}
+
 CREATE CONSTRAINT tenant_name_unique IF NOT EXISTS ON (t:Tenant) ASSERT t.name IS UNIQUE;
 CREATE INDEX contact_id_idx IF NOT EXISTS FOR (n:Contact) ON (n.id);
 CREATE INDEX tag_id_idx IF NOT EXISTS FOR (n:Tag) ON (n.id);

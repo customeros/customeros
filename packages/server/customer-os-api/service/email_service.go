@@ -17,6 +17,8 @@ type EmailService interface {
 	UpdateEmailFor(ctx context.Context, entityType repository.EntityType, entityId string, entity *entity.EmailEntity) (*entity.EmailEntity, error)
 	Delete(ctx context.Context, contactId string, email string) (bool, error)
 	DeleteById(ctx context.Context, contactId string, emailId string) (bool, error)
+
+	mapDbNodeToEmailEntity(node dbtype.Node) *entity.EmailEntity
 }
 
 type emailService struct {

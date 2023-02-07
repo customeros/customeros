@@ -37,6 +37,10 @@ type Pages interface {
 	GetTotalElements() int64
 }
 
+type SearchBasicResult interface {
+	IsSearchBasicResult()
+}
+
 // A contact represents an individual in customerOS.
 // **A `response` object.**
 type Contact struct {
@@ -93,6 +97,8 @@ func (this Contact) GetID() string                { return this.ID }
 func (this Contact) GetTemplate() *EntityTemplate { return this.Template }
 
 func (Contact) IsNode() {}
+
+func (Contact) IsSearchBasicResult() {}
 
 // A collection of groups that a Contact belongs to.  Groups are user-defined entities.
 // **A `return` object.**
@@ -408,6 +414,8 @@ type Email struct {
 	UpdatedAt     time.Time  `json:"updatedAt"`
 }
 
+func (Email) IsSearchBasicResult() {}
+
 // Describes an email address associated with a `Contact` in customerOS.
 // **A `create` object.**
 type EmailInput struct {
@@ -620,6 +628,8 @@ type Organization struct {
 func (Organization) IsNode()            {}
 func (this Organization) GetID() string { return this.ID }
 
+func (Organization) IsSearchBasicResult() {}
+
 type OrganizationInput struct {
 	// The name of the organization.
 	// **Required.**
@@ -769,6 +779,11 @@ type Result struct {
 	// The result of the GraphQL call.
 	// **Required.**
 	Result bool `json:"result"`
+}
+
+type SearchBasicResultItem struct {
+	Score  float64           `json:"score"`
+	Result SearchBasicResult `json:"result"`
 }
 
 type SortBy struct {

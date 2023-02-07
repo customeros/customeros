@@ -1,7 +1,7 @@
 package resolver
 
 import (
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service/container"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
 	commonRepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/repository"
 )
 
@@ -11,10 +11,10 @@ import (
 // It serves as dependency injection for your app, add any dependencies you require here.
 
 type Resolver struct {
-	Services                    *container.Services
+	Services                    *service.Services
 	PostgresRepositoryContainer *commonRepository.Repositories
 }
 
-func NewResolver(serviceContainer *container.Services, postgresRepositoryContainer *commonRepository.Repositories) *Resolver {
+func NewResolver(serviceContainer *service.Services, postgresRepositoryContainer *commonRepository.Repositories) *Resolver {
 	return &Resolver{Services: serviceContainer, PostgresRepositoryContainer: postgresRepositoryContainer}
 }

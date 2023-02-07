@@ -366,6 +366,7 @@ type ComplexityRoot struct {
 		Organization      func(childComplexity int, id string) int
 		OrganizationTypes func(childComplexity int) int
 		Organizations     func(childComplexity int, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) int
+		SearchBasic       func(childComplexity int, keyword string) int
 		Tags              func(childComplexity int) int
 		User              func(childComplexity int, id string) int
 		UserByEmail       func(childComplexity int, email string) int
@@ -374,6 +375,11 @@ type ComplexityRoot struct {
 
 	Result struct {
 		Result func(childComplexity int) int
+	}
+
+	SearchBasicResultItem struct {
+		Result func(childComplexity int) int
+		Score  func(childComplexity int) int
 	}
 
 	Tag struct {
@@ -527,6 +533,7 @@ type QueryResolver interface {
 	Organizations(ctx context.Context, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) (*model.OrganizationPage, error)
 	Organization(ctx context.Context, id string) (*model.Organization, error)
 	OrganizationTypes(ctx context.Context) ([]*model.OrganizationType, error)
+	SearchBasic(ctx context.Context, keyword string) ([]*model.SearchBasicResultItem, error)
 	Tags(ctx context.Context) ([]*model.Tag, error)
 	Users(ctx context.Context, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) (*model.UserPage, error)
 	User(ctx context.Context, id string) (*model.User, error)
@@ -2603,6 +2610,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.Organizations(childComplexity, args["pagination"].(*model.Pagination), args["where"].(*model.Filter), args["sort"].([]*model.SortBy)), true
 
+	case "Query.search_Basic":
+		if e.complexity.Query.SearchBasic == nil {
+			break
+		}
+
+		args, err := ec.field_Query_search_Basic_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.SearchBasic(childComplexity, args["keyword"].(string)), true
+
 	case "Query.tags":
 		if e.complexity.Query.Tags == nil {
 			break
@@ -2652,6 +2671,20 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Result.Result(childComplexity), true
+
+	case "SearchBasicResultItem.result":
+		if e.complexity.SearchBasicResultItem.Result == nil {
+			break
+		}
+
+		return e.complexity.SearchBasicResultItem.Result(childComplexity), true
+
+	case "SearchBasicResultItem.score":
+		if e.complexity.SearchBasicResultItem.Score == nil {
+			break
+		}
+
+		return e.complexity.SearchBasicResultItem.Score(childComplexity), true
 
 	case "Tag.appSource":
 		if e.complexity.Tag.AppSource == nil {
@@ -4123,6 +4156,16 @@ type Result {
 scalar Int64
 
 scalar Any @goModel(model:"model.AnyTypeValue")`, BuiltIn: false},
+	{Name: "../schemas/search.graphqls", Input: `extend type Query {
+    search_Basic(keyword: String!): [SearchBasicResultItem!]!
+}
+
+union SearchBasicResult = Contact | Email | Organization
+
+type SearchBasicResultItem {
+    score: Float!
+    result: SearchBasicResult!
+}`, BuiltIn: false},
 	{Name: "../schemas/source.graphqls", Input: `enum DataSource {
     NA,
     OPENLINE
@@ -5837,6 +5880,21 @@ func (ec *executionContext) field_Query_organizations_args(ctx context.Context, 
 		}
 	}
 	args["sort"] = arg2
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_search_Basic_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["keyword"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("keyword"))
+		arg0, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["keyword"] = arg0
 	return args, nil
 }
 
@@ -18960,6 +19018,66 @@ func (ec *executionContext) fieldContext_Query_organizationTypes(ctx context.Con
 	return fc, nil
 }
 
+func (ec *executionContext) _Query_search_Basic(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_search_Basic(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().SearchBasic(rctx, fc.Args["keyword"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.SearchBasicResultItem)
+	fc.Result = res
+	return ec.marshalNSearchBasicResultItem2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐSearchBasicResultItemᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_search_Basic(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "score":
+				return ec.fieldContext_SearchBasicResultItem_score(ctx, field)
+			case "result":
+				return ec.fieldContext_SearchBasicResultItem_result(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type SearchBasicResultItem", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_search_Basic_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Query_tags(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Query_tags(ctx, field)
 	if err != nil {
@@ -19385,6 +19503,94 @@ func (ec *executionContext) fieldContext_Result_result(ctx context.Context, fiel
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _SearchBasicResultItem_score(ctx context.Context, field graphql.CollectedField, obj *model.SearchBasicResultItem) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_SearchBasicResultItem_score(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Score, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(float64)
+	fc.Result = res
+	return ec.marshalNFloat2float64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_SearchBasicResultItem_score(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SearchBasicResultItem",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Float does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _SearchBasicResultItem_result(ctx context.Context, field graphql.CollectedField, obj *model.SearchBasicResultItem) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_SearchBasicResultItem_result(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Result, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(model.SearchBasicResult)
+	fc.Result = res
+	return ec.marshalNSearchBasicResult2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐSearchBasicResult(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_SearchBasicResultItem_result(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SearchBasicResultItem",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type SearchBasicResult does not have child fields")
 		},
 	}
 	return fc, nil
@@ -23990,11 +24196,41 @@ func (ec *executionContext) _Pages(ctx context.Context, sel ast.SelectionSet, ob
 	}
 }
 
+func (ec *executionContext) _SearchBasicResult(ctx context.Context, sel ast.SelectionSet, obj model.SearchBasicResult) graphql.Marshaler {
+	switch obj := (obj).(type) {
+	case nil:
+		return graphql.Null
+	case model.Contact:
+		return ec._Contact(ctx, sel, &obj)
+	case *model.Contact:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._Contact(ctx, sel, obj)
+	case model.Email:
+		return ec._Email(ctx, sel, &obj)
+	case *model.Email:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._Email(ctx, sel, obj)
+	case model.Organization:
+		return ec._Organization(ctx, sel, &obj)
+	case *model.Organization:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._Organization(ctx, sel, obj)
+	default:
+		panic(fmt.Errorf("unexpected type %T", obj))
+	}
+}
+
 // endregion ************************** interface.gotpl ***************************
 
 // region    **************************** object.gotpl ****************************
 
-var contactImplementors = []string{"Contact", "ExtensibleEntity", "Node"}
+var contactImplementors = []string{"Contact", "ExtensibleEntity", "Node", "SearchBasicResult"}
 
 func (ec *executionContext) _Contact(ctx context.Context, sel ast.SelectionSet, obj *model.Contact) graphql.Marshaler {
 	fields := graphql.CollectFields(ec.OperationContext, sel, contactImplementors)
@@ -24872,7 +25108,7 @@ func (ec *executionContext) _CustomFieldTemplate(ctx context.Context, sel ast.Se
 	return out
 }
 
-var emailImplementors = []string{"Email"}
+var emailImplementors = []string{"Email", "SearchBasicResult"}
 
 func (ec *executionContext) _Email(ctx context.Context, sel ast.SelectionSet, obj *model.Email) graphql.Marshaler {
 	fields := graphql.CollectFields(ec.OperationContext, sel, emailImplementors)
@@ -25819,7 +26055,7 @@ func (ec *executionContext) _NotePage(ctx context.Context, sel ast.SelectionSet,
 	return out
 }
 
-var organizationImplementors = []string{"Organization", "Node"}
+var organizationImplementors = []string{"Organization", "Node", "SearchBasicResult"}
 
 func (ec *executionContext) _Organization(ctx context.Context, sel ast.SelectionSet, obj *model.Organization) graphql.Marshaler {
 	fields := graphql.CollectFields(ec.OperationContext, sel, organizationImplementors)
@@ -26543,6 +26779,26 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			out.Concurrently(i, func() graphql.Marshaler {
 				return rrm(innerCtx)
 			})
+		case "search_Basic":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_search_Basic(ctx, field)
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx, innerFunc)
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return rrm(innerCtx)
+			})
 		case "tags":
 			field := field
 
@@ -26656,6 +26912,41 @@ func (ec *executionContext) _Result(ctx context.Context, sel ast.SelectionSet, o
 		case "result":
 
 			out.Values[i] = ec._Result_result(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var searchBasicResultItemImplementors = []string{"SearchBasicResultItem"}
+
+func (ec *executionContext) _SearchBasicResultItem(ctx context.Context, sel ast.SelectionSet, obj *model.SearchBasicResultItem) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, searchBasicResultItemImplementors)
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("SearchBasicResultItem")
+		case "score":
+
+			out.Values[i] = ec._SearchBasicResultItem_score(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "result":
+
+			out.Values[i] = ec._SearchBasicResultItem_result(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
 				invalids++
@@ -28056,6 +28347,21 @@ func (ec *executionContext) unmarshalNFilter2ᚖgithubᚗcomᚋopenlineᚑaiᚋo
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
+func (ec *executionContext) unmarshalNFloat2float64(ctx context.Context, v interface{}) (float64, error) {
+	res, err := graphql.UnmarshalFloatContext(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNFloat2float64(ctx context.Context, sel ast.SelectionSet, v float64) graphql.Marshaler {
+	res := graphql.MarshalFloatContext(v)
+	if res == graphql.Null {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+	}
+	return graphql.WrapContextMarshaler(ctx, res)
+}
+
 func (ec *executionContext) unmarshalNID2string(ctx context.Context, v interface{}) (string, error) {
 	res, err := graphql.UnmarshalID(v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -28535,6 +28841,70 @@ func (ec *executionContext) marshalNResult2ᚖgithubᚗcomᚋopenlineᚑaiᚋope
 		return graphql.Null
 	}
 	return ec._Result(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNSearchBasicResult2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐSearchBasicResult(ctx context.Context, sel ast.SelectionSet, v model.SearchBasicResult) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._SearchBasicResult(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNSearchBasicResultItem2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐSearchBasicResultItemᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.SearchBasicResultItem) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNSearchBasicResultItem2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐSearchBasicResultItem(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNSearchBasicResultItem2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐSearchBasicResultItem(ctx context.Context, sel ast.SelectionSet, v *model.SearchBasicResultItem) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._SearchBasicResultItem(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalNSortBy2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐSortBy(ctx context.Context, v interface{}) (*model.SortBy, error) {

@@ -15,7 +15,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/generated"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/resolver"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service/container"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
 	commonRepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/repository"
 	commonService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 	"github.com/sirupsen/logrus"
@@ -32,7 +32,7 @@ func InitDB(cfg *config.Config) (db *config.StorageDB, err error) {
 }
 
 func graphqlHandler(cfg *config.Config, driver neo4j.Driver, repositoryContainer *commonRepository.Repositories) gin.HandlerFunc {
-	serviceContainer := container.InitServices(&driver)
+	serviceContainer := service.InitServices(&driver)
 	// instantiate graph resolver
 	graphResolver := resolver.NewResolver(serviceContainer, repositoryContainer)
 
