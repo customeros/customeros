@@ -13,6 +13,11 @@ func CypherPtr(cypher Cypher) *Cypher {
 	return &cypher
 }
 
+type PairDbNodesWithTotalCount struct {
+	Pairs []*Pair[*dbtype.Node, *dbtype.Node]
+	Count int64
+}
+
 type DbNodesWithTotalCount struct {
 	Nodes []*dbtype.Node
 	Count int64

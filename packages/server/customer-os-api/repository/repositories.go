@@ -26,6 +26,7 @@ type Repositories struct {
 	PhoneNumberRepository         PhoneNumberRepository
 	TagRepository                 TagRepository
 	SearchRepository              SearchRepository
+	QueryRepository               QueryRepository
 }
 
 type Drivers struct {
@@ -58,5 +59,6 @@ func InitRepos(driver *neo4j.Driver) *Repositories {
 	repositories.OrganizationTypeRepository = NewOrganizationTypeRepository(driver)
 	repositories.TagRepository = NewTagRepository(driver)
 	repositories.SearchRepository = NewSearchRepository(driver)
+	repositories.QueryRepository = NewQueryRepository(driver)
 	return &repositories
 }
