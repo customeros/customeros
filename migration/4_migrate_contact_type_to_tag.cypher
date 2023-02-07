@@ -11,8 +11,8 @@ ON CREATE SET   tg.createdAt=datetime({timezone: 'UTC'}),
                 tg.tenant=t.name;
 
 # Link contact of each contact type with Tag
-MATCH (t:Tenant)<-[:CONTACT_TYPE_BELONGS_TO_TENANT]-(ct:ContactType)<-[:IS_OF_TYPE]-(c:Contact)--(t),
-        (ct)<-[:TEMP_LINK]-(tag:Tag)--(t)
+MATCH (t:Tenant)<-[:CONTACT_TYPE_BELONGS_TO_TENANT]-(ct:ContactType)<-[:IS_OF_TYPE]-(c:Contact),
+        (ct)<-[:TEMP_LINK]-(tag:Tag)
 MERGE (c)-[r:TAGGED]->(tag)
 ON CREATE SET r.taggedAt=datetime({timezone: 'UTC'});
 
