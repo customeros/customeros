@@ -23,6 +23,6 @@ func (contact ContactEntity) ToString() string {
 
 type ContactEntities []ContactEntity
 
-func (contact ContactEntity) Labels() []string {
-	return []string{"Contact"}
+func (contact ContactEntity) Labels(tenant string) []string {
+	return []string{"Contact", "Contact_" + tenant}
 }

@@ -26,6 +26,6 @@ func (organization OrganizationEntity) ToString() string {
 
 type OrganizationEntities []OrganizationEntity
 
-func (organization OrganizationEntity) Labels() []string {
-	return []string{"Organization"}
+func (organization OrganizationEntity) Labels(tenant string) []string {
+	return []string{"Organization", "Organization_" + tenant}
 }

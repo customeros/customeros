@@ -28,6 +28,8 @@ type ContactService interface {
 
 	AddTag(ctx context.Context, contactId string, tagId string) (*entity.ContactEntity, error)
 	RemoveTag(ctx context.Context, contactId string, tagId string) (*entity.ContactEntity, error)
+
+	mapDbNodeToContactEntity(dbNode dbtype.Node) *entity.ContactEntity
 }
 
 type ContactCreateData struct {
@@ -486,8 +488,8 @@ func (s *contactService) RemoveTag(ctx context.Context, contactId string, tagId 
 	return s.mapDbNodeToContactEntity(*contactNodePtr), nil
 }
 
-func (s *contactService) mapDbNodeToContactEntity(dbContactNode dbtype.Node) *entity.ContactEntity {
-	props := utils.GetPropsFromNode(dbContactNode)
+func (s *contactService) mapDbNodeToContactEntity(dbNode dbtype.Node) *entity.ContactEntity {
+	props := utils.GetPropsFromNode(dbNode)
 	contact := entity.ContactEntity{
 		Id:            utils.GetStringPropOrEmpty(props, "id"),
 		FirstName:     utils.GetStringPropOrEmpty(props, "firstName"),

@@ -1,0 +1,10 @@
+extend type Query {
+    search_Basic(keyword: String!): [SearchBasicResultItem!]!
+}
+
+union SearchBasicResult = Contact | Email | Organization
+
+type SearchBasicResultItem {
+    score: Float!
+    result: SearchBasicResult!
+}
