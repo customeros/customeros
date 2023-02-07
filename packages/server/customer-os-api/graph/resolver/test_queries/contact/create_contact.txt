@@ -1,11 +1,10 @@
-mutation CreateContact($contactTypeId: ID) {
+mutation CreateContact() {
 contact_Create(
     input: {
       title: MR,
       firstName: "first",
       lastName: "last",
       label: "Some label"
-      contactTypeId: $contactTypeId,
       createdAt: "2023-01-02T03:04:05.000Z"
       customFields: [ {name: "textField", value: "value1", datatype: TEXT},
                       {name: "integerField", value: 123, datatype: INTEGER},
@@ -33,10 +32,6 @@ contact_Create(
     source
     owner {
         id
-    }
-    contactType {
-        id
-        name
     }
     createdAt
     customFields {

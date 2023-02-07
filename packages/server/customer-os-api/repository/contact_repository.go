@@ -17,8 +17,6 @@ type JobRepository interface {
 	SetOwner(tx neo4j.Transaction, tenant, contactId, userId string) error
 	RemoveOwner(tx neo4j.Transaction, tenant, contactId string) error
 	LinkWithEntityTemplateInTx(tx neo4j.Transaction, tenant, contactId, entityTemplateId string) error
-	LinkWithContactTypeInTx(tx neo4j.Transaction, tenant, contactId, contactTypeId string) error
-	UnlinkFromContactTypesInTx(tx neo4j.Transaction, tenant, contactId string) error
 	GetPaginatedContacts(session neo4j.Session, tenant string, skip, limit int, filter *utils.CypherFilter, sort *utils.CypherSort) (*utils.DbNodesWithTotalCount, error)
 	GetPaginatedContactsForContactGroup(session neo4j.Session, tenant string, skip, limit int, filter *utils.CypherFilter, sort *utils.CypherSort, contactGroupId string) (*utils.DbNodesWithTotalCount, error)
 	GetPaginatedContactsForOrganization(session neo4j.Session, tenant, organizationId string, skip, limit int, filter *utils.CypherFilter, sort *utils.CypherSort) (*utils.DbNodesWithTotalCount, error)
@@ -143,37 +141,6 @@ func (r *contactRepository) LinkWithEntityTemplateInTx(tx neo4j.Transaction, ten
 	}
 	_, err = queryResult.Single()
 	return err
-}
-
-func (r *contactRepository) LinkWithContactTypeInTx(tx neo4j.Transaction, tenant, contactId, contactTypeId string) error {
-	queryResult, err := tx.Run(`
-			MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant})<-[:CONTACT_TYPE_BELONGS_TO_TENANT]-(e:ContactType {id:$contactTypeId})
-			MERGE (c)-[r:IS_OF_TYPE]->(e)
-			RETURN r`,
-		map[string]any{
-			"tenant":        tenant,
-			"contactId":     contactId,
-			"contactTypeId": contactTypeId,
-		})
-	if err != nil {
-		return err
-	}
-	_, err = queryResult.Single()
-	return err
-}
-
-func (r *contactRepository) UnlinkFromContactTypesInTx(tx neo4j.Transaction, tenant, contactId string) error {
-	if _, err := tx.Run(`
-			MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}),
-				(c)-[r:IS_OF_TYPE]->(o:ContactType)
-			DELETE r`,
-		map[string]any{
-			"tenant":    tenant,
-			"contactId": contactId,
-		}); err != nil {
-		return err
-	}
-	return nil
 }
 
 func (r *contactRepository) GetPaginatedContacts(session neo4j.Session, tenant string, skip, limit int, filter *utils.CypherFilter, sort *utils.CypherSort) (*utils.DbNodesWithTotalCount, error) {

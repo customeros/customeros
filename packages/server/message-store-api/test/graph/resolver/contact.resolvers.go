@@ -12,11 +12,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/message-store-api/test/graph/model"
 )
 
-// ContactType is the resolver for the contactType field.
-func (r *contactResolver) ContactType(ctx context.Context, obj *model.Contact) (*model.ContactType, error) {
-	panic(fmt.Errorf("not implemented: ContactType - contactType"))
-}
-
 // Tags is the resolver for the tags field.
 func (r *contactResolver) Tags(ctx context.Context, obj *model.Contact) ([]*model.Tag, error) {
 	panic(fmt.Errorf("not implemented: Tags - tags"))

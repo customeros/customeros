@@ -39,7 +39,6 @@ type ContactCreateData struct {
 	EmailEntity       *entity.EmailEntity
 	PhoneNumberEntity *entity.PhoneNumberEntity
 	TemplateId        *string
-	ContactTypeId     *string
 	OwnerUserId       *string
 	ExternalReference *entity.ExternalReferenceRelationship
 	Source            entity.DataSource
@@ -48,7 +47,6 @@ type ContactCreateData struct {
 
 type ContactUpdateData struct {
 	ContactEntity *entity.ContactEntity
-	ContactTypeId *string
 	OwnerUserId   *string
 }
 
@@ -86,12 +84,6 @@ func (s *contactService) createContactInDBTxWork(ctx context.Context, newContact
 		}
 		var contactId = utils.GetPropsFromNode(*contactDbNode)["id"].(string)
 
-		if newContact.ContactTypeId != nil {
-			err := s.repositories.JobRepository.LinkWithContactTypeInTx(tx, tenant, contactId, *newContact.ContactTypeId)
-			if err != nil {
-				return nil, err
-			}
-		}
 		if newContact.TemplateId != nil {
 			err := s.repositories.JobRepository.LinkWithEntityTemplateInTx(tx, tenant, contactId, *newContact.TemplateId)
 			if err != nil {
@@ -182,17 +174,6 @@ func (s *contactService) Update(ctx context.Context, contactUpdateData *ContactU
 		dbNode, err := s.repositories.JobRepository.Update(tx, tenant, contactId, contactUpdateData.ContactEntity)
 		if err != nil {
 			return nil, err
-		}
-
-		err = s.repositories.JobRepository.UnlinkFromContactTypesInTx(tx, tenant, contactId)
-		if err != nil {
-			return nil, err
-		}
-		if contactUpdateData.ContactTypeId != nil {
-			err := s.repositories.JobRepository.LinkWithContactTypeInTx(tx, tenant, contactId, *contactUpdateData.ContactTypeId)
-			if err != nil {
-				return nil, err
-			}
 		}
 
 		err = s.repositories.JobRepository.RemoveOwner(tx, tenant, contactId)
