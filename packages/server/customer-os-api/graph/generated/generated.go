@@ -149,6 +149,17 @@ type ComplexityRoot struct {
 		Type      func(childComplexity int) int
 	}
 
+	DashboardViewItem struct {
+		Contact      func(childComplexity int) int
+		Organization func(childComplexity int) int
+	}
+
+	DashboardViewItemPage struct {
+		Content       func(childComplexity int) int
+		TotalElements func(childComplexity int) int
+		TotalPages    func(childComplexity int) int
+	}
+
 	Email struct {
 		AppSource     func(childComplexity int) int
 		CreatedAt     func(childComplexity int) int
@@ -351,6 +362,7 @@ type ComplexityRoot struct {
 		ContactGroup      func(childComplexity int, id string) int
 		ContactGroups     func(childComplexity int, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) int
 		Contacts          func(childComplexity int, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) int
+		DashboardView     func(childComplexity int, pagination model.Pagination) int
 		EntityTemplates   func(childComplexity int, extends *model.EntityTemplateExtension) int
 		Organization      func(childComplexity int, id string) int
 		OrganizationTypes func(childComplexity int) int
@@ -508,6 +520,7 @@ type OrganizationResolver interface {
 }
 type QueryResolver interface {
 	EntityTemplates(ctx context.Context, extends *model.EntityTemplateExtension) ([]*model.EntityTemplate, error)
+	DashboardView(ctx context.Context, pagination model.Pagination) (*model.DashboardViewItemPage, error)
 	Contact(ctx context.Context, id string) (*model.Contact, error)
 	Contacts(ctx context.Context, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) (*model.ContactsPage, error)
 	ContactByEmail(ctx context.Context, email string) (*model.Contact, error)
@@ -1051,6 +1064,41 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.CustomFieldTemplate.Type(childComplexity), true
+
+	case "DashboardViewItem.contact":
+		if e.complexity.DashboardViewItem.Contact == nil {
+			break
+		}
+
+		return e.complexity.DashboardViewItem.Contact(childComplexity), true
+
+	case "DashboardViewItem.organization":
+		if e.complexity.DashboardViewItem.Organization == nil {
+			break
+		}
+
+		return e.complexity.DashboardViewItem.Organization(childComplexity), true
+
+	case "DashboardViewItemPage.content":
+		if e.complexity.DashboardViewItemPage.Content == nil {
+			break
+		}
+
+		return e.complexity.DashboardViewItemPage.Content(childComplexity), true
+
+	case "DashboardViewItemPage.totalElements":
+		if e.complexity.DashboardViewItemPage.TotalElements == nil {
+			break
+		}
+
+		return e.complexity.DashboardViewItemPage.TotalElements(childComplexity), true
+
+	case "DashboardViewItemPage.totalPages":
+		if e.complexity.DashboardViewItemPage.TotalPages == nil {
+			break
+		}
+
+		return e.complexity.DashboardViewItemPage.TotalPages(childComplexity), true
 
 	case "Email.appSource":
 		if e.complexity.Email.AppSource == nil {
@@ -2479,6 +2527,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Query.Contacts(childComplexity, args["pagination"].(*model.Pagination), args["where"].(*model.Filter), args["sort"].([]*model.SortBy)), true
+
+	case "Query.dashboardView":
+		if e.complexity.Query.DashboardView == nil {
+			break
+		}
+
+		args, err := ec.field_Query_dashboardView_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.DashboardView(childComplexity, args["pagination"].(model.Pagination)), true
 
 	case "Query.entityTemplates":
 		if e.complexity.Query.EntityTemplates == nil {
@@ -4016,6 +4076,18 @@ enum PhoneNumberLabel {
 `, BuiltIn: false},
 	{Name: "../schemas/query.graphqls", Input: `type Query {
     entityTemplates(extends: EntityTemplateExtension) :[EntityTemplate!]!
+    dashboardView(pagination: Pagination!): DashboardViewItemPage
+}
+
+type DashboardViewItemPage implements Pages {
+    content: [DashboardViewItem!]!
+    totalPages: Int!
+    totalElements: Int64!
+}
+
+type DashboardViewItem {
+    contact: Contact
+    organization: Organization
 }`, BuiltIn: false},
 	{Name: "../schemas/result.graphqls", Input: `"""
 Describes the success or failure of the GraphQL call.
@@ -5650,6 +5722,21 @@ func (ec *executionContext) field_Query_contacts_args(ctx context.Context, rawAr
 		}
 	}
 	args["sort"] = arg2
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_dashboardView_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 model.Pagination
+	if tmp, ok := rawArgs["pagination"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("pagination"))
+		arg0, err = ec.unmarshalNPagination2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐPagination(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["pagination"] = arg0
 	return args, nil
 }
 
@@ -9252,6 +9339,306 @@ func (ec *executionContext) fieldContext_CustomFieldTemplate_max(ctx context.Con
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _DashboardViewItem_contact(ctx context.Context, field graphql.CollectedField, obj *model.DashboardViewItem) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_DashboardViewItem_contact(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Contact, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.Contact)
+	fc.Result = res
+	return ec.marshalOContact2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐContact(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_DashboardViewItem_contact(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "DashboardViewItem",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Contact_id(ctx, field)
+			case "title":
+				return ec.fieldContext_Contact_title(ctx, field)
+			case "firstName":
+				return ec.fieldContext_Contact_firstName(ctx, field)
+			case "lastName":
+				return ec.fieldContext_Contact_lastName(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Contact_createdAt(ctx, field)
+			case "label":
+				return ec.fieldContext_Contact_label(ctx, field)
+			case "source":
+				return ec.fieldContext_Contact_source(ctx, field)
+			case "tags":
+				return ec.fieldContext_Contact_tags(ctx, field)
+			case "jobRoles":
+				return ec.fieldContext_Contact_jobRoles(ctx, field)
+			case "organizations":
+				return ec.fieldContext_Contact_organizations(ctx, field)
+			case "groups":
+				return ec.fieldContext_Contact_groups(ctx, field)
+			case "phoneNumbers":
+				return ec.fieldContext_Contact_phoneNumbers(ctx, field)
+			case "emails":
+				return ec.fieldContext_Contact_emails(ctx, field)
+			case "addresses":
+				return ec.fieldContext_Contact_addresses(ctx, field)
+			case "customFields":
+				return ec.fieldContext_Contact_customFields(ctx, field)
+			case "fieldSets":
+				return ec.fieldContext_Contact_fieldSets(ctx, field)
+			case "template":
+				return ec.fieldContext_Contact_template(ctx, field)
+			case "owner":
+				return ec.fieldContext_Contact_owner(ctx, field)
+			case "notes":
+				return ec.fieldContext_Contact_notes(ctx, field)
+			case "conversations":
+				return ec.fieldContext_Contact_conversations(ctx, field)
+			case "actions":
+				return ec.fieldContext_Contact_actions(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Contact", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _DashboardViewItem_organization(ctx context.Context, field graphql.CollectedField, obj *model.DashboardViewItem) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_DashboardViewItem_organization(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Organization, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.Organization)
+	fc.Result = res
+	return ec.marshalOOrganization2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOrganization(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_DashboardViewItem_organization(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "DashboardViewItem",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Organization_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Organization_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_Organization_updatedAt(ctx, field)
+			case "name":
+				return ec.fieldContext_Organization_name(ctx, field)
+			case "description":
+				return ec.fieldContext_Organization_description(ctx, field)
+			case "domain":
+				return ec.fieldContext_Organization_domain(ctx, field)
+			case "website":
+				return ec.fieldContext_Organization_website(ctx, field)
+			case "industry":
+				return ec.fieldContext_Organization_industry(ctx, field)
+			case "isPublic":
+				return ec.fieldContext_Organization_isPublic(ctx, field)
+			case "organizationType":
+				return ec.fieldContext_Organization_organizationType(ctx, field)
+			case "source":
+				return ec.fieldContext_Organization_source(ctx, field)
+			case "sourceOfTruth":
+				return ec.fieldContext_Organization_sourceOfTruth(ctx, field)
+			case "appSource":
+				return ec.fieldContext_Organization_appSource(ctx, field)
+			case "addresses":
+				return ec.fieldContext_Organization_addresses(ctx, field)
+			case "contacts":
+				return ec.fieldContext_Organization_contacts(ctx, field)
+			case "jobRoles":
+				return ec.fieldContext_Organization_jobRoles(ctx, field)
+			case "notes":
+				return ec.fieldContext_Organization_notes(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Organization", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _DashboardViewItemPage_content(ctx context.Context, field graphql.CollectedField, obj *model.DashboardViewItemPage) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_DashboardViewItemPage_content(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Content, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.DashboardViewItem)
+	fc.Result = res
+	return ec.marshalNDashboardViewItem2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐDashboardViewItemᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_DashboardViewItemPage_content(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "DashboardViewItemPage",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "contact":
+				return ec.fieldContext_DashboardViewItem_contact(ctx, field)
+			case "organization":
+				return ec.fieldContext_DashboardViewItem_organization(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type DashboardViewItem", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _DashboardViewItemPage_totalPages(ctx context.Context, field graphql.CollectedField, obj *model.DashboardViewItemPage) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_DashboardViewItemPage_totalPages(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.TotalPages, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_DashboardViewItemPage_totalPages(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "DashboardViewItemPage",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _DashboardViewItemPage_totalElements(ctx context.Context, field graphql.CollectedField, obj *model.DashboardViewItemPage) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_DashboardViewItemPage_totalElements(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.TotalElements, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int64)
+	fc.Result = res
+	return ec.marshalNInt642int64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_DashboardViewItemPage_totalElements(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "DashboardViewItemPage",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int64 does not have child fields")
 		},
 	}
 	return fc, nil
@@ -17743,6 +18130,65 @@ func (ec *executionContext) fieldContext_Query_entityTemplates(ctx context.Conte
 	return fc, nil
 }
 
+func (ec *executionContext) _Query_dashboardView(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_dashboardView(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().DashboardView(rctx, fc.Args["pagination"].(model.Pagination))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.DashboardViewItemPage)
+	fc.Result = res
+	return ec.marshalODashboardViewItemPage2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐDashboardViewItemPage(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_dashboardView(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "content":
+				return ec.fieldContext_DashboardViewItemPage_content(ctx, field)
+			case "totalPages":
+				return ec.fieldContext_DashboardViewItemPage_totalPages(ctx, field)
+			case "totalElements":
+				return ec.fieldContext_DashboardViewItemPage_totalElements(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type DashboardViewItemPage", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_dashboardView_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Query_contact(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Query_contact(ctx, field)
 	if err != nil {
@@ -23507,6 +23953,13 @@ func (ec *executionContext) _Pages(ctx context.Context, sel ast.SelectionSet, ob
 			return graphql.Null
 		}
 		return ec._OrganizationPage(ctx, sel, obj)
+	case model.DashboardViewItemPage:
+		return ec._DashboardViewItemPage(ctx, sel, &obj)
+	case *model.DashboardViewItemPage:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._DashboardViewItemPage(ctx, sel, obj)
 	case model.UserPage:
 		return ec._UserPage(ctx, sel, &obj)
 	case *model.UserPage:
@@ -24361,6 +24814,77 @@ func (ec *executionContext) _CustomFieldTemplate(ctx context.Context, sel ast.Se
 
 			out.Values[i] = ec._CustomFieldTemplate_max(ctx, field, obj)
 
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var dashboardViewItemImplementors = []string{"DashboardViewItem"}
+
+func (ec *executionContext) _DashboardViewItem(ctx context.Context, sel ast.SelectionSet, obj *model.DashboardViewItem) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, dashboardViewItemImplementors)
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("DashboardViewItem")
+		case "contact":
+
+			out.Values[i] = ec._DashboardViewItem_contact(ctx, field, obj)
+
+		case "organization":
+
+			out.Values[i] = ec._DashboardViewItem_organization(ctx, field, obj)
+
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var dashboardViewItemPageImplementors = []string{"DashboardViewItemPage", "Pages"}
+
+func (ec *executionContext) _DashboardViewItemPage(ctx context.Context, sel ast.SelectionSet, obj *model.DashboardViewItemPage) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, dashboardViewItemPageImplementors)
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("DashboardViewItemPage")
+		case "content":
+
+			out.Values[i] = ec._DashboardViewItemPage_content(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "totalPages":
+
+			out.Values[i] = ec._DashboardViewItemPage_totalPages(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "totalElements":
+
+			out.Values[i] = ec._DashboardViewItemPage_totalElements(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -25825,6 +26349,26 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			out.Concurrently(i, func() graphql.Marshaler {
 				return rrm(innerCtx)
 			})
+		case "dashboardView":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_dashboardView(ctx, field)
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx, innerFunc)
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return rrm(innerCtx)
+			})
 		case "contact":
 			field := field
 
@@ -27216,6 +27760,60 @@ func (ec *executionContext) unmarshalNCustomFieldUpdateInput2githubᚗcomᚋopen
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
+func (ec *executionContext) marshalNDashboardViewItem2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐDashboardViewItemᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.DashboardViewItem) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNDashboardViewItem2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐDashboardViewItem(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNDashboardViewItem2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐDashboardViewItem(ctx context.Context, sel ast.SelectionSet, v *model.DashboardViewItem) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._DashboardViewItem(ctx, sel, v)
+}
+
 func (ec *executionContext) unmarshalNDataSource2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐDataSource(ctx context.Context, v interface{}) (model.DataSource, error) {
 	var res model.DataSource
 	err := res.UnmarshalGQL(v)
@@ -27862,6 +28460,11 @@ func (ec *executionContext) unmarshalNOrganizationTypeUpdateInput2githubᚗcom�
 
 func (ec *executionContext) unmarshalNOrganizationUpdateInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOrganizationUpdateInput(ctx context.Context, v interface{}) (model.OrganizationUpdateInput, error) {
 	res, err := ec.unmarshalInputOrganizationUpdateInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalNPagination2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐPagination(ctx context.Context, v interface{}) (model.Pagination, error) {
+	res, err := ec.unmarshalInputPagination(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
@@ -28736,6 +29339,13 @@ func (ec *executionContext) unmarshalOCustomFieldTemplateInput2ᚕᚖgithubᚗco
 		}
 	}
 	return res, nil
+}
+
+func (ec *executionContext) marshalODashboardViewItemPage2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐDashboardViewItemPage(ctx context.Context, sel ast.SelectionSet, v *model.DashboardViewItemPage) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._DashboardViewItemPage(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalODataSource2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐDataSource(ctx context.Context, v interface{}) (*model.DataSource, error) {

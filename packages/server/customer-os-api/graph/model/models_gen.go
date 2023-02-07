@@ -372,6 +372,27 @@ type CustomFieldUpdateInput struct {
 	Value AnyTypeValue `json:"value"`
 }
 
+type DashboardViewItem struct {
+	Contact      *Contact      `json:"contact"`
+	Organization *Organization `json:"organization"`
+}
+
+type DashboardViewItemPage struct {
+	Content       []*DashboardViewItem `json:"content"`
+	TotalPages    int                  `json:"totalPages"`
+	TotalElements int64                `json:"totalElements"`
+}
+
+func (DashboardViewItemPage) IsPages() {}
+
+// The total number of pages included in the query response.
+// **Required.**
+func (this DashboardViewItemPage) GetTotalPages() int { return this.TotalPages }
+
+// The total number of elements included in the query response.
+// **Required.**
+func (this DashboardViewItemPage) GetTotalElements() int64 { return this.TotalElements }
+
 // Describes an email address associated with a `Contact` in customerOS.
 // **A `return` object.**
 type Email struct {

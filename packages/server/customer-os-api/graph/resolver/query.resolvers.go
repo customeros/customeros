@@ -7,6 +7,8 @@ package resolver
 import (
 	"context"
 
+	"github.com/99designs/gqlgen/graphql"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/generated"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper"
@@ -17,6 +19,20 @@ import (
 func (r *queryResolver) EntityTemplates(ctx context.Context, extends *model.EntityTemplateExtension) ([]*model.EntityTemplate, error) {
 	result, err := r.Services.EntityTemplateService.FindAll(ctx, utils.StringPtr(extends.String()))
 	return mapper.MapEntitiesToEntityTemplates(result), err
+}
+
+// DashboardView is the resolver for the dashboardView field.
+func (r *queryResolver) DashboardView(ctx context.Context, pagination model.Pagination) (*model.DashboardViewItemPage, error) {
+	paginatedResult, err := r.Services.QueryService.GetDashboardViewData(ctx, pagination.Page, pagination.Limit)
+	if err != nil {
+		graphql.AddErrorf(ctx, "Failed to get organizations and contacts data")
+		return nil, err
+	}
+	return &model.DashboardViewItemPage{
+		Content:       mapper.MapEntitiesToDashboardViewItems(paginatedResult.Rows.([]*entity.DashboardViewResultEntity)),
+		TotalPages:    paginatedResult.TotalPages,
+		TotalElements: paginatedResult.TotalRows,
+	}, err
 }
 
 // Query returns generated.QueryResolver implementation.
