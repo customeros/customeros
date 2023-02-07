@@ -29,21 +29,21 @@ type CommonStoreService interface {
 
 func (s *commonStoreService) EncodeConversationEventToMS(conversationEvent entity.ConversationEvent) *msProto.Message {
 	return &msProto.Message{
-		MessageId:                     s.EncodeMessageIdToMs(conversationEvent),
-		ConversationInitiatorUsername: conversationEvent.InitiatorUsername,
-		Type:                          s.ConvertEntityTypeToMSType(conversationEvent.Type),
-		Subtype:                       s.ConvertEntitySubtypeToMSSubtype(conversationEvent.Subtype),
-		Content:                       conversationEvent.Content,
-		Direction:                     s.ConvertEntityDirectionToMSDirection(conversationEvent.Direction),
-		Time:                          timestamppb.New(conversationEvent.CreateDate),
-		SenderId:                      conversationEvent.SenderId,
-		SenderType:                    s.ConvertEntitySenderTypeToMSSenderType(conversationEvent.SenderType),
-		SenderUsername:                conversationEvent.SenderUsername,
+		MessageId:         s.EncodeMessageIdToMs(conversationEvent),
+		InitiatorUsername: conversationEvent.InitiatorUsername,
+		Type:              s.ConvertEntityTypeToMSType(conversationEvent.Type),
+		Subtype:           s.ConvertEntitySubtypeToMSSubtype(conversationEvent.Subtype),
+		Content:           conversationEvent.Content,
+		Direction:         s.ConvertEntityDirectionToMSDirection(conversationEvent.Direction),
+		Time:              timestamppb.New(conversationEvent.CreateDate),
+		SenderId:          conversationEvent.SenderId,
+		SenderType:        s.ConvertEntitySenderTypeToMSSenderType(conversationEvent.SenderType),
+		SenderUsername:    conversationEvent.SenderUsername,
 	}
 }
 
 func (s *commonStoreService) EncodeMessageIdToMs(conversationEvent entity.ConversationEvent) *msProto.MessageId {
-	return &msProto.MessageId{Id: conversationEvent.ID, ConversationId: conversationEvent.ConversationId}
+	return &msProto.MessageId{ConversationEventId: conversationEvent.ID, ConversationId: conversationEvent.ConversationId}
 }
 
 func (s *commonStoreService) EncodeConversationToMS(conversation Conversation) *msProto.FeedItem {

@@ -27,6 +27,7 @@ type MessageStoreServiceClient interface {
 	GetMessagesForFeed(ctx context.Context, in *FeedId, opts ...grpc.CallOption) (*MessageListResponse, error)
 	GetMessage(ctx context.Context, in *MessageId, opts ...grpc.CallOption) (*Message, error)
 	SaveMessage(ctx context.Context, in *InputMessage, opts ...grpc.CallOption) (*MessageId, error)
+	GetParticipants(ctx context.Context, in *FeedId, opts ...grpc.CallOption) (*ParticipantsListResponse, error)
 }
 
 type messageStoreServiceClient struct {
@@ -82,6 +83,15 @@ func (c *messageStoreServiceClient) SaveMessage(ctx context.Context, in *InputMe
 	return out, nil
 }
 
+func (c *messageStoreServiceClient) GetParticipants(ctx context.Context, in *FeedId, opts ...grpc.CallOption) (*ParticipantsListResponse, error) {
+	out := new(ParticipantsListResponse)
+	err := c.cc.Invoke(ctx, "/proto.MessageStoreService/getParticipants", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // MessageStoreServiceServer is the server API for MessageStoreService service.
 // All implementations must embed UnimplementedMessageStoreServiceServer
 // for forward compatibility
@@ -91,6 +101,7 @@ type MessageStoreServiceServer interface {
 	GetMessagesForFeed(context.Context, *FeedId) (*MessageListResponse, error)
 	GetMessage(context.Context, *MessageId) (*Message, error)
 	SaveMessage(context.Context, *InputMessage) (*MessageId, error)
+	GetParticipants(context.Context, *FeedId) (*ParticipantsListResponse, error)
 	mustEmbedUnimplementedMessageStoreServiceServer()
 }
 
@@ -112,6 +123,9 @@ func (UnimplementedMessageStoreServiceServer) GetMessage(context.Context, *Messa
 }
 func (UnimplementedMessageStoreServiceServer) SaveMessage(context.Context, *InputMessage) (*MessageId, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SaveMessage not implemented")
+}
+func (UnimplementedMessageStoreServiceServer) GetParticipants(context.Context, *FeedId) (*ParticipantsListResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetParticipants not implemented")
 }
 func (UnimplementedMessageStoreServiceServer) mustEmbedUnimplementedMessageStoreServiceServer() {}
 
@@ -216,6 +230,24 @@ func _MessageStoreService_SaveMessage_Handler(srv interface{}, ctx context.Conte
 	return interceptor(ctx, in, info, handler)
 }
 
+func _MessageStoreService_GetParticipants_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(FeedId)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MessageStoreServiceServer).GetParticipants(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/proto.MessageStoreService/getParticipants",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MessageStoreServiceServer).GetParticipants(ctx, req.(*FeedId))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // MessageStoreService_ServiceDesc is the grpc.ServiceDesc for MessageStoreService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -242,6 +274,10 @@ var MessageStoreService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "saveMessage",
 			Handler:    _MessageStoreService_SaveMessage_Handler,
+		},
+		{
+			MethodName: "getParticipants",
+			Handler:    _MessageStoreService_GetParticipants_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
