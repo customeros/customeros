@@ -3,7 +3,7 @@ name: Feature request
 about: Suggest a feature for customerOS
 title: ''
 labels: feature request
-assignees: jontyk, mattbr0wn
+assignees: 
 
 ---
 
