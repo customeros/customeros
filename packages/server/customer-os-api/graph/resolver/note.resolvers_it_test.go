@@ -41,6 +41,7 @@ func TestMutationResolver_NoteCreateForContact(t *testing.T) {
 
 	// Check the number of nodes and relationships in the Neo4j database
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Contact"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Contact_"+tenantName))
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "User"))
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Note"))
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Note_"+tenantName))
@@ -48,7 +49,7 @@ func TestMutationResolver_NoteCreateForContact(t *testing.T) {
 	require.Equal(t, 1, neo4jt.GetCountOfRelationships(driver, "CREATED"))
 
 	// Check the labels on the nodes in the Neo4j database
-	assertNeo4jLabels(t, driver, []string{"Tenant", "Contact", "User", "Note", "Note_" + tenantName})
+	assertNeo4jLabels(t, driver, []string{"Tenant", "Contact", "Contact_" + tenantName, "User", "Note", "Note_" + tenantName})
 }
 
 func TestMutationResolver_NoteCreateForOrganization(t *testing.T) {
@@ -82,13 +83,14 @@ func TestMutationResolver_NoteCreateForOrganization(t *testing.T) {
 
 	// Check the number of nodes and relationships in the Neo4j database
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Organization"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Organization_"+tenantName))
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "User"))
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Note"))
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Note_"+tenantName))
 	require.Equal(t, 1, neo4jt.GetCountOfRelationships(driver, "NOTED"))
 
 	// Check the labels on the nodes in the Neo4j database
-	assertNeo4jLabels(t, driver, []string{"Tenant", "Organization", "User", "Note", "Note_" + tenantName})
+	assertNeo4jLabels(t, driver, []string{"Tenant", "Organization", "Organization_" + tenantName, "User", "Note", "Note_" + tenantName})
 }
 
 func TestMutationResolver_NoteUpdate(t *testing.T) {
@@ -118,12 +120,13 @@ func TestMutationResolver_NoteUpdate(t *testing.T) {
 
 	// Check the number of nodes and relationships in the Neo4j database
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Contact"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Contact_"+tenantName))
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Note"))
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Note_"+tenantName))
 	require.Equal(t, 1, neo4jt.GetCountOfRelationships(driver, "NOTED"))
 
 	// Check the labels on the nodes in the Neo4j database
-	assertNeo4jLabels(t, driver, []string{"Tenant", "Contact", "Note", "Note_" + tenantName})
+	assertNeo4jLabels(t, driver, []string{"Tenant", "Contact", "Contact_" + tenantName, "Note", "Note_" + tenantName})
 }
 
 func TestMutationResolver_NoteDelete(t *testing.T) {
@@ -153,10 +156,11 @@ func TestMutationResolver_NoteDelete(t *testing.T) {
 
 	// Check the number of nodes and relationships in the Neo4j database
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Contact"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Contact_"+tenantName))
 	require.Equal(t, 0, neo4jt.GetCountOfNodes(driver, "Note"))
 	require.Equal(t, 0, neo4jt.GetCountOfNodes(driver, "Note_"+tenantName))
 	require.Equal(t, 0, neo4jt.GetCountOfRelationships(driver, "NOTED"))
 
 	// Check the labels on the nodes in the Neo4j database
-	assertNeo4jLabels(t, driver, []string{"Tenant", "Contact"})
+	assertNeo4jLabels(t, driver, []string{"Tenant", "Contact", "Contact_" + tenantName})
 }

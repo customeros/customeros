@@ -56,7 +56,7 @@ func TestMutationResolver_EmailMergeToContact(t *testing.T) {
 	require.Equal(t, 1, neo4jt.GetCountOfRelationships(driver, "HAS"), "Incorrect number of HAS relationships in Neo4j")
 
 	// Check the labels on the nodes in the Neo4j database
-	assertNeo4jLabels(t, driver, []string{"Tenant", "Contact", "Email", "Email_" + tenantName})
+	assertNeo4jLabels(t, driver, []string{"Tenant", "Contact", "Contact_" + tenantName, "Email", "Email_" + tenantName})
 }
 
 func TestMutationResolver_EmailUpdateInContact(t *testing.T) {
@@ -67,7 +67,7 @@ func TestMutationResolver_EmailUpdateInContact(t *testing.T) {
 
 	// Create a default contact and email
 	contactId := neo4jt.CreateDefaultContact(driver, tenantName)
-	emailId := neo4jt.AddEmailTo(driver, repository.CONTACT, contactId, "original@email.com", true, "")
+	emailId := neo4jt.AddEmailTo(driver, repository.CONTACT, tenantName, contactId, "original@email.com", true, "")
 
 	// Make the RawPost request and check for errors
 	rawResponse, err := c.RawPost(getQuery("update_email_for_contact"),
@@ -156,7 +156,7 @@ func TestMutationResolver_EmailUpdateInUser(t *testing.T) {
 
 	// Create a default contact and email
 	userId := neo4jt.CreateDefaultUser(driver, tenantName)
-	emailId := neo4jt.AddEmailTo(driver, repository.USER, userId, "original@email.com", true, "")
+	emailId := neo4jt.AddEmailTo(driver, repository.USER, tenantName, userId, "original@email.com", true, "")
 
 	// Make the RawPost request and check for errors
 	rawResponse, err := c.RawPost(getQuery("update_email_for_user"),

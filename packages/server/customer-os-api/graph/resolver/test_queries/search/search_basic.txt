@@ -1,0 +1,21 @@
+query BasicSearch($keyword: String!) {
+  search_Basic(keyword: $keyword) {
+    score
+    result {
+      __typename ... on Contact {
+      	id
+    	firstName
+        lastName
+    	}
+      __typename ... on Organization {
+      	id
+    	name
+        description
+    	}
+      __typename ... on Email {
+      	id
+    	email
+    	}
+    }
+  }
+}

@@ -23,6 +23,7 @@ func TestMutationResolver_CustomFieldsMergeAndUpdateInContact(t *testing.T) {
 	fieldInSetId := neo4jt.CreateDefaultCustomFieldInSet(driver, fieldSetId)
 
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Contact"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Contact_"+tenantName))
 	require.Equal(t, 2, neo4jt.GetCountOfNodes(driver, "CustomField"))
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "FieldSet"))
 
@@ -44,6 +45,7 @@ func TestMutationResolver_CustomFieldsMergeAndUpdateInContact(t *testing.T) {
 	assertRawResponseSuccess(t, rawResponse, err)
 
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Contact"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Contact_"+tenantName))
 	require.Equal(t, 4, neo4jt.GetCountOfNodes(driver, "CustomField"))
 	require.Equal(t, 2, neo4jt.GetCountOfNodes(driver, "CustomField_"+tenantName))
 	require.Equal(t, 2, neo4jt.GetCountOfNodes(driver, "FieldSet"))
@@ -89,7 +91,7 @@ func TestMutationResolver_CustomFieldsMergeAndUpdateInContact(t *testing.T) {
 		checkCustomField(t, *updatedContact.FieldSets[1].CustomFields[0], "field4", "value4", &fieldInSetTemplateId)
 	}
 
-	assertNeo4jLabels(t, driver, []string{"Tenant", "Contact", "EntityTemplate", "CustomFieldTemplate",
+	assertNeo4jLabels(t, driver, []string{"Tenant", "Contact", "Contact_" + tenantName, "EntityTemplate", "CustomFieldTemplate",
 		"FieldSetTemplate", "TextField", "CustomField", "CustomField_" + tenantName, "FieldSet", "FieldSet_" + tenantName})
 }
 

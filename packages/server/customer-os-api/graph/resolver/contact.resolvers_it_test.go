@@ -19,8 +19,8 @@ func TestQueryResolver_ContactByEmail(t *testing.T) {
 	neo4jt.CreateTenant(driver, otherTenant)
 	contactId1 := neo4jt.CreateDefaultContact(driver, tenantName)
 	contactId2 := neo4jt.CreateDefaultContact(driver, otherTenant)
-	neo4jt.AddEmailTo(driver, repository.CONTACT, contactId1, "test@test.com", true, "MAIN")
-	neo4jt.AddEmailTo(driver, repository.CONTACT, contactId2, "test@test.com", true, "MAIN")
+	neo4jt.AddEmailTo(driver, repository.CONTACT, tenantName, contactId1, "test@test.com", true, "MAIN")
+	neo4jt.AddEmailTo(driver, repository.CONTACT, otherTenant, contactId2, "test@test.com", true, "MAIN")
 
 	rawResponse, err := c.RawPost(getQuery("get_contact_by_email"), client.Var("email", "test@test.com"))
 	assertRawResponseSuccess(t, rawResponse, err)
@@ -381,12 +381,13 @@ func TestMutationResolver_UpdateContact(t *testing.T) {
 	require.Equal(t, newOwnerId, contact.Contact_Update.Owner.ID)
 
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Contact"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Contact_"+tenantName))
 	require.Equal(t, 2, neo4jt.GetCountOfNodes(driver, "ContactType"))
 	require.Equal(t, 2, neo4jt.GetCountOfNodes(driver, "User"))
 	require.Equal(t, 1, neo4jt.GetCountOfRelationships(driver, "IS_OF_TYPE"))
 	require.Equal(t, 1, neo4jt.GetCountOfRelationships(driver, "OWNS"))
 
-	assertNeo4jLabels(t, driver, []string{"Tenant", "Contact", "ContactType", "User"})
+	assertNeo4jLabels(t, driver, []string{"Tenant", "Contact", "Contact_" + tenantName, "ContactType", "User"})
 }
 
 func TestMutationResolver_UpdateContact_ClearTitle(t *testing.T) {

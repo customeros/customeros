@@ -14,7 +14,7 @@ func TestMutationResolver_TagCreate(t *testing.T) {
 	neo4jt.CreateTenant(driver, tenantName)
 	neo4jt.CreateTenant(driver, "otherTenant")
 
-	rawResponse, err := c.RawPost(getQuery("create_tag"))
+	rawResponse, err := c.RawPost(getQuery("tag/create_tag"))
 	assertRawResponseSuccess(t, rawResponse, err)
 
 	var tag struct {
@@ -45,7 +45,7 @@ func TestMutationResolver_TagUpdate(t *testing.T) {
 	neo4jt.CreateTenant(driver, tenantName)
 	tagId := neo4jt.CreateTag(driver, tenantName, "original tag")
 
-	rawResponse, err := c.RawPost(getQuery("update_tag"),
+	rawResponse, err := c.RawPost(getQuery("tag/update_tag"),
 		client.Var("tagId", tagId),
 		client.Var("tagName", "new tag name"),
 	)
@@ -79,7 +79,7 @@ func TestMutationResolver_TagDelete(t *testing.T) {
 	require.Equal(t, 1, neo4jt.GetCountOfRelationships(driver, "TAGGED"))
 	require.Equal(t, 1, neo4jt.GetCountOfRelationships(driver, "TAG_BELONGS_TO_TENANT"))
 
-	rawResponse, err := c.RawPost(getQuery("delete_tag"),
+	rawResponse, err := c.RawPost(getQuery("tag/delete_tag"),
 		client.Var("tagId", tagId),
 	)
 	assertRawResponseSuccess(t, rawResponse, err)
@@ -109,7 +109,7 @@ func TestQueryResolver_Tags(t *testing.T) {
 
 	require.Equal(t, 3, neo4jt.GetCountOfNodes(driver, "Tag"))
 
-	rawResponse, err := c.RawPost(getQuery("get_tags"))
+	rawResponse, err := c.RawPost(getQuery("tag/get_tags"))
 	assertRawResponseSuccess(t, rawResponse, err)
 
 	var tagStruct struct {

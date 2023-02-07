@@ -15,6 +15,22 @@ func CleanupAllData(driver *neo4j.Driver) {
 	ExecuteWriteQuery(driver, `MATCH (n) DETACH DELETE n`, map[string]any{})
 }
 
+func CreateFullTextBasicSearchIndexes(driver *neo4j.Driver, tenant string) {
+	query := fmt.Sprintf("DROP INDEX basicSearchStandard_%s IF EXISTS", tenant)
+	ExecuteWriteQuery(driver, query, map[string]any{})
+
+	query = fmt.Sprintf("CREATE FULLTEXT INDEX basicSearchStandard_%s FOR (n:Contact_%s|Email_%s|Organization_%s) ON EACH [n.firstName, n.lastName, n.name, n.email] "+
+		"OPTIONS {  indexConfig: { `fulltext.analyzer`: 'standard', `fulltext.eventually_consistent`: true } }", tenant, tenant, tenant, tenant)
+	ExecuteWriteQuery(driver, query, map[string]any{})
+
+	query = fmt.Sprintf("DROP INDEX basicSearchSimple_%s IF EXISTS", tenant)
+	ExecuteWriteQuery(driver, query, map[string]any{})
+
+	query = fmt.Sprintf("CREATE FULLTEXT INDEX basicSearchSimple_%s FOR (n:Contact_%s|Email_%s|Organization_%s) ON EACH [n.firstName, n.lastName, n.email, n.name] "+
+		"OPTIONS {  indexConfig: { `fulltext.analyzer`: 'simple', `fulltext.eventually_consistent`: true } }", tenant, tenant, tenant, tenant)
+	ExecuteWriteQuery(driver, query, map[string]any{})
+}
+
 func CreateTenant(driver *neo4j.Driver, tenant string) {
 	query := `MERGE (t:Tenant {name:$tenant})`
 	ExecuteWriteQuery(driver, query, map[string]any{
@@ -85,17 +101,11 @@ func CreateDefaultContact(driver *neo4j.Driver, tenant string) string {
 
 func CreateContact(driver *neo4j.Driver, tenant string, contact entity.ContactEntity) string {
 	var contactId, _ = uuid.NewRandom()
-	query := `
-			MATCH (t:Tenant {name:$tenant})
-			MERGE (c:Contact {
-				  id: $contactId,
-				  title: $title,
-				  firstName: $firstName,
-				  lastName: $lastName,
-				  label: $label,
-				  createdAt :datetime({timezone: 'UTC'})
-				})-[:CONTACT_BELONGS_TO_TENANT]->(t)`
-	ExecuteWriteQuery(driver, query, map[string]any{
+	query := "MATCH (t:Tenant {name:$tenant}) MERGE (c:Contact {id: $contactId})-[:CONTACT_BELONGS_TO_TENANT]->(t) " +
+		" ON CREATE SET c.title=$title, c.firstName=$firstName, c.lastName=$lastName, c.label=$label, c.createdAt=datetime({timezone: 'UTC'}), " +
+		" c:%s"
+
+	ExecuteWriteQuery(driver, fmt.Sprintf(query, "Contact_"+tenant), map[string]any{
 		"tenant":    tenant,
 		"contactId": contactId.String(),
 		"title":     contact.Title,
@@ -237,26 +247,22 @@ func createCustomFieldInContact(driver *neo4j.Driver, contactId string, customFi
 	return fieldId.String()
 }
 
-func AddEmailTo(driver *neo4j.Driver, entityType repository.EntityType, entityId string, email string, primary bool, label string) string {
+func AddEmailTo(driver *neo4j.Driver, entityType repository.EntityType, tenant, entityId, email string, primary bool, label string) string {
 	query := ""
 
 	switch entityType {
 	case repository.CONTACT:
-		query = `MATCH (entity:Contact {id:$entityId}) `
+		query = "MATCH (entity:Contact {id:$entityId}) "
 	case repository.USER:
-		query = `MATCH (entity:User {id:$entityId}) `
+		query = "MATCH (entity:User {id:$entityId}) "
 	case repository.ORGANIZATION:
-		query = `MATCH (entity:Organization {id:$entityId}) `
+		query = "MATCH (entity:Organization {id:$entityId}) "
 	}
 
 	var emailId, _ = uuid.NewRandom()
-	query = query + `
-			MERGE (:Email {
-				  id: $emailId,
-				  email: $email,
-				  label: $label
-				})<-[:HAS {primary:$primary}]-(entity)`
-	ExecuteWriteQuery(driver, query, map[string]any{
+	query = query + "MERGE (e:Email {id: $emailId,email: $email,label: $label})<-[:HAS {primary:$primary}]-(entity) ON CREATE SET e:%s"
+
+	ExecuteWriteQuery(driver, fmt.Sprintf(query, "Email_"+tenant), map[string]any{
 		"entityId": entityId,
 		"primary":  primary,
 		"email":    email,
@@ -397,8 +403,8 @@ func CreateOrganization(driver *neo4j.Driver, tenant, organizationName string) s
 	var organizationId, _ = uuid.NewRandom()
 	query := `MATCH (t:Tenant {name:$tenant})
 			MERGE (t)<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {id:$id})
-			ON CREATE SET org.name=$name`
-	ExecuteWriteQuery(driver, query, map[string]any{
+			ON CREATE SET org.name=$name, org:%s`
+	ExecuteWriteQuery(driver, fmt.Sprintf(query, "Organization_"+tenant), map[string]any{
 		"id":     organizationId.String(),
 		"tenant": tenant,
 		"name":   organizationName,
