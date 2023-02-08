@@ -10,7 +10,7 @@ import (
 )
 
 type QueryService interface {
-	GetDashboardViewData(ctx context.Context, page int, limit int) (*utils.Pagination, error)
+	GetDashboardViewData(ctx context.Context, page int, limit int, searchTerm *string) (*utils.Pagination, error)
 }
 
 type queryService struct {
@@ -29,7 +29,7 @@ func (s *queryService) getNeo4jDriver() neo4j.Driver {
 	return *s.repositories.Drivers.Neo4jDriver
 }
 
-func (s *queryService) GetDashboardViewData(ctx context.Context, page int, limit int) (*utils.Pagination, error) {
+func (s *queryService) GetDashboardViewData(ctx context.Context, page int, limit int, searchTerm *string) (*utils.Pagination, error) {
 	session := utils.NewNeo4jReadSession(s.getNeo4jDriver())
 	defer session.Close()
 
@@ -38,7 +38,7 @@ func (s *queryService) GetDashboardViewData(ctx context.Context, page int, limit
 		Page:  page,
 	}
 
-	dbNodes, err := s.repositories.QueryRepository.GetOrganizationsAndContacts(session, common.GetContext(ctx).Tenant, page, limit)
+	dbNodes, err := s.repositories.QueryRepository.GetOrganizationsAndContacts(session, common.GetContext(ctx).Tenant, paginatedResult.GetSkip(), paginatedResult.GetLimit(), searchTerm)
 	if err != nil {
 		return nil, err
 	}

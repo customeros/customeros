@@ -118,20 +118,23 @@ func (f *CypherFilter) CypherFilterFragment(nodeAlias string) (Cypher, map[strin
 
 	var cypherStr strings.Builder
 	cypherStr.WriteString(" WHERE ")
-	innerCypherStr, params := f.buildCypherFilterFragment(nodeAlias)
+	innerCypherStr, params := f.BuildCypherFilterFragment(nodeAlias)
 	cypherStr.WriteString(innerCypherStr)
 
 	return Cypher(cypherStr.String()), params
 }
 
-func (f *CypherFilter) buildCypherFilterFragment(nodeAlias string) (string, map[string]any) {
+func (f *CypherFilter) BuildCypherFilterFragment(nodeAlias string) (string, map[string]any) {
+	return f.BuildCypherFilterFragmentWithParamName(nodeAlias, paramPrefix)
+}
+func (f *CypherFilter) BuildCypherFilterFragmentWithParamName(nodeAlias string, customParamPrefix string) (string, map[string]any) {
 	var cypherStr strings.Builder
 	var params = map[string]any{}
 
 	if f.Negate {
 		cypherStr.WriteString(" NOT ")
 		f.Filters[0].paramCount = f.paramCount
-		innerCypherStr, innerParams := f.Filters[0].buildCypherFilterFragment(nodeAlias)
+		innerCypherStr, innerParams := f.Filters[0].BuildCypherFilterFragmentWithParamName(nodeAlias, customParamPrefix)
 		f.paramCount = f.Filters[0].paramCount
 		MergeMapToMap(innerParams, params)
 		cypherStr.WriteString(SurroundWithRoundParentheses(innerCypherStr))
@@ -143,7 +146,7 @@ func (f *CypherFilter) buildCypherFilterFragment(nodeAlias string) (string, map[
 				cypherStr.WriteString(SurroundWithSpaces(f.LogicalOperator.String()))
 			}
 			v.paramCount = f.paramCount
-			innerCypherStr, innerParams := v.buildCypherFilterFragment(nodeAlias)
+			innerCypherStr, innerParams := v.BuildCypherFilterFragmentWithParamName(nodeAlias, customParamPrefix)
 			f.paramCount = v.paramCount
 			MergeMapToMap(innerParams, params)
 			cypherStr.WriteString(SurroundWithRoundParentheses(innerCypherStr))
@@ -167,11 +170,11 @@ func (f *CypherFilter) buildCypherFilterFragment(nodeAlias string) (string, map[
 		}
 		f.paramCount++
 		paramSuffix := strconv.Itoa(f.paramCount)
-		cypherStr.WriteString("$" + paramPrefix + paramSuffix)
+		cypherStr.WriteString("$" + customParamPrefix + paramSuffix)
 		if params == nil {
-			params = map[string]any{paramPrefix + paramSuffix: f.Details.Value}
+			params = map[string]any{customParamPrefix + paramSuffix: f.Details.Value}
 		} else {
-			params[paramPrefix+paramSuffix] = f.Details.Value
+			params[customParamPrefix+paramSuffix] = f.Details.Value
 		}
 
 		if toLower {

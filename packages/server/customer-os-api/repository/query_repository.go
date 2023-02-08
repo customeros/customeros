@@ -1,13 +1,14 @@
 package repository
 
 import (
+	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v4/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v4/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils"
 )
 
 type QueryRepository interface {
-	GetOrganizationsAndContacts(session neo4j.Session, tenant string, skip int, limit int) (*utils.PairDbNodesWithTotalCount, error)
+	GetOrganizationsAndContacts(session neo4j.Session, tenant string, skip int, limit int, searchTerm *string) (*utils.PairDbNodesWithTotalCount, error)
 }
 
 type queryRepository struct {
@@ -20,28 +21,79 @@ func NewQueryRepository(driver *neo4j.Driver) QueryRepository {
 	}
 }
 
-func (r *queryRepository) GetOrganizationsAndContacts(session neo4j.Session, tenant string, skip int, limit int) (*utils.PairDbNodesWithTotalCount, error) {
+func createCypherFilter(propertyName string, searchTerm string) *utils.CypherFilter {
+	filter := utils.CypherFilter{}
+	filter.Details = new(utils.CypherFilterItem)
+	filter.Details.NodeProperty = propertyName
+	filter.Details.Value = &searchTerm
+	filter.Details.ComparisonOperator = utils.CONTAINS
+	filter.Details.SupportCaseSensitive = true
+	return &filter
+}
+
+func (r *queryRepository) GetOrganizationsAndContacts(session neo4j.Session, tenant string, skip int, limit int, searchTerm *string) (*utils.PairDbNodesWithTotalCount, error) {
 	result := new(utils.PairDbNodesWithTotalCount)
+
+	contactFilterCypher, contactFilterParams := "1=1", make(map[string]interface{})
+	organizationFilterCypher, organizationFilterParams := "1=1", make(map[string]interface{})
+
+	//region contact filters
+	if searchTerm != nil {
+		contactFilter := new(utils.CypherFilter)
+		contactFilter.Negate = false
+		contactFilter.LogicalOperator = utils.OR
+		contactFilter.Filters = make([]*utils.CypherFilter, 0)
+
+		contactFilter.Filters = append(contactFilter.Filters, createCypherFilter("firstName", *searchTerm))
+		contactFilter.Filters = append(contactFilter.Filters, createCypherFilter("lastName", *searchTerm))
+
+		contactFilterCypher, contactFilterParams = contactFilter.BuildCypherFilterFragmentWithParamName("c", "c_param_")
+	}
+
+	//endregion
+
+	//region organization filters
+	if searchTerm != nil {
+
+		organizationFilter := new(utils.CypherFilter)
+		organizationFilter.Negate = false
+		organizationFilter.LogicalOperator = utils.OR
+		organizationFilter.Filters = make([]*utils.CypherFilter, 0)
+
+		organizationFilter.Filters = append(organizationFilter.Filters, createCypherFilter("name", *searchTerm))
+
+		organizationFilterCypher, organizationFilterParams = organizationFilter.BuildCypherFilterFragmentWithParamName("o", "o_param_")
+	}
+
+	//endregion
+
 	dbRecords, err := session.ReadTransaction(func(tx neo4j.Transaction) (any, error) {
-		queryResult, err := tx.Run(`
+		params := map[string]any{
+			"tenant": tenant,
+			"skip":   skip,
+			"limit":  limit,
+		}
+		utils.MergeMapToMap(contactFilterParams, params)
+		utils.MergeMapToMap(organizationFilterParams, params)
+
+		queryResult, err := tx.Run(fmt.Sprintf(`
 		CALL {
 		  MATCH (t:Tenant {name:$tenant})--(o:Organization)
 		  MATCH (t)--(c:Contact)
 		  MATCH (o)--(c)
-		  RETURN count(o) as o, count(c) as c
+		  WHERE (%s) OR (%s)
+		  RETURN count(o) as t
 		  UNION
 		  MATCH (t:Tenant {name:$tenant})--(o:Organization)
-		  WHERE NOT (o)-[:LINKED]-(:Contact)
-		  RETURN count(o) as o, 0 as c
+		  WHERE NOT (o)--(:Contact) AND (%s)
+		  RETURN count(o) as t
 		  UNION
 		  MATCH (t:Tenant {name:$tenant})--(c:Contact)
-		  WHERE NOT (c)-[:LINKED]-(:Organization)
-		  RETURN 0 as o, count(c) as c
+		  WHERE NOT (c)--(:Organization) AND (%s)
+		  RETURN count(c) as t
 		}
-		RETURN max(o), max (c)`,
-			map[string]any{
-				"tenant": tenant,
-			})
+		RETURN sum(t)`, contactFilterCypher, organizationFilterCypher, organizationFilterCypher, contactFilterCypher),
+			params)
 		if err != nil {
 			return nil, err
 		}
@@ -49,30 +101,27 @@ func (r *queryRepository) GetOrganizationsAndContacts(session neo4j.Session, ten
 		if err != nil {
 			return nil, err
 		}
-		result.Count = max(countRecord.Values[0].(int64), countRecord.Values[1].(int64))
+		result.Count = countRecord.Values[0].(int64)
 
-		if queryResult, err := tx.Run(`
+		if queryResult, err := tx.Run(fmt.Sprintf(`
 		CALL {
 		  MATCH (t:Tenant {name:$tenant})--(o:Organization)
 		  MATCH (t)--(c:Contact)
 		  MATCH (o)--(c)
+		  WHERE (%s) OR (%s)
 		  RETURN o, c
 		  UNION
 		  MATCH (t:Tenant {name:$tenant})--(o:Organization)
-		  WHERE NOT (o)-[:LINKED]-(:Contact)
+		  WHERE NOT (o)--(:Contact) AND (%s)
 		  RETURN o, null as c
 		  UNION
 		  MATCH (t:Tenant {name:$tenant})--(c:Contact)
-		  WHERE NOT (c)-[:LINKED]-(:Organization)
+		  WHERE NOT (c)--(:Organization) AND (%s)
 		  RETURN null as o, c
 		}
 		RETURN o, c
-		SKIP $skip LIMIT $limit`,
-			map[string]any{
-				"tenant": tenant,
-				"skip":   skip,
-				"limit":  limit,
-			}); err != nil {
+		SKIP $skip LIMIT $limit`, organizationFilterCypher, contactFilterCypher, organizationFilterCypher, contactFilterCypher),
+			params); err != nil {
 			return nil, err
 		} else {
 			return queryResult.Collect()
