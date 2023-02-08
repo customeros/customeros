@@ -16,6 +16,10 @@ message MessageListResponse {
   repeated Message messages = 1;
 }
 
+message ParticipantsListResponse {
+  repeated string participants = 1;
+}
+
 message FeedId {
   string id = 1;
 }
@@ -53,4 +57,5 @@ service MessageStoreService {
   rpc getMessagesForFeed(FeedId) returns (MessageListResponse) {};
   rpc getMessage(MessageId) returns (Message) {};
   rpc saveMessage(InputMessage) returns (MessageId) {};
+  rpc getParticipants(FeedId) returns (ParticipantsListResponse) {};
 }
