@@ -48,9 +48,9 @@ func (r *contactResolver) Emails(ctx context.Context, obj *model.Contact) ([]*mo
 	panic(fmt.Errorf("not implemented: Emails - emails"))
 }
 
-// Addresses is the resolver for the addresses field.
-func (r *contactResolver) Addresses(ctx context.Context, obj *model.Contact) ([]*model.Place, error) {
-	panic(fmt.Errorf("not implemented: Addresses - addresses"))
+// Locations is the resolver for the locations field.
+func (r *contactResolver) Locations(ctx context.Context, obj *model.Contact) ([]*model.Location, error) {
+	panic(fmt.Errorf("not implemented: Locations - locations"))
 }
 
 // CustomFields is the resolver for the customFields field.
@@ -155,3 +155,13 @@ func (r *queryResolver) ContactByPhone(ctx context.Context, e164 string) (*model
 func (r *Resolver) Contact() generated.ContactResolver { return &contactResolver{r} }
 
 type contactResolver struct{ *Resolver }
+
+// !!! WARNING !!!
+// The code below was going to be deleted when updating resolvers. It has been copied here so you have
+// one last chance to move it out of harms way if you want. There are two reasons this happens:
+//   - When renaming or deleting a resolver the old code will be put in here. You can safely delete
+//     it when you're done.
+//   - You have helper methods in this file. Move them out to keep these resolver files clean.
+func (r *contactResolver) Addresses(ctx context.Context, obj *model.Contact) ([]*model.Place, error) {
+	panic(fmt.Errorf("not implemented: Addresses - addresses"))
+}

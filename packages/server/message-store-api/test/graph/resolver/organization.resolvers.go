@@ -31,9 +31,9 @@ func (r *organizationResolver) OrganizationType(ctx context.Context, obj *model.
 	panic(fmt.Errorf("not implemented: OrganizationType - organizationType"))
 }
 
-// Addresses is the resolver for the addresses field.
-func (r *organizationResolver) Addresses(ctx context.Context, obj *model.Organization) ([]*model.Place, error) {
-	panic(fmt.Errorf("not implemented: Addresses - addresses"))
+// Locations is the resolver for the locations field.
+func (r *organizationResolver) Locations(ctx context.Context, obj *model.Organization) ([]*model.Location, error) {
+	panic(fmt.Errorf("not implemented: Locations - locations"))
 }
 
 // Contacts is the resolver for the contacts field.
@@ -65,3 +65,13 @@ func (r *queryResolver) Organization(ctx context.Context, id string) (*model.Org
 func (r *Resolver) Organization() generated.OrganizationResolver { return &organizationResolver{r} }
 
 type organizationResolver struct{ *Resolver }
+
+// !!! WARNING !!!
+// The code below was going to be deleted when updating resolvers. It has been copied here so you have
+// one last chance to move it out of harms way if you want. There are two reasons this happens:
+//   - When renaming or deleting a resolver the old code will be put in here. You can safely delete
+//     it when you're done.
+//   - You have helper methods in this file. Move them out to keep these resolver files clean.
+func (r *organizationResolver) Addresses(ctx context.Context, obj *model.Organization) ([]*model.Place, error) {
+	panic(fmt.Errorf("not implemented: Addresses - addresses"))
+}
