@@ -6,8 +6,8 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils"
 )
 
-func MapEntityToAddress(entity *entity.PlaceEntity) *model.Place {
-	address := model.Place{
+func MapEntityToPlace(entity *entity.PlaceEntity) *model.Place {
+	place := model.Place{
 		ID:        entity.Id,
 		Country:   utils.StringPtr(entity.Country),
 		State:     utils.StringPtr(entity.State),
@@ -18,15 +18,17 @@ func MapEntityToAddress(entity *entity.PlaceEntity) *model.Place {
 		Phone:     utils.StringPtr(entity.Phone),
 		Fax:       utils.StringPtr(entity.Fax),
 		Source:    utils.ToPtr(MapDataSourceToModel(entity.Source)),
+		AppSource: utils.StringPtr(entity.AppSource),
 		CreatedAt: entity.CreatedAt,
+		UpdatedAt: entity.UpdatedAt,
 	}
-	return &address
+	return &place
 }
 
 func MapEntitiesToPlaces(entities *entity.PlaceEntities) []*model.Place {
-	var addresses []*model.Place
-	for _, addressEntity := range *entities {
-		addresses = append(addresses, MapEntityToAddress(&addressEntity))
+	var places []*model.Place
+	for _, placeEntity := range *entities {
+		places = append(places, MapEntityToPlace(&placeEntity))
 	}
-	return addresses
+	return places
 }

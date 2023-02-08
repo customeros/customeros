@@ -23,6 +23,7 @@ type Services struct {
 	NoteService                NoteService
 	JobRoleService             JobRoleService
 	PlaceService               PlaceService
+	LocationService            LocationService
 	TagService                 TagService
 	SearchService              SearchService
 	QueryService               QueryService
@@ -49,6 +50,7 @@ func InitServices(driver *neo4j.Driver) *Services {
 		NoteService:                NewNoteService(repositories),
 		JobRoleService:             NewJobRoleService(repositories),
 		PlaceService:               NewPlaceService(repositories),
+		LocationService:            NewLocationService(repositories),
 		TagService:                 NewTagService(repositories),
 	}
 	services.SearchService = NewSearchService(repositories, &services)

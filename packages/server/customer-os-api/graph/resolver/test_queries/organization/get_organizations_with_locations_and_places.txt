@@ -1,0 +1,34 @@
+query GetOrganizations($page: Int!, $limit: Int!){
+  organizations(pagination: {page: $page, limit: $limit}
+            where:{filter: {property:"NAME" value:"openline" operation:CONTAINS}}) {
+    totalPages
+    totalElements
+    content {
+      id
+      name
+      locations {
+        id
+        name
+        createdAt
+        updatedAt
+        source
+        appSource
+        place {
+            id
+            createdAt
+            updatedAt
+            country
+            state
+            city
+            address
+            address2
+            zip
+            phone
+            fax
+            source
+            appSource
+        }
+      }
+    }
+  }
+}

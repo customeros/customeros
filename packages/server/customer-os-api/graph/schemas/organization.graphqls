@@ -28,7 +28,7 @@ type Organization implements Node {
     All addresses associated with an organization in customerOS.
     **Required.  If no values it returns an empty array.**
     """
-    addresses: [Place!]! @goField(forceResolver: true)
+    locations: [Location!]! @goField(forceResolver: true)
     contacts(pagination: Pagination, where: Filter, sort: [SortBy!]): ContactsPage! @goField(forceResolver: true)
     jobRoles: [JobRole!]! @goField(forceResolver: true)
     "Organization notes"

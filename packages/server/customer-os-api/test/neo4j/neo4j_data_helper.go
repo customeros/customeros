@@ -505,52 +505,79 @@ func CreatePageView(driver *neo4j.Driver, contactId string, actionEntity entity.
 	return actionId.String()
 }
 
-func CreateAddress(driver *neo4j.Driver, address entity.PlaceEntity) string {
-	var addressId, _ = uuid.NewRandom()
-	query := `MERGE (a:Address {id:$id})
-			ON CREATE SET  a.country=$country, a.state=$state, a.city=$city, a.address=$address,
-							a.address2=$address2, a.zip=$zip, a.fax=$fax, a.phone=$phone,
-							a.source=$source, a.sourceOfTruth=$sourceOfTruth`
-	ExecuteWriteQuery(driver, query, map[string]any{
-		"id":            addressId.String(),
-		"source":        address.Source,
-		"sourceOfTruth": address.Source,
-		"country":       address.Country,
-		"state":         address.State,
-		"city":          address.City,
-		"address":       address.Address,
-		"address2":      address.Address2,
-		"zip":           address.Zip,
-		"phone":         address.Phone,
-		"fax":           address.Fax,
+func CreateLocation(driver *neo4j.Driver, tenant string, location entity.LocationEntity) string {
+	var locationId, _ = uuid.NewRandom()
+	query := "MERGE (l:Location {id:$locationId}) " +
+		" ON CREATE SET l.name=$name, " +
+		"				l.source=$source, " +
+		"				l.appSource=$appSource, " +
+		"				l.createdAt=$now, " +
+		"				l.updatedAt=$now, " +
+		"				l:Location_%s"
+
+	ExecuteWriteQuery(driver, fmt.Sprintf(query, tenant), map[string]any{
+		"locationId": locationId.String(),
+		"source":     location.Source,
+		"appSource":  location.AppSource,
+		"name":       location.Name,
+		"now":        utils.Now(),
 	})
-	return addressId.String()
+	return locationId.String()
 }
 
-func ContactHasAddress(driver *neo4j.Driver, contactId, addressId string) string {
-	var roleId, _ = uuid.NewRandom()
+func CreatePlaceForLocation(driver *neo4j.Driver, place entity.PlaceEntity, locationId string) string {
+	var placeId, _ = uuid.NewRandom()
+	query := `MATCH (l:Location {id:$locationId})
+	MERGE (l)-[:LOCATED_AT]->(a:Place {id:$placeId})
+			ON CREATE SET  a.country=$country, 
+							a.state=$state, 
+							a.city=$city, 
+							a.address=$address,
+							a.address2=$address2, 
+							a.zip=$zip, 
+							a.fax=$fax, 
+							a.phone=$phone,
+							a.source=$source, 
+							a.sourceOfTruth=$sourceOfTruth, 
+							a.appSource=$appSource,
+							a.createdAt=datetime({timezone: 'UTC'}), 
+							a.updatedAt=datetime({timezone: 'UTC'})`
+	ExecuteWriteQuery(driver, query, map[string]any{
+		"placeId":       placeId.String(),
+		"locationId":    locationId,
+		"source":        place.Source,
+		"appSource":     place.AppSource,
+		"sourceOfTruth": place.Source,
+		"country":       place.Country,
+		"state":         place.State,
+		"city":          place.City,
+		"address":       place.Address,
+		"address2":      place.Address2,
+		"zip":           place.Zip,
+		"phone":         place.Phone,
+		"fax":           place.Fax,
+	})
+	return placeId.String()
+}
+
+func ContactAssociatedWithLocation(driver *neo4j.Driver, contactId, locationId string) {
 	query := `MATCH (c:Contact {id:$contactId}),
-			        (a:Address {id:$addressId})
-			MERGE (c)-[:LOCATED_AT]->(a)`
+			        (l:Location {id:$locationId})
+			MERGE (c)-[:ASSOCIATED_WITH]->(l)`
 	ExecuteWriteQuery(driver, query, map[string]any{
-		"id":        roleId.String(),
-		"contactId": contactId,
-		"addressId": addressId,
+		"contactId":  contactId,
+		"locationId": locationId,
 	})
-	return roleId.String()
 }
 
-func OrganizationHasAddress(driver *neo4j.Driver, organizationId, addressId string) string {
-	var roleId, _ = uuid.NewRandom()
+func OrganizationAssociatedWithLocation(driver *neo4j.Driver, organizationId, locationId string) {
 	query := `MATCH (org:Organization {id:$organizationId}),
-			        (a:Address {id:$addressId})
-			MERGE (org)-[:LOCATED_AT]->(a)`
+			        (l:Location {id:$locationId})
+			MERGE (org)-[:ASSOCIATED_WITH]->(l)`
 	ExecuteWriteQuery(driver, query, map[string]any{
-		"id":             roleId.String(),
 		"organizationId": organizationId,
-		"addressId":      addressId,
+		"locationId":     locationId,
 	})
-	return roleId.String()
 }
 
 func CreateNoteForContact(driver *neo4j.Driver, tenant, contactId, html string) string {

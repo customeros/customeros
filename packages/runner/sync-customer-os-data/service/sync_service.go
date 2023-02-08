@@ -162,7 +162,7 @@ func (s *syncService) syncContacts(dataService common.DataService, syncDate time
 			err = s.repositories.ContactRepository.MergeContactDefaultPlace(tenant, contactId, v)
 			if err != nil {
 				failedSync = true
-				logrus.Errorf("failed merge address for contact %v, tenant %v :%v", contactId, tenant, err)
+				logrus.Errorf("failed merge place for contact %v, tenant %v :%v", contactId, tenant, err)
 			}
 
 			if len(v.TagName) > 0 {
@@ -213,7 +213,7 @@ func (s *syncService) syncOrganizations(dataService common.DataService, syncDate
 			err = s.repositories.OrganizationRepository.MergeOrganizationDefaultPlace(tenant, organizationId, v)
 			if err != nil {
 				failedSync = true
-				logrus.Errorf("failed merge organization' address with external reference %v for tenant %v :%v", v.ExternalId, tenant, err)
+				logrus.Errorf("failed merge organization' place with external reference %v for tenant %v :%v", v.ExternalId, tenant, err)
 			}
 
 			if len(v.OrganizationTypeName) > 0 {
