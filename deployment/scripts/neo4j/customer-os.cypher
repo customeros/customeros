@@ -114,7 +114,7 @@ OPTIONS {
     `fulltext.analyzer`: 'simple',
     `fulltext.eventually_consistent`: true
   }
-}
+};
 
 CREATE CONSTRAINT tenant_name_unique IF NOT EXISTS ON (t:Tenant) ASSERT t.name IS UNIQUE;
 CREATE INDEX contact_id_idx IF NOT EXISTS FOR (n:Contact) ON (n.id);
