@@ -100,8 +100,9 @@ func (r *organizationRepository) Delete(session neo4j.Session, tenant, organizat
 	_, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
 		_, err := tx.Run(`
 			MATCH (org:Organization {id:$organizationId})-[:ORGANIZATION_BELONGS_TO_TENANT]->(:Tenant {name:$tenant})
-			OPTIONAL MATCH (org)-[:LOCATED_AT]->(a:Address)
-            DETACH DELETE a, org`,
+			OPTIONAL MATCH (org)-[:ASSOCIATED_WITH]->(l:Location)
+			OPTIONAL MATCH (l)-[:LOCATED_AT]->(p:Place)	
+            DETACH DELETE p, l, org`,
 			map[string]interface{}{
 				"organizationId": organizationId,
 				"tenant":         tenant,

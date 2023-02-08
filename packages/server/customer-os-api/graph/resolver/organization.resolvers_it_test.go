@@ -21,7 +21,7 @@ func TestQueryResolver_Organizations_FilterByNameLike(t *testing.T) {
 
 	require.Equal(t, 5, neo4jt.GetCountOfNodes(driver, "Organization"))
 
-	rawResponse, err := c.RawPost(getQuery("get_organizations"),
+	rawResponse, err := c.RawPost(getQuery("organization/get_organizations"),
 		client.Var("page", 1),
 		client.Var("limit", 3),
 	)
@@ -58,7 +58,7 @@ func TestQueryResolver_Organization(t *testing.T) {
 
 	require.Equal(t, 2, neo4jt.GetCountOfNodes(driver, "Organization"))
 
-	rawResponse, err := c.RawPost(getQuery("get_organization_by_id"),
+	rawResponse, err := c.RawPost(getQuery("organization/get_organization_by_id"),
 		client.Var("organizationId", organizationId1),
 	)
 	assertRawResponseSuccess(t, rawResponse, err)
@@ -79,60 +79,97 @@ func TestQueryResolver_Organization(t *testing.T) {
 	require.NotNil(t, organization.Organization.CreatedAt)
 }
 
-func TestQueryResolver_Organizations_WithAddresses(t *testing.T) {
+func TestQueryResolver_Organizations_WithLocationsAndPlaces(t *testing.T) {
 	defer tearDownTestCase()(t)
 	neo4jt.CreateTenant(driver, tenantName)
-	organization1 := neo4jt.CreateOrganization(driver, tenantName, "OPENLINE")
-	organization2 := neo4jt.CreateOrganization(driver, tenantName, "some other organization")
-	addressInput := entity.PlaceEntity{
-		Source:   entity.DataSourceOpenline,
-		Country:  "testCountry",
-		State:    "testState",
-		City:     "testCity",
-		Address:  "testAddress",
-		Address2: "testAddress2",
-		Zip:      "testZip",
-		Phone:    "testPhone",
-		Fax:      "testFax",
-	}
-	address1 := neo4jt.CreateAddress(driver, addressInput)
-	address2 := neo4jt.CreateAddress(driver, entity.PlaceEntity{
-		Source: "manual",
+	organizationId1 := neo4jt.CreateOrganization(driver, tenantName, "OPENLINE")
+	neo4jt.CreateOrganization(driver, tenantName, "some other organization")
+	locationId1 := neo4jt.CreateLocation(driver, tenantName, entity.LocationEntity{
+		Name:      "WORK",
+		Source:    entity.DataSourceOpenline,
+		AppSource: "test",
 	})
-	neo4jt.OrganizationHasAddress(driver, organization1, address1)
-	neo4jt.OrganizationHasAddress(driver, organization2, address2)
+	locationId2 := neo4jt.CreateLocation(driver, tenantName, entity.LocationEntity{
+		Name:      "UNKNOWN",
+		Source:    entity.DataSourceOpenline,
+		AppSource: "test",
+	})
+	placeInput := entity.PlaceEntity{
+		Source:    entity.DataSourceOpenline,
+		AppSource: "test",
+		Country:   "testCountry",
+		State:     "testState",
+		City:      "testCity",
+		Address:   "testAddress",
+		Address2:  "testAddress2",
+		Zip:       "testZip",
+		Phone:     "testPhone",
+		Fax:       "testFax",
+	}
+	placeId := neo4jt.CreatePlaceForLocation(driver, placeInput, locationId1)
+	neo4jt.OrganizationAssociatedWithLocation(driver, organizationId1, locationId1)
+	neo4jt.OrganizationAssociatedWithLocation(driver, organizationId1, locationId2)
 
 	require.Equal(t, 2, neo4jt.GetCountOfNodes(driver, "Organization"))
-	require.Equal(t, 2, neo4jt.GetCountOfNodes(driver, "Address"))
-	require.Equal(t, 2, neo4jt.GetCountOfRelationships(driver, "LOCATED_AT"))
+	require.Equal(t, 2, neo4jt.GetCountOfNodes(driver, "Location"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Place"))
+	require.Equal(t, 2, neo4jt.GetCountOfRelationships(driver, "ASSOCIATED_WITH"))
+	require.Equal(t, 1, neo4jt.GetCountOfRelationships(driver, "LOCATED_AT"))
 
-	rawResponse, err := c.RawPost(getQuery("get_organizations_with_addresses"),
+	rawResponse, err := c.RawPost(getQuery("organization/get_organizations_with_locations_and_places"),
 		client.Var("page", 1),
 		client.Var("limit", 3),
 	)
 	assertRawResponseSuccess(t, rawResponse, err)
 
-	var organizations struct {
+	var organizationsStruct struct {
 		Organizations model.OrganizationPage
 	}
 
-	err = decode.Decode(rawResponse.Data.(map[string]any), &organizations)
+	err = decode.Decode(rawResponse.Data.(map[string]any), &organizationsStruct)
 	require.Nil(t, err)
+
+	organizations := organizationsStruct.Organizations
 	require.NotNil(t, organizations)
-	pagedOrganizations := organizations.Organizations
-	require.Equal(t, int64(1), pagedOrganizations.TotalElements)
-	require.Equal(t, 1, len(organizations.Organizations.Content[0].Addresses))
-	address := organizations.Organizations.Content[0].Addresses[0]
-	require.Equal(t, address1, address.ID)
-	require.Equal(t, model.DataSourceOpenline, *address.Source)
-	require.Equal(t, addressInput.Country, *address.Country)
-	require.Equal(t, addressInput.City, *address.City)
-	require.Equal(t, addressInput.State, *address.State)
-	require.Equal(t, addressInput.Address, *address.Address)
-	require.Equal(t, addressInput.Address2, *address.Address2)
-	require.Equal(t, addressInput.Fax, *address.Fax)
-	require.Equal(t, addressInput.Phone, *address.Phone)
-	require.Equal(t, addressInput.Zip, *address.Zip)
+	require.Equal(t, int64(1), organizations.TotalElements)
+	require.Equal(t, 2, len(organizations.Content[0].Locations))
+
+	var locationWithPlace, locationWithoutPlace *model.Location
+	if organizations.Content[0].Locations[0].ID == locationId1 {
+		locationWithPlace = organizations.Content[0].Locations[0]
+		locationWithoutPlace = organizations.Content[0].Locations[1]
+	} else {
+		locationWithPlace = organizations.Content[0].Locations[1]
+		locationWithoutPlace = organizations.Content[0].Locations[0]
+	}
+
+	require.Equal(t, locationId1, locationWithPlace.ID)
+	require.Equal(t, "WORK", locationWithPlace.Name)
+	require.NotNil(t, locationWithPlace.CreatedAt)
+	require.NotNil(t, locationWithPlace.UpdatedAt)
+	require.Equal(t, "test", *locationWithPlace.AppSource)
+	require.Equal(t, model.DataSourceOpenline, *locationWithPlace.Source)
+	require.NotNil(t, locationWithPlace.Place)
+
+	place := locationWithPlace.Place
+	require.Equal(t, placeId, place.ID)
+	require.Equal(t, model.DataSourceOpenline, *place.Source)
+	require.Equal(t, placeInput.Country, *place.Country)
+	require.Equal(t, placeInput.City, *place.City)
+	require.Equal(t, placeInput.State, *place.State)
+	require.Equal(t, placeInput.Address, *place.Address)
+	require.Equal(t, placeInput.Address2, *place.Address2)
+	require.Equal(t, placeInput.Fax, *place.Fax)
+	require.Equal(t, placeInput.Phone, *place.Phone)
+	require.Equal(t, placeInput.Zip, *place.Zip)
+
+	require.Equal(t, locationId2, locationWithoutPlace.ID)
+	require.Equal(t, "UNKNOWN", locationWithoutPlace.Name)
+	require.NotNil(t, locationWithoutPlace.CreatedAt)
+	require.NotNil(t, locationWithoutPlace.UpdatedAt)
+	require.Equal(t, "test", *locationWithoutPlace.AppSource)
+	require.Equal(t, model.DataSourceOpenline, *locationWithoutPlace.Source)
+	require.Nil(t, locationWithoutPlace.Place)
 }
 
 func TestQueryResolver_Organization_WithNotes_ById(t *testing.T) {
@@ -150,7 +187,7 @@ func TestQueryResolver_Organization_WithNotes_ById(t *testing.T) {
 	require.Equal(t, 2, neo4jt.GetCountOfRelationships(driver, "NOTED"))
 	require.Equal(t, 1, neo4jt.GetCountOfRelationships(driver, "CREATED"))
 
-	rawResponse, err := c.RawPost(getQuery("get_organization_with_notes_by_id"),
+	rawResponse, err := c.RawPost(getQuery("organization/get_organization_with_notes_by_id"),
 		client.Var("organizationId", organizationId))
 	assertRawResponseSuccess(t, rawResponse, err)
 
@@ -197,7 +234,7 @@ func TestMutationResolver_OrganizationCreate(t *testing.T) {
 	require.Equal(t, 2, neo4jt.GetTotalCountOfNodes(driver))
 
 	// Call the "create_organization" mutation.
-	rawResponse, err := c.RawPost(getQuery("create_organization"),
+	rawResponse, err := c.RawPost(getQuery("organization/create_organization"),
 		client.Var("organizationTypeId", organizationTypeId))
 	assertRawResponseSuccess(t, rawResponse, err)
 
@@ -247,7 +284,7 @@ func TestMutationResolver_OrganizationUpdate(t *testing.T) {
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Organization"))
 	require.Equal(t, 2, neo4jt.GetCountOfNodes(driver, "OrganizationType"))
 
-	rawResponse, err := c.RawPost(getQuery("update_organization"),
+	rawResponse, err := c.RawPost(getQuery("organization/update_organization"),
 		client.Var("organizationId", organizationId),
 		client.Var("organizationTypeId", organizationTypeIdUpdate))
 	assertRawResponseSuccess(t, rawResponse, err)
@@ -280,16 +317,21 @@ func TestMutationResolver_OrganizationDelete(t *testing.T) {
 	neo4jt.CreateTenant(driver, tenantName)
 
 	organizationId := neo4jt.CreateOrganization(driver, tenantName, "LLC LLC")
-	addressId := neo4jt.CreateAddress(driver, entity.PlaceEntity{
+	locationId := neo4jt.CreateLocation(driver, tenantName, entity.LocationEntity{
 		Source: "manual",
 	})
-	neo4jt.OrganizationHasAddress(driver, organizationId, addressId)
+	neo4jt.CreatePlaceForLocation(driver, entity.PlaceEntity{
+		Country: "aCountry",
+	}, locationId)
+	neo4jt.OrganizationAssociatedWithLocation(driver, organizationId, locationId)
 
-	require.Equal(t, 1, neo4jt.GetCountOfRelationships(driver, "LOCATED_AT"))
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Address"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Location"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Place"))
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Organization"))
+	require.Equal(t, 1, neo4jt.GetCountOfRelationships(driver, "ASSOCIATED_WITH"))
+	require.Equal(t, 1, neo4jt.GetCountOfRelationships(driver, "LOCATED_AT"))
 
-	rawResponse, err := c.RawPost(getQuery("delete_organization"),
+	rawResponse, err := c.RawPost(getQuery("organization/delete_organization"),
 		client.Var("organizationId", organizationId))
 	assertRawResponseSuccess(t, rawResponse, err)
 
@@ -302,9 +344,11 @@ func TestMutationResolver_OrganizationDelete(t *testing.T) {
 	require.NotNil(t, result)
 	require.Equal(t, true, result.Organization_Delete.Result)
 
-	require.Equal(t, 0, neo4jt.GetCountOfRelationships(driver, "LOCATED_AT"))
-	require.Equal(t, 0, neo4jt.GetCountOfNodes(driver, "Address"))
+	require.Equal(t, 0, neo4jt.GetCountOfNodes(driver, "Location"))
+	require.Equal(t, 0, neo4jt.GetCountOfNodes(driver, "Place"))
 	require.Equal(t, 0, neo4jt.GetCountOfNodes(driver, "Organization"))
+	require.Equal(t, 0, neo4jt.GetCountOfRelationships(driver, "LOCATED_AT"))
+	require.Equal(t, 0, neo4jt.GetCountOfRelationships(driver, "ASSOCIATED_WITH"))
 
 	assertNeo4jLabels(t, driver, []string{"Tenant"})
 }
@@ -324,7 +368,7 @@ func TestQueryResolver_Organization_WithRoles_ById(t *testing.T) {
 	require.Equal(t, 2, neo4jt.GetCountOfRelationships(driver, "ROLE_IN"))
 	require.Equal(t, 2, neo4jt.GetCountOfRelationships(driver, "WORKS_AS"))
 
-	rawResponse, err := c.RawPost(getQuery("get_organization_with_job_roles_by_id"),
+	rawResponse, err := c.RawPost(getQuery("organization/get_organization_with_job_roles_by_id"),
 		client.Var("organizationId", organizationId))
 	assertRawResponseSuccess(t, rawResponse, err)
 
@@ -370,7 +414,7 @@ func TestQueryResolver_Organization_WithContacts_ById(t *testing.T) {
 	require.Equal(t, 2, neo4jt.GetCountOfNodes(driver, "Organization"))
 	require.Equal(t, 4, neo4jt.GetCountOfRelationships(driver, "CONTACT_OF"))
 
-	rawResponse, err := c.RawPost(getQuery("get_organization_with_contacts_by_id"),
+	rawResponse, err := c.RawPost(getQuery("organization/get_organization_with_contacts_by_id"),
 		client.Var("organizationId", organizationId),
 		client.Var("limit", 1),
 		client.Var("page", 1),
