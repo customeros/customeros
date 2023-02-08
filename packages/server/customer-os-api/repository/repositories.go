@@ -21,7 +21,8 @@ type Repositories struct {
 	ExternalSystemRepository      ExternalSystemRepository
 	NoteRepository                NoteRepository
 	JobRoleRepository             JobRoleRepository
-	AddressRepository             PlaceRepository
+	PlaceRepository               PlaceRepository
+	LocationRepository            LocationRepository
 	EmailRepository               EmailRepository
 	PhoneNumberRepository         PhoneNumberRepository
 	TagRepository                 TagRepository
@@ -53,7 +54,8 @@ func InitRepos(driver *neo4j.Driver) *Repositories {
 	repositories.ExternalSystemRepository = NewExternalSystemRepository(driver)
 	repositories.NoteRepository = NewNoteRepository(driver)
 	repositories.JobRoleRepository = NewJobRoleRepository(driver)
-	repositories.AddressRepository = NewPlaceRepository(driver)
+	repositories.PlaceRepository = NewPlaceRepository(driver)
+	repositories.LocationRepository = NewLocationRepository(driver)
 	repositories.EmailRepository = NewEmailRepository(driver)
 	repositories.PhoneNumberRepository = NewPhoneNumberRepository(driver)
 	repositories.OrganizationTypeRepository = NewOrganizationTypeRepository(driver)

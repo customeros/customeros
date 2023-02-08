@@ -72,14 +72,14 @@ func (r *contactResolver) Emails(ctx context.Context, obj *model.Contact) ([]*mo
 	return mapper.MapEntitiesToEmails(emailEntities), err
 }
 
-// Addresses is the resolver for the addresses field.
-func (r *contactResolver) Addresses(ctx context.Context, obj *model.Contact) ([]*model.Place, error) {
-	addressEntities, err := r.Services.PlaceService.FindAllForContact(ctx, obj.ID)
+// Locations is the resolver for the locations field.
+func (r *contactResolver) Locations(ctx context.Context, obj *model.Contact) ([]*model.Location, error) {
+	locationEntities, err := r.Services.LocationService.GetAllForContact(ctx, obj.ID)
 	if err != nil {
-		graphql.AddErrorf(ctx, "Failed to get addresses for contact %s", obj.ID)
+		graphql.AddErrorf(ctx, "Failed to get locations for contact %s", obj.ID)
 		return nil, err
 	}
-	return mapper.MapEntitiesToPlaces(addressEntities), err
+	return mapper.MapEntitiesToLocations(locationEntities), err
 }
 
 // CustomFields is the resolver for the customFields field.

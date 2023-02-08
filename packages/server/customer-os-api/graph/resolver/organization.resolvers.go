@@ -70,14 +70,14 @@ func (r *organizationResolver) OrganizationType(ctx context.Context, obj *model.
 	return mapper.MapEntityToOrganizationType(organizationTypeEntity), nil
 }
 
-// Addresses is the resolver for the addresses field.
-func (r *organizationResolver) Addresses(ctx context.Context, obj *model.Organization) ([]*model.Place, error) {
-	addressEntities, err := r.Services.PlaceService.FindAllForOrganization(ctx, obj.ID)
+// Locations is the resolver for the locations field.
+func (r *organizationResolver) Locations(ctx context.Context, obj *model.Organization) ([]*model.Location, error) {
+	locationEntities, err := r.Services.LocationService.GetAllForOrganization(ctx, obj.ID)
 	if err != nil {
-		graphql.AddErrorf(ctx, "Failed to get addresses for organization %s", obj.ID)
+		graphql.AddErrorf(ctx, "Failed to get locations for organization %s", obj.ID)
 		return nil, err
 	}
-	return mapper.MapEntitiesToPlaces(addressEntities), err
+	return mapper.MapEntitiesToLocations(locationEntities), err
 }
 
 // Contacts is the resolver for the contacts field.

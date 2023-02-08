@@ -73,9 +73,9 @@ type Contact struct {
 	// All email addresses associated with a contact in customerOS.
 	// **Required.  If no values it returns an empty array.**
 	Emails []*Email `json:"emails"`
-	// All addresses associated with a contact in customerOS.
+	// All locations associated with a contact in customerOS.
 	// **Required.  If no values it returns an empty array.**
-	Addresses []*Place `json:"addresses"`
+	Locations []*Location `json:"locations"`
 	// User defined metadata appended to the contact record in customerOS.
 	// **Required.  If no values it returns an empty array.**
 	CustomFields []*CustomField `json:"customFields"`
@@ -565,6 +565,16 @@ type JobRoleUpdateInput struct {
 	ResponsibilityLevel *int64  `json:"responsibilityLevel"`
 }
 
+type Location struct {
+	ID        string      `json:"id"`
+	Name      string      `json:"name"`
+	CreatedAt time.Time   `json:"createdAt"`
+	UpdatedAt time.Time   `json:"updatedAt"`
+	Source    *DataSource `json:"source"`
+	AppSource *string     `json:"appSource"`
+	Place     *Place      `json:"place"`
+}
+
 type Note struct {
 	ID            string     `json:"id"`
 	HTML          string     `json:"html"`
@@ -618,7 +628,7 @@ type Organization struct {
 	AppSource        string            `json:"appSource"`
 	// All addresses associated with an organization in customerOS.
 	// **Required.  If no values it returns an empty array.**
-	Addresses []*Place      `json:"addresses"`
+	Locations []*Location   `json:"locations"`
 	Contacts  *ContactsPage `json:"contacts"`
 	JobRoles  []*JobRole    `json:"jobRoles"`
 	// Organization notes
@@ -762,6 +772,7 @@ type PhoneNumberUpdateInput struct {
 type Place struct {
 	ID        string      `json:"id"`
 	CreatedAt time.Time   `json:"createdAt"`
+	UpdatedAt time.Time   `json:"updatedAt"`
 	Country   *string     `json:"country"`
 	State     *string     `json:"state"`
 	City      *string     `json:"city"`
@@ -771,6 +782,7 @@ type Place struct {
 	Phone     *string     `json:"phone"`
 	Fax       *string     `json:"fax"`
 	Source    *DataSource `json:"source"`
+	AppSource *string     `json:"appSource"`
 }
 
 // Describes the success or failure of the GraphQL call.

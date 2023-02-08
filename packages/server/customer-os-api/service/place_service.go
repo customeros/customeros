@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"github.com/neo4j/neo4j-go-driver/v4/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v4/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
@@ -11,8 +10,7 @@ import (
 )
 
 type PlaceService interface {
-	FindAllForContact(ctx context.Context, contactId string) (*entity.PlaceEntities, error)
-	FindAllForOrganization(ctx context.Context, organizationId string) (*entity.PlaceEntities, error)
+	GetForLocation(ctx context.Context, locationId string) (*entity.PlaceEntity, error)
 }
 
 type placeService struct {
@@ -25,47 +23,24 @@ func NewPlaceService(repositories *repository.Repositories) PlaceService {
 	}
 }
 
-func (s *placeService) getDriver() neo4j.Driver {
-	return *s.repositories.Drivers.Neo4jDriver
-}
-
-func (s *placeService) FindAllForContact(ctx context.Context, contactId string) (*entity.PlaceEntities, error) {
-	session := utils.NewNeo4jReadSession(s.getDriver())
-	defer session.Close()
-
-	dbNodes, err := s.repositories.AddressRepository.FindAllForContact(session, common.GetContext(ctx).Tenant, contactId)
+func (s *placeService) GetForLocation(ctx context.Context, locationId string) (*entity.PlaceEntity, error) {
+	dbNodes, err := s.repositories.PlaceRepository.GetAnyForLocation(common.GetTenantFromContext(ctx), locationId)
 	if err != nil {
 		return nil, err
 	}
 
-	addressEntities := entity.PlaceEntities{}
-	for _, dbNode := range dbNodes {
-		addressEntities = append(addressEntities, *s.mapDbNodeToAddressEntity(dbNode))
+	if len(dbNodes) == 0 {
+		return nil, nil
 	}
-	return &addressEntities, nil
+	return s.mapDbNodeToPlaceEntity(*dbNodes[0]), nil
 }
 
-func (s *placeService) FindAllForOrganization(ctx context.Context, organizationId string) (*entity.PlaceEntities, error) {
-	session := utils.NewNeo4jReadSession(s.getDriver())
-	defer session.Close()
-
-	dbNodes, err := s.repositories.AddressRepository.FindAllForOrganization(session, common.GetContext(ctx).Tenant, organizationId)
-	if err != nil {
-		return nil, err
-	}
-
-	addressEntities := entity.PlaceEntities{}
-	for _, dbNode := range dbNodes {
-		addressEntities = append(addressEntities, *s.mapDbNodeToAddressEntity(dbNode))
-	}
-	return &addressEntities, nil
-}
-
-func (s *placeService) mapDbNodeToAddressEntity(node *dbtype.Node) *entity.PlaceEntity {
-	props := utils.GetPropsFromNode(*node)
+func (s *placeService) mapDbNodeToPlaceEntity(node dbtype.Node) *entity.PlaceEntity {
+	props := utils.GetPropsFromNode(node)
 	result := entity.PlaceEntity{
 		Id:            utils.GetStringPropOrEmpty(props, "id"),
 		CreatedAt:     utils.GetTimePropOrNow(props, "createdAt"),
+		UpdatedAt:     utils.GetTimePropOrNow(props, "updatedAt"),
 		Country:       utils.GetStringPropOrEmpty(props, "country"),
 		State:         utils.GetStringPropOrEmpty(props, "state"),
 		City:          utils.GetStringPropOrEmpty(props, "city"),
@@ -76,6 +51,7 @@ func (s *placeService) mapDbNodeToAddressEntity(node *dbtype.Node) *entity.Place
 		Fax:           utils.GetStringPropOrEmpty(props, "fax"),
 		Source:        entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
 		SourceOfTruth: entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
+		AppSource:     utils.GetStringPropOrEmpty(props, "appSource"),
 	}
 	return &result
 }
