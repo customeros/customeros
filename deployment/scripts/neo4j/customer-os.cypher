@@ -38,7 +38,7 @@ MATCH (t:Tenant {name:"openline"})
                 tag.appSource="manual";
 
 MATCH (t:Tenant {name:"openline"})
-  MERGE (t)<-[:TAG_BELONGS_TO_TENANT]-(tag:Tag {name:"NOT_SET"})
+  MERGE (t)<-[:TAG_BELONGS_TO_TENANT]-(tag:Tag {name:"PROSPECT"})
   ON CREATE SET tag.id=randomUUID(),
                 tag.createdAt=datetime({timezone: 'UTC'}),
                 tag.updatedAt=datetime({timezone: 'UTC'}),
