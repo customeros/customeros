@@ -99,6 +99,10 @@ func CreateDefaultContact(driver *neo4j.Driver, tenant string) string {
 	return CreateContact(driver, tenant, entity.ContactEntity{Title: "MR", FirstName: "first", LastName: "last"})
 }
 
+func CreateContactWith(driver *neo4j.Driver, tenant string, firstName string, lastName string) string {
+	return CreateContact(driver, tenant, entity.ContactEntity{Title: "MR", FirstName: firstName, LastName: lastName})
+}
+
 func CreateContact(driver *neo4j.Driver, tenant string, contact entity.ContactEntity) string {
 	var contactId, _ = uuid.NewRandom()
 	query := "MATCH (t:Tenant {name:$tenant}) MERGE (c:Contact {id: $contactId})-[:CONTACT_BELONGS_TO_TENANT]->(t) " +
@@ -625,6 +629,58 @@ func LinkContactWithOrganization(driver *neo4j.Driver, contactId, organizationId
 		"organizationId": organizationId,
 		"contactId":      contactId,
 	})
+}
+
+func Q1(driver *neo4j.Driver, tenant string) int64 {
+	query := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})--(o:Organization)
+		  MATCH (t)--(c:Contact)
+		  MATCH (o)--(c) 
+RETURN count(t)`)
+	result := ExecuteReadQueryWithSingleReturn(driver, query, map[string]any{
+		"tenant": tenant,
+	})
+	return int64(result.(*db.Record).Values[0].(int64))
+}
+
+func Q2(driver *neo4j.Driver, tenant string) int64 {
+	query := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})--(o:Organization)
+		  WHERE NOT (o)--(:Contact)
+RETURN count(t)`)
+	result := ExecuteReadQueryWithSingleReturn(driver, query, map[string]any{
+		"tenant": tenant,
+	})
+	return int64(result.(*db.Record).Values[0].(int64))
+}
+
+func Q3(driver *neo4j.Driver, tenant string) int64 {
+	query := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})--(c:Contact)
+		  WHERE NOT (c)--(:Organization)
+RETURN count(t)`)
+	result := ExecuteReadQueryWithSingleReturn(driver, query, map[string]any{
+		"tenant": tenant,
+	})
+	return int64(result.(*db.Record).Values[0].(int64))
+}
+
+func Q4(driver *neo4j.Driver, tenant string) int64 {
+	query := fmt.Sprintf(`CALL {
+		  MATCH (t:Tenant {name:$tenant})--(o:Organization)
+		  MATCH (t)--(c:Contact)
+		  MATCH (o)--(c)
+		  RETURN count(o) as t
+		  UNION
+		  MATCH (t:Tenant {name:$tenant})--(o:Organization)
+		  WHERE NOT (o)--(:Contact)
+		  RETURN count(o) as t
+		  UNION
+		  MATCH (t:Tenant {name:$tenant})--(c:Contact)
+		  WHERE NOT (c)--(:Organization)
+		  RETURN count(c) as t
+		} RETURN sum(t)`)
+	result := ExecuteReadQueryWithSingleReturn(driver, query, map[string]any{
+		"tenant": tenant,
+	})
+	return int64(result.(*db.Record).Values[0].(int64))
 }
 
 func GetCountOfNodes(driver *neo4j.Driver, nodeLabel string) int {

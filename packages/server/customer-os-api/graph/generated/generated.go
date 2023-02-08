@@ -375,7 +375,7 @@ type ComplexityRoot struct {
 		ContactGroup      func(childComplexity int, id string) int
 		ContactGroups     func(childComplexity int, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) int
 		Contacts          func(childComplexity int, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) int
-		DashboardView     func(childComplexity int, pagination model.Pagination) int
+		DashboardView     func(childComplexity int, pagination model.Pagination, searchTerm *string) int
 		EntityTemplates   func(childComplexity int, extends *model.EntityTemplateExtension) int
 		Organization      func(childComplexity int, id string) int
 		OrganizationTypes func(childComplexity int) int
@@ -536,7 +536,7 @@ type OrganizationResolver interface {
 }
 type QueryResolver interface {
 	EntityTemplates(ctx context.Context, extends *model.EntityTemplateExtension) ([]*model.EntityTemplate, error)
-	DashboardView(ctx context.Context, pagination model.Pagination) (*model.DashboardViewItemPage, error)
+	DashboardView(ctx context.Context, pagination model.Pagination, searchTerm *string) (*model.DashboardViewItemPage, error)
 	Contact(ctx context.Context, id string) (*model.Contact, error)
 	Contacts(ctx context.Context, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) (*model.ContactsPage, error)
 	ContactByEmail(ctx context.Context, email string) (*model.Contact, error)
@@ -2617,7 +2617,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Query.DashboardView(childComplexity, args["pagination"].(model.Pagination)), true
+		return e.complexity.Query.DashboardView(childComplexity, args["pagination"].(model.Pagination), args["searchTerm"].(*string)), true
 
 	case "Query.entityTemplates":
 		if e.complexity.Query.EntityTemplates == nil {
@@ -4167,7 +4167,7 @@ enum PhoneNumberLabel {
 `, BuiltIn: false},
 	{Name: "../schemas/query.graphqls", Input: `type Query {
     entityTemplates(extends: EntityTemplateExtension) :[EntityTemplate!]!
-    dashboardView(pagination: Pagination!): DashboardViewItemPage
+    dashboardView(pagination: Pagination!, searchTerm: String): DashboardViewItemPage
 }
 
 type DashboardViewItemPage implements Pages {
@@ -5828,6 +5828,15 @@ func (ec *executionContext) field_Query_dashboardView_args(ctx context.Context, 
 		}
 	}
 	args["pagination"] = arg0
+	var arg1 *string
+	if tmp, ok := rawArgs["searchTerm"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("searchTerm"))
+		arg1, err = ec.unmarshalOString2ᚖstring(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["searchTerm"] = arg1
 	return args, nil
 }
 
@@ -18631,7 +18640,7 @@ func (ec *executionContext) _Query_dashboardView(ctx context.Context, field grap
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().DashboardView(rctx, fc.Args["pagination"].(model.Pagination))
+		return ec.resolvers.Query().DashboardView(rctx, fc.Args["pagination"].(model.Pagination), fc.Args["searchTerm"].(*string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)

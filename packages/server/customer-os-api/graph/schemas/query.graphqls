@@ -1,6 +1,6 @@
 type Query {
     entityTemplates(extends: EntityTemplateExtension) :[EntityTemplate!]!
-    dashboardView(pagination: Pagination!): DashboardViewItemPage
+    dashboardView(pagination: Pagination!, searchTerm: String): DashboardViewItemPage
 }
 
 type DashboardViewItemPage implements Pages {

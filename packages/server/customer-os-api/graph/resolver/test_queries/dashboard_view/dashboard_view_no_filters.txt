@@ -1,0 +1,21 @@
+query GetDashboardData($page: Int!, $limit: Int!) {
+  dashboardView(pagination: {page: $page, limit: $limit}) {
+    content {
+      contact {
+        id
+        firstName
+        lastName
+        emails {
+          id
+          email
+        }
+      }
+      organization {
+        id
+        name
+      }
+    }
+    totalPages
+    totalElements
+  }
+}
