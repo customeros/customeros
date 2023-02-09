@@ -329,3 +329,46 @@ func TestQueryResolver_GetData_Search_Contact_By_Email(t *testing.T) {
 	require.Equal(t, "1", *pagedData.Content[0].Contact.LastName)
 	require.Equal(t, "c1@email.com", pagedData.Content[0].Contact.Emails[0].Email)
 }
+
+func TestQueryResolver_GetData_Search_Organization_By_Email(t *testing.T) {
+	defer tearDownTestCase()(t)
+	neo4jt.CreateTenant(driver, tenantName)
+
+	neo4jt.CreateContactWith(driver, tenantName, "c", "1")
+	neo4jt.CreateContactWith(driver, tenantName, "c", "2")
+
+	organizationId1 := neo4jt.CreateOrganization(driver, tenantName, "org 1")
+	organizationId2 := neo4jt.CreateOrganization(driver, tenantName, "org 2")
+
+	neo4jt.AddEmailTo(driver, repository.ORGANIZATION, tenantName, organizationId1, "o1@email.com", true, "WORK")
+	neo4jt.AddEmailTo(driver, repository.ORGANIZATION, tenantName, organizationId2, "o2@email.com", true, "WORK")
+
+	require.Equal(t, 2, neo4jt.GetCountOfNodes(driver, "Email"))
+	require.Equal(t, 2, neo4jt.GetCountOfNodes(driver, "Contact"))
+	require.Equal(t, 2, neo4jt.GetCountOfNodes(driver, "Organization"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Tenant"))
+	require.Equal(t, 2, neo4jt.GetCountOfRelationships(driver, "CONTACT_BELONGS_TO_TENANT"))
+	require.Equal(t, 2, neo4jt.GetCountOfRelationships(driver, "ORGANIZATION_BELONGS_TO_TENANT"))
+	require.Equal(t, 2, neo4jt.GetCountOfRelationships(driver, "HAS"))
+
+	rawResponse, err := c.RawPost(getQuery("/dashboard_view/dashboard_view_with_filters"),
+		client.Var("page", 1),
+		client.Var("limit", 10),
+		client.Var("searchTerm", "o1@email.com"),
+	)
+	assertRawResponseSuccess(t, rawResponse, err)
+
+	var response struct {
+		DashboardView model.DashboardViewItemPage
+	}
+
+	err = decode.Decode(rawResponse.Data.(map[string]any), &response)
+	require.Nil(t, err)
+	require.NotNil(t, response)
+	pagedData := response.DashboardView
+	require.Equal(t, 1, pagedData.TotalPages)
+	require.Equal(t, int64(1), pagedData.TotalElements)
+
+	require.Nil(t, pagedData.Content[0].Contact)
+	require.Equal(t, "org 1", pagedData.Content[0].Organization.Name)
+}
