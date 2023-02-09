@@ -36,6 +36,8 @@ func (r *queryRepository) GetOrganizationsAndContacts(session neo4j.Session, ten
 
 	contactFilterCypher, contactFilterParams := "1=1", make(map[string]interface{})
 	organizationFilterCypher, organizationFilterParams := "1=1", make(map[string]interface{})
+	contactEmailFilterCypher, contactEmailFilterParams := "1=1", make(map[string]interface{})
+	organizationEmailFilterCypher, organizationEmailFilterParams := "1=1", make(map[string]interface{})
 
 	//region contact filters
 	if searchTerm != nil {
@@ -48,6 +50,19 @@ func (r *queryRepository) GetOrganizationsAndContacts(session neo4j.Session, ten
 		contactFilter.Filters = append(contactFilter.Filters, createCypherFilter("lastName", *searchTerm))
 
 		contactFilterCypher, contactFilterParams = contactFilter.BuildCypherFilterFragmentWithParamName("c", "c_param_")
+
+		contactEmailFilter := new(utils.CypherFilter)
+		contactEmailFilter.Negate = false
+		contactEmailFilter.LogicalOperator = utils.OR
+		contactEmailFilter.Filters = make([]*utils.CypherFilter, 0)
+
+		contactEmailFilter.Filters = append(contactEmailFilter.Filters, createCypherFilter("email", *searchTerm))
+		contactEmailFilterCypher, contactEmailFilterParams = contactEmailFilter.BuildCypherFilterFragmentWithParamName("ce", "ce_param_")
+
+		fmt.Sprintf(contactFilterCypher)
+		fmt.Sprintf(contactEmailFilterCypher)
+
+		contactFilterCypher = fmt.Sprintf("(%s) OR (%s)", contactFilterCypher, contactEmailFilterCypher)
 	}
 
 	//endregion
@@ -63,6 +78,19 @@ func (r *queryRepository) GetOrganizationsAndContacts(session neo4j.Session, ten
 		organizationFilter.Filters = append(organizationFilter.Filters, createCypherFilter("name", *searchTerm))
 
 		organizationFilterCypher, organizationFilterParams = organizationFilter.BuildCypherFilterFragmentWithParamName("o", "o_param_")
+
+		organizationEmailFilter := new(utils.CypherFilter)
+		organizationEmailFilter.Negate = false
+		organizationEmailFilter.LogicalOperator = utils.OR
+		organizationEmailFilter.Filters = make([]*utils.CypherFilter, 0)
+
+		organizationEmailFilter.Filters = append(organizationEmailFilter.Filters, createCypherFilter("email", *searchTerm))
+		organizationEmailFilterCypher, organizationEmailFilterParams = organizationEmailFilter.BuildCypherFilterFragmentWithParamName("oe", "oe_param_")
+
+		fmt.Sprintf(organizationFilterCypher)
+		fmt.Sprintf(organizationEmailFilterCypher)
+
+		organizationFilterCypher = fmt.Sprintf("(%s) OR (%s)", organizationFilterCypher, organizationEmailFilterCypher)
 	}
 
 	//endregion
@@ -75,24 +103,26 @@ func (r *queryRepository) GetOrganizationsAndContacts(session neo4j.Session, ten
 		}
 		utils.MergeMapToMap(contactFilterParams, params)
 		utils.MergeMapToMap(organizationFilterParams, params)
+		utils.MergeMapToMap(contactEmailFilterParams, params)
+		utils.MergeMapToMap(organizationEmailFilterParams, params)
 
 		queryResult, err := tx.Run(fmt.Sprintf(`
-		CALL {
-		  MATCH (t:Tenant {name:$tenant})--(o:Organization)
-		  MATCH (t)--(c:Contact)
-		  MATCH (o)--(c)
+		 CALL {
+		  MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization)-[r1:HAS]->(oe:Email) 
+		  MATCH (t)--(c:Contact)-[r2:HAS]->(ce:Email) 
+		  MATCH (o)-[rel]-(c)
 		  WHERE (%s) OR (%s)
-		  RETURN count(o) as t
+		  RETURN rel
 		  UNION
-		  MATCH (t:Tenant {name:$tenant})--(o:Organization)
+		  MATCH (t:Tenant {name:$tenant})<-[rel:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization)-[r1:HAS]->(oe:Email) 
 		  WHERE NOT (o)--(:Contact) AND (%s)
-		  RETURN count(o) as t
+		  RETURN rel
 		  UNION
-		  MATCH (t:Tenant {name:$tenant})--(c:Contact)
+		  MATCH (t:Tenant {name:$tenant})<-[rel:CONTACT_BELONGS_TO_TENANT]-(c:Contact)-[r1:HAS]->(ce:Email) 
 		  WHERE NOT (c)--(:Organization) AND (%s)
-		  RETURN count(c) as t
+		  RETURN rel
 		}
-		RETURN sum(t)`, contactFilterCypher, organizationFilterCypher, organizationFilterCypher, contactFilterCypher),
+		RETURN count(rel)`, contactFilterCypher, organizationFilterCypher, organizationFilterCypher, contactFilterCypher),
 			params)
 		if err != nil {
 			return nil, err
@@ -105,17 +135,17 @@ func (r *queryRepository) GetOrganizationsAndContacts(session neo4j.Session, ten
 
 		if queryResult, err := tx.Run(fmt.Sprintf(`
 		CALL {
-		  MATCH (t:Tenant {name:$tenant})--(o:Organization)
-		  MATCH (t)--(c:Contact)
+		  MATCH (t:Tenant {name:$tenant})--(o:Organization)-[r1:HAS]->(oe:Email) 
+		  MATCH (t)--(c:Contact)-[r2:HAS]->(ce:Email) 
 		  MATCH (o)--(c)
 		  WHERE (%s) OR (%s)
 		  RETURN o, c
 		  UNION
-		  MATCH (t:Tenant {name:$tenant})--(o:Organization)
+		  MATCH (t:Tenant {name:$tenant})--(o:Organization)-[r1:HAS]->(oe:Email) 
 		  WHERE NOT (o)--(:Contact) AND (%s)
 		  RETURN o, null as c
 		  UNION
-		  MATCH (t:Tenant {name:$tenant})--(c:Contact)
+		  MATCH (t:Tenant {name:$tenant})--(c:Contact)-[r1:HAS]->(ce:Email) 
 		  WHERE NOT (c)--(:Organization) AND (%s)
 		  RETURN null as o, c
 		}

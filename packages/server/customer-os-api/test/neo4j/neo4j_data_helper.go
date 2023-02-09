@@ -631,58 +631,6 @@ func LinkContactWithOrganization(driver *neo4j.Driver, contactId, organizationId
 	})
 }
 
-func Q1(driver *neo4j.Driver, tenant string) int64 {
-	query := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})--(o:Organization)
-		  MATCH (t)--(c:Contact)
-		  MATCH (o)--(c) 
-RETURN count(t)`)
-	result := ExecuteReadQueryWithSingleReturn(driver, query, map[string]any{
-		"tenant": tenant,
-	})
-	return int64(result.(*db.Record).Values[0].(int64))
-}
-
-func Q2(driver *neo4j.Driver, tenant string) int64 {
-	query := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})--(o:Organization)
-		  WHERE NOT (o)--(:Contact)
-RETURN count(t)`)
-	result := ExecuteReadQueryWithSingleReturn(driver, query, map[string]any{
-		"tenant": tenant,
-	})
-	return int64(result.(*db.Record).Values[0].(int64))
-}
-
-func Q3(driver *neo4j.Driver, tenant string) int64 {
-	query := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})--(c:Contact)
-		  WHERE NOT (c)--(:Organization)
-RETURN count(t)`)
-	result := ExecuteReadQueryWithSingleReturn(driver, query, map[string]any{
-		"tenant": tenant,
-	})
-	return int64(result.(*db.Record).Values[0].(int64))
-}
-
-func Q4(driver *neo4j.Driver, tenant string) int64 {
-	query := fmt.Sprintf(`CALL {
-		  MATCH (t:Tenant {name:$tenant})--(o:Organization)
-		  MATCH (t)--(c:Contact)
-		  MATCH (o)--(c)
-		  RETURN count(o) as t
-		  UNION
-		  MATCH (t:Tenant {name:$tenant})--(o:Organization)
-		  WHERE NOT (o)--(:Contact)
-		  RETURN count(o) as t
-		  UNION
-		  MATCH (t:Tenant {name:$tenant})--(c:Contact)
-		  WHERE NOT (c)--(:Organization)
-		  RETURN count(c) as t
-		} RETURN sum(t)`)
-	result := ExecuteReadQueryWithSingleReturn(driver, query, map[string]any{
-		"tenant": tenant,
-	})
-	return int64(result.(*db.Record).Values[0].(int64))
-}
-
 func GetCountOfNodes(driver *neo4j.Driver, nodeLabel string) int {
 	query := fmt.Sprintf(`MATCH (n:%s) RETURN count(n)`, nodeLabel)
 	result := ExecuteReadQueryWithSingleReturn(driver, query, map[string]any{})
