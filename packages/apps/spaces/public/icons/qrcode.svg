@@ -1,0 +1,17 @@
+<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g >
+<g id="qrcode">
+<path  d="M12.38 3.88V10.88H19.38V3.88H12.38ZM17.88 9.38H13.88V5.38H17.88V9.38Z" fill="currentColor"/>
+<path  d="M3.88 10.88H10.88V3.88H3.88V10.88ZM5.38 5.38H9.38V9.38H5.38V5.38Z" fill="currentColor"/>
+<path  d="M3.88 19.38H10.88V12.38H3.88V19.38ZM5.38 13.88H9.38V17.88H5.38V13.88Z" fill="currentColor"/>
+<path  d="M14.13 12.38H12.38V14.13H14.13V12.38Z" fill="currentColor"/>
+<path  d="M17.63 12.38H15.88V14.13H17.63V12.38Z" fill="currentColor"/>
+<path  d="M15.88 14.13H14.13V15.88H15.88V14.13Z" fill="currentColor"/>
+<path  d="M19.38 14.13H17.63V15.88H19.38V14.13Z" fill="currentColor"/>
+<path  d="M14.13 15.88H12.38V17.63H14.13V15.88Z" fill="currentColor"/>
+<path  d="M17.63 15.88H15.88V17.63H17.63V15.88Z" fill="currentColor"/>
+<path d="M15.88 17.63H14.13V19.38H15.88V17.63Z" fill="currentColor"/>
+<path d="M19.38 17.63H17.63V19.38H19.38V17.63Z" fill="currentColor"/>
+</g>
+</g>
+</svg>

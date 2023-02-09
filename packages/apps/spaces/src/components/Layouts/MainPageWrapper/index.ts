@@ -1,0 +1,1 @@
+export { MainPageWrapper } from './MainPageWrapper';

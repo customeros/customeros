@@ -1,0 +1,58 @@
+.noteContainer {
+  display: flex;
+  justify-content: space-between;
+  font-family: Helvetica, Arial, sans-serif !important;
+  line-height: 1.3rem;
+}
+
+.noteContent {
+  width: fit-content;
+  line-height: 1.3rem;
+  font-size: 14px;
+  font-weight: normal;
+  color: #495057;
+  & * {
+    margin: 4px 0;
+    width: fit-content;
+    overflow: hidden;
+    white-space: pre-line;
+    word-break: break-word;
+    display: inline;
+  }
+}
+
+.pin {
+  position: absolute;
+  left: 10px;
+  top: 8px;
+  transform: rotate3d(1, 2, 2, -25deg);
+  color: var(--gray-700);
+  height: 0.8rem;
+}
+
+.note {
+  padding: 12px;
+  margin-bottom: 8px;
+  border: 1px solid var(--gray-200);
+}
+
+.noteData {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: flex-end;
+  flex: 1;
+}
+
+.actions {
+  color: var(--gray-700);
+  margin-right: -12px;
+  margin-bottom: 4px;
+}
+
+.actionContainer {
+  display: flex;
+  flex-direction: column;
+  justify-items: end;
+  align-items: end;
+}
