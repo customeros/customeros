@@ -76,52 +76,148 @@ func (r *queryRepository) GetOrganizationsAndContacts(session neo4j.Session, ten
 		utils.MergeMapToMap(contactFilterParams, params)
 		utils.MergeMapToMap(organizationFilterParams, params)
 
-		queryResult, err := tx.Run(fmt.Sprintf(`
-		CALL {
-		  MATCH (t:Tenant {name:$tenant})--(o:Organization)
-		  MATCH (t)--(c:Contact)
-		  MATCH (o)--(c)
-		  WHERE (%s) OR (%s)
-		  RETURN count(o) as t
-		  UNION
-		  MATCH (t:Tenant {name:$tenant})--(o:Organization)
-		  WHERE NOT (o)--(:Contact) AND (%s)
-		  RETURN count(o) as t
-		  UNION
-		  MATCH (t:Tenant {name:$tenant})--(c:Contact)
-		  WHERE NOT (c)--(:Organization) AND (%s)
-		  RETURN count(c) as t
+		if searchTerm != nil {
+			params["email"] = searchTerm
 		}
-		RETURN sum(t)`, contactFilterCypher, organizationFilterCypher, organizationFilterCypher, contactFilterCypher),
-			params)
+
+		//region count query
+		countQuery := fmt.Sprintf(`CALL {`)
+
+		//fetch organizations and contacts + filters on their properties
+		countQuery = countQuery + fmt.Sprintf(`
+          MATCH (t:Tenant {name:$tenant})--(o:Organization)
+		  MATCH (t)--(c:Contact)
+		  MATCH (o)-[rel]-(c)
+		  WHERE (%s) OR (%s)
+		  RETURN rel`, organizationFilterCypher, contactFilterCypher)
+
+		//fetch organizations and contacts with filters on their emails
+		if searchTerm != nil {
+			countQuery = countQuery + fmt.Sprintf(`
+		  UNION
+		  MATCH (t:Tenant {name:$tenant})--(o:Organization)--(e:Email{email:$email})
+		  MATCH (t)--(c:Contact)
+		  MATCH (o)-[rel]-(c)
+		  RETURN rel
+
+		  UNION
+		  MATCH (t:Tenant {name:$tenant})--(o:Organization)
+		  MATCH (t)--(c:Contact)--(e:Email{email:$email})
+		  MATCH (o)-[rel]-(c)
+		  RETURN rel`)
+		}
+
+		//fetch organizations without contacts + filters on their properties
+		countQuery = countQuery + fmt.Sprintf(`
+		  UNION
+		  MATCH (t:Tenant {name:$tenant})-[rel:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization)
+		  WHERE NOT (o)--(:Contact) AND (%s)	
+		  RETURN rel`, organizationFilterCypher)
+
+		//fetch organizations without contacts with filters on their emails
+		if searchTerm != nil {
+			countQuery = countQuery + fmt.Sprintf(`
+		  UNION
+		  MATCH (t:Tenant {name:$tenant})-[rel:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization)--(e:Email{email:$email})
+		  WHERE NOT (o)--(:Contact)	  
+		  RETURN rel`)
+		}
+
+		//fetch contacts without organizations + filters on their properties
+		countQuery = countQuery + fmt.Sprintf(`
+		  UNION
+		  MATCH (t:Tenant {name:$tenant})-[rel:CONTACT_BELONGS_TO_TENANT]-(c:Contact)
+		  WHERE NOT (c)--(:Organization) AND (%s)
+		  RETURN rel`, contactFilterCypher)
+
+		//fetch contacts without organizations with filters on their emails
+		if searchTerm != nil {
+			countQuery = countQuery + fmt.Sprintf(`
+		  UNION
+		  MATCH (t:Tenant {name:$tenant})-[rel:CONTACT_BELONGS_TO_TENANT]-(c:Contact)--(e:Email{email:$email})
+		  WHERE NOT (c)--(:Organization)
+		  RETURN rel`)
+		}
+
+		countQuery = countQuery + fmt.Sprintf(`} RETURN count(rel)`)
+
+		countQueryResult, err := tx.Run(countQuery, params)
 		if err != nil {
 			return nil, err
 		}
-		countRecord, err := queryResult.Single()
+
+		countRecord, err := countQueryResult.Single()
 		if err != nil {
 			return nil, err
 		}
 		result.Count = countRecord.Values[0].(int64)
 
-		if queryResult, err := tx.Run(fmt.Sprintf(`
-		CALL {
-		  MATCH (t:Tenant {name:$tenant})--(o:Organization)
+		//endregion
+
+		//region query to fetch data
+		query := fmt.Sprintf(`CALL {`)
+
+		//fetch organizations and contacts + filters on their properties
+		query = query + fmt.Sprintf(`
+          MATCH (t:Tenant {name:$tenant})--(o:Organization)
 		  MATCH (t)--(c:Contact)
 		  MATCH (o)--(c)
 		  WHERE (%s) OR (%s)
+		  RETURN o, c`, organizationFilterCypher, contactFilterCypher)
+
+		//fetch organizations and contacts with filters on their emails
+		if searchTerm != nil {
+			query = query + fmt.Sprintf(`
+		  UNION
+		  MATCH (t:Tenant {name:$tenant})--(o:Organization)--(e:Email{email:$email})
+		  MATCH (t)--(c:Contact)
+		  MATCH (o)--(c)
 		  RETURN o, c
+
 		  UNION
 		  MATCH (t:Tenant {name:$tenant})--(o:Organization)
-		  WHERE NOT (o)--(:Contact) AND (%s)
-		  RETURN o, null as c
+		  MATCH (t)--(c:Contact)--(e:Email{email:$email})
+		  MATCH (o)--(c)
+		  RETURN o, c`)
+		}
+
+		//fetch organizations without contacts + filters on their properties
+		query = query + fmt.Sprintf(`
+		  UNION
+		  MATCH (t:Tenant {name:$tenant})--(o:Organization)
+		  WHERE NOT (o)--(:Contact) AND (%s)	
+		  RETURN o, null as c`, organizationFilterCypher)
+
+		//fetch organizations without contacts with filters on their emails
+		if searchTerm != nil {
+			query = query + fmt.Sprintf(`
+		  UNION
+		  MATCH (t:Tenant {name:$tenant})--(o:Organization)--(e:Email{email:$email})
+		  WHERE NOT (o)--(:Contact)	  
+		  RETURN o, null as c`)
+		}
+
+		//fetch contacts without organizations + filters on their properties
+		query = query + fmt.Sprintf(`
 		  UNION
 		  MATCH (t:Tenant {name:$tenant})--(c:Contact)
 		  WHERE NOT (c)--(:Organization) AND (%s)
-		  RETURN null as o, c
+		  RETURN null as o, c`, contactFilterCypher)
+
+		//fetch contacts without organizations with filters on their emails
+		if searchTerm != nil {
+			query = query + fmt.Sprintf(`
+		  UNION
+		  MATCH (t:Tenant {name:$tenant})--(c:Contact)--(e:Email{email:$email})
+		  WHERE NOT (c)--(:Organization)
+		  RETURN null as o, c`)
 		}
-		RETURN o, c
-		SKIP $skip LIMIT $limit`, organizationFilterCypher, contactFilterCypher, organizationFilterCypher, contactFilterCypher),
-			params); err != nil {
+		//endregion
+
+		query = query + fmt.Sprintf(`} RETURN o, c SKIP $skip LIMIT $limit`)
+
+		queryResult, err := tx.Run(query, params)
+		if err != nil {
 			return nil, err
 		} else {
 			return queryResult.Collect()
