@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"github.com/neo4j/neo4j-go-driver/v4/neo4j"
 	commonModuleService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
@@ -10,6 +11,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/message-store-api/repository/entity"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"log"
 	"time"
 )
 
@@ -19,6 +21,11 @@ type MessageService struct {
 	postgresRepositories *repository.PostgresRepositories
 	customerOSService    *CustomerOSService
 	commonStoreService   *commonStoreService
+}
+
+type Participant struct {
+	Id   string
+	Type entity.SenderType
 }
 
 func (s *MessageService) GetMessage(ctx context.Context, msgId *msProto.MessageId) (*msProto.Message, error) {
@@ -178,11 +185,19 @@ func (s *MessageService) SaveMessage(ctx context.Context, input *msProto.InputMe
 	if input.Content == nil {
 		return nil, errors.New("message must be provided")
 	}
+	participants := []Participant{}
 
 	tenant := "openline" //TODO get tenant from context
-	initiatorId, err := s.getInitiatorId(input.SenderType, tenant, *input.InitiatorIdentifier)
+	initiator, err := s.getParticipant(tenant, *input.InitiatorIdentifier)
+	participants = append(participants, *initiator)
 	if err != nil {
 		return nil, err
+	}
+
+	var threadId = ""
+	entityType := s.commonStoreService.ConvertMSTypeToEntityType(input.Type)
+	if err := s.getThreadIdAndParticipantsFromMail(tenant, &threadId, &participants, entityType, input); err != nil {
+		log.Printf("Error handleing email: %v", err)
 	}
 
 	var conversation *Conversation
@@ -193,8 +208,7 @@ func (s *MessageService) SaveMessage(ctx context.Context, input *msProto.InputMe
 			conversation = conv
 		}
 	} else {
-		entityType := s.commonStoreService.ConvertMSTypeToEntityType(input.Type)
-		if conv, err := s.customerOSService.GetActiveConversationOrCreate(tenant, *initiatorId, *input.InitiatorIdentifier, input.SenderType, entityType, *input.Content); err != nil {
+		if conv, err := s.customerOSService.GetActiveConversationOrCreate(tenant, initiator.Id, *input.InitiatorIdentifier, input.SenderType, entityType, threadId); err != nil {
 			return nil, err
 		} else {
 			conversation = conv
@@ -203,14 +217,58 @@ func (s *MessageService) SaveMessage(ctx context.Context, input *msProto.InputMe
 
 	previewMessage := s.getMessagePreview(input)
 
-	senderType := s.commonStoreService.ConvertMSSenderTypeToEntitySenderType(input.SenderType)
-	if _, err := s.customerOSService.UpdateConversation(tenant, conversation.Id, *initiatorId, senderType, previewMessage); err != nil {
+	userIds := []string{}
+	contactIds := []string{}
+	for participantsIndex := range participants {
+		if participants[participantsIndex].Type == entity.CONTACT {
+			contactIds = append(contactIds, participants[participantsIndex].Id)
+		} else if participants[participantsIndex].Type == entity.USER {
+			userIds = append(userIds, participants[participantsIndex].Id)
+		}
+	}
+
+	lastSenderType := s.getSenderTypeStr(initiator)
+	if _, err := s.customerOSService.UpdateConversation(tenant, conversation.Id, initiator.Id, lastSenderType, contactIds, userIds, previewMessage); err != nil {
 		return nil, err
 	}
 
-	conversationEvent := s.saveConversationEvent(tenant, conversation, input, *initiatorId, senderType)
+	conversationEvent := s.saveConversationEvent(tenant, conversation, input, initiator)
 
 	return s.commonStoreService.EncodeMessageIdToMs(conversationEvent), nil
+}
+func (s *MessageService) getSenderTypeStr(initiator *Participant) string {
+	var lastSenderType = ""
+	if initiator.Type == entity.CONTACT {
+		lastSenderType = "CONTACT"
+	} else if initiator.Type == entity.USER {
+		lastSenderType = "USER"
+	}
+	return lastSenderType
+}
+
+func (s *MessageService) getThreadIdAndParticipantsFromMail(tenant string, threadId *string, participants *[]Participant, entityType entity.EventType, input *msProto.InputMessage) error {
+	if entityType == entity.EMAIL {
+		var messageJson EmailContent
+		if err := json.Unmarshal([]byte(*input.Content), &messageJson); err != nil {
+			return err
+		}
+
+		refSize := len(messageJson.Reference)
+		if refSize > 0 {
+			threadId = &messageJson.Reference[0]
+		} else {
+			threadId = &messageJson.MessageId
+		}
+
+		for _, toAddress := range append(messageJson.To, messageJson.Cc...) {
+			if participant, err := s.getParticipant(tenant, toAddress); err != nil {
+				log.Printf("Error getting participant: %v", err)
+			} else {
+				*participants = append(*participants, *participant)
+			}
+		}
+	}
+	return nil
 }
 
 func (s *MessageService) getMessagePreview(input *msProto.InputMessage) string {
@@ -226,26 +284,20 @@ func (s *MessageService) getMessagePreview(input *msProto.InputMessage) string {
 	return previewContent
 }
 
-func (s *MessageService) getInitiatorId(st msProto.SenderType, tenant string, email string) (*string, error) {
-	var initiatorId *string
-	if st == msProto.SenderType_CONTACT {
-		if contact, err := s.customerOSService.GetContactWithEmailOrCreate(tenant, email); err != nil {
+func (s *MessageService) getParticipant(tenant string, initiatorIdentifier string) (*Participant, error) {
+	user, err := s.customerOSService.GetUserByEmail(initiatorIdentifier)
+	if err != nil {
+		contact, err := s.customerOSService.GetContactWithEmailOrCreate(tenant, initiatorIdentifier)
+		if err != nil {
 			return nil, err
-		} else {
-			initiatorId = &contact.Id
 		}
-	} else if st == msProto.SenderType_USER {
-		if user, err := s.customerOSService.GetUserByEmail(email); err != nil {
-			return nil, err
-		} else {
-			initiatorId = &user.Id
-		}
+		return &Participant{Id: contact.Id, Type: entity.CONTACT}, nil
+	} else {
+		return &Participant{Id: user.Id, Type: entity.USER}, nil
 	}
-
-	return initiatorId, nil
 }
 
-func (s *MessageService) saveConversationEvent(tenant string, conversation *Conversation, input *msProto.InputMessage, initiatorId string, senderType entity.SenderType) entity.ConversationEvent {
+func (s *MessageService) saveConversationEvent(tenant string, conversation *Conversation, input *msProto.InputMessage, initiator *Participant) entity.ConversationEvent {
 	conversationEvent := entity.ConversationEvent{
 		TenantName:     tenant,
 		ConversationId: conversation.Id,
@@ -258,9 +310,9 @@ func (s *MessageService) saveConversationEvent(tenant string, conversation *Conv
 
 		InitiatorUsername: conversation.InitiatorUsername,
 
-		SenderId:       initiatorId,
+		SenderId:       initiator.Id,
 		SenderUsername: *input.InitiatorIdentifier,
-		SenderType:     senderType,
+		SenderType:     initiator.Type,
 		OriginalJson:   "TODO",
 	}
 

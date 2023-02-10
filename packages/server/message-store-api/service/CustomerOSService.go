@@ -1,7 +1,6 @@
 package service
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v4/neo4j"
@@ -503,24 +502,12 @@ func (s *CustomerOSService) CreateConversation(tenant string, initiatorId string
 	}
 }
 
-func (s *CustomerOSService) UpdateConversation(tenant string, conversationId string, participantId string, participantType entity.SenderType, lastContentPreview string) (string, error) {
+func (s *CustomerOSService) UpdateConversation(tenant string, conversationId string, lastSenderId string, lastSenderType string, contactIds []string, userIds []string, lastContentPreview string) (string, error) {
 	session := (*s.driver).NewSession(
 		neo4j.SessionConfig{
 			AccessMode: neo4j.AccessModeWrite,
 			BoltLogger: neo4j.ConsoleBoltLogger()})
 	defer session.Close()
-
-	contactIds := []string{}
-	userIds := []string{}
-	participantTypeString := ""
-
-	if participantType == entity.CONTACT {
-		contactIds = append(contactIds, participantId)
-		participantTypeString = "CONTACT"
-	} else if participantType == entity.USER {
-		userIds = append(userIds, participantId)
-		participantTypeString = "USER"
-	}
 
 	if result, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
 		query := "MATCH (t:Tenant {name:$tenant}) " +
@@ -550,8 +537,8 @@ func (s *CustomerOSService) UpdateConversation(tenant string, conversationId str
 				"updatedAt":           time.Now().UTC(),
 				"contactIds":          contactIds,
 				"userIds":             userIds,
-				"lastSenderId":        participantId,
-				"lastSenderType":      participantTypeString,
+				"lastSenderId":        lastSenderId,
+				"lastSenderType":      lastSenderType,
 				"lastSenderFirstName": "",
 				"lastSenderLastName":  "",
 				"lastContentPreview":  lastContentPreview,
@@ -640,11 +627,10 @@ func (s *CustomerOSService) GetActiveConversationOrCreate(
 	initiatorUsername string,
 	senderType msProto.SenderType,
 	eventType entity.EventType,
-	content string,
+	threadId string,
 ) (*Conversation, error) {
 	var conversation *Conversation
 	var err error
-	var threadId = ""
 	if eventType == entity.WEB_CHAT {
 		if senderType == msProto.SenderType_CONTACT {
 			conversation, err = s.GetWebChatConversationWithContactInitiator(tenant, initiatorId)
@@ -652,15 +638,6 @@ func (s *CustomerOSService) GetActiveConversationOrCreate(
 			conversation, err = s.GetWebChatConversationWithUserInitiator(tenant, initiatorId)
 		}
 	} else if eventType == entity.EMAIL {
-		var messageJson EmailContent
-		err := json.Unmarshal([]byte(content), &messageJson)
-
-		refSize := len(messageJson.Reference)
-		if refSize > 0 {
-			threadId = messageJson.Reference[0]
-		} else {
-			threadId = messageJson.MessageId
-		}
 		if err != nil {
 			return nil, err
 		}
