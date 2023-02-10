@@ -63,5 +63,6 @@ func MapEntityToCustomField(entity *entity.CustomFieldEntity) *model.CustomField
 		Value:     entity.Value,
 		Source:    MapDataSourceToModel(entity.Source),
 		CreatedAt: entity.CreatedAt,
+		UpdatedAt: entity.UpdatedAt,
 	}
 }

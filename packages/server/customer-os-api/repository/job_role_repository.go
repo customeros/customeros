@@ -6,7 +6,6 @@ import (
 	"github.com/neo4j/neo4j-go-driver/v4/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils"
-	"time"
 )
 
 type JobRoleRepository interface {
@@ -108,7 +107,7 @@ func (r *jobRoleRepository) CreateJobRole(tx neo4j.Transaction, tenant string, c
 			"source":              input.Source,
 			"sourceOfTruth":       input.SourceOfTruth,
 			"appSource":           input.AppSource,
-			"now":                 time.Now().UTC(),
+			"now":                 utils.Now(),
 		}); err != nil {
 		return nil, err
 	} else {

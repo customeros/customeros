@@ -144,8 +144,8 @@ func (s *jobRoleService) mapDbNodeToJobRoleEntity(node dbtype.Node) *entity.JobR
 		Source:              entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
 		SourceOfTruth:       entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
 		AppSource:           utils.GetStringPropOrEmpty(props, "appSource"),
-		CreatedAt:           utils.GetTimePropOrNow(props, "createdAt"),
-		UpdatedAt:           utils.GetTimePropOrNow(props, "updatedAt"),
+		CreatedAt:           utils.GetTimePropOrEpochStart(props, "createdAt"),
+		UpdatedAt:           utils.GetTimePropOrEpochStart(props, "updatedAt"),
 	}
 	return &result
 }

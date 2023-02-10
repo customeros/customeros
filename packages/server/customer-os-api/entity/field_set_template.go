@@ -8,6 +8,7 @@ import (
 type FieldSetTemplateEntity struct {
 	Id           string
 	CreatedAt    time.Time
+	UpdatedAt    time.Time
 	Name         string
 	Order        int64
 	CustomFields []*CustomFieldTemplateEntity

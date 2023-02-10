@@ -29,7 +29,8 @@ func (r *customFieldTemplateRepository) createCustomFieldTemplateForEntityInTx(t
 	query := "MATCH (e:EntityTemplate {id:$entityTemplateId}) " +
 		" MERGE (e)-[:CONTAINS]->(f:CustomFieldTemplate {id:randomUUID(), name:$name}) " +
 		" ON CREATE SET f:%s, " +
-		"				f.createdAt=datetime({timezone: 'UTC'}), " +
+		"				f.createdAt=$now, " +
+		"				f.updated=$now, " +
 		"  				f.order=$order, " +
 		"				f.mandatory=$mandatory, " +
 		"				f.type=$type, " +
@@ -47,6 +48,7 @@ func (r *customFieldTemplateRepository) createCustomFieldTemplateForEntityInTx(t
 			"length":           entity.Length,
 			"min":              entity.Min,
 			"max":              entity.Max,
+			"now":              utils.Now(),
 		})
 
 	return err
@@ -56,7 +58,8 @@ func (r *customFieldTemplateRepository) createCustomFieldTemplateForFieldSetInTx
 	query := "MATCH (d:FieldSetTemplate {id:$fieldSetTemplateId}) " +
 		" MERGE (d)-[:CONTAINS]->(f:CustomFieldTemplate {id:randomUUID(), name:$name}) " +
 		" ON CREATE SET f:%s, " +
-		"				f.createdAt=datetime({timezone: 'UTC'}), " +
+		"				f.createdAt=$now, " +
+		"				f.updatedAt=$now, " +
 		"				f.order=$order, " +
 		"				f.mandatory=$mandatory, " +
 		"				f.type=$type, " +
@@ -73,6 +76,7 @@ func (r *customFieldTemplateRepository) createCustomFieldTemplateForFieldSetInTx
 			"length":             entity.Length,
 			"min":                entity.Min,
 			"max":                entity.Max,
+			"now":                utils.Now(),
 		})
 
 	return err

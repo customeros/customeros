@@ -9,6 +9,7 @@ type FieldSetEntity struct {
 	Id            *string
 	Name          string
 	CreatedAt     time.Time
+	UpdatedAt     time.Time
 	TemplateId    *string
 	CustomFields  *CustomFieldEntities
 	Source        DataSource

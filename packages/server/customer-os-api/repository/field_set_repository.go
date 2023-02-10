@@ -6,7 +6,6 @@ import (
 	"github.com/neo4j/neo4j-go-driver/v4/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils"
-	"time"
 )
 
 type FieldSetRepository interface {
@@ -50,7 +49,8 @@ func (r *fieldSetRepository) MergeFieldSetToContactInTx(tx neo4j.Transaction, te
 	query := "MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) " +
 		" MERGE (f:FieldSet {name: $name})<-[r:HAS_COMPLEX_PROPERTY]-(c) " +
 		" ON CREATE SET f.id=randomUUID(), " +
-		"				f.createdAt=$createdAt, " +
+		"				f.createdAt=$now, " +
+		"				f.createdAt=$now, " +
 		"				f.source=$source, " +
 		"				f.sourceOfTruth=$sourceOfTruth, " +
 		"				f:%s " +
@@ -62,7 +62,7 @@ func (r *fieldSetRepository) MergeFieldSetToContactInTx(tx neo4j.Transaction, te
 			"name":          entity.Name,
 			"source":        entity.Source,
 			"sourceOfTruth": entity.SourceOfTruth,
-			"createdAt":     time.Now().UTC(),
+			"now":           utils.Now(),
 		})
 	return utils.ExtractSingleRecordFirstValueAsNode(queryResult, err)
 }
@@ -71,7 +71,7 @@ func (r *fieldSetRepository) UpdateFieldSetForContactInTx(tx neo4j.Transaction, 
 	queryResult, err := tx.Run(`
 			MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}),
 					(c)-[r:HAS_COMPLEX_PROPERTY]->(s:FieldSet {id:$fieldSetId})
-            SET s.name=$name, s.sourceOfTruth=$sourceOfTruth
+            SET s.name=$name, s.sourceOfTruth=$sourceOfTruth, s.updatedAt=$now
 			RETURN s`,
 		map[string]interface{}{
 			"tenant":        tenant,
@@ -79,6 +79,7 @@ func (r *fieldSetRepository) UpdateFieldSetForContactInTx(tx neo4j.Transaction, 
 			"fieldSetId":    entity.Id,
 			"name":          entity.Name,
 			"sourceOfTruth": entity.SourceOfTruth,
+			"now":           utils.Now(),
 		})
 	return utils.ExtractSingleRecordFirstValueAsNode(queryResult, err)
 }

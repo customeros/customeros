@@ -35,7 +35,8 @@ func (r *userRepository) Create(tx neo4j.Transaction, tenant string, entity enti
 		" MERGE (u:User {id: randomUUID()})-[:USER_BELONGS_TO_TENANT]->(t) " +
 		" ON CREATE SET u.firstName=$firstName, " +
 		"				u.lastName=$lastName, " +
-		"				u.createdAt=datetime({timezone: 'UTC'}), " +
+		"				u.createdAt=$now, " +
+		"				u.updatedAt=$now, " +
 		" 				u.source=$source, " +
 		"				u.sourceOfTruth=$sourceOfTruth, " +
 		"				u:%s" +
@@ -48,6 +49,7 @@ func (r *userRepository) Create(tx neo4j.Transaction, tenant string, entity enti
 			"lastName":      entity.LastName,
 			"source":        entity.Source,
 			"sourceOfTruth": entity.SourceOfTruth,
+			"now":           utils.Now(),
 		})
 	return utils.ExtractSingleRecordFirstValueAsNode(queryResult, err)
 }

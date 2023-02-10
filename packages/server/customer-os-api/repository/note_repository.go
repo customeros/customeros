@@ -6,7 +6,6 @@ import (
 	"github.com/neo4j/neo4j-go-driver/v4/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils"
-	"time"
 )
 
 type NoteDbNodeWithParentId struct {
@@ -136,7 +135,7 @@ func (r *noteRepository) UpdateNote(session neo4j.Session, tenant string, entity
 				"noteId":        entity.Id,
 				"html":          entity.Html,
 				"sourceOfTruth": entity.SourceOfTruth,
-				"now":           time.Now().UTC(),
+				"now":           utils.Now(),
 			})
 		return utils.ExtractSingleRecordFirstValueAsNode(txResult, err)
 	})
@@ -150,8 +149,8 @@ func (r *noteRepository) CreateNoteForContact(session neo4j.Session, tenant, con
 	query := "MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant}) " +
 		" MERGE (c)-[:NOTED]->(n:Note {id:randomUUID()}) " +
 		" ON CREATE SET n.html=$html, " +
-		"				n.createdAt=$createdAt, " +
-		"				n.updatedAt=$createdAt, " +
+		"				n.createdAt=$now, " +
+		"				n.updatedAt=$now, " +
 		"				n.source=$source, " +
 		"				n.sourceOfTruth=$sourceOfTruth, " +
 		"				n.appSource=$appSource, " +
@@ -164,7 +163,7 @@ func (r *noteRepository) CreateNoteForContact(session neo4j.Session, tenant, con
 				"tenant":        tenant,
 				"contactId":     contactId,
 				"html":          entity.Html,
-				"createdAt":     time.Now().UTC(),
+				"now":           utils.Now(),
 				"source":        entity.Source,
 				"sourceOfTruth": entity.SourceOfTruth,
 				"appSource":     entity.AppSource,
@@ -181,8 +180,8 @@ func (r *noteRepository) CreateNoteForOrganization(session neo4j.Session, tenant
 	query := "MATCH (org:Organization {id:$organizationId})-[:ORGANIZATION_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant}) " +
 		" MERGE (org)-[:NOTED]->(n:Note {id:randomUUID()}) " +
 		" ON CREATE SET n.html=$html, " +
-		"				n.createdAt=$createdAt, " +
-		"				n.updatedAt=$createdAt, " +
+		"				n.createdAt=$now, " +
+		"				n.updatedAt=$now, " +
 		"				n.source=$source, " +
 		"				n.sourceOfTruth=$sourceOfTruth, " +
 		"				n.appSource=$appSource, " +
@@ -195,7 +194,7 @@ func (r *noteRepository) CreateNoteForOrganization(session neo4j.Session, tenant
 				"tenant":         tenant,
 				"organizationId": organizationId,
 				"html":           entity.Html,
-				"createdAt":      time.Now().UTC(),
+				"now":            utils.Now(),
 				"source":         entity.Source,
 				"sourceOfTruth":  entity.SourceOfTruth,
 				"appSource":      entity.AppSource,

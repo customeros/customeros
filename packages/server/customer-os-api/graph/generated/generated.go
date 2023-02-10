@@ -79,6 +79,7 @@ type ComplexityRoot struct {
 		Tags          func(childComplexity int) int
 		Template      func(childComplexity int) int
 		Title         func(childComplexity int) int
+		UpdatedAt     func(childComplexity int) int
 	}
 
 	ContactGroup struct {
@@ -135,6 +136,7 @@ type ComplexityRoot struct {
 		Name      func(childComplexity int) int
 		Source    func(childComplexity int) int
 		Template  func(childComplexity int) int
+		UpdatedAt func(childComplexity int) int
 		Value     func(childComplexity int) int
 	}
 
@@ -148,6 +150,7 @@ type ComplexityRoot struct {
 		Name      func(childComplexity int) int
 		Order     func(childComplexity int) int
 		Type      func(childComplexity int) int
+		UpdatedAt func(childComplexity int) int
 	}
 
 	DashboardViewItem struct {
@@ -180,6 +183,7 @@ type ComplexityRoot struct {
 		FieldSets    func(childComplexity int) int
 		ID           func(childComplexity int) int
 		Name         func(childComplexity int) int
+		UpdatedAt    func(childComplexity int) int
 		Version      func(childComplexity int) int
 	}
 
@@ -190,6 +194,7 @@ type ComplexityRoot struct {
 		Name         func(childComplexity int) int
 		Source       func(childComplexity int) int
 		Template     func(childComplexity int) int
+		UpdatedAt    func(childComplexity int) int
 	}
 
 	FieldSetTemplate struct {
@@ -198,6 +203,7 @@ type ComplexityRoot struct {
 		ID           func(childComplexity int) int
 		Name         func(childComplexity int) int
 		Order        func(childComplexity int) int
+		UpdatedAt    func(childComplexity int) int
 	}
 
 	JobRole struct {
@@ -329,6 +335,7 @@ type ComplexityRoot struct {
 		CreatedAt func(childComplexity int) int
 		ID        func(childComplexity int) int
 		Name      func(childComplexity int) int
+		UpdatedAt func(childComplexity int) int
 	}
 
 	PageViewAction struct {
@@ -350,6 +357,7 @@ type ComplexityRoot struct {
 		Label     func(childComplexity int) int
 		Primary   func(childComplexity int) int
 		Source    func(childComplexity int) int
+		UpdatedAt func(childComplexity int) int
 	}
 
 	Place struct {
@@ -413,6 +421,7 @@ type ComplexityRoot struct {
 		ID            func(childComplexity int) int
 		LastName      func(childComplexity int) int
 		Source        func(childComplexity int) int
+		UpdatedAt     func(childComplexity int) int
 	}
 
 	UserPage struct {
@@ -740,6 +749,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Contact.Title(childComplexity), true
 
+	case "Contact.updatedAt":
+		if e.complexity.Contact.UpdatedAt == nil {
+			break
+		}
+
+		return e.complexity.Contact.UpdatedAt(childComplexity), true
+
 	case "ContactGroup.contacts":
 		if e.complexity.ContactGroup.Contacts == nil {
 			break
@@ -1011,6 +1027,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.CustomField.Template(childComplexity), true
 
+	case "CustomField.updatedAt":
+		if e.complexity.CustomField.UpdatedAt == nil {
+			break
+		}
+
+		return e.complexity.CustomField.UpdatedAt(childComplexity), true
+
 	case "CustomField.value":
 		if e.complexity.CustomField.Value == nil {
 			break
@@ -1080,6 +1103,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.CustomFieldTemplate.Type(childComplexity), true
+
+	case "CustomFieldTemplate.updatedAt":
+		if e.complexity.CustomFieldTemplate.UpdatedAt == nil {
+			break
+		}
+
+		return e.complexity.CustomFieldTemplate.UpdatedAt(childComplexity), true
 
 	case "DashboardViewItem.contact":
 		if e.complexity.DashboardViewItem.Contact == nil {
@@ -1221,6 +1251,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.EntityTemplate.Name(childComplexity), true
 
+	case "EntityTemplate.updatedAt":
+		if e.complexity.EntityTemplate.UpdatedAt == nil {
+			break
+		}
+
+		return e.complexity.EntityTemplate.UpdatedAt(childComplexity), true
+
 	case "EntityTemplate.version":
 		if e.complexity.EntityTemplate.Version == nil {
 			break
@@ -1270,6 +1307,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.FieldSet.Template(childComplexity), true
 
+	case "FieldSet.updatedAt":
+		if e.complexity.FieldSet.UpdatedAt == nil {
+			break
+		}
+
+		return e.complexity.FieldSet.UpdatedAt(childComplexity), true
+
 	case "FieldSetTemplate.createdAt":
 		if e.complexity.FieldSetTemplate.CreatedAt == nil {
 			break
@@ -1304,6 +1348,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.FieldSetTemplate.Order(childComplexity), true
+
+	case "FieldSetTemplate.updatedAt":
+		if e.complexity.FieldSetTemplate.UpdatedAt == nil {
+			break
+		}
+
+		return e.complexity.FieldSetTemplate.UpdatedAt(childComplexity), true
 
 	case "JobRole.appSource":
 		if e.complexity.JobRole.AppSource == nil {
@@ -2339,6 +2390,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.OrganizationType.Name(childComplexity), true
 
+	case "OrganizationType.updatedAt":
+		if e.complexity.OrganizationType.UpdatedAt == nil {
+			break
+		}
+
+		return e.complexity.OrganizationType.UpdatedAt(childComplexity), true
+
 	case "PageViewAction.application":
 		if e.complexity.PageViewAction.Application == nil {
 			break
@@ -2443,6 +2501,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.PhoneNumber.Source(childComplexity), true
+
+	case "PhoneNumber.updatedAt":
+		if e.complexity.PhoneNumber.UpdatedAt == nil {
+			break
+		}
+
+		return e.complexity.PhoneNumber.UpdatedAt(childComplexity), true
 
 	case "Place.address":
 		if e.complexity.Place.Address == nil {
@@ -2834,6 +2899,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.User.Source(childComplexity), true
 
+	case "User.updatedAt":
+		if e.complexity.User.UpdatedAt == nil {
+			break
+		}
+
+		return e.complexity.User.UpdatedAt(childComplexity), true
+
 	case "UserPage.content":
 		if e.complexity.UserPage.Content == nil {
 			break
@@ -3041,6 +3113,7 @@ type Contact implements ExtensibleEntity & Node {
     **Required**
     """
     createdAt: Time!
+    updatedAt: Time!
 
     "A user-defined label applied against a contact in customerOS."
     label: String
@@ -3458,6 +3531,7 @@ type CustomField implements Node {
     source: DataSource!
 
     createdAt: Time!
+    updatedAt: Time!
 
     template: CustomFieldTemplate @goField(forceResolver: true)
 }
@@ -3537,6 +3611,7 @@ type FieldSet {
     id: ID!
     name: String!
     createdAt: Time!
+    updatedAt: Time!
     customFields: [CustomField!]! @goField(forceResolver: true)
     template: FieldSetTemplate @goField(forceResolver: true)
     source: DataSource!
@@ -3693,11 +3768,13 @@ type EntityTemplate implements Node {
     fieldSets: [FieldSetTemplate!]! @goField(forceResolver: true)
     customFields: [CustomFieldTemplate!]! @goField(forceResolver: true)
     createdAt: Time!
+    updatedAt: Time!
 }
 
 type FieldSetTemplate  implements Node {
     id: ID!
     createdAt: Time!
+    updatedAt: Time!
     name: String!
     order: Int!
     customFields: [CustomFieldTemplate!]! @goField(forceResolver: true)
@@ -3706,6 +3783,7 @@ type FieldSetTemplate  implements Node {
 type CustomFieldTemplate  implements Node {
     id: ID!
     createdAt: Time!
+    updatedAt: Time!
     name: String!
     type: CustomFieldTemplateType!
     order: Int!
@@ -3929,7 +4007,6 @@ type Place {
 }`, BuiltIn: false},
 	{Name: "../schemas/mutation.graphqls", Input: `type Mutation {
     entityTemplateCreate(input: EntityTemplateInput!): EntityTemplate!
-    # createEntityTemplateNewVersion(id: ID!, input: EntityTemplateInput!): EntityTemplate!
 }
 
 
@@ -4049,6 +4126,7 @@ type OrganizationType {
     id: ID!
     name: String!
     createdAt: Time!
+    updatedAt: Time!
 }
 
 input OrganizationTypeInput {
@@ -4095,6 +4173,7 @@ type PhoneNumber {
     primary: Boolean!
 
     createdAt: Time!
+    updatedAt: Time!
 
     source: DataSource!
 }
@@ -4288,6 +4367,7 @@ type User {
     **Required**
     """
     createdAt: Time!
+    updatedAt: Time!
 
     source: DataSource!
 
@@ -6254,6 +6334,50 @@ func (ec *executionContext) fieldContext_Contact_createdAt(ctx context.Context, 
 	return fc, nil
 }
 
+func (ec *executionContext) _Contact_updatedAt(ctx context.Context, field graphql.CollectedField, obj *model.Contact) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Contact_updatedAt(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.UpdatedAt, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(time.Time)
+	fc.Result = res
+	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Contact_updatedAt(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Contact",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Contact_label(ctx context.Context, field graphql.CollectedField, obj *model.Contact) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Contact_label(ctx, field)
 	if err != nil {
@@ -6630,6 +6754,8 @@ func (ec *executionContext) fieldContext_Contact_phoneNumbers(ctx context.Contex
 				return ec.fieldContext_PhoneNumber_primary(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_PhoneNumber_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_PhoneNumber_updatedAt(ctx, field)
 			case "source":
 				return ec.fieldContext_PhoneNumber_source(ctx, field)
 			}
@@ -6814,6 +6940,8 @@ func (ec *executionContext) fieldContext_Contact_customFields(ctx context.Contex
 				return ec.fieldContext_CustomField_source(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_CustomField_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_CustomField_updatedAt(ctx, field)
 			case "template":
 				return ec.fieldContext_CustomField_template(ctx, field)
 			}
@@ -6868,6 +6996,8 @@ func (ec *executionContext) fieldContext_Contact_fieldSets(ctx context.Context, 
 				return ec.fieldContext_FieldSet_name(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_FieldSet_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_FieldSet_updatedAt(ctx, field)
 			case "customFields":
 				return ec.fieldContext_FieldSet_customFields(ctx, field)
 			case "template":
@@ -6931,6 +7061,8 @@ func (ec *executionContext) fieldContext_Contact_template(ctx context.Context, f
 				return ec.fieldContext_EntityTemplate_customFields(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_EntityTemplate_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_EntityTemplate_updatedAt(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type EntityTemplate", field.Name)
 		},
@@ -6984,6 +7116,8 @@ func (ec *executionContext) fieldContext_Contact_owner(ctx context.Context, fiel
 				return ec.fieldContext_User_emails(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_User_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_User_updatedAt(ctx, field)
 			case "source":
 				return ec.fieldContext_User_source(ctx, field)
 			case "conversations":
@@ -7608,6 +7742,8 @@ func (ec *executionContext) fieldContext_ContactsPage_content(ctx context.Contex
 				return ec.fieldContext_Contact_lastName(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_Contact_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_Contact_updatedAt(ctx, field)
 			case "label":
 				return ec.fieldContext_Contact_label(ctx, field)
 			case "source":
@@ -8124,6 +8260,8 @@ func (ec *executionContext) fieldContext_Conversation_contacts(ctx context.Conte
 				return ec.fieldContext_Contact_lastName(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_Contact_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_Contact_updatedAt(ctx, field)
 			case "label":
 				return ec.fieldContext_Contact_label(ctx, field)
 			case "source":
@@ -8209,6 +8347,8 @@ func (ec *executionContext) fieldContext_Conversation_users(ctx context.Context,
 				return ec.fieldContext_User_emails(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_User_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_User_updatedAt(ctx, field)
 			case "source":
 				return ec.fieldContext_User_source(ctx, field)
 			case "conversations":
@@ -8988,6 +9128,50 @@ func (ec *executionContext) fieldContext_CustomField_createdAt(ctx context.Conte
 	return fc, nil
 }
 
+func (ec *executionContext) _CustomField_updatedAt(ctx context.Context, field graphql.CollectedField, obj *model.CustomField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_CustomField_updatedAt(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.UpdatedAt, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(time.Time)
+	fc.Result = res
+	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_CustomField_updatedAt(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "CustomField",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _CustomField_template(ctx context.Context, field graphql.CollectedField, obj *model.CustomField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_CustomField_template(ctx, field)
 	if err != nil {
@@ -9028,6 +9212,8 @@ func (ec *executionContext) fieldContext_CustomField_template(ctx context.Contex
 				return ec.fieldContext_CustomFieldTemplate_id(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_CustomFieldTemplate_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_CustomFieldTemplate_updatedAt(ctx, field)
 			case "name":
 				return ec.fieldContext_CustomFieldTemplate_name(ctx, field)
 			case "type":
@@ -9125,6 +9311,50 @@ func (ec *executionContext) _CustomFieldTemplate_createdAt(ctx context.Context, 
 }
 
 func (ec *executionContext) fieldContext_CustomFieldTemplate_createdAt(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "CustomFieldTemplate",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _CustomFieldTemplate_updatedAt(ctx context.Context, field graphql.CollectedField, obj *model.CustomFieldTemplate) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_CustomFieldTemplate_updatedAt(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.UpdatedAt, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(time.Time)
+	fc.Result = res
+	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_CustomFieldTemplate_updatedAt(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "CustomFieldTemplate",
 		Field:      field,
@@ -9482,6 +9712,8 @@ func (ec *executionContext) fieldContext_DashboardViewItem_contact(ctx context.C
 				return ec.fieldContext_Contact_lastName(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_Contact_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_Contact_updatedAt(ctx, field)
 			case "label":
 				return ec.fieldContext_Contact_label(ctx, field)
 			case "source":
@@ -10345,6 +10577,8 @@ func (ec *executionContext) fieldContext_EntityTemplate_fieldSets(ctx context.Co
 				return ec.fieldContext_FieldSetTemplate_id(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_FieldSetTemplate_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_FieldSetTemplate_updatedAt(ctx, field)
 			case "name":
 				return ec.fieldContext_FieldSetTemplate_name(ctx, field)
 			case "order":
@@ -10401,6 +10635,8 @@ func (ec *executionContext) fieldContext_EntityTemplate_customFields(ctx context
 				return ec.fieldContext_CustomFieldTemplate_id(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_CustomFieldTemplate_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_CustomFieldTemplate_updatedAt(ctx, field)
 			case "name":
 				return ec.fieldContext_CustomFieldTemplate_name(ctx, field)
 			case "type":
@@ -10454,6 +10690,50 @@ func (ec *executionContext) _EntityTemplate_createdAt(ctx context.Context, field
 }
 
 func (ec *executionContext) fieldContext_EntityTemplate_createdAt(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "EntityTemplate",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _EntityTemplate_updatedAt(ctx context.Context, field graphql.CollectedField, obj *model.EntityTemplate) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_EntityTemplate_updatedAt(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.UpdatedAt, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(time.Time)
+	fc.Result = res
+	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_EntityTemplate_updatedAt(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "EntityTemplate",
 		Field:      field,
@@ -10598,6 +10878,50 @@ func (ec *executionContext) fieldContext_FieldSet_createdAt(ctx context.Context,
 	return fc, nil
 }
 
+func (ec *executionContext) _FieldSet_updatedAt(ctx context.Context, field graphql.CollectedField, obj *model.FieldSet) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_FieldSet_updatedAt(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.UpdatedAt, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(time.Time)
+	fc.Result = res
+	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_FieldSet_updatedAt(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "FieldSet",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _FieldSet_customFields(ctx context.Context, field graphql.CollectedField, obj *model.FieldSet) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_FieldSet_customFields(ctx, field)
 	if err != nil {
@@ -10649,6 +10973,8 @@ func (ec *executionContext) fieldContext_FieldSet_customFields(ctx context.Conte
 				return ec.fieldContext_CustomField_source(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_CustomField_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_CustomField_updatedAt(ctx, field)
 			case "template":
 				return ec.fieldContext_CustomField_template(ctx, field)
 			}
@@ -10698,6 +11024,8 @@ func (ec *executionContext) fieldContext_FieldSet_template(ctx context.Context, 
 				return ec.fieldContext_FieldSetTemplate_id(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_FieldSetTemplate_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_FieldSetTemplate_updatedAt(ctx, field)
 			case "name":
 				return ec.fieldContext_FieldSetTemplate_name(ctx, field)
 			case "order":
@@ -10843,6 +11171,50 @@ func (ec *executionContext) fieldContext_FieldSetTemplate_createdAt(ctx context.
 	return fc, nil
 }
 
+func (ec *executionContext) _FieldSetTemplate_updatedAt(ctx context.Context, field graphql.CollectedField, obj *model.FieldSetTemplate) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_FieldSetTemplate_updatedAt(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.UpdatedAt, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(time.Time)
+	fc.Result = res
+	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_FieldSetTemplate_updatedAt(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "FieldSetTemplate",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _FieldSetTemplate_name(ctx context.Context, field graphql.CollectedField, obj *model.FieldSetTemplate) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_FieldSetTemplate_name(ctx, field)
 	if err != nil {
@@ -10974,6 +11346,8 @@ func (ec *executionContext) fieldContext_FieldSetTemplate_customFields(ctx conte
 				return ec.fieldContext_CustomFieldTemplate_id(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_CustomFieldTemplate_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_CustomFieldTemplate_updatedAt(ctx, field)
 			case "name":
 				return ec.fieldContext_CustomFieldTemplate_name(ctx, field)
 			case "type":
@@ -11250,6 +11624,8 @@ func (ec *executionContext) fieldContext_JobRole_contact(ctx context.Context, fi
 				return ec.fieldContext_Contact_lastName(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_Contact_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_Contact_updatedAt(ctx, field)
 			case "label":
 				return ec.fieldContext_Contact_label(ctx, field)
 			case "source":
@@ -11929,6 +12305,8 @@ func (ec *executionContext) fieldContext_Mutation_entityTemplateCreate(ctx conte
 				return ec.fieldContext_EntityTemplate_customFields(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_EntityTemplate_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_EntityTemplate_updatedAt(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type EntityTemplate", field.Name)
 		},
@@ -11995,6 +12373,8 @@ func (ec *executionContext) fieldContext_Mutation_contact_Create(ctx context.Con
 				return ec.fieldContext_Contact_lastName(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_Contact_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_Contact_updatedAt(ctx, field)
 			case "label":
 				return ec.fieldContext_Contact_label(ctx, field)
 			case "source":
@@ -12093,6 +12473,8 @@ func (ec *executionContext) fieldContext_Mutation_contact_Update(ctx context.Con
 				return ec.fieldContext_Contact_lastName(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_Contact_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_Contact_updatedAt(ctx, field)
 			case "label":
 				return ec.fieldContext_Contact_label(ctx, field)
 			case "source":
@@ -12307,6 +12689,8 @@ func (ec *executionContext) fieldContext_Mutation_contact_AddTagById(ctx context
 				return ec.fieldContext_Contact_lastName(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_Contact_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_Contact_updatedAt(ctx, field)
 			case "label":
 				return ec.fieldContext_Contact_label(ctx, field)
 			case "source":
@@ -12405,6 +12789,8 @@ func (ec *executionContext) fieldContext_Mutation_contact_RemoveTagById(ctx cont
 				return ec.fieldContext_Contact_lastName(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_Contact_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_Contact_updatedAt(ctx, field)
 			case "label":
 				return ec.fieldContext_Contact_label(ctx, field)
 			case "source":
@@ -13085,6 +13471,8 @@ func (ec *executionContext) fieldContext_Mutation_customFieldsMergeAndUpdateInCo
 				return ec.fieldContext_Contact_lastName(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_Contact_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_Contact_updatedAt(ctx, field)
 			case "label":
 				return ec.fieldContext_Contact_label(ctx, field)
 			case "source":
@@ -13185,6 +13573,8 @@ func (ec *executionContext) fieldContext_Mutation_customFieldMergeToContact(ctx 
 				return ec.fieldContext_CustomField_source(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_CustomField_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_CustomField_updatedAt(ctx, field)
 			case "template":
 				return ec.fieldContext_CustomField_template(ctx, field)
 			}
@@ -13255,6 +13645,8 @@ func (ec *executionContext) fieldContext_Mutation_customFieldUpdateInContact(ctx
 				return ec.fieldContext_CustomField_source(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_CustomField_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_CustomField_updatedAt(ctx, field)
 			case "template":
 				return ec.fieldContext_CustomField_template(ctx, field)
 			}
@@ -13441,6 +13833,8 @@ func (ec *executionContext) fieldContext_Mutation_customFieldMergeToFieldSet(ctx
 				return ec.fieldContext_CustomField_source(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_CustomField_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_CustomField_updatedAt(ctx, field)
 			case "template":
 				return ec.fieldContext_CustomField_template(ctx, field)
 			}
@@ -13511,6 +13905,8 @@ func (ec *executionContext) fieldContext_Mutation_customFieldUpdateInFieldSet(ct
 				return ec.fieldContext_CustomField_source(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_CustomField_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_CustomField_updatedAt(ctx, field)
 			case "template":
 				return ec.fieldContext_CustomField_template(ctx, field)
 			}
@@ -13630,6 +14026,8 @@ func (ec *executionContext) fieldContext_Mutation_fieldSetMergeToContact(ctx con
 				return ec.fieldContext_FieldSet_name(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_FieldSet_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_FieldSet_updatedAt(ctx, field)
 			case "customFields":
 				return ec.fieldContext_FieldSet_customFields(ctx, field)
 			case "template":
@@ -13695,6 +14093,8 @@ func (ec *executionContext) fieldContext_Mutation_fieldSetUpdateInContact(ctx co
 				return ec.fieldContext_FieldSet_name(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_FieldSet_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_FieldSet_updatedAt(ctx, field)
 			case "customFields":
 				return ec.fieldContext_FieldSet_customFields(ctx, field)
 			case "template":
@@ -15014,6 +15414,8 @@ func (ec *executionContext) fieldContext_Mutation_organizationType_Create(ctx co
 				return ec.fieldContext_OrganizationType_name(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_OrganizationType_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_OrganizationType_updatedAt(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type OrganizationType", field.Name)
 		},
@@ -15073,6 +15475,8 @@ func (ec *executionContext) fieldContext_Mutation_organizationType_Update(ctx co
 				return ec.fieldContext_OrganizationType_name(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_OrganizationType_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_OrganizationType_updatedAt(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type OrganizationType", field.Name)
 		},
@@ -15194,6 +15598,8 @@ func (ec *executionContext) fieldContext_Mutation_phoneNumberMergeToContact(ctx 
 				return ec.fieldContext_PhoneNumber_primary(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_PhoneNumber_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_PhoneNumber_updatedAt(ctx, field)
 			case "source":
 				return ec.fieldContext_PhoneNumber_source(ctx, field)
 			}
@@ -15262,6 +15668,8 @@ func (ec *executionContext) fieldContext_Mutation_phoneNumberUpdateInContact(ctx
 				return ec.fieldContext_PhoneNumber_primary(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_PhoneNumber_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_PhoneNumber_updatedAt(ctx, field)
 			case "source":
 				return ec.fieldContext_PhoneNumber_source(ctx, field)
 			}
@@ -15634,6 +16042,8 @@ func (ec *executionContext) fieldContext_Mutation_user_Create(ctx context.Contex
 				return ec.fieldContext_User_emails(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_User_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_User_updatedAt(ctx, field)
 			case "source":
 				return ec.fieldContext_User_source(ctx, field)
 			case "conversations":
@@ -15704,6 +16114,8 @@ func (ec *executionContext) fieldContext_Mutation_user_Update(ctx context.Contex
 				return ec.fieldContext_User_emails(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_User_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_User_updatedAt(ctx, field)
 			case "source":
 				return ec.fieldContext_User_source(ctx, field)
 			case "conversations":
@@ -15948,6 +16360,8 @@ func (ec *executionContext) fieldContext_Note_createdBy(ctx context.Context, fie
 				return ec.fieldContext_User_emails(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_User_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_User_updatedAt(ctx, field)
 			case "source":
 				return ec.fieldContext_User_source(ctx, field)
 			case "conversations":
@@ -16664,6 +17078,8 @@ func (ec *executionContext) fieldContext_Organization_organizationType(ctx conte
 				return ec.fieldContext_OrganizationType_name(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_OrganizationType_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_OrganizationType_updatedAt(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type OrganizationType", field.Name)
 		},
@@ -17357,6 +17773,50 @@ func (ec *executionContext) fieldContext_OrganizationType_createdAt(ctx context.
 	return fc, nil
 }
 
+func (ec *executionContext) _OrganizationType_updatedAt(ctx context.Context, field graphql.CollectedField, obj *model.OrganizationType) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_OrganizationType_updatedAt(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.UpdatedAt, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(time.Time)
+	fc.Result = res
+	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_OrganizationType_updatedAt(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "OrganizationType",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _PageViewAction_id(ctx context.Context, field graphql.CollectedField, obj *model.PageViewAction) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_PageViewAction_id(ctx, field)
 	if err != nil {
@@ -17958,6 +18418,50 @@ func (ec *executionContext) _PhoneNumber_createdAt(ctx context.Context, field gr
 }
 
 func (ec *executionContext) fieldContext_PhoneNumber_createdAt(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PhoneNumber",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PhoneNumber_updatedAt(ctx context.Context, field graphql.CollectedField, obj *model.PhoneNumber) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_PhoneNumber_updatedAt(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.UpdatedAt, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(time.Time)
+	fc.Result = res
+	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_PhoneNumber_updatedAt(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "PhoneNumber",
 		Field:      field,
@@ -18608,6 +19112,8 @@ func (ec *executionContext) fieldContext_Query_entityTemplates(ctx context.Conte
 				return ec.fieldContext_EntityTemplate_customFields(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_EntityTemplate_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_EntityTemplate_updatedAt(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type EntityTemplate", field.Name)
 		},
@@ -18730,6 +19236,8 @@ func (ec *executionContext) fieldContext_Query_contact(ctx context.Context, fiel
 				return ec.fieldContext_Contact_lastName(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_Contact_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_Contact_updatedAt(ctx, field)
 			case "label":
 				return ec.fieldContext_Contact_label(ctx, field)
 			case "source":
@@ -18890,6 +19398,8 @@ func (ec *executionContext) fieldContext_Query_contact_ByEmail(ctx context.Conte
 				return ec.fieldContext_Contact_lastName(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_Contact_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_Contact_updatedAt(ctx, field)
 			case "label":
 				return ec.fieldContext_Contact_label(ctx, field)
 			case "source":
@@ -18988,6 +19498,8 @@ func (ec *executionContext) fieldContext_Query_contact_ByPhone(ctx context.Conte
 				return ec.fieldContext_Contact_lastName(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_Contact_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_Contact_updatedAt(ctx, field)
 			case "label":
 				return ec.fieldContext_Contact_label(ctx, field)
 			case "source":
@@ -19356,6 +19868,8 @@ func (ec *executionContext) fieldContext_Query_organizationTypes(ctx context.Con
 				return ec.fieldContext_OrganizationType_name(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_OrganizationType_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_OrganizationType_updatedAt(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type OrganizationType", field.Name)
 		},
@@ -19590,6 +20104,8 @@ func (ec *executionContext) fieldContext_Query_user(ctx context.Context, field g
 				return ec.fieldContext_User_emails(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_User_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_User_updatedAt(ctx, field)
 			case "source":
 				return ec.fieldContext_User_source(ctx, field)
 			case "conversations":
@@ -19660,6 +20176,8 @@ func (ec *executionContext) fieldContext_Query_user_ByEmail(ctx context.Context,
 				return ec.fieldContext_User_emails(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_User_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_User_updatedAt(ctx, field)
 			case "source":
 				return ec.fieldContext_User_source(ctx, field)
 			case "conversations":
@@ -20442,6 +20960,50 @@ func (ec *executionContext) fieldContext_User_createdAt(ctx context.Context, fie
 	return fc, nil
 }
 
+func (ec *executionContext) _User_updatedAt(ctx context.Context, field graphql.CollectedField, obj *model.User) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_User_updatedAt(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.UpdatedAt, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(time.Time)
+	fc.Result = res
+	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_User_updatedAt(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "User",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _User_source(ctx context.Context, field graphql.CollectedField, obj *model.User) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_User_source(ctx, field)
 	if err != nil {
@@ -20598,6 +21160,8 @@ func (ec *executionContext) fieldContext_UserPage_content(ctx context.Context, f
 				return ec.fieldContext_User_emails(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_User_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_User_updatedAt(ctx, field)
 			case "source":
 				return ec.fieldContext_User_source(ctx, field)
 			case "conversations":
@@ -24538,6 +25102,13 @@ func (ec *executionContext) _Contact(ctx context.Context, sel ast.SelectionSet, 
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&invalids, 1)
 			}
+		case "updatedAt":
+
+			out.Values[i] = ec._Contact_updatedAt(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
 		case "label":
 
 			out.Values[i] = ec._Contact_label(ctx, field, obj)
@@ -25218,6 +25789,13 @@ func (ec *executionContext) _CustomField(ctx context.Context, sel ast.SelectionS
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&invalids, 1)
 			}
+		case "updatedAt":
+
+			out.Values[i] = ec._CustomField_updatedAt(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
 		case "template":
 			field := field
 
@@ -25266,6 +25844,13 @@ func (ec *executionContext) _CustomFieldTemplate(ctx context.Context, sel ast.Se
 		case "createdAt":
 
 			out.Values[i] = ec._CustomFieldTemplate_createdAt(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "updatedAt":
+
+			out.Values[i] = ec._CustomFieldTemplate_updatedAt(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
 				invalids++
@@ -25555,6 +26140,13 @@ func (ec *executionContext) _EntityTemplate(ctx context.Context, sel ast.Selecti
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&invalids, 1)
 			}
+		case "updatedAt":
+
+			out.Values[i] = ec._EntityTemplate_updatedAt(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -25593,6 +26185,13 @@ func (ec *executionContext) _FieldSet(ctx context.Context, sel ast.SelectionSet,
 		case "createdAt":
 
 			out.Values[i] = ec._FieldSet_createdAt(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "updatedAt":
+
+			out.Values[i] = ec._FieldSet_updatedAt(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&invalids, 1)
@@ -25672,6 +26271,13 @@ func (ec *executionContext) _FieldSetTemplate(ctx context.Context, sel ast.Selec
 		case "createdAt":
 
 			out.Values[i] = ec._FieldSetTemplate_createdAt(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "updatedAt":
+
+			out.Values[i] = ec._FieldSetTemplate_updatedAt(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&invalids, 1)
@@ -26655,6 +27261,13 @@ func (ec *executionContext) _OrganizationType(ctx context.Context, sel ast.Selec
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
+		case "updatedAt":
+
+			out.Values[i] = ec._OrganizationType_updatedAt(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -26788,6 +27401,13 @@ func (ec *executionContext) _PhoneNumber(ctx context.Context, sel ast.SelectionS
 		case "createdAt":
 
 			out.Values[i] = ec._PhoneNumber_createdAt(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "updatedAt":
+
+			out.Values[i] = ec._PhoneNumber_updatedAt(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
 				invalids++
@@ -27427,6 +28047,13 @@ func (ec *executionContext) _User(ctx context.Context, sel ast.SelectionSet, obj
 		case "createdAt":
 
 			out.Values[i] = ec._User_createdAt(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "updatedAt":
+
+			out.Values[i] = ec._User_updatedAt(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&invalids, 1)

@@ -158,8 +158,8 @@ func (s *conversationService) mapDbNodeToConversationEntity(dbNode dbtype.Node) 
 	props := utils.GetPropsFromNode(dbNode)
 	conversationEntity := entity.ConversationEntity{
 		Id:                 utils.GetStringPropOrEmpty(props, "id"),
-		StartedAt:          utils.GetTimePropOrNow(props, "startedAt"),
-		UpdatedAt:          utils.GetTimePropOrNow(props, "updatedAt"),
+		StartedAt:          utils.GetTimePropOrEpochStart(props, "startedAt"),
+		UpdatedAt:          utils.GetTimePropOrEpochStart(props, "updatedAt"),
 		EndedAt:            utils.GetTimePropOrNil(props, "endedAt"),
 		Channel:            utils.GetStringPropOrEmpty(props, "channel"),
 		Subject:            utils.GetStringPropOrEmpty(props, "subject"),

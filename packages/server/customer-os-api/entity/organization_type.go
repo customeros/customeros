@@ -9,6 +9,7 @@ type OrganizationTypeEntity struct {
 	Id        string
 	Name      string
 	CreatedAt time.Time
+	UpdatedAt time.Time
 }
 
 func (organizationType OrganizationTypeEntity) ToString() string {

@@ -10,11 +10,13 @@ type EntityTemplate implements Node {
     fieldSets: [FieldSetTemplate!]! @goField(forceResolver: true)
     customFields: [CustomFieldTemplate!]! @goField(forceResolver: true)
     createdAt: Time!
+    updatedAt: Time!
 }
 
 type FieldSetTemplate  implements Node {
     id: ID!
     createdAt: Time!
+    updatedAt: Time!
     name: String!
     order: Int!
     customFields: [CustomFieldTemplate!]! @goField(forceResolver: true)
@@ -23,6 +25,7 @@ type FieldSetTemplate  implements Node {
 type CustomFieldTemplate  implements Node {
     id: ID!
     createdAt: Time!
+    updatedAt: Time!
     name: String!
     type: CustomFieldTemplateType!
     order: Int!

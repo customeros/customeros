@@ -39,8 +39,8 @@ func (s *placeService) mapDbNodeToPlaceEntity(node dbtype.Node) *entity.PlaceEnt
 	props := utils.GetPropsFromNode(node)
 	result := entity.PlaceEntity{
 		Id:            utils.GetStringPropOrEmpty(props, "id"),
-		CreatedAt:     utils.GetTimePropOrNow(props, "createdAt"),
-		UpdatedAt:     utils.GetTimePropOrNow(props, "updatedAt"),
+		CreatedAt:     utils.GetTimePropOrEpochStart(props, "createdAt"),
+		UpdatedAt:     utils.GetTimePropOrEpochStart(props, "updatedAt"),
 		Country:       utils.GetStringPropOrEmpty(props, "country"),
 		State:         utils.GetStringPropOrEmpty(props, "state"),
 		City:          utils.GetStringPropOrEmpty(props, "city"),

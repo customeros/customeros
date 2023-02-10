@@ -478,6 +478,7 @@ func (s *contactService) mapDbNodeToContactEntity(dbNode dbtype.Node) *entity.Co
 		Label:         utils.GetStringPropOrEmpty(props, "label"),
 		Title:         utils.GetStringPropOrEmpty(props, "title"),
 		CreatedAt:     utils.GetTimePropOrNil(props, "createdAt"),
+		UpdatedAt:     utils.GetTimePropOrEpochStart(props, "updatedAt"),
 		Source:        entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
 		SourceOfTruth: entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
 	}

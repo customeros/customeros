@@ -5,6 +5,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/neo4j"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils/decode"
 	"github.com/stretchr/testify/require"
 	"testing"
@@ -247,23 +248,25 @@ func TestMutationResolver_OrganizationCreate(t *testing.T) {
 	require.NotNil(t, organization)
 
 	// Assign the organization to a shorter variable for easier reference.
-	org := organization.Organization_Create
+	createdOrganization := organization.Organization_Create
 
 	// Ensure that the organization was created correctly.
-	require.NotNil(t, org.ID)
-	require.NotNil(t, org.CreatedAt)
-	require.NotNil(t, org.UpdatedAt)
-	require.Equal(t, "organization name", org.Name)
-	require.Equal(t, "organization description", *org.Description)
-	require.Equal(t, "organization domain", *org.Domain)
-	require.Equal(t, "organization website", *org.Website)
-	require.Equal(t, "organization industry", *org.Industry)
-	require.Equal(t, true, *org.IsPublic)
-	require.Equal(t, organizationTypeId, org.OrganizationType.ID)
-	require.Equal(t, "COMPANY", org.OrganizationType.Name)
-	require.Equal(t, model.DataSourceOpenline, org.Source)
-	require.Equal(t, model.DataSourceOpenline, org.SourceOfTruth)
-	require.Equal(t, "test", org.AppSource)
+	require.NotNil(t, createdOrganization.ID)
+	require.NotNil(t, createdOrganization.CreatedAt)
+	require.NotEqual(t, utils.GetEpochStart(), createdOrganization.CreatedAt)
+	require.NotNil(t, createdOrganization.UpdatedAt)
+	require.NotEqual(t, utils.GetEpochStart(), createdOrganization.UpdatedAt)
+	require.Equal(t, "organization name", createdOrganization.Name)
+	require.Equal(t, "organization description", *createdOrganization.Description)
+	require.Equal(t, "organization domain", *createdOrganization.Domain)
+	require.Equal(t, "organization website", *createdOrganization.Website)
+	require.Equal(t, "organization industry", *createdOrganization.Industry)
+	require.Equal(t, true, *createdOrganization.IsPublic)
+	require.Equal(t, organizationTypeId, createdOrganization.OrganizationType.ID)
+	require.Equal(t, "COMPANY", createdOrganization.OrganizationType.Name)
+	require.Equal(t, model.DataSourceOpenline, createdOrganization.Source)
+	require.Equal(t, model.DataSourceOpenline, createdOrganization.SourceOfTruth)
+	require.Equal(t, "test", createdOrganization.AppSource)
 
 	// Check the number of nodes and relationships in the Neo4j database
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Organization"))
@@ -295,18 +298,19 @@ func TestMutationResolver_OrganizationUpdate(t *testing.T) {
 	err = decode.Decode(rawResponse.Data.(map[string]any), &organization)
 	require.Nil(t, err)
 	require.NotNil(t, organization)
-	require.Equal(t, organizationId, organization.Organization_Update.ID)
-	require.NotNil(t, organization.Organization_Update.CreatedAt)
-	require.NotNil(t, organization.Organization_Update.UpdatedAt)
-	require.Equal(t, "updated name", organization.Organization_Update.Name)
-	require.Equal(t, "updated description", *organization.Organization_Update.Description)
-	require.Equal(t, "updated domain", *organization.Organization_Update.Domain)
-	require.Equal(t, "updated website", *organization.Organization_Update.Website)
-	require.Equal(t, "updated industry", *organization.Organization_Update.Industry)
-	require.Equal(t, true, *organization.Organization_Update.IsPublic)
-	require.Equal(t, organizationTypeIdUpdate, organization.Organization_Update.OrganizationType.ID)
-	require.Equal(t, "UPDATED", organization.Organization_Update.OrganizationType.Name)
-	require.Equal(t, model.DataSourceOpenline, organization.Organization_Update.SourceOfTruth)
+	updatedOrganization := organization.Organization_Update
+	require.Equal(t, organizationId, updatedOrganization.ID)
+	require.NotNil(t, updatedOrganization.UpdatedAt)
+	require.NotEqual(t, utils.GetEpochStart(), updatedOrganization.UpdatedAt)
+	require.Equal(t, "updated name", updatedOrganization.Name)
+	require.Equal(t, "updated description", *updatedOrganization.Description)
+	require.Equal(t, "updated domain", *updatedOrganization.Domain)
+	require.Equal(t, "updated website", *updatedOrganization.Website)
+	require.Equal(t, "updated industry", *updatedOrganization.Industry)
+	require.Equal(t, true, *updatedOrganization.IsPublic)
+	require.Equal(t, organizationTypeIdUpdate, updatedOrganization.OrganizationType.ID)
+	require.Equal(t, "UPDATED", updatedOrganization.OrganizationType.Name)
+	require.Equal(t, model.DataSourceOpenline, updatedOrganization.SourceOfTruth)
 
 	// Check still single organization node exists after update, no new node created
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Organization"))

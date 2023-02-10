@@ -56,6 +56,7 @@ type Contact struct {
 	// An ISO8601 timestamp recording when the contact was created in customerOS.
 	// **Required**
 	CreatedAt time.Time `json:"createdAt"`
+	UpdatedAt time.Time `json:"updatedAt"`
 	// A user-defined label applied against a contact in customerOS.
 	Label  *string    `json:"label"`
 	Source DataSource `json:"source"`
@@ -307,6 +308,7 @@ type CustomField struct {
 	// The source of the custom field value
 	Source    DataSource           `json:"source"`
 	CreatedAt time.Time            `json:"createdAt"`
+	UpdatedAt time.Time            `json:"updatedAt"`
 	Template  *CustomFieldTemplate `json:"template"`
 }
 
@@ -333,6 +335,7 @@ type CustomFieldInput struct {
 type CustomFieldTemplate struct {
 	ID        string                  `json:"id"`
 	CreatedAt time.Time               `json:"createdAt"`
+	UpdatedAt time.Time               `json:"updatedAt"`
 	Name      string                  `json:"name"`
 	Type      CustomFieldTemplateType `json:"type"`
 	Order     int                     `json:"order"`
@@ -454,6 +457,7 @@ type EntityTemplate struct {
 	FieldSets    []*FieldSetTemplate      `json:"fieldSets"`
 	CustomFields []*CustomFieldTemplate   `json:"customFields"`
 	CreatedAt    time.Time                `json:"createdAt"`
+	UpdatedAt    time.Time                `json:"updatedAt"`
 }
 
 func (EntityTemplate) IsNode()            {}
@@ -476,6 +480,7 @@ type FieldSet struct {
 	ID           string            `json:"id"`
 	Name         string            `json:"name"`
 	CreatedAt    time.Time         `json:"createdAt"`
+	UpdatedAt    time.Time         `json:"updatedAt"`
 	CustomFields []*CustomField    `json:"customFields"`
 	Template     *FieldSetTemplate `json:"template"`
 	Source       DataSource        `json:"source"`
@@ -491,6 +496,7 @@ type FieldSetInput struct {
 type FieldSetTemplate struct {
 	ID           string                 `json:"id"`
 	CreatedAt    time.Time              `json:"createdAt"`
+	UpdatedAt    time.Time              `json:"updatedAt"`
 	Name         string                 `json:"name"`
 	Order        int                    `json:"order"`
 	CustomFields []*CustomFieldTemplate `json:"customFields"`
@@ -673,6 +679,7 @@ type OrganizationType struct {
 	ID        string    `json:"id"`
 	Name      string    `json:"name"`
 	CreatedAt time.Time `json:"createdAt"`
+	UpdatedAt time.Time `json:"updatedAt"`
 }
 
 type OrganizationTypeInput struct {
@@ -737,6 +744,7 @@ type PhoneNumber struct {
 	// **Required**
 	Primary   bool       `json:"primary"`
 	CreatedAt time.Time  `json:"createdAt"`
+	UpdatedAt time.Time  `json:"updatedAt"`
 	Source    DataSource `json:"source"`
 }
 
@@ -841,6 +849,7 @@ type User struct {
 	// Timestamp of user creation.
 	// **Required**
 	CreatedAt     time.Time         `json:"createdAt"`
+	UpdatedAt     time.Time         `json:"updatedAt"`
 	Source        DataSource        `json:"source"`
 	Conversations *ConversationPage `json:"conversations"`
 }

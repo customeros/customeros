@@ -68,18 +68,19 @@ func (r *contactRepository) RemoveOwner(tx neo4j.Transaction, tenant, contactId 
 
 func (r *contactRepository) Create(tx neo4j.Transaction, tenant string, newContact entity.ContactEntity, source, sourceOfTruth entity.DataSource) (*dbtype.Node, error) {
 	var createdAt time.Time
-	createdAt = time.Now().UTC()
+	createdAt = utils.Now()
 	if newContact.CreatedAt != nil {
 		createdAt = *newContact.CreatedAt
 	}
 
 	query := "MATCH (t:Tenant {name:$tenant}) " +
-		" MERGE (c:Contact {id:randomUUID()})-[:CONTACT_BELONGS_TO_TENANT]->(t) ON CREATE SET" +
+		" MERGE (c:Contact {id:randomUUID()})-[:CONTACT_BELONGS_TO_TENANT]->(t) ON CREATE SET " +
 		" c.title=$title, " +
 		" c.firstName=$firstName, " +
 		" c.lastName=$lastName, " +
 		" c.label=$label, " +
 		" c.createdAt=$createdAt, " +
+		" c.updatedAt=$createdAt, " +
 		" c.source=$source, " +
 		" c.sourceOfTruth=$sourceOfTruth, " +
 		" c:Contact_%s " +
@@ -108,7 +109,8 @@ func (r *contactRepository) Update(tx neo4j.Transaction, tenant, contactId strin
 			SET c.firstName=$firstName,
 				c.lastName=$lastName,
 				c.label=$label,
-				c.title=$title
+				c.title=$title,
+				c.updatedAt=datetime({timezone: 'UTC'})
 			RETURN c`,
 		map[string]interface{}{
 			"tenant":    tenant,

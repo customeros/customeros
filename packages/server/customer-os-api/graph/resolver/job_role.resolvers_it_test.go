@@ -15,7 +15,7 @@ func TestMutationResolver_JobRoleCreate_WithOrganization(t *testing.T) {
 	contactId := neo4jt.CreateDefaultContact(driver, tenantName)
 	organizationId := neo4jt.CreateOrganization(driver, tenantName, "LLC LLC")
 
-	rawResponse, err := c.RawPost(getQuery("create_job_role_for_organization"),
+	rawResponse, err := c.RawPost(getQuery("job_role/create_job_role_for_organization"),
 		client.Var("contactId", contactId),
 		client.Var("organizationId", organizationId))
 	assertRawResponseSuccess(t, rawResponse, err)
@@ -58,7 +58,7 @@ func TestMutationResolver_JobRoleCreate_WithoutOrganization(t *testing.T) {
 	neo4jt.CreateTenant(driver, tenantName)
 	contactId := neo4jt.CreateDefaultContact(driver, tenantName)
 
-	rawResponse, err := c.RawPost(getQuery("create_job_role_without_organization"),
+	rawResponse, err := c.RawPost(getQuery("job_role/create_job_role_without_organization"),
 		client.Var("contactId", contactId))
 	assertRawResponseSuccess(t, rawResponse, err)
 
@@ -104,7 +104,7 @@ func TestMutationResolver_JobRoleUpdate(t *testing.T) {
 	require.Equal(t, 1, neo4jt.GetCountOfRelationships(driver, "ROLE_IN"))
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "JobRole"))
 
-	rawResponse, err := c.RawPost(getQuery("update_job_role"),
+	rawResponse, err := c.RawPost(getQuery("job_role/update_job_role"),
 		client.Var("contactId", contactId),
 		client.Var("roleId", roleId))
 	assertRawResponseSuccess(t, rawResponse, err)
@@ -139,7 +139,7 @@ func TestMutationResolver_JobRoleUpdate_ChangeOrganization(t *testing.T) {
 	newOrganizationId := neo4jt.CreateOrganization(driver, tenantName, "NEW CO")
 	roleId := neo4jt.ContactWorksForOrganization(driver, contactId, organizationId, "CTO", false)
 
-	rawResponse, err := c.RawPost(getQuery("update_job_role_change_organization"),
+	rawResponse, err := c.RawPost(getQuery("job_role/update_job_role_change_organization"),
 		client.Var("contactId", contactId),
 		client.Var("roleId", roleId),
 		client.Var("organizationId", newOrganizationId))
@@ -183,7 +183,7 @@ func TestMutationResolver_JobRoleDelete(t *testing.T) {
 	require.Equal(t, 1, neo4jt.GetCountOfRelationships(driver, "ROLE_IN"))
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "JobRole"))
 
-	rawResponse, err := c.RawPost(getQuery("delete_job_role"),
+	rawResponse, err := c.RawPost(getQuery("job_role/delete_job_role"),
 		client.Var("contactId", contactId),
 		client.Var("roleId", roleId))
 	assertRawResponseSuccess(t, rawResponse, err)

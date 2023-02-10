@@ -34,6 +34,7 @@ type PhoneNumber {
     primary: Boolean!
 
     createdAt: Time!
+    updatedAt: Time!
 
     source: DataSource!
 }
