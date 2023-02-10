@@ -189,11 +189,11 @@ func (s *MessageService) SaveMessage(ctx context.Context, input *msProto.InputMe
 
 	tenant := "openline" //TODO get tenant from context
 	initiator, err := s.getParticipant(tenant, *input.InitiatorIdentifier)
+
 	participants = append(participants, *initiator)
 	if err != nil {
 		return nil, err
 	}
-
 	var threadId = ""
 	entityType := s.commonStoreService.ConvertMSTypeToEntityType(input.Type)
 	if err := s.getThreadIdAndParticipantsFromMail(tenant, &threadId, &participants, entityType, input); err != nil {
@@ -208,7 +208,7 @@ func (s *MessageService) SaveMessage(ctx context.Context, input *msProto.InputMe
 			conversation = conv
 		}
 	} else {
-		if conv, err := s.customerOSService.GetActiveConversationOrCreate(tenant, initiator.Id, *input.InitiatorIdentifier, input.SenderType, entityType, threadId); err != nil {
+		if conv, err := s.customerOSService.GetActiveConversationOrCreate(tenant, initiator.Id, *input.InitiatorIdentifier, initiator.Type, entityType, threadId); err != nil {
 			return nil, err
 		} else {
 			conversation = conv
@@ -226,9 +226,8 @@ func (s *MessageService) SaveMessage(ctx context.Context, input *msProto.InputMe
 			userIds = append(userIds, participants[participantsIndex].Id)
 		}
 	}
-
-	lastSenderType := s.getSenderTypeStr(initiator)
-	if _, err := s.customerOSService.UpdateConversation(tenant, conversation.Id, initiator.Id, lastSenderType, contactIds, userIds, previewMessage); err != nil {
+	senderType := s.getSenderTypeStr(initiator)
+	if _, err := s.customerOSService.UpdateConversation(tenant, conversation.Id, initiator.Id, senderType, contactIds, userIds, previewMessage); err != nil {
 		return nil, err
 	}
 

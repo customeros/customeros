@@ -7,7 +7,6 @@ import (
 	"github.com/neo4j/neo4j-go-driver/v4/neo4j/db"
 	"github.com/neo4j/neo4j-go-driver/v4/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	msProto "github.com/openline-ai/openline-customer-os/packages/server/message-store-api/proto/generated"
 	"github.com/openline-ai/openline-customer-os/packages/server/message-store-api/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/message-store-api/repository/entity"
 	"time"
@@ -625,25 +624,25 @@ func (s *CustomerOSService) GetActiveConversationOrCreate(
 	tenant string,
 	initiatorId string,
 	initiatorUsername string,
-	senderType msProto.SenderType,
+	senderType entity.SenderType,
 	eventType entity.EventType,
 	threadId string,
 ) (*Conversation, error) {
 	var conversation *Conversation
 	var err error
 	if eventType == entity.WEB_CHAT {
-		if senderType == msProto.SenderType_CONTACT {
+		if senderType == entity.CONTACT {
 			conversation, err = s.GetWebChatConversationWithContactInitiator(tenant, initiatorId)
-		} else if senderType == msProto.SenderType_USER {
+		} else if senderType == entity.USER {
 			conversation, err = s.GetWebChatConversationWithUserInitiator(tenant, initiatorId)
 		}
 	} else if eventType == entity.EMAIL {
 		if err != nil {
 			return nil, err
 		}
-		if senderType == msProto.SenderType_CONTACT {
+		if senderType == entity.CONTACT {
 			conversation, err = s.GetEmailConversationWithContactInitiator(tenant, initiatorId, threadId)
-		} else if senderType == msProto.SenderType_USER {
+		} else if senderType == entity.USER {
 			conversation, err = s.GetEmailConversationWithUserInitiator(tenant, initiatorId, threadId)
 		}
 	}
@@ -653,7 +652,7 @@ func (s *CustomerOSService) GetActiveConversationOrCreate(
 	}
 
 	if conversation == nil {
-		conversation, err = s.CreateConversation(tenant, initiatorId, initiatorUsername, s.commonStoreService.ConvertMSSenderTypeToEntitySenderType(senderType), eventType, threadId)
+		conversation, err = s.CreateConversation(tenant, initiatorId, initiatorUsername, senderType, eventType, threadId)
 	}
 	if err != nil {
 		return nil, err
