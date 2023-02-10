@@ -133,7 +133,8 @@ func (s *fieldSetService) mapDbNodeToFieldSetEntity(node dbtype.Node) *entity.Fi
 	result := entity.FieldSetEntity{
 		Id:            utils.StringPtr(utils.GetStringPropOrEmpty(props, "id")),
 		Name:          utils.GetStringPropOrEmpty(props, "name"),
-		CreatedAt:     utils.GetTimePropOrNow(props, "createdAt"),
+		CreatedAt:     utils.GetTimePropOrEpochStart(props, "createdAt"),
+		UpdatedAt:     utils.GetTimePropOrEpochStart(props, "updatedAt"),
 		Source:        entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
 		SourceOfTruth: entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
 	}

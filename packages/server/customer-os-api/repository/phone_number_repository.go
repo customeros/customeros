@@ -33,10 +33,12 @@ func (r *phoneNumberRepository) MergePhoneNumberToContactInTx(tx neo4j.Transacti
 		"				p.id=randomUUID(), " +
 		"				p.source=$source, " +
 		"				p.sourceOfTruth=$sourceOfTruth, " +
-		"				p.createdAt=datetime({timezone: 'UTC'}), " +
+		"				p.createdAt=$now, " +
+		"				p.updatedAt=$now, " +
 		"				p:%s " +
 		" ON MATCH SET 	p.label=$label, " +
 		"				r.primary=$primary, " +
+		"				p.updatedAt=$now, " +
 		"				p.sourceOfTruth=$sourceOfTruth " +
 		" RETURN p, r"
 
@@ -49,6 +51,7 @@ func (r *phoneNumberRepository) MergePhoneNumberToContactInTx(tx neo4j.Transacti
 			"primary":       entity.Primary,
 			"source":        entity.Source,
 			"sourceOfTruth": entity.SourceOfTruth,
+			"now":           utils.Now(),
 		})
 	return utils.ExtractSingleRecordNodeAndRelationship(queryResult, err)
 }
@@ -61,6 +64,7 @@ func (r *phoneNumberRepository) UpdatePhoneNumberByContactInTx(tx neo4j.Transact
 				p.label=$label,
 				r.primary=$primary,
 				p.sourceOfTruth=$sourceOfTruth,
+				p.updatedAt=$now
 			RETURN p, r`,
 		map[string]interface{}{
 			"tenant":        tenant,
@@ -70,6 +74,7 @@ func (r *phoneNumberRepository) UpdatePhoneNumberByContactInTx(tx neo4j.Transact
 			"label":         entity.Label,
 			"primary":       entity.Primary,
 			"sourceOfTruth": entity.SourceOfTruth,
+			"now":           utils.Now(),
 		})
 	return utils.ExtractSingleRecordNodeAndRelationship(queryResult, err)
 }

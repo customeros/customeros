@@ -34,13 +34,15 @@ func (r *userRepository) MergeUser(tenant string, syncDate time.Time, user entit
 	// Link User with Tenant
 	query := "MATCH (t:Tenant {name:$tenant})<-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]-(e:ExternalSystem {id:$externalSystem}) " +
 		" MERGE (u:User)-[r:IS_LINKED_WITH {externalId:$externalId}]->(e) " +
-		" ON CREATE SET r.externalId=$externalId, r.externalOwnerId=$externalOwnerId, r.syncDate=$syncDate, u.id=randomUUID(), u.createdAt=$createdAt, " +
+		" ON CREATE SET r.externalId=$externalId, r.externalOwnerId=$externalOwnerId, r.syncDate=$syncDate, u.id=randomUUID(), " +
+		"				u.createdAt=$createdAt, u.updatedAt=$createdAt, " +
 		"               u.firstName=$firstName, u.lastName=$lastName, " +
 		"               u.source=$source, u.sourceOfTruth=$sourceOfTruth, u.appSource=$appSource, " +
 		"               u:%s" +
 		" ON MATCH SET 	r.syncDate = CASE WHEN u.sourceOfTruth=$sourceOfTruth THEN $syncDate ELSE r.syncDate END, " +
 		"				u.firstName = CASE WHEN u.sourceOfTruth=$sourceOfTruth THEN $firstName ELSE u.firstName END, " +
-		"				u.lastName = CASE WHEN u.sourceOfTruth=$sourceOfTruth THEN $lastName ELSE u.lastName END " +
+		"				u.lastName = CASE WHEN u.sourceOfTruth=$sourceOfTruth THEN $lastName ELSE u.lastName END, " +
+		"				u.updatedAt = CASE WHEN u.sourceOfTruth=$sourceOfTruth THEN $now ELSE u.updatedAt END " +
 		" WITH u, t " +
 		" MERGE (u)-[:USER_BELONGS_TO_TENANT]->(t)" +
 		" WITH u " +

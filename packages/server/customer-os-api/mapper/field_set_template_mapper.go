@@ -20,6 +20,7 @@ func MapEntityToFieldSetTemplate(entity *entity.FieldSetTemplateEntity) *model.F
 	output := model.FieldSetTemplate{
 		ID:        entity.Id,
 		CreatedAt: entity.CreatedAt,
+		UpdatedAt: entity.UpdatedAt,
 		Name:      entity.Name,
 		Order:     int(entity.Order),
 	}

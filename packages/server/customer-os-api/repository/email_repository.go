@@ -6,7 +6,6 @@ import (
 	"github.com/neo4j/neo4j-go-driver/v4/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils"
-	"time"
 )
 
 type EntityType string
@@ -73,7 +72,7 @@ func (r *emailRepository) MergeEmailToInTx(tx neo4j.Transaction, tenant string, 
 			"source":        entity.Source,
 			"sourceOfTruth": entity.SourceOfTruth,
 			"appSource":     entity.AppSource,
-			"now":           time.Now().UTC(),
+			"now":           utils.Now(),
 		})
 	return utils.ExtractSingleRecordNodeAndRelationship(queryResult, err)
 }
@@ -105,7 +104,7 @@ func (r *emailRepository) UpdateEmailByInTx(tx neo4j.Transaction, tenant string,
 			"label":         entity.Label,
 			"primary":       entity.Primary,
 			"sourceOfTruth": entity.SourceOfTruth,
-			"now":           time.Now().UTC(),
+			"now":           utils.Now(),
 		})
 	return utils.ExtractSingleRecordNodeAndRelationship(queryResult, err)
 }
@@ -157,7 +156,7 @@ func (r *emailRepository) SetOtherEmailsNonPrimaryInTx(tx neo4j.Transaction, ten
 			"tenant":   tenantId,
 			"entityId": entityId,
 			"email":    email,
-			"now":      time.Now().UTC(),
+			"now":      utils.Now(),
 		})
 	return err
 }

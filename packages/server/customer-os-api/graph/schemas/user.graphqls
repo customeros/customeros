@@ -45,6 +45,7 @@ type User {
     **Required**
     """
     createdAt: Time!
+    updatedAt: Time!
 
     source: DataSource!
 

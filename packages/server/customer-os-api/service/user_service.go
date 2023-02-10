@@ -199,7 +199,8 @@ func (s *userService) mapDbNodeToUserEntity(dbNode dbtype.Node) *entity.UserEnti
 		Id:            utils.GetStringPropOrEmpty(props, "id"),
 		FirstName:     utils.GetStringPropOrEmpty(props, "firstName"),
 		LastName:      utils.GetStringPropOrEmpty(props, "lastName"),
-		CreatedAt:     utils.GetTimePropOrNow(props, "createdAt"),
+		CreatedAt:     utils.GetTimePropOrEpochStart(props, "createdAt"),
+		UpdatedAt:     utils.GetTimePropOrEpochStart(props, "updatedAt"),
 		Source:        entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
 		SourceOfTruth: entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
 	}

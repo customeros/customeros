@@ -33,7 +33,8 @@ func (r *organizationTypeRepository) Create(tenant string, organizationType *ent
 	query := "MATCH (t:Tenant {name:$tenant})" +
 		" MERGE (t)<-[:ORGANIZATION_TYPE_BELONGS_TO_TENANT]-(ot:OrganizationType {id:randomUUID()})" +
 		" ON CREATE SET ot.name=$name, " +
-		"				ot.createdAt=datetime({timezone: 'UTC'}), " +
+		"				ot.createdAt=$now, " +
+		"				ot.updatedAt=$now, " +
 		"				ot:%s" +
 		" RETURN ot"
 
@@ -42,6 +43,7 @@ func (r *organizationTypeRepository) Create(tenant string, organizationType *ent
 			map[string]any{
 				"tenant": tenant,
 				"name":   organizationType.Name,
+				"now":    utils.Now(),
 			})
 		return utils.ExtractSingleRecordFirstValueAsNode(queryResult, err)
 	}); err != nil {
@@ -58,12 +60,13 @@ func (r *organizationTypeRepository) Update(tenant string, organizationType *ent
 	if result, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
 		queryResult, err := tx.Run(`
 			MATCH (:Tenant {name:$tenant})<-[:ORGANIZATION_TYPE_BELONGS_TO_TENANT]-(ot:OrganizationType {id:$organizationId})
-			SET ot.name=$name
+			SET ot.name=$name, ot.updatedAt=$now
 			RETURN ot`,
 			map[string]any{
 				"tenant":         tenant,
 				"organizationId": organizationType.Id,
 				"name":           organizationType.Name,
+				"now":            utils.Now(),
 			})
 		return utils.ExtractSingleRecordFirstValueAsNode(queryResult, err)
 	}); err != nil {

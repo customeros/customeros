@@ -11,5 +11,7 @@ mutation MergePhoneNumberToContact($contactId: ID!){
         label
         primary
         source
+        createdAt
+        updatedAt
       }
 }

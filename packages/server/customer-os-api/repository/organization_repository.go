@@ -7,7 +7,6 @@ import (
 	"github.com/neo4j/neo4j-go-driver/v4/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils"
-	"time"
 )
 
 type OrganizationRepository interface {
@@ -63,7 +62,7 @@ func (r *organizationRepository) Create(tx neo4j.Transaction, tenant string, org
 			"source":        organization.Source,
 			"sourceOfTruth": organization.SourceOfTruth,
 			"appSource":     organization.AppSource,
-			"now":           time.Now().UTC(),
+			"now":           utils.Now(),
 		})
 	return utils.ExtractSingleRecordFirstValueAsNode(queryResult, err)
 }

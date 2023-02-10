@@ -11,6 +11,7 @@ type EntityTemplateEntity struct {
 	Extends      *string
 	Version      int64
 	CreatedAt    time.Time
+	UpdatedAt    time.Time
 	CustomFields []*CustomFieldTemplateEntity
 	FieldSets    []*FieldSetTemplateEntity
 }

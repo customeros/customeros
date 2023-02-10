@@ -34,6 +34,7 @@ func MapEntityToCustomFieldTemplate(entity *entity.CustomFieldTemplateEntity) *m
 		Min:       utils.Int64PtrToIntPtr(entity.Min),
 		Max:       utils.Int64PtrToIntPtr(entity.Max),
 		CreatedAt: entity.CreatedAt,
+		UpdatedAt: entity.UpdatedAt,
 	}
 	return &output
 }

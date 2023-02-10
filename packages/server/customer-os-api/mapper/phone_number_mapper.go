@@ -54,5 +54,6 @@ func MapEntityToPhoneNumber(entity *entity.PhoneNumberEntity) *model.PhoneNumber
 		Primary:   entity.Primary,
 		Source:    MapDataSourceToModel(entity.Source),
 		CreatedAt: entity.CreatedAt,
+		UpdatedAt: entity.UpdatedAt,
 	}
 }

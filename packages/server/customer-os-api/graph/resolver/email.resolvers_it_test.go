@@ -20,7 +20,7 @@ func TestMutationResolver_EmailMergeToContact(t *testing.T) {
 	contactId := neo4jt.CreateDefaultContact(driver, tenantName)
 
 	// Make the RawPost request and check for errors
-	rawResponse, err := c.RawPost(getQuery("merge_email_to_contact"),
+	rawResponse, err := c.RawPost(getQuery("email/merge_email_to_contact"),
 		client.Var("contactId", contactId))
 	assertRawResponseSuccess(t, rawResponse, err)
 
@@ -70,7 +70,7 @@ func TestMutationResolver_EmailUpdateInContact(t *testing.T) {
 	emailId := neo4jt.AddEmailTo(driver, repository.CONTACT, tenantName, contactId, "original@email.com", true, "")
 
 	// Make the RawPost request and check for errors
-	rawResponse, err := c.RawPost(getQuery("update_email_for_contact"),
+	rawResponse, err := c.RawPost(getQuery("email/update_email_for_contact"),
 		client.Var("contactId", contactId),
 		client.Var("emailId", emailId))
 	assertRawResponseSuccess(t, rawResponse, err)
@@ -109,7 +109,7 @@ func TestMutationResolver_EmailMergeToUser(t *testing.T) {
 	userId := neo4jt.CreateDefaultUser(driver, tenantName)
 
 	// Make the RawPost request and check for errors
-	rawResponse, err := c.RawPost(getQuery("merge_email_to_user"),
+	rawResponse, err := c.RawPost(getQuery("email/merge_email_to_user"),
 		client.Var("userId", userId))
 	assertRawResponseSuccess(t, rawResponse, err)
 
@@ -159,7 +159,7 @@ func TestMutationResolver_EmailUpdateInUser(t *testing.T) {
 	emailId := neo4jt.AddEmailTo(driver, repository.USER, tenantName, userId, "original@email.com", true, "")
 
 	// Make the RawPost request and check for errors
-	rawResponse, err := c.RawPost(getQuery("update_email_for_user"),
+	rawResponse, err := c.RawPost(getQuery("email/update_email_for_user"),
 		client.Var("userId", userId),
 		client.Var("emailId", emailId))
 	assertRawResponseSuccess(t, rawResponse, err)

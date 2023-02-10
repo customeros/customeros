@@ -43,6 +43,7 @@ type CustomFieldEntity struct {
 	Source        DataSource
 	SourceOfTruth DataSource
 	CreatedAt     time.Time
+	UpdatedAt     time.Time
 }
 
 type CustomFieldEntities []CustomFieldEntity

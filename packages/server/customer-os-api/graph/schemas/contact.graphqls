@@ -64,6 +64,7 @@ type Contact implements ExtensibleEntity & Node {
     **Required**
     """
     createdAt: Time!
+    updatedAt: Time!
 
     "A user-defined label applied against a contact in customerOS."
     label: String

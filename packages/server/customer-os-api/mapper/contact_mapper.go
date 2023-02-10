@@ -45,6 +45,7 @@ func MapEntityToContact(contact *entity.ContactEntity) *model.Contact {
 		LastName:  utils.StringPtr(contact.LastName),
 		Label:     utils.StringPtr(contact.Label),
 		CreatedAt: *contact.CreatedAt,
+		UpdatedAt: contact.UpdatedAt,
 		Source:    MapDataSourceToModel(contact.Source),
 	}
 }

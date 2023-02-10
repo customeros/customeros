@@ -48,6 +48,7 @@ type CustomField implements Node {
     source: DataSource!
 
     createdAt: Time!
+    updatedAt: Time!
 
     template: CustomFieldTemplate @goField(forceResolver: true)
 }
@@ -127,6 +128,7 @@ type FieldSet {
     id: ID!
     name: String!
     createdAt: Time!
+    updatedAt: Time!
     customFields: [CustomField!]! @goField(forceResolver: true)
     template: FieldSetTemplate @goField(forceResolver: true)
     source: DataSource!

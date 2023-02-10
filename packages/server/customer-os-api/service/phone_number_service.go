@@ -169,7 +169,8 @@ func (s *phoneNumberService) mapDbNodeToPhoneNumberEntity(node dbtype.Node) *ent
 		Label:         utils.GetStringPropOrEmpty(props, "label"),
 		Source:        entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
 		SourceOfTruth: entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
-		CreatedAt:     utils.GetTimePropOrNow(props, "createdAt"),
+		CreatedAt:     utils.GetTimePropOrEpochStart(props, "createdAt"),
+		UpdatedAt:     utils.GetTimePropOrEpochStart(props, "updatedAt"),
 	}
 	return &result
 }

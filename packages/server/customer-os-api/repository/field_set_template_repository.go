@@ -31,7 +31,8 @@ func (r *fieldSetTemplateRepository) createFieldSetTemplateInTx(tx neo4j.Transac
 		" MERGE (e)-[:CONTAINS]->(f:FieldSetTemplate {id:randomUUID(), name:$name}) " +
 		" ON CREATE SET f:%s, " +
 		"				f.order=$order, " +
-		"				f.createdAt=datetime({timezone: 'UTC'})" +
+		"				f.createdAt=$now, " +
+		"				f.updatedAt=$now " +
 		" RETURN f"
 
 	queryResult, err := tx.Run(fmt.Sprintf(query, "FieldSetTemplate_"+tenant),
@@ -39,6 +40,7 @@ func (r *fieldSetTemplateRepository) createFieldSetTemplateInTx(tx neo4j.Transac
 			"entityTemplateId": entityTemplateId,
 			"name":             entity.Name,
 			"order":            entity.Order,
+			"now":              utils.Now(),
 		})
 
 	record, err := queryResult.Single()

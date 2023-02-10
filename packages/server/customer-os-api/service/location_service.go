@@ -60,8 +60,8 @@ func (s *locationService) mapDbNodeToLocationEntity(node dbtype.Node) *entity.Lo
 	result := entity.LocationEntity{
 		Id:        utils.GetStringPropOrEmpty(props, "id"),
 		Name:      utils.GetStringPropOrEmpty(props, "name"),
-		CreatedAt: utils.GetTimePropOrNow(props, "createdAt"),
-		UpdatedAt: utils.GetTimePropOrNow(props, "updatedAt"),
+		CreatedAt: utils.GetTimePropOrEpochStart(props, "createdAt"),
+		UpdatedAt: utils.GetTimePropOrEpochStart(props, "updatedAt"),
 		Source:    entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
 		AppSource: utils.GetStringPropOrEmpty(props, "appSource"),
 	}

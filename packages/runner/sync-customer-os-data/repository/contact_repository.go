@@ -42,13 +42,14 @@ func (r *contactRepository) MergeContact(tenant string, syncDate time.Time, cont
 	// Link Contact with Tenant
 	query := "MATCH (t:Tenant {name:$tenant})<-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]-(e:ExternalSystem {id:$externalSystem}) " +
 		" MERGE (c:Contact)-[r:IS_LINKED_WITH {externalId:$externalId}]->(e) " +
-		" ON CREATE SET r.externalId=$externalId, r.syncDate=$syncDate, c.id=randomUUID(), c.createdAt=$createdAt, " +
+		" ON CREATE SET r.externalId=$externalId, r.syncDate=$syncDate, c.id=randomUUID(), c.createdAt=$createdAt, c.updatedAt=$createdAt, " +
 		"				c.source=$source, c.sourceOfTruth=$sourceOfTruth, c.appSource=$appSource, " +
 		"				c.firstName=$firstName, c.lastName=$lastName,  " +
 		" 				c:%s " +
 		" ON MATCH SET 	r.syncDate = CASE WHEN c.sourceOfTruth=$sourceOfTruth THEN $syncDate ELSE r.syncDate END, " +
 		"				c.firstName = CASE WHEN c.sourceOfTruth=$sourceOfTruth THEN $firstName ELSE c.firstName END, " +
-		"				c.lastName = CASE WHEN c.sourceOfTruth=$sourceOfTruth THEN $lastName ELSE c.lastName END " +
+		"				c.lastName = CASE WHEN c.sourceOfTruth=$sourceOfTruth THEN $lastName ELSE c.lastName END, " +
+		"				c.updatedAt = CASE WHEN c.sourceOfTruth=$sourceOfTruth THEN $now ELSE c.updatedAt END " +
 		" WITH c, t " +
 		" MERGE (c)-[:CONTACT_BELONGS_TO_TENANT]->(t) " +
 		" WITH c " +

@@ -51,6 +51,7 @@ func MapEntityToFieldSet(fieldSetEntity *entity.FieldSetEntity) *model.FieldSet 
 		ID:        *fieldSetEntity.Id,
 		Name:      fieldSetEntity.Name,
 		CreatedAt: fieldSetEntity.CreatedAt,
+		UpdatedAt: fieldSetEntity.UpdatedAt,
 		Source:    MapDataSourceToModel(fieldSetEntity.Source),
 	}
 }

@@ -28,8 +28,7 @@ func (r *externalSystemRepository) Merge(tenant, externalSystem string) error {
 		_, err := tx.Run(`
 				MATCH (t:Tenant {name:$tenant})
 				MERGE (t)<-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]-(e:ExternalSystem {id:$externalSystem})
-				ON CREATE SET e.name=$externalSystem, e.createdAt=$now
-				`,
+				ON CREATE SET e.name=$externalSystem, e.createdAt=$now, e.updatedAt=$now `,
 			map[string]interface{}{
 				"tenant":         tenant,
 				"externalSystem": externalSystem,

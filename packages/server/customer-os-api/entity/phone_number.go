@@ -13,6 +13,7 @@ type PhoneNumberEntity struct {
 	Source        DataSource
 	SourceOfTruth DataSource
 	CreatedAt     time.Time
+	UpdatedAt     time.Time
 }
 
 func (phone PhoneNumberEntity) ToString() string {

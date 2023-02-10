@@ -8,5 +8,6 @@ mutation UpdateUser($userId: ID!) {
     firstName
     lastName
     source
+    updatedAt
   }
 }

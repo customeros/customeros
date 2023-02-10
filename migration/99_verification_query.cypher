@@ -112,4 +112,3 @@ CALL {
 
 # CHECK 4 - Query to verify labels mix
 MATCH (n) RETURN count(labels(n)), labels(n);
-
