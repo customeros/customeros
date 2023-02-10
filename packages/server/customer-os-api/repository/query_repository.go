@@ -95,15 +95,17 @@ func (r *queryRepository) GetOrganizationsAndContacts(session neo4j.Session, ten
 		if searchTerm != nil {
 			countQuery = countQuery + fmt.Sprintf(`
 		  UNION
-		  MATCH (t:Tenant {name:$tenant})--(o:Organization)--(e:Email{email:$email})
+		  MATCH (t:Tenant {name:$tenant})--(o:Organization)--(e:Email)
 		  MATCH (t)--(c:Contact)
 		  MATCH (o)-[rel]-(c)
+		  WHERE e.email CONTAINS $email
 		  RETURN rel
 
 		  UNION
 		  MATCH (t:Tenant {name:$tenant})--(o:Organization)
-		  MATCH (t)--(c:Contact)--(e:Email{email:$email})
+		  MATCH (t)--(c:Contact)--(e:Email)
 		  MATCH (o)-[rel]-(c)
+		  WHERE e.email CONTAINS $email
 		  RETURN rel`)
 		}
 
@@ -118,8 +120,8 @@ func (r *queryRepository) GetOrganizationsAndContacts(session neo4j.Session, ten
 		if searchTerm != nil {
 			countQuery = countQuery + fmt.Sprintf(`
 		  UNION
-		  MATCH (t:Tenant {name:$tenant})-[rel:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization)--(e:Email{email:$email})
-		  WHERE NOT (o)--(:Contact)	  
+		  MATCH (t:Tenant {name:$tenant})-[rel:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization)--(e:Email)
+		  WHERE NOT (o)--(:Contact)	AND e.email CONTAINS $email
 		  RETURN rel`)
 		}
 
@@ -134,8 +136,8 @@ func (r *queryRepository) GetOrganizationsAndContacts(session neo4j.Session, ten
 		if searchTerm != nil {
 			countQuery = countQuery + fmt.Sprintf(`
 		  UNION
-		  MATCH (t:Tenant {name:$tenant})-[rel:CONTACT_BELONGS_TO_TENANT]-(c:Contact)--(e:Email{email:$email})
-		  WHERE NOT (c)--(:Organization)
+		  MATCH (t:Tenant {name:$tenant})-[rel:CONTACT_BELONGS_TO_TENANT]-(c:Contact)--(e:Email)
+		  WHERE NOT (c)--(:Organization) AND e.email CONTAINS $email
 		  RETURN rel`)
 		}
 
@@ -169,15 +171,17 @@ func (r *queryRepository) GetOrganizationsAndContacts(session neo4j.Session, ten
 		if searchTerm != nil {
 			query = query + fmt.Sprintf(`
 		  UNION
-		  MATCH (t:Tenant {name:$tenant})--(o:Organization)--(e:Email{email:$email})
+		  MATCH (t:Tenant {name:$tenant})--(o:Organization)--(e:Email)
 		  MATCH (t)--(c:Contact)
 		  MATCH (o)--(c)
+		  WHERE e.email CONTAINS $email
 		  RETURN o, c
 
 		  UNION
 		  MATCH (t:Tenant {name:$tenant})--(o:Organization)
-		  MATCH (t)--(c:Contact)--(e:Email{email:$email})
+		  MATCH (t)--(c:Contact)--(e:Email)
 		  MATCH (o)--(c)
+		  WHERE e.email CONTAINS $email
 		  RETURN o, c`)
 		}
 
@@ -192,8 +196,8 @@ func (r *queryRepository) GetOrganizationsAndContacts(session neo4j.Session, ten
 		if searchTerm != nil {
 			query = query + fmt.Sprintf(`
 		  UNION
-		  MATCH (t:Tenant {name:$tenant})--(o:Organization)--(e:Email{email:$email})
-		  WHERE NOT (o)--(:Contact)	  
+		  MATCH (t:Tenant {name:$tenant})--(o:Organization)--(e:Email)
+		  WHERE NOT (o)--(:Contact) AND e.email CONTAINS $email 
 		  RETURN o, null as c`)
 		}
 
@@ -208,8 +212,8 @@ func (r *queryRepository) GetOrganizationsAndContacts(session neo4j.Session, ten
 		if searchTerm != nil {
 			query = query + fmt.Sprintf(`
 		  UNION
-		  MATCH (t:Tenant {name:$tenant})--(c:Contact)--(e:Email{email:$email})
-		  WHERE NOT (c)--(:Organization)
+		  MATCH (t:Tenant {name:$tenant})--(c:Contact)--(e:Email)
+		  WHERE NOT (c)--(:Organization) AND e.email CONTAINS $email
 		  RETURN null as o, c`)
 		}
 		//endregion
