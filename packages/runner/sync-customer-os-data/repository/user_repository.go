@@ -88,17 +88,20 @@ func (r *userRepository) MergeEmail(tenant, userId, email, externalSystem string
 	session := utils.NewNeo4jWriteSession(*r.driver)
 	defer session.Close()
 
-	query := "MATCH (u:User {id:$userId})-[:USER_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) " +
-		" MERGE (u)-[r:HAS]->(e:Email {email: $email}) " +
-		" ON CREATE SET r.primary=true, " +
+	query := "MATCH (u:User {id:$userId})-[:USER_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant}) " +
+		" MERGE (e:Email {email: $email})-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]->(t) " +
+		" ON CREATE SET " +
 		"				e.id=randomUUID(), " +
-		"				e.label=$label, " +
 		"				e.createdAt=$now, " +
 		"				e.updatedAt=$now, " +
 		"				e.source=$source, " +
 		"				e.sourceOfTruth=$sourceOfTruth, " +
 		"				e.appSource=$appSource, " +
-		"				e:%s "
+		"				e:%s " +
+		" WITH DISTINCT u, e " +
+		" MERGE (u)-[rel:HAS]->(e) " +
+		" ON CREATE SET rel.primary=true, " +
+		"				rel.label=$label "
 	_, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
 		_, err := tx.Run(fmt.Sprintf(query, "Email_"+tenant),
 			map[string]interface{}{
