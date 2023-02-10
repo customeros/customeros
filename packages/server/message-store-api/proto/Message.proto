@@ -47,9 +47,8 @@ message Message {
 message InputMessage {
   optional string conversationId = 1;
   optional string initiatorIdentifier = 2;
-  SenderType senderType = 3;
-  MessageType type = 4;
-  MessageSubtype subtype = 5;
-  optional string content = 6;
-  MessageDirection direction = 7;
+  MessageType type = 3;
+  MessageSubtype subtype = 4;
+  optional string content = 5;
+  MessageDirection direction = 6;
 }
