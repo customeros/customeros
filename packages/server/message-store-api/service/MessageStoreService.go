@@ -194,7 +194,7 @@ func (s *MessageService) SaveMessage(ctx context.Context, input *msProto.InputMe
 	if err != nil {
 		return nil, err
 	}
-	var threadId = ""
+	threadId := ""
 	entityType := s.commonStoreService.ConvertMSTypeToEntityType(input.Type)
 	if err := s.getThreadIdAndParticipantsFromMail(tenant, &threadId, &participants, entityType, input); err != nil {
 		log.Printf("Error handleing email: %v", err)
@@ -254,9 +254,9 @@ func (s *MessageService) getThreadIdAndParticipantsFromMail(tenant string, threa
 
 		refSize := len(messageJson.Reference)
 		if refSize > 0 {
-			threadId = &messageJson.Reference[0]
+			*threadId = messageJson.Reference[0]
 		} else {
-			threadId = &messageJson.MessageId
+			*threadId = messageJson.MessageId
 		}
 
 		for _, toAddress := range append(messageJson.To, messageJson.Cc...) {
