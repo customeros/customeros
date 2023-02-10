@@ -480,3 +480,61 @@ func TestQueryResolver_GetData_Search_Contact_Linked_To_Organization_By_Email_2(
 	require.Equal(t, "2", *pagedData.Content[2].Contact.LastName)
 	require.Equal(t, "c1@email.com", pagedData.Content[2].Contact.Emails[0].Email)
 }
+
+func TestQueryResolver_GetData_Search_Data_Email_3(t *testing.T) {
+	defer tearDownTestCase()(t)
+	neo4jt.CreateTenant(driver, tenantName)
+
+	contactId1 := neo4jt.CreateContactWith(driver, tenantName, "c", "1")
+	contactId2 := neo4jt.CreateContactWith(driver, tenantName, "c", "2")
+
+	neo4jt.AddEmailTo(driver, repository.CONTACT, tenantName, contactId1, "c1@email.com", true, "WORK")
+	neo4jt.AddEmailTo(driver, repository.CONTACT, tenantName, contactId2, "c1@email.com", true, "WORK")
+
+	organizationId1 := neo4jt.CreateOrganization(driver, tenantName, "org 1")
+	organizationId2 := neo4jt.CreateOrganization(driver, tenantName, "org 2")
+
+	neo4jt.AddEmailTo(driver, repository.ORGANIZATION, tenantName, organizationId1, "o1@abcde.com", true, "WORK")
+	neo4jt.AddEmailTo(driver, repository.ORGANIZATION, tenantName, organizationId2, "c1@email.com", true, "WORK")
+
+	neo4jt.LinkContactWithOrganization(driver, contactId1, organizationId1)
+
+	require.Equal(t, 4, neo4jt.GetCountOfNodes(driver, "Email"))
+	require.Equal(t, 2, neo4jt.GetCountOfNodes(driver, "Contact"))
+	require.Equal(t, 2, neo4jt.GetCountOfNodes(driver, "Organization"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Tenant"))
+	require.Equal(t, 2, neo4jt.GetCountOfRelationships(driver, "CONTACT_BELONGS_TO_TENANT"))
+	require.Equal(t, 2, neo4jt.GetCountOfRelationships(driver, "ORGANIZATION_BELONGS_TO_TENANT"))
+	require.Equal(t, 4, neo4jt.GetCountOfRelationships(driver, "HAS"))
+
+	rawResponse, err := c.RawPost(getQuery("/dashboard_view/dashboard_view_with_filters"),
+		client.Var("page", 1),
+		client.Var("limit", 10),
+		client.Var("searchTerm", "email.com"),
+	)
+	assertRawResponseSuccess(t, rawResponse, err)
+
+	var response struct {
+		DashboardView model.DashboardViewItemPage
+	}
+
+	err = decode.Decode(rawResponse.Data.(map[string]any), &response)
+	require.Nil(t, err)
+	require.NotNil(t, response)
+	pagedData := response.DashboardView
+	require.Equal(t, 1, pagedData.TotalPages)
+	require.Equal(t, int64(3), pagedData.TotalElements)
+
+	require.Equal(t, "org 1", pagedData.Content[0].Organization.Name)
+	require.Equal(t, "c", *pagedData.Content[0].Contact.FirstName)
+	require.Equal(t, "1", *pagedData.Content[0].Contact.LastName)
+	require.Equal(t, "c1@email.com", pagedData.Content[0].Contact.Emails[0].Email)
+
+	require.Nil(t, pagedData.Content[1].Contact)
+	require.Equal(t, "org 2", pagedData.Content[1].Organization.Name)
+
+	require.Nil(t, pagedData.Content[2].Organization)
+	require.Equal(t, "c", *pagedData.Content[2].Contact.FirstName)
+	require.Equal(t, "2", *pagedData.Content[2].Contact.LastName)
+	require.Equal(t, "c1@email.com", pagedData.Content[2].Contact.Emails[0].Email)
+}
