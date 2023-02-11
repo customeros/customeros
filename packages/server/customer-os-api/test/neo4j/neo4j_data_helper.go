@@ -534,7 +534,7 @@ func CreatePlaceForLocation(driver *neo4j.Driver, place entity.PlaceEntity, loca
 	var placeId, _ = uuid.NewRandom()
 	query := `MATCH (l:Location {id:$locationId})
 	MERGE (l)-[:LOCATED_AT]->(a:Place {id:$placeId})
-			ON CREATE SET  a.country=$country, 
+			ON CREATE SET   a.country=$country, 
 							a.state=$state, 
 							a.city=$city, 
 							a.address=$address,
