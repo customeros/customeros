@@ -286,12 +286,11 @@ func (r *contactRepository) Delete(session neo4j.Session, tenant, contactId stri
 			MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant})
 			OPTIONAL MATCH (c)-[:HAS_PROPERTY]->(f:CustomField)
 			OPTIONAL MATCH (c)-[:PHONE_ASSOCIATED_WITH]->(p:PhoneNumber)
-			OPTIONAL MATCH (c)-[:HAS]->(e:Email)
 			OPTIONAL MATCH (c)-[:ASSOCIATED_WITH]->(l:Location)
 			OPTIONAL MATCH (l)-[:LOCATED_AT]->(pl:Place)
 			OPTIONAL MATCH (c)-[:HAS_COMPLEX_PROPERTY]->(fs:FieldSet)
 			OPTIONAL MATCH (c)-[:WORKS_AS]->(j:JobRole)
-            DETACH DELETE p, e, f, fs, l, pl, j, c`,
+            DETACH DELETE p, f, fs, l, pl, j, c`,
 			map[string]interface{}{
 				"contactId": contactId,
 				"tenant":    tenant,

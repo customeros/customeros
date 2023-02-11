@@ -87,7 +87,7 @@ func TestMutationResolver_EmailUpdateInContact(t *testing.T) {
 	// Check that the fields of the email struct have the expected values
 	require.Equal(t, emailId, e.ID, "Email ID is nil")
 	require.Equal(t, true, e.Primary, "Email Primary field is not true")
-	require.Equal(t, "new@email.com", e.Email, "Email Email field is not expected value")
+	require.Equal(t, "original@email.com", e.Email, "Email address expected not to be changed")
 	require.NotNil(t, e.UpdatedAt, "Missing updatedAt field")
 	if e.Label == nil {
 		t.Errorf("Email Label field is nil")
@@ -176,7 +176,7 @@ func TestMutationResolver_EmailUpdateInUser(t *testing.T) {
 	// Check that the fields of the email struct have the expected values
 	require.Equal(t, emailId, e.ID, "Email ID is nil")
 	require.Equal(t, true, e.Primary, "Email Primary field is not true")
-	require.Equal(t, "new@email.com", e.Email, "Email Email field is not expected value")
+	require.Equal(t, "original@email.com", e.Email, "Email address expected not to be changed")
 	require.NotNil(t, e.UpdatedAt, "Missing updatedAt field")
 	if e.Label == nil {
 		t.Errorf("Email Label field is nil")

@@ -259,11 +259,18 @@ func (s *CustomerOSService) CreateContactWithEmail(tenant string, email string) 
 		}
 
 		//create the email
-		emailQuery := "MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) " +
-			" MERGE (c)-[r:HAS]->(e:Email {email: $email}) " +
-			" ON CREATE SET e.label=$label, r.primary=$primary, e.id=randomUUID(), e.createdAt=$now, e.updatedAt=$now," +
-			" e.source=$source, e.sourceOfTruth=$sourceOfTruth, e.appSource=$appSource, e:%s " +
-			" ON MATCH SET e.label=$label, r.primary=$primary, e.updatedAt=$now " +
+		emailQuery := "MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant}) " +
+			" MERGE (e:Email {email: $email})-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]->(t) " +
+			" ON CREATE SET e.id=randomUUID(), " +
+			"				e.createdAt=$now, " +
+			"				e.updatedAt=$now," +
+			" 				e.source=$source, " +
+			"				e.sourceOfTruth=$sourceOfTruth, " +
+			"				e.appSource=$appSource, " +
+			"				e:%s " +
+			" WITH c, e " +
+			" MERGE (c)-[rel:HAS]->(e) " +
+			" SET rel.label=$label, rel.primary=$primary" +
 			" RETURN e"
 
 		contactId := contact.Values[0].(string)
