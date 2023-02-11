@@ -90,6 +90,8 @@ CALL {
  UNION
  MATCH (:Tenant {name:$tenant})--(n:Tag) WHERE NOT 'Tag_'+$tenant  in labels(n) return count(n) as x
  UNION
+ MATCH (:Tenant {name:$tenant})--(n:Email) WHERE NOT 'Email_'+$tenant  in labels(n) return count(n) as x
+ UNION
  MATCH (:Tenant {name:$tenant})-[*2]-(n:Email) WHERE NOT 'Email_'+$tenant  in labels(n) return count(n) as x
  UNION
  MATCH (:Tenant {name:$tenant})-[*2]-(n:Conversation) WHERE NOT 'Conversation_'+$tenant  in labels(n) return count(n) as x

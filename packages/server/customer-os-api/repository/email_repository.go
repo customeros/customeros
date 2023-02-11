@@ -38,29 +38,29 @@ func (r *emailRepository) MergeEmailToInTx(tx neo4j.Transaction, tenant string, 
 
 	switch entityType {
 	case CONTACT:
-		query = `MATCH (entity:Contact {id:$entityId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) `
+		query = `MATCH (entity:Contact {id:$entityId})-[:CONTACT_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant}) `
 	case USER:
-		query = `MATCH (entity:User {id:$entityId})-[:USER_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) `
+		query = `MATCH (entity:User {id:$entityId})-[:USER_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant}) `
 	case ORGANIZATION:
-		query = `MATCH (entity:Organization {id:$entityId})-[:ORGANIZATION_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) `
+		query = `MATCH (entity:Organization {id:$entityId})-[:ORGANIZATION_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant}) `
 	}
 
 	query = query +
-		" MERGE (entity)-[r:HAS]->(e:Email {email: $email}) " +
-		" ON CREATE SET e.label=$label, " +
-		"				r.primary=$primary, " +
-		"				e.id=randomUUID(), " +
+		" MERGE (t)<-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]-(e:Email {email: $email}) " +
+		" ON CREATE SET e.id=randomUUID(), " +
 		"				e.source=$source, " +
 		"				e.sourceOfTruth=$sourceOfTruth, " +
 		" 				e.appSource=$appSource, " +
 		"				e.createdAt=$now, " +
 		"				e.updatedAt=$now, " +
 		"				e:%s " +
-		" ON MATCH SET 	e.label=$label, " +
-		"				r.primary=$primary, " +
-		"				e.sourceOfTruth=$sourceOfTruth, " +
-		"				e.updatedAt=$now " +
-		" RETURN e, r"
+		" WITH e, entity " +
+		" MERGE (entity)-[rel:HAS]->(e) " +
+		" SET 	rel.label=$label, " +
+		"		rel.primary=$primary, " +
+		"		e.sourceOfTruth=$sourceOfTruth," +
+		"		e.updatedAt=$now " +
+		" RETURN e, rel"
 
 	queryResult, err := tx.Run(fmt.Sprintf(query, "Email_"+tenant),
 		map[string]interface{}{
@@ -82,25 +82,23 @@ func (r *emailRepository) UpdateEmailByInTx(tx neo4j.Transaction, tenant string,
 
 	switch entityType {
 	case CONTACT:
-		query = `MATCH (entity:Contact {id:$entityId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) `
+		query = `MATCH (entity:Contact {id:$entityId})-[:CONTACT_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant}) `
 	case USER:
-		query = `MATCH (entity:User {id:$entityId})-[:USER_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) `
+		query = `MATCH (entity:User {id:$entityId})-[:USER_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant}) `
 	case ORGANIZATION:
-		query = `MATCH (entity:Organization {id:$entityId})-[:ORGANIZATION_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) `
+		query = `MATCH (entity:Organization {id:$entityId})-[:ORGANIZATION_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant}) `
 	}
 
-	queryResult, err := tx.Run(query+`, (c)-[r:HAS]->(e:Email {id:$emailId}) 
-			SET e.email=$email,
-				e.label=$label,
-				r.primary=$primary,
+	queryResult, err := tx.Run(query+`, (entity)-[rel:HAS]->(e:Email {id:$emailId}) 
+			SET rel.label=$label,
+				rel.primary=$primary,
 				e.sourceOfTruth=$sourceOfTruth,
 				e.updatedAt=$now
-			RETURN e, r`,
+			RETURN e, rel`,
 		map[string]interface{}{
 			"tenant":        tenant,
 			"entityId":      entityId,
 			"emailId":       entity.Id,
-			"email":         entity.Email,
 			"label":         entity.Label,
 			"primary":       entity.Primary,
 			"sourceOfTruth": entity.SourceOfTruth,
@@ -122,8 +120,8 @@ func (r *emailRepository) FindAllFor(session neo4j.Session, tenant string, entit
 			query = `MATCH (entity:Organization {id:$entityId})-[:ORGANIZATION_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) `
 		}
 
-		result, err := tx.Run(query+`, (entity)-[r:HAS]->(e:Email) 				
-				RETURN e, r`,
+		result, err := tx.Run(query+`, (entity)-[rel:HAS]->(e:Email) 				
+				RETURN e, rel`,
 			map[string]interface{}{
 				"entityId": entityId,
 				"tenant":   tenant,
@@ -148,9 +146,9 @@ func (r *emailRepository) SetOtherEmailsNonPrimaryInTx(tx neo4j.Transaction, ten
 		query = `MATCH (entity:Organization {id:$entityId})-[:ORGANIZATION_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) `
 	}
 
-	_, err := tx.Run(query+`, (c)-[r:HAS]->(e:Email)
+	_, err := tx.Run(query+`, (entity)-[rel:HAS]->(e:Email)
 			WHERE e.email <> $email
-            SET r.primary=false, 
+            SET rel.primary=false, 
 				e.updatedAt=$now`,
 		map[string]interface{}{
 			"tenant":   tenantId,

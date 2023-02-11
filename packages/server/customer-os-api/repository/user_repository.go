@@ -82,8 +82,7 @@ func (r *userRepository) Update(session neo4j.Session, tenant string, entity ent
 func (r *userRepository) FindUserByEmail(session neo4j.Session, tenant string, email string) (*dbtype.Node, error) {
 	result, err := session.WriteTransaction(func(tx neo4j.Transaction) (interface{}, error) {
 		queryResult, err := tx.Run(`
-			MATCH (:Email {email:$email})<-[:HAS]-(u:User),
-			(u)-[:USER_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) 
+			MATCH (:Email {email:$email})<-[:HAS]-(u:User)-[:USER_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) 
 			RETURN u`,
 			map[string]any{
 				"tenant": tenant,

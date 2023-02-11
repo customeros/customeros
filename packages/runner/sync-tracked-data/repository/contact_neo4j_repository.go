@@ -31,13 +31,28 @@ func (r *contactRepository) GetOrCreateContactId(tenant, email, firstName, lastN
 	record, err := session.WriteTransaction(func(tx neo4j.Transaction) (interface{}, error) {
 		queryResult, err := tx.Run(fmt.Sprintf(
 			" MATCH (t:Tenant {name:$tenant}) "+
-				" MERGE (e:Email {email: $email})<-[r:HAS]-(c:Contact)-[:CONTACT_BELONGS_TO_TENANT]->(t) "+
-				" ON CREATE SET r.primary=true, e.id=randomUUID(), e.createdAt=$createdAt, e.updatedAt=$createdAt, "+
-				"				c.id=randomUUID(), c.firstName=$firstName, c.lastName=$lastName, c.createdAt=$createdAt, c.updatedAt=$createdAt, "+
-				"				e.source=$source, e.sourceOfTruth=$sourceOfTruth, e.appSource=$appSource, "+
-				"				c.source=$source, c.sourceOfTruth=$sourceOfTruth, c.appSource=$appSource, "+
-				"               c:%s, e:%s "+
-				" RETURN c.id", "Contact_"+tenant, "Email_"+tenant),
+				" MERGE (e:Email {email: $email})-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]->(t) "+
+				" ON CREATE SET "+
+				"				e.id=randomUUID(), "+
+				"				e.createdAt=$now, "+
+				"				e.updatedAt=$now, "+
+				"				e.source=$source, "+
+				"				e.sourceOfTruth=$sourceOfTruth, "+
+				"				e.appSource=$appSource, "+
+				"				e:%s "+
+				" WITH DISTINCT t, e "+
+				" MERGE (e)<-[rel:HAS]-(c:Contact)-[:CONTACT_BELONGS_TO_TENANT]->(t) "+
+				" ON CREATE SET rel.primary=true, "+
+				"				c.id=randomUUID(), "+
+				"				c.firstName=$firstName, "+
+				"				c.lastName=$lastName, "+
+				"				c.createdAt=$now, "+
+				"				c.updatedAt=$now, "+
+				"				c.source=$source, "+
+				"				c.sourceOfTruth=$sourceOfTruth, "+
+				"				c.appSource=$appSource, "+
+				"               c:%s "+
+				" RETURN c.id", "Email_"+tenant, "Contact_"+tenant),
 			map[string]interface{}{
 				"tenant":        tenant,
 				"email":         email,
@@ -46,7 +61,7 @@ func (r *contactRepository) GetOrCreateContactId(tenant, email, firstName, lastN
 				"source":        "openline",
 				"sourceOfTruth": "openline",
 				"appSource":     application,
-				"createdAt":     time.Now().UTC(),
+				"now":           time.Now().UTC(),
 			})
 		record, err := queryResult.Single()
 		if err != nil {

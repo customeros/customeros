@@ -119,8 +119,8 @@ func (s *emailService) Delete(ctx context.Context, contactId string, email strin
 	queryResult, err := session.WriteTransaction(func(tx neo4j.Transaction) (interface{}, error) {
 		_, err := tx.Run(`
 			MATCH (c:Contact {id:$id})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}),
-                  (c:Contact {id:$id})-[:HAS]->(p:Email {email:$email})
-            DETACH DELETE p
+                  (c:Contact {id:$id})-[:HAS]->(e:Email {email:$email})
+            DETACH DELETE e
 			`,
 			map[string]interface{}{
 				"id":     contactId,
@@ -144,8 +144,8 @@ func (s *emailService) DeleteById(ctx context.Context, contactId string, emailId
 	queryResult, err := session.WriteTransaction(func(tx neo4j.Transaction) (interface{}, error) {
 		_, err := tx.Run(`
 			MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}),
-                  (c:Contact {id:$contactId})-[:HAS]->(p:Email {id:$emailId})
-            DETACH DELETE p
+                  (c:Contact {id:$contactId})-[:HAS]->(e:Email {id:$emailId})
+            DETACH DELETE e
 			`,
 			map[string]interface{}{
 				"contactId": contactId,
@@ -167,7 +167,6 @@ func (s *emailService) mapDbNodeToEmailEntity(node dbtype.Node) *entity.EmailEnt
 	result := entity.EmailEntity{
 		Id:            utils.GetStringPropOrEmpty(props, "id"),
 		Email:         utils.GetStringPropOrEmpty(props, "email"),
-		Label:         utils.GetStringPropOrEmpty(props, "label"),
 		Source:        entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
 		SourceOfTruth: entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
 		AppSource:     utils.GetStringPropOrEmpty(props, "appSource"),
@@ -180,4 +179,5 @@ func (s *emailService) mapDbNodeToEmailEntity(node dbtype.Node) *entity.EmailEnt
 func (s *emailService) addDbRelationshipToEmailEntity(relationship dbtype.Relationship, emailEntity *entity.EmailEntity) {
 	props := utils.GetPropsFromRelationship(relationship)
 	emailEntity.Primary = utils.GetBoolPropOrFalse(props, "primary")
+	emailEntity.Label = utils.GetStringPropOrEmpty(props, "label")
 }

@@ -245,15 +245,16 @@ func AddEmailTo(driver *neo4j.Driver, entityType repository.EntityType, tenant, 
 
 	switch entityType {
 	case repository.CONTACT:
-		query = "MATCH (entity:Contact {id:$entityId}) "
+		query = "MATCH (entity:Contact {id:$entityId})--(t:Tenant) "
 	case repository.USER:
-		query = "MATCH (entity:User {id:$entityId}) "
+		query = "MATCH (entity:User {id:$entityId})--(t:Tenant) "
 	case repository.ORGANIZATION:
-		query = "MATCH (entity:Organization {id:$entityId}) "
+		query = "MATCH (entity:Organization {id:$entityId})--(t:Tenant) "
 	}
 
 	var emailId, _ = uuid.NewRandom()
-	query = query + "MERGE (e:Email {id: $emailId,email: $email,label: $label})<-[:HAS {primary:$primary}]-(entity) ON CREATE SET e:%s"
+	query = query + "MERGE (e:Email {id: $emailId, email: $email})<-[rel:HAS {primary:$primary}]-(entity) ON CREATE SET rel.label=$label, e:%s " +
+		" WITH e, t MERGE (e)-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]->(t)"
 
 	ExecuteWriteQuery(driver, fmt.Sprintf(query, "Email_"+tenant), map[string]any{
 		"entityId": entityId,
