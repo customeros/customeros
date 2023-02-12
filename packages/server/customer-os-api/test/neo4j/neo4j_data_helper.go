@@ -7,7 +7,6 @@ import (
 	"github.com/neo4j/neo4j-go-driver/v4/neo4j/db"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils"
 )
 
@@ -240,21 +239,26 @@ func createCustomFieldInContact(driver *neo4j.Driver, contactId string, customFi
 	return fieldId.String()
 }
 
-func AddEmailTo(driver *neo4j.Driver, entityType repository.EntityType, tenant, entityId, email string, primary bool, label string) string {
+func AddEmailTo(driver *neo4j.Driver, entityType entity.EntityType, tenant, entityId, email string, primary bool, label string) string {
 	query := ""
 
 	switch entityType {
-	case repository.CONTACT:
+	case entity.CONTACT:
 		query = "MATCH (entity:Contact {id:$entityId})--(t:Tenant) "
-	case repository.USER:
+	case entity.USER:
 		query = "MATCH (entity:User {id:$entityId})--(t:Tenant) "
-	case repository.ORGANIZATION:
+	case entity.ORGANIZATION:
 		query = "MATCH (entity:Organization {id:$entityId})--(t:Tenant) "
 	}
 
 	var emailId, _ = uuid.NewRandom()
-	query = query + "MERGE (e:Email {id: $emailId, email: $email})<-[rel:HAS {primary:$primary}]-(entity) ON CREATE SET rel.label=$label, e:%s " +
-		" WITH e, t MERGE (e)-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]->(t)"
+	query = query +
+		" MERGE (e:Email {email: $email})-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]->(t)" +
+		" ON CREATE SET " +
+		"	e.id=$emailId, " +
+		"	e:%s " +
+		" WITH e, entity MERGE (e)<-[rel:HAS]-(entity) " +
+		" ON CREATE SET rel.label=$label, rel.primary=$primary "
 
 	ExecuteWriteQuery(driver, fmt.Sprintf(query, "Email_"+tenant), map[string]any{
 		"entityId": entityId,

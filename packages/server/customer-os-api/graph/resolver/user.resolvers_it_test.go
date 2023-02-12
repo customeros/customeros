@@ -4,7 +4,6 @@ import (
 	"github.com/99designs/gqlgen/client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils/decode"
@@ -26,8 +25,8 @@ func TestQueryResolver_UserByEmail(t *testing.T) {
 		LastName:  "otherLast",
 	})
 
-	neo4jt.AddEmailTo(driver, repository.USER, tenantName, userId1, "test@openline.com", true, "MAIN")
-	neo4jt.AddEmailTo(driver, repository.USER, otherTenant, userId2, "test@openline.com", true, "MAIN")
+	neo4jt.AddEmailTo(driver, entity.USER, tenantName, userId1, "test@openline.com", true, "MAIN")
+	neo4jt.AddEmailTo(driver, entity.USER, otherTenant, userId2, "test@openline.com", true, "MAIN")
 
 	rawResponse, err := c.RawPost(getQuery("user/get_user_by_email"),
 		client.Var("email", "test@openline.com"))
@@ -123,8 +122,8 @@ func TestQueryResolver_Users(t *testing.T) {
 		LastName:  "otherLast",
 	})
 
-	neo4jt.AddEmailTo(driver, repository.USER, tenantName, userId1, "test@openline.com", true, "MAIN")
-	neo4jt.AddEmailTo(driver, repository.USER, otherTenant, userId2, "test@openline.com", true, "MAIN")
+	neo4jt.AddEmailTo(driver, entity.USER, tenantName, userId1, "test@openline.com", true, "MAIN")
+	neo4jt.AddEmailTo(driver, entity.USER, otherTenant, userId2, "test@openline.com", true, "MAIN")
 
 	rawResponse, err := c.RawPost(getQuery("user/get_users"))
 	assertRawResponseSuccess(t, rawResponse, err)
@@ -197,7 +196,7 @@ func TestQueryResolver_User(t *testing.T) {
 		LastName:  "user",
 	})
 
-	neo4jt.AddEmailTo(driver, repository.USER, tenantName, userId1, "test@openline.com", true, "MAIN")
+	neo4jt.AddEmailTo(driver, entity.USER, tenantName, userId1, "test@openline.com", true, "MAIN")
 
 	require.Equal(t, 2, neo4jt.GetCountOfNodes(driver, "User"))
 

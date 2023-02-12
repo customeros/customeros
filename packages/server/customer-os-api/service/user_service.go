@@ -184,7 +184,7 @@ func (s *userService) createUserInDBTxWork(ctx context.Context, newUser *UserCre
 		var userId = utils.GetPropsFromNode(*userDbNode)["id"].(string)
 
 		if newUser.EmailEntity != nil {
-			_, _, err := s.repositories.EmailRepository.MergeEmailToInTx(tx, tenant, repository.USER, userId, *newUser.EmailEntity)
+			_, _, err := s.repositories.EmailRepository.MergeEmailToInTx(tx, tenant, entity.USER, userId, *newUser.EmailEntity)
 			if err != nil {
 				return nil, err
 			}

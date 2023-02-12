@@ -4,7 +4,6 @@ import (
 	"github.com/99designs/gqlgen/client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils/decode"
 	"github.com/stretchr/testify/require"
@@ -292,45 +291,45 @@ func TestQueryResolver_GetData_Search_By_Email(t *testing.T) {
 
 	//c email associated with org - wrong email
 	contactId1 := neo4jt.CreateContactWith(driver, tenantName, "c", "1")
-	neo4jt.AddEmailTo(driver, repository.CONTACT, tenantName, contactId1, "wrong email", true, "WORK")
+	neo4jt.AddEmailTo(driver, entity.CONTACT, tenantName, contactId1, "wrong email", true, "WORK")
 	organizationId1 := neo4jt.CreateOrganization(driver, tenantName, "org 1")
 	neo4jt.LinkContactWithOrganization(driver, contactId1, organizationId1)
 
 	//c email associated with org - good email
 	contactId2 := neo4jt.CreateContactWith(driver, tenantName, "c", "2")
-	neo4jt.AddEmailTo(driver, repository.CONTACT, tenantName, contactId2, "good email", true, "WORK")
+	neo4jt.AddEmailTo(driver, entity.CONTACT, tenantName, contactId2, "good email", true, "WORK")
 	organizationId2 := neo4jt.CreateOrganization(driver, tenantName, "org 2")
 	neo4jt.LinkContactWithOrganization(driver, contactId2, organizationId2)
 
 	//c associated with org email - wrong email
 	contactId3 := neo4jt.CreateContactWith(driver, tenantName, "c", "3")
 	organizationId3 := neo4jt.CreateOrganization(driver, tenantName, "org 3")
-	neo4jt.AddEmailTo(driver, repository.ORGANIZATION, tenantName, organizationId3, "wrong email", true, "WORK")
+	neo4jt.AddEmailTo(driver, entity.ORGANIZATION, tenantName, organizationId3, "wrong email", true, "WORK")
 	neo4jt.LinkContactWithOrganization(driver, contactId3, organizationId3)
 
 	//c associated with org email - good email
 	contactId4 := neo4jt.CreateContactWith(driver, tenantName, "c", "4")
 	organizationId4 := neo4jt.CreateOrganization(driver, tenantName, "org 4")
-	neo4jt.AddEmailTo(driver, repository.ORGANIZATION, tenantName, organizationId4, "good email", true, "WORK")
+	neo4jt.AddEmailTo(driver, entity.ORGANIZATION, tenantName, organizationId4, "good email", true, "WORK")
 	neo4jt.LinkContactWithOrganization(driver, contactId4, organizationId4)
 
 	//c not associated - wrong email
 	contactId5 := neo4jt.CreateContactWith(driver, tenantName, "c", "5")
-	neo4jt.AddEmailTo(driver, repository.CONTACT, tenantName, contactId5, "wrong email", true, "WORK")
+	neo4jt.AddEmailTo(driver, entity.CONTACT, tenantName, contactId5, "wrong email", true, "WORK")
 
 	//c not associated - good email
 	contactId6 := neo4jt.CreateContactWith(driver, tenantName, "c", "6")
-	neo4jt.AddEmailTo(driver, repository.CONTACT, tenantName, contactId6, "good email", true, "WORK")
+	neo4jt.AddEmailTo(driver, entity.CONTACT, tenantName, contactId6, "good email", true, "WORK")
 
 	//org 3 not associated - wrong email
 	organizationId7 := neo4jt.CreateOrganization(driver, tenantName, "org 7")
-	neo4jt.AddEmailTo(driver, repository.ORGANIZATION, tenantName, organizationId7, "wrong email", true, "WORK")
+	neo4jt.AddEmailTo(driver, entity.ORGANIZATION, tenantName, organizationId7, "wrong email", true, "WORK")
 
 	//org not associated - good email
 	organizationId8 := neo4jt.CreateOrganization(driver, tenantName, "org 8")
-	neo4jt.AddEmailTo(driver, repository.ORGANIZATION, tenantName, organizationId8, "good email", true, "WORK")
+	neo4jt.AddEmailTo(driver, entity.ORGANIZATION, tenantName, organizationId8, "good email", true, "WORK")
 
-	require.Equal(t, 8, neo4jt.GetCountOfNodes(driver, "Email"))
+	require.Equal(t, 2, neo4jt.GetCountOfNodes(driver, "Email"))
 	require.Equal(t, 6, neo4jt.GetCountOfNodes(driver, "Contact"))
 	require.Equal(t, 6, neo4jt.GetCountOfNodes(driver, "Organization"))
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Tenant"))
