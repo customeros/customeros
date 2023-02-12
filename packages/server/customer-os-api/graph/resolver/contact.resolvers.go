@@ -13,7 +13,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/generated"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
 )
 
@@ -68,7 +67,7 @@ func (r *contactResolver) PhoneNumbers(ctx context.Context, obj *model.Contact) 
 
 // Emails is the resolver for the emails field.
 func (r *contactResolver) Emails(ctx context.Context, obj *model.Contact) ([]*model.Email, error) {
-	emailEntities, err := r.Services.EmailService.FindAllFor(ctx, repository.CONTACT, obj.ID)
+	emailEntities, err := r.Services.EmailService.FindAllFor(ctx, entity.CONTACT, obj.ID)
 	return mapper.MapEntitiesToEmails(emailEntities), err
 }
 

@@ -12,7 +12,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/generated"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
 )
 
@@ -74,7 +73,7 @@ func (r *queryResolver) UserByEmail(ctx context.Context, email string) (*model.U
 
 // Emails is the resolver for the emails field.
 func (r *userResolver) Emails(ctx context.Context, obj *model.User) ([]*model.Email, error) {
-	emailEntities, err := r.Services.EmailService.FindAllFor(ctx, repository.USER, obj.ID)
+	emailEntities, err := r.Services.EmailService.FindAllFor(ctx, entity.USER, obj.ID)
 	return mapper.MapEntitiesToEmails(emailEntities), err
 }
 
