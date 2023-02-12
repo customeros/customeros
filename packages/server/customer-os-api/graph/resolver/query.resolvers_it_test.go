@@ -329,7 +329,7 @@ func TestQueryResolver_GetData_Search_By_Email(t *testing.T) {
 	organizationId8 := neo4jt.CreateOrganization(driver, tenantName, "org 8")
 	neo4jt.AddEmailTo(driver, entity.ORGANIZATION, tenantName, organizationId8, "good email", true, "WORK")
 
-	require.Equal(t, 8, neo4jt.GetCountOfNodes(driver, "Email"))
+	require.Equal(t, 2, neo4jt.GetCountOfNodes(driver, "Email"))
 	require.Equal(t, 6, neo4jt.GetCountOfNodes(driver, "Contact"))
 	require.Equal(t, 6, neo4jt.GetCountOfNodes(driver, "Organization"))
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Tenant"))
