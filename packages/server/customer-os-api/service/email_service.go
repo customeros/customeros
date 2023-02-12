@@ -115,17 +115,17 @@ func (s *emailService) UpdateEmailFor(ctx context.Context, entityType entity.Ent
 
 func (s *emailService) DetachFromEntity(ctx context.Context, entityType entity.EntityType, entityId, email string) (bool, error) {
 	err := s.repositories.EmailRepository.RemoveRelationship(entityType, common.GetTenantFromContext(ctx), entityId, email)
-	return err != nil, err
+	return err == nil, err
 }
 
 func (s *emailService) DetachFromEntityById(ctx context.Context, entityType entity.EntityType, entityId, emailId string) (bool, error) {
 	err := s.repositories.EmailRepository.RemoveRelationshipById(entityType, common.GetTenantFromContext(ctx), entityId, emailId)
-	return err != nil, err
+	return err == nil, err
 }
 
 func (s *emailService) DeleteById(ctx context.Context, emailId string) (bool, error) {
 	err := s.repositories.EmailRepository.DeleteById(common.GetTenantFromContext(ctx), emailId)
-	return err != nil, err
+	return err == nil, err
 }
 
 func (s *emailService) mapDbNodeToEmailEntity(node dbtype.Node) *entity.EmailEntity {

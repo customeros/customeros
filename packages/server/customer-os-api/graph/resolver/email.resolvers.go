@@ -79,7 +79,6 @@ func (r *mutationResolver) EmailUpdateInUser(ctx context.Context, userID string,
 
 // EmailRemoveFromUser is the resolver for the emailRemoveFromUser field.
 func (r *mutationResolver) EmailRemoveFromUser(ctx context.Context, userID string, email string) (*model.Result, error) {
-	// FIXME alexb add test
 	result, err := r.Services.EmailService.DetachFromEntity(ctx, entity.USER, userID, email)
 	if err != nil {
 		graphql.AddErrorf(ctx, "Could not remove email %s from user %s", email, userID)
@@ -92,7 +91,6 @@ func (r *mutationResolver) EmailRemoveFromUser(ctx context.Context, userID strin
 
 // EmailRemoveFromUserByID is the resolver for the emailRemoveFromUserById field.
 func (r *mutationResolver) EmailRemoveFromUserByID(ctx context.Context, userID string, id string) (*model.Result, error) {
-	// FIXME alexb add test
 	result, err := r.Services.EmailService.DetachFromEntityById(ctx, entity.USER, userID, id)
 	if err != nil {
 		graphql.AddErrorf(ctx, "Could not remove email %s from user %s", id, userID)
@@ -105,7 +103,6 @@ func (r *mutationResolver) EmailRemoveFromUserByID(ctx context.Context, userID s
 
 // EmailDelete is the resolver for the emailDelete field.
 func (r *mutationResolver) EmailDelete(ctx context.Context, id string) (*model.Result, error) {
-	// FIXME alexb add test
 	result, err := r.Services.EmailService.DeleteById(ctx, id)
 	if err != nil {
 		graphql.AddErrorf(ctx, "Could not remove email %s", id)

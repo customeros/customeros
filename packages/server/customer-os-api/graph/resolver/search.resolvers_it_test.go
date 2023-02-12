@@ -3,7 +3,6 @@ package resolver
 import (
 	"github.com/99designs/gqlgen/client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/neo4j"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/require"
@@ -33,8 +32,8 @@ func TestQueryResolver_SearchBasic(t *testing.T) {
 	neo4jt.CreateOrganization(driver, tenantName, "THATISNOTMATCHING")
 	perfectMatchOgranizationId := neo4jt.CreateOrganization(driver, tenantName, "abc")
 
-	expectedPartialMatchedEmailId := neo4jt.AddEmailTo(driver, repository.CONTACT, tenantName, notExpectedContactId, "abd@openline.ai", false, "WORK")
-	neo4jt.AddEmailTo(driver, repository.CONTACT, tenantName, expectedSecondContactId, "xxx@yyy.zzz", false, "WORK")
+	expectedPartialMatchedEmailId := neo4jt.AddEmailTo(driver, entity.CONTACT, tenantName, notExpectedContactId, "abd@openline.ai", false, "WORK")
+	neo4jt.AddEmailTo(driver, entity.CONTACT, tenantName, expectedSecondContactId, "xxx@yyy.zzz", false, "WORK")
 
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Tenant"))
 	require.Equal(t, 3, neo4jt.GetCountOfNodes(driver, "Contact"))
