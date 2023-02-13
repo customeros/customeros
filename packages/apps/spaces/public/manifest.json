@@ -1,0 +1,16 @@
+{
+  "name": "Spaces",
+  "short_name": "Spaces",
+  "icons": [
+    {
+      "src": "public/favicon.ico",
+      "sizes": "16x16",
+      "type": "image/svg",
+      "purpose": "any maskable"
+    }
+  ],
+  "theme_color": "#FFFFFF",
+  "background_color": "#FFFFFF",
+  "start_url": "/",
+  "display": "browser"
+}

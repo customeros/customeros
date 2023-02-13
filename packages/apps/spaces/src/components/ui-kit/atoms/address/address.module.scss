@@ -1,0 +1,52 @@
+.addressContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  margin-top: 12px;
+  font-size: 0.95rem;
+  line-height: 1rem;
+  color: var(--gray-700);
+
+  &:not(:last-of-type) {
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--gray-400);
+
+    &.default {
+      border-bottom-color: var(--gray-600);
+    }
+  }
+
+  &:first-of-type {
+    margin-top: 16px;
+  }
+}
+
+.address {
+  margin-bottom: 4px;
+
+  &.default {
+    font-weight: bold;
+  }
+}
+
+.country {
+  margin-bottom: 4px;
+
+  &.default {
+    font-weight: lighter;
+  }
+}
+
+.phone,
+.fax {
+  font-weight: lighter;
+  margin-bottom: 4px;
+
+  & span {
+    font-weight: 800;
+  }
+}
+
+.phoneAndFaxContainer {
+  margin-top: 4px;
+}

@@ -1,0 +1,85 @@
+.option {
+  display: flex;
+  align-items: center;
+  flex: 1 1;
+  cursor: pointer;
+}
+
+.tagInputWrapper {
+  display: flex;
+  flex-flow: row wrap;
+  padding: 4px;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+  background: white;
+  position: relative;
+
+  &:focus-within {
+    outline: 0 none;
+    outline-offset: 0;
+    box-shadow: 0 0 0 0.2rem #c7d2fe;
+    border-color: #6366f1;
+  }
+
+  & .optionsList {
+    display: none;
+  }
+}
+
+.tagsList {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  padding: 0px;
+  margin: 0 5px 0 0;
+
+  li {
+    font-size: 0.7rem;
+    display: inline-block;
+    margin: 3px;
+    padding: 5px 8px;
+    border-radius: 30px;
+    background: #ddd;
+    color: #444;
+    text-transform: lowercase;
+
+    &:first-letter {
+      text-transform: capitalize;
+    }
+
+    &.clickable:hover {
+      background: #aaa;
+      cursor: pointer;
+      color: black;
+    }
+  }
+
+  &.tagListPresentation {
+    margin: 0;
+  }
+}
+
+.tagListItem {
+  display: flex;
+  justify-content: space-between;
+  align-content: center;
+}
+
+.autocomplete {
+  display: flex;
+  position: relative;
+  flex: 1;
+
+  & ul {
+    border: none !important;
+  }
+}
+
+.deleteButton {
+  margin: -8px;
+  color: var(--gray-700);
+}
+
+.tag {
+  cursor: pointer;
+}

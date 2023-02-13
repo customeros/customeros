@@ -1,0 +1,59 @@
+.button {
+  padding: 10px;
+  border-radius: 50%;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  // fixme improve visual
+  &:hover,
+  &:focus,
+  &:active {
+    background: linear-gradient(-45deg, #b072f1, #f696b6);
+  }
+
+  &:not(:last-of-type) {
+    margin-right: 8px;
+  }
+
+  &.default {
+    background: transparent;
+    color: #474747;
+
+    // fixme improve visual
+    &:hover,
+    &:focus,
+    &:active {
+      background: #d3d3d3;
+    }
+  }
+
+  &.primary {
+    background: linear-gradient(-45deg, #be8df3, #daa4b7);
+    color: white;
+
+    // fixme improve visual
+    &:hover,
+    &:focus,
+    &:active {
+      background: linear-gradient(-45deg, #b072f1, #f696b6);
+    }
+  }
+
+  &.secondary {
+    background: transparent;
+    cursor: pointer;
+    // fixme improve visual
+    &:hover,
+    &:focus,
+    &:active {
+      background: none;
+      color: var(--gray-800);
+    }
+  }
+
+  &:disabled {
+    pointer-events: none;
+  }
+}

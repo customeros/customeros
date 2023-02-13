@@ -1,0 +1,48 @@
+{
+  "env": {
+    "browser": true,
+    "es2021": true,
+    "jest": true
+  },
+  "extends": [
+    //    "react-app",
+    //    "react-app/jest",
+    //    "airbnb-typescript",
+    //    "plugin:import/typescript"
+    "next/core-web-vitals",
+    "eslint:recommended",
+    "plugin:@typescript-eslint/recommended",
+    "prettier"
+  ],
+  "parser": "@typescript-eslint/parser",
+  "parserOptions": {
+    "ecmaFeatures": {
+      "tsx": true
+    },
+    "project": ["./tsconfig.json"],
+    "ecmaVersion": "latest",
+    "sourceType": "module"
+  },
+  "plugins": [
+    "react",
+    "prettier",
+    "@typescript-eslint",
+    "eslint-plugin-storybook",
+    "eslint-plugin-react",
+    "eslint-plugin-react-hooks"
+  ],
+  "rules": {
+    "@typescript-eslint/prefer-ts-expect-error": "warn",
+    "prettier/prettier": "warn",
+    "no-console": "warn"
+  },
+  "overrides": [
+    {
+      "files": ["*.graphql"],
+      "extends": "plugin:@graphql-eslint/schema-recommended",
+      "rules": {
+        "@graphql-eslint/known-type-names": "error"
+      }
+    }
+  ]
+}
