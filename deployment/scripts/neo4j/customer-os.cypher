@@ -94,7 +94,7 @@ ON CREATE SET
     		u.updatedAt=datetime({timezone: 'UTC'}),
     		u.source="openline",
     		u.sourceOfTruth="openline",
-    		u.appSource="manual";
+    		u.appSource="manual",
             rel.primary=true,
             rel.label="WORK";
 
@@ -123,7 +123,7 @@ ON CREATE SET
 
 
 MATCH (t:Tenant {name:"openline"})
-MERGE (t)<-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]-(e:Email {email:"kasis@openline.ai"})
+MERGE (t)<-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]-(e:Email {email:"kasia@openline.ai"})
 ON CREATE SET
             e.id=randomUUID(),
             e.source="openline",
@@ -158,7 +158,7 @@ WITH t, e
 MERGE (t)<-[:USER_BELONGS_TO_TENANT]-(u:User)-[rel:HAS]->(e)
 ON CREATE SET
             rel.primary=true,
-            rel.label="WORK"
+            rel.label="WORK",
             u.id=randomUUID(),
             u.firstName="Gabriel",
             u.lastName="Gontariu",
