@@ -15,8 +15,6 @@ const Login: () => string | JSX.Element = () => {
     setBackgroundImageUrl(backgroundImageUrl);
   }, []);
 
-  console.log('🏷️ ----- : HEREERERE ');
-
   return (
     <>
       <Image

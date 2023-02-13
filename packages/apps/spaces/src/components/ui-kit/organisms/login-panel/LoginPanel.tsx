@@ -23,7 +23,6 @@ export function handleFlowError<S>(
   resetFlow: Dispatch<SetStateAction<S | undefined>>,
 ) {
   return async (err: AxiosError) => {
-    console.log('EDI ERROR');
     console.log(err);
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     //@ts-expect-error
@@ -287,12 +286,10 @@ export const LoginPanel: React.FC = () => {
                 window.location.href = flow?.return_to;
                 return;
               }
-              console.log('🏷️ ----- : LOGGED IN ');
               router.push('/');
             })
             .catch(handleFlowError(router, 'login', setFlow))
             .catch((err: AxiosError) => {
-              console.log('🏷️ ----- err: ', err);
               // If the previous handler did not catch the error it's most likely a form validation error
               if (err.response?.status === 400) {
                 // Yup, it is!

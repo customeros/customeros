@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 export function middleware(request: NextRequest) {
-  console.log('🏷️ ----- : TEST'
-      , );
+  console.log('🏷️ ----- : TEST');
   if (
     !request.nextUrl.pathname.startsWith('/customer-os-api/') &&
     !request.nextUrl.pathname.startsWith('/sa/') &&
@@ -11,21 +10,15 @@ export function middleware(request: NextRequest) {
   ) {
     return NextResponse.next();
   }
-  console.log('🏷️ ----- process.env.ORY_SDK_URL: '
-      , process.env.ORY_SDK_URL);
+
   return fetch(`${process.env.ORY_SDK_URL}/sessions/whoami`, {
     headers: {
       cookie: request.headers.get('cookie') || '',
     },
   })
-
-
-.then((resp) => {
-  console.log('🏷️ ----- process.env.ORY_SDK_URL: '
-      , process.env.ORY_SDK_URL);
+    .then((resp) => {
       // there must've been no response (invalid URL or something...)
       if (!resp) {
-        console.log('no response');
         return NextResponse.redirect(
           new URL('/api/.ory/ui/login', request.url),
         );

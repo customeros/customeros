@@ -43,8 +43,6 @@ export const MainPageWrapper = ({ children }: any) => {
       })
       .catch((e) => {
         // Redirect to login page
-        console.log('🏷️ ----- :eee ', e);
-        console.log('🏷️ ----- : name', edgeConfig.basePath + '/ui/login');
         return router.push(edgeConfig.basePath + '/ui/login');
       });
   }, [router]);
