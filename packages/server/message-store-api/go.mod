@@ -13,14 +13,14 @@ require (
 	github.com/joho/godotenv v1.5.1
 	github.com/lib/pq v1.10.7
 	github.com/neo4j/neo4j-go-driver/v4 v4.4.5
-	github.com/openline-ai/openline-customer-os/packages/server/customer-os-api v0.0.0-20230206070732-08512c89b0c3
+	github.com/openline-ai/openline-customer-os/packages/server/customer-os-api v0.0.0-20230209150714-92dd471e9786
 	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20230206074839-23cc944c7767
 	github.com/sirupsen/logrus v1.9.0
 	github.com/testcontainers/testcontainers-go v0.17.0
 	github.com/vektah/gqlparser/v2 v2.5.1
-	google.golang.org/grpc v1.52.3
+	google.golang.org/grpc v1.53.0
 	google.golang.org/protobuf v1.28.1
-	gorm.io/driver/postgres v1.4.6
+	gorm.io/driver/postgres v1.4.7
 	gorm.io/gorm v1.24.5
 )
 

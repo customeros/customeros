@@ -13,22 +13,8 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/generated"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
 )
-
-// ContactType is the resolver for the contactType field.
-func (r *contactResolver) ContactType(ctx context.Context, obj *model.Contact) (*model.ContactType, error) {
-	contactTypeEntity, err := r.Services.ContactTypeService.FindContactTypeForContact(ctx, obj.ID)
-	if err != nil {
-		graphql.AddErrorf(ctx, "Failed to get contact type for contact %s", obj.ID)
-		return nil, err
-	}
-	if contactTypeEntity == nil {
-		return nil, nil
-	}
-	return mapper.MapEntityToContactType(contactTypeEntity), nil
-}
 
 // Tags is the resolver for the tags field.
 func (r *contactResolver) Tags(ctx context.Context, obj *model.Contact) ([]*model.Tag, error) {
@@ -81,18 +67,18 @@ func (r *contactResolver) PhoneNumbers(ctx context.Context, obj *model.Contact) 
 
 // Emails is the resolver for the emails field.
 func (r *contactResolver) Emails(ctx context.Context, obj *model.Contact) ([]*model.Email, error) {
-	emailEntities, err := r.Services.EmailService.FindAllFor(ctx, repository.CONTACT, obj.ID)
+	emailEntities, err := r.Services.EmailService.FindAllFor(ctx, entity.CONTACT, obj.ID)
 	return mapper.MapEntitiesToEmails(emailEntities), err
 }
 
-// Addresses is the resolver for the addresses field.
-func (r *contactResolver) Addresses(ctx context.Context, obj *model.Contact) ([]*model.Place, error) {
-	addressEntities, err := r.Services.PlaceService.FindAllForContact(ctx, obj.ID)
+// Locations is the resolver for the locations field.
+func (r *contactResolver) Locations(ctx context.Context, obj *model.Contact) ([]*model.Location, error) {
+	locationEntities, err := r.Services.LocationService.GetAllForContact(ctx, obj.ID)
 	if err != nil {
-		graphql.AddErrorf(ctx, "Failed to get addresses for contact %s", obj.ID)
+		graphql.AddErrorf(ctx, "Failed to get locations for contact %s", obj.ID)
 		return nil, err
 	}
-	return mapper.MapEntitiesToPlaces(addressEntities), err
+	return mapper.MapEntitiesToLocations(locationEntities), err
 }
 
 // CustomFields is the resolver for the customFields field.
@@ -191,7 +177,6 @@ func (r *mutationResolver) ContactCreate(ctx context.Context, input model.Contac
 		EmailEntity:       mapper.MapEmailInputToEntity(input.Email),
 		ExternalReference: mapper.MapExternalSystemReferenceInputToRelationship(input.ExternalReference),
 		TemplateId:        input.TemplateID,
-		ContactTypeId:     input.ContactTypeID,
 		OwnerUserId:       input.OwnerID,
 		Source:            entity.DataSourceOpenline,
 		SourceOfTruth:     entity.DataSourceOpenline,
@@ -207,7 +192,6 @@ func (r *mutationResolver) ContactCreate(ctx context.Context, input model.Contac
 func (r *mutationResolver) ContactUpdate(ctx context.Context, input model.ContactUpdateInput) (*model.Contact, error) {
 	updatedContact, err := r.Services.ContactService.Update(ctx, &service.ContactUpdateData{
 		ContactEntity: mapper.MapContactUpdateInputToEntity(input),
-		ContactTypeId: input.ContactTypeID,
 		OwnerUserId:   input.OwnerID,
 	})
 	if err != nil {

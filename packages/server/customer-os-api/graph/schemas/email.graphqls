@@ -6,7 +6,10 @@ extend type Mutation {
 
     emailMergeToUser(userId : ID!, input: EmailInput!): Email!
     emailUpdateInUser(userId : ID!, input: EmailUpdateInput!): Email!
+    emailRemoveFromUser(userId : ID!, email: String!): Result!
     emailRemoveFromUserById(userId : ID!, id: ID!): Result!
+
+    emailDelete(id: ID!): Result!
 }
 
 """

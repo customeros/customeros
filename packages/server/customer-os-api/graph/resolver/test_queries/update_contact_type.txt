@@ -1,9 +1,0 @@
-mutation UpdateContactType($contactTypeId: ID!) {
-  contactType_Update(input: {
-        id: $contactTypeId
-        name:"updated type" })
-    {
-      id
-      name
-    }
-}

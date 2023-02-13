@@ -64,14 +64,12 @@ type Contact implements ExtensibleEntity & Node {
     **Required**
     """
     createdAt: Time!
+    updatedAt: Time!
 
     "A user-defined label applied against a contact in customerOS."
     label: String
 
     source: DataSource!
-
-    "User-defined field that defines the relationship type the contact has with your business.  `Customer`, `Partner`, `Lead` are examples."
-    contactType: ContactType @goField(forceResolver: true)
 
     tags: [Tag!] @goField(forceResolver: true)
 
@@ -102,10 +100,10 @@ type Contact implements ExtensibleEntity & Node {
     emails: [Email!]! @goField(forceResolver: true)
 
     """
-    All addresses associated with a contact in customerOS.
+    All locations associated with a contact in customerOS.
     **Required.  If no values it returns an empty array.**
     """
-    addresses: [Place!]! @goField(forceResolver: true)
+    locations: [Location!]! @goField(forceResolver: true)
 
     """
     User defined metadata appended to the contact record in customerOS.
@@ -181,9 +179,6 @@ input ContactInput {
     "A user-defined label attached to contact."
     label: String
 
-    "User-defined field that defines the relationship type the contact has with your business.  `Customer`, `Partner`, `Lead` are examples."
-    contactTypeId: ID
-
     """
     An ISO8601 timestamp recording when the contact was created in customerOS.
     """
@@ -236,9 +231,6 @@ input ContactUpdateInput {
 
     "A user-defined label applied against a contact in customerOS."
     label: String
-
-    "User-defined field that defines the relationship type the contact has with your business.  `Customer`, `Partner`, `Lead` are examples."
-    contactTypeId: ID
 
     "Id of the contact owner (user)"
     ownerId: ID

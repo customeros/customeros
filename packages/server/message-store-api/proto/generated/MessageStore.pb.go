@@ -117,6 +117,53 @@ func (x *MessageListResponse) GetMessages() []*Message {
 	return nil
 }
 
+type ParticipantsListResponse struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Participants []string `protobuf:"bytes,1,rep,name=participants,proto3" json:"participants"`
+}
+
+func (x *ParticipantsListResponse) Reset() {
+	*x = ParticipantsListResponse{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_MessageStore_proto_msgTypes[1]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *ParticipantsListResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ParticipantsListResponse) ProtoMessage() {}
+
+func (x *ParticipantsListResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_MessageStore_proto_msgTypes[1]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ParticipantsListResponse.ProtoReflect.Descriptor instead.
+func (*ParticipantsListResponse) Descriptor() ([]byte, []int) {
+	return file_MessageStore_proto_rawDescGZIP(), []int{1}
+}
+
+func (x *ParticipantsListResponse) GetParticipants() []string {
+	if x != nil {
+		return x.Participants
+	}
+	return nil
+}
+
 type FeedId struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -128,7 +175,7 @@ type FeedId struct {
 func (x *FeedId) Reset() {
 	*x = FeedId{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_MessageStore_proto_msgTypes[1]
+		mi := &file_MessageStore_proto_msgTypes[2]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -141,7 +188,7 @@ func (x *FeedId) String() string {
 func (*FeedId) ProtoMessage() {}
 
 func (x *FeedId) ProtoReflect() protoreflect.Message {
-	mi := &file_MessageStore_proto_msgTypes[1]
+	mi := &file_MessageStore_proto_msgTypes[2]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -154,7 +201,7 @@ func (x *FeedId) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use FeedId.ProtoReflect.Descriptor instead.
 func (*FeedId) Descriptor() ([]byte, []int) {
-	return file_MessageStore_proto_rawDescGZIP(), []int{1}
+	return file_MessageStore_proto_rawDescGZIP(), []int{2}
 }
 
 func (x *FeedId) GetId() string {
@@ -185,7 +232,7 @@ type FeedItem struct {
 func (x *FeedItem) Reset() {
 	*x = FeedItem{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_MessageStore_proto_msgTypes[2]
+		mi := &file_MessageStore_proto_msgTypes[3]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -198,7 +245,7 @@ func (x *FeedItem) String() string {
 func (*FeedItem) ProtoMessage() {}
 
 func (x *FeedItem) ProtoReflect() protoreflect.Message {
-	mi := &file_MessageStore_proto_msgTypes[2]
+	mi := &file_MessageStore_proto_msgTypes[3]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -211,7 +258,7 @@ func (x *FeedItem) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use FeedItem.ProtoReflect.Descriptor instead.
 func (*FeedItem) Descriptor() ([]byte, []int) {
-	return file_MessageStore_proto_rawDescGZIP(), []int{2}
+	return file_MessageStore_proto_rawDescGZIP(), []int{3}
 }
 
 func (x *FeedItem) GetId() string {
@@ -289,7 +336,7 @@ type FeedItemPagedResponse struct {
 func (x *FeedItemPagedResponse) Reset() {
 	*x = FeedItemPagedResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_MessageStore_proto_msgTypes[3]
+		mi := &file_MessageStore_proto_msgTypes[4]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -302,7 +349,7 @@ func (x *FeedItemPagedResponse) String() string {
 func (*FeedItemPagedResponse) ProtoMessage() {}
 
 func (x *FeedItemPagedResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_MessageStore_proto_msgTypes[3]
+	mi := &file_MessageStore_proto_msgTypes[4]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -315,7 +362,7 @@ func (x *FeedItemPagedResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use FeedItemPagedResponse.ProtoReflect.Descriptor instead.
 func (*FeedItemPagedResponse) Descriptor() ([]byte, []int) {
-	return file_MessageStore_proto_rawDescGZIP(), []int{3}
+	return file_MessageStore_proto_rawDescGZIP(), []int{4}
 }
 
 func (x *FeedItemPagedResponse) GetFeedItems() []*FeedItem {
@@ -345,7 +392,7 @@ type GetFeedsPagedRequest struct {
 func (x *GetFeedsPagedRequest) Reset() {
 	*x = GetFeedsPagedRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_MessageStore_proto_msgTypes[4]
+		mi := &file_MessageStore_proto_msgTypes[5]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -358,7 +405,7 @@ func (x *GetFeedsPagedRequest) String() string {
 func (*GetFeedsPagedRequest) ProtoMessage() {}
 
 func (x *GetFeedsPagedRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_MessageStore_proto_msgTypes[4]
+	mi := &file_MessageStore_proto_msgTypes[5]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -371,7 +418,7 @@ func (x *GetFeedsPagedRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetFeedsPagedRequest.ProtoReflect.Descriptor instead.
 func (*GetFeedsPagedRequest) Descriptor() ([]byte, []int) {
-	return file_MessageStore_proto_rawDescGZIP(), []int{4}
+	return file_MessageStore_proto_rawDescGZIP(), []int{5}
 }
 
 func (x *GetFeedsPagedRequest) GetStateIn() []FeedItemState {
@@ -406,7 +453,11 @@ var file_MessageStore_proto_rawDesc = []byte{
 	0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x4c, 0x69, 0x73, 0x74, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e,
 	0x73, 0x65, 0x12, 0x2a, 0x0a, 0x08, 0x6d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x73, 0x18, 0x01,
 	0x20, 0x03, 0x28, 0x0b, 0x32, 0x0e, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2e, 0x4d, 0x65, 0x73,
-	0x73, 0x61, 0x67, 0x65, 0x52, 0x08, 0x6d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x73, 0x22, 0x18,
+	0x73, 0x61, 0x67, 0x65, 0x52, 0x08, 0x6d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x73, 0x22, 0x3e,
+	0x0a, 0x18, 0x50, 0x61, 0x72, 0x74, 0x69, 0x63, 0x69, 0x70, 0x61, 0x6e, 0x74, 0x73, 0x4c, 0x69,
+	0x73, 0x74, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x22, 0x0a, 0x0c, 0x70, 0x61,
+	0x72, 0x74, 0x69, 0x63, 0x69, 0x70, 0x61, 0x6e, 0x74, 0x73, 0x18, 0x01, 0x20, 0x03, 0x28, 0x09,
+	0x52, 0x0c, 0x70, 0x61, 0x72, 0x74, 0x69, 0x63, 0x69, 0x70, 0x61, 0x6e, 0x74, 0x73, 0x22, 0x18,
 	0x0a, 0x06, 0x46, 0x65, 0x65, 0x64, 0x49, 0x64, 0x12, 0x0e, 0x0a, 0x02, 0x69, 0x64, 0x18, 0x01,
 	0x20, 0x01, 0x28, 0x09, 0x52, 0x02, 0x69, 0x64, 0x22, 0xa0, 0x03, 0x0a, 0x08, 0x46, 0x65, 0x65,
 	0x64, 0x49, 0x74, 0x65, 0x6d, 0x12, 0x0e, 0x0a, 0x02, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28,
@@ -452,7 +503,7 @@ var file_MessageStore_proto_rawDesc = []byte{
 	0x65, 0x2a, 0x35, 0x0a, 0x0d, 0x46, 0x65, 0x65, 0x64, 0x49, 0x74, 0x65, 0x6d, 0x53, 0x74, 0x61,
 	0x74, 0x65, 0x12, 0x07, 0x0a, 0x03, 0x4e, 0x45, 0x57, 0x10, 0x00, 0x12, 0x0f, 0x0a, 0x0b, 0x49,
 	0x4e, 0x5f, 0x50, 0x52, 0x4f, 0x47, 0x52, 0x45, 0x53, 0x53, 0x10, 0x01, 0x12, 0x0a, 0x0a, 0x06,
-	0x43, 0x4c, 0x4f, 0x53, 0x45, 0x44, 0x10, 0x02, 0x32, 0xb8, 0x02, 0x0a, 0x13, 0x4d, 0x65, 0x73,
+	0x43, 0x4c, 0x4f, 0x53, 0x45, 0x44, 0x10, 0x02, 0x32, 0xfd, 0x02, 0x0a, 0x13, 0x4d, 0x65, 0x73,
 	0x73, 0x61, 0x67, 0x65, 0x53, 0x74, 0x6f, 0x72, 0x65, 0x53, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65,
 	0x12, 0x47, 0x0a, 0x08, 0x67, 0x65, 0x74, 0x46, 0x65, 0x65, 0x64, 0x73, 0x12, 0x1b, 0x2e, 0x70,
 	0x72, 0x6f, 0x74, 0x6f, 0x2e, 0x47, 0x65, 0x74, 0x46, 0x65, 0x65, 0x64, 0x73, 0x50, 0x61, 0x67,
@@ -472,13 +523,18 @@ var file_MessageStore_proto_rawDesc = []byte{
 	0x61, 0x76, 0x65, 0x4d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x12, 0x13, 0x2e, 0x70, 0x72, 0x6f,
 	0x74, 0x6f, 0x2e, 0x49, 0x6e, 0x70, 0x75, 0x74, 0x4d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x1a,
 	0x10, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2e, 0x4d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x49,
-	0x64, 0x22, 0x00, 0x42, 0x60, 0x5a, 0x5e, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f,
-	0x6d, 0x2f, 0x6f, 0x70, 0x65, 0x6e, 0x6c, 0x69, 0x6e, 0x65, 0x2d, 0x61, 0x69, 0x2f, 0x6f, 0x70,
-	0x65, 0x6e, 0x6c, 0x69, 0x6e, 0x65, 0x2d, 0x63, 0x75, 0x73, 0x74, 0x6f, 0x6d, 0x65, 0x72, 0x2d,
-	0x6f, 0x73, 0x2f, 0x70, 0x61, 0x63, 0x6b, 0x61, 0x67, 0x65, 0x73, 0x2f, 0x73, 0x65, 0x72, 0x76,
-	0x65, 0x72, 0x2f, 0x6d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x2d, 0x73, 0x74, 0x6f, 0x72, 0x65,
-	0x2d, 0x61, 0x70, 0x69, 0x2f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2f, 0x67, 0x65, 0x6e, 0x65, 0x72,
-	0x61, 0x74, 0x65, 0x64, 0x2f, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x64, 0x22, 0x00, 0x12, 0x43, 0x0a, 0x0f, 0x67, 0x65, 0x74, 0x50, 0x61, 0x72, 0x74, 0x69, 0x63,
+	0x69, 0x70, 0x61, 0x6e, 0x74, 0x73, 0x12, 0x0d, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2e, 0x46,
+	0x65, 0x65, 0x64, 0x49, 0x64, 0x1a, 0x1f, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2e, 0x50, 0x61,
+	0x72, 0x74, 0x69, 0x63, 0x69, 0x70, 0x61, 0x6e, 0x74, 0x73, 0x4c, 0x69, 0x73, 0x74, 0x52, 0x65,
+	0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x00, 0x42, 0x5f, 0x5a, 0x5d, 0x67, 0x69, 0x74, 0x68,
+	0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x6f, 0x70, 0x65, 0x6e, 0x6c, 0x69, 0x6e, 0x65, 0x2d,
+	0x61, 0x69, 0x2f, 0x6f, 0x70, 0x65, 0x6e, 0x6c, 0x69, 0x6e, 0x65, 0x2d, 0x63, 0x75, 0x73, 0x74,
+	0x6f, 0x6d, 0x65, 0x72, 0x2d, 0x6f, 0x73, 0x2f, 0x70, 0x61, 0x63, 0x6b, 0x61, 0x67, 0x65, 0x73,
+	0x2f, 0x73, 0x65, 0x72, 0x76, 0x65, 0x72, 0x2f, 0x6d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x2d,
+	0x73, 0x74, 0x6f, 0x72, 0x65, 0x2d, 0x61, 0x70, 0x69, 0x2f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2f,
+	0x67, 0x65, 0x6e, 0x65, 0x72, 0x61, 0x74, 0x65, 0x64, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f,
+	0x33,
 }
 
 var (
@@ -494,39 +550,42 @@ func file_MessageStore_proto_rawDescGZIP() []byte {
 }
 
 var file_MessageStore_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
-var file_MessageStore_proto_msgTypes = make([]protoimpl.MessageInfo, 5)
+var file_MessageStore_proto_msgTypes = make([]protoimpl.MessageInfo, 6)
 var file_MessageStore_proto_goTypes = []interface{}{
-	(FeedItemState)(0),            // 0: proto.FeedItemState
-	(*MessageListResponse)(nil),   // 1: proto.MessageListResponse
-	(*FeedId)(nil),                // 2: proto.FeedId
-	(*FeedItem)(nil),              // 3: proto.FeedItem
-	(*FeedItemPagedResponse)(nil), // 4: proto.FeedItemPagedResponse
-	(*GetFeedsPagedRequest)(nil),  // 5: proto.GetFeedsPagedRequest
-	(*Message)(nil),               // 6: proto.Message
-	(*timestamppb.Timestamp)(nil), // 7: google.protobuf.Timestamp
-	(*MessageId)(nil),             // 8: proto.MessageId
-	(*InputMessage)(nil),          // 9: proto.InputMessage
+	(FeedItemState)(0),               // 0: proto.FeedItemState
+	(*MessageListResponse)(nil),      // 1: proto.MessageListResponse
+	(*ParticipantsListResponse)(nil), // 2: proto.ParticipantsListResponse
+	(*FeedId)(nil),                   // 3: proto.FeedId
+	(*FeedItem)(nil),                 // 4: proto.FeedItem
+	(*FeedItemPagedResponse)(nil),    // 5: proto.FeedItemPagedResponse
+	(*GetFeedsPagedRequest)(nil),     // 6: proto.GetFeedsPagedRequest
+	(*Message)(nil),                  // 7: proto.Message
+	(*timestamppb.Timestamp)(nil),    // 8: google.protobuf.Timestamp
+	(*MessageId)(nil),                // 9: proto.MessageId
+	(*InputMessage)(nil),             // 10: proto.InputMessage
 }
 var file_MessageStore_proto_depIdxs = []int32{
-	6, // 0: proto.MessageListResponse.messages:type_name -> proto.Message
-	7, // 1: proto.FeedItem.lastTimestamp:type_name -> google.protobuf.Timestamp
-	3, // 2: proto.FeedItemPagedResponse.feedItems:type_name -> proto.FeedItem
-	0, // 3: proto.GetFeedsPagedRequest.stateIn:type_name -> proto.FeedItemState
-	5, // 4: proto.MessageStoreService.getFeeds:input_type -> proto.GetFeedsPagedRequest
-	2, // 5: proto.MessageStoreService.getFeed:input_type -> proto.FeedId
-	2, // 6: proto.MessageStoreService.getMessagesForFeed:input_type -> proto.FeedId
-	8, // 7: proto.MessageStoreService.getMessage:input_type -> proto.MessageId
-	9, // 8: proto.MessageStoreService.saveMessage:input_type -> proto.InputMessage
-	4, // 9: proto.MessageStoreService.getFeeds:output_type -> proto.FeedItemPagedResponse
-	3, // 10: proto.MessageStoreService.getFeed:output_type -> proto.FeedItem
-	1, // 11: proto.MessageStoreService.getMessagesForFeed:output_type -> proto.MessageListResponse
-	6, // 12: proto.MessageStoreService.getMessage:output_type -> proto.Message
-	8, // 13: proto.MessageStoreService.saveMessage:output_type -> proto.MessageId
-	9, // [9:14] is the sub-list for method output_type
-	4, // [4:9] is the sub-list for method input_type
-	4, // [4:4] is the sub-list for extension type_name
-	4, // [4:4] is the sub-list for extension extendee
-	0, // [0:4] is the sub-list for field type_name
+	7,  // 0: proto.MessageListResponse.messages:type_name -> proto.Message
+	8,  // 1: proto.FeedItem.lastTimestamp:type_name -> google.protobuf.Timestamp
+	4,  // 2: proto.FeedItemPagedResponse.feedItems:type_name -> proto.FeedItem
+	0,  // 3: proto.GetFeedsPagedRequest.stateIn:type_name -> proto.FeedItemState
+	6,  // 4: proto.MessageStoreService.getFeeds:input_type -> proto.GetFeedsPagedRequest
+	3,  // 5: proto.MessageStoreService.getFeed:input_type -> proto.FeedId
+	3,  // 6: proto.MessageStoreService.getMessagesForFeed:input_type -> proto.FeedId
+	9,  // 7: proto.MessageStoreService.getMessage:input_type -> proto.MessageId
+	10, // 8: proto.MessageStoreService.saveMessage:input_type -> proto.InputMessage
+	3,  // 9: proto.MessageStoreService.getParticipants:input_type -> proto.FeedId
+	5,  // 10: proto.MessageStoreService.getFeeds:output_type -> proto.FeedItemPagedResponse
+	4,  // 11: proto.MessageStoreService.getFeed:output_type -> proto.FeedItem
+	1,  // 12: proto.MessageStoreService.getMessagesForFeed:output_type -> proto.MessageListResponse
+	7,  // 13: proto.MessageStoreService.getMessage:output_type -> proto.Message
+	9,  // 14: proto.MessageStoreService.saveMessage:output_type -> proto.MessageId
+	2,  // 15: proto.MessageStoreService.getParticipants:output_type -> proto.ParticipantsListResponse
+	10, // [10:16] is the sub-list for method output_type
+	4,  // [4:10] is the sub-list for method input_type
+	4,  // [4:4] is the sub-list for extension type_name
+	4,  // [4:4] is the sub-list for extension extendee
+	0,  // [0:4] is the sub-list for field type_name
 }
 
 func init() { file_MessageStore_proto_init() }
@@ -549,7 +608,7 @@ func file_MessageStore_proto_init() {
 			}
 		}
 		file_MessageStore_proto_msgTypes[1].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*FeedId); i {
+			switch v := v.(*ParticipantsListResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -561,7 +620,7 @@ func file_MessageStore_proto_init() {
 			}
 		}
 		file_MessageStore_proto_msgTypes[2].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*FeedItem); i {
+			switch v := v.(*FeedId); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -573,7 +632,7 @@ func file_MessageStore_proto_init() {
 			}
 		}
 		file_MessageStore_proto_msgTypes[3].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*FeedItemPagedResponse); i {
+			switch v := v.(*FeedItem); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -585,6 +644,18 @@ func file_MessageStore_proto_init() {
 			}
 		}
 		file_MessageStore_proto_msgTypes[4].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*FeedItemPagedResponse); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_MessageStore_proto_msgTypes[5].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*GetFeedsPagedRequest); i {
 			case 0:
 				return &v.state
@@ -603,7 +674,7 @@ func file_MessageStore_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_MessageStore_proto_rawDesc,
 			NumEnums:      1,
-			NumMessages:   5,
+			NumMessages:   6,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

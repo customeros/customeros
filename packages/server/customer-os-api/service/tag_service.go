@@ -80,8 +80,8 @@ func (s *tagService) mapDbNodeToTagEntity(dbNode dbtype.Node) *entity.TagEntity 
 	tag := entity.TagEntity{
 		Id:        utils.GetStringPropOrEmpty(props, "id"),
 		Name:      utils.GetStringPropOrEmpty(props, "name"),
-		CreatedAt: utils.GetTimePropOrNow(props, "createdAt"),
-		UpdatedAt: utils.GetTimePropOrNow(props, "updatedAt"),
+		CreatedAt: utils.GetTimePropOrEpochStart(props, "createdAt"),
+		UpdatedAt: utils.GetTimePropOrEpochStart(props, "updatedAt"),
 		AppSource: utils.GetStringPropOrEmpty(props, "appSource"),
 		Source:    entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
 	}

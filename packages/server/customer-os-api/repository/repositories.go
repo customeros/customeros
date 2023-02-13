@@ -11,7 +11,6 @@ type Repositories struct {
 	OrganizationTypeRepository    OrganizationTypeRepository
 	ContactGroupRepository        ContactGroupRepository
 	JobRepository                 JobRepository
-	ContactTypeRepository         ContactTypeRepository
 	ConversationRepository        ConversationRepository
 	CustomFieldTemplateRepository CustomFieldTemplateRepository
 	CustomFieldRepository         CustomFieldRepository
@@ -22,11 +21,13 @@ type Repositories struct {
 	ExternalSystemRepository      ExternalSystemRepository
 	NoteRepository                NoteRepository
 	JobRoleRepository             JobRoleRepository
-	AddressRepository             PlaceRepository
+	PlaceRepository               PlaceRepository
+	LocationRepository            LocationRepository
 	EmailRepository               EmailRepository
 	PhoneNumberRepository         PhoneNumberRepository
 	TagRepository                 TagRepository
 	SearchRepository              SearchRepository
+	QueryRepository               QueryRepository
 }
 
 type Drivers struct {
@@ -43,7 +44,6 @@ func InitRepos(driver *neo4j.Driver) *Repositories {
 	repositories.OrganizationRepository = NewOrganizationRepository(driver)
 	repositories.ContactGroupRepository = NewContactGroupRepository(driver)
 	repositories.JobRepository = NewJobRepository(driver)
-	repositories.ContactTypeRepository = NewContactTypeRepository(driver)
 	repositories.ConversationRepository = NewConversationRepository(driver)
 	repositories.CustomFieldTemplateRepository = NewCustomFieldTemplateRepository(driver)
 	repositories.CustomFieldRepository = NewCustomFieldRepository(driver)
@@ -54,11 +54,13 @@ func InitRepos(driver *neo4j.Driver) *Repositories {
 	repositories.ExternalSystemRepository = NewExternalSystemRepository(driver)
 	repositories.NoteRepository = NewNoteRepository(driver)
 	repositories.JobRoleRepository = NewJobRoleRepository(driver)
-	repositories.AddressRepository = NewPlaceRepository(driver)
+	repositories.PlaceRepository = NewPlaceRepository(driver)
+	repositories.LocationRepository = NewLocationRepository(driver)
 	repositories.EmailRepository = NewEmailRepository(driver)
 	repositories.PhoneNumberRepository = NewPhoneNumberRepository(driver)
 	repositories.OrganizationTypeRepository = NewOrganizationTypeRepository(driver)
 	repositories.TagRepository = NewTagRepository(driver)
 	repositories.SearchRepository = NewSearchRepository(driver)
+	repositories.QueryRepository = NewQueryRepository(driver)
 	return &repositories
 }

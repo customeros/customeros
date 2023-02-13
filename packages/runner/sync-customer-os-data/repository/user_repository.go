@@ -34,13 +34,15 @@ func (r *userRepository) MergeUser(tenant string, syncDate time.Time, user entit
 	// Link User with Tenant
 	query := "MATCH (t:Tenant {name:$tenant})<-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]-(e:ExternalSystem {id:$externalSystem}) " +
 		" MERGE (u:User)-[r:IS_LINKED_WITH {externalId:$externalId}]->(e) " +
-		" ON CREATE SET r.externalId=$externalId, r.externalOwnerId=$externalOwnerId, r.syncDate=$syncDate, u.id=randomUUID(), u.createdAt=$createdAt, " +
+		" ON CREATE SET r.externalId=$externalId, r.externalOwnerId=$externalOwnerId, r.syncDate=$syncDate, u.id=randomUUID(), " +
+		"				u.createdAt=$createdAt, u.updatedAt=$createdAt, " +
 		"               u.firstName=$firstName, u.lastName=$lastName, " +
 		"               u.source=$source, u.sourceOfTruth=$sourceOfTruth, u.appSource=$appSource, " +
 		"               u:%s" +
 		" ON MATCH SET 	r.syncDate = CASE WHEN u.sourceOfTruth=$sourceOfTruth THEN $syncDate ELSE r.syncDate END, " +
 		"				u.firstName = CASE WHEN u.sourceOfTruth=$sourceOfTruth THEN $firstName ELSE u.firstName END, " +
-		"				u.lastName = CASE WHEN u.sourceOfTruth=$sourceOfTruth THEN $lastName ELSE u.lastName END " +
+		"				u.lastName = CASE WHEN u.sourceOfTruth=$sourceOfTruth THEN $lastName ELSE u.lastName END, " +
+		"				u.updatedAt = CASE WHEN u.sourceOfTruth=$sourceOfTruth THEN $now ELSE u.updatedAt END " +
 		" WITH u, t " +
 		" MERGE (u)-[:USER_BELONGS_TO_TENANT]->(t)" +
 		" WITH u " +
@@ -86,17 +88,20 @@ func (r *userRepository) MergeEmail(tenant, userId, email, externalSystem string
 	session := utils.NewNeo4jWriteSession(*r.driver)
 	defer session.Close()
 
-	query := "MATCH (u:User {id:$userId})-[:USER_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) " +
-		" MERGE (u)-[r:HAS]->(e:Email {email: $email}) " +
-		" ON CREATE SET r.primary=true, " +
+	query := "MATCH (u:User {id:$userId})-[:USER_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant}) " +
+		" MERGE (e:Email {email: $email})-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]->(t) " +
+		" ON CREATE SET " +
 		"				e.id=randomUUID(), " +
-		"				e.label=$label, " +
 		"				e.createdAt=$now, " +
 		"				e.updatedAt=$now, " +
 		"				e.source=$source, " +
 		"				e.sourceOfTruth=$sourceOfTruth, " +
 		"				e.appSource=$appSource, " +
-		"				e:%s "
+		"				e:%s " +
+		" WITH DISTINCT u, e " +
+		" MERGE (u)-[rel:HAS]->(e) " +
+		" ON CREATE SET rel.primary=true, " +
+		"				rel.label=$label "
 	_, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
 		_, err := tx.Run(fmt.Sprintf(query, "Email_"+tenant),
 			map[string]interface{}{

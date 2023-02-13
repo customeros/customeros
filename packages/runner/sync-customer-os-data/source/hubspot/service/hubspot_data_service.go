@@ -94,8 +94,8 @@ func (s *hubspotDataService) GetContactsForSync(batchSize int, runId string) []e
 		// set contact's tags
 		if isCustomerTag(hubspotContactProperties.LifecycleStage) {
 			contactForCustomerOs.TagName = "CUSTOMER"
-		} else {
-			contactForCustomerOs.TagName = "NOT_SET"
+		} else if isProspectTag(hubspotContactProperties.LifecycleStage) {
+			contactForCustomerOs.TagName = "PROSPECT"
 		}
 
 		customerOsContacts = append(customerOsContacts, contactForCustomerOs)
@@ -106,9 +106,15 @@ func (s *hubspotDataService) GetContactsForSync(batchSize int, runId string) []e
 
 func isCustomerTag(hubspotLifecycleStage string) bool {
 	customerLifecycleStages := map[string]bool{
-		"lead": true, "subscriber": true, "marketingqualifiedlead": true, "salesqualifiedlead": true,
-		"opportunity": true, "evangelist": true, "customer": true}
+		"customer": true}
 	return customerLifecycleStages[hubspotLifecycleStage]
+}
+
+func isProspectTag(hubspotLifecycleStage string) bool {
+	prospectLifecycleStages := map[string]bool{
+		"lead": true, "subscriber": true, "marketingqualifiedlead": true, "salesqualifiedlead": true,
+		"opportunity": true}
+	return prospectLifecycleStages[hubspotLifecycleStage]
 }
 
 func (s *hubspotDataService) GetOrganizationsForSync(batchSize int, runId string) []entity.OrganizationData {

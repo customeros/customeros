@@ -3,7 +3,7 @@ package proto;
 
 import "google/protobuf/timestamp.proto";
 
-option go_package = "github.com/openline-ai/openline-customer-os/packages/server/message-store-api/proto/generated/";
+option go_package = "github.com/openline-ai/openline-customer-os/packages/server/message-store-api/proto/generated";
 
 enum SenderType {
   CONTACT = 0;
@@ -24,13 +24,15 @@ enum MessageType {
 }
 
 message MessageId {
-  string id = 1;
+  // postgres id
+  string conversationEventId = 1;
+  // neo4j id
   string conversationId = 2;
 }
 
 message Message {
   MessageId messageId = 1;
-  string conversationInitiatorUsername = 2;
+  string initiatorUsername = 2;
   MessageType type = 3;
   MessageSubtype subtype = 4;
   string content = 5;
@@ -44,11 +46,9 @@ message Message {
 
 message InputMessage {
   optional string conversationId = 1;
-  optional string email = 2;
-  SenderType senderType = 3;
-  MessageType type = 4;
-  MessageSubtype subtype = 5;
-  optional string message = 6;
-  optional string bytes = 7;
-  MessageDirection direction = 8;
+  optional string initiatorIdentifier = 2;
+  MessageType type = 3;
+  MessageSubtype subtype = 4;
+  optional string content = 5;
+  MessageDirection direction = 6;
 }

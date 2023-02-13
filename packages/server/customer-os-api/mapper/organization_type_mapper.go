@@ -25,6 +25,7 @@ func MapEntityToOrganizationType(entity *entity.OrganizationTypeEntity) *model.O
 		ID:        entity.Id,
 		Name:      entity.Name,
 		CreatedAt: entity.CreatedAt,
+		UpdatedAt: entity.UpdatedAt,
 	}
 }
 

@@ -56,12 +56,11 @@ type Contact struct {
 	// An ISO8601 timestamp recording when the contact was created in customerOS.
 	// **Required**
 	CreatedAt time.Time `json:"createdAt"`
+	UpdatedAt time.Time `json:"updatedAt"`
 	// A user-defined label applied against a contact in customerOS.
 	Label  *string    `json:"label"`
 	Source DataSource `json:"source"`
-	// User-defined field that defines the relationship type the contact has with your business.  `Customer`, `Partner`, `Lead` are examples.
-	ContactType *ContactType `json:"contactType"`
-	Tags        []*Tag       `json:"tags"`
+	Tags   []*Tag     `json:"tags"`
 	// `organizationName` and `jobTitle` of the contact if it has been associated with an organization.
 	// **Required.  If no values it returns an empty array.**
 	JobRoles      []*JobRole        `json:"jobRoles"`
@@ -75,9 +74,9 @@ type Contact struct {
 	// All email addresses associated with a contact in customerOS.
 	// **Required.  If no values it returns an empty array.**
 	Emails []*Email `json:"emails"`
-	// All addresses associated with a contact in customerOS.
+	// All locations associated with a contact in customerOS.
 	// **Required.  If no values it returns an empty array.**
-	Addresses []*Place `json:"addresses"`
+	Locations []*Location `json:"locations"`
 	// User defined metadata appended to the contact record in customerOS.
 	// **Required.  If no values it returns an empty array.**
 	CustomFields []*CustomField `json:"customFields"`
@@ -170,8 +169,6 @@ type ContactInput struct {
 	LastName *string `json:"lastName"`
 	// A user-defined label attached to contact.
 	Label *string `json:"label"`
-	// User-defined field that defines the relationship type the contact has with your business.  `Customer`, `Partner`, `Lead` are examples.
-	ContactTypeID *string `json:"contactTypeId"`
 	// An ISO8601 timestamp recording when the contact was created in customerOS.
 	CreatedAt *time.Time `json:"createdAt"`
 	// User defined metadata appended to contact.
@@ -192,21 +189,6 @@ type ContactTagInput struct {
 	TagID     string `json:"tagId"`
 }
 
-type ContactType struct {
-	ID        string    `json:"id"`
-	CreatedAt time.Time `json:"createdAt"`
-	Name      string    `json:"name"`
-}
-
-type ContactTypeInput struct {
-	Name string `json:"name"`
-}
-
-type ContactTypeUpdateInput struct {
-	ID   string `json:"id"`
-	Name string `json:"name"`
-}
-
 // Updates data fields associated with an existing customer record in customerOS.
 // **An `update` object.**
 type ContactUpdateInput struct {
@@ -221,8 +203,6 @@ type ContactUpdateInput struct {
 	LastName *string `json:"lastName"`
 	// A user-defined label applied against a contact in customerOS.
 	Label *string `json:"label"`
-	// User-defined field that defines the relationship type the contact has with your business.  `Customer`, `Partner`, `Lead` are examples.
-	ContactTypeID *string `json:"contactTypeId"`
 	// Id of the contact owner (user)
 	OwnerID *string `json:"ownerId"`
 }
@@ -328,6 +308,7 @@ type CustomField struct {
 	// The source of the custom field value
 	Source    DataSource           `json:"source"`
 	CreatedAt time.Time            `json:"createdAt"`
+	UpdatedAt time.Time            `json:"updatedAt"`
 	Template  *CustomFieldTemplate `json:"template"`
 }
 
@@ -354,6 +335,7 @@ type CustomFieldInput struct {
 type CustomFieldTemplate struct {
 	ID        string                  `json:"id"`
 	CreatedAt time.Time               `json:"createdAt"`
+	UpdatedAt time.Time               `json:"updatedAt"`
 	Name      string                  `json:"name"`
 	Type      CustomFieldTemplateType `json:"type"`
 	Order     int                     `json:"order"`
@@ -392,6 +374,27 @@ type CustomFieldUpdateInput struct {
 	// **Required**
 	Value AnyTypeValue `json:"value"`
 }
+
+type DashboardViewItem struct {
+	Contact      *Contact      `json:"contact"`
+	Organization *Organization `json:"organization"`
+}
+
+type DashboardViewItemPage struct {
+	Content       []*DashboardViewItem `json:"content"`
+	TotalPages    int                  `json:"totalPages"`
+	TotalElements int64                `json:"totalElements"`
+}
+
+func (DashboardViewItemPage) IsPages() {}
+
+// The total number of pages included in the query response.
+// **Required.**
+func (this DashboardViewItemPage) GetTotalPages() int { return this.TotalPages }
+
+// The total number of elements included in the query response.
+// **Required.**
+func (this DashboardViewItemPage) GetTotalElements() int64 { return this.TotalElements }
 
 // Describes an email address associated with a `Contact` in customerOS.
 // **A `return` object.**
@@ -454,6 +457,7 @@ type EntityTemplate struct {
 	FieldSets    []*FieldSetTemplate      `json:"fieldSets"`
 	CustomFields []*CustomFieldTemplate   `json:"customFields"`
 	CreatedAt    time.Time                `json:"createdAt"`
+	UpdatedAt    time.Time                `json:"updatedAt"`
 }
 
 func (EntityTemplate) IsNode()            {}
@@ -476,6 +480,7 @@ type FieldSet struct {
 	ID           string            `json:"id"`
 	Name         string            `json:"name"`
 	CreatedAt    time.Time         `json:"createdAt"`
+	UpdatedAt    time.Time         `json:"updatedAt"`
 	CustomFields []*CustomField    `json:"customFields"`
 	Template     *FieldSetTemplate `json:"template"`
 	Source       DataSource        `json:"source"`
@@ -491,6 +496,7 @@ type FieldSetInput struct {
 type FieldSetTemplate struct {
 	ID           string                 `json:"id"`
 	CreatedAt    time.Time              `json:"createdAt"`
+	UpdatedAt    time.Time              `json:"updatedAt"`
 	Name         string                 `json:"name"`
 	Order        int                    `json:"order"`
 	CustomFields []*CustomFieldTemplate `json:"customFields"`
@@ -565,6 +571,16 @@ type JobRoleUpdateInput struct {
 	ResponsibilityLevel *int64  `json:"responsibilityLevel"`
 }
 
+type Location struct {
+	ID        string      `json:"id"`
+	Name      string      `json:"name"`
+	CreatedAt time.Time   `json:"createdAt"`
+	UpdatedAt time.Time   `json:"updatedAt"`
+	Source    *DataSource `json:"source"`
+	AppSource *string     `json:"appSource"`
+	Place     *Place      `json:"place"`
+}
+
 type Note struct {
 	ID            string     `json:"id"`
 	HTML          string     `json:"html"`
@@ -618,7 +634,7 @@ type Organization struct {
 	AppSource        string            `json:"appSource"`
 	// All addresses associated with an organization in customerOS.
 	// **Required.  If no values it returns an empty array.**
-	Addresses []*Place      `json:"addresses"`
+	Locations []*Location   `json:"locations"`
 	Contacts  *ContactsPage `json:"contacts"`
 	JobRoles  []*JobRole    `json:"jobRoles"`
 	// Organization notes
@@ -663,6 +679,7 @@ type OrganizationType struct {
 	ID        string    `json:"id"`
 	Name      string    `json:"name"`
 	CreatedAt time.Time `json:"createdAt"`
+	UpdatedAt time.Time `json:"updatedAt"`
 }
 
 type OrganizationTypeInput struct {
@@ -727,6 +744,7 @@ type PhoneNumber struct {
 	// **Required**
 	Primary   bool       `json:"primary"`
 	CreatedAt time.Time  `json:"createdAt"`
+	UpdatedAt time.Time  `json:"updatedAt"`
 	Source    DataSource `json:"source"`
 }
 
@@ -762,6 +780,7 @@ type PhoneNumberUpdateInput struct {
 type Place struct {
 	ID        string      `json:"id"`
 	CreatedAt time.Time   `json:"createdAt"`
+	UpdatedAt time.Time   `json:"updatedAt"`
 	Country   *string     `json:"country"`
 	State     *string     `json:"state"`
 	City      *string     `json:"city"`
@@ -771,6 +790,7 @@ type Place struct {
 	Phone     *string     `json:"phone"`
 	Fax       *string     `json:"fax"`
 	Source    *DataSource `json:"source"`
+	AppSource *string     `json:"appSource"`
 }
 
 // Describes the success or failure of the GraphQL call.
@@ -829,6 +849,7 @@ type User struct {
 	// Timestamp of user creation.
 	// **Required**
 	CreatedAt     time.Time         `json:"createdAt"`
+	UpdatedAt     time.Time         `json:"updatedAt"`
 	Source        DataSource        `json:"source"`
 	Conversations *ConversationPage `json:"conversations"`
 }

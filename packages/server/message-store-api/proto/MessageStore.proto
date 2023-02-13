@@ -4,7 +4,7 @@ package proto;
 import "google/protobuf/timestamp.proto";
 import "Message.proto";
 
-option go_package = "github.com/openline-ai/openline-customer-os/packages/server/message-store-api/proto/generated/";
+option go_package = "github.com/openline-ai/openline-customer-os/packages/server/message-store-api/proto/generated";
 
 enum FeedItemState {
   NEW = 0;
@@ -14,6 +14,10 @@ enum FeedItemState {
 
 message MessageListResponse {
   repeated Message messages = 1;
+}
+
+message ParticipantsListResponse {
+  repeated string participants = 1;
 }
 
 message FeedId {
@@ -53,4 +57,5 @@ service MessageStoreService {
   rpc getMessagesForFeed(FeedId) returns (MessageListResponse) {};
   rpc getMessage(MessageId) returns (Message) {};
   rpc saveMessage(InputMessage) returns (MessageId) {};
+  rpc getParticipants(FeedId) returns (ParticipantsListResponse) {};
 }

@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"github.com/neo4j/neo4j-go-driver/v4/neo4j"
 	commonModuleService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
@@ -10,18 +11,24 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/message-store-api/repository/entity"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"log"
 	"time"
 )
 
-type messageService struct {
+type MessageService struct {
 	msProto.UnimplementedMessageStoreServiceServer
 	driver               *neo4j.Driver
 	postgresRepositories *repository.PostgresRepositories
-	customerOSService    *customerOSService
+	customerOSService    *CustomerOSService
 	commonStoreService   *commonStoreService
 }
 
-func (s *messageService) GetMessage(ctx context.Context, msgId *msProto.MessageId) (*msProto.Message, error) {
+type Participant struct {
+	Id   string
+	Type entity.SenderType
+}
+
+func (s *MessageService) GetMessage(ctx context.Context, msgId *msProto.MessageId) (*msProto.Message, error) {
 	apiKeyValid := commonModuleService.ApiKeyCheckerGRPC(ctx, s.postgresRepositories.CommonRepositories.AppKeyRepo, commonModuleService.MESSAGE_STORE_API)
 	if !apiKeyValid {
 		return nil, status.Errorf(codes.Unauthenticated, "Invalid API Key")
@@ -32,11 +39,11 @@ func (s *messageService) GetMessage(ctx context.Context, msgId *msProto.MessageI
 		return nil, err
 	}
 
-	if msgId == nil || msgId.GetId() == "" {
+	if msgId == nil || msgId.GetConversationEventId() == "" {
 		return nil, status.Errorf(codes.InvalidArgument, "Message ID must be specified")
 	}
 
-	queryResult := s.postgresRepositories.ConversationEventRepository.GetEventById(msgId.GetId())
+	queryResult := s.postgresRepositories.ConversationEventRepository.GetEventById(msgId.GetConversationEventId())
 	if queryResult.Error != nil {
 		return nil, status.Errorf(codes.Internal, queryResult.Error.Error())
 	}
@@ -53,8 +60,37 @@ func (s *messageService) GetMessage(ctx context.Context, msgId *msProto.MessageI
 
 	return s.commonStoreService.EncodeConversationEventToMS(conversationEvent), nil
 }
+func (s *MessageService) GetParticipants(ctx context.Context, feedId *msProto.FeedId) (*msProto.ParticipantsListResponse, error) {
+	apiKeyValid := commonModuleService.ApiKeyCheckerGRPC(ctx, s.postgresRepositories.CommonRepositories.AppKeyRepo, commonModuleService.MESSAGE_STORE_API)
+	if !apiKeyValid {
+		return nil, status.Errorf(codes.Unauthenticated, "Invalid API Key")
+	}
 
-func (s *messageService) GetMessagesForFeed(ctx context.Context, feedIdRequest *msProto.FeedId) (*msProto.MessageListResponse, error) {
+	tenantName, err := commonModuleService.GetTenantForUsernameForGRPC(ctx, s.postgresRepositories.CommonRepositories.UserRepo)
+	if err != nil {
+		return nil, err
+	}
+
+	if feedId == nil || feedId.GetId() == "" {
+		return nil, status.Errorf(codes.InvalidArgument, "Feed ID must be specified")
+	}
+
+	emails, err := s.customerOSService.GetConversationParticipants(*tenantName, feedId.GetId())
+	var participants []string
+
+	for _, participant := range emails {
+		participants = append(participants, participant)
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	return &msProto.ParticipantsListResponse{
+		Participants: participants,
+	}, nil
+}
+
+func (s *MessageService) GetMessagesForFeed(ctx context.Context, feedIdRequest *msProto.FeedId) (*msProto.MessageListResponse, error) {
 	apiKeyValid := commonModuleService.ApiKeyCheckerGRPC(ctx, s.postgresRepositories.CommonRepositories.AppKeyRepo, commonModuleService.MESSAGE_STORE_API)
 	if !apiKeyValid {
 		return nil, status.Errorf(codes.Unauthenticated, "Invalid API Key")
@@ -93,7 +129,7 @@ func (s *messageService) GetMessagesForFeed(ctx context.Context, feedIdRequest *
 	}, nil
 }
 
-func (s *messageService) GetFeeds(ctx context.Context, request *msProto.GetFeedsPagedRequest) (*msProto.FeedItemPagedResponse, error) {
+func (s *MessageService) GetFeeds(ctx context.Context, request *msProto.GetFeedsPagedRequest) (*msProto.FeedItemPagedResponse, error) {
 	apiKeyValid := commonModuleService.ApiKeyCheckerGRPC(ctx, s.postgresRepositories.CommonRepositories.AppKeyRepo, commonModuleService.MESSAGE_STORE_API)
 	if !apiKeyValid {
 		return nil, status.Errorf(codes.Unauthenticated, "Invalid API Key")
@@ -109,20 +145,6 @@ func (s *messageService) GetFeeds(ctx context.Context, request *msProto.GetFeeds
 		return nil, err
 	}
 
-	//if feedRequest.GetStateIn() != nil {
-	//	stateIn := make([]genConversation.State, 0, len(feedRequest.GetStateIn()))
-	//	for _, state := range feedRequest.GetStateIn() {
-	//		stateIn = append(stateIn, encodeConversationState(state))
-	//	}
-	//	query.Where(genConversation.StateIn(stateIn...))
-	//}
-	//
-	//limit := 100 // default to 100 if no pagination is specified
-	//if feedRequest.GetPageSize() != 0 {
-	//	limit = int(feedRequest.GetPageSize())
-	//}
-	//offset := limit * int(feedRequest.GetPage())
-
 	fl := &msProto.FeedItemPagedResponse{FeedItems: make([]*msProto.FeedItem, len(conversations))}
 	fl.TotalElements = int32(len(conversations))
 
@@ -133,7 +155,7 @@ func (s *messageService) GetFeeds(ctx context.Context, request *msProto.GetFeeds
 	return fl, nil
 }
 
-func (s *messageService) GetFeed(ctx context.Context, feedIdRequest *msProto.FeedId) (*msProto.FeedItem, error) {
+func (s *MessageService) GetFeed(ctx context.Context, feedIdRequest *msProto.FeedId) (*msProto.FeedItem, error) {
 	apiKeyValid := commonModuleService.ApiKeyCheckerGRPC(ctx, s.postgresRepositories.CommonRepositories.AppKeyRepo, commonModuleService.MESSAGE_STORE_API)
 	if !apiKeyValid {
 		return nil, status.Errorf(codes.Unauthenticated, "Invalid API Key")
@@ -156,109 +178,149 @@ func (s *messageService) GetFeed(ctx context.Context, feedIdRequest *msProto.Fee
 	return s.commonStoreService.EncodeConversationToMS(*conversation), nil
 }
 
-func (s *messageService) SaveMessage(ctx context.Context, input *msProto.InputMessage) (*msProto.MessageId, error) {
-	//var err error
-	//var conversation *gen.Conversation
-	//
-	var conversation *Conversation
-	var participantId string
-	var participantFirstName string
-	var participantLastName string
-	var participantUsername string
-
-	if input.ConversationId == nil && input.Email == nil {
+func (s *MessageService) SaveMessage(ctx context.Context, input *msProto.InputMessage) (*msProto.MessageId, error) {
+	if input.ConversationId == nil && input.InitiatorIdentifier == nil {
 		return nil, errors.New("conversationId or email must be provided")
 	}
-	if input.Message == nil && input.Bytes == nil {
-		return nil, errors.New("message or bytes must be provided")
+	if input.Content == nil {
+		return nil, errors.New("message must be provided")
 	}
+	participants := []Participant{}
 
 	tenant := "openline" //TODO get tenant from context
+	initiator, err := s.getParticipant(tenant, *input.InitiatorIdentifier)
 
+	participants = append(participants, *initiator)
+	if err != nil {
+		return nil, err
+	}
+	threadId := ""
+	entityType := s.commonStoreService.ConvertMSTypeToEntityType(input.Type)
+	if err := s.getThreadIdAndParticipantsFromMail(tenant, &threadId, &participants, entityType, input); err != nil {
+		log.Printf("Error handleing email: %v", err)
+	}
+
+	var conversation *Conversation
 	if input.ConversationId != nil {
-		conv, err := s.customerOSService.GetConversationById(tenant, *input.ConversationId)
+		if conv, err := s.customerOSService.GetConversationById(tenant, *input.ConversationId); err != nil {
+			return nil, err
+		} else {
+			conversation = conv
+		}
+	} else {
+		if conv, err := s.customerOSService.GetActiveConversationOrCreate(tenant, initiator.Id, *input.InitiatorIdentifier, initiator.Type, entityType, threadId); err != nil {
+			return nil, err
+		} else {
+			conversation = conv
+		}
+	}
+
+	previewMessage := s.getMessagePreview(input)
+
+	userIds := []string{}
+	contactIds := []string{}
+	for participantsIndex := range participants {
+		if participants[participantsIndex].Type == entity.CONTACT {
+			contactIds = append(contactIds, participants[participantsIndex].Id)
+		} else if participants[participantsIndex].Type == entity.USER {
+			userIds = append(userIds, participants[participantsIndex].Id)
+		}
+	}
+	senderType := s.getSenderTypeStr(initiator)
+	if _, err := s.customerOSService.UpdateConversation(tenant, conversation.Id, initiator.Id, senderType, contactIds, userIds, previewMessage); err != nil {
+		return nil, err
+	}
+
+	conversationEvent := s.saveConversationEvent(tenant, conversation, input, initiator)
+
+	return s.commonStoreService.EncodeMessageIdToMs(conversationEvent), nil
+}
+func (s *MessageService) getSenderTypeStr(initiator *Participant) string {
+	var lastSenderType = ""
+	if initiator.Type == entity.CONTACT {
+		lastSenderType = "CONTACT"
+	} else if initiator.Type == entity.USER {
+		lastSenderType = "USER"
+	}
+	return lastSenderType
+}
+
+func (s *MessageService) getThreadIdAndParticipantsFromMail(tenant string, threadId *string, participants *[]Participant, entityType entity.EventType, input *msProto.InputMessage) error {
+	if entityType == entity.EMAIL {
+		var messageJson EmailContent
+		if err := json.Unmarshal([]byte(*input.Content), &messageJson); err != nil {
+			return err
+		}
+
+		refSize := len(messageJson.Reference)
+		if refSize > 0 {
+			*threadId = messageJson.Reference[0]
+		} else {
+			*threadId = messageJson.MessageId
+		}
+
+		for _, toAddress := range append(messageJson.To, messageJson.Cc...) {
+			if participant, err := s.getParticipant(tenant, toAddress); err != nil {
+				log.Printf("Error getting participant: %v", err)
+			} else {
+				*participants = append(*participants, *participant)
+			}
+		}
+	}
+	return nil
+}
+
+func (s *MessageService) getMessagePreview(input *msProto.InputMessage) string {
+	previewContent := ""
+	if input.Content != nil {
+		str := *input.Content
+		msgLen := len(str)
+		if msgLen > 20 {
+			msgLen = 20
+		}
+		previewContent = str[0:msgLen]
+	}
+	return previewContent
+}
+
+func (s *MessageService) getParticipant(tenant string, initiatorIdentifier string) (*Participant, error) {
+	user, err := s.customerOSService.GetUserByEmail(initiatorIdentifier)
+	if err != nil {
+		contact, err := s.customerOSService.GetContactWithEmailOrCreate(tenant, initiatorIdentifier)
 		if err != nil {
 			return nil, err
 		}
-		conversation = conv
+		return &Participant{Id: contact.Id, Type: entity.CONTACT}, nil
+	} else {
+		return &Participant{Id: user.Id, Type: entity.USER}, nil
 	}
+}
 
-	if input.SenderType == msProto.SenderType_CONTACT {
-		contact, err := s.customerOSService.GetContactWithEmailOrCreate(tenant, *input.Email)
-		if err != nil {
-			return nil, err
-		}
-		participantId = contact.Id
-	} else if input.SenderType == msProto.SenderType_USER {
-		user, err := s.customerOSService.GetUserByEmail(*input.Email)
-		if err != nil {
-			return nil, err
-		}
-		participantId = user.Id
-	}
-
-	if participantId == "" {
-		return nil, errors.New("participant not found")
-	}
-
-	participantUsername = *input.Email
-
-	if input.ConversationId == nil {
-		entityType := s.commonStoreService.ConvertMSTypeToEntityType(input.Type)
-		conv, err := s.customerOSService.GetActiveConversationOrCreate(tenant, participantId, participantFirstName, participantLastName, *input.Email, input.SenderType, entityType)
-		if err != nil {
-			return nil, err
-		}
-		conversation = conv
-	}
-
+func (s *MessageService) saveConversationEvent(tenant string, conversation *Conversation, input *msProto.InputMessage, initiator *Participant) entity.ConversationEvent {
 	conversationEvent := entity.ConversationEvent{
 		TenantName:     tenant,
 		ConversationId: conversation.Id,
 		Type:           s.commonStoreService.ConvertMSTypeToEntityType(input.Type),
 		Subtype:        s.commonStoreService.ConvertMSSubtypeToEntitySubtype(input.Subtype),
-		Content:        *input.Message,
+		Content:        *input.Content,
 		Source:         entity.OPENLINE,
 		Direction:      s.commonStoreService.ConvertMSDirectionToEntityDirection(input.Direction),
 		CreateDate:     time.Now(),
 
 		InitiatorUsername: conversation.InitiatorUsername,
 
-		SenderId:       participantId,
-		SenderUsername: participantUsername,
-
-		OriginalJson: "TODO",
-	}
-
-	if input.GetDirection() == msProto.MessageDirection_INBOUND {
-		conversationEvent.SenderType = entity.CONTACT
-	} else {
-		conversationEvent.SenderType = entity.USER
+		SenderId:       initiator.Id,
+		SenderUsername: *input.InitiatorIdentifier,
+		SenderType:     initiator.Type,
+		OriginalJson:   "TODO",
 	}
 
 	s.postgresRepositories.ConversationEventRepository.Save(&conversationEvent)
-
-	senderType := s.commonStoreService.ConvertMSSenderTypeToEntitySenderType(input.SenderType)
-
-	previewMessage := ""
-	if input.Message != nil {
-		s := *input.Message
-		len := len(s)
-		if len > 20 {
-			len = 20
-		}
-		previewMessage = s[0:len]
-	}
-	_, err := s.customerOSService.UpdateConversation(tenant, conversation.Id, participantId, senderType, participantFirstName, participantLastName, previewMessage)
-	if err != nil {
-		return nil, err
-	}
-
-	return s.commonStoreService.EncodeMessageIdToMs(conversationEvent), nil
+	return conversationEvent
 }
 
-func NewMessageService(driver *neo4j.Driver, postgresRepositories *repository.PostgresRepositories, customerOSService *customerOSService, commonStoreService *commonStoreService) *messageService {
-	ms := new(messageService)
+func NewMessageService(driver *neo4j.Driver, postgresRepositories *repository.PostgresRepositories, customerOSService *CustomerOSService, commonStoreService *commonStoreService) *MessageService {
+	ms := new(MessageService)
 	ms.driver = driver
 	ms.postgresRepositories = postgresRepositories
 	ms.customerOSService = customerOSService

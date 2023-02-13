@@ -1,0 +1,6 @@
+mutation RemoveEmailFromUser($userId: ID!, $email: String!) {
+  emailRemoveFromUser(userId: $userId, email: $email)
+    {
+      result
+    }
+}

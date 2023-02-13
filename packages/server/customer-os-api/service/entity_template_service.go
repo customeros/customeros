@@ -77,7 +77,8 @@ func (s *entityTemplateService) mapDbNodeToEntityTemplate(dbNode dbtype.Node) *e
 		Name:      utils.GetStringPropOrEmpty(props, "name"),
 		Extends:   utils.GetStringPropOrNil(props, "extends"),
 		Version:   utils.GetIntPropOrMinusOne(props, "version"),
-		CreatedAt: utils.GetTimePropOrNow(props, "createdAt"),
+		CreatedAt: utils.GetTimePropOrEpochStart(props, "createdAt"),
+		UpdatedAt: utils.GetTimePropOrEpochStart(props, "updatedAt"),
 	}
 	return &entityTemplate
 }

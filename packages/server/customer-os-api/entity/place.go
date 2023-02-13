@@ -16,16 +16,18 @@ type PlaceEntity struct {
 	Phone         string
 	Fax           string
 	CreatedAt     time.Time
+	UpdatedAt     time.Time
 	Source        DataSource
 	SourceOfTruth DataSource
+	AppSource     string
 }
 
-func (address PlaceEntity) ToString() string {
-	return fmt.Sprintf("id: %s", address.Id)
+func (place PlaceEntity) ToString() string {
+	return fmt.Sprintf("id: %s", place.Id)
 }
 
 type PlaceEntities []PlaceEntity
 
-func (address PlaceEntity) Labels() []string {
-	return []string{"Address"}
+func (place PlaceEntity) Labels(tenant string) []string {
+	return []string{"Place", "Place_" + tenant}
 }

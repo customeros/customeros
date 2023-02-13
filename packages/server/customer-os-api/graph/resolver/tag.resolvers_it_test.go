@@ -4,6 +4,7 @@ import (
 	"github.com/99designs/gqlgen/client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/neo4j"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils/decode"
 	"github.com/stretchr/testify/require"
 	"testing"
@@ -28,7 +29,9 @@ func TestMutationResolver_TagCreate(t *testing.T) {
 	require.NotNil(t, createdTag)
 	require.NotNil(t, createdTag.ID)
 	require.NotNil(t, createdTag.CreatedAt)
+	require.NotEqual(t, utils.GetEpochStart(), createdTag.CreatedAt)
 	require.NotNil(t, createdTag.UpdatedAt)
+	require.NotEqual(t, utils.GetEpochStart(), createdTag.UpdatedAt)
 	require.Equal(t, "the tag", createdTag.Name)
 	require.Equal(t, "test", createdTag.AppSource)
 	require.Equal(t, model.DataSourceOpenline, createdTag.Source)
@@ -60,6 +63,7 @@ func TestMutationResolver_TagUpdate(t *testing.T) {
 	require.Nil(t, err)
 	require.NotNil(t, updatedTag)
 	require.NotNil(t, updatedTag.UpdatedAt)
+	require.NotEqual(t, utils.GetEpochStart(), updatedTag.UpdatedAt)
 	require.NotEqual(t, updatedTag.UpdatedAt, updatedTag.CreatedAt)
 	require.Equal(t, tagId, updatedTag.ID)
 	require.Equal(t, "new tag name", updatedTag.Name)

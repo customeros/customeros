@@ -12,6 +12,7 @@ type OrganizationType {
     id: ID!
     name: String!
     createdAt: Time!
+    updatedAt: Time!
 }
 
 input OrganizationTypeInput {

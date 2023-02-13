@@ -28,6 +28,7 @@ func MapEntityToEntityTemplate(entity *entity.EntityTemplateEntity) *model.Entit
 		Name:      entity.Name,
 		Version:   int(entity.Version),
 		CreatedAt: entity.CreatedAt,
+		UpdatedAt: entity.UpdatedAt,
 	}
 	if entity.Extends != nil {
 		extends := model.EntityTemplateExtension(*entity.Extends)

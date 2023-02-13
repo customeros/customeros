@@ -1,0 +1,28 @@
+query GetContactById($contactId: ID!){
+  contact(id: $contactId) {
+    id
+    locations {
+            id
+            name
+            createdAt
+            updatedAt
+            source
+            appSource
+            place {
+                id
+                createdAt
+                updatedAt
+                country
+                state
+                city
+                address
+                address2
+                zip
+                phone
+                fax
+                source
+                appSource
+            }
+          }
+  }
+}

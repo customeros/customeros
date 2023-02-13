@@ -1,0 +1,25 @@
+type Location {
+    id: ID!
+    name: String!
+    createdAt: Time!
+    updatedAt: Time!
+    source: DataSource
+    appSource: String
+    place: Place @goField(forceResolver: true)
+}
+
+type Place {
+    id: ID!
+    createdAt: Time!
+    updatedAt: Time!
+    country: String
+    state: String
+    city: String
+    address: String
+    address2: String
+    zip: String
+    phone: String
+    fax: String
+    source: DataSource
+    appSource: String
+}

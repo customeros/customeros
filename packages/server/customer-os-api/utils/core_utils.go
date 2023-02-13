@@ -8,6 +8,11 @@ import (
 	"time"
 )
 
+type Pair[T, U any] struct {
+	First  T
+	Second U
+}
+
 func ToPtr[T any](obj T) *T {
 	return &obj
 }

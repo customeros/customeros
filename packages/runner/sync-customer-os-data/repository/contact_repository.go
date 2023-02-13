@@ -42,13 +42,14 @@ func (r *contactRepository) MergeContact(tenant string, syncDate time.Time, cont
 	// Link Contact with Tenant
 	query := "MATCH (t:Tenant {name:$tenant})<-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]-(e:ExternalSystem {id:$externalSystem}) " +
 		" MERGE (c:Contact)-[r:IS_LINKED_WITH {externalId:$externalId}]->(e) " +
-		" ON CREATE SET r.externalId=$externalId, r.syncDate=$syncDate, c.id=randomUUID(), c.createdAt=$createdAt, " +
+		" ON CREATE SET r.externalId=$externalId, r.syncDate=$syncDate, c.id=randomUUID(), c.createdAt=$createdAt, c.updatedAt=$createdAt, " +
 		"				c.source=$source, c.sourceOfTruth=$sourceOfTruth, c.appSource=$appSource, " +
 		"				c.firstName=$firstName, c.lastName=$lastName,  " +
 		" 				c:%s " +
 		" ON MATCH SET 	r.syncDate = CASE WHEN c.sourceOfTruth=$sourceOfTruth THEN $syncDate ELSE r.syncDate END, " +
 		"				c.firstName = CASE WHEN c.sourceOfTruth=$sourceOfTruth THEN $firstName ELSE c.firstName END, " +
-		"				c.lastName = CASE WHEN c.sourceOfTruth=$sourceOfTruth THEN $lastName ELSE c.lastName END " +
+		"				c.lastName = CASE WHEN c.sourceOfTruth=$sourceOfTruth THEN $lastName ELSE c.lastName END, " +
+		"				c.updatedAt = CASE WHEN c.sourceOfTruth=$sourceOfTruth THEN $now ELSE c.updatedAt END " +
 		" WITH c, t " +
 		" MERGE (c)-[:CONTACT_BELONGS_TO_TENANT]->(t) " +
 		" WITH c " +
@@ -93,13 +94,23 @@ func (r *contactRepository) MergePrimaryEmail(tenant, contactId, email, external
 	session := utils.NewNeo4jWriteSession(*r.driver)
 	defer session.Close()
 
-	query := "MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) " +
-		" OPTIONAL MATCH (c)-[r:HAS]->(e:Email) " +
-		" SET r.primary=false " +
-		" WITH c " +
-		" MERGE (c)-[r:HAS]->(e:Email {email: $email}) " +
-		" ON CREATE SET r.primary=true, e.id=randomUUID(), e.createdAt=$createdAt, e.updatedAt=$createdAt, e.source=$source, e.sourceOfTruth=$sourceOfTruth, e.appSource=$appSource, e:%s " +
-		" ON MATCH SET r.primary=true, e.updatedAt=$now "
+	query := "MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant}) " +
+		" OPTIONAL MATCH (c)-[rel:HAS]->(:Email) " +
+		" SET rel.primary=false " +
+		" WITH c, t " +
+		" MERGE (e:Email {email: $email})-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]->(t) " +
+		" ON CREATE SET " +
+		"				e.id=randomUUID(), " +
+		"				e.createdAt=$now, " +
+		"				e.updatedAt=$now, " +
+		"				e.source=$source, " +
+		"				e.sourceOfTruth=$sourceOfTruth, " +
+		"				e.appSource=$appSource, " +
+		"				e:%s " +
+		" WITH DISTINCT c, e " +
+		" MERGE (c)-[rel:HAS]->(e) " +
+		" ON CREATE SET rel.primary=true " +
+		" ON MATCH SET rel.primary=true, e.updatedAt=$now "
 
 	_, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
 		_, err := tx.Run(fmt.Sprintf(query, "Email_"+tenant),
@@ -122,10 +133,20 @@ func (r *contactRepository) MergeAdditionalEmail(tenant, contactId, email, exter
 	session := utils.NewNeo4jWriteSession(*r.driver)
 	defer session.Close()
 
-	query := "MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) " +
-		" MERGE (c)-[r:HAS]->(e:Email {email:$email}) " +
-		" ON CREATE SET r.primary=false, e.id=randomUUID(), e.createdAt=$createdAt, e.updatedAt=$createdAt, e.source=$source, e.sourceOfTruth=$sourceOfTruth, e.appSource=$appSource, e:%s " +
-		" ON MATCH SET r.primary=false, e.updatedAt=$now "
+	query := "MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant}) " +
+		" MERGE (e:Email {email: $email})-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]->(t) " +
+		" ON CREATE SET " +
+		"				e.id=randomUUID(), " +
+		"				e.createdAt=$now, " +
+		"				e.updatedAt=$now, " +
+		"				e.source=$source, " +
+		"				e.sourceOfTruth=$sourceOfTruth, " +
+		"				e.appSource=$appSource, " +
+		"				e:%s " +
+		" WITH DISTINCT c, e " +
+		" MERGE (c)-[rel:HAS]->(e) " +
+		" ON CREATE SET rel.primary=false " +
+		" ON MATCH SET rel.primary=false, e.updatedAt=$now "
 
 	_, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
 		_, err := tx.Run(fmt.Sprintf(query, "Email_"+tenant),
@@ -337,14 +358,28 @@ func (r *contactRepository) GetOrCreateContactId(tenant, email, firstName, lastN
 	record, err := session.WriteTransaction(func(tx neo4j.Transaction) (interface{}, error) {
 		queryResult, err := tx.Run(fmt.Sprintf(
 			" MATCH (t:Tenant {name:$tenant}) "+
-				" MERGE (e:Email {email: $email})<-[r:HAS]-(c:Contact)-[:CONTACT_BELONGS_TO_TENANT]->(t) "+
-				" ON CREATE SET r.primary=true, e.id=randomUUID(), e.createdAt=$now, e.updatedAt=$now, "+
-				"				e.source=$source, e.sourceOfTruth=$sourceOfTruth, e.appSource=$appSource, "+
-				"				c.id=randomUUID(), c.firstName=$firstName, c.lastName=$lastName, "+
-				"				c.createdAt=$now, c.updatedAt=$now, "+
-				"				c.source=$source, c.sourceOfTruth=$sourceOfTruth, c.appSource=$appSource, "+
-				"               c:%s, e:%s "+
-				" RETURN c.id", "Contact_"+tenant, "Email_"+tenant),
+				" MERGE (e:Email {email: $email})-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]->(t) "+
+				" ON CREATE SET "+
+				"				e.id=randomUUID(), "+
+				"				e.createdAt=$now, "+
+				"				e.updatedAt=$now, "+
+				"				e.source=$source, "+
+				"				e.sourceOfTruth=$sourceOfTruth, "+
+				"				e.appSource=$appSource, "+
+				"				e:%s "+
+				" WITH DISTINCT t, e "+
+				" MERGE (e)<-[rel:HAS]-(c:Contact)-[:CONTACT_BELONGS_TO_TENANT]->(t) "+
+				" ON CREATE SET rel.primary=true, "+
+				"				c.id=randomUUID(), "+
+				"				c.firstName=$firstName, "+
+				"				c.lastName=$lastName, "+
+				"				c.createdAt=$now, "+
+				"				c.updatedAt=$now, "+
+				"				c.source=$source, "+
+				"				c.sourceOfTruth=$sourceOfTruth, "+
+				"				c.appSource=$appSource, "+
+				"               c:%s"+
+				" RETURN c.id", "Email_"+tenant, "Contact_"+tenant),
 			map[string]interface{}{
 				"tenant":        tenant,
 				"email":         email,

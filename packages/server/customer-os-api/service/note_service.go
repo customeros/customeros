@@ -155,8 +155,8 @@ func (s *noteService) mapDbNodeToNoteEntity(node dbtype.Node) *entity.NoteEntity
 	result := entity.NoteEntity{
 		Id:            utils.GetStringPropOrEmpty(props, "id"),
 		Html:          utils.GetStringPropOrEmpty(props, "html"),
-		CreatedAt:     utils.GetTimePropOrNow(props, "createdAt"),
-		UpdatedAt:     utils.GetTimePropOrNow(props, "updatedAt"),
+		CreatedAt:     utils.GetTimePropOrEpochStart(props, "createdAt"),
+		UpdatedAt:     utils.GetTimePropOrEpochStart(props, "updatedAt"),
 		Source:        entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
 		SourceOfTruth: entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
 		AppSource:     utils.GetStringPropOrEmpty(props, "appSource"),

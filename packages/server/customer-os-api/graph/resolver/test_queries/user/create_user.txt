@@ -18,6 +18,7 @@ mutation {
       appSource
     }
     createdAt
+    updatedAt
     source
   }
 }

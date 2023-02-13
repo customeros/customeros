@@ -80,7 +80,8 @@ func (s *organizationTypeService) mapDbNodeToOrganizationTypeEntity(dbNode *dbty
 	organizationType := entity.OrganizationTypeEntity{
 		Id:        utils.GetStringPropOrEmpty(props, "id"),
 		Name:      utils.GetStringPropOrEmpty(props, "name"),
-		CreatedAt: utils.GetTimePropOrNow(props, "createdAt"),
+		CreatedAt: utils.GetTimePropOrEpochStart(props, "createdAt"),
+		UpdatedAt: utils.GetTimePropOrEpochStart(props, "updatedAt"),
 	}
 	return &organizationType
 }

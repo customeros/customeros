@@ -16,6 +16,11 @@ func (r *queryResolver) EntityTemplates(ctx context.Context, extends *model.Enti
 	panic(fmt.Errorf("not implemented: EntityTemplates - entityTemplates"))
 }
 
+// DashboardView is the resolver for the dashboardView field.
+func (r *queryResolver) DashboardView(ctx context.Context, pagination model.Pagination, searchTerm *string) (*model.DashboardViewItemPage, error) {
+	panic(fmt.Errorf("not implemented: DashboardView - dashboardView"))
+}
+
 // Query returns generated.QueryResolver implementation.
 func (r *Resolver) Query() generated.QueryResolver { return &queryResolver{r} }
 

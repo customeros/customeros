@@ -17,8 +17,6 @@ type JobRepository interface {
 	SetOwner(tx neo4j.Transaction, tenant, contactId, userId string) error
 	RemoveOwner(tx neo4j.Transaction, tenant, contactId string) error
 	LinkWithEntityTemplateInTx(tx neo4j.Transaction, tenant, contactId, entityTemplateId string) error
-	LinkWithContactTypeInTx(tx neo4j.Transaction, tenant, contactId, contactTypeId string) error
-	UnlinkFromContactTypesInTx(tx neo4j.Transaction, tenant, contactId string) error
 	GetPaginatedContacts(session neo4j.Session, tenant string, skip, limit int, filter *utils.CypherFilter, sort *utils.CypherSort) (*utils.DbNodesWithTotalCount, error)
 	GetPaginatedContactsForContactGroup(session neo4j.Session, tenant string, skip, limit int, filter *utils.CypherFilter, sort *utils.CypherSort, contactGroupId string) (*utils.DbNodesWithTotalCount, error)
 	GetPaginatedContactsForOrganization(session neo4j.Session, tenant, organizationId string, skip, limit int, filter *utils.CypherFilter, sort *utils.CypherSort) (*utils.DbNodesWithTotalCount, error)
@@ -70,18 +68,19 @@ func (r *contactRepository) RemoveOwner(tx neo4j.Transaction, tenant, contactId 
 
 func (r *contactRepository) Create(tx neo4j.Transaction, tenant string, newContact entity.ContactEntity, source, sourceOfTruth entity.DataSource) (*dbtype.Node, error) {
 	var createdAt time.Time
-	createdAt = time.Now().UTC()
+	createdAt = utils.Now()
 	if newContact.CreatedAt != nil {
 		createdAt = *newContact.CreatedAt
 	}
 
 	query := "MATCH (t:Tenant {name:$tenant}) " +
-		" MERGE (c:Contact {id:randomUUID()})-[:CONTACT_BELONGS_TO_TENANT]->(t) ON CREATE SET" +
+		" MERGE (c:Contact {id:randomUUID()})-[:CONTACT_BELONGS_TO_TENANT]->(t) ON CREATE SET " +
 		" c.title=$title, " +
 		" c.firstName=$firstName, " +
 		" c.lastName=$lastName, " +
 		" c.label=$label, " +
 		" c.createdAt=$createdAt, " +
+		" c.updatedAt=$createdAt, " +
 		" c.source=$source, " +
 		" c.sourceOfTruth=$sourceOfTruth, " +
 		" c:Contact_%s " +
@@ -110,7 +109,8 @@ func (r *contactRepository) Update(tx neo4j.Transaction, tenant, contactId strin
 			SET c.firstName=$firstName,
 				c.lastName=$lastName,
 				c.label=$label,
-				c.title=$title
+				c.title=$title,
+				c.updatedAt=datetime({timezone: 'UTC'})
 			RETURN c`,
 		map[string]interface{}{
 			"tenant":    tenant,
@@ -143,37 +143,6 @@ func (r *contactRepository) LinkWithEntityTemplateInTx(tx neo4j.Transaction, ten
 	}
 	_, err = queryResult.Single()
 	return err
-}
-
-func (r *contactRepository) LinkWithContactTypeInTx(tx neo4j.Transaction, tenant, contactId, contactTypeId string) error {
-	queryResult, err := tx.Run(`
-			MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant})<-[:CONTACT_TYPE_BELONGS_TO_TENANT]-(e:ContactType {id:$contactTypeId})
-			MERGE (c)-[r:IS_OF_TYPE]->(e)
-			RETURN r`,
-		map[string]any{
-			"tenant":        tenant,
-			"contactId":     contactId,
-			"contactTypeId": contactTypeId,
-		})
-	if err != nil {
-		return err
-	}
-	_, err = queryResult.Single()
-	return err
-}
-
-func (r *contactRepository) UnlinkFromContactTypesInTx(tx neo4j.Transaction, tenant, contactId string) error {
-	if _, err := tx.Run(`
-			MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}),
-				(c)-[r:IS_OF_TYPE]->(o:ContactType)
-			DELETE r`,
-		map[string]any{
-			"tenant":    tenant,
-			"contactId": contactId,
-		}); err != nil {
-		return err
-	}
-	return nil
 }
 
 func (r *contactRepository) GetPaginatedContacts(session neo4j.Session, tenant string, skip, limit int, filter *utils.CypherFilter, sort *utils.CypherSort) (*utils.DbNodesWithTotalCount, error) {
@@ -317,11 +286,11 @@ func (r *contactRepository) Delete(session neo4j.Session, tenant, contactId stri
 			MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant})
 			OPTIONAL MATCH (c)-[:HAS_PROPERTY]->(f:CustomField)
 			OPTIONAL MATCH (c)-[:PHONE_ASSOCIATED_WITH]->(p:PhoneNumber)
-			OPTIONAL MATCH (c)-[:HAS]->(e:Email)
-			OPTIONAL MATCH (c)-[:LOCATED_AT]->(a:Address)
+			OPTIONAL MATCH (c)-[:ASSOCIATED_WITH]->(l:Location)
+			OPTIONAL MATCH (l)-[:LOCATED_AT]->(pl:Place)
 			OPTIONAL MATCH (c)-[:HAS_COMPLEX_PROPERTY]->(fs:FieldSet)
 			OPTIONAL MATCH (c)-[:WORKS_AS]->(j:JobRole)
-            DETACH DELETE p, e, f, fs, a, j, c`,
+            DETACH DELETE p, f, fs, l, pl, j, c`,
 			map[string]interface{}{
 				"contactId": contactId,
 				"tenant":    tenant,

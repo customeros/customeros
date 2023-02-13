@@ -31,6 +31,7 @@ func MapEntityToUser(userEntity *entity.UserEntity) *model.User {
 		FirstName: userEntity.FirstName,
 		LastName:  userEntity.LastName,
 		CreatedAt: userEntity.CreatedAt,
+		UpdatedAt: userEntity.UpdatedAt,
 		Source:    MapDataSourceToModel(userEntity.Source),
 	}
 }

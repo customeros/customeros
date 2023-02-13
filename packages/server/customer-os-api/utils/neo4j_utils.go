@@ -13,6 +13,11 @@ func CypherPtr(cypher Cypher) *Cypher {
 	return &cypher
 }
 
+type PairDbNodesWithTotalCount struct {
+	Pairs []*Pair[*dbtype.Node, *dbtype.Node]
+	Count int64
+}
+
 type DbNodesWithTotalCount struct {
 	Nodes []*dbtype.Node
 	Count int64
@@ -147,6 +152,17 @@ func GetFloatPropOrNil(props map[string]any, key string) *float64 {
 		return &f
 	}
 	return nil
+}
+
+func GetTimePropOrEpochStart(props map[string]any, key string) time.Time {
+	if props[key] != nil {
+		return props[key].(time.Time)
+	}
+	return GetEpochStart()
+}
+
+func GetEpochStart() time.Time {
+	return time.Date(1970, 1, 1, 0, 0, 0, 0, time.UTC)
 }
 
 func GetTimePropOrNow(props map[string]any, key string) time.Time {

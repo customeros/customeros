@@ -53,7 +53,8 @@ func (s *fieldSetTemplateService) mapDbNodeToFieldSetTemplate(dbNode dbtype.Node
 		Id:        utils.GetStringPropOrEmpty(props, "id"),
 		Name:      utils.GetStringPropOrEmpty(props, "name"),
 		Order:     utils.GetIntPropOrMinusOne(props, "order"),
-		CreatedAt: utils.GetTimePropOrNow(props, "createdAt"),
+		CreatedAt: utils.GetTimePropOrEpochStart(props, "createdAt"),
+		UpdatedAt: utils.GetTimePropOrEpochStart(props, "updatedAt"),
 	}
 	return &fieldSetTemplate
 }

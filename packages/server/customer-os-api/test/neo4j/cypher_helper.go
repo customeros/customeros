@@ -27,7 +27,7 @@ func ExecuteReadQueryWithSingleReturn(driver *neo4j.Driver, query string, params
 	session := utils.NewNeo4jReadSession(*driver)
 	defer session.Close()
 
-	queryResult, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
+	queryResult, err := session.ReadTransaction(func(tx neo4j.Transaction) (any, error) {
 		record, err := tx.Run(query, params)
 		if err != nil {
 			logrus.Fatalf("Error executing query %s", query)
@@ -44,7 +44,7 @@ func ExecuteReadQueryWithCollectionReturn(driver *neo4j.Driver, query string, pa
 	session := utils.NewNeo4jReadSession(*driver)
 	defer session.Close()
 
-	queryResult, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
+	queryResult, err := session.ReadTransaction(func(tx neo4j.Transaction) (any, error) {
 		records, err := tx.Run(query, params)
 		if err != nil {
 			logrus.Fatalf("Error executing query %s", query)

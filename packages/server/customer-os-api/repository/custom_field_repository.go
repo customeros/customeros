@@ -6,7 +6,6 @@ import (
 	"github.com/neo4j/neo4j-go-driver/v4/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils"
-	"time"
 )
 
 type CustomFieldRepository interface {
@@ -37,8 +36,8 @@ func (r *customFieldRepository) MergeCustomFieldToContactInTx(tx neo4j.Transacti
 	queryResult, err := tx.Run(
 		fmt.Sprintf("MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) "+
 			" MERGE (f:%s:CustomField {name: $name, datatype:$datatype})<-[:HAS_PROPERTY]-(c) "+
-			" ON CREATE SET f.%s=$value, f.id=randomUUID(), f.createdAt=$createdAt, f.source=$source, f.sourceOfTruth=$sourceOfTruth,  f:%s "+
-			" ON MATCH SET f.%s=$value, f.sourceOfTruth=$sourceOfTruth "+
+			" ON CREATE SET f.%s=$value, f.id=randomUUID(), f.createdAt=$now, f.updatedAt=$now, f.source=$source, f.sourceOfTruth=$sourceOfTruth,  f:%s "+
+			" ON MATCH SET f.%s=$value, f.sourceOfTruth=$sourceOfTruth, f.updatedAt=$now "+
 			" RETURN f", entity.NodeLabel(), entity.PropertyName(), "CustomField_"+tenant, entity.PropertyName()),
 		map[string]any{
 			"tenant":        tenant,
@@ -48,7 +47,7 @@ func (r *customFieldRepository) MergeCustomFieldToContactInTx(tx neo4j.Transacti
 			"value":         entity.Value.RealValue(),
 			"source":        entity.Source,
 			"sourceOfTruth": entity.SourceOfTruth,
-			"createdAt":     time.Now().UTC(),
+			"now":           utils.Now(),
 		})
 	return utils.ExtractSingleRecordFirstValueAsNode(queryResult, err)
 }
@@ -57,8 +56,8 @@ func (r *customFieldRepository) MergeCustomFieldToFieldSetInTx(tx neo4j.Transact
 	queryResult, err := tx.Run(
 		fmt.Sprintf(" MATCH (s:FieldSet {id:$fieldSetId})<-[:HAS_COMPLEX_PROPERTY]-(c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) "+
 			" MERGE (f:%s:CustomField {name: $name, datatype:$datatype})<-[:HAS_PROPERTY]-(s)"+
-			" ON CREATE SET f.%s=$value, f.id=randomUUID(), f.createdAt=$createdAt, f.source=$source, f.sourceOfTruth=$sourceOfTruth, f:%s "+
-			" ON MATCH SET f.%s=$value, f.sourceOfTruth=$sourceOfTruth "+
+			" ON CREATE SET f.%s=$value, f.id=randomUUID(), f.createdAt=$now, f.updatedAt=$now, f.source=$source, f.sourceOfTruth=$sourceOfTruth, f:%s "+
+			" ON MATCH SET f.%s=$value, f.sourceOfTruth=$sourceOfTruth, f.updatedAt=$now "+
 			" RETURN f", entity.NodeLabel(), entity.PropertyName(), "CustomField_"+tenant, entity.PropertyName()),
 		map[string]any{
 			"tenant":        tenant,
@@ -69,7 +68,7 @@ func (r *customFieldRepository) MergeCustomFieldToFieldSetInTx(tx neo4j.Transact
 			"value":         entity.Value.RealValue(),
 			"source":        entity.Source,
 			"sourceOfTruth": entity.SourceOfTruth,
-			"createdAt":     time.Now().UTC(),
+			"now":           utils.Now(),
 		})
 	return utils.ExtractSingleRecordFirstValueAsNode(queryResult, err)
 }
@@ -202,7 +201,8 @@ func (r *customFieldRepository) UpdateForContactInTx(tx neo4j.Transaction, tenan
 			" (c)-[:HAS_PROPERTY]->(f:%s:CustomField {id:$fieldId}) "+
 			" SET f.name=$name, "+
 			" f.%s=$value, "+
-			" f.sourceOfTruth=$sourceOfTruth "+
+			" f.sourceOfTruth=$sourceOfTruth, "+
+			" f.updatedAt=$now "+
 			" RETURN f", entity.NodeLabel(), entity.PropertyName()),
 		map[string]any{
 			"tenant":        tenant,
@@ -211,6 +211,7 @@ func (r *customFieldRepository) UpdateForContactInTx(tx neo4j.Transaction, tenan
 			"name":          entity.Name,
 			"sourceOfTruth": entity.SourceOfTruth,
 			"value":         entity.Value.RealValue(),
+			"now":           utils.Now(),
 		})
 	return utils.ExtractSingleRecordFirstValueAsNode(queryResult, err)
 }
@@ -222,7 +223,8 @@ func (r *customFieldRepository) UpdateForFieldSetInTx(tx neo4j.Transaction, tena
 			" (s)-[:HAS_PROPERTY]->(f:%s:CustomField {id:$fieldId})"+
 			" SET f.name=$name, "+
 			" f.%s=$value, "+
-			" f.sourceOfTruth=$sourceOfTruth "+
+			" f.sourceOfTruth=$sourceOfTruth, "+
+			" f.updatedAt=$now "+
 			"RETURN f", entity.NodeLabel(), entity.PropertyName()),
 		map[string]any{
 			"tenant":        tenant,
@@ -232,6 +234,7 @@ func (r *customFieldRepository) UpdateForFieldSetInTx(tx neo4j.Transaction, tena
 			"name":          entity.Name,
 			"sourceOfTruth": entity.SourceOfTruth,
 			"value":         entity.Value.RealValue(),
+			"now":           utils.Now(),
 		})
 	return utils.ExtractSingleRecordFirstValueAsNode(queryResult, err)
 }

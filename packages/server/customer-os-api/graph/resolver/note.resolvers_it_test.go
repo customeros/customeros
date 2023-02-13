@@ -17,7 +17,7 @@ func TestMutationResolver_NoteCreateForContact(t *testing.T) {
 	neo4jt.CreateDefaultUserWithId(driver, tenantName, testUserId)
 	contactId := neo4jt.CreateDefaultContact(driver, tenantName)
 
-	rawResponse, err := c.RawPost(getQuery("create_note_for_contact"),
+	rawResponse, err := c.RawPost(getQuery("note/create_note_for_contact"),
 		client.Var("contactId", contactId))
 	assertRawResponseSuccess(t, rawResponse, err)
 
@@ -59,7 +59,7 @@ func TestMutationResolver_NoteCreateForOrganization(t *testing.T) {
 	neo4jt.CreateDefaultUserWithId(driver, tenantName, testUserId)
 	organizationId := neo4jt.CreateOrganization(driver, tenantName, "test org")
 
-	rawResponse, err := c.RawPost(getQuery("create_note_for_organization"),
+	rawResponse, err := c.RawPost(getQuery("note/create_note_for_organization"),
 		client.Var("organizationId", organizationId))
 	assertRawResponseSuccess(t, rawResponse, err)
 
@@ -100,7 +100,7 @@ func TestMutationResolver_NoteUpdate(t *testing.T) {
 	contactId := neo4jt.CreateDefaultContact(driver, tenantName)
 	noteId := neo4jt.CreateNoteForContact(driver, tenantName, contactId, "Note content")
 
-	rawResponse, err := c.RawPost(getQuery("update_note"),
+	rawResponse, err := c.RawPost(getQuery("note/update_note"),
 		client.Var("noteId", noteId))
 	assertRawResponseSuccess(t, rawResponse, err)
 
@@ -141,7 +141,7 @@ func TestMutationResolver_NoteDelete(t *testing.T) {
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Note_"+tenantName))
 	require.Equal(t, 1, neo4jt.GetCountOfRelationships(driver, "NOTED"))
 
-	rawResponse, err := c.RawPost(getQuery("delete_note"),
+	rawResponse, err := c.RawPost(getQuery("note/delete_note"),
 		client.Var("noteId", noteId))
 	assertRawResponseSuccess(t, rawResponse, err)
 

@@ -7,7 +7,6 @@ import (
 	"github.com/neo4j/neo4j-go-driver/v4/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils"
-	"time"
 )
 
 type OrganizationRepository interface {
@@ -63,7 +62,7 @@ func (r *organizationRepository) Create(tx neo4j.Transaction, tenant string, org
 			"source":        organization.Source,
 			"sourceOfTruth": organization.SourceOfTruth,
 			"appSource":     organization.AppSource,
-			"now":           time.Now().UTC(),
+			"now":           utils.Now(),
 		})
 	return utils.ExtractSingleRecordFirstValueAsNode(queryResult, err)
 }
@@ -100,8 +99,9 @@ func (r *organizationRepository) Delete(session neo4j.Session, tenant, organizat
 	_, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
 		_, err := tx.Run(`
 			MATCH (org:Organization {id:$organizationId})-[:ORGANIZATION_BELONGS_TO_TENANT]->(:Tenant {name:$tenant})
-			OPTIONAL MATCH (org)-[:LOCATED_AT]->(a:Address)
-            DETACH DELETE a, org`,
+			OPTIONAL MATCH (org)-[:ASSOCIATED_WITH]->(l:Location)
+			OPTIONAL MATCH (l)-[:LOCATED_AT]->(p:Place)	
+            DETACH DELETE p, l, org`,
 			map[string]interface{}{
 				"organizationId": organizationId,
 				"tenant":         tenant,
