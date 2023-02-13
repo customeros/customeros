@@ -17,8 +17,8 @@ type OrganizationData struct {
 
 	DefaultLocationName string
 	Country             string
-	State               string
-	City                string
+	Region              string
+	Locality            string
 	Address             string
 	Address2            string
 	Zip                 string

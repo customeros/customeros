@@ -64,8 +64,6 @@ CALL {
  UNION
  MATCH (node:Location) with node, labels(node) as labs unwind labs as labsList with node, count(node) as nodeCount where nodeCount <> 2 return count(nodeCount) as x
  UNION
- MATCH (node:Place) with node, labels(node) as labs unwind labs as labsList with node, count(node) as nodeCount where nodeCount <> 2 return count(nodeCount) as x
- UNION
  MATCH (node:Note) with node, labels(node) as labs unwind labs as labsList with node, count(node) as nodeCount where nodeCount <> 2 return count(nodeCount) as x
  UNION
  MATCH (node:PhoneNumber) with node, labels(node) as labs unwind labs as labsList with node, count(node) as nodeCount where nodeCount <> 2 return count(nodeCount) as x
@@ -100,6 +98,8 @@ CALL {
  UNION
  MATCH (:Tenant {name:$tenant})-[*2]-(n:JobRole) WHERE NOT 'JobRole_'+$tenant  in labels(n) return count(n) as x
  UNION
+ MATCH (:Tenant {name:$tenant})--(n:Location) WHERE NOT 'Location_'+$tenant  in labels(n) return count(n) as x
+ UNION
  MATCH (:Tenant {name:$tenant})-[*2]-(n:Location) WHERE NOT 'Location_'+$tenant  in labels(n) return count(n) as x
  UNION
  MATCH (:Tenant {name:$tenant})-[*2]-(n:CustomField) WHERE NOT 'CustomField_'+$tenant  in labels(n) return count(n) as x
@@ -109,8 +109,6 @@ CALL {
  MATCH (:Tenant {name:$tenant})-[*2]-(n:Note) WHERE NOT 'Note_'+$tenant  in labels(n) return count(n) as x
  UNION
  MATCH (:Tenant {name:$tenant})-[*2]-(n:Action) WHERE NOT 'Action_'+$tenant  in labels(n) return count(n) as x
- UNION
- MATCH (:Tenant {name:$tenant})-[*2]-(:Location)--(n:Place) WHERE NOT 'Place_'+$tenant  in labels(n) return count(n) as x
 } return sum(x) as Problematic_nodes;
 
 
