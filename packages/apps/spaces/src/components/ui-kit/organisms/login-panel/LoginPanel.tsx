@@ -10,7 +10,7 @@ import {
   LoginFlow,
   UpdateLoginFlowBody,
 } from '@ory/client';
-import { AxiosError } from 'axios/index';
+import { AxiosError } from 'axios';
 import { edgeConfig } from '@ory/integrations/next';
 import { Flow } from './ui';
 
