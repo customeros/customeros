@@ -10,7 +10,7 @@ WORKDIR /app
 
 COPY --from=deps /app/node_modules ./node_modules
 
-COPY ../customer-os .
+COPY . .
 COPY .env.cluster .env.production
 
 ARG ENV
