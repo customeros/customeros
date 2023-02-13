@@ -38,6 +38,8 @@ CALL {
 CALL {
  MATCH (node:Tenant) with node, labels(node) as labs unwind labs as labsList with node, count(node) as nodeCount where nodeCount <> 1 return count(nodeCount) as x
  UNION
+ MATCH (node:EmailDomain) with node, labels(node) as labs unwind labs as labsList with node, count(node) as nodeCount where nodeCount <> 1 return count(nodeCount) as x
+ UNION
  MATCH (node:AlternateOrganization) with node, labels(node) as labs unwind labs as labsList with node, count(node) as nodeCount where nodeCount <> 1 return count(nodeCount) as x
  UNION
  MATCH (node:AlternateContact) with node, labels(node) as labs unwind labs as labsList with node, count(node) as nodeCount where nodeCount <> 1 return count(nodeCount) as x

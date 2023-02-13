@@ -2,7 +2,7 @@
 
 # QUERY PER TENANT. Execute before release, link Email and Tenant nodes
 
-:param { tenant: "openline" };
+:param { tenant: "test" };
 
 MATCH (t:Tenant {name:$tenant})<-[USER_BELONGS_TO_TENANT]-(:User)-[HAS]->(e:Email)
 MERGE (e)-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]->(t);
@@ -37,7 +37,7 @@ SET rel.label=e.label
 WITH e
 REMOVE e.label;
 
-# QUERY PER TENANT Move relationships to the first node in duplicates, execte after release
+# QUERY PER TENANT Move relationships to the first node in duplicates, execute after release
 
 MATCH (e:Email_test)
 WITH e order by e.createdAt
@@ -48,7 +48,7 @@ WITH firstNode, otherNode
 MATCH (otherNode)<-[rel:HAS]-(n)
 MERGE (firstNode)<-[newRel:HAS]-(n)
 ON CREATE SET newRel.primary=rel.primary, newRel.label=rel.label
-DELETE rel
+DELETE rel;
 
 # QUERY PER TENANT. Delete duplicate email nodes. execute after release
 
