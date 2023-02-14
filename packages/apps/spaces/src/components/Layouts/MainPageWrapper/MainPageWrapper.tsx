@@ -4,6 +4,7 @@ import { edgeConfig } from '@ory/integrations/next';
 import React, { useEffect, useState } from 'react';
 import { WebChat } from '@openline-ai/openline-web-chat';
 import { useRouter } from 'next/router';
+import { getUserName } from '../../../utils';
 
 const ory = new FrontendApi(new Configuration(edgeConfig));
 
@@ -32,16 +33,13 @@ export const MainPageWrapper = ({ children }: any) => {
       .then(({ data }) => {
         // User has a session!
         setSession(data);
-        // setUserEmail(getUserName(data.identity))
-
-        // initGraphQLClient()
-
+        setUserEmail(getUserName(data.identity));
         // Create a logout url
         ory.createBrowserLogoutFlow().then(({ data }) => {
           setLogoutUrl(data.logout_url);
         });
       })
-      .catch((e) => {
+      .catch(() => {
         // Redirect to login page
         return router.push(edgeConfig.basePath + '/ui/login');
       });
@@ -51,7 +49,7 @@ export const MainPageWrapper = ({ children }: any) => {
     if (router.asPath.startsWith('/login')) {
       return <>{children}</>;
     }
-    if (router.asPath != '/login') {
+    if (router.asPath !== '/login') {
       return null;
     }
   }
