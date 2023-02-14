@@ -578,6 +578,12 @@ type Location struct {
 	UpdatedAt time.Time   `json:"updatedAt"`
 	Source    *DataSource `json:"source"`
 	AppSource *string     `json:"appSource"`
+	Country   *string     `json:"country"`
+	Region    *string     `json:"region"`
+	Locality  *string     `json:"locality"`
+	Address   *string     `json:"address"`
+	Address2  *string     `json:"address2"`
+	Zip       *string     `json:"zip"`
 	Place     *Place      `json:"place"`
 }
 

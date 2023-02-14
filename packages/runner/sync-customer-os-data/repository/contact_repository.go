@@ -261,43 +261,50 @@ func (r *contactRepository) MergeContactDefaultPlace(tenant, contactId string, c
 	session := utils.NewNeo4jWriteSession(*r.driver)
 	defer session.Close()
 
-	// Create new Place and Location if it does not exist with given source property
-	// If Place exists, and sourceOfTruth is acceptable then update it.
-	//   otherwise create/update AlternatePlace for incoming source, with a new relationship 'ALTERNATE'
-	// !!! Current assumption - there is single Location and place with source of externalSystem
-	query := "MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) " +
-		" MERGE (c)-[:ASSOCIATED_WITH]->(loc:Location {source:$source})-[:LOCATED_AT]->(p:Place {source:$source}) " +
-		" ON CREATE SET p.id=randomUUID(), p.createdAt=$createdAt, p.updatedAt=$createdAt, p.sourceOfTruth=$sourceOfTruth, p.appSource=$appSource, " +
-		"				p.country=$country, p.state=$state, p.city=$city, p.address=$address, p.zip=$zip, p.fax=$fax, p:%s," +
-		"				loc.id=randomUUID(), loc.appSource=$appSource, loc.sourceOfTruth=$sourceOfTruth, loc.name=$locationName, " +
-		"				loc.createdAt=$createdAt, loc.updatedAt=$createdAt, loc:%s " +
+	// Create new Location and Location if it does not exist with given source property and namd
+	// If Location exists, and sourceOfTruth is acceptable then update it.
+	//   otherwise create/update AlternateLocation for incoming source, with a new relationship 'ALTERNATE'
+	// !!! Current assumption - there is single Location with source of externalSystem and name per contact
+	query := "MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant}) " +
+		" MERGE (c)-[:ASSOCIATED_WITH]->(loc:Location {source:$source, name:$locationName}) " +
+		" ON CREATE SET " +
+		"	loc.country=$country, " +
+		"	loc.region=$region, " +
+		"	loc.locality=$locality, " +
+		"	loc.address=$address, " +
+		"	loc.zip=$zip, " +
+		"	loc.id=randomUUID(), " +
+		"	loc.appSource=$appSource, " +
+		"	loc.sourceOfTruth=$sourceOfTruth, " +
+		"	loc.createdAt=$createdAt, " +
+		"	loc.updatedAt=$createdAt, " +
+		"	loc:%s " +
 		" ON MATCH SET 	" +
-		"             p.country = CASE WHEN p.sourceOfTruth=$sourceOfTruth THEN $country ELSE p.country END, " +
-		"             p.state = CASE WHEN p.sourceOfTruth=$sourceOfTruth THEN $state ELSE p.state END, " +
-		"             p.city = CASE WHEN p.sourceOfTruth=$sourceOfTruth THEN $city ELSE p.city END, " +
-		"             p.address = CASE WHEN p.sourceOfTruth=$sourceOfTruth THEN $address ELSE p.address END, " +
-		"             p.zip = CASE WHEN p.sourceOfTruth=$sourceOfTruth THEN $zip ELSE p.zip END, " +
-		"             p.fax = CASE WHEN p.sourceOfTruth=$sourceOfTruth THEN $fax ELSE p.fax END, " +
-		"             p.updatedAt = CASE WHEN p.sourceOfTruth=$sourceOfTruth THEN $now ELSE p.updatedAt END, " +
-		"             loc.updatedAt = CASE WHEN p.sourceOfTruth=$sourceOfTruth THEN $now ELSE loc.updatedAt END " +
-		" WITH p " +
-		" FOREACH (x in CASE WHEN p.sourceOfTruth <> $sourceOfTruth THEN [p] ELSE [] END | " +
+		"             loc.country = CASE WHEN loc.sourceOfTruth=$sourceOfTruth THEN $country ELSE loc.country END, " +
+		"             loc.region = CASE WHEN loc.sourceOfTruth=$sourceOfTruth THEN $region ELSE loc.region END, " +
+		"             loc.locality = CASE WHEN loc.sourceOfTruth=$sourceOfTruth THEN $locality ELSE loc.locality END, " +
+		"             loc.address = CASE WHEN loc.sourceOfTruth=$sourceOfTruth THEN $address ELSE loc.address END, " +
+		"             loc.zip = CASE WHEN loc.sourceOfTruth=$sourceOfTruth THEN $zip ELSE loc.zip END, " +
+		"             loc.updatedAt = CASE WHEN loc.sourceOfTruth=$sourceOfTruth THEN $now ELSE loc.updatedAt END " +
+		" WITH loc, t " +
+		" MERGE (loc)-[:LOCATION_BELONGS_TO_TENANT]->(t) " +
+		" WITH loc " +
+		" FOREACH (x in CASE WHEN loc.sourceOfTruth <> $sourceOfTruth THEN [loc] ELSE [] END | " +
 		"  MERGE (x)-[:ALTERNATE]->(alt:AlternatePlace {source:$source, id:x.id}) " +
 		"    SET alt.updatedAt=$now, alt.appSource=$appSource, " +
-		" alt.country=$country, alt.state=$state, alt.city=$city, alt.address=$address, alt.zip=$zip, alt.fax=$fax " +
+		" alt.country=$country, alt.region=$region, alt.locality=$locality, alt.address=$address, alt.zip=$zip " +
 		") "
 
 	_, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
-		_, err := tx.Run(fmt.Sprintf(query, "Place_"+tenant, "Location_"+tenant),
+		_, err := tx.Run(fmt.Sprintf(query, "Location_"+tenant),
 			map[string]interface{}{
 				"tenant":        tenant,
 				"contactId":     contactId,
 				"country":       contact.Country,
-				"state":         contact.State,
-				"city":          contact.City,
+				"region":        contact.Region,
+				"locality":      contact.Locality,
 				"address":       contact.Address,
 				"zip":           contact.Zip,
-				"fax":           contact.Fax,
 				"createdAt":     contact.CreatedAt,
 				"source":        contact.ExternalSystem,
 				"sourceOfTruth": contact.ExternalSystem,

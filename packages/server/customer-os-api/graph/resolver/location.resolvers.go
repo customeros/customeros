@@ -7,23 +7,25 @@ package resolver
 import (
 	"context"
 
-	"github.com/99designs/gqlgen/graphql"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/generated"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper"
 )
 
 // Place is the resolver for the place field.
 func (r *locationResolver) Place(ctx context.Context, obj *model.Location) (*model.Place, error) {
-	placeEntity, err := r.Services.PlaceService.GetForLocation(ctx, obj.ID)
-	if err != nil {
-		graphql.AddErrorf(ctx, "Failed to get place for location %s", obj.ID)
-		return nil, err
-	}
-	if placeEntity == nil {
-		return nil, nil
-	}
-	return mapper.MapEntityToPlace(placeEntity), err
+	return &model.Place{
+		ID:        obj.ID,
+		CreatedAt: obj.CreatedAt,
+		UpdatedAt: obj.UpdatedAt,
+		Country:   obj.Country,
+		State:     obj.Region,
+		City:      obj.Locality,
+		Address:   obj.Address,
+		Address2:  obj.Address2,
+		Zip:       obj.Zip,
+		AppSource: obj.AppSource,
+		Source:    obj.Source,
+	}, nil
 }
 
 // Location returns generated.LocationResolver implementation.

@@ -391,44 +391,29 @@ func TestQueryResolver_GetData_Search_By_Place(t *testing.T) {
 		Name:      "LOCATION 1",
 		Source:    entity.DataSourceOpenline,
 		AppSource: "test",
+		Country:   "testCountry1",
+		Region:    "testState1",
+		Locality:  "testCity1",
+		Address:   "testAddress1",
+		Address2:  "testAddress21",
+		Zip:       "testZip1",
 	})
 	locationId2 := neo4jt.CreateLocation(driver, tenantName, entity.LocationEntity{
 		Name:      "LOCATION 2",
 		Source:    entity.DataSourceOpenline,
 		AppSource: "test",
+		Country:   "testCountry2",
+		Region:    "testState2",
+		Locality:  "testCity2",
+		Address:   "testAddress2",
+		Address2:  "testAddress22",
+		Zip:       "testZip2",
 	})
 	locationId3 := neo4jt.CreateLocation(driver, tenantName, entity.LocationEntity{
 		Name:      "LOCATION 3",
 		Source:    entity.DataSourceOpenline,
 		AppSource: "test",
 	})
-	placeInput1 := entity.PlaceEntity{
-		Source:    entity.DataSourceOpenline,
-		AppSource: "test1",
-		Country:   "testCountry1",
-		State:     "testState1",
-		City:      "testCity1",
-		Address:   "testAddress1",
-		Address2:  "testAddress21",
-		Zip:       "testZip1",
-		Phone:     "testPhone1",
-		Fax:       "testFax1",
-	}
-	placeInput2 := entity.PlaceEntity{
-		Source:    entity.DataSourceOpenline,
-		AppSource: "test2",
-		Country:   "testCountry2",
-		State:     "testState2",
-		City:      "testCity2",
-		Address:   "testAddress2",
-		Address2:  "testAddress22",
-		Zip:       "testZip2",
-		Phone:     "testPhone2",
-		Fax:       "testFax2",
-	}
-
-	neo4jt.CreatePlaceForLocation(driver, placeInput1, locationId1)
-	neo4jt.CreatePlaceForLocation(driver, placeInput2, locationId2)
 
 	neo4jt.ContactAssociatedWithLocation(driver, contactId1, locationId1)
 	neo4jt.ContactAssociatedWithLocation(driver, contactId2, locationId2)
@@ -441,9 +426,7 @@ func TestQueryResolver_GetData_Search_By_Place(t *testing.T) {
 	require.Equal(t, 3, neo4jt.GetCountOfNodes(driver, "Contact"))
 	require.Equal(t, 3, neo4jt.GetCountOfNodes(driver, "Organization"))
 	require.Equal(t, 3, neo4jt.GetCountOfNodes(driver, "Location"))
-	require.Equal(t, 2, neo4jt.GetCountOfNodes(driver, "Place"))
 	require.Equal(t, 6, neo4jt.GetCountOfRelationships(driver, "ASSOCIATED_WITH"))
-	require.Equal(t, 2, neo4jt.GetCountOfRelationships(driver, "LOCATED_AT"))
 
 	//region search by country
 	rawResponseCountry, err := c.RawPost(getQuery("/dashboard_view/dashboard_view_with_filters"),

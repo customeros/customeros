@@ -522,6 +522,12 @@ func CreateLocation(driver *neo4j.Driver, tenant string, location entity.Locatio
 		"				l.appSource=$appSource, " +
 		"				l.createdAt=$now, " +
 		"				l.updatedAt=$now, " +
+		"				l.country=$country, " +
+		"				l.region=$region, " +
+		"				l.locality=$locality, " +
+		"				l.address=$address, " +
+		"				l.address2=$address2, " +
+		"				l.zip=$zip, " +
 		"				l:Location_%s"
 
 	ExecuteWriteQuery(driver, fmt.Sprintf(query, tenant), map[string]any{
@@ -530,43 +536,14 @@ func CreateLocation(driver *neo4j.Driver, tenant string, location entity.Locatio
 		"appSource":  location.AppSource,
 		"name":       location.Name,
 		"now":        utils.Now(),
+		"country":    location.Country,
+		"region":     location.Region,
+		"locality":   location.Locality,
+		"address":    location.Address,
+		"address2":   location.Address2,
+		"zip":        location.Zip,
 	})
 	return locationId.String()
-}
-
-func CreatePlaceForLocation(driver *neo4j.Driver, place entity.PlaceEntity, locationId string) string {
-	var placeId, _ = uuid.NewRandom()
-	query := `MATCH (l:Location {id:$locationId})
-	MERGE (l)-[:LOCATED_AT]->(a:Place {id:$placeId})
-			ON CREATE SET   a.country=$country, 
-							a.state=$state, 
-							a.city=$city, 
-							a.address=$address,
-							a.address2=$address2, 
-							a.zip=$zip, 
-							a.fax=$fax, 
-							a.phone=$phone,
-							a.source=$source, 
-							a.sourceOfTruth=$sourceOfTruth, 
-							a.appSource=$appSource,
-							a.createdAt=datetime({timezone: 'UTC'}), 
-							a.updatedAt=datetime({timezone: 'UTC'})`
-	ExecuteWriteQuery(driver, query, map[string]any{
-		"placeId":       placeId.String(),
-		"locationId":    locationId,
-		"source":        place.Source,
-		"appSource":     place.AppSource,
-		"sourceOfTruth": place.Source,
-		"country":       place.Country,
-		"state":         place.State,
-		"city":          place.City,
-		"address":       place.Address,
-		"address2":      place.Address2,
-		"zip":           place.Zip,
-		"phone":         place.Phone,
-		"fax":           place.Fax,
-	})
-	return placeId.String()
 }
 
 func ContactAssociatedWithLocation(driver *neo4j.Driver, contactId, locationId string) {

@@ -6,12 +6,19 @@ import (
 )
 
 type LocationEntity struct {
-	Id        string
-	Name      string
-	CreatedAt time.Time
-	UpdatedAt time.Time
-	Source    DataSource
-	AppSource string
+	Id            string
+	Name          string
+	CreatedAt     time.Time
+	UpdatedAt     time.Time
+	Country       string
+	Region        string
+	Locality      string
+	Address       string
+	Address2      string
+	Zip           string
+	SourceOfTruth DataSource
+	Source        DataSource
+	AppSource     string
 }
 
 func (location LocationEntity) ToString() string {

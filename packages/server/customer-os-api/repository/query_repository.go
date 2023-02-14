@@ -108,21 +108,21 @@ func (r *queryRepository) GetOrganizationsAndContacts(session neo4j.Session, ten
 		  WHERE e.email CONTAINS $email
 		  RETURN rel`)
 		}
-		//fetch organizations and contacts with filters on their place
+		//fetch organizations and contacts with filters on their locations
 		if searchTerm != nil {
 			countQuery = countQuery + fmt.Sprintf(`
 		  UNION
-		  MATCH (t:Tenant {name:$tenant})--(o:Organization)--(l:Location)--(p:Place)
+		  MATCH (t:Tenant {name:$tenant})--(o:Organization)--(l:Location)
 		  MATCH (t)--(c:Contact)
 		  MATCH (o)-[rel]-(c)
-		  WHERE p.country CONTAINS $location OR p.state CONTAINS $location OR p.city CONTAINS $location
+		  WHERE l.country CONTAINS $location OR l.region CONTAINS $location OR l.locality CONTAINS $location
 		  RETURN rel
 
 		  UNION
 		  MATCH (t:Tenant {name:$tenant})--(o:Organization)
-		  MATCH (t)--(c:Contact)--(l:Location)--(p:Place)
+		  MATCH (t)--(c:Contact)--(l:Location)
 		  MATCH (o)-[rel]-(c)
-		  WHERE p.country CONTAINS $location OR p.state CONTAINS $location OR p.city CONTAINS $location
+		  WHERE l.country CONTAINS $location OR l.region CONTAINS $location OR l.locality CONTAINS $location
 		  RETURN rel`)
 		}
 
@@ -140,12 +140,12 @@ func (r *queryRepository) GetOrganizationsAndContacts(session neo4j.Session, ten
 		  WHERE NOT (o)--(:Contact)	AND e.email CONTAINS $email
 		  RETURN rel`)
 		}
-		//fetch organizations without contacts with filters on their place
+		//fetch organizations without contacts with filters on their locations
 		if searchTerm != nil {
 			countQuery = countQuery + fmt.Sprintf(`
 		  UNION
-		  MATCH (t:Tenant {name:$tenant})-[rel:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization)--(l:Location)--(p:Place)
-		  WHERE NOT (o)--(:Contact)	AND (p.country CONTAINS $location OR p.state CONTAINS $location OR p.city CONTAINS $location)
+		  MATCH (t:Tenant {name:$tenant})-[rel:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization)--(l:Location)
+		  WHERE NOT (o)--(:Contact)	AND (l.country CONTAINS $location OR l.region CONTAINS $location OR l.locality CONTAINS $location)
 		  RETURN rel`)
 		}
 
@@ -163,12 +163,12 @@ func (r *queryRepository) GetOrganizationsAndContacts(session neo4j.Session, ten
 		  WHERE NOT (c)--(:Organization) AND e.email CONTAINS $email
 		  RETURN rel`)
 		}
-		//fetch contacts without organizations with filters on their place
+		//fetch contacts without organizations with filters on their locations
 		if searchTerm != nil {
 			countQuery = countQuery + fmt.Sprintf(`
 		  UNION
-		  MATCH (t:Tenant {name:$tenant})-[rel:CONTACT_BELONGS_TO_TENANT]-(c:Contact)--(l:Location)--(p:Place)
-		  WHERE NOT (c)--(:Organization) AND (p.country CONTAINS $location OR p.state CONTAINS $location OR p.city CONTAINS $location)
+		  MATCH (t:Tenant {name:$tenant})-[rel:CONTACT_BELONGS_TO_TENANT]-(c:Contact)--(l:Location)
+		  WHERE NOT (c)--(:Organization) AND (l.country CONTAINS $location OR l.region CONTAINS $location OR l.locality CONTAINS $location)
 		  RETURN rel`)
 		}
 
@@ -214,21 +214,21 @@ func (r *queryRepository) GetOrganizationsAndContacts(session neo4j.Session, ten
 		  WHERE e.email CONTAINS $email
 		  RETURN o, c`)
 		}
-		//fetch organizations and contacts with filters on their place
+		//fetch organizations and contacts with filters on their locations
 		if searchTerm != nil {
 			query = query + fmt.Sprintf(`
 		  UNION
-		  MATCH (t:Tenant {name:$tenant})--(o:Organization)--(l:Location)--(p:Place)
+		  MATCH (t:Tenant {name:$tenant})--(o:Organization)--(l:Location)
 		  MATCH (t)--(c:Contact)
 		  MATCH (o)--(c)
-		  WHERE p.country CONTAINS $location OR p.state CONTAINS $location OR p.city CONTAINS $location
+		  WHERE l.country CONTAINS $location OR l.region CONTAINS $location OR l.locality CONTAINS $location
 		  RETURN o, c
 
 		  UNION
 		  MATCH (t:Tenant {name:$tenant})--(o:Organization)
-		  MATCH (t)--(c:Contact)--(l:Location)--(p:Place)
+		  MATCH (t)--(c:Contact)--(l:Location)
 		  MATCH (o)--(c)
-		  WHERE p.country CONTAINS $location OR p.state CONTAINS $location OR p.city CONTAINS $location
+		  WHERE l.country CONTAINS $location OR l.region CONTAINS $location OR l.locality CONTAINS $location
 		  RETURN o, c`)
 		}
 
@@ -246,12 +246,12 @@ func (r *queryRepository) GetOrganizationsAndContacts(session neo4j.Session, ten
 		  WHERE NOT (o)--(:Contact) AND e.email CONTAINS $email 
 		  RETURN o, null as c`)
 		}
-		//fetch organizations without contacts with filters on their place
+		//fetch organizations without contacts with filters on their locations
 		if searchTerm != nil {
 			query = query + fmt.Sprintf(`
 		  UNION
-		  MATCH (t:Tenant {name:$tenant})--(o:Organization)--(l:Location)--(p:Place)
-		  WHERE NOT (o)--(:Contact) AND (p.country CONTAINS $location OR p.state CONTAINS $location OR p.city CONTAINS $location)
+		  MATCH (t:Tenant {name:$tenant})--(o:Organization)--(l:Location)
+		  WHERE NOT (o)--(:Contact) AND (l.country CONTAINS $location OR l.region CONTAINS $location OR l.locality CONTAINS $location)
 		  RETURN o, null as c`)
 		}
 
@@ -269,12 +269,12 @@ func (r *queryRepository) GetOrganizationsAndContacts(session neo4j.Session, ten
 		  WHERE NOT (c)--(:Organization) AND e.email CONTAINS $email
 		  RETURN null as o, c`)
 		}
-		//fetch contacts without organizations with filters on their place
+		//fetch contacts without organizations with filters on their locations
 		if searchTerm != nil {
 			query = query + fmt.Sprintf(`
 		  UNION
-		  MATCH (t:Tenant {name:$tenant})--(c:Contact)--(l:Location)--(p:Place)
-		  WHERE NOT (c)--(:Organization) AND (p.country CONTAINS $location OR p.state CONTAINS $location OR p.city CONTAINS $location)
+		  MATCH (t:Tenant {name:$tenant})--(c:Contact)--(l:Location)
+		  WHERE NOT (c)--(:Organization) AND (l.country CONTAINS $location OR l.region CONTAINS $location OR l.locality CONTAINS $location)
 		  RETURN null as o, c`)
 		}
 		//endregion

@@ -5,6 +5,7 @@ import (
 	"time"
 )
 
+// Deprecated
 type PlaceEntity struct {
 	Id            string
 	Country       string

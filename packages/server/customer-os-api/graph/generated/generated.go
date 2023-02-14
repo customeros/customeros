@@ -221,13 +221,19 @@ type ComplexityRoot struct {
 	}
 
 	Location struct {
+		Address   func(childComplexity int) int
+		Address2  func(childComplexity int) int
 		AppSource func(childComplexity int) int
+		Country   func(childComplexity int) int
 		CreatedAt func(childComplexity int) int
 		ID        func(childComplexity int) int
+		Locality  func(childComplexity int) int
 		Name      func(childComplexity int) int
 		Place     func(childComplexity int) int
+		Region    func(childComplexity int) int
 		Source    func(childComplexity int) int
 		UpdatedAt func(childComplexity int) int
+		Zip       func(childComplexity int) int
 	}
 
 	Mutation struct {
@@ -1437,12 +1443,33 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.JobRole.UpdatedAt(childComplexity), true
 
+	case "Location.address":
+		if e.complexity.Location.Address == nil {
+			break
+		}
+
+		return e.complexity.Location.Address(childComplexity), true
+
+	case "Location.address2":
+		if e.complexity.Location.Address2 == nil {
+			break
+		}
+
+		return e.complexity.Location.Address2(childComplexity), true
+
 	case "Location.appSource":
 		if e.complexity.Location.AppSource == nil {
 			break
 		}
 
 		return e.complexity.Location.AppSource(childComplexity), true
+
+	case "Location.country":
+		if e.complexity.Location.Country == nil {
+			break
+		}
+
+		return e.complexity.Location.Country(childComplexity), true
 
 	case "Location.createdAt":
 		if e.complexity.Location.CreatedAt == nil {
@@ -1458,6 +1485,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Location.ID(childComplexity), true
 
+	case "Location.locality":
+		if e.complexity.Location.Locality == nil {
+			break
+		}
+
+		return e.complexity.Location.Locality(childComplexity), true
+
 	case "Location.name":
 		if e.complexity.Location.Name == nil {
 			break
@@ -1472,6 +1506,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Location.Place(childComplexity), true
 
+	case "Location.region":
+		if e.complexity.Location.Region == nil {
+			break
+		}
+
+		return e.complexity.Location.Region(childComplexity), true
+
 	case "Location.source":
 		if e.complexity.Location.Source == nil {
 			break
@@ -1485,6 +1526,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Location.UpdatedAt(childComplexity), true
+
+	case "Location.zip":
+		if e.complexity.Location.Zip == nil {
+			break
+		}
+
+		return e.complexity.Location.Zip(childComplexity), true
 
 	case "Mutation.contact_AddTagById":
 		if e.complexity.Mutation.ContactAddTagByID == nil {
@@ -4018,9 +4066,18 @@ input JobRoleUpdateInput {
     updatedAt: Time!
     source: DataSource
     appSource: String
+
+    country: String
+    region: String
+    locality: String
+    address: String
+    address2: String
+    zip: String
+
     place: Place @goField(forceResolver: true)
 }
 
+# Place is deprecated
 type Place {
     id: ID!
     createdAt: Time!
@@ -6950,6 +7007,18 @@ func (ec *executionContext) fieldContext_Contact_locations(ctx context.Context, 
 				return ec.fieldContext_Location_source(ctx, field)
 			case "appSource":
 				return ec.fieldContext_Location_appSource(ctx, field)
+			case "country":
+				return ec.fieldContext_Location_country(ctx, field)
+			case "region":
+				return ec.fieldContext_Location_region(ctx, field)
+			case "locality":
+				return ec.fieldContext_Location_locality(ctx, field)
+			case "address":
+				return ec.fieldContext_Location_address(ctx, field)
+			case "address2":
+				return ec.fieldContext_Location_address2(ctx, field)
+			case "zip":
+				return ec.fieldContext_Location_zip(ctx, field)
 			case "place":
 				return ec.fieldContext_Location_place(ctx, field)
 			}
@@ -12254,6 +12323,252 @@ func (ec *executionContext) fieldContext_Location_appSource(ctx context.Context,
 	return fc, nil
 }
 
+func (ec *executionContext) _Location_country(ctx context.Context, field graphql.CollectedField, obj *model.Location) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Location_country(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Country, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Location_country(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Location",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Location_region(ctx context.Context, field graphql.CollectedField, obj *model.Location) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Location_region(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Region, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Location_region(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Location",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Location_locality(ctx context.Context, field graphql.CollectedField, obj *model.Location) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Location_locality(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Locality, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Location_locality(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Location",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Location_address(ctx context.Context, field graphql.CollectedField, obj *model.Location) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Location_address(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Address, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Location_address(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Location",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Location_address2(ctx context.Context, field graphql.CollectedField, obj *model.Location) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Location_address2(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Address2, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Location_address2(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Location",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Location_zip(ctx context.Context, field graphql.CollectedField, obj *model.Location) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Location_zip(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Zip, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Location_zip(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Location",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Location_place(ctx context.Context, field graphql.CollectedField, obj *model.Location) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Location_place(ctx, field)
 	if err != nil {
@@ -17456,6 +17771,18 @@ func (ec *executionContext) fieldContext_Organization_locations(ctx context.Cont
 				return ec.fieldContext_Location_source(ctx, field)
 			case "appSource":
 				return ec.fieldContext_Location_appSource(ctx, field)
+			case "country":
+				return ec.fieldContext_Location_country(ctx, field)
+			case "region":
+				return ec.fieldContext_Location_region(ctx, field)
+			case "locality":
+				return ec.fieldContext_Location_locality(ctx, field)
+			case "address":
+				return ec.fieldContext_Location_address(ctx, field)
+			case "address2":
+				return ec.fieldContext_Location_address2(ctx, field)
+			case "zip":
+				return ec.fieldContext_Location_zip(ctx, field)
 			case "place":
 				return ec.fieldContext_Location_place(ctx, field)
 			}
@@ -26673,6 +27000,30 @@ func (ec *executionContext) _Location(ctx context.Context, sel ast.SelectionSet,
 		case "appSource":
 
 			out.Values[i] = ec._Location_appSource(ctx, field, obj)
+
+		case "country":
+
+			out.Values[i] = ec._Location_country(ctx, field, obj)
+
+		case "region":
+
+			out.Values[i] = ec._Location_region(ctx, field, obj)
+
+		case "locality":
+
+			out.Values[i] = ec._Location_locality(ctx, field, obj)
+
+		case "address":
+
+			out.Values[i] = ec._Location_address(ctx, field, obj)
+
+		case "address2":
+
+			out.Values[i] = ec._Location_address2(ctx, field, obj)
+
+		case "zip":
+
+			out.Values[i] = ec._Location_zip(ctx, field, obj)
 
 		case "place":
 			field := field
