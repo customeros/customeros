@@ -12,7 +12,9 @@ MERGE (loc)-[:LOCATION_BELONGS_TO_TENANT]->(t);
 
 # STEP 2 Execute before and after release, link Location with tenant
 
-MATCH (loc:Location)--(p:Place)
+MATCH (loc:Location)-[:LOCATED_AT]->(p:Place)
+WHERE loc.country is null
+WITH loc, p
 SET
 loc.country = p.country,
 loc.region = p.state,
