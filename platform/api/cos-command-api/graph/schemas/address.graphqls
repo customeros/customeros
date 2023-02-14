@@ -1,0 +1,13 @@
+type Place {
+    id: ID!
+    createdAt: Time!
+    country: String
+    state: String
+    city: String
+    address: String
+    address2: String
+    zip: String
+    phone: String
+    fax: String
+    source: DataSource
+}

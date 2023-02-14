@@ -1,0 +1,28 @@
+mutation UpdateOrganization($organizationId: ID!, $organizationTypeId: ID) {
+  organization_Update(
+        input: {
+            id: $organizationId
+            name: "updated name"
+            description: "updated description"
+            domain: "updated domain"
+            website: "updated website"
+            industry: "updated industry"
+            isPublic: true
+            organizationTypeId: $organizationTypeId
+        }) {
+      id
+      name
+      description
+      domain
+      website
+      industry
+      isPublic
+      createdAt
+      updatedAt
+      sourceOfTruth
+      organizationType {
+        id
+        name
+      }
+    }
+}

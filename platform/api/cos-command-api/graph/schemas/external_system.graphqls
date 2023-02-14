@@ -1,0 +1,10 @@
+input ExternalSystemReferenceInput {
+    id :ID!
+    syncDate: Time
+    type: ExternalSystemType!
+}
+
+enum ExternalSystemType {
+    HUBSPOT
+    ZENDESK
+}

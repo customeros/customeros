@@ -1,0 +1,12 @@
+"""
+Describes the success or failure of the GraphQL call.
+**A `return` object**
+"""
+type Result {
+    
+    """
+    The result of the GraphQL call.
+    **Required.**
+    """
+    result: Boolean!
+}

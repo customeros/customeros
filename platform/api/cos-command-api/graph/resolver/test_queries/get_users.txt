@@ -1,0 +1,16 @@
+query {
+  users {
+    totalPages
+    totalElements
+    content {
+      id
+      firstName
+      lastName
+      emails {
+        id
+        email
+      }
+      createdAt
+    }
+  }
+}

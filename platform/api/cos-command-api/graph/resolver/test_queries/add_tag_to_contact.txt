@@ -1,0 +1,13 @@
+mutation AddTagToContact($contactId: ID!, $tagId: ID!) {
+  contact_AddTagById(
+  input: {
+    contactId: $contactId
+    tagId: $tagId
+  }) {
+    id
+    tags {
+      id
+      name
+    }
+  }
+}

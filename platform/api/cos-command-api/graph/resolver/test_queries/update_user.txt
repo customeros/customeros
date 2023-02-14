@@ -1,0 +1,12 @@
+mutation UpdateUser($userId: ID!) {
+  user_Update(input: {
+    id: $userId
+    firstName: "firstUpdated"
+    lastName: "lastUpdated"
+  }) {
+    id
+    firstName
+    lastName
+    source
+  }
+}

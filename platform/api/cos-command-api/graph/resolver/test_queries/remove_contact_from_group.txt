@@ -1,0 +1,6 @@
+mutation RemoveContactFromGroup($contactId: ID!, $groupId: ID!) {
+     contactGroupRemoveContact(contactId: $contactId,groupId: $groupId)
+     {
+        result
+     }
+}
