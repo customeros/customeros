@@ -6,6 +6,8 @@ package resolver
 
 import (
 	"context"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils"
+	"time"
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
@@ -46,6 +48,10 @@ func (r *mutationResolver) TagDelete(ctx context.Context, id string) (*model.Res
 
 // Tags is the resolver for the tags field.
 func (r *queryResolver) Tags(ctx context.Context) ([]*model.Tag, error) {
+	defer func(start time.Time) {
+		utils.LogMethodExecution(start, utils.GetFunctionName())
+	}(time.Now())
+
 	tags, err := r.Services.TagService.GetAll(ctx)
 	if err != nil {
 		graphql.AddErrorf(ctx, "Failed to fetch tags")

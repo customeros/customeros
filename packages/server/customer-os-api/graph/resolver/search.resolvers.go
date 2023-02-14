@@ -6,6 +6,8 @@ package resolver
 
 import (
 	"context"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils"
+	"time"
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
@@ -15,6 +17,10 @@ import (
 
 // SearchBasic is the resolver for the search_Basic field.
 func (r *queryResolver) SearchBasic(ctx context.Context, keyword string) ([]*model.SearchBasicResultItem, error) {
+	defer func(start time.Time) {
+		utils.LogMethodExecution(start, utils.GetFunctionName())
+	}(time.Now())
+
 	searchResultEntities, err := r.Services.SearchService.SearchBasic(ctx, keyword)
 	if err != nil {
 		graphql.AddErrorf(ctx, "Failed basic search for keyword %s", keyword)

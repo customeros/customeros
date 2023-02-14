@@ -6,6 +6,8 @@ package resolver
 
 import (
 	"context"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils"
+	"time"
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/generated"
@@ -15,6 +17,10 @@ import (
 
 // Organization is the resolver for the organization field.
 func (r *jobRoleResolver) Organization(ctx context.Context, obj *model.JobRole) (*model.Organization, error) {
+	defer func(start time.Time) {
+		utils.LogMethodExecution(start, utils.GetFunctionName())
+	}(time.Now())
+
 	organizationEntity, err := r.Services.OrganizationService.GetOrganizationForJobRole(ctx, obj.ID)
 	if err != nil {
 		graphql.AddErrorf(ctx, "Failed to get organization for job role %s", obj.ID)
@@ -28,6 +34,10 @@ func (r *jobRoleResolver) Organization(ctx context.Context, obj *model.JobRole) 
 
 // Contact is the resolver for the contact field.
 func (r *jobRoleResolver) Contact(ctx context.Context, obj *model.JobRole) (*model.Contact, error) {
+	defer func(start time.Time) {
+		utils.LogMethodExecution(start, utils.GetFunctionName())
+	}(time.Now())
+
 	contactEntity, err := r.Services.ContactService.GetContactForRole(ctx, obj.ID)
 	if err != nil {
 		graphql.AddErrorf(ctx, "Failed to get contact job for role %s", obj.ID)

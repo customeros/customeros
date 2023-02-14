@@ -6,6 +6,7 @@ package resolver
 
 import (
 	"context"
+	"time"
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
@@ -17,12 +18,20 @@ import (
 
 // EntityTemplates is the resolver for the entityTemplates field.
 func (r *queryResolver) EntityTemplates(ctx context.Context, extends *model.EntityTemplateExtension) ([]*model.EntityTemplate, error) {
+	defer func(start time.Time) {
+		utils.LogMethodExecution(start, utils.GetFunctionName())
+	}(time.Now())
+
 	result, err := r.Services.EntityTemplateService.FindAll(ctx, utils.StringPtr(extends.String()))
 	return mapper.MapEntitiesToEntityTemplates(result), err
 }
 
 // DashboardView is the resolver for the dashboardView field.
 func (r *queryResolver) DashboardView(ctx context.Context, pagination model.Pagination, searchTerm *string) (*model.DashboardViewItemPage, error) {
+	defer func(start time.Time) {
+		utils.LogMethodExecution(start, utils.GetFunctionName())
+	}(time.Now())
+
 	paginatedResult, err := r.Services.QueryService.GetDashboardViewData(ctx, pagination.Page, pagination.Limit, searchTerm)
 	if err != nil {
 		graphql.AddErrorf(ctx, "Failed to get organizations and contacts data")

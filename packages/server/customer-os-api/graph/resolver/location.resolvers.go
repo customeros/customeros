@@ -13,6 +13,7 @@ import (
 
 // Place is the resolver for the place field.
 func (r *locationResolver) Place(ctx context.Context, obj *model.Location) (*model.Place, error) {
+	//Deprecated
 	return &model.Place{
 		ID:        obj.ID,
 		CreatedAt: obj.CreatedAt,

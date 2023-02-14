@@ -6,6 +6,8 @@ package resolver
 
 import (
 	"context"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils"
+	"time"
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
@@ -40,6 +42,10 @@ func (r *mutationResolver) UserUpdate(ctx context.Context, input model.UserUpdat
 
 // Users is the resolver for the users field.
 func (r *queryResolver) Users(ctx context.Context, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) (*model.UserPage, error) {
+	defer func(start time.Time) {
+		utils.LogMethodExecution(start, utils.GetFunctionName())
+	}(time.Now())
+
 	if pagination == nil {
 		pagination = &model.Pagination{Page: 0, Limit: 0}
 	}
@@ -53,6 +59,10 @@ func (r *queryResolver) Users(ctx context.Context, pagination *model.Pagination,
 
 // User is the resolver for the user field.
 func (r *queryResolver) User(ctx context.Context, id string) (*model.User, error) {
+	defer func(start time.Time) {
+		utils.LogMethodExecution(start, utils.GetFunctionName())
+	}(time.Now())
+
 	userEntity, err := r.Services.UserService.FindUserById(ctx, id)
 	if err != nil || userEntity == nil {
 		graphql.AddErrorf(ctx, "User with id %s not found", id)
@@ -63,6 +73,10 @@ func (r *queryResolver) User(ctx context.Context, id string) (*model.User, error
 
 // UserByEmail is the resolver for the user_ByEmail field.
 func (r *queryResolver) UserByEmail(ctx context.Context, email string) (*model.User, error) {
+	defer func(start time.Time) {
+		utils.LogMethodExecution(start, utils.GetFunctionName())
+	}(time.Now())
+
 	userEntity, err := r.Services.UserService.FindUserByEmail(ctx, email)
 	if err != nil || userEntity == nil {
 		graphql.AddErrorf(ctx, "User with email %s not identified", email)
@@ -73,12 +87,20 @@ func (r *queryResolver) UserByEmail(ctx context.Context, email string) (*model.U
 
 // Emails is the resolver for the emails field.
 func (r *userResolver) Emails(ctx context.Context, obj *model.User) ([]*model.Email, error) {
+	defer func(start time.Time) {
+		utils.LogMethodExecution(start, utils.GetFunctionName())
+	}(time.Now())
+
 	emailEntities, err := r.Services.EmailService.FindAllFor(ctx, entity.USER, obj.ID)
 	return mapper.MapEntitiesToEmails(emailEntities), err
 }
 
 // Conversations is the resolver for the conversations field.
 func (r *userResolver) Conversations(ctx context.Context, obj *model.User, pagination *model.Pagination, sort []*model.SortBy) (*model.ConversationPage, error) {
+	defer func(start time.Time) {
+		utils.LogMethodExecution(start, utils.GetFunctionName())
+	}(time.Now())
+
 	if pagination == nil {
 		pagination = &model.Pagination{Page: 0, Limit: 0}
 	}

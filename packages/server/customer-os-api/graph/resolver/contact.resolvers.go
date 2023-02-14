@@ -6,6 +6,7 @@ package resolver
 
 import (
 	"context"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils"
 	"time"
 
 	"github.com/99designs/gqlgen/graphql"
@@ -18,6 +19,10 @@ import (
 
 // Tags is the resolver for the tags field.
 func (r *contactResolver) Tags(ctx context.Context, obj *model.Contact) ([]*model.Tag, error) {
+	defer func(start time.Time) {
+		utils.LogMethodExecution(start, utils.GetFunctionName())
+	}(time.Now())
+
 	tagEntities, err := r.Services.TagService.GetTagsForContact(ctx, obj.ID)
 	if err != nil {
 		graphql.AddErrorf(ctx, "Failed to get tags for contact %s", obj.ID)
@@ -28,6 +33,10 @@ func (r *contactResolver) Tags(ctx context.Context, obj *model.Contact) ([]*mode
 
 // JobRoles is the resolver for the jobRoles field.
 func (r *contactResolver) JobRoles(ctx context.Context, obj *model.Contact) ([]*model.JobRole, error) {
+	defer func(start time.Time) {
+		utils.LogMethodExecution(start, utils.GetFunctionName())
+	}(time.Now())
+
 	jobRoleEntities, err := r.Services.JobRoleService.GetAllForContact(ctx, obj.ID)
 	if err != nil {
 		graphql.AddErrorf(ctx, "Failed to get job roles for contact %s", obj.ID)
@@ -38,6 +47,10 @@ func (r *contactResolver) JobRoles(ctx context.Context, obj *model.Contact) ([]*
 
 // Organizations is the resolver for the organizations field.
 func (r *contactResolver) Organizations(ctx context.Context, obj *model.Contact, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) (*model.OrganizationPage, error) {
+	defer func(start time.Time) {
+		utils.LogMethodExecution(start, utils.GetFunctionName())
+	}(time.Now())
+
 	if pagination == nil {
 		pagination = &model.Pagination{Page: 0, Limit: 0}
 	}
@@ -55,24 +68,40 @@ func (r *contactResolver) Organizations(ctx context.Context, obj *model.Contact,
 
 // Groups is the resolver for the groups field.
 func (r *contactResolver) Groups(ctx context.Context, obj *model.Contact) ([]*model.ContactGroup, error) {
+	defer func(start time.Time) {
+		utils.LogMethodExecution(start, utils.GetFunctionName())
+	}(time.Now())
+
 	contactGroupEntities, err := r.Services.ContactGroupService.FindAllForContact(ctx, obj)
 	return mapper.MapEntitiesToContactGroups(contactGroupEntities), err
 }
 
 // PhoneNumbers is the resolver for the phoneNumbers field.
 func (r *contactResolver) PhoneNumbers(ctx context.Context, obj *model.Contact) ([]*model.PhoneNumber, error) {
+	defer func(start time.Time) {
+		utils.LogMethodExecution(start, utils.GetFunctionName())
+	}(time.Now())
+
 	phoneNumberEntities, err := r.Services.PhoneNumberService.FindAllForContact(ctx, obj.ID)
 	return mapper.MapEntitiesToPhoneNumbers(phoneNumberEntities), err
 }
 
 // Emails is the resolver for the emails field.
 func (r *contactResolver) Emails(ctx context.Context, obj *model.Contact) ([]*model.Email, error) {
+	defer func(start time.Time) {
+		utils.LogMethodExecution(start, utils.GetFunctionName())
+	}(time.Now())
+
 	emailEntities, err := r.Services.EmailService.FindAllFor(ctx, entity.CONTACT, obj.ID)
 	return mapper.MapEntitiesToEmails(emailEntities), err
 }
 
 // Locations is the resolver for the locations field.
 func (r *contactResolver) Locations(ctx context.Context, obj *model.Contact) ([]*model.Location, error) {
+	defer func(start time.Time) {
+		utils.LogMethodExecution(start, utils.GetFunctionName())
+	}(time.Now())
+
 	locationEntities, err := r.Services.LocationService.GetAllForContact(ctx, obj.ID)
 	if err != nil {
 		graphql.AddErrorf(ctx, "Failed to get locations for contact %s", obj.ID)
@@ -83,6 +112,10 @@ func (r *contactResolver) Locations(ctx context.Context, obj *model.Contact) ([]
 
 // CustomFields is the resolver for the customFields field.
 func (r *contactResolver) CustomFields(ctx context.Context, obj *model.Contact) ([]*model.CustomField, error) {
+	defer func(start time.Time) {
+		utils.LogMethodExecution(start, utils.GetFunctionName())
+	}(time.Now())
+
 	var customFields []*model.CustomField
 	customFieldEntities, err := r.Services.CustomFieldService.FindAllForContact(ctx, obj)
 	for _, v := range mapper.MapEntitiesToCustomFields(customFieldEntities) {
@@ -93,12 +126,20 @@ func (r *contactResolver) CustomFields(ctx context.Context, obj *model.Contact) 
 
 // FieldSets is the resolver for the fieldSets field.
 func (r *contactResolver) FieldSets(ctx context.Context, obj *model.Contact) ([]*model.FieldSet, error) {
+	defer func(start time.Time) {
+		utils.LogMethodExecution(start, utils.GetFunctionName())
+	}(time.Now())
+
 	fieldSetEntities, err := r.Services.FieldSetService.FindAllForContact(ctx, obj)
 	return mapper.MapEntitiesToFieldSets(fieldSetEntities), err
 }
 
 // Template is the resolver for the template field.
 func (r *contactResolver) Template(ctx context.Context, obj *model.Contact) (*model.EntityTemplate, error) {
+	defer func(start time.Time) {
+		utils.LogMethodExecution(start, utils.GetFunctionName())
+	}(time.Now())
+
 	templateEntity, err := r.Services.EntityTemplateService.FindLinkedWithContact(ctx, obj.ID)
 	if err != nil {
 		graphql.AddErrorf(ctx, "Failed to get contact template for contact %s", obj.ID)
@@ -112,6 +153,10 @@ func (r *contactResolver) Template(ctx context.Context, obj *model.Contact) (*mo
 
 // Owner is the resolver for the owner field.
 func (r *contactResolver) Owner(ctx context.Context, obj *model.Contact) (*model.User, error) {
+	defer func(start time.Time) {
+		utils.LogMethodExecution(start, utils.GetFunctionName())
+	}(time.Now())
+
 	owner, err := r.Services.UserService.FindContactOwner(ctx, obj.ID)
 	if err != nil {
 		graphql.AddErrorf(ctx, "Failed to get owner for contact %s", obj.ID)
@@ -125,6 +170,10 @@ func (r *contactResolver) Owner(ctx context.Context, obj *model.Contact) (*model
 
 // Notes is the resolver for the notes field.
 func (r *contactResolver) Notes(ctx context.Context, obj *model.Contact, pagination *model.Pagination) (*model.NotePage, error) {
+	defer func(start time.Time) {
+		utils.LogMethodExecution(start, utils.GetFunctionName())
+	}(time.Now())
+
 	if pagination == nil {
 		pagination = &model.Pagination{Page: 0, Limit: 0}
 	}
@@ -142,6 +191,10 @@ func (r *contactResolver) Notes(ctx context.Context, obj *model.Contact, paginat
 
 // Conversations is the resolver for the conversations field.
 func (r *contactResolver) Conversations(ctx context.Context, obj *model.Contact, pagination *model.Pagination, sort []*model.SortBy) (*model.ConversationPage, error) {
+	defer func(start time.Time) {
+		utils.LogMethodExecution(start, utils.GetFunctionName())
+	}(time.Now())
+
 	if pagination == nil {
 		pagination = &model.Pagination{Page: 0, Limit: 0}
 	}
@@ -159,6 +212,10 @@ func (r *contactResolver) Conversations(ctx context.Context, obj *model.Contact,
 
 // Actions is the resolver for the actions field.
 func (r *contactResolver) Actions(ctx context.Context, obj *model.Contact, from time.Time, to time.Time, actionTypes []model.ActionType) ([]model.Action, error) {
+	defer func(start time.Time) {
+		utils.LogMethodExecution(start, utils.GetFunctionName())
+	}(time.Now())
+
 	actions, err := r.Services.ActionsService.GetContactActions(ctx, obj.ID, from, to, actionTypes)
 	if err != nil {
 		graphql.AddErrorf(ctx, "failed to get actions for contact %s", obj.ID)
@@ -247,6 +304,10 @@ func (r *mutationResolver) ContactRemoveTagByID(ctx context.Context, input *mode
 
 // Contact is the resolver for the contact field.
 func (r *queryResolver) Contact(ctx context.Context, id string) (*model.Contact, error) {
+	defer func(start time.Time) {
+		utils.LogMethodExecution(start, utils.GetFunctionName())
+	}(time.Now())
+
 	contactEntity, err := r.Services.ContactService.GetContactById(ctx, id)
 	if err != nil || contactEntity == nil {
 		graphql.AddErrorf(ctx, "Contact with id %s not found", id)
@@ -257,6 +318,10 @@ func (r *queryResolver) Contact(ctx context.Context, id string) (*model.Contact,
 
 // Contacts is the resolver for the contacts field.
 func (r *queryResolver) Contacts(ctx context.Context, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) (*model.ContactsPage, error) {
+	defer func(start time.Time) {
+		utils.LogMethodExecution(start, utils.GetFunctionName())
+	}(time.Now())
+
 	if pagination == nil {
 		pagination = &model.Pagination{Page: 0, Limit: 0}
 	}
@@ -270,6 +335,10 @@ func (r *queryResolver) Contacts(ctx context.Context, pagination *model.Paginati
 
 // ContactByEmail is the resolver for the contactByEmail field.
 func (r *queryResolver) ContactByEmail(ctx context.Context, email string) (*model.Contact, error) {
+	defer func(start time.Time) {
+		utils.LogMethodExecution(start, utils.GetFunctionName())
+	}(time.Now())
+
 	contactEntity, err := r.Services.ContactService.FindContactByEmail(ctx, email)
 	if err != nil || contactEntity == nil {
 		graphql.AddErrorf(ctx, "Contact with email %s not identified", email)
@@ -280,6 +349,10 @@ func (r *queryResolver) ContactByEmail(ctx context.Context, email string) (*mode
 
 // ContactByPhone is the resolver for the contactByPhone field.
 func (r *queryResolver) ContactByPhone(ctx context.Context, e164 string) (*model.Contact, error) {
+	defer func(start time.Time) {
+		utils.LogMethodExecution(start, utils.GetFunctionName())
+	}(time.Now())
+
 	contactEntity, err := r.Services.ContactService.FindContactByPhoneNumber(ctx, e164)
 	if err != nil || contactEntity == nil {
 		graphql.AddErrorf(ctx, "Contact with phone number %s not identified", e164)

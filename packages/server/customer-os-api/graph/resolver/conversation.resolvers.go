@@ -6,6 +6,8 @@ package resolver
 
 import (
 	"context"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils"
+	"time"
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
@@ -16,6 +18,10 @@ import (
 
 // Contacts is the resolver for the contacts field.
 func (r *conversationResolver) Contacts(ctx context.Context, obj *model.Conversation) ([]*model.Contact, error) {
+	defer func(start time.Time) {
+		utils.LogMethodExecution(start, utils.GetFunctionName())
+	}(time.Now())
+
 	contactEntities, err := r.Services.ContactService.GetAllForConversation(ctx, obj.ID)
 	if err != nil {
 		graphql.AddErrorf(ctx, "failed to fetch contacts for conversation %s", obj.ID)
@@ -26,6 +32,10 @@ func (r *conversationResolver) Contacts(ctx context.Context, obj *model.Conversa
 
 // Users is the resolver for the users field.
 func (r *conversationResolver) Users(ctx context.Context, obj *model.Conversation) ([]*model.User, error) {
+	defer func(start time.Time) {
+		utils.LogMethodExecution(start, utils.GetFunctionName())
+	}(time.Now())
+
 	userEntities, err := r.Services.UserService.GetAllForConversation(ctx, obj.ID)
 	if err != nil {
 		graphql.AddErrorf(ctx, "failed to fetch users for conversation %s", obj.ID)

@@ -6,6 +6,8 @@ package resolver
 
 import (
 	"context"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils"
+	"time"
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
@@ -59,6 +61,10 @@ func (r *mutationResolver) OrganizationDelete(ctx context.Context, id string) (*
 
 // OrganizationType is the resolver for the organizationType field.
 func (r *organizationResolver) OrganizationType(ctx context.Context, obj *model.Organization) (*model.OrganizationType, error) {
+	defer func(start time.Time) {
+		utils.LogMethodExecution(start, utils.GetFunctionName())
+	}(time.Now())
+
 	organizationTypeEntity, err := r.Services.OrganizationTypeService.FindOrganizationTypeForOrganization(ctx, obj.ID)
 	if err != nil {
 		graphql.AddErrorf(ctx, "Failed to get organization type for organization %s", obj.ID)
@@ -72,6 +78,10 @@ func (r *organizationResolver) OrganizationType(ctx context.Context, obj *model.
 
 // Locations is the resolver for the locations field.
 func (r *organizationResolver) Locations(ctx context.Context, obj *model.Organization) ([]*model.Location, error) {
+	defer func(start time.Time) {
+		utils.LogMethodExecution(start, utils.GetFunctionName())
+	}(time.Now())
+
 	locationEntities, err := r.Services.LocationService.GetAllForOrganization(ctx, obj.ID)
 	if err != nil {
 		graphql.AddErrorf(ctx, "Failed to get locations for organization %s", obj.ID)
@@ -82,6 +92,10 @@ func (r *organizationResolver) Locations(ctx context.Context, obj *model.Organiz
 
 // Contacts is the resolver for the contacts field.
 func (r *organizationResolver) Contacts(ctx context.Context, obj *model.Organization, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) (*model.ContactsPage, error) {
+	defer func(start time.Time) {
+		utils.LogMethodExecution(start, utils.GetFunctionName())
+	}(time.Now())
+
 	if pagination == nil {
 		pagination = &model.Pagination{Page: 0, Limit: 0}
 	}
@@ -99,6 +113,10 @@ func (r *organizationResolver) Contacts(ctx context.Context, obj *model.Organiza
 
 // JobRoles is the resolver for the jobRoles field.
 func (r *organizationResolver) JobRoles(ctx context.Context, obj *model.Organization) ([]*model.JobRole, error) {
+	defer func(start time.Time) {
+		utils.LogMethodExecution(start, utils.GetFunctionName())
+	}(time.Now())
+
 	jobRoleEntities, err := r.Services.JobRoleService.GetAllForOrganization(ctx, obj.ID)
 	if err != nil {
 		graphql.AddErrorf(ctx, "Failed to get roles for organization %s", obj.ID)
@@ -109,6 +127,10 @@ func (r *organizationResolver) JobRoles(ctx context.Context, obj *model.Organiza
 
 // Notes is the resolver for the notes field.
 func (r *organizationResolver) Notes(ctx context.Context, obj *model.Organization, pagination *model.Pagination) (*model.NotePage, error) {
+	defer func(start time.Time) {
+		utils.LogMethodExecution(start, utils.GetFunctionName())
+	}(time.Now())
+
 	if pagination == nil {
 		pagination = &model.Pagination{Page: 0, Limit: 0}
 	}
@@ -126,6 +148,10 @@ func (r *organizationResolver) Notes(ctx context.Context, obj *model.Organizatio
 
 // Organizations is the resolver for the organizations field.
 func (r *queryResolver) Organizations(ctx context.Context, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) (*model.OrganizationPage, error) {
+	defer func(start time.Time) {
+		utils.LogMethodExecution(start, utils.GetFunctionName())
+	}(time.Now())
+
 	if pagination == nil {
 		pagination = &model.Pagination{Page: 0, Limit: 0}
 	}
@@ -143,6 +169,10 @@ func (r *queryResolver) Organizations(ctx context.Context, pagination *model.Pag
 
 // Organization is the resolver for the organization field.
 func (r *queryResolver) Organization(ctx context.Context, id string) (*model.Organization, error) {
+	defer func(start time.Time) {
+		utils.LogMethodExecution(start, utils.GetFunctionName())
+	}(time.Now())
+
 	organizationEntityPtr, err := r.Services.OrganizationService.GetOrganizationById(ctx, id)
 	if err != nil {
 		graphql.AddErrorf(ctx, "Failed to get organization by id %s", id)

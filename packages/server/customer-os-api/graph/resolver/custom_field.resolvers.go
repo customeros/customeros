@@ -6,6 +6,8 @@ package resolver
 
 import (
 	"context"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils"
+	"time"
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/generated"
@@ -15,6 +17,10 @@ import (
 
 // Template is the resolver for the template field.
 func (r *customFieldResolver) Template(ctx context.Context, obj *model.CustomField) (*model.CustomFieldTemplate, error) {
+	defer func(start time.Time) {
+		utils.LogMethodExecution(start, utils.GetFunctionName())
+	}(time.Now())
+
 	entity, err := r.Services.CustomFieldTemplateService.FindLinkedWithCustomField(ctx, obj.ID)
 	if err != nil {
 		graphql.AddErrorf(ctx, "Failed to get contact template for custom field <%s>", obj.ID)
@@ -28,6 +34,10 @@ func (r *customFieldResolver) Template(ctx context.Context, obj *model.CustomFie
 
 // CustomFields is the resolver for the customFields field.
 func (r *fieldSetResolver) CustomFields(ctx context.Context, obj *model.FieldSet) ([]*model.CustomField, error) {
+	defer func(start time.Time) {
+		utils.LogMethodExecution(start, utils.GetFunctionName())
+	}(time.Now())
+
 	var customFields []*model.CustomField
 	customFieldEntities, err := r.Services.CustomFieldService.FindAllForFieldSet(ctx, obj)
 	for _, v := range mapper.MapEntitiesToCustomFields(customFieldEntities) {
@@ -38,6 +48,10 @@ func (r *fieldSetResolver) CustomFields(ctx context.Context, obj *model.FieldSet
 
 // Template is the resolver for the template field.
 func (r *fieldSetResolver) Template(ctx context.Context, obj *model.FieldSet) (*model.FieldSetTemplate, error) {
+	defer func(start time.Time) {
+		utils.LogMethodExecution(start, utils.GetFunctionName())
+	}(time.Now())
+
 	entity, err := r.Services.FieldSetTemplateService.FindLinkedWithFieldSet(ctx, obj.ID)
 	if err != nil {
 		graphql.AddErrorf(ctx, "Failed to get contact template for field set <%s>", obj.ID)

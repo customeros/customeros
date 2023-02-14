@@ -6,6 +6,8 @@ package resolver
 
 import (
 	"context"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils"
+	"time"
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
@@ -46,6 +48,10 @@ func (r *mutationResolver) OrganizationTypeDelete(ctx context.Context, id string
 
 // OrganizationTypes is the resolver for the organizationTypes field.
 func (r *queryResolver) OrganizationTypes(ctx context.Context) ([]*model.OrganizationType, error) {
+	defer func(start time.Time) {
+		utils.LogMethodExecution(start, utils.GetFunctionName())
+	}(time.Now())
+
 	organizationTypes, err := r.Services.OrganizationTypeService.GetAll(ctx)
 	if err != nil {
 		graphql.AddErrorf(ctx, "Failed to fetch organization types")
