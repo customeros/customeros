@@ -1,0 +1,20 @@
+mutation CreateContact($ownerId: ID) {
+contact_Create(
+    input: {
+      firstName: "first"
+      lastName: "last"
+      ownerId: $ownerId
+    }
+  ) {
+    id
+    title
+    firstName
+    lastName
+    source
+    owner {
+        id
+        firstName
+        lastName
+    }
+  }
+}

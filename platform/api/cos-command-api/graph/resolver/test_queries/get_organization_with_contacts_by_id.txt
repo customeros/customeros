@@ -1,0 +1,13 @@
+query GetOrganizationById($organizationId: ID!, $page: Int!, $limit: Int!){
+  organization(id: $organizationId) {
+    id
+    contacts(pagination: {page: $page, limit: $limit}
+                sort:[{by: "CREATED_AT" direction:ASC }]) {
+        totalPages
+        totalElements
+        content {
+          id
+        }
+      }
+  }
+}

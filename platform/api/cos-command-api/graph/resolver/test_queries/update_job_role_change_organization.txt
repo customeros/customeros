@@ -1,0 +1,20 @@
+mutation JobRoleUpdate($contactId: ID!, $roleId: ID!, $organizationId: ID!){
+     jobRole_Update(
+        contactId: $contactId
+        input: {
+                    id: $roleId
+                    organizationId: $organizationId
+                    jobTitle: "CEO"
+                    primary: true
+               }
+     ) {
+        organization {
+            id
+        }
+        updatedAt
+        jobTitle
+        primary
+        responsibilityLevel
+        sourceOfTruth
+      }
+}

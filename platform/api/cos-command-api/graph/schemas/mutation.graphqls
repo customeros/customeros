@@ -1,0 +1,6 @@
+type Mutation {
+    entityTemplateCreate(input: EntityTemplateInput!): EntityTemplate!
+    # createEntityTemplateNewVersion(id: ID!, input: EntityTemplateInput!): EntityTemplate!
+}
+
+

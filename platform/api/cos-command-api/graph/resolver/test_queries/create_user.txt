@@ -1,0 +1,23 @@
+mutation {
+  user_Create(input: {
+    firstName: "first",
+    lastName: "last",
+    email: {
+        email: "user@openline.ai",
+        label: WORK,
+        appSource: "dummy"
+    }
+  }) {
+    id
+    firstName
+    lastName
+    emails {
+      email
+      primary
+      label
+      appSource
+    }
+    createdAt
+    source
+  }
+}

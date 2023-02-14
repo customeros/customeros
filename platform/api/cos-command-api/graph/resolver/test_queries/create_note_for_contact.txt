@@ -1,0 +1,19 @@
+mutation CreateNote($contactId: ID!) {
+  note_CreateForContact(
+    contactId: $contactId,
+    input: {
+      html: "Note content"
+    }
+  ) {
+    id
+    html
+    createdAt
+    updatedAt
+    source
+    sourceOfTruth
+    appSource
+    createdBy {
+      id
+    }
+  }
+}

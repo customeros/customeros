@@ -1,0 +1,67 @@
+mutation CreateContact($contactTypeId: ID) {
+contact_Create(
+    input: {
+      title: MR,
+      firstName: "first",
+      lastName: "last",
+      label: "Some label"
+      contactTypeId: $contactTypeId,
+      createdAt: "2023-01-02T03:04:05.000Z"
+      customFields: [ {name: "textField", value: "value1", datatype: TEXT},
+                      {name: "integerField", value: 123, datatype: INTEGER},
+                      {name: "decimalField", value: 0.001, datatype: DECIMAL},
+                      {name: "boolField", value: true, datatype: BOOL},
+                      {name: "timeField", value: "2022-11-13T20:21:56.732Z", datatype: DATETIME},
+                    ],
+      email: {
+            email: "contact@abc.com",
+            label: WORK,
+            primary: false
+      },
+      phoneNumber: {
+            e164: "+1234567890",
+            label: MOBILE,
+            primary: true
+      }
+    }
+  ) {
+    id
+    title
+    firstName
+    lastName
+    label
+    source
+    owner {
+        id
+    }
+    contactType {
+        id
+        name
+    }
+    createdAt
+    customFields {
+      id
+      name
+      datatype
+      value
+    }
+    emails {
+      id
+      email
+      label
+      primary
+      source
+    }
+    phoneNumbers {
+      id
+      primary
+      e164
+      label
+      source
+    }
+    groups {
+      id
+      name
+    }
+  }
+}

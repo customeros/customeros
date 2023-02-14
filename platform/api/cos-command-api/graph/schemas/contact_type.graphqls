@@ -1,0 +1,24 @@
+extend type Query {
+    contactTypes: [ContactType!]!
+}
+
+extend type Mutation {
+    contactType_Create(input: ContactTypeInput!): ContactType!
+    contactType_Update(input: ContactTypeUpdateInput!): ContactType
+    contactType_Delete(id: ID!): Result
+}
+
+type ContactType {
+    id: ID!
+    createdAt: Time!
+    name: String!
+}
+
+input ContactTypeInput {
+    name: String!
+}
+
+input ContactTypeUpdateInput {
+    id: ID!
+    name: String!
+}

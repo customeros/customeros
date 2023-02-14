@@ -1,0 +1,25 @@
+mutation CreateJobRole($contactId: ID!, $organizationId: ID!) {
+  jobRole_Create(
+    contactId: $contactId,
+    input: {
+      organizationId: $organizationId,
+      jobTitle: "CEO",
+      primary: true,
+      responsibilityLevel: 2,
+      appSource: "Hubspot",
+    }
+  ) {
+    organization {
+      id
+      name
+    }
+    jobTitle
+    primary
+    source
+    sourceOfTruth
+    appSource
+    createdAt
+    updatedAt
+    responsibilityLevel
+  }
+}

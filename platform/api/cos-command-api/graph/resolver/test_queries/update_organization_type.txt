@@ -1,0 +1,9 @@
+mutation UpdateOrganizationType($organizationTypeId: ID!) {
+  organizationType_Update(input: {
+        id: $organizationTypeId
+        name:"updated type" })
+    {
+      id
+      name
+    }
+}

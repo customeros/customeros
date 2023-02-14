@@ -1,0 +1,26 @@
+mutation UpdateContact($contactId: ID!, $contactTypeId: ID, $ownerId: ID){
+    contact_Update(
+        input: {
+            id: $contactId
+            title: DR
+            firstName: "updated first"
+            lastName: "updated last"
+            label: "updated label"
+            contactTypeId: $contactTypeId
+            ownerId: $ownerId
+        }
+    ) {
+        id
+        title
+        firstName
+        lastName
+        label
+        contactType {
+            id
+            name
+        }
+        owner {
+            id
+        }
+    }
+}

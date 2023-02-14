@@ -1,0 +1,6 @@
+mutation DeleteJobRole($contactId:ID!, $roleId: ID!) {
+  jobRole_Delete(contactId: $contactId, roleId: $roleId)
+    {
+      result
+    }
+}

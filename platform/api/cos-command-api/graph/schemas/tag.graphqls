@@ -1,0 +1,28 @@
+extend type Query {
+    tags: [Tag!]!
+}
+
+extend type Mutation {
+    tag_Create(input: TagInput!): Tag!
+    tag_Update(input: TagUpdateInput!): Tag
+    tag_Delete(id: ID!): Result
+}
+
+type Tag {
+    id: ID!
+    name: String!
+    createdAt: Time!
+    updatedAt: Time!
+    source: DataSource!
+    appSource: String!
+}
+
+input TagInput {
+    name: String!
+    appSource: String
+}
+
+input TagUpdateInput {
+    id: ID!
+    name: String!
+}

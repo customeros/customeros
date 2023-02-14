@@ -1,0 +1,17 @@
+mutation UpdateCustomFieldInFieldSet($contactId: ID!, $fieldSetId: ID!, $fieldId: ID!){
+     customFieldUpdateInFieldSet(
+        contactId: $contactId,
+        fieldSetId: $fieldSetId,
+        input: {id: $fieldId
+                datatype: TEXT
+                name: "new name"
+                value: "new value"
+                }
+     ) {
+        id
+        name
+        value
+        datatype
+        source
+      }
+}

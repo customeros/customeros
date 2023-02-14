@@ -1,0 +1,14 @@
+mutation CreateContactMin() {
+contact_Create(
+    input: {
+    }
+  ) {
+    id
+    title
+    firstName
+    lastName
+    label
+    source
+    createdAt
+  }
+}
