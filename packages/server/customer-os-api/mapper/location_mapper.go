@@ -12,6 +12,12 @@ func MapEntityToLocation(entity *entity.LocationEntity) *model.Location {
 		Name:      entity.Name,
 		CreatedAt: entity.CreatedAt,
 		UpdatedAt: entity.UpdatedAt,
+		Country:   utils.StringPtr(entity.Country),
+		Region:    utils.StringPtr(entity.Region),
+		Locality:  utils.StringPtr(entity.Locality),
+		Address:   utils.StringPtr(entity.Address),
+		Address2:  utils.StringPtr(entity.Address2),
+		Zip:       utils.StringPtr(entity.Zip),
 		Source:    utils.ToPtr(MapDataSourceToModel(entity.Source)),
 		AppSource: utils.StringPtr(entity.AppSource),
 	}

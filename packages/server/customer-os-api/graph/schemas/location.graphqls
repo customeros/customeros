@@ -5,9 +5,18 @@ type Location {
     updatedAt: Time!
     source: DataSource
     appSource: String
+
+    country: String
+    region: String
+    locality: String
+    address: String
+    address2: String
+    zip: String
+
     place: Place @goField(forceResolver: true)
 }
 
+# Place is deprecated
 type Place {
     id: ID!
     createdAt: Time!

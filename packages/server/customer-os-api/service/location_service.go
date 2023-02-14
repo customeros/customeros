@@ -58,12 +58,19 @@ func (s *locationService) GetAllForOrganization(ctx context.Context, organizatio
 func (s *locationService) mapDbNodeToLocationEntity(node dbtype.Node) *entity.LocationEntity {
 	props := utils.GetPropsFromNode(node)
 	result := entity.LocationEntity{
-		Id:        utils.GetStringPropOrEmpty(props, "id"),
-		Name:      utils.GetStringPropOrEmpty(props, "name"),
-		CreatedAt: utils.GetTimePropOrEpochStart(props, "createdAt"),
-		UpdatedAt: utils.GetTimePropOrEpochStart(props, "updatedAt"),
-		Source:    entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
-		AppSource: utils.GetStringPropOrEmpty(props, "appSource"),
+		Id:            utils.GetStringPropOrEmpty(props, "id"),
+		Name:          utils.GetStringPropOrEmpty(props, "name"),
+		CreatedAt:     utils.GetTimePropOrEpochStart(props, "createdAt"),
+		UpdatedAt:     utils.GetTimePropOrEpochStart(props, "updatedAt"),
+		Country:       utils.GetStringPropOrEmpty(props, "country"),
+		Region:        utils.GetStringPropOrEmpty(props, "region"),
+		Locality:      utils.GetStringPropOrEmpty(props, "locality"),
+		Address:       utils.GetStringPropOrEmpty(props, "address"),
+		Address2:      utils.GetStringPropOrEmpty(props, "address2"),
+		Zip:           utils.GetStringPropOrEmpty(props, "zip"),
+		Source:        entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
+		SourceOfTruth: entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
+		AppSource:     utils.GetStringPropOrEmpty(props, "appSource"),
 	}
 	return &result
 }

@@ -13,21 +13,12 @@ query GetOrganizations($page: Int!, $limit: Int!){
         updatedAt
         source
         appSource
-        place {
-            id
-            createdAt
-            updatedAt
-            country
-            state
-            city
-            address
-            address2
-            zip
-            phone
-            fax
-            source
-            appSource
-        }
+        country
+        region
+        locality
+        address
+        address2
+        zip
       }
     }
   }

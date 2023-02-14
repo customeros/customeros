@@ -562,7 +562,7 @@ func TestQueryResolver_Contact_WithTags_ById(t *testing.T) {
 	require.Equal(t, "tag2", tags[1].Name)
 }
 
-func TestQueryResolver_Contact_WithLocationsAndPlaces_ById(t *testing.T) {
+func TestQueryResolver_Contact_WithLocations_ById(t *testing.T) {
 	defer tearDownTestCase()(t)
 	neo4jt.CreateTenant(driver, tenantName)
 	contactId := neo4jt.CreateDefaultContact(driver, tenantName)
@@ -571,35 +571,26 @@ func TestQueryResolver_Contact_WithLocationsAndPlaces_ById(t *testing.T) {
 		Name:      "WORK",
 		Source:    entity.DataSourceOpenline,
 		AppSource: "test",
+		Country:   "testCountry",
+		Region:    "testRegion",
+		Locality:  "testLocality",
+		Address:   "testAddress",
+		Address2:  "testAddress2",
+		Zip:       "testZip",
 	})
 	locationId2 := neo4jt.CreateLocation(driver, tenantName, entity.LocationEntity{
 		Name:      "UNKNOWN",
 		Source:    entity.DataSourceOpenline,
 		AppSource: "test",
 	})
-	placeInput := entity.PlaceEntity{
-		Source:    entity.DataSourceOpenline,
-		AppSource: "test",
-		Country:   "testCountry",
-		State:     "testState",
-		City:      "testCity",
-		Address:   "testAddress",
-		Address2:  "testAddress2",
-		Zip:       "testZip",
-		Phone:     "testPhone",
-		Fax:       "testFax",
-	}
-	placeId := neo4jt.CreatePlaceForLocation(driver, placeInput, locationId1)
 	neo4jt.ContactAssociatedWithLocation(driver, contactId, locationId1)
 	neo4jt.ContactAssociatedWithLocation(driver, contactId, locationId2)
 
 	require.Equal(t, 2, neo4jt.GetCountOfNodes(driver, "Contact"))
 	require.Equal(t, 2, neo4jt.GetCountOfNodes(driver, "Location"))
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Place"))
 	require.Equal(t, 2, neo4jt.GetCountOfRelationships(driver, "ASSOCIATED_WITH"))
-	require.Equal(t, 1, neo4jt.GetCountOfRelationships(driver, "LOCATED_AT"))
 
-	rawResponse, err := c.RawPost(getQuery("contact/get_contact_with_locations_and_places_by_id"),
+	rawResponse, err := c.RawPost(getQuery("contact/get_contact_with_locations_by_id"),
 		client.Var("contactId", contactId),
 	)
 	assertRawResponseSuccess(t, rawResponse, err)
@@ -615,42 +606,40 @@ func TestQueryResolver_Contact_WithLocationsAndPlaces_ById(t *testing.T) {
 	require.NotNil(t, contact)
 	require.Equal(t, 2, len(contact.Locations))
 
-	var locationWithPlace, locationWithoutPlace *model.Location
+	var locationWithAddressDtls, locationWithoutAddressDtls *model.Location
 	if contact.Locations[0].ID == locationId1 {
-		locationWithPlace = contact.Locations[0]
-		locationWithoutPlace = contact.Locations[1]
+		locationWithAddressDtls = contact.Locations[0]
+		locationWithoutAddressDtls = contact.Locations[1]
 	} else {
-		locationWithPlace = contact.Locations[1]
-		locationWithoutPlace = contact.Locations[0]
+		locationWithAddressDtls = contact.Locations[1]
+		locationWithoutAddressDtls = contact.Locations[0]
 	}
 
-	require.Equal(t, locationId1, locationWithPlace.ID)
-	require.Equal(t, "WORK", locationWithPlace.Name)
-	require.NotNil(t, locationWithPlace.CreatedAt)
-	require.NotNil(t, locationWithPlace.UpdatedAt)
-	require.Equal(t, "test", *locationWithPlace.AppSource)
-	require.Equal(t, model.DataSourceOpenline, *locationWithPlace.Source)
-	require.NotNil(t, locationWithPlace.Place)
+	require.Equal(t, locationId1, locationWithAddressDtls.ID)
+	require.Equal(t, "WORK", locationWithAddressDtls.Name)
+	require.NotNil(t, locationWithAddressDtls.CreatedAt)
+	require.NotNil(t, locationWithAddressDtls.UpdatedAt)
+	require.Equal(t, "test", *locationWithAddressDtls.AppSource)
+	require.Equal(t, model.DataSourceOpenline, *locationWithAddressDtls.Source)
+	require.Equal(t, "testCountry", *locationWithAddressDtls.Country)
+	require.Equal(t, "testLocality", *locationWithAddressDtls.Locality)
+	require.Equal(t, "testRegion", *locationWithAddressDtls.Region)
+	require.Equal(t, "testAddress", *locationWithAddressDtls.Address)
+	require.Equal(t, "testAddress2", *locationWithAddressDtls.Address2)
+	require.Equal(t, "testZip", *locationWithAddressDtls.Zip)
 
-	place := locationWithPlace.Place
-	require.Equal(t, placeId, place.ID)
-	require.Equal(t, model.DataSourceOpenline, *place.Source)
-	require.Equal(t, placeInput.Country, *place.Country)
-	require.Equal(t, placeInput.City, *place.City)
-	require.Equal(t, placeInput.State, *place.State)
-	require.Equal(t, placeInput.Address, *place.Address)
-	require.Equal(t, placeInput.Address2, *place.Address2)
-	require.Equal(t, placeInput.Fax, *place.Fax)
-	require.Equal(t, placeInput.Phone, *place.Phone)
-	require.Equal(t, placeInput.Zip, *place.Zip)
-
-	require.Equal(t, locationId2, locationWithoutPlace.ID)
-	require.Equal(t, "UNKNOWN", locationWithoutPlace.Name)
-	require.NotNil(t, locationWithoutPlace.CreatedAt)
-	require.NotNil(t, locationWithoutPlace.UpdatedAt)
-	require.Equal(t, "test", *locationWithoutPlace.AppSource)
-	require.Equal(t, model.DataSourceOpenline, *locationWithoutPlace.Source)
-	require.Nil(t, locationWithoutPlace.Place)
+	require.Equal(t, locationId2, locationWithoutAddressDtls.ID)
+	require.Equal(t, "UNKNOWN", locationWithoutAddressDtls.Name)
+	require.NotNil(t, locationWithoutAddressDtls.CreatedAt)
+	require.NotNil(t, locationWithoutAddressDtls.UpdatedAt)
+	require.Equal(t, "test", *locationWithoutAddressDtls.AppSource)
+	require.Equal(t, model.DataSourceOpenline, *locationWithoutAddressDtls.Source)
+	require.Equal(t, "", *locationWithoutAddressDtls.Country)
+	require.Equal(t, "", *locationWithoutAddressDtls.Region)
+	require.Equal(t, "", *locationWithoutAddressDtls.Locality)
+	require.Equal(t, "", *locationWithoutAddressDtls.Address)
+	require.Equal(t, "", *locationWithoutAddressDtls.Address2)
+	require.Equal(t, "", *locationWithoutAddressDtls.Zip)
 }
 
 func TestQueryResolver_Contacts_SortByTitleAscFirstNameAscLastNameDesc(t *testing.T) {
