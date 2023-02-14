@@ -71,44 +71,50 @@ CALL {
  MATCH (node:CustomField) with node, labels(node) as labs unwind labs as labsList with node, count(node) as nodeCount where nodeCount <> 3 return count(nodeCount) as x
 } return sum(x) as Problematic_nodes;
 
-# CHECK 3 - Parameterized query, to be used for each tenant
-
-:param { tenant: "openline" };
+# CHECK 3
 
 CALL {
- MATCH (:Tenant {name:$tenant})--(n:Contact) WHERE NOT 'Contact_'+$tenant  in labels(n) return count(n) as x
+ MATCH (t:Tenant)--(n:Contact) WHERE NOT 'Contact_'+t.name  in labels(n) return count(n) as x
  UNION
- MATCH (:Tenant {name:$tenant})--(n:Organization) WHERE NOT 'Organization_'+$tenant  in labels(n) return count(n) as x
+ MATCH (t:Tenant)--(n:Organization) WHERE NOT 'Organization_'+t.name  in labels(n) return count(n) as x
  UNION
- MATCH (:Tenant {name:$tenant})--(n:Organization) WHERE NOT 'Organization_'+$tenant  in labels(n) return count(n) as x
+ MATCH (t:Tenant)--(n:Organization) WHERE NOT 'Organization_'+t.name  in labels(n) return count(n) as x
  UNION
- MATCH (:Tenant {name:$tenant})--(n:ExternalSystem) WHERE NOT 'ExternalSystem_'+$tenant  in labels(n) return count(n) as x
+ MATCH (t:Tenant)--(n:ExternalSystem) WHERE NOT 'ExternalSystem_'+t.name  in labels(n) return count(n) as x
  UNION
- MATCH (:Tenant {name:$tenant})--(n:OrganizationType) WHERE NOT 'OrganizationType_'+$tenant  in labels(n) return count(n) as x
+ MATCH (t:Tenant)--(n:OrganizationType) WHERE NOT 'OrganizationType_'+t.name  in labels(n) return count(n) as x
  UNION
- MATCH (:Tenant {name:$tenant})--(n:User) WHERE NOT 'User_'+$tenant  in labels(n) return count(n) as x
+ MATCH (t:Tenant)--(n:User) WHERE NOT 'User_'+t.name  in labels(n) return count(n) as x
  UNION
- MATCH (:Tenant {name:$tenant})--(n:Tag) WHERE NOT 'Tag_'+$tenant  in labels(n) return count(n) as x
+ MATCH (t:Tenant)--(n:Tag) WHERE NOT 'Tag_'+t.name  in labels(n) return count(n) as x
  UNION
- MATCH (:Tenant {name:$tenant})--(n:Email) WHERE NOT 'Email_'+$tenant  in labels(n) return count(n) as x
+ MATCH (t:Tenant)--(n:Email) WHERE NOT 'Email_'+t.name  in labels(n) return count(n) as x
  UNION
- MATCH (:Tenant {name:$tenant})-[*2]-(n:Email) WHERE NOT 'Email_'+$tenant  in labels(n) return count(n) as x
+ MATCH (t:Tenant)--(:Contact)--(n:Email) WHERE NOT 'Email_'+t.name  in labels(n) return count(n) as x
  UNION
- MATCH (:Tenant {name:$tenant})-[*2]-(n:Conversation) WHERE NOT 'Conversation_'+$tenant  in labels(n) return count(n) as x
+ MATCH (t:Tenant)--(:Organization)--(n:Email) WHERE NOT 'Email_'+t.name  in labels(n) return count(n) as x
  UNION
- MATCH (:Tenant {name:$tenant})-[*2]-(n:JobRole) WHERE NOT 'JobRole_'+$tenant  in labels(n) return count(n) as x
+ MATCH (t:Tenant)--(:User)--(n:Email) WHERE NOT 'Email_'+t.name  in labels(n) return count(n) as x
  UNION
- MATCH (:Tenant {name:$tenant})--(n:Location) WHERE NOT 'Location_'+$tenant  in labels(n) return count(n) as x
+ MATCH (t:Tenant)--(:User)--(n:Conversation) WHERE NOT 'Conversation_'+t.name  in labels(n) return count(n) as x
  UNION
- MATCH (:Tenant {name:$tenant})-[*2]-(n:Location) WHERE NOT 'Location_'+$tenant  in labels(n) return count(n) as x
+ MATCH (t:Tenant)--(:Contact)--(n:Conversation) WHERE NOT 'Conversation_'+t.name  in labels(n) return count(n) as x
  UNION
- MATCH (:Tenant {name:$tenant})-[*2]-(n:CustomField) WHERE NOT 'CustomField_'+$tenant  in labels(n) return count(n) as x
+ MATCH (t:Tenant)--(:Contact)--(n:JobRole) WHERE NOT 'JobRole_'+t.name  in labels(n) return count(n) as x
  UNION
- MATCH (:Tenant {name:$tenant})-[*2]-(n:PhoneNumber) WHERE NOT 'PhoneNumber_'+$tenant  in labels(n) return count(n) as x
+ MATCH (t:Tenant)--(n:Location) WHERE NOT 'Location_'+t.name  in labels(n) return count(n) as x
  UNION
- MATCH (:Tenant {name:$tenant})-[*2]-(n:Note) WHERE NOT 'Note_'+$tenant  in labels(n) return count(n) as x
+ MATCH (t:Tenant)--(:Contact)--(n:Location) WHERE NOT 'Location_'+t.name  in labels(n) return count(n) as x
  UNION
- MATCH (:Tenant {name:$tenant})-[*2]-(n:Action) WHERE NOT 'Action_'+$tenant  in labels(n) return count(n) as x
+ MATCH (t:Tenant)--(:Organization)--(n:Location) WHERE NOT 'Location_'+t.name  in labels(n) return count(n) as x
+ UNION
+ MATCH (t:Tenant)--(:Contact)--(n:CustomField) WHERE NOT 'CustomField_'+t.name  in labels(n) return count(n) as x
+ UNION
+ MATCH (t:Tenant)--(:Contact)--(n:PhoneNumber) WHERE NOT 'PhoneNumber_'+t.name  in labels(n) return count(n) as x
+ UNION
+ MATCH (t:Tenant)--(:Contact)--(n:Note) WHERE NOT 'Note_'+t.name  in labels(n) return count(n) as x
+ UNION
+ MATCH (t:Tenant)--(:Contact)--(n:Action) WHERE NOT 'Action_'+t.name  in labels(n) return count(n) as x
 } return sum(x) as Problematic_nodes;
 
 
