@@ -5,6 +5,7 @@ import (
 	"github.com/neo4j/neo4j-go-driver/v4/neo4j/dbtype"
 	"github.com/sirupsen/logrus"
 	"reflect"
+	"runtime"
 	"time"
 )
 
@@ -186,4 +187,14 @@ func AnySliceToStringSlice(input []any) ([]string, error) {
 		result = append(result, str)
 	}
 	return result, nil
+}
+
+func GetFunctionName() string {
+	pc, _, _, _ := runtime.Caller(2)
+	return runtime.FuncForPC(pc).Name()
+}
+
+func LogMethodExecution(start time.Time, methodName string) {
+	duration := time.Since(start).Milliseconds()
+	logrus.Infof("Method %s execution time: %d ms", methodName, duration)
 }

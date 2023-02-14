@@ -6,6 +6,8 @@ package resolver
 
 import (
 	"context"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils"
+	"time"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/generated"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
@@ -14,18 +16,30 @@ import (
 
 // FieldSets is the resolver for the fieldSets field.
 func (r *entityTemplateResolver) FieldSets(ctx context.Context, obj *model.EntityTemplate) ([]*model.FieldSetTemplate, error) {
+	defer func(start time.Time) {
+		utils.LogMethodExecution(start, utils.GetFunctionName())
+	}(time.Now())
+
 	result, err := r.Services.FieldSetTemplateService.FindAll(obj.ID)
 	return mapper.MapEntitiesToFieldSetTemplates(result), err
 }
 
 // CustomFields is the resolver for the customFields field.
 func (r *entityTemplateResolver) CustomFields(ctx context.Context, obj *model.EntityTemplate) ([]*model.CustomFieldTemplate, error) {
+	defer func(start time.Time) {
+		utils.LogMethodExecution(start, utils.GetFunctionName())
+	}(time.Now())
+
 	result, err := r.Services.CustomFieldTemplateService.FindAllForEntityTemplate(obj.ID)
 	return mapper.MapEntitiesToCustomFieldTemplates(result), err
 }
 
 // CustomFields is the resolver for the customFields field.
 func (r *fieldSetTemplateResolver) CustomFields(ctx context.Context, obj *model.FieldSetTemplate) ([]*model.CustomFieldTemplate, error) {
+	defer func(start time.Time) {
+		utils.LogMethodExecution(start, utils.GetFunctionName())
+	}(time.Now())
+
 	result, err := r.Services.CustomFieldTemplateService.FindAllForFieldSetTemplate(obj.ID)
 	return mapper.MapEntitiesToCustomFieldTemplates(result), err
 }
