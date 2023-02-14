@@ -295,7 +295,7 @@ MATCH (t:Tenant {name:"openline"})
     		c.firstName ="Echo",
             c.lastName="Test",
     		c.createdAt=datetime({timezone: 'UTC'}),
-    		u.updatedAt=datetime({timezone: 'UTC'}),
+    		c.updatedAt=datetime({timezone: 'UTC'}),
     		c.source="openline",
             c.sourceOfTruth="openline",
             c.appSource="manual";
