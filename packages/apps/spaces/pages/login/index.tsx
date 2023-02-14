@@ -1,29 +1,27 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import Image from 'next/image';
 import { LoginPanel } from '../../src/components/ui-kit/organisms';
 
-const Login: () => string | JSX.Element = () => {
-  const [backgroundImageUrl, setBackgroundImageUrl] = useState('');
+export async function getServerSideProps() {
+  const backgroundImageUrlNumber = `${
+    Math.floor(Math.random() * 3) + 1
+  }`.padStart(2, '0');
 
-  function getRandom(min: number, max: number) {
-    return min + Math.floor(Math.random() * (max - min + 1));
-  }
-
-  useEffect(() => {
-    const backgroundImageUrlNumber = String(getRandom(1, 3)).padStart(2, '0');
-    const backgroundImageUrl = `/backgrounds/background-000${backgroundImageUrlNumber}.avif`;
-    setBackgroundImageUrl(backgroundImageUrl);
-  }, []);
-
+  return {
+    props: {
+      image: `/backgrounds/blueprint/background-000${backgroundImageUrlNumber}.webp`,
+    },
+  };
+}
+const Login = ({ image }: { image: string }) => {
   return (
     <>
       <Image
         alt=''
-        src={backgroundImageUrl}
+        src={image}
         fill
         priority={true}
         sizes='100vw'
-        unoptimized={true}
         style={{
           objectFit: 'cover',
         }}
