@@ -2,20 +2,21 @@ package repository
 
 import (
 	"fmt"
-	"github.com/neo4j/neo4j-go-driver/v4/neo4j"
-	"github.com/neo4j/neo4j-go-driver/v4/neo4j/dbtype"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils"
+	"golang.org/x/net/context"
 )
 
 type QueryRepository interface {
-	GetOrganizationsAndContacts(session neo4j.Session, tenant string, skip int, limit int, searchTerm *string) (*utils.PairDbNodesWithTotalCount, error)
+	GetOrganizationsAndContacts(ctx context.Context, session neo4j.SessionWithContext, tenant string, skip int, limit int, searchTerm *string) (*utils.PairDbNodesWithTotalCount, error)
 }
 
 type queryRepository struct {
-	driver *neo4j.Driver
+	driver *neo4j.DriverWithContext
 }
 
-func NewQueryRepository(driver *neo4j.Driver) QueryRepository {
+func NewQueryRepository(driver *neo4j.DriverWithContext) QueryRepository {
 	return &queryRepository{
 		driver: driver,
 	}
@@ -31,7 +32,7 @@ func createCypherFilter(propertyName string, searchTerm string) *utils.CypherFil
 	return &filter
 }
 
-func (r *queryRepository) GetOrganizationsAndContacts(session neo4j.Session, tenant string, skip int, limit int, searchTerm *string) (*utils.PairDbNodesWithTotalCount, error) {
+func (r *queryRepository) GetOrganizationsAndContacts(ctx context.Context, session neo4j.SessionWithContext, tenant string, skip int, limit int, searchTerm *string) (*utils.PairDbNodesWithTotalCount, error) {
 	result := new(utils.PairDbNodesWithTotalCount)
 
 	contactFilterCypher, contactFilterParams := "1=1", make(map[string]interface{})
@@ -67,7 +68,7 @@ func (r *queryRepository) GetOrganizationsAndContacts(session neo4j.Session, ten
 
 	//endregion
 
-	dbRecords, err := session.ReadTransaction(func(tx neo4j.Transaction) (any, error) {
+	dbRecords, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		params := map[string]any{
 			"tenant": tenant,
 			"skip":   skip,
@@ -174,12 +175,12 @@ func (r *queryRepository) GetOrganizationsAndContacts(session neo4j.Session, ten
 
 		countQuery = countQuery + fmt.Sprintf(`} RETURN count(rel)`)
 
-		countQueryResult, err := tx.Run(countQuery, params)
+		countQueryResult, err := tx.Run(ctx, countQuery, params)
 		if err != nil {
 			return nil, err
 		}
 
-		countRecord, err := countQueryResult.Single()
+		countRecord, err := countQueryResult.Single(ctx)
 		if err != nil {
 			return nil, err
 		}
@@ -281,11 +282,11 @@ func (r *queryRepository) GetOrganizationsAndContacts(session neo4j.Session, ten
 
 		query = query + fmt.Sprintf(`} RETURN o, c SKIP $skip LIMIT $limit`)
 
-		queryResult, err := tx.Run(query, params)
+		queryResult, err := tx.Run(ctx, query, params)
 		if err != nil {
 			return nil, err
 		} else {
-			return queryResult.Collect()
+			return queryResult.Collect(ctx)
 		}
 	})
 	if err != nil {

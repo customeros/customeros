@@ -2,36 +2,37 @@ package repository
 
 import (
 	"fmt"
-	"github.com/neo4j/neo4j-go-driver/v4/neo4j"
-	"github.com/neo4j/neo4j-go-driver/v4/neo4j/db"
-	"github.com/neo4j/neo4j-go-driver/v4/neo4j/dbtype"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j/db"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils"
+	"golang.org/x/net/context"
 )
 
 type OrganizationRepository interface {
-	Create(tx neo4j.Transaction, tenant string, organization entity.OrganizationEntity) (*dbtype.Node, error)
-	Update(tx neo4j.Transaction, tenant string, organization entity.OrganizationEntity) (*dbtype.Node, error)
-	GetOrganizationForJobRole(session neo4j.Session, tenant, roleId string) (*dbtype.Node, error)
-	GetOrganizationById(session neo4j.Session, tenant, organizationId string) (*dbtype.Node, error)
-	GetPaginatedOrganizations(session neo4j.Session, tenant string, skip, limit int, filter *utils.CypherFilter, sorting *utils.CypherSort) (*utils.DbNodesWithTotalCount, error)
-	GetPaginatedOrganizationsForContact(session neo4j.Session, tenant, contactId string, skip, limit int, filter *utils.CypherFilter, sorting *utils.CypherSort) (*utils.DbNodesWithTotalCount, error)
-	Delete(session neo4j.Session, tenant, organizationId string) error
-	LinkWithOrganizationTypeInTx(tx neo4j.Transaction, tenant, organizationId, organizationTypeId string) error
-	UnlinkFromOrganizationTypesInTx(tx neo4j.Transaction, tenant, organizationId string) error
+	Create(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, organization entity.OrganizationEntity) (*dbtype.Node, error)
+	Update(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, organization entity.OrganizationEntity) (*dbtype.Node, error)
+	GetOrganizationForJobRole(ctx context.Context, session neo4j.SessionWithContext, tenant, roleId string) (*dbtype.Node, error)
+	GetOrganizationById(ctx context.Context, session neo4j.SessionWithContext, tenant, organizationId string) (*dbtype.Node, error)
+	GetPaginatedOrganizations(ctx context.Context, session neo4j.SessionWithContext, tenant string, skip, limit int, filter *utils.CypherFilter, sorting *utils.CypherSort) (*utils.DbNodesWithTotalCount, error)
+	GetPaginatedOrganizationsForContact(ctx context.Context, session neo4j.SessionWithContext, tenant, contactId string, skip, limit int, filter *utils.CypherFilter, sorting *utils.CypherSort) (*utils.DbNodesWithTotalCount, error)
+	Delete(ctx context.Context, session neo4j.SessionWithContext, tenant, organizationId string) error
+	LinkWithOrganizationTypeInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant, organizationId, organizationTypeId string) error
+	UnlinkFromOrganizationTypesInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant, organizationId string) error
 }
 
 type organizationRepository struct {
-	driver *neo4j.Driver
+	driver *neo4j.DriverWithContext
 }
 
-func NewOrganizationRepository(driver *neo4j.Driver) OrganizationRepository {
+func NewOrganizationRepository(driver *neo4j.DriverWithContext) OrganizationRepository {
 	return &organizationRepository{
 		driver: driver,
 	}
 }
 
-func (r *organizationRepository) Create(tx neo4j.Transaction, tenant string, organization entity.OrganizationEntity) (*dbtype.Node, error) {
+func (r *organizationRepository) Create(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, organization entity.OrganizationEntity) (*dbtype.Node, error) {
 	query := "MATCH (t:Tenant {name:$tenant})" +
 		" MERGE (t)<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {id:randomUUID()})" +
 		" ON CREATE SET org.name=$name, " +
@@ -49,7 +50,7 @@ func (r *organizationRepository) Create(tx neo4j.Transaction, tenant string, org
 		" 				org:%s" +
 		" RETURN org"
 
-	queryResult, err := tx.Run(fmt.Sprintf(query, "Organization_"+tenant),
+	queryResult, err := tx.Run(ctx, fmt.Sprintf(query, "Organization_"+tenant),
 		map[string]any{
 			"tenant":        tenant,
 			"name":          organization.Name,
@@ -64,10 +65,10 @@ func (r *organizationRepository) Create(tx neo4j.Transaction, tenant string, org
 			"appSource":     organization.AppSource,
 			"now":           utils.Now(),
 		})
-	return utils.ExtractSingleRecordFirstValueAsNode(queryResult, err)
+	return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
 }
 
-func (r *organizationRepository) Update(tx neo4j.Transaction, tenant string, organization entity.OrganizationEntity) (*dbtype.Node, error) {
+func (r *organizationRepository) Update(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, organization entity.OrganizationEntity) (*dbtype.Node, error) {
 	query :=
 		" MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {id:$organizationId})" +
 			" SET 	org.name=$name, " +
@@ -80,7 +81,7 @@ func (r *organizationRepository) Update(tx neo4j.Transaction, tenant string, org
 			"		org.updatedAt=datetime({timezone: 'UTC'}) " +
 			" RETURN org"
 
-	queryResult, err := tx.Run(query,
+	queryResult, err := tx.Run(ctx, query,
 		map[string]any{
 			"tenant":         tenant,
 			"organizationId": organization.ID,
@@ -92,12 +93,12 @@ func (r *organizationRepository) Update(tx neo4j.Transaction, tenant string, org
 			"isPublic":       organization.IsPublic,
 			"sourceOfTruth":  organization.SourceOfTruth,
 		})
-	return utils.ExtractSingleRecordFirstValueAsNode(queryResult, err)
+	return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
 }
 
-func (r *organizationRepository) Delete(session neo4j.Session, tenant, organizationId string) error {
-	_, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
-		_, err := tx.Run(`
+func (r *organizationRepository) Delete(ctx context.Context, session neo4j.SessionWithContext, tenant, organizationId string) error {
+	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		_, err := tx.Run(ctx, `
 			MATCH (org:Organization {id:$organizationId})-[:ORGANIZATION_BELONGS_TO_TENANT]->(:Tenant {name:$tenant})
 			OPTIONAL MATCH (org)-[:ASSOCIATED_WITH]->(l:Location)
 			OPTIONAL MATCH (l)-[:LOCATED_AT]->(p:Place)	
@@ -111,9 +112,9 @@ func (r *organizationRepository) Delete(session neo4j.Session, tenant, organizat
 	return err
 }
 
-func (r *organizationRepository) GetOrganizationForJobRole(session neo4j.Session, tenant, roleId string) (*dbtype.Node, error) {
-	dbRecords, err := session.ReadTransaction(func(tx neo4j.Transaction) (any, error) {
-		if queryResult, err := tx.Run(`
+func (r *organizationRepository) GetOrganizationForJobRole(ctx context.Context, session neo4j.SessionWithContext, tenant, roleId string) (*dbtype.Node, error) {
+	dbRecords, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		if queryResult, err := tx.Run(ctx, `
 			MATCH (:JobRole {id:$roleId})-[:ROLE_IN]->(org:Organization)-[:ORGANIZATION_BELONGS_TO_TENANT]->(:Tenant {name:$tenant})
 			RETURN org`,
 			map[string]any{
@@ -122,7 +123,7 @@ func (r *organizationRepository) GetOrganizationForJobRole(session neo4j.Session
 			}); err != nil {
 			return nil, err
 		} else {
-			return queryResult.Collect()
+			return queryResult.Collect(ctx)
 		}
 	})
 	if err != nil {
@@ -134,9 +135,9 @@ func (r *organizationRepository) GetOrganizationForJobRole(session neo4j.Session
 	return utils.NodePtr(dbRecords.([]*neo4j.Record)[0].Values[0].(dbtype.Node)), nil
 }
 
-func (r *organizationRepository) GetOrganizationById(session neo4j.Session, tenant, organizationId string) (*dbtype.Node, error) {
-	dbRecord, err := session.ReadTransaction(func(tx neo4j.Transaction) (any, error) {
-		if queryResult, err := tx.Run(`
+func (r *organizationRepository) GetOrganizationById(ctx context.Context, session neo4j.SessionWithContext, tenant, organizationId string) (*dbtype.Node, error) {
+	dbRecord, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		if queryResult, err := tx.Run(ctx, `
 			MATCH (org:Organization {id:$organizationId})-[:ORGANIZATION_BELONGS_TO_TENANT]->(:Tenant {name:$tenant})
 			RETURN org`,
 			map[string]any{
@@ -145,7 +146,7 @@ func (r *organizationRepository) GetOrganizationById(session neo4j.Session, tena
 			}); err != nil {
 			return nil, err
 		} else {
-			return queryResult.Single()
+			return queryResult.Single(ctx)
 		}
 	})
 	if err != nil {
@@ -154,17 +155,17 @@ func (r *organizationRepository) GetOrganizationById(session neo4j.Session, tena
 	return utils.NodePtr(dbRecord.(*db.Record).Values[0].(dbtype.Node)), nil
 }
 
-func (r *organizationRepository) GetPaginatedOrganizations(session neo4j.Session, tenant string, skip, limit int, filter *utils.CypherFilter, sorting *utils.CypherSort) (*utils.DbNodesWithTotalCount, error) {
+func (r *organizationRepository) GetPaginatedOrganizations(ctx context.Context, session neo4j.SessionWithContext, tenant string, skip, limit int, filter *utils.CypherFilter, sorting *utils.CypherSort) (*utils.DbNodesWithTotalCount, error) {
 	dbNodesWithTotalCount := new(utils.DbNodesWithTotalCount)
 
-	dbRecords, err := session.ReadTransaction(func(tx neo4j.Transaction) (any, error) {
+	dbRecords, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		filterCypherStr, filterParams := filter.CypherFilterFragment("org")
 		countParams := map[string]any{
 			"tenant": tenant,
 		}
 		utils.MergeMapToMap(filterParams, countParams)
 
-		queryResult, err := tx.Run(fmt.Sprintf(
+		queryResult, err := tx.Run(ctx, fmt.Sprintf(
 			" MATCH (:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization) "+
 				" %s "+
 				" RETURN count(org) as count", filterCypherStr),
@@ -172,7 +173,7 @@ func (r *organizationRepository) GetPaginatedOrganizations(session neo4j.Session
 		if err != nil {
 			return nil, err
 		}
-		count, _ := queryResult.Single()
+		count, _ := queryResult.Single(ctx)
 		dbNodesWithTotalCount.Count = count.Values[0].(int64)
 
 		params := map[string]any{
@@ -182,14 +183,14 @@ func (r *organizationRepository) GetPaginatedOrganizations(session neo4j.Session
 		}
 		utils.MergeMapToMap(filterParams, params)
 
-		queryResult, err = tx.Run(fmt.Sprintf(
+		queryResult, err = tx.Run(ctx, fmt.Sprintf(
 			" MATCH (:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization) "+
 				" %s "+
 				" RETURN org "+
 				" %s "+
 				" SKIP $skip LIMIT $limit", filterCypherStr, sorting.SortingCypherFragment("org")),
 			params)
-		return queryResult.Collect()
+		return queryResult.Collect(ctx)
 	})
 	if err != nil {
 		return nil, err
@@ -200,10 +201,10 @@ func (r *organizationRepository) GetPaginatedOrganizations(session neo4j.Session
 	return dbNodesWithTotalCount, nil
 }
 
-func (r *organizationRepository) GetPaginatedOrganizationsForContact(session neo4j.Session, tenant, contactId string, skip, limit int, filter *utils.CypherFilter, sorting *utils.CypherSort) (*utils.DbNodesWithTotalCount, error) {
+func (r *organizationRepository) GetPaginatedOrganizationsForContact(ctx context.Context, session neo4j.SessionWithContext, tenant, contactId string, skip, limit int, filter *utils.CypherFilter, sorting *utils.CypherSort) (*utils.DbNodesWithTotalCount, error) {
 	dbNodesWithTotalCount := new(utils.DbNodesWithTotalCount)
 
-	dbRecords, err := session.ReadTransaction(func(tx neo4j.Transaction) (any, error) {
+	dbRecords, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		filterCypherStr, filterParams := filter.CypherFilterFragment("org")
 		countParams := map[string]any{
 			"tenant":    tenant,
@@ -211,7 +212,7 @@ func (r *organizationRepository) GetPaginatedOrganizationsForContact(session neo
 		}
 		utils.MergeMapToMap(filterParams, countParams)
 
-		queryResult, err := tx.Run(fmt.Sprintf(
+		queryResult, err := tx.Run(ctx, fmt.Sprintf(
 			" MATCH (:Tenant {name:$tenant})<-[:CONTACT_BELONGS_TO_TENANT]-(c:Contact {id:$contactId})--(org:Organization) "+
 				" %s "+
 				" RETURN count(org) as count", filterCypherStr),
@@ -219,7 +220,7 @@ func (r *organizationRepository) GetPaginatedOrganizationsForContact(session neo
 		if err != nil {
 			return nil, err
 		}
-		count, _ := queryResult.Single()
+		count, _ := queryResult.Single(ctx)
 		dbNodesWithTotalCount.Count = count.Values[0].(int64)
 
 		params := map[string]any{
@@ -230,14 +231,14 @@ func (r *organizationRepository) GetPaginatedOrganizationsForContact(session neo
 		}
 		utils.MergeMapToMap(filterParams, params)
 
-		queryResult, err = tx.Run(fmt.Sprintf(
+		queryResult, err = tx.Run(ctx, fmt.Sprintf(
 			" MATCH (:Tenant {name:$tenant})<-[:CONTACT_BELONGS_TO_TENANT]-(c:Contact {id:$contactId})--(org:Organization) "+
 				" %s "+
 				" RETURN org "+
 				" %s "+
 				" SKIP $skip LIMIT $limit", filterCypherStr, sorting.SortingCypherFragment("org")),
 			params)
-		return queryResult.Collect()
+		return queryResult.Collect(ctx)
 	})
 	if err != nil {
 		return nil, err
@@ -248,8 +249,8 @@ func (r *organizationRepository) GetPaginatedOrganizationsForContact(session neo
 	return dbNodesWithTotalCount, nil
 }
 
-func (r *organizationRepository) LinkWithOrganizationTypeInTx(tx neo4j.Transaction, tenant, organizationId, organizationTypeId string) error {
-	queryResult, err := tx.Run(`
+func (r *organizationRepository) LinkWithOrganizationTypeInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant, organizationId, organizationTypeId string) error {
+	queryResult, err := tx.Run(ctx, `
 			MATCH (org:Organization {id:$organizationId})-[:ORGANIZATION_BELONGS_TO_TENANT]->(:Tenant {name:$tenant})<-[:ORGANIZATION_TYPE_BELONGS_TO_TENANT]-(ot:OrganizationType {id:$organizationTypeId})
 			MERGE (org)-[r:IS_OF_TYPE]->(ot)
 			RETURN r`,
@@ -261,12 +262,12 @@ func (r *organizationRepository) LinkWithOrganizationTypeInTx(tx neo4j.Transacti
 	if err != nil {
 		return err
 	}
-	_, err = queryResult.Single()
+	_, err = queryResult.Single(ctx)
 	return err
 }
 
-func (r *organizationRepository) UnlinkFromOrganizationTypesInTx(tx neo4j.Transaction, tenant, organizationId string) error {
-	if _, err := tx.Run(`
+func (r *organizationRepository) UnlinkFromOrganizationTypesInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant, organizationId string) error {
+	if _, err := tx.Run(ctx, `
 			MATCH (org:Organization {id:$organizationId})-[:ORGANIZATION_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}),
 				(org)-[r:IS_OF_TYPE]->(:OrganizationType)
 			DELETE r`,

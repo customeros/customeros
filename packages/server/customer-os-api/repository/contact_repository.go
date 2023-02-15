@@ -2,42 +2,43 @@ package repository
 
 import (
 	"fmt"
-	"github.com/neo4j/neo4j-go-driver/v4/neo4j"
-	"github.com/neo4j/neo4j-go-driver/v4/neo4j/dbtype"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils"
+	"golang.org/x/net/context"
 	"time"
 )
 
-type JobRepository interface {
-	Create(tx neo4j.Transaction, tenant string, newContact entity.ContactEntity, source, sourceOfTruth entity.DataSource) (*dbtype.Node, error)
-	Update(tx neo4j.Transaction, tenant, contactId string, contactDtls *entity.ContactEntity) (*dbtype.Node, error)
-	Delete(session neo4j.Session, tenant, contactId string) error
-	SetOwner(tx neo4j.Transaction, tenant, contactId, userId string) error
-	RemoveOwner(tx neo4j.Transaction, tenant, contactId string) error
-	LinkWithEntityTemplateInTx(tx neo4j.Transaction, tenant, contactId, entityTemplateId string) error
-	GetPaginatedContacts(session neo4j.Session, tenant string, skip, limit int, filter *utils.CypherFilter, sort *utils.CypherSort) (*utils.DbNodesWithTotalCount, error)
-	GetPaginatedContactsForContactGroup(session neo4j.Session, tenant string, skip, limit int, filter *utils.CypherFilter, sort *utils.CypherSort, contactGroupId string) (*utils.DbNodesWithTotalCount, error)
-	GetPaginatedContactsForOrganization(session neo4j.Session, tenant, organizationId string, skip, limit int, filter *utils.CypherFilter, sort *utils.CypherSort) (*utils.DbNodesWithTotalCount, error)
-	GetAllForConversation(session neo4j.Session, tenant, conversationId string) ([]*dbtype.Node, error)
-	GetContactForRole(session neo4j.Session, tenant, roleId string) (*dbtype.Node, error)
-	AddTag(tenant, contactId, tagId string) (*dbtype.Node, error)
-	RemoveTag(tenant, contactId, tagId string) (*dbtype.Node, error)
+type ContactRepository interface {
+	Create(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, newContact entity.ContactEntity, source, sourceOfTruth entity.DataSource) (*dbtype.Node, error)
+	Update(ctx context.Context, tx neo4j.ManagedTransaction, tenant, contactId string, contactDtls *entity.ContactEntity) (*dbtype.Node, error)
+	Delete(ctx context.Context, session neo4j.SessionWithContext, tenant, contactId string) error
+	SetOwner(ctx context.Context, tx neo4j.ManagedTransaction, tenant, contactId, userId string) error
+	RemoveOwner(ctx context.Context, tx neo4j.ManagedTransaction, tenant, contactId string) error
+	LinkWithEntityTemplateInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant, contactId, entityTemplateId string) error
+	GetPaginatedContacts(ctx context.Context, session neo4j.SessionWithContext, tenant string, skip, limit int, filter *utils.CypherFilter, sort *utils.CypherSort) (*utils.DbNodesWithTotalCount, error)
+	GetPaginatedContactsForContactGroup(ctx context.Context, session neo4j.SessionWithContext, tenant string, skip, limit int, filter *utils.CypherFilter, sort *utils.CypherSort, contactGroupId string) (*utils.DbNodesWithTotalCount, error)
+	GetPaginatedContactsForOrganization(ctx context.Context, session neo4j.SessionWithContext, tenant, organizationId string, skip, limit int, filter *utils.CypherFilter, sort *utils.CypherSort) (*utils.DbNodesWithTotalCount, error)
+	GetAllForConversation(ctx context.Context, session neo4j.SessionWithContext, tenant, conversationId string) ([]*dbtype.Node, error)
+	GetContactForRole(ctx context.Context, session neo4j.SessionWithContext, tenant, roleId string) (*dbtype.Node, error)
+	AddTag(ctx context.Context, tenant, contactId, tagId string) (*dbtype.Node, error)
+	RemoveTag(ctx context.Context, tenant, contactId, tagId string) (*dbtype.Node, error)
 }
 
 type contactRepository struct {
-	driver *neo4j.Driver
+	driver *neo4j.DriverWithContext
 }
 
-func NewJobRepository(driver *neo4j.Driver) JobRepository {
+func NewContactRepository(driver *neo4j.DriverWithContext) ContactRepository {
 	return &contactRepository{
 		driver: driver,
 	}
 }
 
-func (r *contactRepository) SetOwner(tx neo4j.Transaction, tenant, contactId, userId string) error {
-	queryResult, err := tx.Run(`
+func (r *contactRepository) SetOwner(ctx context.Context, tx neo4j.ManagedTransaction, tenant, contactId, userId string) error {
+	queryResult, err := tx.Run(ctx, `
 			MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant}),
 					(u:User {id:$userId})-[:USER_BELONGS_TO_TENANT]->(t)
 			MERGE (u)-[r:OWNS]->(c)
@@ -50,12 +51,12 @@ func (r *contactRepository) SetOwner(tx neo4j.Transaction, tenant, contactId, us
 	if err != nil {
 		return err
 	}
-	_, err = queryResult.Single()
+	_, err = queryResult.Single(ctx)
 	return err
 }
 
-func (r *contactRepository) RemoveOwner(tx neo4j.Transaction, tenant, contactId string) error {
-	_, err := tx.Run(`
+func (r *contactRepository) RemoveOwner(ctx context.Context, tx neo4j.ManagedTransaction, tenant, contactId string) error {
+	_, err := tx.Run(ctx, `
 			MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant}),
 					(c)<-[r:OWNS]-()
 			DELETE r`,
@@ -66,7 +67,7 @@ func (r *contactRepository) RemoveOwner(tx neo4j.Transaction, tenant, contactId 
 	return err
 }
 
-func (r *contactRepository) Create(tx neo4j.Transaction, tenant string, newContact entity.ContactEntity, source, sourceOfTruth entity.DataSource) (*dbtype.Node, error) {
+func (r *contactRepository) Create(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, newContact entity.ContactEntity, source, sourceOfTruth entity.DataSource) (*dbtype.Node, error) {
 	var createdAt time.Time
 	createdAt = utils.Now()
 	if newContact.CreatedAt != nil {
@@ -86,7 +87,7 @@ func (r *contactRepository) Create(tx neo4j.Transaction, tenant string, newConta
 		" c:Contact_%s " +
 		" RETURN c"
 
-	if queryResult, err := tx.Run(fmt.Sprintf(query, tenant),
+	if queryResult, err := tx.Run(ctx, fmt.Sprintf(query, tenant),
 		map[string]interface{}{
 			"tenant":        tenant,
 			"title":         newContact.Title,
@@ -99,12 +100,12 @@ func (r *contactRepository) Create(tx neo4j.Transaction, tenant string, newConta
 		}); err != nil {
 		return nil, err
 	} else {
-		return utils.ExtractSingleRecordFirstValueAsNode(queryResult, err)
+		return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
 	}
 }
 
-func (r *contactRepository) Update(tx neo4j.Transaction, tenant, contactId string, contactDtls *entity.ContactEntity) (*dbtype.Node, error) {
-	if queryResult, err := tx.Run(`
+func (r *contactRepository) Update(ctx context.Context, tx neo4j.ManagedTransaction, tenant, contactId string, contactDtls *entity.ContactEntity) (*dbtype.Node, error) {
+	if queryResult, err := tx.Run(ctx, `
 			MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant})
 			SET c.firstName=$firstName,
 				c.lastName=$lastName,
@@ -122,12 +123,12 @@ func (r *contactRepository) Update(tx neo4j.Transaction, tenant, contactId strin
 		}); err != nil {
 		return nil, err
 	} else {
-		return utils.ExtractSingleRecordFirstValueAsNode(queryResult, err)
+		return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
 	}
 }
 
-func (r *contactRepository) LinkWithEntityTemplateInTx(tx neo4j.Transaction, tenant, contactId, entityTemplateId string) error {
-	queryResult, err := tx.Run(`
+func (r *contactRepository) LinkWithEntityTemplateInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant, contactId, entityTemplateId string) error {
+	queryResult, err := tx.Run(ctx, `
 			MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant})<-[:ENTITY_TEMPLATE_BELONGS_TO_TENANT]-(e:EntityTemplate {id:$entityTemplateId})
 			WHERE e.extends=$extends
 			MERGE (c)-[r:IS_DEFINED_BY]->(e)
@@ -141,25 +142,25 @@ func (r *contactRepository) LinkWithEntityTemplateInTx(tx neo4j.Transaction, ten
 	if err != nil {
 		return err
 	}
-	_, err = queryResult.Single()
+	_, err = queryResult.Single(ctx)
 	return err
 }
 
-func (r *contactRepository) GetPaginatedContacts(session neo4j.Session, tenant string, skip, limit int, filter *utils.CypherFilter, sort *utils.CypherSort) (*utils.DbNodesWithTotalCount, error) {
+func (r *contactRepository) GetPaginatedContacts(ctx context.Context, session neo4j.SessionWithContext, tenant string, skip, limit int, filter *utils.CypherFilter, sort *utils.CypherSort) (*utils.DbNodesWithTotalCount, error) {
 	dbNodesWithTotalCount := new(utils.DbNodesWithTotalCount)
 
-	dbRecords, err := session.ReadTransaction(func(tx neo4j.Transaction) (any, error) {
+	dbRecords, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		filterCypherStr, filterParams := filter.CypherFilterFragment("c")
 		countParams := map[string]any{
 			"tenant": tenant,
 		}
 		utils.MergeMapToMap(filterParams, countParams)
-		queryResult, err := tx.Run(fmt.Sprintf("MATCH (:Tenant {name:$tenant})<-[:CONTACT_BELONGS_TO_TENANT]-(c:Contact) %s RETURN count(c) as count", filterCypherStr),
+		queryResult, err := tx.Run(ctx, fmt.Sprintf("MATCH (:Tenant {name:$tenant})<-[:CONTACT_BELONGS_TO_TENANT]-(c:Contact) %s RETURN count(c) as count", filterCypherStr),
 			countParams)
 		if err != nil {
 			return nil, err
 		}
-		count, _ := queryResult.Single()
+		count, _ := queryResult.Single(ctx)
 		dbNodesWithTotalCount.Count = count.Values[0].(int64)
 
 		params := map[string]any{
@@ -169,14 +170,14 @@ func (r *contactRepository) GetPaginatedContacts(session neo4j.Session, tenant s
 		}
 		utils.MergeMapToMap(filterParams, params)
 
-		queryResult, err = tx.Run(fmt.Sprintf(
+		queryResult, err = tx.Run(ctx, fmt.Sprintf(
 			"MATCH (:Tenant {name:$tenant})<-[:CONTACT_BELONGS_TO_TENANT]-(c:Contact) "+
 				" %s "+
 				" RETURN c "+
 				" %s "+
 				" SKIP $skip LIMIT $limit", filterCypherStr, sort.SortingCypherFragment("c")),
 			params)
-		return queryResult.Collect()
+		return queryResult.Collect(ctx)
 	})
 	if err != nil {
 		return nil, err
@@ -187,24 +188,24 @@ func (r *contactRepository) GetPaginatedContacts(session neo4j.Session, tenant s
 	return dbNodesWithTotalCount, nil
 }
 
-func (r *contactRepository) GetPaginatedContactsForContactGroup(session neo4j.Session, tenant string, skip, limit int, filter *utils.CypherFilter, sort *utils.CypherSort, contactGroupId string) (*utils.DbNodesWithTotalCount, error) {
+func (r *contactRepository) GetPaginatedContactsForContactGroup(ctx context.Context, session neo4j.SessionWithContext, tenant string, skip, limit int, filter *utils.CypherFilter, sort *utils.CypherSort, contactGroupId string) (*utils.DbNodesWithTotalCount, error) {
 	dbNodesWithTotalCount := new(utils.DbNodesWithTotalCount)
 
-	dbRecords, err := session.ReadTransaction(func(tx neo4j.Transaction) (any, error) {
+	dbRecords, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		filterCypherStr, filterParams := filter.CypherFilterFragment("c")
 		countParams := map[string]any{
 			"tenant":         tenant,
 			"contactGroupId": contactGroupId,
 		}
 		utils.MergeMapToMap(filterParams, countParams)
-		queryResult, err := tx.Run(fmt.Sprintf("MATCH (t:Tenant {name:$tenant})<-[:GROUP_BELONGS_TO_TENANT]-(g:ContactGroup {id:$contactGroupId}), "+
+		queryResult, err := tx.Run(ctx, fmt.Sprintf("MATCH (t:Tenant {name:$tenant})<-[:GROUP_BELONGS_TO_TENANT]-(g:ContactGroup {id:$contactGroupId}), "+
 			" (g)<-[:BELONGS_TO_GROUP]-(c:Contact) %s "+
 			" RETURN count(c) as count", filterCypherStr),
 			countParams)
 		if err != nil {
 			return nil, err
 		}
-		count, _ := queryResult.Single()
+		count, _ := queryResult.Single(ctx)
 		dbNodesWithTotalCount.Count = count.Values[0].(int64)
 
 		params := map[string]any{
@@ -215,7 +216,7 @@ func (r *contactRepository) GetPaginatedContactsForContactGroup(session neo4j.Se
 		}
 		utils.MergeMapToMap(filterParams, params)
 
-		queryResult, err = tx.Run(fmt.Sprintf(
+		queryResult, err = tx.Run(ctx, fmt.Sprintf(
 			"MATCH (t:Tenant {name:$tenant})<-[:GROUP_BELONGS_TO_TENANT]-(g:ContactGroup {id:$contactGroupId}), "+
 				" (g)<-[:BELONGS_TO_GROUP]-(c:Contact) "+
 				" %s "+
@@ -223,7 +224,7 @@ func (r *contactRepository) GetPaginatedContactsForContactGroup(session neo4j.Se
 				" %s "+
 				" SKIP $skip LIMIT $limit", filterCypherStr, sort.SortingCypherFragment("c")),
 			params)
-		return queryResult.Collect()
+		return queryResult.Collect(ctx)
 	})
 	if err != nil {
 		return nil, err
@@ -234,24 +235,24 @@ func (r *contactRepository) GetPaginatedContactsForContactGroup(session neo4j.Se
 	return dbNodesWithTotalCount, nil
 }
 
-func (r *contactRepository) GetPaginatedContactsForOrganization(session neo4j.Session, tenant, organizationId string, skip, limit int, filter *utils.CypherFilter, sort *utils.CypherSort) (*utils.DbNodesWithTotalCount, error) {
+func (r *contactRepository) GetPaginatedContactsForOrganization(ctx context.Context, session neo4j.SessionWithContext, tenant, organizationId string, skip, limit int, filter *utils.CypherFilter, sort *utils.CypherSort) (*utils.DbNodesWithTotalCount, error) {
 	dbNodesWithTotalCount := new(utils.DbNodesWithTotalCount)
 
-	dbRecords, err := session.ReadTransaction(func(tx neo4j.Transaction) (any, error) {
+	dbRecords, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		filterCypherStr, filterParams := filter.CypherFilterFragment("c")
 		countParams := map[string]any{
 			"tenant":         tenant,
 			"organizationId": organizationId,
 		}
 		utils.MergeMapToMap(filterParams, countParams)
-		queryResult, err := tx.Run(fmt.Sprintf("MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {id:$organizationId})--(c:Contact) "+
+		queryResult, err := tx.Run(ctx, fmt.Sprintf("MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {id:$organizationId})--(c:Contact) "+
 			" %s "+
 			" RETURN count(c) as count", filterCypherStr),
 			countParams)
 		if err != nil {
 			return nil, err
 		}
-		count, _ := queryResult.Single()
+		count, _ := queryResult.Single(ctx)
 		dbNodesWithTotalCount.Count = count.Values[0].(int64)
 
 		params := map[string]any{
@@ -262,14 +263,14 @@ func (r *contactRepository) GetPaginatedContactsForOrganization(session neo4j.Se
 		}
 		utils.MergeMapToMap(filterParams, params)
 
-		queryResult, err = tx.Run(fmt.Sprintf(
+		queryResult, err = tx.Run(ctx, fmt.Sprintf(
 			"MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {id:$organizationId})--(c:Contact) "+
 				" %s "+
 				" RETURN c "+
 				" %s "+
 				" SKIP $skip LIMIT $limit", filterCypherStr, sort.SortingCypherFragment("c")),
 			params)
-		return queryResult.Collect()
+		return queryResult.Collect(ctx)
 	})
 	if err != nil {
 		return nil, err
@@ -280,9 +281,9 @@ func (r *contactRepository) GetPaginatedContactsForOrganization(session neo4j.Se
 	return dbNodesWithTotalCount, nil
 }
 
-func (r *contactRepository) Delete(session neo4j.Session, tenant, contactId string) error {
-	_, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
-		_, err := tx.Run(`
+func (r *contactRepository) Delete(ctx context.Context, session neo4j.SessionWithContext, tenant, contactId string) error {
+	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		_, err := tx.Run(ctx, `
 			MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant})
 			OPTIONAL MATCH (c)-[:HAS_PROPERTY]->(f:CustomField)
 			OPTIONAL MATCH (c)-[:PHONE_ASSOCIATED_WITH]->(p:PhoneNumber)
@@ -300,9 +301,9 @@ func (r *contactRepository) Delete(session neo4j.Session, tenant, contactId stri
 	return err
 }
 
-func (r *contactRepository) GetAllForConversation(session neo4j.Session, tenant, conversationId string) ([]*dbtype.Node, error) {
-	dbRecords, err := session.ReadTransaction(func(tx neo4j.Transaction) (any, error) {
-		if queryResult, err := tx.Run(`
+func (r *contactRepository) GetAllForConversation(ctx context.Context, session neo4j.SessionWithContext, tenant, conversationId string) ([]*dbtype.Node, error) {
+	dbRecords, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		if queryResult, err := tx.Run(ctx, `
 			MATCH (t:Tenant {name:$tenant})<-[:CONTACT_BELONGS_TO_TENANT]-(c:Contact)-[:PARTICIPATES]->(o:Conversation {id:$conversationId})
 			RETURN c`,
 			map[string]any{
@@ -311,7 +312,7 @@ func (r *contactRepository) GetAllForConversation(session neo4j.Session, tenant,
 			}); err != nil {
 			return nil, err
 		} else {
-			return queryResult.Collect()
+			return queryResult.Collect(ctx)
 		}
 	})
 	if err != nil {
@@ -326,9 +327,9 @@ func (r *contactRepository) GetAllForConversation(session neo4j.Session, tenant,
 	return dbNodes, err
 }
 
-func (r *contactRepository) GetContactForRole(session neo4j.Session, tenant, roleId string) (*dbtype.Node, error) {
-	result, err := session.ReadTransaction(func(tx neo4j.Transaction) (any, error) {
-		if queryResult, err := tx.Run(`
+func (r *contactRepository) GetContactForRole(ctx context.Context, session neo4j.SessionWithContext, tenant, roleId string) (*dbtype.Node, error) {
+	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		if queryResult, err := tx.Run(ctx, `
 			MATCH (:JobRole {id:$roleId})<-[:WORKS_AS]-(c:Contact)-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant})
 			RETURN c`,
 			map[string]any{
@@ -337,7 +338,7 @@ func (r *contactRepository) GetContactForRole(session neo4j.Session, tenant, rol
 			}); err != nil {
 			return nil, err
 		} else {
-			return utils.ExtractSingleRecordFirstValueAsNode(queryResult, err)
+			return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
 		}
 	})
 	if err != nil {
@@ -346,9 +347,9 @@ func (r *contactRepository) GetContactForRole(session neo4j.Session, tenant, rol
 	return result.(*dbtype.Node), nil
 }
 
-func (r *contactRepository) AddTag(tenant, contactId, tagId string) (*dbtype.Node, error) {
-	session := utils.NewNeo4jWriteSession(*r.driver)
-	defer session.Close()
+func (r *contactRepository) AddTag(ctx context.Context, tenant, contactId, tagId string) (*dbtype.Node, error) {
+	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
+	defer session.Close(ctx)
 
 	query := "MATCH (t:Tenant {name:$tenant}), " +
 		" (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(t), " +
@@ -357,15 +358,15 @@ func (r *contactRepository) AddTag(tenant, contactId, tagId string) (*dbtype.Nod
 		" ON CREATE SET rel.taggedAt=$now " +
 		" RETURN c"
 
-	if result, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
-		queryResult, err := tx.Run(query,
+	if result, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		queryResult, err := tx.Run(ctx, query,
 			map[string]any{
 				"tenant":    tenant,
 				"contactId": contactId,
 				"tagId":     tagId,
 				"now":       utils.Now(),
 			})
-		return utils.ExtractSingleRecordFirstValueAsNode(queryResult, err)
+		return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
 	}); err != nil {
 		return nil, err
 	} else {
@@ -373,9 +374,9 @@ func (r *contactRepository) AddTag(tenant, contactId, tagId string) (*dbtype.Nod
 	}
 }
 
-func (r *contactRepository) RemoveTag(tenant, contactId, tagId string) (*dbtype.Node, error) {
-	session := utils.NewNeo4jWriteSession(*r.driver)
-	defer session.Close()
+func (r *contactRepository) RemoveTag(ctx context.Context, tenant, contactId, tagId string) (*dbtype.Node, error) {
+	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
+	defer session.Close(ctx)
 
 	query := "MATCH (t:Tenant {name:$tenant}), " +
 		" (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(t), " +
@@ -384,14 +385,14 @@ func (r *contactRepository) RemoveTag(tenant, contactId, tagId string) (*dbtype.
 		" DELETE rel " +
 		" RETURN c"
 
-	if result, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
-		queryResult, err := tx.Run(query,
+	if result, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		queryResult, err := tx.Run(ctx, query,
 			map[string]any{
 				"tenant":    tenant,
 				"contactId": contactId,
 				"tagId":     tagId,
 			})
-		return utils.ExtractSingleRecordFirstValueAsNode(queryResult, err)
+		return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
 	}); err != nil {
 		return nil, err
 	} else {

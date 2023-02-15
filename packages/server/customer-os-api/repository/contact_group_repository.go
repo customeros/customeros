@@ -2,29 +2,33 @@ package repository
 
 import (
 	"fmt"
-	"github.com/neo4j/neo4j-go-driver/v4/neo4j"
-	"github.com/neo4j/neo4j-go-driver/v4/neo4j/dbtype"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils"
+	"golang.org/x/net/context"
 )
 
 type ContactGroupRepository interface {
-	Create(session neo4j.Session, tenant string, entity entity.ContactGroupEntity) (*dbtype.Node, error)
-	Update(session neo4j.Session, tenant string, entity entity.ContactGroupEntity) (*dbtype.Node, error)
-	GetPaginatedContactGroups(session neo4j.Session, tenant string, skip, limit int, filter *utils.CypherFilter, sorting *utils.CypherSort) (*utils.DbNodesWithTotalCount, error)
+	Create(ctx context.Context, tenant string, entity entity.ContactGroupEntity) (*dbtype.Node, error)
+	Update(ctx context.Context, tenant string, entity entity.ContactGroupEntity) (*dbtype.Node, error)
+	GetPaginatedContactGroups(ctx context.Context, tenant string, skip, limit int, filter *utils.CypherFilter, sorting *utils.CypherSort) (*utils.DbNodesWithTotalCount, error)
 }
 
 type contactGroupRepository struct {
-	driver *neo4j.Driver
+	driver *neo4j.DriverWithContext
 }
 
-func NewContactGroupRepository(driver *neo4j.Driver) ContactGroupRepository {
+func NewContactGroupRepository(driver *neo4j.DriverWithContext) ContactGroupRepository {
 	return &contactGroupRepository{
 		driver: driver,
 	}
 }
 
-func (r *contactGroupRepository) Create(session neo4j.Session, tenant string, entity entity.ContactGroupEntity) (*dbtype.Node, error) {
+func (r *contactGroupRepository) Create(ctx context.Context, tenant string, entity entity.ContactGroupEntity) (*dbtype.Node, error) {
+	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
+	defer session.Close(ctx)
+
 	query := "MATCH (t:Tenant {name:$tenant}) " +
 		" MERGE (g:ContactGroup {id: randomUUID()})-[:GROUP_BELONGS_TO_TENANT]->(t)" +
 		" ON CREATE SET g.name=$name, " +
@@ -34,15 +38,15 @@ func (r *contactGroupRepository) Create(session neo4j.Session, tenant string, en
 		"				g:%s " +
 		" RETURN g"
 
-	result, err := session.WriteTransaction(func(tx neo4j.Transaction) (interface{}, error) {
-		queryResult, err := tx.Run(fmt.Sprintf(query, "ContactGroup_"+tenant),
+	result, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (interface{}, error) {
+		queryResult, err := tx.Run(ctx, fmt.Sprintf(query, "ContactGroup_"+tenant),
 			map[string]any{
 				"tenant":        tenant,
 				"name":          entity.Name,
 				"source":        entity.Source,
 				"sourceOfTruth": entity.SourceOfTruth,
 			})
-		return utils.ExtractSingleRecordFirstValueAsNode(queryResult, err)
+		return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
 	})
 	if err != nil {
 		return nil, err
@@ -50,9 +54,12 @@ func (r *contactGroupRepository) Create(session neo4j.Session, tenant string, en
 	return result.(*dbtype.Node), nil
 }
 
-func (r *contactGroupRepository) Update(session neo4j.Session, tenant string, entity entity.ContactGroupEntity) (*dbtype.Node, error) {
-	dbNode, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
-		queryResult, err := tx.Run(`
+func (r *contactGroupRepository) Update(ctx context.Context, tenant string, entity entity.ContactGroupEntity) (*dbtype.Node, error) {
+	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
+	defer session.Close(ctx)
+
+	dbNode, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		queryResult, err := tx.Run(ctx, `
 			MATCH (g:ContactGroup {id:$groupId})-[:GROUP_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant})
 			SET g.name=$name, 
 				g.sourceOfTruth=$sourceOfTruth
@@ -63,7 +70,7 @@ func (r *contactGroupRepository) Update(session neo4j.Session, tenant string, en
 				"name":          entity.Name,
 				"sourceOfTruth": entity.SourceOfTruth,
 			})
-		return utils.ExtractSingleRecordFirstValueAsNode(queryResult, err)
+		return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
 	})
 	if err != nil {
 		return nil, err
@@ -71,22 +78,25 @@ func (r *contactGroupRepository) Update(session neo4j.Session, tenant string, en
 	return dbNode.(*dbtype.Node), nil
 }
 
-func (r *contactGroupRepository) GetPaginatedContactGroups(session neo4j.Session, tenant string, skip, limit int, filter *utils.CypherFilter, sorting *utils.CypherSort) (*utils.DbNodesWithTotalCount, error) {
+func (r *contactGroupRepository) GetPaginatedContactGroups(ctx context.Context, tenant string, skip, limit int, filter *utils.CypherFilter, sorting *utils.CypherSort) (*utils.DbNodesWithTotalCount, error) {
+	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
+	defer session.Close(ctx)
+
 	dbNodesWithTotalCount := new(utils.DbNodesWithTotalCount)
 
-	dbRecords, err := session.ReadTransaction(func(tx neo4j.Transaction) (any, error) {
+	dbRecords, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		filterCypherStr, filterParams := filter.CypherFilterFragment("g")
 		countParams := map[string]any{
 			"tenant": tenant,
 		}
 		utils.MergeMapToMap(filterParams, countParams)
 
-		queryResult, err := tx.Run(fmt.Sprintf("MATCH (:Tenant {name:$tenant})<-[:GROUP_BELONGS_TO_TENANT]-(g:ContactGroup) %s RETURN count(g) as count", filterCypherStr),
+		queryResult, err := tx.Run(ctx, fmt.Sprintf("MATCH (:Tenant {name:$tenant})<-[:GROUP_BELONGS_TO_TENANT]-(g:ContactGroup) %s RETURN count(g) as count", filterCypherStr),
 			countParams)
 		if err != nil {
 			return nil, err
 		}
-		count, _ := queryResult.Single()
+		count, _ := queryResult.Single(ctx)
 		dbNodesWithTotalCount.Count = count.Values[0].(int64)
 
 		params := map[string]any{
@@ -96,14 +106,14 @@ func (r *contactGroupRepository) GetPaginatedContactGroups(session neo4j.Session
 		}
 		utils.MergeMapToMap(filterParams, params)
 
-		queryResult, err = tx.Run(fmt.Sprintf(
+		queryResult, err = tx.Run(ctx, fmt.Sprintf(
 			"MATCH (:Tenant {name:$tenant})<-[:GROUP_BELONGS_TO_TENANT]-(g:ContactGroup) "+
 				" %s "+
 				" RETURN g "+
 				" %s "+
 				" SKIP $skip LIMIT $limit", filterCypherStr, sorting.SortingCypherFragment("g")),
 			params)
-		return queryResult.Collect()
+		return queryResult.Collect(ctx)
 	})
 	if err != nil {
 		return nil, err

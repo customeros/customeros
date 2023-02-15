@@ -3,11 +3,10 @@ package neo4j
 import (
 	"context"
 	"fmt"
-	"github.com/neo4j/neo4j-go-driver/v4/neo4j"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/sirupsen/logrus"
 	"github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/wait"
-	"io"
 	"time"
 )
 
@@ -27,7 +26,7 @@ func startContainer(ctx context.Context, username, password string) (testcontain
 	})
 }
 
-func InitTestNeo4jDB() (testcontainers.Container, *neo4j.Driver) {
+func InitTestNeo4jDB() (testcontainers.Container, *neo4j.DriverWithContext) {
 	var ctx = context.Background()
 	var err error
 	neo4jContainer, err := startContainer(ctx, username, password)
@@ -39,17 +38,17 @@ func InitTestNeo4jDB() (testcontainers.Container, *neo4j.Driver) {
 		logrus.Panic(err)
 	}
 	address := fmt.Sprintf("bolt://localhost:%d", port.Int())
-	driver, err := neo4j.NewDriver(address, neo4j.BasicAuth(username, password, ""))
+	driver, err := neo4j.NewDriverWithContext(address, neo4j.BasicAuth(username, password, ""))
 	if err != nil {
 		logrus.Panic(err)
 	}
 	return neo4jContainer, &driver
 }
 
-func Close(closer io.Closer, resourceName string) {
-	err := closer.Close()
+func CloseDriver(driver neo4j.DriverWithContext) {
+	err := driver.Close(context.Background())
 	if err != nil {
-		logrus.Panicf("%s should close", resourceName)
+		logrus.Panic("Neo4j driver should close")
 	}
 }
 

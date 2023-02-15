@@ -7,22 +7,24 @@ import (
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils/decode"
 	"github.com/stretchr/testify/require"
+	"golang.org/x/net/context"
 	"testing"
 )
 
 func TestMutationResolver_ContactGroupRemoveContact(t *testing.T) {
-	defer tearDownTestCase()(t)
-	neo4jt.CreateTenant(driver, tenantName)
-	contactId1 := neo4jt.CreateDefaultContact(driver, tenantName)
-	contactId2 := neo4jt.CreateDefaultContact(driver, tenantName)
-	groupId := neo4jt.CreateContactGroup(driver, tenantName, "Group1")
-	neo4jt.AddContactToGroup(driver, contactId1, groupId)
-	neo4jt.AddContactToGroup(driver, contactId2, groupId)
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx)(t)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+	contactId1 := neo4jt.CreateDefaultContact(ctx, driver, tenantName)
+	contactId2 := neo4jt.CreateDefaultContact(ctx, driver, tenantName)
+	groupId := neo4jt.CreateContactGroup(ctx, driver, tenantName, "Group1")
+	neo4jt.AddContactToGroup(ctx, driver, contactId1, groupId)
+	neo4jt.AddContactToGroup(ctx, driver, contactId2, groupId)
 
-	require.Equal(t, 2, neo4jt.GetCountOfNodes(driver, "Contact"))
-	require.Equal(t, 2, neo4jt.GetCountOfNodes(driver, "Contact_"+tenantName))
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "ContactGroup"))
-	require.Equal(t, 2, neo4jt.GetCountOfRelationships(driver, "BELONGS_TO_GROUP"))
+	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "Contact"))
+	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "Contact_"+tenantName))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "ContactGroup"))
+	require.Equal(t, 2, neo4jt.GetCountOfRelationships(ctx, driver, "BELONGS_TO_GROUP"))
 
 	rawResponse, err := c.RawPost(getQuery("remove_contact_from_group"),
 		client.Var("contactId", contactId1),
@@ -38,14 +40,15 @@ func TestMutationResolver_ContactGroupRemoveContact(t *testing.T) {
 	require.NotNil(t, result)
 	require.Equal(t, true, result.ContactGroupRemoveContact.Result)
 
-	require.Equal(t, 1, neo4jt.GetCountOfRelationships(driver, "BELONGS_TO_GROUP"))
+	require.Equal(t, 1, neo4jt.GetCountOfRelationships(ctx, driver, "BELONGS_TO_GROUP"))
 
-	assertNeo4jLabels(t, driver, []string{"Tenant", "Contact", "Contact_" + tenantName, "ContactGroup"})
+	assertNeo4jLabels(ctx, t, driver, []string{"Tenant", "Contact", "Contact_" + tenantName, "ContactGroup"})
 }
 
 func TestMutationResolver_ContactGroupCreate(t *testing.T) {
-	defer tearDownTestCase()(t)
-	neo4jt.CreateTenant(driver, tenantName)
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx)(t)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
 
 	rawResponse, err := c.RawPost(getQuery("create_contact_group"))
 	assertRawResponseSuccess(t, rawResponse, err)
@@ -60,20 +63,21 @@ func TestMutationResolver_ContactGroupCreate(t *testing.T) {
 	require.NotNil(t, contactGroup.ContactGroupCreate.ID)
 	require.Equal(t, "the contact group", contactGroup.ContactGroupCreate.Name)
 
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "ContactGroup"))
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "ContactGroup_"+tenantName))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "ContactGroup"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "ContactGroup_"+tenantName))
 
-	assertNeo4jLabels(t, driver, []string{"Tenant", "ContactGroup", "ContactGroup_" + tenantName})
+	assertNeo4jLabels(ctx, t, driver, []string{"Tenant", "ContactGroup", "ContactGroup_" + tenantName})
 }
 
 func TestQueryResolver_ContactGroups(t *testing.T) {
-	defer tearDownTestCase()(t)
-	neo4jt.CreateTenant(driver, tenantName)
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx)(t)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
 
-	group4 := neo4jt.CreateContactGroup(driver, tenantName, "GROUP4")
-	group3 := neo4jt.CreateContactGroup(driver, tenantName, "group3")
-	group2 := neo4jt.CreateContactGroup(driver, tenantName, "GROUP2")
-	group1 := neo4jt.CreateContactGroup(driver, tenantName, "group1")
+	group4 := neo4jt.CreateContactGroup(ctx, driver, tenantName, "GROUP4")
+	group3 := neo4jt.CreateContactGroup(ctx, driver, tenantName, "group3")
+	group2 := neo4jt.CreateContactGroup(ctx, driver, tenantName, "GROUP2")
+	group1 := neo4jt.CreateContactGroup(ctx, driver, tenantName, "group1")
 
 	rawResponse, err := c.RawPost(getQuery("get_contact_groups_default_sorting"))
 	assertRawResponseSuccess(t, rawResponse, err)
@@ -91,17 +95,18 @@ func TestQueryResolver_ContactGroups(t *testing.T) {
 	require.Equal(t, group3, groups.ContactGroups.Content[2].ID)
 	require.Equal(t, group4, groups.ContactGroups.Content[3].ID)
 
-	require.Equal(t, 4, neo4jt.GetCountOfNodes(driver, "ContactGroup"))
+	require.Equal(t, 4, neo4jt.GetCountOfNodes(ctx, driver, "ContactGroup"))
 }
 
 func TestQueryResolver_ContactGroups_SortDescendingCaseSensitive(t *testing.T) {
-	defer tearDownTestCase()(t)
-	neo4jt.CreateTenant(driver, tenantName)
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx)(t)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
 
-	group1 := neo4jt.CreateContactGroup(driver, tenantName, "group1")
-	group2 := neo4jt.CreateContactGroup(driver, tenantName, "GROUP2")
-	group3 := neo4jt.CreateContactGroup(driver, tenantName, "group3")
-	group4 := neo4jt.CreateContactGroup(driver, tenantName, "GROUP4")
+	group1 := neo4jt.CreateContactGroup(ctx, driver, tenantName, "group1")
+	group2 := neo4jt.CreateContactGroup(ctx, driver, tenantName, "GROUP2")
+	group3 := neo4jt.CreateContactGroup(ctx, driver, tenantName, "group3")
+	group4 := neo4jt.CreateContactGroup(ctx, driver, tenantName, "GROUP4")
 
 	rawResponse, err := c.RawPost(getQuery("get_contact_groups_desc_sorting"))
 	assertRawResponseSuccess(t, rawResponse, err)
@@ -119,47 +124,48 @@ func TestQueryResolver_ContactGroups_SortDescendingCaseSensitive(t *testing.T) {
 	require.Equal(t, group4, groups.ContactGroups.Content[2].ID)
 	require.Equal(t, group2, groups.ContactGroups.Content[3].ID)
 
-	require.Equal(t, 4, neo4jt.GetCountOfNodes(driver, "ContactGroup"))
+	require.Equal(t, 4, neo4jt.GetCountOfNodes(ctx, driver, "ContactGroup"))
 }
 
 func TestQueryResolver_Contacts_ForContactGroup(t *testing.T) {
-	defer tearDownTestCase()(t)
-	neo4jt.CreateTenant(driver, tenantName)
-	neo4jt.CreateTenant(driver, "other tenant")
-	group1 := neo4jt.CreateContactGroup(driver, tenantName, "Group1")
-	group2 := neo4jt.CreateContactGroup(driver, tenantName, "Group2")
-	group3 := neo4jt.CreateContactGroup(driver, tenantName, "Group3")
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx)(t)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jt.CreateTenant(ctx, driver, "other tenant")
+	group1 := neo4jt.CreateContactGroup(ctx, driver, tenantName, "Group1")
+	group2 := neo4jt.CreateContactGroup(ctx, driver, tenantName, "Group2")
+	group3 := neo4jt.CreateContactGroup(ctx, driver, tenantName, "Group3")
 
-	contact1InGroup1 := neo4jt.CreateContact(driver, tenantName, entity.ContactEntity{
+	contact1InGroup1 := neo4jt.CreateContact(ctx, driver, tenantName, entity.ContactEntity{
 		Title:     "MR",
 		FirstName: "first",
 		LastName:  "contact",
 	})
-	contact2InGroup1 := neo4jt.CreateContact(driver, tenantName, entity.ContactEntity{
+	contact2InGroup1 := neo4jt.CreateContact(ctx, driver, tenantName, entity.ContactEntity{
 		Title:     "MR",
 		FirstName: "second",
 		LastName:  "contact",
 	})
-	contact3InGroup2 := neo4jt.CreateContact(driver, tenantName, entity.ContactEntity{
+	contact3InGroup2 := neo4jt.CreateContact(ctx, driver, tenantName, entity.ContactEntity{
 		Title:     "MR",
 		FirstName: "third",
 		LastName:  "contact",
 	})
-	contact4InGroups1And2 := neo4jt.CreateContact(driver, tenantName, entity.ContactEntity{
+	contact4InGroups1And2 := neo4jt.CreateContact(ctx, driver, tenantName, entity.ContactEntity{
 		Title:     "MR",
 		FirstName: "forth",
 		LastName:  "contact",
 	})
-	neo4jt.AddContactToGroup(driver, contact1InGroup1, group1)
-	neo4jt.AddContactToGroup(driver, contact2InGroup1, group1)
-	neo4jt.AddContactToGroup(driver, contact3InGroup2, group2)
-	neo4jt.AddContactToGroup(driver, contact4InGroups1And2, group1)
-	neo4jt.AddContactToGroup(driver, contact4InGroups1And2, group2)
+	neo4jt.AddContactToGroup(ctx, driver, contact1InGroup1, group1)
+	neo4jt.AddContactToGroup(ctx, driver, contact2InGroup1, group1)
+	neo4jt.AddContactToGroup(ctx, driver, contact3InGroup2, group2)
+	neo4jt.AddContactToGroup(ctx, driver, contact4InGroups1And2, group1)
+	neo4jt.AddContactToGroup(ctx, driver, contact4InGroups1And2, group2)
 
-	require.Equal(t, 2, neo4jt.GetCountOfNodes(driver, "Tenant"))
-	require.Equal(t, 4, neo4jt.GetCountOfNodes(driver, "Contact"))
-	require.Equal(t, 3, neo4jt.GetCountOfNodes(driver, "ContactGroup"))
-	require.Equal(t, 5, neo4jt.GetCountOfRelationships(driver, "BELONGS_TO_GROUP"))
+	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "Tenant"))
+	require.Equal(t, 4, neo4jt.GetCountOfNodes(ctx, driver, "Contact"))
+	require.Equal(t, 3, neo4jt.GetCountOfNodes(ctx, driver, "ContactGroup"))
+	require.Equal(t, 5, neo4jt.GetCountOfRelationships(ctx, driver, "BELONGS_TO_GROUP"))
 
 	rawResponse, err := c.RawPost(getQuery("get_contact_groups_with_contacts"))
 	assertRawResponseSuccess(t, rawResponse, err)
@@ -200,15 +206,16 @@ func TestQueryResolver_Contacts_ForContactGroup(t *testing.T) {
 }
 
 func TestQueryResolver_ContactGroups_MultipleFiltersByName(t *testing.T) {
-	defer tearDownTestCase()(t)
-	neo4jt.CreateTenant(driver, tenantName)
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx)(t)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
 
-	groupAcceptFilterCaseInsensitive := neo4jt.CreateContactGroup(driver, tenantName, "aA")
-	groupAcceptFilterCaseSensitive := neo4jt.CreateContactGroup(driver, tenantName, "_ABC_")
-	groupRejectFilterCaseSensitive := neo4jt.CreateContactGroup(driver, tenantName, "_ABc_")
-	groupRejectFilterNegation := neo4jt.CreateContactGroup(driver, tenantName, "ABC_test")
+	groupAcceptFilterCaseInsensitive := neo4jt.CreateContactGroup(ctx, driver, tenantName, "aA")
+	groupAcceptFilterCaseSensitive := neo4jt.CreateContactGroup(ctx, driver, tenantName, "_ABC_")
+	groupRejectFilterCaseSensitive := neo4jt.CreateContactGroup(ctx, driver, tenantName, "_ABc_")
+	groupRejectFilterNegation := neo4jt.CreateContactGroup(ctx, driver, tenantName, "ABC_test")
 
-	require.Equal(t, 4, neo4jt.GetCountOfNodes(driver, "ContactGroup"))
+	require.Equal(t, 4, neo4jt.GetCountOfNodes(ctx, driver, "ContactGroup"))
 
 	rawResponse, err := c.RawPost(getQuery("get_contact_groups_filter_by_name"))
 	assertRawResponseSuccess(t, rawResponse, err)
@@ -229,5 +236,5 @@ func TestQueryResolver_ContactGroups_MultipleFiltersByName(t *testing.T) {
 	require.NotNil(t, groupRejectFilterCaseSensitive)
 	require.NotNil(t, groupRejectFilterNegation)
 
-	require.Equal(t, 4, neo4jt.GetCountOfNodes(driver, "ContactGroup"))
+	require.Equal(t, 4, neo4jt.GetCountOfNodes(ctx, driver, "ContactGroup"))
 }

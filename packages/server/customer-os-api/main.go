@@ -10,7 +10,7 @@ import (
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
-	"github.com/neo4j/neo4j-go-driver/v4/neo4j"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/generated"
@@ -31,7 +31,7 @@ func InitDB(cfg *config.Config) (db *config.StorageDB, err error) {
 	return
 }
 
-func graphqlHandler(cfg *config.Config, driver neo4j.Driver, repositoryContainer *commonRepository.Repositories) gin.HandlerFunc {
+func graphqlHandler(cfg *config.Config, driver neo4j.DriverWithContext, repositoryContainer *commonRepository.Repositories) gin.HandlerFunc {
 	serviceContainer := service.InitServices(&driver)
 	// instantiate graph resolver
 	graphResolver := resolver.NewResolver(serviceContainer, repositoryContainer)
@@ -83,7 +83,8 @@ func main() {
 	if err != nil {
 		logrus.Fatalf("Could not establish connection with neo4j at: %v, error: %v", cfg.Neo4j.Target, err.Error())
 	}
-	defer neo4jDriver.Close()
+	ctx := context.Background()
+	defer neo4jDriver.Close(ctx)
 
 	repositoryContainer := commonRepository.InitRepositories(db.GormDB, &neo4jDriver)
 
@@ -95,7 +96,7 @@ func main() {
 	r.Use(cors.New(corsConfig))
 
 	r.POST("/query",
-		commonService.UserToTenantEnhancer(repositoryContainer.UserRepo),
+		commonService.UserToTenantEnhancer(ctx, repositoryContainer.UserRepo),
 		commonService.ApiKeyCheckerHTTP(repositoryContainer.AppKeyRepo, commonService.CUSTOMER_OS_API),
 		graphqlHandler(cfg, neo4jDriver, repositoryContainer))
 	if cfg.GraphQL.PlaygroundEnabled {

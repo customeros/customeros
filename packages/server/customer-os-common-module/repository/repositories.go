@@ -1,7 +1,7 @@
 package repository
 
 import (
-	"github.com/neo4j/neo4j-go-driver/v4/neo4j"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	neo4jrepo "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/repository/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/repository/postgres"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/repository/postgres/entity"
@@ -14,7 +14,7 @@ type Repositories struct {
 	UserRepo   neo4jrepo.UserRepository
 }
 
-func InitRepositories(db *gorm.DB, driver *neo4j.Driver) *Repositories {
+func InitRepositories(db *gorm.DB, driver *neo4j.DriverWithContext) *Repositories {
 	repositories := &Repositories{
 		AppKeyRepo: repository.NewAppKeyRepo(db),
 		UserRepo:   neo4jrepo.NewUserRepository(driver),

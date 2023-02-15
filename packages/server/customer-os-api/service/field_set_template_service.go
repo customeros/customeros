@@ -2,15 +2,15 @@ package service
 
 import (
 	"context"
-	"github.com/neo4j/neo4j-go-driver/v4/neo4j/db"
-	"github.com/neo4j/neo4j-go-driver/v4/neo4j/dbtype"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j/db"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils"
 )
 
 type FieldSetTemplateService interface {
-	FindAll(entityTemplateId string) (*entity.FieldSetTemplateEntities, error)
+	FindAll(ctx context.Context, entityTemplateId string) (*entity.FieldSetTemplateEntities, error)
 	FindLinkedWithFieldSet(ctx context.Context, fieldSetId string) (*entity.FieldSetTemplateEntity, error)
 }
 
@@ -24,8 +24,8 @@ func NewFieldSetTemplateService(repositories *repository.Repositories) FieldSetT
 	}
 }
 
-func (s *fieldSetTemplateService) FindAll(entityTemplateId string) (*entity.FieldSetTemplateEntities, error) {
-	all, err := s.repositories.FieldSetTemplateRepository.FindAllByEntityTemplateId(entityTemplateId)
+func (s *fieldSetTemplateService) FindAll(ctx context.Context, entityTemplateId string) (*entity.FieldSetTemplateEntities, error) {
+	all, err := s.repositories.FieldSetTemplateRepository.FindAllByEntityTemplateId(ctx, entityTemplateId)
 	if err != nil {
 		return nil, err
 	}
@@ -37,7 +37,7 @@ func (s *fieldSetTemplateService) FindAll(entityTemplateId string) (*entity.Fiel
 }
 
 func (s *fieldSetTemplateService) FindLinkedWithFieldSet(ctx context.Context, fieldSetId string) (*entity.FieldSetTemplateEntity, error) {
-	queryResult, err := s.repositories.FieldSetTemplateRepository.FindByFieldSetId(fieldSetId)
+	queryResult, err := s.repositories.FieldSetTemplateRepository.FindByFieldSetId(ctx, fieldSetId)
 	if err != nil {
 		return nil, err
 	}

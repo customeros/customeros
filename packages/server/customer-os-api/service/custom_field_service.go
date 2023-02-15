@@ -2,8 +2,8 @@ package service
 
 import (
 	"context"
-	"github.com/neo4j/neo4j-go-driver/v4/neo4j"
-	"github.com/neo4j/neo4j-go-driver/v4/neo4j/dbtype"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
@@ -38,32 +38,32 @@ func NewCustomFieldService(repository *repository.Repositories) CustomFieldServi
 	}
 }
 
-func (s *customFieldService) getDriver() neo4j.Driver {
+func (s *customFieldService) getDriver() neo4j.DriverWithContext {
 	return *s.repository.Drivers.Neo4jDriver
 }
 
 func (s *customFieldService) MergeAndUpdateCustomFieldsForContact(ctx context.Context, contactId string, customFields *entity.CustomFieldEntities, fieldSets *entity.FieldSetEntities) error {
-	session := utils.NewNeo4jWriteSession(s.getDriver())
-	defer session.Close()
+	session := utils.NewNeo4jWriteSession(ctx, s.getDriver())
+	defer session.Close(ctx)
 
-	_, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
+	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		tenant := common.GetContext(ctx).Tenant
 		if customFields != nil {
 			for _, customField := range *customFields {
 				if customField.Id == nil {
-					dbNode, err := s.repository.CustomFieldRepository.MergeCustomFieldToContactInTx(tx, tenant, contactId, customField)
+					dbNode, err := s.repository.CustomFieldRepository.MergeCustomFieldToContactInTx(ctx, tx, tenant, contactId, customField)
 					if err != nil {
 						return nil, err
 					}
 					if customField.TemplateId != nil {
 						var fieldId = utils.GetPropsFromNode(*dbNode)["id"].(string)
-						err := s.repository.CustomFieldRepository.LinkWithCustomFieldTemplateForContactInTx(tx, fieldId, contactId, *customField.TemplateId)
+						err := s.repository.CustomFieldRepository.LinkWithCustomFieldTemplateForContactInTx(ctx, tx, fieldId, contactId, *customField.TemplateId)
 						if err != nil {
 							return nil, err
 						}
 					}
 				} else {
-					_, err := s.repository.CustomFieldRepository.UpdateForContactInTx(tx, tenant, contactId, customField)
+					_, err := s.repository.CustomFieldRepository.UpdateForContactInTx(ctx, tx, tenant, contactId, customField)
 					if err != nil {
 						return nil, err
 					}
@@ -74,19 +74,19 @@ func (s *customFieldService) MergeAndUpdateCustomFieldsForContact(ctx context.Co
 			for _, fieldSet := range *fieldSets {
 				var fieldSetId string
 				if fieldSet.Id == nil {
-					setDbNode, err := s.repository.FieldSetRepository.MergeFieldSetToContactInTx(tx, tenant, contactId, fieldSet)
+					setDbNode, err := s.repository.FieldSetRepository.MergeFieldSetToContactInTx(ctx, tx, tenant, contactId, fieldSet)
 					if err != nil {
 						return nil, err
 					}
 					fieldSetId = utils.GetPropsFromNode(*setDbNode)["id"].(string)
 					if fieldSet.TemplateId != nil {
-						err := s.repository.FieldSetRepository.LinkWithFieldSetTemplateInTx(tx, tenant, fieldSetId, *fieldSet.TemplateId)
+						err := s.repository.FieldSetRepository.LinkWithFieldSetTemplateInTx(ctx, tx, tenant, fieldSetId, *fieldSet.TemplateId)
 						if err != nil {
 							return nil, err
 						}
 					}
 				} else {
-					fieldSetDbNode, err := s.repository.FieldSetRepository.UpdateFieldSetForContactInTx(tx, common.GetContext(ctx).Tenant, contactId, fieldSet)
+					fieldSetDbNode, err := s.repository.FieldSetRepository.UpdateFieldSetForContactInTx(ctx, tx, common.GetContext(ctx).Tenant, contactId, fieldSet)
 					if err != nil {
 						return nil, err
 					}
@@ -95,19 +95,19 @@ func (s *customFieldService) MergeAndUpdateCustomFieldsForContact(ctx context.Co
 				if fieldSet.CustomFields != nil {
 					for _, customField := range *fieldSet.CustomFields {
 						if customField.Id == nil {
-							fieldDbNode, err := s.repository.CustomFieldRepository.MergeCustomFieldToFieldSetInTx(tx, tenant, contactId, fieldSetId, customField)
+							fieldDbNode, err := s.repository.CustomFieldRepository.MergeCustomFieldToFieldSetInTx(ctx, tx, tenant, contactId, fieldSetId, customField)
 							if err != nil {
 								return nil, err
 							}
 							if customField.TemplateId != nil {
 								var fieldId = utils.GetPropsFromNode(*fieldDbNode)["id"].(string)
-								err := s.repository.CustomFieldRepository.LinkWithCustomFieldTemplateForFieldSetInTx(tx, fieldId, fieldSetId, *customField.TemplateId)
+								err := s.repository.CustomFieldRepository.LinkWithCustomFieldTemplateForFieldSetInTx(ctx, tx, fieldId, fieldSetId, *customField.TemplateId)
 								if err != nil {
 									return nil, err
 								}
 							}
 						} else {
-							_, err := s.repository.CustomFieldRepository.UpdateForFieldSetInTx(tx, tenant, contactId, fieldSetId, customField)
+							_, err := s.repository.CustomFieldRepository.UpdateForFieldSetInTx(ctx, tx, tenant, contactId, fieldSetId, customField)
 							if err != nil {
 								return nil, err
 							}
@@ -123,10 +123,10 @@ func (s *customFieldService) MergeAndUpdateCustomFieldsForContact(ctx context.Co
 }
 
 func (s *customFieldService) FindAllForContact(ctx context.Context, contact *model.Contact) (*entity.CustomFieldEntities, error) {
-	session := utils.NewNeo4jReadSession(s.getDriver())
-	defer session.Close()
+	session := utils.NewNeo4jReadSession(ctx, s.getDriver())
+	defer session.Close(ctx)
 
-	dbRecords, err := s.repository.CustomFieldRepository.FindAllForContact(session, common.GetContext(ctx).Tenant, contact.ID)
+	dbRecords, err := s.repository.CustomFieldRepository.FindAllForContact(ctx, session, common.GetContext(ctx).Tenant, contact.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -142,10 +142,10 @@ func (s *customFieldService) FindAllForContact(ctx context.Context, contact *mod
 }
 
 func (s *customFieldService) FindAllForFieldSet(ctx context.Context, fieldSet *model.FieldSet) (*entity.CustomFieldEntities, error) {
-	session := utils.NewNeo4jReadSession(s.getDriver())
-	defer session.Close()
+	session := utils.NewNeo4jReadSession(ctx, s.getDriver())
+	defer session.Close(ctx)
 
-	dbRecords, err := s.repository.CustomFieldRepository.FindAllForFieldSet(session, common.GetContext(ctx).Tenant, fieldSet.ID)
+	dbRecords, err := s.repository.CustomFieldRepository.FindAllForFieldSet(ctx, session, common.GetContext(ctx).Tenant, fieldSet.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -161,17 +161,17 @@ func (s *customFieldService) FindAllForFieldSet(ctx context.Context, fieldSet *m
 }
 
 func (s *customFieldService) MergeCustomFieldToContact(ctx context.Context, contactId string, entity *entity.CustomFieldEntity) (*entity.CustomFieldEntity, error) {
-	session := utils.NewNeo4jWriteSession(s.getDriver())
-	defer session.Close()
+	session := utils.NewNeo4jWriteSession(ctx, s.getDriver())
+	defer session.Close(ctx)
 
-	customFieldNode, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
-		customFieldDbNode, err := s.repository.CustomFieldRepository.MergeCustomFieldToContactInTx(tx, common.GetContext(ctx).Tenant, contactId, *entity)
+	customFieldNode, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		customFieldDbNode, err := s.repository.CustomFieldRepository.MergeCustomFieldToContactInTx(ctx, tx, common.GetContext(ctx).Tenant, contactId, *entity)
 		if err != nil {
 			return nil, err
 		}
 		if entity.TemplateId != nil {
 			var fieldId = utils.GetPropsFromNode(*customFieldDbNode)["id"].(string)
-			if err = s.repository.CustomFieldRepository.LinkWithCustomFieldTemplateForContactInTx(tx, fieldId, contactId, *entity.TemplateId); err != nil {
+			if err = s.repository.CustomFieldRepository.LinkWithCustomFieldTemplateForContactInTx(ctx, tx, fieldId, contactId, *entity.TemplateId); err != nil {
 				return nil, err
 			}
 		}
@@ -185,17 +185,17 @@ func (s *customFieldService) MergeCustomFieldToContact(ctx context.Context, cont
 }
 
 func (s *customFieldService) MergeCustomFieldToFieldSet(ctx context.Context, contactId string, fieldSetId string, entity *entity.CustomFieldEntity) (*entity.CustomFieldEntity, error) {
-	session := utils.NewNeo4jWriteSession(s.getDriver())
-	defer session.Close()
+	session := utils.NewNeo4jWriteSession(ctx, s.getDriver())
+	defer session.Close(ctx)
 
-	customFieldNode, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
-		customFieldNode, err := s.repository.CustomFieldRepository.MergeCustomFieldToFieldSetInTx(tx, common.GetContext(ctx).Tenant, contactId, fieldSetId, *entity)
+	customFieldNode, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		customFieldNode, err := s.repository.CustomFieldRepository.MergeCustomFieldToFieldSetInTx(ctx, tx, common.GetContext(ctx).Tenant, contactId, fieldSetId, *entity)
 		if err != nil {
 			return nil, err
 		}
 		if entity.TemplateId != nil {
 			var fieldId = utils.GetPropsFromNode(*customFieldNode)["id"].(string)
-			if err = s.repository.CustomFieldRepository.LinkWithCustomFieldTemplateForFieldSetInTx(tx, fieldId, fieldSetId, *entity.TemplateId); err != nil {
+			if err = s.repository.CustomFieldRepository.LinkWithCustomFieldTemplateForFieldSetInTx(ctx, tx, fieldId, fieldSetId, *entity.TemplateId); err != nil {
 				return nil, err
 			}
 		}
@@ -209,11 +209,11 @@ func (s *customFieldService) MergeCustomFieldToFieldSet(ctx context.Context, con
 }
 
 func (s *customFieldService) UpdateCustomFieldForContact(ctx context.Context, contactId string, entity *entity.CustomFieldEntity) (*entity.CustomFieldEntity, error) {
-	session := utils.NewNeo4jWriteSession(s.getDriver())
-	defer session.Close()
+	session := utils.NewNeo4jWriteSession(ctx, s.getDriver())
+	defer session.Close(ctx)
 
-	customFieldDbNode, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
-		return s.repository.CustomFieldRepository.UpdateForContactInTx(tx, common.GetContext(ctx).Tenant, contactId, *entity)
+	customFieldDbNode, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		return s.repository.CustomFieldRepository.UpdateForContactInTx(ctx, tx, common.GetContext(ctx).Tenant, contactId, *entity)
 	})
 
 	if err != nil {
@@ -223,11 +223,11 @@ func (s *customFieldService) UpdateCustomFieldForContact(ctx context.Context, co
 }
 
 func (s *customFieldService) UpdateCustomFieldForFieldSet(ctx context.Context, contactId string, fieldSetId string, entity *entity.CustomFieldEntity) (*entity.CustomFieldEntity, error) {
-	session := utils.NewNeo4jWriteSession(s.getDriver())
-	defer session.Close()
+	session := utils.NewNeo4jWriteSession(ctx, s.getDriver())
+	defer session.Close(ctx)
 
-	customFieldDbNode, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
-		return s.repository.CustomFieldRepository.UpdateForFieldSetInTx(tx, common.GetContext(ctx).Tenant, contactId, fieldSetId, *entity)
+	customFieldDbNode, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		return s.repository.CustomFieldRepository.UpdateForFieldSetInTx(ctx, tx, common.GetContext(ctx).Tenant, contactId, fieldSetId, *entity)
 	})
 	if err != nil {
 		return nil, err
@@ -236,9 +236,9 @@ func (s *customFieldService) UpdateCustomFieldForFieldSet(ctx context.Context, c
 }
 
 func (s *customFieldService) DeleteByNameFromContact(ctx context.Context, contactId, fieldName string) (bool, error) {
-	session := utils.NewNeo4jWriteSession(s.getDriver())
-	defer session.Close()
-	err := s.repository.CustomFieldRepository.DeleteByNameFromContact(session, common.GetContext(ctx).Tenant, contactId, fieldName)
+	session := utils.NewNeo4jWriteSession(ctx, s.getDriver())
+	defer session.Close(ctx)
+	err := s.repository.CustomFieldRepository.DeleteByNameFromContact(ctx, session, common.GetContext(ctx).Tenant, contactId, fieldName)
 	if err != nil {
 		return false, err
 	}
@@ -246,9 +246,9 @@ func (s *customFieldService) DeleteByNameFromContact(ctx context.Context, contac
 }
 
 func (s *customFieldService) DeleteByIdFromContact(ctx context.Context, contactId, fieldId string) (bool, error) {
-	session := utils.NewNeo4jWriteSession(s.getDriver())
-	defer session.Close()
-	err := s.repository.CustomFieldRepository.DeleteByIdFromContact(session, common.GetContext(ctx).Tenant, contactId, fieldId)
+	session := utils.NewNeo4jWriteSession(ctx, s.getDriver())
+	defer session.Close(ctx)
+	err := s.repository.CustomFieldRepository.DeleteByIdFromContact(ctx, session, common.GetContext(ctx).Tenant, contactId, fieldId)
 	if err != nil {
 		return false, err
 	}
@@ -256,9 +256,9 @@ func (s *customFieldService) DeleteByIdFromContact(ctx context.Context, contactI
 }
 
 func (s *customFieldService) DeleteByIdFromFieldSet(ctx context.Context, contactId, fieldSetId, fieldId string) (bool, error) {
-	session := utils.NewNeo4jWriteSession(s.getDriver())
-	defer session.Close()
-	err := s.repository.CustomFieldRepository.DeleteByIdFromFieldSet(session, common.GetContext(ctx).Tenant, contactId, fieldSetId, fieldId)
+	session := utils.NewNeo4jWriteSession(ctx, s.getDriver())
+	defer session.Close(ctx)
+	err := s.repository.CustomFieldRepository.DeleteByIdFromFieldSet(ctx, session, common.GetContext(ctx).Tenant, contactId, fieldSetId, fieldId)
 	if err != nil {
 		return false, err
 	}

@@ -1,32 +1,30 @@
 package utils
 
 import (
-	"github.com/neo4j/neo4j-go-driver/v4/neo4j"
-	"github.com/neo4j/neo4j-go-driver/v4/neo4j/dbtype"
+	"context"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"time"
 )
 
 type Cypher string
-
-func CypherPtr(cypher Cypher) *Cypher {
-	return &cypher
-}
 
 type DbNodesWithTotalCount struct {
 	Nodes []*dbtype.Node
 	Count int64
 }
 
-func NewNeo4jReadSession(driver neo4j.Driver) neo4j.Session {
-	return newNeo4jSession(driver, neo4j.AccessModeRead)
+func NewNeo4jReadSession(ctx context.Context, driver neo4j.DriverWithContext) neo4j.SessionWithContext {
+	return newNeo4jSession(ctx, driver, neo4j.AccessModeRead)
 }
 
-func NewNeo4jWriteSession(driver neo4j.Driver) neo4j.Session {
-	return newNeo4jSession(driver, neo4j.AccessModeWrite)
+func NewNeo4jWriteSession(ctx context.Context, driver neo4j.DriverWithContext) neo4j.SessionWithContext {
+	return newNeo4jSession(ctx, driver, neo4j.AccessModeWrite)
 }
 
-func newNeo4jSession(driver neo4j.Driver, accessMode neo4j.AccessMode) neo4j.Session {
+func newNeo4jSession(ctx context.Context, driver neo4j.DriverWithContext, accessMode neo4j.AccessMode) neo4j.SessionWithContext {
 	return driver.NewSession(
+		ctx,
 		neo4j.SessionConfig{
 			AccessMode: accessMode,
 			BoltLogger: neo4j.ConsoleBoltLogger(),
@@ -34,19 +32,19 @@ func newNeo4jSession(driver neo4j.Driver, accessMode neo4j.AccessMode) neo4j.Ses
 	)
 }
 
-func ExtractSingleRecordFirstValue(result neo4j.Result, err error) (any, error) {
+func ExtractSingleRecordFirstValue(ctx context.Context, result neo4j.ResultWithContext, err error) (any, error) {
 	if err != nil {
 		return nil, err
 	}
-	if record, err := result.Single(); err != nil {
+	if record, err := result.Single(ctx); err != nil {
 		return nil, err
 	} else {
 		return record.Values[0], nil
 	}
 }
 
-func ExtractSingleRecordFirstValueAsNode(result neo4j.Result, err error) (*dbtype.Node, error) {
-	node, err := ExtractSingleRecordFirstValue(result, err)
+func ExtractSingleRecordFirstValueAsNode(ctx context.Context, result neo4j.ResultWithContext, err error) (*dbtype.Node, error) {
+	node, err := ExtractSingleRecordFirstValue(ctx, result, err)
 	if err != nil {
 		return nil, err
 	}
@@ -54,11 +52,11 @@ func ExtractSingleRecordFirstValueAsNode(result neo4j.Result, err error) (*dbtyp
 	return &dbTypeNode, err
 }
 
-func ExtractSingleRecordNodeAndRelationship(result neo4j.Result, err error) (*dbtype.Node, *dbtype.Relationship, error) {
+func ExtractSingleRecordNodeAndRelationship(ctx context.Context, result neo4j.ResultWithContext, err error) (*dbtype.Node, *dbtype.Relationship, error) {
 	if err != nil {
 		return nil, nil, err
 	}
-	if record, err := result.Single(); err != nil {
+	if record, err := result.Single(ctx); err != nil {
 		return nil, nil, err
 	} else {
 		return NodePtr(record.Values[0].(dbtype.Node)), RelationshipPtr(record.Values[1].(dbtype.Relationship)), nil

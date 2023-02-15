@@ -2,35 +2,36 @@ package repository
 
 import (
 	"fmt"
-	"github.com/neo4j/neo4j-go-driver/v4/neo4j"
-	"github.com/neo4j/neo4j-go-driver/v4/neo4j/db"
-	"github.com/neo4j/neo4j-go-driver/v4/neo4j/dbtype"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j/db"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils"
+	"golang.org/x/net/context"
 )
 
 type UserRepository interface {
-	Create(tx neo4j.Transaction, tenant string, entity entity.UserEntity) (*dbtype.Node, error)
-	Update(session neo4j.Session, tenant string, entity entity.UserEntity) (*dbtype.Node, error)
-	FindUserByEmail(session neo4j.Session, tenant string, email string) (*dbtype.Node, error)
-	FindOwnerForContact(tx neo4j.Transaction, tenant, contactId string) (*dbtype.Node, error)
-	FindCreatorForNote(tx neo4j.Transaction, tenant, noteId string) (*dbtype.Node, error)
-	GetPaginatedUsers(session neo4j.Session, tenant string, skip, limit int, filter *utils.CypherFilter, sort *utils.CypherSort) (*utils.DbNodesWithTotalCount, error)
-	GetById(session neo4j.Session, tenant, userId string) (*dbtype.Node, error)
-	GetAllForConversation(session neo4j.Session, tenant, conversationId string) ([]*dbtype.Node, error)
+	Create(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, entity entity.UserEntity) (*dbtype.Node, error)
+	Update(ctx context.Context, session neo4j.SessionWithContext, tenant string, entity entity.UserEntity) (*dbtype.Node, error)
+	FindUserByEmail(ctx context.Context, session neo4j.SessionWithContext, tenant string, email string) (*dbtype.Node, error)
+	FindOwnerForContact(ctx context.Context, tx neo4j.ManagedTransaction, tenant, contactId string) (*dbtype.Node, error)
+	FindCreatorForNote(ctx context.Context, tx neo4j.ManagedTransaction, tenant, noteId string) (*dbtype.Node, error)
+	GetPaginatedUsers(ctx context.Context, session neo4j.SessionWithContext, tenant string, skip, limit int, filter *utils.CypherFilter, sort *utils.CypherSort) (*utils.DbNodesWithTotalCount, error)
+	GetById(ctx context.Context, session neo4j.SessionWithContext, tenant, userId string) (*dbtype.Node, error)
+	GetAllForConversation(ctx context.Context, session neo4j.SessionWithContext, tenant, conversationId string) ([]*dbtype.Node, error)
 }
 
 type userRepository struct {
-	driver *neo4j.Driver
+	driver *neo4j.DriverWithContext
 }
 
-func NewUserRepository(driver *neo4j.Driver) UserRepository {
+func NewUserRepository(driver *neo4j.DriverWithContext) UserRepository {
 	return &userRepository{
 		driver: driver,
 	}
 }
 
-func (r *userRepository) Create(tx neo4j.Transaction, tenant string, entity entity.UserEntity) (*dbtype.Node, error) {
+func (r *userRepository) Create(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, entity entity.UserEntity) (*dbtype.Node, error) {
 	query := "MATCH (t:Tenant {name:$tenant}) " +
 		" MERGE (u:User {id: randomUUID()})-[:USER_BELONGS_TO_TENANT]->(t) " +
 		" ON CREATE SET u.firstName=$firstName, " +
@@ -42,7 +43,7 @@ func (r *userRepository) Create(tx neo4j.Transaction, tenant string, entity enti
 		"				u:%s" +
 		" RETURN u"
 
-	queryResult, err := tx.Run(fmt.Sprintf(query, "User_"+tenant),
+	queryResult, err := tx.Run(ctx, fmt.Sprintf(query, "User_"+tenant),
 		map[string]any{
 			"tenant":        tenant,
 			"firstName":     entity.FirstName,
@@ -51,10 +52,10 @@ func (r *userRepository) Create(tx neo4j.Transaction, tenant string, entity enti
 			"sourceOfTruth": entity.SourceOfTruth,
 			"now":           utils.Now(),
 		})
-	return utils.ExtractSingleRecordFirstValueAsNode(queryResult, err)
+	return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
 }
 
-func (r *userRepository) Update(session neo4j.Session, tenant string, entity entity.UserEntity) (*dbtype.Node, error) {
+func (r *userRepository) Update(ctx context.Context, session neo4j.SessionWithContext, tenant string, entity entity.UserEntity) (*dbtype.Node, error) {
 	query := "MATCH (u:User {id:$userId})-[:USER_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant}) " +
 		" SET 	u.firstName=$firstName, " +
 		"		u.lastName=$lastName, " +
@@ -62,8 +63,8 @@ func (r *userRepository) Update(session neo4j.Session, tenant string, entity ent
 		"		u.sourceOfTruth=$sourceOfTruth " +
 		" RETURN u"
 
-	result, err := session.WriteTransaction(func(tx neo4j.Transaction) (interface{}, error) {
-		queryResult, err := tx.Run(query,
+	result, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (interface{}, error) {
+		queryResult, err := tx.Run(ctx, query,
 			map[string]any{
 				"userId":        entity.Id,
 				"tenant":        tenant,
@@ -71,7 +72,7 @@ func (r *userRepository) Update(session neo4j.Session, tenant string, entity ent
 				"lastName":      entity.LastName,
 				"sourceOfTruth": entity.SourceOfTruth,
 			})
-		return utils.ExtractSingleRecordFirstValueAsNode(queryResult, err)
+		return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
 	})
 	if err != nil {
 		return nil, err
@@ -79,16 +80,16 @@ func (r *userRepository) Update(session neo4j.Session, tenant string, entity ent
 	return result.(*dbtype.Node), nil
 }
 
-func (r *userRepository) FindUserByEmail(session neo4j.Session, tenant string, email string) (*dbtype.Node, error) {
-	result, err := session.WriteTransaction(func(tx neo4j.Transaction) (interface{}, error) {
-		queryResult, err := tx.Run(`
+func (r *userRepository) FindUserByEmail(ctx context.Context, session neo4j.SessionWithContext, tenant string, email string) (*dbtype.Node, error) {
+	result, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (interface{}, error) {
+		queryResult, err := tx.Run(ctx, `
 			MATCH (:Email {email:$email})<-[:HAS]-(u:User)-[:USER_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) 
 			RETURN u`,
 			map[string]any{
 				"tenant": tenant,
 				"email":  email,
 			})
-		return utils.ExtractSingleRecordFirstValueAsNode(queryResult, err)
+		return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
 	})
 	if err != nil {
 		return nil, err
@@ -96,8 +97,8 @@ func (r *userRepository) FindUserByEmail(session neo4j.Session, tenant string, e
 	return result.(*dbtype.Node), nil
 }
 
-func (r *userRepository) FindOwnerForContact(tx neo4j.Transaction, tenant, contactId string) (*dbtype.Node, error) {
-	if queryResult, err := tx.Run(`
+func (r *userRepository) FindOwnerForContact(ctx context.Context, tx neo4j.ManagedTransaction, tenant, contactId string) (*dbtype.Node, error) {
+	if queryResult, err := tx.Run(ctx, `
 			MATCH (t:Tenant {name:$tenant})<-[:CONTACT_BELONGS_TO_TENANT]-(c:Contact {id:$contactId})<-[:OWNS]-(u:User)
 			RETURN u`,
 		map[string]any{
@@ -106,7 +107,7 @@ func (r *userRepository) FindOwnerForContact(tx neo4j.Transaction, tenant, conta
 		}); err != nil {
 		return nil, err
 	} else {
-		dbRecords, err := queryResult.Collect()
+		dbRecords, err := queryResult.Collect(ctx)
 		if err != nil {
 			return nil, err
 		} else if len(dbRecords) == 0 {
@@ -117,8 +118,8 @@ func (r *userRepository) FindOwnerForContact(tx neo4j.Transaction, tenant, conta
 	}
 }
 
-func (r *userRepository) FindCreatorForNote(tx neo4j.Transaction, tenant, noteId string) (*dbtype.Node, error) {
-	if queryResult, err := tx.Run(`
+func (r *userRepository) FindCreatorForNote(ctx context.Context, tx neo4j.ManagedTransaction, tenant, noteId string) (*dbtype.Node, error) {
+	if queryResult, err := tx.Run(ctx, `
 			MATCH (t:Tenant {name:$tenant})<-[:USER_BELONGS_TO_TENANT]-(u:User)-[:CREATED]->(n:Note {id:$noteId})
 			RETURN u`,
 		map[string]any{
@@ -127,7 +128,7 @@ func (r *userRepository) FindCreatorForNote(tx neo4j.Transaction, tenant, noteId
 		}); err != nil {
 		return nil, err
 	} else {
-		dbRecords, err := queryResult.Collect()
+		dbRecords, err := queryResult.Collect(ctx)
 		if err != nil {
 			return nil, err
 		} else if len(dbRecords) == 0 {
@@ -138,21 +139,21 @@ func (r *userRepository) FindCreatorForNote(tx neo4j.Transaction, tenant, noteId
 	}
 }
 
-func (r *userRepository) GetPaginatedUsers(session neo4j.Session, tenant string, skip, limit int, filter *utils.CypherFilter, sort *utils.CypherSort) (*utils.DbNodesWithTotalCount, error) {
+func (r *userRepository) GetPaginatedUsers(ctx context.Context, session neo4j.SessionWithContext, tenant string, skip, limit int, filter *utils.CypherFilter, sort *utils.CypherSort) (*utils.DbNodesWithTotalCount, error) {
 	dbNodesWithTotalCount := new(utils.DbNodesWithTotalCount)
 
-	dbRecords, err := session.ReadTransaction(func(tx neo4j.Transaction) (any, error) {
+	dbRecords, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		filterCypherStr, filterParams := filter.CypherFilterFragment("u")
 		countParams := map[string]any{
 			"tenant": tenant,
 		}
 		utils.MergeMapToMap(filterParams, countParams)
-		queryResult, err := tx.Run(fmt.Sprintf("MATCH (:Tenant {name:$tenant})<-[:USER_BELONGS_TO_TENANT]-(u:User) %s RETURN count(u) as count", filterCypherStr),
+		queryResult, err := tx.Run(ctx, fmt.Sprintf("MATCH (:Tenant {name:$tenant})<-[:USER_BELONGS_TO_TENANT]-(u:User) %s RETURN count(u) as count", filterCypherStr),
 			countParams)
 		if err != nil {
 			return nil, err
 		}
-		count, _ := queryResult.Single()
+		count, _ := queryResult.Single(ctx)
 		dbNodesWithTotalCount.Count = count.Values[0].(int64)
 
 		params := map[string]any{
@@ -162,14 +163,14 @@ func (r *userRepository) GetPaginatedUsers(session neo4j.Session, tenant string,
 		}
 		utils.MergeMapToMap(filterParams, params)
 
-		queryResult, err = tx.Run(fmt.Sprintf(
+		queryResult, err = tx.Run(ctx, fmt.Sprintf(
 			"MATCH (:Tenant {name:$tenant})<-[:USER_BELONGS_TO_TENANT]-(u:User) "+
 				" %s "+
 				" RETURN u "+
 				" %s "+
 				" SKIP $skip LIMIT $limit", filterCypherStr, sort.SortingCypherFragment("u")),
 			params)
-		return queryResult.Collect()
+		return queryResult.Collect(ctx)
 	})
 	if err != nil {
 		return nil, err
@@ -180,9 +181,9 @@ func (r *userRepository) GetPaginatedUsers(session neo4j.Session, tenant string,
 	return dbNodesWithTotalCount, nil
 }
 
-func (r *userRepository) GetById(session neo4j.Session, tenant, userId string) (*dbtype.Node, error) {
-	dbRecord, err := session.ReadTransaction(func(tx neo4j.Transaction) (any, error) {
-		queryResult, err := tx.Run(`
+func (r *userRepository) GetById(ctx context.Context, session neo4j.SessionWithContext, tenant, userId string) (*dbtype.Node, error) {
+	dbRecord, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		queryResult, err := tx.Run(ctx, `
 			MATCH (t:Tenant {name:$tenant})<-[:USER_BELONGS_TO_TENANT]-(u:User {id:$userId})
 			RETURN u`,
 			map[string]any{
@@ -192,14 +193,14 @@ func (r *userRepository) GetById(session neo4j.Session, tenant, userId string) (
 		if err != nil {
 			return nil, err
 		}
-		return queryResult.Single()
+		return queryResult.Single(ctx)
 	})
 	return utils.NodePtr(dbRecord.(*db.Record).Values[0].(dbtype.Node)), err
 }
 
-func (r *userRepository) GetAllForConversation(session neo4j.Session, tenant, conversationId string) ([]*dbtype.Node, error) {
-	dbRecords, err := session.ReadTransaction(func(tx neo4j.Transaction) (any, error) {
-		if queryResult, err := tx.Run(`
+func (r *userRepository) GetAllForConversation(ctx context.Context, session neo4j.SessionWithContext, tenant, conversationId string) ([]*dbtype.Node, error) {
+	dbRecords, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		if queryResult, err := tx.Run(ctx, `
 			MATCH (t:Tenant {name:$tenant})<-[:USER_BELONGS_TO_TENANT]-(u:User)-[:PARTICIPATES]->(o:Conversation {id:$conversationId})
 			RETURN u`,
 			map[string]any{
@@ -208,7 +209,7 @@ func (r *userRepository) GetAllForConversation(session neo4j.Session, tenant, co
 			}); err != nil {
 			return nil, err
 		} else {
-			return queryResult.Collect()
+			return queryResult.Collect(ctx)
 		}
 	})
 	if err != nil {

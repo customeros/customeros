@@ -4,7 +4,7 @@ go 1.19
 
 require (
 	github.com/gin-gonic/gin v1.8.2
-	github.com/neo4j/neo4j-go-driver/v4 v4.4.5
+	github.com/neo4j/neo4j-go-driver/v5 v5.5.0
 	github.com/sirupsen/logrus v1.9.0
 	google.golang.org/grpc v1.53.0
 	gorm.io/gorm v1.24.5

@@ -2,8 +2,8 @@ package service
 
 import (
 	"context"
-	"github.com/neo4j/neo4j-go-driver/v4/neo4j"
-	"github.com/neo4j/neo4j-go-driver/v4/neo4j/dbtype"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
@@ -45,19 +45,19 @@ func NewOrganizationService(repositories *repository.Repositories) OrganizationS
 }
 
 func (s *organizationService) Create(ctx context.Context, input *OrganizationCreateData) (*entity.OrganizationEntity, error) {
-	session := utils.NewNeo4jWriteSession(*s.repositories.Drivers.Neo4jDriver)
-	defer session.Close()
+	session := utils.NewNeo4jWriteSession(ctx, *s.repositories.Drivers.Neo4jDriver)
+	defer session.Close(ctx)
 
-	organizationDbNodePtr, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
+	organizationDbNodePtr, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		tenant := common.GetContext(ctx).Tenant
-		organizationDbNodePtr, err := s.repositories.OrganizationRepository.Create(tx, tenant, *input.OrganizationEntity)
+		organizationDbNodePtr, err := s.repositories.OrganizationRepository.Create(ctx, tx, tenant, *input.OrganizationEntity)
 		if err != nil {
 			return nil, err
 		}
 		var organizationId = utils.GetPropsFromNode(*organizationDbNodePtr)["id"].(string)
 
 		if input.OrganizationTypeID != nil {
-			err = s.repositories.OrganizationRepository.LinkWithOrganizationTypeInTx(tx, tenant, organizationId, *input.OrganizationTypeID)
+			err = s.repositories.OrganizationRepository.LinkWithOrganizationTypeInTx(ctx, tx, tenant, organizationId, *input.OrganizationTypeID)
 			if err != nil {
 				return nil, err
 			}
@@ -72,23 +72,23 @@ func (s *organizationService) Create(ctx context.Context, input *OrganizationCre
 }
 
 func (s *organizationService) Update(ctx context.Context, input *OrganizationUpdateData) (*entity.OrganizationEntity, error) {
-	session := utils.NewNeo4jWriteSession(*s.repositories.Drivers.Neo4jDriver)
-	defer session.Close()
+	session := utils.NewNeo4jWriteSession(ctx, *s.repositories.Drivers.Neo4jDriver)
+	defer session.Close(ctx)
 
-	organizationDbNodePtr, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
+	organizationDbNodePtr, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		tenant := common.GetContext(ctx).Tenant
-		organizationDbNodePtr, err := s.repositories.OrganizationRepository.Update(tx, tenant, *input.OrganizationEntity)
+		organizationDbNodePtr, err := s.repositories.OrganizationRepository.Update(ctx, tx, tenant, *input.OrganizationEntity)
 		if err != nil {
 			return nil, err
 		}
 		var organizationId = utils.GetPropsFromNode(*organizationDbNodePtr)["id"].(string)
 
-		err = s.repositories.OrganizationRepository.UnlinkFromOrganizationTypesInTx(tx, tenant, organizationId)
+		err = s.repositories.OrganizationRepository.UnlinkFromOrganizationTypesInTx(ctx, tx, tenant, organizationId)
 		if err != nil {
 			return nil, err
 		}
 		if input.OrganizationTypeID != nil {
-			err := s.repositories.OrganizationRepository.LinkWithOrganizationTypeInTx(tx, tenant, organizationId, *input.OrganizationTypeID)
+			err := s.repositories.OrganizationRepository.LinkWithOrganizationTypeInTx(ctx, tx, tenant, organizationId, *input.OrganizationTypeID)
 			if err != nil {
 				return nil, err
 			}
@@ -103,8 +103,8 @@ func (s *organizationService) Update(ctx context.Context, input *OrganizationUpd
 }
 
 func (s *organizationService) FindAll(ctx context.Context, page, limit int, filter *model.Filter, sortBy []*model.SortBy) (*utils.Pagination, error) {
-	session := utils.NewNeo4jReadSession(*s.repositories.Drivers.Neo4jDriver)
-	defer session.Close()
+	session := utils.NewNeo4jReadSession(ctx, *s.repositories.Drivers.Neo4jDriver)
+	defer session.Close(ctx)
 
 	var paginatedResult = utils.Pagination{
 		Limit: limit,
@@ -120,6 +120,7 @@ func (s *organizationService) FindAll(ctx context.Context, page, limit int, filt
 	}
 
 	dbNodesWithTotalCount, err := s.repositories.OrganizationRepository.GetPaginatedOrganizations(
+		ctx,
 		session,
 		common.GetContext(ctx).Tenant,
 		paginatedResult.GetSkip(),
@@ -141,8 +142,8 @@ func (s *organizationService) FindAll(ctx context.Context, page, limit int, filt
 }
 
 func (s *organizationService) GetOrganizationsForContact(ctx context.Context, contactId string, page, limit int, filter *model.Filter, sortBy []*model.SortBy) (*utils.Pagination, error) {
-	session := utils.NewNeo4jReadSession(*s.repositories.Drivers.Neo4jDriver)
-	defer session.Close()
+	session := utils.NewNeo4jReadSession(ctx, *s.repositories.Drivers.Neo4jDriver)
+	defer session.Close(ctx)
 
 	var paginatedResult = utils.Pagination{
 		Limit: limit,
@@ -158,6 +159,7 @@ func (s *organizationService) GetOrganizationsForContact(ctx context.Context, co
 	}
 
 	dbNodesWithTotalCount, err := s.repositories.OrganizationRepository.GetPaginatedOrganizationsForContact(
+		ctx,
 		session,
 		common.GetTenantFromContext(ctx),
 		contactId,
@@ -180,10 +182,10 @@ func (s *organizationService) GetOrganizationsForContact(ctx context.Context, co
 }
 
 func (s *organizationService) GetOrganizationForJobRole(ctx context.Context, roleId string) (*entity.OrganizationEntity, error) {
-	session := utils.NewNeo4jReadSession(*s.repositories.Drivers.Neo4jDriver)
-	defer session.Close()
+	session := utils.NewNeo4jReadSession(ctx, *s.repositories.Drivers.Neo4jDriver)
+	defer session.Close(ctx)
 
-	dbNode, err := s.repositories.OrganizationRepository.GetOrganizationForJobRole(session, common.GetContext(ctx).Tenant, roleId)
+	dbNode, err := s.repositories.OrganizationRepository.GetOrganizationForJobRole(ctx, session, common.GetContext(ctx).Tenant, roleId)
 	if dbNode == nil || err != nil {
 		return nil, err
 	}
@@ -191,10 +193,10 @@ func (s *organizationService) GetOrganizationForJobRole(ctx context.Context, rol
 }
 
 func (s *organizationService) GetOrganizationById(ctx context.Context, organizationId string) (*entity.OrganizationEntity, error) {
-	session := utils.NewNeo4jReadSession(*s.repositories.Drivers.Neo4jDriver)
-	defer session.Close()
+	session := utils.NewNeo4jReadSession(ctx, *s.repositories.Drivers.Neo4jDriver)
+	defer session.Close(ctx)
 
-	dbNode, err := s.repositories.OrganizationRepository.GetOrganizationById(session, common.GetContext(ctx).Tenant, organizationId)
+	dbNode, err := s.repositories.OrganizationRepository.GetOrganizationById(ctx, session, common.GetContext(ctx).Tenant, organizationId)
 	if err != nil {
 		return nil, err
 	}
@@ -202,10 +204,10 @@ func (s *organizationService) GetOrganizationById(ctx context.Context, organizat
 }
 
 func (s *organizationService) PermanentDelete(ctx context.Context, organizationId string) (bool, error) {
-	session := utils.NewNeo4jWriteSession(*s.repositories.Drivers.Neo4jDriver)
-	defer session.Close()
+	session := utils.NewNeo4jWriteSession(ctx, *s.repositories.Drivers.Neo4jDriver)
+	defer session.Close(ctx)
 
-	err := s.repositories.OrganizationRepository.Delete(session, common.GetContext(ctx).Tenant, organizationId)
+	err := s.repositories.OrganizationRepository.Delete(ctx, session, common.GetContext(ctx).Tenant, organizationId)
 
 	if err != nil {
 		return false, err

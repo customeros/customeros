@@ -2,38 +2,39 @@ package repository
 
 import (
 	"fmt"
-	"github.com/neo4j/neo4j-go-driver/v4/neo4j"
-	"github.com/neo4j/neo4j-go-driver/v4/neo4j/dbtype"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils"
+	"golang.org/x/net/context"
 )
 
 type CustomFieldRepository interface {
-	MergeCustomFieldToContactInTx(tx neo4j.Transaction, tenant, contactId string, entity entity.CustomFieldEntity) (*dbtype.Node, error)
-	MergeCustomFieldToFieldSetInTx(tx neo4j.Transaction, tenant, contactId, fieldSet string, entity entity.CustomFieldEntity) (*dbtype.Node, error)
-	LinkWithCustomFieldTemplateForContactInTx(tx neo4j.Transaction, fieldId, contactId, templateId string) error
-	LinkWithCustomFieldTemplateForFieldSetInTx(tx neo4j.Transaction, fieldId, fieldSetId, templateId string) error
-	UpdateForContactInTx(tx neo4j.Transaction, tenant, contactId string, entity entity.CustomFieldEntity) (*dbtype.Node, error)
-	UpdateForFieldSetInTx(tx neo4j.Transaction, tenant, contactId, fieldSetId string, entity entity.CustomFieldEntity) (*dbtype.Node, error)
-	FindAllForContact(session neo4j.Session, tenant, contactId string) ([]*neo4j.Record, error)
-	FindAllForFieldSet(session neo4j.Session, tenant, fieldSetId string) ([]*neo4j.Record, error)
-	DeleteByNameFromContact(session neo4j.Session, tenant, contactId, fieldName string) error
-	DeleteByIdFromContact(session neo4j.Session, tenant, contactId, fieldId string) error
-	DeleteByIdFromFieldSet(session neo4j.Session, tenant, contactId, fieldSetId, fieldId string) error
+	MergeCustomFieldToContactInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant, contactId string, entity entity.CustomFieldEntity) (*dbtype.Node, error)
+	MergeCustomFieldToFieldSetInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant, contactId, fieldSet string, entity entity.CustomFieldEntity) (*dbtype.Node, error)
+	LinkWithCustomFieldTemplateForContactInTx(ctx context.Context, tx neo4j.ManagedTransaction, fieldId, contactId, templateId string) error
+	LinkWithCustomFieldTemplateForFieldSetInTx(ctx context.Context, tx neo4j.ManagedTransaction, fieldId, fieldSetId, templateId string) error
+	UpdateForContactInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant, contactId string, entity entity.CustomFieldEntity) (*dbtype.Node, error)
+	UpdateForFieldSetInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant, contactId, fieldSetId string, entity entity.CustomFieldEntity) (*dbtype.Node, error)
+	FindAllForContact(ctx context.Context, session neo4j.SessionWithContext, tenant, contactId string) ([]*neo4j.Record, error)
+	FindAllForFieldSet(ctx context.Context, session neo4j.SessionWithContext, tenant, fieldSetId string) ([]*neo4j.Record, error)
+	DeleteByNameFromContact(ctx context.Context, session neo4j.SessionWithContext, tenant, contactId, fieldName string) error
+	DeleteByIdFromContact(ctx context.Context, session neo4j.SessionWithContext, tenant, contactId, fieldId string) error
+	DeleteByIdFromFieldSet(ctx context.Context, session neo4j.SessionWithContext, tenant, contactId, fieldSetId, fieldId string) error
 }
 
 type customFieldRepository struct {
-	driver *neo4j.Driver
+	driver *neo4j.DriverWithContext
 }
 
-func NewCustomFieldRepository(driver *neo4j.Driver) CustomFieldRepository {
+func NewCustomFieldRepository(driver *neo4j.DriverWithContext) CustomFieldRepository {
 	return &customFieldRepository{
 		driver: driver,
 	}
 }
 
-func (r *customFieldRepository) MergeCustomFieldToContactInTx(tx neo4j.Transaction, tenant, contactId string, entity entity.CustomFieldEntity) (*dbtype.Node, error) {
-	queryResult, err := tx.Run(
+func (r *customFieldRepository) MergeCustomFieldToContactInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant, contactId string, entity entity.CustomFieldEntity) (*dbtype.Node, error) {
+	queryResult, err := tx.Run(ctx,
 		fmt.Sprintf("MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) "+
 			" MERGE (f:%s:CustomField {name: $name, datatype:$datatype})<-[:HAS_PROPERTY]-(c) "+
 			" ON CREATE SET f.%s=$value, f.id=randomUUID(), f.createdAt=$now, f.updatedAt=$now, f.source=$source, f.sourceOfTruth=$sourceOfTruth,  f:%s "+
@@ -49,11 +50,11 @@ func (r *customFieldRepository) MergeCustomFieldToContactInTx(tx neo4j.Transacti
 			"sourceOfTruth": entity.SourceOfTruth,
 			"now":           utils.Now(),
 		})
-	return utils.ExtractSingleRecordFirstValueAsNode(queryResult, err)
+	return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
 }
 
-func (r *customFieldRepository) MergeCustomFieldToFieldSetInTx(tx neo4j.Transaction, tenant, contactId, fieldSetId string, entity entity.CustomFieldEntity) (*dbtype.Node, error) {
-	queryResult, err := tx.Run(
+func (r *customFieldRepository) MergeCustomFieldToFieldSetInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant, contactId, fieldSetId string, entity entity.CustomFieldEntity) (*dbtype.Node, error) {
+	queryResult, err := tx.Run(ctx,
 		fmt.Sprintf(" MATCH (s:FieldSet {id:$fieldSetId})<-[:HAS_COMPLEX_PROPERTY]-(c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) "+
 			" MERGE (f:%s:CustomField {name: $name, datatype:$datatype})<-[:HAS_PROPERTY]-(s)"+
 			" ON CREATE SET f.%s=$value, f.id=randomUUID(), f.createdAt=$now, f.updatedAt=$now, f.source=$source, f.sourceOfTruth=$sourceOfTruth, f:%s "+
@@ -70,11 +71,11 @@ func (r *customFieldRepository) MergeCustomFieldToFieldSetInTx(tx neo4j.Transact
 			"sourceOfTruth": entity.SourceOfTruth,
 			"now":           utils.Now(),
 		})
-	return utils.ExtractSingleRecordFirstValueAsNode(queryResult, err)
+	return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
 }
 
-func (r *customFieldRepository) LinkWithCustomFieldTemplateForContactInTx(tx neo4j.Transaction, fieldId, contactId, templateId string) error {
-	queryResult, err := tx.Run(`
+func (r *customFieldRepository) LinkWithCustomFieldTemplateForContactInTx(ctx context.Context, tx neo4j.ManagedTransaction, fieldId, contactId, templateId string) error {
+	queryResult, err := tx.Run(ctx, `
 			MATCH (f:CustomField {id:$fieldId})<-[:HAS_PROPERTY]-(c:Contact {id:$contactId}),
 				  (c)-[:IS_DEFINED_BY]->(e:EntityTemplate),
 				  (e)-[:CONTAINS]->(d:CustomFieldTemplate {id:$customFieldTemplateId})
@@ -88,12 +89,12 @@ func (r *customFieldRepository) LinkWithCustomFieldTemplateForContactInTx(tx neo
 	if err != nil {
 		return err
 	}
-	_, err = queryResult.Single()
+	_, err = queryResult.Single(ctx)
 	return err
 }
 
-func (r *customFieldRepository) LinkWithCustomFieldTemplateForFieldSetInTx(tx neo4j.Transaction, fieldId, fieldSetId, templateId string) error {
-	queryResult, err := tx.Run(`
+func (r *customFieldRepository) LinkWithCustomFieldTemplateForFieldSetInTx(ctx context.Context, tx neo4j.ManagedTransaction, fieldId, fieldSetId, templateId string) error {
+	queryResult, err := tx.Run(ctx, `
 			MATCH (f:CustomField {id:$fieldId})<-[:HAS_PROPERTY]-(s:FieldSet {id:$fieldSetId}),
 				  (s)-[:IS_DEFINED_BY]->(e:FieldSetTemplate),
 				  (e)-[:CONTAINS]->(d:CustomFieldTemplate {id:$customFieldTemplateId})
@@ -107,13 +108,13 @@ func (r *customFieldRepository) LinkWithCustomFieldTemplateForFieldSetInTx(tx ne
 	if err != nil {
 		return err
 	}
-	_, err = queryResult.Single()
+	_, err = queryResult.Single(ctx)
 	return err
 }
 
-func (r *customFieldRepository) FindAllForContact(session neo4j.Session, tenant, contactId string) ([]*neo4j.Record, error) {
-	records, err := session.ReadTransaction(func(tx neo4j.Transaction) (any, error) {
-		queryResult, err := tx.Run(`
+func (r *customFieldRepository) FindAllForContact(ctx context.Context, session neo4j.SessionWithContext, tenant, contactId string) ([]*neo4j.Record, error) {
+	records, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		queryResult, err := tx.Run(ctx, `
 				MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}),
               		  (c)-[:HAS_PROPERTY]->(f:CustomField) 
 				RETURN f ORDER BY f.name`,
@@ -123,14 +124,14 @@ func (r *customFieldRepository) FindAllForContact(session neo4j.Session, tenant,
 		if err != nil {
 			return nil, err
 		}
-		return queryResult.Collect()
+		return queryResult.Collect(ctx)
 	})
 	return records.([]*neo4j.Record), err
 }
 
-func (r *customFieldRepository) FindAllForFieldSet(session neo4j.Session, tenant, fieldSetId string) ([]*neo4j.Record, error) {
-	records, err := session.ReadTransaction(func(tx neo4j.Transaction) (any, error) {
-		queryResult, err := tx.Run(`
+func (r *customFieldRepository) FindAllForFieldSet(ctx context.Context, session neo4j.SessionWithContext, tenant, fieldSetId string) ([]*neo4j.Record, error) {
+	records, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		queryResult, err := tx.Run(ctx, `
 				MATCH (s:FieldSet {id:$fieldSetId})<-[:HAS_COMPLEX_PROPERTY]-(:Contact)-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}),
               		  (s)-[:HAS_PROPERTY]->(f:CustomField) 
 				RETURN f ORDER BY f.name`,
@@ -140,14 +141,14 @@ func (r *customFieldRepository) FindAllForFieldSet(session neo4j.Session, tenant
 		if err != nil {
 			return nil, err
 		}
-		return queryResult.Collect()
+		return queryResult.Collect(ctx)
 	})
 	return records.([]*neo4j.Record), err
 }
 
-func (r *customFieldRepository) DeleteByIdFromContact(session neo4j.Session, tenant, contactId, fieldId string) error {
-	_, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
-		_, err := tx.Run(`
+func (r *customFieldRepository) DeleteByIdFromContact(ctx context.Context, session neo4j.SessionWithContext, tenant, contactId, fieldId string) error {
+	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		_, err := tx.Run(ctx, `
 			MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}),
                   (c)-[:HAS_PROPERTY]->(f:CustomField {id:$fieldId})
             DETACH DELETE f`,
@@ -161,9 +162,9 @@ func (r *customFieldRepository) DeleteByIdFromContact(session neo4j.Session, ten
 	return err
 }
 
-func (r *customFieldRepository) DeleteByNameFromContact(session neo4j.Session, tenant, contactId, fieldId string) error {
-	_, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
-		_, err := tx.Run(`
+func (r *customFieldRepository) DeleteByNameFromContact(ctx context.Context, session neo4j.SessionWithContext, tenant, contactId, fieldId string) error {
+	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		_, err := tx.Run(ctx, `
 			MATCH (c:Contact {id:$id})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}),
                   (c)-[:HAS_PROPERTY]->(f:CustomField {name:$name})
             DETACH DELETE f`,
@@ -177,9 +178,9 @@ func (r *customFieldRepository) DeleteByNameFromContact(session neo4j.Session, t
 	return err
 }
 
-func (r *customFieldRepository) DeleteByIdFromFieldSet(session neo4j.Session, tenant, contactId, fieldSetId, fieldId string) error {
-	_, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
-		_, err := tx.Run(`
+func (r *customFieldRepository) DeleteByIdFromFieldSet(ctx context.Context, session neo4j.SessionWithContext, tenant, contactId, fieldSetId, fieldId string) error {
+	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		_, err := tx.Run(ctx, `
 			MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}),
                   (c)-[:HAS_COMPLEX_PROPERTY]->(s:FieldSet {id:$fieldSetId}),
                   (s)-[:HAS_PROPERTY]->(f:CustomField {id:$fieldId})
@@ -195,8 +196,8 @@ func (r *customFieldRepository) DeleteByIdFromFieldSet(session neo4j.Session, te
 	return err
 }
 
-func (r *customFieldRepository) UpdateForContactInTx(tx neo4j.Transaction, tenant, contactId string, entity entity.CustomFieldEntity) (*dbtype.Node, error) {
-	queryResult, err := tx.Run(fmt.Sprintf(
+func (r *customFieldRepository) UpdateForContactInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant, contactId string, entity entity.CustomFieldEntity) (*dbtype.Node, error) {
+	queryResult, err := tx.Run(ctx, fmt.Sprintf(
 		"MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}), "+
 			" (c)-[:HAS_PROPERTY]->(f:%s:CustomField {id:$fieldId}) "+
 			" SET f.name=$name, "+
@@ -213,11 +214,11 @@ func (r *customFieldRepository) UpdateForContactInTx(tx neo4j.Transaction, tenan
 			"value":         entity.Value.RealValue(),
 			"now":           utils.Now(),
 		})
-	return utils.ExtractSingleRecordFirstValueAsNode(queryResult, err)
+	return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
 }
 
-func (r *customFieldRepository) UpdateForFieldSetInTx(tx neo4j.Transaction, tenant, contactId, fieldSetId string, entity entity.CustomFieldEntity) (*dbtype.Node, error) {
-	queryResult, err := tx.Run(fmt.Sprintf(
+func (r *customFieldRepository) UpdateForFieldSetInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant, contactId, fieldSetId string, entity entity.CustomFieldEntity) (*dbtype.Node, error) {
+	queryResult, err := tx.Run(ctx, fmt.Sprintf(
 		"MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}), "+
 			" (c)-[:HAS_COMPLEX_PROPERTY]->(s:FieldSet {id:$fieldSetId}),"+
 			" (s)-[:HAS_PROPERTY]->(f:%s:CustomField {id:$fieldId})"+
@@ -236,5 +237,5 @@ func (r *customFieldRepository) UpdateForFieldSetInTx(tx neo4j.Transaction, tena
 			"value":         entity.Value.RealValue(),
 			"now":           utils.Now(),
 		})
-	return utils.ExtractSingleRecordFirstValueAsNode(queryResult, err)
+	return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
 }

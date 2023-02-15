@@ -10,12 +10,12 @@ import (
 
 const UsernameHeader = "X-Openline-USERNAME"
 
-func UserToTenantEnhancer(userRepository repository.UserRepository) func(c *gin.Context) {
+func UserToTenantEnhancer(ctx context.Context, userRepository repository.UserRepository) func(c *gin.Context) {
 	return func(c *gin.Context) {
 		usernameHeader := c.GetHeader(UsernameHeader)
 		if usernameHeader != "" {
 
-			userId, tenant, err := userRepository.FindUserByEmail(usernameHeader)
+			userId, tenant, err := userRepository.FindUserByEmail(ctx, usernameHeader)
 
 			if err != nil {
 				c.AbortWithStatus(401)
@@ -65,7 +65,7 @@ func GetTenantForUsernameForGRPC(ctx context.Context, userRepository repository.
 
 	kh := md.Get(UsernameHeader)
 	if kh != nil && len(kh) == 1 {
-		_, tenant, err := userRepository.FindUserByEmail(kh[0])
+		_, tenant, err := userRepository.FindUserByEmail(ctx, kh[0])
 
 		if err != nil {
 			return nil, err

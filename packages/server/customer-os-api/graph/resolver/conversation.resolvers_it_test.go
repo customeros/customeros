@@ -6,13 +6,15 @@ import (
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils/decode"
 	"github.com/stretchr/testify/require"
+	"golang.org/x/net/context"
 	"testing"
 )
 
 func TestMutationResolver_ConversationCreate_Min(t *testing.T) {
-	defer tearDownTestCase()(t)
-	neo4jt.CreateTenant(driver, tenantName)
-	contactId := neo4jt.CreateDefaultContact(driver, tenantName)
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx)(t)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+	contactId := neo4jt.CreateDefaultContact(ctx, driver, tenantName)
 
 	rawResponse, err := c.RawPost(getQuery("conversation/create_conversation_min"),
 		client.Var("contactId", contactId))
@@ -36,20 +38,21 @@ func TestMutationResolver_ConversationCreate_Min(t *testing.T) {
 	require.Equal(t, model.DataSourceOpenline, conversation.Conversation_Create.Source)
 	require.Equal(t, "func test", *conversation.Conversation_Create.AppSource)
 
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Conversation"))
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Conversation_"+tenantName))
-	require.Equal(t, 1, neo4jt.GetCountOfRelationships(driver, "PARTICIPATES"))
-	assertNeo4jLabels(t, driver, []string{"Tenant", "Contact", "Contact_" + tenantName, "Conversation", "Conversation_" + tenantName})
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Conversation"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Conversation_"+tenantName))
+	require.Equal(t, 1, neo4jt.GetCountOfRelationships(ctx, driver, "PARTICIPATES"))
+	assertNeo4jLabels(ctx, t, driver, []string{"Tenant", "Contact", "Contact_" + tenantName, "Conversation", "Conversation_" + tenantName})
 }
 
 func TestMutationResolver_ConversationCreate_WithGivenIdAndMultipleParticipants(t *testing.T) {
-	defer tearDownTestCase()(t)
-	neo4jt.CreateTenant(driver, tenantName)
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx)(t)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
 	conversationId := "Some given conversation ID"
-	userId1 := neo4jt.CreateDefaultUser(driver, tenantName)
-	userId2 := neo4jt.CreateDefaultUser(driver, tenantName)
-	contactId1 := neo4jt.CreateDefaultContact(driver, tenantName)
-	contactId2 := neo4jt.CreateDefaultContact(driver, tenantName)
+	userId1 := neo4jt.CreateDefaultUser(ctx, driver, tenantName)
+	userId2 := neo4jt.CreateDefaultUser(ctx, driver, tenantName)
+	contactId1 := neo4jt.CreateDefaultContact(ctx, driver, tenantName)
+	contactId2 := neo4jt.CreateDefaultContact(ctx, driver, tenantName)
 
 	rawResponse, err := c.RawPost(getQuery("conversation/create_conversation_with_multiple_participants"),
 		client.Var("contactId1", contactId1),
@@ -78,18 +81,19 @@ func TestMutationResolver_ConversationCreate_WithGivenIdAndMultipleParticipants(
 	require.ElementsMatch(t, []string{userId1, userId2},
 		[]string{conversation.Conversation_Create.Users[0].ID, conversation.Conversation_Create.Users[1].ID})
 
-	require.Equal(t, 2, neo4jt.GetCountOfNodes(driver, "Contact"))
-	require.Equal(t, 2, neo4jt.GetCountOfNodes(driver, "Contact_"+tenantName))
-	require.Equal(t, 2, neo4jt.GetCountOfNodes(driver, "User"))
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Conversation"))
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Conversation_"+tenantName))
-	require.Equal(t, 4, neo4jt.GetCountOfRelationships(driver, "PARTICIPATES"))
-	assertNeo4jLabels(t, driver, []string{"Tenant", "Contact", "Contact_" + tenantName, "User", "Conversation", "Conversation_" + tenantName})
+	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "Contact"))
+	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "Contact_"+tenantName))
+	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "User"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Conversation"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Conversation_"+tenantName))
+	require.Equal(t, 4, neo4jt.GetCountOfRelationships(ctx, driver, "PARTICIPATES"))
+	assertNeo4jLabels(ctx, t, driver, []string{"Tenant", "Contact", "Contact_" + tenantName, "User", "Conversation", "Conversation_" + tenantName})
 }
 
 func TestMutationResolver_ConversationCreate_WithoutParticipants_ShouldFail(t *testing.T) {
-	defer tearDownTestCase()(t)
-	neo4jt.CreateTenant(driver, tenantName)
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx)(t)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
 
 	rawResponse, err := c.RawPost(getQuery("conversation/create_conversation_without_participants"))
 
@@ -97,15 +101,16 @@ func TestMutationResolver_ConversationCreate_WithoutParticipants_ShouldFail(t *t
 	require.NotNil(t, rawResponse.Errors)
 	require.Contains(t, string(rawResponse.Errors), "Missing participants for new conversation")
 
-	require.Equal(t, 0, neo4jt.GetCountOfNodes(driver, "Conversation"))
+	require.Equal(t, 0, neo4jt.GetCountOfNodes(ctx, driver, "Conversation"))
 }
 
 func TestMutationResolver_ConversationClose(t *testing.T) {
-	defer tearDownTestCase()(t)
-	neo4jt.CreateTenant(driver, tenantName)
-	contactId := neo4jt.CreateDefaultContact(driver, tenantName)
-	userId := neo4jt.CreateDefaultUser(driver, tenantName)
-	conversationId := neo4jt.CreateConversation(driver, userId, contactId)
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx)(t)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+	contactId := neo4jt.CreateDefaultContact(ctx, driver, tenantName)
+	userId := neo4jt.CreateDefaultUser(ctx, driver, tenantName)
+	conversationId := neo4jt.CreateConversation(ctx, driver, userId, contactId)
 
 	rawResponse, err := c.RawPost(getQuery("conversation/close_conversation"),
 		client.Var("conversationId", conversationId))
@@ -125,18 +130,19 @@ func TestMutationResolver_ConversationClose(t *testing.T) {
 	require.Equal(t, contactId, conversation.Conversation_Close.Contacts[0].ID)
 	require.Equal(t, userId, conversation.Conversation_Close.Users[0].ID)
 
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Conversation"))
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Contact"))
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "User"))
-	require.Equal(t, 2, neo4jt.GetCountOfRelationships(driver, "PARTICIPATES"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Conversation"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Contact"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "User"))
+	require.Equal(t, 2, neo4jt.GetCountOfRelationships(ctx, driver, "PARTICIPATES"))
 }
 
 func TestMutationResolver_ConversationUpdate_NoChanges(t *testing.T) {
-	defer tearDownTestCase()(t)
-	neo4jt.CreateTenant(driver, tenantName)
-	contactId := neo4jt.CreateDefaultContact(driver, tenantName)
-	userId := neo4jt.CreateDefaultUser(driver, tenantName)
-	conversationId := neo4jt.CreateConversation(driver, userId, contactId)
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx)(t)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+	contactId := neo4jt.CreateDefaultContact(ctx, driver, tenantName)
+	userId := neo4jt.CreateDefaultUser(ctx, driver, tenantName)
+	conversationId := neo4jt.CreateConversation(ctx, driver, userId, contactId)
 
 	rawResponse, err := c.RawPost(getQuery("conversation/update_conversation_no_changes"),
 		client.Var("conversationId", conversationId))
@@ -158,22 +164,23 @@ func TestMutationResolver_ConversationUpdate_NoChanges(t *testing.T) {
 	require.Equal(t, contactId, conversation.Conversation_Update.Contacts[0].ID)
 	require.Equal(t, userId, conversation.Conversation_Update.Users[0].ID)
 
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Conversation"))
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Contact"))
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "User"))
-	require.Equal(t, 2, neo4jt.GetCountOfRelationships(driver, "PARTICIPATES"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Conversation"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Contact"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "User"))
+	require.Equal(t, 2, neo4jt.GetCountOfRelationships(ctx, driver, "PARTICIPATES"))
 }
 
 func TestMutationResolver_ConversationUpdate_ChangeAllFieldsAndAddNewParticipants(t *testing.T) {
-	defer tearDownTestCase()(t)
-	neo4jt.CreateTenant(driver, tenantName)
-	contactId1 := neo4jt.CreateDefaultContact(driver, tenantName)
-	contactId2 := neo4jt.CreateDefaultContact(driver, tenantName)
-	userId1 := neo4jt.CreateDefaultUser(driver, tenantName)
-	userId2 := neo4jt.CreateDefaultUser(driver, tenantName)
-	conversationId := neo4jt.CreateConversation(driver, userId1, contactId1)
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx)(t)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+	contactId1 := neo4jt.CreateDefaultContact(ctx, driver, tenantName)
+	contactId2 := neo4jt.CreateDefaultContact(ctx, driver, tenantName)
+	userId1 := neo4jt.CreateDefaultUser(ctx, driver, tenantName)
+	userId2 := neo4jt.CreateDefaultUser(ctx, driver, tenantName)
+	conversationId := neo4jt.CreateConversation(ctx, driver, userId1, contactId1)
 
-	require.Equal(t, 2, neo4jt.GetCountOfRelationships(driver, "PARTICIPATES"))
+	require.Equal(t, 2, neo4jt.GetCountOfRelationships(ctx, driver, "PARTICIPATES"))
 
 	rawResponse, err := c.RawPost(getQuery("conversation/update_conversation_new_participants"),
 		client.Var("conversationId", conversationId),
@@ -201,8 +208,8 @@ func TestMutationResolver_ConversationUpdate_ChangeAllFieldsAndAddNewParticipant
 	require.ElementsMatch(t, []string{userId1, userId2},
 		[]string{conversation.Conversation_Update.Users[0].ID, conversation.Conversation_Update.Users[1].ID})
 
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Conversation"))
-	require.Equal(t, 2, neo4jt.GetCountOfNodes(driver, "Contact"))
-	require.Equal(t, 2, neo4jt.GetCountOfNodes(driver, "User"))
-	require.Equal(t, 4, neo4jt.GetCountOfRelationships(driver, "PARTICIPATES"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Conversation"))
+	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "Contact"))
+	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "User"))
+	require.Equal(t, 4, neo4jt.GetCountOfRelationships(ctx, driver, "PARTICIPATES"))
 }

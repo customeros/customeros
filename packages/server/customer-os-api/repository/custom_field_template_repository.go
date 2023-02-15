@@ -2,30 +2,31 @@ package repository
 
 import (
 	"fmt"
-	"github.com/neo4j/neo4j-go-driver/v4/neo4j"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils"
+	"golang.org/x/net/context"
 )
 
 type CustomFieldTemplateRepository interface {
-	createCustomFieldTemplateForEntityInTx(tx neo4j.Transaction, tenant, entityTemplateId string, entity *entity.CustomFieldTemplateEntity) error
-	createCustomFieldTemplateForFieldSetInTx(tx neo4j.Transaction, tenant, fieldSetTemplateId string, entity *entity.CustomFieldTemplateEntity) error
-	FindAllByEntityTemplateId(entityTemplateId string) (any, error)
-	FindAllByEntityFieldSetTemplateId(fieldSetTemplateId string) (any, error)
-	FindByCustomFieldId(fieldSetId string) (any, error)
+	createCustomFieldTemplateForEntityInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant, entityTemplateId string, entity *entity.CustomFieldTemplateEntity) error
+	createCustomFieldTemplateForFieldSetInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant, fieldSetTemplateId string, entity *entity.CustomFieldTemplateEntity) error
+	FindAllByEntityTemplateId(ctx context.Context, entityTemplateId string) (any, error)
+	FindAllByEntityFieldSetTemplateId(ctx context.Context, fieldSetTemplateId string) (any, error)
+	FindByCustomFieldId(ctx context.Context, fieldSetId string) (any, error)
 }
 
 type customFieldTemplateRepository struct {
-	driver *neo4j.Driver
+	driver *neo4j.DriverWithContext
 }
 
-func NewCustomFieldTemplateRepository(driver *neo4j.Driver) CustomFieldTemplateRepository {
+func NewCustomFieldTemplateRepository(driver *neo4j.DriverWithContext) CustomFieldTemplateRepository {
 	return &customFieldTemplateRepository{
 		driver: driver,
 	}
 }
 
-func (r *customFieldTemplateRepository) createCustomFieldTemplateForEntityInTx(tx neo4j.Transaction, tenant, entityTemplateId string, entity *entity.CustomFieldTemplateEntity) error {
+func (r *customFieldTemplateRepository) createCustomFieldTemplateForEntityInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant, entityTemplateId string, entity *entity.CustomFieldTemplateEntity) error {
 	query := "MATCH (e:EntityTemplate {id:$entityTemplateId}) " +
 		" MERGE (e)-[:CONTAINS]->(f:CustomFieldTemplate {id:randomUUID(), name:$name}) " +
 		" ON CREATE SET f:%s, " +
@@ -38,7 +39,7 @@ func (r *customFieldTemplateRepository) createCustomFieldTemplateForEntityInTx(t
 		"  				f.min=$min, " +
 		"				f.max=$max"
 
-	_, err := tx.Run(fmt.Sprintf(query, "CustomFieldTemplate_"+tenant),
+	_, err := tx.Run(ctx, fmt.Sprintf(query, "CustomFieldTemplate_"+tenant),
 		map[string]any{
 			"entityTemplateId": entityTemplateId,
 			"name":             entity.Name,
@@ -54,7 +55,7 @@ func (r *customFieldTemplateRepository) createCustomFieldTemplateForEntityInTx(t
 	return err
 }
 
-func (r *customFieldTemplateRepository) createCustomFieldTemplateForFieldSetInTx(tx neo4j.Transaction, tenant, fieldSetTemplateId string, entity *entity.CustomFieldTemplateEntity) error {
+func (r *customFieldTemplateRepository) createCustomFieldTemplateForFieldSetInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant, fieldSetTemplateId string, entity *entity.CustomFieldTemplateEntity) error {
 	query := "MATCH (d:FieldSetTemplate {id:$fieldSetTemplateId}) " +
 		" MERGE (d)-[:CONTAINS]->(f:CustomFieldTemplate {id:randomUUID(), name:$name}) " +
 		" ON CREATE SET f:%s, " +
@@ -66,7 +67,7 @@ func (r *customFieldTemplateRepository) createCustomFieldTemplateForFieldSetInTx
 		"				f.length=$length, " +
 		"				f.min=$min, " +
 		"				f.max=$max"
-	_, err := tx.Run(fmt.Sprintf(query, "CustomFieldTemplate_"+tenant),
+	_, err := tx.Run(ctx, fmt.Sprintf(query, "CustomFieldTemplate_"+tenant),
 		map[string]any{
 			"fieldSetTemplateId": fieldSetTemplateId,
 			"name":               entity.Name,
@@ -82,12 +83,12 @@ func (r *customFieldTemplateRepository) createCustomFieldTemplateForFieldSetInTx
 	return err
 }
 
-func (r *customFieldTemplateRepository) FindAllByEntityTemplateId(entityTemplateId string) (any, error) {
-	session := utils.NewNeo4jReadSession(*r.driver)
-	defer session.Close()
+func (r *customFieldTemplateRepository) FindAllByEntityTemplateId(ctx context.Context, entityTemplateId string) (any, error) {
+	session := utils.NewNeo4jReadSession(ctx, *r.driver)
+	defer session.Close(ctx)
 
-	return session.ReadTransaction(func(tx neo4j.Transaction) (interface{}, error) {
-		queryResult, err := tx.Run(`
+	return session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (interface{}, error) {
+		queryResult, err := tx.Run(ctx, `
 				MATCH (:EntityTemplate {id:$entityTemplateId})-[:CONTAINS]->(f:CustomFieldTemplate) RETURN f ORDER BY f.order`,
 			map[string]any{
 				"entityTemplateId": entityTemplateId,
@@ -95,16 +96,16 @@ func (r *customFieldTemplateRepository) FindAllByEntityTemplateId(entityTemplate
 		if err != nil {
 			return nil, err
 		}
-		return queryResult.Collect()
+		return queryResult.Collect(ctx)
 	})
 }
 
-func (r *customFieldTemplateRepository) FindAllByEntityFieldSetTemplateId(fieldSetTemplateId string) (any, error) {
-	session := utils.NewNeo4jReadSession(*r.driver)
-	defer session.Close()
+func (r *customFieldTemplateRepository) FindAllByEntityFieldSetTemplateId(ctx context.Context, fieldSetTemplateId string) (any, error) {
+	session := utils.NewNeo4jReadSession(ctx, *r.driver)
+	defer session.Close(ctx)
 
-	return session.ReadTransaction(func(tx neo4j.Transaction) (interface{}, error) {
-		queryResult, err := tx.Run(`
+	return session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (interface{}, error) {
+		queryResult, err := tx.Run(ctx, `
 				MATCH (:FieldSetTemplate {id:$fieldSetTemplateId})-[:CONTAINS]->(f:CustomFieldTemplate) RETURN f ORDER BY f.order`,
 			map[string]any{
 				"fieldSetTemplateId": fieldSetTemplateId,
@@ -112,16 +113,16 @@ func (r *customFieldTemplateRepository) FindAllByEntityFieldSetTemplateId(fieldS
 		if err != nil {
 			return nil, err
 		}
-		return queryResult.Collect()
+		return queryResult.Collect(ctx)
 	})
 }
 
-func (r *customFieldTemplateRepository) FindByCustomFieldId(customFieldId string) (any, error) {
-	session := utils.NewNeo4jReadSession(*r.driver)
-	defer session.Close()
+func (r *customFieldTemplateRepository) FindByCustomFieldId(ctx context.Context, customFieldId string) (any, error) {
+	session := utils.NewNeo4jReadSession(ctx, *r.driver)
+	defer session.Close(ctx)
 
-	return session.ReadTransaction(func(tx neo4j.Transaction) (interface{}, error) {
-		queryResult, err := tx.Run(`
+	return session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (interface{}, error) {
+		queryResult, err := tx.Run(ctx, `
 				MATCH (:CustomField {id:$customFieldId})-[:IS_DEFINED_BY]->(d:CustomFieldTemplate)
 					RETURN d`,
 			map[string]any{
@@ -130,6 +131,6 @@ func (r *customFieldTemplateRepository) FindByCustomFieldId(customFieldId string
 		if err != nil {
 			return nil, err
 		}
-		return queryResult.Collect()
+		return queryResult.Collect(ctx)
 	})
 }

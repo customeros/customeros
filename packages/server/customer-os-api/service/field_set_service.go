@@ -2,8 +2,8 @@ package service
 
 import (
 	"context"
-	"github.com/neo4j/neo4j-go-driver/v4/neo4j"
-	"github.com/neo4j/neo4j-go-driver/v4/neo4j/dbtype"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
@@ -28,15 +28,15 @@ func NewFieldSetService(repository *repository.Repositories) FieldSetService {
 	}
 }
 
-func (s *fieldSetService) getDriver() neo4j.Driver {
+func (s *fieldSetService) getDriver() neo4j.DriverWithContext {
 	return *s.repository.Drivers.Neo4jDriver
 }
 
 func (s *fieldSetService) FindAllForContact(ctx context.Context, contact *model.Contact) (*entity.FieldSetEntities, error) {
-	session := utils.NewNeo4jReadSession(s.getDriver())
-	defer session.Close()
+	session := utils.NewNeo4jReadSession(ctx, s.getDriver())
+	defer session.Close(ctx)
 
-	dbRecords, err := s.repository.FieldSetRepository.FindAllForContact(session, common.GetContext(ctx).Tenant, contact.ID)
+	dbRecords, err := s.repository.FieldSetRepository.FindAllForContact(ctx, session, common.GetContext(ctx).Tenant, contact.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -52,33 +52,33 @@ func (s *fieldSetService) FindAllForContact(ctx context.Context, contact *model.
 }
 
 func (s *fieldSetService) MergeFieldSetToContact(ctx context.Context, contactId string, entity *entity.FieldSetEntity) (*entity.FieldSetEntity, error) {
-	session := utils.NewNeo4jWriteSession(s.getDriver())
-	defer session.Close()
+	session := utils.NewNeo4jWriteSession(ctx, s.getDriver())
+	defer session.Close(ctx)
 
 	var fieldSetDbNode *dbtype.Node
 
-	_, err := session.WriteTransaction(func(tx neo4j.Transaction) (interface{}, error) {
+	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (interface{}, error) {
 		var err error
-		fieldSetDbNode, err = s.repository.FieldSetRepository.MergeFieldSetToContactInTx(tx, common.GetContext(ctx).Tenant, contactId, *entity)
+		fieldSetDbNode, err = s.repository.FieldSetRepository.MergeFieldSetToContactInTx(ctx, tx, common.GetContext(ctx).Tenant, contactId, *entity)
 		if err != nil {
 			return nil, err
 		}
 		var fieldSetId = utils.GetPropsFromNode(*fieldSetDbNode)["id"].(string)
 		if entity.TemplateId != nil {
-			err := s.repository.FieldSetRepository.LinkWithFieldSetTemplateInTx(tx, common.GetContext(ctx).Tenant, fieldSetId, *entity.TemplateId)
+			err := s.repository.FieldSetRepository.LinkWithFieldSetTemplateInTx(ctx, tx, common.GetContext(ctx).Tenant, fieldSetId, *entity.TemplateId)
 			if err != nil {
 				return nil, err
 			}
 		}
 		if entity.CustomFields != nil {
 			for _, customField := range *entity.CustomFields {
-				dbNode, err := s.repository.CustomFieldRepository.MergeCustomFieldToFieldSetInTx(tx, common.GetContext(ctx).Tenant, contactId, fieldSetId, customField)
+				dbNode, err := s.repository.CustomFieldRepository.MergeCustomFieldToFieldSetInTx(ctx, tx, common.GetContext(ctx).Tenant, contactId, fieldSetId, customField)
 				if err != nil {
 					return nil, err
 				}
 				if customField.TemplateId != nil {
 					var fieldId = utils.GetPropsFromNode(*dbNode)["id"].(string)
-					err := s.repository.CustomFieldRepository.LinkWithCustomFieldTemplateForFieldSetInTx(tx, fieldId, fieldSetId, *customField.TemplateId)
+					err := s.repository.CustomFieldRepository.LinkWithCustomFieldTemplateForFieldSetInTx(ctx, tx, fieldId, fieldSetId, *customField.TemplateId)
 					if err != nil {
 						return nil, err
 					}
@@ -96,14 +96,14 @@ func (s *fieldSetService) MergeFieldSetToContact(ctx context.Context, contactId 
 }
 
 func (s *fieldSetService) UpdateFieldSetInContact(ctx context.Context, contactId string, entity *entity.FieldSetEntity) (*entity.FieldSetEntity, error) {
-	session := utils.NewNeo4jWriteSession(s.getDriver())
-	defer session.Close()
+	session := utils.NewNeo4jWriteSession(ctx, s.getDriver())
+	defer session.Close(ctx)
 
 	var fieldSetDbNode *dbtype.Node
 
-	_, err := session.WriteTransaction(func(tx neo4j.Transaction) (interface{}, error) {
+	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (interface{}, error) {
 		var err error
-		fieldSetDbNode, err = s.repository.FieldSetRepository.UpdateFieldSetForContactInTx(tx, common.GetContext(ctx).Tenant, contactId, *entity)
+		fieldSetDbNode, err = s.repository.FieldSetRepository.UpdateFieldSetForContactInTx(ctx, tx, common.GetContext(ctx).Tenant, contactId, *entity)
 		if err != nil {
 			return nil, err
 		}
@@ -118,10 +118,10 @@ func (s *fieldSetService) UpdateFieldSetInContact(ctx context.Context, contactId
 }
 
 func (s *fieldSetService) DeleteByIdFromContact(ctx context.Context, contactId string, fieldSetId string) (bool, error) {
-	session := utils.NewNeo4jWriteSession(s.getDriver())
-	defer session.Close()
+	session := utils.NewNeo4jWriteSession(ctx, s.getDriver())
+	defer session.Close(ctx)
 
-	err := s.repository.FieldSetRepository.DeleteByIdFromContact(session, common.GetContext(ctx).Tenant, contactId, fieldSetId)
+	err := s.repository.FieldSetRepository.DeleteByIdFromContact(ctx, session, common.GetContext(ctx).Tenant, contactId, fieldSetId)
 	if err != nil {
 		return false, err
 	}

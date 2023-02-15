@@ -3,51 +3,52 @@ package neo4j
 import (
 	"fmt"
 	"github.com/google/uuid"
-	"github.com/neo4j/neo4j-go-driver/v4/neo4j"
-	"github.com/neo4j/neo4j-go-driver/v4/neo4j/db"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j/db"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils"
+	"golang.org/x/net/context"
 )
 
-func CleanupAllData(driver *neo4j.Driver) {
-	ExecuteWriteQuery(driver, `MATCH (n) DETACH DELETE n`, map[string]any{})
+func CleanupAllData(ctx context.Context, driver *neo4j.DriverWithContext) {
+	ExecuteWriteQuery(ctx, driver, `MATCH (n) DETACH DELETE n`, map[string]any{})
 }
 
-func CreateFullTextBasicSearchIndexes(driver *neo4j.Driver, tenant string) {
+func CreateFullTextBasicSearchIndexes(ctx context.Context, driver *neo4j.DriverWithContext, tenant string) {
 	query := fmt.Sprintf("DROP INDEX basicSearchStandard_%s IF EXISTS", tenant)
-	ExecuteWriteQuery(driver, query, map[string]any{})
+	ExecuteWriteQuery(ctx, driver, query, map[string]any{})
 
 	query = fmt.Sprintf("CREATE FULLTEXT INDEX basicSearchStandard_%s FOR (n:Contact_%s|Email_%s|Organization_%s) ON EACH [n.firstName, n.lastName, n.name, n.email] "+
 		"OPTIONS {  indexConfig: { `fulltext.analyzer`: 'standard', `fulltext.eventually_consistent`: true } }", tenant, tenant, tenant, tenant)
-	ExecuteWriteQuery(driver, query, map[string]any{})
+	ExecuteWriteQuery(ctx, driver, query, map[string]any{})
 
 	query = fmt.Sprintf("DROP INDEX basicSearchSimple_%s IF EXISTS", tenant)
-	ExecuteWriteQuery(driver, query, map[string]any{})
+	ExecuteWriteQuery(ctx, driver, query, map[string]any{})
 
 	query = fmt.Sprintf("CREATE FULLTEXT INDEX basicSearchSimple_%s FOR (n:Contact_%s|Email_%s|Organization_%s) ON EACH [n.firstName, n.lastName, n.email, n.name] "+
 		"OPTIONS {  indexConfig: { `fulltext.analyzer`: 'simple', `fulltext.eventually_consistent`: true } }", tenant, tenant, tenant, tenant)
-	ExecuteWriteQuery(driver, query, map[string]any{})
+	ExecuteWriteQuery(ctx, driver, query, map[string]any{})
 }
 
-func CreateTenant(driver *neo4j.Driver, tenant string) {
+func CreateTenant(ctx context.Context, driver *neo4j.DriverWithContext, tenant string) {
 	query := `MERGE (t:Tenant {name:$tenant})`
-	ExecuteWriteQuery(driver, query, map[string]any{
+	ExecuteWriteQuery(ctx, driver, query, map[string]any{
 		"tenant": tenant,
 	})
 }
 
-func CreateHubspotExternalSystem(driver *neo4j.Driver, tenant string) {
+func CreateHubspotExternalSystem(ctx context.Context, driver *neo4j.DriverWithContext, tenant string) {
 	query := `MATCH (t:Tenant {name:$tenant})
 			MERGE (e:ExternalSystem {id:$externalSystemId})-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]->(t)`
-	ExecuteWriteQuery(driver, query, map[string]any{
+	ExecuteWriteQuery(ctx, driver, query, map[string]any{
 		"tenant":           tenant,
 		"externalSystemId": "hubspot",
 	})
 }
 
-func CreateDefaultUser(driver *neo4j.Driver, tenant string) string {
-	return CreateUser(driver, tenant, entity.UserEntity{
+func CreateDefaultUser(ctx context.Context, driver *neo4j.DriverWithContext, tenant string) string {
+	return CreateUser(ctx, driver, tenant, entity.UserEntity{
 		FirstName:     "first",
 		LastName:      "last",
 		Source:        "openline",
@@ -55,8 +56,8 @@ func CreateDefaultUser(driver *neo4j.Driver, tenant string) string {
 	})
 }
 
-func CreateDefaultUserWithId(driver *neo4j.Driver, tenant, userId string) string {
-	return CreateUserWithId(driver, tenant, userId, entity.UserEntity{
+func CreateDefaultUserWithId(ctx context.Context, driver *neo4j.DriverWithContext, tenant, userId string) string {
+	return CreateUserWithId(ctx, driver, tenant, userId, entity.UserEntity{
 		FirstName:     "first",
 		LastName:      "last",
 		Source:        "openline",
@@ -64,11 +65,11 @@ func CreateDefaultUserWithId(driver *neo4j.Driver, tenant, userId string) string
 	})
 }
 
-func CreateUser(driver *neo4j.Driver, tenant string, user entity.UserEntity) string {
-	return CreateUserWithId(driver, tenant, "", user)
+func CreateUser(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, user entity.UserEntity) string {
+	return CreateUserWithId(ctx, driver, tenant, "", user)
 }
 
-func CreateUserWithId(driver *neo4j.Driver, tenant, userId string, user entity.UserEntity) string {
+func CreateUserWithId(ctx context.Context, driver *neo4j.DriverWithContext, tenant, userId string, user entity.UserEntity) string {
 	if len(userId) == 0 {
 		userUuid, _ := uuid.NewRandom()
 		userId = userUuid.String()
@@ -83,7 +84,7 @@ func CreateUserWithId(driver *neo4j.Driver, tenant, userId string, user entity.U
 					source: $source,
 					sourceOfTruth: $sourceOfTruth
 				})-[:USER_BELONGS_TO_TENANT]->(t)`
-	ExecuteWriteQuery(driver, query, map[string]any{
+	ExecuteWriteQuery(ctx, driver, query, map[string]any{
 		"tenant":        tenant,
 		"userId":        userId,
 		"firstName":     user.FirstName,
@@ -94,21 +95,21 @@ func CreateUserWithId(driver *neo4j.Driver, tenant, userId string, user entity.U
 	return userId
 }
 
-func CreateDefaultContact(driver *neo4j.Driver, tenant string) string {
-	return CreateContact(driver, tenant, entity.ContactEntity{Title: "MR", FirstName: "first", LastName: "last"})
+func CreateDefaultContact(ctx context.Context, driver *neo4j.DriverWithContext, tenant string) string {
+	return CreateContact(ctx, driver, tenant, entity.ContactEntity{Title: "MR", FirstName: "first", LastName: "last"})
 }
 
-func CreateContactWith(driver *neo4j.Driver, tenant string, firstName string, lastName string) string {
-	return CreateContact(driver, tenant, entity.ContactEntity{Title: "MR", FirstName: firstName, LastName: lastName})
+func CreateContactWith(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, firstName string, lastName string) string {
+	return CreateContact(ctx, driver, tenant, entity.ContactEntity{Title: "MR", FirstName: firstName, LastName: lastName})
 }
 
-func CreateContact(driver *neo4j.Driver, tenant string, contact entity.ContactEntity) string {
+func CreateContact(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, contact entity.ContactEntity) string {
 	var contactId, _ = uuid.NewRandom()
 	query := "MATCH (t:Tenant {name:$tenant}) MERGE (c:Contact {id: $contactId})-[:CONTACT_BELONGS_TO_TENANT]->(t) " +
 		" ON CREATE SET c.title=$title, c.firstName=$firstName, c.lastName=$lastName, c.label=$label, c.createdAt=datetime({timezone: 'UTC'}), " +
 		" c:%s"
 
-	ExecuteWriteQuery(driver, fmt.Sprintf(query, "Contact_"+tenant), map[string]any{
+	ExecuteWriteQuery(ctx, driver, fmt.Sprintf(query, "Contact_"+tenant), map[string]any{
 		"tenant":    tenant,
 		"contactId": contactId.String(),
 		"title":     contact.Title,
@@ -119,7 +120,7 @@ func CreateContact(driver *neo4j.Driver, tenant string, contact entity.ContactEn
 	return contactId.String()
 }
 
-func CreateContactGroup(driver *neo4j.Driver, tenant, name string) string {
+func CreateContactGroup(ctx context.Context, driver *neo4j.DriverWithContext, tenant, name string) string {
 	var contactGroupId, _ = uuid.NewRandom()
 	query := `
 			MATCH (t:Tenant {name:$tenant})
@@ -127,7 +128,7 @@ func CreateContactGroup(driver *neo4j.Driver, tenant, name string) string {
 				  id: $id,
 				  name: $name
 				})-[:GROUP_BELONGS_TO_TENANT]->(t)`
-	ExecuteWriteQuery(driver, query, map[string]any{
+	ExecuteWriteQuery(ctx, driver, query, map[string]any{
 		"tenant": tenant,
 		"id":     contactGroupId.String(),
 		"name":   name,
@@ -135,20 +136,20 @@ func CreateContactGroup(driver *neo4j.Driver, tenant, name string) string {
 	return contactGroupId.String()
 }
 
-func AddContactToGroup(driver *neo4j.Driver, contactId, groupId string) {
+func AddContactToGroup(ctx context.Context, driver *neo4j.DriverWithContext, contactId, groupId string) {
 	query := `MATCH (c:Contact {id:$contactId}), (g:ContactGroup {id:$groupId})
 				MERGE (c)-[:BELONGS_TO_GROUP]->(g)`
-	ExecuteWriteQuery(driver, query, map[string]any{
+	ExecuteWriteQuery(ctx, driver, query, map[string]any{
 		"contactId": contactId,
 		"groupId":   groupId,
 	})
 }
 
-func CreateDefaultFieldSet(driver *neo4j.Driver, contactId string) string {
-	return CreateFieldSet(driver, contactId, entity.FieldSetEntity{Name: "name", Source: entity.DataSourceOpenline, SourceOfTruth: entity.DataSourceOpenline})
+func CreateDefaultFieldSet(ctx context.Context, driver *neo4j.DriverWithContext, contactId string) string {
+	return CreateFieldSet(ctx, driver, contactId, entity.FieldSetEntity{Name: "name", Source: entity.DataSourceOpenline, SourceOfTruth: entity.DataSourceOpenline})
 }
 
-func CreateFieldSet(driver *neo4j.Driver, contactId string, fieldSet entity.FieldSetEntity) string {
+func CreateFieldSet(ctx context.Context, driver *neo4j.DriverWithContext, contactId string, fieldSet entity.FieldSetEntity) string {
 	var fieldSetId, _ = uuid.NewRandom()
 	query := `
 			MATCH (c:Contact {id:$contactId})
@@ -159,7 +160,7 @@ func CreateFieldSet(driver *neo4j.Driver, contactId string, fieldSet entity.Fiel
 					sourceOfTruth: $sourceOfTruth,
 					createdAt :datetime({timezone: 'UTC'})
 				})<-[:HAS_COMPLEX_PROPERTY]-(c)`
-	ExecuteWriteQuery(driver, query, map[string]any{
+	ExecuteWriteQuery(ctx, driver, query, map[string]any{
 		"contactId":     contactId,
 		"fieldSetId":    fieldSetId.String(),
 		"name":          fieldSet.Name,
@@ -169,8 +170,8 @@ func CreateFieldSet(driver *neo4j.Driver, contactId string, fieldSet entity.Fiel
 	return fieldSetId.String()
 }
 
-func CreateDefaultCustomFieldInSet(driver *neo4j.Driver, fieldSetId string) string {
-	return createCustomFieldInSet(driver, fieldSetId,
+func CreateDefaultCustomFieldInSet(ctx context.Context, driver *neo4j.DriverWithContext, fieldSetId string) string {
+	return createCustomFieldInSet(ctx, driver, fieldSetId,
 		entity.CustomFieldEntity{
 			Name:          "name",
 			Source:        entity.DataSourceOpenline,
@@ -179,7 +180,7 @@ func CreateDefaultCustomFieldInSet(driver *neo4j.Driver, fieldSetId string) stri
 			Value:         model.AnyTypeValue{Str: utils.StringPtr("value")}})
 }
 
-func createCustomFieldInSet(driver *neo4j.Driver, fieldSetId string, customField entity.CustomFieldEntity) string {
+func createCustomFieldInSet(ctx context.Context, driver *neo4j.DriverWithContext, fieldSetId string, customField entity.CustomFieldEntity) string {
 	var fieldId, _ = uuid.NewRandom()
 	customField.AdjustValueByDatatype()
 	query := fmt.Sprintf(
@@ -192,7 +193,7 @@ func createCustomFieldInSet(driver *neo4j.Driver, fieldSetId string, customField
 			"	  source: $source, "+
 			"	  sourceOfTruth: $sourceOfTruth "+
 			"	})<-[:HAS_PROPERTY]-(s)", customField.NodeLabel(), customField.PropertyName())
-	ExecuteWriteQuery(driver, query, map[string]any{
+	ExecuteWriteQuery(ctx, driver, query, map[string]any{
 		"fieldSetId":    fieldSetId,
 		"fieldId":       fieldId.String(),
 		"name":          customField.Name,
@@ -204,8 +205,8 @@ func createCustomFieldInSet(driver *neo4j.Driver, fieldSetId string, customField
 	return fieldId.String()
 }
 
-func CreateDefaultCustomFieldInContact(driver *neo4j.Driver, contactId string) string {
-	return createCustomFieldInContact(driver, contactId,
+func CreateDefaultCustomFieldInContact(ctx context.Context, driver *neo4j.DriverWithContext, contactId string) string {
+	return createCustomFieldInContact(ctx, driver, contactId,
 		entity.CustomFieldEntity{
 			Name:          "name",
 			DataType:      model.CustomFieldDataTypeText.String(),
@@ -214,7 +215,7 @@ func CreateDefaultCustomFieldInContact(driver *neo4j.Driver, contactId string) s
 			Value:         model.AnyTypeValue{Str: utils.StringPtr("value")}})
 }
 
-func createCustomFieldInContact(driver *neo4j.Driver, contactId string, customField entity.CustomFieldEntity) string {
+func createCustomFieldInContact(ctx context.Context, driver *neo4j.DriverWithContext, contactId string, customField entity.CustomFieldEntity) string {
 	var fieldId, _ = uuid.NewRandom()
 	customField.AdjustValueByDatatype()
 	query := fmt.Sprintf(
@@ -227,7 +228,7 @@ func createCustomFieldInContact(driver *neo4j.Driver, contactId string, customFi
 			"	  source: $source, "+
 			"	  sourceOfTruth: $sourceOfTruth "+
 			"	})<-[:HAS_PROPERTY]-(c)", customField.NodeLabel(), customField.PropertyName())
-	ExecuteWriteQuery(driver, query, map[string]any{
+	ExecuteWriteQuery(ctx, driver, query, map[string]any{
 		"contactId":     contactId,
 		"fieldId":       fieldId.String(),
 		"name":          customField.Name,
@@ -239,7 +240,7 @@ func createCustomFieldInContact(driver *neo4j.Driver, contactId string, customFi
 	return fieldId.String()
 }
 
-func AddEmailTo(driver *neo4j.Driver, entityType entity.EntityType, tenant, entityId, email string, primary bool, label string) string {
+func AddEmailTo(ctx context.Context, driver *neo4j.DriverWithContext, entityType entity.EntityType, tenant, entityId, email string, primary bool, label string) string {
 	query := ""
 
 	switch entityType {
@@ -260,7 +261,7 @@ func AddEmailTo(driver *neo4j.Driver, entityType entity.EntityType, tenant, enti
 		" WITH e, entity MERGE (e)<-[rel:HAS]-(entity) " +
 		" ON CREATE SET rel.label=$label, rel.primary=$primary "
 
-	ExecuteWriteQuery(driver, fmt.Sprintf(query, "Email_"+tenant), map[string]any{
+	ExecuteWriteQuery(ctx, driver, fmt.Sprintf(query, "Email_"+tenant), map[string]any{
 		"entityId": entityId,
 		"primary":  primary,
 		"email":    email,
@@ -270,7 +271,7 @@ func AddEmailTo(driver *neo4j.Driver, entityType entity.EntityType, tenant, enti
 	return emailId.String()
 }
 
-func AddPhoneNumberToContact(driver *neo4j.Driver, contactId string, e164 string, primary bool, label string) {
+func AddPhoneNumberToContact(ctx context.Context, driver *neo4j.DriverWithContext, contactId string, e164 string, primary bool, label string) {
 	query := `
 			MATCH (c:Contact {id:$contactId})
 			MERGE (:PhoneNumber {
@@ -278,7 +279,7 @@ func AddPhoneNumberToContact(driver *neo4j.Driver, contactId string, e164 string
 				  e164: $e164,
 				  label: $label
 				})<-[:PHONE_ASSOCIATED_WITH {primary:$primary}]-(c)`
-	ExecuteWriteQuery(driver, query, map[string]any{
+	ExecuteWriteQuery(ctx, driver, query, map[string]any{
 		"contactId": contactId,
 		"primary":   primary,
 		"e164":      e164,
@@ -286,12 +287,12 @@ func AddPhoneNumberToContact(driver *neo4j.Driver, contactId string, e164 string
 	})
 }
 
-func CreateEntityTemplate(driver *neo4j.Driver, tenant, extends string) string {
+func CreateEntityTemplate(ctx context.Context, driver *neo4j.DriverWithContext, tenant, extends string) string {
 	var templateId, _ = uuid.NewRandom()
 	query := `MATCH (t:Tenant {name:$tenant})
 			MERGE (e:EntityTemplate {id:$templateId})-[:ENTITY_TEMPLATE_BELONGS_TO_TENANT]->(t)
 			ON CREATE SET e.extends=$extends, e.name=$name`
-	ExecuteWriteQuery(driver, query, map[string]any{
+	ExecuteWriteQuery(ctx, driver, query, map[string]any{
 		"templateId": templateId.String(),
 		"tenant":     tenant,
 		"extends":    extends,
@@ -300,22 +301,22 @@ func CreateEntityTemplate(driver *neo4j.Driver, tenant, extends string) string {
 	return templateId.String()
 }
 
-func LinkEntityTemplateToContact(driver *neo4j.Driver, entityTemplateId, contactId string) {
+func LinkEntityTemplateToContact(ctx context.Context, driver *neo4j.DriverWithContext, entityTemplateId, contactId string) {
 	query := `MATCH (c:Contact {id:$contactId}),
 			(e:EntityTemplate {id:$TemplateId})
 			MERGE (c)-[:IS_DEFINED_BY]->(e)`
-	ExecuteWriteQuery(driver, query, map[string]any{
+	ExecuteWriteQuery(ctx, driver, query, map[string]any{
 		"TemplateId": entityTemplateId,
 		"contactId":  contactId,
 	})
 }
 
-func AddFieldTemplateToEntity(driver *neo4j.Driver, entityTemplateId string) string {
+func AddFieldTemplateToEntity(ctx context.Context, driver *neo4j.DriverWithContext, entityTemplateId string) string {
 	var templateId, _ = uuid.NewRandom()
 	query := `MATCH (e:EntityTemplate {id:$entityTemplateId})
 			MERGE (f:CustomFieldTemplate {id:$templateId})<-[:CONTAINS]-(e)
 			ON CREATE SET f.name=$name, f.type=$type, f.order=$order, f.mandatory=$mandatory`
-	ExecuteWriteQuery(driver, query, map[string]any{
+	ExecuteWriteQuery(ctx, driver, query, map[string]any{
 		"templateId":       templateId.String(),
 		"entityTemplateId": entityTemplateId,
 		"type":             "TEXT",
@@ -326,12 +327,12 @@ func AddFieldTemplateToEntity(driver *neo4j.Driver, entityTemplateId string) str
 	return templateId.String()
 }
 
-func AddFieldTemplateToSet(driver *neo4j.Driver, setTemplateId string) string {
+func AddFieldTemplateToSet(ctx context.Context, driver *neo4j.DriverWithContext, setTemplateId string) string {
 	var templateId, _ = uuid.NewRandom()
 	query := `MATCH (e:FieldSetTemplate {id:$setTemplateId})
 			MERGE (f:CustomFieldTemplate {id:$templateId})<-[:CONTAINS]-(e)
 			ON CREATE SET f.name=$name, f.type=$type, f.order=$order, f.mandatory=$mandatory`
-	ExecuteWriteQuery(driver, query, map[string]any{
+	ExecuteWriteQuery(ctx, driver, query, map[string]any{
 		"templateId":    templateId.String(),
 		"setTemplateId": setTemplateId,
 		"type":          "TEXT",
@@ -342,12 +343,12 @@ func AddFieldTemplateToSet(driver *neo4j.Driver, setTemplateId string) string {
 	return templateId.String()
 }
 
-func AddSetTemplateToEntity(driver *neo4j.Driver, entityTemplateId string) string {
+func AddSetTemplateToEntity(ctx context.Context, driver *neo4j.DriverWithContext, entityTemplateId string) string {
 	var templateId, _ = uuid.NewRandom()
 	query := `MATCH (e:EntityTemplate {id:$entityTemplateId})
 			MERGE (f:FieldSetTemplate {id:$templateId})<-[:CONTAINS]-(e)
 			ON CREATE SET f.name=$name, f.type=$type, f.order=$order, f.mandatory=$mandatory`
-	ExecuteWriteQuery(driver, query, map[string]any{
+	ExecuteWriteQuery(ctx, driver, query, map[string]any{
 		"templateId":       templateId.String(),
 		"entityTemplateId": entityTemplateId,
 		"type":             "TEXT",
@@ -358,12 +359,12 @@ func AddSetTemplateToEntity(driver *neo4j.Driver, entityTemplateId string) strin
 	return templateId.String()
 }
 
-func CreateTag(driver *neo4j.Driver, tenant, tagName string) string {
+func CreateTag(ctx context.Context, driver *neo4j.DriverWithContext, tenant, tagName string) string {
 	var tagId, _ = uuid.NewRandom()
 	query := `MATCH (t:Tenant {name:$tenant})
 			MERGE (t)<-[:TAG_BELONGS_TO_TENANT]-(tag:Tag {id:$id})
 			ON CREATE SET tag.name=$name, tag.source=$source, tag.appSource=$appSource, tag.createdAt=$now, tag.updatedAt=$now`
-	ExecuteWriteQuery(driver, query, map[string]any{
+	ExecuteWriteQuery(ctx, driver, query, map[string]any{
 		"id":        tagId.String(),
 		"tenant":    tenant,
 		"name":      tagName,
@@ -374,22 +375,22 @@ func CreateTag(driver *neo4j.Driver, tenant, tagName string) string {
 	return tagId.String()
 }
 
-func TagContact(driver *neo4j.Driver, contactId, tagId string) {
+func TagContact(ctx context.Context, driver *neo4j.DriverWithContext, contactId, tagId string) {
 	query := `MATCH (c:Contact {id:$contactId}), (tag:Tag {id:$tagId})
 			MERGE (c)-[r:TAGGED]->(tag)
 			ON CREATE SET r.taggedAt=datetime({timezone: 'UTC'})`
-	ExecuteWriteQuery(driver, query, map[string]any{
+	ExecuteWriteQuery(ctx, driver, query, map[string]any{
 		"tagId":     tagId,
 		"contactId": contactId,
 	})
 }
 
-func CreateOrganization(driver *neo4j.Driver, tenant, organizationName string) string {
+func CreateOrganization(ctx context.Context, driver *neo4j.DriverWithContext, tenant, organizationName string) string {
 	var organizationId, _ = uuid.NewRandom()
 	query := `MATCH (t:Tenant {name:$tenant})
 			MERGE (t)<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {id:$id})
 			ON CREATE SET org.name=$name, org:%s`
-	ExecuteWriteQuery(driver, fmt.Sprintf(query, "Organization_"+tenant), map[string]any{
+	ExecuteWriteQuery(ctx, driver, fmt.Sprintf(query, "Organization_"+tenant), map[string]any{
 		"id":     organizationId.String(),
 		"tenant": tenant,
 		"name":   organizationName,
@@ -397,12 +398,12 @@ func CreateOrganization(driver *neo4j.Driver, tenant, organizationName string) s
 	return organizationId.String()
 }
 
-func CreateOrganizationType(driver *neo4j.Driver, tenant, organizationTypeName string) string {
+func CreateOrganizationType(ctx context.Context, driver *neo4j.DriverWithContext, tenant, organizationTypeName string) string {
 	var organizationTypeId, _ = uuid.NewRandom()
 	query := `MATCH (t:Tenant {name:$tenant})
 			MERGE (t)<-[:ORGANIZATION_TYPE_BELONGS_TO_TENANT]-(ot:OrganizationType {id:$id})
 			ON CREATE SET ot.name=$name`
-	ExecuteWriteQuery(driver, query, map[string]any{
+	ExecuteWriteQuery(ctx, driver, query, map[string]any{
 		"id":     organizationTypeId.String(),
 		"tenant": tenant,
 		"name":   organizationTypeName,
@@ -410,14 +411,14 @@ func CreateOrganizationType(driver *neo4j.Driver, tenant, organizationTypeName s
 	return organizationTypeId.String()
 }
 
-func CreateFullOrganization(driver *neo4j.Driver, tenant string, organization entity.OrganizationEntity) string {
+func CreateFullOrganization(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, organization entity.OrganizationEntity) string {
 	var organizationId, _ = uuid.NewRandom()
 	query := `MATCH (t:Tenant {name:$tenant})
 			MERGE (t)<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {id:$id})
 			ON CREATE SET org.name=$name, org.description=$description, org.domain=$domain, org.website=$website,
 							org.industry=$industry, org.isPublic=$isPublic, org.createdAt=datetime({timezone: 'UTC'})
 `
-	ExecuteWriteQuery(driver, query, map[string]any{
+	ExecuteWriteQuery(ctx, driver, query, map[string]any{
 		"id":          organizationId.String(),
 		"tenant":      tenant,
 		"name":        organization.Name,
@@ -430,14 +431,14 @@ func CreateFullOrganization(driver *neo4j.Driver, tenant string, organization en
 	return organizationId.String()
 }
 
-func ContactWorksForOrganization(driver *neo4j.Driver, contactId, organizationId, jobTitle string, primary bool) string {
+func ContactWorksForOrganization(ctx context.Context, driver *neo4j.DriverWithContext, contactId, organizationId, jobTitle string, primary bool) string {
 	var roleId, _ = uuid.NewRandom()
 	query := `MATCH (c:Contact {id:$contactId}),
 			        (org:Organization {id:$organizationId})
 			MERGE (c)-[:WORKS_AS]->(r:JobRole)-[:ROLE_IN]->(org)
 			ON CREATE SET r.id=$id, r.jobTitle=$jobTitle, r.primary=$primary, r.responsibilityLevel=$responsibilityLevel,
 							r.createdAt=datetime({timezone: 'UTC'}), r.appSource=$appSource`
-	ExecuteWriteQuery(driver, query, map[string]any{
+	ExecuteWriteQuery(ctx, driver, query, map[string]any{
 		"id":                  roleId.String(),
 		"contactId":           contactId,
 		"organizationId":      organizationId,
@@ -449,34 +450,34 @@ func ContactWorksForOrganization(driver *neo4j.Driver, contactId, organizationId
 	return roleId.String()
 }
 
-func SetOrganizationTypeForOrganization(driver *neo4j.Driver, organizationId, organizationTypeId string) {
+func SetOrganizationTypeForOrganization(ctx context.Context, driver *neo4j.DriverWithContext, organizationId, organizationTypeId string) {
 	query := `
 			MATCH (org:Organization {id:$organizationId}),
 				  (ot:OrganizationType {id:$organizationTypeId})
 			MERGE (org)-[:IS_OF_TYPE]->(ot)`
-	ExecuteWriteQuery(driver, query, map[string]any{
+	ExecuteWriteQuery(ctx, driver, query, map[string]any{
 		"organizationId":     organizationId,
 		"organizationTypeId": organizationTypeId,
 	})
 }
 
-func UserOwnsContact(driver *neo4j.Driver, userId, contactId string) {
+func UserOwnsContact(ctx context.Context, driver *neo4j.DriverWithContext, userId, contactId string) {
 	query := `MATCH (c:Contact {id:$contactId}),
 			        (u:User {id:$userId})
 			MERGE (u)-[:OWNS]->(c)`
-	ExecuteWriteQuery(driver, query, map[string]any{
+	ExecuteWriteQuery(ctx, driver, query, map[string]any{
 		"contactId": contactId,
 		"userId":    userId,
 	})
 }
 
-func CreateConversation(driver *neo4j.Driver, userId, contactId string) string {
+func CreateConversation(ctx context.Context, driver *neo4j.DriverWithContext, userId, contactId string) string {
 	var conversationId, _ = uuid.NewRandom()
 	query := `MATCH (c:Contact {id:$contactId}),
 			        (u:User {id:$userId})
 			MERGE (u)-[:PARTICIPATES]->(o:Conversation {id:$conversationId})<-[:PARTICIPATES]-(c)
 			ON CREATE SET o.startedAt=datetime({timezone: 'UTC'}), o.status="ACTIVE", o.channel="VOICE", o.messageCount=0 `
-	ExecuteWriteQuery(driver, query, map[string]any{
+	ExecuteWriteQuery(ctx, driver, query, map[string]any{
 		"contactId":      contactId,
 		"userId":         userId,
 		"conversationId": conversationId.String(),
@@ -484,7 +485,7 @@ func CreateConversation(driver *neo4j.Driver, userId, contactId string) string {
 	return conversationId.String()
 }
 
-func CreatePageView(driver *neo4j.Driver, contactId string, actionEntity entity.PageViewEntity) string {
+func CreatePageView(ctx context.Context, driver *neo4j.DriverWithContext, contactId string, actionEntity entity.PageViewEntity) string {
 	var actionId, _ = uuid.NewRandom()
 	query := `MATCH (c:Contact {id:$contactId})
 			MERGE (c)-[:HAS_ACTION]->(a:Action:PageView {id:$actionId})
@@ -498,7 +499,7 @@ func CreatePageView(driver *neo4j.Driver, contactId string, actionEntity entity.
 				a.sessionId=$sessionId,
 				a.orderInSession=$orderInSession,
 				a.engagedTime=$engagedTime`
-	ExecuteWriteQuery(driver, query, map[string]any{
+	ExecuteWriteQuery(ctx, driver, query, map[string]any{
 		"contactId":      contactId,
 		"actionId":       actionId.String(),
 		"trackerName":    actionEntity.TrackerName,
@@ -514,7 +515,7 @@ func CreatePageView(driver *neo4j.Driver, contactId string, actionEntity entity.
 	return actionId.String()
 }
 
-func CreateLocation(driver *neo4j.Driver, tenant string, location entity.LocationEntity) string {
+func CreateLocation(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, location entity.LocationEntity) string {
 	var locationId, _ = uuid.NewRandom()
 	query := "MERGE (l:Location {id:$locationId}) " +
 		" ON CREATE SET l.name=$name, " +
@@ -530,7 +531,7 @@ func CreateLocation(driver *neo4j.Driver, tenant string, location entity.Locatio
 		"				l.zip=$zip, " +
 		"				l:Location_%s"
 
-	ExecuteWriteQuery(driver, fmt.Sprintf(query, tenant), map[string]any{
+	ExecuteWriteQuery(ctx, driver, fmt.Sprintf(query, tenant), map[string]any{
 		"locationId": locationId.String(),
 		"source":     location.Source,
 		"appSource":  location.AppSource,
@@ -546,32 +547,32 @@ func CreateLocation(driver *neo4j.Driver, tenant string, location entity.Locatio
 	return locationId.String()
 }
 
-func ContactAssociatedWithLocation(driver *neo4j.Driver, contactId, locationId string) {
+func ContactAssociatedWithLocation(ctx context.Context, driver *neo4j.DriverWithContext, contactId, locationId string) {
 	query := `MATCH (c:Contact {id:$contactId}),
 			        (l:Location {id:$locationId})
 			MERGE (c)-[:ASSOCIATED_WITH]->(l)`
-	ExecuteWriteQuery(driver, query, map[string]any{
+	ExecuteWriteQuery(ctx, driver, query, map[string]any{
 		"contactId":  contactId,
 		"locationId": locationId,
 	})
 }
 
-func OrganizationAssociatedWithLocation(driver *neo4j.Driver, organizationId, locationId string) {
+func OrganizationAssociatedWithLocation(ctx context.Context, driver *neo4j.DriverWithContext, organizationId, locationId string) {
 	query := `MATCH (org:Organization {id:$organizationId}),
 			        (l:Location {id:$locationId})
 			MERGE (org)-[:ASSOCIATED_WITH]->(l)`
-	ExecuteWriteQuery(driver, query, map[string]any{
+	ExecuteWriteQuery(ctx, driver, query, map[string]any{
 		"organizationId": organizationId,
 		"locationId":     locationId,
 	})
 }
 
-func CreateNoteForContact(driver *neo4j.Driver, tenant, contactId, html string) string {
+func CreateNoteForContact(ctx context.Context, driver *neo4j.DriverWithContext, tenant, contactId, html string) string {
 	var noteId, _ = uuid.NewRandom()
 	query := "MATCH (c:Contact {id:$contactId}) " +
 		"		MERGE (c)-[:NOTED]->(n:Note {id:$id}) " +
 		"		ON CREATE SET n.html=$html, n.createdAt=datetime({timezone: 'UTC'}), n:%s"
-	ExecuteWriteQuery(driver, fmt.Sprintf(query, "Note_"+tenant), map[string]any{
+	ExecuteWriteQuery(ctx, driver, fmt.Sprintf(query, "Note_"+tenant), map[string]any{
 		"id":        noteId.String(),
 		"contactId": contactId,
 		"html":      html,
@@ -579,12 +580,12 @@ func CreateNoteForContact(driver *neo4j.Driver, tenant, contactId, html string) 
 	return noteId.String()
 }
 
-func CreateNoteForOrganization(driver *neo4j.Driver, tenant, organizationId, html string) string {
+func CreateNoteForOrganization(ctx context.Context, driver *neo4j.DriverWithContext, tenant, organizationId, html string) string {
 	var noteId, _ = uuid.NewRandom()
 	query := "MATCH (org:Organization {id:$organizationId}) " +
 		"		MERGE (org)-[:NOTED]->(n:Note {id:$id}) " +
 		"		ON CREATE SET n.html=$html, n.createdAt=datetime({timezone: 'UTC'}), n:%s"
-	ExecuteWriteQuery(driver, fmt.Sprintf(query, "Note_"+tenant), map[string]any{
+	ExecuteWriteQuery(ctx, driver, fmt.Sprintf(query, "Note_"+tenant), map[string]any{
 		"id":             noteId.String(),
 		"organizationId": organizationId,
 		"html":           html,
@@ -592,48 +593,48 @@ func CreateNoteForOrganization(driver *neo4j.Driver, tenant, organizationId, htm
 	return noteId.String()
 }
 
-func NoteCreatedByUser(driver *neo4j.Driver, noteId, userId string) {
+func NoteCreatedByUser(ctx context.Context, driver *neo4j.DriverWithContext, noteId, userId string) {
 	query := `MATCH (u:User {id:$userId})
 				MATCH (n:Note {id:$noteId})
 			MERGE (u)-[:CREATED]->(n)
 `
-	ExecuteWriteQuery(driver, query, map[string]any{
+	ExecuteWriteQuery(ctx, driver, query, map[string]any{
 		"noteId": noteId,
 		"userId": userId,
 	})
 }
 
-func LinkContactWithOrganization(driver *neo4j.Driver, contactId, organizationId string) {
+func LinkContactWithOrganization(ctx context.Context, driver *neo4j.DriverWithContext, contactId, organizationId string) {
 	query := `MATCH (c:Contact {id:$contactId}),
 			(org:Organization {id:$organizationId})
 			MERGE (c)-[:CONTACT_OF]->(org)`
-	ExecuteWriteQuery(driver, query, map[string]any{
+	ExecuteWriteQuery(ctx, driver, query, map[string]any{
 		"organizationId": organizationId,
 		"contactId":      contactId,
 	})
 }
 
-func GetCountOfNodes(driver *neo4j.Driver, nodeLabel string) int {
+func GetCountOfNodes(ctx context.Context, driver *neo4j.DriverWithContext, nodeLabel string) int {
 	query := fmt.Sprintf(`MATCH (n:%s) RETURN count(n)`, nodeLabel)
-	result := ExecuteReadQueryWithSingleReturn(driver, query, map[string]any{})
+	result := ExecuteReadQueryWithSingleReturn(ctx, driver, query, map[string]any{})
 	return int(result.(*db.Record).Values[0].(int64))
 }
 
-func GetCountOfRelationships(driver *neo4j.Driver, relationship string) int {
+func GetCountOfRelationships(ctx context.Context, driver *neo4j.DriverWithContext, relationship string) int {
 	query := fmt.Sprintf(`MATCH (a)-[r:%s]-(b) RETURN count(distinct r)`, relationship)
-	result := ExecuteReadQueryWithSingleReturn(driver, query, map[string]any{})
+	result := ExecuteReadQueryWithSingleReturn(ctx, driver, query, map[string]any{})
 	return int(result.(*db.Record).Values[0].(int64))
 }
 
-func GetTotalCountOfNodes(driver *neo4j.Driver) int {
+func GetTotalCountOfNodes(ctx context.Context, driver *neo4j.DriverWithContext) int {
 	query := `MATCH (n) RETURN count(n)`
-	result := ExecuteReadQueryWithSingleReturn(driver, query, map[string]any{})
+	result := ExecuteReadQueryWithSingleReturn(ctx, driver, query, map[string]any{})
 	return int(result.(*db.Record).Values[0].(int64))
 }
 
-func GetAllLabels(driver *neo4j.Driver) []string {
+func GetAllLabels(ctx context.Context, driver *neo4j.DriverWithContext) []string {
 	query := `MATCH (n) RETURN DISTINCT labels(n)`
-	dbRecords := ExecuteReadQueryWithCollectionReturn(driver, query, map[string]any{})
+	dbRecords := ExecuteReadQueryWithCollectionReturn(ctx, driver, query, map[string]any{})
 	labels := []string{}
 	for _, v := range dbRecords {
 		for _, nodeLabels := range v.Values {

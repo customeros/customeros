@@ -2,7 +2,7 @@ package service
 
 import (
 	"context"
-	"github.com/neo4j/neo4j-go-driver/v4/neo4j/dbtype"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
@@ -28,7 +28,7 @@ func NewTagService(repository *repository.Repositories) TagService {
 }
 
 func (s *tagService) Merge(ctx context.Context, tag *entity.TagEntity) (*entity.TagEntity, error) {
-	tagNodePtr, err := s.repositories.TagRepository.Merge(common.GetTenantFromContext(ctx), *tag)
+	tagNodePtr, err := s.repositories.TagRepository.Merge(ctx, common.GetTenantFromContext(ctx), *tag)
 	if err != nil {
 		return nil, err
 	}
@@ -36,7 +36,7 @@ func (s *tagService) Merge(ctx context.Context, tag *entity.TagEntity) (*entity.
 }
 
 func (s *tagService) Update(ctx context.Context, tag *entity.TagEntity) (*entity.TagEntity, error) {
-	tagNodePtr, err := s.repositories.TagRepository.Update(common.GetTenantFromContext(ctx), *tag)
+	tagNodePtr, err := s.repositories.TagRepository.Update(ctx, common.GetTenantFromContext(ctx), *tag)
 	if err != nil {
 		return nil, err
 	}
@@ -44,7 +44,7 @@ func (s *tagService) Update(ctx context.Context, tag *entity.TagEntity) (*entity
 }
 
 func (s *tagService) UnlinkAndDelete(ctx context.Context, id string) (bool, error) {
-	err := s.repositories.TagRepository.UnlinkAndDelete(common.GetTenantFromContext(ctx), id)
+	err := s.repositories.TagRepository.UnlinkAndDelete(ctx, common.GetTenantFromContext(ctx), id)
 	if err != nil {
 		return false, err
 	}
@@ -52,7 +52,7 @@ func (s *tagService) UnlinkAndDelete(ctx context.Context, id string) (bool, erro
 }
 
 func (s *tagService) GetAll(ctx context.Context) (*entity.TagEntities, error) {
-	tagDbNodes, err := s.repositories.TagRepository.GetAll(common.GetContext(ctx).Tenant)
+	tagDbNodes, err := s.repositories.TagRepository.GetAll(ctx, common.GetTenantFromContext(ctx))
 	if err != nil {
 		return nil, err
 	}
@@ -64,7 +64,7 @@ func (s *tagService) GetAll(ctx context.Context) (*entity.TagEntities, error) {
 }
 
 func (s *tagService) GetTagsForContact(ctx context.Context, contactId string) (*entity.TagEntities, error) {
-	tagDbNodes, err := s.repositories.TagRepository.GetForContact(common.GetTenantFromContext(ctx), contactId)
+	tagDbNodes, err := s.repositories.TagRepository.GetForContact(ctx, common.GetTenantFromContext(ctx), contactId)
 	if err != nil {
 		return nil, err
 	}

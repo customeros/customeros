@@ -2,28 +2,29 @@ package repository
 
 import (
 	"fmt"
-	"github.com/neo4j/neo4j-go-driver/v4/neo4j"
-	"github.com/neo4j/neo4j-go-driver/v4/neo4j/db"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j/db"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils"
+	"golang.org/x/net/context"
 )
 
 type SearchRepository interface {
-	SearchBasic(tenant, keyword string) ([]*db.Record, error)
+	SearchBasic(ctx context.Context, tenant, keyword string) ([]*db.Record, error)
 }
 
 type searchRepository struct {
-	driver *neo4j.Driver
+	driver *neo4j.DriverWithContext
 }
 
-func NewSearchRepository(driver *neo4j.Driver) SearchRepository {
+func NewSearchRepository(driver *neo4j.DriverWithContext) SearchRepository {
 	return &searchRepository{
 		driver: driver,
 	}
 }
 
-func (r *searchRepository) SearchBasic(tenant, keyword string) ([]*db.Record, error) {
-	session := utils.NewNeo4jReadSession(*r.driver)
-	defer session.Close()
+func (r *searchRepository) SearchBasic(ctx context.Context, tenant, keyword string) ([]*db.Record, error) {
+	session := utils.NewNeo4jReadSession(ctx, *r.driver)
+	defer session.Close(ctx)
 
 	params := map[string]any{
 		"tenant":        tenant,
@@ -41,12 +42,12 @@ func (r *searchRepository) SearchBasic(tenant, keyword string) ([]*db.Record, er
 		" with labels, node, collect(score) as scores " +
 		" return labels, head(scores) as score, node order by score desc limit $limit"
 
-	records, err := session.ReadTransaction(func(tx neo4j.Transaction) (any, error) {
-		queryResult, err := tx.Run(query, params)
+	records, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		queryResult, err := tx.Run(ctx, query, params)
 		if err != nil {
 			return nil, err
 		}
-		return queryResult.Collect()
+		return queryResult.Collect(ctx)
 	})
 	return records.([]*db.Record), err
 }

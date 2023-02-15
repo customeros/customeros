@@ -2,7 +2,7 @@ package service
 
 import (
 	"context"
-	"github.com/neo4j/neo4j-go-driver/v4/neo4j/dbtype"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
@@ -28,7 +28,7 @@ func NewSearchService(repositories *repository.Repositories, services *Services)
 
 func (s *searchService) SearchBasic(ctx context.Context, keyword string) (*entity.SearchResultEntities, error) {
 	tenant := common.GetTenantFromContext(ctx)
-	records, err := s.repositories.SearchRepository.SearchBasic(tenant, keyword)
+	records, err := s.repositories.SearchRepository.SearchBasic(ctx, tenant, keyword)
 	if err != nil {
 		return nil, err
 	}
