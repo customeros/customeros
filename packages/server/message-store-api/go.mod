@@ -6,6 +6,8 @@ replace github.com/docker/docker => github.com/docker/docker v20.10.3-0.20221013
 
 replace github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module => ../customer-os-common-module
 
+replace github.com/openline-ai/openline-customer-os/packages/server/customer-os-api => ../customer-os-api
+
 require (
 	github.com/99designs/gqlgen v0.17.24
 	github.com/caarlos0/env/v6 v6.10.1
@@ -13,11 +15,13 @@ require (
 	github.com/joho/godotenv v1.5.1
 	github.com/lib/pq v1.10.7
 	github.com/neo4j/neo4j-go-driver/v4 v4.4.5
-	github.com/openline-ai/openline-customer-os/packages/server/customer-os-api v0.0.0-20230209150714-92dd471e9786
-	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20230206074839-23cc944c7767
+	github.com/neo4j/neo4j-go-driver/v5 v5.5.0
+	github.com/openline-ai/openline-customer-os/packages/server/customer-os-api v0.0.0-20230214195550-054499130c38
+	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20230214195550-054499130c38
 	github.com/sirupsen/logrus v1.9.0
 	github.com/testcontainers/testcontainers-go v0.17.0
 	github.com/vektah/gqlparser/v2 v2.5.1
+	golang.org/x/net v0.7.0
 	google.golang.org/grpc v1.53.0
 	google.golang.org/protobuf v1.28.1
 	gorm.io/driver/postgres v1.4.7
@@ -29,9 +33,9 @@ require (
 	github.com/Microsoft/go-winio v0.6.0 // indirect
 	github.com/agnivade/levenshtein v1.1.1 // indirect
 	github.com/cenkalti/backoff/v4 v4.2.0 // indirect
-	github.com/containerd/containerd v1.6.16 // indirect
+	github.com/containerd/containerd v1.6.17 // indirect
 	github.com/docker/distribution v2.8.1+incompatible // indirect
-	github.com/docker/docker v23.0.0+incompatible // indirect
+	github.com/docker/docker v23.0.1+incompatible // indirect
 	github.com/docker/go-connections v0.4.0 // indirect
 	github.com/docker/go-units v0.5.0 // indirect
 	github.com/gin-contrib/sse v0.1.0 // indirect
@@ -46,7 +50,7 @@ require (
 	github.com/hashicorp/golang-lru v0.5.4 // indirect
 	github.com/jackc/pgpassfile v1.0.0 // indirect
 	github.com/jackc/pgservicefile v0.0.0-20221227161230-091c0ba34f0a // indirect
-	github.com/jackc/pgx/v5 v5.2.0 // indirect
+	github.com/jackc/pgx/v5 v5.3.0 // indirect
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/jinzhu/now v1.1.5 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
@@ -67,12 +71,11 @@ require (
 	github.com/pelletier/go-toml/v2 v2.0.6 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/ugorji/go/codec v1.2.9 // indirect
-	golang.org/x/crypto v0.5.0 // indirect
-	golang.org/x/mod v0.7.0 // indirect
-	golang.org/x/net v0.5.0 // indirect
-	golang.org/x/sys v0.4.0 // indirect
-	golang.org/x/text v0.6.0 // indirect
-	golang.org/x/tools v0.5.0 // indirect
-	google.golang.org/genproto v0.0.0-20230202175211-008b39050e57 // indirect
+	golang.org/x/crypto v0.6.0 // indirect
+	golang.org/x/mod v0.8.0 // indirect
+	golang.org/x/sys v0.5.0 // indirect
+	golang.org/x/text v0.7.0 // indirect
+	golang.org/x/tools v0.6.0 // indirect
+	google.golang.org/genproto v0.0.0-20230209215440-0dfe4f8abfcc // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 )

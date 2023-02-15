@@ -3,17 +3,18 @@ package service
 import (
 	"errors"
 	"fmt"
-	"github.com/neo4j/neo4j-go-driver/v4/neo4j"
-	"github.com/neo4j/neo4j-go-driver/v4/neo4j/db"
-	"github.com/neo4j/neo4j-go-driver/v4/neo4j/dbtype"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j/db"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/message-store-api/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/message-store-api/repository/entity"
+	"golang.org/x/net/context"
 	"time"
 )
 
 type CustomerOSService struct {
-	driver               *neo4j.Driver
+	driver               *neo4j.DriverWithContext
 	postgresRepositories *repository.PostgresRepositories
 	commonStoreService   *commonStoreService
 }
@@ -85,19 +86,16 @@ type Conversation struct {
 	LastContentPreview  string
 }
 
-func (s *CustomerOSService) ContactByIdExists(contactId string) (bool, error) {
-	session := (*s.driver).NewSession(
-		neo4j.SessionConfig{
-			AccessMode: neo4j.AccessModeWrite,
-			BoltLogger: neo4j.ConsoleBoltLogger()})
-	defer session.Close()
+func (s *CustomerOSService) ContactByIdExists(ctx context.Context, contactId string) (bool, error) {
+	session := utils.NewNeo4jWriteSession(ctx, *s.driver)
+	defer session.Close(ctx)
 
 	params := map[string]interface{}{
 		"contactId": contactId,
 	}
 	query := "MATCH (n:Contact {id:$contactId}) RETURN count(*)"
-	_, err := session.ReadTransaction(func(tx neo4j.Transaction) (interface{}, error) {
-		_, err := tx.Run(query, params)
+	_, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (interface{}, error) {
+		_, err := tx.Run(ctx, query, params)
 		return nil, err
 	})
 
@@ -109,15 +107,12 @@ func (s *CustomerOSService) ContactByIdExists(contactId string) (bool, error) {
 	return true, nil
 }
 
-func (s *CustomerOSService) GetUserByEmail(email string) (*User, error) {
-	session := (*s.driver).NewSession(
-		neo4j.SessionConfig{
-			AccessMode: neo4j.AccessModeWrite,
-			BoltLogger: neo4j.ConsoleBoltLogger()})
-	defer session.Close()
+func (s *CustomerOSService) GetUserByEmail(ctx context.Context, email string) (*User, error) {
+	session := utils.NewNeo4jWriteSession(ctx, *s.driver)
+	defer session.Close(ctx)
 
-	dbRecords, err := session.ReadTransaction(func(tx neo4j.Transaction) (any, error) {
-		if queryResult, err := tx.Run(`
+	dbRecords, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		if queryResult, err := tx.Run(ctx, `
 			MATCH (:Email {email:$email})<-[:HAS]-(u:User)
 			RETURN u`,
 			map[string]any{
@@ -125,7 +120,7 @@ func (s *CustomerOSService) GetUserByEmail(email string) (*User, error) {
 			}); err != nil {
 			return nil, err
 		} else {
-			return queryResult.Collect()
+			return queryResult.Collect(ctx)
 		}
 	})
 	if err != nil {
@@ -139,15 +134,12 @@ func (s *CustomerOSService) GetUserByEmail(email string) (*User, error) {
 	return mapNodeToUser(&dbNode), nil
 }
 
-func (s *CustomerOSService) GetContactById(id string) (*Contact, error) {
-	session := (*s.driver).NewSession(
-		neo4j.SessionConfig{
-			AccessMode: neo4j.AccessModeWrite,
-			BoltLogger: neo4j.ConsoleBoltLogger()})
-	defer session.Close()
+func (s *CustomerOSService) GetContactById(ctx context.Context, id string) (*Contact, error) {
+	session := utils.NewNeo4jReadSession(ctx, *s.driver)
+	defer session.Close(ctx)
 
-	dbRecords, err := session.ReadTransaction(func(tx neo4j.Transaction) (any, error) {
-		if queryResult, err := tx.Run(`MATCH (c:Contact{id: $id})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}),
+	dbRecords, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		if queryResult, err := tx.Run(ctx, `MATCH (c:Contact{id: $id})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}),
                   (c:Contact)-[:HAS]->(p:Email{primary: true})
             RETURN c.id, c.firstName, c.lastName, p.email`,
 			map[string]any{
@@ -156,7 +148,7 @@ func (s *CustomerOSService) GetContactById(id string) (*Contact, error) {
 			}); err != nil {
 			return nil, err
 		} else {
-			return queryResult.Collect()
+			return queryResult.Collect(ctx)
 		}
 	})
 	if err != nil {
@@ -173,15 +165,12 @@ func (s *CustomerOSService) GetContactById(id string) (*Contact, error) {
 	return mapNodeToContact(idd, firstName, lastName, em), nil
 }
 
-func (s *CustomerOSService) GetContactByEmail(email string) (*Contact, error) {
-	session := (*s.driver).NewSession(
-		neo4j.SessionConfig{
-			AccessMode: neo4j.AccessModeWrite,
-			BoltLogger: neo4j.ConsoleBoltLogger()})
-	defer session.Close()
+func (s *CustomerOSService) GetContactByEmail(ctx context.Context, email string) (*Contact, error) {
+	session := utils.NewNeo4jReadSession(ctx, *s.driver)
+	defer session.Close(ctx)
 
-	dbRecords, err := session.ReadTransaction(func(tx neo4j.Transaction) (any, error) {
-		if queryResult, err := tx.Run(`MATCH (c:Contact)-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}),
+	dbRecords, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		if queryResult, err := tx.Run(ctx, `MATCH (c:Contact)-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}),
                   (c:Contact)-[:HAS]->(p:Email {email:$email})
             RETURN c.id, c.firstName, c.lastName, p.email`,
 			map[string]any{
@@ -190,7 +179,7 @@ func (s *CustomerOSService) GetContactByEmail(email string) (*Contact, error) {
 			}); err != nil {
 			return nil, err
 		} else {
-			return queryResult.Collect()
+			return queryResult.Collect(ctx)
 		}
 	})
 	if err != nil {
@@ -224,14 +213,11 @@ func (s *CustomerOSService) GetContactByEmail(email string) (*Contact, error) {
 	return mapNodeToContact(id, firstName, lastName, em), nil
 }
 
-func (s *CustomerOSService) CreateContactWithEmail(tenant string, email string) (*Contact, error) {
-	session := (*s.driver).NewSession(
-		neo4j.SessionConfig{
-			AccessMode: neo4j.AccessModeWrite,
-			BoltLogger: neo4j.ConsoleBoltLogger()})
-	defer session.Close()
+func (s *CustomerOSService) CreateContactWithEmail(ctx context.Context, tenant string, email string) (*Contact, error) {
+	session := utils.NewNeo4jWriteSession(ctx, *s.driver)
+	defer session.Close(ctx)
 
-	contact, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
+	contact, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		//create the contact
 		contactQuery := "MATCH (t:Tenant {name:$tenant}) " +
 			" MERGE (c:Contact {id:randomUUID()})-[:CONTACT_BELONGS_TO_TENANT]->(t) ON CREATE SET" +
@@ -243,7 +229,7 @@ func (s *CustomerOSService) CreateContactWithEmail(tenant string, email string) 
 			" c:%s " +
 			" RETURN c.id, c.firstName, c.lastName"
 
-		contactQueryResult, err := tx.Run(fmt.Sprintf(contactQuery, "Contact_"+tenant),
+		contactQueryResult, err := tx.Run(ctx, fmt.Sprintf(contactQuery, "Contact_"+tenant),
 			map[string]interface{}{
 				"tenant":        tenant,
 				"createdAt":     time.Now().UTC(),
@@ -252,7 +238,7 @@ func (s *CustomerOSService) CreateContactWithEmail(tenant string, email string) 
 				"appSource":     "message-store-api",
 			})
 
-		contact, err := contactQueryResult.Single()
+		contact, err := contactQueryResult.Single(ctx)
 
 		if err != nil {
 			return nil, err
@@ -274,7 +260,7 @@ func (s *CustomerOSService) CreateContactWithEmail(tenant string, email string) 
 			" RETURN e"
 
 		contactId := contact.Values[0].(string)
-		_, err = tx.Run(fmt.Sprintf(emailQuery, "Email_"+tenant),
+		_, err = tx.Run(ctx, fmt.Sprintf(emailQuery, "Email_"+tenant),
 			map[string]interface{}{
 				"tenant":        tenant,
 				"contactId":     contactId,
@@ -300,21 +286,18 @@ func (s *CustomerOSService) CreateContactWithEmail(tenant string, email string) 
 	}
 }
 
-func (s *CustomerOSService) ConversationByIdExists(tenant string, conversationId string) (bool, error) {
-	session := (*s.driver).NewSession(
-		neo4j.SessionConfig{
-			AccessMode: neo4j.AccessModeWrite,
-			BoltLogger: neo4j.ConsoleBoltLogger()})
-	defer session.Close()
+func (s *CustomerOSService) ConversationByIdExists(ctx context.Context, tenant string, conversationId string) (bool, error) {
+	session := utils.NewNeo4jWriteSession(ctx, *s.driver)
+	defer session.Close(ctx)
 
-	dbRecords, err := session.ReadTransaction(func(tx neo4j.Transaction) (any, error) {
-		if queryResult, err := tx.Run("MATCH (c:Conversation_"+tenant+"{id:$conversationId}) RETURN c",
+	dbRecords, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		if queryResult, err := tx.Run(ctx, "MATCH (c:Conversation_"+tenant+"{id:$conversationId}) RETURN c",
 			map[string]any{
 				"conversationId": conversationId,
 			}); err != nil {
 			return nil, err
 		} else {
-			return queryResult.Collect()
+			return queryResult.Collect(ctx)
 		}
 	})
 
@@ -329,22 +312,19 @@ func (s *CustomerOSService) ConversationByIdExists(tenant string, conversationId
 	return true, nil
 }
 
-func (s *CustomerOSService) GetConversations(tenant string) ([]Conversation, error) {
-	session := (*s.driver).NewSession(
-		neo4j.SessionConfig{
-			AccessMode: neo4j.AccessModeWrite,
-			BoltLogger: neo4j.ConsoleBoltLogger()})
-	defer session.Close()
+func (s *CustomerOSService) GetConversations(ctx context.Context, tenant string) ([]Conversation, error) {
+	session := utils.NewNeo4jReadSession(ctx, *s.driver)
+	defer session.Close(ctx)
 
-	dbRecords, err := session.ReadTransaction(func(tx neo4j.Transaction) (any, error) {
+	dbRecords, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 
 		//todo move order by as param
-		if queryResult, err := tx.Run("MATCH (c:Conversation_"+tenant+") RETURN c order by c.updatedAt desc", map[string]any{
+		if queryResult, err := tx.Run(ctx, "MATCH (c:Conversation_"+tenant+") RETURN c order by c.updatedAt desc", map[string]any{
 			"tenant": tenant,
 		}); err != nil {
 			return nil, err
 		} else {
-			return queryResult.Collect()
+			return queryResult.Collect(ctx)
 		}
 	})
 
@@ -361,21 +341,18 @@ func (s *CustomerOSService) GetConversations(tenant string) ([]Conversation, err
 	return conversations, nil
 }
 
-func (s *CustomerOSService) GetConversationById(tenant string, conversationId string) (*Conversation, error) {
-	session := (*s.driver).NewSession(
-		neo4j.SessionConfig{
-			AccessMode: neo4j.AccessModeWrite,
-			BoltLogger: neo4j.ConsoleBoltLogger()})
-	defer session.Close()
+func (s *CustomerOSService) GetConversationById(ctx context.Context, tenant string, conversationId string) (*Conversation, error) {
+	session := utils.NewNeo4jReadSession(ctx, *s.driver)
+	defer session.Close(ctx)
 
-	conversationNode, err := session.ReadTransaction(func(tx neo4j.Transaction) (any, error) {
+	conversationNode, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 
-		if queryResult, err := tx.Run("MATCH (c:Conversation_"+tenant+"{id: $conversationId}) RETURN c", map[string]any{
+		if queryResult, err := tx.Run(ctx, "MATCH (c:Conversation_"+tenant+"{id: $conversationId}) RETURN c", map[string]any{
 			"conversationId": conversationId,
 		}); err != nil {
 			return nil, err
 		} else {
-			record, err := queryResult.Single()
+			record, err := queryResult.Single(ctx)
 			if err != nil {
 				return nil, err
 			}
@@ -393,24 +370,19 @@ func (s *CustomerOSService) GetConversationById(tenant string, conversationId st
 	return mapNodeToConversation(conversationNode.(*dbtype.Node)), nil
 }
 
-func (s *CustomerOSService) GetConversationParticipants(tenant string, conversationId string) ([]string, error) {
-	session := (*s.driver).NewSession(
-		neo4j.SessionConfig{
-			AccessMode: neo4j.AccessModeRead,
-			BoltLogger: neo4j.ConsoleBoltLogger(),
-		},
-	)
-	defer session.Close()
+func (s *CustomerOSService) GetConversationParticipants(ctx context.Context, tenant string, conversationId string) ([]string, error) {
+	session := utils.NewNeo4jReadSession(ctx, *s.driver)
+	defer session.Close(ctx)
 
-	records, err := session.ReadTransaction(func(tx neo4j.Transaction) (any, error) {
-		queryResult, err := tx.Run("MATCH (c:Conversation_"+tenant+"{id:$conversationId})<-[PARTICIPATES]-(p)-[HAS]->(e:Email) RETURN DISTINCT(e.email) AS email",
+	records, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		queryResult, err := tx.Run(ctx, "MATCH (c:Conversation_"+tenant+"{id:$conversationId})<-[PARTICIPATES]-(p)-[HAS]->(e:Email) RETURN DISTINCT(e.email) AS email",
 			map[string]interface{}{
 				"conversationId": conversationId,
 			})
 		if err != nil {
 			return nil, err
 		}
-		return queryResult.Collect()
+		return queryResult.Collect(ctx)
 	})
 	if err != nil {
 		return []string{}, err
@@ -426,12 +398,9 @@ func (s *CustomerOSService) GetConversationParticipants(tenant string, conversat
 	}
 }
 
-func (s *CustomerOSService) CreateConversation(tenant string, initiatorId string, initiatorUsername string, initiatorType entity.SenderType, channel entity.EventType, threadId string) (*Conversation, error) {
-	session := (*s.driver).NewSession(
-		neo4j.SessionConfig{
-			AccessMode: neo4j.AccessModeWrite,
-			BoltLogger: neo4j.ConsoleBoltLogger()})
-	defer session.Close()
+func (s *CustomerOSService) CreateConversation(ctx context.Context, tenant string, initiatorId string, initiatorUsername string, initiatorType entity.SenderType, channel entity.EventType, threadId string) (*Conversation, error) {
+	session := utils.NewNeo4jWriteSession(ctx, *s.driver)
+	defer session.Close(ctx)
 
 	contactIds := []string{}
 	userIds := []string{}
@@ -445,7 +414,7 @@ func (s *CustomerOSService) CreateConversation(tenant string, initiatorId string
 		initiatorTypeStr = "USER"
 	}
 
-	if result, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
+	if result, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		query := "MATCH (t:Tenant {name:$tenant}) " +
 			" MERGE (o:Conversation {id:randomUUID()}) " +
 			" ON CREATE SET o.startedAt=$startedAt, o.updatedAt=$updatedAt, o.threadId=$threadId, " +
@@ -475,7 +444,7 @@ func (s *CustomerOSService) CreateConversation(tenant string, initiatorId string
 				" MERGE (u)-[:INITIATED]->(o) "
 		}
 		utc := time.Now().UTC()
-		queryResult, err := tx.Run(fmt.Sprintf(query, "Conversation_"+tenant, queryLinkWithContacts, queryLinkWithUsers),
+		queryResult, err := tx.Run(ctx, fmt.Sprintf(query, "Conversation_"+tenant, queryLinkWithContacts, queryLinkWithUsers),
 			map[string]interface{}{
 				"tenant":              tenant,
 				"source":              "openline",
@@ -499,7 +468,7 @@ func (s *CustomerOSService) CreateConversation(tenant string, initiatorId string
 				"lastContentPreview":  "",
 			})
 
-		return utils.ExtractSingleRecordFirstValueAsNode(queryResult, err)
+		return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
 	}); err != nil {
 		return nil, err
 	} else {
@@ -508,14 +477,11 @@ func (s *CustomerOSService) CreateConversation(tenant string, initiatorId string
 	}
 }
 
-func (s *CustomerOSService) UpdateConversation(tenant string, conversationId string, lastSenderId string, lastSenderType string, contactIds []string, userIds []string, lastContentPreview string) (string, error) {
-	session := (*s.driver).NewSession(
-		neo4j.SessionConfig{
-			AccessMode: neo4j.AccessModeWrite,
-			BoltLogger: neo4j.ConsoleBoltLogger()})
-	defer session.Close()
+func (s *CustomerOSService) UpdateConversation(ctx context.Context, tenant string, conversationId string, lastSenderId string, lastSenderType string, contactIds []string, userIds []string, lastContentPreview string) (string, error) {
+	session := utils.NewNeo4jWriteSession(ctx, *s.driver)
+	defer session.Close(ctx)
 
-	if result, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
+	if result, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		query := "MATCH (t:Tenant {name:$tenant}) " +
 			" MERGE (o:Conversation {id:$conversationId}) " +
 			" ON MATCH SET " +
@@ -536,7 +502,7 @@ func (s *CustomerOSService) UpdateConversation(tenant string, conversationId str
 				" OPTIONAL MATCH (u:User)-[:USER_BELONGS_TO_TENANT]->(t) WHERE u.id in $userIds " +
 				" MERGE (u)-[:PARTICIPATES]->(o) "
 		}
-		queryResult, err := tx.Run(fmt.Sprintf(query, "Conversation_"+tenant, queryLinkWithContacts, queryLinkWithUsers),
+		queryResult, err := tx.Run(ctx, fmt.Sprintf(query, "Conversation_"+tenant, queryLinkWithContacts, queryLinkWithUsers),
 			map[string]interface{}{
 				"tenant":              tenant,
 				"conversationId":      conversationId,
@@ -549,7 +515,7 @@ func (s *CustomerOSService) UpdateConversation(tenant string, conversationId str
 				"lastSenderLastName":  "",
 				"lastContentPreview":  lastContentPreview,
 			})
-		return utils.ExtractSingleRecordFirstValueAsNode(queryResult, err)
+		return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
 	}); err != nil {
 		return "", err
 	} else {
@@ -611,10 +577,10 @@ func mapNodeToUser(node *dbtype.Node) *User {
 	return user
 }
 
-func (s *CustomerOSService) GetContactWithEmailOrCreate(tenant string, email string) (Contact, error) {
-	contact, err := s.GetContactByEmail(email)
+func (s *CustomerOSService) GetContactWithEmailOrCreate(ctx context.Context, tenant string, email string) (Contact, error) {
+	contact, err := s.GetContactByEmail(ctx, email)
 	if err != nil {
-		contact, err = s.CreateContactWithEmail(tenant, email)
+		contact, err = s.CreateContactWithEmail(ctx, tenant, email)
 		if err != nil {
 			return Contact{}, err
 		}
@@ -628,6 +594,7 @@ func (s *CustomerOSService) GetContactWithEmailOrCreate(tenant string, email str
 }
 
 func (s *CustomerOSService) GetActiveConversationOrCreate(
+	ctx context.Context,
 	tenant string,
 	initiatorId string,
 	initiatorUsername string,
@@ -639,18 +606,18 @@ func (s *CustomerOSService) GetActiveConversationOrCreate(
 	var err error
 	if eventType == entity.WEB_CHAT {
 		if senderType == entity.CONTACT {
-			conversation, err = s.GetWebChatConversationWithContactInitiator(tenant, initiatorId)
+			conversation, err = s.GetWebChatConversationWithContactInitiator(ctx, tenant, initiatorId)
 		} else if senderType == entity.USER {
-			conversation, err = s.GetWebChatConversationWithUserInitiator(tenant, initiatorId)
+			conversation, err = s.GetWebChatConversationWithUserInitiator(ctx, tenant, initiatorId)
 		}
 	} else if eventType == entity.EMAIL {
 		if err != nil {
 			return nil, err
 		}
 		if senderType == entity.CONTACT {
-			conversation, err = s.GetEmailConversationWithContactInitiator(tenant, initiatorId, threadId)
+			conversation, err = s.GetEmailConversationWithContactInitiator(ctx, tenant, initiatorId, threadId)
 		} else if senderType == entity.USER {
-			conversation, err = s.GetEmailConversationWithUserInitiator(tenant, initiatorId, threadId)
+			conversation, err = s.GetEmailConversationWithUserInitiator(ctx, tenant, initiatorId, threadId)
 		}
 	}
 
@@ -659,7 +626,7 @@ func (s *CustomerOSService) GetActiveConversationOrCreate(
 	}
 
 	if conversation == nil {
-		conversation, err = s.CreateConversation(tenant, initiatorId, initiatorUsername, senderType, eventType, threadId)
+		conversation, err = s.CreateConversation(ctx, tenant, initiatorId, initiatorUsername, senderType, eventType, threadId)
 	}
 	if err != nil {
 		return nil, err
@@ -668,15 +635,12 @@ func (s *CustomerOSService) GetActiveConversationOrCreate(
 	return conversation, nil
 }
 
-func (s *CustomerOSService) GetEmailConversationWithContactInitiator(tenant string, contactId string, threadId string) (*Conversation, error) {
-	session := (*s.driver).NewSession(
-		neo4j.SessionConfig{
-			AccessMode: neo4j.AccessModeWrite,
-			BoltLogger: neo4j.ConsoleBoltLogger()})
-	defer session.Close()
+func (s *CustomerOSService) GetEmailConversationWithContactInitiator(ctx context.Context, tenant string, contactId string, threadId string) (*Conversation, error) {
+	session := utils.NewNeo4jWriteSession(ctx, *s.driver)
+	defer session.Close(ctx)
 
-	conversationNode, err := session.ReadTransaction(func(tx neo4j.Transaction) (any, error) {
-		if queryResult, err := tx.Run(`match(o:Conversation{status:"ACTIVE", channel: "EMAIL", threadId: $threadId})<-[:INITIATED]-(c:Contact{id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(t:Tenant{name:$tenant}) return o`,
+	conversationNode, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		if queryResult, err := tx.Run(ctx, `match(o:Conversation{status:"ACTIVE", channel: "EMAIL", threadId: $threadId})<-[:INITIATED]-(c:Contact{id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(t:Tenant{name:$tenant}) return o`,
 			map[string]any{
 				"tenant":    tenant,
 				"contactId": contactId,
@@ -684,7 +648,7 @@ func (s *CustomerOSService) GetEmailConversationWithContactInitiator(tenant stri
 			}); err != nil {
 			return nil, err
 		} else {
-			record, err := queryResult.Single()
+			record, err := queryResult.Single(ctx)
 			if err != nil && err.Error() != "Result contains no more records" {
 				return nil, err
 			}
@@ -708,14 +672,12 @@ func (s *CustomerOSService) GetEmailConversationWithContactInitiator(tenant stri
 	}
 }
 
-func (s *CustomerOSService) GetEmailConversationWithUserInitiator(tenant string, userId string, threadId string) (*Conversation, error) {
-	session := (*s.driver).NewSession(
-		neo4j.SessionConfig{
-			AccessMode: neo4j.AccessModeWrite,
-			BoltLogger: neo4j.ConsoleBoltLogger()})
-	defer session.Close()
-	conversationNode, err := session.ReadTransaction(func(tx neo4j.Transaction) (any, error) {
-		if queryResult, err := tx.Run(`match(o:Conversation{status:"ACTIVE", channel: "EMAIL", threadId: $threadId})<-[:INITIATED]-(u:User{id:$userId})-[:USER_BELONGS_TO_TENANT]->(t:Tenant{name:$tenant}) return o`,
+func (s *CustomerOSService) GetEmailConversationWithUserInitiator(ctx context.Context, tenant string, userId string, threadId string) (*Conversation, error) {
+	session := utils.NewNeo4jReadSession(ctx, *s.driver)
+	defer session.Close(ctx)
+
+	conversationNode, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		if queryResult, err := tx.Run(ctx, `match(o:Conversation{status:"ACTIVE", channel: "EMAIL", threadId: $threadId})<-[:INITIATED]-(u:User{id:$userId})-[:USER_BELONGS_TO_TENANT]->(t:Tenant{name:$tenant}) return o`,
 			map[string]any{
 				"tenant":   tenant,
 				"userId":   userId,
@@ -723,7 +685,7 @@ func (s *CustomerOSService) GetEmailConversationWithUserInitiator(tenant string,
 			}); err != nil {
 			return nil, err
 		} else {
-			record, err := queryResult.Single()
+			record, err := queryResult.Single(ctx)
 			if err != nil && err.Error() != "Result contains no more records" {
 				return nil, err
 			}
@@ -747,21 +709,19 @@ func (s *CustomerOSService) GetEmailConversationWithUserInitiator(tenant string,
 	}
 }
 
-func (s *CustomerOSService) GetWebChatConversationWithContactInitiator(tenant string, contactId string) (*Conversation, error) {
-	session := (*s.driver).NewSession(
-		neo4j.SessionConfig{
-			AccessMode: neo4j.AccessModeWrite,
-			BoltLogger: neo4j.ConsoleBoltLogger()})
-	defer session.Close()
-	conversationNode, err := session.ReadTransaction(func(tx neo4j.Transaction) (any, error) {
-		if queryResult, err := tx.Run(`match(o:Conversation{status:"ACTIVE", channel: "WEB_CHAT"})<-[:INITIATED]-(c:Contact{id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(t:Tenant{name:$tenant}) return o`,
+func (s *CustomerOSService) GetWebChatConversationWithContactInitiator(ctx context.Context, tenant string, contactId string) (*Conversation, error) {
+	session := utils.NewNeo4jReadSession(ctx, *s.driver)
+	defer session.Close(ctx)
+
+	conversationNode, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		if queryResult, err := tx.Run(ctx, `match(o:Conversation{status:"ACTIVE", channel: "WEB_CHAT"})<-[:INITIATED]-(c:Contact{id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(t:Tenant{name:$tenant}) return o`,
 			map[string]any{
 				"tenant":    tenant,
 				"contactId": contactId,
 			}); err != nil {
 			return nil, err
 		} else {
-			record, err := queryResult.Single()
+			record, err := queryResult.Single(ctx)
 			if err != nil && err.Error() != "Result contains no more records" {
 				return nil, err
 			}
@@ -785,22 +745,19 @@ func (s *CustomerOSService) GetWebChatConversationWithContactInitiator(tenant st
 	}
 }
 
-func (s *CustomerOSService) GetWebChatConversationWithUserInitiator(tenant string, userId string) (*Conversation, error) {
-	session := (*s.driver).NewSession(
-		neo4j.SessionConfig{
-			AccessMode: neo4j.AccessModeWrite,
-			BoltLogger: neo4j.ConsoleBoltLogger()})
-	defer session.Close()
+func (s *CustomerOSService) GetWebChatConversationWithUserInitiator(ctx context.Context, tenant string, userId string) (*Conversation, error) {
+	session := utils.NewNeo4jReadSession(ctx, *s.driver)
+	defer session.Close(ctx)
 
-	conversationNode, err := session.ReadTransaction(func(tx neo4j.Transaction) (any, error) {
-		if queryResult, err := tx.Run(`match(o:Conversation{status:"ACTIVE", channel: "WEB_CHAT"})<-[:INITIATED]-(u:User{id:$userId})-[:USER_BELONGS_TO_TENANT]->(t:Tenant{name:$tenant}) return o`,
+	conversationNode, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		if queryResult, err := tx.Run(ctx, `match(o:Conversation{status:"ACTIVE", channel: "WEB_CHAT"})<-[:INITIATED]-(u:User{id:$userId})-[:USER_BELONGS_TO_TENANT]->(t:Tenant{name:$tenant}) return o`,
 			map[string]any{
 				"tenant": tenant,
 				"userId": userId,
 			}); err != nil {
 			return nil, err
 		} else {
-			record, err := queryResult.Single()
+			record, err := queryResult.Single(ctx)
 			if err != nil && err.Error() != "Result contains no more records" {
 				return nil, err
 			}
@@ -824,7 +781,7 @@ func (s *CustomerOSService) GetWebChatConversationWithUserInitiator(tenant strin
 	}
 }
 
-func NewCustomerOSService(driver *neo4j.Driver, postgresRepositories *repository.PostgresRepositories, commonStoreService *commonStoreService) *CustomerOSService {
+func NewCustomerOSService(driver *neo4j.DriverWithContext, postgresRepositories *repository.PostgresRepositories, commonStoreService *commonStoreService) *CustomerOSService {
 	customerOsService := new(CustomerOSService)
 	customerOsService.driver = driver
 	customerOsService.postgresRepositories = postgresRepositories
