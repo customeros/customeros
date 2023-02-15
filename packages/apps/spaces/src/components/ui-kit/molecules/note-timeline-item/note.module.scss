@@ -12,7 +12,7 @@
   font-weight: normal;
   color: #495057;
   & * {
-    margin: 4px 0;
+    margin: var(--spacing-xxxs) 0;
     width: fit-content;
     overflow: hidden;
     white-space: pre-line;
@@ -31,8 +31,8 @@
 }
 
 .note {
-  padding: 12px;
-  margin-bottom: 8px;
+  padding: var(--spacing-xs);
+  margin-bottom: var(--spacing-xxs);
   border: 1px solid var(--gray-200);
 }
 
@@ -47,7 +47,7 @@
 .actions {
   color: var(--gray-700);
   margin-right: -12px;
-  margin-bottom: 4px;
+  margin-bottom: var(--spacing-xxxs);
 }
 
 .actionContainer {

@@ -1,0 +1,55 @@
+.featuresItem {
+  display: flex;
+  align-items: center;
+  padding: var(--spacing-xs) var(--spacing-md);
+  color: var(--grey-color);
+  cursor: pointer;
+  transition: 0.5s ease;
+
+  &:focus,
+  &:active,
+  &:hover {
+    background: var(--side-panel-item-hovered);
+    transition: 0.5s ease;
+  }
+  &::before {
+    transition: 0.5s ease;
+    content: '';
+    position: absolute;
+    left: -1.2rem;
+    height: 100%;
+    border-left: 3px solid var(--white-color);
+    border-radius: 2px;
+    opacity: 0;
+    visibility: hidden;
+  }
+
+  &:hover::before {
+    opacity: 1;
+    visibility: unset;
+  }
+
+  & .featuresItemIcon {
+    font-size: 2rem;
+  }
+
+  & .featuresItemText {
+    margin-left: 1.5rem;
+    transition: opacity 0.6s ease;
+    opacity: 1;
+    overflow: hidden;
+    word-break: keep-all;
+    white-space: nowrap;
+  }
+
+  & .featuresItemIcon,
+  & .featuresItemText {
+    display: inline-flex;
+    align-items: center;
+  }
+
+  & .featuresItemTextHidden {
+    opacity: 0;
+    pointer-events: none;
+  }
+}

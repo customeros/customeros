@@ -1,0 +1,18 @@
+.pageContent {
+  //background: var(--background-color);
+  //margin-left: var(--side-panel-collapsed-width);
+  //transition: margin-left 0.5s ease;
+  height: 100vh;
+
+  display: grid;
+  grid-template-columns: var(--side-panel-collapsed-width) 1fr;
+  grid-template-areas: 'sidebar content';
+  grid-gap: 24px;
+  transition: all ease 0.25s;
+  background: var(--background-color);
+}
+
+.open {
+  //margin-left: var(--side-panel-expanded-width);
+  grid-template-columns: var(--side-panel-expanded-width) 1fr;
+}

@@ -7,8 +7,8 @@
   position: relative;
   text-align: left;
   border-radius: 4px;
-  padding: 16px 16px 4px;
-  margin-bottom: 16px;
+  padding: var(--spacing-sm) var(--spacing-sm) var(--spacing-xxxs);
+  margin-bottom: var(--spacing-sm);
   z-index: 2;
   background: var(--gray-200);
   box-shadow: -3px 5px 5px var(--gray-300);

@@ -7,4 +7,5 @@ export { Button } from './button';
 export { Message } from './message';
 export { Address } from './address';
 export { DeleteConfirmationDialog } from './deleteConfirmationDialog';
+export { IconButton } from './icon-button';
 export * from './icons';

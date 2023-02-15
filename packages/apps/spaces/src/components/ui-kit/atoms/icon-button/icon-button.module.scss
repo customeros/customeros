@@ -1,59 +1,106 @@
 .button {
-  padding: 10px;
   border-radius: 50%;
-
-  display: flex;
-  justify-content: center;
+  display: inline-flex;
   align-items: center;
-  cursor: pointer;
-  // fixme improve visual
-  &:hover,
-  &:focus,
-  &:active {
-    background: linear-gradient(-45deg, #b072f1, #f696b6);
+  justify-content: center;
+
+  &:focus-visible {
+    outline-color: var(--outline-color);
+    outline-width: var(--outline-width);
+    outline-offset: var(--outline-offset);
   }
 
-  &:not(:last-of-type) {
-    margin-right: 8px;
-  }
-
+  /* VARIANTS */
+  // todo determine if its needed
   &.default {
-    background: transparent;
-    color: #474747;
-
-    // fixme improve visual
+    background: var(--gray-600);
+    color: #fff;
     &:hover,
     &:focus,
     &:active {
-      background: #d3d3d3;
+      background: transparent;
+      outline: none;
     }
   }
 
   &.primary {
-    background: linear-gradient(-45deg, #be8df3, #daa4b7);
-    color: white;
+    background: var(--primary-color);
+    color: var(--text-on-primary);
 
-    // fixme improve visual
-    &:hover,
-    &:focus,
-    &:active {
-      background: linear-gradient(-45deg, #b072f1, #f696b6);
+    &:hover {
+      background: var(--primary-color-hover);
+    }
+    &:focus {
+      background: var(--primary-color-focus);
+    }
+    &:focus {
+      background: var(--primary-color-active);
     }
   }
 
   &.secondary {
+    background: var(--secondary-color);
+    color: var(--text-on-secondary);
+    &:hover {
+      background: var(--secondary-color-hover);
+    }
+    &:focus {
+      background: var(--secondary-color-focus);
+    }
+    &:focus {
+      background: var(--secondary-color-active);
+    }
+  }
+
+  &.accent {
+    background: var(--accent-color);
+    color: var(--text-on-accent);
+
+    &:hover {
+      background: var(--accent-color-hover);
+    }
+    &:focus {
+      background: var(--accent-color-focus);
+    }
+    &:focus {
+      background: var(--accent-color-active);
+    }
+  }
+
+  &.text {
     background: transparent;
-    cursor: pointer;
-    // fixme improve visual
+
     &:hover,
     &:focus,
     &:active {
-      background: none;
-      color: var(--gray-800);
+      background: transparent;
+      outline: none;
     }
   }
 
   &:disabled {
     pointer-events: none;
+    cursor: not-allowed;
+  }
+
+  /* SIZES */
+
+  &.xxxs {
+    padding: var(--spacing-xxxs);
+  }
+  &.xxs {
+    padding: var(--spacing-xxs);
+  }
+  &.xs {
+    padding: var(--spacing-xs);
+  }
+  &.sm {
+    padding: var(--spacing-sm);
+  }
+  &.sm {
+    padding: var(--spacing-md);
+  }
+  &.sm {
+    padding: var(--spacing-lg);
   }
 }

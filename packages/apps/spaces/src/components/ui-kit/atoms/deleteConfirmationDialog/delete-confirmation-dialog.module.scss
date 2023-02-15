@@ -1,6 +1,6 @@
 .button {
-  padding: 8px 16px;
-  border-radius: 30px;
+  padding: var(--spacing-xxs) var(--spacing-sm);
+  border-radius: var(--border-radius-xl);
   border: none; // fix in theming
   display: flex;
   justify-content: center;

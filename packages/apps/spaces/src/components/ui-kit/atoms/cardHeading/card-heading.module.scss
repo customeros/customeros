@@ -1,13 +1,13 @@
 .headingContainer {
   display: flex;
   flex-direction: column;
-  margin-bottom: 24px;
+  margin-bottom: var(--spacing-md);
   margin-top: 0;
 }
 
 .heading {
   display: block;
   margin-top: 0;
-  margin-bottom: 4px;
+  margin-bottom: var(--spacing-xxxs);
   color: var(--gray-800);
 }

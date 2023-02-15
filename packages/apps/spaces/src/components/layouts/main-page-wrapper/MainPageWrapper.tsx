@@ -5,6 +5,8 @@ import React, { useEffect, useState } from 'react';
 import { WebChat } from '@openline-ai/openline-web-chat';
 import { useRouter } from 'next/router';
 import { getUserName } from '../../../utils';
+import { SidePanel } from '../../ui-kit/organisms';
+import { PageContentLayout } from '../page-content-layout/PageContentLayout';
 
 const ory = new FrontendApi(new Configuration(edgeConfig));
 
@@ -56,17 +58,18 @@ export const MainPageWrapper = ({ children }: any) => {
 
   return (
     <>
-      {/*{router.pathname === '/' && (*/}
-      {/*    <SidePanel*/}
-      {/*        userEmail={userEmail}*/}
-      {/*        logoutUrl={logoutUrl}*/}
-      {/*        isOpen={isSidePanelVisible}*/}
-      {/*        onOpen={() => setSidePanelVisible(true)}*/}
-      {/*        onClose={() => setSidePanelVisible(false)}*/}
-      {/*    />*/}
-      {/*)}*/}
-
-      {children}
+      <PageContentLayout
+        isPanelOpen={isSidePanelVisible}
+        isSideBarShown={router.pathname === '/'}
+      >
+        {router.pathname === '/' && (
+          <SidePanel
+            onPanelToggle={setSidePanelVisible}
+            isPanelOpen={isSidePanelVisible}
+          />
+        )}
+        <article style={{ gridArea: 'content' }}>{children}</article>
+      </PageContentLayout>
 
       <WebChat
         apikey={`${process.env.WEB_CHAT_API_KEY}`}
