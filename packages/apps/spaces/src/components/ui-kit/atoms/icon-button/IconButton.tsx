@@ -2,6 +2,7 @@ import React, {
   ButtonHTMLAttributes,
   EventHandler,
   FC,
+  ReactEventHandler,
   ReactNode,
 } from 'react';
 import styles from './icon-button.module.scss';
@@ -9,7 +10,7 @@ import classNames from 'classnames';
 
 interface Props extends ButtonHTMLAttributes<HTMLButtonElement> {
   icon?: ReactNode;
-  onClick: EventHandler<never>;
+  onClick: ReactEventHandler;
   mode?: 'default' | 'primary' | 'secondary' | 'accent' | 'text';
   size?: 'xxxs' | 'xxs' | 'xs' | 'sm' | 'md' | 'lg';
 }

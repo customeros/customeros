@@ -4,8 +4,12 @@ import { toast } from 'react-toastify';
 import parse from 'html-react-parser';
 import ReactDOMServer from 'react-dom/server';
 import axios from 'axios';
-import { IconButton } from '../../atoms/icon-button';
-import { DeleteConfirmationDialog, Trash, Pencil } from '../../atoms';
+import {
+  DeleteConfirmationDialog,
+  Trash,
+  Pencil,
+  IconButton,
+} from '../../atoms';
 import sanitizeHtml from 'sanitize-html';
 
 interface Props {
@@ -170,7 +174,7 @@ export const NoteTimelineItem: React.FC<Props> = ({
                 onClick={() => setDeleteConfirmationModalVisible(true)}
                 icon={<Trash />}
                 mode='secondary'
-                ariaLabel='Delete'
+                title='Delete'
                 style={{ marginRight: 0, marginBottom: '8px', height: '1rem' }}
               />
 
@@ -178,7 +182,7 @@ export const NoteTimelineItem: React.FC<Props> = ({
                 onClick={() => setEditNote(true)}
                 icon={<Pencil />}
                 mode='secondary'
-                ariaLabel='Edit'
+                title='Edit'
                 style={{ marginRight: 0, height: '1rem' }}
               />
             </div>
