@@ -2,33 +2,34 @@ package repository
 
 import (
 	"fmt"
-	"github.com/neo4j/neo4j-go-driver/v4/neo4j"
-	"github.com/neo4j/neo4j-go-driver/v4/neo4j/dbtype"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils"
+	"golang.org/x/net/context"
 )
 
 type FieldSetRepository interface {
-	LinkWithFieldSetTemplateInTx(tx neo4j.Transaction, tenant, fieldSetId, templateId string) error
-	MergeFieldSetToContactInTx(tx neo4j.Transaction, tenant, contactId string, entity entity.FieldSetEntity) (*dbtype.Node, error)
+	LinkWithFieldSetTemplateInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant, fieldSetId, templateId string) error
+	MergeFieldSetToContactInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant, contactId string, entity entity.FieldSetEntity) (*dbtype.Node, error)
 
-	UpdateFieldSetForContactInTx(tx neo4j.Transaction, tenant, contactId string, entity entity.FieldSetEntity) (*dbtype.Node, error)
-	DeleteByIdFromContact(session neo4j.Session, tenant, contactId, fieldSetId string) error
-	FindAllForContact(session neo4j.Session, tenant, contactId string) ([]*neo4j.Record, error)
+	UpdateFieldSetForContactInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant, contactId string, entity entity.FieldSetEntity) (*dbtype.Node, error)
+	DeleteByIdFromContact(ctx context.Context, session neo4j.SessionWithContext, tenant, contactId, fieldSetId string) error
+	FindAllForContact(ctx context.Context, session neo4j.SessionWithContext, tenant, contactId string) ([]*neo4j.Record, error)
 }
 
 type fieldSetRepository struct {
-	driver *neo4j.Driver
+	driver *neo4j.DriverWithContext
 }
 
-func NewFieldSetRepository(driver *neo4j.Driver) FieldSetRepository {
+func NewFieldSetRepository(driver *neo4j.DriverWithContext) FieldSetRepository {
 	return &fieldSetRepository{
 		driver: driver,
 	}
 }
 
-func (r *fieldSetRepository) LinkWithFieldSetTemplateInTx(tx neo4j.Transaction, tenant, fieldSetId, templateId string) error {
-	txResult, err := tx.Run(`
+func (r *fieldSetRepository) LinkWithFieldSetTemplateInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant, fieldSetId, templateId string) error {
+	txResult, err := tx.Run(ctx, `
 			MATCH (f:FieldSet {id:$fieldSetId})<-[:HAS_COMPLEX_PROPERTY]-(c:Contact)-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}),
 					(c)-[:IS_DEFINED_BY]->(e:EntityTemplate)-[:CONTAINS]->(d:FieldSetTemplate {id:$templateId})
 			MERGE (f)-[r:IS_DEFINED_BY]->(d)
@@ -41,11 +42,11 @@ func (r *fieldSetRepository) LinkWithFieldSetTemplateInTx(tx neo4j.Transaction, 
 	if err != nil {
 		return err
 	}
-	_, err = txResult.Single()
+	_, err = txResult.Single(ctx)
 	return err
 }
 
-func (r *fieldSetRepository) MergeFieldSetToContactInTx(tx neo4j.Transaction, tenant, contactId string, entity entity.FieldSetEntity) (*dbtype.Node, error) {
+func (r *fieldSetRepository) MergeFieldSetToContactInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant, contactId string, entity entity.FieldSetEntity) (*dbtype.Node, error) {
 	query := "MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) " +
 		" MERGE (f:FieldSet {name: $name})<-[r:HAS_COMPLEX_PROPERTY]-(c) " +
 		" ON CREATE SET f.id=randomUUID(), " +
@@ -55,7 +56,7 @@ func (r *fieldSetRepository) MergeFieldSetToContactInTx(tx neo4j.Transaction, te
 		"				f.sourceOfTruth=$sourceOfTruth, " +
 		"				f:%s " +
 		" RETURN f"
-	queryResult, err := tx.Run(fmt.Sprintf(query, "FieldSet_"+tenant),
+	queryResult, err := tx.Run(ctx, fmt.Sprintf(query, "FieldSet_"+tenant),
 		map[string]interface{}{
 			"tenant":        tenant,
 			"contactId":     contactId,
@@ -64,11 +65,11 @@ func (r *fieldSetRepository) MergeFieldSetToContactInTx(tx neo4j.Transaction, te
 			"sourceOfTruth": entity.SourceOfTruth,
 			"now":           utils.Now(),
 		})
-	return utils.ExtractSingleRecordFirstValueAsNode(queryResult, err)
+	return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
 }
 
-func (r *fieldSetRepository) UpdateFieldSetForContactInTx(tx neo4j.Transaction, tenant, contactId string, entity entity.FieldSetEntity) (*dbtype.Node, error) {
-	queryResult, err := tx.Run(`
+func (r *fieldSetRepository) UpdateFieldSetForContactInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant, contactId string, entity entity.FieldSetEntity) (*dbtype.Node, error) {
+	queryResult, err := tx.Run(ctx, `
 			MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}),
 					(c)-[r:HAS_COMPLEX_PROPERTY]->(s:FieldSet {id:$fieldSetId})
             SET s.name=$name, s.sourceOfTruth=$sourceOfTruth, s.updatedAt=$now
@@ -81,12 +82,12 @@ func (r *fieldSetRepository) UpdateFieldSetForContactInTx(tx neo4j.Transaction, 
 			"sourceOfTruth": entity.SourceOfTruth,
 			"now":           utils.Now(),
 		})
-	return utils.ExtractSingleRecordFirstValueAsNode(queryResult, err)
+	return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
 }
 
-func (r *fieldSetRepository) DeleteByIdFromContact(session neo4j.Session, tenant, contactId, fieldSetId string) error {
-	_, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
-		_, err := tx.Run(`
+func (r *fieldSetRepository) DeleteByIdFromContact(ctx context.Context, session neo4j.SessionWithContext, tenant, contactId, fieldSetId string) error {
+	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		_, err := tx.Run(ctx, `
 			MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}),
                   (c)-[:HAS_COMPLEX_PROPERTY]->(s:FieldSet {id:$fieldSetId}),
 				  (s)-[:HAS_PROPERTY]->(f:CustomField)
@@ -101,9 +102,9 @@ func (r *fieldSetRepository) DeleteByIdFromContact(session neo4j.Session, tenant
 	return err
 }
 
-func (r *fieldSetRepository) FindAllForContact(session neo4j.Session, tenant, contactId string) ([]*neo4j.Record, error) {
-	records, err := session.ReadTransaction(func(tx neo4j.Transaction) (any, error) {
-		queryResult, err := tx.Run(`
+func (r *fieldSetRepository) FindAllForContact(ctx context.Context, session neo4j.SessionWithContext, tenant, contactId string) ([]*neo4j.Record, error) {
+	records, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		queryResult, err := tx.Run(ctx, `
 				MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}),
               			(c)-[:HAS_COMPLEX_PROPERTY]->(s:FieldSet) 
 				RETURN s ORDER BY s.name`,
@@ -113,7 +114,7 @@ func (r *fieldSetRepository) FindAllForContact(session neo4j.Session, tenant, co
 		if err != nil {
 			return nil, err
 		}
-		return queryResult.Collect()
+		return queryResult.Collect(ctx)
 	})
 	return records.([]*neo4j.Record), err
 }

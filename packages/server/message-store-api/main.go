@@ -9,6 +9,7 @@ import (
 	msProto "github.com/openline-ai/openline-customer-os/packages/server/message-store-api/proto/generated"
 	"github.com/openline-ai/openline-customer-os/packages/server/message-store-api/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/message-store-api/service"
+	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 	"log"
 	"net"
@@ -40,7 +41,8 @@ func main() {
 	if err != nil {
 		log.Fatalf("failed opening connection to neo4j: %v", err.Error())
 	}
-	defer (*neo4jDriver).Close()
+	ctx := context.Background()
+	defer (*neo4jDriver).Close(ctx)
 
 	// Create a new gRPC server (you can wire multiple services to a single server).
 	server := grpc.NewServer()

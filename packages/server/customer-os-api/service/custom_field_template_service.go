@@ -2,16 +2,16 @@ package service
 
 import (
 	"context"
-	"github.com/neo4j/neo4j-go-driver/v4/neo4j/db"
-	"github.com/neo4j/neo4j-go-driver/v4/neo4j/dbtype"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j/db"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils"
 )
 
 type CustomFieldTemplateService interface {
-	FindAllForEntityTemplate(entityTemplateId string) (*entity.CustomFieldTemplateEntities, error)
-	FindAllForFieldSetTemplate(fieldSetTemplateId string) (*entity.CustomFieldTemplateEntities, error)
+	FindAllForEntityTemplate(ctx context.Context, entityTemplateId string) (*entity.CustomFieldTemplateEntities, error)
+	FindAllForFieldSetTemplate(ctx context.Context, fieldSetTemplateId string) (*entity.CustomFieldTemplateEntities, error)
 	FindLinkedWithCustomField(ctx context.Context, customFieldId string) (*entity.CustomFieldTemplateEntity, error)
 }
 
@@ -25,8 +25,8 @@ func NewCustomFieldTemplateService(repositories *repository.Repositories) Custom
 	}
 }
 
-func (s *customFieldTemplateService) FindAllForEntityTemplate(entityTemplateId string) (*entity.CustomFieldTemplateEntities, error) {
-	all, err := s.repositories.CustomFieldTemplateRepository.FindAllByEntityTemplateId(entityTemplateId)
+func (s *customFieldTemplateService) FindAllForEntityTemplate(ctx context.Context, entityTemplateId string) (*entity.CustomFieldTemplateEntities, error) {
+	all, err := s.repositories.CustomFieldTemplateRepository.FindAllByEntityTemplateId(ctx, entityTemplateId)
 	if err != nil {
 		return nil, err
 	}
@@ -37,8 +37,8 @@ func (s *customFieldTemplateService) FindAllForEntityTemplate(entityTemplateId s
 	return &customFieldTemplateEntities, nil
 }
 
-func (s *customFieldTemplateService) FindAllForFieldSetTemplate(fieldSetTemplateId string) (*entity.CustomFieldTemplateEntities, error) {
-	all, err := s.repositories.CustomFieldTemplateRepository.FindAllByEntityFieldSetTemplateId(fieldSetTemplateId)
+func (s *customFieldTemplateService) FindAllForFieldSetTemplate(ctx context.Context, fieldSetTemplateId string) (*entity.CustomFieldTemplateEntities, error) {
+	all, err := s.repositories.CustomFieldTemplateRepository.FindAllByEntityFieldSetTemplateId(ctx, fieldSetTemplateId)
 	if err != nil {
 		return nil, err
 	}
@@ -50,7 +50,7 @@ func (s *customFieldTemplateService) FindAllForFieldSetTemplate(fieldSetTemplate
 }
 
 func (s *customFieldTemplateService) FindLinkedWithCustomField(ctx context.Context, customFieldId string) (*entity.CustomFieldTemplateEntity, error) {
-	queryResult, err := s.repositories.CustomFieldTemplateRepository.FindByCustomFieldId(customFieldId)
+	queryResult, err := s.repositories.CustomFieldTemplateRepository.FindByCustomFieldId(ctx, customFieldId)
 	if err != nil {
 		return nil, err
 	}

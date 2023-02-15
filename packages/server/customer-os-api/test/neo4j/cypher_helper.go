@@ -1,18 +1,19 @@
 package neo4j
 
 import (
-	"github.com/neo4j/neo4j-go-driver/v4/neo4j"
-	"github.com/neo4j/neo4j-go-driver/v4/neo4j/db"
+	"context"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j/db"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils"
 	"github.com/sirupsen/logrus"
 )
 
-func ExecuteWriteQuery(driver *neo4j.Driver, query string, params map[string]interface{}) {
-	session := utils.NewNeo4jWriteSession(*driver)
-	defer session.Close()
+func ExecuteWriteQuery(ctx context.Context, driver *neo4j.DriverWithContext, query string, params map[string]interface{}) {
+	session := utils.NewNeo4jWriteSession(ctx, *driver)
+	defer session.Close(ctx)
 
-	_, err := session.WriteTransaction(func(tx neo4j.Transaction) (interface{}, error) {
-		_, err := tx.Run(query, params)
+	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (interface{}, error) {
+		_, err := tx.Run(ctx, query, params)
 		if err != nil {
 			return nil, err
 		}
@@ -23,16 +24,16 @@ func ExecuteWriteQuery(driver *neo4j.Driver, query string, params map[string]int
 	}
 }
 
-func ExecuteReadQueryWithSingleReturn(driver *neo4j.Driver, query string, params map[string]any) any {
-	session := utils.NewNeo4jReadSession(*driver)
-	defer session.Close()
+func ExecuteReadQueryWithSingleReturn(ctx context.Context, driver *neo4j.DriverWithContext, query string, params map[string]any) any {
+	session := utils.NewNeo4jReadSession(ctx, *driver)
+	defer session.Close(ctx)
 
-	queryResult, err := session.ReadTransaction(func(tx neo4j.Transaction) (any, error) {
-		record, err := tx.Run(query, params)
+	queryResult, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		record, err := tx.Run(ctx, query, params)
 		if err != nil {
 			logrus.Fatalf("Error executing query %s", query)
 		}
-		return record.Single()
+		return record.Single(ctx)
 	})
 	if err != nil {
 		logrus.Fatalf("Error executing query %s", query)
@@ -40,16 +41,16 @@ func ExecuteReadQueryWithSingleReturn(driver *neo4j.Driver, query string, params
 	return queryResult
 }
 
-func ExecuteReadQueryWithCollectionReturn(driver *neo4j.Driver, query string, params map[string]any) []*db.Record {
-	session := utils.NewNeo4jReadSession(*driver)
-	defer session.Close()
+func ExecuteReadQueryWithCollectionReturn(ctx context.Context, driver *neo4j.DriverWithContext, query string, params map[string]any) []*db.Record {
+	session := utils.NewNeo4jReadSession(ctx, *driver)
+	defer session.Close(ctx)
 
-	queryResult, err := session.ReadTransaction(func(tx neo4j.Transaction) (any, error) {
-		records, err := tx.Run(query, params)
+	queryResult, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		records, err := tx.Run(ctx, query, params)
 		if err != nil {
 			logrus.Fatalf("Error executing query %s", query)
 		}
-		return records.Collect()
+		return records.Collect(ctx)
 	})
 	if err != nil {
 		logrus.Fatalf("Error executing query %s", query)

@@ -20,7 +20,7 @@ func (r *entityTemplateResolver) FieldSets(ctx context.Context, obj *model.Entit
 		utils.LogMethodExecution(start, utils.GetFunctionName())
 	}(time.Now())
 
-	result, err := r.Services.FieldSetTemplateService.FindAll(obj.ID)
+	result, err := r.Services.FieldSetTemplateService.FindAll(ctx, obj.ID)
 	return mapper.MapEntitiesToFieldSetTemplates(result), err
 }
 
@@ -30,7 +30,7 @@ func (r *entityTemplateResolver) CustomFields(ctx context.Context, obj *model.En
 		utils.LogMethodExecution(start, utils.GetFunctionName())
 	}(time.Now())
 
-	result, err := r.Services.CustomFieldTemplateService.FindAllForEntityTemplate(obj.ID)
+	result, err := r.Services.CustomFieldTemplateService.FindAllForEntityTemplate(ctx, obj.ID)
 	return mapper.MapEntitiesToCustomFieldTemplates(result), err
 }
 
@@ -40,7 +40,7 @@ func (r *fieldSetTemplateResolver) CustomFields(ctx context.Context, obj *model.
 		utils.LogMethodExecution(start, utils.GetFunctionName())
 	}(time.Now())
 
-	result, err := r.Services.CustomFieldTemplateService.FindAllForFieldSetTemplate(obj.ID)
+	result, err := r.Services.CustomFieldTemplateService.FindAllForFieldSetTemplate(ctx, obj.ID)
 	return mapper.MapEntitiesToCustomFieldTemplates(result), err
 }
 

@@ -2,8 +2,8 @@ package service
 
 import (
 	"context"
-	"github.com/neo4j/neo4j-go-driver/v4/neo4j"
-	"github.com/neo4j/neo4j-go-driver/v4/neo4j/dbtype"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
@@ -25,12 +25,12 @@ func NewLocationService(repositories *repository.Repositories) LocationService {
 	}
 }
 
-func (s *locationService) getNeo4jDriver() neo4j.Driver {
+func (s *locationService) getNeo4jDriver() neo4j.DriverWithContext {
 	return *s.repositories.Drivers.Neo4jDriver
 }
 
 func (s *locationService) GetAllForContact(ctx context.Context, contactId string) (*entity.LocationEntities, error) {
-	dbNodes, err := s.repositories.LocationRepository.GetAllForContact(common.GetTenantFromContext(ctx), contactId)
+	dbNodes, err := s.repositories.LocationRepository.GetAllForContact(ctx, common.GetTenantFromContext(ctx), contactId)
 	if err != nil {
 		return nil, err
 	}
@@ -43,7 +43,7 @@ func (s *locationService) GetAllForContact(ctx context.Context, contactId string
 }
 
 func (s *locationService) GetAllForOrganization(ctx context.Context, organizationId string) (*entity.LocationEntities, error) {
-	dbNodes, err := s.repositories.LocationRepository.GetAllForOrganization(common.GetContext(ctx).Tenant, organizationId)
+	dbNodes, err := s.repositories.LocationRepository.GetAllForOrganization(ctx, common.GetContext(ctx).Tenant, organizationId)
 	if err != nil {
 		return nil, err
 	}

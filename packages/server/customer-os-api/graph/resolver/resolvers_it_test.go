@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"github.com/99designs/gqlgen/client"
 	"github.com/99designs/gqlgen/graphql/handler"
-	"github.com/neo4j/neo4j-go-driver/v4/neo4j"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/generated"
@@ -28,7 +28,7 @@ import (
 
 var (
 	neo4jContainer testcontainers.Container
-	driver         *neo4j.Driver
+	driver         *neo4j.DriverWithContext
 
 	postgresContainer testcontainers.Container
 	postgresGormDB    *gorm.DB
@@ -41,8 +41,8 @@ const testUserId = "test-user-id"
 
 func TestMain(m *testing.M) {
 	neo4jContainer, driver = neo4jt.InitTestNeo4jDB()
-	defer func(dbContainer testcontainers.Container, driver neo4j.Driver, ctx context.Context) {
-		neo4jt.Close(driver, "Driver")
+	defer func(dbContainer testcontainers.Container, driver neo4j.DriverWithContext, ctx context.Context) {
+		neo4jt.CloseDriver(driver)
 		neo4jt.Terminate(dbContainer, ctx)
 	}(neo4jContainer, *driver, context.Background())
 
@@ -59,10 +59,10 @@ func TestMain(m *testing.M) {
 	os.Exit(m.Run())
 }
 
-func tearDownTestCase() func(tb testing.TB) {
+func tearDownTestCase(ctx context.Context) func(tb testing.TB) {
 	return func(tb testing.TB) {
 		tb.Logf("Teardown test %v, cleaning neo4j DB", tb.Name())
-		neo4jt.CleanupAllData(driver)
+		neo4jt.CleanupAllData(ctx, driver)
 	}
 }
 
@@ -75,8 +75,8 @@ func prepareClient() {
 		UserId: testUserId,
 	}
 	server := handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: graphResolver}))
-	h := common.WithContext(customCtx, server)
-	c = client.New(h)
+	handler := common.WithContext(customCtx, server)
+	c = client.New(handler)
 }
 
 func getQuery(fileName string) string {
@@ -97,8 +97,8 @@ func assertRawResponseSuccess(t *testing.T, response *client.Response, err error
 	require.Nil(t, response.Errors)
 }
 
-func assertNeo4jLabels(t *testing.T, driver *neo4j.Driver, expectedLabels []string) {
-	actualLabels := neo4jt.GetAllLabels(driver)
+func assertNeo4jLabels(ctx context.Context, t *testing.T, driver *neo4j.DriverWithContext, expectedLabels []string) {
+	actualLabels := neo4jt.GetAllLabels(ctx, driver)
 	sort.Strings(expectedLabels)
 	sort.Strings(actualLabels)
 	if !reflect.DeepEqual(actualLabels, expectedLabels) {
@@ -107,14 +107,15 @@ func assertNeo4jLabels(t *testing.T, driver *neo4j.Driver, expectedLabels []stri
 }
 
 func TestMutationResolver_FieldSetMergeToContact_AllowMultipleFieldSetWithSameNameOnDifferentContacts(t *testing.T) {
-	defer tearDownTestCase()(t)
-	neo4jt.CreateTenant(driver, tenantName)
-	contactId1 := neo4jt.CreateContact(driver, tenantName, entity.ContactEntity{
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx)(t)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+	contactId1 := neo4jt.CreateContact(ctx, driver, tenantName, entity.ContactEntity{
 		Title:     model.PersonTitleMr.String(),
 		FirstName: "first",
 		LastName:  "last",
 	})
-	contactId2 := neo4jt.CreateContact(driver, tenantName, entity.ContactEntity{
+	contactId2 := neo4jt.CreateContact(ctx, driver, tenantName, entity.ContactEntity{
 		Title:     model.PersonTitleMr.String(),
 		FirstName: "first",
 		LastName:  "last",
@@ -149,14 +150,15 @@ func TestMutationResolver_FieldSetMergeToContact_AllowMultipleFieldSetWithSameNa
 	require.Equal(t, model.DataSourceOpenline, fieldSet1.FieldSetMergeToContact.Source)
 	require.Equal(t, model.DataSourceOpenline, fieldSet2.FieldSetMergeToContact.Source)
 
-	require.Equal(t, 2, neo4jt.GetCountOfNodes(driver, "FieldSet"))
+	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "FieldSet"))
 }
 
 func TestMutationResolver_MergeCustomFieldToFieldSet(t *testing.T) {
-	defer tearDownTestCase()(t)
-	neo4jt.CreateTenant(driver, tenantName)
-	contactId := neo4jt.CreateDefaultContact(driver, tenantName)
-	fieldSetId := neo4jt.CreateDefaultFieldSet(driver, contactId)
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx)(t)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+	contactId := neo4jt.CreateDefaultContact(ctx, driver, tenantName)
+	fieldSetId := neo4jt.CreateDefaultFieldSet(ctx, driver, contactId)
 
 	rawResponse, err := c.RawPost(getQuery("merge_custom_field_to_field_set"),
 		client.Var("contactId", contactId), client.Var("fieldSetId", fieldSetId))
@@ -175,18 +177,19 @@ func TestMutationResolver_MergeCustomFieldToFieldSet(t *testing.T) {
 	require.Equal(t, model.CustomFieldDataTypeText, textField.CustomFieldMergeToFieldSet.Datatype)
 	require.NotNil(t, textField.CustomFieldMergeToFieldSet.ID)
 
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Contact"))
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "FieldSet"))
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "CustomField"))
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "TextField"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Contact"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "FieldSet"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "CustomField"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "TextField"))
 }
 
 func TestMutationResolver_CustomFieldUpdateInFieldSet(t *testing.T) {
-	defer tearDownTestCase()(t)
-	neo4jt.CreateTenant(driver, tenantName)
-	contactId := neo4jt.CreateDefaultContact(driver, tenantName)
-	fieldSetId := neo4jt.CreateDefaultFieldSet(driver, contactId)
-	fieldId := neo4jt.CreateDefaultCustomFieldInSet(driver, fieldSetId)
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx)(t)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+	contactId := neo4jt.CreateDefaultContact(ctx, driver, tenantName)
+	fieldSetId := neo4jt.CreateDefaultFieldSet(ctx, driver, contactId)
+	fieldId := neo4jt.CreateDefaultCustomFieldInSet(ctx, driver, fieldSetId)
 
 	rawResponse, err := c.RawPost(getQuery("update_custom_field_in_field_set"),
 		client.Var("contactId", contactId),
@@ -207,17 +210,18 @@ func TestMutationResolver_CustomFieldUpdateInFieldSet(t *testing.T) {
 	require.Equal(t, model.CustomFieldDataTypeText, textField.CustomFieldUpdateInFieldSet.Datatype)
 	require.Equal(t, fieldId, textField.CustomFieldUpdateInFieldSet.ID)
 
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Contact"))
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "FieldSet"))
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "CustomField"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Contact"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "FieldSet"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "CustomField"))
 }
 
 func TestMutationResolver_CustomFieldDeleteFromFieldSetByID(t *testing.T) {
-	defer tearDownTestCase()(t)
-	neo4jt.CreateTenant(driver, tenantName)
-	contactId := neo4jt.CreateDefaultContact(driver, tenantName)
-	fieldSetId := neo4jt.CreateDefaultFieldSet(driver, contactId)
-	fieldId := neo4jt.CreateDefaultCustomFieldInSet(driver, fieldSetId)
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx)(t)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+	contactId := neo4jt.CreateDefaultContact(ctx, driver, tenantName)
+	fieldSetId := neo4jt.CreateDefaultFieldSet(ctx, driver, contactId)
+	fieldId := neo4jt.CreateDefaultCustomFieldInSet(ctx, driver, fieldSetId)
 
 	rawResponse, err := c.RawPost(getQuery("delete_custom_field_from_field_set"),
 		client.Var("contactId", contactId),
@@ -234,21 +238,22 @@ func TestMutationResolver_CustomFieldDeleteFromFieldSetByID(t *testing.T) {
 
 	require.Equal(t, true, textField.CustomFieldDeleteFromFieldSetByID.Result)
 
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Contact"))
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "FieldSet"))
-	require.Equal(t, 0, neo4jt.GetCountOfNodes(driver, "CustomField"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Contact"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "FieldSet"))
+	require.Equal(t, 0, neo4jt.GetCountOfNodes(ctx, driver, "CustomField"))
 }
 
 func TestMutationResolver_FieldSetDeleteFromContact(t *testing.T) {
-	defer tearDownTestCase()(t)
-	neo4jt.CreateTenant(driver, tenantName)
-	contactId := neo4jt.CreateDefaultContact(driver, tenantName)
-	fieldSetId := neo4jt.CreateDefaultFieldSet(driver, contactId)
-	neo4jt.CreateDefaultCustomFieldInSet(driver, fieldSetId)
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx)(t)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+	contactId := neo4jt.CreateDefaultContact(ctx, driver, tenantName)
+	fieldSetId := neo4jt.CreateDefaultFieldSet(ctx, driver, contactId)
+	neo4jt.CreateDefaultCustomFieldInSet(ctx, driver, fieldSetId)
 
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Contact"))
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "FieldSet"))
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "CustomField"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Contact"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "FieldSet"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "CustomField"))
 
 	rawResponse, err := c.RawPost(getQuery("delete_field_set_from_contact"),
 		client.Var("contactId", contactId),
@@ -264,15 +269,16 @@ func TestMutationResolver_FieldSetDeleteFromContact(t *testing.T) {
 
 	require.Equal(t, true, textField.FieldSetDeleteFromContact.Result)
 
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Contact"))
-	require.Equal(t, 0, neo4jt.GetCountOfNodes(driver, "FieldSet"))
-	require.Equal(t, 0, neo4jt.GetCountOfNodes(driver, "CustomField"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Contact"))
+	require.Equal(t, 0, neo4jt.GetCountOfNodes(ctx, driver, "FieldSet"))
+	require.Equal(t, 0, neo4jt.GetCountOfNodes(ctx, driver, "CustomField"))
 }
 
 func TestMutationResolver_EntityTemplateCreate(t *testing.T) {
-	defer tearDownTestCase()(t)
-	neo4jt.CreateTenant(driver, tenantName)
-	neo4jt.CreateTenant(driver, "other")
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx)(t)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jt.CreateTenant(ctx, driver, "other")
 
 	rawResponse, err := c.RawPost(getQuery("create_entity_template"))
 	assertRawResponseSuccess(t, rawResponse, err)
@@ -351,24 +357,25 @@ func TestMutationResolver_EntityTemplateCreate(t *testing.T) {
 	require.Equal(t, 99, *field.Max)
 	require.Equal(t, 255, *field.Length)
 
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "EntityTemplate"))
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "EntityTemplate_"+tenantName))
-	require.Equal(t, 2, neo4jt.GetCountOfNodes(driver, "FieldSetTemplate"))
-	require.Equal(t, 2, neo4jt.GetCountOfNodes(driver, "FieldSetTemplate_"+tenantName))
-	require.Equal(t, 4, neo4jt.GetCountOfNodes(driver, "CustomFieldTemplate"))
-	require.Equal(t, 4, neo4jt.GetCountOfNodes(driver, "CustomFieldTemplate_"+tenantName))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "EntityTemplate"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "EntityTemplate_"+tenantName))
+	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "FieldSetTemplate"))
+	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "FieldSetTemplate_"+tenantName))
+	require.Equal(t, 4, neo4jt.GetCountOfNodes(ctx, driver, "CustomFieldTemplate"))
+	require.Equal(t, 4, neo4jt.GetCountOfNodes(ctx, driver, "CustomFieldTemplate_"+tenantName))
 
-	assertNeo4jLabels(t, driver, []string{"Tenant", "EntityTemplate", "EntityTemplate_" + tenantName,
+	assertNeo4jLabels(ctx, t, driver, []string{"Tenant", "EntityTemplate", "EntityTemplate_" + tenantName,
 		"FieldSetTemplate", "FieldSetTemplate_" + tenantName, "CustomFieldTemplate", "CustomFieldTemplate_" + tenantName})
 }
 
 func TestQueryResolver_EntityTemplates_FilterExtendsProperty(t *testing.T) {
-	defer tearDownTestCase()(t)
-	neo4jt.CreateTenant(driver, tenantName)
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx)(t)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
 
-	neo4jt.CreateEntityTemplate(driver, tenantName, "")
-	id2 := neo4jt.CreateEntityTemplate(driver, tenantName, model.EntityTemplateExtensionContact.String())
-	id3 := neo4jt.CreateEntityTemplate(driver, tenantName, model.EntityTemplateExtensionContact.String())
+	neo4jt.CreateEntityTemplate(ctx, driver, tenantName, "")
+	id2 := neo4jt.CreateEntityTemplate(ctx, driver, tenantName, model.EntityTemplateExtensionContact.String())
+	id3 := neo4jt.CreateEntityTemplate(ctx, driver, tenantName, model.EntityTemplateExtensionContact.String())
 
 	rawResponse, err := c.RawPost(getQuery("get_entity_templates_filter_by_extends"),
 		client.Var("extends", model.EntityTemplateExtensionContact.String()))
@@ -386,5 +393,5 @@ func TestQueryResolver_EntityTemplates_FilterExtendsProperty(t *testing.T) {
 	require.Equal(t, "CONTACT", entityTemplate.EntityTemplates[1].Extends.String())
 	require.ElementsMatch(t, []string{id2, id3}, []string{entityTemplate.EntityTemplates[0].ID, entityTemplate.EntityTemplates[1].ID})
 
-	require.Equal(t, 3, neo4jt.GetCountOfNodes(driver, "EntityTemplate"))
+	require.Equal(t, 3, neo4jt.GetCountOfNodes(ctx, driver, "EntityTemplate"))
 }

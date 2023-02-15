@@ -7,17 +7,19 @@ import (
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils/decode"
 	"github.com/stretchr/testify/require"
+	"golang.org/x/net/context"
 	"testing"
 )
 
 func TestMutationResolver_EmailMergeToContact(t *testing.T) {
-	defer tearDownTestCase()(t)
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx)(t)
 
 	// Create a tenant in the Neo4j database
-	neo4jt.CreateTenant(driver, tenantName)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
 
 	// Create a default contact
-	contactId := neo4jt.CreateDefaultContact(driver, tenantName)
+	contactId := neo4jt.CreateDefaultContact(ctx, driver, tenantName)
 
 	// Make the RawPost request and check for errors
 	rawResponse, err := c.RawPost(getQuery("email/merge_email_to_contact"),
@@ -49,25 +51,26 @@ func TestMutationResolver_EmailMergeToContact(t *testing.T) {
 	require.Equal(t, "test", e.AppSource, "Email App source field is not expected value")
 
 	// Check the number of nodes and relationships in the Neo4j database
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Contact"), "Incorrect number of Contact nodes in Neo4j")
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Email"), "Incorrect number of Email nodes in Neo4j")
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Email_"+tenantName), "Incorrect number of Email_%s nodes in Neo4j", tenantName)
-	require.Equal(t, 3, neo4jt.GetTotalCountOfNodes(driver), "Incorrect total number of nodes in Neo4j")
-	require.Equal(t, 1, neo4jt.GetCountOfRelationships(driver, "HAS"), "Incorrect number of HAS relationships in Neo4j")
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Contact"), "Incorrect number of Contact nodes in Neo4j")
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Email"), "Incorrect number of Email nodes in Neo4j")
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Email_"+tenantName), "Incorrect number of Email_%s nodes in Neo4j", tenantName)
+	require.Equal(t, 3, neo4jt.GetTotalCountOfNodes(ctx, driver), "Incorrect total number of nodes in Neo4j")
+	require.Equal(t, 1, neo4jt.GetCountOfRelationships(ctx, driver, "HAS"), "Incorrect number of HAS relationships in Neo4j")
 
 	// Check the labels on the nodes in the Neo4j database
-	assertNeo4jLabels(t, driver, []string{"Tenant", "Contact", "Contact_" + tenantName, "Email", "Email_" + tenantName})
+	assertNeo4jLabels(ctx, t, driver, []string{"Tenant", "Contact", "Contact_" + tenantName, "Email", "Email_" + tenantName})
 }
 
 func TestMutationResolver_EmailUpdateInContact(t *testing.T) {
-	defer tearDownTestCase()(t)
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx)(t)
 
 	// Create a tenant in the Neo4j database
-	neo4jt.CreateTenant(driver, tenantName)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
 
 	// Create a default contact and email
-	contactId := neo4jt.CreateDefaultContact(driver, tenantName)
-	emailId := neo4jt.AddEmailTo(driver, entity.CONTACT, tenantName, contactId, "original@email.com", true, "")
+	contactId := neo4jt.CreateDefaultContact(ctx, driver, tenantName)
+	emailId := neo4jt.AddEmailTo(ctx, driver, entity.CONTACT, tenantName, contactId, "original@email.com", true, "")
 
 	// Make the RawPost request and check for errors
 	rawResponse, err := c.RawPost(getQuery("email/update_email_for_contact"),
@@ -95,18 +98,19 @@ func TestMutationResolver_EmailUpdateInContact(t *testing.T) {
 		require.Equal(t, model.EmailLabelHome, *e.Label, "Email Label field is not expected value")
 	}
 
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Email"), "Incorrect number of Email nodes in Neo4j")
-	require.Equal(t, 1, neo4jt.GetCountOfRelationships(driver, "HAS"), "Incorrect number of HAS relationships in Neo4j")
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Email"), "Incorrect number of Email nodes in Neo4j")
+	require.Equal(t, 1, neo4jt.GetCountOfRelationships(ctx, driver, "HAS"), "Incorrect number of HAS relationships in Neo4j")
 }
 
 func TestMutationResolver_EmailMergeToUser(t *testing.T) {
-	defer tearDownTestCase()(t)
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx)(t)
 
 	// Create a tenant in the Neo4j database
-	neo4jt.CreateTenant(driver, tenantName)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
 
 	// Create a default contact
-	userId := neo4jt.CreateDefaultUser(driver, tenantName)
+	userId := neo4jt.CreateDefaultUser(ctx, driver, tenantName)
 
 	// Make the RawPost request and check for errors
 	rawResponse, err := c.RawPost(getQuery("email/merge_email_to_user"),
@@ -138,25 +142,26 @@ func TestMutationResolver_EmailMergeToUser(t *testing.T) {
 	require.Equal(t, "test", e.AppSource, "Email App source field is not expected value")
 
 	// Check the number of nodes and relationships in the Neo4j database
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "User"), "Incorrect number of User nodes in Neo4j")
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Email"), "Incorrect number of Email nodes in Neo4j")
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Email_"+tenantName), "Incorrect number of Email_%s nodes in Neo4j", tenantName)
-	require.Equal(t, 3, neo4jt.GetTotalCountOfNodes(driver), "Incorrect total number of nodes in Neo4j")
-	require.Equal(t, 1, neo4jt.GetCountOfRelationships(driver, "HAS"), "Incorrect number of HAS relationships in Neo4j")
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "User"), "Incorrect number of User nodes in Neo4j")
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Email"), "Incorrect number of Email nodes in Neo4j")
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Email_"+tenantName), "Incorrect number of Email_%s nodes in Neo4j", tenantName)
+	require.Equal(t, 3, neo4jt.GetTotalCountOfNodes(ctx, driver), "Incorrect total number of nodes in Neo4j")
+	require.Equal(t, 1, neo4jt.GetCountOfRelationships(ctx, driver, "HAS"), "Incorrect number of HAS relationships in Neo4j")
 
 	// Check the labels on the nodes in the Neo4j database
-	assertNeo4jLabels(t, driver, []string{"Tenant", "User", "Email", "Email_" + tenantName})
+	assertNeo4jLabels(ctx, t, driver, []string{"Tenant", "User", "Email", "Email_" + tenantName})
 }
 
 func TestMutationResolver_EmailUpdateInUser(t *testing.T) {
-	defer tearDownTestCase()(t)
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx)(t)
 
 	// Create a tenant in the Neo4j database
-	neo4jt.CreateTenant(driver, tenantName)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
 
 	// Create a default contact and email
-	userId := neo4jt.CreateDefaultUser(driver, tenantName)
-	emailId := neo4jt.AddEmailTo(driver, entity.USER, tenantName, userId, "original@email.com", true, "")
+	userId := neo4jt.CreateDefaultUser(ctx, driver, tenantName)
+	emailId := neo4jt.AddEmailTo(ctx, driver, entity.USER, tenantName, userId, "original@email.com", true, "")
 
 	// Make the RawPost request and check for errors
 	rawResponse, err := c.RawPost(getQuery("email/update_email_for_user"),
@@ -184,28 +189,29 @@ func TestMutationResolver_EmailUpdateInUser(t *testing.T) {
 		require.Equal(t, model.EmailLabelHome, *e.Label, "Email Label field is not expected value")
 	}
 
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Email"), "Incorrect number of Email nodes in Neo4j")
-	require.Equal(t, 1, neo4jt.GetCountOfRelationships(driver, "HAS"), "Incorrect number of HAS relationships in Neo4j")
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Email"), "Incorrect number of Email nodes in Neo4j")
+	require.Equal(t, 1, neo4jt.GetCountOfRelationships(ctx, driver, "HAS"), "Incorrect number of HAS relationships in Neo4j")
 }
 
 func TestMutationResolver_EmailDelete(t *testing.T) {
-	defer tearDownTestCase()(t)
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx)(t)
 
 	// Create a tenant in the Neo4j database
-	neo4jt.CreateTenant(driver, tenantName)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
 
 	// Create a default contact and email
-	userId := neo4jt.CreateDefaultUser(driver, tenantName)
-	contactId := neo4jt.CreateDefaultContact(driver, tenantName)
-	emailId := neo4jt.AddEmailTo(driver, entity.USER, tenantName, userId, "original@email.com", true, "")
-	neo4jt.AddEmailTo(driver, entity.CONTACT, tenantName, contactId, "original@email.com", true, "")
+	userId := neo4jt.CreateDefaultUser(ctx, driver, tenantName)
+	contactId := neo4jt.CreateDefaultContact(ctx, driver, tenantName)
+	emailId := neo4jt.AddEmailTo(ctx, driver, entity.USER, tenantName, userId, "original@email.com", true, "")
+	neo4jt.AddEmailTo(ctx, driver, entity.CONTACT, tenantName, contactId, "original@email.com", true, "")
 
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Email"))
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Email_"+tenantName))
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Contact"))
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "User"))
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Tenant"))
-	require.Equal(t, 2, neo4jt.GetCountOfRelationships(driver, "HAS"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Email"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Email_"+tenantName))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Contact"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "User"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Tenant"))
+	require.Equal(t, 2, neo4jt.GetCountOfRelationships(ctx, driver, "HAS"))
 
 	// Make the RawPost request and check for errors
 	rawResponse, err := c.RawPost(getQuery("email/delete_email"),
@@ -221,29 +227,30 @@ func TestMutationResolver_EmailDelete(t *testing.T) {
 
 	require.Equal(t, true, emailStruct.EmailDelete.Result)
 
-	require.Equal(t, 0, neo4jt.GetCountOfNodes(driver, "Email"))
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Contact"))
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "User"))
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Tenant"))
-	require.Equal(t, 0, neo4jt.GetCountOfRelationships(driver, "HAS"))
-	assertNeo4jLabels(t, driver, []string{"Tenant", "Contact", "Contact_" + tenantName, "User"})
+	require.Equal(t, 0, neo4jt.GetCountOfNodes(ctx, driver, "Email"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Contact"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "User"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Tenant"))
+	require.Equal(t, 0, neo4jt.GetCountOfRelationships(ctx, driver, "HAS"))
+	assertNeo4jLabels(ctx, t, driver, []string{"Tenant", "Contact", "Contact_" + tenantName, "User"})
 }
 
 func TestMutationResolver_EmailRemoveFromUser(t *testing.T) {
-	defer tearDownTestCase()(t)
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx)(t)
 
 	// Create a tenant in the Neo4j database
-	neo4jt.CreateTenant(driver, tenantName)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
 
 	// Create a default contact and email
-	userId := neo4jt.CreateDefaultUser(driver, tenantName)
-	neo4jt.AddEmailTo(driver, entity.USER, tenantName, userId, "original@email.com", true, "")
+	userId := neo4jt.CreateDefaultUser(ctx, driver, tenantName)
+	neo4jt.AddEmailTo(ctx, driver, entity.USER, tenantName, userId, "original@email.com", true, "")
 
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Email"))
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Email_"+tenantName))
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "User"))
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Tenant"))
-	require.Equal(t, 1, neo4jt.GetCountOfRelationships(driver, "HAS"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Email"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Email_"+tenantName))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "User"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Tenant"))
+	require.Equal(t, 1, neo4jt.GetCountOfRelationships(ctx, driver, "HAS"))
 
 	// Make the RawPost request and check for errors
 	rawResponse, err := c.RawPost(getQuery("email/remove_email_from_user"),
@@ -261,29 +268,30 @@ func TestMutationResolver_EmailRemoveFromUser(t *testing.T) {
 
 	require.Equal(t, true, emailStruct.EmailRemoveFromUser.Result)
 
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Email"))
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Email_"+tenantName))
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "User"))
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Tenant"))
-	require.Equal(t, 0, neo4jt.GetCountOfRelationships(driver, "HAS"))
-	assertNeo4jLabels(t, driver, []string{"Tenant", "Email", "Email_" + tenantName, "User"})
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Email"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Email_"+tenantName))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "User"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Tenant"))
+	require.Equal(t, 0, neo4jt.GetCountOfRelationships(ctx, driver, "HAS"))
+	assertNeo4jLabels(ctx, t, driver, []string{"Tenant", "Email", "Email_" + tenantName, "User"})
 }
 
 func TestMutationResolver_EmailRemoveFromUserById(t *testing.T) {
-	defer tearDownTestCase()(t)
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx)(t)
 
 	// Create a tenant in the Neo4j database
-	neo4jt.CreateTenant(driver, tenantName)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
 
 	// Create a default contact and email
-	userId := neo4jt.CreateDefaultUser(driver, tenantName)
-	emailId := neo4jt.AddEmailTo(driver, entity.USER, tenantName, userId, "original@email.com", true, "")
+	userId := neo4jt.CreateDefaultUser(ctx, driver, tenantName)
+	emailId := neo4jt.AddEmailTo(ctx, driver, entity.USER, tenantName, userId, "original@email.com", true, "")
 
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Email"))
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Email_"+tenantName))
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "User"))
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Tenant"))
-	require.Equal(t, 1, neo4jt.GetCountOfRelationships(driver, "HAS"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Email"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Email_"+tenantName))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "User"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Tenant"))
+	require.Equal(t, 1, neo4jt.GetCountOfRelationships(ctx, driver, "HAS"))
 
 	// Make the RawPost request and check for errors
 	rawResponse, err := c.RawPost(getQuery("email/remove_email_from_user_by_id"),
@@ -301,10 +309,10 @@ func TestMutationResolver_EmailRemoveFromUserById(t *testing.T) {
 
 	require.Equal(t, true, emailStruct.EmailRemoveFromUserById.Result)
 
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Email"))
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Email_"+tenantName))
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "User"))
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Tenant"))
-	require.Equal(t, 0, neo4jt.GetCountOfRelationships(driver, "HAS"))
-	assertNeo4jLabels(t, driver, []string{"Tenant", "Email", "Email_" + tenantName, "User"})
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Email"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Email_"+tenantName))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "User"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Tenant"))
+	require.Equal(t, 0, neo4jt.GetCountOfRelationships(ctx, driver, "HAS"))
+	assertNeo4jLabels(ctx, t, driver, []string{"Tenant", "Email", "Email_" + tenantName, "User"})
 }

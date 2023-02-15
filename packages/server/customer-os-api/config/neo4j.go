@@ -1,15 +1,17 @@
 package config
 
 import (
-	"github.com/neo4j/neo4j-go-driver/v4/neo4j"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"time"
 )
 
-func NewDriver(cfg *Config) (neo4j.Driver, error) {
-	return neo4j.NewDriver(
+func NewDriver(cfg *Config) (neo4j.DriverWithContext, error) {
+	return neo4j.NewDriverWithContext(
 		cfg.Neo4j.Target,
 		neo4j.BasicAuth(cfg.Neo4j.User, cfg.Neo4j.Pwd, cfg.Neo4j.Realm),
 		func(config *neo4j.Config) {
 			config.MaxConnectionPoolSize = cfg.Neo4j.MaxConnectionPoolSize
+			config.ConnectionAcquisitionTimeout = time.Duration(cfg.Neo4j.ConnectionAcquisitionTimeoutSec) * time.Second
 			config.Log = neo4j.ConsoleLogger(strToLogLevel(cfg.Neo4j.LogLevel))
 		})
 }

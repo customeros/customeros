@@ -1,28 +1,29 @@
 package repository
 
 import (
+	"context"
 	"fmt"
-	"github.com/neo4j/neo4j-go-driver/v4/neo4j"
-	"github.com/neo4j/neo4j-go-driver/v4/neo4j/dbtype"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils"
 	"time"
 )
 
 type ActionRepository interface {
-	GetContactActions(session neo4j.Session, tenant, contactId string, from, to time.Time, labels []string) ([]*dbtype.Node, error)
+	GetContactActions(ctx context.Context, session neo4j.SessionWithContext, tenant, contactId string, from, to time.Time, labels []string) ([]*dbtype.Node, error)
 }
 
 type actionRepository struct {
-	driver *neo4j.Driver
+	driver *neo4j.DriverWithContext
 }
 
-func NewActionRepository(driver *neo4j.Driver) ActionRepository {
+func NewActionRepository(driver *neo4j.DriverWithContext) ActionRepository {
 	return &actionRepository{
 		driver: driver,
 	}
 }
 
-func (r *actionRepository) GetContactActions(session neo4j.Session, tenant, contactId string, from, to time.Time, labels []string) ([]*dbtype.Node, error) {
+func (r *actionRepository) GetContactActions(ctx context.Context, session neo4j.SessionWithContext, tenant, contactId string, from, to time.Time, labels []string) ([]*dbtype.Node, error) {
 	params := map[string]any{
 		"tenant":    tenant,
 		"contactId": contactId,
@@ -41,17 +42,17 @@ func (r *actionRepository) GetContactActions(session neo4j.Session, tenant, cont
 		" %s "+
 		" RETURN distinct a ORDER BY a.startedAt DESC", filterByTypeCypherFragment)
 
-	records, err := session.ReadTransaction(func(tx neo4j.Transaction) (any, error) {
-		queryResult, err := tx.Run(query, params)
+	records, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		queryResult, err := tx.Run(ctx, query, params)
 		if err != nil {
 			return nil, err
 		}
-		return queryResult.Collect()
+		return queryResult.Collect(ctx)
 	})
 	if err != nil {
 		return nil, err
 	}
-	actionDbNodes := []*dbtype.Node{}
+	var actionDbNodes []*dbtype.Node
 	for _, v := range records.([]*neo4j.Record) {
 		if v.Values[0] != nil {
 			actionDbNodes = append(actionDbNodes, utils.NodePtr(v.Values[0].(dbtype.Node)))

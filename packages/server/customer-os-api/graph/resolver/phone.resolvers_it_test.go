@@ -7,15 +7,17 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils/decode"
 	"github.com/stretchr/testify/require"
+	"golang.org/x/net/context"
 	"testing"
 )
 
 func TestMutationResolver_PhoneNumberMergeToContact(t *testing.T) {
-	defer tearDownTestCase()(t)
-	neo4jt.CreateTenant(driver, tenantName)
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx)(t)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
 
 	// Create a default contact
-	contactId := neo4jt.CreateDefaultContact(driver, tenantName)
+	contactId := neo4jt.CreateDefaultContact(ctx, driver, tenantName)
 
 	rawResponse, err := c.RawPost(getQuery("phone_number/merge_phone_number_to_contact"),
 		client.Var("contactId", contactId),
@@ -47,12 +49,12 @@ func TestMutationResolver_PhoneNumberMergeToContact(t *testing.T) {
 	require.Equal(t, model.DataSourceOpenline, createdPhoneNumber.Source, "PhoneNumber Source field is not expected value")
 
 	// Check the number of nodes and relationships in the Neo4j database
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Contact"), "Incorrect number of Contact nodes in Neo4j")
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "PhoneNumber"), "Incorrect number of PhoneNumber nodes in Neo4j")
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "PhoneNumber_"+tenantName), "Incorrect number of PhoneNumber_%s nodes in Neo4j", tenantName)
-	require.Equal(t, 3, neo4jt.GetTotalCountOfNodes(driver), "Incorrect total number of nodes in Neo4j")
-	require.Equal(t, 1, neo4jt.GetCountOfRelationships(driver, "PHONE_ASSOCIATED_WITH"), "Incorrect number of PHONE_ASSOCIATED_WITH relationships in Neo4j")
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Contact"), "Incorrect number of Contact nodes in Neo4j")
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "PhoneNumber"), "Incorrect number of PhoneNumber nodes in Neo4j")
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "PhoneNumber_"+tenantName), "Incorrect number of PhoneNumber_%s nodes in Neo4j", tenantName)
+	require.Equal(t, 3, neo4jt.GetTotalCountOfNodes(ctx, driver), "Incorrect total number of nodes in Neo4j")
+	require.Equal(t, 1, neo4jt.GetCountOfRelationships(ctx, driver, "PHONE_ASSOCIATED_WITH"), "Incorrect number of PHONE_ASSOCIATED_WITH relationships in Neo4j")
 
 	// Check the labels on the nodes in the Neo4j database
-	assertNeo4jLabels(t, driver, []string{"Tenant", "Contact", "Contact_" + tenantName, "PhoneNumber", "PhoneNumber_" + tenantName})
+	assertNeo4jLabels(ctx, t, driver, []string{"Tenant", "Contact", "Contact_" + tenantName, "PhoneNumber", "PhoneNumber_" + tenantName})
 }

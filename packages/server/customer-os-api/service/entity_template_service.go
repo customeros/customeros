@@ -2,8 +2,8 @@ package service
 
 import (
 	"context"
-	"github.com/neo4j/neo4j-go-driver/v4/neo4j/db"
-	"github.com/neo4j/neo4j-go-driver/v4/neo4j/dbtype"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j/db"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
@@ -28,7 +28,7 @@ func NewEntityTemplateService(repository *repository.Repositories) EntityTemplat
 
 func (s *entityTemplateService) Create(ctx context.Context, entity *entity.EntityTemplateEntity) (*entity.EntityTemplateEntity, error) {
 	entity.Version = 1
-	record, err := s.repository.EntityTemplateRepository.Create(common.GetContext(ctx).Tenant, entity)
+	record, err := s.repository.EntityTemplateRepository.Create(ctx, common.GetContext(ctx).Tenant, entity)
 	if err != nil {
 		return nil, err
 	}
@@ -37,15 +37,15 @@ func (s *entityTemplateService) Create(ctx context.Context, entity *entity.Entit
 }
 
 func (s *entityTemplateService) FindAll(ctx context.Context, extends *string) (*entity.EntityTemplateEntities, error) {
-	session := utils.NewNeo4jReadSession(*s.repository.Drivers.Neo4jDriver)
-	defer session.Close()
+	session := utils.NewNeo4jReadSession(ctx, *s.repository.Drivers.Neo4jDriver)
+	defer session.Close(ctx)
 
 	var err error
 	var entityTemplatesDbRecords []*db.Record
 	if extends == nil {
-		entityTemplatesDbRecords, err = s.repository.EntityTemplateRepository.FindAllByTenant(session, common.GetContext(ctx).Tenant)
+		entityTemplatesDbRecords, err = s.repository.EntityTemplateRepository.FindAllByTenant(ctx, session, common.GetContext(ctx).Tenant)
 	} else {
-		entityTemplatesDbRecords, err = s.repository.EntityTemplateRepository.FindAllByTenantAndExtends(session, common.GetContext(ctx).Tenant, *extends)
+		entityTemplatesDbRecords, err = s.repository.EntityTemplateRepository.FindAllByTenantAndExtends(ctx, session, common.GetContext(ctx).Tenant, *extends)
 	}
 	if err != nil {
 		return nil, err
@@ -59,7 +59,7 @@ func (s *entityTemplateService) FindAll(ctx context.Context, extends *string) (*
 }
 
 func (s *entityTemplateService) FindLinkedWithContact(ctx context.Context, contactId string) (*entity.EntityTemplateEntity, error) {
-	queryResult, err := s.repository.EntityTemplateRepository.FindByContactId(common.GetContext(ctx).Tenant, contactId)
+	queryResult, err := s.repository.EntityTemplateRepository.FindByContactId(ctx, common.GetContext(ctx).Tenant, contactId)
 	if err != nil {
 		return nil, err
 	}

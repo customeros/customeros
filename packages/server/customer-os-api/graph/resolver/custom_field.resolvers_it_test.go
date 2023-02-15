@@ -6,32 +6,34 @@ import (
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils/decode"
 	"github.com/stretchr/testify/require"
+	"golang.org/x/net/context"
 	"testing"
 )
 
 func TestMutationResolver_CustomFieldsMergeAndUpdateInContact(t *testing.T) {
-	defer tearDownTestCase()(t)
-	neo4jt.CreateTenant(driver, tenantName)
-	contactId := neo4jt.CreateDefaultContact(driver, tenantName)
-	entityTemplateId := neo4jt.CreateEntityTemplate(driver, tenantName, model.EntityTemplateExtensionContact.String())
-	fieldTemplateId := neo4jt.AddFieldTemplateToEntity(driver, entityTemplateId)
-	setTemplateId := neo4jt.AddSetTemplateToEntity(driver, entityTemplateId)
-	fieldInSetTemplateId := neo4jt.AddFieldTemplateToSet(driver, setTemplateId)
-	neo4jt.LinkEntityTemplateToContact(driver, entityTemplateId, contactId)
-	fieldInContactId := neo4jt.CreateDefaultCustomFieldInContact(driver, contactId)
-	fieldSetId := neo4jt.CreateDefaultFieldSet(driver, contactId)
-	fieldInSetId := neo4jt.CreateDefaultCustomFieldInSet(driver, fieldSetId)
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx)(t)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+	contactId := neo4jt.CreateDefaultContact(ctx, driver, tenantName)
+	entityTemplateId := neo4jt.CreateEntityTemplate(ctx, driver, tenantName, model.EntityTemplateExtensionContact.String())
+	fieldTemplateId := neo4jt.AddFieldTemplateToEntity(ctx, driver, entityTemplateId)
+	setTemplateId := neo4jt.AddSetTemplateToEntity(ctx, driver, entityTemplateId)
+	fieldInSetTemplateId := neo4jt.AddFieldTemplateToSet(ctx, driver, setTemplateId)
+	neo4jt.LinkEntityTemplateToContact(ctx, driver, entityTemplateId, contactId)
+	fieldInContactId := neo4jt.CreateDefaultCustomFieldInContact(ctx, driver, contactId)
+	fieldSetId := neo4jt.CreateDefaultFieldSet(ctx, driver, contactId)
+	fieldInSetId := neo4jt.CreateDefaultCustomFieldInSet(ctx, driver, fieldSetId)
 
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Contact"))
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Contact_"+tenantName))
-	require.Equal(t, 2, neo4jt.GetCountOfNodes(driver, "CustomField"))
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "FieldSet"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Contact"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Contact_"+tenantName))
+	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "CustomField"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "FieldSet"))
 
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "EntityTemplate"))
-	require.Equal(t, 2, neo4jt.GetCountOfNodes(driver, "CustomFieldTemplate"))
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "FieldSetTemplate"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "EntityTemplate"))
+	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "CustomFieldTemplate"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "FieldSetTemplate"))
 
-	require.Equal(t, 1, neo4jt.GetCountOfRelationships(driver, "IS_DEFINED_BY"))
+	require.Equal(t, 1, neo4jt.GetCountOfRelationships(ctx, driver, "IS_DEFINED_BY"))
 
 	rawResponse, err := c.RawPost(getQuery("update_custom_fields_and_filed_sets_in_contact"),
 		client.Var("contactId", contactId),
@@ -44,18 +46,18 @@ func TestMutationResolver_CustomFieldsMergeAndUpdateInContact(t *testing.T) {
 	)
 	assertRawResponseSuccess(t, rawResponse, err)
 
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Contact"))
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Contact_"+tenantName))
-	require.Equal(t, 4, neo4jt.GetCountOfNodes(driver, "CustomField"))
-	require.Equal(t, 2, neo4jt.GetCountOfNodes(driver, "CustomField_"+tenantName))
-	require.Equal(t, 2, neo4jt.GetCountOfNodes(driver, "FieldSet"))
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "FieldSet_"+tenantName))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Contact"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Contact_"+tenantName))
+	require.Equal(t, 4, neo4jt.GetCountOfNodes(ctx, driver, "CustomField"))
+	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "CustomField_"+tenantName))
+	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "FieldSet"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "FieldSet_"+tenantName))
 
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "EntityTemplate"))
-	require.Equal(t, 2, neo4jt.GetCountOfNodes(driver, "CustomFieldTemplate"))
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "FieldSetTemplate"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "EntityTemplate"))
+	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "CustomFieldTemplate"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "FieldSetTemplate"))
 
-	require.Equal(t, 4, neo4jt.GetCountOfRelationships(driver, "IS_DEFINED_BY"))
+	require.Equal(t, 4, neo4jt.GetCountOfRelationships(ctx, driver, "IS_DEFINED_BY"))
 
 	var contact struct {
 		CustomFieldsMergeAndUpdateInContact model.Contact
@@ -91,7 +93,7 @@ func TestMutationResolver_CustomFieldsMergeAndUpdateInContact(t *testing.T) {
 		checkCustomField(t, *updatedContact.FieldSets[1].CustomFields[0], "field4", "value4", &fieldInSetTemplateId)
 	}
 
-	assertNeo4jLabels(t, driver, []string{"Tenant", "Contact", "Contact_" + tenantName, "EntityTemplate", "CustomFieldTemplate",
+	assertNeo4jLabels(ctx, t, driver, []string{"Tenant", "Contact", "Contact_" + tenantName, "EntityTemplate", "CustomFieldTemplate",
 		"FieldSetTemplate", "TextField", "CustomField", "CustomField_" + tenantName, "FieldSet", "FieldSet_" + tenantName})
 }
 

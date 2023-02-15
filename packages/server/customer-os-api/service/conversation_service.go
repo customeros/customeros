@@ -4,8 +4,8 @@ import (
 	"context"
 	"errors"
 	"github.com/google/uuid"
-	"github.com/neo4j/neo4j-go-driver/v4/neo4j"
-	"github.com/neo4j/neo4j-go-driver/v4/neo4j/dbtype"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
@@ -34,7 +34,7 @@ func NewConversationService(repository *repository.Repositories) ConversationSer
 	}
 }
 
-func (s *conversationService) getNeo4jDriver() *neo4j.Driver {
+func (s *conversationService) getNeo4jDriver() *neo4j.DriverWithContext {
 	return s.repository.Drivers.Neo4jDriver
 }
 
@@ -49,10 +49,10 @@ func (s *conversationService) CreateNewConversation(ctx context.Context, userIds
 		input.Id = newUuid.String()
 	}
 
-	session := utils.NewNeo4jReadSession(*s.getNeo4jDriver())
-	defer session.Close()
+	session := utils.NewNeo4jReadSession(ctx, *s.getNeo4jDriver())
+	defer session.Close(ctx)
 
-	dbNodePtr, err := s.repository.ConversationRepository.Create(session, common.GetContext(ctx).Tenant, userIds, contactIds, *input)
+	dbNodePtr, err := s.repository.ConversationRepository.Create(ctx, session, common.GetContext(ctx).Tenant, userIds, contactIds, *input)
 	if err != nil {
 		return nil, err
 	}
@@ -61,10 +61,10 @@ func (s *conversationService) CreateNewConversation(ctx context.Context, userIds
 }
 
 func (s *conversationService) UpdateConversation(ctx context.Context, userIds, contactIds []string, input *entity.ConversationEntity, skipMessageCountIncrement bool) (*entity.ConversationEntity, error) {
-	session := utils.NewNeo4jReadSession(*s.getNeo4jDriver())
-	defer session.Close()
+	session := utils.NewNeo4jReadSession(ctx, *s.getNeo4jDriver())
+	defer session.Close(ctx)
 
-	dbNodePtr, err := s.repository.ConversationRepository.Update(session, common.GetContext(ctx).Tenant, userIds, contactIds, skipMessageCountIncrement, *input)
+	dbNodePtr, err := s.repository.ConversationRepository.Update(ctx, session, common.GetContext(ctx).Tenant, userIds, contactIds, skipMessageCountIncrement, *input)
 	if err != nil {
 		return nil, err
 	}
@@ -73,10 +73,10 @@ func (s *conversationService) UpdateConversation(ctx context.Context, userIds, c
 }
 
 func (s *conversationService) CloseConversation(ctx context.Context, conversationId string, sourceOfTruth entity.DataSource) (*entity.ConversationEntity, error) {
-	session := utils.NewNeo4jReadSession(*s.getNeo4jDriver())
-	defer session.Close()
+	session := utils.NewNeo4jReadSession(ctx, *s.getNeo4jDriver())
+	defer session.Close(ctx)
 
-	dbNodePtr, err := s.repository.ConversationRepository.Close(session, common.GetContext(ctx).Tenant, conversationId, mapper.MapConversationStatusFromModel(model.ConversationStatusClosed), sourceOfTruth)
+	dbNodePtr, err := s.repository.ConversationRepository.Close(ctx, session, common.GetContext(ctx).Tenant, conversationId, mapper.MapConversationStatusFromModel(model.ConversationStatusClosed), sourceOfTruth)
 	if err != nil {
 		return nil, err
 	}
@@ -85,8 +85,8 @@ func (s *conversationService) CloseConversation(ctx context.Context, conversatio
 }
 
 func (s *conversationService) GetConversationsForUser(ctx context.Context, userId string, page, limit int, sortBy []*model.SortBy) (*utils.Pagination, error) {
-	session := utils.NewNeo4jReadSession(*s.getNeo4jDriver())
-	defer session.Close()
+	session := utils.NewNeo4jReadSession(ctx, *s.getNeo4jDriver())
+	defer session.Close(ctx)
 
 	var paginatedResult = utils.Pagination{
 		Limit: limit,
@@ -98,7 +98,7 @@ func (s *conversationService) GetConversationsForUser(ctx context.Context, userI
 	}
 
 	conversationDbNodesWithTotalCount, err := s.repository.ConversationRepository.GetPaginatedConversationsForUser(
-		session,
+		ctx, session,
 		common.GetContext(ctx).Tenant,
 		userId,
 		paginatedResult.GetSkip(),
@@ -120,8 +120,8 @@ func (s *conversationService) GetConversationsForUser(ctx context.Context, userI
 }
 
 func (s *conversationService) GetConversationsForContact(ctx context.Context, contactId string, page, limit int, sortBy []*model.SortBy) (*utils.Pagination, error) {
-	session := utils.NewNeo4jReadSession(*s.getNeo4jDriver())
-	defer session.Close()
+	session := utils.NewNeo4jReadSession(ctx, *s.getNeo4jDriver())
+	defer session.Close(ctx)
 
 	var paginatedResult = utils.Pagination{
 		Limit: limit,
@@ -133,7 +133,7 @@ func (s *conversationService) GetConversationsForContact(ctx context.Context, co
 	}
 
 	conversationDbNodesWithTotalCount, err := s.repository.ConversationRepository.GetPaginatedConversationsForContact(
-		session,
+		ctx, session,
 		common.GetContext(ctx).Tenant,
 		contactId,
 		paginatedResult.GetSkip(),

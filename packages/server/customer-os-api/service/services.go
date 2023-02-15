@@ -1,7 +1,7 @@
 package service
 
 import (
-	"github.com/neo4j/neo4j-go-driver/v4/neo4j"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
 )
 
@@ -28,7 +28,7 @@ type Services struct {
 	QueryService               QueryService
 }
 
-func InitServices(driver *neo4j.Driver) *Services {
+func InitServices(driver *neo4j.DriverWithContext) *Services {
 	repositories := repository.InitRepos(driver)
 
 	services := Services{

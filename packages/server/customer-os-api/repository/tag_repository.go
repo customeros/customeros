@@ -2,33 +2,34 @@ package repository
 
 import (
 	"fmt"
-	"github.com/neo4j/neo4j-go-driver/v4/neo4j"
-	"github.com/neo4j/neo4j-go-driver/v4/neo4j/dbtype"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils"
+	"golang.org/x/net/context"
 )
 
 type TagRepository interface {
-	Merge(tenant string, tag entity.TagEntity) (*dbtype.Node, error)
-	Update(tenant string, tag entity.TagEntity) (*dbtype.Node, error)
-	UnlinkAndDelete(tenant string, tagId string) error
-	GetAll(tenant string) ([]*dbtype.Node, error)
-	GetForContact(tenant, contactId string) ([]*dbtype.Node, error)
+	Merge(ctx context.Context, tenant string, tag entity.TagEntity) (*dbtype.Node, error)
+	Update(ctx context.Context, tenant string, tag entity.TagEntity) (*dbtype.Node, error)
+	UnlinkAndDelete(ctx context.Context, tenant string, tagId string) error
+	GetAll(ctx context.Context, tenant string) ([]*dbtype.Node, error)
+	GetForContact(ctx context.Context, tenant, contactId string) ([]*dbtype.Node, error)
 }
 
 type tagRepository struct {
-	driver *neo4j.Driver
+	driver *neo4j.DriverWithContext
 }
 
-func NewTagRepository(driver *neo4j.Driver) TagRepository {
+func NewTagRepository(driver *neo4j.DriverWithContext) TagRepository {
 	return &tagRepository{
 		driver: driver,
 	}
 }
 
-func (r *tagRepository) Merge(tenant string, tag entity.TagEntity) (*dbtype.Node, error) {
-	session := utils.NewNeo4jWriteSession(*r.driver)
-	defer session.Close()
+func (r *tagRepository) Merge(ctx context.Context, tenant string, tag entity.TagEntity) (*dbtype.Node, error) {
+	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
+	defer session.Close(ctx)
 
 	query := "MATCH (t:Tenant {name:$tenant}) " +
 		" MERGE (t)<-[:TAG_BELONGS_TO_TENANT]-(tag:Tag {name:$name}) " +
@@ -41,8 +42,8 @@ func (r *tagRepository) Merge(tenant string, tag entity.TagEntity) (*dbtype.Node
 		"  tag:%s" +
 		" RETURN tag"
 
-	if result, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
-		queryResult, err := tx.Run(fmt.Sprintf(query, "Tag_"+tenant),
+	if result, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		queryResult, err := tx.Run(ctx, fmt.Sprintf(query, "Tag_"+tenant),
 			map[string]any{
 				"tenant":    tenant,
 				"name":      tag.Name,
@@ -50,7 +51,7 @@ func (r *tagRepository) Merge(tenant string, tag entity.TagEntity) (*dbtype.Node
 				"appSource": tag.AppSource,
 				"now":       utils.Now(),
 			})
-		return utils.ExtractSingleRecordFirstValueAsNode(queryResult, err)
+		return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
 	}); err != nil {
 		return nil, err
 	} else {
@@ -58,12 +59,12 @@ func (r *tagRepository) Merge(tenant string, tag entity.TagEntity) (*dbtype.Node
 	}
 }
 
-func (r *tagRepository) Update(tenant string, tag entity.TagEntity) (*dbtype.Node, error) {
-	session := utils.NewNeo4jWriteSession(*r.driver)
-	defer session.Close()
+func (r *tagRepository) Update(ctx context.Context, tenant string, tag entity.TagEntity) (*dbtype.Node, error) {
+	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
+	defer session.Close(ctx)
 
-	if result, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
-		queryResult, err := tx.Run(`
+	if result, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		queryResult, err := tx.Run(ctx, `
 			MATCH (t:Tenant {name:$tenant})<-[:TAG_BELONGS_TO_TENANT]-(tag:Tag {id:$id})
 			SET tag.name=$name, tag.updatedAt=$now
 			RETURN tag`,
@@ -73,7 +74,7 @@ func (r *tagRepository) Update(tenant string, tag entity.TagEntity) (*dbtype.Nod
 				"name":   tag.Name,
 				"now":    utils.Now(),
 			})
-		return utils.ExtractSingleRecordFirstValueAsNode(queryResult, err)
+		return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
 	}); err != nil {
 		return nil, err
 	} else {
@@ -81,12 +82,12 @@ func (r *tagRepository) Update(tenant string, tag entity.TagEntity) (*dbtype.Nod
 	}
 }
 
-func (r *tagRepository) UnlinkAndDelete(tenant string, tagId string) error {
-	session := utils.NewNeo4jWriteSession(*r.driver)
-	defer session.Close()
+func (r *tagRepository) UnlinkAndDelete(ctx context.Context, tenant string, tagId string) error {
+	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
+	defer session.Close(ctx)
 
-	if _, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
-		_, err := tx.Run(`
+	if _, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		_, err := tx.Run(ctx, `
 			MATCH (t:Tenant {name:$tenant})<-[:TAG_BELONGS_TO_TENANT]-(tag:Tag {id:$id})
 			DETACH DELETE tag`,
 			map[string]any{
@@ -101,12 +102,12 @@ func (r *tagRepository) UnlinkAndDelete(tenant string, tagId string) error {
 	}
 }
 
-func (r *tagRepository) GetAll(tenant string) ([]*dbtype.Node, error) {
-	session := utils.NewNeo4jReadSession(*r.driver)
-	defer session.Close()
+func (r *tagRepository) GetAll(ctx context.Context, tenant string) ([]*dbtype.Node, error) {
+	session := utils.NewNeo4jReadSession(ctx, *r.driver)
+	defer session.Close(ctx)
 
-	result, err := session.ReadTransaction(func(tx neo4j.Transaction) (any, error) {
-		if queryResult, err := tx.Run(`
+	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		if queryResult, err := tx.Run(ctx, `
 			MATCH (t:Tenant {name:$tenant})<-[:TAG_BELONGS_TO_TENANT]-(tag:Tag)
 			RETURN tag ORDER BY tag.name`,
 			map[string]any{
@@ -114,18 +115,18 @@ func (r *tagRepository) GetAll(tenant string) ([]*dbtype.Node, error) {
 			}); err != nil {
 			return nil, err
 		} else {
-			return utils.ExtractAllRecordsFirstValueAsNodePtrs(queryResult, err)
+			return utils.ExtractAllRecordsFirstValueAsNodePtrs(ctx, queryResult, err)
 		}
 	})
 	return result.([]*dbtype.Node), err
 }
 
-func (r *tagRepository) GetForContact(tenant, contactId string) ([]*dbtype.Node, error) {
-	session := utils.NewNeo4jReadSession(*r.driver)
-	defer session.Close()
+func (r *tagRepository) GetForContact(ctx context.Context, tenant, contactId string) ([]*dbtype.Node, error) {
+	session := utils.NewNeo4jReadSession(ctx, *r.driver)
+	defer session.Close(ctx)
 
-	result, err := session.ReadTransaction(func(tx neo4j.Transaction) (any, error) {
-		if queryResult, err := tx.Run(`
+	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		if queryResult, err := tx.Run(ctx, `
 			MATCH (t:Tenant {name:$tenant})<-[:CONTACT_BELONGS_TO_TENANT]-(c:Contact {id:$contactId})-[:TAGGED]->(tag:Tag)
 			RETURN tag ORDER BY tag.name`,
 			map[string]any{
@@ -134,7 +135,7 @@ func (r *tagRepository) GetForContact(tenant, contactId string) ([]*dbtype.Node,
 			}); err != nil {
 			return nil, err
 		} else {
-			return utils.ExtractAllRecordsFirstValueAsNodePtrs(queryResult, err)
+			return utils.ExtractAllRecordsFirstValueAsNodePtrs(ctx, queryResult, err)
 		}
 	})
 	return result.([]*dbtype.Node), err

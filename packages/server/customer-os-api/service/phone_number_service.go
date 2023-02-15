@@ -2,9 +2,9 @@ package service
 
 import (
 	"context"
-	"github.com/neo4j/neo4j-go-driver/v4/neo4j"
-	"github.com/neo4j/neo4j-go-driver/v4/neo4j/db"
-	"github.com/neo4j/neo4j-go-driver/v4/neo4j/dbtype"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j/db"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
@@ -29,15 +29,15 @@ func NewPhoneNumberService(repositories *repository.Repositories) PhoneNumberSer
 	}
 }
 
-func (s *phoneNumberService) getDriver() neo4j.Driver {
+func (s *phoneNumberService) getDriver() neo4j.DriverWithContext {
 	return *s.repositories.Drivers.Neo4jDriver
 }
 
 func (s *phoneNumberService) FindAllForContact(ctx context.Context, contactId string) (*entity.PhoneNumberEntities, error) {
-	session := utils.NewNeo4jReadSession(s.getDriver())
-	defer session.Close()
+	session := utils.NewNeo4jReadSession(ctx, s.getDriver())
+	defer session.Close(ctx)
 
-	queryResult, err := s.repositories.PhoneNumberRepository.FindAllForContact(session, common.GetContext(ctx).Tenant, contactId)
+	queryResult, err := s.repositories.PhoneNumberRepository.FindAllForContact(ctx, session, common.GetContext(ctx).Tenant, contactId)
 	if err != nil {
 		return nil, err
 	}
@@ -54,21 +54,21 @@ func (s *phoneNumberService) FindAllForContact(ctx context.Context, contactId st
 }
 
 func (s *phoneNumberService) MergePhoneNumberToContact(ctx context.Context, contactId string, entity *entity.PhoneNumberEntity) (*entity.PhoneNumberEntity, error) {
-	session := utils.NewNeo4jWriteSession(s.getDriver())
-	defer session.Close()
+	session := utils.NewNeo4jWriteSession(ctx, s.getDriver())
+	defer session.Close(ctx)
 
 	var err error
 	var phoneNumberNode *dbtype.Node
 	var phoneNumberRelationship *dbtype.Relationship
 
-	_, err = session.WriteTransaction(func(tx neo4j.Transaction) (interface{}, error) {
+	_, err = session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (interface{}, error) {
 		if entity.Primary == true {
-			err := s.repositories.PhoneNumberRepository.SetOtherContactPhoneNumbersNonPrimaryInTx(tx, common.GetContext(ctx).Tenant, contactId, entity.E164)
+			err := s.repositories.PhoneNumberRepository.SetOtherContactPhoneNumbersNonPrimaryInTx(ctx, tx, common.GetContext(ctx).Tenant, contactId, entity.E164)
 			if err != nil {
 				return nil, err
 			}
 		}
-		phoneNumberNode, phoneNumberRelationship, err = s.repositories.PhoneNumberRepository.MergePhoneNumberToContactInTx(tx, common.GetContext(ctx).Tenant, contactId, *entity)
+		phoneNumberNode, phoneNumberRelationship, err = s.repositories.PhoneNumberRepository.MergePhoneNumberToContactInTx(ctx, tx, common.GetContext(ctx).Tenant, contactId, *entity)
 		return nil, err
 	})
 	if err != nil {
@@ -81,21 +81,21 @@ func (s *phoneNumberService) MergePhoneNumberToContact(ctx context.Context, cont
 }
 
 func (s *phoneNumberService) UpdatePhoneNumberInContact(ctx context.Context, contactId string, entity *entity.PhoneNumberEntity) (*entity.PhoneNumberEntity, error) {
-	session := utils.NewNeo4jWriteSession(s.getDriver())
-	defer session.Close()
+	session := utils.NewNeo4jWriteSession(ctx, s.getDriver())
+	defer session.Close(ctx)
 
 	var err error
 	var phoneNumberNode *dbtype.Node
 	var phoneNumberRelationship *dbtype.Relationship
 
-	_, err = session.WriteTransaction(func(tx neo4j.Transaction) (interface{}, error) {
-		phoneNumberNode, phoneNumberRelationship, err = s.repositories.PhoneNumberRepository.UpdatePhoneNumberByContactInTx(tx, common.GetContext(ctx).Tenant, contactId, *entity)
+	_, err = session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (interface{}, error) {
+		phoneNumberNode, phoneNumberRelationship, err = s.repositories.PhoneNumberRepository.UpdatePhoneNumberByContactInTx(ctx, tx, common.GetContext(ctx).Tenant, contactId, *entity)
 
 		if err != nil {
 			return nil, err
 		}
 		if entity.Primary == true {
-			err := s.repositories.PhoneNumberRepository.SetOtherContactPhoneNumbersNonPrimaryInTx(tx, common.GetContext(ctx).Tenant, contactId, entity.E164)
+			err := s.repositories.PhoneNumberRepository.SetOtherContactPhoneNumbersNonPrimaryInTx(ctx, tx, common.GetContext(ctx).Tenant, contactId, entity.E164)
 			if err != nil {
 				return nil, err
 			}
@@ -112,11 +112,11 @@ func (s *phoneNumberService) UpdatePhoneNumberInContact(ctx context.Context, con
 }
 
 func (s *phoneNumberService) Delete(ctx context.Context, contactId string, e164 string) (bool, error) {
-	session := utils.NewNeo4jWriteSession(s.getDriver())
-	defer session.Close()
+	session := utils.NewNeo4jWriteSession(ctx, s.getDriver())
+	defer session.Close(ctx)
 
-	queryResult, err := session.WriteTransaction(func(tx neo4j.Transaction) (interface{}, error) {
-		_, err := tx.Run(`
+	queryResult, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (interface{}, error) {
+		_, err := tx.Run(ctx, `
 			MATCH (c:Contact {id:$id})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}),
                   (c:Contact {id:$id})-[:PHONE_ASSOCIATED_WITH]->(p:PhoneNumber {e164:$e164})
             DETACH DELETE p
@@ -137,11 +137,11 @@ func (s *phoneNumberService) Delete(ctx context.Context, contactId string, e164 
 }
 
 func (s *phoneNumberService) DeleteById(ctx context.Context, contactId string, phoneId string) (bool, error) {
-	session := utils.NewNeo4jWriteSession(s.getDriver())
-	defer session.Close()
+	session := utils.NewNeo4jWriteSession(ctx, s.getDriver())
+	defer session.Close(ctx)
 
-	queryResult, err := session.WriteTransaction(func(tx neo4j.Transaction) (interface{}, error) {
-		_, err := tx.Run(`
+	queryResult, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (interface{}, error) {
+		_, err := tx.Run(ctx, `
 			MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}),
                   (c:Contact {id:$contactId})-[:PHONE_ASSOCIATED_WITH]->(p:PhoneNumber {id:$phoneId})
             DETACH DELETE p

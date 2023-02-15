@@ -2,8 +2,8 @@ package service
 
 import (
 	"context"
-	"github.com/neo4j/neo4j-go-driver/v4/neo4j"
-	"github.com/neo4j/neo4j-go-driver/v4/neo4j/dbtype"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
@@ -28,15 +28,15 @@ func NewJobRoleService(repositories *repository.Repositories) JobRoleService {
 	}
 }
 
-func (s *jobRoleService) getDriver() neo4j.Driver {
+func (s *jobRoleService) getDriver() neo4j.DriverWithContext {
 	return *s.repositories.Drivers.Neo4jDriver
 }
 
 func (s *jobRoleService) GetAllForContact(ctx context.Context, contactId string) (*entity.JobRoleEntities, error) {
-	session := utils.NewNeo4jReadSession(s.getDriver())
-	defer session.Close()
+	session := utils.NewNeo4jReadSession(ctx, s.getDriver())
+	defer session.Close(ctx)
 
-	dbNodes, err := s.repositories.JobRoleRepository.GetJobRolesForContact(session, common.GetContext(ctx).Tenant, contactId)
+	dbNodes, err := s.repositories.JobRoleRepository.GetJobRolesForContact(ctx, session, common.GetContext(ctx).Tenant, contactId)
 	if err != nil {
 		return nil, err
 	}
@@ -49,10 +49,10 @@ func (s *jobRoleService) GetAllForContact(ctx context.Context, contactId string)
 }
 
 func (s *jobRoleService) GetAllForOrganization(ctx context.Context, organizationId string) (*entity.JobRoleEntities, error) {
-	session := utils.NewNeo4jReadSession(s.getDriver())
-	defer session.Close()
+	session := utils.NewNeo4jReadSession(ctx, s.getDriver())
+	defer session.Close(ctx)
 
-	dbNodes, err := s.repositories.JobRoleRepository.GetJobRolesForOrganization(session, common.GetContext(ctx).Tenant, organizationId)
+	dbNodes, err := s.repositories.JobRoleRepository.GetJobRolesForOrganization(ctx, session, common.GetContext(ctx).Tenant, organizationId)
 	if err != nil {
 		return nil, err
 	}
@@ -65,22 +65,22 @@ func (s *jobRoleService) GetAllForOrganization(ctx context.Context, organization
 }
 
 func (s *jobRoleService) CreateJobRole(ctx context.Context, contactId string, organizationId *string, entity *entity.JobRoleEntity) (*entity.JobRoleEntity, error) {
-	session := utils.NewNeo4jWriteSession(*s.repositories.Drivers.Neo4jDriver)
-	defer session.Close()
+	session := utils.NewNeo4jWriteSession(ctx, *s.repositories.Drivers.Neo4jDriver)
+	defer session.Close(ctx)
 
-	dbNode, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
+	dbNode, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		if entity.Primary == true {
-			s.repositories.JobRoleRepository.SetOtherJobRolesForContactNonPrimaryInTx(tx, common.GetContext(ctx).Tenant, contactId, "")
+			s.repositories.JobRoleRepository.SetOtherJobRolesForContactNonPrimaryInTx(ctx, tx, common.GetContext(ctx).Tenant, contactId, "")
 		}
 
-		roleDbNode, err := s.repositories.JobRoleRepository.CreateJobRole(tx, common.GetContext(ctx).Tenant, contactId, *entity)
+		roleDbNode, err := s.repositories.JobRoleRepository.CreateJobRole(ctx, tx, common.GetContext(ctx).Tenant, contactId, *entity)
 		if err != nil {
 			return nil, err
 		}
 		var roleId = utils.GetPropsFromNode(*roleDbNode)["id"].(string)
 
 		if organizationId != nil {
-			if err = s.repositories.JobRoleRepository.LinkWithOrganization(tx, common.GetContext(ctx).Tenant, roleId, *organizationId); err != nil {
+			if err = s.repositories.JobRoleRepository.LinkWithOrganization(ctx, tx, common.GetContext(ctx).Tenant, roleId, *organizationId); err != nil {
 				return nil, err
 			}
 		}
@@ -94,21 +94,21 @@ func (s *jobRoleService) CreateJobRole(ctx context.Context, contactId string, or
 }
 
 func (s *jobRoleService) UpdateJobRole(ctx context.Context, contactId string, organizationId *string, entity *entity.JobRoleEntity) (*entity.JobRoleEntity, error) {
-	session := utils.NewNeo4jWriteSession(*s.repositories.Drivers.Neo4jDriver)
-	defer session.Close()
+	session := utils.NewNeo4jWriteSession(ctx, *s.repositories.Drivers.Neo4jDriver)
+	defer session.Close(ctx)
 
-	dbNode, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
+	dbNode, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		if entity.Primary == true {
-			s.repositories.JobRoleRepository.SetOtherJobRolesForContactNonPrimaryInTx(tx, common.GetContext(ctx).Tenant, contactId, entity.Id)
+			s.repositories.JobRoleRepository.SetOtherJobRolesForContactNonPrimaryInTx(ctx, tx, common.GetContext(ctx).Tenant, contactId, entity.Id)
 		}
 
-		roleDbNode, err := s.repositories.JobRoleRepository.UpdateJobRoleDetails(tx, common.GetContext(ctx).Tenant, contactId, entity.Id, *entity)
+		roleDbNode, err := s.repositories.JobRoleRepository.UpdateJobRoleDetails(ctx, tx, common.GetContext(ctx).Tenant, contactId, entity.Id, *entity)
 		if err != nil {
 			return nil, err
 		}
 
 		if organizationId != nil {
-			if err = s.repositories.JobRoleRepository.LinkWithOrganization(tx, common.GetContext(ctx).Tenant, entity.Id, *organizationId); err != nil {
+			if err = s.repositories.JobRoleRepository.LinkWithOrganization(ctx, tx, common.GetContext(ctx).Tenant, entity.Id, *organizationId); err != nil {
 				return nil, err
 			}
 		}
@@ -122,11 +122,11 @@ func (s *jobRoleService) UpdateJobRole(ctx context.Context, contactId string, or
 }
 
 func (s *jobRoleService) DeleteJobRole(ctx context.Context, contactId, roleId string) (bool, error) {
-	session := utils.NewNeo4jWriteSession(*s.repositories.Drivers.Neo4jDriver)
-	defer session.Close()
+	session := utils.NewNeo4jWriteSession(ctx, *s.repositories.Drivers.Neo4jDriver)
+	defer session.Close(ctx)
 
-	_, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
-		return nil, s.repositories.JobRoleRepository.DeleteJobRoleInTx(tx, common.GetContext(ctx).Tenant, contactId, roleId)
+	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		return nil, s.repositories.JobRoleRepository.DeleteJobRoleInTx(ctx, tx, common.GetContext(ctx).Tenant, contactId, roleId)
 	})
 	if err != nil {
 		return false, err

@@ -1,7 +1,7 @@
 package repository
 
 import (
-	"github.com/neo4j/neo4j-go-driver/v4/neo4j"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 )
 
 type Repositories struct {
@@ -10,7 +10,7 @@ type Repositories struct {
 	OrganizationRepository        OrganizationRepository
 	OrganizationTypeRepository    OrganizationTypeRepository
 	ContactGroupRepository        ContactGroupRepository
-	JobRepository                 JobRepository
+	ContactRepository             ContactRepository
 	ConversationRepository        ConversationRepository
 	CustomFieldTemplateRepository CustomFieldTemplateRepository
 	CustomFieldRepository         CustomFieldRepository
@@ -30,10 +30,10 @@ type Repositories struct {
 }
 
 type Drivers struct {
-	Neo4jDriver *neo4j.Driver
+	Neo4jDriver *neo4j.DriverWithContext
 }
 
-func InitRepos(driver *neo4j.Driver) *Repositories {
+func InitRepos(driver *neo4j.DriverWithContext) *Repositories {
 	repositories := Repositories{
 		Drivers: Drivers{
 			Neo4jDriver: driver,
@@ -42,7 +42,7 @@ func InitRepos(driver *neo4j.Driver) *Repositories {
 	repositories.ActionRepository = NewActionRepository(driver)
 	repositories.OrganizationRepository = NewOrganizationRepository(driver)
 	repositories.ContactGroupRepository = NewContactGroupRepository(driver)
-	repositories.JobRepository = NewJobRepository(driver)
+	repositories.ContactRepository = NewContactRepository(driver)
 	repositories.ConversationRepository = NewConversationRepository(driver)
 	repositories.CustomFieldTemplateRepository = NewCustomFieldTemplateRepository(driver)
 	repositories.CustomFieldRepository = NewCustomFieldRepository(driver)

@@ -1,34 +1,36 @@
 package repository
 
 import (
-	"github.com/neo4j/neo4j-go-driver/v4/neo4j"
+	"context"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 )
 
 type userRepository struct {
-	driver *neo4j.Driver
+	driver *neo4j.DriverWithContext
 }
 
 type UserRepository interface {
-	FindUserByEmail(email string) (string, string, error)
+	FindUserByEmail(ctx context.Context, email string) (string, string, error)
 }
 
-func NewUserRepository(driver *neo4j.Driver) UserRepository {
+func NewUserRepository(driver *neo4j.DriverWithContext) UserRepository {
 	return &userRepository{
 		driver: driver,
 	}
 }
 
-func (u *userRepository) FindUserByEmail(email string) (string, string, error) {
+func (u *userRepository) FindUserByEmail(ctx context.Context, email string) (string, string, error) {
 	session := (*u.driver).NewSession(
+		ctx,
 		neo4j.SessionConfig{
 			AccessMode: neo4j.AccessModeRead,
 			BoltLogger: neo4j.ConsoleBoltLogger(),
 		},
 	)
-	defer session.Close()
+	defer session.Close(ctx)
 
-	records, err := session.ReadTransaction(func(tx neo4j.Transaction) (any, error) {
-		queryResult, err := tx.Run(`
+	records, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		queryResult, err := tx.Run(ctx, `
 			MATCH (e:Email {email:$email})<-[:HAS]-(u:User)-[:USER_BELONGS_TO_TENANT]->(t:Tenant)
 			RETURN t.name, u.id`,
 			map[string]interface{}{
@@ -37,7 +39,7 @@ func (u *userRepository) FindUserByEmail(email string) (string, string, error) {
 		if err != nil {
 			return nil, err
 		}
-		return queryResult.Collect()
+		return queryResult.Collect(ctx)
 	})
 	if err != nil {
 		return "", "", err

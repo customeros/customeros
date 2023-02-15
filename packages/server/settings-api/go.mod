@@ -9,9 +9,10 @@ require (
 	github.com/gin-contrib/cors v1.4.0
 	github.com/gin-gonic/gin v1.8.2
 	github.com/joho/godotenv v1.4.0
-	github.com/neo4j/neo4j-go-driver/v4 v4.4.5
+	github.com/neo4j/neo4j-go-driver/v5 v5.5.0
 	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20230203114552-e5ca0d992aff
 	github.com/sirupsen/logrus v1.9.0
+	golang.org/x/net v0.5.0
 	gorm.io/driver/postgres v1.4.5
 	gorm.io/gorm v1.24.5
 )
@@ -41,7 +42,6 @@ require (
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/ugorji/go/codec v1.2.7 // indirect
 	golang.org/x/crypto v0.0.0-20220722155217-630584e8d5aa // indirect
-	golang.org/x/net v0.5.0 // indirect
 	golang.org/x/sys v0.4.0 // indirect
 	golang.org/x/text v0.6.0 // indirect
 	google.golang.org/grpc v1.53.0 // indirect

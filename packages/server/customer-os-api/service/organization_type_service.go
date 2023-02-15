@@ -2,7 +2,7 @@ package service
 
 import (
 	"context"
-	"github.com/neo4j/neo4j-go-driver/v4/neo4j/dbtype"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
@@ -28,7 +28,7 @@ func NewOrganizationTypeService(repository *repository.Repositories) Organizatio
 }
 
 func (s *organizationTypeService) Create(ctx context.Context, organizationType *entity.OrganizationTypeEntity) (*entity.OrganizationTypeEntity, error) {
-	organizationTypeNode, err := s.repository.OrganizationTypeRepository.Create(common.GetContext(ctx).Tenant, organizationType)
+	organizationTypeNode, err := s.repository.OrganizationTypeRepository.Create(ctx, common.GetContext(ctx).Tenant, organizationType)
 	if err != nil {
 		return nil, err
 	}
@@ -36,7 +36,7 @@ func (s *organizationTypeService) Create(ctx context.Context, organizationType *
 }
 
 func (s *organizationTypeService) Update(ctx context.Context, organizationType *entity.OrganizationTypeEntity) (*entity.OrganizationTypeEntity, error) {
-	organizationTypeNode, err := s.repository.OrganizationTypeRepository.Update(common.GetContext(ctx).Tenant, organizationType)
+	organizationTypeNode, err := s.repository.OrganizationTypeRepository.Update(ctx, common.GetContext(ctx).Tenant, organizationType)
 	if err != nil {
 		return nil, err
 	}
@@ -44,7 +44,7 @@ func (s *organizationTypeService) Update(ctx context.Context, organizationType *
 }
 
 func (s *organizationTypeService) Delete(ctx context.Context, id string) (bool, error) {
-	err := s.repository.OrganizationTypeRepository.Delete(common.GetContext(ctx).Tenant, id)
+	err := s.repository.OrganizationTypeRepository.Delete(ctx, common.GetContext(ctx).Tenant, id)
 	if err != nil {
 		return false, err
 	}
@@ -52,7 +52,7 @@ func (s *organizationTypeService) Delete(ctx context.Context, id string) (bool, 
 }
 
 func (s *organizationTypeService) GetAll(ctx context.Context) (*entity.OrganizationTypeEntities, error) {
-	organizationTypeDbNodes, err := s.repository.OrganizationTypeRepository.FindAll(common.GetContext(ctx).Tenant)
+	organizationTypeDbNodes, err := s.repository.OrganizationTypeRepository.FindAll(ctx, common.GetContext(ctx).Tenant)
 	if err != nil {
 		return nil, err
 	}
@@ -65,7 +65,7 @@ func (s *organizationTypeService) GetAll(ctx context.Context) (*entity.Organizat
 }
 
 func (s *organizationTypeService) FindOrganizationTypeForOrganization(ctx context.Context, organizationId string) (*entity.OrganizationTypeEntity, error) {
-	organizationTypeDbNode, err := s.repository.OrganizationTypeRepository.FindForOrganization(common.GetContext(ctx).Tenant, organizationId)
+	organizationTypeDbNode, err := s.repository.OrganizationTypeRepository.FindForOrganization(ctx, common.GetContext(ctx).Tenant, organizationId)
 	if err != nil {
 		return nil, err
 	} else if organizationTypeDbNode == nil {

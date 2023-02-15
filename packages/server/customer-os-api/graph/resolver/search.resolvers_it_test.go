@@ -6,42 +6,44 @@ import (
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/neo4j"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/require"
+	"golang.org/x/net/context"
 	"testing"
 )
 
 func TestQueryResolver_SearchBasic(t *testing.T) {
-	defer tearDownTestCase()(t)
-	neo4jt.CreateTenant(driver, tenantName)
-	neo4jt.CreateFullTextBasicSearchIndexes(driver, tenantName)
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx)(t)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jt.CreateFullTextBasicSearchIndexes(ctx, driver, tenantName)
 
 	keyword := "abc"
 
-	notExpectedContactId := neo4jt.CreateContact(driver, tenantName, entity.ContactEntity{
+	notExpectedContactId := neo4jt.CreateContact(ctx, driver, tenantName, entity.ContactEntity{
 		FirstName: "x",
 		LastName:  "y",
 	})
-	expectedSecondContactId := neo4jt.CreateContact(driver, tenantName, entity.ContactEntity{
+	expectedSecondContactId := neo4jt.CreateContact(ctx, driver, tenantName, entity.ContactEntity{
 		FirstName: "Matching by last name",
 		LastName:  "abcdefgh",
 	})
-	expectedFirstContactId := neo4jt.CreateContact(driver, tenantName, entity.ContactEntity{
+	expectedFirstContactId := neo4jt.CreateContact(ctx, driver, tenantName, entity.ContactEntity{
 		FirstName: "abdd",
 		LastName:  "Matching by first name",
 	})
 
-	neo4jt.CreateOrganization(driver, tenantName, "THATISNOTMATCHING")
-	perfectMatchOgranizationId := neo4jt.CreateOrganization(driver, tenantName, "abc")
+	neo4jt.CreateOrganization(ctx, driver, tenantName, "THATISNOTMATCHING")
+	perfectMatchOgranizationId := neo4jt.CreateOrganization(ctx, driver, tenantName, "abc")
 
-	expectedPartialMatchedEmailId := neo4jt.AddEmailTo(driver, entity.CONTACT, tenantName, notExpectedContactId, "abd@openline.ai", false, "WORK")
-	neo4jt.AddEmailTo(driver, entity.CONTACT, tenantName, expectedSecondContactId, "xxx@yyy.zzz", false, "WORK")
+	expectedPartialMatchedEmailId := neo4jt.AddEmailTo(ctx, driver, entity.CONTACT, tenantName, notExpectedContactId, "abd@openline.ai", false, "WORK")
+	neo4jt.AddEmailTo(ctx, driver, entity.CONTACT, tenantName, expectedSecondContactId, "xxx@yyy.zzz", false, "WORK")
 
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(driver, "Tenant"))
-	require.Equal(t, 3, neo4jt.GetCountOfNodes(driver, "Contact"))
-	require.Equal(t, 3, neo4jt.GetCountOfNodes(driver, "Contact_"+tenantName))
-	require.Equal(t, 2, neo4jt.GetCountOfNodes(driver, "Organization"))
-	require.Equal(t, 2, neo4jt.GetCountOfNodes(driver, "Organization_"+tenantName))
-	require.Equal(t, 2, neo4jt.GetCountOfNodes(driver, "Email"))
-	require.Equal(t, 2, neo4jt.GetCountOfNodes(driver, "Email_"+tenantName))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Tenant"))
+	require.Equal(t, 3, neo4jt.GetCountOfNodes(ctx, driver, "Contact"))
+	require.Equal(t, 3, neo4jt.GetCountOfNodes(ctx, driver, "Contact_"+tenantName))
+	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "Organization"))
+	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "Organization_"+tenantName))
+	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "Email"))
+	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "Email_"+tenantName))
 
 	rawResponse, err := c.RawPost(getQuery("search/search_basic"),
 		client.Var("keyword", keyword))

@@ -2,8 +2,8 @@ package service
 
 import (
 	"context"
-	"github.com/neo4j/neo4j-go-driver/v4/neo4j"
-	"github.com/neo4j/neo4j-go-driver/v4/neo4j/dbtype"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
@@ -27,20 +27,20 @@ func NewActionsService(repositories *repository.Repositories) ActionsService {
 	}
 }
 
-func (s *actionsService) getNeo4jDriver() neo4j.Driver {
+func (s *actionsService) getNeo4jDriver() neo4j.DriverWithContext {
 	return *s.repositories.Drivers.Neo4jDriver
 }
 
 func (s *actionsService) GetContactActions(ctx context.Context, contactId string, from time.Time, to time.Time, types []model.ActionType) (*entity.ActionEntities, error) {
-	session := utils.NewNeo4jReadSession(s.getNeo4jDriver())
-	defer session.Close()
+	session := utils.NewNeo4jReadSession(ctx, s.getNeo4jDriver())
+	defer session.Close(ctx)
 
 	var nodeLabels = []string{}
 	for _, v := range types {
 		nodeLabels = append(nodeLabels, entity.NodeLabelsByActionType[v.String()])
 	}
 
-	dbNodes, err := s.repositories.ActionRepository.GetContactActions(session, common.GetContext(ctx).Tenant, contactId, from, to, nodeLabels)
+	dbNodes, err := s.repositories.ActionRepository.GetContactActions(ctx, session, common.GetContext(ctx).Tenant, contactId, from, to, nodeLabels)
 	if err != nil {
 		return nil, err
 	}

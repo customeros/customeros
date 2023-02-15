@@ -2,9 +2,9 @@ package service
 
 import (
 	"context"
-	"github.com/neo4j/neo4j-go-driver/v4/neo4j"
-	"github.com/neo4j/neo4j-go-driver/v4/neo4j/db"
-	"github.com/neo4j/neo4j-go-driver/v4/neo4j/dbtype"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j/db"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
@@ -34,15 +34,12 @@ func NewContactGroupService(repositories *repository.Repositories) ContactGroupS
 	}
 }
 
-func (s *contactGroupService) getDriver() neo4j.Driver {
+func (s *contactGroupService) getDriver() neo4j.DriverWithContext {
 	return *s.repositories.Drivers.Neo4jDriver
 }
 
 func (s *contactGroupService) Create(ctx context.Context, entity *entity.ContactGroupEntity) (*entity.ContactGroupEntity, error) {
-	session := utils.NewNeo4jWriteSession(s.getDriver())
-	defer session.Close()
-
-	dbNode, err := s.repositories.ContactGroupRepository.Create(session, common.GetContext(ctx).Tenant, *entity)
+	dbNode, err := s.repositories.ContactGroupRepository.Create(ctx, common.GetContext(ctx).Tenant, *entity)
 	if err != nil {
 		return nil, err
 	}
@@ -50,10 +47,7 @@ func (s *contactGroupService) Create(ctx context.Context, entity *entity.Contact
 }
 
 func (s *contactGroupService) Update(ctx context.Context, entity *entity.ContactGroupEntity) (*entity.ContactGroupEntity, error) {
-	session := utils.NewNeo4jWriteSession(s.getDriver())
-	defer session.Close()
-
-	dbNode, err := s.repositories.ContactGroupRepository.Update(session, common.GetContext(ctx).Tenant, *entity)
+	dbNode, err := s.repositories.ContactGroupRepository.Update(ctx, common.GetContext(ctx).Tenant, *entity)
 	if err != nil {
 		return nil, err
 	}
@@ -61,11 +55,11 @@ func (s *contactGroupService) Update(ctx context.Context, entity *entity.Contact
 }
 
 func (s *contactGroupService) Delete(ctx context.Context, id string) (bool, error) {
-	session := utils.NewNeo4jWriteSession(s.getDriver())
-	defer session.Close()
+	session := utils.NewNeo4jWriteSession(ctx, s.getDriver())
+	defer session.Close(ctx)
 
-	queryResult, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
-		_, err := tx.Run(`
+	queryResult, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		_, err := tx.Run(ctx, `
 			MATCH (g:ContactGroup {id:$groupId})-[:GROUP_BELONGS_TO_TENANT]->(:Tenant {name:$tenant})
             DETACH DELETE g
 			`,
@@ -84,8 +78,8 @@ func (s *contactGroupService) Delete(ctx context.Context, id string) (bool, erro
 }
 
 func (s *contactGroupService) FindAll(ctx context.Context, page, limit int, filter *model.Filter, sortBy []*model.SortBy) (*utils.Pagination, error) {
-	session := utils.NewNeo4jReadSession(s.getDriver())
-	defer session.Close()
+	session := utils.NewNeo4jReadSession(ctx, s.getDriver())
+	defer session.Close(ctx)
 
 	var paginatedResult = utils.Pagination{
 		Limit: limit,
@@ -101,7 +95,7 @@ func (s *contactGroupService) FindAll(ctx context.Context, page, limit int, filt
 	}
 
 	dbNodesWithTotalCount, err := s.repositories.ContactGroupRepository.GetPaginatedContactGroups(
-		session,
+		ctx,
 		common.GetContext(ctx).Tenant,
 		paginatedResult.GetSkip(),
 		paginatedResult.GetLimit(),
@@ -122,17 +116,17 @@ func (s *contactGroupService) FindAll(ctx context.Context, page, limit int, filt
 }
 
 func (s *contactGroupService) FindContactGroupById(ctx context.Context, id string) (*entity.ContactGroupEntity, error) {
-	session := utils.NewNeo4jReadSession(s.getDriver())
-	defer session.Close()
+	session := utils.NewNeo4jReadSession(ctx, s.getDriver())
+	defer session.Close(ctx)
 
-	queryResult, err := session.ReadTransaction(func(tx neo4j.Transaction) (any, error) {
-		result, err := tx.Run(`
+	queryResult, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		result, err := tx.Run(ctx, `
 			MATCH (c:ContactGroup {id:$id})-[:GROUP_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) RETURN c`,
 			map[string]any{
 				"id":     id,
 				"tenant": common.GetContext(ctx).Tenant,
 			})
-		record, err := result.Single()
+		record, err := result.Single(ctx)
 		if err != nil {
 			return nil, err
 		}
@@ -146,18 +140,18 @@ func (s *contactGroupService) FindContactGroupById(ctx context.Context, id strin
 }
 
 func (s *contactGroupService) FindAllForContact(ctx context.Context, contact *model.Contact) (*entity.ContactGroupEntities, error) {
-	session := utils.NewNeo4jReadSession(s.getDriver())
-	defer session.Close()
+	session := utils.NewNeo4jReadSession(ctx, s.getDriver())
+	defer session.Close(ctx)
 
-	queryResult, err := session.ReadTransaction(func(tx neo4j.Transaction) (any, error) {
-		result, err := tx.Run(`
+	queryResult, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		result, err := tx.Run(ctx, `
 				MATCH (c:Contact {id:$id})-[:BELONGS_TO_GROUP]->(g:ContactGroup)-[:GROUP_BELONGS_TO_TENANT]->(:Tenant {name:$tenant})
 				RETURN g 
 				ORDER BY g.name`,
 			map[string]any{
 				"id":     contact.ID,
 				"tenant": common.GetContext(ctx).Tenant})
-		records, err := result.Collect()
+		records, err := result.Collect(ctx)
 		if err != nil {
 			return nil, err
 		}
@@ -178,11 +172,11 @@ func (s *contactGroupService) FindAllForContact(ctx context.Context, contact *mo
 }
 
 func (s *contactGroupService) AddContactToGroup(ctx context.Context, contactId, groupId string) (bool, error) {
-	session := utils.NewNeo4jWriteSession(s.getDriver())
-	defer session.Close()
+	session := utils.NewNeo4jWriteSession(ctx, s.getDriver())
+	defer session.Close(ctx)
 
-	queryResult, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
-		_, err := tx.Run(`
+	queryResult, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		_, err := tx.Run(ctx, `
 			MATCH 	(c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}), 
 					(g:ContactGroup {id:$groupId})-[:GROUP_BELONGS_TO_TENANT]->(:Tenant {name:$tenant})
 			MERGE (c)-[:BELONGS_TO_GROUP]->(g)
@@ -202,11 +196,11 @@ func (s *contactGroupService) AddContactToGroup(ctx context.Context, contactId, 
 }
 
 func (s *contactGroupService) RemoveContactFromGroup(ctx context.Context, contactId, groupId string) (bool, error) {
-	session := utils.NewNeo4jWriteSession(s.getDriver())
-	defer session.Close()
+	session := utils.NewNeo4jWriteSession(ctx, s.getDriver())
+	defer session.Close(ctx)
 
-	queryResult, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
-		_, err := tx.Run(`
+	queryResult, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		_, err := tx.Run(ctx, `
 			MATCH 	(c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}), 
 					(g:ContactGroup {id:$groupId})-[:GROUP_BELONGS_TO_TENANT]->(:Tenant {name:$tenant})
 			MATCH (c)-[r:BELONGS_TO_GROUP]->(g)
