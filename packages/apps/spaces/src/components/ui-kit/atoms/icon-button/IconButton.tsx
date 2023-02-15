@@ -1,40 +1,35 @@
-import React, { EventHandler, FC, ReactNode } from 'react';
+import React, {
+  ButtonHTMLAttributes,
+  EventHandler,
+  FC,
+  ReactNode,
+} from 'react';
 import styles from './icon-button.module.scss';
 
-interface Props {
+interface Props extends ButtonHTMLAttributes<HTMLButtonElement> {
   icon?: ReactNode;
-  onClick: EventHandler<any>;
-  ariaLabel?: string;
-  children?: HTMLCollection | undefined;
-  mode?: 'default' | 'primary' | 'secondary';
-  disabled?: boolean;
-  className?: string;
-  title?: string;
-  style?: any;
-  type?: string;
+  onClick: EventHandler<never>;
+  mode?: 'default' | 'primary' | 'secondary' | 'text';
+  size?: 'xs' | 'sm' | 'md' | 'lg';
 }
 
 export const IconButton: FC<Props> = ({
   icon,
   onClick,
-  children,
   mode = 'default',
   ...rest
 }) => {
   return (
-    <div
+    <button
       {...rest}
       onClick={onClick}
-      role='button'
-      title={rest.ariaLabel}
+      role={rest?.role || 'button'}
+      title={rest?.title}
       tabIndex={0}
       style={rest?.style}
       className={`${styles.button} ${styles[mode]} ${rest.className}`}
     >
-      <>
-        {icon && icon}
-        {children}
-      </>
-    </div>
+      {icon && icon}
+    </button>
   );
 };

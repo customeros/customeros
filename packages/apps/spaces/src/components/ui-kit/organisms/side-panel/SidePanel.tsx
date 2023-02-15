@@ -1,65 +1,71 @@
-import React, { useState } from 'react';
+import React from 'react';
+import { IconButton } from '../../atoms/icon-button';
+import {
+  Button,
+  ChevronLeft,
+  ChevronRight,
+  Cog,
+  OpenlineLogo,
+  SignOut,
+} from '../../atoms';
+import { SidePanelListItem } from './side-panel-list-item';
+import classNames from 'classnames';
 import styles from './side-panel.module.scss';
-import { AvatarButton, Cog, SignOut } from '../../atoms';
-import { useRouter } from 'next/router';
+import Image from 'next/image';
 
-interface Props {
-  userEmail: any;
-  logoutUrl: string | undefined;
-  isOpen: boolean;
-  onOpen: () => void;
-  onClose: () => void;
+interface SidePanelProps {
+  onPanelToggle: (status: boolean) => void;
+  isPanelOpen: boolean;
 }
 
-export const SidePanel: React.FC<Props> = ({
-  userEmail,
-  logoutUrl,
-  isOpen,
-  onOpen,
-  onClose,
+export const SidePanel: React.FC<SidePanelProps> = ({
+  onPanelToggle,
+  isPanelOpen,
 }) => {
-  const router = useRouter();
-
   return (
-    <div
-      className={`${styles.panelWrapper} ${isOpen ? styles.open : ''} ' `}
-      style={{ background: isOpen ? 'white' : 'transparent' }}
+    <aside
+      className={classNames(styles.sidebar, {
+        [styles.collapse]: !isPanelOpen,
+      })}
     >
-      <div className={styles.openPanelButton}>
-        <AvatarButton ariaLabel='Profile' onClick={isOpen ? onClose : onOpen} />
+      <div className={styles.logoNameWrapper}>
+        <Image
+          src='logos/openline.svg'
+          alt='Openline'
+          width={120}
+          height={40}
+          className={styles.logoExpanded}
+        />
+        <Image
+          src='icons/openlineLogo.svg'
+          alt='Openline'
+          width={40}
+          height={40}
+          className={styles.logoCollapsed}
+        />
       </div>
-      <div
-        className={`${isOpen ? styles.panelIsOpen : styles.panelClosed} ${
-          styles.panel
-        }`}
-      >
-        <div
-          className={`${isOpen ? styles.contentVisible : styles.contentHidden}`}
-        >
-          <div className={styles.userDataSection}>
-            <div className={styles.userDataEntry}>
-              <span>Email:</span>
-              {userEmail}
-            </div>
-          </div>
-          <div className={styles.signOutSection}>
-            <button
-              className={styles.signOutButton}
-              onClick={() => router.push('/settings')}
-            >
-              <Cog />
-              <span>Settings</span>
-            </button>
-            <button
-              className={styles.signOutButton}
-              onClick={() => (window.location.href = logoutUrl ?? '#')}
-            >
-              <SignOut />
-              <span>Log out</span>
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
+
+      <IconButton
+        mode='secondary'
+        className={styles.collapseExpandButton}
+        onClick={() => onPanelToggle(!isPanelOpen)}
+        icon={isPanelOpen ? <ChevronLeft /> : <ChevronRight />}
+      />
+
+      <ul className={styles.featuresList}>
+        <SidePanelListItem
+          label='Settings'
+          isOpen={isPanelOpen}
+          icon={<Cog />}
+          onClick={() => null}
+        />
+        <SidePanelListItem
+          label='Log Out'
+          isOpen={isPanelOpen}
+          icon={<SignOut />}
+          onClick={() => null}
+        />
+      </ul>
+    </aside>
   );
 };

@@ -1,31 +1,24 @@
 .button {
-  padding: 10px;
+  padding: var(--spacing-xxs);
   border-radius: 50%;
-
-  display: flex;
-  justify-content: center;
+  display: inline-flex;
   align-items: center;
-  cursor: pointer;
-  // fixme improve visual
-  &:hover,
-  &:focus,
-  &:active {
-    background: linear-gradient(-45deg, #b072f1, #f696b6);
-  }
+  justify-content: center;
 
-  &:not(:last-of-type) {
-    margin-right: 8px;
+  &:focus-visible {
+    outline-color: var(--outline-color);
+    outline-width: var(--outline-width);
+    outline-offset: var(--outline-offset);
   }
 
   &.default {
-    background: transparent;
-    color: #474747;
-
-    // fixme improve visual
+    background: var(--gray-600);
+    color: #fff;
     &:hover,
     &:focus,
     &:active {
-      background: #d3d3d3;
+      background: transparent;
+      outline: none;
     }
   }
 
@@ -42,14 +35,30 @@
   }
 
   &.secondary {
+    background: var(--secondary-color);
+    color: var(--text-on-secondary);
+    &:hover {
+      background: var(--secondary-color-hover);
+      color: var(--gray-800);
+    }
+    &:focus {
+      background: var(--secondary-color-focus);
+      color: var(--gray-800);
+    }
+    &:focus {
+      background: var(--secondary-color-active);
+      color: var(--gray-800);
+    }
+  }
+
+  &.text {
     background: transparent;
-    cursor: pointer;
-    // fixme improve visual
+
     &:hover,
     &:focus,
     &:active {
-      background: none;
-      color: var(--gray-800);
+      background: transparent;
+      outline: none;
     }
   }
 
@@ -57,3 +66,5 @@
     pointer-events: none;
   }
 }
+
+

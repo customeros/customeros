@@ -2,10 +2,11 @@ import Head from 'next/head';
 import { ApolloProvider } from '@apollo/client';
 import { AppProps, NextWebVitalsMetric } from 'next/app';
 import '../styles/normalization.css';
+import '../styles/theme.css';
 import client from './../apollo-client';
 import React from 'react';
 import { ToastContainer } from 'react-toastify';
-import { MainPageWrapper } from '../src/components/Layouts';
+import { MainPageWrapper } from '../src/components/layouts';
 
 // Uncomment when adding google analitics
 // export function reportWebVitals({ id, name, label, value } :NextWebVitalsMetric) {

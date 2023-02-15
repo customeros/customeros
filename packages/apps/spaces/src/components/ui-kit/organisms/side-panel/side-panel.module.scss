@@ -1,93 +1,80 @@
-.panelWrapper {
-  width: auto;
-  background: transparent;
-
-  &.open {
-    background: #fafbff;
-    box-shadow: -7px 2px 20px #bbbbbb;
-  }
-}
-.panel {
-  width: 0;
+.sidebar {
+  grid-area: sidebar;
+  width: var(--side-panel-expanded-width);
   height: 100%;
-  transition: width 0.2s ease, transform 0.2s ease;
-}
+  background-color: var(--color-bg-primary-light);
+  position: fixed;
+  top: 0;
+  transition: var(--transition-width);
 
-.panelClosed {
-  transition-delay: 0.01s;
-  transform: translate(-110px);
-}
-.panelIsOpen {
-  max-width: 200px;
-  transform: translate(0);
-  width: 200px;
-}
-
-.content {
-  margin-top: 64px;
-  transition: opacity 0.1s ease;
-}
-
-.contentVisible {
-  opacity: 1;
-  transition: opacity 0.1s ease-in;
-  transition-delay: 0.2s;
-}
-
-.contentHidden {
-  opacity: 0;
-}
-
-.openPanelButton {
-  margin: 24px 0 0 12px;
-  z-index: 10;
-}
-
-.workspaces-list {
-  display: flex;
-  flex-direction: column;
-  align-content: center;
-}
-
-.userDataSection {
-  padding: 16px 12px;
-  border-radius: 15px;
-  border: 1px solid #ccc;
-  margin: 24px 12px 36px;
-}
-
-.userDataEntry {
-  color: #525252;
-  font-size: 12px;
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-  display: block;
-  //margin-bottom: 40px;
-  //
-  & span {
-    margin-right: 4px;
+  &::after {
+    content: '';
     display: block;
-    margin-bottom: 4px;
-    font-weight: bold;
+    height: 100%;
+    width: 18px;
+    background-color: var(--background-color);
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    border-top-left-radius: 30px;
+    right: -7px;
+    box-shadow: var(--box-shadow-sm-left);
+  }
+
+  & .logoNameWrapper {
+    position: relative;
+    margin-bottom: var(--spacing-lg);
+    align-items: center;
+    font-size: var(--font-size-base);
+    overflow: hidden;
+    padding: var(--spacing-md) var(--spacing-md) var(--spacing-sm);
+  }
+
+  & .logoNameWrapper .logoCollapsed {
+    opacity: 0;
+    width: 0; // improve
+    height: 0;
+    transition: opacity 0.25ms ease;
+  }
+
+  & .logoNameWrapper .logoExpanded {
+    opacity: 1;
+    transition: opacity 0.25ms ease;
+  }
+  & .logoNameWrapper {
+    display: flex;
+  }
+
+  &.collapse {
+    width: var(--side-panel-collapsed-width);
+
+    & .logoNameWrapper .logoExpanded {
+      opacity: 0;
+      pointer-events: none;
+      width: 0; // improve
+      height: 0
+    }
+
+    & .logoNameWrapper .logoCollapsed {
+      opacity: 1;
+      width: 31px; // improve
+      height: 40px
+    }
+  }
+
+  & .collapseExpandButton {
+    position: absolute;
+    right: -4px;
+    top: 5rem;
+    z-index: 99;
+    padding: 6px; // todo match with theme
+    box-shadow: 1px 1px 4px 0 #e3e3e3;
   }
 }
-
-.signOutButton {
-  border: none;
-  width: 100%;
-  margin-top: 12px;
-  padding: 12px 24px;
-  background: transparent;
-  text-align: center;
-
-  &:hover,
-  &:focus,
-  &:active {
-    background: #ededed;
-  }
-
-  & span {
-    margin-left: 12px;
-  }
+.featuresList {
+  padding-top: var(--spacing-lg);
+  padding-bottom: var(--spacing-sm);
+  border-bottom: 1px solid var(--text-light-low-contrast);
+  list-style: none;
 }
+
