@@ -10,7 +10,7 @@
 }
 
 .last {
-  margin-bottom: 24px;
+margin-bottom: var(--spacing-md);
 }
 
 .timelineLine {
@@ -19,18 +19,18 @@
 
   &:first-of-type {
     height: 24px;
-    margin-bottom: 4px;
+    margin-bottom: var(--spacing-xxxs);
   }
 
   &:not(:first-of-type) {
     height: 12px;
-    margin-top: 4px;
+   margin-top: var(--spacing-xxxs);
   }
 }
 
 .content {
   background: #fff;
-  padding: 16px 24px;
+  padding: var(--spacing-sm) var(--spacing-md);
 
   border-radius: 6px;
   border: 1px solid var(--gray-300);

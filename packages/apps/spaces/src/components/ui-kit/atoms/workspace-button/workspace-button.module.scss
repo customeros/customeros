@@ -1,6 +1,6 @@
 .button {
-  padding: 12px;
-  margin-bottom: 8px;
+  padding: var(--spacing-xs);
+margin-bottom: var(--spacing-xxs);
   background: #d7d5fa;
   color: #525252;
   border: none;

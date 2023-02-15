@@ -8,7 +8,7 @@
 .tagInputWrapper {
   display: flex;
   flex-flow: row wrap;
-  padding: 4px;
+  padding: var(--spacing-xxxs);
   border-radius: 5px;
   border: 1px solid #ccc;
   background: white;
@@ -30,15 +30,15 @@
   display: inline-flex;
   flex-wrap: wrap;
   align-items: center;
-  padding: 0px;
-  margin: 0 5px 0 0;
+  padding: 0;
+  margin: 0 var(--spacing-xxxs) 0 0;
 
   li {
     font-size: 0.7rem;
     display: inline-block;
-    margin: 3px;
-    padding: 5px 8px;
-    border-radius: 30px;
+    margin: var(--spacing-xxxs);
+    padding: var(--spacing-xxxs) var(--spacing-xxs);
+    border-radius: var(--border-radius-lg);
     background: #ddd;
     color: #444;
     text-transform: lowercase;
@@ -76,7 +76,7 @@
 }
 
 .deleteButton {
-  margin: -8px;
+  margin: - var(--spacing-xxs);
   color: var(--gray-700);
 }
 
