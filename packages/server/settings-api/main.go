@@ -194,6 +194,82 @@ func main() {
 			c.JSON(200, mapper.MapTenantSettingsEntityToDTO(data))
 		})
 
+	r.POST("/settings/jira",
+		commonService.UserToTenantEnhancer(ctx, commonRepositoryContainer.UserRepo),
+		commonService.ApiKeyCheckerHTTP(commonRepositoryContainer.AppKeyRepo, commonService.SETTINGS_API),
+		func(c *gin.Context) {
+			var request dto.TenantSettingsJiraDTO
+
+			if err := c.BindJSON(&request); err != nil {
+				println(err.Error())
+				c.AbortWithStatus(500) //todo
+				return
+			}
+
+			tenantName := c.Keys["TenantName"].(string)
+
+			data, err := services.TenantSettingsService.SaveJiraData(tenantName, request)
+			if err != nil {
+				c.JSON(500, gin.H{"error": err.Error()})
+				return
+			}
+
+			c.JSON(200, mapper.MapTenantSettingsEntityToDTO(data))
+		})
+
+	r.DELETE("/settings/jira",
+		commonService.UserToTenantEnhancer(ctx, commonRepositoryContainer.UserRepo),
+		commonService.ApiKeyCheckerHTTP(commonRepositoryContainer.AppKeyRepo, commonService.SETTINGS_API),
+		func(c *gin.Context) {
+			tenantName := c.Keys["TenantName"].(string)
+
+			data, err := services.TenantSettingsService.ClearJiraData(tenantName)
+			if err != nil {
+				c.JSON(500, gin.H{"error": err.Error()})
+				return
+			}
+
+			c.JSON(200, mapper.MapTenantSettingsEntityToDTO(data))
+		})
+
+	r.POST("/settings/trello",
+		commonService.UserToTenantEnhancer(ctx, commonRepositoryContainer.UserRepo),
+		commonService.ApiKeyCheckerHTTP(commonRepositoryContainer.AppKeyRepo, commonService.SETTINGS_API),
+		func(c *gin.Context) {
+			var request dto.TenantSettingsTrelloDTO
+
+			if err := c.BindJSON(&request); err != nil {
+				println(err.Error())
+				c.AbortWithStatus(500) //todo
+				return
+			}
+
+			tenantName := c.Keys["TenantName"].(string)
+
+			data, err := services.TenantSettingsService.SaveTrelloData(tenantName, request)
+			if err != nil {
+				c.JSON(500, gin.H{"error": err.Error()})
+				return
+			}
+
+			c.JSON(200, mapper.MapTenantSettingsEntityToDTO(data))
+		})
+
+	r.DELETE("/settings/trello",
+		commonService.UserToTenantEnhancer(ctx, commonRepositoryContainer.UserRepo),
+		commonService.ApiKeyCheckerHTTP(commonRepositoryContainer.AppKeyRepo, commonService.SETTINGS_API),
+		func(c *gin.Context) {
+			tenantName := c.Keys["TenantName"].(string)
+
+			data, err := services.TenantSettingsService.ClearTrelloData(tenantName)
+			if err != nil {
+				c.JSON(500, gin.H{"error": err.Error()})
+				return
+			}
+
+			c.JSON(200, mapper.MapTenantSettingsEntityToDTO(data))
+		})
+
 	r.GET("/health", healthCheckHandler)
 	r.GET("/readiness", healthCheckHandler)
 
