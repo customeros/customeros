@@ -1,12 +1,11 @@
 import React from 'react';
-import { IconButton } from '../../atoms/icon-button';
+
 import {
-  Button,
   ChevronLeft,
   ChevronRight,
   Cog,
-  OpenlineLogo,
   SignOut,
+  IconButton,
 } from '../../atoms';
 import { SidePanelListItem } from './side-panel-list-item';
 import classNames from 'classnames';
@@ -47,6 +46,7 @@ export const SidePanel: React.FC<SidePanelProps> = ({
 
       <IconButton
         mode='secondary'
+        size='xxxs'
         className={styles.collapseExpandButton}
         onClick={() => onPanelToggle(!isPanelOpen)}
         icon={isPanelOpen ? <ChevronLeft /> : <ChevronRight />}

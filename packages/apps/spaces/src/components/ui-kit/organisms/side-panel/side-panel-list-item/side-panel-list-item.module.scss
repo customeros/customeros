@@ -1,5 +1,3 @@
-
-
 .featuresItem {
   display: flex;
   align-items: center;
@@ -11,7 +9,7 @@
   &:focus,
   &:active,
   &:hover {
-    background: #c7c7c7;
+    background: var(--side-panel-item-hovered);
     transition: 0.5s ease;
   }
   &::before {
@@ -49,11 +47,9 @@
     display: inline-flex;
     align-items: center;
   }
+
+  & .featuresItemTextHidden {
+    opacity: 0;
+    pointer-events: none;
+  }
 }
-
-
-.featuresItemTextHidden {
-  opacity: 0;
-  pointer-events: none;
-}
-

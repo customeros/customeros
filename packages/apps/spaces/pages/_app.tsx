@@ -1,6 +1,6 @@
 import Head from 'next/head';
 import { ApolloProvider } from '@apollo/client';
-import { AppProps, NextWebVitalsMetric } from 'next/app';
+import { AppProps } from 'next/app';
 import '../styles/normalization.css';
 import '../styles/theme.css';
 import client from './../apollo-client';

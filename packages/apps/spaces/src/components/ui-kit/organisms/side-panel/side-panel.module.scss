@@ -1,48 +1,48 @@
 .sidebar {
   grid-area: sidebar;
   width: var(--side-panel-expanded-width);
+  background-color: var(--side-panel-background);
+  transition: var(--transition-width);
   height: 100%;
-  background-color: var(--color-bg-primary-light);
   position: fixed;
   top: 0;
-  transition: var(--transition-width);
 
   &::after {
     content: '';
     display: block;
     height: 100%;
     width: 18px;
-    background-color: var(--background-color);
     position: absolute;
     top: 0;
     bottom: 0;
-    border-top-left-radius: 30px;
     right: -7px;
+    background-color: var(--background-color);
+    border-top-left-radius: var(--border-radius-lg);
     box-shadow: var(--box-shadow-sm-left);
   }
 
   & .logoNameWrapper {
     position: relative;
-    margin-bottom: var(--spacing-lg);
-    align-items: center;
-    font-size: var(--font-size-base);
     overflow: hidden;
+    margin-bottom: var(--spacing-lg);
+    font-size: var(--font-size-base);
     padding: var(--spacing-md) var(--spacing-md) var(--spacing-sm);
+  }
+
+  & .logoNameWrapper {
+    display: flex;
   }
 
   & .logoNameWrapper .logoCollapsed {
     opacity: 0;
-    width: 0; // improve
+    width: 0;
     height: 0;
-    transition: opacity 0.25ms ease;
+    transition: var(--transition-opacity);
   }
 
   & .logoNameWrapper .logoExpanded {
     opacity: 1;
-    transition: opacity 0.25ms ease;
-  }
-  & .logoNameWrapper {
-    display: flex;
+    transition: var(--transition-opacity);
   }
 
   &.collapse {
@@ -50,15 +50,15 @@
 
     & .logoNameWrapper .logoExpanded {
       opacity: 0;
+      width: 0;
+      height: 0;
       pointer-events: none;
-      width: 0; // improve
-      height: 0
     }
 
     & .logoNameWrapper .logoCollapsed {
       opacity: 1;
-      width: 31px; // improve
-      height: 40px
+      width: 31px;
+      height: 40px;
     }
   }
 
@@ -67,14 +67,10 @@
     right: -4px;
     top: 5rem;
     z-index: 99;
-    padding: 6px; // todo match with theme
-    box-shadow: 1px 1px 4px 0 #e3e3e3;
+  }
+
+  .featuresList {
+    padding-top: var(--spacing-lg);
+    padding-bottom: var(--spacing-sm);
   }
 }
-.featuresList {
-  padding-top: var(--spacing-lg);
-  padding-bottom: var(--spacing-sm);
-  border-bottom: 1px solid var(--text-light-low-contrast);
-  list-style: none;
-}
-

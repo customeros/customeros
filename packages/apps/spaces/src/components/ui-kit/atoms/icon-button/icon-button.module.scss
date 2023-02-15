@@ -1,5 +1,4 @@
 .button {
-  padding: var(--spacing-xxs);
   border-radius: 50%;
   display: inline-flex;
   align-items: center;
@@ -11,6 +10,8 @@
     outline-offset: var(--outline-offset);
   }
 
+  /* VARIANTS */
+  // todo determine if its needed
   &.default {
     background: var(--gray-600);
     color: #fff;
@@ -23,14 +24,17 @@
   }
 
   &.primary {
-    background: linear-gradient(-45deg, #be8df3, #daa4b7);
-    color: white;
+    background: var(--primary-color);
+    color: var(--text-on-primary);
 
-    // fixme improve visual
-    &:hover,
-    &:focus,
-    &:active {
-      background: linear-gradient(-45deg, #b072f1, #f696b6);
+    &:hover {
+      background: var(--primary-color-hover);
+    }
+    &:focus {
+      background: var(--primary-color-focus);
+    }
+    &:focus {
+      background: var(--primary-color-active);
     }
   }
 
@@ -39,15 +43,27 @@
     color: var(--text-on-secondary);
     &:hover {
       background: var(--secondary-color-hover);
-      color: var(--gray-800);
     }
     &:focus {
       background: var(--secondary-color-focus);
-      color: var(--gray-800);
     }
     &:focus {
       background: var(--secondary-color-active);
-      color: var(--gray-800);
+    }
+  }
+
+  &.accent {
+    background: var(--accent-color);
+    color: var(--text-on-accent);
+
+    &:hover {
+      background: var(--accent-color-hover);
+    }
+    &:focus {
+      background: var(--accent-color-focus);
+    }
+    &:focus {
+      background: var(--accent-color-active);
     }
   }
 
@@ -64,7 +80,27 @@
 
   &:disabled {
     pointer-events: none;
+    cursor: not-allowed;
+  }
+
+  /* SIZES */
+
+  &.xxxs {
+    padding: var(--spacing-xxxs);
+  }
+  &.xxs {
+    padding: var(--spacing-xxs);
+  }
+  &.xs {
+    padding: var(--spacing-xs);
+  }
+  &.sm {
+    padding: var(--spacing-sm);
+  }
+  &.sm {
+    padding: var(--spacing-md);
+  }
+  &.sm {
+    padding: var(--spacing-lg);
   }
 }
-
-

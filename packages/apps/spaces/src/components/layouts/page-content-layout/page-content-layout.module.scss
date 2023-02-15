@@ -9,12 +9,10 @@
   grid-template-areas: 'sidebar content';
   grid-gap: 24px;
   transition: all ease 0.25s;
-  background: #fff;
-
+  background: var(--background-color);
 }
 
 .open {
   //margin-left: var(--side-panel-expanded-width);
   grid-template-columns: var(--side-panel-expanded-width) 1fr;
-
 }

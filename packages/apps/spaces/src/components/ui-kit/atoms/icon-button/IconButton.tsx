@@ -5,18 +5,20 @@ import React, {
   ReactNode,
 } from 'react';
 import styles from './icon-button.module.scss';
+import classNames from 'classnames';
 
 interface Props extends ButtonHTMLAttributes<HTMLButtonElement> {
   icon?: ReactNode;
   onClick: EventHandler<never>;
-  mode?: 'default' | 'primary' | 'secondary' | 'text';
-  size?: 'xs' | 'sm' | 'md' | 'lg';
+  mode?: 'default' | 'primary' | 'secondary' | 'accent' | 'text';
+  size?: 'xxxs' | 'xxs' | 'xs' | 'sm' | 'md' | 'lg';
 }
 
 export const IconButton: FC<Props> = ({
   icon,
   onClick,
   mode = 'default',
+  size = 'xxs',
   ...rest
 }) => {
   return (
@@ -27,7 +29,12 @@ export const IconButton: FC<Props> = ({
       title={rest?.title}
       tabIndex={0}
       style={rest?.style}
-      className={`${styles.button} ${styles[mode]} ${rest.className}`}
+      className={classNames(
+        styles.button,
+        styles[mode],
+        styles[size],
+        rest.className,
+      )}
     >
       {icon && icon}
     </button>

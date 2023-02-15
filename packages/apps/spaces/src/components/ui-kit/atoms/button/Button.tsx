@@ -8,10 +8,9 @@ import styles from './button.module.scss';
 
 interface Props extends ButtonHTMLAttributes<HTMLButtonElement> {
   icon?: ReactNode;
-  onClick: EventHandler<any>;
+  onClick: EventHandler<never>;
   ariaLabel?: string;
   children?: React.ReactNode;
-  style?: any;
   mode?:
     | 'default'
     | 'primary'

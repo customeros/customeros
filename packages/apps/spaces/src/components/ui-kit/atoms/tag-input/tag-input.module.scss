@@ -38,7 +38,7 @@
     display: inline-block;
     margin: var(--spacing-xxxs);
     padding: var(--spacing-xxxs) var(--spacing-xxs);
-    border-radius: var(--border-radius-lg);
+    border-radius: var(--border-radius-xl);
     background: #ddd;
     color: #444;
     text-transform: lowercase;
@@ -76,7 +76,7 @@
 }
 
 .deleteButton {
-  margin: - var(--spacing-xxs);
+  margin: -var(--spacing-xxs);
   color: var(--gray-700);
 }
 

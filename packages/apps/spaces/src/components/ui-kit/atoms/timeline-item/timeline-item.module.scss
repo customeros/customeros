@@ -10,7 +10,7 @@
 }
 
 .last {
-margin-bottom: var(--spacing-md);
+  margin-bottom: var(--spacing-md);
 }
 
 .timelineLine {
@@ -24,7 +24,7 @@ margin-bottom: var(--spacing-md);
 
   &:not(:first-of-type) {
     height: 12px;
-   margin-top: var(--spacing-xxxs);
+    margin-top: var(--spacing-xxxs);
   }
 }
 
