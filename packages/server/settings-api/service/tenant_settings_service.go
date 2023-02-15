@@ -17,6 +17,12 @@ type TenantSettingsService interface {
 
 	SaveSmartSheetData(tenantName string, request dto.TenantSettingsSmartSheetDTO) (*entity.TenantSettings, error)
 	ClearSmartSheetData(tenantName string) (*entity.TenantSettings, error)
+
+	SaveJiraData(tenantName string, request dto.TenantSettingsJiraDTO) (*entity.TenantSettings, error)
+	ClearJiraData(tenantName string) (*entity.TenantSettings, error)
+
+	SaveTrelloData(tenantName string, request dto.TenantSettingsTrelloDTO) (*entity.TenantSettings, error)
+	ClearTrelloData(tenantName string) (*entity.TenantSettings, error)
 }
 
 type tenantSettingsService struct {
@@ -179,6 +185,107 @@ func (s *tenantSettingsService) ClearSmartSheetData(tenantName string) (*entity.
 	} else {
 		tenantSettings.SmartSheetId = nil
 		tenantSettings.SmartSheetAccessToken = nil
+
+		qr := s.repositories.TenantSettingsRepository.Save(tenantSettings)
+		if qr.Error != nil {
+			return nil, qr.Error
+		}
+		return qr.Result.(*entity.TenantSettings), nil
+	}
+}
+
+func (s *tenantSettingsService) SaveJiraData(tenantName string, request dto.TenantSettingsJiraDTO) (*entity.TenantSettings, error) {
+	tenantSettings, err := s.GetForTenant(tenantName)
+	if err != nil {
+		return nil, err
+	}
+
+	if tenantSettings == nil {
+		e := new(entity.TenantSettings)
+		e.TenantName = tenantName
+		e.JiraAPIToken = request.JiraAPIToken
+		e.JiraDomain = request.JiraDomain
+		e.JiraEmail = request.JiraEmail
+
+		qr := s.repositories.TenantSettingsRepository.Save(e)
+		if qr.Error != nil {
+			return nil, qr.Error
+		}
+		return qr.Result.(*entity.TenantSettings), nil
+	} else {
+		tenantSettings.JiraAPIToken = request.JiraAPIToken
+		tenantSettings.JiraDomain = request.JiraDomain
+		tenantSettings.JiraEmail = request.JiraEmail
+
+		qr := s.repositories.TenantSettingsRepository.Save(tenantSettings)
+		if qr.Error != nil {
+			return nil, qr.Error
+		}
+		return qr.Result.(*entity.TenantSettings), nil
+	}
+}
+
+func (s *tenantSettingsService) ClearJiraData(tenantName string) (*entity.TenantSettings, error) {
+	tenantSettings, err := s.GetForTenant(tenantName)
+	if err != nil {
+		return nil, err
+	}
+
+	if tenantSettings == nil {
+		return nil, nil
+	} else {
+		tenantSettings.JiraAPIToken = nil
+		tenantSettings.JiraDomain = nil
+		tenantSettings.JiraEmail = nil
+
+		qr := s.repositories.TenantSettingsRepository.Save(tenantSettings)
+		if qr.Error != nil {
+			return nil, qr.Error
+		}
+		return qr.Result.(*entity.TenantSettings), nil
+	}
+}
+
+func (s *tenantSettingsService) SaveTrelloData(tenantName string, request dto.TenantSettingsTrelloDTO) (*entity.TenantSettings, error) {
+	tenantSettings, err := s.GetForTenant(tenantName)
+	if err != nil {
+		return nil, err
+	}
+
+	if tenantSettings == nil {
+		e := new(entity.TenantSettings)
+		e.TenantName = tenantName
+		e.TrelloAPIToken = request.TrelloAPIToken
+		e.TrelloAPIKey = request.TrelloAPIKey
+
+		qr := s.repositories.TenantSettingsRepository.Save(e)
+		if qr.Error != nil {
+			return nil, qr.Error
+		}
+		return qr.Result.(*entity.TenantSettings), nil
+	} else {
+		tenantSettings.TrelloAPIToken = request.TrelloAPIToken
+		tenantSettings.TrelloAPIKey = request.TrelloAPIKey
+
+		qr := s.repositories.TenantSettingsRepository.Save(tenantSettings)
+		if qr.Error != nil {
+			return nil, qr.Error
+		}
+		return qr.Result.(*entity.TenantSettings), nil
+	}
+}
+
+func (s *tenantSettingsService) ClearTrelloData(tenantName string) (*entity.TenantSettings, error) {
+	tenantSettings, err := s.GetForTenant(tenantName)
+	if err != nil {
+		return nil, err
+	}
+
+	if tenantSettings == nil {
+		return nil, nil
+	} else {
+		tenantSettings.TrelloAPIToken = nil
+		tenantSettings.TrelloAPIKey = nil
 
 		qr := s.repositories.TenantSettingsRepository.Save(tenantSettings)
 		if qr.Error != nil {

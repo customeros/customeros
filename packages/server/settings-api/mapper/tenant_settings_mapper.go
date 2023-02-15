@@ -20,5 +20,13 @@ func MapTenantSettingsEntityToDTO(input *entity.TenantSettings) *dto.TenantSetti
 		responseDTO.SmartSheetExists = true
 	}
 
+	if input != nil && input.JiraAPIToken != nil && input.JiraDomain != nil && input.JiraEmail != nil {
+		responseDTO.JiraExists = true
+	}
+
+	if input != nil && input.TrelloAPIToken != nil && input.TrelloAPIKey != nil {
+		responseDTO.TrelloExists = true
+	}
+
 	return &responseDTO
 }
