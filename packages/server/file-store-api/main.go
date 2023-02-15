@@ -15,6 +15,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/file-store-api/repository/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/file-store-api/service"
 	"github.com/sirupsen/logrus"
+	"golang.org/x/net/context"
 	"log"
 )
 
@@ -52,7 +53,8 @@ func main() {
 	if err != nil {
 		logrus.Fatalf("Could not establish connection with neo4j at: %v, error: %v", cfg.Neo4j.Target, err.Error())
 	}
-	defer neo4jDriver.Close()
+	ctx := context.Background()
+	defer neo4jDriver.Close(ctx)
 
 	commonRepositoryContainer := commonRepository.InitRepositories(db.GormDB, &neo4jDriver)
 	services := service.InitServices(cfg, db.GormDB)
@@ -66,7 +68,7 @@ func main() {
 	r.Use(cors.New(corsConfig))
 
 	r.POST("/file",
-		commonService.UserToTenantEnhancer(commonRepositoryContainer.UserRepo),
+		commonService.UserToTenantEnhancer(ctx, commonRepositoryContainer.UserRepo),
 		commonService.ApiKeyCheckerHTTP(commonRepositoryContainer.AppKeyRepo, commonService.FILE_STORE_API),
 		func(c *gin.Context) {
 			tenantName := c.Keys["TenantName"].(string)
@@ -86,7 +88,7 @@ func main() {
 			c.JSON(200, MapFileEntityToDTO(cfg, fileEntity))
 		})
 	r.GET("/file/:id",
-		commonService.UserToTenantEnhancer(commonRepositoryContainer.UserRepo),
+		commonService.UserToTenantEnhancer(ctx, commonRepositoryContainer.UserRepo),
 		commonService.ApiKeyCheckerHTTP(commonRepositoryContainer.AppKeyRepo, commonService.FILE_STORE_API),
 		func(c *gin.Context) {
 			tenantName := c.Keys["TenantName"].(string)
@@ -104,7 +106,7 @@ func main() {
 			c.JSON(200, MapFileEntityToDTO(cfg, byId))
 		})
 	r.GET("/file/:id/download",
-		commonService.UserToTenantEnhancer(commonRepositoryContainer.UserRepo),
+		commonService.UserToTenantEnhancer(ctx, commonRepositoryContainer.UserRepo),
 		commonService.ApiKeyCheckerHTTP(commonRepositoryContainer.AppKeyRepo, commonService.FILE_STORE_API),
 		func(c *gin.Context) {
 			tenantName := c.Keys["TenantName"].(string)
@@ -125,7 +127,7 @@ func main() {
 			c.Writer.Write(bytes)
 		})
 	r.GET("/file/:id/base64",
-		commonService.UserToTenantEnhancer(commonRepositoryContainer.UserRepo),
+		commonService.UserToTenantEnhancer(ctx, commonRepositoryContainer.UserRepo),
 		commonService.ApiKeyCheckerHTTP(commonRepositoryContainer.AppKeyRepo, commonService.FILE_STORE_API),
 		func(c *gin.Context) {
 			tenantName := c.Keys["TenantName"].(string)
