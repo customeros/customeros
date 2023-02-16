@@ -31,8 +31,8 @@ type Organization implements Node {
     locations: [Location!]! @goField(forceResolver: true)
     contacts(pagination: Pagination, where: Filter, sort: [SortBy!]): ContactsPage! @goField(forceResolver: true)
     jobRoles: [JobRole!]! @goField(forceResolver: true)
-    "Organization notes"
     notes(pagination: Pagination): NotePage! @goField(forceResolver: true)
+    tags: [Tag!] @goField(forceResolver: true)
 }
 
 type OrganizationPage implements Pages {

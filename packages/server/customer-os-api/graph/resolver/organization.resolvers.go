@@ -6,7 +6,7 @@ package resolver
 
 import (
 	"context"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/dataloader"
 	"time"
 
 	"github.com/99designs/gqlgen/graphql"
@@ -15,6 +15,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils"
 )
 
 // OrganizationCreate is the resolver for the organization_Create field.
@@ -144,6 +145,21 @@ func (r *organizationResolver) Notes(ctx context.Context, obj *model.Organizatio
 		TotalPages:    paginatedResult.TotalPages,
 		TotalElements: paginatedResult.TotalRows,
 	}, err
+}
+
+// Tags is the resolver for the tags field.
+func (r *organizationResolver) Tags(ctx context.Context, obj *model.Organization) ([]*model.Tag, error) {
+	//TODO alexb add test
+	defer func(start time.Time) {
+		utils.LogMethodExecution(start, utils.GetFunctionName())
+	}(time.Now())
+
+	tagEntities, err := dataloader.For(ctx).GetTagsForOrganization(ctx, obj.ID)
+	if err != nil {
+		graphql.AddErrorf(ctx, "Failed to get tags for organization %s", obj.ID)
+		return nil, err
+	}
+	return mapper.MapEntitiesToTags(tagEntities), nil
 }
 
 // Organizations is the resolver for the organizations field.

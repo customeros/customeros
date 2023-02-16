@@ -643,8 +643,8 @@ type Organization struct {
 	Locations []*Location   `json:"locations"`
 	Contacts  *ContactsPage `json:"contacts"`
 	JobRoles  []*JobRole    `json:"jobRoles"`
-	// Organization notes
-	Notes *NotePage `json:"notes"`
+	Notes     *NotePage     `json:"notes"`
+	Tags      []*Tag        `json:"tags"`
 }
 
 func (Organization) IsNode()            {}

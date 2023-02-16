@@ -15,6 +15,7 @@ type TagService interface {
 	UnlinkAndDelete(ctx context.Context, id string) (bool, error)
 	GetAll(ctx context.Context) (*entity.TagEntities, error)
 	GetTagsForContact(ctx context.Context, contactId string) (*entity.TagEntities, error)
+	GetTagsForOrganizations(ctx context.Context, organizationIds []string) (*entity.TagEntities, error)
 }
 
 type tagService struct {
@@ -75,6 +76,21 @@ func (s *tagService) GetTagsForContact(ctx context.Context, contactId string) (*
 	return &tagEntities, nil
 }
 
+func (s *tagService) GetTagsForOrganizations(ctx context.Context, organizationIds []string) (*entity.TagEntities, error) {
+	tags, err := s.repositories.TagRepository.GetForOrganizations(ctx, common.GetTenantFromContext(ctx), organizationIds)
+	if err != nil {
+		return nil, err
+	}
+	tagEntities := entity.TagEntities{}
+	for _, dbTag := range tags {
+		tagEntity := s.mapDbNodeToTagEntity(*dbTag.TagNode)
+		s.addDbRelationshipToTagEntity(*dbTag.TagRelationship, tagEntity)
+		tagEntity.DataloaderKey = dbTag.LinkedNodeId
+		tagEntities = append(tagEntities, *tagEntity)
+	}
+	return &tagEntities, nil
+}
+
 func (s *tagService) mapDbNodeToTagEntity(dbNode dbtype.Node) *entity.TagEntity {
 	props := utils.GetPropsFromNode(dbNode)
 	tag := entity.TagEntity{
@@ -86,4 +102,9 @@ func (s *tagService) mapDbNodeToTagEntity(dbNode dbtype.Node) *entity.TagEntity 
 		Source:    entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
 	}
 	return &tag
+}
+
+func (s *tagService) addDbRelationshipToTagEntity(relationship dbtype.Relationship, tagEntity *entity.TagEntity) {
+	props := utils.GetPropsFromRelationship(relationship)
+	tagEntity.TaggedAt = utils.GetTimePropOrEpochStart(props, "taggedAt")
 }
