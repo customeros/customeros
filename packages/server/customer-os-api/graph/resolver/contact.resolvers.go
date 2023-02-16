@@ -38,7 +38,7 @@ func (r *contactResolver) JobRoles(ctx context.Context, obj *model.Contact) ([]*
 		utils.LogMethodExecution(start, utils.GetFunctionName())
 	}(time.Now())
 
-	jobRoleEntities, err := r.Services.JobRoleService.GetAllForContact(ctx, obj.ID)
+	jobRoleEntities, err := dataloader.For(ctx).GetJobRolesForContact(ctx, obj.ID)
 	if err != nil {
 		graphql.AddErrorf(ctx, "Failed to get job roles for contact %s", obj.ID)
 		return nil, err

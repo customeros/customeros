@@ -17,6 +17,7 @@ type Loaders struct {
 	EmailsForContact         *dataloader.Loader
 	LocationsForContact      *dataloader.Loader
 	LocationsForOrganization *dataloader.Loader
+	JobRolesForContact       *dataloader.Loader
 }
 
 type tagBatcher struct {
@@ -27,6 +28,9 @@ type emailBatcher struct {
 }
 type locationBatcher struct {
 	locationService service.LocationService
+}
+type jobRoleBatcher struct {
+	jobRoleService service.JobRoleService
 }
 
 // NewDataLoader returns the instantiated Loaders struct for use in a request
@@ -40,12 +44,16 @@ func NewDataLoader(services *service.Services) *Loaders {
 	locationBatcher := &locationBatcher{
 		locationService: services.LocationService,
 	}
+	jobRoleBatcher := &jobRoleBatcher{
+		jobRoleService: services.JobRoleService,
+	}
 	return &Loaders{
 		TagsForOrganization:      dataloader.NewBatchedLoader(tagBatcher.getTagsForOrganizations, dataloader.WithClearCacheOnBatch()),
 		TagsForContact:           dataloader.NewBatchedLoader(tagBatcher.getTagsForContacts, dataloader.WithClearCacheOnBatch()),
 		EmailsForContact:         dataloader.NewBatchedLoader(emailBatcher.getEmailsForContacts, dataloader.WithClearCacheOnBatch()),
 		LocationsForContact:      dataloader.NewBatchedLoader(locationBatcher.getLocationsForContacts, dataloader.WithClearCacheOnBatch()),
 		LocationsForOrganization: dataloader.NewBatchedLoader(locationBatcher.getLocationsForOrganizations, dataloader.WithClearCacheOnBatch()),
+		JobRolesForContact:       dataloader.NewBatchedLoader(jobRoleBatcher.getJobRolesForContacts, dataloader.WithClearCacheOnBatch()),
 	}
 }
 

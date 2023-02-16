@@ -12,6 +12,7 @@ import (
 
 type JobRoleService interface {
 	GetAllForContact(ctx context.Context, contactId string) (*entity.JobRoleEntities, error)
+	GetAllForContacts(ctx context.Context, contactIds []string) (*entity.JobRoleEntities, error)
 	GetAllForOrganization(ctx context.Context, organizationId string) (*entity.JobRoleEntities, error)
 	DeleteJobRole(ctx context.Context, contactId, roleId string) (bool, error)
 	CreateJobRole(ctx context.Context, contactId string, organizationId *string, entity *entity.JobRoleEntity) (*entity.JobRoleEntity, error)
@@ -36,7 +37,7 @@ func (s *jobRoleService) GetAllForContact(ctx context.Context, contactId string)
 	session := utils.NewNeo4jReadSession(ctx, s.getDriver())
 	defer session.Close(ctx)
 
-	dbNodes, err := s.repositories.JobRoleRepository.GetJobRolesForContact(ctx, session, common.GetContext(ctx).Tenant, contactId)
+	dbNodes, err := s.repositories.JobRoleRepository.GetAllForContact(ctx, session, common.GetContext(ctx).Tenant, contactId)
 	if err != nil {
 		return nil, err
 	}
@@ -48,11 +49,25 @@ func (s *jobRoleService) GetAllForContact(ctx context.Context, contactId string)
 	return &jobRoleEntities, nil
 }
 
+func (s *jobRoleService) GetAllForContacts(ctx context.Context, contactIds []string) (*entity.JobRoleEntities, error) {
+	jobRoles, err := s.repositories.JobRoleRepository.GetAllForContacts(ctx, common.GetTenantFromContext(ctx), contactIds)
+	if err != nil {
+		return nil, err
+	}
+	jobRoleEntities := entity.JobRoleEntities{}
+	for _, v := range jobRoles {
+		jobRoleEntity := s.mapDbNodeToJobRoleEntity(*v.Node)
+		jobRoleEntity.DataloaderKey = v.LinkedNodeId
+		jobRoleEntities = append(jobRoleEntities, *jobRoleEntity)
+	}
+	return &jobRoleEntities, nil
+}
+
 func (s *jobRoleService) GetAllForOrganization(ctx context.Context, organizationId string) (*entity.JobRoleEntities, error) {
 	session := utils.NewNeo4jReadSession(ctx, s.getDriver())
 	defer session.Close(ctx)
 
-	dbNodes, err := s.repositories.JobRoleRepository.GetJobRolesForOrganization(ctx, session, common.GetContext(ctx).Tenant, organizationId)
+	dbNodes, err := s.repositories.JobRoleRepository.GetAllForOrganization(ctx, session, common.GetContext(ctx).Tenant, organizationId)
 	if err != nil {
 		return nil, err
 	}
