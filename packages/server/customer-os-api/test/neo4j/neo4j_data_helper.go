@@ -385,6 +385,16 @@ func TagContact(ctx context.Context, driver *neo4j.DriverWithContext, contactId,
 	})
 }
 
+func TagOrganization(ctx context.Context, driver *neo4j.DriverWithContext, organizationId, tagId string) {
+	query := `MATCH (o:Organization {id:$organizationId}), (tag:Tag {id:$tagId})
+			MERGE (o)-[r:TAGGED]->(tag)
+			ON CREATE SET r.taggedAt=datetime({timezone: 'UTC'})`
+	ExecuteWriteQuery(ctx, driver, query, map[string]any{
+		"tagId":          tagId,
+		"organizationId": organizationId,
+	})
+}
+
 func CreateOrganization(ctx context.Context, driver *neo4j.DriverWithContext, tenant, organizationName string) string {
 	var organizationId, _ = uuid.NewRandom()
 	query := `MATCH (t:Tenant {name:$tenant})

@@ -13,6 +13,7 @@ import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/config"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/dataloader"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/generated"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/resolver"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
@@ -35,7 +36,8 @@ func graphqlHandler(cfg *config.Config, driver neo4j.DriverWithContext, reposito
 	serviceContainer := service.InitServices(&driver)
 	// instantiate graph resolver
 	graphResolver := resolver.NewResolver(serviceContainer, repositoryContainer)
-
+	// make a data loader
+	loader := dataloader.NewDataLoader(serviceContainer)
 	schemaConfig := generated.Config{Resolvers: graphResolver}
 
 	srv := handler.NewDefaultServer(generated.NewExecutableSchema(schemaConfig))
@@ -54,7 +56,8 @@ func graphqlHandler(cfg *config.Config, driver neo4j.DriverWithContext, reposito
 			Tenant: c.Keys["TenantName"].(string),
 			UserId: c.Keys["UserId"].(string),
 		}
-		h := common.WithContext(customCtx, srv)
+		dataloaderSrv := dataloader.Middleware(loader, srv)
+		h := common.WithContext(customCtx, dataloaderSrv)
 
 		h.ServeHTTP(c.Writer, c.Request)
 	}
