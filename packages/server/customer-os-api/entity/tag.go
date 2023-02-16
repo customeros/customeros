@@ -12,8 +12,7 @@ type TagEntity struct {
 	UpdatedAt time.Time
 	Source    DataSource
 	AppSource string
-
-	TaggedAt time.Time
+	TaggedAt  time.Time
 
 	DataloaderKey string
 }

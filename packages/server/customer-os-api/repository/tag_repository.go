@@ -9,20 +9,14 @@ import (
 	"golang.org/x/net/context"
 )
 
-type TagWithLinkedNodeId struct {
-	TagNode         *dbtype.Node
-	TagRelationship *dbtype.Relationship
-	LinkedNodeId    string
-}
-
 type TagRepository interface {
 	Merge(ctx context.Context, tenant string, tag entity.TagEntity) (*dbtype.Node, error)
 	Update(ctx context.Context, tenant string, tag entity.TagEntity) (*dbtype.Node, error)
 	UnlinkAndDelete(ctx context.Context, tenant string, tagId string) error
 	GetAll(ctx context.Context, tenant string) ([]*dbtype.Node, error)
 	GetForContact(ctx context.Context, tenant, contactId string) ([]*dbtype.Node, error)
-	GetForContacts(ctx context.Context, tenant string, contactIds []string) ([]*TagWithLinkedNodeId, error)
-	GetForOrganizations(ctx context.Context, tenant string, organizationIds []string) ([]*TagWithLinkedNodeId, error)
+	GetForContacts(ctx context.Context, tenant string, contactIds []string) ([]*utils.DbNodeWithRelationAndId, error)
+	GetForOrganizations(ctx context.Context, tenant string, organizationIds []string) ([]*utils.DbNodeWithRelationAndId, error)
 }
 
 type tagRepository struct {
@@ -149,11 +143,11 @@ func (r *tagRepository) GetForContact(ctx context.Context, tenant, contactId str
 	return result.([]*dbtype.Node), err
 }
 
-func (r *tagRepository) GetForContacts(ctx context.Context, tenant string, contactIds []string) ([]*TagWithLinkedNodeId, error) {
+func (r *tagRepository) GetForContacts(ctx context.Context, tenant string, contactIds []string) ([]*utils.DbNodeWithRelationAndId, error) {
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
-	dbRecords, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		if queryResult, err := tx.Run(ctx, `
 			MATCH (t:Tenant {name:$tenant})<-[:CONTACT_BELONGS_TO_TENANT]-(c:Contact)-[rel:TAGGED]->(tag:Tag)-[:TAG_BELONGS_TO_TENANT]->(t)
 			WHERE c.id IN $contactIds
@@ -164,30 +158,20 @@ func (r *tagRepository) GetForContacts(ctx context.Context, tenant string, conta
 			}); err != nil {
 			return nil, err
 		} else {
-			return queryResult.Collect(ctx)
+			return utils.ExtractAllRecordsAsDbNodeWithRelationAndId(ctx, queryResult, err)
 		}
 	})
 	if err != nil {
 		return nil, err
 	}
-
-	result := make([]*TagWithLinkedNodeId, 0)
-
-	for _, v := range dbRecords.([]*neo4j.Record) {
-		tagWithLinkedNodeId := new(TagWithLinkedNodeId)
-		tagWithLinkedNodeId.TagNode = utils.NodePtr(v.Values[0].(neo4j.Node))
-		tagWithLinkedNodeId.TagRelationship = utils.RelationshipPtr(v.Values[1].(neo4j.Relationship))
-		tagWithLinkedNodeId.LinkedNodeId = v.Values[2].(string)
-		result = append(result, tagWithLinkedNodeId)
-	}
-	return result, nil
+	return result.([]*utils.DbNodeWithRelationAndId), err
 }
 
-func (r *tagRepository) GetForOrganizations(ctx context.Context, tenant string, organizationIds []string) ([]*TagWithLinkedNodeId, error) {
+func (r *tagRepository) GetForOrganizations(ctx context.Context, tenant string, organizationIds []string) ([]*utils.DbNodeWithRelationAndId, error) {
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
-	dbRecords, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		if queryResult, err := tx.Run(ctx, `
 			MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization)-[rel:TAGGED]->(tag:Tag)-[:TAG_BELONGS_TO_TENANT]->(t)
 			WHERE o.id IN $organizationIds
@@ -198,21 +182,11 @@ func (r *tagRepository) GetForOrganizations(ctx context.Context, tenant string, 
 			}); err != nil {
 			return nil, err
 		} else {
-			return queryResult.Collect(ctx)
+			return utils.ExtractAllRecordsAsDbNodeWithRelationAndId(ctx, queryResult, err)
 		}
 	})
 	if err != nil {
 		return nil, err
 	}
-
-	result := make([]*TagWithLinkedNodeId, 0)
-
-	for _, v := range dbRecords.([]*neo4j.Record) {
-		tagWithLinkedNodeId := new(TagWithLinkedNodeId)
-		tagWithLinkedNodeId.TagNode = utils.NodePtr(v.Values[0].(neo4j.Node))
-		tagWithLinkedNodeId.TagRelationship = utils.RelationshipPtr(v.Values[1].(neo4j.Relationship))
-		tagWithLinkedNodeId.LinkedNodeId = v.Values[2].(string)
-		result = append(result, tagWithLinkedNodeId)
-	}
-	return result, nil
+	return result.([]*utils.DbNodeWithRelationAndId), err
 }

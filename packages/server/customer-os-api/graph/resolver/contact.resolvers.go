@@ -93,8 +93,12 @@ func (r *contactResolver) Emails(ctx context.Context, obj *model.Contact) ([]*mo
 		utils.LogMethodExecution(start, utils.GetFunctionName())
 	}(time.Now())
 
-	emailEntities, err := r.Services.EmailService.FindAllFor(ctx, entity.CONTACT, obj.ID)
-	return mapper.MapEntitiesToEmails(emailEntities), err
+	emailEntities, err := dataloader.For(ctx).GetEmailsForContact(ctx, obj.ID)
+	if err != nil {
+		graphql.AddErrorf(ctx, "Failed to get emails for contact %s", obj.ID)
+		return nil, err
+	}
+	return mapper.MapEntitiesToEmails(emailEntities), nil
 }
 
 // Locations is the resolver for the locations field.

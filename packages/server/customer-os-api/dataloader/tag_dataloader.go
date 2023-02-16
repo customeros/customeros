@@ -1,10 +1,14 @@
 package dataloader
 
 import (
+	"errors"
 	"github.com/graph-gophers/dataloader"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"golang.org/x/net/context"
+	"time"
 )
+
+const tagContextTimeout = 10 * time.Second
 
 func (i *Loaders) GetTagsForOrganization(ctx context.Context, organizationId string) (*entity.TagEntities, error) {
 	thunk := i.TagsForOrganization.Load(ctx, dataloader.StringKey(organizationId))
@@ -27,16 +31,17 @@ func (i *Loaders) GetTagsForContact(ctx context.Context, contactId string) (*ent
 }
 
 func (b *batcher) getTagsForOrganizations(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
-	var ids []string
-	// create a map for remembering the order of keys passed in
-	keyOrder := make(map[string]int, len(keys))
-	for ix, key := range keys {
-		ids = append(ids, key.String())
-		keyOrder[key.String()] = ix
-	}
+	ids, keyOrder := sortKeys(keys)
+
+	ctx, cancel := context.WithTimeout(ctx, tagContextTimeout)
+	defer cancel()
 
 	tagEntitiesPtr, err := b.tagService.GetTagsForOrganizations(ctx, ids)
 	if err != nil {
+		// check if context deadline exceeded error occurred
+		if ctx.Err() == context.DeadlineExceeded {
+			return []*dataloader.Result{{Data: nil, Error: errors.New("deadline exceeded to get tags for organizations")}}
+		}
 		return []*dataloader.Result{{Data: nil, Error: err}}
 	}
 
@@ -52,8 +57,7 @@ func (b *batcher) getTagsForOrganizations(ctx context.Context, keys dataloader.K
 	// construct an output array of dataloader results
 	results := make([]*dataloader.Result, len(keys))
 	for organizationId, record := range tagEntitiesByOrganizationId {
-		ix, ok := keyOrder[organizationId]
-		if ok {
+		if ix, ok := keyOrder[organizationId]; ok {
 			results[ix] = &dataloader.Result{Data: record, Error: nil}
 			delete(keyOrder, organizationId)
 		}
@@ -66,16 +70,17 @@ func (b *batcher) getTagsForOrganizations(ctx context.Context, keys dataloader.K
 }
 
 func (b *batcher) getTagsForContacts(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
-	var ids []string
-	// create a map for remembering the order of keys passed in
-	keyOrder := make(map[string]int, len(keys))
-	for ix, key := range keys {
-		ids = append(ids, key.String())
-		keyOrder[key.String()] = ix
-	}
+	ids, keyOrder := sortKeys(keys)
+
+	ctx, cancel := context.WithTimeout(ctx, tagContextTimeout)
+	defer cancel()
 
 	tagEntitiesPtr, err := b.tagService.GetTagsForContacts(ctx, ids)
 	if err != nil {
+		// check if context deadline exceeded error occurred
+		if ctx.Err() == context.DeadlineExceeded {
+			return []*dataloader.Result{{Data: nil, Error: errors.New("deadline exceeded to get tags for contacts")}}
+		}
 		return []*dataloader.Result{{Data: nil, Error: err}}
 	}
 
@@ -91,8 +96,7 @@ func (b *batcher) getTagsForContacts(ctx context.Context, keys dataloader.Keys) 
 	// construct an output array of dataloader results
 	results := make([]*dataloader.Result, len(keys))
 	for contactId, record := range tagEntitiesByContactId {
-		ix, ok := keyOrder[contactId]
-		if ok {
+		if ix, ok := keyOrder[contactId]; ok {
 			results[ix] = &dataloader.Result{Data: record, Error: nil}
 			delete(keyOrder, contactId)
 		}

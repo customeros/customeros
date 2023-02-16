@@ -14,18 +14,26 @@ const loadersKey = loadersString("dataloaders")
 type Loaders struct {
 	TagsForOrganization *dataloader.Loader
 	TagsForContact      *dataloader.Loader
+	EmailsForContact    *dataloader.Loader
 }
 
 type batcher struct {
-	tagService service.TagService
+	tagService   service.TagService
+	emailService service.EmailService
 }
 
 // NewDataLoader returns the instantiated Loaders struct for use in a request
 func NewDataLoader(services *service.Services) *Loaders {
-	b := &batcher{tagService: services.TagService}
+	tagBatcher := &batcher{
+		tagService: services.TagService,
+	}
+	emailBatcher := &batcher{
+		emailService: services.EmailService,
+	}
 	return &Loaders{
-		TagsForOrganization: dataloader.NewBatchedLoader(b.getTagsForOrganizations, dataloader.WithClearCacheOnBatch()),
-		TagsForContact:      dataloader.NewBatchedLoader(b.getTagsForContacts, dataloader.WithClearCacheOnBatch()),
+		TagsForOrganization: dataloader.NewBatchedLoader(tagBatcher.getTagsForOrganizations, dataloader.WithClearCacheOnBatch()),
+		TagsForContact:      dataloader.NewBatchedLoader(tagBatcher.getTagsForContacts, dataloader.WithClearCacheOnBatch()),
+		EmailsForContact:    dataloader.NewBatchedLoader(emailBatcher.getEmailsForContacts, dataloader.WithClearCacheOnBatch()),
 	}
 }
 

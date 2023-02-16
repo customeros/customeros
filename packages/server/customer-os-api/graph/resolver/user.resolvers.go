@@ -91,7 +91,7 @@ func (r *userResolver) Emails(ctx context.Context, obj *model.User) ([]*model.Em
 		utils.LogMethodExecution(start, utils.GetFunctionName())
 	}(time.Now())
 
-	emailEntities, err := r.Services.EmailService.FindAllFor(ctx, entity.USER, obj.ID)
+	emailEntities, err := r.Services.EmailService.GetAllFor(ctx, entity.USER, obj.ID)
 	return mapper.MapEntitiesToEmails(emailEntities), err
 }
 

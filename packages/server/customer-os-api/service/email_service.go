@@ -12,7 +12,8 @@ import (
 )
 
 type EmailService interface {
-	FindAllFor(ctx context.Context, entityType entity.EntityType, entityId string) (*entity.EmailEntities, error)
+	GetAllFor(ctx context.Context, entityType entity.EntityType, entityId string) (*entity.EmailEntities, error)
+	GetAllForEntityTypeByIds(ctx context.Context, entityType entity.EntityType, entityIds []string) (*entity.EmailEntities, error)
 	MergeEmailTo(ctx context.Context, entityType entity.EntityType, entityId string, entity *entity.EmailEntity) (*entity.EmailEntity, error)
 	UpdateEmailFor(ctx context.Context, entityType entity.EntityType, entityId string, entity *entity.EmailEntity) (*entity.EmailEntity, error)
 	DetachFromEntity(ctx context.Context, entityType entity.EntityType, entityId, email string) (bool, error)
@@ -36,11 +37,11 @@ func (s *emailService) getDriver() neo4j.DriverWithContext {
 	return *s.repositories.Drivers.Neo4jDriver
 }
 
-func (s *emailService) FindAllFor(ctx context.Context, entityType entity.EntityType, entityId string) (*entity.EmailEntities, error) {
+func (s *emailService) GetAllFor(ctx context.Context, entityType entity.EntityType, entityId string) (*entity.EmailEntities, error) {
 	session := utils.NewNeo4jReadSession(ctx, s.getDriver())
 	defer session.Close(ctx)
 
-	queryResult, err := s.repositories.EmailRepository.FindAllFor(ctx, session, common.GetContext(ctx).Tenant, entityType, entityId)
+	queryResult, err := s.repositories.EmailRepository.GetAllFor(ctx, session, common.GetContext(ctx).Tenant, entityType, entityId)
 	if err != nil {
 		return nil, err
 	}
@@ -53,6 +54,22 @@ func (s *emailService) FindAllFor(ctx context.Context, entityType entity.EntityT
 		emailEntities = append(emailEntities, *emailEntity)
 	}
 
+	return &emailEntities, nil
+}
+
+func (s *emailService) GetAllForEntityTypeByIds(ctx context.Context, entityType entity.EntityType, entityIds []string) (*entity.EmailEntities, error) {
+	emails, err := s.repositories.EmailRepository.GetAllForIds(ctx, common.GetContext(ctx).Tenant, entityType, entityIds)
+	if err != nil {
+		return nil, err
+	}
+
+	emailEntities := entity.EmailEntities{}
+	for _, v := range emails {
+		emailEntity := s.mapDbNodeToEmailEntity(*v.Node)
+		s.addDbRelationshipToEmailEntity(*v.Relationship, emailEntity)
+		emailEntity.DataloaderKey = v.LinkedNodeId
+		emailEntities = append(emailEntities, *emailEntity)
+	}
 	return &emailEntities, nil
 }
 

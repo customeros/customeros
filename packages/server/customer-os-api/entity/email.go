@@ -15,6 +15,8 @@ type EmailEntity struct {
 	AppSource     string
 	CreatedAt     time.Time
 	UpdatedAt     time.Time
+
+	DataloaderKey string
 }
 
 func (email EmailEntity) ToString() string {
