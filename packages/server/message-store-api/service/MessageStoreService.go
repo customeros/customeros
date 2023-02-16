@@ -179,6 +179,16 @@ func (s *MessageService) GetFeed(ctx context.Context, feedIdRequest *msProto.Fee
 }
 
 func (s *MessageService) SaveMessage(ctx context.Context, input *msProto.InputMessage) (*msProto.MessageId, error) {
+	apiKeyValid := commonModuleService.ApiKeyCheckerGRPC(ctx, s.postgresRepositories.CommonRepositories.AppKeyRepo, commonModuleService.MESSAGE_STORE_API)
+	if !apiKeyValid {
+		return nil, status.Errorf(codes.Unauthenticated, "Invalid API Key")
+	}
+
+	tenant, err := commonModuleService.GetTenantForUsernameForGRPC(ctx, s.postgresRepositories.CommonRepositories.UserRepo)
+	if err != nil {
+		return nil, err
+	}
+
 	if input.ConversationId == nil && input.InitiatorIdentifier == nil {
 		return nil, errors.New("conversationId or email must be provided")
 	}
@@ -187,28 +197,29 @@ func (s *MessageService) SaveMessage(ctx context.Context, input *msProto.InputMe
 	}
 	participants := []Participant{}
 
-	tenant := "openline" //TODO get tenant from context
-	initiator, err := s.getParticipant(ctx, tenant, *input.InitiatorIdentifier)
-
-	participants = append(participants, *initiator)
+	initiator, err := s.getParticipant(ctx, *tenant, *input.InitiatorIdentifier)
 	if err != nil {
 		return nil, err
 	}
+
+	participants = append(participants, *initiator)
+
 	threadId := ""
 	entityType := s.commonStoreService.ConvertMSTypeToEntityType(input.Type)
-	if err := s.getThreadIdAndParticipantsFromMail(ctx, tenant, &threadId, &participants, entityType, input); err != nil {
+	if err := s.getThreadIdAndParticipantsFromMail(ctx, *tenant, &threadId, &participants, entityType, input); err != nil {
 		log.Printf("Error handleing email: %v", err)
+		return nil, err
 	}
 
 	var conversation *Conversation
 	if input.ConversationId != nil {
-		if conv, err := s.customerOSService.GetConversationById(ctx, tenant, *input.ConversationId); err != nil {
+		if conv, err := s.customerOSService.GetConversationById(ctx, *tenant, *input.ConversationId); err != nil {
 			return nil, err
 		} else {
 			conversation = conv
 		}
 	} else {
-		if conv, err := s.customerOSService.GetActiveConversationOrCreate(ctx, tenant, initiator.Id, *input.InitiatorIdentifier, initiator.Type, entityType, threadId); err != nil {
+		if conv, err := s.customerOSService.GetActiveConversationOrCreate(ctx, *tenant, initiator.Id, *input.InitiatorIdentifier, initiator.Type, entityType, threadId); err != nil {
 			return nil, err
 		} else {
 			conversation = conv
@@ -227,11 +238,11 @@ func (s *MessageService) SaveMessage(ctx context.Context, input *msProto.InputMe
 		}
 	}
 	senderType := s.getSenderTypeStr(initiator)
-	if _, err := s.customerOSService.UpdateConversation(ctx, tenant, conversation.Id, initiator.Id, senderType, contactIds, userIds, previewMessage); err != nil {
+	if _, err := s.customerOSService.UpdateConversation(ctx, *tenant, conversation.Id, initiator.Id, senderType, contactIds, userIds, previewMessage); err != nil {
 		return nil, err
 	}
 
-	conversationEvent := s.saveConversationEvent(tenant, conversation, input, initiator)
+	conversationEvent := s.saveConversationEvent(*tenant, conversation, input, initiator)
 
 	return s.commonStoreService.EncodeMessageIdToMs(conversationEvent), nil
 }
