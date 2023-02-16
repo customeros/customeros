@@ -33,7 +33,7 @@ func (i *Loaders) GetTagsForOrganization(ctx context.Context, organizationId str
 func NewDataLoader(services *service.Services) *Loaders {
 	b := &batcher{tagService: services.TagService}
 	return &Loaders{
-		TagsForOrganizationId: dataloader.NewBatchedLoader(b.getTagsForOrganizations),
+		TagsForOrganizationId: dataloader.NewBatchedLoader(b.getTagsForOrganizations, dataloader.WithClearCacheOnBatch()),
 	}
 }
 
