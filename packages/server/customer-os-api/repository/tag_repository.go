@@ -156,7 +156,7 @@ func (r *tagRepository) GetForOrganizations(ctx context.Context, tenant string, 
 		if queryResult, err := tx.Run(ctx, `
 			MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization)-[rel:TAGGED]->(tag:Tag)-[:TAG_BELONGS_TO_TENANT]->(t)
 			WHERE o.id IN $organizationIds
-			RETURN tag, rel, o.id ORDER BY tag.name`,
+			RETURN o.id, rel, tag ORDER BY o.id, tag.name`,
 			map[string]any{
 				"tenant":          tenant,
 				"organizationIds": organizationsIds,
@@ -174,9 +174,9 @@ func (r *tagRepository) GetForOrganizations(ctx context.Context, tenant string, 
 
 	for _, v := range dbRecords.([]*neo4j.Record) {
 		tagWithLinkedNodeId := new(TagWithLinkedNodeId)
-		tagWithLinkedNodeId.TagNode = utils.NodePtr(v.Values[0].(neo4j.Node))
+		tagWithLinkedNodeId.LinkedNodeId = v.Values[0].(string)
 		tagWithLinkedNodeId.TagRelationship = utils.RelationshipPtr(v.Values[1].(neo4j.Relationship))
-		tagWithLinkedNodeId.LinkedNodeId = v.Values[2].(string)
+		tagWithLinkedNodeId.TagNode = utils.NodePtr(v.Values[2].(neo4j.Node))
 		result = append(result, tagWithLinkedNodeId)
 	}
 	return result, nil

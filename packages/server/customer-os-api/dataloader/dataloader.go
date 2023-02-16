@@ -26,7 +26,8 @@ func (i *Loaders) GetTagsForOrganization(ctx context.Context, organizationId str
 	if err != nil {
 		return nil, err
 	}
-	return result.(*entity.TagEntities), nil
+	resultObj := result.(entity.TagEntities)
+	return &resultObj, nil
 }
 
 // NewDataLoader returns the instantiated Loaders struct for use in a request

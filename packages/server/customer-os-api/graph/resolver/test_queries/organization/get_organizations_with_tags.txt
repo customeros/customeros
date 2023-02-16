@@ -1,0 +1,15 @@
+query GetOrganizations($page: Int!, $limit: Int!){
+  organizations(pagination: {page: $page, limit: $limit}
+                sort:[{by: "NAME" direction:ASC }]) {
+    totalPages
+    totalElements
+    content {
+      id
+      name
+      tags {
+        id
+        name
+      }
+    }
+  }
+}

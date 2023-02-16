@@ -8,6 +8,7 @@ import (
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/dataloader"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/generated"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
@@ -70,12 +71,14 @@ func prepareClient() {
 	repositoryContainer := commonRepository.InitRepositories(postgresGormDB, driver)
 	serviceContainer := service.InitServices(driver)
 	graphResolver := NewResolver(serviceContainer, repositoryContainer)
+	loader := dataloader.NewDataLoader(serviceContainer)
 	customCtx := &common.CustomContext{
 		Tenant: tenantName,
 		UserId: testUserId,
 	}
 	server := handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: graphResolver}))
-	handler := common.WithContext(customCtx, server)
+	dataloaderServer := dataloader.Middleware(loader, server)
+	handler := common.WithContext(customCtx, dataloaderServer)
 	c = client.New(handler)
 }
 

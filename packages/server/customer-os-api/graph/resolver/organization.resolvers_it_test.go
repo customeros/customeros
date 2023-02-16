@@ -166,6 +166,48 @@ func TestQueryResolver_Organizations_WithLocations(t *testing.T) {
 	require.Equal(t, "", *locationWithoutAddressDtls.Zip)
 }
 
+func TestQueryResolver_Organizations_WithTags(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx)(t)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+	organizationId1 := neo4jt.CreateOrganization(ctx, driver, tenantName, "Org 1 with 2 tags")
+	organizationId2 := neo4jt.CreateOrganization(ctx, driver, tenantName, "Org 2 with 1 tag")
+	neo4jt.CreateOrganization(ctx, driver, tenantName, "Org 3 with 0 tags")
+	tag1 := neo4jt.CreateTag(ctx, driver, tenantName, "tag1")
+	tag2 := neo4jt.CreateTag(ctx, driver, tenantName, "tag2")
+
+	neo4jt.TagOrganization(ctx, driver, organizationId1, tag1)
+	neo4jt.TagOrganization(ctx, driver, organizationId1, tag2)
+	neo4jt.TagOrganization(ctx, driver, organizationId2, tag1)
+
+	require.Equal(t, 3, neo4jt.GetCountOfNodes(ctx, driver, "Organization"))
+	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "Tag"))
+	require.Equal(t, 3, neo4jt.GetCountOfRelationships(ctx, driver, "TAGGED"))
+
+	rawResponse, err := c.RawPost(getQuery("organization/get_organizations_with_tags"),
+		client.Var("page", 1),
+		client.Var("limit", 10),
+	)
+	assertRawResponseSuccess(t, rawResponse, err)
+
+	var organizationsStruct struct {
+		Organizations model.OrganizationPage
+	}
+
+	err = decode.Decode(rawResponse.Data.(map[string]any), &organizationsStruct)
+	require.Nil(t, err)
+
+	organizations := organizationsStruct.Organizations
+	require.NotNil(t, organizations)
+	require.Equal(t, int64(3), organizations.TotalElements)
+	require.Equal(t, 2, len(organizations.Content[0].Tags))
+	require.ElementsMatch(t, []string{tag1, tag2},
+		[]string{organizations.Content[0].Tags[0].ID, organizations.Content[0].Tags[1].ID})
+	require.Equal(t, 1, len(organizations.Content[1].Tags))
+	require.Equal(t, tag1, organizations.Content[1].Tags[0].ID)
+	require.Equal(t, 0, len(organizations.Content[2].Tags))
+}
+
 func TestQueryResolver_Organization_WithNotes_ById(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx)(t)

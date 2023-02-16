@@ -20,22 +20,26 @@ func (b *batcher) getTagsForOrganizations(ctx context.Context, keys dataloader.K
 		return []*dataloader.Result{{Data: nil, Error: err}}
 	}
 
-	tagEntitiesByOrganizationId := map[string]entity.TagEntities{}
+	tagEntitiesByOrganizationId := make(map[string]entity.TagEntities)
 	for _, val := range *tagEntitiesPtr {
-		tagEntitiesByOrganizationId[val.DataloaderKey] = append(tagEntitiesByOrganizationId[val.DataloaderKey], val)
+		if list, ok := tagEntitiesByOrganizationId[val.DataloaderKey]; ok {
+			tagEntitiesByOrganizationId[val.DataloaderKey] = append(list, val)
+		} else {
+			tagEntitiesByOrganizationId[val.DataloaderKey] = entity.TagEntities{val}
+		}
 	}
 
 	// construct an output array of dataloader results
 	results := make([]*dataloader.Result, len(keys))
-	for sessionId, record := range tagEntitiesByOrganizationId {
-		ix, ok := keyOrder[sessionId]
+	for organizationId, record := range tagEntitiesByOrganizationId {
+		ix, ok := keyOrder[organizationId]
 		if ok {
-			results[ix] = &dataloader.Result{Data: &record, Error: nil}
-			delete(keyOrder, sessionId)
+			results[ix] = &dataloader.Result{Data: record, Error: nil}
+			delete(keyOrder, organizationId)
 		}
 	}
 	for _, ix := range keyOrder {
-		results[ix] = &dataloader.Result{Data: &entity.TagEntities{}, Error: nil}
+		results[ix] = &dataloader.Result{Data: entity.TagEntities{}, Error: nil}
 	}
 
 	return results
