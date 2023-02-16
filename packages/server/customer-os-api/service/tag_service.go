@@ -15,6 +15,7 @@ type TagService interface {
 	UnlinkAndDelete(ctx context.Context, id string) (bool, error)
 	GetAll(ctx context.Context) (*entity.TagEntities, error)
 	GetTagsForContact(ctx context.Context, contactId string) (*entity.TagEntities, error)
+	GetTagsForContacts(ctx context.Context, contactIds []string) (*entity.TagEntities, error)
 	GetTagsForOrganizations(ctx context.Context, organizationIds []string) (*entity.TagEntities, error)
 }
 
@@ -72,6 +73,21 @@ func (s *tagService) GetTagsForContact(ctx context.Context, contactId string) (*
 	tagEntities := entity.TagEntities{}
 	for _, dbNodePtr := range tagDbNodes {
 		tagEntities = append(tagEntities, *s.mapDbNodeToTagEntity(*dbNodePtr))
+	}
+	return &tagEntities, nil
+}
+
+func (s *tagService) GetTagsForContacts(ctx context.Context, contactIds []string) (*entity.TagEntities, error) {
+	tags, err := s.repositories.TagRepository.GetForContacts(ctx, common.GetTenantFromContext(ctx), contactIds)
+	if err != nil {
+		return nil, err
+	}
+	tagEntities := entity.TagEntities{}
+	for _, dbTag := range tags {
+		tagEntity := s.mapDbNodeToTagEntity(*dbTag.TagNode)
+		s.addDbRelationshipToTagEntity(*dbTag.TagRelationship, tagEntity)
+		tagEntity.DataloaderKey = dbTag.LinkedNodeId
+		tagEntities = append(tagEntities, *tagEntity)
 	}
 	return &tagEntities, nil
 }

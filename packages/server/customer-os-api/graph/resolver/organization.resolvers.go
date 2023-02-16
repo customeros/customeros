@@ -149,7 +149,6 @@ func (r *organizationResolver) Notes(ctx context.Context, obj *model.Organizatio
 
 // Tags is the resolver for the tags field.
 func (r *organizationResolver) Tags(ctx context.Context, obj *model.Organization) ([]*model.Tag, error) {
-	//TODO alexb add test
 	defer func(start time.Time) {
 		utils.LogMethodExecution(start, utils.GetFunctionName())
 	}(time.Now())

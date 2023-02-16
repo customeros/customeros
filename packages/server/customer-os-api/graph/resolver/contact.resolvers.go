@@ -6,6 +6,7 @@ package resolver
 
 import (
 	"context"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/dataloader"
 	"time"
 
 	"github.com/99designs/gqlgen/graphql"
@@ -23,7 +24,7 @@ func (r *contactResolver) Tags(ctx context.Context, obj *model.Contact) ([]*mode
 		utils.LogMethodExecution(start, utils.GetFunctionName())
 	}(time.Now())
 
-	tagEntities, err := r.Services.TagService.GetTagsForContact(ctx, obj.ID)
+	tagEntities, err := dataloader.For(ctx).GetTagsForContact(ctx, obj.ID)
 	if err != nil {
 		graphql.AddErrorf(ctx, "Failed to get tags for contact %s", obj.ID)
 		return nil, err
