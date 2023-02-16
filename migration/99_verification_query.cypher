@@ -1,7 +1,15 @@
-# CHECK 1 - Result should be 0
+# CHECK 1 - Cross tenant data link - Result should be 0
 
 CALL {
- MATCH (t1:Tenant)--(c:Contact)-[rel]-(tag:Tag)--(t2:Tenant)
+ MATCH (t1:Tenant)--(c:Contact)-[rel]-(:Email)--(t2:Tenant)
+ WHERE t1.name <> t2.name
+ return count(rel) as x
+ UNION
+ MATCH (t1:Tenant)--(c:Contact)-[rel]-(:Location)--(t2:Tenant)
+ WHERE t1.name <> t2.name
+ return count(rel) as x
+ UNION
+ MATCH (t1:Tenant)--(c:Contact)-[rel]-(:Tag)--(t2:Tenant)
  WHERE t1.name <> t2.name
  return count(rel) as x
  UNION
@@ -10,6 +18,18 @@ CALL {
  return count(rel) as x
  UNION
  MATCH (t1:Tenant)--(:Contact)-[rel]-(:ExternalSystem)--(t2:Tenant)
+ WHERE t1.name <> t2.name
+ return count(rel) as x
+ UNION
+ MATCH (t1:Tenant)--(:Organization)-[rel]-(:Location)--(t2:Tenant)
+ WHERE t1.name <> t2.name
+ return count(rel) as x
+ UNION
+ MATCH (t1:Tenant)--(:Organization)-[rel]-(:Email)--(t2:Tenant)
+ WHERE t1.name <> t2.name
+ return count(rel) as x
+ UNION
+ MATCH (t1:Tenant)--(:Organization)-[rel]-(:Tag)--(t2:Tenant)
  WHERE t1.name <> t2.name
  return count(rel) as x
  UNION
@@ -117,6 +137,27 @@ CALL {
  MATCH (t:Tenant)--(:Contact)--(n:Action) WHERE NOT 'Action_'+t.name  in labels(n) return count(n) as x
 } return sum(x) as Problematic_nodes;
 
+#=========== CHECK 4 - Missing tenant links
 
-# CHECK 4 - Query to verify labels mix
+CALL {
+ MATCH (t:Tenant)--(:Contact)-[rel]-(n:Email) WHERE NOT (n)--(t)
+ return count(n) as x
+ UNION
+ MATCH (t:Tenant)--(:Contact)-[rel]-(n:Tag) WHERE NOT (n)--(t)
+ return count(n) as x
+ UNION
+ MATCH (t:Tenant)--(:Contact)-[rel]-(n:Location) WHERE NOT (n)--(t)
+ return count(n) as x
+ UNION
+ MATCH (t:Tenant)--(:Organization)-[rel]-(n:Email) WHERE NOT (n)--(t)
+ return count(n) as x
+ UNION
+ MATCH (t:Tenant)--(:Organization)-[rel]-(n:Tag) WHERE NOT (n)--(t)
+ return count(n) as x
+ UNION
+ MATCH (t:Tenant)--(:Organization)-[rel]-(n:Location) WHERE NOT (n)--(t)
+ return count(n) as x
+} return sum(x) as Problematic_nodes;
+
+#=========== CHECK 5 - Query to verify labels mix
 MATCH (n) RETURN count(labels(n)), labels(n);

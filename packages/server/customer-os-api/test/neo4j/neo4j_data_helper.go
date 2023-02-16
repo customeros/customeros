@@ -527,7 +527,8 @@ func CreatePageView(ctx context.Context, driver *neo4j.DriverWithContext, contac
 
 func CreateLocation(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, location entity.LocationEntity) string {
 	var locationId, _ = uuid.NewRandom()
-	query := "MERGE (l:Location {id:$locationId}) " +
+	query := "MATCH (t:Tenant {name:$tenant}) " +
+		" MERGE (l:Location {id:$locationId})-[:LOCATION_BELONGS_TO_TENANT]->(t) " +
 		" ON CREATE SET l.name=$name, " +
 		"				l.source=$source, " +
 		"				l.appSource=$appSource, " +
@@ -542,6 +543,7 @@ func CreateLocation(ctx context.Context, driver *neo4j.DriverWithContext, tenant
 		"				l:Location_%s"
 
 	ExecuteWriteQuery(ctx, driver, fmt.Sprintf(query, tenant), map[string]any{
+		"tenant":     tenant,
 		"locationId": locationId.String(),
 		"source":     location.Source,
 		"appSource":  location.AppSource,

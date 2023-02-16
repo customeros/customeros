@@ -30,7 +30,7 @@ func (i *Loaders) GetTagsForContact(ctx context.Context, contactId string) (*ent
 	return &resultObj, nil
 }
 
-func (b *batcher) getTagsForOrganizations(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
+func (b *tagBatcher) getTagsForOrganizations(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
 	ids, keyOrder := sortKeys(keys)
 
 	ctx, cancel := context.WithTimeout(ctx, tagContextTimeout)
@@ -69,7 +69,7 @@ func (b *batcher) getTagsForOrganizations(ctx context.Context, keys dataloader.K
 	return results
 }
 
-func (b *batcher) getTagsForContacts(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
+func (b *tagBatcher) getTagsForContacts(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
 	ids, keyOrder := sortKeys(keys)
 
 	ctx, cancel := context.WithTimeout(ctx, tagContextTimeout)

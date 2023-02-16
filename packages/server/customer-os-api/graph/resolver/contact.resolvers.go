@@ -107,7 +107,7 @@ func (r *contactResolver) Locations(ctx context.Context, obj *model.Contact) ([]
 		utils.LogMethodExecution(start, utils.GetFunctionName())
 	}(time.Now())
 
-	locationEntities, err := r.Services.LocationService.GetAllForContact(ctx, obj.ID)
+	locationEntities, err := dataloader.For(ctx).GetLocationsForContact(ctx, obj.ID)
 	if err != nil {
 		graphql.AddErrorf(ctx, "Failed to get locations for contact %s", obj.ID)
 		return nil, err
