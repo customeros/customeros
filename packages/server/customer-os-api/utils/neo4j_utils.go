@@ -24,6 +24,12 @@ type DbNodesWithTotalCount struct {
 	Count int64
 }
 
+type DbNodeWithRelationAndId struct {
+	Node         *dbtype.Node
+	Relationship *dbtype.Relationship
+	LinkedNodeId string
+}
+
 func NewNeo4jReadSession(ctx context.Context, driver neo4j.DriverWithContext) neo4j.SessionWithContext {
 	return newNeo4jSession(ctx, driver, neo4j.AccessModeRead)
 }
@@ -66,6 +72,25 @@ func ExtractAllRecordsFirstValueAsNodePtrs(ctx context.Context, result neo4j.Res
 		dbNodes = append(dbNodes, utils.NodePtr(v.Values[0].(dbtype.Node)))
 	}
 	return dbNodes, nil
+}
+
+func ExtractAllRecordsAsDbNodeWithRelationAndId(ctx context.Context, result neo4j.ResultWithContext, err error) ([]*DbNodeWithRelationAndId, error) {
+	if err != nil {
+		return nil, err
+	}
+	records, err := result.Collect(ctx)
+	if err != nil {
+		return nil, err
+	}
+	output := make([]*DbNodeWithRelationAndId, 0)
+	for _, v := range records {
+		element := new(DbNodeWithRelationAndId)
+		element.Node = utils.NodePtr(v.Values[0].(neo4j.Node))
+		element.Relationship = utils.RelationshipPtr(v.Values[1].(neo4j.Relationship))
+		element.LinkedNodeId = v.Values[2].(string)
+		output = append(output, element)
+	}
+	return output, nil
 }
 
 func ExtractSingleRecordFirstValueAsNode(ctx context.Context, result neo4j.ResultWithContext, err error) (*dbtype.Node, error) {

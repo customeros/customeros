@@ -83,10 +83,10 @@ func (s *tagService) GetTagsForContacts(ctx context.Context, contactIds []string
 		return nil, err
 	}
 	tagEntities := entity.TagEntities{}
-	for _, dbTag := range tags {
-		tagEntity := s.mapDbNodeToTagEntity(*dbTag.TagNode)
-		s.addDbRelationshipToTagEntity(*dbTag.TagRelationship, tagEntity)
-		tagEntity.DataloaderKey = dbTag.LinkedNodeId
+	for _, v := range tags {
+		tagEntity := s.mapDbNodeToTagEntity(*v.Node)
+		s.addDbRelationshipToTagEntity(*v.Relationship, tagEntity)
+		tagEntity.DataloaderKey = v.LinkedNodeId
 		tagEntities = append(tagEntities, *tagEntity)
 	}
 	return &tagEntities, nil
@@ -98,10 +98,10 @@ func (s *tagService) GetTagsForOrganizations(ctx context.Context, organizationId
 		return nil, err
 	}
 	tagEntities := entity.TagEntities{}
-	for _, dbTag := range tags {
-		tagEntity := s.mapDbNodeToTagEntity(*dbTag.TagNode)
-		s.addDbRelationshipToTagEntity(*dbTag.TagRelationship, tagEntity)
-		tagEntity.DataloaderKey = dbTag.LinkedNodeId
+	for _, v := range tags {
+		tagEntity := s.mapDbNodeToTagEntity(*v.Node)
+		s.addDbRelationshipToTagEntity(*v.Relationship, tagEntity)
+		tagEntity.DataloaderKey = v.LinkedNodeId
 		tagEntities = append(tagEntities, *tagEntity)
 	}
 	return &tagEntities, nil

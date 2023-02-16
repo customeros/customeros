@@ -13,7 +13,8 @@ type EmailRepository interface {
 	MergeEmailToInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, entityType entity.EntityType, entityId string, entity entity.EmailEntity) (*dbtype.Node, *dbtype.Relationship, error)
 	UpdateEmailByInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, entityType entity.EntityType, entityId string, entity entity.EmailEntity) (*dbtype.Node, *dbtype.Relationship, error)
 	SetOtherEmailsNonPrimaryInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenantId string, entityType entity.EntityType, entityId string, email string) error
-	FindAllFor(ctx context.Context, session neo4j.SessionWithContext, tenant string, entityType entity.EntityType, entityId string) (any, error)
+	GetAllFor(ctx context.Context, session neo4j.SessionWithContext, tenant string, entityType entity.EntityType, entityId string) (any, error)
+	GetAllForIds(ctx context.Context, tenant string, entityType entity.EntityType, entityIds []string) ([]*utils.DbNodeWithRelationAndId, error)
 	RemoveRelationship(ctx context.Context, entityType entity.EntityType, tenant, entityId, email string) error
 	RemoveRelationshipById(ctx context.Context, entityType entity.EntityType, tenant, entityId, emailId string) error
 	DeleteById(ctx context.Context, tenant, emailId string) error
@@ -103,7 +104,7 @@ func (r *emailRepository) UpdateEmailByInTx(ctx context.Context, tx neo4j.Manage
 	return utils.ExtractSingleRecordNodeAndRelationship(ctx, queryResult, err)
 }
 
-func (r *emailRepository) FindAllFor(ctx context.Context, session neo4j.SessionWithContext, tenant string, entityType entity.EntityType, entityId string) (any, error) {
+func (r *emailRepository) GetAllFor(ctx context.Context, session neo4j.SessionWithContext, tenant string, entityType entity.EntityType, entityId string) (any, error) {
 	return session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		query := ""
 
@@ -128,6 +129,40 @@ func (r *emailRepository) FindAllFor(ctx context.Context, session neo4j.SessionW
 		}
 		return records, nil
 	})
+}
+
+func (r *emailRepository) GetAllForIds(ctx context.Context, tenant string, entityType entity.EntityType, entityIds []string) ([]*utils.DbNodeWithRelationAndId, error) {
+	session := utils.NewNeo4jReadSession(ctx, *r.driver)
+	defer session.Close(ctx)
+
+	query := ""
+	switch entityType {
+	case entity.CONTACT:
+		query = `MATCH (t:Tenant {name:$tenant})<-[:CONTACT_BELONGS_TO_TENANT]-(entity:Contact)`
+	case entity.USER:
+		query = `MATCH (t:Tenant {name:$tenant})<-[:USER_BELONGS_TO_TENANT]-(entity:User)`
+	case entity.ORGANIZATION:
+		query = `MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(entity:Organization)`
+	}
+	query = query + `, (entity)-[rel:HAS]->(e:Email)-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]->(t)
+					WHERE entity.id IN $entityIds
+					RETURN e, rel, entity.id ORDER BY e.email`
+
+	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		if queryResult, err := tx.Run(ctx, query,
+			map[string]any{
+				"tenant":    tenant,
+				"entityIds": entityIds,
+			}); err != nil {
+			return nil, err
+		} else {
+			return utils.ExtractAllRecordsAsDbNodeWithRelationAndId(ctx, queryResult, err)
+		}
+	})
+	if err != nil {
+		return nil, err
+	}
+	return result.([]*utils.DbNodeWithRelationAndId), err
 }
 
 func (r *emailRepository) SetOtherEmailsNonPrimaryInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenantId string, entityType entity.EntityType, entityId string, email string) error {
