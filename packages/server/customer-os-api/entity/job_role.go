@@ -15,6 +15,8 @@ type JobRoleEntity struct {
 	Source              DataSource
 	SourceOfTruth       DataSource
 	AppSource           string
+
+	DataloaderKey string
 }
 
 func (jobRole JobRoleEntity) ToString() string {
