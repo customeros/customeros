@@ -1,11 +1,8 @@
 module github.com/openline-ai/openline-customer-os/packages/server/customer-os-api
 
-go 1.19
+go 1.20
 
-replace (
-	github.com/docker/docker => github.com/docker/docker v20.10.3-0.20221013203545-33ab36d6b304+incompatible // 22.06 branch
-	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module => ../customer-os-common-module
-)
+replace github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module => ../customer-os-common-module
 
 require (
 	github.com/99designs/gqlgen v0.17.24
@@ -37,7 +34,7 @@ require (
 	github.com/cpuguy83/go-md2man/v2 v2.0.2 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/docker/distribution v2.8.1+incompatible // indirect
-	github.com/docker/docker v23.0.0+incompatible // indirect
+	github.com/docker/docker v23.0.1+incompatible // indirect
 	github.com/docker/go-connections v0.4.0 // indirect
 	github.com/docker/go-units v0.5.0 // indirect
 	github.com/gin-contrib/sse v0.1.0 // indirect
