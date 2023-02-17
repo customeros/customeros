@@ -13,7 +13,7 @@ require (
 	github.com/joho/godotenv v1.5.1
 	github.com/sirupsen/logrus v1.9.0
 	github.com/stretchr/testify v1.8.1
-	github.com/testcontainers/testcontainers-go v0.17.0
+	github.com/testcontainers/testcontainers-go v0.18.0
 	github.com/vektah/gqlparser/v2 v2.5.1
 	gorm.io/driver/postgres v1.4.7
 	gorm.io/gorm v1.24.5
@@ -28,7 +28,7 @@ require (
 	github.com/cpuguy83/go-md2man/v2 v2.0.2 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/docker/distribution v2.8.1+incompatible // indirect
-	github.com/docker/docker v20.10.20+incompatible // indirect
+	github.com/docker/docker v23.0.0+incompatible // indirect
 	github.com/docker/go-connections v0.4.0 // indirect
 	github.com/docker/go-units v0.5.0 // indirect
 	github.com/gin-contrib/sse v0.1.0 // indirect
@@ -75,8 +75,8 @@ require (
 	golang.org/x/crypto v0.4.0 // indirect
 	golang.org/x/mod v0.7.0 // indirect
 	golang.org/x/net v0.4.0 // indirect
-	golang.org/x/sys v0.3.0 // indirect
-	golang.org/x/text v0.5.0 // indirect
+	golang.org/x/sys v0.5.0 // indirect
+	golang.org/x/text v0.7.0 // indirect
 	golang.org/x/time v0.0.0-20220224211638-0e9765cccd65 // indirect
 	golang.org/x/tools v0.4.0 // indirect
 	google.golang.org/genproto v0.0.0-20220617124728-180714bec0ad // indirect
