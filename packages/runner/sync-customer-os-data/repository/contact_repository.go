@@ -169,13 +169,23 @@ func (r *contactRepository) MergePrimaryPhoneNumber(tenant, contactId, e164, ext
 	session := utils.NewNeo4jWriteSession(*r.driver)
 	defer session.Close()
 
-	query := "MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) " +
-		" OPTIONAL MATCH (c)-[r:PHONE_ASSOCIATED_WITH]->(p:PhoneNumber) " +
-		" SET r.primary=false " +
-		" WITH c " +
-		" MERGE (c)-[r:PHONE_ASSOCIATED_WITH]->(p:PhoneNumber {e164: $e164}) " +
-		" ON CREATE SET r.primary=true, p.id=randomUUID(), p.createdAt=$createdAt, p.updatedAt=$createdAt, p.source=$source, p.sourceOfTruth=$sourceOfTruth, p.appSource=$appSource, p:%s " +
-		" ON MATCH SET r.primary=true, p.updatedAt=$now "
+	query := "MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant}) " +
+		" OPTIONAL MATCH (c)-[rel:HAS]->(p:PhoneNumber) " +
+		" SET rel.primary=false " +
+		" WITH c, t " +
+		" MERGE (p:PhoneNumber {e164: $e164})-[:PHONE_NUMBER_BELONGS_TO_TENANT]->(t) " +
+		" ON CREATE SET " +
+		"				p.id=randomUUID(), " +
+		"				p.createdAt=$now, " +
+		"				p.updatedAt=$now, " +
+		"				p.source=$source, " +
+		"				p.sourceOfTruth=$sourceOfTruth, " +
+		"				p.appSource=$appSource, " +
+		"				p:%s " +
+		" WITH DISTINCT c, p " +
+		" MERGE (c)-[rel:HAS]->(p) " +
+		" ON CREATE SET rel.primary=true " +
+		" ON MATCH SET rel.primary=true, p.updatedAt=$now "
 
 	_, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
 		_, err := tx.Run(fmt.Sprintf(query, "PhoneNumber_"+tenant),

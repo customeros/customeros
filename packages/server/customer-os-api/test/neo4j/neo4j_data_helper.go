@@ -278,7 +278,7 @@ func AddPhoneNumberToContact(ctx context.Context, driver *neo4j.DriverWithContex
 				  id: randomUUID(),
 				  e164: $e164,
 				  label: $label
-				})<-[:PHONE_ASSOCIATED_WITH {primary:$primary}]-(c)`
+				})<-[:HAS {primary:$primary}]-(c)`
 	ExecuteWriteQuery(ctx, driver, query, map[string]any{
 		"contactId": contactId,
 		"primary":   primary,

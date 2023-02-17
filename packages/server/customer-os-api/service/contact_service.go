@@ -290,7 +290,7 @@ func (s *contactService) FindContactByPhoneNumber(ctx context.Context, e164 stri
 
 	queryResult, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (interface{}, error) {
 		result, err := tx.Run(ctx, `
-			MATCH (:PhoneNumber {e164:$e164})<-[:PHONE_ASSOCIATED_WITH]-(c:Contact),
+			MATCH (:PhoneNumber {e164:$e164})<-[:HAS]-(c:Contact),
 					(c)-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) 
 			RETURN c`,
 			map[string]interface{}{

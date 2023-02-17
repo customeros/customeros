@@ -28,7 +28,7 @@ func NewPhoneNumberRepository(driver *neo4j.DriverWithContext) PhoneNumberReposi
 
 func (r *phoneNumberRepository) MergePhoneNumberToContactInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant, contactId string, entity entity.PhoneNumberEntity) (*dbtype.Node, *dbtype.Relationship, error) {
 	query := "MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) " +
-		" MERGE (c)-[r:PHONE_ASSOCIATED_WITH]->(p:PhoneNumber {e164: $e164}) " +
+		" MERGE (c)-[r:HAS]->(p:PhoneNumber {e164: $e164}) " +
 		" ON CREATE SET p.label=$label, " +
 		"				r.primary=$primary, " +
 		"				p.id=randomUUID(), " +
@@ -60,7 +60,7 @@ func (r *phoneNumberRepository) MergePhoneNumberToContactInTx(ctx context.Contex
 func (r *phoneNumberRepository) UpdatePhoneNumberByContactInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant, contactId string, entity entity.PhoneNumberEntity) (*dbtype.Node, *dbtype.Relationship, error) {
 	queryResult, err := tx.Run(ctx, `
 			MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}),
-				(c)-[r:PHONE_ASSOCIATED_WITH]->(p:PhoneNumber {id: $phoneId})
+				(c)-[r:HAS]->(p:PhoneNumber {id: $phoneId})
             SET p.e164=$e164,
 				p.label=$label,
 				r.primary=$primary,
@@ -84,7 +84,7 @@ func (r *phoneNumberRepository) FindAllForContact(ctx context.Context, session n
 	return session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		result, err := tx.Run(ctx, `
 				MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}),
-              			(c)-[r:PHONE_ASSOCIATED_WITH]->(p:PhoneNumber)
+              			(c)-[r:HAS]->(p:PhoneNumber)
 				RETURN p, r`,
 			map[string]interface{}{
 				"contactId": contactId,
@@ -101,7 +101,7 @@ func (r *phoneNumberRepository) FindAllForContact(ctx context.Context, session n
 func (r *phoneNumberRepository) SetOtherContactPhoneNumbersNonPrimaryInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant, contactId, e164 string) error {
 	_, err := tx.Run(ctx, `
 			MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}),
-				 (c)-[r:PHONE_ASSOCIATED_WITH]->(p:PhoneNumber)
+				 (c)-[r:HAS]->(p:PhoneNumber)
 			WHERE p.e164 <> $e164
             SET r.primary=false`,
 		map[string]interface{}{

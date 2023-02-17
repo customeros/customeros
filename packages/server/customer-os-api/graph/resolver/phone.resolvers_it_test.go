@@ -53,7 +53,7 @@ func TestMutationResolver_PhoneNumberMergeToContact(t *testing.T) {
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "PhoneNumber"), "Incorrect number of PhoneNumber nodes in Neo4j")
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "PhoneNumber_"+tenantName), "Incorrect number of PhoneNumber_%s nodes in Neo4j", tenantName)
 	require.Equal(t, 3, neo4jt.GetTotalCountOfNodes(ctx, driver), "Incorrect total number of nodes in Neo4j")
-	require.Equal(t, 1, neo4jt.GetCountOfRelationships(ctx, driver, "PHONE_ASSOCIATED_WITH"), "Incorrect number of PHONE_ASSOCIATED_WITH relationships in Neo4j")
+	require.Equal(t, 1, neo4jt.GetCountOfRelationships(ctx, driver, "HAS"), "Incorrect number of PHONE_ASSOCIATED_WITH relationships in Neo4j")
 
 	// Check the labels on the nodes in the Neo4j database
 	assertNeo4jLabels(ctx, t, driver, []string{"Tenant", "Contact", "Contact_" + tenantName, "PhoneNumber", "PhoneNumber_" + tenantName})
