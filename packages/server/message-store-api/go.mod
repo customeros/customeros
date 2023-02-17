@@ -19,7 +19,7 @@ require (
 	github.com/openline-ai/openline-customer-os/packages/server/customer-os-api v0.0.0-20230214195550-054499130c38
 	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20230214195550-054499130c38
 	github.com/sirupsen/logrus v1.9.0
-	github.com/testcontainers/testcontainers-go v0.17.0
+	github.com/testcontainers/testcontainers-go v0.18.0
 	github.com/vektah/gqlparser/v2 v2.5.1
 	golang.org/x/net v0.7.0
 	google.golang.org/grpc v1.53.0
