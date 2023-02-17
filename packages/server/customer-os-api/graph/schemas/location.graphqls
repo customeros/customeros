@@ -12,8 +12,19 @@ type Location {
     address: String
     address2: String
     zip: String
+    addressType: String
+    houseNumber: String
+    postalCode: String
+    plusFour: String
+    commercial: Boolean
+    predirection: String
+    district: String
+    street: String
+    rawAddress: String
+    latitude: Float
+    longitude: Float
 
-    place: Place @goField(forceResolver: true)
+    place: Place @goField(forceResolver: true) @deprecated(reason: "Use location instead")
 }
 
 # Place is deprecated

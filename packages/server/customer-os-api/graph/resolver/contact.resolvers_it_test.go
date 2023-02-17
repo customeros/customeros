@@ -5,6 +5,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/neo4j"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils/decode"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/net/context"
@@ -579,15 +580,26 @@ func TestQueryResolver_Contact_WithLocations_ById(t *testing.T) {
 	contactId := neo4jt.CreateDefaultContact(ctx, driver, tenantName)
 	neo4jt.CreateDefaultContact(ctx, driver, tenantName)
 	locationId1 := neo4jt.CreateLocation(ctx, driver, tenantName, entity.LocationEntity{
-		Name:      "WORK",
-		Source:    entity.DataSourceOpenline,
-		AppSource: "test",
-		Country:   "testCountry",
-		Region:    "testRegion",
-		Locality:  "testLocality",
-		Address:   "testAddress",
-		Address2:  "testAddress2",
-		Zip:       "testZip",
+		Name:         "WORK",
+		Source:       entity.DataSourceOpenline,
+		AppSource:    "test",
+		Country:      "testCountry",
+		Region:       "testRegion",
+		Locality:     "testLocality",
+		Address:      "testAddress",
+		Address2:     "testAddress2",
+		Zip:          "testZip",
+		AddressType:  "testAddressType",
+		HouseNumber:  "testHouseNumber",
+		PostalCode:   "testPostalCode",
+		PlusFour:     "testPlusFour",
+		Commercial:   true,
+		Predirection: "testPredirection",
+		District:     "testDistrict",
+		Street:       "testStreet",
+		RawAddress:   "testRawAddress",
+		Latitude:     utils.ToPtr(float64(0.001)),
+		Longitude:    utils.ToPtr(float64(-2.002)),
 	})
 	locationId2 := neo4jt.CreateLocation(ctx, driver, tenantName, entity.LocationEntity{
 		Name:      "UNKNOWN",
@@ -638,6 +650,17 @@ func TestQueryResolver_Contact_WithLocations_ById(t *testing.T) {
 	require.Equal(t, "testAddress", *locationWithAddressDtls.Address)
 	require.Equal(t, "testAddress2", *locationWithAddressDtls.Address2)
 	require.Equal(t, "testZip", *locationWithAddressDtls.Zip)
+	require.Equal(t, "testAddressType", *locationWithAddressDtls.AddressType)
+	require.Equal(t, "testHouseNumber", *locationWithAddressDtls.HouseNumber)
+	require.Equal(t, "testPostalCode", *locationWithAddressDtls.PostalCode)
+	require.Equal(t, "testPlusFour", *locationWithAddressDtls.PlusFour)
+	require.Equal(t, true, *locationWithAddressDtls.Commercial)
+	require.Equal(t, "testPredirection", *locationWithAddressDtls.Predirection)
+	require.Equal(t, "testDistrict", *locationWithAddressDtls.District)
+	require.Equal(t, "testStreet", *locationWithAddressDtls.Street)
+	require.Equal(t, "testRawAddress", *locationWithAddressDtls.RawAddress)
+	require.Equal(t, float64(0.001), *locationWithAddressDtls.Latitude)
+	require.Equal(t, float64(-2.002), *locationWithAddressDtls.Longitude)
 
 	require.Equal(t, locationId2, locationWithoutAddressDtls.ID)
 	require.Equal(t, "UNKNOWN", locationWithoutAddressDtls.Name)
@@ -651,6 +674,9 @@ func TestQueryResolver_Contact_WithLocations_ById(t *testing.T) {
 	require.Equal(t, "", *locationWithoutAddressDtls.Address)
 	require.Equal(t, "", *locationWithoutAddressDtls.Address2)
 	require.Equal(t, "", *locationWithoutAddressDtls.Zip)
+	require.False(t, *locationWithoutAddressDtls.Commercial)
+	require.Nil(t, locationWithoutAddressDtls.Latitude)
+	require.Nil(t, locationWithoutAddressDtls.Longitude)
 }
 
 func TestQueryResolver_Contacts_SortByTitleAscFirstNameAscLastNameDesc(t *testing.T) {

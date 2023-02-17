@@ -573,19 +573,30 @@ type JobRoleUpdateInput struct {
 }
 
 type Location struct {
-	ID        string      `json:"id"`
-	Name      string      `json:"name"`
-	CreatedAt time.Time   `json:"createdAt"`
-	UpdatedAt time.Time   `json:"updatedAt"`
-	Source    *DataSource `json:"source"`
-	AppSource *string     `json:"appSource"`
-	Country   *string     `json:"country"`
-	Region    *string     `json:"region"`
-	Locality  *string     `json:"locality"`
-	Address   *string     `json:"address"`
-	Address2  *string     `json:"address2"`
-	Zip       *string     `json:"zip"`
-	Place     *Place      `json:"place"`
+	ID           string      `json:"id"`
+	Name         string      `json:"name"`
+	CreatedAt    time.Time   `json:"createdAt"`
+	UpdatedAt    time.Time   `json:"updatedAt"`
+	Source       *DataSource `json:"source"`
+	AppSource    *string     `json:"appSource"`
+	Country      *string     `json:"country"`
+	Region       *string     `json:"region"`
+	Locality     *string     `json:"locality"`
+	Address      *string     `json:"address"`
+	Address2     *string     `json:"address2"`
+	Zip          *string     `json:"zip"`
+	AddressType  *string     `json:"addressType"`
+	HouseNumber  *string     `json:"houseNumber"`
+	PostalCode   *string     `json:"postalCode"`
+	PlusFour     *string     `json:"plusFour"`
+	Commercial   *bool       `json:"commercial"`
+	Predirection *string     `json:"predirection"`
+	District     *string     `json:"district"`
+	Street       *string     `json:"street"`
+	RawAddress   *string     `json:"rawAddress"`
+	Latitude     *float64    `json:"latitude"`
+	Longitude    *float64    `json:"longitude"`
+	Place        *Place      `json:"place"`
 }
 
 type Note struct {

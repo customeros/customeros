@@ -16,6 +16,17 @@ type LocationEntity struct {
 	Address       string
 	Address2      string
 	Zip           string
+	AddressType   string
+	HouseNumber   string
+	PostalCode    string
+	PlusFour      string
+	Commercial    bool
+	Predirection  string
+	District      string
+	Street        string
+	RawAddress    string
+	Latitude      *float64
+	Longitude     *float64
 	SourceOfTruth DataSource
 	Source        DataSource
 	AppSource     string
