@@ -312,14 +312,21 @@ func (s *CustomerOSService) ConversationByIdExists(ctx context.Context, tenant s
 	return true, nil
 }
 
-func (s *CustomerOSService) GetConversations(ctx context.Context, tenant string) ([]Conversation, error) {
+func (s *CustomerOSService) GetConversations(ctx context.Context, tenant string, onlyContacts bool) ([]Conversation, error) {
 	session := utils.NewNeo4jReadSession(ctx, *s.driver)
 	defer session.Close(ctx)
 
 	dbRecords, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-
 		//todo move order by as param
-		if queryResult, err := tx.Run(ctx, "MATCH (c:Conversation_"+tenant+") RETURN c order by c.updatedAt desc", map[string]any{
+		cypher := ""
+		if onlyContacts {
+			//cypher = "match (t:Tenant{name:$tenant})<-[:USER_BELONGS_TO_TENANT]-(u:User)-[:HAS]->(e:Email {email:$user}), (u)-[:PARTICIPATES]->(o:Conversation)<-[:PARTICIPATES]-(c:Contact) return distinct o"
+			cypher = "match (t:Tenant{name:$tenant})<-[:USER_BELONGS_TO_TENANT]-(u:User), (u)-[:PARTICIPATES]->(o:Conversation)<-[:PARTICIPATES]-(c:Contact) return distinct o order by o.updatedAt desc"
+		} else {
+			cypher = "MATCH (c:Conversation_" + tenant + ") RETURN c order by c.updatedAt desc"
+		}
+
+		if queryResult, err := tx.Run(ctx, cypher, map[string]any{
 			"tenant": tenant,
 		}); err != nil {
 			return nil, err
