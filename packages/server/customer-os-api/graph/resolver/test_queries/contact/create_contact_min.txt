@@ -5,6 +5,7 @@ contact_Create(
   ) {
     id
     title
+    name
     firstName
     lastName
     label

@@ -76,9 +76,9 @@ func TestMutationResolver_ContactCreate_Min(t *testing.T) {
 	require.Nil(t, err)
 	require.NotNil(t, contact)
 	require.Equal(t, "", contact.Contact_Create.Title.String())
+	require.Equal(t, "", *contact.Contact_Create.Name)
 	require.Equal(t, "", *contact.Contact_Create.FirstName)
 	require.Equal(t, "", *contact.Contact_Create.LastName)
-	require.Equal(t, "", *contact.Contact_Create.Label)
 	require.Equal(t, model.DataSourceOpenline, contact.Contact_Create.Source)
 
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Tenant"))
@@ -108,7 +108,6 @@ func TestMutationResolver_ContactCreate(t *testing.T) {
 	require.Equal(t, "MR", contact.Contact_Create.Title.String())
 	require.Equal(t, "first", *contact.Contact_Create.FirstName)
 	require.Equal(t, "last", *contact.Contact_Create.LastName)
-	require.Equal(t, "Some label", *contact.Contact_Create.Label)
 	require.Equal(t, model.DataSourceOpenline, contact.Contact_Create.Source)
 
 	require.Equal(t, 5, len(contact.Contact_Create.CustomFields))
@@ -354,7 +353,6 @@ func TestMutationResolver_UpdateContact(t *testing.T) {
 		Title:     model.PersonTitleMr.String(),
 		FirstName: "first",
 		LastName:  "last",
-		Label:     "label",
 	})
 
 	neo4jt.UserOwnsContact(ctx, driver, origOwnerId, contactId)
@@ -374,7 +372,6 @@ func TestMutationResolver_UpdateContact(t *testing.T) {
 	require.Equal(t, "DR", contact.Contact_Update.Title.String())
 	require.Equal(t, "updated first", *contact.Contact_Update.FirstName)
 	require.Equal(t, "updated last", *contact.Contact_Update.LastName)
-	require.Equal(t, "updated label", *contact.Contact_Update.Label)
 	require.Equal(t, newOwnerId, contact.Contact_Update.Owner.ID)
 
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Contact"))
@@ -708,6 +705,7 @@ func TestQueryResolver_Contact_BasicFilters_FindContactWithLetterAInName(t *test
 
 	contactFoundByFirstName := neo4jt.CreateContact(ctx, driver, tenantName, entity.ContactEntity{
 		Title:     "MR",
+		Name:      "contact1",
 		FirstName: "aa",
 		LastName:  "bb",
 	})
@@ -727,18 +725,24 @@ func TestQueryResolver_Contact_BasicFilters_FindContactWithLetterAInName(t *test
 	rawResponse, err := c.RawPost(getQuery("contact/get_contacts_basic_filters"))
 	assertRawResponseSuccess(t, rawResponse, err)
 
-	var contacts struct {
+	var contactsStruct struct {
 		Contacts model.ContactsPage
 	}
 
-	err = decode.Decode(rawResponse.Data.(map[string]any), &contacts)
+	err = decode.Decode(rawResponse.Data.(map[string]any), &contactsStruct)
 	require.Nil(t, err)
-	require.NotNil(t, contacts.Contacts)
-	require.Equal(t, 2, len(contacts.Contacts.Content))
-	require.Equal(t, contactFoundByFirstName, contacts.Contacts.Content[0].ID)
-	require.Equal(t, contactFoundByLastName, contacts.Contacts.Content[1].ID)
-	require.Equal(t, 1, contacts.Contacts.TotalPages)
-	require.Equal(t, int64(2), contacts.Contacts.TotalElements)
+	require.NotNil(t, contactsStruct.Contacts)
+
+	contacts := contactsStruct.Contacts.Content
+
+	require.Equal(t, 2, len(contacts))
+	require.Equal(t, contactFoundByFirstName, contacts[0].ID)
+	require.Equal(t, "contact1", *contacts[0].Name)
+	require.Equal(t, "aa", *contacts[0].FirstName)
+	require.Equal(t, "bb", *contacts[0].LastName)
+	require.Equal(t, contactFoundByLastName, contacts[1].ID)
+	require.Equal(t, 1, contactsStruct.Contacts.TotalPages)
+	require.Equal(t, int64(2), contactsStruct.Contacts.TotalElements)
 	// suppress unused warnings
 	require.NotNil(t, contactFilteredOut)
 }

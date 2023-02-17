@@ -59,6 +59,7 @@ type DirectiveRoot struct {
 type ComplexityRoot struct {
 	Contact struct {
 		Actions       func(childComplexity int, from time.Time, to time.Time, actionTypes []model.ActionType) int
+		AppSource     func(childComplexity int) int
 		Conversations func(childComplexity int, pagination *model.Pagination, sort []*model.SortBy) int
 		CreatedAt     func(childComplexity int) int
 		CustomFields  func(childComplexity int) int
@@ -71,11 +72,13 @@ type ComplexityRoot struct {
 		Label         func(childComplexity int) int
 		LastName      func(childComplexity int) int
 		Locations     func(childComplexity int) int
+		Name          func(childComplexity int) int
 		Notes         func(childComplexity int, pagination *model.Pagination) int
 		Organizations func(childComplexity int, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) int
 		Owner         func(childComplexity int) int
 		PhoneNumbers  func(childComplexity int) int
 		Source        func(childComplexity int) int
+		SourceOfTruth func(childComplexity int) int
 		Tags          func(childComplexity int) int
 		Template      func(childComplexity int) int
 		Title         func(childComplexity int) int
@@ -606,6 +609,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Contact.Actions(childComplexity, args["from"].(time.Time), args["to"].(time.Time), args["actionTypes"].([]model.ActionType)), true
 
+	case "Contact.appSource":
+		if e.complexity.Contact.AppSource == nil {
+			break
+		}
+
+		return e.complexity.Contact.AppSource(childComplexity), true
+
 	case "Contact.conversations":
 		if e.complexity.Contact.Conversations == nil {
 			break
@@ -695,6 +705,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Contact.Locations(childComplexity), true
 
+	case "Contact.name":
+		if e.complexity.Contact.Name == nil {
+			break
+		}
+
+		return e.complexity.Contact.Name(childComplexity), true
+
 	case "Contact.notes":
 		if e.complexity.Contact.Notes == nil {
 			break
@@ -739,6 +756,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Contact.Source(childComplexity), true
+
+	case "Contact.sourceOfTruth":
+		if e.complexity.Contact.SourceOfTruth == nil {
+			break
+		}
+
+		return e.complexity.Contact.SourceOfTruth(childComplexity), true
 
 	case "Contact.tags":
 		if e.complexity.Contact.Tags == nil {
@@ -3151,7 +3175,6 @@ enum ActionType {
     - TITLE
     - FIRST_NAME
     - LAST_NAME
-    - LABEL
     - CREATED_AT
     """
     contacts(pagination: Pagination, where: Filter, sort: [SortBy!]): ContactsPage!
@@ -3184,6 +3207,11 @@ type Contact implements ExtensibleEntity & Node {
     title: PersonTitle
 
     """
+    The name of the contact in customerOS, alternative for firstName + lastName.
+    """
+    name: String
+
+    """
     The first name of the contact in customerOS.
     """
     firstName: String
@@ -3200,10 +3228,11 @@ type Contact implements ExtensibleEntity & Node {
     createdAt: Time!
     updatedAt: Time!
 
-    "A user-defined label applied against a contact in customerOS."
-    label: String
+    label: String @deprecated(reason: "Use ` + "`" + `tags` + "`" + ` instead")
 
     source: DataSource!
+    sourceOfTruth: DataSource!
+    appSource: String
 
     tags: [Tag!] @goField(forceResolver: true)
 
@@ -3310,8 +3339,7 @@ input ContactInput {
     """
     lastName: String
 
-    "A user-defined label attached to contact."
-    label: String
+    label: String @deprecated(reason: "Use ` + "`" + `tags` + "`" + ` instead")
 
     """
     An ISO8601 timestamp recording when the contact was created in customerOS.
@@ -3363,8 +3391,7 @@ input ContactUpdateInput {
     """
     lastName: String
 
-    "A user-defined label applied against a contact in customerOS."
-    label: String
+    label: String @deprecated(reason: "Use ` + "`" + `tags` + "`" + ` instead")
 
     "Id of the contact owner (user)"
     ownerId: ID
@@ -6344,6 +6371,47 @@ func (ec *executionContext) fieldContext_Contact_title(ctx context.Context, fiel
 	return fc, nil
 }
 
+func (ec *executionContext) _Contact_name(ctx context.Context, field graphql.CollectedField, obj *model.Contact) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Contact_name(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Name, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Contact_name(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Contact",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Contact_firstName(ctx context.Context, field graphql.CollectedField, obj *model.Contact) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Contact_firstName(ctx, field)
 	if err != nil {
@@ -6594,6 +6662,91 @@ func (ec *executionContext) fieldContext_Contact_source(ctx context.Context, fie
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type DataSource does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Contact_sourceOfTruth(ctx context.Context, field graphql.CollectedField, obj *model.Contact) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Contact_sourceOfTruth(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.SourceOfTruth, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(model.DataSource)
+	fc.Result = res
+	return ec.marshalNDataSource2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐDataSource(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Contact_sourceOfTruth(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Contact",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type DataSource does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Contact_appSource(ctx context.Context, field graphql.CollectedField, obj *model.Contact) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Contact_appSource(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.AppSource, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Contact_appSource(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Contact",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
 		},
 	}
 	return fc, nil
@@ -7884,6 +8037,8 @@ func (ec *executionContext) fieldContext_ContactsPage_content(ctx context.Contex
 				return ec.fieldContext_Contact_id(ctx, field)
 			case "title":
 				return ec.fieldContext_Contact_title(ctx, field)
+			case "name":
+				return ec.fieldContext_Contact_name(ctx, field)
 			case "firstName":
 				return ec.fieldContext_Contact_firstName(ctx, field)
 			case "lastName":
@@ -7896,6 +8051,10 @@ func (ec *executionContext) fieldContext_ContactsPage_content(ctx context.Contex
 				return ec.fieldContext_Contact_label(ctx, field)
 			case "source":
 				return ec.fieldContext_Contact_source(ctx, field)
+			case "sourceOfTruth":
+				return ec.fieldContext_Contact_sourceOfTruth(ctx, field)
+			case "appSource":
+				return ec.fieldContext_Contact_appSource(ctx, field)
 			case "tags":
 				return ec.fieldContext_Contact_tags(ctx, field)
 			case "jobRoles":
@@ -8402,6 +8561,8 @@ func (ec *executionContext) fieldContext_Conversation_contacts(ctx context.Conte
 				return ec.fieldContext_Contact_id(ctx, field)
 			case "title":
 				return ec.fieldContext_Contact_title(ctx, field)
+			case "name":
+				return ec.fieldContext_Contact_name(ctx, field)
 			case "firstName":
 				return ec.fieldContext_Contact_firstName(ctx, field)
 			case "lastName":
@@ -8414,6 +8575,10 @@ func (ec *executionContext) fieldContext_Conversation_contacts(ctx context.Conte
 				return ec.fieldContext_Contact_label(ctx, field)
 			case "source":
 				return ec.fieldContext_Contact_source(ctx, field)
+			case "sourceOfTruth":
+				return ec.fieldContext_Contact_sourceOfTruth(ctx, field)
+			case "appSource":
+				return ec.fieldContext_Contact_appSource(ctx, field)
 			case "tags":
 				return ec.fieldContext_Contact_tags(ctx, field)
 			case "jobRoles":
@@ -9854,6 +10019,8 @@ func (ec *executionContext) fieldContext_DashboardViewItem_contact(ctx context.C
 				return ec.fieldContext_Contact_id(ctx, field)
 			case "title":
 				return ec.fieldContext_Contact_title(ctx, field)
+			case "name":
+				return ec.fieldContext_Contact_name(ctx, field)
 			case "firstName":
 				return ec.fieldContext_Contact_firstName(ctx, field)
 			case "lastName":
@@ -9866,6 +10033,10 @@ func (ec *executionContext) fieldContext_DashboardViewItem_contact(ctx context.C
 				return ec.fieldContext_Contact_label(ctx, field)
 			case "source":
 				return ec.fieldContext_Contact_source(ctx, field)
+			case "sourceOfTruth":
+				return ec.fieldContext_Contact_sourceOfTruth(ctx, field)
+			case "appSource":
+				return ec.fieldContext_Contact_appSource(ctx, field)
 			case "tags":
 				return ec.fieldContext_Contact_tags(ctx, field)
 			case "jobRoles":
@@ -11770,6 +11941,8 @@ func (ec *executionContext) fieldContext_JobRole_contact(ctx context.Context, fi
 				return ec.fieldContext_Contact_id(ctx, field)
 			case "title":
 				return ec.fieldContext_Contact_title(ctx, field)
+			case "name":
+				return ec.fieldContext_Contact_name(ctx, field)
 			case "firstName":
 				return ec.fieldContext_Contact_firstName(ctx, field)
 			case "lastName":
@@ -11782,6 +11955,10 @@ func (ec *executionContext) fieldContext_JobRole_contact(ctx context.Context, fi
 				return ec.fieldContext_Contact_label(ctx, field)
 			case "source":
 				return ec.fieldContext_Contact_source(ctx, field)
+			case "sourceOfTruth":
+				return ec.fieldContext_Contact_sourceOfTruth(ctx, field)
+			case "appSource":
+				return ec.fieldContext_Contact_appSource(ctx, field)
 			case "tags":
 				return ec.fieldContext_Contact_tags(ctx, field)
 			case "jobRoles":
@@ -12765,6 +12942,8 @@ func (ec *executionContext) fieldContext_Mutation_contact_Create(ctx context.Con
 				return ec.fieldContext_Contact_id(ctx, field)
 			case "title":
 				return ec.fieldContext_Contact_title(ctx, field)
+			case "name":
+				return ec.fieldContext_Contact_name(ctx, field)
 			case "firstName":
 				return ec.fieldContext_Contact_firstName(ctx, field)
 			case "lastName":
@@ -12777,6 +12956,10 @@ func (ec *executionContext) fieldContext_Mutation_contact_Create(ctx context.Con
 				return ec.fieldContext_Contact_label(ctx, field)
 			case "source":
 				return ec.fieldContext_Contact_source(ctx, field)
+			case "sourceOfTruth":
+				return ec.fieldContext_Contact_sourceOfTruth(ctx, field)
+			case "appSource":
+				return ec.fieldContext_Contact_appSource(ctx, field)
 			case "tags":
 				return ec.fieldContext_Contact_tags(ctx, field)
 			case "jobRoles":
@@ -12865,6 +13048,8 @@ func (ec *executionContext) fieldContext_Mutation_contact_Update(ctx context.Con
 				return ec.fieldContext_Contact_id(ctx, field)
 			case "title":
 				return ec.fieldContext_Contact_title(ctx, field)
+			case "name":
+				return ec.fieldContext_Contact_name(ctx, field)
 			case "firstName":
 				return ec.fieldContext_Contact_firstName(ctx, field)
 			case "lastName":
@@ -12877,6 +13062,10 @@ func (ec *executionContext) fieldContext_Mutation_contact_Update(ctx context.Con
 				return ec.fieldContext_Contact_label(ctx, field)
 			case "source":
 				return ec.fieldContext_Contact_source(ctx, field)
+			case "sourceOfTruth":
+				return ec.fieldContext_Contact_sourceOfTruth(ctx, field)
+			case "appSource":
+				return ec.fieldContext_Contact_appSource(ctx, field)
 			case "tags":
 				return ec.fieldContext_Contact_tags(ctx, field)
 			case "jobRoles":
@@ -13081,6 +13270,8 @@ func (ec *executionContext) fieldContext_Mutation_contact_AddTagById(ctx context
 				return ec.fieldContext_Contact_id(ctx, field)
 			case "title":
 				return ec.fieldContext_Contact_title(ctx, field)
+			case "name":
+				return ec.fieldContext_Contact_name(ctx, field)
 			case "firstName":
 				return ec.fieldContext_Contact_firstName(ctx, field)
 			case "lastName":
@@ -13093,6 +13284,10 @@ func (ec *executionContext) fieldContext_Mutation_contact_AddTagById(ctx context
 				return ec.fieldContext_Contact_label(ctx, field)
 			case "source":
 				return ec.fieldContext_Contact_source(ctx, field)
+			case "sourceOfTruth":
+				return ec.fieldContext_Contact_sourceOfTruth(ctx, field)
+			case "appSource":
+				return ec.fieldContext_Contact_appSource(ctx, field)
 			case "tags":
 				return ec.fieldContext_Contact_tags(ctx, field)
 			case "jobRoles":
@@ -13181,6 +13376,8 @@ func (ec *executionContext) fieldContext_Mutation_contact_RemoveTagById(ctx cont
 				return ec.fieldContext_Contact_id(ctx, field)
 			case "title":
 				return ec.fieldContext_Contact_title(ctx, field)
+			case "name":
+				return ec.fieldContext_Contact_name(ctx, field)
 			case "firstName":
 				return ec.fieldContext_Contact_firstName(ctx, field)
 			case "lastName":
@@ -13193,6 +13390,10 @@ func (ec *executionContext) fieldContext_Mutation_contact_RemoveTagById(ctx cont
 				return ec.fieldContext_Contact_label(ctx, field)
 			case "source":
 				return ec.fieldContext_Contact_source(ctx, field)
+			case "sourceOfTruth":
+				return ec.fieldContext_Contact_sourceOfTruth(ctx, field)
+			case "appSource":
+				return ec.fieldContext_Contact_appSource(ctx, field)
 			case "tags":
 				return ec.fieldContext_Contact_tags(ctx, field)
 			case "jobRoles":
@@ -13863,6 +14064,8 @@ func (ec *executionContext) fieldContext_Mutation_customFieldsMergeAndUpdateInCo
 				return ec.fieldContext_Contact_id(ctx, field)
 			case "title":
 				return ec.fieldContext_Contact_title(ctx, field)
+			case "name":
+				return ec.fieldContext_Contact_name(ctx, field)
 			case "firstName":
 				return ec.fieldContext_Contact_firstName(ctx, field)
 			case "lastName":
@@ -13875,6 +14078,10 @@ func (ec *executionContext) fieldContext_Mutation_customFieldsMergeAndUpdateInCo
 				return ec.fieldContext_Contact_label(ctx, field)
 			case "source":
 				return ec.fieldContext_Contact_source(ctx, field)
+			case "sourceOfTruth":
+				return ec.fieldContext_Contact_sourceOfTruth(ctx, field)
+			case "appSource":
+				return ec.fieldContext_Contact_appSource(ctx, field)
 			case "tags":
 				return ec.fieldContext_Contact_tags(ctx, field)
 			case "jobRoles":
@@ -19817,6 +20024,8 @@ func (ec *executionContext) fieldContext_Query_contact(ctx context.Context, fiel
 				return ec.fieldContext_Contact_id(ctx, field)
 			case "title":
 				return ec.fieldContext_Contact_title(ctx, field)
+			case "name":
+				return ec.fieldContext_Contact_name(ctx, field)
 			case "firstName":
 				return ec.fieldContext_Contact_firstName(ctx, field)
 			case "lastName":
@@ -19829,6 +20038,10 @@ func (ec *executionContext) fieldContext_Query_contact(ctx context.Context, fiel
 				return ec.fieldContext_Contact_label(ctx, field)
 			case "source":
 				return ec.fieldContext_Contact_source(ctx, field)
+			case "sourceOfTruth":
+				return ec.fieldContext_Contact_sourceOfTruth(ctx, field)
+			case "appSource":
+				return ec.fieldContext_Contact_appSource(ctx, field)
 			case "tags":
 				return ec.fieldContext_Contact_tags(ctx, field)
 			case "jobRoles":
@@ -19979,6 +20192,8 @@ func (ec *executionContext) fieldContext_Query_contact_ByEmail(ctx context.Conte
 				return ec.fieldContext_Contact_id(ctx, field)
 			case "title":
 				return ec.fieldContext_Contact_title(ctx, field)
+			case "name":
+				return ec.fieldContext_Contact_name(ctx, field)
 			case "firstName":
 				return ec.fieldContext_Contact_firstName(ctx, field)
 			case "lastName":
@@ -19991,6 +20206,10 @@ func (ec *executionContext) fieldContext_Query_contact_ByEmail(ctx context.Conte
 				return ec.fieldContext_Contact_label(ctx, field)
 			case "source":
 				return ec.fieldContext_Contact_source(ctx, field)
+			case "sourceOfTruth":
+				return ec.fieldContext_Contact_sourceOfTruth(ctx, field)
+			case "appSource":
+				return ec.fieldContext_Contact_appSource(ctx, field)
 			case "tags":
 				return ec.fieldContext_Contact_tags(ctx, field)
 			case "jobRoles":
@@ -20079,6 +20298,8 @@ func (ec *executionContext) fieldContext_Query_contact_ByPhone(ctx context.Conte
 				return ec.fieldContext_Contact_id(ctx, field)
 			case "title":
 				return ec.fieldContext_Contact_title(ctx, field)
+			case "name":
+				return ec.fieldContext_Contact_name(ctx, field)
 			case "firstName":
 				return ec.fieldContext_Contact_firstName(ctx, field)
 			case "lastName":
@@ -20091,6 +20312,10 @@ func (ec *executionContext) fieldContext_Query_contact_ByPhone(ctx context.Conte
 				return ec.fieldContext_Contact_label(ctx, field)
 			case "source":
 				return ec.fieldContext_Contact_source(ctx, field)
+			case "sourceOfTruth":
+				return ec.fieldContext_Contact_sourceOfTruth(ctx, field)
+			case "appSource":
+				return ec.fieldContext_Contact_appSource(ctx, field)
 			case "tags":
 				return ec.fieldContext_Contact_tags(ctx, field)
 			case "jobRoles":
@@ -25676,6 +25901,10 @@ func (ec *executionContext) _Contact(ctx context.Context, sel ast.SelectionSet, 
 
 			out.Values[i] = ec._Contact_title(ctx, field, obj)
 
+		case "name":
+
+			out.Values[i] = ec._Contact_name(ctx, field, obj)
+
 		case "firstName":
 
 			out.Values[i] = ec._Contact_firstName(ctx, field, obj)
@@ -25709,6 +25938,17 @@ func (ec *executionContext) _Contact(ctx context.Context, sel ast.SelectionSet, 
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&invalids, 1)
 			}
+		case "sourceOfTruth":
+
+			out.Values[i] = ec._Contact_sourceOfTruth(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "appSource":
+
+			out.Values[i] = ec._Contact_appSource(ctx, field, obj)
+
 		case "tags":
 			field := field
 

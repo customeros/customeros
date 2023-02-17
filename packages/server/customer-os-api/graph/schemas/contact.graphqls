@@ -17,7 +17,6 @@ extend type Query {
     - TITLE
     - FIRST_NAME
     - LAST_NAME
-    - LABEL
     - CREATED_AT
     """
     contacts(pagination: Pagination, where: Filter, sort: [SortBy!]): ContactsPage!
@@ -50,6 +49,11 @@ type Contact implements ExtensibleEntity & Node {
     title: PersonTitle
 
     """
+    The name of the contact in customerOS, alternative for firstName + lastName.
+    """
+    name: String
+
+    """
     The first name of the contact in customerOS.
     """
     firstName: String
@@ -66,10 +70,11 @@ type Contact implements ExtensibleEntity & Node {
     createdAt: Time!
     updatedAt: Time!
 
-    "A user-defined label applied against a contact in customerOS."
-    label: String
+    label: String @deprecated(reason: "Use `tags` instead")
 
     source: DataSource!
+    sourceOfTruth: DataSource!
+    appSource: String
 
     tags: [Tag!] @goField(forceResolver: true)
 
@@ -176,8 +181,7 @@ input ContactInput {
     """
     lastName: String
 
-    "A user-defined label attached to contact."
-    label: String
+    label: String @deprecated(reason: "Use `tags` instead")
 
     """
     An ISO8601 timestamp recording when the contact was created in customerOS.
@@ -229,8 +233,7 @@ input ContactUpdateInput {
     """
     lastName: String
 
-    "A user-defined label applied against a contact in customerOS."
-    label: String
+    label: String @deprecated(reason: "Use `tags` instead")
 
     "Id of the contact owner (user)"
     ownerId: ID
