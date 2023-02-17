@@ -20,7 +20,7 @@ func (i *Loaders) GetEmailsForContact(ctx context.Context, contactId string) (*e
 	return &resultObj, nil
 }
 
-func (b *batcher) getEmailsForContacts(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
+func (b *emailBatcher) getEmailsForContacts(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
 	ids, keyOrder := sortKeys(keys)
 
 	ctx, cancel := context.WithTimeout(ctx, emailContextTimeout)

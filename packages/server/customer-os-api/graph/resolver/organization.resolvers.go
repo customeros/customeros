@@ -83,7 +83,7 @@ func (r *organizationResolver) Locations(ctx context.Context, obj *model.Organiz
 		utils.LogMethodExecution(start, utils.GetFunctionName())
 	}(time.Now())
 
-	locationEntities, err := r.Services.LocationService.GetAllForOrganization(ctx, obj.ID)
+	locationEntities, err := dataloader.For(ctx).GetLocationsForOrganization(ctx, obj.ID)
 	if err != nil {
 		graphql.AddErrorf(ctx, "Failed to get locations for organization %s", obj.ID)
 		return nil, err

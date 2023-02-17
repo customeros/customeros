@@ -12,28 +12,40 @@ type loadersString string
 const loadersKey = loadersString("dataloaders")
 
 type Loaders struct {
-	TagsForOrganization *dataloader.Loader
-	TagsForContact      *dataloader.Loader
-	EmailsForContact    *dataloader.Loader
+	TagsForOrganization      *dataloader.Loader
+	TagsForContact           *dataloader.Loader
+	EmailsForContact         *dataloader.Loader
+	LocationsForContact      *dataloader.Loader
+	LocationsForOrganization *dataloader.Loader
 }
 
-type batcher struct {
-	tagService   service.TagService
+type tagBatcher struct {
+	tagService service.TagService
+}
+type emailBatcher struct {
 	emailService service.EmailService
+}
+type locationBatcher struct {
+	locationService service.LocationService
 }
 
 // NewDataLoader returns the instantiated Loaders struct for use in a request
 func NewDataLoader(services *service.Services) *Loaders {
-	tagBatcher := &batcher{
+	tagBatcher := &tagBatcher{
 		tagService: services.TagService,
 	}
-	emailBatcher := &batcher{
+	emailBatcher := &emailBatcher{
 		emailService: services.EmailService,
 	}
+	locationBatcher := &locationBatcher{
+		locationService: services.LocationService,
+	}
 	return &Loaders{
-		TagsForOrganization: dataloader.NewBatchedLoader(tagBatcher.getTagsForOrganizations, dataloader.WithClearCacheOnBatch()),
-		TagsForContact:      dataloader.NewBatchedLoader(tagBatcher.getTagsForContacts, dataloader.WithClearCacheOnBatch()),
-		EmailsForContact:    dataloader.NewBatchedLoader(emailBatcher.getEmailsForContacts, dataloader.WithClearCacheOnBatch()),
+		TagsForOrganization:      dataloader.NewBatchedLoader(tagBatcher.getTagsForOrganizations, dataloader.WithClearCacheOnBatch()),
+		TagsForContact:           dataloader.NewBatchedLoader(tagBatcher.getTagsForContacts, dataloader.WithClearCacheOnBatch()),
+		EmailsForContact:         dataloader.NewBatchedLoader(emailBatcher.getEmailsForContacts, dataloader.WithClearCacheOnBatch()),
+		LocationsForContact:      dataloader.NewBatchedLoader(locationBatcher.getLocationsForContacts, dataloader.WithClearCacheOnBatch()),
+		LocationsForOrganization: dataloader.NewBatchedLoader(locationBatcher.getLocationsForOrganizations, dataloader.WithClearCacheOnBatch()),
 	}
 }
 

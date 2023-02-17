@@ -19,6 +19,8 @@ type LocationEntity struct {
 	SourceOfTruth DataSource
 	Source        DataSource
 	AppSource     string
+
+	DataloaderKey string
 }
 
 func (location LocationEntity) ToString() string {

@@ -12,7 +12,9 @@ import (
 
 type LocationService interface {
 	GetAllForContact(ctx context.Context, contactId string) (*entity.LocationEntities, error)
+	GetAllForContacts(ctx context.Context, contactIds []string) (*entity.LocationEntities, error)
 	GetAllForOrganization(ctx context.Context, organizationId string) (*entity.LocationEntities, error)
+	GetAllForOrganizations(ctx context.Context, organizationIds []string) (*entity.LocationEntities, error)
 }
 
 type locationService struct {
@@ -42,6 +44,20 @@ func (s *locationService) GetAllForContact(ctx context.Context, contactId string
 	return &locationEntities, nil
 }
 
+func (s *locationService) GetAllForContacts(ctx context.Context, contactIds []string) (*entity.LocationEntities, error) {
+	locations, err := s.repositories.LocationRepository.GetAllForContacts(ctx, common.GetTenantFromContext(ctx), contactIds)
+	if err != nil {
+		return nil, err
+	}
+	locationEntities := entity.LocationEntities{}
+	for _, v := range locations {
+		locationEntity := s.mapDbNodeToLocationEntity(*v.Node)
+		locationEntity.DataloaderKey = v.LinkedNodeId
+		locationEntities = append(locationEntities, *locationEntity)
+	}
+	return &locationEntities, nil
+}
+
 func (s *locationService) GetAllForOrganization(ctx context.Context, organizationId string) (*entity.LocationEntities, error) {
 	dbNodes, err := s.repositories.LocationRepository.GetAllForOrganization(ctx, common.GetContext(ctx).Tenant, organizationId)
 	if err != nil {
@@ -51,6 +67,20 @@ func (s *locationService) GetAllForOrganization(ctx context.Context, organizatio
 	locationEntities := entity.LocationEntities{}
 	for _, dbNode := range dbNodes {
 		locationEntities = append(locationEntities, *s.mapDbNodeToLocationEntity(*dbNode))
+	}
+	return &locationEntities, nil
+}
+
+func (s *locationService) GetAllForOrganizations(ctx context.Context, organizationIds []string) (*entity.LocationEntities, error) {
+	locations, err := s.repositories.LocationRepository.GetAllForOrganizations(ctx, common.GetTenantFromContext(ctx), organizationIds)
+	if err != nil {
+		return nil, err
+	}
+	locationEntities := entity.LocationEntities{}
+	for _, v := range locations {
+		locationEntity := s.mapDbNodeToLocationEntity(*v.Node)
+		locationEntity.DataloaderKey = v.LinkedNodeId
+		locationEntities = append(locationEntities, *locationEntity)
 	}
 	return &locationEntities, nil
 }
