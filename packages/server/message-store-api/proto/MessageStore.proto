@@ -48,6 +48,7 @@ message GetFeedsPagedRequest {
   repeated FeedItemState stateIn = 1;
   int32 page = 2;
   int32 pageSize = 3;
+  bool onlyContacts = 4;
 }
 
 service MessageStoreService {

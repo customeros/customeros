@@ -140,7 +140,7 @@ func (s *MessageService) GetFeeds(ctx context.Context, request *msProto.GetFeeds
 		return nil, err
 	}
 
-	conversations, err := s.customerOSService.GetConversations(ctx, *tenantName)
+	conversations, err := s.customerOSService.GetConversations(ctx, *tenantName, request.GetOnlyContacts())
 	if err != nil {
 		return nil, err
 	}
