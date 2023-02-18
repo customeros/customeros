@@ -118,8 +118,8 @@ func (s *phoneNumberService) Delete(ctx context.Context, contactId string, e164 
 	queryResult, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (interface{}, error) {
 		_, err := tx.Run(ctx, `
 			MATCH (c:Contact {id:$id})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}),
-                  (c:Contact {id:$id})-[:HAS]->(p:PhoneNumber {e164:$e164})
-            DETACH DELETE p
+                  (c)-[rel:HAS]->(p:PhoneNumber {e164:$e164})
+            DELETE rel, p
 			`,
 			map[string]interface{}{
 				"id":     contactId,
@@ -143,8 +143,8 @@ func (s *phoneNumberService) DeleteById(ctx context.Context, contactId string, p
 	queryResult, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (interface{}, error) {
 		_, err := tx.Run(ctx, `
 			MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}),
-                  (c:Contact {id:$contactId})-[:HAS]->(p:PhoneNumber {id:$phoneId})
-            DETACH DELETE p
+                  (c:Contact)-[rel:HAS]->(p:PhoneNumber {id:$phoneId})
+            DELETE rel, p
 			`,
 			map[string]interface{}{
 				"contactId": contactId,
@@ -166,9 +166,9 @@ func (s *phoneNumberService) mapDbNodeToPhoneNumberEntity(node dbtype.Node) *ent
 	result := entity.PhoneNumberEntity{
 		Id:            utils.GetStringPropOrEmpty(props, "id"),
 		E164:          utils.GetStringPropOrEmpty(props, "e164"),
-		Label:         utils.GetStringPropOrEmpty(props, "label"),
 		Source:        entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
 		SourceOfTruth: entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
+		AppSource:     utils.GetStringPropOrEmpty(props, "appSource"),
 		CreatedAt:     utils.GetTimePropOrEpochStart(props, "createdAt"),
 		UpdatedAt:     utils.GetTimePropOrEpochStart(props, "updatedAt"),
 	}
@@ -178,4 +178,5 @@ func (s *phoneNumberService) mapDbNodeToPhoneNumberEntity(node dbtype.Node) *ent
 func (s *phoneNumberService) addDbRelationshipToPhoneNumberEntity(relationship dbtype.Relationship, phoneNumberEntity *entity.PhoneNumberEntity) {
 	props := utils.GetPropsFromRelationship(relationship)
 	phoneNumberEntity.Primary = utils.GetBoolPropOrFalse(props, "primary")
+	phoneNumberEntity.Label = utils.GetStringPropOrEmpty(props, "label")
 }
