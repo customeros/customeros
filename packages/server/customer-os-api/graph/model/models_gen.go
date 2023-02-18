@@ -49,18 +49,21 @@ type Contact struct {
 	ID string `json:"id"`
 	// The title associate with the contact in customerOS.
 	Title *PersonTitle `json:"title"`
+	// The name of the contact in customerOS, alternative for firstName + lastName.
+	Name *string `json:"name"`
 	// The first name of the contact in customerOS.
 	FirstName *string `json:"firstName"`
 	// The last name of the contact in customerOS.
 	LastName *string `json:"lastName"`
 	// An ISO8601 timestamp recording when the contact was created in customerOS.
 	// **Required**
-	CreatedAt time.Time `json:"createdAt"`
-	UpdatedAt time.Time `json:"updatedAt"`
-	// A user-defined label applied against a contact in customerOS.
-	Label  *string    `json:"label"`
-	Source DataSource `json:"source"`
-	Tags   []*Tag     `json:"tags"`
+	CreatedAt     time.Time  `json:"createdAt"`
+	UpdatedAt     time.Time  `json:"updatedAt"`
+	Label         *string    `json:"label"`
+	Source        DataSource `json:"source"`
+	SourceOfTruth DataSource `json:"sourceOfTruth"`
+	AppSource     *string    `json:"appSource"`
+	Tags          []*Tag     `json:"tags"`
 	// `organizationName` and `jobTitle` of the contact if it has been associated with an organization.
 	// **Required.  If no values it returns an empty array.**
 	JobRoles      []*JobRole        `json:"jobRoles"`
@@ -167,8 +170,7 @@ type ContactInput struct {
 	FirstName *string `json:"firstName"`
 	// The last name of the contact.
 	LastName *string `json:"lastName"`
-	// A user-defined label attached to contact.
-	Label *string `json:"label"`
+	Label    *string `json:"label"`
 	// An ISO8601 timestamp recording when the contact was created in customerOS.
 	CreatedAt *time.Time `json:"createdAt"`
 	// User defined metadata appended to contact.
@@ -201,8 +203,7 @@ type ContactUpdateInput struct {
 	FirstName *string `json:"firstName"`
 	// The last name of the contact in customerOS.
 	LastName *string `json:"lastName"`
-	// A user-defined label applied against a contact in customerOS.
-	Label *string `json:"label"`
+	Label    *string `json:"label"`
 	// Id of the contact owner (user)
 	OwnerID *string `json:"ownerId"`
 }
@@ -572,19 +573,30 @@ type JobRoleUpdateInput struct {
 }
 
 type Location struct {
-	ID        string      `json:"id"`
-	Name      string      `json:"name"`
-	CreatedAt time.Time   `json:"createdAt"`
-	UpdatedAt time.Time   `json:"updatedAt"`
-	Source    *DataSource `json:"source"`
-	AppSource *string     `json:"appSource"`
-	Country   *string     `json:"country"`
-	Region    *string     `json:"region"`
-	Locality  *string     `json:"locality"`
-	Address   *string     `json:"address"`
-	Address2  *string     `json:"address2"`
-	Zip       *string     `json:"zip"`
-	Place     *Place      `json:"place"`
+	ID           string      `json:"id"`
+	Name         string      `json:"name"`
+	CreatedAt    time.Time   `json:"createdAt"`
+	UpdatedAt    time.Time   `json:"updatedAt"`
+	Source       *DataSource `json:"source"`
+	AppSource    *string     `json:"appSource"`
+	Country      *string     `json:"country"`
+	Region       *string     `json:"region"`
+	Locality     *string     `json:"locality"`
+	Address      *string     `json:"address"`
+	Address2     *string     `json:"address2"`
+	Zip          *string     `json:"zip"`
+	AddressType  *string     `json:"addressType"`
+	HouseNumber  *string     `json:"houseNumber"`
+	PostalCode   *string     `json:"postalCode"`
+	PlusFour     *string     `json:"plusFour"`
+	Commercial   *bool       `json:"commercial"`
+	Predirection *string     `json:"predirection"`
+	District     *string     `json:"district"`
+	Street       *string     `json:"street"`
+	RawAddress   *string     `json:"rawAddress"`
+	Latitude     *float64    `json:"latitude"`
+	Longitude    *float64    `json:"longitude"`
+	Place        *Place      `json:"place"`
 }
 
 type Note struct {

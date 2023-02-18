@@ -79,7 +79,6 @@ func (r *contactRepository) Create(ctx context.Context, tx neo4j.ManagedTransact
 		" c.title=$title, " +
 		" c.firstName=$firstName, " +
 		" c.lastName=$lastName, " +
-		" c.label=$label, " +
 		" c.createdAt=$createdAt, " +
 		" c.updatedAt=$createdAt, " +
 		" c.source=$source, " +
@@ -93,7 +92,6 @@ func (r *contactRepository) Create(ctx context.Context, tx neo4j.ManagedTransact
 			"title":         newContact.Title,
 			"firstName":     newContact.FirstName,
 			"lastName":      newContact.LastName,
-			"label":         newContact.Label,
 			"source":        source,
 			"sourceOfTruth": sourceOfTruth,
 			"createdAt":     createdAt,
@@ -109,7 +107,6 @@ func (r *contactRepository) Update(ctx context.Context, tx neo4j.ManagedTransact
 			MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant})
 			SET c.firstName=$firstName,
 				c.lastName=$lastName,
-				c.label=$label,
 				c.title=$title,
 				c.updatedAt=datetime({timezone: 'UTC'})
 			RETURN c`,
@@ -118,7 +115,6 @@ func (r *contactRepository) Update(ctx context.Context, tx neo4j.ManagedTransact
 			"contactId": contactId,
 			"firstName": contactDtls.FirstName,
 			"lastName":  contactDtls.LastName,
-			"label":     contactDtls.Label,
 			"title":     contactDtls.Title,
 		}); err != nil {
 		return nil, err

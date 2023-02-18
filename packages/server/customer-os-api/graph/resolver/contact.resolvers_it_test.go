@@ -5,6 +5,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/neo4j"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils/decode"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/net/context"
@@ -76,9 +77,9 @@ func TestMutationResolver_ContactCreate_Min(t *testing.T) {
 	require.Nil(t, err)
 	require.NotNil(t, contact)
 	require.Equal(t, "", contact.Contact_Create.Title.String())
+	require.Equal(t, "", *contact.Contact_Create.Name)
 	require.Equal(t, "", *contact.Contact_Create.FirstName)
 	require.Equal(t, "", *contact.Contact_Create.LastName)
-	require.Equal(t, "", *contact.Contact_Create.Label)
 	require.Equal(t, model.DataSourceOpenline, contact.Contact_Create.Source)
 
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Tenant"))
@@ -108,7 +109,6 @@ func TestMutationResolver_ContactCreate(t *testing.T) {
 	require.Equal(t, "MR", contact.Contact_Create.Title.String())
 	require.Equal(t, "first", *contact.Contact_Create.FirstName)
 	require.Equal(t, "last", *contact.Contact_Create.LastName)
-	require.Equal(t, "Some label", *contact.Contact_Create.Label)
 	require.Equal(t, model.DataSourceOpenline, contact.Contact_Create.Source)
 
 	require.Equal(t, 5, len(contact.Contact_Create.CustomFields))
@@ -354,7 +354,6 @@ func TestMutationResolver_UpdateContact(t *testing.T) {
 		Title:     model.PersonTitleMr.String(),
 		FirstName: "first",
 		LastName:  "last",
-		Label:     "label",
 	})
 
 	neo4jt.UserOwnsContact(ctx, driver, origOwnerId, contactId)
@@ -374,7 +373,6 @@ func TestMutationResolver_UpdateContact(t *testing.T) {
 	require.Equal(t, "DR", contact.Contact_Update.Title.String())
 	require.Equal(t, "updated first", *contact.Contact_Update.FirstName)
 	require.Equal(t, "updated last", *contact.Contact_Update.LastName)
-	require.Equal(t, "updated label", *contact.Contact_Update.Label)
 	require.Equal(t, newOwnerId, contact.Contact_Update.Owner.ID)
 
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Contact"))
@@ -582,15 +580,26 @@ func TestQueryResolver_Contact_WithLocations_ById(t *testing.T) {
 	contactId := neo4jt.CreateDefaultContact(ctx, driver, tenantName)
 	neo4jt.CreateDefaultContact(ctx, driver, tenantName)
 	locationId1 := neo4jt.CreateLocation(ctx, driver, tenantName, entity.LocationEntity{
-		Name:      "WORK",
-		Source:    entity.DataSourceOpenline,
-		AppSource: "test",
-		Country:   "testCountry",
-		Region:    "testRegion",
-		Locality:  "testLocality",
-		Address:   "testAddress",
-		Address2:  "testAddress2",
-		Zip:       "testZip",
+		Name:         "WORK",
+		Source:       entity.DataSourceOpenline,
+		AppSource:    "test",
+		Country:      "testCountry",
+		Region:       "testRegion",
+		Locality:     "testLocality",
+		Address:      "testAddress",
+		Address2:     "testAddress2",
+		Zip:          "testZip",
+		AddressType:  "testAddressType",
+		HouseNumber:  "testHouseNumber",
+		PostalCode:   "testPostalCode",
+		PlusFour:     "testPlusFour",
+		Commercial:   true,
+		Predirection: "testPredirection",
+		District:     "testDistrict",
+		Street:       "testStreet",
+		RawAddress:   "testRawAddress",
+		Latitude:     utils.ToPtr(float64(0.001)),
+		Longitude:    utils.ToPtr(float64(-2.002)),
 	})
 	locationId2 := neo4jt.CreateLocation(ctx, driver, tenantName, entity.LocationEntity{
 		Name:      "UNKNOWN",
@@ -641,6 +650,17 @@ func TestQueryResolver_Contact_WithLocations_ById(t *testing.T) {
 	require.Equal(t, "testAddress", *locationWithAddressDtls.Address)
 	require.Equal(t, "testAddress2", *locationWithAddressDtls.Address2)
 	require.Equal(t, "testZip", *locationWithAddressDtls.Zip)
+	require.Equal(t, "testAddressType", *locationWithAddressDtls.AddressType)
+	require.Equal(t, "testHouseNumber", *locationWithAddressDtls.HouseNumber)
+	require.Equal(t, "testPostalCode", *locationWithAddressDtls.PostalCode)
+	require.Equal(t, "testPlusFour", *locationWithAddressDtls.PlusFour)
+	require.Equal(t, true, *locationWithAddressDtls.Commercial)
+	require.Equal(t, "testPredirection", *locationWithAddressDtls.Predirection)
+	require.Equal(t, "testDistrict", *locationWithAddressDtls.District)
+	require.Equal(t, "testStreet", *locationWithAddressDtls.Street)
+	require.Equal(t, "testRawAddress", *locationWithAddressDtls.RawAddress)
+	require.Equal(t, float64(0.001), *locationWithAddressDtls.Latitude)
+	require.Equal(t, float64(-2.002), *locationWithAddressDtls.Longitude)
 
 	require.Equal(t, locationId2, locationWithoutAddressDtls.ID)
 	require.Equal(t, "UNKNOWN", locationWithoutAddressDtls.Name)
@@ -654,6 +674,9 @@ func TestQueryResolver_Contact_WithLocations_ById(t *testing.T) {
 	require.Equal(t, "", *locationWithoutAddressDtls.Address)
 	require.Equal(t, "", *locationWithoutAddressDtls.Address2)
 	require.Equal(t, "", *locationWithoutAddressDtls.Zip)
+	require.False(t, *locationWithoutAddressDtls.Commercial)
+	require.Nil(t, locationWithoutAddressDtls.Latitude)
+	require.Nil(t, locationWithoutAddressDtls.Longitude)
 }
 
 func TestQueryResolver_Contacts_SortByTitleAscFirstNameAscLastNameDesc(t *testing.T) {
@@ -708,6 +731,7 @@ func TestQueryResolver_Contact_BasicFilters_FindContactWithLetterAInName(t *test
 
 	contactFoundByFirstName := neo4jt.CreateContact(ctx, driver, tenantName, entity.ContactEntity{
 		Title:     "MR",
+		Name:      "contact1",
 		FirstName: "aa",
 		LastName:  "bb",
 	})
@@ -727,18 +751,24 @@ func TestQueryResolver_Contact_BasicFilters_FindContactWithLetterAInName(t *test
 	rawResponse, err := c.RawPost(getQuery("contact/get_contacts_basic_filters"))
 	assertRawResponseSuccess(t, rawResponse, err)
 
-	var contacts struct {
+	var contactsStruct struct {
 		Contacts model.ContactsPage
 	}
 
-	err = decode.Decode(rawResponse.Data.(map[string]any), &contacts)
+	err = decode.Decode(rawResponse.Data.(map[string]any), &contactsStruct)
 	require.Nil(t, err)
-	require.NotNil(t, contacts.Contacts)
-	require.Equal(t, 2, len(contacts.Contacts.Content))
-	require.Equal(t, contactFoundByFirstName, contacts.Contacts.Content[0].ID)
-	require.Equal(t, contactFoundByLastName, contacts.Contacts.Content[1].ID)
-	require.Equal(t, 1, contacts.Contacts.TotalPages)
-	require.Equal(t, int64(2), contacts.Contacts.TotalElements)
+	require.NotNil(t, contactsStruct.Contacts)
+
+	contacts := contactsStruct.Contacts.Content
+
+	require.Equal(t, 2, len(contacts))
+	require.Equal(t, contactFoundByFirstName, contacts[0].ID)
+	require.Equal(t, "contact1", *contacts[0].Name)
+	require.Equal(t, "aa", *contacts[0].FirstName)
+	require.Equal(t, "bb", *contacts[0].LastName)
+	require.Equal(t, contactFoundByLastName, contacts[1].ID)
+	require.Equal(t, 1, contactsStruct.Contacts.TotalPages)
+	require.Equal(t, int64(2), contactsStruct.Contacts.TotalElements)
 	// suppress unused warnings
 	require.NotNil(t, contactFilteredOut)
 }

@@ -106,7 +106,7 @@ func CreateContactWith(ctx context.Context, driver *neo4j.DriverWithContext, ten
 func CreateContact(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, contact entity.ContactEntity) string {
 	var contactId, _ = uuid.NewRandom()
 	query := "MATCH (t:Tenant {name:$tenant}) MERGE (c:Contact {id: $contactId})-[:CONTACT_BELONGS_TO_TENANT]->(t) " +
-		" ON CREATE SET c.title=$title, c.firstName=$firstName, c.lastName=$lastName, c.label=$label, c.createdAt=datetime({timezone: 'UTC'}), " +
+		" ON CREATE SET c.title=$title, c.firstName=$firstName, c.lastName=$lastName, c.name=$name, c.createdAt=datetime({timezone: 'UTC'}), " +
 		" c:%s"
 
 	ExecuteWriteQuery(ctx, driver, fmt.Sprintf(query, "Contact_"+tenant), map[string]any{
@@ -115,7 +115,7 @@ func CreateContact(ctx context.Context, driver *neo4j.DriverWithContext, tenant 
 		"title":     contact.Title,
 		"firstName": contact.FirstName,
 		"lastName":  contact.LastName,
-		"label":     contact.Label,
+		"name":      contact.Name,
 	})
 	return contactId.String()
 }
@@ -540,21 +540,43 @@ func CreateLocation(ctx context.Context, driver *neo4j.DriverWithContext, tenant
 		"				l.address=$address, " +
 		"				l.address2=$address2, " +
 		"				l.zip=$zip, " +
+		"				l.addressType=$addressType, " +
+		"				l.houseNumber=$houseNumber, " +
+		"				l.postalCode=$postalCode, " +
+		"				l.plusFour=$plusFour, " +
+		"				l.commercial=$commercial, " +
+		"				l.predirection=$predirection, " +
+		"				l.district=$district, " +
+		"				l.street=$street, " +
+		"				l.rawAddress=$rawAddress, " +
+		"				l.latitude=$latitude, " +
+		"				l.longitude=$longitude, " +
 		"				l:Location_%s"
 
 	ExecuteWriteQuery(ctx, driver, fmt.Sprintf(query, tenant), map[string]any{
-		"tenant":     tenant,
-		"locationId": locationId.String(),
-		"source":     location.Source,
-		"appSource":  location.AppSource,
-		"name":       location.Name,
-		"now":        utils.Now(),
-		"country":    location.Country,
-		"region":     location.Region,
-		"locality":   location.Locality,
-		"address":    location.Address,
-		"address2":   location.Address2,
-		"zip":        location.Zip,
+		"tenant":       tenant,
+		"locationId":   locationId.String(),
+		"source":       location.Source,
+		"appSource":    location.AppSource,
+		"name":         location.Name,
+		"now":          utils.Now(),
+		"country":      location.Country,
+		"region":       location.Region,
+		"locality":     location.Locality,
+		"address":      location.Address,
+		"address2":     location.Address2,
+		"zip":          location.Zip,
+		"addressType":  location.AddressType,
+		"houseNumber":  location.HouseNumber,
+		"postalCode":   location.PostalCode,
+		"plusFour":     location.PlusFour,
+		"commercial":   location.Commercial,
+		"predirection": location.Predirection,
+		"district":     location.District,
+		"street":       location.Street,
+		"rawAddress":   location.RawAddress,
+		"latitude":     location.Latitude,
+		"longitude":    location.Longitude,
 	})
 	return locationId.String()
 }
