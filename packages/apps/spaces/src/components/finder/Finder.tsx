@@ -4,6 +4,7 @@ import { Table, DebouncedInput } from '../ui-kit';
 import { columns } from './Columns';
 import styles from './finder.module.scss';
 import { DashboardViewItem } from '../../graphQL/types';
+import { Search } from '../ui-kit/atoms';
 
 export const Finder: React.FC = () => {
   const [page, setPagination] = useState(0);
@@ -37,7 +38,10 @@ export const Finder: React.FC = () => {
 
         <DebouncedInput
           onChange={(event) => handleFilterResults(event.target.value)}
-        />
+          placeholder={'Search organizations, contacts, locations...'}
+        >
+          <Search />
+        </DebouncedInput>
       </div>
 
       <Table<DashboardViewItem>

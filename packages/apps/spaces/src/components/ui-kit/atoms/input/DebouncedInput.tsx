@@ -6,15 +6,17 @@ interface DebouncedInputProps {
   onChange: ChangeEventHandler<HTMLInputElement>;
   placeholder?: string;
   minLength?: number;
+  children?: React.ReactNode;
 }
 
 export const DebouncedInput = ({
   onChange,
   placeholder = '',
   minLength = 3,
+  children,
 }: DebouncedInputProps) => {
   return (
-    <>
+    <div className={styles.wrapper}>
       <DebounceInput
         className={styles.input}
         minLength={minLength}
@@ -22,6 +24,8 @@ export const DebouncedInput = ({
         onChange={onChange}
         placeholder={placeholder}
       />
-    </>
+
+      {children && <span className={styles.icon}>{children}</span>}
+    </div>
   );
 };

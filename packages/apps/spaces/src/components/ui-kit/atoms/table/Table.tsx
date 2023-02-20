@@ -45,7 +45,6 @@ export const Table = <T,>({
     rowVirtualizer.virtualItems,
     data,
   ]);
-  console.log('🏷️ ----- data: ', data);
   return (
     <table className={styles.table}>
       <thead className={styles.header}>

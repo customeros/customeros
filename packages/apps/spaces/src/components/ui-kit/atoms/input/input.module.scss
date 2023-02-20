@@ -1,12 +1,16 @@
+.wrapper {
+  position: relative;
+  width: 100%;
+  max-width: 400px;
+}
 .input {
-  border-radius: var(--border-radius-lg);
+  border-radius: var(--border-radius-md);
   border: var(--border-input);
   padding: var(--spacing-xxxs) var(--spacing-sm);
   font-size: var(--font-size-base);
   font-family: var(--font-secondary);
   color: var(--text-default-color);
   width: 100%;
-  max-width: 350px;
 
   &:focus-visible,
   &:hover,
@@ -15,4 +19,9 @@
     border-color: var(--primary-color);
     outline: none;
   }
+}
+.icon {
+  position: absolute;
+  right: 10px;
+  top: 5px;
 }
