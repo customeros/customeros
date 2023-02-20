@@ -2,7 +2,6 @@ import React, { useEffect } from 'react';
 import { DashboardTableHeaderLabel } from './dashboard-table-header-label';
 import { useVirtual } from 'react-virtual';
 import styles from './table.module.scss';
-import { uuidv4 } from '../../../../utils';
 import { Skeleton } from '../skeleton';
 import { Column } from './types';
 import { TableSkeleton } from './TableSkeleton';
@@ -46,14 +45,19 @@ export const Table = <T,>({
     rowVirtualizer.virtualItems,
     data,
   ]);
-
+  console.log('🏷️ ----- data: ', data);
   return (
-    <table className={styles.responsiveTable}>
+    <table className={styles.table}>
       <thead className={styles.header}>
         <tr>
           {columns?.map(({ label, subLabel, width }) => {
             return (
-              <th key={`header-${label}`} style={{ width }}>
+              <th
+                key={`header-${label}`}
+                style={{ width }}
+                data-th={label}
+                data-th2={subLabel}
+              >
                 <DashboardTableHeaderLabel
                   label={label}
                   subLabel={subLabel || ''}
@@ -64,7 +68,7 @@ export const Table = <T,>({
         </tr>
       </thead>
       <tbody ref={parentRef} className={styles.body}>
-        {!data && <TableSkeleton columns={columns} />}
+        {(!data || !data.length) && <TableSkeleton columns={columns} />}
         {/* SHOW TABLE*/}
         {!!data &&
           rowVirtualizer.virtualItems.map((virtualRow) => {

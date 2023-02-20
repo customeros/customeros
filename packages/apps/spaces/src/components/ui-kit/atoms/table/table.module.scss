@@ -6,30 +6,21 @@
     @content;
   }
 }
-//min-sm
-@mixin min-tablet {
-  @media (min-width: 768px) {
-    @content;
-  }
-}
+
 //md
 @mixin desktop {
-  @media (max-width: 991px) {
-    @content;
-  }
-}
-//sm to md
-@mixin tablet-to-desktop {
-  @media (min-width: 768px) and (max-width: 991px) {
+  @media (min-width: 991px) {
     @content;
   }
 }
 
-.responsiveTable {
+
+.table {
   border-collapse: collapse;
   border-radius: 10px;
   position: relative;
   width: inherit;
+  overflow-x: auto;
   height: 75vh;
   table-layout: fixed;
 }
@@ -72,9 +63,11 @@
     white-space: nowrap;
     word-break: keep-all;
     overflow: hidden;
+
   }
 }
 
 .staticRow {
   position: static;
 }
+

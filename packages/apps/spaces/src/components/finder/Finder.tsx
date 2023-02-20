@@ -1,15 +1,13 @@
 import React, { useState } from 'react';
 import { useGetDashboardData } from './graphQL/useGetDashboardData';
 import { Table, DebouncedInput } from '../ui-kit';
-import { useRecoilState } from 'recoil';
 import { columns } from './Columns';
 import styles from './finder.module.scss';
-import { searchTermState } from './state';
 import { DashboardViewItem } from '../../graphQL/types';
 
 export const Finder: React.FC = () => {
   const [page, setPagination] = useState(0);
-  const [searchTerm, setSearchTerm] = useRecoilState(searchTermState);
+  const [searchTerm, setSearchTerm] = useState('');
   const { data, loading, fetchMore, variables, totalElements } =
     useGetDashboardData({
       pagination: {

@@ -12,7 +12,6 @@ export const TableSkeleton = ({ columns }: TableSkeletonProps): JSX.Element => {
   const rows = Array(4)
     .fill('')
     .map((e, i) => i + 1);
-
   return (
     <>
       {rows.map((n) => (
