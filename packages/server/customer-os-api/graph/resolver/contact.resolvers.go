@@ -83,7 +83,7 @@ func (r *contactResolver) PhoneNumbers(ctx context.Context, obj *model.Contact) 
 		utils.LogMethodExecution(start, utils.GetFunctionName())
 	}(time.Now())
 
-	phoneNumberEntities, err := r.Services.PhoneNumberService.FindAllForContact(ctx, obj.ID)
+	phoneNumberEntities, err := r.Services.PhoneNumberService.GetAllForContact(ctx, obj.ID)
 	return mapper.MapEntitiesToPhoneNumbers(phoneNumberEntities), err
 }
 
@@ -358,7 +358,7 @@ func (r *queryResolver) ContactByPhone(ctx context.Context, e164 string) (*model
 		utils.LogMethodExecution(start, utils.GetFunctionName())
 	}(time.Now())
 
-	contactEntity, err := r.Services.ContactService.FindContactByPhoneNumber(ctx, e164)
+	contactEntity, err := r.Services.ContactService.FindContactByPhoneNumberE164(ctx, e164)
 	if err != nil || contactEntity == nil {
 		graphql.AddErrorf(ctx, "Contact with phone number %s not identified", e164)
 		return nil, err

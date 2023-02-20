@@ -18,7 +18,7 @@ contact_Create(
             primary: false
       },
       phoneNumber: {
-            e164: "+1234567890",
+            rawPhoneNumber: "+1234567890",
             label: MOBILE,
             primary: true
       }
@@ -50,6 +50,7 @@ contact_Create(
     phoneNumbers {
       id
       primary
+      rawPhoneNumber
       e164
       label
       source

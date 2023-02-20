@@ -97,7 +97,7 @@ func (r *contactRepository) MergePrimaryEmail(tenant, contactId, email, external
 	query := "MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant}) " +
 		" OPTIONAL MATCH (c)-[rel:HAS]->(:Email) " +
 		" SET rel.primary=false " +
-		" WITH c, t " +
+		" WITH DISTINCT c, t " +
 		" MERGE (e:Email {email: $email})-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]->(t) " +
 		" ON CREATE SET " +
 		"				e.id=randomUUID(), " +
@@ -165,15 +165,15 @@ func (r *contactRepository) MergeAdditionalEmail(tenant, contactId, email, exter
 	return err
 }
 
-func (r *contactRepository) MergePrimaryPhoneNumber(tenant, contactId, e164, externalSystem string, createdAt time.Time) error {
+func (r *contactRepository) MergePrimaryPhoneNumber(tenant, contactId, phoneNumber, externalSystem string, createdAt time.Time) error {
 	session := utils.NewNeo4jWriteSession(*r.driver)
 	defer session.Close()
 
 	query := "MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant}) " +
 		" OPTIONAL MATCH (c)-[rel:HAS]->(p:PhoneNumber) " +
 		" SET rel.primary=false " +
-		" WITH c, t " +
-		" MERGE (p:PhoneNumber {e164: $e164})-[:PHONE_NUMBER_BELONGS_TO_TENANT]->(t) " +
+		" WITH DISTINCT c, t " +
+		" MERGE (p:PhoneNumber {rawPhoneNumber: $phoneNumber})-[:PHONE_NUMBER_BELONGS_TO_TENANT]->(t) " +
 		" ON CREATE SET " +
 		"				p.id=randomUUID(), " +
 		"				p.createdAt=$now, " +
@@ -184,15 +184,15 @@ func (r *contactRepository) MergePrimaryPhoneNumber(tenant, contactId, e164, ext
 		"				p:%s " +
 		" WITH DISTINCT c, p " +
 		" MERGE (c)-[rel:HAS]->(p) " +
-		" ON CREATE SET rel.primary=true " +
-		" ON MATCH SET rel.primary=true, p.updatedAt=$now "
+		" ON CREATE SET rel.primary=true, p.updatedAt=$now, c.updatedAt=$now " +
+		" ON MATCH SET rel.primary=true, c.updatedAt=$now "
 
 	_, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
 		_, err := tx.Run(fmt.Sprintf(query, "PhoneNumber_"+tenant),
 			map[string]interface{}{
 				"tenant":        tenant,
 				"contactId":     contactId,
-				"e164":          e164,
+				"phoneNumber":   phoneNumber,
 				"createdAt":     createdAt,
 				"source":        externalSystem,
 				"sourceOfTruth": externalSystem,
@@ -339,7 +339,7 @@ func (r *contactRepository) MergeTagForContact(tenant, contactId, tagName, sourc
 		"				tag.source=$source," +
 		"				tag.appSource=$source," +
 		"				tag:%s  " +
-		" WITH c, tag " +
+		" WITH DISTINCT c, tag " +
 		" MERGE (c)-[r:TAGGED]->(tag) " +
 		"	ON CREATE SET r.taggedAt=$now " +
 		" return r"

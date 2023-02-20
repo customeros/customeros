@@ -10,10 +10,11 @@ import (
 )
 
 type PhoneNumberRepository interface {
+	GetAllForContact(ctx context.Context, tenant, contactId string) (any, error)
+
 	MergePhoneNumberToContactInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant, contactId string, entity entity.PhoneNumberEntity) (*dbtype.Node, *dbtype.Relationship, error)
 	UpdatePhoneNumberByContactInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant, contactId string, entity entity.PhoneNumberEntity) (*dbtype.Node, *dbtype.Relationship, error)
-	FindAllForContact(ctx context.Context, session neo4j.SessionWithContext, tenant, contactId string) (any, error)
-	SetOtherContactPhoneNumbersNonPrimaryInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant, contactId, e164 string) error
+	SetOtherContactPhoneNumbersNonPrimaryInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant, contactId, phoneNumberId string) error
 }
 
 type phoneNumberRepository struct {
@@ -28,7 +29,7 @@ func NewPhoneNumberRepository(driver *neo4j.DriverWithContext) PhoneNumberReposi
 
 func (r *phoneNumberRepository) MergePhoneNumberToContactInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant, contactId string, entity entity.PhoneNumberEntity) (*dbtype.Node, *dbtype.Relationship, error) {
 	query := "MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant}) " +
-		" MERGE (t)<-[:PHONE_NUMBER_BELONGS_TO_TENANT]-(p:PhoneNumber {e164: $e164}) " +
+		" MERGE (t)<-[:PHONE_NUMBER_BELONGS_TO_TENANT]-(p:PhoneNumber {rawPhoneNumber: $rawPhoneNumber}) " +
 		" ON CREATE SET p.id=randomUUID(), " +
 		"				p.source=$source, " +
 		"				p.sourceOfTruth=$sourceOfTruth, " +
@@ -46,15 +47,15 @@ func (r *phoneNumberRepository) MergePhoneNumberToContactInTx(ctx context.Contex
 
 	queryResult, err := tx.Run(ctx, fmt.Sprintf(query, "PhoneNumber_"+tenant),
 		map[string]interface{}{
-			"tenant":        tenant,
-			"contactId":     contactId,
-			"e164":          entity.E164,
-			"label":         entity.Label,
-			"primary":       entity.Primary,
-			"source":        entity.Source,
-			"sourceOfTruth": entity.SourceOfTruth,
-			"appSource":     entity.AppSource,
-			"now":           utils.Now(),
+			"tenant":         tenant,
+			"contactId":      contactId,
+			"rawPhoneNumber": entity.RawPhoneNumber,
+			"label":          entity.Label,
+			"primary":        entity.Primary,
+			"source":         entity.Source,
+			"sourceOfTruth":  entity.SourceOfTruth,
+			"appSource":      entity.AppSource,
+			"now":            utils.Now(),
 		})
 	return utils.ExtractSingleRecordNodeAndRelationship(ctx, queryResult, err)
 }
@@ -63,8 +64,7 @@ func (r *phoneNumberRepository) UpdatePhoneNumberByContactInTx(ctx context.Conte
 	queryResult, err := tx.Run(ctx, `
 			MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}),
 				(c)-[rel:HAS]->(p:PhoneNumber {id: $phoneNumberId})
-            SET p.e164=$e164,
-				rel.label=$label,
+            SET rel.label=$label,
 				rel.primary=$primary,
 				p.sourceOfTruth=$sourceOfTruth,
 				p.updatedAt=$now
@@ -73,7 +73,6 @@ func (r *phoneNumberRepository) UpdatePhoneNumberByContactInTx(ctx context.Conte
 			"tenant":        tenant,
 			"contactId":     contactId,
 			"phoneNumberId": entity.Id,
-			"email":         entity.E164,
 			"label":         entity.Label,
 			"primary":       entity.Primary,
 			"sourceOfTruth": entity.SourceOfTruth,
@@ -82,7 +81,10 @@ func (r *phoneNumberRepository) UpdatePhoneNumberByContactInTx(ctx context.Conte
 	return utils.ExtractSingleRecordNodeAndRelationship(ctx, queryResult, err)
 }
 
-func (r *phoneNumberRepository) FindAllForContact(ctx context.Context, session neo4j.SessionWithContext, tenant, contactId string) (any, error) {
+func (r *phoneNumberRepository) GetAllForContact(ctx context.Context, tenant, contactId string) (any, error) {
+	session := utils.NewNeo4jReadSession(ctx, *r.driver)
+	defer session.Close(ctx)
+
 	return session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		result, err := tx.Run(ctx, `
 				MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}),
@@ -100,16 +102,17 @@ func (r *phoneNumberRepository) FindAllForContact(ctx context.Context, session n
 	})
 }
 
-func (r *phoneNumberRepository) SetOtherContactPhoneNumbersNonPrimaryInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant, contactId, e164 string) error {
+func (r *phoneNumberRepository) SetOtherContactPhoneNumbersNonPrimaryInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant, contactId, phoneNumberId string) error {
 	_, err := tx.Run(ctx, `
 			MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}),
 				 (c)-[rel:HAS]->(p:PhoneNumber)
-			WHERE p.e164 <> $e164
-            SET rel.primary=false`,
+			WHERE p.id <> $phoneNumberId
+            SET rel.primary=false, p.updatedAt=$now`,
 		map[string]interface{}{
-			"tenant":    tenant,
-			"contactId": contactId,
-			"e164":      e164,
+			"tenant":        tenant,
+			"contactId":     contactId,
+			"phoneNumberId": phoneNumberId,
+			"now":           utils.Now(),
 		})
 	return err
 }

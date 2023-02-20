@@ -39,7 +39,7 @@ func (s *syncService) Sync(runId string) {
 	for _, v := range tenantsToSync {
 
 		syncRunDtls := entity.SyncRun{
-			StarAt:               time.Now().UTC(),
+			StartAt:              time.Now().UTC(),
 			RunId:                runId,
 			TenantSyncSettingsId: v.ID,
 		}

@@ -754,8 +754,9 @@ type PhoneNumber struct {
 	// **Required**
 	ID string `json:"id"`
 	// The phone number in e164 format.
-	// **Required**
-	E164 string `json:"e164"`
+	E164           *string `json:"e164"`
+	RawPhoneNumber *string `json:"rawPhoneNumber"`
+	Validated      *bool   `json:"validated"`
 	// Defines the type of phone number.
 	Label *PhoneNumberLabel `json:"label"`
 	// Determines if the phone number is primary or not.
@@ -764,6 +765,7 @@ type PhoneNumber struct {
 	CreatedAt time.Time  `json:"createdAt"`
 	UpdatedAt time.Time  `json:"updatedAt"`
 	Source    DataSource `json:"source"`
+	AppSource *string    `json:"appSource"`
 }
 
 // Describes a phone number associated with a `Contact` in customerOS.
@@ -771,7 +773,7 @@ type PhoneNumber struct {
 type PhoneNumberInput struct {
 	// The phone number in e164 format.
 	// **Required**
-	E164 string `json:"e164"`
+	RawPhoneNumber string `json:"rawPhoneNumber"`
 	// Defines the type of phone number.
 	Label *PhoneNumberLabel `json:"label"`
 	// Determines if the phone number is primary or not.
@@ -785,9 +787,6 @@ type PhoneNumberUpdateInput struct {
 	// The unique ID associated with the phone number.
 	// **Required**
 	ID string `json:"id"`
-	// The phone number in e164 format.
-	// **Required**
-	E164 string `json:"e164"`
 	// Defines the type of phone number.
 	Label *PhoneNumberLabel `json:"label"`
 	// Determines if the phone number is primary or not.

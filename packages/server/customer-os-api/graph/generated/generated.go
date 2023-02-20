@@ -299,9 +299,9 @@ type ComplexityRoot struct {
 		OrganizationTypeDelete                 func(childComplexity int, id string) int
 		OrganizationTypeUpdate                 func(childComplexity int, input model.OrganizationTypeUpdateInput) int
 		OrganizationUpdate                     func(childComplexity int, input model.OrganizationUpdateInput) int
-		PhoneNumberDeleteFromContact           func(childComplexity int, contactID string, e164 string) int
-		PhoneNumberDeleteFromContactByID       func(childComplexity int, contactID string, id string) int
 		PhoneNumberMergeToContact              func(childComplexity int, contactID string, input model.PhoneNumberInput) int
+		PhoneNumberRemoveFromContactByE164     func(childComplexity int, contactID string, e164 string) int
+		PhoneNumberRemoveFromContactByID       func(childComplexity int, contactID string, id string) int
 		PhoneNumberUpdateInContact             func(childComplexity int, contactID string, input model.PhoneNumberUpdateInput) int
 		TagCreate                              func(childComplexity int, input model.TagInput) int
 		TagDelete                              func(childComplexity int, id string) int
@@ -374,13 +374,16 @@ type ComplexityRoot struct {
 	}
 
 	PhoneNumber struct {
-		CreatedAt func(childComplexity int) int
-		E164      func(childComplexity int) int
-		ID        func(childComplexity int) int
-		Label     func(childComplexity int) int
-		Primary   func(childComplexity int) int
-		Source    func(childComplexity int) int
-		UpdatedAt func(childComplexity int) int
+		AppSource      func(childComplexity int) int
+		CreatedAt      func(childComplexity int) int
+		E164           func(childComplexity int) int
+		ID             func(childComplexity int) int
+		Label          func(childComplexity int) int
+		Primary        func(childComplexity int) int
+		RawPhoneNumber func(childComplexity int) int
+		Source         func(childComplexity int) int
+		UpdatedAt      func(childComplexity int) int
+		Validated      func(childComplexity int) int
 	}
 
 	Place struct {
@@ -549,8 +552,8 @@ type MutationResolver interface {
 	OrganizationTypeDelete(ctx context.Context, id string) (*model.Result, error)
 	PhoneNumberMergeToContact(ctx context.Context, contactID string, input model.PhoneNumberInput) (*model.PhoneNumber, error)
 	PhoneNumberUpdateInContact(ctx context.Context, contactID string, input model.PhoneNumberUpdateInput) (*model.PhoneNumber, error)
-	PhoneNumberDeleteFromContact(ctx context.Context, contactID string, e164 string) (*model.Result, error)
-	PhoneNumberDeleteFromContactByID(ctx context.Context, contactID string, id string) (*model.Result, error)
+	PhoneNumberRemoveFromContactByE164(ctx context.Context, contactID string, e164 string) (*model.Result, error)
+	PhoneNumberRemoveFromContactByID(ctx context.Context, contactID string, id string) (*model.Result, error)
 	TagCreate(ctx context.Context, input model.TagInput) (*model.Tag, error)
 	TagUpdate(ctx context.Context, input model.TagUpdateInput) (*model.Tag, error)
 	TagDelete(ctx context.Context, id string) (*model.Result, error)
@@ -2224,30 +2227,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.OrganizationUpdate(childComplexity, args["input"].(model.OrganizationUpdateInput)), true
 
-	case "Mutation.phoneNumberDeleteFromContact":
-		if e.complexity.Mutation.PhoneNumberDeleteFromContact == nil {
-			break
-		}
-
-		args, err := ec.field_Mutation_phoneNumberDeleteFromContact_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Mutation.PhoneNumberDeleteFromContact(childComplexity, args["contactId"].(string), args["e164"].(string)), true
-
-	case "Mutation.phoneNumberDeleteFromContactById":
-		if e.complexity.Mutation.PhoneNumberDeleteFromContactByID == nil {
-			break
-		}
-
-		args, err := ec.field_Mutation_phoneNumberDeleteFromContactById_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Mutation.PhoneNumberDeleteFromContactByID(childComplexity, args["contactId"].(string), args["id"].(string)), true
-
 	case "Mutation.phoneNumberMergeToContact":
 		if e.complexity.Mutation.PhoneNumberMergeToContact == nil {
 			break
@@ -2259,6 +2238,30 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.PhoneNumberMergeToContact(childComplexity, args["contactId"].(string), args["input"].(model.PhoneNumberInput)), true
+
+	case "Mutation.phoneNumberRemoveFromContactByE164":
+		if e.complexity.Mutation.PhoneNumberRemoveFromContactByE164 == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_phoneNumberRemoveFromContactByE164_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.PhoneNumberRemoveFromContactByE164(childComplexity, args["contactId"].(string), args["e164"].(string)), true
+
+	case "Mutation.phoneNumberRemoveFromContactById":
+		if e.complexity.Mutation.PhoneNumberRemoveFromContactByID == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_phoneNumberRemoveFromContactById_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.PhoneNumberRemoveFromContactByID(childComplexity, args["contactId"].(string), args["id"].(string)), true
 
 	case "Mutation.phoneNumberUpdateInContact":
 		if e.complexity.Mutation.PhoneNumberUpdateInContact == nil {
@@ -2657,6 +2660,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.PageViewAction.StartedAt(childComplexity), true
 
+	case "PhoneNumber.appSource":
+		if e.complexity.PhoneNumber.AppSource == nil {
+			break
+		}
+
+		return e.complexity.PhoneNumber.AppSource(childComplexity), true
+
 	case "PhoneNumber.createdAt":
 		if e.complexity.PhoneNumber.CreatedAt == nil {
 			break
@@ -2692,6 +2702,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.PhoneNumber.Primary(childComplexity), true
 
+	case "PhoneNumber.rawPhoneNumber":
+		if e.complexity.PhoneNumber.RawPhoneNumber == nil {
+			break
+		}
+
+		return e.complexity.PhoneNumber.RawPhoneNumber(childComplexity), true
+
 	case "PhoneNumber.source":
 		if e.complexity.PhoneNumber.Source == nil {
 			break
@@ -2705,6 +2722,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.PhoneNumber.UpdatedAt(childComplexity), true
+
+	case "PhoneNumber.validated":
+		if e.complexity.PhoneNumber.Validated == nil {
+			break
+		}
+
+		return e.complexity.PhoneNumber.Validated(childComplexity), true
 
 	case "Place.address":
 		if e.complexity.Place.Address == nil {
@@ -4363,8 +4387,8 @@ input OrganizationTypeUpdateInput {
 	{Name: "../schemas/phone.graphqls", Input: `extend type Mutation {
     phoneNumberMergeToContact(contactId : ID!, input: PhoneNumberInput!): PhoneNumber!
     phoneNumberUpdateInContact(contactId : ID!, input: PhoneNumberUpdateInput!): PhoneNumber!
-    phoneNumberDeleteFromContact(contactId : ID!, e164: String!): Result!
-    phoneNumberDeleteFromContactById(contactId : ID!, id: ID!): Result!
+    phoneNumberRemoveFromContactByE164(contactId : ID!, e164: String!): Result!
+    phoneNumberRemoveFromContactById(contactId : ID!, id: ID!): Result!
 }
 
 """
@@ -4380,9 +4404,10 @@ type PhoneNumber {
     
     """
     The phone number in e164 format. 
-    **Required**
     """
-    e164: String!
+    e164: String
+    rawPhoneNumber: String
+    validated: Boolean
 
     """
     Defines the type of phone number.
@@ -4399,6 +4424,7 @@ type PhoneNumber {
     updatedAt: Time!
 
     source: DataSource!
+    appSource: String
 }
 
 """
@@ -4411,7 +4437,7 @@ input PhoneNumberInput {
     The phone number in e164 format. 
     **Required**
     """
-    e164: String!
+    rawPhoneNumber: String!
 
     """
     Defines the type of phone number.
@@ -4436,12 +4462,6 @@ input PhoneNumberUpdateInput {
     **Required**
     """
     id: ID!
-
-    """
-    The phone number in e164 format. 
-    **Required**
-    """
-    e164: String!
 
     """
     Defines the type of phone number.
@@ -5798,7 +5818,7 @@ func (ec *executionContext) field_Mutation_organization_Update_args(ctx context.
 	return args, nil
 }
 
-func (ec *executionContext) field_Mutation_phoneNumberDeleteFromContactById_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+func (ec *executionContext) field_Mutation_phoneNumberMergeToContact_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
 	var arg0 string
@@ -5810,19 +5830,19 @@ func (ec *executionContext) field_Mutation_phoneNumberDeleteFromContactById_args
 		}
 	}
 	args["contactId"] = arg0
-	var arg1 string
-	if tmp, ok := rawArgs["id"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
-		arg1, err = ec.unmarshalNID2string(ctx, tmp)
+	var arg1 model.PhoneNumberInput
+	if tmp, ok := rawArgs["input"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+		arg1, err = ec.unmarshalNPhoneNumberInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐPhoneNumberInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["id"] = arg1
+	args["input"] = arg1
 	return args, nil
 }
 
-func (ec *executionContext) field_Mutation_phoneNumberDeleteFromContact_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+func (ec *executionContext) field_Mutation_phoneNumberRemoveFromContactByE164_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
 	var arg0 string
@@ -5846,7 +5866,7 @@ func (ec *executionContext) field_Mutation_phoneNumberDeleteFromContact_args(ctx
 	return args, nil
 }
 
-func (ec *executionContext) field_Mutation_phoneNumberMergeToContact_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+func (ec *executionContext) field_Mutation_phoneNumberRemoveFromContactById_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
 	var arg0 string
@@ -5858,15 +5878,15 @@ func (ec *executionContext) field_Mutation_phoneNumberMergeToContact_args(ctx co
 		}
 	}
 	args["contactId"] = arg0
-	var arg1 model.PhoneNumberInput
-	if tmp, ok := rawArgs["input"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-		arg1, err = ec.unmarshalNPhoneNumberInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐPhoneNumberInput(ctx, tmp)
+	var arg1 string
+	if tmp, ok := rawArgs["id"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+		arg1, err = ec.unmarshalNID2string(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["input"] = arg1
+	args["id"] = arg1
 	return args, nil
 }
 
@@ -7136,6 +7156,10 @@ func (ec *executionContext) fieldContext_Contact_phoneNumbers(ctx context.Contex
 				return ec.fieldContext_PhoneNumber_id(ctx, field)
 			case "e164":
 				return ec.fieldContext_PhoneNumber_e164(ctx, field)
+			case "rawPhoneNumber":
+				return ec.fieldContext_PhoneNumber_rawPhoneNumber(ctx, field)
+			case "validated":
+				return ec.fieldContext_PhoneNumber_validated(ctx, field)
 			case "label":
 				return ec.fieldContext_PhoneNumber_label(ctx, field)
 			case "primary":
@@ -7146,6 +7170,8 @@ func (ec *executionContext) fieldContext_Contact_phoneNumbers(ctx context.Contex
 				return ec.fieldContext_PhoneNumber_updatedAt(ctx, field)
 			case "source":
 				return ec.fieldContext_PhoneNumber_source(ctx, field)
+			case "appSource":
+				return ec.fieldContext_PhoneNumber_appSource(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type PhoneNumber", field.Name)
 		},
@@ -16889,6 +16915,10 @@ func (ec *executionContext) fieldContext_Mutation_phoneNumberMergeToContact(ctx 
 				return ec.fieldContext_PhoneNumber_id(ctx, field)
 			case "e164":
 				return ec.fieldContext_PhoneNumber_e164(ctx, field)
+			case "rawPhoneNumber":
+				return ec.fieldContext_PhoneNumber_rawPhoneNumber(ctx, field)
+			case "validated":
+				return ec.fieldContext_PhoneNumber_validated(ctx, field)
 			case "label":
 				return ec.fieldContext_PhoneNumber_label(ctx, field)
 			case "primary":
@@ -16899,6 +16929,8 @@ func (ec *executionContext) fieldContext_Mutation_phoneNumberMergeToContact(ctx 
 				return ec.fieldContext_PhoneNumber_updatedAt(ctx, field)
 			case "source":
 				return ec.fieldContext_PhoneNumber_source(ctx, field)
+			case "appSource":
+				return ec.fieldContext_PhoneNumber_appSource(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type PhoneNumber", field.Name)
 		},
@@ -16959,6 +16991,10 @@ func (ec *executionContext) fieldContext_Mutation_phoneNumberUpdateInContact(ctx
 				return ec.fieldContext_PhoneNumber_id(ctx, field)
 			case "e164":
 				return ec.fieldContext_PhoneNumber_e164(ctx, field)
+			case "rawPhoneNumber":
+				return ec.fieldContext_PhoneNumber_rawPhoneNumber(ctx, field)
+			case "validated":
+				return ec.fieldContext_PhoneNumber_validated(ctx, field)
 			case "label":
 				return ec.fieldContext_PhoneNumber_label(ctx, field)
 			case "primary":
@@ -16969,6 +17005,8 @@ func (ec *executionContext) fieldContext_Mutation_phoneNumberUpdateInContact(ctx
 				return ec.fieldContext_PhoneNumber_updatedAt(ctx, field)
 			case "source":
 				return ec.fieldContext_PhoneNumber_source(ctx, field)
+			case "appSource":
+				return ec.fieldContext_PhoneNumber_appSource(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type PhoneNumber", field.Name)
 		},
@@ -16987,8 +17025,8 @@ func (ec *executionContext) fieldContext_Mutation_phoneNumberUpdateInContact(ctx
 	return fc, nil
 }
 
-func (ec *executionContext) _Mutation_phoneNumberDeleteFromContact(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_phoneNumberDeleteFromContact(ctx, field)
+func (ec *executionContext) _Mutation_phoneNumberRemoveFromContactByE164(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_phoneNumberRemoveFromContactByE164(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -17001,7 +17039,7 @@ func (ec *executionContext) _Mutation_phoneNumberDeleteFromContact(ctx context.C
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().PhoneNumberDeleteFromContact(rctx, fc.Args["contactId"].(string), fc.Args["e164"].(string))
+		return ec.resolvers.Mutation().PhoneNumberRemoveFromContactByE164(rctx, fc.Args["contactId"].(string), fc.Args["e164"].(string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -17017,7 +17055,7 @@ func (ec *executionContext) _Mutation_phoneNumberDeleteFromContact(ctx context.C
 	return ec.marshalNResult2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐResult(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Mutation_phoneNumberDeleteFromContact(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Mutation_phoneNumberRemoveFromContactByE164(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Mutation",
 		Field:      field,
@@ -17038,15 +17076,15 @@ func (ec *executionContext) fieldContext_Mutation_phoneNumberDeleteFromContact(c
 		}
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_phoneNumberDeleteFromContact_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+	if fc.Args, err = ec.field_Mutation_phoneNumberRemoveFromContactByE164_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return
 	}
 	return fc, nil
 }
 
-func (ec *executionContext) _Mutation_phoneNumberDeleteFromContactById(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_phoneNumberDeleteFromContactById(ctx, field)
+func (ec *executionContext) _Mutation_phoneNumberRemoveFromContactById(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_phoneNumberRemoveFromContactById(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -17059,7 +17097,7 @@ func (ec *executionContext) _Mutation_phoneNumberDeleteFromContactById(ctx conte
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().PhoneNumberDeleteFromContactByID(rctx, fc.Args["contactId"].(string), fc.Args["id"].(string))
+		return ec.resolvers.Mutation().PhoneNumberRemoveFromContactByID(rctx, fc.Args["contactId"].(string), fc.Args["id"].(string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -17075,7 +17113,7 @@ func (ec *executionContext) _Mutation_phoneNumberDeleteFromContactById(ctx conte
 	return ec.marshalNResult2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐResult(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Mutation_phoneNumberDeleteFromContactById(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Mutation_phoneNumberRemoveFromContactById(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Mutation",
 		Field:      field,
@@ -17096,7 +17134,7 @@ func (ec *executionContext) fieldContext_Mutation_phoneNumberDeleteFromContactBy
 		}
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_phoneNumberDeleteFromContactById_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+	if fc.Args, err = ec.field_Mutation_phoneNumberRemoveFromContactById_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return
 	}
@@ -19666,14 +19704,11 @@ func (ec *executionContext) _PhoneNumber_e164(ctx context.Context, field graphql
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
 		return graphql.Null
 	}
-	res := resTmp.(string)
+	res := resTmp.(*string)
 	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_PhoneNumber_e164(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -19684,6 +19719,88 @@ func (ec *executionContext) fieldContext_PhoneNumber_e164(ctx context.Context, f
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PhoneNumber_rawPhoneNumber(ctx context.Context, field graphql.CollectedField, obj *model.PhoneNumber) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_PhoneNumber_rawPhoneNumber(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.RawPhoneNumber, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_PhoneNumber_rawPhoneNumber(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PhoneNumber",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PhoneNumber_validated(ctx context.Context, field graphql.CollectedField, obj *model.PhoneNumber) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_PhoneNumber_validated(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Validated, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*bool)
+	fc.Result = res
+	return ec.marshalOBoolean2ᚖbool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_PhoneNumber_validated(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PhoneNumber",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
 		},
 	}
 	return fc, nil
@@ -19901,6 +20018,47 @@ func (ec *executionContext) fieldContext_PhoneNumber_source(ctx context.Context,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type DataSource does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PhoneNumber_appSource(ctx context.Context, field graphql.CollectedField, obj *model.PhoneNumber) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_PhoneNumber_appSource(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.AppSource, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_PhoneNumber_appSource(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PhoneNumber",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
 		},
 	}
 	return fc, nil
@@ -25976,18 +26134,18 @@ func (ec *executionContext) unmarshalInputPhoneNumberInput(ctx context.Context, 
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"e164", "label", "primary"}
+	fieldsInOrder := [...]string{"rawPhoneNumber", "label", "primary"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
 			continue
 		}
 		switch k {
-		case "e164":
+		case "rawPhoneNumber":
 			var err error
 
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("e164"))
-			it.E164, err = ec.unmarshalNString2string(ctx, v)
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("rawPhoneNumber"))
+			it.RawPhoneNumber, err = ec.unmarshalNString2string(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -26020,7 +26178,7 @@ func (ec *executionContext) unmarshalInputPhoneNumberUpdateInput(ctx context.Con
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"id", "e164", "label", "primary"}
+	fieldsInOrder := [...]string{"id", "label", "primary"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -26032,14 +26190,6 @@ func (ec *executionContext) unmarshalInputPhoneNumberUpdateInput(ctx context.Con
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
 			it.ID, err = ec.unmarshalNID2string(ctx, v)
-			if err != nil {
-				return it, err
-			}
-		case "e164":
-			var err error
-
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("e164"))
-			it.E164, err = ec.unmarshalNString2string(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -28325,16 +28475,16 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 				return ec._Mutation_phoneNumberUpdateInContact(ctx, field)
 			})
 
-		case "phoneNumberDeleteFromContact":
+		case "phoneNumberRemoveFromContactByE164":
 
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_phoneNumberDeleteFromContact(ctx, field)
+				return ec._Mutation_phoneNumberRemoveFromContactByE164(ctx, field)
 			})
 
-		case "phoneNumberDeleteFromContactById":
+		case "phoneNumberRemoveFromContactById":
 
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_phoneNumberDeleteFromContactById(ctx, field)
+				return ec._Mutation_phoneNumberRemoveFromContactById(ctx, field)
 			})
 
 		case "tag_Create":
@@ -28904,9 +29054,14 @@ func (ec *executionContext) _PhoneNumber(ctx context.Context, sel ast.SelectionS
 
 			out.Values[i] = ec._PhoneNumber_e164(ctx, field, obj)
 
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
+		case "rawPhoneNumber":
+
+			out.Values[i] = ec._PhoneNumber_rawPhoneNumber(ctx, field, obj)
+
+		case "validated":
+
+			out.Values[i] = ec._PhoneNumber_validated(ctx, field, obj)
+
 		case "label":
 
 			out.Values[i] = ec._PhoneNumber_label(ctx, field, obj)
@@ -28939,6 +29094,10 @@ func (ec *executionContext) _PhoneNumber(ctx context.Context, sel ast.SelectionS
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
+		case "appSource":
+
+			out.Values[i] = ec._PhoneNumber_appSource(ctx, field, obj)
+
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
