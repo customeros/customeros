@@ -7,7 +7,7 @@ import (
 type SyncRun struct {
 	ID                     uint      `gorm:"primarykey"`
 	RunId                  string    `gorm:"run_id;not null"`
-	StarAt                 time.Time `gorm:"default:CURRENT_TIMESTAMP"`
+	StartAt                time.Time `gorm:"default:CURRENT_TIMESTAMP"`
 	EndAt                  time.Time `gorm:"default:CURRENT_TIMESTAMP"`
 	TenantSyncSettingsId   uint
 	TenantSyncSettings     TenantSyncSettings
