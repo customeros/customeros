@@ -1,10 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 export function middleware(request: NextRequest) {
-  console.log('🏷️ ----- : Headers ', request.headers);
-  console.log('🏷️ ----- : Cookies ', request.headers.get('cookie'));
-
-  console.log('🏷️ ----- : TEST');
   if (
     !request.nextUrl.pathname.startsWith('/customer-os-api/') &&
     !request.nextUrl.pathname.startsWith('/sa/') &&
@@ -71,7 +67,6 @@ export function middleware(request: NextRequest) {
             new URL('/api/.ory/ui/login', request.url),
           );
         default:
-          console.log('default');
           return NextResponse.redirect(
             new URL('/api/.ory/ui/login', request.url),
           );
@@ -92,7 +87,6 @@ function getRedirectUrl(userName: string, request: NextRequest) {
       '/' +
       request.nextUrl.pathname.substring('/customer-os-api/'.length);
 
-    console.log('🏷️ ----- : API KEYx ', process.env.CUSTOMER_OS_API_KEY);
     requestHeaders.set(
       'X-Openline-API-KEY',
       process.env.CUSTOMER_OS_API_KEY as string,
@@ -130,7 +124,6 @@ function getRedirectUrl(userName: string, request: NextRequest) {
     newURL = newURL + '?' + request.nextUrl.searchParams.toString();
   }
 
-  console.log('🏷️ ----- requestHeaders: ', requestHeaders);
   return NextResponse.rewrite(new URL(newURL, request.url), {
     request: {
       headers: requestHeaders,

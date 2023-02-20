@@ -14,7 +14,6 @@ export const useBoundingClientRect = (
     right: 0,
     top: 0,
   });
-  console.log('🏷️ ----- domRects: ', domRects);
   useLayoutEffect(() => {
     setDOMRects(ref?.current?.getBoundingClientRect());
   }, [ref]);
