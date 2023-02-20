@@ -65,7 +65,6 @@
   --apple-green-800: #235824;
   --apple-green-900: #1e491f;
 
-
   /* Typography */
   --font-primary: 'Open Sans', sans-serif;
   --font-secondary: 'Roboto', sans-serif;
@@ -85,13 +84,11 @@
   --secondary-color-focus: var(--gray-400);
   --text-on-secondary: var(--gray-900);
 
-
   --accent-color: var(--electric-violet-400);
   --accent-color-hover: var(--electric-violet-500);
   --accent-color-active: var(--electric-violet-600);
   --accent-color-focus: var(--electric-violet-600);
   --text-on-accent: #fff;
-
 
   --error-color: var(--punch-red-600);
   --error-color-hover: var(--punch-red-700);
@@ -130,9 +127,27 @@
   --spacing-xxl: 3rem; /* 48px for 1rem = 16px */
   --spacing-xxxl: 3.5rem; /* 56px for 1rem = 16px */
 
+  /*  !* TYPOGRAPHY *!*/
+  --font-size-xxs: 0.625rem;
+  --font-size-xs: 0.75rem;
+  --font-size-s: 0.875rem;
+  --font-size-m: 1rem;
+  --font-size-l: 1.125rem;
+  --font-size-xl: 1.25rem;
+  --font-size-xxl: 1.5rem;
+  --font-size-xxxl: 1.75rem;
+
+  --heading-main: var(--font-size-xxl);
+  --heading-secondary: var(--font-size-xl);
+  --heading-tertiary: var(--font-size-l);
+  --normal-text: var(--font-size-m);
+  --small-text: var(--font-size-s);
+  --hint-text: var(--font-size-xs);
+
   /* BORDERS */
 
   --border-divider: 1px solid var(--gray-200);
+  --border-input: 2px solid var(--gray-400);
 
   /* OUTLINE */
 
@@ -146,12 +161,17 @@
   --transition-opacity: opacity 0.25ms ease;
 
   /* BOX-SHADOWS */
-  --box-shadow-sm-left: -4px 1px 4px 0px var(--gray-200);
+  --box-shadow-sm-right: 0 4px 6px -1px rgb(0 0 0 / 0.1),
+    0 2px 4px -2px rgb(0 0 0 / 0.1);
   --box-shadow-xs: 1px 1px 4px 0 var(--gray-200);
 
-
-  --background-color: #f1f1f1;
-  --gradient-base: radial-gradient(circle farthest-corner at 100% 100%, #e095f5, #85abff 53%, #b6d6f0);
+  --background-color: #fff;
+  --gradient-base: radial-gradient(
+    circle farthest-corner at 100% 100%,
+    #e095f5,
+    #85abff 53%,
+    #b6d6f0
+  );
 
   /* GRANULAR */
   /* SIDEBAR */
@@ -160,6 +180,7 @@
   --side-panel-collapsed-width: 82px;
   --side-panel-expanded-width: 200px;
 
+  --web-chat-left: 20px;
 }
 
 /*:root {*/
@@ -222,22 +243,6 @@
 /*  --padding-lg: var(--spacing-m) var(--spacing-lg);*/
 /*  --padding-xl: var(--spacing-lg) var(--spacing-xl);*/
 
-/*  !* TYPOGRAPHY *!*/
-/*  --font-size-xxs: 0.625rem;*/
-/*  --font-size-xs: 0.75rem;*/
-/*  --font-size-s: 0.875rem;*/
-/*  --font-size-m: 1rem;*/
-/*  --font-size-l: 1.125rem;*/
-/*  --font-size-xl: 1.25rem;*/
-/*  --font-size-xxl: 1.5rem;*/
-/*  --font-size-xxxl: 1.75rem;*/
-
-/*  --heading-main: var(--font-size-xxl);*/
-/*  --heading-secondary: var(--font-size-xl);*/
-/*  --heading-tertiary: var(--font-size-l);*/
-/*  --normal-text: var(--font-size-m);*/
-/*  --small-text: var(--font-size-s);*/
-/*  --hint-text: var(--font-size-xs);*/
 /*}*/
 
 /*.dark:root {*/
@@ -265,4 +270,3 @@
 /*  --background-color: #1a202c;*/
 /*  --text-primary-color: #fff;*/
 /*}*/
-

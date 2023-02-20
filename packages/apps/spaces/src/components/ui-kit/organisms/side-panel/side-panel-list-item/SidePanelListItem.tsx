@@ -8,7 +8,7 @@ interface SidePanelListItemProps {
   isOpen: boolean;
   onClick: EventHandler<never>;
 }
-
+classNames(styles.featuresItemText, {});
 export const SidePanelListItem: React.FC<SidePanelListItemProps> = ({
   label,
   icon,
@@ -16,16 +16,16 @@ export const SidePanelListItem: React.FC<SidePanelListItemProps> = ({
   onClick,
 }) => {
   return (
-    <li className={styles.featuresItem} role='button' tabIndex={0}>
+    <li
+      className={classNames(styles.featuresItem, {
+        [styles.featuresItemHidden]: !isOpen,
+      })}
+      role='button'
+      tabIndex={0}
+    >
       {icon && <span className={styles.featuresItemIcon}>{icon}</span>}
 
-      <span
-        className={classNames(styles.featuresItemText, {
-          [styles.featuresItemTextHidden]: !isOpen,
-        })}
-      >
-        {label}
-      </span>
+      <span className={styles.featuresItemText}>{label}</span>
     </li>
   );
 };

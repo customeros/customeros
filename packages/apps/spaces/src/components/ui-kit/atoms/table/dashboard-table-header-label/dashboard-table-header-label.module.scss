@@ -1,0 +1,50 @@
+.header {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: start;
+}
+
+.subLabel {
+  color: var(--gray-600);
+  font-size: 0.9rem;
+}
+
+.addressContainer:not(:last-of-type) {
+  border-bottom: 1px solid var(--gray-300);
+  padding-bottom: 8px;
+  margin-bottom: 8px;
+}
+
+.addressLocality {
+  color: var(--gray-800);
+}
+
+.addressRegion {
+  color: var(--gray-700);
+  font-size: 0.9rem;
+}
+
+.cell {
+  display: flex;
+  flex-direction: column;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  word-break: keep-all;
+  overflow: hidden;
+}
+
+.link {
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  word-break: keep-all;
+  overflow: hidden;
+
+  color: var(--royal-blue-600);
+
+  &:hover,
+  &:focus,
+  &:active {
+    text-decoration: underline;
+  }
+}

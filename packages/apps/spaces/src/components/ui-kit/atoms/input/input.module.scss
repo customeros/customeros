@@ -1,0 +1,18 @@
+.input {
+  border-radius: var(--border-radius-lg);
+  border: var(--border-input);
+  padding: var(--spacing-xxxs) var(--spacing-sm);
+  font-size: var(--font-size-base);
+  font-family: var(--font-secondary);
+  color: var(--text-default-color);
+  width: 100%;
+  max-width: 350px;
+
+  &:focus-visible,
+  &:hover,
+  &:focus,
+  &:active {
+    border-color: var(--primary-color);
+    outline: none;
+  }
+}

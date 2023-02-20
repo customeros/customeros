@@ -16,7 +16,7 @@ html {
 }
 
 html {
-  height: 100%
+  height: 100%;
 }
 
 body {
@@ -69,4 +69,34 @@ button {
 button::-moz-focus-inner {
   padding: 0;
   border: 0;
+}
+
+.p-datatable-scrollable .p-datatable-thead > tr > th,
+.p-datatable-scrollable .p-datatable-tbody > tr > td,
+.p-datatable-scrollable .p-datatable-tfoot > tr > td {
+  display: table-cell !important;
+}
+
+.p-datatable-thead {
+  /*border-bottom: var(--border-divider);*/
+  padding-bottom: var(--spacing-xxs);
+  background: var(--background-color);
+}
+
+.p-datatable-tbody {
+  margin-top: var(--spacing-sm);
+}
+
+.p-datatable-scrollable .p-datatable-thead > tr,
+.p-datatable-scrollable .p-datatable-tbody > tr,
+.p-datatable-scrollable .p-datatable-tfoot > tr {
+  border-bottom: var(--border-divider);
+  display: flex;
+  align-items: center;
+}
+
+.p-datatable-scrollable .p-datatable-thead > tr,
+.p-datatable-scrollable .p-datatable-tbody > tr,
+.p-datatable-scrollable .p-datatable-tfoot > tr {
+  padding: var(--spacing-xs) 0;
 }

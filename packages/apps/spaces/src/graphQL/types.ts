@@ -40,11 +40,6 @@ export type Contact = ExtensibleEntity &
   Node & {
     __typename?: 'Contact';
     actions: Array<Action>;
-    /**
-     * All addresses associated with a contact in customerOS.
-     * **Required.  If no values it returns an empty array.**
-     */
-    addresses: Array<Place>;
     conversations: ConversationPage;
     /**
      * An ISO8601 timestamp recording when the contact was created in customerOS.
@@ -83,6 +78,11 @@ export type Contact = ExtensibleEntity &
     label?: Maybe<Scalars['String']>;
     /** The last name of the contact in customerOS. */
     lastName?: Maybe<Scalars['String']>;
+    /**
+     * All locations associated with a contact in customerOS.
+     * **Required.  If no values it returns an empty array.**
+     */
+    locations: Array<Location>;
     /** Contact notes */
     notes: NotePage;
     organizations: OrganizationPage;
@@ -99,6 +99,7 @@ export type Contact = ExtensibleEntity &
     template?: Maybe<EntityTemplate>;
     /** The title associate with the contact in customerOS. */
     title?: Maybe<PersonTitle>;
+    updatedAt: Scalars['Time'];
   };
 
 /**
@@ -381,6 +382,7 @@ export type CustomField = Node & {
   /** The source of the custom field value */
   source: DataSource;
   template?: Maybe<CustomFieldTemplate>;
+  updatedAt: Scalars['Time'];
   /**
    * The value of the custom field.
    * **Required**
@@ -432,6 +434,7 @@ export type CustomFieldTemplate = Node & {
   name: Scalars['String'];
   order: Scalars['Int'];
   type: CustomFieldTemplateType;
+  updatedAt: Scalars['Time'];
 };
 
 export type CustomFieldTemplateInput = {
@@ -588,6 +591,7 @@ export type EntityTemplate = Node & {
   fieldSets: Array<FieldSetTemplate>;
   id: Scalars['ID'];
   name: Scalars['String'];
+  updatedAt: Scalars['Time'];
   version: Scalars['Int'];
 };
 
@@ -626,6 +630,7 @@ export type FieldSet = {
   name: Scalars['String'];
   source: DataSource;
   template?: Maybe<FieldSetTemplate>;
+  updatedAt: Scalars['Time'];
 };
 
 export type FieldSetInput = {
@@ -642,6 +647,7 @@ export type FieldSetTemplate = Node & {
   id: Scalars['ID'];
   name: Scalars['String'];
   order: Scalars['Int'];
+  updatedAt: Scalars['Time'];
 };
 
 export type FieldSetTemplateInput = {
@@ -719,6 +725,23 @@ export type JobRoleUpdateInput = {
   responsibilityLevel?: InputMaybe<Scalars['Int64']>;
 };
 
+export type Location = {
+  __typename?: 'Location';
+  address?: Maybe<Scalars['String']>;
+  address2?: Maybe<Scalars['String']>;
+  appSource?: Maybe<Scalars['String']>;
+  country?: Maybe<Scalars['String']>;
+  createdAt: Scalars['Time'];
+  id: Scalars['ID'];
+  locality?: Maybe<Scalars['String']>;
+  name: Scalars['String'];
+  place?: Maybe<Place>;
+  region?: Maybe<Scalars['String']>;
+  source?: Maybe<DataSource>;
+  updatedAt: Scalars['Time'];
+  zip?: Maybe<Scalars['String']>;
+};
+
 export type Mutation = {
   __typename?: 'Mutation';
   contactGroupAddContact: Result;
@@ -743,10 +766,12 @@ export type Mutation = {
   customFieldUpdateInContact: CustomField;
   customFieldUpdateInFieldSet: CustomField;
   customFieldsMergeAndUpdateInContact: Contact;
+  emailDelete: Result;
   emailMergeToContact: Email;
   emailMergeToUser: Email;
   emailRemoveFromContact: Result;
   emailRemoveFromContactById: Result;
+  emailRemoveFromUser: Result;
   emailRemoveFromUserById: Result;
   emailUpdateInContact: Email;
   emailUpdateInUser: Email;
@@ -880,6 +905,10 @@ export type MutationCustomFieldsMergeAndUpdateInContactArgs = {
   fieldSets?: InputMaybe<Array<FieldSetInput>>;
 };
 
+export type MutationEmailDeleteArgs = {
+  id: Scalars['ID'];
+};
+
 export type MutationEmailMergeToContactArgs = {
   contactId: Scalars['ID'];
   input: EmailInput;
@@ -898,6 +927,11 @@ export type MutationEmailRemoveFromContactArgs = {
 export type MutationEmailRemoveFromContactByIdArgs = {
   contactId: Scalars['ID'];
   id: Scalars['ID'];
+};
+
+export type MutationEmailRemoveFromUserArgs = {
+  email: Scalars['String'];
+  userId: Scalars['ID'];
 };
 
 export type MutationEmailRemoveFromUserByIdArgs = {
@@ -1066,11 +1100,6 @@ export type NoteUpdateInput = {
 
 export type Organization = Node & {
   __typename?: 'Organization';
-  /**
-   * All addresses associated with an organization in customerOS.
-   * **Required.  If no values it returns an empty array.**
-   */
-  addresses: Array<Place>;
   appSource: Scalars['String'];
   contacts: ContactsPage;
   createdAt: Scalars['Time'];
@@ -1080,6 +1109,11 @@ export type Organization = Node & {
   industry?: Maybe<Scalars['String']>;
   isPublic?: Maybe<Scalars['Boolean']>;
   jobRoles: Array<JobRole>;
+  /**
+   * All addresses associated with an organization in customerOS.
+   * **Required.  If no values it returns an empty array.**
+   */
+  locations: Array<Location>;
   name: Scalars['String'];
   /** Organization notes */
   notes: NotePage;
@@ -1127,6 +1161,7 @@ export type OrganizationType = {
   createdAt: Scalars['Time'];
   id: Scalars['ID'];
   name: Scalars['String'];
+  updatedAt: Scalars['Time'];
 };
 
 export type OrganizationTypeInput = {
@@ -1235,6 +1270,7 @@ export type PhoneNumber = {
    */
   primary: Scalars['Boolean'];
   source: DataSource;
+  updatedAt: Scalars['Time'];
 };
 
 /**
@@ -1296,6 +1332,7 @@ export type Place = {
   __typename?: 'Place';
   address?: Maybe<Scalars['String']>;
   address2?: Maybe<Scalars['String']>;
+  appSource?: Maybe<Scalars['String']>;
   city?: Maybe<Scalars['String']>;
   country?: Maybe<Scalars['String']>;
   createdAt: Scalars['Time'];
@@ -1304,6 +1341,7 @@ export type Place = {
   phone?: Maybe<Scalars['String']>;
   source?: Maybe<DataSource>;
   state?: Maybe<Scalars['String']>;
+  updatedAt: Scalars['Time'];
   zip?: Maybe<Scalars['String']>;
 };
 
@@ -1373,6 +1411,7 @@ export type QueryContactsArgs = {
 
 export type QueryDashboardViewArgs = {
   pagination: Pagination;
+  searchTerm?: InputMaybe<Scalars['String']>;
 };
 
 export type QueryEntityTemplatesArgs = {
@@ -1492,6 +1531,7 @@ export type User = {
    */
   lastName: Scalars['String'];
   source: DataSource;
+  updatedAt: Scalars['Time'];
 };
 
 /**

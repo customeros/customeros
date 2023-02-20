@@ -3,7 +3,7 @@ const path = require('path');
 import dotenv from 'dotenv';
 
 dotenv.config({
-  path: path.join(__dirname, '.env.dev'),
+  path: path.join(__dirname, '.env.development'),
 });
 
 const config: CodegenConfig = {
@@ -18,22 +18,18 @@ const config: CodegenConfig = {
       },
     },
   ],
-  documents: 'src/**/*.tsx',
+  documents: 'src/**/**/graphQL/**',
   generates: {
     'src/graphQL/graphql.schema.json': {
       plugins: ['introspection'],
     },
-    'src/graphQL/types.ts': {
-      plugins: ['typescript'],
-    },
-    'src/graphQL/hooks.ts': {
-      plugins: ['typescript-operations', 'typescript-react-apollo'],
+    'src/graphQL/generated.ts': {
+      plugins: [
+        'typescript',
+        'typescript-operations',
+        'typescript-react-apollo',
+      ],
       config: { withHooks: true },
-    },
-    'src/': {
-      preset: 'near-operation-file',
-      presetConfig: { extension: '.generated.tsx', baseTypesPath: 'types.ts' },
-      plugins: ['typescript-operations', 'typescript-react-apollo'],
     },
   },
 };

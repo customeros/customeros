@@ -1,9 +1,4 @@
-import React, {
-  ButtonHTMLAttributes,
-  EventHandler,
-  FC,
-  ReactNode,
-} from 'react';
+import React, { ButtonHTMLAttributes, FC, ReactNode } from 'react';
 import { Dialog } from 'primereact/dialog';
 import { Button } from '../button';
 import { Trash } from '../icons';

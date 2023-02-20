@@ -1,0 +1,29 @@
+fragment Email on Email {
+  id
+  primary
+  email
+}
+
+fragment Location on Location {
+  id
+  name
+  country
+  region
+  locality
+}
+
+fragment JobRole on JobRole {
+  jobTitle
+  primary
+}
+
+fragment ContactName on Contact {
+  firstName
+  lastName
+}
+
+fragment organizationBaseDetails on Organization {
+  id
+  name
+  industry
+}
