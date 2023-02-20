@@ -1,6 +1,7 @@
 package service
 
 import (
+	"encoding/json"
 	msProto "github.com/openline-ai/openline-customer-os/packages/server/message-store-api/proto/generated"
 	"github.com/openline-ai/openline-customer-os/packages/server/message-store-api/repository/entity"
 	"google.golang.org/protobuf/types/known/timestamppb"
@@ -33,7 +34,7 @@ func (s *commonStoreService) EncodeConversationEventToMS(conversationEvent entit
 		InitiatorUsername: conversationEvent.InitiatorUsername,
 		Type:              s.ConvertEntityTypeToMSType(conversationEvent.Type),
 		Subtype:           s.ConvertEntitySubtypeToMSSubtype(conversationEvent.Subtype),
-		Content:           conversationEvent.Content,
+		Content:           s.ExtractContent(conversationEvent),
 		Direction:         s.ConvertEntityDirectionToMSDirection(conversationEvent.Direction),
 		Time:              timestamppb.New(conversationEvent.CreateDate),
 		SenderId:          conversationEvent.SenderId,
@@ -149,6 +150,23 @@ func (s *commonStoreService) ConvertMSDirectionToEntityDirection(direction msPro
 		return entity.OUTBOUND
 	default:
 		return entity.INBOUND
+	}
+}
+
+func (s *commonStoreService) ExtractContent(conversation entity.ConversationEvent) string {
+	switch conversation.Type {
+	case entity.WEB_CHAT:
+		return conversation.Content
+	case entity.EMAIL:
+		var messageJson EmailContent
+		if err := json.Unmarshal([]byte(conversation.Content), &messageJson); err != nil {
+			return "Unable to parse email content"
+		}
+		return messageJson.Html
+	case entity.VOICE:
+		return conversation.Content
+	default:
+		return conversation.Content
 	}
 }
 
