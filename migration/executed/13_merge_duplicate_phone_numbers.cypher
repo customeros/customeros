@@ -36,11 +36,12 @@ SET p.createdAt=datetime({timezone: 'UTC'});
 
 MATCH (p:PhoneNumber)
 WHERE p.updatedAt is null
-SET p.createdAt=datetime({timezone: 'UTC'});
+SET p.updatedAt=p.createdAt;
 
 #========== QUERY PER TENANT Move relationships to the first node in duplicates. execute after release
 
 MATCH (p:PhoneNumber_test)
+WHERE p.e164 is not null AND p.e164 <> ''
 WITH p order by p.createdAt
 WITH p.e164 AS e164, collect(p) AS numbers WHERE size(numbers) > 1
 WITH head(numbers) as firstNode, tail(numbers) as otherNodes
@@ -54,8 +55,9 @@ DELETE rel;
 #==========  QUERY PER TENANT. Delete duplicate phone number nodes. execute after release
 
 MATCH (p:PhoneNumber_test)
+WHERE p.e164 is not null AND p.e164 <> ''
 WITH p order by p.createdAt
-WITH p.email AS email, collect(p) AS numbers WHERE size(numbers) > 1
+WITH p.e164 AS e164, collect(p) AS numbers WHERE size(numbers) > 1
 WITH head(numbers) as firstNode, tail(numbers) as otherNodes
 UNWIND otherNodes as otherNode
 WITH firstNode, otherNode
@@ -65,6 +67,6 @@ detach delete otherNode;
 #========== Verification query after release. Should return 0.
 
 MATCH (t:Tenant)--(p:PhoneNumber)
-WHERE 'PhoneNumber_'+t.name in labels(p)
+WHERE 'PhoneNumber_'+t.name in labels(p) AND p.e164 is not null AND p.e164 <> ''
 WITH t, p.e164 AS e164, collect(p) AS numbers WHERE size(numbers) > 1
 return count(e164) as duplicates;
