@@ -27,21 +27,22 @@ func NewPhoneNumberRepository(driver *neo4j.DriverWithContext) PhoneNumberReposi
 }
 
 func (r *phoneNumberRepository) MergePhoneNumberToContactInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant, contactId string, entity entity.PhoneNumberEntity) (*dbtype.Node, *dbtype.Relationship, error) {
-	query := "MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) " +
-		" MERGE (c)-[r:PHONE_ASSOCIATED_WITH]->(p:PhoneNumber {e164: $e164}) " +
-		" ON CREATE SET p.label=$label, " +
-		"				r.primary=$primary, " +
-		"				p.id=randomUUID(), " +
+	query := "MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant}) " +
+		" MERGE (t)<-[:PHONE_NUMBER_BELONGS_TO_TENANT]-(p:PhoneNumber {e164: $e164}) " +
+		" ON CREATE SET p.id=randomUUID(), " +
 		"				p.source=$source, " +
 		"				p.sourceOfTruth=$sourceOfTruth, " +
+		" 				p.appSource=$appSource, " +
 		"				p.createdAt=$now, " +
 		"				p.updatedAt=$now, " +
 		"				p:%s " +
-		" ON MATCH SET 	p.label=$label, " +
-		"				r.primary=$primary, " +
-		"				p.updatedAt=$now, " +
-		"				p.sourceOfTruth=$sourceOfTruth " +
-		" RETURN p, r"
+		" WITH p, c " +
+		" MERGE (c)-[rel:HAS]->(p) " +
+		" SET 	rel.label=$label, " +
+		"		rel.primary=$primary, " +
+		"		p.sourceOfTruth=$sourceOfTruth," +
+		"		p.updatedAt=$now " +
+		" RETURN p, rel"
 
 	queryResult, err := tx.Run(ctx, fmt.Sprintf(query, "PhoneNumber_"+tenant),
 		map[string]interface{}{
@@ -52,6 +53,7 @@ func (r *phoneNumberRepository) MergePhoneNumberToContactInTx(ctx context.Contex
 			"primary":       entity.Primary,
 			"source":        entity.Source,
 			"sourceOfTruth": entity.SourceOfTruth,
+			"appSource":     entity.AppSource,
 			"now":           utils.Now(),
 		})
 	return utils.ExtractSingleRecordNodeAndRelationship(ctx, queryResult, err)
@@ -60,17 +62,17 @@ func (r *phoneNumberRepository) MergePhoneNumberToContactInTx(ctx context.Contex
 func (r *phoneNumberRepository) UpdatePhoneNumberByContactInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant, contactId string, entity entity.PhoneNumberEntity) (*dbtype.Node, *dbtype.Relationship, error) {
 	queryResult, err := tx.Run(ctx, `
 			MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}),
-				(c)-[r:PHONE_ASSOCIATED_WITH]->(p:PhoneNumber {id: $phoneId})
+				(c)-[rel:HAS]->(p:PhoneNumber {id: $phoneNumberId})
             SET p.e164=$e164,
-				p.label=$label,
-				r.primary=$primary,
+				rel.label=$label,
+				rel.primary=$primary,
 				p.sourceOfTruth=$sourceOfTruth,
 				p.updatedAt=$now
-			RETURN p, r`,
+			RETURN p, rel`,
 		map[string]interface{}{
 			"tenant":        tenant,
 			"contactId":     contactId,
-			"emailId":       entity.Id,
+			"phoneNumberId": entity.Id,
 			"email":         entity.E164,
 			"label":         entity.Label,
 			"primary":       entity.Primary,
@@ -84,8 +86,8 @@ func (r *phoneNumberRepository) FindAllForContact(ctx context.Context, session n
 	return session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		result, err := tx.Run(ctx, `
 				MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}),
-              			(c)-[r:PHONE_ASSOCIATED_WITH]->(p:PhoneNumber)
-				RETURN p, r`,
+              			(c)-[rel:HAS]->(p:PhoneNumber)
+				RETURN p, rel`,
 			map[string]interface{}{
 				"contactId": contactId,
 				"tenant":    tenant,
@@ -101,9 +103,9 @@ func (r *phoneNumberRepository) FindAllForContact(ctx context.Context, session n
 func (r *phoneNumberRepository) SetOtherContactPhoneNumbersNonPrimaryInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant, contactId, e164 string) error {
 	_, err := tx.Run(ctx, `
 			MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}),
-				 (c)-[r:PHONE_ASSOCIATED_WITH]->(p:PhoneNumber)
+				 (c)-[rel:HAS]->(p:PhoneNumber)
 			WHERE p.e164 <> $e164
-            SET r.primary=false`,
+            SET rel.primary=false`,
 		map[string]interface{}{
 			"tenant":    tenant,
 			"contactId": contactId,

@@ -45,8 +45,8 @@ func TestQueryResolver_ContactByPhone(t *testing.T) {
 	neo4jt.CreateTenant(ctx, driver, otherTenant)
 	contactId1 := neo4jt.CreateDefaultContact(ctx, driver, tenantName)
 	contactId2 := neo4jt.CreateDefaultContact(ctx, driver, otherTenant)
-	neo4jt.AddPhoneNumberToContact(ctx, driver, contactId1, "+1234567890", false, "OTHER")
-	neo4jt.AddPhoneNumberToContact(ctx, driver, contactId2, "+1234567890", true, "MAIN")
+	neo4jt.AddPhoneNumberToContact(ctx, driver, tenantName, contactId1, "+1234567890", false, "OTHER")
+	neo4jt.AddPhoneNumberToContact(ctx, driver, tenantName, contactId2, "+1234567890", true, "MAIN")
 
 	rawResponse, err := c.RawPost(getQuery("contact/get_contact_by_phone"), client.Var("e164", "+1234567890"))
 	assertRawResponseSuccess(t, rawResponse, err)
