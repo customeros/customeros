@@ -6,20 +6,22 @@
   height: 100%;
   position: fixed;
   top: 0;
+  z-index: 1;
+  box-shadow: var(--box-shadow-sm-right);
 
-  &::after {
-    content: '';
-    display: block;
-    height: 100%;
-    width: 18px;
-    position: absolute;
-    top: 0;
-    bottom: 0;
-    right: -7px;
-    background-color: var(--background-color);
-    border-top-left-radius: var(--border-radius-lg);
-    box-shadow: var(--box-shadow-sm-left);
-  }
+  //&::after {
+  //  content: '';
+  //  display: block;
+  //  height: 100%;
+  //  width: 18px;
+  //  position: absolute;
+  //  top: 0;
+  //  bottom: 0;
+  //  right: -7px;
+  //  background-color: var(--background-color);
+  //  border-top-left-radius: var(--border-radius-lg);
+  //  box-shadow: var(--box-shadow-sm-left);
+  //}
 
   & .logoNameWrapper {
     position: relative;
@@ -31,6 +33,7 @@
 
   & .logoNameWrapper {
     display: flex;
+    cursor: pointer;
   }
 
   & .logoNameWrapper .logoCollapsed {
@@ -73,4 +76,9 @@
     padding-top: var(--spacing-lg);
     padding-bottom: var(--spacing-sm);
   }
+}
+
+.webChat {
+  position: relative;
+  height: 10px;
 }

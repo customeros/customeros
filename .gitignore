@@ -4,3 +4,4 @@
 
 deployment/scripts/openline-setup/*.*
 
+packages/apps/spaces/.env.development

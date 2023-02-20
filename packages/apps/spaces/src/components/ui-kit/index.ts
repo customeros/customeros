@@ -8,6 +8,7 @@ export {
   Message,
   Address,
   DeleteConfirmationDialog,
+  DebouncedInput,
 
   // ICONS
   IdCard,

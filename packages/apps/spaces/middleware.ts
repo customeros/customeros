@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 export function middleware(request: NextRequest) {
-  console.log('🏷️ ----- : TEST');
   if (
     !request.nextUrl.pathname.startsWith('/customer-os-api/') &&
     !request.nextUrl.pathname.startsWith('/sa/') &&
@@ -68,7 +67,6 @@ export function middleware(request: NextRequest) {
             new URL('/api/.ory/ui/login', request.url),
           );
         default:
-          console.log('default');
           return NextResponse.redirect(
             new URL('/api/.ory/ui/login', request.url),
           );
@@ -88,6 +86,7 @@ function getRedirectUrl(userName: string, request: NextRequest) {
       process.env.CUSTOMER_OS_API_PATH +
       '/' +
       request.nextUrl.pathname.substring('/customer-os-api/'.length);
+
     requestHeaders.set(
       'X-Openline-API-KEY',
       process.env.CUSTOMER_OS_API_KEY as string,

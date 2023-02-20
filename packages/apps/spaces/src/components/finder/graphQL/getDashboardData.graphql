@@ -1,0 +1,23 @@
+query GetDashboardData($pagination: Pagination!, $searchTerm: String) {
+  dashboardView(pagination: $pagination, searchTerm: $searchTerm) {
+    content {
+      contact {
+        id
+        ...ContactName
+        jobRoles {
+          ...JobRole
+        }
+        emails {
+          ...Email
+        }
+        locations {
+          ...Location
+        }
+      }
+      organization {
+        ...organizationBaseDetails
+      }
+    }
+    totalElements
+  }
+}

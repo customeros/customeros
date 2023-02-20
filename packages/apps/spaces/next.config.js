@@ -6,7 +6,7 @@ const { withSentryConfig } = require('@sentry/nextjs');
 
 /** @type {import('next').NextConfig} */
 
-const webpack = require('webpack')
+const webpack = require('webpack');
 
 const withPWA = require('next-pwa')({
   dest: 'public',
@@ -40,31 +40,28 @@ const config = {
   output: 'standalone',
 };
 
-
 module.exports = withSentryConfig(
-    withPWA({
-      ...config,
-      swcMinify: true,
-      webpack(config) {
-        config.module.rules.push({
-          test: /\.svg$/i,
-          issuer: /\.[jt]sx?$/,
-          use: ['@svgr/webpack'],
-        });
-        config.plugins.push(
-            new webpack.DefinePlugin({
-              __SENTRY_DEBUG__: true,
-              __SENTRY_TRACING__: false,
-            })
-        );
+  withPWA({
+    ...config,
+    swcMinify: true,
+    webpack(config) {
+      config.module.rules.push({
+        test: /\.svg$/i,
+        issuer: /\.[jt]sx?$/,
+        use: ['@svgr/webpack'],
+      });
+      config.plugins.push(
+        new webpack.DefinePlugin({
+          __SENTRY_DEBUG__: true,
+          __SENTRY_TRACING__: false,
+        }),
+      );
 
-        // return the modified config
-        return {
-          ...config,
-        };
-      },
-    }),
-  {
-
-  },
+      // return the modified config
+      return {
+        ...config,
+      };
+    },
+  }),
+  {},
 );
