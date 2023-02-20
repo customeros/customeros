@@ -1,8 +1,8 @@
 extend type Mutation {
     phoneNumberMergeToContact(contactId : ID!, input: PhoneNumberInput!): PhoneNumber!
     phoneNumberUpdateInContact(contactId : ID!, input: PhoneNumberUpdateInput!): PhoneNumber!
-    phoneNumberDeleteFromContact(contactId : ID!, e164: String!): Result!
-    phoneNumberDeleteFromContactById(contactId : ID!, id: ID!): Result!
+    phoneNumberRemoveFromContactByE164(contactId : ID!, e164: String!): Result!
+    phoneNumberRemoveFromContactById(contactId : ID!, id: ID!): Result!
 }
 
 """
@@ -18,9 +18,10 @@ type PhoneNumber {
     
     """
     The phone number in e164 format. 
-    **Required**
     """
-    e164: String!
+    e164: String
+    rawPhoneNumber: String
+    validated: Boolean
 
     """
     Defines the type of phone number.
@@ -37,6 +38,7 @@ type PhoneNumber {
     updatedAt: Time!
 
     source: DataSource!
+    appSource: String
 }
 
 """
@@ -49,7 +51,7 @@ input PhoneNumberInput {
     The phone number in e164 format. 
     **Required**
     """
-    e164: String!
+    rawPhoneNumber: String!
 
     """
     Defines the type of phone number.
@@ -74,12 +76,6 @@ input PhoneNumberUpdateInput {
     **Required**
     """
     id: ID!
-
-    """
-    The phone number in e164 format. 
-    **Required**
-    """
-    e164: String!
 
     """
     Defines the type of phone number.

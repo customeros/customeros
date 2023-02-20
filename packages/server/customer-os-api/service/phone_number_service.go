@@ -12,11 +12,11 @@ import (
 )
 
 type PhoneNumberService interface {
-	FindAllForContact(ctx context.Context, contactId string) (*entity.PhoneNumberEntities, error)
+	GetAllForContact(ctx context.Context, contactId string) (*entity.PhoneNumberEntities, error)
 	MergePhoneNumberToContact(ctx context.Context, id string, toEntity *entity.PhoneNumberEntity) (*entity.PhoneNumberEntity, error)
 	UpdatePhoneNumberInContact(ctx context.Context, id string, toEntity *entity.PhoneNumberEntity) (*entity.PhoneNumberEntity, error)
-	Delete(ctx context.Context, contactId string, e164 string) (bool, error)
-	DeleteById(ctx context.Context, contactId string, phoneId string) (bool, error)
+	RemoveFromContactByE164(ctx context.Context, contactId, e164 string) (bool, error)
+	RemoveFromContactById(ctx context.Context, contactId, phoneNumberId string) (bool, error)
 }
 
 type phoneNumberService struct {
@@ -33,11 +33,8 @@ func (s *phoneNumberService) getDriver() neo4j.DriverWithContext {
 	return *s.repositories.Drivers.Neo4jDriver
 }
 
-func (s *phoneNumberService) FindAllForContact(ctx context.Context, contactId string) (*entity.PhoneNumberEntities, error) {
-	session := utils.NewNeo4jReadSession(ctx, s.getDriver())
-	defer session.Close(ctx)
-
-	queryResult, err := s.repositories.PhoneNumberRepository.FindAllForContact(ctx, session, common.GetContext(ctx).Tenant, contactId)
+func (s *phoneNumberService) GetAllForContact(ctx context.Context, contactId string) (*entity.PhoneNumberEntities, error) {
+	queryResult, err := s.repositories.PhoneNumberRepository.GetAllForContact(ctx, common.GetContext(ctx).Tenant, contactId)
 	if err != nil {
 		return nil, err
 	}
@@ -62,13 +59,17 @@ func (s *phoneNumberService) MergePhoneNumberToContact(ctx context.Context, cont
 	var phoneNumberRelationship *dbtype.Relationship
 
 	_, err = session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (interface{}, error) {
+		phoneNumberNode, phoneNumberRelationship, err = s.repositories.PhoneNumberRepository.MergePhoneNumberToContactInTx(ctx, tx, common.GetContext(ctx).Tenant, contactId, *entity)
+		if err != nil {
+			return nil, err
+		}
+		phoneNumberId := utils.GetPropsFromNode(*phoneNumberNode)["id"].(string)
 		if entity.Primary == true {
-			err := s.repositories.PhoneNumberRepository.SetOtherContactPhoneNumbersNonPrimaryInTx(ctx, tx, common.GetContext(ctx).Tenant, contactId, entity.E164)
+			err := s.repositories.PhoneNumberRepository.SetOtherContactPhoneNumbersNonPrimaryInTx(ctx, tx, common.GetTenantFromContext(ctx), contactId, phoneNumberId)
 			if err != nil {
 				return nil, err
 			}
 		}
-		phoneNumberNode, phoneNumberRelationship, err = s.repositories.PhoneNumberRepository.MergePhoneNumberToContactInTx(ctx, tx, common.GetContext(ctx).Tenant, contactId, *entity)
 		return nil, err
 	})
 	if err != nil {
@@ -90,12 +91,12 @@ func (s *phoneNumberService) UpdatePhoneNumberInContact(ctx context.Context, con
 
 	_, err = session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (interface{}, error) {
 		phoneNumberNode, phoneNumberRelationship, err = s.repositories.PhoneNumberRepository.UpdatePhoneNumberByContactInTx(ctx, tx, common.GetContext(ctx).Tenant, contactId, *entity)
-
 		if err != nil {
 			return nil, err
 		}
+		phoneNumberId := utils.GetPropsFromNode(*phoneNumberNode)["id"].(string)
 		if entity.Primary == true {
-			err := s.repositories.PhoneNumberRepository.SetOtherContactPhoneNumbersNonPrimaryInTx(ctx, tx, common.GetContext(ctx).Tenant, contactId, entity.E164)
+			err := s.repositories.PhoneNumberRepository.SetOtherContactPhoneNumbersNonPrimaryInTx(ctx, tx, common.GetContext(ctx).Tenant, contactId, phoneNumberId)
 			if err != nil {
 				return nil, err
 			}
@@ -111,7 +112,7 @@ func (s *phoneNumberService) UpdatePhoneNumberInContact(ctx context.Context, con
 	return phoneNumberEntity, nil
 }
 
-func (s *phoneNumberService) Delete(ctx context.Context, contactId string, e164 string) (bool, error) {
+func (s *phoneNumberService) RemoveFromContactByE164(ctx context.Context, contactId, e164 string) (bool, error) {
 	session := utils.NewNeo4jWriteSession(ctx, s.getDriver())
 	defer session.Close(ctx)
 
@@ -119,12 +120,11 @@ func (s *phoneNumberService) Delete(ctx context.Context, contactId string, e164 
 		_, err := tx.Run(ctx, `
 			MATCH (c:Contact {id:$id})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}),
                   (c)-[rel:HAS]->(p:PhoneNumber {e164:$e164})
-            DELETE rel, p
-			`,
+            DELETE rel`,
 			map[string]interface{}{
 				"id":     contactId,
 				"e164":   e164,
-				"tenant": common.GetContext(ctx).Tenant,
+				"tenant": common.GetTenantFromContext(ctx),
 			})
 
 		return true, err
@@ -136,20 +136,19 @@ func (s *phoneNumberService) Delete(ctx context.Context, contactId string, e164 
 	return queryResult.(bool), nil
 }
 
-func (s *phoneNumberService) DeleteById(ctx context.Context, contactId string, phoneId string) (bool, error) {
+func (s *phoneNumberService) RemoveFromContactById(ctx context.Context, contactId, phoneNumberId string) (bool, error) {
 	session := utils.NewNeo4jWriteSession(ctx, s.getDriver())
 	defer session.Close(ctx)
 
 	queryResult, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (interface{}, error) {
 		_, err := tx.Run(ctx, `
 			MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}),
-                  (c:Contact)-[rel:HAS]->(p:PhoneNumber {id:$phoneId})
-            DELETE rel, p
-			`,
+                  (c)-[rel:HAS]->(p:PhoneNumber {id:$phoneNumberId})
+            DELETE rel`,
 			map[string]interface{}{
-				"contactId": contactId,
-				"phoneId":   phoneId,
-				"tenant":    common.GetContext(ctx).Tenant,
+				"contactId":     contactId,
+				"phoneNumberId": phoneNumberId,
+				"tenant":        common.GetTenantFromContext(ctx),
 			})
 
 		return true, err
@@ -164,13 +163,15 @@ func (s *phoneNumberService) DeleteById(ctx context.Context, contactId string, p
 func (s *phoneNumberService) mapDbNodeToPhoneNumberEntity(node dbtype.Node) *entity.PhoneNumberEntity {
 	props := utils.GetPropsFromNode(node)
 	result := entity.PhoneNumberEntity{
-		Id:            utils.GetStringPropOrEmpty(props, "id"),
-		E164:          utils.GetStringPropOrEmpty(props, "e164"),
-		Source:        entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
-		SourceOfTruth: entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
-		AppSource:     utils.GetStringPropOrEmpty(props, "appSource"),
-		CreatedAt:     utils.GetTimePropOrEpochStart(props, "createdAt"),
-		UpdatedAt:     utils.GetTimePropOrEpochStart(props, "updatedAt"),
+		Id:             utils.GetStringPropOrEmpty(props, "id"),
+		E164:           utils.GetStringPropOrEmpty(props, "e164"),
+		RawPhoneNumber: utils.GetStringPropOrEmpty(props, "rawPhoneNumber"),
+		Validated:      utils.GetBoolPropOrFalse(props, "validated"),
+		Source:         entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
+		SourceOfTruth:  entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
+		AppSource:      utils.GetStringPropOrEmpty(props, "appSource"),
+		CreatedAt:      utils.GetTimePropOrEpochStart(props, "createdAt"),
+		UpdatedAt:      utils.GetTimePropOrEpochStart(props, "updatedAt"),
 	}
 	return &result
 }

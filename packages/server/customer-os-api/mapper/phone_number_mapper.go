@@ -11,11 +11,11 @@ func MapPhoneNumberInputToEntity(input *model.PhoneNumberInput) *entity.PhoneNum
 		return nil
 	}
 	phoneNumberEntity := entity.PhoneNumberEntity{
-		E164:          input.E164,
-		Label:         utils.IfNotNilString(input.Label, func() string { return input.Label.String() }),
-		Primary:       utils.IfNotNilBool(input.Primary),
-		Source:        entity.DataSourceOpenline,
-		SourceOfTruth: entity.DataSourceOpenline,
+		RawPhoneNumber: input.RawPhoneNumber,
+		Label:          utils.IfNotNilString(input.Label, func() string { return input.Label.String() }),
+		Primary:        utils.IfNotNilBool(input.Primary),
+		Source:         entity.DataSourceOpenline,
+		SourceOfTruth:  entity.DataSourceOpenline,
 	}
 	return &phoneNumberEntity
 }
@@ -26,7 +26,6 @@ func MapPhoneNumberUpdateInputToEntity(input *model.PhoneNumberUpdateInput) *ent
 	}
 	phoneNumberEntity := entity.PhoneNumberEntity{
 		Id:            input.ID,
-		E164:          input.E164,
 		Label:         utils.IfNotNilString(input.Label, func() string { return input.Label.String() }),
 		Primary:       utils.IfNotNilBool(input.Primary),
 		SourceOfTruth: entity.DataSourceOpenline,
@@ -48,12 +47,15 @@ func MapEntityToPhoneNumber(entity *entity.PhoneNumberEntity) *model.PhoneNumber
 		label = ""
 	}
 	return &model.PhoneNumber{
-		ID:        entity.Id,
-		E164:      entity.E164,
-		Label:     &label,
-		Primary:   entity.Primary,
-		Source:    MapDataSourceToModel(entity.Source),
-		CreatedAt: entity.CreatedAt,
-		UpdatedAt: entity.UpdatedAt,
+		ID:             entity.Id,
+		E164:           utils.StringPtrNillable(entity.E164),
+		RawPhoneNumber: utils.StringPtrNillable(entity.RawPhoneNumber),
+		Validated:      utils.BoolPtr(entity.Validated),
+		Label:          utils.ToPtr(label),
+		Primary:        entity.Primary,
+		Source:         MapDataSourceToModel(entity.Source),
+		AppSource:      utils.StringPtrNillable(entity.AppSource),
+		CreatedAt:      entity.CreatedAt,
+		UpdatedAt:      entity.UpdatedAt,
 	}
 }

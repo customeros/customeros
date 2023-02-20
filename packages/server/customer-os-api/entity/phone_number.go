@@ -6,15 +6,17 @@ import (
 )
 
 type PhoneNumberEntity struct {
-	Id            string
-	E164          string
-	Label         string
-	Primary       bool
-	Source        DataSource
-	SourceOfTruth DataSource
-	AppSource     string
-	CreatedAt     time.Time
-	UpdatedAt     time.Time
+	Id             string
+	E164           string
+	Validated      bool
+	RawPhoneNumber string
+	Label          string
+	Primary        bool
+	Source         DataSource
+	SourceOfTruth  DataSource
+	AppSource      string
+	CreatedAt      time.Time
+	UpdatedAt      time.Time
 }
 
 func (phone PhoneNumberEntity) ToString() string {

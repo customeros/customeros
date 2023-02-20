@@ -16,7 +16,7 @@ import (
 func (r *mutationResolver) PhoneNumberMergeToContact(ctx context.Context, contactID string, input model.PhoneNumberInput) (*model.PhoneNumber, error) {
 	result, err := r.Services.PhoneNumberService.MergePhoneNumberToContact(ctx, contactID, mapper.MapPhoneNumberInputToEntity(&input))
 	if err != nil {
-		graphql.AddErrorf(ctx, "Could not add phone number %s to contact %s", input.E164, contactID)
+		graphql.AddErrorf(ctx, "Could not add phone number %s to contact %s", input.RawPhoneNumber, contactID)
 		return nil, err
 	}
 	return mapper.MapEntityToPhoneNumber(result), nil
@@ -26,17 +26,17 @@ func (r *mutationResolver) PhoneNumberMergeToContact(ctx context.Context, contac
 func (r *mutationResolver) PhoneNumberUpdateInContact(ctx context.Context, contactID string, input model.PhoneNumberUpdateInput) (*model.PhoneNumber, error) {
 	result, err := r.Services.PhoneNumberService.UpdatePhoneNumberInContact(ctx, contactID, mapper.MapPhoneNumberUpdateInputToEntity(&input))
 	if err != nil {
-		graphql.AddErrorf(ctx, "Could not update email %s in contact %s", input.ID, contactID)
+		graphql.AddErrorf(ctx, "Could not update phone number %s in contact %s", input.ID, contactID)
 		return nil, err
 	}
 	return mapper.MapEntityToPhoneNumber(result), nil
 }
 
-// PhoneNumberDeleteFromContact is the resolver for the phoneNumberDeleteFromContact field.
-func (r *mutationResolver) PhoneNumberDeleteFromContact(ctx context.Context, contactID string, e164 string) (*model.Result, error) {
-	result, err := r.Services.PhoneNumberService.Delete(ctx, contactID, e164)
+// PhoneNumberRemoveFromContactByE164 is the resolver for the phoneNumberRemoveFromContactByE164 field.
+func (r *mutationResolver) PhoneNumberRemoveFromContactByE164(ctx context.Context, contactID string, e164 string) (*model.Result, error) {
+	result, err := r.Services.PhoneNumberService.RemoveFromContactByE164(ctx, contactID, e164)
 	if err != nil {
-		graphql.AddErrorf(ctx, "Could not remove phone number %s from contact %s", e164, contactID)
+		graphql.AddErrorf(ctx, "Could not remove phone number by e164 %s from contact with id %s", e164, contactID)
 		return nil, err
 	}
 	return &model.Result{
@@ -44,11 +44,11 @@ func (r *mutationResolver) PhoneNumberDeleteFromContact(ctx context.Context, con
 	}, nil
 }
 
-// PhoneNumberDeleteFromContactByID is the resolver for the phoneNumberDeleteFromContactById field.
-func (r *mutationResolver) PhoneNumberDeleteFromContactByID(ctx context.Context, contactID string, id string) (*model.Result, error) {
-	result, err := r.Services.PhoneNumberService.DeleteById(ctx, contactID, id)
+// PhoneNumberRemoveFromContactByID is the resolver for the phoneNumberRemoveFromContactById field.
+func (r *mutationResolver) PhoneNumberRemoveFromContactByID(ctx context.Context, contactID string, id string) (*model.Result, error) {
+	result, err := r.Services.PhoneNumberService.RemoveFromContactById(ctx, contactID, id)
 	if err != nil {
-		graphql.AddErrorf(ctx, "Could not remove phone number %s from contact %s", id, contactID)
+		graphql.AddErrorf(ctx, "Could not remove phone number by id %s from contact with id %s", id, contactID)
 		return nil, err
 	}
 	return &model.Result{
