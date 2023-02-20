@@ -51,4 +51,6 @@ message InputMessage {
   MessageSubtype subtype = 4;
   optional string content = 5;
   MessageDirection direction = 6;
+  repeated string participantsIdentifiers = 7;
+  optional string threadId = 8;
 }

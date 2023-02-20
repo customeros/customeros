@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	commonModuleService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
@@ -204,10 +203,10 @@ func (s *MessageService) SaveMessage(ctx context.Context, input *msProto.InputMe
 
 	participants = append(participants, *initiator)
 
-	threadId := ""
 	entityType := s.commonStoreService.ConvertMSTypeToEntityType(input.Type)
-	if err := s.getThreadIdAndParticipantsFromMail(ctx, *tenant, &threadId, &participants, entityType, input); err != nil {
-		log.Printf("Error handleing email: %v", err)
+
+	if err := s.getOtherParticipants(ctx, *tenant, &participants, input); err != nil {
+		log.Printf("Error getting other participants: %v", err)
 		return nil, err
 	}
 
@@ -219,7 +218,7 @@ func (s *MessageService) SaveMessage(ctx context.Context, input *msProto.InputMe
 			conversation = conv
 		}
 	} else {
-		if conv, err := s.customerOSService.GetActiveConversationOrCreate(ctx, *tenant, initiator.Id, *input.InitiatorIdentifier, initiator.Type, entityType, threadId); err != nil {
+		if conv, err := s.customerOSService.GetActiveConversationOrCreate(ctx, *tenant, *initiator, *input.InitiatorIdentifier, entityType, input.GetThreadId()); err != nil {
 			return nil, err
 		} else {
 			conversation = conv
@@ -256,26 +255,12 @@ func (s *MessageService) getSenderTypeStr(initiator *Participant) string {
 	return lastSenderType
 }
 
-func (s *MessageService) getThreadIdAndParticipantsFromMail(ctx context.Context, tenant string, threadId *string, participants *[]Participant, entityType entity.EventType, input *msProto.InputMessage) error {
-	if entityType == entity.EMAIL {
-		var messageJson EmailContent
-		if err := json.Unmarshal([]byte(*input.Content), &messageJson); err != nil {
-			return err
-		}
-
-		refSize := len(messageJson.Reference)
-		if refSize > 0 {
-			*threadId = messageJson.Reference[0]
+func (s *MessageService) getOtherParticipants(ctx context.Context, tenant string, participants *[]Participant, input *msProto.InputMessage) error {
+	for _, toAddress := range input.ParticipantsIdentifiers {
+		if participant, err := s.getParticipant(ctx, tenant, toAddress); err != nil {
+			log.Printf("Error getting participant: %v", err)
 		} else {
-			*threadId = messageJson.MessageId
-		}
-
-		for _, toAddress := range append(messageJson.To, messageJson.Cc...) {
-			if participant, err := s.getParticipant(ctx, tenant, toAddress); err != nil {
-				log.Printf("Error getting participant: %v", err)
-			} else {
-				*participants = append(*participants, *participant)
-			}
+			*participants = append(*participants, *participant)
 		}
 	}
 	return nil
