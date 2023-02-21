@@ -1,7 +1,6 @@
 import React, { EventHandler, ReactNode } from 'react';
 import styles from './side-panel-list-item.module.scss';
 import classNames from 'classnames';
-import { Button } from '../../../atoms';
 interface SidePanelListItemProps {
   label: string;
   icon?: ReactNode;
