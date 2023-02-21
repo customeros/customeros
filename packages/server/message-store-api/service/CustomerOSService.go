@@ -405,7 +405,7 @@ func (s *CustomerOSService) GetConversationParticipants(ctx context.Context, ten
 	}
 }
 
-func (s *CustomerOSService) CreateConversation(ctx context.Context, tenant string, initiatorId string, initiatorUsername string, initiatorType entity.SenderType, channel entity.EventType, threadId string) (*Conversation, error) {
+func (s *CustomerOSService) CreateConversation(ctx context.Context, tenant string, initiator Participant, initiatorUsername string, channel entity.EventType, threadId string) (*Conversation, error) {
 	session := utils.NewNeo4jWriteSession(ctx, *s.driver)
 	defer session.Close(ctx)
 
@@ -413,11 +413,11 @@ func (s *CustomerOSService) CreateConversation(ctx context.Context, tenant strin
 	userIds := []string{}
 	initiatorTypeStr := ""
 
-	if initiatorType == entity.CONTACT {
-		contactIds = append(contactIds, initiatorId)
+	if initiator.Type == entity.CONTACT {
+		contactIds = append(contactIds, initiator.Id)
 		initiatorTypeStr = "CONTACT"
-	} else if initiatorType == entity.USER {
-		userIds = append(userIds, initiatorId)
+	} else if initiator.Type == entity.USER {
+		userIds = append(userIds, initiator.Id)
 		initiatorTypeStr = "USER"
 	}
 
@@ -603,28 +603,27 @@ func (s *CustomerOSService) GetContactWithEmailOrCreate(ctx context.Context, ten
 func (s *CustomerOSService) GetActiveConversationOrCreate(
 	ctx context.Context,
 	tenant string,
-	initiatorId string,
+	initiator Participant,
 	initiatorUsername string,
-	senderType entity.SenderType,
 	eventType entity.EventType,
 	threadId string,
 ) (*Conversation, error) {
 	var conversation *Conversation
 	var err error
 	if eventType == entity.WEB_CHAT {
-		if senderType == entity.CONTACT {
-			conversation, err = s.GetWebChatConversationWithContactInitiator(ctx, tenant, initiatorId)
-		} else if senderType == entity.USER {
-			conversation, err = s.GetWebChatConversationWithUserInitiator(ctx, tenant, initiatorId)
+		if initiator.Type == entity.CONTACT {
+			conversation, err = s.GetWebChatConversationWithContactInitiator(ctx, tenant, initiator.Id)
+		} else if initiator.Type == entity.USER {
+			conversation, err = s.GetWebChatConversationWithUserInitiator(ctx, tenant, initiator.Id)
 		}
 	} else if eventType == entity.EMAIL {
 		if err != nil {
 			return nil, err
 		}
-		if senderType == entity.CONTACT {
-			conversation, err = s.GetEmailConversationWithContactInitiator(ctx, tenant, initiatorId, threadId)
-		} else if senderType == entity.USER {
-			conversation, err = s.GetEmailConversationWithUserInitiator(ctx, tenant, initiatorId, threadId)
+		if initiator.Type == entity.CONTACT {
+			conversation, err = s.GetEmailConversationWithContactInitiator(ctx, tenant, initiator.Id, threadId)
+		} else if initiator.Type == entity.USER {
+			conversation, err = s.GetEmailConversationWithUserInitiator(ctx, tenant, initiator.Id, threadId)
 		}
 	}
 
@@ -633,7 +632,7 @@ func (s *CustomerOSService) GetActiveConversationOrCreate(
 	}
 
 	if conversation == nil {
-		conversation, err = s.CreateConversation(ctx, tenant, initiatorId, initiatorUsername, senderType, eventType, threadId)
+		conversation, err = s.CreateConversation(ctx, tenant, initiator, initiatorUsername, eventType, threadId)
 	}
 	if err != nil {
 		return nil, err
