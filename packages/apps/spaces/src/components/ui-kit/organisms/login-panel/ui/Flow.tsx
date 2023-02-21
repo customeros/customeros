@@ -17,6 +17,7 @@ import { Component, FormEvent } from 'react';
 
 import { Messages } from './Messages';
 import { Node } from './Node';
+import styles from './login-ui.module.scss';
 
 export type Values = Partial<
   | UpdateLoginFlowBody
@@ -159,6 +160,8 @@ export class Flow<T extends Values> extends Component<Props<T>, State<T>> {
 
     return (
       <form
+        style={{ width: '100%' }}
+        className={styles.form}
         action={flow.ui.action}
         method={flow.ui.method}
         onSubmit={this.handleSubmit}

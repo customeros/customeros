@@ -1,4 +1,10 @@
+@import "styles/mixins";
+
 .loginPanel {
+  @include flex-center;
+  @include frosted-glass;
+  flex-direction: column;
+  min-width: 400px;
   position: absolute;
   left: 50%;
   top: 50%;
@@ -13,4 +19,16 @@
   width: 70%;
   max-width: 300px;
   padding-bottom: var(--spacing-md);
+}
+
+.logo {
+  margin-bottom: var(--spacing-sm);
+}
+
+.oryLogo {
+  margin-left: var(--spacing-xxxs);
+}
+
+.oryInfoSection {
+  font-size: var(--font-size-xs);
 }

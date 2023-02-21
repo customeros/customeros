@@ -14,7 +14,6 @@ const ory = new FrontendApi(new Configuration(edgeConfig));
 
 export const MainPageWrapper = ({ children }: any) => {
   const router = useRouter();
-  const [isSidePanelVisible, setSidePanelVisible] = useState(false);
   // const setTheme = (theme) => {
   //     document.documentElement.className = theme;
   //     localStorage.setItem('theme', theme);
@@ -58,38 +57,5 @@ export const MainPageWrapper = ({ children }: any) => {
     }
   }
 
-  return (
-    <ApolloProvider client={client}>
-      <PageContentLayout
-        isPanelOpen={isSidePanelVisible}
-        isSideBarShown={router.pathname === '/'}
-      >
-        {router.pathname === '/' && (
-          <SidePanel
-            onPanelToggle={setSidePanelVisible}
-            isPanelOpen={isSidePanelVisible}
-            logoutUrl={logoutUrl}
-          >
-            <WebChat
-              apikey={`${process.env.WEB_CHAT_API_KEY}`}
-              httpServerPath={`${process.env.WEB_CHAT_HTTP_PATH}`}
-              wsServerPath={`${process.env.WEB_CHAT_WS_PATH}`}
-              location='left'
-              trackerEnabled={
-                `${process.env.WEB_CHAT_TRACKER_ENABLED}` === 'true'
-              }
-              trackerAppId={`${process.env.WEB_CHAT_TRACKER_APP_ID}`}
-              trackerId={`${process.env.WEB_CHAT_TRACKER_ID}`}
-              trackerCollectorUrl={`${process.env.WEB_CHAT_TRACKER_COLLECTOR_URL}`}
-              trackerBufferSize={`${process.env.WEB_CHAT_TRACKER_BUFFER_SIZE}`}
-              trackerMinimumVisitLength={`${process.env.WEB_CHAT_TRACKER_MINIMUM_VISIT_LENGTH}`}
-              trackerHeartbeatDelay={`${process.env.WEB_CHAT_TRACKER_HEARTBEAT_DELAY}`}
-              userEmail={userEmail || ''}
-            />
-          </SidePanel>
-        )}
-        <article style={{ gridArea: 'content' }}>{children}</article>
-      </PageContentLayout>
-    </ApolloProvider>
-  );
+  return <ApolloProvider client={client}>{children}</ApolloProvider>;
 };

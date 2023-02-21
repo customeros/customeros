@@ -9,6 +9,7 @@ export {
   Address,
   DeleteConfirmationDialog,
   DebouncedInput,
+  Input,
 
   // ICONS
   IdCard,
@@ -144,3 +145,5 @@ export {
   WindowMinimize,
   Youtube,
 } from './atoms';
+
+export { ErrorPage } from './organisms';

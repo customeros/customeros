@@ -1,5 +1,5 @@
 .button {
-  padding: var(-spacing-xxs) var(--spacing-sm);
+  padding: var(--spacing-xxs) var(--spacing-md);
   border-radius: var(--border-radius-xl);
   border: none; // fix in theming
   display: flex;
@@ -75,13 +75,13 @@
     }
   }
   &.link {
-    color: var(--blue-500);
-    background: white;
+    color: var(--royal-blue-800);
+    background: transparent;
 
     &:hover,
     &:focus,
     &:active {
-      color: var(--blue-600);
+      color: var(--royal-blue-700);
       text-decoration: underline;
     }
   }

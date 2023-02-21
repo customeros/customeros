@@ -3,7 +3,7 @@ html {
   box-sizing: border-box;
   padding: 0;
   margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Oxygen,
+  font-family: "Roboto", BlinkMacSystemFont, Segoe UI, Roboto, Oxygen,
     Ubuntu, Cantarell, Fira Sans, Droid Sans, Helvetica Neue, sans-serif;
 }
 
@@ -69,4 +69,30 @@ button {
 button::-moz-focus-inner {
   padding: 0;
   border: 0;
+}
+
+.glass {
+  width: min(400px, 80vw);
+  min-height: 400px;
+  height: 40vh;
+  background: radial-gradient(#ffffff96 30%, #ffffff96);
+  border-radius: 20px;
+  box-shadow: 5px 5px 10px #0007, -1px -1px 2px #fff, 1px 1px 2px #555;
+  backdrop-filter: blur(5px);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+}
+
+.shine {
+  width: 20%;
+  height: 150%;
+  position: absolute;
+  transform: rotate(30deg);
+  background: #fff5;
+  animation: shine 10s infinite linear;
+  right: 200%;
+  filter: blur(5px);
 }

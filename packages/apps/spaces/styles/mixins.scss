@@ -1,0 +1,51 @@
+@mixin frosted-glass {
+    background: radial-gradient(rgb(255 255 255 / 84%) 30%, rgb(255 255 255 / 83%));
+    border-radius: var(--border-radius-md);
+    box-shadow: 5px 5px 10px #0007, -1px -1px 2px #fff, 1px 1px 2px #555;
+    backdrop-filter: blur(5px);
+    overflow: hidden;
+    padding: var(--spacing-lg) var(--spacing-xxl);
+}
+
+@mixin flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@mixin input-style {
+  border-radius: var(--border-radius-sm);
+  border: var(--border-input);
+  padding: var(--spacing-xxs) var(--spacing-sm);
+  margin-top: var(--spacing-xxs);
+  font-size: var(--font-size-base);
+  font-family: var(--font-secondary);
+  color: var(--text-default-color);
+  width: 100%;
+
+  &:focus-visible,
+  &:hover,
+  &:focus,
+  &:active {
+    border-color: var(--primary-color);
+    outline: none;
+  }
+
+  &:disabled {
+    border-color: var(--border-input-disabled);
+    pointer-events: none;
+    cursor: not-allowed;
+  }
+
+
+  &.error {
+    border-color: var(--error-color);
+
+    &:focus-visible,
+    &:hover,
+    &:focus,
+    &:active {
+      border-color: var(--error-color-active);
+    }
+  }
+}

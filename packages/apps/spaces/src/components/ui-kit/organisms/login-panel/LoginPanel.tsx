@@ -1,7 +1,6 @@
 import { InputText } from 'primereact/inputtext';
 import React, { Dispatch, SetStateAction, useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
-import { Button } from 'primereact/button';
 import styles from './login-panel.module.scss';
 import { NextRouter, useRouter } from 'next/router';
 import {
@@ -13,6 +12,8 @@ import {
 import { AxiosError } from 'axios';
 import { edgeConfig } from '@ory/integrations/next';
 import { Flow } from './ui';
+import Image from 'next/image';
+import { Button, Input } from '../../atoms';
 
 // interface Props {}
 
@@ -306,242 +307,212 @@ export const LoginPanel: React.FC = () => {
   };
 
   return (
-    <div className='flex w-full'>
+    <>
       <div className={styles.loginPanel}>
-        <div className='surface-card pt-6 px-6 pb-5 shadow-6 border-round w-full sm:w-25rem'>
-          {loginForm === 'login' && (
-            <>
-              <div className='text-center mb-5'>
-                <img
-                  src='./logos/openline.svg'
-                  alt='Openline'
-                  height={50}
-                  className='mb-3'
-                />
+        {loginForm === 'login' && (
+          <>
+            <Image
+              className={styles.logo}
+              src='logos/openline.svg'
+              alt='Openline'
+              height={60}
+              width={170}
+            />
 
-                <div>
-                  <span className='text-600 font-medium line-height-3 text-sm'>
-                    Don&apos;t have an account?
-                  </span>
-                  <a
-                    className='font-medium no-underline ml-2 text-blue-500 cursor-pointer text-sm'
-                    onClick={() => waitlist()}
-                  >
-                    Join the waitlist!
-                  </a>
-                </div>
-              </div>
+            <p>Don&apos;t have an account?</p>
+            <Button mode='link' onClick={waitlist}>
+              Join the waitlist!
+            </Button>
+
+            <Flow flow={flow} onSubmit={handleLogin} />
+            <div className={styles.oryInfoSection}>
+              <span
+                className='font-medium line-height-3 text-sm'
+                style={{ color: '#9E9E9E' }}
+              >
+                Protected by{' '}
+              </span>
+              <Image
+                className={styles.oryLogo}
+                src='logos/ory-small.svg'
+                alt='Ory'
+                height={30}
+                width={30}
+                style={{ verticalAlign: 'middle' }}
+              />
+            </div>
+          </>
+        )}
+
+        {loginForm === 'waitlist' && (
+          <>
+            <div className='text-center mb-5'>
+              <Image
+                className={styles.logo}
+                src='logos/openline.svg'
+                alt='Openline'
+                height={50}
+                width={50}
+              />
 
               <div>
-                <Flow flow={flow} onSubmit={handleLogin} />
+                <span className='text-600 font-medium line-height-3 text-sm'>
+                  Already have an account?
+                </span>
+                <a
+                  className='font-medium no-underline ml-2 text-blue-500 cursor-pointer text-sm'
+                  onClick={() => login()}
+                >
+                  Login now!
+                </a>
+              </div>
+            </div>
 
-                {/*<form onSubmit={handleLogin}>*/}
-                {/*    <label htmlFor="email" className="block text-600 font-medium mb-2 text-sm">Email</label>*/}
-                {/*    <InputText id="email" type="text" autoComplete="username" className="w-full mb-3" onChange={(e) => setEmail(e.target.value)} />*/}
-
-                {/*    <label htmlFor="password" className="block text-600 font-medium mb-2 text-sm">Password</label>*/}
-                {/*    <InputText type="password" autoComplete='current-password' className="w-full mb-3" onChange={(e) => setPassword(e.target.value)} />*/}
-
-                {/*    <div className="flex align-items-center justify-content-between mb-6">*/}
-                {/*        <a className="font-medium no-underline ml-2 text-blue-500 text-right cursor-pointer text-sm" onClick={forgotPassword}>Forgot your password?</a>*/}
-                {/*    </div>*/}
-
-                {/*    <TagInput label="Sign In" className="w-full p-button-secondary" type='submit' />*/}
-                {/*</form>*/}
+            {formState === SUCCESS && (
+              <>
+                <div className='text-800 font-medium line-height-3 text-center py-8'>
+                  Thanks for joining the waitlist - you should have a welcome
+                  email in your inbox already!
+                </div>
                 <div className='pt-5 text-center'>
-                  <span
-                    className='font-medium line-height-3 text-sm'
-                    style={{ color: '#9E9E9E' }}
+                  <a
+                    className='font-medium no-underline ml-2 text-blue-500 cursor-pointer text-sm'
+                    href='https://www.openline.ai'
                   >
-                    Protected by{' '}
-                  </span>
-                  <img
-                    src='./logos/ory-small.svg'
-                    alt='Ory'
-                    height={14}
-                    style={{ verticalAlign: 'middle' }}
+                    Head back to the Openline website!
+                  </a>
+                </div>
+              </>
+            )}
+
+            {formState === INIT && (
+              <>
+                <form onSubmit={handleSubmit}>
+                  <label
+                    htmlFor='firstName'
+                    className='block text-600 font-medium mb-2 text-sm'
+                  >
+                    First Name
+                  </label>
+                  <InputText
+                    type='firstName'
+                    className='w-full mb-3'
+                    onChange={(e) => setFirstName(e.target.value)}
                   />
-                </div>
-              </div>
-            </>
-          )}
 
-          {loginForm === 'waitlist' && (
-            <>
-              <div className='text-center mb-5'>
-                <img
-                  src='./logos/openline.svg'
-                  alt='Openline'
-                  height={50}
-                  className='mb-3'
-                />
-
-                <div>
-                  <span className='text-600 font-medium line-height-3 text-sm'>
-                    Already have an account?
-                  </span>
-                  <a
-                    className='font-medium no-underline ml-2 text-blue-500 cursor-pointer text-sm'
-                    onClick={() => login()}
+                  <label
+                    htmlFor='lastName'
+                    className='block text-600 font-medium mb-2 text-sm'
                   >
-                    Login now!
-                  </a>
-                </div>
-              </div>
+                    Last Name
+                  </label>
+                  <InputText
+                    type='lastName'
+                    className='w-full mb-3'
+                    onChange={(e) => setLastName(e.target.value)}
+                  />
 
-              {formState === SUCCESS && (
-                <>
-                  <div className='text-800 font-medium line-height-3 text-center py-8'>
-                    Thanks for joining the waitlist - you should have a welcome
-                    email in your inbox already!
-                  </div>
-                  <div className='pt-5 text-center'>
-                    <a
-                      className='font-medium no-underline ml-2 text-blue-500 cursor-pointer text-sm'
-                      href='https://www.openline.ai'
-                    >
-                      Head back to the Openline website!
-                    </a>
-                  </div>
-                </>
-              )}
-
-              {formState === INIT && (
-                <div>
-                  <form onSubmit={handleSubmit}>
-                    <label
-                      htmlFor='firstName'
-                      className='block text-600 font-medium mb-2 text-sm'
-                    >
-                      First Name
-                    </label>
-                    <InputText
-                      type='firstName'
-                      className='w-full mb-3'
-                      onChange={(e) => setFirstName(e.target.value)}
-                    />
-
-                    <label
-                      htmlFor='lastName'
-                      className='block text-600 font-medium mb-2 text-sm'
-                    >
-                      Last Name
-                    </label>
-                    <InputText
-                      type='lastName'
-                      className='w-full mb-3'
-                      onChange={(e) => setLastName(e.target.value)}
-                    />
-
-                    <label
-                      htmlFor='email'
-                      className='block text-600 font-medium mb-2 text-sm'
-                    >
-                      Email
-                    </label>
-                    <InputText
-                      id='email'
-                      type='text'
-                      className='w-full mb-6'
-                      onChange={(e) => setEmail(e.target.value)}
-                    />
-
-                    {/*<Button*/}
-                    {/*  label={*/}
-                    {/*    formState === SUBMITTING*/}
-                    {/*      ? 'Please wait...'*/}
-                    {/*      : 'Join the Waitlist'*/}
-                    {/*  }*/}
-                    {/*  className='w-full p-button-secondary'*/}
-                    {/*  type='submit'*/}
-                    {/*/>*/}
-                  </form>
-                  <div className='pt-5 text-center'>
-                    <a
-                      href='https://www.openline.ai'
-                      style={{ color: '#9E9E9E', textDecoration: 'none' }}
-                    >
-                      <span className='font-medium mr-1 cursor-pointer text-sm'>
-                        Powered by
-                      </span>
-                      <img
-                        src='./logos/openline_gray.svg'
-                        alt='Ory'
-                        height={20}
-                        style={{ verticalAlign: 'middle' }}
-                      />
-                    </a>
-                  </div>
-                </div>
-              )}
-            </>
-          )}
-
-          {loginForm === 'forgotPassword' && (
-            <>
-              <div className='text-center mb-5'>
-                <img
-                  src='./logos/openline.svg'
-                  alt='Openline'
-                  height={50}
-                  className='mb-3'
-                />
-
-                <div>
-                  <span className='text-600 font-medium line-height-3 text-sm'>
-                    Remembered already?
-                  </span>
-                  <a
-                    className='font-medium no-underline ml-2 text-blue-500 cursor-pointer text-sm'
-                    onClick={() => login()}
-                  >
-                    Login now!
-                  </a>
-                </div>
-              </div>
-
-              <div>
-                <form onSubmit={handleForgotPassword}>
                   <label
                     htmlFor='email'
-                    className='block text-600 font-medium mb-3 text-sm'
+                    className='block text-600 font-medium mb-2 text-sm'
                   >
-                    Enter your email here for a password reset
+                    Email
                   </label>
                   <InputText
                     id='email'
                     type='text'
-                    autoComplete='username'
-                    className='w-full mb-5'
-                    onChange={(e) => setForgottenPasswordEmail(e.target.value)}
-                  />
-
-                  <Button
-                    label='Reset Password'
-                    className='w-full p-button-secondary'
-                    type='submit'
+                    className='w-full mb-6'
+                    onChange={(e) => setEmail(e.target.value)}
                   />
                 </form>
-
-                <div className='pt-5 text-center'>
-                  <span
-                    className='font-medium line-height-3 text-sm'
-                    style={{ color: '#9E9E9E' }}
+                <div className={styles.oryInfoSection}>
+                  <a
+                    href='https://www.openline.ai'
+                    style={{ color: '#9E9E9E', textDecoration: 'none' }}
                   >
-                    Protected by{' '}
-                  </span>
-                  <img
-                    src='./logos/ory-small.svg'
-                    alt='Ory'
-                    height={14}
-                    style={{ verticalAlign: 'middle' }}
-                  />
+                    <span className='font-medium mr-1 cursor-pointer text-sm'>
+                      Powered by
+                    </span>
+                    <Image
+                      src='logos/openline_gray.svg'
+                      alt='Ory'
+                      height={30}
+                      width={30}
+                      style={{ verticalAlign: 'middle' }}
+                    />
+                  </a>
                 </div>
+              </>
+            )}
+          </>
+        )}
+
+        {loginForm === 'forgotPassword' && (
+          <>
+            <div className='text-center mb-5'>
+              <Image
+                className={styles.logo}
+                src='logos/openline.svg'
+                alt='Openline'
+                height={50}
+                width={50}
+              />
+
+              <div>
+                <span className='text-600 font-medium line-height-3 text-sm'>
+                  Remembered already?
+                </span>
+                <a
+                  className='font-medium no-underline ml-2 text-blue-500 cursor-pointer text-sm'
+                  onClick={() => login()}
+                >
+                  Login now!
+                </a>
               </div>
-            </>
-          )}
-        </div>
+            </div>
+
+            <div>
+              <form onSubmit={handleForgotPassword}>
+                <label
+                  htmlFor='email'
+                  className='block text-600 font-medium mb-3 text-sm'
+                >
+                  Enter your email here for a password reset
+                </label>
+                <Input
+                  id='email'
+                  type='text'
+                  label='Email'
+                  autocomplete='username'
+                  className='w-full mb-5'
+                  onChange={(e) => setForgottenPasswordEmail(e.target.value)}
+                />
+
+                <Button className='w-full p-button-secondary' type='submit'>
+                  Reset Password
+                </Button>
+              </form>
+
+              <div className={styles.oryInfoSection}>
+                <span
+                  className='font-medium line-height-3 text-sm'
+                  style={{ color: '#9E9E9E' }}
+                >
+                  Protected by{' '}
+                </span>
+                <Image
+                  className={styles.oryLogo}
+                  src='logos/ory-small.svg'
+                  alt='Ory'
+                  height={30}
+                  width={30}
+                  style={{ verticalAlign: 'middle' }}
+                />
+              </div>
+            </div>
+          </>
+        )}
       </div>
-    </div>
+    </>
   );
 };

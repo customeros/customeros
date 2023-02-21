@@ -147,7 +147,8 @@
   /* BORDERS */
 
   --border-divider: 1px solid var(--gray-200);
-  --border-input: 2px solid var(--gray-400);
+  --border-input: 1px solid var(--gray-300);
+  --border-input-disabled: 2px solid var(--gray-200);
 
   /* OUTLINE */
 
