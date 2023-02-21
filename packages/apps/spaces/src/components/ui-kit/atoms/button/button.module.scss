@@ -75,13 +75,13 @@
     }
   }
   &.link {
-    color: var(--blue-500);
-    background: white;
+    color: var(--royal-blue-800);
+    background: transparent;
 
     &:hover,
     &:focus,
     &:active {
-      color: var(--blue-600);
+      color: var(--royal-blue-700);
       text-decoration: underline;
     }
   }

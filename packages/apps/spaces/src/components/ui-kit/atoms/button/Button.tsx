@@ -1,14 +1,8 @@
-import React, {
-  ButtonHTMLAttributes,
-  EventHandler,
-  FC,
-  ReactNode,
-} from 'react';
+import React, { ButtonHTMLAttributes, FC, ReactNode } from 'react';
 import styles from './button.module.scss';
 
 interface Props extends ButtonHTMLAttributes<HTMLButtonElement> {
   icon?: ReactNode;
-  onClick: EventHandler<never>;
   ariaLabel?: string;
   children?: React.ReactNode;
   mode?:

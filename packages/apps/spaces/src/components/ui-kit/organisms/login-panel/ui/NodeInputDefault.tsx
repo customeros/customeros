@@ -1,7 +1,7 @@
 import { TextInput } from '@ory/themes';
 
 import { NodeInputProps } from './helpers';
-
+import styles from './login-ui.module.scss';
 export function NodeInputDefault<T>(props: NodeInputProps) {
   const { node, attributes, value = '', setValue, disabled } = props;
 
@@ -19,6 +19,7 @@ export function NodeInputDefault<T>(props: NodeInputProps) {
   // Render a generic text input field.
   return (
     <TextInput
+      className={styles.input}
       title={node.meta.label?.text}
       onClick={onClick}
       onChange={(e: any) => {

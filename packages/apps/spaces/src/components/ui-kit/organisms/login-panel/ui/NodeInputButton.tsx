@@ -1,9 +1,9 @@
 import { UiNode, UiNodeInputAttributes } from '@ory/client';
 import { getNodeLabel } from '@ory/integrations/ui';
-import { Button, Checkbox, TextInput } from '@ory/themes';
 import { FormEvent } from 'react';
 
 import { FormDispatcher, NodeInputProps, ValueSetter } from './helpers';
+import { Button } from '../../../atoms';
 
 export function NodeInputButton<T>({
   node,
@@ -31,17 +31,16 @@ export function NodeInputButton<T>({
   };
 
   return (
-    <>
-      <Button
-        name={attributes.name}
-        onClick={(e: any) => {
-          onClick(e);
-        }}
-        value={attributes.value || ''}
-        disabled={attributes.disabled || disabled}
-      >
-        {getNodeLabel(node)}
-      </Button>
-    </>
+    <Button
+      mode='primary'
+      name={attributes.name}
+      onClick={(e: any) => {
+        onClick(e);
+      }}
+      value={attributes.value || ''}
+      disabled={attributes.disabled || disabled}
+    >
+      {getNodeLabel(node)}
+    </Button>
   );
 }
