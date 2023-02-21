@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"reflect"
 )
 

@@ -11,7 +11,7 @@ import (
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 )
 
 // TagCreate is the resolver for the tag_Create field.

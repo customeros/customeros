@@ -6,7 +6,7 @@ import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 )
 
 type FieldSetTemplateService interface {
