@@ -1,4 +1,4 @@
-# https://github.com/openline-ai/openline-customer-os/issues/857
+# https://github.com/openline-ai/openline-customer-os/issues/944
 
 #========== migrate e164 into rawPhoneNumber for non validated phone numbers
 

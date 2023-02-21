@@ -404,8 +404,9 @@ type Email struct {
 	// **Required**
 	ID string `json:"id"`
 	// An email address assocaited with the contact in customerOS.
-	// **Required.**
-	Email string `json:"email"`
+	Email     *string `json:"email"`
+	RawEmail  *string `json:"rawEmail"`
+	Validated *bool   `json:"validated"`
 	// Describes the type of email address (WORK, PERSONAL, etc).
 	Label *EmailLabel `json:"label"`
 	// Identifies whether the email address is primary or not.
@@ -423,7 +424,7 @@ func (Email) IsSearchBasicResult() {}
 // Describes an email address associated with a `Contact` in customerOS.
 // **A `create` object.**
 type EmailInput struct {
-	// An email address assocaited with the contact in customerOS.
+	// An email address associated with the contact in customerOS.
 	// **Required.**
 	Email string `json:"email"`
 	// Describes the type of email address (WORK, PERSONAL, etc).
@@ -440,9 +441,6 @@ type EmailUpdateInput struct {
 	// An email address assocaited with the contact in customerOS.
 	// **Required.**
 	ID string `json:"id"`
-	// An email address assocaited with the contact in customerOS.
-	// **Required.**
-	Email string `json:"email"`
 	// Describes the type of email address (WORK, PERSONAL, etc).
 	Label *EmailLabel `json:"label"`
 	// Identifies whether the email address is primary or not.
@@ -773,7 +771,7 @@ type PhoneNumber struct {
 type PhoneNumberInput struct {
 	// The phone number in e164 format.
 	// **Required**
-	RawPhoneNumber string `json:"rawPhoneNumber"`
+	PhoneNumber string `json:"phoneNumber"`
 	// Defines the type of phone number.
 	Label *PhoneNumberLabel `json:"label"`
 	// Determines if the phone number is primary or not.

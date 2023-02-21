@@ -89,7 +89,7 @@ func (r *userRepository) MergeEmail(tenant, userId, email, externalSystem string
 	defer session.Close()
 
 	query := "MATCH (u:User {id:$userId})-[:USER_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant}) " +
-		" MERGE (e:Email {email: $email})-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]->(t) " +
+		" MERGE (e:Email {rawEmail: $email})-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]->(t) " +
 		" ON CREATE SET " +
 		"				e.id=randomUUID(), " +
 		"				e.createdAt=$now, " +

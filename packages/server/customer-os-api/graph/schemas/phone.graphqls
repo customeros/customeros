@@ -51,7 +51,7 @@ input PhoneNumberInput {
     The phone number in e164 format. 
     **Required**
     """
-    rawPhoneNumber: String!
+    phoneNumber: String!
 
     """
     Defines the type of phone number.

@@ -11,7 +11,7 @@ func MapPhoneNumberInputToEntity(input *model.PhoneNumberInput) *entity.PhoneNum
 		return nil
 	}
 	phoneNumberEntity := entity.PhoneNumberEntity{
-		RawPhoneNumber: input.RawPhoneNumber,
+		RawPhoneNumber: input.PhoneNumber,
 		Label:          utils.IfNotNilString(input.Label, func() string { return input.Label.String() }),
 		Primary:        utils.IfNotNilBool(input.Primary),
 		Source:         entity.DataSourceOpenline,
@@ -48,7 +48,7 @@ func MapEntityToPhoneNumber(entity *entity.PhoneNumberEntity) *model.PhoneNumber
 	}
 	return &model.PhoneNumber{
 		ID:             entity.Id,
-		E164:           utils.StringPtrNillable(entity.E164),
+		E164:           utils.StringPtrFirstNonEmptyNillable(entity.E164, entity.RawPhoneNumber),
 		RawPhoneNumber: utils.StringPtrNillable(entity.RawPhoneNumber),
 		Validated:      utils.BoolPtr(entity.Validated),
 		Label:          utils.ToPtr(label),

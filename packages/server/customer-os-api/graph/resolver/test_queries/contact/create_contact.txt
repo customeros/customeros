@@ -18,7 +18,7 @@ contact_Create(
             primary: false
       },
       phoneNumber: {
-            rawPhoneNumber: "+1234567890",
+            phoneNumber: "+1234567890",
             label: MOBILE,
             primary: true
       }
@@ -43,6 +43,7 @@ contact_Create(
     emails {
       id
       email
+      rawEmail
       label
       primary
       source

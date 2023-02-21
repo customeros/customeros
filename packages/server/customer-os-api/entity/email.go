@@ -8,6 +8,8 @@ import (
 type EmailEntity struct {
 	Id            string
 	Email         string
+	RawEmail      string
+	Validated     bool
 	Label         string
 	Primary       bool
 	Source        DataSource

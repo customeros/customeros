@@ -40,7 +40,9 @@ func TestMutationResolver_EmailMergeToContact(t *testing.T) {
 	require.NotNil(t, e.CreatedAt, "Missing createdAt field")
 	require.NotNil(t, e.UpdatedAt, "Missing updatedAt field")
 	require.Equal(t, true, e.Primary, "Email Primary field is not true")
-	require.Equal(t, "test@gmail.com", e.Email, "Email Email field is not expected value")
+	require.Equal(t, "test@gmail.com", *e.Email)
+	require.Equal(t, "test@gmail.com", *e.RawEmail)
+	require.False(t, *e.Validated)
 	if e.Label == nil {
 		t.Errorf("Email Label field is nil")
 	} else {
@@ -90,7 +92,8 @@ func TestMutationResolver_EmailUpdateInContact(t *testing.T) {
 	// Check that the fields of the email struct have the expected values
 	require.Equal(t, emailId, e.ID, "Email ID is nil")
 	require.Equal(t, true, e.Primary, "Email Primary field is not true")
-	require.Equal(t, "original@email.com", e.Email, "Email address expected not to be changed")
+	require.Equal(t, "original@email.com", *e.RawEmail, "Email address expected not to be changed")
+	require.Equal(t, "original@email.com", *e.Email, "Email address expected not to be changed")
 	require.NotNil(t, e.UpdatedAt, "Missing updatedAt field")
 	if e.Label == nil {
 		t.Errorf("Email Label field is nil")
@@ -131,7 +134,9 @@ func TestMutationResolver_EmailMergeToUser(t *testing.T) {
 	require.NotNil(t, e.CreatedAt, "Missing createdAt field")
 	require.NotNil(t, e.UpdatedAt, "Missing updatedAt field")
 	require.Equal(t, true, e.Primary, "Email Primary field is not true")
-	require.Equal(t, "test@gmail.com", e.Email, "Email Email field is not expected value")
+	require.Equal(t, "test@gmail.com", *e.Email)
+	require.Equal(t, "test@gmail.com", *e.RawEmail)
+	require.False(t, *e.Validated)
 	if e.Label == nil {
 		t.Errorf("Email Label field is nil")
 	} else {
@@ -181,7 +186,8 @@ func TestMutationResolver_EmailUpdateInUser(t *testing.T) {
 	// Check that the fields of the email struct have the expected values
 	require.Equal(t, emailId, e.ID, "Email ID is nil")
 	require.Equal(t, true, e.Primary, "Email Primary field is not true")
-	require.Equal(t, "original@email.com", e.Email, "Email address expected not to be changed")
+	require.Equal(t, "original@email.com", *e.Email, "Email address expected not to be changed")
+	require.Equal(t, "original@email.com", *e.RawEmail, "Email address expected not to be changed")
 	require.NotNil(t, e.UpdatedAt, "Missing updatedAt field")
 	if e.Label == nil {
 		t.Errorf("Email Label field is nil")

@@ -41,7 +41,7 @@ func TestMutationResolver_PhoneNumberMergeToContact(t *testing.T) {
 	require.NotNil(t, createdPhoneNumber.ID, "PhoneNumber ID is nil")
 	require.Equal(t, true, createdPhoneNumber.Primary, "PhoneNumber Primary field is not true")
 	require.Equal(t, false, *createdPhoneNumber.Validated, "PhoneNumber Validated field is not false")
-	require.Nil(t, createdPhoneNumber.E164)
+	require.Equal(t, "+1234567890", *createdPhoneNumber.E164)
 	require.Equal(t, "+1234567890", *createdPhoneNumber.RawPhoneNumber, "PhoneNumber E164 field is not expected value")
 	if createdPhoneNumber.Label == nil {
 		t.Errorf("PhoneNumber Label field is nil")

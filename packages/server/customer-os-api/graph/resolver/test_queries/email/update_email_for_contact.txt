@@ -1,12 +1,12 @@
 mutation UpdateEmailForContact($contactId: ID!, $emailId: ID!) {
     emailUpdateInContact(contactId: $contactId,
                         input: {id: $emailId
-                                email: "new@email.com"
                                 label: HOME
                                 primary: true
                         }) {
         id
         email
+        rawEmail
         label
         primary
         updatedAt

@@ -60,8 +60,9 @@ MATCH (t:Tenant {name:"openline"})
     		u.appSource="manual";
 
 MATCH (t:Tenant {name:"openline"})
-MERGE (t)<-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]-(e:Email {email:"development@openline.ai"})
+MERGE (t)<-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]-(e:Email {rawEmail:"development@openline.ai"})
 ON CREATE SET
+            e.email='development@openline.ai',
             e.id=randomUUID(),
             e.source="openline",
             e.sourceOfTruth="openline",
@@ -76,8 +77,9 @@ ON CREATE SET
             rel.label="WORK";
 
 MATCH (t:Tenant {name:"openline"})
-MERGE (t)<-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]-(e:Email {email:"edi@openline.ai"})
+MERGE (t)<-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]-(e:Email {rawEmail:"edi@openline.ai"})
 ON CREATE SET
+            e.email="edi@openline.ai",
             e.id=randomUUID(),
             e.source="openline",
             e.sourceOfTruth="openline",
@@ -99,8 +101,9 @@ ON CREATE SET
             rel.label="WORK";
 
 MATCH (t:Tenant {name:"openline"})
-MERGE (t)<-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]-(e:Email {email:"alex@openline.ai"})
+MERGE (t)<-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]-(e:Email {rawEmail:"alex@openline.ai"})
 ON CREATE SET
+            e.email="alex@openline.ai",
             e.id=randomUUID(),
             e.source="openline",
             e.sourceOfTruth="openline",
@@ -123,8 +126,9 @@ ON CREATE SET
 
 
 MATCH (t:Tenant {name:"openline"})
-MERGE (t)<-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]-(e:Email {email:"kasia@openline.ai"})
+MERGE (t)<-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]-(e:Email {rawEmail:"kasia@openline.ai"})
 ON CREATE SET
+            e.email="kasia@openline.ai",
             e.id=randomUUID(),
             e.source="openline",
             e.sourceOfTruth="openline",
@@ -146,8 +150,9 @@ ON CREATE SET
     		u.appSource="manual";
 
 MATCH (t:Tenant {name:"openline"})
-MERGE (t)<-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]-(e:Email {email:"gabi@openline.ai"})
+MERGE (t)<-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]-(e:Email {rawEmail:"gabi@openline.ai"})
 ON CREATE SET
+            e.email="gabi@openline.ai",
             e.id=randomUUID(),
             e.source="openline",
             e.sourceOfTruth="openline",
@@ -170,8 +175,9 @@ ON CREATE SET
 
 
 MATCH (t:Tenant {name:"openline"})
-MERGE (t)<-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]-(e:Email {email:"torrey@openline.ai"})
+MERGE (t)<-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]-(e:Email {rawEmail:"torrey@openline.ai"})
 ON CREATE SET
+            e.email="torrey@openline.ai",
             e.id=randomUUID(),
             e.source="openline",
             e.sourceOfTruth="openline",
@@ -194,8 +200,9 @@ ON CREATE SET
 
 
 MATCH (t:Tenant {name:"openline"})
-MERGE (t)<-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]-(e:Email {email:"vasi@openline.ai"})
+MERGE (t)<-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]-(e:Email {rawEmail:"vasi@openline.ai"})
 ON CREATE SET
+            e.email="vasi@openline.ai",
             e.id=randomUUID(),
             e.source="openline",
             e.sourceOfTruth="openline",
@@ -218,8 +225,9 @@ ON CREATE SET
 
 
 MATCH (t:Tenant {name:"openline"})
-MERGE (t)<-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]-(e:Email {email:"antoine@openline.ai"})
+MERGE (t)<-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]-(e:Email {rawEmail:"antoine@openline.ai"})
 ON CREATE SET
+            e.email="antoine@openline.ai",
             e.id=randomUUID(),
             e.source="openline",
             e.sourceOfTruth="openline",
@@ -242,8 +250,9 @@ ON CREATE SET
 
 
 MATCH (t:Tenant {name:"openline"})
-MERGE (t)<-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]-(e:Email {email:"matt@openline.ai"})
+MERGE (t)<-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]-(e:Email {rawEmail:"matt@openline.ai"})
 ON CREATE SET
+            e.email="matt@openline.ai",
             e.id=randomUUID(),
             e.source="openline",
             e.sourceOfTruth="openline",
@@ -266,8 +275,9 @@ ON CREATE SET
 
 
 MATCH (t:Tenant {name:"openline"})
-MERGE (t)<-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]-(e:Email {email:"jonty@openline.ai"})
+MERGE (t)<-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]-(e:Email {rawEmail:"jonty@openline.ai"})
 ON CREATE SET
+            e.email="jonty@openline.ai",
             e.id=randomUUID(),
             e.source="openline",
             e.sourceOfTruth="openline",
@@ -301,7 +311,7 @@ MATCH (t:Tenant {name:"openline"})
             c.appSource="manual";
 
 MATCH (t:Tenant {name:"openline"})
-MERGE (t)<-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]-(e:Email {email:"echo@oasis.openline.ai"})
+MERGE (t)<-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]-(e:Email {rawEmail:"echo@oasis.openline.ai"})
 ON CREATE SET
             e.id=randomUUID(),
             e.source="openline",

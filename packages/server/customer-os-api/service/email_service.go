@@ -82,13 +82,17 @@ func (s *emailService) MergeEmailTo(ctx context.Context, entityType entity.Entit
 	var emailRelationship *dbtype.Relationship
 
 	_, err = session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (interface{}, error) {
+		emailNode, emailRelationship, err = s.repositories.EmailRepository.MergeEmailToInTx(ctx, tx, common.GetContext(ctx).Tenant, entityType, entityId, *entity)
+		if err != nil {
+			return nil, err
+		}
+		emailId := utils.GetPropsFromNode(*emailNode)["id"].(string)
 		if entity.Primary == true {
-			err := s.repositories.EmailRepository.SetOtherEmailsNonPrimaryInTx(ctx, tx, common.GetContext(ctx).Tenant, entityType, entityId, entity.Email)
+			err := s.repositories.EmailRepository.SetOtherEmailsNonPrimaryInTx(ctx, tx, common.GetContext(ctx).Tenant, entityType, entityId, emailId)
 			if err != nil {
 				return nil, err
 			}
 		}
-		emailNode, emailRelationship, err = s.repositories.EmailRepository.MergeEmailToInTx(ctx, tx, common.GetContext(ctx).Tenant, entityType, entityId, *entity)
 		return nil, err
 	})
 	if err != nil {
@@ -113,8 +117,9 @@ func (s *emailService) UpdateEmailFor(ctx context.Context, entityType entity.Ent
 		if err != nil {
 			return nil, err
 		}
+		emailId := utils.GetPropsFromNode(*emailNode)["id"].(string)
 		if entity.Primary == true {
-			err := s.repositories.EmailRepository.SetOtherEmailsNonPrimaryInTx(ctx, tx, common.GetContext(ctx).Tenant, entityType, entityId, entity.Email)
+			err := s.repositories.EmailRepository.SetOtherEmailsNonPrimaryInTx(ctx, tx, common.GetContext(ctx).Tenant, entityType, entityId, emailId)
 			if err != nil {
 				return nil, err
 			}
@@ -150,6 +155,8 @@ func (s *emailService) mapDbNodeToEmailEntity(node dbtype.Node) *entity.EmailEnt
 	result := entity.EmailEntity{
 		Id:            utils.GetStringPropOrEmpty(props, "id"),
 		Email:         utils.GetStringPropOrEmpty(props, "email"),
+		RawEmail:      utils.GetStringPropOrEmpty(props, "rawEmail"),
+		Validated:     utils.GetBoolPropOrFalse(props, "validated"),
 		Source:        entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
 		SourceOfTruth: entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
 		AppSource:     utils.GetStringPropOrEmpty(props, "appSource"),

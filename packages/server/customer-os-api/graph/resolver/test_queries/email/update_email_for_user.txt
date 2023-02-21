@@ -1,12 +1,12 @@
 mutation UpdateEmailForUser($userId: ID!, $emailId: ID!) {
     emailUpdateInUser(userId: $userId,
                         input: {id: $emailId
-                                email: "new@email.com"
                                 label: HOME
                                 primary: true
                         }) {
         id
         email
+        rawEmail
         label
         primary
         updatedAt

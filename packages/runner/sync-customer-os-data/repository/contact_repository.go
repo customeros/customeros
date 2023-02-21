@@ -18,7 +18,7 @@ type ContactRepository interface {
 	MergeTextCustomField(tenant, contactId string, field entity.TextCustomField, createdAt time.Time) error
 	MergeContactDefaultPlace(tenant, contactId string, contact entity.ContactData) error
 	MergeTagForContact(tenant, contactId, tagName, sourceApp string) error
-	GetOrCreateContactId(tenant, email, firstName, lastName, source string) (string, error)
+	GetOrCreateContactByEmail(tenant, email, firstName, lastName, source string) (string, error)
 	LinkContactWithOrganization(tenant, contactId, organizationExternalId, source string) error
 }
 
@@ -98,7 +98,7 @@ func (r *contactRepository) MergePrimaryEmail(tenant, contactId, email, external
 		" OPTIONAL MATCH (c)-[rel:HAS]->(:Email) " +
 		" SET rel.primary=false " +
 		" WITH DISTINCT c, t " +
-		" MERGE (e:Email {email: $email})-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]->(t) " +
+		" MERGE (e:Email {rawEmail: $email})-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]->(t) " +
 		" ON CREATE SET " +
 		"				e.id=randomUUID(), " +
 		"				e.createdAt=$now, " +
@@ -134,7 +134,7 @@ func (r *contactRepository) MergeAdditionalEmail(tenant, contactId, email, exter
 	defer session.Close()
 
 	query := "MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant}) " +
-		" MERGE (e:Email {email: $email})-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]->(t) " +
+		" MERGE (e:Email {rawEmail: $email})-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]->(t) " +
 		" ON CREATE SET " +
 		"				e.id=randomUUID(), " +
 		"				e.createdAt=$now, " +
@@ -365,7 +365,7 @@ func (r *contactRepository) MergeTagForContact(tenant, contactId, tagName, sourc
 	return err
 }
 
-func (r *contactRepository) GetOrCreateContactId(tenant, email, firstName, lastName, source string) (string, error) {
+func (r *contactRepository) GetOrCreateContactByEmail(tenant, email, firstName, lastName, source string) (string, error) {
 	session := (*r.driver).NewSession(
 		neo4j.SessionConfig{
 			AccessMode: neo4j.AccessModeWrite,
@@ -375,7 +375,7 @@ func (r *contactRepository) GetOrCreateContactId(tenant, email, firstName, lastN
 	record, err := session.WriteTransaction(func(tx neo4j.Transaction) (interface{}, error) {
 		queryResult, err := tx.Run(fmt.Sprintf(
 			" MATCH (t:Tenant {name:$tenant}) "+
-				" MERGE (e:Email {email: $email})-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]->(t) "+
+				" MERGE (e:Email {rawEmail: $email})-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]->(t) "+
 				" ON CREATE SET "+
 				"				e.id=randomUUID(), "+
 				"				e.createdAt=$now, "+
