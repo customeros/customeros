@@ -14,7 +14,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 )
 
 // UserCreate is the resolver for the userCreate field.

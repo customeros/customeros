@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/db"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"golang.org/x/net/context"
 )
 
