@@ -18,3 +18,19 @@
   src: url('../public/fonts/Roboto/Roboto-Light.ttf');
   font-weight: 200;
 }
+
+.openline_avatar_wrapper {
+  left: var(--web-chat-left) !important;
+  transition: left 0.25s ease;
+  z-index: 9999;
+}
+
+.openline_webchat_button {
+  width: 45px !important;
+  height: 45px !important;
+  z-index: 9999;
+  box-shadow: 0 0 0 2px rgb(255 255 255) !important;
+}
+.support_window {
+  z-index: 9999;
+}

@@ -48,7 +48,7 @@
     align-items: center;
   }
 
-  & .featuresItemTextHidden {
+  &.featuresItemHidden {
     opacity: 0;
     pointer-events: none;
   }

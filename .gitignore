@@ -4,3 +4,5 @@
 
 deployment/scripts/openline-setup/*.*
 
+packages/apps/spaces/.env.production
+packages/apps/spaces/.sentryclirc

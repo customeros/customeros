@@ -1,6 +1,5 @@
 import React, {
   ButtonHTMLAttributes,
-  EventHandler,
   FC,
   ReactEventHandler,
   ReactNode,

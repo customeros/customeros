@@ -2244,6 +2244,11 @@
     tiny-glob "^0.2.9"
     tslib "^2.4.0"
 
+"@reach/observe-rect@^1.1.0":
+  version "1.2.0"
+  resolved "https://registry.yarnpkg.com/@reach/observe-rect/-/observe-rect-1.2.0.tgz#d7a6013b8aafcc64c778a0ccb83355a11204d3b2"
+  integrity sha512-Ba7HmkFgfQxZqqaeIWWkNK0rEhpxVQHIoVyW1YDSkGsGIXzcaW4deC8B0pZrNSSyLTdIk7y+5olKt5+g0GmFIQ==
+
 "@repeaterjs/repeater@3.0.4", "@repeaterjs/repeater@^3.0.4":
   version "3.0.4"
   resolved "https://registry.yarnpkg.com/@repeaterjs/repeater/-/repeater-3.0.4.tgz#a04d63f4d1bf5540a41b01a921c9a7fddc3bd1ca"
@@ -3074,10 +3079,10 @@
     "@types/prop-types" "*"
     csstype "^3.0.2"
 
-"@types/react@17.0.38":
-  version "17.0.38"
-  resolved "https://registry.yarnpkg.com/@types/react/-/react-17.0.38.tgz#f24249fefd89357d5fa71f739a686b8d7c7202bd"
-  integrity sha512-SI92X1IA+FMnP3qM5m4QReluXzhcmovhZnLNm3pyeQlooi02qI7sLiepEYqT678uNiyc25XfCqxREFpy3W7YhQ==
+"@types/react@18.0.28":
+  version "18.0.28"
+  resolved "https://registry.yarnpkg.com/@types/react/-/react-18.0.28.tgz#accaeb8b86f4908057ad629a26635fe641480065"
+  integrity sha512-RD0ivG1kEztNBdoAK7lekI9M+azSnitIn85h4iOiaLjaTrMjzslhaqCGaI4IyCJ1RljWiLCEu4jyrLLgqxBTew==
   dependencies:
     "@types/prop-types" "*"
     "@types/scheduler" "*"
@@ -8970,7 +8975,7 @@ locate-path@^6.0.0:
   dependencies:
     p-locate "^5.0.0"
 
-lodash.debounce@^4.0.8:
+lodash.debounce@^4, lodash.debounce@^4.0.8:
   version "4.0.8"
   resolved "https://registry.yarnpkg.com/lodash.debounce/-/lodash.debounce-4.0.8.tgz#82d79bff30a67c4005ffd5e2515300ad9ca4d7af"
   integrity sha512-FT1yDzDYEoYWhnSGnpE/4Kj1fLZkDFyqRb7fNt6FdYOSxlUWAtp42Eh6Wb0rGIv/m9Bgo7x4GhQbm5Ys4SG5ow==
@@ -11092,6 +11097,14 @@ react-apollo@^3.1.5:
     "@apollo/react-hooks" "^3.1.5"
     "@apollo/react-ssr" "^3.1.5"
 
+react-debounce-input@^3.3.0:
+  version "3.3.0"
+  resolved "https://registry.yarnpkg.com/react-debounce-input/-/react-debounce-input-3.3.0.tgz#85e3ebcaa41f2016e50613134a1ec9fe3cdb422e"
+  integrity sha512-VEqkvs8JvY/IIZvh71Z0TC+mdbxERvYF33RcebnodlsUZ8RSgyKe2VWaHXv4+/8aoOgXLxWrdsYs2hDhcwbUgA==
+  dependencies:
+    lodash.debounce "^4"
+    prop-types "^15.8.1"
+
 react-devtools-core@4.27.2:
   version "4.27.2"
   resolved "https://registry.yarnpkg.com/react-devtools-core/-/react-devtools-core-4.27.2.tgz#d20fc57e258c656eedabafc2c851d38b33583148"
@@ -11170,6 +11183,13 @@ react-use-websocket@^4.2.0:
   version "4.2.0"
   resolved "https://registry.yarnpkg.com/react-use-websocket/-/react-use-websocket-4.2.0.tgz#658c4e44ee5e0fc3d29a66c2a753a72754a5db87"
   integrity sha512-ZovaTlc/tWX6a590fi3kMWImhyoWj46BWJWvO5oucZJzRnVVhYtes2D9g+5MKXjSdR7Es3456hB89v4/1pcBKg==
+
+react-virtual@^2.4.10:
+  version "2.10.4"
+  resolved "https://registry.yarnpkg.com/react-virtual/-/react-virtual-2.10.4.tgz#08712f0acd79d7d6f7c4726f05651a13b24d8704"
+  integrity sha512-Ir6+oPQZTVHfa6+JL9M7cvMILstFZH/H3jqeYeKI4MSUX+rIruVwFC6nGVXw9wqAw8L0Kg2KvfXxI85OvYQdpQ==
+  dependencies:
+    "@reach/observe-rect" "^1.1.0"
 
 react@^18.2.0:
   version "18.2.0"

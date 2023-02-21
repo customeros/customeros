@@ -8,4 +8,6 @@ export { Message } from './message';
 export { Address } from './address';
 export { DeleteConfirmationDialog } from './deleteConfirmationDialog';
 export { IconButton } from './icon-button';
+export { Table } from './table';
+export { DebouncedInput } from './input';
 export * from './icons';

@@ -1,12 +1,13 @@
 import Head from 'next/head';
-import { ApolloProvider } from '@apollo/client';
 import { AppProps } from 'next/app';
 import '../styles/normalization.css';
 import '../styles/theme.css';
-import client from './../apollo-client';
+import '../styles/globals.css';
 import React from 'react';
+import 'primereact/resources/primereact.min.css';
 import { ToastContainer } from 'react-toastify';
 import { MainPageWrapper } from '../src/components/layouts';
+import { RecoilRoot } from 'recoil';
 
 // Uncomment when adding google analitics
 // export function reportWebVitals({ id, name, label, value } :NextWebVitalsMetric) {
@@ -42,17 +43,18 @@ export default function MyApp({
       </Head>
 
       <MainPageWrapper>
-        <ApolloProvider client={client}>
-          <ToastContainer
-            position='bottom-right'
-            autoClose={3000}
-            closeOnClick={true}
-            hideProgressBar={true}
-            theme='colored'
-          />
+        <RecoilRoot>
           <Component {...pageProps} />
-        </ApolloProvider>
+        </RecoilRoot>
       </MainPageWrapper>
+
+      <ToastContainer
+        position='bottom-right'
+        autoClose={3000}
+        closeOnClick={true}
+        hideProgressBar={true}
+        theme='colored'
+      />
     </>
   );
 }
