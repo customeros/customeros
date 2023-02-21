@@ -256,6 +256,7 @@ func AddEmailTo(ctx context.Context, driver *neo4j.DriverWithContext, entityType
 	query = query +
 		" MERGE (e:Email {email: $email})-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]->(t)" +
 		" ON CREATE SET " +
+		"	e.rawEmail=$email, " +
 		"	e.id=$emailId, " +
 		"	e:%s " +
 		" WITH e, entity MERGE (e)<-[rel:HAS]-(entity) " +

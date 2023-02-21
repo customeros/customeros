@@ -16,8 +16,8 @@ type ContactService interface {
 	Create(ctx context.Context, contact *ContactCreateData) (*entity.ContactEntity, error)
 	Update(ctx context.Context, contactUpdateData *ContactUpdateData) (*entity.ContactEntity, error)
 	GetContactById(ctx context.Context, id string) (*entity.ContactEntity, error)
-	FindContactByEmail(ctx context.Context, email string) (*entity.ContactEntity, error)
-	FindContactByPhoneNumberE164(ctx context.Context, e164 string) (*entity.ContactEntity, error)
+	GetFirstContactByEmail(ctx context.Context, email string) (*entity.ContactEntity, error)
+	GetFirstContactByPhoneNumber(ctx context.Context, phoneNumber string) (*entity.ContactEntity, error)
 	FindAll(ctx context.Context, page, limit int, filter *model.Filter, sortBy []*model.SortBy) (*utils.Pagination, error)
 	FindAllForContactGroup(ctx context.Context, page, limit int, filter *model.Filter, sortBy []*model.SortBy, contactGroupId string) (*utils.Pagination, error)
 	GetAllForConversation(ctx context.Context, conversationId string) (*entity.ContactEntities, error)
@@ -258,57 +258,20 @@ func (s *contactService) GetContactById(ctx context.Context, id string) (*entity
 	return s.mapDbNodeToContactEntity(queryResult.(dbtype.Node)), nil
 }
 
-func (s *contactService) FindContactByEmail(ctx context.Context, email string) (*entity.ContactEntity, error) {
-	session := utils.NewNeo4jReadSession(ctx, s.getNeo4jDriver())
-	defer session.Close(ctx)
-
-	queryResult, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (interface{}, error) {
-		result, err := tx.Run(ctx, `
-			MATCH (:Email {email:$email})<-[:HAS]-(c:Contact),
-					(c)-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) 
-			RETURN c`,
-			map[string]interface{}{
-				"email":  email,
-				"tenant": common.GetContext(ctx).Tenant,
-			})
-		record, err := result.Single(ctx)
-		if err != nil {
-			return nil, err
-		}
-		return record.Values[0], nil
-	})
-	if err != nil {
+func (s *contactService) GetFirstContactByEmail(ctx context.Context, email string) (*entity.ContactEntity, error) {
+	dbNodes, err := s.repositories.ContactRepository.GetContactsForEmail(ctx, common.GetContext(ctx).Tenant, email)
+	if err != nil || len(dbNodes) == 0 {
 		return nil, err
 	}
-
-	return s.mapDbNodeToContactEntity(queryResult.(dbtype.Node)), nil
+	return s.mapDbNodeToContactEntity(*dbNodes[0]), nil
 }
 
-func (s *contactService) FindContactByPhoneNumberE164(ctx context.Context, e164 string) (*entity.ContactEntity, error) {
-	session := utils.NewNeo4jReadSession(ctx, s.getNeo4jDriver())
-	defer session.Close(ctx)
-
-	queryResult, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (interface{}, error) {
-		result, err := tx.Run(ctx, `
-			MATCH (p:PhoneNumber {e164:$e164})<-[:HAS]-(c:Contact),
-					(c)-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) 
-					WHERE p.e164 <> ''
-			RETURN c`,
-			map[string]interface{}{
-				"e164":   e164,
-				"tenant": common.GetContext(ctx).Tenant,
-			})
-		record, err := result.Single(ctx)
-		if err != nil {
-			return nil, err
-		}
-		return record.Values[0], nil
-	})
-	if err != nil {
+func (s *contactService) GetFirstContactByPhoneNumber(ctx context.Context, phoneNumber string) (*entity.ContactEntity, error) {
+	dbNodes, err := s.repositories.ContactRepository.GetContactsForPhoneNumber(ctx, common.GetContext(ctx).Tenant, phoneNumber)
+	if err != nil || len(dbNodes) == 0 {
 		return nil, err
 	}
-
-	return s.mapDbNodeToContactEntity(queryResult.(dbtype.Node)), nil
+	return s.mapDbNodeToContactEntity(*dbNodes[0]), nil
 }
 
 func (s *contactService) FindAll(ctx context.Context, page, limit int, filter *model.Filter, sortBy []*model.SortBy) (*utils.Pagination, error) {

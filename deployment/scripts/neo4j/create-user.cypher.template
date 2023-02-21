@@ -10,7 +10,7 @@ MATCH (t:Tenant {name:"openline"})
     		u.appSource="manual";
 
 MATCH (t:Tenant {name:"openline"})
-MERGE (t)<-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]-(e:Email {email:"!USER_EMAIL!"})
+MERGE (t)<-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]-(e:Email {rawEmail:"!USER_EMAIL!"})
 ON CREATE SET
             e.id=randomUUID(),
             e.source="openline",

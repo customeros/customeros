@@ -16,7 +16,7 @@ import (
 func (r *mutationResolver) PhoneNumberMergeToContact(ctx context.Context, contactID string, input model.PhoneNumberInput) (*model.PhoneNumber, error) {
 	result, err := r.Services.PhoneNumberService.MergePhoneNumberToContact(ctx, contactID, mapper.MapPhoneNumberInputToEntity(&input))
 	if err != nil {
-		graphql.AddErrorf(ctx, "Could not add phone number %s to contact %s", input.RawPhoneNumber, contactID)
+		graphql.AddErrorf(ctx, "Could not add phone number %s to contact %s", input.PhoneNumber, contactID)
 		return nil, err
 	}
 	return mapper.MapEntityToPhoneNumber(result), nil

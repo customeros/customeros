@@ -99,14 +99,14 @@ func (r *queryRepository) GetOrganizationsAndContacts(ctx context.Context, sessi
 		  MATCH (t:Tenant {name:$tenant})--(o:Organization)-[:HAS]->(e:Email)
 		  MATCH (t)--(c:Contact)
 		  MATCH (o)-[rel]-(c)
-		  WHERE e.email CONTAINS $email
+		  WHERE (e.email CONTAINS $email OR e.rawEmail CONTAINS $email)
 		  RETURN rel
 
 		  UNION
 		  MATCH (t:Tenant {name:$tenant})--(o:Organization)
-		  MATCH (t)--(c:Contact)-[:HAS]->(e:Email)
+		  MATCH (t)<-[:CONTACT_BELONGS_TO_TENANT]-(c:Contact)-[:HAS]->(e:Email)
 		  MATCH (o)-[rel]-(c)
-		  WHERE e.email CONTAINS $email
+		  WHERE (e.email CONTAINS $email or e.rawEmail CONTAINS $email)
 		  RETURN rel`)
 		}
 		//fetch organizations and contacts with filters on their locations
@@ -138,7 +138,7 @@ func (r *queryRepository) GetOrganizationsAndContacts(ctx context.Context, sessi
 			countQuery = countQuery + fmt.Sprintf(`
 		  UNION
 		  MATCH (t:Tenant {name:$tenant})-[rel:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization)-[:HAS]->(e:Email)
-		  WHERE NOT (o)--(:Contact)	AND e.email CONTAINS $email
+		  WHERE NOT (o)--(:Contact)	AND (e.email CONTAINS $email OR e.rawEmail CONTAINS $email)
 		  RETURN rel`)
 		}
 		//fetch organizations without contacts with filters on their locations
@@ -153,22 +153,22 @@ func (r *queryRepository) GetOrganizationsAndContacts(ctx context.Context, sessi
 		//fetch contacts without organizations + filters on their properties
 		countQuery = countQuery + fmt.Sprintf(`
 		  UNION
-		  MATCH (t:Tenant {name:$tenant})-[rel:CONTACT_BELONGS_TO_TENANT]-(c:Contact)
+		  MATCH (t:Tenant {name:$tenant})<-[rel:CONTACT_BELONGS_TO_TENANT]-(c:Contact)
 		  WHERE NOT (c)--(:Organization) AND (%s)
 		  RETURN rel`, contactFilterCypher)
 		//fetch contacts without organizations with filters on their emails
 		if searchTerm != nil {
 			countQuery = countQuery + fmt.Sprintf(`
 		  UNION
-		  MATCH (t:Tenant {name:$tenant})-[rel:CONTACT_BELONGS_TO_TENANT]-(c:Contact)-[:HAS]->(e:Email)
-		  WHERE NOT (c)--(:Organization) AND e.email CONTAINS $email
+		  MATCH (t:Tenant {name:$tenant})<-[rel:CONTACT_BELONGS_TO_TENANT]-(c:Contact)-[:HAS]->(e:Email)
+		  WHERE NOT (c)--(:Organization) AND (e.email CONTAINS $email OR e.rawEmail CONTAINS $email)
 		  RETURN rel`)
 		}
 		//fetch contacts without organizations with filters on their locations
 		if searchTerm != nil {
 			countQuery = countQuery + fmt.Sprintf(`
 		  UNION
-		  MATCH (t:Tenant {name:$tenant})-[rel:CONTACT_BELONGS_TO_TENANT]-(c:Contact)--(l:Location)
+		  MATCH (t:Tenant {name:$tenant})<-[rel:CONTACT_BELONGS_TO_TENANT]-(c:Contact)--(l:Location)
 		  WHERE NOT (c)--(:Organization) AND (l.country CONTAINS $location OR l.region CONTAINS $location OR l.locality CONTAINS $location)
 		  RETURN rel`)
 		}
@@ -203,16 +203,16 @@ func (r *queryRepository) GetOrganizationsAndContacts(ctx context.Context, sessi
 			query = query + fmt.Sprintf(`
 		  UNION
 		  MATCH (t:Tenant {name:$tenant})--(o:Organization)-[:HAS]->(e:Email)
-		  MATCH (t)--(c:Contact)
+		  MATCH (t)<-[:CONTACT_BELONGS_TO_TENANT]-(c:Contact)
 		  MATCH (o)--(c)
-		  WHERE e.email CONTAINS $email
+		  WHERE (e.email CONTAINS $email OR e.rawEmail CONTAINS $email)
 		  RETURN o, c
 
 		  UNION
 		  MATCH (t:Tenant {name:$tenant})--(o:Organization)
-		  MATCH (t)--(c:Contact)-[:HAS]->(e:Email)
+		  MATCH (t)<-[:CONTACT_BELONGS_TO_TENANT]-(c:Contact)-[:HAS]->(e:Email)
 		  MATCH (o)--(c)
-		  WHERE e.email CONTAINS $email
+		  WHERE (e.email CONTAINS $email OR e.rawEmail CONTAINS $email)
 		  RETURN o, c`)
 		}
 		//fetch organizations and contacts with filters on their locations
@@ -244,7 +244,7 @@ func (r *queryRepository) GetOrganizationsAndContacts(ctx context.Context, sessi
 			query = query + fmt.Sprintf(`
 		  UNION
 		  MATCH (t:Tenant {name:$tenant})--(o:Organization)-[:HAS]->(e:Email)
-		  WHERE NOT (o)--(:Contact) AND e.email CONTAINS $email 
+		  WHERE NOT (o)--(:Contact) AND (e.email CONTAINS $email AND e.rawEmail CONTAINS $email)
 		  RETURN o, null as c`)
 		}
 		//fetch organizations without contacts with filters on their locations
@@ -267,7 +267,7 @@ func (r *queryRepository) GetOrganizationsAndContacts(ctx context.Context, sessi
 			query = query + fmt.Sprintf(`
 		  UNION
 		  MATCH (t:Tenant {name:$tenant})--(c:Contact)-[:HAS]->(e:Email)
-		  WHERE NOT (c)--(:Organization) AND e.email CONTAINS $email
+		  WHERE NOT (c)--(:Organization) AND (e.email CONTAINS $email OR e.rawEmail CONTAINS $email)
 		  RETURN null as o, c`)
 		}
 		//fetch contacts without organizations with filters on their locations

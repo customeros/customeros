@@ -29,6 +29,15 @@ func StringPtrNillable(str string) *string {
 	return &str
 }
 
+func StringPtrFirstNonEmptyNillable(strs ...string) *string {
+	for _, s := range strs {
+		if len(s) > 0 {
+			return &s
+		}
+	}
+	return nil
+}
+
 func BoolPtr(b bool) *bool {
 	return &b
 }

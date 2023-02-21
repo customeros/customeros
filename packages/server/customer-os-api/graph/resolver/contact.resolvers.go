@@ -344,7 +344,7 @@ func (r *queryResolver) ContactByEmail(ctx context.Context, email string) (*mode
 		utils.LogMethodExecution(start, utils.GetFunctionName())
 	}(time.Now())
 
-	contactEntity, err := r.Services.ContactService.FindContactByEmail(ctx, email)
+	contactEntity, err := r.Services.ContactService.GetFirstContactByEmail(ctx, email)
 	if err != nil || contactEntity == nil {
 		graphql.AddErrorf(ctx, "Contact with email %s not identified", email)
 		return nil, err
@@ -358,7 +358,7 @@ func (r *queryResolver) ContactByPhone(ctx context.Context, e164 string) (*model
 		utils.LogMethodExecution(start, utils.GetFunctionName())
 	}(time.Now())
 
-	contactEntity, err := r.Services.ContactService.FindContactByPhoneNumberE164(ctx, e164)
+	contactEntity, err := r.Services.ContactService.GetFirstContactByPhoneNumber(ctx, e164)
 	if err != nil || contactEntity == nil {
 		graphql.AddErrorf(ctx, "Contact with phone number %s not identified", e164)
 		return nil, err

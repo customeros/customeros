@@ -8,7 +8,7 @@ import (
 )
 
 type ContactRepository interface {
-	GetOrCreateContactId(tenant, email, firstName, lastName, application string) (string, error)
+	GetOrCreateContactByEmail(tenant, email, firstName, lastName, application string) (string, error)
 }
 
 type contactRepository struct {
@@ -21,7 +21,7 @@ func NewContactRepository(driver *neo4j.Driver) ContactRepository {
 	}
 }
 
-func (r *contactRepository) GetOrCreateContactId(tenant, email, firstName, lastName, application string) (string, error) {
+func (r *contactRepository) GetOrCreateContactByEmail(tenant, email, firstName, lastName, application string) (string, error) {
 	session := (*r.driver).NewSession(
 		neo4j.SessionConfig{
 			AccessMode: neo4j.AccessModeWrite,
@@ -31,7 +31,7 @@ func (r *contactRepository) GetOrCreateContactId(tenant, email, firstName, lastN
 	record, err := session.WriteTransaction(func(tx neo4j.Transaction) (interface{}, error) {
 		queryResult, err := tx.Run(fmt.Sprintf(
 			" MATCH (t:Tenant {name:$tenant}) "+
-				" MERGE (e:Email {email: $email})-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]->(t) "+
+				" MERGE (e:Email {rawEmail: $email})-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]->(t) "+
 				" ON CREATE SET "+
 				"				e.id=randomUUID(), "+
 				"				e.createdAt=$now, "+

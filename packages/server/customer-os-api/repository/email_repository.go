@@ -43,7 +43,7 @@ func (r *emailRepository) MergeEmailToInTx(ctx context.Context, tx neo4j.Managed
 	}
 
 	query = query +
-		" MERGE (t)<-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]-(e:Email {email: $email}) " +
+		" MERGE (t)<-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]-(e:Email {rawEmail: $email}) " +
 		" ON CREATE SET e.id=randomUUID(), " +
 		"				e.source=$source, " +
 		"				e.sourceOfTruth=$sourceOfTruth, " +
@@ -63,7 +63,7 @@ func (r *emailRepository) MergeEmailToInTx(ctx context.Context, tx neo4j.Managed
 		map[string]interface{}{
 			"tenant":        tenant,
 			"entityId":      entityId,
-			"email":         emailEntity.Email,
+			"email":         emailEntity.RawEmail,
 			"label":         emailEntity.Label,
 			"primary":       emailEntity.Primary,
 			"source":        emailEntity.Source,
@@ -165,7 +165,7 @@ func (r *emailRepository) GetAllForIds(ctx context.Context, tenant string, entit
 	return result.([]*utils.DbNodeWithRelationAndId), err
 }
 
-func (r *emailRepository) SetOtherEmailsNonPrimaryInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenantId string, entityType entity.EntityType, entityId string, email string) error {
+func (r *emailRepository) SetOtherEmailsNonPrimaryInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenantId string, entityType entity.EntityType, entityId string, emailId string) error {
 	query := ""
 
 	switch entityType {
@@ -178,13 +178,13 @@ func (r *emailRepository) SetOtherEmailsNonPrimaryInTx(ctx context.Context, tx n
 	}
 
 	_, err := tx.Run(ctx, query+`, (entity)-[rel:HAS]->(e:Email)
-			WHERE e.email <> $email
+			WHERE e.id <> $emailId
             SET rel.primary=false, 
 				e.updatedAt=$now`,
 		map[string]interface{}{
 			"tenant":   tenantId,
 			"entityId": entityId,
-			"email":    email,
+			"emailId":  emailId,
 			"now":      utils.Now(),
 		})
 	return err
@@ -205,7 +205,8 @@ func (r *emailRepository) RemoveRelationship(ctx context.Context, entityType ent
 	}
 
 	if _, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		_, err := tx.Run(ctx, query+`MATCH (entity)-[rel:HAS]->(e:Email {email:$email})
+		_, err := tx.Run(ctx, query+`MATCH (entity)-[rel:HAS]->(e:Email)
+			WHERE e.email = $email OR e.rawEmail = $email
             DELETE rel`,
 			map[string]any{
 				"entityId": entityId,

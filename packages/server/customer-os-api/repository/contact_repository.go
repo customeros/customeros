@@ -23,6 +23,8 @@ type ContactRepository interface {
 	GetPaginatedContactsForOrganization(ctx context.Context, session neo4j.SessionWithContext, tenant, organizationId string, skip, limit int, filter *utils.CypherFilter, sort *utils.CypherSort) (*utils.DbNodesWithTotalCount, error)
 	GetAllForConversation(ctx context.Context, session neo4j.SessionWithContext, tenant, conversationId string) ([]*dbtype.Node, error)
 	GetContactForRole(ctx context.Context, session neo4j.SessionWithContext, tenant, roleId string) (*dbtype.Node, error)
+	GetContactsForEmail(ctx context.Context, tenant, email string) ([]*dbtype.Node, error)
+	GetContactsForPhoneNumber(ctx context.Context, tenant, phoneNumber string) ([]*dbtype.Node, error)
 	AddTag(ctx context.Context, tenant, contactId, tagId string) (*dbtype.Node, error)
 	RemoveTag(ctx context.Context, tenant, contactId, tagId string) (*dbtype.Node, error)
 }
@@ -391,4 +393,52 @@ func (r *contactRepository) RemoveTag(ctx context.Context, tenant, contactId, ta
 	} else {
 		return result.(*dbtype.Node), nil
 	}
+}
+
+func (r *contactRepository) GetContactsForEmail(ctx context.Context, tenant, email string) ([]*dbtype.Node, error) {
+	session := utils.NewNeo4jReadSession(ctx, *r.driver)
+	defer session.Close(ctx)
+
+	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (interface{}, error) {
+		if queryResult, err := tx.Run(ctx, `
+			MATCH (:Tenant {name:$tenant})<-[:CONTACT_BELONGS_TO_TENANT]-(c:Contact)-[:HAS]->(e:Email) 
+			WHERE e.email=$email OR e.rawEmail=$email
+			RETURN DISTINCT c`,
+			map[string]interface{}{
+				"email":  email,
+				"tenant": tenant,
+			}); err != nil {
+			return nil, err
+		} else {
+			return utils.ExtractAllRecordsFirstValueAsNodePtrs(ctx, queryResult, err)
+		}
+	})
+	if err != nil {
+		return nil, err
+	}
+	return result.([]*dbtype.Node), err
+}
+
+func (r *contactRepository) GetContactsForPhoneNumber(ctx context.Context, tenant, phoneNumber string) ([]*dbtype.Node, error) {
+	session := utils.NewNeo4jReadSession(ctx, *r.driver)
+	defer session.Close(ctx)
+
+	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (interface{}, error) {
+		if queryResult, err := tx.Run(ctx, `
+			MATCH (:Tenant {name:$tenant})<-[:CONTACT_BELONGS_TO_TENANT]-(c:Contact)-[:HAS]->(p:PhoneNumber) 
+			WHERE p.e164=$phoneNumber OR p.rawPhoneNumber=$phoneNumber
+			RETURN DISTINCT c`,
+			map[string]interface{}{
+				"phoneNumber": phoneNumber,
+				"tenant":      tenant,
+			}); err != nil {
+			return nil, err
+		} else {
+			return utils.ExtractAllRecordsFirstValueAsNodePtrs(ctx, queryResult, err)
+		}
+	})
+	if err != nil {
+		return nil, err
+	}
+	return result.([]*dbtype.Node), err
 }

@@ -378,7 +378,7 @@ func (s *syncService) syncEmailMessages(dataService common.DataService, syncDate
 			var fromContactId string
 
 			if message.Direction == entity.INBOUND {
-				fromContactId, err = s.repositories.ContactRepository.GetOrCreateContactId(
+				fromContactId, err = s.repositories.ContactRepository.GetOrCreateContactByEmail(
 					tenant, message.FromEmail, message.FromFirstName, message.FromLastName, message.ExternalSystem)
 				if err != nil {
 					failedSync = true

@@ -70,7 +70,9 @@ func TestMutationResolver_UserCreate(t *testing.T) {
 	require.Equal(t, createdUser.UpdatedAt, createdUser.CreatedAt)
 	require.Equal(t, "first", createdUser.FirstName)
 	require.Equal(t, "last", createdUser.LastName)
-	require.Equal(t, "user@openline.ai", createdUser.Emails[0].Email)
+	require.Equal(t, "user@openline.ai", *createdUser.Emails[0].Email)
+	require.Equal(t, "user@openline.ai", *createdUser.Emails[0].RawEmail)
+	require.Equal(t, false, *createdUser.Emails[0].Validated)
 	require.Equal(t, model.DataSourceOpenline, createdUser.Source)
 
 	// Check the number of nodes and relationships in the Neo4j database
@@ -144,7 +146,7 @@ func TestQueryResolver_Users(t *testing.T) {
 	require.Equal(t, int64(1), users.Users.TotalElements)
 	require.Equal(t, "first", users.Users.Content[0].FirstName)
 	require.Equal(t, "last", users.Users.Content[0].LastName)
-	require.Equal(t, "test@openline.com", users.Users.Content[0].Emails[0].Email)
+	require.Equal(t, "test@openline.com", *users.Users.Content[0].Emails[0].Email)
 	require.NotNil(t, users.Users.Content[0].CreatedAt)
 }
 
@@ -221,7 +223,7 @@ func TestQueryResolver_User(t *testing.T) {
 	require.Equal(t, userId1, user.User.ID)
 	require.Equal(t, "first", user.User.FirstName)
 	require.Equal(t, "user", user.User.LastName)
-	require.Equal(t, "test@openline.com", user.User.Emails[0].Email)
+	require.Equal(t, "test@openline.com", *user.User.Emails[0].Email)
 }
 
 func TestQueryResolver_User_WithConversations(t *testing.T) {

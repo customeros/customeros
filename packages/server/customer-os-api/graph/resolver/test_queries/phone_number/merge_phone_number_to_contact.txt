@@ -1,7 +1,7 @@
 mutation MergePhoneNumberToContact($contactId: ID!){
      phoneNumberMergeToContact(
         contactId: $contactId
-        input: {rawPhoneNumber: "+1234567890"
+        input: {phoneNumber: "+1234567890"
                 label: WORK
                 primary: true
         }

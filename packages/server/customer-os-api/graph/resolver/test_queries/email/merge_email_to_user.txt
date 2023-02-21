@@ -9,6 +9,8 @@ mutation MergeEmailToContact($userId: ID!){
      ) {
         id
         email
+        rawEmail
+        validated
         label
         primary
         source

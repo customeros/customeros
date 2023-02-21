@@ -174,9 +174,11 @@ type ComplexityRoot struct {
 		ID            func(childComplexity int) int
 		Label         func(childComplexity int) int
 		Primary       func(childComplexity int) int
+		RawEmail      func(childComplexity int) int
 		Source        func(childComplexity int) int
 		SourceOfTruth func(childComplexity int) int
 		UpdatedAt     func(childComplexity int) int
+		Validated     func(childComplexity int) int
 	}
 
 	EntityTemplate struct {
@@ -1238,6 +1240,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Email.Primary(childComplexity), true
 
+	case "Email.rawEmail":
+		if e.complexity.Email.RawEmail == nil {
+			break
+		}
+
+		return e.complexity.Email.RawEmail(childComplexity), true
+
 	case "Email.source":
 		if e.complexity.Email.Source == nil {
 			break
@@ -1258,6 +1267,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Email.UpdatedAt(childComplexity), true
+
+	case "Email.validated":
+		if e.complexity.Email.Validated == nil {
+			break
+		}
+
+		return e.complexity.Email.Validated(childComplexity), true
 
 	case "EntityTemplate.createdAt":
 		if e.complexity.EntityTemplate.CreatedAt == nil {
@@ -3880,18 +3896,19 @@ Describes an email address associated with a ` + "`" + `Contact` + "`" + ` in cu
 **A ` + "`" + `return` + "`" + ` object.**
 """
 type Email {
-    
+
     """
-    The unique ID associated with the contact in customerOS. 
+    The unique ID associated with the contact in customerOS.
     **Required**
     """
     id: ID!
 
     """
     An email address assocaited with the contact in customerOS.
-    **Required.**
     """
-    email: String!
+    email: String
+    rawEmail: String
+    validated: Boolean
 
     """
     Describes the type of email address (WORK, PERSONAL, etc).
@@ -3920,9 +3937,9 @@ Describes an email address associated with a ` + "`" + `Contact` + "`" + ` in cu
 **A ` + "`" + `create` + "`" + ` object.**
 """
 input EmailInput {
-    
+
     """
-    An email address assocaited with the contact in customerOS.
+    An email address associated with the contact in customerOS.
     **Required.**
     """
     email: String!
@@ -3946,18 +3963,12 @@ Describes an email address associated with a ` + "`" + `Contact` + "`" + ` in cu
 **An ` + "`" + `update` + "`" + ` object.**
 """
 input EmailUpdateInput {
-    
-    """
-    An email address assocaited with the contact in customerOS.
-    **Required.**
-    """
-    id: ID!
 
     """
     An email address assocaited with the contact in customerOS.
     **Required.**
     """
-    email: String!
+    id: ID!
 
     """
     Describes the type of email address (WORK, PERSONAL, etc).
@@ -4437,7 +4448,7 @@ input PhoneNumberInput {
     The phone number in e164 format. 
     **Required**
     """
-    rawPhoneNumber: String!
+    phoneNumber: String!
 
     """
     Defines the type of phone number.
@@ -7222,6 +7233,10 @@ func (ec *executionContext) fieldContext_Contact_emails(ctx context.Context, fie
 				return ec.fieldContext_Email_id(ctx, field)
 			case "email":
 				return ec.fieldContext_Email_email(ctx, field)
+			case "rawEmail":
+				return ec.fieldContext_Email_rawEmail(ctx, field)
+			case "validated":
+				return ec.fieldContext_Email_validated(ctx, field)
 			case "label":
 				return ec.fieldContext_Email_label(ctx, field)
 			case "primary":
@@ -10501,14 +10516,11 @@ func (ec *executionContext) _Email_email(ctx context.Context, field graphql.Coll
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
 		return graphql.Null
 	}
-	res := resTmp.(string)
+	res := resTmp.(*string)
 	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Email_email(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -10519,6 +10531,88 @@ func (ec *executionContext) fieldContext_Email_email(ctx context.Context, field 
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Email_rawEmail(ctx context.Context, field graphql.CollectedField, obj *model.Email) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Email_rawEmail(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.RawEmail, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Email_rawEmail(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Email",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Email_validated(ctx context.Context, field graphql.CollectedField, obj *model.Email) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Email_validated(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Validated, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*bool)
+	fc.Result = res
+	return ec.marshalOBoolean2ᚖbool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Email_validated(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Email",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
 		},
 	}
 	return fc, nil
@@ -15422,6 +15516,10 @@ func (ec *executionContext) fieldContext_Mutation_emailMergeToContact(ctx contex
 				return ec.fieldContext_Email_id(ctx, field)
 			case "email":
 				return ec.fieldContext_Email_email(ctx, field)
+			case "rawEmail":
+				return ec.fieldContext_Email_rawEmail(ctx, field)
+			case "validated":
+				return ec.fieldContext_Email_validated(ctx, field)
 			case "label":
 				return ec.fieldContext_Email_label(ctx, field)
 			case "primary":
@@ -15496,6 +15594,10 @@ func (ec *executionContext) fieldContext_Mutation_emailUpdateInContact(ctx conte
 				return ec.fieldContext_Email_id(ctx, field)
 			case "email":
 				return ec.fieldContext_Email_email(ctx, field)
+			case "rawEmail":
+				return ec.fieldContext_Email_rawEmail(ctx, field)
+			case "validated":
+				return ec.fieldContext_Email_validated(ctx, field)
 			case "label":
 				return ec.fieldContext_Email_label(ctx, field)
 			case "primary":
@@ -15686,6 +15788,10 @@ func (ec *executionContext) fieldContext_Mutation_emailMergeToUser(ctx context.C
 				return ec.fieldContext_Email_id(ctx, field)
 			case "email":
 				return ec.fieldContext_Email_email(ctx, field)
+			case "rawEmail":
+				return ec.fieldContext_Email_rawEmail(ctx, field)
+			case "validated":
+				return ec.fieldContext_Email_validated(ctx, field)
 			case "label":
 				return ec.fieldContext_Email_label(ctx, field)
 			case "primary":
@@ -15760,6 +15866,10 @@ func (ec *executionContext) fieldContext_Mutation_emailUpdateInUser(ctx context.
 				return ec.fieldContext_Email_id(ctx, field)
 			case "email":
 				return ec.fieldContext_Email_email(ctx, field)
+			case "rawEmail":
+				return ec.fieldContext_Email_rawEmail(ctx, field)
+			case "validated":
+				return ec.fieldContext_Email_validated(ctx, field)
 			case "label":
 				return ec.fieldContext_Email_label(ctx, field)
 			case "primary":
@@ -22461,6 +22571,10 @@ func (ec *executionContext) fieldContext_User_emails(ctx context.Context, field 
 				return ec.fieldContext_Email_id(ctx, field)
 			case "email":
 				return ec.fieldContext_Email_email(ctx, field)
+			case "rawEmail":
+				return ec.fieldContext_Email_rawEmail(ctx, field)
+			case "validated":
+				return ec.fieldContext_Email_validated(ctx, field)
 			case "label":
 				return ec.fieldContext_Email_label(ctx, field)
 			case "primary":
@@ -25283,7 +25397,7 @@ func (ec *executionContext) unmarshalInputEmailUpdateInput(ctx context.Context, 
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"id", "email", "label", "primary"}
+	fieldsInOrder := [...]string{"id", "label", "primary"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -25295,14 +25409,6 @@ func (ec *executionContext) unmarshalInputEmailUpdateInput(ctx context.Context, 
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
 			it.ID, err = ec.unmarshalNID2string(ctx, v)
-			if err != nil {
-				return it, err
-			}
-		case "email":
-			var err error
-
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("email"))
-			it.Email, err = ec.unmarshalNString2string(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -26134,18 +26240,18 @@ func (ec *executionContext) unmarshalInputPhoneNumberInput(ctx context.Context, 
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"rawPhoneNumber", "label", "primary"}
+	fieldsInOrder := [...]string{"phoneNumber", "label", "primary"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
 			continue
 		}
 		switch k {
-		case "rawPhoneNumber":
+		case "phoneNumber":
 			var err error
 
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("rawPhoneNumber"))
-			it.RawPhoneNumber, err = ec.unmarshalNString2string(ctx, v)
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("phoneNumber"))
+			it.PhoneNumber, err = ec.unmarshalNString2string(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -27571,9 +27677,14 @@ func (ec *executionContext) _Email(ctx context.Context, sel ast.SelectionSet, ob
 
 			out.Values[i] = ec._Email_email(ctx, field, obj)
 
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
+		case "rawEmail":
+
+			out.Values[i] = ec._Email_rawEmail(ctx, field, obj)
+
+		case "validated":
+
+			out.Values[i] = ec._Email_validated(ctx, field, obj)
+
 		case "label":
 
 			out.Values[i] = ec._Email_label(ctx, field, obj)

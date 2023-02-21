@@ -12,7 +12,7 @@ func MapEmailInputToEntity(input *model.EmailInput) *entity.EmailEntity {
 		return nil
 	}
 	emailEntity := entity.EmailEntity{
-		Email:         input.Email,
+		RawEmail:      input.Email,
 		Label:         utils.IfNotNilString(input.Label, func() string { return input.Label.String() }),
 		Primary:       utils.IfNotNilBool(input.Primary),
 		Source:        entity.DataSourceOpenline,
@@ -31,7 +31,6 @@ func MapEmailUpdateInputToEntity(input *model.EmailUpdateInput) *entity.EmailEnt
 	}
 	emailEntity := entity.EmailEntity{
 		Id:            input.ID,
-		Email:         input.Email,
 		Label:         utils.IfNotNilString(input.Label, func() string { return input.Label.String() }),
 		Primary:       utils.IfNotNilBool(input.Primary),
 		SourceOfTruth: entity.DataSourceOpenline,
@@ -54,7 +53,9 @@ func MapEntityToEmail(entity *entity.EmailEntity) *model.Email {
 	}
 	return &model.Email{
 		ID:            entity.Id,
-		Email:         entity.Email,
+		Email:         utils.StringPtrFirstNonEmptyNillable(entity.Email, entity.RawEmail),
+		RawEmail:      utils.StringPtrNillable(entity.RawEmail),
+		Validated:     utils.BoolPtr(entity.Validated),
 		Label:         &label,
 		Primary:       entity.Primary,
 		Source:        MapDataSourceToModel(entity.Source),
