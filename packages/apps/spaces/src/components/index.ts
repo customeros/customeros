@@ -8,4 +8,5 @@ export {
   Message,
   Address,
   DeleteConfirmationDialog,
+  ErrorPage,
 } from './ui-kit';

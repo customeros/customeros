@@ -144,3 +144,5 @@ export {
   WindowMinimize,
   Youtube,
 } from './atoms';
+
+export { ErrorPage } from './organisms';

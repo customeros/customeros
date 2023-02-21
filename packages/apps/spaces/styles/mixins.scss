@@ -1,0 +1,13 @@
+@mixin frosted-glass {
+    background: radial-gradient(#ffffff96 30%, #ffffff96);
+    border-radius: var(--border-radius-md);
+    box-shadow: 5px 5px 10px #0007, -1px -1px 2px #fff, 1px 1px 2px #555;
+    backdrop-filter: blur(5px);
+    overflow: hidden;
+}
+
+@mixin flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
