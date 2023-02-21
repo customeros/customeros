@@ -37,11 +37,9 @@
   </p>
 </div>
 
-
 ## 👋 Overview
 
 `coming soon`
-
 
 ## 🚀 Installation
 
@@ -50,20 +48,23 @@ Download and install Openline Spaces using the following commands
 ### macOS
 
 ### Install Openline CLI (skip if you've had already)
+
 ```terminal
 echo Installing openline CLI
 npm i openline -g
 echo Starting contacts CRM with openline CLI
 openline dev start
 ```
+
 ### Run Spaces locally
+
 ```terminal
 // in spaces root directory
 yarn
 yarn dev
 ```
 
-### Generate react hooks for queries and mutations from gql schema  [Read more](https://the-guild.dev/graphql/codegen/plugins/typescript/typescript-react-apollo)
+### Generate react hooks for queries and mutations from gql schema [Read more](https://the-guild.dev/graphql/codegen/plugins/typescript/typescript-react-apollo)
 
 ```terminal
 yarn codegen
@@ -79,7 +80,7 @@ yarn codegen
 Environment variables used by this app
 
 | Variable             | Meaning            |
-|----------------------|--------------------|
+| -------------------- | ------------------ |
 | CUSTOMER_OS_API_PATH | customerOS API URL |
 | CUSTOMER_OS_API_KEY  | customerOS API Key |
 | OASIS_GUI_PATH       | Oasis GUI URL      |
@@ -97,8 +98,8 @@ Here's a list of the big technologies that we use:
 
 ## 💪 Contributions
 
-- We love contributions big or small!  Please check out our [guide on how to get started][contributions].
-- Not sure where to start?  [Book a free, no-pressure, no-commitment call][call] with the team to discuss the best way to get involved.
+- We love contributions big or small! Please check out our [guide on how to get started][contributions].
+- Not sure where to start? [Book a free, no-pressure, no-commitment call][call] with the team to discuss the best way to get involved.
 
 ## ✨ Contributors
 
@@ -128,9 +129,8 @@ A massive thank you goes out to all these wonderful people ([emoji key][emoji]):
 ## 🪪 License
 
 - This repo is licensed under [Apache 2.0][apache2], with the exception of the ee directory (if applicable).
-- Premium features (contained in the ee directory) require an Openline Enterprise license.  See our [pricing page][pricing] for more details.
+- Premium features (contained in the ee directory) require an Openline Enterprise license. See our [pricing page][pricing] for more details.
 - Copyright &copy; Openline Technologies Inc. 2022
-
 
 [apache2]: https://www.apache.org/licenses/LICENSE-2.0
 [call]: https://meetings-eu1.hubspot.com/matt2/customer-demos
@@ -142,12 +142,11 @@ A massive thank you goes out to all these wonderful people ([emoji key][emoji]):
 [pricing]: https://openline.ai/pricing
 [slack]: https://join.slack.com/t/openline-ai/shared_invite/zt-1i6umaw6c-aaap4VwvGHeoJ1zz~ngCKQ
 [twitter]: https://twitter.com/OpenlineAI
-
 [react]: https://reactjs.org/
 [react-hook-form]: https://react-hook-form.com/
 [prime-react]: https://www.primefaces.org/primereact/
 [prime-flex]: https://www.primefaces.org/primeflex/
 [fontawesome]: https://fontawesome.com/
-[apollo-client]:https://github.com/apollographql/apollo-client
-[react-virtual]:https://www.npmjs.com/package/react-virtual
+[apollo-client]: https://github.com/apollographql/apollo-client
+[react-virtual]: https://www.npmjs.com/package/react-virtual
 [react-toastify]: https://github.com/fkhadra/react-toastify
