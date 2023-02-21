@@ -40,7 +40,7 @@ export const SidePanel: React.FC<SidePanelProps> = ({
             className={styles.logoExpanded}
           />
           <Image
-            src='icons/openlineLogo.svg'
+            src='logos/openline_small.svg'
             alt='Openline'
             width={40}
             height={40}

@@ -2,7 +2,7 @@ import { ApolloClient, HttpLink, InMemoryCache } from '@apollo/client';
 import { setContext } from '@apollo/client/link/context';
 
 const httpLink = new HttpLink({
-  uri: `${process.env.NEXT_PUBLIC_CUSTOMER_OS_API_PATH}/customer-os-api/query`,
+  uri: `customer-os-api/query`,
   fetchOptions: {
     credentials: 'include',
   },

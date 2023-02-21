@@ -2,7 +2,7 @@ import { RefObject, useLayoutEffect, useState } from 'react';
 import { BoundingClientRect } from './types';
 
 export const useBoundingClientRect = (
-  ref: RefObject<any>,
+  ref: RefObject<HTMLElement>,
 ): BoundingClientRect => {
   const [domRects, setDOMRects] = useState<BoundingClientRect>({
     height: 0,
@@ -15,7 +15,9 @@ export const useBoundingClientRect = (
     top: 0,
   });
   useLayoutEffect(() => {
-    setDOMRects(ref?.current?.getBoundingClientRect());
+    if (ref?.current) {
+      setDOMRects(ref.current.getBoundingClientRect());
+    }
   }, [ref]);
 
   return domRects;
