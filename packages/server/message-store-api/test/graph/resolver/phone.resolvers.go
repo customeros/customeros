@@ -20,12 +20,12 @@ func (r *mutationResolver) PhoneNumberUpdateInContact(ctx context.Context, conta
 	panic(fmt.Errorf("not implemented: PhoneNumberUpdateInContact - phoneNumberUpdateInContact"))
 }
 
-// PhoneNumberDeleteFromContact is the resolver for the phoneNumberDeleteFromContact field.
-func (r *mutationResolver) PhoneNumberDeleteFromContact(ctx context.Context, contactID string, e164 string) (*model.Result, error) {
-	panic(fmt.Errorf("not implemented: PhoneNumberDeleteFromContact - phoneNumberDeleteFromContact"))
+// PhoneNumberRemoveFromContactByE164 is the resolver for the phoneNumberRemoveFromContactByE164 field.
+func (r *mutationResolver) PhoneNumberRemoveFromContactByE164(ctx context.Context, contactID string, e164 string) (*model.Result, error) {
+	panic(fmt.Errorf("not implemented: PhoneNumberRemoveFromContactByE164 - phoneNumberRemoveFromContactByE164"))
 }
 
-// PhoneNumberDeleteFromContactByID is the resolver for the phoneNumberDeleteFromContactById field.
-func (r *mutationResolver) PhoneNumberDeleteFromContactByID(ctx context.Context, contactID string, id string) (*model.Result, error) {
-	panic(fmt.Errorf("not implemented: PhoneNumberDeleteFromContactByID - phoneNumberDeleteFromContactById"))
+// PhoneNumberRemoveFromContactByID is the resolver for the phoneNumberRemoveFromContactById field.
+func (r *mutationResolver) PhoneNumberRemoveFromContactByID(ctx context.Context, contactID string, id string) (*model.Result, error) {
+	panic(fmt.Errorf("not implemented: PhoneNumberRemoveFromContactByID - phoneNumberRemoveFromContactById"))
 }

@@ -51,6 +51,11 @@ func (r *organizationResolver) Notes(ctx context.Context, obj *model.Organizatio
 	panic(fmt.Errorf("not implemented: Notes - notes"))
 }
 
+// Tags is the resolver for the tags field.
+func (r *organizationResolver) Tags(ctx context.Context, obj *model.Organization) ([]*model.Tag, error) {
+	panic(fmt.Errorf("not implemented: Tags - tags"))
+}
+
 // Organizations is the resolver for the organizations field.
 func (r *queryResolver) Organizations(ctx context.Context, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) (*model.OrganizationPage, error) {
 	panic(fmt.Errorf("not implemented: Organizations - organizations"))
