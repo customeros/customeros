@@ -8,8 +8,9 @@ import (
 )
 
 type Services struct {
-	SyncService SyncService
-	InitService InitService
+	SyncService     SyncService
+	InitService     InitService
+	UserSyncService UserSyncService
 }
 
 func InitServices(driver *neo4j.Driver, controlDb *gorm.DB, airbyteStoreDb *config.AirbyteStoreDB) *Services {
@@ -19,6 +20,7 @@ func InitServices(driver *neo4j.Driver, controlDb *gorm.DB, airbyteStoreDb *conf
 
 	services.SyncService = NewSyncService(repositories, services)
 	services.InitService = NewInitService(repositories, services)
+	services.UserSyncService = NewUserSyncService(repositories)
 
 	return services
 }
