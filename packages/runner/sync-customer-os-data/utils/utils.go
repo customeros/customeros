@@ -42,3 +42,12 @@ func RemoveDuplicates[V comparable](input []V) []V {
 	}
 	return result
 }
+
+func FirstNotEmpty(input ...string) string {
+	for _, item := range input {
+		if item != "" {
+			return item
+		}
+	}
+	return ""
+}

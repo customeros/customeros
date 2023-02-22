@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v4/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/utils"
 	"time"
@@ -24,11 +25,12 @@ func (r *externalSystemRepository) Merge(tenant, externalSystem string) error {
 	session := utils.NewNeo4jWriteSession(*r.driver)
 	defer session.Close()
 
+	query := "MATCH (t:Tenant {name:$tenant}) " +
+		" MERGE (t)<-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]-(e:ExternalSystem {id:$externalSystem})" +
+		" ON CREATE SET e.name=$externalSystem, e.createdAt=$now, e.updatedAt=$now, e:%s "
+
 	_, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
-		_, err := tx.Run(`
-				MATCH (t:Tenant {name:$tenant})
-				MERGE (t)<-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]-(e:ExternalSystem {id:$externalSystem})
-				ON CREATE SET e.name=$externalSystem, e.createdAt=$now, e.updatedAt=$now `,
+		_, err := tx.Run(fmt.Sprintf(query, "ExternalSystem_"+tenant),
 			map[string]interface{}{
 				"tenant":         tenant,
 				"externalSystem": externalSystem,

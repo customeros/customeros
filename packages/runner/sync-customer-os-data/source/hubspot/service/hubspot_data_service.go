@@ -24,7 +24,7 @@ type hubspotDataService struct {
 	emails         map[string]localEntity.Email
 }
 
-func NewHubspotDataService(airbyteStoreDb *config.AirbyteStoreDB, tenant string) common.DataService {
+func NewHubspotDataService(airbyteStoreDb *config.AirbyteStoreDB, tenant string) common.SourceDataService {
 	return &hubspotDataService{
 		airbyteStoreDb: airbyteStoreDb,
 		tenant:         tenant,
@@ -154,15 +154,15 @@ func (s *hubspotDataService) GetOrganizationsForSync(batchSize int, runId string
 	return customerOsOrganizations
 }
 
-func (s *hubspotDataService) GetUsersForSync(batchSize int, runId string) []entity.UserData {
+func (s *hubspotDataService) GetUsersForSync(batchSize int, runId string) []*entity.UserData {
 	hubspotOwners, err := repository.GetOwners(s.getDb(), batchSize, runId)
 	if err != nil {
 		logrus.Error(err)
 		return nil
 	}
-	customerOsUsers := []entity.UserData{}
+	customerOsUsers := make([]*entity.UserData, 0, len(hubspotOwners))
 	for _, v := range hubspotOwners {
-		customerOsUsers = append(customerOsUsers, entity.UserData{
+		userData := entity.UserData{
 			ExternalId:      strconv.FormatInt(v.UserId, 10),
 			ExternalOwnerId: v.Id,
 			ExternalSystem:  s.SourceId(),
@@ -170,8 +170,12 @@ func (s *hubspotDataService) GetUsersForSync(batchSize int, runId string) []enti
 			LastName:        v.LastName,
 			Email:           v.Email,
 			CreatedAt:       v.CreateDate.UTC(),
-		})
-		s.owners[v.Id] = v
+			UpdatedAt:       v.CreateDate.UTC(),
+			ExternalSyncId:  v.Id,
+		}
+		customerOsUsers = append(customerOsUsers, &userData)
+
+		s.owners[userData.ExternalSyncId] = v
 	}
 	return customerOsUsers
 }
@@ -361,13 +365,13 @@ func (s *hubspotDataService) getDb() *gorm.DB {
 }
 
 func (s *hubspotDataService) SourceId() string {
-	return "hubspot"
+	return string(entity.AirbyteSourceHubspot)
 }
 
 func (s *hubspotDataService) Close() {
+	s.owners = make(map[string]localEntity.Owner)
 	s.contacts = make(map[string]localEntity.Contact)
 	s.companies = make(map[string]localEntity.Company)
-	s.owners = make(map[string]localEntity.Owner)
 	s.notes = make(map[string]localEntity.Note)
 	s.emails = make(map[string]localEntity.Email)
 }

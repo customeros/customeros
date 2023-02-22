@@ -6,7 +6,8 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/common"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/entity"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/repository"
-	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/source/hubspot/service"
+	hubspot_service "github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/source/hubspot/service"
+	zendesk_support_service "github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/source/zendesk_support/service"
 	"github.com/sirupsen/logrus"
 	"time"
 )
@@ -37,14 +38,13 @@ func (s *syncService) Sync(runId string) {
 	}
 
 	for _, v := range tenantsToSync {
-
 		syncRunDtls := entity.SyncRun{
 			StartAt:              time.Now().UTC(),
 			RunId:                runId,
 			TenantSyncSettingsId: v.ID,
 		}
 
-		dataService, err := s.dataService(v)
+		dataService, err := s.sourceDataService(v)
 		if err != nil {
 			logrus.Errorf("failed to get data service for tenant %v: %v", v.Tenant, err)
 			continue
@@ -57,18 +57,23 @@ func (s *syncService) Sync(runId string) {
 		syncDate := time.Now().UTC()
 
 		s.syncExternalSystem(dataService, v.Tenant)
-		completedUserCount, failedUserCount := s.syncUsers(dataService, syncDate, v.Tenant, runId)
+
+		userSyncService, err := s.userSyncService(v)
+		completedUserCount, failedUserCount := userSyncService.SyncUsers(dataService, syncDate, v.Tenant, runId)
+		syncRunDtls.CompletedUsers = completedUserCount
+		syncRunDtls.FailedUsers = failedUserCount
+
 		completedOrganizationCount, failedOrganizationCount := s.syncOrganizations(dataService, syncDate, v.Tenant, runId)
+		syncRunDtls.CompletedOrganizations = completedOrganizationCount
+		syncRunDtls.FailedOrganizations = failedOrganizationCount
+
 		completedContactCount, failedContactCount := s.syncContacts(dataService, syncDate, v.Tenant, runId)
+		syncRunDtls.CompletedContacts = completedContactCount
+		syncRunDtls.FailedContacts = failedContactCount
+
 		completedNoteCount, failedNoteCount := s.syncNotes(dataService, syncDate, v.Tenant, runId)
 		completedEmailMessageCount, failedEmailMessageCount := s.syncEmailMessages(dataService, syncDate, v.Tenant, runId)
 
-		syncRunDtls.CompletedContacts = completedContactCount
-		syncRunDtls.FailedContacts = failedContactCount
-		syncRunDtls.CompletedUsers = completedUserCount
-		syncRunDtls.FailedUsers = failedUserCount
-		syncRunDtls.CompletedOrganizations = completedOrganizationCount
-		syncRunDtls.FailedOrganizations = failedOrganizationCount
 		syncRunDtls.CompletedNotes = completedNoteCount
 		syncRunDtls.FailedNotes = failedNoteCount
 		syncRunDtls.CompletedEmailMessages = completedEmailMessageCount
@@ -80,11 +85,11 @@ func (s *syncService) Sync(runId string) {
 	}
 }
 
-func (s *syncService) syncExternalSystem(dataService common.DataService, tenant string) {
+func (s *syncService) syncExternalSystem(dataService common.SourceDataService, tenant string) {
 	_ = s.repositories.ExternalSystemRepository.Merge(tenant, dataService.SourceId())
 }
 
-func (s *syncService) syncContacts(dataService common.DataService, syncDate time.Time, tenant, runId string) (int, int) {
+func (s *syncService) syncContacts(dataService common.SourceDataService, syncDate time.Time, tenant, runId string) (int, int) {
 	completed, failed := 0, 0
 	for {
 		contacts := dataService.GetContactsForSync(batchSize, runId)
@@ -191,7 +196,7 @@ func (s *syncService) syncContacts(dataService common.DataService, syncDate time
 	return completed, failed
 }
 
-func (s *syncService) syncOrganizations(dataService common.DataService, syncDate time.Time, tenant, runId string) (int, int) {
+func (s *syncService) syncOrganizations(dataService common.SourceDataService, syncDate time.Time, tenant, runId string) (int, int) {
 	completed, failed := 0, 0
 	for {
 		organizations := dataService.GetOrganizationsForSync(batchSize, runId)
@@ -242,50 +247,7 @@ func (s *syncService) syncOrganizations(dataService common.DataService, syncDate
 	return completed, failed
 }
 
-func (s *syncService) syncUsers(dataService common.DataService, syncDate time.Time, tenant, runId string) (int, int) {
-	completed, failed := 0, 0
-	for {
-		users := dataService.GetUsersForSync(batchSize, runId)
-		if len(users) == 0 {
-			logrus.Debugf("no users found for sync from %s for tenant %s", dataService.SourceId(), tenant)
-			break
-		}
-		logrus.Infof("syncing %d users from %s for tenant %s", len(users), dataService.SourceId(), tenant)
-
-		for _, v := range users {
-			var failedSync = false
-
-			userId, err := s.repositories.UserRepository.MergeUser(tenant, syncDate, v)
-			if err != nil {
-				failedSync = true
-				logrus.Errorf("failed merging user with external reference %v for tenant %v :%v", v.ExternalId, tenant, err)
-			}
-
-			err = s.repositories.UserRepository.MergeEmail(tenant, userId, v.Email, v.ExternalSystem, v.CreatedAt)
-			if err != nil {
-				failedSync = true
-				logrus.Errorf("failed merging email for user with id %v for tenant %v :%v", userId, tenant, err)
-			}
-
-			logrus.Debugf("successfully merged user with id %v for tenant %v from %v", userId, tenant, dataService.SourceId())
-			if err := dataService.MarkUserProcessed(v.ExternalOwnerId, runId, failedSync == false); err != nil {
-				failed++
-				continue
-			}
-			if failedSync == true {
-				failed++
-			} else {
-				completed++
-			}
-		}
-		if len(users) < batchSize {
-			break
-		}
-	}
-	return completed, failed
-}
-
-func (s *syncService) syncNotes(dataService common.DataService, syncDate time.Time, tenant, runId string) (int, int) {
+func (s *syncService) syncNotes(dataService common.SourceDataService, syncDate time.Time, tenant, runId string) (int, int) {
 	completed, failed := 0, 0
 	for {
 		notes := dataService.GetNotesForSync(batchSize, runId)
@@ -355,7 +317,7 @@ func (s *syncService) syncNotes(dataService common.DataService, syncDate time.Ti
 	return completed, failed
 }
 
-func (s *syncService) syncEmailMessages(dataService common.DataService, syncDate time.Time, tenant, runId string) (int, int) {
+func (s *syncService) syncEmailMessages(dataService common.SourceDataService, syncDate time.Time, tenant, runId string) (int, int) {
 	completed, failed := 0, 0
 	for {
 		messages := dataService.GetEmailMessagesForSync(batchSize, runId)
@@ -529,11 +491,14 @@ func (s *syncService) syncEmailMessages(dataService common.DataService, syncDate
 	return completed, failed
 }
 
-func (s *syncService) dataService(tenantToSync entity.TenantSyncSettings) (common.DataService, error) {
-	// Use a map to store the different implementations of common.DataService as functions.
-	dataServiceMap := map[string]func() common.DataService{
-		string(entity.AirbyteSourceHubspot): func() common.DataService {
-			return service.NewHubspotDataService(s.repositories.Dbs.AirbyteStoreDB, tenantToSync.Tenant)
+func (s *syncService) sourceDataService(tenantToSync entity.TenantSyncSettings) (common.SourceDataService, error) {
+	// Use a map to store the different implementations of common.SourceDataService as functions.
+	dataServiceMap := map[string]func() common.SourceDataService{
+		string(entity.AirbyteSourceHubspot): func() common.SourceDataService {
+			return hubspot_service.NewHubspotDataService(s.repositories.Dbs.AirbyteStoreDB, tenantToSync.Tenant)
+		},
+		string(entity.AirbyteSourceZendeskSupport): func() common.SourceDataService {
+			return zendesk_support_service.NewZendeskSupportDataService(s.repositories.Dbs.AirbyteStoreDB, tenantToSync.Tenant)
 		},
 		// Add additional implementations here.
 	}
@@ -545,11 +510,34 @@ func (s *syncService) dataService(tenantToSync entity.TenantSyncSettings) (commo
 		return nil, fmt.Errorf("unknown airbyte source %v, skipping sync for tenant %v", tenantToSync.Source, tenantToSync.Tenant)
 	}
 
-	// Call the createDataService function to create a new instance of common.DataService.
+	// Call the createDataService function to create a new instance of common.SourceDataService.
 	dataService := createDataService()
 
-	// Call the Refresh method on the dataService instance.
+	// Call the Refresh method on the sourceDataService instance.
 	dataService.Refresh()
 
 	return dataService, nil
+}
+
+func (s *syncService) userSyncService(tenantToSync entity.TenantSyncSettings) (UserSyncService, error) {
+	userSyncServiceMap := map[string]func() UserSyncService{
+		string(entity.AirbyteSourceHubspot): func() UserSyncService {
+			return s.services.UserSyncService
+		},
+		string(entity.AirbyteSourceZendeskSupport): func() UserSyncService {
+			return s.services.UserSyncService
+		},
+	}
+
+	// Look up the corresponding implementation in the map using the tenantToSync.Source value.
+	createDataService, ok := userSyncServiceMap[tenantToSync.Source]
+	if !ok {
+		// Return an error if the tenantToSync.Source value is not recognized.
+		return nil, fmt.Errorf("unknown airbyte source %v, skipping sync for tenant %v", tenantToSync.Source, tenantToSync.Tenant)
+	}
+
+	// Call the createDataService function to create a new instance of common.SourceDataService.
+	userSyncService := createDataService()
+
+	return userSyncService, nil
 }
