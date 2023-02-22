@@ -10,6 +10,7 @@ import (
 	commonModuleService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/message-store-api/config"
+	msProto "github.com/openline-ai/openline-customer-os/packages/server/message-store-api/proto/generated"
 	"github.com/openline-ai/openline-customer-os/packages/server/message-store-api/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/message-store-api/repository/entity"
 	"golang.org/x/net/context"
@@ -43,9 +44,10 @@ type CustomerOSServiceInterface interface {
 	GetUserByEmail(email string) (*User, error)
 	GetContactById(id string) (*Contact, error)
 	GetContactByEmail(email string) (*Contact, error)
+	GetContactByPhone(phoneNumber string) (*Contact, error)
 
 	CreateContactWithEmail(tenant string, email string) (*Contact, error)
-	CreateContactWithPhone(tenant string, phone string) (*Contact, error)
+	CreateContactWithPhone(tenant string, phoneNumber string) (*Contact, error)
 
 	ConversationByIdExists(tenant string, conversationId string) (bool, error)
 
@@ -229,6 +231,29 @@ func (s *CustomerOSService) GetContactByEmail(ctx context.Context, email string)
 	return &graphqlResponse.contactByEmail, nil
 }
 
+func (s *CustomerOSService) GetContactByPhone(ctx context.Context, phoneNumber string) (*Contact, error) {
+	graphqlRequest := graphql.NewRequest(`
+  				query ($phoneNumber: String!) {
+  					contact_ByPhone(e164: $phoneNumber){` + contactFieldSelection + `}
+  				}
+    `)
+	graphqlRequest.Var("phoneNumber", phoneNumber)
+
+	err := s.addHeadersToGraphRequest(graphqlRequest, ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	var graphqlResponse struct {
+		contactByPhone Contact `json:"contact_ByPhone"`
+	}
+
+	if err = s.graphqlClient.Run(context.Background(), graphqlRequest, &graphqlResponse); err != nil {
+		return nil, err
+	}
+	return &graphqlResponse.contactByPhone, nil
+}
+
 func (s *CustomerOSService) CreateContactWithEmail(ctx context.Context, tenant string, email string) (*Contact, error) {
 	graphqlRequest := graphql.NewRequest(`
 		mutation CreateContact ($email: String!) {
@@ -240,6 +265,33 @@ func (s *CustomerOSService) CreateContactWithEmail(ctx context.Context, tenant s
     `)
 
 	graphqlRequest.Var("email", email)
+	err := s.addHeadersToGraphRequest(graphqlRequest, ctx)
+
+	if err != nil {
+		return nil, err
+	}
+
+	var graphqlResponse map[string]map[string]string
+	if err := s.graphqlClient.Run(context.Background(), graphqlRequest, &graphqlResponse); err != nil {
+		return nil, err
+	}
+	id := graphqlResponse["contact_Create"]["id"]
+
+	return s.GetContactById(ctx, id)
+
+}
+
+func (s *CustomerOSService) CreateContactWithPhone(ctx context.Context, tenant string, phoneNumber string) (*Contact, error) {
+	graphqlRequest := graphql.NewRequest(`
+		mutation CreateContact ($phoneNumber: String!) {
+		  contact_Create(input: {
+		  phoneNumber:{rawPhoneNumber:  $phoneNumber, label: MAIN}}) {
+			id
+          }
+		}
+    `)
+
+	graphqlRequest.Var("phoneNumber", phoneNumber)
 	err := s.addHeadersToGraphRequest(graphqlRequest, ctx)
 
 	if err != nil {
@@ -544,31 +596,41 @@ func (s *CustomerOSService) GetContactWithEmailOrCreate(ctx context.Context, ten
 	}
 }
 
+func (s *CustomerOSService) GetContactWithPhoneOrCreate(ctx context.Context, tenant string, phoneNumber string) (Contact, error) {
+	contact, err := s.GetContactByPhone(ctx, phoneNumber)
+	if err != nil {
+		contact, err = s.CreateContactWithPhone(ctx, tenant, phoneNumber)
+		if err != nil {
+			return Contact{}, err
+		}
+		if contact == nil {
+			return Contact{}, errors.New("contact not found and could not be created")
+		}
+		return *contact, nil
+	} else {
+		return *contact, nil
+	}
+}
+
 func (s *CustomerOSService) GetActiveConversationOrCreate(
 	ctx context.Context,
 	tenant string,
 	initiator Participant,
-	initiatorUsername string,
+	initiatorUsername *msProto.ParticipantId,
 	eventType entity.EventType,
 	threadId string,
 ) (*Conversation, error) {
 	var conversation *Conversation
 	var err error
-	if eventType == entity.WEB_CHAT {
-		if initiator.Type == entity.CONTACT {
-			conversation, err = s.GetWebChatConversationWithContactInitiator(ctx, tenant, initiator.Id)
-		} else if initiator.Type == entity.USER {
-			conversation, err = s.GetWebChatConversationWithUserInitiator(ctx, tenant, initiator.Id)
-		}
-	} else if eventType == entity.EMAIL {
-		if err != nil {
-			return nil, err
-		}
-		if initiator.Type == entity.CONTACT {
-			conversation, err = s.GetEmailConversationWithContactInitiator(ctx, tenant, initiator.Id, threadId)
-		} else if initiator.Type == entity.USER {
-			conversation, err = s.GetEmailConversationWithUserInitiator(ctx, tenant, initiator.Id, threadId)
-		}
+
+	// for webchat, thread id is empty string
+	if err != nil {
+		return nil, err
+	}
+	if initiator.Type == entity.CONTACT {
+		conversation, err = s.GetConversationWithContactInitiator(ctx, tenant, initiator.Id, eventType, threadId)
+	} else if initiator.Type == entity.USER {
+		conversation, err = s.GetConversationWithUserInitiator(ctx, tenant, initiator.Id, eventType, threadId)
 	}
 
 	if err != nil {
@@ -576,7 +638,7 @@ func (s *CustomerOSService) GetActiveConversationOrCreate(
 	}
 
 	if conversation == nil {
-		conversation, err = s.CreateConversation(ctx, tenant, initiator, initiatorUsername, eventType, threadId)
+		conversation, err = s.CreateConversation(ctx, tenant, initiator, s.commonStoreService.ConvertMSParticipantIdToUsername(initiatorUsername), eventType, threadId)
 	}
 	if err != nil {
 		return nil, err
@@ -585,16 +647,17 @@ func (s *CustomerOSService) GetActiveConversationOrCreate(
 	return conversation, nil
 }
 
-func (s *CustomerOSService) GetEmailConversationWithContactInitiator(ctx context.Context, tenant string, contactId string, threadId string) (*Conversation, error) {
+func (s *CustomerOSService) GetConversationWithContactInitiator(ctx context.Context, tenant string, contactId string, eventType entity.EventType, threadId string) (*Conversation, error) {
 	session := utils.NewNeo4jWriteSession(ctx, *s.driver)
 	defer session.Close(ctx)
 
 	conversationNode, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		if queryResult, err := tx.Run(ctx, `match(o:Conversation{status:"ACTIVE", channel: "EMAIL", threadId: $threadId})<-[:INITIATED]-(c:Contact{id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(t:Tenant{name:$tenant}) return o`,
+		if queryResult, err := tx.Run(ctx, `match(o:Conversation{status:"ACTIVE", channel: $eventType, threadId: $threadId})<-[:INITIATED]-(c:Contact{id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(t:Tenant{name:$tenant}) return o`,
 			map[string]any{
 				"tenant":    tenant,
 				"contactId": contactId,
 				"threadId":  threadId,
+				"eventType": eventType,
 			}); err != nil {
 			return nil, err
 		} else {
@@ -622,16 +685,17 @@ func (s *CustomerOSService) GetEmailConversationWithContactInitiator(ctx context
 	}
 }
 
-func (s *CustomerOSService) GetEmailConversationWithUserInitiator(ctx context.Context, tenant string, userId string, threadId string) (*Conversation, error) {
+func (s *CustomerOSService) GetConversationWithUserInitiator(ctx context.Context, tenant string, userId string, eventType entity.EventType, threadId string) (*Conversation, error) {
 	session := utils.NewNeo4jReadSession(ctx, *s.driver)
 	defer session.Close(ctx)
 
 	conversationNode, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		if queryResult, err := tx.Run(ctx, `match(o:Conversation{status:"ACTIVE", channel: "EMAIL", threadId: $threadId})<-[:INITIATED]-(u:User{id:$userId})-[:USER_BELONGS_TO_TENANT]->(t:Tenant{name:$tenant}) return o`,
+		if queryResult, err := tx.Run(ctx, `match(o:Conversation{status:"ACTIVE", channel: $eventType, threadId: $threadId})<-[:INITIATED]-(u:User{id:$userId})-[:USER_BELONGS_TO_TENANT]->(t:Tenant{name:$tenant}) return o`,
 			map[string]any{
-				"tenant":   tenant,
-				"userId":   userId,
-				"threadId": threadId,
+				"tenant":    tenant,
+				"userId":    userId,
+				"threadId":  threadId,
+				"eventType": eventType,
 			}); err != nil {
 			return nil, err
 		} else {

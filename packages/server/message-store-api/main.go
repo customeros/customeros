@@ -52,7 +52,7 @@ func main() {
 
 	repositories := repository.InitRepositories(db.GormDB, neo4jDriver)
 	commonStoreService := service.NewCommonStoreService()
-	customerOSService := service.NewCustomerOSService(neo4jDriver, graphqlClient, repositories, commonStoreService)
+	customerOSService := service.NewCustomerOSService(neo4jDriver, graphqlClient, repositories, commonStoreService, conf)
 
 	// Register the Message Item service with the server.
 	msProto.RegisterMessageStoreServiceServer(server, service.NewMessageService(neo4jDriver, repositories, customerOSService, commonStoreService))

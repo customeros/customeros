@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"errors"
+	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	commonModuleService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 	msProto "github.com/openline-ai/openline-customer-os/packages/server/message-store-api/proto/generated"
@@ -196,7 +197,7 @@ func (s *MessageService) SaveMessage(ctx context.Context, input *msProto.InputMe
 	}
 	participants := []Participant{}
 
-	initiator, err := s.getParticipant(ctx, *tenant, *input.InitiatorIdentifier)
+	initiator, err := s.getParticipant(ctx, *tenant, input.InitiatorIdentifier)
 	if err != nil {
 		return nil, err
 	}
@@ -218,7 +219,7 @@ func (s *MessageService) SaveMessage(ctx context.Context, input *msProto.InputMe
 			conversation = conv
 		}
 	} else {
-		if conv, err := s.customerOSService.GetActiveConversationOrCreate(ctx, *tenant, *initiator, *input.InitiatorIdentifier, entityType, input.GetThreadId()); err != nil {
+		if conv, err := s.customerOSService.GetActiveConversationOrCreate(ctx, *tenant, *initiator, input.InitiatorIdentifier, entityType, input.GetThreadId()); err != nil {
 			return nil, err
 		} else {
 			conversation = conv
@@ -279,17 +280,22 @@ func (s *MessageService) getMessagePreview(input *msProto.InputMessage) string {
 	return previewContent
 }
 
-func (s *MessageService) getParticipant(ctx context.Context, tenant string, initiatorIdentifier string) (*Participant, error) {
-	user, err := s.customerOSService.GetUserByEmail(ctx, initiatorIdentifier)
-	if err != nil {
-		contact, err := s.customerOSService.GetContactWithEmailOrCreate(ctx, tenant, initiatorIdentifier)
+func (s *MessageService) getParticipant(ctx context.Context, tenant string, initiatorIdentifier *msProto.ParticipantId) (*Participant, error) {
+	if initiatorIdentifier.Type == msProto.ParticipantIdType_MAILTO {
+		user, err := s.customerOSService.GetUserByEmail(ctx, initiatorIdentifier.Identifier)
 		if err != nil {
-			return nil, err
+			contact, err := s.customerOSService.GetContactWithEmailOrCreate(ctx, tenant, initiatorIdentifier.Identifier)
+			if err != nil {
+				return nil, err
+			}
+			return &Participant{Id: contact.Id, Type: entity.CONTACT}, nil
+		} else {
+			return &Participant{Id: user.Id, Type: entity.USER}, nil
 		}
-		return &Participant{Id: contact.Id, Type: entity.CONTACT}, nil
-	} else {
-		return &Participant{Id: user.Id, Type: entity.USER}, nil
+	} else if initiatorIdentifier.Type == msProto.ParticipantIdType_TEL {
+
 	}
+	return nil, errors.New(fmt.Sprintf("Invalid participant type: %d", initiatorIdentifier.Type))
 }
 
 func (s *MessageService) saveConversationEvent(tenant string, conversation *Conversation, input *msProto.InputMessage, initiator *Participant) entity.ConversationEvent {
@@ -306,7 +312,7 @@ func (s *MessageService) saveConversationEvent(tenant string, conversation *Conv
 		InitiatorUsername: conversation.InitiatorUsername,
 
 		SenderId:       initiator.Id,
-		SenderUsername: *input.InitiatorIdentifier,
+		SenderUsername: s.commonStoreService.ConvertMSParticipantIdToUsername(input.InitiatorIdentifier),
 		SenderType:     initiator.Type,
 		OriginalJson:   "TODO",
 	}

@@ -4,6 +4,7 @@ import (
 	msProto "github.com/openline-ai/openline-customer-os/packages/server/message-store-api/proto/generated"
 	"github.com/openline-ai/openline-customer-os/packages/server/message-store-api/repository/entity"
 	"google.golang.org/protobuf/types/known/timestamppb"
+	"strings"
 )
 
 type commonStoreService struct {
@@ -38,12 +39,37 @@ func (s *commonStoreService) EncodeConversationEventToMS(conversationEvent entit
 		Time:              timestamppb.New(conversationEvent.CreateDate),
 		SenderId:          conversationEvent.SenderId,
 		SenderType:        s.ConvertEntitySenderTypeToMSSenderType(conversationEvent.SenderType),
-		SenderUsername:    conversationEvent.SenderUsername,
+		SenderUsername:    s.EncodeUsernameToMs(conversationEvent.SenderUsername),
 	}
 }
 
 func (s *commonStoreService) EncodeMessageIdToMs(conversationEvent entity.ConversationEvent) *msProto.MessageId {
 	return &msProto.MessageId{ConversationEventId: conversationEvent.ID, ConversationId: conversationEvent.ConversationId}
+}
+
+func (s *commonStoreService) EncodeUsernameToMs(username string) *msProto.ParticipantId {
+	if strings.HasPrefix(username, "mailto:") {
+		return &msProto.ParticipantId{Type: msProto.ParticipantIdType_MAILTO, Identifier: strings.TrimPrefix(username, "mailto:")}
+	} else if strings.HasPrefix(username, "tel:") {
+		return &msProto.ParticipantId{Type: msProto.ParticipantIdType_TEL, Identifier: strings.TrimPrefix(username, "tel:")}
+	} else {
+		// fail back to assuming email id
+		return &msProto.ParticipantId{Type: msProto.ParticipantIdType_MAILTO, Identifier: username}
+	}
+}
+
+func (s *commonStoreService) ConvertMSParticipantIdToUsername(participantId *msProto.ParticipantId) string {
+	if participantId == nil {
+		return ""
+	}
+	if participantId.Type == msProto.ParticipantIdType_MAILTO {
+		return "mailto:" + participantId.Identifier
+	} else if participantId.Type == msProto.ParticipantIdType_TEL {
+		return "tel:" + participantId.Identifier
+	} else {
+		// shouldn't reach here
+		return participantId.Identifier
+	}
 }
 
 func (s *commonStoreService) EncodeConversationToMS(conversation Conversation) *msProto.FeedItem {
