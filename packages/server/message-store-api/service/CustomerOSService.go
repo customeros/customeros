@@ -285,7 +285,7 @@ func (s *CustomerOSService) CreateContactWithPhone(ctx context.Context, tenant s
 	graphqlRequest := graphql.NewRequest(`
 		mutation CreateContact ($phoneNumber: String!) {
 		  contact_Create(input: {
-		  phoneNumber:{rawPhoneNumber:  $phoneNumber, label: MAIN}}) {
+		  phoneNumber:{phoneNumber:  $phoneNumber, label: MAIN}}) {
 			id
           }
 		}
