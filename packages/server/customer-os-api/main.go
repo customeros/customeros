@@ -99,8 +99,8 @@ func main() {
 	r.Use(cors.New(corsConfig))
 
 	r.POST("/query",
-		commonService.UserToTenantEnhancer(ctx, repositoryContainer.UserRepo),
-		commonService.ApiKeyCheckerHTTP(repositoryContainer.AppKeyRepo, commonService.CUSTOMER_OS_API),
+		commonService.UserToTenantEnhancer(ctx, repositoryContainer.UserRepository),
+		commonService.ApiKeyCheckerHTTP(repositoryContainer.AppKeyRepository, commonService.CUSTOMER_OS_API),
 		graphqlHandler(cfg, neo4jDriver, repositoryContainer))
 	if cfg.GraphQL.PlaygroundEnabled {
 		r.GET("/", playgroundHandler())
@@ -113,7 +113,7 @@ func main() {
 		port = customerOSApiPort
 	}
 
-	r.Run(":" + port)
+	r.Run(":9999")
 }
 
 func loadConfiguration() *config.Config {
