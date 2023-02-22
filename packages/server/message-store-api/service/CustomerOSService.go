@@ -107,7 +107,7 @@ func (s *CustomerOSService) ContactByIdExists(ctx context.Context, contactId str
 	return true, nil
 }
 
-func (s *CustomerOSService) GetUserByEmail(ctx context.Context, tenant, email string) (*User, error) {
+func (s *CustomerOSService) GetUserByEmail(ctx context.Context, email string) (*User, error) {
 	session := utils.NewNeo4jWriteSession(ctx, *s.driver)
 	defer session.Close(ctx)
 
