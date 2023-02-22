@@ -38,7 +38,6 @@ type EmailContent struct {
 }
 
 type CustomerOSServiceInterface interface {
-	ContactByIdExists(contactId string) (bool, error)
 	ContactByPhoneExists(e164 string) (bool, error)
 
 	GetUserByEmail(email string) (*User, error)
@@ -123,11 +122,6 @@ const userFieldSelection = `firstName,lastName,id,
   					  email
                       primary
 					  label
-            		},
-					phoneNumbers {
-						  e164,
-						  primary,
-						  label
             		}`
 
 func (s *CustomerOSService) addHeadersToGraphRequest(req *graphql.Request, ctx context.Context) error {
@@ -138,27 +132,6 @@ func (s *CustomerOSService) addHeadersToGraphRequest(req *graphql.Request, ctx c
 	}
 	req.Header.Add("X-Openline-USERNAME", *user)
 	return nil
-}
-
-func (s *CustomerOSService) ContactByIdExists(ctx context.Context, contactId string) (bool, error) {
-	session := utils.NewNeo4jWriteSession(ctx, *s.driver)
-	defer session.Close(ctx)
-
-	params := map[string]interface{}{
-		"contactId": contactId,
-	}
-	query := "MATCH (n:Contact {id:$contactId}) RETURN count(*)"
-	_, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (interface{}, error) {
-		_, err := tx.Run(ctx, query, params)
-		return nil, err
-	})
-
-	//TODO check here if the error is correct
-	if err != nil {
-		return false, err
-	}
-
-	return true, nil
 }
 
 func (s *CustomerOSService) GetUserByEmail(ctx context.Context, email string) (*User, error) {
@@ -172,7 +145,7 @@ func (s *CustomerOSService) GetUserByEmail(ctx context.Context, email string) (*
 	err := s.addHeadersToGraphRequest(graphqlRequest, ctx)
 
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("GetUserByEmail: %w", err)
 	}
 
 	var graphqlResponse struct {
@@ -195,7 +168,7 @@ func (s *CustomerOSService) GetContactById(ctx context.Context, id string) (*Con
 
 	err := s.addHeadersToGraphRequest(graphqlRequest, ctx)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("GetContactById: %w", err)
 	}
 
 	var graphqlResponse struct {
@@ -218,7 +191,7 @@ func (s *CustomerOSService) GetContactByEmail(ctx context.Context, email string)
 
 	err := s.addHeadersToGraphRequest(graphqlRequest, ctx)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("GetContactByEmail: %w", err)
 	}
 
 	var graphqlResponse struct {
@@ -241,7 +214,7 @@ func (s *CustomerOSService) GetContactByPhone(ctx context.Context, phoneNumber s
 
 	err := s.addHeadersToGraphRequest(graphqlRequest, ctx)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("GetContactByPhone: %w", err)
 	}
 
 	var graphqlResponse struct {
@@ -268,7 +241,7 @@ func (s *CustomerOSService) CreateContactWithEmail(ctx context.Context, tenant s
 	err := s.addHeadersToGraphRequest(graphqlRequest, ctx)
 
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("CreateContactWithEmail: %w", err)
 	}
 
 	var graphqlResponse map[string]map[string]string
@@ -295,7 +268,7 @@ func (s *CustomerOSService) CreateContactWithPhone(ctx context.Context, tenant s
 	err := s.addHeadersToGraphRequest(graphqlRequest, ctx)
 
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("CreateContactWithPhone: %w", err)
 	}
 
 	var graphqlResponse map[string]map[string]string
