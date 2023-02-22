@@ -1,4 +1,4 @@
-@import "styles/mixins";
+@import 'styles/mixins';
 
 .wrapper {
   position: relative;
@@ -7,14 +7,22 @@
   display: block;
 
   &:not(:last-of-type) {
-    margin-bottom: var(--spacing-sm)
+    margin-bottom: var(--spacing-sm);
   }
 }
 
 .input {
   @include input-style;
-}
 
+  /* SIZES */
+
+  &.xxxs {
+    margin-top: 0;
+    padding: 0 var(--spacing-xxxs);
+    font-size: var(--font-size-sm);
+    font-weight: lighter;
+  }
+}
 
 .icon {
   position: absolute;

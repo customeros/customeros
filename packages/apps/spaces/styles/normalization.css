@@ -96,3 +96,27 @@ button::-moz-focus-inner {
   right: 200%;
   filter: blur(5px);
 }
+
+.p-overlaypanel-content {
+  border-radius: var(--border-radius-sm);
+  border: var(--border-divider);
+  box-shadow: 5px 5px 9px var(--secondary-color), -1px -1px 9px #fff, 1px 1px 2px var(--secondary-color-hover);
+}
+
+
+.p-menu .p-menuitem-link {
+  font-size: var(--font-size-sm);
+  padding: var(--spacing-xs) var(--spacing-md);
+}
+.p-menu .p-menuitem-link:not(:last-of-type) {
+  border-bottom: var(--border-divider)
+}
+.p-menuitem-link:hover {
+  background: var(--secondary-color)
+}
+
+.p-overlaypanel {
+  position: absolute;
+  margin-top: 2px;
+  margin-left: 29px;
+}

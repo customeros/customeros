@@ -147,3 +147,4 @@ export {
 } from './atoms';
 
 export { ErrorPage } from './organisms';
+export { DetailsPageLayout } from './layouts';

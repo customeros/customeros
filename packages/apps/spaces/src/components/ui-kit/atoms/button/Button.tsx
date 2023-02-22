@@ -26,7 +26,7 @@ export const Button: FC<Props> = ({
     <button
       {...rest}
       onClick={onClick}
-      className={`${styles.button} ${styles[mode]}`}
+      className={`${styles.button} ${styles[mode]} ${rest.className}`}
     >
       <>
         {icon && icon}

@@ -1,18 +1,3 @@
-//Responsive Breakpoint SCSS Mixin:
-
-//xxs
-@mixin mobile-xxs {
-  @media (max-width: 400px) {
-    @content;
-  }
-}
-
-//md
-@mixin desktop {
-  @media (min-width: 991px) {
-    @content;
-  }
-}
 
 .table {
   border-collapse: collapse;

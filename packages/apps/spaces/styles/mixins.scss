@@ -49,3 +49,136 @@
     }
   }
 }
+
+
+@mixin button-variants {
+  cursor: pointer;
+  &:focus-visible {
+    outline-color: var(--outline-color);
+    outline-width: var(--outline-width);
+    outline-offset: var(--outline-offset);
+  }
+
+  /* VARIANTS */
+  // todo determine if its needed
+  &.default {
+    background: var(--gray-600);
+    color: #fff;
+    &:hover,
+    &:focus,
+    &:active {
+      background: transparent;
+      outline: none;
+    }
+  }
+
+  &.primary {
+    background: var(--primary-color);
+    color: var(--text-on-primary);
+
+    &:hover {
+      background: var(--primary-color-hover);
+    }
+    &:focus {
+      background: var(--primary-color-focus);
+    }
+    &:focus {
+      background: var(--primary-color-active);
+    }
+  }
+
+  &.secondary {
+    background: var(--secondary-color);
+    color: var(--text-on-secondary);
+    &:hover {
+      background: var(--secondary-color-hover);
+    }
+    &:focus {
+      background: var(--secondary-color-focus);
+    }
+    &:focus {
+      background: var(--secondary-color-active);
+    }
+  }
+
+  &.accent {
+    background: var(--accent-color);
+    color: var(--text-on-accent);
+
+    &:hover {
+      background: var(--accent-color-hover);
+    }
+    &:focus {
+      background: var(--accent-color-focus);
+    }
+    &:focus {
+      background: var(--accent-color-active);
+    }
+  }
+
+  &.text {
+    background: transparent;
+
+    &:hover,
+    &:focus,
+    &:active {
+      background: transparent;
+      outline: none;
+    }
+  }
+
+  &.danger {
+    color: white;
+    background: var(--error-color);
+
+    &:hover,
+    &:focus,
+    &:active {
+      background: var(--error-color-hover);
+      color: white;
+    }
+  }
+
+  &:disabled {
+    pointer-events: none;
+    cursor: not-allowed;
+  }
+}
+
+//Responsive Breakpoint SCSS Mixin:
+
+//xxs
+@mixin mobile-xxs {
+  @media (max-width: 400px) {
+    @content;
+  }
+}
+
+//xxs to sm
+@mixin mobile-to-tablet {
+  @media (max-width: 768px) {
+    @content;
+  }
+}
+
+
+//min-sm
+@mixin min-tablet {
+  @media (min-width: 768px) {
+    @content;
+  }
+}
+//md
+@mixin desktop {
+  @media (max-width: 991px) {
+    @content;
+  }
+}
+//sm to md
+@mixin tablet-to-desktop {
+  @media (min-width: 768px) and (max-width: 991px) {
+    @content;
+  }
+}
+
+

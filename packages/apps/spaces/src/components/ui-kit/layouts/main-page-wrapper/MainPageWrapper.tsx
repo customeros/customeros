@@ -4,10 +4,10 @@ import { edgeConfig } from '@ory/integrations/next';
 import React, { useEffect, useState } from 'react';
 import { WebChat } from '@openline-ai/openline-web-chat';
 import { useRouter } from 'next/router';
-import { getUserName } from '../../../utils';
-import { SidePanel } from '../../ui-kit/organisms';
+import { getUserName } from '../../../../utils';
+import { SidePanel } from '../../organisms';
 import { PageContentLayout } from '../page-content-layout';
-import client from '../../../../apollo-client';
+import client from '../../../../../apollo-client';
 import { ApolloProvider } from '@apollo/client';
 
 const ory = new FrontendApi(new Configuration(edgeConfig));

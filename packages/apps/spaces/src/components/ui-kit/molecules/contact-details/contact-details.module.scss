@@ -1,0 +1,103 @@
+@import "styles/mixins";
+
+
+.contactDetails {
+  //@include frosted-glass;
+
+  display: flex;
+  flex-direction: column;
+  padding: 24px;
+  border-radius: 10px;
+  max-width: 400px;
+  margin: 20px 20px 0 20px;
+
+  //border: 1px solid #dadada;
+  //box-shadow: 5px 5px 10px rgb(0 0 0 / 3%), -1px -1px 2px #fff, 1px 1px 2px #5550;
+  //box-shadow: none
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.photo {
+  width: 50px;
+  height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  overflow: hidden;
+  margin-right: var(--spacing-md);
+  background: var(--gradient-base);
+  font-weight: bold;
+  color: white;
+}
+
+.photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.name {
+  font-size: 24px;
+  font-weight: 600;
+  color: #333;
+}
+
+.details {
+
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+  grid-gap: 24px;
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  padding: var(--spacing-xxxs);
+
+}
+
+.label {
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  margin-top: var(--spacing-xxxs);
+  color: var(--text-secondary-color)
+}
+
+.value {
+  font-size: 16px;
+  color: #666;
+}
+
+.jobRole {
+  font-size: var(--font-size-xs);
+  color: var(--text-faded);
+  &:first-letter {
+    text-transform: capitalize;
+  }
+}
+
+.source {
+  font-size: var(--font-size-xs);
+  color: var(--text-faded);
+  font-weight: lighter;
+
+
+  & span {
+    font-weight: bold;
+    margin-right: var(--spacing-xxxs)
+  }
+}

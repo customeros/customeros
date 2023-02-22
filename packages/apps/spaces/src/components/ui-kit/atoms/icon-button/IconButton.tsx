@@ -10,7 +10,7 @@ import classNames from 'classnames';
 interface Props extends ButtonHTMLAttributes<HTMLButtonElement> {
   icon?: ReactNode;
   onClick: ReactEventHandler;
-  mode?: 'default' | 'primary' | 'secondary' | 'accent' | 'text';
+  mode?: 'default' | 'primary' | 'secondary' | 'accent' | 'text' | 'danger';
   size?: 'xxxs' | 'xxs' | 'xs' | 'sm' | 'md' | 'lg';
 }
 
@@ -27,7 +27,6 @@ export const IconButton: FC<Props> = ({
       onClick={onClick}
       role={rest?.role || 'button'}
       title={rest?.title}
-      tabIndex={0}
       style={rest?.style}
       className={classNames(
         styles.button,
