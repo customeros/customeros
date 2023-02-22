@@ -107,16 +107,18 @@ func (s *CustomerOSService) ContactByIdExists(ctx context.Context, contactId str
 	return true, nil
 }
 
-func (s *CustomerOSService) GetUserByEmail(ctx context.Context, email string) (*User, error) {
+func (s *CustomerOSService) GetUserByEmail(ctx context.Context, tenant, email string) (*User, error) {
 	session := utils.NewNeo4jWriteSession(ctx, *s.driver)
 	defer session.Close(ctx)
 
 	dbRecords, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		if queryResult, err := tx.Run(ctx, `
-			MATCH (:Email {email:$email})<-[:HAS]-(u:User)
+			MATCH (:Tenant {name:"$tenant"})<-[:USER_BELONGS_TO_TENANT]-(u:User)-[:HAS]->(:Email)
+			WHERE e.email = $email OR e.rawEmail = $email
 			RETURN u`,
 			map[string]any{
-				"email": email,
+				"tenant": "openline", //TODO discuss with customerOS team
+				"email":  email,
 			}); err != nil {
 			return nil, err
 		} else {
@@ -140,8 +142,8 @@ func (s *CustomerOSService) GetContactById(ctx context.Context, id string) (*Con
 
 	dbRecords, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		if queryResult, err := tx.Run(ctx, `MATCH (c:Contact{id: $id})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}),
-                  (c:Contact)-[:HAS]->(p:Email{primary: true})
-            RETURN c.id, c.firstName, c.lastName, p.email`,
+                  (c:Contact)-[:HAS {primary:true}]->(e:Email)
+            RETURN c.id, c.firstName, c.lastName, e.email`,
 			map[string]any{
 				"tenant": "openline", //TODO discuss with customerOS team
 				"id":     id,
@@ -171,8 +173,9 @@ func (s *CustomerOSService) GetContactByEmail(ctx context.Context, email string)
 
 	dbRecords, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		if queryResult, err := tx.Run(ctx, `MATCH (c:Contact)-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}),
-                  (c:Contact)-[:HAS]->(p:Email {email:$email})
-            RETURN c.id, c.firstName, c.lastName, p.email`,
+                  (c:Contact)-[:HAS]->(e:Email)
+			WHERE e.email = $email OR e.rawEmail = $email
+            RETURN c.id, c.firstName, c.lastName, e.email`,
 			map[string]any{
 				"tenant": "openline", //TODO discuss with customerOS team
 				"email":  email,
@@ -246,7 +249,7 @@ func (s *CustomerOSService) CreateContactWithEmail(ctx context.Context, tenant s
 
 		//create the email
 		emailQuery := "MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant}) " +
-			" MERGE (e:Email {email: $email})-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]->(t) " +
+			" MERGE (e:Email {rawEmail: $email})-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]->(t) " +
 			" ON CREATE SET e.id=randomUUID(), " +
 			"				e.createdAt=$now, " +
 			"				e.updatedAt=$now," +
