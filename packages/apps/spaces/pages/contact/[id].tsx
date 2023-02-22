@@ -17,8 +17,6 @@ function ContactDetailsPage() {
           socialProfiles={[]}
           notes={[]}
         />
-      </section>
-      <section className={styles.communicationDetails}>
         <ContactCommunicationDetails />
       </section>
       <section className={styles.notes}>placeholder</section>

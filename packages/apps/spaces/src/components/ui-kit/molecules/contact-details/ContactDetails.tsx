@@ -1,26 +1,13 @@
 import React from 'react';
 import Image from 'next/image';
-import { Envelope, IconButton, Phone, Whatsapp } from '../../atoms';
+import { IconButton } from '../../atoms';
 import styles from './contact-details.module.scss';
 export const ContactDetails = ({
-  firstName = 'Ania',
-  lastName = 'Kowalska',
+  firstName = '',
+  lastName = '',
   photo,
-  source = 'hubspot',
-  jobRoles = [
-    {
-      jobTitle: 'developer',
-      organization: {
-        name: 'Nokia',
-      },
-    },
-    {
-      jobTitle: 'developer',
-      organization: {
-        name: 'Orange',
-      },
-    },
-  ],
+  source = '',
+  jobRoles = [],
 }: any) => {
   return (
     <div className={styles.contactDetails}>

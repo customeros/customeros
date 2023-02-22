@@ -13,9 +13,9 @@
   @include min-tablet {
     display: grid;
     grid-template-columns: 1fr 2fr;
-    grid-template-rows: minmax(200px, 1fr) minmax(20%, 1fr);
-    grid-template-areas: "personalDetails notes"
-                        "contactDetails timeline";
+    grid-template-rows: 1fr minmax(20%, 1fr);
+    grid-template-areas: "details notes"
+                        "details timeline";
     grid-gap: 24px;
   }
 

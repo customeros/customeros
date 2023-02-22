@@ -7,50 +7,9 @@ import { DetailItem } from './detail-item';
 import { OverlayPanel } from '../../atoms/overlay-panel';
 import { OverlayPanelEventType } from 'primereact';
 
-const emailMock = [
-  {
-    id: '12',
-    email: 'example1@example.com',
-    label: 'Work',
-    primary: true,
-  },
-  {
-    id: '13',
-    email: 'example2@example.com',
-    label: 'Home',
-    primary: false,
-  },
-  {
-    id: '14',
-    email: 'example3@example.com',
-    label: 'Other',
-    primary: false,
-  },
-];
-
-const phones = [
-  {
-    id: '22',
-    e164: '+1234567890',
-    label: 'Mobile',
-    primary: true,
-  },
-  {
-    id: '122',
-    e164: '+0987654321',
-    label: 'Home',
-    primary: false,
-  },
-  {
-    id: '123',
-    e164: '+1357908642',
-    label: 'Work',
-    primary: false,
-  },
-];
 export const ContactCommunicationDetails = ({
-  emails = emailMock,
-  phoneNumbers = phones,
+  emails = [],
+  phoneNumbers = [],
 }: any) => {
   const addCommunicationChannelContainerRef = forwardRef<undefined | any>(
     undefined,
