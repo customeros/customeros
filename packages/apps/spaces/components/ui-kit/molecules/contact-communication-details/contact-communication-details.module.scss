@@ -82,7 +82,10 @@
 .buttonWrapper {
   margin-bottom: var(--spacing-xs);
   display: flex;
-  justify-content: flex-end;
+
+  button {
+    width: 100%;
+  }
 }
 
 .editButton {

@@ -172,8 +172,8 @@
   }
 }
 //md
-@mixin desktop {
-  @media (max-width: 991px) {
+@mixin min-desktop {
+  @media (min-width: 991px) {
     @content;
   }
 }

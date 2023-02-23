@@ -114,6 +114,25 @@ export const ContactDetails = ({ id }: any) => {
             Message
           </div>
         </div>
+        <div className={styles.section}>
+          <IconButton
+            aria-describedby='message-icon-label'
+            mode='secondary'
+            className={styles.icon}
+            onClick={() => null}
+            icon={
+              <Image
+                alt={''}
+                src='/icons/share-alt.svg'
+                width={20}
+                height={20}
+              />
+            }
+          />
+          <div className={styles.label} id='message-icon-label'>
+            Share
+          </div>
+        </div>
       </div>
     </div>
   );
