@@ -22,7 +22,6 @@ export const useUpdateContactEmail = ({ contactId }: Props): Result => {
     input,
   ) => {
     try {
-      console.log('🏷️ ----- input: ', input);
       const response = await updateContactEmailMutation({
         variables: { input: { ...input }, contactId },
         // optimisticResponse: {
@@ -34,7 +33,6 @@ export const useUpdateContactEmail = ({ contactId }: Props): Result => {
         // },
       });
 
-      console.log('🏷️ ----- response: ', response);
       return response.data?.emailUpdateInContact ?? null;
     } catch (err) {
       console.error(err);

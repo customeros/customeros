@@ -49,6 +49,7 @@ export const DetailItem = ({
         tabIndex={0}
         key={id}
         className={styles.listContent}
+        onKeyDown={(e) => e.key === 'Enter' && setShowButtons(true)}
         onClick={() => {
           setShowButtons(true);
         }}

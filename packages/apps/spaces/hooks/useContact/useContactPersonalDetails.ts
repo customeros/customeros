@@ -14,7 +14,6 @@ interface Result {
   error: ApolloError | null;
 }
 export const useContactPersonalDetails = ({ id }: Props): Result => {
-  console.log('🏷️ ----- id: ', id);
   const { data, loading, error } = useGetContactPersonalDetailsQuery({
     variables: { id },
   });

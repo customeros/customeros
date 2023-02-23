@@ -51,13 +51,17 @@
 }
 
 
-@mixin button-variants {
-  cursor: pointer;
+@mixin outline {
   &:focus-visible {
     outline-color: var(--outline-color);
     outline-width: var(--outline-width);
     outline-offset: var(--outline-offset);
   }
+}
+
+@mixin button-variants {
+  cursor: pointer;
+  @include outline;
 
   /* VARIANTS */
   // todo determine if its needed
@@ -123,7 +127,6 @@
     &:focus,
     &:active {
       background: transparent;
-      outline: none;
     }
   }
 

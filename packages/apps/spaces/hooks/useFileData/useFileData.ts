@@ -8,7 +8,6 @@ export const useFileData = (addFileToTextContent): Result => {
     return fetch(`/fs/file/${id}/download`)
       .then(async (response: any) => {
         const blob = await response.blob();
-        console.log('🏷️ ----- response: ', response);
         const reader = new FileReader();
         reader.onload = function () {
           const dataUrl = reader.result as any;
