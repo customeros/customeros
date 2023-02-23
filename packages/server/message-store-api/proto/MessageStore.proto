@@ -29,7 +29,7 @@ message FeedItem {
   //used to produce a record in the feed
   string initiatorFirstName = 2;
   string initiatorLastName = 3;
-  string initiatorUsername = 4;
+  ParticipantId initiatorUsername = 4;
   string initiatorType = 5;
 
   //used to produce the preview in the feed

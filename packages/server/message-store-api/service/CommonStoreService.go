@@ -31,7 +31,7 @@ type CommonStoreService interface {
 func (s *commonStoreService) EncodeConversationEventToMS(conversationEvent entity.ConversationEvent) *msProto.Message {
 	return &msProto.Message{
 		MessageId:         s.EncodeMessageIdToMs(conversationEvent),
-		InitiatorUsername: conversationEvent.InitiatorUsername,
+		InitiatorUsername: s.EncodeUsernameToMs(conversationEvent.InitiatorUsername),
 		Type:              s.ConvertEntityTypeToMSType(conversationEvent.Type),
 		Subtype:           s.ConvertEntitySubtypeToMSSubtype(conversationEvent.Subtype),
 		Content:           conversationEvent.Content,
@@ -77,7 +77,7 @@ func (s *commonStoreService) EncodeConversationToMS(conversation Conversation) *
 		Id:                  conversation.Id,
 		InitiatorFirstName:  conversation.InitiatorFirstName,
 		InitiatorLastName:   conversation.InitiatorLastName,
-		InitiatorUsername:   conversation.InitiatorUsername,
+		InitiatorUsername:   s.EncodeUsernameToMs(conversation.InitiatorUsername),
 		InitiatorType:       conversation.InitiatorType,
 		LastSenderFirstName: conversation.LastSenderFirstName,
 		LastSenderLastName:  conversation.LastSenderLastName,

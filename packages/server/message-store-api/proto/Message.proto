@@ -42,7 +42,7 @@ message MessageId {
 
 message Message {
   MessageId messageId = 1;
-  string initiatorUsername = 2;
+  ParticipantId initiatorUsername = 2;
   MessageType type = 3;
   MessageSubtype subtype = 4;
   string content = 5;
