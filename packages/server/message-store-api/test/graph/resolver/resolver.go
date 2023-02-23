@@ -17,4 +17,6 @@ type Resolver struct {
 	GetContactById        func(ctx context.Context, id string) (*model.Contact, error)
 	PhoneNumbersByContact func(ctx context.Context, obj *model.Contact) ([]*model.PhoneNumber, error)
 	EmailsByContact       func(ctx context.Context, obj *model.Contact) ([]*model.Email, error)
+	UserByEmail           func(ctx context.Context, email string) (*model.User, error)
+	EmailsByUser          func(ctx context.Context, obj *model.User) ([]*model.Email, error)
 }

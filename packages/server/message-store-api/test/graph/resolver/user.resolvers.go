@@ -33,11 +33,17 @@ func (r *queryResolver) User(ctx context.Context, id string) (*model.User, error
 
 // UserByEmail is the resolver for the user_ByEmail field.
 func (r *queryResolver) UserByEmail(ctx context.Context, email string) (*model.User, error) {
+	if r.Resolver.UserByEmail != nil {
+		return r.Resolver.UserByEmail(ctx, email)
+	}
 	panic(fmt.Errorf("not implemented: UserByEmail - user_ByEmail"))
 }
 
 // Emails is the resolver for the emails field.
 func (r *userResolver) Emails(ctx context.Context, obj *model.User) ([]*model.Email, error) {
+	if r.Resolver.EmailsByUser != nil {
+		return r.Resolver.EmailsByUser(ctx, obj)
+	}
 	panic(fmt.Errorf("not implemented: Emails - emails"))
 }
 
