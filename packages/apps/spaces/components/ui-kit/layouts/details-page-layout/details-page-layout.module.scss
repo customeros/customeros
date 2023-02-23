@@ -1,0 +1,23 @@
+@import "../../../../styles/mixins";
+.layout {
+  height: 100vh;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: var(--spacing-xxl);
+
+
+  @include mobile-to-tablet {
+    display: flex;
+    flex-direction: column;
+  }
+
+  @include min-tablet {
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    grid-template-rows: 1fr minmax(20%, 1fr);
+    grid-template-areas: "details notes"
+                        "details timeline";
+    grid-gap: 24px;
+  }
+
+}

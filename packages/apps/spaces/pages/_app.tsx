@@ -1,13 +1,13 @@
 import Head from 'next/head';
 import { AppProps } from 'next/app';
-import '../styles/normalization.css';
+import '../styles/normalization.scss';
 import '../styles/theme.css';
 import '../styles/globals.css';
 import 'primereact/resources/primereact.min.css';
 import React from 'react';
 import 'primereact/resources/primereact.min.css';
 import { ToastContainer } from 'react-toastify';
-import { MainPageWrapper } from '../src/components/ui-kit/layouts';
+import { MainPageWrapper } from '../components/ui-kit/layouts';
 import { RecoilRoot } from 'recoil';
 
 // Uncomment when adding google analitics

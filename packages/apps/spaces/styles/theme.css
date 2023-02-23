@@ -142,9 +142,9 @@
 
   --heading-main: var(--font-size-xxl);
   --heading-secondary: var(--font-size-xl);
-  --heading-tertiary: var(--font-size-l);
-  --normal-text: var(--font-size-m);
-  --small-text: var(--font-size-s);
+  --heading-tertiary: var(--font-size-lg);
+  --normal-text: var(--font-size-md);
+  --small-text: var(--font-size-sm);
   --hint-text: var(--font-size-xs);
 
   /* BORDERS */

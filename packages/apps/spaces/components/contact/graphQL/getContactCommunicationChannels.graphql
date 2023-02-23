@@ -1,0 +1,5 @@
+query GetContactCommunicationChannels($id: ID!) {
+  contact(id: $id) {
+    ...ContactCommunicationChannelsDetails
+  }
+}

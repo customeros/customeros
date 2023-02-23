@@ -1,6 +1,6 @@
 /* eslint-disable react/no-unescaped-entities */
 import React from 'react';
-import { ErrorPage } from '../../src/components';
+import { ErrorPage } from '../../components';
 
 export const ServerError: React.FC = () => {
   return (

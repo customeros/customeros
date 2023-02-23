@@ -1,0 +1,5 @@
+mutation removeEmailFromContact($contactId: ID!, $id: ID!) {
+  emailRemoveFromContactById(contactId: $contactId, id: $id) {
+    result
+  }
+}

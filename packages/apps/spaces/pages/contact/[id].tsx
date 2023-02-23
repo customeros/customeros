@@ -1,26 +1,24 @@
 import React from 'react';
-import { ContactDetails } from '../../src/components/ui-kit/molecules/contact-details';
-import { ContactCommunicationDetails } from '../../src/components/ui-kit/molecules/contact-communication-details/ContactCommunicationDetails';
-import { DetailsPageLayout } from '../../src/components/ui-kit';
+import { ContactDetails } from '../../components/ui-kit/molecules/contact-details';
+import { ContactCommunicationDetails } from '../../components/ui-kit/molecules/contact-communication-details/ContactCommunicationDetails';
+import { Button, DetailsPageLayout } from '../../components/ui-kit';
 import styles from './contact.module.scss';
+import { useRouter } from 'next/router';
+import { ContactNoteEditor } from '../../components/contact/note-editor/NoteEditor';
 function ContactDetailsPage() {
+  const {
+    query: { id },
+  } = useRouter();
+
   return (
     <DetailsPageLayout>
       <section className={styles.personalDetails}>
-        <ContactDetails
-          name='Details'
-          photo=''
-          phone='40294-02349-234'
-          email='asdsad@op.pl'
-          address={''}
-          birthday={'11/1/1996'}
-          socialProfiles={[]}
-          notes={[]}
-        />
-        <ContactCommunicationDetails />
+        <ContactDetails id={id as string} />
+        <ContactCommunicationDetails id={id as string} />
       </section>
-      <section className={styles.notes}>placeholder</section>
-      <section className={styles.timeline}>placeholder</section>
+
+      <ContactNoteEditor contactId={id as string} />
+      <section className={styles.timeline}></section>
     </DetailsPageLayout>
   );
 }
