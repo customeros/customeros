@@ -307,7 +307,7 @@ func (s *CustomerOSService) ConversationByIdExists(ctx context.Context, tenant s
 	})
 
 	if err != nil {
-		return false, err
+		return false, fmt.Errorf("ConversationByIdExists: %w", err)
 	}
 
 	if len(dbRecords.([]*db.Record)) == 0 {
@@ -334,14 +334,14 @@ func (s *CustomerOSService) GetConversations(ctx context.Context, tenant string,
 		if queryResult, err := tx.Run(ctx, cypher, map[string]any{
 			"tenant": tenant,
 		}); err != nil {
-			return nil, err
+			return nil, fmt.Errorf("GetConversations: %w", err)
 		} else {
 			return queryResult.Collect(ctx)
 		}
 	})
 
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("GetConversations: %w", err)
 	}
 
 	var conversations []Conversation
@@ -376,7 +376,7 @@ func (s *CustomerOSService) GetConversationById(ctx context.Context, tenant stri
 		}
 	})
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("GetConversationById: %w", err)
 	}
 
 	return mapNodeToConversation(conversationNode.(*dbtype.Node)), nil
@@ -397,7 +397,7 @@ func (s *CustomerOSService) GetConversationParticipants(ctx context.Context, ten
 		return queryResult.Collect(ctx)
 	})
 	if err != nil {
-		return []string{}, err
+		return []string{}, fmt.Errorf("GetConversationParticipants: %w", err)
 	}
 	emails := make([]string, 0)
 	if len(records.([]*neo4j.Record)) > 0 {
@@ -482,7 +482,7 @@ func (s *CustomerOSService) CreateConversation(ctx context.Context, tenant strin
 
 		return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
 	}); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("CreateConversation: %w", err)
 	} else {
 		dbNode := result.(*dbtype.Node)
 		return mapNodeToConversation(dbNode), nil
@@ -529,7 +529,7 @@ func (s *CustomerOSService) UpdateConversation(ctx context.Context, tenant strin
 			})
 		return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
 	}); err != nil {
-		return "", err
+		return "", fmt.Errorf("UpdateConversation: %w", err)
 	} else {
 		dbNode := result.(*dbtype.Node)
 		return utils.GetPropsFromNode(*dbNode)["id"].(string), err
@@ -568,10 +568,10 @@ func (s *CustomerOSService) GetContactWithEmailOrCreate(ctx context.Context, ten
 	if err != nil {
 		contact, err = s.CreateContactWithEmail(ctx, tenant, email)
 		if err != nil {
-			return Contact{}, err
+			return Contact{}, fmt.Errorf("GetContactWithEmailOrCreate: %w", err)
 		}
 		if contact == nil {
-			return Contact{}, errors.New("contact not found and could not be created")
+			return Contact{}, errors.New("GetContactWithEmailOrCreate: contact not found and could not be created")
 		}
 		return *contact, nil
 	} else {
@@ -584,10 +584,10 @@ func (s *CustomerOSService) GetContactWithPhoneOrCreate(ctx context.Context, ten
 	if err != nil {
 		contact, err = s.CreateContactWithPhone(ctx, tenant, phoneNumber)
 		if err != nil {
-			return Contact{}, err
+			return Contact{}, fmt.Errorf("GetContactWithPhoneOrCreate: %w", err)
 		}
 		if contact == nil {
-			return Contact{}, errors.New("contact not found and could not be created")
+			return Contact{}, errors.New("GetContactWithPhoneOrCreate: contact not found and could not be created")
 		}
 		return *contact, nil
 	} else {
@@ -607,9 +607,6 @@ func (s *CustomerOSService) GetActiveConversationOrCreate(
 	var err error
 
 	// for webchat, thread id is empty string
-	if err != nil {
-		return nil, err
-	}
 	if initiator.Type == entity.CONTACT {
 		conversation, err = s.GetConversationWithContactInitiator(ctx, tenant, initiator.Id, eventType, threadId)
 	} else if initiator.Type == entity.USER {
@@ -617,14 +614,14 @@ func (s *CustomerOSService) GetActiveConversationOrCreate(
 	}
 
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("GetActiveConversationOrCreate: %w", err)
 	}
 
 	if conversation == nil {
 		conversation, err = s.CreateConversation(ctx, tenant, initiator, s.commonStoreService.ConvertMSParticipantIdToUsername(initiatorUsername), eventType, threadId)
 	}
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("GetActiveConversationOrCreate: %w", err)
 	}
 
 	return conversation, nil
@@ -657,7 +654,7 @@ func (s *CustomerOSService) GetConversationWithContactInitiator(ctx context.Cont
 	})
 
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("GetConversationWithContactInitiator: %w", err)
 	}
 
 	if conversationNode != nil {
@@ -695,7 +692,7 @@ func (s *CustomerOSService) GetConversationWithUserInitiator(ctx context.Context
 	})
 
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("GetConversationWithUserInitiator: %w", err)
 	}
 
 	if conversationNode != nil {
