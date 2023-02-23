@@ -133,6 +133,10 @@ func (s *CustomerOSService) addHeadersToGraphRequest(req *graphql.Request, ctx c
 	return nil
 }
 
+type GetUserByEmailResponse struct {
+	userByEmail User `json:"user_ByEmail"`
+}
+
 func (s *CustomerOSService) GetUserByEmail(ctx context.Context, email string) (*User, error) {
 	graphqlRequest := graphql.NewRequest(`
   				query ($email: String!) {
@@ -147,16 +151,18 @@ func (s *CustomerOSService) GetUserByEmail(ctx context.Context, email string) (*
 		return nil, fmt.Errorf("GetUserByEmail: %w", err)
 	}
 
-	var graphqlResponse struct {
-		userByEmail User `json:"user_ByEmail"`
-	}
+	var graphqlResponse GetUserByEmailResponse
 
 	if err = s.graphqlClient.Run(context.Background(), graphqlRequest, &graphqlResponse); err != nil {
 		return nil, fmt.Errorf("GetUserByEmail: %w", err)
 	}
 	bytes, _ := json.Marshal(graphqlResponse)
-	log.Printf("GetUserByEmail: graphqlResponse = %s", bytes)
+	log.Printf("GetUserByEmail: email=%s graphqlResponse = %s", email, bytes)
 	return &graphqlResponse.userByEmail, nil
+}
+
+type GetContactByIdResponse struct {
+	contact Contact `json:"contact"`
 }
 
 func (s *CustomerOSService) GetContactById(ctx context.Context, id string) (*Contact, error) {
@@ -172,17 +178,19 @@ func (s *CustomerOSService) GetContactById(ctx context.Context, id string) (*Con
 		return nil, fmt.Errorf("GetContactById: %w", err)
 	}
 
-	var graphqlResponse struct {
-		contact Contact `json:"contact"`
-	}
+	var graphqlResponse GetContactByIdResponse
 
 	if err = s.graphqlClient.Run(context.Background(), graphqlRequest, &graphqlResponse); err != nil {
 		return nil, fmt.Errorf("GetContactById: %w", err)
 	}
 
 	bytes, _ := json.Marshal(graphqlResponse)
-	log.Printf("GetContactById: graphqlResponse = %s", bytes)
+	log.Printf("GetContactById: id=%s graphqlResponse = %s", id, bytes)
 	return &graphqlResponse.contact, nil
+}
+
+type GetContactByEmailResponse struct {
+	contactByEmail Contact `json:"contact_ByEmail"`
 }
 
 func (s *CustomerOSService) GetContactByEmail(ctx context.Context, email string) (*Contact, error) {
@@ -198,16 +206,18 @@ func (s *CustomerOSService) GetContactByEmail(ctx context.Context, email string)
 		return nil, fmt.Errorf("GetContactByEmail: %w", err)
 	}
 
-	var graphqlResponse struct {
-		contactByEmail Contact `json:"contact_ByEmail"`
-	}
+	var graphqlResponse GetContactByEmailResponse
 
 	if err = s.graphqlClient.Run(context.Background(), graphqlRequest, &graphqlResponse); err != nil {
 		return nil, fmt.Errorf("GetContactByEmail: %w", err)
 	}
 	bytes, _ := json.Marshal(graphqlResponse)
-	log.Printf("GetContactByEmail: graphqlResponse = %s", bytes)
+	log.Printf("GetContactByEmail: email=%s graphqlResponse = %s", email, bytes)
 	return &graphqlResponse.contactByEmail, nil
+}
+
+type GetContactByPhoneResponse struct {
+	contactByPhone Contact `json:"contact_ByPhone"`
 }
 
 func (s *CustomerOSService) GetContactByPhone(ctx context.Context, phoneNumber string) (*Contact, error) {
@@ -223,15 +233,13 @@ func (s *CustomerOSService) GetContactByPhone(ctx context.Context, phoneNumber s
 		return nil, fmt.Errorf("GetContactByPhone: %w", err)
 	}
 
-	var graphqlResponse struct {
-		contactByPhone Contact `json:"contact_ByPhone"`
-	}
+	var graphqlResponse GetContactByPhoneResponse
 
 	if err = s.graphqlClient.Run(context.Background(), graphqlRequest, &graphqlResponse); err != nil {
 		return nil, fmt.Errorf("GetContactByPhone: %w", err)
 	}
 	bytes, _ := json.Marshal(graphqlResponse)
-	log.Printf("GetContactByPhone: graphqlResponse = %s", bytes)
+	log.Printf("GetContactByPhone: phoneNumber=%s graphqlResponse = %s", phoneNumber, bytes)
 	return &graphqlResponse.contactByPhone, nil
 }
 
@@ -258,7 +266,7 @@ func (s *CustomerOSService) CreateContactWithEmail(ctx context.Context, tenant s
 	}
 	id := graphqlResponse["contact_Create"]["id"]
 	bytes, _ := json.Marshal(graphqlResponse)
-	log.Printf("CreateContactWithEmail: graphqlResponse = %s", bytes)
+	log.Printf("CreateContactWithEmail: email=%s graphqlResponse = %s", email, bytes)
 	return s.GetContactById(ctx, id)
 
 }
@@ -286,7 +294,7 @@ func (s *CustomerOSService) CreateContactWithPhone(ctx context.Context, tenant s
 	}
 	id := graphqlResponse["contact_Create"]["id"]
 	bytes, _ := json.Marshal(graphqlResponse)
-	log.Printf("CreateContactWithPhone: graphqlResponse = %s", bytes)
+	log.Printf("CreateContactWithPhone: phoneNumber=%s graphqlResponse = %s", phoneNumber, bytes)
 	return s.GetContactById(ctx, id)
 
 }
