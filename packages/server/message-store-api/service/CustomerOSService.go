@@ -1,6 +1,7 @@
 package service
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/machinebox/graphql"
@@ -14,6 +15,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/message-store-api/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/message-store-api/repository/entity"
 	"golang.org/x/net/context"
+	"log"
 	"time"
 )
 
@@ -53,9 +55,6 @@ type CustomerOSServiceInterface interface {
 	GetConversations(tenant string) ([]Conversation, error)
 	GetConversationById(tenant string, conversationId string) (Conversation, error)
 
-	GetWebChatConversationWithContactInitiator(tenant string, contactId string) (*Conversation, error)
-	GetWebChatConversationWithUserInitiator(tenant string, userId string) (*Conversation, error)
-
 	CreateConversation(tenant string, initiatorId string, initiatorFirstName string, initiatorLastName string, initiatorUsername string, initiatorType entity.SenderType, channel entity.EventType) (*Conversation, error)
 	UpdateConversation(tenant string, conversationId string, participantId string, participantType entity.SenderType, lastSenderFirstName string, lastSenderLastName string, lastContentPreview string) (string, error)
 }
@@ -85,7 +84,7 @@ type emailObject struct {
 }
 
 type phoneNumberObject struct {
-	Email   string `json:"email"`
+	E164    string `json:"e164"`
 	Primary bool   `json:"primary"`
 	Label   string `json:"label"`
 }
@@ -153,8 +152,10 @@ func (s *CustomerOSService) GetUserByEmail(ctx context.Context, email string) (*
 	}
 
 	if err = s.graphqlClient.Run(context.Background(), graphqlRequest, &graphqlResponse); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("GetUserByEmail: %w", err)
 	}
+	bytes, _ := json.Marshal(graphqlResponse)
+	log.Printf("GetUserByEmail: graphqlResponse = %s", bytes)
 	return &graphqlResponse.userByEmail, nil
 }
 
@@ -176,8 +177,11 @@ func (s *CustomerOSService) GetContactById(ctx context.Context, id string) (*Con
 	}
 
 	if err = s.graphqlClient.Run(context.Background(), graphqlRequest, &graphqlResponse); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("GetContactById: %w", err)
 	}
+
+	bytes, _ := json.Marshal(graphqlResponse)
+	log.Printf("GetContactById: graphqlResponse = %s", bytes)
 	return &graphqlResponse.contact, nil
 }
 
@@ -199,8 +203,10 @@ func (s *CustomerOSService) GetContactByEmail(ctx context.Context, email string)
 	}
 
 	if err = s.graphqlClient.Run(context.Background(), graphqlRequest, &graphqlResponse); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("GetContactByEmail: %w", err)
 	}
+	bytes, _ := json.Marshal(graphqlResponse)
+	log.Printf("GetContactByEmail: graphqlResponse = %s", bytes)
 	return &graphqlResponse.contactByEmail, nil
 }
 
@@ -222,8 +228,10 @@ func (s *CustomerOSService) GetContactByPhone(ctx context.Context, phoneNumber s
 	}
 
 	if err = s.graphqlClient.Run(context.Background(), graphqlRequest, &graphqlResponse); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("GetContactByPhone: %w", err)
 	}
+	bytes, _ := json.Marshal(graphqlResponse)
+	log.Printf("GetContactByPhone: graphqlResponse = %s", bytes)
 	return &graphqlResponse.contactByPhone, nil
 }
 
@@ -249,7 +257,8 @@ func (s *CustomerOSService) CreateContactWithEmail(ctx context.Context, tenant s
 		return nil, err
 	}
 	id := graphqlResponse["contact_Create"]["id"]
-
+	bytes, _ := json.Marshal(graphqlResponse)
+	log.Printf("CreateContactWithEmail: graphqlResponse = %s", bytes)
 	return s.GetContactById(ctx, id)
 
 }
@@ -273,10 +282,11 @@ func (s *CustomerOSService) CreateContactWithPhone(ctx context.Context, tenant s
 
 	var graphqlResponse map[string]map[string]string
 	if err := s.graphqlClient.Run(context.Background(), graphqlRequest, &graphqlResponse); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("CreateContactWithPhone: %w", err)
 	}
 	id := graphqlResponse["contact_Create"]["id"]
-
+	bytes, _ := json.Marshal(graphqlResponse)
+	log.Printf("CreateContactWithPhone: graphqlResponse = %s", bytes)
 	return s.GetContactById(ctx, id)
 
 }
@@ -669,78 +679,6 @@ func (s *CustomerOSService) GetConversationWithUserInitiator(ctx context.Context
 				"userId":    userId,
 				"threadId":  threadId,
 				"eventType": eventType,
-			}); err != nil {
-			return nil, err
-		} else {
-			record, err := queryResult.Single(ctx)
-			if err != nil && err.Error() != "Result contains no more records" {
-				return nil, err
-			}
-			if record != nil {
-				return record.Values[0].(dbtype.Node), nil
-			} else {
-				return nil, nil
-			}
-		}
-	})
-
-	if err != nil {
-		return nil, err
-	}
-
-	if conversationNode != nil {
-		node := conversationNode.(dbtype.Node)
-		return mapNodeToConversation(&node), nil
-	} else {
-		return nil, nil
-	}
-}
-
-func (s *CustomerOSService) GetWebChatConversationWithContactInitiator(ctx context.Context, tenant string, contactId string) (*Conversation, error) {
-	session := utils.NewNeo4jReadSession(ctx, *s.driver)
-	defer session.Close(ctx)
-
-	conversationNode, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		if queryResult, err := tx.Run(ctx, `match(o:Conversation{status:"ACTIVE", channel: "WEB_CHAT"})<-[:INITIATED]-(c:Contact{id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(t:Tenant{name:$tenant}) return o`,
-			map[string]any{
-				"tenant":    tenant,
-				"contactId": contactId,
-			}); err != nil {
-			return nil, err
-		} else {
-			record, err := queryResult.Single(ctx)
-			if err != nil && err.Error() != "Result contains no more records" {
-				return nil, err
-			}
-			if record != nil {
-				return record.Values[0].(dbtype.Node), nil
-			} else {
-				return nil, nil
-			}
-		}
-	})
-
-	if err != nil {
-		return nil, err
-	}
-
-	if conversationNode != nil {
-		node := conversationNode.(dbtype.Node)
-		return mapNodeToConversation(&node), nil
-	} else {
-		return nil, nil
-	}
-}
-
-func (s *CustomerOSService) GetWebChatConversationWithUserInitiator(ctx context.Context, tenant string, userId string) (*Conversation, error) {
-	session := utils.NewNeo4jReadSession(ctx, *s.driver)
-	defer session.Close(ctx)
-
-	conversationNode, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		if queryResult, err := tx.Run(ctx, `match(o:Conversation{status:"ACTIVE", channel: "WEB_CHAT"})<-[:INITIATED]-(u:User{id:$userId})-[:USER_BELONGS_TO_TENANT]->(t:Tenant{name:$tenant}) return o`,
-			map[string]any{
-				"tenant": tenant,
-				"userId": userId,
 			}); err != nil {
 			return nil, err
 		} else {
