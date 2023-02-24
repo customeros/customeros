@@ -64,7 +64,8 @@ func (s *syncService) Sync(ctx context.Context, runId string) {
 		syncRunDtls.CompletedUsers = completedUserCount
 		syncRunDtls.FailedUsers = failedUserCount
 
-		completedOrganizationCount, failedOrganizationCount := s.syncOrganizations(ctx, dataService, syncDate, v.Tenant, runId)
+		organizationSyncService, err := s.organizationSyncService(v)
+		completedOrganizationCount, failedOrganizationCount := organizationSyncService.SyncOrganizations(ctx, dataService, syncDate, v.Tenant, runId)
 		syncRunDtls.CompletedOrganizations = completedOrganizationCount
 		syncRunDtls.FailedOrganizations = failedOrganizationCount
 
@@ -192,57 +193,6 @@ func (s *syncService) syncContacts(ctx context.Context, dataService common.Sourc
 			}
 		}
 		if len(contacts) < batchSize {
-			break
-		}
-	}
-	return completed, failed
-}
-
-func (s *syncService) syncOrganizations(ctx context.Context, dataService common.SourceDataService, syncDate time.Time, tenant, runId string) (int, int) {
-	completed, failed := 0, 0
-	for {
-		organizations := dataService.GetOrganizationsForSync(batchSize, runId)
-		if len(organizations) == 0 {
-			logrus.Debugf("no organizations found for sync from %s for tenant %s", dataService.SourceId(), tenant)
-			break
-		}
-		logrus.Infof("syncing %d organizations from %s for tenant %s", len(organizations), dataService.SourceId(), tenant)
-
-		for _, v := range organizations {
-			var failedSync = false
-
-			organizationId, err := s.repositories.OrganizationRepository.MergeOrganization(ctx, tenant, syncDate, v)
-			if err != nil {
-				failedSync = true
-				logrus.Errorf("failed merge organization with external reference %v for tenant %v :%v", v.ExternalId, tenant, err)
-			}
-
-			err = s.repositories.OrganizationRepository.MergeOrganizationDefaultPlace(ctx, tenant, organizationId, v)
-			if err != nil {
-				failedSync = true
-				logrus.Errorf("failed merge organization' place with external reference %v for tenant %v :%v", v.ExternalId, tenant, err)
-			}
-
-			if len(v.OrganizationTypeName) > 0 {
-				err = s.repositories.OrganizationRepository.MergeOrganizationType(ctx, tenant, organizationId, v.OrganizationTypeName)
-				if err != nil {
-					failedSync = true
-					logrus.Errorf("failed merge organization type for organization %v, tenant %v :%v", organizationId, tenant, err)
-				}
-			}
-
-			logrus.Debugf("successfully merged organization with id %v for tenant %v from %v", organizationId, tenant, dataService.SourceId())
-			if err := dataService.MarkOrganizationProcessed(v.ExternalId, runId, failedSync == false); err != nil {
-				failed++
-				continue
-			}
-			if failedSync == true {
-				failed++
-			} else {
-				completed++
-			}
-		}
-		if len(organizations) < batchSize {
 			break
 		}
 	}
@@ -532,14 +482,37 @@ func (s *syncService) userSyncService(tenantToSync entity.TenantSyncSettings) (U
 	}
 
 	// Look up the corresponding implementation in the map using the tenantToSync.Source value.
-	createDataService, ok := userSyncServiceMap[tenantToSync.Source]
+	createUserSyncService, ok := userSyncServiceMap[tenantToSync.Source]
 	if !ok {
 		// Return an error if the tenantToSync.Source value is not recognized.
 		return nil, fmt.Errorf("unknown airbyte source %v, skipping sync for tenant %v", tenantToSync.Source, tenantToSync.Tenant)
 	}
 
-	// Call the createDataService function to create a new instance of common.SourceDataService.
-	userSyncService := createDataService()
+	// Call the createUserSyncService function to create a new instance of common.SourceDataService.
+	userSyncService := createUserSyncService()
 
 	return userSyncService, nil
+}
+
+func (s *syncService) organizationSyncService(tenantToSync entity.TenantSyncSettings) (OrganizationSyncService, error) {
+	organizationSyncServiceMap := map[string]func() OrganizationSyncService{
+		string(entity.AirbyteSourceHubspot): func() OrganizationSyncService {
+			return s.services.OrganizationSyncService
+		},
+		string(entity.AirbyteSourceZendeskSupport): func() OrganizationSyncService {
+			return s.services.OrganizationSyncService
+		},
+	}
+
+	// Look up the corresponding implementation in the map using the tenantToSync.Source value.
+	createOrganizationSyncService, ok := organizationSyncServiceMap[tenantToSync.Source]
+	if !ok {
+		// Return an error if the tenantToSync.Source value is not recognized.
+		return nil, fmt.Errorf("unknown airbyte source %v, skipping sync for tenant %v", tenantToSync.Source, tenantToSync.Tenant)
+	}
+
+	// Call the createOrganizationSyncService function to create a new instance of common.SourceDataService.
+	organizationSyncService := createOrganizationSyncService()
+
+	return organizationSyncService, nil
 }

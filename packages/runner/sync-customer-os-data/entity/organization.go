@@ -25,4 +25,6 @@ type OrganizationData struct {
 	Phone               string
 
 	OrganizationTypeName string
+
+	ExternalSyncId string
 }

@@ -16,6 +16,7 @@ type zendeskSupportDataService struct {
 	tenant         string
 	instance       string
 	users          map[string]localEntity.User
+	organizations  map[string]localEntity.Organization
 }
 
 func NewZendeskSupportDataService(airbyteStoreDb *config.AirbyteStoreDB, tenant string) common.SourceDataService {
@@ -23,11 +24,16 @@ func NewZendeskSupportDataService(airbyteStoreDb *config.AirbyteStoreDB, tenant 
 		airbyteStoreDb: airbyteStoreDb,
 		tenant:         tenant,
 		users:          map[string]localEntity.User{},
+		organizations:  map[string]localEntity.Organization{},
 	}
 }
 
 func (s *zendeskSupportDataService) Refresh() {
 	err := s.getDb().AutoMigrate(&localEntity.SyncStatusUser{})
+	if err != nil {
+		logrus.Error(err)
+	}
+	err = s.getDb().AutoMigrate(&localEntity.SyncStatusOrganization{})
 	if err != nil {
 		logrus.Error(err)
 	}
@@ -47,6 +53,7 @@ func (s *zendeskSupportDataService) getDb() *gorm.DB {
 
 func (s *zendeskSupportDataService) Close() {
 	s.users = make(map[string]localEntity.User)
+	s.organizations = make(map[string]localEntity.Organization)
 }
 
 func (z *zendeskSupportDataService) SourceId() string {
@@ -98,34 +105,41 @@ func (z zendeskSupportDataService) GetEmailMessagesForSync(batchSize int, runId 
 	return nil
 }
 
-func (z zendeskSupportDataService) MarkContactProcessed(externalId, runId string, synced bool) error {
+func (z zendeskSupportDataService) MarkContactProcessed(externalSyncId, runId string, synced bool) error {
 	//TODO implement me
 	return nil
 }
 
-func (z zendeskSupportDataService) MarkOrganizationProcessed(externalId, runId string, synced bool) error {
-	//TODO implement me
-	return nil
-}
-
-func (s *zendeskSupportDataService) MarkUserProcessed(externalId, runId string, synced bool) error {
-	user, ok := s.users[externalId]
+func (s *zendeskSupportDataService) MarkOrganizationProcessed(externalSyncId, runId string, synced bool) error {
+	organization, ok := s.organizations[externalSyncId]
 	if ok {
-		err := repository.MarkUserProcessed(s.getDb(), user, synced, runId)
+		err := repository.MarkOrganizationProcessed(s.getDb(), organization, synced, runId)
 		if err != nil {
-			logrus.Errorf("error while marking owner with external reference %s as synced for hubspot", externalId)
+			logrus.Errorf("error while marking organization with external reference %s as synced for zendesk support", externalSyncId)
 		}
 		return err
 	}
 	return nil
 }
 
-func (z zendeskSupportDataService) MarkNoteProcessed(externalId, runId string, synced bool) error {
+func (s *zendeskSupportDataService) MarkUserProcessed(externalSyncId, runId string, synced bool) error {
+	user, ok := s.users[externalSyncId]
+	if ok {
+		err := repository.MarkUserProcessed(s.getDb(), user, synced, runId)
+		if err != nil {
+			logrus.Errorf("error while marking owner with external reference %s as synced for zendesk support", externalSyncId)
+		}
+		return err
+	}
+	return nil
+}
+
+func (z zendeskSupportDataService) MarkNoteProcessed(externalSyncId, runId string, synced bool) error {
 	//TODO implement me
 	return nil
 }
 
-func (z zendeskSupportDataService) MarkEmailMessageProcessed(externalId, runId string, synced bool) error {
+func (z zendeskSupportDataService) MarkEmailMessageProcessed(externalSyncId, runId string, synced bool) error {
 	//TODO implement me
 	return nil
 }
