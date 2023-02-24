@@ -1,6 +1,7 @@
 
 generate:
 	export PATH="${PATH}:$(shell go env GOPATH)/bin";go generate ./...
+	$(shell cd proto;./generate.sh)
 
 build: generate
 	go build -v -o bin/message-store-api
@@ -15,9 +16,9 @@ install:
 	go install gotest.tools/gotestsum@latest
 
 clean:
-	find gen -mindepth 1 -maxdepth 1 -exec rm -r {} \;
 	rm -rf bin
 	rm -rf test/graph/generated
+	rm -rf proto/generated
 	rm test/graph/model/models_gen.go
 
 all: install build
