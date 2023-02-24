@@ -12,6 +12,7 @@ import (
 type Repositories struct {
 	AppKeyRepository  repository.AppKeyRepository
 	UserRepository    neo4jrepo.UserRepository
+	TenantRepository  neo4jrepo.TenantRepository
 	CountryRepository neo4jrepo.CountryRepository
 }
 
@@ -19,6 +20,7 @@ func InitRepositories(db *gorm.DB, driver *neo4j.DriverWithContext) *Repositorie
 	repositories := &Repositories{
 		AppKeyRepository:  repository.NewAppKeyRepo(db),
 		UserRepository:    neo4jrepo.NewUserRepository(driver),
+		TenantRepository:  neo4jrepo.NewTenantRepository(driver),
 		CountryRepository: neo4jrepo.NewCountryRepository(driver),
 	}
 

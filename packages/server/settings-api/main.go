@@ -65,7 +65,7 @@ func main() {
 	r.Use(cors.New(corsConfig))
 
 	r.GET("/settings",
-		commonService.UserToTenantEnhancer(ctx, commonRepositoryContainer.UserRepository),
+		commonService.TenantUserContextEnhancer(ctx, commonService.USERNAME, commonRepositoryContainer),
 		commonService.ApiKeyCheckerHTTP(commonRepositoryContainer.AppKeyRepository, commonService.SETTINGS_API),
 		func(c *gin.Context) {
 			tenantName := c.Keys["TenantName"].(string)
@@ -81,7 +81,7 @@ func main() {
 		})
 
 	r.POST("/settings/hubspot",
-		commonService.UserToTenantEnhancer(ctx, commonRepositoryContainer.UserRepository),
+		commonService.TenantUserContextEnhancer(ctx, commonService.USERNAME, commonRepositoryContainer),
 		commonService.ApiKeyCheckerHTTP(commonRepositoryContainer.AppKeyRepository, commonService.SETTINGS_API),
 		func(c *gin.Context) {
 			var request dto.TenantSettingsHubspotDTO
@@ -104,7 +104,7 @@ func main() {
 		})
 
 	r.DELETE("/settings/hubspot",
-		commonService.UserToTenantEnhancer(ctx, commonRepositoryContainer.UserRepository),
+		commonService.TenantUserContextEnhancer(ctx, commonService.USERNAME, commonRepositoryContainer),
 		commonService.ApiKeyCheckerHTTP(commonRepositoryContainer.AppKeyRepository, commonService.SETTINGS_API),
 		func(c *gin.Context) {
 			tenantName := c.Keys["TenantName"].(string)
@@ -119,7 +119,7 @@ func main() {
 		})
 
 	r.POST("/settings/zendesk",
-		commonService.UserToTenantEnhancer(ctx, commonRepositoryContainer.UserRepository),
+		commonService.TenantUserContextEnhancer(ctx, commonService.USERNAME, commonRepositoryContainer),
 		commonService.ApiKeyCheckerHTTP(commonRepositoryContainer.AppKeyRepository, commonService.SETTINGS_API),
 		func(c *gin.Context) {
 			var request dto.TenantSettingsZendeskDTO
@@ -142,7 +142,7 @@ func main() {
 		})
 
 	r.DELETE("/settings/zendesk",
-		commonService.UserToTenantEnhancer(ctx, commonRepositoryContainer.UserRepository),
+		commonService.TenantUserContextEnhancer(ctx, commonService.USERNAME, commonRepositoryContainer),
 		commonService.ApiKeyCheckerHTTP(commonRepositoryContainer.AppKeyRepository, commonService.SETTINGS_API),
 		func(c *gin.Context) {
 			tenantName := c.Keys["TenantName"].(string)
@@ -157,7 +157,7 @@ func main() {
 		})
 
 	r.POST("/settings/smartSheet",
-		commonService.UserToTenantEnhancer(ctx, commonRepositoryContainer.UserRepository),
+		commonService.TenantUserContextEnhancer(ctx, commonService.USERNAME, commonRepositoryContainer),
 		commonService.ApiKeyCheckerHTTP(commonRepositoryContainer.AppKeyRepository, commonService.SETTINGS_API),
 		func(c *gin.Context) {
 			var request dto.TenantSettingsSmartSheetDTO
@@ -180,7 +180,7 @@ func main() {
 		})
 
 	r.DELETE("/settings/smartSheet",
-		commonService.UserToTenantEnhancer(ctx, commonRepositoryContainer.UserRepository),
+		commonService.TenantUserContextEnhancer(ctx, commonService.USERNAME, commonRepositoryContainer),
 		commonService.ApiKeyCheckerHTTP(commonRepositoryContainer.AppKeyRepository, commonService.SETTINGS_API),
 		func(c *gin.Context) {
 			tenantName := c.Keys["TenantName"].(string)
@@ -195,7 +195,7 @@ func main() {
 		})
 
 	r.POST("/settings/jira",
-		commonService.UserToTenantEnhancer(ctx, commonRepositoryContainer.UserRepository),
+		commonService.TenantUserContextEnhancer(ctx, commonService.USERNAME, commonRepositoryContainer),
 		commonService.ApiKeyCheckerHTTP(commonRepositoryContainer.AppKeyRepository, commonService.SETTINGS_API),
 		func(c *gin.Context) {
 			var request dto.TenantSettingsJiraDTO
@@ -218,7 +218,7 @@ func main() {
 		})
 
 	r.DELETE("/settings/jira",
-		commonService.UserToTenantEnhancer(ctx, commonRepositoryContainer.UserRepository),
+		commonService.TenantUserContextEnhancer(ctx, commonService.USERNAME, commonRepositoryContainer),
 		commonService.ApiKeyCheckerHTTP(commonRepositoryContainer.AppKeyRepository, commonService.SETTINGS_API),
 		func(c *gin.Context) {
 			tenantName := c.Keys["TenantName"].(string)
@@ -233,7 +233,7 @@ func main() {
 		})
 
 	r.POST("/settings/trello",
-		commonService.UserToTenantEnhancer(ctx, commonRepositoryContainer.UserRepository),
+		commonService.TenantUserContextEnhancer(ctx, commonService.USERNAME, commonRepositoryContainer),
 		commonService.ApiKeyCheckerHTTP(commonRepositoryContainer.AppKeyRepository, commonService.SETTINGS_API),
 		func(c *gin.Context) {
 			var request dto.TenantSettingsTrelloDTO
@@ -256,7 +256,7 @@ func main() {
 		})
 
 	r.DELETE("/settings/trello",
-		commonService.UserToTenantEnhancer(ctx, commonRepositoryContainer.UserRepository),
+		commonService.TenantUserContextEnhancer(ctx, commonService.USERNAME, commonRepositoryContainer),
 		commonService.ApiKeyCheckerHTTP(commonRepositoryContainer.AppKeyRepository, commonService.SETTINGS_API),
 		func(c *gin.Context) {
 			tenantName := c.Keys["TenantName"].(string)
