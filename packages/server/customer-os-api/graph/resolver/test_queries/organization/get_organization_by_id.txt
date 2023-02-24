@@ -3,7 +3,7 @@ query GetOrganization($organizationId: ID!){
     id
     name
     description
-    domain
+    domains
     website
     industry
     isPublic

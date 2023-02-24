@@ -198,7 +198,6 @@ func (r *organizationRepository) MergeOrganizationDomain(ctx context.Context, te
 				ON CREATE SET 	d.id=randomUUID(), 
 								d.createdAt=$now, 
 								d.updatedAt=$now,
-								d.sourceOfTruth=$sourceOfTruth,
 								d.appSource=$appSource,
 								d.source=$source
 				WITH d
@@ -213,7 +212,6 @@ func (r *organizationRepository) MergeOrganizationDomain(ctx context.Context, te
 				"organizationId": organizationId,
 				"domain":         domain,
 				"source":         externalSystem,
-				"sourceOfTruth":  externalSystem,
 				"appSource":      externalSystem,
 				"now":            time.Now().UTC(),
 			})

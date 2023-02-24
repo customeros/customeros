@@ -52,12 +52,13 @@ func TestQueryResolver_Organization(t *testing.T) {
 	organizationInput := entity.OrganizationEntity{
 		Name:        "Organization name",
 		Description: "Organization description",
-		Domain:      "Organization domain",
 		Website:     "Organization_website.com",
 		Industry:    "tech",
 		IsPublic:    true,
 	}
 	organizationId1 := neo4jt.CreateFullOrganization(ctx, driver, tenantName, organizationInput)
+	neo4jt.AddDomainToOrg(ctx, driver, organizationId1, "domain1.com")
+	neo4jt.AddDomainToOrg(ctx, driver, organizationId1, "domain2.com")
 	neo4jt.CreateOrganization(ctx, driver, tenantName, "otherOrganization")
 
 	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "Organization"))
@@ -76,7 +77,7 @@ func TestQueryResolver_Organization(t *testing.T) {
 	require.Equal(t, organizationId1, organization.Organization.ID)
 	require.Equal(t, organizationInput.Name, organization.Organization.Name)
 	require.Equal(t, organizationInput.Description, *organization.Organization.Description)
-	require.Equal(t, organizationInput.Domain, *organization.Organization.Domain)
+	require.Equal(t, []string{"domain1.com", "domain2.com"}, organization.Organization.Domains)
 	require.Equal(t, organizationInput.Website, *organization.Organization.Website)
 	require.Equal(t, organizationInput.IsPublic, *organization.Organization.IsPublic)
 	require.Equal(t, organizationInput.Industry, *organization.Organization.Industry)
@@ -295,7 +296,7 @@ func TestMutationResolver_OrganizationCreate(t *testing.T) {
 	require.NotEqual(t, utils.GetEpochStart(), createdOrganization.UpdatedAt)
 	require.Equal(t, "organization name", createdOrganization.Name)
 	require.Equal(t, "organization description", *createdOrganization.Description)
-	require.Equal(t, "organization domain", *createdOrganization.Domain)
+	require.Equal(t, []string{"domain1", "domain2"}, createdOrganization.Domains)
 	require.Equal(t, "organization website", *createdOrganization.Website)
 	require.Equal(t, "organization industry", *createdOrganization.Industry)
 	require.Equal(t, true, *createdOrganization.IsPublic)
@@ -308,9 +309,10 @@ func TestMutationResolver_OrganizationCreate(t *testing.T) {
 	// Check the number of nodes and relationships in the Neo4j database
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Organization"))
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Organization_"+tenantName))
+	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "Domain"))
 
 	// Check the labels on the nodes in the Neo4j database
-	assertNeo4jLabels(ctx, t, driver, []string{"Tenant", "OrganizationType", "Organization", "Organization_" + tenantName})
+	assertNeo4jLabels(ctx, t, driver, []string{"Domain", "Tenant", "OrganizationType", "Organization", "Organization_" + tenantName})
 }
 
 func TestMutationResolver_OrganizationUpdate(t *testing.T) {
@@ -342,7 +344,7 @@ func TestMutationResolver_OrganizationUpdate(t *testing.T) {
 	require.NotEqual(t, utils.GetEpochStart(), updatedOrganization.UpdatedAt)
 	require.Equal(t, "updated name", updatedOrganization.Name)
 	require.Equal(t, "updated description", *updatedOrganization.Description)
-	require.Equal(t, "updated domain", *updatedOrganization.Domain)
+	require.Equal(t, []string{"updated domain"}, updatedOrganization.Domains)
 	require.Equal(t, "updated website", *updatedOrganization.Website)
 	require.Equal(t, "updated industry", *updatedOrganization.Industry)
 	require.Equal(t, true, *updatedOrganization.IsPublic)

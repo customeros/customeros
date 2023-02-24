@@ -4,7 +4,7 @@ mutation UpdateOrganization($organizationId: ID!, $organizationTypeId: ID) {
             id: $organizationId
             name: "updated name"
             description: "updated description"
-            domain: "updated domain"
+            domains: ["updated domain"]
             website: "updated website"
             industry: "updated industry"
             isPublic: true
@@ -13,7 +13,7 @@ mutation UpdateOrganization($organizationId: ID!, $organizationTypeId: ID) {
       id
       name
       description
-      domain
+      domains
       website
       industry
       isPublic

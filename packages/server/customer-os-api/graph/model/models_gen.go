@@ -642,6 +642,7 @@ type Organization struct {
 	Name             string            `json:"name"`
 	Description      *string           `json:"description"`
 	Domain           *string           `json:"domain"`
+	Domains          []string          `json:"domains"`
 	Website          *string           `json:"website"`
 	Industry         *string           `json:"industry"`
 	IsPublic         *bool             `json:"isPublic"`
@@ -666,14 +667,15 @@ func (Organization) IsSearchBasicResult() {}
 type OrganizationInput struct {
 	// The name of the organization.
 	// **Required.**
-	Name               string  `json:"name"`
-	Description        *string `json:"description"`
-	Domain             *string `json:"domain"`
-	Website            *string `json:"website"`
-	Industry           *string `json:"industry"`
-	IsPublic           *bool   `json:"isPublic"`
-	OrganizationTypeID *string `json:"organizationTypeId"`
-	AppSource          *string `json:"appSource"`
+	Name               string   `json:"name"`
+	Description        *string  `json:"description"`
+	Domain             *string  `json:"domain"`
+	Domains            []string `json:"domains"`
+	Website            *string  `json:"website"`
+	Industry           *string  `json:"industry"`
+	IsPublic           *bool    `json:"isPublic"`
+	OrganizationTypeID *string  `json:"organizationTypeId"`
+	AppSource          *string  `json:"appSource"`
 }
 
 type OrganizationPage struct {
@@ -709,14 +711,15 @@ type OrganizationTypeUpdateInput struct {
 }
 
 type OrganizationUpdateInput struct {
-	ID                 string  `json:"id"`
-	Name               string  `json:"name"`
-	Description        *string `json:"description"`
-	Domain             *string `json:"domain"`
-	Website            *string `json:"website"`
-	Industry           *string `json:"industry"`
-	IsPublic           *bool   `json:"isPublic"`
-	OrganizationTypeID *string `json:"organizationTypeId"`
+	ID                 string   `json:"id"`
+	Name               string   `json:"name"`
+	Description        *string  `json:"description"`
+	Domain             *string  `json:"domain"`
+	Domains            []string `json:"domains"`
+	Website            *string  `json:"website"`
+	Industry           *string  `json:"industry"`
+	IsPublic           *bool    `json:"isPublic"`
+	OrganizationTypeID *string  `json:"organizationTypeId"`
 }
 
 type PageViewAction struct {

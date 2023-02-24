@@ -336,6 +336,7 @@ type ComplexityRoot struct {
 		CreatedAt        func(childComplexity int) int
 		Description      func(childComplexity int) int
 		Domain           func(childComplexity int) int
+		Domains          func(childComplexity int) int
 		ID               func(childComplexity int) int
 		Industry         func(childComplexity int) int
 		IsPublic         func(childComplexity int) int
@@ -568,6 +569,8 @@ type NoteResolver interface {
 	CreatedBy(ctx context.Context, obj *model.Note) (*model.User, error)
 }
 type OrganizationResolver interface {
+	Domains(ctx context.Context, obj *model.Organization) ([]string, error)
+
 	OrganizationType(ctx context.Context, obj *model.Organization) (*model.OrganizationType, error)
 
 	Locations(ctx context.Context, obj *model.Organization) ([]*model.Location, error)
@@ -2482,6 +2485,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Organization.Domain(childComplexity), true
 
+	case "Organization.domains":
+		if e.complexity.Organization.Domains == nil {
+			break
+		}
+
+		return e.complexity.Organization.Domains(childComplexity), true
+
 	case "Organization.id":
 		if e.complexity.Organization.ID == nil {
 			break
@@ -4351,7 +4361,8 @@ type Organization implements Node {
     updatedAt:   Time!
     name: String!
     description: String
-    domain:      String
+    domain:      String @deprecated(reason: "Deprecated in favor of domains")
+    domains:     [String!]! @goField(forceResolver: true)
     website:     String
     industry:    String
     isPublic:    Boolean
@@ -4384,7 +4395,8 @@ input OrganizationInput {
     """
     name: String!
     description: String
-    domain:      String
+    domain:      String @deprecated(reason: "Deprecated in favor of domains")
+    domains:     [String!]
     website:     String
     industry:    String
     isPublic:    Boolean
@@ -4396,7 +4408,8 @@ input OrganizationUpdateInput {
     id: ID!
     name: String!
     description: String
-    domain:      String
+    domain:      String @deprecated(reason: "Deprecated in favor of domains")
+    domains:     [String!]
     website:     String
     industry:    String
     isPublic:    Boolean
@@ -10408,6 +10421,8 @@ func (ec *executionContext) fieldContext_DashboardViewItem_organization(ctx cont
 				return ec.fieldContext_Organization_description(ctx, field)
 			case "domain":
 				return ec.fieldContext_Organization_domain(ctx, field)
+			case "domains":
+				return ec.fieldContext_Organization_domains(ctx, field)
 			case "website":
 				return ec.fieldContext_Organization_website(ctx, field)
 			case "industry":
@@ -12237,6 +12252,8 @@ func (ec *executionContext) fieldContext_JobRole_organization(ctx context.Contex
 				return ec.fieldContext_Organization_description(ctx, field)
 			case "domain":
 				return ec.fieldContext_Organization_domain(ctx, field)
+			case "domains":
+				return ec.fieldContext_Organization_domains(ctx, field)
 			case "website":
 				return ec.fieldContext_Organization_website(ctx, field)
 			case "industry":
@@ -16752,6 +16769,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_Create(ctx contex
 				return ec.fieldContext_Organization_description(ctx, field)
 			case "domain":
 				return ec.fieldContext_Organization_domain(ctx, field)
+			case "domains":
+				return ec.fieldContext_Organization_domains(ctx, field)
 			case "website":
 				return ec.fieldContext_Organization_website(ctx, field)
 			case "industry":
@@ -16844,6 +16863,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_Update(ctx contex
 				return ec.fieldContext_Organization_description(ctx, field)
 			case "domain":
 				return ec.fieldContext_Organization_domain(ctx, field)
+			case "domains":
+				return ec.fieldContext_Organization_domains(ctx, field)
 			case "website":
 				return ec.fieldContext_Organization_website(ctx, field)
 			case "industry":
@@ -18496,6 +18517,50 @@ func (ec *executionContext) fieldContext_Organization_domain(ctx context.Context
 	return fc, nil
 }
 
+func (ec *executionContext) _Organization_domains(ctx context.Context, field graphql.CollectedField, obj *model.Organization) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Organization_domains(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Organization().Domains(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]string)
+	fc.Result = res
+	return ec.marshalNString2ᚕstringᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Organization_domains(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Organization",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Organization_website(ctx context.Context, field graphql.CollectedField, obj *model.Organization) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Organization_website(ctx, field)
 	if err != nil {
@@ -19196,6 +19261,8 @@ func (ec *executionContext) fieldContext_OrganizationPage_content(ctx context.Co
 				return ec.fieldContext_Organization_description(ctx, field)
 			case "domain":
 				return ec.fieldContext_Organization_domain(ctx, field)
+			case "domains":
+				return ec.fieldContext_Organization_domains(ctx, field)
 			case "website":
 				return ec.fieldContext_Organization_website(ctx, field)
 			case "industry":
@@ -21602,6 +21669,8 @@ func (ec *executionContext) fieldContext_Query_organization(ctx context.Context,
 				return ec.fieldContext_Organization_description(ctx, field)
 			case "domain":
 				return ec.fieldContext_Organization_domain(ctx, field)
+			case "domains":
+				return ec.fieldContext_Organization_domains(ctx, field)
 			case "website":
 				return ec.fieldContext_Organization_website(ctx, field)
 			case "industry":
@@ -26116,7 +26185,7 @@ func (ec *executionContext) unmarshalInputOrganizationInput(ctx context.Context,
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"name", "description", "domain", "website", "industry", "isPublic", "organizationTypeId", "appSource"}
+	fieldsInOrder := [...]string{"name", "description", "domain", "domains", "website", "industry", "isPublic", "organizationTypeId", "appSource"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -26144,6 +26213,14 @@ func (ec *executionContext) unmarshalInputOrganizationInput(ctx context.Context,
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("domain"))
 			it.Domain, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "domains":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("domains"))
+			it.Domains, err = ec.unmarshalOString2ᚕstringᚄ(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -26264,7 +26341,7 @@ func (ec *executionContext) unmarshalInputOrganizationUpdateInput(ctx context.Co
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"id", "name", "description", "domain", "website", "industry", "isPublic", "organizationTypeId"}
+	fieldsInOrder := [...]string{"id", "name", "description", "domain", "domains", "website", "industry", "isPublic", "organizationTypeId"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -26300,6 +26377,14 @@ func (ec *executionContext) unmarshalInputOrganizationUpdateInput(ctx context.Co
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("domain"))
 			it.Domain, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "domains":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("domains"))
+			it.Domains, err = ec.unmarshalOString2ᚕstringᚄ(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -29011,6 +29096,26 @@ func (ec *executionContext) _Organization(ctx context.Context, sel ast.Selection
 
 			out.Values[i] = ec._Organization_domain(ctx, field, obj)
 
+		case "domains":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Organization_domains(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
 		case "website":
 
 			out.Values[i] = ec._Organization_website(ctx, field, obj)
@@ -31894,6 +31999,38 @@ func (ec *executionContext) marshalNString2string(ctx context.Context, sel ast.S
 		}
 	}
 	return res
+}
+
+func (ec *executionContext) unmarshalNString2ᚕstringᚄ(ctx context.Context, v interface{}) ([]string, error) {
+	var vSlice []interface{}
+	if v != nil {
+		vSlice = graphql.CoerceList(v)
+	}
+	var err error
+	res := make([]string, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalNString2string(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
+func (ec *executionContext) marshalNString2ᚕstringᚄ(ctx context.Context, sel ast.SelectionSet, v []string) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	for i := range v {
+		ret[i] = ec.marshalNString2string(ctx, sel, v[i])
+	}
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
 }
 
 func (ec *executionContext) marshalNTag2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐTag(ctx context.Context, sel ast.SelectionSet, v model.Tag) graphql.Marshaler {
