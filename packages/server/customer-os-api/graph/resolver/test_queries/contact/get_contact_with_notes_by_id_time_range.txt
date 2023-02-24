@@ -1,0 +1,16 @@
+query GetContactById($contactId: ID!, $start: Time!, $end: Time!) {
+  contact(id: $contactId) {
+    id
+    notesByTime(pagination: {from: $start, to: $end}) {
+            id
+            html
+            createdAt
+            createdBy {
+                id
+                firstName
+                lastName
+            }
+
+    }
+  }
+}

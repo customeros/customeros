@@ -74,6 +74,7 @@ type ComplexityRoot struct {
 		Locations     func(childComplexity int) int
 		Name          func(childComplexity int) int
 		Notes         func(childComplexity int, pagination *model.Pagination) int
+		NotesByTime   func(childComplexity int, pagination *model.TimeRange) int
 		Organizations func(childComplexity int, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) int
 		Owner         func(childComplexity int) int
 		PhoneNumbers  func(childComplexity int) int
@@ -472,6 +473,7 @@ type ContactResolver interface {
 	Template(ctx context.Context, obj *model.Contact) (*model.EntityTemplate, error)
 	Owner(ctx context.Context, obj *model.Contact) (*model.User, error)
 	Notes(ctx context.Context, obj *model.Contact, pagination *model.Pagination) (*model.NotePage, error)
+	NotesByTime(ctx context.Context, obj *model.Contact, pagination *model.TimeRange) ([]*model.Note, error)
 	Conversations(ctx context.Context, obj *model.Contact, pagination *model.Pagination, sort []*model.SortBy) (*model.ConversationPage, error)
 	Actions(ctx context.Context, obj *model.Contact, from time.Time, to time.Time, actionTypes []model.ActionType) ([]model.Action, error)
 }
@@ -739,6 +741,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Contact.Notes(childComplexity, args["pagination"].(*model.Pagination)), true
+
+	case "Contact.notesByTime":
+		if e.complexity.Contact.NotesByTime == nil {
+			break
+		}
+
+		args, err := ec.field_Contact_notesByTime_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Contact.NotesByTime(childComplexity, args["pagination"].(*model.TimeRange)), true
 
 	case "Contact.organizations":
 		if e.complexity.Contact.Organizations == nil {
@@ -3205,6 +3219,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputSortBy,
 		ec.unmarshalInputTagInput,
 		ec.unmarshalInputTagUpdateInput,
+		ec.unmarshalInputTimeRange,
 		ec.unmarshalInputUserInput,
 		ec.unmarshalInputUserUpdateInput,
 	)
@@ -3414,6 +3429,8 @@ type Contact implements ExtensibleEntity & Node {
 
     "Contact notes"
     notes(pagination: Pagination): NotePage! @goField(forceResolver: true)
+    notesByTime(pagination: TimeRange): [Note!]! @goField(forceResolver: true)
+
 
     conversations(pagination: Pagination, sort: [SortBy!]): ConversationPage! @goField(forceResolver: true)
 
@@ -4091,6 +4108,21 @@ input Pagination {
     **Required.**
     """
     limit: Int!
+}
+
+input TimeRange {
+
+    """
+    The start time of the time range.
+    **Required.**
+    """
+    from: Time!
+
+    """
+    The end time of the time range.
+    **Required.**
+    """
+    to: Time!
 }
 
 input SortBy {
@@ -4788,6 +4820,21 @@ func (ec *executionContext) field_Contact_conversations_args(ctx context.Context
 		}
 	}
 	args["sort"] = arg1
+	return args, nil
+}
+
+func (ec *executionContext) field_Contact_notesByTime_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 *model.TimeRange
+	if tmp, ok := rawArgs["pagination"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("pagination"))
+		arg0, err = ec.unmarshalOTimeRange2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐTimeRange(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["pagination"] = arg0
 	return args, nil
 }
 
@@ -7655,6 +7702,79 @@ func (ec *executionContext) fieldContext_Contact_notes(ctx context.Context, fiel
 	return fc, nil
 }
 
+func (ec *executionContext) _Contact_notesByTime(ctx context.Context, field graphql.CollectedField, obj *model.Contact) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Contact_notesByTime(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Contact().NotesByTime(rctx, obj, fc.Args["pagination"].(*model.TimeRange))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.Note)
+	fc.Result = res
+	return ec.marshalNNote2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐNoteᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Contact_notesByTime(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Contact",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Note_id(ctx, field)
+			case "html":
+				return ec.fieldContext_Note_html(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Note_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_Note_updatedAt(ctx, field)
+			case "createdBy":
+				return ec.fieldContext_Note_createdBy(ctx, field)
+			case "source":
+				return ec.fieldContext_Note_source(ctx, field)
+			case "sourceOfTruth":
+				return ec.fieldContext_Note_sourceOfTruth(ctx, field)
+			case "appSource":
+				return ec.fieldContext_Note_appSource(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Note", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Contact_notesByTime_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Contact_conversations(ctx context.Context, field graphql.CollectedField, obj *model.Contact) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Contact_conversations(ctx, field)
 	if err != nil {
@@ -8241,6 +8361,8 @@ func (ec *executionContext) fieldContext_ContactsPage_content(ctx context.Contex
 				return ec.fieldContext_Contact_owner(ctx, field)
 			case "notes":
 				return ec.fieldContext_Contact_notes(ctx, field)
+			case "notesByTime":
+				return ec.fieldContext_Contact_notesByTime(ctx, field)
 			case "conversations":
 				return ec.fieldContext_Contact_conversations(ctx, field)
 			case "actions":
@@ -8765,6 +8887,8 @@ func (ec *executionContext) fieldContext_Conversation_contacts(ctx context.Conte
 				return ec.fieldContext_Contact_owner(ctx, field)
 			case "notes":
 				return ec.fieldContext_Contact_notes(ctx, field)
+			case "notesByTime":
+				return ec.fieldContext_Contact_notesByTime(ctx, field)
 			case "conversations":
 				return ec.fieldContext_Contact_conversations(ctx, field)
 			case "actions":
@@ -10223,6 +10347,8 @@ func (ec *executionContext) fieldContext_DashboardViewItem_contact(ctx context.C
 				return ec.fieldContext_Contact_owner(ctx, field)
 			case "notes":
 				return ec.fieldContext_Contact_notes(ctx, field)
+			case "notesByTime":
+				return ec.fieldContext_Contact_notesByTime(ctx, field)
 			case "conversations":
 				return ec.fieldContext_Contact_conversations(ctx, field)
 			case "actions":
@@ -12224,6 +12350,8 @@ func (ec *executionContext) fieldContext_JobRole_contact(ctx context.Context, fi
 				return ec.fieldContext_Contact_owner(ctx, field)
 			case "notes":
 				return ec.fieldContext_Contact_notes(ctx, field)
+			case "notesByTime":
+				return ec.fieldContext_Contact_notesByTime(ctx, field)
 			case "conversations":
 				return ec.fieldContext_Contact_conversations(ctx, field)
 			case "actions":
@@ -13676,6 +13804,8 @@ func (ec *executionContext) fieldContext_Mutation_contact_Create(ctx context.Con
 				return ec.fieldContext_Contact_owner(ctx, field)
 			case "notes":
 				return ec.fieldContext_Contact_notes(ctx, field)
+			case "notesByTime":
+				return ec.fieldContext_Contact_notesByTime(ctx, field)
 			case "conversations":
 				return ec.fieldContext_Contact_conversations(ctx, field)
 			case "actions":
@@ -13782,6 +13912,8 @@ func (ec *executionContext) fieldContext_Mutation_contact_Update(ctx context.Con
 				return ec.fieldContext_Contact_owner(ctx, field)
 			case "notes":
 				return ec.fieldContext_Contact_notes(ctx, field)
+			case "notesByTime":
+				return ec.fieldContext_Contact_notesByTime(ctx, field)
 			case "conversations":
 				return ec.fieldContext_Contact_conversations(ctx, field)
 			case "actions":
@@ -14004,6 +14136,8 @@ func (ec *executionContext) fieldContext_Mutation_contact_AddTagById(ctx context
 				return ec.fieldContext_Contact_owner(ctx, field)
 			case "notes":
 				return ec.fieldContext_Contact_notes(ctx, field)
+			case "notesByTime":
+				return ec.fieldContext_Contact_notesByTime(ctx, field)
 			case "conversations":
 				return ec.fieldContext_Contact_conversations(ctx, field)
 			case "actions":
@@ -14110,6 +14244,8 @@ func (ec *executionContext) fieldContext_Mutation_contact_RemoveTagById(ctx cont
 				return ec.fieldContext_Contact_owner(ctx, field)
 			case "notes":
 				return ec.fieldContext_Contact_notes(ctx, field)
+			case "notesByTime":
+				return ec.fieldContext_Contact_notesByTime(ctx, field)
 			case "conversations":
 				return ec.fieldContext_Contact_conversations(ctx, field)
 			case "actions":
@@ -14798,6 +14934,8 @@ func (ec *executionContext) fieldContext_Mutation_customFieldsMergeAndUpdateInCo
 				return ec.fieldContext_Contact_owner(ctx, field)
 			case "notes":
 				return ec.fieldContext_Contact_notes(ctx, field)
+			case "notesByTime":
+				return ec.fieldContext_Contact_notesByTime(ctx, field)
 			case "conversations":
 				return ec.fieldContext_Contact_conversations(ctx, field)
 			case "actions":
@@ -20928,6 +21066,8 @@ func (ec *executionContext) fieldContext_Query_contact(ctx context.Context, fiel
 				return ec.fieldContext_Contact_owner(ctx, field)
 			case "notes":
 				return ec.fieldContext_Contact_notes(ctx, field)
+			case "notesByTime":
+				return ec.fieldContext_Contact_notesByTime(ctx, field)
 			case "conversations":
 				return ec.fieldContext_Contact_conversations(ctx, field)
 			case "actions":
@@ -21096,6 +21236,8 @@ func (ec *executionContext) fieldContext_Query_contact_ByEmail(ctx context.Conte
 				return ec.fieldContext_Contact_owner(ctx, field)
 			case "notes":
 				return ec.fieldContext_Contact_notes(ctx, field)
+			case "notesByTime":
+				return ec.fieldContext_Contact_notesByTime(ctx, field)
 			case "conversations":
 				return ec.fieldContext_Contact_conversations(ctx, field)
 			case "actions":
@@ -21202,6 +21344,8 @@ func (ec *executionContext) fieldContext_Query_contact_ByPhone(ctx context.Conte
 				return ec.fieldContext_Contact_owner(ctx, field)
 			case "notes":
 				return ec.fieldContext_Contact_notes(ctx, field)
+			case "notesByTime":
+				return ec.fieldContext_Contact_notesByTime(ctx, field)
 			case "conversations":
 				return ec.fieldContext_Contact_conversations(ctx, field)
 			case "actions":
@@ -26444,6 +26588,42 @@ func (ec *executionContext) unmarshalInputTagUpdateInput(ctx context.Context, ob
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputTimeRange(ctx context.Context, obj interface{}) (model.TimeRange, error) {
+	var it model.TimeRange
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"from", "to"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "from":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("from"))
+			it.From, err = ec.unmarshalNTime2timeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "to":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("to"))
+			it.To, err = ec.unmarshalNTime2timeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputUserInput(ctx context.Context, obj interface{}) (model.UserInput, error) {
 	var it model.UserInput
 	asMap := map[string]interface{}{}
@@ -27020,6 +27200,26 @@ func (ec *executionContext) _Contact(ctx context.Context, sel ast.SelectionSet, 
 					}
 				}()
 				res = ec._Contact_notes(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
+		case "notesByTime":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Contact_notesByTime(ctx, field, obj)
 				if res == graphql.Null {
 					atomic.AddUint32(&invalids, 1)
 				}
@@ -32874,6 +33074,14 @@ func (ec *executionContext) marshalOTime2ᚖtimeᚐTime(ctx context.Context, sel
 	}
 	res := graphql.MarshalTime(*v)
 	return res
+}
+
+func (ec *executionContext) unmarshalOTimeRange2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐTimeRange(ctx context.Context, v interface{}) (*model.TimeRange, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalInputTimeRange(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) marshalOUser2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐUserᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.User) graphql.Marshaler {

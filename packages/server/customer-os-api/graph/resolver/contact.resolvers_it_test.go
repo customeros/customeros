@@ -536,6 +536,92 @@ func TestQueryResolver_Contact_WithNotes_ById(t *testing.T) {
 	require.Nil(t, noteWithoutUser.CreatedBy)
 }
 
+func TestQueryResolver_Contact_WithNotes_ById_Time_Range(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx)(t)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+	contactId := neo4jt.CreateDefaultContact(ctx, driver, tenantName)
+	userId := neo4jt.CreateDefaultUser(ctx, driver, tenantName)
+	noteId1 := neo4jt.CreateNoteForContact(ctx, driver, tenantName, contactId, "note1")
+	noteId2 := neo4jt.CreateNoteForContact(ctx, driver, tenantName, contactId, "note2")
+	neo4jt.NoteCreatedByUser(ctx, driver, noteId1, userId)
+
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Contact"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "User"))
+	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "Note"))
+	require.Equal(t, 2, neo4jt.GetCountOfRelationships(ctx, driver, "NOTED"))
+	require.Equal(t, 1, neo4jt.GetCountOfRelationships(ctx, driver, "CREATED"))
+
+	rawResponse, err := c.RawPost(getQuery("contact/get_contact_with_notes_by_id_time_range"),
+		client.Var("contactId", contactId),
+		client.Var("start", time.Now().Add(-1*time.Hour)),
+		client.Var("end", time.Now().Add(1*time.Hour)))
+
+	assertRawResponseSuccess(t, rawResponse, err)
+
+	var searchedContact struct {
+		Contact model.Contact
+	}
+
+	err = decode.Decode(rawResponse.Data.(map[string]any), &searchedContact)
+	require.Nil(t, err)
+	require.Equal(t, contactId, searchedContact.Contact.ID)
+
+	notes := searchedContact.Contact.NotesByTime
+	require.Equal(t, 2, len(notes))
+	var noteWithUser, noteWithoutUser *model.Note
+	if noteId1 == notes[0].ID {
+		noteWithUser = notes[0]
+		noteWithoutUser = notes[1]
+	} else {
+		noteWithUser = notes[1]
+		noteWithoutUser = notes[0]
+	}
+	require.Equal(t, noteId1, noteWithUser.ID)
+	require.Equal(t, "note1", noteWithUser.HTML)
+	require.NotNil(t, noteWithUser.CreatedAt)
+	require.NotNil(t, noteWithUser.CreatedBy)
+	require.Equal(t, userId, noteWithUser.CreatedBy.ID)
+	require.Equal(t, "first", noteWithUser.CreatedBy.FirstName)
+	require.Equal(t, "last", noteWithUser.CreatedBy.LastName)
+
+	require.Equal(t, noteId2, noteWithoutUser.ID)
+	require.Equal(t, "note2", noteWithoutUser.HTML)
+	require.NotNil(t, noteWithoutUser.CreatedAt)
+	require.Nil(t, noteWithoutUser.CreatedBy)
+
+	// test with time range that does not include any notes
+	rawResponse, err = c.RawPost(getQuery("contact/get_contact_with_notes_by_id_time_range"),
+		client.Var("contactId", contactId),
+		client.Var("start", time.Now().Add(-2*time.Hour)),
+		client.Var("end", time.Now().Add(-1*time.Hour)))
+
+	assertRawResponseSuccess(t, rawResponse, err)
+
+	searchedContact.Contact = model.Contact{}
+	err = decode.Decode(rawResponse.Data.(map[string]any), &searchedContact)
+	require.Nil(t, err)
+	require.Equal(t, contactId, searchedContact.Contact.ID)
+
+	notes = searchedContact.Contact.NotesByTime
+	require.Equal(t, 0, len(notes))
+
+	rawResponse, err = c.RawPost(getQuery("contact/get_contact_with_notes_by_id_time_range"),
+		client.Var("contactId", contactId),
+		client.Var("start", time.Now().Add(1*time.Hour)),
+		client.Var("end", time.Now().Add(2*time.Hour)))
+
+	assertRawResponseSuccess(t, rawResponse, err)
+
+	searchedContact.Contact = model.Contact{}
+	err = decode.Decode(rawResponse.Data.(map[string]any), &searchedContact)
+	require.Nil(t, err)
+	require.Equal(t, contactId, searchedContact.Contact.ID)
+
+	notes = searchedContact.Contact.NotesByTime
+	require.Equal(t, 0, len(notes))
+}
+
 func TestQueryResolver_Contact_WithTags_ById(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx)(t)
