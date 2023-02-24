@@ -54,8 +54,11 @@ func graphqlHandler(cfg *config.Config, driver neo4j.DriverWithContext, reposito
 	return func(c *gin.Context) {
 		customCtx := &common.CustomContext{
 			Tenant: c.Keys["TenantName"].(string),
-			UserId: c.Keys["UserId"].(string),
 		}
+		if c.Keys["UserId"] != nil {
+			customCtx.UserId = c.Keys["UserId"].(string)
+		}
+
 		dataloaderSrv := dataloader.Middleware(loader, srv)
 		h := common.WithContext(customCtx, dataloaderSrv)
 
@@ -89,7 +92,7 @@ func main() {
 	ctx := context.Background()
 	defer neo4jDriver.Close(ctx)
 
-	repositoryContainer := commonRepository.InitRepositories(db.GormDB, &neo4jDriver)
+	commonRepositoryContainer := commonRepository.InitRepositories(db.GormDB, &neo4jDriver)
 
 	// Setting up Gin
 	r := gin.Default()
@@ -99,9 +102,9 @@ func main() {
 	r.Use(cors.New(corsConfig))
 
 	r.POST("/query",
-		commonService.UserToTenantEnhancer(ctx, repositoryContainer.UserRepository),
-		commonService.ApiKeyCheckerHTTP(repositoryContainer.AppKeyRepository, commonService.CUSTOMER_OS_API),
-		graphqlHandler(cfg, neo4jDriver, repositoryContainer))
+		commonService.TenantUserContextEnhancer(ctx, commonService.USERNAME_OR_TENANT, commonRepositoryContainer),
+		commonService.ApiKeyCheckerHTTP(commonRepositoryContainer.AppKeyRepository, commonService.CUSTOMER_OS_API),
+		graphqlHandler(cfg, neo4jDriver, commonRepositoryContainer))
 	if cfg.GraphQL.PlaygroundEnabled {
 		r.GET("/", playgroundHandler())
 	}
@@ -113,7 +116,7 @@ func main() {
 		port = customerOSApiPort
 	}
 
-	r.Run(":9999")
+	r.Run(":" + port)
 }
 
 func loadConfiguration() *config.Config {

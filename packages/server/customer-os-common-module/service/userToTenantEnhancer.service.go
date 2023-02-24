@@ -3,45 +3,118 @@ package service
 import (
 	"context"
 	"errors"
+	"fmt"
 	"github.com/gin-gonic/gin"
+	cr "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/repository"
 	repository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/repository/neo4j"
 	"google.golang.org/grpc/metadata"
+	"net/http"
+)
+
+type HeaderAllowance string
+
+const (
+	USERNAME           HeaderAllowance = "USERNAME"
+	TENANT             HeaderAllowance = "TENANT"
+	USERNAME_OR_TENANT HeaderAllowance = "USERNAME_OR_TENANT"
 )
 
 const UsernameHeader = "X-Openline-USERNAME"
+const TenantHeader = "X-Openline-TENANT"
 
-func UserToTenantEnhancer(ctx context.Context, userRepository repository.UserRepository) func(c *gin.Context) {
+func TenantUserContextEnhancer(ctx context.Context, headerAllowance HeaderAllowance, cr *cr.Repositories) func(c *gin.Context) {
 	return func(c *gin.Context) {
+		tenantHeader := c.GetHeader(TenantHeader)
 		usernameHeader := c.GetHeader(UsernameHeader)
-		if usernameHeader != "" {
+		var (
+			tenantExists bool
+			userId       string
+			tenantName   string
+			err          error
+		)
 
-			userId, tenant, err := userRepository.FindUserByEmail(ctx, usernameHeader)
-
+		switch headerAllowance {
+		case TENANT:
+			tenantExists, err = checkTenantHeader(c, tenantHeader, cr, ctx)
 			if err != nil {
-				c.AbortWithStatus(401)
 				return
 			}
+			c.Set("TenantName", tenantHeader)
 
-			if len(tenant) == 0 {
-				c.AbortWithStatus(401)
+		case USERNAME:
+			userId, tenantName, err = checkUsernameHeader(c, usernameHeader, cr, ctx)
+			if err != nil {
 				return
-			} else {
-				if c.Keys == nil {
-					c.Keys = map[string]any{}
+			}
+			c.Set("TenantName", tenantName)
+			c.Set("UserId", userId)
+			c.Set("UserEmail", usernameHeader)
+
+		case USERNAME_OR_TENANT:
+			if tenantHeader != "" {
+				tenantExists, err = checkTenantHeader(c, tenantHeader, cr, ctx)
+				if err != nil {
+					return
 				}
-				c.Keys["TenantName"] = tenant
-				c.Keys["UserId"] = userId
-				c.Keys["UserEmail"] = usernameHeader
+				if tenantExists {
+					c.Set("TenantName", tenantHeader)
+					c.Next()
+					return
+				}
 			}
+			userId, tenantName, err = checkUsernameHeader(c, usernameHeader, cr, ctx)
+			if err != nil {
+				return
+			}
+			c.Set("TenantName", tenantName)
+			c.Set("UserId", userId)
+			c.Set("UserEmail", usernameHeader)
 
-			c.Next()
-			// illegal request, terminate the current process
-		} else {
-			c.AbortWithStatus(401)
+		default:
+			c.AbortWithStatus(http.StatusUnauthorized)
 			return
 		}
 
+		c.Next()
 	}
+}
+
+func checkTenantHeader(c *gin.Context, tenantHeader string, cr *cr.Repositories, ctx context.Context) (bool, error) {
+	if tenantHeader == "" {
+		c.AbortWithStatus(http.StatusUnauthorized)
+		return false, fmt.Errorf("missing tenant header")
+	}
+
+	exists, err := cr.TenantRepository.TenantExists(ctx, tenantHeader)
+	if err != nil {
+		c.AbortWithStatus(http.StatusUnauthorized)
+		return false, fmt.Errorf("failed to check tenant existence: %v", err)
+	}
+	if !exists {
+		c.AbortWithStatus(http.StatusUnauthorized)
+		return false, fmt.Errorf("tenant does not exist")
+	}
+
+	return true, nil
+}
+
+func checkUsernameHeader(c *gin.Context, usernameHeader string, cr *cr.Repositories, ctx context.Context) (string, string, error) {
+	if usernameHeader == "" {
+		c.AbortWithStatus(http.StatusUnauthorized)
+		return "", "", fmt.Errorf("missing username header")
+	}
+
+	userId, tenantName, err := cr.UserRepository.FindUserByEmail(ctx, usernameHeader)
+	if err != nil {
+		c.AbortWithStatus(http.StatusUnauthorized)
+		return "", "", fmt.Errorf("failed to find user: %v", err)
+	}
+	if tenantName == "" {
+		c.AbortWithStatus(http.StatusUnauthorized)
+		return "", "", fmt.Errorf("user has no associated tenant")
+	}
+
+	return userId, tenantName, nil
 }
 
 func GetUsernameMetadataForGRPC(ctx context.Context) (*string, error) {
