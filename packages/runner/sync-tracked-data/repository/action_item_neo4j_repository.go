@@ -2,30 +2,31 @@ package repository
 
 import (
 	"fmt"
-	"github.com/neo4j/neo4j-go-driver/v4/neo4j"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-tracked-data/entity"
+	"golang.org/x/net/context"
 )
 
 type ActionRepository interface {
-	CreatePageViewAction(contactId string, pv entity.PageView) error
+	CreatePageViewAction(ctx context.Context, contactId string, pv entity.PageView) error
 }
 
 type actionRepository struct {
-	driver *neo4j.Driver
+	driver *neo4j.DriverWithContext
 }
 
-func NewActionRepository(driver *neo4j.Driver) ActionRepository {
+func NewActionRepository(driver *neo4j.DriverWithContext) ActionRepository {
 	return &actionRepository{
 		driver: driver,
 	}
 }
 
-func (r *actionRepository) CreatePageViewAction(contactId string, pv entity.PageView) error {
-	session := (*r.driver).NewSession(
+func (r *actionRepository) CreatePageViewAction(ctx context.Context, contactId string, pv entity.PageView) error {
+	session := (*r.driver).NewSession(ctx,
 		neo4j.SessionConfig{
 			AccessMode: neo4j.AccessModeWrite,
 			BoltLogger: neo4j.ConsoleBoltLogger()})
-	defer session.Close()
+	defer session.Close(ctx)
 
 	params := map[string]interface{}{
 		"tenant":         pv.Tenant,
@@ -65,8 +66,8 @@ func (r *actionRepository) CreatePageViewAction(contactId string, pv entity.Page
 		" 	a.engagedTime=$engagedTime, " +
 		" 	a.orderInSession=$orderInSession "
 
-	_, err := session.WriteTransaction(func(tx neo4j.Transaction) (interface{}, error) {
-		_, err := tx.Run(fmt.Sprintf(query, "PageView_"+pv.Tenant, "Action_"+pv.Tenant), params)
+	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (interface{}, error) {
+		_, err := tx.Run(ctx, fmt.Sprintf(query, "PageView_"+pv.Tenant, "Action_"+pv.Tenant), params)
 		return nil, err
 	})
 

@@ -2,34 +2,35 @@ package repository
 
 import (
 	"fmt"
-	"github.com/neo4j/neo4j-go-driver/v4/neo4j"
-	"github.com/neo4j/neo4j-go-driver/v4/neo4j/db"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j/db"
+	"golang.org/x/net/context"
 	"time"
 )
 
 type ContactRepository interface {
-	GetOrCreateContactByEmail(tenant, email, firstName, lastName, application string) (string, error)
+	GetOrCreateContactByEmail(ctx context.Context, tenant, email, firstName, lastName, application string) (string, error)
 }
 
 type contactRepository struct {
-	driver *neo4j.Driver
+	driver *neo4j.DriverWithContext
 }
 
-func NewContactRepository(driver *neo4j.Driver) ContactRepository {
+func NewContactRepository(driver *neo4j.DriverWithContext) ContactRepository {
 	return &contactRepository{
 		driver: driver,
 	}
 }
 
-func (r *contactRepository) GetOrCreateContactByEmail(tenant, email, firstName, lastName, application string) (string, error) {
-	session := (*r.driver).NewSession(
+func (r *contactRepository) GetOrCreateContactByEmail(ctx context.Context, tenant, email, firstName, lastName, application string) (string, error) {
+	session := (*r.driver).NewSession(ctx,
 		neo4j.SessionConfig{
 			AccessMode: neo4j.AccessModeWrite,
 			BoltLogger: neo4j.ConsoleBoltLogger()})
-	defer session.Close()
+	defer session.Close(ctx)
 
-	record, err := session.WriteTransaction(func(tx neo4j.Transaction) (interface{}, error) {
-		queryResult, err := tx.Run(fmt.Sprintf(
+	record, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (interface{}, error) {
+		queryResult, err := tx.Run(ctx, fmt.Sprintf(
 			" MATCH (t:Tenant {name:$tenant}) "+
 				" MERGE (e:Email {rawEmail: $email})-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]->(t) "+
 				" ON CREATE SET "+
@@ -63,7 +64,7 @@ func (r *contactRepository) GetOrCreateContactByEmail(tenant, email, firstName, 
 				"appSource":     application,
 				"now":           time.Now().UTC(),
 			})
-		record, err := queryResult.Single()
+		record, err := queryResult.Single(ctx)
 		if err != nil {
 			return nil, err
 		}

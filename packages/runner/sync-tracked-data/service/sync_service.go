@@ -4,6 +4,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-tracked-data/entity"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-tracked-data/repository"
 	"github.com/sirupsen/logrus"
+	"golang.org/x/net/context"
 	"regexp"
 	"strings"
 	"sync"
@@ -11,7 +12,7 @@ import (
 )
 
 type SyncService interface {
-	Sync(runId string, bucketSize int) int
+	Sync(ctx context.Context, runId string, bucketSize int) int
 }
 
 type syncService struct {
@@ -31,7 +32,7 @@ func NewSyncService(repositories *repository.Repositories, services *Services) S
 	}
 }
 
-func (s *syncService) Sync(runId string, bucketSize int) int {
+func (s *syncService) Sync(ctx context.Context, runId string, bucketSize int) int {
 
 	syncRunDtls := entity.SyncRun{
 		StarAt: time.Now().UTC(),
@@ -44,7 +45,7 @@ func (s *syncService) Sync(runId string, bucketSize int) int {
 	}
 
 	if len(pageViewsToSync) != 0 {
-		contactIds, err := s.prepareContactIds(pageViewsToSync)
+		contactIds, err := s.prepareContactIds(ctx, pageViewsToSync)
 		if err != nil {
 			return 0
 		}
@@ -53,7 +54,7 @@ func (s *syncService) Sync(runId string, bucketSize int) int {
 		wg.Add(len(pageViewsToSync))
 
 		for _, v := range pageViewsToSync {
-			go s.syncPageView(&wg, runId, contactIds, v)
+			go s.syncPageView(ctx, &wg, runId, contactIds, v)
 		}
 		wg.Wait()
 	}
@@ -65,7 +66,7 @@ func (s *syncService) Sync(runId string, bucketSize int) int {
 	return len(pageViewsToSync)
 }
 
-func (s *syncService) prepareContactIds(pageViews entity.PageViews) (map[tenantVisitor]string, error) {
+func (s *syncService) prepareContactIds(ctx context.Context, pageViews entity.PageViews) (map[tenantVisitor]string, error) {
 
 	var contactIds = map[tenantVisitor]string{}
 
@@ -77,7 +78,7 @@ func (s *syncService) prepareContactIds(pageViews entity.PageViews) (map[tenantV
 		}
 		if _, ok := contactIds[tenantVisitor]; !ok {
 			firstName, lastName := s.prepareFirstAndLastNames(email)
-			id, err := s.repositories.ContactRepository.GetOrCreateContactByEmail(v.Tenant, email, firstName, lastName, v.Application)
+			id, err := s.repositories.ContactRepository.GetOrCreateContactByEmail(ctx, v.Tenant, email, firstName, lastName, v.Application)
 			if err != nil {
 				return nil, err
 			}
@@ -88,14 +89,14 @@ func (s *syncService) prepareContactIds(pageViews entity.PageViews) (map[tenantV
 	return contactIds, nil
 }
 
-func (s *syncService) syncPageView(wg *sync.WaitGroup, runId string, contactIds map[tenantVisitor]string, pv entity.PageView) string {
+func (s *syncService) syncPageView(ctx context.Context, wg *sync.WaitGroup, runId string, contactIds map[tenantVisitor]string, pv entity.PageView) string {
 	defer wg.Done()
 
 	contactId := contactIds[tenantVisitor{
 		tenant:    pv.Tenant,
 		visitorId: pv.VisitorID.String,
 	}]
-	if err := s.repositories.ActionRepository.CreatePageViewAction(contactId, pv); err != nil {
+	if err := s.repositories.ActionRepository.CreatePageViewAction(ctx, contactId, pv); err != nil {
 		logrus.Errorf("ERROR run id: %s failed to create action item for page view %s error: %v", runId, pv.ID, err.Error())
 	} else {
 		if err = s.repositories.PageViewRepository.MarkSynced(pv, contactId); err != nil {

@@ -2,34 +2,35 @@ package repository
 
 import (
 	"fmt"
-	"github.com/neo4j/neo4j-go-driver/v4/neo4j"
-	"github.com/neo4j/neo4j-go-driver/v4/neo4j/db"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j/db"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/entity"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/utils"
+	"golang.org/x/net/context"
 	"time"
 )
 
 type UserRepository interface {
-	GetMatchedUserId(tenant string, user entity.UserData) (string, error)
-	MergeUser(tenant string, syncDate time.Time, user entity.UserData) error
-	MergeEmail(tenant string, user entity.UserData) error
-	MergePhoneNumber(tenant string, user entity.UserData) error
-	GetUserIdForExternalId(tenant, userExternalId, externalSystem string) (string, error)
+	GetMatchedUserId(ctx context.Context, tenant string, user entity.UserData) (string, error)
+	MergeUser(ctx context.Context, tenant string, syncDate time.Time, user entity.UserData) error
+	MergeEmail(ctx context.Context, tenant string, user entity.UserData) error
+	MergePhoneNumber(ctx context.Context, tenant string, user entity.UserData) error
+	GetUserIdForExternalId(ctx context.Context, tenant, userExternalId, externalSystem string) (string, error)
 }
 
 type userRepository struct {
-	driver *neo4j.Driver
+	driver *neo4j.DriverWithContext
 }
 
-func NewUserRepository(driver *neo4j.Driver) UserRepository {
+func NewUserRepository(driver *neo4j.DriverWithContext) UserRepository {
 	return &userRepository{
 		driver: driver,
 	}
 }
 
-func (r *userRepository) GetMatchedUserId(tenant string, user entity.UserData) (string, error) {
-	session := utils.NewNeo4jWriteSession(*r.driver)
-	defer session.Close()
+func (r *userRepository) GetMatchedUserId(ctx context.Context, tenant string, user entity.UserData) (string, error) {
+	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
+	defer session.Close(ctx)
 
 	query := `MATCH (t:Tenant {name:$tenant})<-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]-(e:ExternalSystem {id:$externalSystem})
 				OPTIONAL MATCH (t)<-[:USER_BELONGS_TO_TENANT]-(u1:User)-[:IS_LINKED_WITH {externalId:$userExternalId}]->(e)
@@ -39,8 +40,8 @@ func (r *userRepository) GetMatchedUserId(tenant string, user entity.UserData) (
 				where users is not null
 				return users.id limit 1`
 
-	dbRecords, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
-		queryResult, err := tx.Run(query,
+	dbRecords, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		queryResult, err := tx.Run(ctx, query,
 			map[string]interface{}{
 				"tenant":         tenant,
 				"externalSystem": user.ExternalSystem,
@@ -50,7 +51,7 @@ func (r *userRepository) GetMatchedUserId(tenant string, user entity.UserData) (
 		if err != nil {
 			return nil, err
 		}
-		return queryResult.Collect()
+		return queryResult.Collect(ctx)
 	})
 	if err != nil {
 		return "", err
@@ -62,9 +63,9 @@ func (r *userRepository) GetMatchedUserId(tenant string, user entity.UserData) (
 	return "", nil
 }
 
-func (r *userRepository) MergeUser(tenant string, syncDate time.Time, user entity.UserData) error {
-	session := utils.NewNeo4jWriteSession(*r.driver)
-	defer session.Close()
+func (r *userRepository) MergeUser(ctx context.Context, tenant string, syncDate time.Time, user entity.UserData) error {
+	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
+	defer session.Close(ctx)
 
 	// Create new User if it does not exist
 	// If User exists, and sourceOfTruth is acceptable then update it.
@@ -98,8 +99,8 @@ func (r *userRepository) MergeUser(tenant string, syncDate time.Time, user entit
 		"    SET alt.updatedAt=$now, alt.appSource=$appSource, alt.firstName=$firstName, alt.lastName=$lastName, alt.name=$name " +
 		") RETURN u.id"
 
-	_, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
-		queryResult, err := tx.Run(fmt.Sprintf(query, "User_"+tenant),
+	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		queryResult, err := tx.Run(ctx, fmt.Sprintf(query, "User_"+tenant),
 			map[string]interface{}{
 				"tenant":          tenant,
 				"userId":          user.Id,
@@ -120,7 +121,7 @@ func (r *userRepository) MergeUser(tenant string, syncDate time.Time, user entit
 		if err != nil {
 			return nil, err
 		}
-		_, err = queryResult.Single()
+		_, err = queryResult.Single(ctx)
 		if err != nil {
 			return nil, err
 		}
@@ -129,9 +130,9 @@ func (r *userRepository) MergeUser(tenant string, syncDate time.Time, user entit
 	return err
 }
 
-func (r *userRepository) MergeEmail(tenant string, user entity.UserData) error {
-	session := utils.NewNeo4jWriteSession(*r.driver)
-	defer session.Close()
+func (r *userRepository) MergeEmail(ctx context.Context, tenant string, user entity.UserData) error {
+	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
+	defer session.Close(ctx)
 
 	query := "MATCH (u:User {id:$userId})-[:USER_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant}) " +
 		" MERGE (e:Email {rawEmail: $email})-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]->(t) " +
@@ -148,8 +149,8 @@ func (r *userRepository) MergeEmail(tenant string, user entity.UserData) error {
 		" ON CREATE SET rel.primary=true, " +
 		"				rel.label=$label " +
 		" RETURN e.id"
-	_, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
-		queryResult, err := tx.Run(fmt.Sprintf(query, "Email_"+tenant),
+	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		queryResult, err := tx.Run(ctx, fmt.Sprintf(query, "Email_"+tenant),
 			map[string]interface{}{
 				"tenant":        tenant,
 				"userId":        user.Id,
@@ -163,7 +164,7 @@ func (r *userRepository) MergeEmail(tenant string, user entity.UserData) error {
 		if err != nil {
 			return nil, err
 		}
-		_, err = queryResult.Single()
+		_, err = queryResult.Single(ctx)
 		if err != nil {
 			return nil, err
 		}
@@ -172,9 +173,9 @@ func (r *userRepository) MergeEmail(tenant string, user entity.UserData) error {
 	return err
 }
 
-func (r *userRepository) MergePhoneNumber(tenant string, user entity.UserData) error {
-	session := utils.NewNeo4jWriteSession(*r.driver)
-	defer session.Close()
+func (r *userRepository) MergePhoneNumber(ctx context.Context, tenant string, user entity.UserData) error {
+	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
+	defer session.Close(ctx)
 
 	query := "MATCH (u:User {id:$userId})-[:USER_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant}) " +
 		" MERGE (p:PhoneNumber {rawPhoneNumber: $phoneNumber})-[:PHONE_NUMBER_BELONGS_TO_TENANT]->(t) " +
@@ -191,8 +192,8 @@ func (r *userRepository) MergePhoneNumber(tenant string, user entity.UserData) e
 		" ON CREATE SET rel.primary=true, " +
 		"				rel.label=$label " +
 		" RETURN p.id "
-	_, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
-		queryResult, err := tx.Run(fmt.Sprintf(query, "PhoneNumber_"+tenant),
+	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		queryResult, err := tx.Run(ctx, fmt.Sprintf(query, "PhoneNumber_"+tenant),
 			map[string]interface{}{
 				"tenant":        tenant,
 				"userId":        user.Id,
@@ -206,7 +207,7 @@ func (r *userRepository) MergePhoneNumber(tenant string, user entity.UserData) e
 		if err != nil {
 			return nil, err
 		}
-		_, err = queryResult.Single()
+		_, err = queryResult.Single(ctx)
 		if err != nil {
 			return nil, err
 		}
@@ -215,15 +216,15 @@ func (r *userRepository) MergePhoneNumber(tenant string, user entity.UserData) e
 	return err
 }
 
-func (r *userRepository) GetUserIdForExternalId(tenant, userExternalId, externalSystem string) (string, error) {
-	session := utils.NewNeo4jWriteSession(*r.driver)
-	defer session.Close()
+func (r *userRepository) GetUserIdForExternalId(ctx context.Context, tenant, userExternalId, externalSystem string) (string, error) {
+	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
+	defer session.Close(ctx)
 
 	query := "MATCH (:Tenant {name:$tenant})<-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]-(e:ExternalSystem {id:$externalSystem}) " +
 		" MATCH (u:User)-[:IS_LINKED_WITH {externalId:$userExternalId}]->(e) " +
 		" RETURN u.id "
-	dbRecord, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
-		queryResult, err := tx.Run(query,
+	dbRecord, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		queryResult, err := tx.Run(ctx, query,
 			map[string]interface{}{
 				"tenant":         tenant,
 				"externalSystem": externalSystem,
@@ -232,7 +233,7 @@ func (r *userRepository) GetUserIdForExternalId(tenant, userExternalId, external
 		if err != nil {
 			return nil, err
 		}
-		record, err := queryResult.Single()
+		record, err := queryResult.Single(ctx)
 		if err != nil {
 			return nil, err
 		}

@@ -5,11 +5,12 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/common"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/repository"
 	"github.com/sirupsen/logrus"
+	"golang.org/x/net/context"
 	"time"
 )
 
 type UserSyncService interface {
-	SyncUsers(dataService common.SourceDataService, syncDate time.Time, tenant, runId string) (int, int)
+	SyncUsers(ctx context.Context, dataService common.SourceDataService, syncDate time.Time, tenant, runId string) (int, int)
 }
 
 type userSyncService struct {
@@ -22,7 +23,7 @@ func NewUserSyncService(repositories *repository.Repositories) UserSyncService {
 	}
 }
 
-func (s *userSyncService) SyncUsers(dataService common.SourceDataService, syncDate time.Time, tenant, runId string) (int, int) {
+func (s *userSyncService) SyncUsers(ctx context.Context, dataService common.SourceDataService, syncDate time.Time, tenant, runId string) (int, int) {
 	completed, failed := 0, 0
 	for {
 		users := dataService.GetUsersForSync(batchSize, runId)
@@ -35,7 +36,7 @@ func (s *userSyncService) SyncUsers(dataService common.SourceDataService, syncDa
 		for _, v := range users {
 			var failedSync = false
 
-			userId, err := s.repositories.UserRepository.GetMatchedUserId(tenant, *v)
+			userId, err := s.repositories.UserRepository.GetMatchedUserId(ctx, tenant, *v)
 			if err != nil {
 				failedSync = true
 				logrus.Errorf("failed finding existing matched user with external reference %v for tenant %v :%v", v.ExternalId, tenant, err)
@@ -47,14 +48,14 @@ func (s *userSyncService) SyncUsers(dataService common.SourceDataService, syncDa
 			}
 			v.Id = userId
 
-			err = s.repositories.UserRepository.MergeUser(tenant, syncDate, *v)
+			err = s.repositories.UserRepository.MergeUser(ctx, tenant, syncDate, *v)
 			if err != nil {
 				failedSync = true
 				logrus.Errorf("failed merging user with external reference %v for tenant %v :%v", v.ExternalId, tenant, err)
 			}
 
 			if len(v.Email) > 0 {
-				err = s.repositories.UserRepository.MergeEmail(tenant, *v)
+				err = s.repositories.UserRepository.MergeEmail(ctx, tenant, *v)
 				if err != nil {
 					failedSync = true
 					logrus.Errorf("failed merging email for user with id %v for tenant %v :%v", userId, tenant, err)
@@ -62,7 +63,7 @@ func (s *userSyncService) SyncUsers(dataService common.SourceDataService, syncDa
 			}
 
 			if len(v.PhoneNumber) > 0 {
-				err = s.repositories.UserRepository.MergePhoneNumber(tenant, *v)
+				err = s.repositories.UserRepository.MergePhoneNumber(ctx, tenant, *v)
 				if err != nil {
 					failedSync = true
 					logrus.Errorf("failed merging phone number for user with id %v for tenant %v :%v", userId, tenant, err)

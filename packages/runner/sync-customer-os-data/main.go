@@ -7,6 +7,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/config"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/service"
 	"github.com/sirupsen/logrus"
+	"golang.org/x/net/context"
 	"sync"
 	"time"
 )
@@ -52,12 +53,13 @@ func main() {
 	}
 	defer sqlDb.Close()
 
+	ctx := context.Background()
 	// init openline neo4j db client
 	neo4jDriver, errNeo4j := config.NewDriver(cfg)
 	if errNeo4j != nil {
 		logrus.Fatalf("failed opening connection to neo4j: %v", errNeo4j.Error())
 	}
-	defer (*neo4jDriver).Close()
+	defer (*neo4jDriver).Close(ctx)
 
 	// init airbyte postgres db pool
 	airbyteStoreDb := config.InitPoolManager(cfg)
@@ -72,7 +74,7 @@ func main() {
 			taskQueue.AddTask(func() {
 				runId, _ := uuid.NewRandom()
 				logrus.Infof("run id: %s syncing data into customer-os at %v", runId.String(), time.Now().UTC())
-				services.SyncService.Sync(runId.String())
+				services.SyncService.Sync(ctx, runId.String())
 				logrus.Infof("run id: %s sync completed at %v", runId.String(), time.Now().UTC())
 
 				timeout := time.Second * time.Duration(cfg.TimeoutAfterTaskRun)

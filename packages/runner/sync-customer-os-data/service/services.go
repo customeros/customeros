@@ -1,7 +1,7 @@
 package service
 
 import (
-	"github.com/neo4j/neo4j-go-driver/v4/neo4j"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/config"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/repository"
 	"gorm.io/gorm"
@@ -13,7 +13,7 @@ type Services struct {
 	UserSyncService UserSyncService
 }
 
-func InitServices(driver *neo4j.Driver, controlDb *gorm.DB, airbyteStoreDb *config.AirbyteStoreDB) *Services {
+func InitServices(driver *neo4j.DriverWithContext, controlDb *gorm.DB, airbyteStoreDb *config.AirbyteStoreDB) *Services {
 	repositories := repository.InitRepos(driver, controlDb, airbyteStoreDb)
 
 	services := new(Services)

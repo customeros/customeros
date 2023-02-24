@@ -7,6 +7,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-tracked-data/config"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-tracked-data/service"
 	"github.com/sirupsen/logrus"
+	"golang.org/x/net/context"
 	"sync"
 	"time"
 )
@@ -57,11 +58,12 @@ func main() {
 	}
 	defer sqlTrackingDb.Close()
 
+	ctx := context.Background()
 	neo4jDriver, errNeo4j := config.NewDriver(cfg)
 	if errNeo4j != nil {
 		logrus.Fatalf("failed opening connection to neo4j: %v", errNeo4j.Error())
 	}
-	defer (*neo4jDriver).Close()
+	defer (*neo4jDriver).Close(ctx)
 
 	serviceContainer := service.InitServices(neo4jDriver, gormDb, gormTrackingDb)
 	serviceContainer.InitService.Init()
@@ -72,7 +74,7 @@ func main() {
 			taskQueue.AddTask(func() {
 				runId, _ := uuid.NewRandom()
 				logrus.Infof("run id: %s syncing tracked data into customer-os at %v", runId.String(), time.Now().UTC())
-				result := serviceContainer.SyncService.Sync(runId.String(), cfg.PageViewsBucketSize)
+				result := serviceContainer.SyncService.Sync(ctx, runId.String(), cfg.PageViewsBucketSize)
 				logrus.Infof("run id: %s sync completed at %v, processed %d records", runId.String(), time.Now().UTC(), result)
 
 				if result == 0 {

@@ -1,12 +1,12 @@
 package repository
 
 import (
-	"github.com/neo4j/neo4j-go-driver/v4/neo4j"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"gorm.io/gorm"
 )
 
 type DbDrivers struct {
-	Neo4jDriver    *neo4j.Driver
+	Neo4jDriver    *neo4j.DriverWithContext
 	GormDb         *gorm.DB
 	GormTrackingDb *gorm.DB
 }
@@ -19,7 +19,7 @@ type Repositories struct {
 	SyncRunRepository  SyncRunRepository
 }
 
-func InitRepos(driver *neo4j.Driver, gormDb *gorm.DB, gormTrackingDb *gorm.DB) *Repositories {
+func InitRepos(driver *neo4j.DriverWithContext, gormDb *gorm.DB, gormTrackingDb *gorm.DB) *Repositories {
 	repositories := Repositories{
 		Drivers: DbDrivers{
 			Neo4jDriver:    driver,

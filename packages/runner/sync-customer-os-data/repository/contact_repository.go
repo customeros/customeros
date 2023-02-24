@@ -2,39 +2,40 @@ package repository
 
 import (
 	"fmt"
-	"github.com/neo4j/neo4j-go-driver/v4/neo4j"
-	"github.com/neo4j/neo4j-go-driver/v4/neo4j/db"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j/db"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/entity"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/utils"
+	"golang.org/x/net/context"
 	"time"
 )
 
 type ContactRepository interface {
-	MergeContact(tenant string, syncDate time.Time, contact entity.ContactData) (string, error)
-	MergePrimaryEmail(tenant, contactId, email, externalSystem string, createdAt time.Time) error
-	MergeAdditionalEmail(tenant, contactId, email, externalSystem string, createdAt time.Time) error
-	MergePrimaryPhoneNumber(tenant, contactId, phoneNumber, externalSystem string, createdAt time.Time) error
-	SetOwnerRelationship(tenant, contactId, userExternalOwnerId, externalSystemId string) error
-	MergeTextCustomField(tenant, contactId string, field entity.TextCustomField, createdAt time.Time) error
-	MergeContactDefaultPlace(tenant, contactId string, contact entity.ContactData) error
-	MergeTagForContact(tenant, contactId, tagName, sourceApp string) error
-	GetOrCreateContactByEmail(tenant, email, firstName, lastName, source string) (string, error)
-	LinkContactWithOrganization(tenant, contactId, organizationExternalId, source string) error
+	MergeContact(ctx context.Context, tenant string, syncDate time.Time, contact entity.ContactData) (string, error)
+	MergePrimaryEmail(ctx context.Context, tenant, contactId, email, externalSystem string, createdAt time.Time) error
+	MergeAdditionalEmail(ctx context.Context, tenant, contactId, email, externalSystem string, createdAt time.Time) error
+	MergePrimaryPhoneNumber(ctx context.Context, tenant, contactId, phoneNumber, externalSystem string, createdAt time.Time) error
+	SetOwnerRelationship(ctx context.Context, tenant, contactId, userExternalOwnerId, externalSystemId string) error
+	MergeTextCustomField(ctx context.Context, tenant, contactId string, field entity.TextCustomField, createdAt time.Time) error
+	MergeContactDefaultPlace(ctx context.Context, tenant, contactId string, contact entity.ContactData) error
+	MergeTagForContact(ctx context.Context, tenant, contactId, tagName, sourceApp string) error
+	GetOrCreateContactByEmail(ctx context.Context, tenant, email, firstName, lastName, source string) (string, error)
+	LinkContactWithOrganization(ctx context.Context, tenant, contactId, organizationExternalId, source string) error
 }
 
 type contactRepository struct {
-	driver *neo4j.Driver
+	driver *neo4j.DriverWithContext
 }
 
-func NewContactRepository(driver *neo4j.Driver) ContactRepository {
+func NewContactRepository(driver *neo4j.DriverWithContext) ContactRepository {
 	return &contactRepository{
 		driver: driver,
 	}
 }
 
-func (r *contactRepository) MergeContact(tenant string, syncDate time.Time, contact entity.ContactData) (string, error) {
-	session := utils.NewNeo4jWriteSession(*r.driver)
-	defer session.Close()
+func (r *contactRepository) MergeContact(ctx context.Context, tenant string, syncDate time.Time, contact entity.ContactData) (string, error) {
+	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
+	defer session.Close(ctx)
 
 	// Create new Contact if it does not exist
 	// If Contact exists, and sourceOfTruth is acceptable then update it.
@@ -59,8 +60,8 @@ func (r *contactRepository) MergeContact(tenant string, syncDate time.Time, cont
 		" ) " +
 		" RETURN c.id"
 
-	dbRecord, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
-		queryResult, err := tx.Run(fmt.Sprintf(
+	dbRecord, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		queryResult, err := tx.Run(ctx, fmt.Sprintf(
 			query, "Contact_"+tenant),
 			map[string]interface{}{
 				"tenant":         tenant,
@@ -78,7 +79,7 @@ func (r *contactRepository) MergeContact(tenant string, syncDate time.Time, cont
 		if err != nil {
 			return nil, err
 		}
-		record, err := queryResult.Single()
+		record, err := queryResult.Single(ctx)
 		if err != nil {
 			return nil, err
 		}
@@ -90,9 +91,9 @@ func (r *contactRepository) MergeContact(tenant string, syncDate time.Time, cont
 	return dbRecord.(string), nil
 }
 
-func (r *contactRepository) MergePrimaryEmail(tenant, contactId, email, externalSystem string, createdAt time.Time) error {
-	session := utils.NewNeo4jWriteSession(*r.driver)
-	defer session.Close()
+func (r *contactRepository) MergePrimaryEmail(ctx context.Context, tenant, contactId, email, externalSystem string, createdAt time.Time) error {
+	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
+	defer session.Close(ctx)
 
 	query := "MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant}) " +
 		" OPTIONAL MATCH (c)-[rel:HAS]->(:Email) " +
@@ -112,8 +113,8 @@ func (r *contactRepository) MergePrimaryEmail(tenant, contactId, email, external
 		" ON CREATE SET rel.primary=true " +
 		" ON MATCH SET rel.primary=true, e.updatedAt=$now "
 
-	_, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
-		_, err := tx.Run(fmt.Sprintf(query, "Email_"+tenant),
+	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		_, err := tx.Run(ctx, fmt.Sprintf(query, "Email_"+tenant),
 			map[string]interface{}{
 				"tenant":        tenant,
 				"contactId":     contactId,
@@ -129,9 +130,9 @@ func (r *contactRepository) MergePrimaryEmail(tenant, contactId, email, external
 	return err
 }
 
-func (r *contactRepository) MergeAdditionalEmail(tenant, contactId, email, externalSystem string, createdAt time.Time) error {
-	session := utils.NewNeo4jWriteSession(*r.driver)
-	defer session.Close()
+func (r *contactRepository) MergeAdditionalEmail(ctx context.Context, tenant, contactId, email, externalSystem string, createdAt time.Time) error {
+	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
+	defer session.Close(ctx)
 
 	query := "MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant}) " +
 		" MERGE (e:Email {rawEmail: $email})-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]->(t) " +
@@ -148,8 +149,8 @@ func (r *contactRepository) MergeAdditionalEmail(tenant, contactId, email, exter
 		" ON CREATE SET rel.primary=false " +
 		" ON MATCH SET rel.primary=false, e.updatedAt=$now "
 
-	_, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
-		_, err := tx.Run(fmt.Sprintf(query, "Email_"+tenant),
+	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		_, err := tx.Run(ctx, fmt.Sprintf(query, "Email_"+tenant),
 			map[string]interface{}{
 				"tenant":        tenant,
 				"contactId":     contactId,
@@ -165,9 +166,9 @@ func (r *contactRepository) MergeAdditionalEmail(tenant, contactId, email, exter
 	return err
 }
 
-func (r *contactRepository) MergePrimaryPhoneNumber(tenant, contactId, phoneNumber, externalSystem string, createdAt time.Time) error {
-	session := utils.NewNeo4jWriteSession(*r.driver)
-	defer session.Close()
+func (r *contactRepository) MergePrimaryPhoneNumber(ctx context.Context, tenant, contactId, phoneNumber, externalSystem string, createdAt time.Time) error {
+	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
+	defer session.Close(ctx)
 
 	query := "MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant}) " +
 		" OPTIONAL MATCH (c)-[rel:HAS]->(p:PhoneNumber) " +
@@ -187,8 +188,8 @@ func (r *contactRepository) MergePrimaryPhoneNumber(tenant, contactId, phoneNumb
 		" ON CREATE SET rel.primary=true, p.updatedAt=$now, c.updatedAt=$now " +
 		" ON MATCH SET rel.primary=true, c.updatedAt=$now "
 
-	_, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
-		_, err := tx.Run(fmt.Sprintf(query, "PhoneNumber_"+tenant),
+	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		_, err := tx.Run(ctx, fmt.Sprintf(query, "PhoneNumber_"+tenant),
 			map[string]interface{}{
 				"tenant":        tenant,
 				"contactId":     contactId,
@@ -204,12 +205,12 @@ func (r *contactRepository) MergePrimaryPhoneNumber(tenant, contactId, phoneNumb
 	return err
 }
 
-func (r *contactRepository) SetOwnerRelationship(tenant, contactId, userExternalOwnerId, externalSystemId string) error {
-	session := utils.NewNeo4jWriteSession(*r.driver)
-	defer session.Close()
+func (r *contactRepository) SetOwnerRelationship(ctx context.Context, tenant, contactId, userExternalOwnerId, externalSystemId string) error {
+	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
+	defer session.Close(ctx)
 
-	_, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
-		queryResult, err := tx.Run(`
+	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		queryResult, err := tx.Run(ctx, `
 			MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant})
 			MATCH (u:User)-[:IS_LINKED_WITH {externalOwnerId:$userExternalOwnerId}]->(e:ExternalSystem {id:$externalSystemId})-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]->(t)
 			MERGE (u)-[r:OWNS]->(c)
@@ -223,7 +224,7 @@ func (r *contactRepository) SetOwnerRelationship(tenant, contactId, userExternal
 		if err != nil {
 			return nil, err
 		}
-		_, err = queryResult.Single()
+		_, err = queryResult.Single(ctx)
 		if err != nil {
 			return nil, err
 		}
@@ -232,9 +233,9 @@ func (r *contactRepository) SetOwnerRelationship(tenant, contactId, userExternal
 	return err
 }
 
-func (r *contactRepository) MergeTextCustomField(tenant, contactId string, field entity.TextCustomField, createdAt time.Time) error {
-	session := utils.NewNeo4jWriteSession(*r.driver)
-	defer session.Close()
+func (r *contactRepository) MergeTextCustomField(ctx context.Context, tenant, contactId string, field entity.TextCustomField, createdAt time.Time) error {
+	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
+	defer session.Close(ctx)
 
 	query := "MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) " +
 		" MERGE (f:TextField:CustomField {name: $name, datatype:$datatype})<-[:HAS_PROPERTY]-(c) " +
@@ -248,8 +249,8 @@ func (r *contactRepository) MergeTextCustomField(tenant, contactId string, field
 		"    SET alt.updatedAt=$now, alt.appSource=$appSource, alt.textValue=$value " +
 		" ) "
 
-	_, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
-		_, err := tx.Run(fmt.Sprintf(query, "CustomField_"+tenant),
+	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		_, err := tx.Run(ctx, fmt.Sprintf(query, "CustomField_"+tenant),
 			map[string]interface{}{
 				"tenant":        tenant,
 				"contactId":     contactId,
@@ -267,9 +268,9 @@ func (r *contactRepository) MergeTextCustomField(tenant, contactId string, field
 	return err
 }
 
-func (r *contactRepository) MergeContactDefaultPlace(tenant, contactId string, contact entity.ContactData) error {
-	session := utils.NewNeo4jWriteSession(*r.driver)
-	defer session.Close()
+func (r *contactRepository) MergeContactDefaultPlace(ctx context.Context, tenant, contactId string, contact entity.ContactData) error {
+	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
+	defer session.Close(ctx)
 
 	// Create new Location and Location if it does not exist with given source property and namd
 	// If Location exists, and sourceOfTruth is acceptable then update it.
@@ -305,8 +306,8 @@ func (r *contactRepository) MergeContactDefaultPlace(tenant, contactId string, c
 		" alt.country=$country, alt.region=$region, alt.locality=$locality, alt.address=$address, alt.zip=$zip " +
 		") "
 
-	_, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
-		_, err := tx.Run(fmt.Sprintf(query, "Location_"+tenant),
+	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		_, err := tx.Run(ctx, fmt.Sprintf(query, "Location_"+tenant),
 			map[string]interface{}{
 				"tenant":        tenant,
 				"contactId":     contactId,
@@ -327,9 +328,9 @@ func (r *contactRepository) MergeContactDefaultPlace(tenant, contactId string, c
 	return err
 }
 
-func (r *contactRepository) MergeTagForContact(tenant, contactId, tagName, source string) error {
-	session := utils.NewNeo4jWriteSession(*r.driver)
-	defer session.Close()
+func (r *contactRepository) MergeTagForContact(ctx context.Context, tenant, contactId, tagName, source string) error {
+	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
+	defer session.Close(ctx)
 
 	query := "MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant}) " +
 		" MERGE (tag:Tag {name:$tagName})-[:TAG_BELONGS_TO_TENANT]->(t) " +
@@ -344,8 +345,8 @@ func (r *contactRepository) MergeTagForContact(tenant, contactId, tagName, sourc
 		"	ON CREATE SET r.taggedAt=$now " +
 		" return r"
 
-	_, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
-		queryResult, err := tx.Run(fmt.Sprintf(query, "Tag_"+tenant),
+	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		queryResult, err := tx.Run(ctx, fmt.Sprintf(query, "Tag_"+tenant),
 			map[string]interface{}{
 				"tenant":    tenant,
 				"contactId": contactId,
@@ -356,7 +357,7 @@ func (r *contactRepository) MergeTagForContact(tenant, contactId, tagName, sourc
 		if err != nil {
 			return nil, err
 		}
-		_, err = queryResult.Single()
+		_, err = queryResult.Single(ctx)
 		if err != nil {
 			return nil, err
 		}
@@ -365,15 +366,12 @@ func (r *contactRepository) MergeTagForContact(tenant, contactId, tagName, sourc
 	return err
 }
 
-func (r *contactRepository) GetOrCreateContactByEmail(tenant, email, firstName, lastName, source string) (string, error) {
-	session := (*r.driver).NewSession(
-		neo4j.SessionConfig{
-			AccessMode: neo4j.AccessModeWrite,
-			BoltLogger: neo4j.ConsoleBoltLogger()})
-	defer session.Close()
+func (r *contactRepository) GetOrCreateContactByEmail(ctx context.Context, tenant, email, firstName, lastName, source string) (string, error) {
+	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
+	defer session.Close(ctx)
 
-	record, err := session.WriteTransaction(func(tx neo4j.Transaction) (interface{}, error) {
-		queryResult, err := tx.Run(fmt.Sprintf(
+	record, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (interface{}, error) {
+		queryResult, err := tx.Run(ctx, fmt.Sprintf(
 			" MATCH (t:Tenant {name:$tenant}) "+
 				" MERGE (e:Email {rawEmail: $email})-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]->(t) "+
 				" ON CREATE SET "+
@@ -407,7 +405,7 @@ func (r *contactRepository) GetOrCreateContactByEmail(tenant, email, firstName, 
 				"appSource":     source,
 				"now":           time.Now().UTC(),
 			})
-		record, err := queryResult.Single()
+		record, err := queryResult.Single(ctx)
 		if err != nil {
 			return nil, err
 		}
@@ -417,15 +415,15 @@ func (r *contactRepository) GetOrCreateContactByEmail(tenant, email, firstName, 
 	return record.(*db.Record).Values[0].(string), err
 }
 
-func (r *contactRepository) LinkContactWithOrganization(tenant, contactId, organizationExternalId, source string) error {
-	session := utils.NewNeo4jWriteSession(*r.driver)
-	defer session.Close()
+func (r *contactRepository) LinkContactWithOrganization(ctx context.Context, tenant, contactId, organizationExternalId, source string) error {
+	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
+	defer session.Close(ctx)
 
 	query := "MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant}) " +
 		" MATCH (t)<-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]-(e:ExternalSystem {id:$externalSystemId})<-[:IS_LINKED_WITH {externalId:$organizationExternalId}]-(org:Organization) " +
 		" MERGE (c)-[:CONTACT_OF]->(org)"
-	_, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
-		_, err := tx.Run(query,
+	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		_, err := tx.Run(ctx, query,
 			map[string]interface{}{
 				"tenant":                 tenant,
 				"contactId":              contactId,
