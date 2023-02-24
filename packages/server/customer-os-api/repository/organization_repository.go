@@ -20,6 +20,8 @@ type OrganizationRepository interface {
 	Delete(ctx context.Context, session neo4j.SessionWithContext, tenant, organizationId string) error
 	LinkWithOrganizationTypeInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant, organizationId, organizationTypeId string) error
 	UnlinkFromOrganizationTypesInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant, organizationId string) error
+	LinkWithDomainsInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant, organizationId string, domains []string) error
+	UnlinkFromDomainsNotInListInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant, organizationId string, domains []string) error
 }
 
 type organizationRepository struct {
@@ -38,7 +40,6 @@ func (r *organizationRepository) Create(ctx context.Context, tx neo4j.ManagedTra
 		" ON CREATE SET org.name=$name, " +
 		"				org.description=$description, " +
 		"				org.readonly=false, " +
-		" 				org.domain=$domain, " +
 		"				org.website=$website, " +
 		"				org.industry=$industry, " +
 		"				org.isPublic=$isPublic, " +
@@ -56,7 +57,6 @@ func (r *organizationRepository) Create(ctx context.Context, tx neo4j.ManagedTra
 			"name":          organization.Name,
 			"description":   organization.Description,
 			"readonly":      false,
-			"domain":        organization.Domain,
 			"website":       organization.Website,
 			"industry":      organization.Industry,
 			"isPublic":      organization.IsPublic,
@@ -73,7 +73,6 @@ func (r *organizationRepository) Update(ctx context.Context, tx neo4j.ManagedTra
 		" MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {id:$organizationId})" +
 			" SET 	org.name=$name, " +
 			"		org.description=$description, " +
-			"		org.domain=$domain, " +
 			"		org.website=$website, " +
 			" 		org.industry=$industry, " +
 			"		org.isPublic=$isPublic, " +
@@ -87,7 +86,6 @@ func (r *organizationRepository) Update(ctx context.Context, tx neo4j.ManagedTra
 			"organizationId": organization.ID,
 			"name":           organization.Name,
 			"description":    organization.Description,
-			"domain":         organization.Domain,
 			"website":        organization.Website,
 			"industry":       organization.Industry,
 			"isPublic":       organization.IsPublic,
@@ -278,4 +276,30 @@ func (r *organizationRepository) UnlinkFromOrganizationTypesInTx(ctx context.Con
 		return err
 	}
 	return nil
+}
+
+func (r *organizationRepository) LinkWithDomainsInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant, organizationId string, domains []string) error {
+	_, err := tx.Run(ctx, `
+			MATCH (org:Organization {id:$organizationId})-[:ORGANIZATION_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}),
+			(d:Domain) WHERE d.domain IN $domains
+			MERGE (org)-[:HAS_DOMAIN]->(d)`,
+		map[string]any{
+			"tenant":         tenant,
+			"organizationId": organizationId,
+			"domains":        domains,
+		})
+	return err
+}
+
+func (r *organizationRepository) UnlinkFromDomainsNotInListInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant, organizationId string, domains []string) error {
+	_, err := tx.Run(ctx, `
+			MATCH (:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {id:$organizationId})-[rel:HAS_DOMAIN]->(d:Domain)
+			WHERE NOT d.domain IN $domains
+			DELETE rel`,
+		map[string]any{
+			"tenant":         tenant,
+			"organizationId": organizationId,
+			"domains":        domains,
+		})
+	return err
 }

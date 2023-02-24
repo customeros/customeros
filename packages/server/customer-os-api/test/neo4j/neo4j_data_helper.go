@@ -430,7 +430,7 @@ func CreateFullOrganization(ctx context.Context, driver *neo4j.DriverWithContext
 	var organizationId, _ = uuid.NewRandom()
 	query := `MATCH (t:Tenant {name:$tenant})
 			MERGE (t)<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {id:$id})
-			ON CREATE SET org.name=$name, org.description=$description, org.domain=$domain, org.website=$website,
+			ON CREATE SET org.name=$name, org.description=$description, org.website=$website,
 							org.industry=$industry, org.isPublic=$isPublic, org.createdAt=datetime({timezone: 'UTC'})
 `
 	ExecuteWriteQuery(ctx, driver, query, map[string]any{
@@ -438,12 +438,29 @@ func CreateFullOrganization(ctx context.Context, driver *neo4j.DriverWithContext
 		"tenant":      tenant,
 		"name":        organization.Name,
 		"description": organization.Description,
-		"domain":      organization.Domain,
 		"website":     organization.Website,
 		"industry":    organization.Industry,
 		"isPublic":    organization.IsPublic,
 	})
 	return organizationId.String()
+}
+
+func AddDomainToOrg(ctx context.Context, driver *neo4j.DriverWithContext, organizationId, domain string) {
+	query := ` MERGE (d:Domain {domain:$domain})
+			ON CREATE SET
+				d.id=randomUUID(),
+				d.source="test",
+				d.appSource="test",
+				d.createdAt=$now,
+				d.updatedAt=$now
+			WITH d
+			MATCH (o:Organization {id:$organizationId})
+			MERGE (o)-[:HAS_DOMAIN]->(d)`
+	ExecuteWriteQuery(ctx, driver, query, map[string]any{
+		"organizationId": organizationId,
+		"domain":         domain,
+		"now":            utils.Now(),
+	})
 }
 
 func ContactWorksForOrganization(ctx context.Context, driver *neo4j.DriverWithContext, contactId, organizationId, jobTitle string, primary bool) string {

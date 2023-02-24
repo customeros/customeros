@@ -11,7 +11,6 @@ func MapOrganizationInputToEntity(input *model.OrganizationInput) *entity.Organi
 	return &entity.OrganizationEntity{
 		Name:          input.Name,
 		Description:   utils.IfNotNilString(input.Description),
-		Domain:        utils.IfNotNilString(input.Domain),
 		Website:       utils.IfNotNilString(input.Website),
 		Industry:      utils.IfNotNilString(input.Industry),
 		IsPublic:      utils.IfNotNilBool(input.IsPublic),
@@ -26,7 +25,6 @@ func MapOrganizationUpdateInputToEntity(input *model.OrganizationUpdateInput) *e
 		ID:            input.ID,
 		Name:          input.Name,
 		Description:   utils.IfNotNilString(input.Description),
-		Domain:        utils.IfNotNilString(input.Domain),
 		Website:       utils.IfNotNilString(input.Website),
 		Industry:      utils.IfNotNilString(input.Industry),
 		IsPublic:      utils.IfNotNilBool(input.IsPublic),
@@ -39,7 +37,6 @@ func MapEntityToOrganization(entity *entity.OrganizationEntity) *model.Organizat
 		ID:            entity.ID,
 		Name:          entity.Name,
 		Description:   utils.StringPtr(entity.Description),
-		Domain:        utils.StringPtr(entity.Domain),
 		Website:       utils.StringPtr(entity.Website),
 		Industry:      utils.StringPtr(entity.Industry),
 		IsPublic:      utils.BoolPtr(entity.IsPublic),

@@ -15,7 +15,8 @@ type Organization implements Node {
     updatedAt:   Time!
     name: String!
     description: String
-    domain:      String
+    domain:      String @deprecated(reason: "Deprecated in favor of domains")
+    domains:     [String!]! @goField(forceResolver: true)
     website:     String
     industry:    String
     isPublic:    Boolean
@@ -48,7 +49,8 @@ input OrganizationInput {
     """
     name: String!
     description: String
-    domain:      String
+    domain:      String @deprecated(reason: "Deprecated in favor of domains")
+    domains:     [String!]
     website:     String
     industry:    String
     isPublic:    Boolean
@@ -60,7 +62,8 @@ input OrganizationUpdateInput {
     id: ID!
     name: String!
     description: String
-    domain:      String
+    domain:      String @deprecated(reason: "Deprecated in favor of domains")
+    domains:     [String!]
     website:     String
     industry:    String
     isPublic:    Boolean

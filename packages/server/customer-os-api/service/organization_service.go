@@ -27,11 +27,13 @@ type OrganizationService interface {
 type OrganizationCreateData struct {
 	OrganizationEntity *entity.OrganizationEntity
 	OrganizationTypeID *string
+	Domains            []string
 }
 
 type OrganizationUpdateData struct {
 	OrganizationEntity *entity.OrganizationEntity
 	OrganizationTypeID *string
+	Domains            []string
 }
 
 type organizationService struct {
@@ -49,12 +51,29 @@ func (s *organizationService) Create(ctx context.Context, input *OrganizationCre
 	defer session.Close(ctx)
 
 	organizationDbNodePtr, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		tenant := common.GetContext(ctx).Tenant
+		tenant := common.GetTenantFromContext(ctx)
+
+		for _, domain := range input.Domains {
+			_, err := s.repositories.DomainRepository.Merge(ctx, entity.DomainEntity{
+				Domain:    domain,
+				Source:    input.OrganizationEntity.Source,
+				AppSource: input.OrganizationEntity.AppSource,
+			})
+			if err != nil {
+				return nil, err
+			}
+		}
+
 		organizationDbNodePtr, err := s.repositories.OrganizationRepository.Create(ctx, tx, tenant, *input.OrganizationEntity)
 		if err != nil {
 			return nil, err
 		}
 		var organizationId = utils.GetPropsFromNode(*organizationDbNodePtr)["id"].(string)
+
+		err = s.repositories.OrganizationRepository.LinkWithDomainsInTx(ctx, tx, tenant, organizationId, input.Domains)
+		if err != nil {
+			return nil, err
+		}
 
 		if input.OrganizationTypeID != nil {
 			err = s.repositories.OrganizationRepository.LinkWithOrganizationTypeInTx(ctx, tx, tenant, organizationId, *input.OrganizationTypeID)
@@ -76,12 +95,34 @@ func (s *organizationService) Update(ctx context.Context, input *OrganizationUpd
 	defer session.Close(ctx)
 
 	organizationDbNodePtr, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		tenant := common.GetContext(ctx).Tenant
+		tenant := common.GetTenantFromContext(ctx)
+
+		for _, domain := range input.Domains {
+			_, err := s.repositories.DomainRepository.Merge(ctx, entity.DomainEntity{
+				Domain:    domain,
+				Source:    input.OrganizationEntity.Source,
+				AppSource: input.OrganizationEntity.AppSource,
+			})
+			if err != nil {
+				return nil, err
+			}
+		}
+
 		organizationDbNodePtr, err := s.repositories.OrganizationRepository.Update(ctx, tx, tenant, *input.OrganizationEntity)
 		if err != nil {
 			return nil, err
 		}
 		var organizationId = utils.GetPropsFromNode(*organizationDbNodePtr)["id"].(string)
+
+		err = s.repositories.OrganizationRepository.LinkWithDomainsInTx(ctx, tx, tenant, organizationId, input.Domains)
+		if err != nil {
+			return nil, err
+		}
+
+		err = s.repositories.OrganizationRepository.UnlinkFromDomainsNotInListInTx(ctx, tx, tenant, organizationId, input.Domains)
+		if err != nil {
+			return nil, err
+		}
 
 		err = s.repositories.OrganizationRepository.UnlinkFromOrganizationTypesInTx(ctx, tx, tenant, organizationId)
 		if err != nil {
@@ -222,7 +263,6 @@ func (s *organizationService) mapDbNodeToOrganizationEntity(node dbtype.Node) *e
 	organizationEntityPtr.ID = utils.GetStringPropOrEmpty(props, "id")
 	organizationEntityPtr.Name = utils.GetStringPropOrEmpty(props, "name")
 	organizationEntityPtr.Description = utils.GetStringPropOrEmpty(props, "description")
-	organizationEntityPtr.Domain = utils.GetStringPropOrEmpty(props, "domain")
 	organizationEntityPtr.Website = utils.GetStringPropOrEmpty(props, "website")
 	organizationEntityPtr.Industry = utils.GetStringPropOrEmpty(props, "industry")
 	organizationEntityPtr.IsPublic = utils.GetBoolPropOrFalse(props, "isPublic")

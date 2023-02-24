@@ -10,7 +10,7 @@ query GetContactById($contactId: ID!){
             name
             description
             website
-            domain
+            domains
             isPublic
             industry
         }

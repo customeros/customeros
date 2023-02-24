@@ -24,6 +24,7 @@ func (r *mutationResolver) OrganizationCreate(ctx context.Context, input model.O
 		&service.OrganizationCreateData{
 			OrganizationEntity: mapper.MapOrganizationInputToEntity(&input),
 			OrganizationTypeID: input.OrganizationTypeID,
+			Domains:            input.Domains,
 		})
 	if err != nil {
 		graphql.AddErrorf(ctx, "Failed to create organization %s", input.Name)
@@ -40,6 +41,7 @@ func (r *mutationResolver) OrganizationUpdate(ctx context.Context, input model.O
 		&service.OrganizationUpdateData{
 			OrganizationEntity: organization,
 			OrganizationTypeID: input.OrganizationTypeID,
+			Domains:            input.Domains,
 		})
 	if err != nil {
 		graphql.AddErrorf(ctx, "Failed to update organization %s", input.ID)
@@ -58,6 +60,20 @@ func (r *mutationResolver) OrganizationDelete(ctx context.Context, id string) (*
 	return &model.Result{
 		Result: result,
 	}, nil
+}
+
+// Domains is the resolver for the domains field.
+func (r *organizationResolver) Domains(ctx context.Context, obj *model.Organization) ([]string, error) {
+	defer func(start time.Time) {
+		utils.LogMethodExecution(start, utils.GetFunctionName())
+	}(time.Now())
+
+	domainEntities, err := dataloader.For(ctx).GetDomainsForOrganization(ctx, obj.ID)
+	if err != nil {
+		graphql.AddErrorf(ctx, "Failed to get domains for organization %s", obj.ID)
+		return nil, err
+	}
+	return mapper.MapEntitiesToDomainNames(domainEntities), nil
 }
 
 // OrganizationType is the resolver for the organizationType field.

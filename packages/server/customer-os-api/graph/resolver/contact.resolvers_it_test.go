@@ -420,19 +420,19 @@ func TestQueryResolver_Contact_WithJobRoles_ById(t *testing.T) {
 	organizationId1 := neo4jt.CreateFullOrganization(ctx, driver, tenantName, entity.OrganizationEntity{
 		Name:        "name1",
 		Description: "description1",
-		Domain:      "domain1",
 		Website:     "website1",
 		Industry:    "industry1",
 		IsPublic:    true,
 	})
+	neo4jt.AddDomainToOrg(ctx, driver, organizationId1, "domain1")
 	organizationId2 := neo4jt.CreateFullOrganization(ctx, driver, tenantName, entity.OrganizationEntity{
 		Name:        "name2",
 		Description: "description2",
-		Domain:      "domain2",
 		Website:     "website2",
 		Industry:    "industry2",
 		IsPublic:    false,
 	})
+	neo4jt.AddDomainToOrg(ctx, driver, organizationId2, "domain2")
 	role1 := neo4jt.ContactWorksForOrganization(ctx, driver, contactId, organizationId1, "CTO", false)
 	role2 := neo4jt.ContactWorksForOrganization(ctx, driver, contactId, organizationId2, "CEO", true)
 
@@ -465,7 +465,7 @@ func TestQueryResolver_Contact_WithJobRoles_ById(t *testing.T) {
 	require.Equal(t, organizationId1, cto.Organization.ID)
 	require.Equal(t, "name1", cto.Organization.Name)
 	require.Equal(t, "description1", *cto.Organization.Description)
-	require.Equal(t, "domain1", *cto.Organization.Domain)
+	require.Equal(t, []string{"domain1"}, cto.Organization.Domains)
 	require.Equal(t, "website1", *cto.Organization.Website)
 	require.Equal(t, "industry1", *cto.Organization.Industry)
 	require.Equal(t, true, *cto.Organization.IsPublic)
@@ -477,7 +477,7 @@ func TestQueryResolver_Contact_WithJobRoles_ById(t *testing.T) {
 	require.Equal(t, organizationId2, ceo.Organization.ID)
 	require.Equal(t, "name2", ceo.Organization.Name)
 	require.Equal(t, "description2", *ceo.Organization.Description)
-	require.Equal(t, "domain2", *ceo.Organization.Domain)
+	require.Equal(t, []string{"domain2"}, ceo.Organization.Domains)
 	require.Equal(t, "website2", *ceo.Organization.Website)
 	require.Equal(t, "industry2", *ceo.Organization.Industry)
 	require.Equal(t, false, *ceo.Organization.IsPublic)
