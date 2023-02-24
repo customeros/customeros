@@ -13,6 +13,7 @@ type OrganizationRepository interface {
 	MergeOrganization(ctx context.Context, tenant string, syncDate time.Time, organization entity.OrganizationData) (string, error)
 	MergeOrganizationType(ctx context.Context, tenant, organizationId, organizationTypeName string) error
 	MergeOrganizationDefaultPlace(ctx context.Context, tenant, organizationId string, organization entity.OrganizationData) error
+	MergeOrganizationDomain(ctx context.Context, tenant string, organizationId string, domain string, externalSystem string) error
 }
 
 type organizationRepository struct {
@@ -69,7 +70,6 @@ func (r *organizationRepository) MergeOrganization(ctx context.Context, tenant s
 				"name":           organization.Name,
 				"description":    organization.Description,
 				"createdAt":      organization.CreatedAt,
-				"domain":         organization.Domain,
 				"website":        organization.Website,
 				"industry":       organization.Industry,
 				"isPublic":       organization.IsPublic,
@@ -186,6 +186,45 @@ func (r *organizationRepository) MergeOrganizationDefaultPlace(ctx context.Conte
 				"now":            time.Now().UTC(),
 			})
 		return nil, err
+	})
+	return err
+}
+
+func (r *organizationRepository) MergeOrganizationDomain(ctx context.Context, tenant string, organizationId string, domain string, externalSystem string) error {
+	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
+	defer session.Close(ctx)
+
+	query := `MERGE (d:Domain {domain:$domain}) 
+				ON CREATE SET 	d.id=randomUUID(), 
+								d.createdAt=$now, 
+								d.updatedAt=$now,
+								d.sourceOfTruth=$sourceOfTruth,
+								d.appSource=$appSource,
+								d.source=$source
+				WITH d
+				MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {id:$organizationId})
+				MERGE (org)-[rel:HAS_DOMAIN]->(d)
+				RETURN rel`
+
+	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		queryResult, err := tx.Run(ctx, query,
+			map[string]interface{}{
+				"tenant":         tenant,
+				"organizationId": organizationId,
+				"domain":         domain,
+				"source":         externalSystem,
+				"sourceOfTruth":  externalSystem,
+				"appSource":      externalSystem,
+				"now":            time.Now().UTC(),
+			})
+		if err != nil {
+			return nil, err
+		}
+		_, err = queryResult.Single(ctx)
+		if err != nil {
+			return nil, err
+		}
+		return nil, nil
 	})
 	return err
 }

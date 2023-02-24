@@ -129,13 +129,13 @@ func (s *hubspotDataService) GetOrganizationsForSync(batchSize int, runId string
 			logrus.Error(err)
 			continue
 		}
-		customerOsOrganizations = append(customerOsOrganizations, entity.OrganizationData{
+		organization := entity.OrganizationData{
 			ExternalId:           v.Id,
 			ExternalSyncId:       v.Id,
 			ExternalSystem:       s.SourceId(),
+			Domains:              []string{},
 			Name:                 hubspotCompanyProperties.Name,
 			Description:          hubspotCompanyProperties.Description,
-			Domain:               hubspotCompanyProperties.Domain,
 			Website:              hubspotCompanyProperties.Website,
 			Industry:             hubspotCompanyProperties.Industry,
 			IsPublic:             hubspotCompanyProperties.IsPublic,
@@ -149,8 +149,13 @@ func (s *hubspotDataService) GetOrganizationsForSync(batchSize int, runId string
 			Phone:                hubspotCompanyProperties.Phone,
 			OrganizationTypeName: "COMPANY",
 			DefaultLocationName:  "Default location",
-		})
-		s.companies[v.Id] = v
+		}
+		if len(hubspotCompanyProperties.Domain) > 0 {
+			organization.Domains = append(organization.Domains, hubspotCompanyProperties.Domain)
+		}
+		organization.Domains = append(organization.Domains, hubspotCompanyProperties.Domain)
+
+		s.companies[organization.ExternalSyncId] = v
 	}
 	return customerOsOrganizations
 }

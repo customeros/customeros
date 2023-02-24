@@ -41,6 +41,16 @@ func (s *organizationSyncService) SyncOrganizations(ctx context.Context, dataSer
 				logrus.Errorf("failed merge organization with external reference %v for tenant %v :%v", v.ExternalId, tenant, err)
 			}
 
+			if len(v.Domains) > 0 {
+				for _, domain := range v.Domains {
+					err = s.repositories.OrganizationRepository.MergeOrganizationDomain(ctx, tenant, organizationId, domain, v.ExternalSystem)
+					if err != nil {
+						failedSync = true
+						logrus.Errorf("failed merge organization domain for organization %v, tenant %v :%v", organizationId, tenant, err)
+					}
+				}
+			}
+
 			err = s.repositories.OrganizationRepository.MergeOrganizationDefaultPlace(ctx, tenant, organizationId, v)
 			if err != nil {
 				failedSync = true
