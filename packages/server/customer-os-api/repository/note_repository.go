@@ -7,6 +7,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"golang.org/x/net/context"
+	"time"
 )
 
 type NoteDbNodeWithParentId struct {
@@ -21,6 +22,7 @@ type NoteDbNodesWithTotalCount struct {
 
 type NoteRepository interface {
 	GetPaginatedNotesForContact(ctx context.Context, session neo4j.SessionWithContext, tenant, contactId string, skip, limit int) (*NoteDbNodesWithTotalCount, error)
+	GetTimeRangeNotesForContact(ctx context.Context, session neo4j.SessionWithContext, tenant, contactId string, start, end time.Time) ([]*neo4j.Node, error)
 	GetPaginatedNotesForOrganization(ctx context.Context, session neo4j.SessionWithContext, tenant, organizationId string, skip, limit int) (*NoteDbNodesWithTotalCount, error)
 	CreateNoteForContact(ctx context.Context, session neo4j.SessionWithContext, tenant, contactId string, entity entity.NoteEntity) (*dbtype.Node, error)
 	CreateNoteForOrganization(ctx context.Context, session neo4j.SessionWithContext, tenant, organization string, entity entity.NoteEntity) (*dbtype.Node, error)
@@ -67,6 +69,9 @@ func (r *noteRepository) GetPaginatedNotesForContact(ctx context.Context, sessio
 				"skip":      skip,
 				"limit":     limit,
 			})
+		if err != nil {
+			return nil, err
+		}
 		return queryResult.Collect(ctx)
 	})
 	if err != nil {
@@ -77,6 +82,37 @@ func (r *noteRepository) GetPaginatedNotesForContact(ctx context.Context, sessio
 		noteDBNodeWithParentId.Node = utils.NodePtr(v.Values[0].(neo4j.Node))
 		noteDBNodeWithParentId.ParentId = v.Values[1].(string)
 		result.Nodes = append(result.Nodes, noteDBNodeWithParentId)
+	}
+	return result, nil
+}
+
+func (r *noteRepository) GetTimeRangeNotesForContact(ctx context.Context, session neo4j.SessionWithContext, tenant, contactId string, start, end time.Time) ([]*neo4j.Node, error) {
+
+	dbRecords, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+
+		queryResult, err := tx.Run(ctx, fmt.Sprintf(
+			"MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}), "+
+				" (c)-[:NOTED]->(n:Note)"+
+				" WHERE n.createdAt > $start AND n.createdAt < $end"+
+				" RETURN n, c.id "),
+			map[string]any{
+				"tenant":    tenant,
+				"contactId": contactId,
+				"start":     start.UTC(),
+				"end":       end.UTC(),
+			})
+		if err != nil {
+			return nil, err
+		}
+		return queryResult.Collect(ctx)
+	})
+	if err != nil {
+		return nil, err
+	}
+	result := make([]*neo4j.Node, len(dbRecords.([]*neo4j.Record)))
+
+	for i, v := range dbRecords.([]*neo4j.Record) {
+		result[i] = utils.NodePtr(v.Values[0].(neo4j.Node))
 	}
 	return result, nil
 }

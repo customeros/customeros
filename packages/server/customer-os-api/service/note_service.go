@@ -8,10 +8,12 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	"time"
 )
 
 type NoteService interface {
-	GetNotesForContact(ctx context.Context, contactId string, page, limit int) (*utils.Pagination, error)
+	GetNotesForContactPaginated(ctx context.Context, contactId string, page, limit int) (*utils.Pagination, error)
+	GetNotesForContactTimeRange(ctx context.Context, contactId string, start, end time.Time) (*entity.NoteEntities, error)
 	GetNotesForOrganization(ctx context.Context, organizationId string, page, limit int) (*utils.Pagination, error)
 	CreateNoteForContact(ctx context.Context, contactId string, entity *entity.NoteEntity) (*entity.NoteEntity, error)
 	CreateNoteForOrganization(ctx context.Context, organizationId string, entity *entity.NoteEntity) (*entity.NoteEntity, error)
@@ -33,7 +35,7 @@ func (s *noteService) getNeo4jDriver() neo4j.DriverWithContext {
 	return *s.repositories.Drivers.Neo4jDriver
 }
 
-func (s *noteService) GetNotesForContact(ctx context.Context, contactId string, page, limit int) (*utils.Pagination, error) {
+func (s *noteService) GetNotesForContactPaginated(ctx context.Context, contactId string, page, limit int) (*utils.Pagination, error) {
 	session := utils.NewNeo4jReadSession(ctx, *s.repositories.Drivers.Neo4jDriver)
 	defer session.Close(ctx)
 
@@ -61,6 +63,28 @@ func (s *noteService) GetNotesForContact(ctx context.Context, contactId string, 
 	}
 	paginatedResult.SetRows(&entities)
 	return &paginatedResult, nil
+}
+func (s *noteService) GetNotesForContactTimeRange(ctx context.Context, contactId string, start time.Time, end time.Time) (*entity.NoteEntities, error) {
+	session := utils.NewNeo4jReadSession(ctx, *s.repositories.Drivers.Neo4jDriver)
+	defer session.Close(ctx)
+
+	nodes, err := s.repositories.NoteRepository.GetTimeRangeNotesForContact(
+		ctx,
+		session,
+		common.GetContext(ctx).Tenant,
+		contactId,
+		start,
+		end)
+	if err != nil {
+		return nil, err
+	}
+	result := make(entity.NoteEntities, len(nodes))
+
+	for i, v := range nodes {
+		noteEntity := s.mapDbNodeToNoteEntity(*v)
+		result[i] = *noteEntity
+	}
+	return &result, nil
 }
 
 func (s *noteService) GetNotesForOrganization(ctx context.Context, organizationId string, page, limit int) (*utils.Pagination, error) {

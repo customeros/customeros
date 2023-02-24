@@ -182,7 +182,7 @@ func (r *contactResolver) Notes(ctx context.Context, obj *model.Contact, paginat
 	if pagination == nil {
 		pagination = &model.Pagination{Page: 0, Limit: 0}
 	}
-	paginatedResult, err := r.Services.NoteService.GetNotesForContact(ctx, obj.ID, pagination.Page, pagination.Limit)
+	paginatedResult, err := r.Services.NoteService.GetNotesForContactPaginated(ctx, obj.ID, pagination.Page, pagination.Limit)
 	if err != nil {
 		graphql.AddErrorf(ctx, "Failed to get contact %s notes", obj.ID)
 		return nil, err
@@ -192,6 +192,20 @@ func (r *contactResolver) Notes(ctx context.Context, obj *model.Contact, paginat
 		TotalPages:    paginatedResult.TotalPages,
 		TotalElements: paginatedResult.TotalRows,
 	}, err
+}
+
+// NotesByTime is the resolver for the notesByTime field.
+func (r *contactResolver) NotesByTime(ctx context.Context, obj *model.Contact, pagination *model.TimeRange) ([]*model.Note, error) {
+	defer func(start time.Time) {
+		utils.LogMethodExecution(start, utils.GetFunctionName())
+	}(time.Now())
+
+	noteEntities, err := r.Services.NoteService.GetNotesForContactTimeRange(ctx, obj.ID, pagination.From, pagination.To)
+	if err != nil {
+		graphql.AddErrorf(ctx, "Failed to get contact %s notes", obj.ID)
+		return nil, err
+	}
+	return mapper.MapEntitiesToNotes(noteEntities), err
 }
 
 // Conversations is the resolver for the conversations field.

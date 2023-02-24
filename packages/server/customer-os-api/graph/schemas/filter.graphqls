@@ -16,6 +16,21 @@ input Pagination {
     limit: Int!
 }
 
+input TimeRange {
+
+    """
+    The start time of the time range.
+    **Required.**
+    """
+    from: Time!
+
+    """
+    The end time of the time range.
+    **Required.**
+    """
+    to: Time!
+}
+
 input SortBy {
     by: String!
     direction: SortingDirection! = ASC

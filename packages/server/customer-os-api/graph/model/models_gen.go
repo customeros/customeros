@@ -90,6 +90,7 @@ type Contact struct {
 	Owner *User `json:"owner"`
 	// Contact notes
 	Notes         *NotePage         `json:"notes"`
+	NotesByTime   []*Note           `json:"notesByTime"`
 	Conversations *ConversationPage `json:"conversations"`
 	Actions       []Action          `json:"actions"`
 }
@@ -844,6 +845,15 @@ type TagInput struct {
 type TagUpdateInput struct {
 	ID   string `json:"id"`
 	Name string `json:"name"`
+}
+
+type TimeRange struct {
+	// The start time of the time range.
+	// **Required.**
+	From time.Time `json:"from"`
+	// The end time of the time range.
+	// **Required.**
+	To time.Time `json:"to"`
 }
 
 // Describes the User of customerOS.  A user is the person who logs into the Openline platform.
