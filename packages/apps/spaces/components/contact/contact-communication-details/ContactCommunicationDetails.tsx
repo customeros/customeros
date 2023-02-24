@@ -5,9 +5,9 @@ import Image from 'next/image';
 import { DetailItem, DetailItemEditMode } from './detail-item';
 import { OverlayPanelEventType } from 'primereact';
 import {
+  useAddEmailToContactEmail,
   useContactCommunicationChannelsDetails,
   useRemoveEmailFromContactEmail,
-  useAddEmailToContactEmail,
 } from '../../../hooks/useContact';
 import {
   useCreateContactPhoneNumber,
@@ -17,7 +17,9 @@ import {
 import { useUpdateContactEmail } from '../../../hooks/useContactEmail';
 import {
   Email,
+  EmailInput,
   EmailLabel,
+  EmailUpdateInput,
   PhoneNumber,
   PhoneNumberLabel,
   PhoneNumberUpdateInput,
@@ -124,11 +126,11 @@ export const ContactCommunicationDetails = ({ id }: { id: string }) => {
           <DetailItem
             key={email.id}
             id={email.id}
-            isPrimary={email.primary}
-            label={email.label}
-            data={email.email}
-            onChangeLabelAndPrimary={(newValue: Email) =>
-              onUpdateContactEmail(newValue, email as Email)
+            isPrimary={!!email?.primary}
+            label={email.label || EmailLabel.Work}
+            data={email.email || ''}
+            onChangeLabelAndPrimary={(newValue) =>
+              onUpdateContactEmail(newValue as EmailUpdateInput, email as Email)
             }
             labelOptionEnum={EmailLabel}
             onDelete={() => onRemoveEmailFromContact(email.id)}
@@ -167,12 +169,15 @@ export const ContactCommunicationDetails = ({ id }: { id: string }) => {
             key={phoneNr.id}
             id={phoneNr.id}
             isPrimary={phoneNr.primary}
-            label={phoneNr.label}
+            label={phoneNr.label || 'OTHER'}
             // @ts-expect-error this should be revisited on phoneNumber schema change
             data={phoneNr?.rawPhoneNumber || phoneNr?.e164}
             onChange={() => null}
-            onChangeLabelAndPrimary={(newValue: PhoneNumberUpdateInput) =>
-              onUpdateContactPhoneNumber(newValue, phoneNr as PhoneNumber)
+            onChangeLabelAndPrimary={(newValue) =>
+              onUpdateContactPhoneNumber(
+                newValue as PhoneNumberUpdateInput,
+                phoneNr as PhoneNumber,
+              )
             }
             onDelete={() => onRemovePhoneNumberFromContact(phoneNr.id)}
           />

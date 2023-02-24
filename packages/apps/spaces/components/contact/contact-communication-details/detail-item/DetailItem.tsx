@@ -9,7 +9,9 @@ import { EmailLabel, PhoneNumberLabel } from '../../../../graphQL/generated';
 
 interface Props {
   onChange?: ChangeEventHandler<HTMLInputElement>;
-  onChangeLabelAndPrimary: (e: { label?: string; primary?: boolean }) => void;
+  onChangeLabelAndPrimary: (
+    e: { label?: string } | { primary?: boolean },
+  ) => void;
   id: string;
   label: string;
   data: string;

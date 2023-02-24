@@ -6,7 +6,7 @@ import {
 
 interface Result {
   onUpdateContactPhoneNumber: (
-    input: PhoneNumberUpdateInput,
+    input: Omit<PhoneNumberUpdateInput, 'id'>,
     oldValue: PhoneNumber,
   ) => Promise<
     UpdateContactPhoneNumberMutation['phoneNumberUpdateInContact'] | null
@@ -25,7 +25,6 @@ export const useUpdateContactPhoneNumber = ({
       const payload = {
         primary,
         label,
-        // @ts-expect-error revisit later
         id,
         ...input,
       };
