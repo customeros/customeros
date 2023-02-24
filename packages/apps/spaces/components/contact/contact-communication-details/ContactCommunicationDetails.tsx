@@ -17,12 +17,13 @@ import {
 import { useUpdateContactEmail } from '../../../hooks/useContactEmail';
 import {
   Email,
+  EmailLabel,
   PhoneNumber,
+  PhoneNumberLabel,
   PhoneNumberUpdateInput,
 } from '../../../graphQL/generated';
 import { Button } from '../../ui-kit';
 import { OverlayPanel } from '../../ui-kit/atoms/overlay-panel';
-import { ListSkeleton } from './skeletons/ListSkeleton';
 import { ContactCommunicationDetailsSkeleton } from './skeletons';
 
 export const ContactCommunicationDetails = ({ id }: { id: string }) => {
@@ -103,16 +104,17 @@ export const ContactCommunicationDetails = ({ id }: { id: string }) => {
         {newEmail && (
           <DetailItemEditMode
             mode='ADD'
+            labelOptionEnum={EmailLabel}
             id={'new-email'}
-            isPrimary={false}
-            label={'WORK'}
+            isPrimary={!!newEmail?.primary}
+            label={newEmail.label || 'WORK'}
             value={newEmail.email}
             onChange={(e) =>
               setNewEmail({ ...newEmail, email: e.target.value })
             }
-            onChangeLabelAndPrimary={(newValue) =>
-              setNewEmail({ ...newEmail, ...newValue })
-            }
+            onChangeLabelAndPrimary={(newValue) => {
+              setNewEmail({ ...newEmail, ...newValue });
+            }}
             onExitEditMode={() => {
               onAddEmailToContact(newEmail).then((e) => setNewEmail(false));
             }}
@@ -128,6 +130,7 @@ export const ContactCommunicationDetails = ({ id }: { id: string }) => {
             onChangeLabelAndPrimary={(newValue: Email) =>
               onUpdateContactEmail(newValue, email as Email)
             }
+            labelOptionEnum={EmailLabel}
             onDelete={() => onRemoveEmailFromContact(email.id)}
           />
         ))}
@@ -136,10 +139,11 @@ export const ContactCommunicationDetails = ({ id }: { id: string }) => {
       <ul className={styles.detailsList}>
         {newPhoneNumber && (
           <DetailItemEditMode
+            labelOptionEnum={PhoneNumberLabel}
             mode='ADD'
             id={'new-phoneNumber'}
-            isPrimary={false}
-            label={'WORK'}
+            isPrimary={!!newPhoneNumber?.primary}
+            label={newPhoneNumber?.label || 'WORK'}
             value={newPhoneNumber.phoneNumber}
             onChange={(e) =>
               setNewPhoneNumber({
@@ -159,6 +163,7 @@ export const ContactCommunicationDetails = ({ id }: { id: string }) => {
         )}
         {data?.phoneNumbers.map((phoneNr) => (
           <DetailItem
+            labelOptionEnum={PhoneNumberLabel}
             key={phoneNr.id}
             id={phoneNr.id}
             isPrimary={phoneNr.primary}
@@ -166,7 +171,7 @@ export const ContactCommunicationDetails = ({ id }: { id: string }) => {
             // @ts-expect-error this should be revisited on phoneNumber schema change
             data={phoneNr?.rawPhoneNumber || phoneNr?.e164}
             onChange={() => null}
-            onChangeLabel={(newValue: PhoneNumberUpdateInput) =>
+            onChangeLabelAndPrimary={(newValue: PhoneNumberUpdateInput) =>
               onUpdateContactPhoneNumber(newValue, phoneNr as PhoneNumber)
             }
             onDelete={() => onRemovePhoneNumberFromContact(phoneNr.id)}

@@ -37,7 +37,7 @@ export const useUpdateContactPhoneNumber = ({
             phoneNumberUpdateInContact: {
               __typename: 'PhoneNumber',
               ...rest,
-              ...input,
+              ...payload,
               primary: input.primary || primary || false,
             },
           },

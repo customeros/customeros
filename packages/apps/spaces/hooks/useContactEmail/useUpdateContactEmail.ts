@@ -22,6 +22,7 @@ export const useUpdateContactEmail = ({
     input,
     { label, primary = false, id, ...rest },
   ) => {
+    console.log('🏷️ ----- input: ', input);
     const payload = {
       primary,
       label,

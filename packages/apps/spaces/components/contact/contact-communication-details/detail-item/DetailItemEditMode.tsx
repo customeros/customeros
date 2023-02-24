@@ -9,7 +9,7 @@ import classNames from 'classnames';
 import styles from '../contact-communication-details.module.scss';
 import { useDetectClickOutside } from '../../../../hooks';
 import { OverlayPanelEventType } from 'primereact';
-import { EmailLabel } from '../../../../graphQL/generated';
+import { EmailLabel, PhoneNumberLabel } from '../../../../graphQL/generated';
 import Image from 'next/image';
 import { OverlayPanel } from '../../../ui-kit/atoms/overlay-panel';
 
@@ -22,6 +22,7 @@ interface Props {
   isPrimary: boolean;
   mode?: 'ADD' | 'EDIT';
   onExitEditMode: () => void;
+  labelOptionEnum: typeof EmailLabel | typeof PhoneNumberLabel;
 }
 export const DetailItemEditMode = ({
   id,
@@ -32,6 +33,7 @@ export const DetailItemEditMode = ({
   onChange,
   onChangeLabelAndPrimary,
   onExitEditMode,
+  labelOptionEnum,
 }: Props) => {
   const editListItemRef = useRef(null);
   const addCommunicationChannelContainerRef = useRef(null);
@@ -40,7 +42,7 @@ export const DetailItemEditMode = ({
     onExitEditMode();
   });
 
-  const labelOptions = Object.values(EmailLabel).map((labelOption) => ({
+  const labelOptions = Object.values(labelOptionEnum).map((labelOption) => ({
     label: labelOption.toLowerCase(),
     command: () => onChangeLabelAndPrimary({ label: labelOption }),
   }));

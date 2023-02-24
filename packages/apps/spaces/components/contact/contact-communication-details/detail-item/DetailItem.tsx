@@ -1,27 +1,39 @@
-import React, { useRef, useState } from 'react';
+import React, { ChangeEventHandler, useRef, useState } from 'react';
 import Image from 'next/image';
 import { IconButton } from '../../../ui-kit/atoms';
 import classNames from 'classnames';
 import styles from '../contact-communication-details.module.scss';
 import { useDetectClickOutside } from '../../../../hooks';
 import { DetailItemEditMode } from './DetailItemEditMode';
+import { EmailLabel, PhoneNumberLabel } from '../../../../graphQL/generated';
 
+interface Props {
+  onChange?: ChangeEventHandler<HTMLInputElement>;
+  onChangeLabelAndPrimary: (e: { label?: string; primary?: boolean }) => void;
+  id: string;
+  label: string;
+  data: string;
+  isPrimary: boolean;
+  mode?: 'ADD' | 'EDIT';
+  onDelete: () => void;
+  labelOptionEnum: typeof EmailLabel | typeof PhoneNumberLabel;
+}
 export const DetailItem = ({
   id,
   isPrimary,
   label,
   data,
   // onChange,
-  onChangeLabel,
+  onChangeLabelAndPrimary,
   onDelete,
-}: any) => {
+  labelOptionEnum,
+}: Props) => {
   const listItemRef = useRef(null);
   const [editMode, setEditMode] = useState<boolean>(false);
   const [showButtons, setShowButtons] = useState<boolean>(false);
   useDetectClickOutside(listItemRef, () => {
     setShowButtons(false);
   });
-
   if (editMode) {
     return (
       <DetailItemEditMode
@@ -29,7 +41,8 @@ export const DetailItem = ({
         isPrimary={isPrimary}
         label={label}
         value={data}
-        onChangeLabelAndPrimary={onChangeLabel}
+        onChangeLabelAndPrimary={onChangeLabelAndPrimary}
+        labelOptionEnum={labelOptionEnum}
         onExitEditMode={() => {
           setShowButtons(false);
           setEditMode(false);

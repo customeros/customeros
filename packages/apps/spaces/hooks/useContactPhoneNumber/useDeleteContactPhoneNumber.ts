@@ -23,6 +23,7 @@ export const useRemovePhoneNumberFromContact = ({
     try {
       const response = await removePhoneNumberFromContactMutation({
         variables: { id: id, contactId },
+        refetchQueries: ['GetContactCommunicationChannels'],
       });
       return response.data?.phoneNumberRemoveFromContactById ?? null;
     } catch (err) {
