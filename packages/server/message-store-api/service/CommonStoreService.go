@@ -4,6 +4,7 @@ import (
 	msProto "github.com/openline-ai/openline-customer-os/packages/server/message-store-api/proto/generated"
 	"github.com/openline-ai/openline-customer-os/packages/server/message-store-api/repository/entity"
 	"google.golang.org/protobuf/types/known/timestamppb"
+	"strings"
 )
 
 type commonStoreService struct {
@@ -30,7 +31,7 @@ type CommonStoreService interface {
 func (s *commonStoreService) EncodeConversationEventToMS(conversationEvent entity.ConversationEvent) *msProto.Message {
 	return &msProto.Message{
 		MessageId:         s.EncodeMessageIdToMs(conversationEvent),
-		InitiatorUsername: conversationEvent.InitiatorUsername,
+		InitiatorUsername: s.EncodeUsernameToMs(conversationEvent.InitiatorUsername),
 		Type:              s.ConvertEntityTypeToMSType(conversationEvent.Type),
 		Subtype:           s.ConvertEntitySubtypeToMSSubtype(conversationEvent.Subtype),
 		Content:           conversationEvent.Content,
@@ -38,7 +39,7 @@ func (s *commonStoreService) EncodeConversationEventToMS(conversationEvent entit
 		Time:              timestamppb.New(conversationEvent.CreateDate),
 		SenderId:          conversationEvent.SenderId,
 		SenderType:        s.ConvertEntitySenderTypeToMSSenderType(conversationEvent.SenderType),
-		SenderUsername:    conversationEvent.SenderUsername,
+		SenderUsername:    s.EncodeUsernameToMs(conversationEvent.SenderUsername),
 	}
 }
 
@@ -46,12 +47,37 @@ func (s *commonStoreService) EncodeMessageIdToMs(conversationEvent entity.Conver
 	return &msProto.MessageId{ConversationEventId: conversationEvent.ID, ConversationId: conversationEvent.ConversationId}
 }
 
+func (s *commonStoreService) EncodeUsernameToMs(username string) *msProto.ParticipantId {
+	if strings.HasPrefix(username, "mailto:") {
+		return &msProto.ParticipantId{Type: msProto.ParticipantIdType_MAILTO, Identifier: strings.TrimPrefix(username, "mailto:")}
+	} else if strings.HasPrefix(username, "tel:") {
+		return &msProto.ParticipantId{Type: msProto.ParticipantIdType_TEL, Identifier: strings.TrimPrefix(username, "tel:")}
+	} else {
+		// fail back to assuming email id
+		return &msProto.ParticipantId{Type: msProto.ParticipantIdType_MAILTO, Identifier: username}
+	}
+}
+
+func (s *commonStoreService) ConvertMSParticipantIdToUsername(participantId *msProto.ParticipantId) string {
+	if participantId == nil {
+		return ""
+	}
+	if participantId.Type == msProto.ParticipantIdType_MAILTO {
+		return "mailto:" + participantId.Identifier
+	} else if participantId.Type == msProto.ParticipantIdType_TEL {
+		return "tel:" + participantId.Identifier
+	} else {
+		// shouldn't reach here
+		return participantId.Identifier
+	}
+}
+
 func (s *commonStoreService) EncodeConversationToMS(conversation Conversation) *msProto.FeedItem {
 	return &msProto.FeedItem{
 		Id:                  conversation.Id,
 		InitiatorFirstName:  conversation.InitiatorFirstName,
 		InitiatorLastName:   conversation.InitiatorLastName,
-		InitiatorUsername:   conversation.InitiatorUsername,
+		InitiatorUsername:   s.EncodeUsernameToMs(conversation.InitiatorUsername),
 		InitiatorType:       conversation.InitiatorType,
 		LastSenderFirstName: conversation.LastSenderFirstName,
 		LastSenderLastName:  conversation.LastSenderLastName,

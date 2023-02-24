@@ -23,6 +23,16 @@ enum MessageType {
   VOICE = 2;
 }
 
+enum ParticipantIdType {
+  MAILTO = 0;
+  TEL = 1;
+}
+
+message ParticipantId {
+  ParticipantIdType type = 1;
+  string identifier = 2;
+}
+
 message MessageId {
   // postgres id
   string conversationEventId = 1;
@@ -32,7 +42,7 @@ message MessageId {
 
 message Message {
   MessageId messageId = 1;
-  string initiatorUsername = 2;
+  ParticipantId initiatorUsername = 2;
   MessageType type = 3;
   MessageSubtype subtype = 4;
   string content = 5;
@@ -41,16 +51,16 @@ message Message {
 
   SenderType senderType = 8;
   string senderId = 9;
-  string senderUsername = 10;
+  ParticipantId senderUsername = 10;
 }
 
 message InputMessage {
   optional string conversationId = 1;
-  optional string initiatorIdentifier = 2;
+  optional ParticipantId initiatorIdentifier = 2;
   MessageType type = 3;
   MessageSubtype subtype = 4;
   optional string content = 5;
   MessageDirection direction = 6;
-  repeated string participantsIdentifiers = 7;
+  repeated ParticipantId participantsIdentifiers = 7;
   optional string threadId = 8;
 }

@@ -5,6 +5,7 @@ import (
 	"github.com/caarlos0/env/v6"
 	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
+	"github.com/machinebox/graphql"
 	"github.com/openline-ai/openline-customer-os/packages/server/message-store-api/config"
 	msProto "github.com/openline-ai/openline-customer-os/packages/server/message-store-api/proto/generated"
 	"github.com/openline-ai/openline-customer-os/packages/server/message-store-api/repository"
@@ -44,12 +45,14 @@ func main() {
 	ctx := context.Background()
 	defer (*neo4jDriver).Close(ctx)
 
+	graphqlClient := graphql.NewClient(conf.Service.CustomerOsAPI)
+
 	// Create a new gRPC server (you can wire multiple services to a single server).
 	server := grpc.NewServer()
 
 	repositories := repository.InitRepositories(db.GormDB, neo4jDriver)
 	commonStoreService := service.NewCommonStoreService()
-	customerOSService := service.NewCustomerOSService(neo4jDriver, repositories, commonStoreService)
+	customerOSService := service.NewCustomerOSService(neo4jDriver, graphqlClient, repositories, commonStoreService, conf)
 
 	// Register the Message Item service with the server.
 	msProto.RegisterMessageStoreServiceServer(server, service.NewMessageService(neo4jDriver, repositories, customerOSService, commonStoreService))
