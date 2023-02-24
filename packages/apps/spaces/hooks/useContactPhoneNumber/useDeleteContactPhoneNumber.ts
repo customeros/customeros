@@ -11,7 +11,7 @@ interface Result {
     | null
   >;
 }
-export const useRemovePhoneNumberFromContactPhoneNumber = ({
+export const useRemovePhoneNumberFromContact = ({
   contactId,
 }: {
   contactId: string;

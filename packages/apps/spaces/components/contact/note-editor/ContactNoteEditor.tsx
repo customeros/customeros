@@ -1,8 +1,6 @@
-import React, { ButtonHTMLAttributes, ChangeEvent, FC } from 'react';
-import { Control, Controller, FieldValues, useForm } from 'react-hook-form';
-import { NoteEditor } from '../../ui-kit/molecules/note-editor';
-import { Button } from '../../ui-kit';
-import { useCreateContact } from '../../../hooks/useContact';
+import React, { FC } from 'react';
+import { NoteEditor } from '../../ui-kit/molecules';
+import { Controller, useForm } from 'react-hook-form';
 import { useCreateContactNote } from '../../../hooks/useContactNote';
 import { toast } from 'react-toastify';
 
@@ -10,31 +8,22 @@ export enum NoteEditorModes {
   'ADD' = 'ADD',
   'EDIT' = 'EDIT',
 }
-interface Props extends ButtonHTMLAttributes<HTMLButtonElement> {
-  fieldName: string;
-  fieldController: Control<{ id: any; html: any; htmlEnhanced: any }, any>;
-  onGetFieldValue: any;
+interface Props {
   mode: NoteEditorModes;
-  onTextChange: (e: any) => void;
-  onSave: () => void;
-  onCancel?: () => void;
+  contactId: string;
 }
 
 const DEFAULT_VALUES = {
   html: '',
   htmlEnhanced: '',
 };
-export const ContactNoteEditor: FC<any> = ({
-  mode,
+export const ContactNoteEditor: FC<Props> = ({
+  mode = NoteEditorModes.ADD,
   contactId,
-  onTextChange,
-  onSave,
-  onCancel = () => null,
 }) => {
-  const { register, handleSubmit, setValue, getValues, control, reset } =
-    useForm({
-      defaultValues: DEFAULT_VALUES,
-    });
+  const { handleSubmit, setValue, getValues, control, reset } = useForm({
+    defaultValues: DEFAULT_VALUES,
+  });
 
   const { onCreateContactNote } = useCreateContactNote({ contactId });
   const isEditMode = mode === NoteEditorModes.EDIT;
@@ -65,6 +54,8 @@ export const ContactNoteEditor: FC<any> = ({
         control={control}
         render={({ field }) => (
           <NoteEditor
+            mode={NoteEditorModes.ADD}
+            onGetFieldValue={getValues}
             value={field.value}
             onSave={onSubmit}
             onTextChange={(e) => setValue('htmlEnhanced', e.htmlValue)}

@@ -1,9 +1,9 @@
 import React, { useRef, useState } from 'react';
 import Image from 'next/image';
-import { IconButton } from '../../../atoms';
+import { IconButton } from '../../../ui-kit/atoms';
 import classNames from 'classnames';
 import styles from '../contact-communication-details.module.scss';
-import { useDetectClickOutside } from '../../../../../hooks';
+import { useDetectClickOutside } from '../../../../hooks';
 import { DetailItemEditMode } from './DetailItemEditMode';
 
 export const DetailItem = ({
@@ -12,6 +12,7 @@ export const DetailItem = ({
   label,
   data,
   // onChange,
+  onChangeLabel,
   onDelete,
 }: any) => {
   const listItemRef = useRef(null);
@@ -27,7 +28,8 @@ export const DetailItem = ({
         id={id}
         isPrimary={isPrimary}
         label={label}
-        data={data}
+        value={data}
+        onChangeLabelAndPrimary={onChangeLabel}
         onExitEditMode={() => {
           setShowButtons(false);
           setEditMode(false);

@@ -23,12 +23,6 @@ export const useCreateContact = ({ contact }: Props): Result => {
       const optimisticItem = { id: 'optimistic-id', ...contact };
       const response = await createContactMutation({
         variables: { input: contact },
-        optimisticResponse: {
-          contact_Create: {
-            __typename: 'Contact',
-            ...optimisticItem,
-          },
-        },
       });
       return response.data?.contact_Create ?? null;
     } catch (err) {

@@ -3,7 +3,10 @@ import { Result } from './types';
 import axios from 'axios';
 import { toast } from 'react-toastify';
 
-export const useFileData = (addFileToTextContent): Result => {
+interface Props {
+  addFileToTextContent: (data: string) => void;
+}
+export const useFileData = ({ addFileToTextContent }: Props): Result => {
   const handleFetchFile = (id: string) => {
     return fetch(`/fs/file/${id}/download`)
       .then(async (response: any) => {

@@ -10,8 +10,8 @@ export const OverlayPanel = forwardRef(function MyInput(
   ref: ForwardedRef<LegacyRef<PrimereactOverlayPanel> | null>,
 ) {
   return (
-    // @ts-expect-error primereact doesn't count in possibility of forwarding ref in their types
     <PrimereactOverlayPanel
+      // @ts-expect-error primereact doesn't count in possibility of forwarding ref in their types
       ref={ref}
       dismissable
       {...rest}

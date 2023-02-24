@@ -1,16 +1,14 @@
 import React from 'react';
 import Image from 'next/image';
-import { IconButton } from '../../atoms';
+import { IconButton } from '../../ui-kit/atoms';
 import styles from './contact-details.module.scss';
-import {
-  useContactCommunicationChannelsDetails,
-  useContactPersonalDetails,
-} from '../../../../hooks/useContact';
-export const ContactDetails = ({ id }: any) => {
+import { useContactPersonalDetails } from '../../../hooks/useContact';
+import { ContactDetailsSkeleton } from './skeletons';
+export const ContactDetails = ({ id }: { id: string }) => {
   const { data, loading, error } = useContactPersonalDetails({ id });
 
   if (loading) {
-    return <>LOADING</>;
+    return <ContactDetailsSkeleton />;
   }
   if (error) {
     return <>ERROR</>;
@@ -20,11 +18,15 @@ export const ContactDetails = ({ id }: any) => {
     <div className={styles.contactDetails}>
       <div className={styles.header}>
         <div className={styles.photo}>
-          {data?.photo ? (
-            <Image src={data?.photo} alt={''} height={40} width={40} />
-          ) : (
-            <div>{data?.firstName}</div>
-          )}
+          {
+            // @ts-expect-error we will have equivalent of avatar some day...
+            data?.photo ? (
+              // @ts-expect-error we will have equivalent of avatar some day...
+              <Image src={data?.photo} alt={''} height={40} width={40} />
+            ) : (
+              <div>{data?.firstName?.[0]}</div>
+            )
+          }
         </div>
         <div className={styles.name}>
           <div>
@@ -62,6 +64,7 @@ export const ContactDetails = ({ id }: any) => {
       <div className={styles.details}>
         <div className={styles.section}>
           <IconButton
+            disabled={true}
             aria-describedby='phone-icon-label'
             mode='secondary'
             className={styles.icon}
@@ -77,6 +80,7 @@ export const ContactDetails = ({ id }: any) => {
         </div>
         <div className={styles.section}>
           <IconButton
+            disabled={true}
             aria-describedby='email-icon-label'
             mode='secondary'
             className={styles.icon}
@@ -97,6 +101,7 @@ export const ContactDetails = ({ id }: any) => {
         </div>
         <div className={styles.section}>
           <IconButton
+            disabled={true}
             aria-describedby='message-icon-label'
             mode='secondary'
             className={styles.icon}
@@ -116,6 +121,7 @@ export const ContactDetails = ({ id }: any) => {
         </div>
         <div className={styles.section}>
           <IconButton
+            disabled={true}
             aria-describedby='message-icon-label'
             mode='secondary'
             className={styles.icon}

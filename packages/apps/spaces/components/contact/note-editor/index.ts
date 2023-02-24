@@ -1,1 +1,1 @@
-export { NoteEditor } from './NoteEditor';
+export { ContactNoteEditor, NoteEditorModes } from './ContactNoteEditor';

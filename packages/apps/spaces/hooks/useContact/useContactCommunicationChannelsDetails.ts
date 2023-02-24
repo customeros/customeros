@@ -37,7 +37,17 @@ export const useContactCommunicationChannelsDetails = ({
   }
 
   return {
-    data: data?.contact,
+    data: data?.contact
+      ? {
+          ...data?.contact,
+          emails: [...(data?.contact?.emails ?? [])]?.sort((a, b) =>
+            a.primary === b.primary ? 0 : a.primary ? -1 : 1,
+          ),
+          phoneNumbers: [...(data?.contact?.phoneNumbers ?? [])]?.sort((a, b) =>
+            a.primary === b.primary ? 0 : a.primary ? -1 : 1,
+          ),
+        }
+      : null,
     loading,
     error: null,
   };

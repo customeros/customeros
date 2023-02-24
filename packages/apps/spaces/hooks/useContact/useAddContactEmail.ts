@@ -1,5 +1,5 @@
 import { useAddEmailToContactMutation } from './types';
-import { EmailInput } from '../../graphQL/types';
+import { EmailInput } from '../../graphQL/generated';
 import { AddEmailToContactMutation } from '../../graphQL/generated';
 
 interface Props {

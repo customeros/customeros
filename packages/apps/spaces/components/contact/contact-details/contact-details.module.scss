@@ -1,18 +1,13 @@
-@import "../../../../styles/mixins";
+@import "../../../styles/mixins";
 
 
 .contactDetails {
-  //@include frosted-glass;
-
   display: flex;
   flex-direction: column;
   border-radius: 10px;
   max-width: 400px;
   margin-bottom: var(--spacing-xxl);
 
-  //border: 1px solid #dadada;
-  //box-shadow: 5px 5px 10px rgb(0 0 0 / 3%), -1px -1px 2px #fff, 1px 1px 2px #5550;
-  //box-shadow: none
 }
 
 .header {
@@ -56,6 +51,8 @@
   display: flex;
   flex-direction: column;
   align-items: center;
+  cursor: not-allowed;
+  opacity: 0.5;
 }
 
 .icon {

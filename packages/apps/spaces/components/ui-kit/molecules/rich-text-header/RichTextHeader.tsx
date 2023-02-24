@@ -1,5 +1,6 @@
 import React, { ChangeEvent, useRef } from 'react';
 import Image from 'next/image';
+import { Button } from '../../atoms';
 
 interface Props {
   onFileChange: (e: ChangeEvent<HTMLInputElement>) => void;
@@ -10,9 +11,10 @@ export const RichTextHeader = ({ onFileChange, onSubmit }: Props) => {
   const handleUploadClick = () => {
     inputRef.current?.click();
   };
+
   return (
     <span className='flex justify-content-end'>
-      <div className='flex flex-grow-1'>
+      <span className='flex flex-grow-1'>
         <button className='ql-bold' aria-label='Bold'></button>
         <button className='ql-italic' aria-label='Italic'></button>
         <button className='ql-underline' aria-label='Underline'></button>
@@ -36,8 +38,12 @@ export const RichTextHeader = ({ onFileChange, onSubmit }: Props) => {
             height={20}
           />
         </button>
+      </span>
+      <div className='editor_save'>
+        <Button onClick={onSubmit} mode='primary' className='primary'>
+          Save
+        </Button>
       </div>
-
       <input
         type='file'
         ref={inputRef}

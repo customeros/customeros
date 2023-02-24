@@ -3,7 +3,7 @@ import { useGetDashboardData } from './graphQL/useGetDashboardData';
 import { Table, DebouncedInput } from '../ui-kit';
 import { columns } from './Columns';
 import styles from './finder.module.scss';
-import { DashboardViewItem } from '../../graphQL/types';
+import { DashboardViewItem } from '../../graphQL/generated';
 import { Search } from '../ui-kit/atoms';
 
 export const Finder: React.FC = () => {

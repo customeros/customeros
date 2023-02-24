@@ -3,7 +3,7 @@ import {
   UpdateContactEmailMutation,
   useUpdateContactEmailMutation,
 } from './types';
-import { EmailUpdateInput } from '../../graphQL/types';
+import { EmailUpdateInput } from '../../graphQL/generated';
 
 interface Props {
   contactId: string;

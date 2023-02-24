@@ -1,13 +1,17 @@
-import React, { ChangeEventHandler } from 'react';
+import React, { ChangeEventHandler, ReactNode } from 'react';
 import { DebounceInput, DebounceInputProps } from 'react-debounce-input';
 import styles from './input.module.scss';
 import classNames from 'classnames';
 interface DebouncedInputProps
-  extends Partial<DebounceInputProps<HTMLInputElement, HTMLInputElement>> {
+  extends Partial<
+    Omit<DebounceInputProps<HTMLInputElement, HTMLInputElement>, 'children'>
+  > {
   onChange: ChangeEventHandler<HTMLInputElement>;
   placeholder?: string;
   minLength?: number;
+  debounceTimeout?: number;
   inputSize?: 'xxxs' | 'xxs' | 'xs' | 'sm' | 'md' | 'lg';
+  children?: ReactNode;
 }
 
 export const DebouncedInput = ({
@@ -16,6 +20,7 @@ export const DebouncedInput = ({
   minLength = 3,
   children,
   inputSize = 'md',
+  debounceTimeout = 300,
   ...rest
 }: DebouncedInputProps) => {
   return (
@@ -25,7 +30,7 @@ export const DebouncedInput = ({
           [styles?.[inputSize]]: inputSize,
         })}
         minLength={minLength}
-        debounceTimeout={300}
+        debounceTimeout={debounceTimeout}
         onChange={onChange}
         placeholder={placeholder}
         {...rest}

@@ -1,4 +1,4 @@
-@import '../../../../styles/mixins';
+@import '../../../styles/mixins';
 
 .contactDetails {
   display: flex;
@@ -26,7 +26,6 @@
 .editLabelIcon {
     @include flex-center;
     position: relative;
-    margin-right: var(--font-size-xxs);
 
 
   & img {

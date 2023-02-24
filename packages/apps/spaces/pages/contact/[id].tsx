@@ -1,23 +1,33 @@
 import React from 'react';
-import { ContactDetails } from '../../components/ui-kit/molecules/contact-details';
-import { ContactCommunicationDetails } from '../../components/ui-kit/molecules/contact-communication-details/ContactCommunicationDetails';
-import { Button, DetailsPageLayout } from '../../components/ui-kit';
+import { DetailsPageLayout } from '../../components/ui-kit';
 import styles from './contact.module.scss';
 import { useRouter } from 'next/router';
-import { ContactNoteEditor } from '../../components/contact/note-editor/NoteEditor';
+import {
+  ContactCommunicationDetails,
+  ContactDetails,
+  ContactNoteEditor,
+  NoteEditorModes,
+} from '../../components/contact';
+
 function ContactDetailsPage() {
   const {
     query: { id },
+    push,
   } = useRouter();
 
   return (
-    <DetailsPageLayout>
+    <DetailsPageLayout onNavigateBack={() => push('/')}>
       <section className={styles.personalDetails}>
         <ContactDetails id={id as string} />
         <ContactCommunicationDetails id={id as string} />
       </section>
+      <section className={styles.notes}>
+        <ContactNoteEditor
+          contactId={id as string}
+          mode={NoteEditorModes.ADD}
+        />
+      </section>
 
-      <ContactNoteEditor contactId={id as string} />
       <section className={styles.timeline}></section>
     </DetailsPageLayout>
   );

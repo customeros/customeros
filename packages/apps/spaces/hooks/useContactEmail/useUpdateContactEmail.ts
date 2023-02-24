@@ -1,36 +1,49 @@
-import { Note, NoteUpdateInput } from '../../graphQL/types';
+import { Email, EmailUpdateInput } from '../../graphQL/generated';
 import {
-  UpdateContactNoteMutation,
-  useUpdateContactNoteMutation,
+  UpdateContactEmailMutation,
+  useUpdateContactEmailMutation,
 } from '../../graphQL/generated';
 
 interface Result {
-  onUpdateContactNote: (
-    input: NoteUpdateInput,
-    oldValue: Note,
-  ) => Promise<UpdateContactNoteMutation['note_Update'] | null>;
+  onUpdateContactEmail: (
+    input: EmailUpdateInput,
+    oldValue: Email,
+  ) => Promise<UpdateContactEmailMutation['emailUpdateInContact'] | null>;
 }
-export const useUpdateContactNote = (): Result => {
+export const useUpdateContactEmail = ({
+  contactId,
+}: {
+  contactId: string;
+}): Result => {
   const [updateContactNoteMutation, { loading, error, data }] =
-    useUpdateContactNoteMutation();
+    useUpdateContactEmailMutation();
 
-  const handleUpdateContactNote: Result['onUpdateContactNote'] = async (
+  const handleUpdateContactEmail: Result['onUpdateContactEmail'] = async (
     input,
-    oldValue,
+    { label, primary = false, id, ...rest },
   ) => {
+    const payload = {
+      primary,
+      label,
+      // @ts-expect-error revisit later, shouldn't happen
+      id,
+      ...input,
+    };
     try {
       const response = await updateContactNoteMutation({
-        variables: { input },
+        variables: { input: payload, contactId },
+        refetchQueries: ['GetContactCommunicationChannels'],
         optimisticResponse: {
-          note_Update: {
-            __typename: 'Note',
-            ...oldValue,
+          emailUpdateInContact: {
+            __typename: 'Email',
+            ...rest,
             ...input,
+            primary: input.primary || primary || false,
           },
         },
       });
 
-      return response.data?.note_Update ?? null;
+      return response.data?.emailUpdateInContact ?? null;
     } catch (err) {
       console.error(err);
       return null;
@@ -38,6 +51,6 @@ export const useUpdateContactNote = (): Result => {
   };
 
   return {
-    onUpdateContactNote: handleUpdateContactNote,
+    onUpdateContactEmail: handleUpdateContactEmail,
   };
 };

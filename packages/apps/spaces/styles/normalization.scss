@@ -124,15 +124,30 @@ button::-moz-focus-inner {
 }
 
 .ql-toolbar.ql-snow {
+  border: var(--border-divider);
+  border-bottom: none;
   background: var(--secondary-color);
   border-top-right-radius:var(--border-radius-sm);
   border-top-left-radius:var(--border-radius-sm)
 }
 .ql-toolbar.ql-snow+.ql-container.ql-snow {
+  border: var(--border-divider);
   min-height: 100px;
   border-bottom-right-radius:var(--border-radius-sm);
   border-bottom-left-radius:var(--border-radius-sm)
 }
 
+.ql-editor {
+  word-break: break-word !important;
+}
 
-
+.ql-snow.ql-toolbar .editor_save {
+  display: flex;
+  justify-content: flex-end;
+}
+.ql-snow.ql-toolbar .editor_save button.primary {
+  @include button-variants;
+  width: auto;
+  display: flex;
+  padding: var(--spacing-xxxs) var(--spacing-sm);
+}

@@ -1,4 +1,4 @@
-import { NoteInput } from '../../graphQL/types';
+import { NoteInput } from '../../graphQL/generated';
 import {
   CreateContactNoteMutation,
   useCreateContactNoteMutation,
