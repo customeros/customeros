@@ -68,8 +68,8 @@ func main() {
 	r.Use(cors.New(corsConfig))
 
 	r.POST("/file",
-		commonService.UserToTenantEnhancer(ctx, commonRepositoryContainer.UserRepo),
-		commonService.ApiKeyCheckerHTTP(commonRepositoryContainer.AppKeyRepo, commonService.FILE_STORE_API),
+		commonService.UserToTenantEnhancer(ctx, commonRepositoryContainer.UserRepository),
+		commonService.ApiKeyCheckerHTTP(commonRepositoryContainer.AppKeyRepository, commonService.FILE_STORE_API),
 		func(c *gin.Context) {
 			tenantName := c.Keys["TenantName"].(string)
 
@@ -88,8 +88,8 @@ func main() {
 			c.JSON(200, MapFileEntityToDTO(cfg, fileEntity))
 		})
 	r.GET("/file/:id",
-		commonService.UserToTenantEnhancer(ctx, commonRepositoryContainer.UserRepo),
-		commonService.ApiKeyCheckerHTTP(commonRepositoryContainer.AppKeyRepo, commonService.FILE_STORE_API),
+		commonService.UserToTenantEnhancer(ctx, commonRepositoryContainer.UserRepository),
+		commonService.ApiKeyCheckerHTTP(commonRepositoryContainer.AppKeyRepository, commonService.FILE_STORE_API),
 		func(c *gin.Context) {
 			tenantName := c.Keys["TenantName"].(string)
 
@@ -106,8 +106,8 @@ func main() {
 			c.JSON(200, MapFileEntityToDTO(cfg, byId))
 		})
 	r.GET("/file/:id/download",
-		commonService.UserToTenantEnhancer(ctx, commonRepositoryContainer.UserRepo),
-		commonService.ApiKeyCheckerHTTP(commonRepositoryContainer.AppKeyRepo, commonService.FILE_STORE_API),
+		commonService.UserToTenantEnhancer(ctx, commonRepositoryContainer.UserRepository),
+		commonService.ApiKeyCheckerHTTP(commonRepositoryContainer.AppKeyRepository, commonService.FILE_STORE_API),
 		func(c *gin.Context) {
 			tenantName := c.Keys["TenantName"].(string)
 
@@ -127,8 +127,8 @@ func main() {
 			c.Writer.Write(bytes)
 		})
 	r.GET("/file/:id/base64",
-		commonService.UserToTenantEnhancer(ctx, commonRepositoryContainer.UserRepo),
-		commonService.ApiKeyCheckerHTTP(commonRepositoryContainer.AppKeyRepo, commonService.FILE_STORE_API),
+		commonService.UserToTenantEnhancer(ctx, commonRepositoryContainer.UserRepository),
+		commonService.ApiKeyCheckerHTTP(commonRepositoryContainer.AppKeyRepository, commonService.FILE_STORE_API),
 		func(c *gin.Context) {
 			tenantName := c.Keys["TenantName"].(string)
 

@@ -16,6 +16,7 @@ const (
 	SETTINGS_API      App = "settings-api"
 	MESSAGE_STORE_API App = "message-store-api"
 	OASIS_API         App = "oasis-api"
+	VALIDATION_API    App = "validation-api"
 )
 
 const ApiKeyHeader = "X-Openline-API-KEY"

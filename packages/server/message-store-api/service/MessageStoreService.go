@@ -29,12 +29,12 @@ type Participant struct {
 }
 
 func (s *MessageService) GetMessage(ctx context.Context, msgId *msProto.MessageId) (*msProto.Message, error) {
-	apiKeyValid := commonModuleService.ApiKeyCheckerGRPC(ctx, s.postgresRepositories.CommonRepositories.AppKeyRepo, commonModuleService.MESSAGE_STORE_API)
+	apiKeyValid := commonModuleService.ApiKeyCheckerGRPC(ctx, s.postgresRepositories.CommonRepositories.AppKeyRepository, commonModuleService.MESSAGE_STORE_API)
 	if !apiKeyValid {
 		return nil, status.Errorf(codes.Unauthenticated, "Invalid API Key")
 	}
 
-	tenantName, err := commonModuleService.GetTenantForUsernameForGRPC(ctx, s.postgresRepositories.CommonRepositories.UserRepo)
+	tenantName, err := commonModuleService.GetTenantForUsernameForGRPC(ctx, s.postgresRepositories.CommonRepositories.UserRepository)
 	if err != nil {
 		return nil, err
 	}
@@ -61,12 +61,12 @@ func (s *MessageService) GetMessage(ctx context.Context, msgId *msProto.MessageI
 	return s.commonStoreService.EncodeConversationEventToMS(conversationEvent), nil
 }
 func (s *MessageService) GetParticipants(ctx context.Context, feedId *msProto.FeedId) (*msProto.ParticipantsListResponse, error) {
-	apiKeyValid := commonModuleService.ApiKeyCheckerGRPC(ctx, s.postgresRepositories.CommonRepositories.AppKeyRepo, commonModuleService.MESSAGE_STORE_API)
+	apiKeyValid := commonModuleService.ApiKeyCheckerGRPC(ctx, s.postgresRepositories.CommonRepositories.AppKeyRepository, commonModuleService.MESSAGE_STORE_API)
 	if !apiKeyValid {
 		return nil, status.Errorf(codes.Unauthenticated, "Invalid API Key")
 	}
 
-	tenantName, err := commonModuleService.GetTenantForUsernameForGRPC(ctx, s.postgresRepositories.CommonRepositories.UserRepo)
+	tenantName, err := commonModuleService.GetTenantForUsernameForGRPC(ctx, s.postgresRepositories.CommonRepositories.UserRepository)
 	if err != nil {
 		return nil, err
 	}
@@ -92,12 +92,12 @@ func (s *MessageService) GetParticipants(ctx context.Context, feedId *msProto.Fe
 }
 
 func (s *MessageService) GetMessagesForFeed(ctx context.Context, feedIdRequest *msProto.FeedId) (*msProto.MessageListResponse, error) {
-	apiKeyValid := commonModuleService.ApiKeyCheckerGRPC(ctx, s.postgresRepositories.CommonRepositories.AppKeyRepo, commonModuleService.MESSAGE_STORE_API)
+	apiKeyValid := commonModuleService.ApiKeyCheckerGRPC(ctx, s.postgresRepositories.CommonRepositories.AppKeyRepository, commonModuleService.MESSAGE_STORE_API)
 	if !apiKeyValid {
 		return nil, status.Errorf(codes.Unauthenticated, "Invalid API Key")
 	}
 
-	tenantName, err := commonModuleService.GetTenantForUsernameForGRPC(ctx, s.postgresRepositories.CommonRepositories.UserRepo)
+	tenantName, err := commonModuleService.GetTenantForUsernameForGRPC(ctx, s.postgresRepositories.CommonRepositories.UserRepository)
 	if err != nil {
 		return nil, err
 	}
@@ -131,12 +131,12 @@ func (s *MessageService) GetMessagesForFeed(ctx context.Context, feedIdRequest *
 }
 
 func (s *MessageService) GetFeeds(ctx context.Context, request *msProto.GetFeedsPagedRequest) (*msProto.FeedItemPagedResponse, error) {
-	apiKeyValid := commonModuleService.ApiKeyCheckerGRPC(ctx, s.postgresRepositories.CommonRepositories.AppKeyRepo, commonModuleService.MESSAGE_STORE_API)
+	apiKeyValid := commonModuleService.ApiKeyCheckerGRPC(ctx, s.postgresRepositories.CommonRepositories.AppKeyRepository, commonModuleService.MESSAGE_STORE_API)
 	if !apiKeyValid {
 		return nil, status.Errorf(codes.Unauthenticated, "Invalid API Key")
 	}
 
-	tenantName, err := commonModuleService.GetTenantForUsernameForGRPC(ctx, s.postgresRepositories.CommonRepositories.UserRepo)
+	tenantName, err := commonModuleService.GetTenantForUsernameForGRPC(ctx, s.postgresRepositories.CommonRepositories.UserRepository)
 	if err != nil {
 		return nil, err
 	}
@@ -157,12 +157,12 @@ func (s *MessageService) GetFeeds(ctx context.Context, request *msProto.GetFeeds
 }
 
 func (s *MessageService) GetFeed(ctx context.Context, feedIdRequest *msProto.FeedId) (*msProto.FeedItem, error) {
-	apiKeyValid := commonModuleService.ApiKeyCheckerGRPC(ctx, s.postgresRepositories.CommonRepositories.AppKeyRepo, commonModuleService.MESSAGE_STORE_API)
+	apiKeyValid := commonModuleService.ApiKeyCheckerGRPC(ctx, s.postgresRepositories.CommonRepositories.AppKeyRepository, commonModuleService.MESSAGE_STORE_API)
 	if !apiKeyValid {
 		return nil, status.Errorf(codes.Unauthenticated, "Invalid API Key")
 	}
 
-	tenantName, err := commonModuleService.GetTenantForUsernameForGRPC(ctx, s.postgresRepositories.CommonRepositories.UserRepo)
+	tenantName, err := commonModuleService.GetTenantForUsernameForGRPC(ctx, s.postgresRepositories.CommonRepositories.UserRepository)
 	if err != nil {
 		return nil, err
 	}
@@ -180,12 +180,12 @@ func (s *MessageService) GetFeed(ctx context.Context, feedIdRequest *msProto.Fee
 }
 
 func (s *MessageService) SaveMessage(ctx context.Context, input *msProto.InputMessage) (*msProto.MessageId, error) {
-	apiKeyValid := commonModuleService.ApiKeyCheckerGRPC(ctx, s.postgresRepositories.CommonRepositories.AppKeyRepo, commonModuleService.MESSAGE_STORE_API)
+	apiKeyValid := commonModuleService.ApiKeyCheckerGRPC(ctx, s.postgresRepositories.CommonRepositories.AppKeyRepository, commonModuleService.MESSAGE_STORE_API)
 	if !apiKeyValid {
 		return nil, status.Errorf(codes.Unauthenticated, "Invalid API Key")
 	}
 
-	tenant, err := commonModuleService.GetTenantForUsernameForGRPC(ctx, s.postgresRepositories.CommonRepositories.UserRepo)
+	tenant, err := commonModuleService.GetTenantForUsernameForGRPC(ctx, s.postgresRepositories.CommonRepositories.UserRepository)
 	if err != nil {
 		return nil, err
 	}
