@@ -1,0 +1,1 @@
+export { ContactCommunicationDetailsSkeleton } from './ContactCommunicationDetailsSkeleton';

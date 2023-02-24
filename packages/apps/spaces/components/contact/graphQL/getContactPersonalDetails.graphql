@@ -1,0 +1,5 @@
+query GetContactPersonalDetails($id: ID!) {
+  contact(id: $id) {
+    ...ContactPersonalDetails
+  }
+}

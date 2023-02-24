@@ -7,7 +7,7 @@
     "build:dev": "next build",
     "build:cluster": "env-cmd -f .env.cluster next build",
     "start": "next start",
-    "icons": "npx @svgr/cli --typescript --out-dir src/components/ui-kit/atoms/icons --ignore-existing -- public/icons",
+    "icons": "npx @svgr/cli --typescript --out-dir components/ui-kit/atoms/icons --ignore-existing -- public/icons",
     "codegen": "graphql-codegen --require dotenv/config --config codegen.ts",
     "preatify": "yarn prettier --write ."
   },

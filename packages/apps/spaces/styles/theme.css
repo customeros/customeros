@@ -78,10 +78,10 @@
   --primary-color-focus: var(--royal-blue-700);
   --text-on-primary: #fff;
 
-  --secondary-color: var(--gray-300);
-  --secondary-color-hover: var(--gray-400);
-  --secondary-color-active: var(--gray-400);
-  --secondary-color-focus: var(--gray-400);
+  --secondary-color: var(--gray-100);
+  --secondary-color-hover: var(--gray-200);
+  --secondary-color-active: var(--gray-300);
+  --secondary-color-focus: var(--gray-300);
   --text-on-secondary: var(--gray-900);
 
   --accent-color: var(--electric-violet-400);
@@ -109,6 +109,9 @@
   --text-on-info: #fff;
 
   --text-primary-color: #212529;
+  --text-secondary-color: var(--gray-800);
+  --text-error-color: var(--red-800);
+  --text-faded: var(--gray-600);
 
   /* BORDER */
   --border-radius-sm: 4px; /* small border radius */
@@ -130,18 +133,18 @@
   /*  !* TYPOGRAPHY *!*/
   --font-size-xxs: 0.625rem;
   --font-size-xs: 0.75rem;
-  --font-size-s: 0.875rem;
-  --font-size-m: 1rem;
-  --font-size-l: 1.125rem;
+  --font-size-sm: 0.875rem;
+  --font-size-md: 1rem;
+  --font-size-lg: 1.125rem;
   --font-size-xl: 1.25rem;
   --font-size-xxl: 1.5rem;
   --font-size-xxxl: 1.75rem;
 
   --heading-main: var(--font-size-xxl);
   --heading-secondary: var(--font-size-xl);
-  --heading-tertiary: var(--font-size-l);
-  --normal-text: var(--font-size-m);
-  --small-text: var(--font-size-s);
+  --heading-tertiary: var(--font-size-lg);
+  --normal-text: var(--font-size-md);
+  --small-text: var(--font-size-sm);
   --hint-text: var(--font-size-xs);
 
   /* BORDERS */

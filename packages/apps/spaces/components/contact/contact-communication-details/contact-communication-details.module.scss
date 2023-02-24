@@ -1,0 +1,103 @@
+@import '../../../styles/mixins';
+
+.contactDetails {
+  display: flex;
+  flex-direction: column;
+  max-width: 400px;
+}
+
+.info span {
+  padding: var(--spacing-xxxs) var(--spacing-xxs);
+  border-top-right-radius: var(--border-radius-xl);
+  border-bottom-right-radius: var(--border-radius-xl);
+}
+
+.label {
+  color: var(--text-faded);
+  min-width: 15%;
+  text-align: end;
+  & button,
+  & span {
+    padding: var(--spacing-xxxs) var(--spacing-xxs);
+    border-top-left-radius: var(--border-radius-xl);
+    border-bottom-left-radius: var(--border-radius-xl);
+  }
+}
+.editLabelIcon {
+    @include flex-center;
+    position: relative;
+
+
+  & img {
+    transform: rotate(90deg);
+    left: -15px;
+    position: absolute;
+  }
+}
+
+.detailsList {
+  margin-top: var(--spacing-xxxs);
+  padding-bottom: var(--spacing-xxxs);
+}
+
+.divider {
+  border-bottom: var(--border-divider);
+  margin: var(--spacing-xxxs) 0;
+}
+
+.communicationItem,
+.communicationItemEdit {
+  font-size: var(--font-size-sm);
+  border-radius: var(--border-radius-xl);
+  margin-top: var(--spacing-xxxs);
+  display: flex;
+  position: relative;
+}
+
+.communicationItem {
+  cursor: pointer;
+
+  &:not(:last-of-type) {
+    margin-bottom: var(--spacing-xxs);
+  }
+
+  &.selected,
+  &:hover,
+  &:focus-visible {
+    & .label span {
+      background: var(--gray-200);
+    }
+
+    & .info span {
+      background: var(--gray-100);
+    }
+  }
+}
+
+.primary {
+  font-weight: bold;
+}
+
+.buttonWrapper {
+  margin-bottom: var(--spacing-xs);
+  display: flex;
+
+  button {
+    width: 100%;
+  }
+}
+
+.editButton {
+  position: absolute;
+  right: 0;
+
+  & button:first-of-type {
+    margin-right: 2px;
+  }
+}
+
+.listContent {
+  @include outline;
+  display: flex;
+  flex: 1;
+}

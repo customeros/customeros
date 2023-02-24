@@ -1,0 +1,55 @@
+
+.table {
+  border-collapse: collapse;
+  border-radius: 10px;
+  position: relative;
+  width: inherit;
+  overflow-x: auto;
+  height: 75vh;
+  table-layout: fixed;
+}
+
+.header {
+  & tr {
+    display: flex;
+    flex: 1;
+    background: var(--side-panel-background);
+    border-top-right-radius: 6px;
+    border-top-left-radius: 6px;
+    border-bottom: var(--border-divider);
+  }
+  & tr th {
+    padding: var(--spacing-xs);
+  }
+}
+
+.body {
+  overflow-y: auto;
+  overflow-x: hidden;
+  height: inherit;
+  width: 80vw;
+  position: relative;
+  display: block;
+}
+
+.row {
+  display: flex;
+  position: absolute;
+  width: inherit;
+  align-items: center;
+  border-bottom: var(--border-divider);
+
+  th,
+  td {
+    padding: var(--spacing-xs);
+    text-overflow: ellipsis;
+    display: block;
+    white-space: nowrap;
+    word-break: keep-all;
+    overflow: hidden;
+  }
+}
+
+.staticRow {
+  position: static;
+}

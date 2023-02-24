@@ -1,8 +1,8 @@
 import type { NextPage } from 'next';
 import React, { useState } from 'react';
-import { Finder } from '../../src/components/finder';
-import { PageContentLayout } from '../../src/components/layouts';
-import { SidePanel } from '../../src/components/ui-kit/organisms';
+import { Finder } from '../../components/finder';
+import { PageContentLayout } from '../../components/ui-kit/layouts';
+import { SidePanel } from '../../components/ui-kit/organisms';
 import { WebChat } from '@openline-ai/openline-web-chat';
 import { useRouter } from 'next/router';
 

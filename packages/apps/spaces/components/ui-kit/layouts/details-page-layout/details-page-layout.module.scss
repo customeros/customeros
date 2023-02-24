@@ -1,0 +1,37 @@
+@import "../../../../styles/mixins";
+.layout {
+  height: 100vh;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 64px var(--spacing-xxl) var(--spacing-xxl);
+  display: grid;
+
+
+  @include mobile-to-tablet {
+    grid-template-columns: 1fr;
+    grid-gap: 24px;
+    grid-auto-rows: minmax(min-content, max-content);
+    grid-template-areas:  "details"
+                          "notes"
+                          "timeline";
+  }
+
+  @include min-tablet {
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    grid-template-rows:  1fr minmax(20%, 1fr);
+    grid-template-areas:  "details notes"
+                        "details timeline";
+    grid-gap: 24px;
+  }
+
+  @include min-desktop {
+    grid-gap: 120px;
+  }
+
+}
+
+.backButton {
+    position: absolute;
+    top: 20px;
+}
