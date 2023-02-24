@@ -2,35 +2,36 @@ package repository
 
 import (
 	"fmt"
-	"github.com/neo4j/neo4j-go-driver/v4/neo4j"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/utils"
+	"golang.org/x/net/context"
 	"time"
 )
 
 type ExternalSystemRepository interface {
-	Merge(tenant, externalSystem string) error
+	Merge(ctx context.Context, tenant, externalSystem string) error
 }
 
 type externalSystemRepository struct {
-	driver *neo4j.Driver
+	driver *neo4j.DriverWithContext
 }
 
-func NewExternalSystemRepository(driver *neo4j.Driver) ExternalSystemRepository {
+func NewExternalSystemRepository(driver *neo4j.DriverWithContext) ExternalSystemRepository {
 	return &externalSystemRepository{
 		driver: driver,
 	}
 }
 
-func (r *externalSystemRepository) Merge(tenant, externalSystem string) error {
-	session := utils.NewNeo4jWriteSession(*r.driver)
-	defer session.Close()
+func (r *externalSystemRepository) Merge(ctx context.Context, tenant, externalSystem string) error {
+	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
+	defer session.Close(ctx)
 
 	query := "MATCH (t:Tenant {name:$tenant}) " +
 		" MERGE (t)<-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]-(e:ExternalSystem {id:$externalSystem})" +
 		" ON CREATE SET e.name=$externalSystem, e.createdAt=$now, e.updatedAt=$now, e:%s "
 
-	_, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
-		_, err := tx.Run(fmt.Sprintf(query, "ExternalSystem_"+tenant),
+	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		_, err := tx.Run(ctx, fmt.Sprintf(query, "ExternalSystem_"+tenant),
 			map[string]interface{}{
 				"tenant":         tenant,
 				"externalSystem": externalSystem,

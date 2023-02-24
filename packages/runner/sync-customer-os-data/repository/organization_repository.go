@@ -2,31 +2,32 @@ package repository
 
 import (
 	"fmt"
-	"github.com/neo4j/neo4j-go-driver/v4/neo4j"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/entity"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/utils"
+	"golang.org/x/net/context"
 	"time"
 )
 
 type OrganizationRepository interface {
-	MergeOrganization(tenant string, syncDate time.Time, organization entity.OrganizationData) (string, error)
-	MergeOrganizationType(tenant, organizationId, organizationTypeName string) error
-	MergeOrganizationDefaultPlace(tenant, organizationId string, organization entity.OrganizationData) error
+	MergeOrganization(ctx context.Context, tenant string, syncDate time.Time, organization entity.OrganizationData) (string, error)
+	MergeOrganizationType(ctx context.Context, tenant, organizationId, organizationTypeName string) error
+	MergeOrganizationDefaultPlace(ctx context.Context, tenant, organizationId string, organization entity.OrganizationData) error
 }
 
 type organizationRepository struct {
-	driver *neo4j.Driver
+	driver *neo4j.DriverWithContext
 }
 
-func NewOrganizationRepository(driver *neo4j.Driver) OrganizationRepository {
+func NewOrganizationRepository(driver *neo4j.DriverWithContext) OrganizationRepository {
 	return &organizationRepository{
 		driver: driver,
 	}
 }
 
-func (r *organizationRepository) MergeOrganization(tenant string, syncDate time.Time, organization entity.OrganizationData) (string, error) {
-	session := utils.NewNeo4jWriteSession(*r.driver)
-	defer session.Close()
+func (r *organizationRepository) MergeOrganization(ctx context.Context, tenant string, syncDate time.Time, organization entity.OrganizationData) (string, error) {
+	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
+	defer session.Close(ctx)
 
 	// Create new Organization if it does not exist
 	// If Organization exists, and sourceOfTruth is acceptable then update it.
@@ -58,8 +59,8 @@ func (r *organizationRepository) MergeOrganization(tenant string, syncDate time.
 		") " +
 		" RETURN org.id"
 
-	dbRecord, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
-		queryResult, err := tx.Run(fmt.Sprintf(query, "Organization_"+tenant),
+	dbRecord, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		queryResult, err := tx.Run(ctx, fmt.Sprintf(query, "Organization_"+tenant),
 			map[string]interface{}{
 				"tenant":         tenant,
 				"externalSystem": organization.ExternalSystem,
@@ -80,7 +81,7 @@ func (r *organizationRepository) MergeOrganization(tenant string, syncDate time.
 		if err != nil {
 			return nil, err
 		}
-		record, err := queryResult.Single()
+		record, err := queryResult.Single(ctx)
 		if err != nil {
 			return nil, err
 		}
@@ -92,9 +93,9 @@ func (r *organizationRepository) MergeOrganization(tenant string, syncDate time.
 	return dbRecord.(string), nil
 }
 
-func (r *organizationRepository) MergeOrganizationType(tenant, organizationId, organizationTypeName string) error {
-	session := utils.NewNeo4jWriteSession(*r.driver)
-	defer session.Close()
+func (r *organizationRepository) MergeOrganizationType(ctx context.Context, tenant, organizationId, organizationTypeName string) error {
+	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
+	defer session.Close(ctx)
 
 	query := "MATCH (org:Organization {id:$organizationId})-[:ORGANIZATION_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant}) " +
 		" MERGE (ot:OrganizationType {name:$organizationTypeName})-[:ORGANIZATION_TYPE_BELONGS_TO_TENANT]->(t) " +
@@ -103,8 +104,8 @@ func (r *organizationRepository) MergeOrganizationType(tenant, organizationId, o
 		" MERGE (org)-[r:IS_OF_TYPE]->(ot) " +
 		" return r"
 
-	_, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
-		queryResult, err := tx.Run(query,
+	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		queryResult, err := tx.Run(ctx, query,
 			map[string]interface{}{
 				"tenant":               tenant,
 				"organizationId":       organizationId,
@@ -114,7 +115,7 @@ func (r *organizationRepository) MergeOrganizationType(tenant, organizationId, o
 		if err != nil {
 			return nil, err
 		}
-		_, err = queryResult.Single()
+		_, err = queryResult.Single(ctx)
 		if err != nil {
 			return nil, err
 		}
@@ -123,9 +124,9 @@ func (r *organizationRepository) MergeOrganizationType(tenant, organizationId, o
 	return err
 }
 
-func (r *organizationRepository) MergeOrganizationDefaultPlace(tenant, organizationId string, organization entity.OrganizationData) error {
-	session := utils.NewNeo4jWriteSession(*r.driver)
-	defer session.Close()
+func (r *organizationRepository) MergeOrganizationDefaultPlace(ctx context.Context, tenant, organizationId string, organization entity.OrganizationData) error {
+	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
+	defer session.Close(ctx)
 
 	// Create new Location if it does not exist with given source and name
 	// If Place exists, and sourceOfTruth is acceptable then update it.
@@ -165,8 +166,8 @@ func (r *organizationRepository) MergeOrganizationDefaultPlace(tenant, organizat
 		" alt.country=$country, alt.region=$region, alt.locality=$locality, alt.address=$address, alt.address2=$address2, alt.zip=$zip, alt.phone=$phone " +
 		") "
 
-	_, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
-		_, err := tx.Run(fmt.Sprintf(query, "Location_"+tenant),
+	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		_, err := tx.Run(ctx, fmt.Sprintf(query, "Location_"+tenant),
 			map[string]interface{}{
 				"tenant":         tenant,
 				"organizationId": organizationId,

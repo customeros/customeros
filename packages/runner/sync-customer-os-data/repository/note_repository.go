@@ -2,33 +2,34 @@ package repository
 
 import (
 	"fmt"
-	"github.com/neo4j/neo4j-go-driver/v4/neo4j"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/entity"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/utils"
+	"golang.org/x/net/context"
 	"time"
 )
 
 type NoteRepository interface {
-	MergeNote(tenant string, syncDate time.Time, note entity.NoteData) (string, error)
-	NoteLinkWithContactByExternalId(tenant, noteId, contactExternalId, externalSystem string) error
-	NoteLinkWithOrganizationByExternalId(tenant, noteId, organizationExternalId, externalSystem string) error
-	NoteLinkWithUserByExternalId(tenant, noteId, userExternalId, externalSystem string) error
-	NoteLinkWithUserByExternalOwnerId(tenant, noteId, userExternalOwnerId, externalSystem string) error
+	MergeNote(ctx context.Context, tenant string, syncDate time.Time, note entity.NoteData) (string, error)
+	NoteLinkWithContactByExternalId(ctx context.Context, tenant, noteId, contactExternalId, externalSystem string) error
+	NoteLinkWithOrganizationByExternalId(ctx context.Context, tenant, noteId, organizationExternalId, externalSystem string) error
+	NoteLinkWithUserByExternalId(ctx context.Context, tenant, noteId, userExternalId, externalSystem string) error
+	NoteLinkWithUserByExternalOwnerId(ctx context.Context, tenant, noteId, userExternalOwnerId, externalSystem string) error
 }
 
 type noteRepository struct {
-	driver *neo4j.Driver
+	driver *neo4j.DriverWithContext
 }
 
-func NewNoteRepository(driver *neo4j.Driver) NoteRepository {
+func NewNoteRepository(driver *neo4j.DriverWithContext) NoteRepository {
 	return &noteRepository{
 		driver: driver,
 	}
 }
 
-func (r *noteRepository) MergeNote(tenant string, syncDate time.Time, note entity.NoteData) (string, error) {
-	session := utils.NewNeo4jWriteSession(*r.driver)
-	defer session.Close()
+func (r *noteRepository) MergeNote(ctx context.Context, tenant string, syncDate time.Time, note entity.NoteData) (string, error) {
+	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
+	defer session.Close(ctx)
 
 	// Create new Note if it does not exist
 	// If Note exists, and sourceOfTruth is acceptable then update Note.
@@ -48,8 +49,8 @@ func (r *noteRepository) MergeNote(tenant string, syncDate time.Time, note entit
 		") " +
 		"RETURN n.id"
 
-	dbRecord, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
-		queryResult, err := tx.Run(fmt.Sprintf(query, "Note_"+tenant),
+	dbRecord, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		queryResult, err := tx.Run(ctx, fmt.Sprintf(query, "Note_"+tenant),
 			map[string]interface{}{
 				"tenant":         tenant,
 				"source":         note.ExternalSystem,
@@ -65,7 +66,7 @@ func (r *noteRepository) MergeNote(tenant string, syncDate time.Time, note entit
 		if err != nil {
 			return nil, err
 		}
-		record, err := queryResult.Single()
+		record, err := queryResult.Single(ctx)
 		if err != nil {
 			return nil, err
 		}
@@ -77,12 +78,12 @@ func (r *noteRepository) MergeNote(tenant string, syncDate time.Time, note entit
 	return dbRecord.(string), nil
 }
 
-func (r *noteRepository) NoteLinkWithContactByExternalId(tenant, noteId, contactExternalId, externalSystem string) error {
-	session := utils.NewNeo4jWriteSession(*r.driver)
-	defer session.Close()
+func (r *noteRepository) NoteLinkWithContactByExternalId(ctx context.Context, tenant, noteId, contactExternalId, externalSystem string) error {
+	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
+	defer session.Close(ctx)
 
-	_, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
-		_, err := tx.Run(`
+	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		_, err := tx.Run(ctx, `
 				MATCH (t:Tenant {name:$tenant})<-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]-(e:ExternalSystem {id:$externalSystem})<-[:IS_LINKED_WITH {externalId:$contactExternalId}]-(c:Contact)
 				MATCH (n:Note {id:$noteId})-[:IS_LINKED_WITH]->(e)
 				MERGE (c)-[:NOTED]->(n)
@@ -98,12 +99,12 @@ func (r *noteRepository) NoteLinkWithContactByExternalId(tenant, noteId, contact
 	return err
 }
 
-func (r *noteRepository) NoteLinkWithOrganizationByExternalId(tenant, noteId, organizationExternalId, externalSystem string) error {
-	session := utils.NewNeo4jWriteSession(*r.driver)
-	defer session.Close()
+func (r *noteRepository) NoteLinkWithOrganizationByExternalId(ctx context.Context, tenant, noteId, organizationExternalId, externalSystem string) error {
+	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
+	defer session.Close(ctx)
 
-	_, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
-		_, err := tx.Run(`
+	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		_, err := tx.Run(ctx, `
 				MATCH (t:Tenant {name:$tenant})<-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]-(e:ExternalSystem {id:$externalSystem})<-[:IS_LINKED_WITH {externalId:$organizationExternalId}]-(org:Organization)
 				MATCH (n:Note {id:$noteId})-[:IS_LINKED_WITH]->(e)
 				MERGE (org)-[:NOTED]->(n)
@@ -119,12 +120,12 @@ func (r *noteRepository) NoteLinkWithOrganizationByExternalId(tenant, noteId, or
 	return err
 }
 
-func (r *noteRepository) NoteLinkWithUserByExternalId(tenant, noteId, userExternalId, externalSystem string) error {
-	session := utils.NewNeo4jWriteSession(*r.driver)
-	defer session.Close()
+func (r *noteRepository) NoteLinkWithUserByExternalId(ctx context.Context, tenant, noteId, userExternalId, externalSystem string) error {
+	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
+	defer session.Close(ctx)
 
-	_, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
-		_, err := tx.Run(`
+	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		_, err := tx.Run(ctx, `
 				MATCH (t:Tenant {name:$tenant})<-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]-(e:ExternalSystem {id:$externalSystem})<-[:IS_LINKED_WITH {externalId:$userExternalId}]-(u:User)
 				MATCH (n:Note {id:$noteId})-[:IS_LINKED_WITH]->(e)
 				MERGE (u)-[:CREATED]->(n)
@@ -140,12 +141,12 @@ func (r *noteRepository) NoteLinkWithUserByExternalId(tenant, noteId, userExtern
 	return err
 }
 
-func (r *noteRepository) NoteLinkWithUserByExternalOwnerId(tenant, noteId, userExternalOwnerId, externalSystem string) error {
-	session := utils.NewNeo4jWriteSession(*r.driver)
-	defer session.Close()
+func (r *noteRepository) NoteLinkWithUserByExternalOwnerId(ctx context.Context, tenant, noteId, userExternalOwnerId, externalSystem string) error {
+	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
+	defer session.Close(ctx)
 
-	_, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
-		_, err := tx.Run(`
+	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		_, err := tx.Run(ctx, `
 				MATCH (t:Tenant {name:$tenant})<-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]-(e:ExternalSystem {id:$externalSystem})<-[:IS_LINKED_WITH {externalOwnerId:$userExternalOwnerId}]-(u:User)
 				MATCH (n:Note {id:$noteId})-[:IS_LINKED_WITH]->(e)
 				MERGE (u)-[:CREATED]->(n)

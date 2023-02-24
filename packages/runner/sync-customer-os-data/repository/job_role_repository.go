@@ -2,29 +2,30 @@ package repository
 
 import (
 	"fmt"
-	"github.com/neo4j/neo4j-go-driver/v4/neo4j"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/utils"
+	"golang.org/x/net/context"
 	"time"
 )
 
 type JobRoleRepository interface {
-	MergeJobRole(tenant, contactId, jobTitle, organizationExternalId, externalSystemId string) error
-	RemoveOutdatedJobRoles(tenant, contactId, externalSystemId, organizationExternal string) error
+	MergeJobRole(ctx context.Context, tenant, contactId, jobTitle, organizationExternalId, externalSystemId string) error
+	RemoveOutdatedJobRoles(ctx context.Context, tenant, contactId, externalSystemId, organizationExternal string) error
 }
 
 type jobRoleRepository struct {
-	driver *neo4j.Driver
+	driver *neo4j.DriverWithContext
 }
 
-func NewJobRoleRepository(driver *neo4j.Driver) JobRoleRepository {
+func NewJobRoleRepository(driver *neo4j.DriverWithContext) JobRoleRepository {
 	return &jobRoleRepository{
 		driver: driver,
 	}
 }
 
-func (r *jobRoleRepository) MergeJobRole(tenant, contactId, jobTitle, organizationExternalId, externalSystemId string) error {
-	session := utils.NewNeo4jWriteSession(*r.driver)
-	defer session.Close()
+func (r *jobRoleRepository) MergeJobRole(ctx context.Context, tenant, contactId, jobTitle, organizationExternalId, externalSystemId string) error {
+	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
+	defer session.Close(ctx)
 
 	query := "MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant}) " +
 		" MATCH (t)<-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]-(e:ExternalSystem {id:$externalSystemId})<-[:IS_LINKED_WITH {externalId:$organizationExternalId}]-(org:Organization) " +
@@ -43,8 +44,8 @@ func (r *jobRoleRepository) MergeJobRole(tenant, contactId, jobTitle, organizati
 		"				j.updatedAt = CASE WHEN j.sourceOfTruth=$sourceOfTruth THEN $now ELSE j.updatedAt END " +
 		" RETURN j"
 
-	_, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
-		queryResult, err := tx.Run(fmt.Sprintf(query, "JobRole_"+tenant),
+	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		queryResult, err := tx.Run(ctx, fmt.Sprintf(query, "JobRole_"+tenant),
 			map[string]interface{}{
 				"tenant":                 tenant,
 				"contactId":              contactId,
@@ -59,7 +60,7 @@ func (r *jobRoleRepository) MergeJobRole(tenant, contactId, jobTitle, organizati
 		if err != nil {
 			return nil, err
 		}
-		_, err = queryResult.Single()
+		_, err = queryResult.Single(ctx)
 		if err != nil {
 			return nil, err
 		}
@@ -68,12 +69,12 @@ func (r *jobRoleRepository) MergeJobRole(tenant, contactId, jobTitle, organizati
 	return err
 }
 
-func (r *jobRoleRepository) RemoveOutdatedJobRoles(tenant, contactId, externalSystemId, organizationExternalId string) error {
-	session := utils.NewNeo4jWriteSession(*r.driver)
-	defer session.Close()
+func (r *jobRoleRepository) RemoveOutdatedJobRoles(ctx context.Context, tenant, contactId, externalSystemId, organizationExternalId string) error {
+	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
+	defer session.Close(ctx)
 
-	_, err := session.WriteTransaction(func(tx neo4j.Transaction) (any, error) {
-		_, err := tx.Run(`
+	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		_, err := tx.Run(ctx, `
 			MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant})
 			MATCH (c)-[:WORKS_AS]->(j:JobRole)-[:ROLE_IN]->(:Organization)-[r:IS_LINKED_WITH]->(e:ExternalSystem {id:$externalSystemId})
 			WHERE j.sourceOfTruth=$sourceOfTruth AND r.externalId<>$organizationExternalId
