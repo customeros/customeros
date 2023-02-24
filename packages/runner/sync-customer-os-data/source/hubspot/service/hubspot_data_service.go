@@ -131,6 +131,7 @@ func (s *hubspotDataService) GetOrganizationsForSync(batchSize int, runId string
 		}
 		customerOsOrganizations = append(customerOsOrganizations, entity.OrganizationData{
 			ExternalId:           v.Id,
+			ExternalSyncId:       v.Id,
 			ExternalSystem:       s.SourceId(),
 			Name:                 hubspotCompanyProperties.Name,
 			Description:          hubspotCompanyProperties.Description,
@@ -269,60 +270,60 @@ func emailsStringToArray(str string) []string {
 	return strings.Split(str, ";")
 }
 
-func (s *hubspotDataService) MarkContactProcessed(externalId, runId string, synced bool) error {
-	contact, ok := s.contacts[externalId]
+func (s *hubspotDataService) MarkContactProcessed(externalSyncId, runId string, synced bool) error {
+	contact, ok := s.contacts[externalSyncId]
 	if ok {
 		err := repository.MarkContactProcessed(s.getDb(), contact, synced, runId)
 		if err != nil {
-			logrus.Errorf("error while marking contact with external reference %s as synced for hubspot", externalId)
+			logrus.Errorf("error while marking contact with external reference %s as synced for hubspot", externalSyncId)
 		}
 		return err
 	}
 	return nil
 }
 
-func (s *hubspotDataService) MarkOrganizationProcessed(externalId, runId string, synced bool) error {
-	company, ok := s.companies[externalId]
+func (s *hubspotDataService) MarkOrganizationProcessed(externalSyncId, runId string, synced bool) error {
+	company, ok := s.companies[externalSyncId]
 	if ok {
 		err := repository.MarkCompanyProcessed(s.getDb(), company, synced, runId)
 		if err != nil {
-			logrus.Errorf("error while marking company with external reference %s as synced for hubspot", externalId)
+			logrus.Errorf("error while marking company with external reference %s as synced for hubspot", externalSyncId)
 		}
 		return err
 	}
 	return nil
 }
 
-func (s *hubspotDataService) MarkUserProcessed(externalId, runId string, synced bool) error {
-	owner, ok := s.owners[externalId]
+func (s *hubspotDataService) MarkUserProcessed(externalSyncId, runId string, synced bool) error {
+	owner, ok := s.owners[externalSyncId]
 	if ok {
 		err := repository.MarkOwnerProcessed(s.getDb(), owner, synced, runId)
 		if err != nil {
-			logrus.Errorf("error while marking owner with external reference %s as synced for hubspot", externalId)
+			logrus.Errorf("error while marking owner with external reference %s as synced for hubspot", externalSyncId)
 		}
 		return err
 	}
 	return nil
 }
 
-func (s *hubspotDataService) MarkNoteProcessed(externalId, runId string, synced bool) error {
-	note, ok := s.notes[externalId]
+func (s *hubspotDataService) MarkNoteProcessed(externalSyncId, runId string, synced bool) error {
+	note, ok := s.notes[externalSyncId]
 	if ok {
 		err := repository.MarkNoteProcessed(s.getDb(), note, synced, runId)
 		if err != nil {
-			logrus.Errorf("error while marking note with external reference %s as synced for hubspot", externalId)
+			logrus.Errorf("error while marking note with external reference %s as synced for hubspot", externalSyncId)
 		}
 		return err
 	}
 	return nil
 }
 
-func (s *hubspotDataService) MarkEmailMessageProcessed(externalId, runId string, synced bool) error {
-	email, ok := s.emails[externalId]
+func (s *hubspotDataService) MarkEmailMessageProcessed(externalSyncId, runId string, synced bool) error {
+	email, ok := s.emails[externalSyncId]
 	if ok {
 		err := repository.MarkEmailProcessed(s.getDb(), email, synced, runId)
 		if err != nil {
-			logrus.Errorf("error while marking email with external reference %s as synced for hubspot", externalId)
+			logrus.Errorf("error while marking email with external reference %s as synced for hubspot", externalSyncId)
 		}
 		return err
 	}
