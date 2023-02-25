@@ -34,11 +34,11 @@ func (r *userRepository) GetMatchedUserId(ctx context.Context, tenant string, us
 
 	query := `MATCH (t:Tenant {name:$tenant})<-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]-(e:ExternalSystem {id:$externalSystem})
 				OPTIONAL MATCH (t)<-[:USER_BELONGS_TO_TENANT]-(u1:User)-[:IS_LINKED_WITH {externalId:$userExternalId}]->(e)
-				OPTIONAL MATCH (t)<-[:USER_BELONGS_TO_TENANT]-(u2:User)-[HAS]->(m:Email)
+				OPTIONAL MATCH (t)<-[:USER_BELONGS_TO_TENANT]-(u2:User)-[:HAS]->(m:Email)
 					WHERE (m.rawEmail=$email OR m.email=$email) AND $email <> '' 
-				with coalesce(u1, u2) as users order by e asc, m asc
-				where users is not null
-				return users.id limit 1`
+				with coalesce(u1, u2) as user
+				where user is not null
+				return user.id limit 1`
 
 	dbRecords, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		queryResult, err := tx.Run(ctx, query,
@@ -89,8 +89,7 @@ func (r *userRepository) MergeUser(ctx context.Context, tenant string, syncDate 
 		"				u.updatedAt=$now " +
 		" WITH u, ext " +
 		" MERGE (u)-[r:IS_LINKED_WITH {externalId:$externalId}]->(ext) " +
-		" ON CREATE SET r.externalId=$externalId, " +
-		"				r.externalOwnerId = $externalOwnerId, " +
+		" ON CREATE SET r.externalOwnerId = $externalOwnerId, " +
 		"				r.syncDate=$syncDate " +
 		" ON MATCH SET r.syncDate=$syncDate " +
 		" WITH u " +

@@ -3,6 +3,7 @@ package repository
 import (
 	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j/db"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/entity"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/utils"
 	"golang.org/x/net/context"
@@ -10,7 +11,8 @@ import (
 )
 
 type OrganizationRepository interface {
-	MergeOrganization(ctx context.Context, tenant string, syncDate time.Time, organization entity.OrganizationData) (string, error)
+	GetMatchedOrganizationId(ctx context.Context, tenant string, organization entity.OrganizationData) (string, error)
+	MergeOrganization(ctx context.Context, tenant string, syncDate time.Time, organization entity.OrganizationData) error
 	MergeOrganizationType(ctx context.Context, tenant, organizationId, organizationTypeName string) error
 	MergeOrganizationDefaultPlace(ctx context.Context, tenant, organizationId string, organization entity.OrganizationData) error
 	MergeOrganizationDomain(ctx context.Context, tenant string, organizationId string, domain string, externalSystem string) error
@@ -26,7 +28,42 @@ func NewOrganizationRepository(driver *neo4j.DriverWithContext) OrganizationRepo
 	}
 }
 
-func (r *organizationRepository) MergeOrganization(ctx context.Context, tenant string, syncDate time.Time, organization entity.OrganizationData) (string, error) {
+func (r *organizationRepository) GetMatchedOrganizationId(ctx context.Context, tenant string, organization entity.OrganizationData) (string, error) {
+	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
+	defer session.Close(ctx)
+
+	query := `MATCH (t:Tenant {name:$tenant})<-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]-(e:ExternalSystem {id:$externalSystem})
+				OPTIONAL MATCH (t)<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o1:Organization)-[:IS_LINKED_WITH {externalId:$organizationExternalId}]->(e)
+				OPTIONAL MATCH (t)<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o2:Organization)-[:HAS_DOMAIN]->(d:Domain)
+					WHERE d.domain in $domains
+				with coalesce(o1, o2) as organization
+				where organization is not null
+				return organization.id limit 1`
+
+	dbRecords, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		queryResult, err := tx.Run(ctx, query,
+			map[string]interface{}{
+				"tenant":                 tenant,
+				"externalSystem":         organization.ExternalSystem,
+				"organizationExternalId": organization.ExternalId,
+				"domains":                organization.Domains,
+			})
+		if err != nil {
+			return nil, err
+		}
+		return queryResult.Collect(ctx)
+	})
+	if err != nil {
+		return "", err
+	}
+	orgIDs := dbRecords.([]*db.Record)
+	if len(orgIDs) == 1 {
+		return orgIDs[0].Values[0].(string), nil
+	}
+	return "", nil
+}
+
+func (r *organizationRepository) MergeOrganization(ctx context.Context, tenant string, syncDate time.Time, organization entity.OrganizationData) error {
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
@@ -34,42 +71,49 @@ func (r *organizationRepository) MergeOrganization(ctx context.Context, tenant s
 	// If Organization exists, and sourceOfTruth is acceptable then update it.
 	//   otherwise create/update AlternateOrganization for incoming source, with a new relationship 'ALTERNATE'
 	// Link Organization with Tenant
-	query := "MATCH (t:Tenant {name:$tenant})<-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]-(e:ExternalSystem {id:$externalSystem}) " +
-		" MERGE (org:Organization)-[r:IS_LINKED_WITH {externalId:$externalId}]->(e) " +
-		" ON CREATE SET r.externalId=$externalId, r.syncDate=$syncDate, " +
-		"				org.id=randomUUID(), org.createdAt=$createdAt, org.updatedAt=$createdAt, " +
-		"               org.name=$name, org.description=$description, org.domain=$domain, " +
-		"               org.website=$website, org.industry=$industry, org.isPublic=$isPublic, " +
-		"				org.source=$source, org.sourceOfTruth=$sourceOfTruth, org.appSource=$appSource, " +
+	query := "MATCH (t:Tenant {name:$tenant})<-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]-(ext:ExternalSystem {id:$externalSystem}) " +
+		" MERGE (org:Organization {id:$orgId})-[:ORGANIZATION_BELONGS_TO_TENANT]->(t) " +
+		" ON CREATE SET org.createdAt=$createdAt, " +
+		"				org.updatedAt=$updatedAt, " +
+		"               org.name=$name, " +
+		"				org.description=$description, " +
+		"               org.website=$website, " +
+		"				org.industry=$industry, " +
+		"				org.isPublic=$isPublic, " +
+		"				org.source=$source, " +
+		"				org.sourceOfTruth=$sourceOfTruth, " +
+		"				org.appSource=$appSource, " +
 		"				org:%s " +
-		" ON MATCH SET 	r.syncDate = CASE WHEN org.sourceOfTruth=$sourceOfTruth THEN $syncDate ELSE r.syncDate END, " +
-		"				org.name = CASE WHEN org.sourceOfTruth=$sourceOfTruth THEN $name ELSE org.name END, " +
+		" ON MATCH SET 	org.name = CASE WHEN org.sourceOfTruth=$sourceOfTruth THEN $name ELSE org.name END, " +
 		"				org.description = CASE WHEN org.sourceOfTruth=$sourceOfTruth THEN $description ELSE org.description END, " +
-		"				org.domain = CASE WHEN org.sourceOfTruth=$sourceOfTruth THEN $domain ELSE org.domain END, " +
 		"				org.website = CASE WHEN org.sourceOfTruth=$sourceOfTruth THEN $website ELSE org.website END, " +
 		"				org.industry = CASE WHEN org.sourceOfTruth=$sourceOfTruth THEN $industry ELSE org.industry END, " +
 		"				org.isPublic = CASE WHEN org.sourceOfTruth=$sourceOfTruth THEN $isPublic ELSE org.isPublic END, " +
-		"				org.updatedAt = CASE WHEN org.sourceOfTruth=$sourceOfTruth THEN $now ELSE org.updatedAt END " +
-		" WITH org, t " +
-		" MERGE (org)-[:ORGANIZATION_BELONGS_TO_TENANT]->(t) " +
+		"				org.updatedAt = $now " +
+		" WITH org, ext " +
+		" MERGE (org)-[r:IS_LINKED_WITH {externalId:$externalId}]->(ext) " +
+		" ON CREATE SET r.syncDate=$syncDate " +
+		" ON MATCH SET r.syncDate=$syncDate " +
 		" WITH org " +
 		" FOREACH (x in CASE WHEN org.sourceOfTruth <> $sourceOfTruth THEN [org] ELSE [] END | " +
 		"  MERGE (x)-[:ALTERNATE]->(alt:AlternateOrganization {source:$source, id:x.id}) " +
 		"    SET alt.updatedAt=$now, alt.appSource=$appSource, " +
-		" 		alt.name=$name, alt.description=$description, org.domain=$domain, org.website=$website, org.industry=$industry, org.isPublic=$isPublic " +
+		" 		alt.name=$name, alt.description=$description, org.website=$website, org.industry=$industry, org.isPublic=$isPublic " +
 		") " +
 		" RETURN org.id"
 
-	dbRecord, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		queryResult, err := tx.Run(ctx, fmt.Sprintf(query, "Organization_"+tenant),
 			map[string]interface{}{
 				"tenant":         tenant,
+				"orgId":          organization.Id,
 				"externalSystem": organization.ExternalSystem,
 				"externalId":     organization.ExternalId,
 				"syncDate":       syncDate,
 				"name":           organization.Name,
 				"description":    organization.Description,
 				"createdAt":      organization.CreatedAt,
+				"updatedAt":      organization.UpdatedAt,
 				"website":        organization.Website,
 				"industry":       organization.Industry,
 				"isPublic":       organization.IsPublic,
@@ -81,16 +125,13 @@ func (r *organizationRepository) MergeOrganization(ctx context.Context, tenant s
 		if err != nil {
 			return nil, err
 		}
-		record, err := queryResult.Single(ctx)
+		_, err = queryResult.Single(ctx)
 		if err != nil {
 			return nil, err
 		}
-		return record.Values[0], nil
+		return nil, nil
 	})
-	if err != nil {
-		return "", err
-	}
-	return dbRecord.(string), nil
+	return err
 }
 
 func (r *organizationRepository) MergeOrganizationType(ctx context.Context, tenant, organizationId, organizationTypeName string) error {

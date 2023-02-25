@@ -8,7 +8,7 @@ type SourceDataService interface {
 	SourceId() string
 	GetContactsForSync(batchSize int, runId string) []entity.ContactData
 	GetOrganizationsForSync(batchSize int, runId string) []entity.OrganizationData
-	GetUsersForSync(batchSize int, runId string) []*entity.UserData
+	GetUsersForSync(batchSize int, runId string) []entity.UserData
 	GetNotesForSync(batchSize int, runId string) []entity.NoteData
 	GetEmailMessagesForSync(batchSize int, runId string) []entity.EmailMessageData
 	MarkContactProcessed(externalSyncId, runId string, synced bool) error

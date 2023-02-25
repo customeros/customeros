@@ -1,7 +1,9 @@
 package service
 
 import (
+	"github.com/google/uuid"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/common"
+	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/entity"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/repository"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/net/context"
@@ -35,13 +37,28 @@ func (s *organizationSyncService) SyncOrganizations(ctx context.Context, dataSer
 		for _, v := range organizations {
 			var failedSync = false
 
-			organizationId, err := s.repositories.OrganizationRepository.MergeOrganization(ctx, tenant, syncDate, v)
+			organizationId, err := s.repositories.OrganizationRepository.GetMatchedOrganizationId(ctx, tenant, v)
 			if err != nil {
 				failedSync = true
-				logrus.Errorf("failed merge organization with external reference %v for tenant %v :%v", v.ExternalId, tenant, err)
+				logrus.Errorf("failed finding existing matched organization with external reference %v for tenant %v :%v", v.ExternalId, tenant, err)
 			}
 
-			if len(v.Domains) > 0 {
+			// Create new user id if not found
+			if len(organizationId) == 0 {
+				orgUuid, _ := uuid.NewRandom()
+				organizationId = orgUuid.String()
+			}
+			v.Id = organizationId
+
+			if failedSync == false {
+				err = s.repositories.OrganizationRepository.MergeOrganization(ctx, tenant, syncDate, v)
+				if err != nil {
+					failedSync = true
+					logrus.Errorf("failed merge organization with external reference %v for tenant %v :%v", v.ExternalId, tenant, err)
+				}
+			}
+
+			if len(v.Domains) > 0 && failedSync == false {
 				for _, domain := range v.Domains {
 					err = s.repositories.OrganizationRepository.MergeOrganizationDomain(ctx, tenant, organizationId, domain, v.ExternalSystem)
 					if err != nil {
@@ -51,13 +68,33 @@ func (s *organizationSyncService) SyncOrganizations(ctx context.Context, dataSer
 				}
 			}
 
-			err = s.repositories.OrganizationRepository.MergeOrganizationDefaultPlace(ctx, tenant, organizationId, v)
-			if err != nil {
-				failedSync = true
-				logrus.Errorf("failed merge organization' place with external reference %v for tenant %v :%v", v.ExternalId, tenant, err)
+			if len(v.DefaultLocationName) > 0 && failedSync == false {
+				err = s.repositories.OrganizationRepository.MergeOrganizationDefaultPlace(ctx, tenant, organizationId, v)
+				if err != nil {
+					failedSync = true
+					logrus.Errorf("failed merge organization' place with external reference %v for tenant %v :%v", v.ExternalId, tenant, err)
+				}
 			}
 
-			if len(v.OrganizationTypeName) > 0 {
+			if len(v.NoteContent) > 0 && failedSync == false {
+				noteId, err := s.repositories.NoteRepository.MergeNote(ctx, tenant, syncDate, entity.NoteData{
+					Html:           v.NoteContent,
+					CreatedAt:      v.CreatedAt,
+					ExternalId:     v.ExternalId,
+					ExternalSystem: v.ExternalSystem,
+				})
+				if err != nil {
+					failedSync = true
+					logrus.Errorf("failed merge organization note for organization %v, tenant %v :%v", organizationId, tenant, err)
+				}
+				err = s.repositories.NoteRepository.NoteLinkWithOrganizationByExternalId(ctx, tenant, noteId, v.ExternalId, v.ExternalSystem)
+				if err != nil {
+					failedSync = true
+					logrus.Errorf("failed link note with organization %v, tenant %v :%v", organizationId, tenant, err)
+				}
+			}
+
+			if len(v.OrganizationTypeName) > 0 && failedSync == false {
 				err = s.repositories.OrganizationRepository.MergeOrganizationType(ctx, tenant, organizationId, v.OrganizationTypeName)
 				if err != nil {
 					failedSync = true
