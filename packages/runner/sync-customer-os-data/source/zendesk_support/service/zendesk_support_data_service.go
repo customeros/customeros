@@ -6,6 +6,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/entity"
 	localEntity "github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/source/zendesk_support/entity"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/source/zendesk_support/repository"
+	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/utils"
 	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 	"strconv"
@@ -65,18 +66,38 @@ func (z *zendeskSupportDataService) GetContactsForSync(batchSize int, runId stri
 	return nil
 }
 
-func (z *zendeskSupportDataService) GetOrganizationsForSync(batchSize int, runId string) []entity.OrganizationData {
-	//TODO implement me
-	return nil
+func (s *zendeskSupportDataService) GetOrganizationsForSync(batchSize int, runId string) []entity.OrganizationData {
+	zendeskOrganizations, err := repository.GetOrganizations(s.getDb(), batchSize, runId)
+	if err != nil {
+		logrus.Error(err)
+		return nil
+	}
+	customerOsOrganizations := make([]entity.OrganizationData, 0, len(zendeskOrganizations))
+	for _, v := range zendeskOrganizations {
+		organizationData := entity.OrganizationData{
+			ExternalId:     strconv.FormatInt(v.Id, 10),
+			ExternalSyncId: strconv.FormatInt(v.Id, 10),
+			ExternalSystem: s.SourceId(),
+			CreatedAt:      v.CreateDate.UTC(),
+			UpdatedAt:      v.UpdatedDate.UTC(),
+			Name:           v.Name,
+			NoteContent:    v.Details,
+		}
+		organizationData.Domains = utils.ConvertJsonbToStringSlice(v.DomainNames)
+
+		customerOsOrganizations = append(customerOsOrganizations, organizationData)
+		s.organizations[organizationData.ExternalSyncId] = v
+	}
+	return customerOsOrganizations
 }
 
-func (s *zendeskSupportDataService) GetUsersForSync(batchSize int, runId string) []*entity.UserData {
+func (s *zendeskSupportDataService) GetUsersForSync(batchSize int, runId string) []entity.UserData {
 	zendeskUsers, err := repository.GetUsers(s.getDb(), batchSize, runId)
 	if err != nil {
 		logrus.Error(err)
 		return nil
 	}
-	customerOsUsers := make([]*entity.UserData, 0, len(zendeskUsers))
+	customerOsUsers := make([]entity.UserData, 0, len(zendeskUsers))
 	for _, v := range zendeskUsers {
 		userData := entity.UserData{
 			ExternalId:     strconv.FormatInt(v.Id, 10),
@@ -88,7 +109,7 @@ func (s *zendeskSupportDataService) GetUsersForSync(batchSize int, runId string)
 			UpdatedAt:      v.UpdatedDate.UTC(),
 			ExternalSyncId: strconv.FormatInt(v.Id, 10),
 		}
-		customerOsUsers = append(customerOsUsers, &userData)
+		customerOsUsers = append(customerOsUsers, userData)
 
 		s.users[userData.ExternalSyncId] = v
 	}

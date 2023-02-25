@@ -7,6 +7,7 @@ type OrganizationData struct {
 	Name           string
 	Description    string
 	Domains        []string
+	NoteContent    string
 	Website        string
 	Industry       string
 	IsPublic       bool

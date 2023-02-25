@@ -153,20 +153,20 @@ func (s *hubspotDataService) GetOrganizationsForSync(batchSize int, runId string
 		if len(hubspotCompanyProperties.Domain) > 0 {
 			organization.Domains = append(organization.Domains, hubspotCompanyProperties.Domain)
 		}
-		organization.Domains = append(organization.Domains, hubspotCompanyProperties.Domain)
 
+		customerOsOrganizations = append(customerOsOrganizations, organization)
 		s.companies[organization.ExternalSyncId] = v
 	}
 	return customerOsOrganizations
 }
 
-func (s *hubspotDataService) GetUsersForSync(batchSize int, runId string) []*entity.UserData {
+func (s *hubspotDataService) GetUsersForSync(batchSize int, runId string) []entity.UserData {
 	hubspotOwners, err := repository.GetOwners(s.getDb(), batchSize, runId)
 	if err != nil {
 		logrus.Error(err)
 		return nil
 	}
-	customerOsUsers := make([]*entity.UserData, 0, len(hubspotOwners))
+	customerOsUsers := make([]entity.UserData, 0, len(hubspotOwners))
 	for _, v := range hubspotOwners {
 		userData := entity.UserData{
 			ExternalId:      strconv.FormatInt(v.UserId, 10),
@@ -179,7 +179,7 @@ func (s *hubspotDataService) GetUsersForSync(batchSize int, runId string) []*ent
 			UpdatedAt:       v.CreateDate.UTC(),
 			ExternalSyncId:  v.Id,
 		}
-		customerOsUsers = append(customerOsUsers, &userData)
+		customerOsUsers = append(customerOsUsers, userData)
 
 		s.owners[userData.ExternalSyncId] = v
 	}
