@@ -10,6 +10,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 	"strconv"
+	"strings"
 )
 
 type zendeskSupportDataService struct {
@@ -18,6 +19,7 @@ type zendeskSupportDataService struct {
 	instance       string
 	users          map[string]localEntity.User
 	organizations  map[string]localEntity.Organization
+	contacts       map[string]localEntity.Contact
 }
 
 func NewZendeskSupportDataService(airbyteStoreDb *config.AirbyteStoreDB, tenant string) common.SourceDataService {
@@ -25,6 +27,7 @@ func NewZendeskSupportDataService(airbyteStoreDb *config.AirbyteStoreDB, tenant 
 		airbyteStoreDb: airbyteStoreDb,
 		tenant:         tenant,
 		users:          map[string]localEntity.User{},
+		contacts:       map[string]localEntity.Contact{},
 		organizations:  map[string]localEntity.Organization{},
 	}
 }
@@ -35,6 +38,10 @@ func (s *zendeskSupportDataService) Refresh() {
 		logrus.Error(err)
 	}
 	err = s.getDb().AutoMigrate(&localEntity.SyncStatusOrganization{})
+	if err != nil {
+		logrus.Error(err)
+	}
+	err = s.getDb().AutoMigrate(&localEntity.SyncStatusContact{})
 	if err != nil {
 		logrus.Error(err)
 	}
@@ -54,16 +61,62 @@ func (s *zendeskSupportDataService) getDb() *gorm.DB {
 
 func (s *zendeskSupportDataService) Close() {
 	s.users = make(map[string]localEntity.User)
+	s.contacts = make(map[string]localEntity.Contact)
 	s.organizations = make(map[string]localEntity.Organization)
 }
 
-func (z *zendeskSupportDataService) SourceId() string {
+func (s *zendeskSupportDataService) SourceId() string {
 	return string(entity.AirbyteSourceZendeskSupport)
 }
 
-func (z *zendeskSupportDataService) GetContactsForSync(batchSize int, runId string) []entity.ContactData {
-	//TODO implement me
-	return nil
+func (s *zendeskSupportDataService) GetContactsForSync(batchSize int, runId string) []entity.ContactData {
+	zendeskContacts, err := repository.GetContacts(s.getDb(), batchSize, runId)
+	if err != nil {
+		logrus.Error(err)
+		return nil
+	}
+	customerOsContacts := make([]entity.ContactData, 0, len(zendeskContacts))
+	for _, v := range zendeskContacts {
+		contactData := entity.ContactData{
+			ExternalId:     strconv.FormatInt(v.Id, 10),
+			ExternalSyncId: strconv.FormatInt(v.Id, 10),
+			ExternalUrl:    v.Url,
+			ExternalSystem: s.SourceId(),
+			CreatedAt:      v.CreateDate.UTC(),
+			UpdatedAt:      v.UpdatedDate.UTC(),
+			PhoneNumber:    v.Phone,
+		}
+		if len(v.Email) > 0 && !strings.HasSuffix(v.Email, "@without-email.com") {
+			contactData.AdditionalEmails = append(contactData.AdditionalEmails, v.Email)
+		}
+		if len(v.Notes) > 0 {
+			contactData.Notes = append(contactData.Notes, entity.ContactNote{
+				Note:        v.Notes,
+				FieldSource: "notes",
+			})
+		}
+		if len(v.Details) > 0 {
+			contactData.Notes = append(contactData.Notes, entity.ContactNote{
+				Note:        v.Details,
+				FieldSource: "details",
+			})
+		}
+		if len(v.Name) > 0 {
+			contactData.TextCustomFields = append(contactData.TextCustomFields, entity.TextCustomField{
+				Name:           "name",
+				Value:          v.Name,
+				ExternalSystem: s.SourceId(),
+				CreatedAt:      v.CreateDate.UTC(),
+			})
+		}
+		if v.OrganizationId != 0 {
+			contactData.OrganizationsExternalIds = append(contactData.OrganizationsExternalIds, strconv.FormatInt(v.OrganizationId, 10))
+		}
+
+		customerOsContacts = append(customerOsContacts, contactData)
+		s.contacts[contactData.ExternalSyncId] = v
+	}
+	return customerOsContacts
 }
 
 func (s *zendeskSupportDataService) GetOrganizationsForSync(batchSize int, runId string) []entity.OrganizationData {
@@ -126,8 +179,15 @@ func (z zendeskSupportDataService) GetEmailMessagesForSync(batchSize int, runId 
 	return nil
 }
 
-func (z zendeskSupportDataService) MarkContactProcessed(externalSyncId, runId string, synced bool) error {
-	//TODO implement me
+func (s *zendeskSupportDataService) MarkContactProcessed(externalSyncId, runId string, synced bool) error {
+	contact, ok := s.contacts[externalSyncId]
+	if ok {
+		err := repository.MarkContactProcessed(s.getDb(), contact, synced, runId)
+		if err != nil {
+			logrus.Errorf("error while marking contact with external reference %s as synced for zendesk support", externalSyncId)
+		}
+		return err
+	}
 	return nil
 }
 

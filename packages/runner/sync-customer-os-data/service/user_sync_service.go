@@ -57,7 +57,7 @@ func (s *userSyncService) SyncUsers(ctx context.Context, dataService common.Sour
 				}
 			}
 
-			if len(v.Email) > 0 && failedSync == false {
+			if v.HasEmail() && !failedSync {
 				err = s.repositories.UserRepository.MergeEmail(ctx, tenant, v)
 				if err != nil {
 					failedSync = true
@@ -65,7 +65,7 @@ func (s *userSyncService) SyncUsers(ctx context.Context, dataService common.Sour
 				}
 			}
 
-			if len(v.PhoneNumber) > 0 && failedSync == false {
+			if v.HasPhoneNumber() && !failedSync {
 				err = s.repositories.UserRepository.MergePhoneNumber(ctx, tenant, v)
 				if err != nil {
 					failedSync = true

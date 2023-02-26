@@ -36,9 +36,15 @@ func (r *noteRepository) MergeNote(ctx context.Context, tenant string, syncDate 
 	//   otherwise create/update AlternateNote for incoming source, with a new relationship 'ALTERNATE'
 	query := "MATCH (t:Tenant {name:$tenant})<-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]-(e:ExternalSystem {id:$externalSystem}) " +
 		"MERGE (n:Note)-[r:IS_LINKED_WITH {externalId:$externalId}]->(e) " +
-		"ON CREATE SET r.syncDate=$syncDate, n.id=randomUUID(), n.createdAt=$createdAt, n.updatedAt=$createdAt, " +
-		"              n.source=$source, n.sourceOfTruth=$sourceOfTruth, n.appSource=$appSource, " +
-		"              n.html=$html, n:%s " +
+		"ON CREATE SET 	r.syncDate=$syncDate, " +
+		"				n.id=randomUUID(), " +
+		"				n.createdAt=$createdAt, " +
+		"				n.updatedAt=$createdAt, " +
+		"              	n.source=$source, " +
+		"				n.sourceOfTruth=$sourceOfTruth, " +
+		"				n.appSource=$appSource, " +
+		"              	n.html=$html, " +
+		"				n:%s " +
 		"ON MATCH SET r.syncDate = CASE WHEN n.sourceOfTruth=$sourceOfTruth THEN $syncDate ELSE r.syncDate END, " +
 		"             n.html = CASE WHEN n.sourceOfTruth=$sourceOfTruth THEN $html ELSE n.html END, " +
 		"             n.updatedAt = CASE WHEN n.sourceOfTruth=$sourceOfTruth THEN $now ELSE n.updatedAt END " +

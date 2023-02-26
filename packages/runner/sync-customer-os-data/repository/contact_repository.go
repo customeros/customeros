@@ -16,7 +16,7 @@ type ContactRepository interface {
 	MergeAdditionalEmail(ctx context.Context, tenant, contactId, email, externalSystem string, createdAt time.Time) error
 	MergePrimaryPhoneNumber(ctx context.Context, tenant, contactId, phoneNumber, externalSystem string, createdAt time.Time) error
 	SetOwnerRelationship(ctx context.Context, tenant, contactId, userExternalOwnerId, externalSystemId string) error
-	MergeTextCustomField(ctx context.Context, tenant, contactId string, field entity.TextCustomField, createdAt time.Time) error
+	MergeTextCustomField(ctx context.Context, tenant, contactId string, field entity.TextCustomField) error
 	MergeContactDefaultPlace(ctx context.Context, tenant, contactId string, contact entity.ContactData) error
 	MergeTagForContact(ctx context.Context, tenant, contactId, tagName, sourceApp string) error
 	GetOrCreateContactByEmail(ctx context.Context, tenant, email, firstName, lastName, source string) (string, error)
@@ -43,7 +43,10 @@ func (r *contactRepository) MergeContact(ctx context.Context, tenant string, syn
 	// Link Contact with Tenant
 	query := "MATCH (t:Tenant {name:$tenant})<-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]-(e:ExternalSystem {id:$externalSystem}) " +
 		" MERGE (c:Contact)-[r:IS_LINKED_WITH {externalId:$externalId}]->(e) " +
-		" ON CREATE SET r.externalId=$externalId, r.syncDate=$syncDate, c.id=randomUUID(), c.createdAt=$createdAt, c.updatedAt=$createdAt, " +
+		" ON CREATE SET r.externalId=$externalId, " +
+		"				r.externalUrl=$externalUrl, " +
+		"				r.syncDate=$syncDate, " +
+		"				c.id=randomUUID(), c.createdAt=$createdAt, c.updatedAt=$createdAt, " +
 		"				c.source=$source, c.sourceOfTruth=$sourceOfTruth, c.appSource=$appSource, " +
 		"				c.firstName=$firstName, c.lastName=$lastName,  " +
 		" 				c:%s " +
@@ -67,6 +70,7 @@ func (r *contactRepository) MergeContact(ctx context.Context, tenant string, syn
 				"tenant":         tenant,
 				"externalSystem": contact.ExternalSystem,
 				"externalId":     contact.ExternalId,
+				"externalUrl":    contact.ExternalUrl,
 				"firstName":      contact.FirstName,
 				"lastName":       contact.LastName,
 				"syncDate":       syncDate,
@@ -233,7 +237,7 @@ func (r *contactRepository) SetOwnerRelationship(ctx context.Context, tenant, co
 	return err
 }
 
-func (r *contactRepository) MergeTextCustomField(ctx context.Context, tenant, contactId string, field entity.TextCustomField, createdAt time.Time) error {
+func (r *contactRepository) MergeTextCustomField(ctx context.Context, tenant, contactId string, field entity.TextCustomField) error {
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
@@ -257,7 +261,7 @@ func (r *contactRepository) MergeTextCustomField(ctx context.Context, tenant, co
 				"name":          field.Name,
 				"value":         field.Value,
 				"datatype":      "TEXT",
-				"createdAt":     createdAt,
+				"createdAt":     field.CreatedAt,
 				"source":        field.ExternalSystem,
 				"sourceOfTruth": field.ExternalSystem,
 				"appSource":     field.ExternalSystem,

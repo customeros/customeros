@@ -69,7 +69,8 @@ func (s *syncService) Sync(ctx context.Context, runId string) {
 		syncRunDtls.CompletedOrganizations = completedOrganizationCount
 		syncRunDtls.FailedOrganizations = failedOrganizationCount
 
-		completedContactCount, failedContactCount := s.syncContacts(ctx, dataService, syncDate, v.Tenant, runId)
+		contactSyncService, err := s.contactSyncService(v)
+		completedContactCount, failedContactCount := contactSyncService.SyncContacts(ctx, dataService, syncDate, v.Tenant, runId)
 		syncRunDtls.CompletedContacts = completedContactCount
 		syncRunDtls.FailedContacts = failedContactCount
 
@@ -90,113 +91,6 @@ func (s *syncService) Sync(ctx context.Context, runId string) {
 
 func (s *syncService) syncExternalSystem(ctx context.Context, dataService common.SourceDataService, tenant string) {
 	_ = s.repositories.ExternalSystemRepository.Merge(ctx, tenant, dataService.SourceId())
-}
-
-func (s *syncService) syncContacts(ctx context.Context, dataService common.SourceDataService, syncDate time.Time, tenant, runId string) (int, int) {
-	completed, failed := 0, 0
-	for {
-		contacts := dataService.GetContactsForSync(batchSize, runId)
-		if len(contacts) == 0 {
-			logrus.Debugf("no contacts found for sync from %s for tenant %s", dataService.SourceId(), tenant)
-			break
-		}
-		logrus.Infof("syncing %d contacts from %s for tenant %s", len(contacts), dataService.SourceId(), tenant)
-
-		for _, v := range contacts {
-			var failedSync = false
-
-			contactId, err := s.repositories.ContactRepository.MergeContact(ctx, tenant, syncDate, v)
-			if err != nil {
-				failedSync = true
-				logrus.Errorf("failed merge contact with external reference %v for tenant %v :%v", v.ExternalId, tenant, err)
-			}
-
-			if len(v.PrimaryEmail) > 0 {
-				if err = s.repositories.ContactRepository.MergePrimaryEmail(ctx, tenant, contactId, v.PrimaryEmail, v.ExternalSystem, v.CreatedAt); err != nil {
-					failedSync = true
-					logrus.Errorf("failed merge primary email for contact with external reference %v , tenant %v :%v", v.ExternalId, tenant, err)
-				}
-			}
-
-			for _, additionalEmail := range v.AdditionalEmails {
-				if len(additionalEmail) > 0 {
-					if err = s.repositories.ContactRepository.MergeAdditionalEmail(ctx, tenant, contactId, additionalEmail, v.ExternalSystem, v.CreatedAt); err != nil {
-						failedSync = true
-						logrus.Errorf("failed merge additional email for contact with external reference %v , tenant %v :%v", v.ExternalId, tenant, err)
-					}
-				}
-			}
-
-			if len(v.PrimaryE164) > 0 {
-				if err = s.repositories.ContactRepository.MergePrimaryPhoneNumber(ctx, tenant, contactId, v.PrimaryE164, v.ExternalSystem, v.CreatedAt); err != nil {
-					failedSync = true
-					logrus.Errorf("failed merge primary phone number for contact with external reference %v , tenant %v :%v", v.ExternalId, tenant, err)
-				}
-			}
-
-			for _, organizationExternalId := range v.OrganizationsExternalIds {
-				if err = s.repositories.ContactRepository.LinkContactWithOrganization(ctx, tenant, contactId, organizationExternalId, dataService.SourceId()); err != nil {
-					failedSync = true
-					logrus.Errorf("failed link contact %v to organization with external id %v, tenant %v :%v", contactId, organizationExternalId, tenant, err)
-				}
-			}
-
-			if err = s.repositories.RoleRepository.RemoveOutdatedJobRoles(ctx, tenant, contactId, dataService.SourceId(), v.PrimaryOrganizationExternalId); err != nil {
-				failedSync = true
-				logrus.Errorf("failed removing outdated roles for contact %v, tenant %v :%v", contactId, tenant, err)
-			}
-
-			if len(v.PrimaryOrganizationExternalId) > 0 {
-				if err = s.repositories.RoleRepository.MergeJobRole(ctx, tenant, contactId, v.JobTitle, v.PrimaryOrganizationExternalId, dataService.SourceId()); err != nil {
-					failedSync = true
-					logrus.Errorf("failed merge primary role for contact %v, tenant %v :%v", contactId, tenant, err)
-				}
-			}
-
-			if len(v.UserExternalOwnerId) > 0 {
-				if err = s.repositories.ContactRepository.SetOwnerRelationship(ctx, tenant, contactId, v.UserExternalOwnerId, dataService.SourceId()); err != nil {
-					// Do not mark sync as failed in case owner relationship is not set
-					logrus.Errorf("failed set owner user for contact %v, tenant %v :%v", contactId, tenant, err)
-				}
-			}
-
-			for _, f := range v.TextCustomFields {
-				if err = s.repositories.ContactRepository.MergeTextCustomField(ctx, tenant, contactId, f, v.CreatedAt); err != nil {
-					failedSync = true
-					logrus.Errorf("failed merge custom field %v for contact %v, tenant %v :%v", f.Name, contactId, tenant, err)
-				}
-			}
-
-			err = s.repositories.ContactRepository.MergeContactDefaultPlace(ctx, tenant, contactId, v)
-			if err != nil {
-				failedSync = true
-				logrus.Errorf("failed merge place for contact %v, tenant %v :%v", contactId, tenant, err)
-			}
-
-			if len(v.TagName) > 0 {
-				err = s.repositories.ContactRepository.MergeTagForContact(ctx, tenant, contactId, v.TagName, v.ExternalSystem)
-				if err != nil {
-					failedSync = true
-					logrus.Errorf("failed to merge tag for contact %v, tenant %v :%v", contactId, tenant, err)
-				}
-			}
-
-			logrus.Debugf("successfully merged contact with id %v for tenant %v from %v", contactId, tenant, dataService.SourceId())
-			if err := dataService.MarkContactProcessed(v.ExternalId, runId, failedSync == false); err != nil {
-				failed++
-				continue
-			}
-			if failedSync == true {
-				failed++
-			} else {
-				completed++
-			}
-		}
-		if len(contacts) < batchSize {
-			break
-		}
-	}
-	return completed, failed
 }
 
 func (s *syncService) syncNotes(ctx context.Context, dataService common.SourceDataService, syncDate time.Time, tenant, runId string) (int, int) {
@@ -515,4 +409,27 @@ func (s *syncService) organizationSyncService(tenantToSync entity.TenantSyncSett
 	organizationSyncService := createOrganizationSyncService()
 
 	return organizationSyncService, nil
+}
+
+func (s *syncService) contactSyncService(tenantToSync entity.TenantSyncSettings) (ContactSyncService, error) {
+	contactSyncServiceMap := map[string]func() ContactSyncService{
+		string(entity.AirbyteSourceHubspot): func() ContactSyncService {
+			return s.services.ContactSyncService
+		},
+		string(entity.AirbyteSourceZendeskSupport): func() ContactSyncService {
+			return s.services.ContactSyncService
+		},
+	}
+
+	// Look up the corresponding implementation in the map using the tenantToSync.Source value.
+	createContactSyncService, ok := contactSyncServiceMap[tenantToSync.Source]
+	if !ok {
+		// Return an error if the tenantToSync.Source value is not recognized.
+		return nil, fmt.Errorf("unknown airbyte source %v, skipping sync for tenant %v", tenantToSync.Source, tenantToSync.Tenant)
+	}
+
+	// Call the createContactSyncService function to create a new instance of common.SourceDataService.
+	contactSyncService := createContactSyncService()
+
+	return contactSyncService, nil
 }
