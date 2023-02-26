@@ -112,6 +112,20 @@ func (s *zendeskSupportDataService) GetContactsForSync(batchSize int, runId stri
 		if v.OrganizationId != 0 {
 			contactData.OrganizationsExternalIds = append(contactData.OrganizationsExternalIds, strconv.FormatInt(v.OrganizationId, 10))
 		}
+		var jsonObject map[string]string
+		err = v.CustomFieldsAsJson.AssignTo(&jsonObject)
+		if err == nil {
+			for key, value := range jsonObject {
+				if len(value) > 0 {
+					contactData.TextCustomFields = append(contactData.TextCustomFields, entity.TextCustomField{
+						Name:           key,
+						Value:          value,
+						ExternalSystem: s.SourceId(),
+						CreatedAt:      v.CreateDate.UTC(),
+					})
+				}
+			}
+		}
 
 		customerOsContacts = append(customerOsContacts, contactData)
 		s.contacts[contactData.ExternalSyncId] = v

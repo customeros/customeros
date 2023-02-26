@@ -43,7 +43,7 @@ func (s *organizationSyncService) SyncOrganizations(ctx context.Context, dataSer
 				logrus.Errorf("failed finding existing matched organization with external reference %v for tenant %v :%v", v.ExternalId, tenant, err)
 			}
 
-			// Create new user id if not found
+			// Create new organization id if not found
 			if len(organizationId) == 0 {
 				orgUuid, _ := uuid.NewRandom()
 				organizationId = orgUuid.String()

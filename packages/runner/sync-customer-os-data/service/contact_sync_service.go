@@ -1,6 +1,7 @@
 package service
 
 import (
+	"github.com/google/uuid"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/common"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/entity"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/repository"
@@ -36,10 +37,25 @@ func (s *contactSyncService) SyncContacts(ctx context.Context, dataService commo
 		for _, v := range contacts {
 			var failedSync = false
 
-			contactId, err := s.repositories.ContactRepository.MergeContact(ctx, tenant, syncDate, v)
+			contactId, err := s.repositories.ContactRepository.GetMatchedContactId(ctx, tenant, v)
 			if err != nil {
 				failedSync = true
-				logrus.Errorf("failed merge contact with external reference %v for tenant %v :%v", v.ExternalId, tenant, err)
+				logrus.Errorf("failed finding existing matched contact with external reference %v for tenant %v :%v", v.ExternalId, tenant, err)
+			}
+
+			// Create new organization id if not found
+			if len(contactId) == 0 {
+				orgUuid, _ := uuid.NewRandom()
+				contactId = orgUuid.String()
+			}
+			v.Id = contactId
+
+			if !failedSync {
+				err = s.repositories.ContactRepository.MergeContact(ctx, tenant, syncDate, v)
+				if err != nil {
+					failedSync = true
+					logrus.Errorf("failed merge contact with external reference %v for tenant %v :%v", v.ExternalId, tenant, err)
+				}
 			}
 
 			if len(v.PrimaryEmail) > 0 && !failedSync {

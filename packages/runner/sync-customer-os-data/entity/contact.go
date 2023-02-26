@@ -15,6 +15,7 @@ type TextCustomField struct {
 }
 
 type ContactData struct {
+	Id        string
 	Title     string
 	FirstName string
 	LastName  string
