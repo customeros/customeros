@@ -1,7 +1,7 @@
 import {
   RemovePhoneNumberFromContactMutation,
   useRemovePhoneNumberFromContactMutation,
-} from '../../graphQL/generated';
+} from '../../graphQL/__generated__/generated';
 
 interface Result {
   onRemovePhoneNumberFromContact: (

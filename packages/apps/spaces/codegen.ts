@@ -18,12 +18,12 @@ const config: CodegenConfig = {
       },
     },
   ],
-  documents: '**/**/graphQL/**',
+  documents: '**/**/graphQL/**/**',
   generates: {
-    'graphQL/graphql.schema.json': {
+    'graphQL/__generated__/graphql.schema.json': {
       plugins: ['introspection'],
     },
-    'graphQL/generated.ts': {
+    'graphQL/__generated__/generated.ts': {
       plugins: [
         'typescript',
         'typescript-operations',

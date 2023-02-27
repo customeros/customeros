@@ -4,7 +4,9 @@ import { IconButton } from '../../ui-kit/atoms';
 import styles from './contact-details.module.scss';
 import { useContactPersonalDetails } from '../../../hooks/useContact';
 import { ContactDetailsSkeleton } from './skeletons';
+import { useRouter } from 'next/router';
 export const ContactDetails = ({ id }: { id: string }) => {
+  const router = useRouter();
   const { data, loading, error } = useContactPersonalDetails({ id });
 
   if (loading) {
@@ -37,10 +39,9 @@ export const ContactDetails = ({ id }: { id: string }) => {
             return (
               <div
                 className={styles.jobRole}
-                key={jobRole.id}
-                onClick={
-                  () => null
-                  // router.push(`/organization/${jobRole.organization.id}`)
+                key={`contact-job-role-${jobRole.id}-${jobRole.label}`}
+                onClick={() =>
+                  router.push(`/organization/${jobRole.organization.id}`)
                 }
               >
                 {jobRole.jobTitle}{' '}

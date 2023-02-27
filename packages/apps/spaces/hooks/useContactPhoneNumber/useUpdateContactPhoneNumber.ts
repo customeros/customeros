@@ -1,8 +1,11 @@
-import { PhoneNumber, PhoneNumberUpdateInput } from '../../graphQL/generated';
+import {
+  PhoneNumber,
+  PhoneNumberUpdateInput,
+} from '../../graphQL/__generated__/generated';
 import {
   UpdateContactPhoneNumberMutation,
   useUpdateContactPhoneNumberMutation,
-} from '../../graphQL/generated';
+} from '../../graphQL/__generated__/generated';
 
 interface Result {
   onUpdateContactPhoneNumber: (

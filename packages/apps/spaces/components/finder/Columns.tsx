@@ -4,7 +4,7 @@ import {
 } from '../ui-kit/atoms/table/table-cells/TableCell';
 import React from 'react';
 import { Column } from '../ui-kit/atoms/table/types';
-import { LocationBaseDetailsFragment } from '../../graphQL/generated';
+import { LocationBaseDetailsFragment } from '../../graphQL/__generated__/generated';
 
 export const columns: Array<Column> = [
   {

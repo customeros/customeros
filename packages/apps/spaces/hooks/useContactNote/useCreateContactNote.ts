@@ -1,8 +1,8 @@
-import { NoteInput } from '../../graphQL/generated';
 import {
+  NoteInput,
   CreateContactNoteMutation,
   useCreateContactNoteMutation,
-} from '../../graphQL/generated';
+} from '../../graphQL/__generated__/generated';
 
 interface Props {
   contactId: string;
