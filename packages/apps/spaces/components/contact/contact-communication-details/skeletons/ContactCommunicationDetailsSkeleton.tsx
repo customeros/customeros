@@ -7,7 +7,7 @@ export const ContactCommunicationDetailsSkeleton: React.FC = () => {
   return (
     <div className={styles.contactDetails}>
       <div className={styles.buttonWrapper}>
-        <Skeleton height={'30px'} />
+        <Skeleton height={'30px'} width={'100%'} />
       </div>
       <ListSkeleton id='email-list' />
       <div className={styles.divider} />

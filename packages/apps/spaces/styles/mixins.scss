@@ -13,6 +13,32 @@
   justify-content: center;
 }
 
+@mixin text-hint {
+  font-size: var(--font-size-xs);
+  color: var(--gray-600)
+}
+
+@mixin link-style {
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  word-break: keep-all;
+  overflow: hidden;
+
+  color: var(--royal-blue-700);
+
+  &:hover,
+  &:focus,
+  &:active {
+    text-decoration: underline;
+    color: var(--royal-blue-800);
+  }
+
+  &:visited {
+    color: var(--royal-blue-800); // TODO revisit
+
+  }
+}
+
 @mixin input-style {
   border-radius: var(--border-radius-sm);
   border: var(--border-input);
@@ -147,6 +173,8 @@
     cursor: not-allowed;
   }
 }
+
+
 
 //Responsive Breakpoint SCSS Mixin:
 

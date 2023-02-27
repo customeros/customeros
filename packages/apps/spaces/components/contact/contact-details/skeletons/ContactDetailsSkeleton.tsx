@@ -21,8 +21,13 @@ export const ContactDetailsSkeleton: React.FC = () => {
           </div>
 
           {
-            <div className={styles.source} style={{ width: '50px' }}>
-              Source: <Skeleton />
+            <div
+              className={styles.source}
+              style={{
+                width: '100px',
+              }}
+            >
+              <Skeleton height='8px' />
             </div>
           }
         </div>
@@ -30,6 +35,7 @@ export const ContactDetailsSkeleton: React.FC = () => {
       <div className={styles.details}>
         <div className={styles.section}>
           <IconButton
+            style={{ marginBottom: '4px' }}
             disabled={true}
             aria-describedby='phone-icon-label'
             mode='secondary'
@@ -44,6 +50,7 @@ export const ContactDetailsSkeleton: React.FC = () => {
         </div>
         <div className={styles.section}>
           <IconButton
+            style={{ marginBottom: '4px' }}
             disabled={true}
             aria-describedby='email-icon-label'
             mode='secondary'
@@ -63,6 +70,7 @@ export const ContactDetailsSkeleton: React.FC = () => {
         </div>
         <div className={styles.section}>
           <IconButton
+            style={{ marginBottom: '4px' }}
             disabled={true}
             aria-describedby='message-icon-label'
             mode='secondary'
@@ -81,6 +89,7 @@ export const ContactDetailsSkeleton: React.FC = () => {
         </div>
         <div className={styles.section}>
           <IconButton
+            style={{ marginBottom: '4px' }}
             disabled={true}
             aria-describedby='message-icon-label'
             mode='secondary'

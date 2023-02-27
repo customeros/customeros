@@ -1,0 +1,52 @@
+@import "../../../styles/mixins";
+
+.organizationDetails {
+  display: flex;
+  flex-direction: column;
+  border-radius: 10px;
+  margin-bottom: var(--spacing-xxl);
+  //background-image: url("../../../public/backgrounds/blueprint/background-00003.webp");
+  background-size: cover;
+  background-repeat: no-repeat;
+  position:relative;
+  backdrop-filter: blur(10px);
+
+}
+
+.bg {
+  @include frosted-glass;
+  background: radial-gradient(rgba(255, 255, 255, 0.7) 30%, rgba(255, 255, 255, 0.9));
+  height: 100%;
+  backdrop-filter: blur(5px);
+  box-shadow: 5px 5px 10px rgb(0 0 0 / 11%), -1px -1px 2px #ffffff47, 1px 1px 2px #5555552e;
+  padding: var(--spacing-md) var(--spacing-lg);
+}
+
+.name {
+  font-size: var(--heading-main);
+  font-weight: bold;
+}
+
+.industry {
+  @include text-hint;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-top: -2px;
+}
+
+.description {
+  font-size: var(--font-size-sm);
+  margin: var(--spacing-xxs) 0;
+}
+
+.source {
+  font-size: var(--font-size-xs);
+  color: var(--text-faded);
+  font-weight: lighter;
+
+
+  & span {
+    font-weight: bold;
+    margin-right: var(--spacing-xxxs)
+  }
+}

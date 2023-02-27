@@ -10,4 +10,5 @@ export { DeleteConfirmationDialog } from './deleteConfirmationDialog';
 export { IconButton } from './icon-button';
 export { Table } from './table';
 export { DebouncedInput, Input } from './input';
+export { Link } from './Link';
 export * from './icons';

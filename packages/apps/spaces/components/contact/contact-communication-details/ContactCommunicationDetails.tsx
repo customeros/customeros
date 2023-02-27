@@ -17,7 +17,6 @@ import {
 import { useUpdateContactEmail } from '../../../hooks/useContactEmail';
 import {
   Email,
-  EmailInput,
   EmailLabel,
   EmailUpdateInput,
   PhoneNumber,

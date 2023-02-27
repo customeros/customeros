@@ -84,6 +84,7 @@ export type Contact = ExtensibleEntity & Node & {
   name?: Maybe<Scalars['String']>;
   /** Contact notes */
   notes: NotePage;
+  notesByTime: Array<Note>;
   organizations: OrganizationPage;
   /** Contact owner (user) */
   owner?: Maybe<User>;
@@ -130,6 +131,15 @@ export type ContactConversationsArgs = {
  */
 export type ContactNotesArgs = {
   pagination?: InputMaybe<Pagination>;
+};
+
+
+/**
+ * A contact represents an individual in customerOS.
+ * **A `response` object.**
+ */
+export type ContactNotesByTimeArgs = {
+  pagination?: InputMaybe<TimeRange>;
 };
 
 
@@ -1170,7 +1180,9 @@ export type Organization = Node & {
   contacts: ContactsPage;
   createdAt: Scalars['Time'];
   description?: Maybe<Scalars['String']>;
+  /** @deprecated Deprecated in favor of domains */
   domain?: Maybe<Scalars['String']>;
+  domains: Array<Scalars['String']>;
   id: Scalars['ID'];
   industry?: Maybe<Scalars['String']>;
   isPublic?: Maybe<Scalars['Boolean']>;
@@ -1206,6 +1218,7 @@ export type OrganizationInput = {
   appSource?: InputMaybe<Scalars['String']>;
   description?: InputMaybe<Scalars['String']>;
   domain?: InputMaybe<Scalars['String']>;
+  domains?: InputMaybe<Array<Scalars['String']>>;
   industry?: InputMaybe<Scalars['String']>;
   isPublic?: InputMaybe<Scalars['Boolean']>;
   /**
@@ -1244,6 +1257,7 @@ export type OrganizationTypeUpdateInput = {
 export type OrganizationUpdateInput = {
   description?: InputMaybe<Scalars['String']>;
   domain?: InputMaybe<Scalars['String']>;
+  domains?: InputMaybe<Array<Scalars['String']>>;
   id: Scalars['ID'];
   industry?: InputMaybe<Scalars['String']>;
   isPublic?: InputMaybe<Scalars['Boolean']>;
@@ -1574,6 +1588,19 @@ export type TagUpdateInput = {
   name: Scalars['String'];
 };
 
+export type TimeRange = {
+  /**
+   * The start time of the time range.
+   * **Required.**
+   */
+  from: Scalars['Time'];
+  /**
+   * The end time of the time range.
+   * **Required.**
+   */
+  to: Scalars['Time'];
+};
+
 /**
  * Describes the User of customerOS.  A user is the person who logs into the Openline platform.
  * **A `return` object**
@@ -1693,14 +1720,14 @@ export type AddPhoneToContactMutationVariables = Exact<{
 }>;
 
 
-export type AddPhoneToContactMutation = { __typename?: 'Mutation', phoneNumberMergeToContact: { __typename?: 'PhoneNumber', label?: PhoneNumberLabel | null, id: string, primary: boolean, e164?: string | null } };
+export type AddPhoneToContactMutation = { __typename?: 'Mutation', phoneNumberMergeToContact: { __typename?: 'PhoneNumber', label?: PhoneNumberLabel | null, id: string, primary: boolean, e164?: string | null, rawPhoneNumber?: string | null } };
 
 export type CreateContactMutationVariables = Exact<{
   input: ContactInput;
 }>;
 
 
-export type CreateContactMutation = { __typename?: 'Mutation', contact_Create: { __typename?: 'Contact', id: string, source: DataSource, firstName?: string | null, lastName?: string | null, jobRoles: Array<{ __typename?: 'JobRole', jobTitle?: string | null, primary: boolean, organization?: { __typename?: 'Organization', id: string, name: string } | null }>, tags?: Array<{ __typename?: 'Tag', id: string, name: string, createdAt: any, source: DataSource }> | null, emails: Array<{ __typename?: 'Email', label?: EmailLabel | null, id: string, primary: boolean, email?: string | null }>, phoneNumbers: Array<{ __typename?: 'PhoneNumber', label?: PhoneNumberLabel | null, id: string, primary: boolean, e164?: string | null }> } };
+export type CreateContactMutation = { __typename?: 'Mutation', contact_Create: { __typename?: 'Contact', id: string, source: DataSource, firstName?: string | null, lastName?: string | null, jobRoles: Array<{ __typename?: 'JobRole', jobTitle?: string | null, primary: boolean, organization?: { __typename?: 'Organization', id: string, name: string } | null }>, tags?: Array<{ __typename?: 'Tag', id: string, name: string, createdAt: any, source: DataSource }> | null, emails: Array<{ __typename?: 'Email', label?: EmailLabel | null, id: string, primary: boolean, email?: string | null }>, phoneNumbers: Array<{ __typename?: 'PhoneNumber', label?: PhoneNumberLabel | null, id: string, primary: boolean, e164?: string | null, rawPhoneNumber?: string | null }> } };
 
 export type CreateContactNoteMutationVariables = Exact<{
   contactId: Scalars['ID'];
@@ -1715,7 +1742,7 @@ export type GetContactCommunicationChannelsQueryVariables = Exact<{
 }>;
 
 
-export type GetContactCommunicationChannelsQuery = { __typename?: 'Query', contact?: { __typename?: 'Contact', id: string, emails: Array<{ __typename?: 'Email', label?: EmailLabel | null, id: string, primary: boolean, email?: string | null }>, phoneNumbers: Array<{ __typename?: 'PhoneNumber', label?: PhoneNumberLabel | null, id: string, primary: boolean, e164?: string | null }> } | null };
+export type GetContactCommunicationChannelsQuery = { __typename?: 'Query', contact?: { __typename?: 'Contact', id: string, emails: Array<{ __typename?: 'Email', label?: EmailLabel | null, id: string, primary: boolean, email?: string | null }>, phoneNumbers: Array<{ __typename?: 'PhoneNumber', label?: PhoneNumberLabel | null, id: string, primary: boolean, e164?: string | null, rawPhoneNumber?: string | null }> } | null };
 
 export type GetContactNotesQueryVariables = Exact<{
   id: Scalars['ID'];
@@ -1776,7 +1803,7 @@ export type UpdateContactPhoneNumberMutationVariables = Exact<{
 }>;
 
 
-export type UpdateContactPhoneNumberMutation = { __typename?: 'Mutation', phoneNumberUpdateInContact: { __typename?: 'PhoneNumber', label?: PhoneNumberLabel | null, id: string, primary: boolean, e164?: string | null } };
+export type UpdateContactPhoneNumberMutation = { __typename?: 'Mutation', phoneNumberUpdateInContact: { __typename?: 'PhoneNumber', label?: PhoneNumberLabel | null, id: string, primary: boolean, e164?: string | null, rawPhoneNumber?: string | null } };
 
 export type GetDashboardDataQueryVariables = Exact<{
   pagination: Pagination;
@@ -1786,33 +1813,95 @@ export type GetDashboardDataQueryVariables = Exact<{
 
 export type GetDashboardDataQuery = { __typename?: 'Query', dashboardView?: { __typename?: 'DashboardViewItemPage', totalElements: any, content: Array<{ __typename?: 'DashboardViewItem', contact?: { __typename?: 'Contact', id: string, firstName?: string | null, lastName?: string | null, jobRoles: Array<{ __typename?: 'JobRole', jobTitle?: string | null, primary: boolean }>, emails: Array<{ __typename?: 'Email', id: string, primary: boolean, email?: string | null }>, locations: Array<{ __typename?: 'Location', id: string, name: string, country?: string | null, region?: string | null, locality?: string | null }> } | null, organization?: { __typename?: 'Organization', id: string, name: string, industry?: string | null } | null }> } | null };
 
-export type EmailFragment = { __typename?: 'Email', id: string, primary: boolean, email?: string | null };
+export type CreateOrganizationNoteMutationVariables = Exact<{
+  organizationId: Scalars['ID'];
+  input: NoteInput;
+}>;
 
-export type PhoneNumberFragment = { __typename?: 'PhoneNumber', id: string, primary: boolean, e164?: string | null };
 
-export type LocationFragment = { __typename?: 'Location', id: string, name: string, country?: string | null, region?: string | null, locality?: string | null };
+export type CreateOrganizationNoteMutation = { __typename?: 'Mutation', note_CreateForOrganization: { __typename?: 'Note', id: string, html: string, createdAt: any, updatedAt: any, source: DataSource, sourceOfTruth: DataSource, appSource: string, createdBy?: { __typename?: 'User', id: string, firstName: string, lastName: string } | null } };
+
+export type GetOrganizationContactsQueryVariables = Exact<{
+  id: Scalars['ID'];
+}>;
+
+
+export type GetOrganizationContactsQuery = { __typename?: 'Query', organization?: { __typename?: 'Organization', contacts: { __typename?: 'ContactsPage', content: Array<{ __typename?: 'Contact', id: string, name?: string | null, firstName?: string | null, lastName?: string | null, jobRoles: Array<{ __typename?: 'JobRole', jobTitle?: string | null, primary: boolean }>, emails: Array<{ __typename?: 'Email', label?: EmailLabel | null, id: string, primary: boolean, email?: string | null }>, phoneNumbers: Array<{ __typename?: 'PhoneNumber', label?: PhoneNumberLabel | null, id: string, primary: boolean, e164?: string | null, rawPhoneNumber?: string | null }> }> } } | null };
+
+export type GetOrganizationDetailsQueryVariables = Exact<{
+  id: Scalars['ID'];
+}>;
+
+
+export type GetOrganizationDetailsQuery = { __typename?: 'Query', organization?: { __typename?: 'Organization', id: string, name: string, description?: string | null, source: DataSource, industry?: string | null, website?: string | null, updatedAt: any, locations: Array<{ __typename?: 'Location', id: string, name: string, country?: string | null, region?: string | null, locality?: string | null }>, tags?: Array<{ __typename?: 'Tag', id: string, name: string, createdAt: any, source: DataSource }> | null } | null };
+
+export type LocationBaseDetailsFragment = { __typename?: 'Location', id: string, name: string, country?: string | null, region?: string | null, locality?: string | null };
+
+export type LocationTotalFragment = { __typename?: 'Location', id: string, name: string, createdAt: any, updatedAt: any, source?: DataSource | null, appSource?: string | null, country?: string | null, region?: string | null, locality?: string | null, address?: string | null, address2?: string | null, zip?: string | null, addressType?: string | null, houseNumber?: string | null, postalCode?: string | null, plusFour?: string | null, commercial?: boolean | null, predirection?: string | null, district?: string | null, street?: string | null, rawAddress?: string | null, latitude?: number | null, longitude?: number | null };
 
 export type JobRoleFragment = { __typename?: 'JobRole', jobTitle?: string | null, primary: boolean };
+
+export type NoteContentFragment = { __typename?: 'Note', id: string, html: string, createdAt: any, updatedAt: any, source: DataSource, sourceOfTruth: DataSource, appSource: string, createdBy?: { __typename?: 'User', id: string, firstName: string, lastName: string } | null };
+
+export type TagFragment = { __typename?: 'Tag', id: string, name: string, createdAt: any, source: DataSource };
+
+export type EmailFragment = { __typename?: 'Email', id: string, primary: boolean, email?: string | null };
+
+export type PhoneNumberFragment = { __typename?: 'PhoneNumber', id: string, primary: boolean, e164?: string | null, rawPhoneNumber?: string | null };
 
 export type ContactNameFragment = { __typename?: 'Contact', firstName?: string | null, lastName?: string | null };
 
 export type OrganizationBaseDetailsFragment = { __typename?: 'Organization', id: string, name: string, industry?: string | null };
 
-export type TagFragment = { __typename?: 'Tag', id: string, name: string, createdAt: any, source: DataSource };
-
 export type ContactPersonalDetailsFragment = { __typename?: 'Contact', id: string, source: DataSource, firstName?: string | null, lastName?: string | null, jobRoles: Array<{ __typename?: 'JobRole', jobTitle?: string | null, primary: boolean, organization?: { __typename?: 'Organization', id: string, name: string } | null }>, tags?: Array<{ __typename?: 'Tag', id: string, name: string, createdAt: any, source: DataSource }> | null };
 
-export type ContactCommunicationChannelsDetailsFragment = { __typename?: 'Contact', id: string, emails: Array<{ __typename?: 'Email', label?: EmailLabel | null, id: string, primary: boolean, email?: string | null }>, phoneNumbers: Array<{ __typename?: 'PhoneNumber', label?: PhoneNumberLabel | null, id: string, primary: boolean, e164?: string | null }> };
+export type ContactCommunicationChannelsDetailsFragment = { __typename?: 'Contact', id: string, emails: Array<{ __typename?: 'Email', label?: EmailLabel | null, id: string, primary: boolean, email?: string | null }>, phoneNumbers: Array<{ __typename?: 'PhoneNumber', label?: PhoneNumberLabel | null, id: string, primary: boolean, e164?: string | null, rawPhoneNumber?: string | null }> };
 
-export type NoteContentFragment = { __typename?: 'Note', id: string, html: string, createdAt: any, updatedAt: any, source: DataSource, sourceOfTruth: DataSource, appSource: string, createdBy?: { __typename?: 'User', id: string, firstName: string, lastName: string } | null };
+export type OrganizationDetailsFragment = { __typename?: 'Organization', id: string, name: string, description?: string | null, source: DataSource, industry?: string | null, website?: string | null, updatedAt: any, locations: Array<{ __typename?: 'Location', id: string, name: string, country?: string | null, region?: string | null, locality?: string | null }>, tags?: Array<{ __typename?: 'Tag', id: string, name: string, createdAt: any, source: DataSource }> | null };
 
-export const LocationFragmentDoc = gql`
-    fragment Location on Location {
+export type OrganizationContactsFragment = { __typename?: 'Organization', contacts: { __typename?: 'ContactsPage', content: Array<{ __typename?: 'Contact', id: string, name?: string | null, firstName?: string | null, lastName?: string | null, jobRoles: Array<{ __typename?: 'JobRole', jobTitle?: string | null, primary: boolean }>, emails: Array<{ __typename?: 'Email', label?: EmailLabel | null, id: string, primary: boolean, email?: string | null }>, phoneNumbers: Array<{ __typename?: 'PhoneNumber', label?: PhoneNumberLabel | null, id: string, primary: boolean, e164?: string | null, rawPhoneNumber?: string | null }> }> } };
+
+export const LocationTotalFragmentDoc = gql`
+    fragment LocationTotal on Location {
   id
   name
+  createdAt
+  updatedAt
+  source
+  appSource
   country
   region
   locality
+  address
+  address2
+  zip
+  addressType
+  houseNumber
+  postalCode
+  plusFour
+  commercial
+  predirection
+  district
+  street
+  rawAddress
+  latitude
+  longitude
+}
+    `;
+export const NoteContentFragmentDoc = gql`
+    fragment NoteContent on Note {
+  id
+  html
+  createdAt
+  updatedAt
+  createdBy {
+    id
+    firstName
+    lastName
+  }
+  source
+  sourceOfTruth
+  appSource
 }
     `;
 export const OrganizationBaseDetailsFragmentDoc = gql`
@@ -1861,6 +1950,33 @@ export const ContactPersonalDetailsFragmentDoc = gql`
     ${ContactNameFragmentDoc}
 ${JobRoleFragmentDoc}
 ${TagFragmentDoc}`;
+export const LocationBaseDetailsFragmentDoc = gql`
+    fragment LocationBaseDetails on Location {
+  id
+  name
+  country
+  region
+  locality
+}
+    `;
+export const OrganizationDetailsFragmentDoc = gql`
+    fragment OrganizationDetails on Organization {
+  id
+  name
+  description
+  source
+  industry
+  locations {
+    ...LocationBaseDetails
+  }
+  website
+  updatedAt
+  tags {
+    ...Tag
+  }
+}
+    ${LocationBaseDetailsFragmentDoc}
+${TagFragmentDoc}`;
 export const EmailFragmentDoc = gql`
     fragment Email on Email {
   id
@@ -1873,6 +1989,7 @@ export const PhoneNumberFragmentDoc = gql`
   id
   primary
   e164
+  rawPhoneNumber
 }
     `;
 export const ContactCommunicationChannelsDetailsFragmentDoc = gql`
@@ -1889,22 +2006,23 @@ export const ContactCommunicationChannelsDetailsFragmentDoc = gql`
 }
     ${EmailFragmentDoc}
 ${PhoneNumberFragmentDoc}`;
-export const NoteContentFragmentDoc = gql`
-    fragment NoteContent on Note {
-  id
-  html
-  createdAt
-  updatedAt
-  createdBy {
-    id
-    firstName
-    lastName
+export const OrganizationContactsFragmentDoc = gql`
+    fragment OrganizationContacts on Organization {
+  contacts {
+    content {
+      id
+      name
+      firstName
+      lastName
+      jobRoles {
+        ...JobRole
+      }
+      ...ContactCommunicationChannelsDetails
+    }
   }
-  source
-  sourceOfTruth
-  appSource
 }
-    `;
+    ${JobRoleFragmentDoc}
+${ContactCommunicationChannelsDetailsFragmentDoc}`;
 export const AddEmailToContactDocument = gql`
     mutation addEmailToContact($contactId: ID!, $input: EmailInput!) {
   emailMergeToContact(contactId: $contactId, input: $input) {
@@ -2372,7 +2490,7 @@ export const GetDashboardDataDocument = gql`
           ...Email
         }
         locations {
-          ...Location
+          ...LocationBaseDetails
         }
       }
       organization {
@@ -2385,7 +2503,7 @@ export const GetDashboardDataDocument = gql`
     ${ContactNameFragmentDoc}
 ${JobRoleFragmentDoc}
 ${EmailFragmentDoc}
-${LocationFragmentDoc}
+${LocationBaseDetailsFragmentDoc}
 ${OrganizationBaseDetailsFragmentDoc}`;
 
 /**
@@ -2416,3 +2534,107 @@ export function useGetDashboardDataLazyQuery(baseOptions?: Apollo.LazyQueryHookO
 export type GetDashboardDataQueryHookResult = ReturnType<typeof useGetDashboardDataQuery>;
 export type GetDashboardDataLazyQueryHookResult = ReturnType<typeof useGetDashboardDataLazyQuery>;
 export type GetDashboardDataQueryResult = Apollo.QueryResult<GetDashboardDataQuery, GetDashboardDataQueryVariables>;
+export const CreateOrganizationNoteDocument = gql`
+    mutation createOrganizationNote($organizationId: ID!, $input: NoteInput!) {
+  note_CreateForOrganization(organizationId: $organizationId, input: $input) {
+    ...NoteContent
+  }
+}
+    ${NoteContentFragmentDoc}`;
+export type CreateOrganizationNoteMutationFn = Apollo.MutationFunction<CreateOrganizationNoteMutation, CreateOrganizationNoteMutationVariables>;
+
+/**
+ * __useCreateOrganizationNoteMutation__
+ *
+ * To run a mutation, you first call `useCreateOrganizationNoteMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useCreateOrganizationNoteMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [createOrganizationNoteMutation, { data, loading, error }] = useCreateOrganizationNoteMutation({
+ *   variables: {
+ *      organizationId: // value for 'organizationId'
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useCreateOrganizationNoteMutation(baseOptions?: Apollo.MutationHookOptions<CreateOrganizationNoteMutation, CreateOrganizationNoteMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<CreateOrganizationNoteMutation, CreateOrganizationNoteMutationVariables>(CreateOrganizationNoteDocument, options);
+      }
+export type CreateOrganizationNoteMutationHookResult = ReturnType<typeof useCreateOrganizationNoteMutation>;
+export type CreateOrganizationNoteMutationResult = Apollo.MutationResult<CreateOrganizationNoteMutation>;
+export type CreateOrganizationNoteMutationOptions = Apollo.BaseMutationOptions<CreateOrganizationNoteMutation, CreateOrganizationNoteMutationVariables>;
+export const GetOrganizationContactsDocument = gql`
+    query GetOrganizationContacts($id: ID!) {
+  organization(id: $id) {
+    ...OrganizationContacts
+  }
+}
+    ${OrganizationContactsFragmentDoc}`;
+
+/**
+ * __useGetOrganizationContactsQuery__
+ *
+ * To run a query within a React component, call `useGetOrganizationContactsQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetOrganizationContactsQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetOrganizationContactsQuery({
+ *   variables: {
+ *      id: // value for 'id'
+ *   },
+ * });
+ */
+export function useGetOrganizationContactsQuery(baseOptions: Apollo.QueryHookOptions<GetOrganizationContactsQuery, GetOrganizationContactsQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<GetOrganizationContactsQuery, GetOrganizationContactsQueryVariables>(GetOrganizationContactsDocument, options);
+      }
+export function useGetOrganizationContactsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetOrganizationContactsQuery, GetOrganizationContactsQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<GetOrganizationContactsQuery, GetOrganizationContactsQueryVariables>(GetOrganizationContactsDocument, options);
+        }
+export type GetOrganizationContactsQueryHookResult = ReturnType<typeof useGetOrganizationContactsQuery>;
+export type GetOrganizationContactsLazyQueryHookResult = ReturnType<typeof useGetOrganizationContactsLazyQuery>;
+export type GetOrganizationContactsQueryResult = Apollo.QueryResult<GetOrganizationContactsQuery, GetOrganizationContactsQueryVariables>;
+export const GetOrganizationDetailsDocument = gql`
+    query GetOrganizationDetails($id: ID!) {
+  organization(id: $id) {
+    ...OrganizationDetails
+  }
+}
+    ${OrganizationDetailsFragmentDoc}`;
+
+/**
+ * __useGetOrganizationDetailsQuery__
+ *
+ * To run a query within a React component, call `useGetOrganizationDetailsQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetOrganizationDetailsQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetOrganizationDetailsQuery({
+ *   variables: {
+ *      id: // value for 'id'
+ *   },
+ * });
+ */
+export function useGetOrganizationDetailsQuery(baseOptions: Apollo.QueryHookOptions<GetOrganizationDetailsQuery, GetOrganizationDetailsQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<GetOrganizationDetailsQuery, GetOrganizationDetailsQueryVariables>(GetOrganizationDetailsDocument, options);
+      }
+export function useGetOrganizationDetailsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetOrganizationDetailsQuery, GetOrganizationDetailsQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<GetOrganizationDetailsQuery, GetOrganizationDetailsQueryVariables>(GetOrganizationDetailsDocument, options);
+        }
+export type GetOrganizationDetailsQueryHookResult = ReturnType<typeof useGetOrganizationDetailsQuery>;
+export type GetOrganizationDetailsLazyQueryHookResult = ReturnType<typeof useGetOrganizationDetailsLazyQuery>;
+export type GetOrganizationDetailsQueryResult = Apollo.QueryResult<GetOrganizationDetailsQuery, GetOrganizationDetailsQueryVariables>;
