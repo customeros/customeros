@@ -51,11 +51,21 @@ message GetFeedsPagedRequest {
   bool onlyContacts = 4;
 }
 
+message PageInfo {
+  optional google.protobuf.Timestamp before = 1;
+  int32 pageSize = 2;
+}
+
+message PagedMessages {
+  FeedId feed = 1;
+  optional PageInfo page = 2;
+}
+
 service MessageStoreService {
   rpc getFeeds(GetFeedsPagedRequest) returns (FeedItemPagedResponse) {};
   rpc getFeed(FeedId) returns (FeedItem) {};
 
-  rpc getMessagesForFeed(FeedId) returns (MessageListResponse) {};
+  rpc getMessagesForFeed(PagedMessages) returns (MessageListResponse) {};
   rpc getMessage(MessageId) returns (Message) {};
   rpc saveMessage(InputMessage) returns (MessageId) {};
   rpc getParticipants(FeedId) returns (ParticipantsListResponse) {};

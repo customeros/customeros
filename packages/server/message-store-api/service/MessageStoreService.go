@@ -91,7 +91,7 @@ func (s *MessageService) GetParticipants(ctx context.Context, feedId *msProto.Fe
 	}, nil
 }
 
-func (s *MessageService) GetMessagesForFeed(ctx context.Context, feedIdRequest *msProto.FeedId) (*msProto.MessageListResponse, error) {
+func (s *MessageService) GetMessagesForFeed(ctx context.Context, feedRequest *msProto.PagedMessages) (*msProto.MessageListResponse, error) {
 	apiKeyValid := commonModuleService.ApiKeyCheckerGRPC(ctx, s.postgresRepositories.CommonRepositories.AppKeyRepository, commonModuleService.MESSAGE_STORE_API)
 	if !apiKeyValid {
 		return nil, status.Errorf(codes.Unauthenticated, "Invalid API Key")
@@ -102,11 +102,11 @@ func (s *MessageService) GetMessagesForFeed(ctx context.Context, feedIdRequest *
 		return nil, err
 	}
 
-	if feedIdRequest == nil || feedIdRequest.GetId() == "" {
+	if feedRequest == nil || feedRequest.GetFeed().GetId() == "" {
 		return nil, status.Errorf(codes.InvalidArgument, "GetMessagesForFeed: Feed ID must be specified")
 	}
 
-	exists, err := s.customerOSService.ConversationByIdExists(ctx, *tenantName, feedIdRequest.GetId())
+	exists, err := s.customerOSService.ConversationByIdExists(ctx, *tenantName, feedRequest.GetFeed().GetId())
 	if err != nil {
 		return nil, fmt.Errorf("GetMessagesForFeed: %w", err)
 	}
@@ -114,7 +114,18 @@ func (s *MessageService) GetMessagesForFeed(ctx context.Context, feedIdRequest *
 		return nil, status.Errorf(codes.NotFound, "GetMessagesForFeed: Conversation not found")
 	}
 
-	queryResult := s.postgresRepositories.ConversationEventRepository.GetEventsForConversation(feedIdRequest.GetId())
+	pageSize := 100
+	if feedRequest.GetPage() != nil && feedRequest.GetPage().GetPageSize() > 0 {
+		pageSize = int(feedRequest.GetPage().GetPageSize())
+
+	}
+	var before *time.Time = nil
+	if feedRequest.GetPage() != nil && feedRequest.GetPage().GetBefore() != nil {
+
+		t := feedRequest.GetPage().GetBefore().AsTime()
+		before = &t
+	}
+	queryResult := s.postgresRepositories.ConversationEventRepository.GetEventsForConversation(feedRequest.GetFeed().GetId(), before, pageSize)
 	if queryResult.Error != nil {
 		return nil, status.Errorf(codes.Internal, queryResult.Error.Error())
 	}

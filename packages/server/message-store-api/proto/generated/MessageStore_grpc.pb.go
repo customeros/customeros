@@ -24,7 +24,7 @@ const _ = grpc.SupportPackageIsVersion7
 type MessageStoreServiceClient interface {
 	GetFeeds(ctx context.Context, in *GetFeedsPagedRequest, opts ...grpc.CallOption) (*FeedItemPagedResponse, error)
 	GetFeed(ctx context.Context, in *FeedId, opts ...grpc.CallOption) (*FeedItem, error)
-	GetMessagesForFeed(ctx context.Context, in *FeedId, opts ...grpc.CallOption) (*MessageListResponse, error)
+	GetMessagesForFeed(ctx context.Context, in *PagedMessages, opts ...grpc.CallOption) (*MessageListResponse, error)
 	GetMessage(ctx context.Context, in *MessageId, opts ...grpc.CallOption) (*Message, error)
 	SaveMessage(ctx context.Context, in *InputMessage, opts ...grpc.CallOption) (*MessageId, error)
 	GetParticipants(ctx context.Context, in *FeedId, opts ...grpc.CallOption) (*ParticipantsListResponse, error)
@@ -56,7 +56,7 @@ func (c *messageStoreServiceClient) GetFeed(ctx context.Context, in *FeedId, opt
 	return out, nil
 }
 
-func (c *messageStoreServiceClient) GetMessagesForFeed(ctx context.Context, in *FeedId, opts ...grpc.CallOption) (*MessageListResponse, error) {
+func (c *messageStoreServiceClient) GetMessagesForFeed(ctx context.Context, in *PagedMessages, opts ...grpc.CallOption) (*MessageListResponse, error) {
 	out := new(MessageListResponse)
 	err := c.cc.Invoke(ctx, "/proto.MessageStoreService/getMessagesForFeed", in, out, opts...)
 	if err != nil {
@@ -98,7 +98,7 @@ func (c *messageStoreServiceClient) GetParticipants(ctx context.Context, in *Fee
 type MessageStoreServiceServer interface {
 	GetFeeds(context.Context, *GetFeedsPagedRequest) (*FeedItemPagedResponse, error)
 	GetFeed(context.Context, *FeedId) (*FeedItem, error)
-	GetMessagesForFeed(context.Context, *FeedId) (*MessageListResponse, error)
+	GetMessagesForFeed(context.Context, *PagedMessages) (*MessageListResponse, error)
 	GetMessage(context.Context, *MessageId) (*Message, error)
 	SaveMessage(context.Context, *InputMessage) (*MessageId, error)
 	GetParticipants(context.Context, *FeedId) (*ParticipantsListResponse, error)
@@ -115,7 +115,7 @@ func (UnimplementedMessageStoreServiceServer) GetFeeds(context.Context, *GetFeed
 func (UnimplementedMessageStoreServiceServer) GetFeed(context.Context, *FeedId) (*FeedItem, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetFeed not implemented")
 }
-func (UnimplementedMessageStoreServiceServer) GetMessagesForFeed(context.Context, *FeedId) (*MessageListResponse, error) {
+func (UnimplementedMessageStoreServiceServer) GetMessagesForFeed(context.Context, *PagedMessages) (*MessageListResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetMessagesForFeed not implemented")
 }
 func (UnimplementedMessageStoreServiceServer) GetMessage(context.Context, *MessageId) (*Message, error) {
@@ -177,7 +177,7 @@ func _MessageStoreService_GetFeed_Handler(srv interface{}, ctx context.Context, 
 }
 
 func _MessageStoreService_GetMessagesForFeed_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(FeedId)
+	in := new(PagedMessages)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -189,7 +189,7 @@ func _MessageStoreService_GetMessagesForFeed_Handler(srv interface{}, ctx contex
 		FullMethod: "/proto.MessageStoreService/getMessagesForFeed",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MessageStoreServiceServer).GetMessagesForFeed(ctx, req.(*FeedId))
+		return srv.(MessageStoreServiceServer).GetMessagesForFeed(ctx, req.(*PagedMessages))
 	}
 	return interceptor(ctx, in, info, handler)
 }

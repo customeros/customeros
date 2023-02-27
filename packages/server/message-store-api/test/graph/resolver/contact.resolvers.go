@@ -78,6 +78,11 @@ func (r *contactResolver) Notes(ctx context.Context, obj *model.Contact, paginat
 	panic(fmt.Errorf("not implemented: Notes - notes"))
 }
 
+// NotesByTime is the resolver for the notesByTime field.
+func (r *contactResolver) NotesByTime(ctx context.Context, obj *model.Contact, pagination *model.TimeRange) ([]*model.Note, error) {
+	panic(fmt.Errorf("not implemented: NotesByTime - notesByTime"))
+}
+
 // Conversations is the resolver for the conversations field.
 func (r *contactResolver) Conversations(ctx context.Context, obj *model.Contact, pagination *model.Pagination, sort []*model.SortBy) (*model.ConversationPage, error) {
 	panic(fmt.Errorf("not implemented: Conversations - conversations"))
