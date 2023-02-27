@@ -3,8 +3,8 @@ import {
   DashboardTableCell,
 } from '../ui-kit/atoms/table/dashboard-table-header-label/DashboardTableCell';
 import React from 'react';
-import { LocationFragment } from '../../graphQL/generated';
 import { Column } from '../ui-kit/atoms/table/types';
+import { LocationBaseDetailsFragment } from '../../graphQL/generated';
 
 export const columns: Array<Column> = [
   {
@@ -79,7 +79,7 @@ export const columns: Array<Column> = [
         return <span>-</span>;
       }
 
-      return c?.contact?.locations.map((data: LocationFragment) => (
+      return c?.contact?.locations.map((data: LocationBaseDetailsFragment) => (
         <DashboardTableAddressCell
           key={data.id}
           locality={data?.locality}

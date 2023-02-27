@@ -1,0 +1,31 @@
+fragment OrganizationDetails on Organization {
+  id
+  name
+  description
+  source
+  industry
+  locations {
+    ...LocationBaseDetails
+  }
+  website
+  updatedAt
+  tags {
+    ...Tag
+  }
+
+}
+fragment OrganizationContacts on Organization {
+   contacts {
+     content {
+       id
+       name
+       firstName
+       lastName
+       jobRoles {
+         ...JobRole
+       }
+       ...ContactCommunicationChannelsDetails
+     }
+   }
+
+}

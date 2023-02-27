@@ -1,0 +1,6 @@
+@import "styles/mixins";
+
+.link {
+  @include link-style;
+  font-size: var(--font-size-sm)
+}

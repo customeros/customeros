@@ -11,7 +11,7 @@ query GetDashboardData($pagination: Pagination!, $searchTerm: String) {
           ...Email
         }
         locations {
-          ...Location
+          ...LocationBaseDetails
         }
       }
       organization {

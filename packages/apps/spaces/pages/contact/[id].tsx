@@ -12,11 +12,11 @@ import {
 function ContactDetailsPage() {
   const {
     query: { id },
-    push,
+    back,
   } = useRouter();
 
   return (
-    <DetailsPageLayout onNavigateBack={() => push('/')}>
+    <DetailsPageLayout onNavigateBack={back}>
       <section className={styles.personalDetails}>
         <ContactDetails id={id as string} />
         <ContactCommunicationDetails id={id as string} />

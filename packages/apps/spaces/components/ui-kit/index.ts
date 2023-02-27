@@ -10,6 +10,7 @@ export {
   DeleteConfirmationDialog,
   DebouncedInput,
   Input,
+  Link,
 
   // ICONS
   IdCard,
@@ -29,6 +30,7 @@ export {
   Eject,
   EllipsesV,
   Euro,
+  Envelope,
   ExternalLink,
   FastBackward,
   FastForward,
@@ -55,7 +57,7 @@ export {
   Info,
   Instagram,
   Key,
-  Link,
+  Link as LinkIcon,
   Linkedin,
   LockOpen,
   MapMarker,

@@ -1,0 +1,87 @@
+fragment LocationBaseDetails on Location {
+  id
+  name
+  country
+  region
+  locality
+}
+
+fragment LocationTotal on Location {
+  id
+  name
+  createdAt
+  updatedAt
+  source
+  appSource
+  country
+  region
+  locality
+  address
+  address2
+  zip
+  addressType
+  houseNumber
+  postalCode
+  plusFour
+  commercial
+  predirection
+  district
+  street
+  rawAddress
+  latitude
+  longitude
+}
+
+fragment JobRole on JobRole {
+  jobTitle
+  primary
+}
+
+fragment NoteContent on Note {
+  id
+  html
+  createdAt
+  updatedAt
+  createdBy {
+    id
+    firstName
+    lastName
+  }
+  source
+  sourceOfTruth
+  appSource
+}
+
+fragment Tag on Tag {
+  id
+  name
+  createdAt
+  source
+}
+
+fragment Email on Email {
+  id
+  primary
+  email
+}
+fragment PhoneNumber on PhoneNumber {
+  id
+  primary
+  e164
+  rawPhoneNumber
+}
+
+fragment NoteContent on Note {
+  id
+  html
+  createdAt
+  updatedAt
+  createdBy {
+    id
+    firstName
+    lastName
+  }
+  source
+  sourceOfTruth
+  appSource
+}
