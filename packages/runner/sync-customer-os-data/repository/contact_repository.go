@@ -11,12 +11,13 @@ import (
 )
 
 type ContactRepository interface {
-	MergeContact(ctx context.Context, tenant string, syncDate time.Time, contact entity.ContactData) (string, error)
+	GetMatchedContactId(ctx context.Context, tenant string, contact entity.ContactData) (string, error)
+	MergeContact(ctx context.Context, tenant string, syncDate time.Time, contact entity.ContactData) error
 	MergePrimaryEmail(ctx context.Context, tenant, contactId, email, externalSystem string, createdAt time.Time) error
 	MergeAdditionalEmail(ctx context.Context, tenant, contactId, email, externalSystem string, createdAt time.Time) error
 	MergePrimaryPhoneNumber(ctx context.Context, tenant, contactId, phoneNumber, externalSystem string, createdAt time.Time) error
 	SetOwnerRelationship(ctx context.Context, tenant, contactId, userExternalOwnerId, externalSystemId string) error
-	MergeTextCustomField(ctx context.Context, tenant, contactId string, field entity.TextCustomField, createdAt time.Time) error
+	MergeTextCustomField(ctx context.Context, tenant, contactId string, field entity.TextCustomField) error
 	MergeContactDefaultPlace(ctx context.Context, tenant, contactId string, contact entity.ContactData) error
 	MergeTagForContact(ctx context.Context, tenant, contactId, tagName, sourceApp string) error
 	GetOrCreateContactByEmail(ctx context.Context, tenant, email, firstName, lastName, source string) (string, error)
@@ -33,7 +34,47 @@ func NewContactRepository(driver *neo4j.DriverWithContext) ContactRepository {
 	}
 }
 
-func (r *contactRepository) MergeContact(ctx context.Context, tenant string, syncDate time.Time, contact entity.ContactData) (string, error) {
+func (r *contactRepository) GetMatchedContactId(ctx context.Context, tenant string, contact entity.ContactData) (string, error) {
+	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
+	defer session.Close(ctx)
+
+	query := `MATCH (t:Tenant {name:$tenant})<-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]-(e:ExternalSystem {id:$externalSystem})
+				OPTIONAL MATCH (t)<-[:CONTACT_BELONGS_TO_TENANT]-(c1:Contact)-[:IS_LINKED_WITH {externalId:$contactExternalId}]->(e)
+				OPTIONAL MATCH (t)<-[:CONTACT_BELONGS_TO_TENANT]-(c2:Contact),
+						(c2)-[:HAS]->(e2:Email),
+						(c2)-[:HAS]->(p2:PhoneNumber)
+					WHERE e2.rawEmail in $emails AND size($emails) > 0 AND p2.rawPhoneNumber=$phoneNumber AND $phoneNumber <> ''
+				OPTIONAL MATCH (t)<-[:CONTACT_BELONGS_TO_TENANT]-(c3:Contact)-[:HAS]->(e3:Email)
+					WHERE e3.rawEmail in $emails AND size($emails) > 0
+				with coalesce(c1, c2, c3) as contacts
+				where contacts is not null
+				return contacts.id limit 1`
+
+	dbRecords, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		queryResult, err := tx.Run(ctx, query,
+			map[string]interface{}{
+				"tenant":            tenant,
+				"externalSystem":    contact.ExternalSystem,
+				"contactExternalId": contact.ExternalId,
+				"emails":            contact.AllEmails(),
+				"phoneNumber":       contact.PhoneNumber,
+			})
+		if err != nil {
+			return nil, err
+		}
+		return queryResult.Collect(ctx)
+	})
+	if err != nil {
+		return "", err
+	}
+	contactIDs := dbRecords.([]*db.Record)
+	if len(contactIDs) == 1 {
+		return contactIDs[0].Values[0].(string), nil
+	}
+	return "", nil
+}
+
+func (r *contactRepository) MergeContact(ctx context.Context, tenant string, syncDate time.Time, contact entity.ContactData) error {
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
@@ -41,18 +82,23 @@ func (r *contactRepository) MergeContact(ctx context.Context, tenant string, syn
 	// If Contact exists, and sourceOfTruth is acceptable then update it.
 	//   otherwise create/update AlternateContact for incoming source, with a new relationship 'ALTERNATE'
 	// Link Contact with Tenant
-	query := "MATCH (t:Tenant {name:$tenant})<-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]-(e:ExternalSystem {id:$externalSystem}) " +
-		" MERGE (c:Contact)-[r:IS_LINKED_WITH {externalId:$externalId}]->(e) " +
-		" ON CREATE SET r.externalId=$externalId, r.syncDate=$syncDate, c.id=randomUUID(), c.createdAt=$createdAt, c.updatedAt=$createdAt, " +
-		"				c.source=$source, c.sourceOfTruth=$sourceOfTruth, c.appSource=$appSource, " +
-		"				c.firstName=$firstName, c.lastName=$lastName,  " +
+	query := "MATCH (t:Tenant {name:$tenant})<-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]-(ext:ExternalSystem {id:$externalSystem}) " +
+		" MERGE (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(t) " +
+		" ON CREATE SET c.createdAt=$createdAt, " +
+		"				c.updatedAt=$updatedAt, " +
+		"				c.source=$source, " +
+		"				c.sourceOfTruth=$sourceOfTruth, " +
+		"				c.appSource=$appSource, " +
+		"				c.firstName=$firstName, " +
+		"				c.lastName=$lastName,  " +
 		" 				c:%s " +
-		" ON MATCH SET 	r.syncDate = CASE WHEN c.sourceOfTruth=$sourceOfTruth THEN $syncDate ELSE r.syncDate END, " +
-		"				c.firstName = CASE WHEN c.sourceOfTruth=$sourceOfTruth THEN $firstName ELSE c.firstName END, " +
+		" ON MATCH SET 	c.firstName = CASE WHEN c.sourceOfTruth=$sourceOfTruth THEN $firstName ELSE c.firstName END, " +
 		"				c.lastName = CASE WHEN c.sourceOfTruth=$sourceOfTruth THEN $lastName ELSE c.lastName END, " +
-		"				c.updatedAt = CASE WHEN c.sourceOfTruth=$sourceOfTruth THEN $now ELSE c.updatedAt END " +
-		" WITH c, t " +
-		" MERGE (c)-[:CONTACT_BELONGS_TO_TENANT]->(t) " +
+		"				c.updatedAt = $now " +
+		" WITH c, ext " +
+		" MERGE (c)-[r:IS_LINKED_WITH {externalId:$externalId}]->(ext) " +
+		" ON CREATE SET r.syncDate=$syncDate, r.externalUrl=$externalUrl " +
+		" ON MATCH SET r.syncDate=$syncDate " +
 		" WITH c " +
 		" FOREACH (x in CASE WHEN c.sourceOfTruth <> $sourceOfTruth THEN [c] ELSE [] END | " +
 		"  MERGE (x)-[:ALTERNATE]->(alt:AlternateContact {source:$source, id:x.id}) " +
@@ -60,17 +106,20 @@ func (r *contactRepository) MergeContact(ctx context.Context, tenant string, syn
 		" ) " +
 		" RETURN c.id"
 
-	dbRecord, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		queryResult, err := tx.Run(ctx, fmt.Sprintf(
 			query, "Contact_"+tenant),
 			map[string]interface{}{
 				"tenant":         tenant,
+				"contactId":      contact.Id,
 				"externalSystem": contact.ExternalSystem,
 				"externalId":     contact.ExternalId,
+				"externalUrl":    contact.ExternalUrl,
 				"firstName":      contact.FirstName,
 				"lastName":       contact.LastName,
 				"syncDate":       syncDate,
 				"createdAt":      contact.CreatedAt,
+				"updatedAt":      contact.UpdatedAt,
 				"source":         contact.ExternalSystem,
 				"sourceOfTruth":  contact.ExternalSystem,
 				"appSource":      contact.ExternalSystem,
@@ -79,16 +128,13 @@ func (r *contactRepository) MergeContact(ctx context.Context, tenant string, syn
 		if err != nil {
 			return nil, err
 		}
-		record, err := queryResult.Single(ctx)
+		_, err = queryResult.Single(ctx)
 		if err != nil {
 			return nil, err
 		}
-		return record.Values[0], nil
+		return nil, nil
 	})
-	if err != nil {
-		return "", err
-	}
-	return dbRecord.(string), nil
+	return err
 }
 
 func (r *contactRepository) MergePrimaryEmail(ctx context.Context, tenant, contactId, email, externalSystem string, createdAt time.Time) error {
@@ -233,7 +279,7 @@ func (r *contactRepository) SetOwnerRelationship(ctx context.Context, tenant, co
 	return err
 }
 
-func (r *contactRepository) MergeTextCustomField(ctx context.Context, tenant, contactId string, field entity.TextCustomField, createdAt time.Time) error {
+func (r *contactRepository) MergeTextCustomField(ctx context.Context, tenant, contactId string, field entity.TextCustomField) error {
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
@@ -257,7 +303,7 @@ func (r *contactRepository) MergeTextCustomField(ctx context.Context, tenant, co
 				"name":          field.Name,
 				"value":         field.Value,
 				"datatype":      "TEXT",
-				"createdAt":     createdAt,
+				"createdAt":     field.CreatedAt,
 				"source":        field.ExternalSystem,
 				"sourceOfTruth": field.ExternalSystem,
 				"appSource":     field.ExternalSystem,

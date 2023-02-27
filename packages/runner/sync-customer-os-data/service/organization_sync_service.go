@@ -43,14 +43,14 @@ func (s *organizationSyncService) SyncOrganizations(ctx context.Context, dataSer
 				logrus.Errorf("failed finding existing matched organization with external reference %v for tenant %v :%v", v.ExternalId, tenant, err)
 			}
 
-			// Create new user id if not found
+			// Create new organization id if not found
 			if len(organizationId) == 0 {
 				orgUuid, _ := uuid.NewRandom()
 				organizationId = orgUuid.String()
 			}
 			v.Id = organizationId
 
-			if failedSync == false {
+			if !failedSync {
 				err = s.repositories.OrganizationRepository.MergeOrganization(ctx, tenant, syncDate, v)
 				if err != nil {
 					failedSync = true
@@ -58,7 +58,7 @@ func (s *organizationSyncService) SyncOrganizations(ctx context.Context, dataSer
 				}
 			}
 
-			if len(v.Domains) > 0 && failedSync == false {
+			if v.HasDomains() && !failedSync {
 				for _, domain := range v.Domains {
 					err = s.repositories.OrganizationRepository.MergeOrganizationDomain(ctx, tenant, organizationId, domain, v.ExternalSystem)
 					if err != nil {
@@ -68,7 +68,7 @@ func (s *organizationSyncService) SyncOrganizations(ctx context.Context, dataSer
 				}
 			}
 
-			if len(v.DefaultLocationName) > 0 && failedSync == false {
+			if v.HasLocation() && !failedSync {
 				err = s.repositories.OrganizationRepository.MergeOrganizationDefaultPlace(ctx, tenant, organizationId, v)
 				if err != nil {
 					failedSync = true
@@ -76,7 +76,7 @@ func (s *organizationSyncService) SyncOrganizations(ctx context.Context, dataSer
 				}
 			}
 
-			if len(v.NoteContent) > 0 && failedSync == false {
+			if v.HasNotes() && !failedSync {
 				noteId, err := s.repositories.NoteRepository.MergeNote(ctx, tenant, syncDate, entity.NoteData{
 					Html:           v.NoteContent,
 					CreatedAt:      v.CreatedAt,
@@ -94,7 +94,7 @@ func (s *organizationSyncService) SyncOrganizations(ctx context.Context, dataSer
 				}
 			}
 
-			if len(v.OrganizationTypeName) > 0 && failedSync == false {
+			if v.HasOrganizationType() && !failedSync {
 				err = s.repositories.OrganizationRepository.MergeOrganizationType(ctx, tenant, organizationId, v.OrganizationTypeName)
 				if err != nil {
 					failedSync = true

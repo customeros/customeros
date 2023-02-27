@@ -29,3 +29,19 @@ type OrganizationData struct {
 
 	ExternalSyncId string
 }
+
+func (o OrganizationData) HasDomains() bool {
+	return len(o.Domains) > 0
+}
+
+func (o OrganizationData) HasLocation() bool {
+	return len(o.DefaultLocationName) > 0
+}
+
+func (o OrganizationData) HasNotes() bool {
+	return len(o.NoteContent) > 0
+}
+
+func (o OrganizationData) HasOrganizationType() bool {
+	return len(o.OrganizationTypeName) > 0
+}

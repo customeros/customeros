@@ -18,3 +18,11 @@ type UserData struct {
 
 	ExternalSyncId string
 }
+
+func (u UserData) HasPhoneNumber() bool {
+	return len(u.PhoneNumber) > 0
+}
+
+func (u UserData) HasEmail() bool {
+	return len(u.Email) > 0
+}

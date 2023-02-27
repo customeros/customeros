@@ -42,7 +42,7 @@ func (s *hubspotDataService) GetContactsForSync(batchSize int, runId string) []e
 		logrus.Error(err)
 		return nil
 	}
-	customerOsContacts := []entity.ContactData{}
+	customerOsContacts := make([]entity.ContactData, 0, len(hubspotContacts))
 	for _, v := range hubspotContacts {
 		hubspotContactProperties, err := repository.GetContactProperties(s.getDb(), v.AirbyteAbId, v.AirbyteContactsHashid)
 		if err != nil {
@@ -52,14 +52,16 @@ func (s *hubspotDataService) GetContactsForSync(batchSize int, runId string) []e
 		// set main contact fields
 		contactForCustomerOs := entity.ContactData{
 			ExternalId:          v.Id,
+			ExternalSyncId:      v.Id,
 			ExternalSystem:      s.SourceId(),
 			FirstName:           hubspotContactProperties.FirstName,
 			LastName:            hubspotContactProperties.LastName,
 			JobTitle:            hubspotContactProperties.JobTitle,
 			CreatedAt:           v.CreateDate.UTC(),
+			UpdatedAt:           v.UpdatedDate.UTC(),
 			PrimaryEmail:        hubspotContactProperties.Email,
 			AdditionalEmails:    strings.Split(hubspotContactProperties.AdditionalEmails, ";"),
-			PrimaryE164:         hubspotContactProperties.PhoneNumber,
+			PhoneNumber:         hubspotContactProperties.PhoneNumber,
 			UserExternalOwnerId: hubspotContactProperties.OwnerId,
 			Country:             hubspotContactProperties.Country,
 			Region:              hubspotContactProperties.State,
@@ -86,6 +88,7 @@ func (s *hubspotDataService) GetContactsForSync(batchSize int, runId string) []e
 				Name:           "Hubspot Lifecycle Stage",
 				Value:          hubspotContactProperties.LifecycleStage,
 				ExternalSystem: s.SourceId(),
+				CreatedAt:      v.CreateDate.UTC(),
 			})
 		}
 		contactForCustomerOs.TextCustomFields = textCustomFields
@@ -98,7 +101,7 @@ func (s *hubspotDataService) GetContactsForSync(batchSize int, runId string) []e
 		}
 
 		customerOsContacts = append(customerOsContacts, contactForCustomerOs)
-		s.contacts[v.Id] = v
+		s.contacts[contactForCustomerOs.ExternalSyncId] = v
 	}
 	return customerOsContacts
 }
