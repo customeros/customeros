@@ -4,9 +4,10 @@ go 1.19
 
 require (
 	github.com/gin-gonic/gin v1.9.0
-	github.com/neo4j/neo4j-go-driver/v5 v5.5.0
+	github.com/neo4j/neo4j-go-driver/v5 v5.6.0
 	github.com/sirupsen/logrus v1.9.0
 	github.com/stretchr/testify v1.8.1
+	golang.org/x/net v0.7.0
 	google.golang.org/grpc v1.53.0
 	gorm.io/gorm v1.24.5
 )
@@ -34,7 +35,6 @@ require (
 	github.com/ugorji/go/codec v1.2.9 // indirect
 	golang.org/x/arch v0.0.0-20210923205945-b76863e36670 // indirect
 	golang.org/x/crypto v0.5.0 // indirect
-	golang.org/x/net v0.7.0 // indirect
 	golang.org/x/sys v0.5.0 // indirect
 	golang.org/x/text v0.7.0 // indirect
 	google.golang.org/protobuf v1.28.1 // indirect
