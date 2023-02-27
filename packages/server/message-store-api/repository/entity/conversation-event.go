@@ -45,7 +45,7 @@ type ConversationEvent struct {
 	ID             string `gorm:"primary_key;type:uuid;default:gen_random_uuid()" json:"id"`
 	EventUUID      string `gorm:"type:uuid;default:gen_random_uuid()" json:"eventUuid"`
 	TenantName     string `gorm:"column:tenant_name;type:varchar(50);NOT NULL" json:"tenantId" binding:"required"`
-	ConversationId string `gorm:"column:conversation_id;type:varchar(50);NOT NULL" json:"conversationId" binding:"required"`
+	ConversationId string `gorm:"index:idx_conversation_time,priority:1;column:conversation_id;type:varchar(50);NOT NULL" json:"conversationId" binding:"required"`
 	//email
 	Type EventType `gorm:"column:type;type:varchar(50);NOT NULL;" json:"type" binding:"required"`
 	//thread id
@@ -64,7 +64,7 @@ type ConversationEvent struct {
 	ExternalId string `gorm:"column:external_id;type:varchar(100);" json:"externalId" binding:"required"`
 
 	Direction  Direction `gorm:"column:direction;type:varchar(10);NOT NULL;" json:"direction" binding:"required"`
-	CreateDate time.Time `gorm:"column:created_at"`
+	CreateDate time.Time `gorm:"index:idx_conversation_time,priority:2;column:created_at"`
 
 	OriginalJson string `gorm:"column:direction;type:text;NOT NULL;" json:"direction" binding:"required"`
 	//

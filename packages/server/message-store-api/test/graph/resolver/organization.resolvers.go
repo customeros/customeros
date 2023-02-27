@@ -26,6 +26,11 @@ func (r *mutationResolver) OrganizationDelete(ctx context.Context, id string) (*
 	panic(fmt.Errorf("not implemented: OrganizationDelete - organization_Delete"))
 }
 
+// Domains is the resolver for the domains field.
+func (r *organizationResolver) Domains(ctx context.Context, obj *model.Organization) ([]string, error) {
+	panic(fmt.Errorf("not implemented: Domains - domains"))
+}
+
 // OrganizationType is the resolver for the organizationType field.
 func (r *organizationResolver) OrganizationType(ctx context.Context, obj *model.Organization) (*model.OrganizationType, error) {
 	panic(fmt.Errorf("not implemented: OrganizationType - organizationType"))
