@@ -13,7 +13,7 @@ require (
 	github.com/graph-gophers/dataloader v5.0.0+incompatible
 	github.com/joho/godotenv v1.5.1
 	github.com/mitchellh/mapstructure v1.5.0
-	github.com/neo4j/neo4j-go-driver/v5 v5.5.0
+	github.com/neo4j/neo4j-go-driver/v5 v5.6.0
 	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20230202153013-0889c39aefaa
 	github.com/sirupsen/logrus v1.9.0
 	github.com/stretchr/testify v1.8.1
