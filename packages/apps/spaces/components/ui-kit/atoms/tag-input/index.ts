@@ -1,1 +1,1 @@
-export { TagInput } from './TagInput';
+export { TagInput, TagsList } from './TagInput';

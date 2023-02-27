@@ -1,6 +1,7 @@
 export {
   useGetContactCommunicationChannelsQuery,
   useGetContactPersonalDetailsQuery,
+  useGetContactTagsQuery,
   useCreateContactMutation,
   useUpdateContactEmailMutation,
   useAddEmailToContactMutation,
@@ -17,4 +18,5 @@ export type {
   CreateContactMutation,
   Email,
   UpdateContactEmailMutation,
+  GetContactTagsQuery,
 } from '../../graphQL/__generated__/generated';

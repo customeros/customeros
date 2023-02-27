@@ -5,6 +5,7 @@ import styles from './contact-details.module.scss';
 import { useContactPersonalDetails } from '../../../hooks/useContact';
 import { ContactDetailsSkeleton } from './skeletons';
 import { useRouter } from 'next/router';
+import { ContactTags } from '../contact-tags';
 export const ContactDetails = ({ id }: { id: string }) => {
   const router = useRouter();
   const { data, loading, error } = useContactPersonalDetails({ id });
@@ -61,6 +62,7 @@ export const ContactDetails = ({ id }: { id: string }) => {
             </div>
           }
         </div>
+        <ContactTags id={id} />
       </div>
       <div className={styles.details}>
         <div className={styles.section}>
