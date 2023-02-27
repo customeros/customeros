@@ -11,7 +11,7 @@ require (
 	github.com/gin-gonic/gin v1.9.0
 	github.com/h2non/filetype v1.1.3
 	github.com/joho/godotenv v1.4.0
-	github.com/neo4j/neo4j-go-driver/v5 v5.5.0
+	github.com/neo4j/neo4j-go-driver/v5 v5.6.0
 	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20230214195550-054499130c38
 	github.com/sirupsen/logrus v1.9.0
 	golang.org/x/net v0.7.0
