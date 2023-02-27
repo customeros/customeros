@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { DashboardTableHeaderLabel } from './dashboard-table-header-label';
+import { TableHeaderCell } from './table-cells';
 import { useVirtual } from 'react-virtual';
 import styles from './table.module.scss';
 import { Skeleton } from '../skeleton';
@@ -25,10 +25,9 @@ export const Table = <T,>({
   const rowVirtualizer = useVirtual({
     size: totalItems,
     parentRef,
-    estimateSize: React.useCallback(() => 70, []),
+    estimateSize: React.useCallback(() => 60, []),
     overscan: 5,
   });
-
   useEffect(() => {
     const [lastItem] = [...rowVirtualizer.virtualItems].reverse();
     if (!lastItem || !data) {
@@ -46,60 +45,64 @@ export const Table = <T,>({
     data,
   ]);
   return (
-    <table className={styles.table}>
-      <thead className={styles.header}>
-        <tr>
-          {columns?.map(({ label, subLabel, width }) => {
-            return (
-              <th
-                key={`header-${label}`}
-                style={{ width }}
-                data-th={label}
-                data-th2={subLabel}
-              >
-                <DashboardTableHeaderLabel
-                  label={label}
-                  subLabel={subLabel || ''}
-                />
-              </th>
-            );
-          })}
-        </tr>
-      </thead>
-      <tbody ref={parentRef} className={styles.body}>
-        {(!data || !data.length) && <TableSkeleton columns={columns} />}
-        {/* SHOW TABLE*/}
-        {!!data &&
-          rowVirtualizer.virtualItems.map((virtualRow) => {
-            const element = data[virtualRow.index];
+    <>
+      <div className={styles.itemCounter}>
+        <span>Total items:</span>
 
-            return (
-              <tr
-                key={virtualRow.key}
-                data-index={virtualRow.index}
-                ref={virtualRow.measureRef}
-                className={styles.row}
-                style={{
-                  minHeight: `${virtualRow.size}px`,
-                  transform: `translateY(${virtualRow.start}px)`,
-                }}
-              >
-                {columns.map(({ template, width, label }) => (
-                  <td
-                    key={`table-row-${label}`}
-                    style={{
-                      width: width || 'auto',
-                      maxWidth: width || 'auto',
-                    }}
-                  >
-                    {element && template(element)}
-                    {!element && <Skeleton />}
-                  </td>
-                ))}
-              </tr>
-            );
-          })}
-      </tbody>
-    </table>
+        {totalItems}
+      </div>
+      <table className={styles.table}>
+        <thead className={styles.header}>
+          <tr>
+            {columns?.map(({ label, subLabel, width }) => {
+              return (
+                <th
+                  key={`header-${label}`}
+                  style={{ width }}
+                  data-th={label}
+                  data-th2={subLabel}
+                >
+                  <TableHeaderCell label={label} subLabel={subLabel || ''} />
+                </th>
+              );
+            })}
+          </tr>
+        </thead>
+        <tbody ref={parentRef} className={styles.body}>
+          {(!data || !data.length) && <TableSkeleton columns={columns} />}
+          {/* SHOW TABLE*/}
+          {!!data &&
+            rowVirtualizer.virtualItems.map((virtualRow) => {
+              const element = data[virtualRow.index];
+
+              return (
+                <tr
+                  key={virtualRow.key}
+                  data-index={virtualRow.index}
+                  ref={virtualRow.measureRef}
+                  className={styles.row}
+                  style={{
+                    minHeight: `${virtualRow.size}px`,
+                    transform: `translateY(${virtualRow.start}px)`,
+                  }}
+                >
+                  {columns.map(({ template, width, label }) => (
+                    <td
+                      key={`table-row-${label}`}
+                      style={{
+                        width: width || 'auto',
+                        maxWidth: width || 'auto',
+                      }}
+                    >
+                      {element && template(element)}
+                      {!element && <Skeleton />}
+                    </td>
+                  ))}
+                </tr>
+              );
+            })}
+        </tbody>
+      </table>
+    </>
   );
 };

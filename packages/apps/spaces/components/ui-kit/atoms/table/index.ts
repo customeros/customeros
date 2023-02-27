@@ -1,5 +1,2 @@
 export { Table } from './Table';
-export {
-  DashboardTableCell,
-  DashboardTableHeaderLabel,
-} from './dashboard-table-header-label';
+export { TableCell, TableHeaderCell } from './table-cells';

@@ -1,3 +1,5 @@
+@import "styles/mixins";
+
 .sidebar {
   grid-area: sidebar;
   width: var(--side-panel-expanded-width);
@@ -6,7 +8,7 @@
   height: 100%;
   position: fixed;
   top: 0;
-  z-index: 1;
+  z-index: 2;
   box-shadow: var(--box-shadow-sm-right);
 
   & .logoNameWrapper {
@@ -67,4 +69,14 @@
 .webChat {
   position: relative;
   height: 10px;
+}
+
+.overlay {
+  @include frosted-glass;
+  background: rgba(128, 128, 128, 0.49);
+  backdrop-filter: blur(2px);
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
 }
