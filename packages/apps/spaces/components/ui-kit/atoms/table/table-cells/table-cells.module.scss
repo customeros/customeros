@@ -32,14 +32,17 @@
   white-space: nowrap;
   word-break: keep-all;
   overflow: hidden;
+
 }
 
-.link {
+.cellData {
   text-overflow: ellipsis;
   white-space: nowrap;
   word-break: keep-all;
   overflow: hidden;
+}
 
+.link {
   color: var(--royal-blue-600);
 
   &:hover,

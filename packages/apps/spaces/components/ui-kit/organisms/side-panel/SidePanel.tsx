@@ -63,13 +63,8 @@ export const SidePanel: React.FC<SidePanelProps> = ({
           />
         </ul>
       </aside>
-      <div
-        className={styles.webChat}
-        // @ts-expect-error this is valid syntax
-        style={{ '--web-chat-left': isPanelOpen ? '135px' : '20px' }}
-      >
-        {children}
-      </div>
+      {isPanelOpen && <div className={styles.overlay} />}
+      <div className={styles.webChat}>{children}</div>
     </>
   );
 };

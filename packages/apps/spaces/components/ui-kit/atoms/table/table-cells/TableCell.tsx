@@ -1,8 +1,9 @@
-import styles from './dashboard-table-header-label.module.scss';
+import styles from './table-cells.module.scss';
 import Link from 'next/link';
 import React, { ReactNode } from 'react';
+import classNames from 'classnames';
 
-export const DashboardTableCell = ({
+export const TableCell = ({
   label,
   subLabel,
   url,
@@ -16,14 +17,24 @@ export const DashboardTableCell = ({
   return (
     <div className={styles.cell}>
       {url ? (
-        <Link href={url} className={styles.link}>
+        <Link
+          href={url}
+          className={classNames(styles.link, styles.cellData)}
+          title={label}
+        >
           {label}
         </Link>
       ) : (
-        <span className={className}>{label}</span>
+        <span title={label} className={classNames(className, styles.cellData)}>
+          {label}
+        </span>
       )}
 
-      {subLabel && <span className={styles.subLabel}>{subLabel}</span>}
+      {subLabel && (
+        <span className={classNames(styles.subLabel, styles.cellData)}>
+          {subLabel}
+        </span>
+      )}
     </div>
   );
 };

@@ -1,7 +1,7 @@
 import {
   DashboardTableAddressCell,
-  DashboardTableCell,
-} from '../ui-kit/atoms/table/dashboard-table-header-label/DashboardTableCell';
+  TableCell,
+} from '../ui-kit/atoms/table/table-cells/TableCell';
 import React from 'react';
 import { Column } from '../ui-kit/atoms/table/types';
 import { LocationBaseDetailsFragment } from '../../graphQL/generated';
@@ -19,7 +19,7 @@ export const columns: Array<Column> = [
           </span>
         );
         return (
-          <DashboardTableCell
+          <TableCell
             label={c.organization.name}
             subLabel={industry}
             url={`/organization/${c.organization.id}`}
@@ -43,7 +43,7 @@ export const columns: Array<Column> = [
         return <span>-</span>;
       }
       return (
-        <DashboardTableCell
+        <TableCell
           label={`${c?.contact?.firstName} ${c?.contact?.lastName}`}
           subLabel={c?.contact.job}
           url={`/contact/${c?.contact.id}`}
@@ -58,16 +58,17 @@ export const columns: Array<Column> = [
       if (!c?.contact?.emails) {
         return <span>-</span>;
       }
-      return (c.contact?.emails || []).map((data: any, index: number) => (
-        <div style={{ display: 'flex', flexWrap: 'wrap' }} key={data.id}>
-          <DashboardTableCell
-            className='lowercase'
-            label={data.email}
-            url={`/contact/${data.id}`}
-          />
-          {c?.contact?.emails.length - 1 !== index && ', '}
-        </div>
-      ));
+      return (c.contact?.emails || []).map((data: any, index: number) => {
+        const label =
+          c?.contact?.emails.length - 1 !== index
+            ? `${data.email},`
+            : data.email;
+        return (
+          <div style={{ display: 'flex', flexWrap: 'wrap' }} key={data.id}>
+            <TableCell className='lowercase' label={label} />
+          </div>
+        );
+      });
     },
   },
   {

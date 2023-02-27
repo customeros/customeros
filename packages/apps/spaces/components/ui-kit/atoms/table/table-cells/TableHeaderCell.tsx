@@ -1,6 +1,6 @@
-import styles from './dashboard-table-header-label.module.scss';
+import styles from './table-cells.module.scss';
 
-export const DashboardTableHeaderLabel = ({
+export const TableHeaderCell = ({
   label,
   subLabel,
 }: {
