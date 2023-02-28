@@ -1,4 +1,4 @@
-query GetContactTags($id: ID!, $pagination: Pagination) {
+query GetContactTags($id: ID!) {
   contact(id: $id) {
     id
     tags {

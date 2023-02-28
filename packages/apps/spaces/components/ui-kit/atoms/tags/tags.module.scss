@@ -31,17 +31,19 @@
   flex-wrap: wrap;
   align-items: center;
   padding: 0;
-  margin: 0 var(--spacing-xxxs) 0 0;
+  margin: var(--spacing-xxxs) var(--spacing-xxxs) 0 0;
 
   li {
-    font-size: 0.7rem;
+    font-size: var(--font-size-xxs);
     display: inline-block;
-    margin: var(--spacing-xxxs);
+    margin-right: var(--spacing-xxxs);
+
     padding: var(--spacing-xxxs) var(--spacing-xxs);
     border-radius: var(--border-radius-xl);
-    background: #ddd;
-    color: #444;
+    background: var(--secondary-color);
+    color: var(--text-on-secondary);
     text-transform: lowercase;
+
 
     &:first-letter {
       text-transform: capitalize;

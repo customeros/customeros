@@ -1,11 +1,11 @@
 import React from 'react';
-import styles from './organization-contacts.module.scss';
-
+import { useRouter } from 'next/router';
+import classNames from 'classnames';
 import { Phone, Envelope } from '../../ui-kit';
 import { OrganizationContactsSkeleton } from './skeletons';
 import { useOrganizationContacts } from '../../../hooks/useOrganization';
-import { useRouter } from 'next/router';
-import classNames from 'classnames';
+import styles from './organization-contacts.module.scss';
+import { ContactTags } from '../../contact/contact-tags';
 
 export const OrganizationContacts = ({ id }: { id: string }) => {
   const router = useRouter();
@@ -34,11 +34,14 @@ export const OrganizationContacts = ({ id }: { id: string }) => {
             <span className={styles.name}>
               {contact?.name || `${contact?.firstName} ${contact?.lastName}`}
             </span>
-            {[{ id: '234', jobTitle: 'CTO' }].map((role) => (
-              <span key={role.id} className={styles.jobTitle}>
-                {role.jobTitle}
-              </span>
-            ))}
+
+            {!!contact.jobRoles &&
+              contact.jobRoles.map((role) => (
+                <span key={role.id} className={styles.jobTitle}>
+                  {role.jobTitle}
+                </span>
+              ))}
+            <ContactTags id={contact.id} />
           </div>
 
           {!!contact?.emails.length && (

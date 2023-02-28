@@ -11,6 +11,9 @@ export {
   DebouncedInput,
   Input,
   Link,
+  TagsList,
+  TagInput,
+  TagListSkeleton,
 
   // ICONS
   IdCard,

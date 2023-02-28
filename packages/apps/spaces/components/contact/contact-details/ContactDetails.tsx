@@ -33,7 +33,6 @@ export const ContactDetails = ({ id }: { id: string }) => {
         </div>
         <div className={styles.name}>
           <div>
-            {' '}
             {data?.firstName} {data?.lastName}
           </div>
           {data?.jobRoles?.map((jobRole: any) => {
@@ -61,8 +60,8 @@ export const ContactDetails = ({ id }: { id: string }) => {
               {data?.source || ''}
             </div>
           }
+          <ContactTags id={id} />
         </div>
-        <ContactTags id={id} />
       </div>
       <div className={styles.details}>
         <div className={styles.section}>
