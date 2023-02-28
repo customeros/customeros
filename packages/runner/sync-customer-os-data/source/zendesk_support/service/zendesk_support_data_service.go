@@ -20,6 +20,7 @@ type zendeskSupportDataService struct {
 	users          map[string]localEntity.User
 	organizations  map[string]localEntity.Organization
 	contacts       map[string]localEntity.Contact
+	tickets        map[string]localEntity.Ticket
 }
 
 func NewZendeskSupportDataService(airbyteStoreDb *config.AirbyteStoreDB, tenant string) common.SourceDataService {
@@ -29,6 +30,7 @@ func NewZendeskSupportDataService(airbyteStoreDb *config.AirbyteStoreDB, tenant 
 		users:          map[string]localEntity.User{},
 		contacts:       map[string]localEntity.Contact{},
 		organizations:  map[string]localEntity.Organization{},
+		tickets:        map[string]localEntity.Ticket{},
 	}
 }
 
@@ -42,6 +44,10 @@ func (s *zendeskSupportDataService) Refresh() {
 		logrus.Error(err)
 	}
 	err = s.getDb().AutoMigrate(&localEntity.SyncStatusContact{})
+	if err != nil {
+		logrus.Error(err)
+	}
+	err = s.getDb().AutoMigrate(&localEntity.SyncStatusTicket{})
 	if err != nil {
 		logrus.Error(err)
 	}
@@ -63,6 +69,7 @@ func (s *zendeskSupportDataService) Close() {
 	s.users = make(map[string]localEntity.User)
 	s.contacts = make(map[string]localEntity.Contact)
 	s.organizations = make(map[string]localEntity.Organization)
+	s.tickets = make(map[string]localEntity.Ticket)
 }
 
 func (s *zendeskSupportDataService) SourceId() string {
@@ -150,7 +157,7 @@ func (s *zendeskSupportDataService) GetOrganizationsForSync(batchSize int, runId
 			Name:           v.Name,
 			NoteContent:    v.Details,
 		}
-		organizationData.Domains = utils.ConvertJsonbToStringSlice(v.DomainNames)
+		organizationData.Domains = utils.GetUniqueElements(utils.ConvertJsonbToStringSlice(v.DomainNames))
 
 		customerOsOrganizations = append(customerOsOrganizations, organizationData)
 		s.organizations[organizationData.ExternalSyncId] = v
@@ -236,5 +243,42 @@ func (z zendeskSupportDataService) MarkNoteProcessed(externalSyncId, runId strin
 
 func (z zendeskSupportDataService) MarkEmailMessageProcessed(externalSyncId, runId string, synced bool) error {
 	//TODO implement me
+	return nil
+}
+
+func (s *zendeskSupportDataService) GetTicketsForSync(batchSize int, runId string) []entity.TicketData {
+	zendeskTickets, err := repository.GetTickets(s.getDb(), batchSize, runId)
+	if err != nil {
+		logrus.Error(err)
+		return nil
+	}
+	tickets := make([]entity.TicketData, 0, len(zendeskTickets))
+	for _, v := range zendeskTickets {
+		ticketData := entity.TicketData{
+			ExternalId:     strconv.FormatInt(v.Id, 10),
+			ExternalSyncId: strconv.FormatInt(v.Id, 10),
+			ExternalSystem: s.SourceId(),
+			ExternalUrl:    v.Url,
+			CreatedAt:      v.CreateDate.UTC(),
+			UpdatedAt:      v.UpdatedDate.UTC(),
+			Subject:        v.Subject,
+		}
+		ticketData.CollaboratorUserExternalIds = utils.GetUniqueElements(utils.ConvertJsonbToStringSlice(v.CollaboratorIds))
+
+		tickets = append(tickets, ticketData)
+		s.tickets[ticketData.ExternalSyncId] = v
+	}
+	return tickets
+}
+
+func (s *zendeskSupportDataService) MarkTicketProcessed(externalSyncId, runId string, synced bool) error {
+	ticket, ok := s.tickets[externalSyncId]
+	if ok {
+		err := repository.MarkTicketProcessed(s.getDb(), ticket, synced, runId)
+		if err != nil {
+			logrus.Errorf("error while marking ticket with external reference %s as synced for zendesk support", externalSyncId)
+		}
+		return err
+	}
 	return nil
 }

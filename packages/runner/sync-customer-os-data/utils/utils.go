@@ -29,7 +29,11 @@ func ConvertJsonbToStringSlice(input pgtype.JSONB) []string {
 	return output
 }
 
-func RemoveDuplicates[V comparable](input []V) []V {
+func GetUniqueElements[V comparable](input []V) []V {
+	if len(input) == 0 {
+		return []V{}
+	}
+
 	m := make(map[V]bool)
 	for _, item := range input {
 		if _, ok := m[item]; !ok {

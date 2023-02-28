@@ -74,12 +74,16 @@ func (s *syncService) Sync(ctx context.Context, runId string) {
 		syncRunDtls.CompletedContacts = completedContactCount
 		syncRunDtls.FailedContacts = failedContactCount
 
+		ticketSyncService, err := s.ticketSyncService(v)
+		completedTicketCount, failedTickeCount := ticketSyncService.SyncTickets(ctx, dataService, syncDate, v.Tenant, runId)
+		syncRunDtls.CompletedTickets = completedTicketCount
+		syncRunDtls.FailedTickets = failedTickeCount
+
 		completedNoteCount, failedNoteCount := s.syncNotes(ctx, dataService, syncDate, v.Tenant, runId)
 		syncRunDtls.CompletedNotes = completedNoteCount
 		syncRunDtls.FailedNotes = failedNoteCount
 
 		completedEmailMessageCount, failedEmailMessageCount := s.syncEmailMessages(ctx, dataService, syncDate, v.Tenant, runId)
-
 		syncRunDtls.CompletedEmailMessages = completedEmailMessageCount
 		syncRunDtls.FailedEmailMessages = failedEmailMessageCount
 
@@ -432,4 +436,26 @@ func (s *syncService) contactSyncService(tenantToSync entity.TenantSyncSettings)
 	contactSyncService := createContactSyncService()
 
 	return contactSyncService, nil
+}
+
+func (s *syncService) ticketSyncService(tenantToSync entity.TenantSyncSettings) (TicketSyncService, error) {
+	ticketSyncServiceMap := map[string]func() TicketSyncService{
+		string(entity.AirbyteSourceHubspot): func() TicketSyncService {
+			return s.services.TicketSyncService
+		},
+		string(entity.AirbyteSourceZendeskSupport): func() TicketSyncService {
+			return s.services.TicketSyncService
+		},
+	}
+
+	// Look up the corresponding implementation in the map using the tenantToSync.Source value.
+	createTicketSyncService, ok := ticketSyncServiceMap[tenantToSync.Source]
+	if !ok {
+		// Return an error if the tenantToSync.Source value is not recognized.
+		return nil, fmt.Errorf("unknown airbyte source %v, skipping sync for tenant %v", tenantToSync.Source, tenantToSync.Tenant)
+	}
+
+	ticketSyncService := createTicketSyncService()
+
+	return ticketSyncService, nil
 }
