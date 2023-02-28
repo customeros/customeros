@@ -1,0 +1,63 @@
+name: Publish message-store-api
+
+on:
+  push:
+    branches: [ "otter"]
+    paths:
+      - packages/server/ory-tunnel/**
+      - .github/workflows/publish-ory-tunnel.yml
+  release:
+    types: [created, edited]
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}/ory-tunnel
+
+permissions:
+  contents: read
+  pull-requests: read
+
+defaults:
+  run:
+    working-directory: packages/server/ory-tunnel
+
+jobs:
+  publish:
+    name: publish image
+    needs:
+      - build
+
+    if: github.ref_name == 'otter' || github.event_name == 'release'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Set up Go
+        uses: actions/setup-go@v3
+        with:
+          go-version: 1.19
+
+
+      - name: Log in to the Container registry
+        uses: docker/login-action@f054a8b539a109f9f41c372932f1ae047eff08c9
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ secrets.REPOSITORY_READ_WRITE_USERNAME }}
+          password: ${{ secrets.REPOSITORY_READ_WRITE_TOKEN }}
+
+      - name: Extract metadata (tags, labels) for Docker
+        id: meta
+        uses: docker/metadata-action@98669ae865ea3cffbcbaa878cf57c20bbf1c6c38
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+
+      - name: Push Docker image
+        uses: docker/build-push-action@v4
+        with:
+          context: packages/server/ory-tunnel/.
+          file: packages/server/ory-tunnel/Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
