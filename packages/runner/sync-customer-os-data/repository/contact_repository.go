@@ -92,8 +92,8 @@ func (r *contactRepository) MergeContact(ctx context.Context, tenant string, syn
 		"				c.firstName=$firstName, " +
 		"				c.lastName=$lastName,  " +
 		" 				c:%s " +
-		" ON MATCH SET 	c.firstName = CASE WHEN c.sourceOfTruth=$sourceOfTruth THEN $firstName ELSE c.firstName END, " +
-		"				c.lastName = CASE WHEN c.sourceOfTruth=$sourceOfTruth THEN $lastName ELSE c.lastName END, " +
+		" ON MATCH SET 	c.firstName = CASE WHEN c.sourceOfTruth=$sourceOfTruth OR c.firstName is null OR c.firstName = '' THEN $firstName ELSE c.firstName END, " +
+		"				c.lastName = CASE WHEN c.sourceOfTruth=$sourceOfTruth  OR c.lastName is null OR c.lastName = '' THEN $lastName ELSE c.lastName END, " +
 		"				c.updatedAt = $now " +
 		" WITH c, ext " +
 		" MERGE (c)-[r:IS_LINKED_WITH {externalId:$externalId}]->(ext) " +

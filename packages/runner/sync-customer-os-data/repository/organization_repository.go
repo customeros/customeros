@@ -84,10 +84,10 @@ func (r *organizationRepository) MergeOrganization(ctx context.Context, tenant s
 		"				org.sourceOfTruth=$sourceOfTruth, " +
 		"				org.appSource=$appSource, " +
 		"				org:%s " +
-		" ON MATCH SET 	org.name = CASE WHEN org.sourceOfTruth=$sourceOfTruth THEN $name ELSE org.name END, " +
-		"				org.description = CASE WHEN org.sourceOfTruth=$sourceOfTruth THEN $description ELSE org.description END, " +
-		"				org.website = CASE WHEN org.sourceOfTruth=$sourceOfTruth THEN $website ELSE org.website END, " +
-		"				org.industry = CASE WHEN org.sourceOfTruth=$sourceOfTruth THEN $industry ELSE org.industry END, " +
+		" ON MATCH SET 	org.name = CASE WHEN org.sourceOfTruth=$sourceOfTruth OR org.name is null OR org.name = '' THEN $name ELSE org.name END, " +
+		"				org.description = CASE WHEN org.sourceOfTruth=$sourceOfTruth OR org.description is null OR org.description = '' THEN $description ELSE org.description END, " +
+		"				org.website = CASE WHEN org.sourceOfTruth=$sourceOfTruth OR org.website is null OR org.website = '' THEN $website ELSE org.website END, " +
+		"				org.industry = CASE WHEN org.sourceOfTruth=$sourceOfTruth OR org.industry is null OR org.industry = '' THEN $industry ELSE org.industry END, " +
 		"				org.isPublic = CASE WHEN org.sourceOfTruth=$sourceOfTruth THEN $isPublic ELSE org.isPublic END, " +
 		"				org.updatedAt = $now " +
 		" WITH org, ext " +
@@ -98,7 +98,7 @@ func (r *organizationRepository) MergeOrganization(ctx context.Context, tenant s
 		" FOREACH (x in CASE WHEN org.sourceOfTruth <> $sourceOfTruth THEN [org] ELSE [] END | " +
 		"  MERGE (x)-[:ALTERNATE]->(alt:AlternateOrganization {source:$source, id:x.id}) " +
 		"    SET alt.updatedAt=$now, alt.appSource=$appSource, " +
-		" 		alt.name=$name, alt.description=$description, org.website=$website, org.industry=$industry, org.isPublic=$isPublic " +
+		" 		alt.name=$name, alt.description=$description, alt.website=$website, alt.industry=$industry, alt.isPublic=$isPublic " +
 		") " +
 		" RETURN org.id"
 
