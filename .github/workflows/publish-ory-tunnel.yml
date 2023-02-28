@@ -24,8 +24,6 @@ defaults:
 jobs:
   publish:
     name: publish image
-    needs:
-      - build
 
     if: github.ref_name == 'otter' || github.event_name == 'release'
     runs-on: ubuntu-latest
