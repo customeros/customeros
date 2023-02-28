@@ -21,10 +21,12 @@ export const TagsList = ({
       {tags?.map((tag: { name: string; id: string }) => (
         <li key={tag.id} className={styles.tag}>
           {capitalizeFirstLetter(tag.name)?.split('_')?.join(' ')}
-          {!readOnly && (
+          {!readOnly && onTagDelete && (
             // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-            // @ts-expect-error
-            <span className='ml-2' onClick={(e) => onTagDelete(tag.id)}>
+            <span
+              className={styles.deleteButton}
+              onClick={() => onTagDelete(tag.id)}
+            >
               x
             </span>
           )}

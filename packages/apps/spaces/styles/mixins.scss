@@ -46,6 +46,7 @@
   margin-top: var(--spacing-xxs);
   font-size: var(--font-size-sm);
   font-family: var(--font-secondary);
+  font-weight: normal;
   color: var(--text-default-color);
   width: 100%;
 
@@ -213,3 +214,53 @@
 }
 
 
+@mixin tag {
+  font-size: var(--font-size-xxs);
+  display: inline-block;
+  margin-right: var(--spacing-xxxs);
+
+  padding: var(--spacing-xxxs) var(--spacing-xxs);
+  border-radius: var(--border-radius-xl);
+  background: var(--secondary-color);
+  color: var(--text-on-secondary);
+  text-transform: lowercase;
+  margin-bottom: var(--spacing-xxxs);
+
+
+  &:first-letter {
+    text-transform: capitalize;
+  }
+
+  &.clickable:hover {
+    background: #aaa;
+    cursor: pointer;
+    color: black;
+  }
+}
+
+@mixin list-item-selectable {
+  display: flex;
+  align-items: center;
+  padding: var(--spacing-xs) var(--spacing-md);
+  color: var(--grey-color);
+  cursor: pointer;
+  transition: 0.5s ease;
+
+  &:focus,
+  &:active,
+  &:hover {
+    background: var(--side-panel-item-hovered);
+    transition: 0.5s ease;
+  }
+  &::before {
+    transition: 0.5s ease;
+    content: '';
+    position: absolute;
+    left: -1.2rem;
+    height: 100%;
+    border-left: 3px solid var(--white-color);
+    border-radius: 2px;
+    opacity: 0;
+    visibility: hidden;
+  }
+}

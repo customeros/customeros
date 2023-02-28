@@ -22,10 +22,22 @@
     font-size: var(--font-size-sm);
     font-weight: lighter;
   }
+  &.xxs {
+    margin-top: 0;
+    padding: var(--spacing-xxxs) var(--spacing-xxs);
+    font-size: var(--font-size-sm);
+    font-weight: lighter;
+  }
 }
 
 .icon {
   position: absolute;
   right: 10px;
   top: 17px;
+}
+
+.label {
+  font-size: var(--font-size-sm);
+  font-weight: normal;
+  color: var(--text-faded)
 }

@@ -41,7 +41,7 @@ export const OrganizationContacts = ({ id }: { id: string }) => {
                   {role.jobTitle}
                 </span>
               ))}
-            <ContactTags id={contact.id} />
+            <ContactTags id={contact.id} mode='PREVIEW' />
           </div>
 
           {!!contact?.emails.length && (

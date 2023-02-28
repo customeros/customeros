@@ -17,7 +17,7 @@
 
 .personalDetails {
   display: flex;
-  align-items: center;
+  align-items: self-start;
 }
 
 .jobTitle {
@@ -29,6 +29,8 @@
   font-size: var(--font-size-base);
   color: var(--text-default);
   margin: 0 var(--spacing-xxxs);
+  word-break: keep-all;
+  white-space: nowrap;
 }
 
 .detailsContainer {

@@ -1,68 +1,13 @@
-import React from 'react';
+import React, { useState } from 'react';
 import Image from 'next/image';
-import { IconButton } from '../../ui-kit/atoms';
+import { Button, IconButton, Pencil } from '../../ui-kit/atoms';
 import styles from './contact-details.module.scss';
-import { useContactPersonalDetails } from '../../../hooks/useContact';
-import { ContactDetailsSkeleton } from './skeletons';
-import { useRouter } from 'next/router';
-import { ContactTags } from '../contact-tags';
+import { ContactPersonalDetails } from './ContactPersonalDetails';
 export const ContactDetails = ({ id }: { id: string }) => {
-  const router = useRouter();
-  const { data, loading, error } = useContactPersonalDetails({ id });
-
-  if (loading) {
-    return <ContactDetailsSkeleton />;
-  }
-  if (error) {
-    return <>ERROR</>;
-  }
-
   return (
     <div className={styles.contactDetails}>
-      <div className={styles.header}>
-        <div className={styles.photo}>
-          {
-            // @ts-expect-error we will have equivalent of avatar some day...
-            data?.photo ? (
-              // @ts-expect-error we will have equivalent of avatar some day...
-              <Image src={data?.photo} alt={''} height={40} width={40} />
-            ) : (
-              <div>{data?.firstName?.[0]}</div>
-            )
-          }
-        </div>
-        <div className={styles.name}>
-          <div>
-            {data?.firstName} {data?.lastName}
-          </div>
-          {data?.jobRoles?.map((jobRole: any) => {
-            return (
-              <div
-                className={styles.jobRole}
-                key={`contact-job-role-${jobRole.id}-${jobRole.label}`}
-                onClick={() =>
-                  router.push(`/organization/${jobRole.organization.id}`)
-                }
-              >
-                {jobRole.jobTitle}{' '}
-                {jobRole.jobTitle &&
-                jobRole.organization &&
-                jobRole.organization.name
-                  ? 'at'
-                  : ''}{' '}
-                {jobRole.organization.name}
-              </div>
-            );
-          })}
-          {
-            <div className={styles.source}>
-              <span>Source:</span>
-              {data?.source || ''}
-            </div>
-          }
-          <ContactTags id={id} />
-        </div>
-      </div>
+      <ContactPersonalDetails id={id} />
+
       <div className={styles.details}>
         <div className={styles.section}>
           <IconButton

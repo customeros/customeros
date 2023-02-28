@@ -7,6 +7,7 @@ interface InputProps extends Partial<HTMLInputElement> {
   icon?: React.ReactNode;
   label: string;
   error?: string;
+  inputSize?: 'xxxs' | 'xxs' | 'xs' | 'sm' | 'md' | 'lg';
 }
 
 export const Input = ({
@@ -15,13 +16,14 @@ export const Input = ({
   icon,
   label,
   error,
+  inputSize = 'xxs',
 }: InputProps) => {
   return (
     <>
       <label className={styles.wrapper}>
         <div> {label} </div>
         <input
-          className={classNames(styles.input, {
+          className={classNames(styles.input, styles[inputSize], {
             [styles.error]: !!error,
           })}
           onChange={onChange}

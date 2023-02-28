@@ -1,8 +1,19 @@
-import React from 'react';
-import { useContactTags } from '../../../hooks/useContact';
+import React, { useState } from 'react';
+import {
+  useContactTags,
+  useRemoveTagFromContact,
+} from '../../../hooks/useContact';
 import { TagsList, TagListSkeleton } from '../../ui-kit';
-export const ContactTags = ({ id }: { id: string }) => {
+import { ContactTagsEdit } from './ContactTagsEdit';
+export const ContactTags = ({
+  id,
+  mode,
+}: {
+  id: string;
+  mode: 'PREVIEW' | 'EDIT';
+}) => {
   const { data, loading, error } = useContactTags({ id });
+  const { onRemoveTagFromContact } = useRemoveTagFromContact({ contactId: id });
 
   if (loading) {
     return <TagListSkeleton />;
@@ -11,5 +22,18 @@ export const ContactTags = ({ id }: { id: string }) => {
     return null;
   }
 
-  return <TagsList tags={data?.tags ?? []} onTagDelete={() => null} readOnly />;
+  return (
+    <>
+      {data?.tags && (
+        <TagsList
+          tags={data?.tags ?? []}
+          onTagDelete={(id) => onRemoveTagFromContact({ tagId: id })}
+          readOnly={mode === 'PREVIEW'}
+        />
+      )}
+      {mode === 'EDIT' && (
+        <ContactTagsEdit contactId={id} contactTags={data?.tags || []} />
+      )}
+    </>
+  );
 };

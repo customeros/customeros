@@ -12,12 +12,19 @@
 
 .header {
   display: flex;
-  align-items: center;
+  align-items: start;
   margin-bottom: 24px;
+  flex: 1;
+}
+
+.nameAndEditButton {
+  display: flex;
+  flex: 1;
+  justify-content: space-between;
 }
 
 .photo {
-  width: 50px;
+  min-width: 50px;
   height: 50px;
   display: flex;
   align-items: center;
@@ -39,6 +46,7 @@
 .name {
   font-size: 24px;
   font-weight: 600;
+  width: 100%;
   color: #333;
 }
 
@@ -94,4 +102,31 @@
     font-weight: bold;
     margin-right: var(--spacing-xxxs)
   }
+}
+
+
+
+.searchWrapper {
+  display: flex;
+  flex-direction: column;
+  font-size: var(--font-size-xs)
+}
+
+.xyz {
+  display: flex;
+  align-items: baseline;
+  font-size: var(--font-size-sm);
+  font-weight: normal;
+  color: var(--text-faded)
+}
+
+.titleSelector {
+  @include input-style;
+  padding: 0 var(--spacing-xxxs);
+  margin-top: 0;
+  margin-bottom: var(--spacing-xxs);
+}
+
+.formFields input {
+  margin-bottom: var(--spacing-xxs);
 }

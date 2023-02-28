@@ -16,7 +16,12 @@ interface Tag {
   name: string;
 }
 
-interface Props extends ButtonHTMLAttributes<HTMLButtonElement> {
+// todo delete - click - animate 300ms- delete
+// todo input should looks like tag pill
+// todo delete button should appear only in edit mode
+// todo add heading to contacts in org
+// todo emails and phones should be actionable - show that there are more if there are
+export interface TagProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   onNewTag: (tagName: string) => void;
   onTagChange: (tag: Tag) => void;
   onTagRemove: (id: string) => void;
@@ -35,7 +40,7 @@ export const TagInput = ({
   onSetTags,
   onTagSelect,
   onTagDelete,
-}: Props) => {
+}: TagProps) => {
   const [filteredOptions, setFilteredOptions] = useState(options);
   const inputRef = useRef(null);
 
@@ -105,7 +110,6 @@ export const TagInput = ({
 
   return (
     <div className={`${styles.tagInputWrapper}`}>
-      <TagsList tags={tags} onTagDelete={onTagRemove} />
       <AutoComplete
         field='name'
         inputRef={inputRef}
@@ -115,22 +119,9 @@ export const TagInput = ({
         value={tags}
         itemTemplate={(tag: Tag) => {
           return (
-            <div className={styles.tagListItem}>
-              <span className={styles.option} onClick={() => onTagSelect(tag)}>
-                {capitalizeFirstLetter(tag.name)?.split('_')?.join(' ')}
-              </span>
-              <div className={styles.deleteButton}>
-                <IconButton
-                  title='Delete tag'
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    onTagDelete(tag.id);
-                  }}
-                  icon={<Trash />}
-                />
-              </div>
-            </div>
+            <span className={styles.option} onClick={() => onTagSelect(tag)}>
+              {capitalizeFirstLetter(tag.name)?.split('_')?.join(' ')}
+            </span>
           );
         }}
         suggestions={filteredOptions}
