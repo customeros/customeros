@@ -7,22 +7,17 @@ import (
 	"github.com/openline-ai/openline-customer-os/platform/events-processing-platform/domain/contacts/service"
 	"github.com/openline-ai/openline-customer-os/platform/events-processing-platform/eventstore/store"
 	"github.com/openline-ai/openline-customer-os/platform/events-processing-platform/eventstroredb"
-	"github.com/openline-ai/openline-customer-os/platform/events-processing-platform/interceptors"
 	"github.com/openline-ai/openline-customer-os/platform/events-processing-platform/logger"
-	"github.com/openline-ai/openline-customer-os/platform/events-processing-platform/middlewares"
 	"os"
 	"os/signal"
 	"syscall"
 )
 
 type server struct {
-	cfg                *config.Config
-	log                logger.Logger
-	interceptorManager interceptors.InterceptorManager
-	mw                 middlewares.MiddlewareManager
-	contactService     *service.ContactService
+	cfg                   *config.Config
+	log                   logger.Logger
+	contactCommandService *service.ContactCommandsService
 	//validate           *validator.Validate
-
 	echo *echo.Echo
 	//	metrics            *metrics.ESMicroserviceMetrics
 	doneCh chan struct{}
@@ -50,8 +45,8 @@ func (server *server) Run() error {
 	}*/
 
 	//server.metrics = metrics.NewESMicroserviceMetrics(server.cfg)
-	server.interceptorManager = interceptors.NewInterceptorManager(server.log, server.getGrpcMetricsCb())
-	server.mw = middlewares.NewMiddlewareManager(server.log, server.cfg, server.getHttpMetricsCb())
+	//server.interceptorManager = interceptors.NewInterceptorManager(server.log, server.getGrpcMetricsCb())
+	//server.mw = middlewares.NewMiddlewareManager(server.log, server.cfg, server.getHttpMetricsCb())
 
 	db, err := eventstroredb.NewEventStoreDB(server.cfg.EventStoreConfig)
 	if err != nil {
@@ -60,7 +55,7 @@ func (server *server) Run() error {
 	defer db.Close() // nolint: errcheck
 
 	aggregateStore := store.NewAggregateStore(server.log, db)
-	server.contactService = service.NewContactService(server.log, server.cfg, aggregateStore)
+	server.contactCommandService = service.NewContactCommandsService(server.log, server.cfg, aggregateStore)
 
 	//server.runMetrics(cancel)
 	//server.runHealthCheck(ctx)
@@ -84,9 +79,7 @@ func (server *server) Run() error {
 	server.waitShootDown(waitShotDownDuration)
 
 	grpcServer.GracefulStop()
-	if err := server.shutDownHealthCheckServer(ctx); err != nil {
-		server.log.Warnf("(shutDownHealthCheckServer) err: {%validate}", err)
-	}
+
 	if err := server.echo.Shutdown(ctx); err != nil {
 		server.log.Warnf("(Shutdown) err: {%validate}", err)
 	}

@@ -1,12 +1,12 @@
 package server
 
 import (
-	orderService "github.com/AleksK1NG/es-microservice/proto/order"
-	"github.com/openline-ai/openline-customer-os/platform/events-common/constants"
+	"github.com/openline-ai/openline-customer-os/platform/events-processing-common/constants"
+	contactGrpcService "github.com/openline-ai/openline-customer-os/platform/events-processing-common/proto/contact"
+	"github.com/openline-ai/openline-customer-os/platform/events-processing-platform/domain/contacts/service"
 	"github.com/pkg/errors"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/keepalive"
-	"google.golang.org/grpc/reflection"
 	"net"
 	"time"
 
@@ -40,18 +40,12 @@ func (server *server) newEventProcessorGrpcServer() (func() error, *grpc.Server,
 			grpc_ctxtags.UnaryServerInterceptor(),
 			grpc_prometheus.UnaryServerInterceptor,
 			grpc_recovery.UnaryServerInterceptor(),
-			server.interceptorManager.Logger,
 		),
 		),
 	)
 
-	grpcService := grpc2.NewEventProcessorGrpcServer(server.log, server.os, server.v, server.metrics)
-	orderService.RegisterOrderServiceServer(grpcServer, grpcService)
-	grpc_prometheus.Register(grpcServer)
-
-	if server.cfg.GRPC.Development {
-		reflection.Register(grpcServer)
-	}
+	contactService := service.NewContactService(server.log, server.contactCommandService)
+	contactGrpcService.RegisterContactGrpcServiceServer(grpcServer, contactService)
 
 	go func() {
 		server.log.Infof("%server gRPC server is listening on port: {%server}", GetMicroserviceName(server.cfg), server.cfg.GRPC.Port)

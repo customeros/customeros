@@ -3,7 +3,7 @@ package config
 import (
 	"flag"
 	"fmt"
-	"github.com/openline-ai/openline-customer-os/platform/events-common/constants"
+	"github.com/openline-ai/openline-customer-os/platform/events-processing-common/constants"
 	"github.com/openline-ai/openline-customer-os/platform/events-processing-platform/eventstroredb"
 	"github.com/openline-ai/openline-customer-os/platform/events-processing-platform/logger"
 	"os"

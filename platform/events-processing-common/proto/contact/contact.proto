@@ -1,0 +1,27 @@
+syntax = "proto3";
+
+package contactGrpcService;
+
+option go_package = "./;contactGrpcService";
+
+
+message Contact {
+  string UUID = 1;
+  string firstName = 2;
+  string lastName = 3;
+}
+
+message CreateContactGrpcRequest {
+  string UUID = 1;
+  string firstName = 2;
+  string lastName = 3;
+}
+
+message CreateContactGrpcResponse {
+  string AggregateID = 1;
+  string UUID = 2;
+}
+
+service contactGrpcService {
+  rpc CreateContact(CreateContactGrpcRequest) returns (CreateContactGrpcResponse);
+}
