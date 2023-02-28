@@ -15,6 +15,17 @@ function OrganizationDetailsPage() {
     push,
   } = useRouter();
 
+  if (id === 'new') {
+    return (
+      <DetailsPageLayout onNavigateBack={() => push('/')}>
+        <section className={styles.organizationDetails}>
+          <OrganizationDetails id={id as string} />
+        </section>
+        <section className={styles.notes}></section>
+        <section className={styles.timeline}></section>
+      </DetailsPageLayout>
+    );
+  }
   return (
     <DetailsPageLayout onNavigateBack={() => push('/')}>
       <section className={styles.organizationDetails}>
