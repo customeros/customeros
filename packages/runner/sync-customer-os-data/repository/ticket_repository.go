@@ -14,6 +14,7 @@ type TicketRepository interface {
 	GetMatchedTicketId(ctx context.Context, tenant string, user entity.TicketData) (string, error)
 	MergeTicket(ctx context.Context, tenant string, syncDate time.Time, user entity.TicketData) error
 	LinkTicketWithCollaboratorUserByExternalId(ctx context.Context, tenant, ticketId, userExternalId, externalSystem string) error
+	LinkTicketWithFollowerUserByExternalId(ctx context.Context, tenant, ticketId, userExternalId, externalSystem string) error
 	LinkTicketWithSubmitterUserOrContactByExternalId(ctx context.Context, tenant, ticketId, externalId, externalSystem string) error
 	LinkTicketWithRequesterUserOrContactByExternalId(ctx context.Context, tenant, ticketId, externalId, externalSystem string) error
 }
@@ -122,7 +123,28 @@ func (r *ticketRepository) LinkTicketWithCollaboratorUserByExternalId(ctx contex
 		_, err := tx.Run(ctx, `
 				MATCH (t:Tenant {name:$tenant})<-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]-(e:ExternalSystem {id:$externalSystem})<-[:IS_LINKED_WITH {externalId:$userExternalId}]-(u:User)
 				MATCH (tt:Ticket {id:$ticketId})-[:IS_LINKED_WITH]->(e)
-				MERGE (u)-[:COLLABORATES_ON]->(tt)
+				MERGE (u)-[:FOLLOWS]->(tt)
+				`,
+			map[string]interface{}{
+				"tenant":         tenant,
+				"externalSystem": externalSystem,
+				"ticketId":       ticketId,
+				"userExternalId": userExternalId,
+			})
+		return nil, err
+	})
+	return err
+}
+
+func (r *ticketRepository) LinkTicketWithFollowerUserByExternalId(ctx context.Context, tenant, ticketId, userExternalId, externalSystem string) error {
+	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
+	defer session.Close(ctx)
+
+	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		_, err := tx.Run(ctx, `
+				MATCH (t:Tenant {name:$tenant})<-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]-(e:ExternalSystem {id:$externalSystem})<-[:IS_LINKED_WITH {externalId:$userExternalId}]-(u:User)
+				MATCH (tt:Ticket {id:$ticketId})-[:IS_LINKED_WITH]->(e)
+				MERGE (u)-[:FOLLOWS]->(tt)
 				`,
 			map[string]interface{}{
 				"tenant":         tenant,

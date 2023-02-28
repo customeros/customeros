@@ -62,7 +62,17 @@ func (s *ticketSyncService) SyncTickets(ctx context.Context, dataService common.
 					err = s.repositories.TicketRepository.LinkTicketWithCollaboratorUserByExternalId(ctx, tenant, ticketId, userExternalId, v.ExternalSystem)
 					if err != nil {
 						failedSync = true
-						logrus.Errorf("failed link ticket %v with user for tenant %v :%v", ticketId, tenant, err)
+						logrus.Errorf("failed link ticket %v with collaborator user for tenant %v :%v", ticketId, tenant, err)
+					}
+				}
+			}
+
+			if v.HasFollowers() && !failedSync {
+				for _, userExternalId := range v.FollowerUserExternalIds {
+					err = s.repositories.TicketRepository.LinkTicketWithFollowerUserByExternalId(ctx, tenant, ticketId, userExternalId, v.ExternalSystem)
+					if err != nil {
+						failedSync = true
+						logrus.Errorf("failed link ticket %v with follower user for tenant %v :%v", ticketId, tenant, err)
 					}
 				}
 			}
