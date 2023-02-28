@@ -41,16 +41,21 @@ export const OrganizationContacts = ({ id }: { id: string }) => {
             ))}
           </div>
 
-          <div className={styles.detailsContainer}>
-            <Envelope className={styles.icon} />
-            {(contact?.emails ?? []).find((email) => email.primary)?.email ||
-              contact.emails[0].email}
-          </div>
-          <div className={styles.detailsContainer}>
-            <Phone className={styles.icon} />
-            {(contact?.phoneNumbers ?? []).find((phoneNr) => phoneNr.primary)
-              ?.e164 || contact.phoneNumbers[0].e164}
-          </div>
+          {!!contact?.emails.length && (
+            <div className={styles.detailsContainer}>
+              <Envelope className={styles.icon} />
+              {contact.emails.find((email) => email.primary)?.email ||
+                contact.emails[0].email}
+            </div>
+          )}
+
+          {!!contact?.phoneNumbers.length && (
+            <div className={styles.detailsContainer}>
+              <Phone className={styles.icon} />
+              {contact.phoneNumbers.find((phoneNr) => phoneNr.primary)?.e164 ||
+                contact.phoneNumbers[0].e164}
+            </div>
+          )}
         </li>
       ))}
     </ul>
