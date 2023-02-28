@@ -12,7 +12,7 @@ type Services struct {
 	repositories := repository.InitRepos(driver)
 
 	return &Services{
-		ContactService:             service.NewContactService(repositories),
+		ContactCommandsService:             service.NewContactCommandsService(repositories),
 		OrganizationService:        service.NewOrganizationService(repositories),
 		ContactGroupService:        service.NewContactGroupService(repositories),
 		CustomFieldService:         service.NewCustomFieldService(repositories),

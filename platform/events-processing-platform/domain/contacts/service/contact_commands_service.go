@@ -7,15 +7,15 @@ import (
 	"github.com/openline-ai/openline-customer-os/platform/events-processing-platform/logger"
 )
 
-type ContactService struct {
+type ContactCommandsService struct {
 	Commands *commands.ContactCommands
 }
 
-func NewContactService(
+func NewContactCommandsService(
 	log logger.Logger,
 	cfg *config.Config,
 	es eventstore.AggregateStore,
-) *ContactService {
+) *ContactCommandsService {
 
 	createContactHandler := commands.NewCreateContactHandler(log, cfg, es)
 	updateContactCmdHandler := commands.NewUpdateContactCmdHandler(log, cfg, es)
@@ -27,5 +27,5 @@ func NewContactService(
 		deleteContactCommandHandler,
 	)
 
-	return &ContactService{Commands: contactCommands}
+	return &ContactCommandsService{Commands: contactCommands}
 }

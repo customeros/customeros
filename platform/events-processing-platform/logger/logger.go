@@ -2,7 +2,7 @@ package logger
 
 import (
 	"github.com/EventStore/EventStore-Client-Go/esdb"
-	"github.com/openline-ai/openline-customer-os/platform/events-common/constants"
+	"github.com/openline-ai/openline-customer-os/platform/events-processing-common/constants"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"os"
