@@ -6,14 +6,16 @@ type SourceDataService interface {
 	Refresh()
 	Close()
 	SourceId() string
-	GetContactsForSync(batchSize int, runId string) []entity.ContactData
-	GetOrganizationsForSync(batchSize int, runId string) []entity.OrganizationData
 	GetUsersForSync(batchSize int, runId string) []entity.UserData
+	GetOrganizationsForSync(batchSize int, runId string) []entity.OrganizationData
+	GetContactsForSync(batchSize int, runId string) []entity.ContactData
 	GetNotesForSync(batchSize int, runId string) []entity.NoteData
 	GetEmailMessagesForSync(batchSize int, runId string) []entity.EmailMessageData
-	MarkContactProcessed(externalSyncId, runId string, synced bool) error
-	MarkOrganizationProcessed(externalSyncId, runId string, synced bool) error
+	GetTicketsForSync(batchSize int, runId string) []entity.TicketData
 	MarkUserProcessed(externalSyncId, runId string, synced bool) error
+	MarkOrganizationProcessed(externalSyncId, runId string, synced bool) error
+	MarkContactProcessed(externalSyncId, runId string, synced bool) error
 	MarkNoteProcessed(externalSyncId, runId string, synced bool) error
 	MarkEmailMessageProcessed(externalSyncId, runId string, synced bool) error
+	MarkTicketProcessed(externalSyncId, runId string, synced bool) error
 }

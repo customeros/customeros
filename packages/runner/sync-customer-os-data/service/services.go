@@ -13,6 +13,7 @@ type Services struct {
 	UserSyncService         UserSyncService
 	OrganizationSyncService OrganizationSyncService
 	ContactSyncService      ContactSyncService
+	TicketSyncService       TicketSyncService
 }
 
 func InitServices(driver *neo4j.DriverWithContext, controlDb *gorm.DB, airbyteStoreDb *config.AirbyteStoreDB) *Services {
@@ -25,6 +26,7 @@ func InitServices(driver *neo4j.DriverWithContext, controlDb *gorm.DB, airbyteSt
 	services.UserSyncService = NewUserSyncService(repositories)
 	services.OrganizationSyncService = NewOrganizationSyncService(repositories)
 	services.ContactSyncService = NewContactSyncService(repositories)
+	services.TicketSyncService = NewTicketSyncService(repositories)
 
 	return services
 }

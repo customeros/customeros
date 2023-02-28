@@ -79,7 +79,7 @@ func (s *hubspotDataService) GetContactsForSync(batchSize int, runId string) []e
 		// add primary organization to organizations list
 		contactForCustomerOs.OrganizationsExternalIds = append(contactForCustomerOs.OrganizationsExternalIds, contactForCustomerOs.PrimaryOrganizationExternalId)
 		// remove any duplicated organizations
-		contactForCustomerOs.OrganizationsExternalIds = utils.RemoveDuplicates(contactForCustomerOs.OrganizationsExternalIds)
+		contactForCustomerOs.OrganizationsExternalIds = utils.GetUniqueElements(contactForCustomerOs.OrganizationsExternalIds)
 
 		// set custom fields
 		var textCustomFields []entity.TextCustomField
@@ -278,6 +278,11 @@ func emailsStringToArray(str string) []string {
 	return strings.Split(str, ";")
 }
 
+func (s *hubspotDataService) GetTicketsForSync(batchSize int, runId string) []entity.TicketData {
+	// no need to implement
+	return nil
+}
+
 func (s *hubspotDataService) MarkContactProcessed(externalSyncId, runId string, synced bool) error {
 	contact, ok := s.contacts[externalSyncId]
 	if ok {
@@ -323,6 +328,11 @@ func (s *hubspotDataService) MarkNoteProcessed(externalSyncId, runId string, syn
 		}
 		return err
 	}
+	return nil
+}
+
+func (s *hubspotDataService) MarkTicketProcessed(externalSyncId, runId string, synced bool) error {
+	// no need to implement
 	return nil
 }
 
