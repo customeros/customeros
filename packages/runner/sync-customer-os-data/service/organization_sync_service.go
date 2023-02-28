@@ -5,6 +5,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/common"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/entity"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/repository"
+	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/utils"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/net/context"
 	"time"
@@ -36,6 +37,7 @@ func (s *organizationSyncService) SyncOrganizations(ctx context.Context, dataSer
 
 		for _, v := range organizations {
 			var failedSync = false
+			utils.LowercaseStrings(v.Domains)
 
 			organizationId, err := s.repositories.OrganizationRepository.GetMatchedOrganizationId(ctx, tenant, v)
 			if err != nil {

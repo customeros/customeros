@@ -6,6 +6,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/repository"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/net/context"
+	"strings"
 	"time"
 )
 
@@ -35,6 +36,7 @@ func (s *userSyncService) SyncUsers(ctx context.Context, dataService common.Sour
 
 		for _, v := range users {
 			var failedSync = false
+			v.Email = strings.ToLower(v.Email)
 
 			userId, err := s.repositories.UserRepository.GetMatchedUserId(ctx, tenant, v)
 			if err != nil {
