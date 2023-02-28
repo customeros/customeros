@@ -5,8 +5,10 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/common"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/entity"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/repository"
+	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/utils"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/net/context"
+	"strings"
 	"time"
 )
 
@@ -36,6 +38,8 @@ func (s *contactSyncService) SyncContacts(ctx context.Context, dataService commo
 
 		for _, v := range contacts {
 			var failedSync = false
+			v.PrimaryEmail = strings.ToLower(v.PrimaryEmail)
+			utils.LowercaseStrings(v.AdditionalEmails)
 
 			contactId, err := s.repositories.ContactRepository.GetMatchedContactId(ctx, tenant, v)
 			if err != nil {

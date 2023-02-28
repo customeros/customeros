@@ -4,6 +4,7 @@ import (
 	"github.com/jackc/pgtype"
 	"github.com/sirupsen/logrus"
 	"strconv"
+	"strings"
 )
 
 func ConvertJsonbToStringSlice(input pgtype.JSONB) []string {
@@ -50,4 +51,10 @@ func FirstNotEmpty(input ...string) string {
 		}
 	}
 	return ""
+}
+
+func LowercaseStrings(arr []string) {
+	for i, s := range arr {
+		arr[i] = strings.ToLower(s)
+	}
 }
