@@ -6,11 +6,11 @@ spec:
   replicas: 1                    # Number of pods to run at any given time
   selector:
     matchLabels:
-      app: ory        # This deployment applies to any Pods matching the specified label
+      app: ory-tunnel        # This deployment applies to any Pods matching the specified label
   template:                      # This deployment will create a set of pods using the configurations in this template
     metadata:
       labels:                    # The labels that will be applied to all of the pods in this deployment
-        app: ory 
+        app: ory-tunnel 
     spec:                        # Spec for the container which will run in the Pod
       containers:
         - image: ghcr.io/openline-ai/openline-customer-os/ory-tunnel:latest
