@@ -75,9 +75,9 @@ func (s *syncService) Sync(ctx context.Context, runId string) {
 		syncRunDtls.FailedContacts = failedContactCount
 
 		ticketSyncService, err := s.ticketSyncService(v)
-		completedTicketCount, failedTickeCount := ticketSyncService.SyncTickets(ctx, dataService, syncDate, v.Tenant, runId)
+		completedTicketCount, failedTicketCount := ticketSyncService.SyncTickets(ctx, dataService, syncDate, v.Tenant, runId)
 		syncRunDtls.CompletedTickets = completedTicketCount
-		syncRunDtls.FailedTickets = failedTickeCount
+		syncRunDtls.FailedTickets = failedTicketCount
 
 		completedNoteCount, failedNoteCount := s.syncNotes(ctx, dataService, syncDate, v.Tenant, runId)
 		syncRunDtls.CompletedNotes = completedNoteCount
