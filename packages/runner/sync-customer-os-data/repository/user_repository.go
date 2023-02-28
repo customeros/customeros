@@ -83,9 +83,9 @@ func (r *userRepository) MergeUser(ctx context.Context, tenant string, syncDate 
 		"				u.appSource=$appSource, " +
 		"               u:%s" +
 		" ON MATCH SET " +
-		"				u.name = CASE WHEN u.sourceOfTruth=$sourceOfTruth OR u.name is null or u.name = '' THEN $name ELSE u.name END, " +
-		"				u.firstName = CASE WHEN u.sourceOfTruth=$sourceOfTruth OR u.firstName is null or u.firstName = '' THEN $firstName ELSE u.firstName END, " +
-		"				u.lastName = CASE WHEN u.sourceOfTruth=$sourceOfTruth OR u.lastName is null or u.lastName = '' THEN $lastName ELSE u.lastName END, " +
+		"				u.name = CASE WHEN u.sourceOfTruth=$sourceOfTruth OR u.name is null OR u.name = '' THEN $name ELSE u.name END, " +
+		"				u.firstName = CASE WHEN u.sourceOfTruth=$sourceOfTruth OR u.firstName is null OR u.firstName = '' THEN $firstName ELSE u.firstName END, " +
+		"				u.lastName = CASE WHEN u.sourceOfTruth=$sourceOfTruth OR u.lastName is null OR u.lastName = '' THEN $lastName ELSE u.lastName END, " +
 		"				u.updatedAt=$now " +
 		" WITH u, ext " +
 		" MERGE (u)-[r:IS_LINKED_WITH {externalId:$externalId}]->(ext) " +
