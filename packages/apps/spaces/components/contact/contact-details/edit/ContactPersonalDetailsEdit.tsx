@@ -1,6 +1,6 @@
 import React, { FormEvent } from 'react';
 import { useUpdateContactPersonalDetails } from '../../../../hooks/useContact';
-import { ContactPersonalDetailsEditForm } from './ContactDetailsForm';
+import { ContactPersonalDetailsEditForm } from './ContactPersonalDetailsForm';
 
 export const ContactPersonalDetailsEdit = ({
   data,

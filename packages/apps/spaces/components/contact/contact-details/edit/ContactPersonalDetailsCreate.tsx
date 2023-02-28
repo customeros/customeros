@@ -1,6 +1,6 @@
 import React from 'react';
 import { useCreateContact, ContactInput } from '../../../../hooks/useContact';
-import { ContactPersonalDetailsEditForm } from './ContactDetailsForm';
+import { ContactPersonalDetailsEditForm } from './ContactPersonalDetailsForm';
 import { useRouter } from 'next/router';
 
 export const ContactPersonalDetailsCreate = () => {

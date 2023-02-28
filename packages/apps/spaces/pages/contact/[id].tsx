@@ -8,7 +8,7 @@ import {
   ContactNoteEditor,
   NoteEditorModes,
 } from '../../components/contact';
-import { ContactPersonalDetailsCreate } from '../../components/contact/contact-details/edit/ContactDetailsCreate';
+import { ContactPersonalDetailsCreate } from '../../components/contact/contact-details';
 
 function ContactDetailsPage() {
   const {

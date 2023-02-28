@@ -1,15 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import Image from 'next/image';
-import { Button } from '../../ui-kit/atoms';
+import { Button } from '../../ui-kit';
 import styles from './contact-details.module.scss';
 import { useContactPersonalDetails } from '../../../hooks/useContact';
 import { ContactDetailsSkeleton } from './skeletons';
 import { useRouter } from 'next/router';
 import { ContactTags } from '../contact-tags';
-import { ControlledInput } from '../../ui-kit/atoms/input/ControlledInput';
 import { useForm } from 'react-hook-form';
-import { ContactOwner } from './ContactOwner';
-import { ContactPersonalDetailsEdit } from './edit/ContactDetailsEdit';
+import { ContactPersonalDetailsEdit } from './edit';
 export const ContactPersonalDetails = ({ id }: { id: string }) => {
   const router = useRouter();
   const { data, loading, error } = useContactPersonalDetails({ id });
