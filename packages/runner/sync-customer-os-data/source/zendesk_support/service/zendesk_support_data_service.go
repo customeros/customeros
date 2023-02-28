@@ -264,6 +264,7 @@ func (s *zendeskSupportDataService) GetTicketsForSync(batchSize int, runId strin
 			Subject:        v.Subject,
 		}
 		ticketData.CollaboratorUserExternalIds = utils.GetUniqueElements(utils.ConvertJsonbToStringSlice(v.CollaboratorIds))
+		ticketData.FollowerUserExternalIds = utils.GetUniqueElements(utils.ConvertJsonbToStringSlice(v.FollowerIds))
 		if v.SubmitterId > 0 {
 			ticketData.SubmitterExternalId = strconv.FormatInt(v.SubmitterId, 10)
 		}
