@@ -1,10 +1,10 @@
+import { ApolloError, NetworkStatus } from 'apollo-client';
 import {
+  useGetDashboardDataQuery,
   DashboardViewItem,
   GetDashboardDataQueryVariables,
   Pagination,
-  useGetDashboardDataQuery,
-} from '../../../graphQL/generated';
-import { ApolloError, FetchMoreOptions, NetworkStatus } from 'apollo-client';
+} from './types';
 
 interface Props {
   pagination: Pagination;
@@ -20,7 +20,7 @@ interface Result {
   networkStatus?: NetworkStatus;
   totalElements: null | number;
 }
-export const useGetDashboardData = ({
+export const useFinderTableData = ({
   pagination,
   searchTerm,
 }: Props): Result => {

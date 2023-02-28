@@ -35,6 +35,7 @@ fragment LocationTotal on Location {
 fragment JobRole on JobRole {
   jobTitle
   primary
+  id
 }
 
 fragment NoteContent on Note {

@@ -1,5 +1,5 @@
 import { useRemoveEmailFromContactMutation } from './types';
-import { RemoveEmailFromContactMutation } from '../../graphQL/generated';
+import { RemoveEmailFromContactMutation } from '../../graphQL/__generated__/generated';
 
 interface Props {
   contactId: string;

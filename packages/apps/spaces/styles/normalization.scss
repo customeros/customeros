@@ -149,5 +149,45 @@ button::-moz-focus-inner {
   @include button-variants;
   width: auto;
   display: flex;
-  padding: var(--spacing-xxxs) var(--spacing-sm);
+  padding: var(--spacing-xxs) var(--spacing-sm);
+}
+
+.p-autocomplete-token.p-highlight {
+  @include tag;
+}
+
+.p-autocomplete-multiple-container li:not(.p-autocomplete-input-token){
+  display: none;
+}
+
+.p-autocomplete-input-token {
+  @include input-style;
+  font-weight: normal;
+  border: none;
+  margin-top: 0;
+  border-radius: var(--border-radius-lg);
+  padding: var(--spacing-xxxs);
+  font-size: var(--font-size-xs)
+}
+
+.p-autocomplete-panel {
+  border: var(--border-divider);
+  box-shadow: var(--box-shadow-xs);
+}
+
+.p-dropdown-items-wrapper {
+  background: #fff;
+  border: var(--border-divider);
+  box-shadow: var(--box-shadow-xs);
+}
+.p-autocomplete-item,
+.p-dropdown-item {
+  background: #fff;
+  font-size: var(--font-size-sm);
+  @include list-item-selectable;
+  padding: var(--spacing-xxxs) var(--spacing-xs);
+}
+
+.p-highlight {
+  background: var(--side-panel-item-hovered);
 }

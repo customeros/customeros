@@ -4,18 +4,24 @@ import React, {
   useRef,
   useState,
 } from 'react';
-import styles from './tag-input.module.scss';
+import styles from './tags.module.scss';
 import { IconButton } from '../icon-button';
 import { Trash } from '../icons';
 import { AutoComplete } from 'primereact/autocomplete';
 import { capitalizeFirstLetter } from '../../../../utils';
+import { TagsList } from './TagList';
 
 interface Tag {
   id: string;
   name: string;
 }
 
-interface Props extends ButtonHTMLAttributes<HTMLButtonElement> {
+// todo delete - click - animate 300ms- delete
+// todo input should looks like tag pill
+// todo delete button should appear only in edit mode
+// todo add heading to contacts in org
+// todo emails and phones should be actionable - show that there are more if there are
+export interface TagProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   onNewTag: (tagName: string) => void;
   onTagChange: (tag: Tag) => void;
   onTagRemove: (id: string) => void;
@@ -25,35 +31,6 @@ interface Props extends ButtonHTMLAttributes<HTMLButtonElement> {
   onTagSelect: (tag: Tag) => void;
   onTagDelete: (id: string) => void;
 }
-
-export const TagsList = ({
-  tags,
-  onTagDelete,
-  readOnly,
-}: {
-  tags: Array<{ name: string; id: string }>;
-  readOnly?: boolean;
-  onTagDelete?: (id: string) => void;
-}) => {
-  return (
-    <ul
-      className={`${styles.tagsList} ${readOnly && styles.tagListPresentation}`}
-    >
-      {tags?.map((tag: { name: string; id: string }) => (
-        <li key={tag.id} className={styles.tag}>
-          {capitalizeFirstLetter(tag.name)?.split('_')?.join(' ')}
-          {!readOnly && (
-            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-            // @ts-expect-error
-            <span className='ml-2' onClick={(e) => onTagDelete(tag.id)}>
-              x
-            </span>
-          )}
-        </li>
-      ))}
-    </ul>
-  );
-};
 export const TagInput = ({
   onNewTag,
   onTagChange,
@@ -63,7 +40,7 @@ export const TagInput = ({
   onSetTags,
   onTagSelect,
   onTagDelete,
-}: Props) => {
+}: TagProps) => {
   const [filteredOptions, setFilteredOptions] = useState(options);
   const inputRef = useRef(null);
 
@@ -133,7 +110,6 @@ export const TagInput = ({
 
   return (
     <div className={`${styles.tagInputWrapper}`}>
-      <TagsList tags={tags} onTagDelete={onTagRemove} />
       <AutoComplete
         field='name'
         inputRef={inputRef}
@@ -143,22 +119,9 @@ export const TagInput = ({
         value={tags}
         itemTemplate={(tag: Tag) => {
           return (
-            <div className={styles.tagListItem}>
-              <span className={styles.option} onClick={() => onTagSelect(tag)}>
-                {capitalizeFirstLetter(tag.name)?.split('_')?.join(' ')}
-              </span>
-              <div className={styles.deleteButton}>
-                <IconButton
-                  title='Delete tag'
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    onTagDelete(tag.id);
-                  }}
-                  icon={<Trash />}
-                />
-              </div>
-            </div>
+            <span className={styles.option} onClick={() => onTagSelect(tag)}>
+              {capitalizeFirstLetter(tag.name)?.split('_')?.join(' ')}
+            </span>
           );
         }}
         suggestions={filteredOptions}

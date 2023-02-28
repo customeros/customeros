@@ -1,0 +1,8 @@
+query GetContactTags($id: ID!) {
+  contact(id: $id) {
+    id
+    tags {
+      ...Tag
+    }
+  }
+}

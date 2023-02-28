@@ -1,3 +1,4 @@
+@import "styles/mixins";
 .option {
   display: flex;
   align-items: center;
@@ -8,8 +9,8 @@
 .tagInputWrapper {
   display: flex;
   flex-flow: row wrap;
-  padding: var(--spacing-xxxs);
-  border-radius: 5px;
+  padding: 0 var(--spacing-xxs);
+  border-radius: var(--border-radius-lg);
   border: 1px solid #ccc;
   background: white;
   position: relative;
@@ -31,27 +32,10 @@
   flex-wrap: wrap;
   align-items: center;
   padding: 0;
-  margin: 0 var(--spacing-xxxs) 0 0;
+  margin: var(--spacing-xxxs) var(--spacing-xxxs) 0 0;
 
   li {
-    font-size: 0.7rem;
-    display: inline-block;
-    margin: var(--spacing-xxxs);
-    padding: var(--spacing-xxxs) var(--spacing-xxs);
-    border-radius: var(--border-radius-xl);
-    background: #ddd;
-    color: #444;
-    text-transform: lowercase;
-
-    &:first-letter {
-      text-transform: capitalize;
-    }
-
-    &.clickable:hover {
-      background: #aaa;
-      cursor: pointer;
-      color: black;
-    }
+    @include tag;
   }
 
   &.tagListPresentation {
@@ -61,8 +45,16 @@
 
 .tagListItem {
   display: flex;
+  flex:1;
   justify-content: space-between;
   align-content: center;
+  font-size: var(--font-size-xs);
+
+  &:hover,
+  &:focus,
+  &:active {
+    background: var(--secondary-color)
+  }
 }
 
 .autocomplete {
@@ -71,12 +63,13 @@
   flex: 1;
 
   & ul {
+    width: 100%;
     border: none !important;
   }
 }
 
 .deleteButton {
-  margin: -var(--spacing-xxs);
+  margin-left: var(--spacing-xxs);
   color: var(--gray-700);
 }
 

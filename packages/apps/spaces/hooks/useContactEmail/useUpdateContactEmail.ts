@@ -1,8 +1,8 @@
-import { Email, EmailUpdateInput } from '../../graphQL/generated';
+import { Email, EmailUpdateInput } from '../../graphQL/__generated__/generated';
 import {
   UpdateContactEmailMutation,
   useUpdateContactEmailMutation,
-} from '../../graphQL/generated';
+} from '../../graphQL/__generated__/generated';
 
 interface Result {
   onUpdateContactEmail: (

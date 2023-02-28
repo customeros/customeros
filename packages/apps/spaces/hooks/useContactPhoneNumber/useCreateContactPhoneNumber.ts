@@ -1,8 +1,8 @@
 import {
   AddPhoneToContactMutation,
   useAddPhoneToContactMutation,
-} from '../../graphQL/generated';
-import { PhoneNumberInput } from '../../graphQL/generated';
+} from '../../graphQL/__generated__/generated';
+import { PhoneNumberInput } from '../../graphQL/__generated__/generated';
 
 interface Props {
   contactId: string;

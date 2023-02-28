@@ -22,7 +22,7 @@ import {
   PhoneNumber,
   PhoneNumberLabel,
   PhoneNumberUpdateInput,
-} from '../../../graphQL/generated';
+} from '../../../graphQL/__generated__/generated';
 import { Button } from '../../ui-kit';
 import { OverlayPanel } from '../../ui-kit/atoms/overlay-panel';
 import { ContactCommunicationDetailsSkeleton } from './skeletons';

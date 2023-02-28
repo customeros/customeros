@@ -5,7 +5,10 @@ import classNames from 'classnames';
 import styles from '../contact-communication-details.module.scss';
 import { useDetectClickOutside } from '../../../../hooks';
 import { DetailItemEditMode } from './DetailItemEditMode';
-import { EmailLabel, PhoneNumberLabel } from '../../../../graphQL/generated';
+import {
+  EmailLabel,
+  PhoneNumberLabel,
+} from '../../../../graphQL/__generated__/generated';
 
 interface Props {
   onChange?: ChangeEventHandler<HTMLInputElement>;

@@ -1,5 +1,5 @@
 export type {
   NoteInput,
   CreateOrganizationNoteMutation,
-} from '../../graphQL/generated';
-export { useCreateOrganizationNoteMutation } from '../../graphQL/generated';
+} from '../../graphQL/__generated__/generated';
+export { useCreateOrganizationNoteMutation } from '../../graphQL/__generated__/generated';
