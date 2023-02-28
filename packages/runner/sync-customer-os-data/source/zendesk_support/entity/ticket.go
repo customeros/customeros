@@ -14,6 +14,8 @@ type Ticket struct {
 	Url                  string       `gorm:"column:url"`
 	Subject              string       `gorm:"column:subject"`
 	CollaboratorIds      pgtype.JSONB `gorm:"column:collaborator_ids;type:jsonb"`
+	SubmitterId          int64        `gorm:"column:submitter_id"`
+	RequesterId          int64        `gorm:"column:requester_id"`
 }
 
 type Tickets []Ticket

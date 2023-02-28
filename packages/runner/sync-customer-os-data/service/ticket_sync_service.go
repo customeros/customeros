@@ -49,7 +49,7 @@ func (s *ticketSyncService) SyncTickets(ctx context.Context, dataService common.
 			}
 			v.Id = ticketId
 
-			if failedSync == false {
+			if !failedSync {
 				err = s.repositories.TicketRepository.MergeTicket(ctx, tenant, syncDate, v)
 				if err != nil {
 					failedSync = true
@@ -57,13 +57,29 @@ func (s *ticketSyncService) SyncTickets(ctx context.Context, dataService common.
 				}
 			}
 
-			if v.HasCollaborators() {
+			if v.HasCollaborators() && !failedSync {
 				for _, userExternalId := range v.CollaboratorUserExternalIds {
 					err = s.repositories.TicketRepository.LinkTicketWithCollaboratorUserByExternalId(ctx, tenant, ticketId, userExternalId, v.ExternalSystem)
 					if err != nil {
 						failedSync = true
 						logrus.Errorf("failed link ticket %v with user for tenant %v :%v", ticketId, tenant, err)
 					}
+				}
+			}
+
+			if v.HasSubmitter() && !failedSync {
+				err = s.repositories.TicketRepository.LinkTicketWithSubmitterUserOrContactByExternalId(ctx, tenant, ticketId, v.SubmitterExternalId, v.ExternalSystem)
+				if err != nil {
+					failedSync = true
+					logrus.Errorf("failed link ticket %v with submitter for tenant %v :%v", ticketId, tenant, err)
+				}
+			}
+
+			if v.HasRequester() && !failedSync {
+				err = s.repositories.TicketRepository.LinkTicketWithRequesterUserOrContactByExternalId(ctx, tenant, ticketId, v.RequesterExternalId, v.ExternalSystem)
+				if err != nil {
+					failedSync = true
+					logrus.Errorf("failed link ticket %v with requester for tenant %v :%v", ticketId, tenant, err)
 				}
 			}
 

@@ -14,8 +14,18 @@ type TicketData struct {
 
 	Subject                     string
 	CollaboratorUserExternalIds []string
+	SubmitterExternalId         string
+	RequesterExternalId         string
 }
 
 func (t TicketData) HasCollaborators() bool {
 	return len(t.CollaboratorUserExternalIds) > 0
+}
+
+func (t TicketData) HasSubmitter() bool {
+	return len(t.SubmitterExternalId) > 0
+}
+
+func (t TicketData) HasRequester() bool {
+	return len(t.RequesterExternalId) > 0
 }
