@@ -130,8 +130,6 @@ export const SearchWithOverlay = ({
         }
       }
 
-      console.log('🏷️ ----- where: ', where);
-
       props.searchData(where);
     }
   };
