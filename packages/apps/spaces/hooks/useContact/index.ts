@@ -9,3 +9,4 @@ export { useContactTags } from './useContactTags';
 export { useAddTagToContact } from './useAddContactTag';
 export { useRemoveTagFromContact } from './useRemoveTagFromContact';
 export { useUpdateContactPersonalDetails } from './useUpdateContactPersonalDetails';
+export type { ContactInput } from './types';

@@ -14,7 +14,7 @@ interface Result {
     input: ContactInput,
   ) => Promise<CreateContactMutation['contact_Create'] | null>;
 }
-export const useCreateContact = ({ contact }: Props): Result => {
+export const useCreateContact = (): Result => {
   const [createContactMutation, { loading, error, data }] =
     useCreateContactMutation();
 

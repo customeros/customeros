@@ -1,23 +1,24 @@
-import React, { FormEvent, useRef } from 'react';
+import React, { FormEvent, useMemo, useRef } from 'react';
 import Image from 'next/image';
-import { Button } from '../../ui-kit/atoms';
-import styles from './contact-details.module.scss';
-import { ContactTags } from '../contact-tags';
-import { ControlledInput } from '../../ui-kit/atoms/input/ControlledInput';
+import { Button, User, UserPlus } from '../../../ui-kit/atoms';
+import styles from '../contact-details.module.scss';
+import { ContactTags } from '../../contact-tags';
+import { ControlledInput } from '../../../ui-kit/atoms/input/ControlledInput';
 import { Controller, useForm } from 'react-hook-form';
-import { ContactOwner } from './ContactOwner';
-import { useUpdateContactPersonalDetails } from '../../../hooks/useContact';
-import { PersonTitle } from '../../../graphQL/__generated__/generated';
-import { OverlayPanel } from '../../ui-kit/atoms/overlay-panel';
+import { ContactOwner } from '../ContactOwner';
+import { PersonTitle } from '../../../../graphQL/__generated__/generated';
+import { OverlayPanel } from '../../../ui-kit/atoms/overlay-panel';
 import { Dropdown } from 'primereact/dropdown';
-import { capitalizeFirstLetter } from '../../../utils';
+import { capitalizeFirstLetter } from '../../../../utils';
 
-export const ContactPersonalDetailsEdit = ({
+export const ContactPersonalDetailsEditForm = ({
   data,
-  onSetMode,
+  onSubmit,
+  mode = 'EDIT',
 }: {
   data: any;
-  onSetMode: any;
+  onSubmit: any;
+  mode?: 'CREATE' | 'EDIT';
 }) => {
   const titleSelectorRef = useRef(null);
 
@@ -31,35 +32,46 @@ export const ContactPersonalDetailsEdit = ({
       title: data?.title || PersonTitle.Mr,
     },
   });
-  const { onUpdateContactPersonalDetails } = useUpdateContactPersonalDetails({
-    contactId: data.id,
-  });
 
   const handleUpdateDetails = (e: FormEvent<HTMLFormElement>, values: any) => {
     e.stopPropagation();
     e.preventDefault();
-    onUpdateContactPersonalDetails(values).then(() => {
-      onSetMode('PREVIEW');
-    });
+    onSubmit(values);
   };
 
-  const titleOptions = Object.values(PersonTitle).map((labelOption) => ({
-    value: labelOption,
-    label: capitalizeFirstLetter(labelOption),
-  }));
+  const titleOptions = useMemo(
+    () =>
+      Object.values(PersonTitle).map((labelOption) => ({
+        value: labelOption,
+        label: capitalizeFirstLetter(labelOption),
+      })),
+    [],
+  );
+
   return (
     <form
       className={styles.header}
       onSubmit={(e) => handleUpdateDetails(e, getValues())}
     >
-      <div className={styles.photo}>
-        {data?.photo ? (
-          <Image src={data?.photo} alt={''} height={40} width={40} />
-        ) : (
-          <div>{data?.firstName?.[0]}</div>
-        )}
-      </div>
+      {mode === 'EDIT' && (
+        <div className={styles.photo}>
+          {data?.photo ? (
+            <Image src={data?.photo} alt={''} height={40} width={40} />
+          ) : (
+            <User />
+          )}
+        </div>
+      )}
+
       <div className={styles.name}>
+        {mode === 'CREATE' && (
+          <div style={{ display: 'flex', justifyContent: 'center' }}>
+            <div className={styles.photo}>
+              <UserPlus />
+            </div>
+          </div>
+        )}
+
         <div
           className={styles.formFields}
           style={{ display: 'flex', flexDirection: 'column', width: '100%' }}
@@ -89,7 +101,7 @@ export const ContactPersonalDetailsEdit = ({
             inputSize='xxxs'
             control={control}
             name='firstName'
-            placeholder='Type in first name'
+            placeholder=''
             label='First name'
           />
           <ControlledInput
@@ -97,12 +109,13 @@ export const ContactPersonalDetailsEdit = ({
             inputSize='xxxs'
             control={control}
             name='lastName'
-            placeholder='Type in last name'
+            placeholder=''
             label='Last name'
           />
         </div>
         <ContactOwner control={control} setValue={setValue} />
-        <ContactTags id={data.id} mode={'EDIT'} />
+
+        {mode === 'EDIT' && <ContactTags id={data.id} mode={'EDIT'} />}
         <div
           style={{
             display: 'flex',

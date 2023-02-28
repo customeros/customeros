@@ -1,10 +1,12 @@
 import React from 'react';
 
-import { Cog, SignOut } from '../../atoms';
+import { Cog, SignOut, UserPlus } from '../../atoms';
 import { SidePanelListItem } from './side-panel-list-item';
 import classNames from 'classnames';
 import styles from './side-panel.module.scss';
 import Image from 'next/image';
+import { router } from 'next/client';
+import { useRouter } from 'next/router';
 
 interface SidePanelProps {
   onPanelToggle: (status: boolean) => void;
@@ -19,6 +21,8 @@ export const SidePanel: React.FC<SidePanelProps> = ({
   children,
   logoutUrl,
 }) => {
+  const router = useRouter();
+
   return (
     <>
       <aside
@@ -50,11 +54,18 @@ export const SidePanel: React.FC<SidePanelProps> = ({
 
         <ul className={styles.featuresList}>
           <SidePanelListItem
+            label='Add contact'
+            isOpen={isPanelOpen}
+            icon={<UserPlus />}
+            onClick={() => router.push('/contact/new')}
+          />
+          <SidePanelListItem
             label='Settings'
             isOpen={isPanelOpen}
             icon={<Cog />}
             onClick={() => null}
           />
+
           <SidePanelListItem
             label='Log Out'
             isOpen={isPanelOpen}

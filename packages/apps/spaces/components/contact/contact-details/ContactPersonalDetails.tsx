@@ -9,7 +9,7 @@ import { ContactTags } from '../contact-tags';
 import { ControlledInput } from '../../ui-kit/atoms/input/ControlledInput';
 import { useForm } from 'react-hook-form';
 import { ContactOwner } from './ContactOwner';
-import { ContactPersonalDetailsEdit } from './ContactDetailsEdit';
+import { ContactPersonalDetailsEdit } from './edit/ContactDetailsEdit';
 export const ContactPersonalDetails = ({ id }: { id: string }) => {
   const router = useRouter();
   const { data, loading, error } = useContactPersonalDetails({ id });
