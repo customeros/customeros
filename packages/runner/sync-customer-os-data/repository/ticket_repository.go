@@ -13,6 +13,7 @@ import (
 type TicketRepository interface {
 	GetMatchedTicketId(ctx context.Context, tenant string, user entity.TicketData) (string, error)
 	MergeTicket(ctx context.Context, tenant string, syncDate time.Time, user entity.TicketData) error
+	MergeTagForTicket(ctx context.Context, tenant, ticketId, tagName, externalSystem string) error
 	LinkTicketWithCollaboratorUserByExternalId(ctx context.Context, tenant, ticketId, userExternalId, externalSystem string) error
 	LinkTicketWithFollowerUserByExternalId(ctx context.Context, tenant, ticketId, userExternalId, externalSystem string) error
 	LinkTicketWithSubmitterUserOrContactByExternalId(ctx context.Context, tenant, ticketId, externalId, externalSystem string) error
@@ -112,6 +113,44 @@ func (r *ticketRepository) MergeTicket(ctx context.Context, tenant string, syncD
 				"status":         ticket.Status,
 				"priority":       ticket.Priority,
 				"now":            time.Now().UTC(),
+			})
+		if err != nil {
+			return nil, err
+		}
+		_, err = queryResult.Single(ctx)
+		if err != nil {
+			return nil, err
+		}
+		return nil, nil
+	})
+	return err
+}
+
+func (r *ticketRepository) MergeTagForTicket(ctx context.Context, tenant, ticketId, tagName, externalSystem string) error {
+	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
+	defer session.Close(ctx)
+
+	query := "MATCH (t:Tenant {name:$tenant})<-[:TICKET_BELONGS_TO_TENANT]-(tt:Ticket {id:$ticketId}) " +
+		" MERGE (tag:Tag {name:$tagName})-[:TAG_BELONGS_TO_TENANT]->(t) " +
+		" ON CREATE SET tag.id=randomUUID(), " +
+		"				tag.createdAt=$now, " +
+		"				tag.updatedAt=$now, " +
+		"				tag.source=$source," +
+		"				tag.appSource=$source," +
+		"				tag:%s  " +
+		" WITH DISTINCT tt, tag " +
+		" MERGE (tt)-[r:TAGGED]->(tag) " +
+		"	ON CREATE SET r.taggedAt=$now " +
+		" return r"
+
+	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		queryResult, err := tx.Run(ctx, fmt.Sprintf(query, "Tag_"+tenant),
+			map[string]interface{}{
+				"tenant":   tenant,
+				"ticketId": ticketId,
+				"tagName":  tagName,
+				"source":   externalSystem,
+				"now":      time.Now().UTC(),
 			})
 		if err != nil {
 			return nil, err

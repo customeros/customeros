@@ -16,6 +16,7 @@ type TicketData struct {
 	Status                      string
 	Priority                    string
 	Description                 string
+	Tags                        []string
 	CollaboratorUserExternalIds []string
 	FollowerUserExternalIds     []string
 	SubmitterExternalId         string
@@ -41,4 +42,8 @@ func (t TicketData) HasFollowers() bool {
 
 func (t TicketData) HasAssignee() bool {
 	return len(t.AssigneeUserExternalId) > 0
+}
+
+func (t TicketData) HasTags() bool {
+	return len(t.Tags) > 0
 }

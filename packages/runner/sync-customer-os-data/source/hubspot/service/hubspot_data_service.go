@@ -95,9 +95,9 @@ func (s *hubspotDataService) GetContactsForSync(batchSize int, runId string) []e
 
 		// set contact's tags
 		if isCustomerTag(hubspotContactProperties.LifecycleStage) {
-			contactForCustomerOs.TagName = "CUSTOMER"
+			contactForCustomerOs.Tags = append(contactForCustomerOs.Tags, "CUSTOMER")
 		} else if isProspectTag(hubspotContactProperties.LifecycleStage) {
-			contactForCustomerOs.TagName = "PROSPECT"
+			contactForCustomerOs.Tags = append(contactForCustomerOs.Tags, "PROSPECT")
 		}
 
 		customerOsContacts = append(customerOsContacts, contactForCustomerOs)
