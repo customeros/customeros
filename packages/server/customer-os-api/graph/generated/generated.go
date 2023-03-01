@@ -4100,7 +4100,7 @@ enum CustomFieldTemplateType {
 
 enum ExternalSystemType {
     HUBSPOT
-    ZENDESK
+    ZENDESK_SUPPORT
 }`, BuiltIn: false},
 	{Name: "../schemas/filter.graphqls", Input: `"""
 If provided as part of the request, results will be filtered down to the ` + "`" + `page` + "`" + ` and ` + "`" + `limit` + "`" + ` specified.
@@ -4589,7 +4589,7 @@ type SearchBasicResultItem {
     NA,
     OPENLINE
     HUBSPOT
-    ZENDESK
+    ZENDESK_SUPPORT
 }`, BuiltIn: false},
 	{Name: "../schemas/tag.graphqls", Input: `extend type Query {
     tags: [Tag!]!

@@ -7,10 +7,10 @@ import (
 )
 
 var sourceByModel = map[model.DataSource]entity.DataSource{
-	model.DataSourceNa:       entity.DataSourceNA,
-	model.DataSourceOpenline: entity.DataSourceOpenline,
-	model.DataSourceHubspot:  entity.DataSourceHubspot,
-	model.DataSourceZendesk:  entity.DataSourceZendesk,
+	model.DataSourceNa:             entity.DataSourceNA,
+	model.DataSourceOpenline:       entity.DataSourceOpenline,
+	model.DataSourceHubspot:        entity.DataSourceHubspot,
+	model.DataSourceZendeskSupport: entity.DataSourceZendeskSupport,
 }
 
 var sourceByValue = utils.ReverseMap(sourceByModel)

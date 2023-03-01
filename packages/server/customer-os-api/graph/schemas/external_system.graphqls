@@ -6,5 +6,5 @@ input ExternalSystemReferenceInput {
 
 enum ExternalSystemType {
     HUBSPOT
-    ZENDESK
+    ZENDESK_SUPPORT
 }

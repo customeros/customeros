@@ -3,16 +3,16 @@ package entity
 type DataSource string
 
 const (
-	DataSourceNA       DataSource = ""
-	DataSourceOpenline DataSource = "openline"
-	DataSourceHubspot  DataSource = "hubspot"
-	DataSourceZendesk  DataSource = "zendesk"
+	DataSourceNA             DataSource = ""
+	DataSourceOpenline       DataSource = "openline"
+	DataSourceHubspot        DataSource = "hubspot"
+	DataSourceZendeskSupport DataSource = "zendesk_support"
 )
 
 var AllDataSource = []DataSource{
 	DataSourceOpenline,
 	DataSourceHubspot,
-	DataSourceZendesk,
+	DataSourceZendeskSupport,
 }
 
 func GetDataSource(s string) DataSource {

@@ -1140,22 +1140,22 @@ func (e CustomFieldTemplateType) MarshalGQL(w io.Writer) {
 type DataSource string
 
 const (
-	DataSourceNa       DataSource = "NA"
-	DataSourceOpenline DataSource = "OPENLINE"
-	DataSourceHubspot  DataSource = "HUBSPOT"
-	DataSourceZendesk  DataSource = "ZENDESK"
+	DataSourceNa             DataSource = "NA"
+	DataSourceOpenline       DataSource = "OPENLINE"
+	DataSourceHubspot        DataSource = "HUBSPOT"
+	DataSourceZendeskSupport DataSource = "ZENDESK_SUPPORT"
 )
 
 var AllDataSource = []DataSource{
 	DataSourceNa,
 	DataSourceOpenline,
 	DataSourceHubspot,
-	DataSourceZendesk,
+	DataSourceZendeskSupport,
 }
 
 func (e DataSource) IsValid() bool {
 	switch e {
-	case DataSourceNa, DataSourceOpenline, DataSourceHubspot, DataSourceZendesk:
+	case DataSourceNa, DataSourceOpenline, DataSourceHubspot, DataSourceZendeskSupport:
 		return true
 	}
 	return false
@@ -1271,18 +1271,18 @@ func (e EntityTemplateExtension) MarshalGQL(w io.Writer) {
 type ExternalSystemType string
 
 const (
-	ExternalSystemTypeHubspot ExternalSystemType = "HUBSPOT"
-	ExternalSystemTypeZendesk ExternalSystemType = "ZENDESK"
+	ExternalSystemTypeHubspot        ExternalSystemType = "HUBSPOT"
+	ExternalSystemTypeZendeskSupport ExternalSystemType = "ZENDESK_SUPPORT"
 )
 
 var AllExternalSystemType = []ExternalSystemType{
 	ExternalSystemTypeHubspot,
-	ExternalSystemTypeZendesk,
+	ExternalSystemTypeZendeskSupport,
 }
 
 func (e ExternalSystemType) IsValid() bool {
 	switch e {
-	case ExternalSystemTypeHubspot, ExternalSystemTypeZendesk:
+	case ExternalSystemTypeHubspot, ExternalSystemTypeZendeskSupport:
 		return true
 	}
 	return false
