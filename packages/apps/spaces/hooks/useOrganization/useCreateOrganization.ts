@@ -5,7 +5,9 @@ import {
 } from './types';
 
 interface Result {
-  onCreateOrganization: CreateOrganizationMutation['organization_Create'];
+  onCreateOrganization: (
+    input: OrganizationInput,
+  ) => Promise<CreateOrganizationMutation['organization_Create'] | null>;
 }
 export const useCreateOrganization = (): Result => {
   const [createOrganizationMutation, { loading, error, data }] =

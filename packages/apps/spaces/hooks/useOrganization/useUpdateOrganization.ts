@@ -3,20 +3,28 @@ import {
   UpdateOrganizationMutation,
   useUpdateOrganizationMutation,
 } from './types';
+import { OrganizationUpdateInput } from '../../graphQL/__generated__/generated';
+
+interface Props {
+  organizationId: string;
+}
 
 interface Result {
-  onUpdateOrganization: UpdateOrganizationMutation['organization_Update'];
+  onUpdateOrganization: (
+    input: Omit<OrganizationUpdateInput, 'id'>,
+  ) => Promise<UpdateOrganizationMutation['organization_Update'] | null>;
 }
-export const useUpdateOrganization = (): Result => {
+export const useUpdateOrganization = ({ organizationId }: Props): Result => {
   const [updateOrganizationMutation, { loading, error, data }] =
     useUpdateOrganizationMutation();
 
   const handleUpdateOrganization: Result['onUpdateOrganization'] = async (
-    input: OrganizationInput,
+    input,
   ) => {
     try {
       const response = await updateOrganizationMutation({
-        variables: { input },
+        variables: { input: { ...input, id: organizationId } },
+        refetchQueries: ['GetOrganizationDetails'],
       });
       return response.data?.organization_Update ?? null;
     } catch (err) {

@@ -1,26 +1,18 @@
 import React from 'react';
-import {useCreateOrganization, useOrganizationDetails} from "../../../../hooks/useOrganization";
-import styles from "../organization-details.module.scss";
-import {Link} from "../../../ui-kit";
+import { useCreateOrganization } from '../../../../hooks/useOrganization';
+import { OrganizationForm } from './OrganizationForm';
+import { useRouter } from 'next/router';
 
-interface OrganizationFormProps {
+export const OrganizationCreate: React.FC = () => {
+  const router = useRouter();
 
-}
-
-export const OrganizationCreate: React.FC<OrganizationFormProps> = () => {
-    const { onCreateOrganization } = useCreateOrganization( );
-
-    return (
-        <div className={styles.organizationDetails}>
-            <div className={styles.bg}>
-                <div>
-                    <h1 className={styles.name}>{data?.name}</h1>
-                    <span className={styles.industry}>{data?.industry}</span>
-                </div>
-
-                <p className={styles.description}>{data?.description}</p>
-
-                {data?.website && <Link href={data.website}> {data.website} </Link>}
-            </div>
-        </div>
+  const { onCreateOrganization } = useCreateOrganization();
+  const handleCreateOrganization = (values: any) => {
+    onCreateOrganization(values).then((value) => {
+      if (value?.id) {
+        router.push(`/organization/${value.id}`);
+      }
+    });
+  };
+  return <OrganizationForm onSubmit={handleCreateOrganization} mode='CREATE' />;
 };

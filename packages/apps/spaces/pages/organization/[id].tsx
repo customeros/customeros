@@ -7,6 +7,7 @@ import {
   OrganizationNoteEditor,
   NoteEditorModes,
   OrganizationContacts,
+  OrganizationCreate,
 } from '../../components/organization';
 
 function OrganizationDetailsPage() {
@@ -19,7 +20,7 @@ function OrganizationDetailsPage() {
     return (
       <DetailsPageLayout onNavigateBack={() => push('/')}>
         <section className={styles.organizationDetails}>
-          <OrganizationDetails id={id as string} />
+          <OrganizationCreate />
         </section>
         <section className={styles.notes}></section>
         <section className={styles.timeline}></section>

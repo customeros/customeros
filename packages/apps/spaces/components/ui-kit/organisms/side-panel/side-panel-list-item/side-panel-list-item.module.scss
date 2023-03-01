@@ -30,11 +30,11 @@
   }
 
   & .featuresItemIcon {
-    font-size: 2rem;
+    transform: scale(0.9);
   }
 
   & .featuresItemText {
-    margin-left: 1.5rem;
+    margin-left: var(--spacing-xs);
     transition: opacity 0.6s ease;
     opacity: 1;
     overflow: hidden;

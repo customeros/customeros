@@ -1,6 +1,6 @@
 import React from 'react';
 
-import { Cog, SignOut, UserPlus } from '../../atoms';
+import { Building, Cog, SignOut, UserPlus } from '../../atoms';
 import { SidePanelListItem } from './side-panel-list-item';
 import classNames from 'classnames';
 import styles from './side-panel.module.scss';
@@ -53,6 +53,12 @@ export const SidePanel: React.FC<SidePanelProps> = ({
         </div>
 
         <ul className={styles.featuresList}>
+          <SidePanelListItem
+            label='Add organization'
+            isOpen={isPanelOpen}
+            icon={<Building />}
+            onClick={() => router.push('/organization/new')}
+          />
           <SidePanelListItem
             label='Add contact'
             isOpen={isPanelOpen}

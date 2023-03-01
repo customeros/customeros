@@ -3,26 +3,27 @@ import React, { FormEvent } from 'react';
 import styles from '../organization-details.module.scss';
 import { useForm } from 'react-hook-form';
 import { Organization } from '../../../../graphQL/__generated__/generated';
+import { ControlledInput } from '../../../ui-kit/atoms/input/ControlledInput';
+import { Button } from '../../../ui-kit';
+import { ControlledTextArea } from '../../../ui-kit/atoms/input/ControlledTextarea';
 
 interface OrganizationFormProps {
-  data: Organization;
+  data?: Organization;
   onSubmit: any;
+  mode?: 'EDIT' | 'CREATE';
 }
 
 export const OrganizationForm: React.FC<OrganizationFormProps> = ({
   data,
   onSubmit,
+  mode = 'EDIT',
 }) => {
   const { control, reset, setValue, getValues, register } = useForm({
     defaultValues: {
-      name: '',
-      description: '',
-      domain: '',
-      domains: [],
-      industry: '',
-      isPublic: '',
-      organizationTypeId: '',
-      appSource: '',
+      name: data?.name || '',
+      description: data?.description || '',
+      domain: data?.domain || '',
+      industry: data?.industry || '',
     },
   });
 
@@ -37,7 +38,44 @@ export const OrganizationForm: React.FC<OrganizationFormProps> = ({
       className={styles.organizationDetails}
       onSubmit={(e) => handleSubmit(e, getValues())}
     >
-      TODO
+      <div className={styles.bg}>
+        <ControlledInput
+          required={true}
+          inputSize='xxxs'
+          control={control}
+          name='name'
+          placeholder=''
+          label='Name'
+        />
+        <ControlledInput
+          required={true}
+          inputSize='xxxs'
+          control={control}
+          name='industry'
+          placeholder=''
+          label='Industry'
+        />
+        <ControlledTextArea
+          required={true}
+          inputSize='xxxs'
+          control={control}
+          name='description'
+          placeholder=''
+          label='Description'
+        />
+
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'flex-end',
+            marginTop: '8px',
+          }}
+        >
+          <Button mode='primary' type='submit'>
+            {mode === 'CREATE' ? 'Create organization' : 'Save'}
+          </Button>
+        </div>
+      </div>
     </form>
   );
 };
