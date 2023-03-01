@@ -24,9 +24,8 @@
   }
 }
 .editLabelIcon {
-    @include flex-center;
-    position: relative;
-
+  @include flex-center;
+  position: relative;
 
   & img {
     transform: rotate(90deg);

@@ -1,8 +1,7 @@
 @import '../../../styles/mixins';
 
-
 .contactsList {
-  padding: 0 var(--spacing-xxs)
+  padding: 0 var(--spacing-xxs);
 }
 .contactItem {
   margin-bottom: var(--spacing-sm);
@@ -12,7 +11,7 @@
     border-bottom: var(--border-divider);
   }
 
-  @include button-variants
+  @include button-variants;
 }
 
 .personalDetails {
@@ -23,7 +22,7 @@
 .jobTitle {
   margin-left: var(--spacing-xxxs);
   color: var(--text-faded);
-  font-size: var(--font-size-xxs)
+  font-size: var(--font-size-xxs);
 }
 .name {
   font-size: var(--font-size-base);

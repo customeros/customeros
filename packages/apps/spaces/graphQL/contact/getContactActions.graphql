@@ -1,10 +1,10 @@
-query GetActionsForContact($id: ID!, $from: Time!, $to: Time! ) {
+query GetActionsForContact($id: ID!, $from: Time!, $to: Time!) {
   contact(id: $id) {
     id
     firstName
     lastName
     createdAt
-    actions(from:$from, to:$to) {
+    actions(from: $from, to: $to) {
       ... on PageViewAction {
         id
         application

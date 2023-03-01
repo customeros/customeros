@@ -1,7 +1,6 @@
-@import "styles/mixins";
+@import 'styles/mixins';
 
 .container {
-
   & label {
     font-size: var(--font-size-sm);
     font-weight: normal;
@@ -11,15 +10,13 @@
 .searchModalWrapper {
   background: #fff;
   padding: var(--spacing-sm);
-
 }
 .searchModalTrigger {
   @include input-style;
 
   padding: 0 var(--spacing-xxxs);
   margin-bottom: 0;
-  margin-top: 0
-
+  margin-top: 0;
 }
 
 .optionsContainer {

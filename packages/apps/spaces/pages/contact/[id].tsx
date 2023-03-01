@@ -9,7 +9,7 @@ import {
   NoteEditorModes,
 } from '../../components/contact';
 import { ContactPersonalDetailsCreate } from '../../components/contact/contact-details';
-import ContactHistory from "../../components/contact/contact-history/ContactHistory";
+import ContactHistory from '../../components/contact/contact-history/ContactHistory';
 
 function ContactDetailsPage() {
   const {
@@ -32,19 +32,19 @@ function ContactDetailsPage() {
 
   return (
     <DetailsPageLayout onNavigateBack={back}>
-            <section className={styles.details}>
-                <ContactDetails id={id as string} />
-                <ContactCommunicationDetails id={id as string} />
-            </section>
-            <section className={styles.notes}>
-                <ContactNoteEditor
-                    contactId={id as string}
-                    mode={NoteEditorModes.ADD}
-                />
-            </section>
-            <section className={styles.timeline}>
-                <ContactHistory id={id as string} />
-            </section>
+      <section className={styles.details}>
+        <ContactDetails id={id as string} />
+        <ContactCommunicationDetails id={id as string} />
+      </section>
+      <section className={styles.notes}>
+        <ContactNoteEditor
+          contactId={id as string}
+          mode={NoteEditorModes.ADD}
+        />
+      </section>
+      <section className={styles.timeline}>
+        <ContactHistory id={id as string} />
+      </section>
     </DetailsPageLayout>
   );
 }

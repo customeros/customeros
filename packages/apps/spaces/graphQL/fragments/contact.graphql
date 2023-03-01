@@ -26,7 +26,7 @@ fragment ContactPersonalDetails on Contact {
 }
 
 fragment ContactCommunicationChannelsDetails on Contact {
- id
+  id
   emails {
     label
     ...Email
@@ -36,4 +36,3 @@ fragment ContactCommunicationChannelsDetails on Contact {
     ...PhoneNumber
   }
 }
-

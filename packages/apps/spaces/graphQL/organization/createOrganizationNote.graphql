@@ -1,5 +1,5 @@
 mutation createOrganizationNote($organizationId: ID!, $input: NoteInput!) {
-    note_CreateForOrganization(organizationId: $organizationId, input: $input) {
-        ...NoteContent
-    }
+  note_CreateForOrganization(organizationId: $organizationId, input: $input) {
+    ...NoteContent
+  }
 }

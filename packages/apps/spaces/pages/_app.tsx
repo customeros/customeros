@@ -23,14 +23,14 @@ import { RecoilRoot } from 'recoil';
 //   })
 // }
 
-import TimeAgo from "javascript-time-ago";
-import en from 'javascript-time-ago/locale/en.json'
+import TimeAgo from 'javascript-time-ago';
+import en from 'javascript-time-ago/locale/en.json';
 
 export default function MyApp({
   Component,
   pageProps: { session, ...pageProps },
 }: AppProps) {
-    TimeAgo.addDefaultLocale(en)
+  TimeAgo.addDefaultLocale(en);
   return (
     <>
       <Head>

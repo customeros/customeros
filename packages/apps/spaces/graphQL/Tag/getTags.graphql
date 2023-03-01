@@ -1,6 +1,6 @@
 query GetTags {
-    tags {
-        id
-        name
-    }
+  tags {
+    id
+    name
+  }
 }

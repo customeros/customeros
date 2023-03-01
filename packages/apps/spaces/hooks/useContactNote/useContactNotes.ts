@@ -3,7 +3,10 @@ import {
   useGetContactCommunicationChannelsQuery,
 } from './types';
 import { ApolloError } from 'apollo-client';
-import {GetContactNotesQuery, useGetContactNotesQuery} from "../../graphQL/__generated__/generated";
+import {
+  GetContactNotesQuery,
+  useGetContactNotesQuery,
+} from '../../graphQL/__generated__/generated';
 
 interface Props {
   id: string;
@@ -14,9 +17,7 @@ interface Result {
   loading: boolean;
   error: ApolloError | null;
 }
-export const useContactNotes = ({
-  id,
-}: Props): Result => {
+export const useContactNotes = ({ id }: Props): Result => {
   const { data, loading, error } = useGetContactNotesQuery({
     variables: { id },
   });
@@ -37,7 +38,7 @@ export const useContactNotes = ({
     };
   }
 
-  console.log('data loaded for notes')
+  console.log('data loaded for notes');
   return {
     data: data?.contact ?? null,
     loading,

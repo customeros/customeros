@@ -33,7 +33,7 @@ export const useContactPersonalDetails = ({ id }: Props): Result => {
       data: null,
     };
   }
-  console.log('data loaded for personal details')
+  console.log('data loaded for personal details');
   return {
     data: data?.contact,
     loading,

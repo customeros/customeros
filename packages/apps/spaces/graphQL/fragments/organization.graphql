@@ -12,20 +12,18 @@ fragment OrganizationDetails on Organization {
   tags {
     ...Tag
   }
-
 }
 fragment OrganizationContacts on Organization {
-   contacts {
-     content {
-       id
-       name
-       firstName
-       lastName
-       jobRoles {
-         ...JobRole
-       }
-       ...ContactCommunicationChannelsDetails
-     }
-   }
-
+  contacts {
+    content {
+      id
+      name
+      firstName
+      lastName
+      jobRoles {
+        ...JobRole
+      }
+      ...ContactCommunicationChannelsDetails
+    }
+  }
 }

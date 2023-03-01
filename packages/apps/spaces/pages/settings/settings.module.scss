@@ -1,4 +1,4 @@
-@import "styles/mixins";
+@import 'styles/mixins';
 
 .pageContainer {
   padding: var(--spacing-lg);
@@ -35,7 +35,7 @@
   justify-content: flex-end;
 }
 
-.headingSection{
+.headingSection {
   display: flex;
   margin-bottom: var(--spacing-lg);
   & button {
