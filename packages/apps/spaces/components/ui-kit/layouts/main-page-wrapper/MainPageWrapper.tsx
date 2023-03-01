@@ -9,6 +9,8 @@ import { SidePanel } from '../../organisms';
 import { PageContentLayout } from '../page-content-layout';
 import client from '../../../../apollo-client';
 import { ApolloProvider } from '@apollo/client';
+import { useRecoilState, useSetRecoilState } from 'recoil';
+import { logoutUrlState } from '../../../../state';
 
 const ory = new FrontendApi(new Configuration(edgeConfig));
 
@@ -22,10 +24,10 @@ export const MainPageWrapper = ({ children }: any) => {
   //     const theme = localStorage.getItem('theme');
   //     theme && setTheme(theme);
   // }
+  const setLogoutUrl = useSetRecoilState(logoutUrlState);
 
   const [session, setSession] = useState<Session | undefined>();
   const [userEmail, setUserEmail] = useState<string | undefined>();
-  const [logoutUrl, setLogoutUrl] = useState<string | undefined>();
 
   useEffect(() => {
     if (router.asPath.startsWith('/login')) {
