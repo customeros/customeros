@@ -402,7 +402,14 @@ func (s *CustomerOSService) GetConversationParticipants(ctx context.Context, ten
 	emails := make([]string, 0)
 	if len(records.([]*neo4j.Record)) > 0 {
 		for _, record := range records.([]*neo4j.Record) {
-			emails = append(emails, record.Values[0].(string))
+			if record != nil {
+				if len(record.Values) > 0 {
+					val, ok := record.Values[0].(string)
+					if ok {
+						emails = append(emails, val)
+					}
+				}
+			}
 		}
 		return emails, nil
 	} else {
