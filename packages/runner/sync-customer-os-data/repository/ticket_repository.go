@@ -14,7 +14,6 @@ type TicketRepository interface {
 	GetMatchedTicketId(ctx context.Context, tenant string, user entity.TicketData) (string, error)
 	MergeTicket(ctx context.Context, tenant string, syncDate time.Time, user entity.TicketData) error
 	MergeTagForTicket(ctx context.Context, tenant, ticketId, tagName, externalSystem string) error
-	MergeTextCustomField(ctx context.Context, tenant, ticketId string, field entity.TextCustomField) error
 	LinkTicketWithCollaboratorUserByExternalId(ctx context.Context, tenant, ticketId, userExternalId, externalSystem string) error
 	LinkTicketWithFollowerUserByExternalId(ctx context.Context, tenant, ticketId, userExternalId, externalSystem string) error
 	LinkTicketWithSubmitterUserOrContactByExternalId(ctx context.Context, tenant, ticketId, externalId, externalSystem string) error
@@ -161,47 +160,6 @@ func (r *ticketRepository) MergeTagForTicket(ctx context.Context, tenant, ticket
 			return nil, err
 		}
 		return nil, nil
-	})
-	return err
-}
-
-func (r *ticketRepository) MergeTextCustomField(ctx context.Context, tenant, ticketId string, field entity.TextCustomField) error {
-	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
-	defer session.Close(ctx)
-
-	query := "MATCH (tt:Ticket {id:$ticketId})-[:TICKET_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) " +
-		" MERGE (f:TextField:CustomField {name: $name, datatype:$datatype})<-[:HAS_PROPERTY]-(tt) " +
-		" ON CREATE SET f.textValue=$value, " +
-		"				f.id=randomUUID(), " +
-		"				f.createdAt=$createdAt, " +
-		"				f.updatedAt=$createdAt, " +
-		"				f.source=$source, " +
-		"				f.sourceOfTruth=$sourceOfTruth, " +
-		"				f.appSource=$appSource, " +
-		"				f:%s " +
-		" ON MATCH SET 	f.textValue = CASE WHEN f.sourceOfTruth=$sourceOfTruth THEN $value ELSE f.textValue END," +
-		"				f.updatedAt = $now " +
-		" WITH f " +
-		" FOREACH (x in CASE WHEN f.sourceOfTruth <> $sourceOfTruth THEN [f] ELSE [] END | " +
-		"  MERGE (x)-[:ALTERNATE]->(alt:AlternateCustomField:AlternateTextField {source:$source, id:x.id}) " +
-		"    SET alt.updatedAt=$now, alt.appSource=$appSource, alt.textValue=$value " +
-		" ) "
-
-	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		_, err := tx.Run(ctx, fmt.Sprintf(query, "CustomField_"+tenant),
-			map[string]interface{}{
-				"tenant":        tenant,
-				"ticketId":      ticketId,
-				"name":          field.Name,
-				"value":         field.Value,
-				"datatype":      "TEXT",
-				"createdAt":     field.CreatedAt,
-				"source":        field.ExternalSystem,
-				"sourceOfTruth": field.ExternalSystem,
-				"appSource":     field.ExternalSystem,
-				"now":           time.Now().UTC(),
-			})
-		return nil, err
 	})
 	return err
 }

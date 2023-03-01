@@ -17,7 +17,6 @@ type TicketData struct {
 	Priority                    string
 	Description                 string
 	Tags                        []string
-	TextCustomFields            []TextCustomField
 	CollaboratorUserExternalIds []string
 	FollowerUserExternalIds     []string
 	SubmitterExternalId         string
@@ -47,8 +46,4 @@ func (t TicketData) HasAssignee() bool {
 
 func (t TicketData) HasTags() bool {
 	return len(t.Tags) > 0
-}
-
-func (t TicketData) HasTextCustomFields() bool {
-	return len(t.TextCustomFields) > 0
 }

@@ -175,12 +175,3 @@ func MarkTicketProcessed(db *gorm.DB, ticket entity.Ticket, synced bool, runId s
 			RunId:              runId,
 		}).Error
 }
-
-func GetTicketFieldsNotInTypes(db *gorm.DB, ignoredTypes []string) (entity.TicketFields, error) {
-	var ticketFields entity.TicketFields
-	err := db.Table(entity.TicketField{}.TableName()).Where("type NOT IN (?)", ignoredTypes).Find(&ticketFields).Error
-	if err != nil {
-		return nil, err
-	}
-	return ticketFields, nil
-}
