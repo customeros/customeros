@@ -1,41 +1,33 @@
 import React from 'react';
 import styles from './timeline-item.module.scss';
-import ReactTimeAgo from 'react-time-ago';
-import Moment from 'react-moment';
+import format from 'date-fns/format';
 
 interface Props {
   children: React.ReactNode;
   createdAt?: string | number;
-  fistOrLast?: boolean;
+  first?: boolean;
   style?: any;
 }
 
 export const TimelineItem: React.FC<Props> = ({
   children,
   createdAt,
-  fistOrLast,
+  first,
   ...rest
 }) => {
   return (
     <div className={`${styles.timelineItem}`}>
-      {!fistOrLast ? <span className={styles.timelineLine} /> : null}
+      {!first ? (
+        <span className={`${styles.timelineLine} ${styles.first}`} />
+      ) : null}
       {createdAt ? (
-        <>
-          <ReactTimeAgo
-            className='text-sm text-gray-500 mb-1'
-            date={new Date(createdAt)}
-            locale='en-US'
-          />
-          <Moment
-            className='text-sm text-gray-500'
-            date={createdAt}
-            format={'D-M-YYYY h:mm A'}
-          ></Moment>
-        </>
+        <div className={styles.when}>
+          {format(new Date(createdAt), 'dd/MM/yyyy h:mm a')}
+        </div>
       ) : (
         'Date not available'
       )}
-      <span className={styles.timelineLine} />
+      <span className={`${styles.timelineLine} ${styles.second}`} />
       <div className={styles.content} {...rest}>
         {children}
       </div>

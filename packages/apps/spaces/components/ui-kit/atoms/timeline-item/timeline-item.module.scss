@@ -17,15 +17,19 @@
   width: 1px;
   background: var(--gray-400);
 
-  &:first-of-type {
-    height: 24px;
-    margin-bottom: var(--spacing-xxxs);
+  &.first {
+    height: 12px;
   }
 
-  &:not(:first-of-type) {
-    height: 12px;
-    margin-top: var(--spacing-xxxs);
+  &.second {
+    height: 5px;
   }
+}
+
+.when {
+  font-size: 0.75rem;
+  font-weight: 400;
+  color: var(--gray-500);
 }
 
 .content {

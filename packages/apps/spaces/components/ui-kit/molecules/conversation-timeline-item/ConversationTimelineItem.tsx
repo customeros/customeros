@@ -4,16 +4,16 @@ import axios from 'axios';
 // import { FeedItem } from '../../../models/feed-item';
 import { gql } from 'graphql-request';
 import { toast } from 'react-toastify';
-import useWebSocket from 'react-use-websocket';
 // import { ConversationItem } from '../../../models/conversation-item';
 import { Skeleton } from 'primereact/skeleton';
 // import { useGraphQLClient } from '../../../utils/graphQLClient';
 import { EmailTimelineItem } from '../email-timeline-item';
 import { TimelineItem } from '../../atoms/timeline-item';
+
 interface Props {
   feedId: string;
   source: string;
-  fistOrLast: boolean;
+  first: boolean;
   createdAt: any;
 }
 
@@ -50,7 +50,7 @@ export const ConversationTimelineItem: React.FC<Props> = ({
   feedId,
   source,
   createdAt,
-  fistOrLast,
+  first,
 }) => {
   const [feedInitiator, setFeedInitiator] = useState<any>({
     loaded: false,
@@ -168,11 +168,11 @@ export const ConversationTimelineItem: React.FC<Props> = ({
   const getSortedItems = (data: Array<any>): Array<ConversationItem> => {
     return data.sort((a, b) => {
       const date1 =
-        new Date(1970, 0, 1)
-          .setSeconds(a?.time?.seconds) || timeFromLastTimestamp;
+        new Date(1970, 0, 1).setSeconds(a?.time?.seconds) ||
+        timeFromLastTimestamp;
       const date2 =
-        new Date(1970, 0, 1)
-          .setSeconds(b?.time?.seconds) || timeFromLastTimestamp;
+        new Date(1970, 0, 1).setSeconds(b?.time?.seconds) ||
+        timeFromLastTimestamp;
       return date2 - date1;
     });
   };
@@ -208,11 +208,10 @@ export const ConversationTimelineItem: React.FC<Props> = ({
                     new Date(1970, 0, 1).setSeconds(msg?.time?.seconds) ||
                     timeFromLastTimestamp;
                   const fl =
-                    fistOrLast &&
-                    (index === 0 || index === messages.length - 1);
+                    first && (index === 0 || index === messages.length - 1);
                   return (
                     <TimelineItem
-                      fistOrLast={fl}
+                      first={fl}
                       createdAt={date}
                       style={{ paddingBottom: '8px' }}
                       key={msg.id}
@@ -245,11 +244,11 @@ export const ConversationTimelineItem: React.FC<Props> = ({
               const time = new Date(1970, 0, 1).setSeconds(msg?.time?.seconds);
 
               const fl =
-                fistOrLast && (index === 0 || index === messages.length - 1);
+                first && (index === 0 || index === messages.length - 1);
 
               return (
                 <TimelineItem
-                  fistOrLast={fl}
+                  first={fl}
                   createdAt={createdAt || timeFromLastTimestamp}
                   key={msg.id}
                 >

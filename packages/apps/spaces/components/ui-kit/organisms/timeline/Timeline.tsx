@@ -46,10 +46,7 @@ export const Timeline = ({
     switch (type) {
       case 'Note':
         return (
-          <TimelineItem
-            fistOrLast={loggedActivities.length - 1 === index}
-            createdAt={data?.createdAt}
-          >
+          <TimelineItem first={index == 0} createdAt={data?.createdAt}>
             <NoteTimelineItem
               noteContent={data.html}
               createdAt={data.createdAt}
@@ -66,7 +63,7 @@ export const Timeline = ({
       case 'Conversation':
         return (
           <ConversationTimelineItem
-            fistOrLast={loggedActivities.length - 1 === index}
+            first={index == 0}
             feedId={data.id}
             source={data.source}
             createdAt={data?.startedAt}
@@ -74,10 +71,7 @@ export const Timeline = ({
         );
       case 'PageViewAction':
         return (
-          <TimelineItem
-            fistOrLast={loggedActivities.length - 1 === index}
-            createdAt={data?.createdAt}
-          >
+          <TimelineItem first={index == 0} createdAt={data?.createdAt}>
             <WebActionTimelineItem {...data} />
           </TimelineItem>
         );
