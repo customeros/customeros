@@ -387,7 +387,7 @@ func (s *CustomerOSService) GetConversationParticipants(ctx context.Context, ten
 	defer session.Close(ctx)
 
 	records, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		queryResult, err := tx.Run(ctx, "MATCH (c:Conversation_"+tenant+"{id:$conversationId})<-[PARTICIPATES]-(p)-[HAS]->(e:Email) RETURN DISTINCT(e.email) AS email",
+		queryResult, err := tx.Run(ctx, "MATCH (c:Conversation_"+tenant+"{id:$conversationId})<-[PARTICIPATES]-(p)-[HAS]->(e:Email) WITH COALESCE(e.email, e.rawEmail) AS email WHERE email IS NOT NULL RETURN DISTINCT email",
 			map[string]interface{}{
 				"conversationId": conversationId,
 			})
@@ -402,7 +402,14 @@ func (s *CustomerOSService) GetConversationParticipants(ctx context.Context, ten
 	emails := make([]string, 0)
 	if len(records.([]*neo4j.Record)) > 0 {
 		for _, record := range records.([]*neo4j.Record) {
-			emails = append(emails, record.Values[0].(string))
+			if record != nil {
+				if len(record.Values) > 0 {
+					val, ok := record.Values[0].(string)
+					if ok {
+						emails = append(emails, val)
+					}
+				}
+			}
 		}
 		return emails, nil
 	} else {
