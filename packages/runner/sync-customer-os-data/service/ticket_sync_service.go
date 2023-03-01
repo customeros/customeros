@@ -101,6 +101,16 @@ func (s *ticketSyncService) SyncTickets(ctx context.Context, dataService common.
 				}
 			}
 
+			if len(v.Tags) > 0 {
+				for _, tag := range v.Tags {
+					err = s.repositories.TicketRepository.MergeTagForTicket(ctx, tenant, ticketId, tag, v.ExternalSystem)
+					if err != nil {
+						failedSync = true
+						logrus.Errorf("failed to merge tag %v for ticket %v, tenant %v :%v", tag, ticketId, tenant, err)
+					}
+				}
+			}
+
 			logrus.Debugf("successfully merged ticket with id %v for tenant %v from %v", ticketId, tenant, dataService.SourceId())
 			if err := dataService.MarkTicketProcessed(v.ExternalSyncId, runId, failedSync == false); err != nil {
 				failed++

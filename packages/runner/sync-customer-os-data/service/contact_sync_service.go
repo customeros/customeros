@@ -154,11 +154,13 @@ func (s *contactSyncService) SyncContacts(ctx context.Context, dataService commo
 				}
 			}
 
-			if len(v.TagName) > 0 {
-				err = s.repositories.ContactRepository.MergeTagForContact(ctx, tenant, contactId, v.TagName, v.ExternalSystem)
-				if err != nil {
-					failedSync = true
-					logrus.Errorf("failed to merge tag for contact %v, tenant %v :%v", contactId, tenant, err)
+			if len(v.Tags) > 0 && !failedSync {
+				for _, tag := range v.Tags {
+					err = s.repositories.ContactRepository.MergeTagForContact(ctx, tenant, contactId, tag, v.ExternalSystem)
+					if err != nil {
+						failedSync = true
+						logrus.Errorf("failed to merge tag %v for contact %v, tenant %v :%v", tag, contactId, tenant, err)
+					}
 				}
 			}
 

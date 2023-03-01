@@ -41,8 +41,7 @@ type ContactData struct {
 	UserExternalOwnerId string
 
 	TextCustomFields []TextCustomField
-
-	TagName string
+	Tags             []string
 
 	DefaultLocationName string
 	Country             string
