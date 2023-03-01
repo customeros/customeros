@@ -4,6 +4,7 @@ import { AppProps } from 'next/app';
 import '../styles/normalization.scss';
 import '../styles/theme.css';
 import '../styles/globals.css';
+import 'react-toastify/dist/ReactToastify.css';
 import React from 'react';
 import { ToastContainer } from 'react-toastify';
 import { MainPageWrapper } from '../components/ui-kit/layouts';
