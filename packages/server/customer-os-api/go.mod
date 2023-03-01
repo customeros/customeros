@@ -5,7 +5,7 @@ go 1.20
 replace github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module => ../customer-os-common-module
 
 require (
-	github.com/99designs/gqlgen v0.17.24
+	github.com/99designs/gqlgen v0.17.25
 	github.com/caarlos0/env/v6 v6.10.1
 	github.com/gin-contrib/cors v1.4.0
 	github.com/gin-gonic/gin v1.9.0
@@ -47,7 +47,7 @@ require (
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/gorilla/websocket v1.5.0 // indirect
-	github.com/hashicorp/golang-lru v0.5.4 // indirect
+	github.com/hashicorp/golang-lru/v2 v2.0.1 // indirect
 	github.com/jackc/pgpassfile v1.0.0 // indirect
 	github.com/jackc/pgservicefile v0.0.0-20221227161230-091c0ba34f0a // indirect
 	github.com/jackc/pgx/v5 v5.3.0 // indirect
@@ -75,15 +75,15 @@ require (
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
 	github.com/twitchyliquid64/golang-asm v0.15.1 // indirect
 	github.com/ugorji/go/codec v1.2.9 // indirect
-	github.com/urfave/cli/v2 v2.24.2 // indirect
+	github.com/urfave/cli/v2 v2.24.4 // indirect
 	github.com/xrash/smetrics v0.0.0-20201216005158-039620a65673 // indirect
 	golang.org/x/arch v0.0.0-20210923205945-b76863e36670 // indirect
 	golang.org/x/crypto v0.6.0 // indirect
-	golang.org/x/mod v0.7.0 // indirect
+	golang.org/x/mod v0.8.0 // indirect
 	golang.org/x/sys v0.5.0 // indirect
 	golang.org/x/text v0.7.0 // indirect
 	golang.org/x/time v0.0.0-20220224211638-0e9765cccd65 // indirect
-	golang.org/x/tools v0.5.0 // indirect
+	golang.org/x/tools v0.6.0 // indirect
 	google.golang.org/genproto v0.0.0-20230131230820-1c016267d619 // indirect
 	google.golang.org/grpc v1.53.0 // indirect
 	google.golang.org/protobuf v1.28.1 // indirect
