@@ -508,7 +508,7 @@ export enum DataSource {
   Hubspot = 'HUBSPOT',
   Na = 'NA',
   Openline = 'OPENLINE',
-  Zendesk = 'ZENDESK'
+  ZendeskSupport = 'ZENDESK_SUPPORT'
 }
 
 /**
@@ -626,7 +626,7 @@ export type ExternalSystemReferenceInput = {
 
 export enum ExternalSystemType {
   Hubspot = 'HUBSPOT',
-  Zendesk = 'ZENDESK'
+  ZendeskSupport = 'ZENDESK_SUPPORT'
 }
 
 export type FieldSet = {
@@ -1770,12 +1770,28 @@ export type CreateContactNoteMutationVariables = Exact<{
 
 export type CreateContactNoteMutation = { __typename?: 'Mutation', note_CreateForContact: { __typename?: 'Note', id: string, html: string, createdAt: any, updatedAt: any, source: DataSource, sourceOfTruth: DataSource, appSource: string, createdBy?: { __typename?: 'User', id: string, firstName: string, lastName: string } | null } };
 
+export type GetActionsForContactQueryVariables = Exact<{
+  id: Scalars['ID'];
+  from: Scalars['Time'];
+  to: Scalars['Time'];
+}>;
+
+
+export type GetActionsForContactQuery = { __typename?: 'Query', contact?: { __typename?: 'Contact', id: string, firstName?: string | null, lastName?: string | null, createdAt: any, actions: Array<{ __typename?: 'PageViewAction', id: string, application: string, startedAt: any, endedAt: any, engagedTime: any, pageUrl: string, pageTitle: string, orderInSession: any, sessionId: string }> } | null };
+
 export type GetContactCommunicationChannelsQueryVariables = Exact<{
   id: Scalars['ID'];
 }>;
 
 
 export type GetContactCommunicationChannelsQuery = { __typename?: 'Query', contact?: { __typename?: 'Contact', id: string, emails: Array<{ __typename?: 'Email', label?: EmailLabel | null, id: string, primary: boolean, email?: string | null }>, phoneNumbers: Array<{ __typename?: 'PhoneNumber', label?: PhoneNumberLabel | null, id: string, primary: boolean, e164?: string | null, rawPhoneNumber?: string | null }> } | null };
+
+export type GetContactConversationsQueryVariables = Exact<{
+  id: Scalars['ID'];
+}>;
+
+
+export type GetContactConversationsQuery = { __typename?: 'Query', contact?: { __typename?: 'Contact', conversations: { __typename?: 'ConversationPage', content: Array<{ __typename?: 'Conversation', id: string, startedAt: any }> } } | null };
 
 export type GetContactNotesQueryVariables = Exact<{
   id: Scalars['ID'];
@@ -1881,6 +1897,8 @@ export type EmailFragment = { __typename?: 'Email', id: string, primary: boolean
 
 export type PhoneNumberFragment = { __typename?: 'PhoneNumber', id: string, primary: boolean, e164?: string | null, rawPhoneNumber?: string | null };
 
+export type ConversationFragment = { __typename?: 'Conversation', id: string, startedAt: any, updatedAt: any };
+
 export type ContactNameFragment = { __typename?: 'Contact', firstName?: string | null, lastName?: string | null };
 
 export type OrganizationBaseDetailsFragment = { __typename?: 'Organization', id: string, name: string, industry?: string | null };
@@ -1978,6 +1996,13 @@ export const NoteContentFragmentDoc = gql`
   source
   sourceOfTruth
   appSource
+}
+    `;
+export const ConversationFragmentDoc = gql`
+    fragment Conversation on Conversation {
+  id
+  startedAt
+  updatedAt
 }
     `;
 export const OrganizationBaseDetailsFragmentDoc = gql`
@@ -2414,6 +2439,59 @@ export function useCreateContactNoteMutation(baseOptions?: Apollo.MutationHookOp
 export type CreateContactNoteMutationHookResult = ReturnType<typeof useCreateContactNoteMutation>;
 export type CreateContactNoteMutationResult = Apollo.MutationResult<CreateContactNoteMutation>;
 export type CreateContactNoteMutationOptions = Apollo.BaseMutationOptions<CreateContactNoteMutation, CreateContactNoteMutationVariables>;
+export const GetActionsForContactDocument = gql`
+    query GetActionsForContact($id: ID!, $from: Time!, $to: Time!) {
+  contact(id: $id) {
+    id
+    firstName
+    lastName
+    createdAt
+    actions(from: $from, to: $to) {
+      ... on PageViewAction {
+        id
+        application
+        startedAt
+        endedAt
+        engagedTime
+        pageUrl
+        pageTitle
+        orderInSession
+        sessionId
+      }
+    }
+  }
+}
+    `;
+
+/**
+ * __useGetActionsForContactQuery__
+ *
+ * To run a query within a React component, call `useGetActionsForContactQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetActionsForContactQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetActionsForContactQuery({
+ *   variables: {
+ *      id: // value for 'id'
+ *      from: // value for 'from'
+ *      to: // value for 'to'
+ *   },
+ * });
+ */
+export function useGetActionsForContactQuery(baseOptions: Apollo.QueryHookOptions<GetActionsForContactQuery, GetActionsForContactQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<GetActionsForContactQuery, GetActionsForContactQueryVariables>(GetActionsForContactDocument, options);
+      }
+export function useGetActionsForContactLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetActionsForContactQuery, GetActionsForContactQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<GetActionsForContactQuery, GetActionsForContactQueryVariables>(GetActionsForContactDocument, options);
+        }
+export type GetActionsForContactQueryHookResult = ReturnType<typeof useGetActionsForContactQuery>;
+export type GetActionsForContactLazyQueryHookResult = ReturnType<typeof useGetActionsForContactLazyQuery>;
+export type GetActionsForContactQueryResult = Apollo.QueryResult<GetActionsForContactQuery, GetActionsForContactQueryVariables>;
 export const GetContactCommunicationChannelsDocument = gql`
     query GetContactCommunicationChannels($id: ID!) {
   contact(id: $id) {
@@ -2449,6 +2527,46 @@ export function useGetContactCommunicationChannelsLazyQuery(baseOptions?: Apollo
 export type GetContactCommunicationChannelsQueryHookResult = ReturnType<typeof useGetContactCommunicationChannelsQuery>;
 export type GetContactCommunicationChannelsLazyQueryHookResult = ReturnType<typeof useGetContactCommunicationChannelsLazyQuery>;
 export type GetContactCommunicationChannelsQueryResult = Apollo.QueryResult<GetContactCommunicationChannelsQuery, GetContactCommunicationChannelsQueryVariables>;
+export const GetContactConversationsDocument = gql`
+    query GetContactConversations($id: ID!) {
+  contact(id: $id) {
+    conversations(pagination: {page: 0, limit: 25}) {
+      content {
+        id
+        startedAt
+      }
+    }
+  }
+}
+    `;
+
+/**
+ * __useGetContactConversationsQuery__
+ *
+ * To run a query within a React component, call `useGetContactConversationsQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetContactConversationsQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetContactConversationsQuery({
+ *   variables: {
+ *      id: // value for 'id'
+ *   },
+ * });
+ */
+export function useGetContactConversationsQuery(baseOptions: Apollo.QueryHookOptions<GetContactConversationsQuery, GetContactConversationsQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<GetContactConversationsQuery, GetContactConversationsQueryVariables>(GetContactConversationsDocument, options);
+      }
+export function useGetContactConversationsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetContactConversationsQuery, GetContactConversationsQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<GetContactConversationsQuery, GetContactConversationsQueryVariables>(GetContactConversationsDocument, options);
+        }
+export type GetContactConversationsQueryHookResult = ReturnType<typeof useGetContactConversationsQuery>;
+export type GetContactConversationsLazyQueryHookResult = ReturnType<typeof useGetContactConversationsLazyQuery>;
+export type GetContactConversationsQueryResult = Apollo.QueryResult<GetContactConversationsQuery, GetContactConversationsQueryVariables>;
 export const GetContactNotesDocument = gql`
     query GetContactNotes($id: ID!, $pagination: Pagination) {
   contact(id: $id) {

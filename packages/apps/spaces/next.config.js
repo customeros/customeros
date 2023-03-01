@@ -19,8 +19,6 @@ const config = {
     minimumCacheTTL: 31536000,
   },
   env: {
-    OASIS_GUI_PATH: process.env.OASIS_GUI_PATH,
-
     ORY_SDK_URL: process.env.ORY_SDK_URL,
 
     WEB_CHAT_API_KEY: process.env.WEB_CHAT_API_KEY,

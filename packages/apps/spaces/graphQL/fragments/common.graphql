@@ -86,3 +86,9 @@ fragment NoteContent on Note {
   sourceOfTruth
   appSource
 }
+
+fragment Conversation on Conversation {
+  id
+  startedAt
+  updatedAt
+}

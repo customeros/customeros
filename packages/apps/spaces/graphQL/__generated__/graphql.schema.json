@@ -2739,7 +2739,7 @@
             "deprecationReason": null
           },
           {
-            "name": "ZENDESK",
+            "name": "ZENDESK_SUPPORT",
             "description": null,
             "isDeprecated": false,
             "deprecationReason": null
@@ -3435,7 +3435,7 @@
             "deprecationReason": null
           },
           {
-            "name": "ZENDESK",
+            "name": "ZENDESK_SUPPORT",
             "description": null,
             "isDeprecated": false,
             "deprecationReason": null
