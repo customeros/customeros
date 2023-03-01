@@ -72,7 +72,10 @@ export const ContactCommunicationDetails = ({ id }: { id: string }) => {
           }
           icon={<Image alt={''} src='/icons/plus.svg' width={15} height={15} />}
         >
-          Add more
+          {/*TODO improve copy*/}
+          {!data?.emails.length && !data?.phoneNumbers?.length
+            ? 'Add communication channel'
+            : 'Add more'}
         </Button>
         <OverlayPanel
           ref={addCommunicationChannelContainerRef}
@@ -136,7 +139,10 @@ export const ContactCommunicationDetails = ({ id }: { id: string }) => {
           />
         ))}
       </ul>
-      <div className={styles.divider} />
+      {(!!data?.emails?.length || !!data?.phoneNumbers?.length) && (
+        <div className={styles.divider} />
+      )}
+
       <ul className={styles.detailsList}>
         {newPhoneNumber && (
           <DetailItemEditMode
