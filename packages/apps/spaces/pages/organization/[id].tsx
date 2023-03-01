@@ -7,6 +7,7 @@ import {
   OrganizationNoteEditor,
   NoteEditorModes,
   OrganizationContacts,
+  OrganizationCreate,
 } from '../../components/organization';
 
 function OrganizationDetailsPage() {
@@ -15,6 +16,17 @@ function OrganizationDetailsPage() {
     push,
   } = useRouter();
 
+  if (id === 'new') {
+    return (
+      <DetailsPageLayout onNavigateBack={() => push('/')}>
+        <section className={styles.organizationDetails}>
+          <OrganizationCreate />
+        </section>
+        <section className={styles.notes}></section>
+        <section className={styles.timeline}></section>
+      </DetailsPageLayout>
+    );
+  }
   return (
     <DetailsPageLayout onNavigateBack={() => push('/')}>
       <section className={styles.organizationDetails}>

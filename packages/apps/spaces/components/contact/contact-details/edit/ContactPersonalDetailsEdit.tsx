@@ -14,8 +14,10 @@ export const ContactPersonalDetailsEdit = ({
   });
 
   const handleUpdateDetails = (values: any) => {
-    onUpdateContactPersonalDetails(values).then(() => {
-      onSetMode('PREVIEW');
+    onUpdateContactPersonalDetails(values).then((value) => {
+      if (value) {
+        onSetMode('PREVIEW');
+      }
     });
   };
 

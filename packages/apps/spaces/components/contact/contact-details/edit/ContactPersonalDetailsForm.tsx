@@ -33,7 +33,7 @@ export const ContactPersonalDetailsEditForm = ({
     },
   });
 
-  const handleUpdateDetails = (e: FormEvent<HTMLFormElement>, values: any) => {
+  const handleSubmit = (e: FormEvent<HTMLFormElement>, values: any) => {
     e.stopPropagation();
     e.preventDefault();
     onSubmit(values);
@@ -51,7 +51,7 @@ export const ContactPersonalDetailsEditForm = ({
   return (
     <form
       className={styles.header}
-      onSubmit={(e) => handleUpdateDetails(e, getValues())}
+      onSubmit={(e) => handleSubmit(e, getValues())}
     >
       {mode === 'EDIT' && (
         <div className={styles.photo}>
@@ -124,7 +124,7 @@ export const ContactPersonalDetailsEditForm = ({
           }}
         >
           <Button mode='primary' type='submit'>
-            Save
+            {mode === 'CREATE' ? 'Create contact' : 'Save'}
           </Button>
         </div>
       </div>

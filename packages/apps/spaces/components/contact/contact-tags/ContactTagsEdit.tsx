@@ -1,6 +1,5 @@
 import React from 'react';
 import { TagInput } from '../../ui-kit';
-import { TagProps } from '../../ui-kit/atoms/tags/TagInput';
 import { useCreateTag, useDeleteTag, useTags } from '../../../hooks/useTags';
 import {
   useAddTagToContact,

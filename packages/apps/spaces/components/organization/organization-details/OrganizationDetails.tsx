@@ -1,10 +1,12 @@
-import React from 'react';
+import React, { useState } from 'react';
 import styles from './organization-details.module.scss';
 import { OrganizationDetailsSkeleton } from './skeletons';
 import { useOrganizationDetails } from '../../../hooks/useOrganization';
-import { Link } from '../../ui-kit';
+import { Button, Link } from '../../ui-kit';
+import { OrganizationEdit } from './edit';
 export const OrganizationDetails = ({ id }: { id: string }) => {
   const { data, loading, error } = useOrganizationDetails({ id });
+  const [mode, setMode] = useState('PREVIEW');
 
   if (loading) {
     return <OrganizationDetailsSkeleton />;
@@ -13,11 +15,23 @@ export const OrganizationDetails = ({ id }: { id: string }) => {
     return <>ERROR</>;
   }
 
+  if (mode === 'EDIT') {
+    return <OrganizationEdit data={data} onSetMode={setMode} />;
+  }
+
   return (
     <div className={styles.organizationDetails}>
       <div className={styles.bg}>
         <div>
-          <h1 className={styles.name}>{data?.name}</h1>
+          <div className={styles.header}>
+            <h1 className={styles.name}>{data?.name}</h1>
+            <div style={{ marginLeft: '4px' }}>
+              <Button mode='secondary' onClick={() => setMode('EDIT')}>
+                Edit
+              </Button>
+            </div>
+          </div>
+
           <span className={styles.industry}>{data?.industry}</span>
         </div>
 

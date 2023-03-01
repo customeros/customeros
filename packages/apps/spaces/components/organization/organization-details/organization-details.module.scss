@@ -50,3 +50,7 @@
     margin-right: var(--spacing-xxxs)
   }
 }
+.header {
+  display: flex;
+  justify-content: space-between;
+}
