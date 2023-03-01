@@ -21,6 +21,7 @@ type zendeskSupportDataService struct {
 	organizations  map[string]localEntity.Organization
 	contacts       map[string]localEntity.Contact
 	tickets        map[string]localEntity.Ticket
+	ticketComments map[string]localEntity.TicketComment
 }
 
 func NewZendeskSupportDataService(airbyteStoreDb *config.AirbyteStoreDB, tenant string) common.SourceDataService {
@@ -31,6 +32,7 @@ func NewZendeskSupportDataService(airbyteStoreDb *config.AirbyteStoreDB, tenant 
 		contacts:       map[string]localEntity.Contact{},
 		organizations:  map[string]localEntity.Organization{},
 		tickets:        map[string]localEntity.Ticket{},
+		ticketComments: map[string]localEntity.TicketComment{},
 	}
 }
 
@@ -48,6 +50,10 @@ func (s *zendeskSupportDataService) Refresh() {
 		logrus.Error(err)
 	}
 	err = s.getDb().AutoMigrate(&localEntity.SyncStatusTicket{})
+	if err != nil {
+		logrus.Error(err)
+	}
+	err = s.getDb().AutoMigrate(&localEntity.SyncStatusTicketComment{})
 	if err != nil {
 		logrus.Error(err)
 	}
@@ -70,6 +76,7 @@ func (s *zendeskSupportDataService) Close() {
 	s.contacts = make(map[string]localEntity.Contact)
 	s.organizations = make(map[string]localEntity.Organization)
 	s.tickets = make(map[string]localEntity.Ticket)
+	s.ticketComments = make(map[string]localEntity.TicketComment)
 }
 
 func (s *zendeskSupportDataService) SourceId() string {
@@ -190,12 +197,38 @@ func (s *zendeskSupportDataService) GetUsersForSync(batchSize int, runId string)
 	return customerOsUsers
 }
 
-func (z zendeskSupportDataService) GetNotesForSync(batchSize int, runId string) []entity.NoteData {
-	//TODO implement me
-	return nil
+func (s *zendeskSupportDataService) GetNotesForSync(batchSize int, runId string) []entity.NoteData {
+	zendeskTicketComments, err := repository.GetTicketComments(s.getDb(), batchSize, runId)
+	if err != nil {
+		logrus.Error(err)
+		return nil
+	}
+
+	notesToReturn := make([]entity.NoteData, 0, len(zendeskTicketComments))
+
+	for _, v := range zendeskTicketComments {
+		noteData := entity.NoteData{
+			ExternalId:     strconv.FormatInt(v.Id, 10),
+			ExternalSyncId: strconv.FormatInt(v.Id, 10),
+			ExternalSystem: s.SourceId(),
+			CreatedAt:      v.CreateDate.UTC(),
+			Html:           v.HtmlBody,
+			Text:           v.Body,
+		}
+		if v.TicketId > 0 {
+			noteData.NotedTicketsExternalIds = append(noteData.NotedTicketsExternalIds, strconv.FormatInt(v.TicketId, 10))
+		}
+		if v.AuthorId > 0 {
+			noteData.CreatorUserOrContactExternalId = strconv.FormatInt(v.AuthorId, 10)
+		}
+
+		notesToReturn = append(notesToReturn, noteData)
+		s.ticketComments[noteData.ExternalSyncId] = v
+	}
+	return notesToReturn
 }
 
-func (z zendeskSupportDataService) GetEmailMessagesForSync(batchSize int, runId string) []entity.EmailMessageData {
+func (s *zendeskSupportDataService) GetEmailMessagesForSync(batchSize int, runId string) []entity.EmailMessageData {
 	//TODO implement me
 	return nil
 }
@@ -236,12 +269,19 @@ func (s *zendeskSupportDataService) MarkUserProcessed(externalSyncId, runId stri
 	return nil
 }
 
-func (z zendeskSupportDataService) MarkNoteProcessed(externalSyncId, runId string, synced bool) error {
-	//TODO implement me
+func (s *zendeskSupportDataService) MarkNoteProcessed(externalSyncId, runId string, synced bool) error {
+	ticketComment, ok := s.ticketComments[externalSyncId]
+	if ok {
+		err := repository.MarkTicketCommentProcessed(s.getDb(), ticketComment, synced, runId)
+		if err != nil {
+			logrus.Errorf("error while marking ticket comment with external reference %s as synced for zendesk support", externalSyncId)
+		}
+		return err
+	}
 	return nil
 }
 
-func (z zendeskSupportDataService) MarkEmailMessageProcessed(externalSyncId, runId string, synced bool) error {
+func (s *zendeskSupportDataService) MarkEmailMessageProcessed(externalSyncId, runId string, synced bool) error {
 	//TODO implement me
 	return nil
 }

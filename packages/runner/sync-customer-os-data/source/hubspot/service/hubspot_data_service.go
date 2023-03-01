@@ -204,22 +204,23 @@ func (s *hubspotDataService) GetNotesForSync(batchSize int, runId string) []enti
 		}
 		// set main fields
 		noteForCustomerOs := entity.NoteData{
-			ExternalId:          v.Id,
-			ExternalSystem:      s.SourceId(),
-			CreatedAt:           v.CreateDate.UTC(),
-			Html:                hubspotNoteProperties.NoteBody,
-			UserExternalOwnerId: hubspotNoteProperties.OwnerId,
+			ExternalId:                 v.Id,
+			ExternalSyncId:             v.Id,
+			ExternalSystem:             s.SourceId(),
+			CreatedAt:                  v.CreateDate.UTC(),
+			Html:                       hubspotNoteProperties.NoteBody,
+			CreatorUserExternalOwnerId: hubspotNoteProperties.OwnerId,
 		}
 		if hubspotNoteProperties.CreatedByUserId.Valid {
-			noteForCustomerOs.UserExternalId = strconv.FormatFloat(hubspotNoteProperties.CreatedByUserId.Float64, 'f', 0, 64)
+			noteForCustomerOs.CreatorUserExternalId = strconv.FormatFloat(hubspotNoteProperties.CreatedByUserId.Float64, 'f', 0, 64)
 		}
 		// set reference to all linked contacts
-		noteForCustomerOs.ContactsExternalIds = utils.ConvertJsonbToStringSlice(v.ContactsExternalIds)
+		noteForCustomerOs.NotedContactsExternalIds = utils.ConvertJsonbToStringSlice(v.ContactsExternalIds)
 		// set reference to all linked companies
-		noteForCustomerOs.OrganizationsExternalIds = utils.ConvertJsonbToStringSlice(v.CompaniesExternalIds)
+		noteForCustomerOs.NotedOrganizationsExternalIds = utils.ConvertJsonbToStringSlice(v.CompaniesExternalIds)
 
 		customerOsNotes = append(customerOsNotes, noteForCustomerOs)
-		s.notes[v.Id] = v
+		s.notes[noteForCustomerOs.ExternalSyncId] = v
 	}
 	return customerOsNotes
 }

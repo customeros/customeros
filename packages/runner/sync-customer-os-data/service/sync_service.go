@@ -79,7 +79,8 @@ func (s *syncService) Sync(ctx context.Context, runId string) {
 		syncRunDtls.CompletedTickets = completedTicketCount
 		syncRunDtls.FailedTickets = failedTicketCount
 
-		completedNoteCount, failedNoteCount := s.syncNotes(ctx, dataService, syncDate, v.Tenant, runId)
+		noteSyncService, err := s.noteSyncService(v)
+		completedNoteCount, failedNoteCount := noteSyncService.SyncNotes(ctx, dataService, syncDate, v.Tenant, runId)
 		syncRunDtls.CompletedNotes = completedNoteCount
 		syncRunDtls.FailedNotes = failedNoteCount
 
@@ -95,76 +96,6 @@ func (s *syncService) Sync(ctx context.Context, runId string) {
 
 func (s *syncService) syncExternalSystem(ctx context.Context, dataService common.SourceDataService, tenant string) {
 	_ = s.repositories.ExternalSystemRepository.Merge(ctx, tenant, dataService.SourceId())
-}
-
-func (s *syncService) syncNotes(ctx context.Context, dataService common.SourceDataService, syncDate time.Time, tenant, runId string) (int, int) {
-	completed, failed := 0, 0
-	for {
-		notes := dataService.GetNotesForSync(batchSize, runId)
-		if len(notes) == 0 {
-			logrus.Debugf("no notes found for sync from %s for tenant %s", dataService.SourceId(), tenant)
-			break
-		}
-		logrus.Infof("syncing %d notes from %s for tenant %s", len(notes), dataService.SourceId(), tenant)
-
-		for _, note := range notes {
-			var failedSync = false
-
-			noteId, err := s.repositories.NoteRepository.MergeNote(ctx, tenant, syncDate, note)
-			if err != nil {
-				failedSync = true
-				logrus.Errorf("failed merge note with external reference %v for tenant %v :%v", note.ExternalId, tenant, err)
-			}
-
-			if len(noteId) > 0 {
-				for _, contactExternalId := range note.ContactsExternalIds {
-					err = s.repositories.NoteRepository.NoteLinkWithContactByExternalId(ctx, tenant, noteId, contactExternalId, dataService.SourceId())
-					if err != nil {
-						failedSync = true
-						logrus.Errorf("failed link note %v with contact for tenant %v :%v", noteId, tenant, err)
-					}
-				}
-
-				for _, organizationExternalId := range note.OrganizationsExternalIds {
-					err = s.repositories.NoteRepository.NoteLinkWithOrganizationByExternalId(ctx, tenant, noteId, organizationExternalId, dataService.SourceId())
-					if err != nil {
-						failedSync = true
-						logrus.Errorf("failed link note %v with organization for tenant %v :%v", noteId, tenant, err)
-					}
-				}
-
-				if len(note.UserExternalId) > 0 {
-					err = s.repositories.NoteRepository.NoteLinkWithUserByExternalId(ctx, tenant, noteId, note.UserExternalId, dataService.SourceId())
-					if err != nil {
-						failedSync = true
-						logrus.Errorf("failed link note %v with user for tenant %v :%v", noteId, tenant, err)
-					}
-				} else if len(note.UserExternalOwnerId) > 0 {
-					err = s.repositories.NoteRepository.NoteLinkWithUserByExternalOwnerId(ctx, tenant, noteId, note.UserExternalOwnerId, dataService.SourceId())
-					if err != nil {
-						failedSync = true
-						logrus.Errorf("failed link note %v with user for tenant %v :%v", noteId, tenant, err)
-					}
-				}
-			}
-			if failedSync == false {
-				logrus.Debugf("successfully merged note with id %v for tenant %v from %v", noteId, tenant, dataService.SourceId())
-			}
-			if err := dataService.MarkNoteProcessed(note.ExternalId, runId, failedSync == false); err != nil {
-				failed++
-				continue
-			}
-			if failedSync == true {
-				failed++
-			} else {
-				completed++
-			}
-		}
-		if len(notes) < batchSize {
-			break
-		}
-	}
-	return completed, failed
 }
 
 func (s *syncService) syncEmailMessages(ctx context.Context, dataService common.SourceDataService, syncDate time.Time, tenant, runId string) (int, int) {
@@ -458,4 +389,26 @@ func (s *syncService) ticketSyncService(tenantToSync entity.TenantSyncSettings) 
 	ticketSyncService := createTicketSyncService()
 
 	return ticketSyncService, nil
+}
+
+func (s *syncService) noteSyncService(tenantToSync entity.TenantSyncSettings) (NoteSyncService, error) {
+	noteSyncServiceMap := map[string]func() NoteSyncService{
+		string(entity.AirbyteSourceHubspot): func() NoteSyncService {
+			return s.services.NoteSyncService
+		},
+		string(entity.AirbyteSourceZendeskSupport): func() NoteSyncService {
+			return s.services.NoteSyncService
+		},
+	}
+
+	// Look up the corresponding implementation in the map using the tenantToSync.Source value.
+	createNoteSyncService, ok := noteSyncServiceMap[tenantToSync.Source]
+	if !ok {
+		// Return an error if the tenantToSync.Source value is not recognized.
+		return nil, fmt.Errorf("unknown airbyte source %v, skipping sync for tenant %v", tenantToSync.Source, tenantToSync.Tenant)
+	}
+
+	noteSyncService := createNoteSyncService()
+
+	return noteSyncService, nil
 }

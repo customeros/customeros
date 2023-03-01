@@ -79,12 +79,24 @@ func (s *organizationSyncService) SyncOrganizations(ctx context.Context, dataSer
 			}
 
 			if v.HasNotes() && !failedSync {
-				noteId, err := s.repositories.NoteRepository.MergeNote(ctx, tenant, syncDate, entity.NoteData{
+				note := entity.NoteData{
 					Html:           v.NoteContent,
 					CreatedAt:      v.CreatedAt,
 					ExternalId:     v.ExternalId,
 					ExternalSystem: v.ExternalSystem,
-				})
+				}
+				noteId, err := s.repositories.NoteRepository.GetMatchedNoteId(ctx, tenant, note)
+				if err != nil {
+					failedSync = true
+					logrus.Errorf("failed finding existing matched note with external reference id %v for tenant %v :%v", note.ExternalId, tenant, err)
+				}
+				// Create new note id if not found
+				if len(noteId) == 0 {
+					noteUuid, _ := uuid.NewRandom()
+					noteId = noteUuid.String()
+				}
+				note.Id = noteId
+				err = s.repositories.NoteRepository.MergeNote(ctx, tenant, syncDate, note)
 				if err != nil {
 					failedSync = true
 					logrus.Errorf("failed merge organization note for organization %v, tenant %v :%v", organizationId, tenant, err)

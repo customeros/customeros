@@ -11,7 +11,7 @@ import (
 )
 
 type TicketRepository interface {
-	GetMatchedTicketId(ctx context.Context, tenant string, user entity.TicketData) (string, error)
+	GetMatchedTicketId(ctx context.Context, tenant string, ticket entity.TicketData) (string, error)
 	MergeTicket(ctx context.Context, tenant string, syncDate time.Time, user entity.TicketData) error
 	MergeTagForTicket(ctx context.Context, tenant, ticketId, tagName, externalSystem string) error
 	LinkTicketWithCollaboratorUserByExternalId(ctx context.Context, tenant, ticketId, userExternalId, externalSystem string) error

@@ -119,12 +119,24 @@ func (s *contactSyncService) SyncContacts(ctx context.Context, dataService commo
 
 			if v.HasNotes() && !failedSync {
 				for _, note := range v.Notes {
-					noteId, err := s.repositories.NoteRepository.MergeNote(ctx, tenant, syncDate, entity.NoteData{
+					localNote := entity.NoteData{
 						Html:           note.Note,
 						CreatedAt:      v.CreatedAt,
 						ExternalId:     string(note.FieldSource) + "-" + v.ExternalId,
 						ExternalSystem: v.ExternalSystem,
-					})
+					}
+					noteId, err := s.repositories.NoteRepository.GetMatchedNoteId(ctx, tenant, localNote)
+					if err != nil {
+						failedSync = true
+						logrus.Errorf("failed finding existing matched note with external reference id %v for tenant %v :%v", localNote.ExternalId, tenant, err)
+					}
+					// Create new note id if not found
+					if len(noteId) == 0 {
+						noteUuid, _ := uuid.NewRandom()
+						noteId = noteUuid.String()
+					}
+					localNote.Id = noteId
+					err = s.repositories.NoteRepository.MergeNote(ctx, tenant, syncDate, localNote)
 					if err != nil {
 						failedSync = true
 						logrus.Errorf("failed merge note for contact %v, tenant %v :%v", contactId, tenant, err)
