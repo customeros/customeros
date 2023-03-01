@@ -93,6 +93,14 @@ func (s *ticketSyncService) SyncTickets(ctx context.Context, dataService common.
 				}
 			}
 
+			if v.HasAssignee() && !failedSync {
+				err = s.repositories.TicketRepository.LinkTicketWithAssigneeUserByExternalId(ctx, tenant, ticketId, v.AssigneeUserExternalId, v.ExternalSystem)
+				if err != nil {
+					failedSync = true
+					logrus.Errorf("failed link ticket %v with assignee user for tenant %v :%v", ticketId, tenant, err)
+				}
+			}
+
 			logrus.Debugf("successfully merged ticket with id %v for tenant %v from %v", ticketId, tenant, dataService.SourceId())
 			if err := dataService.MarkTicketProcessed(v.ExternalSyncId, runId, failedSync == false); err != nil {
 				failed++
