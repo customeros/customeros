@@ -68,7 +68,7 @@ export const SidePanel: React.FC<SidePanelProps> = ({
             label='Settings'
             isOpen={isPanelOpen}
             icon={<Cog />}
-            onClick={() => null}
+            onClick={() => router.push('/settings')}
           />
 
           <SidePanelListItem
