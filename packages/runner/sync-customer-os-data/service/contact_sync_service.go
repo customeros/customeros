@@ -137,11 +137,11 @@ func (s *contactSyncService) SyncContacts(ctx context.Context, dataService commo
 				}
 			}
 
-			if !failedSync {
-				for _, organization_id := range v.TextCustomFields {
-					if err = s.repositories.ContactRepository.MergeTextCustomField(ctx, tenant, contactId, organization_id); err != nil {
+			if v.HasTextCustomFields() && !failedSync {
+				for _, customField := range v.TextCustomFields {
+					if err = s.repositories.ContactRepository.MergeTextCustomField(ctx, tenant, contactId, customField); err != nil {
 						failedSync = true
-						logrus.Errorf("failed merge custom field %v for contact %v, tenant %v :%v", organization_id.Name, contactId, tenant, err)
+						logrus.Errorf("failed merge custom field %v for contact %v, tenant %v :%v", customField.Name, contactId, tenant, err)
 					}
 				}
 			}
@@ -154,7 +154,7 @@ func (s *contactSyncService) SyncContacts(ctx context.Context, dataService commo
 				}
 			}
 
-			if len(v.Tags) > 0 && !failedSync {
+			if v.HasTags() && !failedSync {
 				for _, tag := range v.Tags {
 					err = s.repositories.ContactRepository.MergeTagForContact(ctx, tenant, contactId, tag, v.ExternalSystem)
 					if err != nil {

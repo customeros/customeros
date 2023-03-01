@@ -7,13 +7,6 @@ type ContactNote struct {
 	Note        string
 }
 
-type TextCustomField struct {
-	Name           string
-	Value          string
-	ExternalSystem string
-	CreatedAt      time.Time
-}
-
 type ContactData struct {
 	Id        string
 	Title     string
@@ -76,4 +69,12 @@ func (c ContactData) HasNotes() bool {
 
 func (c ContactData) HasLocation() bool {
 	return len(c.DefaultLocationName) > 0
+}
+
+func (c ContactData) HasTextCustomFields() bool {
+	return len(c.TextCustomFields) > 0
+}
+
+func (c ContactData) HasTags() bool {
+	return len(c.Tags) > 0
 }
