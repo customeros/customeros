@@ -73,13 +73,15 @@ CALL {
 CALL {
  MATCH (node:Tenant) with node, labels(node) as labs unwind labs as labsList with node, count(node) as nodeCount where nodeCount <> 1 return count(nodeCount) as x
  UNION
- MATCH (node:EmailDomain) with node, labels(node) as labs unwind labs as labsList with node, count(node) as nodeCount where nodeCount <> 1 return count(nodeCount) as x
+ MATCH (node:Domain) with node, labels(node) as labs unwind labs as labsList with node, count(node) as nodeCount where nodeCount <> 1 return count(nodeCount) as x
  UNION
  MATCH (node:AlternateOrganization) with node, labels(node) as labs unwind labs as labsList with node, count(node) as nodeCount where nodeCount <> 1 return count(nodeCount) as x
  UNION
  MATCH (node:AlternateContact) with node, labels(node) as labs unwind labs as labsList with node, count(node) as nodeCount where nodeCount <> 1 return count(nodeCount) as x
  UNION
  MATCH (node:Tag) with node, labels(node) as labs unwind labs as labsList with node, count(node) as nodeCount where nodeCount <> 2 return count(nodeCount) as x
+ UNION
+ MATCH (node:Ticket) with node, labels(node) as labs unwind labs as labsList with node, count(node) as nodeCount where nodeCount <> 2 return count(nodeCount) as x
  UNION
  MATCH (node:ExternalSystem) with node, labels(node) as labs unwind labs as labsList with node, count(node) as nodeCount where nodeCount <> 2 return count(nodeCount) as x
  UNION
@@ -124,6 +126,8 @@ CALL {
  MATCH (t:Tenant)--(n:User) WHERE NOT 'User_'+t.name  in labels(n) return count(n) as x
  UNION
  MATCH (t:Tenant)--(n:Tag) WHERE NOT 'Tag_'+t.name  in labels(n) return count(n) as x
+ UNION
+ MATCH (t:Tenant)--(n:Ticket) WHERE NOT 'Ticket_'+t.name  in labels(n) return count(n) as x
  UNION
  MATCH (t:Tenant)--(n:Email) WHERE NOT 'Email_'+t.name  in labels(n) return count(n) as x
  UNION
