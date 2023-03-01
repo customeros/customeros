@@ -551,15 +551,33 @@ func mapNodeToConversation(node *dbtype.Node) *Conversation {
 	props := utils.GetPropsFromNode(*node)
 
 	conversation := new(Conversation)
-	conversation.Id = utils.GetPropsFromNode(*node)["id"].(string)
-	conversation.Status = utils.GetPropsFromNode(*node)["status"].(string)
-	conversation.Channel = utils.GetPropsFromNode(*node)["channel"].(string)
-	conversation.StartedAt = utils.GetPropsFromNode(*node)["startedAt"].(time.Time)
-	conversation.UpdatedAt = utils.GetPropsFromNode(*node)["updatedAt"].(time.Time)
-	conversation.InitiatorFirstName = utils.GetPropsFromNode(*node)["initiatorFirstName"].(string)
-	conversation.InitiatorLastName = utils.GetPropsFromNode(*node)["initiatorLastName"].(string)
-	conversation.InitiatorUsername = utils.GetPropsFromNode(*node)["initiatorUsername"].(string)
-	conversation.InitiatorType = utils.GetPropsFromNode(*node)["initiatorType"].(string)
+	if id, err := utils.GetPropsFromNode(*node)["id"].(string); err {
+		conversation.Id = id
+	}
+	if status, err := utils.GetPropsFromNode(*node)["status"].(string); err {
+		conversation.Status = status
+	}
+	if channel, err := utils.GetPropsFromNode(*node)["channel"].(string); err {
+		conversation.Channel = channel
+	}
+	if channel, err := utils.GetPropsFromNode(*node)["startedAt"].(time.Time); err {
+		conversation.StartedAt = channel
+	}
+	if updatedAt, err := utils.GetPropsFromNode(*node)["updatedAt"].(time.Time); err {
+		conversation.UpdatedAt = updatedAt
+	}
+	if initatorFirstName, err := utils.GetPropsFromNode(*node)["initiatorFirstName"].(string); err {
+		conversation.InitiatorFirstName = initatorFirstName
+	}
+	if initatorLastName, err := utils.GetPropsFromNode(*node)["initiatorLastName"].(string); err {
+		conversation.InitiatorLastName = initatorLastName
+	}
+	if initatorUsername, err := utils.GetPropsFromNode(*node)["initiatorUsername"].(string); err {
+		conversation.InitiatorUsername = initatorUsername
+	}
+	if initatorType, err := utils.GetPropsFromNode(*node)["initiatorType"].(string); err {
+		conversation.InitiatorType = initatorType
+	}
 
 	conversation.LastSenderId = utils.GetStringPropOrEmpty(props, "lastSenderId")
 	conversation.LastSenderType = utils.GetStringPropOrEmpty(props, "lastSenderType")
