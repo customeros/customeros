@@ -73,9 +73,15 @@ func (r *ticketRepository) MergeTicket(ctx context.Context, tenant string, syncD
 		"				tt.sourceOfTruth=$sourceOfTruth, " +
 		"				tt.appSource=$appSource, " +
 		"				tt.subject=$subject, " +
+		"				tt.status=$status, " +
+		"				tt.priority=$priority, " +
+		"				tt.description=$description, " +
 		"               tt:%s" +
 		" ON MATCH SET " +
 		"				tt.subject = CASE WHEN tt.sourceOfTruth=$sourceOfTruth OR tt.subject is null OR tt.subject = '' THEN $subject ELSE tt.subject END, " +
+		"				tt.description = CASE WHEN tt.sourceOfTruth=$sourceOfTruth OR tt.description is null OR tt.description = '' THEN $description ELSE tt.description END, " +
+		"				tt.status = CASE WHEN tt.sourceOfTruth=$sourceOfTruth OR tt.status is null OR tt.status = '' THEN $status ELSE tt.status END, " +
+		"				tt.priority = CASE WHEN tt.sourceOfTruth=$sourceOfTruth OR tt.priority is null OR tt.priority = '' THEN $priority ELSE tt.priority END, " +
 		"				tt.updatedAt=$now " +
 		" WITH tt, ext " +
 		" MERGE (tt)-[r:IS_LINKED_WITH {externalId:$externalId}]->(ext) " +
@@ -84,7 +90,7 @@ func (r *ticketRepository) MergeTicket(ctx context.Context, tenant string, syncD
 		" WITH tt " +
 		" FOREACH (x in CASE WHEN tt.sourceOfTruth <> $sourceOfTruth THEN [tt] ELSE [] END | " +
 		"  MERGE (x)-[:ALTERNATE]->(alt:AlternateTicket {source:$source, id:x.id}) " +
-		"    SET alt.updatedAt=$now, alt.appSource=$appSource " +
+		"    SET alt.updatedAt=$now, alt.appSource=$appSource, alt.subject=$subject, alt.status=$status, alt.priority=$priority, alt.description=$description" +
 		") RETURN tt.id"
 
 	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
@@ -102,6 +108,9 @@ func (r *ticketRepository) MergeTicket(ctx context.Context, tenant string, syncD
 				"sourceOfTruth":  ticket.ExternalSystem,
 				"appSource":      ticket.ExternalSystem,
 				"subject":        ticket.Subject,
+				"description":    ticket.Description,
+				"status":         ticket.Status,
+				"priority":       ticket.Priority,
 				"now":            time.Now().UTC(),
 			})
 		if err != nil {

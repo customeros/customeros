@@ -13,6 +13,9 @@ type Ticket struct {
 	UpdatedDate          time.Time    `gorm:"column:updated_at"`
 	Url                  string       `gorm:"column:url"`
 	Subject              string       `gorm:"column:subject"`
+	Status               string       `gorm:"column:status"`
+	Priority             string       `gorm:"column:priority"`
+	Description          string       `gorm:"column:description"`
 	CollaboratorIds      pgtype.JSONB `gorm:"column:collaborator_ids;type:jsonb"`
 	FollowerIds          pgtype.JSONB `gorm:"column:follower_ids;type:jsonb"`
 	SubmitterId          int64        `gorm:"column:submitter_id"`
