@@ -17,6 +17,7 @@ type TicketRepository interface {
 	LinkTicketWithFollowerUserByExternalId(ctx context.Context, tenant, ticketId, userExternalId, externalSystem string) error
 	LinkTicketWithSubmitterUserOrContactByExternalId(ctx context.Context, tenant, ticketId, externalId, externalSystem string) error
 	LinkTicketWithRequesterUserOrContactByExternalId(ctx context.Context, tenant, ticketId, externalId, externalSystem string) error
+	LinkTicketWithAssigneeUserByExternalId(ctx context.Context, tenant, ticketId, externalId, externalSystem string) error
 }
 
 type ticketRepository struct {
@@ -189,6 +190,27 @@ func (r *ticketRepository) LinkTicketWithRequesterUserOrContactByExternalId(ctx 
 					WHERE (n:User OR n:Contact)
 				MATCH (tt:Ticket {id:$ticketId})-[:IS_LINKED_WITH]->(e)
 				MERGE (n)-[:REQUESTED]->(tt)
+				`,
+			map[string]interface{}{
+				"tenant":         tenant,
+				"externalSystem": externalSystem,
+				"ticketId":       ticketId,
+				"externalId":     externalId,
+			})
+		return nil, err
+	})
+	return err
+}
+
+func (r *ticketRepository) LinkTicketWithAssigneeUserByExternalId(ctx context.Context, tenant, ticketId, externalId, externalSystem string) error {
+	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
+	defer session.Close(ctx)
+
+	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		_, err := tx.Run(ctx, `
+				MATCH (t:Tenant {name:$tenant})<-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]-(e:ExternalSystem {id:$externalSystem})<-[:IS_LINKED_WITH {externalId:$externalId}]-(n:User)
+				MATCH (tt:Ticket {id:$ticketId})-[:IS_LINKED_WITH]->(e)
+				MERGE (n)-[:IS_ASSIGNED_TO]->(tt)
 				`,
 			map[string]interface{}{
 				"tenant":         tenant,

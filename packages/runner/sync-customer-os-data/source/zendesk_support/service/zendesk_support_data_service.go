@@ -271,6 +271,9 @@ func (s *zendeskSupportDataService) GetTicketsForSync(batchSize int, runId strin
 		if v.RequesterId > 0 {
 			ticketData.RequesterExternalId = strconv.FormatInt(v.RequesterId, 10)
 		}
+		if v.AssigneeId > 0 {
+			ticketData.AssigneeUserExternalId = strconv.FormatInt(v.AssigneeId, 10)
+		}
 
 		tickets = append(tickets, ticketData)
 		s.tickets[ticketData.ExternalSyncId] = v
