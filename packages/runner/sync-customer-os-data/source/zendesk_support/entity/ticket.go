@@ -16,6 +16,7 @@ type Ticket struct {
 	Status               string       `gorm:"column:status"`
 	Type                 string       `gorm:"column:type"`
 	Tags                 pgtype.JSONB `gorm:"column:tags;type:jsonb"`
+	CustomFieldsAsJson   pgtype.JSONB `gorm:"column:custom_fields;type:jsonb"`
 	Priority             string       `gorm:"column:priority"`
 	Description          string       `gorm:"column:description"`
 	CollaboratorIds      pgtype.JSONB `gorm:"column:collaborator_ids;type:jsonb"`

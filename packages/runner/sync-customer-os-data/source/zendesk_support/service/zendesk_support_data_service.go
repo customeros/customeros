@@ -252,7 +252,15 @@ func (s *zendeskSupportDataService) GetTicketsForSync(batchSize int, runId strin
 		logrus.Error(err)
 		return nil
 	}
-	tickets := make([]entity.TicketData, 0, len(zendeskTickets))
+
+	ticketFields, err := repository.GetTicketFieldsNotInTypes(s.getDb(), []string{"tagger"})
+	ticketFieldMap := make(map[int64]string)
+	for _, ticketField := range ticketFields {
+		ticketFieldMap[ticketField.Id] = ticketField.Title
+	}
+
+	ticketsToReturn := make([]entity.TicketData, 0, len(zendeskTickets))
+
 	for _, v := range zendeskTickets {
 		ticketData := entity.TicketData{
 			ExternalId:     strconv.FormatInt(v.Id, 10),
@@ -282,10 +290,31 @@ func (s *zendeskSupportDataService) GetTicketsForSync(batchSize int, runId strin
 		}
 		ticketData.Tags = append(ticketData.Tags, utils.GetUniqueElements(utils.ConvertJsonbToStringSlice(v.Tags))...)
 
-		tickets = append(tickets, ticketData)
+		type TicketCustomField struct {
+			Id    int64  `json:"id"`
+			Value string `json:"value"`
+		}
+		var ticketCustomFields []TicketCustomField
+		err = v.CustomFieldsAsJson.AssignTo(&ticketCustomFields)
+		if err == nil {
+			for _, customField := range ticketCustomFields {
+				if _, ok := ticketFieldMap[customField.Id]; ok {
+					if len(customField.Value) > 0 {
+						ticketData.TextCustomFields = append(ticketData.TextCustomFields, entity.TextCustomField{
+							Name:           ticketFieldMap[customField.Id],
+							Value:          customField.Value,
+							ExternalSystem: s.SourceId(),
+							CreatedAt:      v.CreateDate.UTC(),
+						})
+					}
+				}
+			}
+		}
+
+		ticketsToReturn = append(ticketsToReturn, ticketData)
 		s.tickets[ticketData.ExternalSyncId] = v
 	}
-	return tickets
+	return ticketsToReturn
 }
 
 func (s *zendeskSupportDataService) MarkTicketProcessed(externalSyncId, runId string, synced bool) error {

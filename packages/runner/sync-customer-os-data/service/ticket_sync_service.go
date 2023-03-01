@@ -101,12 +101,21 @@ func (s *ticketSyncService) SyncTickets(ctx context.Context, dataService common.
 				}
 			}
 
-			if len(v.Tags) > 0 {
+			if v.HasTags() && !failedSync {
 				for _, tag := range v.Tags {
 					err = s.repositories.TicketRepository.MergeTagForTicket(ctx, tenant, ticketId, tag, v.ExternalSystem)
 					if err != nil {
 						failedSync = true
 						logrus.Errorf("failed to merge tag %v for ticket %v, tenant %v :%v", tag, ticketId, tenant, err)
+					}
+				}
+			}
+
+			if v.HasTextCustomFields() && !failedSync {
+				for _, customField := range v.TextCustomFields {
+					if err = s.repositories.TicketRepository.MergeTextCustomField(ctx, tenant, ticketId, customField); err != nil {
+						failedSync = true
+						logrus.Errorf("failed merge custom field %v for ticket %v, tenant %v :%v", customField.Name, ticketId, tenant, err)
 					}
 				}
 			}
