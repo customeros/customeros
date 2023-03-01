@@ -41,12 +41,11 @@ export default function MyApp({
 
         <link rel='manifest' href='/manifest.json' />
       </Head>
-
-      <MainPageWrapper>
-        <RecoilRoot>
+      <RecoilRoot>
+        <MainPageWrapper>
           <Component {...pageProps} />
-        </RecoilRoot>
-      </MainPageWrapper>
+        </MainPageWrapper>
+      </RecoilRoot>
 
       <ToastContainer
         position='bottom-right'

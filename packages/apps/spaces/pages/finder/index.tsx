@@ -19,7 +19,6 @@ const FinderComponent: NextPage = () => {
         <SidePanel
           onPanelToggle={setSidePanelVisible}
           isPanelOpen={isSidePanelVisible}
-          logoutUrl={undefined}
         >
           <WebChat
             apikey={`${process.env.WEB_CHAT_API_KEY}`}

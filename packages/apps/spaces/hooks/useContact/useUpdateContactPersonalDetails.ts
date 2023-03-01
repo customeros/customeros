@@ -24,6 +24,7 @@ export const useUpdateContactPersonalDetails = ({
       try {
         const response = await updateContactPersonalDetails({
           variables: { input: { ...input, id: contactId } },
+          refetchQueries: ['GetContactPersonalDetails'],
           // optimisticResponse: {
           //   emailUpdateInContact: {
           //     __typename: 'Email',

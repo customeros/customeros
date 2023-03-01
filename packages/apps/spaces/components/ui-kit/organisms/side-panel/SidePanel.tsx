@@ -5,13 +5,13 @@ import { SidePanelListItem } from './side-panel-list-item';
 import classNames from 'classnames';
 import styles from './side-panel.module.scss';
 import Image from 'next/image';
-import { router } from 'next/client';
 import { useRouter } from 'next/router';
+import { useRecoilValue } from 'recoil';
+import { logoutUrlState } from '../../../../state';
 
 interface SidePanelProps {
   onPanelToggle: (status: boolean) => void;
   isPanelOpen: boolean;
-  logoutUrl: string | undefined;
   children: React.ReactNode;
 }
 
@@ -19,10 +19,9 @@ export const SidePanel: React.FC<SidePanelProps> = ({
   onPanelToggle,
   isPanelOpen,
   children,
-  logoutUrl,
 }) => {
   const router = useRouter();
-
+  const logoutUrl = useRecoilValue(logoutUrlState);
   return (
     <>
       <aside
@@ -76,7 +75,7 @@ export const SidePanel: React.FC<SidePanelProps> = ({
             label='Log Out'
             isOpen={isPanelOpen}
             icon={<SignOut />}
-            onClick={() => (window.location.href = logoutUrl ?? '#')}
+            onClick={() => (window.location.href = logoutUrl)}
           />
         </ul>
       </aside>
