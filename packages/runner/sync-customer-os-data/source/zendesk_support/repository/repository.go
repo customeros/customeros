@@ -175,3 +175,45 @@ func MarkTicketProcessed(db *gorm.DB, ticket entity.Ticket, synced bool, runId s
 			RunId:              runId,
 		}).Error
 }
+
+func GetTicketComments(db *gorm.DB, limit int, runId string) (entity.TicketComments, error) {
+	var ticketComments entity.TicketComments
+
+	cte := `
+		WITH UpToDateData AS (
+   		SELECT row_number() OVER (PARTITION BY id ORDER BY created_at DESC) AS row_num, *
+   		FROM ticket_comments
+		)`
+	err := db.
+		Raw(cte+" SELECT u.* FROM UpToDateData u left join openline_sync_status_ticket_comments s "+
+			" on u.id = s.id and u._airbyte_ab_id = s._airbyte_ab_id and u._airbyte_ticket_comments_hashid = s._airbyte_ticket_comments_hashid "+
+			" WHERE u.row_num = ? "+
+			" and (s.synced_to_customer_os is null or s.synced_to_customer_os = ?) "+
+			" and (s.synced_to_customer_os_attempt is null or s.synced_to_customer_os_attempt < ?) "+
+			" and (s.run_id is null or s.run_id <> ?) "+
+			" limit ?", 1, false, 10, runId, limit).
+		Find(&ticketComments).Error
+
+	if err != nil {
+		return nil, err
+	}
+	return ticketComments, nil
+}
+
+func MarkTicketCommentProcessed(db *gorm.DB, ticketComment entity.TicketComment, synced bool, runId string) error {
+	syncStatusTicketComment := entity.SyncStatusTicketComment{
+		Id:                          ticketComment.Id,
+		AirbyteAbId:                 ticketComment.AirbyteAbId,
+		AirbyteTicketCommentsHashid: ticketComment.AirbyteTicketCommentsHashid,
+	}
+	db.FirstOrCreate(&syncStatusTicketComment, syncStatusTicketComment)
+
+	return db.Model(&syncStatusTicketComment).
+		Where(&entity.SyncStatusTicketComment{Id: ticketComment.Id, AirbyteAbId: ticketComment.AirbyteAbId, AirbyteTicketCommentsHashid: ticketComment.AirbyteTicketCommentsHashid}).
+		Updates(entity.SyncStatusTicketComment{
+			SyncedToCustomerOs: synced,
+			SyncedAt:           time.Now(),
+			SyncAttempt:        syncStatusTicketComment.SyncAttempt + 1,
+			RunId:              runId,
+		}).Error
+}
