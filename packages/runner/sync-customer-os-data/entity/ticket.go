@@ -13,6 +13,9 @@ type TicketData struct {
 	ExternalUrl    string
 
 	Subject                     string
+	Status                      string
+	Priority                    string
+	Description                 string
 	CollaboratorUserExternalIds []string
 	FollowerUserExternalIds     []string
 	SubmitterExternalId         string

@@ -262,6 +262,9 @@ func (s *zendeskSupportDataService) GetTicketsForSync(batchSize int, runId strin
 			CreatedAt:      v.CreateDate.UTC(),
 			UpdatedAt:      v.UpdatedDate.UTC(),
 			Subject:        v.Subject,
+			Status:         v.Status,
+			Priority:       v.Priority,
+			Description:    v.Description,
 		}
 		ticketData.CollaboratorUserExternalIds = utils.GetUniqueElements(utils.ConvertJsonbToStringSlice(v.CollaboratorIds))
 		ticketData.FollowerUserExternalIds = utils.GetUniqueElements(utils.ConvertJsonbToStringSlice(v.FollowerIds))
