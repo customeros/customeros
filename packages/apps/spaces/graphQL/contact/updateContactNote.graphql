@@ -1,5 +1,5 @@
 mutation updateContactNote($input: NoteUpdateInput!) {
-    note_Update(input: $input) {
-        ...NoteContent
-    }
+  note_Update(input: $input) {
+    ...NoteContent
+  }
 }

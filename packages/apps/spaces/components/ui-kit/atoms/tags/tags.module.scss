@@ -1,4 +1,4 @@
-@import "styles/mixins";
+@import 'styles/mixins';
 .option {
   display: flex;
   align-items: center;
@@ -45,7 +45,7 @@
 
 .tagListItem {
   display: flex;
-  flex:1;
+  flex: 1;
   justify-content: space-between;
   align-content: center;
   font-size: var(--font-size-xs);
@@ -53,7 +53,7 @@
   &:hover,
   &:focus,
   &:active {
-    background: var(--secondary-color)
+    background: var(--secondary-color);
   }
 }
 

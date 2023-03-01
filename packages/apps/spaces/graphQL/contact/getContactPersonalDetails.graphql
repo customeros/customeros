@@ -2,7 +2,7 @@ query GetContactPersonalDetails($id: ID!) {
   contact(id: $id) {
     ...ContactPersonalDetails
     owner {
-      id,
+      id
       firstName
       lastName
     }

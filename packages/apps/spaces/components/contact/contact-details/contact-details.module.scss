@@ -1,5 +1,4 @@
-@import "../../../styles/mixins";
-
+@import '../../../styles/mixins';
 
 .contactDetails {
   display: flex;
@@ -7,7 +6,6 @@
   border-radius: 10px;
   max-width: 400px;
   margin-bottom: var(--spacing-xxl);
-
 }
 
 .header {
@@ -70,14 +68,13 @@
   justify-content: center;
   border-radius: 50%;
   padding: var(--spacing-xxxs);
-
 }
 
 .label {
   font-size: var(--font-size-xs);
   font-weight: 600;
   margin-top: var(--spacing-xxxs);
-  color: var(--text-secondary-color)
+  color: var(--text-secondary-color);
 }
 
 .value {
@@ -98,19 +95,16 @@
   color: var(--text-faded);
   font-weight: lighter;
 
-
   & span {
     font-weight: bold;
-    margin-right: var(--spacing-xxxs)
+    margin-right: var(--spacing-xxxs);
   }
 }
-
-
 
 .searchWrapper {
   display: flex;
   flex-direction: column;
-  font-size: var(--font-size-xs)
+  font-size: var(--font-size-xs);
 }
 
 .xyz {
@@ -118,7 +112,7 @@
   align-items: baseline;
   font-size: var(--font-size-sm);
   font-weight: normal;
-  color: var(--text-faded)
+  color: var(--text-faded);
 }
 
 .titleSelector {

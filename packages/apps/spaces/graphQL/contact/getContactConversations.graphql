@@ -1,0 +1,10 @@
+query GetContactConversations($id: ID!) {
+  contact(id: $id) {
+    conversations(pagination: { page: 0, limit: 25 }) {
+      content {
+        id
+        startedAt
+      }
+    }
+  }
+}

@@ -83,7 +83,6 @@ Environment variables used by this app
 | -------------------- | ------------------ |
 | CUSTOMER_OS_API_PATH | customerOS API URL |
 | CUSTOMER_OS_API_KEY  | customerOS API Key |
-| OASIS_GUI_PATH       | Oasis GUI URL      |
 
 ### Technologies
 

@@ -1,4 +1,4 @@
-@import "../../../../styles/mixins";
+@import '../../../../styles/mixins';
 .button {
   padding: var(--spacing-xxxs) var(--spacing-sm);
   border-radius: var(--border-radius-xl);
@@ -28,7 +28,6 @@
     }
   }
 
-
   &.link {
     color: var(--royal-blue-800);
     background: transparent;
@@ -40,6 +39,4 @@
       //text-decoration: underline;
     }
   }
-
-
 }

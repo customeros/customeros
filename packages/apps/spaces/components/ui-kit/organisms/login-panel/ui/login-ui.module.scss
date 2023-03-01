@@ -1,4 +1,4 @@
-@import "../../../../../styles/mixins";
+@import '../../../../../styles/mixins';
 
 .form {
   @include flex-center;
@@ -7,7 +7,7 @@
 
   & button {
     margin: var(--spacing-lg) 0;
-    width: 100%
+    width: 100%;
   }
 }
 

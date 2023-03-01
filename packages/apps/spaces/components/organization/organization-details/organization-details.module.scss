@@ -1,4 +1,4 @@
-@import "../../../styles/mixins";
+@import '../../../styles/mixins';
 
 .organizationDetails {
   display: flex;
@@ -8,17 +8,20 @@
   //background-image: url("../../../public/backgrounds/blueprint/background-00003.webp");
   background-size: cover;
   background-repeat: no-repeat;
-  position:relative;
+  position: relative;
   backdrop-filter: blur(10px);
-
 }
 
 .bg {
   @include frosted-glass;
-  background: radial-gradient(rgba(255, 255, 255, 0.7) 30%, rgba(255, 255, 255, 0.9));
+  background: radial-gradient(
+    rgba(255, 255, 255, 0.7) 30%,
+    rgba(255, 255, 255, 0.9)
+  );
   height: 100%;
   backdrop-filter: blur(5px);
-  box-shadow: 5px 5px 10px rgb(0 0 0 / 11%), -1px -1px 2px #ffffff47, 1px 1px 2px #5555552e;
+  box-shadow: 5px 5px 10px rgb(0 0 0 / 11%), -1px -1px 2px #ffffff47,
+    1px 1px 2px #5555552e;
   padding: var(--spacing-md) var(--spacing-lg);
 }
 
@@ -44,10 +47,9 @@
   color: var(--text-faded);
   font-weight: lighter;
 
-
   & span {
     font-weight: bold;
-    margin-right: var(--spacing-xxxs)
+    margin-right: var(--spacing-xxxs);
   }
 }
 .header {
