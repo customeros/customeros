@@ -14,9 +14,12 @@
 
 .settingsContainer {
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
-  grid-auto-rows: min-content;
   grid-gap: 38px;
+
+  @include min-tablet {
+    grid-template-columns: 1fr 1fr 1fr;
+    grid-auto-rows: min-content;
+  }
 }
 
 .heading {
