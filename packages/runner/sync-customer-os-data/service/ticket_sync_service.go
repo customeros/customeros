@@ -111,15 +111,6 @@ func (s *ticketSyncService) SyncTickets(ctx context.Context, dataService common.
 				}
 			}
 
-			if v.HasTextCustomFields() && !failedSync {
-				for _, customField := range v.TextCustomFields {
-					if err = s.repositories.TicketRepository.MergeTextCustomField(ctx, tenant, ticketId, customField); err != nil {
-						failedSync = true
-						logrus.Errorf("failed merge custom field %v for ticket %v, tenant %v :%v", customField.Name, ticketId, tenant, err)
-					}
-				}
-			}
-
 			logrus.Debugf("successfully merged ticket with id %v for tenant %v from %v", ticketId, tenant, dataService.SourceId())
 			if err := dataService.MarkTicketProcessed(v.ExternalSyncId, runId, failedSync == false); err != nil {
 				failed++
