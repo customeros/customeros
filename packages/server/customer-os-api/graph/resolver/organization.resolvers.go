@@ -63,16 +63,19 @@ func (r *mutationResolver) OrganizationDelete(ctx context.Context, id string) (*
 }
 
 // OrganizationMerge is the resolver for the organization_Merge field.
-func (r *mutationResolver) OrganizationMerge(ctx context.Context, primaryOrganizationID string, mergedOrganizationID string) (*model.Organization, error) {
+func (r *mutationResolver) OrganizationMerge(ctx context.Context, primaryOrganizationID string, mergedOrganizationIds []string) (*model.Organization, error) {
 	defer func(start time.Time) {
 		utils.LogMethodExecution(start, utils.GetFunctionName())
 	}(time.Now())
 
-	err := r.Services.OrganizationService.Merge(ctx, primaryOrganizationID, mergedOrganizationID)
-	if err != nil {
-		graphql.AddErrorf(ctx, "Failed to merge organization %s into organization %s", mergedOrganizationID, primaryOrganizationID)
-		return nil, err
+	for _, mergedOrganizationID := range mergedOrganizationIds {
+		err := r.Services.OrganizationService.Merge(ctx, primaryOrganizationID, mergedOrganizationID)
+		if err != nil {
+			graphql.AddErrorf(ctx, "Failed to merge organization %s into organization %s", mergedOrganizationID, primaryOrganizationID)
+			return nil, err
+		}
 	}
+
 	organizationEntityPtr, err := r.Services.OrganizationService.GetOrganizationById(ctx, primaryOrganizationID)
 	if err != nil {
 		graphql.AddErrorf(ctx, "Failed to get organization by id %s", primaryOrganizationID)

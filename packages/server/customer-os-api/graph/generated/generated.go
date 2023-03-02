@@ -298,7 +298,7 @@ type ComplexityRoot struct {
 		NoteUpdate                             func(childComplexity int, input model.NoteUpdateInput) int
 		OrganizationCreate                     func(childComplexity int, input model.OrganizationInput) int
 		OrganizationDelete                     func(childComplexity int, id string) int
-		OrganizationMerge                      func(childComplexity int, primaryOrganizationID string, mergedOrganizationID string) int
+		OrganizationMerge                      func(childComplexity int, primaryOrganizationID string, mergedOrganizationIds []string) int
 		OrganizationTypeCreate                 func(childComplexity int, input model.OrganizationTypeInput) int
 		OrganizationTypeDelete                 func(childComplexity int, id string) int
 		OrganizationTypeUpdate                 func(childComplexity int, input model.OrganizationTypeUpdateInput) int
@@ -553,7 +553,7 @@ type MutationResolver interface {
 	OrganizationCreate(ctx context.Context, input model.OrganizationInput) (*model.Organization, error)
 	OrganizationUpdate(ctx context.Context, input model.OrganizationUpdateInput) (*model.Organization, error)
 	OrganizationDelete(ctx context.Context, id string) (*model.Result, error)
-	OrganizationMerge(ctx context.Context, primaryOrganizationID string, mergedOrganizationID string) (*model.Organization, error)
+	OrganizationMerge(ctx context.Context, primaryOrganizationID string, mergedOrganizationIds []string) (*model.Organization, error)
 	OrganizationTypeCreate(ctx context.Context, input model.OrganizationTypeInput) (*model.OrganizationType, error)
 	OrganizationTypeUpdate(ctx context.Context, input model.OrganizationTypeUpdateInput) (*model.OrganizationType, error)
 	OrganizationTypeDelete(ctx context.Context, id string) (*model.Result, error)
@@ -2224,7 +2224,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.OrganizationMerge(childComplexity, args["primaryOrganizationId"].(string), args["mergedOrganizationId"].(string)), true
+		return e.complexity.Mutation.OrganizationMerge(childComplexity, args["primaryOrganizationId"].(string), args["mergedOrganizationIds"].([]string)), true
 
 	case "Mutation.organizationType_Create":
 		if e.complexity.Mutation.OrganizationTypeCreate == nil {
@@ -4367,7 +4367,7 @@ extend type Mutation {
     organization_Create(input: OrganizationInput!): Organization!
     organization_Update(input: OrganizationUpdateInput!): Organization!
     organization_Delete(id: ID!): Result
-    organization_Merge(primaryOrganizationId: ID!, mergedOrganizationId: ID!): Organization!
+    organization_Merge(primaryOrganizationId: ID!, mergedOrganizationIds: [ID!]!): Organization!
 }
 
 type Organization implements Node {
@@ -5901,15 +5901,15 @@ func (ec *executionContext) field_Mutation_organization_Merge_args(ctx context.C
 		}
 	}
 	args["primaryOrganizationId"] = arg0
-	var arg1 string
-	if tmp, ok := rawArgs["mergedOrganizationId"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("mergedOrganizationId"))
-		arg1, err = ec.unmarshalNID2string(ctx, tmp)
+	var arg1 []string
+	if tmp, ok := rawArgs["mergedOrganizationIds"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("mergedOrganizationIds"))
+		arg1, err = ec.unmarshalNID2ᚕstringᚄ(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["mergedOrganizationId"] = arg1
+	args["mergedOrganizationIds"] = arg1
 	return args, nil
 }
 
@@ -17015,7 +17015,7 @@ func (ec *executionContext) _Mutation_organization_Merge(ctx context.Context, fi
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().OrganizationMerge(rctx, fc.Args["primaryOrganizationId"].(string), fc.Args["mergedOrganizationId"].(string))
+		return ec.resolvers.Mutation().OrganizationMerge(rctx, fc.Args["primaryOrganizationId"].(string), fc.Args["mergedOrganizationIds"].([]string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -31573,6 +31573,38 @@ func (ec *executionContext) marshalNID2string(ctx context.Context, sel ast.Selec
 		}
 	}
 	return res
+}
+
+func (ec *executionContext) unmarshalNID2ᚕstringᚄ(ctx context.Context, v interface{}) ([]string, error) {
+	var vSlice []interface{}
+	if v != nil {
+		vSlice = graphql.CoerceList(v)
+	}
+	var err error
+	res := make([]string, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalNID2string(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
+func (ec *executionContext) marshalNID2ᚕstringᚄ(ctx context.Context, sel ast.SelectionSet, v []string) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	for i := range v {
+		ret[i] = ec.marshalNID2string(ctx, sel, v[i])
+	}
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
 }
 
 func (ec *executionContext) unmarshalNInt2int(ctx context.Context, v interface{}) (int, error) {
