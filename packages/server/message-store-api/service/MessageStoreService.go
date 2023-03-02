@@ -35,7 +35,7 @@ func (s *MessageService) GetMessage(ctx context.Context, msgId *msProto.MessageI
 		return nil, status.Errorf(codes.Unauthenticated, "Invalid API Key")
 	}
 
-	tenantName, err := commonModuleService.GetTenantForUsernameForGRPC(ctx, s.postgresRepositories.CommonRepositories.UserRepository)
+	tenant, err := s.resolveTenant(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -51,7 +51,7 @@ func (s *MessageService) GetMessage(ctx context.Context, msgId *msProto.MessageI
 
 	conversationEvent := *queryResult.Result.(*entity.ConversationEvent)
 
-	conversationExists, err := s.customerOSService.ConversationByIdExists(ctx, *tenantName, conversationEvent.ConversationId)
+	conversationExists, err := s.customerOSService.ConversationByIdExists(ctx, tenant, conversationEvent.ConversationId)
 	if err != nil {
 		return nil, fmt.Errorf("GetMessage: %w", err)
 	}
@@ -148,12 +148,12 @@ func (s *MessageService) GetFeeds(ctx context.Context, request *msProto.GetFeeds
 		return nil, status.Errorf(codes.Unauthenticated, "Invalid API Key")
 	}
 
-	tenantName, err := commonModuleService.GetTenantForUsernameForGRPC(ctx, s.postgresRepositories.CommonRepositories.UserRepository)
+	tenant, err := s.resolveTenant(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	conversations, err := s.customerOSService.GetConversations(ctx, *tenantName, request.GetOnlyContacts())
+	conversations, err := s.customerOSService.GetConversations(ctx, tenant, request.GetOnlyContacts())
 	if err != nil {
 		return nil, fmt.Errorf("GetFeeds: %w", err)
 	}
@@ -173,8 +173,7 @@ func (s *MessageService) GetFeed(ctx context.Context, feedIdRequest *msProto.Fee
 	if !apiKeyValid {
 		return nil, status.Errorf(codes.Unauthenticated, "Invalid API Key")
 	}
-
-	tenantName, err := commonModuleService.GetTenantForUsernameForGRPC(ctx, s.postgresRepositories.CommonRepositories.UserRepository)
+	tenant, err := s.resolveTenant(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -183,7 +182,7 @@ func (s *MessageService) GetFeed(ctx context.Context, feedIdRequest *msProto.Fee
 		return nil, status.Errorf(codes.InvalidArgument, "GetFeed: Feed ID must be specified")
 	}
 
-	conversation, err := s.customerOSService.GetConversationById(ctx, *tenantName, feedIdRequest.GetId())
+	conversation, err := s.customerOSService.GetConversationById(ctx, tenant, feedIdRequest.GetId())
 	if err != nil {
 		return nil, fmt.Errorf("GetFeed: %w", err)
 	}
@@ -197,24 +196,9 @@ func (s *MessageService) SaveMessage(ctx context.Context, input *msProto.InputMe
 		return nil, status.Errorf(codes.Unauthenticated, "Invalid API Key")
 	}
 
-	tenant := ""
-	md, ok := metadata.FromIncomingContext(ctx)
-	if !ok {
-		return nil, errors.New("no metadata")
-	}
-	tenantPtr, err := commonModuleService.GetTenantForUsernameForGRPC(ctx, s.postgresRepositories.CommonRepositories.UserRepository)
+	tenant, err := s.resolveTenant(ctx)
 	if err != nil {
-		kh := md.Get("X-Openline-TENANT")
-		if kh != nil && len(kh) == 1 {
-			tenant = kh[0]
-			if len(tenant) == 0 {
-				return nil, errors.New("tenant header is empty")
-			}
-		} else {
-			return nil, errors.New("unable read tenant header")
-		}
-	} else {
-		tenant = *tenantPtr
+		return nil, err
 	}
 
 	if input.ConversationId == nil && input.InitiatorIdentifier == nil {
@@ -274,6 +258,30 @@ func (s *MessageService) SaveMessage(ctx context.Context, input *msProto.InputMe
 
 	return s.commonStoreService.EncodeMessageIdToMs(conversationEvent), nil
 }
+
+func (s *MessageService) resolveTenant(ctx context.Context) (string, error) {
+	tenant := ""
+	md, ok := metadata.FromIncomingContext(ctx)
+	if !ok {
+		return "", errors.New("no metadata")
+	}
+	tenantPtr, err := commonModuleService.GetTenantForUsernameForGRPC(ctx, s.postgresRepositories.CommonRepositories.UserRepository)
+	if err != nil {
+		kh := md.Get("X-Openline-TENANT")
+		if kh != nil && len(kh) == 1 {
+			tenant = kh[0]
+			if len(tenant) == 0 {
+				return "", errors.New("tenant header is empty")
+			}
+		} else {
+			return "", errors.New("unable read tenant header")
+		}
+	} else {
+		tenant = *tenantPtr
+	}
+	return tenant, nil
+}
+
 func (s *MessageService) getSenderTypeStr(initiator *Participant) string {
 	var lastSenderType = ""
 	if initiator.Type == entity.CONTACT {
