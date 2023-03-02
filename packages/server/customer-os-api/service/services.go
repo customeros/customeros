@@ -27,6 +27,7 @@ type Services struct {
 	SearchService              SearchService
 	QueryService               QueryService
 	DomainService              DomainService
+	TicketService              TicketService
 }
 
 func InitServices(driver *neo4j.DriverWithContext) *Services {
@@ -52,6 +53,7 @@ func InitServices(driver *neo4j.DriverWithContext) *Services {
 		LocationService:            NewLocationService(repositories),
 		TagService:                 NewTagService(repositories),
 		DomainService:              NewDomainService(repositories),
+		TicketService:              NewTicketService(repositories),
 	}
 	services.SearchService = NewSearchService(repositories, &services)
 	services.QueryService = NewQueryService(repositories, &services)

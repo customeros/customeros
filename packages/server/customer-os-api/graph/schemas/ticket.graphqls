@@ -1,0 +1,11 @@
+type Ticket implements Node {
+    id: ID!
+    createdAt: Time!
+    updatedAt: Time!
+
+    subject: String
+    status: String
+    priority: String
+    description: String
+    tags: [Tag] @goField(forceResolver: true)
+}

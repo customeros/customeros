@@ -30,6 +30,16 @@ func (i *Loaders) GetTagsForContact(ctx context.Context, contactId string) (*ent
 	return &resultObj, nil
 }
 
+func (i *Loaders) GetTagsForTickets(ctx context.Context, ticketId string) (*entity.TagEntities, error) {
+	thunk := i.TagsForTicket.Load(ctx, dataloader.StringKey(ticketId))
+	result, err := thunk()
+	if err != nil {
+		return nil, err
+	}
+	resultObj := result.(entity.TagEntities)
+	return &resultObj, nil
+}
+
 func (b *tagBatcher) getTagsForOrganizations(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
 	ids, keyOrder := sortKeys(keys)
 
@@ -99,6 +109,45 @@ func (b *tagBatcher) getTagsForContacts(ctx context.Context, keys dataloader.Key
 		if ix, ok := keyOrder[contactId]; ok {
 			results[ix] = &dataloader.Result{Data: record, Error: nil}
 			delete(keyOrder, contactId)
+		}
+	}
+	for _, ix := range keyOrder {
+		results[ix] = &dataloader.Result{Data: entity.TagEntities{}, Error: nil}
+	}
+
+	return results
+}
+
+func (b *tagBatcher) getTagsForTickets(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
+	ids, keyOrder := sortKeys(keys)
+
+	ctx, cancel := context.WithTimeout(ctx, tagContextTimeout)
+	defer cancel()
+
+	tagEntitiesPtr, err := b.tagService.GetTagsForTickets(ctx, ids)
+	if err != nil {
+		// check if context deadline exceeded error occurred
+		if ctx.Err() == context.DeadlineExceeded {
+			return []*dataloader.Result{{Data: nil, Error: errors.New("deadline exceeded to get tags for tickets")}}
+		}
+		return []*dataloader.Result{{Data: nil, Error: err}}
+	}
+
+	tagEntitiesByTicketId := make(map[string]entity.TagEntities)
+	for _, val := range *tagEntitiesPtr {
+		if list, ok := tagEntitiesByTicketId[val.DataloaderKey]; ok {
+			tagEntitiesByTicketId[val.DataloaderKey] = append(list, val)
+		} else {
+			tagEntitiesByTicketId[val.DataloaderKey] = entity.TagEntities{val}
+		}
+	}
+
+	// construct an output array of dataloader results
+	results := make([]*dataloader.Result, len(keys))
+	for ticketId, record := range tagEntitiesByTicketId {
+		if ix, ok := keyOrder[ticketId]; ok {
+			results[ix] = &dataloader.Result{Data: record, Error: nil}
+			delete(keyOrder, ticketId)
 		}
 	}
 	for _, ix := range keyOrder {

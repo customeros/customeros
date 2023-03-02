@@ -380,6 +380,39 @@ func CreateTag(ctx context.Context, driver *neo4j.DriverWithContext, tenant, tag
 	return tagId.String()
 }
 
+func CreateTicket(ctx context.Context, driver *neo4j.DriverWithContext, tenant, subject string) string {
+	var tagId, _ = uuid.NewRandom()
+	query := `MATCH (t:Tenant {name:$tenant})
+			MERGE (t)<-[:TICKET_BELONGS_TO_TENANT]-(tt:Ticket {id:$id})
+			ON CREATE SET tt.subject=$subject, tt.createdAt=$now, tt.updatedAt=$now`
+	ExecuteWriteQuery(ctx, driver, query, map[string]any{
+		"id":      tagId.String(),
+		"tenant":  tenant,
+		"subject": subject,
+		"now":     utils.Now(),
+	})
+	return tagId.String()
+}
+
+func RequestTicket(ctx context.Context, driver *neo4j.DriverWithContext, contactId string, ticketId string) {
+	query := `MATCH (c:Contact {id:$contactId}), (t:Ticket {id:$ticketId})
+			MERGE (c)-[r:REQUESTED]->(t)`
+	ExecuteWriteQuery(ctx, driver, query, map[string]any{
+		"ticketId":  ticketId,
+		"contactId": contactId,
+	})
+}
+
+func TagTicket(ctx context.Context, driver *neo4j.DriverWithContext, ticketId, tagId string) {
+	query := `MATCH (t:Ticket {id:$ticketId}), (tag:Tag {id:$tagId})
+			MERGE (t)-[r:TAGGED]->(tag)
+			ON CREATE SET r.taggedAt=datetime({timezone: 'UTC'})`
+	ExecuteWriteQuery(ctx, driver, query, map[string]any{
+		"tagId":    tagId,
+		"ticketId": ticketId,
+	})
+}
+
 func TagContact(ctx context.Context, driver *neo4j.DriverWithContext, contactId, tagId string) {
 	query := `MATCH (c:Contact {id:$contactId}), (tag:Tag {id:$tagId})
 			MERGE (c)-[r:TAGGED]->(tag)
