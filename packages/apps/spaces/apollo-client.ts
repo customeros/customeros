@@ -37,19 +37,6 @@ const client = new ApolloClient({
               },
             ) {
               if (page === 0) return incoming;
-              if (searchTerm && page === 0) {
-                const listLength = incoming.totalElements;
-                if (listLength <= limit) {
-                  return incoming;
-                }
-              }
-              if (searchTerm && page > 0) {
-                return {
-                  ...existing,
-                  content: [...existing.content, ...incoming.content],
-                };
-              }
-
               return {
                 ...existing,
                 content: [...existing.content, ...incoming.content],

@@ -5,10 +5,13 @@ import styles from './finder.module.scss';
 import { DashboardViewItem } from '../../graphQL/__generated__/generated';
 import { Search } from '../ui-kit/atoms';
 import { useFinderTableData } from '../../hooks/useFinderTableData';
+import { useRecoilState } from 'recoil';
+import { finderSearchTerm } from '../../state';
 
 export const Finder: React.FC = () => {
   const [page, setPagination] = useState(0);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useRecoilState(finderSearchTerm);
+
   const { data, loading, fetchMore, variables, totalElements } =
     useFinderTableData({
       pagination: {
@@ -34,11 +37,12 @@ export const Finder: React.FC = () => {
   return (
     <div style={{ padding: '36px', height: '100%' }}>
       <div className={styles.inputSection}>
-        <h1> All Contacts </h1>
+        <h1> Everything </h1>
 
         <DebouncedInput
           onChange={(event) => handleFilterResults(event.target.value)}
           placeholder={'Search organizations, contacts, locations...'}
+          value={searchTerm}
         >
           <Search />
         </DebouncedInput>
