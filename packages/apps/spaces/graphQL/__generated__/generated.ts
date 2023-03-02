@@ -1751,6 +1751,7 @@ export type CreateContactMutation = {
     source: DataSource;
     firstName?: string | null;
     lastName?: string | null;
+    name?: string | null;
     jobRoles: Array<{
       __typename?: 'JobRole';
       jobTitle?: string | null;
@@ -1930,6 +1931,7 @@ export type GetContactPersonalDetailsQuery = {
     source: DataSource;
     firstName?: string | null;
     lastName?: string | null;
+    name?: string | null;
     owner?: {
       __typename?: 'User';
       id: string;
@@ -2127,6 +2129,7 @@ export type GetDashboardDataQuery = {
         id: string;
         firstName?: string | null;
         lastName?: string | null;
+        name?: string | null;
         jobRoles: Array<{
           __typename?: 'JobRole';
           jobTitle?: string | null;
@@ -2270,6 +2273,7 @@ export type ContactNameFragment = {
   __typename?: 'Contact';
   firstName?: string | null;
   lastName?: string | null;
+  name?: string | null;
 };
 
 export type OrganizationBaseDetailsFragment = {
@@ -2285,6 +2289,7 @@ export type ContactPersonalDetailsFragment = {
   source: DataSource;
   firstName?: string | null;
   lastName?: string | null;
+  name?: string | null;
   jobRoles: Array<{
     __typename?: 'JobRole';
     jobTitle?: string | null;
@@ -2607,6 +2612,7 @@ export const ContactNameFragmentDoc = gql`
   fragment ContactName on Contact {
     firstName
     lastName
+    name
   }
 `;
 export const JobRoleFragmentDoc = gql`
