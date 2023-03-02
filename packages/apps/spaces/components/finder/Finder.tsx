@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Table, DebouncedInput } from '../ui-kit';
-import { columns } from './Columns';
+import { columns } from './finder-table/Columns';
 import styles from './finder.module.scss';
 import { DashboardViewItem } from '../../graphQL/__generated__/generated';
 import { Search } from '../ui-kit/atoms';

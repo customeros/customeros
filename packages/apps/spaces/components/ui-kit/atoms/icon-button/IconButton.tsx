@@ -10,7 +10,14 @@ import classNames from 'classnames';
 interface Props extends ButtonHTMLAttributes<HTMLButtonElement> {
   icon?: ReactNode;
   onClick: ReactEventHandler;
-  mode?: 'default' | 'primary' | 'secondary' | 'accent' | 'text' | 'danger';
+  mode?:
+    | 'default'
+    | 'primary'
+    | 'secondary'
+    | 'accent'
+    | 'text'
+    | 'danger'
+    | 'dangerLink';
   size?: 'xxxs' | 'xxs' | 'xs' | 'sm' | 'md' | 'lg';
 }
 

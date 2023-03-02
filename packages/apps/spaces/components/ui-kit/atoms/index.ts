@@ -13,4 +13,5 @@ export { DebouncedInput, Input } from './input';
 export { Link } from './link';
 export { Highlight } from './highlight';
 export { TagsList, TagListSkeleton, TagInput } from './tags';
+export { Tooltip } from './tooltip';
 export * from './icons';

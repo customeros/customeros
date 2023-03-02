@@ -49,7 +49,6 @@ export const Table = <T,>({
     <>
       <div className={styles.itemCounter}>
         <span>Total items:</span>
-
         {totalItems}
       </div>
 
@@ -57,6 +56,20 @@ export const Table = <T,>({
         <thead className={styles.header}>
           <tr>
             {columns?.map(({ label, subLabel, width }) => {
+              if (typeof label !== 'string') {
+                console.log('🏷️ ----- : HERE');
+                return (
+                  <th
+                    key={`header-${label}`}
+                    style={{ width }}
+                    data-th={label}
+                    data-th2={subLabel}
+                  >
+                    {label}
+                  </th>
+                );
+              }
+
               return (
                 <th
                   key={`header-${label}`}

@@ -15,6 +15,7 @@ export {
   TagInput,
   TagListSkeleton,
   Highlight,
+  Tooltip,
 
   // ICONS
   IdCard,
