@@ -14,6 +14,7 @@ import (
 	msProto "github.com/openline-ai/openline-customer-os/packages/server/message-store-api/proto/generated"
 	"github.com/openline-ai/openline-customer-os/packages/server/message-store-api/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/message-store-api/repository/entity"
+	"golang.org/x/exp/slices"
 	"golang.org/x/net/context"
 	"log"
 	"time"
@@ -423,7 +424,7 @@ func (s *CustomerOSService) GetConversationParticipantsIds(ctx context.Context, 
 	defer session.Close(ctx)
 
 	records, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		queryResult, err := tx.Run(ctx, "MATCH (c:Conversation_"+tenant+"{id:$conversationId})<-[PARTICIPATES]-(p) RETURN DISTINCT RETURN DISTINCT labels(p)[0], p.id",
+		queryResult, err := tx.Run(ctx, "MATCH (c:Conversation_"+tenant+"{id:$conversationId})<-[PARTICIPATES]-(p) RETURN DISTINCT RETURN DISTINCT labels(p), p.id",
 			map[string]interface{}{
 				"conversationId": conversationId,
 			})
@@ -441,11 +442,11 @@ func (s *CustomerOSService) GetConversationParticipantsIds(ctx context.Context, 
 			if record != nil {
 				if len(record.Values) > 0 {
 					p := Participant{}
-					val, ok := record.Values[0].(string)
+					val, ok := record.Values[0].([]string)
 					if ok {
-						if val == "Contact" {
+						if slices.Contains(val, "Contact") {
 							p.Type = entity.CONTACT
-						} else if val == "User" {
+						} else if slices.Contains(val, "User") {
 							p.Type = entity.USER
 						} else {
 							log.Printf("GetConversationParticipantsIds: unknown participant type %s, skipping", val)
@@ -455,9 +456,9 @@ func (s *CustomerOSService) GetConversationParticipantsIds(ctx context.Context, 
 						log.Printf("GetConversationParticipantsIds: Error trying to get record type, skipping")
 						continue
 					}
-					val, ok = record.Values[0].(string)
+					valId, ok := record.Values[0].(string)
 					if ok {
-						p.Id = val
+						p.Id = valId
 					} else {
 						log.Printf("GetConversationParticipantsIds: Error trying to get record id, skipping")
 						continue
