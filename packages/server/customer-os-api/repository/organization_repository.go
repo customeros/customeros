@@ -24,7 +24,7 @@ type OrganizationRepository interface {
 	UnlinkFromDomainsNotInListInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant, organizationId string, domains []string) error
 	MergeOrganizationPropertiesInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, primaryOrganizationId, mergedOrganizationId string, sourceOfTruth entity.DataSource) error
 	MergeOrganizationRelationsInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, primaryOrganizationId, mergedOrganizationId string) error
-	AdaptMergedOrganizationLabelsInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, mergedOrganizationId string) error
+	UpdateMergedOrganizationLabelsInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, mergedOrganizationId string) error
 }
 
 type organizationRepository struct {
@@ -393,17 +393,19 @@ func (r *organizationRepository) MergeOrganizationRelationsInTx(ctx context.Cont
 
 	if _, err := tx.Run(ctx, matchQuery+
 		" WITH primary, merged "+
-		" MATCH (merged)-[:HAS]->(e:Email) "+
+		" MATCH (merged)-[rel:HAS]->(e:Email) "+
 		" MERGE (primary)-[newRel:HAS]->(e) "+
-		" ON CREATE SET newRel.mergedFrom = $mergedOrganizationId, newRel.createdAt = $now", params); err != nil {
+		" ON CREATE SET newRel.primary=rel.primary, newRel.label=rel.label, "+
+		"				newRel.mergedFrom = $mergedOrganizationId, newRel.createdAt = $now", params); err != nil {
 		return err
 	}
 
 	if _, err := tx.Run(ctx, matchQuery+
 		" WITH primary, merged "+
-		" MATCH (merged)-[:HAS]->(p:PhoneNumber) "+
+		" MATCH (merged)-[rel:HAS]->(p:PhoneNumber) "+
 		" MERGE (primary)-[newRel:HAS]->(p) "+
-		" ON CREATE SET newRel.mergedFrom = $mergedOrganizationId, newRel.createdAt = $now", params); err != nil {
+		" ON CREATE SET newRel.primary=rel.primary, newRel.label=rel.label, "+
+		"				newRel.mergedFrom = $mergedOrganizationId, newRel.createdAt = $now", params); err != nil {
 		return err
 	}
 
@@ -419,7 +421,8 @@ func (r *organizationRepository) MergeOrganizationRelationsInTx(ctx context.Cont
 		" WITH primary, merged "+
 		" MATCH (merged)-[rel:IS_LINKED_WITH]->(ext:ExternalSystem) "+
 		" MERGE (primary)-[newRel:IS_LINKED_WITH {externalId:rel.externalId}]->(ext) "+
-		" ON CREATE SET newRel.syncDate=rel.syncDate, newRel.mergedFrom = $mergedOrganizationId, newRel.createdAt = $now", params); err != nil {
+		" ON CREATE SET newRel.syncDate=rel.syncDate, newRel.externalUrl=rel.externalUrl, "+
+		"				newRel.mergedFrom = $mergedOrganizationId, newRel.createdAt = $now", params); err != nil {
 		return err
 	}
 
@@ -432,7 +435,7 @@ func (r *organizationRepository) MergeOrganizationRelationsInTx(ctx context.Cont
 	return nil
 }
 
-func (r *organizationRepository) AdaptMergedOrganizationLabelsInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, mergedOrganizationId string) error {
+func (r *organizationRepository) UpdateMergedOrganizationLabelsInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, mergedOrganizationId string) error {
 	query := "MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {id:$organizationId}) " +
 		" SET org:MergedOrganization:%s " +
 		" REMOVE org:Organization:%s"

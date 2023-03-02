@@ -283,7 +283,7 @@ func (s *organizationService) Merge(ctx context.Context, primaryOrganizationId, 
 			return nil, err
 		}
 
-		err = s.repositories.OrganizationRepository.AdaptMergedOrganizationLabelsInTx(ctx, tx, tenant, mergedOrganizationId)
+		err = s.repositories.OrganizationRepository.UpdateMergedOrganizationLabelsInTx(ctx, tx, tenant, mergedOrganizationId)
 		if err != nil {
 			return nil, err
 		}

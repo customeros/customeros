@@ -27,6 +27,9 @@ type ContactRepository interface {
 	GetContactsForPhoneNumber(ctx context.Context, tenant, phoneNumber string) ([]*dbtype.Node, error)
 	AddTag(ctx context.Context, tenant, contactId, tagId string) (*dbtype.Node, error)
 	RemoveTag(ctx context.Context, tenant, contactId, tagId string) (*dbtype.Node, error)
+	MergeContactPropertiesInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, primaryContactId, mergedContactId string, sourceOfTruth entity.DataSource) error
+	MergeContactRelationsInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, primaryContactId, mergedContactId string) error
+	UpdateMergedContactLabelsInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, mergedContactId string) error
 }
 
 type contactRepository struct {
@@ -441,4 +444,173 @@ func (r *contactRepository) GetContactsForPhoneNumber(ctx context.Context, tenan
 		return nil, err
 	}
 	return result.([]*dbtype.Node), err
+}
+
+func (r *contactRepository) MergeContactPropertiesInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, primaryContactId, mergedContactId string, sourceOfTruth entity.DataSource) error {
+	_, err := tx.Run(ctx, `
+			MATCH (t:Tenant {name:$tenant})<-[:CONTACT_BELONGS_TO_TENANT]-(primary:Contact {id:$primaryContactId}),
+			(t)<-[:CONTACT_BELONGS_TO_TENANT]-(merged:Contact {id:$mergedContactId})
+			SET primary.firstName = CASE WHEN primary.firstName is null OR primary.firstName = '' THEN merged.firstName ELSE primary.firstName END, 
+				primary.lastName = CASE WHEN primary.lastName is null OR primary.lastName = '' THEN merged.lastName ELSE primary.lastName END, 
+				primary.name = CASE WHEN primary.name is null OR primary.name = '' THEN merged.name ELSE primary.name END, 
+				primary.title = CASE WHEN primary.title is null OR primary.title = '' THEN merged.title ELSE primary.title END, 
+				primary.sourceOfTruth=$sourceOfTruth,
+				primary.updatedAt = $now
+			`,
+		map[string]any{
+			"tenant":           tenant,
+			"primaryContactId": primaryContactId,
+			"mergedContactId":  mergedContactId,
+			"sourceOfTruth":    string(sourceOfTruth),
+			"now":              utils.Now(),
+		})
+	return err
+}
+
+func (r *contactRepository) MergeContactRelationsInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, primaryContactId, mergedContactId string) error {
+	matchQuery := "MATCH (t:Tenant {name:$tenant})<-[:CONTACT_BELONGS_TO_TENANT]-(primary:Contact {id:$primaryContactId}), " +
+		"(t)<-[:CONTACT_BELONGS_TO_TENANT]-(merged:Contact {id:$mergedContactId})"
+
+	params := map[string]any{
+		"tenant":           tenant,
+		"primaryContactId": primaryContactId,
+		"mergedContactId":  mergedContactId,
+		"now":              utils.Now(),
+	}
+
+	if _, err := tx.Run(ctx, matchQuery+" "+
+		" WITH primary, merged "+
+		" MATCH (merged)-[:PARTICIPATES]->(c:Conversation) "+
+		" MERGE (primary)-[newRel:PARTICIPATES]->(c)"+
+		" 	ON CREATE SET newRel.mergedFrom = $mergedContactId, newRel.createdAt = $now", params); err != nil {
+		return err
+	}
+
+	if _, err := tx.Run(ctx, matchQuery+
+		" WITH primary, merged "+
+		" MATCH (merged)-[rel:TAGGED]->(t:Tag) "+
+		" MERGE (primary)-[newRel:TAGGED]->(t) "+
+		" ON CREATE SET newRel.taggedAt=rel.taggedAt, newRel.mergedFrom = $mergedContactId, newRel.createdAt = $now", params); err != nil {
+		return err
+	}
+
+	if _, err := tx.Run(ctx, matchQuery+
+		" WITH primary, merged "+
+		" MATCH (merged)-[:ASSOCIATED_WITH]->(loc:Location) "+
+		" MERGE (primary)-[newRel:ASSOCIATED_WITH]->(loc) "+
+		" ON CREATE SET newRel.mergedFrom = $mergedContactId, newRel.createdAt = $now", params); err != nil {
+		return err
+	}
+
+	if _, err := tx.Run(ctx, matchQuery+
+		" WITH primary, merged "+
+		" MATCH (merged)-[:HAS_PROPERTY]->(c:CustomField) "+
+		" MERGE (primary)-[newRel:HAS_PROPERTY]->(c) "+
+		" ON CREATE SET newRel.mergedFrom = $mergedContactId, newRel.createdAt = $now", params); err != nil {
+		return err
+	}
+
+	if _, err := tx.Run(ctx, matchQuery+
+		" WITH primary, merged "+
+		" MATCH (merged)<-[:OWNS]-(u:User) "+
+		" MERGE (primary)<-[newRel:OWNS]-(u) "+
+		" ON CREATE SET newRel.mergedFrom = $mergedContactId, newRel.createdAt = $now", params); err != nil {
+		return err
+	}
+
+	if _, err := tx.Run(ctx, matchQuery+
+		" WITH primary, merged "+
+		" MATCH (merged)-[:WORKS_AS]->(jb:JobRole) "+
+		" MERGE (primary)-[newRel:WORKS_AS]->(jb) "+
+		" ON CREATE SET newRel.mergedFrom = $mergedContactId, newRel.createdAt = $now", params); err != nil {
+		return err
+	}
+
+	if _, err := tx.Run(ctx, matchQuery+
+		" WITH primary, merged "+
+		" MATCH (merged)-[:CONTACT_OF]->(o:Organization) "+
+		" MERGE (primary)-[newRel:CONTACT_OF]->(o) "+
+		" ON CREATE SET newRel.mergedFrom = $mergedContactId, newRel.createdAt = $now", params); err != nil {
+		return err
+	}
+
+	if _, err := tx.Run(ctx, matchQuery+
+		" WITH primary, merged "+
+		" MATCH (merged)-[rel:HAS]->(e:Email) "+
+		" MERGE (primary)-[newRel:HAS]->(e) "+
+		" ON CREATE SET newRel.primary=rel.primary, newRel.label=rel.label, "+
+		"				newRel.mergedFrom = $mergedContactId, newRel.createdAt = $now", params); err != nil {
+		return err
+	}
+
+	if _, err := tx.Run(ctx, matchQuery+
+		" WITH primary, merged "+
+		" MATCH (merged)-[rel:HAS]->(p:PhoneNumber) "+
+		" MERGE (primary)-[newRel:HAS]->(p) "+
+		" ON CREATE SET newRel.primary=rel.primary, newRel.label=rel.label, "+
+		"               newRel.mergedFrom = $mergedContactId, newRel.createdAt = $now", params); err != nil {
+		return err
+	}
+
+	if _, err := tx.Run(ctx, matchQuery+
+		" WITH primary, merged "+
+		" MATCH (merged)-[:NOTED]->(n:Note) "+
+		" MERGE (primary)-[newRel:NOTED]->(n) "+
+		" ON CREATE SET newRel.mergedFrom = $mergedContactId, newRel.createdAt = $now", params); err != nil {
+		return err
+	}
+
+	if _, err := tx.Run(ctx, matchQuery+
+		" WITH primary, merged "+
+		" MATCH (merged)-[:CREATED]->(n:Note) "+
+		" MERGE (primary)-[newRel:CREATED]->(n) "+
+		" ON CREATE SET newRel.mergedFrom = $mergedContactId, newRel.createdAt = $now", params); err != nil {
+		return err
+	}
+
+	if _, err := tx.Run(ctx, matchQuery+
+		" WITH primary, merged "+
+		" MATCH (merged)-[:SUBMITTED]->(t:Ticket) "+
+		" MERGE (primary)-[newRel:SUBMITTED]->(t) "+
+		" ON CREATE SET newRel.mergedFrom = $mergedContactId, newRel.createdAt = $now", params); err != nil {
+		return err
+	}
+
+	if _, err := tx.Run(ctx, matchQuery+
+		" WITH primary, merged "+
+		" MATCH (merged)-[:REQUESTED]->(t:Ticket) "+
+		" MERGE (primary)-[newRel:REQUESTED]->(t) "+
+		" ON CREATE SET newRel.mergedFrom = $mergedContactId, newRel.createdAt = $now", params); err != nil {
+		return err
+	}
+
+	if _, err := tx.Run(ctx, matchQuery+
+		" WITH primary, merged "+
+		" MATCH (merged)-[rel:IS_LINKED_WITH]->(ext:ExternalSystem) "+
+		" MERGE (primary)-[newRel:IS_LINKED_WITH {externalId:rel.externalId}]->(ext) "+
+		" ON CREATE SET newRel.syncDate=rel.syncDate, newRel.externalUrl=rel.externalUrl, "+
+		"				newRel.mergedFrom = $mergedContactId, newRel.createdAt = $now", params); err != nil {
+		return err
+	}
+
+	if _, err := tx.Run(ctx, matchQuery+
+		" WITH primary, merged "+
+		" MERGE (merged)-[:IS_MERGED_INTO]->(primary)", params); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (r *contactRepository) UpdateMergedContactLabelsInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, mergedContactId string) error {
+	query := "MATCH (t:Tenant {name:$tenant})<-[:CONTACT_BELONGS_TO_TENANT]-(c:Contact {id:$contactId}) " +
+		" SET c:MergedContact:%s " +
+		" REMOVE c:Contact:%s"
+
+	_, err := tx.Run(ctx, fmt.Sprintf(query, "MergedContact_"+tenant, "Contact"+tenant),
+		map[string]any{
+			"tenant":    tenant,
+			"contactId": mergedContactId,
+		})
+	return err
 }
