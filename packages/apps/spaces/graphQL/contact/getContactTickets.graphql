@@ -1,0 +1,17 @@
+query GetContactTickets($id: ID!) {
+  contact(id: $id) {
+    tickets {
+      id
+      createdAt
+      updatedAt
+      subject
+      status
+      priority
+      description
+      tags {
+        id
+        name
+      }
+    }
+  }
+}
