@@ -92,3 +92,16 @@ fragment Conversation on Conversation {
   startedAt
   updatedAt
 }
+
+fragment Ticket on Ticket {
+  id
+  createdAt
+  updatedAt
+  subject
+  status
+  priority
+  description
+  tags {
+    ...Tag
+  }
+}

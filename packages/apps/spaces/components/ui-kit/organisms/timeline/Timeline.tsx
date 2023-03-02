@@ -7,6 +7,7 @@ import {
 } from '../../molecules';
 import { TimelineItem } from '../../atoms/timeline-item';
 import { uuidv4 } from '../../../../utils';
+import { TicketTimelineItem } from '../../molecules/ticket-timeline-item';
 
 interface Props {
   loading: boolean;
@@ -75,6 +76,12 @@ export const Timeline = ({
             <WebActionTimelineItem {...data} />
           </TimelineItem>
         );
+      case 'Ticket':
+        return (
+          <TimelineItem first={index == 0} createdAt={data?.createdAt}>
+            <TicketTimelineItem {...data} />
+          </TimelineItem>
+        );
       // case "CALL":
       //     return <PhoneCallTimelineItem phoneCallParties={data} duration={}/>
       default:
@@ -84,7 +91,7 @@ export const Timeline = ({
             yet{' '}
           </div>
         ) : (
-          ''
+          'AAAA'
         );
     }
   };
