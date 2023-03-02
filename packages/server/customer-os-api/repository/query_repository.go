@@ -47,6 +47,7 @@ func (r *queryRepository) GetOrganizationsAndContacts(ctx context.Context, sessi
 
 		contactFilter.Filters = append(contactFilter.Filters, createCypherFilter("firstName", *searchTerm))
 		contactFilter.Filters = append(contactFilter.Filters, createCypherFilter("lastName", *searchTerm))
+		contactFilter.Filters = append(contactFilter.Filters, createCypherFilter("name", *searchTerm))
 
 		contactFilterCypher, contactFilterParams = contactFilter.BuildCypherFilterFragmentWithParamName("c", "c_param_")
 	}
