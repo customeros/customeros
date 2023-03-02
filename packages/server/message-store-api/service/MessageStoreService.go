@@ -115,7 +115,7 @@ func (s *MessageService) GetParticipantIds(ctx context.Context, feedId *msProto.
 		} else if id.Type == entity.USER {
 			elem.Type = msProto.SenderType_USER
 		} else {
-			return nil, fmt.Errorf("GetParticipantFromId: unknown participant type %", id.Type)
+			return nil, fmt.Errorf("GetParticipantFromId: unknown participant type %s", id.Type)
 		}
 		ret = append(ret, elem)
 	}
