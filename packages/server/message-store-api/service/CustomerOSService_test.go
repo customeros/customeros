@@ -122,7 +122,7 @@ func Test_GetContactById(t *testing.T) {
 
 		return []*model.PhoneNumber{&model.PhoneNumber{E164: &phoneNumber}}, nil
 	}
-	contact, err := service.GetContactById(ctx, my_id)
+	contact, err := service.GetContactById(ctx, my_id, "my_tenant")
 	if assert.NoErrorf(t, err, "Unexpected error: %v", err) {
 		assert.Equal(t, my_id, contact.Id)
 		assert.Equal(t, "x@x.org", contact.Emails[0].Email)
