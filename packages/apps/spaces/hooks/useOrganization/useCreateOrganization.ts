@@ -19,6 +19,7 @@ export const useCreateOrganization = (): Result => {
     try {
       const response = await createOrganizationMutation({
         variables: { input },
+        refetchQueries: ['GetDashboardData'],
       });
       return response.data?.organization_Create ?? null;
     } catch (err) {

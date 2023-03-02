@@ -188,3 +188,89 @@ button::-moz-focus-inner {
 .p-highlight {
   background: var(--side-panel-item-hovered);
 }
+
+.p-tooltip {
+  font-size: var(--font-size-sm);
+  background: rgba(98, 94, 94, 0.99);
+  color: #ffffff;
+  border-radius: var(--border-radius-sm);
+  padding: var(--spacing-xxxs) var(--spacing-xs);
+}
+.p-tooltip-arrow {
+  //padding: var(--spacing-xxxs) var(--spacing-sm);
+}
+.p-tooltip-text {
+  padding: var(--spacing-xxxs) var(--spacing-xs);
+
+}
+
+
+// checkbox
+.p-checkbox{display:inline-flex;cursor:pointer;user-select:none;vertical-align:bottom;position:relative}
+.p-checkbox-box{display:flex;justify-content:center;align-items:center}
+
+
+.p-checkbox {
+  width: 20px;
+  height: 20px;
+}
+.p-checkbox .p-checkbox-box {
+  border: 1px solid #ced4da;
+  background: #ffffff;
+  width: 15px;
+  height: 15px;
+  color: var(--gray-900);
+  border-radius: var(--border-radius-sm);
+  transition: background-color 0.2s, color 0.2s, border-color 0.2s, box-shadow 0.2s;
+}
+
+.p-checkbox .p-checkbox-box.p-highlight {
+  border-color: var(--primary-color);
+  position: relative;
+  &::after {
+    content: "";
+    border: 2px solid var(--gray-900);
+    border-left: 0;
+    border-top: 0;
+    height: 11px;
+    left: 3px;
+    opacity: 1;
+    position: absolute;
+    top: 0;
+    transform: rotate(45deg);
+    transition: opacity 0.2s ease-in-out;
+    width: 7px;
+
+  }
+}
+.p-checkbox .p-checkbox-box.p-highlight:not(.p-disabled):hover {
+  border-color: #4338CA;
+  color: #ffffff;
+}
+.p-checkbox:not(.p-checkbox-disabled) .p-checkbox-box:hover {
+  border-color: var(--primary-color);
+}
+.p-checkbox:not(.p-checkbox-disabled) .p-checkbox-box.p-focus {
+ @include outline;
+
+}
+.p-checkbox:not(.p-checkbox-disabled) .p-checkbox-box.p-highlight:hover {
+  border-color: #4338CA;
+  color: #ffffff;
+}
+.p-checkbox.p-invalid > .p-checkbox-box {
+  border-color: #e24c4c;
+}
+
+.p-input-filled .p-checkbox .p-checkbox-box {
+  background-color: #e9ecef;
+}
+.p-input-filled .p-checkbox .p-checkbox-box.p-highlight {
+  background: var(--primary-color);
+}
+.p-input-filled .p-checkbox:not(.p-checkbox-disabled) .p-checkbox-box:hover {
+  background-color: #e9ecef;
+}
+.p-input-filled .p-checkbox:not(.p-checkbox-disabled) .p-checkbox-box.p-highlight:hover {
+  background: #4338CA;
+}

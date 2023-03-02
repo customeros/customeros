@@ -1,0 +1,35 @@
+@import "styles/mixins";
+.actionHeader {
+  height: 100%;
+  @include flex-center;
+
+}
+
+.deselectAllButton {
+  padding: 0 !important;
+  border-radius: 4px;
+  height: 20px;
+  width: 20px;
+  border: var(--border-divider);
+  border-color: var(--gray-600);
+  color: var(--gray-600);
+  position: relative;
+  margin-top: var(--spacing-xxxs);
+  margin-right: var(--spacing-xxxs);
+
+  &::after {
+    content: 'X';
+    width: 12px;
+    height: 12px;
+    position:absolute;
+    top:-3px;
+    color: inherit;
+  }
+
+  &:focus,
+  &:active,
+  &:hover {
+    color: var(--gray-900);
+    border-color: var(--gray-900)
+  }
+}

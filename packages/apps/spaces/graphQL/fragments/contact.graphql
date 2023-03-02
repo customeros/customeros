@@ -1,4 +1,4 @@
-fragment ContactName on Contact {
+fragment ContactNameFragment on Contact {
   firstName
   lastName
   name

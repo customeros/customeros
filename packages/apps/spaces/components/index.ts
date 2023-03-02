@@ -16,4 +16,5 @@ export {
   TagInput,
   TagListSkeleton,
   Highlight,
+  Tooltip,
 } from './ui-kit';
