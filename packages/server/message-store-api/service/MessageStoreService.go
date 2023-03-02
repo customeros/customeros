@@ -10,6 +10,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/message-store-api/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/message-store-api/repository/entity"
 	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
 	"log"
 	"time"
@@ -196,9 +197,20 @@ func (s *MessageService) SaveMessage(ctx context.Context, input *msProto.InputMe
 		return nil, status.Errorf(codes.Unauthenticated, "Invalid API Key")
 	}
 
-	tenant, err := commonModuleService.GetTenantForUsernameForGRPC(ctx, s.postgresRepositories.CommonRepositories.UserRepository)
-	if err != nil {
-		return nil, err
+	tenant := ""
+	md, ok := metadata.FromIncomingContext(ctx)
+	if !ok {
+		return nil, errors.New("no metadata")
+	}
+
+	kh := md.Get("X-Openline-TENANT")
+	if kh != nil && len(kh) == 1 {
+		tenant = kh[0]
+		if len(tenant) == 0 {
+			return nil, errors.New("tenant header is empty")
+		}
+	} else {
+		return nil, errors.New("unable read tenant header")
 	}
 
 	if input.ConversationId == nil && input.InitiatorIdentifier == nil {
@@ -209,7 +221,7 @@ func (s *MessageService) SaveMessage(ctx context.Context, input *msProto.InputMe
 	}
 	participants := []Participant{}
 
-	initiator, err := s.getParticipant(ctx, *tenant, input.InitiatorIdentifier)
+	initiator, err := s.getParticipant(ctx, tenant, input.InitiatorIdentifier)
 	if err != nil {
 		return nil, fmt.Errorf("SaveMessage: %w", err)
 	}
@@ -218,20 +230,20 @@ func (s *MessageService) SaveMessage(ctx context.Context, input *msProto.InputMe
 
 	entityType := s.commonStoreService.ConvertMSTypeToEntityType(input.Type)
 
-	if err := s.getOtherParticipants(ctx, *tenant, &participants, input); err != nil {
+	if err := s.getOtherParticipants(ctx, tenant, &participants, input); err != nil {
 		log.Printf("Error getting other participants: %v", err)
 		return nil, fmt.Errorf("SaveMessage: %w", err)
 	}
 
 	var conversation *Conversation
 	if input.ConversationId != nil {
-		if conv, err := s.customerOSService.GetConversationById(ctx, *tenant, *input.ConversationId); err != nil {
+		if conv, err := s.customerOSService.GetConversationById(ctx, tenant, *input.ConversationId); err != nil {
 			return nil, fmt.Errorf("SaveMessage: %w", err)
 		} else {
 			conversation = conv
 		}
 	} else {
-		if conv, err := s.customerOSService.GetActiveConversationOrCreate(ctx, *tenant, *initiator, input.InitiatorIdentifier, entityType, input.GetThreadId()); err != nil {
+		if conv, err := s.customerOSService.GetActiveConversationOrCreate(ctx, tenant, *initiator, input.InitiatorIdentifier, entityType, input.GetThreadId()); err != nil {
 			return nil, fmt.Errorf("SaveMessage: %w", err)
 		} else {
 			conversation = conv
@@ -250,11 +262,11 @@ func (s *MessageService) SaveMessage(ctx context.Context, input *msProto.InputMe
 		}
 	}
 	senderType := s.getSenderTypeStr(initiator)
-	if _, err := s.customerOSService.UpdateConversation(ctx, *tenant, conversation.Id, initiator.Id, senderType, contactIds, userIds, previewMessage); err != nil {
+	if _, err := s.customerOSService.UpdateConversation(ctx, tenant, conversation.Id, initiator.Id, senderType, contactIds, userIds, previewMessage); err != nil {
 		return nil, fmt.Errorf("SaveMessage: %w", err)
 	}
 
-	conversationEvent := s.saveConversationEvent(*tenant, conversation, input, initiator)
+	conversationEvent := s.saveConversationEvent(tenant, conversation, input, initiator)
 
 	return s.commonStoreService.EncodeMessageIdToMs(conversationEvent), nil
 }
@@ -294,7 +306,7 @@ func (s *MessageService) getMessagePreview(input *msProto.InputMessage) string {
 
 func (s *MessageService) getParticipant(ctx context.Context, tenant string, initiatorIdentifier *msProto.ParticipantId) (*Participant, error) {
 	if initiatorIdentifier.Type == msProto.ParticipantIdType_MAILTO {
-		user, err := s.customerOSService.GetUserByEmail(ctx, initiatorIdentifier.Identifier)
+		user, err := s.customerOSService.GetUserByEmail(ctx, initiatorIdentifier.Identifier, tenant)
 		if err != nil {
 			contact, err := s.customerOSService.GetContactWithEmailOrCreate(ctx, tenant, initiatorIdentifier.Identifier)
 			if err != nil {

@@ -70,7 +70,7 @@ func Test_GetUserByEmail(t *testing.T) {
 		return []*model.Email{&model.Email{Email: &mail}}, nil
 	}
 
-	user, err := service.GetUserByEmail(ctx, "x@x.org")
+	user, err := service.GetUserByEmail(ctx, "x@x.org", "my_tenant")
 	if assert.NoErrorf(t, err, "Unexpected error: %v", err) {
 		assert.Equal(t, "my_user_id", user.Id)
 	}
@@ -147,6 +147,7 @@ func Test_GetContactByEmail(t *testing.T) {
 	my_email := "x@x.org"
 	my_id := "my_contact_id"
 	my_phone := "+123456"
+	my_tenant := "my_tenant"
 
 	resolver.GetContactByEmail = func(ctx context.Context, email string) (*model.Contact, error) {
 		if !assert.Equal(t, email, my_email) {
@@ -177,7 +178,7 @@ func Test_GetContactByEmail(t *testing.T) {
 
 		return []*model.PhoneNumber{&model.PhoneNumber{E164: &my_phone}}, nil
 	}
-	contact, err := service.GetContactByEmail(ctx, my_email)
+	contact, err := service.GetContactByEmail(ctx, my_email, my_tenant)
 	if assert.NoErrorf(t, err, "Unexpected error: %v", err) {
 		assert.Equal(t, my_id, contact.Id)
 		assert.Equal(t, my_email, contact.Emails[0].Email)
@@ -202,6 +203,7 @@ func Test_GetContactByPhone(t *testing.T) {
 	my_email := "x@x.org"
 	my_id := "my_contact_id"
 	my_phone := "+123456"
+	my_tenant := "my_tenant"
 	resolver.GetContactByPhone = func(ctx context.Context, phone string) (*model.Contact, error) {
 		if !assert.Equal(t, phone, my_phone) {
 			return nil, status.Error(500, "Unexpected id")
@@ -231,7 +233,7 @@ func Test_GetContactByPhone(t *testing.T) {
 
 		return []*model.PhoneNumber{&model.PhoneNumber{E164: &my_phone}}, nil
 	}
-	contact, err := service.GetContactByPhone(ctx, my_phone)
+	contact, err := service.GetContactByPhone(ctx, my_phone, my_tenant)
 	if assert.NoErrorf(t, err, "Unexpected error: %v", err) {
 		assert.Equal(t, my_id, contact.Id)
 		assert.Equal(t, my_email, contact.Emails[0].Email)
