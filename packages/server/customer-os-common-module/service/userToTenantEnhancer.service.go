@@ -51,6 +51,11 @@ func TenantUserContextEnhancer(ctx context.Context, headerAllowance HeaderAllowa
 			c.Set("UserEmail", usernameHeader)
 
 		case USERNAME_OR_TENANT:
+			if tenantHeader == "" && usernameHeader == "" {
+				c.AbortWithStatus(http.StatusUnauthorized)
+				return
+			}
+
 			if tenantHeader != "" {
 				tenantExists, err = checkTenantHeader(c, tenantHeader, cr, ctx)
 				if err != nil {
@@ -58,18 +63,19 @@ func TenantUserContextEnhancer(ctx context.Context, headerAllowance HeaderAllowa
 				}
 				if tenantExists {
 					c.Set("TenantName", tenantHeader)
-					c.Next()
-					return
 				}
 			}
-			userId, tenantName, err = checkUsernameHeader(c, usernameHeader, cr, ctx)
-			if err != nil {
-				return
+			if usernameHeader != "" {
+				userId, tenantName, err = checkUsernameHeader(c, usernameHeader, cr, ctx)
+				if err != nil {
+					return
+				}
+				c.Set("TenantName", tenantName)
+				c.Set("UserId", userId)
+				c.Set("UserEmail", usernameHeader)
 			}
-			c.Set("TenantName", tenantName)
-			c.Set("UserId", userId)
-			c.Set("UserEmail", usernameHeader)
-
+			c.Next()
+			return
 		default:
 			c.AbortWithStatus(http.StatusUnauthorized)
 			return

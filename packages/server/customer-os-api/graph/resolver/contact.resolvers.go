@@ -243,6 +243,20 @@ func (r *contactResolver) Actions(ctx context.Context, obj *model.Contact, from 
 	return mapper.MapEntitiesToActions(actions), nil
 }
 
+// Tickets is the resolver for the tickets field.
+func (r *contactResolver) Tickets(ctx context.Context, obj *model.Contact) ([]*model.Ticket, error) {
+	defer func(start time.Time) {
+		utils.LogMethodExecution(start, utils.GetFunctionName())
+	}(time.Now())
+
+	tickets, err := r.Services.TicketService.GetContactTickets(ctx, obj.ID)
+	if err != nil {
+		graphql.AddErrorf(ctx, "failed to get tickets for contact %s", obj.ID)
+		return nil, err
+	}
+	return mapper.MapEntitiesToTickets(tickets), nil
+}
+
 // ContactCreate is the resolver for the contact_Create field.
 func (r *mutationResolver) ContactCreate(ctx context.Context, input model.ContactInput) (*model.Contact, error) {
 	contactNodeCreated, err := r.Services.ContactService.Create(ctx, &service.ContactCreateData{

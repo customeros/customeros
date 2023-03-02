@@ -1153,3 +1153,57 @@ func TestMutationResolver_ContactRemoveTagByID(t *testing.T) {
 	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "Tag"))
 	require.Equal(t, 1, neo4jt.GetCountOfRelationships(ctx, driver, "TAGGED"))
 }
+
+func TestQueryResolver_Contact_WithTickets_ById(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx)(t)
+
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+
+	contactId := neo4jt.CreateDefaultContact(ctx, driver, tenantName)
+	contactId2 := neo4jt.CreateDefaultContact(ctx, driver, tenantName)
+
+	ticketId1 := neo4jt.CreateTicket(ctx, driver, tenantName, "subject 1")
+	ticketId2 := neo4jt.CreateTicket(ctx, driver, tenantName, "subject 2")
+	ticketId3 := neo4jt.CreateTicket(ctx, driver, tenantName, "subject 3")
+
+	tagId1 := neo4jt.CreateTag(ctx, driver, tenantName, "tag1")
+	tagId2 := neo4jt.CreateTag(ctx, driver, tenantName, "tag2")
+
+	neo4jt.TagTicket(ctx, driver, ticketId1, tagId1)
+	neo4jt.TagTicket(ctx, driver, ticketId2, tagId2)
+
+	neo4jt.RequestTicket(ctx, driver, contactId, ticketId1)
+	neo4jt.RequestTicket(ctx, driver, contactId, ticketId2)
+	neo4jt.RequestTicket(ctx, driver, contactId2, ticketId3)
+
+	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "Contact"))
+	require.Equal(t, 3, neo4jt.GetCountOfNodes(ctx, driver, "Ticket"))
+	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "Tag"))
+	require.Equal(t, 3, neo4jt.GetCountOfRelationships(ctx, driver, "REQUESTED"))
+	require.Equal(t, 2, neo4jt.GetCountOfRelationships(ctx, driver, "TAGGED"))
+
+	rawResponse, err := c.RawPost(getQuery("contact/get_contact_with_tickets_by_id"), client.Var("contactId", contactId))
+	assertRawResponseSuccess(t, rawResponse, err)
+
+	var contactStruct struct {
+		Contact model.Contact
+	}
+
+	err = decode.Decode(rawResponse.Data.(map[string]any), &contactStruct)
+	contact := contactStruct.Contact
+
+	require.Nil(t, err)
+	require.Equal(t, contactId, contact.ID)
+
+	tickets := contact.Tickets
+	require.Equal(t, 2, len(tickets))
+	require.Equal(t, ticketId2, tickets[0].ID)
+	require.Equal(t, 1, len(tickets[0].Tags))
+	require.Equal(t, "subject 2", *tickets[0].Subject)
+	require.Equal(t, "tag2", tickets[0].Tags[0].Name)
+	require.Equal(t, ticketId1, tickets[1].ID)
+	require.Equal(t, 1, len(tickets[1].Tags))
+	require.Equal(t, "subject 1", *tickets[1].Subject)
+	require.Equal(t, "tag1", tickets[1].Tags[0].Name)
+}

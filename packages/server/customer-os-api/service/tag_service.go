@@ -16,6 +16,7 @@ type TagService interface {
 	GetAll(ctx context.Context) (*entity.TagEntities, error)
 	GetTagsForContact(ctx context.Context, contactId string) (*entity.TagEntities, error)
 	GetTagsForContacts(ctx context.Context, contactIds []string) (*entity.TagEntities, error)
+	GetTagsForTickets(ctx context.Context, ticketIds []string) (*entity.TagEntities, error)
 	GetTagsForOrganizations(ctx context.Context, organizationIds []string) (*entity.TagEntities, error)
 }
 
@@ -79,6 +80,21 @@ func (s *tagService) GetTagsForContact(ctx context.Context, contactId string) (*
 
 func (s *tagService) GetTagsForContacts(ctx context.Context, contactIds []string) (*entity.TagEntities, error) {
 	tags, err := s.repositories.TagRepository.GetForContacts(ctx, common.GetTenantFromContext(ctx), contactIds)
+	if err != nil {
+		return nil, err
+	}
+	tagEntities := entity.TagEntities{}
+	for _, v := range tags {
+		tagEntity := s.mapDbNodeToTagEntity(*v.Node)
+		s.addDbRelationshipToTagEntity(*v.Relationship, tagEntity)
+		tagEntity.DataloaderKey = v.LinkedNodeId
+		tagEntities = append(tagEntities, *tagEntity)
+	}
+	return &tagEntities, nil
+}
+
+func (s *tagService) GetTagsForTickets(ctx context.Context, ticketIds []string) (*entity.TagEntities, error) {
+	tags, err := s.repositories.TagRepository.GetForTickets(ctx, common.GetTenantFromContext(ctx), ticketIds)
 	if err != nil {
 		return nil, err
 	}

@@ -93,6 +93,7 @@ type Contact struct {
 	NotesByTime   []*Note           `json:"notesByTime"`
 	Conversations *ConversationPage `json:"conversations"`
 	Actions       []Action          `json:"actions"`
+	Tickets       []*Ticket         `json:"tickets"`
 }
 
 func (Contact) IsExtensibleEntity()               {}
@@ -849,6 +850,20 @@ type TagUpdateInput struct {
 	ID   string `json:"id"`
 	Name string `json:"name"`
 }
+
+type Ticket struct {
+	ID          string    `json:"id"`
+	CreatedAt   time.Time `json:"createdAt"`
+	UpdatedAt   time.Time `json:"updatedAt"`
+	Subject     *string   `json:"subject"`
+	Status      *string   `json:"status"`
+	Priority    *string   `json:"priority"`
+	Description *string   `json:"description"`
+	Tags        []*Tag    `json:"tags"`
+}
+
+func (Ticket) IsNode()            {}
+func (this Ticket) GetID() string { return this.ID }
 
 type TimeRange struct {
 	// The start time of the time range.

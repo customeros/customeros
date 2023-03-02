@@ -14,6 +14,7 @@ const loadersKey = loadersString("dataloaders")
 type Loaders struct {
 	TagsForOrganization      *dataloader.Loader
 	TagsForContact           *dataloader.Loader
+	TagsForTicket            *dataloader.Loader
 	EmailsForContact         *dataloader.Loader
 	LocationsForContact      *dataloader.Loader
 	LocationsForOrganization *dataloader.Loader
@@ -57,6 +58,7 @@ func NewDataLoader(services *service.Services) *Loaders {
 	return &Loaders{
 		TagsForOrganization:      dataloader.NewBatchedLoader(tagBatcher.getTagsForOrganizations, dataloader.WithClearCacheOnBatch()),
 		TagsForContact:           dataloader.NewBatchedLoader(tagBatcher.getTagsForContacts, dataloader.WithClearCacheOnBatch()),
+		TagsForTicket:            dataloader.NewBatchedLoader(tagBatcher.getTagsForTickets, dataloader.WithClearCacheOnBatch()),
 		EmailsForContact:         dataloader.NewBatchedLoader(emailBatcher.getEmailsForContacts, dataloader.WithClearCacheOnBatch()),
 		LocationsForContact:      dataloader.NewBatchedLoader(locationBatcher.getLocationsForContacts, dataloader.WithClearCacheOnBatch()),
 		LocationsForOrganization: dataloader.NewBatchedLoader(locationBatcher.getLocationsForOrganizations, dataloader.WithClearCacheOnBatch()),
