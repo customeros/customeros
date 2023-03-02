@@ -442,7 +442,7 @@ func (s *CustomerOSService) GetConversationParticipantsIds(ctx context.Context, 
 			if record != nil {
 				if len(record.Values) > 0 {
 					p := Participant{}
-					val, ok := record.Values[0].([]string)
+					val, ok := record.Values[0].([]any)
 					if ok {
 						if slices.Contains(val, "Contact") {
 							p.Type = entity.CONTACT
@@ -456,7 +456,7 @@ func (s *CustomerOSService) GetConversationParticipantsIds(ctx context.Context, 
 						log.Printf("GetConversationParticipantsIds: Error trying to get record type, skipping")
 						continue
 					}
-					valId, ok := record.Values[0].(string)
+					valId, ok := record.Values[1].(string)
 					if ok {
 						p.Id = valId
 					} else {
