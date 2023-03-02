@@ -31,11 +31,11 @@ export const Table = <T,>({
   });
   useEffect(() => {
     const [lastItem] = [...rowVirtualizer.virtualItems].reverse();
-    if (!lastItem || !data?.length) {
+    if (!lastItem || !data) {
       return;
     }
 
-    if (lastItem.index >= totalItems && !isFetching) {
+    if (lastItem.index >= data?.length - 1 && !isFetching) {
       onFetchNextPage();
     }
   }, [
@@ -43,7 +43,7 @@ export const Table = <T,>({
     onFetchNextPage,
     isFetching,
     rowVirtualizer.virtualItems,
-    data?.length,
+    data,
   ]);
   return (
     <>
@@ -71,7 +71,6 @@ export const Table = <T,>({
           </tr>
         </thead>
         <tbody ref={parentRef} className={styles.body}>
-          {isFetching && <TableSkeleton columns={columns} />}
           {/* SHOW TABLE*/}
           {!totalItems && !isFetching && (
             <tr className={styles.noResultsInfo}>
@@ -81,6 +80,8 @@ export const Table = <T,>({
               </td>
             </tr>
           )}
+          {isFetching && <TableSkeleton columns={columns} />}
+
           {!!data &&
             rowVirtualizer.virtualItems.map((virtualRow) => {
               const element = data[virtualRow.index];

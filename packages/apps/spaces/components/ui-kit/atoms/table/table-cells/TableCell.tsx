@@ -9,7 +9,7 @@ export const TableCell = ({
   url,
   className,
 }: {
-  label: string;
+  label: string | ReactNode;
   subLabel?: string | ReactNode;
   url?: string;
   className?: string;
@@ -17,17 +17,11 @@ export const TableCell = ({
   return (
     <div className={styles.cell}>
       {url ? (
-        <Link
-          href={url}
-          className={classNames(styles.link, styles.cellData)}
-          title={label}
-        >
+        <Link href={url} className={classNames(styles.link, styles.cellData)}>
           {label}
         </Link>
       ) : (
-        <span title={label} className={classNames(className, styles.cellData)}>
-          {label}
-        </span>
+        <span className={classNames(className, styles.cellData)}>{label}</span>
       )}
 
       {subLabel && (
@@ -43,13 +37,17 @@ export const DashboardTableAddressCell = ({
   country,
   region,
   locality,
+  name,
 }: {
   country?: string | null;
   region?: string | null;
   locality?: string | null;
+  name?: string | null;
 }) => {
   return (
     <div className={styles.addressContainer}>
+      {name && <span>{name}</span>}
+
       {locality && (
         <div className={`${styles.addressLocality}`}>{locality}</div>
       )}

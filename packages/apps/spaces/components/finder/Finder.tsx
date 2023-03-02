@@ -40,6 +40,8 @@ export const Finder: React.FC = () => {
         <h1> Everything </h1>
 
         <DebouncedInput
+          // todo temporary
+          minLength={1}
           onChange={(event) => handleFilterResults(event.target.value)}
           placeholder={'Search organizations, contacts, locations...'}
           value={searchTerm}

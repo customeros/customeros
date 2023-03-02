@@ -1,6 +1,7 @@
 fragment ContactName on Contact {
   firstName
   lastName
+  name
 }
 
 fragment organizationBaseDetails on Organization {
