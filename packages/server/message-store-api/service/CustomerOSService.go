@@ -424,7 +424,7 @@ func (s *CustomerOSService) GetConversationParticipantsIds(ctx context.Context, 
 	defer session.Close(ctx)
 
 	records, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		queryResult, err := tx.Run(ctx, "MATCH (c:Conversation_"+tenant+"{id:$conversationId})<-[PARTICIPATES]-(p) RETURN DISTINCT RETURN DISTINCT labels(p), p.id",
+		queryResult, err := tx.Run(ctx, "MATCH (c:Conversation_"+tenant+"{id:$conversationId})<-[PARTICIPATES]-(p) RETURN DISTINCT labels(p), p.id",
 			map[string]interface{}{
 				"conversationId": conversationId,
 			})
