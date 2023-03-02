@@ -92,6 +92,36 @@ func (s *MessageService) GetParticipants(ctx context.Context, feedId *msProto.Fe
 	}, nil
 }
 
+func (s *MessageService) GetParticipantIds(ctx context.Context, feedId *msProto.FeedId) (*msProto.ParticipantObjectListResponse, error) {
+	apiKeyValid := commonModuleService.ApiKeyCheckerGRPC(ctx, s.postgresRepositories.CommonRepositories.AppKeyRepository, commonModuleService.MESSAGE_STORE_API)
+	if !apiKeyValid {
+		return nil, status.Errorf(codes.Unauthenticated, "Invalid API Key")
+	}
+
+	tenant, err := s.resolveTenant(ctx)
+	if err != nil {
+		return nil, err
+	}
+	ids, err := s.customerOSService.GetConversationParticipantsIds(ctx, tenant, feedId.GetId())
+
+	if err != nil {
+		return nil, fmt.Errorf("GetParticipantIds: %w", err)
+	}
+	var ret []*msProto.Participant
+	for _, id := range ids {
+		elem := &msProto.Participant{Id: id.Id}
+		if id.Type == entity.CONTACT {
+			elem.Type = msProto.SenderType_CONTACT
+		} else if id.Type == entity.USER {
+			elem.Type = msProto.SenderType_USER
+		} else {
+			return nil, fmt.Errorf("GetParticipantFromId: unknown participant type %", id.Type)
+		}
+		ret = append(ret, elem)
+	}
+	return &msProto.ParticipantObjectListResponse{Participants: ret}, nil
+}
+
 func (s *MessageService) GetMessagesForFeed(ctx context.Context, feedRequest *msProto.PagedMessages) (*msProto.MessageListResponse, error) {
 	apiKeyValid := commonModuleService.ApiKeyCheckerGRPC(ctx, s.postgresRepositories.CommonRepositories.AppKeyRepository, commonModuleService.MESSAGE_STORE_API)
 	if !apiKeyValid {
