@@ -7,6 +7,7 @@ extend type Mutation {
     organization_Create(input: OrganizationInput!): Organization!
     organization_Update(input: OrganizationUpdateInput!): Organization!
     organization_Delete(id: ID!): Result
+    organization_Merge(primaryOrganizationId: ID!, mergedOrganizationIds: [ID!]!): Organization!
 }
 
 type Organization implements Node {

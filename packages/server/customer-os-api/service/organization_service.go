@@ -9,6 +9,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	"github.com/sirupsen/logrus"
 	"reflect"
 )
 
@@ -20,6 +21,7 @@ type OrganizationService interface {
 	FindAll(ctx context.Context, page, limit int, filter *model.Filter, sortBy []*model.SortBy) (*utils.Pagination, error)
 	GetOrganizationsForContact(ctx context.Context, contactId string, page, limit int, filter *model.Filter, sortBy []*model.SortBy) (*utils.Pagination, error)
 	PermanentDelete(ctx context.Context, organizationId string) (bool, error)
+	Merge(ctx context.Context, primaryOrganizationId, mergedOrganizationId string) error
 
 	mapDbNodeToOrganizationEntity(node dbtype.Node) *entity.OrganizationEntity
 }
@@ -234,10 +236,7 @@ func (s *organizationService) GetOrganizationForJobRole(ctx context.Context, rol
 }
 
 func (s *organizationService) GetOrganizationById(ctx context.Context, organizationId string) (*entity.OrganizationEntity, error) {
-	session := utils.NewNeo4jReadSession(ctx, *s.repositories.Drivers.Neo4jDriver)
-	defer session.Close(ctx)
-
-	dbNode, err := s.repositories.OrganizationRepository.GetOrganizationById(ctx, session, common.GetContext(ctx).Tenant, organizationId)
+	dbNode, err := s.repositories.OrganizationRepository.GetOrganizationById(ctx, common.GetTenantFromContext(ctx), organizationId)
 	if err != nil {
 		return nil, err
 	}
@@ -255,6 +254,43 @@ func (s *organizationService) PermanentDelete(ctx context.Context, organizationI
 	}
 
 	return true, nil
+}
+
+func (s *organizationService) Merge(ctx context.Context, primaryOrganizationId, mergedOrganizationId string) error {
+	session := utils.NewNeo4jWriteSession(ctx, *s.repositories.Drivers.Neo4jDriver)
+	defer session.Close(ctx)
+
+	_, err := s.GetOrganizationById(ctx, primaryOrganizationId)
+	if err != nil {
+		logrus.Errorf("Primary organization with id %s not found: %v", primaryOrganizationId, err)
+		return err
+	}
+	_, err = s.GetOrganizationById(ctx, mergedOrganizationId)
+	if err != nil {
+		logrus.Errorf("Organization to merge with id %s not found: %v", mergedOrganizationId, err)
+		return err
+	}
+
+	tenant := common.GetContext(ctx).Tenant
+	_, err = session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		err = s.repositories.OrganizationRepository.MergeOrganizationPropertiesInTx(ctx, tx, tenant, primaryOrganizationId, mergedOrganizationId, entity.DataSourceOpenline)
+		if err != nil {
+			return nil, err
+		}
+
+		err = s.repositories.OrganizationRepository.MergeOrganizationRelationsInTx(ctx, tx, tenant, primaryOrganizationId, mergedOrganizationId)
+		if err != nil {
+			return nil, err
+		}
+
+		err = s.repositories.OrganizationRepository.AdaptMergedOrganizationLabelsInTx(ctx, tx, tenant, mergedOrganizationId)
+		if err != nil {
+			return nil, err
+		}
+
+		return nil, nil
+	})
+	return err
 }
 
 func (s *organizationService) mapDbNodeToOrganizationEntity(node dbtype.Node) *entity.OrganizationEntity {

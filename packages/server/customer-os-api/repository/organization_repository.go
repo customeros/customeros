@@ -14,7 +14,7 @@ type OrganizationRepository interface {
 	Create(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, organization entity.OrganizationEntity) (*dbtype.Node, error)
 	Update(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, organization entity.OrganizationEntity) (*dbtype.Node, error)
 	GetOrganizationForJobRole(ctx context.Context, session neo4j.SessionWithContext, tenant, roleId string) (*dbtype.Node, error)
-	GetOrganizationById(ctx context.Context, session neo4j.SessionWithContext, tenant, organizationId string) (*dbtype.Node, error)
+	GetOrganizationById(ctx context.Context, tenant, organizationId string) (*dbtype.Node, error)
 	GetPaginatedOrganizations(ctx context.Context, session neo4j.SessionWithContext, tenant string, skip, limit int, filter *utils.CypherFilter, sorting *utils.CypherSort) (*utils.DbNodesWithTotalCount, error)
 	GetPaginatedOrganizationsForContact(ctx context.Context, session neo4j.SessionWithContext, tenant, contactId string, skip, limit int, filter *utils.CypherFilter, sorting *utils.CypherSort) (*utils.DbNodesWithTotalCount, error)
 	Delete(ctx context.Context, session neo4j.SessionWithContext, tenant, organizationId string) error
@@ -22,6 +22,9 @@ type OrganizationRepository interface {
 	UnlinkFromOrganizationTypesInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant, organizationId string) error
 	LinkWithDomainsInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant, organizationId string, domains []string) error
 	UnlinkFromDomainsNotInListInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant, organizationId string, domains []string) error
+	MergeOrganizationPropertiesInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, primaryOrganizationId, mergedOrganizationId string, sourceOfTruth entity.DataSource) error
+	MergeOrganizationRelationsInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, primaryOrganizationId, mergedOrganizationId string) error
+	AdaptMergedOrganizationLabelsInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, mergedOrganizationId string) error
 }
 
 type organizationRepository struct {
@@ -133,7 +136,10 @@ func (r *organizationRepository) GetOrganizationForJobRole(ctx context.Context, 
 	return utils.NodePtr(dbRecords.([]*neo4j.Record)[0].Values[0].(dbtype.Node)), nil
 }
 
-func (r *organizationRepository) GetOrganizationById(ctx context.Context, session neo4j.SessionWithContext, tenant, organizationId string) (*dbtype.Node, error) {
+func (r *organizationRepository) GetOrganizationById(ctx context.Context, tenant, organizationId string) (*dbtype.Node, error) {
+	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
+	defer session.Close(ctx)
+
 	dbRecord, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		if queryResult, err := tx.Run(ctx, `
 			MATCH (org:Organization {id:$organizationId})-[:ORGANIZATION_BELONGS_TO_TENANT]->(:Tenant {name:$tenant})
@@ -300,6 +306,141 @@ func (r *organizationRepository) UnlinkFromDomainsNotInListInTx(ctx context.Cont
 			"tenant":         tenant,
 			"organizationId": organizationId,
 			"domains":        domains,
+		})
+	return err
+}
+
+func (r *organizationRepository) MergeOrganizationPropertiesInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, primaryOrganizationId, mergedOrganizationId string, sourceOfTruth entity.DataSource) error {
+	_, err := tx.Run(ctx, `
+			MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(primary:Organization {id:$primaryOrganizationId}),
+			(t)<-[:ORGANIZATION_BELONGS_TO_TENANT]-(merged:Organization {id:$mergedOrganizationId})
+			SET primary.website = CASE WHEN primary.website is null OR primary.website = '' THEN merged.website ELSE primary.website END, 
+				primary.industry = CASE WHEN primary.industry is null OR primary.industry = '' THEN merged.industry ELSE primary.industry END, 
+				primary.name = CASE WHEN primary.name is null OR primary.name = '' THEN merged.name ELSE primary.name END, 
+				primary.description = CASE WHEN primary.description is null OR primary.description = '' THEN merged.description ELSE primary.description END, 
+				primary.isPublic = CASE WHEN primary.isPublic is null THEN merged.isPublic ELSE primary.isPublic END, 
+				primary.sourceOfTruth=$sourceOfTruth,
+				primary.updatedAt = $now
+			`,
+		map[string]any{
+			"tenant":                tenant,
+			"primaryOrganizationId": primaryOrganizationId,
+			"mergedOrganizationId":  mergedOrganizationId,
+			"sourceOfTruth":         string(sourceOfTruth),
+			"now":                   utils.Now(),
+		})
+	return err
+}
+
+func (r *organizationRepository) MergeOrganizationRelationsInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, primaryOrganizationId, mergedOrganizationId string) error {
+	matchQuery := "MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(primary:Organization {id:$primaryOrganizationId}), " +
+		"(t)<-[:ORGANIZATION_BELONGS_TO_TENANT]-(merged:Organization {id:$mergedOrganizationId})"
+
+	params := map[string]any{
+		"tenant":                tenant,
+		"primaryOrganizationId": primaryOrganizationId,
+		"mergedOrganizationId":  mergedOrganizationId,
+		"now":                   utils.Now(),
+	}
+
+	if _, err := tx.Run(ctx, matchQuery+" "+
+		" WITH primary, merged "+
+		" MATCH (merged)-[:HAS_DOMAIN]->(d:Domain) "+
+		" MERGE (primary)-[newRel:HAS_DOMAIN]->(d)"+
+		" 	ON CREATE SET newRel.mergedFrom = $mergedOrganizationId, newRel.createdAt = $now", params); err != nil {
+		return err
+	}
+
+	if _, err := tx.Run(ctx, matchQuery+
+		" WITH primary, merged"+
+		" MATCH (merged)<-[:ROLE_IN]-(jb:JobRole) "+
+		" MERGE (primary)<-[newRel:ROLE_IN]-(jb) "+
+		" ON CREATE SET newRel.mergedFrom = $mergedOrganizationId, newRel.createdAt = $now", params); err != nil {
+		return err
+	}
+
+	if _, err := tx.Run(ctx, matchQuery+
+		" WITH primary, merged"+
+		" MATCH (merged)<-[:CONTACT_OF]-(c:Contact)"+
+		" MERGE (primary)<-[newRel:CONTACT_OF]-(c)"+
+		" ON CREATE SET newRel.mergedFrom = $mergedOrganizationId, newRel.createdAt = $now", params); err != nil {
+		return err
+	}
+
+	if _, err := tx.Run(ctx, matchQuery+
+		" WITH primary, merged"+
+		" MATCH (merged)-[:IS_OF_TYPE]->(ot:OrganizationType) "+
+		" MERGE (primary)-[newRel:IS_OF_TYPE]->(ot) "+
+		" ON CREATE SET newRel.mergedFrom = $mergedOrganizationId, newRel.createdAt = $now", params); err != nil {
+		return err
+	}
+
+	if _, err := tx.Run(ctx, matchQuery+
+		" WITH primary, merged "+
+		" MATCH (merged)-[:ASSOCIATED_WITH]->(loc:Location) "+
+		" MERGE (primary)-[newRel:ASSOCIATED_WITH]->(loc) "+
+		" ON CREATE SET newRel.mergedFrom = $mergedOrganizationId, newRel.createdAt = $now", params); err != nil {
+		return err
+	}
+
+	if _, err := tx.Run(ctx, matchQuery+
+		" WITH primary, merged "+
+		" MATCH (merged)-[:NOTED]->(n:Note) "+
+		" MERGE (primary)-[newRel:NOTED]->(n) "+
+		" ON CREATE SET newRel.mergedFrom = $mergedOrganizationId, newRel.createdAt = $now", params); err != nil {
+		return err
+	}
+
+	if _, err := tx.Run(ctx, matchQuery+
+		" WITH primary, merged "+
+		" MATCH (merged)-[:HAS]->(e:Email) "+
+		" MERGE (primary)-[newRel:HAS]->(e) "+
+		" ON CREATE SET newRel.mergedFrom = $mergedOrganizationId, newRel.createdAt = $now", params); err != nil {
+		return err
+	}
+
+	if _, err := tx.Run(ctx, matchQuery+
+		" WITH primary, merged "+
+		" MATCH (merged)-[:HAS]->(p:PhoneNumber) "+
+		" MERGE (primary)-[newRel:HAS]->(p) "+
+		" ON CREATE SET newRel.mergedFrom = $mergedOrganizationId, newRel.createdAt = $now", params); err != nil {
+		return err
+	}
+
+	if _, err := tx.Run(ctx, matchQuery+
+		" WITH primary, merged "+
+		" MATCH (merged)-[rel:TAGGED]->(t:Tag) "+
+		" MERGE (primary)-[newRel:TAGGED]->(t) "+
+		" ON CREATE SET newRel.taggedAt=rel.taggedAt, newRel.mergedFrom = $mergedOrganizationId, newRel.createdAt = $now", params); err != nil {
+		return err
+	}
+
+	if _, err := tx.Run(ctx, matchQuery+
+		" WITH primary, merged "+
+		" MATCH (merged)-[rel:IS_LINKED_WITH]->(ext:ExternalSystem) "+
+		" MERGE (primary)-[newRel:IS_LINKED_WITH {externalId:rel.externalId}]->(ext) "+
+		" ON CREATE SET newRel.syncDate=rel.syncDate, newRel.mergedFrom = $mergedOrganizationId, newRel.createdAt = $now", params); err != nil {
+		return err
+	}
+
+	if _, err := tx.Run(ctx, matchQuery+
+		" WITH primary, merged "+
+		" MERGE (merged)-[:IS_MERGED_INTO]->(primary)", params); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (r *organizationRepository) AdaptMergedOrganizationLabelsInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, mergedOrganizationId string) error {
+	query := "MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {id:$organizationId}) " +
+		" SET org:MergedOrganization:%s " +
+		" REMOVE org:Organization:%s"
+
+	_, err := tx.Run(ctx, fmt.Sprintf(query, "MergedOrganization_"+tenant, "Organization_"+tenant),
+		map[string]any{
+			"tenant":         tenant,
+			"organizationId": mergedOrganizationId,
 		})
 	return err
 }
