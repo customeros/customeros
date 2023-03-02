@@ -633,10 +633,14 @@ func (s *CustomerOSService) GetActiveConversationOrCreate(
 	var err error
 
 	// for webchat, thread id is empty string
-	if initiator.Type == entity.CONTACT {
-		conversation, err = s.GetConversationWithContactInitiator(ctx, tenant, initiator.Id, eventType, threadId)
-	} else if initiator.Type == entity.USER {
-		conversation, err = s.GetConversationWithUserInitiator(ctx, tenant, initiator.Id, eventType, threadId)
+	if threadId == "" {
+		if initiator.Type == entity.CONTACT {
+			conversation, err = s.GetConversationWithContactInitiator(ctx, tenant, initiator.Id, eventType)
+		} else if initiator.Type == entity.USER {
+			conversation, err = s.GetConversationWithUserInitiator(ctx, tenant, initiator.Id, eventType)
+		}
+	} else {
+		conversation, err = s.GetConversationWithThreadId(ctx, tenant, eventType, threadId)
 	}
 
 	if err != nil {
@@ -652,16 +656,14 @@ func (s *CustomerOSService) GetActiveConversationOrCreate(
 
 	return conversation, nil
 }
-
-func (s *CustomerOSService) GetConversationWithContactInitiator(ctx context.Context, tenant string, contactId string, eventType entity.EventType, threadId string) (*Conversation, error) {
+func (s *CustomerOSService) GetConversationWithThreadId(ctx context.Context, tenant string, eventType entity.EventType, threadId string) (*Conversation, error) {
 	session := utils.NewNeo4jWriteSession(ctx, *s.driver)
 	defer session.Close(ctx)
 
 	conversationNode, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		if queryResult, err := tx.Run(ctx, `match(o:Conversation{status:"ACTIVE", channel: $eventType, threadId: $threadId})<-[:INITIATED]-(c:Contact{id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(t:Tenant{name:$tenant}) return o`,
+		if queryResult, err := tx.Run(ctx, `match(o:Conversation_`+tenant+`{status:"ACTIVE", channel: $eventType, threadId: $threadId}) return o`,
 			map[string]any{
 				"tenant":    tenant,
-				"contactId": contactId,
 				"threadId":  threadId,
 				"eventType": eventType,
 			}); err != nil {
@@ -691,16 +693,52 @@ func (s *CustomerOSService) GetConversationWithContactInitiator(ctx context.Cont
 	}
 }
 
-func (s *CustomerOSService) GetConversationWithUserInitiator(ctx context.Context, tenant string, userId string, eventType entity.EventType, threadId string) (*Conversation, error) {
+func (s *CustomerOSService) GetConversationWithContactInitiator(ctx context.Context, tenant string, contactId string, eventType entity.EventType) (*Conversation, error) {
+	session := utils.NewNeo4jWriteSession(ctx, *s.driver)
+	defer session.Close(ctx)
+
+	conversationNode, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		if queryResult, err := tx.Run(ctx, `match(o:Conversation{status:"ACTIVE", channel: $eventType})<-[:INITIATED]-(c:Contact{id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(t:Tenant{name:$tenant}) return o`,
+			map[string]any{
+				"tenant":    tenant,
+				"contactId": contactId,
+				"eventType": eventType,
+			}); err != nil {
+			return nil, err
+		} else {
+			record, err := queryResult.Single(ctx)
+			if err != nil && err.Error() != "Result contains no more records" {
+				return nil, err
+			}
+			if record != nil {
+				return record.Values[0].(dbtype.Node), nil
+			} else {
+				return nil, nil
+			}
+		}
+	})
+
+	if err != nil {
+		return nil, fmt.Errorf("GetConversationWithContactInitiator: %w", err)
+	}
+
+	if conversationNode != nil {
+		node := conversationNode.(dbtype.Node)
+		return mapNodeToConversation(&node), nil
+	} else {
+		return nil, nil
+	}
+}
+
+func (s *CustomerOSService) GetConversationWithUserInitiator(ctx context.Context, tenant string, userId string, eventType entity.EventType) (*Conversation, error) {
 	session := utils.NewNeo4jReadSession(ctx, *s.driver)
 	defer session.Close(ctx)
 
 	conversationNode, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		if queryResult, err := tx.Run(ctx, `match(o:Conversation{status:"ACTIVE", channel: $eventType, threadId: $threadId})<-[:INITIATED]-(u:User{id:$userId})-[:USER_BELONGS_TO_TENANT]->(t:Tenant{name:$tenant}) return o`,
+		if queryResult, err := tx.Run(ctx, `match(o:Conversation{status:"ACTIVE", channel: $eventType})<-[:INITIATED]-(u:User{id:$userId})-[:USER_BELONGS_TO_TENANT]->(t:Tenant{name:$tenant}) return o`,
 			map[string]any{
 				"tenant":    tenant,
 				"userId":    userId,
-				"threadId":  threadId,
 				"eventType": eventType,
 			}); err != nil {
 			return nil, err
