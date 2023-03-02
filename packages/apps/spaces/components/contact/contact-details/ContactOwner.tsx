@@ -42,12 +42,16 @@ export const ContactOwner: React.FC<ContactOwnerProps> = ({
               });
             }}
             itemTemplate={(e: any) => {
+              const firstName = e?.firstName ? e.firstName : '';
+              const lastName = e?.lastName ? e.lastName : '';
+              const name =
+                firstName || lastName ? `${firstName} ${lastName}` : e?.name;
               return (
                 <>
                   <span className='mr-3'>
                     <User style={{ transform: 'scale(0.8)' }} />
                   </span>
-                  {e.firstName} {e.lastName}
+                  {name || 'Unnamed'}
                 </>
               );
             }}

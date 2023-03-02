@@ -23,6 +23,8 @@ import { RecoilRoot } from 'recoil';
 //   })
 // }
 
+// todo add id to toast to prevent duplicates
+
 export default function MyApp({
   Component,
   pageProps: { session, ...pageProps },
@@ -51,6 +53,7 @@ export default function MyApp({
       <ToastContainer
         position='bottom-right'
         autoClose={3000}
+        limit={3}
         closeOnClick={true}
         hideProgressBar={true}
         theme='colored'

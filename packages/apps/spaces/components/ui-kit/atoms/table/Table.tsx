@@ -5,6 +5,7 @@ import styles from './table.module.scss';
 import { Skeleton } from '../skeleton';
 import { Column } from './types';
 import { TableSkeleton } from './TableSkeleton';
+import { SearchMinus } from '../icons';
 
 interface TableProps<T> {
   data: Array<T> | null;
@@ -16,7 +17,7 @@ interface TableProps<T> {
 
 export const Table = <T,>({
   columns,
-  data,
+  data = [],
   totalItems,
   isFetching,
   onFetchNextPage,
@@ -51,6 +52,7 @@ export const Table = <T,>({
 
         {totalItems}
       </div>
+
       <table className={styles.table}>
         <thead className={styles.header}>
           <tr>
@@ -69,8 +71,17 @@ export const Table = <T,>({
           </tr>
         </thead>
         <tbody ref={parentRef} className={styles.body}>
-          {(!data || !data.length) && <TableSkeleton columns={columns} />}
           {/* SHOW TABLE*/}
+          {!totalItems && !isFetching && (
+            <tr className={styles.noResultsInfo}>
+              <td>
+                <SearchMinus />
+                <span>No results</span>
+              </td>
+            </tr>
+          )}
+          {isFetching && <TableSkeleton columns={columns} />}
+
           {!!data &&
             rowVirtualizer.virtualItems.map((virtualRow) => {
               const element = data[virtualRow.index];

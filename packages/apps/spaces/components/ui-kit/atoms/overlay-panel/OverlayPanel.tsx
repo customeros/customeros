@@ -15,9 +15,11 @@ export const OverlayPanel = forwardRef(function MyInput(
       ref={ref}
       dismissable
       {...rest}
-      style={{ background: '#fff' }}
+      style={{ background: '#fff', ...rest.style }}
     >
-      <Menu model={model} />
+      {rest.children && rest.children}
+
+      {model && <Menu model={model} />}
     </PrimereactOverlayPanel>
   );
 });

@@ -1,3 +1,4 @@
+@import 'styles/mixins';
 .itemCounter {
   width: 80vw;
   display: flex;
@@ -67,4 +68,17 @@
 .staticRow {
   min-height: 60px;
   position: static;
+}
+
+.noResultsInfo {
+  @include flex-center;
+  padding: var(--spacing-xl);
+
+  & td {
+    @include flex-center;
+  }
+
+  & span {
+    margin-left: var(--spacing-xs);
+  }
 }
