@@ -9,6 +9,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	"github.com/sirupsen/logrus"
 	"reflect"
 )
 
@@ -25,6 +26,7 @@ type ContactService interface {
 	SoftDelete(ctx context.Context, id string) (bool, error)
 	GetContactForRole(ctx context.Context, roleId string) (*entity.ContactEntity, error)
 	GetContactsForOrganization(ctx context.Context, organizationId string, page, limit int, filter *model.Filter, sortBy []*model.SortBy) (*utils.Pagination, error)
+	Merge(ctx context.Context, primaryContactId, mergedContactId string) error
 
 	AddTag(ctx context.Context, contactId string, tagId string) (*entity.ContactEntity, error)
 	RemoveTag(ctx context.Context, contactId string, tagId string) (*entity.ContactEntity, error)
@@ -415,6 +417,43 @@ func (s *contactService) GetContactsForOrganization(ctx context.Context, organiz
 	}
 	paginatedResult.SetRows(&contacts)
 	return &paginatedResult, nil
+}
+
+func (s *contactService) Merge(ctx context.Context, primaryContactId, mergedContactId string) error {
+	session := utils.NewNeo4jWriteSession(ctx, *s.repositories.Drivers.Neo4jDriver)
+	defer session.Close(ctx)
+
+	_, err := s.GetContactById(ctx, primaryContactId)
+	if err != nil {
+		logrus.Errorf("Primary contact with id %s not found: %v", primaryContactId, err)
+		return err
+	}
+	_, err = s.GetContactById(ctx, mergedContactId)
+	if err != nil {
+		logrus.Errorf("Contact to merge with id %s not found: %v", mergedContactId, err)
+		return err
+	}
+
+	tenant := common.GetContext(ctx).Tenant
+	_, err = session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		err = s.repositories.ContactRepository.MergeContactPropertiesInTx(ctx, tx, tenant, primaryContactId, mergedContactId, entity.DataSourceOpenline)
+		if err != nil {
+			return nil, err
+		}
+
+		err = s.repositories.ContactRepository.MergeContactRelationsInTx(ctx, tx, tenant, primaryContactId, mergedContactId)
+		if err != nil {
+			return nil, err
+		}
+
+		err = s.repositories.ContactRepository.UpdateMergedContactLabelsInTx(ctx, tx, tenant, mergedContactId)
+		if err != nil {
+			return nil, err
+		}
+
+		return nil, nil
+	})
+	return err
 }
 
 func (s *contactService) AddTag(ctx context.Context, contactId string, tagId string) (*entity.ContactEntity, error) {

@@ -315,6 +315,28 @@ func (r *mutationResolver) ContactSoftDelete(ctx context.Context, contactID stri
 	}, nil
 }
 
+// ContactMerge is the resolver for the contact_Merge field.
+func (r *mutationResolver) ContactMerge(ctx context.Context, primaryContactID string, mergedContactIds []string) (*model.Contact, error) {
+	defer func(start time.Time) {
+		utils.LogMethodExecution(start, utils.GetFunctionName())
+	}(time.Now())
+
+	for _, mergedContactID := range mergedContactIds {
+		err := r.Services.ContactService.Merge(ctx, primaryContactID, mergedContactID)
+		if err != nil {
+			graphql.AddErrorf(ctx, "Failed to merge contact %s into contact %s", mergedContactID, primaryContactID)
+			return nil, err
+		}
+	}
+
+	contactEntityPtr, err := r.Services.ContactService.GetContactById(ctx, primaryContactID)
+	if err != nil {
+		graphql.AddErrorf(ctx, "Failed to get contact by id %s", primaryContactID)
+		return nil, err
+	}
+	return mapper.MapEntityToContact(contactEntityPtr), nil
+}
+
 // ContactAddTagByID is the resolver for the contact_AddTagById field.
 func (r *mutationResolver) ContactAddTagByID(ctx context.Context, input *model.ContactTagInput) (*model.Contact, error) {
 	updatedContact, err := r.Services.ContactService.AddTag(ctx, input.ContactID, input.TagID)

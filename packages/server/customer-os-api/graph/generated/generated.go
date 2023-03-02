@@ -264,6 +264,7 @@ type ComplexityRoot struct {
 		ContactGroupRemoveContact              func(childComplexity int, contactID string, groupID string) int
 		ContactGroupUpdate                     func(childComplexity int, input model.ContactGroupUpdateInput) int
 		ContactHardDelete                      func(childComplexity int, contactID string) int
+		ContactMerge                           func(childComplexity int, primaryContactID string, mergedContactIds []string) int
 		ContactRemoveTagByID                   func(childComplexity int, input *model.ContactTagInput) int
 		ContactSoftDelete                      func(childComplexity int, contactID string) int
 		ContactUpdate                          func(childComplexity int, input model.ContactUpdateInput) int
@@ -527,6 +528,7 @@ type MutationResolver interface {
 	ContactUpdate(ctx context.Context, input model.ContactUpdateInput) (*model.Contact, error)
 	ContactHardDelete(ctx context.Context, contactID string) (*model.Result, error)
 	ContactSoftDelete(ctx context.Context, contactID string) (*model.Result, error)
+	ContactMerge(ctx context.Context, primaryContactID string, mergedContactIds []string) (*model.Contact, error)
 	ContactAddTagByID(ctx context.Context, input *model.ContactTagInput) (*model.Contact, error)
 	ContactRemoveTagByID(ctx context.Context, input *model.ContactTagInput) (*model.Contact, error)
 	ContactGroupCreate(ctx context.Context, input model.ContactGroupInput) (*model.ContactGroup, error)
@@ -1805,6 +1807,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.ContactHardDelete(childComplexity, args["contactId"].(string)), true
+
+	case "Mutation.contact_Merge":
+		if e.complexity.Mutation.ContactMerge == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_contact_Merge_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.ContactMerge(childComplexity, args["primaryContactId"].(string), args["mergedContactIds"].([]string)), true
 
 	case "Mutation.contact_RemoveTagById":
 		if e.complexity.Mutation.ContactRemoveTagByID == nil {
@@ -3434,6 +3448,7 @@ extend type Mutation {
     contact_Update(input: ContactUpdateInput!): Contact!
     contact_HardDelete(contactId: ID!): Result!
     contact_SoftDelete(contactId: ID!): Result!
+    contact_Merge(primaryContactId: ID!, mergedContactIds: [ID!]!): Contact!
 
     contact_AddTagById(input: ContactTagInput): Contact!
     contact_RemoveTagById(input: ContactTagInput): Contact!
@@ -5142,6 +5157,30 @@ func (ec *executionContext) field_Mutation_contact_HardDelete_args(ctx context.C
 		}
 	}
 	args["contactId"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_contact_Merge_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["primaryContactId"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("primaryContactId"))
+		arg0, err = ec.unmarshalNID2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["primaryContactId"] = arg0
+	var arg1 []string
+	if tmp, ok := rawArgs["mergedContactIds"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("mergedContactIds"))
+		arg1, err = ec.unmarshalNID2ᚕstringᚄ(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["mergedContactIds"] = arg1
 	return args, nil
 }
 
@@ -14269,6 +14308,114 @@ func (ec *executionContext) fieldContext_Mutation_contact_SoftDelete(ctx context
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Mutation_contact_SoftDelete_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_contact_Merge(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_contact_Merge(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().ContactMerge(rctx, fc.Args["primaryContactId"].(string), fc.Args["mergedContactIds"].([]string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.Contact)
+	fc.Result = res
+	return ec.marshalNContact2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐContact(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_contact_Merge(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Contact_id(ctx, field)
+			case "title":
+				return ec.fieldContext_Contact_title(ctx, field)
+			case "name":
+				return ec.fieldContext_Contact_name(ctx, field)
+			case "firstName":
+				return ec.fieldContext_Contact_firstName(ctx, field)
+			case "lastName":
+				return ec.fieldContext_Contact_lastName(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Contact_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_Contact_updatedAt(ctx, field)
+			case "label":
+				return ec.fieldContext_Contact_label(ctx, field)
+			case "source":
+				return ec.fieldContext_Contact_source(ctx, field)
+			case "sourceOfTruth":
+				return ec.fieldContext_Contact_sourceOfTruth(ctx, field)
+			case "appSource":
+				return ec.fieldContext_Contact_appSource(ctx, field)
+			case "tags":
+				return ec.fieldContext_Contact_tags(ctx, field)
+			case "jobRoles":
+				return ec.fieldContext_Contact_jobRoles(ctx, field)
+			case "organizations":
+				return ec.fieldContext_Contact_organizations(ctx, field)
+			case "groups":
+				return ec.fieldContext_Contact_groups(ctx, field)
+			case "phoneNumbers":
+				return ec.fieldContext_Contact_phoneNumbers(ctx, field)
+			case "emails":
+				return ec.fieldContext_Contact_emails(ctx, field)
+			case "locations":
+				return ec.fieldContext_Contact_locations(ctx, field)
+			case "customFields":
+				return ec.fieldContext_Contact_customFields(ctx, field)
+			case "fieldSets":
+				return ec.fieldContext_Contact_fieldSets(ctx, field)
+			case "template":
+				return ec.fieldContext_Contact_template(ctx, field)
+			case "owner":
+				return ec.fieldContext_Contact_owner(ctx, field)
+			case "notes":
+				return ec.fieldContext_Contact_notes(ctx, field)
+			case "notesByTime":
+				return ec.fieldContext_Contact_notesByTime(ctx, field)
+			case "conversations":
+				return ec.fieldContext_Contact_conversations(ctx, field)
+			case "actions":
+				return ec.fieldContext_Contact_actions(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Contact", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_contact_Merge_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return
 	}
@@ -29289,6 +29436,12 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_contact_SoftDelete(ctx, field)
+			})
+
+		case "contact_Merge":
+
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_contact_Merge(ctx, field)
 			})
 
 		case "contact_AddTagById":
