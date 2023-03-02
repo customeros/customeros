@@ -5,6 +5,7 @@ import styles from './table.module.scss';
 import { Skeleton } from '../skeleton';
 import { Column } from './types';
 import { TableSkeleton } from './TableSkeleton';
+import { SearchMinus } from '../icons';
 
 interface TableProps<T> {
   data: Array<T> | null;
@@ -16,7 +17,7 @@ interface TableProps<T> {
 
 export const Table = <T,>({
   columns,
-  data,
+  data = [],
   totalItems,
   isFetching,
   onFetchNextPage,
@@ -30,11 +31,11 @@ export const Table = <T,>({
   });
   useEffect(() => {
     const [lastItem] = [...rowVirtualizer.virtualItems].reverse();
-    if (!lastItem || !data) {
+    if (!lastItem || !data?.length) {
       return;
     }
 
-    if (lastItem.index >= data?.length - 1 && !isFetching) {
+    if (lastItem.index >= totalItems && !isFetching) {
       onFetchNextPage();
     }
   }, [
@@ -42,7 +43,7 @@ export const Table = <T,>({
     onFetchNextPage,
     isFetching,
     rowVirtualizer.virtualItems,
-    data,
+    data?.length,
   ]);
   return (
     <>
@@ -51,6 +52,7 @@ export const Table = <T,>({
 
         {totalItems}
       </div>
+
       <table className={styles.table}>
         <thead className={styles.header}>
           <tr>
@@ -69,8 +71,16 @@ export const Table = <T,>({
           </tr>
         </thead>
         <tbody ref={parentRef} className={styles.body}>
-          {(!data || !data.length) && <TableSkeleton columns={columns} />}
+          {isFetching && <TableSkeleton columns={columns} />}
           {/* SHOW TABLE*/}
+          {!totalItems && !isFetching && (
+            <tr className={styles.noResultsInfo}>
+              <td>
+                <SearchMinus />
+                <span>No results</span>
+              </td>
+            </tr>
+          )}
           {!!data &&
             rowVirtualizer.virtualItems.map((virtualRow) => {
               const element = data[virtualRow.index];
