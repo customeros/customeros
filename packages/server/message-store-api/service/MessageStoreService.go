@@ -202,15 +202,19 @@ func (s *MessageService) SaveMessage(ctx context.Context, input *msProto.InputMe
 	if !ok {
 		return nil, errors.New("no metadata")
 	}
-
-	kh := md.Get("X-Openline-TENANT")
-	if kh != nil && len(kh) == 1 {
-		tenant = kh[0]
-		if len(tenant) == 0 {
-			return nil, errors.New("tenant header is empty")
+	tenantPtr, err := commonModuleService.GetTenantForUsernameForGRPC(ctx, s.postgresRepositories.CommonRepositories.UserRepository)
+	if err != nil {
+		kh := md.Get("X-Openline-TENANT")
+		if kh != nil && len(kh) == 1 {
+			tenant = kh[0]
+			if len(tenant) == 0 {
+				return nil, errors.New("tenant header is empty")
+			}
+		} else {
+			return nil, errors.New("unable read tenant header")
 		}
 	} else {
-		return nil, errors.New("unable read tenant header")
+		tenant = *tenantPtr
 	}
 
 	if input.ConversationId == nil && input.InitiatorIdentifier == nil {
