@@ -123,17 +123,18 @@ const userFieldSelection = `firstName,lastName,id,
 					  label
             		}`
 
-func (s *CustomerOSService) addHeadersToGraphRequest(req *graphql.Request, ctx context.Context) error {
+func (s *CustomerOSService) addHeadersToGraphRequest(req *graphql.Request, ctx context.Context, tenant string) error {
 	req.Header.Add("X-Openline-API-KEY", s.conf.Service.CustomerOsAPIKey)
 	user, err := commonModuleService.GetUsernameMetadataForGRPC(ctx)
 	if err != nil {
 		return err
 	}
 	req.Header.Add("X-Openline-USERNAME", *user)
+	req.Header.Add("X-Openline-TENANT", tenant)
 	return nil
 }
 
-func (s *CustomerOSService) GetUserByEmail(ctx context.Context, email string) (*User, error) {
+func (s *CustomerOSService) GetUserByEmail(ctx context.Context, email string, tenant string) (*User, error) {
 	graphqlRequest := graphql.NewRequest(`
   				query ($email: String!) {
   					user_ByEmail(email: $email){` + userFieldSelection + `}
@@ -141,7 +142,7 @@ func (s *CustomerOSService) GetUserByEmail(ctx context.Context, email string) (*
     `)
 	graphqlRequest.Var("email", email)
 
-	err := s.addHeadersToGraphRequest(graphqlRequest, ctx)
+	err := s.addHeadersToGraphRequest(graphqlRequest, ctx, tenant)
 
 	if err != nil {
 		return nil, fmt.Errorf("GetUserByEmail: %w", err)
@@ -159,7 +160,7 @@ func (s *CustomerOSService) GetUserByEmail(ctx context.Context, email string) (*
 	return graphqlResponse.UserByEmail, nil
 }
 
-func (s *CustomerOSService) GetContactById(ctx context.Context, id string) (*Contact, error) {
+func (s *CustomerOSService) GetContactById(ctx context.Context, id string, tenant string) (*Contact, error) {
 	graphqlRequest := graphql.NewRequest(`
   				query ($id: ID!) {
   					contact(id: $id){` + contactFieldSelection + `}
@@ -167,7 +168,7 @@ func (s *CustomerOSService) GetContactById(ctx context.Context, id string) (*Con
     `)
 	graphqlRequest.Var("id", id)
 
-	err := s.addHeadersToGraphRequest(graphqlRequest, ctx)
+	err := s.addHeadersToGraphRequest(graphqlRequest, ctx, tenant)
 	if err != nil {
 		return nil, fmt.Errorf("GetContactById: %w", err)
 	}
@@ -185,7 +186,7 @@ func (s *CustomerOSService) GetContactById(ctx context.Context, id string) (*Con
 	return graphqlResponse.Contact, nil
 }
 
-func (s *CustomerOSService) GetContactByEmail(ctx context.Context, email string) (*Contact, error) {
+func (s *CustomerOSService) GetContactByEmail(ctx context.Context, email string, tenant string) (*Contact, error) {
 	graphqlRequest := graphql.NewRequest(`
   				query ($email: String!) {
   					contact_ByEmail(email: $email){` + contactFieldSelection + `}
@@ -193,7 +194,7 @@ func (s *CustomerOSService) GetContactByEmail(ctx context.Context, email string)
     `)
 	graphqlRequest.Var("email", email)
 
-	err := s.addHeadersToGraphRequest(graphqlRequest, ctx)
+	err := s.addHeadersToGraphRequest(graphqlRequest, ctx, tenant)
 	if err != nil {
 		return nil, fmt.Errorf("GetContactByEmail: %w", err)
 	}
@@ -210,7 +211,7 @@ func (s *CustomerOSService) GetContactByEmail(ctx context.Context, email string)
 	return &graphqlResponse.ContactByEmail, nil
 }
 
-func (s *CustomerOSService) GetContactByPhone(ctx context.Context, phoneNumber string) (*Contact, error) {
+func (s *CustomerOSService) GetContactByPhone(ctx context.Context, phoneNumber string, tenant string) (*Contact, error) {
 	graphqlRequest := graphql.NewRequest(`
   				query ($phoneNumber: String!) {
   					contact_ByPhone(e164: $phoneNumber){` + contactFieldSelection + `}
@@ -218,7 +219,7 @@ func (s *CustomerOSService) GetContactByPhone(ctx context.Context, phoneNumber s
     `)
 	graphqlRequest.Var("phoneNumber", phoneNumber)
 
-	err := s.addHeadersToGraphRequest(graphqlRequest, ctx)
+	err := s.addHeadersToGraphRequest(graphqlRequest, ctx, tenant)
 	if err != nil {
 		return nil, fmt.Errorf("GetContactByPhone: %w", err)
 	}
@@ -246,7 +247,7 @@ func (s *CustomerOSService) CreateContactWithEmail(ctx context.Context, tenant s
     `)
 
 	graphqlRequest.Var("email", email)
-	err := s.addHeadersToGraphRequest(graphqlRequest, ctx)
+	err := s.addHeadersToGraphRequest(graphqlRequest, ctx, tenant)
 
 	if err != nil {
 		return nil, fmt.Errorf("CreateContactWithEmail: %w", err)
@@ -259,7 +260,7 @@ func (s *CustomerOSService) CreateContactWithEmail(ctx context.Context, tenant s
 	id := graphqlResponse["contact_Create"]["id"]
 	bytes, _ := json.Marshal(graphqlResponse)
 	log.Printf("CreateContactWithEmail: email=%s graphqlResponse = %s", email, bytes)
-	return s.GetContactById(ctx, id)
+	return s.GetContactById(ctx, id, tenant)
 
 }
 
@@ -274,7 +275,7 @@ func (s *CustomerOSService) CreateContactWithPhone(ctx context.Context, tenant s
     `)
 
 	graphqlRequest.Var("phoneNumber", phoneNumber)
-	err := s.addHeadersToGraphRequest(graphqlRequest, ctx)
+	err := s.addHeadersToGraphRequest(graphqlRequest, ctx, tenant)
 
 	if err != nil {
 		return nil, fmt.Errorf("CreateContactWithPhone: %w", err)
@@ -287,7 +288,7 @@ func (s *CustomerOSService) CreateContactWithPhone(ctx context.Context, tenant s
 	id := graphqlResponse["contact_Create"]["id"]
 	bytes, _ := json.Marshal(graphqlResponse)
 	log.Printf("CreateContactWithPhone: phoneNumber=%s graphqlResponse = %s", phoneNumber, bytes)
-	return s.GetContactById(ctx, id)
+	return s.GetContactById(ctx, id, tenant)
 
 }
 
@@ -589,7 +590,7 @@ func mapNodeToConversation(node *dbtype.Node) *Conversation {
 }
 
 func (s *CustomerOSService) GetContactWithEmailOrCreate(ctx context.Context, tenant string, email string) (Contact, error) {
-	contact, err := s.GetContactByEmail(ctx, email)
+	contact, err := s.GetContactByEmail(ctx, email, tenant)
 	if err != nil {
 		contact, err = s.CreateContactWithEmail(ctx, tenant, email)
 		if err != nil {
@@ -605,7 +606,7 @@ func (s *CustomerOSService) GetContactWithEmailOrCreate(ctx context.Context, ten
 }
 
 func (s *CustomerOSService) GetContactWithPhoneOrCreate(ctx context.Context, tenant string, phoneNumber string) (Contact, error) {
-	contact, err := s.GetContactByPhone(ctx, phoneNumber)
+	contact, err := s.GetContactByPhone(ctx, phoneNumber, tenant)
 	if err != nil {
 		contact, err = s.CreateContactWithPhone(ctx, tenant, phoneNumber)
 		if err != nil {
