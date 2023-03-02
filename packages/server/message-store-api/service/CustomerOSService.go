@@ -14,7 +14,6 @@ import (
 	msProto "github.com/openline-ai/openline-customer-os/packages/server/message-store-api/proto/generated"
 	"github.com/openline-ai/openline-customer-os/packages/server/message-store-api/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/message-store-api/repository/entity"
-	"golang.org/x/exp/slices"
 	"golang.org/x/net/context"
 	"log"
 	"time"
@@ -444,12 +443,21 @@ func (s *CustomerOSService) GetConversationParticipantsIds(ctx context.Context, 
 					p := Participant{}
 					val, ok := record.Values[0].([]any)
 					if ok {
-						if slices.Contains(val, "Contact") {
-							p.Type = entity.CONTACT
-						} else if slices.Contains(val, "User") {
-							p.Type = entity.USER
-						} else {
-							log.Printf("GetConversationParticipantsIds: unknown participant type %s, skipping", val)
+						detected := false
+						for _, v := range val {
+							strv, ok := v.(string)
+							if ok {
+								if strv == "Contact" {
+									p.Type = entity.CONTACT
+									detected = true
+								} else if strv == "User" {
+									p.Type = entity.USER
+									detected = true
+								}
+							}
+						}
+						if !detected {
+							log.Printf("GetConversationParticipantsIds: Error trying to get record type, skipping")
 							continue
 						}
 					} else {
