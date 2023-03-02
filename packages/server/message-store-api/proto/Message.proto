@@ -32,6 +32,10 @@ message ParticipantId {
   ParticipantIdType type = 1;
   string identifier = 2;
 }
+message Participant  {
+  string Id = 1;
+  SenderType Type = 2;
+}
 
 message MessageId {
   // postgres id

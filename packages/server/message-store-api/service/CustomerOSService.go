@@ -418,6 +418,70 @@ func (s *CustomerOSService) GetConversationParticipants(ctx context.Context, ten
 	}
 }
 
+func (s *CustomerOSService) GetConversationParticipantsIds(ctx context.Context, tenant string, conversationId string) ([]Participant, error) {
+	session := utils.NewNeo4jReadSession(ctx, *s.driver)
+	defer session.Close(ctx)
+
+	records, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		queryResult, err := tx.Run(ctx, "MATCH (c:Conversation_"+tenant+"{id:$conversationId})<-[PARTICIPATES]-(p) RETURN DISTINCT labels(p), p.id",
+			map[string]interface{}{
+				"conversationId": conversationId,
+			})
+		if err != nil {
+			return nil, err
+		}
+		return queryResult.Collect(ctx)
+	})
+	if err != nil {
+		return []Participant{}, fmt.Errorf("GetConversationParticipantsIds: %w", err)
+	}
+	participants := make([]Participant, 0)
+	if len(records.([]*neo4j.Record)) > 0 {
+		for _, record := range records.([]*neo4j.Record) {
+			if record != nil {
+				if len(record.Values) > 0 {
+					p := Participant{}
+					val, ok := record.Values[0].([]any)
+					if ok {
+						detected := false
+						for _, v := range val {
+							strv, ok := v.(string)
+							if ok {
+								if strv == "Contact" {
+									p.Type = entity.CONTACT
+									detected = true
+								} else if strv == "User" {
+									p.Type = entity.USER
+									detected = true
+								}
+							}
+						}
+						if !detected {
+							log.Printf("GetConversationParticipantsIds: Error trying to get record type, skipping")
+							continue
+						}
+					} else {
+						log.Printf("GetConversationParticipantsIds: Error trying to get record type, skipping")
+						continue
+					}
+					valId, ok := record.Values[1].(string)
+					if ok {
+						p.Id = valId
+					} else {
+						log.Printf("GetConversationParticipantsIds: Error trying to get record id, skipping")
+						continue
+					}
+					participants = append(participants, p)
+
+				}
+			}
+		}
+		return participants, nil
+	} else {
+		return []Participant{}, nil
+	}
+}
+
 func (s *CustomerOSService) CreateConversation(ctx context.Context, tenant string, initiator Participant, initiatorUsername string, channel entity.EventType, threadId string) (*Conversation, error) {
 	session := utils.NewNeo4jWriteSession(ctx, *s.driver)
 	defer session.Close(ctx)

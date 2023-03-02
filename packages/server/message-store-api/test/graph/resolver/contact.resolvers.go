@@ -93,6 +93,11 @@ func (r *contactResolver) Actions(ctx context.Context, obj *model.Contact, from 
 	panic(fmt.Errorf("not implemented: Actions - actions"))
 }
 
+// Tickets is the resolver for the tickets field.
+func (r *contactResolver) Tickets(ctx context.Context, obj *model.Contact) ([]*model.Ticket, error) {
+	panic(fmt.Errorf("not implemented: Tickets - tickets"))
+}
+
 // ContactCreate is the resolver for the contact_Create field.
 func (r *mutationResolver) ContactCreate(ctx context.Context, input model.ContactInput) (*model.Contact, error) {
 	if r.Resolver.ContactCreate != nil {
