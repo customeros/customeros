@@ -4,7 +4,7 @@ import { EmailTimelineItem } from '../../molecules';
 // import { ConversationItem } from '../../../models/conversation-item';
 interface Props {
   message: any;
-  feedInitiator: {
+  sender: {
     loaded: boolean;
     email: string;
     firstName: string;
@@ -15,9 +15,10 @@ interface Props {
   previousMessage: number | null;
   index: number;
 }
+
 export const Message = ({
   message,
-  feedInitiator,
+  sender,
   date,
   previousMessage,
   index,
@@ -44,15 +45,19 @@ export const Message = ({
     <>
       {message.direction == 0 && (
         <>
-          {index === 0 && (
+          {(index === 0 ||
+            (index > 0 && previousMessage !== message?.direction)) && (
             <div className='mb-1 text-gray-600'>
-              {feedInitiator.firstName && feedInitiator.lastName && (
+              {sender.firstName && sender.lastName && (
                 <>
-                  {feedInitiator.firstName} {feedInitiator.lastName}
+                  {sender.firstName} {sender.lastName}
                 </>
               )}
-              {!feedInitiator.firstName && !feedInitiator.lastName && (
-                <>{feedInitiator.email}</>
+              {!sender.firstName && !sender.lastName &&   (
+                <>{sender.email}</>
+              )}
+              {!sender.firstName && !sender.lastName &&  sender.phoneNumber && (
+                <>{sender.phoneNumber}</>
               )}
             </div>
           )}
@@ -90,7 +95,19 @@ export const Message = ({
             (index > 0 && previousMessage !== message?.direction)) && (
             <div className='w-full flex'>
               <div className='flex-grow-1'></div>
-              {/*<div className="flex-grow-0 mb-1 pr-3">To be added</div>*/}
+              {<div className="flex-grow-0 mb-1 pr-3">
+              {sender.firstName && sender.lastName && (
+                <>
+                  {sender.firstName} {sender.lastName}
+                </>
+              )}
+              {!sender.firstName && !sender.lastName &&  sender.email && (
+                <>{sender.email}</>
+              )}
+              {!sender.firstName && !sender.lastName &&  sender.phoneNumber && (
+                <>{sender.phoneNumber}</>
+              )}
+              </div>}
             </div>
           )}
 

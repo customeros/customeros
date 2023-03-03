@@ -21,6 +21,12 @@ export type Time = {
   seconds: number;
 };
 
+  
+export type Participant = {
+  type: number,
+  identifier: string,
+}
+
 export type ConversationItem = {
   id: string;
   conversationId: string;
@@ -31,14 +37,14 @@ export type ConversationItem = {
   time: Time;
   senderType: number;
   senderId: string;
-  senderUserName?: string;
+  senderUsername: Participant;
 };
 
 export type FeedItem = {
   id: string;
   initiatorFirstName: string;
   initiatorLastName: string;
-  initiatorUsername: string;
+  initiatorUsername: Participant;
   initiatorType: string;
   lastSenderFirstName: string;
   lastSenderLastName: string;
@@ -65,6 +71,15 @@ export const ConversationTimelineItem: React.FC<Props> = ({
 
   const [loadingMessages, setLoadingMessages] = useState(false);
 
+  const makeSender = (msg: ConversationItem) => {
+    return {
+      loaded: true,
+      email: msg.senderUsername.type == 0 ? msg.senderUsername.identifier : '',
+      firstName: '',
+      lastName: '',
+      phoneNumber: msg.senderUsername.type == 1  ? msg.senderUsername.identifier : '',
+    }
+  }
   useEffect(() => {
     setLoadingMessages(true);
     axios
@@ -74,11 +89,11 @@ export const ConversationTimelineItem: React.FC<Props> = ({
 
         if (feedItem.initiatorType !== 'CONTACT') {
           setFeedInitiator({
-            loaded: true,
-            email: feedItem.initiatorUsername,
+            loaded: true, 
+            email: feedItem.initiatorUsername.type == 0 ? feedItem.initiatorUsername.identifier : '',
             firstName: feedItem.initiatorFirstName,
             lastName: feedItem.initiatorLastName,
-            phoneNumber: '',
+            phoneNumber: feedItem.initiatorUsername.type == 1 ? feedItem.initiatorUsername.identifier : '',
             lastTimestamp: feedItem.lastTimestamp,
           });
         }
@@ -252,10 +267,11 @@ export const ConversationTimelineItem: React.FC<Props> = ({
                   createdAt={createdAt || timeFromLastTimestamp}
                   key={msg.id}
                 >
+                  
                   <Message
                     key={msg.id}
                     message={msg}
-                    feedInitiator={feedInitiator}
+                    sender={makeSender(msg)}
                     date={time}
                     previousMessage={messages?.[index - 1]?.direction || null}
                     index={index}
