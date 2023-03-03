@@ -5,6 +5,7 @@ import styles from './finder-table.module.scss';
 import { Checkbox } from '../../ui-kit/atoms/input';
 import { FinderCell } from './FinderTableCell';
 import { Contact } from '../../../graphQL/__generated__/generated';
+import { getContactDisplayName } from '../../../utils';
 
 export const ContactTableCell: React.FC<{
   contact: Contact;
@@ -29,14 +30,10 @@ export const ContactTableCell: React.FC<{
     return <span>-</span>;
   }
 
-  const name = `${contact?.firstName} ${contact?.lastName} ${
-    contact?.name || ''
-  }`;
-  const displayName = name.trim().length ? name : 'Unnamed';
   return (
     <div className={styles.mergableCell}>
       <FinderCell
-        label={displayName}
+        label={getContactDisplayName(contact)}
         subLabel={
           (contact.jobRoles.find((role) => role.primary) || contact.jobRoles[0])
             ?.jobTitle || ''

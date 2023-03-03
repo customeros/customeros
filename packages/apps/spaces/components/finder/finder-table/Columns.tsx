@@ -9,6 +9,7 @@ import { ContactTableCell } from './ContactTableCell';
 
 export const columns: Array<Column> = [
   {
+    id: 'finder-table-column-org',
     width: '25%',
     label: (
       <FinderMergeItemTableHeader
@@ -22,6 +23,7 @@ export const columns: Array<Column> = [
     },
   },
   {
+    id: 'finder-table-column-contact',
     width: '25%',
     label: (
       <FinderMergeItemTableHeader
@@ -34,6 +36,7 @@ export const columns: Array<Column> = [
     template: (c: any) => <ContactTableCell contact={c?.contact} />,
   },
   {
+    id: 'finder-table-column-email',
     width: '25%',
     label: 'Email',
     template: (c: any) => {
@@ -44,6 +47,7 @@ export const columns: Array<Column> = [
     },
   },
   {
+    id: 'finder-table-column-address',
     width: '25%',
     label: 'Location',
     subLabel: 'City, State, Country',
@@ -52,6 +56,7 @@ export const columns: Array<Column> = [
     },
   },
   {
+    id: 'finder-table-column-actions',
     width: '10%',
     label: <ActionColumn />,
     subLabel: '',

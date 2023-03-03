@@ -8,6 +8,7 @@ import { useRouter } from 'next/router';
 import { ContactTags } from '../contact-tags';
 import { useForm } from 'react-hook-form';
 import { ContactPersonalDetailsEdit } from './edit';
+import { getContactDisplayName } from '../../../utils';
 export const ContactPersonalDetails = ({ id }: { id: string }) => {
   const router = useRouter();
   const { data, loading, error } = useContactPersonalDetails({ id });
@@ -46,7 +47,10 @@ export const ContactPersonalDetails = ({ id }: { id: string }) => {
       </div>
       <div className={styles.name}>
         <div className={styles.nameAndEditButton}>
-          {data?.firstName} {data?.lastName}
+          {
+            //@ts-expect-error fixme later
+            getContactDisplayName(data)
+          }
           <div style={{ marginLeft: '4px' }}>
             <Button mode='secondary' onClick={() => setMode('EDIT')}>
               Edit

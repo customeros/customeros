@@ -16,9 +16,9 @@ export const TableSkeleton = ({ columns }: TableSkeletonProps): JSX.Element => {
     <>
       {rows.map((n) => (
         <tr key={n} className={classNames(styles.row, styles.staticRow)}>
-          {columns.map(({ width, label }) => (
+          {columns.map(({ width, label }, index) => (
             <td
-              key={`table-skeleton-${label}`}
+              key={`table-skeleton-${label}-${index}`}
               style={{
                 width: width || 'auto',
                 maxWidth: width || 'auto',
