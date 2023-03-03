@@ -40,12 +40,14 @@ export const ContactTableCell: React.FC<{
         }
         url={`/contact/${contact.id}`}
       />
-      {mode === 'MERGE_CONTACT' && (
-        <Checkbox
-          checked={selectedIds.findIndex((id) => contact.id === id) !== -1}
-          onChange={() => handleCheckboxToggle()}
-        />
-      )}
+      <div className={styles.checkboxContainer}>
+        {mode === 'MERGE_CONTACT' && (
+          <Checkbox
+            checked={selectedIds.findIndex((id) => contact.id === id) !== -1}
+            onChange={() => handleCheckboxToggle()}
+          />
+        )}
+      </div>
     </div>
   );
 };

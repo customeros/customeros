@@ -15,7 +15,6 @@ interface Result {
 export const useMergeOrganizations = (): Result => {
   const [mergeOrganizationsMutation, { loading, error, data }] =
     useMergeOrganizationsMutation();
-  const [mode, setMode] = useRecoilState(tableMode);
   const [selectedItems, setSelectedItems] = useRecoilState(selectedItemsIds);
   const handleMergeOrganizations: Result['onMergeOrganizations'] = async (
     input,
@@ -27,7 +26,6 @@ export const useMergeOrganizations = (): Result => {
       });
 
       if (response.data?.organization_Merge !== null) {
-        setMode('PREVIEW');
         setSelectedItems([]);
         toast.success('Organizations were successfully merged!', {
           toastId: `merge-organizations-success-${input.primaryOrganizationId}`,

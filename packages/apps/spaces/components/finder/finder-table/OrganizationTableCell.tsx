@@ -1,7 +1,7 @@
 import React from 'react';
 import { useRecoilState, useRecoilValue } from 'recoil';
 import { selectedItemsIds, tableMode } from '../state';
-import styles from '../finder.module.scss';
+import styles from './finder-table.module.scss';
 import { Checkbox } from '../../ui-kit/atoms/input';
 import { FinderCell } from './FinderTableCell';
 import { Organization } from '../../../graphQL/__generated__/generated';
@@ -40,14 +40,16 @@ export const OrganizationTableCell: React.FC<{
           subLabel={industry}
           url={`/organization/${organization.id}`}
         />
-        {mode === 'MERGE_ORG' && (
-          <Checkbox
-            checked={
-              selectedIds.findIndex((id) => organization.id === id) !== -1
-            }
-            onChange={() => handleCheckboxToggle()}
-          />
-        )}
+        <div className={styles.checkboxContainer}>
+          {mode === 'MERGE_ORG' && (
+            <Checkbox
+              checked={
+                selectedIds.findIndex((id) => organization.id === id) !== -1
+              }
+              onChange={() => handleCheckboxToggle()}
+            />
+          )}
+        </div>
       </div>
     );
   }
