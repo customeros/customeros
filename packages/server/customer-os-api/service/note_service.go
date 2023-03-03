@@ -15,8 +15,11 @@ type NoteService interface {
 	GetNotesForContactPaginated(ctx context.Context, contactId string, page, limit int) (*utils.Pagination, error)
 	GetNotesForContactTimeRange(ctx context.Context, contactId string, start, end time.Time) (*entity.NoteEntities, error)
 	GetNotesForOrganization(ctx context.Context, organizationId string, page, limit int) (*utils.Pagination, error)
+	GetNotesForTickets(ctx context.Context, ticketIds []string) (*entity.NoteEntities, error)
+
 	CreateNoteForContact(ctx context.Context, contactId string, entity *entity.NoteEntity) (*entity.NoteEntity, error)
 	CreateNoteForOrganization(ctx context.Context, organizationId string, entity *entity.NoteEntity) (*entity.NoteEntity, error)
+
 	UpdateNote(ctx context.Context, entity *entity.NoteEntity) (*entity.NoteEntity, error)
 	DeleteNote(ctx context.Context, noteId string) (bool, error)
 }
@@ -115,6 +118,20 @@ func (s *noteService) GetNotesForOrganization(ctx context.Context, organizationI
 	}
 	paginatedResult.SetRows(&entities)
 	return &paginatedResult, nil
+}
+
+func (s *noteService) GetNotesForTickets(ctx context.Context, ticketIds []string) (*entity.NoteEntities, error) {
+	tags, err := s.repositories.NoteRepository.GetForTickets(ctx, common.GetTenantFromContext(ctx), ticketIds)
+	if err != nil {
+		return nil, err
+	}
+	noteEntities := entity.NoteEntities{}
+	for _, v := range tags {
+		noteEntity := s.mapDbNodeToNoteEntity(*v.Node)
+		noteEntity.DataloaderKey = v.LinkedNodeId
+		noteEntities = append(noteEntities, *noteEntity)
+	}
+	return &noteEntities, nil
 }
 
 func (s *noteService) CreateNoteForContact(ctx context.Context, contactId string, entity *entity.NoteEntity) (*entity.NoteEntity, error) {

@@ -3,6 +3,8 @@ import React from 'react';
 import styles from './ticket-timeline-item.module.scss';
 import Ticket from '../../atoms/icons/Ticket';
 import { TagsList } from '../../atoms';
+import sanitizeHtml from 'sanitize-html';
+import format from 'date-fns/format';
 
 // interface Props extends ContactWebAction {
 //     contactName?: string
@@ -16,14 +18,17 @@ export const TicketTimelineItem = ({
   priority,
   description,
   tags,
+  notes,
   ...rest
 }: any): JSX.Element => {
   return (
     <div className={styles.x}>
-      <Ticket />
       <article className={`${styles.ticketContainer}`}>
         <div className={`${styles.ticketHeader}`}>
-          <div className={`${styles.ticketHeaderSubject}`}>{subject}</div>
+          <div className={`${styles.ticketHeaderSubject}`}>
+            <Ticket className={`${styles.ticketHeaderPicture}`} />
+            {subject}
+          </div>
           <div className={`${styles.ticketHeaderStatus}`}>{status}</div>
         </div>
 
@@ -34,6 +39,26 @@ export const TicketTimelineItem = ({
         )}
 
         <div>{description}</div>
+
+        {description && notes && notes.length > 0 && (
+          <div className={`${styles.contentNotesSeparator}`}></div>
+        )}
+
+        {notes &&
+          notes.length > 0 &&
+          notes.map((note: any) => {
+            return (
+              <div key={note.id}>
+                <div className={`${styles.noteActivity}`}>
+                  Activity on{' '}
+                  {format(new Date(note.createdAt), 'dd/MM/yyyy h:mm a')}
+                </div>
+                <div
+                  dangerouslySetInnerHTML={{ __html: sanitizeHtml(note.html) }}
+                ></div>
+              </div>
+            );
+          })}
       </article>
     </div>
   );

@@ -860,6 +860,7 @@ type Ticket struct {
 	Priority    *string   `json:"priority"`
 	Description *string   `json:"description"`
 	Tags        []*Tag    `json:"tags"`
+	Notes       []*Note   `json:"notes"`
 }
 
 func (Ticket) IsNode()            {}

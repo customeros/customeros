@@ -3,7 +3,7 @@ query GetDashboardData($pagination: Pagination!, $searchTerm: String) {
     content {
       contact {
         id
-        ...ContactName
+        ...ContactNameFragment
         jobRoles {
           ...JobRole
         }

@@ -20,6 +20,7 @@ type Loaders struct {
 	LocationsForOrganization *dataloader.Loader
 	JobRolesForContact       *dataloader.Loader
 	DomainsForOrganization   *dataloader.Loader
+	NotesForTicket           *dataloader.Loader
 }
 
 type tagBatcher struct {
@@ -36,6 +37,9 @@ type jobRoleBatcher struct {
 }
 type domainBatcher struct {
 	domainService service.DomainService
+}
+type noteBatcher struct {
+	noteService service.NoteService
 }
 
 // NewDataLoader returns the instantiated Loaders struct for use in a request
@@ -55,6 +59,9 @@ func NewDataLoader(services *service.Services) *Loaders {
 	domainBatcher := &domainBatcher{
 		domainService: services.DomainService,
 	}
+	noteBatcher := &noteBatcher{
+		noteService: services.NoteService,
+	}
 	return &Loaders{
 		TagsForOrganization:      dataloader.NewBatchedLoader(tagBatcher.getTagsForOrganizations, dataloader.WithClearCacheOnBatch()),
 		TagsForContact:           dataloader.NewBatchedLoader(tagBatcher.getTagsForContacts, dataloader.WithClearCacheOnBatch()),
@@ -64,6 +71,7 @@ func NewDataLoader(services *service.Services) *Loaders {
 		LocationsForOrganization: dataloader.NewBatchedLoader(locationBatcher.getLocationsForOrganizations, dataloader.WithClearCacheOnBatch()),
 		JobRolesForContact:       dataloader.NewBatchedLoader(jobRoleBatcher.getJobRolesForContacts, dataloader.WithClearCacheOnBatch()),
 		DomainsForOrganization:   dataloader.NewBatchedLoader(domainBatcher.getDomainsForOrganizations, dataloader.WithClearCacheOnBatch()),
+		NotesForTicket:           dataloader.NewBatchedLoader(noteBatcher.getNotesForTickets, dataloader.WithClearCacheOnBatch()),
 	}
 }
 

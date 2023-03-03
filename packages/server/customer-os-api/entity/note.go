@@ -13,6 +13,8 @@ type NoteEntity struct {
 	Source        DataSource
 	SourceOfTruth DataSource
 	AppSource     string
+
+	DataloaderKey string
 }
 
 func (note NoteEntity) ToString() string {

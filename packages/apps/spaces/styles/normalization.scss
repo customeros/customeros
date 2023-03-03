@@ -201,14 +201,21 @@ button::-moz-focus-inner {
 }
 .p-tooltip-text {
   padding: var(--spacing-xxxs) var(--spacing-xs);
-
 }
 
-
 // checkbox
-.p-checkbox{display:inline-flex;cursor:pointer;user-select:none;vertical-align:bottom;position:relative}
-.p-checkbox-box{display:flex;justify-content:center;align-items:center}
-
+.p-checkbox {
+  display: inline-flex;
+  cursor: pointer;
+  user-select: none;
+  vertical-align: bottom;
+  position: relative;
+}
+.p-checkbox-box {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
 
 .p-checkbox {
   width: 20px;
@@ -221,14 +228,15 @@ button::-moz-focus-inner {
   height: 15px;
   color: var(--gray-900);
   border-radius: var(--border-radius-sm);
-  transition: background-color 0.2s, color 0.2s, border-color 0.2s, box-shadow 0.2s;
+  transition: background-color 0.2s, color 0.2s, border-color 0.2s,
+    box-shadow 0.2s;
 }
 
 .p-checkbox .p-checkbox-box.p-highlight {
   border-color: var(--primary-color);
   position: relative;
   &::after {
-    content: "";
+    content: '';
     border: 2px solid var(--gray-900);
     border-left: 0;
     border-top: 0;
@@ -240,22 +248,20 @@ button::-moz-focus-inner {
     transform: rotate(45deg);
     transition: opacity 0.2s ease-in-out;
     width: 7px;
-
   }
 }
 .p-checkbox .p-checkbox-box.p-highlight:not(.p-disabled):hover {
-  border-color: #4338CA;
+  border-color: #4338ca;
   color: #ffffff;
 }
 .p-checkbox:not(.p-checkbox-disabled) .p-checkbox-box:hover {
   border-color: var(--primary-color);
 }
 .p-checkbox:not(.p-checkbox-disabled) .p-checkbox-box.p-focus {
- @include outline;
-
+  @include outline;
 }
 .p-checkbox:not(.p-checkbox-disabled) .p-checkbox-box.p-highlight:hover {
-  border-color: #4338CA;
+  border-color: #4338ca;
   color: #ffffff;
 }
 .p-checkbox.p-invalid > .p-checkbox-box {
@@ -271,6 +277,8 @@ button::-moz-focus-inner {
 .p-input-filled .p-checkbox:not(.p-checkbox-disabled) .p-checkbox-box:hover {
   background-color: #e9ecef;
 }
-.p-input-filled .p-checkbox:not(.p-checkbox-disabled) .p-checkbox-box.p-highlight:hover {
-  background: #4338CA;
+.p-input-filled
+  .p-checkbox:not(.p-checkbox-disabled)
+  .p-checkbox-box.p-highlight:hover {
+  background: #4338ca;
 }

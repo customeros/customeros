@@ -18,11 +18,33 @@
   margin-bottom: 10px;
 }
 
+.ticketHeaderSubject {
+  display: flex;
+  justify-content: start;
+}
+
+.ticketHeaderPicture {
+  margin-right: 10px;
+}
+
+.ticketHeaderStatus {
+  font-size: 0.75rem;
+  font-weight: 400;
+  color: var(--gray-500);
+}
+
 .tags {
   margin-bottom: 10px;
 }
 
-.ticketHeaderStatus {
+.contentNotesSeparator {
+  width: 100%;
+  height: 2px;
+  background: var(--gray-500);
+  margin: 10px 0;
+}
+
+.noteActivity {
   font-size: 0.75rem;
   font-weight: 400;
   color: var(--gray-500);

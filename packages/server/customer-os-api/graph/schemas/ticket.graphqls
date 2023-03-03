@@ -8,4 +8,5 @@ type Ticket implements Node {
     priority: String
     description: String
     tags: [Tag] @goField(forceResolver: true)
+    notes: [Note] @goField(forceResolver: true)
 }
