@@ -1,21 +1,36 @@
-import React, { useState } from 'react';
+import React, { useContext } from 'react';
 import Image from 'next/image';
-import { Button, IconButton, Pencil } from '../../ui-kit/atoms';
+import { IconButton } from '../../ui-kit/atoms';
 import styles from './contact-details.module.scss';
 import { ContactPersonalDetails } from './ContactPersonalDetails';
-export const ContactDetails = ({ id }: { id: string }) => {
+import { WebRTCContext } from '../../../context/web-rtc';
+import { WebRTCCallProgress } from '../../ui-kit/molecules';
+import { useContactCommunicationChannelsDetails } from '../../../hooks/useContact';
+import { da } from "date-fns/locale";
+export const ContactDetails = ({ id }: { id: string}) => {
+  const { makeCall } = useContext(WebRTCContext);
+  const { data, loading, error } = useContactCommunicationChannelsDetails({
+    id,
+  });
+
   return (
     <div className={styles.contactDetails}>
       <ContactPersonalDetails id={id} />
-
+      <WebRTCCallProgress />
       <div className={styles.details}>
         <div className={styles.section}>
           <IconButton
-            disabled={true}
+            disabled={loading || error || data?.phoneNumbers?.length === 0}
             aria-describedby='phone-icon-label'
             mode='secondary'
             className={styles.icon}
-            onClick={() => null}
+            onClick={() => {
+              for (let i = 0; i < data?.phoneNumbers?.length; i++) {
+                if (data?.phoneNumbers[i]?.primary === true) {
+                  return makeCall(data?.phoneNumbers[i]?.e164);
+                }
+              }
+            }}
             icon={
               <Image alt={''} src='/icons/phone.svg' width={20} height={20} />
             }
