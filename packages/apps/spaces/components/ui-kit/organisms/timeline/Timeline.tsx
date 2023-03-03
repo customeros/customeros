@@ -2,6 +2,8 @@ import React from 'react';
 import { Skeleton } from 'primereact/skeleton';
 import {
   ConversationTimelineItem,
+  LiveConversationTimelineItem,
+
   NoteTimelineItem,
   WebActionTimelineItem,
 } from '../../molecules';
@@ -70,6 +72,14 @@ export const Timeline = ({
             createdAt={data?.startedAt}
           />
         );
+      case 'LiveConversation':
+          return (
+            <LiveConversationTimelineItem
+              first={index == 0}
+              contactId={contactId}
+              source={data.source}
+            />
+          );
       case 'PageViewAction':
         return (
           <TimelineItem first={index == 0} createdAt={data?.createdAt}>
