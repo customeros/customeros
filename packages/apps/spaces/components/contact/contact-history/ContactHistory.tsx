@@ -23,6 +23,9 @@ export const ContactHistory = ({ id }: { id: string }) => {
     error: conversationsError,
   } = useContactConversations({ id });
 
+
+  const liveConversations = {__typename: "LiveConversation", source: "LiveStream", createdAt: Date.now()}
+
   console.log('in history');
 
   const noHistoryItemsAvailable =
@@ -38,6 +41,7 @@ export const ContactHistory = ({ id }: { id: string }) => {
     data1: Array<any> | undefined,
     data2: Array<any> | undefined,
     data3: Array<any> | undefined,
+    
   ) => {
     const data = [...(data1 || []), ...(data2 || []), ...(data3 || [])];
     console.log(data);
@@ -52,11 +56,11 @@ export const ContactHistory = ({ id }: { id: string }) => {
       loading={notesLoading || conversationsLoading || ticketsLoading}
       noActivity={noHistoryItemsAvailable}
       contactId={id}
-      loggedActivities={getSortedItems(
+      loggedActivities={[liveConversations, ...getSortedItems(
         notes?.notes.content,
         conversations?.conversations.content,
         tickets?.tickets,
-      )}
+      )]}
     />
   );
 };
