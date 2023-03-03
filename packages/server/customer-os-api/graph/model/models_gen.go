@@ -89,11 +89,12 @@ type Contact struct {
 	// Contact owner (user)
 	Owner *User `json:"owner"`
 	// Contact notes
-	Notes         *NotePage         `json:"notes"`
-	NotesByTime   []*Note           `json:"notesByTime"`
-	Conversations *ConversationPage `json:"conversations"`
-	Actions       []Action          `json:"actions"`
-	Tickets       []*Ticket         `json:"tickets"`
+	Notes                 *NotePage                `json:"notes"`
+	NotesByTime           []*Note                  `json:"notesByTime"`
+	Conversations         *ConversationPage        `json:"conversations"`
+	Actions               []Action                 `json:"actions"`
+	Tickets               []*Ticket                `json:"tickets"`
+	TicketSummaryByStatus []*TicketSummaryByStatus `json:"ticketSummaryByStatus"`
 }
 
 func (Contact) IsExtensibleEntity()               {}
@@ -653,11 +654,12 @@ type Organization struct {
 	AppSource        string            `json:"appSource"`
 	// All addresses associated with an organization in customerOS.
 	// **Required.  If no values it returns an empty array.**
-	Locations []*Location   `json:"locations"`
-	Contacts  *ContactsPage `json:"contacts"`
-	JobRoles  []*JobRole    `json:"jobRoles"`
-	Notes     *NotePage     `json:"notes"`
-	Tags      []*Tag        `json:"tags"`
+	Locations             []*Location              `json:"locations"`
+	Contacts              *ContactsPage            `json:"contacts"`
+	JobRoles              []*JobRole               `json:"jobRoles"`
+	Notes                 *NotePage                `json:"notes"`
+	Tags                  []*Tag                   `json:"tags"`
+	TicketSummaryByStatus []*TicketSummaryByStatus `json:"ticketSummaryByStatus"`
 }
 
 func (Organization) IsNode()            {}
@@ -865,6 +867,11 @@ type Ticket struct {
 
 func (Ticket) IsNode()            {}
 func (this Ticket) GetID() string { return this.ID }
+
+type TicketSummaryByStatus struct {
+	Status string `json:"status"`
+	Count  int64  `json:"count"`
+}
 
 type TimeRange struct {
 	// The start time of the time range.

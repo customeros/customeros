@@ -257,6 +257,27 @@ func (r *contactResolver) Tickets(ctx context.Context, obj *model.Contact) ([]*m
 	return mapper.MapEntitiesToTickets(tickets), nil
 }
 
+// TicketSummaryByStatus is the resolver for the ticketSummaryByStatus field.
+func (r *contactResolver) TicketSummaryByStatus(ctx context.Context, obj *model.Contact) ([]*model.TicketSummaryByStatus, error) {
+	defer func(start time.Time) {
+		utils.LogMethodExecution(start, utils.GetFunctionName())
+	}(time.Now())
+
+	ticketCountByStatus, err := r.Services.TicketService.GetTicketSummaryByStatusForContact(ctx, obj.ID)
+	if err != nil {
+		graphql.AddErrorf(ctx, "Failed to get ticket summary by status for contact %s", obj.ID)
+		return nil, err
+	}
+	ticketSummaryByStatus := make([]*model.TicketSummaryByStatus, 0)
+	for key, value := range ticketCountByStatus {
+		ticketSummaryByStatus = append(ticketSummaryByStatus, &model.TicketSummaryByStatus{
+			Status: key,
+			Count:  value,
+		})
+	}
+	return ticketSummaryByStatus, nil
+}
+
 // ContactCreate is the resolver for the contact_Create field.
 func (r *mutationResolver) ContactCreate(ctx context.Context, input model.ContactInput) (*model.Contact, error) {
 	contactNodeCreated, err := r.Services.ContactService.Create(ctx, &service.ContactCreateData{

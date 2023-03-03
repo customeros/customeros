@@ -199,6 +199,27 @@ func (r *organizationResolver) Tags(ctx context.Context, obj *model.Organization
 	return mapper.MapEntitiesToTags(tagEntities), nil
 }
 
+// TicketSummaryByStatus is the resolver for the ticketSummaryByStatus field.
+func (r *organizationResolver) TicketSummaryByStatus(ctx context.Context, obj *model.Organization) ([]*model.TicketSummaryByStatus, error) {
+	defer func(start time.Time) {
+		utils.LogMethodExecution(start, utils.GetFunctionName())
+	}(time.Now())
+
+	ticketCountByStatus, err := r.Services.TicketService.GetTicketSummaryByStatusForOrganization(ctx, obj.ID)
+	if err != nil {
+		graphql.AddErrorf(ctx, "Failed to get ticket summary by status for organization %s", obj.ID)
+		return nil, err
+	}
+	ticketSummaryByStatus := make([]*model.TicketSummaryByStatus, 0)
+	for key, value := range ticketCountByStatus {
+		ticketSummaryByStatus = append(ticketSummaryByStatus, &model.TicketSummaryByStatus{
+			Status: key,
+			Count:  value,
+		})
+	}
+	return ticketSummaryByStatus, nil
+}
+
 // Organizations is the resolver for the organizations field.
 func (r *queryResolver) Organizations(ctx context.Context, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) (*model.OrganizationPage, error) {
 	defer func(start time.Time) {

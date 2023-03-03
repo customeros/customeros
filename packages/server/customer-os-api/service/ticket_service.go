@@ -11,6 +11,8 @@ import (
 
 type TicketService interface {
 	GetContactTickets(context.Context, string) ([]*entity.Ticket, error)
+	GetTicketSummaryByStatusForOrganization(ctx context.Context, organizationId string) (map[string]int64, error)
+	GetTicketSummaryByStatusForContact(ctx context.Context, contactId string) (map[string]int64, error)
 }
 
 type ticketService struct {
@@ -33,6 +35,14 @@ func (s *ticketService) GetContactTickets(ctx context.Context, contactId string)
 		ticketEntities = append(ticketEntities, s.mapDbNodeToTicket(dbNodePtr))
 	}
 	return ticketEntities, nil
+}
+
+func (s *ticketService) GetTicketSummaryByStatusForOrganization(ctx context.Context, organizationId string) (map[string]int64, error) {
+	return s.repositories.TicketRepository.GetTicketCountByStatusForOrganization(ctx, common.GetTenantFromContext(ctx), organizationId)
+}
+
+func (s *ticketService) GetTicketSummaryByStatusForContact(ctx context.Context, contactId string) (map[string]int64, error) {
+	return s.repositories.TicketRepository.GetTicketCountByStatusForContact(ctx, common.GetTenantFromContext(ctx), contactId)
 }
 
 func (s *ticketService) mapDbNodeToTicket(node *dbtype.Node) *entity.Ticket {
