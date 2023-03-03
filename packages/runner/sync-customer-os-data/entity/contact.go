@@ -44,6 +44,16 @@ type ContactData struct {
 	Zip                 string
 }
 
+func (c ContactData) EmailsForUnicity() []string {
+	var emailsForUnicity []string
+	if len(c.PrimaryEmail) > 0 {
+		emailsForUnicity = append(emailsForUnicity, c.PrimaryEmail)
+	} else if len(c.AdditionalEmails) == 1 {
+		emailsForUnicity = append(emailsForUnicity, c.AdditionalEmails...)
+	}
+	return emailsForUnicity
+}
+
 func (c ContactData) AllEmails() []string {
 	var allEmails []string
 	if len(c.PrimaryEmail) > 0 {

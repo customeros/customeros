@@ -194,90 +194,90 @@ func (r *queryRepository) GetOrganizationsAndContacts(ctx context.Context, sessi
 
 		//fetch organizations and contacts + filters on their properties
 		query = query + fmt.Sprintf(`
-          MATCH (t:Tenant {name:$tenant})--(o:Organization)
-		  MATCH (t)--(c:Contact)
+          MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization)
+		  MATCH (t)<-[:CONTACT_BELONGS_TO_TENANT]-(c:Contact)
 		  MATCH (o)--(c)
 		  WHERE (%s) OR (%s)
-		  RETURN o, c`, organizationFilterCypher, contactFilterCypher)
+		  RETURN DISTINCT o, c order by o.updatedAt desc, c.updatedAt desc`, organizationFilterCypher, contactFilterCypher)
 		//fetch organizations and contacts with filters on their emails
 		if searchTerm != nil {
 			query = query + fmt.Sprintf(`
 		  UNION
-		  MATCH (t:Tenant {name:$tenant})--(o:Organization)-[:HAS]->(e:Email)
+		  MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization)-[:HAS]->(e:Email)
 		  MATCH (t)<-[:CONTACT_BELONGS_TO_TENANT]-(c:Contact)
 		  MATCH (o)--(c)
 		  WHERE (e.email CONTAINS $email OR e.rawEmail CONTAINS $email)
-		  RETURN o, c
+		  RETURN DISTINCT o, c order by o.updatedAt desc, c.updatedAt desc
 
 		  UNION
-		  MATCH (t:Tenant {name:$tenant})--(o:Organization)
+		  MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization)
 		  MATCH (t)<-[:CONTACT_BELONGS_TO_TENANT]-(c:Contact)-[:HAS]->(e:Email)
 		  MATCH (o)--(c)
 		  WHERE (e.email CONTAINS $email OR e.rawEmail CONTAINS $email)
-		  RETURN o, c`)
+		  RETURN DISTINCT o, c order by o.updatedAt desc, c.updatedAt desc`)
 		}
 		//fetch organizations and contacts with filters on their locations
 		if searchTerm != nil {
 			query = query + fmt.Sprintf(`
 		  UNION
-		  MATCH (t:Tenant {name:$tenant})--(o:Organization)--(l:Location)
-		  MATCH (t)--(c:Contact)
+		  MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization)--(l:Location)
+		  MATCH (t)<-[:CONTACT_BELONGS_TO_TENANT]-(c:Contact)
 		  MATCH (o)--(c)
 		  WHERE l.country CONTAINS $location OR l.region CONTAINS $location OR l.locality CONTAINS $location
-		  RETURN o, c
+		  RETURN o, c order by o.updatedAt desc, c.updatedAt desc
 
 		  UNION
-		  MATCH (t:Tenant {name:$tenant})--(o:Organization)
-		  MATCH (t)--(c:Contact)--(l:Location)
+		  MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization)
+		  MATCH (t)<-[:CONTACT_BELONGS_TO_TENANT]-(c:Contact)--(l:Location)
 		  MATCH (o)--(c)
 		  WHERE l.country CONTAINS $location OR l.region CONTAINS $location OR l.locality CONTAINS $location
-		  RETURN o, c`)
+		  RETURN o, c order by o.updatedAt desc, c.updatedAt desc`)
 		}
 
 		//fetch organizations without contacts + filters on their properties
 		query = query + fmt.Sprintf(`
 		  UNION
-		  MATCH (t:Tenant {name:$tenant})--(o:Organization)
+		  MATCH (:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization)
 		  WHERE NOT (o)--(:Contact) AND (%s)	
-		  RETURN o, null as c`, organizationFilterCypher)
+		  RETURN o, null as c order by o.updatedAt desc`, organizationFilterCypher)
 		//fetch organizations without contacts with filters on their emails
 		if searchTerm != nil {
 			query = query + fmt.Sprintf(`
 		  UNION
-		  MATCH (t:Tenant {name:$tenant})--(o:Organization)-[:HAS]->(e:Email)
+		  MATCH (:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization)-[:HAS]->(e:Email)
 		  WHERE NOT (o)--(:Contact) AND (e.email CONTAINS $email AND e.rawEmail CONTAINS $email)
-		  RETURN o, null as c`)
+		  RETURN o, null as c order by o.updatedAt desc`)
 		}
 		//fetch organizations without contacts with filters on their locations
 		if searchTerm != nil {
 			query = query + fmt.Sprintf(`
 		  UNION
-		  MATCH (t:Tenant {name:$tenant})--(o:Organization)--(l:Location)
+		  MATCH (:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization)--(l:Location)
 		  WHERE NOT (o)--(:Contact) AND (l.country CONTAINS $location OR l.region CONTAINS $location OR l.locality CONTAINS $location)
-		  RETURN o, null as c`)
+		  RETURN o, null as c order by o.updatedAt desc`)
 		}
 
 		//fetch contacts without organizations + filters on their properties
 		query = query + fmt.Sprintf(`
 		  UNION
-		  MATCH (t:Tenant {name:$tenant})--(c:Contact)
+		  MATCH (:Tenant {name:$tenant})<-[:CONTACT_BELONGS_TO_TENANT]-(c:Contact)
 		  WHERE NOT (c)--(:Organization) AND (%s)
-		  RETURN null as o, c`, contactFilterCypher)
+		  RETURN null as o, c order by c.updatedAt desc`, contactFilterCypher)
 		//fetch contacts without organizations with filters on their emails
 		if searchTerm != nil {
 			query = query + fmt.Sprintf(`
 		  UNION
-		  MATCH (t:Tenant {name:$tenant})--(c:Contact)-[:HAS]->(e:Email)
+		  MATCH (:Tenant {name:$tenant})<-[:CONTACT_BELONGS_TO_TENANT]-(c:Contact)-[:HAS]->(e:Email)
 		  WHERE NOT (c)--(:Organization) AND (e.email CONTAINS $email OR e.rawEmail CONTAINS $email)
-		  RETURN null as o, c`)
+		  RETURN null as o, c order by c.updatedAt desc`)
 		}
 		//fetch contacts without organizations with filters on their locations
 		if searchTerm != nil {
 			query = query + fmt.Sprintf(`
 		  UNION
-		  MATCH (t:Tenant {name:$tenant})--(c:Contact)--(l:Location)
+		  MATCH (:Tenant {name:$tenant})<-[:CONTACT_BELONGS_TO_TENANT]-(c:Contact)--(l:Location)
 		  WHERE NOT (c)--(:Organization) AND (l.country CONTAINS $location OR l.region CONTAINS $location OR l.locality CONTAINS $location)
-		  RETURN null as o, c`)
+		  RETURN null as o, c order by c.updatedAt desc`)
 		}
 		//endregion
 
