@@ -126,10 +126,10 @@ const userFieldSelection = `firstName,lastName,id,
 func (s *CustomerOSService) addHeadersToGraphRequest(req *graphql.Request, ctx context.Context, tenant string) error {
 	req.Header.Add("X-Openline-API-KEY", s.conf.Service.CustomerOsAPIKey)
 	user, err := commonModuleService.GetUsernameMetadataForGRPC(ctx)
-	if err != nil {
-		return err
+	if err != nil && user != nil {
+		req.Header.Add("X-Openline-USERNAME", *user)
 	}
-	req.Header.Add("X-Openline-USERNAME", *user)
+
 	req.Header.Add("X-Openline-TENANT", tenant)
 	return nil
 }
