@@ -15,25 +15,26 @@ export const Finder: React.FC = () => {
   const { data, loading, fetchMore, variables, totalElements } =
     useFinderTableData({
       pagination: {
-        page: 0,
+        page: 1,
         limit: 60,
       },
       searchTerm,
     });
 
   const handleFilterResults = (value: string) => {
-    setPagination(0);
+    setPagination(1);
     setSearchTerm(value);
     fetchMore({
       variables: {
         pagination: {
-          page: 0,
-          limit: 10,
+          page: 1,
+          limit: 60,
         },
         searchTerm: value,
       },
     });
   };
+
   return (
     <div style={{ padding: '36px', height: '100%' }}>
       <div className={styles.inputSection}>

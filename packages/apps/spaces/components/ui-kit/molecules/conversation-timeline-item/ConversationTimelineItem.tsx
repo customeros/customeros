@@ -163,9 +163,9 @@ export const ConversationTimelineItem: React.FC<Props> = ({
       })
       .catch((reason: any) => {
         setLoadingMessages(false);
-        toast.error(
-          'There was a problem on our side and we are doing our best to solve it!',
-        );
+        toast.error('Something went wrong while loading feed item', {
+          toastId: `conversation-timeline-item-feed-${feedId}`,
+        });
       });
   }, []);
 

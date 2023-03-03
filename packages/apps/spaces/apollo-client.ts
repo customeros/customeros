@@ -31,12 +31,10 @@ const client = new ApolloClient({
                 args: {
                   // @ts-expect-error look into it later
                   pagination: { page, limit },
-                  // @ts-expect-error look into it later
-                  searchTerm,
                 },
               },
             ) {
-              if (page === 0) return incoming;
+              if (page === 1) return incoming;
               return {
                 ...existing,
                 content: [...existing.content, ...incoming.content],
