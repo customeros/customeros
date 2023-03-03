@@ -32,11 +32,13 @@ export const AddressTableCell = ({
   }
 
   const getMatchingLocation = () => {
-    return locations.map(
-      (location) =>
-        location?.locality.includes(searchTern) ||
-        location?.region.includes(searchTern) ||
-        location?.name.includes(searchTern),
+    return (
+      locations.find(
+        (location) =>
+          location?.locality.includes(searchTern) ||
+          location?.region.includes(searchTern) ||
+          location?.name.includes(searchTern),
+      ) || locations[0]
     );
   };
 
