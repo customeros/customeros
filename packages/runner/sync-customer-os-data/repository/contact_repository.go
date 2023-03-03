@@ -56,7 +56,7 @@ func (r *contactRepository) GetMatchedContactId(ctx context.Context, tenant stri
 				"tenant":            tenant,
 				"externalSystem":    contact.ExternalSystem,
 				"contactExternalId": contact.ExternalId,
-				"emails":            contact.AllEmails(),
+				"emails":            contact.EmailsForUnicity(),
 				"phoneNumber":       contact.PhoneNumber,
 			})
 		if err != nil {
