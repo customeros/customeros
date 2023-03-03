@@ -6,6 +6,7 @@ import { OrganizationContactsSkeleton } from './skeletons';
 import { useOrganizationContacts } from '../../../hooks/useOrganization';
 import styles from './organization-contacts.module.scss';
 import { ContactTags } from '../../contact/contact-tags';
+import { getContactDisplayName } from '../../../utils';
 
 export const OrganizationContacts = ({ id }: { id: string }) => {
   const router = useRouter();
@@ -32,7 +33,10 @@ export const OrganizationContacts = ({ id }: { id: string }) => {
         >
           <div className={styles.personalDetails}>
             <span className={styles.name}>
-              {contact?.name || `${contact?.firstName} ${contact?.lastName}`}
+              {
+                //@ts-expect-error fixme
+                getContactDisplayName(contact)
+              }
             </span>
 
             {!!contact.jobRoles &&

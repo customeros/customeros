@@ -7,21 +7,23 @@
 .deselectAllButton {
   padding: 0 !important;
   border-radius: 4px;
-  height: 20px;
-  width: 20px;
+  height: 16px;
+  width: 16px;
   border: var(--border-divider);
   border-color: var(--gray-600);
   color: var(--gray-600);
   position: relative;
   margin-top: var(--spacing-xxxs);
-  margin-right: var(--spacing-xxxs);
+  margin-right: var(--spacing-xxs);
 
   &::after {
     content: 'X';
-    width: 12px;
-    height: 12px;
+    font-size: var(--font-size-sm);
+    width: 8px;
+    height: 8px;
     position: absolute;
     top: -3px;
+    left: 2px;
     color: inherit;
   }
 
@@ -47,5 +49,15 @@
 
 .mergableCell {
   @include flex-between;
-  margin-right: var(--spacing-xxs);
+
+  & .checkboxContainer {
+    margin-right: var(--spacing-xxxs);
+
+  }
+}
+
+
+.confirmButton{
+  border-radius: 4px;
+  margin-left: var(--spacing-xxs);
 }

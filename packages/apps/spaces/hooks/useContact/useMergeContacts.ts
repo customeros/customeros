@@ -12,7 +12,6 @@ interface Result {
 export const useMergeContacts = (): Result => {
   const [mergeContactsMutation, { loading, error, data }] =
     useMergeContactsMutation();
-  const setMode = useSetRecoilState(tableMode);
   const setSelectedItems = useSetRecoilState(selectedItemsIds);
   const handleMergeContacts: Result['onMergeContacts'] = async (input) => {
     try {
@@ -22,7 +21,6 @@ export const useMergeContacts = (): Result => {
       });
 
       if (response.data?.contact_Merge !== null) {
-        setMode('PREVIEW');
         setSelectedItems([]);
         toast.success('Contacts were successfully merged!', {
           toastId: `merge-Contacts-success-${input.primaryContactId}`,

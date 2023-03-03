@@ -3,6 +3,8 @@ import { DashboardTableAddressCell } from '../../ui-kit/atoms/table/table-cells/
 import { Button } from '../../ui-kit';
 import { OverlayPanel } from '../../ui-kit/atoms/overlay-panel';
 import styles from './finder-table.module.scss';
+import { useRecoilValue } from 'recoil';
+import { finderSearchTerm } from '../../../state';
 
 export const AddressTableCell = ({
   locations = [],
@@ -10,6 +12,7 @@ export const AddressTableCell = ({
   locations: Array<any>;
 }) => {
   const op = useRef(null);
+  const searchTern = useRecoilValue(finderSearchTerm);
 
   const locationsCount: number | undefined = locations.length;
   if (!locationsCount) {
@@ -23,9 +26,23 @@ export const AddressTableCell = ({
         locality={locations[0]?.locality}
         region={locations[0]?.region}
         name={locations[0]?.name}
+        highlight={searchTern}
       />
     );
   }
+
+  const getMatchingLocation = () => {
+    return (
+      locations.find(
+        (location) =>
+          location?.locality.includes(searchTern) ||
+          location?.region.includes(searchTern) ||
+          location?.name.includes(searchTern),
+      ) || locations[0]
+    );
+  };
+
+  const displayedLocation = !searchTern ? locations[0] : getMatchingLocation();
 
   return (
     <div>
@@ -36,10 +53,11 @@ export const AddressTableCell = ({
         style={{ padding: 0 }}
       >
         <DashboardTableAddressCell
-          key={locations[0].id}
-          locality={locations[0]?.locality}
-          region={locations[0]?.region}
-          name={locations[0]?.name}
+          key={displayedLocation.id}
+          locality={displayedLocation?.locality}
+          region={displayedLocation?.region}
+          name={displayedLocation?.name}
+          highlight={searchTern}
         />
         <span style={{ marginLeft: '8px' }}>(...)</span>
       </Button>

@@ -55,11 +55,11 @@ export const Table = <T,>({
       <table className={styles.table}>
         <thead className={styles.header}>
           <tr>
-            {columns?.map(({ label, subLabel, width }) => {
+            {columns?.map(({ label, id, subLabel, width }) => {
               if (typeof label !== 'string') {
                 return (
                   <th
-                    key={`header-${label}`}
+                    key={`header-${id}`}
                     style={{ width }}
                     data-th={label}
                     data-th2={subLabel}
@@ -71,7 +71,7 @@ export const Table = <T,>({
 
               return (
                 <th
-                  key={`header-${label}`}
+                  key={`header-${id}`}
                   style={{ width }}
                   data-th={label}
                   data-th2={subLabel}
@@ -107,9 +107,9 @@ export const Table = <T,>({
                     transform: `translateY(${virtualRow.start}px)`,
                   }}
                 >
-                  {columns.map(({ template, width, label }) => (
+                  {columns.map(({ template, width, id }) => (
                     <td
-                      key={`table-row-${label}`}
+                      key={`table-row-${id}`}
                       style={{
                         width: width || 'auto',
                         maxWidth: width || 'auto',

@@ -5,6 +5,7 @@ import { SearchWithOverlay } from '../../ui-kit/atoms/search';
 import { useUsers } from '../../../hooks/useUser';
 import styles from './contact-details.module.scss';
 import { Filter } from '../../../graphQL/__generated__/generated';
+import { getContactDisplayName } from '../../../utils';
 
 interface ContactOwnerProps {
   control: any;
@@ -42,16 +43,12 @@ export const ContactOwner: React.FC<ContactOwnerProps> = ({
               });
             }}
             itemTemplate={(e: any) => {
-              const firstName = e?.firstName ? e.firstName : '';
-              const lastName = e?.lastName ? e.lastName : '';
-              const name =
-                firstName || lastName ? `${firstName} ${lastName}` : e?.name;
               return (
                 <>
                   <span className='mr-3'>
                     <User style={{ transform: 'scale(0.8)' }} />
                   </span>
-                  {name || 'Unnamed'}
+                  {getContactDisplayName(e)}
                 </>
               );
             }}
