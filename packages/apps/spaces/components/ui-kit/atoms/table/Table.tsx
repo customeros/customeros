@@ -57,7 +57,6 @@ export const Table = <T,>({
           <tr>
             {columns?.map(({ label, subLabel, width }) => {
               if (typeof label !== 'string') {
-                console.log('🏷️ ----- : HERE');
                 return (
                   <th
                     key={`header-${label}`}
@@ -93,8 +92,6 @@ export const Table = <T,>({
               </td>
             </tr>
           )}
-          {isFetching && <TableSkeleton columns={columns} />}
-
           {!!data &&
             rowVirtualizer.virtualItems.map((virtualRow) => {
               const element = data[virtualRow.index];
@@ -125,6 +122,7 @@ export const Table = <T,>({
                 </tr>
               );
             })}
+          {isFetching && !data?.length && <TableSkeleton columns={columns} />}
         </tbody>
       </table>
     </>

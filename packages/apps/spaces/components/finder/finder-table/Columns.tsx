@@ -1,43 +1,37 @@
 import React from 'react';
 import { Column } from '../../ui-kit/atoms/table/types';
-import { IconButton, Times } from '../../ui-kit/atoms';
-import { TableHeaderCell } from '../../ui-kit/atoms/table';
 import { OrganizationTableCell } from './OrganizationTableCell';
-import { FinderCell } from './FinderTableCell';
 import { EmailTableCell } from './EmailTableCell';
 import { AddressTableCell } from './AddressTableCell';
 import { ActionColumn } from './ActionTableHeader';
-import { OrganizationTableHeader } from './OrganizationTableHeader';
+import { FinderMergeItemTableHeader } from './FinderMergeItemTableHeader';
+import { ContactTableCell } from './ContactTableCell';
 
 export const columns: Array<Column> = [
   {
     width: '25%',
-    label: <OrganizationTableHeader />,
+    label: (
+      <FinderMergeItemTableHeader
+        mergeMode='MERGE_ORG'
+        label='Organization'
+        subLabel='Industry'
+      />
+    ),
     template: (c: any) => {
       return <OrganizationTableCell organization={c?.organization} />;
     },
   },
   {
     width: '25%',
-    label: 'Name',
-    subLabel: 'Role',
+    label: (
+      <FinderMergeItemTableHeader
+        mergeMode='MERGE_CONTACT'
+        label='Name'
+        subLabel='Role'
+      />
+    ),
 
-    template: (c: any) => {
-      if (!c?.contact) {
-        return <span>-</span>;
-      }
-      const name = `${c?.contact?.firstName} ${c?.contact?.lastName} ${
-        c?.contact?.name || ''
-      }`;
-      const displayName = name.trim().length ? name : 'Unnamed';
-      return (
-        <FinderCell
-          label={displayName}
-          subLabel={c?.contact.job}
-          url={`/contact/${c?.contact.id}`}
-        />
-      );
-    },
+    template: (c: any) => <ContactTableCell contact={c?.contact} />,
   },
   {
     width: '25%',
@@ -62,7 +56,7 @@ export const columns: Array<Column> = [
     label: <ActionColumn />,
     subLabel: '',
     template: () => {
-      return <div />;
+      return <div style={{ display: 'none' }} />;
     },
   },
 ];
