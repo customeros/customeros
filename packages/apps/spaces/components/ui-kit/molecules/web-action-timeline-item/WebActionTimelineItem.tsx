@@ -11,7 +11,7 @@ import { capitalizeFirstLetter } from '../../../../utils';
 // }
 
 export const WebActionTimelineItem = ({
-  startedAt,
+                                        startedAt,
   pageTitle,
   pageUrl,
   application,
@@ -23,38 +23,36 @@ export const WebActionTimelineItem = ({
     <div className={styles.x}>
       <Globe />
       <article className={`${styles.actionContainer}`}>
-        <div className='flex align-items-center'>
+        <div>
           <div>
             {contactName && <div className='text-gray-700'>{contactName}</div>}
 
             <div>
-              <span className='mr-1 text-gray-700'>Visited: </span>
+              <span>Visited: </span>
               <Link
                 href={pageUrl}
+                target={'_blank'}
                 style={{ fontWeight: 'bolder' }}
-                className='overflow-hidden text-overflow-ellipsis'
               >
-                {pageTitle}
+                {pageTitle && pageTitle !== "" &&
+                    <span>{pageTitle}</span>
+                }
+
+                {(!pageTitle || pageTitle === "") &&
+                    <span>{pageUrl}</span>
+                }
               </Link>
             </div>
 
             <div className='flex text-gray-700'>
-              <span className='mr-2 font-bolder text-gray-700'>Duration:</span>
+              <span className='mr-2 font-bolder text-gray-700'>Duration:&nbsp;</span>
 
-              <span>{engagedTime ? engagedTime : '-'} minutes</span>
+              <span>{engagedTime} minutes</span>
             </div>
+
           </div>
         </div>
         <div>
-          <div className='flex flex-column'>
-            <div>
-              <span className='mr-2 font-bolder text-gray-700'>
-                Started at:
-              </span>
-
-              {format(startedAt, 'dd/mm/yyyy h:mm a')}
-            </div>
-          </div>
           <div>
             <span className='mr-1 text-gray-700 font-bolder'>
               Accessed from:{' '}
