@@ -37,7 +37,7 @@ export const ContactOwner: React.FC<ContactOwnerProps> = ({
             searchData={(where: Filter) => {
               return onLoadUsers({
                 variables: {
-                  pagination: { limit: 999, page: 0 },
+                  pagination: { limit: 999, page: 1 },
                   where: where,
                 },
               });
