@@ -11,7 +11,7 @@ require (
 	github.com/sirupsen/logrus v1.9.0
 	golang.org/x/net v0.7.0
 	gorm.io/driver/postgres v1.4.8
-	gorm.io/gorm v1.24.5
+	gorm.io/gorm v1.24.6
 	zgo.at/zcache v1.2.0
 )
 
