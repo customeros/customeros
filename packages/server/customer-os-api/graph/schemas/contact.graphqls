@@ -137,6 +137,8 @@ type Contact implements ExtensibleEntity & Node {
     actions(from: Time!, to: Time!, actionTypes: [ActionType!]): [Action!]! @goField(forceResolver: true)
 
     tickets: [Ticket]! @goField(forceResolver: true)
+
+    ticketSummaryByStatus: [TicketSummaryByStatus!]! @goField(forceResolver: true)
 }
 
 """

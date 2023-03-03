@@ -35,6 +35,8 @@ type Organization implements Node {
     jobRoles: [JobRole!]! @goField(forceResolver: true)
     notes(pagination: Pagination): NotePage! @goField(forceResolver: true)
     tags: [Tag!] @goField(forceResolver: true)
+
+    ticketSummaryByStatus: [TicketSummaryByStatus!]! @goField(forceResolver: true)
 }
 
 type OrganizationPage implements Pages {

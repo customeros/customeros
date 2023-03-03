@@ -10,3 +10,8 @@ type Ticket implements Node {
     tags: [Tag] @goField(forceResolver: true)
     notes: [Note] @goField(forceResolver: true)
 }
+
+type TicketSummaryByStatus {
+    status: String!
+    count: Int64!
+}
