@@ -6,19 +6,26 @@ import { Button, EllipsesV, Tooltip } from '../../ui-kit';
 import { IconButton } from '../../ui-kit/atoms';
 import { OverlayPanel } from '../../ui-kit/atoms/overlay-panel';
 import styles from './finder-table.module.scss';
+import { useMergeContacts } from '../../../hooks/useContact';
 
 export const ActionColumn = () => {
   const op = useRef(null);
   const [mode, setMode] = useRecoilState(tableMode);
   const [selectedItems, setSelectedItems] = useRecoilState(selectedItemsIds);
   const { onMergeOrganizations } = useMergeOrganizations();
+  const { onMergeContacts } = useMergeContacts();
 
   const handleSave = async () => {
-    const [primaryOrganizationId, ...mergedOrganizationIds] = selectedItems;
-    await onMergeOrganizations({
-      primaryOrganizationId,
-      mergedOrganizationIds,
-    });
+    const [primaryId, ...mergeIds] = selectedItems;
+    return mode === 'MERGE_CONTACT'
+      ? onMergeContacts({
+          primaryContactId: primaryId,
+          mergedContactIds: mergeIds,
+        })
+      : onMergeOrganizations({
+          primaryOrganizationId: primaryId,
+          mergedOrganizationIds: mergeIds,
+        });
   };
 
   if (mode === 'MERGE_ORG' || mode === 'MERGE_CONTACT') {
@@ -78,7 +85,6 @@ export const ActionColumn = () => {
           },
           {
             label: 'Merge contacts',
-            disabled: true,
             command() {
               return setMode('MERGE_CONTACT');
             },

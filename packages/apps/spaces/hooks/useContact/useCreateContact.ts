@@ -23,6 +23,7 @@ export const useCreateContact = (): Result => {
       const optimisticItem = { id: 'optimistic-id', ...contact };
       const response = await createContactMutation({
         variables: { input: contact },
+        refetchQueries: ['GetDashboardData'],
       });
       return response.data?.contact_Create ?? null;
     } catch (err) {

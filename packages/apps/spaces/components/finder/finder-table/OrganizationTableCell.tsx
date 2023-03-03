@@ -34,7 +34,7 @@ export const OrganizationTableCell: React.FC<{
       </span>
     );
     return (
-      <div className={styles.orgCell}>
+      <div className={styles.mergableCell}>
         <FinderCell
           label={organization.name}
           subLabel={industry}

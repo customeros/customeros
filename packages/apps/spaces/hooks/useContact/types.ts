@@ -10,6 +10,7 @@ export {
   useRemovePhoneNumberFromContactMutation,
   useAddPhoneToContactMutation,
   useAddTagToContactMutation,
+  useMergeContactsMutation,
 } from '../../graphQL/__generated__/generated';
 export type {
   Contact,
@@ -22,4 +23,5 @@ export type {
   GetContactTagsQuery,
   AddTagToContactMutation,
   ContactTagInput,
+  MergeContactsMutation,
 } from '../../graphQL/__generated__/generated';

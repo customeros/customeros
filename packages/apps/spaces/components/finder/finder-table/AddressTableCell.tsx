@@ -2,7 +2,7 @@ import React, { useRef } from 'react';
 import { DashboardTableAddressCell } from '../../ui-kit/atoms/table/table-cells/TableCell';
 import { Button } from '../../ui-kit';
 import { OverlayPanel } from '../../ui-kit/atoms/overlay-panel';
-import styles from '../finder.module.scss';
+import styles from './finder-table.module.scss';
 
 export const AddressTableCell = ({
   locations = [],

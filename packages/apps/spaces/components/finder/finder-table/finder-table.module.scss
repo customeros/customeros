@@ -32,3 +32,20 @@
     border-color: var(--gray-900);
   }
 }
+
+.adressesList {
+  padding: var(--spacing-xs) var(--spacing-sm);
+}
+.emailList {
+  font-size: var(--font-size-sm);
+  padding: var(--spacing-xxs) 0;
+
+  &:not(:last-of-type) {
+    border-bottom: var(--border-divider);
+  }
+}
+
+.mergableCell {
+  @include flex-between;
+  margin-right: var(--spacing-xxs);
+}

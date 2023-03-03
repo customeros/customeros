@@ -3,7 +3,7 @@ import { finderSearchTerm } from '../../../state';
 import React, { useRef } from 'react';
 import { Button } from '../../ui-kit';
 import { OverlayPanel } from '../../ui-kit/atoms/overlay-panel';
-import styles from '../finder.module.scss';
+import styles from './finder-table.module.scss';
 import { Contact } from '../../../graphQL/__generated__/generated';
 import { FinderCell } from './FinderTableCell';
 
@@ -11,7 +11,7 @@ export const EmailTableCell = ({ emails }: { emails: Contact['emails'] }) => {
   const searchTern = useRecoilValue(finderSearchTerm);
   const op = useRef(null);
 
-  if (!emails) {
+  if (!emails?.length) {
     return <span>-</span>;
   }
 
