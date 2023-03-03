@@ -1,8 +1,7 @@
-@import "styles/mixins";
+@import 'styles/mixins';
 .actionHeader {
   height: 100%;
   @include flex-center;
-
 }
 
 .deselectAllButton {
@@ -21,8 +20,8 @@
     content: 'X';
     width: 12px;
     height: 12px;
-    position:absolute;
-    top:-3px;
+    position: absolute;
+    top: -3px;
     color: inherit;
   }
 
@@ -30,6 +29,6 @@
   &:active,
   &:hover {
     color: var(--gray-900);
-    border-color: var(--gray-900)
+    border-color: var(--gray-900);
   }
 }

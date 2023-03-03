@@ -656,6 +656,19 @@ func OrganizationAssociatedWithLocation(ctx context.Context, driver *neo4j.Drive
 	})
 }
 
+func CreateNoteForTicket(ctx context.Context, driver *neo4j.DriverWithContext, tenant, ticketId, html string) string {
+	var noteId, _ = uuid.NewRandom()
+	query := "MATCH (t:Ticket {id:$ticketId}) " +
+		"		MERGE (t)-[:NOTED]->(n:Note {id:$id}) " +
+		"		ON CREATE SET n.html=$html, n.createdAt=datetime({timezone: 'UTC'}), n:%s"
+	ExecuteWriteQuery(ctx, driver, fmt.Sprintf(query, "Note_"+tenant), map[string]any{
+		"id":       noteId.String(),
+		"ticketId": ticketId,
+		"html":     html,
+	})
+	return noteId.String()
+}
+
 func CreateNoteForContact(ctx context.Context, driver *neo4j.DriverWithContext, tenant, contactId, html string) string {
 	var noteId, _ = uuid.NewRandom()
 	query := "MATCH (c:Contact {id:$contactId}) " +

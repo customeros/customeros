@@ -104,4 +104,7 @@ fragment Ticket on Ticket {
   tags {
     ...Tag
   }
+  notes {
+    ...NoteContent
+  }
 }

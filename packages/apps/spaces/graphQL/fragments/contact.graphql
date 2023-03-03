@@ -12,7 +12,7 @@ fragment organizationBaseDetails on Organization {
 
 fragment ContactPersonalDetails on Contact {
   id
-  ...ContactName
+  ...ContactNameFragment
   source
   jobRoles {
     ...JobRole

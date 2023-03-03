@@ -12,6 +12,11 @@ query GetContactTickets($id: ID!) {
         id
         name
       }
+      notes {
+        id
+        createdAt
+        html
+      }
     }
   }
 }

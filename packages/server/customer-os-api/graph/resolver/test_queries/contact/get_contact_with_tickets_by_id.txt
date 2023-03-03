@@ -11,6 +11,10 @@ query GetContactById($contactId: ID!){
             id
             name
           }
+          notes {
+            id
+            html
+          }
     }
   }
 }

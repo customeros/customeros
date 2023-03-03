@@ -451,6 +451,7 @@ type ComplexityRoot struct {
 		CreatedAt   func(childComplexity int) int
 		Description func(childComplexity int) int
 		ID          func(childComplexity int) int
+		Notes       func(childComplexity int) int
 		Priority    func(childComplexity int) int
 		Status      func(childComplexity int) int
 		Subject     func(childComplexity int) int
@@ -617,6 +618,7 @@ type QueryResolver interface {
 }
 type TicketResolver interface {
 	Tags(ctx context.Context, obj *model.Ticket) ([]*model.Tag, error)
+	Notes(ctx context.Context, obj *model.Ticket) ([]*model.Note, error)
 }
 type UserResolver interface {
 	Emails(ctx context.Context, obj *model.User) ([]*model.Email, error)
@@ -3179,6 +3181,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Ticket.ID(childComplexity), true
 
+	case "Ticket.notes":
+		if e.complexity.Ticket.Notes == nil {
+			break
+		}
+
+		return e.complexity.Ticket.Notes(childComplexity), true
+
 	case "Ticket.priority":
 		if e.complexity.Ticket.Priority == nil {
 			break
@@ -4741,6 +4750,7 @@ input TagUpdateInput {
     priority: String
     description: String
     tags: [Tag] @goField(forceResolver: true)
+    notes: [Note] @goField(forceResolver: true)
 }`, BuiltIn: false},
 	{Name: "../schemas/user.graphqls", Input: `extend type Query {
     users(pagination: Pagination, where: Filter, sort: [SortBy!]): UserPage!
@@ -8132,6 +8142,8 @@ func (ec *executionContext) fieldContext_Contact_tickets(ctx context.Context, fi
 				return ec.fieldContext_Ticket_description(ctx, field)
 			case "tags":
 				return ec.fieldContext_Ticket_tags(ctx, field)
+			case "notes":
+				return ec.fieldContext_Ticket_notes(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Ticket", field.Name)
 		},
@@ -14404,6 +14416,8 @@ func (ec *executionContext) fieldContext_Mutation_contact_Merge(ctx context.Cont
 				return ec.fieldContext_Contact_conversations(ctx, field)
 			case "actions":
 				return ec.fieldContext_Contact_actions(ctx, field)
+			case "tickets":
+				return ec.fieldContext_Contact_tickets(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Contact", field.Name)
 		},
@@ -23422,6 +23436,65 @@ func (ec *executionContext) fieldContext_Ticket_tags(ctx context.Context, field 
 	return fc, nil
 }
 
+func (ec *executionContext) _Ticket_notes(ctx context.Context, field graphql.CollectedField, obj *model.Ticket) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Ticket_notes(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Ticket().Notes(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.([]*model.Note)
+	fc.Result = res
+	return ec.marshalONote2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐNote(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Ticket_notes(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Ticket",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Note_id(ctx, field)
+			case "html":
+				return ec.fieldContext_Note_html(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Note_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_Note_updatedAt(ctx, field)
+			case "createdBy":
+				return ec.fieldContext_Note_createdBy(ctx, field)
+			case "source":
+				return ec.fieldContext_Note_source(ctx, field)
+			case "sourceOfTruth":
+				return ec.fieldContext_Note_sourceOfTruth(ctx, field)
+			case "appSource":
+				return ec.fieldContext_Note_appSource(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Note", field.Name)
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _User_id(ctx context.Context, field graphql.CollectedField, obj *model.User) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_User_id(ctx, field)
 	if err != nil {
@@ -31004,6 +31077,23 @@ func (ec *executionContext) _Ticket(ctx context.Context, sel ast.SelectionSet, o
 				return innerFunc(ctx)
 
 			})
+		case "notes":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Ticket_notes(ctx, field, obj)
+				return res
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -33985,6 +34075,54 @@ func (ec *executionContext) marshalOInt642ᚖint64(ctx context.Context, sel ast.
 	}
 	res := graphql.MarshalInt64(*v)
 	return res
+}
+
+func (ec *executionContext) marshalONote2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐNote(ctx context.Context, sel ast.SelectionSet, v []*model.Note) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalONote2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐNote(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	return ret
+}
+
+func (ec *executionContext) marshalONote2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐNote(ctx context.Context, sel ast.SelectionSet, v *model.Note) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._Note(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalOOrganization2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOrganization(ctx context.Context, sel ast.SelectionSet, v *model.Organization) graphql.Marshaler {

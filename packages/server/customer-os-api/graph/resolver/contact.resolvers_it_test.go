@@ -1170,6 +1170,10 @@ func TestQueryResolver_Contact_WithTickets_ById(t *testing.T) {
 	tagId1 := neo4jt.CreateTag(ctx, driver, tenantName, "tag1")
 	tagId2 := neo4jt.CreateTag(ctx, driver, tenantName, "tag2")
 
+	neo4jt.CreateNoteForTicket(ctx, driver, tenantName, ticketId1, "note 1")
+	neo4jt.CreateNoteForTicket(ctx, driver, tenantName, ticketId2, "note 2")
+	neo4jt.CreateNoteForTicket(ctx, driver, tenantName, ticketId3, "note 3")
+
 	neo4jt.TagTicket(ctx, driver, ticketId1, tagId1)
 	neo4jt.TagTicket(ctx, driver, ticketId2, tagId2)
 
@@ -1180,8 +1184,10 @@ func TestQueryResolver_Contact_WithTickets_ById(t *testing.T) {
 	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "Contact"))
 	require.Equal(t, 3, neo4jt.GetCountOfNodes(ctx, driver, "Ticket"))
 	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "Tag"))
+	require.Equal(t, 3, neo4jt.GetCountOfNodes(ctx, driver, "Note"))
 	require.Equal(t, 3, neo4jt.GetCountOfRelationships(ctx, driver, "REQUESTED"))
 	require.Equal(t, 2, neo4jt.GetCountOfRelationships(ctx, driver, "TAGGED"))
+	require.Equal(t, 3, neo4jt.GetCountOfRelationships(ctx, driver, "NOTED"))
 
 	rawResponse, err := c.RawPost(getQuery("contact/get_contact_with_tickets_by_id"), client.Var("contactId", contactId))
 	assertRawResponseSuccess(t, rawResponse, err)
@@ -1200,10 +1206,14 @@ func TestQueryResolver_Contact_WithTickets_ById(t *testing.T) {
 	require.Equal(t, 2, len(tickets))
 	require.Equal(t, ticketId2, tickets[0].ID)
 	require.Equal(t, 1, len(tickets[0].Tags))
+	require.Equal(t, 1, len(tickets[0].Notes))
 	require.Equal(t, "subject 2", *tickets[0].Subject)
 	require.Equal(t, "tag2", tickets[0].Tags[0].Name)
+	require.Equal(t, "note 2", tickets[0].Notes[0].HTML)
 	require.Equal(t, ticketId1, tickets[1].ID)
 	require.Equal(t, 1, len(tickets[1].Tags))
+	require.Equal(t, 1, len(tickets[1].Notes))
 	require.Equal(t, "subject 1", *tickets[1].Subject)
 	require.Equal(t, "tag1", tickets[1].Tags[0].Name)
+	require.Equal(t, "note 1", tickets[1].Notes[0].HTML)
 }
