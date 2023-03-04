@@ -1,6 +1,6 @@
 import * as React from 'react';
 import styles from './message.module.css';
-import { EmailTimelineItem } from '../../molecules';
+import sanitizeHtml from 'sanitize-html';
 // import { ConversationItem } from '../../../models/conversation-item';
 interface Props {
   message: any;
@@ -41,9 +41,80 @@ export const Message = ({
     return '';
   };
 
+  interface Content {
+    type?: string;
+    mimetype: string;
+    body: string;
+  }
+  interface MiniVcon {
+    dialog?: Content
+    analysis?: Content
+  }
+
+  interface TranscriptElement {
+    party: string;
+    text: string;
+  }
+
+  const decodeContent = (content: string)  => {
+    var response;
+    try {
+      response = JSON.parse(content);
+      console.log("***************Managed to parse JSON!!!!" + content)
+      console.log("Got result:" + JSON.stringify(response));
+    } catch (e) {
+      response = {dialog: 
+       {
+          type: 'MESSAGE',
+          mimetype: 'text/plain',
+          body: content
+       } };
+    }
+    //console.log("Got result:" + JSON.stringify(response));
+    return response;
+  }
+
+  const displayContent = (content: MiniVcon) => {
+    if (content.dialog) {
+      if (content.dialog.mimetype === 'text/plain') {
+        return content.dialog.body
+      } else if (content.dialog.mimetype === 'text/html') {
+        return <div
+        className={`text-overflow-ellipsis ${styles.emailContent}`}
+        dangerouslySetInnerHTML={{ __html: sanitizeHtml(content.dialog.body) }}
+      ></div>
+      }
+    }
+    if (content.analysis) {
+      if (content.analysis.mimetype === 'text/plain') {
+        return content.analysis.body
+      } else if (content.analysis.mimetype === 'text/html') {
+        return <div
+        className={`text-overflow-ellipsis ${styles.emailContent}`}
+        dangerouslySetInnerHTML={{ __html: sanitizeHtml(content.analysis.body) }}
+      ></div>
+      }  else if (content.analysis.mimetype === 'application/x-openline-transcript') {
+        try {
+          let response = JSON.parse(content.analysis.body);
+          return <div>{response.map((transcriptElement: TranscriptElement) => (
+             <div><b>{transcriptElement.party}:  </b>{transcriptElement.text}</div>
+          ))}</div>;
+        } catch (e) {
+        }
+
+      }  
+    }
+    return "Unknown Content: " + JSON.stringify(content);
+  }
+
+  const content = decodeContent(message.content);
+  if (content.analysis && message.direction) {
+    message.direction = 3
+  }
+
   return (
     <>
-      {message.direction == 0 && (
+      {content.dialog && message.direction == 0 && (
         <>
           {(index === 0 ||
             (index > 0 && previousMessage !== message?.direction)) && (
@@ -63,7 +134,7 @@ export const Message = ({
           )}
           <div className={styles.messageContainer}>
             <div className={`${styles.message} ${styles.left}`}>
-              {message.content}
+              {displayContent(content)}
               <div
                 className='flex align-content-end'
                 style={{
@@ -89,7 +160,7 @@ export const Message = ({
           </div>
         </>
       )}
-      {message.direction == 1 && (
+      {content.dialog && message.direction == 1 && (
         <>
           {(index === 0 ||
             (index > 0 && previousMessage !== message?.direction)) && (
@@ -119,7 +190,7 @@ export const Message = ({
               className={`${styles.message} ${styles.right}`}
               style={{ background: '#C5EDCE', borderRadius: '5px' }}
             >
-              {message.content}
+              {displayContent(content)}
               <div
                 className='flex align-content-end'
                 style={{
@@ -143,6 +214,46 @@ export const Message = ({
               </div>
             </div>
           </div>
+        </>
+      )}
+      {content.analysis && (
+        <>
+            <div className='w-full flex'>
+              <div className='flex-grow-1'></div>
+              {<div className="flex-grow-0 mb-1 pr-3">
+              
+                <div style={{textAlign: 'center'}}><b>{content.analysis.type}</b></div>
+              </div>}
+            </div>
+
+   
+            <div
+              className={`${styles.message} ${styles.center}`}
+              style={{ background: '#C5EDCE', borderRadius: '5px' }}
+            >
+              {displayContent(content)}
+              <div
+                className='flex align-content-end'
+                style={{
+                  width: '100%',
+                  textAlign: 'center',
+                  fontSize: '12px',
+                  color: '#C1C1C1',
+                }}
+              >
+                <span className='flex-grow-1'></span>
+                <span className='text-gray-600 mr-2'>
+                  {decodeChannel(message.type)}
+                </span>
+                {/*{date && (*/}
+                {/*  // <Moment*/}
+                {/*  //   className='text-sm text-gray-600'*/}
+                {/*  //   date={date}*/}
+                {/*  //   format={'HH:mm'}*/}
+                {/*  // ></Moment>*/}
+                {/*)}*/}
+              </div>
+            </div>
         </>
       )}
     </>
