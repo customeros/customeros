@@ -57,7 +57,7 @@ export const Message = ({
   }
 
   const decodeContent = (content: string)  => {
-    var response;
+    let response;
     try {
       response = JSON.parse(content);
       console.log("***************Managed to parse JSON!!!!" + content)
