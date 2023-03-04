@@ -6,4 +6,6 @@
 }
 .timeline {
   grid-area: timeline;
+  max-height: 60vh;
+  overflow-y: scroll;
 }

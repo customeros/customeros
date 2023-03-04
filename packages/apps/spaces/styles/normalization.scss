@@ -282,3 +282,7 @@ button::-moz-focus-inner {
   .p-checkbox-box.p-highlight:hover {
   background: #4338ca;
 }
+
+.p-skeleton.p-component {
+  height: 0 !important;
+}

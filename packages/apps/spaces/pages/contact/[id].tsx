@@ -15,11 +15,12 @@ function ContactDetailsPage() {
   const {
     query: { id },
     back,
+    push,
   } = useRouter();
 
   if (id === 'new') {
     return (
-      <DetailsPageLayout onNavigateBack={back}>
+      <DetailsPageLayout onNavigateBack={() => push('/')}>
         <section className={styles.personalDetails}>
           <ContactPersonalDetailsCreate />
         </section>
@@ -36,14 +37,14 @@ function ContactDetailsPage() {
         <ContactDetails id={id as string} />
         <ContactCommunicationDetails id={id as string} />
       </section>
+      <section className={styles.timeline}>
+        <ContactHistory id={id as string} />
+      </section>
       <section className={styles.notes}>
         <ContactNoteEditor
           contactId={id as string}
           mode={NoteEditorModes.ADD}
         />
-      </section>
-      <section className={styles.timeline}>
-        <ContactHistory id={id as string} />
       </section>
     </DetailsPageLayout>
   );

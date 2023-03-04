@@ -21,8 +21,8 @@
     grid-template-columns: 1fr 2fr;
     grid-template-rows: 1fr minmax(20%, 1fr);
     grid-template-areas:
-      'details notes'
-      'details timeline';
+      'details timeline'
+      'details notes';
     grid-gap: 24px;
   }
 
