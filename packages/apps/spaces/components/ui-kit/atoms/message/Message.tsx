@@ -60,8 +60,6 @@ export const Message = ({
     let response;
     try {
       response = JSON.parse(content);
-      console.log("***************Managed to parse JSON!!!!" + content)
-      console.log("Got result:" + JSON.stringify(response));
     } catch (e) {
       response = {dialog: 
        {
@@ -70,7 +68,6 @@ export const Message = ({
           body: content
        } };
     }
-    //console.log("Got result:" + JSON.stringify(response));
     return response;
   }
 
@@ -95,11 +92,12 @@ export const Message = ({
       ></div>
       }  else if (content.analysis.mimetype === 'application/x-openline-transcript') {
         try {
-          let response = JSON.parse(content.analysis.body);
-          return <div>{response.map((transcriptElement: TranscriptElement) => (
-             <div><b>{transcriptElement.party}:  </b>{transcriptElement.text}</div>
+          const response = JSON.parse(content.analysis.body);
+          return <div>{response.map((transcriptElement: TranscriptElement, index: number) => (
+             <div key={index}><b>{transcriptElement.party}:  </b>{transcriptElement.text}</div>
           ))}</div>;
         } catch (e) {
+          console.log("Got an error: " + e + " when parsing: " + content.analysis.body);
         }
 
       }  
