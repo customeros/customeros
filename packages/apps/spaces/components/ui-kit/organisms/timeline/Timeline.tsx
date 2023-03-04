@@ -82,7 +82,7 @@ export const Timeline = ({
           );
       case 'PageViewAction':
         return (
-          <TimelineItem first={index == 0} createdAt={data?.createdAt}>
+          <TimelineItem first={index == 0} createdAt={data?.startedAt}>
             <WebActionTimelineItem {...data} />
           </TimelineItem>
         );

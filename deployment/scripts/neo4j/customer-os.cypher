@@ -337,6 +337,18 @@ MATCH (t:Tenant {name:"openline"})<-[:USER_BELONGS_TO_TENANT]-(u:User) SET u:Use
 MATCH (t:Tenant {name:"openline"})<-[:CONTACT_BELONGS_TO_TENANT]-(c:Contact) SET c:Contact_openline;
 MATCH (t:Tenant {name:"openline"})<-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]-(e:Email) SET e:Email_openline;
 
+MATCH (c:Country {name:"Romania"}) ON CREATE SET
+c.id=randomUUID(),
+c.name="Romania",
+c.phoneCode="40",
+c.codeA2="RO",
+c.codeA3="ROU",
+c.appSource="csvImport",
+c.createdAt=datetime({timezone: 'UTC'}),
+c.source="openline",
+c.sourceOfTruth= "openline",
+c.updatedAt=datetime({timezone: 'UTC'});
+
 DROP INDEX basicSearchStandard_openline IF EXISTS;
 CREATE FULLTEXT INDEX basicSearchStandard_openline FOR (n:Contact_openline|Email_openline|Organization_openline) ON EACH [n.firstName, n.lastName, n.name, n.email]
 OPTIONS {
