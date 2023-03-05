@@ -4,7 +4,7 @@ import styles from './organization.module.scss';
 import { useRouter } from 'next/router';
 import {
   OrganizationDetails,
-  OrganizationNoteEditor,
+  OrganizationEditor,
   NoteEditorModes,
   OrganizationContacts,
   OrganizationCreate,
@@ -34,7 +34,7 @@ function OrganizationDetailsPage() {
         <OrganizationContacts id={id as string} />
       </section>
       <section className={styles.notes}>
-        <OrganizationNoteEditor
+        <OrganizationEditor
           organizationId={id as string}
           mode={NoteEditorModes.ADD}
         />

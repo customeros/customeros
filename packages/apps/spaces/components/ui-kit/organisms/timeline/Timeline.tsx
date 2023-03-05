@@ -1,9 +1,8 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { Skeleton } from 'primereact/skeleton';
 import {
   ConversationTimelineItem,
   LiveConversationTimelineItem,
-
   NoteTimelineItem,
   WebActionTimelineItem,
 } from '../../molecules';
@@ -28,6 +27,17 @@ export const Timeline = ({
   notifyChange = () => null,
   notifyContactNotesUpdate = () => null,
 }: Props) => {
+  const timelineContainerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (timelineContainerRef?.current && !loading) {
+      timelineContainerRef?.current?.scroll({
+        top: timelineContainerRef.current.scrollHeight,
+        behavior: 'smooth',
+      });
+    }
+  }, [timelineContainerRef?.current, loading]);
+
   if (loading) {
     return (
       <div className='flex flex-column mt-4'>
@@ -45,7 +55,7 @@ export const Timeline = ({
       <p className='text-gray-600 font-italic mt-4'>No activity logged yet</p>
     );
   }
-  const getTimelineItemByTime = (type: string, data: any, index: number) => {
+  const getTimelineItemByType = (type: string, data: any, index: number) => {
     switch (type) {
       case 'Note':
         return (
@@ -73,13 +83,13 @@ export const Timeline = ({
           />
         );
       case 'LiveConversation':
-          return (
-            <LiveConversationTimelineItem
-              first={index == 0}
-              contactId={contactId}
-              source={data.source}
-            />
-          );
+        return (
+          <LiveConversationTimelineItem
+            first={index == 0}
+            contactId={contactId}
+            source={data.source}
+          />
+        );
       case 'PageViewAction':
         return (
           <TimelineItem first={index == 0} createdAt={data?.startedAt}>
@@ -107,10 +117,10 @@ export const Timeline = ({
   };
 
   return (
-    <div className='mb-3'>
+    <div ref={timelineContainerRef}>
       {loggedActivities.map((e: any, index) => (
         <React.Fragment key={uuidv4()}>
-          {getTimelineItemByTime(e.__typename, e, index)}
+          {getTimelineItemByType(e.__typename, e, index)}
         </React.Fragment>
       ))}
     </div>

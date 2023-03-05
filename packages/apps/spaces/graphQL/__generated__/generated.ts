@@ -98,6 +98,7 @@ export type Contact = ExtensibleEntity & Node & {
   tags?: Maybe<Array<Tag>>;
   /** Template of the contact in customerOS. */
   template?: Maybe<EntityTemplate>;
+  ticketSummaryByStatus: Array<TicketSummaryByStatus>;
   tickets: Array<Maybe<Ticket>>;
   /** The title associate with the contact in customerOS. */
   title?: Maybe<PersonTitle>;
@@ -1213,6 +1214,7 @@ export type Organization = Node & {
   source: DataSource;
   sourceOfTruth: DataSource;
   tags?: Maybe<Array<Tag>>;
+  ticketSummaryByStatus: Array<TicketSummaryByStatus>;
   updatedAt: Scalars['Time'];
   website?: Maybe<Scalars['String']>;
 };
@@ -1616,6 +1618,12 @@ export type Ticket = Node & {
   updatedAt: Scalars['Time'];
 };
 
+export type TicketSummaryByStatus = {
+  __typename?: 'TicketSummaryByStatus';
+  count: Scalars['Int64'];
+  status: Scalars['String'];
+};
+
 export type TimeRange = {
   /**
    * The start time of the time range.
@@ -1820,6 +1828,15 @@ export type GetContactConversationsQueryVariables = Exact<{
 
 
 export type GetContactConversationsQuery = { __typename?: 'Query', contact?: { __typename?: 'Contact', conversations: { __typename?: 'ConversationPage', content: Array<{ __typename?: 'Conversation', id: string, startedAt: any }> } } | null };
+
+export type GetContactListQueryVariables = Exact<{
+  pagination: Pagination;
+  where?: InputMaybe<Filter>;
+  sort?: InputMaybe<Array<SortBy> | SortBy>;
+}>;
+
+
+export type GetContactListQuery = { __typename?: 'Query', contacts: { __typename?: 'ContactsPage', content: Array<{ __typename?: 'Contact', firstName?: string | null, lastName?: string | null, name?: string | null, emails: Array<{ __typename?: 'Email', id: string, email?: string | null }> }> } };
 
 export type GetContactNotesQueryVariables = Exact<{
   id: Scalars['ID'];
@@ -2639,6 +2656,49 @@ export function useGetContactConversationsLazyQuery(baseOptions?: Apollo.LazyQue
 export type GetContactConversationsQueryHookResult = ReturnType<typeof useGetContactConversationsQuery>;
 export type GetContactConversationsLazyQueryHookResult = ReturnType<typeof useGetContactConversationsLazyQuery>;
 export type GetContactConversationsQueryResult = Apollo.QueryResult<GetContactConversationsQuery, GetContactConversationsQueryVariables>;
+export const GetContactListDocument = gql`
+    query GetContactList($pagination: Pagination!, $where: Filter, $sort: [SortBy!]) {
+  contacts(pagination: $pagination, where: $where, sort: $sort) {
+    content {
+      ...ContactNameFragment
+      emails {
+        id
+        email
+      }
+    }
+  }
+}
+    ${ContactNameFragmentFragmentDoc}`;
+
+/**
+ * __useGetContactListQuery__
+ *
+ * To run a query within a React component, call `useGetContactListQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetContactListQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetContactListQuery({
+ *   variables: {
+ *      pagination: // value for 'pagination'
+ *      where: // value for 'where'
+ *      sort: // value for 'sort'
+ *   },
+ * });
+ */
+export function useGetContactListQuery(baseOptions: Apollo.QueryHookOptions<GetContactListQuery, GetContactListQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<GetContactListQuery, GetContactListQueryVariables>(GetContactListDocument, options);
+      }
+export function useGetContactListLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetContactListQuery, GetContactListQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<GetContactListQuery, GetContactListQueryVariables>(GetContactListDocument, options);
+        }
+export type GetContactListQueryHookResult = ReturnType<typeof useGetContactListQuery>;
+export type GetContactListLazyQueryHookResult = ReturnType<typeof useGetContactListLazyQuery>;
+export type GetContactListQueryResult = Apollo.QueryResult<GetContactListQuery, GetContactListQueryVariables>;
 export const GetContactNotesDocument = gql`
     query GetContactNotes($id: ID!, $pagination: Pagination) {
   contact(id: $id) {

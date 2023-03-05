@@ -122,18 +122,29 @@ button::-moz-focus-inner {
 
 .ql-toolbar.ql-snow {
   border: var(--border-divider);
-  border-bottom: none;
-  background: var(--secondary-color);
-  border-top-right-radius: var(--border-radius-sm);
-  border-top-left-radius: var(--border-radius-sm);
-}
-.ql-toolbar.ql-snow + .ql-container.ql-snow {
-  border: var(--border-divider);
-  min-height: 100px;
+  border-top: none;
+  background: #fff;
   border-bottom-right-radius: var(--border-radius-sm);
   border-bottom-left-radius: var(--border-radius-sm);
 }
 
+.openline-editor-email .ql-toolbar.ql-snow + .ql-container.ql-snow {
+  border-top-right-radius: 0;
+  border-top-left-radius: 0;
+}
+.ql-toolbar.ql-snow + .ql-container.ql-snow {
+  border: var(--border-divider);
+  min-height: 100px;
+  border-top-right-radius: var(--border-radius-sm);
+  border-top-left-radius: var(--border-radius-sm);
+}
+
+
+.p-component.p-editor-container {
+  display: flex;
+  flex-direction: column-reverse;
+  flex:1;
+}
 .ql-editor {
   word-break: break-word !important;
 }
@@ -142,7 +153,13 @@ button::-moz-focus-inner {
   display: flex;
   justify-content: flex-end;
 }
+
 .ql-snow.ql-toolbar .editor_save button.primary {
+  margin-left: 8px
+}
+
+.ql-snow.ql-toolbar .editor_save button.primary,
+.ql-snow.ql-toolbar .editor_save button.secondary, {
   @include button-variants;
   width: auto;
   display: flex;
@@ -167,6 +184,10 @@ button::-moz-focus-inner {
   font-size: var(--font-size-xs);
 }
 
+.emailEditor .p-autocomplete-input-token {
+  font-size: var(--font-size-sm);
+}
+
 .p-autocomplete-panel {
   border: var(--border-divider);
   box-shadow: var(--box-shadow-xs);
@@ -187,6 +208,12 @@ button::-moz-focus-inner {
 
 .p-highlight {
   background: var(--side-panel-item-hovered);
+}
+
+.p-autocomplete-multiple-container,
+.p-autocomplete.p-component.p-autocomplete-multiple.p-inputwrapper-filled {
+  min-width: 50%;
+  width: 100%;
 }
 
 .p-tooltip {

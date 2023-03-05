@@ -34,7 +34,11 @@ export function middleware(request: NextRequest) {
       return resp.json().then((data) => {
         console.log('User is signed in. Proceeding to redirect.');
 
-        return getRedirectUrl(data.identity.traits.email, request);
+        return getRedirectUrl(
+          data.identity.traits.email,
+          data.identity.id,
+          request,
+        );
       });
     })
     .catch((err) => {
@@ -74,12 +78,17 @@ export function middleware(request: NextRequest) {
     });
 }
 
-function getRedirectUrl(userName: string, request: NextRequest) {
+function getRedirectUrl(
+  userName: string,
+  identityId: string,
+  request: NextRequest,
+) {
   var newURL = '';
 
   const requestHeaders = new Headers(request.headers);
 
   requestHeaders.set('X-Openline-USERNAME', userName);
+  requestHeaders.set('X-Openline-IDENTITY-ID', identityId);
 
   if (request.nextUrl.pathname.startsWith('/customer-os-api/')) {
     newURL =

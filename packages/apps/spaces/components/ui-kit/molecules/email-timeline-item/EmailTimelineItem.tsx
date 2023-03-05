@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { ReactNode, useState } from 'react';
 import sanitizeHtml from 'sanitize-html';
 import styles from './email-timeline-item.module.scss';
 import { Button } from '../../atoms';
@@ -9,6 +9,7 @@ interface Props {
   cc?: string | Array<string>;
   bcc?: string | Array<string>;
   subject: string;
+  children?: ReactNode;
 }
 
 export const EmailTimelineItem: React.FC<Props> = ({
@@ -18,6 +19,7 @@ export const EmailTimelineItem: React.FC<Props> = ({
   subject,
   cc,
   bcc,
+  children,
 }) => {
   const [expanded, toggleExpanded] = useState(false);
 
@@ -114,6 +116,7 @@ export const EmailTimelineItem: React.FC<Props> = ({
         <Button onClick={() => toggleExpanded(!expanded)} mode='link'>
           {expanded ? 'Collapse' : 'Expand'}
         </Button>
+        {children}
       </div>
     </article>
   );

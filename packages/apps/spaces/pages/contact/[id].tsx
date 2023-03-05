@@ -5,7 +5,7 @@ import { useRouter } from 'next/router';
 import {
   ContactCommunicationDetails,
   ContactDetails,
-  ContactNoteEditor,
+  ContactEditor,
   NoteEditorModes,
 } from '../../components/contact';
 import { ContactPersonalDetailsCreate } from '../../components/contact/contact-details';
@@ -41,10 +41,7 @@ function ContactDetailsPage() {
         <ContactHistory id={id as string} />
       </section>
       <section className={styles.notes}>
-        <ContactNoteEditor
-          contactId={id as string}
-          mode={NoteEditorModes.ADD}
-        />
+        <ContactEditor contactId={id as string} mode={NoteEditorModes.ADD} />
       </section>
     </DetailsPageLayout>
   );
