@@ -47,13 +47,44 @@ export const Message = ({
     body: string;
   }
   interface MiniVcon {
+    parties: Array<VConParty>;
     dialog?: Content
     analysis?: Content
   }
 
+  interface VConParty {
+    tel?: string;
+    stir?: string;
+    mailto?: string;
+    name?: string;
+  }
+
   interface TranscriptElement {
-    party: string;
+    party: VConParty;
     text: string;
+  }
+
+  const getUser = (msg: MiniVcon) : VConParty => {
+    if (msg.parties) {
+      for (const party of msg.parties) {
+        if (party.mailto) {
+          return party;
+        }
+      }
+    }
+    return {mailto: "unknown"};
+  }
+
+  const getContact = (msg: MiniVcon) : VConParty  => {
+    console.log("getContact"+JSON.stringify(msg)+"\n")
+    if (msg.parties) {
+      for (const party of msg.parties) {
+        if (party.tel) {
+          return party;
+        }
+      }
+    }
+    return {tel: "unknown"};
   }
 
   const decodeContent = (content: string)  => {
@@ -93,8 +124,30 @@ export const Message = ({
       }  else if (content.analysis.mimetype === 'application/x-openline-transcript') {
         try {
           const response = JSON.parse(content.analysis.body);
-          return <div>{response.map((transcriptElement: TranscriptElement, index: number) => (
-             <div key={index}><b>{transcriptElement.party}:  </b>{transcriptElement.text}</div>
+          return <div>{response.map(
+            (transcriptElement: TranscriptElement, index: number) => (
+              <div key={index}>
+              {transcriptElement.party.tel &&
+                (
+                  <div
+                  className={`${styles.message} ${styles.left}`}>
+                  {transcriptElement.text}
+                </div>
+                )
+              }
+              {!transcriptElement.party.tel &&
+                (
+                  (
+                    <div
+                    className={`${styles.message} ${styles.right}`}
+                    style={{ background: '#C5EDCE', borderRadius: '5px' }}
+                  >
+                    {transcriptElement.text}
+                  </div>
+                  )
+                )
+              }
+              </div>
           ))}</div>;
         } catch (e) {
           console.log("Got an error: " + e + " when parsing: " + content.analysis.body);
@@ -220,14 +273,20 @@ export const Message = ({
               <div className='flex-grow-1'></div>
               {<div className="flex-grow-0 mb-1 pr-3">
               
-                <div style={{textAlign: 'center'}}><b>{content.analysis.type}</b></div>
-              </div>}
+                <table width="100%"><tr>
+                <td><div>{getContact(content).tel}</div></td>
+                <td><div style={{textAlign: 'center'}}><b>{content.analysis.type}</b></div></td>
+                <td align="right"><div>{getUser(content).mailto}</div></td>
+                </tr></table>
+              </div>
+              }
+              
             </div>
 
    
             <div
               className={`${styles.message} ${styles.center}`}
-              style={{ background: '#C5EDCE', borderRadius: '5px' }}
+              style={{ background: '#E5FAE9', borderRadius: '5px' }}
             >
               {displayContent(content)}
               <div
