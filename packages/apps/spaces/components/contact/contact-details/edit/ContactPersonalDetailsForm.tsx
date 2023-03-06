@@ -113,7 +113,6 @@ export const ContactPersonalDetailsEditForm = ({
             label='Last name'
           />
         </div>
-        <ContactOwner control={control} setValue={setValue} />
 
         {mode === 'EDIT' && <ContactTags id={data.id} mode={'EDIT'} />}
         <div
