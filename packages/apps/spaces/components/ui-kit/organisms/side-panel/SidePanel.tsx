@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 
 import { Building, Cog, SignOut, UserPlus } from '../../atoms';
 import { SidePanelListItem } from './side-panel-list-item';
@@ -8,6 +8,7 @@ import Image from 'next/image';
 import { useRouter } from 'next/router';
 import { useRecoilValue } from 'recoil';
 import { logoutUrlState } from '../../../../state';
+import { useDetectClickOutside } from '../../../../hooks';
 
 interface SidePanelProps {
   onPanelToggle: (status: boolean) => void;
@@ -22,27 +23,6 @@ export const SidePanel: React.FC<SidePanelProps> = ({
 }) => {
   const router = useRouter();
   const logoutUrl = useRecoilValue(logoutUrlState);
-
-  const overlay = React.useRef<HTMLDivElement>(null);
-
-  React.useEffect(() => {
-    const closeListener = () => {
-      onPanelToggle(!isPanelOpen);
-      if (overlay && overlay.current) {
-        overlay.current.removeEventListener('click', closeListener);
-      }
-    };
-
-    if (overlay && overlay.current) {
-      overlay.current.addEventListener('click', closeListener);
-    }
-
-    return () => {
-      if (overlay && overlay.current) {
-        overlay.current.removeEventListener('click', closeListener);
-      }
-    };
-  }, [overlay, isPanelOpen]);
 
   return (
     <>
@@ -101,7 +81,7 @@ export const SidePanel: React.FC<SidePanelProps> = ({
           />
         </ul>
       </aside>
-      {isPanelOpen && <div className={styles.overlay} ref={overlay} />}
+      {isPanelOpen && <div className={styles.overlay} onClick={() => onPanelToggle(!isPanelOpen)}/>}
       <div className={styles.webChat}>{children}</div>
     </>
   );
