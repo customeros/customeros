@@ -13,11 +13,12 @@ import {
 import { OverlayPanel } from 'primereact/overlaypanel';
 import { Button } from 'primereact/button';
 import { WebRTCContext } from '../../../../context/web-rtc';
+import {useRecoilValue} from "recoil";
+import {userData} from "../../../../state";
 
 export const WebRTCCallProgress: React.FC<any> = () => {
   const {
     inCall,
-    from,
     isCallMuted,
     muteCall,
     unMuteCall,
@@ -27,6 +28,9 @@ export const WebRTCCallProgress: React.FC<any> = () => {
     sendDtmf,
     hangupCall,
   } = useContext(WebRTCContext);
+
+  const from = useRecoilValue(userData);
+  from
   const phoneContainerRef = useRef<OverlayPanel>(null);
 
   const toggleMute = () => {
@@ -101,7 +105,7 @@ export const WebRTCCallProgress: React.FC<any> = () => {
               <div className='font-bold text-center'>In call with</div>
               <div className='font-bold text-center mb-3'>{dialpad_rows}</div>
 
-              <div className='font-bold text-center mb-3'>{from}</div>
+              <div className='font-bold text-center mb-3'>{from.identity}</div>
               <div className='mb-3'>
                 <Button onClick={() => toggleMute()} className='mr-2'>
                   <FontAwesomeIcon

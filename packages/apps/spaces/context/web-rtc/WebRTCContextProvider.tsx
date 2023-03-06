@@ -20,14 +20,9 @@ import axios from 'axios';
 
 export const WebRTCContext = createContext(null);
 
-interface WebRTCContextProviderProps {
-  username: string;
-}
-
-export const WebRTCContextProvider = (props: WebRTCContextProviderProps) => {
+export const WebRTCContextProvider = (props: any) => {
   const webSocketUrl = `${process.env.NEXT_PUBLIC_WEBRTC_WEBSOCKET_URL}`;
   const [inCall, setInCall] = useState(false);
-  const [from, setFrom] = useState(props.username);
   const [callerId, setCallerId] = useState('');
   const [ringing, setRinging] = useState(false);
   const [username, setUsername] = useState('');
@@ -218,8 +213,6 @@ export const WebRTCContextProvider = (props: WebRTCContextProviderProps) => {
   const value = {
     inCall,
     setInCall,
-    from,
-    setFrom,
     callerId,
     setCallerId,
     ringing,
