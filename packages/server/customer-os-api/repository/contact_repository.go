@@ -666,7 +666,7 @@ func (r *contactRepository) UpdateMergedContactLabelsInTx(ctx context.Context, t
 		" SET c:MergedContact:%s " +
 		" REMOVE c:Contact:%s"
 
-	_, err := tx.Run(ctx, fmt.Sprintf(query, "MergedContact_"+tenant, "Contact"+tenant),
+	_, err := tx.Run(ctx, fmt.Sprintf(query, "MergedContact_"+tenant, "Contact_"+tenant),
 		map[string]any{
 			"tenant":    tenant,
 			"contactId": mergedContactId,
