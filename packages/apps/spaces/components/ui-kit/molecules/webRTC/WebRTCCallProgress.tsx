@@ -30,7 +30,6 @@ export const WebRTCCallProgress: React.FC<any> = () => {
   } = useContext(WebRTCContext);
 
   const from = useRecoilValue(userData);
-  from
   const phoneContainerRef = useRef<OverlayPanel>(null);
 
   const toggleMute = () => {

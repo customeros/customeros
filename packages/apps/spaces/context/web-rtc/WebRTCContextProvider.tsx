@@ -17,6 +17,8 @@ import {
 } from 'jssip/lib/UA';
 
 import axios from 'axios';
+import { useRecoilValue } from "recoil";
+import { userData } from "../../state";
 
 export const WebRTCContext = createContext(null);
 
@@ -32,6 +34,7 @@ export const WebRTCContextProvider = (props: any) => {
   const remoteVideo = useRef<HTMLVideoElement>();
   const [isCallOnHold, setIsCallOnHold] = useState(false);
   const [isCallMuted, setIsCallMuted] = useState(false);
+  const from = useRecoilValue(userData);
 
   useEffect(() => {
     const refreshCredentials = () => {
@@ -68,7 +71,7 @@ export const WebRTCContextProvider = (props: any) => {
     const socket: JsSIP.Socket = new JsSIP.WebSocketInterface(webSocketUrl);
     const configuration: UAConfiguration = {
       sockets: [socket],
-      uri: from,
+      uri: from.identity,
     };
 
     configuration.authorization_user = username;
