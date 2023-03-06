@@ -5,7 +5,7 @@ import { WebRTCContext } from '../../../../context/web-rtc';
 
 export const WebRTCInboundNotification: React.FC<any> = () => {
   const { inCall, ringing, remoteVideo, answerCall, hangupCall, callerId } =
-    useContext(WebRTCContext);
+    useContext(WebRTCContext) as any;
   return (
     <>
       <video
