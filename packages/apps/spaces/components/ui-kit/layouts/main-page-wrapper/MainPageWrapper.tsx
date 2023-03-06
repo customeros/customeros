@@ -9,6 +9,7 @@ import { ApolloProvider } from '@apollo/client';
 import { logoutUrlState, userData } from '../../../../state';
 import { useSetRecoilState } from 'recoil';
 import { WebRTCContextProvider } from '../../../../context';
+import { WebRTCInboundNotification } from "../../molecules";
 
 const ory = new FrontendApi(new Configuration(edgeConfig));
 
@@ -59,7 +60,10 @@ export const MainPageWrapper = ({ children }: any) => {
 
   return (
     <ApolloProvider client={client}>
-      <WebRTCContextProvider> {children}</WebRTCContextProvider>
+      <WebRTCContextProvider>
+        <WebRTCInboundNotification />
+        {children}
+      </WebRTCContextProvider>
     </ApolloProvider>
   );
 };
