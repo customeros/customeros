@@ -28,6 +28,14 @@ export const MainPageWrapper = ({ children }: any) => {
   const [session, setSession] = useState<Session | undefined>();
   const setUserEmail = useSetRecoilState(userData);
 
+  const getReturnToUrl: () => string = () => {
+    if (window.location.origin.startsWith('http://localhost')) {
+      ``
+      return '';
+    }
+    return "?return_to=" + window.location.origin
+  }
+
   useEffect(() => {
     if (router.asPath.startsWith('/login')) {
       return;
@@ -45,7 +53,7 @@ export const MainPageWrapper = ({ children }: any) => {
       })
       .catch(() => {
         // Redirect to login page
-        return router.push(edgeConfig.basePath + '/ui/login');
+        return router.push(edgeConfig.basePath + '/ui/login' + getReturnToUrl());
       });
   }, [router]);
 
