@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React from 'react';
 
 import { Building, Cog, SignOut, UserPlus } from '../../atoms';
 import { SidePanelListItem } from './side-panel-list-item';
@@ -8,7 +8,6 @@ import Image from 'next/image';
 import { useRouter } from 'next/router';
 import { useRecoilValue } from 'recoil';
 import { logoutUrlState } from '../../../../state';
-import { useDetectClickOutside } from '../../../../hooks';
 
 interface SidePanelProps {
   onPanelToggle: (status: boolean) => void;
