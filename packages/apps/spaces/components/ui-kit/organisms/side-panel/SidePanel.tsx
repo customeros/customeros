@@ -22,6 +22,7 @@ export const SidePanel: React.FC<SidePanelProps> = ({
 }) => {
   const router = useRouter();
   const logoutUrl = useRecoilValue(logoutUrlState);
+
   return (
     <>
       <aside
@@ -79,7 +80,12 @@ export const SidePanel: React.FC<SidePanelProps> = ({
           />
         </ul>
       </aside>
-      {isPanelOpen && <div className={styles.overlay} />}
+      {isPanelOpen && (
+        <div
+          className={styles.overlay}
+          onClick={() => onPanelToggle(!isPanelOpen)}
+        />
+      )}
       <div className={styles.webChat}>{children}</div>
     </>
   );
