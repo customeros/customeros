@@ -71,7 +71,7 @@ export const ContactPersonalDetailsEditForm = ({
           className={styles.formFields}
           style={{ display: 'flex', flexDirection: 'column', width: '100%' }}
         >
-          <label className={styles.xyz} htmlFor='title'>
+          <label className={styles.titleSelectorLabel} htmlFor='title'>
             Title
           </label>
           <Controller
