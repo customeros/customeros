@@ -37,9 +37,7 @@ function ContactDetailsPage() {
         <ContactDetails id={id as string} />
         <ContactCommunicationDetails id={id as string} />
       </section>
-      <section className={styles.timeline}>
-        <ContactHistory id={id as string} />
-      </section>
+      <ContactHistory id={id as string} />
       <section className={styles.notes}>
         <ContactEditor contactId={id as string} mode={NoteEditorModes.ADD} />
       </section>

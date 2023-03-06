@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { ReactNode, useEffect, useRef } from 'react';
 import { Skeleton } from 'primereact/skeleton';
 import {
   ConversationTimelineItem,
@@ -9,6 +9,7 @@ import {
 import { TimelineItem } from '../../atoms/timeline-item';
 import { uuidv4 } from '../../../../utils';
 import { TicketTimelineItem } from '../../molecules/ticket-timeline-item';
+import styles from './timeline.module.scss';
 
 interface Props {
   loading: boolean;
@@ -17,6 +18,7 @@ interface Props {
   loggedActivities: Array<any>;
   notifyChange?: (id: any) => void;
   notifyContactNotesUpdate?: (id: any) => void;
+  header?: ReactNode;
 }
 
 export const Timeline = ({
@@ -26,6 +28,7 @@ export const Timeline = ({
   contactId,
   notifyChange = () => null,
   notifyContactNotesUpdate = () => null,
+  header,
 }: Props) => {
   const timelineContainerRef = useRef<HTMLDivElement>(null);
 
@@ -117,12 +120,15 @@ export const Timeline = ({
   };
 
   return (
-    <div ref={timelineContainerRef}>
-      {loggedActivities.map((e: any, index) => (
-        <React.Fragment key={uuidv4()}>
-          {getTimelineItemByType(e.__typename, e, index)}
-        </React.Fragment>
-      ))}
-    </div>
+    <article ref={timelineContainerRef} className={styles.timeline}>
+      {header}
+      <div className={styles.timelineContent}>
+        {loggedActivities.map((e: any, index) => (
+          <React.Fragment key={uuidv4()}>
+            {getTimelineItemByType(e.__typename, e, index)}
+          </React.Fragment>
+        ))}
+      </div>
+    </article>
   );
 };

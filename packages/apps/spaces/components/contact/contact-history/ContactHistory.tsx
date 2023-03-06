@@ -5,6 +5,10 @@ import { useContactConversations } from '../../../hooks/useContactConversations'
 import { useContactTickets } from '../../../hooks/useContact/useContactTickets';
 import { gql } from '@apollo/client';
 import { GraphQLClient } from 'graphql-request';
+import { useContactPersonalDetails } from '../../../hooks/useContact';
+import { Skeleton } from '../../ui-kit/atoms/skeleton';
+import { getContactDisplayName } from '../../../utils';
+import { Contact } from '../../../graphQL/__generated__/generated';
 
 export const ContactHistory = ({ id }: { id: string }) => {
   const {
@@ -23,6 +27,11 @@ export const ContactHistory = ({ id }: { id: string }) => {
     loading: conversationsLoading,
     error: conversationsError,
   } = useContactConversations({ id });
+  const {
+    data: contactPersonalDetails,
+    loading: contactPersonalDetailsLoading,
+    error: contactPersonalDetailsError,
+  } = useContactPersonalDetails({ id });
 
   const query = gql`
     query GetActionsForContact($id: ID!, $from: Time!, $to: Time!) {
@@ -105,21 +114,37 @@ export const ContactHistory = ({ id }: { id: string }) => {
     });
   };
 
+  const getTimelineTitle = () => {
+    const name = getContactDisplayName(contactPersonalDetails as Contact);
+
+    return name === 'Unnamed'
+      ? 'Unnamed contact Timeline:'
+      : `${name} Timeline:`;
+  };
   return (
-    <Timeline
-      loading={notesLoading || conversationsLoading || ticketsLoading}
-      noActivity={noHistoryItemsAvailable}
-      contactId={id}
-      loggedActivities={[
-        liveConversations,
-        ...getSortedItems(
-          notes?.notes.content,
-          conversations?.conversations.content,
-          tickets?.tickets,
-          actions,
-        ),
-      ]}
-    />
+    <>
+      <Timeline
+        header={
+          <h1>
+            {contactPersonalDetailsLoading && <Skeleton />}
+            {contactPersonalDetailsError && 'Failed to load timeline title'}
+            {contactPersonalDetails?.id && getTimelineTitle()}
+          </h1>
+        }
+        loading={notesLoading || conversationsLoading || ticketsLoading}
+        noActivity={noHistoryItemsAvailable}
+        contactId={id}
+        loggedActivities={[
+          liveConversations,
+          ...getSortedItems(
+            notes?.notes.content,
+            conversations?.conversations.content,
+            tickets?.tickets,
+            actions,
+          ),
+        ]}
+      />
+    </>
   );
 };
 
