@@ -231,7 +231,7 @@ export const WebRTCContextProvider = (props: any) => {
     sendDtmf,
     isCallOnHold,
     isCallMuted,
-  };
+  } as any;
 
   return (
     <WebRTCContext.Provider value={value}>
