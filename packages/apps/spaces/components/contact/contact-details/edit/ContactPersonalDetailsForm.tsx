@@ -27,7 +27,6 @@ export const ContactPersonalDetailsEditForm = ({
       id: data.id,
       label: data?.label || '',
       lastName: data?.lastName || '',
-      ownerId: data?.ownerId || '',
       title: data?.title || PersonTitle.Mr,
     },
   });
