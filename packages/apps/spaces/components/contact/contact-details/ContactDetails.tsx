@@ -6,9 +6,8 @@ import { ContactPersonalDetails } from './ContactPersonalDetails';
 import { WebRTCContext } from '../../../context/web-rtc';
 import { WebRTCCallProgress } from '../../ui-kit/molecules';
 import { useContactCommunicationChannelsDetails } from '../../../hooks/useContact';
-import { da } from "date-fns/locale";
 export const ContactDetails = ({ id }: { id: string}) => {
-  const { makeCall } = useContext(WebRTCContext);
+  const webRtc = useContext(WebRTCContext);
   const { data, loading, error } = useContactCommunicationChannelsDetails({
     id,
   });
@@ -27,7 +26,7 @@ export const ContactDetails = ({ id }: { id: string}) => {
             onClick={() => {
               for (let i = 0; i < data?.phoneNumbers?.length; i++) {
                 if (data?.phoneNumbers[i]?.primary === true) {
-                  return makeCall(data?.phoneNumbers[i]?.e164);
+                  return webRtc?.makeCall(data?.phoneNumbers[i]?.e164);
                 }
               }
             }}
