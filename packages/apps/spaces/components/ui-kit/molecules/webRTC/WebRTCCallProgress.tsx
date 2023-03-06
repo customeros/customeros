@@ -27,7 +27,7 @@ export const WebRTCCallProgress: React.FC<any> = () => {
     unHoldCall,
     sendDtmf,
     hangupCall,
-  } = useContext(WebRTCContext);
+  } = useContext(WebRTCContext) as any;
 
   const from = useRecoilValue(userData);
   const phoneContainerRef = useRef<OverlayPanel>(null);
