@@ -17,8 +17,8 @@ import {
 } from 'jssip/lib/UA';
 
 import axios from 'axios';
-import { useRecoilValue } from "recoil";
-import { userData } from "../../state";
+import { useRecoilValue } from 'recoil';
+import { userData } from '../../state';
 
 export const WebRTCContext = createContext(null);
 
