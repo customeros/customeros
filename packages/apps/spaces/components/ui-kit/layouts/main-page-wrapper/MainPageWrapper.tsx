@@ -30,7 +30,6 @@ export const MainPageWrapper = ({ children }: any) => {
 
   const getReturnToUrl: () => string = () => {
     if (window.location.origin.startsWith('http://localhost')) {
-      ``
       return '';
     }
     return "?return_to=" + window.location.origin
