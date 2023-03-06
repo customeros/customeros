@@ -11,9 +11,11 @@ export interface EmailMode {
     data: any,
     onSuccess: () => void,
     destination: Array<string>,
+    respondTo: null | string,
   ) => Promise<any>;
   subject: string;
   to: Array<string>;
+  respondTo: null | string;
 }
 
 export const editorMode = atom({
@@ -28,5 +30,6 @@ export const editorEmail = atom<EmailMode>({
   default: {
     to: [],
     subject: '',
+    respondTo: null,
   },
 });

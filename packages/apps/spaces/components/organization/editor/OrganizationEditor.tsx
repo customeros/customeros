@@ -29,7 +29,11 @@ export const OrganizationEditor: FC<Props> = ({
     defaultValues: DEFAULT_VALUES,
   });
   const [editorModeState, setMode] = useRecoilState(editorMode);
-  const { handleSubmit: handleSendEmail, to } = useRecoilValue(editorEmail);
+  const {
+    handleSubmit: handleSendEmail,
+    to,
+    respondTo,
+  } = useRecoilValue(editorEmail);
 
   const { onCreateOrganizationNote } = useCreateOrganizationNote({
     organizationId,
@@ -49,6 +53,7 @@ export const OrganizationEditor: FC<Props> = ({
           dataToSubmit.html.replace(/(<([^>]+)>)/gi, ''),
           () => reset(DEFAULT_VALUES),
           to,
+          respondTo,
         )
       : onCreateOrganizationNote(dataToSubmit).then(() =>
           reset(DEFAULT_VALUES),

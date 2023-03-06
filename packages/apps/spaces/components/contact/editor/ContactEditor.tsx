@@ -28,7 +28,11 @@ export const ContactEditor: FC<Props> = ({
     defaultValues: DEFAULT_VALUES,
   });
   const [editorModeState, setMode] = useRecoilState(editorMode);
-  const { handleSubmit: handleSendEmail, to } = useRecoilValue(editorEmail);
+  const {
+    handleSubmit: handleSendEmail,
+    to,
+    respondTo,
+  } = useRecoilValue(editorEmail);
   const { onCreateContactNote } = useCreateContactNote({ contactId });
   const isEditMode = mode === NoteEditorModes.EDIT;
 
@@ -45,6 +49,7 @@ export const ContactEditor: FC<Props> = ({
           dataToSubmit.html.replace(/(<([^>]+)>)/gi, ''),
           () => reset(DEFAULT_VALUES),
           to,
+          respondTo,
         )
       : onCreateContactNote(dataToSubmit).then(() => reset(DEFAULT_VALUES));
   });
