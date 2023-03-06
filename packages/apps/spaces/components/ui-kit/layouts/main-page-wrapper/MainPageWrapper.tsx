@@ -6,7 +6,6 @@ import { useRouter } from 'next/router';
 import { getUserName } from '../../../../utils';
 import client from '../../../../apollo-client';
 import { ApolloProvider } from '@apollo/client';
-import { useRecoilState, useSetRecoilState } from 'recoil';
 import { logoutUrlState, userData } from '../../../../state';
 import { useSetRecoilState } from 'recoil';
 import { WebRTCContextProvider } from '../../../../context';
