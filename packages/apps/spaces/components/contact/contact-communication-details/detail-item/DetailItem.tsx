@@ -59,7 +59,6 @@ export const DetailItem = ({
   return (
     <li
       className={classNames(styles.communicationItem, {
-        [styles.primary]: isPrimary,
         [styles.selected]: showButtons,
       })}
     >
@@ -77,7 +76,11 @@ export const DetailItem = ({
         <div className={styles.label}>
           <span>{label.toLowerCase()}</span>
         </div>
-        <div className={styles.info}>
+        <div
+          className={classNames(styles.info, {
+            [styles.primary]: isPrimary,
+          })}
+        >
           <span> {data}</span>
         </div>
       </div>

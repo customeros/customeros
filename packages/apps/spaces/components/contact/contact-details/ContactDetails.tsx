@@ -1,4 +1,4 @@
-import React, { useContext, useState } from 'react';
+import React, { useContext } from 'react';
 import Image from 'next/image';
 import { IconButton } from '../../ui-kit/atoms';
 import styles from './contact-details.module.scss';
@@ -6,27 +6,27 @@ import { ContactPersonalDetails } from './ContactPersonalDetails';
 import { WebRTCContext } from '../../../context/web-rtc';
 import { WebRTCCallProgress } from '../../ui-kit/molecules';
 import { useContactCommunicationChannelsDetails } from '../../../hooks/useContact';
+import { toast } from 'react-toastify';
 
 export const ContactDetails = ({ id }: { id: string }) => {
   const webRtc = useContext(WebRTCContext) as any;
   const { data, loading, error } = useContactCommunicationChannelsDetails({
     id,
   });
-  const getPrimaryNumber = () => {
-    if (!loading && !error) {
-      const phoneNumbersLength = data?.phoneNumbers.length;
-      if (phoneNumbersLength !== undefined) {
-        for (let i = 0; i < phoneNumbersLength; i++) {
-          if (data?.phoneNumbers?.[i]?.primary === true) {
-            const e164 = data?.phoneNumbers[i]?.e164;
-            if (e164 !== undefined && e164 !== null) {
-              return e164;
-            }
-          }
-        }
-      }
+  const handleStartPhoneCall = () => {
+    const number =
+      data?.phoneNumbers.find((pn) => pn.primary)?.e164 ||
+      data?.phoneNumbers[0].e164;
+
+    if (!number) {
+      toast.error('Error! Number missing!', {
+        toastId: `${id}-missing-phone-number`,
+      });
+      return;
     }
+    webRtc?.makeCall(number);
   };
+
   return (
     <div className={styles.contactDetails}>
       <ContactPersonalDetails id={id} />
@@ -34,15 +34,11 @@ export const ContactDetails = ({ id }: { id: string }) => {
       <div className={styles.details}>
         <div className={styles.section}>
           <IconButton
-            disabled={
-              loading || error != null || data?.phoneNumbers.length === 0
-            }
+            disabled={loading || error !== null || !data?.phoneNumbers.length}
             aria-describedby='phone-icon-label'
             mode='secondary'
             className={styles.icon}
-            onClick={() => {
-              return webRtc?.makeCall(getPrimaryNumber());
-            }}
+            onClick={handleStartPhoneCall}
             icon={
               <Image alt={''} src='/icons/phone.svg' width={20} height={20} />
             }

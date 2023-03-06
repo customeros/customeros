@@ -15,6 +15,7 @@ import {
 } from '../../../../graphQL/__generated__/generated';
 import Image from 'next/image';
 import { OverlayPanel } from '../../../ui-kit/atoms/overlay-panel';
+import { MenuItemCommandParams } from 'primereact/menuitem';
 
 interface Props {
   onChange?: ChangeEventHandler<HTMLInputElement>;
@@ -47,16 +48,20 @@ export const DetailItemEditMode = ({
 
   const labelOptions = Object.values(labelOptionEnum).map((labelOption) => ({
     label: labelOption.toLowerCase(),
-    command: () => onChangeLabelAndPrimary({ label: labelOption }),
+    command: (event: MenuItemCommandParams) => {
+      event.originalEvent.stopPropagation();
+      event.originalEvent.preventDefault();
+      onChangeLabelAndPrimary({ label: labelOption });
+      //@ts-expect-error revisit later
+      addCommunicationChannelContainerRef?.current?.toggle(event);
+    },
   }));
 
   return (
     <li
       key={id}
       ref={editListItemRef}
-      className={classNames(styles.communicationItemEdit, {
-        [styles.primary]: isPrimary,
-      })}
+      className={classNames(styles.communicationItemEdit)}
     >
       <div className={styles.label}>
         <Button
@@ -82,7 +87,12 @@ export const DetailItemEditMode = ({
           model={labelOptions}
         />
       </div>
-      <div style={{ display: 'flex', flex: '1' }}>
+      <div
+        style={{ display: 'flex', flex: '1' }}
+        className={classNames({
+          [styles.primary]: isPrimary,
+        })}
+      >
         {mode === 'ADD' && onChange ? (
           <DebouncedInput
             onChange={onChange}
