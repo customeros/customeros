@@ -1,0 +1,38 @@
+query LoadTimelineForOrganization($id: ID!) {
+  organization(id: $id) {
+    contacts {
+      content {
+        notes {
+          content {
+            id
+            html
+          }
+        }
+        conversations {
+          content {
+            id
+            subject
+          }
+        }
+        tickets {
+          id
+          createdAt
+          updatedAt
+          subject
+          status
+          priority
+          description
+          tags {
+            id
+            name
+          }
+          notes {
+            id
+            createdAt
+            html
+          }
+        }
+      }
+    }
+  }
+}

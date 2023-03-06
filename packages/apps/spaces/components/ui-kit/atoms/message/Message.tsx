@@ -48,8 +48,8 @@ export const Message = ({
   }
   interface MiniVcon {
     parties: Array<VConParty>;
-    dialog?: Content
-    analysis?: Content
+    dialog?: Content;
+    analysis?: Content;
   }
 
   interface VConParty {
@@ -64,7 +64,7 @@ export const Message = ({
     text: string;
   }
 
-  const getUser = (msg: MiniVcon) : VConParty => {
+  const getUser = (msg: MiniVcon): VConParty => {
     if (msg.parties) {
       for (const party of msg.parties) {
         if (party.mailto) {
@@ -72,11 +72,11 @@ export const Message = ({
         }
       }
     }
-    return {mailto: "unknown"};
-  }
+    return { mailto: 'unknown' };
+  };
 
-  const getContact = (msg: MiniVcon) : VConParty  => {
-    console.log("getContact"+JSON.stringify(msg)+"\n")
+  const getContact = (msg: MiniVcon): VConParty => {
+    console.log('getContact' + JSON.stringify(msg) + '\n');
     if (msg.parties) {
       for (const party of msg.parties) {
         if (party.tel) {
@@ -84,83 +84,93 @@ export const Message = ({
         }
       }
     }
-    return {tel: "unknown"};
-  }
+    return { tel: 'unknown' };
+  };
 
-  const decodeContent = (content: string)  => {
+  const decodeContent = (content: string) => {
     let response;
     try {
       response = JSON.parse(content);
     } catch (e) {
-      response = {dialog: 
-       {
+      response = {
+        dialog: {
           type: 'MESSAGE',
           mimetype: 'text/plain',
-          body: content
-       } };
+          body: content,
+        },
+      };
     }
     return response;
-  }
+  };
 
   const displayContent = (content: MiniVcon) => {
     if (content.dialog) {
       if (content.dialog.mimetype === 'text/plain') {
-        return content.dialog.body
+        return content.dialog.body;
       } else if (content.dialog.mimetype === 'text/html') {
-        return <div
-        className={`text-overflow-ellipsis ${styles.emailContent}`}
-        dangerouslySetInnerHTML={{ __html: sanitizeHtml(content.dialog.body) }}
-      ></div>
+        return (
+          <div
+            className={`text-overflow-ellipsis ${styles.emailContent}`}
+            dangerouslySetInnerHTML={{
+              __html: sanitizeHtml(content.dialog.body),
+            }}
+          ></div>
+        );
       }
     }
     if (content.analysis) {
       if (content.analysis.mimetype === 'text/plain') {
-        return content.analysis.body
+        return content.analysis.body;
       } else if (content.analysis.mimetype === 'text/html') {
-        return <div
-        className={`text-overflow-ellipsis ${styles.emailContent}`}
-        dangerouslySetInnerHTML={{ __html: sanitizeHtml(content.analysis.body) }}
-      ></div>
-      }  else if (content.analysis.mimetype === 'application/x-openline-transcript') {
+        return (
+          <div
+            className={`text-overflow-ellipsis ${styles.emailContent}`}
+            dangerouslySetInnerHTML={{
+              __html: sanitizeHtml(content.analysis.body),
+            }}
+          ></div>
+        );
+      } else if (
+        content.analysis.mimetype === 'application/x-openline-transcript'
+      ) {
         try {
           const response = JSON.parse(content.analysis.body);
-          return <div>{response.map(
-            (transcriptElement: TranscriptElement, index: number) => (
-              <div key={index}>
-              {transcriptElement.party.tel &&
-                (
-                  <div
-                  className={`${styles.message} ${styles.left}`}>
-                  {transcriptElement.text}
-                </div>
-                )
-              }
-              {!transcriptElement.party.tel &&
-                (
-                  (
-                    <div
-                    className={`${styles.message} ${styles.right}`}
-                    style={{ background: '#C5EDCE', borderRadius: '5px' }}
-                  >
-                    {transcriptElement.text}
+          return (
+            <div>
+              {response.map(
+                (transcriptElement: TranscriptElement, index: number) => (
+                  <div key={index}>
+                    {transcriptElement.party.tel && (
+                      <div className={`${styles.message} ${styles.left}`}>
+                        {transcriptElement.text}
+                      </div>
+                    )}
+                    {!transcriptElement.party.tel && (
+                      <div
+                        className={`${styles.message} ${styles.right}`}
+                        style={{ background: '#C5EDCE', borderRadius: '5px' }}
+                      >
+                        {transcriptElement.text}
+                      </div>
+                    )}
                   </div>
-                  )
-                )
-              }
-              </div>
-          ))}</div>;
+                ),
+              )}
+            </div>
+          );
         } catch (e) {
-          console.log("Got an error: " + e + " when parsing: " + content.analysis.body);
+          console.log(
+            'Got an error: ' + e + ' when parsing: ' + content.analysis.body,
+          );
         }
-
-      }  
+      }
     }
-    return "Unknown Content: " + JSON.stringify(content);
-  }
+    return 'Unknown Content: ' + JSON.stringify(content);
+  };
 
   const content = decodeContent(message.content);
   if (content.analysis && message.direction) {
-    message.direction = 3
+    message.direction = 3;
   }
 
   return (
@@ -175,10 +185,8 @@ export const Message = ({
                   {sender.firstName} {sender.lastName}
                 </>
               )}
-              {!sender.firstName && !sender.lastName &&   (
-                <>{sender.email}</>
-              )}
-              {!sender.firstName && !sender.lastName &&  sender.phoneNumber && (
+              {!sender.firstName && !sender.lastName && <>{sender.email}</>}
+              {!sender.firstName && !sender.lastName && sender.phoneNumber && (
                 <>{sender.phoneNumber}</>
               )}
             </div>
@@ -217,19 +225,21 @@ export const Message = ({
             (index > 0 && previousMessage !== message?.direction)) && (
             <div className='w-full flex'>
               <div className='flex-grow-1'></div>
-              {<div className="flex-grow-0 mb-1 pr-3">
-              {sender.firstName && sender.lastName && (
-                <>
-                  {sender.firstName} {sender.lastName}
-                </>
-              )}
-              {!sender.firstName && !sender.lastName &&  sender.email && (
-                <>{sender.email}</>
-              )}
-              {!sender.firstName && !sender.lastName &&  sender.phoneNumber && (
-                <>{sender.phoneNumber}</>
-              )}
-              </div>}
+              {
+                <div className='flex-grow-0 mb-1 pr-3'>
+                  {sender.firstName && sender.lastName && (
+                    <>
+                      {sender.firstName} {sender.lastName}
+                    </>
+                  )}
+                  {!sender.firstName && !sender.lastName && sender.email && (
+                    <>{sender.email}</>
+                  )}
+                  {!sender.firstName &&
+                    !sender.lastName &&
+                    sender.phoneNumber && <>{sender.phoneNumber}</>}
+                </div>
+              }
             </div>
           )}
 
@@ -269,48 +279,56 @@ export const Message = ({
       )}
       {content.analysis && (
         <>
-            <div className='w-full flex'>
-              <div className='flex-grow-1'></div>
-              {<div className="flex-grow-0 mb-1 pr-3">
-              
-                <table width="100%"><tr>
-                <td><div>{getContact(content).tel}</div></td>
-                <td><div style={{textAlign: 'center'}}><b>{content.analysis.type}</b></div></td>
-                <td align="right"><div>{getUser(content).mailto}</div></td>
-                </tr></table>
+          <div className='w-full flex'>
+            <div className='flex-grow-1'></div>
+            {
+              <div className='flex-grow-0 mb-1 pr-3'>
+                <table width='100%'>
+                  <tr>
+                    <td>
+                      <div>{getContact(content).tel}</div>
+                    </td>
+                    <td>
+                      <div style={{ textAlign: 'center' }}>
+                        <b>{content.analysis.type}</b>
+                      </div>
+                    </td>
+                    <td align='right'>
+                      <div>{getUser(content).mailto}</div>
+                    </td>
+                  </tr>
+                </table>
               </div>
-              }
-              
-            </div>
+            }
+          </div>
 
-   
+          <div
+            className={`${styles.message} ${styles.center}`}
+            style={{ background: '#E5FAE9', borderRadius: '5px' }}
+          >
+            {displayContent(content)}
             <div
-              className={`${styles.message} ${styles.center}`}
-              style={{ background: '#E5FAE9', borderRadius: '5px' }}
+              className='flex align-content-end'
+              style={{
+                width: '100%',
+                textAlign: 'center',
+                fontSize: '12px',
+                color: '#C1C1C1',
+              }}
             >
-              {displayContent(content)}
-              <div
-                className='flex align-content-end'
-                style={{
-                  width: '100%',
-                  textAlign: 'center',
-                  fontSize: '12px',
-                  color: '#C1C1C1',
-                }}
-              >
-                <span className='flex-grow-1'></span>
-                <span className='text-gray-600 mr-2'>
-                  {decodeChannel(message.type)}
-                </span>
-                {/*{date && (*/}
-                {/*  // <Moment*/}
-                {/*  //   className='text-sm text-gray-600'*/}
-                {/*  //   date={date}*/}
-                {/*  //   format={'HH:mm'}*/}
-                {/*  // ></Moment>*/}
-                {/*)}*/}
-              </div>
+              <span className='flex-grow-1'></span>
+              <span className='text-gray-600 mr-2'>
+                {decodeChannel(message.type)}
+              </span>
+              {/*{date && (*/}
+              {/*  // <Moment*/}
+              {/*  //   className='text-sm text-gray-600'*/}
+              {/*  //   date={date}*/}
+              {/*  //   format={'HH:mm'}*/}
+              {/*  // ></Moment>*/}
+              {/*)}*/}
             </div>
+          </div>
         </>
       )}
     </>

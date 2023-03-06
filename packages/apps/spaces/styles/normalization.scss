@@ -139,11 +139,10 @@ button::-moz-focus-inner {
   border-top-left-radius: var(--border-radius-sm);
 }
 
-
 .p-component.p-editor-container {
   display: flex;
   flex-direction: column-reverse;
-  flex:1;
+  flex: 1;
 }
 .ql-editor {
   word-break: break-word !important;
@@ -155,11 +154,11 @@ button::-moz-focus-inner {
 }
 
 .ql-snow.ql-toolbar .editor_save button.primary {
-  margin-left: 8px
+  margin-left: 8px;
 }
 
 .ql-snow.ql-toolbar .editor_save button.primary,
-.ql-snow.ql-toolbar .editor_save button.secondary, {
+.ql-snow.ql-toolbar .editor_save button.secondary {
   @include button-variants;
   width: auto;
   display: flex;

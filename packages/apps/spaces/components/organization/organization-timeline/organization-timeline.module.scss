@@ -1,0 +1,45 @@
+@import '../../../styles/mixins';
+
+.contactsList {
+  padding: 0 var(--spacing-xxs);
+}
+.contactItem {
+  margin-bottom: var(--spacing-sm);
+  padding-bottom: var(--spacing-sm);
+
+  &:not(:last-of-type) {
+    border-bottom: var(--border-divider);
+  }
+
+  @include button-variants;
+}
+
+.personalDetails {
+  display: flex;
+  align-items: self-start;
+}
+
+.jobTitle {
+  margin-left: var(--spacing-xxxs);
+  color: var(--text-faded);
+  font-size: var(--font-size-xxs);
+}
+.name {
+  font-size: var(--font-size-base);
+  color: var(--text-default);
+  margin: 0 var(--spacing-xxxs);
+  word-break: keep-all;
+  white-space: nowrap;
+}
+
+.detailsContainer {
+  display: flex;
+  align-items: center;
+  font-size: var(--font-size-sm);
+  color: var(--text-faded);
+}
+
+// FIXME generated icons are not responsive, this should be removed when they are fixed
+.icon {
+  transform: scale(0.8);
+}

@@ -10,9 +10,10 @@
     grid-template-columns: 1fr;
     grid-gap: 24px;
     grid-auto-rows: minmax(min-content, max-content);
-    grid-template-areas:  "details"
-                          "timeline"
-                          "notes";
+    grid-template-areas:
+      'details'
+      'timeline'
+      'notes';
   }
 
   @include min-tablet {
