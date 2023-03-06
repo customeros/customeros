@@ -217,6 +217,7 @@ export const ConversationTimelineItem: React.FC<Props> = ({
     text: string,
     onSuccess: () => void,
     destination = [],
+    replyTo: null | string,
   ) => {
     if (!text) return;
     const message: FeedPostRequest = {
@@ -226,11 +227,11 @@ export const ConversationTimelineItem: React.FC<Props> = ({
       direction: 'OUTBOUND',
       destination: destination,
     };
-    if (messages.length > 0) {
-      message.replyTo =
-        //@ts-expect-error this will be fixed after switching to new paginated timeline
-        messages[messages.length - 1]?.messageId.conversationEventId;
+    console.log('🏷️ ----- replyTo: ', replyTo);
+    if (replyTo) {
+      message.replyTo = replyTo;
     }
+
     setSending(true);
 
     axios
@@ -306,18 +307,19 @@ export const ConversationTimelineItem: React.FC<Props> = ({
                 .filter((msg: ConversationItem) => msg.type === 1)
                 .map((msg: ConversationItem, index: number) => {
                   const emailData = JSON.parse(msg.content);
+
                   const date =
                     new Date(1970, 0, 1).setSeconds(msg?.time?.seconds) ||
                     timeFromLastTimestamp;
                   const fl =
                     first && (index === 0 || index === messages.length - 1);
-                  console.log('🏷️ ----- emailData.to: ', emailData.to);
                   return (
                     <TimelineItem
                       first={fl}
                       createdAt={date}
                       style={{ paddingBottom: '8px' }}
-                      key={msg.id}
+                      //@ts-expect-error fixme later
+                      key={msg?.messageId?.conversationEventId}
                     >
                       <EmailTimelineItem
                         emailContent={emailData.html}
@@ -330,11 +332,16 @@ export const ConversationTimelineItem: React.FC<Props> = ({
                         <Button
                           mode='link'
                           onClick={() => {
+                            // TODO add cc and bcc
+
                             setEmailEditorData({
                               //@ts-expect-error fixme later
                               handleSubmit: handleSendMessage,
-                              to: emailData.to,
+                              to: [emailData.from],
                               subject: emailData.subject,
+                              respondTo:
+                                //@ts-expect-error fixme later
+                                msg?.messageId?.conversationEventId || null,
                             });
                             setEditorMode({
                               mode: EditorMode.Email,
