@@ -1,5 +1,8 @@
 import Head from 'next/head';
+import 'primereact/resources/themes/lara-light-blue/theme.css';
 import 'primereact/resources/primereact.min.css';
+import 'primeflex/primeflex.css';
+import 'primeicons/primeicons.css';
 import { AppProps } from 'next/app';
 import '../styles/normalization.scss';
 import '../styles/theme.css';
@@ -24,6 +27,7 @@ import { RecoilRoot } from 'recoil';
 // }
 
 // todo add id to toast to prevent duplicates
+import { WebRTCInboundNotification } from '../components/ui-kit/molecules';
 
 export default function MyApp({
   Component,
@@ -46,6 +50,7 @@ export default function MyApp({
       </Head>
       <RecoilRoot>
         <MainPageWrapper>
+          <WebRTCInboundNotification />
           <Component {...pageProps} />
         </MainPageWrapper>
       </RecoilRoot>

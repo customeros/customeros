@@ -6,8 +6,9 @@ import { useRouter } from 'next/router';
 import { getUserName } from '../../../../utils';
 import client from '../../../../apollo-client';
 import { ApolloProvider } from '@apollo/client';
-import { useRecoilState, useSetRecoilState } from 'recoil';
 import { logoutUrlState, userData } from '../../../../state';
+import { useSetRecoilState } from 'recoil';
+import { WebRTCContextProvider } from '../../../../context';
 
 const ory = new FrontendApi(new Configuration(edgeConfig));
 
@@ -56,5 +57,9 @@ export const MainPageWrapper = ({ children }: any) => {
     }
   }
 
-  return <ApolloProvider client={client}>{children}</ApolloProvider>;
+  return (
+    <ApolloProvider client={client}>
+      <WebRTCContextProvider> {children}</WebRTCContextProvider>
+    </ApolloProvider>
+  );
 };
