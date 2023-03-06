@@ -6,7 +6,6 @@ import { Checkbox } from '../../ui-kit/atoms/input';
 import { FinderCell } from './FinderTableCell';
 import { Organization } from '../../../graphQL/__generated__/generated';
 
-//@ts-expect-error fixme later
 export const OrganizationTableCell: React.FC<{
   organization: Organization;
 }> = ({ organization }) => {
@@ -26,34 +25,34 @@ export const OrganizationTableCell: React.FC<{
       return Array.from(new Set([...oldSelectedIds, organization.id]));
     });
   };
+  if (!organization) {
+    return <div className={styles.emptyCell}>-</div>;
+  }
 
-  if (organization) {
-    const industry = (
-      <span className={'capitalise'}>
-        {(organization?.industry ?? '')?.split('_').join(' ').toLowerCase()}
-      </span>
-    );
-    return (
-      <div className={styles.mergableCell}>
+  const industry = (
+    <span className={'capitalise'}>
+      {(organization?.industry ?? '')?.split('_').join(' ').toLowerCase()}
+    </span>
+  );
+  return (
+    <div className={styles.mergableCell}>
+      <div className={styles.checkboxContainer}>
+        {mode === 'MERGE_ORG' && (
+          <Checkbox
+            checked={
+              selectedIds.findIndex((id) => organization.id === id) !== -1
+            }
+            onChange={() => handleCheckboxToggle()}
+          />
+        )}
+      </div>
+      <div className={styles.finderCell}>
         <FinderCell
           label={organization.name}
           subLabel={industry}
           url={`/organization/${organization.id}`}
         />
-        <div className={styles.checkboxContainer}>
-          {mode === 'MERGE_ORG' && (
-            <Checkbox
-              checked={
-                selectedIds.findIndex((id) => organization.id === id) !== -1
-              }
-              onChange={() => handleCheckboxToggle()}
-            />
-          )}
-        </div>
       </div>
-    );
-  }
-  if (!organization) {
-    return <span>-</span>;
-  }
+    </div>
+  );
 };

@@ -27,19 +27,11 @@ export const ContactTableCell: React.FC<{
   };
 
   if (!contact) {
-    return <span>-</span>;
+    return <span className={styles.emptyCell}>-</span>;
   }
 
   return (
     <div className={styles.mergableCell}>
-      <FinderCell
-        label={getContactDisplayName(contact)}
-        subLabel={
-          (contact.jobRoles.find((role) => role.primary) || contact.jobRoles[0])
-            ?.jobTitle || ''
-        }
-        url={`/contact/${contact.id}`}
-      />
       <div className={styles.checkboxContainer}>
         {mode === 'MERGE_CONTACT' && (
           <Checkbox
@@ -47,6 +39,18 @@ export const ContactTableCell: React.FC<{
             onChange={() => handleCheckboxToggle()}
           />
         )}
+      </div>
+      <div className={styles.finderCell}>
+        <FinderCell
+          label={getContactDisplayName(contact)}
+          subLabel={
+            (
+              contact.jobRoles.find((role) => role.primary) ||
+              contact.jobRoles[0]
+            )?.jobTitle || ''
+          }
+          url={`/contact/${contact.id}`}
+        />
       </div>
     </div>
   );
