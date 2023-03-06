@@ -81,7 +81,12 @@ export const SidePanel: React.FC<SidePanelProps> = ({
           />
         </ul>
       </aside>
-      {isPanelOpen && <div className={styles.overlay} onClick={() => onPanelToggle(!isPanelOpen)}/>}
+      {isPanelOpen && (
+        <div
+          className={styles.overlay}
+          onClick={() => onPanelToggle(!isPanelOpen)}
+        />
+      )}
       <div className={styles.webChat}>{children}</div>
     </>
   );
