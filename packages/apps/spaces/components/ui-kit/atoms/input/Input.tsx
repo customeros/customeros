@@ -17,15 +17,22 @@ export const Input = ({
   label,
   error,
   inputSize = 'xxs',
+  ...rest
 }: InputProps) => {
   return (
     <>
       <label className={styles.wrapper}>
-        <div> {label} </div>
+        {label && <div> {label} </div>}
+
         <input
-          className={classNames(styles.input, styles[inputSize], {
-            [styles.error]: !!error,
-          })}
+          className={classNames(
+            styles.input,
+            styles[inputSize],
+            rest.className,
+            {
+              [styles.error]: !!error,
+            },
+          )}
           onChange={onChange}
           placeholder={placeholder}
         />

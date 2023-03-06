@@ -1,14 +1,18 @@
 import React, { useEffect, useState } from 'react';
-import { Message } from '../../atoms';
+import { Button, Message, Reply } from '../../atoms';
 import axios from 'axios';
-// import { FeedItem } from '../../../models/feed-item';
 import { gql } from 'graphql-request';
 import { toast } from 'react-toastify';
-// import { ConversationItem } from '../../../models/conversation-item';
-import { Skeleton } from 'primereact/skeleton';
-// import { useGraphQLClient } from '../../../utils/graphQLClient';
 import { EmailTimelineItem } from '../email-timeline-item';
 import { TimelineItem } from '../../atoms/timeline-item';
+import { Skeleton } from '../../atoms/skeleton';
+import { useRecoilState, useRecoilValue } from 'recoil';
+import {
+  editorEmail,
+  editorMode,
+  EditorMode,
+  userData,
+} from '../../../../state';
 
 interface Props {
   feedId: string;
@@ -21,11 +25,10 @@ export type Time = {
   seconds: number;
 };
 
-  
 export type Participant = {
-  type: number,
-  identifier: string,
-}
+  type: number;
+  identifier: string;
+};
 
 export type ConversationItem = {
   id: string;
@@ -52,12 +55,23 @@ export type FeedItem = {
   lastTimestamp: Time;
 };
 
+export type FeedPostRequest = {
+  username: string;
+  message: string;
+  channel: string;
+  direction: string;
+  destination: string[];
+  replyTo?: string;
+};
 export const ConversationTimelineItem: React.FC<Props> = ({
   feedId,
   source,
   createdAt,
   first,
 }) => {
+  const [editorModeState, setEditorMode] = useRecoilState(editorMode);
+  const [emailEditorData, setEmailEditorData] = useRecoilState(editorEmail);
+  const loggedInUserData = useRecoilValue(userData);
   const [feedInitiator, setFeedInitiator] = useState<any>({
     loaded: false,
     email: '',
@@ -68,6 +82,8 @@ export const ConversationTimelineItem: React.FC<Props> = ({
   });
 
   const [messages, setMessages] = useState([] as ConversationItem[]);
+  const [participants, setParticipants] = useState([] as Participant[]);
+  const [isSending, setSending] = useState(false);
 
   const [loadingMessages, setLoadingMessages] = useState(false);
 
@@ -77,9 +93,10 @@ export const ConversationTimelineItem: React.FC<Props> = ({
       email: msg.senderUsername.type == 0 ? msg.senderUsername.identifier : '',
       firstName: '',
       lastName: '',
-      phoneNumber: msg.senderUsername.type == 1  ? msg.senderUsername.identifier : '',
-    }
-  }
+      phoneNumber:
+        msg.senderUsername.type == 1 ? msg.senderUsername.identifier : '',
+    };
+  };
   useEffect(() => {
     setLoadingMessages(true);
     axios
@@ -89,11 +106,17 @@ export const ConversationTimelineItem: React.FC<Props> = ({
 
         if (feedItem.initiatorType !== 'CONTACT') {
           setFeedInitiator({
-            loaded: true, 
-            email: feedItem.initiatorUsername.type == 0 ? feedItem.initiatorUsername.identifier : '',
+            loaded: true,
+            email:
+              feedItem.initiatorUsername.type == 0
+                ? feedItem.initiatorUsername.identifier
+                : '',
             firstName: feedItem.initiatorFirstName,
             lastName: feedItem.initiatorLastName,
-            phoneNumber: feedItem.initiatorUsername.type == 1 ? feedItem.initiatorUsername.identifier : '',
+            phoneNumber:
+              feedItem.initiatorUsername.type == 1
+                ? feedItem.initiatorUsername.identifier
+                : '',
             lastTimestamp: feedItem.lastTimestamp,
           });
         }
@@ -156,6 +179,27 @@ export const ConversationTimelineItem: React.FC<Props> = ({
       });
 
     axios
+      .get(`/oasis-api/feed/${feedId}/participants`)
+      .then((res) => {
+        if (res.data && res.data.participants) {
+          const list: Participant[] = [];
+          for (const participant of res.data.participants) {
+            if (participant.email !== loggedInUserData.identity) {
+              //@ts-expect-error this will be fixed after switching to new paginated timeline
+              list.push({ email: participant.email });
+            }
+          }
+
+          setParticipants(list);
+        }
+      })
+      .catch((reason: any) => {
+        //todo log on backend
+        toast.error(
+          'There was a problem on our side and we are doing our best to solve it!',
+        );
+      });
+    axios
       .get(`/oasis-api/feed/${feedId}/item`)
       .then((res) => {
         setMessages(res.data ?? []);
@@ -168,6 +212,49 @@ export const ConversationTimelineItem: React.FC<Props> = ({
         });
       });
   }, []);
+
+  const handleSendMessage = (
+    text: string,
+    onSuccess: () => void,
+    destination = [],
+  ) => {
+    if (!text) return;
+    const message: FeedPostRequest = {
+      channel: 'EMAIL',
+      username: loggedInUserData.identity,
+      message: text,
+      direction: 'OUTBOUND',
+      destination: destination,
+    };
+    if (messages.length > 0) {
+      message.replyTo =
+        //@ts-expect-error this will be fixed after switching to new paginated timeline
+        messages[messages.length - 1]?.messageId.conversationEventId;
+    }
+    setSending(true);
+
+    axios
+      .post(`/oasis-api/feed/${feedId}/item`, message)
+      .then((res) => {
+        console.log(res);
+        if (res.data) {
+          setMessages((messageList: any) => [...messageList, res.data]);
+          onSuccess();
+          setEditorMode({
+            submitButtonLabel: 'Log into timeline',
+            mode: EditorMode.Note,
+          });
+          setEmailEditorData({ ...emailEditorData, to: [], subject: '' });
+          toast.success('Email sent!');
+          setSending(false);
+        }
+      })
+      .catch((reason) => {
+        //todo log on backend
+        setSending(false);
+        toast.error('Something went wrong while sending email');
+      });
+  };
 
   //when a new message appears, scroll to the end of container
   useEffect(() => {
@@ -224,6 +311,7 @@ export const ConversationTimelineItem: React.FC<Props> = ({
                     timeFromLastTimestamp;
                   const fl =
                     first && (index === 0 || index === messages.length - 1);
+                  console.log('🏷️ ----- emailData.to: ', emailData.to);
                   return (
                     <TimelineItem
                       first={fl}
@@ -238,7 +326,25 @@ export const ConversationTimelineItem: React.FC<Props> = ({
                         cc={emailData?.cc}
                         bcc={emailData?.bcc}
                         subject={emailData.subject}
-                      />
+                      >
+                        <Button
+                          mode='link'
+                          onClick={() => {
+                            setEmailEditorData({
+                              //@ts-expect-error fixme later
+                              handleSubmit: handleSendMessage,
+                              to: emailData.to,
+                              subject: emailData.subject,
+                            });
+                            setEditorMode({
+                              mode: EditorMode.Email,
+                              submitButtonLabel: 'Send',
+                            });
+                          }}
+                        >
+                          Respond
+                        </Button>
+                      </EmailTimelineItem>
                     </TimelineItem>
                   );
                 })
@@ -267,7 +373,6 @@ export const ConversationTimelineItem: React.FC<Props> = ({
                   createdAt={createdAt || timeFromLastTimestamp}
                   key={msg.id}
                 >
-                  
                   <Message
                     key={msg.id}
                     message={msg}

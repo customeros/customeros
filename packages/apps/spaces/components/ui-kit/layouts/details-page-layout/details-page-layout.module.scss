@@ -10,19 +10,18 @@
     grid-template-columns: 1fr;
     grid-gap: 24px;
     grid-auto-rows: minmax(min-content, max-content);
-    grid-template-areas:
-      'details'
-      'notes'
-      'timeline';
+    grid-template-areas:  "details"
+                          "timeline"
+                          "notes";
   }
 
   @include min-tablet {
     display: grid;
     grid-template-columns: 1fr 2fr;
-    grid-template-rows: 1fr minmax(20%, 1fr);
+    //grid-template-rows: 1fr minmax(20%, 1fr);
     grid-template-areas:
-      'details notes'
-      'details timeline';
+      'details timeline'
+      'details notes';
     grid-gap: 24px;
   }
 

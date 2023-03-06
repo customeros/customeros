@@ -3,6 +3,7 @@ import {
   CreateContactNoteMutation,
   useCreateContactNoteMutation,
 } from '../../graphQL/__generated__/generated';
+import { toast } from 'react-toastify';
 
 interface Props {
   contactId: string;
@@ -24,9 +25,12 @@ export const useCreateContactNote = ({ contactId }: Props): Result => {
       const response = await createContactNoteMutation({
         variables: { contactId, input: note },
       });
+      if (response.data) {
+        toast.success('Note added!');
+      }
       return response.data?.note_CreateForContact ?? null;
     } catch (err) {
-      console.error(err);
+      toast.error('Something went wrong while adding a note');
       return null;
     }
   };

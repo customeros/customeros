@@ -5,8 +5,15 @@ import { Button } from '../../atoms';
 interface Props {
   onFileChange: (e: ChangeEvent<HTMLInputElement>) => void;
   onSubmit: any;
+  onCancel?: () => void;
+  label: string;
 }
-export const RichTextHeader = ({ onFileChange, onSubmit }: Props) => {
+export const RichTextHeader = ({
+  onFileChange,
+  onSubmit,
+  label,
+  onCancel,
+}: Props) => {
   const inputRef = useRef<HTMLInputElement | null>(null);
   const handleUploadClick = () => {
     inputRef.current?.click();
@@ -40,8 +47,13 @@ export const RichTextHeader = ({ onFileChange, onSubmit }: Props) => {
         </button>
       </span>
       <div className='editor_save'>
+        {onCancel && (
+          <Button onClick={onCancel} mode='secondary' className='secondary'>
+            Cancel
+          </Button>
+        )}
         <Button onClick={onSubmit} mode='primary' className='primary'>
-          Save
+          {label}
         </Button>
       </div>
       <input

@@ -3,4 +3,4 @@ export {
   OrganizationCreate,
 } from './organization-details';
 export { OrganizationContacts } from './organization-contacts';
-export { OrganizationNoteEditor, NoteEditorModes } from './note-editor';
+export { OrganizationEditor, NoteEditorModes } from './editor';

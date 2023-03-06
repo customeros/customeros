@@ -7,7 +7,7 @@ import { getUserName } from '../../../../utils';
 import client from '../../../../apollo-client';
 import { ApolloProvider } from '@apollo/client';
 import { useRecoilState, useSetRecoilState } from 'recoil';
-import { logoutUrlState } from '../../../../state';
+import { logoutUrlState, userData } from '../../../../state';
 
 const ory = new FrontendApi(new Configuration(edgeConfig));
 
@@ -24,7 +24,7 @@ export const MainPageWrapper = ({ children }: any) => {
   const setLogoutUrl = useSetRecoilState(logoutUrlState);
 
   const [session, setSession] = useState<Session | undefined>();
-  const [userEmail, setUserEmail] = useState<string | undefined>();
+  const setUserEmail = useSetRecoilState(userData);
 
   useEffect(() => {
     if (router.asPath.startsWith('/login')) {
@@ -35,7 +35,7 @@ export const MainPageWrapper = ({ children }: any) => {
       .then(({ data }) => {
         // User has a session!
         setSession(data);
-        setUserEmail(getUserName(data.identity));
+        setUserEmail({ identity: getUserName(data.identity) });
         // Create a logout url
         ory.createBrowserLogoutFlow().then(({ data }) => {
           setLogoutUrl(data.logout_url);
