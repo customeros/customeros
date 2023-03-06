@@ -189,6 +189,11 @@ type ContactInput struct {
 	ExternalReference *ExternalSystemReferenceInput `json:"externalReference"`
 }
 
+type ContactOrganizationInput struct {
+	ContactID      string `json:"contactId"`
+	OrganizationID string `json:"organizationId"`
+}
+
 type ContactTagInput struct {
 	ContactID string `json:"contactId"`
 	TagID     string `json:"tagId"`

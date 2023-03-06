@@ -359,7 +359,7 @@ func (r *mutationResolver) ContactMerge(ctx context.Context, primaryContactID st
 }
 
 // ContactAddTagByID is the resolver for the contact_AddTagById field.
-func (r *mutationResolver) ContactAddTagByID(ctx context.Context, input *model.ContactTagInput) (*model.Contact, error) {
+func (r *mutationResolver) ContactAddTagByID(ctx context.Context, input model.ContactTagInput) (*model.Contact, error) {
 	updatedContact, err := r.Services.ContactService.AddTag(ctx, input.ContactID, input.TagID)
 	if err != nil {
 		graphql.AddErrorf(ctx, "Failed to add tag %s to contact %s", input.TagID, input.ContactID)
@@ -369,10 +369,30 @@ func (r *mutationResolver) ContactAddTagByID(ctx context.Context, input *model.C
 }
 
 // ContactRemoveTagByID is the resolver for the contact_RemoveTagById field.
-func (r *mutationResolver) ContactRemoveTagByID(ctx context.Context, input *model.ContactTagInput) (*model.Contact, error) {
+func (r *mutationResolver) ContactRemoveTagByID(ctx context.Context, input model.ContactTagInput) (*model.Contact, error) {
 	updatedContact, err := r.Services.ContactService.RemoveTag(ctx, input.ContactID, input.TagID)
 	if err != nil {
 		graphql.AddErrorf(ctx, "Failed to remove tag %s from contact %s", input.TagID, input.ContactID)
+		return nil, err
+	}
+	return mapper.MapEntityToContact(updatedContact), nil
+}
+
+// ContactAddOrganizationByID is the resolver for the contact_AddOrganizationById field.
+func (r *mutationResolver) ContactAddOrganizationByID(ctx context.Context, input model.ContactOrganizationInput) (*model.Contact, error) {
+	updatedContact, err := r.Services.ContactService.AddOrganization(ctx, input.ContactID, input.OrganizationID)
+	if err != nil {
+		graphql.AddErrorf(ctx, "Failed to add organization %s to contact %s", input.OrganizationID, input.ContactID)
+		return nil, err
+	}
+	return mapper.MapEntityToContact(updatedContact), nil
+}
+
+// ContactRemoveOrganizationByID is the resolver for the contact_RemoveOrganizationById field.
+func (r *mutationResolver) ContactRemoveOrganizationByID(ctx context.Context, input model.ContactOrganizationInput) (*model.Contact, error) {
+	updatedContact, err := r.Services.ContactService.RemoveOrganization(ctx, input.ContactID, input.OrganizationID)
+	if err != nil {
+		graphql.AddErrorf(ctx, "Failed to remove organization %s from contact %s", input.OrganizationID, input.ContactID)
 		return nil, err
 	}
 	return mapper.MapEntityToContact(updatedContact), nil

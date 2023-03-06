@@ -1,0 +1,16 @@
+mutation RemoveOrganizationFromContact($contactId: ID!, $organizationId: ID!) {
+  contact_RemoveOrganizationById(
+  input: {
+    contactId: $contactId
+    organizationId: $organizationId
+  }) {
+    id
+    updatedAt
+    organizations {
+      content {
+        id
+        name
+      }
+    }
+  }
+}

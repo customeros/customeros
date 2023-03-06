@@ -1,0 +1,16 @@
+mutation AddOrganizationToContact($contactId: ID!, $organizationId: ID!) {
+  contact_AddOrganizationById(
+  input: {
+    contactId: $contactId
+    organizationId: $organizationId
+  }) {
+    id
+    updatedAt
+    organizations() {
+      content {
+        id
+        name
+      }
+    }
+  }
+}

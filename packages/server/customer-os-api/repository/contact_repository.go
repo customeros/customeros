@@ -27,6 +27,8 @@ type ContactRepository interface {
 	GetContactsForPhoneNumber(ctx context.Context, tenant, phoneNumber string) ([]*dbtype.Node, error)
 	AddTag(ctx context.Context, tenant, contactId, tagId string) (*dbtype.Node, error)
 	RemoveTag(ctx context.Context, tenant, contactId, tagId string) (*dbtype.Node, error)
+	AddOrganization(ctx context.Context, tenant, contactId, organizationId string) (*dbtype.Node, error)
+	RemoveOrganization(ctx context.Context, tenant, contactId, organizationId string) (*dbtype.Node, error)
 	MergeContactPropertiesInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, primaryContactId, mergedContactId string, sourceOfTruth entity.DataSource) error
 	MergeContactRelationsInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, primaryContactId, mergedContactId string) error
 	UpdateMergedContactLabelsInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, mergedContactId string) error
@@ -353,7 +355,7 @@ func (r *contactRepository) AddTag(ctx context.Context, tenant, contactId, tagId
 		" (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(t), " +
 		" (tag:Tag {id:$tagId})-[:TAG_BELONGS_TO_TENANT]->(t) " +
 		" MERGE (c)-[rel:TAGGED]->(tag) " +
-		" ON CREATE SET rel.taggedAt=$now " +
+		" ON CREATE SET rel.taggedAt=$now, c.updatedAt=$now " +
 		" RETURN c"
 
 	if result, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
@@ -380,6 +382,7 @@ func (r *contactRepository) RemoveTag(ctx context.Context, tenant, contactId, ta
 		" (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(t), " +
 		" (tag:Tag {id:$tagId})-[:TAG_BELONGS_TO_TENANT]->(t) " +
 		" OPTIONAL MATCH (c)-[rel:TAGGED]->(tag) " +
+		" SET c.updatedAt = CASE WHEN rel is not null THEN $now ELSE c.updatedAt END " +
 		" DELETE rel " +
 		" RETURN c"
 
@@ -389,6 +392,62 @@ func (r *contactRepository) RemoveTag(ctx context.Context, tenant, contactId, ta
 				"tenant":    tenant,
 				"contactId": contactId,
 				"tagId":     tagId,
+				"now":       utils.Now(),
+			})
+		return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
+	}); err != nil {
+		return nil, err
+	} else {
+		return result.(*dbtype.Node), nil
+	}
+}
+
+func (r *contactRepository) AddOrganization(ctx context.Context, tenant, contactId, organizationId string) (*dbtype.Node, error) {
+	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
+	defer session.Close(ctx)
+
+	query := "MATCH (t:Tenant {name:$tenant}), " +
+		" (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(t), " +
+		" (org:Organization {id:$organizationId})-[:ORGANIZATION_BELONGS_TO_TENANT]->(t) " +
+		" MERGE (c)-[:CONTACT_OF]->(org) " +
+		" ON CREATE SET c.updatedAt=$now " +
+		" RETURN c"
+
+	if result, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		queryResult, err := tx.Run(ctx, query,
+			map[string]any{
+				"tenant":         tenant,
+				"contactId":      contactId,
+				"organizationId": organizationId,
+				"now":            utils.Now(),
+			})
+		return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
+	}); err != nil {
+		return nil, err
+	} else {
+		return result.(*dbtype.Node), nil
+	}
+}
+
+func (r *contactRepository) RemoveOrganization(ctx context.Context, tenant, contactId, organizationId string) (*dbtype.Node, error) {
+	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
+	defer session.Close(ctx)
+
+	query := "MATCH (t:Tenant {name:$tenant}), " +
+		" (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(t), " +
+		" (org:Organization {id:$organizationId})-[:ORGANIZATION_BELONGS_TO_TENANT]->(t) " +
+		" OPTIONAL MATCH (c)-[rel:CONTACT_OF]->(org) " +
+		" SET c.updatedAt = CASE WHEN rel is not null THEN $now ELSE c.updatedAt END " +
+		" DELETE rel " +
+		" RETURN c"
+
+	if result, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		queryResult, err := tx.Run(ctx, query,
+			map[string]any{
+				"tenant":         tenant,
+				"contactId":      contactId,
+				"organizationId": organizationId,
+				"now":            utils.Now(),
 			})
 		return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
 	}); err != nil {

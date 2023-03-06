@@ -1111,6 +1111,7 @@ func TestMutationResolver_ContactAddTagByID(t *testing.T) {
 	require.NotNil(t, contactStruct)
 	tags := contactStruct.Contact_AddTagById.Tags
 	require.Equal(t, contactId, contactStruct.Contact_AddTagById.ID)
+	require.NotNil(t, contactStruct.Contact_AddTagById.UpdatedAt)
 	require.Equal(t, 2, len(tags))
 	require.Equal(t, tagId1, tags[0].ID)
 	require.Equal(t, "tag1", tags[0].Name)
@@ -1150,6 +1151,7 @@ func TestMutationResolver_ContactRemoveTagByID(t *testing.T) {
 	require.NotNil(t, contactStruct)
 	tags := contactStruct.Contact_RemoveTagById.Tags
 	require.Equal(t, contactId, contactStruct.Contact_RemoveTagById.ID)
+	require.NotNil(t, contactStruct.Contact_RemoveTagById.UpdatedAt)
 	require.Equal(t, 1, len(tags))
 	require.Equal(t, tagId1, tags[0].ID)
 	require.Equal(t, "tag1", tags[0].Name)
@@ -1157,6 +1159,79 @@ func TestMutationResolver_ContactRemoveTagByID(t *testing.T) {
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Contact"))
 	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "Tag"))
 	require.Equal(t, 1, neo4jt.GetCountOfRelationships(ctx, driver, "TAGGED"))
+}
+
+func TestMutationResolver_ContactAddOrganizationByID(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx)(t)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+
+	contactId := neo4jt.CreateDefaultContact(ctx, driver, tenantName)
+	orgId1 := neo4jt.CreateOrganization(ctx, driver, tenantName, "org1")
+	orgId2 := neo4jt.CreateOrganization(ctx, driver, tenantName, "org2")
+	neo4jt.LinkContactWithOrganization(ctx, driver, contactId, orgId1)
+
+	rawResponse, err := c.RawPost(getQuery("contact/add_organization_to_contact"),
+		client.Var("contactId", contactId),
+		client.Var("organizationId", orgId2),
+	)
+	assertRawResponseSuccess(t, rawResponse, err)
+
+	var contactStruct struct {
+		Contact_AddOrganizationById model.Contact
+	}
+
+	err = decode.Decode(rawResponse.Data.(map[string]any), &contactStruct)
+	require.Nil(t, err)
+	require.NotNil(t, contactStruct)
+	organizations := contactStruct.Contact_AddOrganizationById.Organizations.Content
+	require.Equal(t, contactId, contactStruct.Contact_AddOrganizationById.ID)
+	require.NotNil(t, contactStruct.Contact_AddOrganizationById.UpdatedAt)
+	require.Equal(t, 2, len(organizations))
+	require.ElementsMatch(t, []string{orgId1, orgId2}, []string{organizations[0].ID, organizations[1].ID})
+	require.ElementsMatch(t, []string{"org1", "org2"}, []string{organizations[0].Name, organizations[1].Name})
+
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Contact"))
+	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "Organization"))
+	require.Equal(t, 2, neo4jt.GetCountOfRelationships(ctx, driver, "CONTACT_OF"))
+}
+
+func TestMutationResolver_ContactRemoveOrganizationByID(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx)(t)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+
+	contactId := neo4jt.CreateDefaultContact(ctx, driver, tenantName)
+	orgId1 := neo4jt.CreateOrganization(ctx, driver, tenantName, "org1")
+	orgId2 := neo4jt.CreateOrganization(ctx, driver, tenantName, "org2")
+	neo4jt.LinkContactWithOrganization(ctx, driver, contactId, orgId1)
+	neo4jt.LinkContactWithOrganization(ctx, driver, contactId, orgId2)
+
+	require.Equal(t, 2, neo4jt.GetCountOfRelationships(ctx, driver, "CONTACT_OF"))
+
+	rawResponse, err := c.RawPost(getQuery("contact/remove_organization_from_contact"),
+		client.Var("contactId", contactId),
+		client.Var("organizationId", orgId2),
+	)
+	assertRawResponseSuccess(t, rawResponse, err)
+
+	var contactStruct struct {
+		Contact_RemoveOrganizationById model.Contact
+	}
+
+	err = decode.Decode(rawResponse.Data.(map[string]any), &contactStruct)
+	require.Nil(t, err)
+	require.NotNil(t, contactStruct)
+	organizations := contactStruct.Contact_RemoveOrganizationById.Organizations.Content
+	require.Equal(t, contactId, contactStruct.Contact_RemoveOrganizationById.ID)
+	require.NotNil(t, contactStruct.Contact_RemoveOrganizationById.UpdatedAt)
+	require.Equal(t, 1, len(organizations))
+	require.Equal(t, orgId1, organizations[0].ID)
+	require.Equal(t, "org1", organizations[0].Name)
+
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Contact"))
+	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "Organization"))
+	require.Equal(t, 1, neo4jt.GetCountOfRelationships(ctx, driver, "CONTACT_OF"))
 }
 
 func TestQueryResolver_Contact_WithTickets_ById(t *testing.T) {
