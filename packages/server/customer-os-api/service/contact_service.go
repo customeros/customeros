@@ -28,8 +28,11 @@ type ContactService interface {
 	GetContactsForOrganization(ctx context.Context, organizationId string, page, limit int, filter *model.Filter, sortBy []*model.SortBy) (*utils.Pagination, error)
 	Merge(ctx context.Context, primaryContactId, mergedContactId string) error
 
-	AddTag(ctx context.Context, contactId string, tagId string) (*entity.ContactEntity, error)
-	RemoveTag(ctx context.Context, contactId string, tagId string) (*entity.ContactEntity, error)
+	AddTag(ctx context.Context, contactId, tagId string) (*entity.ContactEntity, error)
+	RemoveTag(ctx context.Context, contactId, tagId string) (*entity.ContactEntity, error)
+
+	AddOrganization(ctx context.Context, contactId, organizationId string) (*entity.ContactEntity, error)
+	RemoveOrganization(ctx context.Context, contactId, organizationId string) (*entity.ContactEntity, error)
 
 	mapDbNodeToContactEntity(dbNode dbtype.Node) *entity.ContactEntity
 }
@@ -464,7 +467,7 @@ func (s *contactService) Merge(ctx context.Context, primaryContactId, mergedCont
 	return err
 }
 
-func (s *contactService) AddTag(ctx context.Context, contactId string, tagId string) (*entity.ContactEntity, error) {
+func (s *contactService) AddTag(ctx context.Context, contactId, tagId string) (*entity.ContactEntity, error) {
 	contactNodePtr, err := s.repositories.ContactRepository.AddTag(ctx, common.GetTenantFromContext(ctx), contactId, tagId)
 	if err != nil {
 		return nil, err
@@ -472,8 +475,24 @@ func (s *contactService) AddTag(ctx context.Context, contactId string, tagId str
 	return s.mapDbNodeToContactEntity(*contactNodePtr), nil
 }
 
-func (s *contactService) RemoveTag(ctx context.Context, contactId string, tagId string) (*entity.ContactEntity, error) {
+func (s *contactService) RemoveTag(ctx context.Context, contactId, tagId string) (*entity.ContactEntity, error) {
 	contactNodePtr, err := s.repositories.ContactRepository.RemoveTag(ctx, common.GetTenantFromContext(ctx), contactId, tagId)
+	if err != nil {
+		return nil, err
+	}
+	return s.mapDbNodeToContactEntity(*contactNodePtr), nil
+}
+
+func (s *contactService) AddOrganization(ctx context.Context, contactId, organizationId string) (*entity.ContactEntity, error) {
+	contactNodePtr, err := s.repositories.ContactRepository.AddOrganization(ctx, common.GetTenantFromContext(ctx), contactId, organizationId)
+	if err != nil {
+		return nil, err
+	}
+	return s.mapDbNodeToContactEntity(*contactNodePtr), nil
+}
+
+func (s *contactService) RemoveOrganization(ctx context.Context, contactId, organizationId string) (*entity.ContactEntity, error) {
+	contactNodePtr, err := s.repositories.ContactRepository.RemoveOrganization(ctx, common.GetTenantFromContext(ctx), contactId, organizationId)
 	if err != nil {
 		return nil, err
 	}

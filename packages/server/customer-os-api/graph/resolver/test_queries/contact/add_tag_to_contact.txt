@@ -5,6 +5,7 @@ mutation AddTagToContact($contactId: ID!, $tagId: ID!) {
     tagId: $tagId
   }) {
     id
+    updatedAt
     tags {
       id
       name

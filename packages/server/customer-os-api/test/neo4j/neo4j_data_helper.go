@@ -105,9 +105,14 @@ func CreateContactWith(ctx context.Context, driver *neo4j.DriverWithContext, ten
 
 func CreateContact(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, contact entity.ContactEntity) string {
 	var contactId, _ = uuid.NewRandom()
-	query := "MATCH (t:Tenant {name:$tenant}) MERGE (c:Contact {id: $contactId})-[:CONTACT_BELONGS_TO_TENANT]->(t) " +
-		" ON CREATE SET c.title=$title, c.firstName=$firstName, c.lastName=$lastName, c.name=$name, c.createdAt=datetime({timezone: 'UTC'}), " +
-		" c:%s"
+	query := "MATCH (t:Tenant {name:$tenant}) " +
+		" MERGE (c:Contact {id: $contactId})-[:CONTACT_BELONGS_TO_TENANT]->(t) " +
+		" ON CREATE SET c.title=$title, " +
+		"				c.firstName=$firstName, " +
+		"				c.lastName=$lastName, " +
+		"				c.name=$name, " +
+		"				c.createdAt=datetime({timezone: 'UTC'}), " +
+		" 				c:%s"
 
 	ExecuteWriteQuery(ctx, driver, fmt.Sprintf(query, "Contact_"+tenant), map[string]any{
 		"tenant":    tenant,

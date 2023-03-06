@@ -31,8 +31,11 @@ extend type Mutation {
     contact_SoftDelete(contactId: ID!): Result!
     contact_Merge(primaryContactId: ID!, mergedContactIds: [ID!]!): Contact!
 
-    contact_AddTagById(input: ContactTagInput): Contact!
-    contact_RemoveTagById(input: ContactTagInput): Contact!
+    contact_AddTagById(input: ContactTagInput!): Contact!
+    contact_RemoveTagById(input: ContactTagInput!): Contact!
+
+    contact_AddOrganizationById(input: ContactOrganizationInput!): Contact!
+    contact_RemoveOrganizationById(input: ContactOrganizationInput!): Contact!
 }
 
 """
@@ -249,6 +252,11 @@ input ContactUpdateInput {
 input ContactTagInput {
     contactId: ID!
     tagId: ID!
+}
+
+input ContactOrganizationInput {
+    contactId: ID!
+    organizationId: ID!
 }
 
 """
