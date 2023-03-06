@@ -9,6 +9,7 @@ import {
   OrganizationContacts,
   OrganizationCreate,
 } from '../../components/organization';
+import { OrganizationTimeline } from '../../components/organization/organization-timeline';
 
 function OrganizationDetailsPage() {
   const {
@@ -39,7 +40,9 @@ function OrganizationDetailsPage() {
           mode={NoteEditorModes.ADD}
         />
       </section>
-      <section className={styles.timeline}></section>
+      <section className={styles.timeline}>
+        <OrganizationTimeline id={id as string} />
+      </section>
     </DetailsPageLayout>
   );
 }

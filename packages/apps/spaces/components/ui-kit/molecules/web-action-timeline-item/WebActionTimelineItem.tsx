@@ -11,7 +11,7 @@ import { capitalizeFirstLetter } from '../../../../utils';
 // }
 
 export const WebActionTimelineItem = ({
-                                        startedAt,
+  startedAt,
   pageTitle,
   pageUrl,
   application,
@@ -34,22 +34,19 @@ export const WebActionTimelineItem = ({
                 target={'_blank'}
                 style={{ fontWeight: 'bolder' }}
               >
-                {pageTitle && pageTitle !== "" &&
-                    <span>{pageTitle}</span>
-                }
+                {pageTitle && pageTitle !== '' && <span>{pageTitle}</span>}
 
-                {(!pageTitle || pageTitle === "") &&
-                    <span>{pageUrl}</span>
-                }
+                {(!pageTitle || pageTitle === '') && <span>{pageUrl}</span>}
               </Link>
             </div>
 
             <div className='flex text-gray-700'>
-              <span className='mr-2 font-bolder text-gray-700'>Duration:&nbsp;</span>
+              <span className='mr-2 font-bolder text-gray-700'>
+                Duration:&nbsp;
+              </span>
 
               <span>{engagedTime} minutes</span>
             </div>
-
           </div>
         </div>
         <div>

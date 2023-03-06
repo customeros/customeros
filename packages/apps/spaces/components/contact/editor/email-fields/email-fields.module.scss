@@ -24,11 +24,11 @@
   white-space: nowrap;
   margin-right: 4px;
   &:not(:last-of-type)::after {
-    content: ','
+    content: ',';
   }
 }
 .selectedEmailsList {
-  display:flex;
+  display: flex;
   flex-wrap: wrap;
 }
 
