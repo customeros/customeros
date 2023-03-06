@@ -50,7 +50,6 @@ export default function MyApp({
       </Head>
       <RecoilRoot>
         <MainPageWrapper>
-          <WebRTCInboundNotification />
           <Component {...pageProps} />
         </MainPageWrapper>
       </RecoilRoot>
