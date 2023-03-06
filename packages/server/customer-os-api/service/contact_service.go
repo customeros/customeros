@@ -155,8 +155,13 @@ func (s *contactService) createContactInDBTxWork(ctx context.Context, newContact
 				return nil, err
 			}
 		}
-		if newContact.OwnerUserId != nil {
-			err := s.repositories.ContactRepository.SetOwner(ctx, tx, tenant, contactId, *newContact.OwnerUserId)
+
+		var ownerUserId = common.GetUserIdFromContext(ctx)
+		if newContact.OwnerUserId != nil && *newContact.OwnerUserId != "" {
+			ownerUserId = *newContact.OwnerUserId
+		}
+		if len(ownerUserId) > 0 {
+			err := s.repositories.ContactRepository.SetOwner(ctx, tx, tenant, contactId, ownerUserId)
 			if err != nil {
 				return nil, err
 			}
@@ -178,14 +183,17 @@ func (s *contactService) Update(ctx context.Context, contactUpdateData *ContactU
 			return nil, err
 		}
 
-		err = s.repositories.ContactRepository.RemoveOwner(ctx, tx, tenant, contactId)
-		if err != nil {
-			return nil, err
-		}
 		if contactUpdateData.OwnerUserId != nil {
-			err := s.repositories.ContactRepository.SetOwner(ctx, tx, tenant, contactId, *contactUpdateData.OwnerUserId)
+			err = s.repositories.ContactRepository.RemoveOwner(ctx, tx, tenant, contactId)
 			if err != nil {
 				return nil, err
+			}
+
+			if len(*contactUpdateData.OwnerUserId) > 0 {
+				err := s.repositories.ContactRepository.SetOwner(ctx, tx, tenant, contactId, *contactUpdateData.OwnerUserId)
+				if err != nil {
+					return nil, err
+				}
 			}
 		}
 

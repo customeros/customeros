@@ -65,6 +65,7 @@ func TestMutationResolver_ContactCreate_Min(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
 
 	rawResponse, err := c.RawPost(getQuery("contact/create_contact_min"))
 	assertRawResponseSuccess(t, rawResponse, err)
@@ -85,9 +86,9 @@ func TestMutationResolver_ContactCreate_Min(t *testing.T) {
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Tenant"))
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Contact"))
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Contact_"+tenantName))
-	require.Equal(t, 2, neo4jt.GetTotalCountOfNodes(ctx, driver))
+	require.Equal(t, 3, neo4jt.GetTotalCountOfNodes(ctx, driver))
 
-	assertNeo4jLabels(ctx, t, driver, []string{"Tenant", "Contact", "Contact_" + tenantName})
+	assertNeo4jLabels(ctx, t, driver, []string{"Tenant", "User", "Contact", "Contact_" + tenantName})
 }
 
 func TestMutationResolver_ContactCreate(t *testing.T) {
@@ -95,6 +96,7 @@ func TestMutationResolver_ContactCreate(t *testing.T) {
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 	neo4jt.CreateTenant(ctx, driver, "otherTenant")
+	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
 
 	rawResponse, err := c.RawPost(getQuery("contact/create_contact"))
 	assertRawResponseSuccess(t, rawResponse, err)
@@ -177,9 +179,9 @@ func TestMutationResolver_ContactCreate(t *testing.T) {
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Email_"+tenantName))
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "PhoneNumber"))
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "PhoneNumber_"+tenantName))
-	require.Equal(t, 10, neo4jt.GetTotalCountOfNodes(ctx, driver))
+	require.Equal(t, 11, neo4jt.GetTotalCountOfNodes(ctx, driver))
 
-	assertNeo4jLabels(ctx, t, driver, []string{"Tenant", "Contact", "Contact_" + tenantName,
+	assertNeo4jLabels(ctx, t, driver, []string{"Tenant", "User", "Contact", "Contact_" + tenantName,
 		"Email", "Email_" + tenantName, "PhoneNumber", "PhoneNumber_" + tenantName,
 		"CustomField", "BoolField", "TextField", "FloatField", "TimeField", "IntField", "CustomField_" + tenantName})
 }
@@ -188,6 +190,8 @@ func TestMutationResolver_ContactCreate_WithCustomFields(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
+
 	entityTemplateId := neo4jt.CreateEntityTemplate(ctx, driver, tenantName, model.EntityTemplateExtensionContact.String())
 	fieldTemplateId := neo4jt.AddFieldTemplateToEntity(ctx, driver, entityTemplateId)
 	setTemplateId := neo4jt.AddSetTemplateToEntity(ctx, driver, entityTemplateId)
@@ -215,7 +219,7 @@ func TestMutationResolver_ContactCreate_WithCustomFields(t *testing.T) {
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "FieldSetTemplate"))
 	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "FieldSet"))
 	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "FieldSet_"+tenantName))
-	require.Equal(t, 12, neo4jt.GetTotalCountOfNodes(ctx, driver))
+	require.Equal(t, 13, neo4jt.GetTotalCountOfNodes(ctx, driver))
 
 	var contact struct {
 		Contact_Create model.Contact
@@ -272,7 +276,7 @@ func TestMutationResolver_ContactCreate_WithCustomFields(t *testing.T) {
 	require.Equal(t, "set2", set2.Name)
 	require.Equal(t, model.DataSourceOpenline, set2.Source)
 
-	assertNeo4jLabels(ctx, t, driver, []string{"Tenant", "Contact", "Contact_" + tenantName,
+	assertNeo4jLabels(ctx, t, driver, []string{"Tenant", "User", "Contact", "Contact_" + tenantName,
 		"CustomFieldTemplate", "EntityTemplate", "FieldSet", "FieldSet_" + tenantName, "FieldSetTemplate",
 		"CustomField", "TextField", "CustomField_" + tenantName})
 }
@@ -320,6 +324,7 @@ func TestMutationResolver_ContactCreate_WithExternalReference(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
 	neo4jt.CreateHubspotExternalSystem(ctx, driver, tenantName)
 
 	rawResponse, err := c.RawPost(getQuery("contact/create_contact_with_external_reference"))
@@ -340,10 +345,10 @@ func TestMutationResolver_ContactCreate_WithExternalReference(t *testing.T) {
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Contact_"+tenantName))
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "ExternalSystem"))
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "ExternalSystem_"+tenantName))
-	require.Equal(t, 3, neo4jt.GetTotalCountOfNodes(ctx, driver))
+	require.Equal(t, 4, neo4jt.GetTotalCountOfNodes(ctx, driver))
 	require.Equal(t, 1, neo4jt.GetCountOfRelationships(ctx, driver, "IS_LINKED_WITH"))
 
-	assertNeo4jLabels(ctx, t, driver, []string{"Tenant", "Contact", "Contact_" + tenantName, "ExternalSystem", "ExternalSystem_" + tenantName})
+	assertNeo4jLabels(ctx, t, driver, []string{"Tenant", "User", "Contact", "Contact_" + tenantName, "ExternalSystem", "ExternalSystem_" + tenantName})
 }
 
 func TestMutationResolver_UpdateContact(t *testing.T) {
