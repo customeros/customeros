@@ -1,0 +1,14 @@
+.timeline {
+  //background: red;
+  grid-area: timeline;
+
+  & h1 {
+    font-size: var(--heading-secondary);
+    margin-bottom: var(--spacing-xs)
+  }
+
+}
+.timelineContent {
+  max-height: 65vh;
+  overflow-y: scroll;
+}

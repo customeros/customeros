@@ -9,20 +9,6 @@ import { ContactTableCell } from './ContactTableCell';
 
 export const columns: Array<Column> = [
   {
-    id: 'finder-table-column-org',
-    width: '25%',
-    label: (
-      <FinderMergeItemTableHeader
-        mergeMode='MERGE_ORG'
-        label='Organization'
-        subLabel='Industry'
-      />
-    ),
-    template: (c: any) => {
-      return <OrganizationTableCell organization={c?.organization} />;
-    },
-  },
-  {
     id: 'finder-table-column-contact',
     width: '25%',
     label: (
@@ -56,8 +42,22 @@ export const columns: Array<Column> = [
     },
   },
   {
+    id: 'finder-table-column-org',
+    width: '25%',
+    label: (
+      <FinderMergeItemTableHeader
+        mergeMode='MERGE_ORG'
+        label='Organization'
+        subLabel='Industry'
+      />
+    ),
+    template: (c: any) => {
+      return <OrganizationTableCell organization={c?.organization} />;
+    },
+  },
+  {
     id: 'finder-table-column-actions',
-    width: '10%',
+    width: '12%',
     label: <ActionColumn />,
     subLabel: '',
     template: () => {

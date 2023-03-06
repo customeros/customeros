@@ -23,17 +23,18 @@ export const ContactTags = ({
   }
 
   return (
-    <>
+    <section style={{ display: 'flex' }}>
       {data?.tags && (
         <TagsList
           tags={data?.tags ?? []}
           onTagDelete={(id) => onRemoveTagFromContact({ tagId: id })}
           readOnly={mode === 'PREVIEW'}
-        />
+        >
+          {mode === 'EDIT' && (
+            <ContactTagsEdit contactId={id} contactTags={data?.tags || []} />
+          )}
+        </TagsList>
       )}
-      {mode === 'EDIT' && (
-        <ContactTagsEdit contactId={id} contactTags={data?.tags || []} />
-      )}
-    </>
+    </section>
   );
 };

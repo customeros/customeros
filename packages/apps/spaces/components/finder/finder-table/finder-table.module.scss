@@ -6,13 +6,13 @@
 
 .deselectAllButton {
   padding: 0 !important;
+  position: relative;
   border-radius: 4px;
   height: 16px;
   width: 16px;
   border: var(--border-divider);
   border-color: var(--gray-600);
   color: var(--gray-600);
-  position: relative;
   margin-top: var(--spacing-xxxs);
   margin-right: var(--spacing-xxs);
 
@@ -48,14 +48,26 @@
 }
 
 .mergableCell {
-  @include flex-between;
-
-  & .checkboxContainer {
-    margin-right: var(--spacing-xxxs);
-  }
+  display:flex;
+  position: relative;
 }
 
-.confirmButton {
+.checkboxContainer {
+  width: 25px;
+  margin-top: 2px;
+  margin-left: var(--spacing-xxxs);
+
+}
+
+.emptyCell {
+  margin-left: var(--spacing-lg);
+}
+
+.finderCell {
+  //margin-left: var(--font-size-xxxl);
+}
+
+.confirmButton{
   border-radius: 4px;
   margin-left: var(--spacing-xxs);
 }

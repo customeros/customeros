@@ -14,8 +14,7 @@ export const FinderMergeItemTableHeader: React.FC<{
   const selectedIds = useRecoilValue(selectedItemsIds);
 
   return (
-    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-      <TableHeaderCell label={label} subLabel={subLabel} />
+    <div style={{ display: 'flex' }}>
       <div className={styles.checkboxContainer}>
         {mode === mergeMode && !!selectedIds.length && (
           <IconButton
@@ -24,6 +23,9 @@ export const FinderMergeItemTableHeader: React.FC<{
             onClick={resetSelectedItems}
           />
         )}
+      </div>
+      <div className={styles.finderCell}>
+        <TableHeaderCell label={label} subLabel={subLabel} />
       </div>
     </div>
   );
