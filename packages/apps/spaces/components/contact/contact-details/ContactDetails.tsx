@@ -11,6 +11,11 @@ export const ContactDetails = ({ id }: { id: string}) => {
   const { data, loading, error } = useContactCommunicationChannelsDetails({
     id,
   });
+  function isCallDisabled(): boolean {
+    return (
+      loading === null || error === null || data?.phoneNumbers?.length === 0
+    );
+  }
 
   return (
     <div className={styles.contactDetails}>
@@ -19,7 +24,7 @@ export const ContactDetails = ({ id }: { id: string}) => {
       <div className={styles.details}>
         <div className={styles.section}>
           <IconButton
-            disabled={loading || error || data?.phoneNumbers?.length === 0}
+            disabled={isCallDisabled()}
             aria-describedby='phone-icon-label'
             mode='secondary'
             className={styles.icon}
