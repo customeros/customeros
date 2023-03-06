@@ -1,16 +1,18 @@
-import React from 'react';
+import React, { ReactNode } from 'react';
 import styles from './tags.module.scss';
-import { capitalizeFirstLetter } from '../../../../utils';
+import { capitalizeFirstLetter, uuidv4 } from '../../../../utils';
 import classNames from 'classnames';
 
 export const TagsList = ({
   tags,
   onTagDelete,
   readOnly,
+  children,
 }: {
   tags: Array<{ name: string; id: string }>;
   readOnly?: boolean;
   onTagDelete?: (id: string) => void;
+  children?: ReactNode;
 }) => {
   return (
     <ul
@@ -32,6 +34,8 @@ export const TagsList = ({
           )}
         </li>
       ))}
+
+      {children && <li key='add-tag-input'>{children}</li>}
     </ul>
   );
 };

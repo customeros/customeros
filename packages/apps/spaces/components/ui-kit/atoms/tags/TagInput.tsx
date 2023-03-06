@@ -114,7 +114,7 @@ export const TagInput = ({
         field='name'
         inputRef={inputRef}
         multiple
-        placeholder='Enter a tag...'
+        placeholder='Add a tag...'
         className={`${styles.autocomplete} tagInput`}
         value={tags}
         itemTemplate={(tag: Tag) => {

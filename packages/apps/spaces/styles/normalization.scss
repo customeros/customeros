@@ -179,12 +179,13 @@ button::-moz-focus-inner {
   border: none;
   margin-top: 0;
   border-radius: var(--border-radius-lg);
-  padding: var(--spacing-xxxs);
+  padding: 2px var(--spacing-xxxs);
   font-size: var(--font-size-xs);
 }
 
 .emailEditor .p-autocomplete-input-token {
   font-size: var(--font-size-sm);
+  padding: var(--spacing-xxxs);
 }
 
 .p-autocomplete-panel {

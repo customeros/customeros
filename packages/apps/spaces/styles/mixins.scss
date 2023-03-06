@@ -217,6 +217,7 @@
 
 @mixin tag {
   font-size: var(--font-size-xxs);
+  font-weight: normal;
   display: inline-block;
   margin-right: var(--spacing-xxxs);
 

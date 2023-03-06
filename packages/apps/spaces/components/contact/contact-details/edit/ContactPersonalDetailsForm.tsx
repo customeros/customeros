@@ -5,7 +5,6 @@ import styles from '../contact-details.module.scss';
 import { ContactTags } from '../../contact-tags';
 import { ControlledInput } from '../../../ui-kit/atoms/input/ControlledInput';
 import { Controller, useForm } from 'react-hook-form';
-import { ContactOwner } from '../ContactOwner';
 import { PersonTitle } from '../../../../graphQL/__generated__/generated';
 import { OverlayPanel } from '../../../ui-kit/atoms/overlay-panel';
 import { Dropdown } from 'primereact/dropdown';
@@ -22,7 +21,7 @@ export const ContactPersonalDetailsEditForm = ({
 }) => {
   const titleSelectorRef = useRef(null);
 
-  const { control, reset, setValue, getValues, register } = useForm({
+  const { control, getValues } = useForm({
     defaultValues: {
       firstName: data?.firstName || '',
       id: data.id,
@@ -33,7 +32,7 @@ export const ContactPersonalDetailsEditForm = ({
     },
   });
 
-  const handleSubmit = (e: FormEvent<HTMLFormElement>, values: any) => {
+  const handleSubmit = (e: FormEvent<HTMLButtonElement>, values: any) => {
     e.stopPropagation();
     e.preventDefault();
     onSubmit(values);
@@ -49,10 +48,7 @@ export const ContactPersonalDetailsEditForm = ({
   );
 
   return (
-    <form
-      className={styles.header}
-      onSubmit={(e) => handleSubmit(e, getValues())}
-    >
+    <form className={styles.header}>
       {mode === 'EDIT' && (
         <div className={styles.photo}>
           {data?.photo ? (
@@ -122,7 +118,12 @@ export const ContactPersonalDetailsEditForm = ({
             marginTop: '8px',
           }}
         >
-          <Button mode='primary' type='submit'>
+          {}
+          <Button
+            mode='primary'
+            type='button'
+            onClick={(e) => handleSubmit(e, getValues())}
+          >
             {mode === 'CREATE' ? 'Create contact' : 'Save'}
           </Button>
         </div>
