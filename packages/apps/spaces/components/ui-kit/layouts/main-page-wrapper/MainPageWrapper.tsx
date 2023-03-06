@@ -59,7 +59,7 @@ export const MainPageWrapper = ({ children }: any) => {
 
   return (
     <ApolloProvider client={client}>
-      <WebRTCContextProvider username={userEmail}> {children}</WebRTCContextProvider>
+      <WebRTCContextProvider> {children}</WebRTCContextProvider>
     </ApolloProvider>
   );
 };
