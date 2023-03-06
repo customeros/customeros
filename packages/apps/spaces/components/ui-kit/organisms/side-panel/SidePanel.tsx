@@ -22,6 +22,28 @@ export const SidePanel: React.FC<SidePanelProps> = ({
 }) => {
   const router = useRouter();
   const logoutUrl = useRecoilValue(logoutUrlState);
+
+  const overlay = React.useRef<HTMLDivElement>(null);
+
+  React.useEffect(() => {
+    const closeListener = () => {
+      onPanelToggle(!isPanelOpen);
+      if (overlay && overlay.current) {
+        overlay.current.removeEventListener('click', closeListener);
+      }
+    };
+
+    if (overlay && overlay.current) {
+      overlay.current.addEventListener('click', closeListener);
+    }
+
+    return () => {
+      if (overlay && overlay.current) {
+        overlay.current.removeEventListener('click', closeListener);
+      }
+    };
+  }, [overlay, isPanelOpen]);
+
   return (
     <>
       <aside
@@ -79,7 +101,7 @@ export const SidePanel: React.FC<SidePanelProps> = ({
           />
         </ul>
       </aside>
-      {isPanelOpen && <div className={styles.overlay} />}
+      {isPanelOpen && <div className={styles.overlay} ref={overlay} />}
       <div className={styles.webChat}>{children}</div>
     </>
   );
