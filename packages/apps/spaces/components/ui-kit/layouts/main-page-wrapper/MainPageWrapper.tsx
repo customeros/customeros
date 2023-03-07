@@ -9,7 +9,7 @@ import { ApolloProvider } from '@apollo/client';
 import { logoutUrlState, userData } from '../../../../state';
 import { useSetRecoilState } from 'recoil';
 import { WebRTCContextProvider } from '../../../../context';
-import { WebRTCInboundNotification } from "../../molecules";
+import { WebRTCCallProgress, WebRTCInboundNotification } from '../../molecules';
 
 const ory = new FrontendApi(new Configuration(edgeConfig));
 
@@ -32,8 +32,8 @@ export const MainPageWrapper = ({ children }: any) => {
     if (window.location.origin.startsWith('http://localhost')) {
       return '';
     }
-    return "?return_to=" + window.location.origin
-  }
+    return '?return_to=' + window.location.origin;
+  };
 
   useEffect(() => {
     if (router.asPath.startsWith('/login')) {
@@ -52,7 +52,9 @@ export const MainPageWrapper = ({ children }: any) => {
       })
       .catch(() => {
         // Redirect to login page
-        return router.push(edgeConfig.basePath + '/ui/login' + getReturnToUrl());
+        return router.push(
+          edgeConfig.basePath + '/ui/login' + getReturnToUrl(),
+        );
       });
   }, [router]);
 
@@ -69,6 +71,7 @@ export const MainPageWrapper = ({ children }: any) => {
     <ApolloProvider client={client}>
       <WebRTCContextProvider>
         <WebRTCInboundNotification />
+        <WebRTCCallProgress />
         {children}
       </WebRTCContextProvider>
     </ApolloProvider>

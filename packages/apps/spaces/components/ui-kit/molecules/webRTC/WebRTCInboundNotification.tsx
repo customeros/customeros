@@ -1,8 +1,8 @@
 import React, { useContext } from 'react';
 import { Dialog } from 'primereact/dialog';
-import { Button } from 'primereact/button';
 import { WebRTCContext } from '../../../../context/web-rtc';
-
+import styles from './web-rtc.module.scss';
+import { Button, IconButton, Phone, Times } from '../../atoms';
 export const WebRTCInboundNotification: React.FC<any> = () => {
   const { inCall, ringing, remoteVideo, answerCall, hangupCall, callerId } =
     useContext(WebRTCContext) as any;
@@ -19,33 +19,30 @@ export const WebRTCInboundNotification: React.FC<any> = () => {
       <Dialog
         visible={ringing && inCall}
         modal={false}
-        style={{ background: 'red', position: 'absolute', top: '25px' }}
+        className={styles.incomingCallContainer}
+        style={{ position: 'absolute', top: '25px' }}
         closable={false}
         closeOnEscape={false}
         draggable={false}
         onHide={() => console.log()}
         footer={
-          <div>
-            <Button
-              label='Accept the call'
-              icon='pi pi-check'
+          <div className={styles.actionButtonsRow}>
+            <IconButton
+              mode='primary'
               onClick={() => answerCall()}
-              className='p-button-success'
+              icon={<Phone />}
             />
-            <Button
-              label='Reject the call'
-              icon='pi pi-times'
+            <IconButton
+              mode='danger'
               onClick={() => hangupCall()}
-              className='p-button-danger'
+              icon={<Phone style={{ transform: 'rotate(133deg)' }} />}
             />
           </div>
         }
       >
-        <div
-          className='w-full text-center font-bold'
-          style={{ fontSize: '25px' }}
-        >
-          Incoming call from {callerId}
+        <div className={styles.incomingCall}>
+          Incoming call from
+          <span>{callerId}</span>
         </div>
       </Dialog>
     </>

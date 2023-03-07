@@ -1,4 +1,4 @@
-import React, { useContext } from 'react';
+import React, { useContext, useRef, useState } from 'react';
 import Image from 'next/image';
 import { IconButton } from '../../ui-kit/atoms';
 import styles from './contact-details.module.scss';
@@ -7,12 +7,18 @@ import { WebRTCContext } from '../../../context/web-rtc';
 import { WebRTCCallProgress } from '../../ui-kit/molecules';
 import { useContactCommunicationChannelsDetails } from '../../../hooks/useContact';
 import { toast } from 'react-toastify';
+import { useSetRecoilState } from 'recoil';
+import { callParticipant } from '../../../state';
+import { getContactDisplayName } from '../../../utils';
+import { Contact } from '../../../graphQL/__generated__/generated';
 
 export const ContactDetails = ({ id }: { id: string }) => {
   const webRtc = useContext(WebRTCContext) as any;
   const { data, loading, error } = useContactCommunicationChannelsDetails({
     id,
   });
+  const setCallParticipant = useSetRecoilState(callParticipant);
+
   const handleStartPhoneCall = () => {
     const number =
       data?.phoneNumbers.find((pn) => pn.primary)?.e164 ||
@@ -24,13 +30,13 @@ export const ContactDetails = ({ id }: { id: string }) => {
       });
       return;
     }
+    setCallParticipant({ identity: getContactDisplayName(data as Contact) });
     webRtc?.makeCall(number);
   };
 
   return (
     <div className={styles.contactDetails}>
       <ContactPersonalDetails id={id} />
-      <WebRTCCallProgress />
       <div className={styles.details}>
         <div className={styles.section}>
           <IconButton

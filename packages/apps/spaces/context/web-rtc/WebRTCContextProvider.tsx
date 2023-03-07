@@ -17,8 +17,8 @@ import {
 } from 'jssip/lib/UA';
 
 import axios from 'axios';
-import { useRecoilValue } from 'recoil';
-import { userData } from '../../state';
+import { useRecoilValue, useResetRecoilState, useSetRecoilState } from 'recoil';
+import { callParticipant, userData } from '../../state';
 
 export const WebRTCContext = createContext(null);
 
@@ -29,6 +29,7 @@ export const WebRTCContextProvider = (props: any) => {
   const [ringing, setRinging] = useState(false);
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const resetCallParticipant = useResetRecoilState(callParticipant);
   const [userAgent, setUserAgent] = useState<UA>();
   const [session, setSession] = useState<RTCSession>();
   const remoteVideo = useRef<HTMLVideoElement>();
@@ -134,10 +135,12 @@ export const WebRTCContextProvider = (props: any) => {
       failed: function (e: EndEvent) {
         console.log('call failed with cause: ' + JSON.stringify(e.cause));
         setInCall(false);
+        resetCallParticipant();
       },
       ended: function (e: EndEvent) {
         console.log('call ended with cause: ' + JSON.stringify(e.cause));
         setInCall(false);
+        resetCallParticipant();
       },
       confirmed: function (e: IncomingAckEvent | OutgoingAckEvent) {
         console.log('call confirmed');
@@ -185,6 +188,7 @@ export const WebRTCContextProvider = (props: any) => {
   const hangupCall = () => {
     setInCall(false);
     setRinging(false);
+    resetCallParticipant();
     if (session) {
       session.terminate();
     }
