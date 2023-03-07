@@ -62,18 +62,18 @@ export const ContactPersonalDetails = ({ id }: { id: string }) => {
           return (
             <div
               className={styles.jobRole}
-              key={`contact-job-role-${jobRole.id}-${jobRole.label}`}
+              key={`contact-job-role-${jobRole?.id}-${jobRole?.label}`}
               onClick={() =>
-                router.push(`/organization/${jobRole.organization.id}`)
+                router.push(`/organization/${jobRole?.organization.id}`)
               }
             >
-              {jobRole.jobTitle}{' '}
-              {jobRole.jobTitle &&
-              jobRole.organization &&
-              jobRole.organization.name
+              {jobRole?.jobTitle}
+              {jobRole?.jobTitle &&
+              jobRole?.organization &&
+              jobRole?.organization?.name
                 ? 'at'
                 : ''}{' '}
-              {jobRole.organization.name}
+              {jobRole?.organization?.name}
             </div>
           );
         })}

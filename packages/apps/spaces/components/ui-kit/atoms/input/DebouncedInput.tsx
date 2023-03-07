@@ -24,8 +24,14 @@ export const DebouncedInput = ({
   ...rest
 }: DebouncedInputProps) => {
   return (
-    <div className={styles.wrapper}>
+    <div
+      className={classNames(styles.wrapper, {
+        //@ts-expect-error fixme
+        [styles?.[rest.className]]: rest?.className,
+      })}
+    >
       <DebounceInput
+        {...rest}
         className={classNames(styles.input, {
           [styles?.[inputSize]]: inputSize,
         })}
@@ -33,7 +39,6 @@ export const DebouncedInput = ({
         debounceTimeout={debounceTimeout}
         onChange={onChange}
         placeholder={placeholder}
-        {...rest}
       />
 
       {children && <span className={styles.icon}>{children}</span>}

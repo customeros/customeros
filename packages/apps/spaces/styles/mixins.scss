@@ -21,6 +21,11 @@
   justify-content: space-between;
 }
 
+@mixin justify-end {
+  display: flex;
+  justify-content: flex-end;
+}
+
 @mixin text-hint {
   font-size: var(--font-size-xs);
   color: var(--gray-600);

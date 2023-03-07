@@ -1,0 +1,8 @@
+query getOrganizationsOptions {
+  organizations {
+    content {
+      id
+      name
+    }
+  }
+}
