@@ -351,20 +351,17 @@ export const LoginPanel: React.FC = () => {
                 className={styles.logo}
                 src='logos/openline.svg'
                 alt='Openline'
-                height={50}
-                width={50}
+                height={60}
+                width={170}
               />
 
-              <div>
+              <div style={{display:'flex', alignItems: 'baseline'}}>
                 <span className='text-600 font-medium line-height-3 text-sm'>
                   Already have an account?
                 </span>
-                <a
-                  className='font-medium no-underline ml-2 text-blue-500 cursor-pointer text-sm'
-                  onClick={() => login()}
-                >
+                <Button mode='link' onClick={login} style={{marginLeft: '5px'}}>
                   Login now!
-                </a>
+                </Button>
               </div>
             </div>
 
@@ -424,6 +421,11 @@ export const LoginPanel: React.FC = () => {
                     className='w-full mb-6'
                     onChange={(e) => setEmail(e.target.value)}
                   />
+
+                  <Button mode={"primary"} type='submit' style={{margin: 'auto', marginBottom: '20px'}}>
+                    Join the Waitlist
+                  </Button>
+
                 </form>
                 <div className={styles.oryInfoSection}>
                   <a
