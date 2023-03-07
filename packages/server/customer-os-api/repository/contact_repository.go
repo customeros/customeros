@@ -539,9 +539,11 @@ func (r *contactRepository) MergeContactRelationsInTx(ctx context.Context, tx ne
 
 	if _, err := tx.Run(ctx, matchQuery+" "+
 		" WITH primary, merged "+
-		" MATCH (merged)-[:PARTICIPATES]->(c:Conversation) "+
+		" MATCH (merged)-[rel:PARTICIPATES]->(c:Conversation) "+
 		" MERGE (primary)-[newRel:PARTICIPATES]->(c)"+
-		" 	ON CREATE SET newRel.mergedFrom = $mergedContactId, newRel.createdAt = $now", params); err != nil {
+		" ON CREATE SET newRel.mergedFrom = $mergedContactId, "+
+		"				newRel.createdAt = $now "+
+		"			SET	rel.merged=true", params); err != nil {
 		return err
 	}
 
@@ -549,47 +551,60 @@ func (r *contactRepository) MergeContactRelationsInTx(ctx context.Context, tx ne
 		" WITH primary, merged "+
 		" MATCH (merged)-[rel:TAGGED]->(t:Tag) "+
 		" MERGE (primary)-[newRel:TAGGED]->(t) "+
-		" ON CREATE SET newRel.taggedAt=rel.taggedAt, newRel.mergedFrom = $mergedContactId, newRel.createdAt = $now", params); err != nil {
+		" ON CREATE SET newRel.taggedAt=rel.taggedAt, "+
+		"				newRel.mergedFrom = $mergedContactId, "+
+		"				newRel.createdAt = $now "+
+		"			SET	rel.merged=true", params); err != nil {
 		return err
 	}
 
 	if _, err := tx.Run(ctx, matchQuery+
 		" WITH primary, merged "+
-		" MATCH (merged)-[:ASSOCIATED_WITH]->(loc:Location) "+
+		" MATCH (merged)-[rel:ASSOCIATED_WITH]->(loc:Location) "+
 		" MERGE (primary)-[newRel:ASSOCIATED_WITH]->(loc) "+
-		" ON CREATE SET newRel.mergedFrom = $mergedContactId, newRel.createdAt = $now", params); err != nil {
+		" ON CREATE SET newRel.mergedFrom = $mergedContactId, "+
+		"				newRel.createdAt = $now "+
+		"			SET	rel.merged=true", params); err != nil {
 		return err
 	}
 
 	if _, err := tx.Run(ctx, matchQuery+
 		" WITH primary, merged "+
-		" MATCH (merged)-[:HAS_PROPERTY]->(c:CustomField) "+
+		" MATCH (merged)-[rel:HAS_PROPERTY]->(c:CustomField) "+
 		" MERGE (primary)-[newRel:HAS_PROPERTY]->(c) "+
-		" ON CREATE SET newRel.mergedFrom = $mergedContactId, newRel.createdAt = $now", params); err != nil {
+		" ON CREATE SET newRel.mergedFrom = $mergedContactId, "+
+		"				newRel.createdAt = $now "+
+		"			SET	rel.merged=true", params); err != nil {
 		return err
 	}
 
 	if _, err := tx.Run(ctx, matchQuery+
 		" WITH primary, merged "+
-		" MATCH (merged)<-[:OWNS]-(u:User) "+
+		" MATCH (merged)<-[rel:OWNS]-(u:User) "+
 		" MERGE (primary)<-[newRel:OWNS]-(u) "+
-		" ON CREATE SET newRel.mergedFrom = $mergedContactId, newRel.createdAt = $now", params); err != nil {
+		" ON CREATE SET newRel.mergedFrom = $mergedContactId, "+
+		"				newRel.createdAt = $now "+
+		"			SET	rel.merged=true", params); err != nil {
 		return err
 	}
 
 	if _, err := tx.Run(ctx, matchQuery+
 		" WITH primary, merged "+
-		" MATCH (merged)-[:WORKS_AS]->(jb:JobRole) "+
+		" MATCH (merged)-[rel:WORKS_AS]->(jb:JobRole) "+
 		" MERGE (primary)-[newRel:WORKS_AS]->(jb) "+
-		" ON CREATE SET newRel.mergedFrom = $mergedContactId, newRel.createdAt = $now", params); err != nil {
+		" ON CREATE SET newRel.mergedFrom = $mergedContactId, "+
+		"				newRel.createdAt = $now "+
+		"			SET	rel.merged=true", params); err != nil {
 		return err
 	}
 
 	if _, err := tx.Run(ctx, matchQuery+
 		" WITH primary, merged "+
-		" MATCH (merged)-[:CONTACT_OF]->(o:Organization) "+
+		" MATCH (merged)-[rel:CONTACT_OF]->(o:Organization) "+
 		" MERGE (primary)-[newRel:CONTACT_OF]->(o) "+
-		" ON CREATE SET newRel.mergedFrom = $mergedContactId, newRel.createdAt = $now", params); err != nil {
+		" ON CREATE SET newRel.mergedFrom = $mergedContactId, "+
+		"				newRel.createdAt = $now "+
+		"			SET	rel.merged=true", params); err != nil {
 		return err
 	}
 
@@ -597,8 +612,11 @@ func (r *contactRepository) MergeContactRelationsInTx(ctx context.Context, tx ne
 		" WITH primary, merged "+
 		" MATCH (merged)-[rel:HAS]->(e:Email) "+
 		" MERGE (primary)-[newRel:HAS]->(e) "+
-		" ON CREATE SET newRel.primary=rel.primary, newRel.label=rel.label, "+
-		"				newRel.mergedFrom = $mergedContactId, newRel.createdAt = $now", params); err != nil {
+		" ON CREATE SET newRel.primary=rel.primary, "+
+		"				newRel.label=rel.label, "+
+		"				newRel.mergedFrom = $mergedContactId, "+
+		"				newRel.createdAt = $now "+
+		"			SET	rel.merged=true", params); err != nil {
 		return err
 	}
 
@@ -606,40 +624,71 @@ func (r *contactRepository) MergeContactRelationsInTx(ctx context.Context, tx ne
 		" WITH primary, merged "+
 		" MATCH (merged)-[rel:HAS]->(p:PhoneNumber) "+
 		" MERGE (primary)-[newRel:HAS]->(p) "+
-		" ON CREATE SET newRel.primary=rel.primary, newRel.label=rel.label, "+
-		"               newRel.mergedFrom = $mergedContactId, newRel.createdAt = $now", params); err != nil {
+		" ON CREATE SET newRel.primary=rel.primary, "+
+		"				newRel.label=rel.label, "+
+		"               newRel.mergedFrom = $mergedContactId, "+
+		"				newRel.createdAt = $now "+
+		"			SET	rel.merged=true", params); err != nil {
 		return err
 	}
 
 	if _, err := tx.Run(ctx, matchQuery+
 		" WITH primary, merged "+
-		" MATCH (merged)-[:NOTED]->(n:Note) "+
+		" MATCH (merged)-[rel:NOTED]->(n:Note) "+
 		" MERGE (primary)-[newRel:NOTED]->(n) "+
-		" ON CREATE SET newRel.mergedFrom = $mergedContactId, newRel.createdAt = $now", params); err != nil {
+		" ON CREATE SET newRel.mergedFrom = $mergedContactId, "+
+		"				newRel.createdAt = $now "+
+		"			SET	rel.merged=true", params); err != nil {
 		return err
 	}
 
 	if _, err := tx.Run(ctx, matchQuery+
 		" WITH primary, merged "+
-		" MATCH (merged)-[:CREATED]->(n:Note) "+
+		" MATCH (merged)-[rel:CREATED]->(n:Note) "+
 		" MERGE (primary)-[newRel:CREATED]->(n) "+
-		" ON CREATE SET newRel.mergedFrom = $mergedContactId, newRel.createdAt = $now", params); err != nil {
+		" ON CREATE SET newRel.mergedFrom = $mergedContactId, "+
+		"				newRel.createdAt = $now "+
+		"			SET	rel.merged=true", params); err != nil {
 		return err
 	}
 
 	if _, err := tx.Run(ctx, matchQuery+
 		" WITH primary, merged "+
-		" MATCH (merged)-[:SUBMITTED]->(t:Ticket) "+
+		" MATCH (merged)-[rel:SUBMITTED]->(t:Ticket) "+
 		" MERGE (primary)-[newRel:SUBMITTED]->(t) "+
-		" ON CREATE SET newRel.mergedFrom = $mergedContactId, newRel.createdAt = $now", params); err != nil {
+		" ON CREATE SET newRel.mergedFrom = $mergedContactId, "+
+		"				newRel.createdAt = $now "+
+		"			SET	rel.merged=true", params); err != nil {
 		return err
 	}
 
 	if _, err := tx.Run(ctx, matchQuery+
 		" WITH primary, merged "+
-		" MATCH (merged)-[:REQUESTED]->(t:Ticket) "+
+		" MATCH (merged)-[rel:REQUESTED]->(t:Ticket) "+
 		" MERGE (primary)-[newRel:REQUESTED]->(t) "+
-		" ON CREATE SET newRel.mergedFrom = $mergedContactId, newRel.createdAt = $now", params); err != nil {
+		" ON CREATE SET newRel.mergedFrom = $mergedContactId, "+
+		"				newRel.createdAt = $now "+
+		"			SET	rel.merged=true", params); err != nil {
+		return err
+	}
+
+	if _, err := tx.Run(ctx, matchQuery+
+		" WITH primary, merged "+
+		" MATCH (merged)-[rel:SENT]->(i:InteractionEvent) "+
+		" MERGE (primary)-[newRel:SENT]->(i) "+
+		" ON CREATE SET newRel.mergedFrom = $mergedContactId, "+
+		"				newRel.createdAt = $now "+
+		"			SET	rel.merged=true", params); err != nil {
+		return err
+	}
+
+	if _, err := tx.Run(ctx, matchQuery+
+		" WITH primary, merged "+
+		" MATCH (merged)<-[rel:SENT_TO]-(i:InteractionEvent) "+
+		" MERGE (primary)<-[newRel:SENT_TO]-(i) "+
+		" ON CREATE SET newRel.mergedFrom = $mergedContactId, "+
+		"				newRel.createdAt = $now "+
+		"			SET	rel.merged=true", params); err != nil {
 		return err
 	}
 
@@ -647,8 +696,11 @@ func (r *contactRepository) MergeContactRelationsInTx(ctx context.Context, tx ne
 		" WITH primary, merged "+
 		" MATCH (merged)-[rel:IS_LINKED_WITH]->(ext:ExternalSystem) "+
 		" MERGE (primary)-[newRel:IS_LINKED_WITH {externalId:rel.externalId}]->(ext) "+
-		" ON CREATE SET newRel.syncDate=rel.syncDate, newRel.externalUrl=rel.externalUrl, "+
-		"				newRel.mergedFrom = $mergedContactId, newRel.createdAt = $now", params); err != nil {
+		" ON CREATE SET newRel.syncDate=rel.syncDate, "+
+		"				newRel.externalUrl=rel.externalUrl, "+
+		"				newRel.mergedFrom = $mergedContactId, "+
+		"				newRel.createdAt = $now "+
+		"			SET	rel.merged=true", params); err != nil {
 		return err
 	}
 

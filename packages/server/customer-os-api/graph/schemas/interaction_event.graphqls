@@ -1,0 +1,31 @@
+union InteractionParticipant = Contact | User
+
+type InteractionSession implements Node {
+    id: ID!
+    startedAt: Time!
+    endedAt: Time
+
+    name: String
+    status: String
+    type: String
+    channel: String
+    source: DataSource!
+    sourceOfTruth: DataSource!
+    appSource: String!
+}
+
+type InteractionEvent implements Node {
+    id: ID!
+    createdAt: Time!
+
+    channel: String!
+    sentBy: InteractionParticipant!
+    sentTo: [InteractionEventReceiver!]!
+
+    content: String
+}
+
+type InteractionEventReceiver {
+    participant: InteractionParticipant
+    nature: String
+}

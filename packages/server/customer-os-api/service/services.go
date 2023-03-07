@@ -28,6 +28,7 @@ type Services struct {
 	QueryService               QueryService
 	DomainService              DomainService
 	TicketService              TicketService
+	InteractionSessionService  InteractionSessionService
 }
 
 func InitServices(driver *neo4j.DriverWithContext) *Services {
@@ -47,14 +48,15 @@ func InitServices(driver *neo4j.DriverWithContext) *Services {
 		CustomFieldTemplateService: NewCustomFieldTemplateService(repositories),
 		ConversationService:        NewConversationService(repositories),
 		OrganizationTypeService:    NewOrganizationTypeService(repositories),
-		ActionsService:             NewActionsService(repositories),
 		NoteService:                NewNoteService(repositories),
 		JobRoleService:             NewJobRoleService(repositories),
 		LocationService:            NewLocationService(repositories),
 		TagService:                 NewTagService(repositories),
 		DomainService:              NewDomainService(repositories),
 		TicketService:              NewTicketService(repositories),
+		InteractionSessionService:  NewInteractionSessionService(repositories),
 	}
+	services.ActionsService = NewActionsService(repositories, &services)
 	services.SearchService = NewSearchService(repositories, &services)
 	services.QueryService = NewQueryService(repositories, &services)
 

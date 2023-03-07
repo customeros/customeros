@@ -19,11 +19,13 @@ type ActionsService interface {
 
 type actionsService struct {
 	repositories *repository.Repositories
+	services     *Services
 }
 
-func NewActionsService(repositories *repository.Repositories) ActionsService {
+func NewActionsService(repositories *repository.Repositories, services *Services) ActionsService {
 	return &actionsService{
 		repositories: repositories,
+		services:     services,
 	}
 }
 
@@ -49,6 +51,8 @@ func (s *actionsService) GetContactActions(ctx context.Context, contactId string
 	for _, v := range dbNodes {
 		if slices.Contains(v.Labels, entity.NodeLabel_PageView) {
 			actions = append(actions, s.mapDbNodeToPageViewAction(v))
+		} else if slices.Contains(v.Labels, entity.NodeLabel_InteractionSession) {
+			actions = append(actions, s.services.InteractionSessionService.mapDbNodeToInteractionSessionEntity(v))
 		}
 	}
 
