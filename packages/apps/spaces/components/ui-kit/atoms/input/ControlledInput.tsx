@@ -8,6 +8,8 @@ interface ControlledInputProps {
   name: string;
   placeholder: string;
   label: string;
+  hideLabel?: boolean;
+  id?: string;
   required?: boolean;
   inputSize?: 'xxxs' | 'xxs' | 'xs' | 'sm' | 'md' | 'lg';
 }
@@ -19,6 +21,8 @@ export const ControlledInput: React.FC<ControlledInputProps> = ({
   placeholder,
   required = false,
   inputSize = 'xxs',
+  hideLabel = false,
+  id,
 }) => {
   const {
     field,
@@ -32,9 +36,17 @@ export const ControlledInput: React.FC<ControlledInputProps> = ({
 
   return (
     <>
-      <label className={styles.label}>{label}</label>
+      <label
+        htmlFor={id}
+        className={classNames(styles.label, {
+          [styles.labelHidden]: hideLabel,
+        })}
+      >
+        {label}
+      </label>
       <input
         {...field}
+        id={id}
         className={classNames(styles.input, {
           [styles.error]: invalid && isTouched,
           [styles?.[inputSize]]: inputSize,

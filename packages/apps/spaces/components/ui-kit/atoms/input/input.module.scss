@@ -6,9 +6,6 @@
   max-width: 400px;
   display: block;
 
-  &:not(:last-of-type) {
-    margin-bottom: var(--spacing-sm);
-  }
 }
 
 .input {
@@ -40,4 +37,9 @@
   font-size: var(--font-size-sm);
   font-weight: normal;
   color: var(--text-faded);
+
+  &.labelHidden {
+    position: absolute;
+    top: -10000px;
+  }
 }
