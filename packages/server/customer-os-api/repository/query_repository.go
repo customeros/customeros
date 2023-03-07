@@ -91,7 +91,7 @@ func (r *queryRepository) GetOrganizationsAndContacts(ctx context.Context, sessi
           MATCH (t:Tenant {name:$tenant})--(o:Organization)
 		  MATCH (t)--(c:Contact)
 		  MATCH (o)-[rel]-(c)
-		  WHERE o.tenantOrganization = false AND ((%s) OR (%s))
+		  WHERE (o.tenantOrganization = false OR o.tenantOrganization is null) AND ((%s) OR (%s))
 		  RETURN rel`, organizationFilterCypher, contactFilterCypher)
 		//fetch organizations and contacts with filters on their emails
 		if searchTerm != nil {
