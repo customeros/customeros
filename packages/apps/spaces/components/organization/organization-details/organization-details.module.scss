@@ -32,7 +32,7 @@
 
 .industry {
   @include text-hint;
-  text-transform: uppercase;
+  text-transform: lowercase;
   letter-spacing: 1px;
   margin-top: -2px;
 }
