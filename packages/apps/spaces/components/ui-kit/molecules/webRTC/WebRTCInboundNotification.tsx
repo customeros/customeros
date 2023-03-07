@@ -34,7 +34,7 @@ export const WebRTCInboundNotification: React.FC<any> = () => {
             />
             <IconButton
               mode='danger'
-              onClick={() => answerCall()}
+              onClick={() => hangupCall()}
               icon={<Phone style={{ transform: 'rotate(133deg)' }} />}
             />
           </div>
