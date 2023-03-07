@@ -438,17 +438,26 @@ func TagOrganization(ctx context.Context, driver *neo4j.DriverWithContext, organ
 	})
 }
 
-func CreateOrganization(ctx context.Context, driver *neo4j.DriverWithContext, tenant, organizationName string) string {
+func CreateOrg(ctx context.Context, driver *neo4j.DriverWithContext, tenant, organizationName string, tenantOrganization bool) string {
 	var organizationId, _ = uuid.NewRandom()
 	query := `MATCH (t:Tenant {name:$tenant})
 			MERGE (t)<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {id:$id})
-			ON CREATE SET org.name=$name, org:%s`
+			ON CREATE SET org.name=$name, org.tenantOrganization=$tenantOrganization, org:%s`
 	ExecuteWriteQuery(ctx, driver, fmt.Sprintf(query, "Organization_"+tenant), map[string]any{
-		"id":     organizationId.String(),
-		"tenant": tenant,
-		"name":   organizationName,
+		"id":                 organizationId.String(),
+		"tenant":             tenant,
+		"name":               organizationName,
+		"tenantOrganization": tenantOrganization,
 	})
 	return organizationId.String()
+}
+
+func CreateOrganization(ctx context.Context, driver *neo4j.DriverWithContext, tenant, organizationName string) string {
+	return CreateOrg(ctx, driver, tenant, organizationName, false)
+}
+
+func CreateTenantOrganization(ctx context.Context, driver *neo4j.DriverWithContext, tenant, organizationName string) string {
+	return CreateOrg(ctx, driver, tenant, organizationName, true)
 }
 
 func CreateOrganizationType(ctx context.Context, driver *neo4j.DriverWithContext, tenant, organizationTypeName string) string {
