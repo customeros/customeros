@@ -100,14 +100,14 @@ func (r *queryRepository) GetOrganizationsAndContacts(ctx context.Context, sessi
 		  MATCH (t:Tenant {name:$tenant})--(o:Organization)-[:HAS]->(e:Email)
 		  MATCH (t)--(c:Contact)
 		  MATCH (o)-[rel]-(c)
-		  WHERE o.tenantOrganization = false AND (toLower(e.email) CONTAINS $email OR toLower(e.rawEmail) CONTAINS $email)
+		  WHERE (o.tenantOrganization = false OR o.tenantOrganization is null) AND (toLower(e.email) CONTAINS $email OR toLower(e.rawEmail) CONTAINS $email)
 		  RETURN rel
 
 		  UNION
 		  MATCH (t:Tenant {name:$tenant})--(o:Organization)
 		  MATCH (t)<-[:CONTACT_BELONGS_TO_TENANT]-(c:Contact)-[:HAS]->(e:Email)
 		  MATCH (o)-[rel]-(c)
-		  WHERE o.tenantOrganization = false AND (toLower(e.email) CONTAINS $email or toLower(e.rawEmail) CONTAINS $email)
+		  WHERE (o.tenantOrganization = false OR o.tenantOrganization is null) AND (toLower(e.email) CONTAINS $email or toLower(e.rawEmail) CONTAINS $email)
 		  RETURN rel`)
 		}
 		//fetch organizations and contacts with filters on their locations
@@ -117,14 +117,14 @@ func (r *queryRepository) GetOrganizationsAndContacts(ctx context.Context, sessi
 		  MATCH (t:Tenant {name:$tenant})--(o:Organization)--(l:Location)
 		  MATCH (t)--(c:Contact)
 		  MATCH (o)-[rel]-(c)
-		  WHERE o.tenantOrganization = false AND (toLower(l.name) CONTAINS $location OR toLower(l.country) CONTAINS $location OR toLower(l.region) CONTAINS $location OR toLower(l.locality) CONTAINS $location)
+		  WHERE (o.tenantOrganization = false OR o.tenantOrganization is null) AND (toLower(l.name) CONTAINS $location OR toLower(l.country) CONTAINS $location OR toLower(l.region) CONTAINS $location OR toLower(l.locality) CONTAINS $location)
 		  RETURN rel
 
 		  UNION
 		  MATCH (t:Tenant {name:$tenant})--(o:Organization)
 		  MATCH (t)--(c:Contact)--(l:Location)
 		  MATCH (o)-[rel]-(c)
-		  WHERE o.tenantOrganization = false AND (toLower(l.name) CONTAINS $location OR toLower(l.country) CONTAINS $location OR toLower(l.region) CONTAINS $location OR toLower(l.locality) CONTAINS $location)
+		  WHERE (o.tenantOrganization = false OR o.tenantOrganization is null) AND (toLower(l.name) CONTAINS $location OR toLower(l.country) CONTAINS $location OR toLower(l.region) CONTAINS $location OR toLower(l.locality) CONTAINS $location)
 		  RETURN rel`)
 		}
 
@@ -132,14 +132,14 @@ func (r *queryRepository) GetOrganizationsAndContacts(ctx context.Context, sessi
 		countQuery = countQuery + fmt.Sprintf(`
 		  UNION
 		  MATCH (t:Tenant {name:$tenant})-[rel:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization)
-		  WHERE o.tenantOrganization = false AND NOT (o)--(:Contact) AND (%s)
+		  WHERE (o.tenantOrganization = false OR o.tenantOrganization is null) AND NOT (o)--(:Contact) AND (%s)
 		  RETURN rel`, organizationFilterCypher)
 		//fetch organizations without contacts with filters on their emails
 		if searchTerm != nil {
 			countQuery = countQuery + fmt.Sprintf(`
 		  UNION
 		  MATCH (t:Tenant {name:$tenant})-[rel:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization)-[:HAS]->(e:Email)
-		  WHERE o.tenantOrganization = false AND NOT (o)--(:Contact) AND (toLower(e.email) CONTAINS $email OR toLower(e.rawEmail) CONTAINS $email)
+		  WHERE (o.tenantOrganization = false OR o.tenantOrganization is null) AND NOT (o)--(:Contact) AND (toLower(e.email) CONTAINS $email OR toLower(e.rawEmail) CONTAINS $email)
 		  RETURN rel`)
 		}
 		//fetch organizations without contacts with filters on their locations
@@ -147,7 +147,7 @@ func (r *queryRepository) GetOrganizationsAndContacts(ctx context.Context, sessi
 			countQuery = countQuery + fmt.Sprintf(`
 		  UNION
 		  MATCH (t:Tenant {name:$tenant})-[rel:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization)--(l:Location)
-		  WHERE o.tenantOrganization = false AND NOT (o)--(:Contact) AND (toLower(l.name) CONTAINS $location OR toLower(l.country) CONTAINS $location OR toLower(l.region) CONTAINS $location OR toLower(l.locality) CONTAINS $location)
+		  WHERE (o.tenantOrganization = false OR o.tenantOrganization is null) AND NOT (o)--(:Contact) AND (toLower(l.name) CONTAINS $location OR toLower(l.country) CONTAINS $location OR toLower(l.region) CONTAINS $location OR toLower(l.locality) CONTAINS $location)
 		  RETURN rel`)
 		}
 
@@ -197,7 +197,7 @@ func (r *queryRepository) GetOrganizationsAndContacts(ctx context.Context, sessi
           MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization)
 		  MATCH (t)<-[:CONTACT_BELONGS_TO_TENANT]-(c:Contact)
 		  MATCH (o)--(c)
-		  WHERE o.tenantOrganization = false AND ((%s) OR (%s))
+		  WHERE (o.tenantOrganization = false OR o.tenantOrganization is null) AND ((%s) OR (%s))
 		  RETURN DISTINCT o, c order by o.updatedAt desc, c.updatedAt desc`, organizationFilterCypher, contactFilterCypher)
 		//fetch organizations and contacts with filters on their emails
 		if searchTerm != nil {
@@ -206,14 +206,14 @@ func (r *queryRepository) GetOrganizationsAndContacts(ctx context.Context, sessi
 		  MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization)-[:HAS]->(e:Email)
 		  MATCH (t)<-[:CONTACT_BELONGS_TO_TENANT]-(c:Contact)
 		  MATCH (o)--(c)
-		  WHERE o.tenantOrganization = false AND (toLower(e.email) CONTAINS $email OR toLower(e.rawEmail) CONTAINS $email)
+		  WHERE (o.tenantOrganization = false OR o.tenantOrganization is null) AND (toLower(e.email) CONTAINS $email OR toLower(e.rawEmail) CONTAINS $email)
 		  RETURN DISTINCT o, c order by o.updatedAt desc, c.updatedAt desc
 
 		  UNION
 		  MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization)
 		  MATCH (t)<-[:CONTACT_BELONGS_TO_TENANT]-(c:Contact)-[:HAS]->(e:Email)
 		  MATCH (o)--(c)
-		  WHERE o.tenantOrganization = false AND (toLower(e.email) CONTAINS $email OR toLower(e.rawEmail) CONTAINS $email)
+		  WHERE (o.tenantOrganization = false OR o.tenantOrganization is null) AND (toLower(e.email) CONTAINS $email OR toLower(e.rawEmail) CONTAINS $email)
 		  RETURN DISTINCT o, c order by o.updatedAt desc, c.updatedAt desc`)
 		}
 		//fetch organizations and contacts with filters on their locations
@@ -223,14 +223,14 @@ func (r *queryRepository) GetOrganizationsAndContacts(ctx context.Context, sessi
 		  MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization)--(l:Location)
 		  MATCH (t)<-[:CONTACT_BELONGS_TO_TENANT]-(c:Contact)
 		  MATCH (o)--(c)
-		  WHERE o.tenantOrganization = false AND (toLower(l.name) CONTAINS $location OR toLower(l.country) CONTAINS $location OR toLower(l.region) CONTAINS $location OR toLower(l.locality) CONTAINS $location)
+		  WHERE (o.tenantOrganization = false OR o.tenantOrganization is null) AND (toLower(l.name) CONTAINS $location OR toLower(l.country) CONTAINS $location OR toLower(l.region) CONTAINS $location OR toLower(l.locality) CONTAINS $location)
 		  RETURN o, c order by o.updatedAt desc, c.updatedAt desc
 
 		  UNION
 		  MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization)
 		  MATCH (t)<-[:CONTACT_BELONGS_TO_TENANT]-(c:Contact)--(l:Location)
 		  MATCH (o)--(c)
-		  WHERE o.tenantOrganization = false AND (toLower(l.name) CONTAINS $location OR toLower(l.country) CONTAINS $location OR toLower(l.region) CONTAINS $location OR toLower(l.locality) CONTAINS $location)
+		  WHERE (o.tenantOrganization = false OR o.tenantOrganization is null) AND (toLower(l.name) CONTAINS $location OR toLower(l.country) CONTAINS $location OR toLower(l.region) CONTAINS $location OR toLower(l.locality) CONTAINS $location)
 		  RETURN o, c order by o.updatedAt desc, c.updatedAt desc`)
 		}
 
@@ -238,14 +238,14 @@ func (r *queryRepository) GetOrganizationsAndContacts(ctx context.Context, sessi
 		query = query + fmt.Sprintf(`
 		  UNION
 		  MATCH (:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization)
-		  WHERE o.tenantOrganization = false AND NOT (o)--(:Contact) AND (%s)	
+		  WHERE (o.tenantOrganization = false OR o.tenantOrganization is null) AND NOT (o)--(:Contact) AND (%s)	
 		  RETURN o, null as c order by o.updatedAt desc`, organizationFilterCypher)
 		//fetch organizations without contacts with filters on their emails
 		if searchTerm != nil {
 			query = query + fmt.Sprintf(`
 		  UNION
 		  MATCH (:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization)-[:HAS]->(e:Email)
-		  WHERE o.tenantOrganization = false AND NOT (o)--(:Contact) AND (toLower(e.email) CONTAINS $email AND toLower(e.rawEmail) CONTAINS $email)
+		  WHERE (o.tenantOrganization = false OR o.tenantOrganization is null) AND NOT (o)--(:Contact) AND (toLower(e.email) CONTAINS $email AND toLower(e.rawEmail) CONTAINS $email)
 		  RETURN o, null as c order by o.updatedAt desc`)
 		}
 		//fetch organizations without contacts with filters on their locations
@@ -253,7 +253,7 @@ func (r *queryRepository) GetOrganizationsAndContacts(ctx context.Context, sessi
 			query = query + fmt.Sprintf(`
 		  UNION
 		  MATCH (:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization)--(l:Location)
-		  WHERE o.tenantOrganization = false AND NOT (o)--(:Contact) AND (toLower(l.name) CONTAINS $location OR toLower(l.country) CONTAINS $location OR toLower(l.region) CONTAINS $location OR toLower(l.locality) CONTAINS $location)
+		  WHERE (o.tenantOrganization = false OR o.tenantOrganization is null) AND NOT (o)--(:Contact) AND (toLower(l.name) CONTAINS $location OR toLower(l.country) CONTAINS $location OR toLower(l.region) CONTAINS $location OR toLower(l.locality) CONTAINS $location)
 		  RETURN o, null as c order by o.updatedAt desc`)
 		}
 
