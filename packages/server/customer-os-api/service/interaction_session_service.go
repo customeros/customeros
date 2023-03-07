@@ -8,7 +8,7 @@ import (
 )
 
 type InteractionSessionService interface {
-	mapDbNodeToInteractionSessionEntity(node *dbtype.Node) *entity.InteractionSessionEntity
+	mapDbNodeToInteractionSessionEntity(node dbtype.Node) *entity.InteractionSessionEntity
 }
 
 type interactionSessionService struct {
@@ -21,8 +21,8 @@ func NewInteractionSessionService(repositories *repository.Repositories) Interac
 	}
 }
 
-func (s *interactionSessionService) mapDbNodeToInteractionSessionEntity(node *dbtype.Node) *entity.InteractionSessionEntity {
-	props := utils.GetPropsFromNode(*node)
+func (s *interactionSessionService) mapDbNodeToInteractionSessionEntity(node dbtype.Node) *entity.InteractionSessionEntity {
+	props := utils.GetPropsFromNode(node)
 	interactionSessionEntity := entity.InteractionSessionEntity{
 		Id:            utils.GetStringPropOrEmpty(props, "id"),
 		StartedAt:     utils.GetTimePropOrNow(props, "startedAt"),

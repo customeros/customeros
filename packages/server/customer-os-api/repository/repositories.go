@@ -29,6 +29,7 @@ type Repositories struct {
 	QueryRepository               QueryRepository
 	DomainRepository              DomainRepository
 	TicketRepository              TicketRepository
+	InteractionEventRepository    InteractionEventRepository
 }
 
 type Drivers struct {
@@ -64,5 +65,6 @@ func InitRepos(driver *neo4j.DriverWithContext) *Repositories {
 	repositories.QueryRepository = NewQueryRepository(driver)
 	repositories.DomainRepository = NewDomainRepository(driver)
 	repositories.TicketRepository = NewTicketRepository(driver)
+	repositories.InteractionEventRepository = NewInteractionEventRepository(driver)
 	return &repositories
 }
