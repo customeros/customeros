@@ -19,8 +19,6 @@ export const OrganizationDetailsSkeleton: React.FC = () => {
           <Skeleton />
           <Skeleton />
         </p>
-
-        <Skeleton />
       </div>
     </div>
   );

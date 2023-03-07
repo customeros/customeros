@@ -32,7 +32,7 @@ export const OrganizationDetails = ({ id }: { id: string }) => {
             </div>
           </div>
 
-          <span className={styles.industry}>{data?.industry}</span>
+          <span className={styles.industry}>{(data?.industry ?? '')?.split('_').join(' ').toLowerCase()}</span>
         </div>
 
         <p className={styles.description}>{data?.description}</p>

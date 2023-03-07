@@ -1,22 +1,7 @@
 import React, { useEffect } from 'react';
-import { useRouter } from 'next/router';
-import classNames from 'classnames';
-import { Phone, Envelope } from '../../ui-kit';
 import { OrganizationTimelineSkeleton } from './skeletons';
-import { useOrganizationContacts } from '../../../hooks/useOrganization';
-import styles from './organization-timeline.module.scss';
-import { ContactTags } from '../../contact/contact-tags';
-import { getContactDisplayName } from '../../../utils';
-import { useContactNotes } from '../../../hooks/useContactNote/useContactNotes';
-import { useContactTickets } from '../../../hooks/useContact/useContactTickets';
-import { useContactConversations } from '../../../hooks/useContactConversations';
-import {
-  Contact,
-  useGetContactNotesQuery,
-} from '../../../graphQL/__generated__/generated';
 import { Timeline } from '../../ui-kit/organisms';
 import { useOrganizationTimelineData } from '../../../hooks/useOrganization/useOrganizationTimeline';
-import { OrganizationContactsSkeleton } from '../organization-contacts/skeletons';
 
 export const OrganizationTimeline = ({ id }: { id: string }) => {
   const {
