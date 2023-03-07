@@ -1,7 +1,7 @@
 @import '../../../styles/mixins';
 
 .contactsList {
-  padding: 0 var(--spacing-xxs);
+  padding: 0;
 }
 .contactItem {
   margin-bottom: var(--spacing-sm);
@@ -16,20 +16,21 @@
 
 .personalDetails {
   display: flex;
-  align-items: self-start;
+  align-items: center;
 }
 
 .jobTitle {
-  margin-left: var(--spacing-xxxs);
+  margin-right: var(--spacing-xxs);
   color: var(--text-faded);
   font-size: var(--font-size-xxs);
 }
 .name {
   font-size: var(--font-size-base);
   color: var(--text-default);
-  margin: 0 var(--spacing-xxxs);
+  margin: 0;
   word-break: keep-all;
   white-space: nowrap;
+  padding: 0px var(--spacing-lg);
 }
 
 .detailsContainer {
@@ -42,4 +43,5 @@
 // FIXME generated icons are not responsive, this should be removed when they are fixed
 .icon {
   transform: scale(0.8);
+  width:  var(--spacing-lg);
 }

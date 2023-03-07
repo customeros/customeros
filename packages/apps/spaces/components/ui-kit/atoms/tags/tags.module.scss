@@ -34,6 +34,10 @@
   padding: 0;
   margin: var(--spacing-xxxs) var(--spacing-xxxs) 0 0;
 
+  li {
+    margin: 0;
+  }
+
   &.tagListPresentation {
     margin: 0;
   }
