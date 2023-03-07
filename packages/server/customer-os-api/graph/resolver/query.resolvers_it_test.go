@@ -169,12 +169,12 @@ func TestQueryResolver_GetData_Multiple_Records(t *testing.T) {
 	require.Equal(t, "c", *pagedData.Content[0].Contact.FirstName)
 	require.Equal(t, "1", *pagedData.Content[0].Contact.LastName)
 
-	require.Nil(t, pagedData.Content[1].Contact)
-	require.Equal(t, "org 2", pagedData.Content[1].Organization.Name)
+	require.Nil(t, pagedData.Content[1].Organization)
+	require.Equal(t, "c", *pagedData.Content[1].Contact.FirstName)
+	require.Equal(t, "2", *pagedData.Content[1].Contact.LastName)
 
-	require.Nil(t, pagedData.Content[2].Organization)
-	require.Equal(t, "c", *pagedData.Content[2].Contact.FirstName)
-	require.Equal(t, "2", *pagedData.Content[2].Contact.LastName)
+	require.Nil(t, pagedData.Content[2].Contact)
+	require.Equal(t, "org 2", pagedData.Content[2].Organization.Name)
 }
 
 func TestQueryResolver_GetData_Search_Organization(t *testing.T) {
@@ -298,12 +298,12 @@ func TestQueryResolver_GetData_Search_Contact_And_Organization(t *testing.T) {
 	require.Equal(t, 1, pagedData.TotalPages)
 	require.Equal(t, int64(2), pagedData.TotalElements)
 
-	require.Nil(t, pagedData.Content[0].Contact)
-	require.Equal(t, "org 2", pagedData.Content[0].Organization.Name)
+	require.Nil(t, pagedData.Content[0].Organization)
+	require.Equal(t, "c", *pagedData.Content[0].Contact.FirstName)
+	require.Equal(t, "2", *pagedData.Content[0].Contact.LastName)
 
-	require.Nil(t, pagedData.Content[1].Organization)
-	require.Equal(t, "c", *pagedData.Content[1].Contact.FirstName)
-	require.Equal(t, "2", *pagedData.Content[1].Contact.LastName)
+	require.Nil(t, pagedData.Content[1].Contact)
+	require.Equal(t, "org 2", pagedData.Content[1].Organization.Name)
 }
 
 func TestQueryResolver_GetData_Search_By_Email(t *testing.T) {
@@ -389,14 +389,14 @@ func TestQueryResolver_GetData_Search_By_Email(t *testing.T) {
 	require.Equal(t, "c", *pagedData.Content[1].Contact.FirstName)
 	require.Equal(t, "2", *pagedData.Content[1].Contact.LastName)
 
-	//org not associated
-	require.Nil(t, pagedData.Content[2].Contact)
-	require.Equal(t, "org 8", pagedData.Content[2].Organization.Name)
-
 	//c not associated
-	require.Nil(t, pagedData.Content[3].Organization)
-	require.Equal(t, "c", *pagedData.Content[3].Contact.FirstName)
-	require.Equal(t, "6", *pagedData.Content[3].Contact.LastName)
+	require.Nil(t, pagedData.Content[2].Organization)
+	require.Equal(t, "c", *pagedData.Content[2].Contact.FirstName)
+	require.Equal(t, "6", *pagedData.Content[2].Contact.LastName)
+
+	//org not associated
+	require.Nil(t, pagedData.Content[3].Contact)
+	require.Equal(t, "org 8", pagedData.Content[3].Organization.Name)
 }
 
 func TestQueryResolver_GetData_Search_By_Place(t *testing.T) {
@@ -474,12 +474,12 @@ func TestQueryResolver_GetData_Search_By_Place(t *testing.T) {
 	require.Equal(t, 1, pagedDataCountry.TotalPages)
 	require.Equal(t, int64(2), pagedDataCountry.TotalElements)
 
-	require.Equal(t, "org 2", pagedDataCountry.Content[0].Organization.Name)
-	require.Nil(t, pagedDataCountry.Content[0].Contact)
+	require.Nil(t, pagedDataCountry.Content[0].Organization)
+	require.Equal(t, "c", *pagedDataCountry.Content[0].Contact.FirstName)
+	require.Equal(t, "2", *pagedDataCountry.Content[0].Contact.LastName)
 
-	require.Nil(t, pagedDataCountry.Content[1].Organization)
-	require.Equal(t, "c", *pagedDataCountry.Content[1].Contact.FirstName)
-	require.Equal(t, "2", *pagedDataCountry.Content[1].Contact.LastName)
+	require.Nil(t, pagedDataCountry.Content[1].Contact)
+	require.Equal(t, "org 2", pagedDataCountry.Content[1].Organization.Name)
 	//endregion
 
 	//region search by state
@@ -501,12 +501,12 @@ func TestQueryResolver_GetData_Search_By_Place(t *testing.T) {
 	require.Equal(t, 1, pagedDataState.TotalPages)
 	require.Equal(t, int64(2), pagedDataState.TotalElements)
 
-	require.Equal(t, "org 2", pagedDataState.Content[0].Organization.Name)
-	require.Nil(t, pagedDataState.Content[0].Contact)
+	require.Nil(t, pagedDataState.Content[0].Organization)
+	require.Equal(t, "c", *pagedDataState.Content[0].Contact.FirstName)
+	require.Equal(t, "2", *pagedDataState.Content[0].Contact.LastName)
 
-	require.Nil(t, pagedDataState.Content[1].Organization)
-	require.Equal(t, "c", *pagedDataState.Content[1].Contact.FirstName)
-	require.Equal(t, "2", *pagedDataState.Content[1].Contact.LastName)
+	require.Nil(t, pagedDataState.Content[1].Contact)
+	require.Equal(t, "org 2", pagedDataState.Content[1].Organization.Name)
 	//endregion
 
 	//region search by city
@@ -528,11 +528,11 @@ func TestQueryResolver_GetData_Search_By_Place(t *testing.T) {
 	require.Equal(t, 1, pagedDataCity.TotalPages)
 	require.Equal(t, int64(2), pagedDataCity.TotalElements)
 
-	require.Equal(t, "org 2", pagedDataCity.Content[0].Organization.Name)
-	require.Nil(t, pagedDataCity.Content[0].Contact)
+	require.Nil(t, pagedDataCity.Content[0].Organization)
+	require.Equal(t, "c", *pagedDataCity.Content[0].Contact.FirstName)
+	require.Equal(t, "2", *pagedDataCity.Content[0].Contact.LastName)
 
-	require.Nil(t, pagedDataCity.Content[1].Organization)
-	require.Equal(t, "c", *pagedDataCity.Content[1].Contact.FirstName)
-	require.Equal(t, "2", *pagedDataCity.Content[1].Contact.LastName)
+	require.Nil(t, pagedDataCity.Content[1].Contact)
+	require.Equal(t, "org 2", pagedDataCity.Content[1].Organization.Name)
 	//endregion
 }
