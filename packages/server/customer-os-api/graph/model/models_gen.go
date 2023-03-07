@@ -544,12 +544,13 @@ type FilterItem struct {
 }
 
 type InteractionEvent struct {
-	ID        string                      `json:"id"`
-	CreatedAt time.Time                   `json:"createdAt"`
-	Channel   string                      `json:"channel"`
-	SentBy    InteractionParticipant      `json:"sentBy"`
-	SentTo    []*InteractionEventReceiver `json:"sentTo"`
-	Content   *string                     `json:"content"`
+	ID            string     `json:"id"`
+	CreatedAt     time.Time  `json:"createdAt"`
+	Channel       *string    `json:"channel"`
+	Content       *string    `json:"content"`
+	Source        DataSource `json:"source"`
+	SourceOfTruth DataSource `json:"sourceOfTruth"`
+	AppSource     string     `json:"appSource"`
 }
 
 func (InteractionEvent) IsNode()            {}
@@ -561,16 +562,17 @@ type InteractionEventReceiver struct {
 }
 
 type InteractionSession struct {
-	ID            string     `json:"id"`
-	StartedAt     time.Time  `json:"startedAt"`
-	EndedAt       *time.Time `json:"endedAt"`
-	Name          *string    `json:"name"`
-	Status        *string    `json:"status"`
-	Type          *string    `json:"type"`
-	Channel       *string    `json:"channel"`
-	Source        DataSource `json:"source"`
-	SourceOfTruth DataSource `json:"sourceOfTruth"`
-	AppSource     string     `json:"appSource"`
+	ID            string              `json:"id"`
+	StartedAt     time.Time           `json:"startedAt"`
+	EndedAt       *time.Time          `json:"endedAt"`
+	Name          *string             `json:"name"`
+	Status        *string             `json:"status"`
+	Type          *string             `json:"type"`
+	Channel       *string             `json:"channel"`
+	Source        DataSource          `json:"source"`
+	SourceOfTruth DataSource          `json:"sourceOfTruth"`
+	AppSource     string              `json:"appSource"`
+	Events        []*InteractionEvent `json:"events"`
 }
 
 func (InteractionSession) IsAction() {}

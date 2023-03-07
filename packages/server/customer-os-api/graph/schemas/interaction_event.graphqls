@@ -12,17 +12,21 @@ type InteractionSession implements Node {
     source: DataSource!
     sourceOfTruth: DataSource!
     appSource: String!
+    events: [InteractionEvent!]! @goField(forceResolver: true)
 }
 
 type InteractionEvent implements Node {
     id: ID!
     createdAt: Time!
 
-    channel: String!
-    sentBy: InteractionParticipant!
-    sentTo: [InteractionEventReceiver!]!
-
+    channel: String
     content: String
+    source: DataSource!
+    sourceOfTruth: DataSource!
+    appSource: String!
+    #    sentBy: InteractionParticipant!
+    #    sentTo: [InteractionEventReceiver!]!
+
 }
 
 type InteractionEventReceiver {
