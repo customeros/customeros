@@ -12,6 +12,9 @@ func MapEntityToAction(actionEntity *entity.Action) any {
 	case entity.NodeLabel_PageView:
 		pageViewEntity := (*actionEntity).(*entity.PageViewEntity)
 		return MapEntityToPageViewAction(pageViewEntity)
+	case entity.NodeLabel_InteractionSession:
+		interactionSessionEntity := (*actionEntity).(*entity.InteractionSessionEntity)
+		return MapEntityToInteractionSession(interactionSessionEntity)
 	}
 	fmt.Errorf("action of type %s not identified", reflect.TypeOf(actionEntity))
 	return nil

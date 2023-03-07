@@ -20,6 +20,10 @@ type ExtensibleEntity interface {
 	GetTemplate() *EntityTemplate
 }
 
+type InteractionParticipant interface {
+	IsInteractionParticipant()
+}
+
 type Node interface {
 	IsNode()
 	GetID() string
@@ -102,6 +106,8 @@ func (this Contact) GetID() string                { return this.ID }
 func (this Contact) GetTemplate() *EntityTemplate { return this.Template }
 
 func (Contact) IsNode() {}
+
+func (Contact) IsInteractionParticipant() {}
 
 func (Contact) IsSearchBasicResult() {}
 
@@ -537,6 +543,41 @@ type FilterItem struct {
 	CaseSensitive *bool              `json:"caseSensitive"`
 }
 
+type InteractionEvent struct {
+	ID        string                      `json:"id"`
+	CreatedAt time.Time                   `json:"createdAt"`
+	Channel   string                      `json:"channel"`
+	SentBy    InteractionParticipant      `json:"sentBy"`
+	SentTo    []*InteractionEventReceiver `json:"sentTo"`
+	Content   *string                     `json:"content"`
+}
+
+func (InteractionEvent) IsNode()            {}
+func (this InteractionEvent) GetID() string { return this.ID }
+
+type InteractionEventReceiver struct {
+	Participant InteractionParticipant `json:"participant"`
+	Nature      *string                `json:"nature"`
+}
+
+type InteractionSession struct {
+	ID            string     `json:"id"`
+	StartedAt     time.Time  `json:"startedAt"`
+	EndedAt       *time.Time `json:"endedAt"`
+	Name          *string    `json:"name"`
+	Status        *string    `json:"status"`
+	Type          *string    `json:"type"`
+	Channel       *string    `json:"channel"`
+	Source        DataSource `json:"source"`
+	SourceOfTruth DataSource `json:"sourceOfTruth"`
+	AppSource     string     `json:"appSource"`
+}
+
+func (InteractionSession) IsAction() {}
+
+func (InteractionSession) IsNode()            {}
+func (this InteractionSession) GetID() string { return this.ID }
+
 // Describes the relationship a Contact has with a Organization.
 // **A `return` object**
 type JobRole struct {
@@ -910,6 +951,8 @@ type User struct {
 	Conversations *ConversationPage `json:"conversations"`
 }
 
+func (User) IsInteractionParticipant() {}
+
 // Describes the User of customerOS.  A user is the person who logs into the Openline platform.
 // **A `create` object.**
 type UserInput struct {
@@ -961,16 +1004,18 @@ type UserUpdateInput struct {
 type ActionType string
 
 const (
-	ActionTypePageView ActionType = "PAGE_VIEW"
+	ActionTypePageView           ActionType = "PAGE_VIEW"
+	ActionTypeInteractionSession ActionType = "INTERACTION_SESSION"
 )
 
 var AllActionType = []ActionType{
 	ActionTypePageView,
+	ActionTypeInteractionSession,
 }
 
 func (e ActionType) IsValid() bool {
 	switch e {
-	case ActionTypePageView:
+	case ActionTypePageView, ActionTypeInteractionSession:
 		return true
 	}
 	return false

@@ -36,8 +36,8 @@ func (r *actionRepository) GetContactActions(ctx context.Context, session neo4j.
 		filterByTypeCypherFragment = "AND size([label IN labels(a) WHERE label IN $nodeLabels | 1]) > 0"
 	}
 	query := fmt.Sprintf("MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant}), "+
-		" p = (c)-[*1..2]->(a:Action) "+
-		" WHERE all(r IN relationships(p) WHERE type(r) in ['HAS_ACTION','PARTICIPATES','CONSISTS_OF'])"+
+		" p = (c)-[*1..2]-(a:Action) "+
+		" WHERE all(r IN relationships(p) WHERE type(r) in ['HAS_ACTION','PARTICIPATES','CONSISTS_OF','SENT','SENT_TO','PART_OF'])"+
 		" AND a.startedAt >= datetime($from) AND a.startedAt <= datetime($to) "+
 		" %s "+
 		" RETURN distinct a ORDER BY a.startedAt DESC", filterByTypeCypherFragment)

@@ -3,11 +3,14 @@ package entity
 import "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 
 const (
-	NodeLabel_PageView = "PageView"
+	// FIXME alexb check where it's used
+	NodeLabel_PageView           = "PageView"
+	NodeLabel_InteractionSession = "InteractionSession"
 )
 
 var NodeLabelsByActionType = map[string]string{
-	model.ActionTypePageView.String(): NodeLabel_PageView,
+	model.ActionTypePageView.String():           NodeLabel_PageView,
+	model.ActionTypeInteractionSession.String(): NodeLabel_InteractionSession,
 }
 
 type Action interface {
