@@ -1,4 +1,4 @@
-import React, { useContext } from 'react';
+import React, { useContext, useRef, useState } from 'react';
 import Image from 'next/image';
 import { IconButton } from '../../ui-kit/atoms';
 import styles from './contact-details.module.scss';
@@ -13,6 +13,7 @@ export const ContactDetails = ({ id }: { id: string }) => {
   const { data, loading, error } = useContactCommunicationChannelsDetails({
     id,
   });
+  const phoneContainerRef = useRef(null);
   const handleStartPhoneCall = () => {
     const number =
       data?.phoneNumbers.find((pn) => pn.primary)?.e164 ||
