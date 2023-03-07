@@ -13,7 +13,8 @@ import { WebRTCContext } from '../../../../context/web-rtc';
 import styles from './web-rtc.module.scss';
 import { Button, IconButton } from '../../atoms';
 import { useRecoilValue } from 'recoil';
-import { userData } from '../../../../state';
+import { callParticipant } from '../../../../state';
+import { Dialog } from 'primereact/dialog';
 export const WebRTCCallProgress: React.FC<any> = () => {
   const {
     inCall,
@@ -25,9 +26,10 @@ export const WebRTCCallProgress: React.FC<any> = () => {
     unHoldCall,
     sendDtmf,
     hangupCall,
+    ringing,
     callerId,
   } = useContext(WebRTCContext) as any;
-  const from = useRecoilValue(userData);
+  const { identity } = useRecoilValue(callParticipant);
 
   const toggleMute = () => {
     if (isCallMuted) {
@@ -89,9 +91,17 @@ export const WebRTCCallProgress: React.FC<any> = () => {
   }
 
   return (
-    <>
-      <article className={styles.overlayContentWrapper}>
-        <h1 className={styles.sectionTitle}>In call with {from.identity}</h1>
+    <Dialog
+      visible={inCall}
+      modal={false}
+      className={styles.overlayContentWrapper}
+      closable={false}
+      closeOnEscape={false}
+      draggable={false}
+      onHide={() => console.log()}
+    >
+      <article>
+        <h1 className={styles.sectionTitle}>In call with {identity}</h1>
 
         <div className={styles.dialNumbers}>{getRows()}</div>
 
@@ -122,6 +132,6 @@ export const WebRTCCallProgress: React.FC<any> = () => {
           />
         </div>
       </article>
-    </>
+    </Dialog>
   );
 };

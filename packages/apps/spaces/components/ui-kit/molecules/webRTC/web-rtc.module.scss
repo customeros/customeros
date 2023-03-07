@@ -3,10 +3,11 @@
   background: white;
   padding: var(--spacing-xs) var(--spacing-xs);
   position:absolute;
+  top: 230px;// fixme
+  left: 20px;// fixme
   z-index: 1;
   border-radius: var(--border-radius-md);
   box-shadow: 5px 5px 10px rgb(188 188 188 / 59%), -1px -1px 2px #fff, 2px 3px 4px #a4a4a4;
-  bottom: -300px; //fixme magin number
   max-width: min-content;
 }
 
