@@ -24,6 +24,7 @@
   &.second {
     height: 5px;
   }
+
 }
 
 .when {
@@ -40,4 +41,8 @@
   border: 1px solid var(--gray-300);
   width: 100%;
   position: relative;
+}
+
+.interaction {
+  background:red;
 }
