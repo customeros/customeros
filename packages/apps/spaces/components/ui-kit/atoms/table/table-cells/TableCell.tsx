@@ -59,7 +59,7 @@ export const DashboardTableAddressCell = ({
 
       {(country || region) && (
         <div className={`${styles.addressRegion}`}>
-          <Highlight text={region || ''} highlight={highlight} />,
+          <Highlight text={region || ''} highlight={highlight} /> {country && ','}
           <Highlight text={country || ''} highlight={highlight} />
         </div>
       )}
