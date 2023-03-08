@@ -26,7 +26,7 @@ export const Table = <T,>({
   const rowVirtualizer = useVirtual({
     size: totalItems,
     parentRef,
-    estimateSize: React.useCallback(() => 60, []),
+    estimateSize: React.useCallback(() => 54, []),
     overscan: 5,
   });
   useEffect(() => {
@@ -103,6 +103,7 @@ export const Table = <T,>({
                   ref={virtualRow.measureRef}
                   className={styles.row}
                   style={{
+                    // padding: `5px 0px`,
                     minHeight: `${virtualRow.size}px`,
                     transform: `translateY(${virtualRow.start}px)`,
                   }}
