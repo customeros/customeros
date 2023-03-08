@@ -308,6 +308,10 @@ export const ConversationTimelineItem: React.FC<Props> = ({
                 .map((msg: ConversationItem, index: number) => {
                   const emailData = JSON.parse(msg.content);
 
+                  if (!emailData.html) {
+                    return;
+                  }
+
                   const date =
                     new Date(1970, 0, 1).setSeconds(msg?.time?.seconds) ||
                     timeFromLastTimestamp;
