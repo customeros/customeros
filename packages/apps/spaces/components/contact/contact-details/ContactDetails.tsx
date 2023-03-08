@@ -1,10 +1,9 @@
-import React, { useContext, useRef, useState } from 'react';
+import React, { useContext } from 'react';
 import Image from 'next/image';
 import { IconButton } from '../../ui-kit/atoms';
 import styles from './contact-details.module.scss';
 import { ContactPersonalDetails } from './ContactPersonalDetails';
 import { WebRTCContext } from '../../../context/web-rtc';
-import { WebRTCCallProgress } from '../../ui-kit/molecules';
 import { useContactCommunicationChannelsDetails } from '../../../hooks/useContact';
 import { toast } from 'react-toastify';
 import { useSetRecoilState } from 'recoil';

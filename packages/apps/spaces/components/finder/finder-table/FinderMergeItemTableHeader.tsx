@@ -18,6 +18,7 @@ export const FinderMergeItemTableHeader: React.FC<{
       <div className={styles.checkboxContainer}>
         {mode === mergeMode && !!selectedIds.length && (
           <IconButton
+            size='xxxs'
             className={styles.deselectAllButton}
             mode='dangerLink'
             onClick={resetSelectedItems}

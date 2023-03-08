@@ -10,11 +10,17 @@
   font-size: 0.9rem;
 }
 
-.addressContainer:not(:last-of-type) {
-  border-bottom: 1px solid var(--gray-300);
-  padding-bottom: 8px;
-  margin-bottom: 8px;
+.addressContainer {
   font-size: var(--font-size-sm);
+  display: flex;
+  flex-direction: column;
+  align-items: baseline;
+
+  &:not(:last-of-type) {
+    border-bottom: 1px solid var(--gray-300);
+    padding-bottom: 8px;
+    margin-bottom: 8px;
+  }
 }
 
 .addressLocality {

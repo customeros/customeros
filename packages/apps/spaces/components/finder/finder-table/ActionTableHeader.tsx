@@ -44,7 +44,7 @@ export const ActionColumn = () => {
           setSelectedItems([]);
         }}
       >
-        Cancel
+        Done
       </Button>
     );
   }
@@ -59,6 +59,7 @@ export const ActionColumn = () => {
         autoHide={false}
       />
       <IconButton
+        className={styles.actionsMenuButton}
         id={'finder-actions-dropdown-button'}
         mode='secondary'
         size={'xxxs'}

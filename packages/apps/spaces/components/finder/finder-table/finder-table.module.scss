@@ -1,7 +1,8 @@
 @import 'styles/mixins';
 .actionHeader {
   height: 100%;
-  @include flex-center;
+  @include justify-end;
+  align-items: center;
 }
 
 .deselectAllButton {
@@ -22,7 +23,7 @@
     width: 8px;
     height: 8px;
     position: absolute;
-    top: -3px;
+    top: -4px;
     left: 2px;
     color: inherit;
   }
@@ -53,7 +54,7 @@
 }
 
 .checkboxContainer {
-  width: 25px;
+  min-width: 25px;
   margin-top: 2px;
   margin-left: var(--spacing-xxxs);
 }
@@ -62,11 +63,17 @@
   margin-left: var(--spacing-lg);
 }
 
-.finderCell {
-  //margin-left: var(--font-size-xxxl);
+.actionsMenuButton {
+  width: 30px;
+  height: 30px;
 }
-
 .confirmButton {
   border-radius: 4px;
   margin-left: var(--spacing-xxs);
+}
+
+.showMoreLocationsIcon {
+  display: flex;
+  align-self: flex-end;
+  margin-left: var(--spacing-xs);
 }
