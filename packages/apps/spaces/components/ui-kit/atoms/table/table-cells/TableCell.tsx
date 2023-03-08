@@ -51,18 +51,27 @@ export const DashboardTableAddressCell = ({
     <div className={styles.addressContainer}>
       {name && <Highlight text={name} highlight={highlight} />}
 
-      {locality && (
-        <div className={`${styles.addressLocality}`}>
-          <Highlight text={locality} highlight={highlight} />
-        </div>
-      )}
+      <div className={styles.addressFields}>
+        {locality && (
+          <div className={`${styles.addressLocality}`}>
+            <Highlight text={locality} highlight={highlight} />
+          </div>
+        )}
 
-      {(country || region) && (
-        <div className={`${styles.addressRegion}`}>
-          <Highlight text={region || ''} highlight={highlight} /> {country && ','}
-          <Highlight text={country || ''} highlight={highlight} />
-        </div>
-      )}
+        {locality && (country || region) && (
+            <div>,&nbsp;</div>
+        )}
+
+        {country || region ? (
+          <div className={`${styles.addressRegion}`}>
+            <Highlight text={region || ''} highlight={highlight} />{' '}
+            {country && ', '}
+            <Highlight text={country || ''} highlight={highlight} />
+          </div>
+        ) : (
+          ''
+        )}
+      </div>
     </div>
   );
 };

@@ -23,6 +23,10 @@
   }
 }
 
+.addressFields {
+  display: flex;
+}
+
 .addressLocality {
   color: var(--gray-800);
 }
