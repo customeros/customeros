@@ -1,6 +1,7 @@
 import * as React from 'react';
 import styles from './message.module.css';
 import sanitizeHtml from 'sanitize-html';
+
 // import { ConversationItem } from '../../../models/conversation-item';
 interface Props {
   message: any;
@@ -24,21 +25,7 @@ export const Message = ({
   index,
 }: Props) => {
   const decodeChannel = (channel: number) => {
-    switch (channel) {
-      case 0:
-        return 'Web chat';
-      case 1:
-        return 'Email';
-      case 2:
-        return 'WhatsApp';
-      case 3:
-        return 'Facebook';
-      case 4:
-        return 'Twitter';
-      case 5:
-        return 'Phone call';
-    }
-    return '';
+    return 'Voice call';
   };
 
   interface Content {
@@ -46,6 +33,7 @@ export const Message = ({
     mimetype: string;
     body: string;
   }
+
   interface MiniVcon {
     parties: Array<VConParty>;
     dialog?: Content;
@@ -138,23 +126,26 @@ export const Message = ({
           return (
             <div>
               {response.map(
-                (transcriptElement: TranscriptElement, index: number) => (
-                  <div key={index}>
-                    {transcriptElement.party.tel && (
-                      <div className={`${styles.message} ${styles.left}`}>
-                        {transcriptElement.text}
-                      </div>
-                    )}
-                    {!transcriptElement.party.tel && (
-                      <div
-                        className={`${styles.message} ${styles.right}`}
-                        style={{ background: '#C5EDCE', borderRadius: '5px' }}
-                      >
-                        {transcriptElement.text}
-                      </div>
-                    )}
-                  </div>
-                ),
+                (transcriptElement: TranscriptElement, index: number) => {
+                  console.log(transcriptElement);
+                  return (
+                    <div key={index}>
+                      {transcriptElement.party.tel && (
+                        <div className={`${styles.message} ${styles.left}`}>
+                          {transcriptElement.text}
+                        </div>
+                      )}
+                      {!transcriptElement.party.tel && (
+                        <div
+                          className={`${styles.message} ${styles.right}`}
+                          style={{ background: '#C5EDCE', borderRadius: '5px' }}
+                        >
+                          {transcriptElement.text}
+                        </div>
+                      )}
+                    </div>
+                  );
+                },
               )}
             </div>
           );
@@ -204,16 +195,6 @@ export const Message = ({
                 }}
               >
                 <span className='flex-grow-1'></span>
-                <span className='text-gray-600 mr-2'>
-                  {decodeChannel(message.type)}
-                </span>
-                {/*{date && (*/}
-                {/*  // <Moment*/}
-                {/*  //   className='text-sm text-gray-600'*/}
-                {/*  //   date={date}*/}
-                {/*  //   format={'HH:mm'}*/}
-                {/*  // ></Moment>*/}
-                {/*)}*/}
               </div>
             </div>
           </div>
@@ -265,13 +246,6 @@ export const Message = ({
                 <span className='text-gray-600 mr-2'>
                   {decodeChannel(message.type)}
                 </span>
-                {/*{date && (*/}
-                {/*  // <Moment*/}
-                {/*  //   className='text-sm text-gray-600'*/}
-                {/*  //   date={date}*/}
-                {/*  //   format={'HH:mm'}*/}
-                {/*  // ></Moment>*/}
-                {/*)}*/}
               </div>
             </div>
           </div>
@@ -282,22 +256,12 @@ export const Message = ({
           <div className='w-full flex'>
             <div className='flex-grow-1'></div>
             {
-              <div className='flex-grow-0 mb-1 pr-3'>
-                <table width='100%'>
-                  <tr>
-                    <td>
-                      <div>{getContact(content).tel}</div>
-                    </td>
-                    <td>
-                      <div style={{ textAlign: 'center' }}>
-                        <b>{content.analysis.type}</b>
-                      </div>
-                    </td>
-                    <td align='right'>
-                      <div>{getUser(content).mailto}</div>
-                    </td>
-                  </tr>
-                </table>
+              <div className='flex flex-row flex-grow-0'>
+                <div className={'mr-1'}>{getContact(content).tel}</div>
+                <div className={'mr-1'}style={{ textAlign: 'center' }}>
+                  <b>{content.analysis.type}</b>
+                </div>
+                <div className={'mr-1'}>{getUser(content).mailto}</div>
               </div>
             }
           </div>
@@ -320,13 +284,6 @@ export const Message = ({
               <span className='text-gray-600 mr-2'>
                 {decodeChannel(message.type)}
               </span>
-              {/*{date && (*/}
-              {/*  // <Moment*/}
-              {/*  //   className='text-sm text-gray-600'*/}
-              {/*  //   date={date}*/}
-              {/*  //   format={'HH:mm'}*/}
-              {/*  // ></Moment>*/}
-              {/*)}*/}
             </div>
           </div>
         </>
