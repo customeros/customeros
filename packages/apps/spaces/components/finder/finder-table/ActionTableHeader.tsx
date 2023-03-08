@@ -44,7 +44,7 @@ export const ActionColumn = () => {
           setSelectedItems([]);
         }}
       >
-        Cancel
+        Done
       </Button>
     );
   }

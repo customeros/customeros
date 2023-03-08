@@ -1,7 +1,7 @@
 @import 'styles/mixins';
 .actionHeader {
   height: 100%;
-  @include flex-center;
+  @include justify-end;
 }
 
 .deselectAllButton {
