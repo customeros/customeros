@@ -73,7 +73,7 @@ func (s *emailService) GetAllForEntityTypeByIds(ctx context.Context, entityType 
 	return &emailEntities, nil
 }
 
-func (s *emailService) MergeEmailTo(ctx context.Context, entityType entity.EntityType, entityId string, entity *entity.EmailEntity) (*entity.EmailEntity, error) {
+func (s *emailService) MergeEmailTo(ctx context.Context, entityType entity.EntityType, entityId string, inputEntity *entity.EmailEntity) (*entity.EmailEntity, error) {
 	session := utils.NewNeo4jWriteSession(ctx, s.getDriver())
 	defer session.Close(ctx)
 
@@ -82,12 +82,12 @@ func (s *emailService) MergeEmailTo(ctx context.Context, entityType entity.Entit
 	var emailRelationship *dbtype.Relationship
 
 	_, err = session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (interface{}, error) {
-		emailNode, emailRelationship, err = s.repositories.EmailRepository.MergeEmailToInTx(ctx, tx, common.GetContext(ctx).Tenant, entityType, entityId, *entity)
+		emailNode, emailRelationship, err = s.repositories.EmailRepository.MergeEmailToInTx(ctx, tx, common.GetContext(ctx).Tenant, entityType, entityId, *inputEntity)
 		if err != nil {
 			return nil, err
 		}
 		emailId := utils.GetPropsFromNode(*emailNode)["id"].(string)
-		if entity.Primary == true {
+		if inputEntity.Primary == true {
 			err := s.repositories.EmailRepository.SetOtherEmailsNonPrimaryInTx(ctx, tx, common.GetContext(ctx).Tenant, entityType, entityId, emailId)
 			if err != nil {
 				return nil, err
@@ -104,30 +104,60 @@ func (s *emailService) MergeEmailTo(ctx context.Context, entityType entity.Entit
 	return emailEntity, nil
 }
 
-func (s *emailService) UpdateEmailFor(ctx context.Context, entityType entity.EntityType, entityId string, entity *entity.EmailEntity) (*entity.EmailEntity, error) {
+func (s *emailService) UpdateEmailFor(ctx context.Context, entityType entity.EntityType, entityId string, inputEntity *entity.EmailEntity) (*entity.EmailEntity, error) {
 	session := utils.NewNeo4jWriteSession(ctx, s.getDriver())
 	defer session.Close(ctx)
 
 	var err error
 	var emailNode *dbtype.Node
 	var emailRelationship *dbtype.Relationship
+	var detachCurrentEmail = false
 
 	_, err = session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (interface{}, error) {
-		emailNode, emailRelationship, err = s.repositories.EmailRepository.UpdateEmailByInTx(ctx, tx, common.GetContext(ctx).Tenant, entityType, entityId, *entity)
+		currentEmailNode, err := s.repositories.EmailRepository.GetByIdAndRelatedEntity(ctx, entityType, common.GetTenantFromContext(ctx), inputEntity.Id, entityId)
 		if err != nil {
 			return nil, err
 		}
-		emailId := utils.GetPropsFromNode(*emailNode)["id"].(string)
-		if entity.Primary == true {
-			err := s.repositories.EmailRepository.SetOtherEmailsNonPrimaryInTx(ctx, tx, common.GetContext(ctx).Tenant, entityType, entityId, emailId)
+		currentEmail := utils.GetPropsFromNode(*currentEmailNode)["email"].(string)
+		currentRawEmail := utils.GetPropsFromNode(*currentEmailNode)["rawEmail"].(string)
+
+		if len(inputEntity.RawEmail) == 0 || inputEntity.RawEmail == currentEmail || inputEntity.RawEmail == currentRawEmail {
+			// email address replace not requested, proceed with update
+			emailNode, emailRelationship, err = s.repositories.EmailRepository.UpdateEmailByInTx(ctx, tx, common.GetContext(ctx).Tenant, entityType, entityId, *inputEntity)
 			if err != nil {
 				return nil, err
 			}
+			emailId := utils.GetPropsFromNode(*emailNode)["id"].(string)
+			if inputEntity.Primary == true {
+				err := s.repositories.EmailRepository.SetOtherEmailsNonPrimaryInTx(ctx, tx, common.GetContext(ctx).Tenant, entityType, entityId, emailId)
+				if err != nil {
+					return nil, err
+				}
+			}
+		} else {
+			// proceed with email address replace
+			// merge new email address
+			emailNode, emailRelationship, err = s.repositories.EmailRepository.MergeEmailToInTx(ctx, tx, common.GetContext(ctx).Tenant, entityType, entityId, *inputEntity)
+			if err != nil {
+				return nil, err
+			}
+			emailId := utils.GetPropsFromNode(*emailNode)["id"].(string)
+			if inputEntity.Primary == true {
+				err := s.repositories.EmailRepository.SetOtherEmailsNonPrimaryInTx(ctx, tx, common.GetContext(ctx).Tenant, entityType, entityId, emailId)
+				if err != nil {
+					return nil, err
+				}
+			}
+			detachCurrentEmail = true
 		}
-		return nil, err
+		return nil, nil
 	})
 	if err != nil {
 		return nil, err
+	}
+
+	if detachCurrentEmail {
+		_, err = s.DetachFromEntityById(ctx, entityType, entityId, inputEntity.Id)
 	}
 
 	var emailEntity = s.mapDbNodeToEmailEntity(*emailNode)

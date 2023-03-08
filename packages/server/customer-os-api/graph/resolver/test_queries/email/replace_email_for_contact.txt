@@ -3,13 +3,15 @@ mutation UpdateEmailForContact($contactId: ID!, $emailId: ID!) {
                         input: {id: $emailId
                                 label: HOME
                                 primary: true
-                                email: "original@email.com"
+                                email: "new@email.com"
                         }) {
         id
-        email
         rawEmail
+        validated
+        email
         label
         primary
+        createdAt
         updatedAt
     }
 }

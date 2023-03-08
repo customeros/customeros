@@ -18,6 +18,7 @@ type EmailRepository interface {
 	RemoveRelationship(ctx context.Context, entityType entity.EntityType, tenant, entityId, email string) error
 	RemoveRelationshipById(ctx context.Context, entityType entity.EntityType, tenant, entityId, emailId string) error
 	DeleteById(ctx context.Context, tenant, emailId string) error
+	GetByIdAndRelatedEntity(ctx context.Context, entityType entity.EntityType, tenant, emailId, entityId string) (*dbtype.Node, error)
 }
 
 type emailRepository struct {
@@ -268,4 +269,38 @@ func (r *emailRepository) DeleteById(ctx context.Context, tenant, emailId string
 	} else {
 		return nil
 	}
+}
+
+func (r *emailRepository) GetByIdAndRelatedEntity(ctx context.Context, entityType entity.EntityType, tenant, emailId, entityId string) (*dbtype.Node, error) {
+	session := utils.NewNeo4jReadSession(ctx, *r.driver)
+	defer session.Close(ctx)
+
+	query := ""
+	switch entityType {
+	case entity.CONTACT:
+		query = `MATCH (entity:Contact {id:$entityId})-[:CONTACT_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant}) `
+	case entity.USER:
+		query = `MATCH (entity:User {id:$entityId})-[:USER_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant}) `
+	case entity.ORGANIZATION:
+		query = `MATCH (entity:Organization {id:$entityId})-[:ORGANIZATION_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant}) `
+	}
+	query += ` MATCH (entity)-[rel:HAS]->(e:Email {id:$emailId})-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]->(t)
+			RETURN e`
+
+	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		if queryResult, err := tx.Run(ctx, query,
+			map[string]any{
+				"tenant":   tenant,
+				"emailId":  emailId,
+				"entityId": entityId,
+			}); err != nil {
+			return nil, err
+		} else {
+			return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
+		}
+	})
+	if err != nil {
+		return nil, err
+	}
+	return result.(*dbtype.Node), nil
 }

@@ -1,0 +1,18 @@
+mutation UpdatePhoneNumberForContact($contactId: ID!, $phoneNumberId: ID!) {
+    phoneNumberUpdateInContact(contactId: $contactId,
+                        input: {id: $phoneNumberId
+                                label: HOME
+                                primary: true
+                                phoneNumber: "+1234567890"
+                        }) {
+        id
+        e164
+        rawPhoneNumber
+        validated
+        label
+        primary
+        source
+        createdAt
+        updatedAt
+    }
+}

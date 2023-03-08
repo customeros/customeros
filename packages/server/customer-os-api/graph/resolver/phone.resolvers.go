@@ -24,7 +24,7 @@ func (r *mutationResolver) PhoneNumberMergeToContact(ctx context.Context, contac
 
 // PhoneNumberUpdateInContact is the resolver for the phoneNumberUpdateInContact field.
 func (r *mutationResolver) PhoneNumberUpdateInContact(ctx context.Context, contactID string, input model.PhoneNumberUpdateInput) (*model.PhoneNumber, error) {
-	result, err := r.Services.PhoneNumberService.UpdatePhoneNumberInContact(ctx, contactID, mapper.MapPhoneNumberUpdateInputToEntity(&input))
+	result, err := r.Services.PhoneNumberService.UpdatePhoneNumberForContact(ctx, contactID, mapper.MapPhoneNumberUpdateInputToEntity(&input))
 	if err != nil {
 		graphql.AddErrorf(ctx, "Could not update phone number %s in contact %s", input.ID, contactID)
 		return nil, err

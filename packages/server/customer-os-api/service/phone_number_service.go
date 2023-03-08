@@ -12,9 +12,9 @@ import (
 )
 
 type PhoneNumberService interface {
-	GetAllForContact(ctx context.Context, contactId string) (*entity.PhoneNumberEntities, error)
+	GetAllFor(ctx context.Context, contactId string) (*entity.PhoneNumberEntities, error)
 	MergePhoneNumberToContact(ctx context.Context, id string, toEntity *entity.PhoneNumberEntity) (*entity.PhoneNumberEntity, error)
-	UpdatePhoneNumberInContact(ctx context.Context, id string, toEntity *entity.PhoneNumberEntity) (*entity.PhoneNumberEntity, error)
+	UpdatePhoneNumberForContact(ctx context.Context, id string, toEntity *entity.PhoneNumberEntity) (*entity.PhoneNumberEntity, error)
 	RemoveFromContactByE164(ctx context.Context, contactId, e164 string) (bool, error)
 	RemoveFromContactById(ctx context.Context, contactId, phoneNumberId string) (bool, error)
 }
@@ -33,7 +33,7 @@ func (s *phoneNumberService) getDriver() neo4j.DriverWithContext {
 	return *s.repositories.Drivers.Neo4jDriver
 }
 
-func (s *phoneNumberService) GetAllForContact(ctx context.Context, contactId string) (*entity.PhoneNumberEntities, error) {
+func (s *phoneNumberService) GetAllFor(ctx context.Context, contactId string) (*entity.PhoneNumberEntities, error) {
 	queryResult, err := s.repositories.PhoneNumberRepository.GetAllForContact(ctx, common.GetContext(ctx).Tenant, contactId)
 	if err != nil {
 		return nil, err
@@ -50,7 +50,7 @@ func (s *phoneNumberService) GetAllForContact(ctx context.Context, contactId str
 	return &phoneNumberEntities, nil
 }
 
-func (s *phoneNumberService) MergePhoneNumberToContact(ctx context.Context, contactId string, entity *entity.PhoneNumberEntity) (*entity.PhoneNumberEntity, error) {
+func (s *phoneNumberService) MergePhoneNumberToContact(ctx context.Context, contactId string, inputEntity *entity.PhoneNumberEntity) (*entity.PhoneNumberEntity, error) {
 	session := utils.NewNeo4jWriteSession(ctx, s.getDriver())
 	defer session.Close(ctx)
 
@@ -59,12 +59,12 @@ func (s *phoneNumberService) MergePhoneNumberToContact(ctx context.Context, cont
 	var phoneNumberRelationship *dbtype.Relationship
 
 	_, err = session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (interface{}, error) {
-		phoneNumberNode, phoneNumberRelationship, err = s.repositories.PhoneNumberRepository.MergePhoneNumberToContactInTx(ctx, tx, common.GetContext(ctx).Tenant, contactId, *entity)
+		phoneNumberNode, phoneNumberRelationship, err = s.repositories.PhoneNumberRepository.MergePhoneNumberToContactInTx(ctx, tx, common.GetContext(ctx).Tenant, contactId, *inputEntity)
 		if err != nil {
 			return nil, err
 		}
 		phoneNumberId := utils.GetPropsFromNode(*phoneNumberNode)["id"].(string)
-		if entity.Primary == true {
+		if inputEntity.Primary == true {
 			err := s.repositories.PhoneNumberRepository.SetOtherContactPhoneNumbersNonPrimaryInTx(ctx, tx, common.GetTenantFromContext(ctx), contactId, phoneNumberId)
 			if err != nil {
 				return nil, err
@@ -81,30 +81,57 @@ func (s *phoneNumberService) MergePhoneNumberToContact(ctx context.Context, cont
 	return phoneNumberEntity, nil
 }
 
-func (s *phoneNumberService) UpdatePhoneNumberInContact(ctx context.Context, contactId string, entity *entity.PhoneNumberEntity) (*entity.PhoneNumberEntity, error) {
+func (s *phoneNumberService) UpdatePhoneNumberForContact(ctx context.Context, contactId string, inputEntity *entity.PhoneNumberEntity) (*entity.PhoneNumberEntity, error) {
 	session := utils.NewNeo4jWriteSession(ctx, s.getDriver())
 	defer session.Close(ctx)
 
 	var err error
 	var phoneNumberNode *dbtype.Node
 	var phoneNumberRelationship *dbtype.Relationship
+	var detachCurrentPhoneNumber = false
 
 	_, err = session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (interface{}, error) {
-		phoneNumberNode, phoneNumberRelationship, err = s.repositories.PhoneNumberRepository.UpdatePhoneNumberByContactInTx(ctx, tx, common.GetContext(ctx).Tenant, contactId, *entity)
+		currentPhoneNumberNode, err := s.repositories.PhoneNumberRepository.GetByIdAndRelatedEntity(ctx, entity.CONTACT, common.GetTenantFromContext(ctx), inputEntity.Id, contactId)
 		if err != nil {
 			return nil, err
 		}
-		phoneNumberId := utils.GetPropsFromNode(*phoneNumberNode)["id"].(string)
-		if entity.Primary == true {
-			err := s.repositories.PhoneNumberRepository.SetOtherContactPhoneNumbersNonPrimaryInTx(ctx, tx, common.GetContext(ctx).Tenant, contactId, phoneNumberId)
+		currentE164 := utils.GetPropsFromNode(*currentPhoneNumberNode)["e164"].(string)
+		currentRawPhoneNumber := utils.GetPropsFromNode(*currentPhoneNumberNode)["rawPhoneNumber"].(string)
+
+		if len(inputEntity.RawPhoneNumber) == 0 || inputEntity.RawPhoneNumber == currentE164 || inputEntity.RawPhoneNumber == currentRawPhoneNumber {
+			phoneNumberNode, phoneNumberRelationship, err = s.repositories.PhoneNumberRepository.UpdatePhoneNumberByContactInTx(ctx, tx, common.GetContext(ctx).Tenant, contactId, *inputEntity)
 			if err != nil {
 				return nil, err
 			}
+			phoneNumberId := utils.GetPropsFromNode(*phoneNumberNode)["id"].(string)
+			if inputEntity.Primary == true {
+				err := s.repositories.PhoneNumberRepository.SetOtherContactPhoneNumbersNonPrimaryInTx(ctx, tx, common.GetContext(ctx).Tenant, contactId, phoneNumberId)
+				if err != nil {
+					return nil, err
+				}
+			}
+		} else {
+			phoneNumberNode, phoneNumberRelationship, err = s.repositories.PhoneNumberRepository.MergePhoneNumberToContactInTx(ctx, tx, common.GetContext(ctx).Tenant, contactId, *inputEntity)
+			if err != nil {
+				return nil, err
+			}
+			phoneNumberId := utils.GetPropsFromNode(*phoneNumberNode)["id"].(string)
+			if inputEntity.Primary == true {
+				err := s.repositories.PhoneNumberRepository.SetOtherContactPhoneNumbersNonPrimaryInTx(ctx, tx, common.GetTenantFromContext(ctx), contactId, phoneNumberId)
+				if err != nil {
+					return nil, err
+				}
+			}
+			detachCurrentPhoneNumber = true
 		}
 		return nil, nil
 	})
 	if err != nil {
 		return nil, err
+	}
+
+	if detachCurrentPhoneNumber {
+		_, err = s.RemoveFromContactById(ctx, contactId, inputEntity.Id)
 	}
 
 	var phoneNumberEntity = s.mapDbNodeToPhoneNumberEntity(*phoneNumberNode)
