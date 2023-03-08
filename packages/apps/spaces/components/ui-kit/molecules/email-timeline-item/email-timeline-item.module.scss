@@ -53,6 +53,7 @@
 
 .emailContent {
   min-height: 40px;
+  overflow-wrap: anywhere;
   & * {
     margin-bottom: 2px;
   }
