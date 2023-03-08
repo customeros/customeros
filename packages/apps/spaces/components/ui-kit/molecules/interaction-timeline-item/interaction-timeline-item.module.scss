@@ -18,6 +18,7 @@
 }
 
 .x {
-  align-items: center;
   display: flex;
+  flex-direction: row;
+  align-items: flex-start;
 }

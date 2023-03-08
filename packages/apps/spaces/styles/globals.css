@@ -34,3 +34,7 @@
 .support_window {
   z-index: 9999;
 }
+
+.interactionTimeLineItemClass{
+  background: rgba(247, 241, 235, 0.37)!important;
+}

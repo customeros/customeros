@@ -317,7 +317,6 @@ export const ConversationTimelineItem: React.FC<Props> = ({
                     <TimelineItem
                       first={fl}
                       createdAt={date}
-                      style={{ paddingBottom: '8px' }}
                       //@ts-expect-error fixme later
                       key={msg?.messageId?.conversationEventId}
                     >
