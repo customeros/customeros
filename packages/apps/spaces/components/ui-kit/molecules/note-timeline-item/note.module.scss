@@ -4,17 +4,17 @@
   justify-content: space-between;
   font-family: Helvetica, Arial, sans-serif !important;
   line-height: 1.3rem;
+  font-size: var(--font-size-xxs) !important;
 }
 
 .noteContent {
   width: fit-content;
   line-height: 1.3rem;
-  font-size: 14px;
+  font-size: var(--font-size-sm);
   font-weight: normal;
   color: #495057;
 
   & * {
-    margin: var(--spacing-xxxs) 0;
     width: fit-content;
     overflow: hidden;
     white-space: pre-line;

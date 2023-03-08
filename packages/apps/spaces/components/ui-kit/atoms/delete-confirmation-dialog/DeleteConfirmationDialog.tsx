@@ -2,6 +2,7 @@ import React, { ButtonHTMLAttributes, FC, ReactNode } from 'react';
 import { Dialog } from 'primereact/dialog';
 import { Button } from '../button';
 import { Trash } from '../icons';
+import styles from './delete-confirmation-dialog.module.scss';
 
 interface Props extends ButtonHTMLAttributes<HTMLButtonElement> {
   deleteConfirmationModalVisible: boolean;
@@ -25,14 +26,15 @@ export const DeleteConfirmationDialog: FC<Props> = ({
       <Dialog
         header={header || 'Confirm Delete'}
         draggable={false}
+        className={styles.dialog}
         visible={deleteConfirmationModalVisible}
         footer={
-          <div className='flex flex-grow-1 justify-content-between align-items-center'>
+          <div className={styles.dialogFooter}>
             <Button
+              mode='secondary'
               onClick={() => setDeleteConfirmationModalVisible(false)}
               className='p-button-text'
             >
-              <Trash />
               Cancel
             </Button>
             <Button
@@ -47,7 +49,7 @@ export const DeleteConfirmationDialog: FC<Props> = ({
         }
         onHide={() => setDeleteConfirmationModalVisible(false)}
       >
-        <p>
+        <p className={styles.dialogExplanation}>
           {explanationText ||
             'Are you sure you want to delete this item? This action cannot be undone.'}
         </p>
