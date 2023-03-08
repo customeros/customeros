@@ -355,11 +355,15 @@ export const LoginPanel: React.FC = () => {
                 width={170}
               />
 
-              <div style={{display:'flex', alignItems: 'baseline'}}>
+              <div style={{ display: 'flex', alignItems: 'baseline' }}>
                 <span className='text-600 font-medium line-height-3 text-sm'>
                   Already have an account?
                 </span>
-                <Button mode='link' onClick={login} style={{marginLeft: '5px'}}>
+                <Button
+                  mode='link'
+                  onClick={login}
+                  style={{ marginLeft: '5px' }}
+                >
                   Login now!
                 </Button>
               </div>
@@ -422,10 +426,13 @@ export const LoginPanel: React.FC = () => {
                     onChange={(e) => setEmail(e.target.value)}
                   />
 
-                  <Button mode={"primary"} type='submit' style={{margin: 'auto', marginBottom: '20px'}}>
+                  <Button
+                    mode={'primary'}
+                    type='submit'
+                    style={{ margin: 'auto', marginBottom: '20px' }}
+                  >
                     Join the Waitlist
                   </Button>
-
                 </form>
                 <div className={styles.oryInfoSection}>
                   <a

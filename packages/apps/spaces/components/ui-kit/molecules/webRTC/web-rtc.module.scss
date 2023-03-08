@@ -1,31 +1,32 @@
-@import "styles/mixins";
+@import 'styles/mixins';
 .overlayContentWrapper {
   background: white;
   padding: var(--spacing-xs) var(--spacing-xs);
-  position:absolute;
-  top: 230px;// fixme
-  left: 20px;// fixme
+  position: absolute;
+  top: 230px; // fixme
+  left: 20px; // fixme
   z-index: 1;
   border-radius: var(--border-radius-md);
-  box-shadow: 5px 5px 10px rgb(188 188 188 / 59%), -1px -1px 2px #fff, 2px 3px 4px #a4a4a4;
+  box-shadow: 5px 5px 10px rgb(188 188 188 / 59%), -1px -1px 2px #fff,
+    2px 3px 4px #a4a4a4;
   max-width: min-content;
 }
 
 .incomingCallContainer {
   max-width: 400px;
   padding: var(--spacing-sm);
-  position:absolute;
+  position: absolute;
   z-index: 1;
   border-radius: var(--border-radius-md);
-  box-shadow: 5px 5px 10px rgb(188 188 188 / 59%), -1px -1px 2px #fff, 2px 3px 4px #a4a4a4;
+  box-shadow: 5px 5px 10px rgb(188 188 188 / 59%), -1px -1px 2px #fff,
+    2px 3px 4px #a4a4a4;
 
   @include frosted-glass;
   background: #2e2b2b;
   color: #fff;
-
 }
 
-.dialNumbers{
+.dialNumbers {
   margin: var(--spacing-xs) 0;
   @include flex-center;
   flex-direction: column;
@@ -35,7 +36,6 @@
   font-size: var(--font-size-xs);
   white-space: break-spaces;
   margin: 0 var(--spacing-xxs);
-
 }
 
 .dialNumbersRow {
@@ -46,14 +46,13 @@
     margin: var(--spacing-xxs);
     height: 30px;
     width: 30px;
-    @include flex-center
+    @include flex-center;
   }
 }
 
 .actionButtonsRow {
   @include flex-between;
   justify-content: space-around;
-
 }
 
 .incomingCall {

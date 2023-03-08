@@ -42,6 +42,7 @@ export const ContactHistory = ({ id }: { id: string }) => {
         createdAt
         actions(from: $from, to: $to) {
           ... on PageViewAction {
+            __typename
             id
             application
             startedAt
@@ -51,6 +52,19 @@ export const ContactHistory = ({ id }: { id: string }) => {
             pageTitle
             orderInSession
             sessionId
+          }
+          ... on InteractionSession {
+            __typename
+            id
+            startedAt
+            name
+            status
+            type
+            channel
+            events {
+              channel
+              content
+            }
           }
         }
       }
@@ -65,11 +79,7 @@ export const ContactHistory = ({ id }: { id: string }) => {
     const to = new Date().toISOString();
     const client = new GraphQLClient(`/customer-os-api/query`);
     client.request(query, { id, from, to }).then((response) => {
-      console.log(response);
       if (response && response.contact) {
-        response.contact.actions.forEach((action: any) => {
-          action.__typename = 'PageViewAction';
-        });
         setActions(response.contact.actions);
         setActionsLoading(false);
       } else {
