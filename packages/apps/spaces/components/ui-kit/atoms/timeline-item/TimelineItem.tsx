@@ -6,12 +6,14 @@ interface Props {
   children: React.ReactNode;
   createdAt?: string | number;
   first?: boolean;
+  contentClassName?: any;
 }
 
 export const TimelineItem: React.FC<Props> = ({
   children,
   createdAt,
   first,
+  contentClassName,
   ...rest
 }) => {
   return (
@@ -27,7 +29,7 @@ export const TimelineItem: React.FC<Props> = ({
         'Date not available'
       )}
       <span className={`${styles.timelineLine} ${styles.second}`} />
-      <div className={styles.content} {...rest}>
+      <div className={`${styles.content} ${contentClassName}`} {...rest}>
         {children}
       </div>
     </div>
