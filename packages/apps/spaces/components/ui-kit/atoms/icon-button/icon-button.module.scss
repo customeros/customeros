@@ -1,6 +1,5 @@
 @import '../../../../styles/mixins';
 .button {
-
   border-radius: 50%;
   display: inline-flex;
   align-items: center;
@@ -11,7 +10,6 @@
 
   &.xxxs {
     padding: var(--spacing-xxxs);
-
   }
   &.xxs {
     padding: var(--spacing-xxs);

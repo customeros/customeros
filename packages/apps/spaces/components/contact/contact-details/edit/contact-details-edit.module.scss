@@ -1,8 +1,7 @@
 @import 'styles/mixins';
 
-
 .jobAndOrganizationInputs {
-   @include flex-center;
+  @include flex-center;
   align-items: flex-end;
   margin-bottom: var(--spacing-xxxs);
   margin-top: -8px;
@@ -12,7 +11,7 @@
   margin: 0;
 }
 
-.copy{
+.copy {
   font-weight: normal;
   font-size: var(--font-size-sm);
   margin: 0 var(--spacing-xxxs);

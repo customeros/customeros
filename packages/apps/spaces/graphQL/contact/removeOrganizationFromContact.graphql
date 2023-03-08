@@ -1,5 +1,5 @@
 mutation removeOrganizationToContact($input: ContactOrganizationInput!) {
   contact_RemoveOrganizationById(input: $input) {
-    ...ContactPersonalDetails,
+    ...ContactPersonalDetails
   }
 }

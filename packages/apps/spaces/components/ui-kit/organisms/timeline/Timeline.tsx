@@ -10,6 +10,7 @@ import { TimelineItem } from '../../atoms/timeline-item';
 import { uuidv4 } from '../../../../utils';
 import { TicketTimelineItem } from '../../molecules/ticket-timeline-item';
 import styles from './timeline.module.scss';
+import { InteractionTimelineItem } from '../../molecules/interaction-timeline-item';
 
 interface Props {
   loading: boolean;
@@ -99,6 +100,12 @@ export const Timeline = ({
             <WebActionTimelineItem {...data} />
           </TimelineItem>
         );
+      case 'InteractionSession':
+        return (
+          <TimelineItem first={index == 0} createdAt={data?.startedAt}>
+            <InteractionTimelineItem {...data} />
+          </TimelineItem>
+        );
       case 'Ticket':
         return (
           <TimelineItem first={index == 0} createdAt={data?.createdAt}>
@@ -114,7 +121,7 @@ export const Timeline = ({
             yet{' '}
           </div>
         ) : (
-          'AAAA'
+          ''
         );
     }
   };

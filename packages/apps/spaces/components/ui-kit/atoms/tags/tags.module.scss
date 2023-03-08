@@ -19,7 +19,7 @@
   &:focus-within {
     outline: 0 none;
     outline-offset: 0;
-    border-color: var(--primary-color)
+    border-color: var(--primary-color);
   }
 
   & .optionsList {
@@ -56,8 +56,6 @@
     background: var(--secondary-color);
   }
 }
-
-
 
 .deleteButton {
   margin-left: var(--spacing-xxs);
