@@ -134,7 +134,6 @@ export const LiveConversationTimelineItem: React.FC<Props> = ({
                   <TimelineItem
                     first={fl}
                     createdAt={date}
-                    style={{ paddingBottom: '8px' }}
                     key={msg.id}
                   >
                     <EmailTimelineItem

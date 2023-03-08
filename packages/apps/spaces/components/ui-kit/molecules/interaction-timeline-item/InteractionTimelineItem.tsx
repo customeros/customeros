@@ -31,7 +31,7 @@ export const InteractionTimelineItem = ({
             {events.map((event: any) => {
               console.log(event.content);
               if (event.content.toLowerCase().indexOf('photos') > -1) {
-                let linksExtracted = event.content.substring(
+                const linksExtracted = event.content.substring(
                   event.content.indexOf(':') + 1,
                   event.content.length,
                 );
@@ -40,6 +40,7 @@ export const InteractionTimelineItem = ({
                   return (
                     <a
                       target={'_blank'}
+                      rel='noreferrer'
                       key={uuidv4()}
                       href={photo}
                       className={styles.photoLink}
@@ -65,11 +66,11 @@ export const InteractionTimelineItem = ({
                   </div>
                 );
               } else {
-                let keyExtracted = event.content.substring(
+                const keyExtracted = event.content.substring(
                   0,
                   event.content.indexOf(':') + 1,
                 );
-                let valueExtracted = event.content.substring(
+                const valueExtracted = event.content.substring(
                   event.content.indexOf(':') + 1,
                   event.content.length,
                 );
