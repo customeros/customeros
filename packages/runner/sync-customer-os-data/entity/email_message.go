@@ -4,6 +4,7 @@ import "time"
 
 type EmailMessageData struct {
 	Html      string
+	Text      string
 	Subject   string
 	CreatedAt time.Time
 

@@ -8,6 +8,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/repository"
 	hubspot_service "github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/source/hubspot/service"
 	zendesk_support_service "github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/source/zendesk_support/service"
+	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/utils"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/net/context"
 	"time"
@@ -233,7 +234,7 @@ func (s *syncService) syncEmailMessages(ctx context.Context, dataService common.
 				emailContent := entity.EmailContent{
 					MessageId: message.EmailMessageId,
 					Subject:   message.Subject,
-					Html:      message.Html,
+					Html:      utils.FirstNotEmpty(message.Html, message.Text),
 					From:      message.FromEmail,
 					To:        message.ToEmail,
 					Cc:        message.CcEmail,

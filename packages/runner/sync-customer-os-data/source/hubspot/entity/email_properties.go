@@ -6,6 +6,7 @@ type EmailProperties struct {
 	AirbyteAbId         string          `gorm:"column:_airbyte_ab_id"`
 	AirbyteEmailsHashid string          `gorm:"column:_airbyte_engagements_emails_hashid"`
 	EmailHtml           string          `gorm:"column:hs_email_html"`
+	EmailText           string          `gorm:"column:hs_email_text"`
 	EmailSubject        string          `gorm:"column:hs_email_subject"`
 	EmailThreadId       string          `gorm:"column:hs_email_thread_id"`
 	EmailDirection      string          `gorm:"column:hs_email_direction"`
