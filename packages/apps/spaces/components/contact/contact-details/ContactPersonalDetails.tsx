@@ -9,6 +9,7 @@ import { ContactTags } from '../contact-tags';
 import { useForm } from 'react-hook-form';
 import { ContactPersonalDetailsEdit } from './edit';
 import { getContactDisplayName } from '../../../utils';
+
 export const ContactPersonalDetails = ({ id }: { id: string }) => {
   const router = useRouter();
   const { data, loading, error } = useContactPersonalDetails({ id });
@@ -68,10 +69,11 @@ export const ContactPersonalDetails = ({ id }: { id: string }) => {
               }
             >
               {jobRole?.jobTitle}
+
               {jobRole?.jobTitle &&
               jobRole?.organization &&
               jobRole?.organization?.name
-                ? 'at'
+                ? ' at'
                 : ''}{' '}
               {jobRole?.organization?.name}
             </div>

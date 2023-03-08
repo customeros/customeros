@@ -21,8 +21,8 @@
 .emailParty {
   display: flex;
   justify-content: flex-end;
-  font-size: 1.05rem;
-  font-weight: 700;
+  font-weight: normal;
+  color: var(--gray-500);
   margin-right: 8px;
 }
 
@@ -31,7 +31,7 @@
   display: block;
   overflow: hidden;
   pointer-events: none;
-  padding: var(--spacing-md) 0;
+  padding: var(--spacing-xxxs) 0;
 
   &.eclipse:after {
     content: '';

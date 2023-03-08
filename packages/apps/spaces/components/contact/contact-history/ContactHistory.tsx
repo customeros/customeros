@@ -125,22 +125,11 @@ export const ContactHistory = ({ id }: { id: string }) => {
   };
 
   const getTimelineTitle = () => {
-    const name = getContactDisplayName(contactPersonalDetails as Contact);
-
-    return name === 'Unnamed'
-      ? 'Unnamed contact Timeline:'
-      : `${name} Timeline:`;
+    return 'Timeline:';
   };
   return (
     <>
       <Timeline
-        header={
-          <h1>
-            {contactPersonalDetailsLoading && <Skeleton />}
-            {contactPersonalDetailsError && 'Failed to load timeline title'}
-            {contactPersonalDetails?.id && getTimelineTitle()}
-          </h1>
-        }
         loading={notesLoading || conversationsLoading || ticketsLoading}
         noActivity={noHistoryItemsAvailable}
         contactId={id}

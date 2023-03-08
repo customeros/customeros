@@ -91,7 +91,7 @@ export const EmailTimelineItem: React.FC<Props> = ({
             </tr>
           )}
           <tr>
-            <th>Subject:</th>
+            <th className={styles.emailParty}>Subject:</th>
             <td>{subject}</td>
           </tr>
         </table>

@@ -29,7 +29,6 @@ export const InteractionTimelineItem = ({
             )}
 
             {events.map((event: any) => {
-              console.log(event.content);
               if (event.content.toLowerCase().indexOf('photos') > -1) {
                 const linksExtracted = event.content.substring(
                   event.content.indexOf(':') + 1,
