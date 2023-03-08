@@ -189,9 +189,7 @@ export const WebRTCContextProvider = (props: any) => {
     setInCall(false);
     setRinging(false);
     resetCallParticipant();
-    if (session) {
-      session.terminate();
-    }
+    session?.terminate();
   };
 
   const holdCall = () => {
