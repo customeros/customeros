@@ -171,30 +171,32 @@ export const NoteTimelineItem: React.FC<Props> = ({
           <div className={styles.actionContainer}>
             <div className={styles.actions}>
               <IconButton
+                size='xxxs'
                 onClick={() => setDeleteConfirmationModalVisible(true)}
-                icon={<Trash />}
-                mode='secondary'
+                icon={<Trash style={{ transform: 'scale(0.85)' }} />}
+                mode='text'
                 title='Delete'
-                style={{ marginRight: 0, marginBottom: '8px', height: '1rem' }}
+                style={{ marginRight: 0, marginBottom: '8px' }}
               />
 
               <IconButton
+                size='xxxs'
                 onClick={() => setEditNote(true)}
-                icon={<Pencil />}
-                mode='secondary'
+                icon={<Pencil style={{ transform: 'scale(0.85)' }} />}
+                mode='text'
                 title='Edit'
-                style={{ marginRight: 0, height: '1rem' }}
+                style={{ marginRight: 0 }}
               />
             </div>
             <div className={styles.noteData}>
-              <div className='text-sm text-gray-600'>
+              <div>
                 {(createdBy?.firstName || createdBy?.lastName) && '- '}
                 {createdBy?.firstName} {createdBy?.lastName}
               </div>
 
               {source && (
-                <div className='flex text-sm text-gray-600 '>
-                  <div className='mr-2'>Source:</div>
+                <div className='flex'>
+                  <div className='mr-1'>Source:</div>
                   <div className='capitaliseFirstLetter'>{source}</div>
                 </div>
               )}
