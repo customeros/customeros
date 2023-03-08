@@ -92,7 +92,7 @@ export const WebRTCCallProgress: React.FC<any> = () => {
 
   return (
     <Dialog
-      visible={inCall}
+      visible={inCall && !ringing}
       modal={false}
       className={styles.overlayContentWrapper}
       closable={false}
