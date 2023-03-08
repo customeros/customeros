@@ -241,6 +241,7 @@ func (s *hubspotDataService) GetEmailMessagesForSync(batchSize int, runId string
 		// set main fields
 		emailForCustomerOS := entity.EmailMessageData{
 			Html:           hubspotEmailProperties.EmailHtml,
+			Text:           hubspotEmailProperties.EmailText,
 			Subject:        hubspotEmailProperties.EmailSubject,
 			CreatedAt:      v.CreateDate.UTC(),
 			ExternalId:     v.Id,
