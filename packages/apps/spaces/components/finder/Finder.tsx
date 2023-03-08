@@ -36,7 +36,7 @@ export const Finder: React.FC = () => {
   };
 
   return (
-    <div style={{ padding: '36px', height: '100%' }}>
+    <div style={{ padding: '1.2rem', height: '100%' }}>
       <div className={styles.inputSection}>
         <h1> Everything </h1>
 

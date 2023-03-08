@@ -1,9 +1,9 @@
 @import 'styles/mixins';
 .inputSection {
   display: flex;
-  align-items: flex-end;
+  align-items: baseline;
   font-family: var(--font-secondary);
-  padding: 0 0 var(--spacing-lg) 0;
+  padding: 0 0 var(--spacing-sm) 0;
 
   h1 {
     font-size: var(--heading-secondary);
