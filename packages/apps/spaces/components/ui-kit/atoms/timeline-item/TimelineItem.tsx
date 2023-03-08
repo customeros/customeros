@@ -1,6 +1,6 @@
 import React from 'react';
 import styles from './timeline-item.module.scss';
-import format from 'date-fns/format';
+import { DateTimeUtils } from '../../../../utils';
 
 interface Props {
   children: React.ReactNode;
@@ -23,7 +23,10 @@ export const TimelineItem: React.FC<Props> = ({
       ) : null}
       {createdAt ? (
         <div className={styles.when}>
-          {format(new Date(createdAt), 'dd/MM/yyyy h:mm a')}
+          <div className={styles.timeAgo}>
+            {DateTimeUtils.timeAgo(new Date(createdAt), { addSuffix: true })}
+          </div>
+          {DateTimeUtils.format(new Date(createdAt))}
         </div>
       ) : (
         'Date not available'

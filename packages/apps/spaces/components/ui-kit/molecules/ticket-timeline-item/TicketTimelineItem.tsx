@@ -5,6 +5,7 @@ import Ticket from '../../atoms/icons/Ticket';
 import { TagsList } from '../../atoms';
 import sanitizeHtml from 'sanitize-html';
 import format from 'date-fns/format';
+import { DateTimeUtils } from '../../../../utils';
 
 // interface Props extends ContactWebAction {
 //     contactName?: string
@@ -50,8 +51,7 @@ export const TicketTimelineItem = ({
             return (
               <div key={note.id}>
                 <div className={`${styles.noteActivity}`}>
-                  Activity on{' '}
-                  {format(new Date(note.createdAt), 'dd/MM/yyyy h:mm a')}
+                  Activity on {DateTimeUtils.format(new Date(note.createdAt))}
                 </div>
                 <div
                   dangerouslySetInnerHTML={{ __html: sanitizeHtml(note.html) }}
