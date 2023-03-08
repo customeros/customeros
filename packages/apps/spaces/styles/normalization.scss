@@ -134,9 +134,12 @@ button::-moz-focus-inner {
 }
 .ql-toolbar.ql-snow + .ql-container.ql-snow {
   border: var(--border-divider);
-  min-height: 100px;
+  min-height: 90px;
   border-top-right-radius: var(--border-radius-sm);
   border-top-left-radius: var(--border-radius-sm);
+  font-size: var(--font-size-sm);
+  font-weight: normal;
+
 }
 
 .p-component.p-editor-container {
@@ -312,4 +315,9 @@ button::-moz-focus-inner {
 
 .p-skeleton.p-component {
   height: 0 !important;
+}
+
+.ql-editor {
+  min-height: 90px;
+
 }

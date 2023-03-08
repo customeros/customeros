@@ -11,6 +11,8 @@ import {
   IconButton,
 } from '../../atoms';
 import sanitizeHtml from 'sanitize-html';
+import ContactNoteModalTemplate from '../../../contact/editor/ContactNoteModalTemplate';
+import { useDeleteNote } from '../../../../hooks/useContactNote';
 
 interface Props {
   noteContent: string;
@@ -35,6 +37,7 @@ export const NoteTimelineItem: React.FC<Props> = ({
 }) => {
   // const client =  useGraphQLClient();
   const [images, setImages] = useState({});
+  const { onRemoveNote } = useDeleteNote();
   const [editNote, setEditNote] = useState(false);
 
   const [note, setNote] = useState({
@@ -117,44 +120,25 @@ export const NoteTimelineItem: React.FC<Props> = ({
 
   const [deleteConfirmationModalVisible, setDeleteConfirmationModalVisible] =
     useState(false);
-  const deleteNote = () => {
-    // DeleteNote(client, id)
-    //   .then((result: boolean) => {
-    //     if (result) {
-    //       refreshNoteData(id);
-    //       setDeleteConfirmationModalVisible(false);
-    //       toast.success('Note removed successfully!');
-    //     } else {
-    //       toast.error(
-    //         'There was a problem on our side and we are doing our best to solve it!',
-    //       );
-    //     }
-    //   })
-    //   .catch((reason: any) => {
-    //     toast.error(
-    //       'There was a problem on our side and we are doing our best to solve it!',
-    //     );
-    //   });
-  };
 
   return (
     <>
-      {/*{editNote && (*/}
-      {/*  <ContactNoteModalTemplate*/}
-      {/*    isEdit*/}
-      {/*    note={note}*/}
-      {/*    contactId={contactId}*/}
-      {/*    notifyChanged={(data) => {*/}
-      {/*      setEditNote(false);*/}
-      {/*      refreshNoteData(data);*/}
-      {/*    }}*/}
-      {/*    notifyCancel={() => setEditNote(false)}*/}
-      {/*  />*/}
-      {/*)}*/}
+      {editNote && (
+        <ContactNoteModalTemplate
+          isEdit
+          note={note}
+          contactId={contactId as string}
+          onSuccess={(data) => {
+            setEditNote(false);
+            refreshNoteData(data);
+          }}
+          onCancel={() => setEditNote(false)}
+        />
+      )}
       <DeleteConfirmationDialog
         deleteConfirmationModalVisible={deleteConfirmationModalVisible}
         setDeleteConfirmationModalVisible={setDeleteConfirmationModalVisible}
-        deleteAction={deleteNote}
+        deleteAction={() => onRemoveNote(id)}
         confirmationButtonLabel='Delete note'
       />
 
@@ -171,30 +155,32 @@ export const NoteTimelineItem: React.FC<Props> = ({
           <div className={styles.actionContainer}>
             <div className={styles.actions}>
               <IconButton
+                size='xxxs'
                 onClick={() => setDeleteConfirmationModalVisible(true)}
-                icon={<Trash />}
-                mode='secondary'
+                icon={<Trash style={{ transform: 'scale(0.85)' }} />}
+                mode='text'
                 title='Delete'
-                style={{ marginRight: 0, marginBottom: '8px', height: '1rem' }}
+                style={{ marginRight: 0, marginBottom: '8px' }}
               />
 
               <IconButton
+                size='xxxs'
                 onClick={() => setEditNote(true)}
-                icon={<Pencil />}
-                mode='secondary'
+                icon={<Pencil style={{ transform: 'scale(0.85)' }} />}
+                mode='text'
                 title='Edit'
-                style={{ marginRight: 0, height: '1rem' }}
+                style={{ marginRight: 0 }}
               />
             </div>
             <div className={styles.noteData}>
-              <div className='text-sm text-gray-600'>
+              <div>
                 {(createdBy?.firstName || createdBy?.lastName) && '- '}
                 {createdBy?.firstName} {createdBy?.lastName}
               </div>
 
               {source && (
-                <div className='flex text-sm text-gray-600 '>
-                  <div className='mr-2'>Source:</div>
+                <div className='flex'>
+                  <div className='mr-1'>Source:</div>
                   <div className='capitaliseFirstLetter'>{source}</div>
                 </div>
               )}
