@@ -9,7 +9,7 @@ replace github.com/openline-ai/openline-customer-os/packages/server/customer-os-
 replace github.com/openline-ai/openline-customer-os/packages/server/customer-os-api => ../customer-os-api
 
 require (
-	github.com/99designs/gqlgen v0.17.25
+	github.com/99designs/gqlgen v0.17.26
 	github.com/caarlos0/env/v6 v6.10.1
 	github.com/fergusstrange/embedded-postgres v1.21.0
 	github.com/gin-gonic/gin v1.9.0
