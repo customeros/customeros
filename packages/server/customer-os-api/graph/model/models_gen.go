@@ -845,7 +845,8 @@ type PhoneNumberUpdateInput struct {
 	Label *PhoneNumberLabel `json:"label"`
 	// Determines if the phone number is primary or not.
 	// **Required**
-	Primary *bool `json:"primary"`
+	Primary     *bool   `json:"primary"`
+	PhoneNumber *string `json:"phoneNumber"`
 }
 
 type Place struct {

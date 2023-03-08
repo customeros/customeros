@@ -4940,6 +4940,8 @@ input PhoneNumberUpdateInput {
     **Required**
     """
     primary: Boolean
+
+    phoneNumber: String
 }
 
 """
@@ -29166,7 +29168,7 @@ func (ec *executionContext) unmarshalInputPhoneNumberUpdateInput(ctx context.Con
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"id", "label", "primary"}
+	fieldsInOrder := [...]string{"id", "label", "primary", "phoneNumber"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -29194,6 +29196,14 @@ func (ec *executionContext) unmarshalInputPhoneNumberUpdateInput(ctx context.Con
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("primary"))
 			it.Primary, err = ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "phoneNumber":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("phoneNumber"))
+			it.PhoneNumber, err = ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
 				return it, err
 			}

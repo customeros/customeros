@@ -87,6 +87,8 @@ input PhoneNumberUpdateInput {
     **Required**
     """
     primary: Boolean
+
+    phoneNumber: String
 }
 
 """

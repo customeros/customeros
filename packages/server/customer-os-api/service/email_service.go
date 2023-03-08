@@ -111,7 +111,7 @@ func (s *emailService) UpdateEmailFor(ctx context.Context, entityType entity.Ent
 	var err error
 	var emailNode *dbtype.Node
 	var emailRelationship *dbtype.Relationship
-	var detachCurrentEmail bool = false
+	var detachCurrentEmail = false
 
 	_, err = session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (interface{}, error) {
 		currentEmailNode, err := s.repositories.EmailRepository.GetByIdAndRelatedEntity(ctx, entityType, common.GetTenantFromContext(ctx), inputEntity.Id, entityId)
@@ -134,7 +134,6 @@ func (s *emailService) UpdateEmailFor(ctx context.Context, entityType entity.Ent
 					return nil, err
 				}
 			}
-			return nil, nil
 		} else {
 			// proceed with email address replace
 			// merge new email address
@@ -150,8 +149,8 @@ func (s *emailService) UpdateEmailFor(ctx context.Context, entityType entity.Ent
 				}
 			}
 			detachCurrentEmail = true
-			return nil, nil
 		}
+		return nil, nil
 	})
 	if err != nil {
 		return nil, err

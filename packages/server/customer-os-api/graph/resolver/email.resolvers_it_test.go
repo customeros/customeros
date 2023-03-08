@@ -112,9 +112,9 @@ func TestMutationResolver_EmailUpdateInContact_ReplaceEmail(t *testing.T) {
 	// Create a tenant in the Neo4j database
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 
-	// Create a default contact and emailStruct
+	// Create a default contact and email
 	contactId := neo4jt.CreateDefaultContact(ctx, driver, tenantName)
-	emailId := neo4jt.AddEmailTo(ctx, driver, entity.CONTACT, tenantName, contactId, "original@emailStruct.com", true, "")
+	emailId := neo4jt.AddEmailTo(ctx, driver, entity.CONTACT, tenantName, contactId, "original@email.com", true, "")
 
 	// Make the RawPost request and check for errors
 	rawResponse, err := c.RawPost(getQuery("email/replace_email_for_contact"),
@@ -132,12 +132,12 @@ func TestMutationResolver_EmailUpdateInContact_ReplaceEmail(t *testing.T) {
 	email := emailStruct.EmailUpdateInContact
 
 	// Check that the fields of the emailStruct struct have the expected values
-	require.NotEqual(t, emailId, email.ID, "New Email ID is generated")
+	require.NotEqual(t, emailId, email.ID, "Expected new email id to be generated")
 	require.Equal(t, true, email.Primary, "Email Primary field is not true")
 	require.Equal(t, "new@email.com", *email.RawEmail)
 	require.Equal(t, "new@email.com", *email.Email)
 	require.False(t, *email.Validated, "New email is not validated yet")
-	require.NotNil(t, email.CreatedAt, "Missing updatedAt field")
+	require.NotNil(t, email.CreatedAt, "Missing createdAt field")
 	require.NotNil(t, email.UpdatedAt, "Missing updatedAt field")
 	if email.Label == nil {
 		t.Errorf("Email Label field is nil")
