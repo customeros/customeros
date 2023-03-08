@@ -59,7 +59,7 @@ export const AddressTableCell = ({
           name={displayedLocation?.name}
           highlight={searchTern}
         />
-        <span style={{ marginLeft: '8px' }}>(...)</span>
+        <span className={styles.showMoreLocationsIcon}>(...)</span>
       </Button>
       <OverlayPanel
         ref={op}
