@@ -459,7 +459,8 @@ type EmailUpdateInput struct {
 	Label *EmailLabel `json:"label"`
 	// Identifies whether the email address is primary or not.
 	// **Required.**
-	Primary *bool `json:"primary"`
+	Primary *bool   `json:"primary"`
+	Email   *string `json:"email"`
 }
 
 type EntityTemplate struct {

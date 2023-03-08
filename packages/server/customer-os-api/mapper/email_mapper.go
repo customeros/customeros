@@ -33,6 +33,7 @@ func MapEmailUpdateInputToEntity(input *model.EmailUpdateInput) *entity.EmailEnt
 		Id:            input.ID,
 		Label:         utils.IfNotNilString(input.Label, func() string { return input.Label.String() }),
 		Primary:       utils.IfNotNilBool(input.Primary),
+		RawEmail:      utils.IfNotNilString(input.Email),
 		SourceOfTruth: entity.DataSourceOpenline,
 	}
 	return &emailEntity

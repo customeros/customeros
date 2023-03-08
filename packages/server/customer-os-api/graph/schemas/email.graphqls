@@ -101,6 +101,8 @@ input EmailUpdateInput {
     **Required.**
     """
     primary: Boolean
+
+    email: String
 }
 
 
