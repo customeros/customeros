@@ -270,6 +270,7 @@ export const Message = ({
             className={`${styles.message} ${styles.center}`}
             style={{ background: '#E5FAE9', borderRadius: '5px' }}
           >
+
             {displayContent(content)}
             <div
               className='flex align-content-end'
