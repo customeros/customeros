@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Button, Message, Reply } from '../../atoms';
+import { Button, Message } from '../../atoms';
 import axios from 'axios';
 import { gql } from 'graphql-request';
 import { toast } from 'react-toastify';
@@ -97,6 +97,22 @@ export const ConversationTimelineItem: React.FC<Props> = ({
         msg.senderUsername.type == 1 ? msg.senderUsername.identifier : '',
     };
   };
+
+  useEffect(() => {
+    return () => {
+      setEmailEditorData({
+        //@ts-expect-error fixme later
+        handleSubmit: () => null,
+        to: [],
+        subject: '',
+        respondTo: '',
+      });
+      setEditorMode({
+        mode: EditorMode.Note,
+        submitButtonLabel: 'Log into timeline',
+      });
+    };
+  }, []);
   useEffect(() => {
     setLoadingMessages(true);
     axios
