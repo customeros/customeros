@@ -1,32 +1,17 @@
+import React from 'react';
 import Head from 'next/head';
+import Script from 'next/script';
+import { AppProps } from 'next/app';
+import { RecoilRoot } from 'recoil';
+import { ToastContainer } from 'react-toastify';
 import 'primereact/resources/primereact.min.css';
 import 'primeflex/primeflex.css';
 import 'primeicons/primeicons.css';
-import { AppProps } from 'next/app';
 import '../styles/normalization.scss';
 import '../styles/theme.css';
 import '../styles/globals.css';
 import 'react-toastify/dist/ReactToastify.css';
-import React from 'react';
-import { ToastContainer } from 'react-toastify';
 import { MainPageWrapper } from '../components/ui-kit/layouts';
-import { RecoilRoot } from 'recoil';
-
-// Uncomment when adding google analitics
-// export function reportWebVitals({ id, name, label, value } :NextWebVitalsMetric) {
-//   // Use `window.gtag` if you initialized Google Analytics as this example:
-//   // https://github.com/vercel/next.js/blob/canary/examples/with-google-analytics/pages/_app.js
-//   window.gtag('event', name, {
-//     event_category:
-//         label === 'web-vital' ? 'Web Vitals' : 'Next.js custom metric',
-//     value: Math.round(name === 'CLS' ? value * 1000 : value), // values must be integers
-//     event_label: id, // id unique to current page load
-//     non_interaction: true, // avoids affecting bounce rate.
-//   })
-// }
-
-// todo add id to toast to prevent duplicates
-import { WebRTCInboundNotification } from '../components/ui-kit/molecules';
 
 export default function MyApp({
   Component,
@@ -47,6 +32,38 @@ export default function MyApp({
 
         <link rel='manifest' href='/manifest.json' />
       </Head>
+
+      <Script
+        id='openline-spaces-clarity-script'
+        strategy='afterInteractive'
+        dangerouslySetInnerHTML={{
+          __html: `(function(c,l,a,r,i,t,y){
+                        c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
+                        t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
+                        y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
+                    })(window, document, "clarity", "script", "fryzkewrjw");`,
+        }}
+      />
+      <Script
+        id='openline-spaces-june-script'
+        strategy='afterInteractive'
+        dangerouslySetInnerHTML={{
+          __html: `window.analytics = {};
+                     function juneify(writeKey) {
+                        window.analytics._writeKey = writeKey;
+                        var script = document.createElement("script");
+                        script.type = "application/javascript";
+                        script.onload = function () {
+                            window.analytics.page();
+                        }
+                        script.src = "https://unpkg.com/@june-so/analytics-next/dist/umd/standalone.js";
+                        var first = document.getElementsByTagName('script')[0];
+                        first.parentNode.insertBefore(script, first);
+                    }
+                    juneify("M2QnaR2vqHiuu3W2");`,
+        }}
+      />
+
       <RecoilRoot>
         <MainPageWrapper>
           <Component {...pageProps} />
