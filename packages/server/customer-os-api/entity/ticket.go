@@ -2,24 +2,24 @@ package entity
 
 import "time"
 
-type Ticket struct {
+type TicketEntity struct {
 	Id        string
 	CreatedAt time.Time
 	UpdatedAt time.Time
 
-	ExternalId     string
-	ExternalSystem string
-	ExternalSyncId string
-	ExternalUrl    string
+	Subject     string
+	Status      string
+	Priority    string
+	Description string
+}
 
-	Subject                     string
-	Status                      string
-	Priority                    string
-	Description                 string
-	Tags                        []string
-	CollaboratorUserExternalIds []string
-	FollowerUserExternalIds     []string
-	SubmitterExternalId         string
-	RequesterExternalId         string
-	AssigneeUserExternalId      string
+func (TicketEntity) Action() {
+}
+
+func (TicketEntity) ActionName() string {
+	return NodeLabel_Ticket
+}
+
+func (TicketEntity) Labels(tenant string) []string {
+	return []string{"TicketEntity", "Action", "Ticket_" + tenant, "Action_" + tenant}
 }

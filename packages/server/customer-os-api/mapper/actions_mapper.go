@@ -15,6 +15,10 @@ func MapEntityToAction(actionEntity *entity.Action) any {
 	case entity.NodeLabel_InteractionSession:
 		interactionSessionEntity := (*actionEntity).(*entity.InteractionSessionEntity)
 		return MapEntityToInteractionSession(interactionSessionEntity)
+	case entity.NodeLabel_Ticket:
+		ticketEntity := (*actionEntity).(*entity.TicketEntity)
+		return MapEntityToTicket(ticketEntity)
+
 	}
 	fmt.Errorf("action of type %s not identified", reflect.TypeOf(actionEntity))
 	return nil

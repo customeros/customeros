@@ -77,7 +77,9 @@ func (r *ticketRepository) MergeTicket(ctx context.Context, tenant string, syncD
 		"				tt.status=$status, " +
 		"				tt.priority=$priority, " +
 		"				tt.description=$description, " +
-		"               tt:%s" +
+		"               tt:%s," +
+		"				tt:Action," +
+		"				tt:%s" +
 		" ON MATCH SET " +
 		"				tt.subject = CASE WHEN tt.sourceOfTruth=$sourceOfTruth OR tt.subject is null OR tt.subject = '' THEN $subject ELSE tt.subject END, " +
 		"				tt.description = CASE WHEN tt.sourceOfTruth=$sourceOfTruth OR tt.description is null OR tt.description = '' THEN $description ELSE tt.description END, " +
@@ -95,7 +97,7 @@ func (r *ticketRepository) MergeTicket(ctx context.Context, tenant string, syncD
 		") RETURN tt.id"
 
 	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		queryResult, err := tx.Run(ctx, fmt.Sprintf(query, "Ticket_"+tenant),
+		queryResult, err := tx.Run(ctx, fmt.Sprintf(query, "Ticket_"+tenant, "Action_"+tenant),
 			map[string]interface{}{
 				"tenant":         tenant,
 				"ticketId":       ticket.Id,

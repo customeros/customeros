@@ -53,6 +53,8 @@ func (s *actionsService) GetContactActions(ctx context.Context, contactId string
 			actions = append(actions, s.mapDbNodeToPageViewAction(v))
 		} else if slices.Contains(v.Labels, entity.NodeLabel_InteractionSession) {
 			actions = append(actions, s.services.InteractionSessionService.mapDbNodeToInteractionSessionEntity(*v))
+		} else if slices.Contains(v.Labels, entity.NodeLabel_Ticket) {
+			actions = append(actions, s.services.TicketService.mapDbNodeToTicket(*v))
 		}
 	}
 

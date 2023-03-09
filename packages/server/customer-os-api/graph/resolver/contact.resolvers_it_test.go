@@ -913,7 +913,7 @@ func TestQueryResolver_Contact_WithConversations(t *testing.T) {
 	require.NotNil(t, conv2_3)
 }
 
-func TestQueryResolver_Contact_WithActions(t *testing.T) {
+func TestQueryResolver_Contact_WithAllActions(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
@@ -921,14 +921,18 @@ func TestQueryResolver_Contact_WithActions(t *testing.T) {
 	contactId := neo4jt.CreateDefaultContact(ctx, driver, tenantName)
 	contactId2 := neo4jt.CreateDefaultContact(ctx, driver, tenantName)
 	userId := neo4jt.CreateDefaultUser(ctx, driver, tenantName)
+
 	// Use below conversation when conversation is converted to Action
 	neo4jt.CreateConversation(ctx, driver, userId, contactId)
 
 	now := time.Now().UTC()
 	secAgo1 := now.Add(time.Duration(-1) * time.Second)
+	secAgo10 := now.Add(time.Duration(-10) * time.Second)
+	secAgo20 := now.Add(time.Duration(-20) * time.Second)
 	secAgo30 := now.Add(time.Duration(-30) * time.Second)
-	from := now.Add(time.Duration(-10) * time.Minute)
+	from := now.Add(time.Duration(-10) * time.Hour)
 
+	// prepare page views
 	pageViewId1 := neo4jt.CreatePageView(ctx, driver, contactId, entity.PageViewEntity{
 		StartedAt:      secAgo1,
 		EndedAt:        now,
@@ -940,7 +944,6 @@ func TestQueryResolver_Contact_WithActions(t *testing.T) {
 		OrderInSession: 1,
 		EngagedTime:    10,
 	})
-
 	pageViewId2 := neo4jt.CreatePageView(ctx, driver, contactId, entity.PageViewEntity{
 		StartedAt:      secAgo30,
 		EndedAt:        now,
@@ -952,16 +955,40 @@ func TestQueryResolver_Contact_WithActions(t *testing.T) {
 		OrderInSession: 2,
 		EngagedTime:    20,
 	})
-
 	neo4jt.CreatePageView(ctx, driver, contactId2, entity.PageViewEntity{})
+
+	// prepare tickets with tags and notes
+	ticketId1 := neo4jt.CreateTicket(ctx, driver, tenantName, entity.TicketEntity{
+		Subject:     "subject 1",
+		CreatedAt:   secAgo20,
+		Priority:    "P1",
+		Status:      "OPEN",
+		Description: "description 1",
+	})
+	ticketId2 := neo4jt.CreateTicket(ctx, driver, tenantName, entity.TicketEntity{
+		Subject:     "subject 2",
+		CreatedAt:   secAgo10,
+		Priority:    "P2",
+		Status:      "CLOSED",
+		Description: "description 2",
+	})
+	tagId1 := neo4jt.CreateTag(ctx, driver, tenantName, "tag1")
+	tagId2 := neo4jt.CreateTag(ctx, driver, tenantName, "tag2")
+	noteId1 := neo4jt.CreateNoteForTicket(ctx, driver, tenantName, ticketId1, "note 1")
+	noteId2 := neo4jt.CreateNoteForTicket(ctx, driver, tenantName, ticketId2, "note 2")
+	neo4jt.TagTicket(ctx, driver, ticketId1, tagId1)
+	neo4jt.TagTicket(ctx, driver, ticketId2, tagId2)
+	neo4jt.RequestTicket(ctx, driver, contactId, ticketId1)
+	neo4jt.RequestTicket(ctx, driver, contactId, ticketId2)
 
 	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "Contact"))
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "User"))
-	require.Equal(t, 3, neo4jt.GetCountOfNodes(ctx, driver, "Action"))
+	require.Equal(t, 5, neo4jt.GetCountOfNodes(ctx, driver, "Action"))
 	require.Equal(t, 3, neo4jt.GetCountOfNodes(ctx, driver, "PageView"))
+	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "Ticket"))
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Conversation"))
 
-	rawResponse, err := c.RawPost(getQuery("contact/get_contact_with_actions"),
+	rawResponse, err := c.RawPost(getQuery("contact/get_contact_with_all_actions"),
 		client.Var("contactId", contactId),
 		client.Var("from", from),
 		client.Var("to", now))
@@ -971,7 +998,8 @@ func TestQueryResolver_Contact_WithActions(t *testing.T) {
 	require.Equal(t, contactId, contact.(map[string]interface{})["id"])
 
 	actions := contact.(map[string]interface{})["actions"].([]interface{})
-	require.Equal(t, 2, len(actions))
+	require.Equal(t, 4, len(actions))
+
 	action1 := actions[0].(map[string]interface{})
 	require.Equal(t, "PageViewAction", action1["__typename"].(string))
 	require.Equal(t, pageViewId1, action1["id"].(string))
@@ -985,16 +1013,42 @@ func TestQueryResolver_Contact_WithActions(t *testing.T) {
 	require.Equal(t, float64(10), action1["engagedTime"].(float64))
 
 	action2 := actions[1].(map[string]interface{})
-	require.Equal(t, "PageViewAction", action2["__typename"].(string))
-	require.Equal(t, pageViewId2, action2["id"].(string))
-	require.NotNil(t, action2["startedAt"].(string))
-	require.NotNil(t, action2["endedAt"].(string))
-	require.Equal(t, "session2", action2["sessionId"].(string))
-	require.Equal(t, "application2", action2["application"].(string))
-	require.Equal(t, "page2", action2["pageTitle"].(string))
-	require.Equal(t, "http://app-2.ai", action2["pageUrl"].(string))
-	require.Equal(t, float64(2), action2["orderInSession"].(float64))
-	require.Equal(t, float64(20), action2["engagedTime"].(float64))
+	require.Equal(t, "Ticket", action2["__typename"].(string))
+	require.Equal(t, ticketId2, action2["id"].(string))
+	require.NotNil(t, secAgo20, action2["createdAt"].(string))
+	require.Equal(t, "subject 2", action2["subject"].(string))
+	require.Equal(t, "P2", action2["priority"].(string))
+	require.Equal(t, "CLOSED", action2["status"].(string))
+	require.Equal(t, "description 2", action2["description"].(string))
+	require.Equal(t, tagId2, action2["tags"].([]interface{})[0].(map[string]interface{})["id"].(string))
+	require.Equal(t, "tag2", action2["tags"].([]interface{})[0].(map[string]interface{})["name"].(string))
+	require.Equal(t, noteId2, action2["notes"].([]interface{})[0].(map[string]interface{})["id"].(string))
+	require.Equal(t, "note 2", action2["notes"].([]interface{})[0].(map[string]interface{})["html"].(string))
+
+	action3 := actions[2].(map[string]interface{})
+	require.Equal(t, "Ticket", action3["__typename"].(string))
+	require.Equal(t, ticketId1, action3["id"].(string))
+	require.NotNil(t, secAgo20, action3["createdAt"].(string))
+	require.Equal(t, "subject 1", action3["subject"].(string))
+	require.Equal(t, "P1", action3["priority"].(string))
+	require.Equal(t, "OPEN", action3["status"].(string))
+	require.Equal(t, "description 1", action3["description"].(string))
+	require.Equal(t, tagId1, action3["tags"].([]interface{})[0].(map[string]interface{})["id"].(string))
+	require.Equal(t, "tag1", action3["tags"].([]interface{})[0].(map[string]interface{})["name"].(string))
+	require.Equal(t, noteId1, action3["notes"].([]interface{})[0].(map[string]interface{})["id"].(string))
+	require.Equal(t, "note 1", action3["notes"].([]interface{})[0].(map[string]interface{})["html"].(string))
+
+	action4 := actions[3].(map[string]interface{})
+	require.Equal(t, "PageViewAction", action4["__typename"].(string))
+	require.Equal(t, pageViewId2, action4["id"].(string))
+	require.NotNil(t, action4["startedAt"].(string))
+	require.NotNil(t, action4["endedAt"].(string))
+	require.Equal(t, "session2", action4["sessionId"].(string))
+	require.Equal(t, "application2", action4["application"].(string))
+	require.Equal(t, "page2", action4["pageTitle"].(string))
+	require.Equal(t, "http://app-2.ai", action4["pageUrl"].(string))
+	require.Equal(t, float64(2), action4["orderInSession"].(float64))
+	require.Equal(t, float64(20), action4["engagedTime"].(float64))
 }
 
 func TestQueryResolver_Contact_WithActions_FilterByActionType(t *testing.T) {
@@ -1243,9 +1297,18 @@ func TestQueryResolver_Contact_WithTickets_ById(t *testing.T) {
 	contactId := neo4jt.CreateDefaultContact(ctx, driver, tenantName)
 	contactId2 := neo4jt.CreateDefaultContact(ctx, driver, tenantName)
 
-	ticketId1 := neo4jt.CreateTicket(ctx, driver, tenantName, "subject 1")
-	ticketId2 := neo4jt.CreateTicket(ctx, driver, tenantName, "subject 2")
-	ticketId3 := neo4jt.CreateTicket(ctx, driver, tenantName, "subject 3")
+	ticketId1 := neo4jt.CreateTicket(ctx, driver, tenantName, entity.TicketEntity{
+		Subject:   "subject 1",
+		CreatedAt: utils.Now(),
+	})
+	ticketId2 := neo4jt.CreateTicket(ctx, driver, tenantName, entity.TicketEntity{
+		Subject:   "subject 2",
+		CreatedAt: utils.Now(),
+	})
+	ticketId3 := neo4jt.CreateTicket(ctx, driver, tenantName, entity.TicketEntity{
+		Subject:   "subject 3",
+		CreatedAt: utils.Now(),
+	})
 
 	tagId1 := neo4jt.CreateTag(ctx, driver, tenantName, "tag1")
 	tagId2 := neo4jt.CreateTag(ctx, driver, tenantName, "tag2")

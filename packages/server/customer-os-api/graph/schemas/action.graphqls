@@ -1,4 +1,4 @@
-union Action = PageViewAction | InteractionSession
+union Action = PageViewAction | InteractionSession | Ticket
 
 type PageViewAction implements Node {
     id: ID!
@@ -15,4 +15,5 @@ type PageViewAction implements Node {
 enum ActionType {
     PAGE_VIEW
     INTERACTION_SESSION
+    TICKET
 }

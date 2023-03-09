@@ -387,18 +387,30 @@ func CreateTag(ctx context.Context, driver *neo4j.DriverWithContext, tenant, tag
 	return tagId.String()
 }
 
-func CreateTicket(ctx context.Context, driver *neo4j.DriverWithContext, tenant, subject string) string {
-	var tagId, _ = uuid.NewRandom()
+func CreateTicket(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, ticket entity.TicketEntity) string {
+	var ticketId, _ = uuid.NewRandom()
 	query := `MATCH (t:Tenant {name:$tenant})
 			MERGE (t)<-[:TICKET_BELONGS_TO_TENANT]-(tt:Ticket {id:$id})
-			ON CREATE SET tt.subject=$subject, tt.createdAt=$now, tt.updatedAt=$now`
-	ExecuteWriteQuery(ctx, driver, query, map[string]any{
-		"id":      tagId.String(),
-		"tenant":  tenant,
-		"subject": subject,
-		"now":     utils.Now(),
+			ON CREATE SET 
+				tt.subject=$subject, 
+				tt.createdAt=$createdAt,  
+				tt.updatedAt=$createdAt,
+				tt.description=$description,
+				tt.status=$status,
+				tt.priority=$priority,
+				tt:Action,
+				tt:Ticket_%s,
+				tt:Action_%s`
+	ExecuteWriteQuery(ctx, driver, fmt.Sprintf(query, tenant, tenant), map[string]any{
+		"id":          ticketId.String(),
+		"tenant":      tenant,
+		"subject":     ticket.Subject,
+		"createdAt":   ticket.CreatedAt,
+		"description": ticket.Description,
+		"status":      ticket.Status,
+		"priority":    ticket.Priority,
 	})
-	return tagId.String()
+	return ticketId.String()
 }
 
 func RequestTicket(ctx context.Context, driver *neo4j.DriverWithContext, contactId string, ticketId string) {
