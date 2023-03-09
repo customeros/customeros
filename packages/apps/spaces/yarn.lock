@@ -2224,10 +2224,10 @@
   resolved "https://registry.yarnpkg.com/@open-draft/until/-/until-1.0.3.tgz#db9cc719191a62e7d9200f6e7bab21c5b848adca"
   integrity sha512-Aq58f5HiWdyDlFffbbSjAlv596h/cOnt2DO1w3DOC7OJ5EHs0hd/nycJfiu9RJbT6Yk6F1knnRRXNSpxoIVZ9Q==
 
-"@openline-ai/openline-web-chat@^1.3.7":
-  version "1.3.7"
-  resolved "https://registry.yarnpkg.com/@openline-ai/openline-web-chat/-/openline-web-chat-1.3.7.tgz#72be89e78566230f9645f3fefdf5abfad036494d"
-  integrity sha512-K5E410W8DZwm0QwxkX7I/mzkwT/t1eZK0Z8F1hQY4DDLXy9Z/yqt6C2xelezRhOY0r7JLE68Rs57qnfckNS7tg==
+"@openline-ai/openline-web-chat@^1.3.9":
+  version "1.3.9"
+  resolved "https://registry.yarnpkg.com/@openline-ai/openline-web-chat/-/openline-web-chat-1.3.9.tgz#dedc4563341f9eb46ea99e9edeaed3bc552fea70"
+  integrity sha512-PY+muODR1ZrU3PPB8gHWEa/+kQXyBiylcJnaRBQGfeDLsPYGXiquarh0CQ9rwBslWyst06pHZ9nvPfITwOZ0WQ==
   dependencies:
     "@fortawesome/fontawesome-svg-core" "^6.2.1"
     "@fortawesome/free-solid-svg-icons" "^6.2.1"
