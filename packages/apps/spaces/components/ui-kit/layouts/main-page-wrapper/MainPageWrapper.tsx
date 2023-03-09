@@ -53,7 +53,8 @@ export const MainPageWrapper = ({ children }: any) => {
           });
           // @ts-expect-error analytics is added to window object from script
           window.analytics.track('Signed in', {
-            browser: data.devices,
+            // @ts-expect-error analytics is added to window object from script
+            browser: data.devices?.user_agent || 'unknown',
           });
         }
 
