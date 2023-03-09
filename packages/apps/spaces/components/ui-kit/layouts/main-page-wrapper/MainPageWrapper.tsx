@@ -45,16 +45,15 @@ export const MainPageWrapper = ({ children }: any) => {
         // User has a session!
         setSession(data);
         setUserEmail({ identity: getUserName(data.identity) });
-
         // @ts-expect-error analytics is added to window object from script
         if (window?.analytics) {
           // @ts-expect-error analytics is added to window object from script
           window.analytics.identify(data.id, {
-            email: data.identity,
+            email: getUserName(data.identity),
           });
           // @ts-expect-error analytics is added to window object from script
           window.analytics.track('Signed in', {
-            email: data.identity,
+            browser: data.devices,
           });
         }
 
