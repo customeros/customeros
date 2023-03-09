@@ -549,6 +549,7 @@ type InteractionEvent struct {
 	CreatedAt     time.Time  `json:"createdAt"`
 	Channel       *string    `json:"channel"`
 	Content       *string    `json:"content"`
+	ContentType   *string    `json:"contentType"`
 	Source        DataSource `json:"source"`
 	SourceOfTruth DataSource `json:"sourceOfTruth"`
 	AppSource     string     `json:"appSource"`

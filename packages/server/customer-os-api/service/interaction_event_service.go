@@ -44,6 +44,7 @@ func (s *interactionEventService) mapDbNodeToInteractionEventEntity(node dbtype.
 		CreatedAt:     utils.GetTimePropOrEpochStart(props, "createdAt"),
 		Channel:       utils.GetStringPropOrEmpty(props, "channel"),
 		Content:       utils.GetStringPropOrEmpty(props, "content"),
+		ContentType:   utils.GetStringPropOrEmpty(props, "contentType"),
 		AppSource:     utils.GetStringPropOrEmpty(props, "appSource"),
 		Source:        entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
 		SourceOfTruth: entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),

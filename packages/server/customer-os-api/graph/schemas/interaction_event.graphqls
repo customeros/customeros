@@ -21,6 +21,7 @@ type InteractionEvent implements Node {
 
     channel: String
     content: String
+    contentType: String
     source: DataSource!
     sourceOfTruth: DataSource!
     appSource: String!
