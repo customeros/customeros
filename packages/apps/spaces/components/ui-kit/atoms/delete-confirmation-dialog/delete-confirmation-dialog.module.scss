@@ -1,8 +1,9 @@
-@import "styles/mixins";
+@import 'styles/mixins';
 .dialog {
   background: white;
   padding: var(--spacing-lg);
-  box-shadow: 5px 5px 9px #dfdfdf, -1px -1px 9px #f4f4f4, 1px 1px 2px var(--secondary-color-hover);
+  box-shadow: 5px 5px 9px #dfdfdf, -1px -1px 9px #f4f4f4,
+    1px 1px 2px var(--secondary-color-hover);
   border-radius: var(--border-radius-sm);
 
   & > div:first-of-type {
@@ -11,14 +12,12 @@
   }
 }
 
-.dialogFooter{
-    @include flex-between;
+.dialogFooter {
+  @include flex-between;
 }
-.dialogExplanation{
+.dialogExplanation {
   padding: var(--spacing-md) 0;
-
 }
-
 
 .button {
   padding: var(--spacing-xxs) var(--spacing-sm);

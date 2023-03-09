@@ -3847,7 +3847,10 @@ export type GetContactCommunicationChannelsQueryResult = Apollo.QueryResult<
 export const GetContactConversationsDocument = gql`
   query GetContactConversations($id: ID!) {
     contact(id: $id) {
-      conversations(pagination: { page: 0, limit: 25 }) {
+      conversations(
+        pagination: { page: 0, limit: 25 }
+        sort: { by: "STARTED_AT", direction: DESC }
+      ) {
         content {
           id
           startedAt
@@ -5133,7 +5136,10 @@ export const LoadTimelineForOrganizationDocument = gql`
               html
             }
           }
-          conversations {
+          conversations(
+            pagination: { page: 0, limit: 25 }
+            sort: { by: "STARTED_AT", direction: DESC }
+          ) {
             content {
               id
               subject

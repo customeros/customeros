@@ -27,11 +27,6 @@ export const ContactHistory = ({ id }: { id: string }) => {
     loading: conversationsLoading,
     error: conversationsError,
   } = useContactConversations({ id });
-  const {
-    data: contactPersonalDetails,
-    loading: contactPersonalDetailsLoading,
-    error: contactPersonalDetailsError,
-  } = useContactPersonalDetails({ id });
 
   const query = gql`
     query GetActionsForContact($id: ID!, $from: Time!, $to: Time!) {

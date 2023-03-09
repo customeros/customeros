@@ -58,9 +58,7 @@ export const DashboardTableAddressCell = ({
           </div>
         )}
 
-        {locality && (country || region) && (
-            <div>,&nbsp;</div>
-        )}
+        {locality && (country || region) && <div>,&nbsp;</div>}
 
         {country || region ? (
           <div className={`${styles.addressRegion}`}>

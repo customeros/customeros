@@ -102,7 +102,11 @@ export const Timeline = ({
         );
       case 'InteractionSession':
         return (
-          <TimelineItem first={index == 0} createdAt={data?.startedAt} contentClassName={'interactionTimeLineItemClass'}>
+          <TimelineItem
+            first={index == 0}
+            createdAt={data?.startedAt}
+            contentClassName={'interactionTimeLineItemClass'}
+          >
             <InteractionTimelineItem {...data} />
           </TimelineItem>
         );
