@@ -11,6 +11,7 @@ func MapEntityToInteractionEvent(entity *entity.InteractionEventEntity) *model.I
 		ID:            entity.Id,
 		CreatedAt:     entity.CreatedAt,
 		Content:       utils.StringPtr(entity.Content),
+		ContentType:   utils.StringPtr(entity.ContentType),
 		Channel:       utils.StringPtr(entity.Channel),
 		Source:        MapDataSourceToModel(entity.Source),
 		SourceOfTruth: MapDataSourceToModel(entity.SourceOfTruth),

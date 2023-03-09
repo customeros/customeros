@@ -10,6 +10,7 @@ type InteractionEventEntity struct {
 	CreatedAt     time.Time
 	Channel       string
 	Content       string
+	ContentType   string
 	Source        DataSource
 	SourceOfTruth DataSource
 	AppSource     string

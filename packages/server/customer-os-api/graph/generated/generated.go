@@ -220,6 +220,7 @@ type ComplexityRoot struct {
 		AppSource     func(childComplexity int) int
 		Channel       func(childComplexity int) int
 		Content       func(childComplexity int) int
+		ContentType   func(childComplexity int) int
 		CreatedAt     func(childComplexity int) int
 		ID            func(childComplexity int) int
 		Source        func(childComplexity int) int
@@ -1542,6 +1543,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.InteractionEvent.Content(childComplexity), true
+
+	case "InteractionEvent.contentType":
+		if e.complexity.InteractionEvent.ContentType == nil {
+			break
+		}
+
+		return e.complexity.InteractionEvent.ContentType(childComplexity), true
 
 	case "InteractionEvent.createdAt":
 		if e.complexity.InteractionEvent.CreatedAt == nil {
@@ -4559,6 +4567,7 @@ type InteractionEvent implements Node {
 
     channel: String
     content: String
+    contentType: String
     source: DataSource!
     sourceOfTruth: DataSource!
     appSource: String!
@@ -12879,6 +12888,47 @@ func (ec *executionContext) fieldContext_InteractionEvent_content(ctx context.Co
 	return fc, nil
 }
 
+func (ec *executionContext) _InteractionEvent_contentType(ctx context.Context, field graphql.CollectedField, obj *model.InteractionEvent) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_InteractionEvent_contentType(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ContentType, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_InteractionEvent_contentType(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "InteractionEvent",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _InteractionEvent_source(ctx context.Context, field graphql.CollectedField, obj *model.InteractionEvent) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_InteractionEvent_source(ctx, field)
 	if err != nil {
@@ -13565,6 +13615,8 @@ func (ec *executionContext) fieldContext_InteractionSession_events(ctx context.C
 				return ec.fieldContext_InteractionEvent_channel(ctx, field)
 			case "content":
 				return ec.fieldContext_InteractionEvent_content(ctx, field)
+			case "contentType":
+				return ec.fieldContext_InteractionEvent_contentType(ctx, field)
 			case "source":
 				return ec.fieldContext_InteractionEvent_source(ctx, field)
 			case "sourceOfTruth":
@@ -31081,6 +31133,10 @@ func (ec *executionContext) _InteractionEvent(ctx context.Context, sel ast.Selec
 		case "content":
 
 			out.Values[i] = ec._InteractionEvent_content(ctx, field, obj)
+
+		case "contentType":
+
+			out.Values[i] = ec._InteractionEvent_contentType(ctx, field, obj)
 
 		case "source":
 
