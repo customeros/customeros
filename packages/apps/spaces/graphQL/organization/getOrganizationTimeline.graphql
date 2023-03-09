@@ -8,7 +8,10 @@ query LoadTimelineForOrganization($id: ID!) {
             html
           }
         }
-        conversations {
+        conversations(
+          pagination: { page: 0, limit: 25 }
+          sort: { by: "STARTED_AT", direction: DESC }
+        ) {
           content {
             id
             subject

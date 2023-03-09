@@ -1,4 +1,4 @@
-@import "styles/mixins";
+@import 'styles/mixins';
 .noteContainer {
   display: flex;
   justify-content: space-between;
@@ -43,7 +43,7 @@
   justify-content: flex-end;
   align-items: flex-end;
   flex: 1;
- @include text-hint;
+  @include text-hint;
 }
 
 .actions {

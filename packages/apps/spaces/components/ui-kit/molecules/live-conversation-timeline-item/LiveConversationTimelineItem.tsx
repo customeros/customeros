@@ -131,11 +131,7 @@ export const LiveConversationTimelineItem: React.FC<Props> = ({
                 const fl =
                   first && (index === 0 || index === messages.length - 1);
                 return (
-                  <TimelineItem
-                    first={fl}
-                    createdAt={date}
-                    key={msg.id}
-                  >
+                  <TimelineItem first={fl} createdAt={date} key={msg.id}>
                     <EmailTimelineItem
                       emailContent={emailData.html}
                       sender={emailData.from || 'Unknown'}

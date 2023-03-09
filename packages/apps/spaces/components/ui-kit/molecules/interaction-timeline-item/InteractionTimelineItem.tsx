@@ -34,28 +34,30 @@ export const InteractionTimelineItem = ({
                   event.content.indexOf(':') + 1,
                   event.content.length,
                 );
-                const links = linksExtracted.split(',').map((photo: any, index: any) => {
-                  if (photo.indexOf('http') == -1) return ''
-                  return (
-                    <a
-                      target={'_blank'}
-                      rel='noreferrer'
-                      key={uuidv4()}
-                      href={photo}
-                      className={styles.photoLink}
-                    >
-                      <div
-                        className={'flex flex-column align-items-center mr-5'}
+                const links = linksExtracted
+                  .split(',')
+                  .map((photo: any, index: any) => {
+                    if (photo.indexOf('http') == -1) return '';
+                    return (
+                      <a
+                        target={'_blank'}
+                        rel='noreferrer'
+                        key={uuidv4()}
+                        href={photo}
+                        className={styles.photoLink}
                       >
-                        <FontAwesomeIcon icon={faImage} size='2x' />
-                        Photo {index + 1}
-                      </div>
-                    </a>
-                  );
-                });
+                        <div
+                          className={'flex flex-column align-items-center mr-5'}
+                        >
+                          <FontAwesomeIcon icon={faImage} size='2x' />
+                          Photo {index + 1}
+                        </div>
+                      </a>
+                    );
+                  });
 
                 if (links.filter((link: any) => link != '').length == 0) {
-                  return ''
+                  return '';
                 }
 
                 return (

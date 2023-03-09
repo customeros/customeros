@@ -69,7 +69,6 @@ export const ContactPersonalDetails = ({ id }: { id: string }) => {
               }
             >
               {jobRole?.jobTitle}
-
               {jobRole?.jobTitle &&
               jobRole?.organization &&
               jobRole?.organization?.name

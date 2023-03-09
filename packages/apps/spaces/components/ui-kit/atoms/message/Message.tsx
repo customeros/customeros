@@ -258,7 +258,7 @@ export const Message = ({
             {
               <div className='flex flex-row flex-grow-0'>
                 <div className={'mr-1'}>{getContact(content).tel}</div>
-                <div className={'mr-1'}style={{ textAlign: 'center' }}>
+                <div className={'mr-1'} style={{ textAlign: 'center' }}>
                   <b>{content.analysis.type}</b>
                 </div>
                 <div className={'mr-1'}>{getUser(content).mailto}</div>
