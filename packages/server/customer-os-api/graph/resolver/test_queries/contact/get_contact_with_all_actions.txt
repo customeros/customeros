@@ -32,6 +32,13 @@ query GetContactById($contactId: ID!, $from: Time!, $to: Time!){
                 name
               }
             }
+            __typename
+            ... on Conversation {
+                id
+                startedAt
+                subject
+                channel
+            }
           }
   }
 }

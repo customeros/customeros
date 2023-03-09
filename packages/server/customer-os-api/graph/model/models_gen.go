@@ -267,6 +267,8 @@ type Conversation struct {
 	ThreadID           *string            `json:"threadId"`
 }
 
+func (Conversation) IsAction() {}
+
 func (Conversation) IsNode()            {}
 func (this Conversation) GetID() string { return this.ID }
 
@@ -1014,17 +1016,19 @@ const (
 	ActionTypePageView           ActionType = "PAGE_VIEW"
 	ActionTypeInteractionSession ActionType = "INTERACTION_SESSION"
 	ActionTypeTicket             ActionType = "TICKET"
+	ActionTypeConversation       ActionType = "CONVERSATION"
 )
 
 var AllActionType = []ActionType{
 	ActionTypePageView,
 	ActionTypeInteractionSession,
 	ActionTypeTicket,
+	ActionTypeConversation,
 }
 
 func (e ActionType) IsValid() bool {
 	switch e {
-	case ActionTypePageView, ActionTypeInteractionSession, ActionTypeTicket:
+	case ActionTypePageView, ActionTypeInteractionSession, ActionTypeTicket, ActionTypeConversation:
 		return true
 	}
 	return false

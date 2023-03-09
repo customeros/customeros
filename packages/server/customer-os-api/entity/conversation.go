@@ -30,6 +30,13 @@ func (conversation ConversationEntity) ToString() string {
 
 type ConversationEntities []ConversationEntity
 
-func (conversation ConversationEntity) Labels() []string {
-	return []string{"Conversation"}
+func (ConversationEntity) Action() {
+}
+
+func (ConversationEntity) ActionName() string {
+	return NodeLabel_Conversation
+}
+
+func (conversation ConversationEntity) Labels(tenant string) []string {
+	return []string{"Conversation", "Action", "Conversation_" + tenant, "Action_" + tenant}
 }

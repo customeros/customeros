@@ -22,6 +22,8 @@ type ConversationService interface {
 	CloseConversation(ctx context.Context, conversationId string, sourceOfTruth entity.DataSource) (*entity.ConversationEntity, error)
 	GetConversationsForUser(ctx context.Context, userId string, page, limit int, sortBy []*model.SortBy) (*utils.Pagination, error)
 	GetConversationsForContact(ctx context.Context, contactId string, page, limit int, sortBy []*model.SortBy) (*utils.Pagination, error)
+
+	mapDbNodeToConversationEntity(dbNode dbtype.Node) *entity.ConversationEntity
 }
 
 type conversationService struct {

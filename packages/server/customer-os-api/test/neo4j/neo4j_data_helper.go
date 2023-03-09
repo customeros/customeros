@@ -9,6 +9,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"golang.org/x/net/context"
+	"time"
 )
 
 func CleanupAllData(ctx context.Context, driver *neo4j.DriverWithContext) {
@@ -564,18 +565,21 @@ func UserOwnsContact(ctx context.Context, driver *neo4j.DriverWithContext, userI
 	})
 }
 
-func CreateConversation(ctx context.Context, driver *neo4j.DriverWithContext, tenant, userId, contactId string) string {
+func CreateConversation(ctx context.Context, driver *neo4j.DriverWithContext, tenant, userId, contactId, subject string, startedAt time.Time) string {
 	var conversationId, _ = uuid.NewRandom()
 	query := `MATCH (c:Contact {id:$contactId}),
 			        (u:User {id:$userId})
 			MERGE (u)-[:PARTICIPATES]->(o:Conversation:Conversation_%s:Action:Action_%s {id:$conversationId})<-[:PARTICIPATES]-(c)
-			ON CREATE SET 	o.startedAt=datetime({timezone: 'UTC'}), 
+			ON CREATE SET 	o.startedAt=$startedAt, 
 							o.status="ACTIVE", 
-							o.channel="VOICE", 
+							o.channel="VOICE",
+							o.subject=$subject,
 							o.messageCount=0 `
 	ExecuteWriteQuery(ctx, driver, fmt.Sprintf(query, tenant, tenant), map[string]any{
 		"contactId":      contactId,
 		"userId":         userId,
+		"subject":        subject,
+		"startedAt":      startedAt,
 		"conversationId": conversationId.String(),
 	})
 	return conversationId.String()
