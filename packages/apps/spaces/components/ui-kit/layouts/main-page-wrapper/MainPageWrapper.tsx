@@ -45,6 +45,18 @@ export const MainPageWrapper = ({ children }: any) => {
         // User has a session!
         setSession(data);
         setUserEmail({ identity: getUserName(data.identity) });
+        // @ts-expect-error analytics is added to window object from script
+        if (window?.analytics && process.env.NODE_ENV === 'production') {
+          // @ts-expect-error analytics is added to window object from script
+          window.analytics.identify(data.id, {
+            email: getUserName(data.identity),
+          });
+          // @ts-expect-error analytics is added to window object from script
+          window.analytics.track('Signed in', {
+            browser: data.devices,
+          });
+        }
+
         // Create a logout url
         ory.createBrowserLogoutFlow().then(({ data }) => {
           setLogoutUrl(data.logout_url);
