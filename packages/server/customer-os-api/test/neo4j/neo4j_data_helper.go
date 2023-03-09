@@ -564,13 +564,16 @@ func UserOwnsContact(ctx context.Context, driver *neo4j.DriverWithContext, userI
 	})
 }
 
-func CreateConversation(ctx context.Context, driver *neo4j.DriverWithContext, userId, contactId string) string {
+func CreateConversation(ctx context.Context, driver *neo4j.DriverWithContext, tenant, userId, contactId string) string {
 	var conversationId, _ = uuid.NewRandom()
 	query := `MATCH (c:Contact {id:$contactId}),
 			        (u:User {id:$userId})
-			MERGE (u)-[:PARTICIPATES]->(o:Conversation {id:$conversationId})<-[:PARTICIPATES]-(c)
-			ON CREATE SET o.startedAt=datetime({timezone: 'UTC'}), o.status="ACTIVE", o.channel="VOICE", o.messageCount=0 `
-	ExecuteWriteQuery(ctx, driver, query, map[string]any{
+			MERGE (u)-[:PARTICIPATES]->(o:Conversation:Conversation_%s:Action:Action_%s {id:$conversationId})<-[:PARTICIPATES]-(c)
+			ON CREATE SET 	o.startedAt=datetime({timezone: 'UTC'}), 
+							o.status="ACTIVE", 
+							o.channel="VOICE", 
+							o.messageCount=0 `
+	ExecuteWriteQuery(ctx, driver, fmt.Sprintf(query, tenant, tenant), map[string]any{
 		"contactId":      contactId,
 		"userId":         userId,
 		"conversationId": conversationId.String(),

@@ -42,9 +42,16 @@ func (r *conversationRepository) Create(ctx context.Context, session neo4j.Sessi
 	if result, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		query := "MATCH (t:Tenant {name:$tenant}) " +
 			" MERGE (o:Conversation {id:$conversationId}) " +
-			" ON CREATE SET o:%s, " +
-			"				o.startedAt=$startedAt, o.messageCount=0, o.channel=$channel, o.status=$status, " +
-			" 				o.source=$source, o.sourceOfTruth=$sourceOfTruth, o.appSource=$appSource " +
+			" ON CREATE SET o:Conversation_%s, " +
+			"				o:Action," +
+			"				o:Action_%s," +
+			"				o.startedAt=$startedAt, " +
+			"				o.messageCount=0, " +
+			"				o.channel=$channel, " +
+			"				o.status=$status, " +
+			" 				o.source=$source, " +
+			"				o.sourceOfTruth=$sourceOfTruth, " +
+			"				o.appSource=$appSource " +
 			" %s %s " +
 			" RETURN DISTINCT o"
 		queryLinkWithContacts := ""
@@ -61,7 +68,7 @@ func (r *conversationRepository) Create(ctx context.Context, session neo4j.Sessi
 				" WITH t, o, COLLECT(u) as participants " +
 				" FOREACH (x in participants | MERGE (x)-[:PARTICIPATES]->(o) )"
 		}
-		queryResult, err := tx.Run(ctx, fmt.Sprintf(query, "Conversation_"+tenant, queryLinkWithContacts, queryLinkWithUsers),
+		queryResult, err := tx.Run(ctx, fmt.Sprintf(query, tenant, tenant, queryLinkWithContacts, queryLinkWithUsers),
 			map[string]interface{}{
 				"tenant":         tenant,
 				"status":         entity.Status,

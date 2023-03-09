@@ -877,10 +877,10 @@ func TestQueryResolver_Contact_WithConversations(t *testing.T) {
 	contact2 := neo4jt.CreateDefaultContact(ctx, driver, tenantName)
 	contact3 := neo4jt.CreateDefaultContact(ctx, driver, tenantName)
 
-	conv1_1 := neo4jt.CreateConversation(ctx, driver, user1, contact1)
-	conv1_2 := neo4jt.CreateConversation(ctx, driver, user1, contact2)
-	conv2_1 := neo4jt.CreateConversation(ctx, driver, user2, contact1)
-	conv2_3 := neo4jt.CreateConversation(ctx, driver, user2, contact3)
+	conv1_1 := neo4jt.CreateConversation(ctx, driver, tenantName, user1, contact1)
+	conv1_2 := neo4jt.CreateConversation(ctx, driver, tenantName, user1, contact2)
+	conv2_1 := neo4jt.CreateConversation(ctx, driver, tenantName, user2, contact1)
+	conv2_3 := neo4jt.CreateConversation(ctx, driver, tenantName, user2, contact3)
 
 	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "User"))
 	require.Equal(t, 3, neo4jt.GetCountOfNodes(ctx, driver, "Contact"))
@@ -923,7 +923,7 @@ func TestQueryResolver_Contact_WithAllActions(t *testing.T) {
 	userId := neo4jt.CreateDefaultUser(ctx, driver, tenantName)
 
 	// Use below conversation when conversation is converted to Action
-	neo4jt.CreateConversation(ctx, driver, userId, contactId)
+	neo4jt.CreateConversation(ctx, driver, tenantName, userId, contactId)
 
 	now := time.Now().UTC()
 	secAgo1 := now.Add(time.Duration(-1) * time.Second)

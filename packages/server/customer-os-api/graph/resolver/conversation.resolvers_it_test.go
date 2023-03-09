@@ -110,7 +110,7 @@ func TestMutationResolver_ConversationClose(t *testing.T) {
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 	contactId := neo4jt.CreateDefaultContact(ctx, driver, tenantName)
 	userId := neo4jt.CreateDefaultUser(ctx, driver, tenantName)
-	conversationId := neo4jt.CreateConversation(ctx, driver, userId, contactId)
+	conversationId := neo4jt.CreateConversation(ctx, driver, tenantName, userId, contactId)
 
 	rawResponse, err := c.RawPost(getQuery("conversation/close_conversation"),
 		client.Var("conversationId", conversationId))
@@ -142,7 +142,7 @@ func TestMutationResolver_ConversationUpdate_NoChanges(t *testing.T) {
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 	contactId := neo4jt.CreateDefaultContact(ctx, driver, tenantName)
 	userId := neo4jt.CreateDefaultUser(ctx, driver, tenantName)
-	conversationId := neo4jt.CreateConversation(ctx, driver, userId, contactId)
+	conversationId := neo4jt.CreateConversation(ctx, driver, tenantName, userId, contactId)
 
 	rawResponse, err := c.RawPost(getQuery("conversation/update_conversation_no_changes"),
 		client.Var("conversationId", conversationId))
@@ -178,7 +178,7 @@ func TestMutationResolver_ConversationUpdate_ChangeAllFieldsAndAddNewParticipant
 	contactId2 := neo4jt.CreateDefaultContact(ctx, driver, tenantName)
 	userId1 := neo4jt.CreateDefaultUser(ctx, driver, tenantName)
 	userId2 := neo4jt.CreateDefaultUser(ctx, driver, tenantName)
-	conversationId := neo4jt.CreateConversation(ctx, driver, userId1, contactId1)
+	conversationId := neo4jt.CreateConversation(ctx, driver, tenantName, userId1, contactId1)
 
 	require.Equal(t, 2, neo4jt.GetCountOfRelationships(ctx, driver, "PARTICIPATES"))
 
