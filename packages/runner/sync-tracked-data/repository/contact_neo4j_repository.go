@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"errors"
 	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/db"
@@ -9,7 +10,7 @@ import (
 )
 
 type ContactRepository interface {
-	GetOrCreateContactByEmail(ctx context.Context, tenant, email, firstName, lastName, application string) (string, error)
+	GetFirstOrCreateContactByEmail(ctx context.Context, tenant, email, firstName, lastName, application string) (string, error)
 }
 
 type contactRepository struct {
@@ -22,14 +23,14 @@ func NewContactRepository(driver *neo4j.DriverWithContext) ContactRepository {
 	}
 }
 
-func (r *contactRepository) GetOrCreateContactByEmail(ctx context.Context, tenant, email, firstName, lastName, application string) (string, error) {
+func (r *contactRepository) GetFirstOrCreateContactByEmail(ctx context.Context, tenant, email, firstName, lastName, application string) (string, error) {
 	session := (*r.driver).NewSession(ctx,
 		neo4j.SessionConfig{
 			AccessMode: neo4j.AccessModeWrite,
 			BoltLogger: neo4j.ConsoleBoltLogger()})
 	defer session.Close(ctx)
 
-	record, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (interface{}, error) {
+	records, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (interface{}, error) {
 		queryResult, err := tx.Run(ctx, fmt.Sprintf(
 			" MATCH (t:Tenant {name:$tenant}) "+
 				" MERGE (e:Email {rawEmail: $email})-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]->(t) "+
@@ -53,7 +54,7 @@ func (r *contactRepository) GetOrCreateContactByEmail(ctx context.Context, tenan
 				"				c.sourceOfTruth=$sourceOfTruth, "+
 				"				c.appSource=$appSource, "+
 				"               c:%s "+
-				" RETURN c.id", "Email_"+tenant, "Contact_"+tenant),
+				" RETURN c.id order by c.createdAt ASC", "Email_"+tenant, "Contact_"+tenant),
 			map[string]interface{}{
 				"tenant":        tenant,
 				"email":         email,
@@ -64,12 +65,16 @@ func (r *contactRepository) GetOrCreateContactByEmail(ctx context.Context, tenan
 				"appSource":     application,
 				"now":           time.Now().UTC(),
 			})
-		record, err := queryResult.Single(ctx)
 		if err != nil {
 			return nil, err
 		}
-		return record, nil
+		return queryResult.Collect(ctx)
 	})
-
-	return record.(*db.Record).Values[0].(string), err
+	if err != nil {
+		return "", err
+	}
+	if len(records.([]*db.Record)) == 0 {
+		return "", errors.New("no contact records found/created to link page views")
+	}
+	return records.([]*db.Record)[0].Values[0].(string), nil
 }

@@ -6,6 +6,7 @@ import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/db"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/entity"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/utils"
+	"github.com/pkg/errors"
 	"golang.org/x/net/context"
 	"time"
 )
@@ -20,7 +21,7 @@ type ContactRepository interface {
 	MergeTextCustomField(ctx context.Context, tenant, contactId string, field entity.TextCustomField) error
 	MergeContactDefaultPlace(ctx context.Context, tenant, contactId string, contact entity.ContactData) error
 	MergeTagForContact(ctx context.Context, tenant, contactId, tagName, sourceApp string) error
-	GetOrCreateContactByEmail(ctx context.Context, tenant, email, firstName, lastName, source string) (string, error)
+	GetFirstOrCreateContactByEmail(ctx context.Context, tenant, email, firstName, lastName, source string) (string, error)
 	LinkContactWithOrganization(ctx context.Context, tenant, contactId, organizationExternalId, source string) error
 }
 
@@ -412,11 +413,11 @@ func (r *contactRepository) MergeTagForContact(ctx context.Context, tenant, cont
 	return err
 }
 
-func (r *contactRepository) GetOrCreateContactByEmail(ctx context.Context, tenant, email, firstName, lastName, source string) (string, error) {
+func (r *contactRepository) GetFirstOrCreateContactByEmail(ctx context.Context, tenant, email, firstName, lastName, source string) (string, error) {
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
-	record, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (interface{}, error) {
+	records, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (interface{}, error) {
 		queryResult, err := tx.Run(ctx, fmt.Sprintf(
 			" MATCH (t:Tenant {name:$tenant}) "+
 				" MERGE (e:Email {rawEmail: $email})-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]->(t) "+
@@ -440,7 +441,7 @@ func (r *contactRepository) GetOrCreateContactByEmail(ctx context.Context, tenan
 				"				c.sourceOfTruth=$sourceOfTruth, "+
 				"				c.appSource=$appSource, "+
 				"               c:%s"+
-				" RETURN c.id", "Email_"+tenant, "Contact_"+tenant),
+				" RETURN c.id order by c.createdAt ASC", "Email_"+tenant, "Contact_"+tenant),
 			map[string]interface{}{
 				"tenant":        tenant,
 				"email":         email,
@@ -451,14 +452,18 @@ func (r *contactRepository) GetOrCreateContactByEmail(ctx context.Context, tenan
 				"appSource":     source,
 				"now":           time.Now().UTC(),
 			})
-		record, err := queryResult.Single(ctx)
 		if err != nil {
 			return nil, err
 		}
-		return record, nil
+		return queryResult.Collect(ctx)
 	})
-
-	return record.(*db.Record).Values[0].(string), err
+	if err != nil {
+		return "", err
+	}
+	if len(records.([]*db.Record)) == 0 {
+		return "", errors.New("no contact records found/created to link page views")
+	}
+	return records.([]*db.Record)[0].Values[0].(string), nil
 }
 
 func (r *contactRepository) LinkContactWithOrganization(ctx context.Context, tenant, contactId, organizationExternalId, source string) error {
