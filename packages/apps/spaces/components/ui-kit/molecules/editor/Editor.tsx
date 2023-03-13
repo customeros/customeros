@@ -48,7 +48,7 @@ export const Editor: FC<Props> = ({
       {children}
       <PrimereactEditor
         style={{
-          height: isEditMode ? 'auto' : '120px',
+          height: isEditMode ? 'auto' : '160px',
           borderColor: isEditMode && 'transparent',
         }}
         headerTemplate={
