@@ -22,6 +22,8 @@ type NoteService interface {
 
 	UpdateNote(ctx context.Context, entity *entity.NoteEntity) (*entity.NoteEntity, error)
 	DeleteNote(ctx context.Context, noteId string) (bool, error)
+
+	mapDbNodeToNoteEntity(node dbtype.Node) *entity.NoteEntity
 }
 
 type noteService struct {

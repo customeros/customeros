@@ -3656,7 +3656,7 @@ func (ec *executionContext) introspectType(name string) (*introspection.Type, er
 }
 
 var sources = []*ast.Source{
-	{Name: "../schemas/action.graphqls", Input: `union Action = PageViewAction | InteractionSession | Ticket | Conversation
+	{Name: "../schemas/action.graphqls", Input: `union Action = PageViewAction | InteractionSession | Ticket | Conversation | Note
 
 type PageViewAction implements Node {
     id: ID!
@@ -3675,6 +3675,7 @@ enum ActionType {
     INTERACTION_SESSION
     TICKET
     CONVERSATION
+    NOTE
 }`, BuiltIn: false},
 	{Name: "../schemas/contact.graphqls", Input: `extend type Query {
     """
@@ -29550,6 +29551,13 @@ func (ec *executionContext) _Action(ctx context.Context, sel ast.SelectionSet, o
 			return graphql.Null
 		}
 		return ec._Conversation(ctx, sel, obj)
+	case model.Note:
+		return ec._Note(ctx, sel, &obj)
+	case *model.Note:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._Note(ctx, sel, obj)
 	default:
 		panic(fmt.Errorf("unexpected type %T", obj))
 	}
@@ -32126,7 +32134,7 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 	return out
 }
 
-var noteImplementors = []string{"Note"}
+var noteImplementors = []string{"Note", "Action"}
 
 func (ec *executionContext) _Note(ctx context.Context, sel ast.SelectionSet, obj *model.Note) graphql.Marshaler {
 	fields := graphql.CollectFields(ec.OperationContext, sel, noteImplementors)

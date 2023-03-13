@@ -663,6 +663,8 @@ type Note struct {
 	AppSource     string     `json:"appSource"`
 }
 
+func (Note) IsAction() {}
+
 type NoteInput struct {
 	HTML      string  `json:"html"`
 	AppSource *string `json:"appSource"`
@@ -1017,6 +1019,7 @@ const (
 	ActionTypeInteractionSession ActionType = "INTERACTION_SESSION"
 	ActionTypeTicket             ActionType = "TICKET"
 	ActionTypeConversation       ActionType = "CONVERSATION"
+	ActionTypeNote               ActionType = "NOTE"
 )
 
 var AllActionType = []ActionType{
@@ -1024,11 +1027,12 @@ var AllActionType = []ActionType{
 	ActionTypeInteractionSession,
 	ActionTypeTicket,
 	ActionTypeConversation,
+	ActionTypeNote,
 }
 
 func (e ActionType) IsValid() bool {
 	switch e {
-	case ActionTypePageView, ActionTypeInteractionSession, ActionTypeTicket, ActionTypeConversation:
+	case ActionTypePageView, ActionTypeInteractionSession, ActionTypeTicket, ActionTypeConversation, ActionTypeNote:
 		return true
 	}
 	return false

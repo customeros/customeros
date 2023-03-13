@@ -23,6 +23,13 @@ func (note NoteEntity) ToString() string {
 
 type NoteEntities []NoteEntity
 
-func (note NoteEntity) Labels() []string {
-	return []string{"Note"}
+func (NoteEntity) Action() {
+}
+
+func (NoteEntity) ActionName() string {
+	return NodeLabel_Note
+}
+
+func (note NoteEntity) Labels(tenant string) []string {
+	return []string{"Note", "Action", "Note_" + tenant, "Action_" + tenant}
 }

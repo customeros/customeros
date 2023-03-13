@@ -21,6 +21,9 @@ func MapEntityToAction(actionEntity *entity.Action) any {
 	case entity.NodeLabel_Conversation:
 		conversationEntity := (*actionEntity).(*entity.ConversationEntity)
 		return MapEntityToConversation(conversationEntity)
+	case entity.NodeLabel_Note:
+		noteEntity := (*actionEntity).(*entity.NoteEntity)
+		return MapEntityToNote(noteEntity)
 	}
 	fmt.Errorf("action of type %s not identified", reflect.TypeOf(actionEntity))
 	return nil
