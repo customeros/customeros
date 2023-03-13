@@ -9,8 +9,8 @@ require (
 	github.com/neo4j/neo4j-go-driver/v5 v5.6.0
 	github.com/sirupsen/logrus v1.9.0
 	golang.org/x/net v0.8.0
-	gorm.io/driver/postgres v1.4.8
-	gorm.io/gorm v1.24.6
+	gorm.io/driver/postgres v1.5.0
+	gorm.io/gorm v1.24.7-0.20230306060331-85eaf9eeda11
 )
 
 require (
