@@ -903,11 +903,10 @@ func TestQueryResolver_Contact_WithConversations(t *testing.T) {
 	require.Equal(t, 2, len(contact.Contact.Conversations.Content))
 	conversations := contact.Contact.Conversations.Content
 	require.ElementsMatch(t, []string{conv1_1, conv2_1}, []string{conversations[0].ID, conversations[1].ID})
+	require.ElementsMatch(t, []string{"subject 1", "subject 3"}, []string{*conversations[0].Subject, *conversations[1].Subject})
 	require.ElementsMatch(t, []string{user1, user2}, []string{conversations[0].Users[0].ID, conversations[1].Users[0].ID})
 	require.Equal(t, contact1, conversations[0].Contacts[0].ID)
-	require.Nil(t, conversations[0].Subject)
 	require.Equal(t, contact1, conversations[1].Contacts[0].ID)
-	require.Nil(t, conversations[1].Subject)
 
 	require.NotNil(t, conv1_2)
 	require.NotNil(t, conv2_3)

@@ -42,7 +42,8 @@ func TestMutationResolver_ConversationCreate_Min(t *testing.T) {
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Conversation"))
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Conversation_"+tenantName))
 	require.Equal(t, 1, neo4jt.GetCountOfRelationships(ctx, driver, "PARTICIPATES"))
-	assertNeo4jLabels(ctx, t, driver, []string{"Tenant", "Contact", "Contact_" + tenantName, "Conversation", "Conversation_" + tenantName})
+	assertNeo4jLabels(ctx, t, driver, []string{"Tenant", "Contact", "Contact_" + tenantName,
+		"Conversation", "Conversation_" + tenantName, "Action", "Action_" + tenantName})
 }
 
 func TestMutationResolver_ConversationCreate_WithGivenIdAndMultipleParticipants(t *testing.T) {
@@ -88,7 +89,8 @@ func TestMutationResolver_ConversationCreate_WithGivenIdAndMultipleParticipants(
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Conversation"))
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Conversation_"+tenantName))
 	require.Equal(t, 4, neo4jt.GetCountOfRelationships(ctx, driver, "PARTICIPATES"))
-	assertNeo4jLabels(ctx, t, driver, []string{"Tenant", "Contact", "Contact_" + tenantName, "User", "Conversation", "Conversation_" + tenantName})
+	assertNeo4jLabels(ctx, t, driver, []string{"Tenant", "Contact", "Contact_" + tenantName, "User",
+		"Conversation", "Conversation_" + tenantName, "Action", "Action_" + tenantName})
 }
 
 func TestMutationResolver_ConversationCreate_WithoutParticipants_ShouldFail(t *testing.T) {
