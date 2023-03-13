@@ -20,7 +20,7 @@ function OrganizationDetailsPage() {
   if (id === 'new') {
     return (
       <DetailsPageLayout onNavigateBack={() => push('/')}>
-        <section className={styles.organizationDetails}>
+        <section className={styles.organizationIdCard}>
           <OrganizationCreate />
         </section>
         <section className={styles.notes}></section>
@@ -30,8 +30,10 @@ function OrganizationDetailsPage() {
   }
   return (
     <DetailsPageLayout onNavigateBack={() => push('/')}>
-      <section className={styles.organizationDetails}>
+      <section className={styles.organizationIdCard}>
         <OrganizationDetails id={id as string} />
+      </section>
+      <section className={styles.organizationDetails}>
         <OrganizationContacts id={id as string} />
       </section>
       <section className={styles.notes}>

@@ -1,5 +1,9 @@
+.organizationIdCard {
+  grid-area: idCard;
+}
 .organizationDetails {
   grid-area: details;
+  overflow-y: scroll;
 }
 .communicationDetails {
   grid-area: contactDetails;
