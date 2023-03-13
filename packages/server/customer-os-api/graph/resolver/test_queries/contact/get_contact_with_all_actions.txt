@@ -39,6 +39,12 @@ query GetContactById($contactId: ID!, $from: Time!, $to: Time!){
                 subject
                 channel
             }
+            __typename
+            ... on Note {
+                id
+                html
+                createdAt
+            }
           }
   }
 }

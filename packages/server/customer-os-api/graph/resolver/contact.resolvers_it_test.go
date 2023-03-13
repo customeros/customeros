@@ -495,8 +495,8 @@ func TestQueryResolver_Contact_WithNotes_ById(t *testing.T) {
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 	contactId := neo4jt.CreateDefaultContact(ctx, driver, tenantName)
 	userId := neo4jt.CreateDefaultUser(ctx, driver, tenantName)
-	noteId1 := neo4jt.CreateNoteForContact(ctx, driver, tenantName, contactId, "note1")
-	noteId2 := neo4jt.CreateNoteForContact(ctx, driver, tenantName, contactId, "note2")
+	noteId1 := neo4jt.CreateNoteForContact(ctx, driver, tenantName, contactId, "note1", nil)
+	noteId2 := neo4jt.CreateNoteForContact(ctx, driver, tenantName, contactId, "note2", nil)
 	neo4jt.NoteCreatedByUser(ctx, driver, noteId1, userId)
 
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Contact"))
@@ -547,8 +547,8 @@ func TestQueryResolver_Contact_WithNotes_ById_Time_Range(t *testing.T) {
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 	contactId := neo4jt.CreateDefaultContact(ctx, driver, tenantName)
 	userId := neo4jt.CreateDefaultUser(ctx, driver, tenantName)
-	noteId1 := neo4jt.CreateNoteForContact(ctx, driver, tenantName, contactId, "note1")
-	noteId2 := neo4jt.CreateNoteForContact(ctx, driver, tenantName, contactId, "note2")
+	noteId1 := neo4jt.CreateNoteForContact(ctx, driver, tenantName, contactId, "note1", nil)
+	noteId2 := neo4jt.CreateNoteForContact(ctx, driver, tenantName, contactId, "note2", nil)
 	neo4jt.NoteCreatedByUser(ctx, driver, noteId1, userId)
 
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Contact"))
@@ -927,6 +927,7 @@ func TestQueryResolver_Contact_WithAllActions(t *testing.T) {
 	secAgo20 := now.Add(time.Duration(-20) * time.Second)
 	secAgo30 := now.Add(time.Duration(-30) * time.Second)
 	secAgo40 := now.Add(time.Duration(-40) * time.Second)
+	secAgo50 := now.Add(time.Duration(-50) * time.Second)
 	from := now.Add(time.Duration(-10) * time.Hour)
 
 	// prepare conversations
@@ -981,12 +982,16 @@ func TestQueryResolver_Contact_WithAllActions(t *testing.T) {
 	neo4jt.RequestTicket(ctx, driver, contactId, ticketId1)
 	neo4jt.RequestTicket(ctx, driver, contactId, ticketId2)
 
+	// prepare contact notes
+	contactNoteId := neo4jt.CreateNoteForContact(ctx, driver, tenantName, contactId, "contact note 1", &secAgo50)
+
 	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "Contact"))
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "User"))
-	require.Equal(t, 6, neo4jt.GetCountOfNodes(ctx, driver, "Action"))
 	require.Equal(t, 3, neo4jt.GetCountOfNodes(ctx, driver, "PageView"))
 	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "Ticket"))
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Conversation"))
+	require.Equal(t, 3, neo4jt.GetCountOfNodes(ctx, driver, "Note"))
+	require.Equal(t, 7, neo4jt.GetCountOfNodes(ctx, driver, "Action"))
 
 	rawResponse, err := c.RawPost(getQuery("contact/get_contact_with_all_actions"),
 		client.Var("contactId", contactId),
@@ -998,7 +1003,7 @@ func TestQueryResolver_Contact_WithAllActions(t *testing.T) {
 	require.Equal(t, contactId, contact.(map[string]interface{})["id"])
 
 	actions := contact.(map[string]interface{})["actions"].([]interface{})
-	require.Equal(t, 5, len(actions))
+	require.Equal(t, 6, len(actions))
 
 	action1 := actions[0].(map[string]interface{})
 	require.Equal(t, "PageViewAction", action1["__typename"].(string))
@@ -1056,6 +1061,12 @@ func TestQueryResolver_Contact_WithAllActions(t *testing.T) {
 	require.NotNil(t, action5["startedAt"].(string))
 	require.Equal(t, "subject", action5["subject"].(string))
 	require.Equal(t, "VOICE", action5["channel"].(string))
+
+	action6 := actions[5].(map[string]interface{})
+	require.Equal(t, "Note", action6["__typename"].(string))
+	require.Equal(t, contactNoteId, action6["id"].(string))
+	require.NotNil(t, action6["createdAt"].(string))
+	require.Equal(t, "contact note 1", action6["html"].(string))
 }
 
 func TestQueryResolver_Contact_WithActions_FilterByActionType(t *testing.T) {

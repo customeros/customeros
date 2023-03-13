@@ -51,7 +51,8 @@ func TestMutationResolver_NoteCreateForContact(t *testing.T) {
 	require.Equal(t, 1, neo4jt.GetCountOfRelationships(ctx, driver, "CREATED"))
 
 	// Check the labels on the nodes in the Neo4j database
-	assertNeo4jLabels(ctx, t, driver, []string{"Tenant", "Contact", "Contact_" + tenantName, "User", "Note", "Note_" + tenantName})
+	assertNeo4jLabels(ctx, t, driver, []string{"Tenant", "Contact", "Contact_" + tenantName, "User",
+		"Note", "Note_" + tenantName, "Action", "Action_" + tenantName})
 }
 
 func TestMutationResolver_NoteCreateForOrganization(t *testing.T) {
@@ -102,7 +103,7 @@ func TestMutationResolver_NoteUpdate(t *testing.T) {
 
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 	contactId := neo4jt.CreateDefaultContact(ctx, driver, tenantName)
-	noteId := neo4jt.CreateNoteForContact(ctx, driver, tenantName, contactId, "Note content")
+	noteId := neo4jt.CreateNoteForContact(ctx, driver, tenantName, contactId, "Note content", nil)
 
 	rawResponse, err := c.RawPost(getQuery("note/update_note"),
 		client.Var("noteId", noteId))
@@ -130,7 +131,8 @@ func TestMutationResolver_NoteUpdate(t *testing.T) {
 	require.Equal(t, 1, neo4jt.GetCountOfRelationships(ctx, driver, "NOTED"))
 
 	// Check the labels on the nodes in the Neo4j database
-	assertNeo4jLabels(ctx, t, driver, []string{"Tenant", "Contact", "Contact_" + tenantName, "Note", "Note_" + tenantName})
+	assertNeo4jLabels(ctx, t, driver, []string{"Tenant", "Contact", "Contact_" + tenantName,
+		"Note", "Note_" + tenantName, "Action", "Action_" + tenantName})
 }
 
 func TestMutationResolver_NoteDelete(t *testing.T) {
@@ -139,7 +141,7 @@ func TestMutationResolver_NoteDelete(t *testing.T) {
 
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 	contactId := neo4jt.CreateDefaultContact(ctx, driver, tenantName)
-	noteId := neo4jt.CreateNoteForContact(ctx, driver, tenantName, contactId, "Note content")
+	noteId := neo4jt.CreateNoteForContact(ctx, driver, tenantName, contactId, "Note content", nil)
 
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Contact"))
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Note"))

@@ -7,6 +7,7 @@ const (
 	NodeLabel_InteractionSession = "InteractionSession"
 	NodeLabel_Ticket             = "Ticket"
 	NodeLabel_Conversation       = "Conversation"
+	NodeLabel_Note               = "Note"
 )
 
 var NodeLabelsByActionType = map[string]string{
@@ -14,6 +15,7 @@ var NodeLabelsByActionType = map[string]string{
 	model.ActionTypeInteractionSession.String(): NodeLabel_InteractionSession,
 	model.ActionTypeTicket.String():             NodeLabel_Ticket,
 	model.ActionTypeConversation.String():       NodeLabel_Conversation,
+	model.ActionTypeNote.String():               NodeLabel_Note,
 }
 
 type Action interface {

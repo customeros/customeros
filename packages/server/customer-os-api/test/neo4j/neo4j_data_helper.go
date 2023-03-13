@@ -704,15 +704,24 @@ func CreateNoteForTicket(ctx context.Context, driver *neo4j.DriverWithContext, t
 	return noteId.String()
 }
 
-func CreateNoteForContact(ctx context.Context, driver *neo4j.DriverWithContext, tenant, contactId, html string) string {
+func CreateNoteForContact(ctx context.Context, driver *neo4j.DriverWithContext, tenant, contactId, html string, createdAt *time.Time) string {
 	var noteId, _ = uuid.NewRandom()
+
+	var contactCreatedAt time.Time
+	if createdAt == nil {
+		contactCreatedAt = utils.Now()
+	} else {
+		contactCreatedAt = *createdAt
+	}
+
 	query := "MATCH (c:Contact {id:$contactId}) " +
 		"		MERGE (c)-[:NOTED]->(n:Note {id:$id}) " +
-		"		ON CREATE SET n.html=$html, n.createdAt=datetime({timezone: 'UTC'}), n:%s"
-	ExecuteWriteQuery(ctx, driver, fmt.Sprintf(query, "Note_"+tenant), map[string]any{
+		"		ON CREATE SET n.html=$html, n.createdAt=$createdAt, n.updatedAt=$createdAt, n:Note_%s, n:Action, n:Action_%s"
+	ExecuteWriteQuery(ctx, driver, fmt.Sprintf(query, tenant, tenant), map[string]any{
 		"id":        noteId.String(),
 		"contactId": contactId,
 		"html":      html,
+		"createdAt": contactCreatedAt,
 	})
 	return noteId.String()
 }
