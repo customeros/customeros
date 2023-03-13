@@ -14,6 +14,24 @@ query GetContactById($contactId: ID!, $from: Time!, $to: Time!){
               orderInSession
               sessionId
             }
+            __typename
+            ... on Ticket {
+              id
+              createdAt
+              updatedAt
+              subject
+              status
+              priority
+              description
+              notes {
+                id
+                html
+              }
+              tags {
+                id
+                name
+              }
+            }
           }
   }
 }

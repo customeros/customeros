@@ -10,9 +10,11 @@ import (
 )
 
 type TicketService interface {
-	GetContactTickets(context.Context, string) ([]*entity.Ticket, error)
+	GetContactTickets(context.Context, string) ([]*entity.TicketEntity, error)
 	GetTicketSummaryByStatusForOrganization(ctx context.Context, organizationId string) (map[string]int64, error)
 	GetTicketSummaryByStatusForContact(ctx context.Context, contactId string) (map[string]int64, error)
+
+	mapDbNodeToTicket(node dbtype.Node) *entity.TicketEntity
 }
 
 type ticketService struct {
@@ -25,14 +27,14 @@ func NewTicketService(repositories *repository.Repositories) TicketService {
 	}
 }
 
-func (s *ticketService) GetContactTickets(ctx context.Context, contactId string) ([]*entity.Ticket, error) {
+func (s *ticketService) GetContactTickets(ctx context.Context, contactId string) ([]*entity.TicketEntity, error) {
 	ticketDbNodes, err := s.repositories.TicketRepository.GetForContact(ctx, common.GetTenantFromContext(ctx), contactId)
 	if err != nil {
 		return nil, err
 	}
-	ticketEntities := make([]*entity.Ticket, 0)
+	ticketEntities := make([]*entity.TicketEntity, 0)
 	for _, dbNodePtr := range ticketDbNodes {
-		ticketEntities = append(ticketEntities, s.mapDbNodeToTicket(dbNodePtr))
+		ticketEntities = append(ticketEntities, s.mapDbNodeToTicket(*dbNodePtr))
 	}
 	return ticketEntities, nil
 }
@@ -45,9 +47,9 @@ func (s *ticketService) GetTicketSummaryByStatusForContact(ctx context.Context, 
 	return s.repositories.TicketRepository.GetTicketCountByStatusForContact(ctx, common.GetTenantFromContext(ctx), contactId)
 }
 
-func (s *ticketService) mapDbNodeToTicket(node *dbtype.Node) *entity.Ticket {
-	props := utils.GetPropsFromNode(*node)
-	ticket := entity.Ticket{
+func (s *ticketService) mapDbNodeToTicket(node dbtype.Node) *entity.TicketEntity {
+	props := utils.GetPropsFromNode(node)
+	ticket := entity.TicketEntity{
 		Id:          utils.GetStringPropOrEmpty(props, "id"),
 		CreatedAt:   utils.GetTimePropOrNow(props, "createdAt"),
 		UpdatedAt:   utils.GetTimePropOrNow(props, "updatedAt"),

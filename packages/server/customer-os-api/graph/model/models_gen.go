@@ -916,6 +916,8 @@ type Ticket struct {
 	Notes       []*Note   `json:"notes"`
 }
 
+func (Ticket) IsAction() {}
+
 func (Ticket) IsNode()            {}
 func (this Ticket) GetID() string { return this.ID }
 
@@ -1011,16 +1013,18 @@ type ActionType string
 const (
 	ActionTypePageView           ActionType = "PAGE_VIEW"
 	ActionTypeInteractionSession ActionType = "INTERACTION_SESSION"
+	ActionTypeTicket             ActionType = "TICKET"
 )
 
 var AllActionType = []ActionType{
 	ActionTypePageView,
 	ActionTypeInteractionSession,
+	ActionTypeTicket,
 }
 
 func (e ActionType) IsValid() bool {
 	switch e {
-	case ActionTypePageView, ActionTypeInteractionSession:
+	case ActionTypePageView, ActionTypeInteractionSession, ActionTypeTicket:
 		return true
 	}
 	return false
