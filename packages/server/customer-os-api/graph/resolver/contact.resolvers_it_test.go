@@ -877,10 +877,10 @@ func TestQueryResolver_Contact_WithConversations(t *testing.T) {
 	contact2 := neo4jt.CreateDefaultContact(ctx, driver, tenantName)
 	contact3 := neo4jt.CreateDefaultContact(ctx, driver, tenantName)
 
-	conv1_1 := neo4jt.CreateConversation(ctx, driver, user1, contact1)
-	conv1_2 := neo4jt.CreateConversation(ctx, driver, user1, contact2)
-	conv2_1 := neo4jt.CreateConversation(ctx, driver, user2, contact1)
-	conv2_3 := neo4jt.CreateConversation(ctx, driver, user2, contact3)
+	conv1_1 := neo4jt.CreateConversation(ctx, driver, tenantName, user1, contact1, "subject 1", utils.Now())
+	conv1_2 := neo4jt.CreateConversation(ctx, driver, tenantName, user1, contact2, "subject 2", utils.Now())
+	conv2_1 := neo4jt.CreateConversation(ctx, driver, tenantName, user2, contact1, "subject 3", utils.Now())
+	conv2_3 := neo4jt.CreateConversation(ctx, driver, tenantName, user2, contact3, "subject 4", utils.Now())
 
 	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "User"))
 	require.Equal(t, 3, neo4jt.GetCountOfNodes(ctx, driver, "Contact"))
@@ -903,11 +903,10 @@ func TestQueryResolver_Contact_WithConversations(t *testing.T) {
 	require.Equal(t, 2, len(contact.Contact.Conversations.Content))
 	conversations := contact.Contact.Conversations.Content
 	require.ElementsMatch(t, []string{conv1_1, conv2_1}, []string{conversations[0].ID, conversations[1].ID})
+	require.ElementsMatch(t, []string{"subject 1", "subject 3"}, []string{*conversations[0].Subject, *conversations[1].Subject})
 	require.ElementsMatch(t, []string{user1, user2}, []string{conversations[0].Users[0].ID, conversations[1].Users[0].ID})
 	require.Equal(t, contact1, conversations[0].Contacts[0].ID)
-	require.Nil(t, conversations[0].Subject)
 	require.Equal(t, contact1, conversations[1].Contacts[0].ID)
-	require.Nil(t, conversations[1].Subject)
 
 	require.NotNil(t, conv1_2)
 	require.NotNil(t, conv2_3)
@@ -922,15 +921,16 @@ func TestQueryResolver_Contact_WithAllActions(t *testing.T) {
 	contactId2 := neo4jt.CreateDefaultContact(ctx, driver, tenantName)
 	userId := neo4jt.CreateDefaultUser(ctx, driver, tenantName)
 
-	// Use below conversation when conversation is converted to Action
-	neo4jt.CreateConversation(ctx, driver, userId, contactId)
-
 	now := time.Now().UTC()
 	secAgo1 := now.Add(time.Duration(-1) * time.Second)
 	secAgo10 := now.Add(time.Duration(-10) * time.Second)
 	secAgo20 := now.Add(time.Duration(-20) * time.Second)
 	secAgo30 := now.Add(time.Duration(-30) * time.Second)
+	secAgo40 := now.Add(time.Duration(-40) * time.Second)
 	from := now.Add(time.Duration(-10) * time.Hour)
+
+	// prepare conversations
+	conversationId := neo4jt.CreateConversation(ctx, driver, tenantName, userId, contactId, "subject", secAgo40)
 
 	// prepare page views
 	pageViewId1 := neo4jt.CreatePageView(ctx, driver, contactId, entity.PageViewEntity{
@@ -983,7 +983,7 @@ func TestQueryResolver_Contact_WithAllActions(t *testing.T) {
 
 	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "Contact"))
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "User"))
-	require.Equal(t, 5, neo4jt.GetCountOfNodes(ctx, driver, "Action"))
+	require.Equal(t, 6, neo4jt.GetCountOfNodes(ctx, driver, "Action"))
 	require.Equal(t, 3, neo4jt.GetCountOfNodes(ctx, driver, "PageView"))
 	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "Ticket"))
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Conversation"))
@@ -998,7 +998,7 @@ func TestQueryResolver_Contact_WithAllActions(t *testing.T) {
 	require.Equal(t, contactId, contact.(map[string]interface{})["id"])
 
 	actions := contact.(map[string]interface{})["actions"].([]interface{})
-	require.Equal(t, 4, len(actions))
+	require.Equal(t, 5, len(actions))
 
 	action1 := actions[0].(map[string]interface{})
 	require.Equal(t, "PageViewAction", action1["__typename"].(string))
@@ -1015,7 +1015,7 @@ func TestQueryResolver_Contact_WithAllActions(t *testing.T) {
 	action2 := actions[1].(map[string]interface{})
 	require.Equal(t, "Ticket", action2["__typename"].(string))
 	require.Equal(t, ticketId2, action2["id"].(string))
-	require.NotNil(t, secAgo20, action2["createdAt"].(string))
+	require.NotNil(t, action2["createdAt"].(string))
 	require.Equal(t, "subject 2", action2["subject"].(string))
 	require.Equal(t, "P2", action2["priority"].(string))
 	require.Equal(t, "CLOSED", action2["status"].(string))
@@ -1028,7 +1028,7 @@ func TestQueryResolver_Contact_WithAllActions(t *testing.T) {
 	action3 := actions[2].(map[string]interface{})
 	require.Equal(t, "Ticket", action3["__typename"].(string))
 	require.Equal(t, ticketId1, action3["id"].(string))
-	require.NotNil(t, secAgo20, action3["createdAt"].(string))
+	require.NotNil(t, action3["createdAt"].(string))
 	require.Equal(t, "subject 1", action3["subject"].(string))
 	require.Equal(t, "P1", action3["priority"].(string))
 	require.Equal(t, "OPEN", action3["status"].(string))
@@ -1049,6 +1049,13 @@ func TestQueryResolver_Contact_WithAllActions(t *testing.T) {
 	require.Equal(t, "http://app-2.ai", action4["pageUrl"].(string))
 	require.Equal(t, float64(2), action4["orderInSession"].(float64))
 	require.Equal(t, float64(20), action4["engagedTime"].(float64))
+
+	action5 := actions[4].(map[string]interface{})
+	require.Equal(t, "Conversation", action5["__typename"].(string))
+	require.Equal(t, conversationId, action5["id"].(string))
+	require.NotNil(t, action5["startedAt"].(string))
+	require.Equal(t, "subject", action5["subject"].(string))
+	require.Equal(t, "VOICE", action5["channel"].(string))
 }
 
 func TestQueryResolver_Contact_WithActions_FilterByActionType(t *testing.T) {

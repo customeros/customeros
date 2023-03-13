@@ -3656,7 +3656,7 @@ func (ec *executionContext) introspectType(name string) (*introspection.Type, er
 }
 
 var sources = []*ast.Source{
-	{Name: "../schemas/action.graphqls", Input: `union Action = PageViewAction | InteractionSession | Ticket
+	{Name: "../schemas/action.graphqls", Input: `union Action = PageViewAction | InteractionSession | Ticket | Conversation
 
 type PageViewAction implements Node {
     id: ID!
@@ -3674,6 +3674,7 @@ enum ActionType {
     PAGE_VIEW
     INTERACTION_SESSION
     TICKET
+    CONVERSATION
 }`, BuiltIn: false},
 	{Name: "../schemas/contact.graphqls", Input: `extend type Query {
     """
@@ -29542,6 +29543,13 @@ func (ec *executionContext) _Action(ctx context.Context, sel ast.SelectionSet, o
 			return graphql.Null
 		}
 		return ec._Ticket(ctx, sel, obj)
+	case model.Conversation:
+		return ec._Conversation(ctx, sel, &obj)
+	case *model.Conversation:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._Conversation(ctx, sel, obj)
 	default:
 		panic(fmt.Errorf("unexpected type %T", obj))
 	}
@@ -30333,7 +30341,7 @@ func (ec *executionContext) _ContactsPage(ctx context.Context, sel ast.Selection
 	return out
 }
 
-var conversationImplementors = []string{"Conversation", "Node"}
+var conversationImplementors = []string{"Conversation", "Action", "Node"}
 
 func (ec *executionContext) _Conversation(ctx context.Context, sel ast.SelectionSet, obj *model.Conversation) graphql.Marshaler {
 	fields := graphql.CollectFields(ec.OperationContext, sel, conversationImplementors)

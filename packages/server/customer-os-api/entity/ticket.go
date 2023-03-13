@@ -21,5 +21,5 @@ func (TicketEntity) ActionName() string {
 }
 
 func (TicketEntity) Labels(tenant string) []string {
-	return []string{"TicketEntity", "Action", "Ticket_" + tenant, "Action_" + tenant}
+	return []string{"Ticket", "Action", "Ticket_" + tenant, "Action_" + tenant}
 }

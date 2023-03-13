@@ -5,6 +5,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils/decode"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/net/context"
 	"testing"
@@ -41,7 +42,8 @@ func TestMutationResolver_ConversationCreate_Min(t *testing.T) {
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Conversation"))
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Conversation_"+tenantName))
 	require.Equal(t, 1, neo4jt.GetCountOfRelationships(ctx, driver, "PARTICIPATES"))
-	assertNeo4jLabels(ctx, t, driver, []string{"Tenant", "Contact", "Contact_" + tenantName, "Conversation", "Conversation_" + tenantName})
+	assertNeo4jLabels(ctx, t, driver, []string{"Tenant", "Contact", "Contact_" + tenantName,
+		"Conversation", "Conversation_" + tenantName, "Action", "Action_" + tenantName})
 }
 
 func TestMutationResolver_ConversationCreate_WithGivenIdAndMultipleParticipants(t *testing.T) {
@@ -87,7 +89,8 @@ func TestMutationResolver_ConversationCreate_WithGivenIdAndMultipleParticipants(
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Conversation"))
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Conversation_"+tenantName))
 	require.Equal(t, 4, neo4jt.GetCountOfRelationships(ctx, driver, "PARTICIPATES"))
-	assertNeo4jLabels(ctx, t, driver, []string{"Tenant", "Contact", "Contact_" + tenantName, "User", "Conversation", "Conversation_" + tenantName})
+	assertNeo4jLabels(ctx, t, driver, []string{"Tenant", "Contact", "Contact_" + tenantName, "User",
+		"Conversation", "Conversation_" + tenantName, "Action", "Action_" + tenantName})
 }
 
 func TestMutationResolver_ConversationCreate_WithoutParticipants_ShouldFail(t *testing.T) {
@@ -110,7 +113,7 @@ func TestMutationResolver_ConversationClose(t *testing.T) {
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 	contactId := neo4jt.CreateDefaultContact(ctx, driver, tenantName)
 	userId := neo4jt.CreateDefaultUser(ctx, driver, tenantName)
-	conversationId := neo4jt.CreateConversation(ctx, driver, userId, contactId)
+	conversationId := neo4jt.CreateConversation(ctx, driver, tenantName, userId, contactId, "subject", utils.Now())
 
 	rawResponse, err := c.RawPost(getQuery("conversation/close_conversation"),
 		client.Var("conversationId", conversationId))
@@ -142,7 +145,7 @@ func TestMutationResolver_ConversationUpdate_NoChanges(t *testing.T) {
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 	contactId := neo4jt.CreateDefaultContact(ctx, driver, tenantName)
 	userId := neo4jt.CreateDefaultUser(ctx, driver, tenantName)
-	conversationId := neo4jt.CreateConversation(ctx, driver, userId, contactId)
+	conversationId := neo4jt.CreateConversation(ctx, driver, tenantName, userId, contactId, "subject", utils.Now())
 
 	rawResponse, err := c.RawPost(getQuery("conversation/update_conversation_no_changes"),
 		client.Var("conversationId", conversationId))
@@ -178,7 +181,7 @@ func TestMutationResolver_ConversationUpdate_ChangeAllFieldsAndAddNewParticipant
 	contactId2 := neo4jt.CreateDefaultContact(ctx, driver, tenantName)
 	userId1 := neo4jt.CreateDefaultUser(ctx, driver, tenantName)
 	userId2 := neo4jt.CreateDefaultUser(ctx, driver, tenantName)
-	conversationId := neo4jt.CreateConversation(ctx, driver, userId1, contactId1)
+	conversationId := neo4jt.CreateConversation(ctx, driver, tenantName, userId1, contactId1, "subject", utils.Now())
 
 	require.Equal(t, 2, neo4jt.GetCountOfRelationships(ctx, driver, "PARTICIPATES"))
 

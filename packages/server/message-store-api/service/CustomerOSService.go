@@ -501,12 +501,29 @@ func (s *CustomerOSService) CreateConversation(ctx context.Context, tenant strin
 	if result, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		query := "MATCH (t:Tenant {name:$tenant}) " +
 			" MERGE (o:Conversation {id:randomUUID()}) " +
-			" ON CREATE SET o.startedAt=$startedAt, o.updatedAt=$updatedAt, o.threadId=$threadId, " +
-			" o.messageCount=0, o.channel=$channel, o.status=$status, o.source=$source, o.sourceOfTruth=$sourceOfTruth, " +
-			" o.initiatorFirstName=$initiatorFirstName, o.initiatorLastName=$initiatorLastName, o.initiatorUsername=$initiatorUsername, o.initiatorType=$initiatorType, " +
-			" o.source=$source, o.sourceOfTruth=$sourceOfTruth, " +
-			" o.lastSenderId=$lastSenderId, o.lastSenderType=$lastSenderType, o.lastSenderFirstName=$lastSenderFirstName, o.lastSenderLastName=$lastSenderLastName, o.lastContentPreview=$lastContentPreview, " +
-			" o.appSource=$appSource, o:%s " +
+			" ON CREATE SET o.startedAt=$startedAt, " +
+			"				o.updatedAt=$updatedAt, " +
+			"				o.threadId=$threadId, " +
+			" 				o.messageCount=0, " +
+			"				o.channel=$channel, " +
+			"				o.status=$status, " +
+			"				o.source=$source, " +
+			"				o.sourceOfTruth=$sourceOfTruth, " +
+			" 				o.initiatorFirstName=$initiatorFirstName, " +
+			"				o.initiatorLastName=$initiatorLastName, " +
+			"				o.initiatorUsername=$initiatorUsername, " +
+			"				o.initiatorType=$initiatorType, " +
+			" 				o.source=$source, " +
+			"				o.sourceOfTruth=$sourceOfTruth, " +
+			" 				o.lastSenderId=$lastSenderId, " +
+			"				o.lastSenderType=$lastSenderType, " +
+			"				o.lastSenderFirstName=$lastSenderFirstName, " +
+			"				o.lastSenderLastName=$lastSenderLastName, " +
+			"				o.lastContentPreview=$lastContentPreview, " +
+			" 				o.appSource=$appSource, " +
+			"				o:Conversation_%s," +
+			"				o:Action," +
+			"				o:Action_%s " +
 			" %s %s " +
 			" RETURN DISTINCT o"
 		queryLinkWithContacts := ""
@@ -528,7 +545,7 @@ func (s *CustomerOSService) CreateConversation(ctx context.Context, tenant strin
 				" MERGE (u)-[:INITIATED]->(o) "
 		}
 		utc := time.Now().UTC()
-		queryResult, err := tx.Run(ctx, fmt.Sprintf(query, "Conversation_"+tenant, queryLinkWithContacts, queryLinkWithUsers),
+		queryResult, err := tx.Run(ctx, fmt.Sprintf(query, tenant, tenant, queryLinkWithContacts, queryLinkWithUsers),
 			map[string]interface{}{
 				"tenant":              tenant,
 				"source":              "openline",
@@ -567,11 +584,15 @@ func (s *CustomerOSService) UpdateConversation(ctx context.Context, tenant strin
 
 	if result, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		query := "MATCH (t:Tenant {name:$tenant}) " +
-			" MERGE (o:Conversation {id:$conversationId}) " +
-			" ON MATCH SET " +
-			" o.messageCount=o.messageCount+1, o.updatedAt=$updatedAt, " +
-			" o.lastSenderId=$lastSenderId, o.lastSenderType=$lastSenderType, o.lastSenderFirstName=$lastSenderFirstName, o.lastSenderLastName=$lastSenderLastName, o.lastContentPreview=$lastContentPreview, " +
-			" o:%s " +
+			" MATCH (o:Conversation_%s {id:$conversationId}) " +
+			" SET " +
+			" 	o.messageCount=o.messageCount+1, " +
+			"	o.updatedAt=$updatedAt, " +
+			" 	o.lastSenderId=$lastSenderId, " +
+			"	o.lastSenderType=$lastSenderType, " +
+			"	o.lastSenderFirstName=$lastSenderFirstName, " +
+			"	o.lastSenderLastName=$lastSenderLastName, " +
+			"	o.lastContentPreview=$lastContentPreview " +
 			" %s %s " +
 			" RETURN DISTINCT o"
 		queryLinkWithContacts := ""
@@ -586,7 +607,7 @@ func (s *CustomerOSService) UpdateConversation(ctx context.Context, tenant strin
 				" OPTIONAL MATCH (u:User)-[:USER_BELONGS_TO_TENANT]->(t) WHERE u.id in $userIds " +
 				" MERGE (u)-[:PARTICIPATES]->(o) "
 		}
-		queryResult, err := tx.Run(ctx, fmt.Sprintf(query, "Conversation_"+tenant, queryLinkWithContacts, queryLinkWithUsers),
+		queryResult, err := tx.Run(ctx, fmt.Sprintf(query, tenant, queryLinkWithContacts, queryLinkWithUsers),
 			map[string]interface{}{
 				"tenant":              tenant,
 				"conversationId":      conversationId,

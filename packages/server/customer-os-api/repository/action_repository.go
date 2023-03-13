@@ -37,7 +37,7 @@ func (r *actionRepository) GetContactActions(ctx context.Context, session neo4j.
 	}
 	query := fmt.Sprintf("MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant}), "+
 		" p = (c)-[*1..2]-(a:Action) "+
-		" WHERE all(r IN relationships(p) WHERE type(r) in ['HAS_ACTION','PARTICIPATES','CONSISTS_OF','SENT','SENT_TO','PART_OF','REQUESTED'])"+
+		" WHERE all(r IN relationships(p) WHERE type(r) in ['HAS_ACTION','PARTICIPATES','SENT','SENT_TO','PART_OF','REQUESTED'])"+
 		" AND coalesce(a.startedAt, a.createdAt) >= datetime($from) AND coalesce(a.startedAt, a.createdAt) <= datetime($to) "+
 		" %s "+
 		" RETURN distinct a ORDER BY coalesce(a.startedAt, a.createdAt) DESC", filterByTypeCypherFragment)

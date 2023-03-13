@@ -38,6 +38,8 @@ func (r *conversationRepository) MergeEmailConversation(ctx context.Context, ten
 	query := "MERGE (o:Conversation_%s {threadId:$threadId, source:$source, channel:$channel}) " +
 		" ON CREATE SET " +
 		"  o:Conversation, " +
+		"  o:Action, " +
+		"  o:Action_%s, " +
 		"  o.syncDate=$syncDate, " +
 		"  o.id=randomUUID(), " +
 		"  o.subject=$subject, " +
@@ -54,7 +56,7 @@ func (r *conversationRepository) MergeEmailConversation(ctx context.Context, ten
 		" RETURN o.id, o.messageCount, coalesce(o.initiatorUsername, $emptyInitiator) "
 
 	dbRecord, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		queryResult, err := tx.Run(ctx, fmt.Sprintf(query, tenant),
+		queryResult, err := tx.Run(ctx, fmt.Sprintf(query, tenant, tenant),
 			map[string]interface{}{
 				"tenant":         tenant,
 				"subject":        message.Subject,
