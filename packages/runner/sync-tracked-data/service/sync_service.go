@@ -78,7 +78,7 @@ func (s *syncService) prepareContactIds(ctx context.Context, pageViews entity.Pa
 		}
 		if _, ok := contactIds[tenantVisitor]; !ok {
 			firstName, lastName := s.prepareFirstAndLastNames(email)
-			id, err := s.repositories.ContactRepository.GetOrCreateContactByEmail(ctx, v.Tenant, email, firstName, lastName, v.Application)
+			id, err := s.repositories.ContactRepository.GetFirstOrCreateContactByEmail(ctx, v.Tenant, email, firstName, lastName, v.Application)
 			if err != nil {
 				return nil, err
 			}

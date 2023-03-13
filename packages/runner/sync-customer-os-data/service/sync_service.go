@@ -122,7 +122,7 @@ func (s *syncService) syncEmailMessages(ctx context.Context, dataService common.
 			var fromContactId string
 
 			if message.Direction == entity.INBOUND {
-				fromContactId, err = s.repositories.ContactRepository.GetOrCreateContactByEmail(
+				fromContactId, err = s.repositories.ContactRepository.GetFirstOrCreateContactByEmail(
 					ctx, tenant, message.FromEmail, message.FromFirstName, message.FromLastName, message.ExternalSystem)
 				if err != nil {
 					failedSync = true
