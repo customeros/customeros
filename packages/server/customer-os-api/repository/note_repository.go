@@ -253,11 +253,13 @@ func (r *noteRepository) CreateNoteForOrganization(ctx context.Context, session 
 		"				n.source=$source, " +
 		"				n.sourceOfTruth=$sourceOfTruth, " +
 		"				n.appSource=$appSource, " +
-		"				n:%s " +
+		"				n:Note_%s," +
+		"				n:Action," +
+		"				n:Action_%s " +
 		" RETURN n"
 
 	result, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (interface{}, error) {
-		queryResult, err := tx.Run(ctx, fmt.Sprintf(query, "Note_"+tenant),
+		queryResult, err := tx.Run(ctx, fmt.Sprintf(query, tenant, tenant),
 			map[string]any{
 				"tenant":         tenant,
 				"organizationId": organizationId,

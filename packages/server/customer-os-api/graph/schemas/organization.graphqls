@@ -36,6 +36,8 @@ type Organization implements Node {
     notes(pagination: Pagination): NotePage! @goField(forceResolver: true)
     tags: [Tag!] @goField(forceResolver: true)
 
+    timelineEvents(from: Time, size: Int!, timelineEventTypes: [TimelineEventType!]): [TimelineEvent!]! @goField(forceResolver: true)
+
     ticketSummaryByStatus: [TicketSummaryByStatus!]! @goField(forceResolver: true)
 }
 

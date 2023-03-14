@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
@@ -13,6 +14,7 @@ import (
 
 type TimelineEventService interface {
 	GetTimelineEventsForContact(ctx context.Context, contactId string, from *time.Time, size int, types []model.TimelineEventType) (*entity.TimelineEventEntities, error)
+	GetTimelineEventsForOrganization(ctx context.Context, organizationId string, from *time.Time, size int, types []model.TimelineEventType) (*entity.TimelineEventEntities, error)
 }
 
 type timelineEventService struct {
@@ -45,6 +47,34 @@ func (s *timelineEventService) GetTimelineEventsForContact(ctx context.Context, 
 		return nil, err
 	}
 
+	timelineEvents := s.convertDbNodesIntoTimelineEvents(dbNodes)
+
+	return &timelineEvents, nil
+}
+
+func (s *timelineEventService) GetTimelineEventsForOrganization(ctx context.Context, organizationId string, from *time.Time, size int, types []model.TimelineEventType) (*entity.TimelineEventEntities, error) {
+	var nodeLabels = []string{}
+	for _, v := range types {
+		nodeLabels = append(nodeLabels, entity.NodeLabelsByTimelineEventType[v.String()])
+	}
+
+	var startingDate time.Time
+	if from == nil {
+		startingDate = utils.Now().Add(time.Duration(5) * time.Second)
+	} else {
+		startingDate = *from
+	}
+
+	dbNodes, err := s.repositories.TimelineEventRepository.GetTimelineEventsForOrganization(ctx, common.GetContext(ctx).Tenant, organizationId, startingDate, size, nodeLabels)
+	if err != nil {
+		return nil, err
+	}
+
+	timelineEvents := s.convertDbNodesIntoTimelineEvents(dbNodes)
+	return &timelineEvents, nil
+}
+
+func (s *timelineEventService) convertDbNodesIntoTimelineEvents(dbNodes []*dbtype.Node) entity.TimelineEventEntities {
 	timelineEvents := entity.TimelineEventEntities{}
 	for _, v := range dbNodes {
 		if slices.Contains(v.Labels, entity.NodeLabel_PageView) {
@@ -59,6 +89,5 @@ func (s *timelineEventService) GetTimelineEventsForContact(ctx context.Context, 
 			timelineEvents = append(timelineEvents, s.services.NoteService.mapDbNodeToNoteEntity(*v))
 		}
 	}
-
-	return &timelineEvents, nil
+	return timelineEvents
 }

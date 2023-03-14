@@ -10,9 +10,9 @@ type PageView implements Node {
     engagedTime: Int64!
 }
 
-
+#Deprecated: Use PageView instead. Delete once Actions are removed from graphql
 type PageViewAction implements Node {
-    id: ID! @deprecated(reason: "Use PageView instead")
+    id: ID!
     startedAt: Time!
     endedAt: Time!
     pageTitle: String!
