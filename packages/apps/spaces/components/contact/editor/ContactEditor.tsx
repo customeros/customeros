@@ -1,7 +1,7 @@
 import React, { FC } from 'react';
 import { Editor } from '../../ui-kit/molecules';
 import { Controller, useForm } from 'react-hook-form';
-import { useCreateContactNote } from '../../../hooks/useContactNote';
+import { useCreateContactNote } from '../../../hooks/useNote';
 import { useRecoilState, useRecoilValue } from 'recoil';
 import { editorMode, editorEmail, EditorMode } from '../../../state';
 import { EmailFields } from './email-fields';
@@ -33,7 +33,7 @@ export const ContactEditor: FC<Props> = ({
     to,
     respondTo,
   } = useRecoilValue(editorEmail);
-  const { onCreateContactNote } = useCreateContactNote({ contactId });
+  const { onCreateContactNote, saving } = useCreateContactNote({ contactId });
   const isEditMode = mode === NoteEditorModes.EDIT;
 
   const onSubmit = handleSubmit(async (d) => {
@@ -83,6 +83,7 @@ export const ContactEditor: FC<Props> = ({
               mode={NoteEditorModes.ADD}
               onGetFieldValue={getValues}
               value={field.value}
+              saving={saving}
               onSave={onSubmit}
               onCancel={
                 editorModeState.mode === EditorMode.Email

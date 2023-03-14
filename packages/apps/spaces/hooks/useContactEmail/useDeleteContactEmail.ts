@@ -1,32 +1,44 @@
-import {
-  RemoveContactNoteMutation,
-  useRemoveContactNoteMutation,
-} from '../../graphQL/__generated__/generated';
+import { useRemoveEmailFromContactMutation } from '../useContact/types';
+import { RemoveEmailFromContactMutation } from '../../graphQL/__generated__/generated';
+
+interface Props {
+  contactId: string;
+}
 
 interface Result {
-  onRemoveContactNote: (
+  onRemoveEmailFromContact: (
     emailId: string,
-  ) => Promise<RemoveContactNoteMutation['note_Delete'] | null>;
+  ) => Promise<
+    RemoveEmailFromContactMutation['emailRemoveFromContactById'] | null
+  >;
 }
-export const useRemoveEmailFromContactEmail = (): Result => {
+export const useRemoveEmailFromContactEmail = ({
+  contactId,
+}: Props): Result => {
   const [removeEmailFromContactMutation, { loading, error, data }] =
-    useRemoveContactNoteMutation();
+    useRemoveEmailFromContactMutation();
 
-  const handleRemoveEmailFromContact: Result['onRemoveContactNote'] = async (
-    id,
-  ) => {
-    try {
-      const response = await removeEmailFromContactMutation({
-        variables: { id: id },
-      });
-      return response.data?.note_Delete ?? null;
-    } catch (err) {
-      console.error(err);
-      return null;
-    }
-  };
+  const handleRemoveEmailFromContact: Result['onRemoveEmailFromContact'] =
+    async (emailId) => {
+      try {
+        const response = await removeEmailFromContactMutation({
+          variables: { contactId, id: emailId },
+          refetchQueries: ['GetContactCommunicationChannels'],
+          optimisticResponse: {
+            emailRemoveFromContactById: {
+              __typename: 'Result',
+              result: true,
+            },
+          },
+        });
+        return response.data?.emailRemoveFromContactById ?? null;
+      } catch (err) {
+        console.error(err);
+        return null;
+      }
+    };
 
   return {
-    onRemoveContactNote: handleRemoveEmailFromContact,
+    onRemoveEmailFromContact: handleRemoveEmailFromContact,
   };
 };

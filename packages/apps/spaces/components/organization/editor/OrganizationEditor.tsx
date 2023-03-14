@@ -1,9 +1,8 @@
 import React, { FC } from 'react';
+import classNames from 'classnames';
 import { Editor } from '../../ui-kit/molecules';
 import { Controller, useForm } from 'react-hook-form';
-import { toast } from 'react-toastify';
-import { useCreateOrganizationNote } from '../../../hooks/useOrganizationNote';
-import classNames from 'classnames';
+import { useCreateOrganizationNote } from '../../../hooks/useNote';
 import { editorEmail, editorMode, EditorMode } from '../../../state';
 import { EmailFields } from '../../contact/editor/email-fields';
 import { useRecoilState, useRecoilValue } from 'recoil';
@@ -35,7 +34,7 @@ export const OrganizationEditor: FC<Props> = ({
     respondTo,
   } = useRecoilValue(editorEmail);
 
-  const { onCreateOrganizationNote } = useCreateOrganizationNote({
+  const { onCreateOrganizationNote, saving } = useCreateOrganizationNote({
     organizationId,
   });
   const isEditMode = mode === NoteEditorModes.EDIT;
@@ -83,6 +82,7 @@ export const OrganizationEditor: FC<Props> = ({
               mode={NoteEditorModes.ADD}
               onGetFieldValue={getValues}
               value={field.value}
+              saving={saving}
               onSave={onSubmit}
               label={editorModeState.submitButtonLabel}
               onTextChange={(e) => setValue('htmlEnhanced', e.htmlValue)}

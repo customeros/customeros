@@ -1,6 +1,5 @@
 import React from 'react';
 import { OrganizationForm } from './OrganizationForm';
-import { useRouter } from 'next/router';
 import { useUpdateOrganization } from '../../../../hooks/useOrganization/useUpdateOrganization';
 
 export const OrganizationEdit = ({

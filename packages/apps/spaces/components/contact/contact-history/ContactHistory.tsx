@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useContactNotes } from '../../../hooks/useContactNote/useContactNotes';
+import { useContactNotes } from '../../../hooks/useNote/useContactNotes';
 import { Timeline } from '../../ui-kit/organisms';
 import { useContactConversations } from '../../../hooks/useContactConversations';
 import { useContactTickets } from '../../../hooks/useContact/useContactTickets';
