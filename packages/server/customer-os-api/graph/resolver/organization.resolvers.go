@@ -199,6 +199,20 @@ func (r *organizationResolver) Tags(ctx context.Context, obj *model.Organization
 	return mapper.MapEntitiesToTags(tagEntities), nil
 }
 
+// TimelineEvents is the resolver for the timelineEvents field.
+func (r *organizationResolver) TimelineEvents(ctx context.Context, obj *model.Organization, from *time.Time, size int, timelineEventTypes []model.TimelineEventType) ([]model.TimelineEvent, error) {
+	defer func(start time.Time) {
+		utils.LogMethodExecution(start, utils.GetFunctionName())
+	}(time.Now())
+
+	timelineEvents, err := r.Services.TimelineEventService.GetTimelineEventsForOrganization(ctx, obj.ID, from, size, timelineEventTypes)
+	if err != nil {
+		graphql.AddErrorf(ctx, "failed to get timeline events for organization %s", obj.ID)
+		return nil, err
+	}
+	return mapper.MapEntitiesToTimelineEvents(timelineEvents), nil
+}
+
 // TicketSummaryByStatus is the resolver for the ticketSummaryByStatus field.
 func (r *organizationResolver) TicketSummaryByStatus(ctx context.Context, obj *model.Organization) ([]*model.TicketSummaryByStatus, error) {
 	defer func(start time.Time) {

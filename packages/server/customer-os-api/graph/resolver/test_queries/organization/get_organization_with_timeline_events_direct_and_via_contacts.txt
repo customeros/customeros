@@ -1,0 +1,50 @@
+query GetOrganizationById($organizationId: ID!, $from: Time!, $size: Int!){
+  organization(id: $organizationId) {
+    id
+    timelineEvents(from:$from, size:$size) {
+            __typename
+            ... on PageView {
+              id
+              application
+              startedAt
+              endedAt
+              engagedTime
+              pageUrl
+              pageTitle
+              orderInSession
+              sessionId
+            }
+            __typename
+            ... on Ticket {
+              id
+              createdAt
+              updatedAt
+              subject
+              status
+              priority
+              description
+              notes {
+                id
+                html
+              }
+              tags {
+                id
+                name
+              }
+            }
+            __typename
+            ... on Conversation {
+                id
+                startedAt
+                subject
+                channel
+            }
+            __typename
+            ... on Note {
+                id
+                html
+                createdAt
+            }
+          }
+  }
+}

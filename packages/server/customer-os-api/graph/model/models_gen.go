@@ -724,6 +724,7 @@ type Organization struct {
 	JobRoles              []*JobRole               `json:"jobRoles"`
 	Notes                 *NotePage                `json:"notes"`
 	Tags                  []*Tag                   `json:"tags"`
+	TimelineEvents        []TimelineEvent          `json:"timelineEvents"`
 	TicketSummaryByStatus []*TicketSummaryByStatus `json:"ticketSummaryByStatus"`
 }
 
@@ -802,8 +803,6 @@ type PageView struct {
 	EngagedTime    int64     `json:"engagedTime"`
 }
 
-func (PageView) IsAction() {}
-
 func (PageView) IsNode()            {}
 func (this PageView) GetID() string { return this.ID }
 
@@ -820,6 +819,8 @@ type PageViewAction struct {
 	OrderInSession int64     `json:"orderInSession"`
 	EngagedTime    int64     `json:"engagedTime"`
 }
+
+func (PageViewAction) IsAction() {}
 
 func (PageViewAction) IsNode()            {}
 func (this PageViewAction) GetID() string { return this.ID }

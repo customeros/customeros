@@ -148,12 +148,13 @@ func (r *noteRepository) NoteLinkWithOrganizationByExternalId(ctx context.Contex
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
-	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		_, err := tx.Run(ctx, `
-				MATCH (t:Tenant {name:$tenant})<-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]-(e:ExternalSystem {id:$externalSystem})<-[:IS_LINKED_WITH {externalId:$organizationExternalId}]-(org:Organization)
+	query := `MATCH (t:Tenant {name:$tenant})<-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]-(e:ExternalSystem {id:$externalSystem})<-[:IS_LINKED_WITH {externalId:$organizationExternalId}]-(org:Organization)
 				MATCH (n:Note {id:$noteId})-[:IS_LINKED_WITH]->(e)
 				MERGE (org)-[:NOTED]->(n)
-				`,
+				SET n:Action, n:Action_%s`
+
+	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		_, err := tx.Run(ctx, fmt.Sprintf(query, tenant),
 			map[string]interface{}{
 				"tenant":                 tenant,
 				"externalSystem":         externalSystem,

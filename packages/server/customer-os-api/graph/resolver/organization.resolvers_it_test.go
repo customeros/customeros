@@ -10,6 +10,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"golang.org/x/net/context"
 	"testing"
+	"time"
 )
 
 func TestQueryResolver_Organizations_FilterByNameLike(t *testing.T) {
@@ -215,8 +216,8 @@ func TestQueryResolver_Organization_WithNotes_ById(t *testing.T) {
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 	organizationId := neo4jt.CreateOrganization(ctx, driver, tenantName, "test org")
 	userId := neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
-	noteId1 := neo4jt.CreateNoteForOrganization(ctx, driver, tenantName, organizationId, "note1")
-	noteId2 := neo4jt.CreateNoteForOrganization(ctx, driver, tenantName, organizationId, "note2")
+	noteId1 := neo4jt.CreateNoteForOrganization(ctx, driver, tenantName, organizationId, "note1", utils.Now())
+	noteId2 := neo4jt.CreateNoteForOrganization(ctx, driver, tenantName, organizationId, "note2", utils.Now())
 	neo4jt.NoteCreatedByUser(ctx, driver, noteId1, userId)
 
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Organization"))
@@ -474,4 +475,66 @@ func TestQueryResolver_Organization_WithContacts_ById(t *testing.T) {
 	contacts := searchedOrganization.Organization.Contacts.Content
 	require.Equal(t, 1, len(contacts))
 	require.Equal(t, contactId1, contacts[0].ID)
+}
+
+func TestQueryResolver_Organization_WithTimelineEvents_DirectAndFromMultipleContacts(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx)(t)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+
+	organizationId := neo4jt.CreateOrganization(ctx, driver, tenantName, "org1")
+	contactId1 := neo4jt.CreateDefaultContact(ctx, driver, tenantName)
+	contactId2 := neo4jt.CreateDefaultContact(ctx, driver, tenantName)
+	neo4jt.LinkContactWithOrganization(ctx, driver, contactId1, organizationId)
+	neo4jt.LinkContactWithOrganization(ctx, driver, contactId2, organizationId)
+
+	now := time.Now().UTC()
+	secInFuture10 := now.Add(time.Duration(10) * time.Second)
+	secAgo10 := now.Add(time.Duration(-10) * time.Second)
+	secAgo20 := now.Add(time.Duration(-20) * time.Second)
+	secAgo30 := now.Add(time.Duration(-30) * time.Second)
+	secAgo40 := now.Add(time.Duration(-40) * time.Second)
+
+	// prepare contact amd org notes
+	contactNoteId1 := neo4jt.CreateNoteForContact(ctx, driver, tenantName, contactId1, "contact note 1", secAgo10)
+	contactNoteId2 := neo4jt.CreateNoteForContact(ctx, driver, tenantName, contactId2, "contact note 2", secAgo20)
+	orgNoteId3 := neo4jt.CreateNoteForOrganization(ctx, driver, tenantName, organizationId, "org note 1", secAgo30)
+	neo4jt.CreateNoteForOrganization(ctx, driver, tenantName, organizationId, "org note 2", secAgo40)
+	neo4jt.CreateNoteForOrganization(ctx, driver, tenantName, organizationId, "org note 3", secInFuture10)
+
+	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "Contact"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Organization"))
+	require.Equal(t, 5, neo4jt.GetCountOfNodes(ctx, driver, "Note"))
+	require.Equal(t, 5, neo4jt.GetCountOfNodes(ctx, driver, "Action"))
+
+	rawResponse, err := c.RawPost(getQuery("organization/get_organization_with_timeline_events_direct_and_via_contacts"),
+		client.Var("organizationId", organizationId),
+		client.Var("from", now),
+		client.Var("size", 3))
+	assertRawResponseSuccess(t, rawResponse, err)
+
+	organization := rawResponse.Data.(map[string]interface{})["organization"]
+	require.Equal(t, organizationId, organization.(map[string]interface{})["id"])
+
+	timelineEvents := organization.(map[string]interface{})["timelineEvents"].([]interface{})
+	require.Equal(t, 3, len(timelineEvents))
+
+	timelineEvent1 := timelineEvents[0].(map[string]interface{})
+	require.Equal(t, "Note", timelineEvent1["__typename"].(string))
+	require.Equal(t, contactNoteId1, timelineEvent1["id"].(string))
+	require.NotNil(t, timelineEvent1["createdAt"].(string))
+	require.Equal(t, "contact note 1", timelineEvent1["html"].(string))
+
+	timelineEvent2 := timelineEvents[1].(map[string]interface{})
+	require.Equal(t, "Note", timelineEvent2["__typename"].(string))
+	require.Equal(t, contactNoteId2, timelineEvent2["id"].(string))
+	require.NotNil(t, timelineEvent2["createdAt"].(string))
+	require.Equal(t, "contact note 2", timelineEvent2["html"].(string))
+
+	timelineEvent3 := timelineEvents[2].(map[string]interface{})
+	require.Equal(t, "Note", timelineEvent3["__typename"].(string))
+	require.Equal(t, orgNoteId3, timelineEvent3["id"].(string))
+	require.NotNil(t, timelineEvent3["createdAt"].(string))
+	require.Equal(t, "org note 1", timelineEvent3["html"].(string))
+
 }

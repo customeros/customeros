@@ -6,6 +6,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils/decode"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/net/context"
 	"testing"
@@ -94,7 +95,8 @@ func TestMutationResolver_NoteCreateForOrganization(t *testing.T) {
 	require.Equal(t, 1, neo4jt.GetCountOfRelationships(ctx, driver, "NOTED"))
 
 	// Check the labels on the nodes in the Neo4j database
-	assertNeo4jLabels(ctx, t, driver, []string{"Tenant", "Organization", "Organization_" + tenantName, "User", "Note", "Note_" + tenantName})
+	assertNeo4jLabels(ctx, t, driver, []string{"Tenant", "Organization", "Organization_" + tenantName, "User",
+		"Note", "Note_" + tenantName, "Action", "Action_" + tenantName})
 }
 
 func TestMutationResolver_NoteUpdate(t *testing.T) {
@@ -103,7 +105,7 @@ func TestMutationResolver_NoteUpdate(t *testing.T) {
 
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 	contactId := neo4jt.CreateDefaultContact(ctx, driver, tenantName)
-	noteId := neo4jt.CreateNoteForContact(ctx, driver, tenantName, contactId, "Note content", nil)
+	noteId := neo4jt.CreateNoteForContact(ctx, driver, tenantName, contactId, "Note content", utils.Now())
 
 	rawResponse, err := c.RawPost(getQuery("note/update_note"),
 		client.Var("noteId", noteId))
@@ -141,7 +143,7 @@ func TestMutationResolver_NoteDelete(t *testing.T) {
 
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 	contactId := neo4jt.CreateDefaultContact(ctx, driver, tenantName)
-	noteId := neo4jt.CreateNoteForContact(ctx, driver, tenantName, contactId, "Note content", nil)
+	noteId := neo4jt.CreateNoteForContact(ctx, driver, tenantName, contactId, "Note content", utils.Now())
 
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Contact"))
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Note"))

@@ -388,6 +388,7 @@ type ComplexityRoot struct {
 		SourceOfTruth         func(childComplexity int) int
 		Tags                  func(childComplexity int) int
 		TicketSummaryByStatus func(childComplexity int) int
+		TimelineEvents        func(childComplexity int, from *time.Time, size int, timelineEventTypes []model.TimelineEventType) int
 		UpdatedAt             func(childComplexity int) int
 		Website               func(childComplexity int) int
 	}
@@ -657,6 +658,7 @@ type OrganizationResolver interface {
 	JobRoles(ctx context.Context, obj *model.Organization) ([]*model.JobRole, error)
 	Notes(ctx context.Context, obj *model.Organization, pagination *model.Pagination) (*model.NotePage, error)
 	Tags(ctx context.Context, obj *model.Organization) ([]*model.Tag, error)
+	TimelineEvents(ctx context.Context, obj *model.Organization, from *time.Time, size int, timelineEventTypes []model.TimelineEventType) ([]model.TimelineEvent, error)
 	TicketSummaryByStatus(ctx context.Context, obj *model.Organization) ([]*model.TicketSummaryByStatus, error)
 }
 type QueryResolver interface {
@@ -2886,6 +2888,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Organization.TicketSummaryByStatus(childComplexity), true
 
+	case "Organization.timelineEvents":
+		if e.complexity.Organization.TimelineEvents == nil {
+			break
+		}
+
+		args, err := ec.field_Organization_timelineEvents_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Organization.TimelineEvents(childComplexity, args["from"].(*time.Time), args["size"].(int), args["timelineEventTypes"].([]model.TimelineEventType)), true
+
 	case "Organization.updatedAt":
 		if e.complexity.Organization.UpdatedAt == nil {
 			break
@@ -3745,7 +3759,7 @@ func (ec *executionContext) introspectType(name string) (*introspection.Type, er
 }
 
 var sources = []*ast.Source{
-	{Name: "../schemas/action.graphqls", Input: `union Action = PageView | InteractionSession | Ticket | Conversation | Note
+	{Name: "../schemas/action.graphqls", Input: `union Action = PageViewAction | InteractionSession | Ticket | Conversation | Note
 
 enum ActionType {
     PAGE_VIEW
@@ -4880,6 +4894,8 @@ type Organization implements Node {
     notes(pagination: Pagination): NotePage! @goField(forceResolver: true)
     tags: [Tag!] @goField(forceResolver: true)
 
+    timelineEvents(from: Time, size: Int!, timelineEventTypes: [TimelineEventType!]): [TimelineEvent!]! @goField(forceResolver: true)
+
     ticketSummaryByStatus: [TicketSummaryByStatus!]! @goField(forceResolver: true)
 }
 
@@ -4953,9 +4969,9 @@ input OrganizationTypeUpdateInput {
     engagedTime: Int64!
 }
 
-
+#Deprecated: Use PageView instead. Delete once Actions are removed from graphql
 type PageViewAction implements Node {
-    id: ID! @deprecated(reason: "Use PageView instead")
+    id: ID!
     startedAt: Time!
     endedAt: Time!
     pageTitle: String!
@@ -6770,6 +6786,39 @@ func (ec *executionContext) field_Organization_notes_args(ctx context.Context, r
 		}
 	}
 	args["pagination"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Organization_timelineEvents_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 *time.Time
+	if tmp, ok := rawArgs["from"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("from"))
+		arg0, err = ec.unmarshalOTime2ᚖtimeᚐTime(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["from"] = arg0
+	var arg1 int
+	if tmp, ok := rawArgs["size"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("size"))
+		arg1, err = ec.unmarshalNInt2int(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["size"] = arg1
+	var arg2 []model.TimelineEventType
+	if tmp, ok := rawArgs["timelineEventTypes"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("timelineEventTypes"))
+		arg2, err = ec.unmarshalOTimelineEventType2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐTimelineEventTypeᚄ(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["timelineEventTypes"] = arg2
 	return args, nil
 }
 
@@ -11299,6 +11348,8 @@ func (ec *executionContext) fieldContext_DashboardViewItem_organization(ctx cont
 				return ec.fieldContext_Organization_notes(ctx, field)
 			case "tags":
 				return ec.fieldContext_Organization_tags(ctx, field)
+			case "timelineEvents":
+				return ec.fieldContext_Organization_timelineEvents(ctx, field)
 			case "ticketSummaryByStatus":
 				return ec.fieldContext_Organization_ticketSummaryByStatus(ctx, field)
 			}
@@ -14044,6 +14095,8 @@ func (ec *executionContext) fieldContext_JobRole_organization(ctx context.Contex
 				return ec.fieldContext_Organization_notes(ctx, field)
 			case "tags":
 				return ec.fieldContext_Organization_tags(ctx, field)
+			case "timelineEvents":
+				return ec.fieldContext_Organization_timelineEvents(ctx, field)
 			case "ticketSummaryByStatus":
 				return ec.fieldContext_Organization_ticketSummaryByStatus(ctx, field)
 			}
@@ -18987,6 +19040,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_Create(ctx contex
 				return ec.fieldContext_Organization_notes(ctx, field)
 			case "tags":
 				return ec.fieldContext_Organization_tags(ctx, field)
+			case "timelineEvents":
+				return ec.fieldContext_Organization_timelineEvents(ctx, field)
 			case "ticketSummaryByStatus":
 				return ec.fieldContext_Organization_ticketSummaryByStatus(ctx, field)
 			}
@@ -19084,6 +19139,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_Update(ctx contex
 				return ec.fieldContext_Organization_notes(ctx, field)
 			case "tags":
 				return ec.fieldContext_Organization_tags(ctx, field)
+			case "timelineEvents":
+				return ec.fieldContext_Organization_timelineEvents(ctx, field)
 			case "ticketSummaryByStatus":
 				return ec.fieldContext_Organization_ticketSummaryByStatus(ctx, field)
 			}
@@ -19237,6 +19294,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_Merge(ctx context
 				return ec.fieldContext_Organization_notes(ctx, field)
 			case "tags":
 				return ec.fieldContext_Organization_tags(ctx, field)
+			case "timelineEvents":
+				return ec.fieldContext_Organization_timelineEvents(ctx, field)
 			case "ticketSummaryByStatus":
 				return ec.fieldContext_Organization_ticketSummaryByStatus(ctx, field)
 			}
@@ -21517,6 +21576,61 @@ func (ec *executionContext) fieldContext_Organization_tags(ctx context.Context, 
 	return fc, nil
 }
 
+func (ec *executionContext) _Organization_timelineEvents(ctx context.Context, field graphql.CollectedField, obj *model.Organization) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Organization_timelineEvents(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Organization().TimelineEvents(rctx, obj, fc.Args["from"].(*time.Time), fc.Args["size"].(int), fc.Args["timelineEventTypes"].([]model.TimelineEventType))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]model.TimelineEvent)
+	fc.Result = res
+	return ec.marshalNTimelineEvent2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐTimelineEventᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Organization_timelineEvents(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Organization",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type TimelineEvent does not have child fields")
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Organization_timelineEvents_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Organization_ticketSummaryByStatus(ctx context.Context, field graphql.CollectedField, obj *model.Organization) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Organization_ticketSummaryByStatus(ctx, field)
 	if err != nil {
@@ -21644,6 +21758,8 @@ func (ec *executionContext) fieldContext_OrganizationPage_content(ctx context.Co
 				return ec.fieldContext_Organization_notes(ctx, field)
 			case "tags":
 				return ec.fieldContext_Organization_tags(ctx, field)
+			case "timelineEvents":
+				return ec.fieldContext_Organization_timelineEvents(ctx, field)
 			case "ticketSummaryByStatus":
 				return ec.fieldContext_Organization_ticketSummaryByStatus(ctx, field)
 			}
@@ -24478,6 +24594,8 @@ func (ec *executionContext) fieldContext_Query_organization(ctx context.Context,
 				return ec.fieldContext_Organization_notes(ctx, field)
 			case "tags":
 				return ec.fieldContext_Organization_tags(ctx, field)
+			case "timelineEvents":
+				return ec.fieldContext_Organization_timelineEvents(ctx, field)
 			case "ticketSummaryByStatus":
 				return ec.fieldContext_Organization_ticketSummaryByStatus(ctx, field)
 			}
@@ -30148,13 +30266,13 @@ func (ec *executionContext) _Action(ctx context.Context, sel ast.SelectionSet, o
 	switch obj := (obj).(type) {
 	case nil:
 		return graphql.Null
-	case model.PageView:
-		return ec._PageView(ctx, sel, &obj)
-	case *model.PageView:
+	case model.PageViewAction:
+		return ec._PageViewAction(ctx, sel, &obj)
+	case *model.PageViewAction:
 		if obj == nil {
 			return graphql.Null
 		}
-		return ec._PageView(ctx, sel, obj)
+		return ec._PageViewAction(ctx, sel, obj)
 	case model.InteractionSession:
 		return ec._InteractionSession(ctx, sel, &obj)
 	case *model.InteractionSession:
@@ -33172,6 +33290,26 @@ func (ec *executionContext) _Organization(ctx context.Context, sel ast.Selection
 				return innerFunc(ctx)
 
 			})
+		case "timelineEvents":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Organization_timelineEvents(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
 		case "ticketSummaryByStatus":
 			field := field
 
@@ -33294,7 +33432,7 @@ func (ec *executionContext) _OrganizationType(ctx context.Context, sel ast.Selec
 	return out
 }
 
-var pageViewImplementors = []string{"PageView", "Action", "Node", "TimelineEvent"}
+var pageViewImplementors = []string{"PageView", "Node", "TimelineEvent"}
 
 func (ec *executionContext) _PageView(ctx context.Context, sel ast.SelectionSet, obj *model.PageView) graphql.Marshaler {
 	fields := graphql.CollectFields(ec.OperationContext, sel, pageViewImplementors)
@@ -33378,7 +33516,7 @@ func (ec *executionContext) _PageView(ctx context.Context, sel ast.SelectionSet,
 	return out
 }
 
-var pageViewActionImplementors = []string{"PageViewAction", "Node"}
+var pageViewActionImplementors = []string{"PageViewAction", "Action", "Node"}
 
 func (ec *executionContext) _PageViewAction(ctx context.Context, sel ast.SelectionSet, obj *model.PageViewAction) graphql.Marshaler {
 	fields := graphql.CollectFields(ec.OperationContext, sel, pageViewActionImplementors)
