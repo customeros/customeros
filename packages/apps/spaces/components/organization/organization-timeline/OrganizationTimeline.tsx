@@ -17,12 +17,10 @@ export const OrganizationTimeline = ({ id }: { id: string }) => {
   const [tickets, setTickets] = React.useState<any>([]);
   const [conversations, setConversations] = React.useState<any>([]);
 
-  console.log(data);
-
   useEffect(() => {
     if (!orgLoading && data) {
       let ticketsData = [] as any;
-      let notesData = [] as any;
+      let notesData = [...data.notes.content] as any;
       let conversationsData = [] as any;
 
       data.contacts.content.forEach((contact: any) => {
@@ -45,7 +43,7 @@ export const OrganizationTimeline = ({ id }: { id: string }) => {
       setConversations(conversationsData);
       setLoading(false);
     }
-  }, [orgLoading]);
+  }, [orgLoading, data?.notes.content.length]); // fixme after adding new timeline
 
   const noHistoryItemsAvailable =
     !loading &&

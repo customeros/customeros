@@ -1,6 +1,6 @@
 import React from 'react';
 import { Controller, useForm } from 'react-hook-form';
-import { useUpdateContactNote } from '../../../hooks/useContactNote';
+import { useUpdateNote } from '../../../hooks/useNote';
 import { NoteEditorModes } from './ContactEditor';
 import { Editor } from '../../ui-kit/molecules';
 
@@ -13,7 +13,7 @@ interface Props {
 }
 
 function ContactNoteModalTemplate(props: Props) {
-  const { onUpdateContactNote } = useUpdateContactNote();
+  const { onUpdateNote } = useUpdateNote();
   const { handleSubmit, setValue, getValues, control, reset } = useForm({
     defaultValues: {
       id: props.note?.id || '',
@@ -27,7 +27,7 @@ function ContactNoteModalTemplate(props: Props) {
       ...data,
       html: htmlEnhanced?.replaceAll(/.src(\S*)/g, ''), //remove src attribute to not send the file bytes in here
     };
-    onUpdateContactNote(dataToSubmit).then(() => {
+    onUpdateNote(dataToSubmit).then(() => {
       props.onSuccess(dataToSubmit);
       reset({
         id: '',
