@@ -20,6 +20,13 @@ func (TicketEntity) ActionName() string {
 	return NodeLabel_Ticket
 }
 
+func (TicketEntity) TimelineEvent() {
+}
+
+func (TicketEntity) TimelineEventName() string {
+	return NodeLabel_Ticket
+}
+
 func (TicketEntity) Labels(tenant string) []string {
 	return []string{"Ticket", "Action", "Ticket_" + tenant, "Action_" + tenant}
 }

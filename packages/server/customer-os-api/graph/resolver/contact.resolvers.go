@@ -243,6 +243,20 @@ func (r *contactResolver) Actions(ctx context.Context, obj *model.Contact, from 
 	return mapper.MapEntitiesToActions(actions), nil
 }
 
+// TimelineEvents is the resolver for the timelineEvents field.
+func (r *contactResolver) TimelineEvents(ctx context.Context, obj *model.Contact, from *time.Time, size int, timelineEventTypes []model.TimelineEventType) ([]model.TimelineEvent, error) {
+	defer func(start time.Time) {
+		utils.LogMethodExecution(start, utils.GetFunctionName())
+	}(time.Now())
+
+	timelineEvents, err := r.Services.TimelineEventService.GetTimelineEventsForContact(ctx, obj.ID, from, size, timelineEventTypes)
+	if err != nil {
+		graphql.AddErrorf(ctx, "failed to get timeline events for contact %s", obj.ID)
+		return nil, err
+	}
+	return mapper.MapEntitiesToTimelineEvents(timelineEvents), nil
+}
+
 // Tickets is the resolver for the tickets field.
 func (r *contactResolver) Tickets(ctx context.Context, obj *model.Contact) ([]*model.Ticket, error) {
 	defer func(start time.Time) {

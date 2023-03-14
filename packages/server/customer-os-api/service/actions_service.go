@@ -3,7 +3,6 @@ package service
 import (
 	"context"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
@@ -50,7 +49,7 @@ func (s *actionsService) GetContactActions(ctx context.Context, contactId string
 	actions := entity.ActionEntities{}
 	for _, v := range dbNodes {
 		if slices.Contains(v.Labels, entity.NodeLabel_PageView) {
-			actions = append(actions, s.mapDbNodeToPageViewAction(v))
+			actions = append(actions, s.services.PageViewService.mapDbNodeToPageView(*v))
 		} else if slices.Contains(v.Labels, entity.NodeLabel_InteractionSession) {
 			actions = append(actions, s.services.InteractionSessionService.mapDbNodeToInteractionSessionEntity(*v))
 		} else if slices.Contains(v.Labels, entity.NodeLabel_Ticket) {
@@ -63,21 +62,4 @@ func (s *actionsService) GetContactActions(ctx context.Context, contactId string
 	}
 
 	return &actions, nil
-}
-
-func (s *actionsService) mapDbNodeToPageViewAction(node *dbtype.Node) *entity.PageViewEntity {
-	props := utils.GetPropsFromNode(*node)
-	pageViewAction := entity.PageViewEntity{
-		Id:             utils.GetStringPropOrEmpty(props, "id"),
-		Application:    utils.GetStringPropOrEmpty(props, "application"),
-		TrackerName:    utils.GetStringPropOrEmpty(props, "trackerName"),
-		SessionId:      utils.GetStringPropOrEmpty(props, "sessionId"),
-		PageUrl:        utils.GetStringPropOrEmpty(props, "pageUrl"),
-		PageTitle:      utils.GetStringPropOrEmpty(props, "pageTitle"),
-		OrderInSession: utils.GetInt64PropOrZero(props, "orderInSession"),
-		EngagedTime:    utils.GetInt64PropOrZero(props, "engagedTime"),
-		StartedAt:      utils.GetTimePropOrNow(props, "startedAt"),
-		EndedAt:        utils.GetTimePropOrNow(props, "endedAt"),
-	}
-	return &pageViewAction
 }

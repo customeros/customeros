@@ -1,0 +1,24 @@
+type PageView implements Node {
+    id: ID!
+    startedAt: Time!
+    endedAt: Time!
+    pageTitle: String!
+    pageUrl: String!
+    application: String!
+    sessionId: ID!
+    orderInSession: Int64!
+    engagedTime: Int64!
+}
+
+
+type PageViewAction implements Node {
+    id: ID! @deprecated(reason: "Use PageView instead")
+    startedAt: Time!
+    endedAt: Time!
+    pageTitle: String!
+    pageUrl: String!
+    application: String!
+    sessionId: ID!
+    orderInSession: Int64!
+    engagedTime: Int64!
+}

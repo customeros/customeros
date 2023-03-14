@@ -45,6 +45,10 @@ type SearchBasicResult interface {
 	IsSearchBasicResult()
 }
 
+type TimelineEvent interface {
+	IsTimelineEvent()
+}
+
 // A contact represents an individual in customerOS.
 // **A `response` object.**
 type Contact struct {
@@ -97,6 +101,7 @@ type Contact struct {
 	NotesByTime           []*Note                  `json:"notesByTime"`
 	Conversations         *ConversationPage        `json:"conversations"`
 	Actions               []Action                 `json:"actions"`
+	TimelineEvents        []TimelineEvent          `json:"timelineEvents"`
 	Tickets               []*Ticket                `json:"tickets"`
 	TicketSummaryByStatus []*TicketSummaryByStatus `json:"ticketSummaryByStatus"`
 }
@@ -271,6 +276,8 @@ func (Conversation) IsAction() {}
 
 func (Conversation) IsNode()            {}
 func (this Conversation) GetID() string { return this.ID }
+
+func (Conversation) IsTimelineEvent() {}
 
 type ConversationInput struct {
 	ID         *string            `json:"id"`
@@ -584,6 +591,8 @@ func (InteractionSession) IsAction() {}
 func (InteractionSession) IsNode()            {}
 func (this InteractionSession) GetID() string { return this.ID }
 
+func (InteractionSession) IsTimelineEvent() {}
+
 // Describes the relationship a Contact has with a Organization.
 // **A `return` object**
 type JobRole struct {
@@ -664,6 +673,8 @@ type Note struct {
 }
 
 func (Note) IsAction() {}
+
+func (Note) IsTimelineEvent() {}
 
 type NoteInput struct {
 	HTML      string  `json:"html"`
@@ -779,7 +790,7 @@ type OrganizationUpdateInput struct {
 	OrganizationTypeID *string  `json:"organizationTypeId"`
 }
 
-type PageViewAction struct {
+type PageView struct {
 	ID             string    `json:"id"`
 	StartedAt      time.Time `json:"startedAt"`
 	EndedAt        time.Time `json:"endedAt"`
@@ -791,7 +802,24 @@ type PageViewAction struct {
 	EngagedTime    int64     `json:"engagedTime"`
 }
 
-func (PageViewAction) IsAction() {}
+func (PageView) IsAction() {}
+
+func (PageView) IsNode()            {}
+func (this PageView) GetID() string { return this.ID }
+
+func (PageView) IsTimelineEvent() {}
+
+type PageViewAction struct {
+	ID             string    `json:"id"`
+	StartedAt      time.Time `json:"startedAt"`
+	EndedAt        time.Time `json:"endedAt"`
+	PageTitle      string    `json:"pageTitle"`
+	PageURL        string    `json:"pageUrl"`
+	Application    string    `json:"application"`
+	SessionID      string    `json:"sessionId"`
+	OrderInSession int64     `json:"orderInSession"`
+	EngagedTime    int64     `json:"engagedTime"`
+}
 
 func (PageViewAction) IsNode()            {}
 func (this PageViewAction) GetID() string { return this.ID }
@@ -924,6 +952,8 @@ func (Ticket) IsAction() {}
 
 func (Ticket) IsNode()            {}
 func (this Ticket) GetID() string { return this.ID }
+
+func (Ticket) IsTimelineEvent() {}
 
 type TicketSummaryByStatus struct {
 	Status string `json:"status"`
@@ -1540,5 +1570,52 @@ func (e *SortingDirection) UnmarshalGQL(v interface{}) error {
 }
 
 func (e SortingDirection) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+type TimelineEventType string
+
+const (
+	TimelineEventTypePageView           TimelineEventType = "PAGE_VIEW"
+	TimelineEventTypeInteractionSession TimelineEventType = "INTERACTION_SESSION"
+	TimelineEventTypeTicket             TimelineEventType = "TICKET"
+	TimelineEventTypeConversation       TimelineEventType = "CONVERSATION"
+	TimelineEventTypeNote               TimelineEventType = "NOTE"
+)
+
+var AllTimelineEventType = []TimelineEventType{
+	TimelineEventTypePageView,
+	TimelineEventTypeInteractionSession,
+	TimelineEventTypeTicket,
+	TimelineEventTypeConversation,
+	TimelineEventTypeNote,
+}
+
+func (e TimelineEventType) IsValid() bool {
+	switch e {
+	case TimelineEventTypePageView, TimelineEventTypeInteractionSession, TimelineEventTypeTicket, TimelineEventTypeConversation, TimelineEventTypeNote:
+		return true
+	}
+	return false
+}
+
+func (e TimelineEventType) String() string {
+	return string(e)
+}
+
+func (e *TimelineEventType) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = TimelineEventType(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid TimelineEventType", str)
+	}
+	return nil
+}
+
+func (e TimelineEventType) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
 }

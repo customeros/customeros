@@ -30,6 +30,13 @@ func (NoteEntity) ActionName() string {
 	return NodeLabel_Note
 }
 
+func (NoteEntity) TimelineEvent() {
+}
+
+func (NoteEntity) TimelineEventName() string {
+	return NodeLabel_Note
+}
+
 func (note NoteEntity) Labels(tenant string) []string {
 	return []string{"Note", "Action", "Note_" + tenant, "Action_" + tenant}
 }

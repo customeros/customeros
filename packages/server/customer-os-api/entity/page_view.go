@@ -31,6 +31,13 @@ func (PageViewEntity) ActionName() string {
 	return NodeLabel_PageView
 }
 
+func (PageViewEntity) TimelineEvent() {
+}
+
+func (PageViewEntity) TimelineEventName() string {
+	return NodeLabel_PageView
+}
+
 func (pageView PageViewEntity) Labels() []string {
 	return []string{"PageView", "Action"}
 }
