@@ -1,14 +1,12 @@
 package service
 
 import (
-	"encoding/json"
 	"fmt"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/common"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/entity"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/repository"
 	hubspot_service "github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/source/hubspot/service"
 	zendesk_support_service "github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/source/zendesk_support/service"
-	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/utils"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/net/context"
 	"time"
@@ -111,151 +109,92 @@ func (s *syncService) syncEmailMessages(ctx context.Context, dataService common.
 
 		for _, message := range messages {
 			var failedSync = false
+			var interactionEventId string
 
-			var initiatorUsername = ""
-			conversationId, messageCount, initiatorUsername, err := s.repositories.ConversationRepository.MergeEmailConversation(ctx, tenant, syncDate, message)
+			sessionId, err := s.repositories.InteractionEventRepository.MergeInteractionSession(ctx, tenant, syncDate, message)
 			if err != nil {
 				failedSync = true
-				logrus.Errorf("failed merge email message with external reference %v for tenant %v :%v", message.ExternalId, tenant, err)
+				logrus.Errorf("failed merge interaction session with external reference %v for tenant %v :%v", message.ExternalId, tenant, err)
 			}
 
-			var fromContactId string
-
-			if message.Direction == entity.INBOUND {
-				fromContactId, err = s.repositories.ContactRepository.GetFirstOrCreateContactByEmail(
-					ctx, tenant, message.FromEmail, message.FromFirstName, message.FromLastName, message.ExternalSystem)
+			if !failedSync {
+				interactionEventId, err = s.repositories.InteractionEventRepository.MergeInteractionEvent(ctx, tenant, syncDate, message)
 				if err != nil {
 					failedSync = true
-					logrus.Errorf("failed creating contact with email %v for tenant %v :%v", message.FromEmail, tenant, err)
+					logrus.Errorf("failed merge interaction event with external reference %v for tenant %v :%v", message.ExternalId, tenant, err)
 				}
-			}
 
-			// set initiator for new conversation
-			if messageCount == 0 {
-				initiatorUsername = message.FromEmail
-
-				if message.Direction == entity.OUTBOUND {
-					initiator := entity.ConversationInitiator{
-						ExternalSystem: message.ExternalSystem,
-						ExternalId:     message.UserExternalId,
-						FirstName:      message.FromFirstName,
-						LastName:       message.FromLastName,
-						Email:          message.FromEmail,
-						InitiatorType:  entity.USER,
-					}
-					err := s.repositories.ConversationRepository.UserInitiateConversation(ctx, tenant, conversationId, initiator)
+				if !failedSync {
+					err = s.repositories.InteractionEventRepository.MergeInteractionEventToSession(ctx, tenant, interactionEventId, sessionId)
 					if err != nil {
 						failedSync = true
-						logrus.Errorf("failed set user initiator for conversation %v in tenant %v :%v", conversationId, tenant, err)
+						logrus.Errorf("failed to associate interaction event to session %v for tenant %v :%v", message.ExternalId, tenant, err)
 					}
-				} else if message.Direction == entity.INBOUND {
-					initiator := entity.ConversationInitiator{
-						Id:            fromContactId,
-						FirstName:     message.FromFirstName,
-						LastName:      message.FromLastName,
-						Email:         message.FromEmail,
-						InitiatorType: entity.CONTACT,
-					}
-					err := s.repositories.ConversationRepository.ContactInitiateConversation(ctx, tenant, conversationId, initiator)
+				}
+			}
+
+			//from
+			if message.Direction == entity.OUTBOUND && !failedSync {
+				err := s.repositories.InteractionEventRepository.InteractionEventSentByUser(ctx, tenant, interactionEventId, message.UserExternalId, message.ExternalSystem)
+				if err != nil {
+					failedSync = true
+					logrus.Errorf("failed set sender for interaction event %v in tenant %v :%v", interactionEventId, tenant, err)
+				}
+			} else if message.Direction == entity.INBOUND && !failedSync {
+				//1. find email ( contact/organization/user )
+				//2. if not found, create contact with email
+
+				emailId, err := s.repositories.ContactRepository.GetEmailId(ctx, tenant, message.FromEmail)
+				if err != nil {
+					failedSync = true
+					logrus.Errorf("failed retrieving email %v for tenant %v :%v", message.FromEmail, tenant, err)
+				}
+
+				if emailId == "" {
+					emailId, err = s.repositories.ContactRepository.GetEmailIdOrCreateContactByEmail(ctx, tenant, message.FromEmail, message.FromFirstName, message.FromLastName, message.ExternalSystem)
 					if err != nil {
 						failedSync = true
-						logrus.Errorf("failed set contact initiator for conversation %v in tenant %v :%v", conversationId, tenant, err)
+						logrus.Errorf("failed creating contact with email %v for tenant %v :%v", message.FromEmail, tenant, err)
 					}
 				}
-			}
 
-			// set contact participants
-			if len(fromContactId) > 0 {
-				err := s.repositories.ConversationRepository.ContactByIdParticipateInConversation(ctx, tenant, conversationId, fromContactId)
-				if err != nil {
-					failedSync = true
-					logrus.Errorf("failed set contact participat %v for conversation %v in tenant %v :%v", fromContactId, conversationId, tenant, err)
-				}
-			}
-			if len(message.ContactsExternalIds) > 0 {
-				err := s.repositories.ConversationRepository.ContactsByExternalIdParticipateInConversation(ctx, tenant, conversationId, message.ExternalSystem, message.ContactsExternalIds)
-				if err != nil {
-					failedSync = true
-					logrus.Errorf("failed set contact participants by external id %v for conversation %v in tenant %v :%v", message.ContactsExternalIds, conversationId, tenant, err)
-				}
-			}
-
-			// set user participants
-			if len(message.UserExternalId) > 0 {
-				err := s.repositories.ConversationRepository.UserByExternalIdParticipateInConversation(ctx, tenant, conversationId, message.ExternalSystem, message.UserExternalId)
-				if err != nil {
-					failedSync = true
-					logrus.Errorf("failed set user participant by external id %v for conversation %v in tenant %v :%v", message.UserExternalId, conversationId, tenant, err)
-				}
-			}
-			if len(message.ToEmail) > 0 && message.Direction == entity.INBOUND {
-				err := s.repositories.ConversationRepository.UsersByEmailParticipateInConversation(ctx, tenant, conversationId, message.ToEmail)
-				if err != nil {
-					failedSync = true
-					logrus.Errorf("failed set contact participants by external id %v for conversation %v in tenant %v :%v", message.ContactsExternalIds, conversationId, tenant, err)
-				}
-			}
-
-			// increment message count
-			if failedSync == false {
-				err = s.repositories.ConversationRepository.IncrementMessageCount(ctx, tenant, conversationId, message.CreatedAt)
-				if err != nil {
-					failedSync = true
-					logrus.Errorf("failed set contact participants by external id %v for conversation %v in tenant %v :%v", message.ContactsExternalIds, conversationId, tenant, err)
-				}
-			}
-
-			if failedSync == false {
-				conversationEvent := entity.ConversationEvent{
-					TenantName:        tenant,
-					ConversationId:    conversationId,
-					Type:              entity.EMAIL,
-					Subtype:           message.EmailThreadId,
-					Source:            message.ExternalSystem,
-					ExternalId:        message.ExternalId,
-					CreateDate:        message.CreatedAt,
-					SenderUsername:    message.FromEmail,
-					InitiatorUsername: initiatorUsername,
-				}
-				if message.Direction == entity.INBOUND {
-					conversationEvent.Direction = entity.INBOUND
-					conversationEvent.SenderType = entity.CONTACT
-					conversationEvent.SenderId = fromContactId
-				} else {
-					conversationEvent.Direction = entity.OUTBOUND
-					conversationEvent.SenderType = entity.USER
-					userId, err := s.repositories.UserRepository.GetUserIdForExternalId(ctx, tenant, message.UserExternalId, message.ExternalSystem)
-					if err != nil {
-						// Do not mark sync as failed if user is not found. There will
-						logrus.Errorf("failed to get user id for external id %v for tenant %v :%v", message.UserExternalId, tenant, err)
-					}
-					conversationEvent.SenderId = userId
-				}
-				emailContent := entity.EmailContent{
-					MessageId: message.EmailMessageId,
-					Subject:   message.Subject,
-					Html:      utils.FirstNotEmpty(message.Html, message.Text),
-					From:      message.FromEmail,
-					To:        message.ToEmail,
-					Cc:        message.CcEmail,
-					Bcc:       message.BccEmail,
-				}
-				jsonContent, err := json.Marshal(emailContent)
-				if err != nil {
-					failedSync = true
-					logrus.Errorf("failed to marshal email content with external id %v for conversation %v in tenant %v :%v", message.ExternalId, conversationId, tenant, err)
-				}
-				if failedSync == false {
-					conversationEvent.Content = string(jsonContent)
-					err = s.repositories.ConversationEventRepository.Save(conversationEvent)
+				if !failedSync {
+					err = s.repositories.InteractionEventRepository.InteractionEventSentByEmail(ctx, tenant, interactionEventId, emailId)
 					if err != nil {
 						failedSync = true
-						logrus.Errorf("failed save message with external id %v in message store for conversation %v in tenant %v :%v", message.ExternalId, conversationId, tenant, err)
+						logrus.Errorf("failed set sender for interaction event %v in tenant %v :%v", interactionEventId, tenant, err)
 					}
 				}
 			}
 
-			logrus.Debugf("successfully merged email message with external id %v to conversation %v for tenant %v from %v", message.ExternalId, conversationId, tenant, dataService.SourceId())
+			//to
+			if len(message.ToEmail) > 0 && !failedSync {
+				err := s.repositories.InteractionEventRepository.InteractionEventSentToEmails(ctx, tenant, interactionEventId, "TO", message.ToEmail)
+				if err != nil {
+					failedSync = true
+					logrus.Errorf("failed set TO users %v for interaction event %v in tenant %v :%v", message.ContactsExternalIds, sessionId, tenant, err)
+				}
+			}
+
+			//cc
+			if len(message.CcEmail) > 0 && !failedSync {
+				err := s.repositories.InteractionEventRepository.InteractionEventSentToEmails(ctx, tenant, interactionEventId, "CC", message.CcEmail)
+				if err != nil {
+					failedSync = true
+					logrus.Errorf("failed set CC users %v for interaction event %v in tenant %v :%v", message.ContactsExternalIds, sessionId, tenant, err)
+				}
+			}
+
+			//bcc
+			if len(message.BccEmail) > 0 && !failedSync {
+				err := s.repositories.InteractionEventRepository.InteractionEventSentToEmails(ctx, tenant, interactionEventId, "BCC", message.BccEmail)
+				if err != nil {
+					failedSync = true
+					logrus.Errorf("failed set BCC users %v for interaction event %v in tenant %v :%v", message.ContactsExternalIds, sessionId, tenant, err)
+				}
+			}
+
+			logrus.Debugf("successfully merged email message with external id %v to interaction session %v for tenant %v from %v", message.ExternalId, sessionId, tenant, dataService.SourceId())
 			if err := dataService.MarkEmailMessageProcessed(message.ExternalId, runId, failedSync == false); err != nil {
 				failed++
 				continue
