@@ -21,7 +21,9 @@ type ContactRepository interface {
 	MergeTextCustomField(ctx context.Context, tenant, contactId string, field entity.TextCustomField) error
 	MergeContactDefaultPlace(ctx context.Context, tenant, contactId string, contact entity.ContactData) error
 	MergeTagForContact(ctx context.Context, tenant, contactId, tagName, sourceApp string) error
+	GetEmailId(ctx context.Context, tenant, email string) (string, error)
 	GetFirstOrCreateContactByEmail(ctx context.Context, tenant, email, firstName, lastName, source string) (string, error)
+	GetEmailIdOrCreateContactByEmail(ctx context.Context, tenant, email, firstName, lastName, source string) (string, error)
 	LinkContactWithOrganization(ctx context.Context, tenant, contactId, organizationExternalId, source string) error
 }
 
@@ -462,6 +464,85 @@ func (r *contactRepository) GetFirstOrCreateContactByEmail(ctx context.Context, 
 	}
 	if len(records.([]*db.Record)) == 0 {
 		return "", errors.New("no contact records found/created to link page views")
+	}
+	return records.([]*db.Record)[0].Values[0].(string), nil
+}
+
+func (r *contactRepository) GetEmailIdOrCreateContactByEmail(ctx context.Context, tenant, email, firstName, lastName, source string) (string, error) {
+	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
+	defer session.Close(ctx)
+
+	records, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (interface{}, error) {
+		queryResult, err := tx.Run(ctx, fmt.Sprintf(
+			" MATCH (t:Tenant {name:$tenant}) "+
+				" MERGE (e:Email {rawEmail: $email})-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]->(t) "+
+				" ON CREATE SET "+
+				"				e.id=randomUUID(), "+
+				"				e.createdAt=$now, "+
+				"				e.updatedAt=$now, "+
+				"				e.source=$source, "+
+				"				e.sourceOfTruth=$sourceOfTruth, "+
+				"				e.appSource=$appSource, "+
+				"				e:%s "+
+				" WITH DISTINCT t, e "+
+				" MERGE (e)<-[rel:HAS]-(c:Contact)-[:CONTACT_BELONGS_TO_TENANT]->(t) "+
+				" ON CREATE SET rel.primary=true, "+
+				"				c.id=randomUUID(), "+
+				"				c.firstName=$firstName, "+
+				"				c.lastName=$lastName, "+
+				"				c.createdAt=$now, "+
+				"				c.updatedAt=$now, "+
+				"				c.source=$source, "+
+				"				c.sourceOfTruth=$sourceOfTruth, "+
+				"				c.appSource=$appSource, "+
+				"               c:%s"+
+				" RETURN e.id limit 1", "Email_"+tenant, "Contact_"+tenant),
+			map[string]interface{}{
+				"tenant":        tenant,
+				"email":         email,
+				"firstName":     firstName,
+				"lastName":      lastName,
+				"source":        source,
+				"sourceOfTruth": source,
+				"appSource":     source,
+				"now":           time.Now().UTC(),
+			})
+		if err != nil {
+			return nil, err
+		}
+		return queryResult.Collect(ctx)
+	})
+	if err != nil {
+		return "", err
+	}
+	if len(records.([]*db.Record)) == 0 {
+		return "", errors.New("no contact created")
+	}
+	return records.([]*db.Record)[0].Values[0].(string), nil
+}
+
+func (r *contactRepository) GetEmailId(ctx context.Context, tenant, email string) (string, error) {
+	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
+	defer session.Close(ctx)
+
+	records, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (interface{}, error) {
+		queryResult, err := tx.Run(ctx,
+			"MATCH (e:Email {rawEmail: $email})-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant}) "+
+				" RETURN e.id limit 1",
+			map[string]interface{}{
+				"tenant": tenant,
+				"email":  email,
+			})
+		if err != nil {
+			return nil, err
+		}
+		return queryResult.Collect(ctx)
+	})
+	if err != nil {
+		return "", err
+	}
+	if len(records.([]*db.Record)) == 0 {
+		return "", nil
 	}
 	return records.([]*db.Record)[0].Values[0].(string), nil
 }
