@@ -31,6 +31,13 @@ func (InteractionSessionEntity) ActionName() string {
 	return NodeLabel_InteractionSession
 }
 
+func (InteractionSessionEntity) TimelineEvent() {
+}
+
+func (InteractionSessionEntity) TimelineEventName() string {
+	return NodeLabel_InteractionSession
+}
+
 func (interactionSession InteractionSessionEntity) Labels(tenant string) []string {
 	return []string{"InteractionSession", "Action", "InteractionSession_" + tenant, "Action_" + tenant}
 }

@@ -1,9 +1,9 @@
-query GetContactById($contactId: ID!, $from: Time!, $to: Time!){
+query GetContactById($contactId: ID!, $from: Time!, $size: Int!){
   contact(id: $contactId) {
     id
-    actions(from:$from, to:$to) {
+    timelineEvents(from:$from, size:$size) {
             __typename
-            ... on PageViewAction {
+            ... on PageView {
               id
               application
               startedAt

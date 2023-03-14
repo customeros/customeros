@@ -20,6 +20,7 @@ type Services struct {
 	ConversationService        ConversationService
 	OrganizationTypeService    OrganizationTypeService
 	ActionsService             ActionsService
+	TimelineEventService       TimelineEventService
 	NoteService                NoteService
 	JobRoleService             JobRoleService
 	LocationService            LocationService
@@ -30,6 +31,7 @@ type Services struct {
 	TicketService              TicketService
 	InteractionSessionService  InteractionSessionService
 	InteractionEventService    InteractionEventService
+	PageViewService            PageViewService
 }
 
 func InitServices(driver *neo4j.DriverWithContext) *Services {
@@ -57,8 +59,10 @@ func InitServices(driver *neo4j.DriverWithContext) *Services {
 		TicketService:              NewTicketService(repositories),
 		InteractionSessionService:  NewInteractionSessionService(repositories),
 		InteractionEventService:    NewInteractionEventService(repositories),
+		PageViewService:            NewPageViewService(repositories),
 	}
 	services.ActionsService = NewActionsService(repositories, &services)
+	services.TimelineEventService = NewTimelineEventService(repositories, &services)
 	services.SearchService = NewSearchService(repositories, &services)
 	services.QueryService = NewQueryService(repositories, &services)
 

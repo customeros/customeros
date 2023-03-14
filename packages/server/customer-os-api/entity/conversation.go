@@ -37,6 +37,13 @@ func (ConversationEntity) ActionName() string {
 	return NodeLabel_Conversation
 }
 
+func (ConversationEntity) TimelineEvent() {
+}
+
+func (ConversationEntity) TimelineEventName() string {
+	return NodeLabel_Conversation
+}
+
 func (conversation ConversationEntity) Labels(tenant string) []string {
 	return []string{"Conversation", "Action", "Conversation_" + tenant, "Action_" + tenant}
 }

@@ -137,7 +137,8 @@ type Contact implements ExtensibleEntity & Node {
 
     conversations(pagination: Pagination, sort: [SortBy!]): ConversationPage! @goField(forceResolver: true)
 
-    actions(from: Time!, to: Time!, actionTypes: [ActionType!]): [Action!]! @goField(forceResolver: true)
+    actions(from: Time!, to: Time!, actionTypes: [ActionType!]): [Action!]! @goField(forceResolver: true) @deprecated(reason: "Use `timelineEvents` instead")
+    timelineEvents(from: Time, size: Int!, timelineEventTypes: [TimelineEventType!]): [TimelineEvent!]! @goField(forceResolver: true)
 
     tickets: [Ticket]! @goField(forceResolver: true)
 

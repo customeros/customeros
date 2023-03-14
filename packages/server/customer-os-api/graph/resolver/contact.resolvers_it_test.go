@@ -912,7 +912,7 @@ func TestQueryResolver_Contact_WithConversations(t *testing.T) {
 	require.NotNil(t, conv2_3)
 }
 
-func TestQueryResolver_Contact_WithAllActions(t *testing.T) {
+func TestQueryResolver_Contact_WithTimelineEvents(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
@@ -928,7 +928,7 @@ func TestQueryResolver_Contact_WithAllActions(t *testing.T) {
 	secAgo30 := now.Add(time.Duration(-30) * time.Second)
 	secAgo40 := now.Add(time.Duration(-40) * time.Second)
 	secAgo50 := now.Add(time.Duration(-50) * time.Second)
-	from := now.Add(time.Duration(-10) * time.Hour)
+	minAgo5 := now.Add(time.Duration(-5) * time.Minute)
 
 	// prepare conversations
 	conversationId := neo4jt.CreateConversation(ctx, driver, tenantName, userId, contactId, "subject", secAgo40)
@@ -984,29 +984,30 @@ func TestQueryResolver_Contact_WithAllActions(t *testing.T) {
 
 	// prepare contact notes
 	contactNoteId := neo4jt.CreateNoteForContact(ctx, driver, tenantName, contactId, "contact note 1", &secAgo50)
+	neo4jt.CreateNoteForContact(ctx, driver, tenantName, contactId, "contact note 2", &minAgo5)
 
 	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "Contact"))
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "User"))
 	require.Equal(t, 3, neo4jt.GetCountOfNodes(ctx, driver, "PageView"))
 	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "Ticket"))
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Conversation"))
-	require.Equal(t, 3, neo4jt.GetCountOfNodes(ctx, driver, "Note"))
-	require.Equal(t, 7, neo4jt.GetCountOfNodes(ctx, driver, "Action"))
+	require.Equal(t, 4, neo4jt.GetCountOfNodes(ctx, driver, "Note"))
+	require.Equal(t, 8, neo4jt.GetCountOfNodes(ctx, driver, "Action"))
 
-	rawResponse, err := c.RawPost(getQuery("contact/get_contact_with_all_actions"),
+	rawResponse, err := c.RawPost(getQuery("contact/get_contact_with_timeline_events"),
 		client.Var("contactId", contactId),
-		client.Var("from", from),
-		client.Var("to", now))
+		client.Var("from", now),
+		client.Var("size", 6))
 	assertRawResponseSuccess(t, rawResponse, err)
 
 	contact := rawResponse.Data.(map[string]interface{})["contact"]
 	require.Equal(t, contactId, contact.(map[string]interface{})["id"])
 
-	actions := contact.(map[string]interface{})["actions"].([]interface{})
+	actions := contact.(map[string]interface{})["timelineEvents"].([]interface{})
 	require.Equal(t, 6, len(actions))
 
 	action1 := actions[0].(map[string]interface{})
-	require.Equal(t, "PageViewAction", action1["__typename"].(string))
+	require.Equal(t, "PageView", action1["__typename"].(string))
 	require.Equal(t, pageViewId1, action1["id"].(string))
 	require.NotNil(t, action1["startedAt"].(string))
 	require.NotNil(t, action1["endedAt"].(string))
@@ -1044,7 +1045,7 @@ func TestQueryResolver_Contact_WithAllActions(t *testing.T) {
 	require.Equal(t, "note 1", action3["notes"].([]interface{})[0].(map[string]interface{})["html"].(string))
 
 	action4 := actions[3].(map[string]interface{})
-	require.Equal(t, "PageViewAction", action4["__typename"].(string))
+	require.Equal(t, "PageView", action4["__typename"].(string))
 	require.Equal(t, pageViewId2, action4["id"].(string))
 	require.NotNil(t, action4["startedAt"].(string))
 	require.NotNil(t, action4["endedAt"].(string))
@@ -1069,7 +1070,7 @@ func TestQueryResolver_Contact_WithAllActions(t *testing.T) {
 	require.Equal(t, "contact note 1", action6["html"].(string))
 }
 
-func TestQueryResolver_Contact_WithActions_FilterByActionType(t *testing.T) {
+func TestQueryResolver_Contact_WithTimelineEvents_FilterByType(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
@@ -1078,7 +1079,6 @@ func TestQueryResolver_Contact_WithActions_FilterByActionType(t *testing.T) {
 
 	now := time.Now().UTC()
 	secAgo1 := now.Add(time.Duration(-1) * time.Second)
-	from := now.Add(time.Duration(-10) * time.Minute)
 
 	actionId1 := neo4jt.CreatePageView(ctx, driver, contactId, entity.PageViewEntity{
 		StartedAt:      secAgo1,
@@ -1099,21 +1099,20 @@ func TestQueryResolver_Contact_WithActions_FilterByActionType(t *testing.T) {
 	types := []model.ActionType{}
 	types = append(types, model.ActionTypePageView)
 
-	rawResponse, err := c.RawPost(getQuery("contact/get_contact_with_actions_filter_by_action_type"),
+	rawResponse, err := c.RawPost(getQuery("contact/get_contact_with_timeline_filter_by_timeline_event_type"),
 		client.Var("contactId", contactId),
-		client.Var("from", from),
-		client.Var("to", now),
+		client.Var("from", now),
 		client.Var("types", types))
 	assertRawResponseSuccess(t, rawResponse, err)
 
 	contact := rawResponse.Data.(map[string]interface{})["contact"]
 	require.Equal(t, contactId, contact.(map[string]interface{})["id"])
 
-	actions := contact.(map[string]interface{})["actions"].([]interface{})
-	require.Equal(t, 1, len(actions))
-	action1 := actions[0].(map[string]interface{})
-	require.Equal(t, "PageViewAction", action1["__typename"].(string))
-	require.Equal(t, actionId1, action1["id"].(string))
+	timelineEvents := contact.(map[string]interface{})["timelineEvents"].([]interface{})
+	require.Equal(t, 1, len(timelineEvents))
+	timelineEvent1 := timelineEvents[0].(map[string]interface{})
+	require.Equal(t, "PageView", timelineEvent1["__typename"].(string))
+	require.Equal(t, actionId1, timelineEvent1["id"].(string))
 }
 
 func TestQueryResolver_Contact_WithOrganizations_ById(t *testing.T) {
