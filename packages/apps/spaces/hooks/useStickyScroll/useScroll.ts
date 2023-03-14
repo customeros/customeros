@@ -1,3 +1,7 @@
+/*
+  Idea and code comes from library https://github.com/vytenisu/use-chat-scroll/blob/master/lib/sticky-scroll.ts
+  library was not used directly due to imports problem in next js
+ */
 import { useEffect, useRef, useState } from 'react';
 
 /**
