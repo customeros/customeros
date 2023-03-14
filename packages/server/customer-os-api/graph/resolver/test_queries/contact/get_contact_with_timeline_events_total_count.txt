@@ -1,0 +1,6 @@
+query GetContactById($contactId: ID!){
+  contact(id: $contactId) {
+    id
+    timelineEventsTotalCount
+  }
+}

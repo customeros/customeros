@@ -37,6 +37,7 @@ type Organization implements Node {
     tags: [Tag!] @goField(forceResolver: true)
 
     timelineEvents(from: Time, size: Int!, timelineEventTypes: [TimelineEventType!]): [TimelineEvent!]! @goField(forceResolver: true)
+    timelineEventsTotalCount(timelineEventTypes: [TimelineEventType!]): Int64! @goField(forceResolver: true)
 
     ticketSummaryByStatus: [TicketSummaryByStatus!]! @goField(forceResolver: true)
 }

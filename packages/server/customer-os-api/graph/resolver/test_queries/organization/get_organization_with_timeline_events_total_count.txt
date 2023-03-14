@@ -1,0 +1,6 @@
+query GetOrganizationById($organizationId: ID!){
+  organization(id: $organizationId) {
+    id
+    timelineEventsTotalCount
+  }
+}

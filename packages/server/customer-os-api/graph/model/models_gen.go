@@ -97,13 +97,14 @@ type Contact struct {
 	// Contact owner (user)
 	Owner *User `json:"owner"`
 	// Contact notes
-	Notes                 *NotePage                `json:"notes"`
-	NotesByTime           []*Note                  `json:"notesByTime"`
-	Conversations         *ConversationPage        `json:"conversations"`
-	Actions               []Action                 `json:"actions"`
-	TimelineEvents        []TimelineEvent          `json:"timelineEvents"`
-	Tickets               []*Ticket                `json:"tickets"`
-	TicketSummaryByStatus []*TicketSummaryByStatus `json:"ticketSummaryByStatus"`
+	Notes                    *NotePage                `json:"notes"`
+	NotesByTime              []*Note                  `json:"notesByTime"`
+	Conversations            *ConversationPage        `json:"conversations"`
+	Actions                  []Action                 `json:"actions"`
+	TimelineEvents           []TimelineEvent          `json:"timelineEvents"`
+	TimelineEventsTotalCount int64                    `json:"timelineEventsTotalCount"`
+	Tickets                  []*Ticket                `json:"tickets"`
+	TicketSummaryByStatus    []*TicketSummaryByStatus `json:"ticketSummaryByStatus"`
 }
 
 func (Contact) IsExtensibleEntity()               {}
@@ -719,13 +720,14 @@ type Organization struct {
 	AppSource        string            `json:"appSource"`
 	// All addresses associated with an organization in customerOS.
 	// **Required.  If no values it returns an empty array.**
-	Locations             []*Location              `json:"locations"`
-	Contacts              *ContactsPage            `json:"contacts"`
-	JobRoles              []*JobRole               `json:"jobRoles"`
-	Notes                 *NotePage                `json:"notes"`
-	Tags                  []*Tag                   `json:"tags"`
-	TimelineEvents        []TimelineEvent          `json:"timelineEvents"`
-	TicketSummaryByStatus []*TicketSummaryByStatus `json:"ticketSummaryByStatus"`
+	Locations                []*Location              `json:"locations"`
+	Contacts                 *ContactsPage            `json:"contacts"`
+	JobRoles                 []*JobRole               `json:"jobRoles"`
+	Notes                    *NotePage                `json:"notes"`
+	Tags                     []*Tag                   `json:"tags"`
+	TimelineEvents           []TimelineEvent          `json:"timelineEvents"`
+	TimelineEventsTotalCount int64                    `json:"timelineEventsTotalCount"`
+	TicketSummaryByStatus    []*TicketSummaryByStatus `json:"ticketSummaryByStatus"`
 }
 
 func (Organization) IsNode()            {}

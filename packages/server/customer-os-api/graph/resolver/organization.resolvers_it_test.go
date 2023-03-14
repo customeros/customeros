@@ -538,3 +538,35 @@ func TestQueryResolver_Organization_WithTimelineEvents_DirectAndFromMultipleCont
 	require.Equal(t, "org note 1", timelineEvent3["html"].(string))
 
 }
+
+func TestQueryResolver_Organization_WithTimelineEventsTotalCount(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx)(t)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+
+	organizationId := neo4jt.CreateOrganization(ctx, driver, tenantName, "org1")
+	contactId1 := neo4jt.CreateDefaultContact(ctx, driver, tenantName)
+	contactId2 := neo4jt.CreateDefaultContact(ctx, driver, tenantName)
+	neo4jt.LinkContactWithOrganization(ctx, driver, contactId1, organizationId)
+	neo4jt.LinkContactWithOrganization(ctx, driver, contactId2, organizationId)
+
+	now := time.Now().UTC()
+
+	// prepare contact amd org notes
+	neo4jt.CreateNoteForContact(ctx, driver, tenantName, contactId1, "contact note 1", now)
+	neo4jt.CreateNoteForContact(ctx, driver, tenantName, contactId2, "contact note 2", now)
+	neo4jt.CreateNoteForOrganization(ctx, driver, tenantName, organizationId, "org note 1", now)
+
+	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "Contact"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Organization"))
+	require.Equal(t, 3, neo4jt.GetCountOfNodes(ctx, driver, "Note"))
+	require.Equal(t, 3, neo4jt.GetCountOfNodes(ctx, driver, "Action"))
+
+	rawResponse, err := c.RawPost(getQuery("organization/get_organization_with_timeline_events_total_count"),
+		client.Var("organizationId", organizationId))
+	assertRawResponseSuccess(t, rawResponse, err)
+
+	organization := rawResponse.Data.(map[string]interface{})["organization"]
+	require.Equal(t, organizationId, organization.(map[string]interface{})["id"])
+	require.Equal(t, float64(3), organization.(map[string]interface{})["timelineEventsTotalCount"].(float64))
+}
