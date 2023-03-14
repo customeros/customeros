@@ -60,6 +60,8 @@ export const Timeline = ({
     );
   }
 
+  console.log('CHECKER');
+
   const getTimelineItemByType = (type: string, data: any, index: number) => {
     switch (type) {
       case 'Note':
