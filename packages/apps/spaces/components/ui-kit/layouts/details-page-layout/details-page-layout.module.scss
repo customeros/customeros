@@ -12,6 +12,7 @@
     grid-auto-rows: minmax(min-content, max-content);
     grid-template-areas:
       'backButton'
+      'idCard'
       'details'
       'timeline'
       'notes';
@@ -20,8 +21,9 @@
   @include min-tablet {
     display: grid;
     grid-template-columns: 50px 1fr 2fr;
-    //grid-template-rows: 1fr minmax(20%, 1fr);
+    grid-template-rows: min-content 1fr 200px;
     grid-template-areas:
+      'backButton idCard timeline'
       'backButton details timeline'
       'backButton details notes';
     grid-gap: 24px;
