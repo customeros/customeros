@@ -257,6 +257,20 @@ func (r *contactResolver) TimelineEvents(ctx context.Context, obj *model.Contact
 	return mapper.MapEntitiesToTimelineEvents(timelineEvents), nil
 }
 
+// TimelineEventsTotalCount is the resolver for the timelineEventsTotalCount field.
+func (r *contactResolver) TimelineEventsTotalCount(ctx context.Context, obj *model.Contact, timelineEventTypes []model.TimelineEventType) (int64, error) {
+	defer func(start time.Time) {
+		utils.LogMethodExecution(start, utils.GetFunctionName())
+	}(time.Now())
+
+	count, err := r.Services.TimelineEventService.GetTimelineEventsTotalCountForContact(ctx, obj.ID, timelineEventTypes)
+	if err != nil {
+		graphql.AddErrorf(ctx, "failed to get timeline events total count for contact %s", obj.ID)
+		return int64(0), err
+	}
+	return count, nil
+}
+
 // Tickets is the resolver for the tickets field.
 func (r *contactResolver) Tickets(ctx context.Context, obj *model.Contact) ([]*model.Ticket, error) {
 	defer func(start time.Time) {

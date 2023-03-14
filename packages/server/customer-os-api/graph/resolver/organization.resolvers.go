@@ -213,6 +213,20 @@ func (r *organizationResolver) TimelineEvents(ctx context.Context, obj *model.Or
 	return mapper.MapEntitiesToTimelineEvents(timelineEvents), nil
 }
 
+// TimelineEventsTotalCount is the resolver for the timelineEventsTotalCount field.
+func (r *organizationResolver) TimelineEventsTotalCount(ctx context.Context, obj *model.Organization, timelineEventTypes []model.TimelineEventType) (int64, error) {
+	defer func(start time.Time) {
+		utils.LogMethodExecution(start, utils.GetFunctionName())
+	}(time.Now())
+
+	count, err := r.Services.TimelineEventService.GetTimelineEventsTotalCountForOrganization(ctx, obj.ID, timelineEventTypes)
+	if err != nil {
+		graphql.AddErrorf(ctx, "failed to get timeline events total count for organization %s", obj.ID)
+		return int64(0), err
+	}
+	return count, nil
+}
+
 // TicketSummaryByStatus is the resolver for the ticketSummaryByStatus field.
 func (r *organizationResolver) TicketSummaryByStatus(ctx context.Context, obj *model.Organization) ([]*model.TicketSummaryByStatus, error) {
 	defer func(start time.Time) {

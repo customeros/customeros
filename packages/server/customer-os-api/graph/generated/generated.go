@@ -60,35 +60,36 @@ type DirectiveRoot struct {
 
 type ComplexityRoot struct {
 	Contact struct {
-		Actions               func(childComplexity int, from time.Time, to time.Time, actionTypes []model.ActionType) int
-		AppSource             func(childComplexity int) int
-		Conversations         func(childComplexity int, pagination *model.Pagination, sort []*model.SortBy) int
-		CreatedAt             func(childComplexity int) int
-		CustomFields          func(childComplexity int) int
-		Emails                func(childComplexity int) int
-		FieldSets             func(childComplexity int) int
-		FirstName             func(childComplexity int) int
-		Groups                func(childComplexity int) int
-		ID                    func(childComplexity int) int
-		JobRoles              func(childComplexity int) int
-		Label                 func(childComplexity int) int
-		LastName              func(childComplexity int) int
-		Locations             func(childComplexity int) int
-		Name                  func(childComplexity int) int
-		Notes                 func(childComplexity int, pagination *model.Pagination) int
-		NotesByTime           func(childComplexity int, pagination *model.TimeRange) int
-		Organizations         func(childComplexity int, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) int
-		Owner                 func(childComplexity int) int
-		PhoneNumbers          func(childComplexity int) int
-		Source                func(childComplexity int) int
-		SourceOfTruth         func(childComplexity int) int
-		Tags                  func(childComplexity int) int
-		Template              func(childComplexity int) int
-		TicketSummaryByStatus func(childComplexity int) int
-		Tickets               func(childComplexity int) int
-		TimelineEvents        func(childComplexity int, from *time.Time, size int, timelineEventTypes []model.TimelineEventType) int
-		Title                 func(childComplexity int) int
-		UpdatedAt             func(childComplexity int) int
+		Actions                  func(childComplexity int, from time.Time, to time.Time, actionTypes []model.ActionType) int
+		AppSource                func(childComplexity int) int
+		Conversations            func(childComplexity int, pagination *model.Pagination, sort []*model.SortBy) int
+		CreatedAt                func(childComplexity int) int
+		CustomFields             func(childComplexity int) int
+		Emails                   func(childComplexity int) int
+		FieldSets                func(childComplexity int) int
+		FirstName                func(childComplexity int) int
+		Groups                   func(childComplexity int) int
+		ID                       func(childComplexity int) int
+		JobRoles                 func(childComplexity int) int
+		Label                    func(childComplexity int) int
+		LastName                 func(childComplexity int) int
+		Locations                func(childComplexity int) int
+		Name                     func(childComplexity int) int
+		Notes                    func(childComplexity int, pagination *model.Pagination) int
+		NotesByTime              func(childComplexity int, pagination *model.TimeRange) int
+		Organizations            func(childComplexity int, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) int
+		Owner                    func(childComplexity int) int
+		PhoneNumbers             func(childComplexity int) int
+		Source                   func(childComplexity int) int
+		SourceOfTruth            func(childComplexity int) int
+		Tags                     func(childComplexity int) int
+		Template                 func(childComplexity int) int
+		TicketSummaryByStatus    func(childComplexity int) int
+		Tickets                  func(childComplexity int) int
+		TimelineEvents           func(childComplexity int, from *time.Time, size int, timelineEventTypes []model.TimelineEventType) int
+		TimelineEventsTotalCount func(childComplexity int, timelineEventTypes []model.TimelineEventType) int
+		Title                    func(childComplexity int) int
+		UpdatedAt                func(childComplexity int) int
 	}
 
 	ContactGroup struct {
@@ -370,27 +371,28 @@ type ComplexityRoot struct {
 	}
 
 	Organization struct {
-		AppSource             func(childComplexity int) int
-		Contacts              func(childComplexity int, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) int
-		CreatedAt             func(childComplexity int) int
-		Description           func(childComplexity int) int
-		Domain                func(childComplexity int) int
-		Domains               func(childComplexity int) int
-		ID                    func(childComplexity int) int
-		Industry              func(childComplexity int) int
-		IsPublic              func(childComplexity int) int
-		JobRoles              func(childComplexity int) int
-		Locations             func(childComplexity int) int
-		Name                  func(childComplexity int) int
-		Notes                 func(childComplexity int, pagination *model.Pagination) int
-		OrganizationType      func(childComplexity int) int
-		Source                func(childComplexity int) int
-		SourceOfTruth         func(childComplexity int) int
-		Tags                  func(childComplexity int) int
-		TicketSummaryByStatus func(childComplexity int) int
-		TimelineEvents        func(childComplexity int, from *time.Time, size int, timelineEventTypes []model.TimelineEventType) int
-		UpdatedAt             func(childComplexity int) int
-		Website               func(childComplexity int) int
+		AppSource                func(childComplexity int) int
+		Contacts                 func(childComplexity int, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) int
+		CreatedAt                func(childComplexity int) int
+		Description              func(childComplexity int) int
+		Domain                   func(childComplexity int) int
+		Domains                  func(childComplexity int) int
+		ID                       func(childComplexity int) int
+		Industry                 func(childComplexity int) int
+		IsPublic                 func(childComplexity int) int
+		JobRoles                 func(childComplexity int) int
+		Locations                func(childComplexity int) int
+		Name                     func(childComplexity int) int
+		Notes                    func(childComplexity int, pagination *model.Pagination) int
+		OrganizationType         func(childComplexity int) int
+		Source                   func(childComplexity int) int
+		SourceOfTruth            func(childComplexity int) int
+		Tags                     func(childComplexity int) int
+		TicketSummaryByStatus    func(childComplexity int) int
+		TimelineEvents           func(childComplexity int, from *time.Time, size int, timelineEventTypes []model.TimelineEventType) int
+		TimelineEventsTotalCount func(childComplexity int, timelineEventTypes []model.TimelineEventType) int
+		UpdatedAt                func(childComplexity int) int
+		Website                  func(childComplexity int) int
 	}
 
 	OrganizationPage struct {
@@ -548,6 +550,7 @@ type ContactResolver interface {
 	Conversations(ctx context.Context, obj *model.Contact, pagination *model.Pagination, sort []*model.SortBy) (*model.ConversationPage, error)
 	Actions(ctx context.Context, obj *model.Contact, from time.Time, to time.Time, actionTypes []model.ActionType) ([]model.Action, error)
 	TimelineEvents(ctx context.Context, obj *model.Contact, from *time.Time, size int, timelineEventTypes []model.TimelineEventType) ([]model.TimelineEvent, error)
+	TimelineEventsTotalCount(ctx context.Context, obj *model.Contact, timelineEventTypes []model.TimelineEventType) (int64, error)
 	Tickets(ctx context.Context, obj *model.Contact) ([]*model.Ticket, error)
 	TicketSummaryByStatus(ctx context.Context, obj *model.Contact) ([]*model.TicketSummaryByStatus, error)
 }
@@ -659,6 +662,7 @@ type OrganizationResolver interface {
 	Notes(ctx context.Context, obj *model.Organization, pagination *model.Pagination) (*model.NotePage, error)
 	Tags(ctx context.Context, obj *model.Organization) ([]*model.Tag, error)
 	TimelineEvents(ctx context.Context, obj *model.Organization, from *time.Time, size int, timelineEventTypes []model.TimelineEventType) ([]model.TimelineEvent, error)
+	TimelineEventsTotalCount(ctx context.Context, obj *model.Organization, timelineEventTypes []model.TimelineEventType) (int64, error)
 	TicketSummaryByStatus(ctx context.Context, obj *model.Organization) ([]*model.TicketSummaryByStatus, error)
 }
 type QueryResolver interface {
@@ -922,6 +926,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Contact.TimelineEvents(childComplexity, args["from"].(*time.Time), args["size"].(int), args["timelineEventTypes"].([]model.TimelineEventType)), true
+
+	case "Contact.timelineEventsTotalCount":
+		if e.complexity.Contact.TimelineEventsTotalCount == nil {
+			break
+		}
+
+		args, err := ec.field_Contact_timelineEventsTotalCount_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Contact.TimelineEventsTotalCount(childComplexity, args["timelineEventTypes"].([]model.TimelineEventType)), true
 
 	case "Contact.title":
 		if e.complexity.Contact.Title == nil {
@@ -2900,6 +2916,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Organization.TimelineEvents(childComplexity, args["from"].(*time.Time), args["size"].(int), args["timelineEventTypes"].([]model.TimelineEventType)), true
 
+	case "Organization.timelineEventsTotalCount":
+		if e.complexity.Organization.TimelineEventsTotalCount == nil {
+			break
+		}
+
+		args, err := ec.field_Organization_timelineEventsTotalCount_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Organization.TimelineEventsTotalCount(childComplexity, args["timelineEventTypes"].([]model.TimelineEventType)), true
+
 	case "Organization.updatedAt":
 		if e.complexity.Organization.UpdatedAt == nil {
 			break
@@ -3909,6 +3937,7 @@ type Contact implements ExtensibleEntity & Node {
 
     actions(from: Time!, to: Time!, actionTypes: [ActionType!]): [Action!]! @goField(forceResolver: true) @deprecated(reason: "Use ` + "`" + `timelineEvents` + "`" + ` instead")
     timelineEvents(from: Time, size: Int!, timelineEventTypes: [TimelineEventType!]): [TimelineEvent!]! @goField(forceResolver: true)
+    timelineEventsTotalCount(timelineEventTypes: [TimelineEventType!]): Int64! @goField(forceResolver: true)
 
     tickets: [Ticket]! @goField(forceResolver: true)
 
@@ -4895,6 +4924,7 @@ type Organization implements Node {
     tags: [Tag!] @goField(forceResolver: true)
 
     timelineEvents(from: Time, size: Int!, timelineEventTypes: [TimelineEventType!]): [TimelineEvent!]! @goField(forceResolver: true)
+    timelineEventsTotalCount(timelineEventTypes: [TimelineEventType!]): Int64! @goField(forceResolver: true)
 
     ticketSummaryByStatus: [TicketSummaryByStatus!]! @goField(forceResolver: true)
 }
@@ -5466,6 +5496,21 @@ func (ec *executionContext) field_Contact_organizations_args(ctx context.Context
 		}
 	}
 	args["sort"] = arg2
+	return args, nil
+}
+
+func (ec *executionContext) field_Contact_timelineEventsTotalCount_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 []model.TimelineEventType
+	if tmp, ok := rawArgs["timelineEventTypes"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("timelineEventTypes"))
+		arg0, err = ec.unmarshalOTimelineEventType2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐTimelineEventTypeᚄ(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["timelineEventTypes"] = arg0
 	return args, nil
 }
 
@@ -6786,6 +6831,21 @@ func (ec *executionContext) field_Organization_notes_args(ctx context.Context, r
 		}
 	}
 	args["pagination"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Organization_timelineEventsTotalCount_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 []model.TimelineEventType
+	if tmp, ok := rawArgs["timelineEventTypes"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("timelineEventTypes"))
+		arg0, err = ec.unmarshalOTimelineEventType2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐTimelineEventTypeᚄ(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["timelineEventTypes"] = arg0
 	return args, nil
 }
 
@@ -8675,6 +8735,61 @@ func (ec *executionContext) fieldContext_Contact_timelineEvents(ctx context.Cont
 	return fc, nil
 }
 
+func (ec *executionContext) _Contact_timelineEventsTotalCount(ctx context.Context, field graphql.CollectedField, obj *model.Contact) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Contact_timelineEventsTotalCount(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Contact().TimelineEventsTotalCount(rctx, obj, fc.Args["timelineEventTypes"].([]model.TimelineEventType))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int64)
+	fc.Result = res
+	return ec.marshalNInt642int64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Contact_timelineEventsTotalCount(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Contact",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int64 does not have child fields")
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Contact_timelineEventsTotalCount_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Contact_tickets(ctx context.Context, field graphql.CollectedField, obj *model.Contact) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Contact_tickets(ctx, field)
 	if err != nil {
@@ -9265,6 +9380,8 @@ func (ec *executionContext) fieldContext_ContactsPage_content(ctx context.Contex
 				return ec.fieldContext_Contact_actions(ctx, field)
 			case "timelineEvents":
 				return ec.fieldContext_Contact_timelineEvents(ctx, field)
+			case "timelineEventsTotalCount":
+				return ec.fieldContext_Contact_timelineEventsTotalCount(ctx, field)
 			case "tickets":
 				return ec.fieldContext_Contact_tickets(ctx, field)
 			case "ticketSummaryByStatus":
@@ -9797,6 +9914,8 @@ func (ec *executionContext) fieldContext_Conversation_contacts(ctx context.Conte
 				return ec.fieldContext_Contact_actions(ctx, field)
 			case "timelineEvents":
 				return ec.fieldContext_Contact_timelineEvents(ctx, field)
+			case "timelineEventsTotalCount":
+				return ec.fieldContext_Contact_timelineEventsTotalCount(ctx, field)
 			case "tickets":
 				return ec.fieldContext_Contact_tickets(ctx, field)
 			case "ticketSummaryByStatus":
@@ -11263,6 +11382,8 @@ func (ec *executionContext) fieldContext_DashboardViewItem_contact(ctx context.C
 				return ec.fieldContext_Contact_actions(ctx, field)
 			case "timelineEvents":
 				return ec.fieldContext_Contact_timelineEvents(ctx, field)
+			case "timelineEventsTotalCount":
+				return ec.fieldContext_Contact_timelineEventsTotalCount(ctx, field)
 			case "tickets":
 				return ec.fieldContext_Contact_tickets(ctx, field)
 			case "ticketSummaryByStatus":
@@ -11350,6 +11471,8 @@ func (ec *executionContext) fieldContext_DashboardViewItem_organization(ctx cont
 				return ec.fieldContext_Organization_tags(ctx, field)
 			case "timelineEvents":
 				return ec.fieldContext_Organization_timelineEvents(ctx, field)
+			case "timelineEventsTotalCount":
+				return ec.fieldContext_Organization_timelineEventsTotalCount(ctx, field)
 			case "ticketSummaryByStatus":
 				return ec.fieldContext_Organization_ticketSummaryByStatus(ctx, field)
 			}
@@ -14097,6 +14220,8 @@ func (ec *executionContext) fieldContext_JobRole_organization(ctx context.Contex
 				return ec.fieldContext_Organization_tags(ctx, field)
 			case "timelineEvents":
 				return ec.fieldContext_Organization_timelineEvents(ctx, field)
+			case "timelineEventsTotalCount":
+				return ec.fieldContext_Organization_timelineEventsTotalCount(ctx, field)
 			case "ticketSummaryByStatus":
 				return ec.fieldContext_Organization_ticketSummaryByStatus(ctx, field)
 			}
@@ -14196,6 +14321,8 @@ func (ec *executionContext) fieldContext_JobRole_contact(ctx context.Context, fi
 				return ec.fieldContext_Contact_actions(ctx, field)
 			case "timelineEvents":
 				return ec.fieldContext_Contact_timelineEvents(ctx, field)
+			case "timelineEventsTotalCount":
+				return ec.fieldContext_Contact_timelineEventsTotalCount(ctx, field)
 			case "tickets":
 				return ec.fieldContext_Contact_tickets(ctx, field)
 			case "ticketSummaryByStatus":
@@ -15658,6 +15785,8 @@ func (ec *executionContext) fieldContext_Mutation_contact_Create(ctx context.Con
 				return ec.fieldContext_Contact_actions(ctx, field)
 			case "timelineEvents":
 				return ec.fieldContext_Contact_timelineEvents(ctx, field)
+			case "timelineEventsTotalCount":
+				return ec.fieldContext_Contact_timelineEventsTotalCount(ctx, field)
 			case "tickets":
 				return ec.fieldContext_Contact_tickets(ctx, field)
 			case "ticketSummaryByStatus":
@@ -15773,6 +15902,8 @@ func (ec *executionContext) fieldContext_Mutation_contact_Update(ctx context.Con
 				return ec.fieldContext_Contact_actions(ctx, field)
 			case "timelineEvents":
 				return ec.fieldContext_Contact_timelineEvents(ctx, field)
+			case "timelineEventsTotalCount":
+				return ec.fieldContext_Contact_timelineEventsTotalCount(ctx, field)
 			case "tickets":
 				return ec.fieldContext_Contact_tickets(ctx, field)
 			case "ticketSummaryByStatus":
@@ -16006,6 +16137,8 @@ func (ec *executionContext) fieldContext_Mutation_contact_Merge(ctx context.Cont
 				return ec.fieldContext_Contact_actions(ctx, field)
 			case "timelineEvents":
 				return ec.fieldContext_Contact_timelineEvents(ctx, field)
+			case "timelineEventsTotalCount":
+				return ec.fieldContext_Contact_timelineEventsTotalCount(ctx, field)
 			case "tickets":
 				return ec.fieldContext_Contact_tickets(ctx, field)
 			case "ticketSummaryByStatus":
@@ -16121,6 +16254,8 @@ func (ec *executionContext) fieldContext_Mutation_contact_AddTagById(ctx context
 				return ec.fieldContext_Contact_actions(ctx, field)
 			case "timelineEvents":
 				return ec.fieldContext_Contact_timelineEvents(ctx, field)
+			case "timelineEventsTotalCount":
+				return ec.fieldContext_Contact_timelineEventsTotalCount(ctx, field)
 			case "tickets":
 				return ec.fieldContext_Contact_tickets(ctx, field)
 			case "ticketSummaryByStatus":
@@ -16236,6 +16371,8 @@ func (ec *executionContext) fieldContext_Mutation_contact_RemoveTagById(ctx cont
 				return ec.fieldContext_Contact_actions(ctx, field)
 			case "timelineEvents":
 				return ec.fieldContext_Contact_timelineEvents(ctx, field)
+			case "timelineEventsTotalCount":
+				return ec.fieldContext_Contact_timelineEventsTotalCount(ctx, field)
 			case "tickets":
 				return ec.fieldContext_Contact_tickets(ctx, field)
 			case "ticketSummaryByStatus":
@@ -16351,6 +16488,8 @@ func (ec *executionContext) fieldContext_Mutation_contact_AddOrganizationById(ct
 				return ec.fieldContext_Contact_actions(ctx, field)
 			case "timelineEvents":
 				return ec.fieldContext_Contact_timelineEvents(ctx, field)
+			case "timelineEventsTotalCount":
+				return ec.fieldContext_Contact_timelineEventsTotalCount(ctx, field)
 			case "tickets":
 				return ec.fieldContext_Contact_tickets(ctx, field)
 			case "ticketSummaryByStatus":
@@ -16466,6 +16605,8 @@ func (ec *executionContext) fieldContext_Mutation_contact_RemoveOrganizationById
 				return ec.fieldContext_Contact_actions(ctx, field)
 			case "timelineEvents":
 				return ec.fieldContext_Contact_timelineEvents(ctx, field)
+			case "timelineEventsTotalCount":
+				return ec.fieldContext_Contact_timelineEventsTotalCount(ctx, field)
 			case "tickets":
 				return ec.fieldContext_Contact_tickets(ctx, field)
 			case "ticketSummaryByStatus":
@@ -17171,6 +17312,8 @@ func (ec *executionContext) fieldContext_Mutation_customFieldsMergeAndUpdateInCo
 				return ec.fieldContext_Contact_actions(ctx, field)
 			case "timelineEvents":
 				return ec.fieldContext_Contact_timelineEvents(ctx, field)
+			case "timelineEventsTotalCount":
+				return ec.fieldContext_Contact_timelineEventsTotalCount(ctx, field)
 			case "tickets":
 				return ec.fieldContext_Contact_tickets(ctx, field)
 			case "ticketSummaryByStatus":
@@ -19042,6 +19185,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_Create(ctx contex
 				return ec.fieldContext_Organization_tags(ctx, field)
 			case "timelineEvents":
 				return ec.fieldContext_Organization_timelineEvents(ctx, field)
+			case "timelineEventsTotalCount":
+				return ec.fieldContext_Organization_timelineEventsTotalCount(ctx, field)
 			case "ticketSummaryByStatus":
 				return ec.fieldContext_Organization_ticketSummaryByStatus(ctx, field)
 			}
@@ -19141,6 +19286,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_Update(ctx contex
 				return ec.fieldContext_Organization_tags(ctx, field)
 			case "timelineEvents":
 				return ec.fieldContext_Organization_timelineEvents(ctx, field)
+			case "timelineEventsTotalCount":
+				return ec.fieldContext_Organization_timelineEventsTotalCount(ctx, field)
 			case "ticketSummaryByStatus":
 				return ec.fieldContext_Organization_ticketSummaryByStatus(ctx, field)
 			}
@@ -19296,6 +19443,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_Merge(ctx context
 				return ec.fieldContext_Organization_tags(ctx, field)
 			case "timelineEvents":
 				return ec.fieldContext_Organization_timelineEvents(ctx, field)
+			case "timelineEventsTotalCount":
+				return ec.fieldContext_Organization_timelineEventsTotalCount(ctx, field)
 			case "ticketSummaryByStatus":
 				return ec.fieldContext_Organization_ticketSummaryByStatus(ctx, field)
 			}
@@ -21631,6 +21780,61 @@ func (ec *executionContext) fieldContext_Organization_timelineEvents(ctx context
 	return fc, nil
 }
 
+func (ec *executionContext) _Organization_timelineEventsTotalCount(ctx context.Context, field graphql.CollectedField, obj *model.Organization) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Organization_timelineEventsTotalCount(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Organization().TimelineEventsTotalCount(rctx, obj, fc.Args["timelineEventTypes"].([]model.TimelineEventType))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int64)
+	fc.Result = res
+	return ec.marshalNInt642int64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Organization_timelineEventsTotalCount(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Organization",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int64 does not have child fields")
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Organization_timelineEventsTotalCount_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Organization_ticketSummaryByStatus(ctx context.Context, field graphql.CollectedField, obj *model.Organization) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Organization_ticketSummaryByStatus(ctx, field)
 	if err != nil {
@@ -21760,6 +21964,8 @@ func (ec *executionContext) fieldContext_OrganizationPage_content(ctx context.Co
 				return ec.fieldContext_Organization_tags(ctx, field)
 			case "timelineEvents":
 				return ec.fieldContext_Organization_timelineEvents(ctx, field)
+			case "timelineEventsTotalCount":
+				return ec.fieldContext_Organization_timelineEventsTotalCount(ctx, field)
 			case "ticketSummaryByStatus":
 				return ec.fieldContext_Organization_ticketSummaryByStatus(ctx, field)
 			}
@@ -24015,6 +24221,8 @@ func (ec *executionContext) fieldContext_Query_contact(ctx context.Context, fiel
 				return ec.fieldContext_Contact_actions(ctx, field)
 			case "timelineEvents":
 				return ec.fieldContext_Contact_timelineEvents(ctx, field)
+			case "timelineEventsTotalCount":
+				return ec.fieldContext_Contact_timelineEventsTotalCount(ctx, field)
 			case "tickets":
 				return ec.fieldContext_Contact_tickets(ctx, field)
 			case "ticketSummaryByStatus":
@@ -24193,6 +24401,8 @@ func (ec *executionContext) fieldContext_Query_contact_ByEmail(ctx context.Conte
 				return ec.fieldContext_Contact_actions(ctx, field)
 			case "timelineEvents":
 				return ec.fieldContext_Contact_timelineEvents(ctx, field)
+			case "timelineEventsTotalCount":
+				return ec.fieldContext_Contact_timelineEventsTotalCount(ctx, field)
 			case "tickets":
 				return ec.fieldContext_Contact_tickets(ctx, field)
 			case "ticketSummaryByStatus":
@@ -24308,6 +24518,8 @@ func (ec *executionContext) fieldContext_Query_contact_ByPhone(ctx context.Conte
 				return ec.fieldContext_Contact_actions(ctx, field)
 			case "timelineEvents":
 				return ec.fieldContext_Contact_timelineEvents(ctx, field)
+			case "timelineEventsTotalCount":
+				return ec.fieldContext_Contact_timelineEventsTotalCount(ctx, field)
 			case "tickets":
 				return ec.fieldContext_Contact_tickets(ctx, field)
 			case "ticketSummaryByStatus":
@@ -24596,6 +24808,8 @@ func (ec *executionContext) fieldContext_Query_organization(ctx context.Context,
 				return ec.fieldContext_Organization_tags(ctx, field)
 			case "timelineEvents":
 				return ec.fieldContext_Organization_timelineEvents(ctx, field)
+			case "timelineEventsTotalCount":
+				return ec.fieldContext_Organization_timelineEventsTotalCount(ctx, field)
 			case "ticketSummaryByStatus":
 				return ec.fieldContext_Organization_ticketSummaryByStatus(ctx, field)
 			}
@@ -30959,6 +31173,26 @@ func (ec *executionContext) _Contact(ctx context.Context, sel ast.SelectionSet, 
 				return innerFunc(ctx)
 
 			})
+		case "timelineEventsTotalCount":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Contact_timelineEventsTotalCount(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
 		case "tickets":
 			field := field
 
@@ -33300,6 +33534,26 @@ func (ec *executionContext) _Organization(ctx context.Context, sel ast.Selection
 					}
 				}()
 				res = ec._Organization_timelineEvents(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
+		case "timelineEventsTotalCount":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Organization_timelineEventsTotalCount(ctx, field, obj)
 				if res == graphql.Null {
 					atomic.AddUint32(&invalids, 1)
 				}

@@ -14,7 +14,9 @@ import (
 
 type TimelineEventService interface {
 	GetTimelineEventsForContact(ctx context.Context, contactId string, from *time.Time, size int, types []model.TimelineEventType) (*entity.TimelineEventEntities, error)
+	GetTimelineEventsTotalCountForContact(ctx context.Context, contactId string, types []model.TimelineEventType) (int64, error)
 	GetTimelineEventsForOrganization(ctx context.Context, organizationId string, from *time.Time, size int, types []model.TimelineEventType) (*entity.TimelineEventEntities, error)
+	GetTimelineEventsTotalCountForOrganization(ctx context.Context, organizationId string, types []model.TimelineEventType) (int64, error)
 }
 
 type timelineEventService struct {
@@ -72,6 +74,34 @@ func (s *timelineEventService) GetTimelineEventsForOrganization(ctx context.Cont
 
 	timelineEvents := s.convertDbNodesIntoTimelineEvents(dbNodes)
 	return &timelineEvents, nil
+}
+
+func (s *timelineEventService) GetTimelineEventsTotalCountForContact(ctx context.Context, contactId string, types []model.TimelineEventType) (int64, error) {
+	var nodeLabels = []string{}
+	for _, v := range types {
+		nodeLabels = append(nodeLabels, entity.NodeLabelsByTimelineEventType[v.String()])
+	}
+
+	count, err := s.repositories.TimelineEventRepository.GetTimelineEventsTotalCountForContact(ctx, common.GetContext(ctx).Tenant, contactId, nodeLabels)
+	if err != nil {
+		return int64(0), err
+	}
+
+	return count, nil
+}
+
+func (s *timelineEventService) GetTimelineEventsTotalCountForOrganization(ctx context.Context, organizationId string, types []model.TimelineEventType) (int64, error) {
+	var nodeLabels = []string{}
+	for _, v := range types {
+		nodeLabels = append(nodeLabels, entity.NodeLabelsByTimelineEventType[v.String()])
+	}
+
+	count, err := s.repositories.TimelineEventRepository.GetTimelineEventsTotalCountForOrganization(ctx, common.GetContext(ctx).Tenant, organizationId, nodeLabels)
+	if err != nil {
+		return int64(0), err
+	}
+
+	return count, nil
 }
 
 func (s *timelineEventService) convertDbNodesIntoTimelineEvents(dbNodes []*dbtype.Node) entity.TimelineEventEntities {

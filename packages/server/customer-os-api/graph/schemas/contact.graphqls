@@ -139,6 +139,7 @@ type Contact implements ExtensibleEntity & Node {
 
     actions(from: Time!, to: Time!, actionTypes: [ActionType!]): [Action!]! @goField(forceResolver: true) @deprecated(reason: "Use `timelineEvents` instead")
     timelineEvents(from: Time, size: Int!, timelineEventTypes: [TimelineEventType!]): [TimelineEvent!]! @goField(forceResolver: true)
+    timelineEventsTotalCount(timelineEventTypes: [TimelineEventType!]): Int64! @goField(forceResolver: true)
 
     tickets: [Ticket]! @goField(forceResolver: true)
 

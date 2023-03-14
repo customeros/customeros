@@ -1115,6 +1115,61 @@ func TestQueryResolver_Contact_WithTimelineEvents_FilterByType(t *testing.T) {
 	require.Equal(t, actionId1, timelineEvent1["id"].(string))
 }
 
+func TestQueryResolver_Contact_WithTimelineEventsTotalCount(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx)(t)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+
+	contactId := neo4jt.CreateDefaultContact(ctx, driver, tenantName)
+	userId := neo4jt.CreateDefaultUser(ctx, driver, tenantName)
+
+	now := time.Now().UTC()
+
+	// prepare conversations
+	neo4jt.CreateConversation(ctx, driver, tenantName, userId, contactId, "subject", now)
+
+	// prepare page views
+	neo4jt.CreatePageView(ctx, driver, contactId, entity.PageViewEntity{
+		StartedAt: now,
+	})
+	neo4jt.CreatePageView(ctx, driver, contactId, entity.PageViewEntity{
+		StartedAt: now,
+	})
+
+	// prepare tickets with tags and notes
+	ticketId1 := neo4jt.CreateTicket(ctx, driver, tenantName, entity.TicketEntity{
+		CreatedAt: now,
+	})
+	ticketId2 := neo4jt.CreateTicket(ctx, driver, tenantName, entity.TicketEntity{
+		CreatedAt: now,
+	})
+	neo4jt.RequestTicket(ctx, driver, contactId, ticketId1)
+	neo4jt.RequestTicket(ctx, driver, contactId, ticketId2)
+
+	// prepare contact notes
+	neo4jt.CreateNoteForContact(ctx, driver, tenantName, contactId, "contact note 1", now)
+	neo4jt.CreateNoteForContact(ctx, driver, tenantName, contactId, "contact note 2", now)
+	neo4jt.CreateNoteForContact(ctx, driver, tenantName, contactId, "contact note 3", now)
+	neo4jt.CreateNoteForContact(ctx, driver, tenantName, contactId, "contact note 4", now)
+	neo4jt.CreateNoteForContact(ctx, driver, tenantName, contactId, "contact note 5", now)
+
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Contact"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "User"))
+	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "PageView"))
+	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "Ticket"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Conversation"))
+	require.Equal(t, 5, neo4jt.GetCountOfNodes(ctx, driver, "Note"))
+	require.Equal(t, 10, neo4jt.GetCountOfNodes(ctx, driver, "Action"))
+
+	rawResponse, err := c.RawPost(getQuery("contact/get_contact_with_timeline_events_total_count"),
+		client.Var("contactId", contactId))
+	assertRawResponseSuccess(t, rawResponse, err)
+
+	contact := rawResponse.Data.(map[string]interface{})["contact"]
+	require.Equal(t, contactId, contact.(map[string]interface{})["id"])
+	require.Equal(t, float64(10), contact.(map[string]interface{})["timelineEventsTotalCount"].(float64))
+}
+
 func TestQueryResolver_Contact_WithOrganizations_ById(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx)(t)
