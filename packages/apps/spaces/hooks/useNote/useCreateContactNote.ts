@@ -2,8 +2,7 @@ import {
   NoteInput,
   CreateContactNoteMutation,
   useCreateContactNoteMutation,
-  GetContactNotesQuery,
-} from '../../graphQL/__generated__/generated';
+} from './types';
 import { toast } from 'react-toastify';
 
 interface Props {
@@ -11,6 +10,7 @@ interface Props {
 }
 
 interface Result {
+  saving: boolean;
   onCreateContactNote: (
     input: NoteInput,
   ) => Promise<CreateContactNoteMutation['note_CreateForContact'] | null>;
@@ -28,16 +28,21 @@ export const useCreateContactNote = ({ contactId }: Props): Result => {
         refetchQueries: ['GetContactNotes'],
       });
       if (response.data) {
-        toast.success('Note added!');
+        toast.success('Note added!', {
+          toastId: `note-added-${response.data?.note_CreateForContact.id}`,
+        });
       }
       return response.data?.note_CreateForContact ?? null;
     } catch (err) {
-      toast.error('Something went wrong while adding a note');
+      toast.error('Something went wrong while adding a note', {
+        toastId: `note-add-error-${contactId}`,
+      });
       return null;
     }
   };
 
   return {
+    saving: loading,
     onCreateContactNote: handleCreateContactNote,
   };
 };

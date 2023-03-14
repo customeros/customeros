@@ -1,12 +1,5 @@
-import {
-  GetContactCommunicationChannelsQuery,
-  useGetContactCommunicationChannelsQuery,
-} from './types';
+import { GetContactNotesQuery, useGetContactNotesQuery } from './types';
 import { ApolloError } from 'apollo-client';
-import {
-  GetContactNotesQuery,
-  useGetContactNotesQuery,
-} from '../../graphQL/__generated__/generated';
 
 interface Props {
   id: string;

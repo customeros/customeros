@@ -12,7 +12,7 @@ import {
 } from '../../atoms';
 import sanitizeHtml from 'sanitize-html';
 import ContactNoteModalTemplate from '../../../contact/editor/ContactNoteModalTemplate';
-import { useDeleteNote } from '../../../../hooks/useContactNote';
+import { useDeleteNote } from '../../../../hooks/useNote';
 
 interface Props {
   noteContent: string;
@@ -138,7 +138,9 @@ export const NoteTimelineItem: React.FC<Props> = ({
       <DeleteConfirmationDialog
         deleteConfirmationModalVisible={deleteConfirmationModalVisible}
         setDeleteConfirmationModalVisible={setDeleteConfirmationModalVisible}
-        deleteAction={() => onRemoveNote(id)}
+        deleteAction={() =>
+          onRemoveNote(id).then(() => setDeleteConfirmationModalVisible(false))
+        }
         confirmationButtonLabel='Delete note'
       />
 

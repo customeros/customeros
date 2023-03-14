@@ -1,11 +1,19 @@
 query LoadTimelineForOrganization($id: ID!) {
   organization(id: $id) {
+    notes(pagination: { page: 0, limit: 25 }) {
+      content {
+        id
+        html
+        createdAt
+      }
+    }
     contacts {
       content {
         notes {
           content {
             id
             html
+            createdAt
           }
         }
         conversations(

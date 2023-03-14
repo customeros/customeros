@@ -22,6 +22,7 @@ interface Props extends ButtonHTMLAttributes<HTMLButtonElement> {
     action: () => void;
   }>;
   children?: ReactNode;
+  saving?: boolean;
 }
 
 export const Editor: FC<Props> = ({
@@ -33,6 +34,7 @@ export const Editor: FC<Props> = ({
   onGetFieldValue,
   children,
   onCancel,
+  saving = false,
 }) => {
   const isEditMode = mode === NoteEditorModes.EDIT;
   const handleAddFileToTextContent = (imagePreview: string) => {
@@ -57,6 +59,7 @@ export const Editor: FC<Props> = ({
             onSubmit={onSave}
             onCancel={onCancel}
             label={label}
+            saving={saving}
           />
         }
         value={value}

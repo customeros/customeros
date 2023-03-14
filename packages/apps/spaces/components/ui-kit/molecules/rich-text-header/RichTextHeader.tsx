@@ -7,12 +7,14 @@ interface Props {
   onSubmit: any;
   onCancel?: () => void;
   label: string;
+  saving: boolean;
 }
 export const RichTextHeader = ({
   onFileChange,
   onSubmit,
   label,
   onCancel,
+  saving,
 }: Props) => {
   const inputRef = useRef<HTMLInputElement | null>(null);
   const handleUploadClick = () => {
@@ -52,8 +54,13 @@ export const RichTextHeader = ({
             Cancel
           </Button>
         )}
-        <Button onClick={onSubmit} mode='primary' className='primary'>
-          {label}
+        <Button
+          onClick={onSubmit}
+          disabled={saving}
+          mode='primary'
+          className='primary'
+        >
+          {saving ? 'Saving...' : label}
         </Button>
       </div>
       <input
