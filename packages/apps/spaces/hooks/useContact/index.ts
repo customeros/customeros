@@ -3,7 +3,7 @@ export { useContactCommunicationChannelsDetails } from './useContactCommunicatio
 export { useCreateContact } from './useCreateContact';
 
 export { useAddEmailToContactEmail } from './useAddContactEmail';
-export { useRemoveEmailFromContactEmail } from './useDeleteContactEmail';
+export { useRemoveEmailFromContactEmail } from '../useContactEmail/useDeleteContactEmail';
 export { useUpdateContactEmail } from './useUpdateContactEmail';
 export { useContactTags } from './useContactTags';
 export { useAddTagToContact } from './useAddContactTag';
