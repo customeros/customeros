@@ -49,6 +49,7 @@ export const Table = <T,>({
     rowVirtualizer.virtualItems,
     data,
   ]);
+
   return (
     <>
       <div className={styles.itemCounter}>

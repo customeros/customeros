@@ -18,11 +18,14 @@ export type Scalars = {
   Time: any;
 };
 
-export type Action = InteractionSession | PageViewAction;
+export type Action = Conversation | InteractionSession | Note | PageView | Ticket;
 
 export enum ActionType {
+  Conversation = 'CONVERSATION',
   InteractionSession = 'INTERACTION_SESSION',
-  PageView = 'PAGE_VIEW'
+  Note = 'NOTE',
+  PageView = 'PAGE_VIEW',
+  Ticket = 'TICKET'
 }
 
 export enum ComparisonOperator {
@@ -36,6 +39,7 @@ export enum ComparisonOperator {
  */
 export type Contact = ExtensibleEntity & Node & {
   __typename?: 'Contact';
+  /** @deprecated Use `timelineEvents` instead */
   actions: Array<Action>;
   appSource?: Maybe<Scalars['String']>;
   conversations: ConversationPage;
@@ -101,6 +105,7 @@ export type Contact = ExtensibleEntity & Node & {
   template?: Maybe<EntityTemplate>;
   ticketSummaryByStatus: Array<TicketSummaryByStatus>;
   tickets: Array<Maybe<Ticket>>;
+  timelineEvents: Array<TimelineEvent>;
   /** The title associate with the contact in customerOS. */
   title?: Maybe<PersonTitle>;
   updatedAt: Scalars['Time'];
@@ -154,6 +159,17 @@ export type ContactOrganizationsArgs = {
   pagination?: InputMaybe<Pagination>;
   sort?: InputMaybe<Array<SortBy>>;
   where?: InputMaybe<Filter>;
+};
+
+
+/**
+ * A contact represents an individual in customerOS.
+ * **A `response` object.**
+ */
+export type ContactTimelineEventsArgs = {
+  from?: InputMaybe<Scalars['Time']>;
+  size: Scalars['Int'];
+  timelineEventTypes?: InputMaybe<Array<TimelineEventType>>;
 };
 
 /**
@@ -1337,11 +1353,25 @@ export type OrganizationUpdateInput = {
   website?: InputMaybe<Scalars['String']>;
 };
 
+export type PageView = Node & {
+  __typename?: 'PageView';
+  application: Scalars['String'];
+  endedAt: Scalars['Time'];
+  engagedTime: Scalars['Int64'];
+  id: Scalars['ID'];
+  orderInSession: Scalars['Int64'];
+  pageTitle: Scalars['String'];
+  pageUrl: Scalars['String'];
+  sessionId: Scalars['ID'];
+  startedAt: Scalars['Time'];
+};
+
 export type PageViewAction = Node & {
   __typename?: 'PageViewAction';
   application: Scalars['String'];
   endedAt: Scalars['Time'];
   engagedTime: Scalars['Int64'];
+  /** @deprecated Use PageView instead */
   id: Scalars['ID'];
   orderInSession: Scalars['Int64'];
   pageTitle: Scalars['String'];
@@ -1692,6 +1722,16 @@ export type TimeRange = {
   to: Scalars['Time'];
 };
 
+export type TimelineEvent = Conversation | InteractionSession | Note | PageView | Ticket;
+
+export enum TimelineEventType {
+  Conversation = 'CONVERSATION',
+  InteractionSession = 'INTERACTION_SESSION',
+  Note = 'NOTE',
+  PageView = 'PAGE_VIEW',
+  Ticket = 'TICKET'
+}
+
 /**
  * Describes the User of customerOS.  A user is the person who logs into the Openline platform.
  * **A `return` object**
@@ -1891,7 +1931,7 @@ export type GetActionsForContactQueryVariables = Exact<{
 }>;
 
 
-export type GetActionsForContactQuery = { __typename?: 'Query', contact?: { __typename?: 'Contact', id: string, firstName?: string | null, lastName?: string | null, createdAt: any, actions: Array<{ __typename?: 'InteractionSession' } | { __typename?: 'PageViewAction', id: string, application: string, startedAt: any, endedAt: any, engagedTime: any, pageUrl: string, pageTitle: string, orderInSession: any, sessionId: string }> } | null };
+export type GetActionsForContactQuery = { __typename?: 'Query', contact?: { __typename?: 'Contact', id: string, firstName?: string | null, lastName?: string | null, createdAt: any, actions: Array<{ __typename?: 'Conversation' } | { __typename?: 'InteractionSession' } | { __typename?: 'Note' } | { __typename?: 'PageView', id: string, application: string, startedAt: any, endedAt: any, engagedTime: any, pageUrl: string, pageTitle: string, orderInSession: any, sessionId: string } | { __typename?: 'Ticket' }> } | null };
 
 export type GetContactCommunicationChannelsQueryVariables = Exact<{
   id: Scalars['ID'];
@@ -1944,6 +1984,15 @@ export type GetContactTicketsQueryVariables = Exact<{
 
 
 export type GetContactTicketsQuery = { __typename?: 'Query', contact?: { __typename?: 'Contact', tickets: Array<{ __typename?: 'Ticket', id: string, createdAt: any, updatedAt: any, subject?: string | null, status?: string | null, priority?: string | null, description?: string | null, tags?: Array<{ __typename?: 'Tag', id: string, name: string } | null> | null, notes?: Array<{ __typename?: 'Note', id: string, createdAt: any, html: string } | null> | null } | null> } | null };
+
+export type GetContactTimelineQueryVariables = Exact<{
+  contactId: Scalars['ID'];
+  from: Scalars['Time'];
+  size: Scalars['Int'];
+}>;
+
+
+export type GetContactTimelineQuery = { __typename?: 'Query', contact?: { __typename?: 'Contact', id: string, timelineEvents: Array<{ __typename?: 'Conversation', id: string, startedAt: any, subject?: string | null, channel?: string | null, updatedAt: any, messageCount: any, source: DataSource, appSource?: string | null, initiatorFirstName?: string | null, initiatorLastName?: string | null, initiatorUsername?: string | null, initiatorType?: string | null, threadId?: string | null, contacts?: Array<{ __typename?: 'Contact', id: string, lastName?: string | null, firstName?: string | null }> | null, users?: Array<{ __typename?: 'User', lastName: string, firstName: string, emails?: Array<{ __typename?: 'Email', email?: string | null }> | null }> | null } | { __typename?: 'InteractionSession' } | { __typename?: 'Note', id: string, html: string, createdAt: any } | { __typename?: 'PageView', id: string, application: string, startedAt: any, endedAt: any, engagedTime: any, pageUrl: string, pageTitle: string, orderInSession: any, sessionId: string } | { __typename?: 'Ticket', id: string, createdAt: any, updatedAt: any, subject?: string | null, status?: string | null, priority?: string | null, description?: string | null, notes?: Array<{ __typename?: 'Note', id: string, html: string } | null> | null, tags?: Array<{ __typename?: 'Tag', id: string, name: string } | null> | null }> } | null };
 
 export type MergeContactsMutationVariables = Exact<{
   primaryContactId: Scalars['ID'];
@@ -2750,7 +2799,7 @@ export const GetActionsForContactDocument = gql`
     lastName
     createdAt
     actions(from: $from, to: $to) {
-      ... on PageViewAction {
+      ... on PageView {
         id
         application
         startedAt
@@ -3088,6 +3137,105 @@ export function useGetContactTicketsLazyQuery(baseOptions?: Apollo.LazyQueryHook
 export type GetContactTicketsQueryHookResult = ReturnType<typeof useGetContactTicketsQuery>;
 export type GetContactTicketsLazyQueryHookResult = ReturnType<typeof useGetContactTicketsLazyQuery>;
 export type GetContactTicketsQueryResult = Apollo.QueryResult<GetContactTicketsQuery, GetContactTicketsQueryVariables>;
+export const GetContactTimelineDocument = gql`
+    query GetContactTimeline($contactId: ID!, $from: Time!, $size: Int!) {
+  contact(id: $contactId) {
+    id
+    timelineEvents(from: $from, size: $size) {
+      ... on PageView {
+        id
+        application
+        startedAt
+        endedAt
+        engagedTime
+        pageUrl
+        pageTitle
+        orderInSession
+        sessionId
+      }
+      ... on Ticket {
+        id
+        createdAt
+        updatedAt
+        subject
+        status
+        priority
+        description
+        notes {
+          id
+          html
+        }
+        tags {
+          id
+          name
+        }
+      }
+      ... on Conversation {
+        id
+        startedAt
+        subject
+        channel
+        updatedAt
+        messageCount
+        contacts {
+          id
+          lastName
+          firstName
+        }
+        users {
+          lastName
+          firstName
+          emails {
+            email
+          }
+        }
+        source
+        appSource
+        initiatorFirstName
+        initiatorLastName
+        initiatorUsername
+        initiatorType
+        threadId
+      }
+      ... on Note {
+        id
+        html
+        createdAt
+      }
+    }
+  }
+}
+    `;
+
+/**
+ * __useGetContactTimelineQuery__
+ *
+ * To run a query within a React component, call `useGetContactTimelineQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetContactTimelineQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetContactTimelineQuery({
+ *   variables: {
+ *      contactId: // value for 'contactId'
+ *      from: // value for 'from'
+ *      size: // value for 'size'
+ *   },
+ * });
+ */
+export function useGetContactTimelineQuery(baseOptions: Apollo.QueryHookOptions<GetContactTimelineQuery, GetContactTimelineQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<GetContactTimelineQuery, GetContactTimelineQueryVariables>(GetContactTimelineDocument, options);
+      }
+export function useGetContactTimelineLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetContactTimelineQuery, GetContactTimelineQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<GetContactTimelineQuery, GetContactTimelineQueryVariables>(GetContactTimelineDocument, options);
+        }
+export type GetContactTimelineQueryHookResult = ReturnType<typeof useGetContactTimelineQuery>;
+export type GetContactTimelineLazyQueryHookResult = ReturnType<typeof useGetContactTimelineLazyQuery>;
+export type GetContactTimelineQueryResult = Apollo.QueryResult<GetContactTimelineQuery, GetContactTimelineQueryVariables>;
 export const MergeContactsDocument = gql`
     mutation mergeContacts($primaryContactId: ID!, $mergedContactIds: [ID!]!) {
   contact_Merge(

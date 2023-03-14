@@ -1,5 +1,6 @@
-import React, { ReactNode, useEffect, useRef } from 'react';
-import { Skeleton } from 'primereact/skeleton';
+import React, { useRef } from 'react';
+import { useStickyScroll } from '../../../../hooks/useStickyScroll';
+
 import {
   ConversationTimelineItem,
   LiveConversationTimelineItem,
@@ -7,19 +8,24 @@ import {
   WebActionTimelineItem,
 } from '../../molecules';
 import { TimelineItem } from '../../atoms/timeline-item';
-import { uuidv4 } from '../../../../utils';
 import { TicketTimelineItem } from '../../molecules/ticket-timeline-item';
 import styles from './timeline.module.scss';
 import { InteractionTimelineItem } from '../../molecules/interaction-timeline-item';
+import { EmailTimelineItemTemp } from '../../molecules/conversation-timeline-item/EmailTimelineItemTemp';
+import { ChatTimelineItem } from '../../molecules/conversation-timeline-item/ChatTimelineItem';
+import { useInfiniteScroll } from './useInfiniteScroll';
+import { Skeleton } from '../../atoms/skeleton';
+import { ConversationTimelineItemDeprecated } from '../../molecules/conversation-timeline-item/ConversationTimelineItemDeprecated';
 
 interface Props {
   loading: boolean;
   noActivity: boolean;
+  notPaginated?: boolean; // todo remove when org list is paginated
   contactId?: string;
   loggedActivities: Array<any>;
   notifyChange?: (id: any) => void;
   notifyContactNotesUpdate?: (id: any) => void;
-  header?: ReactNode;
+  onLoadMore: () => void;
 }
 
 export const Timeline = ({
@@ -29,36 +35,31 @@ export const Timeline = ({
   contactId,
   notifyChange = () => null,
   notifyContactNotesUpdate = () => null,
-  header,
+  onLoadMore,
+  notPaginated = false,
 }: Props) => {
-  const timelineContainerRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (timelineContainerRef?.current && !loading) {
-      timelineContainerRef?.current?.scroll({
-        top: timelineContainerRef.current.scrollHeight,
-        behavior: 'smooth',
-      });
-    }
-  }, [timelineContainerRef?.current, loading]);
-
-  if (loading) {
-    return (
-      <div className='flex flex-column mt-4'>
-        <Skeleton className='mb-3' />
-        <Skeleton className='mb-3' />
-        <Skeleton className='mb-3' />
-        <Skeleton className='mb-3' />
-        <Skeleton />
-      </div>
-    );
-  }
-
+  const timelineContainerRef = useRef(null);
+  const containerRef = useRef(null);
+  const infiniteScrollElementRef = useRef(null);
+  // @ts-expect-error revisit later
+  useStickyScroll(containerRef, loggedActivities || []);
+  useInfiniteScroll({
+    element: infiniteScrollElementRef,
+    isFetching: loading,
+    callback: () => {
+      if (loggedActivities.length > 10 && !notPaginated) {
+        // @ts-expect-error this code will be removed after total items count is provided and we switch to virtualized list
+        containerRef.current.scrollTop = 100;
+        onLoadMore();
+      }
+    },
+  });
   if (!loading && noActivity) {
     return (
       <p className='text-gray-600 font-italic mt-4'>No activity logged yet</p>
     );
   }
+
   const getTimelineItemByType = (type: string, data: any, index: number) => {
     switch (type) {
       case 'Note':
@@ -78,14 +79,67 @@ export const Timeline = ({
           </TimelineItem>
         );
       case 'Conversation':
-        return (
-          <ConversationTimelineItem
-            first={index == 0}
-            feedId={data.id}
-            source={data.source}
-            createdAt={data?.startedAt}
-          />
-        );
+        if (notPaginated) {
+          // TODO remove when org timeline is paginated
+          return (
+            <ConversationTimelineItemDeprecated
+              first={index == 0}
+              feedId={data.id}
+              source={data.source}
+              createdAt={data?.startedAt}
+            />
+          );
+        }
+        if (data.channel === 'WEB_CHAT') {
+          return (
+            <ChatTimelineItem
+              first={index == 0}
+              feedId={data.id}
+              source={data.source}
+              createdAt={data?.startedAt}
+              feedInitiator={{
+                firstName: data.initiatorFirstName,
+                lastName: data.initiatorLastName,
+                phoneNumber: data.initiatorUsername.identifier,
+                lastTimestamp: data.lastTimestamp,
+              }}
+            />
+          );
+        }
+        if (data.channel === 'EMAIL') {
+          return (
+            <EmailTimelineItemTemp
+              first={index == 0}
+              feedId={data.id}
+              source={data.source}
+              createdAt={data?.startedAt}
+              feedInitiator={{
+                firstName: data.initiatorFirstName,
+                lastName: data.initiatorLastName,
+                phoneNumber: data.initiatorUsername.identifier,
+                lastTimestamp: data.lastTimestamp,
+              }}
+            />
+          );
+        }
+        if (data.channel === 'VOICE') {
+          return (
+            <ConversationTimelineItem
+              first={index == 0}
+              feedId={data.id}
+              source={data.source}
+              createdAt={data?.startedAt}
+              feedInitiator={{
+                firstName: data.initiatorFirstName,
+                lastName: data.initiatorLastName,
+                phoneNumber: data.initiatorUsername.identifier,
+                lastTimestamp: data.lastTimestamp,
+              }}
+            />
+          );
+        }
+        return null;
+
       case 'LiveConversation':
         return (
           <LiveConversationTimelineItem
@@ -94,7 +148,7 @@ export const Timeline = ({
             source={data.source}
           />
         );
-      case 'PageViewAction':
+      case 'PageView':
         return (
           <TimelineItem first={index == 0} createdAt={data?.startedAt}>
             <WebActionTimelineItem {...data} />
@@ -132,10 +186,27 @@ export const Timeline = ({
 
   return (
     <article ref={timelineContainerRef} className={styles.timeline}>
-      {header}
-      <div className={styles.timelineContent}>
+      <div className={styles.timelineContent} ref={containerRef}>
+        {!!loggedActivities.length && (
+          <div
+            ref={infiniteScrollElementRef}
+            style={{
+              height: '6px',
+              width: '6px',
+            }}
+          />
+        )}
+        {loading && (
+          <div className='flex flex-column mt-4'>
+            <Skeleton height={'40px'} className='mb-3' />
+            <Skeleton height={'40px'} className='mb-3' />
+            <Skeleton height={'40px'} className='mb-3' />
+            <Skeleton height={'40px'} className='mb-3' />
+            <Skeleton height={'40px'} className='mb-3' />
+          </div>
+        )}
         {loggedActivities.map((e: any, index) => (
-          <React.Fragment key={uuidv4()}>
+          <React.Fragment key={e.id}>
             {getTimelineItemByType(e.__typename, e, index)}
           </React.Fragment>
         ))}

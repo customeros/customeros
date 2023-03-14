@@ -5,7 +5,7 @@ query GetActionsForContact($id: ID!, $from: Time!, $to: Time!) {
     lastName
     createdAt
     actions(from: $from, to: $to) {
-      ... on PageViewAction {
+      ... on PageView {
         id
         application
         startedAt

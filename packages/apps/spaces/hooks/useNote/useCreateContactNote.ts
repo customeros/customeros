@@ -28,9 +28,9 @@ export const useCreateContactNote = ({ contactId }: Props): Result => {
         refetchQueries: ['GetContactNotes'],
       });
       if (response.data) {
-        toast.success('Note added!', {
-          toastId: `note-added-${response.data?.note_CreateForContact.id}`,
-        });
+        // toast.success('Note added!', {
+        //   toastId: `note-added-${response.data?.note_CreateForContact.id}`,
+        // });
       }
       return response.data?.note_CreateForContact ?? null;
     } catch (err) {

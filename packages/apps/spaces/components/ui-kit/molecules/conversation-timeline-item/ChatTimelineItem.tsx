@@ -1,19 +1,18 @@
 import React, { useEffect, useState } from 'react';
 import { Message } from '../../atoms';
-import axios from 'axios';
-import { toast } from 'react-toastify';
 import { TimelineItem } from '../../atoms/timeline-item';
 import { Skeleton } from '../../atoms/skeleton';
+import axios from 'axios';
+import { toast } from 'react-toastify';
 import { ConversationItem, Props } from './types';
 
-export const ConversationTimelineItem: React.FC<Props> = ({
+export const ChatTimelineItem: React.FC<Props> = ({
   feedId,
   createdAt,
   first,
   feedInitiator,
 }) => {
   const [messages, setMessages] = useState([] as ConversationItem[]);
-
   const [loadingMessages, setLoadingMessages] = useState(false);
 
   const makeSender = (msg: ConversationItem) => {
@@ -37,8 +36,8 @@ export const ConversationTimelineItem: React.FC<Props> = ({
       })
       .catch(() => {
         setLoadingMessages(false);
-        toast.error('Something went wrong while loading feed item', {
-          toastId: `conversation-timeline-item-feed-${feedId}`,
+        toast.error('Something went wrong while loading chat item', {
+          toastId: `chat-conversation-timeline-item-feed-${feedId}`,
         });
       });
   }, []);
@@ -65,6 +64,7 @@ export const ConversationTimelineItem: React.FC<Props> = ({
       return date2 - date1;
     });
   };
+
   return (
     <div className='flex flex-column h-full w-full'>
       <div className='flex-grow-1 w-full'>
@@ -72,15 +72,6 @@ export const ConversationTimelineItem: React.FC<Props> = ({
           <div className='flex flex-column mb-2'>
             <div className='mb-2 flex justify-content-end'>
               <Skeleton height='40px' width='50%' />
-            </div>
-            <div className='mb-2 flex justify-content-start'>
-              <Skeleton height='50px' width='40%' />
-            </div>
-            <div className='flex justify-content-end mb-2'>
-              <Skeleton height='45px' width='50%' />
-            </div>
-            <div className='flex justify-content-start'>
-              <Skeleton height='40px' width='45%' />
             </div>
           </div>
         )}

@@ -6,6 +6,10 @@
   @include flex-center;
 }
 
+.fullScreenMode {
+  height: 100%;
+}
+
 .content {
   border-radius: var(--border-radius-md);
   background: #ffffff;

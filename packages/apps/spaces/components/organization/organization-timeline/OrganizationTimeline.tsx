@@ -77,6 +77,11 @@ export const OrganizationTimeline = ({ id }: { id: string }) => {
 
   return (
     <Timeline
+      notPaginated={true}
+      onLoadMore={() => {
+        //todo add when paginated timeline items are available
+        return;
+      }}
       loading={loading}
       noActivity={noHistoryItemsAvailable}
       contactId={id}
