@@ -3,7 +3,7 @@
 }
 .organizationDetails {
   grid-area: details;
-  overflow-y: scroll;
+  overflow-y: auto;
 }
 .communicationDetails {
   grid-area: contactDetails;
