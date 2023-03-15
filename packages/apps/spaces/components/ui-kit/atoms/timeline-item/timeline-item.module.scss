@@ -2,38 +2,41 @@
   display: flex;
   flex-direction: column;
   justify-content: center;
-  align-items: center;
+  align-items: flex-end;
   font-family: Roboto, sans-serif;
   font-weight: 200;
   line-height: 1.3rem;
   font-size: 1rem;
+
+
 }
 
 .last {
   margin-bottom: var(--spacing-md);
 }
 
-.timelineLine {
-  width: 1px;
-  background: var(--gray-400);
-
-  &.first {
-    height: 12px;
-  }
-
-  &.second {
-    height: 5px;
-  }
-}
 
 .when {
   font-size: 0.75rem;
   font-weight: 400;
   color: var(--gray-500);
+  position: relative;
+  margin: var(--spacing-sm) var(--spacing-xxs);
+
+  &:after{
+    content: '';
+    display: block;
+    height: 3px;
+    position:absolute;
+    right: -2.5rem;
+    bottom: 10px;
+    width: var(--spacing-md);
+    border-bottom: var(--border-divider);
+  }
 }
 
 .timeAgo {
-  text-align: center;
+  text-align: end;
 }
 
 .content {

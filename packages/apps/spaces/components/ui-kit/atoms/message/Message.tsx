@@ -1,5 +1,5 @@
 import * as React from 'react';
-import styles from './message.module.css';
+import styles from './message.module.scss';
 import sanitizeHtml from 'sanitize-html';
 
 // import { ConversationItem } from '../../../models/conversation-item';

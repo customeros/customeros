@@ -18,9 +18,6 @@ export const TimelineItem: React.FC<Props> = ({
 }) => {
   return (
     <div className={`${styles.timelineItem}`}>
-      {!first ? (
-        <span className={`${styles.timelineLine} ${styles.first}`} />
-      ) : null}
       {createdAt ? (
         <div className={styles.when}>
           <div className={styles.timeAgo}>
@@ -31,7 +28,6 @@ export const TimelineItem: React.FC<Props> = ({
       ) : (
         'Date not available'
       )}
-      <span className={`${styles.timelineLine} ${styles.second}`} />
       <div className={`${styles.content} ${contentClassName}`} {...rest}>
         {children}
       </div>

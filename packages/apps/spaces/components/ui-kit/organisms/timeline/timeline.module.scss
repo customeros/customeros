@@ -1,6 +1,16 @@
 .timeline {
-  //background: red;
   grid-area: timeline;
+  position: relative;
+
+  &::after {
+    content: ' ';
+    display: block;
+    border-right: var(--border-divider);
+    height: 100%;
+    position: absolute;
+    top: 0;
+    right: 0;
+  }
 
   & h1 {
     font-size: var(--heading-secondary);
@@ -10,5 +20,17 @@
 .timelineContent {
   max-height: 65vh;
   overflow-y: auto;
-  padding: 0px 8px 0px 0px;
+  overflow-x: hidden;
+  padding: 0 var(--spacing-md) 0 0;
+  margin-right: -4px;
+
+  &::-webkit-scrollbar {
+    width: 4px;
+    background-color: #F5F5F5;
+  }
+  &::-webkit-scrollbar-thumb {
+    width: 4px;
+    border-radius: var(--border-radius-md);
+    background-color: var(--secondary-color-active);
+  }
 }
