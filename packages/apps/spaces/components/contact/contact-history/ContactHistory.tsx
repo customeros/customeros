@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Timeline } from '../../ui-kit/organisms';
 import { useContactTimeline } from '../../../hooks/useContactTimeline';
+import { uuid4 } from '@sentry/utils';
 
 export const ContactHistory = ({ id }: { id: string }) => {
   const { data, loading, error, fetchMore } = useContactTimeline({
@@ -11,6 +12,7 @@ export const ContactHistory = ({ id }: { id: string }) => {
     __typename: 'LiveConversation',
     source: 'LiveStream',
     createdAt: Date.now(),
+    id: uuid4(),
   };
 
   if (error) {

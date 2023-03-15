@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Timeline } from '../../ui-kit/organisms';
 import { useOrganizationTimeline } from '../../../hooks/useOrganizationTimeline';
+import { uuid4 } from '@sentry/utils';
 
 export const OrganizationTimeline = ({ id }: { id: string }) => {
   const { data, loading, error, fetchMore } = useOrganizationTimeline({
@@ -11,6 +12,7 @@ export const OrganizationTimeline = ({ id }: { id: string }) => {
     __typename: 'LiveConversation',
     source: 'LiveStream',
     createdAt: Date.now(),
+    id: uuid4(),
   };
 
   if (error) {
