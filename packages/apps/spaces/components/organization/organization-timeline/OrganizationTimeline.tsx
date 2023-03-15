@@ -1,91 +1,48 @@
-import React, { useEffect } from 'react';
-import { OrganizationTimelineSkeleton } from './skeletons';
+import React, { useState } from 'react';
 import { Timeline } from '../../ui-kit/organisms';
-import { useOrganizationTimelineData } from '../../../hooks/useOrganization/useOrganizationTimeline';
+import { useOrganizationTimeline } from '../../../hooks/useOrganizationTimeline';
 
 export const OrganizationTimeline = ({ id }: { id: string }) => {
-  const {
-    data,
-    loading: orgLoading,
-    error,
-  } = useOrganizationTimelineData({
-    id,
+  const { data, loading, error, fetchMore } = useOrganizationTimeline({
+    organizationId: id,
   });
-
-  const [loading, setLoading] = React.useState<boolean>(true);
-  const [notes, setNotes] = React.useState<any>([]);
-  const [tickets, setTickets] = React.useState<any>([]);
-  const [conversations, setConversations] = React.useState<any>([]);
-
-  useEffect(() => {
-    if (!orgLoading && data) {
-      let ticketsData = [] as any;
-      let notesData = [...data.notes.content] as any;
-      let conversationsData = [] as any;
-
-      data.contacts.content.forEach((contact: any) => {
-        if (contact.notes && contact.notes.content) {
-          notesData = [...notesData, ...contact.notes.content];
-        }
-        if (contact.tickets) {
-          ticketsData = [...ticketsData, ...contact.tickets];
-        }
-        if (contact.conversations && contact.conversations.content) {
-          conversationsData = [
-            ...conversationsData,
-            ...contact.conversations.content,
-          ];
-        }
-      });
-
-      setTickets(ticketsData);
-      setNotes(notesData);
-      setConversations(conversationsData);
-      setLoading(false);
-    }
-  }, [orgLoading, data?.notes.content.length]); // fixme after adding new timeline
-
-  const noHistoryItemsAvailable =
-    !loading &&
-    notes.length == 0 &&
-    conversations.length == 0 &&
-    tickets.length == 0;
-
-  const getSortedItems = (
-    data1: Array<any> | undefined,
-    data2: Array<any> | undefined,
-    data3: Array<any> | undefined,
-    data4: Array<any> | undefined,
-  ) => {
-    const data = [
-      ...(data1 || []),
-      ...(data2 || []),
-      ...(data3 || []),
-      ...(data4 || []),
-    ];
-    return data.sort((a, b) => {
-      return Date.parse(a?.createdAt) - Date.parse(b?.createdAt);
-    });
+  const [prevDate, setPrevDate] = useState(null);
+  const liveConversations = {
+    __typename: 'LiveConversation',
+    source: 'LiveStream',
+    createdAt: Date.now(),
   };
 
-  if (loading) {
-    return <OrganizationTimelineSkeleton />;
-  }
   if (error) {
-    return null;
+    return (
+      <div>
+        <h1>Oops! Timeline error</h1>
+      </div>
+    );
   }
 
   return (
     <Timeline
-      notPaginated={true}
-      onLoadMore={() => {
-        //todo add when paginated timeline items are available
-        return;
-      }}
       loading={loading}
-      noActivity={noHistoryItemsAvailable}
-      contactId={id}
-      loggedActivities={getSortedItems(notes, conversations, tickets, [])}
+      onLoadMore={(containerRef) => {
+        const newFromDate = data[0]?.createdAt || data[0]?.startedAt;
+        if (!data[0] || prevDate === newFromDate) {
+          return;
+        }
+        // todo remove me when switching to virtualized list
+        containerRef.current.scrollTop = 100;
+        setPrevDate(newFromDate);
+        fetchMore({
+          variables: {
+            contactId: id,
+            size: 10,
+            from: newFromDate,
+          },
+        });
+      }}
+      noActivity={!data}
+      id={id}
+      loggedActivities={[liveConversations, ...(data || [])]}
     />
   );
 };

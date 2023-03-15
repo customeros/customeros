@@ -30,6 +30,16 @@ const client = new ApolloClient({
           },
         },
       },
+      Organization: {
+        fields: {
+          timelineEvents: {
+            keyArgs: false,
+            merge(existing = [], incoming) {
+              return [...incoming, ...existing];
+            },
+          },
+        },
+      },
       Query: {
         fields: {
           dashboardView: {

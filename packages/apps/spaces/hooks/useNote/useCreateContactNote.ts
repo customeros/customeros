@@ -25,7 +25,7 @@ export const useCreateContactNote = ({ contactId }: Props): Result => {
     try {
       const response = await createContactNoteMutation({
         variables: { contactId, input: note },
-        refetchQueries: ['GetContactNotes'],
+        refetchQueries: ['GetContactTimeline'],
       });
       if (response.data) {
         // toast.success('Note added!', {

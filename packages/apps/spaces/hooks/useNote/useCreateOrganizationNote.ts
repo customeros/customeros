@@ -3,8 +3,8 @@ import {
   CreateOrganizationNoteMutation,
   useCreateOrganizationNoteMutation,
   DataSource,
-  LoadTimelineForOrganizationDocument,
-  LoadTimelineForOrganizationQuery,
+  GetOrganizationTimelineQuery,
+  GetOrganizationTimelineDocument,
   Note,
 } from './types';
 import { toast } from 'react-toastify';
@@ -33,8 +33,8 @@ export const useCreateOrganizationNote = ({
     cache: ApolloCache<any>,
     { data: { note_CreateForOrganization } }: any,
   ) => {
-    const data: LoadTimelineForOrganizationQuery | null = cache.readQuery({
-      query: LoadTimelineForOrganizationDocument,
+    const data: GetOrganizationTimelineQuery | null = cache.readQuery({
+      query: GetOrganizationTimelineDocument,
       variables: {
         id: organizationId,
       },
@@ -42,10 +42,10 @@ export const useCreateOrganizationNote = ({
 
     if (data === null) {
       client.writeQuery({
-        query: LoadTimelineForOrganizationDocument,
+        query: GetOrganizationTimelineDocument,
         data: {
           organization: {
-            notes: {
+            timelineEvents: {
               content: [note_CreateForOrganization],
             },
           },
@@ -55,20 +55,15 @@ export const useCreateOrganizationNote = ({
       return;
     }
 
-    const existingNotes = data.organization
-      ? data.organization.notes.content
-      : [];
-
     const newData = {
-      organization: {
-        ...data.organization,
-        notes: {
-          content: [note_CreateForOrganization, ...existingNotes],
-        },
-      },
+      organization: [
+        ...(data?.organization?.timelineEvents ?? []),
+        note_CreateForOrganization,
+      ],
     };
+
     client.writeQuery({
-      query: LoadTimelineForOrganizationDocument,
+      query: GetOrganizationTimelineDocument,
       data: newData,
       variables: { id: organizationId },
     });

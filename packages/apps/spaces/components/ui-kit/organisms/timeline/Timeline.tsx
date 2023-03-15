@@ -15,13 +15,11 @@ import { EmailTimelineItemTemp } from '../../molecules/conversation-timeline-ite
 import { ChatTimelineItem } from '../../molecules/conversation-timeline-item/ChatTimelineItem';
 import { useInfiniteScroll } from './useInfiniteScroll';
 import { Skeleton } from '../../atoms/skeleton';
-import { ConversationTimelineItemDeprecated } from '../../molecules/conversation-timeline-item/ConversationTimelineItemDeprecated';
 
 interface Props {
   loading: boolean;
   noActivity: boolean;
-  notPaginated?: boolean; // todo remove when org list is paginated
-  contactId?: string;
+  id?: string;
   loggedActivities: Array<any>;
   notifyChange?: (id: any) => void;
   notifyContactNotesUpdate?: (id: any) => void;
@@ -32,11 +30,10 @@ export const Timeline = ({
   loading,
   noActivity,
   loggedActivities,
-  contactId,
+  id,
   notifyChange = () => null,
   notifyContactNotesUpdate = () => null,
   onLoadMore,
-  notPaginated = false,
 }: Props) => {
   const timelineContainerRef = useRef(null);
   const containerRef = useRef(null);
@@ -47,7 +44,7 @@ export const Timeline = ({
     element: infiniteScrollElementRef,
     isFetching: loading,
     callback: () => {
-      if (loggedActivities.length > 10 && !notPaginated) {
+      if (loggedActivities.length > 10) {
         onLoadMore(containerRef);
       }
     },
@@ -57,8 +54,6 @@ export const Timeline = ({
       <p className='text-gray-600 font-italic mt-4'>No activity logged yet</p>
     );
   }
-
-  console.log('CHECKER');
 
   const getTimelineItemByType = (type: string, data: any, index: number) => {
     switch (type) {
@@ -74,22 +69,11 @@ export const Timeline = ({
               refreshNoteData={
                 data?.contact ? notifyContactNotesUpdate : notifyChange
               }
-              contactId={contactId}
+              contactId={id}
             />
           </TimelineItem>
         );
       case 'Conversation':
-        if (notPaginated) {
-          // TODO remove when org timeline is paginated
-          return (
-            <ConversationTimelineItemDeprecated
-              first={index == 0}
-              feedId={data.id}
-              source={data.source}
-              createdAt={data?.startedAt}
-            />
-          );
-        }
         if (data.channel === 'WEB_CHAT') {
           return (
             <ChatTimelineItem
@@ -144,7 +128,7 @@ export const Timeline = ({
         return (
           <LiveConversationTimelineItem
             first={index == 0}
-            contactId={contactId}
+            contactId={id}
             source={data.source}
           />
         );

@@ -41,7 +41,7 @@ export const ContactHistory = ({ id }: { id: string }) => {
         });
       }}
       noActivity={!data}
-      contactId={id}
+      id={id}
       loggedActivities={[liveConversations, ...(data || [])]}
     />
   );

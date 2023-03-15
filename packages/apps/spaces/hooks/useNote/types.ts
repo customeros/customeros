@@ -14,7 +14,7 @@ export {
   useUpdateNoteMutation,
   DataSource,
   useGetContactNotesQuery,
-  LoadTimelineForOrganizationDocument,
+  GetOrganizationTimelineDocument,
 } from '../../graphQL/__generated__/generated';
 export type {
   Contact,
@@ -31,6 +31,6 @@ export type {
   RemoveNoteMutation,
   NoteUpdateInput,
   UpdateNoteMutation,
-  LoadTimelineForOrganizationQuery,
+  GetOrganizationTimelineQuery,
   Note,
 } from '../../graphQL/__generated__/generated';
