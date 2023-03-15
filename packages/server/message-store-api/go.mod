@@ -16,7 +16,7 @@ require (
 	github.com/joho/godotenv v1.5.1
 	github.com/lib/pq v1.10.7
 	github.com/machinebox/graphql v0.2.2
-	github.com/neo4j/neo4j-go-driver/v4 v4.4.5
+	github.com/neo4j/neo4j-go-driver/v4 v4.4.6
 	github.com/neo4j/neo4j-go-driver/v5 v5.6.0
 	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20230214195550-054499130c38
 	github.com/sirupsen/logrus v1.9.0
