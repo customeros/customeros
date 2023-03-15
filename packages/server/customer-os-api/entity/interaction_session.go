@@ -16,6 +16,8 @@ type InteractionSessionEntity struct {
 	AppSource     string
 	Source        DataSource
 	SourceOfTruth DataSource
+
+	DataloaderKey string
 }
 
 func (interactionSession InteractionSessionEntity) ToString() string {

@@ -44,6 +44,7 @@ type ResolverRoot interface {
 	EntityTemplate() EntityTemplateResolver
 	FieldSet() FieldSetResolver
 	FieldSetTemplate() FieldSetTemplateResolver
+	InteractionEvent() InteractionEventResolver
 	InteractionSession() InteractionSessionResolver
 	JobRole() JobRoleResolver
 	Location() LocationResolver
@@ -219,15 +220,16 @@ type ComplexityRoot struct {
 	}
 
 	InteractionEvent struct {
-		AppSource       func(childComplexity int) int
-		Channel         func(childComplexity int) int
-		Content         func(childComplexity int) int
-		ContentType     func(childComplexity int) int
-		CreatedAt       func(childComplexity int) int
-		EventIdentifier func(childComplexity int) int
-		ID              func(childComplexity int) int
-		Source          func(childComplexity int) int
-		SourceOfTruth   func(childComplexity int) int
+		AppSource          func(childComplexity int) int
+		Channel            func(childComplexity int) int
+		Content            func(childComplexity int) int
+		ContentType        func(childComplexity int) int
+		CreatedAt          func(childComplexity int) int
+		EventIdentifier    func(childComplexity int) int
+		ID                 func(childComplexity int) int
+		InteractionSession func(childComplexity int) int
+		Source             func(childComplexity int) int
+		SourceOfTruth      func(childComplexity int) int
 	}
 
 	InteractionSession struct {
@@ -571,6 +573,9 @@ type FieldSetResolver interface {
 }
 type FieldSetTemplateResolver interface {
 	CustomFields(ctx context.Context, obj *model.FieldSetTemplate) ([]*model.CustomFieldTemplate, error)
+}
+type InteractionEventResolver interface {
+	InteractionSession(ctx context.Context, obj *model.InteractionEvent) (*model.InteractionSession, error)
 }
 type InteractionSessionResolver interface {
 	Events(ctx context.Context, obj *model.InteractionSession) ([]*model.InteractionEvent, error)
@@ -1613,6 +1618,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.InteractionEvent.ID(childComplexity), true
+
+	case "InteractionEvent.interactionSession":
+		if e.complexity.InteractionEvent.InteractionSession == nil {
+			break
+		}
+
+		return e.complexity.InteractionEvent.InteractionSession(childComplexity), true
 
 	case "InteractionEvent.source":
 		if e.complexity.InteractionEvent.Source == nil {
@@ -4689,6 +4701,7 @@ type InteractionEvent implements Node {
     content: String
     contentType: String
     channel: String
+    interactionSession: InteractionSession @goField(forceResolver: true)
 
     source: DataSource!
     sourceOfTruth: DataSource!
@@ -13345,6 +13358,71 @@ func (ec *executionContext) fieldContext_InteractionEvent_channel(ctx context.Co
 	return fc, nil
 }
 
+func (ec *executionContext) _InteractionEvent_interactionSession(ctx context.Context, field graphql.CollectedField, obj *model.InteractionEvent) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_InteractionEvent_interactionSession(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.InteractionEvent().InteractionSession(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.InteractionSession)
+	fc.Result = res
+	return ec.marshalOInteractionSession2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐInteractionSession(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_InteractionEvent_interactionSession(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "InteractionEvent",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_InteractionSession_id(ctx, field)
+			case "startedAt":
+				return ec.fieldContext_InteractionSession_startedAt(ctx, field)
+			case "endedAt":
+				return ec.fieldContext_InteractionSession_endedAt(ctx, field)
+			case "name":
+				return ec.fieldContext_InteractionSession_name(ctx, field)
+			case "status":
+				return ec.fieldContext_InteractionSession_status(ctx, field)
+			case "type":
+				return ec.fieldContext_InteractionSession_type(ctx, field)
+			case "channel":
+				return ec.fieldContext_InteractionSession_channel(ctx, field)
+			case "source":
+				return ec.fieldContext_InteractionSession_source(ctx, field)
+			case "sourceOfTruth":
+				return ec.fieldContext_InteractionSession_sourceOfTruth(ctx, field)
+			case "appSource":
+				return ec.fieldContext_InteractionSession_appSource(ctx, field)
+			case "events":
+				return ec.fieldContext_InteractionSession_events(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type InteractionSession", field.Name)
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _InteractionEvent_source(ctx context.Context, field graphql.CollectedField, obj *model.InteractionEvent) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_InteractionEvent_source(ctx, field)
 	if err != nil {
@@ -13953,6 +14031,8 @@ func (ec *executionContext) fieldContext_InteractionSession_events(ctx context.C
 				return ec.fieldContext_InteractionEvent_contentType(ctx, field)
 			case "channel":
 				return ec.fieldContext_InteractionEvent_channel(ctx, field)
+			case "interactionSession":
+				return ec.fieldContext_InteractionEvent_interactionSession(ctx, field)
 			case "source":
 				return ec.fieldContext_InteractionEvent_source(ctx, field)
 			case "sourceOfTruth":
@@ -32207,14 +32287,14 @@ func (ec *executionContext) _InteractionEvent(ctx context.Context, sel ast.Selec
 			out.Values[i] = ec._InteractionEvent_id(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "createdAt":
 
 			out.Values[i] = ec._InteractionEvent_createdAt(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "eventIdentifier":
 
@@ -32232,26 +32312,43 @@ func (ec *executionContext) _InteractionEvent(ctx context.Context, sel ast.Selec
 
 			out.Values[i] = ec._InteractionEvent_channel(ctx, field, obj)
 
+		case "interactionSession":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._InteractionEvent_interactionSession(ctx, field, obj)
+				return res
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
 		case "source":
 
 			out.Values[i] = ec._InteractionEvent_source(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "sourceOfTruth":
 
 			out.Values[i] = ec._InteractionEvent_sourceOfTruth(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "appSource":
 
 			out.Values[i] = ec._InteractionEvent_appSource(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
@@ -37820,6 +37917,13 @@ func (ec *executionContext) marshalOInt642ᚖint64(ctx context.Context, sel ast.
 	}
 	res := graphql.MarshalInt64(*v)
 	return res
+}
+
+func (ec *executionContext) marshalOInteractionSession2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐInteractionSession(ctx context.Context, sel ast.SelectionSet, v *model.InteractionSession) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._InteractionSession(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalONote2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐNote(ctx context.Context, sel ast.SelectionSet, v []*model.Note) graphql.Marshaler {

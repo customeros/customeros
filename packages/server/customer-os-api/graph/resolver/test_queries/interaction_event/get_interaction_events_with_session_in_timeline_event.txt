@@ -1,0 +1,30 @@
+query GetContactById($contactId: ID!, $from: Time!, $size: Int!){
+  contact(id: $contactId) {
+    id
+    timelineEvents(from:$from, size:$size) {
+            __typename
+            ... on InteractionEvent {
+                id
+                createdAt
+                content
+                contentType
+                channel
+                source
+                sourceOfTruth
+                appSource
+                interactionSession {
+                  id
+                  startedAt
+                  endedAt
+                  name
+                  type
+                  channel
+                  status
+                  source
+                  sourceOfTruth
+                  appSource
+                }
+            }
+          }
+  }
+}

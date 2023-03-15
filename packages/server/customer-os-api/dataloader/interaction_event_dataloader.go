@@ -10,8 +10,8 @@ import (
 
 const interactionEventContextTimeout = 10 * time.Second
 
-func (i *Loaders) GetInteractionsEventsForInteractionsSession(ctx context.Context, ticketId string) (*entity.InteractionEventEntities, error) {
-	thunk := i.InteractionEventsForInteractionSession.Load(ctx, dataloader.StringKey(ticketId))
+func (i *Loaders) GetInteractionEventsForInteractionSession(ctx context.Context, interactionSessionId string) (*entity.InteractionEventEntities, error) {
+	thunk := i.InteractionEventsForInteractionSession.Load(ctx, dataloader.StringKey(interactionSessionId))
 	result, err := thunk()
 	if err != nil {
 		return nil, err
@@ -20,7 +20,7 @@ func (i *Loaders) GetInteractionsEventsForInteractionsSession(ctx context.Contex
 	return &resultObj, nil
 }
 
-func (b *interactionEventBatcher) getInteractionsEventsForInteractionsSessions(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
+func (b *interactionEventBatcher) getInteractionEventsForInteractionSessions(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
 	ids, keyOrder := sortKeys(keys)
 
 	ctx, cancel := context.WithTimeout(ctx, interactionEventContextTimeout)
@@ -30,7 +30,7 @@ func (b *interactionEventBatcher) getInteractionsEventsForInteractionsSessions(c
 	if err != nil {
 		// check if context deadline exceeded error occurred
 		if ctx.Err() == context.DeadlineExceeded {
-			return []*dataloader.Result{{Data: nil, Error: errors.New("deadline exceeded to get notes for tickets")}}
+			return []*dataloader.Result{{Data: nil, Error: errors.New("deadline exceeded to get interaction events for interaction sessions")}}
 		}
 		return []*dataloader.Result{{Data: nil, Error: err}}
 	}
@@ -46,14 +46,14 @@ func (b *interactionEventBatcher) getInteractionsEventsForInteractionsSessions(c
 
 	// construct an output array of dataloader results
 	results := make([]*dataloader.Result, len(keys))
-	for contactId, record := range interactionEventEntitiesByInteractionSessionId {
-		if ix, ok := keyOrder[contactId]; ok {
+	for interactionSessionId, record := range interactionEventEntitiesByInteractionSessionId {
+		if ix, ok := keyOrder[interactionSessionId]; ok {
 			results[ix] = &dataloader.Result{Data: record, Error: nil}
-			delete(keyOrder, contactId)
+			delete(keyOrder, interactionSessionId)
 		}
 	}
 	for _, ix := range keyOrder {
-		results[ix] = &dataloader.Result{Data: entity.NoteEntities{}, Error: nil}
+		results[ix] = &dataloader.Result{Data: entity.InteractionEventEntities{}, Error: nil}
 	}
 
 	return results

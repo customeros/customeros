@@ -16,13 +16,27 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 )
 
+// InteractionSession is the resolver for the interactionSession field.
+func (r *interactionEventResolver) InteractionSession(ctx context.Context, obj *model.InteractionEvent) (*model.InteractionSession, error) {
+	defer func(start time.Time) {
+		utils.LogMethodExecution(start, utils.GetFunctionName())
+	}(time.Now())
+
+	interactionSessionEntityNillable, err := dataloader.For(ctx).GetInteractionSessionForInteractionEvent(ctx, obj.ID)
+	if err != nil {
+		graphql.AddErrorf(ctx, "Failed to get interaction session for interaction event %s", obj.ID)
+		return nil, err
+	}
+	return mapper.MapEntityToInteractionSession(interactionSessionEntityNillable), nil
+}
+
 // Events is the resolver for the events field.
 func (r *interactionSessionResolver) Events(ctx context.Context, obj *model.InteractionSession) ([]*model.InteractionEvent, error) {
 	defer func(start time.Time) {
 		utils.LogMethodExecution(start, utils.GetFunctionName())
 	}(time.Now())
 
-	interactionEventEntities, err := dataloader.For(ctx).GetInteractionsEventsForInteractionsSession(ctx, obj.ID)
+	interactionEventEntities, err := dataloader.For(ctx).GetInteractionEventsForInteractionSession(ctx, obj.ID)
 	if err != nil {
 		graphql.AddErrorf(ctx, "Failed to get interaction events for interaction session %s", obj.ID)
 		return nil, err
@@ -30,9 +44,15 @@ func (r *interactionSessionResolver) Events(ctx context.Context, obj *model.Inte
 	return mapper.MapEntitiesToInteractionEvents(interactionEventEntities), nil
 }
 
+// InteractionEvent returns generated.InteractionEventResolver implementation.
+func (r *Resolver) InteractionEvent() generated.InteractionEventResolver {
+	return &interactionEventResolver{r}
+}
+
 // InteractionSession returns generated.InteractionSessionResolver implementation.
 func (r *Resolver) InteractionSession() generated.InteractionSessionResolver {
 	return &interactionSessionResolver{r}
 }
 
+type interactionEventResolver struct{ *Resolver }
 type interactionSessionResolver struct{ *Resolver }

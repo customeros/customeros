@@ -2,12 +2,16 @@ package service
 
 import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	"golang.org/x/net/context"
 )
 
 type InteractionSessionService interface {
+	GetInteractionEventsForInteractionSessions(ctx context.Context, ids []string) (*entity.InteractionSessionEntities, error)
+
 	mapDbNodeToInteractionSessionEntity(node dbtype.Node) *entity.InteractionSessionEntity
 }
 
@@ -19,6 +23,20 @@ func NewInteractionSessionService(repositories *repository.Repositories) Interac
 	return &interactionSessionService{
 		repositories: repositories,
 	}
+}
+
+func (s *interactionSessionService) GetInteractionEventsForInteractionSessions(ctx context.Context, ids []string) (*entity.InteractionSessionEntities, error) {
+	interactionSessions, err := s.repositories.InteractionSessionRepository.GetAllForInteractionEvents(ctx, common.GetTenantFromContext(ctx), ids)
+	if err != nil {
+		return nil, err
+	}
+	interactionSessionEntities := entity.InteractionSessionEntities{}
+	for _, v := range interactionSessions {
+		interactionSessionEntity := s.mapDbNodeToInteractionSessionEntity(*v.Node)
+		interactionSessionEntity.DataloaderKey = v.LinkedNodeId
+		interactionSessionEntities = append(interactionSessionEntities, *interactionSessionEntity)
+	}
+	return &interactionSessionEntities, nil
 }
 
 func (s *interactionSessionService) mapDbNodeToInteractionSessionEntity(node dbtype.Node) *entity.InteractionSessionEntity {

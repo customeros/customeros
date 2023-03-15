@@ -21,6 +21,7 @@ type InteractionEvent implements Node {
     content: String
     contentType: String
     channel: String
+    interactionSession: InteractionSession @goField(forceResolver: true)
 
     source: DataSource!
     sourceOfTruth: DataSource!
