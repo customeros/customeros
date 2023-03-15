@@ -12,11 +12,10 @@ import (
 
 type InteractionEventRepository interface {
 	MergeInteractionSession(ctx context.Context, tenant string, date time.Time, message entity.EmailMessageData) (string, error)
-	MergeInteractionEvent(ctx context.Context, tenant string, date time.Time, message entity.EmailMessageData) (string, error)
-	MergeInteractionEventToSession(ctx context.Context, tenant string, interactionEventId, interactionSessionId string) error
+	MergeInteractionEvent(ctx context.Context, tenant, externalSystemId string, date time.Time, message entity.EmailMessageData) (string, error)
+	MergeInteractionEventToSession(ctx context.Context, tenant, interactionEventId, interactionSessionId string) error
 
 	InteractionEventSentByEmail(ctx context.Context, tenant, interactionEventId, emailId string) error
-	InteractionEventSentByUser(ctx context.Context, tenant, interactionEventId, userExternalId, externalSystem string) error
 
 	InteractionEventSentToEmails(ctx context.Context, tenant, interactionEventId, sentType string, emails []string) error
 }
@@ -41,7 +40,6 @@ func (r *interactionEventRepository) MergeInteractionSession(ctx context.Context
 		"  is.id=randomUUID(), " +
 		"  is.syncDate=$syncDate, " +
 		"  is.createdAt=$createdAt, " +
-		"  is.updatedAt=$updatedAt, " +
 		"  is.name=$name, " +
 		"  is.status=$status," +
 		"  is.type=$type," +
@@ -81,20 +79,20 @@ func (r *interactionEventRepository) MergeInteractionSession(ctx context.Context
 	return dbRecord.(*db.Record).Values[0].(string), nil
 }
 
-func (r *interactionEventRepository) MergeInteractionEvent(ctx context.Context, tenant string, syncDate time.Time, message entity.EmailMessageData) (string, error) {
+func (r *interactionEventRepository) MergeInteractionEvent(ctx context.Context, tenant, externalSystemId string, syncDate time.Time, message entity.EmailMessageData) (string, error) {
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
-	query := "MERGE (ie:InteractionEvent_%s {externalId:$externalId, source:$source, channel:$channel}) " +
+	query := "MATCH (:Tenant {name:$tenant})<-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]-(e:ExternalSystem {id:$externalSystemId}) " +
+		" MERGE (ie:InteractionEvent_%s {externalId:$externalId, source:$source, channel:$channel}) " +
+		" MERGE (ie)-[:IS_LINKED_WITH {externalId:$externalId, syncDate: $syncDate}]->(e)" +
 		" ON CREATE SET " +
 		"  ie:InteractionEvent, " +
 		"  ie:Action, " +
 		"  ie:Action_%s, " +
 		//"  ie:TimelineEvent, " +
 		//"  ie:TimelineEvent_%s, " +
-		"  ie.syncDate=$syncDate, " +
 		"  ie.createdAt=$createdAt, " +
-		"  ie.updatedAt=$updatedAt, " +
 		"  ie.id=randomUUID(), " +
 		"  ie.identifier=$identifier, " +
 		"  ie.content=$content, " +
@@ -106,16 +104,17 @@ func (r *interactionEventRepository) MergeInteractionEvent(ctx context.Context, 
 
 	dbRecord, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		params := map[string]interface{}{
-			"tenant":        tenant,
-			"identifier":    message.EmailMessageId,
-			"source":        message.ExternalSystem,
-			"sourceOfTruth": message.ExternalSystem,
-			"appSource":     message.ExternalSystem,
-			"externalId":    message.ExternalId,
-			"syncDate":      syncDate,
-			"createdAt":     message.CreatedAt,
-			"updatedAt":     time.Now().UTC(),
-			"channel":       "EMAIL",
+			"tenant":           tenant,
+			"externalSystemId": externalSystemId,
+			"identifier":       message.EmailMessageId,
+			"source":           message.ExternalSystem,
+			"sourceOfTruth":    message.ExternalSystem,
+			"appSource":        message.ExternalSystem,
+			"externalId":       message.ExternalId,
+			"syncDate":         syncDate,
+			"createdAt":        message.CreatedAt,
+			"updatedAt":        time.Now().UTC(),
+			"channel":          "EMAIL",
 		}
 
 		if message.Html != "" {
@@ -144,7 +143,7 @@ func (r *interactionEventRepository) MergeInteractionEvent(ctx context.Context, 
 	return dbRecord.(*db.Record).Values[0].(string), nil
 }
 
-func (r *interactionEventRepository) MergeInteractionEventToSession(ctx context.Context, tenant string, interactionEventId, interactionSessionId string) error {
+func (r *interactionEventRepository) MergeInteractionEventToSession(ctx context.Context, tenant, interactionEventId, interactionSessionId string) error {
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
@@ -176,26 +175,6 @@ func (r *interactionEventRepository) InteractionEventSentByEmail(ctx context.Con
 				"tenant":             tenant,
 				"interactionEventId": interactionEventId,
 				"emailId":            emailId,
-			})
-		return nil, err
-	})
-	return err
-}
-func (r *interactionEventRepository) InteractionEventSentByUser(ctx context.Context, tenant, interactionEventId, userExternalId, externalSystem string) error {
-	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
-	defer session.Close(ctx)
-
-	query := " MATCH (:Tenant {name:$tenant})<-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]-(e:ExternalSystem {id:$externalSystem}) " +
-		" MATCH (is:InteractionEvent_%s {id:$interactionEventId}) " +
-		" MATCH (u:User_%s)-[:IS_LINKED_WITH {externalId:$userExternalId}]->(e)-[:HAS]->(e:Email)" +
-		" MERGE (is)<-[:SENT_BY]-(e) "
-	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		_, err := tx.Run(ctx, fmt.Sprintf(query, tenant, tenant),
-			map[string]interface{}{
-				"tenant":             tenant,
-				"interactionEventId": interactionEventId,
-				"externalSystem":     externalSystem,
-				"userExternalId":     userExternalId,
 			})
 		return nil, err
 	})
