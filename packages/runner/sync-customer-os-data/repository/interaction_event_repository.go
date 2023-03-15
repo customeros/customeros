@@ -92,7 +92,6 @@ func (r *interactionEventRepository) MergeInteractionEvent(ctx context.Context, 
 		//"  ie:TimelineEvent_%s, " +
 		"  rel.syncDate=$syncDate, " +
 		"  ie.createdAt=$createdAt, " +
-		"  ie.createdAt=$createdAt, " +
 		"  ie.id=randomUUID(), " +
 		"  ie.identifier=$identifier, " +
 		"  ie.content=$content, " +
