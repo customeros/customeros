@@ -24,11 +24,13 @@ export const ContactHistory = ({ id }: { id: string }) => {
   return (
     <Timeline
       loading={loading}
-      onLoadMore={() => {
+      onLoadMore={(containerRef) => {
         const newFromDate = data[0]?.createdAt || data[0]?.startedAt;
         if (!data[0] || prevDate === newFromDate) {
           return;
         }
+        // todo remove me when switching to virtualized list
+        containerRef.current.scrollTop = 100;
         setPrevDate(newFromDate);
         fetchMore({
           variables: {

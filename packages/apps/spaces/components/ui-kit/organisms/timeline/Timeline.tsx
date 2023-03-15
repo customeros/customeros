@@ -25,7 +25,7 @@ interface Props {
   loggedActivities: Array<any>;
   notifyChange?: (id: any) => void;
   notifyContactNotesUpdate?: (id: any) => void;
-  onLoadMore: () => void;
+  onLoadMore: (ref: any) => void;
 }
 
 export const Timeline = ({
@@ -48,9 +48,7 @@ export const Timeline = ({
     isFetching: loading,
     callback: () => {
       if (loggedActivities.length > 10 && !notPaginated) {
-        // @ts-expect-error this code will be removed after total items count is provided and we switch to virtualized list
-        containerRef.current.scrollTop = 100;
-        onLoadMore();
+        onLoadMore(containerRef);
       }
     },
   });
