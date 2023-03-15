@@ -59,7 +59,6 @@ func (r *interactionEventRepository) MergeInteractionSession(ctx context.Context
 				"name":          message.Subject,
 				"syncDate":      syncDate,
 				"createdAt":     message.CreatedAt,
-				"updatedAt":     message.CreatedAt,
 				"status":        "ACTIVE",
 				"type":          "THREAD",
 				"channel":       "EMAIL",
@@ -113,7 +112,6 @@ func (r *interactionEventRepository) MergeInteractionEvent(ctx context.Context, 
 			"externalId":       message.ExternalId,
 			"syncDate":         syncDate,
 			"createdAt":        message.CreatedAt,
-			"updatedAt":        time.Now().UTC(),
 			"channel":          "EMAIL",
 		}
 
