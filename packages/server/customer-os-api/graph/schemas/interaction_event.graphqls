@@ -1,5 +1,3 @@
-union InteractionParticipant = Contact | User
-
 type InteractionSession implements Node {
     id: ID!
     startedAt: Time!
@@ -19,18 +17,12 @@ type InteractionEvent implements Node {
     id: ID!
     createdAt: Time!
 
-    channel: String
+    eventIdentifier: String
     content: String
     contentType: String
+    channel: String
+
     source: DataSource!
     sourceOfTruth: DataSource!
     appSource: String!
-    #    sentBy: InteractionParticipant!
-    #    sentTo: [InteractionEventReceiver!]!
-
-}
-
-type InteractionEventReceiver {
-    participant: InteractionParticipant
-    nature: String
 }

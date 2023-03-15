@@ -20,10 +20,6 @@ type ExtensibleEntity interface {
 	GetTemplate() *EntityTemplate
 }
 
-type InteractionParticipant interface {
-	IsInteractionParticipant()
-}
-
 type Node interface {
 	IsNode()
 	GetID() string
@@ -112,8 +108,6 @@ func (this Contact) GetID() string                { return this.ID }
 func (this Contact) GetTemplate() *EntityTemplate { return this.Template }
 
 func (Contact) IsNode() {}
-
-func (Contact) IsInteractionParticipant() {}
 
 func (Contact) IsSearchBasicResult() {}
 
@@ -555,23 +549,21 @@ type FilterItem struct {
 }
 
 type InteractionEvent struct {
-	ID            string     `json:"id"`
-	CreatedAt     time.Time  `json:"createdAt"`
-	Channel       *string    `json:"channel"`
-	Content       *string    `json:"content"`
-	ContentType   *string    `json:"contentType"`
-	Source        DataSource `json:"source"`
-	SourceOfTruth DataSource `json:"sourceOfTruth"`
-	AppSource     string     `json:"appSource"`
+	ID              string     `json:"id"`
+	CreatedAt       time.Time  `json:"createdAt"`
+	EventIdentifier *string    `json:"eventIdentifier"`
+	Content         *string    `json:"content"`
+	ContentType     *string    `json:"contentType"`
+	Channel         *string    `json:"channel"`
+	Source          DataSource `json:"source"`
+	SourceOfTruth   DataSource `json:"sourceOfTruth"`
+	AppSource       string     `json:"appSource"`
 }
 
 func (InteractionEvent) IsNode()            {}
 func (this InteractionEvent) GetID() string { return this.ID }
 
-type InteractionEventReceiver struct {
-	Participant InteractionParticipant `json:"participant"`
-	Nature      *string                `json:"nature"`
-}
+func (InteractionEvent) IsTimelineEvent() {}
 
 type InteractionSession struct {
 	ID            string              `json:"id"`
@@ -994,8 +986,6 @@ type User struct {
 	Source        DataSource        `json:"source"`
 	Conversations *ConversationPage `json:"conversations"`
 }
-
-func (User) IsInteractionParticipant() {}
 
 // Describes the User of customerOS.  A user is the person who logs into the Openline platform.
 // **A `create` object.**
@@ -1584,6 +1574,7 @@ const (
 	TimelineEventTypeTicket             TimelineEventType = "TICKET"
 	TimelineEventTypeConversation       TimelineEventType = "CONVERSATION"
 	TimelineEventTypeNote               TimelineEventType = "NOTE"
+	TimelineEventTypeInteractionEvent   TimelineEventType = "INTERACTION_EVENT"
 )
 
 var AllTimelineEventType = []TimelineEventType{
@@ -1592,11 +1583,12 @@ var AllTimelineEventType = []TimelineEventType{
 	TimelineEventTypeTicket,
 	TimelineEventTypeConversation,
 	TimelineEventTypeNote,
+	TimelineEventTypeInteractionEvent,
 }
 
 func (e TimelineEventType) IsValid() bool {
 	switch e {
-	case TimelineEventTypePageView, TimelineEventTypeInteractionSession, TimelineEventTypeTicket, TimelineEventTypeConversation, TimelineEventTypeNote:
+	case TimelineEventTypePageView, TimelineEventTypeInteractionSession, TimelineEventTypeTicket, TimelineEventTypeConversation, TimelineEventTypeNote, TimelineEventTypeInteractionEvent:
 		return true
 	}
 	return false

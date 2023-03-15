@@ -24,6 +24,9 @@ func MapEntityToTimelineEvent(timelineEventEntity *entity.TimelineEvent) any {
 	case entity.NodeLabel_Note:
 		noteEntity := (*timelineEventEntity).(*entity.NoteEntity)
 		return MapEntityToNote(noteEntity)
+	case entity.NodeLabel_InteractionEvent:
+		interactionEventEntity := (*timelineEventEntity).(*entity.InteractionEventEntity)
+		return MapEntityToInteractionEvent(interactionEventEntity)
 	}
 	fmt.Errorf("timeline event of type %s not identified", reflect.TypeOf(timelineEventEntity))
 	return nil

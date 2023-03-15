@@ -260,9 +260,10 @@ func AddEmailTo(ctx context.Context, driver *neo4j.DriverWithContext, entityType
 
 	var emailId, _ = uuid.NewRandom()
 	query = query +
-		" MERGE (e:Email {email: $email})-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]->(t)" +
+		" MERGE (e:Email {rawEmail: $email})-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]->(t)" +
 		" ON CREATE SET " +
 		"	e.rawEmail=$email, " +
+		"	e.email=$email, " +
 		"	e.id=$emailId, " +
 		"	e:%s " +
 		" WITH e, entity MERGE (e)<-[rel:HAS]-(entity) " +
@@ -752,6 +753,47 @@ func LinkContactWithOrganization(ctx context.Context, driver *neo4j.DriverWithCo
 	ExecuteWriteQuery(ctx, driver, query, map[string]any{
 		"organizationId": organizationId,
 		"contactId":      contactId,
+	})
+}
+
+func CreateInteractionEvent(ctx context.Context, driver *neo4j.DriverWithContext, tenant, content, contentType, channel string, createdAt time.Time) string {
+	var interactionEventId, _ = uuid.NewRandom()
+
+	query := "MERGE (ie:InteractionEvent {id:$id})" +
+		" ON CREATE SET " +
+		"	ie.content=$content, " +
+		"	ie.createdAt=$createdAt, " +
+		"	ie.content=$content, " +
+		"	ie.channel=$channel, " +
+		"	ie.contentType=$contentType, " +
+		"	ie:InteractionEvent_%s, ie:Action, ie:Action_%s"
+	ExecuteWriteQuery(ctx, driver, fmt.Sprintf(query, tenant, tenant), map[string]any{
+		"id":          interactionEventId.String(),
+		"content":     content,
+		"contentType": contentType,
+		"channel":     channel,
+		"createdAt":   createdAt,
+	})
+	return interactionEventId.String()
+}
+
+func InteractionEventSentBy(ctx context.Context, driver *neo4j.DriverWithContext, interactionEventId, nodeId string) {
+	query := "MATCH (ie:InteractionEvent {id:$interactionEventId}), " +
+		"(n {id:$nodeId}) " +
+		" MERGE (ie)-[:SENT_BY]->(n) "
+	ExecuteWriteQuery(ctx, driver, query, map[string]any{
+		"interactionEventId": interactionEventId,
+		"nodeId":             nodeId,
+	})
+}
+
+func InteractionEventSentTo(ctx context.Context, driver *neo4j.DriverWithContext, interactionEventId, nodeId string) {
+	query := "MATCH (ie:InteractionEvent {id:$interactionEventId}), " +
+		"(n {id:$nodeId}) " +
+		" MERGE (ie)-[:SENT_TO]->(n) "
+	ExecuteWriteQuery(ctx, driver, query, map[string]any{
+		"interactionEventId": interactionEventId,
+		"nodeId":             nodeId,
 	})
 }
 

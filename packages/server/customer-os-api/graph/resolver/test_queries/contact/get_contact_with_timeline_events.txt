@@ -45,6 +45,14 @@ query GetContactById($contactId: ID!, $from: Time!, $size: Int!){
                 html
                 createdAt
             }
+            __typename
+            ... on InteractionEvent {
+                id
+                content
+                contentType
+                channel
+                createdAt
+            }
           }
   }
 }
