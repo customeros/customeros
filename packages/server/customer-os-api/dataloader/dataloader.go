@@ -16,6 +16,7 @@ type Loaders struct {
 	TagsForContact                         *dataloader.Loader
 	TagsForTicket                          *dataloader.Loader
 	EmailsForContact                       *dataloader.Loader
+	EmailsForOrganization                  *dataloader.Loader
 	LocationsForContact                    *dataloader.Loader
 	LocationsForOrganization               *dataloader.Loader
 	JobRolesForContact                     *dataloader.Loader
@@ -74,6 +75,7 @@ func NewDataLoader(services *service.Services) *Loaders {
 		TagsForContact:                         dataloader.NewBatchedLoader(tagBatcher.getTagsForContacts, dataloader.WithClearCacheOnBatch()),
 		TagsForTicket:                          dataloader.NewBatchedLoader(tagBatcher.getTagsForTickets, dataloader.WithClearCacheOnBatch()),
 		EmailsForContact:                       dataloader.NewBatchedLoader(emailBatcher.getEmailsForContacts, dataloader.WithClearCacheOnBatch()),
+		EmailsForOrganization:                  dataloader.NewBatchedLoader(emailBatcher.getEmailsForOrganizations, dataloader.WithClearCacheOnBatch()),
 		LocationsForContact:                    dataloader.NewBatchedLoader(locationBatcher.getLocationsForContacts, dataloader.WithClearCacheOnBatch()),
 		LocationsForOrganization:               dataloader.NewBatchedLoader(locationBatcher.getLocationsForOrganizations, dataloader.WithClearCacheOnBatch()),
 		JobRolesForContact:                     dataloader.NewBatchedLoader(jobRoleBatcher.getJobRolesForContacts, dataloader.WithClearCacheOnBatch()),

@@ -199,6 +199,20 @@ func (r *organizationResolver) Tags(ctx context.Context, obj *model.Organization
 	return mapper.MapEntitiesToTags(tagEntities), nil
 }
 
+// Emails is the resolver for the emails field.
+func (r *organizationResolver) Emails(ctx context.Context, obj *model.Organization) ([]*model.Email, error) {
+	defer func(start time.Time) {
+		utils.LogMethodExecution(start, utils.GetFunctionName())
+	}(time.Now())
+
+	emailEntities, err := dataloader.For(ctx).GetEmailsForOrganization(ctx, obj.ID)
+	if err != nil {
+		graphql.AddErrorf(ctx, "Failed to get emails for organization %s", obj.ID)
+		return nil, err
+	}
+	return mapper.MapEntitiesToEmails(emailEntities), nil
+}
+
 // TimelineEvents is the resolver for the timelineEvents field.
 func (r *organizationResolver) TimelineEvents(ctx context.Context, obj *model.Organization, from *time.Time, size int, timelineEventTypes []model.TimelineEventType) ([]model.TimelineEvent, error) {
 	defer func(start time.Time) {

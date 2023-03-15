@@ -717,6 +717,7 @@ type Organization struct {
 	JobRoles                 []*JobRole               `json:"jobRoles"`
 	Notes                    *NotePage                `json:"notes"`
 	Tags                     []*Tag                   `json:"tags"`
+	Emails                   []*Email                 `json:"emails"`
 	TimelineEvents           []TimelineEvent          `json:"timelineEvents"`
 	TimelineEventsTotalCount int64                    `json:"timelineEventsTotalCount"`
 	TicketSummaryByStatus    []*TicketSummaryByStatus `json:"ticketSummaryByStatus"`

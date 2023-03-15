@@ -30,7 +30,7 @@ func (i *Loaders) GetTagsForContact(ctx context.Context, contactId string) (*ent
 	return &resultObj, nil
 }
 
-func (i *Loaders) GetTagsForTickets(ctx context.Context, ticketId string) (*entity.TagEntities, error) {
+func (i *Loaders) GetTagsForTicket(ctx context.Context, ticketId string) (*entity.TagEntities, error) {
 	thunk := i.TagsForTicket.Load(ctx, dataloader.StringKey(ticketId))
 	result, err := thunk()
 	if err != nil {

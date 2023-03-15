@@ -22,7 +22,7 @@ func (r *ticketResolver) Tags(ctx context.Context, obj *model.Ticket) ([]*model.
 		utils.LogMethodExecution(start, utils.GetFunctionName())
 	}(time.Now())
 
-	tagEntities, err := dataloader.For(ctx).GetTagsForTickets(ctx, obj.ID)
+	tagEntities, err := dataloader.For(ctx).GetTagsForTicket(ctx, obj.ID)
 	if err != nil {
 		graphql.AddErrorf(ctx, "Failed to get tags for contact %s", obj.ID)
 		return nil, err
