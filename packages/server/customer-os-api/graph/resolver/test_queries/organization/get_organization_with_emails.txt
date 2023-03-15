@@ -1,0 +1,13 @@
+query GetOrganizationById($organizationId: ID!){
+  organization(id: $organizationId) {
+    id
+    emails {
+        id
+        email
+        rawEmail
+        label
+        primary
+        source
+    }
+  }
+}

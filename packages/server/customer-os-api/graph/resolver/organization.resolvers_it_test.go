@@ -620,3 +620,54 @@ func TestQueryResolver_Organization_WithTimelineEventsTotalCount(t *testing.T) {
 	require.Equal(t, organizationId, organization.(map[string]interface{})["id"])
 	require.Equal(t, float64(6), organization.(map[string]interface{})["timelineEventsTotalCount"].(float64))
 }
+
+func TestQueryResolver_Organization_WithEmails(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx)(t)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+
+	organizationId := neo4jt.CreateOrganization(ctx, driver, tenantName, "test org")
+	emailId1 := neo4jt.AddEmailTo(ctx, driver, entity.ORGANIZATION, tenantName, organizationId, "email1", true, "MAIN")
+	emailId2 := neo4jt.AddEmailTo(ctx, driver, entity.ORGANIZATION, tenantName, organizationId, "email2", false, "WORK")
+
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Organization"))
+	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "Email"))
+	require.Equal(t, 2, neo4jt.GetCountOfRelationships(ctx, driver, "HAS"))
+
+	rawResponse, err := c.RawPost(getQuery("organization/get_organization_with_emails"),
+		client.Var("organizationId", organizationId))
+	assertRawResponseSuccess(t, rawResponse, err)
+
+	var organizationStruct struct {
+		Organization model.Organization
+	}
+
+	err = decode.Decode(rawResponse.Data.(map[string]any), &organizationStruct)
+	require.Nil(t, err)
+	organization := organizationStruct.Organization
+
+	require.Equal(t, organizationId, organization.ID)
+	emails := organization.Emails
+	require.Equal(t, 2, len(emails))
+	var emailA, emailB *model.Email
+	if emailId1 == emails[0].ID {
+		emailA = emails[0]
+		emailB = emails[1]
+	} else {
+		emailA = emails[1]
+		emailB = emails[0]
+	}
+	require.Equal(t, emailId1, emailA.ID)
+	require.NotNil(t, emailA.CreatedAt)
+	require.Equal(t, true, emailA.Primary)
+	require.Equal(t, "email1", *emailA.RawEmail)
+	require.Equal(t, "email1", *emailA.Email)
+	require.Equal(t, model.EmailLabelMain, *emailA.Label)
+
+	require.Equal(t, emailId2, emailB.ID)
+	require.NotNil(t, emailB.CreatedAt)
+	require.Equal(t, false, emailB.Primary)
+	require.Equal(t, "email2", *emailB.RawEmail)
+	require.Equal(t, "email2", *emailB.Email)
+	require.Equal(t, model.EmailLabelWork, *emailB.Label)
+}
