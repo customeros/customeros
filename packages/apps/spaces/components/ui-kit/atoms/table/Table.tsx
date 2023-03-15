@@ -35,7 +35,11 @@ export const Table = <T,>({
       return;
     }
 
-    if (lastItem.index >= data?.length - 1 && !isFetching) {
+    if (
+      lastItem.index >= data?.length - 1 &&
+      data.length < totalItems &&
+      !isFetching
+    ) {
       onFetchNextPage();
     }
   }, [
