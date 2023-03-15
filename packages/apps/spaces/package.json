@@ -59,7 +59,7 @@
     "sanitize-html": "^2.9.0",
     "sass": "^1.58.0",
     "storybook": "^6.5.16",
-    "webpack": "^5.75.0"
+    "webpack": "^5.76.0"
   },
   "devDependencies": {
     "@graphql-codegen/cli": "^3.0.0",
