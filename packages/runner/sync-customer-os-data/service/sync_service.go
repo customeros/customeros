@@ -118,7 +118,7 @@ func (s *syncService) syncEmailMessages(ctx context.Context, dataService common.
 			}
 
 			if !failedSync {
-				interactionEventId, err = s.repositories.InteractionEventRepository.MergeInteractionEvent(ctx, tenant, syncDate, message)
+				interactionEventId, err = s.repositories.InteractionEventRepository.MergeInteractionEvent(ctx, tenant, message.ExternalSystem, syncDate, message)
 				if err != nil {
 					failedSync = true
 					logrus.Errorf("failed merge interaction event with external reference %v for tenant %v :%v", message.ExternalId, tenant, err)
@@ -135,23 +135,39 @@ func (s *syncService) syncEmailMessages(ctx context.Context, dataService common.
 
 			//from
 			if message.Direction == entity.OUTBOUND && !failedSync {
-				err := s.repositories.InteractionEventRepository.InteractionEventSentByUser(ctx, tenant, interactionEventId, message.UserExternalId, message.ExternalSystem)
-				if err != nil {
-					failedSync = true
-					logrus.Errorf("failed set sender for interaction event %v in tenant %v :%v", interactionEventId, tenant, err)
-				}
-			} else if message.Direction == entity.INBOUND && !failedSync {
-				//1. find email ( contact/organization/user )
-				//2. if not found, create contact with email
-
-				emailId, err := s.repositories.ContactRepository.GetEmailId(ctx, tenant, message.FromEmail)
+				emailId, err := s.repositories.EmailRepository.GetEmailId(ctx, tenant, message.FromEmail)
 				if err != nil {
 					failedSync = true
 					logrus.Errorf("failed retrieving email %v for tenant %v :%v", message.FromEmail, tenant, err)
 				}
 
-				if emailId == "" {
-					emailId, err = s.repositories.ContactRepository.GetEmailIdOrCreateContactByEmail(ctx, tenant, message.FromEmail, message.FromFirstName, message.FromLastName, message.ExternalSystem)
+				if emailId == "" && !failedSync {
+					emailId, err = s.repositories.EmailRepository.GetEmailIdOrCreateUserByEmail(ctx, tenant, message.FromEmail, message.FromFirstName, message.FromLastName, message.ExternalSystem)
+					if err != nil {
+						failedSync = true
+						logrus.Errorf("failed creating contact with email %v for tenant %v :%v", message.FromEmail, tenant, err)
+					}
+				}
+
+				if !failedSync {
+					err := s.repositories.InteractionEventRepository.InteractionEventSentByEmail(ctx, tenant, interactionEventId, emailId)
+					if err != nil {
+						failedSync = true
+						logrus.Errorf("failed set sender for interaction event %v in tenant %v :%v", interactionEventId, tenant, err)
+					}
+				}
+			} else if message.Direction == entity.INBOUND && !failedSync {
+				//1. find email ( contact/organization/user )
+				//2. if not found, create contact with email
+
+				emailId, err := s.repositories.EmailRepository.GetEmailId(ctx, tenant, message.FromEmail)
+				if err != nil {
+					failedSync = true
+					logrus.Errorf("failed retrieving email %v for tenant %v :%v", message.FromEmail, tenant, err)
+				}
+
+				if emailId == "" && !failedSync {
+					emailId, err = s.repositories.EmailRepository.GetEmailIdOrCreateContactByEmail(ctx, tenant, message.FromEmail, message.FromFirstName, message.FromLastName, message.ExternalSystem)
 					if err != nil {
 						failedSync = true
 						logrus.Errorf("failed creating contact with email %v for tenant %v :%v", message.FromEmail, tenant, err)
