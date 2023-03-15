@@ -7,6 +7,9 @@ import (
 )
 
 func MapEntityToInteractionSession(entity *entity.InteractionSessionEntity) *model.InteractionSession {
+	if entity == nil {
+		return nil
+	}
 	return &model.InteractionSession{
 		ID:            entity.Id,
 		StartedAt:     entity.StartedAt,
@@ -19,4 +22,12 @@ func MapEntityToInteractionSession(entity *entity.InteractionSessionEntity) *mod
 		Source:        MapDataSourceToModel(entity.Source),
 		SourceOfTruth: MapDataSourceToModel(entity.SourceOfTruth),
 	}
+}
+
+func MapEntitiesToInteractionSessions(entities *entity.InteractionSessionEntities) []*model.InteractionSession {
+	var interactionSessions []*model.InteractionSession
+	for _, interactionSessionEntity := range *entities {
+		interactionSessions = append(interactionSessions, MapEntityToInteractionSession(&interactionSessionEntity))
+	}
+	return interactionSessions
 }

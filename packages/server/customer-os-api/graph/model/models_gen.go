@@ -549,15 +549,16 @@ type FilterItem struct {
 }
 
 type InteractionEvent struct {
-	ID              string     `json:"id"`
-	CreatedAt       time.Time  `json:"createdAt"`
-	EventIdentifier *string    `json:"eventIdentifier"`
-	Content         *string    `json:"content"`
-	ContentType     *string    `json:"contentType"`
-	Channel         *string    `json:"channel"`
-	Source          DataSource `json:"source"`
-	SourceOfTruth   DataSource `json:"sourceOfTruth"`
-	AppSource       string     `json:"appSource"`
+	ID                 string              `json:"id"`
+	CreatedAt          time.Time           `json:"createdAt"`
+	EventIdentifier    *string             `json:"eventIdentifier"`
+	Content            *string             `json:"content"`
+	ContentType        *string             `json:"contentType"`
+	Channel            *string             `json:"channel"`
+	InteractionSession *InteractionSession `json:"interactionSession"`
+	Source             DataSource          `json:"source"`
+	SourceOfTruth      DataSource          `json:"sourceOfTruth"`
+	AppSource          string              `json:"appSource"`
 }
 
 func (InteractionEvent) IsNode()            {}

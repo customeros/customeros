@@ -23,6 +23,7 @@ type Loaders struct {
 	DomainsForOrganization                 *dataloader.Loader
 	NotesForTicket                         *dataloader.Loader
 	InteractionEventsForInteractionSession *dataloader.Loader
+	InteractionSessionForInteractionEvent  *dataloader.Loader
 }
 
 type tagBatcher struct {
@@ -45,6 +46,9 @@ type noteBatcher struct {
 }
 type interactionEventBatcher struct {
 	interactionEventService service.InteractionEventService
+}
+type interactionSessionBatcher struct {
+	interactionSessionService service.InteractionSessionService
 }
 
 // NewDataLoader returns the instantiated Loaders struct for use in a request
@@ -70,6 +74,9 @@ func NewDataLoader(services *service.Services) *Loaders {
 	interactionEventBatcher := &interactionEventBatcher{
 		interactionEventService: services.InteractionEventService,
 	}
+	interactionSessionBatcher := &interactionSessionBatcher{
+		interactionSessionService: services.InteractionSessionService,
+	}
 	return &Loaders{
 		TagsForOrganization:                    dataloader.NewBatchedLoader(tagBatcher.getTagsForOrganizations, dataloader.WithClearCacheOnBatch()),
 		TagsForContact:                         dataloader.NewBatchedLoader(tagBatcher.getTagsForContacts, dataloader.WithClearCacheOnBatch()),
@@ -81,7 +88,8 @@ func NewDataLoader(services *service.Services) *Loaders {
 		JobRolesForContact:                     dataloader.NewBatchedLoader(jobRoleBatcher.getJobRolesForContacts, dataloader.WithClearCacheOnBatch()),
 		DomainsForOrganization:                 dataloader.NewBatchedLoader(domainBatcher.getDomainsForOrganizations, dataloader.WithClearCacheOnBatch()),
 		NotesForTicket:                         dataloader.NewBatchedLoader(noteBatcher.getNotesForTickets, dataloader.WithClearCacheOnBatch()),
-		InteractionEventsForInteractionSession: dataloader.NewBatchedLoader(interactionEventBatcher.getInteractionsEventsForInteractionsSessions, dataloader.WithClearCacheOnBatch()),
+		InteractionEventsForInteractionSession: dataloader.NewBatchedLoader(interactionEventBatcher.getInteractionEventsForInteractionSessions, dataloader.WithClearCacheOnBatch()),
+		InteractionSessionForInteractionEvent:  dataloader.NewBatchedLoader(interactionSessionBatcher.getInteractionSessionsForInteractionEvents, dataloader.WithClearCacheOnBatch()),
 	}
 }
 
