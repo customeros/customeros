@@ -10,6 +10,8 @@ import {
 import { toast } from 'react-toastify';
 import client from '../../apollo-client';
 import { ApolloCache } from 'apollo-cache';
+import { useRecoilValue } from 'recoil';
+import { userData } from '../../state';
 
 interface Props {
   organizationId: string;
@@ -23,20 +25,25 @@ interface Result {
     CreateOrganizationNoteMutation['note_CreateForOrganization'] | null
   >;
 }
+
+const NOW_DATE = new Date().toISOString();
 export const useCreateOrganizationNote = ({
   organizationId,
 }: Props): Result => {
   const [createOrganizationNoteMutation, { loading, error, data }] =
     useCreateOrganizationNoteMutation();
+  const { id: userId } = useRecoilValue(userData);
 
   const handleUpdateCacheAfterAddingNote = (
     cache: ApolloCache<any>,
     { data: { note_CreateForOrganization } }: any,
   ) => {
-    const data: GetOrganizationTimelineQuery | null = cache.readQuery({
+    const data: GetOrganizationTimelineQuery | null = client.readQuery({
       query: GetOrganizationTimelineDocument,
       variables: {
-        id: organizationId,
+        organizationId,
+        from: NOW_DATE,
+        size: 10,
       },
     });
 
@@ -45,27 +52,33 @@ export const useCreateOrganizationNote = ({
         query: GetOrganizationTimelineDocument,
         data: {
           organization: {
-            timelineEvents: {
-              content: [note_CreateForOrganization],
-            },
+            id: organizationId,
+            timelineEvents: [note_CreateForOrganization],
           },
+          variables: { organizationId, from: NOW_DATE, size: 10 },
         },
-        variables: { id: organizationId },
       });
       return;
     }
 
     const newData = {
-      organization: [
-        ...(data?.organization?.timelineEvents ?? []),
-        note_CreateForOrganization,
-      ],
+      organization: {
+        ...data.organization,
+        timelineEvents: [
+          ...(data?.organization?.timelineEvents ?? []),
+          note_CreateForOrganization,
+        ],
+      },
     };
 
     client.writeQuery({
       query: GetOrganizationTimelineDocument,
       data: newData,
-      variables: { id: organizationId },
+      variables: {
+        organizationId,
+        from: NOW_DATE,
+        size: 10,
+      },
     });
   };
   const handleCreateOrganizationNote: Result['onCreateOrganizationNote'] =
@@ -82,6 +95,11 @@ export const useCreateOrganizationNote = ({
               appSource: note.appSource || DataSource.Openline,
               html: note.html,
               createdAt: new Date().toISOString(),
+              createdBy: {
+                id: userId,
+                firstName: '',
+                lastName: '',
+              },
               updatedAt: '',
               source: DataSource.Openline,
               sourceOfTruth: DataSource.Openline,

@@ -2115,6 +2115,18 @@ export type OrganizationDetailsFragment = { __typename?: 'Organization', id: str
 
 export type OrganizationContactsFragment = { __typename?: 'Organization', contacts: { __typename?: 'ContactsPage', content: Array<{ __typename?: 'Contact', id: string, name?: string | null, firstName?: string | null, lastName?: string | null, jobRoles: Array<{ __typename?: 'JobRole', jobTitle?: string | null, primary: boolean, id: string }>, emails: Array<{ __typename?: 'Email', label?: EmailLabel | null, id: string, primary: boolean, email?: string | null }>, phoneNumbers: Array<{ __typename?: 'PhoneNumber', label?: PhoneNumberLabel | null, id: string, primary: boolean, e164?: string | null, rawPhoneNumber?: string | null }> }> } };
 
+type TimelineEvent_Conversation_Fragment = { __typename?: 'Conversation', id: string, startedAt: any, subject?: string | null, channel?: string | null, updatedAt: any, messageCount: any, source: DataSource, appSource?: string | null, initiatorFirstName?: string | null, initiatorLastName?: string | null, initiatorUsername?: string | null, initiatorType?: string | null, threadId?: string | null, contacts?: Array<{ __typename?: 'Contact', id: string, lastName?: string | null, firstName?: string | null }> | null, users?: Array<{ __typename?: 'User', lastName: string, firstName: string, emails?: Array<{ __typename?: 'Email', email?: string | null }> | null }> | null };
+
+type TimelineEvent_InteractionSession_Fragment = { __typename?: 'InteractionSession' };
+
+type TimelineEvent_Note_Fragment = { __typename?: 'Note', id: string, html: string, createdAt: any };
+
+type TimelineEvent_PageView_Fragment = { __typename?: 'PageView', id: string, application: string, startedAt: any, endedAt: any, engagedTime: any, pageUrl: string, pageTitle: string, orderInSession: any, sessionId: string };
+
+type TimelineEvent_Ticket_Fragment = { __typename?: 'Ticket', id: string, createdAt: any, updatedAt: any, subject?: string | null, status?: string | null, priority?: string | null, description?: string | null, notes?: Array<{ __typename?: 'Note', id: string, html: string } | null> | null, tags?: Array<{ __typename?: 'Tag', id: string, name: string } | null> | null };
+
+export type TimelineEventFragment = TimelineEvent_Conversation_Fragment | TimelineEvent_InteractionSession_Fragment | TimelineEvent_Note_Fragment | TimelineEvent_PageView_Fragment | TimelineEvent_Ticket_Fragment;
+
 export type CreateOrganizationMutationVariables = Exact<{
   input: OrganizationInput;
 }>;
@@ -2392,6 +2404,70 @@ export const OrganizationContactsFragmentDoc = gql`
 }
     ${JobRoleFragmentDoc}
 ${ContactCommunicationChannelsDetailsFragmentDoc}`;
+export const TimelineEventFragmentDoc = gql`
+    fragment TimelineEvent on TimelineEvent {
+  ... on PageView {
+    id
+    application
+    startedAt
+    endedAt
+    engagedTime
+    pageUrl
+    pageTitle
+    orderInSession
+    sessionId
+  }
+  ... on Ticket {
+    id
+    createdAt
+    updatedAt
+    subject
+    status
+    priority
+    description
+    notes {
+      id
+      html
+    }
+    tags {
+      id
+      name
+    }
+  }
+  ... on Conversation {
+    id
+    startedAt
+    subject
+    channel
+    updatedAt
+    messageCount
+    contacts {
+      id
+      lastName
+      firstName
+    }
+    users {
+      lastName
+      firstName
+      emails {
+        email
+      }
+    }
+    source
+    appSource
+    initiatorFirstName
+    initiatorLastName
+    initiatorUsername
+    initiatorType
+    threadId
+  }
+  ... on Note {
+    id
+    html
+    createdAt
+  }
+}
+    `;
 export const CreateTagDocument = gql`
     mutation CreateTag($input: TagInput!) {
   tag_Create(input: $input) {

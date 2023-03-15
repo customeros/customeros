@@ -19,14 +19,14 @@ interface Result {
   variables: any;
   networkStatus?: NetworkStatus;
 }
-
-const x = new Date().toISOString();
+// TODO move to date class util
+export const DATE_NOW = new Date().toISOString();
 export const useOrganizationTimeline = ({ organizationId }: Props): Result => {
   const { data, loading, error, refetch, variables, fetchMore, networkStatus } =
     useGetOrganizationTimelineQuery({
       variables: {
         organizationId,
-        from: x,
+        from: DATE_NOW,
         size: 10,
       },
       fetchPolicy: 'cache-first',
