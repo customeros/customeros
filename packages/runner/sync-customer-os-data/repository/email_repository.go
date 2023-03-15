@@ -58,7 +58,7 @@ func (r *emailRepository) GetEmailIdOrCreateContactByEmail(ctx context.Context, 
 
 	records, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (interface{}, error) {
 		queryResult, err := tx.Run(ctx, fmt.Sprintf(
-			" MATCH (t:Tenant {name:$tenant})<-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]-(es:ExternalSystem {id:$externalSystemId}) "+
+			" MATCH (t:Tenant {name:$tenant}) "+
 				" MERGE (e:Email {rawEmail: $email})-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]->(t) "+
 				" ON CREATE SET "+
 				"				e.id=randomUUID(), "+
@@ -70,7 +70,6 @@ func (r *emailRepository) GetEmailIdOrCreateContactByEmail(ctx context.Context, 
 				"				e:%s "+
 				" WITH DISTINCT t, e "+
 				" MERGE (e)<-[rel:HAS]-(c:Contact)-[:CONTACT_BELONGS_TO_TENANT]->(t) "+
-				" MERGE (c)-[:IS_LINKED_WITH {syncDate: $now}]->(es)"+
 				" ON CREATE SET rel.primary=true, "+
 				"				c.id=randomUUID(), "+
 				"				c.firstName=$firstName, "+
@@ -83,15 +82,14 @@ func (r *emailRepository) GetEmailIdOrCreateContactByEmail(ctx context.Context, 
 				"               c:%s"+
 				" RETURN e.id limit 1", "Email_"+tenant, "Contact_"+tenant),
 			map[string]interface{}{
-				"tenant":           tenant,
-				"externalSystemId": externalSystemId,
-				"email":            email,
-				"firstName":        firstName,
-				"lastName":         lastName,
-				"source":           externalSystemId,
-				"sourceOfTruth":    externalSystemId,
-				"appSource":        externalSystemId,
-				"now":              time.Now().UTC(),
+				"tenant":        tenant,
+				"email":         email,
+				"firstName":     firstName,
+				"lastName":      lastName,
+				"source":        externalSystemId,
+				"sourceOfTruth": externalSystemId,
+				"appSource":     externalSystemId,
+				"now":           time.Now().UTC(),
 			})
 		if err != nil {
 			return nil, err
@@ -113,7 +111,7 @@ func (r *emailRepository) GetEmailIdOrCreateUserByEmail(ctx context.Context, ten
 
 	records, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (interface{}, error) {
 		queryResult, err := tx.Run(ctx, fmt.Sprintf(
-			" MATCH (t:Tenant {name:$tenant})<-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]-(es:ExternalSystem {id:$externalSystemId}) "+
+			" MATCH (t:Tenant {name:$tenant}) "+
 				" MERGE (e:Email {rawEmail: $email})-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]->(t) "+
 				" ON CREATE SET "+
 				"				e.id=randomUUID(), "+
@@ -125,7 +123,6 @@ func (r *emailRepository) GetEmailIdOrCreateUserByEmail(ctx context.Context, ten
 				"				e:%s "+
 				" WITH DISTINCT t, e "+
 				" MERGE (e)<-[rel:HAS]-(u:User)-[:USER_BELONGS_TO_TENANT]->(t) "+
-				" MERGE (u)-[:IS_LINKED_WITH {syncDate: $now}]->(es)"+
 				" ON CREATE SET rel.primary=true, "+
 				"				u.id=randomUUID(), "+
 				"				u.firstName=$firstName, "+
@@ -138,15 +135,14 @@ func (r *emailRepository) GetEmailIdOrCreateUserByEmail(ctx context.Context, ten
 				"               u:%s"+
 				" RETURN e.id limit 1", "Email_"+tenant, "User_"+tenant),
 			map[string]interface{}{
-				"tenant":           tenant,
-				"externalSystemId": externalSystemId,
-				"email":            email,
-				"firstName":        firstName,
-				"lastName":         lastName,
-				"source":           externalSystemId,
-				"sourceOfTruth":    externalSystemId,
-				"appSource":        externalSystemId,
-				"now":              time.Now().UTC(),
+				"tenant":        tenant,
+				"email":         email,
+				"firstName":     firstName,
+				"lastName":      lastName,
+				"source":        externalSystemId,
+				"sourceOfTruth": externalSystemId,
+				"appSource":     externalSystemId,
+				"now":           time.Now().UTC(),
 			})
 		if err != nil {
 			return nil, err
