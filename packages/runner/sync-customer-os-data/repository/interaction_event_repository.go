@@ -83,8 +83,7 @@ func (r *interactionEventRepository) MergeInteractionEvent(ctx context.Context, 
 	defer session.Close(ctx)
 
 	query := "MATCH (:Tenant {name:$tenant})<-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]-(e:ExternalSystem {id:$externalSystemId}) " +
-		" MERGE (ie:InteractionEvent_%s {externalId:$externalId, source:$source, channel:$channel}) " +
-		" MERGE (ie)-[:IS_LINKED_WITH {externalId:$externalId, syncDate: $syncDate}]->(e)" +
+		" MERGE (ie:InteractionEvent_%s {externalId:$externalId, source:$source, channel:$channel})-[:IS_LINKED_WITH {externalId:$externalId, syncDate: $syncDate}]->(e) " +
 		" ON CREATE SET " +
 		"  ie:InteractionEvent, " +
 		"  ie:Action, " +
