@@ -8,6 +8,7 @@ const (
 	NodeLabel_Ticket             = "Ticket"
 	NodeLabel_Conversation       = "Conversation"
 	NodeLabel_Note               = "Note"
+	NodeLabel_InteractionEvent   = "InteractionEvent"
 )
 
 var NodeLabelsByTimelineEventType = map[string]string{
@@ -16,6 +17,7 @@ var NodeLabelsByTimelineEventType = map[string]string{
 	model.TimelineEventTypeTicket.String():             NodeLabel_Ticket,
 	model.TimelineEventTypeConversation.String():       NodeLabel_Conversation,
 	model.TimelineEventTypeNote.String():               NodeLabel_Note,
+	model.TimelineEventTypeInteractionEvent.String():   NodeLabel_InteractionEvent,
 }
 
 type TimelineEvent interface {

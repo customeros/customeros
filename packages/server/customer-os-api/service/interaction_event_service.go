@@ -11,6 +11,8 @@ import (
 
 type InteractionEventService interface {
 	GetInteractionEventsForInteractionSessions(ctx context.Context, ids []string) (*entity.InteractionEventEntities, error)
+
+	mapDbNodeToInteractionEventEntity(node dbtype.Node) *entity.InteractionEventEntity
 }
 
 type interactionEventService struct {
@@ -40,14 +42,15 @@ func (s *interactionEventService) GetInteractionEventsForInteractionSessions(ctx
 func (s *interactionEventService) mapDbNodeToInteractionEventEntity(node dbtype.Node) *entity.InteractionEventEntity {
 	props := utils.GetPropsFromNode(node)
 	interactionEventEntity := entity.InteractionEventEntity{
-		Id:            utils.GetStringPropOrEmpty(props, "id"),
-		CreatedAt:     utils.GetTimePropOrEpochStart(props, "createdAt"),
-		Channel:       utils.GetStringPropOrEmpty(props, "channel"),
-		Content:       utils.GetStringPropOrEmpty(props, "content"),
-		ContentType:   utils.GetStringPropOrEmpty(props, "contentType"),
-		AppSource:     utils.GetStringPropOrEmpty(props, "appSource"),
-		Source:        entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
-		SourceOfTruth: entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
+		Id:              utils.GetStringPropOrEmpty(props, "id"),
+		CreatedAt:       utils.GetTimePropOrEpochStart(props, "createdAt"),
+		EventIdentifier: utils.GetStringPropOrEmpty(props, "identifier"),
+		Channel:         utils.GetStringPropOrEmpty(props, "channel"),
+		Content:         utils.GetStringPropOrEmpty(props, "content"),
+		ContentType:     utils.GetStringPropOrEmpty(props, "contentType"),
+		AppSource:       utils.GetStringPropOrEmpty(props, "appSource"),
+		Source:          entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
+		SourceOfTruth:   entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
 	}
 	return &interactionEventEntity
 }

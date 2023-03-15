@@ -42,12 +42,27 @@ func (r *timelineEventRepository) GetTimelineEventsForContact(ctx context.Contex
 		params["nodeLabels"] = labels
 		filterByTypeCypherFragment = "AND size([label IN labels(a) WHERE label IN $nodeLabels | 1]) > 0"
 	}
-	query := fmt.Sprintf("MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant}), "+
+	query := fmt.Sprintf("MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant}) "+
+		" CALL {"+
+		// get all timeline events for the contact
+		" WITH c MATCH (c), "+
 		" p = (c)-[*1..2]-(a:Action) "+
-		" WHERE all(r IN relationships(p) WHERE type(r) in ['HAS_ACTION','PARTICIPATES','SENT','SENT_TO','PART_OF','REQUESTED','NOTED'])"+
+		" WHERE all(r IN relationships(p) WHERE type(r) in ['HAS_ACTION','PARTICIPATES','SENT','SENT_TO','SENT_BY','PART_OF','REQUESTED','NOTED'])"+
 		" AND coalesce(a.startedAt, a.createdAt) < datetime($startingDate) "+
 		" %s "+
-		" RETURN distinct a ORDER BY coalesce(a.startedAt, a.createdAt) DESC LIMIT $size", filterByTypeCypherFragment)
+		" return a as timelineEvent "+
+		" UNION "+
+		// get all timeline events for the contact's emails and phone numbers
+		" WITH c MATCH (c)-[:HAS]->(e),"+
+		" p = (e)-[*1]-(a:Action) "+
+		" WHERE ('Email' in labels(e) OR 'PhoneNumber' in labels(e)) "+
+		" AND all(r IN relationships(p) WHERE type(r) in ['SENT_TO','SENT_BY'])"+
+		" AND coalesce(a.startedAt, a.createdAt) < datetime($startingDate) "+
+		" %s "+
+		" return a as timelineEvent "+
+		" } "+
+		" RETURN distinct timelineEvent ORDER BY coalesce(timelineEvent.startedAt, timelineEvent.createdAt) DESC LIMIT $size",
+		filterByTypeCypherFragment, filterByTypeCypherFragment)
 
 	records, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		queryResult, err := tx.Run(ctx, query, params)
@@ -81,11 +96,25 @@ func (r *timelineEventRepository) GetTimelineEventsTotalCountForContact(ctx cont
 		params["nodeLabels"] = labels
 		filterByTypeCypherFragment = "AND size([label IN labels(a) WHERE label IN $nodeLabels | 1]) > 0"
 	}
-	query := fmt.Sprintf("MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant}), "+
+	query := fmt.Sprintf("MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant}) "+
+		" CALL {"+
+		// get all timeline events for the contact
+		" WITH c MATCH (c), "+
 		" p = (c)-[*1..2]-(a:Action) "+
-		" WHERE all(r IN relationships(p) WHERE type(r) in ['HAS_ACTION','PARTICIPATES','SENT','SENT_TO','PART_OF','REQUESTED','NOTED']) "+
+		" WHERE all(r IN relationships(p) WHERE type(r) in ['HAS_ACTION','PARTICIPATES','SENT','SENT_TO','SENT_BY','PART_OF','REQUESTED','NOTED']) "+
 		" %s "+
-		" RETURN count(distinct a)", filterByTypeCypherFragment)
+		" return a as timelineEvent "+
+		" UNION "+
+		// get all timeline events for the contact's emails and phone numbers
+		" WITH c MATCH (c)-[:HAS]->(e),"+
+		" p = (e)-[*1]-(a:Action) "+
+		" WHERE ('Email' in labels(e) OR 'PhoneNumber' in labels(e)) "+
+		" AND all(r IN relationships(p) WHERE type(r) in ['SENT_TO','SENT_BY'])"+
+		" %s "+
+		" return a as timelineEvent "+
+		" } "+
+		" RETURN count(distinct timelineEvent)",
+		filterByTypeCypherFragment, filterByTypeCypherFragment)
 
 	record, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		queryResult, err := tx.Run(ctx, query, params)
@@ -115,24 +144,44 @@ func (r *timelineEventRepository) GetTimelineEventsForOrganization(ctx context.C
 		params["nodeLabels"] = labels
 		filterByTypeCypherFragment = "AND size([label IN labels(a) WHERE label IN $nodeLabels | 1]) > 0"
 	}
-	query := fmt.Sprintf("CALL { "+
-		"MATCH (o:Organization {id:$organizationId})-[:ORGANIZATION_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant}), "+
-		" (o)--(c:Contact), "+
+	query := fmt.Sprintf("MATCH (o:Organization {id:$organizationId})-[:ORGANIZATION_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant}) "+
+		" CALL { "+
+		// get all timeline events for the organization contatcs
+		" WITH o MATCH (o)--(c:Contact), "+
 		" p = (c)-[*1..2]-(a:Action) "+
-		" WHERE all(r IN relationships(p) WHERE type(r) in ['HAS_ACTION','PARTICIPATES','SENT','SENT_TO','PART_OF','REQUESTED','NOTED'])"+
+		" WHERE all(r IN relationships(p) WHERE type(r) in ['HAS_ACTION','PARTICIPATES','SENT','SENT_TO','SENT_BY','PART_OF','REQUESTED','NOTED'])"+
 		" AND coalesce(a.startedAt, a.createdAt) < datetime($startingDate) "+
 		" %s "+
 		" return a as timelineEvent "+
 		" UNION "+
-		"MATCH (o:Organization {id:$organizationId})-[:ORGANIZATION_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant}), "+
+		// get all timeline events directly for the organization
+		" WITH o MATCH (o), "+
 		" p = (o)-[*1]-(a:Action) "+
 		" WHERE all(r IN relationships(p) WHERE type(r) in ['NOTED'])"+
 		" AND coalesce(a.startedAt, a.createdAt) < datetime($startingDate) "+
 		" %s "+
 		" return a as timelineEvent "+
+		" UNION "+
+		// get all timeline events for the organization contacts' emails and phone numbers
+		" WITH o MATCH (o)--(c:Contact)-[:HAS]->(e), "+
+		" p = (e)-[*1]-(a:Action) "+
+		" WHERE ('Email' in labels(e) OR 'PhoneNumber' in labels(e)) "+
+		" AND all(r IN relationships(p) WHERE type(r) in ['SENT_TO','SENT_BY'])"+
+		" AND coalesce(a.startedAt, a.createdAt) < datetime($startingDate) "+
+		" %s "+
+		" return a as timelineEvent "+
+		" UNION "+
+		// get all timeline events for the organization emails and phone numbers
+		" WITH o MATCH (o)-[:HAS]->(e), "+
+		" p = (e)-[*1]-(a:Action) "+
+		" WHERE ('Email' in labels(e) OR 'PhoneNumber' in labels(e)) "+
+		" AND all(r IN relationships(p) WHERE type(r) in ['SENT_TO','SENT_BY'])"+
+		" AND coalesce(a.startedAt, a.createdAt) < datetime($startingDate) "+
+		" %s "+
+		" return a as timelineEvent "+
 		" } "+
 		" RETURN distinct timelineEvent ORDER BY coalesce(timelineEvent.startedAt, timelineEvent.createdAt) DESC LIMIT $size",
-		filterByTypeCypherFragment, filterByTypeCypherFragment)
+		filterByTypeCypherFragment, filterByTypeCypherFragment, filterByTypeCypherFragment, filterByTypeCypherFragment)
 
 	records, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		queryResult, err := tx.Run(ctx, query, params)
@@ -166,22 +215,40 @@ func (r *timelineEventRepository) GetTimelineEventsTotalCountForOrganization(ctx
 		params["nodeLabels"] = labels
 		filterByTypeCypherFragment = "AND size([label IN labels(a) WHERE label IN $nodeLabels | 1]) > 0"
 	}
-	query := fmt.Sprintf("CALL { "+
-		"MATCH (o:Organization {id:$organizationId})-[:ORGANIZATION_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant}), "+
-		" (o)--(c:Contact), "+
+	query := fmt.Sprintf("MATCH (o:Organization {id:$organizationId})-[:ORGANIZATION_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant}) "+
+		" CALL { "+
+		// get all timeline events for the organization' contatcs
+		" WITH o MATCH (o)--(c:Contact), "+
 		" p = (c)-[*1..2]-(a:Action) "+
-		" WHERE all(r IN relationships(p) WHERE type(r) in ['HAS_ACTION','PARTICIPATES','SENT','SENT_TO','PART_OF','REQUESTED','NOTED'])"+
+		" WHERE all(r IN relationships(p) WHERE type(r) in ['HAS_ACTION','PARTICIPATES','SENT','SENT_TO','SENT_BY','PART_OF','REQUESTED','NOTED'])"+
 		" %s "+
 		" return a as timelineEvent "+
 		" UNION "+
-		"MATCH (o:Organization {id:$organizationId})-[:ORGANIZATION_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant}), "+
+		// get all timeline events directly for the organization
+		" WITH o MATCH (o), "+
 		" p = (o)-[*1]-(a:Action) "+
 		" WHERE all(r IN relationships(p) WHERE type(r) in ['NOTED'])"+
 		" %s "+
 		" return a as timelineEvent "+
+		" UNION "+
+		// get all timeline events for the organization contacts' emails and phone numbers
+		" WITH o MATCH (o)--(c:Contact)-[:HAS]->(e), "+
+		" p = (e)-[*1]-(a:Action) "+
+		" WHERE ('Email' in labels(e) OR 'PhoneNumber' in labels(e)) "+
+		" AND all(r IN relationships(p) WHERE type(r) in ['SENT_TO','SENT_BY'])"+
+		" %s "+
+		" return a as timelineEvent "+
+		" UNION "+
+		// get all timeline events for the organization emails and phone numbers
+		" WITH o MATCH (o)-[:HAS]->(e), "+
+		" p = (e)-[*1]-(a:Action) "+
+		" WHERE ('Email' in labels(e) OR 'PhoneNumber' in labels(e)) "+
+		" AND all(r IN relationships(p) WHERE type(r) in ['SENT_TO','SENT_BY'])"+
+		" %s "+
+		" return a as timelineEvent "+
 		" } "+
 		" RETURN count(distinct timelineEvent)",
-		filterByTypeCypherFragment, filterByTypeCypherFragment)
+		filterByTypeCypherFragment, filterByTypeCypherFragment, filterByTypeCypherFragment, filterByTypeCypherFragment)
 
 	record, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		queryResult, err := tx.Run(ctx, query, params)

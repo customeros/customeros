@@ -8,14 +8,15 @@ import (
 
 func MapEntityToInteractionEvent(entity *entity.InteractionEventEntity) *model.InteractionEvent {
 	return &model.InteractionEvent{
-		ID:            entity.Id,
-		CreatedAt:     entity.CreatedAt,
-		Content:       utils.StringPtr(entity.Content),
-		ContentType:   utils.StringPtr(entity.ContentType),
-		Channel:       utils.StringPtr(entity.Channel),
-		Source:        MapDataSourceToModel(entity.Source),
-		SourceOfTruth: MapDataSourceToModel(entity.SourceOfTruth),
-		AppSource:     entity.AppSource,
+		ID:              entity.Id,
+		CreatedAt:       entity.CreatedAt,
+		EventIdentifier: utils.StringPtrNillable(entity.EventIdentifier),
+		Content:         utils.StringPtrNillable(entity.Content),
+		ContentType:     utils.StringPtrNillable(entity.ContentType),
+		Channel:         utils.StringPtrNillable(entity.Channel),
+		Source:          MapDataSourceToModel(entity.Source),
+		SourceOfTruth:   MapDataSourceToModel(entity.SourceOfTruth),
+		AppSource:       entity.AppSource,
 	}
 }
 
