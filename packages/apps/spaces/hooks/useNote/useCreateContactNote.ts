@@ -2,14 +2,13 @@ import {
   NoteInput,
   CreateContactNoteMutation,
   useCreateContactNoteMutation,
-  GetOrganizationTimelineQuery,
-  GetOrganizationTimelineDocument,
+  GetContactTimelineQuery,
+  GetContactTimelineDocument,
   DataSource,
 } from './types';
 import { toast } from 'react-toastify';
 import { ApolloCache } from 'apollo-cache';
 import client from '../../apollo-client';
-import { DATE_NOW } from '../useOrganizationTimeline/useOrganizationTimeline';
 import { useRecoilValue } from 'recoil';
 import { userData } from '../../state';
 
@@ -33,24 +32,23 @@ export const useCreateContactNote = ({ contactId }: Props): Result => {
 
   const handleUpdateCacheAfterAddingNote = (
     cache: ApolloCache<any>,
-    { data: { note_CreateForOrganization } }: any,
+    { data: { note_CreateForContact } }: any,
   ) => {
-    const data: GetOrganizationTimelineQuery | null = client.readQuery({
-      query: GetOrganizationTimelineDocument,
+    const data: GetContactTimelineQuery | null = client.readQuery({
+      query: GetContactTimelineDocument,
       variables: {
         contactId,
-        from: DATE_NOW,
+        from: NOW_DATE,
         size: 10,
       },
     });
-
     if (data === null) {
       client.writeQuery({
-        query: GetOrganizationTimelineDocument,
+        query: GetContactTimelineDocument,
         data: {
-          organization: {
+          contact: {
             contactId,
-            timelineEvents: [note_CreateForOrganization],
+            timelineEvents: [note_CreateForContact],
           },
           variables: { contactId, from: NOW_DATE, size: 10 },
         },
@@ -59,17 +57,17 @@ export const useCreateContactNote = ({ contactId }: Props): Result => {
     }
 
     const newData = {
-      organization: {
-        ...data.organization,
+      contact: {
+        ...data.contact,
         timelineEvents: [
-          ...(data?.organization?.timelineEvents ?? []),
-          note_CreateForOrganization,
+          ...(data?.contact?.timelineEvents ?? []),
+          note_CreateForContact,
         ],
       },
     };
 
     client.writeQuery({
-      query: GetOrganizationTimelineDocument,
+      query: GetContactTimelineDocument,
       data: newData,
       variables: {
         contactId,

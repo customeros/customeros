@@ -38,23 +38,16 @@
 }
 
 .noteData {
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
-  align-items: flex-end;
-  flex: 1;
   @include text-hint;
+  position: absolute;
+  bottom: 4px;
+  right: 15px;
 }
 
 .actions {
   color: var(--gray-700);
   margin-right: -12px;
+  margin-top: -16px;
   margin-bottom: var(--spacing-xxxs);
-}
-
-.actionContainer {
-  display: flex;
-  flex-direction: column;
-  justify-items: end;
-  align-items: end;
+  @include flex-center;
 }
