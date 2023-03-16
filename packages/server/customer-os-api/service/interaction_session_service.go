@@ -42,16 +42,17 @@ func (s *interactionSessionService) GetInteractionEventsForInteractionSessions(c
 func (s *interactionSessionService) mapDbNodeToInteractionSessionEntity(node dbtype.Node) *entity.InteractionSessionEntity {
 	props := utils.GetPropsFromNode(node)
 	interactionSessionEntity := entity.InteractionSessionEntity{
-		Id:            utils.GetStringPropOrEmpty(props, "id"),
-		StartedAt:     utils.GetTimePropOrNow(props, "startedAt"),
-		EndedAt:       utils.GetTimePropOrNil(props, "endedAt"),
-		Name:          utils.GetStringPropOrEmpty(props, "name"),
-		Status:        utils.GetStringPropOrEmpty(props, "status"),
-		Type:          utils.GetStringPropOrEmpty(props, "type"),
-		Channel:       utils.GetStringPropOrEmpty(props, "channel"),
-		AppSource:     utils.GetStringPropOrEmpty(props, "appSource"),
-		Source:        entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
-		SourceOfTruth: entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
+		Id:                utils.GetStringPropOrEmpty(props, "id"),
+		StartedAt:         utils.GetTimePropOrNow(props, "startedAt"),
+		EndedAt:           utils.GetTimePropOrNil(props, "endedAt"),
+		SessionIdentifier: utils.GetStringPropOrEmpty(props, "identifier"),
+		Name:              utils.GetStringPropOrEmpty(props, "name"),
+		Status:            utils.GetStringPropOrEmpty(props, "status"),
+		Type:              utils.GetStringPropOrEmpty(props, "type"),
+		Channel:           utils.GetStringPropOrEmpty(props, "channel"),
+		AppSource:         utils.GetStringPropOrEmpty(props, "appSource"),
+		Source:            entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
+		SourceOfTruth:     entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
 	}
 	return &interactionSessionEntity
 }
