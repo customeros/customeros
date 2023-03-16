@@ -1,3 +1,45 @@
+extend type Query {
+    interactionSession(id: ID!): InteractionSession!
+    interactionSession_ByEventIdentifier(eventIdentifier: String!): InteractionSession!
+
+    interactionEvent(id: ID!): InteractionEvent!
+    interactionEvent_ByEventIdentifier(eventIdentifier: String!): InteractionEvent!
+}
+
+input InteractionEventParticipantInput  {
+    email: String
+    phoneNumber: String
+    contactID: ID
+    userID: ID
+    type: String
+}
+
+extend type Mutation {
+    createInteractionSession(
+        sessionIdentifier: String
+        name: String
+        status: String
+        type: String
+        channel: String
+        source: DataSource!
+        sourceOfTruth: DataSource!
+        appSource: String!
+    ): InteractionSession!
+
+    createInteractionEvent(
+        eventIdentifier: String
+        content: String
+        contentType: String
+        channel: String
+        interactionSession: ID!
+        sentBy: [InteractionEventParticipantInput!]!
+        sentTo: [InteractionEventParticipantInput!]!
+        source: DataSource!
+        sourceOfTruth: DataSource!
+        appSource: String!
+    ): InteractionEvent!
+}
+
 union InteractionEventParticipant = EmailParticipant | PhoneNumberParticipant | ContactParticipant | UserParticipant
 
 type InteractionSession implements Node {
@@ -5,6 +47,7 @@ type InteractionSession implements Node {
     startedAt: Time!
     endedAt: Time
 
+    sessionIdentifier: String
     name: String
     status: String
     type: String

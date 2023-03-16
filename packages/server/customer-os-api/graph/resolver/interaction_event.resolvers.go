@@ -6,6 +6,7 @@ package resolver
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/99designs/gqlgen/graphql"
@@ -70,6 +71,36 @@ func (r *interactionSessionResolver) Events(ctx context.Context, obj *model.Inte
 		return nil, err
 	}
 	return mapper.MapEntitiesToInteractionEvents(interactionEventEntities), nil
+}
+
+// CreateInteractionSession is the resolver for the createInteractionSession field.
+func (r *mutationResolver) CreateInteractionSession(ctx context.Context, sessionIdentifier *string, name *string, status *string, typeArg *string, channel *string, source model.DataSource, sourceOfTruth model.DataSource, appSource string) (*model.InteractionSession, error) {
+	panic(fmt.Errorf("not implemented: CreateInteractionSession - createInteractionSession"))
+}
+
+// CreateInteractionEvent is the resolver for the createInteractionEvent field.
+func (r *mutationResolver) CreateInteractionEvent(ctx context.Context, eventIdentifier *string, content *string, contentType *string, channel *string, interactionSession string, sentBy []*model.InteractionEventParticipantInput, sentTo []*model.InteractionEventParticipantInput, source model.DataSource, sourceOfTruth model.DataSource, appSource string) (*model.InteractionEvent, error) {
+	panic(fmt.Errorf("not implemented: CreateInteractionEvent - createInteractionEvent"))
+}
+
+// InteractionSession is the resolver for the interactionSession field.
+func (r *queryResolver) InteractionSession(ctx context.Context, id string) (*model.InteractionSession, error) {
+	panic(fmt.Errorf("not implemented: InteractionSession - interactionSession"))
+}
+
+// InteractionSessionByEventIdentifier is the resolver for the interactionSession_ByEventIdentifier field.
+func (r *queryResolver) InteractionSessionByEventIdentifier(ctx context.Context, eventIdentifier string) (*model.InteractionSession, error) {
+	panic(fmt.Errorf("not implemented: InteractionSessionByEventIdentifier - interactionSession_ByEventIdentifier"))
+}
+
+// InteractionEvent is the resolver for the interactionEvent field.
+func (r *queryResolver) InteractionEvent(ctx context.Context, id string) (*model.InteractionEvent, error) {
+	panic(fmt.Errorf("not implemented: InteractionEvent - interactionEvent"))
+}
+
+// InteractionEventByEventIdentifier is the resolver for the interactionEvent_ByEventIdentifier field.
+func (r *queryResolver) InteractionEventByEventIdentifier(ctx context.Context, eventIdentifier string) (*model.InteractionEvent, error) {
+	panic(fmt.Errorf("not implemented: InteractionEventByEventIdentifier - interactionEvent_ByEventIdentifier"))
 }
 
 // InteractionEvent returns generated.InteractionEventResolver implementation.

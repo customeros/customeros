@@ -244,17 +244,18 @@ type ComplexityRoot struct {
 	}
 
 	InteractionSession struct {
-		AppSource     func(childComplexity int) int
-		Channel       func(childComplexity int) int
-		EndedAt       func(childComplexity int) int
-		Events        func(childComplexity int) int
-		ID            func(childComplexity int) int
-		Name          func(childComplexity int) int
-		Source        func(childComplexity int) int
-		SourceOfTruth func(childComplexity int) int
-		StartedAt     func(childComplexity int) int
-		Status        func(childComplexity int) int
-		Type          func(childComplexity int) int
+		AppSource         func(childComplexity int) int
+		Channel           func(childComplexity int) int
+		EndedAt           func(childComplexity int) int
+		Events            func(childComplexity int) int
+		ID                func(childComplexity int) int
+		Name              func(childComplexity int) int
+		SessionIdentifier func(childComplexity int) int
+		Source            func(childComplexity int) int
+		SourceOfTruth     func(childComplexity int) int
+		StartedAt         func(childComplexity int) int
+		Status            func(childComplexity int) int
+		Type              func(childComplexity int) int
 	}
 
 	JobRole struct {
@@ -479,22 +480,26 @@ type ComplexityRoot struct {
 	}
 
 	Query struct {
-		Contact           func(childComplexity int, id string) int
-		ContactByEmail    func(childComplexity int, email string) int
-		ContactByPhone    func(childComplexity int, e164 string) int
-		ContactGroup      func(childComplexity int, id string) int
-		ContactGroups     func(childComplexity int, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) int
-		Contacts          func(childComplexity int, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) int
-		DashboardView     func(childComplexity int, pagination model.Pagination, searchTerm *string) int
-		EntityTemplates   func(childComplexity int, extends *model.EntityTemplateExtension) int
-		Organization      func(childComplexity int, id string) int
-		OrganizationTypes func(childComplexity int) int
-		Organizations     func(childComplexity int, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) int
-		SearchBasic       func(childComplexity int, keyword string) int
-		Tags              func(childComplexity int) int
-		User              func(childComplexity int, id string) int
-		UserByEmail       func(childComplexity int, email string) int
-		Users             func(childComplexity int, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) int
+		Contact                             func(childComplexity int, id string) int
+		ContactByEmail                      func(childComplexity int, email string) int
+		ContactByPhone                      func(childComplexity int, e164 string) int
+		ContactGroup                        func(childComplexity int, id string) int
+		ContactGroups                       func(childComplexity int, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) int
+		Contacts                            func(childComplexity int, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) int
+		DashboardView                       func(childComplexity int, pagination model.Pagination, searchTerm *string) int
+		EntityTemplates                     func(childComplexity int, extends *model.EntityTemplateExtension) int
+		InteractionEvent                    func(childComplexity int, id string) int
+		InteractionEventByEventIdentifier   func(childComplexity int, eventIdentifier string) int
+		InteractionSession                  func(childComplexity int, id string) int
+		InteractionSessionByEventIdentifier func(childComplexity int, eventIdentifier string) int
+		Organization                        func(childComplexity int, id string) int
+		OrganizationTypes                   func(childComplexity int) int
+		Organizations                       func(childComplexity int, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) int
+		SearchBasic                         func(childComplexity int, keyword string) int
+		Tags                                func(childComplexity int) int
+		User                                func(childComplexity int, id string) int
+		UserByEmail                         func(childComplexity int, email string) int
+		Users                               func(childComplexity int, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) int
 	}
 
 	Result struct {
@@ -655,6 +660,8 @@ type MutationResolver interface {
 	EmailRemoveFromOrganization(ctx context.Context, organizationID string, email string) (*model.Result, error)
 	EmailRemoveFromOrganizationByID(ctx context.Context, organizationID string, id string) (*model.Result, error)
 	EmailDelete(ctx context.Context, id string) (*model.Result, error)
+	CreateInteractionSession(ctx context.Context, sessionIdentifier *string, name *string, status *string, typeArg *string, channel *string, source model.DataSource, sourceOfTruth model.DataSource, appSource string) (*model.InteractionSession, error)
+	CreateInteractionEvent(ctx context.Context, eventIdentifier *string, content *string, contentType *string, channel *string, interactionSession string, sentBy []*model.InteractionEventParticipantInput, sentTo []*model.InteractionEventParticipantInput, source model.DataSource, sourceOfTruth model.DataSource, appSource string) (*model.InteractionEvent, error)
 	JobRoleDelete(ctx context.Context, contactID string, roleID string) (*model.Result, error)
 	JobRoleCreate(ctx context.Context, contactID string, input model.JobRoleInput) (*model.JobRole, error)
 	JobRoleUpdate(ctx context.Context, contactID string, input model.JobRoleUpdateInput) (*model.JobRole, error)
@@ -716,6 +723,10 @@ type QueryResolver interface {
 	ContactByPhone(ctx context.Context, e164 string) (*model.Contact, error)
 	ContactGroup(ctx context.Context, id string) (*model.ContactGroup, error)
 	ContactGroups(ctx context.Context, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) (*model.ContactGroupPage, error)
+	InteractionSession(ctx context.Context, id string) (*model.InteractionSession, error)
+	InteractionSessionByEventIdentifier(ctx context.Context, eventIdentifier string) (*model.InteractionSession, error)
+	InteractionEvent(ctx context.Context, id string) (*model.InteractionEvent, error)
+	InteractionEventByEventIdentifier(ctx context.Context, eventIdentifier string) (*model.InteractionEvent, error)
 	Organizations(ctx context.Context, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) (*model.OrganizationPage, error)
 	Organization(ctx context.Context, id string) (*model.Organization, error)
 	OrganizationTypes(ctx context.Context) ([]*model.OrganizationType, error)
@@ -1752,6 +1763,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.InteractionSession.Name(childComplexity), true
 
+	case "InteractionSession.sessionIdentifier":
+		if e.complexity.InteractionSession.SessionIdentifier == nil {
+			break
+		}
+
+		return e.complexity.InteractionSession.SessionIdentifier(childComplexity), true
+
 	case "InteractionSession.source":
 		if e.complexity.InteractionSession.Source == nil {
 			break
@@ -2235,6 +2253,30 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.ConversationUpdate(childComplexity, args["input"].(model.ConversationUpdateInput)), true
+
+	case "Mutation.createInteractionEvent":
+		if e.complexity.Mutation.CreateInteractionEvent == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_createInteractionEvent_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.CreateInteractionEvent(childComplexity, args["eventIdentifier"].(*string), args["content"].(*string), args["contentType"].(*string), args["channel"].(*string), args["interactionSession"].(string), args["sentBy"].([]*model.InteractionEventParticipantInput), args["sentTo"].([]*model.InteractionEventParticipantInput), args["source"].(model.DataSource), args["sourceOfTruth"].(model.DataSource), args["appSource"].(string)), true
+
+	case "Mutation.createInteractionSession":
+		if e.complexity.Mutation.CreateInteractionSession == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_createInteractionSession_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.CreateInteractionSession(childComplexity, args["sessionIdentifier"].(*string), args["name"].(*string), args["status"].(*string), args["type"].(*string), args["channel"].(*string), args["source"].(model.DataSource), args["sourceOfTruth"].(model.DataSource), args["appSource"].(string)), true
 
 	case "Mutation.customFieldDeleteFromContactById":
 		if e.complexity.Mutation.CustomFieldDeleteFromContactByID == nil {
@@ -3563,6 +3605,54 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.EntityTemplates(childComplexity, args["extends"].(*model.EntityTemplateExtension)), true
 
+	case "Query.interactionEvent":
+		if e.complexity.Query.InteractionEvent == nil {
+			break
+		}
+
+		args, err := ec.field_Query_interactionEvent_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.InteractionEvent(childComplexity, args["id"].(string)), true
+
+	case "Query.interactionEvent_ByEventIdentifier":
+		if e.complexity.Query.InteractionEventByEventIdentifier == nil {
+			break
+		}
+
+		args, err := ec.field_Query_interactionEvent_ByEventIdentifier_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.InteractionEventByEventIdentifier(childComplexity, args["eventIdentifier"].(string)), true
+
+	case "Query.interactionSession":
+		if e.complexity.Query.InteractionSession == nil {
+			break
+		}
+
+		args, err := ec.field_Query_interactionSession_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.InteractionSession(childComplexity, args["id"].(string)), true
+
+	case "Query.interactionSession_ByEventIdentifier":
+		if e.complexity.Query.InteractionSessionByEventIdentifier == nil {
+			break
+		}
+
+		args, err := ec.field_Query_interactionSession_ByEventIdentifier_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.InteractionSessionByEventIdentifier(childComplexity, args["eventIdentifier"].(string)), true
+
 	case "Query.organization":
 		if e.complexity.Query.Organization == nil {
 			break
@@ -3920,6 +4010,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputFieldSetUpdateInput,
 		ec.unmarshalInputFilter,
 		ec.unmarshalInputFilterItem,
+		ec.unmarshalInputInteractionEventParticipantInput,
 		ec.unmarshalInputJobRoleInput,
 		ec.unmarshalInputJobRoleUpdateInput,
 		ec.unmarshalInputNoteInput,
@@ -4873,13 +4964,56 @@ enum ComparisonOperator {
     EQ
     CONTAINS
 }`, BuiltIn: false},
-	{Name: "../schemas/interaction_event.graphqls", Input: `union InteractionEventParticipant = EmailParticipant | PhoneNumberParticipant | ContactParticipant | UserParticipant
+	{Name: "../schemas/interaction_event.graphqls", Input: `extend type Query {
+    interactionSession(id: ID!): InteractionSession!
+    interactionSession_ByEventIdentifier(eventIdentifier: String!): InteractionSession!
+
+    interactionEvent(id: ID!): InteractionEvent!
+    interactionEvent_ByEventIdentifier(eventIdentifier: String!): InteractionEvent!
+}
+
+input InteractionEventParticipantInput  {
+    email: String
+    phoneNumber: String
+    contactID: ID
+    userID: ID
+    type: String
+}
+
+extend type Mutation {
+    createInteractionSession(
+        sessionIdentifier: String
+        name: String
+        status: String
+        type: String
+        channel: String
+        source: DataSource!
+        sourceOfTruth: DataSource!
+        appSource: String!
+    ): InteractionSession!
+
+    createInteractionEvent(
+        eventIdentifier: String
+        content: String
+        contentType: String
+        channel: String
+        interactionSession: ID!
+        sentBy: [InteractionEventParticipantInput!]!
+        sentTo: [InteractionEventParticipantInput!]!
+        source: DataSource!
+        sourceOfTruth: DataSource!
+        appSource: String!
+    ): InteractionEvent!
+}
+
+union InteractionEventParticipant = EmailParticipant | PhoneNumberParticipant | ContactParticipant | UserParticipant
 
 type InteractionSession implements Node {
     id: ID!
     startedAt: Time!
     endedAt: Time
 
+    sessionIdentifier: String
     name: String
     status: String
     type: String
@@ -6018,6 +6152,180 @@ func (ec *executionContext) field_Mutation_conversation_Update_args(ctx context.
 		}
 	}
 	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_createInteractionEvent_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 *string
+	if tmp, ok := rawArgs["eventIdentifier"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("eventIdentifier"))
+		arg0, err = ec.unmarshalOString2ᚖstring(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["eventIdentifier"] = arg0
+	var arg1 *string
+	if tmp, ok := rawArgs["content"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("content"))
+		arg1, err = ec.unmarshalOString2ᚖstring(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["content"] = arg1
+	var arg2 *string
+	if tmp, ok := rawArgs["contentType"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("contentType"))
+		arg2, err = ec.unmarshalOString2ᚖstring(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["contentType"] = arg2
+	var arg3 *string
+	if tmp, ok := rawArgs["channel"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("channel"))
+		arg3, err = ec.unmarshalOString2ᚖstring(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["channel"] = arg3
+	var arg4 string
+	if tmp, ok := rawArgs["interactionSession"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("interactionSession"))
+		arg4, err = ec.unmarshalNID2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["interactionSession"] = arg4
+	var arg5 []*model.InteractionEventParticipantInput
+	if tmp, ok := rawArgs["sentBy"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("sentBy"))
+		arg5, err = ec.unmarshalNInteractionEventParticipantInput2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐInteractionEventParticipantInputᚄ(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["sentBy"] = arg5
+	var arg6 []*model.InteractionEventParticipantInput
+	if tmp, ok := rawArgs["sentTo"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("sentTo"))
+		arg6, err = ec.unmarshalNInteractionEventParticipantInput2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐInteractionEventParticipantInputᚄ(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["sentTo"] = arg6
+	var arg7 model.DataSource
+	if tmp, ok := rawArgs["source"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("source"))
+		arg7, err = ec.unmarshalNDataSource2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐDataSource(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["source"] = arg7
+	var arg8 model.DataSource
+	if tmp, ok := rawArgs["sourceOfTruth"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("sourceOfTruth"))
+		arg8, err = ec.unmarshalNDataSource2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐDataSource(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["sourceOfTruth"] = arg8
+	var arg9 string
+	if tmp, ok := rawArgs["appSource"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("appSource"))
+		arg9, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["appSource"] = arg9
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_createInteractionSession_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 *string
+	if tmp, ok := rawArgs["sessionIdentifier"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("sessionIdentifier"))
+		arg0, err = ec.unmarshalOString2ᚖstring(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["sessionIdentifier"] = arg0
+	var arg1 *string
+	if tmp, ok := rawArgs["name"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
+		arg1, err = ec.unmarshalOString2ᚖstring(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["name"] = arg1
+	var arg2 *string
+	if tmp, ok := rawArgs["status"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("status"))
+		arg2, err = ec.unmarshalOString2ᚖstring(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["status"] = arg2
+	var arg3 *string
+	if tmp, ok := rawArgs["type"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("type"))
+		arg3, err = ec.unmarshalOString2ᚖstring(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["type"] = arg3
+	var arg4 *string
+	if tmp, ok := rawArgs["channel"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("channel"))
+		arg4, err = ec.unmarshalOString2ᚖstring(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["channel"] = arg4
+	var arg5 model.DataSource
+	if tmp, ok := rawArgs["source"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("source"))
+		arg5, err = ec.unmarshalNDataSource2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐDataSource(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["source"] = arg5
+	var arg6 model.DataSource
+	if tmp, ok := rawArgs["sourceOfTruth"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("sourceOfTruth"))
+		arg6, err = ec.unmarshalNDataSource2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐDataSource(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["sourceOfTruth"] = arg6
+	var arg7 string
+	if tmp, ok := rawArgs["appSource"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("appSource"))
+		arg7, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["appSource"] = arg7
 	return args, nil
 }
 
@@ -7539,6 +7847,66 @@ func (ec *executionContext) field_Query_entityTemplates_args(ctx context.Context
 		}
 	}
 	args["extends"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_interactionEvent_ByEventIdentifier_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["eventIdentifier"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("eventIdentifier"))
+		arg0, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["eventIdentifier"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_interactionEvent_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["id"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+		arg0, err = ec.unmarshalNID2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["id"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_interactionSession_ByEventIdentifier_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["eventIdentifier"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("eventIdentifier"))
+		arg0, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["eventIdentifier"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_interactionSession_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["id"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+		arg0, err = ec.unmarshalNID2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["id"] = arg0
 	return args, nil
 }
 
@@ -14077,6 +14445,8 @@ func (ec *executionContext) fieldContext_InteractionEvent_interactionSession(ctx
 				return ec.fieldContext_InteractionSession_startedAt(ctx, field)
 			case "endedAt":
 				return ec.fieldContext_InteractionSession_endedAt(ctx, field)
+			case "sessionIdentifier":
+				return ec.fieldContext_InteractionSession_sessionIdentifier(ctx, field)
 			case "name":
 				return ec.fieldContext_InteractionSession_name(ctx, field)
 			case "status":
@@ -14444,6 +14814,47 @@ func (ec *executionContext) fieldContext_InteractionSession_endedAt(ctx context.
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _InteractionSession_sessionIdentifier(ctx context.Context, field graphql.CollectedField, obj *model.InteractionSession) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_InteractionSession_sessionIdentifier(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.SessionIdentifier, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_InteractionSession_sessionIdentifier(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "InteractionSession",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
 		},
 	}
 	return fc, nil
@@ -19670,6 +20081,168 @@ func (ec *executionContext) fieldContext_Mutation_emailDelete(ctx context.Contex
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Mutation_emailDelete_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_createInteractionSession(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_createInteractionSession(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().CreateInteractionSession(rctx, fc.Args["sessionIdentifier"].(*string), fc.Args["name"].(*string), fc.Args["status"].(*string), fc.Args["type"].(*string), fc.Args["channel"].(*string), fc.Args["source"].(model.DataSource), fc.Args["sourceOfTruth"].(model.DataSource), fc.Args["appSource"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.InteractionSession)
+	fc.Result = res
+	return ec.marshalNInteractionSession2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐInteractionSession(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_createInteractionSession(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_InteractionSession_id(ctx, field)
+			case "startedAt":
+				return ec.fieldContext_InteractionSession_startedAt(ctx, field)
+			case "endedAt":
+				return ec.fieldContext_InteractionSession_endedAt(ctx, field)
+			case "sessionIdentifier":
+				return ec.fieldContext_InteractionSession_sessionIdentifier(ctx, field)
+			case "name":
+				return ec.fieldContext_InteractionSession_name(ctx, field)
+			case "status":
+				return ec.fieldContext_InteractionSession_status(ctx, field)
+			case "type":
+				return ec.fieldContext_InteractionSession_type(ctx, field)
+			case "channel":
+				return ec.fieldContext_InteractionSession_channel(ctx, field)
+			case "source":
+				return ec.fieldContext_InteractionSession_source(ctx, field)
+			case "sourceOfTruth":
+				return ec.fieldContext_InteractionSession_sourceOfTruth(ctx, field)
+			case "appSource":
+				return ec.fieldContext_InteractionSession_appSource(ctx, field)
+			case "events":
+				return ec.fieldContext_InteractionSession_events(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type InteractionSession", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_createInteractionSession_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_createInteractionEvent(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_createInteractionEvent(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().CreateInteractionEvent(rctx, fc.Args["eventIdentifier"].(*string), fc.Args["content"].(*string), fc.Args["contentType"].(*string), fc.Args["channel"].(*string), fc.Args["interactionSession"].(string), fc.Args["sentBy"].([]*model.InteractionEventParticipantInput), fc.Args["sentTo"].([]*model.InteractionEventParticipantInput), fc.Args["source"].(model.DataSource), fc.Args["sourceOfTruth"].(model.DataSource), fc.Args["appSource"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.InteractionEvent)
+	fc.Result = res
+	return ec.marshalNInteractionEvent2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐInteractionEvent(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_createInteractionEvent(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_InteractionEvent_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_InteractionEvent_createdAt(ctx, field)
+			case "eventIdentifier":
+				return ec.fieldContext_InteractionEvent_eventIdentifier(ctx, field)
+			case "content":
+				return ec.fieldContext_InteractionEvent_content(ctx, field)
+			case "contentType":
+				return ec.fieldContext_InteractionEvent_contentType(ctx, field)
+			case "channel":
+				return ec.fieldContext_InteractionEvent_channel(ctx, field)
+			case "interactionSession":
+				return ec.fieldContext_InteractionEvent_interactionSession(ctx, field)
+			case "sentBy":
+				return ec.fieldContext_InteractionEvent_sentBy(ctx, field)
+			case "sentTo":
+				return ec.fieldContext_InteractionEvent_sentTo(ctx, field)
+			case "source":
+				return ec.fieldContext_InteractionEvent_source(ctx, field)
+			case "sourceOfTruth":
+				return ec.fieldContext_InteractionEvent_sourceOfTruth(ctx, field)
+			case "appSource":
+				return ec.fieldContext_InteractionEvent_appSource(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type InteractionEvent", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_createInteractionEvent_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return
 	}
@@ -26191,6 +26764,330 @@ func (ec *executionContext) fieldContext_Query_contactGroups(ctx context.Context
 	return fc, nil
 }
 
+func (ec *executionContext) _Query_interactionSession(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_interactionSession(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().InteractionSession(rctx, fc.Args["id"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.InteractionSession)
+	fc.Result = res
+	return ec.marshalNInteractionSession2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐInteractionSession(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_interactionSession(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_InteractionSession_id(ctx, field)
+			case "startedAt":
+				return ec.fieldContext_InteractionSession_startedAt(ctx, field)
+			case "endedAt":
+				return ec.fieldContext_InteractionSession_endedAt(ctx, field)
+			case "sessionIdentifier":
+				return ec.fieldContext_InteractionSession_sessionIdentifier(ctx, field)
+			case "name":
+				return ec.fieldContext_InteractionSession_name(ctx, field)
+			case "status":
+				return ec.fieldContext_InteractionSession_status(ctx, field)
+			case "type":
+				return ec.fieldContext_InteractionSession_type(ctx, field)
+			case "channel":
+				return ec.fieldContext_InteractionSession_channel(ctx, field)
+			case "source":
+				return ec.fieldContext_InteractionSession_source(ctx, field)
+			case "sourceOfTruth":
+				return ec.fieldContext_InteractionSession_sourceOfTruth(ctx, field)
+			case "appSource":
+				return ec.fieldContext_InteractionSession_appSource(ctx, field)
+			case "events":
+				return ec.fieldContext_InteractionSession_events(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type InteractionSession", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_interactionSession_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_interactionSession_ByEventIdentifier(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_interactionSession_ByEventIdentifier(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().InteractionSessionByEventIdentifier(rctx, fc.Args["eventIdentifier"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.InteractionSession)
+	fc.Result = res
+	return ec.marshalNInteractionSession2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐInteractionSession(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_interactionSession_ByEventIdentifier(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_InteractionSession_id(ctx, field)
+			case "startedAt":
+				return ec.fieldContext_InteractionSession_startedAt(ctx, field)
+			case "endedAt":
+				return ec.fieldContext_InteractionSession_endedAt(ctx, field)
+			case "sessionIdentifier":
+				return ec.fieldContext_InteractionSession_sessionIdentifier(ctx, field)
+			case "name":
+				return ec.fieldContext_InteractionSession_name(ctx, field)
+			case "status":
+				return ec.fieldContext_InteractionSession_status(ctx, field)
+			case "type":
+				return ec.fieldContext_InteractionSession_type(ctx, field)
+			case "channel":
+				return ec.fieldContext_InteractionSession_channel(ctx, field)
+			case "source":
+				return ec.fieldContext_InteractionSession_source(ctx, field)
+			case "sourceOfTruth":
+				return ec.fieldContext_InteractionSession_sourceOfTruth(ctx, field)
+			case "appSource":
+				return ec.fieldContext_InteractionSession_appSource(ctx, field)
+			case "events":
+				return ec.fieldContext_InteractionSession_events(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type InteractionSession", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_interactionSession_ByEventIdentifier_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_interactionEvent(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_interactionEvent(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().InteractionEvent(rctx, fc.Args["id"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.InteractionEvent)
+	fc.Result = res
+	return ec.marshalNInteractionEvent2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐInteractionEvent(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_interactionEvent(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_InteractionEvent_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_InteractionEvent_createdAt(ctx, field)
+			case "eventIdentifier":
+				return ec.fieldContext_InteractionEvent_eventIdentifier(ctx, field)
+			case "content":
+				return ec.fieldContext_InteractionEvent_content(ctx, field)
+			case "contentType":
+				return ec.fieldContext_InteractionEvent_contentType(ctx, field)
+			case "channel":
+				return ec.fieldContext_InteractionEvent_channel(ctx, field)
+			case "interactionSession":
+				return ec.fieldContext_InteractionEvent_interactionSession(ctx, field)
+			case "sentBy":
+				return ec.fieldContext_InteractionEvent_sentBy(ctx, field)
+			case "sentTo":
+				return ec.fieldContext_InteractionEvent_sentTo(ctx, field)
+			case "source":
+				return ec.fieldContext_InteractionEvent_source(ctx, field)
+			case "sourceOfTruth":
+				return ec.fieldContext_InteractionEvent_sourceOfTruth(ctx, field)
+			case "appSource":
+				return ec.fieldContext_InteractionEvent_appSource(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type InteractionEvent", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_interactionEvent_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_interactionEvent_ByEventIdentifier(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_interactionEvent_ByEventIdentifier(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().InteractionEventByEventIdentifier(rctx, fc.Args["eventIdentifier"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.InteractionEvent)
+	fc.Result = res
+	return ec.marshalNInteractionEvent2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐInteractionEvent(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_interactionEvent_ByEventIdentifier(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_InteractionEvent_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_InteractionEvent_createdAt(ctx, field)
+			case "eventIdentifier":
+				return ec.fieldContext_InteractionEvent_eventIdentifier(ctx, field)
+			case "content":
+				return ec.fieldContext_InteractionEvent_content(ctx, field)
+			case "contentType":
+				return ec.fieldContext_InteractionEvent_contentType(ctx, field)
+			case "channel":
+				return ec.fieldContext_InteractionEvent_channel(ctx, field)
+			case "interactionSession":
+				return ec.fieldContext_InteractionEvent_interactionSession(ctx, field)
+			case "sentBy":
+				return ec.fieldContext_InteractionEvent_sentBy(ctx, field)
+			case "sentTo":
+				return ec.fieldContext_InteractionEvent_sentTo(ctx, field)
+			case "source":
+				return ec.fieldContext_InteractionEvent_source(ctx, field)
+			case "sourceOfTruth":
+				return ec.fieldContext_InteractionEvent_sourceOfTruth(ctx, field)
+			case "appSource":
+				return ec.fieldContext_InteractionEvent_appSource(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type InteractionEvent", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_interactionEvent_ByEventIdentifier_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Query_organizations(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Query_organizations(ctx, field)
 	if err != nil {
@@ -31358,6 +32255,66 @@ func (ec *executionContext) unmarshalInputFilterItem(ctx context.Context, obj in
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputInteractionEventParticipantInput(ctx context.Context, obj interface{}) (model.InteractionEventParticipantInput, error) {
+	var it model.InteractionEventParticipantInput
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"email", "phoneNumber", "contactID", "userID", "type"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "email":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("email"))
+			it.Email, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "phoneNumber":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("phoneNumber"))
+			it.PhoneNumber, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "contactID":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("contactID"))
+			it.ContactID, err = ec.unmarshalOID2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "userID":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("userID"))
+			it.UserID, err = ec.unmarshalOID2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "type":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("type"))
+			it.Type, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputJobRoleInput(ctx context.Context, obj interface{}) (model.JobRoleInput, error) {
 	var it model.JobRoleInput
 	asMap := map[string]interface{}{}
@@ -34073,6 +35030,10 @@ func (ec *executionContext) _InteractionSession(ctx context.Context, sel ast.Sel
 
 			out.Values[i] = ec._InteractionSession_endedAt(ctx, field, obj)
 
+		case "sessionIdentifier":
+
+			out.Values[i] = ec._InteractionSession_sessionIdentifier(ctx, field, obj)
+
 		case "name":
 
 			out.Values[i] = ec._InteractionSession_name(ctx, field, obj)
@@ -34784,6 +35745,24 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_emailDelete(ctx, field)
+			})
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "createInteractionSession":
+
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_createInteractionSession(ctx, field)
+			})
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "createInteractionEvent":
+
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_createInteractionEvent(ctx, field)
 			})
 
 			if out.Values[i] == graphql.Null {
@@ -36083,6 +37062,98 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_contactGroups(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx, innerFunc)
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return rrm(innerCtx)
+			})
+		case "interactionSession":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_interactionSession(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx, innerFunc)
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return rrm(innerCtx)
+			})
+		case "interactionSession_ByEventIdentifier":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_interactionSession_ByEventIdentifier(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx, innerFunc)
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return rrm(innerCtx)
+			})
+		case "interactionEvent":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_interactionEvent(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx, innerFunc)
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return rrm(innerCtx)
+			})
+		case "interactionEvent_ByEventIdentifier":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_interactionEvent_ByEventIdentifier(ctx, field)
 				if res == graphql.Null {
 					atomic.AddUint32(&invalids, 1)
 				}
@@ -37958,6 +39029,10 @@ func (ec *executionContext) marshalNInt642int64(ctx context.Context, sel ast.Sel
 	return res
 }
 
+func (ec *executionContext) marshalNInteractionEvent2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐInteractionEvent(ctx context.Context, sel ast.SelectionSet, v model.InteractionEvent) graphql.Marshaler {
+	return ec._InteractionEvent(ctx, sel, &v)
+}
+
 func (ec *executionContext) marshalNInteractionEvent2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐInteractionEventᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.InteractionEvent) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
@@ -38064,6 +39139,42 @@ func (ec *executionContext) marshalNInteractionEventParticipant2ᚕgithubᚗcom�
 	}
 
 	return ret
+}
+
+func (ec *executionContext) unmarshalNInteractionEventParticipantInput2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐInteractionEventParticipantInputᚄ(ctx context.Context, v interface{}) ([]*model.InteractionEventParticipantInput, error) {
+	var vSlice []interface{}
+	if v != nil {
+		vSlice = graphql.CoerceList(v)
+	}
+	var err error
+	res := make([]*model.InteractionEventParticipantInput, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalNInteractionEventParticipantInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐInteractionEventParticipantInput(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
+func (ec *executionContext) unmarshalNInteractionEventParticipantInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐInteractionEventParticipantInput(ctx context.Context, v interface{}) (*model.InteractionEventParticipantInput, error) {
+	res, err := ec.unmarshalInputInteractionEventParticipantInput(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNInteractionSession2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐInteractionSession(ctx context.Context, sel ast.SelectionSet, v model.InteractionSession) graphql.Marshaler {
+	return ec._InteractionSession(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNInteractionSession2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐInteractionSession(ctx context.Context, sel ast.SelectionSet, v *model.InteractionSession) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._InteractionSession(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalNJobRole2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐJobRole(ctx context.Context, sel ast.SelectionSet, v model.JobRole) graphql.Marshaler {
