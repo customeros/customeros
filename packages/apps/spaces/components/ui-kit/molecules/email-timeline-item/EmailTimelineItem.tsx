@@ -20,7 +20,7 @@ export const EmailTimelineItem: React.FC<Props> = ({
   interactionSession,
   ...rest
 }) => {
-  var from = '';
+  let from = '';
   if (
     sentBy &&
     sentBy.length > 0 &&
@@ -30,7 +30,7 @@ export const EmailTimelineItem: React.FC<Props> = ({
     from = sentBy[0].emailParticipant.email;
   }
 
-  var to = '';
+  let to = '';
   if (sentTo && sentTo.length > 0) {
     to = sentTo
       .filter((p: any) => p.type === 'TO')
@@ -43,7 +43,7 @@ export const EmailTimelineItem: React.FC<Props> = ({
       .join('; ');
   }
 
-  var cc = '';
+  let cc = '';
   if (sentTo && sentTo.length > 0) {
     cc = sentTo
       .filter((p: any) => p.type === 'CC')
@@ -56,7 +56,7 @@ export const EmailTimelineItem: React.FC<Props> = ({
       .join('; ');
   }
 
-  var bcc = '';
+  let bcc = '';
   if (sentTo && sentTo.length > 0) {
     bcc = sentTo
       .filter((p: any) => p.type === 'BCC')
