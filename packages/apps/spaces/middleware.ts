@@ -11,12 +11,18 @@ export function middleware(request: NextRequest) {
     }
 
     if (request.cookies.has('AUTH_CHECK')) {
-        let authCheckCookieData = JSON.parse(
-            Buffer.from(
-                request.cookies.get('AUTH_CHECK')?.value as string,
-                'base64',
-            ).toString(),
-        ) as any;
+        let authCheckCookieData = null;
+
+        try {
+            authCheckCookieData = JSON.parse(
+                Buffer.from(
+                    request.cookies.get('AUTH_CHECK')?.value as string,
+                    'base64',
+                ).toString(),
+            ) as any;
+        } catch (e) {
+            console.log('auth check cookie found but invalid. check ory session.');
+        }
 
         if (
             authCheckCookieData &&
