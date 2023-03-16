@@ -1,5 +1,4 @@
 import { atom } from 'recoil';
-import { a } from 'msw/lib/SetupServerApi-39df862c';
 
 export enum EditorMode {
   Note = 'NOTE',

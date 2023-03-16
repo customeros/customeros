@@ -154,39 +154,39 @@ export const NoteTimelineItem: React.FC<Props> = ({
               }}
             ></div>
           </div>
-          <div className={styles.actionContainer}>
-            <div className={styles.actions}>
-              <IconButton
-                size='xxxs'
-                onClick={() => setDeleteConfirmationModalVisible(true)}
-                icon={<Trash style={{ transform: 'scale(0.85)' }} />}
-                mode='text'
-                title='Delete'
-                style={{ marginRight: 0, marginBottom: '8px' }}
-              />
+          <div className={styles.actions}>
+            <IconButton
+              size='xxxs'
+              onClick={() => setDeleteConfirmationModalVisible(true)}
+              icon={<Trash style={{ transform: 'scale(0.85)' }} />}
+              mode='text'
+              title='Delete'
+              style={{ marginRight: 0 }}
+            />
 
-              <IconButton
-                size='xxxs'
-                onClick={() => setEditNote(true)}
-                icon={<Pencil style={{ transform: 'scale(0.85)' }} />}
-                mode='text'
-                title='Edit'
-                style={{ marginRight: 0 }}
-              />
-            </div>
-            <div className={styles.noteData}>
-              <div>
+            <IconButton
+              size='xxxs'
+              onClick={() => setEditNote(true)}
+              icon={<Pencil style={{ transform: 'scale(0.85)' }} />}
+              mode='text'
+              title='Edit'
+              style={{ marginRight: 0 }}
+            />
+          </div>
+          <div className={styles.noteData}>
+            {(createdBy?.firstName || createdBy?.lastName) && (
+              <>
                 {(createdBy?.firstName || createdBy?.lastName) && '- '}
-                {createdBy?.firstName} {createdBy?.lastName}
-              </div>
+                {`${createdBy?.firstName} ${createdBy?.lastName}`}
+              </>
+            )}
 
-              {source && (
-                <div className='flex'>
-                  <div className='mr-1'>Source:</div>
-                  <div className='capitaliseFirstLetter'>{source}</div>
-                </div>
-              )}
-            </div>
+            {source && (
+              <div className='flex'>
+                <div className='mr-1'>Source:</div>
+                <div className='capitaliseFirstLetter'>{source}</div>
+              </div>
+            )}
           </div>
         </div>
       )}
