@@ -1,6 +1,6 @@
 extend type Query {
     interactionSession(id: ID!): InteractionSession!
-    interactionSession_ByEventIdentifier(eventIdentifier: String!): InteractionSession!
+    interactionSession_BySessionIdentifier(sessionIdentifier: String!): InteractionSession!
 
     interactionEvent(id: ID!): InteractionEvent!
     interactionEvent_ByEventIdentifier(eventIdentifier: String!): InteractionEvent!

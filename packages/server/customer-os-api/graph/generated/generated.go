@@ -480,26 +480,26 @@ type ComplexityRoot struct {
 	}
 
 	Query struct {
-		Contact                             func(childComplexity int, id string) int
-		ContactByEmail                      func(childComplexity int, email string) int
-		ContactByPhone                      func(childComplexity int, e164 string) int
-		ContactGroup                        func(childComplexity int, id string) int
-		ContactGroups                       func(childComplexity int, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) int
-		Contacts                            func(childComplexity int, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) int
-		DashboardView                       func(childComplexity int, pagination model.Pagination, searchTerm *string) int
-		EntityTemplates                     func(childComplexity int, extends *model.EntityTemplateExtension) int
-		InteractionEvent                    func(childComplexity int, id string) int
-		InteractionEventByEventIdentifier   func(childComplexity int, eventIdentifier string) int
-		InteractionSession                  func(childComplexity int, id string) int
-		InteractionSessionByEventIdentifier func(childComplexity int, eventIdentifier string) int
-		Organization                        func(childComplexity int, id string) int
-		OrganizationTypes                   func(childComplexity int) int
-		Organizations                       func(childComplexity int, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) int
-		SearchBasic                         func(childComplexity int, keyword string) int
-		Tags                                func(childComplexity int) int
-		User                                func(childComplexity int, id string) int
-		UserByEmail                         func(childComplexity int, email string) int
-		Users                               func(childComplexity int, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) int
+		Contact                               func(childComplexity int, id string) int
+		ContactByEmail                        func(childComplexity int, email string) int
+		ContactByPhone                        func(childComplexity int, e164 string) int
+		ContactGroup                          func(childComplexity int, id string) int
+		ContactGroups                         func(childComplexity int, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) int
+		Contacts                              func(childComplexity int, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) int
+		DashboardView                         func(childComplexity int, pagination model.Pagination, searchTerm *string) int
+		EntityTemplates                       func(childComplexity int, extends *model.EntityTemplateExtension) int
+		InteractionEvent                      func(childComplexity int, id string) int
+		InteractionEventByEventIdentifier     func(childComplexity int, eventIdentifier string) int
+		InteractionSession                    func(childComplexity int, id string) int
+		InteractionSessionBySessionIdentifier func(childComplexity int, sessionIdentifier string) int
+		Organization                          func(childComplexity int, id string) int
+		OrganizationTypes                     func(childComplexity int) int
+		Organizations                         func(childComplexity int, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) int
+		SearchBasic                           func(childComplexity int, keyword string) int
+		Tags                                  func(childComplexity int) int
+		User                                  func(childComplexity int, id string) int
+		UserByEmail                           func(childComplexity int, email string) int
+		Users                                 func(childComplexity int, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) int
 	}
 
 	Result struct {
@@ -724,7 +724,7 @@ type QueryResolver interface {
 	ContactGroup(ctx context.Context, id string) (*model.ContactGroup, error)
 	ContactGroups(ctx context.Context, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) (*model.ContactGroupPage, error)
 	InteractionSession(ctx context.Context, id string) (*model.InteractionSession, error)
-	InteractionSessionByEventIdentifier(ctx context.Context, eventIdentifier string) (*model.InteractionSession, error)
+	InteractionSessionBySessionIdentifier(ctx context.Context, sessionIdentifier string) (*model.InteractionSession, error)
 	InteractionEvent(ctx context.Context, id string) (*model.InteractionEvent, error)
 	InteractionEventByEventIdentifier(ctx context.Context, eventIdentifier string) (*model.InteractionEvent, error)
 	Organizations(ctx context.Context, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) (*model.OrganizationPage, error)
@@ -3641,17 +3641,17 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.InteractionSession(childComplexity, args["id"].(string)), true
 
-	case "Query.interactionSession_ByEventIdentifier":
-		if e.complexity.Query.InteractionSessionByEventIdentifier == nil {
+	case "Query.interactionSession_BySessionIdentifier":
+		if e.complexity.Query.InteractionSessionBySessionIdentifier == nil {
 			break
 		}
 
-		args, err := ec.field_Query_interactionSession_ByEventIdentifier_args(context.TODO(), rawArgs)
+		args, err := ec.field_Query_interactionSession_BySessionIdentifier_args(context.TODO(), rawArgs)
 		if err != nil {
 			return 0, false
 		}
 
-		return e.complexity.Query.InteractionSessionByEventIdentifier(childComplexity, args["eventIdentifier"].(string)), true
+		return e.complexity.Query.InteractionSessionBySessionIdentifier(childComplexity, args["sessionIdentifier"].(string)), true
 
 	case "Query.organization":
 		if e.complexity.Query.Organization == nil {
@@ -4966,7 +4966,7 @@ enum ComparisonOperator {
 }`, BuiltIn: false},
 	{Name: "../schemas/interaction_event.graphqls", Input: `extend type Query {
     interactionSession(id: ID!): InteractionSession!
-    interactionSession_ByEventIdentifier(eventIdentifier: String!): InteractionSession!
+    interactionSession_BySessionIdentifier(sessionIdentifier: String!): InteractionSession!
 
     interactionEvent(id: ID!): InteractionEvent!
     interactionEvent_ByEventIdentifier(eventIdentifier: String!): InteractionEvent!
@@ -7880,18 +7880,18 @@ func (ec *executionContext) field_Query_interactionEvent_args(ctx context.Contex
 	return args, nil
 }
 
-func (ec *executionContext) field_Query_interactionSession_ByEventIdentifier_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+func (ec *executionContext) field_Query_interactionSession_BySessionIdentifier_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
 	var arg0 string
-	if tmp, ok := rawArgs["eventIdentifier"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("eventIdentifier"))
+	if tmp, ok := rawArgs["sessionIdentifier"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("sessionIdentifier"))
 		arg0, err = ec.unmarshalNString2string(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["eventIdentifier"] = arg0
+	args["sessionIdentifier"] = arg0
 	return args, nil
 }
 
@@ -26845,8 +26845,8 @@ func (ec *executionContext) fieldContext_Query_interactionSession(ctx context.Co
 	return fc, nil
 }
 
-func (ec *executionContext) _Query_interactionSession_ByEventIdentifier(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Query_interactionSession_ByEventIdentifier(ctx, field)
+func (ec *executionContext) _Query_interactionSession_BySessionIdentifier(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_interactionSession_BySessionIdentifier(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -26859,7 +26859,7 @@ func (ec *executionContext) _Query_interactionSession_ByEventIdentifier(ctx cont
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().InteractionSessionByEventIdentifier(rctx, fc.Args["eventIdentifier"].(string))
+		return ec.resolvers.Query().InteractionSessionBySessionIdentifier(rctx, fc.Args["sessionIdentifier"].(string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -26876,7 +26876,7 @@ func (ec *executionContext) _Query_interactionSession_ByEventIdentifier(ctx cont
 	return ec.marshalNInteractionSession2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐInteractionSession(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Query_interactionSession_ByEventIdentifier(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Query_interactionSession_BySessionIdentifier(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Query",
 		Field:      field,
@@ -26919,7 +26919,7 @@ func (ec *executionContext) fieldContext_Query_interactionSession_ByEventIdentif
 		}
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Query_interactionSession_ByEventIdentifier_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+	if fc.Args, err = ec.field_Query_interactionSession_BySessionIdentifier_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return
 	}
@@ -37098,7 +37098,7 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			out.Concurrently(i, func() graphql.Marshaler {
 				return rrm(innerCtx)
 			})
-		case "interactionSession_ByEventIdentifier":
+		case "interactionSession_BySessionIdentifier":
 			field := field
 
 			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
@@ -37107,7 +37107,7 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 						ec.Error(ctx, ec.Recover(ctx, r))
 					}
 				}()
-				res = ec._Query_interactionSession_ByEventIdentifier(ctx, field)
+				res = ec._Query_interactionSession_BySessionIdentifier(ctx, field)
 				if res == graphql.Null {
 					atomic.AddUint32(&invalids, 1)
 				}
