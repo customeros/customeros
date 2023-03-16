@@ -74,7 +74,7 @@ export async function middleware(request: NextRequest) {
         })
           .setProtectedHeader({ alg })
           .setIssuedAt()
-          .setExpirationTime('10s')
+          .setExpirationTime('2m')
           .sign(ORY_SIGN_SECRET);
 
         nextResponse.cookies.set(ORY_CHECK_HEADER, jwt);
