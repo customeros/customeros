@@ -80,7 +80,7 @@ func (b *emailBatcher) getEmailsForOrganizations(ctx context.Context, keys datal
 	if err != nil {
 		// check if context deadline exceeded error occurred
 		if ctx.Err() == context.DeadlineExceeded {
-			return []*dataloader.Result{{Data: nil, Error: errors.New("deadline exceeded to get emails for contacts")}}
+			return []*dataloader.Result{{Data: nil, Error: errors.New("deadline exceeded to get emails for organizations")}}
 		}
 		return []*dataloader.Result{{Data: nil, Error: err}}
 	}

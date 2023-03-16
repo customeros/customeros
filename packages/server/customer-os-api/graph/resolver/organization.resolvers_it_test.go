@@ -511,7 +511,7 @@ func TestQueryResolver_Organization_WithTimelineEvents_DirectAndFromMultipleCont
 	interactionEventId3 := neo4jt.CreateInteractionEvent(ctx, driver, tenantName, "IE text 3", "application/json", "EMAIL", secAgo70)
 	emailIdContact := neo4jt.AddEmailTo(ctx, driver, entity.CONTACT, tenantName, contactId1, "email1", false, "WORK")
 	emailIdOrg := neo4jt.AddEmailTo(ctx, driver, entity.ORGANIZATION, tenantName, organizationId, "email2", false, "WORK")
-	phoneNumberId := neo4jt.AddPhoneNumberToContact(ctx, driver, tenantName, contactId2, "+1234", false, "WORK")
+	phoneNumberId := neo4jt.AddPhoneNumberTo(ctx, driver, tenantName, contactId2, "+1234", false, "WORK")
 	neo4jt.InteractionEventSentBy(ctx, driver, interactionEventId1, emailIdContact, "")
 	neo4jt.InteractionEventSentTo(ctx, driver, interactionEventId2, phoneNumberId, "")
 	neo4jt.InteractionEventSentBy(ctx, driver, interactionEventId3, emailIdOrg, "")
@@ -598,7 +598,7 @@ func TestQueryResolver_Organization_WithTimelineEventsTotalCount(t *testing.T) {
 	interactionEventId3 := neo4jt.CreateInteractionEvent(ctx, driver, tenantName, "IE text 3", "application/json", "EMAIL", now)
 	emailIdContact := neo4jt.AddEmailTo(ctx, driver, entity.CONTACT, tenantName, contactId1, "email1", false, "WORK")
 	emailIdOrg := neo4jt.AddEmailTo(ctx, driver, entity.ORGANIZATION, tenantName, organizationId, "email2", false, "WORK")
-	phoneNumberId := neo4jt.AddPhoneNumberToContact(ctx, driver, tenantName, contactId2, "+1234", false, "WORK")
+	phoneNumberId := neo4jt.AddPhoneNumberTo(ctx, driver, tenantName, contactId2, "+1234", false, "WORK")
 	neo4jt.InteractionEventSentBy(ctx, driver, interactionEventId1, emailIdContact, "")
 	neo4jt.InteractionEventSentTo(ctx, driver, interactionEventId2, phoneNumberId, "")
 	neo4jt.InteractionEventSentBy(ctx, driver, interactionEventId3, emailIdOrg, "")
@@ -670,4 +670,55 @@ func TestQueryResolver_Organization_WithEmails(t *testing.T) {
 	require.Equal(t, "email2", *emailB.RawEmail)
 	require.Equal(t, "email2", *emailB.Email)
 	require.Equal(t, model.EmailLabelWork, *emailB.Label)
+}
+
+func TestQueryResolver_Organization_WithPhoneNumbers(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx)(t)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+
+	organizationId := neo4jt.CreateOrganization(ctx, driver, tenantName, "test org")
+	phoneNumberId1 := neo4jt.AddPhoneNumberTo(ctx, driver, tenantName, organizationId, "+1111", true, "MAIN")
+	phoneNumberId2 := neo4jt.AddPhoneNumberTo(ctx, driver, tenantName, organizationId, "+2222", false, "WORK")
+
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Organization"))
+	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "PhoneNumber"))
+	require.Equal(t, 2, neo4jt.GetCountOfRelationships(ctx, driver, "HAS"))
+
+	rawResponse, err := c.RawPost(getQuery("organization/get_organization_with_phone_numbers"),
+		client.Var("organizationId", organizationId))
+	assertRawResponseSuccess(t, rawResponse, err)
+
+	var organizationStruct struct {
+		Organization model.Organization
+	}
+
+	err = decode.Decode(rawResponse.Data.(map[string]any), &organizationStruct)
+	require.Nil(t, err)
+	organization := organizationStruct.Organization
+
+	require.Equal(t, organizationId, organization.ID)
+	phoneNumbers := organization.PhoneNumbers
+	require.Equal(t, 2, len(phoneNumbers))
+	var phoneNumber1, phoneNumber2 *model.PhoneNumber
+	if phoneNumberId1 == phoneNumbers[0].ID {
+		phoneNumber1 = phoneNumbers[0]
+		phoneNumber2 = phoneNumbers[1]
+	} else {
+		phoneNumber1 = phoneNumbers[1]
+		phoneNumber2 = phoneNumbers[0]
+	}
+	require.Equal(t, phoneNumberId1, phoneNumber1.ID)
+	require.NotNil(t, phoneNumber1.CreatedAt)
+	require.Equal(t, true, phoneNumber1.Primary)
+	require.Equal(t, "+1111", *phoneNumber1.RawPhoneNumber)
+	require.Equal(t, "+1111", *phoneNumber1.E164)
+	require.Equal(t, model.PhoneNumberLabelMain, *phoneNumber1.Label)
+
+	require.Equal(t, phoneNumberId2, phoneNumber2.ID)
+	require.NotNil(t, phoneNumber2.CreatedAt)
+	require.Equal(t, false, phoneNumber2.Primary)
+	require.Equal(t, "+2222", *phoneNumber2.RawPhoneNumber)
+	require.Equal(t, "+2222", *phoneNumber2.E164)
+	require.Equal(t, model.PhoneNumberLabelWork, *phoneNumber2.Label)
 }

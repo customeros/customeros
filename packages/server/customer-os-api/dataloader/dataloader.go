@@ -26,6 +26,7 @@ type Loaders struct {
 	InteractionSessionForInteractionEvent  *dataloader.Loader
 	SentByParticipantsForInteractionEvent  *dataloader.Loader
 	SentToParticipantsForInteractionEvent  *dataloader.Loader
+	PhoneNumbersForOrganization            *dataloader.Loader
 }
 
 type tagBatcher struct {
@@ -54,6 +55,9 @@ type interactionSessionBatcher struct {
 }
 type interactionEventParticipantBatcher struct {
 	interactionEventService service.InteractionEventService
+}
+type phoneNumberBatcher struct {
+	phoneNumberService service.PhoneNumberService
 }
 
 // NewDataLoader returns the instantiated Loaders struct for use in a request
@@ -85,6 +89,9 @@ func NewDataLoader(services *service.Services) *Loaders {
 	interactionEventParticipantBatcher := &interactionEventParticipantBatcher{
 		interactionEventService: services.InteractionEventService,
 	}
+	phoneNumberBatcher := &phoneNumberBatcher{
+		phoneNumberService: services.PhoneNumberService,
+	}
 	return &Loaders{
 		TagsForOrganization:                    dataloader.NewBatchedLoader(tagBatcher.getTagsForOrganizations, dataloader.WithClearCacheOnBatch()),
 		TagsForContact:                         dataloader.NewBatchedLoader(tagBatcher.getTagsForContacts, dataloader.WithClearCacheOnBatch()),
@@ -100,6 +107,7 @@ func NewDataLoader(services *service.Services) *Loaders {
 		InteractionSessionForInteractionEvent:  dataloader.NewBatchedLoader(interactionSessionBatcher.getInteractionSessionsForInteractionEvents, dataloader.WithClearCacheOnBatch()),
 		SentByParticipantsForInteractionEvent:  dataloader.NewBatchedLoader(interactionEventParticipantBatcher.getSentByParticipantsForInteractionEvents, dataloader.WithClearCacheOnBatch()),
 		SentToParticipantsForInteractionEvent:  dataloader.NewBatchedLoader(interactionEventParticipantBatcher.getSentToParticipantsForInteractionEvents, dataloader.WithClearCacheOnBatch()),
+		PhoneNumbersForOrganization:            dataloader.NewBatchedLoader(phoneNumberBatcher.getPhoneNumbersForOrganizations, dataloader.WithClearCacheOnBatch()),
 	}
 }
 

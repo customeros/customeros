@@ -396,6 +396,7 @@ type ComplexityRoot struct {
 		Name                     func(childComplexity int) int
 		Notes                    func(childComplexity int, pagination *model.Pagination) int
 		OrganizationType         func(childComplexity int) int
+		PhoneNumbers             func(childComplexity int) int
 		Source                   func(childComplexity int) int
 		SourceOfTruth            func(childComplexity int) int
 		Tags                     func(childComplexity int) int
@@ -688,6 +689,7 @@ type OrganizationResolver interface {
 	Notes(ctx context.Context, obj *model.Organization, pagination *model.Pagination) (*model.NotePage, error)
 	Tags(ctx context.Context, obj *model.Organization) ([]*model.Tag, error)
 	Emails(ctx context.Context, obj *model.Organization) ([]*model.Email, error)
+	PhoneNumbers(ctx context.Context, obj *model.Organization) ([]*model.PhoneNumber, error)
 	TimelineEvents(ctx context.Context, obj *model.Organization, from *time.Time, size int, timelineEventTypes []model.TimelineEventType) ([]model.TimelineEvent, error)
 	TimelineEventsTotalCount(ctx context.Context, obj *model.Organization, timelineEventTypes []model.TimelineEventType) (int64, error)
 	TicketSummaryByStatus(ctx context.Context, obj *model.Organization) ([]*model.TicketSummaryByStatus, error)
@@ -2952,6 +2954,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Organization.OrganizationType(childComplexity), true
 
+	case "Organization.phoneNumbers":
+		if e.complexity.Organization.PhoneNumbers == nil {
+			break
+		}
+
+		return e.complexity.Organization.PhoneNumbers(childComplexity), true
+
 	case "Organization.source":
 		if e.complexity.Organization.Source == nil {
 			break
@@ -5043,6 +5052,7 @@ type Organization implements Node {
     notes(pagination: Pagination): NotePage! @goField(forceResolver: true)
     tags: [Tag!] @goField(forceResolver: true)
     emails: [Email!]! @goField(forceResolver: true)
+    phoneNumbers: [PhoneNumber!]! @goField(forceResolver: true)
 
     timelineEvents(from: Time, size: Int!, timelineEventTypes: [TimelineEventType!]): [TimelineEvent!]! @goField(forceResolver: true)
     timelineEventsTotalCount(timelineEventTypes: [TimelineEventType!]): Int64! @goField(forceResolver: true)
@@ -11740,6 +11750,8 @@ func (ec *executionContext) fieldContext_DashboardViewItem_organization(ctx cont
 				return ec.fieldContext_Organization_tags(ctx, field)
 			case "emails":
 				return ec.fieldContext_Organization_emails(ctx, field)
+			case "phoneNumbers":
+				return ec.fieldContext_Organization_phoneNumbers(ctx, field)
 			case "timelineEvents":
 				return ec.fieldContext_Organization_timelineEvents(ctx, field)
 			case "timelineEventsTotalCount":
@@ -14720,6 +14732,8 @@ func (ec *executionContext) fieldContext_JobRole_organization(ctx context.Contex
 				return ec.fieldContext_Organization_tags(ctx, field)
 			case "emails":
 				return ec.fieldContext_Organization_emails(ctx, field)
+			case "phoneNumbers":
+				return ec.fieldContext_Organization_phoneNumbers(ctx, field)
 			case "timelineEvents":
 				return ec.fieldContext_Organization_timelineEvents(ctx, field)
 			case "timelineEventsTotalCount":
@@ -19687,6 +19701,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_Create(ctx contex
 				return ec.fieldContext_Organization_tags(ctx, field)
 			case "emails":
 				return ec.fieldContext_Organization_emails(ctx, field)
+			case "phoneNumbers":
+				return ec.fieldContext_Organization_phoneNumbers(ctx, field)
 			case "timelineEvents":
 				return ec.fieldContext_Organization_timelineEvents(ctx, field)
 			case "timelineEventsTotalCount":
@@ -19790,6 +19806,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_Update(ctx contex
 				return ec.fieldContext_Organization_tags(ctx, field)
 			case "emails":
 				return ec.fieldContext_Organization_emails(ctx, field)
+			case "phoneNumbers":
+				return ec.fieldContext_Organization_phoneNumbers(ctx, field)
 			case "timelineEvents":
 				return ec.fieldContext_Organization_timelineEvents(ctx, field)
 			case "timelineEventsTotalCount":
@@ -19949,6 +19967,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_Merge(ctx context
 				return ec.fieldContext_Organization_tags(ctx, field)
 			case "emails":
 				return ec.fieldContext_Organization_emails(ctx, field)
+			case "phoneNumbers":
+				return ec.fieldContext_Organization_phoneNumbers(ctx, field)
 			case "timelineEvents":
 				return ec.fieldContext_Organization_timelineEvents(ctx, field)
 			case "timelineEventsTotalCount":
@@ -22301,6 +22321,72 @@ func (ec *executionContext) fieldContext_Organization_emails(ctx context.Context
 	return fc, nil
 }
 
+func (ec *executionContext) _Organization_phoneNumbers(ctx context.Context, field graphql.CollectedField, obj *model.Organization) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Organization_phoneNumbers(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Organization().PhoneNumbers(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.PhoneNumber)
+	fc.Result = res
+	return ec.marshalNPhoneNumber2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐPhoneNumberᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Organization_phoneNumbers(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Organization",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_PhoneNumber_id(ctx, field)
+			case "e164":
+				return ec.fieldContext_PhoneNumber_e164(ctx, field)
+			case "rawPhoneNumber":
+				return ec.fieldContext_PhoneNumber_rawPhoneNumber(ctx, field)
+			case "validated":
+				return ec.fieldContext_PhoneNumber_validated(ctx, field)
+			case "label":
+				return ec.fieldContext_PhoneNumber_label(ctx, field)
+			case "primary":
+				return ec.fieldContext_PhoneNumber_primary(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_PhoneNumber_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_PhoneNumber_updatedAt(ctx, field)
+			case "source":
+				return ec.fieldContext_PhoneNumber_source(ctx, field)
+			case "appSource":
+				return ec.fieldContext_PhoneNumber_appSource(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type PhoneNumber", field.Name)
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Organization_timelineEvents(ctx context.Context, field graphql.CollectedField, obj *model.Organization) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Organization_timelineEvents(ctx, field)
 	if err != nil {
@@ -22540,6 +22626,8 @@ func (ec *executionContext) fieldContext_OrganizationPage_content(ctx context.Co
 				return ec.fieldContext_Organization_tags(ctx, field)
 			case "emails":
 				return ec.fieldContext_Organization_emails(ctx, field)
+			case "phoneNumbers":
+				return ec.fieldContext_Organization_phoneNumbers(ctx, field)
 			case "timelineEvents":
 				return ec.fieldContext_Organization_timelineEvents(ctx, field)
 			case "timelineEventsTotalCount":
@@ -25493,6 +25581,8 @@ func (ec *executionContext) fieldContext_Query_organization(ctx context.Context,
 				return ec.fieldContext_Organization_tags(ctx, field)
 			case "emails":
 				return ec.fieldContext_Organization_emails(ctx, field)
+			case "phoneNumbers":
+				return ec.fieldContext_Organization_phoneNumbers(ctx, field)
 			case "timelineEvents":
 				return ec.fieldContext_Organization_timelineEvents(ctx, field)
 			case "timelineEventsTotalCount":
@@ -34441,6 +34531,26 @@ func (ec *executionContext) _Organization(ctx context.Context, sel ast.Selection
 					}
 				}()
 				res = ec._Organization_emails(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
+		case "phoneNumbers":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Organization_phoneNumbers(ctx, field, obj)
 				if res == graphql.Null {
 					atomic.AddUint32(&invalids, 1)
 				}
