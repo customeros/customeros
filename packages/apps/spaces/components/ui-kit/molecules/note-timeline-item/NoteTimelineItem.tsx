@@ -189,7 +189,7 @@ export const NoteTimelineItem: React.FC<Props> = ({
 
             {source && (
               <div className='flex'>
-                <div className='mr-1'>Source:</div>
+                <div className='mr-1'>Source: </div>
                 <div className='capitaliseFirstLetter'>{source}</div>
               </div>
             )}
