@@ -585,6 +585,17 @@ func (this InteractionEvent) GetID() string { return this.ID }
 
 func (InteractionEvent) IsTimelineEvent() {}
 
+type InteractionEventInput struct {
+	EventIdentifier    *string                             `json:"eventIdentifier"`
+	Content            *string                             `json:"content"`
+	ContentType        *string                             `json:"contentType"`
+	Channel            *string                             `json:"channel"`
+	InteractionSession *string                             `json:"interactionSession"`
+	SentBy             []*InteractionEventParticipantInput `json:"sentBy"`
+	SentTo             []*InteractionEventParticipantInput `json:"sentTo"`
+	AppSource          string                              `json:"appSource"`
+}
+
 type InteractionEventParticipantInput struct {
 	Email       *string `json:"email"`
 	PhoneNumber *string `json:"phoneNumber"`
@@ -612,6 +623,15 @@ func (InteractionSession) IsNode()            {}
 func (this InteractionSession) GetID() string { return this.ID }
 
 func (InteractionSession) IsTimelineEvent() {}
+
+type InteractionSessionInput struct {
+	SessionIdentifier *string `json:"sessionIdentifier"`
+	Name              *string `json:"name"`
+	Status            *string `json:"status"`
+	Type              *string `json:"type"`
+	Channel           *string `json:"channel"`
+	AppSource         string  `json:"appSource"`
+}
 
 // Describes the relationship a Contact has with a Organization.
 // **A `return` object**

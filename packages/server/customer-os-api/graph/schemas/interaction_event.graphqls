@@ -14,29 +14,33 @@ input InteractionEventParticipantInput  {
     type: String
 }
 
+input InteractionSessionInput {
+    sessionIdentifier: String
+    name: String
+    status: String
+    type: String
+    channel: String
+    appSource: String!
+}
+
+input InteractionEventInput {
+    eventIdentifier: String
+    content: String
+    contentType: String
+    channel: String
+    interactionSession: ID
+    sentBy: [InteractionEventParticipantInput!]!
+    sentTo: [InteractionEventParticipantInput!]!
+    appSource: String!
+}
+
 extend type Mutation {
-    createInteractionSession(
-        sessionIdentifier: String
-        name: String
-        status: String
-        type: String
-        channel: String
-        source: DataSource!
-        sourceOfTruth: DataSource!
-        appSource: String!
+    interactionSession_Create(
+        session: InteractionSessionInput!
     ): InteractionSession!
 
-    createInteractionEvent(
-        eventIdentifier: String
-        content: String
-        contentType: String
-        channel: String
-        interactionSession: ID!
-        sentBy: [InteractionEventParticipantInput!]!
-        sentTo: [InteractionEventParticipantInput!]!
-        source: DataSource!
-        sourceOfTruth: DataSource!
-        appSource: String!
+    interactionEvent_Create(
+        event: InteractionEventInput!
     ): InteractionEvent!
 }
 

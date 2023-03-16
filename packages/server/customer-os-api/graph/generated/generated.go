@@ -300,79 +300,69 @@ type ComplexityRoot struct {
 	}
 
 	Mutation struct {
-		ContactAddOrganizationByID              func(childComplexity int, input model.ContactOrganizationInput) int
-		ContactAddTagByID                       func(childComplexity int, input model.ContactTagInput) int
-		ContactCreate                           func(childComplexity int, input model.ContactInput) int
-		ContactGroupAddContact                  func(childComplexity int, contactID string, groupID string) int
-		ContactGroupCreate                      func(childComplexity int, input model.ContactGroupInput) int
-		ContactGroupDeleteAndUnlinkAllContacts  func(childComplexity int, id string) int
-		ContactGroupRemoveContact               func(childComplexity int, contactID string, groupID string) int
-		ContactGroupUpdate                      func(childComplexity int, input model.ContactGroupUpdateInput) int
-		ContactHardDelete                       func(childComplexity int, contactID string) int
-		ContactMerge                            func(childComplexity int, primaryContactID string, mergedContactIds []string) int
-		ContactRemoveOrganizationByID           func(childComplexity int, input model.ContactOrganizationInput) int
-		ContactRemoveTagByID                    func(childComplexity int, input model.ContactTagInput) int
-		ContactSoftDelete                       func(childComplexity int, contactID string) int
-		ContactUpdate                           func(childComplexity int, input model.ContactUpdateInput) int
-		ConversationClose                       func(childComplexity int, conversationID string) int
-		ConversationCreate                      func(childComplexity int, input model.ConversationInput) int
-		ConversationUpdate                      func(childComplexity int, input model.ConversationUpdateInput) int
-		CustomFieldDeleteFromContactByID        func(childComplexity int, contactID string, id string) int
-		CustomFieldDeleteFromContactByName      func(childComplexity int, contactID string, fieldName string) int
-		CustomFieldDeleteFromFieldSetByID       func(childComplexity int, contactID string, fieldSetID string, id string) int
-		CustomFieldMergeToContact               func(childComplexity int, contactID string, input model.CustomFieldInput) int
-		CustomFieldMergeToFieldSet              func(childComplexity int, contactID string, fieldSetID string, input model.CustomFieldInput) int
-		CustomFieldUpdateInContact              func(childComplexity int, contactID string, input model.CustomFieldUpdateInput) int
-		CustomFieldUpdateInFieldSet             func(childComplexity int, contactID string, fieldSetID string, input model.CustomFieldUpdateInput) int
-		CustomFieldsMergeAndUpdateInContact     func(childComplexity int, contactID string, customFields []*model.CustomFieldInput, fieldSets []*model.FieldSetInput) int
-		EmailDelete                             func(childComplexity int, id string) int
-		EmailMergeToContact                     func(childComplexity int, contactID string, input model.EmailInput) int
-		EmailMergeToOrganization                func(childComplexity int, organizationID string, input model.EmailInput) int
-		EmailMergeToUser                        func(childComplexity int, userID string, input model.EmailInput) int
-		EmailRemoveFromContact                  func(childComplexity int, contactID string, email string) int
-		EmailRemoveFromContactByID              func(childComplexity int, contactID string, id string) int
-		EmailRemoveFromOrganization             func(childComplexity int, organizationID string, email string) int
-		EmailRemoveFromOrganizationByID         func(childComplexity int, organizationID string, id string) int
-		EmailRemoveFromUser                     func(childComplexity int, userID string, email string) int
-		EmailRemoveFromUserByID                 func(childComplexity int, userID string, id string) int
-		EmailUpdateInContact                    func(childComplexity int, contactID string, input model.EmailUpdateInput) int
-		EmailUpdateInOrganization               func(childComplexity int, organizationID string, input model.EmailUpdateInput) int
-		EmailUpdateInUser                       func(childComplexity int, userID string, input model.EmailUpdateInput) int
-		EntityTemplateCreate                    func(childComplexity int, input model.EntityTemplateInput) int
-		FieldSetDeleteFromContact               func(childComplexity int, contactID string, id string) int
-		FieldSetMergeToContact                  func(childComplexity int, contactID string, input model.FieldSetInput) int
-		FieldSetUpdateInContact                 func(childComplexity int, contactID string, input model.FieldSetUpdateInput) int
-		JobRoleCreate                           func(childComplexity int, contactID string, input model.JobRoleInput) int
-		JobRoleDelete                           func(childComplexity int, contactID string, roleID string) int
-		JobRoleUpdate                           func(childComplexity int, contactID string, input model.JobRoleUpdateInput) int
-		NoteCreateForContact                    func(childComplexity int, contactID string, input model.NoteInput) int
-		NoteCreateForOrganization               func(childComplexity int, organizationID string, input model.NoteInput) int
-		NoteDelete                              func(childComplexity int, id string) int
-		NoteUpdate                              func(childComplexity int, input model.NoteUpdateInput) int
-		OrganizationCreate                      func(childComplexity int, input model.OrganizationInput) int
-		OrganizationDelete                      func(childComplexity int, id string) int
-		OrganizationMerge                       func(childComplexity int, primaryOrganizationID string, mergedOrganizationIds []string) int
-		OrganizationTypeCreate                  func(childComplexity int, input model.OrganizationTypeInput) int
-		OrganizationTypeDelete                  func(childComplexity int, id string) int
-		OrganizationTypeUpdate                  func(childComplexity int, input model.OrganizationTypeUpdateInput) int
-		OrganizationUpdate                      func(childComplexity int, input model.OrganizationUpdateInput) int
-		PhoneNumberMergeToContact               func(childComplexity int, contactID string, input model.PhoneNumberInput) int
-		PhoneNumberMergeToOrganization          func(childComplexity int, organizationID string, input model.PhoneNumberInput) int
-		PhoneNumberMergeToUser                  func(childComplexity int, userID string, input model.PhoneNumberInput) int
-		PhoneNumberRemoveFromContactByE164      func(childComplexity int, contactID string, e164 string) int
-		PhoneNumberRemoveFromContactByID        func(childComplexity int, contactID string, id string) int
-		PhoneNumberRemoveFromOrganizationByE164 func(childComplexity int, organizationID string, e164 string) int
-		PhoneNumberRemoveFromOrganizationByID   func(childComplexity int, organizationID string, id string) int
-		PhoneNumberRemoveFromUserByE164         func(childComplexity int, userID string, e164 string) int
-		PhoneNumberRemoveFromUserByID           func(childComplexity int, userID string, id string) int
-		PhoneNumberUpdateInContact              func(childComplexity int, contactID string, input model.PhoneNumberUpdateInput) int
-		PhoneNumberUpdateInOrganization         func(childComplexity int, organizationID string, input model.PhoneNumberUpdateInput) int
-		PhoneNumberUpdateInUser                 func(childComplexity int, userID string, input model.PhoneNumberUpdateInput) int
-		TagCreate                               func(childComplexity int, input model.TagInput) int
-		TagDelete                               func(childComplexity int, id string) int
-		TagUpdate                               func(childComplexity int, input model.TagUpdateInput) int
-		UserCreate                              func(childComplexity int, input model.UserInput) int
-		UserUpdate                              func(childComplexity int, input model.UserUpdateInput) int
+		ContactAddOrganizationByID             func(childComplexity int, input model.ContactOrganizationInput) int
+		ContactAddTagByID                      func(childComplexity int, input model.ContactTagInput) int
+		ContactCreate                          func(childComplexity int, input model.ContactInput) int
+		ContactGroupAddContact                 func(childComplexity int, contactID string, groupID string) int
+		ContactGroupCreate                     func(childComplexity int, input model.ContactGroupInput) int
+		ContactGroupDeleteAndUnlinkAllContacts func(childComplexity int, id string) int
+		ContactGroupRemoveContact              func(childComplexity int, contactID string, groupID string) int
+		ContactGroupUpdate                     func(childComplexity int, input model.ContactGroupUpdateInput) int
+		ContactHardDelete                      func(childComplexity int, contactID string) int
+		ContactMerge                           func(childComplexity int, primaryContactID string, mergedContactIds []string) int
+		ContactRemoveOrganizationByID          func(childComplexity int, input model.ContactOrganizationInput) int
+		ContactRemoveTagByID                   func(childComplexity int, input model.ContactTagInput) int
+		ContactSoftDelete                      func(childComplexity int, contactID string) int
+		ContactUpdate                          func(childComplexity int, input model.ContactUpdateInput) int
+		ConversationClose                      func(childComplexity int, conversationID string) int
+		ConversationCreate                     func(childComplexity int, input model.ConversationInput) int
+		ConversationUpdate                     func(childComplexity int, input model.ConversationUpdateInput) int
+		CustomFieldDeleteFromContactByID       func(childComplexity int, contactID string, id string) int
+		CustomFieldDeleteFromContactByName     func(childComplexity int, contactID string, fieldName string) int
+		CustomFieldDeleteFromFieldSetByID      func(childComplexity int, contactID string, fieldSetID string, id string) int
+		CustomFieldMergeToContact              func(childComplexity int, contactID string, input model.CustomFieldInput) int
+		CustomFieldMergeToFieldSet             func(childComplexity int, contactID string, fieldSetID string, input model.CustomFieldInput) int
+		CustomFieldUpdateInContact             func(childComplexity int, contactID string, input model.CustomFieldUpdateInput) int
+		CustomFieldUpdateInFieldSet            func(childComplexity int, contactID string, fieldSetID string, input model.CustomFieldUpdateInput) int
+		CustomFieldsMergeAndUpdateInContact    func(childComplexity int, contactID string, customFields []*model.CustomFieldInput, fieldSets []*model.FieldSetInput) int
+		EmailDelete                            func(childComplexity int, id string) int
+		EmailMergeToContact                    func(childComplexity int, contactID string, input model.EmailInput) int
+		EmailMergeToUser                       func(childComplexity int, userID string, input model.EmailInput) int
+		EmailRemoveFromContact                 func(childComplexity int, contactID string, email string) int
+		EmailRemoveFromContactByID             func(childComplexity int, contactID string, id string) int
+		EmailRemoveFromUser                    func(childComplexity int, userID string, email string) int
+		EmailRemoveFromUserByID                func(childComplexity int, userID string, id string) int
+		EmailUpdateInContact                   func(childComplexity int, contactID string, input model.EmailUpdateInput) int
+		EmailUpdateInUser                      func(childComplexity int, userID string, input model.EmailUpdateInput) int
+		EntityTemplateCreate                   func(childComplexity int, input model.EntityTemplateInput) int
+		FieldSetDeleteFromContact              func(childComplexity int, contactID string, id string) int
+		FieldSetMergeToContact                 func(childComplexity int, contactID string, input model.FieldSetInput) int
+		FieldSetUpdateInContact                func(childComplexity int, contactID string, input model.FieldSetUpdateInput) int
+		InteractionEventCreate                 func(childComplexity int, event model.InteractionEventInput) int
+		InteractionSessionCreate               func(childComplexity int, session model.InteractionSessionInput) int
+		JobRoleCreate                          func(childComplexity int, contactID string, input model.JobRoleInput) int
+		JobRoleDelete                          func(childComplexity int, contactID string, roleID string) int
+		JobRoleUpdate                          func(childComplexity int, contactID string, input model.JobRoleUpdateInput) int
+		NoteCreateForContact                   func(childComplexity int, contactID string, input model.NoteInput) int
+		NoteCreateForOrganization              func(childComplexity int, organizationID string, input model.NoteInput) int
+		NoteDelete                             func(childComplexity int, id string) int
+		NoteUpdate                             func(childComplexity int, input model.NoteUpdateInput) int
+		OrganizationCreate                     func(childComplexity int, input model.OrganizationInput) int
+		OrganizationDelete                     func(childComplexity int, id string) int
+		OrganizationMerge                      func(childComplexity int, primaryOrganizationID string, mergedOrganizationIds []string) int
+		OrganizationTypeCreate                 func(childComplexity int, input model.OrganizationTypeInput) int
+		OrganizationTypeDelete                 func(childComplexity int, id string) int
+		OrganizationTypeUpdate                 func(childComplexity int, input model.OrganizationTypeUpdateInput) int
+		OrganizationUpdate                     func(childComplexity int, input model.OrganizationUpdateInput) int
+		PhoneNumberMergeToContact              func(childComplexity int, contactID string, input model.PhoneNumberInput) int
+		PhoneNumberRemoveFromContactByE164     func(childComplexity int, contactID string, e164 string) int
+		PhoneNumberRemoveFromContactByID       func(childComplexity int, contactID string, id string) int
+		PhoneNumberUpdateInContact             func(childComplexity int, contactID string, input model.PhoneNumberUpdateInput) int
+		TagCreate                              func(childComplexity int, input model.TagInput) int
+		TagDelete                              func(childComplexity int, id string) int
+		TagUpdate                              func(childComplexity int, input model.TagUpdateInput) int
+		UserCreate                             func(childComplexity int, input model.UserInput) int
+		UserUpdate                             func(childComplexity int, input model.UserUpdateInput) int
 	}
 
 	Note struct {
@@ -660,8 +650,8 @@ type MutationResolver interface {
 	EmailRemoveFromOrganization(ctx context.Context, organizationID string, email string) (*model.Result, error)
 	EmailRemoveFromOrganizationByID(ctx context.Context, organizationID string, id string) (*model.Result, error)
 	EmailDelete(ctx context.Context, id string) (*model.Result, error)
-	CreateInteractionSession(ctx context.Context, sessionIdentifier *string, name *string, status *string, typeArg *string, channel *string, source model.DataSource, sourceOfTruth model.DataSource, appSource string) (*model.InteractionSession, error)
-	CreateInteractionEvent(ctx context.Context, eventIdentifier *string, content *string, contentType *string, channel *string, interactionSession string, sentBy []*model.InteractionEventParticipantInput, sentTo []*model.InteractionEventParticipantInput, source model.DataSource, sourceOfTruth model.DataSource, appSource string) (*model.InteractionEvent, error)
+	InteractionSessionCreate(ctx context.Context, session model.InteractionSessionInput) (*model.InteractionSession, error)
+	InteractionEventCreate(ctx context.Context, event model.InteractionEventInput) (*model.InteractionEvent, error)
 	JobRoleDelete(ctx context.Context, contactID string, roleID string) (*model.Result, error)
 	JobRoleCreate(ctx context.Context, contactID string, input model.JobRoleInput) (*model.JobRole, error)
 	JobRoleUpdate(ctx context.Context, contactID string, input model.JobRoleUpdateInput) (*model.JobRole, error)
@@ -2254,30 +2244,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.ConversationUpdate(childComplexity, args["input"].(model.ConversationUpdateInput)), true
 
-	case "Mutation.createInteractionEvent":
-		if e.complexity.Mutation.CreateInteractionEvent == nil {
-			break
-		}
-
-		args, err := ec.field_Mutation_createInteractionEvent_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Mutation.CreateInteractionEvent(childComplexity, args["eventIdentifier"].(*string), args["content"].(*string), args["contentType"].(*string), args["channel"].(*string), args["interactionSession"].(string), args["sentBy"].([]*model.InteractionEventParticipantInput), args["sentTo"].([]*model.InteractionEventParticipantInput), args["source"].(model.DataSource), args["sourceOfTruth"].(model.DataSource), args["appSource"].(string)), true
-
-	case "Mutation.createInteractionSession":
-		if e.complexity.Mutation.CreateInteractionSession == nil {
-			break
-		}
-
-		args, err := ec.field_Mutation_createInteractionSession_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Mutation.CreateInteractionSession(childComplexity, args["sessionIdentifier"].(*string), args["name"].(*string), args["status"].(*string), args["type"].(*string), args["channel"].(*string), args["source"].(model.DataSource), args["sourceOfTruth"].(model.DataSource), args["appSource"].(string)), true
-
 	case "Mutation.customFieldDeleteFromContactById":
 		if e.complexity.Mutation.CustomFieldDeleteFromContactByID == nil {
 			break
@@ -2577,6 +2543,30 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.FieldSetUpdateInContact(childComplexity, args["contactId"].(string), args["input"].(model.FieldSetUpdateInput)), true
+
+	case "Mutation.interactionEvent_Create":
+		if e.complexity.Mutation.InteractionEventCreate == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_interactionEvent_Create_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.InteractionEventCreate(childComplexity, args["event"].(model.InteractionEventInput)), true
+
+	case "Mutation.interactionSession_Create":
+		if e.complexity.Mutation.InteractionSessionCreate == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_interactionSession_Create_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.InteractionSessionCreate(childComplexity, args["session"].(model.InteractionSessionInput)), true
 
 	case "Mutation.jobRole_Create":
 		if e.complexity.Mutation.JobRoleCreate == nil {
@@ -4010,7 +4000,9 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputFieldSetUpdateInput,
 		ec.unmarshalInputFilter,
 		ec.unmarshalInputFilterItem,
+		ec.unmarshalInputInteractionEventInput,
 		ec.unmarshalInputInteractionEventParticipantInput,
+		ec.unmarshalInputInteractionSessionInput,
 		ec.unmarshalInputJobRoleInput,
 		ec.unmarshalInputJobRoleUpdateInput,
 		ec.unmarshalInputNoteInput,
@@ -4980,29 +4972,33 @@ input InteractionEventParticipantInput  {
     type: String
 }
 
+input InteractionSessionInput {
+    sessionIdentifier: String
+    name: String
+    status: String
+    type: String
+    channel: String
+    appSource: String!
+}
+
+input InteractionEventInput {
+    eventIdentifier: String
+    content: String
+    contentType: String
+    channel: String
+    interactionSession: ID
+    sentBy: [InteractionEventParticipantInput!]!
+    sentTo: [InteractionEventParticipantInput!]!
+    appSource: String!
+}
+
 extend type Mutation {
-    createInteractionSession(
-        sessionIdentifier: String
-        name: String
-        status: String
-        type: String
-        channel: String
-        source: DataSource!
-        sourceOfTruth: DataSource!
-        appSource: String!
+    interactionSession_Create(
+        session: InteractionSessionInput!
     ): InteractionSession!
 
-    createInteractionEvent(
-        eventIdentifier: String
-        content: String
-        contentType: String
-        channel: String
-        interactionSession: ID!
-        sentBy: [InteractionEventParticipantInput!]!
-        sentTo: [InteractionEventParticipantInput!]!
-        source: DataSource!
-        sourceOfTruth: DataSource!
-        appSource: String!
+    interactionEvent_Create(
+        event: InteractionEventInput!
     ): InteractionEvent!
 }
 
@@ -6155,180 +6151,6 @@ func (ec *executionContext) field_Mutation_conversation_Update_args(ctx context.
 	return args, nil
 }
 
-func (ec *executionContext) field_Mutation_createInteractionEvent_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
-	var err error
-	args := map[string]interface{}{}
-	var arg0 *string
-	if tmp, ok := rawArgs["eventIdentifier"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("eventIdentifier"))
-		arg0, err = ec.unmarshalOString2ᚖstring(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["eventIdentifier"] = arg0
-	var arg1 *string
-	if tmp, ok := rawArgs["content"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("content"))
-		arg1, err = ec.unmarshalOString2ᚖstring(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["content"] = arg1
-	var arg2 *string
-	if tmp, ok := rawArgs["contentType"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("contentType"))
-		arg2, err = ec.unmarshalOString2ᚖstring(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["contentType"] = arg2
-	var arg3 *string
-	if tmp, ok := rawArgs["channel"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("channel"))
-		arg3, err = ec.unmarshalOString2ᚖstring(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["channel"] = arg3
-	var arg4 string
-	if tmp, ok := rawArgs["interactionSession"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("interactionSession"))
-		arg4, err = ec.unmarshalNID2string(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["interactionSession"] = arg4
-	var arg5 []*model.InteractionEventParticipantInput
-	if tmp, ok := rawArgs["sentBy"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("sentBy"))
-		arg5, err = ec.unmarshalNInteractionEventParticipantInput2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐInteractionEventParticipantInputᚄ(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["sentBy"] = arg5
-	var arg6 []*model.InteractionEventParticipantInput
-	if tmp, ok := rawArgs["sentTo"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("sentTo"))
-		arg6, err = ec.unmarshalNInteractionEventParticipantInput2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐInteractionEventParticipantInputᚄ(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["sentTo"] = arg6
-	var arg7 model.DataSource
-	if tmp, ok := rawArgs["source"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("source"))
-		arg7, err = ec.unmarshalNDataSource2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐDataSource(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["source"] = arg7
-	var arg8 model.DataSource
-	if tmp, ok := rawArgs["sourceOfTruth"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("sourceOfTruth"))
-		arg8, err = ec.unmarshalNDataSource2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐDataSource(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["sourceOfTruth"] = arg8
-	var arg9 string
-	if tmp, ok := rawArgs["appSource"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("appSource"))
-		arg9, err = ec.unmarshalNString2string(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["appSource"] = arg9
-	return args, nil
-}
-
-func (ec *executionContext) field_Mutation_createInteractionSession_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
-	var err error
-	args := map[string]interface{}{}
-	var arg0 *string
-	if tmp, ok := rawArgs["sessionIdentifier"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("sessionIdentifier"))
-		arg0, err = ec.unmarshalOString2ᚖstring(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["sessionIdentifier"] = arg0
-	var arg1 *string
-	if tmp, ok := rawArgs["name"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
-		arg1, err = ec.unmarshalOString2ᚖstring(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["name"] = arg1
-	var arg2 *string
-	if tmp, ok := rawArgs["status"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("status"))
-		arg2, err = ec.unmarshalOString2ᚖstring(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["status"] = arg2
-	var arg3 *string
-	if tmp, ok := rawArgs["type"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("type"))
-		arg3, err = ec.unmarshalOString2ᚖstring(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["type"] = arg3
-	var arg4 *string
-	if tmp, ok := rawArgs["channel"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("channel"))
-		arg4, err = ec.unmarshalOString2ᚖstring(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["channel"] = arg4
-	var arg5 model.DataSource
-	if tmp, ok := rawArgs["source"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("source"))
-		arg5, err = ec.unmarshalNDataSource2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐDataSource(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["source"] = arg5
-	var arg6 model.DataSource
-	if tmp, ok := rawArgs["sourceOfTruth"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("sourceOfTruth"))
-		arg6, err = ec.unmarshalNDataSource2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐDataSource(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["sourceOfTruth"] = arg6
-	var arg7 string
-	if tmp, ok := rawArgs["appSource"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("appSource"))
-		arg7, err = ec.unmarshalNString2string(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["appSource"] = arg7
-	return args, nil
-}
-
 func (ec *executionContext) field_Mutation_customFieldDeleteFromContactById_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
@@ -6944,6 +6766,36 @@ func (ec *executionContext) field_Mutation_fieldSetUpdateInContact_args(ctx cont
 		}
 	}
 	args["input"] = arg1
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_interactionEvent_Create_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 model.InteractionEventInput
+	if tmp, ok := rawArgs["event"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("event"))
+		arg0, err = ec.unmarshalNInteractionEventInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐInteractionEventInput(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["event"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_interactionSession_Create_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 model.InteractionSessionInput
+	if tmp, ok := rawArgs["session"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("session"))
+		arg0, err = ec.unmarshalNInteractionSessionInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐInteractionSessionInput(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["session"] = arg0
 	return args, nil
 }
 
@@ -20087,8 +19939,8 @@ func (ec *executionContext) fieldContext_Mutation_emailDelete(ctx context.Contex
 	return fc, nil
 }
 
-func (ec *executionContext) _Mutation_createInteractionSession(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_createInteractionSession(ctx, field)
+func (ec *executionContext) _Mutation_interactionSession_Create(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_interactionSession_Create(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -20101,7 +19953,7 @@ func (ec *executionContext) _Mutation_createInteractionSession(ctx context.Conte
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().CreateInteractionSession(rctx, fc.Args["sessionIdentifier"].(*string), fc.Args["name"].(*string), fc.Args["status"].(*string), fc.Args["type"].(*string), fc.Args["channel"].(*string), fc.Args["source"].(model.DataSource), fc.Args["sourceOfTruth"].(model.DataSource), fc.Args["appSource"].(string))
+		return ec.resolvers.Mutation().InteractionSessionCreate(rctx, fc.Args["session"].(model.InteractionSessionInput))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -20118,7 +19970,7 @@ func (ec *executionContext) _Mutation_createInteractionSession(ctx context.Conte
 	return ec.marshalNInteractionSession2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐInteractionSession(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Mutation_createInteractionSession(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Mutation_interactionSession_Create(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Mutation",
 		Field:      field,
@@ -20161,15 +20013,15 @@ func (ec *executionContext) fieldContext_Mutation_createInteractionSession(ctx c
 		}
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_createInteractionSession_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+	if fc.Args, err = ec.field_Mutation_interactionSession_Create_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return
 	}
 	return fc, nil
 }
 
-func (ec *executionContext) _Mutation_createInteractionEvent(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_createInteractionEvent(ctx, field)
+func (ec *executionContext) _Mutation_interactionEvent_Create(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_interactionEvent_Create(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -20182,7 +20034,7 @@ func (ec *executionContext) _Mutation_createInteractionEvent(ctx context.Context
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().CreateInteractionEvent(rctx, fc.Args["eventIdentifier"].(*string), fc.Args["content"].(*string), fc.Args["contentType"].(*string), fc.Args["channel"].(*string), fc.Args["interactionSession"].(string), fc.Args["sentBy"].([]*model.InteractionEventParticipantInput), fc.Args["sentTo"].([]*model.InteractionEventParticipantInput), fc.Args["source"].(model.DataSource), fc.Args["sourceOfTruth"].(model.DataSource), fc.Args["appSource"].(string))
+		return ec.resolvers.Mutation().InteractionEventCreate(rctx, fc.Args["event"].(model.InteractionEventInput))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -20199,7 +20051,7 @@ func (ec *executionContext) _Mutation_createInteractionEvent(ctx context.Context
 	return ec.marshalNInteractionEvent2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐInteractionEvent(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Mutation_createInteractionEvent(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Mutation_interactionEvent_Create(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Mutation",
 		Field:      field,
@@ -20242,7 +20094,7 @@ func (ec *executionContext) fieldContext_Mutation_createInteractionEvent(ctx con
 		}
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_createInteractionEvent_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+	if fc.Args, err = ec.field_Mutation_interactionEvent_Create_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return
 	}
@@ -32255,6 +32107,90 @@ func (ec *executionContext) unmarshalInputFilterItem(ctx context.Context, obj in
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputInteractionEventInput(ctx context.Context, obj interface{}) (model.InteractionEventInput, error) {
+	var it model.InteractionEventInput
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"eventIdentifier", "content", "contentType", "channel", "interactionSession", "sentBy", "sentTo", "appSource"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "eventIdentifier":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("eventIdentifier"))
+			it.EventIdentifier, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "content":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("content"))
+			it.Content, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "contentType":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("contentType"))
+			it.ContentType, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "channel":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("channel"))
+			it.Channel, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "interactionSession":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("interactionSession"))
+			it.InteractionSession, err = ec.unmarshalOID2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "sentBy":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("sentBy"))
+			it.SentBy, err = ec.unmarshalNInteractionEventParticipantInput2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐInteractionEventParticipantInputᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "sentTo":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("sentTo"))
+			it.SentTo, err = ec.unmarshalNInteractionEventParticipantInput2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐInteractionEventParticipantInputᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "appSource":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("appSource"))
+			it.AppSource, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputInteractionEventParticipantInput(ctx context.Context, obj interface{}) (model.InteractionEventParticipantInput, error) {
 	var it model.InteractionEventParticipantInput
 	asMap := map[string]interface{}{}
@@ -32306,6 +32242,74 @@ func (ec *executionContext) unmarshalInputInteractionEventParticipantInput(ctx c
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("type"))
 			it.Type, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputInteractionSessionInput(ctx context.Context, obj interface{}) (model.InteractionSessionInput, error) {
+	var it model.InteractionSessionInput
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"sessionIdentifier", "name", "status", "type", "channel", "appSource"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "sessionIdentifier":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("sessionIdentifier"))
+			it.SessionIdentifier, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "name":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
+			it.Name, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "status":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("status"))
+			it.Status, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "type":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("type"))
+			it.Type, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "channel":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("channel"))
+			it.Channel, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "appSource":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("appSource"))
+			it.AppSource, err = ec.unmarshalNString2string(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -35750,19 +35754,19 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
-		case "createInteractionSession":
+		case "interactionSession_Create":
 
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_createInteractionSession(ctx, field)
+				return ec._Mutation_interactionSession_Create(ctx, field)
 			})
 
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
-		case "createInteractionEvent":
+		case "interactionEvent_Create":
 
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_createInteractionEvent(ctx, field)
+				return ec._Mutation_interactionEvent_Create(ctx, field)
 			})
 
 			if out.Values[i] == graphql.Null {
@@ -39087,6 +39091,11 @@ func (ec *executionContext) marshalNInteractionEvent2ᚖgithubᚗcomᚋopenline�
 	return ec._InteractionEvent(ctx, sel, v)
 }
 
+func (ec *executionContext) unmarshalNInteractionEventInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐInteractionEventInput(ctx context.Context, v interface{}) (model.InteractionEventInput, error) {
+	res, err := ec.unmarshalInputInteractionEventInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
 func (ec *executionContext) marshalNInteractionEventParticipant2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐInteractionEventParticipant(ctx context.Context, sel ast.SelectionSet, v model.InteractionEventParticipant) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
@@ -39175,6 +39184,11 @@ func (ec *executionContext) marshalNInteractionSession2ᚖgithubᚗcomᚋopenlin
 		return graphql.Null
 	}
 	return ec._InteractionSession(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalNInteractionSessionInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐInteractionSessionInput(ctx context.Context, v interface{}) (model.InteractionSessionInput, error) {
+	res, err := ec.unmarshalInputInteractionSessionInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) marshalNJobRole2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐJobRole(ctx context.Context, sel ast.SelectionSet, v model.JobRole) graphql.Marshaler {

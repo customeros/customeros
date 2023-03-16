@@ -73,14 +73,14 @@ func (r *interactionSessionResolver) Events(ctx context.Context, obj *model.Inte
 	return mapper.MapEntitiesToInteractionEvents(interactionEventEntities), nil
 }
 
-// CreateInteractionSession is the resolver for the createInteractionSession field.
-func (r *mutationResolver) CreateInteractionSession(ctx context.Context, sessionIdentifier *string, name *string, status *string, typeArg *string, channel *string, source model.DataSource, sourceOfTruth model.DataSource, appSource string) (*model.InteractionSession, error) {
-	panic(fmt.Errorf("not implemented: CreateInteractionSession - createInteractionSession"))
+// InteractionSessionCreate is the resolver for the interactionSession_Create field.
+func (r *mutationResolver) InteractionSessionCreate(ctx context.Context, session model.InteractionSessionInput) (*model.InteractionSession, error) {
+	panic(fmt.Errorf("not implemented: InteractionSessionCreate - interactionSession_Create"))
 }
 
-// CreateInteractionEvent is the resolver for the createInteractionEvent field.
-func (r *mutationResolver) CreateInteractionEvent(ctx context.Context, eventIdentifier *string, content *string, contentType *string, channel *string, interactionSession string, sentBy []*model.InteractionEventParticipantInput, sentTo []*model.InteractionEventParticipantInput, source model.DataSource, sourceOfTruth model.DataSource, appSource string) (*model.InteractionEvent, error) {
-	panic(fmt.Errorf("not implemented: CreateInteractionEvent - createInteractionEvent"))
+// InteractionEventCreate is the resolver for the interactionEvent_Create field.
+func (r *mutationResolver) InteractionEventCreate(ctx context.Context, event model.InteractionEventInput) (*model.InteractionEvent, error) {
+	panic(fmt.Errorf("not implemented: InteractionEventCreate - interactionEvent_Create"))
 }
 
 // InteractionSession is the resolver for the interactionSession field.
@@ -122,6 +122,12 @@ type interactionSessionResolver struct{ *Resolver }
 //   - When renaming or deleting a resolver the old code will be put in here. You can safely delete
 //     it when you're done.
 //   - You have helper methods in this file. Move them out to keep these resolver files clean.
+func (r *mutationResolver) CreateInteractionSession(ctx context.Context, sessionIdentifier *string, name *string, status *string, typeArg *string, channel *string, source model.DataSource, sourceOfTruth model.DataSource, appSource string) (*model.InteractionSession, error) {
+	panic(fmt.Errorf("not implemented: CreateInteractionSession - createInteractionSession"))
+}
+func (r *mutationResolver) CreateInteractionEvent(ctx context.Context, eventIdentifier *string, content *string, contentType *string, channel *string, interactionSession string, sentBy []*model.InteractionEventParticipantInput, sentTo []*model.InteractionEventParticipantInput, source model.DataSource, sourceOfTruth model.DataSource, appSource string) (*model.InteractionEvent, error) {
+	panic(fmt.Errorf("not implemented: CreateInteractionEvent - createInteractionEvent"))
+}
 func (r *queryResolver) InteractionSessionByEventIdentifier(ctx context.Context, eventIdentifier string) (*model.InteractionSession, error) {
 	panic(fmt.Errorf("not implemented: InteractionSessionByEventIdentifier - interactionSession_ByEventIdentifier"))
 }
