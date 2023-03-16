@@ -10,7 +10,7 @@ import { Skeleton } from 'primereact/skeleton';
 import { EmailTimelineItem } from '../email-timeline-item';
 import { TimelineItem } from '../../atoms/timeline-item';
 import useWebSocket from 'react-use-websocket';
-import {EmailTimelineItemToDeprecate} from "../email-timeline-item-to-deprecate";
+import { EmailTimelineItemToDeprecate } from '../email-timeline-item-to-deprecate';
 
 interface Props {
   contactId?: string;

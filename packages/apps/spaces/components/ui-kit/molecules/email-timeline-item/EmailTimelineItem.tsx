@@ -2,6 +2,7 @@ import React, { useRef, useState } from 'react';
 import sanitizeHtml from 'sanitize-html';
 import styles from './email-timeline-item.module.scss';
 import { Button } from '../../atoms';
+import linkifyHtml from 'linkify-html';
 
 interface Props {
   content: string;
@@ -188,7 +189,14 @@ export const EmailTimelineItem: React.FC<Props> = ({
           {contentType === 'text/html' && (
             <div
               className={`text-overflow-ellipsis ${styles.emailContent}`}
-              dangerouslySetInnerHTML={{ __html: sanitizeHtml(content) }}
+              dangerouslySetInnerHTML={{
+                __html: sanitizeHtml(
+                  linkifyHtml(content, {
+                    defaultProtocol: 'https',
+                    rel: 'noopener noreferrer',
+                  }),
+                ),
+              }}
             ></div>
           )}
           {contentType === 'text/plain' && (

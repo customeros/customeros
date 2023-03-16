@@ -15,7 +15,7 @@
   color: #495057;
 
   & a {
-    @include link-style
+    @include link-style;
   }
 
   & * {

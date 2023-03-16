@@ -149,10 +149,7 @@ export const Timeline = ({
       case 'InteractionEvent':
         if (data.channel === 'EMAIL') {
           return (
-            <TimelineItem
-              first={index == 0}
-              createdAt={data?.createdAt}
-            >
+            <TimelineItem first={index == 0} createdAt={data?.createdAt}>
               <EmailTimelineItem {...data} />
             </TimelineItem>
           );

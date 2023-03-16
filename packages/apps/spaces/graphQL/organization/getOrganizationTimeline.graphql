@@ -1,7 +1,7 @@
 query GetOrganizationTimeline($organizationId: ID!, $from: Time!, $size: Int!) {
   organization(id: $organizationId) {
     id
-    timelineEvents(from:$from, size:$size) {
+    timelineEvents(from: $from, size: $size) {
       ... on PageView {
         id
         application
@@ -38,7 +38,7 @@ query GetOrganizationTimeline($organizationId: ID!, $from: Time!, $size: Int!) {
         updatedAt
         messageCount
         contacts {
-          id,
+          id
           lastName
           firstName
         }
@@ -66,9 +66,7 @@ query GetOrganizationTimeline($organizationId: ID!, $from: Time!, $size: Int!) {
           firstName
           lastName
         }
-
       }
     }
   }
 }
-
