@@ -1,3 +1,4 @@
+@import "styles/mixins";
 .emailContainer {
   display: flex;
   flex-direction: column;
@@ -35,7 +36,6 @@
   position: relative;
   display: block;
   overflow: hidden;
-  pointer-events: none;
   padding: var(--spacing-xxxs) 0;
 
   &.eclipse:after {
@@ -59,6 +59,10 @@
 .emailContent {
   min-height: 40px;
   overflow-wrap: anywhere;
+
+  & a {
+    @include link-style;
+  }
   & * {
     margin-bottom: 2px;
   }

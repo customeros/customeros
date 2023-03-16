@@ -51,7 +51,7 @@ export const TicketTimelineItem = ({
             return (
               <div key={note.id}>
                 <div className={`${styles.noteActivity}`}>
-                  Activity on {DateTimeUtils.format(new Date(note.createdAt))}
+                  Activity on {DateTimeUtils.format(note.createdAt)}
                 </div>
                 <div
                   dangerouslySetInnerHTML={{ __html: sanitizeHtml(note.html) }}
