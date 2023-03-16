@@ -44,7 +44,7 @@ export const MainPageWrapper = ({ children }: any) => {
       .then(({ data }) => {
         // User has a session!
         setSession(data);
-        setUserEmail({ identity: getUserName(data.identity) });
+        setUserEmail({ identity: getUserName(data.identity), id: data.id });
         // @ts-expect-error analytics is added to window object from script
         if (window?.analytics && process.env.NODE_ENV === 'production') {
           // @ts-expect-error analytics is added to window object from script

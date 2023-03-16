@@ -18,7 +18,6 @@ export const useUpdateNote = (): Result => {
     try {
       const response = await updateNoteMutation({
         variables: { input: note },
-        refetchQueries: ['GetContactNotes', 'LoadTimelineForOrganization'], // TODO fixme after moving to new query!
       });
       if (response.data) {
         toast.success('Note updated!', {

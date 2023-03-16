@@ -20,6 +20,26 @@ const authLink = setContext((_, { headers }) => {
 const client = new ApolloClient({
   cache: new InMemoryCache({
     typePolicies: {
+      Contact: {
+        fields: {
+          timelineEvents: {
+            keyArgs: false,
+            merge(existing = [], incoming) {
+              return [...incoming, ...existing];
+            },
+          },
+        },
+      },
+      Organization: {
+        fields: {
+          timelineEvents: {
+            keyArgs: false,
+            merge(existing = [], incoming) {
+              return [...incoming, ...existing];
+            },
+          },
+        },
+      },
       Query: {
         fields: {
           dashboardView: {

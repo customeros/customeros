@@ -1,5 +1,5 @@
-query GetOrganizationTimeline($organizationId: ID!, $from: Time!, $size: Int!) {
-  organization(id: $organizationId) {
+query GetContactTimeline($contactId: ID!, $from: Time!, $size: Int!) {
+  contact(id: $contactId) {
     id
     timelineEvents(from:$from, size:$size) {
       ... on PageView {

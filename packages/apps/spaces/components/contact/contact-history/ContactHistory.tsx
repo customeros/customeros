@@ -1,144 +1,51 @@
-import React, { useEffect, useState } from 'react';
-import { useContactNotes } from '../../../hooks/useNote/useContactNotes';
+import React, { useState } from 'react';
 import { Timeline } from '../../ui-kit/organisms';
-import { useContactConversations } from '../../../hooks/useContactConversations';
-import { useContactTickets } from '../../../hooks/useContact/useContactTickets';
-import { gql } from '@apollo/client';
-import { GraphQLClient } from 'graphql-request';
-import { useContactPersonalDetails } from '../../../hooks/useContact';
-import { Skeleton } from '../../ui-kit/atoms/skeleton';
-import { getContactDisplayName } from '../../../utils';
-import { Contact } from '../../../graphQL/__generated__/generated';
+import { useContactTimeline } from '../../../hooks/useContactTimeline';
+import { uuid4 } from '@sentry/utils';
 
 export const ContactHistory = ({ id }: { id: string }) => {
-  const {
-    data: notes,
-    loading: notesLoading,
-    error: notesError,
-  } = useContactNotes({ id });
-  const {
-    data: tickets,
-    loading: ticketsLoading,
-    error: ticketsError,
-  } = useContactTickets({ id });
-  // TODO add pagination support
-  const {
-    data: conversations,
-    loading: conversationsLoading,
-    error: conversationsError,
-  } = useContactConversations({ id });
-
-  const query = gql`
-    query GetActionsForContact($id: ID!, $from: Time!, $to: Time!) {
-      contact(id: $id) {
-        id
-        firstName
-        lastName
-        createdAt
-        actions(from: $from, to: $to) {
-          ... on PageViewAction {
-            __typename
-            id
-            application
-            startedAt
-            endedAt
-            engagedTime
-            pageUrl
-            pageTitle
-            orderInSession
-            sessionId
-          }
-          ... on InteractionSession {
-            __typename
-            id
-            startedAt
-            name
-            status
-            type
-            channel
-            events {
-              channel
-              content
-            }
-          }
-        }
-      }
-    }
-  `;
-
-  const [actions, setActions] = useState<any[] | undefined>(undefined);
-  const [actionsLoading, setActionsLoading] = useState<boolean>(true);
-
-  useEffect(() => {
-    const from = new Date(1970, 0, 1).toISOString();
-    const to = new Date().toISOString();
-    const client = new GraphQLClient(`/customer-os-api/query`);
-    client.request(query, { id, from, to }).then((response) => {
-      if (response && response.contact) {
-        setActions(response.contact.actions);
-        setActionsLoading(false);
-      } else {
-        setActions([]);
-        setActionsLoading(false);
-      }
-    });
-  }, [id]);
-
+  const { data, loading, error, fetchMore } = useContactTimeline({
+    contactId: id,
+  });
+  const [prevDate, setPrevDate] = useState(null);
   const liveConversations = {
     __typename: 'LiveConversation',
     source: 'LiveStream',
     createdAt: Date.now(),
+    id: uuid4(),
   };
 
-  console.log('in history');
+  if (error) {
+    return (
+      <div>
+        <h1>Oops! Timeline error</h1>
+      </div>
+    );
+  }
 
-  const noHistoryItemsAvailable =
-    !notesLoading &&
-    notes?.notes?.content.length == 0 &&
-    !conversationsLoading &&
-    conversations?.conversations?.content.length == 0 &&
-    !ticketsLoading &&
-    tickets?.tickets?.length == 0 &&
-    !actionsLoading &&
-    actions?.length == 0;
-
-  const getSortedItems = (
-    data1: Array<any> | undefined,
-    data2: Array<any> | undefined,
-    data3: Array<any> | undefined,
-    data4: Array<any> | undefined,
-  ) => {
-    const data = [
-      ...(data1 || []),
-      ...(data2 || []),
-      ...(data3 || []),
-      ...(data4 || []),
-    ];
-    return data.sort((a, b) => {
-      return Date.parse(a?.createdAt) - Date.parse(b?.createdAt);
-    });
-  };
-
-  const getTimelineTitle = () => {
-    return 'Timeline:';
-  };
   return (
-    <>
-      <Timeline
-        loading={notesLoading || conversationsLoading || ticketsLoading}
-        noActivity={noHistoryItemsAvailable}
-        contactId={id}
-        loggedActivities={[
-          liveConversations,
-          ...getSortedItems(
-            notes?.notes.content,
-            conversations?.conversations.content,
-            tickets?.tickets,
-            actions,
-          ),
-        ]}
-      />
-    </>
+    <Timeline
+      loading={loading}
+      onLoadMore={(containerRef) => {
+        const newFromDate = data[0]?.createdAt || data[0]?.startedAt;
+        if (!data[0] || prevDate === newFromDate) {
+          return;
+        }
+        // todo remove me when switching to virtualized list
+        containerRef.current.scrollTop = 100;
+        setPrevDate(newFromDate);
+        fetchMore({
+          variables: {
+            contactId: id,
+            size: 10,
+            from: newFromDate,
+          },
+        });
+      }}
+      noActivity={!data}
+      id={id}
+      loggedActivities={[liveConversations, ...(data || [])]}
+    />
   );
 };
 

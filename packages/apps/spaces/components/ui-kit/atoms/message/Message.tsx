@@ -1,5 +1,5 @@
 import * as React from 'react';
-import styles from './message.module.css';
+import styles from './message.module.scss';
 import sanitizeHtml from 'sanitize-html';
 
 // import { ConversationItem } from '../../../models/conversation-item';
@@ -64,7 +64,6 @@ export const Message = ({
   };
 
   const getContact = (msg: MiniVcon): VConParty => {
-    console.log('getContact' + JSON.stringify(msg) + '\n');
     if (msg.parties) {
       for (const party of msg.parties) {
         if (party.tel) {
@@ -127,7 +126,6 @@ export const Message = ({
             <div>
               {response.map(
                 (transcriptElement: TranscriptElement, index: number) => {
-                  console.log(transcriptElement);
                   return (
                     <div key={index}>
                       {transcriptElement.party.tel && (
@@ -270,7 +268,6 @@ export const Message = ({
             className={`${styles.message} ${styles.center}`}
             style={{ background: '#E5FAE9', borderRadius: '5px' }}
           >
-
             {displayContent(content)}
             <div
               className='flex align-content-end'

@@ -88,7 +88,7 @@ export const LiveConversationTimelineItem: React.FC<Props> = ({
       Object.keys(lastMessage).length !== 0 &&
       lastMessage.data.length > 0
     ) {
-      console.log('🏷️ ----- lastMessage: ', lastMessage);
+      // console.log('🏷️ ----- lastMessage: ', lastMessage);
       handleWebsocketMessage(JSON.parse(lastMessage?.data));
     }
   }, [lastMessage]);

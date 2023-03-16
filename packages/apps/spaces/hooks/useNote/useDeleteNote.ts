@@ -14,7 +14,11 @@ export const useDeleteNote = (): Result => {
     try {
       const response = await removeNoteMutation({
         variables: { id: id },
-        refetchQueries: ['GetContactNotes', 'LoadTimelineForOrganization'], // TODO fixme after moving to new query!
+        update(cache) {
+          const normalizedId = cache.identify({ id, __typename: 'Note' });
+          cache.evict({ id: normalizedId });
+          cache.gc();
+        },
       });
       toast.success('Note deleted!', {
         toastId: `remove-note-success-${id}`,
