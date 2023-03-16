@@ -1,6 +1,7 @@
 import * as React from 'react';
 import styles from './message.module.scss';
-import sanitizeHtml from 'sanitize-html';
+import { DialogContent } from './DialogContent';
+import { AnalysisContent } from './AnalysisContent';
 
 // import { ConversationItem } from '../../../models/conversation-item';
 interface Props {
@@ -24,7 +25,7 @@ export const Message = ({
   previousMessage,
   index,
 }: Props) => {
-  const decodeChannel = (channel: number) => {
+  const decodeChannel = () => {
     return 'Voice call';
   };
 
@@ -46,12 +47,6 @@ export const Message = ({
     mailto?: string;
     name?: string;
   }
-
-  interface TranscriptElement {
-    party: VConParty;
-    text: string;
-  }
-
   const getUser = (msg: MiniVcon): VConParty => {
     if (msg.parties) {
       for (const party of msg.parties) {
@@ -64,6 +59,7 @@ export const Message = ({
   };
 
   const getContact = (msg: MiniVcon): VConParty => {
+    console.log('getContact', msg);
     if (msg.parties) {
       for (const party of msg.parties) {
         if (party.tel) {
@@ -90,85 +86,19 @@ export const Message = ({
     return response;
   };
 
-  const displayContent = (content: MiniVcon) => {
-    if (content.dialog) {
-      if (content.dialog.mimetype === 'text/plain') {
-        return content.dialog.body;
-      } else if (content.dialog.mimetype === 'text/html') {
-        return (
-          <div
-            className={`text-overflow-ellipsis ${styles.emailContent}`}
-            dangerouslySetInnerHTML={{
-              __html: sanitizeHtml(content.dialog.body),
-            }}
-          ></div>
-        );
-      }
-    }
-    if (content.analysis) {
-      if (content.analysis.mimetype === 'text/plain') {
-        return content.analysis.body;
-      } else if (content.analysis.mimetype === 'text/html') {
-        return (
-          <div
-            className={`text-overflow-ellipsis ${styles.emailContent}`}
-            dangerouslySetInnerHTML={{
-              __html: sanitizeHtml(content.analysis.body),
-            }}
-          ></div>
-        );
-      } else if (
-        content.analysis.mimetype === 'application/x-openline-transcript'
-      ) {
-        try {
-          const response = JSON.parse(content.analysis.body);
-          return (
-            <div>
-              {response.map(
-                (transcriptElement: TranscriptElement, index: number) => {
-                  return (
-                    <div key={index}>
-                      {transcriptElement.party.tel && (
-                        <div className={`${styles.message} ${styles.left}`}>
-                          {transcriptElement.text}
-                        </div>
-                      )}
-                      {!transcriptElement.party.tel && (
-                        <div
-                          className={`${styles.message} ${styles.right}`}
-                          style={{ background: '#C5EDCE', borderRadius: '5px' }}
-                        >
-                          {transcriptElement.text}
-                        </div>
-                      )}
-                    </div>
-                  );
-                },
-              )}
-            </div>
-          );
-        } catch (e) {
-          console.log(
-            'Got an error: ' + e + ' when parsing: ' + content.analysis.body,
-          );
-        }
-      }
-    }
-    return 'Unknown Content: ' + JSON.stringify(content);
-  };
-
   const content = decodeContent(message.content);
+
   if (content.analysis && message.direction) {
     message.direction = 3;
   }
 
   return (
-    <>
-      {content.dialog && message.direction == 0 && (
+    <div style={{ width: '100%' }}>
+      {content.dialog && message.direction === 0 && (
         <>
           {(index === 0 ||
             (index > 0 && previousMessage !== message?.direction)) && (
-            <div className='mb-1 text-gray-600'>
+            <div className='mb-1 text-gray-600 part-1'>
               {sender.firstName && sender.lastName && (
                 <>
                   {sender.firstName} {sender.lastName}
@@ -178,11 +108,13 @@ export const Message = ({
               {!sender.firstName && !sender.lastName && sender.phoneNumber && (
                 <>{sender.phoneNumber}</>
               )}
+              HELLO
             </div>
           )}
           <div className={styles.messageContainer}>
             <div className={`${styles.message} ${styles.left}`}>
-              {displayContent(content)}
+              <DialogContent dialog={content.dialog} />
+
               <div
                 className='flex align-content-end'
                 style={{
@@ -198,7 +130,7 @@ export const Message = ({
           </div>
         </>
       )}
-      {content.dialog && message.direction == 1 && (
+      {content.dialog && message.direction === 1 && (
         <>
           {(index === 0 ||
             (index > 0 && previousMessage !== message?.direction)) && (
@@ -228,9 +160,9 @@ export const Message = ({
           >
             <div
               className={`${styles.message} ${styles.right}`}
-              style={{ background: '#C5EDCE', borderRadius: '5px' }}
+              // style={{ background: '#C5EDCE', borderRadius: '5px' }}
             >
-              {displayContent(content)}
+              <DialogContent dialog={content.dialog} />
               <div
                 className='flex align-content-end'
                 style={{
@@ -241,9 +173,7 @@ export const Message = ({
                 }}
               >
                 <span className='flex-grow-1'></span>
-                <span className='text-gray-600 mr-2'>
-                  {decodeChannel(message.type)}
-                </span>
+                <span className='text-gray-600 mr-2'>{decodeChannel()}</span>
               </div>
             </div>
           </div>
@@ -266,9 +196,9 @@ export const Message = ({
 
           <div
             className={`${styles.message} ${styles.center}`}
-            style={{ background: '#E5FAE9', borderRadius: '5px' }}
+            style={{ background: 'transparent', borderRadius: '5px' }}
           >
-            {displayContent(content)}
+            <AnalysisContent analysis={content.analysis} />
             <div
               className='flex align-content-end'
               style={{
@@ -279,13 +209,11 @@ export const Message = ({
               }}
             >
               <span className='flex-grow-1'></span>
-              <span className='text-gray-600 mr-2'>
-                {decodeChannel(message.type)}
-              </span>
+              <span className='text-gray-600 mr-2'>{decodeChannel()}</span>
             </div>
           </div>
         </>
       )}
-    </>
+    </div>
   );
 };

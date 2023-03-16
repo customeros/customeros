@@ -114,6 +114,7 @@
   --text-faded: var(--gray-600);
 
   /* BORDER */
+  --border-radius-xs: 2px; /* very small border radius */
   --border-radius-sm: 4px; /* small border radius */
   --border-radius-md: 8px; /* medium border radius */
   --border-radius-lg: 16px; /* large border radius */

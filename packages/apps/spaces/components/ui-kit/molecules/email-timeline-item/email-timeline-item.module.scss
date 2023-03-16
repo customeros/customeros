@@ -138,3 +138,9 @@
 .emailDataTable {
   border: none;
 }
+
+.emailWrapper {
+  border: var(--border-divider);
+  border-radius: var(--border-radius-sm);
+  padding: var(--spacing-xs)
+}

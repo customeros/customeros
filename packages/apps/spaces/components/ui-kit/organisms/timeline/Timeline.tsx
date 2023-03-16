@@ -24,6 +24,7 @@ interface Props {
   notifyChange?: (id: any) => void;
   notifyContactNotesUpdate?: (id: any) => void;
   onLoadMore: (ref: any) => void;
+  contactName?: string;
 }
 
 export const Timeline = ({
@@ -34,6 +35,7 @@ export const Timeline = ({
   notifyChange = () => null,
   notifyContactNotesUpdate = () => null,
   onLoadMore,
+  contactName = '',
 }: Props) => {
   const timelineContainerRef = useRef(null);
   const containerRef = useRef(null);
@@ -135,7 +137,7 @@ export const Timeline = ({
       case 'PageView':
         return (
           <TimelineItem first={index == 0} createdAt={data?.startedAt}>
-            <WebActionTimelineItem {...data} />
+            <WebActionTimelineItem {...data} contactName={contactName} />
           </TimelineItem>
         );
       case 'InteractionSession':

@@ -1,23 +1,21 @@
+@import "styles/mixins";
+
 .actionContainer {
-  display: flex;
-  overflow: hidden;
-  position: relative;
-  align-items: self-start;
-  justify-content: space-between;
-  flex: 1;
-  line-height: 1.5rem;
-  margin-left: 20px;
-  @media (max-width: 1024px) {
-    flex-direction: column;
+  border: 1px solid rgba(182, 182, 182, 1);
+  border-left: var(--spacing-xxxs) solid #565656;
+  box-shadow: 1px 4px 4px 0px rgba(0, 0, 0, 0.25);
+  border-radius: var(--border-radius-xs);
+  display:flex;
+  padding: var(--spacing-xxs) var(--spacing-xxxl) var(--spacing-xxs) var(--spacing-xl);
+  justify-self: flex-start;
+
+
+  & span {
+    margin: 0 var(--spacing-xxxs)
   }
-}
 
-.actionDevice {
-  margin-top: var(--spacing-xxxs);
-  color: var(--gray-600);
-}
+  & .visitor {
+    font-weight: bold;
+  }
 
-.x {
-  align-items: center;
-  display: flex;
 }
