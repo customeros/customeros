@@ -10,6 +10,7 @@ import { Skeleton } from 'primereact/skeleton';
 import { EmailTimelineItem } from '../email-timeline-item';
 import { TimelineItem } from '../../atoms/timeline-item';
 import useWebSocket from 'react-use-websocket';
+import {EmailTimelineItemToDeprecate} from "../email-timeline-item-to-deprecate";
 
 interface Props {
   contactId?: string;
@@ -132,9 +133,9 @@ export const LiveConversationTimelineItem: React.FC<Props> = ({
                   first && (index === 0 || index === messages.length - 1);
                 return (
                   <TimelineItem first={fl} createdAt={date} key={msg.id}>
-                    <EmailTimelineItem
+                    {/*TODO switch to EmailTimelineItem when the backend migration is done*/}
+                    <EmailTimelineItemToDeprecate
                       emailContent={emailData.html}
-                      emailContentType={'text/html'}
                       sender={emailData.from || 'Unknown'}
                       recipients={emailData.to}
                       cc={emailData?.cc}

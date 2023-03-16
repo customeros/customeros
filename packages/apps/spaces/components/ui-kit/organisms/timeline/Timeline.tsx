@@ -2,7 +2,7 @@ import React, { useRef } from 'react';
 import { useStickyScroll } from '../../../../hooks/useStickyScroll';
 
 import {
-  ConversationTimelineItem,
+  PhoneConversationTimelineItem,
   EmailTimelineItem,
   LiveConversationTimelineItem,
   NoteTimelineItem,
@@ -15,8 +15,6 @@ import { InteractionTimelineItem } from '../../molecules/interaction-timeline-it
 import { ChatTimelineItem } from '../../molecules/conversation-timeline-item/ChatTimelineItem';
 import { useInfiniteScroll } from './useInfiniteScroll';
 import { Skeleton } from '../../atoms/skeleton';
-import {EditorMode} from "../../../../state";
-import {Button} from "../../atoms";
 
 interface Props {
   loading: boolean;
@@ -101,7 +99,7 @@ export const Timeline = ({
         // TODO move to interaction event once we have the data in backend
         if (data.channel === 'VOICE') {
           return (
-            <ConversationTimelineItem
+            <PhoneConversationTimelineItem
               first={index == 0}
               feedId={data.id}
               source={data.source}
@@ -154,17 +152,8 @@ export const Timeline = ({
             <TimelineItem
               first={index == 0}
               createdAt={data?.createdAt}
-              contentClassName={'interactionTimeLineItemClass'}
             >
-              <EmailTimelineItem
-                emailContent={data.content}
-                emailContentType={data.contentType}
-                sender={''} //TODO when we have backend data
-                recipients={''} //TODO when we have backend data
-                subject={''} //TODO when we have backend data
-                cc={''} //TODO when we have backend data
-                bcc={''} //TODO when we have backend data
-              />
+              <EmailTimelineItem {...data} />
             </TimelineItem>
           );
         } else {
