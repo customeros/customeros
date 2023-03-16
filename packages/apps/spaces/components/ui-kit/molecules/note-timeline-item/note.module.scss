@@ -14,6 +14,10 @@
   font-weight: normal;
   color: #495057;
 
+  & a {
+    @include link-style
+  }
+
   & * {
     width: fit-content;
     overflow: hidden;

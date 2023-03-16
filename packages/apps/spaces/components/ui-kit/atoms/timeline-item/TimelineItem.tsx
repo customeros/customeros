@@ -21,9 +21,11 @@ export const TimelineItem: React.FC<Props> = ({
       {createdAt ? (
         <div className={styles.when}>
           <div className={styles.timeAgo}>
-            {DateTimeUtils.timeAgo(new Date(createdAt), { addSuffix: true })}
+            {DateTimeUtils.timeAgo(createdAt, {
+              addSuffix: true,
+            })}
           </div>
-          {DateTimeUtils.format(new Date(createdAt))}
+          {DateTimeUtils.format(createdAt)}
         </div>
       ) : (
         'Date not available'

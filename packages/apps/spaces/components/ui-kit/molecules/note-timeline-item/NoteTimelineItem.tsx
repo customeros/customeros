@@ -13,6 +13,7 @@ import {
 import sanitizeHtml from 'sanitize-html';
 import ContactNoteModalTemplate from '../../../contact/editor/ContactNoteModalTemplate';
 import { useDeleteNote } from '../../../../hooks/useNote';
+import linkifyHtml from 'linkify-html';
 
 interface Props {
   noteContent: string;
@@ -150,7 +151,12 @@ export const NoteTimelineItem: React.FC<Props> = ({
             <div
               className={`${styles.noteContent}`}
               dangerouslySetInnerHTML={{
-                __html: sanitizeHtml(note.htmlEnhanced),
+                __html: sanitizeHtml(
+                  linkifyHtml(note.htmlEnhanced, {
+                    defaultProtocol: 'https',
+                    rel: 'noopener noreferrer',
+                  }),
+                ),
               }}
             ></div>
           </div>
