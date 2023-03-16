@@ -32,7 +32,7 @@ export const EmailTimelineItem: React.FC<Props> = ({
     }
   };
   return (
-    <>
+    <div className={styles.emailWrapper}>
       <div ref={timelineItemRef} className={styles.scrollToView} />
       <article className={`${styles.emailContainer}`}>
         <div className={styles.emailData}>
@@ -139,6 +139,6 @@ export const EmailTimelineItem: React.FC<Props> = ({
           {children}
         </div>
       </article>
-    </>
+    </div>
   );
 };

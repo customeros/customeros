@@ -2006,7 +2006,7 @@ export type GetContactTimelineQueryVariables = Exact<{
 }>;
 
 
-export type GetContactTimelineQuery = { __typename?: 'Query', contact?: { __typename?: 'Contact', id: string, timelineEvents: Array<{ __typename?: 'Conversation', id: string, startedAt: any, subject?: string | null, channel?: string | null, updatedAt: any, messageCount: any, source: DataSource, appSource?: string | null, initiatorFirstName?: string | null, initiatorLastName?: string | null, initiatorUsername?: string | null, initiatorType?: string | null, threadId?: string | null, contacts?: Array<{ __typename?: 'Contact', id: string, lastName?: string | null, firstName?: string | null }> | null, users?: Array<{ __typename?: 'User', lastName: string, firstName: string, emails?: Array<{ __typename?: 'Email', email?: string | null }> | null }> | null } | { __typename?: 'InteractionSession' } | { __typename?: 'Note', id: string, html: string, createdAt: any, createdBy?: { __typename?: 'User', id: string, firstName: string, lastName: string } | null } | { __typename?: 'PageView', id: string, application: string, startedAt: any, endedAt: any, engagedTime: any, pageUrl: string, pageTitle: string, orderInSession: any, sessionId: string } | { __typename?: 'Ticket', id: string, createdAt: any, updatedAt: any, subject?: string | null, status?: string | null, priority?: string | null, description?: string | null, notes?: Array<{ __typename?: 'Note', id: string, html: string } | null> | null, tags?: Array<{ __typename?: 'Tag', id: string, name: string } | null> | null }> } | null };
+export type GetContactTimelineQuery = { __typename?: 'Query', contact?: { __typename?: 'Contact', id: string, firstName?: string | null, lastName?: string | null, name?: string | null, timelineEvents: Array<{ __typename?: 'Conversation', id: string, startedAt: any, subject?: string | null, channel?: string | null, updatedAt: any, messageCount: any, source: DataSource, appSource?: string | null, initiatorFirstName?: string | null, initiatorLastName?: string | null, initiatorUsername?: string | null, initiatorType?: string | null, threadId?: string | null, contacts?: Array<{ __typename?: 'Contact', id: string, lastName?: string | null, firstName?: string | null }> | null, users?: Array<{ __typename?: 'User', lastName: string, firstName: string, emails?: Array<{ __typename?: 'Email', email?: string | null }> | null }> | null } | { __typename?: 'InteractionSession' } | { __typename?: 'Note', id: string, html: string, createdAt: any, createdBy?: { __typename?: 'User', id: string, firstName: string, lastName: string } | null } | { __typename?: 'PageView', id: string, application: string, startedAt: any, endedAt: any, engagedTime: any, pageUrl: string, pageTitle: string, orderInSession: any, sessionId: string } | { __typename?: 'Ticket', id: string, createdAt: any, updatedAt: any, subject?: string | null, status?: string | null, priority?: string | null, description?: string | null, notes?: Array<{ __typename?: 'Note', id: string, html: string } | null> | null, tags?: Array<{ __typename?: 'Tag', id: string, name: string } | null> | null }> } | null };
 
 export type MergeContactsMutationVariables = Exact<{
   primaryContactId: Scalars['ID'];
@@ -3104,6 +3104,7 @@ export const GetContactTimelineDocument = gql`
     query GetContactTimeline($contactId: ID!, $from: Time!, $size: Int!) {
   contact(id: $contactId) {
     id
+    ...ContactNameFragment
     timelineEvents(from: $from, size: $size) {
       ... on PageView {
         id
@@ -3173,7 +3174,7 @@ export const GetContactTimelineDocument = gql`
     }
   }
 }
-    `;
+    ${ContactNameFragmentFragmentDoc}`;
 
 /**
  * __useGetContactTimelineQuery__

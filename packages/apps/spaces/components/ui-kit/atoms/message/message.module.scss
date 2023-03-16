@@ -11,8 +11,9 @@
   margin-bottom: var(--spacing-sm);
   z-index: 2;
   background: var(--gray-200);
-  box-shadow: -3px 5px 5px var(--gray-300);
   min-width: 40%;
+  word-break: break-all;
+  white-space: pre-line;
 }
 
 .message.left:first-of-type:after {
@@ -31,6 +32,7 @@
 
 .right {
   margin-left: 50px;
+  background:rgb(197, 237, 206);
 }
 
 .left {
@@ -49,4 +51,9 @@
   margin-left: -10px;
   bottom: 0;
   right: -10px;
+}
+
+
+.transcriptionContainer {
+
 }

@@ -41,11 +41,9 @@
 
 .content {
   background: #fff;
-  padding: var(--spacing-sm) var(--spacing-md);
-
   border-radius: 6px;
-  border: var(--border-divider);
   width: 100%;
+  display: flex;
   position: relative;
   font-size: var(--font-size-sm);
   font-weight: normal;

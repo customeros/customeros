@@ -1,9 +1,9 @@
 @import "styles/mixins";
 .emailContainer {
-  display: flex;
   flex-direction: column;
   overflow: hidden;
   position: relative;
+  display: grid;
 }
 
 .emailData {
@@ -137,4 +137,10 @@
 
 .emailDataTable {
   border: none;
+}
+
+.emailWrapper {
+  border: var(--border-divider);
+  border-radius: var(--border-radius-sm);
+  padding: var(--spacing-xs)
 }

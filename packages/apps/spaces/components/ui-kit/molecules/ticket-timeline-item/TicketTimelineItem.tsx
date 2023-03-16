@@ -6,6 +6,7 @@ import { TagsList } from '../../atoms';
 import sanitizeHtml from 'sanitize-html';
 import format from 'date-fns/format';
 import { DateTimeUtils } from '../../../../utils';
+import linkifyHtml from 'linkify-html';
 
 // interface Props extends ContactWebAction {
 //     contactName?: string
@@ -54,7 +55,14 @@ export const TicketTimelineItem = ({
                   Activity on {DateTimeUtils.format(note.createdAt)}
                 </div>
                 <div
-                  dangerouslySetInnerHTML={{ __html: sanitizeHtml(note.html) }}
+                  dangerouslySetInnerHTML={{
+                    __html: sanitizeHtml(
+                      linkifyHtml(note.html, {
+                        defaultProtocol: 'https',
+                        rel: 'noopener noreferrer',
+                      }),
+                    ),
+                  }}
                 ></div>
               </div>
             );

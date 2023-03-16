@@ -123,7 +123,7 @@ export const NoteTimelineItem: React.FC<Props> = ({
     useState(false);
 
   return (
-    <>
+    <div className={styles.noteWrapper}>
       {editNote && (
         <ContactNoteModalTemplate
           isEdit
@@ -164,7 +164,7 @@ export const NoteTimelineItem: React.FC<Props> = ({
             <IconButton
               size='xxxs'
               onClick={() => setDeleteConfirmationModalVisible(true)}
-              icon={<Trash style={{ transform: 'scale(0.85)' }} />}
+              icon={<Trash style={{ transform: 'scale(0.7)' }} />}
               mode='text'
               title='Delete'
               style={{ marginRight: 0 }}
@@ -173,7 +173,7 @@ export const NoteTimelineItem: React.FC<Props> = ({
             <IconButton
               size='xxxs'
               onClick={() => setEditNote(true)}
-              icon={<Pencil style={{ transform: 'scale(0.85)' }} />}
+              icon={<Pencil style={{ transform: 'scale(0.7)' }} />}
               mode='text'
               title='Edit'
               style={{ marginRight: 0 }}
@@ -189,13 +189,13 @@ export const NoteTimelineItem: React.FC<Props> = ({
 
             {source && (
               <div className='flex'>
-                <div className='mr-1'>Source:</div>
+                <div className='mr-1'>Source: </div>
                 <div className='capitaliseFirstLetter'>{source}</div>
               </div>
             )}
           </div>
         </div>
       )}
-    </>
+    </div>
   );
 };

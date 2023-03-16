@@ -4,7 +4,7 @@ import { useContactTimeline } from '../../../hooks/useContactTimeline';
 import { uuid4 } from '@sentry/utils';
 
 export const ContactHistory = ({ id }: { id: string }) => {
-  const { data, loading, error, fetchMore } = useContactTimeline({
+  const { data, contactName, loading, error, fetchMore } = useContactTimeline({
     contactId: id,
   });
   const [prevDate, setPrevDate] = useState(null);
@@ -44,6 +44,7 @@ export const ContactHistory = ({ id }: { id: string }) => {
       }}
       noActivity={!data}
       id={id}
+      contactName={contactName}
       loggedActivities={[liveConversations, ...(data || [])]}
     />
   );
