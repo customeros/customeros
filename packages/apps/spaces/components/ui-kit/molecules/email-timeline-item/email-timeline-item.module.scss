@@ -1,9 +1,9 @@
 @import "styles/mixins";
 .emailContainer {
-  display: flex;
   flex-direction: column;
   overflow: hidden;
   position: relative;
+  display: grid;
 }
 
 .emailData {
