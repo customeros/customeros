@@ -30,6 +30,34 @@ func (r *interactionEventResolver) InteractionSession(ctx context.Context, obj *
 	return mapper.MapEntityToInteractionSession(interactionSessionEntityNillable), nil
 }
 
+// SentBy is the resolver for the sentBy field.
+func (r *interactionEventResolver) SentBy(ctx context.Context, obj *model.InteractionEvent) ([]model.InteractionEventParticipant, error) {
+	defer func(start time.Time) {
+		utils.LogMethodExecution(start, utils.GetFunctionName())
+	}(time.Now())
+
+	participantEntities, err := dataloader.For(ctx).GetSentByParticipantsForInteractionEvent(ctx, obj.ID)
+	if err != nil {
+		graphql.AddErrorf(ctx, "Failed to get participants for interaction event %s", obj.ID)
+		return nil, err
+	}
+	return mapper.MapEntitiesToInteractionEventParticipants(participantEntities), nil
+}
+
+// SentTo is the resolver for the sentTo field.
+func (r *interactionEventResolver) SentTo(ctx context.Context, obj *model.InteractionEvent) ([]model.InteractionEventParticipant, error) {
+	defer func(start time.Time) {
+		utils.LogMethodExecution(start, utils.GetFunctionName())
+	}(time.Now())
+
+	participantEntities, err := dataloader.For(ctx).GetSentToParticipantsForInteractionEvent(ctx, obj.ID)
+	if err != nil {
+		graphql.AddErrorf(ctx, "Failed to get participants for interaction event %s", obj.ID)
+		return nil, err
+	}
+	return mapper.MapEntitiesToInteractionEventParticipants(participantEntities), nil
+}
+
 // Events is the resolver for the events field.
 func (r *interactionSessionResolver) Events(ctx context.Context, obj *model.InteractionSession) ([]*model.InteractionEvent, error) {
 	defer func(start time.Time) {

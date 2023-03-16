@@ -58,13 +58,13 @@ func InitServices(driver *neo4j.DriverWithContext) *Services {
 		DomainService:              NewDomainService(repositories),
 		TicketService:              NewTicketService(repositories),
 		InteractionSessionService:  NewInteractionSessionService(repositories),
-		InteractionEventService:    NewInteractionEventService(repositories),
 		PageViewService:            NewPageViewService(repositories),
 	}
 	services.ActionsService = NewActionsService(repositories, &services)
 	services.TimelineEventService = NewTimelineEventService(repositories, &services)
 	services.SearchService = NewSearchService(repositories, &services)
 	services.QueryService = NewQueryService(repositories, &services)
+	services.InteractionEventService = NewInteractionEventService(repositories, &services)
 
 	return &services
 }

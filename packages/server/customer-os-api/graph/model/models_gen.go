@@ -20,6 +20,10 @@ type ExtensibleEntity interface {
 	GetTemplate() *EntityTemplate
 }
 
+type InteractionEventParticipant interface {
+	IsInteractionEventParticipant()
+}
+
 type Node interface {
 	IsNode()
 	GetID() string
@@ -199,6 +203,13 @@ type ContactOrganizationInput struct {
 	ContactID      string `json:"contactId"`
 	OrganizationID string `json:"organizationId"`
 }
+
+type ContactParticipant struct {
+	ContactParticipant *Contact `json:"contactParticipant"`
+	Type               *string  `json:"type"`
+}
+
+func (ContactParticipant) IsInteractionEventParticipant() {}
 
 type ContactTagInput struct {
 	ContactID string `json:"contactId"`
@@ -453,6 +464,13 @@ type EmailInput struct {
 	AppSource *string `json:"appSource"`
 }
 
+type EmailParticipant struct {
+	EmailParticipant *Email  `json:"emailParticipant"`
+	Type             *string `json:"type"`
+}
+
+func (EmailParticipant) IsInteractionEventParticipant() {}
+
 // Describes an email address associated with a `Contact` in customerOS.
 // **An `update` object.**
 type EmailUpdateInput struct {
@@ -549,16 +567,18 @@ type FilterItem struct {
 }
 
 type InteractionEvent struct {
-	ID                 string              `json:"id"`
-	CreatedAt          time.Time           `json:"createdAt"`
-	EventIdentifier    *string             `json:"eventIdentifier"`
-	Content            *string             `json:"content"`
-	ContentType        *string             `json:"contentType"`
-	Channel            *string             `json:"channel"`
-	InteractionSession *InteractionSession `json:"interactionSession"`
-	Source             DataSource          `json:"source"`
-	SourceOfTruth      DataSource          `json:"sourceOfTruth"`
-	AppSource          string              `json:"appSource"`
+	ID                 string                        `json:"id"`
+	CreatedAt          time.Time                     `json:"createdAt"`
+	EventIdentifier    *string                       `json:"eventIdentifier"`
+	Content            *string                       `json:"content"`
+	ContentType        *string                       `json:"contentType"`
+	Channel            *string                       `json:"channel"`
+	InteractionSession *InteractionSession           `json:"interactionSession"`
+	SentBy             []InteractionEventParticipant `json:"sentBy"`
+	SentTo             []InteractionEventParticipant `json:"sentTo"`
+	Source             DataSource                    `json:"source"`
+	SourceOfTruth      DataSource                    `json:"sourceOfTruth"`
+	AppSource          string                        `json:"appSource"`
 }
 
 func (InteractionEvent) IsNode()            {}
@@ -865,6 +885,13 @@ type PhoneNumberInput struct {
 	Primary *bool `json:"primary"`
 }
 
+type PhoneNumberParticipant struct {
+	PhoneNumberParticipant *PhoneNumber `json:"phoneNumberParticipant"`
+	Type                   *string      `json:"type"`
+}
+
+func (PhoneNumberParticipant) IsInteractionEventParticipant() {}
+
 // Describes a phone number associated with a `Contact` in customerOS.
 // **An `update` object.**
 type PhoneNumberUpdateInput struct {
@@ -1026,6 +1053,13 @@ func (this UserPage) GetTotalPages() int { return this.TotalPages }
 // The total number of elements included in the query response.
 // **Required.**
 func (this UserPage) GetTotalElements() int64 { return this.TotalElements }
+
+type UserParticipant struct {
+	UserParticipant *User   `json:"userParticipant"`
+	Type            *string `json:"type"`
+}
+
+func (UserParticipant) IsInteractionEventParticipant() {}
 
 type UserUpdateInput struct {
 	ID string `json:"id"`

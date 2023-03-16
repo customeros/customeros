@@ -30,10 +30,10 @@ func (NoteEntity) ActionName() string {
 	return NodeLabel_Note
 }
 
-func (NoteEntity) TimelineEvent() {
+func (NoteEntity) IsTimelineEvent() {
 }
 
-func (NoteEntity) TimelineEventName() string {
+func (NoteEntity) TimelineEventLabel() string {
 	return NodeLabel_Note
 }
 

@@ -812,23 +812,25 @@ func CreateInteractionSession(ctx context.Context, driver *neo4j.DriverWithConte
 	return interactionSessionId.String()
 }
 
-func InteractionEventSentBy(ctx context.Context, driver *neo4j.DriverWithContext, interactionEventId, nodeId string) {
+func InteractionEventSentBy(ctx context.Context, driver *neo4j.DriverWithContext, interactionEventId, nodeId, interactionType string) {
 	query := "MATCH (ie:InteractionEvent {id:$interactionEventId}), " +
 		"(n {id:$nodeId}) " +
-		" MERGE (ie)-[:SENT_BY]->(n) "
+		" MERGE (ie)-[:SENT_BY {type:$interactionType}]->(n) "
 	ExecuteWriteQuery(ctx, driver, query, map[string]any{
 		"interactionEventId": interactionEventId,
 		"nodeId":             nodeId,
+		"interactionType":    interactionType,
 	})
 }
 
-func InteractionEventSentTo(ctx context.Context, driver *neo4j.DriverWithContext, interactionEventId, nodeId string) {
+func InteractionEventSentTo(ctx context.Context, driver *neo4j.DriverWithContext, interactionEventId, nodeId, interactionType string) {
 	query := "MATCH (ie:InteractionEvent {id:$interactionEventId}), " +
 		"(n {id:$nodeId}) " +
-		" MERGE (ie)-[:SENT_TO]->(n) "
+		" MERGE (ie)-[:SENT_TO {type:$interactionType}]->(n) "
 	ExecuteWriteQuery(ctx, driver, query, map[string]any{
 		"interactionEventId": interactionEventId,
 		"nodeId":             nodeId,
+		"interactionType":    interactionType,
 	})
 }
 

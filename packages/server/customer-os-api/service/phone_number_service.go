@@ -17,6 +17,8 @@ type PhoneNumberService interface {
 	UpdatePhoneNumberForContact(ctx context.Context, id string, toEntity *entity.PhoneNumberEntity) (*entity.PhoneNumberEntity, error)
 	RemoveFromContactByE164(ctx context.Context, contactId, e164 string) (bool, error)
 	RemoveFromContactById(ctx context.Context, contactId, phoneNumberId string) (bool, error)
+
+	mapDbNodeToPhoneNumberEntity(node dbtype.Node) *entity.PhoneNumberEntity
 }
 
 type phoneNumberService struct {

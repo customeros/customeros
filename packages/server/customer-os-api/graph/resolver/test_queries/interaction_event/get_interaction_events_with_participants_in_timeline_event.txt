@@ -1,0 +1,73 @@
+query GetContactById($contactId: ID!, $from: Time!, $size: Int!){
+  contact(id: $contactId) {
+    id
+    timelineEvents(from:$from, size:$size) {
+            __typename
+            ... on InteractionEvent {
+                id
+                sentBy {
+                    __typename
+                    ... on EmailParticipant {
+                        emailParticipant {
+                            id
+                            rawEmail
+                        }
+                        type
+                    }
+                    ... on UserParticipant {
+                        userParticipant {
+                            id
+                            firstName
+                        }
+                        type
+                    }
+                    ... on PhoneNumberParticipant {
+                        phoneNumberParticipant {
+                            id
+                            rawPhoneNumber
+                        }
+                        type
+                    }
+                    ... on ContactParticipant {
+                        contactParticipant {
+                            id
+                            firstName
+                        }
+                        type
+                    }
+                }
+                sentTo {
+                    __typename
+                    ... on EmailParticipant {
+                        emailParticipant {
+                            id
+                            rawEmail
+                        }
+                        type
+                    }
+                    ... on UserParticipant {
+                        userParticipant {
+                            id
+                            firstName
+                        }
+                        type
+                    }
+                    ... on PhoneNumberParticipant {
+                        phoneNumberParticipant {
+                            id
+                            rawPhoneNumber
+                        }
+                        type
+                    }
+                    ... on ContactParticipant {
+                        contactParticipant {
+                            id
+                            firstName
+                        }
+                        type
+                    }
+                }
+            }
+          }
+  }
+}

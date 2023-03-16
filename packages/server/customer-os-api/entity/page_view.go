@@ -31,10 +31,10 @@ func (PageViewEntity) ActionName() string {
 	return NodeLabel_PageView
 }
 
-func (PageViewEntity) TimelineEvent() {
+func (PageViewEntity) IsTimelineEvent() {
 }
 
-func (PageViewEntity) TimelineEventName() string {
+func (PageViewEntity) TimelineEventLabel() string {
 	return NodeLabel_PageView
 }
 

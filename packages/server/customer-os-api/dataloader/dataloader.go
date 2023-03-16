@@ -24,6 +24,8 @@ type Loaders struct {
 	NotesForTicket                         *dataloader.Loader
 	InteractionEventsForInteractionSession *dataloader.Loader
 	InteractionSessionForInteractionEvent  *dataloader.Loader
+	SentByParticipantsForInteractionEvent  *dataloader.Loader
+	SentToParticipantsForInteractionEvent  *dataloader.Loader
 }
 
 type tagBatcher struct {
@@ -49,6 +51,9 @@ type interactionEventBatcher struct {
 }
 type interactionSessionBatcher struct {
 	interactionSessionService service.InteractionSessionService
+}
+type interactionEventParticipantBatcher struct {
+	interactionEventService service.InteractionEventService
 }
 
 // NewDataLoader returns the instantiated Loaders struct for use in a request
@@ -77,6 +82,9 @@ func NewDataLoader(services *service.Services) *Loaders {
 	interactionSessionBatcher := &interactionSessionBatcher{
 		interactionSessionService: services.InteractionSessionService,
 	}
+	interactionEventParticipantBatcher := &interactionEventParticipantBatcher{
+		interactionEventService: services.InteractionEventService,
+	}
 	return &Loaders{
 		TagsForOrganization:                    dataloader.NewBatchedLoader(tagBatcher.getTagsForOrganizations, dataloader.WithClearCacheOnBatch()),
 		TagsForContact:                         dataloader.NewBatchedLoader(tagBatcher.getTagsForContacts, dataloader.WithClearCacheOnBatch()),
@@ -90,6 +98,8 @@ func NewDataLoader(services *service.Services) *Loaders {
 		NotesForTicket:                         dataloader.NewBatchedLoader(noteBatcher.getNotesForTickets, dataloader.WithClearCacheOnBatch()),
 		InteractionEventsForInteractionSession: dataloader.NewBatchedLoader(interactionEventBatcher.getInteractionEventsForInteractionSessions, dataloader.WithClearCacheOnBatch()),
 		InteractionSessionForInteractionEvent:  dataloader.NewBatchedLoader(interactionSessionBatcher.getInteractionSessionsForInteractionEvents, dataloader.WithClearCacheOnBatch()),
+		SentByParticipantsForInteractionEvent:  dataloader.NewBatchedLoader(interactionEventParticipantBatcher.getSentByParticipantsForInteractionEvents, dataloader.WithClearCacheOnBatch()),
+		SentToParticipantsForInteractionEvent:  dataloader.NewBatchedLoader(interactionEventParticipantBatcher.getSentToParticipantsForInteractionEvents, dataloader.WithClearCacheOnBatch()),
 	}
 }
 

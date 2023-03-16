@@ -33,10 +33,10 @@ func (InteractionSessionEntity) ActionName() string {
 	return NodeLabel_InteractionSession
 }
 
-func (InteractionSessionEntity) TimelineEvent() {
+func (InteractionSessionEntity) IsTimelineEvent() {
 }
 
-func (InteractionSessionEntity) TimelineEventName() string {
+func (InteractionSessionEntity) TimelineEventLabel() string {
 	return NodeLabel_InteractionSession
 }
 

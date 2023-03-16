@@ -47,7 +47,7 @@ func (r *timelineEventRepository) GetTimelineEventsForContact(ctx context.Contex
 		// get all timeline events for the contact
 		" WITH c MATCH (c), "+
 		" p = (c)-[*1..2]-(a:Action) "+
-		" WHERE all(r IN relationships(p) WHERE type(r) in ['HAS_ACTION','PARTICIPATES','SENT','SENT_TO','SENT_BY','PART_OF','REQUESTED','NOTED'])"+
+		" WHERE all(r IN relationships(p) WHERE type(r) in ['HAS_ACTION','PARTICIPATES','SENT_TO','SENT_BY','PART_OF','REQUESTED','NOTED'])"+
 		" AND coalesce(a.startedAt, a.createdAt) < datetime($startingDate) "+
 		" %s "+
 		" return a as timelineEvent "+
@@ -101,7 +101,7 @@ func (r *timelineEventRepository) GetTimelineEventsTotalCountForContact(ctx cont
 		// get all timeline events for the contact
 		" WITH c MATCH (c), "+
 		" p = (c)-[*1..2]-(a:Action) "+
-		" WHERE all(r IN relationships(p) WHERE type(r) in ['HAS_ACTION','PARTICIPATES','SENT','SENT_TO','SENT_BY','PART_OF','REQUESTED','NOTED']) "+
+		" WHERE all(r IN relationships(p) WHERE type(r) in ['HAS_ACTION','PARTICIPATES','SENT_TO','SENT_BY','PART_OF','REQUESTED','NOTED']) "+
 		" %s "+
 		" return a as timelineEvent "+
 		" UNION "+
@@ -149,7 +149,7 @@ func (r *timelineEventRepository) GetTimelineEventsForOrganization(ctx context.C
 		// get all timeline events for the organization contatcs
 		" WITH o MATCH (o)--(c:Contact), "+
 		" p = (c)-[*1..2]-(a:Action) "+
-		" WHERE all(r IN relationships(p) WHERE type(r) in ['HAS_ACTION','PARTICIPATES','SENT','SENT_TO','SENT_BY','PART_OF','REQUESTED','NOTED'])"+
+		" WHERE all(r IN relationships(p) WHERE type(r) in ['HAS_ACTION','PARTICIPATES','SENT_TO','SENT_BY','PART_OF','REQUESTED','NOTED'])"+
 		" AND coalesce(a.startedAt, a.createdAt) < datetime($startingDate) "+
 		" %s "+
 		" return a as timelineEvent "+
@@ -220,7 +220,7 @@ func (r *timelineEventRepository) GetTimelineEventsTotalCountForOrganization(ctx
 		// get all timeline events for the organization' contatcs
 		" WITH o MATCH (o)--(c:Contact), "+
 		" p = (c)-[*1..2]-(a:Action) "+
-		" WHERE all(r IN relationships(p) WHERE type(r) in ['HAS_ACTION','PARTICIPATES','SENT','SENT_TO','SENT_BY','PART_OF','REQUESTED','NOTED'])"+
+		" WHERE all(r IN relationships(p) WHERE type(r) in ['HAS_ACTION','PARTICIPATES','SENT_TO','SENT_BY','PART_OF','REQUESTED','NOTED'])"+
 		" %s "+
 		" return a as timelineEvent "+
 		" UNION "+

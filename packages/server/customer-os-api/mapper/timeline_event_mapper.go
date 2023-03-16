@@ -8,7 +8,7 @@ import (
 )
 
 func MapEntityToTimelineEvent(timelineEventEntity *entity.TimelineEvent) any {
-	switch (*timelineEventEntity).TimelineEventName() {
+	switch (*timelineEventEntity).TimelineEventLabel() {
 	case entity.NodeLabel_PageView:
 		pageViewEntity := (*timelineEventEntity).(*entity.PageViewEntity)
 		return MapEntityToPageView(pageViewEntity)
