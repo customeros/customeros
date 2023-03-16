@@ -140,8 +140,8 @@ func TestQueryResolver_Contact_WithTimelineEvents_InteractionEvents_With_Multipl
 	emailId1 := neo4jt.AddEmailTo(ctx, driver, entity.CONTACT, tenantName, contactId, "email_1@email.com", false, "WORK")
 	emailId2 := neo4jt.AddEmailTo(ctx, driver, entity.CONTACT, tenantName, contactId, "email_2@email.com", false, "WORK")
 	emailId3 := neo4jt.AddEmailTo(ctx, driver, entity.CONTACT, tenantName, contactId, "email_3@email.com", false, "WORK")
-	phoneNumberId1 := neo4jt.AddPhoneNumberToContact(ctx, driver, tenantName, contactId, "+1111", false, "WORK")
-	phoneNumberId2 := neo4jt.AddPhoneNumberToContact(ctx, driver, tenantName, contactId, "+2222", false, "WORK")
+	phoneNumberId1 := neo4jt.AddPhoneNumberTo(ctx, driver, tenantName, contactId, "+1111", false, "WORK")
+	phoneNumberId2 := neo4jt.AddPhoneNumberTo(ctx, driver, tenantName, contactId, "+2222", false, "WORK")
 
 	now := time.Now().UTC()
 	secAgo10 := now.Add(time.Duration(-10) * time.Second)

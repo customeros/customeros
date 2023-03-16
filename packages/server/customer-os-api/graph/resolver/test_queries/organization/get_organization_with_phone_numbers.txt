@@ -1,0 +1,13 @@
+query GetOrganizationById($organizationId: ID!){
+  organization(id: $organizationId) {
+    id
+    phoneNumbers {
+        id
+        e164
+        rawPhoneNumber
+        label
+        primary
+        source
+    }
+  }
+}

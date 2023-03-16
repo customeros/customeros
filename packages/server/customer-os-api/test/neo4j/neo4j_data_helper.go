@@ -279,24 +279,24 @@ func AddEmailTo(ctx context.Context, driver *neo4j.DriverWithContext, entityType
 	return emailId.String()
 }
 
-func AddPhoneNumberToContact(ctx context.Context, driver *neo4j.DriverWithContext, tenant, contactId, phoneNumber string, primary bool, label string) string {
+func AddPhoneNumberTo(ctx context.Context, driver *neo4j.DriverWithContext, tenant, id, phoneNumber string, primary bool, label string) string {
 	var phoneNumberId, _ = uuid.NewRandom()
 	query :=
-		" MATCH (c:Contact {id:$contactId})--(t:Tenant) " +
+		" MATCH (n {id:$entityId})--(t:Tenant) " +
 			" MERGE (p:PhoneNumber {rawPhoneNumber:$phoneNumber})-[:PHONE_NUMBER_BELONGS_TO_TENANT]->(t) " +
 			" ON CREATE SET " +
 			" 	p.e164=$phoneNumber," +
 			" 	p.validated=true," +
-			"	p.id=$id, " +
+			"	p.id=$phoneNumberId, " +
 			"	p:%s " +
-			" WITH p, c MERGE (p)<-[rel:HAS]-(c) " +
+			" WITH p, n MERGE (p)<-[rel:HAS]-(n) " +
 			" ON CREATE SET rel.label=$label, rel.primary=$primary "
 	ExecuteWriteQuery(ctx, driver, fmt.Sprintf(query, "PhoneNumber_"+tenant), map[string]any{
-		"id":          phoneNumberId.String(),
-		"contactId":   contactId,
-		"primary":     primary,
-		"phoneNumber": phoneNumber,
-		"label":       label,
+		"phoneNumberId": phoneNumberId.String(),
+		"entityId":      id,
+		"primary":       primary,
+		"phoneNumber":   phoneNumber,
+		"label":         label,
 	})
 	return phoneNumberId.String()
 }

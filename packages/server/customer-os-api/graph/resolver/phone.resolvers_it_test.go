@@ -70,7 +70,7 @@ func TestMutationResolver_PhoneNumberUpdateInContact(t *testing.T) {
 
 	// Create a default contact and phone number
 	contactId := neo4jt.CreateDefaultContact(ctx, driver, tenantName)
-	phoneNumberId := neo4jt.AddPhoneNumberToContact(ctx, driver, tenantName, contactId, "+1234567890", false, "WORK")
+	phoneNumberId := neo4jt.AddPhoneNumberTo(ctx, driver, tenantName, contactId, "+1234567890", false, "WORK")
 
 	// Make the RawPost request and check for errors
 	rawResponse, err := c.RawPost(getQuery("phone_number/update_phone_number_for_contact"),
@@ -112,7 +112,7 @@ func TestMutationResolver_PhoneNumberUpdateInContact_ReplacePhoneNumber(t *testi
 
 	// Create a default contact and phone number
 	contactId := neo4jt.CreateDefaultContact(ctx, driver, tenantName)
-	phoneNumberId := neo4jt.AddPhoneNumberToContact(ctx, driver, tenantName, contactId, "+1234567890", false, "WORK")
+	phoneNumberId := neo4jt.AddPhoneNumberTo(ctx, driver, tenantName, contactId, "+1234567890", false, "WORK")
 
 	// Make the RawPost request and check for errors
 	rawResponse, err := c.RawPost(getQuery("phone_number/replace_phone_number_for_contact"),

@@ -213,6 +213,20 @@ func (r *organizationResolver) Emails(ctx context.Context, obj *model.Organizati
 	return mapper.MapEntitiesToEmails(emailEntities), nil
 }
 
+// PhoneNumbers is the resolver for the phoneNumbers field.
+func (r *organizationResolver) PhoneNumbers(ctx context.Context, obj *model.Organization) ([]*model.PhoneNumber, error) {
+	defer func(start time.Time) {
+		utils.LogMethodExecution(start, utils.GetFunctionName())
+	}(time.Now())
+
+	phoneNumberEntities, err := dataloader.For(ctx).GetPhoneNumbersForOrganization(ctx, obj.ID)
+	if err != nil {
+		graphql.AddErrorf(ctx, "Failed to get phone numbers for organization %s", obj.ID)
+		return nil, err
+	}
+	return mapper.MapEntitiesToPhoneNumbers(phoneNumberEntities), nil
+}
+
 // TimelineEvents is the resolver for the timelineEvents field.
 func (r *organizationResolver) TimelineEvents(ctx context.Context, obj *model.Organization, from *time.Time, size int, timelineEventTypes []model.TimelineEventType) ([]model.TimelineEvent, error) {
 	defer func(start time.Time) {

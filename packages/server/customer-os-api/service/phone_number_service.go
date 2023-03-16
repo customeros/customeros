@@ -12,11 +12,12 @@ import (
 )
 
 type PhoneNumberService interface {
-	GetAllFor(ctx context.Context, contactId string) (*entity.PhoneNumberEntities, error)
+	GetAllForContact(ctx context.Context, contactId string) (*entity.PhoneNumberEntities, error)
 	MergePhoneNumberToContact(ctx context.Context, id string, toEntity *entity.PhoneNumberEntity) (*entity.PhoneNumberEntity, error)
 	UpdatePhoneNumberForContact(ctx context.Context, id string, toEntity *entity.PhoneNumberEntity) (*entity.PhoneNumberEntity, error)
 	RemoveFromContactByE164(ctx context.Context, contactId, e164 string) (bool, error)
 	RemoveFromContactById(ctx context.Context, contactId, phoneNumberId string) (bool, error)
+	GetAllForEntityTypeByIds(ctx context.Context, entityType entity.EntityType, ids []string) (*entity.PhoneNumberEntities, error)
 
 	mapDbNodeToPhoneNumberEntity(node dbtype.Node) *entity.PhoneNumberEntity
 }
@@ -35,7 +36,7 @@ func (s *phoneNumberService) getDriver() neo4j.DriverWithContext {
 	return *s.repositories.Drivers.Neo4jDriver
 }
 
-func (s *phoneNumberService) GetAllFor(ctx context.Context, contactId string) (*entity.PhoneNumberEntities, error) {
+func (s *phoneNumberService) GetAllForContact(ctx context.Context, contactId string) (*entity.PhoneNumberEntities, error) {
 	queryResult, err := s.repositories.PhoneNumberRepository.GetAllForContact(ctx, common.GetContext(ctx).Tenant, contactId)
 	if err != nil {
 		return nil, err
@@ -49,6 +50,22 @@ func (s *phoneNumberService) GetAllFor(ctx context.Context, contactId string) (*
 		phoneNumberEntities = append(phoneNumberEntities, *phoneNumberEntity)
 	}
 
+	return &phoneNumberEntities, nil
+}
+
+func (s *phoneNumberService) GetAllForEntityTypeByIds(ctx context.Context, entityType entity.EntityType, ids []string) (*entity.PhoneNumberEntities, error) {
+	phoneNumbers, err := s.repositories.PhoneNumberRepository.GetAllForIds(ctx, common.GetContext(ctx).Tenant, entityType, ids)
+	if err != nil {
+		return nil, err
+	}
+
+	phoneNumberEntities := entity.PhoneNumberEntities{}
+	for _, v := range phoneNumbers {
+		emailEntity := s.mapDbNodeToPhoneNumberEntity(*v.Node)
+		s.addDbRelationshipToPhoneNumberEntity(*v.Relationship, emailEntity)
+		emailEntity.DataloaderKey = v.LinkedNodeId
+		phoneNumberEntities = append(phoneNumberEntities, *emailEntity)
+	}
 	return &phoneNumberEntities, nil
 }
 

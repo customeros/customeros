@@ -83,7 +83,7 @@ func (r *contactResolver) PhoneNumbers(ctx context.Context, obj *model.Contact) 
 		utils.LogMethodExecution(start, utils.GetFunctionName())
 	}(time.Now())
 
-	phoneNumberEntities, err := r.Services.PhoneNumberService.GetAllFor(ctx, obj.ID)
+	phoneNumberEntities, err := r.Services.PhoneNumberService.GetAllForContact(ctx, obj.ID)
 	return mapper.MapEntitiesToPhoneNumbers(phoneNumberEntities), err
 }
 
