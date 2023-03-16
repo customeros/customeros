@@ -17,6 +17,9 @@ type PhoneNumberEntity struct {
 	AppSource      string
 	CreatedAt      time.Time
 	UpdatedAt      time.Time
+
+	InteractionEventParticipantDetails InteractionEventParticipantDetails
+	DataloaderKey                      string
 }
 
 func (phone PhoneNumberEntity) ToString() string {
@@ -25,6 +28,19 @@ func (phone PhoneNumberEntity) ToString() string {
 
 type PhoneNumberEntities []PhoneNumberEntity
 
-func (phone PhoneNumberEntity) Labels() []string {
-	return []string{"PhoneNumber"}
+func (PhoneNumberEntity) IsInteractionEventParticipant() {}
+
+func (PhoneNumberEntity) InteractionEventParticipantLabel() string {
+	return NodeLabel_PhoneNumber
+}
+
+func (phoneNumber PhoneNumberEntity) GetDataloaderKey() string {
+	return phoneNumber.DataloaderKey
+}
+
+func (PhoneNumberEntity) Labels(tenant string) []string {
+	return []string{
+		NodeLabel_PhoneNumber,
+		NodeLabel_PhoneNumber + "_" + tenant,
+	}
 }

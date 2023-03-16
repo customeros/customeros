@@ -23,6 +23,8 @@ type UserService interface {
 	FindNoteCreator(ctx context.Context, noteId string) (*entity.UserEntity, error)
 
 	GetAllForConversation(ctx context.Context, conversationId string) (*entity.UserEntities, error)
+
+	mapDbNodeToUserEntity(dbNode dbtype.Node) *entity.UserEntity
 }
 
 type UserCreateData struct {

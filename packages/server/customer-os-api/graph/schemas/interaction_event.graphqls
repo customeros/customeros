@@ -1,3 +1,5 @@
+union InteractionEventParticipant = EmailParticipant | PhoneNumberParticipant | ContactParticipant | UserParticipant
+
 type InteractionSession implements Node {
     id: ID!
     startedAt: Time!
@@ -22,8 +24,30 @@ type InteractionEvent implements Node {
     contentType: String
     channel: String
     interactionSession: InteractionSession @goField(forceResolver: true)
+    sentBy: [InteractionEventParticipant!]! @goField(forceResolver: true)
+    sentTo: [InteractionEventParticipant!]! @goField(forceResolver: true)
 
     source: DataSource!
     sourceOfTruth: DataSource!
     appSource: String!
+}
+
+type EmailParticipant {
+    emailParticipant: Email!
+    type: String
+}
+
+type PhoneNumberParticipant {
+    phoneNumberParticipant: PhoneNumber!
+    type: String
+}
+
+type ContactParticipant {
+    contactParticipant: Contact!
+    type: String
+}
+
+type UserParticipant {
+    userParticipant: User!
+    type: String
 }

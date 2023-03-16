@@ -25,13 +25,18 @@ func (interactionEventEntity InteractionEventEntity) ToString() string {
 
 type InteractionEventEntities []InteractionEventEntity
 
-func (InteractionEventEntity) TimelineEvent() {
+func (InteractionEventEntity) IsTimelineEvent() {
 }
 
-func (InteractionEventEntity) TimelineEventName() string {
+func (InteractionEventEntity) TimelineEventLabel() string {
 	return NodeLabel_InteractionEvent
 }
 
 func (InteractionEventEntity) Labels(tenant string) []string {
-	return []string{"InteractionEvent", "InteractionEvent_" + tenant}
+	return []string{
+		NodeLabel_InteractionEvent,
+		NodeLabel_InteractionEvent + "_" + tenant,
+		NodeLabel_Action,
+		NodeLabel_Action + "_" + tenant,
+	}
 }

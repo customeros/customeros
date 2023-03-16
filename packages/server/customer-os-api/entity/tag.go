@@ -23,6 +23,9 @@ func (tag TagEntity) ToString() string {
 
 type TagEntities []TagEntity
 
-func (tag TagEntity) Labels(tenant string) []string {
-	return []string{"Tag", "Tag_" + tenant}
+func (TagEntity) Labels(tenant string) []string {
+	return []string{
+		NodeLabel_Tag,
+		NodeLabel_Tag + "_" + tenant,
+	}
 }

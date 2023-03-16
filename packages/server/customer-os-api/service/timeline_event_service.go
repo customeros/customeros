@@ -49,7 +49,7 @@ func (s *timelineEventService) GetTimelineEventsForContact(ctx context.Context, 
 		return nil, err
 	}
 
-	timelineEvents := s.convertDbNodesIntoTimelineEvents(dbNodes)
+	timelineEvents := s.convertDbNodesToTimelineEvents(dbNodes)
 
 	return &timelineEvents, nil
 }
@@ -72,7 +72,7 @@ func (s *timelineEventService) GetTimelineEventsForOrganization(ctx context.Cont
 		return nil, err
 	}
 
-	timelineEvents := s.convertDbNodesIntoTimelineEvents(dbNodes)
+	timelineEvents := s.convertDbNodesToTimelineEvents(dbNodes)
 	return &timelineEvents, nil
 }
 
@@ -104,7 +104,7 @@ func (s *timelineEventService) GetTimelineEventsTotalCountForOrganization(ctx co
 	return count, nil
 }
 
-func (s *timelineEventService) convertDbNodesIntoTimelineEvents(dbNodes []*dbtype.Node) entity.TimelineEventEntities {
+func (s *timelineEventService) convertDbNodesToTimelineEvents(dbNodes []*dbtype.Node) entity.TimelineEventEntities {
 	timelineEvents := entity.TimelineEventEntities{}
 	for _, v := range dbNodes {
 		if slices.Contains(v.Labels, entity.NodeLabel_PageView) {

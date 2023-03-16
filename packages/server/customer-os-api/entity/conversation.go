@@ -37,10 +37,10 @@ func (ConversationEntity) ActionName() string {
 	return NodeLabel_Conversation
 }
 
-func (ConversationEntity) TimelineEvent() {
+func (ConversationEntity) IsTimelineEvent() {
 }
 
-func (ConversationEntity) TimelineEventName() string {
+func (ConversationEntity) TimelineEventLabel() string {
 	return NodeLabel_Conversation
 }
 

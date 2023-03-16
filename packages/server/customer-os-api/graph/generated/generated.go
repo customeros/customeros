@@ -107,6 +107,11 @@ type ComplexityRoot struct {
 		TotalPages    func(childComplexity int) int
 	}
 
+	ContactParticipant struct {
+		ContactParticipant func(childComplexity int) int
+		Type               func(childComplexity int) int
+	}
+
 	ContactsPage struct {
 		Content       func(childComplexity int) int
 		TotalElements func(childComplexity int) int
@@ -189,6 +194,11 @@ type ComplexityRoot struct {
 		Validated     func(childComplexity int) int
 	}
 
+	EmailParticipant struct {
+		EmailParticipant func(childComplexity int) int
+		Type             func(childComplexity int) int
+	}
+
 	EntityTemplate struct {
 		CreatedAt    func(childComplexity int) int
 		CustomFields func(childComplexity int) int
@@ -228,6 +238,8 @@ type ComplexityRoot struct {
 		EventIdentifier    func(childComplexity int) int
 		ID                 func(childComplexity int) int
 		InteractionSession func(childComplexity int) int
+		SentBy             func(childComplexity int) int
+		SentTo             func(childComplexity int) int
 		Source             func(childComplexity int) int
 		SourceOfTruth      func(childComplexity int) int
 	}
@@ -444,6 +456,11 @@ type ComplexityRoot struct {
 		Validated      func(childComplexity int) int
 	}
 
+	PhoneNumberParticipant struct {
+		PhoneNumberParticipant func(childComplexity int) int
+		Type                   func(childComplexity int) int
+	}
+
 	Place struct {
 		Address   func(childComplexity int) int
 		Address2  func(childComplexity int) int
@@ -530,6 +547,11 @@ type ComplexityRoot struct {
 		TotalElements func(childComplexity int) int
 		TotalPages    func(childComplexity int) int
 	}
+
+	UserParticipant struct {
+		Type            func(childComplexity int) int
+		UserParticipant func(childComplexity int) int
+	}
 }
 
 type ContactResolver interface {
@@ -576,6 +598,8 @@ type FieldSetTemplateResolver interface {
 }
 type InteractionEventResolver interface {
 	InteractionSession(ctx context.Context, obj *model.InteractionEvent) (*model.InteractionSession, error)
+	SentBy(ctx context.Context, obj *model.InteractionEvent) ([]model.InteractionEventParticipant, error)
+	SentTo(ctx context.Context, obj *model.InteractionEvent) ([]model.InteractionEventParticipant, error)
 }
 type InteractionSessionResolver interface {
 	Events(ctx context.Context, obj *model.InteractionSession) ([]*model.InteractionEvent, error)
@@ -1017,6 +1041,20 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.ContactGroupPage.TotalPages(childComplexity), true
 
+	case "ContactParticipant.contactParticipant":
+		if e.complexity.ContactParticipant.ContactParticipant == nil {
+			break
+		}
+
+		return e.complexity.ContactParticipant.ContactParticipant(childComplexity), true
+
+	case "ContactParticipant.type":
+		if e.complexity.ContactParticipant.Type == nil {
+			break
+		}
+
+		return e.complexity.ContactParticipant.Type(childComplexity), true
+
 	case "ContactsPage.content":
 		if e.complexity.ContactsPage.Content == nil {
 			break
@@ -1423,6 +1461,20 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Email.Validated(childComplexity), true
 
+	case "EmailParticipant.emailParticipant":
+		if e.complexity.EmailParticipant.EmailParticipant == nil {
+			break
+		}
+
+		return e.complexity.EmailParticipant.EmailParticipant(childComplexity), true
+
+	case "EmailParticipant.type":
+		if e.complexity.EmailParticipant.Type == nil {
+			break
+		}
+
+		return e.complexity.EmailParticipant.Type(childComplexity), true
+
 	case "EntityTemplate.createdAt":
 		if e.complexity.EntityTemplate.CreatedAt == nil {
 			break
@@ -1625,6 +1677,20 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.InteractionEvent.InteractionSession(childComplexity), true
+
+	case "InteractionEvent.sentBy":
+		if e.complexity.InteractionEvent.SentBy == nil {
+			break
+		}
+
+		return e.complexity.InteractionEvent.SentBy(childComplexity), true
+
+	case "InteractionEvent.sentTo":
+		if e.complexity.InteractionEvent.SentTo == nil {
+			break
+		}
+
+		return e.complexity.InteractionEvent.SentTo(childComplexity), true
 
 	case "InteractionEvent.source":
 		if e.complexity.InteractionEvent.Source == nil {
@@ -3197,6 +3263,20 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.PhoneNumber.Validated(childComplexity), true
 
+	case "PhoneNumberParticipant.phoneNumberParticipant":
+		if e.complexity.PhoneNumberParticipant.PhoneNumberParticipant == nil {
+			break
+		}
+
+		return e.complexity.PhoneNumberParticipant.PhoneNumberParticipant(childComplexity), true
+
+	case "PhoneNumberParticipant.type":
+		if e.complexity.PhoneNumberParticipant.Type == nil {
+			break
+		}
+
+		return e.complexity.PhoneNumberParticipant.Type(childComplexity), true
+
 	case "Place.address":
 		if e.complexity.Place.Address == nil {
 			break
@@ -3691,6 +3771,20 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.UserPage.TotalPages(childComplexity), true
+
+	case "UserParticipant.type":
+		if e.complexity.UserParticipant.Type == nil {
+			break
+		}
+
+		return e.complexity.UserParticipant.Type(childComplexity), true
+
+	case "UserParticipant.userParticipant":
+		if e.complexity.UserParticipant.UserParticipant == nil {
+			break
+		}
+
+		return e.complexity.UserParticipant.UserParticipant(childComplexity), true
 
 	}
 	return 0, false
@@ -4678,7 +4772,9 @@ enum ComparisonOperator {
     EQ
     CONTAINS
 }`, BuiltIn: false},
-	{Name: "../schemas/interaction_event.graphqls", Input: `type InteractionSession implements Node {
+	{Name: "../schemas/interaction_event.graphqls", Input: `union InteractionEventParticipant = EmailParticipant | PhoneNumberParticipant | ContactParticipant | UserParticipant
+
+type InteractionSession implements Node {
     id: ID!
     startedAt: Time!
     endedAt: Time
@@ -4702,10 +4798,32 @@ type InteractionEvent implements Node {
     contentType: String
     channel: String
     interactionSession: InteractionSession @goField(forceResolver: true)
+    sentBy: [InteractionEventParticipant!]! @goField(forceResolver: true)
+    sentTo: [InteractionEventParticipant!]! @goField(forceResolver: true)
 
     source: DataSource!
     sourceOfTruth: DataSource!
     appSource: String!
+}
+
+type EmailParticipant {
+    emailParticipant: Email!
+    type: String
+}
+
+type PhoneNumberParticipant {
+    phoneNumberParticipant: PhoneNumber!
+    type: String
+}
+
+type ContactParticipant {
+    contactParticipant: Contact!
+    type: String
+}
+
+type UserParticipant {
+    userParticipant: User!
+    type: String
 }`, BuiltIn: false},
 	{Name: "../schemas/interfaces.graphqls", Input: `"""
 Describes the number of pages and total elements included in a query response.
@@ -9291,6 +9409,153 @@ func (ec *executionContext) fieldContext_ContactGroupPage_totalElements(ctx cont
 	return fc, nil
 }
 
+func (ec *executionContext) _ContactParticipant_contactParticipant(ctx context.Context, field graphql.CollectedField, obj *model.ContactParticipant) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ContactParticipant_contactParticipant(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ContactParticipant, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.Contact)
+	fc.Result = res
+	return ec.marshalNContact2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐContact(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_ContactParticipant_contactParticipant(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ContactParticipant",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Contact_id(ctx, field)
+			case "title":
+				return ec.fieldContext_Contact_title(ctx, field)
+			case "name":
+				return ec.fieldContext_Contact_name(ctx, field)
+			case "firstName":
+				return ec.fieldContext_Contact_firstName(ctx, field)
+			case "lastName":
+				return ec.fieldContext_Contact_lastName(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Contact_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_Contact_updatedAt(ctx, field)
+			case "label":
+				return ec.fieldContext_Contact_label(ctx, field)
+			case "source":
+				return ec.fieldContext_Contact_source(ctx, field)
+			case "sourceOfTruth":
+				return ec.fieldContext_Contact_sourceOfTruth(ctx, field)
+			case "appSource":
+				return ec.fieldContext_Contact_appSource(ctx, field)
+			case "tags":
+				return ec.fieldContext_Contact_tags(ctx, field)
+			case "jobRoles":
+				return ec.fieldContext_Contact_jobRoles(ctx, field)
+			case "organizations":
+				return ec.fieldContext_Contact_organizations(ctx, field)
+			case "groups":
+				return ec.fieldContext_Contact_groups(ctx, field)
+			case "phoneNumbers":
+				return ec.fieldContext_Contact_phoneNumbers(ctx, field)
+			case "emails":
+				return ec.fieldContext_Contact_emails(ctx, field)
+			case "locations":
+				return ec.fieldContext_Contact_locations(ctx, field)
+			case "customFields":
+				return ec.fieldContext_Contact_customFields(ctx, field)
+			case "fieldSets":
+				return ec.fieldContext_Contact_fieldSets(ctx, field)
+			case "template":
+				return ec.fieldContext_Contact_template(ctx, field)
+			case "owner":
+				return ec.fieldContext_Contact_owner(ctx, field)
+			case "notes":
+				return ec.fieldContext_Contact_notes(ctx, field)
+			case "notesByTime":
+				return ec.fieldContext_Contact_notesByTime(ctx, field)
+			case "conversations":
+				return ec.fieldContext_Contact_conversations(ctx, field)
+			case "actions":
+				return ec.fieldContext_Contact_actions(ctx, field)
+			case "timelineEvents":
+				return ec.fieldContext_Contact_timelineEvents(ctx, field)
+			case "timelineEventsTotalCount":
+				return ec.fieldContext_Contact_timelineEventsTotalCount(ctx, field)
+			case "tickets":
+				return ec.fieldContext_Contact_tickets(ctx, field)
+			case "ticketSummaryByStatus":
+				return ec.fieldContext_Contact_ticketSummaryByStatus(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Contact", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ContactParticipant_type(ctx context.Context, field graphql.CollectedField, obj *model.ContactParticipant) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ContactParticipant_type(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Type, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_ContactParticipant_type(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ContactParticipant",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _ContactsPage_content(ctx context.Context, field graphql.CollectedField, obj *model.ContactsPage) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_ContactsPage_content(ctx, field)
 	if err != nil {
@@ -12098,6 +12363,115 @@ func (ec *executionContext) fieldContext_Email_updatedAt(ctx context.Context, fi
 	return fc, nil
 }
 
+func (ec *executionContext) _EmailParticipant_emailParticipant(ctx context.Context, field graphql.CollectedField, obj *model.EmailParticipant) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_EmailParticipant_emailParticipant(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.EmailParticipant, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.Email)
+	fc.Result = res
+	return ec.marshalNEmail2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐEmail(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_EmailParticipant_emailParticipant(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "EmailParticipant",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Email_id(ctx, field)
+			case "email":
+				return ec.fieldContext_Email_email(ctx, field)
+			case "rawEmail":
+				return ec.fieldContext_Email_rawEmail(ctx, field)
+			case "validated":
+				return ec.fieldContext_Email_validated(ctx, field)
+			case "label":
+				return ec.fieldContext_Email_label(ctx, field)
+			case "primary":
+				return ec.fieldContext_Email_primary(ctx, field)
+			case "source":
+				return ec.fieldContext_Email_source(ctx, field)
+			case "sourceOfTruth":
+				return ec.fieldContext_Email_sourceOfTruth(ctx, field)
+			case "appSource":
+				return ec.fieldContext_Email_appSource(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Email_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_Email_updatedAt(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Email", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _EmailParticipant_type(ctx context.Context, field graphql.CollectedField, obj *model.EmailParticipant) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_EmailParticipant_type(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Type, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_EmailParticipant_type(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "EmailParticipant",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _EntityTemplate_id(ctx context.Context, field graphql.CollectedField, obj *model.EntityTemplate) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_EntityTemplate_id(ctx, field)
 	if err != nil {
@@ -13423,6 +13797,94 @@ func (ec *executionContext) fieldContext_InteractionEvent_interactionSession(ctx
 	return fc, nil
 }
 
+func (ec *executionContext) _InteractionEvent_sentBy(ctx context.Context, field graphql.CollectedField, obj *model.InteractionEvent) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_InteractionEvent_sentBy(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.InteractionEvent().SentBy(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]model.InteractionEventParticipant)
+	fc.Result = res
+	return ec.marshalNInteractionEventParticipant2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐInteractionEventParticipantᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_InteractionEvent_sentBy(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "InteractionEvent",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type InteractionEventParticipant does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _InteractionEvent_sentTo(ctx context.Context, field graphql.CollectedField, obj *model.InteractionEvent) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_InteractionEvent_sentTo(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.InteractionEvent().SentTo(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]model.InteractionEventParticipant)
+	fc.Result = res
+	return ec.marshalNInteractionEventParticipant2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐInteractionEventParticipantᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_InteractionEvent_sentTo(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "InteractionEvent",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type InteractionEventParticipant does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _InteractionEvent_source(ctx context.Context, field graphql.CollectedField, obj *model.InteractionEvent) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_InteractionEvent_source(ctx, field)
 	if err != nil {
@@ -14033,6 +14495,10 @@ func (ec *executionContext) fieldContext_InteractionSession_events(ctx context.C
 				return ec.fieldContext_InteractionEvent_channel(ctx, field)
 			case "interactionSession":
 				return ec.fieldContext_InteractionEvent_interactionSession(ctx, field)
+			case "sentBy":
+				return ec.fieldContext_InteractionEvent_sentBy(ctx, field)
+			case "sentTo":
+				return ec.fieldContext_InteractionEvent_sentTo(ctx, field)
 			case "source":
 				return ec.fieldContext_InteractionEvent_source(ctx, field)
 			case "sourceOfTruth":
@@ -23568,6 +24034,113 @@ func (ec *executionContext) fieldContext_PhoneNumber_appSource(ctx context.Conte
 	return fc, nil
 }
 
+func (ec *executionContext) _PhoneNumberParticipant_phoneNumberParticipant(ctx context.Context, field graphql.CollectedField, obj *model.PhoneNumberParticipant) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_PhoneNumberParticipant_phoneNumberParticipant(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.PhoneNumberParticipant, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.PhoneNumber)
+	fc.Result = res
+	return ec.marshalNPhoneNumber2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐPhoneNumber(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_PhoneNumberParticipant_phoneNumberParticipant(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PhoneNumberParticipant",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_PhoneNumber_id(ctx, field)
+			case "e164":
+				return ec.fieldContext_PhoneNumber_e164(ctx, field)
+			case "rawPhoneNumber":
+				return ec.fieldContext_PhoneNumber_rawPhoneNumber(ctx, field)
+			case "validated":
+				return ec.fieldContext_PhoneNumber_validated(ctx, field)
+			case "label":
+				return ec.fieldContext_PhoneNumber_label(ctx, field)
+			case "primary":
+				return ec.fieldContext_PhoneNumber_primary(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_PhoneNumber_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_PhoneNumber_updatedAt(ctx, field)
+			case "source":
+				return ec.fieldContext_PhoneNumber_source(ctx, field)
+			case "appSource":
+				return ec.fieldContext_PhoneNumber_appSource(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type PhoneNumber", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PhoneNumberParticipant_type(ctx context.Context, field graphql.CollectedField, obj *model.PhoneNumberParticipant) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_PhoneNumberParticipant_type(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Type, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_PhoneNumberParticipant_type(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PhoneNumberParticipant",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Place_id(ctx context.Context, field graphql.CollectedField, obj *model.Place) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Place_id(ctx, field)
 	if err != nil {
@@ -26886,6 +27459,109 @@ func (ec *executionContext) fieldContext_UserPage_totalElements(ctx context.Cont
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type Int64 does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _UserParticipant_userParticipant(ctx context.Context, field graphql.CollectedField, obj *model.UserParticipant) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_UserParticipant_userParticipant(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.UserParticipant, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.User)
+	fc.Result = res
+	return ec.marshalNUser2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐUser(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_UserParticipant_userParticipant(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UserParticipant",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_User_id(ctx, field)
+			case "firstName":
+				return ec.fieldContext_User_firstName(ctx, field)
+			case "lastName":
+				return ec.fieldContext_User_lastName(ctx, field)
+			case "emails":
+				return ec.fieldContext_User_emails(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_User_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_User_updatedAt(ctx, field)
+			case "source":
+				return ec.fieldContext_User_source(ctx, field)
+			case "conversations":
+				return ec.fieldContext_User_conversations(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _UserParticipant_type(ctx context.Context, field graphql.CollectedField, obj *model.UserParticipant) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_UserParticipant_type(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Type, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_UserParticipant_type(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UserParticipant",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
 		},
 	}
 	return fc, nil
@@ -30650,6 +31326,43 @@ func (ec *executionContext) _ExtensibleEntity(ctx context.Context, sel ast.Selec
 	}
 }
 
+func (ec *executionContext) _InteractionEventParticipant(ctx context.Context, sel ast.SelectionSet, obj model.InteractionEventParticipant) graphql.Marshaler {
+	switch obj := (obj).(type) {
+	case nil:
+		return graphql.Null
+	case model.EmailParticipant:
+		return ec._EmailParticipant(ctx, sel, &obj)
+	case *model.EmailParticipant:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._EmailParticipant(ctx, sel, obj)
+	case model.PhoneNumberParticipant:
+		return ec._PhoneNumberParticipant(ctx, sel, &obj)
+	case *model.PhoneNumberParticipant:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._PhoneNumberParticipant(ctx, sel, obj)
+	case model.ContactParticipant:
+		return ec._ContactParticipant(ctx, sel, &obj)
+	case *model.ContactParticipant:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._ContactParticipant(ctx, sel, obj)
+	case model.UserParticipant:
+		return ec._UserParticipant(ctx, sel, &obj)
+	case *model.UserParticipant:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._UserParticipant(ctx, sel, obj)
+	default:
+		panic(fmt.Errorf("unexpected type %T", obj))
+	}
+}
+
 func (ec *executionContext) _Node(ctx context.Context, sel ast.SelectionSet, obj model.Node) graphql.Marshaler {
 	switch obj := (obj).(type) {
 	case nil:
@@ -31453,6 +32166,38 @@ func (ec *executionContext) _ContactGroupPage(ctx context.Context, sel ast.Selec
 	return out
 }
 
+var contactParticipantImplementors = []string{"ContactParticipant", "InteractionEventParticipant"}
+
+func (ec *executionContext) _ContactParticipant(ctx context.Context, sel ast.SelectionSet, obj *model.ContactParticipant) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, contactParticipantImplementors)
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("ContactParticipant")
+		case "contactParticipant":
+
+			out.Values[i] = ec._ContactParticipant_contactParticipant(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "type":
+
+			out.Values[i] = ec._ContactParticipant_type(ctx, field, obj)
+
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
 var contactsPageImplementors = []string{"ContactsPage", "Pages"}
 
 func (ec *executionContext) _ContactsPage(ctx context.Context, sel ast.SelectionSet, obj *model.ContactsPage) graphql.Marshaler {
@@ -32003,6 +32748,38 @@ func (ec *executionContext) _Email(ctx context.Context, sel ast.SelectionSet, ob
 	return out
 }
 
+var emailParticipantImplementors = []string{"EmailParticipant", "InteractionEventParticipant"}
+
+func (ec *executionContext) _EmailParticipant(ctx context.Context, sel ast.SelectionSet, obj *model.EmailParticipant) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, emailParticipantImplementors)
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("EmailParticipant")
+		case "emailParticipant":
+
+			out.Values[i] = ec._EmailParticipant_emailParticipant(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "type":
+
+			out.Values[i] = ec._EmailParticipant_type(ctx, field, obj)
+
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
 var entityTemplateImplementors = []string{"EntityTemplate", "Node"}
 
 func (ec *executionContext) _EntityTemplate(ctx context.Context, sel ast.SelectionSet, obj *model.EntityTemplate) graphql.Marshaler {
@@ -32322,6 +33099,46 @@ func (ec *executionContext) _InteractionEvent(ctx context.Context, sel ast.Selec
 					}
 				}()
 				res = ec._InteractionEvent_interactionSession(ctx, field, obj)
+				return res
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
+		case "sentBy":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._InteractionEvent_sentBy(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
+		case "sentTo":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._InteractionEvent_sentTo(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
 				return res
 			}
 
@@ -34040,6 +34857,38 @@ func (ec *executionContext) _PhoneNumber(ctx context.Context, sel ast.SelectionS
 	return out
 }
 
+var phoneNumberParticipantImplementors = []string{"PhoneNumberParticipant", "InteractionEventParticipant"}
+
+func (ec *executionContext) _PhoneNumberParticipant(ctx context.Context, sel ast.SelectionSet, obj *model.PhoneNumberParticipant) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, phoneNumberParticipantImplementors)
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("PhoneNumberParticipant")
+		case "phoneNumberParticipant":
+
+			out.Values[i] = ec._PhoneNumberParticipant_phoneNumberParticipant(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "type":
+
+			out.Values[i] = ec._PhoneNumberParticipant_type(ctx, field, obj)
+
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
 var placeImplementors = []string{"Place"}
 
 func (ec *executionContext) _Place(ctx context.Context, sel ast.SelectionSet, obj *model.Place) graphql.Marshaler {
@@ -34904,6 +35753,38 @@ func (ec *executionContext) _UserPage(ctx context.Context, sel ast.SelectionSet,
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var userParticipantImplementors = []string{"UserParticipant", "InteractionEventParticipant"}
+
+func (ec *executionContext) _UserParticipant(ctx context.Context, sel ast.SelectionSet, obj *model.UserParticipant) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, userParticipantImplementors)
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("UserParticipant")
+		case "userParticipant":
+
+			out.Values[i] = ec._UserParticipant_userParticipant(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "type":
+
+			out.Values[i] = ec._UserParticipant_type(ctx, field, obj)
+
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -36242,6 +37123,60 @@ func (ec *executionContext) marshalNInteractionEvent2ᚖgithubᚗcomᚋopenline�
 		return graphql.Null
 	}
 	return ec._InteractionEvent(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNInteractionEventParticipant2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐInteractionEventParticipant(ctx context.Context, sel ast.SelectionSet, v model.InteractionEventParticipant) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._InteractionEventParticipant(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNInteractionEventParticipant2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐInteractionEventParticipantᚄ(ctx context.Context, sel ast.SelectionSet, v []model.InteractionEventParticipant) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNInteractionEventParticipant2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐInteractionEventParticipant(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
 }
 
 func (ec *executionContext) marshalNJobRole2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐJobRole(ctx context.Context, sel ast.SelectionSet, v model.JobRole) graphql.Marshaler {

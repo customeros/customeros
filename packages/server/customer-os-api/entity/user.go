@@ -13,6 +13,9 @@ type UserEntity struct {
 	UpdatedAt     time.Time  `neo4jDb:"property:updatedAt;lookupName:UPDATED_AT;supportCaseSensitive:false"`
 	Source        DataSource `neo4jDb:"property:source;lookupName:SOURCE;supportCaseSensitive:false"`
 	SourceOfTruth DataSource
+
+	InteractionEventParticipantDetails InteractionEventParticipantDetails
+	DataloaderKey                      string
 }
 
 func (User UserEntity) ToString() string {
@@ -21,6 +24,19 @@ func (User UserEntity) ToString() string {
 
 type UserEntities []UserEntity
 
-func (user UserEntity) Labels() []string {
-	return []string{"User"}
+func (UserEntity) IsInteractionEventParticipant() {}
+
+func (UserEntity) InteractionEventParticipantLabel() string {
+	return NodeLabel_User
+}
+
+func (user UserEntity) GetDataloaderKey() string {
+	return user.DataloaderKey
+}
+
+func (UserEntity) Labels(tenant string) []string {
+	return []string{
+		NodeLabel_User,
+		NodeLabel_User + "_" + tenant,
+	}
 }
