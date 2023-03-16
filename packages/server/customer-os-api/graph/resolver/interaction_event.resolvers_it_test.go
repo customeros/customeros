@@ -6,9 +6,90 @@ import (
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/neo4j"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/net/context"
+	"log"
 	"testing"
 	"time"
 )
+
+func TestQueryResolver_InteractionEvent(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx)(t)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+
+	contactId := neo4jt.CreateDefaultContact(ctx, driver, tenantName)
+	emailId := neo4jt.AddEmailTo(ctx, driver, entity.CONTACT, tenantName, contactId, "some@email.com", false, "WORK")
+
+	now := time.Now().UTC()
+	secAgo10 := now.Add(time.Duration(-10) * time.Second)
+	secAgo40 := now.Add(time.Duration(-10) * time.Second)
+
+	// prepare interaction events
+	interactionEventId1 := neo4jt.CreateInteractionEvent(ctx, driver, tenantName, "IE 1", "application/json", "EMAIL", secAgo10)
+
+	interactionEventId4_WithoutSession := neo4jt.CreateInteractionEvent(ctx, driver, tenantName, "IE 4", "application/json", "EMAIL", secAgo40)
+
+	neo4jt.InteractionEventSentBy(ctx, driver, interactionEventId1, emailId, "")
+	neo4jt.InteractionEventSentTo(ctx, driver, interactionEventId4_WithoutSession, emailId, "")
+
+	interactionSession1 := neo4jt.CreateInteractionSession(ctx, driver, tenantName, "session1", "THREAD", "ACTIVE", "EMAIL", now)
+
+	neo4jt.InteractionEventPartOfInteractionSession(ctx, driver, interactionEventId1, interactionSession1)
+
+	rawResponse, err := c.RawPost(getQuery("interaction_event/get_interaction_event"),
+		client.Var("eventId", interactionEventId1))
+	assertRawResponseSuccess(t, rawResponse, err)
+	log.Printf("response: %v", rawResponse.Data)
+	responseMap, ok := rawResponse.Data.(map[string]interface{})
+	if !ok {
+		t.Fatalf("response is not a map")
+	}
+	interactionEventInterface := responseMap["interactionEvent"]
+	timelineEvent1, ok := interactionEventInterface.(map[string]interface{})
+	if !ok {
+		t.Fatalf("timelineEventInterface is not a map")
+	}
+	require.Equal(t, interactionEventId1, timelineEvent1["id"].(string))
+	require.NotNil(t, timelineEvent1["createdAt"].(string))
+	require.Equal(t, "IE 1", timelineEvent1["content"].(string))
+	require.Equal(t, "application/json", timelineEvent1["contentType"].(string))
+	require.Equal(t, "EMAIL", timelineEvent1["channel"].(string))
+	require.NotNil(t, timelineEvent1["createdAt"].(string))
+	require.Equal(t, "OPENLINE", timelineEvent1["source"].(string))
+	require.Equal(t, "OPENLINE", timelineEvent1["sourceOfTruth"].(string))
+	require.Equal(t, "test", timelineEvent1["appSource"].(string))
+	require.Equal(t, interactionSession1, timelineEvent1["interactionSession"].(map[string]interface{})["id"].(string))
+	require.Equal(t, "session1", timelineEvent1["interactionSession"].(map[string]interface{})["name"].(string))
+	require.Equal(t, "THREAD", timelineEvent1["interactionSession"].(map[string]interface{})["type"].(string))
+	require.Equal(t, "ACTIVE", timelineEvent1["interactionSession"].(map[string]interface{})["status"].(string))
+	require.Equal(t, "EMAIL", timelineEvent1["interactionSession"].(map[string]interface{})["channel"].(string))
+	require.Equal(t, "OPENLINE", timelineEvent1["interactionSession"].(map[string]interface{})["source"].(string))
+	require.Equal(t, "OPENLINE", timelineEvent1["interactionSession"].(map[string]interface{})["sourceOfTruth"].(string))
+	require.Equal(t, "test", timelineEvent1["interactionSession"].(map[string]interface{})["appSource"].(string))
+	require.NotNil(t, timelineEvent1["interactionSession"].(map[string]interface{})["startedAt"].(string))
+	require.NotNil(t, timelineEvent1["interactionSession"].(map[string]interface{})["endedAt"].(string))
+
+	rawResponse, err = c.RawPost(getQuery("interaction_event/get_interaction_event"),
+		client.Var("eventId", interactionEventId4_WithoutSession))
+	assertRawResponseSuccess(t, rawResponse, err)
+	log.Printf("response: %v", rawResponse.Data)
+
+	responseMap, ok = rawResponse.Data.(map[string]interface{})
+	if !ok {
+		t.Fatalf("response is not a map")
+	}
+	interactionEventInterface = responseMap["interactionEvent"]
+	timelineEvent4, ok := interactionEventInterface.(map[string]interface{})
+	require.Equal(t, interactionEventId4_WithoutSession, timelineEvent4["id"].(string))
+	require.NotNil(t, timelineEvent4["createdAt"].(string))
+	require.Equal(t, "IE 4", timelineEvent4["content"].(string))
+	require.Equal(t, "application/json", timelineEvent4["contentType"].(string))
+	require.Equal(t, "EMAIL", timelineEvent4["channel"].(string))
+	require.NotNil(t, timelineEvent4["createdAt"].(string))
+	require.Equal(t, "OPENLINE", timelineEvent4["source"].(string))
+	require.Equal(t, "OPENLINE", timelineEvent4["sourceOfTruth"].(string))
+	require.Equal(t, "test", timelineEvent4["appSource"].(string))
+
+}
 
 func TestQueryResolver_Contact_WithTimelineEvents_InteractionEvents_With_InteractionSession(t *testing.T) {
 	ctx := context.TODO()

@@ -59,6 +59,11 @@ func (r *interactionEventResolver) SentTo(ctx context.Context, obj *model.Intera
 	return mapper.MapEntitiesToInteractionEventParticipants(participantEntities), nil
 }
 
+// RepliesTo is the resolver for the repliesTo field.
+func (r *interactionEventResolver) RepliesTo(ctx context.Context, obj *model.InteractionEvent) (*model.InteractionEvent, error) {
+	panic(fmt.Errorf("not implemented: RepliesTo - repliesTo"))
+}
+
 // Events is the resolver for the events field.
 func (r *interactionSessionResolver) Events(ctx context.Context, obj *model.InteractionSession) ([]*model.InteractionEvent, error) {
 	defer func(start time.Time) {
@@ -85,7 +90,16 @@ func (r *mutationResolver) InteractionEventCreate(ctx context.Context, event mod
 
 // InteractionSession is the resolver for the interactionSession field.
 func (r *queryResolver) InteractionSession(ctx context.Context, id string) (*model.InteractionSession, error) {
-	panic(fmt.Errorf("not implemented: InteractionSession - interactionSession"))
+	defer func(start time.Time) {
+		utils.LogMethodExecution(start, utils.GetFunctionName())
+	}(time.Now())
+
+	interactionSessionEntity, err := r.Services.InteractionSessionService.GetInteractionSessionById(ctx, id)
+	if err != nil || interactionSessionEntity == nil {
+		graphql.AddErrorf(ctx, "InteractionEvent with id %s not found", id)
+		return nil, err
+	}
+	return mapper.MapEntityToInteractionSession(interactionSessionEntity), nil
 }
 
 // InteractionSessionBySessionIdentifier is the resolver for the interactionSession_BySessionIdentifier field.
@@ -95,12 +109,30 @@ func (r *queryResolver) InteractionSessionBySessionIdentifier(ctx context.Contex
 
 // InteractionEvent is the resolver for the interactionEvent field.
 func (r *queryResolver) InteractionEvent(ctx context.Context, id string) (*model.InteractionEvent, error) {
-	panic(fmt.Errorf("not implemented: InteractionEvent - interactionEvent"))
+	defer func(start time.Time) {
+		utils.LogMethodExecution(start, utils.GetFunctionName())
+	}(time.Now())
+
+	interactionEventEntity, err := r.Services.InteractionEventService.GetInteractionEventById(ctx, id)
+	if err != nil || interactionEventEntity == nil {
+		graphql.AddErrorf(ctx, "InteractionEvent with id %s not found", id)
+		return nil, err
+	}
+	return mapper.MapEntityToInteractionEvent(interactionEventEntity), nil
 }
 
 // InteractionEventByEventIdentifier is the resolver for the interactionEvent_ByEventIdentifier field.
 func (r *queryResolver) InteractionEventByEventIdentifier(ctx context.Context, eventIdentifier string) (*model.InteractionEvent, error) {
-	panic(fmt.Errorf("not implemented: InteractionEventByEventIdentifier - interactionEvent_ByEventIdentifier"))
+	defer func(start time.Time) {
+		utils.LogMethodExecution(start, utils.GetFunctionName())
+	}(time.Now())
+
+	interactionEventEntity, err := r.Services.InteractionEventService.GetInteractionEventByEventIdentifier(ctx, eventIdentifier)
+	if err != nil || interactionEventEntity == nil {
+		graphql.AddErrorf(ctx, "InteractionEvent with EventIdentifier %s not found", eventIdentifier)
+		return nil, err
+	}
+	return mapper.MapEntityToInteractionEvent(interactionEventEntity), nil
 }
 
 // InteractionEvent returns generated.InteractionEventResolver implementation.

@@ -237,6 +237,7 @@ type ComplexityRoot struct {
 		EventIdentifier    func(childComplexity int) int
 		ID                 func(childComplexity int) int
 		InteractionSession func(childComplexity int) int
+		RepliesTo          func(childComplexity int) int
 		SentBy             func(childComplexity int) int
 		SentTo             func(childComplexity int) int
 		Source             func(childComplexity int) int
@@ -596,6 +597,7 @@ type InteractionEventResolver interface {
 	InteractionSession(ctx context.Context, obj *model.InteractionEvent) (*model.InteractionSession, error)
 	SentBy(ctx context.Context, obj *model.InteractionEvent) ([]model.InteractionEventParticipant, error)
 	SentTo(ctx context.Context, obj *model.InteractionEvent) ([]model.InteractionEventParticipant, error)
+	RepliesTo(ctx context.Context, obj *model.InteractionEvent) (*model.InteractionEvent, error)
 }
 type InteractionSessionResolver interface {
 	Events(ctx context.Context, obj *model.InteractionSession) ([]*model.InteractionEvent, error)
@@ -1682,6 +1684,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.InteractionEvent.InteractionSession(childComplexity), true
+
+	case "InteractionEvent.repliesTo":
+		if e.complexity.InteractionEvent.RepliesTo == nil {
+			break
+		}
+
+		return e.complexity.InteractionEvent.RepliesTo(childComplexity), true
 
 	case "InteractionEvent.sentBy":
 		if e.complexity.InteractionEvent.SentBy == nil {
@@ -5031,7 +5040,7 @@ type InteractionEvent implements Node {
     interactionSession: InteractionSession @goField(forceResolver: true)
     sentBy: [InteractionEventParticipant!]! @goField(forceResolver: true)
     sentTo: [InteractionEventParticipant!]! @goField(forceResolver: true)
-
+    repliesTo: InteractionEvent @goField(forceResolver: true)
     source: DataSource!
     sourceOfTruth: DataSource!
     appSource: String!
@@ -14410,6 +14419,75 @@ func (ec *executionContext) fieldContext_InteractionEvent_sentTo(ctx context.Con
 	return fc, nil
 }
 
+func (ec *executionContext) _InteractionEvent_repliesTo(ctx context.Context, field graphql.CollectedField, obj *model.InteractionEvent) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_InteractionEvent_repliesTo(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.InteractionEvent().RepliesTo(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.InteractionEvent)
+	fc.Result = res
+	return ec.marshalOInteractionEvent2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐInteractionEvent(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_InteractionEvent_repliesTo(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "InteractionEvent",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_InteractionEvent_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_InteractionEvent_createdAt(ctx, field)
+			case "eventIdentifier":
+				return ec.fieldContext_InteractionEvent_eventIdentifier(ctx, field)
+			case "content":
+				return ec.fieldContext_InteractionEvent_content(ctx, field)
+			case "contentType":
+				return ec.fieldContext_InteractionEvent_contentType(ctx, field)
+			case "channel":
+				return ec.fieldContext_InteractionEvent_channel(ctx, field)
+			case "interactionSession":
+				return ec.fieldContext_InteractionEvent_interactionSession(ctx, field)
+			case "sentBy":
+				return ec.fieldContext_InteractionEvent_sentBy(ctx, field)
+			case "sentTo":
+				return ec.fieldContext_InteractionEvent_sentTo(ctx, field)
+			case "repliesTo":
+				return ec.fieldContext_InteractionEvent_repliesTo(ctx, field)
+			case "source":
+				return ec.fieldContext_InteractionEvent_source(ctx, field)
+			case "sourceOfTruth":
+				return ec.fieldContext_InteractionEvent_sourceOfTruth(ctx, field)
+			case "appSource":
+				return ec.fieldContext_InteractionEvent_appSource(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type InteractionEvent", field.Name)
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _InteractionEvent_source(ctx context.Context, field graphql.CollectedField, obj *model.InteractionEvent) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_InteractionEvent_source(ctx, field)
 	if err != nil {
@@ -15065,6 +15143,8 @@ func (ec *executionContext) fieldContext_InteractionSession_events(ctx context.C
 				return ec.fieldContext_InteractionEvent_sentBy(ctx, field)
 			case "sentTo":
 				return ec.fieldContext_InteractionEvent_sentTo(ctx, field)
+			case "repliesTo":
+				return ec.fieldContext_InteractionEvent_repliesTo(ctx, field)
 			case "source":
 				return ec.fieldContext_InteractionEvent_source(ctx, field)
 			case "sourceOfTruth":
@@ -20077,6 +20157,8 @@ func (ec *executionContext) fieldContext_Mutation_interactionEvent_Create(ctx co
 				return ec.fieldContext_InteractionEvent_sentBy(ctx, field)
 			case "sentTo":
 				return ec.fieldContext_InteractionEvent_sentTo(ctx, field)
+			case "repliesTo":
+				return ec.fieldContext_InteractionEvent_repliesTo(ctx, field)
 			case "source":
 				return ec.fieldContext_InteractionEvent_source(ctx, field)
 			case "sourceOfTruth":
@@ -26835,6 +26917,8 @@ func (ec *executionContext) fieldContext_Query_interactionEvent(ctx context.Cont
 				return ec.fieldContext_InteractionEvent_sentBy(ctx, field)
 			case "sentTo":
 				return ec.fieldContext_InteractionEvent_sentTo(ctx, field)
+			case "repliesTo":
+				return ec.fieldContext_InteractionEvent_repliesTo(ctx, field)
 			case "source":
 				return ec.fieldContext_InteractionEvent_source(ctx, field)
 			case "sourceOfTruth":
@@ -26916,6 +27000,8 @@ func (ec *executionContext) fieldContext_Query_interactionEvent_ByEventIdentifie
 				return ec.fieldContext_InteractionEvent_sentBy(ctx, field)
 			case "sentTo":
 				return ec.fieldContext_InteractionEvent_sentTo(ctx, field)
+			case "repliesTo":
+				return ec.fieldContext_InteractionEvent_repliesTo(ctx, field)
 			case "source":
 				return ec.fieldContext_InteractionEvent_source(ctx, field)
 			case "sourceOfTruth":
@@ -34974,6 +35060,23 @@ func (ec *executionContext) _InteractionEvent(ctx context.Context, sel ast.Selec
 				return innerFunc(ctx)
 
 			})
+		case "repliesTo":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._InteractionEvent_repliesTo(ctx, field, obj)
+				return res
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
 		case "source":
 
 			out.Values[i] = ec._InteractionEvent_source(ctx, field, obj)
@@ -40851,6 +40954,13 @@ func (ec *executionContext) marshalOInt642ᚖint64(ctx context.Context, sel ast.
 	}
 	res := graphql.MarshalInt64(*v)
 	return res
+}
+
+func (ec *executionContext) marshalOInteractionEvent2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐInteractionEvent(ctx context.Context, sel ast.SelectionSet, v *model.InteractionEvent) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._InteractionEvent(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalOInteractionSession2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐInteractionSession(ctx context.Context, sel ast.SelectionSet, v *model.InteractionSession) graphql.Marshaler {

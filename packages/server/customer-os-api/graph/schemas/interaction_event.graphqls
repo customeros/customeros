@@ -73,7 +73,7 @@ type InteractionEvent implements Node {
     interactionSession: InteractionSession @goField(forceResolver: true)
     sentBy: [InteractionEventParticipant!]! @goField(forceResolver: true)
     sentTo: [InteractionEventParticipant!]! @goField(forceResolver: true)
-
+    repliesTo: InteractionEvent @goField(forceResolver: true)
     source: DataSource!
     sourceOfTruth: DataSource!
     appSource: String!

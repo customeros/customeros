@@ -1,6 +1,8 @@
 package service
 
 import (
+	"fmt"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
@@ -14,6 +16,8 @@ type InteractionEventService interface {
 	GetInteractionEventsForInteractionSessions(ctx context.Context, ids []string) (*entity.InteractionEventEntities, error)
 	GetSentByParticipantsForInteractionEvents(ctx context.Context, ids []string) (*entity.InteractionEventParticipants, error)
 	GetSentToParticipantsForInteractionEvents(ctx context.Context, ids []string) (*entity.InteractionEventParticipants, error)
+	GetInteractionEventById(ctx context.Context, id string) (*entity.InteractionEventEntity, error)
+	GetInteractionEventByEventIdentifier(ctx context.Context, eventIdentifier string) (*entity.InteractionEventEntity, error)
 
 	mapDbNodeToInteractionEventEntity(node dbtype.Node) *entity.InteractionEventEntity
 }
@@ -66,6 +70,54 @@ func (s *interactionEventService) GetSentToParticipantsForInteractionEvents(ctx 
 	return &interactionEventParticipants, nil
 }
 
+func (s *interactionEventService) GetInteractionEventById(ctx context.Context, id string) (*entity.InteractionEventEntity, error) {
+	session := utils.NewNeo4jReadSession(ctx, s.getNeo4jDriver())
+	defer session.Close(ctx)
+
+	queryResult, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (interface{}, error) {
+		result, err := tx.Run(ctx, fmt.Sprintf(`
+			MATCH (e:InteractionEvent_%s {id:$id}) RETURN e`,
+			common.GetTenantFromContext(ctx)),
+			map[string]interface{}{
+				"id": id,
+			})
+		record, err := result.Single(ctx)
+		if err != nil {
+			return nil, err
+		}
+		return record.Values[0], nil
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return s.mapDbNodeToInteractionEventEntity(queryResult.(dbtype.Node)), nil
+}
+
+func (s *interactionEventService) GetInteractionEventByEventIdentifier(ctx context.Context, eventIdentifier string) (*entity.InteractionEventEntity, error) {
+	session := utils.NewNeo4jReadSession(ctx, s.getNeo4jDriver())
+	defer session.Close(ctx)
+
+	queryResult, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (interface{}, error) {
+		result, err := tx.Run(ctx, fmt.Sprintf(`
+			MATCH (e:InteractionEvent_%s {identifier:$identifier}) RETURN e`,
+			common.GetTenantFromContext(ctx)),
+			map[string]interface{}{
+				"identifier": eventIdentifier,
+			})
+		record, err := result.Single(ctx)
+		if err != nil {
+			return nil, err
+		}
+		return record.Values[0], nil
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return s.mapDbNodeToInteractionEventEntity(queryResult.(dbtype.Node)), nil
+}
+
 func (s *interactionEventService) mapDbNodeToInteractionEventEntity(node dbtype.Node) *entity.InteractionEventEntity {
 	props := utils.GetPropsFromNode(node)
 	interactionEventEntity := entity.InteractionEventEntity{
@@ -116,4 +168,8 @@ func (s *interactionEventService) mapDbRelationshipToParticipantDetails(relation
 		Type: utils.GetStringPropOrEmpty(props, "type"),
 	}
 	return details
+}
+
+func (s *interactionEventService) getNeo4jDriver() neo4j.DriverWithContext {
+	return *s.repositories.Drivers.Neo4jDriver
 }

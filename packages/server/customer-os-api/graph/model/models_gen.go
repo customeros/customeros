@@ -575,6 +575,7 @@ type InteractionEvent struct {
 	InteractionSession *InteractionSession           `json:"interactionSession"`
 	SentBy             []InteractionEventParticipant `json:"sentBy"`
 	SentTo             []InteractionEventParticipant `json:"sentTo"`
+	RepliesTo          *InteractionEvent             `json:"repliesTo"`
 	Source             DataSource                    `json:"source"`
 	SourceOfTruth      DataSource                    `json:"sourceOfTruth"`
 	AppSource          string                        `json:"appSource"`
