@@ -61,7 +61,11 @@ query GetContactTimeline($contactId: ID!, $from: Time!, $size: Int!) {
         id
         html
         createdAt
-
+        createdBy {
+          id
+          firstName
+          lastName
+        }
       }
     }
   }
