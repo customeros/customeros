@@ -5,7 +5,7 @@ type Config struct {
 	LogLevel string `env:"LOG_LEVEL" envDefault:"INFO"`
 	GraphQL  struct {
 		PlaygroundEnabled    bool `env:"GRAPHQL_PLAYGROUND_ENABLED" envDefault:"false"`
-		FixedComplexityLimit int  `env:"GRAPHQL_FIXED_COMPLEXITY_LIMIT" envDefault:"100"`
+		FixedComplexityLimit int  `env:"GRAPHQL_FIXED_COMPLEXITY_LIMIT" envDefault:"200"`
 	}
 	Postgres struct {
 		Host            string `env:"POSTGRES_HOST,required"`
