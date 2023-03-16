@@ -2,7 +2,7 @@ query GetContactTimeline($contactId: ID!, $from: Time!, $size: Int!) {
   contact(id: $contactId) {
     id
     ...ContactNameFragment
-    timelineEvents(from:$from, size:$size) {
+    timelineEvents(from: $from, size: $size) {
       ... on PageView {
         id
         application
@@ -40,7 +40,7 @@ query GetContactTimeline($contactId: ID!, $from: Time!, $size: Int!) {
         updatedAt
         messageCount
         contacts {
-          id,
+          id
           lastName
           firstName
         }
@@ -59,6 +59,21 @@ query GetContactTimeline($contactId: ID!, $from: Time!, $size: Int!) {
         initiatorType
         threadId
       }
+      ... on InteractionSession {
+        id
+        startedAt
+        events {
+          content
+          contentType
+        }
+      }
+      ... on InteractionEvent {
+        id
+        createdAt
+        channel
+        content
+        contentType
+      }
       ... on Note {
         id
         html
@@ -72,4 +87,3 @@ query GetContactTimeline($contactId: ID!, $from: Time!, $size: Int!) {
     }
   }
 }
-

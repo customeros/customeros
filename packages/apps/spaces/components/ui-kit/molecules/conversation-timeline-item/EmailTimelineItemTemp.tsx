@@ -165,6 +165,7 @@ export const EmailTimelineItemTemp: React.FC<Props> = ({
                     >
                       <EmailTimelineItem
                         emailContent={emailData.html}
+                        emailContentType={'text/html'}
                         sender={emailData.from || 'Unknown'}
                         recipients={emailData.to}
                         cc={emailData?.cc}

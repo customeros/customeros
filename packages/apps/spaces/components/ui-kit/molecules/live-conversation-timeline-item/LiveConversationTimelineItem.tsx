@@ -134,6 +134,7 @@ export const LiveConversationTimelineItem: React.FC<Props> = ({
                   <TimelineItem first={fl} createdAt={date} key={msg.id}>
                     <EmailTimelineItem
                       emailContent={emailData.html}
+                      emailContentType={'text/html'}
                       sender={emailData.from || 'Unknown'}
                       recipients={emailData.to}
                       cc={emailData?.cc}

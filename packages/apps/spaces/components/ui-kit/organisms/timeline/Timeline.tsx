@@ -3,6 +3,7 @@ import { useStickyScroll } from '../../../../hooks/useStickyScroll';
 
 import {
   ConversationTimelineItem,
+  EmailTimelineItem,
   LiveConversationTimelineItem,
   NoteTimelineItem,
   WebActionTimelineItem,
@@ -11,10 +12,11 @@ import { TimelineItem } from '../../atoms/timeline-item';
 import { TicketTimelineItem } from '../../molecules/ticket-timeline-item';
 import styles from './timeline.module.scss';
 import { InteractionTimelineItem } from '../../molecules/interaction-timeline-item';
-import { EmailTimelineItemTemp } from '../../molecules/conversation-timeline-item/EmailTimelineItemTemp';
 import { ChatTimelineItem } from '../../molecules/conversation-timeline-item/ChatTimelineItem';
 import { useInfiniteScroll } from './useInfiniteScroll';
 import { Skeleton } from '../../atoms/skeleton';
+import {EditorMode} from "../../../../state";
+import {Button} from "../../atoms";
 
 interface Props {
   loading: boolean;
@@ -76,6 +78,7 @@ export const Timeline = ({
           </TimelineItem>
         );
       case 'Conversation':
+        // TODO move to interaction event once we have the data in backend
         if (data.channel === 'WEB_CHAT') {
           return (
             <ChatTimelineItem
@@ -93,21 +96,9 @@ export const Timeline = ({
           );
         }
         if (data.channel === 'EMAIL') {
-          return (
-            <EmailTimelineItemTemp
-              first={index == 0}
-              feedId={data.id}
-              source={data.source}
-              createdAt={data?.startedAt}
-              feedInitiator={{
-                firstName: data.initiatorFirstName,
-                lastName: data.initiatorLastName,
-                phoneNumber: data.initiatorUsername.identifier,
-                lastTimestamp: data.lastTimestamp,
-              }}
-            />
-          );
+          return '';
         }
+        // TODO move to interaction event once we have the data in backend
         if (data.channel === 'VOICE') {
           return (
             <ConversationTimelineItem
@@ -156,8 +147,36 @@ export const Timeline = ({
             <TicketTimelineItem {...data} />
           </TimelineItem>
         );
-      // case "CALL":
-      //     return <PhoneCallTimelineItem phoneCallParties={data} duration={}/>
+
+      case 'InteractionEvent':
+        if (data.channel === 'EMAIL') {
+          return (
+            <TimelineItem
+              first={index == 0}
+              createdAt={data?.createdAt}
+              contentClassName={'interactionTimeLineItemClass'}
+            >
+              <EmailTimelineItem
+                emailContent={data.content}
+                emailContentType={data.contentType}
+                sender={''} //TODO when we have backend data
+                recipients={''} //TODO when we have backend data
+                subject={''} //TODO when we have backend data
+                cc={''} //TODO when we have backend data
+                bcc={''} //TODO when we have backend data
+              />
+            </TimelineItem>
+          );
+        } else {
+          return (
+            <div>
+              Sorry, looks like &apos;{type}&apos; activity type is not
+              supported yet{' '}
+            </div>
+          );
+        }
+        return null;
+
       default:
         return type ? (
           <div>
