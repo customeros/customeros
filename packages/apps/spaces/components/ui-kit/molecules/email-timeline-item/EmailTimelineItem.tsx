@@ -2,7 +2,6 @@ import React, { useRef, useState } from 'react';
 import sanitizeHtml from 'sanitize-html';
 import styles from './email-timeline-item.module.scss';
 import { Button } from '../../atoms';
-import { EditorMode } from '../../../../state';
 
 interface Props {
   content: string;
@@ -78,6 +77,65 @@ export const EmailTimelineItem: React.FC<Props> = ({
       timelineItemRef?.current?.scrollIntoView();
     }
   };
+
+  // const setEditorMode = useSetRecoilState(editorMode);
+  // const [emailEditorData, setEmailEditorData] = useRecoilState(editorEmail);
+  // const loggedInUserData = useRecoilValue(userData);
+  //
+  // useEffect(() => {
+  //   return () => {
+  //     setEmailEditorData({
+  //       //@ts-expect-error fixme later
+  //       handleSubmit: () => null,
+  //       to: [],
+  //       subject: '',
+  //       respondTo: '',
+  //     });
+  //     setEditorMode({
+  //       mode: EditorMode.Note,
+  //       submitButtonLabel: 'Log into timeline',
+  //     });
+  //   };
+  // }, []);
+
+  // const handleSendMessage = (
+  //     text: string,
+  //     onSuccess: () => void,
+  //     destination = [],
+  //     replyTo: null | string,
+  // ) => {
+  //   if (!text) return;
+  //   const message: FeedPostRequest = {
+  //     channel: 'EMAIL',
+  //     username: loggedInUserData.identity,
+  //     message: text,
+  //     direction: 'OUTBOUND',
+  //     destination: destination,
+  //   };
+  //   if (replyTo) {
+  //     message.replyTo = replyTo;
+  //   }
+
+  //   axios
+  //       .post(`/oasis-api/feed/${feedId}/item`, message)
+  //       .then((res) => {
+  //         console.log(res);
+  //         if (res.data) {
+  //           setMessages((messageList: any) => [...messageList, res.data]);
+  //           onSuccess();
+  //           setEditorMode({
+  //             submitButtonLabel: 'Log into timeline',
+  //             mode: EditorMode.Note,
+  //           });
+  //           setEmailEditorData({ ...emailEditorData, to: [], subject: '' });
+  //           toast.success('Email sent!');
+  //         }
+  //       })
+  //       .catch(() => {
+  //         toast.error('Something went wrong while sending email');
+  //       });
+  // };
+
   return (
     <div className={styles.emailWrapper}>
       <div ref={timelineItemRef} className={styles.scrollToView} />
@@ -91,9 +149,7 @@ export const EmailTimelineItem: React.FC<Props> = ({
             <tr>
               <th className={styles.emailParty}>To:</th>
               <td>
-                <span className={styles.emailRecipient} >
-                            {to}
-                          </span>
+                <span className={styles.emailRecipient}>{to}</span>
               </td>
             </tr>
 
@@ -101,9 +157,7 @@ export const EmailTimelineItem: React.FC<Props> = ({
               <tr>
                 <th className={styles.emailParty}>CC:</th>
                 <td>
-                   <span className={styles.emailRecipient} >
-                            {cc}
-                          </span>
+                  <span className={styles.emailRecipient}>{cc}</span>
                 </td>
               </tr>
             )}
@@ -111,9 +165,7 @@ export const EmailTimelineItem: React.FC<Props> = ({
               <tr>
                 <th className={styles.emailParty}>BCC:</th>
                 <td>
-                   <span className={styles.emailRecipient} >
-                            {bcc}
-                          </span>
+                  <span className={styles.emailRecipient}>{bcc}</span>
                 </td>
               </tr>
             )}
@@ -151,25 +203,27 @@ export const EmailTimelineItem: React.FC<Props> = ({
           <Button onClick={() => handleToggleExpanded()} mode='link'>
             {expanded ? 'Collapse' : 'Expand'}
           </Button>
-          {/*<Button*/}
-          {/*  mode='link'*/}
-          {/*  onClick={() => {*/}
-          {/*    // TODO add cc and bcc*/}
 
-          {/*    setEmailEditorData({*/}
-          {/*      //@ts-expect-error fixme later*/}
-          {/*      handleSubmit: handleSendMessage,*/}
-          {/*      to: [sender],*/}
-          {/*      subject: subject,*/}
-          {/*      respondTo:*/}
+          {/*TODO enable after backend refactor*/}
+          {/*<Button*/}
+          {/*    mode='link'*/}
+          {/*    onClick={() => {*/}
+          {/*      // TODO add cc and bcc*/}
+
+          {/*      setEmailEditorData({*/}
           {/*        //@ts-expect-error fixme later*/}
-          {/*        msg?.messageId?.conversationEventId || null,*/}
-          {/*    });*/}
-          {/*    setEditorMode({*/}
-          {/*      mode: EditorMode.Email,*/}
-          {/*      submitButtonLabel: 'Send',*/}
-          {/*    });*/}
-          {/*  }}*/}
+          {/*        handleSubmit: handleSendMessage,*/}
+          {/*        to: [emailData.from],*/}
+          {/*        subject: emailData.subject,*/}
+          {/*        respondTo:*/}
+          {/*        //@ts-expect-error fixme later*/}
+          {/*            msg?.messageId?.conversationEventId || null,*/}
+          {/*      });*/}
+          {/*      setEditorMode({*/}
+          {/*        mode: EditorMode.Email,*/}
+          {/*        submitButtonLabel: 'Send',*/}
+          {/*      });*/}
+          {/*    }}*/}
           {/*>*/}
           {/*  Respond*/}
           {/*</Button>*/}
