@@ -4998,6 +4998,7 @@ input InteractionEventInput {
     interactionSession: ID
     sentBy: [InteractionEventParticipantInput!]!
     sentTo: [InteractionEventParticipantInput!]!
+    repliesTo: ID
     appSource: String!
 }
 
@@ -32200,7 +32201,7 @@ func (ec *executionContext) unmarshalInputInteractionEventInput(ctx context.Cont
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"eventIdentifier", "content", "contentType", "channel", "interactionSession", "sentBy", "sentTo", "appSource"}
+	fieldsInOrder := [...]string{"eventIdentifier", "content", "contentType", "channel", "interactionSession", "sentBy", "sentTo", "repliesTo", "appSource"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -32260,6 +32261,14 @@ func (ec *executionContext) unmarshalInputInteractionEventInput(ctx context.Cont
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("sentTo"))
 			it.SentTo, err = ec.unmarshalNInteractionEventParticipantInput2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐInteractionEventParticipantInputᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "repliesTo":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("repliesTo"))
+			it.RepliesTo, err = ec.unmarshalOID2ᚖstring(ctx, v)
 			if err != nil {
 				return it, err
 			}

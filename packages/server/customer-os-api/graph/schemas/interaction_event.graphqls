@@ -31,6 +31,7 @@ input InteractionEventInput {
     interactionSession: ID
     sentBy: [InteractionEventParticipantInput!]!
     sentTo: [InteractionEventParticipantInput!]!
+    repliesTo: ID
     appSource: String!
 }
 

@@ -594,6 +594,7 @@ type InteractionEventInput struct {
 	InteractionSession *string                             `json:"interactionSession"`
 	SentBy             []*InteractionEventParticipantInput `json:"sentBy"`
 	SentTo             []*InteractionEventParticipantInput `json:"sentTo"`
+	RepliesTo          *string                             `json:"repliesTo"`
 	AppSource          string                              `json:"appSource"`
 }
 
