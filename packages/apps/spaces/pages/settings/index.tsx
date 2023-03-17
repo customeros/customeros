@@ -45,8 +45,7 @@ const Settings: NextPage = () => {
   const [jiraDomain, setJiraDomain] = useState<string>('');
   const [jiraEmail, setJiraEmail] = useState<string>('');
 
-  const [trelloAPIToken, setTrelloAPIToken] = useState<string>('');
-  const [trelloAPIKey, setTrelloAPIKey] = useState<string>('');
+  const [trelloToken, setTrelloToken] = useState<string>('');
 
   useEffect(() => {
     GetSettings()
@@ -82,8 +81,7 @@ const Settings: NextPage = () => {
   };
 
   const resetTrello = () => {
-    setTrelloAPIToken('');
-    setTrelloAPIKey('');
+    setTrelloToken('');
   };
 
   const handleSubmitHubspotSettings = () => {
@@ -164,8 +162,7 @@ const Settings: NextPage = () => {
   };
   const handleSubmitTrelloSettings = () => {
     UpdateTrelloSettings({
-      trelloAPIToken,
-      trelloAPIKey,
+      trelloToken,
     })
       .then(() => {
         toast.success('Settings updated successfully!');
@@ -431,22 +428,13 @@ const Settings: NextPage = () => {
 
         <article className={styles.gridItem}>
           <h2 className={styles.heading}>Trello</h2>
-          <label className={styles.label}>API Token</label>
-          <input
-            value={
-              settings.trelloExists ? '******************' : trelloAPIToken
-            }
-            disabled={settings.trelloExists}
-            className={styles.input}
-            onChange={({ target: { value } }) => setTrelloAPIToken(value)}
-          />
 
-          <label className={styles.label}>API key</label>
+          <label className={styles.label}>Token</label>
           <input
-            value={settings.trelloExists ? '******************' : trelloAPIKey}
+            value={settings.trelloExists ? '******************' : trelloToken}
             className={styles.input}
             disabled={settings.trelloExists}
-            onChange={({ target: { value } }) => setTrelloAPIKey(value)}
+            onChange={({ target: { value } }) => setTrelloToken(value)}
           />
 
           <div className={styles.buttonSection}>

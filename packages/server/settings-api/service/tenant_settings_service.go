@@ -255,8 +255,7 @@ func (s *tenantSettingsService) SaveTrelloData(tenantName string, request dto.Te
 	if tenantSettings == nil {
 		e := new(entity.TenantSettings)
 		e.TenantName = tenantName
-		e.TrelloAPIToken = request.TrelloAPIToken
-		e.TrelloAPIKey = request.TrelloAPIKey
+		e.TrelloToken = request.TrelloToken
 
 		qr := s.repositories.TenantSettingsRepository.Save(e)
 		if qr.Error != nil {
@@ -264,8 +263,7 @@ func (s *tenantSettingsService) SaveTrelloData(tenantName string, request dto.Te
 		}
 		return qr.Result.(*entity.TenantSettings), nil
 	} else {
-		tenantSettings.TrelloAPIToken = request.TrelloAPIToken
-		tenantSettings.TrelloAPIKey = request.TrelloAPIKey
+		tenantSettings.TrelloToken = request.TrelloToken
 
 		qr := s.repositories.TenantSettingsRepository.Save(tenantSettings)
 		if qr.Error != nil {
@@ -284,8 +282,7 @@ func (s *tenantSettingsService) ClearTrelloData(tenantName string) (*entity.Tena
 	if tenantSettings == nil {
 		return nil, nil
 	} else {
-		tenantSettings.TrelloAPIToken = nil
-		tenantSettings.TrelloAPIKey = nil
+		tenantSettings.TrelloToken = nil
 
 		qr := s.repositories.TenantSettingsRepository.Save(tenantSettings)
 		if qr.Error != nil {

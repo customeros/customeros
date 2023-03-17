@@ -24,7 +24,7 @@ func MapTenantSettingsEntityToDTO(input *entity.TenantSettings) *dto.TenantSetti
 		responseDTO.JiraExists = true
 	}
 
-	if input != nil && input.TrelloAPIToken != nil && input.TrelloAPIKey != nil {
+	if input != nil && input.TrelloToken != nil {
 		responseDTO.TrelloExists = true
 	}
 

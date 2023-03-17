@@ -17,8 +17,7 @@ type TenantSettings struct {
 	JiraDomain   *string `gorm:"column:jira_domain;type:varchar(255);" json:"jiraDomain" binding:"required"`
 	JiraEmail    *string `gorm:"column:jira_email;type:varchar(255);" json:"jiraEmail" binding:"required"`
 
-	TrelloAPIToken *string `gorm:"column:trello_api_token;type:varchar(255);" json:"trelloAPIToken" binding:"required"`
-	TrelloAPIKey   *string `gorm:"column:trello_api_key;type:varchar(255);" json:"trelloAPIKey" binding:"required"`
+	TrelloToken *string `gorm:"column:trello_token;type:varchar(255);" json:"trelloToken" binding:"required"`
 }
 
 func (TenantSettings) TableName() string {
