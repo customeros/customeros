@@ -1,0 +1,6 @@
+mutation RemoveEmailFromOrganization($organizationId: ID!, $email: String!) {
+  emailRemoveFromOrganization(organizationId: $organizationId, email: $email)
+    {
+      result
+    }
+}

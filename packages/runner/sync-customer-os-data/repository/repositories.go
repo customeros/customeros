@@ -16,7 +16,6 @@ type Repositories struct {
 	Dbs                          Dbs
 	TenantSyncSettingsRepository TenantSyncSettingsRepository
 	SyncRunRepository            SyncRunRepository
-	ConversationEventRepository  ConversationEventRepository
 
 	ContactRepository          ContactRepository
 	EmailRepository            EmailRepository
@@ -38,7 +37,6 @@ func InitRepos(driver *neo4j.DriverWithContext, controlDb *gorm.DB, airbyteStore
 		},
 		TenantSyncSettingsRepository: NewTenantSyncSettingsRepository(controlDb),
 		SyncRunRepository:            NewSyncRunRepository(controlDb),
-		ConversationEventRepository:  NewConversationEventRepository(controlDb),
 		ContactRepository:            NewContactRepository(driver),
 		EmailRepository:              NewEmailRepository(driver),
 		ExternalSystemRepository:     NewExternalSystemRepository(driver),

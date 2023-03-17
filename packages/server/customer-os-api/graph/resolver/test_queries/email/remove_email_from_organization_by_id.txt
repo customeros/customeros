@@ -1,0 +1,6 @@
+mutation RemoveEmailFromOrganizationById($organizationId: ID!, $emailId: ID!) {
+  emailRemoveFromOrganizationById(organizationId: $organizationId, id: $emailId)
+    {
+      result
+    }
+}
