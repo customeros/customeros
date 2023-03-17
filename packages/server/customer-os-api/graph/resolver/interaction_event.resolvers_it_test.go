@@ -297,6 +297,7 @@ func TestQueryResolver_InteractionSession_BySessionIdentifier(t *testing.T) {
 	require.Equal(t, "OPENLINE", timelineEvent1["source"].(string))
 	require.Equal(t, "OPENLINE", timelineEvent1["sourceOfTruth"].(string))
 	require.Equal(t, "test", timelineEvent1["appSource"].(string))
+	require.Equal(t, "mySessionIdentifier", timelineEvent1["sessionIdentifier"].(string))
 	require.NotNil(t, timelineEvent1["startedAt"].(string))
 	require.NotNil(t, timelineEvent1["endedAt"].(string))
 

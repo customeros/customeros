@@ -105,8 +105,8 @@ func (r *mutationResolver) InteractionEventCreate(ctx context.Context, event mod
 		Content:                event.Content,
 		ContentType:            event.ContentType,
 		SessionIdentifier:      event.InteractionSession,
-		SentBy:                 mapper.MapInteractionEventParticipantInputToAddressData(event.SentBy),
-		SentTo:                 mapper.MapInteractionEventParticipantInputToAddressData(event.SentBy),
+		SentBy:                 service.MapInteractionEventParticipantInputToAddressData(event.SentBy),
+		SentTo:                 service.MapInteractionEventParticipantInputToAddressData(event.SentBy),
 
 		Source:        entity.DataSourceOpenline,
 		SourceOfTruth: entity.DataSourceOpenline,

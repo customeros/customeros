@@ -366,6 +366,19 @@ func (s *interactionEventService) mapDbRelationshipToParticipantDetails(relation
 	return details
 }
 
+func MapInteractionEventParticipantInputToAddressData(input []*model.InteractionEventParticipantInput) []ParticipantAddressData {
+	var inputData []ParticipantAddressData
+	for _, participant := range input {
+		inputData = append(inputData, ParticipantAddressData{
+			Email:       participant.Email,
+			PhoneNumber: participant.PhoneNumber,
+			UserId:      participant.UserID,
+			ContactId:   participant.ContactID,
+			Type:        participant.Type,
+		})
+	}
+	return inputData
+}
 func (s *interactionEventService) getNeo4jDriver() neo4j.DriverWithContext {
 	return *s.repositories.Drivers.Neo4jDriver
 }

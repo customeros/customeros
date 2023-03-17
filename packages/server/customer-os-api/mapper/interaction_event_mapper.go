@@ -3,7 +3,6 @@ package mapper
 import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 )
 
@@ -36,18 +35,4 @@ func MapInteractionEventInputToEntity(input *model.InteractionEventInput) *entit
 		Channel:         *input.Channel,
 		AppSource:       input.AppSource,
 	}
-}
-
-func MapInteractionEventParticipantInputToAddressData(input []*model.InteractionEventParticipantInput) []service.ParticipantAddressData {
-	var inputData []service.ParticipantAddressData
-	for _, participant := range input {
-		inputData = append(inputData, service.ParticipantAddressData{
-			Email:       participant.Email,
-			PhoneNumber: participant.PhoneNumber,
-			UserId:      participant.UserID,
-			ContactId:   participant.ContactID,
-			Type:        participant.Type,
-		})
-	}
-	return inputData
 }
