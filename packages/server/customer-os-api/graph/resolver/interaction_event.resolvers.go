@@ -7,6 +7,8 @@ package resolver
 import (
 	"context"
 	"fmt"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
 	"time"
 
 	"github.com/99designs/gqlgen/graphql"
@@ -97,7 +99,23 @@ func (r *mutationResolver) InteractionSessionCreate(ctx context.Context, session
 
 // InteractionEventCreate is the resolver for the interactionEvent_Create field.
 func (r *mutationResolver) InteractionEventCreate(ctx context.Context, event model.InteractionEventInput) (*model.InteractionEvent, error) {
-	panic(fmt.Errorf("not implemented: InteractionEventCreate - interactionEvent_Create"))
+
+	interactionEventCreated, err := r.Services.InteractionEventService.Create(ctx, &service.InteractionEventCreateData{
+		InteractionEventEntity: mapper.MapInteractionEventInputToEntity(&event),
+		Content:                event.Content,
+		ContentType:            event.ContentType,
+		SessionIdentifier:      event.InteractionSession,
+		SentBy:                 mapper.MapInteractionEventParticipantInputToAddressData(event.SentBy),
+		SentTo:                 mapper.MapInteractionEventParticipantInputToAddressData(event.SentBy),
+
+		Source:        entity.DataSourceOpenline,
+		SourceOfTruth: entity.DataSourceOpenline,
+	})
+	if err != nil {
+		graphql.AddErrorf(ctx, "Failed to create InteractionEvent")
+		return nil, err
+	}
+	return mapper.MapEntityToInteractionEvent(interactionEventCreated), nil
 }
 
 // InteractionSession is the resolver for the interactionSession field.

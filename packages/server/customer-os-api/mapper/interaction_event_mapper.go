@@ -3,13 +3,14 @@ package mapper
 import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 )
 
 func MapEntityToInteractionEvent(entity *entity.InteractionEventEntity) *model.InteractionEvent {
 	return &model.InteractionEvent{
 		ID:              entity.Id,
-		CreatedAt:       entity.CreatedAt,
+		CreatedAt:       *entity.CreatedAt,
 		EventIdentifier: utils.StringPtrNillable(entity.EventIdentifier),
 		Content:         utils.StringPtrNillable(entity.Content),
 		ContentType:     utils.StringPtrNillable(entity.ContentType),
@@ -26,4 +27,27 @@ func MapEntitiesToInteractionEvents(entities *entity.InteractionEventEntities) [
 		interactionEvents = append(interactionEvents, MapEntityToInteractionEvent(&interactionEventEntity))
 	}
 	return interactionEvents
+}
+func MapInteractionEventInputToEntity(input *model.InteractionEventInput) *entity.InteractionEventEntity {
+	return &entity.InteractionEventEntity{
+		EventIdentifier: *input.EventIdentifier,
+		Content:         *input.Content,
+		ContentType:     *input.ContentType,
+		Channel:         *input.Channel,
+		AppSource:       input.AppSource,
+	}
+}
+
+func MapInteractionEventParticipantInputToAddressData(input []*model.InteractionEventParticipantInput) []service.ParticipantAddressData {
+	var inputData []service.ParticipantAddressData
+	for _, participant := range input {
+		inputData = append(inputData, service.ParticipantAddressData{
+			Email:       participant.Email,
+			PhoneNumber: participant.PhoneNumber,
+			UserId:      participant.UserID,
+			ContactId:   participant.ContactID,
+			Type:        participant.Type,
+		})
+	}
+	return inputData
 }

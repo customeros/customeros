@@ -18,6 +18,8 @@ type PhoneNumberRepository interface {
 	SetOtherPhoneNumbersNonPrimaryInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, entityType entity.EntityType, entityId, phoneNumberId string) error
 	RemoveRelationship(ctx context.Context, entityType entity.EntityType, tenant, entityId, phoneNumber string) error
 	RemoveRelationshipById(ctx context.Context, entityType entity.EntityType, tenant, entityId, phoneNumberId string) error
+
+	Exists(ctx context.Context, tenant string, e164 string) (bool, error)
 }
 
 type phoneNumberRepository struct {
@@ -256,4 +258,27 @@ func (r *phoneNumberRepository) RemoveRelationshipById(ctx context.Context, enti
 	} else {
 		return nil
 	}
+}
+
+func (r *phoneNumberRepository) Exists(ctx context.Context, tenant string, e164 string) (bool, error) {
+	session := utils.NewNeo4jReadSession(ctx, *r.driver)
+	defer session.Close(ctx)
+
+	query := "MATCH (p:PhoneNumber_%s) WHERE e.e164 = $e164 OR e.rawPhoneNumber = $e164 RETURN p LIMIT 1"
+
+	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		if queryResult, err := tx.Run(ctx, fmt.Sprintf(query, tenant),
+			map[string]any{
+				"e164": e164,
+			}); err != nil {
+			return false, err
+		} else {
+			return queryResult.Next(ctx), nil
+
+		}
+	})
+	if err != nil {
+		return false, err
+	}
+	return result.(bool), err
 }

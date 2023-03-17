@@ -6,10 +6,13 @@ import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"golang.org/x/exp/slices"
 	"golang.org/x/net/context"
+	"time"
 )
 
 type InteractionEventService interface {
@@ -20,7 +23,30 @@ type InteractionEventService interface {
 	GetInteractionEventByEventIdentifier(ctx context.Context, eventIdentifier string) (*entity.InteractionEventEntity, error)
 	GetReplyToInteractionsEventForInteractionEvents(ctx context.Context, ids []string) (*entity.InteractionEventEntities, error)
 
+	Create(ctx context.Context, newInteractionEvent *InteractionEventCreateData) (*entity.InteractionEventEntity, error)
+
 	mapDbNodeToInteractionEventEntity(node dbtype.Node) *entity.InteractionEventEntity
+}
+
+type ParticipantAddressData struct {
+	Email       *string
+	PhoneNumber *string
+	ContactId   *string
+	UserId      *string
+	Type        *string
+}
+
+type InteractionEventCreateData struct {
+	InteractionEventEntity *entity.InteractionEventEntity
+	SessionIdentifier      *string
+	RepliesTo              *string
+	Content                *string
+	ContentType            *string
+	channel                *string
+	SentBy                 []ParticipantAddressData
+	SentTo                 []ParticipantAddressData
+	Source                 entity.DataSource
+	SourceOfTruth          entity.DataSource
 }
 
 type interactionEventService struct {
@@ -32,6 +58,152 @@ func NewInteractionEventService(repositories *repository.Repositories, services 
 	return &interactionEventService{
 		repositories: repositories,
 		services:     services,
+	}
+}
+func (s *interactionEventService) Create(ctx context.Context, newInteractionEvent *InteractionEventCreateData) (*entity.InteractionEventEntity, error) {
+	session := utils.NewNeo4jWriteSession(ctx, s.getNeo4jDriver())
+	defer session.Close(ctx)
+
+	interactionEventDbNode, err := session.ExecuteWrite(ctx, s.createInteractionEventInDBTxWork(ctx, newInteractionEvent))
+	if err != nil {
+		return nil, err
+	}
+	return s.mapDbNodeToInteractionEventEntity(*interactionEventDbNode.(*dbtype.Node)), nil
+}
+
+func (s *interactionEventService) createInteractionEventInDBTxWork(ctx context.Context, newInteractionEvent *InteractionEventCreateData) func(tx neo4j.ManagedTransaction) (any, error) {
+	return func(tx neo4j.ManagedTransaction) (any, error) {
+		tenant := common.GetContext(ctx).Tenant
+		interactionEventDbNode, err := s.repositories.InteractionEventRepository.Create(ctx, tx, tenant, *newInteractionEvent.InteractionEventEntity, newInteractionEvent.Source, newInteractionEvent.SourceOfTruth)
+		if err != nil {
+			return nil, err
+		}
+		var interactionEventId = utils.GetPropsFromNode(*interactionEventDbNode)["id"].(string)
+
+		if newInteractionEvent.SessionIdentifier != nil {
+			err := s.repositories.InteractionEventRepository.LinkWithInteractionSessionInTx(ctx, tx, tenant, interactionEventId, *newInteractionEvent.SessionIdentifier)
+			if err != nil {
+				return nil, err
+			}
+		}
+		if newInteractionEvent.RepliesTo != nil {
+			err := s.repositories.InteractionEventRepository.LinkWithRepliesToInTx(ctx, tx, tenant, interactionEventId, *newInteractionEvent.RepliesTo)
+			if err != nil {
+				return nil, err
+			}
+		}
+
+		for _, sentTo := range newInteractionEvent.SentTo {
+			if sentTo.ContactId != nil {
+				err := s.repositories.InteractionEventRepository.LinkWithSentXXParticipantInTx(ctx, tx, tenant, entity.CONTACT, interactionEventId, *sentTo.ContactId, sentTo.Type, repository.SENT_TO)
+				if err != nil {
+					return nil, err
+				}
+			} else if sentTo.UserId != nil {
+				err := s.repositories.InteractionEventRepository.LinkWithSentXXParticipantInTx(ctx, tx, tenant, entity.USER, interactionEventId, *sentTo.UserId, sentTo.Type, repository.SENT_TO)
+				if err != nil {
+					return nil, err
+				}
+			} else if sentTo.Email != nil {
+				exists, err := s.repositories.EmailRepository.Exists(ctx, tenant, *sentTo.Email)
+				if err != nil {
+					return nil, err
+				}
+
+				curTime := time.Now()
+				if !exists {
+					_, err = s.services.ContactService.Create(ctx, &ContactCreateData{
+						ContactEntity: &entity.ContactEntity{CreatedAt: &curTime, FirstName: "", LastName: ""},
+						EmailEntity:   mapper.MapEmailInputToEntity(&model.EmailInput{Email: *sentTo.Email}),
+						Source:        entity.DataSourceOpenline,
+						SourceOfTruth: entity.DataSourceOpenline,
+					})
+				}
+				err = s.repositories.InteractionEventRepository.LinkWithSentXXEmailInTx(ctx, tx, tenant, interactionEventId, *sentTo.Email, sentTo.Type, repository.SENT_TO)
+				if err != nil {
+					return nil, err
+				}
+
+			} else if sentTo.PhoneNumber != nil {
+				exists, err := s.repositories.EmailRepository.Exists(ctx, tenant, *sentTo.Email)
+				if err != nil {
+					return nil, err
+				}
+
+				curTime := time.Now()
+				if !exists {
+					_, err = s.services.ContactService.Create(ctx, &ContactCreateData{
+						ContactEntity: &entity.ContactEntity{CreatedAt: &curTime, FirstName: "", LastName: ""},
+						EmailEntity:   mapper.MapEmailInputToEntity(&model.EmailInput{Email: *sentTo.Email}),
+						Source:        entity.DataSourceOpenline,
+						SourceOfTruth: entity.DataSourceOpenline,
+					})
+				}
+				err = s.repositories.InteractionEventRepository.LinkWithSentXXPhoneNumberInTx(ctx, tx, tenant, interactionEventId, *sentTo.PhoneNumber, sentTo.Type, repository.SENT_TO)
+				if err != nil {
+					return nil, err
+				}
+
+			}
+
+		}
+
+		for _, sentBy := range newInteractionEvent.SentBy {
+			if sentBy.ContactId != nil {
+				err := s.repositories.InteractionEventRepository.LinkWithSentXXParticipantInTx(ctx, tx, tenant, entity.CONTACT, interactionEventId, *sentBy.ContactId, sentBy.Type, repository.SENT_BY)
+				if err != nil {
+					return nil, err
+				}
+			} else if sentBy.UserId != nil {
+				err := s.repositories.InteractionEventRepository.LinkWithSentXXParticipantInTx(ctx, tx, tenant, entity.USER, interactionEventId, *sentBy.UserId, sentBy.Type, repository.SENT_BY)
+				if err != nil {
+					return nil, err
+				}
+			} else if sentBy.Email != nil {
+				exists, err := s.repositories.EmailRepository.Exists(ctx, tenant, *sentBy.Email)
+				if err != nil {
+					return nil, err
+				}
+
+				curTime := time.Now()
+				if !exists {
+					_, err = s.services.ContactService.Create(ctx, &ContactCreateData{
+						ContactEntity: &entity.ContactEntity{CreatedAt: &curTime, FirstName: "", LastName: ""},
+						EmailEntity:   mapper.MapEmailInputToEntity(&model.EmailInput{Email: *sentBy.Email}),
+						Source:        entity.DataSourceOpenline,
+						SourceOfTruth: entity.DataSourceOpenline,
+					})
+				}
+				err = s.repositories.InteractionEventRepository.LinkWithSentXXEmailInTx(ctx, tx, tenant, interactionEventId, *sentBy.Email, sentBy.Type, repository.SENT_BY)
+				if err != nil {
+					return nil, err
+				}
+
+			} else if sentBy.PhoneNumber != nil {
+				exists, err := s.repositories.EmailRepository.Exists(ctx, tenant, *sentBy.Email)
+				if err != nil {
+					return nil, err
+				}
+
+				curTime := time.Now()
+				if !exists {
+					_, err = s.services.ContactService.Create(ctx, &ContactCreateData{
+						ContactEntity: &entity.ContactEntity{CreatedAt: &curTime, FirstName: "", LastName: ""},
+						EmailEntity:   mapper.MapEmailInputToEntity(&model.EmailInput{Email: *sentBy.Email}),
+						Source:        entity.DataSourceOpenline,
+						SourceOfTruth: entity.DataSourceOpenline,
+					})
+				}
+				err = s.repositories.InteractionEventRepository.LinkWithSentXXPhoneNumberInTx(ctx, tx, tenant, interactionEventId, *sentBy.PhoneNumber, sentBy.Type, repository.SENT_BY)
+				if err != nil {
+					return nil, err
+				}
+
+			}
+
+		}
+
+		return interactionEventDbNode, nil
 	}
 }
 
@@ -132,9 +304,10 @@ func (s *interactionEventService) GetInteractionEventByEventIdentifier(ctx conte
 
 func (s *interactionEventService) mapDbNodeToInteractionEventEntity(node dbtype.Node) *entity.InteractionEventEntity {
 	props := utils.GetPropsFromNode(node)
+	createdAt := utils.GetTimePropOrEpochStart(props, "createdAt")
 	interactionEventEntity := entity.InteractionEventEntity{
 		Id:              utils.GetStringPropOrEmpty(props, "id"),
-		CreatedAt:       utils.GetTimePropOrEpochStart(props, "createdAt"),
+		CreatedAt:       &createdAt,
 		EventIdentifier: utils.GetStringPropOrEmpty(props, "identifier"),
 		Channel:         utils.GetStringPropOrEmpty(props, "channel"),
 		Content:         utils.GetStringPropOrEmpty(props, "content"),

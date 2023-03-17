@@ -19,6 +19,7 @@ type EmailRepository interface {
 	RemoveRelationshipById(ctx context.Context, entityType entity.EntityType, tenant, entityId, emailId string) error
 	DeleteById(ctx context.Context, tenant, emailId string) error
 	GetByIdAndRelatedEntity(ctx context.Context, entityType entity.EntityType, tenant, emailId, entityId string) (*dbtype.Node, error)
+	Exists(ctx context.Context, tenant string, email string) (bool, error)
 }
 
 type emailRepository struct {
@@ -303,4 +304,27 @@ func (r *emailRepository) GetByIdAndRelatedEntity(ctx context.Context, entityTyp
 		return nil, err
 	}
 	return result.(*dbtype.Node), nil
+}
+
+func (r *emailRepository) Exists(ctx context.Context, tenant string, email string) (bool, error) {
+	session := utils.NewNeo4jReadSession(ctx, *r.driver)
+	defer session.Close(ctx)
+
+	query := "MATCH (e:Email_%s {email: $email}) RETURN e LIMIT 1"
+
+	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		if queryResult, err := tx.Run(ctx, fmt.Sprintf(query, tenant),
+			map[string]any{
+				"email": email,
+			}); err != nil {
+			return false, err
+		} else {
+			return queryResult.Next(ctx), nil
+
+		}
+	})
+	if err != nil {
+		return false, err
+	}
+	return result.(bool), err
 }

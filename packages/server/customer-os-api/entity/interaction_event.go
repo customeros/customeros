@@ -7,7 +7,7 @@ import (
 
 type InteractionEventEntity struct {
 	Id              string
-	CreatedAt       time.Time
+	CreatedAt       *time.Time
 	Channel         string
 	EventIdentifier string
 	Content         string
