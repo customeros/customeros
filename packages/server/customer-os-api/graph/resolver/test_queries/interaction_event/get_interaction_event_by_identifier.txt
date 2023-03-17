@@ -1,5 +1,5 @@
-query GetInteractionEvent($eventId: ID!){
-  interactionEvent(id: $eventId) {
+query GetInteractionEvent($eventId: String!){
+  interactionEvent_ByEventIdentifier(eventIdentifier: $eventId) {
     id
     createdAt
     eventIdentifier

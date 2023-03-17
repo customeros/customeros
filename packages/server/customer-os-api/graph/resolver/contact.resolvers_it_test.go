@@ -989,8 +989,8 @@ func TestQueryResolver_Contact_WithTimelineEvents(t *testing.T) {
 	neo4jt.CreateNoteForContact(ctx, driver, tenantName, contactId, "contact note 2", minAgo5)
 
 	// prepare interaction events
-	interactionEventId1 := neo4jt.CreateInteractionEvent(ctx, driver, tenantName, "IE text 1", "application/json", "EMAIL", secAgo60)
-	interactionEventId2 := neo4jt.CreateInteractionEvent(ctx, driver, tenantName, "IE text 2", "application/json", "EMAIL", secAgo70)
+	interactionEventId1 := neo4jt.CreateInteractionEvent(ctx, driver, tenantName, "myExternalId", "IE text 1", "application/json", "EMAIL", secAgo60)
+	interactionEventId2 := neo4jt.CreateInteractionEvent(ctx, driver, tenantName, "myExternalId", "IE text 2", "application/json", "EMAIL", secAgo70)
 	emailId := neo4jt.AddEmailTo(ctx, driver, entity.CONTACT, tenantName, contactId, "email1", false, "WORK")
 	phoneNumberId := neo4jt.AddPhoneNumberTo(ctx, driver, tenantName, contactId, "+1234", false, "WORK")
 	neo4jt.InteractionEventSentBy(ctx, driver, interactionEventId1, emailId, "")
@@ -1183,8 +1183,8 @@ func TestQueryResolver_Contact_WithTimelineEventsTotalCount(t *testing.T) {
 	neo4jt.CreateNoteForContact(ctx, driver, tenantName, contactId, "contact note 5", now)
 
 	// prepare interaction events
-	interactionEventId1 := neo4jt.CreateInteractionEvent(ctx, driver, tenantName, "IE text", "application/json", "EMAIL", now)
-	interactionEventId2 := neo4jt.CreateInteractionEvent(ctx, driver, tenantName, "IE text", "application/json", "EMAIL", now)
+	interactionEventId1 := neo4jt.CreateInteractionEvent(ctx, driver, tenantName, "myExternalId", "IE text", "application/json", "EMAIL", now)
+	interactionEventId2 := neo4jt.CreateInteractionEvent(ctx, driver, tenantName, "myExternalId", "IE text", "application/json", "EMAIL", now)
 	emailId := neo4jt.AddEmailTo(ctx, driver, entity.CONTACT, tenantName, contactId, "email1", false, "WORK")
 	phoneNumberId := neo4jt.AddPhoneNumberTo(ctx, driver, tenantName, contactId, "+1234", false, "WORK")
 	neo4jt.InteractionEventSentBy(ctx, driver, interactionEventId1, emailId, "")

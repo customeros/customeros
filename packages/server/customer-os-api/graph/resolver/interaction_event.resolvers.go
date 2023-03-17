@@ -61,7 +61,19 @@ func (r *interactionEventResolver) SentTo(ctx context.Context, obj *model.Intera
 
 // RepliesTo is the resolver for the repliesTo field.
 func (r *interactionEventResolver) RepliesTo(ctx context.Context, obj *model.InteractionEvent) (*model.InteractionEvent, error) {
-	panic(fmt.Errorf("not implemented: RepliesTo - repliesTo"))
+	defer func(start time.Time) {
+		utils.LogMethodExecution(start, utils.GetFunctionName())
+	}(time.Now())
+
+	interactionEventEntities, err := dataloader.For(ctx).GetInteractionEventsForInteractionEvent(ctx, obj.ID)
+	if err != nil {
+		graphql.AddErrorf(ctx, "Failed to get ReplyTo for interaction event %s", obj.ID)
+		return nil, err
+	}
+	if len(*interactionEventEntities) > 0 {
+		return mapper.MapEntityToInteractionEvent(&(*interactionEventEntities)[0]), nil
+	}
+	return nil, nil
 }
 
 // Events is the resolver for the events field.

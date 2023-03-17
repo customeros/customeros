@@ -18,6 +18,7 @@ type InteractionEventService interface {
 	GetSentToParticipantsForInteractionEvents(ctx context.Context, ids []string) (*entity.InteractionEventParticipants, error)
 	GetInteractionEventById(ctx context.Context, id string) (*entity.InteractionEventEntity, error)
 	GetInteractionEventByEventIdentifier(ctx context.Context, eventIdentifier string) (*entity.InteractionEventEntity, error)
+	GetReplyToInteractionsEventForInteractionEvents(ctx context.Context, ids []string) (*entity.InteractionEventEntities, error)
 
 	mapDbNodeToInteractionEventEntity(node dbtype.Node) *entity.InteractionEventEntity
 }
@@ -68,6 +69,17 @@ func (s *interactionEventService) GetSentToParticipantsForInteractionEvents(ctx 
 	interactionEventParticipants := s.convertDbNodesToInteractionEventParticipants(records)
 
 	return &interactionEventParticipants, nil
+}
+
+func (s *interactionEventService) GetReplyToInteractionsEventForInteractionEvents(ctx context.Context, ids []string) (*entity.InteractionEventEntities, error) {
+	records, err := s.repositories.InteractionEventRepository.GetReplyToInteractionEventsForInteractionEvents(ctx, common.GetTenantFromContext(ctx), ids)
+	if err != nil {
+		return nil, err
+	}
+
+	interactionEvents := s.convertDbNodesToInteractionEvent(records)
+
+	return &interactionEvents, nil
 }
 
 func (s *interactionEventService) GetInteractionEventById(ctx context.Context, id string) (*entity.InteractionEventEntity, error) {
@@ -132,6 +144,17 @@ func (s *interactionEventService) mapDbNodeToInteractionEventEntity(node dbtype.
 		SourceOfTruth:   entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
 	}
 	return &interactionEventEntity
+}
+
+func (s *interactionEventService) convertDbNodesToInteractionEvent(records []*utils.DbNodeAndId) entity.InteractionEventEntities {
+	interactionEvents := entity.InteractionEventEntities{}
+	for _, v := range records {
+		event := s.mapDbNodeToInteractionEventEntity(*v.Node)
+		event.DataloaderKey = v.LinkedNodeId
+		interactionEvents = append(interactionEvents, *event)
+
+	}
+	return interactionEvents
 }
 
 func (s *interactionEventService) convertDbNodesToInteractionEventParticipants(records []*utils.DbNodeWithRelationAndId) entity.InteractionEventParticipants {
