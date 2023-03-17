@@ -116,7 +116,16 @@ func (r *queryResolver) InteractionSession(ctx context.Context, id string) (*mod
 
 // InteractionSessionBySessionIdentifier is the resolver for the interactionSession_BySessionIdentifier field.
 func (r *queryResolver) InteractionSessionBySessionIdentifier(ctx context.Context, sessionIdentifier string) (*model.InteractionSession, error) {
-	panic(fmt.Errorf("not implemented: InteractionSessionBySessionIdentifier - interactionSession_BySessionIdentifier"))
+	defer func(start time.Time) {
+		utils.LogMethodExecution(start, utils.GetFunctionName())
+	}(time.Now())
+
+	interactionSessionEntity, err := r.Services.InteractionSessionService.GetInteractionSessionBySessionIdentifier(ctx, sessionIdentifier)
+	if err != nil || interactionSessionEntity == nil {
+		graphql.AddErrorf(ctx, "InteractionEvent with identifier %s not found", sessionIdentifier)
+		return nil, err
+	}
+	return mapper.MapEntityToInteractionSession(interactionSessionEntity), nil
 }
 
 // InteractionEvent is the resolver for the interactionEvent field.

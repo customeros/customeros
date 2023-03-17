@@ -31,7 +31,7 @@ func TestQueryResolver_InteractionEvent(t *testing.T) {
 	neo4jt.InteractionEventSentBy(ctx, driver, interactionEventId1, emailId, "")
 	neo4jt.InteractionEventSentTo(ctx, driver, interactionEventId4_WithoutSession, emailId, "")
 
-	interactionSession1 := neo4jt.CreateInteractionSession(ctx, driver, tenantName, "session1", "THREAD", "ACTIVE", "EMAIL", now)
+	interactionSession1 := neo4jt.CreateInteractionSession(ctx, driver, tenantName, "mySessionIdentifier", "session1", "THREAD", "ACTIVE", "EMAIL", now)
 
 	neo4jt.InteractionEventPartOfInteractionSession(ctx, driver, interactionEventId1, interactionSession1)
 	neo4jt.InteractionEventRepliesToInteractionEvent(ctx, driver, interactionEventId1, interactionEventId4_WithoutSession)
@@ -117,7 +117,7 @@ func TestQueryResolver_InteractionEvent_ByEventIdentifier(t *testing.T) {
 	neo4jt.InteractionEventSentBy(ctx, driver, interactionEventId1, emailId, "")
 	neo4jt.InteractionEventSentTo(ctx, driver, interactionEventId4_WithoutSession, emailId, "")
 
-	interactionSession1 := neo4jt.CreateInteractionSession(ctx, driver, tenantName, "session1", "THREAD", "ACTIVE", "EMAIL", now)
+	interactionSession1 := neo4jt.CreateInteractionSession(ctx, driver, tenantName, "mySessionIdentifier", "session1", "THREAD", "ACTIVE", "EMAIL", now)
 
 	neo4jt.InteractionEventPartOfInteractionSession(ctx, driver, interactionEventId1, interactionSession1)
 	neo4jt.InteractionEventRepliesToInteractionEvent(ctx, driver, interactionEventId1, interactionEventId4_WithoutSession)
@@ -183,6 +183,142 @@ func TestQueryResolver_InteractionEvent_ByEventIdentifier(t *testing.T) {
 
 }
 
+func TestQueryResolver_InteractionSession(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx)(t)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+
+	contactId := neo4jt.CreateDefaultContact(ctx, driver, tenantName)
+	emailId := neo4jt.AddEmailTo(ctx, driver, entity.CONTACT, tenantName, contactId, "some@email.com", false, "WORK")
+
+	now := time.Now().UTC()
+	secAgo10 := now.Add(time.Duration(-10) * time.Second)
+	secAgo40 := now.Add(time.Duration(-10) * time.Second)
+
+	// prepare interaction events
+	interactionEventId1 := neo4jt.CreateInteractionEvent(ctx, driver, tenantName, "myExternalId1", "IE 1", "application/json", "EMAIL", secAgo10)
+
+	interactionEventId4_WithoutSession := neo4jt.CreateInteractionEvent(ctx, driver, tenantName, "myExternalId4", "IE 4", "application/json", "EMAIL", secAgo40)
+
+	neo4jt.InteractionEventSentBy(ctx, driver, interactionEventId1, emailId, "")
+	neo4jt.InteractionEventSentTo(ctx, driver, interactionEventId4_WithoutSession, emailId, "")
+
+	interactionSession1 := neo4jt.CreateInteractionSession(ctx, driver, tenantName, "mySessionIdentifier", "session1", "THREAD", "ACTIVE", "EMAIL", now)
+
+	neo4jt.InteractionEventPartOfInteractionSession(ctx, driver, interactionEventId1, interactionSession1)
+	neo4jt.InteractionEventRepliesToInteractionEvent(ctx, driver, interactionEventId1, interactionEventId4_WithoutSession)
+	rawResponse, err := c.RawPost(getQuery("interaction_event/get_interaction_session"),
+		client.Var("sessionId", interactionSession1))
+	assertRawResponseSuccess(t, rawResponse, err)
+	log.Printf("response: %v", rawResponse.Data)
+	responseMap, ok := rawResponse.Data.(map[string]interface{})
+	if !ok {
+		t.Fatalf("response is not a map")
+	}
+	interactionEventInterface := responseMap["interactionSession"]
+	timelineEvent1, ok := interactionEventInterface.(map[string]interface{})
+	if !ok {
+		t.Fatalf("timelineEventInterface is not a map")
+	}
+
+	require.Equal(t, interactionSession1, timelineEvent1["id"].(string))
+	require.Equal(t, "session1", timelineEvent1["name"].(string))
+	require.Equal(t, "THREAD", timelineEvent1["type"].(string))
+	require.Equal(t, "ACTIVE", timelineEvent1["status"].(string))
+	require.Equal(t, "EMAIL", timelineEvent1["channel"].(string))
+	require.Equal(t, "OPENLINE", timelineEvent1["source"].(string))
+	require.Equal(t, "OPENLINE", timelineEvent1["sourceOfTruth"].(string))
+	require.Equal(t, "test", timelineEvent1["appSource"].(string))
+	require.NotNil(t, timelineEvent1["startedAt"].(string))
+	require.NotNil(t, timelineEvent1["endedAt"].(string))
+
+	events := timelineEvent1["events"].([]interface{})
+	require.NotEmpty(t, events)
+	event := events[0].(map[string]interface{})
+	require.Equal(t, interactionEventId1, event["id"].(string))
+	require.NotNil(t, event["createdAt"].(string))
+	require.Equal(t, "IE 1", event["content"].(string))
+	require.Equal(t, "myExternalId1", event["eventIdentifier"].(string))
+	require.Equal(t, "application/json", event["contentType"].(string))
+	require.Equal(t, "EMAIL", event["channel"].(string))
+	require.Equal(t, "OPENLINE", event["source"].(string))
+	require.Equal(t, "OPENLINE", event["sourceOfTruth"].(string))
+	require.Equal(t, "test", event["appSource"].(string))
+
+	require.Equal(t, interactionEventId4_WithoutSession, event["repliesTo"].(map[string]interface{})["id"].(string))
+	require.Equal(t, "IE 4", event["repliesTo"].(map[string]interface{})["content"].(string))
+	require.Equal(t, "myExternalId4", event["repliesTo"].(map[string]interface{})["eventIdentifier"].(string))
+
+}
+
+func TestQueryResolver_InteractionSession_BySessionIdentifier(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx)(t)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+
+	contactId := neo4jt.CreateDefaultContact(ctx, driver, tenantName)
+	emailId := neo4jt.AddEmailTo(ctx, driver, entity.CONTACT, tenantName, contactId, "some@email.com", false, "WORK")
+
+	now := time.Now().UTC()
+	secAgo10 := now.Add(time.Duration(-10) * time.Second)
+	secAgo40 := now.Add(time.Duration(-10) * time.Second)
+
+	// prepare interaction events
+	interactionEventId1 := neo4jt.CreateInteractionEvent(ctx, driver, tenantName, "myExternalId1", "IE 1", "application/json", "EMAIL", secAgo10)
+
+	interactionEventId4_WithoutSession := neo4jt.CreateInteractionEvent(ctx, driver, tenantName, "myExternalId4", "IE 4", "application/json", "EMAIL", secAgo40)
+
+	neo4jt.InteractionEventSentBy(ctx, driver, interactionEventId1, emailId, "")
+	neo4jt.InteractionEventSentTo(ctx, driver, interactionEventId4_WithoutSession, emailId, "")
+
+	interactionSession1 := neo4jt.CreateInteractionSession(ctx, driver, tenantName, "mySessionIdentifier", "session1", "THREAD", "ACTIVE", "EMAIL", now)
+
+	neo4jt.InteractionEventPartOfInteractionSession(ctx, driver, interactionEventId1, interactionSession1)
+	neo4jt.InteractionEventRepliesToInteractionEvent(ctx, driver, interactionEventId1, interactionEventId4_WithoutSession)
+	rawResponse, err := c.RawPost(getQuery("interaction_event/get_interaction_session_by_identifier"),
+		client.Var("sessionId", "mySessionIdentifier"))
+	assertRawResponseSuccess(t, rawResponse, err)
+	log.Printf("response: %v", rawResponse.Data)
+	responseMap, ok := rawResponse.Data.(map[string]interface{})
+	if !ok {
+		t.Fatalf("response is not a map")
+	}
+	interactionEventInterface := responseMap["interactionSession_BySessionIdentifier"]
+	timelineEvent1, ok := interactionEventInterface.(map[string]interface{})
+	if !ok {
+		t.Fatalf("timelineEventInterface is not a map")
+	}
+
+	require.Equal(t, interactionSession1, timelineEvent1["id"].(string))
+	require.Equal(t, "session1", timelineEvent1["name"].(string))
+	require.Equal(t, "THREAD", timelineEvent1["type"].(string))
+	require.Equal(t, "ACTIVE", timelineEvent1["status"].(string))
+	require.Equal(t, "EMAIL", timelineEvent1["channel"].(string))
+	require.Equal(t, "OPENLINE", timelineEvent1["source"].(string))
+	require.Equal(t, "OPENLINE", timelineEvent1["sourceOfTruth"].(string))
+	require.Equal(t, "test", timelineEvent1["appSource"].(string))
+	require.NotNil(t, timelineEvent1["startedAt"].(string))
+	require.NotNil(t, timelineEvent1["endedAt"].(string))
+
+	events := timelineEvent1["events"].([]interface{})
+	require.NotEmpty(t, events)
+	event := events[0].(map[string]interface{})
+	require.Equal(t, interactionEventId1, event["id"].(string))
+	require.NotNil(t, event["createdAt"].(string))
+	require.Equal(t, "IE 1", event["content"].(string))
+	require.Equal(t, "myExternalId1", event["eventIdentifier"].(string))
+	require.Equal(t, "application/json", event["contentType"].(string))
+	require.Equal(t, "EMAIL", event["channel"].(string))
+	require.Equal(t, "OPENLINE", event["source"].(string))
+	require.Equal(t, "OPENLINE", event["sourceOfTruth"].(string))
+	require.Equal(t, "test", event["appSource"].(string))
+
+	require.Equal(t, interactionEventId4_WithoutSession, event["repliesTo"].(map[string]interface{})["id"].(string))
+	require.Equal(t, "IE 4", event["repliesTo"].(map[string]interface{})["content"].(string))
+	require.Equal(t, "myExternalId4", event["repliesTo"].(map[string]interface{})["eventIdentifier"].(string))
+
+}
+
 func TestQueryResolver_Contact_WithTimelineEvents_InteractionEvents_With_InteractionSession(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx)(t)
@@ -208,8 +344,8 @@ func TestQueryResolver_Contact_WithTimelineEvents_InteractionEvents_With_Interac
 	neo4jt.InteractionEventSentBy(ctx, driver, interactionEventId3, emailId, "")
 	neo4jt.InteractionEventSentTo(ctx, driver, interactionEventId4_WithoutSession, emailId, "")
 
-	interactionSession1 := neo4jt.CreateInteractionSession(ctx, driver, tenantName, "session1", "THREAD", "ACTIVE", "EMAIL", now)
-	interactionSession2 := neo4jt.CreateInteractionSession(ctx, driver, tenantName, "session2", "THREAD", "INACTIVE", "EMAIL", now)
+	interactionSession1 := neo4jt.CreateInteractionSession(ctx, driver, tenantName, "mySessionIdentifier", "session1", "THREAD", "ACTIVE", "EMAIL", now)
+	interactionSession2 := neo4jt.CreateInteractionSession(ctx, driver, tenantName, "mySessionIdentifier", "session2", "THREAD", "INACTIVE", "EMAIL", now)
 
 	neo4jt.InteractionEventPartOfInteractionSession(ctx, driver, interactionEventId1, interactionSession1)
 	neo4jt.InteractionEventPartOfInteractionSession(ctx, driver, interactionEventId2, interactionSession2)
