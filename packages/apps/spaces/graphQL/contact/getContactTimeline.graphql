@@ -13,7 +13,6 @@ query GetContactTimeline($contactId: ID!, $from: Time!, $size: Int!) {
         pageTitle
         orderInSession
         sessionId
-
       }
       ... on Ticket {
         id
