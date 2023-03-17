@@ -76,7 +76,11 @@ export const SidePanel: React.FC<SidePanelProps> = ({
             label='Log Out'
             isOpen={isPanelOpen}
             icon={<SignOut />}
-            onClick={() => (window.location.href = logoutUrl)}
+            onClick={() => {
+              document.cookie =
+                'AUTH_CHECK=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;';
+              window.location.href = logoutUrl;
+            }}
           />
         </ul>
       </aside>
