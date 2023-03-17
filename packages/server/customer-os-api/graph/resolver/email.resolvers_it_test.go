@@ -159,7 +159,6 @@ func TestMutationResolver_EmailMergeToUser(t *testing.T) {
 	// Create a tenant in the Neo4j database
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 
-	// Create a default contact
 	userId := neo4jt.CreateDefaultUser(ctx, driver, tenantName)
 
 	// Make the RawPost request and check for errors
@@ -201,7 +200,7 @@ func TestMutationResolver_EmailMergeToUser(t *testing.T) {
 	require.Equal(t, 1, neo4jt.GetCountOfRelationships(ctx, driver, "HAS"), "Incorrect number of HAS relationships in Neo4j")
 
 	// Check the labels on the nodes in the Neo4j database
-	assertNeo4jLabels(ctx, t, driver, []string{"Tenant", "User", "Email", "Email_" + tenantName})
+	assertNeo4jLabels(ctx, t, driver, []string{"Tenant", "User", "User_" + tenantName, "Email", "Email_" + tenantName})
 }
 
 func TestMutationResolver_EmailUpdateInUser(t *testing.T) {
@@ -284,7 +283,7 @@ func TestMutationResolver_EmailDelete(t *testing.T) {
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "User"))
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Tenant"))
 	require.Equal(t, 0, neo4jt.GetCountOfRelationships(ctx, driver, "HAS"))
-	assertNeo4jLabels(ctx, t, driver, []string{"Tenant", "Contact", "Contact_" + tenantName, "User"})
+	assertNeo4jLabels(ctx, t, driver, []string{"Tenant", "Contact", "Contact_" + tenantName, "User", "User_" + tenantName})
 }
 
 func TestMutationResolver_EmailRemoveFromUser(t *testing.T) {
@@ -325,7 +324,7 @@ func TestMutationResolver_EmailRemoveFromUser(t *testing.T) {
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "User"))
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Tenant"))
 	require.Equal(t, 0, neo4jt.GetCountOfRelationships(ctx, driver, "HAS"))
-	assertNeo4jLabels(ctx, t, driver, []string{"Tenant", "Email", "Email_" + tenantName, "User"})
+	assertNeo4jLabels(ctx, t, driver, []string{"Tenant", "Email", "Email_" + tenantName, "User", "User_" + tenantName})
 }
 
 func TestMutationResolver_EmailRemoveFromUserById(t *testing.T) {
@@ -366,7 +365,7 @@ func TestMutationResolver_EmailRemoveFromUserById(t *testing.T) {
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "User"))
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Tenant"))
 	require.Equal(t, 0, neo4jt.GetCountOfRelationships(ctx, driver, "HAS"))
-	assertNeo4jLabels(ctx, t, driver, []string{"Tenant", "Email", "Email_" + tenantName, "User"})
+	assertNeo4jLabels(ctx, t, driver, []string{"Tenant", "Email", "Email_" + tenantName, "User", "User_" + tenantName})
 }
 
 func TestMutationResolver_EmailMergeToOrganization(t *testing.T) {

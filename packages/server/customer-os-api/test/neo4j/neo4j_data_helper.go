@@ -84,8 +84,9 @@ func CreateUserWithId(ctx context.Context, driver *neo4j.DriverWithContext, tena
 					createdAt :datetime({timezone: 'UTC'}),
 					source: $source,
 					sourceOfTruth: $sourceOfTruth
-				})-[:USER_BELONGS_TO_TENANT]->(t)`
-	ExecuteWriteQuery(ctx, driver, query, map[string]any{
+				})-[:USER_BELONGS_TO_TENANT]->(t)
+			SET u:User_%s`
+	ExecuteWriteQuery(ctx, driver, fmt.Sprintf(query, tenant), map[string]any{
 		"tenant":        tenant,
 		"userId":        userId,
 		"firstName":     user.FirstName,

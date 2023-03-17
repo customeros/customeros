@@ -52,7 +52,7 @@ func TestMutationResolver_NoteCreateForContact(t *testing.T) {
 	require.Equal(t, 1, neo4jt.GetCountOfRelationships(ctx, driver, "CREATED"))
 
 	// Check the labels on the nodes in the Neo4j database
-	assertNeo4jLabels(ctx, t, driver, []string{"Tenant", "Contact", "Contact_" + tenantName, "User",
+	assertNeo4jLabels(ctx, t, driver, []string{"Tenant", "Contact", "Contact_" + tenantName, "User", "User_" + tenantName,
 		"Note", "Note_" + tenantName, "Action", "Action_" + tenantName})
 }
 
@@ -95,7 +95,7 @@ func TestMutationResolver_NoteCreateForOrganization(t *testing.T) {
 	require.Equal(t, 1, neo4jt.GetCountOfRelationships(ctx, driver, "NOTED"))
 
 	// Check the labels on the nodes in the Neo4j database
-	assertNeo4jLabels(ctx, t, driver, []string{"Tenant", "Organization", "Organization_" + tenantName, "User",
+	assertNeo4jLabels(ctx, t, driver, []string{"Tenant", "Organization", "Organization_" + tenantName, "User", "User_" + tenantName,
 		"Note", "Note_" + tenantName, "Action", "Action_" + tenantName})
 }
 

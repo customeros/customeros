@@ -1,0 +1,19 @@
+mutation MergePhoneNumberToOrganization($organizationId: ID!){
+     phoneNumberMergeToOrganization(
+        organizationId: $organizationId
+        input: {phoneNumber: "+1234567890"
+                label: WORK
+                primary: true
+        }
+     ) {
+        id
+        e164
+        rawPhoneNumber
+        validated
+        label
+        primary
+        source
+        createdAt
+        updatedAt
+      }
+}

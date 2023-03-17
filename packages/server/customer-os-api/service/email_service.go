@@ -123,7 +123,7 @@ func (s *emailService) UpdateEmailFor(ctx context.Context, entityType entity.Ent
 
 		if len(inputEntity.RawEmail) == 0 || inputEntity.RawEmail == currentEmail || inputEntity.RawEmail == currentRawEmail {
 			// email address replace not requested, proceed with update
-			emailNode, emailRelationship, err = s.repositories.EmailRepository.UpdateEmailByInTx(ctx, tx, common.GetContext(ctx).Tenant, entityType, entityId, *inputEntity)
+			emailNode, emailRelationship, err = s.repositories.EmailRepository.UpdateEmailForInTx(ctx, tx, common.GetContext(ctx).Tenant, entityType, entityId, *inputEntity)
 			if err != nil {
 				return nil, err
 			}
