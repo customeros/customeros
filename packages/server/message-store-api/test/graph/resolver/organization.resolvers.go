@@ -6,6 +6,7 @@ package resolver
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/message-store-api/test/graph/generated"
 	"github.com/openline-ai/openline-customer-os/packages/server/message-store-api/test/graph/model"
@@ -64,6 +65,31 @@ func (r *organizationResolver) Notes(ctx context.Context, obj *model.Organizatio
 // Tags is the resolver for the tags field.
 func (r *organizationResolver) Tags(ctx context.Context, obj *model.Organization) ([]*model.Tag, error) {
 	panic(fmt.Errorf("not implemented: Tags - tags"))
+}
+
+// Emails is the resolver for the emails field.
+func (r *organizationResolver) Emails(ctx context.Context, obj *model.Organization) ([]*model.Email, error) {
+	panic(fmt.Errorf("not implemented: Emails - emails"))
+}
+
+// PhoneNumbers is the resolver for the phoneNumbers field.
+func (r *organizationResolver) PhoneNumbers(ctx context.Context, obj *model.Organization) ([]*model.PhoneNumber, error) {
+	panic(fmt.Errorf("not implemented: PhoneNumbers - phoneNumbers"))
+}
+
+// TimelineEvents is the resolver for the timelineEvents field.
+func (r *organizationResolver) TimelineEvents(ctx context.Context, obj *model.Organization, from *time.Time, size int, timelineEventTypes []model.TimelineEventType) ([]model.TimelineEvent, error) {
+	panic(fmt.Errorf("not implemented: TimelineEvents - timelineEvents"))
+}
+
+// TimelineEventsTotalCount is the resolver for the timelineEventsTotalCount field.
+func (r *organizationResolver) TimelineEventsTotalCount(ctx context.Context, obj *model.Organization, timelineEventTypes []model.TimelineEventType) (int64, error) {
+	panic(fmt.Errorf("not implemented: TimelineEventsTotalCount - timelineEventsTotalCount"))
+}
+
+// TicketSummaryByStatus is the resolver for the ticketSummaryByStatus field.
+func (r *organizationResolver) TicketSummaryByStatus(ctx context.Context, obj *model.Organization) ([]*model.TicketSummaryByStatus, error) {
+	panic(fmt.Errorf("not implemented: TicketSummaryByStatus - ticketSummaryByStatus"))
 }
 
 // Organizations is the resolver for the organizations field.

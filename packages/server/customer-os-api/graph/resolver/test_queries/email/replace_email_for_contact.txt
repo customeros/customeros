@@ -1,7 +1,7 @@
 mutation UpdateEmailForContact($contactId: ID!, $emailId: ID!) {
     emailUpdateInContact(contactId: $contactId,
                         input: {id: $emailId
-                                label: HOME
+                                label: PERSONAL
                                 primary: true
                                 email: "new@email.com"
                         }) {
