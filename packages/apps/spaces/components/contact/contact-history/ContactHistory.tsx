@@ -16,13 +16,8 @@ export const ContactHistory = ({ id }: { id: string }) => {
   };
 
   if (error) {
-    return (
-      <div>
-        <h1>Oops! Timeline error</h1>
-      </div>
-    );
+    return <div />;
   }
-
   return (
     <Timeline
       loading={loading}
@@ -43,7 +38,6 @@ export const ContactHistory = ({ id }: { id: string }) => {
         });
       }}
       noActivity={!data}
-      id={id}
       contactName={contactName}
       loggedActivities={[liveConversations, ...(data || [])]}
     />

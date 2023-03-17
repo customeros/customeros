@@ -28,7 +28,7 @@ export const useInfiniteScroll = ({
         // rootMargin: '100px',
       },
     );
-    observer.current.observe(element.current);
+    observer.current?.observe(element.current);
 
     return () => observer.current?.disconnect();
   }, [callback, isFetching, element]);

@@ -15,6 +15,7 @@ import { InteractionTimelineItem } from '../../molecules/interaction-timeline-it
 import { ChatTimelineItem } from '../../molecules/conversation-timeline-item/ChatTimelineItem';
 import { useInfiniteScroll } from './useInfiniteScroll';
 import { Skeleton } from '../../atoms/skeleton';
+import Image from 'next/image';
 
 interface Props {
   loading: boolean;
@@ -49,11 +50,6 @@ export const Timeline = ({
       }
     },
   });
-  if (!loading && noActivity) {
-    return (
-      <p className='text-gray-600 font-italic mt-4'>No activity logged yet</p>
-    );
-  }
 
   const getTimelineItemByType = (type: string, data: any, index: number) => {
     switch (type) {
@@ -131,7 +127,11 @@ export const Timeline = ({
             createdAt={data?.startedAt}
             contentClassName={'interactionTimeLineItemClass'}
           >
-            <InteractionTimelineItem {...data} />
+            <InteractionTimelineItem
+              {...data}
+              contactId={contactName && id}
+              organizationId={!contactName && id}
+            />
           </TimelineItem>
         );
       case 'Ticket':
@@ -172,6 +172,17 @@ export const Timeline = ({
 
   return (
     <article ref={timelineContainerRef} className={styles.timeline}>
+      {/*{!loading && !noActivity && (*/}
+      {/*  <Image*/}
+      {/*    alt=''*/}
+      {/*    src={'/backgrounds/blueprint/timeline-error.webp'}*/}
+      {/*    fill*/}
+      {/*    priority={true}*/}
+      {/*    style={{*/}
+      {/*      objectFit: 'cover',*/}
+      {/*    }}*/}
+      {/*  />*/}
+      {/*)}*/}
       <div className={styles.timelineContent} ref={containerRef}>
         {!!loggedActivities.length && (
           <div
@@ -191,6 +202,7 @@ export const Timeline = ({
             <Skeleton height={'40px'} className='mb-3' />
           </div>
         )}
+
         {loggedActivities.map((e: any, index) => (
           <React.Fragment key={e.id}>
             {getTimelineItemByType(e.__typename, e, index)}

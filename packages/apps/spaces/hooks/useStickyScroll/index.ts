@@ -21,6 +21,8 @@ export const useStickyScroll = (
   const stickyRef = useRef(sticky);
 
   const moveScrollToBottom = () => {
+    if (!targetRef.current?.scrollTop) return;
+
     targetRef.current.scrollTop = targetRef.current.scrollHeight;
   };
 
