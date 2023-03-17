@@ -54,6 +54,7 @@ export const Avatar: React.FC<AvatarProps> = ({
     width: `${size}px`,
     height: `${size}px`,
     backgroundColor: color,
+    fontSize: size > 40 ? 'var(--font-size-lg)' : 'ar(--font-size-xxs)',
   };
 
   return (

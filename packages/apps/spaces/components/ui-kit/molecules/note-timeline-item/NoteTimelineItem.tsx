@@ -24,6 +24,7 @@ import linkifyHtml from 'linkify-html';
 import { Controller, useForm } from 'react-hook-form';
 import { Editor } from '../editor';
 import { NoteEditorModes } from '../editor/Editor';
+import { ContactAvatar } from '../contact-avatar';
 
 interface Props {
   noteContent: string;
@@ -41,6 +42,7 @@ export const NoteTimelineItem: React.FC<Props> = ({
   noteContent,
   id,
   createdBy,
+  contactId,
 }) => {
   const [images, setImages] = useState({});
   const [deleteConfirmationModalVisible, setDeleteConfirmationModalVisible] =
@@ -167,7 +169,7 @@ export const NoteTimelineItem: React.FC<Props> = ({
     >
       <div className={styles.noteContainer}>
         <div className={styles.actions}>
-          <Avatar name='Jane' surname='Doe' size={30} />
+          {contactId ? <ContactAvatar contactId={contactId} /> : <div />}
 
           {editNote && (
             <IconButton

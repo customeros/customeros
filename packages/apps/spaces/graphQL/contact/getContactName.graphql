@@ -1,0 +1,6 @@
+query GetContactName($id: ID!) {
+  contact(id: $id) {
+    id
+    ...ContactNameFragment
+  }
+}

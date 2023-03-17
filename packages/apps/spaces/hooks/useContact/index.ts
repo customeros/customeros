@@ -10,4 +10,5 @@ export { useAddTagToContact } from './useAddContactTag';
 export { useRemoveTagFromContact } from './useRemoveTagFromContact';
 export { useUpdateContactPersonalDetails } from './useUpdateContactPersonalDetails';
 export { useMergeContacts } from './useMergeContacts';
+export { useContactName } from './useContactName';
 export type { ContactInput } from './types';
