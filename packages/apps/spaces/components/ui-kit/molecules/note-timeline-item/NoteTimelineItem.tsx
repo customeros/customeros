@@ -1,4 +1,10 @@
-import React, { useEffect, useState } from 'react';
+import React, {
+  MutableRefObject,
+  Ref,
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
 import styles from './note.module.scss';
 import { toast } from 'react-toastify';
 import parse from 'html-react-parser';
@@ -9,18 +15,22 @@ import {
   Trash,
   Pencil,
   IconButton,
+  Avatar,
+  Check,
 } from '../../atoms';
 import sanitizeHtml from 'sanitize-html';
-import ContactNoteModalTemplate from '../../../contact/editor/ContactNoteModalTemplate';
-import { useDeleteNote } from '../../../../hooks/useNote';
+import { useDeleteNote, useUpdateNote } from '../../../../hooks/useNote';
 import linkifyHtml from 'linkify-html';
+import { Controller, useForm } from 'react-hook-form';
+import { Editor } from '../editor';
+import { NoteEditorModes } from '../editor/Editor';
+import { ContactAvatar } from '../contact-avatar';
 
 interface Props {
   noteContent: string;
   createdAt: string;
   contactId?: string;
   id: string;
-  refreshNoteData: (id: string) => void;
   createdBy?: {
     firstName?: string;
     lastName?: string;
@@ -33,13 +43,14 @@ export const NoteTimelineItem: React.FC<Props> = ({
   id,
   createdBy,
   contactId,
-  refreshNoteData,
-  source,
 }) => {
-  // const client =  useGraphQLClient();
   const [images, setImages] = useState({});
+  const [deleteConfirmationModalVisible, setDeleteConfirmationModalVisible] =
+    useState(false);
+  const { onUpdateNote } = useUpdateNote();
   const { onRemoveNote } = useDeleteNote();
   const [editNote, setEditNote] = useState(false);
+  const elementRef = useRef<MutableRefObject<Ref<HTMLDivElement>>>(null);
 
   const [note, setNote] = useState({
     id,
@@ -119,83 +130,138 @@ export const NoteTimelineItem: React.FC<Props> = ({
     }
   }, [id, images, noteContent]);
 
-  const [deleteConfirmationModalVisible, setDeleteConfirmationModalVisible] =
-    useState(false);
+  const { handleSubmit, setValue, getValues, control, reset } = useForm({
+    defaultValues: {
+      id: note?.id || '',
+      html: note?.html || '',
+      htmlEnhanced: note.htmlEnhanced || '',
+    },
+  });
+
+  const onSubmit = handleSubmit(({ htmlEnhanced, ...data }) => {
+    const dataToSubmit = {
+      ...data,
+      html: htmlEnhanced?.replaceAll(/.src(\S*)/g, ''), //remove src attribute to not send the file bytes in here
+    };
+    onUpdateNote(dataToSubmit).then(() => {
+      setEditNote(false);
+    });
+  });
+
+  const handleToggleEditMode = (state: boolean) => {
+    setEditNote(state);
+    setTimeout(() => {
+      if (elementRef?.current) {
+        //@ts-expect-error fixme
+        elementRef.current.scrollIntoView({
+          behavior: 'smooth',
+          inline: 'start',
+        });
+      }
+    }, 0);
+  };
 
   return (
-    <div className={styles.noteWrapper}>
-      {editNote && (
-        <ContactNoteModalTemplate
-          isEdit
-          note={note}
-          contactId={contactId as string}
-          onSuccess={(data) => {
-            setEditNote(false);
-            refreshNoteData(data);
-          }}
-          onCancel={() => setEditNote(false)}
-        />
-      )}
-      <DeleteConfirmationDialog
-        deleteConfirmationModalVisible={deleteConfirmationModalVisible}
-        setDeleteConfirmationModalVisible={setDeleteConfirmationModalVisible}
-        deleteAction={() =>
-          onRemoveNote(id).then(() => setDeleteConfirmationModalVisible(false))
-        }
-        confirmationButtonLabel='Delete note'
-      />
+    <div
+      className={styles.noteWrapper}
+      //@ts-expect-error fixme
+      ref={elementRef}
+    >
+      <div className={styles.noteContainer}>
+        <div className={styles.actions}>
+          {contactId ? <ContactAvatar contactId={contactId} /> : <div />}
 
-      {!editNote && (
-        <div className='flex justify-content-between'>
-          <div className={styles.noteContainer}>
-            <div
-              className={`${styles.noteContent}`}
-              dangerouslySetInnerHTML={{
-                __html: sanitizeHtml(
-                  linkifyHtml(note.htmlEnhanced, {
-                    defaultProtocol: 'https',
-                    rel: 'noopener noreferrer',
-                  }),
-                ),
-              }}
-            ></div>
-          </div>
-          <div className={styles.actions}>
+          {editNote && (
             <IconButton
               size='xxxs'
               onClick={() => setDeleteConfirmationModalVisible(true)}
-              icon={<Trash style={{ transform: 'scale(0.7)' }} />}
+              icon={<Trash style={{ transform: 'scale(0.9)', color: 'red' }} />}
               mode='text'
               title='Delete'
-              style={{ marginRight: 0 }}
+              style={{ marginBottom: 0 }}
             />
+          )}
+        </div>
+        {editNote && (
+          <div className={styles.noteContent}>
+            <div
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+              }}
+            >
+              <Controller
+                name='htmlEnhanced'
+                control={control}
+                render={({ field }) => (
+                  <Editor
+                    onCancel={() => null} // not used
+                    mode={NoteEditorModes.EDIT}
+                    onGetFieldValue={getValues}
+                    value={field.value}
+                    onSave={() => null} //not used
+                    label='Save'
+                    onTextChange={(e) => setValue('htmlEnhanced', e.htmlValue)}
+                  />
+                )}
+              />
+            </div>
 
+            <DeleteConfirmationDialog
+              deleteConfirmationModalVisible={deleteConfirmationModalVisible}
+              setDeleteConfirmationModalVisible={
+                setDeleteConfirmationModalVisible
+              }
+              deleteAction={() =>
+                onRemoveNote(id).then(() =>
+                  setDeleteConfirmationModalVisible(false),
+                )
+              }
+              confirmationButtonLabel='Delete note'
+            />
+          </div>
+        )}
+
+        {!editNote && (
+          <div
+            className={styles.noteContent}
+            dangerouslySetInnerHTML={{
+              __html: sanitizeHtml(
+                linkifyHtml(note.htmlEnhanced, {
+                  defaultProtocol: 'https',
+                  rel: 'noopener noreferrer',
+                }),
+              ),
+            }}
+          />
+        )}
+        <div className={styles.actions}>
+          <Avatar
+            name={createdBy?.firstName || ''}
+            surname={createdBy?.lastName || ''}
+            size={30}
+          />
+          {editNote ? (
             <IconButton
               size='xxxs'
-              onClick={() => setEditNote(true)}
-              icon={<Pencil style={{ transform: 'scale(0.7)' }} />}
+              onClick={onSubmit}
+              icon={<Check style={{ transform: 'scale(0.9)' }} />}
               mode='text'
               title='Edit'
-              style={{ marginRight: 0 }}
+              style={{ marginBottom: 0, color: 'green' }}
             />
-          </div>
-          <div className={styles.noteData}>
-            {(createdBy?.firstName || createdBy?.lastName) && (
-              <>
-                {(createdBy?.firstName || createdBy?.lastName) && '- '}
-                {`${createdBy?.firstName} ${createdBy?.lastName}`}
-              </>
-            )}
-
-            {source && (
-              <div className='flex'>
-                <div className='mr-1'>Source: </div>
-                <div className='capitaliseFirstLetter'>{source}</div>
-              </div>
-            )}
-          </div>
+          ) : (
+            <IconButton
+              size='xxxs'
+              onClick={() => handleToggleEditMode(true)}
+              icon={<Pencil style={{ transform: 'scale(0.9)' }} />}
+              mode='text'
+              title='Edit'
+              style={{ marginBottom: 0 }}
+            />
+          )}
         </div>
-      )}
+      </div>
     </div>
   );
 };

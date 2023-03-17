@@ -1,16 +1,20 @@
 @import 'styles/mixins';
 .noteContainer {
   display: flex;
+  flex:1;
   justify-content: space-between;
   font-family: Helvetica, Arial, sans-serif !important;
   line-height: 1.3rem;
   font-size: var(--font-size-xxs) !important;
+  padding: var(--spacing-sm) var(--spacing-sm) var(--spacing-xxs);
+
 }
 
 .noteContent {
-  width: fit-content;
+  width: -webkit-fill-available;
   line-height: 1.3rem;
-  font-size: var(--font-size-sm);
+  font-size: var(--font-size-xs);
+  margin: 0 var(--spacing-xxs);
   font-weight: normal;
   color: #495057;
 
@@ -19,26 +23,11 @@
   }
 
   & * {
-    width: fit-content;
+    width: -webkit-fill-available;
     overflow: hidden;
     white-space: pre-line;
     word-break: break-word;
   }
-}
-
-.pin {
-  position: absolute;
-  left: 10px;
-  top: 8px;
-  transform: rotate3d(1, 2, 2, -25deg);
-  color: var(--gray-700);
-  height: 0.8rem;
-}
-
-.note {
-  padding: var(--spacing-xs);
-  margin-bottom: var(--spacing-xxs);
-  border: 1px solid var(--gray-200);
 }
 
 .noteData {
@@ -50,16 +39,33 @@
 
 .actions {
   color: var(--gray-700);
-  margin-right: -12px;
-  margin-top: -16px;
-  margin-bottom: var(--spacing-xxs);
-  @include flex-center;
+  @include flex-between;
+  flex-direction: column;
+  align-items: center;
+
+  & button{
+    margin-top: var(--spacing-xs);
+  }
 }
 
 .noteWrapper {
   width: 100%;
   height: min-content;
-  border: var(--border-divider);
+  border: 1px solid rgba(155, 155, 155, 1);
   border-radius: var(--border-radius-sm);
-  padding: var(--spacing-sm);
+  position: relative;
+  display: flex;
+  justify-content: space-between;
+
+  &:after {
+    content: '';
+    display: block;
+    height:5px;
+    width: 100%;
+    position:absolute;
+    background: rgba(244, 230, 156, 1);
+    border-top-right-radius: var(--border-radius-sm);
+    border-top-left-radius: var(--border-radius-sm);
+    top:0;
+  }
 }

@@ -1,9 +1,7 @@
 import React, { ButtonHTMLAttributes, FC, ReactNode } from 'react';
 import { Editor as PrimereactEditor } from 'primereact/editor';
 import { RichTextHeader } from '../rich-text-header';
-import styles from './editor.module.scss';
 import { useFileData } from '../../../../hooks/useFileData';
-import { Button } from '../../atoms';
 
 export enum NoteEditorModes {
   'ADD' = 'ADD',
@@ -51,10 +49,11 @@ export const Editor: FC<Props> = ({
       <PrimereactEditor
         style={{
           height: isEditMode ? 'auto' : '160px',
-          borderColor: isEditMode && 'transparent',
+          borderBottomColor: isEditMode && 'transparent',
         }}
         headerTemplate={
           <RichTextHeader
+            hideButtons={isEditMode}
             onFileChange={(e) => onFileChange(e)}
             onSubmit={onSave}
             onCancel={onCancel}

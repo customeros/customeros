@@ -64,7 +64,7 @@ export const ContactEditor: FC<Props> = ({
       style={{
         display: 'flex',
         flexDirection: 'column',
-        margin: isEditMode ? '-17px -24px' : 0,
+        margin: 0,
       }}
       key={editorModeState.mode}
     >

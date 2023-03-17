@@ -9,6 +9,7 @@ import { ContactTags } from '../contact-tags';
 import { useForm } from 'react-hook-form';
 import { ContactPersonalDetailsEdit } from './edit';
 import { getContactDisplayName } from '../../../utils';
+import { ContactAvatar } from '../../ui-kit/molecules/contact-avatar';
 
 export const ContactPersonalDetails = ({ id }: { id: string }) => {
   const router = useRouter();
@@ -36,15 +37,7 @@ export const ContactPersonalDetails = ({ id }: { id: string }) => {
   return (
     <div className={styles.header}>
       <div className={styles.photo}>
-        {
-          // @ts-expect-error we will have equivalent of avatar some day...
-          data?.photo ? (
-            // @ts-expect-error we will have equivalent of avatar some day...
-            <Image src={data?.photo} alt={''} height={40} width={40} />
-          ) : (
-            <div>{data?.firstName?.[0]}</div>
-          )
-        }
+        <ContactAvatar contactId={id} size={50} />
       </div>
       <div className={styles.name}>
         <div className={styles.nameAndEditButton}>

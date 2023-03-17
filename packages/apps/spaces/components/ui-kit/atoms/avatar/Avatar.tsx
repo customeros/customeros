@@ -1,29 +1,65 @@
 import React from 'react';
-import Image, { ImageProps, StaticImageData } from 'next/image';
+import Image, { StaticImageData } from 'next/image';
+import styles from './avatar.module.scss';
+import { getInitialsColor } from './utils';
 
-interface AvatarProps extends Partial<ImageProps> {
+interface AvatarProps {
+  name: string;
+  surname: string;
+  size: number;
   image?: StaticImageData;
-  username: string;
   imageHeight?: number;
   imageWidth?: number;
 }
 
+function hashString(str: string): number {
+  let hash = 0;
+  if (str.length === 0) {
+    return hash;
+  }
+  for (let i = 0; i < str.length; i++) {
+    const char = str.charCodeAt(i);
+    hash = (hash << 5) - hash + char;
+    hash |= 0; // Convert to 32bit integer
+  }
+  return hash;
+}
 export const Avatar: React.FC<AvatarProps> = ({
+  name,
+  surname,
+  size,
   image,
-  username,
-  imageHeight,
   imageWidth,
+  imageHeight,
   ...rest
 }) => {
-  return image ? (
-    <Image
-      {...rest}
-      src={image}
-      alt={username}
-      height={imageHeight || 40}
-      width={imageWidth}
-    />
-  ) : (
-    <div>{username}</div>
+  if (image) {
+    return (
+      <>
+        <Image
+          {...rest}
+          src={image}
+          alt={`${name} ${surname}`}
+          height={imageHeight || 40}
+          width={imageWidth}
+        />
+      </>
+    );
+  }
+
+  const initials = `${name.charAt(0)}${surname.charAt(0)}`;
+  const color = getInitialsColor(initials);
+
+  const avatarStyle = {
+    width: `${size}px`,
+    height: `${size}px`,
+    backgroundColor: color,
+    fontSize: size > 40 ? 'var(--font-size-lg)' : 'ar(--font-size-xxs)',
+  };
+
+  return (
+    <div className={styles.avatar} style={avatarStyle}>
+      {initials}
+    </div>
   );
 };
