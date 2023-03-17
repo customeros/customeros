@@ -1,0 +1,18 @@
+mutation UpdatePhoneNumberForOrganization($organizationId: ID!, $phoneNumberId: ID!) {
+    phoneNumberUpdateInOrganization(organizationId: $organizationId,
+                        input: {id: $phoneNumberId
+                                label: HOME
+                                primary: true
+                                phoneNumber: "+987654321"
+                        }) {
+        id
+        e164
+        rawPhoneNumber
+        validated
+        label
+        primary
+        source
+        createdAt
+        updatedAt
+    }
+}

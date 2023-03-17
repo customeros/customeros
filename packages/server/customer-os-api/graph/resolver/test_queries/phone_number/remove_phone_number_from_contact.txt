@@ -1,0 +1,6 @@
+mutation RemovePhoneNumberFromContact($contactId: ID!, $e164: String!) {
+  phoneNumberRemoveFromContactByE164(contactId: $contactId, e164: $e164)
+    {
+      result
+    }
+}

@@ -1,0 +1,6 @@
+mutation RemovePhoneNumberFromOrganizationById($organizationId: ID!, $phoneNumberId: ID!) {
+  phoneNumberRemoveFromOrganizationById(organizationId: $organizationId, id: $phoneNumberId)
+    {
+      result
+    }
+}

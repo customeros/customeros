@@ -150,6 +150,44 @@ func TestMutationResolver_PhoneNumberUpdateInContact_ReplacePhoneNumber(t *testi
 	assertNeo4jLabels(ctx, t, driver, []string{"Tenant", "Contact", "Contact_" + tenantName, "PhoneNumber", "PhoneNumber_" + tenantName})
 }
 
+func TestMutationResolver_PhoneNumberRemoveFromContact(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx)(t)
+
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+
+	contactId := neo4jt.CreateDefaultContact(ctx, driver, tenantName)
+	neo4jt.AddPhoneNumberTo(ctx, driver, tenantName, contactId, "+1234567890", false, "WORK")
+
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "PhoneNumber"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "PhoneNumber_"+tenantName))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Contact"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Tenant"))
+	require.Equal(t, 1, neo4jt.GetCountOfRelationships(ctx, driver, "HAS"))
+
+	// Make the RawPost request and check for errors
+	rawResponse, err := c.RawPost(getQuery("phone_number/remove_phone_number_from_contact"),
+		client.Var("contactId", contactId),
+		client.Var("e164", "+1234567890"),
+	)
+	assertRawResponseSuccess(t, rawResponse, err)
+
+	var phoneNumberStruct struct {
+		PhoneNumberRemoveFromContactByE164 model.Result
+	}
+	err = decode.Decode(rawResponse.Data.(map[string]any), &phoneNumberStruct)
+	require.Nil(t, err, "Error unmarshalling response data")
+
+	require.Equal(t, true, phoneNumberStruct.PhoneNumberRemoveFromContactByE164.Result)
+
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "PhoneNumber"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "PhoneNumber_"+tenantName))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Contact"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Tenant"))
+	require.Equal(t, 0, neo4jt.GetCountOfRelationships(ctx, driver, "HAS"))
+	assertNeo4jLabels(ctx, t, driver, []string{"Tenant", "PhoneNumber", "PhoneNumber_" + tenantName, "Contact", "Contact_" + tenantName})
+}
+
 func TestMutationResolver_PhoneNumberMergeToOrganization(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx)(t)
@@ -199,6 +237,129 @@ func TestMutationResolver_PhoneNumberMergeToOrganization(t *testing.T) {
 	assertNeo4jLabels(ctx, t, driver, []string{"Tenant", "Organization", "Organization_" + tenantName, "PhoneNumber", "PhoneNumber_" + tenantName})
 }
 
+func TestMutationResolver_PhoneNumberUpdateInOrganization(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx)(t)
+
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+
+	organizationId := neo4jt.CreateOrganization(ctx, driver, tenantName, "Edgeless Systems")
+	phoneNumberId := neo4jt.AddPhoneNumberTo(ctx, driver, tenantName, organizationId, "+1234567890", false, "WORK")
+
+	// Make the RawPost request and check for errors
+	rawResponse, err := c.RawPost(getQuery("phone_number/update_phone_number_for_organization"),
+		client.Var("organizationId", organizationId),
+		client.Var("phoneNumberId", phoneNumberId))
+	assertRawResponseSuccess(t, rawResponse, err)
+
+	// Unmarshal the response data into the phone number struct
+	var phoneNumberStruct struct {
+		PhoneNumberUpdateInOrganization model.PhoneNumber
+	}
+	err = decode.Decode(rawResponse.Data.(map[string]any), &phoneNumberStruct)
+	require.Nil(t, err, "Error unmarshalling response data")
+
+	phoneNumber := phoneNumberStruct.PhoneNumberUpdateInOrganization
+
+	// Check that the fields of the phone struct have the expected values
+	require.Equal(t, phoneNumberId, phoneNumber.ID, "Phone number ID is nil")
+	require.Equal(t, true, phoneNumber.Primary, "Phone number Primary field is not true")
+	require.Equal(t, "+1234567890", *phoneNumber.RawPhoneNumber, "Phone number expected not to be changed")
+	require.Equal(t, "+1234567890", *phoneNumber.E164, "Phone number expected not to be changed")
+	require.NotNil(t, phoneNumber.UpdatedAt, "Missing updatedAt field")
+	if phoneNumber.Label == nil {
+		t.Errorf("Phone number Label field is nil")
+	} else {
+		require.Equal(t, model.PhoneNumberLabelHome, *phoneNumber.Label, "Phone number label field is not expected value")
+	}
+
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "PhoneNumber"), "Incorrect number of PhoneNumber nodes in Neo4j")
+	require.Equal(t, 1, neo4jt.GetCountOfRelationships(ctx, driver, "HAS"), "Incorrect number of HAS relationships in Neo4j")
+}
+
+func TestMutationResolver_PhoneNumberUpdateInOrganization_ReplacePhoneNumber(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx)(t)
+
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+
+	organizationId := neo4jt.CreateOrganization(ctx, driver, tenantName, "Edgeless Systems")
+	phoneNumberId := neo4jt.AddPhoneNumberTo(ctx, driver, tenantName, organizationId, "+1234567890", false, "WORK")
+
+	// Make the RawPost request and check for errors
+	rawResponse, err := c.RawPost(getQuery("phone_number/replace_phone_number_for_organization"),
+		client.Var("organizationId", organizationId),
+		client.Var("phoneNumberId", phoneNumberId))
+	assertRawResponseSuccess(t, rawResponse, err)
+
+	// Unmarshal the response data into the phone number struct
+	var phoneNumberStruct struct {
+		PhoneNumberUpdateInOrganization model.PhoneNumber
+	}
+	err = decode.Decode(rawResponse.Data.(map[string]any), &phoneNumberStruct)
+	require.Nil(t, err, "Error unmarshalling response data")
+
+	phoneNumber := phoneNumberStruct.PhoneNumberUpdateInOrganization
+
+	// Check that the fields of the phoneNumberStruct struct have the expected values
+	require.NotEqual(t, phoneNumberId, phoneNumber.ID, "Expected new phone number ID to be generated")
+	require.Equal(t, true, phoneNumber.Primary, "Phone number primary field is not true")
+	require.Equal(t, "+987654321", *phoneNumber.RawPhoneNumber)
+	require.Equal(t, "+987654321", *phoneNumber.E164)
+	require.False(t, *phoneNumber.Validated, "New phone number is not validated yet")
+	require.NotNil(t, phoneNumber.CreatedAt, "Missing createdAt field")
+	require.NotNil(t, phoneNumber.UpdatedAt, "Missing updatedAt field")
+	if phoneNumber.Label == nil {
+		t.Errorf("Phone number Label field is nil")
+	} else {
+		require.Equal(t, model.PhoneNumberLabelHome, *phoneNumber.Label, "Phone number label field is not expected value")
+	}
+
+	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "PhoneNumber"), "Expected 2 PhoneNumber nodes, original one and new")
+	require.Equal(t, 1, neo4jt.GetCountOfRelationships(ctx, driver, "HAS"), "Incorrect number of HAS relationships in Neo4j")
+
+	// Check the labels on the nodes in the Neo4j database
+	assertNeo4jLabels(ctx, t, driver, []string{"Tenant", "Organization", "Organization_" + tenantName, "PhoneNumber", "PhoneNumber_" + tenantName})
+}
+
+func TestMutationResolver_PhoneNumberRemoveFromOrganizationByID(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx)(t)
+
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+
+	organizationId := neo4jt.CreateOrganization(ctx, driver, tenantName, "Edgeless Systems")
+	phoneNumberId := neo4jt.AddPhoneNumberTo(ctx, driver, tenantName, organizationId, "+1234567890", false, "WORK")
+
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "PhoneNumber"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "PhoneNumber_"+tenantName))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Organization"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Tenant"))
+	require.Equal(t, 1, neo4jt.GetCountOfRelationships(ctx, driver, "HAS"))
+
+	// Make the RawPost request and check for errors
+	rawResponse, err := c.RawPost(getQuery("phone_number/remove_phone_number_from_organization_by_id"),
+		client.Var("organizationId", organizationId),
+		client.Var("phoneNumberId", phoneNumberId),
+	)
+	assertRawResponseSuccess(t, rawResponse, err)
+
+	var phoneNumberStruct struct {
+		PhoneNumberRemoveFromOrganizationById model.Result
+	}
+	err = decode.Decode(rawResponse.Data.(map[string]any), &phoneNumberStruct)
+	require.Nil(t, err, "Error unmarshalling response data")
+
+	require.Equal(t, true, phoneNumberStruct.PhoneNumberRemoveFromOrganizationById.Result)
+
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "PhoneNumber"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "PhoneNumber_"+tenantName))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Organization"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Tenant"))
+	require.Equal(t, 0, neo4jt.GetCountOfRelationships(ctx, driver, "HAS"))
+	assertNeo4jLabels(ctx, t, driver, []string{"Tenant", "PhoneNumber", "PhoneNumber_" + tenantName, "Organization", "Organization_" + tenantName})
+}
+
 func TestMutationResolver_PhoneNumberMergeToUser(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx)(t)
@@ -243,6 +404,91 @@ func TestMutationResolver_PhoneNumberMergeToUser(t *testing.T) {
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "PhoneNumber_"+tenantName), "Incorrect number of PhoneNumber_%s nodes in Neo4j", tenantName)
 	require.Equal(t, 3, neo4jt.GetTotalCountOfNodes(ctx, driver), "Incorrect total number of nodes in Neo4j")
 	require.Equal(t, 1, neo4jt.GetCountOfRelationships(ctx, driver, "HAS"), "Incorrect number of PHONE_ASSOCIATED_WITH relationships in Neo4j")
+
+	// Check the labels on the nodes in the Neo4j database
+	assertNeo4jLabels(ctx, t, driver, []string{"Tenant", "User", "User_" + tenantName, "PhoneNumber", "PhoneNumber_" + tenantName})
+}
+
+func TestMutationResolver_PhoneNumberUpdateInUser(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx)(t)
+
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+
+	userId := neo4jt.CreateDefaultUser(ctx, driver, tenantName)
+	phoneNumberId := neo4jt.AddPhoneNumberTo(ctx, driver, tenantName, userId, "+1234567890", false, "WORK")
+
+	// Make the RawPost request and check for errors
+	rawResponse, err := c.RawPost(getQuery("phone_number/update_phone_number_for_user"),
+		client.Var("userId", userId),
+		client.Var("phoneNumberId", phoneNumberId))
+	assertRawResponseSuccess(t, rawResponse, err)
+
+	// Unmarshal the response data into the phone number struct
+	var phoneNumberStruct struct {
+		PhoneNumberUpdateInUser model.PhoneNumber
+	}
+	err = decode.Decode(rawResponse.Data.(map[string]any), &phoneNumberStruct)
+	require.Nil(t, err, "Error unmarshalling response data")
+
+	phoneNumber := phoneNumberStruct.PhoneNumberUpdateInUser
+
+	// Check that the fields of the phone struct have the expected values
+	require.Equal(t, phoneNumberId, phoneNumber.ID, "Phone number ID is nil")
+	require.Equal(t, true, phoneNumber.Primary, "Phone number Primary field is not true")
+	require.Equal(t, "+1234567890", *phoneNumber.RawPhoneNumber, "Phone number expected not to be changed")
+	require.Equal(t, "+1234567890", *phoneNumber.E164, "Phone number expected not to be changed")
+	require.NotNil(t, phoneNumber.UpdatedAt, "Missing updatedAt field")
+	if phoneNumber.Label == nil {
+		t.Errorf("Phone number Label field is nil")
+	} else {
+		require.Equal(t, model.PhoneNumberLabelHome, *phoneNumber.Label, "Phone number label field is not expected value")
+	}
+
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "PhoneNumber"), "Incorrect number of PhoneNumber nodes in Neo4j")
+	require.Equal(t, 1, neo4jt.GetCountOfRelationships(ctx, driver, "HAS"), "Incorrect number of HAS relationships in Neo4j")
+}
+
+func TestMutationResolver_PhoneNumberUpdateInUser_ReplacePhoneNumber(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx)(t)
+
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+
+	userId := neo4jt.CreateDefaultUser(ctx, driver, tenantName)
+	phoneNumberId := neo4jt.AddPhoneNumberTo(ctx, driver, tenantName, userId, "+1234567890", false, "WORK")
+
+	// Make the RawPost request and check for errors
+	rawResponse, err := c.RawPost(getQuery("phone_number/replace_phone_number_for_user"),
+		client.Var("userId", userId),
+		client.Var("phoneNumberId", phoneNumberId))
+	assertRawResponseSuccess(t, rawResponse, err)
+
+	// Unmarshal the response data into the phone number struct
+	var phoneNumberStruct struct {
+		PhoneNumberUpdateInUser model.PhoneNumber
+	}
+	err = decode.Decode(rawResponse.Data.(map[string]any), &phoneNumberStruct)
+	require.Nil(t, err, "Error unmarshalling response data")
+
+	phoneNumber := phoneNumberStruct.PhoneNumberUpdateInUser
+
+	// Check that the fields of the phoneNumberStruct struct have the expected values
+	require.NotEqual(t, phoneNumberId, phoneNumber.ID, "Expected new phone number ID to be generated")
+	require.Equal(t, true, phoneNumber.Primary, "Phone number primary field is not true")
+	require.Equal(t, "+987654321", *phoneNumber.RawPhoneNumber)
+	require.Equal(t, "+987654321", *phoneNumber.E164)
+	require.False(t, *phoneNumber.Validated, "New phone number is not validated yet")
+	require.NotNil(t, phoneNumber.CreatedAt, "Missing createdAt field")
+	require.NotNil(t, phoneNumber.UpdatedAt, "Missing updatedAt field")
+	if phoneNumber.Label == nil {
+		t.Errorf("Phone number Label field is nil")
+	} else {
+		require.Equal(t, model.PhoneNumberLabelHome, *phoneNumber.Label, "Phone number label field is not expected value")
+	}
+
+	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "PhoneNumber"), "Expected 2 PhoneNumber nodes, original one and new")
+	require.Equal(t, 1, neo4jt.GetCountOfRelationships(ctx, driver, "HAS"), "Incorrect number of HAS relationships in Neo4j")
 
 	// Check the labels on the nodes in the Neo4j database
 	assertNeo4jLabels(ctx, t, driver, []string{"Tenant", "User", "User_" + tenantName, "PhoneNumber", "PhoneNumber_" + tenantName})

@@ -12,12 +12,13 @@ import (
 type PhoneNumberRepository interface {
 	GetAllForContact(ctx context.Context, tenant, contactId string) (any, error)
 	GetAllForIds(ctx context.Context, tenant string, entityType entity.EntityType, entityIds []string) ([]*utils.DbNodeWithRelationAndId, error)
-
-	MergePhoneNumberToInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, entityType entity.EntityType, entityId string, entity entity.PhoneNumberEntity) (*dbtype.Node, *dbtype.Relationship, error)
-	UpdatePhoneNumberByContactInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant, contactId string, entity entity.PhoneNumberEntity) (*dbtype.Node, *dbtype.Relationship, error)
-	SetOtherPhoneNumbersNonPrimaryInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, entityType entity.EntityType, entityId, phoneNumberId string) error
-
 	GetByIdAndRelatedEntity(ctx context.Context, entityType entity.EntityType, tenant, phoneNumberId, entityId string) (*dbtype.Node, error)
+
+	MergePhoneNumberToInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, entityType entity.EntityType, entityId string, phoneNumberEntity entity.PhoneNumberEntity) (*dbtype.Node, *dbtype.Relationship, error)
+	UpdatePhoneNumberForInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, entityType entity.EntityType, entityId string, phoneNumberEntity entity.PhoneNumberEntity) (*dbtype.Node, *dbtype.Relationship, error)
+	SetOtherPhoneNumbersNonPrimaryInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, entityType entity.EntityType, entityId, phoneNumberId string) error
+	RemoveRelationship(ctx context.Context, entityType entity.EntityType, tenant, entityId, phoneNumber string) error
+	RemoveRelationshipById(ctx context.Context, entityType entity.EntityType, tenant, entityId, phoneNumberId string) error
 }
 
 type phoneNumberRepository struct {
@@ -74,10 +75,19 @@ func (r *phoneNumberRepository) MergePhoneNumberToInTx(ctx context.Context, tx n
 	return utils.ExtractSingleRecordNodeAndRelationship(ctx, queryResult, err)
 }
 
-func (r *phoneNumberRepository) UpdatePhoneNumberByContactInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant, contactId string, entity entity.PhoneNumberEntity) (*dbtype.Node, *dbtype.Relationship, error) {
-	queryResult, err := tx.Run(ctx, `
-			MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}),
-				(c)-[rel:HAS]->(p:PhoneNumber {id: $phoneNumberId})
+func (r *phoneNumberRepository) UpdatePhoneNumberForInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, entityType entity.EntityType, entityId string, phoneNumberEntity entity.PhoneNumberEntity) (*dbtype.Node, *dbtype.Relationship, error) {
+	query := ""
+
+	switch entityType {
+	case entity.CONTACT:
+		query = `MATCH (entity:Contact {id:$entityId})-[:CONTACT_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant}) `
+	case entity.USER:
+		query = `MATCH (entity:User {id:$entityId})-[:USER_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant}) `
+	case entity.ORGANIZATION:
+		query = `MATCH (entity:Organization {id:$entityId})-[:ORGANIZATION_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant}) `
+	}
+
+	queryResult, err := tx.Run(ctx, query+`, (entity)-[rel:HAS]->(p:PhoneNumber {id: $phoneNumberId})
             SET rel.label=$label,
 				rel.primary=$primary,
 				p.sourceOfTruth=$sourceOfTruth,
@@ -85,11 +95,11 @@ func (r *phoneNumberRepository) UpdatePhoneNumberByContactInTx(ctx context.Conte
 			RETURN p, rel`,
 		map[string]interface{}{
 			"tenant":        tenant,
-			"contactId":     contactId,
-			"phoneNumberId": entity.Id,
-			"label":         entity.Label,
-			"primary":       entity.Primary,
-			"sourceOfTruth": entity.SourceOfTruth,
+			"entityId":      entityId,
+			"phoneNumberId": phoneNumberEntity.Id,
+			"label":         phoneNumberEntity.Label,
+			"primary":       phoneNumberEntity.Primary,
+			"sourceOfTruth": phoneNumberEntity.SourceOfTruth,
 			"now":           utils.Now(),
 		})
 	return utils.ExtractSingleRecordNodeAndRelationship(ctx, queryResult, err)
@@ -207,4 +217,65 @@ func (r *phoneNumberRepository) GetByIdAndRelatedEntity(ctx context.Context, ent
 		return nil, err
 	}
 	return result.(*dbtype.Node), nil
+}
+
+func (r *phoneNumberRepository) RemoveRelationship(ctx context.Context, entityType entity.EntityType, tenant, entityId, phoneNumber string) error {
+	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
+	defer session.Close(ctx)
+
+	query := ""
+	switch entityType {
+	case entity.CONTACT:
+		query = `MATCH (entity:Contact {id:$entityId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) `
+	case entity.USER:
+		query = `MATCH (entity:User {id:$entityId})-[:USER_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) `
+	case entity.ORGANIZATION:
+		query = `MATCH (entity:Organization {id:$entityId})-[:ORGANIZATION_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) `
+	}
+
+	if _, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		_, err := tx.Run(ctx, query+`MATCH (entity)-[rel:HAS]->(p:PhoneNumber)
+			WHERE p.e164 = $phoneNumber OR p.rawPhoneNumber = $phoneNumber
+            DELETE rel`,
+			map[string]any{
+				"entityId":    entityId,
+				"phoneNumber": phoneNumber,
+				"tenant":      tenant,
+			})
+		return nil, err
+	}); err != nil {
+		return err
+	} else {
+		return nil
+	}
+}
+
+func (r *phoneNumberRepository) RemoveRelationshipById(ctx context.Context, entityType entity.EntityType, tenant, entityId, phoneNumberId string) error {
+	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
+	defer session.Close(ctx)
+
+	query := ""
+	switch entityType {
+	case entity.CONTACT:
+		query = `MATCH (entity:Contact {id:$entityId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) `
+	case entity.USER:
+		query = `MATCH (entity:User {id:$entityId})-[:USER_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) `
+	case entity.ORGANIZATION:
+		query = `MATCH (entity:Organization {id:$entityId})-[:ORGANIZATION_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) `
+	}
+
+	if _, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		_, err := tx.Run(ctx, query+`MATCH (entity)-[rel:HAS]->(p:PhoneNumber {id:$phoneNumberId})
+            DELETE rel`,
+			map[string]any{
+				"entityId":      entityId,
+				"phoneNumberId": phoneNumberId,
+				"tenant":        tenant,
+			})
+		return nil, err
+	}); err != nil {
+		return err
+	} else {
+		return nil
+	}
 }
