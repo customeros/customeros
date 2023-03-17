@@ -6,7 +6,7 @@ import { TimelineItem } from '../../atoms/timeline-item';
 import { Skeleton } from '../../atoms/skeleton';
 import { ConversationItem, Props } from './types';
 
-export const ConversationTimelineItem: React.FC<Props> = ({
+export const PhoneConversationTimelineItem: React.FC<Props> = ({
   feedId,
   createdAt,
   first,

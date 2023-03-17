@@ -7,14 +7,11 @@
   font-weight: 200;
   line-height: 1.3rem;
   font-size: 1rem;
-
-
 }
 
 .last {
   margin-bottom: var(--spacing-md);
 }
-
 
 .when {
   font-size: 0.75rem;
@@ -23,11 +20,11 @@
   position: relative;
   margin: var(--spacing-sm) var(--spacing-xxs);
 
-  &:after{
+  &:after {
     content: '';
     display: block;
     height: 3px;
-    position:absolute;
+    position: absolute;
     right: -2.5rem;
     bottom: 10px;
     width: var(--spacing-md);

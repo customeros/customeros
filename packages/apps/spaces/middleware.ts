@@ -23,7 +23,9 @@ export async function middleware(request: NextRequest) {
         new TextEncoder().encode(process.env.ORY_SIGN_SECRET as string),
       );
 
-      console.log('auth check cookie found and is valid. proceeding to redirect.');
+      console.log(
+        'auth check cookie found and is valid. proceeding to redirect.',
+      );
 
       return getRedirectUrl(
         payload.email as string,

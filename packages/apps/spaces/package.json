@@ -1,7 +1,7 @@
 {
   "private": true,
   "scripts": {
-    "dev": "next dev -p 3001",
+    "dev": "env-cmd -f .env.development next dev -p 3001",
     "production": "env-cmd -f .env.production next dev -p 3001",
     "dev:debug": "NODE_OPTIONS='--inspect' next dev -p 3001",
     "build:dev": "next build",

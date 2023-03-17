@@ -2,7 +2,7 @@ query GetContactTimeline($contactId: ID!, $from: Time!, $size: Int!) {
   contact(id: $contactId) {
     id
     ...ContactNameFragment
-    timelineEvents(from:$from, size:$size) {
+    timelineEvents(from: $from, size: $size) {
       ... on PageView {
         id
         application
@@ -13,7 +13,6 @@ query GetContactTimeline($contactId: ID!, $from: Time!, $size: Int!) {
         pageTitle
         orderInSession
         sessionId
-
       }
       ... on Ticket {
         id
@@ -40,7 +39,7 @@ query GetContactTimeline($contactId: ID!, $from: Time!, $size: Int!) {
         updatedAt
         messageCount
         contacts {
-          id,
+          id
           lastName
           firstName
         }
@@ -59,6 +58,87 @@ query GetContactTimeline($contactId: ID!, $from: Time!, $size: Int!) {
         initiatorType
         threadId
       }
+      ... on InteractionSession {
+        id
+        startedAt
+        name
+        status
+        type
+        events {
+          content
+          contentType
+        }
+      }
+      ... on InteractionEvent {
+        id
+        createdAt
+        channel
+        interactionSession {
+          name
+        }
+        content
+        contentType
+        sentBy {
+          __typename
+          ... on EmailParticipant {
+            __typename
+            emailParticipant {
+              email
+            }
+          }
+          ... on PhoneNumberParticipant {
+            __typename
+            phoneNumberParticipant {
+              e164
+            }
+          }
+          ... on ContactParticipant {
+            __typename
+            contactParticipant {
+              name
+            }
+          }
+          ... on UserParticipant {
+            __typename
+            userParticipant {
+              firstName
+              lastName
+            }
+          }
+        }
+        sentTo {
+          __typename
+          ... on EmailParticipant {
+            __typename
+            type
+            emailParticipant {
+              email
+            }
+          }
+          ... on PhoneNumberParticipant {
+            __typename
+            type
+            phoneNumberParticipant {
+              e164
+            }
+          }
+          ... on ContactParticipant {
+            __typename
+            type
+            contactParticipant {
+              name
+            }
+          }
+          ... on UserParticipant {
+            __typename
+            type
+            userParticipant {
+              firstName
+              lastName
+            }
+          }
+        }
+      }
       ... on Note {
         id
         html
@@ -72,4 +152,3 @@ query GetContactTimeline($contactId: ID!, $from: Time!, $size: Int!) {
     }
   }
 }
-
