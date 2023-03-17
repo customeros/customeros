@@ -3,6 +3,16 @@ extend type Mutation {
     phoneNumberUpdateInContact(contactId : ID!, input: PhoneNumberUpdateInput!): PhoneNumber!
     phoneNumberRemoveFromContactByE164(contactId : ID!, e164: String!): Result!
     phoneNumberRemoveFromContactById(contactId : ID!, id: ID!): Result!
+
+    phoneNumberMergeToOrganization(organizationId : ID!, input: PhoneNumberInput!): PhoneNumber!
+    phoneNumberUpdateInOrganization(organizationId : ID!, input: PhoneNumberUpdateInput!): PhoneNumber!
+    phoneNumberRemoveFromOrganizationByE164(organizationId : ID!, e164: String!): Result!
+    phoneNumberRemoveFromOrganizationById(organizationId : ID!, id: ID!): Result!
+
+    phoneNumberMergeToUser(userId : ID!, input: PhoneNumberInput!): PhoneNumber!
+    phoneNumberUpdateInUser(userId : ID!, input: PhoneNumberUpdateInput!): PhoneNumber!
+    phoneNumberRemoveFromUserByE164(userId : ID!, e164: String!): Result!
+    phoneNumberRemoveFromUserById(userId : ID!, id: ID!): Result!
 }
 
 """

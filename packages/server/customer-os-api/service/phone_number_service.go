@@ -13,8 +13,8 @@ import (
 
 type PhoneNumberService interface {
 	GetAllForContact(ctx context.Context, contactId string) (*entity.PhoneNumberEntities, error)
-	MergePhoneNumberToContact(ctx context.Context, id string, toEntity *entity.PhoneNumberEntity) (*entity.PhoneNumberEntity, error)
-	UpdatePhoneNumberForContact(ctx context.Context, id string, toEntity *entity.PhoneNumberEntity) (*entity.PhoneNumberEntity, error)
+	MergePhoneNumberTo(ctx context.Context, entityType entity.EntityType, entityId string, inputEntity *entity.PhoneNumberEntity) (*entity.PhoneNumberEntity, error)
+	UpdatePhoneNumberFor(ctx context.Context, entityType entity.EntityType, entityId string, inputEntity *entity.PhoneNumberEntity) (*entity.PhoneNumberEntity, error)
 	RemoveFromContactByE164(ctx context.Context, contactId, e164 string) (bool, error)
 	RemoveFromContactById(ctx context.Context, contactId, phoneNumberId string) (bool, error)
 	GetAllForEntityTypeByIds(ctx context.Context, entityType entity.EntityType, ids []string) (*entity.PhoneNumberEntities, error)
@@ -37,7 +37,7 @@ func (s *phoneNumberService) getDriver() neo4j.DriverWithContext {
 }
 
 func (s *phoneNumberService) GetAllForContact(ctx context.Context, contactId string) (*entity.PhoneNumberEntities, error) {
-	queryResult, err := s.repositories.PhoneNumberRepository.GetAllForContact(ctx, common.GetContext(ctx).Tenant, contactId)
+	queryResult, err := s.repositories.PhoneNumberRepository.GetAllForContact(ctx, common.GetTenantFromContext(ctx), contactId)
 	if err != nil {
 		return nil, err
 	}
@@ -54,7 +54,7 @@ func (s *phoneNumberService) GetAllForContact(ctx context.Context, contactId str
 }
 
 func (s *phoneNumberService) GetAllForEntityTypeByIds(ctx context.Context, entityType entity.EntityType, ids []string) (*entity.PhoneNumberEntities, error) {
-	phoneNumbers, err := s.repositories.PhoneNumberRepository.GetAllForIds(ctx, common.GetContext(ctx).Tenant, entityType, ids)
+	phoneNumbers, err := s.repositories.PhoneNumberRepository.GetAllForIds(ctx, common.GetTenantFromContext(ctx), entityType, ids)
 	if err != nil {
 		return nil, err
 	}
@@ -69,7 +69,7 @@ func (s *phoneNumberService) GetAllForEntityTypeByIds(ctx context.Context, entit
 	return &phoneNumberEntities, nil
 }
 
-func (s *phoneNumberService) MergePhoneNumberToContact(ctx context.Context, contactId string, inputEntity *entity.PhoneNumberEntity) (*entity.PhoneNumberEntity, error) {
+func (s *phoneNumberService) MergePhoneNumberTo(ctx context.Context, entityType entity.EntityType, entityId string, inputEntity *entity.PhoneNumberEntity) (*entity.PhoneNumberEntity, error) {
 	session := utils.NewNeo4jWriteSession(ctx, s.getDriver())
 	defer session.Close(ctx)
 
@@ -78,13 +78,13 @@ func (s *phoneNumberService) MergePhoneNumberToContact(ctx context.Context, cont
 	var phoneNumberRelationship *dbtype.Relationship
 
 	_, err = session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (interface{}, error) {
-		phoneNumberNode, phoneNumberRelationship, err = s.repositories.PhoneNumberRepository.MergePhoneNumberToContactInTx(ctx, tx, common.GetContext(ctx).Tenant, contactId, *inputEntity)
+		phoneNumberNode, phoneNumberRelationship, err = s.repositories.PhoneNumberRepository.MergePhoneNumberToInTx(ctx, tx, common.GetTenantFromContext(ctx), entityType, entityId, *inputEntity)
 		if err != nil {
 			return nil, err
 		}
 		phoneNumberId := utils.GetPropsFromNode(*phoneNumberNode)["id"].(string)
 		if inputEntity.Primary == true {
-			err := s.repositories.PhoneNumberRepository.SetOtherContactPhoneNumbersNonPrimaryInTx(ctx, tx, common.GetTenantFromContext(ctx), contactId, phoneNumberId)
+			err := s.repositories.PhoneNumberRepository.SetOtherPhoneNumbersNonPrimaryInTx(ctx, tx, common.GetTenantFromContext(ctx), entityType, entityId, phoneNumberId)
 			if err != nil {
 				return nil, err
 			}
@@ -100,7 +100,7 @@ func (s *phoneNumberService) MergePhoneNumberToContact(ctx context.Context, cont
 	return phoneNumberEntity, nil
 }
 
-func (s *phoneNumberService) UpdatePhoneNumberForContact(ctx context.Context, contactId string, inputEntity *entity.PhoneNumberEntity) (*entity.PhoneNumberEntity, error) {
+func (s *phoneNumberService) UpdatePhoneNumberFor(ctx context.Context, entityType entity.EntityType, entityId string, inputEntity *entity.PhoneNumberEntity) (*entity.PhoneNumberEntity, error) {
 	session := utils.NewNeo4jWriteSession(ctx, s.getDriver())
 	defer session.Close(ctx)
 
@@ -110,7 +110,7 @@ func (s *phoneNumberService) UpdatePhoneNumberForContact(ctx context.Context, co
 	var detachCurrentPhoneNumber = false
 
 	_, err = session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (interface{}, error) {
-		currentPhoneNumberNode, err := s.repositories.PhoneNumberRepository.GetByIdAndRelatedEntity(ctx, entity.CONTACT, common.GetTenantFromContext(ctx), inputEntity.Id, contactId)
+		currentPhoneNumberNode, err := s.repositories.PhoneNumberRepository.GetByIdAndRelatedEntity(ctx, entity.CONTACT, common.GetTenantFromContext(ctx), inputEntity.Id, entityId)
 		if err != nil {
 			return nil, err
 		}
@@ -118,25 +118,25 @@ func (s *phoneNumberService) UpdatePhoneNumberForContact(ctx context.Context, co
 		currentRawPhoneNumber := utils.GetPropsFromNode(*currentPhoneNumberNode)["rawPhoneNumber"].(string)
 
 		if len(inputEntity.RawPhoneNumber) == 0 || inputEntity.RawPhoneNumber == currentE164 || inputEntity.RawPhoneNumber == currentRawPhoneNumber {
-			phoneNumberNode, phoneNumberRelationship, err = s.repositories.PhoneNumberRepository.UpdatePhoneNumberByContactInTx(ctx, tx, common.GetContext(ctx).Tenant, contactId, *inputEntity)
+			phoneNumberNode, phoneNumberRelationship, err = s.repositories.PhoneNumberRepository.UpdatePhoneNumberByContactInTx(ctx, tx, common.GetTenantFromContext(ctx), entityId, *inputEntity)
 			if err != nil {
 				return nil, err
 			}
 			phoneNumberId := utils.GetPropsFromNode(*phoneNumberNode)["id"].(string)
 			if inputEntity.Primary == true {
-				err := s.repositories.PhoneNumberRepository.SetOtherContactPhoneNumbersNonPrimaryInTx(ctx, tx, common.GetContext(ctx).Tenant, contactId, phoneNumberId)
+				err := s.repositories.PhoneNumberRepository.SetOtherPhoneNumbersNonPrimaryInTx(ctx, tx, common.GetTenantFromContext(ctx), entityType, entityId, phoneNumberId)
 				if err != nil {
 					return nil, err
 				}
 			}
 		} else {
-			phoneNumberNode, phoneNumberRelationship, err = s.repositories.PhoneNumberRepository.MergePhoneNumberToContactInTx(ctx, tx, common.GetContext(ctx).Tenant, contactId, *inputEntity)
+			phoneNumberNode, phoneNumberRelationship, err = s.repositories.PhoneNumberRepository.MergePhoneNumberToInTx(ctx, tx, common.GetTenantFromContext(ctx), entityType, entityId, *inputEntity)
 			if err != nil {
 				return nil, err
 			}
 			phoneNumberId := utils.GetPropsFromNode(*phoneNumberNode)["id"].(string)
 			if inputEntity.Primary == true {
-				err := s.repositories.PhoneNumberRepository.SetOtherContactPhoneNumbersNonPrimaryInTx(ctx, tx, common.GetTenantFromContext(ctx), contactId, phoneNumberId)
+				err := s.repositories.PhoneNumberRepository.SetOtherPhoneNumbersNonPrimaryInTx(ctx, tx, common.GetTenantFromContext(ctx), entityType, entityId, phoneNumberId)
 				if err != nil {
 					return nil, err
 				}
@@ -150,7 +150,7 @@ func (s *phoneNumberService) UpdatePhoneNumberForContact(ctx context.Context, co
 	}
 
 	if detachCurrentPhoneNumber {
-		_, err = s.RemoveFromContactById(ctx, contactId, inputEntity.Id)
+		_, err = s.RemoveFromContactById(ctx, entityId, inputEntity.Id)
 	}
 
 	var phoneNumberEntity = s.mapDbNodeToPhoneNumberEntity(*phoneNumberNode)

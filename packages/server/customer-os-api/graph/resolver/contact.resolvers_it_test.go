@@ -88,7 +88,7 @@ func TestMutationResolver_ContactCreate_Min(t *testing.T) {
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Contact_"+tenantName))
 	require.Equal(t, 3, neo4jt.GetTotalCountOfNodes(ctx, driver))
 
-	assertNeo4jLabels(ctx, t, driver, []string{"Tenant", "User", "Contact", "Contact_" + tenantName})
+	assertNeo4jLabels(ctx, t, driver, []string{"Tenant", "User", "User_" + tenantName, "Contact", "Contact_" + tenantName})
 }
 
 func TestMutationResolver_ContactCreate(t *testing.T) {
@@ -181,7 +181,7 @@ func TestMutationResolver_ContactCreate(t *testing.T) {
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "PhoneNumber_"+tenantName))
 	require.Equal(t, 11, neo4jt.GetTotalCountOfNodes(ctx, driver))
 
-	assertNeo4jLabels(ctx, t, driver, []string{"Tenant", "User", "Contact", "Contact_" + tenantName,
+	assertNeo4jLabels(ctx, t, driver, []string{"Tenant", "User", "User_" + tenantName, "Contact", "Contact_" + tenantName,
 		"Email", "Email_" + tenantName, "PhoneNumber", "PhoneNumber_" + tenantName,
 		"CustomField", "BoolField", "TextField", "FloatField", "TimeField", "IntField", "CustomField_" + tenantName})
 }
@@ -276,7 +276,7 @@ func TestMutationResolver_ContactCreate_WithCustomFields(t *testing.T) {
 	require.Equal(t, "set2", set2.Name)
 	require.Equal(t, model.DataSourceOpenline, set2.Source)
 
-	assertNeo4jLabels(ctx, t, driver, []string{"Tenant", "User", "Contact", "Contact_" + tenantName,
+	assertNeo4jLabels(ctx, t, driver, []string{"Tenant", "User", "User_" + tenantName, "Contact", "Contact_" + tenantName,
 		"CustomFieldTemplate", "EntityTemplate", "FieldSet", "FieldSet_" + tenantName, "FieldSetTemplate",
 		"CustomField", "TextField", "CustomField_" + tenantName})
 }
@@ -317,7 +317,7 @@ func TestMutationResolver_ContactCreate_WithOwner(t *testing.T) {
 	require.Equal(t, 3, neo4jt.GetTotalCountOfNodes(ctx, driver))
 	require.Equal(t, 1, neo4jt.GetCountOfRelationships(ctx, driver, "OWNS"))
 
-	assertNeo4jLabels(ctx, t, driver, []string{"Tenant", "Contact", "Contact_" + tenantName, "User"})
+	assertNeo4jLabels(ctx, t, driver, []string{"Tenant", "Contact", "Contact_" + tenantName, "User", "User_" + tenantName})
 }
 
 func TestMutationResolver_ContactCreate_WithExternalReference(t *testing.T) {
@@ -348,7 +348,7 @@ func TestMutationResolver_ContactCreate_WithExternalReference(t *testing.T) {
 	require.Equal(t, 4, neo4jt.GetTotalCountOfNodes(ctx, driver))
 	require.Equal(t, 1, neo4jt.GetCountOfRelationships(ctx, driver, "IS_LINKED_WITH"))
 
-	assertNeo4jLabels(ctx, t, driver, []string{"Tenant", "User", "Contact", "Contact_" + tenantName, "ExternalSystem", "ExternalSystem_" + tenantName})
+	assertNeo4jLabels(ctx, t, driver, []string{"Tenant", "User", "User_" + tenantName, "Contact", "Contact_" + tenantName, "ExternalSystem", "ExternalSystem_" + tenantName})
 }
 
 func TestMutationResolver_UpdateContact(t *testing.T) {
@@ -387,7 +387,7 @@ func TestMutationResolver_UpdateContact(t *testing.T) {
 	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "User"))
 	require.Equal(t, 1, neo4jt.GetCountOfRelationships(ctx, driver, "OWNS"))
 
-	assertNeo4jLabels(ctx, t, driver, []string{"Tenant", "Contact", "Contact_" + tenantName, "User"})
+	assertNeo4jLabels(ctx, t, driver, []string{"Tenant", "Contact", "Contact_" + tenantName, "User", "User_" + tenantName})
 }
 
 func TestMutationResolver_UpdateContact_ClearTitle(t *testing.T) {

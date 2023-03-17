@@ -6,15 +6,17 @@ package resolver
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/99designs/gqlgen/graphql"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper"
 )
 
 // PhoneNumberMergeToContact is the resolver for the phoneNumberMergeToContact field.
 func (r *mutationResolver) PhoneNumberMergeToContact(ctx context.Context, contactID string, input model.PhoneNumberInput) (*model.PhoneNumber, error) {
-	result, err := r.Services.PhoneNumberService.MergePhoneNumberToContact(ctx, contactID, mapper.MapPhoneNumberInputToEntity(&input))
+	result, err := r.Services.PhoneNumberService.MergePhoneNumberTo(ctx, entity.CONTACT, contactID, mapper.MapPhoneNumberInputToEntity(&input))
 	if err != nil {
 		graphql.AddErrorf(ctx, "Could not add phone number %s to contact %s", input.PhoneNumber, contactID)
 		return nil, err
@@ -24,7 +26,7 @@ func (r *mutationResolver) PhoneNumberMergeToContact(ctx context.Context, contac
 
 // PhoneNumberUpdateInContact is the resolver for the phoneNumberUpdateInContact field.
 func (r *mutationResolver) PhoneNumberUpdateInContact(ctx context.Context, contactID string, input model.PhoneNumberUpdateInput) (*model.PhoneNumber, error) {
-	result, err := r.Services.PhoneNumberService.UpdatePhoneNumberForContact(ctx, contactID, mapper.MapPhoneNumberUpdateInputToEntity(&input))
+	result, err := r.Services.PhoneNumberService.UpdatePhoneNumberFor(ctx, entity.CONTACT, contactID, mapper.MapPhoneNumberUpdateInputToEntity(&input))
 	if err != nil {
 		graphql.AddErrorf(ctx, "Could not update phone number %s in contact %s", input.ID, contactID)
 		return nil, err
@@ -54,4 +56,54 @@ func (r *mutationResolver) PhoneNumberRemoveFromContactByID(ctx context.Context,
 	return &model.Result{
 		Result: result,
 	}, nil
+}
+
+// PhoneNumberMergeToOrganization is the resolver for the phoneNumberMergeToOrganization field.
+func (r *mutationResolver) PhoneNumberMergeToOrganization(ctx context.Context, organizationID string, input model.PhoneNumberInput) (*model.PhoneNumber, error) {
+	result, err := r.Services.PhoneNumberService.MergePhoneNumberTo(ctx, entity.ORGANIZATION, organizationID, mapper.MapPhoneNumberInputToEntity(&input))
+	if err != nil {
+		graphql.AddErrorf(ctx, "Could not add phone number %s to organization %s", input.PhoneNumber, organizationID)
+		return nil, err
+	}
+	return mapper.MapEntityToPhoneNumber(result), nil
+}
+
+// PhoneNumberUpdateInOrganization is the resolver for the phoneNumberUpdateInOrganization field.
+func (r *mutationResolver) PhoneNumberUpdateInOrganization(ctx context.Context, organizationID string, input model.PhoneNumberUpdateInput) (*model.PhoneNumber, error) {
+	panic(fmt.Errorf("not implemented: PhoneNumberUpdateInOrganization - phoneNumberUpdateInOrganization"))
+}
+
+// PhoneNumberRemoveFromOrganizationByE164 is the resolver for the phoneNumberRemoveFromOrganizationByE164 field.
+func (r *mutationResolver) PhoneNumberRemoveFromOrganizationByE164(ctx context.Context, organizationID string, e164 string) (*model.Result, error) {
+	panic(fmt.Errorf("not implemented: PhoneNumberRemoveFromOrganizationByE164 - phoneNumberRemoveFromOrganizationByE164"))
+}
+
+// PhoneNumberRemoveFromOrganizationByID is the resolver for the phoneNumberRemoveFromOrganizationById field.
+func (r *mutationResolver) PhoneNumberRemoveFromOrganizationByID(ctx context.Context, organizationID string, id string) (*model.Result, error) {
+	panic(fmt.Errorf("not implemented: PhoneNumberRemoveFromOrganizationByID - phoneNumberRemoveFromOrganizationById"))
+}
+
+// PhoneNumberMergeToUser is the resolver for the phoneNumberMergeToUser field.
+func (r *mutationResolver) PhoneNumberMergeToUser(ctx context.Context, userID string, input model.PhoneNumberInput) (*model.PhoneNumber, error) {
+	result, err := r.Services.PhoneNumberService.MergePhoneNumberTo(ctx, entity.USER, userID, mapper.MapPhoneNumberInputToEntity(&input))
+	if err != nil {
+		graphql.AddErrorf(ctx, "Could not add phone number %s to user %s", input.PhoneNumber, userID)
+		return nil, err
+	}
+	return mapper.MapEntityToPhoneNumber(result), nil
+}
+
+// PhoneNumberUpdateInUser is the resolver for the phoneNumberUpdateInUser field.
+func (r *mutationResolver) PhoneNumberUpdateInUser(ctx context.Context, userID string, input model.PhoneNumberUpdateInput) (*model.PhoneNumber, error) {
+	panic(fmt.Errorf("not implemented: PhoneNumberUpdateInUser - phoneNumberUpdateInUser"))
+}
+
+// PhoneNumberRemoveFromUserByE164 is the resolver for the phoneNumberRemoveFromUserByE164 field.
+func (r *mutationResolver) PhoneNumberRemoveFromUserByE164(ctx context.Context, userID string, e164 string) (*model.Result, error) {
+	panic(fmt.Errorf("not implemented: PhoneNumberRemoveFromUserByE164 - phoneNumberRemoveFromUserByE164"))
+}
+
+// PhoneNumberRemoveFromUserByID is the resolver for the phoneNumberRemoveFromUserById field.
+func (r *mutationResolver) PhoneNumberRemoveFromUserByID(ctx context.Context, userID string, id string) (*model.Result, error) {
+	panic(fmt.Errorf("not implemented: PhoneNumberRemoveFromUserByID - phoneNumberRemoveFromUserById"))
 }

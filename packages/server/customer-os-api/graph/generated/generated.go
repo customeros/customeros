@@ -300,71 +300,79 @@ type ComplexityRoot struct {
 	}
 
 	Mutation struct {
-		ContactAddOrganizationByID             func(childComplexity int, input model.ContactOrganizationInput) int
-		ContactAddTagByID                      func(childComplexity int, input model.ContactTagInput) int
-		ContactCreate                          func(childComplexity int, input model.ContactInput) int
-		ContactGroupAddContact                 func(childComplexity int, contactID string, groupID string) int
-		ContactGroupCreate                     func(childComplexity int, input model.ContactGroupInput) int
-		ContactGroupDeleteAndUnlinkAllContacts func(childComplexity int, id string) int
-		ContactGroupRemoveContact              func(childComplexity int, contactID string, groupID string) int
-		ContactGroupUpdate                     func(childComplexity int, input model.ContactGroupUpdateInput) int
-		ContactHardDelete                      func(childComplexity int, contactID string) int
-		ContactMerge                           func(childComplexity int, primaryContactID string, mergedContactIds []string) int
-		ContactRemoveOrganizationByID          func(childComplexity int, input model.ContactOrganizationInput) int
-		ContactRemoveTagByID                   func(childComplexity int, input model.ContactTagInput) int
-		ContactSoftDelete                      func(childComplexity int, contactID string) int
-		ContactUpdate                          func(childComplexity int, input model.ContactUpdateInput) int
-		ConversationClose                      func(childComplexity int, conversationID string) int
-		ConversationCreate                     func(childComplexity int, input model.ConversationInput) int
-		ConversationUpdate                     func(childComplexity int, input model.ConversationUpdateInput) int
-		CustomFieldDeleteFromContactByID       func(childComplexity int, contactID string, id string) int
-		CustomFieldDeleteFromContactByName     func(childComplexity int, contactID string, fieldName string) int
-		CustomFieldDeleteFromFieldSetByID      func(childComplexity int, contactID string, fieldSetID string, id string) int
-		CustomFieldMergeToContact              func(childComplexity int, contactID string, input model.CustomFieldInput) int
-		CustomFieldMergeToFieldSet             func(childComplexity int, contactID string, fieldSetID string, input model.CustomFieldInput) int
-		CustomFieldUpdateInContact             func(childComplexity int, contactID string, input model.CustomFieldUpdateInput) int
-		CustomFieldUpdateInFieldSet            func(childComplexity int, contactID string, fieldSetID string, input model.CustomFieldUpdateInput) int
-		CustomFieldsMergeAndUpdateInContact    func(childComplexity int, contactID string, customFields []*model.CustomFieldInput, fieldSets []*model.FieldSetInput) int
-		EmailDelete                            func(childComplexity int, id string) int
-		EmailMergeToContact                    func(childComplexity int, contactID string, input model.EmailInput) int
-		EmailMergeToOrganization               func(childComplexity int, organizationID string, input model.EmailInput) int
-		EmailMergeToUser                       func(childComplexity int, userID string, input model.EmailInput) int
-		EmailRemoveFromContact                 func(childComplexity int, contactID string, email string) int
-		EmailRemoveFromContactByID             func(childComplexity int, contactID string, id string) int
-		EmailRemoveFromOrganization            func(childComplexity int, organizationID string, email string) int
-		EmailRemoveFromOrganizationByID        func(childComplexity int, organizationID string, id string) int
-		EmailRemoveFromUser                    func(childComplexity int, userID string, email string) int
-		EmailRemoveFromUserByID                func(childComplexity int, userID string, id string) int
-		EmailUpdateInContact                   func(childComplexity int, contactID string, input model.EmailUpdateInput) int
-		EmailUpdateInOrganization              func(childComplexity int, organizationID string, input model.EmailUpdateInput) int
-		EmailUpdateInUser                      func(childComplexity int, userID string, input model.EmailUpdateInput) int
-		EntityTemplateCreate                   func(childComplexity int, input model.EntityTemplateInput) int
-		FieldSetDeleteFromContact              func(childComplexity int, contactID string, id string) int
-		FieldSetMergeToContact                 func(childComplexity int, contactID string, input model.FieldSetInput) int
-		FieldSetUpdateInContact                func(childComplexity int, contactID string, input model.FieldSetUpdateInput) int
-		JobRoleCreate                          func(childComplexity int, contactID string, input model.JobRoleInput) int
-		JobRoleDelete                          func(childComplexity int, contactID string, roleID string) int
-		JobRoleUpdate                          func(childComplexity int, contactID string, input model.JobRoleUpdateInput) int
-		NoteCreateForContact                   func(childComplexity int, contactID string, input model.NoteInput) int
-		NoteCreateForOrganization              func(childComplexity int, organizationID string, input model.NoteInput) int
-		NoteDelete                             func(childComplexity int, id string) int
-		NoteUpdate                             func(childComplexity int, input model.NoteUpdateInput) int
-		OrganizationCreate                     func(childComplexity int, input model.OrganizationInput) int
-		OrganizationDelete                     func(childComplexity int, id string) int
-		OrganizationMerge                      func(childComplexity int, primaryOrganizationID string, mergedOrganizationIds []string) int
-		OrganizationTypeCreate                 func(childComplexity int, input model.OrganizationTypeInput) int
-		OrganizationTypeDelete                 func(childComplexity int, id string) int
-		OrganizationTypeUpdate                 func(childComplexity int, input model.OrganizationTypeUpdateInput) int
-		OrganizationUpdate                     func(childComplexity int, input model.OrganizationUpdateInput) int
-		PhoneNumberMergeToContact              func(childComplexity int, contactID string, input model.PhoneNumberInput) int
-		PhoneNumberRemoveFromContactByE164     func(childComplexity int, contactID string, e164 string) int
-		PhoneNumberRemoveFromContactByID       func(childComplexity int, contactID string, id string) int
-		PhoneNumberUpdateInContact             func(childComplexity int, contactID string, input model.PhoneNumberUpdateInput) int
-		TagCreate                              func(childComplexity int, input model.TagInput) int
-		TagDelete                              func(childComplexity int, id string) int
-		TagUpdate                              func(childComplexity int, input model.TagUpdateInput) int
-		UserCreate                             func(childComplexity int, input model.UserInput) int
-		UserUpdate                             func(childComplexity int, input model.UserUpdateInput) int
+		ContactAddOrganizationByID              func(childComplexity int, input model.ContactOrganizationInput) int
+		ContactAddTagByID                       func(childComplexity int, input model.ContactTagInput) int
+		ContactCreate                           func(childComplexity int, input model.ContactInput) int
+		ContactGroupAddContact                  func(childComplexity int, contactID string, groupID string) int
+		ContactGroupCreate                      func(childComplexity int, input model.ContactGroupInput) int
+		ContactGroupDeleteAndUnlinkAllContacts  func(childComplexity int, id string) int
+		ContactGroupRemoveContact               func(childComplexity int, contactID string, groupID string) int
+		ContactGroupUpdate                      func(childComplexity int, input model.ContactGroupUpdateInput) int
+		ContactHardDelete                       func(childComplexity int, contactID string) int
+		ContactMerge                            func(childComplexity int, primaryContactID string, mergedContactIds []string) int
+		ContactRemoveOrganizationByID           func(childComplexity int, input model.ContactOrganizationInput) int
+		ContactRemoveTagByID                    func(childComplexity int, input model.ContactTagInput) int
+		ContactSoftDelete                       func(childComplexity int, contactID string) int
+		ContactUpdate                           func(childComplexity int, input model.ContactUpdateInput) int
+		ConversationClose                       func(childComplexity int, conversationID string) int
+		ConversationCreate                      func(childComplexity int, input model.ConversationInput) int
+		ConversationUpdate                      func(childComplexity int, input model.ConversationUpdateInput) int
+		CustomFieldDeleteFromContactByID        func(childComplexity int, contactID string, id string) int
+		CustomFieldDeleteFromContactByName      func(childComplexity int, contactID string, fieldName string) int
+		CustomFieldDeleteFromFieldSetByID       func(childComplexity int, contactID string, fieldSetID string, id string) int
+		CustomFieldMergeToContact               func(childComplexity int, contactID string, input model.CustomFieldInput) int
+		CustomFieldMergeToFieldSet              func(childComplexity int, contactID string, fieldSetID string, input model.CustomFieldInput) int
+		CustomFieldUpdateInContact              func(childComplexity int, contactID string, input model.CustomFieldUpdateInput) int
+		CustomFieldUpdateInFieldSet             func(childComplexity int, contactID string, fieldSetID string, input model.CustomFieldUpdateInput) int
+		CustomFieldsMergeAndUpdateInContact     func(childComplexity int, contactID string, customFields []*model.CustomFieldInput, fieldSets []*model.FieldSetInput) int
+		EmailDelete                             func(childComplexity int, id string) int
+		EmailMergeToContact                     func(childComplexity int, contactID string, input model.EmailInput) int
+		EmailMergeToOrganization                func(childComplexity int, organizationID string, input model.EmailInput) int
+		EmailMergeToUser                        func(childComplexity int, userID string, input model.EmailInput) int
+		EmailRemoveFromContact                  func(childComplexity int, contactID string, email string) int
+		EmailRemoveFromContactByID              func(childComplexity int, contactID string, id string) int
+		EmailRemoveFromOrganization             func(childComplexity int, organizationID string, email string) int
+		EmailRemoveFromOrganizationByID         func(childComplexity int, organizationID string, id string) int
+		EmailRemoveFromUser                     func(childComplexity int, userID string, email string) int
+		EmailRemoveFromUserByID                 func(childComplexity int, userID string, id string) int
+		EmailUpdateInContact                    func(childComplexity int, contactID string, input model.EmailUpdateInput) int
+		EmailUpdateInOrganization               func(childComplexity int, organizationID string, input model.EmailUpdateInput) int
+		EmailUpdateInUser                       func(childComplexity int, userID string, input model.EmailUpdateInput) int
+		EntityTemplateCreate                    func(childComplexity int, input model.EntityTemplateInput) int
+		FieldSetDeleteFromContact               func(childComplexity int, contactID string, id string) int
+		FieldSetMergeToContact                  func(childComplexity int, contactID string, input model.FieldSetInput) int
+		FieldSetUpdateInContact                 func(childComplexity int, contactID string, input model.FieldSetUpdateInput) int
+		JobRoleCreate                           func(childComplexity int, contactID string, input model.JobRoleInput) int
+		JobRoleDelete                           func(childComplexity int, contactID string, roleID string) int
+		JobRoleUpdate                           func(childComplexity int, contactID string, input model.JobRoleUpdateInput) int
+		NoteCreateForContact                    func(childComplexity int, contactID string, input model.NoteInput) int
+		NoteCreateForOrganization               func(childComplexity int, organizationID string, input model.NoteInput) int
+		NoteDelete                              func(childComplexity int, id string) int
+		NoteUpdate                              func(childComplexity int, input model.NoteUpdateInput) int
+		OrganizationCreate                      func(childComplexity int, input model.OrganizationInput) int
+		OrganizationDelete                      func(childComplexity int, id string) int
+		OrganizationMerge                       func(childComplexity int, primaryOrganizationID string, mergedOrganizationIds []string) int
+		OrganizationTypeCreate                  func(childComplexity int, input model.OrganizationTypeInput) int
+		OrganizationTypeDelete                  func(childComplexity int, id string) int
+		OrganizationTypeUpdate                  func(childComplexity int, input model.OrganizationTypeUpdateInput) int
+		OrganizationUpdate                      func(childComplexity int, input model.OrganizationUpdateInput) int
+		PhoneNumberMergeToContact               func(childComplexity int, contactID string, input model.PhoneNumberInput) int
+		PhoneNumberMergeToOrganization          func(childComplexity int, organizationID string, input model.PhoneNumberInput) int
+		PhoneNumberMergeToUser                  func(childComplexity int, userID string, input model.PhoneNumberInput) int
+		PhoneNumberRemoveFromContactByE164      func(childComplexity int, contactID string, e164 string) int
+		PhoneNumberRemoveFromContactByID        func(childComplexity int, contactID string, id string) int
+		PhoneNumberRemoveFromOrganizationByE164 func(childComplexity int, organizationID string, e164 string) int
+		PhoneNumberRemoveFromOrganizationByID   func(childComplexity int, organizationID string, id string) int
+		PhoneNumberRemoveFromUserByE164         func(childComplexity int, userID string, e164 string) int
+		PhoneNumberRemoveFromUserByID           func(childComplexity int, userID string, id string) int
+		PhoneNumberUpdateInContact              func(childComplexity int, contactID string, input model.PhoneNumberUpdateInput) int
+		PhoneNumberUpdateInOrganization         func(childComplexity int, organizationID string, input model.PhoneNumberUpdateInput) int
+		PhoneNumberUpdateInUser                 func(childComplexity int, userID string, input model.PhoneNumberUpdateInput) int
+		TagCreate                               func(childComplexity int, input model.TagInput) int
+		TagDelete                               func(childComplexity int, id string) int
+		TagUpdate                               func(childComplexity int, input model.TagUpdateInput) int
+		UserCreate                              func(childComplexity int, input model.UserInput) int
+		UserUpdate                              func(childComplexity int, input model.UserUpdateInput) int
 	}
 
 	Note struct {
@@ -677,6 +685,14 @@ type MutationResolver interface {
 	PhoneNumberUpdateInContact(ctx context.Context, contactID string, input model.PhoneNumberUpdateInput) (*model.PhoneNumber, error)
 	PhoneNumberRemoveFromContactByE164(ctx context.Context, contactID string, e164 string) (*model.Result, error)
 	PhoneNumberRemoveFromContactByID(ctx context.Context, contactID string, id string) (*model.Result, error)
+	PhoneNumberMergeToOrganization(ctx context.Context, organizationID string, input model.PhoneNumberInput) (*model.PhoneNumber, error)
+	PhoneNumberUpdateInOrganization(ctx context.Context, organizationID string, input model.PhoneNumberUpdateInput) (*model.PhoneNumber, error)
+	PhoneNumberRemoveFromOrganizationByE164(ctx context.Context, organizationID string, e164 string) (*model.Result, error)
+	PhoneNumberRemoveFromOrganizationByID(ctx context.Context, organizationID string, id string) (*model.Result, error)
+	PhoneNumberMergeToUser(ctx context.Context, userID string, input model.PhoneNumberInput) (*model.PhoneNumber, error)
+	PhoneNumberUpdateInUser(ctx context.Context, userID string, input model.PhoneNumberUpdateInput) (*model.PhoneNumber, error)
+	PhoneNumberRemoveFromUserByE164(ctx context.Context, userID string, e164 string) (*model.Result, error)
+	PhoneNumberRemoveFromUserByID(ctx context.Context, userID string, id string) (*model.Result, error)
 	TagCreate(ctx context.Context, input model.TagInput) (*model.Tag, error)
 	TagUpdate(ctx context.Context, input model.TagUpdateInput) (*model.Tag, error)
 	TagDelete(ctx context.Context, id string) (*model.Result, error)
@@ -2722,6 +2738,30 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.PhoneNumberMergeToContact(childComplexity, args["contactId"].(string), args["input"].(model.PhoneNumberInput)), true
 
+	case "Mutation.phoneNumberMergeToOrganization":
+		if e.complexity.Mutation.PhoneNumberMergeToOrganization == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_phoneNumberMergeToOrganization_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.PhoneNumberMergeToOrganization(childComplexity, args["organizationId"].(string), args["input"].(model.PhoneNumberInput)), true
+
+	case "Mutation.phoneNumberMergeToUser":
+		if e.complexity.Mutation.PhoneNumberMergeToUser == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_phoneNumberMergeToUser_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.PhoneNumberMergeToUser(childComplexity, args["userId"].(string), args["input"].(model.PhoneNumberInput)), true
+
 	case "Mutation.phoneNumberRemoveFromContactByE164":
 		if e.complexity.Mutation.PhoneNumberRemoveFromContactByE164 == nil {
 			break
@@ -2746,6 +2786,54 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.PhoneNumberRemoveFromContactByID(childComplexity, args["contactId"].(string), args["id"].(string)), true
 
+	case "Mutation.phoneNumberRemoveFromOrganizationByE164":
+		if e.complexity.Mutation.PhoneNumberRemoveFromOrganizationByE164 == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_phoneNumberRemoveFromOrganizationByE164_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.PhoneNumberRemoveFromOrganizationByE164(childComplexity, args["organizationId"].(string), args["e164"].(string)), true
+
+	case "Mutation.phoneNumberRemoveFromOrganizationById":
+		if e.complexity.Mutation.PhoneNumberRemoveFromOrganizationByID == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_phoneNumberRemoveFromOrganizationById_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.PhoneNumberRemoveFromOrganizationByID(childComplexity, args["organizationId"].(string), args["id"].(string)), true
+
+	case "Mutation.phoneNumberRemoveFromUserByE164":
+		if e.complexity.Mutation.PhoneNumberRemoveFromUserByE164 == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_phoneNumberRemoveFromUserByE164_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.PhoneNumberRemoveFromUserByE164(childComplexity, args["userId"].(string), args["e164"].(string)), true
+
+	case "Mutation.phoneNumberRemoveFromUserById":
+		if e.complexity.Mutation.PhoneNumberRemoveFromUserByID == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_phoneNumberRemoveFromUserById_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.PhoneNumberRemoveFromUserByID(childComplexity, args["userId"].(string), args["id"].(string)), true
+
 	case "Mutation.phoneNumberUpdateInContact":
 		if e.complexity.Mutation.PhoneNumberUpdateInContact == nil {
 			break
@@ -2757,6 +2845,30 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.PhoneNumberUpdateInContact(childComplexity, args["contactId"].(string), args["input"].(model.PhoneNumberUpdateInput)), true
+
+	case "Mutation.phoneNumberUpdateInOrganization":
+		if e.complexity.Mutation.PhoneNumberUpdateInOrganization == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_phoneNumberUpdateInOrganization_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.PhoneNumberUpdateInOrganization(childComplexity, args["organizationId"].(string), args["input"].(model.PhoneNumberUpdateInput)), true
+
+	case "Mutation.phoneNumberUpdateInUser":
+		if e.complexity.Mutation.PhoneNumberUpdateInUser == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_phoneNumberUpdateInUser_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.PhoneNumberUpdateInUser(childComplexity, args["userId"].(string), args["input"].(model.PhoneNumberUpdateInput)), true
 
 	case "Mutation.tag_Create":
 		if e.complexity.Mutation.TagCreate == nil {
@@ -5208,6 +5320,16 @@ type PageViewAction implements Node {
     phoneNumberUpdateInContact(contactId : ID!, input: PhoneNumberUpdateInput!): PhoneNumber!
     phoneNumberRemoveFromContactByE164(contactId : ID!, e164: String!): Result!
     phoneNumberRemoveFromContactById(contactId : ID!, id: ID!): Result!
+
+    phoneNumberMergeToOrganization(organizationId : ID!, input: PhoneNumberInput!): PhoneNumber!
+    phoneNumberUpdateInOrganization(organizationId : ID!, input: PhoneNumberUpdateInput!): PhoneNumber!
+    phoneNumberRemoveFromOrganizationByE164(organizationId : ID!, e164: String!): Result!
+    phoneNumberRemoveFromOrganizationById(organizationId : ID!, id: ID!): Result!
+
+    phoneNumberMergeToUser(userId : ID!, input: PhoneNumberInput!): PhoneNumber!
+    phoneNumberUpdateInUser(userId : ID!, input: PhoneNumberUpdateInput!): PhoneNumber!
+    phoneNumberRemoveFromUserByE164(userId : ID!, e164: String!): Result!
+    phoneNumberRemoveFromUserById(userId : ID!, id: ID!): Result!
 }
 
 """
@@ -6928,6 +7050,54 @@ func (ec *executionContext) field_Mutation_phoneNumberMergeToContact_args(ctx co
 	return args, nil
 }
 
+func (ec *executionContext) field_Mutation_phoneNumberMergeToOrganization_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["organizationId"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("organizationId"))
+		arg0, err = ec.unmarshalNID2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["organizationId"] = arg0
+	var arg1 model.PhoneNumberInput
+	if tmp, ok := rawArgs["input"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+		arg1, err = ec.unmarshalNPhoneNumberInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐPhoneNumberInput(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg1
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_phoneNumberMergeToUser_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["userId"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("userId"))
+		arg0, err = ec.unmarshalNID2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["userId"] = arg0
+	var arg1 model.PhoneNumberInput
+	if tmp, ok := rawArgs["input"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+		arg1, err = ec.unmarshalNPhoneNumberInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐPhoneNumberInput(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg1
+	return args, nil
+}
+
 func (ec *executionContext) field_Mutation_phoneNumberRemoveFromContactByE164_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
@@ -6976,6 +7146,102 @@ func (ec *executionContext) field_Mutation_phoneNumberRemoveFromContactById_args
 	return args, nil
 }
 
+func (ec *executionContext) field_Mutation_phoneNumberRemoveFromOrganizationByE164_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["organizationId"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("organizationId"))
+		arg0, err = ec.unmarshalNID2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["organizationId"] = arg0
+	var arg1 string
+	if tmp, ok := rawArgs["e164"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("e164"))
+		arg1, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["e164"] = arg1
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_phoneNumberRemoveFromOrganizationById_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["organizationId"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("organizationId"))
+		arg0, err = ec.unmarshalNID2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["organizationId"] = arg0
+	var arg1 string
+	if tmp, ok := rawArgs["id"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+		arg1, err = ec.unmarshalNID2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["id"] = arg1
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_phoneNumberRemoveFromUserByE164_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["userId"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("userId"))
+		arg0, err = ec.unmarshalNID2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["userId"] = arg0
+	var arg1 string
+	if tmp, ok := rawArgs["e164"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("e164"))
+		arg1, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["e164"] = arg1
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_phoneNumberRemoveFromUserById_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["userId"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("userId"))
+		arg0, err = ec.unmarshalNID2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["userId"] = arg0
+	var arg1 string
+	if tmp, ok := rawArgs["id"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+		arg1, err = ec.unmarshalNID2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["id"] = arg1
+	return args, nil
+}
+
 func (ec *executionContext) field_Mutation_phoneNumberUpdateInContact_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
@@ -6988,6 +7254,54 @@ func (ec *executionContext) field_Mutation_phoneNumberUpdateInContact_args(ctx c
 		}
 	}
 	args["contactId"] = arg0
+	var arg1 model.PhoneNumberUpdateInput
+	if tmp, ok := rawArgs["input"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+		arg1, err = ec.unmarshalNPhoneNumberUpdateInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐPhoneNumberUpdateInput(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg1
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_phoneNumberUpdateInOrganization_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["organizationId"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("organizationId"))
+		arg0, err = ec.unmarshalNID2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["organizationId"] = arg0
+	var arg1 model.PhoneNumberUpdateInput
+	if tmp, ok := rawArgs["input"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+		arg1, err = ec.unmarshalNPhoneNumberUpdateInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐPhoneNumberUpdateInput(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg1
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_phoneNumberUpdateInUser_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["userId"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("userId"))
+		arg0, err = ec.unmarshalNID2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["userId"] = arg0
 	var arg1 model.PhoneNumberUpdateInput
 	if tmp, ok := rawArgs["input"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
@@ -20881,6 +21195,550 @@ func (ec *executionContext) fieldContext_Mutation_phoneNumberRemoveFromContactBy
 	return fc, nil
 }
 
+func (ec *executionContext) _Mutation_phoneNumberMergeToOrganization(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_phoneNumberMergeToOrganization(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().PhoneNumberMergeToOrganization(rctx, fc.Args["organizationId"].(string), fc.Args["input"].(model.PhoneNumberInput))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.PhoneNumber)
+	fc.Result = res
+	return ec.marshalNPhoneNumber2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐPhoneNumber(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_phoneNumberMergeToOrganization(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_PhoneNumber_id(ctx, field)
+			case "e164":
+				return ec.fieldContext_PhoneNumber_e164(ctx, field)
+			case "rawPhoneNumber":
+				return ec.fieldContext_PhoneNumber_rawPhoneNumber(ctx, field)
+			case "validated":
+				return ec.fieldContext_PhoneNumber_validated(ctx, field)
+			case "label":
+				return ec.fieldContext_PhoneNumber_label(ctx, field)
+			case "primary":
+				return ec.fieldContext_PhoneNumber_primary(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_PhoneNumber_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_PhoneNumber_updatedAt(ctx, field)
+			case "source":
+				return ec.fieldContext_PhoneNumber_source(ctx, field)
+			case "appSource":
+				return ec.fieldContext_PhoneNumber_appSource(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type PhoneNumber", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_phoneNumberMergeToOrganization_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_phoneNumberUpdateInOrganization(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_phoneNumberUpdateInOrganization(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().PhoneNumberUpdateInOrganization(rctx, fc.Args["organizationId"].(string), fc.Args["input"].(model.PhoneNumberUpdateInput))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.PhoneNumber)
+	fc.Result = res
+	return ec.marshalNPhoneNumber2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐPhoneNumber(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_phoneNumberUpdateInOrganization(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_PhoneNumber_id(ctx, field)
+			case "e164":
+				return ec.fieldContext_PhoneNumber_e164(ctx, field)
+			case "rawPhoneNumber":
+				return ec.fieldContext_PhoneNumber_rawPhoneNumber(ctx, field)
+			case "validated":
+				return ec.fieldContext_PhoneNumber_validated(ctx, field)
+			case "label":
+				return ec.fieldContext_PhoneNumber_label(ctx, field)
+			case "primary":
+				return ec.fieldContext_PhoneNumber_primary(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_PhoneNumber_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_PhoneNumber_updatedAt(ctx, field)
+			case "source":
+				return ec.fieldContext_PhoneNumber_source(ctx, field)
+			case "appSource":
+				return ec.fieldContext_PhoneNumber_appSource(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type PhoneNumber", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_phoneNumberUpdateInOrganization_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_phoneNumberRemoveFromOrganizationByE164(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_phoneNumberRemoveFromOrganizationByE164(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().PhoneNumberRemoveFromOrganizationByE164(rctx, fc.Args["organizationId"].(string), fc.Args["e164"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.Result)
+	fc.Result = res
+	return ec.marshalNResult2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐResult(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_phoneNumberRemoveFromOrganizationByE164(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "result":
+				return ec.fieldContext_Result_result(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Result", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_phoneNumberRemoveFromOrganizationByE164_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_phoneNumberRemoveFromOrganizationById(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_phoneNumberRemoveFromOrganizationById(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().PhoneNumberRemoveFromOrganizationByID(rctx, fc.Args["organizationId"].(string), fc.Args["id"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.Result)
+	fc.Result = res
+	return ec.marshalNResult2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐResult(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_phoneNumberRemoveFromOrganizationById(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "result":
+				return ec.fieldContext_Result_result(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Result", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_phoneNumberRemoveFromOrganizationById_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_phoneNumberMergeToUser(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_phoneNumberMergeToUser(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().PhoneNumberMergeToUser(rctx, fc.Args["userId"].(string), fc.Args["input"].(model.PhoneNumberInput))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.PhoneNumber)
+	fc.Result = res
+	return ec.marshalNPhoneNumber2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐPhoneNumber(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_phoneNumberMergeToUser(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_PhoneNumber_id(ctx, field)
+			case "e164":
+				return ec.fieldContext_PhoneNumber_e164(ctx, field)
+			case "rawPhoneNumber":
+				return ec.fieldContext_PhoneNumber_rawPhoneNumber(ctx, field)
+			case "validated":
+				return ec.fieldContext_PhoneNumber_validated(ctx, field)
+			case "label":
+				return ec.fieldContext_PhoneNumber_label(ctx, field)
+			case "primary":
+				return ec.fieldContext_PhoneNumber_primary(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_PhoneNumber_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_PhoneNumber_updatedAt(ctx, field)
+			case "source":
+				return ec.fieldContext_PhoneNumber_source(ctx, field)
+			case "appSource":
+				return ec.fieldContext_PhoneNumber_appSource(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type PhoneNumber", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_phoneNumberMergeToUser_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_phoneNumberUpdateInUser(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_phoneNumberUpdateInUser(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().PhoneNumberUpdateInUser(rctx, fc.Args["userId"].(string), fc.Args["input"].(model.PhoneNumberUpdateInput))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.PhoneNumber)
+	fc.Result = res
+	return ec.marshalNPhoneNumber2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐPhoneNumber(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_phoneNumberUpdateInUser(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_PhoneNumber_id(ctx, field)
+			case "e164":
+				return ec.fieldContext_PhoneNumber_e164(ctx, field)
+			case "rawPhoneNumber":
+				return ec.fieldContext_PhoneNumber_rawPhoneNumber(ctx, field)
+			case "validated":
+				return ec.fieldContext_PhoneNumber_validated(ctx, field)
+			case "label":
+				return ec.fieldContext_PhoneNumber_label(ctx, field)
+			case "primary":
+				return ec.fieldContext_PhoneNumber_primary(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_PhoneNumber_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_PhoneNumber_updatedAt(ctx, field)
+			case "source":
+				return ec.fieldContext_PhoneNumber_source(ctx, field)
+			case "appSource":
+				return ec.fieldContext_PhoneNumber_appSource(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type PhoneNumber", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_phoneNumberUpdateInUser_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_phoneNumberRemoveFromUserByE164(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_phoneNumberRemoveFromUserByE164(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().PhoneNumberRemoveFromUserByE164(rctx, fc.Args["userId"].(string), fc.Args["e164"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.Result)
+	fc.Result = res
+	return ec.marshalNResult2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐResult(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_phoneNumberRemoveFromUserByE164(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "result":
+				return ec.fieldContext_Result_result(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Result", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_phoneNumberRemoveFromUserByE164_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_phoneNumberRemoveFromUserById(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_phoneNumberRemoveFromUserById(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().PhoneNumberRemoveFromUserByID(rctx, fc.Args["userId"].(string), fc.Args["id"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.Result)
+	fc.Result = res
+	return ec.marshalNResult2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐResult(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_phoneNumberRemoveFromUserById(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "result":
+				return ec.fieldContext_Result_result(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Result", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_phoneNumberRemoveFromUserById_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Mutation_tag_Create(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Mutation_tag_Create(ctx, field)
 	if err != nil {
@@ -34593,6 +35451,78 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_phoneNumberRemoveFromContactById(ctx, field)
+			})
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "phoneNumberMergeToOrganization":
+
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_phoneNumberMergeToOrganization(ctx, field)
+			})
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "phoneNumberUpdateInOrganization":
+
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_phoneNumberUpdateInOrganization(ctx, field)
+			})
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "phoneNumberRemoveFromOrganizationByE164":
+
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_phoneNumberRemoveFromOrganizationByE164(ctx, field)
+			})
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "phoneNumberRemoveFromOrganizationById":
+
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_phoneNumberRemoveFromOrganizationById(ctx, field)
+			})
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "phoneNumberMergeToUser":
+
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_phoneNumberMergeToUser(ctx, field)
+			})
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "phoneNumberUpdateInUser":
+
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_phoneNumberUpdateInUser(ctx, field)
+			})
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "phoneNumberRemoveFromUserByE164":
+
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_phoneNumberRemoveFromUserByE164(ctx, field)
+			})
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "phoneNumberRemoveFromUserById":
+
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_phoneNumberRemoveFromUserById(ctx, field)
 			})
 
 			if out.Values[i] == graphql.Null {

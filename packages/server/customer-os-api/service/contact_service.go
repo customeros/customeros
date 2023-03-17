@@ -153,7 +153,7 @@ func (s *contactService) createContactInDBTxWork(ctx context.Context, newContact
 			}
 		}
 		if newContact.PhoneNumberEntity != nil {
-			_, _, err := s.repositories.PhoneNumberRepository.MergePhoneNumberToContactInTx(ctx, tx, tenant, contactId, *newContact.PhoneNumberEntity)
+			_, _, err := s.repositories.PhoneNumberRepository.MergePhoneNumberToInTx(ctx, tx, tenant, entity.CONTACT, contactId, *newContact.PhoneNumberEntity)
 			if err != nil {
 				return nil, err
 			}
