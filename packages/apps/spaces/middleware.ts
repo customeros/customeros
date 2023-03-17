@@ -1,6 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
+import * as jose from 'jose';
 
-export function middleware(request: NextRequest) {
+const ORY_CHECK_HEADER = 'AUTH_CHECK';
+const ORY_SIGN_SECRET = new TextEncoder().encode(
+  process.env.ORY_SIGN_SECRET as string,
+);
+
+export async function middleware(request: NextRequest) {
   if (
     !request.nextUrl.pathname.startsWith('/customer-os-api/') &&
     !request.nextUrl.pathname.startsWith('/sa/') &&
@@ -8,6 +14,27 @@ export function middleware(request: NextRequest) {
     !request.nextUrl.pathname.startsWith('/oasis-api/')
   ) {
     return NextResponse.next();
+  }
+
+  if (request.cookies.has(ORY_CHECK_HEADER)) {
+    try {
+      const { payload } = await jose.jwtVerify(
+        request.cookies.get(ORY_CHECK_HEADER)?.value as string,
+        new TextEncoder().encode(process.env.ORY_SIGN_SECRET as string),
+      );
+
+      console.log('auth check cookie found and is valid. proceeding to redirect.');
+
+      return getRedirectUrl(
+        payload.email as string,
+        payload.id as string,
+        request,
+      );
+    } catch (e) {
+      console.log(
+        'auth check cookie found but is expired/invalid. check ory session.',
+      );
+    }
   }
 
   return fetch(`${process.env.ORY_SDK_URL}/sessions/whoami`, {
@@ -31,14 +58,28 @@ export function middleware(request: NextRequest) {
         );
       }
 
-      return resp.json().then((data) => {
+      return resp.json().then(async (data) => {
         console.log('User is signed in. Proceeding to redirect.');
 
-        return getRedirectUrl(
+        const nextResponse = getRedirectUrl(
           data.identity.traits.email,
           data.identity.id,
           request,
         );
+
+        const alg = 'HS256';
+        const jwt = await new jose.SignJWT({
+          id: data.identity.id,
+          email: data.identity.traits.email,
+        })
+          .setProtectedHeader({ alg })
+          .setIssuedAt()
+          .setExpirationTime('2m')
+          .sign(ORY_SIGN_SECRET);
+
+        nextResponse.cookies.set(ORY_CHECK_HEADER, jwt);
+
+        return nextResponse;
       });
     })
     .catch((err) => {
@@ -82,7 +123,7 @@ function getRedirectUrl(
   userName: string,
   identityId: string,
   request: NextRequest,
-) {
+): NextResponse {
   var newURL = '';
 
   const requestHeaders = new Headers(request.headers);
