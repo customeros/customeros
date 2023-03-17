@@ -50,6 +50,26 @@ func (r *mutationResolver) EmailRemoveFromUserByID(ctx context.Context, userID s
 	panic(fmt.Errorf("not implemented: EmailRemoveFromUserByID - emailRemoveFromUserById"))
 }
 
+// EmailMergeToOrganization is the resolver for the emailMergeToOrganization field.
+func (r *mutationResolver) EmailMergeToOrganization(ctx context.Context, organizationID string, input model.EmailInput) (*model.Email, error) {
+	panic(fmt.Errorf("not implemented: EmailMergeToOrganization - emailMergeToOrganization"))
+}
+
+// EmailUpdateInOrganization is the resolver for the emailUpdateInOrganization field.
+func (r *mutationResolver) EmailUpdateInOrganization(ctx context.Context, organizationID string, input model.EmailUpdateInput) (*model.Email, error) {
+	panic(fmt.Errorf("not implemented: EmailUpdateInOrganization - emailUpdateInOrganization"))
+}
+
+// EmailRemoveFromOrganization is the resolver for the emailRemoveFromOrganization field.
+func (r *mutationResolver) EmailRemoveFromOrganization(ctx context.Context, organizationID string, email string) (*model.Result, error) {
+	panic(fmt.Errorf("not implemented: EmailRemoveFromOrganization - emailRemoveFromOrganization"))
+}
+
+// EmailRemoveFromOrganizationByID is the resolver for the emailRemoveFromOrganizationById field.
+func (r *mutationResolver) EmailRemoveFromOrganizationByID(ctx context.Context, organizationID string, id string) (*model.Result, error) {
+	panic(fmt.Errorf("not implemented: EmailRemoveFromOrganizationByID - emailRemoveFromOrganizationById"))
+}
+
 // EmailDelete is the resolver for the emailDelete field.
 func (r *mutationResolver) EmailDelete(ctx context.Context, id string) (*model.Result, error) {
 	panic(fmt.Errorf("not implemented: EmailDelete - emailDelete"))
