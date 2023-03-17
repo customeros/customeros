@@ -93,9 +93,24 @@ func (r *contactResolver) Actions(ctx context.Context, obj *model.Contact, from 
 	panic(fmt.Errorf("not implemented: Actions - actions"))
 }
 
+// TimelineEvents is the resolver for the timelineEvents field.
+func (r *contactResolver) TimelineEvents(ctx context.Context, obj *model.Contact, from *time.Time, size int, timelineEventTypes []model.TimelineEventType) ([]model.TimelineEvent, error) {
+	panic(fmt.Errorf("not implemented: TimelineEvents - timelineEvents"))
+}
+
+// TimelineEventsTotalCount is the resolver for the timelineEventsTotalCount field.
+func (r *contactResolver) TimelineEventsTotalCount(ctx context.Context, obj *model.Contact, timelineEventTypes []model.TimelineEventType) (int64, error) {
+	panic(fmt.Errorf("not implemented: TimelineEventsTotalCount - timelineEventsTotalCount"))
+}
+
 // Tickets is the resolver for the tickets field.
 func (r *contactResolver) Tickets(ctx context.Context, obj *model.Contact) ([]*model.Ticket, error) {
 	panic(fmt.Errorf("not implemented: Tickets - tickets"))
+}
+
+// TicketSummaryByStatus is the resolver for the ticketSummaryByStatus field.
+func (r *contactResolver) TicketSummaryByStatus(ctx context.Context, obj *model.Contact) ([]*model.TicketSummaryByStatus, error) {
+	panic(fmt.Errorf("not implemented: TicketSummaryByStatus - ticketSummaryByStatus"))
 }
 
 // ContactCreate is the resolver for the contact_Create field.
@@ -121,14 +136,29 @@ func (r *mutationResolver) ContactSoftDelete(ctx context.Context, contactID stri
 	panic(fmt.Errorf("not implemented: ContactSoftDelete - contact_SoftDelete"))
 }
 
+// ContactMerge is the resolver for the contact_Merge field.
+func (r *mutationResolver) ContactMerge(ctx context.Context, primaryContactID string, mergedContactIds []string) (*model.Contact, error) {
+	panic(fmt.Errorf("not implemented: ContactMerge - contact_Merge"))
+}
+
 // ContactAddTagByID is the resolver for the contact_AddTagById field.
-func (r *mutationResolver) ContactAddTagByID(ctx context.Context, input *model.ContactTagInput) (*model.Contact, error) {
+func (r *mutationResolver) ContactAddTagByID(ctx context.Context, input model.ContactTagInput) (*model.Contact, error) {
 	panic(fmt.Errorf("not implemented: ContactAddTagByID - contact_AddTagById"))
 }
 
 // ContactRemoveTagByID is the resolver for the contact_RemoveTagById field.
-func (r *mutationResolver) ContactRemoveTagByID(ctx context.Context, input *model.ContactTagInput) (*model.Contact, error) {
+func (r *mutationResolver) ContactRemoveTagByID(ctx context.Context, input model.ContactTagInput) (*model.Contact, error) {
 	panic(fmt.Errorf("not implemented: ContactRemoveTagByID - contact_RemoveTagById"))
+}
+
+// ContactAddOrganizationByID is the resolver for the contact_AddOrganizationById field.
+func (r *mutationResolver) ContactAddOrganizationByID(ctx context.Context, input model.ContactOrganizationInput) (*model.Contact, error) {
+	panic(fmt.Errorf("not implemented: ContactAddOrganizationByID - contact_AddOrganizationById"))
+}
+
+// ContactRemoveOrganizationByID is the resolver for the contact_RemoveOrganizationById field.
+func (r *mutationResolver) ContactRemoveOrganizationByID(ctx context.Context, input model.ContactOrganizationInput) (*model.Contact, error) {
+	panic(fmt.Errorf("not implemented: ContactRemoveOrganizationByID - contact_RemoveOrganizationById"))
 }
 
 // Contact is the resolver for the contact field.

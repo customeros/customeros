@@ -1337,22 +1337,22 @@ func (e DataSource) MarshalGQL(w io.Writer) {
 type EmailLabel string
 
 const (
-	EmailLabelMain  EmailLabel = "MAIN"
-	EmailLabelWork  EmailLabel = "WORK"
-	EmailLabelHome  EmailLabel = "HOME"
-	EmailLabelOther EmailLabel = "OTHER"
+	EmailLabelMain     EmailLabel = "MAIN"
+	EmailLabelWork     EmailLabel = "WORK"
+	EmailLabelPersonal EmailLabel = "PERSONAL"
+	EmailLabelOther    EmailLabel = "OTHER"
 )
 
 var AllEmailLabel = []EmailLabel{
 	EmailLabelMain,
 	EmailLabelWork,
-	EmailLabelHome,
+	EmailLabelPersonal,
 	EmailLabelOther,
 }
 
 func (e EmailLabel) IsValid() bool {
 	switch e {
-	case EmailLabelMain, EmailLabelWork, EmailLabelHome, EmailLabelOther:
+	case EmailLabelMain, EmailLabelWork, EmailLabelPersonal, EmailLabelOther:
 		return true
 	}
 	return false

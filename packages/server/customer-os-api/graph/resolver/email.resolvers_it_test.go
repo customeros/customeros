@@ -98,7 +98,7 @@ func TestMutationResolver_EmailUpdateInContact(t *testing.T) {
 	if e.Label == nil {
 		t.Errorf("Email Label field is nil")
 	} else {
-		require.Equal(t, model.EmailLabelHome, *e.Label, "Email Label field is not expected value")
+		require.Equal(t, model.EmailLabelPersonal, *e.Label, "Email Label field is not expected value")
 	}
 
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Email"), "Incorrect number of Email nodes in Neo4j")
@@ -142,7 +142,7 @@ func TestMutationResolver_EmailUpdateInContact_ReplaceEmail(t *testing.T) {
 	if email.Label == nil {
 		t.Errorf("Email Label field is nil")
 	} else {
-		require.Equal(t, model.EmailLabelHome, *email.Label, "Email Label field is not expected value")
+		require.Equal(t, model.EmailLabelPersonal, *email.Label, "Email Label field is not expected value")
 	}
 
 	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "Email"), "Expected 2 email nodes, original one and new")
@@ -239,7 +239,7 @@ func TestMutationResolver_EmailUpdateInUser(t *testing.T) {
 	if e.Label == nil {
 		t.Errorf("Email Label field is nil")
 	} else {
-		require.Equal(t, model.EmailLabelHome, *e.Label, "Email Label field is not expected value")
+		require.Equal(t, model.EmailLabelPersonal, *e.Label, "Email Label field is not expected value")
 	}
 
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Email"), "Incorrect number of Email nodes in Neo4j")

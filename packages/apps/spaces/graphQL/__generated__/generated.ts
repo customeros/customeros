@@ -609,9 +609,9 @@ export type EmailInput = {
  * **A `return` object.
  */
 export enum EmailLabel {
-  Home = 'HOME',
   Main = 'MAIN',
   Other = 'OTHER',
+  Personal = 'PERSONAL',
   Work = 'WORK',
 }
 

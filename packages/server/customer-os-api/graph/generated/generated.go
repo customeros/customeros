@@ -4634,7 +4634,7 @@ Describes the type of email address (WORK, PERSONAL, etc).
 enum EmailLabel {
     MAIN
     WORK
-    HOME
+    PERSONAL
     OTHER
 }
 `, BuiltIn: false},

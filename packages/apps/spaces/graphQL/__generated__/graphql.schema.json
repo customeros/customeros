@@ -3270,12 +3270,6 @@
         "interfaces": null,
         "enumValues": [
           {
-            "name": "HOME",
-            "description": null,
-            "isDeprecated": false,
-            "deprecationReason": null
-          },
-          {
             "name": "MAIN",
             "description": null,
             "isDeprecated": false,
@@ -3283,6 +3277,12 @@
           },
           {
             "name": "OTHER",
+            "description": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "PERSONAL",
             "description": null,
             "isDeprecated": false,
             "deprecationReason": null
