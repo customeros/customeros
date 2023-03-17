@@ -1,4 +1,10 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, {
+  MutableRefObject,
+  Ref,
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
 import styles from './note.module.scss';
 import { toast } from 'react-toastify';
 import parse from 'html-react-parser';
@@ -17,7 +23,7 @@ import { useDeleteNote, useUpdateNote } from '../../../../hooks/useNote';
 import linkifyHtml from 'linkify-html';
 import { Controller, useForm } from 'react-hook-form';
 import { Editor } from '../editor';
-import { NoteEditorModes } from '../../../contact';
+import { NoteEditorModes } from '../editor/Editor';
 
 interface Props {
   noteContent: string;
@@ -42,7 +48,7 @@ export const NoteTimelineItem: React.FC<Props> = ({
   const { onUpdateNote } = useUpdateNote();
   const { onRemoveNote } = useDeleteNote();
   const [editNote, setEditNote] = useState(false);
-  const elementRef = useRef<React.Ref<HTMLDivElement>>(null);
+  const elementRef = useRef<MutableRefObject<Ref<HTMLDivElement>>>(null);
 
   const [note, setNote] = useState({
     id,
@@ -142,13 +148,23 @@ export const NoteTimelineItem: React.FC<Props> = ({
 
   const handleToggleEditMode = (state: boolean) => {
     setEditNote(state);
-    // if (elementRef?.current) {
-    //   elementRef.current.scrollIntoView();
-    // }
+    setTimeout(() => {
+      if (elementRef?.current) {
+        //@ts-expect-error fixme
+        elementRef.current.scrollIntoView({
+          behavior: 'smooth',
+          inline: 'start',
+        });
+      }
+    }, 0);
   };
 
   return (
-    <div className={styles.noteWrapper}>
+    <div
+      className={styles.noteWrapper}
+      //@ts-expect-error fixme
+      ref={elementRef}
+    >
       <div className={styles.noteContainer}>
         <div className={styles.actions}>
           <Avatar name='Jane' surname='Doe' size={30} />
@@ -164,14 +180,12 @@ export const NoteTimelineItem: React.FC<Props> = ({
             />
           )}
         </div>
-
-        <div className={styles.noteContent}>
-          {editNote && (
+        {editNote && (
+          <div className={styles.noteContent}>
             <div
               style={{
                 display: 'flex',
                 flexDirection: 'column',
-                margin: editNote ? '0 8px' : 0,
               }}
             >
               <Controller
@@ -190,35 +204,35 @@ export const NoteTimelineItem: React.FC<Props> = ({
                 )}
               />
             </div>
-          )}
 
-          <DeleteConfirmationDialog
-            deleteConfirmationModalVisible={deleteConfirmationModalVisible}
-            setDeleteConfirmationModalVisible={
-              setDeleteConfirmationModalVisible
-            }
-            deleteAction={() =>
-              onRemoveNote(id).then(() =>
-                setDeleteConfirmationModalVisible(false),
-              )
-            }
-            confirmationButtonLabel='Delete note'
-          />
-
-          {!editNote && (
-            <div
-              className={`${styles.noteContent}`}
-              dangerouslySetInnerHTML={{
-                __html: sanitizeHtml(
-                  linkifyHtml(note.htmlEnhanced, {
-                    defaultProtocol: 'https',
-                    rel: 'noopener noreferrer',
-                  }),
-                ),
-              }}
+            <DeleteConfirmationDialog
+              deleteConfirmationModalVisible={deleteConfirmationModalVisible}
+              setDeleteConfirmationModalVisible={
+                setDeleteConfirmationModalVisible
+              }
+              deleteAction={() =>
+                onRemoveNote(id).then(() =>
+                  setDeleteConfirmationModalVisible(false),
+                )
+              }
+              confirmationButtonLabel='Delete note'
             />
-          )}
-        </div>
+          </div>
+        )}
+
+        {!editNote && (
+          <div
+            className={styles.noteContent}
+            dangerouslySetInnerHTML={{
+              __html: sanitizeHtml(
+                linkifyHtml(note.htmlEnhanced, {
+                  defaultProtocol: 'https',
+                  rel: 'noopener noreferrer',
+                }),
+              ),
+            }}
+          />
+        )}
         <div className={styles.actions}>
           <Avatar
             name={createdBy?.firstName || ''}

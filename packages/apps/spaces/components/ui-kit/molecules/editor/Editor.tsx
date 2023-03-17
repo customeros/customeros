@@ -1,9 +1,7 @@
 import React, { ButtonHTMLAttributes, FC, ReactNode } from 'react';
 import { Editor as PrimereactEditor } from 'primereact/editor';
 import { RichTextHeader } from '../rich-text-header';
-import styles from './editor.module.scss';
 import { useFileData } from '../../../../hooks/useFileData';
-import { Button } from '../../atoms';
 
 export enum NoteEditorModes {
   'ADD' = 'ADD',

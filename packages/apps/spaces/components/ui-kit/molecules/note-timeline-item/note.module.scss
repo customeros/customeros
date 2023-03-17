@@ -14,7 +14,7 @@
   width: -webkit-fill-available;
   line-height: 1.3rem;
   font-size: var(--font-size-xs);
-  margin: 0 var(--spacing-xxxs);
+  margin: 0 var(--spacing-xxs);
   font-weight: normal;
   color: #495057;
 
@@ -30,21 +30,6 @@
   }
 }
 
-.pin {
-  position: absolute;
-  left: 10px;
-  top: 8px;
-  transform: rotate3d(1, 2, 2, -25deg);
-  color: var(--gray-700);
-  height: 0.8rem;
-}
-
-.note {
-  padding: var(--spacing-xs);
-  margin-bottom: var(--spacing-xxs);
-  border: 1px solid var(--gray-200);
-}
-
 .noteData {
   @include text-hint;
   position: absolute;
@@ -56,6 +41,7 @@
   color: var(--gray-700);
   @include flex-between;
   flex-direction: column;
+  align-items: center;
 
   & button{
     margin-top: var(--spacing-xs);
