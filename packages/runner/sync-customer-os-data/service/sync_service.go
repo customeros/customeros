@@ -14,13 +14,6 @@ import (
 
 const batchSize = 100
 
-type Direction string
-
-const (
-	INBOUND  Direction = "INBOUND"
-	OUTBOUND Direction = "OUTBOUND"
-)
-
 type SyncService interface {
 	Sync(ctx context.Context, runId string)
 }
@@ -141,7 +134,7 @@ func (s *syncService) syncEmailMessages(ctx context.Context, dataService common.
 			}
 
 			//from
-			if message.Direction == OUTBOUND && !failedSync {
+			if message.Direction == entity.OUTBOUND && !failedSync {
 				emailId, err := s.repositories.EmailRepository.GetEmailId(ctx, tenant, message.FromEmail)
 				if err != nil {
 					failedSync = true
@@ -163,7 +156,7 @@ func (s *syncService) syncEmailMessages(ctx context.Context, dataService common.
 						logrus.Errorf("failed set sender for interaction event %v in tenant %v :%v", interactionEventId, tenant, err)
 					}
 				}
-			} else if message.Direction == INBOUND && !failedSync {
+			} else if message.Direction == entity.INBOUND && !failedSync {
 				//1. find email ( contact/organization/user )
 				//2. if not found, create contact with email
 
