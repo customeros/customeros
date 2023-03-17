@@ -35,8 +35,4 @@ func (s *initService) Init() {
 		logrus.Fatal(err)
 	}
 
-	err = db.AutoMigrate(&entity.ConversationEvent{})
-	if err != nil {
-		logrus.Fatal(err)
-	}
 }

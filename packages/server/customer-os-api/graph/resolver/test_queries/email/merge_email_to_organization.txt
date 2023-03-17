@@ -1,0 +1,22 @@
+mutation MergeEmailToOrganization($organizationId: ID!){
+     emailMergeToOrganization(
+        organizationId: $organizationId
+        input: {email: "test@gmail.com"
+                label: WORK
+                primary: true
+                appSource: "test"
+        }
+     ) {
+        id
+        rawEmail
+        validated
+        email
+        label
+        primary
+        source
+        sourceOfTruth
+        appSource
+        createdAt
+        updatedAt
+      }
+}

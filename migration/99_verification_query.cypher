@@ -2,50 +2,38 @@
 #========== Sample Linked Contact and Email must belong to same tenant
 
 CALL {
- MATCH (t1:Tenant)--(c:Contact)-[rel]-(:Email)--(t2:Tenant)
- WHERE t1.name <> t2.name
- return count(rel) as x
- UNION
- MATCH (t1:Tenant)--(c:Contact)-[rel]-(:PhoneNumber)--(t2:Tenant)
- WHERE t1.name <> t2.name
- return count(rel) as x
- UNION
- MATCH (t1:Tenant)--(c:Contact)-[rel]-(:Location)--(t2:Tenant)
- WHERE t1.name <> t2.name
- return count(rel) as x
- UNION
- MATCH (t1:Tenant)--(c:Contact)-[rel]-(:Tag)--(t2:Tenant)
- WHERE t1.name <> t2.name
- return count(rel) as x
- UNION
- MATCH (t1:Tenant)--(:Contact)-[rel]-(:Organization)--(t2:Tenant)
- WHERE t1.name <> t2.name
- return count(rel) as x
- UNION
- MATCH (t1:Tenant)--(:Contact)-[rel]-(:ExternalSystem)--(t2:Tenant)
- WHERE t1.name <> t2.name
- return count(rel) as x
- UNION
- MATCH (t1:Tenant)--(:Organization)-[rel]-(:Location)--(t2:Tenant)
- WHERE t1.name <> t2.name
- return count(rel) as x
- UNION
- MATCH (t1:Tenant)--(:Organization)-[rel]-(:Email)--(t2:Tenant)
- WHERE t1.name <> t2.name
- return count(rel) as x
- UNION
- MATCH (t1:Tenant)--(:Organization)-[rel]-(:Tag)--(t2:Tenant)
- WHERE t1.name <> t2.name
- return count(rel) as x
- UNION
- MATCH (t1:Tenant)--(:Organization)-[rel]-(:ExternalSystem)--(t2:Tenant)
- WHERE t1.name <> t2.name
- return count(rel) as x
- UNION
- MATCH (t1:Tenant)--(:Note)-[rel]-(:ExternalSystem)--(t2:Tenant)
- WHERE t1.name <> t2.name
- return count(rel) as x
- UNION
+ MATCH (t1:Tenant)--(e:Email)--(n)--(t2:Tenant)
+ WHERE t1 <> t2 AND
+ ('Contact' in labels(n) OR 'User' in labels(n) OR 'Organization' in labels(n))
+ RETURN count(e) as x
+    UNION
+ MATCH (t1:Tenant)--(t:Tag)--(n)--(t2:Tenant)
+ WHERE t1 <> t2 AND
+ ('Contact' in labels(n) OR 'Organization' in labels(n))
+ RETURN count(t) as x
+    UNION
+ MATCH (t1:Tenant)--(p:PhoneNumber)--(n)--(t2:Tenant)
+ WHERE t1 <> t2 AND
+ ('Contact' in labels(n) OR 'User' in labels(n) OR 'Organization' in labels(n))
+ RETURN count(p) as x
+    UNION
+ MATCH (t1:Tenant)--(l:Location)--(n)--(t2:Tenant)
+ WHERE t1 <> t2 AND
+ ('Contact' in labels(n) OR 'Organization' in labels(n))
+ RETURN count(l) as x
+    UNION
+ MATCH (t1:Tenant)--(c:Contact)--(n)--(t2:Tenant)
+ WHERE t1 <> t2 AND
+ ('Organization' in labels(n))
+ return count(c) as x
+    UNION
+ MATCH (t1:Tenant)--(e:ExternalSystem)--(n)--(t2:Tenant)
+ WHERE t1 <> t2 AND
+ ('Contact' in labels(n) OR 'User' in labels(n) OR 'Organization' in labels(n) OR 'Note' in labels(n) OR 'Ticket' in labels(n))
+ RETURN count(e) as x
+    UNION
+
+
  MATCH (t1:Tenant)--(:Contact)-[rel]-(:Conversation)--(c2:Contact)--(t2:Tenant)
  WHERE t1.name <> t2.name
  return count(rel) as x
@@ -57,14 +45,6 @@ CALL {
  MATCH (t1:Tenant)--(:User)-[rel]-(:Conversation)--(u2:User)--(t2:Tenant)
  WHERE t1.name <> t2.name
  return count(rel) as x
- MATCH (t1:Tenant)--(:User)-[rel]-(:Email)--(t2:Tenant)
- WHERE t1.name <> t2.name
- return count(rel) as x
- UNION
- MATCH (t1:Tenant)--(:User)-[rel]-(:PhoneNumber)--(t2:Tenant)
- WHERE t1.name <> t2.name
- return count(rel) as x
- UNION
 } return sum(x) as Problematic_relationships;
 
 #========== CHECK 2 - Check amount of labels per node

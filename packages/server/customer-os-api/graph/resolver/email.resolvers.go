@@ -27,7 +27,7 @@ func (r *mutationResolver) EmailMergeToContact(ctx context.Context, contactID st
 func (r *mutationResolver) EmailUpdateInContact(ctx context.Context, contactID string, input model.EmailUpdateInput) (*model.Email, error) {
 	result, err := r.Services.EmailService.UpdateEmailFor(ctx, entity.CONTACT, contactID, mapper.MapEmailUpdateInputToEntity(&input))
 	if err != nil {
-		graphql.AddErrorf(ctx, "Could not update email %s in contact %s", input.ID, contactID)
+		graphql.AddErrorf(ctx, "Could not update email %s for contact %s", input.ID, contactID)
 		return nil, err
 	}
 	return mapper.MapEntityToEmail(result), nil
@@ -71,7 +71,7 @@ func (r *mutationResolver) EmailMergeToUser(ctx context.Context, userID string, 
 func (r *mutationResolver) EmailUpdateInUser(ctx context.Context, userID string, input model.EmailUpdateInput) (*model.Email, error) {
 	result, err := r.Services.EmailService.UpdateEmailFor(ctx, entity.USER, userID, mapper.MapEmailUpdateInputToEntity(&input))
 	if err != nil {
-		graphql.AddErrorf(ctx, "Could not update email %s in user %s", input.ID, userID)
+		graphql.AddErrorf(ctx, "Could not update email %s for user %s", input.ID, userID)
 		return nil, err
 	}
 	return mapper.MapEntityToEmail(result), nil
@@ -94,6 +94,50 @@ func (r *mutationResolver) EmailRemoveFromUserByID(ctx context.Context, userID s
 	result, err := r.Services.EmailService.DetachFromEntityById(ctx, entity.USER, userID, id)
 	if err != nil {
 		graphql.AddErrorf(ctx, "Could not remove email %s from user %s", id, userID)
+		return nil, err
+	}
+	return &model.Result{
+		Result: result,
+	}, nil
+}
+
+// EmailMergeToOrganization is the resolver for the emailMergeToOrganization field.
+func (r *mutationResolver) EmailMergeToOrganization(ctx context.Context, organizationID string, input model.EmailInput) (*model.Email, error) {
+	result, err := r.Services.EmailService.MergeEmailTo(ctx, entity.ORGANIZATION, organizationID, mapper.MapEmailInputToEntity(&input))
+	if err != nil {
+		graphql.AddErrorf(ctx, "Could not add email %s to organization %s", input.Email, organizationID)
+		return nil, err
+	}
+	return mapper.MapEntityToEmail(result), nil
+}
+
+// EmailUpdateInOrganization is the resolver for the emailUpdateInOrganization field.
+func (r *mutationResolver) EmailUpdateInOrganization(ctx context.Context, organizationID string, input model.EmailUpdateInput) (*model.Email, error) {
+	result, err := r.Services.EmailService.UpdateEmailFor(ctx, entity.ORGANIZATION, organizationID, mapper.MapEmailUpdateInputToEntity(&input))
+	if err != nil {
+		graphql.AddErrorf(ctx, "Could not update email %s for organization %s", input.ID, organizationID)
+		return nil, err
+	}
+	return mapper.MapEntityToEmail(result), nil
+}
+
+// EmailRemoveFromOrganization is the resolver for the emailRemoveFromOrganization field.
+func (r *mutationResolver) EmailRemoveFromOrganization(ctx context.Context, organizationID string, email string) (*model.Result, error) {
+	result, err := r.Services.EmailService.DetachFromEntity(ctx, entity.ORGANIZATION, organizationID, email)
+	if err != nil {
+		graphql.AddErrorf(ctx, "Could not remove email %s from organization %s", email, organizationID)
+		return nil, err
+	}
+	return &model.Result{
+		Result: result,
+	}, nil
+}
+
+// EmailRemoveFromOrganizationByID is the resolver for the emailRemoveFromOrganizationById field.
+func (r *mutationResolver) EmailRemoveFromOrganizationByID(ctx context.Context, organizationID string, id string) (*model.Result, error) {
+	result, err := r.Services.EmailService.DetachFromEntityById(ctx, entity.ORGANIZATION, organizationID, id)
+	if err != nil {
+		graphql.AddErrorf(ctx, "Could not remove email %s from organization %s", id, organizationID)
 		return nil, err
 	}
 	return &model.Result{
