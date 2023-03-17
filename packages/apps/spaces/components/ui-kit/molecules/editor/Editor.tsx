@@ -51,10 +51,11 @@ export const Editor: FC<Props> = ({
       <PrimereactEditor
         style={{
           height: isEditMode ? 'auto' : '160px',
-          borderColor: isEditMode && 'transparent',
+          borderBottomColor: isEditMode && 'transparent',
         }}
         headerTemplate={
           <RichTextHeader
+            hideButtons={isEditMode}
             onFileChange={(e) => onFileChange(e)}
             onSubmit={onSave}
             onCancel={onCancel}

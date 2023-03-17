@@ -8,6 +8,7 @@ interface Props {
   onCancel?: () => void;
   label: string;
   saving: boolean;
+  hideButtons?: boolean;
 }
 export const RichTextHeader = ({
   onFileChange,
@@ -15,6 +16,7 @@ export const RichTextHeader = ({
   label,
   onCancel,
   saving,
+  hideButtons = false,
 }: Props) => {
   const inputRef = useRef<HTMLInputElement | null>(null);
   const handleUploadClick = () => {
@@ -48,21 +50,25 @@ export const RichTextHeader = ({
           />
         </button>
       </span>
-      <div className='editor_save'>
-        {onCancel && (
-          <Button onClick={onCancel} mode='secondary' className='secondary'>
-            Cancel
+
+      {!hideButtons && (
+        <div className='editor_save'>
+          {onCancel && (
+            <Button onClick={onCancel} mode='secondary' className='secondary'>
+              Cancel
+            </Button>
+          )}
+          <Button
+            onClick={onSubmit}
+            disabled={saving}
+            mode='primary'
+            className='primary'
+          >
+            {saving ? 'Saving...' : label}
           </Button>
-        )}
-        <Button
-          onClick={onSubmit}
-          disabled={saving}
-          mode='primary'
-          className='primary'
-        >
-          {saving ? 'Saving...' : label}
-        </Button>
-      </div>
+        </div>
+      )}
+
       <input
         type='file'
         ref={inputRef}

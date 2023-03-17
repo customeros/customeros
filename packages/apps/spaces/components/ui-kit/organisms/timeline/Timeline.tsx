@@ -22,7 +22,6 @@ interface Props {
   id?: string;
   loggedActivities: Array<any>;
   notifyChange?: (id: any) => void;
-  notifyContactNotesUpdate?: (id: any) => void;
   onLoadMore: (ref: any) => void;
   contactName?: string;
 }
@@ -33,7 +32,6 @@ export const Timeline = ({
   loggedActivities,
   id,
   notifyChange = () => null,
-  notifyContactNotesUpdate = () => null,
   onLoadMore,
   contactName = '',
 }: Props) => {
@@ -68,9 +66,6 @@ export const Timeline = ({
               createdBy={data?.createdBy}
               id={data.id}
               source={data?.source}
-              refreshNoteData={
-                data?.contact ? notifyContactNotesUpdate : notifyChange
-              }
               contactId={id}
             />
           </TimelineItem>

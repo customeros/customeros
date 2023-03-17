@@ -1,5 +1,5 @@
 import React from 'react';
-import { DetailsPageLayout } from '../../components/ui-kit';
+import { DetailsPageLayout } from '../../components';
 import styles from './organization.module.scss';
 import { useRouter } from 'next/router';
 import {

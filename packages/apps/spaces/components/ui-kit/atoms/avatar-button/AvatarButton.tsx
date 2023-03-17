@@ -19,7 +19,16 @@ export const AvatarButton: FC<Props> = ({ image, onClick, ariaLabel }) => {
       tabIndex={0}
       className={styles.button}
     >
-      {image ? <Avatar username={ariaLabel} image={image} /> : <User />}
+      {image ? (
+        <Avatar
+          name={ariaLabel.split(' ')?.[0] || ''}
+          surname={ariaLabel.split(' ')?.[1] || ''}
+          image={image}
+          size={30}
+        />
+      ) : (
+        <User />
+      )}
     </div>
   );
 };
