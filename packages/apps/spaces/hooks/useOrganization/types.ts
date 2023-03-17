@@ -5,6 +5,7 @@ export type {
   OrganizationInput,
   UpdateOrganizationMutation,
   MergeOrganizationsMutation,
+  GetOrganizationNameQuery,
 } from '../../graphQL/__generated__/generated';
 export {
   useCreateOrganizationMutation,
@@ -12,4 +13,5 @@ export {
   useGetOrganizationContactsQuery,
   useUpdateOrganizationMutation,
   useMergeOrganizationsMutation,
+  useGetOrganizationNameQuery,
 } from '../../graphQL/__generated__/generated';

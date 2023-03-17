@@ -1,0 +1,6 @@
+query GetOrganizationName($id: ID!) {
+  organization(id: $id) {
+    id
+    name
+  }
+}

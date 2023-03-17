@@ -14,7 +14,6 @@ export const ContactAvatar: React.FC<Props> = ({ contactId, size = 30 }) => {
     return <div />;
   }
   const name = getContactDisplayName(data).split(' ');
-  console.log('🏷️ ----- name: ', name);
   return (
     <Avatar
       name={name?.[0] || ''}

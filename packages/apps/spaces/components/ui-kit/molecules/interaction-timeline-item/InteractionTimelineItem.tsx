@@ -3,11 +3,13 @@ import React from 'react';
 import styles from './interaction-timeline-item.module.scss';
 import { uuidv4 } from '../../../../utils';
 import { Avatar } from '../../atoms';
-import { useRecoilValue } from 'recoil';
-import { userData } from '../../../../state';
+import { OrganizationAvatar } from '../contact-avatar';
 
-export const InteractionTimelineItem = ({ name, events }: any): JSX.Element => {
-  const { identity } = useRecoilValue(userData);
+export const InteractionTimelineItem = ({
+  name,
+  events,
+  organizationId,
+}: any): JSX.Element => {
   return (
     <div className={styles.folder}>
       <article>
@@ -15,8 +17,9 @@ export const InteractionTimelineItem = ({ name, events }: any): JSX.Element => {
           <div>
             <div className={styles.title}>
               <div className='flex align-items-center'>
-                {/*{contactId && <ContactAvatar contactId={contactId} size={35} />}*/}
-                {<Avatar name={'todo'} surname='' isSquare size={35} />}
+                {organizationId && (
+                  <OrganizationAvatar organizationId={organizationId} />
+                )}
 
                 {name && (
                   <div
@@ -25,7 +28,6 @@ export const InteractionTimelineItem = ({ name, events }: any): JSX.Element => {
                   ></div>
                 )}
               </div>
-              <Avatar name={identity} surname='' size={35} isSquare />
             </div>
 
             <div className={styles.events}>

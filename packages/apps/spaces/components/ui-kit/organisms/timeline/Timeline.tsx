@@ -32,7 +32,6 @@ export const Timeline = ({
   noActivity,
   loggedActivities,
   id,
-  notifyChange = () => null,
   onLoadMore,
   contactName = '',
 }: Props) => {
@@ -122,11 +121,7 @@ export const Timeline = ({
         );
       case 'InteractionSession':
         return (
-          <TimelineItem
-            first={index == 0}
-            createdAt={data?.startedAt}
-            contentClassName={'interactionTimeLineItemClass'}
-          >
+          <TimelineItem first={index == 0} createdAt={data?.startedAt}>
             <InteractionTimelineItem
               {...data}
               contactId={contactName && id}
@@ -172,17 +167,20 @@ export const Timeline = ({
 
   return (
     <article ref={timelineContainerRef} className={styles.timeline}>
-      {/*{!loading && !noActivity && (*/}
-      {/*  <Image*/}
-      {/*    alt=''*/}
-      {/*    src={'/backgrounds/blueprint/timeline-error.webp'}*/}
-      {/*    fill*/}
-      {/*    priority={true}*/}
-      {/*    style={{*/}
-      {/*      objectFit: 'cover',*/}
-      {/*    }}*/}
-      {/*  />*/}
-      {/*)}*/}
+      {!loading && noActivity && (
+        <div>
+          <Image
+            alt=''
+            src={'/backgrounds/blueprint/timeline-error.webp'}
+            fill
+            priority={true}
+            style={{
+              objectFit: 'cover',
+            }}
+          />
+          <h1>No activity logged yet</h1>
+        </div>
+      )}
       <div className={styles.timelineContent} ref={containerRef}>
         {!!loggedActivities.length && (
           <div

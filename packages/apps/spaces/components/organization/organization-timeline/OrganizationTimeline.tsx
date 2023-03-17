@@ -42,7 +42,7 @@ export const OrganizationTimeline = ({ id }: { id: string }) => {
           },
         });
       }}
-      noActivity={!data}
+      noActivity={!data.length}
       id={id}
       loggedActivities={[liveConversations, ...(data || [])]}
     />

@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import Image from 'next/image';
 import { Button } from '../../ui-kit';
 import styles from './contact-details.module.scss';
 import { useContactPersonalDetails } from '../../../hooks/useContact';
@@ -9,7 +8,7 @@ import { ContactTags } from '../contact-tags';
 import { useForm } from 'react-hook-form';
 import { ContactPersonalDetailsEdit } from './edit';
 import { getContactDisplayName } from '../../../utils';
-import { ContactAvatar } from '../../ui-kit/molecules/contact-avatar';
+import { ContactAvatar } from '../../ui-kit/molecules/organization-avatar';
 
 export const ContactPersonalDetails = ({ id }: { id: string }) => {
   const router = useRouter();
