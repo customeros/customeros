@@ -12,11 +12,11 @@ import (
 )
 
 type PhoneNumberService interface {
-	GetAllForContact(ctx context.Context, contactId string) (*entity.PhoneNumberEntities, error)
 	MergePhoneNumberTo(ctx context.Context, entityType entity.EntityType, entityId string, inputEntity *entity.PhoneNumberEntity) (*entity.PhoneNumberEntity, error)
 	UpdatePhoneNumberFor(ctx context.Context, entityType entity.EntityType, entityId string, inputEntity *entity.PhoneNumberEntity) (*entity.PhoneNumberEntity, error)
-	RemoveFromContactByE164(ctx context.Context, contactId, e164 string) (bool, error)
-	RemoveFromContactById(ctx context.Context, contactId, phoneNumberId string) (bool, error)
+	DetachFromEntityByPhoneNumber(ctx context.Context, entityType entity.EntityType, entityId, phoneNumber string) (bool, error)
+	DetachFromEntityById(ctx context.Context, entityType entity.EntityType, entityId, phoneNumberId string) (bool, error)
+	GetAllForContact(ctx context.Context, contactId string) (*entity.PhoneNumberEntities, error)
 	GetAllForEntityTypeByIds(ctx context.Context, entityType entity.EntityType, ids []string) (*entity.PhoneNumberEntities, error)
 
 	mapDbNodeToPhoneNumberEntity(node dbtype.Node) *entity.PhoneNumberEntity
@@ -110,7 +110,7 @@ func (s *phoneNumberService) UpdatePhoneNumberFor(ctx context.Context, entityTyp
 	var detachCurrentPhoneNumber = false
 
 	_, err = session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (interface{}, error) {
-		currentPhoneNumberNode, err := s.repositories.PhoneNumberRepository.GetByIdAndRelatedEntity(ctx, entity.CONTACT, common.GetTenantFromContext(ctx), inputEntity.Id, entityId)
+		currentPhoneNumberNode, err := s.repositories.PhoneNumberRepository.GetByIdAndRelatedEntity(ctx, entityType, common.GetTenantFromContext(ctx), inputEntity.Id, entityId)
 		if err != nil {
 			return nil, err
 		}
@@ -118,7 +118,7 @@ func (s *phoneNumberService) UpdatePhoneNumberFor(ctx context.Context, entityTyp
 		currentRawPhoneNumber := utils.GetPropsFromNode(*currentPhoneNumberNode)["rawPhoneNumber"].(string)
 
 		if len(inputEntity.RawPhoneNumber) == 0 || inputEntity.RawPhoneNumber == currentE164 || inputEntity.RawPhoneNumber == currentRawPhoneNumber {
-			phoneNumberNode, phoneNumberRelationship, err = s.repositories.PhoneNumberRepository.UpdatePhoneNumberByContactInTx(ctx, tx, common.GetTenantFromContext(ctx), entityId, *inputEntity)
+			phoneNumberNode, phoneNumberRelationship, err = s.repositories.PhoneNumberRepository.UpdatePhoneNumberForInTx(ctx, tx, common.GetTenantFromContext(ctx), entityType, entityId, *inputEntity)
 			if err != nil {
 				return nil, err
 			}
@@ -150,7 +150,7 @@ func (s *phoneNumberService) UpdatePhoneNumberFor(ctx context.Context, entityTyp
 	}
 
 	if detachCurrentPhoneNumber {
-		_, err = s.RemoveFromContactById(ctx, entityId, inputEntity.Id)
+		_, err = s.DetachFromEntityById(ctx, entityType, entityId, inputEntity.Id)
 	}
 
 	var phoneNumberEntity = s.mapDbNodeToPhoneNumberEntity(*phoneNumberNode)
@@ -158,52 +158,14 @@ func (s *phoneNumberService) UpdatePhoneNumberFor(ctx context.Context, entityTyp
 	return phoneNumberEntity, nil
 }
 
-func (s *phoneNumberService) RemoveFromContactByE164(ctx context.Context, contactId, e164 string) (bool, error) {
-	session := utils.NewNeo4jWriteSession(ctx, s.getDriver())
-	defer session.Close(ctx)
-
-	queryResult, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (interface{}, error) {
-		_, err := tx.Run(ctx, `
-			MATCH (c:Contact {id:$id})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}),
-                  (c)-[rel:HAS]->(p:PhoneNumber {e164:$e164})
-            DELETE rel`,
-			map[string]interface{}{
-				"id":     contactId,
-				"e164":   e164,
-				"tenant": common.GetTenantFromContext(ctx),
-			})
-
-		return true, err
-	})
-	if err != nil {
-		return false, err
-	}
-
-	return queryResult.(bool), nil
+func (s *phoneNumberService) DetachFromEntityByPhoneNumber(ctx context.Context, entityType entity.EntityType, entityId, phoneNumber string) (bool, error) {
+	err := s.repositories.PhoneNumberRepository.RemoveRelationship(ctx, entityType, common.GetTenantFromContext(ctx), entityId, phoneNumber)
+	return err == nil, err
 }
 
-func (s *phoneNumberService) RemoveFromContactById(ctx context.Context, contactId, phoneNumberId string) (bool, error) {
-	session := utils.NewNeo4jWriteSession(ctx, s.getDriver())
-	defer session.Close(ctx)
-
-	queryResult, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (interface{}, error) {
-		_, err := tx.Run(ctx, `
-			MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}),
-                  (c)-[rel:HAS]->(p:PhoneNumber {id:$phoneNumberId})
-            DELETE rel`,
-			map[string]interface{}{
-				"contactId":     contactId,
-				"phoneNumberId": phoneNumberId,
-				"tenant":        common.GetTenantFromContext(ctx),
-			})
-
-		return true, err
-	})
-	if err != nil {
-		return false, err
-	}
-
-	return queryResult.(bool), nil
+func (s *phoneNumberService) DetachFromEntityById(ctx context.Context, entityType entity.EntityType, entityId, phoneNumberId string) (bool, error) {
+	err := s.repositories.PhoneNumberRepository.RemoveRelationshipById(ctx, entityType, common.GetTenantFromContext(ctx), entityId, phoneNumberId)
+	return err == nil, err
 }
 
 func (s *phoneNumberService) mapDbNodeToPhoneNumberEntity(node dbtype.Node) *entity.PhoneNumberEntity {

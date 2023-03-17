@@ -6,8 +6,6 @@ package resolver
 
 import (
 	"context"
-	"fmt"
-
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
@@ -28,7 +26,7 @@ func (r *mutationResolver) PhoneNumberMergeToContact(ctx context.Context, contac
 func (r *mutationResolver) PhoneNumberUpdateInContact(ctx context.Context, contactID string, input model.PhoneNumberUpdateInput) (*model.PhoneNumber, error) {
 	result, err := r.Services.PhoneNumberService.UpdatePhoneNumberFor(ctx, entity.CONTACT, contactID, mapper.MapPhoneNumberUpdateInputToEntity(&input))
 	if err != nil {
-		graphql.AddErrorf(ctx, "Could not update phone number %s in contact %s", input.ID, contactID)
+		graphql.AddErrorf(ctx, "Could not update phone number %s for contact %s", input.ID, contactID)
 		return nil, err
 	}
 	return mapper.MapEntityToPhoneNumber(result), nil
@@ -36,7 +34,7 @@ func (r *mutationResolver) PhoneNumberUpdateInContact(ctx context.Context, conta
 
 // PhoneNumberRemoveFromContactByE164 is the resolver for the phoneNumberRemoveFromContactByE164 field.
 func (r *mutationResolver) PhoneNumberRemoveFromContactByE164(ctx context.Context, contactID string, e164 string) (*model.Result, error) {
-	result, err := r.Services.PhoneNumberService.RemoveFromContactByE164(ctx, contactID, e164)
+	result, err := r.Services.PhoneNumberService.DetachFromEntityByPhoneNumber(ctx, entity.CONTACT, contactID, e164)
 	if err != nil {
 		graphql.AddErrorf(ctx, "Could not remove phone number by e164 %s from contact with id %s", e164, contactID)
 		return nil, err
@@ -48,7 +46,7 @@ func (r *mutationResolver) PhoneNumberRemoveFromContactByE164(ctx context.Contex
 
 // PhoneNumberRemoveFromContactByID is the resolver for the phoneNumberRemoveFromContactById field.
 func (r *mutationResolver) PhoneNumberRemoveFromContactByID(ctx context.Context, contactID string, id string) (*model.Result, error) {
-	result, err := r.Services.PhoneNumberService.RemoveFromContactById(ctx, contactID, id)
+	result, err := r.Services.PhoneNumberService.DetachFromEntityById(ctx, entity.CONTACT, contactID, id)
 	if err != nil {
 		graphql.AddErrorf(ctx, "Could not remove phone number by id %s from contact with id %s", id, contactID)
 		return nil, err
@@ -70,17 +68,36 @@ func (r *mutationResolver) PhoneNumberMergeToOrganization(ctx context.Context, o
 
 // PhoneNumberUpdateInOrganization is the resolver for the phoneNumberUpdateInOrganization field.
 func (r *mutationResolver) PhoneNumberUpdateInOrganization(ctx context.Context, organizationID string, input model.PhoneNumberUpdateInput) (*model.PhoneNumber, error) {
-	panic(fmt.Errorf("not implemented: PhoneNumberUpdateInOrganization - phoneNumberUpdateInOrganization"))
+	result, err := r.Services.PhoneNumberService.UpdatePhoneNumberFor(ctx, entity.ORGANIZATION, organizationID, mapper.MapPhoneNumberUpdateInputToEntity(&input))
+	if err != nil {
+		graphql.AddErrorf(ctx, "Could not update phone number %s for organization %s", input.ID, organizationID)
+		return nil, err
+	}
+	return mapper.MapEntityToPhoneNumber(result), nil
 }
 
 // PhoneNumberRemoveFromOrganizationByE164 is the resolver for the phoneNumberRemoveFromOrganizationByE164 field.
 func (r *mutationResolver) PhoneNumberRemoveFromOrganizationByE164(ctx context.Context, organizationID string, e164 string) (*model.Result, error) {
-	panic(fmt.Errorf("not implemented: PhoneNumberRemoveFromOrganizationByE164 - phoneNumberRemoveFromOrganizationByE164"))
+	result, err := r.Services.PhoneNumberService.DetachFromEntityByPhoneNumber(ctx, entity.ORGANIZATION, organizationID, e164)
+	if err != nil {
+		graphql.AddErrorf(ctx, "Could not remove phone number by e164 %s from user with id %s", e164, organizationID)
+		return nil, err
+	}
+	return &model.Result{
+		Result: result,
+	}, nil
 }
 
 // PhoneNumberRemoveFromOrganizationByID is the resolver for the phoneNumberRemoveFromOrganizationById field.
 func (r *mutationResolver) PhoneNumberRemoveFromOrganizationByID(ctx context.Context, organizationID string, id string) (*model.Result, error) {
-	panic(fmt.Errorf("not implemented: PhoneNumberRemoveFromOrganizationByID - phoneNumberRemoveFromOrganizationById"))
+	result, err := r.Services.PhoneNumberService.DetachFromEntityById(ctx, entity.ORGANIZATION, organizationID, id)
+	if err != nil {
+		graphql.AddErrorf(ctx, "Could not remove phone number by id %s from organization with id %s", id, organizationID)
+		return nil, err
+	}
+	return &model.Result{
+		Result: result,
+	}, nil
 }
 
 // PhoneNumberMergeToUser is the resolver for the phoneNumberMergeToUser field.
@@ -95,15 +112,34 @@ func (r *mutationResolver) PhoneNumberMergeToUser(ctx context.Context, userID st
 
 // PhoneNumberUpdateInUser is the resolver for the phoneNumberUpdateInUser field.
 func (r *mutationResolver) PhoneNumberUpdateInUser(ctx context.Context, userID string, input model.PhoneNumberUpdateInput) (*model.PhoneNumber, error) {
-	panic(fmt.Errorf("not implemented: PhoneNumberUpdateInUser - phoneNumberUpdateInUser"))
+	result, err := r.Services.PhoneNumberService.UpdatePhoneNumberFor(ctx, entity.USER, userID, mapper.MapPhoneNumberUpdateInputToEntity(&input))
+	if err != nil {
+		graphql.AddErrorf(ctx, "Could not update phone number %s for user %s", input.ID, userID)
+		return nil, err
+	}
+	return mapper.MapEntityToPhoneNumber(result), nil
 }
 
 // PhoneNumberRemoveFromUserByE164 is the resolver for the phoneNumberRemoveFromUserByE164 field.
 func (r *mutationResolver) PhoneNumberRemoveFromUserByE164(ctx context.Context, userID string, e164 string) (*model.Result, error) {
-	panic(fmt.Errorf("not implemented: PhoneNumberRemoveFromUserByE164 - phoneNumberRemoveFromUserByE164"))
+	result, err := r.Services.PhoneNumberService.DetachFromEntityByPhoneNumber(ctx, entity.USER, userID, e164)
+	if err != nil {
+		graphql.AddErrorf(ctx, "Could not remove phone number by e164 %s from user with id %s", e164, userID)
+		return nil, err
+	}
+	return &model.Result{
+		Result: result,
+	}, nil
 }
 
 // PhoneNumberRemoveFromUserByID is the resolver for the phoneNumberRemoveFromUserById field.
 func (r *mutationResolver) PhoneNumberRemoveFromUserByID(ctx context.Context, userID string, id string) (*model.Result, error) {
-	panic(fmt.Errorf("not implemented: PhoneNumberRemoveFromUserByID - phoneNumberRemoveFromUserById"))
+	result, err := r.Services.PhoneNumberService.DetachFromEntityById(ctx, entity.USER, userID, id)
+	if err != nil {
+		graphql.AddErrorf(ctx, "Could not remove phone number by id %s from user with id %s", id, userID)
+		return nil, err
+	}
+	return &model.Result{
+		Result: result,
+	}, nil
 }
