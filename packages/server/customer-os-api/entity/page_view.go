@@ -24,13 +24,6 @@ func (pageView PageViewEntity) ToString() string {
 
 type PageViewEntities []PageViewEntity
 
-func (PageViewEntity) Action() {
-}
-
-func (PageViewEntity) ActionName() string {
-	return NodeLabel_PageView
-}
-
 func (PageViewEntity) IsTimelineEvent() {
 }
 

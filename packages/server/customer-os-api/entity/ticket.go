@@ -13,13 +13,6 @@ type TicketEntity struct {
 	Description string
 }
 
-func (TicketEntity) Action() {
-}
-
-func (TicketEntity) ActionName() string {
-	return NodeLabel_Ticket
-}
-
 func (TicketEntity) IsTimelineEvent() {
 }
 

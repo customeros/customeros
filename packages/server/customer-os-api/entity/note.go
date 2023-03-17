@@ -23,13 +23,6 @@ func (note NoteEntity) ToString() string {
 
 type NoteEntities []NoteEntity
 
-func (NoteEntity) Action() {
-}
-
-func (NoteEntity) ActionName() string {
-	return NodeLabel_Note
-}
-
 func (NoteEntity) IsTimelineEvent() {
 }
 

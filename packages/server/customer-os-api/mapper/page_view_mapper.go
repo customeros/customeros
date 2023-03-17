@@ -18,17 +18,3 @@ func MapEntityToPageView(entity *entity.PageViewEntity) *model.PageView {
 		EngagedTime:    entity.EngagedTime,
 	}
 }
-
-func MapEntityToPageViewAction(entity *entity.PageViewEntity) *model.PageViewAction {
-	return &model.PageViewAction{
-		ID:             entity.Id,
-		StartedAt:      entity.StartedAt,
-		EndedAt:        entity.EndedAt,
-		Application:    entity.Application,
-		SessionID:      entity.SessionId,
-		PageURL:        entity.PageUrl,
-		PageTitle:      entity.PageTitle,
-		OrderInSession: entity.OrderInSession,
-		EngagedTime:    entity.EngagedTime,
-	}
-}

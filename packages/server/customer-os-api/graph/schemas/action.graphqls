@@ -1,9 +1,0 @@
-union Action = PageViewAction | InteractionSession | Ticket | Conversation | Note
-
-enum ActionType {
-    PAGE_VIEW
-    INTERACTION_SESSION
-    TICKET
-    CONVERSATION
-    NOTE
-}
