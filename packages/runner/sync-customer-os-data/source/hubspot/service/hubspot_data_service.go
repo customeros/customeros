@@ -149,7 +149,7 @@ func (s *hubspotDataService) GetOrganizationsForSync(batchSize int, runId string
 			Address:              hubspotCompanyProperties.Address,
 			Address2:             hubspotCompanyProperties.Address2,
 			Zip:                  hubspotCompanyProperties.Zip,
-			Phone:                hubspotCompanyProperties.Phone,
+			PhoneNumber:          hubspotCompanyProperties.Phone,
 			OrganizationTypeName: "COMPANY",
 			DefaultLocationName:  "Default location",
 		}
