@@ -6,6 +6,7 @@ package resolver
 
 import (
 	"context"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/dataloader"
 	"time"
 
 	"github.com/99designs/gqlgen/graphql"
@@ -93,6 +94,20 @@ func (r *userResolver) Emails(ctx context.Context, obj *model.User) ([]*model.Em
 
 	emailEntities, err := r.Services.EmailService.GetAllFor(ctx, entity.USER, obj.ID)
 	return mapper.MapEntitiesToEmails(emailEntities), err
+}
+
+// PhoneNumbers is the resolver for the phoneNumbers field.
+func (r *userResolver) PhoneNumbers(ctx context.Context, obj *model.User) ([]*model.PhoneNumber, error) {
+	defer func(start time.Time) {
+		utils.LogMethodExecution(start, utils.GetFunctionName())
+	}(time.Now())
+
+	phoneNumberEntities, err := dataloader.For(ctx).GetPhoneNumbersForUser(ctx, obj.ID)
+	if err != nil {
+		graphql.AddErrorf(ctx, "Failed to get phone numbers for user %s", obj.ID)
+		return nil, err
+	}
+	return mapper.MapEntitiesToPhoneNumbers(phoneNumberEntities), nil
 }
 
 // Conversations is the resolver for the conversations field.

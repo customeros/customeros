@@ -1,0 +1,13 @@
+query GetUserById($userId: ID!){
+  user(id: $userId) {
+    id
+    phoneNumbers {
+        id
+        e164
+        rawPhoneNumber
+        label
+        primary
+        source
+    }
+  }
+}

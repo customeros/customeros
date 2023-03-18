@@ -978,7 +978,8 @@ type User struct {
 	LastName string `json:"lastName"`
 	// All email addresses associated with a user in customerOS.
 	// **Required.  If no values it returns an empty array.**
-	Emails []*Email `json:"emails"`
+	Emails       []*Email       `json:"emails"`
+	PhoneNumbers []*PhoneNumber `json:"phoneNumbers"`
 	// Timestamp of user creation.
 	// **Required**
 	CreatedAt     time.Time         `json:"createdAt"`
