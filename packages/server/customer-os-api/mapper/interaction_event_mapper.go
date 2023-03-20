@@ -9,7 +9,7 @@ import (
 func MapEntityToInteractionEvent(entity *entity.InteractionEventEntity) *model.InteractionEvent {
 	return &model.InteractionEvent{
 		ID:              entity.Id,
-		CreatedAt:       entity.CreatedAt,
+		CreatedAt:       *entity.CreatedAt,
 		EventIdentifier: utils.StringPtrNillable(entity.EventIdentifier),
 		Content:         utils.StringPtrNillable(entity.Content),
 		ContentType:     utils.StringPtrNillable(entity.ContentType),
@@ -26,4 +26,13 @@ func MapEntitiesToInteractionEvents(entities *entity.InteractionEventEntities) [
 		interactionEvents = append(interactionEvents, MapEntityToInteractionEvent(&interactionEventEntity))
 	}
 	return interactionEvents
+}
+func MapInteractionEventInputToEntity(input *model.InteractionEventInput) *entity.InteractionEventEntity {
+	return &entity.InteractionEventEntity{
+		EventIdentifier: utils.IfNotNilString(input.EventIdentifier),
+		Content:         utils.IfNotNilString(input.Content),
+		ContentType:     utils.IfNotNilString(input.ContentType),
+		Channel:         utils.IfNotNilString(input.Channel),
+		AppSource:       input.AppSource,
+	}
 }

@@ -575,6 +575,7 @@ type InteractionEvent struct {
 	InteractionSession *InteractionSession           `json:"interactionSession"`
 	SentBy             []InteractionEventParticipant `json:"sentBy"`
 	SentTo             []InteractionEventParticipant `json:"sentTo"`
+	RepliesTo          *InteractionEvent             `json:"repliesTo"`
 	Source             DataSource                    `json:"source"`
 	SourceOfTruth      DataSource                    `json:"sourceOfTruth"`
 	AppSource          string                        `json:"appSource"`
@@ -585,24 +586,56 @@ func (this InteractionEvent) GetID() string { return this.ID }
 
 func (InteractionEvent) IsTimelineEvent() {}
 
+type InteractionEventInput struct {
+	EventIdentifier    *string                             `json:"eventIdentifier"`
+	Content            *string                             `json:"content"`
+	ContentType        *string                             `json:"contentType"`
+	Channel            *string                             `json:"channel"`
+	InteractionSession *string                             `json:"interactionSession"`
+	SentBy             []*InteractionEventParticipantInput `json:"sentBy"`
+	SentTo             []*InteractionEventParticipantInput `json:"sentTo"`
+	RepliesTo          *string                             `json:"repliesTo"`
+	AppSource          string                              `json:"appSource"`
+}
+
+type InteractionEventParticipantInput struct {
+	Email       *string `json:"email"`
+	PhoneNumber *string `json:"phoneNumber"`
+	ContactID   *string `json:"contactID"`
+	UserID      *string `json:"userID"`
+	Type        *string `json:"type"`
+}
+
 type InteractionSession struct {
-	ID            string              `json:"id"`
-	StartedAt     time.Time           `json:"startedAt"`
-	EndedAt       *time.Time          `json:"endedAt"`
-	Name          *string             `json:"name"`
-	Status        *string             `json:"status"`
-	Type          *string             `json:"type"`
-	Channel       *string             `json:"channel"`
-	Source        DataSource          `json:"source"`
-	SourceOfTruth DataSource          `json:"sourceOfTruth"`
-	AppSource     string              `json:"appSource"`
-	Events        []*InteractionEvent `json:"events"`
+	ID                string              `json:"id"`
+	StartedAt         time.Time           `json:"startedAt"`
+	EndedAt           *time.Time          `json:"endedAt"`
+	CreatedAt         time.Time           `json:"createdAt"`
+	UpdatedAt         time.Time           `json:"updatedAt"`
+	SessionIdentifier *string             `json:"sessionIdentifier"`
+	Name              string              `json:"name"`
+	Status            string              `json:"status"`
+	Type              *string             `json:"type"`
+	Channel           *string             `json:"channel"`
+	Source            DataSource          `json:"source"`
+	SourceOfTruth     DataSource          `json:"sourceOfTruth"`
+	AppSource         string              `json:"appSource"`
+	Events            []*InteractionEvent `json:"events"`
 }
 
 func (InteractionSession) IsNode()            {}
 func (this InteractionSession) GetID() string { return this.ID }
 
 func (InteractionSession) IsTimelineEvent() {}
+
+type InteractionSessionInput struct {
+	SessionIdentifier *string `json:"sessionIdentifier"`
+	Name              string  `json:"name"`
+	Status            string  `json:"status"`
+	Type              *string `json:"type"`
+	Channel           *string `json:"channel"`
+	AppSource         string  `json:"appSource"`
+}
 
 // Describes the relationship a Contact has with a Organization.
 // **A `return` object**

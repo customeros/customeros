@@ -506,9 +506,9 @@ func TestQueryResolver_Organization_WithTimelineEvents_DirectAndFromMultipleCont
 	neo4jt.CreateNoteForOrganization(ctx, driver, tenantName, organizationId, "org note 3", secInFuture10)
 
 	// prepare contact and org interaction events
-	interactionEventId1 := neo4jt.CreateInteractionEvent(ctx, driver, tenantName, "IE text 1", "application/json", "EMAIL", secAgo50)
-	interactionEventId2 := neo4jt.CreateInteractionEvent(ctx, driver, tenantName, "IE text 2", "application/json", "EMAIL", secAgo60)
-	interactionEventId3 := neo4jt.CreateInteractionEvent(ctx, driver, tenantName, "IE text 3", "application/json", "EMAIL", secAgo70)
+	interactionEventId1 := neo4jt.CreateInteractionEvent(ctx, driver, tenantName, "myExternalId", "IE text 1", "application/json", "EMAIL", secAgo50)
+	interactionEventId2 := neo4jt.CreateInteractionEvent(ctx, driver, tenantName, "myExternalId", "IE text 2", "application/json", "EMAIL", secAgo60)
+	interactionEventId3 := neo4jt.CreateInteractionEvent(ctx, driver, tenantName, "myExternalId", "IE text 3", "application/json", "EMAIL", secAgo70)
 	emailIdContact := neo4jt.AddEmailTo(ctx, driver, entity.CONTACT, tenantName, contactId1, "email1", false, "WORK")
 	emailIdOrg := neo4jt.AddEmailTo(ctx, driver, entity.ORGANIZATION, tenantName, organizationId, "email2", false, "WORK")
 	phoneNumberId := neo4jt.AddPhoneNumberTo(ctx, driver, tenantName, contactId2, "+1234", false, "WORK")
@@ -593,9 +593,9 @@ func TestQueryResolver_Organization_WithTimelineEventsTotalCount(t *testing.T) {
 	neo4jt.CreateNoteForOrganization(ctx, driver, tenantName, organizationId, "org note 1", now)
 
 	// prepare contact and org interaction events
-	interactionEventId1 := neo4jt.CreateInteractionEvent(ctx, driver, tenantName, "IE text 1", "application/json", "EMAIL", now)
-	interactionEventId2 := neo4jt.CreateInteractionEvent(ctx, driver, tenantName, "IE text 2", "application/json", "EMAIL", now)
-	interactionEventId3 := neo4jt.CreateInteractionEvent(ctx, driver, tenantName, "IE text 3", "application/json", "EMAIL", now)
+	interactionEventId1 := neo4jt.CreateInteractionEvent(ctx, driver, tenantName, "myExternalId", "IE text 1", "application/json", "EMAIL", now)
+	interactionEventId2 := neo4jt.CreateInteractionEvent(ctx, driver, tenantName, "myExternalId", "IE text 2", "application/json", "EMAIL", now)
+	interactionEventId3 := neo4jt.CreateInteractionEvent(ctx, driver, tenantName, "myExternalId", "IE text 3", "application/json", "EMAIL", now)
 	emailIdContact := neo4jt.AddEmailTo(ctx, driver, entity.CONTACT, tenantName, contactId1, "email1", false, "WORK")
 	emailIdOrg := neo4jt.AddEmailTo(ctx, driver, entity.ORGANIZATION, tenantName, organizationId, "email2", false, "WORK")
 	phoneNumberId := neo4jt.AddPhoneNumberTo(ctx, driver, tenantName, contactId2, "+1234", false, "WORK")

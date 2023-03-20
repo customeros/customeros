@@ -6,16 +6,18 @@ import (
 )
 
 type InteractionSessionEntity struct {
-	Id            string
-	StartedAt     time.Time
-	EndedAt       *time.Time
-	Name          string
-	Status        string
-	Type          string
-	Channel       string
-	AppSource     string
-	Source        DataSource
-	SourceOfTruth DataSource
+	Id                string
+	CreatedAt         time.Time
+	UpdatedAt         time.Time
+	EndedAt           *time.Time
+	SessionIdentifier *string
+	Name              string
+	Status            string
+	Type              *string
+	Channel           *string
+	AppSource         string
+	Source            DataSource
+	SourceOfTruth     DataSource
 
 	DataloaderKey string
 }

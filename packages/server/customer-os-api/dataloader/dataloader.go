@@ -12,24 +12,25 @@ type loadersString string
 const loadersKey = loadersString("dataloaders")
 
 type Loaders struct {
-	TagsForOrganization                    *dataloader.Loader
-	TagsForContact                         *dataloader.Loader
-	TagsForTicket                          *dataloader.Loader
-	EmailsForContact                       *dataloader.Loader
-	EmailsForOrganization                  *dataloader.Loader
-	LocationsForContact                    *dataloader.Loader
-	LocationsForOrganization               *dataloader.Loader
-	JobRolesForContact                     *dataloader.Loader
-	DomainsForOrganization                 *dataloader.Loader
-	NotesForTicket                         *dataloader.Loader
-	InteractionEventsForInteractionSession *dataloader.Loader
-	InteractionSessionForInteractionEvent  *dataloader.Loader
-	SentByParticipantsForInteractionEvent  *dataloader.Loader
-	SentToParticipantsForInteractionEvent  *dataloader.Loader
-	PhoneNumbersForOrganization            *dataloader.Loader
-	PhoneNumbersForUser                    *dataloader.Loader
-	PhoneNumbersForContact                 *dataloader.Loader
-	NotedEntitiesForNote                   *dataloader.Loader
+	TagsForOrganization                        *dataloader.Loader
+	TagsForContact                             *dataloader.Loader
+	TagsForTicket                              *dataloader.Loader
+	EmailsForContact                           *dataloader.Loader
+	EmailsForOrganization                      *dataloader.Loader
+	LocationsForContact                        *dataloader.Loader
+	LocationsForOrganization                   *dataloader.Loader
+	JobRolesForContact                         *dataloader.Loader
+	DomainsForOrganization                     *dataloader.Loader
+	NotesForTicket                             *dataloader.Loader
+	InteractionEventsForInteractionSession     *dataloader.Loader
+	InteractionSessionForInteractionEvent      *dataloader.Loader
+	SentByParticipantsForInteractionEvent      *dataloader.Loader
+	SentToParticipantsForInteractionEvent      *dataloader.Loader
+	ReplyToInteractionEventForInteractionEvent *dataloader.Loader
+	PhoneNumbersForOrganization                *dataloader.Loader
+	PhoneNumbersForUser                        *dataloader.Loader
+	PhoneNumbersForContact                     *dataloader.Loader
+	NotedEntitiesForNote                       *dataloader.Loader
 }
 
 type tagBatcher struct {
@@ -102,24 +103,25 @@ func NewDataLoader(services *service.Services) *Loaders {
 		noteService: services.NoteService,
 	}
 	return &Loaders{
-		TagsForOrganization:                    dataloader.NewBatchedLoader(tagBatcher.getTagsForOrganizations, dataloader.WithClearCacheOnBatch()),
-		TagsForContact:                         dataloader.NewBatchedLoader(tagBatcher.getTagsForContacts, dataloader.WithClearCacheOnBatch()),
-		TagsForTicket:                          dataloader.NewBatchedLoader(tagBatcher.getTagsForTickets, dataloader.WithClearCacheOnBatch()),
-		EmailsForContact:                       dataloader.NewBatchedLoader(emailBatcher.getEmailsForContacts, dataloader.WithClearCacheOnBatch()),
-		EmailsForOrganization:                  dataloader.NewBatchedLoader(emailBatcher.getEmailsForOrganizations, dataloader.WithClearCacheOnBatch()),
-		LocationsForContact:                    dataloader.NewBatchedLoader(locationBatcher.getLocationsForContacts, dataloader.WithClearCacheOnBatch()),
-		LocationsForOrganization:               dataloader.NewBatchedLoader(locationBatcher.getLocationsForOrganizations, dataloader.WithClearCacheOnBatch()),
-		JobRolesForContact:                     dataloader.NewBatchedLoader(jobRoleBatcher.getJobRolesForContacts, dataloader.WithClearCacheOnBatch()),
-		DomainsForOrganization:                 dataloader.NewBatchedLoader(domainBatcher.getDomainsForOrganizations, dataloader.WithClearCacheOnBatch()),
-		NotesForTicket:                         dataloader.NewBatchedLoader(noteBatcher.getNotesForTickets, dataloader.WithClearCacheOnBatch()),
-		InteractionEventsForInteractionSession: dataloader.NewBatchedLoader(interactionEventBatcher.getInteractionEventsForInteractionSessions, dataloader.WithClearCacheOnBatch()),
-		InteractionSessionForInteractionEvent:  dataloader.NewBatchedLoader(interactionSessionBatcher.getInteractionSessionsForInteractionEvents, dataloader.WithClearCacheOnBatch()),
-		SentByParticipantsForInteractionEvent:  dataloader.NewBatchedLoader(interactionEventParticipantBatcher.getSentByParticipantsForInteractionEvents, dataloader.WithClearCacheOnBatch()),
-		SentToParticipantsForInteractionEvent:  dataloader.NewBatchedLoader(interactionEventParticipantBatcher.getSentToParticipantsForInteractionEvents, dataloader.WithClearCacheOnBatch()),
-		PhoneNumbersForOrganization:            dataloader.NewBatchedLoader(phoneNumberBatcher.getPhoneNumbersForOrganizations, dataloader.WithClearCacheOnBatch()),
-		PhoneNumbersForUser:                    dataloader.NewBatchedLoader(phoneNumberBatcher.getPhoneNumbersForUsers, dataloader.WithClearCacheOnBatch()),
-		PhoneNumbersForContact:                 dataloader.NewBatchedLoader(phoneNumberBatcher.getPhoneNumbersForContacts, dataloader.WithClearCacheOnBatch()),
-		NotedEntitiesForNote:                   dataloader.NewBatchedLoader(notedEntityBatcher.getNotedEntitiesForNotes, dataloader.WithClearCacheOnBatch()),
+		TagsForOrganization:                        dataloader.NewBatchedLoader(tagBatcher.getTagsForOrganizations, dataloader.WithClearCacheOnBatch()),
+		TagsForContact:                             dataloader.NewBatchedLoader(tagBatcher.getTagsForContacts, dataloader.WithClearCacheOnBatch()),
+		TagsForTicket:                              dataloader.NewBatchedLoader(tagBatcher.getTagsForTickets, dataloader.WithClearCacheOnBatch()),
+		EmailsForContact:                           dataloader.NewBatchedLoader(emailBatcher.getEmailsForContacts, dataloader.WithClearCacheOnBatch()),
+		EmailsForOrganization:                      dataloader.NewBatchedLoader(emailBatcher.getEmailsForOrganizations, dataloader.WithClearCacheOnBatch()),
+		LocationsForContact:                        dataloader.NewBatchedLoader(locationBatcher.getLocationsForContacts, dataloader.WithClearCacheOnBatch()),
+		LocationsForOrganization:                   dataloader.NewBatchedLoader(locationBatcher.getLocationsForOrganizations, dataloader.WithClearCacheOnBatch()),
+		JobRolesForContact:                         dataloader.NewBatchedLoader(jobRoleBatcher.getJobRolesForContacts, dataloader.WithClearCacheOnBatch()),
+		DomainsForOrganization:                     dataloader.NewBatchedLoader(domainBatcher.getDomainsForOrganizations, dataloader.WithClearCacheOnBatch()),
+		NotesForTicket:                             dataloader.NewBatchedLoader(noteBatcher.getNotesForTickets, dataloader.WithClearCacheOnBatch()),
+		InteractionEventsForInteractionSession:     dataloader.NewBatchedLoader(interactionEventBatcher.getInteractionEventsForInteractionSessions, dataloader.WithClearCacheOnBatch()),
+		InteractionSessionForInteractionEvent:      dataloader.NewBatchedLoader(interactionSessionBatcher.getInteractionSessionsForInteractionEvents, dataloader.WithClearCacheOnBatch()),
+		SentByParticipantsForInteractionEvent:      dataloader.NewBatchedLoader(interactionEventParticipantBatcher.getSentByParticipantsForInteractionEvents, dataloader.WithClearCacheOnBatch()),
+		SentToParticipantsForInteractionEvent:      dataloader.NewBatchedLoader(interactionEventParticipantBatcher.getSentToParticipantsForInteractionEvents, dataloader.WithClearCacheOnBatch()),
+		PhoneNumbersForOrganization:                dataloader.NewBatchedLoader(phoneNumberBatcher.getPhoneNumbersForOrganizations, dataloader.WithClearCacheOnBatch()),
+		PhoneNumbersForUser:                        dataloader.NewBatchedLoader(phoneNumberBatcher.getPhoneNumbersForUsers, dataloader.WithClearCacheOnBatch()),
+		PhoneNumbersForContact:                     dataloader.NewBatchedLoader(phoneNumberBatcher.getPhoneNumbersForContacts, dataloader.WithClearCacheOnBatch()),
+		ReplyToInteractionEventForInteractionEvent: dataloader.NewBatchedLoader(interactionEventBatcher.getReplyToInteractionEventsForInteractionEvents, dataloader.WithClearCacheOnBatch()),
+		NotedEntitiesForNote:                       dataloader.NewBatchedLoader(notedEntityBatcher.getNotedEntitiesForNotes, dataloader.WithClearCacheOnBatch()),
 	}
 }
 

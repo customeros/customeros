@@ -1,12 +1,62 @@
+extend type Query {
+    interactionSession(id: ID!): InteractionSession!
+    interactionSession_BySessionIdentifier(sessionIdentifier: String!): InteractionSession!
+
+    interactionEvent(id: ID!): InteractionEvent!
+    interactionEvent_ByEventIdentifier(eventIdentifier: String!): InteractionEvent!
+}
+
+input InteractionEventParticipantInput  {
+    email: String
+    phoneNumber: String
+    contactID: ID
+    userID: ID
+    type: String
+}
+
+input InteractionSessionInput {
+    sessionIdentifier: String
+    name: String!
+    status: String!
+    type: String
+    channel: String
+    appSource: String!
+}
+
+input InteractionEventInput {
+    eventIdentifier: String
+    content: String
+    contentType: String
+    channel: String
+    interactionSession: ID
+    sentBy: [InteractionEventParticipantInput!]!
+    sentTo: [InteractionEventParticipantInput!]!
+    repliesTo: ID
+    appSource: String!
+}
+
+extend type Mutation {
+    interactionSession_Create(
+        session: InteractionSessionInput!
+    ): InteractionSession!
+
+    interactionEvent_Create(
+        event: InteractionEventInput!
+    ): InteractionEvent!
+}
+
 union InteractionEventParticipant = EmailParticipant | PhoneNumberParticipant | ContactParticipant | UserParticipant
 
 type InteractionSession implements Node {
     id: ID!
     startedAt: Time!
     endedAt: Time
+    createdAt: Time!
+    updatedAt: Time!
 
-    name: String
-    status: String
+    sessionIdentifier: String
+    name: String!
+    status: String!
     type: String
     channel: String
     source: DataSource!
@@ -26,7 +76,7 @@ type InteractionEvent implements Node {
     interactionSession: InteractionSession @goField(forceResolver: true)
     sentBy: [InteractionEventParticipant!]! @goField(forceResolver: true)
     sentTo: [InteractionEventParticipant!]! @goField(forceResolver: true)
-
+    repliesTo: InteractionEvent @goField(forceResolver: true)
     source: DataSource!
     sourceOfTruth: DataSource!
     appSource: String!

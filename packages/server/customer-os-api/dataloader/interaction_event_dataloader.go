@@ -20,6 +20,16 @@ func (i *Loaders) GetInteractionEventsForInteractionSession(ctx context.Context,
 	return &resultObj, nil
 }
 
+func (i *Loaders) GetInteractionEventsForInteractionEvent(ctx context.Context, interactionEventId string) (*entity.InteractionEventEntities, error) {
+	thunk := i.ReplyToInteractionEventForInteractionEvent.Load(ctx, dataloader.StringKey(interactionEventId))
+	result, err := thunk()
+	if err != nil {
+		return nil, err
+	}
+	resultObj := result.(entity.InteractionEventEntities)
+	return &resultObj, nil
+}
+
 func (b *interactionEventBatcher) getInteractionEventsForInteractionSessions(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
 	ids, keyOrder := sortKeys(keys)
 
@@ -50,6 +60,46 @@ func (b *interactionEventBatcher) getInteractionEventsForInteractionSessions(ctx
 		if ix, ok := keyOrder[interactionSessionId]; ok {
 			results[ix] = &dataloader.Result{Data: record, Error: nil}
 			delete(keyOrder, interactionSessionId)
+		}
+	}
+	for _, ix := range keyOrder {
+		results[ix] = &dataloader.Result{Data: entity.InteractionEventEntities{}, Error: nil}
+	}
+
+	return results
+}
+
+func (b *interactionEventBatcher) getReplyToInteractionEventsForInteractionEvents(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
+	ids, keyOrder := sortKeys(keys)
+
+	ctx, cancel := context.WithTimeout(ctx, participantContextTimeout)
+	defer cancel()
+
+	interactionEventEntitiesPtr, err := b.interactionEventService.GetReplyToInteractionsEventForInteractionEvents(ctx, ids)
+	if err != nil {
+		// check if context deadline exceeded error occurred
+		if ctx.Err() == context.DeadlineExceeded {
+			return []*dataloader.Result{{Data: nil, Error: errors.New("deadline exceeded to get interaction event participants")}}
+		}
+		return []*dataloader.Result{{Data: nil, Error: err}}
+	}
+
+	interactionEventEntitiesGrouped := make(map[string]entity.InteractionEventEntities)
+	for _, val := range *interactionEventEntitiesPtr {
+		if list, ok := interactionEventEntitiesGrouped[val.DataloaderKey]; ok {
+			interactionEventEntitiesGrouped[val.DataloaderKey] = append(list, val)
+		} else {
+			interactionEventEntitiesGrouped[val.DataloaderKey] = entity.InteractionEventEntities{val}
+		}
+	}
+
+	// construct an output array of dataloader results
+	results := make([]*dataloader.Result, len(keys))
+	for organizationId, record := range interactionEventEntitiesGrouped {
+		ix, ok := keyOrder[organizationId]
+		if ok {
+			results[ix] = &dataloader.Result{Data: record, Error: nil}
+			delete(keyOrder, organizationId)
 		}
 	}
 	for _, ix := range keyOrder {

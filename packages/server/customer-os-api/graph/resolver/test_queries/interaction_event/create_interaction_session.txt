@@ -1,0 +1,24 @@
+mutation CreateInteractionSession($sessionIdentifier: String, $name: String!, $status: String!, $type: String, $channel: String) {
+interactionSession_Create(
+    session: {
+        sessionIdentifier: $sessionIdentifier
+        name: $name
+        status: $status
+        type: $type
+        channel: $channel
+        appSource: "Oasis"
+    }
+  ) {
+       id
+       createdAt
+       updatedAt
+       sessionIdentifier
+       name
+       status
+       type
+       channel
+       source
+       sourceOfTruth
+       appSource
+   }
+}

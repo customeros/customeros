@@ -11,16 +11,36 @@ func MapEntityToInteractionSession(entity *entity.InteractionSessionEntity) *mod
 		return nil
 	}
 	return &model.InteractionSession{
-		ID:            entity.Id,
-		StartedAt:     entity.StartedAt,
-		EndedAt:       entity.EndedAt,
-		Name:          utils.StringPtr(entity.Name),
-		Status:        utils.StringPtr(entity.Status),
-		Type:          utils.StringPtr(entity.Type),
-		Channel:       utils.StringPtr(entity.Channel),
-		AppSource:     entity.AppSource,
-		Source:        MapDataSourceToModel(entity.Source),
-		SourceOfTruth: MapDataSourceToModel(entity.SourceOfTruth),
+		ID:                entity.Id,
+		CreatedAt:         entity.CreatedAt,
+		UpdatedAt:         entity.UpdatedAt,
+		StartedAt:         entity.CreatedAt,
+		EndedAt:           entity.EndedAt,
+		SessionIdentifier: entity.SessionIdentifier,
+		Name:              entity.Name,
+		Status:            entity.Status,
+		Type:              entity.Type,
+		Channel:           entity.Channel,
+		AppSource:         entity.AppSource,
+		Source:            MapDataSourceToModel(entity.Source),
+		SourceOfTruth:     MapDataSourceToModel(entity.SourceOfTruth),
+	}
+}
+
+func MapInteractionSessionInputToEntity(model *model.InteractionSessionInput) *entity.InteractionSessionEntity {
+	if model == nil {
+		return nil
+	}
+	return &entity.InteractionSessionEntity{
+		SessionIdentifier: model.SessionIdentifier,
+		CreatedAt:         utils.Now(),
+		Name:              model.Name,
+		Status:            model.Status,
+		Type:              model.Type,
+		Channel:           model.Channel,
+		AppSource:         model.AppSource,
+		Source:            entity.DataSourceOpenline,
+		SourceOfTruth:     entity.DataSourceOpenline,
 	}
 }
 
