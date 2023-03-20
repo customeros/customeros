@@ -303,69 +303,81 @@ type ComplexityRoot struct {
 	}
 
 	Mutation struct {
-		ContactAddOrganizationByID             func(childComplexity int, input model.ContactOrganizationInput) int
-		ContactAddTagByID                      func(childComplexity int, input model.ContactTagInput) int
-		ContactCreate                          func(childComplexity int, input model.ContactInput) int
-		ContactGroupAddContact                 func(childComplexity int, contactID string, groupID string) int
-		ContactGroupCreate                     func(childComplexity int, input model.ContactGroupInput) int
-		ContactGroupDeleteAndUnlinkAllContacts func(childComplexity int, id string) int
-		ContactGroupRemoveContact              func(childComplexity int, contactID string, groupID string) int
-		ContactGroupUpdate                     func(childComplexity int, input model.ContactGroupUpdateInput) int
-		ContactHardDelete                      func(childComplexity int, contactID string) int
-		ContactMerge                           func(childComplexity int, primaryContactID string, mergedContactIds []string) int
-		ContactRemoveOrganizationByID          func(childComplexity int, input model.ContactOrganizationInput) int
-		ContactRemoveTagByID                   func(childComplexity int, input model.ContactTagInput) int
-		ContactSoftDelete                      func(childComplexity int, contactID string) int
-		ContactUpdate                          func(childComplexity int, input model.ContactUpdateInput) int
-		ConversationClose                      func(childComplexity int, conversationID string) int
-		ConversationCreate                     func(childComplexity int, input model.ConversationInput) int
-		ConversationUpdate                     func(childComplexity int, input model.ConversationUpdateInput) int
-		CustomFieldDeleteFromContactByID       func(childComplexity int, contactID string, id string) int
-		CustomFieldDeleteFromContactByName     func(childComplexity int, contactID string, fieldName string) int
-		CustomFieldDeleteFromFieldSetByID      func(childComplexity int, contactID string, fieldSetID string, id string) int
-		CustomFieldMergeToContact              func(childComplexity int, contactID string, input model.CustomFieldInput) int
-		CustomFieldMergeToFieldSet             func(childComplexity int, contactID string, fieldSetID string, input model.CustomFieldInput) int
-		CustomFieldUpdateInContact             func(childComplexity int, contactID string, input model.CustomFieldUpdateInput) int
-		CustomFieldUpdateInFieldSet            func(childComplexity int, contactID string, fieldSetID string, input model.CustomFieldUpdateInput) int
-		CustomFieldsMergeAndUpdateInContact    func(childComplexity int, contactID string, customFields []*model.CustomFieldInput, fieldSets []*model.FieldSetInput) int
-		EmailDelete                            func(childComplexity int, id string) int
-		EmailMergeToContact                    func(childComplexity int, contactID string, input model.EmailInput) int
-		EmailMergeToUser                       func(childComplexity int, userID string, input model.EmailInput) int
-		EmailRemoveFromContact                 func(childComplexity int, contactID string, email string) int
-		EmailRemoveFromContactByID             func(childComplexity int, contactID string, id string) int
-		EmailRemoveFromUser                    func(childComplexity int, userID string, email string) int
-		EmailRemoveFromUserByID                func(childComplexity int, userID string, id string) int
-		EmailUpdateInContact                   func(childComplexity int, contactID string, input model.EmailUpdateInput) int
-		EmailUpdateInUser                      func(childComplexity int, userID string, input model.EmailUpdateInput) int
-		EntityTemplateCreate                   func(childComplexity int, input model.EntityTemplateInput) int
-		FieldSetDeleteFromContact              func(childComplexity int, contactID string, id string) int
-		FieldSetMergeToContact                 func(childComplexity int, contactID string, input model.FieldSetInput) int
-		FieldSetUpdateInContact                func(childComplexity int, contactID string, input model.FieldSetUpdateInput) int
-		InteractionEventCreate                 func(childComplexity int, event model.InteractionEventInput) int
-		InteractionSessionCreate               func(childComplexity int, session model.InteractionSessionInput) int
-		JobRoleCreate                          func(childComplexity int, contactID string, input model.JobRoleInput) int
-		JobRoleDelete                          func(childComplexity int, contactID string, roleID string) int
-		JobRoleUpdate                          func(childComplexity int, contactID string, input model.JobRoleUpdateInput) int
-		NoteCreateForContact                   func(childComplexity int, contactID string, input model.NoteInput) int
-		NoteCreateForOrganization              func(childComplexity int, organizationID string, input model.NoteInput) int
-		NoteDelete                             func(childComplexity int, id string) int
-		NoteUpdate                             func(childComplexity int, input model.NoteUpdateInput) int
-		OrganizationCreate                     func(childComplexity int, input model.OrganizationInput) int
-		OrganizationDelete                     func(childComplexity int, id string) int
-		OrganizationMerge                      func(childComplexity int, primaryOrganizationID string, mergedOrganizationIds []string) int
-		OrganizationTypeCreate                 func(childComplexity int, input model.OrganizationTypeInput) int
-		OrganizationTypeDelete                 func(childComplexity int, id string) int
-		OrganizationTypeUpdate                 func(childComplexity int, input model.OrganizationTypeUpdateInput) int
-		OrganizationUpdate                     func(childComplexity int, input model.OrganizationUpdateInput) int
-		PhoneNumberMergeToContact              func(childComplexity int, contactID string, input model.PhoneNumberInput) int
-		PhoneNumberRemoveFromContactByE164     func(childComplexity int, contactID string, e164 string) int
-		PhoneNumberRemoveFromContactByID       func(childComplexity int, contactID string, id string) int
-		PhoneNumberUpdateInContact             func(childComplexity int, contactID string, input model.PhoneNumberUpdateInput) int
-		TagCreate                              func(childComplexity int, input model.TagInput) int
-		TagDelete                              func(childComplexity int, id string) int
-		TagUpdate                              func(childComplexity int, input model.TagUpdateInput) int
-		UserCreate                             func(childComplexity int, input model.UserInput) int
-		UserUpdate                             func(childComplexity int, input model.UserUpdateInput) int
+		ContactAddOrganizationByID              func(childComplexity int, input model.ContactOrganizationInput) int
+		ContactAddTagByID                       func(childComplexity int, input model.ContactTagInput) int
+		ContactCreate                           func(childComplexity int, input model.ContactInput) int
+		ContactGroupAddContact                  func(childComplexity int, contactID string, groupID string) int
+		ContactGroupCreate                      func(childComplexity int, input model.ContactGroupInput) int
+		ContactGroupDeleteAndUnlinkAllContacts  func(childComplexity int, id string) int
+		ContactGroupRemoveContact               func(childComplexity int, contactID string, groupID string) int
+		ContactGroupUpdate                      func(childComplexity int, input model.ContactGroupUpdateInput) int
+		ContactHardDelete                       func(childComplexity int, contactID string) int
+		ContactMerge                            func(childComplexity int, primaryContactID string, mergedContactIds []string) int
+		ContactRemoveOrganizationByID           func(childComplexity int, input model.ContactOrganizationInput) int
+		ContactRemoveTagByID                    func(childComplexity int, input model.ContactTagInput) int
+		ContactSoftDelete                       func(childComplexity int, contactID string) int
+		ContactUpdate                           func(childComplexity int, input model.ContactUpdateInput) int
+		ConversationClose                       func(childComplexity int, conversationID string) int
+		ConversationCreate                      func(childComplexity int, input model.ConversationInput) int
+		ConversationUpdate                      func(childComplexity int, input model.ConversationUpdateInput) int
+		CustomFieldDeleteFromContactByID        func(childComplexity int, contactID string, id string) int
+		CustomFieldDeleteFromContactByName      func(childComplexity int, contactID string, fieldName string) int
+		CustomFieldDeleteFromFieldSetByID       func(childComplexity int, contactID string, fieldSetID string, id string) int
+		CustomFieldMergeToContact               func(childComplexity int, contactID string, input model.CustomFieldInput) int
+		CustomFieldMergeToFieldSet              func(childComplexity int, contactID string, fieldSetID string, input model.CustomFieldInput) int
+		CustomFieldUpdateInContact              func(childComplexity int, contactID string, input model.CustomFieldUpdateInput) int
+		CustomFieldUpdateInFieldSet             func(childComplexity int, contactID string, fieldSetID string, input model.CustomFieldUpdateInput) int
+		CustomFieldsMergeAndUpdateInContact     func(childComplexity int, contactID string, customFields []*model.CustomFieldInput, fieldSets []*model.FieldSetInput) int
+		EmailDelete                             func(childComplexity int, id string) int
+		EmailMergeToContact                     func(childComplexity int, contactID string, input model.EmailInput) int
+		EmailMergeToOrganization                func(childComplexity int, organizationID string, input model.EmailInput) int
+		EmailMergeToUser                        func(childComplexity int, userID string, input model.EmailInput) int
+		EmailRemoveFromContact                  func(childComplexity int, contactID string, email string) int
+		EmailRemoveFromContactByID              func(childComplexity int, contactID string, id string) int
+		EmailRemoveFromOrganization             func(childComplexity int, organizationID string, email string) int
+		EmailRemoveFromOrganizationByID         func(childComplexity int, organizationID string, id string) int
+		EmailRemoveFromUser                     func(childComplexity int, userID string, email string) int
+		EmailRemoveFromUserByID                 func(childComplexity int, userID string, id string) int
+		EmailUpdateInContact                    func(childComplexity int, contactID string, input model.EmailUpdateInput) int
+		EmailUpdateInOrganization               func(childComplexity int, organizationID string, input model.EmailUpdateInput) int
+		EmailUpdateInUser                       func(childComplexity int, userID string, input model.EmailUpdateInput) int
+		EntityTemplateCreate                    func(childComplexity int, input model.EntityTemplateInput) int
+		FieldSetDeleteFromContact               func(childComplexity int, contactID string, id string) int
+		FieldSetMergeToContact                  func(childComplexity int, contactID string, input model.FieldSetInput) int
+		FieldSetUpdateInContact                 func(childComplexity int, contactID string, input model.FieldSetUpdateInput) int
+		InteractionEventCreate                  func(childComplexity int, event model.InteractionEventInput) int
+		InteractionSessionCreate                func(childComplexity int, session model.InteractionSessionInput) int
+		JobRoleCreate                           func(childComplexity int, contactID string, input model.JobRoleInput) int
+		JobRoleDelete                           func(childComplexity int, contactID string, roleID string) int
+		JobRoleUpdate                           func(childComplexity int, contactID string, input model.JobRoleUpdateInput) int
+		NoteCreateForContact                    func(childComplexity int, contactID string, input model.NoteInput) int
+		NoteCreateForOrganization               func(childComplexity int, organizationID string, input model.NoteInput) int
+		NoteDelete                              func(childComplexity int, id string) int
+		NoteUpdate                              func(childComplexity int, input model.NoteUpdateInput) int
+		OrganizationCreate                      func(childComplexity int, input model.OrganizationInput) int
+		OrganizationDelete                      func(childComplexity int, id string) int
+		OrganizationMerge                       func(childComplexity int, primaryOrganizationID string, mergedOrganizationIds []string) int
+		OrganizationTypeCreate                  func(childComplexity int, input model.OrganizationTypeInput) int
+		OrganizationTypeDelete                  func(childComplexity int, id string) int
+		OrganizationTypeUpdate                  func(childComplexity int, input model.OrganizationTypeUpdateInput) int
+		OrganizationUpdate                      func(childComplexity int, input model.OrganizationUpdateInput) int
+		PhoneNumberMergeToContact               func(childComplexity int, contactID string, input model.PhoneNumberInput) int
+		PhoneNumberMergeToOrganization          func(childComplexity int, organizationID string, input model.PhoneNumberInput) int
+		PhoneNumberMergeToUser                  func(childComplexity int, userID string, input model.PhoneNumberInput) int
+		PhoneNumberRemoveFromContactByE164      func(childComplexity int, contactID string, e164 string) int
+		PhoneNumberRemoveFromContactByID        func(childComplexity int, contactID string, id string) int
+		PhoneNumberRemoveFromOrganizationByE164 func(childComplexity int, organizationID string, e164 string) int
+		PhoneNumberRemoveFromOrganizationByID   func(childComplexity int, organizationID string, id string) int
+		PhoneNumberRemoveFromUserByE164         func(childComplexity int, userID string, e164 string) int
+		PhoneNumberRemoveFromUserByID           func(childComplexity int, userID string, id string) int
+		PhoneNumberUpdateInContact              func(childComplexity int, contactID string, input model.PhoneNumberUpdateInput) int
+		PhoneNumberUpdateInOrganization         func(childComplexity int, organizationID string, input model.PhoneNumberUpdateInput) int
+		PhoneNumberUpdateInUser                 func(childComplexity int, userID string, input model.PhoneNumberUpdateInput) int
+		TagCreate                               func(childComplexity int, input model.TagInput) int
+		TagDelete                               func(childComplexity int, id string) int
+		TagUpdate                               func(childComplexity int, input model.TagUpdateInput) int
+		UserCreate                              func(childComplexity int, input model.UserInput) int
+		UserUpdate                              func(childComplexity int, input model.UserUpdateInput) int
 	}
 
 	Note struct {
