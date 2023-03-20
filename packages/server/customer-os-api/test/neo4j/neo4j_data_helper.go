@@ -875,11 +875,11 @@ func InteractionEventPartOfInteractionSession(ctx context.Context, driver *neo4j
 	})
 }
 
-func InteractionEventRepliesToInteractionEvent(ctx context.Context, driver *neo4j.DriverWithContext, interactionEventId, repliesToInteractionEventId string) {
-	query := "MATCH (ie:InteractionEvent {id:$interactionEventId}), " +
-		"(rie:InteractionEvent {id:$repliesToInteractionEventId}) " +
+func InteractionEventRepliesToInteractionEvent(ctx context.Context, driver *neo4j.DriverWithContext, tenant, interactionEventId, repliesToInteractionEventId string) {
+	query := "MATCH (ie:InteractionEvent_%s {id:$interactionEventId}), " +
+		"(rie:InteractionEvent_%s {id:$repliesToInteractionEventId}) " +
 		" MERGE (ie)-[:REPLIES_TO]->(rie) "
-	ExecuteWriteQuery(ctx, driver, query, map[string]any{
+	ExecuteWriteQuery(ctx, driver, fmt.Sprintf(query, tenant, tenant), map[string]any{
 		"interactionEventId":          interactionEventId,
 		"repliesToInteractionEventId": repliesToInteractionEventId,
 	})
