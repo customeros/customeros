@@ -14,7 +14,7 @@ export class DateTimeUtils {
   public static format(date: string | number, formatString?: string): string {
     const formatStr = formatString || this.defaultFormatString;
 
-    return format(this.getDate(date), formatStr);
+    return date ? format(this.getDate(date), formatStr) : '';
   }
 
   public static timeAgo(
