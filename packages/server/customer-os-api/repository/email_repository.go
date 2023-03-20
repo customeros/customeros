@@ -310,7 +310,7 @@ func (r *emailRepository) Exists(ctx context.Context, tenant string, email strin
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
-	query := "MATCH (e:Email_%s {email: $email}) RETURN e LIMIT 1"
+	query := "MATCH (e:Email_%s) WHERE e.rawEmail = $email OR e.email = $email RETURN e LIMIT 1"
 
 	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		if queryResult, err := tx.Run(ctx, fmt.Sprintf(query, tenant),

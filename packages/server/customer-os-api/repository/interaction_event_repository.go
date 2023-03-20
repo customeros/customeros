@@ -55,9 +55,9 @@ func (r *interactionEventRepository) LinkWithSentXXEmailInTx(ctx context.Context
 		}
 	} else {
 		if sentType != nil {
-			query += fmt.Sprintf(`MERGE (ie)<-[r:SENT_BY {type:$sentType}]-(e) RETURN r`)
+			query += fmt.Sprintf(`MERGE (ie)-[r:SENT_BY {type:$sentType}]->(e) RETURN r`)
 		} else {
-			query += fmt.Sprintf(`MERGE (ie)<-[r:SENT_BY]-(e) RETURN r`)
+			query += fmt.Sprintf(`MERGE (ie)-[r:SENT_BY]->(e) RETURN r`)
 		}
 	}
 	queryResult, err := tx.Run(ctx, query,
@@ -75,7 +75,7 @@ func (r *interactionEventRepository) LinkWithSentXXEmailInTx(ctx context.Context
 func (r *interactionEventRepository) LinkWithSentXXPhoneNumberInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, interactionEventId, e164 string, sentType *string, direction SendDirection) error {
 	query := fmt.Sprintf(`MATCH (p:PhoneNumber_%s) `, tenant)
 	query += fmt.Sprintf(`MATCH (ie:InteractionEvent_%s {id:$eventId}) `, tenant)
-	query += `WHERE p.e164 = $e164 OR e.rawPhoneNumber = $e164 `
+	query += `WHERE p.e164 = $e164 OR p.rawPhoneNumber = $e164 `
 
 	if direction == SENT_TO {
 		if sentType != nil {
@@ -85,9 +85,9 @@ func (r *interactionEventRepository) LinkWithSentXXPhoneNumberInTx(ctx context.C
 		}
 	} else {
 		if sentType != nil {
-			query += fmt.Sprintf(`MERGE (ie)<-[r:SENT_BY {type:$sentType}]-(p) RETURN r`)
+			query += fmt.Sprintf(`MERGE (ie)-[r:SENT_BY {type:$sentType}]->(p) RETURN r`)
 		} else {
-			query += fmt.Sprintf(`MERGE (ie)<-[r:SENT_BY]-(p) RETURN r`)
+			query += fmt.Sprintf(`MERGE (ie)-[r:SENT_BY]->(p) RETURN r`)
 		}
 	}
 	queryResult, err := tx.Run(ctx, query,

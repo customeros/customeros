@@ -12,7 +12,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"golang.org/x/exp/slices"
 	"golang.org/x/net/context"
-	"time"
 )
 
 type InteractionEventService interface {
@@ -110,7 +109,7 @@ func (s *interactionEventService) createInteractionEventInDBTxWork(ctx context.C
 					return nil, err
 				}
 
-				curTime := time.Now()
+				curTime := utils.Now()
 				if !exists {
 					_, err = s.services.ContactService.Create(ctx, &ContactCreateData{
 						ContactEntity: &entity.ContactEntity{CreatedAt: &curTime, FirstName: "", LastName: ""},
@@ -125,12 +124,12 @@ func (s *interactionEventService) createInteractionEventInDBTxWork(ctx context.C
 				}
 
 			} else if sentTo.PhoneNumber != nil {
-				exists, err := s.repositories.EmailRepository.Exists(ctx, tenant, *sentTo.Email)
+				exists, err := s.repositories.PhoneNumberRepository.Exists(ctx, tenant, *sentTo.PhoneNumber)
 				if err != nil {
 					return nil, err
 				}
 
-				curTime := time.Now()
+				curTime := utils.Now()
 				if !exists {
 					_, err = s.services.ContactService.Create(ctx, &ContactCreateData{
 						ContactEntity: &entity.ContactEntity{CreatedAt: &curTime, FirstName: "", LastName: ""},
@@ -165,7 +164,7 @@ func (s *interactionEventService) createInteractionEventInDBTxWork(ctx context.C
 					return nil, err
 				}
 
-				curTime := time.Now()
+				curTime := utils.Now()
 				if !exists {
 					_, err = s.services.ContactService.Create(ctx, &ContactCreateData{
 						ContactEntity: &entity.ContactEntity{CreatedAt: &curTime, FirstName: "", LastName: ""},
@@ -180,18 +179,18 @@ func (s *interactionEventService) createInteractionEventInDBTxWork(ctx context.C
 				}
 
 			} else if sentBy.PhoneNumber != nil {
-				exists, err := s.repositories.EmailRepository.Exists(ctx, tenant, *sentBy.Email)
+				exists, err := s.repositories.PhoneNumberRepository.Exists(ctx, tenant, *sentBy.PhoneNumber)
 				if err != nil {
 					return nil, err
 				}
 
-				curTime := time.Now()
+				curTime := utils.Now()
 				if !exists {
 					_, err = s.services.ContactService.Create(ctx, &ContactCreateData{
-						ContactEntity: &entity.ContactEntity{CreatedAt: &curTime, FirstName: "", LastName: ""},
-						EmailEntity:   mapper.MapEmailInputToEntity(&model.EmailInput{Email: *sentBy.Email}),
-						Source:        entity.DataSourceOpenline,
-						SourceOfTruth: entity.DataSourceOpenline,
+						ContactEntity:     &entity.ContactEntity{CreatedAt: &curTime, FirstName: "", LastName: ""},
+						PhoneNumberEntity: mapper.MapPhoneNumberInputToEntity(&model.PhoneNumberInput{PhoneNumber: *sentBy.PhoneNumber}),
+						Source:            entity.DataSourceOpenline,
+						SourceOfTruth:     entity.DataSourceOpenline,
 					})
 				}
 				err = s.repositories.InteractionEventRepository.LinkWithSentXXPhoneNumberInTx(ctx, tx, tenant, interactionEventId, *sentBy.PhoneNumber, sentBy.Type, repository.SENT_BY)

@@ -29,10 +29,10 @@ func MapEntitiesToInteractionEvents(entities *entity.InteractionEventEntities) [
 }
 func MapInteractionEventInputToEntity(input *model.InteractionEventInput) *entity.InteractionEventEntity {
 	return &entity.InteractionEventEntity{
-		EventIdentifier: *input.EventIdentifier,
-		Content:         *input.Content,
-		ContentType:     *input.ContentType,
-		Channel:         *input.Channel,
+		EventIdentifier: utils.IfNotNilString(input.EventIdentifier),
+		Content:         utils.IfNotNilString(input.Content),
+		ContentType:     utils.IfNotNilString(input.ContentType),
+		Channel:         utils.IfNotNilString(input.Channel),
 		AppSource:       input.AppSource,
 	}
 }

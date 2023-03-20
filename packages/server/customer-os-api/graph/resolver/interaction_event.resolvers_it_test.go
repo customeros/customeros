@@ -4,12 +4,271 @@ import (
 	"github.com/99designs/gqlgen/client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/neo4j"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils/decode"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/net/context"
 	"log"
 	"testing"
 	"time"
 )
+
+func TestMutationResolver_InteractionEventCreate_Min(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx)(t)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
+
+	rawResponse, err := c.RawPost(getQuery("interaction_event/create_interaction_event_min"))
+	assertRawResponseSuccess(t, rawResponse, err)
+
+	var interactionEvent struct {
+		InteractionEvent_Create struct {
+			ID        string  `json:"id"`
+			Channel   *string `json:"channel"`
+			AppSource string  `json:"appSource"`
+			SentTo    []struct {
+				Typename         string `json:"__typename"`
+				EmailParticipant struct {
+					ID       string `json:"id"`
+					RawEmail string `json:"rawEmail"`
+				} `json:"emailParticipant"`
+			} `json:"sentTo"`
+			SentBy []struct {
+				Typename         string `json:"__typename"`
+				EmailParticipant struct {
+					ID       string `json:"id"`
+					RawEmail string `json:"rawEmail"`
+				} `json:"emailParticipant"`
+			} `json:"sentBy"`
+			InteractionSession struct {
+				ID                string `json:"id"`
+				AppSource         string `json:"appSource"`
+				Channel           string `json:"channel"`
+				Name              string `json:"name"`
+				SessionIdentifier string `json:"sessionIdentifier"`
+			} `json:"interactionSession"`
+			RepliesTo struct {
+				ID string `json:"id"`
+			} `json:"repliesTo"`
+		}
+	}
+
+	err = decode.Decode(rawResponse.Data.(map[string]interface{}), &interactionEvent)
+	log.Printf("interactionEvent: %v", rawResponse.Data)
+
+	require.Nil(t, err)
+	require.NotNil(t, interactionEvent)
+	require.Equal(t, *interactionEvent.InteractionEvent_Create.Channel, "CHAT")
+	require.Equal(t, interactionEvent.InteractionEvent_Create.AppSource, "Oasis")
+	require.Equal(t, len(interactionEvent.InteractionEvent_Create.SentBy), 1)
+	require.Equal(t, interactionEvent.InteractionEvent_Create.SentBy[0].EmailParticipant.RawEmail, "email_1@openline.ai")
+
+}
+
+func TestMutationResolver_InteractionEventCreate_Email(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx)(t)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
+
+	now := time.Now().UTC()
+
+	interactionSession1 := neo4jt.CreateInteractionSession(ctx, driver, tenantName, "mySessionIdentifier", "session1", "THREAD", "ACTIVE", "EMAIL", now)
+
+	rawResponse, err := c.RawPost(getQuery("interaction_event/create_interaction_event_email"),
+		client.Var("content", "Message 1"),
+		client.Var("contentType", "text/plain"),
+		client.Var("sessionId", interactionSession1))
+	assertRawResponseSuccess(t, rawResponse, err)
+
+	type interactionEventType struct {
+		InteractionEvent_Create struct {
+			ID          string  `json:"id"`
+			Channel     *string `json:"channel"`
+			AppSource   string  `json:"appSource"`
+			Content     string  `json:"content"`
+			ContentType string  `json:"contentType"`
+			SentTo      []struct {
+				Typename         string `json:"__typename"`
+				EmailParticipant struct {
+					ID       string `json:"id"`
+					RawEmail string `json:"rawEmail"`
+				} `json:"emailParticipant"`
+			} `json:"sentTo"`
+			SentBy []struct {
+				Typename         string `json:"__typename"`
+				EmailParticipant struct {
+					ID       string `json:"id"`
+					RawEmail string `json:"rawEmail"`
+				} `json:"emailParticipant"`
+			} `json:"sentBy"`
+			InteractionSession struct {
+				ID                string `json:"id"`
+				AppSource         string `json:"appSource"`
+				Channel           string `json:"channel"`
+				Name              string `json:"name"`
+				SessionIdentifier string `json:"sessionIdentifier"`
+			} `json:"interactionSession"`
+			RepliesTo struct {
+				ID string `json:"id"`
+			} `json:"repliesTo"`
+		}
+	}
+
+	var interactionEvent interactionEventType
+	err = decode.Decode(rawResponse.Data.(map[string]interface{}), &interactionEvent)
+	log.Printf("interactionEvent: %v", rawResponse.Data)
+
+	require.Nil(t, err)
+	require.NotNil(t, interactionEvent)
+	require.Equal(t, *interactionEvent.InteractionEvent_Create.Channel, "EMAIL")
+	require.Equal(t, interactionEvent.InteractionEvent_Create.AppSource, "Oasis")
+	require.Equal(t, interactionEvent.InteractionEvent_Create.Content, "Message 1")
+	require.Equal(t, interactionEvent.InteractionEvent_Create.ContentType, "text/plain")
+	require.Equal(t, len(interactionEvent.InteractionEvent_Create.SentBy), 1)
+	require.Equal(t, interactionEvent.InteractionEvent_Create.SentBy[0].EmailParticipant.RawEmail, "sentBy@openline.ai")
+
+	require.Equal(t, len(interactionEvent.InteractionEvent_Create.SentTo), 2)
+	require.Equal(t, interactionEvent.InteractionEvent_Create.SentTo[0].EmailParticipant.RawEmail, "dest1@openline.ai")
+	require.Equal(t, interactionEvent.InteractionEvent_Create.SentTo[1].EmailParticipant.RawEmail, "dest2@openline.ai")
+
+	require.Equal(t, interactionEvent.InteractionEvent_Create.InteractionSession.ID, interactionSession1)
+	require.Equal(t, interactionEvent.InteractionEvent_Create.InteractionSession.Name, "session1")
+
+	sentById := interactionEvent.InteractionEvent_Create.SentBy[0].EmailParticipant.ID
+	dest1 := interactionEvent.InteractionEvent_Create.SentTo[0].EmailParticipant.ID
+	dest2 := interactionEvent.InteractionEvent_Create.SentTo[1].EmailParticipant.ID
+	origMsgId := interactionEvent.InteractionEvent_Create.ID
+
+	var interactionEvent2 interactionEventType
+
+	rawResponse, err = c.RawPost(getQuery("interaction_event/create_interaction_event_email"),
+		client.Var("content", "Message 2"),
+		client.Var("contentType", "text/plain"),
+		client.Var("sessionId", interactionSession1),
+		client.Var("replyTo", origMsgId))
+	assertRawResponseSuccess(t, rawResponse, err)
+	err = decode.Decode(rawResponse.Data.(map[string]interface{}), &interactionEvent2)
+	log.Printf("interactionEvent: %v", rawResponse.Data)
+
+	// check the email addresses are re-used
+	require.Nil(t, err)
+	require.Equal(t, interactionEvent2.InteractionEvent_Create.RepliesTo.ID, origMsgId)
+	require.Equal(t, interactionEvent2.InteractionEvent_Create.SentBy[0].EmailParticipant.ID, sentById)
+	require.Equal(t, interactionEvent2.InteractionEvent_Create.SentTo[0].EmailParticipant.ID, dest1)
+	require.Equal(t, interactionEvent2.InteractionEvent_Create.SentTo[1].EmailParticipant.ID, dest2)
+}
+
+func TestMutationResolver_InteractionEventCreate_Voice(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx)(t)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
+
+	userId := neo4jt.CreateUser(ctx, driver, tenantName, entity.UserEntity{
+		FirstName: "Agent",
+		LastName:  "Smith",
+	})
+
+	emailId1 := neo4jt.AddEmailTo(ctx, driver, entity.USER, tenantName, userId, "user1@openline.ai", true, "WORK")
+
+	now := time.Now().UTC()
+
+	interactionSession1 := neo4jt.CreateInteractionSession(ctx, driver, tenantName, "mySessionIdentifier", "session1", "THREAD", "ACTIVE", "VOICE", now)
+
+	rawResponse, err := c.RawPost(getQuery("interaction_event/create_interaction_event_call"),
+		client.Var("content", "Message 1"),
+		client.Var("contentType", "text/plain"),
+		client.Var("sessionId", interactionSession1))
+	assertRawResponseSuccess(t, rawResponse, err)
+
+	type interactionEventType struct {
+		InteractionEvent_Create struct {
+			ID          string `json:"id"`
+			Channel     string `json:"channel"`
+			AppSource   string `json:"appSource"`
+			Content     string `json:"content"`
+			ContentType string `json:"contentType"`
+			SentTo      []struct {
+				Typename         string `json:"__typename"`
+				EmailParticipant struct {
+					ID       string `json:"id"`
+					RawEmail string `json:"rawEmail"`
+				} `json:"emailParticipant"`
+				PhoneNumberParticipant struct {
+					ID             string `json:"id"`
+					RawPhoneNumber string `json:"rawPhoneNumber"`
+				} `json:"phoneNumberParticipant"`
+			} `json:"sentTo"`
+			SentBy []struct {
+				Typename         string `json:"__typename"`
+				EmailParticipant struct {
+					ID       string `json:"id"`
+					RawEmail string `json:"rawEmail"`
+				} `json:"emailParticipant"`
+				PhoneNumberParticipant struct {
+					ID             string `json:"id"`
+					RawPhoneNumber string `json:"rawPhoneNumber"`
+				} `json:"phoneNumberParticipant"`
+			} `json:"sentBy"`
+			InteractionSession struct {
+				ID                string `json:"id"`
+				AppSource         string `json:"appSource"`
+				Channel           string `json:"channel"`
+				Name              string `json:"name"`
+				SessionIdentifier string `json:"sessionIdentifier"`
+			} `json:"interactionSession"`
+			RepliesTo struct {
+				ID string `json:"id"`
+			} `json:"repliesTo"`
+		}
+	}
+
+	var interactionEvent interactionEventType
+	err = decode.Decode(rawResponse.Data.(map[string]interface{}), &interactionEvent)
+	log.Printf("interactionEvent: %v", rawResponse.Data)
+
+	require.Nil(t, err)
+	require.NotNil(t, interactionEvent)
+	require.Equal(t, interactionEvent.InteractionEvent_Create.Channel, "VOICE")
+	require.Equal(t, interactionEvent.InteractionEvent_Create.AppSource, "Oasis")
+	require.Equal(t, interactionEvent.InteractionEvent_Create.Content, "Message 1")
+	require.Equal(t, interactionEvent.InteractionEvent_Create.ContentType, "text/plain")
+	require.Equal(t, len(interactionEvent.InteractionEvent_Create.SentBy), 1)
+	require.Equal(t, interactionEvent.InteractionEvent_Create.SentBy[0].PhoneNumberParticipant.RawPhoneNumber, "+1234567890")
+
+	phoneNumberId := interactionEvent.InteractionEvent_Create.SentBy[0].PhoneNumberParticipant.ID
+
+	require.Equal(t, len(interactionEvent.InteractionEvent_Create.SentTo), 1)
+	require.Equal(t, interactionEvent.InteractionEvent_Create.SentTo[0].EmailParticipant.RawEmail, "user1@openline.ai")
+	require.Equal(t, interactionEvent.InteractionEvent_Create.SentTo[0].EmailParticipant.ID, emailId1)
+
+	require.Equal(t, interactionEvent.InteractionEvent_Create.InteractionSession.ID, interactionSession1)
+	require.Equal(t, interactionEvent.InteractionEvent_Create.InteractionSession.Name, "session1")
+
+	rawResponse, err = c.RawPost(getQuery("interaction_event/create_interaction_event_call2"),
+		client.Var("content", "Message 2"),
+		client.Var("contentType", "text/plain"),
+		client.Var("sessionId", interactionSession1))
+	assertRawResponseSuccess(t, rawResponse, err)
+
+	var interactionEvent2 interactionEventType
+	err = decode.Decode(rawResponse.Data.(map[string]interface{}), &interactionEvent2)
+	log.Printf("interactionEvent: %v", rawResponse.Data)
+
+	require.Nil(t, err)
+	require.Equal(t, interactionEvent2.InteractionEvent_Create.Channel, "VOICE")
+	require.Equal(t, interactionEvent2.InteractionEvent_Create.AppSource, "Oasis")
+	require.Equal(t, interactionEvent2.InteractionEvent_Create.Content, "Message 2")
+	require.Equal(t, interactionEvent2.InteractionEvent_Create.ContentType, "text/plain")
+	require.Equal(t, len(interactionEvent2.InteractionEvent_Create.SentBy), 1)
+	require.Equal(t, interactionEvent2.InteractionEvent_Create.SentBy[0].EmailParticipant.RawEmail, "user1@openline.ai")
+	require.Equal(t, interactionEvent2.InteractionEvent_Create.SentBy[0].EmailParticipant.ID, emailId1)
+
+	require.Equal(t, len(interactionEvent2.InteractionEvent_Create.SentTo), 1)
+	require.Equal(t, interactionEvent2.InteractionEvent_Create.SentTo[0].PhoneNumberParticipant.RawPhoneNumber, "+1234567890")
+	require.Equal(t, interactionEvent2.InteractionEvent_Create.SentTo[0].PhoneNumberParticipant.ID, phoneNumberId)
+}
 
 func TestQueryResolver_InteractionEvent(t *testing.T) {
 	ctx := context.TODO()

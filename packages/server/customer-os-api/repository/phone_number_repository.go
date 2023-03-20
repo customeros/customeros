@@ -264,7 +264,7 @@ func (r *phoneNumberRepository) Exists(ctx context.Context, tenant string, e164 
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
-	query := "MATCH (p:PhoneNumber_%s) WHERE e.e164 = $e164 OR e.rawPhoneNumber = $e164 RETURN p LIMIT 1"
+	query := "MATCH (p:PhoneNumber_%s) WHERE p.e164 = $e164 OR p.rawPhoneNumber = $e164 RETURN p LIMIT 1"
 
 	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		if queryResult, err := tx.Run(ctx, fmt.Sprintf(query, tenant),

@@ -106,7 +106,8 @@ func (r *mutationResolver) InteractionEventCreate(ctx context.Context, event mod
 		ContentType:            event.ContentType,
 		SessionIdentifier:      event.InteractionSession,
 		SentBy:                 service.MapInteractionEventParticipantInputToAddressData(event.SentBy),
-		SentTo:                 service.MapInteractionEventParticipantInputToAddressData(event.SentBy),
+		SentTo:                 service.MapInteractionEventParticipantInputToAddressData(event.SentTo),
+		RepliesTo:              event.RepliesTo,
 
 		Source:        entity.DataSourceOpenline,
 		SourceOfTruth: entity.DataSourceOpenline,
@@ -115,7 +116,8 @@ func (r *mutationResolver) InteractionEventCreate(ctx context.Context, event mod
 		graphql.AddErrorf(ctx, "Failed to create InteractionEvent")
 		return nil, err
 	}
-	return mapper.MapEntityToInteractionEvent(interactionEventCreated), nil
+	interactionEvent := mapper.MapEntityToInteractionEvent(interactionEventCreated)
+	return interactionEvent, nil
 }
 
 // InteractionSession is the resolver for the interactionSession field.
