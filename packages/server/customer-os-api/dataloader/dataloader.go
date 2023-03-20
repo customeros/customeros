@@ -27,6 +27,8 @@ type Loaders struct {
 	SentByParticipantsForInteractionEvent  *dataloader.Loader
 	SentToParticipantsForInteractionEvent  *dataloader.Loader
 	PhoneNumbersForOrganization            *dataloader.Loader
+	PhoneNumbersForUser                    *dataloader.Loader
+	PhoneNumbersForContact                 *dataloader.Loader
 }
 
 type tagBatcher struct {
@@ -108,6 +110,8 @@ func NewDataLoader(services *service.Services) *Loaders {
 		SentByParticipantsForInteractionEvent:  dataloader.NewBatchedLoader(interactionEventParticipantBatcher.getSentByParticipantsForInteractionEvents, dataloader.WithClearCacheOnBatch()),
 		SentToParticipantsForInteractionEvent:  dataloader.NewBatchedLoader(interactionEventParticipantBatcher.getSentToParticipantsForInteractionEvents, dataloader.WithClearCacheOnBatch()),
 		PhoneNumbersForOrganization:            dataloader.NewBatchedLoader(phoneNumberBatcher.getPhoneNumbersForOrganizations, dataloader.WithClearCacheOnBatch()),
+		PhoneNumbersForUser:                    dataloader.NewBatchedLoader(phoneNumberBatcher.getPhoneNumbersForUsers, dataloader.WithClearCacheOnBatch()),
+		PhoneNumbersForContact:                 dataloader.NewBatchedLoader(phoneNumberBatcher.getPhoneNumbersForContacts, dataloader.WithClearCacheOnBatch()),
 	}
 }
 

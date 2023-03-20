@@ -3,7 +3,6 @@ package service
 import (
 	"context"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j/db"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
@@ -16,7 +15,6 @@ type PhoneNumberService interface {
 	UpdatePhoneNumberFor(ctx context.Context, entityType entity.EntityType, entityId string, inputEntity *entity.PhoneNumberEntity) (*entity.PhoneNumberEntity, error)
 	DetachFromEntityByPhoneNumber(ctx context.Context, entityType entity.EntityType, entityId, phoneNumber string) (bool, error)
 	DetachFromEntityById(ctx context.Context, entityType entity.EntityType, entityId, phoneNumberId string) (bool, error)
-	GetAllForContact(ctx context.Context, contactId string) (*entity.PhoneNumberEntities, error)
 	GetAllForEntityTypeByIds(ctx context.Context, entityType entity.EntityType, ids []string) (*entity.PhoneNumberEntities, error)
 
 	mapDbNodeToPhoneNumberEntity(node dbtype.Node) *entity.PhoneNumberEntity
@@ -34,23 +32,6 @@ func NewPhoneNumberService(repositories *repository.Repositories) PhoneNumberSer
 
 func (s *phoneNumberService) getDriver() neo4j.DriverWithContext {
 	return *s.repositories.Drivers.Neo4jDriver
-}
-
-func (s *phoneNumberService) GetAllForContact(ctx context.Context, contactId string) (*entity.PhoneNumberEntities, error) {
-	queryResult, err := s.repositories.PhoneNumberRepository.GetAllForContact(ctx, common.GetTenantFromContext(ctx), contactId)
-	if err != nil {
-		return nil, err
-	}
-
-	phoneNumberEntities := entity.PhoneNumberEntities{}
-
-	for _, dbRecord := range queryResult.([]*db.Record) {
-		phoneNumberEntity := s.mapDbNodeToPhoneNumberEntity(dbRecord.Values[0].(dbtype.Node))
-		s.addDbRelationshipToPhoneNumberEntity(dbRecord.Values[1].(dbtype.Relationship), phoneNumberEntity)
-		phoneNumberEntities = append(phoneNumberEntities, *phoneNumberEntity)
-	}
-
-	return &phoneNumberEntities, nil
 }
 
 func (s *phoneNumberService) GetAllForEntityTypeByIds(ctx context.Context, entityType entity.EntityType, ids []string) (*entity.PhoneNumberEntities, error) {

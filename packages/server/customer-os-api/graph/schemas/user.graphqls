@@ -39,6 +39,7 @@ type User {
     **Required.  If no values it returns an empty array.**
     """
     emails: [Email!] @goField(forceResolver: true)
+    phoneNumbers: [PhoneNumber!]! @goField(forceResolver: true)
 
     """
     Timestamp of user creation.
@@ -49,7 +50,7 @@ type User {
 
     source: DataSource!
 
-    conversations(pagination: Pagination, sort: [SortBy!]): ConversationPage! @goField(forceResolver: true)
+    conversations(pagination: Pagination, sort: [SortBy!]): ConversationPage! @goField(forceResolver: true) @deprecated(reason: "Conversations replaced by interaction events")
 }
 
 """

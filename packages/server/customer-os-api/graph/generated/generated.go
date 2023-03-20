@@ -538,6 +538,7 @@ type ComplexityRoot struct {
 		FirstName     func(childComplexity int) int
 		ID            func(childComplexity int) int
 		LastName      func(childComplexity int) int
+		PhoneNumbers  func(childComplexity int) int
 		Source        func(childComplexity int) int
 		UpdatedAt     func(childComplexity int) int
 	}
@@ -728,6 +729,7 @@ type TicketResolver interface {
 }
 type UserResolver interface {
 	Emails(ctx context.Context, obj *model.User) ([]*model.Email, error)
+	PhoneNumbers(ctx context.Context, obj *model.User) ([]*model.PhoneNumber, error)
 
 	Conversations(ctx context.Context, obj *model.User, pagination *model.Pagination, sort []*model.SortBy) (*model.ConversationPage, error)
 }
@@ -3825,6 +3827,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.User.LastName(childComplexity), true
 
+	case "User.phoneNumbers":
+		if e.complexity.User.PhoneNumbers == nil {
+			break
+		}
+
+		return e.complexity.User.PhoneNumbers(childComplexity), true
+
 	case "User.source":
 		if e.complexity.User.Source == nil {
 			break
@@ -5463,6 +5472,7 @@ type User {
     **Required.  If no values it returns an empty array.**
     """
     emails: [Email!] @goField(forceResolver: true)
+    phoneNumbers: [PhoneNumber!]! @goField(forceResolver: true)
 
     """
     Timestamp of user creation.
@@ -5473,7 +5483,7 @@ type User {
 
     source: DataSource!
 
-    conversations(pagination: Pagination, sort: [SortBy!]): ConversationPage! @goField(forceResolver: true)
+    conversations(pagination: Pagination, sort: [SortBy!]): ConversationPage! @goField(forceResolver: true) @deprecated(reason: "Conversations replaced by interaction events")
 }
 
 """
@@ -8869,6 +8879,8 @@ func (ec *executionContext) fieldContext_Contact_owner(ctx context.Context, fiel
 				return ec.fieldContext_User_lastName(ctx, field)
 			case "emails":
 				return ec.fieldContext_User_emails(ctx, field)
+			case "phoneNumbers":
+				return ec.fieldContext_User_phoneNumbers(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_User_createdAt(ctx, field)
 			case "updatedAt":
@@ -10515,6 +10527,8 @@ func (ec *executionContext) fieldContext_Conversation_users(ctx context.Context,
 				return ec.fieldContext_User_lastName(ctx, field)
 			case "emails":
 				return ec.fieldContext_User_emails(ctx, field)
+			case "phoneNumbers":
+				return ec.fieldContext_User_phoneNumbers(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_User_createdAt(ctx, field)
 			case "updatedAt":
@@ -21751,6 +21765,8 @@ func (ec *executionContext) fieldContext_Mutation_user_Create(ctx context.Contex
 				return ec.fieldContext_User_lastName(ctx, field)
 			case "emails":
 				return ec.fieldContext_User_emails(ctx, field)
+			case "phoneNumbers":
+				return ec.fieldContext_User_phoneNumbers(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_User_createdAt(ctx, field)
 			case "updatedAt":
@@ -21824,6 +21840,8 @@ func (ec *executionContext) fieldContext_Mutation_user_Update(ctx context.Contex
 				return ec.fieldContext_User_lastName(ctx, field)
 			case "emails":
 				return ec.fieldContext_User_emails(ctx, field)
+			case "phoneNumbers":
+				return ec.fieldContext_User_phoneNumbers(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_User_createdAt(ctx, field)
 			case "updatedAt":
@@ -22070,6 +22088,8 @@ func (ec *executionContext) fieldContext_Note_createdBy(ctx context.Context, fie
 				return ec.fieldContext_User_lastName(ctx, field)
 			case "emails":
 				return ec.fieldContext_User_emails(ctx, field)
+			case "phoneNumbers":
+				return ec.fieldContext_User_phoneNumbers(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_User_createdAt(ctx, field)
 			case "updatedAt":
@@ -26553,6 +26573,8 @@ func (ec *executionContext) fieldContext_Query_user(ctx context.Context, field g
 				return ec.fieldContext_User_lastName(ctx, field)
 			case "emails":
 				return ec.fieldContext_User_emails(ctx, field)
+			case "phoneNumbers":
+				return ec.fieldContext_User_phoneNumbers(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_User_createdAt(ctx, field)
 			case "updatedAt":
@@ -26626,6 +26648,8 @@ func (ec *executionContext) fieldContext_Query_user_ByEmail(ctx context.Context,
 				return ec.fieldContext_User_lastName(ctx, field)
 			case "emails":
 				return ec.fieldContext_User_emails(ctx, field)
+			case "phoneNumbers":
+				return ec.fieldContext_User_phoneNumbers(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_User_createdAt(ctx, field)
 			case "updatedAt":
@@ -27872,6 +27896,72 @@ func (ec *executionContext) fieldContext_User_emails(ctx context.Context, field 
 	return fc, nil
 }
 
+func (ec *executionContext) _User_phoneNumbers(ctx context.Context, field graphql.CollectedField, obj *model.User) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_User_phoneNumbers(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.User().PhoneNumbers(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.PhoneNumber)
+	fc.Result = res
+	return ec.marshalNPhoneNumber2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐPhoneNumberᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_User_phoneNumbers(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "User",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_PhoneNumber_id(ctx, field)
+			case "e164":
+				return ec.fieldContext_PhoneNumber_e164(ctx, field)
+			case "rawPhoneNumber":
+				return ec.fieldContext_PhoneNumber_rawPhoneNumber(ctx, field)
+			case "validated":
+				return ec.fieldContext_PhoneNumber_validated(ctx, field)
+			case "label":
+				return ec.fieldContext_PhoneNumber_label(ctx, field)
+			case "primary":
+				return ec.fieldContext_PhoneNumber_primary(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_PhoneNumber_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_PhoneNumber_updatedAt(ctx, field)
+			case "source":
+				return ec.fieldContext_PhoneNumber_source(ctx, field)
+			case "appSource":
+				return ec.fieldContext_PhoneNumber_appSource(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type PhoneNumber", field.Name)
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _User_createdAt(ctx context.Context, field graphql.CollectedField, obj *model.User) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_User_createdAt(ctx, field)
 	if err != nil {
@@ -28114,6 +28204,8 @@ func (ec *executionContext) fieldContext_UserPage_content(ctx context.Context, f
 				return ec.fieldContext_User_lastName(ctx, field)
 			case "emails":
 				return ec.fieldContext_User_emails(ctx, field)
+			case "phoneNumbers":
+				return ec.fieldContext_User_phoneNumbers(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_User_createdAt(ctx, field)
 			case "updatedAt":
@@ -28264,6 +28356,8 @@ func (ec *executionContext) fieldContext_UserParticipant_userParticipant(ctx con
 				return ec.fieldContext_User_lastName(ctx, field)
 			case "emails":
 				return ec.fieldContext_User_emails(ctx, field)
+			case "phoneNumbers":
+				return ec.fieldContext_User_phoneNumbers(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_User_createdAt(ctx, field)
 			case "updatedAt":
@@ -36389,6 +36483,26 @@ func (ec *executionContext) _User(ctx context.Context, sel ast.SelectionSet, obj
 					}
 				}()
 				res = ec._User_emails(ctx, field, obj)
+				return res
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
+		case "phoneNumbers":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._User_phoneNumbers(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
 				return res
 			}
 

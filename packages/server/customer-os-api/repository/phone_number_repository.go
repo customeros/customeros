@@ -10,7 +10,6 @@ import (
 )
 
 type PhoneNumberRepository interface {
-	GetAllForContact(ctx context.Context, tenant, contactId string) (any, error)
 	GetAllForIds(ctx context.Context, tenant string, entityType entity.EntityType, entityIds []string) ([]*utils.DbNodeWithRelationAndId, error)
 	GetByIdAndRelatedEntity(ctx context.Context, entityType entity.EntityType, tenant, phoneNumberId, entityId string) (*dbtype.Node, error)
 
@@ -103,27 +102,6 @@ func (r *phoneNumberRepository) UpdatePhoneNumberForInTx(ctx context.Context, tx
 			"now":           utils.Now(),
 		})
 	return utils.ExtractSingleRecordNodeAndRelationship(ctx, queryResult, err)
-}
-
-func (r *phoneNumberRepository) GetAllForContact(ctx context.Context, tenant, contactId string) (any, error) {
-	session := utils.NewNeo4jReadSession(ctx, *r.driver)
-	defer session.Close(ctx)
-
-	return session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		result, err := tx.Run(ctx, `
-				MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}),
-              			(c)-[rel:HAS]->(p:PhoneNumber)
-				RETURN p, rel`,
-			map[string]interface{}{
-				"contactId": contactId,
-				"tenant":    tenant,
-			})
-		records, err := result.Collect(ctx)
-		if err != nil {
-			return nil, err
-		}
-		return records, nil
-	})
 }
 
 func (r *phoneNumberRepository) GetAllForIds(ctx context.Context, tenant string, entityType entity.EntityType, entityIds []string) ([]*utils.DbNodeWithRelationAndId, error) {

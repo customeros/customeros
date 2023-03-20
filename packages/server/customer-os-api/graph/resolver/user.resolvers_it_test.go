@@ -272,3 +272,54 @@ func TestQueryResolver_User_WithConversations(t *testing.T) {
 	require.NotNil(t, conv2_1)
 	require.NotNil(t, conv2_3)
 }
+
+func TestQueryResolver_User_WithPhoneNumbers(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx)(t)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+
+	userId := neo4jt.CreateDefaultUser(ctx, driver, tenantName)
+	phoneNumberId1 := neo4jt.AddPhoneNumberTo(ctx, driver, tenantName, userId, "+1111", true, "MAIN")
+	phoneNumberId2 := neo4jt.AddPhoneNumberTo(ctx, driver, tenantName, userId, "+2222", false, "WORK")
+
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "User"))
+	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "PhoneNumber"))
+	require.Equal(t, 2, neo4jt.GetCountOfRelationships(ctx, driver, "HAS"))
+
+	rawResponse, err := c.RawPost(getQuery("user/get_user_with_phone_numbers"),
+		client.Var("userId", userId))
+	assertRawResponseSuccess(t, rawResponse, err)
+
+	var userStruct struct {
+		User model.User
+	}
+
+	err = decode.Decode(rawResponse.Data.(map[string]any), &userStruct)
+	require.Nil(t, err)
+	user := userStruct.User
+
+	require.Equal(t, userId, user.ID)
+	phoneNumbers := user.PhoneNumbers
+	require.Equal(t, 2, len(phoneNumbers))
+	var phoneNumber1, phoneNumber2 *model.PhoneNumber
+	if phoneNumberId1 == phoneNumbers[0].ID {
+		phoneNumber1 = phoneNumbers[0]
+		phoneNumber2 = phoneNumbers[1]
+	} else {
+		phoneNumber1 = phoneNumbers[1]
+		phoneNumber2 = phoneNumbers[0]
+	}
+	require.Equal(t, phoneNumberId1, phoneNumber1.ID)
+	require.NotNil(t, phoneNumber1.CreatedAt)
+	require.Equal(t, true, phoneNumber1.Primary)
+	require.Equal(t, "+1111", *phoneNumber1.RawPhoneNumber)
+	require.Equal(t, "+1111", *phoneNumber1.E164)
+	require.Equal(t, model.PhoneNumberLabelMain, *phoneNumber1.Label)
+
+	require.Equal(t, phoneNumberId2, phoneNumber2.ID)
+	require.NotNil(t, phoneNumber2.CreatedAt)
+	require.Equal(t, false, phoneNumber2.Primary)
+	require.Equal(t, "+2222", *phoneNumber2.RawPhoneNumber)
+	require.Equal(t, "+2222", *phoneNumber2.E164)
+	require.Equal(t, model.PhoneNumberLabelWork, *phoneNumber2.Label)
+}
