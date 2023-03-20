@@ -441,7 +441,7 @@ func TestQueryResolver_InteractionEvent_ByEventIdentifier(t *testing.T) {
 	interactionSession1 := neo4jt.CreateInteractionSession(ctx, driver, tenantName, "mySessionIdentifier", "session1", "THREAD", "ACTIVE", "EMAIL", now)
 
 	neo4jt.InteractionEventPartOfInteractionSession(ctx, driver, interactionEventId1, interactionSession1)
-	neo4jt.InteractionEventRepliesToInteractionEvent(ctx, driver, "Openline", interactionEventId1, interactionEventId4_WithoutSession)
+	neo4jt.InteractionEventRepliesToInteractionEvent(ctx, driver, tenantName, interactionEventId1, interactionEventId4_WithoutSession)
 	rawResponse, err := c.RawPost(getQuery("interaction_event/get_interaction_event_by_identifier"),
 		client.Var("eventId", "myExternalId1"))
 	assertRawResponseSuccess(t, rawResponse, err)
@@ -527,7 +527,7 @@ func TestQueryResolver_InteractionSession(t *testing.T) {
 	interactionSession1 := neo4jt.CreateInteractionSession(ctx, driver, tenantName, "mySessionIdentifier", "session1", "THREAD", "ACTIVE", "EMAIL", now)
 
 	neo4jt.InteractionEventPartOfInteractionSession(ctx, driver, interactionEventId1, interactionSession1)
-	neo4jt.InteractionEventRepliesToInteractionEvent(ctx, driver, "Openline", interactionEventId1, interactionEventId4_WithoutSession)
+	neo4jt.InteractionEventRepliesToInteractionEvent(ctx, driver, tenantName, interactionEventId1, interactionEventId4_WithoutSession)
 	rawResponse, err := c.RawPost(getQuery("interaction_event/get_interaction_session"),
 		client.Var("sessionId", interactionSession1))
 	assertRawResponseSuccess(t, rawResponse, err)
@@ -595,7 +595,7 @@ func TestQueryResolver_InteractionSession_BySessionIdentifier(t *testing.T) {
 	interactionSession1 := neo4jt.CreateInteractionSession(ctx, driver, tenantName, "mySessionIdentifier", "session1", "THREAD", "ACTIVE", "EMAIL", now)
 
 	neo4jt.InteractionEventPartOfInteractionSession(ctx, driver, interactionEventId1, interactionSession1)
-	neo4jt.InteractionEventRepliesToInteractionEvent(ctx, driver, "Openline", interactionEventId1, interactionEventId4_WithoutSession)
+	neo4jt.InteractionEventRepliesToInteractionEvent(ctx, driver, tenantName, interactionEventId1, interactionEventId4_WithoutSession)
 	rawResponse, err := c.RawPost(getQuery("interaction_event/get_interaction_session_by_identifier"),
 		client.Var("sessionId", "mySessionIdentifier"))
 	assertRawResponseSuccess(t, rawResponse, err)
