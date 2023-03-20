@@ -610,9 +610,11 @@ type InteractionSession struct {
 	ID                string              `json:"id"`
 	StartedAt         time.Time           `json:"startedAt"`
 	EndedAt           *time.Time          `json:"endedAt"`
+	CreatedAt         time.Time           `json:"createdAt"`
+	UpdatedAt         time.Time           `json:"updatedAt"`
 	SessionIdentifier *string             `json:"sessionIdentifier"`
-	Name              *string             `json:"name"`
-	Status            *string             `json:"status"`
+	Name              string              `json:"name"`
+	Status            string              `json:"status"`
 	Type              *string             `json:"type"`
 	Channel           *string             `json:"channel"`
 	Source            DataSource          `json:"source"`
@@ -628,8 +630,8 @@ func (InteractionSession) IsTimelineEvent() {}
 
 type InteractionSessionInput struct {
 	SessionIdentifier *string `json:"sessionIdentifier"`
-	Name              *string `json:"name"`
-	Status            *string `json:"status"`
+	Name              string  `json:"name"`
+	Status            string  `json:"status"`
 	Type              *string `json:"type"`
 	Channel           *string `json:"channel"`
 	AppSource         string  `json:"appSource"`

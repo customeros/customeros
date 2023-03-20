@@ -247,6 +247,7 @@ type ComplexityRoot struct {
 	InteractionSession struct {
 		AppSource         func(childComplexity int) int
 		Channel           func(childComplexity int) int
+		CreatedAt         func(childComplexity int) int
 		EndedAt           func(childComplexity int) int
 		Events            func(childComplexity int) int
 		ID                func(childComplexity int) int
@@ -257,6 +258,7 @@ type ComplexityRoot struct {
 		StartedAt         func(childComplexity int) int
 		Status            func(childComplexity int) int
 		Type              func(childComplexity int) int
+		UpdatedAt         func(childComplexity int) int
 	}
 
 	JobRole struct {
@@ -1734,6 +1736,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.InteractionSession.Channel(childComplexity), true
 
+	case "InteractionSession.createdAt":
+		if e.complexity.InteractionSession.CreatedAt == nil {
+			break
+		}
+
+		return e.complexity.InteractionSession.CreatedAt(childComplexity), true
+
 	case "InteractionSession.endedAt":
 		if e.complexity.InteractionSession.EndedAt == nil {
 			break
@@ -1803,6 +1812,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.InteractionSession.Type(childComplexity), true
+
+	case "InteractionSession.updatedAt":
+		if e.complexity.InteractionSession.UpdatedAt == nil {
+			break
+		}
+
+		return e.complexity.InteractionSession.UpdatedAt(childComplexity), true
 
 	case "JobRole.appSource":
 		if e.complexity.JobRole.AppSource == nil {
@@ -4983,8 +4999,8 @@ input InteractionEventParticipantInput  {
 
 input InteractionSessionInput {
     sessionIdentifier: String
-    name: String
-    status: String
+    name: String!
+    status: String!
     type: String
     channel: String
     appSource: String!
@@ -5018,10 +5034,12 @@ type InteractionSession implements Node {
     id: ID!
     startedAt: Time!
     endedAt: Time
+    createdAt: Time!
+    updatedAt: Time!
 
     sessionIdentifier: String
-    name: String
-    status: String
+    name: String!
+    status: String!
     type: String
     channel: String
     source: DataSource!
@@ -14307,6 +14325,10 @@ func (ec *executionContext) fieldContext_InteractionEvent_interactionSession(ctx
 				return ec.fieldContext_InteractionSession_startedAt(ctx, field)
 			case "endedAt":
 				return ec.fieldContext_InteractionSession_endedAt(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_InteractionSession_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_InteractionSession_updatedAt(ctx, field)
 			case "sessionIdentifier":
 				return ec.fieldContext_InteractionSession_sessionIdentifier(ctx, field)
 			case "name":
@@ -14750,6 +14772,94 @@ func (ec *executionContext) fieldContext_InteractionSession_endedAt(ctx context.
 	return fc, nil
 }
 
+func (ec *executionContext) _InteractionSession_createdAt(ctx context.Context, field graphql.CollectedField, obj *model.InteractionSession) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_InteractionSession_createdAt(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.CreatedAt, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(time.Time)
+	fc.Result = res
+	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_InteractionSession_createdAt(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "InteractionSession",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _InteractionSession_updatedAt(ctx context.Context, field graphql.CollectedField, obj *model.InteractionSession) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_InteractionSession_updatedAt(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.UpdatedAt, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(time.Time)
+	fc.Result = res
+	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_InteractionSession_updatedAt(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "InteractionSession",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _InteractionSession_sessionIdentifier(ctx context.Context, field graphql.CollectedField, obj *model.InteractionSession) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_InteractionSession_sessionIdentifier(ctx, field)
 	if err != nil {
@@ -14812,11 +14922,14 @@ func (ec *executionContext) _InteractionSession_name(ctx context.Context, field 
 		return graphql.Null
 	}
 	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
 		return graphql.Null
 	}
-	res := resTmp.(*string)
+	res := resTmp.(string)
 	fc.Result = res
-	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_InteractionSession_name(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -14853,11 +14966,14 @@ func (ec *executionContext) _InteractionSession_status(ctx context.Context, fiel
 		return graphql.Null
 	}
 	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
 		return graphql.Null
 	}
-	res := resTmp.(*string)
+	res := resTmp.(string)
 	fc.Result = res
-	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_InteractionSession_status(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -20065,6 +20181,10 @@ func (ec *executionContext) fieldContext_Mutation_interactionSession_Create(ctx 
 				return ec.fieldContext_InteractionSession_startedAt(ctx, field)
 			case "endedAt":
 				return ec.fieldContext_InteractionSession_endedAt(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_InteractionSession_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_InteractionSession_updatedAt(ctx, field)
 			case "sessionIdentifier":
 				return ec.fieldContext_InteractionSession_sessionIdentifier(ctx, field)
 			case "name":
@@ -26744,6 +26864,10 @@ func (ec *executionContext) fieldContext_Query_interactionSession(ctx context.Co
 				return ec.fieldContext_InteractionSession_startedAt(ctx, field)
 			case "endedAt":
 				return ec.fieldContext_InteractionSession_endedAt(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_InteractionSession_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_InteractionSession_updatedAt(ctx, field)
 			case "sessionIdentifier":
 				return ec.fieldContext_InteractionSession_sessionIdentifier(ctx, field)
 			case "name":
@@ -26825,6 +26949,10 @@ func (ec *executionContext) fieldContext_Query_interactionSession_BySessionIdent
 				return ec.fieldContext_InteractionSession_startedAt(ctx, field)
 			case "endedAt":
 				return ec.fieldContext_InteractionSession_endedAt(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_InteractionSession_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_InteractionSession_updatedAt(ctx, field)
 			case "sessionIdentifier":
 				return ec.fieldContext_InteractionSession_sessionIdentifier(ctx, field)
 			case "name":
@@ -32372,7 +32500,7 @@ func (ec *executionContext) unmarshalInputInteractionSessionInput(ctx context.Co
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
-			it.Name, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			it.Name, err = ec.unmarshalNString2string(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -32380,7 +32508,7 @@ func (ec *executionContext) unmarshalInputInteractionSessionInput(ctx context.Co
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("status"))
-			it.Status, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			it.Status, err = ec.unmarshalNString2string(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -35146,6 +35274,20 @@ func (ec *executionContext) _InteractionSession(ctx context.Context, sel ast.Sel
 
 			out.Values[i] = ec._InteractionSession_endedAt(ctx, field, obj)
 
+		case "createdAt":
+
+			out.Values[i] = ec._InteractionSession_createdAt(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "updatedAt":
+
+			out.Values[i] = ec._InteractionSession_updatedAt(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
 		case "sessionIdentifier":
 
 			out.Values[i] = ec._InteractionSession_sessionIdentifier(ctx, field, obj)
@@ -35154,10 +35296,16 @@ func (ec *executionContext) _InteractionSession(ctx context.Context, sel ast.Sel
 
 			out.Values[i] = ec._InteractionSession_name(ctx, field, obj)
 
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
 		case "status":
 
 			out.Values[i] = ec._InteractionSession_status(ctx, field, obj)
 
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
 		case "type":
 
 			out.Values[i] = ec._InteractionSession_type(ctx, field, obj)

@@ -7,15 +7,15 @@ package resolver
 import (
 	"context"
 	"fmt"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
 	"time"
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/dataloader"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/generated"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 )
 
@@ -94,12 +94,17 @@ func (r *interactionSessionResolver) Events(ctx context.Context, obj *model.Inte
 
 // InteractionSessionCreate is the resolver for the interactionSession_Create field.
 func (r *mutationResolver) InteractionSessionCreate(ctx context.Context, session model.InteractionSessionInput) (*model.InteractionSession, error) {
-	panic(fmt.Errorf("not implemented: InteractionSessionCreate - interactionSession_Create"))
+	interactionSessionEntity, err := r.Services.InteractionSessionService.Create(ctx, mapper.MapInteractionSessionInputToEntity(&session))
+	if err != nil {
+		graphql.AddErrorf(ctx, "Failed to create InteractionEvent")
+		return nil, err
+	}
+	interactionEvent := mapper.MapEntityToInteractionSession(interactionSessionEntity)
+	return interactionEvent, nil
 }
 
 // InteractionEventCreate is the resolver for the interactionEvent_Create field.
 func (r *mutationResolver) InteractionEventCreate(ctx context.Context, event model.InteractionEventInput) (*model.InteractionEvent, error) {
-
 	interactionEventCreated, err := r.Services.InteractionEventService.Create(ctx, &service.InteractionEventCreateData{
 		InteractionEventEntity: mapper.MapInteractionEventInputToEntity(&event),
 		Content:                event.Content,

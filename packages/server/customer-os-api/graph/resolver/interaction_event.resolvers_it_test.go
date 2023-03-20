@@ -12,6 +12,68 @@ import (
 	"time"
 )
 
+func TestMutationResolver_InteractionSessionCreate_Min(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx)(t)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
+
+	rawResponse, err := c.RawPost(getQuery("interaction_event/create_interaction_session_min"))
+	assertRawResponseSuccess(t, rawResponse, err)
+	log.Printf("interactionSession: %v", rawResponse.Data)
+	var interactionSession struct {
+		InteractionSession_Create struct {
+			ID                string `json:"id"`
+			Channel           string `json:"channel"`
+			AppSource         string `json:"appSource"`
+			SessionIdentifier string `json:"sessionIdentifier"`
+			Type              string `json:"type"`
+			Name              string `json:"name"`
+			Status            string `json:"status"`
+		}
+	}
+	err = decode.Decode(rawResponse.Data.(map[string]interface{}), &interactionSession)
+	require.Nil(t, err)
+	require.Equal(t, "ACTIVE", interactionSession.InteractionSession_Create.Status)
+	require.Equal(t, "CHAT", interactionSession.InteractionSession_Create.Channel)
+	require.Equal(t, "Oasis", interactionSession.InteractionSession_Create.AppSource)
+}
+
+func TestMutationResolver_InteractionSessionCreate(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx)(t)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
+
+	rawResponse, err := c.RawPost(getQuery("interaction_event/create_interaction_session"),
+		client.Var("sessionIdentifier", "My Session Identifier"),
+		client.Var("name", "My Session Name"),
+		client.Var("type", "THREAD"),
+		client.Var("channel", "EMAIL"),
+		client.Var("status", "ACTIVE"),
+	)
+	assertRawResponseSuccess(t, rawResponse, err)
+	log.Printf("interactionSession: %v", rawResponse.Data)
+	var interactionSession struct {
+		InteractionSession_Create struct {
+			ID                string `json:"id"`
+			Channel           string `json:"channel"`
+			AppSource         string `json:"appSource"`
+			SessionIdentifier string `json:"sessionIdentifier"`
+			Type              string `json:"type"`
+			Name              string `json:"name"`
+			Status            string `json:"status"`
+		}
+	}
+	err = decode.Decode(rawResponse.Data.(map[string]interface{}), &interactionSession)
+	require.Nil(t, err)
+	require.Equal(t, "ACTIVE", interactionSession.InteractionSession_Create.Status)
+	require.Equal(t, "EMAIL", interactionSession.InteractionSession_Create.Channel)
+	require.Equal(t, "Oasis", interactionSession.InteractionSession_Create.AppSource)
+	require.Equal(t, "My Session Identifier", interactionSession.InteractionSession_Create.SessionIdentifier)
+	require.Equal(t, "My Session Name", interactionSession.InteractionSession_Create.Name)
+}
+
 func TestMutationResolver_InteractionEventCreate_Min(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx)(t)

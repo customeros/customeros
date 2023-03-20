@@ -16,8 +16,8 @@ input InteractionEventParticipantInput  {
 
 input InteractionSessionInput {
     sessionIdentifier: String
-    name: String
-    status: String
+    name: String!
+    status: String!
     type: String
     channel: String
     appSource: String!
@@ -51,10 +51,12 @@ type InteractionSession implements Node {
     id: ID!
     startedAt: Time!
     endedAt: Time
+    createdAt: Time!
+    updatedAt: Time!
 
     sessionIdentifier: String
-    name: String
-    status: String
+    name: String!
+    status: String!
     type: String
     channel: String
     source: DataSource!

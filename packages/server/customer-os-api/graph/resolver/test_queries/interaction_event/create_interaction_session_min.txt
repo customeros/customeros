@@ -1,0 +1,22 @@
+mutation CreateInteractionSessionMin() {
+interactionSession_Create(
+    session: {
+        channel: "CHAT"
+        name: "Test Session"
+        status: "ACTIVE"
+        appSource: "Oasis"
+    }
+  ) {
+       id
+       createdAt
+       updatedAt
+       sessionIdentifier
+       name
+       status
+       type
+       channel
+       source
+       sourceOfTruth
+       appSource
+   }
+}

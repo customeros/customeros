@@ -9,6 +9,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"golang.org/x/net/context"
+	"time"
 )
 
 type InteractionSessionService interface {
@@ -16,6 +17,7 @@ type InteractionSessionService interface {
 
 	mapDbNodeToInteractionSessionEntity(node dbtype.Node) *entity.InteractionSessionEntity
 	GetInteractionSessionById(ctx context.Context, id string) (*entity.InteractionSessionEntity, error)
+	Create(ctx context.Context, entity *entity.InteractionSessionEntity) (*entity.InteractionSessionEntity, error)
 	GetInteractionSessionBySessionIdentifier(ctx context.Context, sessionIdentifier string) (*entity.InteractionSessionEntity, error)
 }
 
@@ -27,6 +29,20 @@ func NewInteractionSessionService(repositories *repository.Repositories) Interac
 	return &interactionSessionService{
 		repositories: repositories,
 	}
+}
+
+func (s *interactionSessionService) Create(ctx context.Context, entity *entity.InteractionSessionEntity) (*entity.InteractionSessionEntity, error) {
+	session := utils.NewNeo4jWriteSession(ctx, s.getNeo4jDriver())
+	defer session.Close(ctx)
+
+	queryResult, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (interface{}, error) {
+		return s.repositories.InteractionSessionRepository.Create(ctx, tx, common.GetTenantFromContext(ctx), entity)
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return s.mapDbNodeToInteractionSessionEntity(*queryResult.(*dbtype.Node)), nil
 }
 
 func (s *interactionSessionService) GetInteractionSessionById(ctx context.Context, id string) (*entity.InteractionSessionEntity, error) {
@@ -91,17 +107,29 @@ func (s *interactionSessionService) GetInteractionEventsForInteractionSessions(c
 	return &interactionSessionEntities, nil
 }
 
+// createdAt takes priority over startedAt
+func (s *interactionSessionService) migrateStartedAt(props map[string]any) time.Time {
+	if props["createdAt"] != nil {
+		return utils.GetTimePropOrNow(props, "createdAt")
+	}
+	if props["startedAt"] != nil {
+		return utils.GetTimePropOrNow(props, "startedAt")
+	}
+	return time.Now()
+}
+
 func (s *interactionSessionService) mapDbNodeToInteractionSessionEntity(node dbtype.Node) *entity.InteractionSessionEntity {
 	props := utils.GetPropsFromNode(node)
 	interactionSessionEntity := entity.InteractionSessionEntity{
 		Id:                utils.GetStringPropOrEmpty(props, "id"),
-		StartedAt:         utils.GetTimePropOrNow(props, "startedAt"),
+		CreatedAt:         s.migrateStartedAt(props),
+		UpdatedAt:         utils.GetTimePropOrNow(props, "updatedAt"),
 		EndedAt:           utils.GetTimePropOrNil(props, "endedAt"),
-		SessionIdentifier: utils.GetStringPropOrEmpty(props, "identifier"),
+		SessionIdentifier: utils.GetStringPropOrNil(props, "identifier"),
 		Name:              utils.GetStringPropOrEmpty(props, "name"),
 		Status:            utils.GetStringPropOrEmpty(props, "status"),
-		Type:              utils.GetStringPropOrEmpty(props, "type"),
-		Channel:           utils.GetStringPropOrEmpty(props, "channel"),
+		Type:              utils.GetStringPropOrNil(props, "type"),
+		Channel:           utils.GetStringPropOrNil(props, "channel"),
 		AppSource:         utils.GetStringPropOrEmpty(props, "appSource"),
 		Source:            entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
 		SourceOfTruth:     entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),

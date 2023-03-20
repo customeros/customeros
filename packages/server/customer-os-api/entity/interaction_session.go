@@ -7,13 +7,14 @@ import (
 
 type InteractionSessionEntity struct {
 	Id                string
-	StartedAt         time.Time
+	CreatedAt         time.Time
+	UpdatedAt         time.Time
 	EndedAt           *time.Time
-	SessionIdentifier string
+	SessionIdentifier *string
 	Name              string
 	Status            string
-	Type              string
-	Channel           string
+	Type              *string
+	Channel           *string
 	AppSource         string
 	Source            DataSource
 	SourceOfTruth     DataSource
