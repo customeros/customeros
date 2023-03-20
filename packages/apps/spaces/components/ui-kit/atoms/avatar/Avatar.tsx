@@ -39,8 +39,6 @@ export const Avatar: React.FC<AvatarProps> = ({
   }
 
   const initials = `${name?.charAt(0)}${surname?.charAt(0)}`;
-  console.log('🏷️ ----- initials: ', initials);
-
   const color = getInitialsColor(initials);
 
   const avatarStyle = {

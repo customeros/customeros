@@ -26,6 +26,7 @@ interface Props {
   notifyChange?: (id: any) => void;
   onLoadMore: (ref: any) => void;
   contactName?: string;
+  mode: 'CONTACT' | 'ORGANIZATION';
 }
 
 export const Timeline = ({
@@ -35,6 +36,7 @@ export const Timeline = ({
   id,
   onLoadMore,
   contactName = '',
+  mode,
 }: Props) => {
   const timelineContainerRef = useRef(null);
   const containerRef = useRef(null);
@@ -141,7 +143,10 @@ export const Timeline = ({
         if (data.channel === 'EMAIL') {
           return (
             <TimelineItem first={index == 0} createdAt={data?.createdAt}>
-              <EmailTimelineItem {...data} />
+              <EmailTimelineItem
+                {...data}
+                contactId={mode === 'CONTACT' && id}
+              />
             </TimelineItem>
           );
         } else {

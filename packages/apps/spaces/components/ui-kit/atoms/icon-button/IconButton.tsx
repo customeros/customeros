@@ -10,6 +10,7 @@ import classNames from 'classnames';
 interface Props extends ButtonHTMLAttributes<HTMLButtonElement> {
   icon?: ReactNode;
   onClick: ReactEventHandler;
+  isSquare?: boolean;
   mode?:
     | 'default'
     | 'primary'
@@ -26,6 +27,7 @@ export const IconButton: FC<Props> = ({
   onClick,
   mode = 'default',
   size = 'xxs',
+  isSquare = false,
   ...rest
 }) => {
   return (
@@ -40,6 +42,9 @@ export const IconButton: FC<Props> = ({
         styles[mode],
         styles[size],
         rest.className,
+        {
+          [styles.square]: isSquare,
+        },
       )}
     >
       {icon && icon}

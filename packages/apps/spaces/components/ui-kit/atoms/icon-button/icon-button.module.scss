@@ -6,6 +6,17 @@
   justify-content: center;
   @include button-variants;
 
+  &.square {
+    border-radius: var(--border-radius-sm);
+    padding: 2px;
+    background: #EAEAEA;
+
+    &.xxxs {
+      width: 22px;
+      height: 22px;
+    }
+  }
+
   /* SIZES */
 
   &.xxxs {
@@ -20,13 +31,5 @@
   &.xs {
     padding: var(--spacing-xs);
   }
-  //&.sm {
-  //  padding: var(--spacing-sm);
-  //}
-  //&.sm {
-  //  padding: var(--spacing-md);
-  //}
-  //&.sm {
-  //  padding: var(--spacing-lg);
-  //}
+
 }

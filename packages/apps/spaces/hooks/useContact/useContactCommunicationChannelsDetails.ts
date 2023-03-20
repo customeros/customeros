@@ -18,6 +18,7 @@ export const useContactCommunicationChannelsDetails = ({
 }: Props): Result => {
   const { data, loading, error } = useGetContactCommunicationChannelsQuery({
     variables: { id },
+    nextFetchPolicy: 'cache-first',
   });
 
   if (loading) {

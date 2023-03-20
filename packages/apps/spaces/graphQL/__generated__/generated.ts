@@ -1995,12 +1995,19 @@ export type GetContactListQueryVariables = Exact<{
 
 export type GetContactListQuery = { __typename?: 'Query', contacts: { __typename?: 'ContactsPage', content: Array<{ __typename?: 'Contact', firstName?: string | null, lastName?: string | null, name?: string | null, emails: Array<{ __typename?: 'Email', id: string, email?: string | null }> }> } };
 
-export type GetContactNameQueryVariables = Exact<{
+export type GetContactNameByEmailQueryVariables = Exact<{
+  email: Scalars['String'];
+}>;
+
+
+export type GetContactNameByEmailQuery = { __typename?: 'Query', contact_ByEmail: { __typename?: 'Contact', id: string, firstName?: string | null, lastName?: string | null, name?: string | null } };
+
+export type GetContactNameByIdQueryVariables = Exact<{
   id: Scalars['ID'];
 }>;
 
 
-export type GetContactNameQuery = { __typename?: 'Query', contact?: { __typename?: 'Contact', id: string, firstName?: string | null, lastName?: string | null, name?: string | null } | null };
+export type GetContactNameByIdQuery = { __typename?: 'Query', contact?: { __typename?: 'Contact', id: string, firstName?: string | null, lastName?: string | null, name?: string | null } | null };
 
 export type GetContactNotesQueryVariables = Exact<{
   id: Scalars['ID'];
@@ -2969,8 +2976,44 @@ export function useGetContactListLazyQuery(baseOptions?: Apollo.LazyQueryHookOpt
 export type GetContactListQueryHookResult = ReturnType<typeof useGetContactListQuery>;
 export type GetContactListLazyQueryHookResult = ReturnType<typeof useGetContactListLazyQuery>;
 export type GetContactListQueryResult = Apollo.QueryResult<GetContactListQuery, GetContactListQueryVariables>;
-export const GetContactNameDocument = gql`
-    query GetContactName($id: ID!) {
+export const GetContactNameByEmailDocument = gql`
+    query GetContactNameByEmail($email: String!) {
+  contact_ByEmail(email: $email) {
+    id
+    ...ContactNameFragment
+  }
+}
+    ${ContactNameFragmentFragmentDoc}`;
+
+/**
+ * __useGetContactNameByEmailQuery__
+ *
+ * To run a query within a React component, call `useGetContactNameByEmailQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetContactNameByEmailQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetContactNameByEmailQuery({
+ *   variables: {
+ *      email: // value for 'email'
+ *   },
+ * });
+ */
+export function useGetContactNameByEmailQuery(baseOptions: Apollo.QueryHookOptions<GetContactNameByEmailQuery, GetContactNameByEmailQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<GetContactNameByEmailQuery, GetContactNameByEmailQueryVariables>(GetContactNameByEmailDocument, options);
+      }
+export function useGetContactNameByEmailLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetContactNameByEmailQuery, GetContactNameByEmailQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<GetContactNameByEmailQuery, GetContactNameByEmailQueryVariables>(GetContactNameByEmailDocument, options);
+        }
+export type GetContactNameByEmailQueryHookResult = ReturnType<typeof useGetContactNameByEmailQuery>;
+export type GetContactNameByEmailLazyQueryHookResult = ReturnType<typeof useGetContactNameByEmailLazyQuery>;
+export type GetContactNameByEmailQueryResult = Apollo.QueryResult<GetContactNameByEmailQuery, GetContactNameByEmailQueryVariables>;
+export const GetContactNameByIdDocument = gql`
+    query GetContactNameById($id: ID!) {
   contact(id: $id) {
     id
     ...ContactNameFragment
@@ -2979,32 +3022,32 @@ export const GetContactNameDocument = gql`
     ${ContactNameFragmentFragmentDoc}`;
 
 /**
- * __useGetContactNameQuery__
+ * __useGetContactNameByIdQuery__
  *
- * To run a query within a React component, call `useGetContactNameQuery` and pass it any options that fit your needs.
- * When your component renders, `useGetContactNameQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * To run a query within a React component, call `useGetContactNameByIdQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetContactNameByIdQuery` returns an object from Apollo Client that contains loading, error, and data properties
  * you can use to render your UI.
  *
  * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
  *
  * @example
- * const { data, loading, error } = useGetContactNameQuery({
+ * const { data, loading, error } = useGetContactNameByIdQuery({
  *   variables: {
  *      id: // value for 'id'
  *   },
  * });
  */
-export function useGetContactNameQuery(baseOptions: Apollo.QueryHookOptions<GetContactNameQuery, GetContactNameQueryVariables>) {
+export function useGetContactNameByIdQuery(baseOptions: Apollo.QueryHookOptions<GetContactNameByIdQuery, GetContactNameByIdQueryVariables>) {
         const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<GetContactNameQuery, GetContactNameQueryVariables>(GetContactNameDocument, options);
+        return Apollo.useQuery<GetContactNameByIdQuery, GetContactNameByIdQueryVariables>(GetContactNameByIdDocument, options);
       }
-export function useGetContactNameLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetContactNameQuery, GetContactNameQueryVariables>) {
+export function useGetContactNameByIdLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetContactNameByIdQuery, GetContactNameByIdQueryVariables>) {
           const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<GetContactNameQuery, GetContactNameQueryVariables>(GetContactNameDocument, options);
+          return Apollo.useLazyQuery<GetContactNameByIdQuery, GetContactNameByIdQueryVariables>(GetContactNameByIdDocument, options);
         }
-export type GetContactNameQueryHookResult = ReturnType<typeof useGetContactNameQuery>;
-export type GetContactNameLazyQueryHookResult = ReturnType<typeof useGetContactNameLazyQuery>;
-export type GetContactNameQueryResult = Apollo.QueryResult<GetContactNameQuery, GetContactNameQueryVariables>;
+export type GetContactNameByIdQueryHookResult = ReturnType<typeof useGetContactNameByIdQuery>;
+export type GetContactNameByIdLazyQueryHookResult = ReturnType<typeof useGetContactNameByIdLazyQuery>;
+export type GetContactNameByIdQueryResult = Apollo.QueryResult<GetContactNameByIdQuery, GetContactNameByIdQueryVariables>;
 export const GetContactNotesDocument = gql`
     query GetContactNotes($id: ID!, $pagination: Pagination) {
   contact(id: $id) {

@@ -1,6 +1,6 @@
 import React from 'react';
 import { Avatar } from '../../atoms';
-import { useContactName } from '../../../../hooks/useContact';
+import { useContactNameFromId } from '../../../../hooks/useContact';
 import { getContactDisplayName } from '../../../../utils';
 
 interface Props {
@@ -9,7 +9,7 @@ interface Props {
 }
 
 export const ContactAvatar: React.FC<Props> = ({ contactId, size = 30 }) => {
-  const { loading, error, data } = useContactName({ id: contactId });
+  const { loading, error, data } = useContactNameFromId({ id: contactId });
   if (loading || error) {
     return <div />;
   }
