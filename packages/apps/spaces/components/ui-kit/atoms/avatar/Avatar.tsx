@@ -2,6 +2,7 @@ import React from 'react';
 import Image, { StaticImageData } from 'next/image';
 import styles from './avatar.module.scss';
 import { getInitialsColor } from './utils';
+import classNames from 'classnames';
 
 interface AvatarProps {
   name: string;
@@ -10,20 +11,9 @@ interface AvatarProps {
   image?: StaticImageData;
   imageHeight?: number;
   imageWidth?: number;
+  isSquare?: boolean;
 }
 
-function hashString(str: string): number {
-  let hash = 0;
-  if (str.length === 0) {
-    return hash;
-  }
-  for (let i = 0; i < str.length; i++) {
-    const char = str.charCodeAt(i);
-    hash = (hash << 5) - hash + char;
-    hash |= 0; // Convert to 32bit integer
-  }
-  return hash;
-}
 export const Avatar: React.FC<AvatarProps> = ({
   name,
   surname,
@@ -31,6 +21,7 @@ export const Avatar: React.FC<AvatarProps> = ({
   image,
   imageWidth,
   imageHeight,
+  isSquare = false,
   ...rest
 }) => {
   if (image) {
@@ -47,7 +38,9 @@ export const Avatar: React.FC<AvatarProps> = ({
     );
   }
 
-  const initials = `${name.charAt(0)}${surname.charAt(0)}`;
+  const initials = `${name?.charAt(0)}${surname?.charAt(0)}`;
+  console.log('🏷️ ----- initials: ', initials);
+
   const color = getInitialsColor(initials);
 
   const avatarStyle = {
@@ -58,7 +51,12 @@ export const Avatar: React.FC<AvatarProps> = ({
   };
 
   return (
-    <div className={styles.avatar} style={avatarStyle}>
+    <div
+      className={classNames(styles.avatar, {
+        [styles.square]: isSquare,
+      })}
+      style={avatarStyle}
+    >
       {initials}
     </div>
   );

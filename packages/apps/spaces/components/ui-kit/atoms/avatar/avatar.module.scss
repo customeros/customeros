@@ -9,6 +9,10 @@
   color: white;
   text-transform: uppercase;
   line-height: var(--font-size-xs);
+
+  &.square {
+    border-radius: var(--border-radius-sm)
+  }
 }
 
 .initials {

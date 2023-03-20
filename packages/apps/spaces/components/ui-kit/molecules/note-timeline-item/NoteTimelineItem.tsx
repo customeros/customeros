@@ -24,7 +24,7 @@ import linkifyHtml from 'linkify-html';
 import { Controller, useForm } from 'react-hook-form';
 import { Editor } from '../editor';
 import { NoteEditorModes } from '../editor/Editor';
-import { ContactAvatar } from '../contact-avatar';
+import { ContactAvatar } from '../organization-avatar';
 
 interface Props {
   noteContent: string;

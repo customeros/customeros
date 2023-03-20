@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Timeline } from '../../ui-kit/organisms';
 import { useOrganizationTimeline } from '../../../hooks/useOrganizationTimeline';
 import { uuid4 } from '@sentry/utils';
+import { TimelineStatus } from '../../ui-kit/organisms/timeline';
 
 export const OrganizationTimeline = ({ id }: { id: string }) => {
   const { data, loading, error, fetchMore } = useOrganizationTimeline({
@@ -16,11 +17,7 @@ export const OrganizationTimeline = ({ id }: { id: string }) => {
   };
 
   if (error) {
-    return (
-      <div>
-        <h1>Oops! Timeline error</h1>
-      </div>
-    );
+    return <TimelineStatus status='timeline-error' />;
   }
 
   return (
@@ -42,7 +39,7 @@ export const OrganizationTimeline = ({ id }: { id: string }) => {
           },
         });
       }}
-      noActivity={!data}
+      noActivity={!data.length}
       id={id}
       loggedActivities={[liveConversations, ...(data || [])]}
     />
