@@ -22,6 +22,7 @@ export const OrganizationTimeline = ({ id }: { id: string }) => {
 
   return (
     <Timeline
+      mode='ORGANIZATION'
       loading={loading}
       onLoadMore={(containerRef) => {
         const newFromDate = data[0]?.createdAt || data[0]?.startedAt;
