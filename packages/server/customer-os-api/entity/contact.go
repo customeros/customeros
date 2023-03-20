@@ -34,6 +34,12 @@ func (ContactEntity) InteractionEventParticipantLabel() string {
 	return NodeLabel_Contact
 }
 
+func (ContactEntity) IsNotedEntity() {}
+
+func (ContactEntity) NotedEntityLabel() string {
+	return NodeLabel_Contact
+}
+
 func (contact ContactEntity) GetDataloaderKey() string {
 	return contact.DataloaderKey
 }

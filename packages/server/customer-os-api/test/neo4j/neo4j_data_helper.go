@@ -711,12 +711,22 @@ func CreateNoteForContact(ctx context.Context, driver *neo4j.DriverWithContext, 
 
 	query := "MATCH (c:Contact {id:$contactId}) " +
 		"		MERGE (c)-[:NOTED]->(n:Note {id:$id}) " +
-		"		ON CREATE SET n.html=$html, n.createdAt=$createdAt, n.updatedAt=$createdAt, n:Note_%s, n:Action, n:Action_%s"
+		"		ON CREATE SET 	n.html=$html, " +
+		"						n.createdAt=$createdAt, " +
+		"						n.updatedAt=$createdAt, " +
+		"						n.source=$source, " +
+		"						n.sourceOfSource=$source, " +
+		"						n.appSource=$appSource, " +
+		"						n:Note_%s, " +
+		"						n:Action, " +
+		"						n:Action_%s"
 	ExecuteWriteQuery(ctx, driver, fmt.Sprintf(query, tenant, tenant), map[string]any{
 		"id":        noteId.String(),
 		"contactId": contactId,
 		"html":      html,
 		"createdAt": createdAt,
+		"source":    "openline",
+		"appSource": "test",
 	})
 	return noteId.String()
 }
@@ -726,14 +736,30 @@ func CreateNoteForOrganization(ctx context.Context, driver *neo4j.DriverWithCont
 
 	query := "MATCH (org:Organization {id:$organizationId}) " +
 		"		MERGE (org)-[:NOTED]->(n:Note {id:$id}) " +
-		"		ON CREATE SET n.html=$html, n.createdAt=$createdAt, n:Note_%s, n:Action, n:Action_%s"
+		"		ON CREATE SET 	n.html=$html, " +
+		"						n.createdAt=$createdAt, " +
+		"						n:Note_%s, " +
+		"						n:Action, " +
+		"						n:Action_%s"
 	ExecuteWriteQuery(ctx, driver, fmt.Sprintf(query, tenant, tenant), map[string]any{
 		"id":             noteId.String(),
 		"organizationId": organizationId,
 		"html":           html,
 		"createdAt":      createdAt,
+		"source":         "openline",
+		"appSource":      "test",
 	})
 	return noteId.String()
+}
+
+func LinkNoteWithOrganization(ctx context.Context, driver *neo4j.DriverWithContext, noteId, organizationId string) {
+	query := `MATCH (n:Note {id:$noteId}),
+			(org:Organization {id:$organizationId})
+			MERGE (n)<-[:NOTED]-(org)`
+	ExecuteWriteQuery(ctx, driver, query, map[string]any{
+		"organizationId": organizationId,
+		"noteId":         noteId,
+	})
 }
 
 func NoteCreatedByUser(ctx context.Context, driver *neo4j.DriverWithContext, noteId, userId string) {

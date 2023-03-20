@@ -8,6 +8,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	"golang.org/x/exp/slices"
 	"time"
 )
 
@@ -23,16 +24,20 @@ type NoteService interface {
 	UpdateNote(ctx context.Context, entity *entity.NoteEntity) (*entity.NoteEntity, error)
 	DeleteNote(ctx context.Context, noteId string) (bool, error)
 
+	GetNotedEntities(ctx context.Context, ids []string) (*entity.NotedEntities, error)
+
 	mapDbNodeToNoteEntity(node dbtype.Node) *entity.NoteEntity
 }
 
 type noteService struct {
 	repositories *repository.Repositories
+	services     *Services
 }
 
-func NewNoteService(repositories *repository.Repositories) NoteService {
+func NewNoteService(repositories *repository.Repositories, services *Services) NoteService {
 	return &noteService{
 		repositories: repositories,
+		services:     services,
 	}
 }
 
@@ -193,6 +198,28 @@ func (s *noteService) DeleteNote(ctx context.Context, noteId string) (bool, erro
 	}
 
 	return true, nil
+}
+
+func (s *noteService) GetNotedEntities(ctx context.Context, ids []string) (*entity.NotedEntities, error) {
+	records, err := s.repositories.NoteRepository.GetNotedEntitiesForNotes(ctx, common.GetTenantFromContext(ctx), ids)
+	if err != nil {
+		return nil, err
+	}
+
+	notedEntities := entity.NotedEntities{}
+	for _, v := range records {
+		if slices.Contains(v.Node.Labels, entity.NodeLabel_Organization) {
+			notedEntity := s.services.OrganizationService.mapDbNodeToOrganizationEntity(*v.Node)
+			notedEntity.DataloaderKey = v.LinkedNodeId
+			notedEntities = append(notedEntities, notedEntity)
+		} else if slices.Contains(v.Node.Labels, entity.NodeLabel_Contact) {
+			notedEntity := s.services.ContactService.mapDbNodeToContactEntity(*v.Node)
+			notedEntity.DataloaderKey = v.LinkedNodeId
+			notedEntities = append(notedEntities, notedEntity)
+		}
+	}
+
+	return &notedEntities, nil
 }
 
 func (s *noteService) mapDbNodeToNoteEntity(node dbtype.Node) *entity.NoteEntity {

@@ -18,14 +18,29 @@ type OrganizationEntity struct {
 	Source             DataSource
 	SourceOfTruth      DataSource
 	AppSource          string
+
+	DataloaderKey string
 }
 
 func (organization OrganizationEntity) ToString() string {
 	return fmt.Sprintf("id: %s\nname: %s", organization.ID, organization.Name)
 }
 
+func (OrganizationEntity) IsNotedEntity() {}
+
+func (OrganizationEntity) NotedEntityLabel() string {
+	return NodeLabel_Organization
+}
+
+func (organization OrganizationEntity) GetDataloaderKey() string {
+	return organization.DataloaderKey
+}
+
 type OrganizationEntities []OrganizationEntity
 
 func (organization OrganizationEntity) Labels(tenant string) []string {
-	return []string{"Organization", "Organization_" + tenant}
+	return []string{
+		NodeLabel_Organization,
+		NodeLabel_Organization + "_" + tenant,
+	}
 }

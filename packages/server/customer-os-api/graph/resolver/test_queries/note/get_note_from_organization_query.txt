@@ -1,0 +1,29 @@
+query GetOrganizationById($organizationId: ID!){
+  organization(id: $organizationId) {
+    id
+    notes {
+        content {
+          id
+          html
+          createdAt
+          updatedAt
+          noted {
+            __typename
+            ... on Contact {
+                id
+                firstName
+                lastName
+            }
+            __typename
+            ... on Organization {
+                id
+                name
+            }
+          }
+          source
+          sourceOfTruth
+          appSource
+        }
+    }
+  }
+}

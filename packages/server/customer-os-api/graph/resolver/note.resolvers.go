@@ -6,6 +6,7 @@ package resolver
 
 import (
 	"context"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/dataloader"
 	"time"
 
 	"github.com/99designs/gqlgen/graphql"
@@ -72,6 +73,20 @@ func (r *noteResolver) CreatedBy(ctx context.Context, obj *model.Note) (*model.U
 		return nil, nil
 	}
 	return mapper.MapEntityToUser(creator), err
+}
+
+// Noted is the resolver for the noted field.
+func (r *noteResolver) Noted(ctx context.Context, obj *model.Note) ([]model.NotedEntity, error) {
+	defer func(start time.Time) {
+		utils.LogMethodExecution(start, utils.GetFunctionName())
+	}(time.Now())
+
+	entities, err := dataloader.For(ctx).GetNotedEntitiesForNote(ctx, obj.ID)
+	if err != nil {
+		graphql.AddErrorf(ctx, "Failed to get noted entities for note %s", obj.ID)
+		return nil, err
+	}
+	return mapper.MapEntitiesToNotedEntities(entities), nil
 }
 
 // Note returns generated.NoteResolver implementation.
