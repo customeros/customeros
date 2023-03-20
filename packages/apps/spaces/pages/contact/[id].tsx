@@ -21,7 +21,7 @@ function ContactDetailsPage() {
   if (id === 'new') {
     return (
       <DetailsPageLayout onNavigateBack={() => push('/')}>
-        <section className={styles.personalDetails}>
+        <section className={styles.idCard}>
           <ContactPersonalDetailsCreate />
         </section>
         <section className={styles.notes}></section>
