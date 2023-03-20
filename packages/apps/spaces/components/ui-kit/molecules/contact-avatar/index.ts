@@ -1,1 +1,1 @@
-export { OrganizationAvatar } from './OrganizationAvatar';
+export { OrganizationAvatar } from '../organization-avatar/OrganizationAvatar';

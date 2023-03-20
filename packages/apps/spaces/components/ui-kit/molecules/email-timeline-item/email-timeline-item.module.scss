@@ -1,9 +1,11 @@
 @import 'styles/mixins';
+
 .emailContainer {
   flex-direction: column;
   overflow: hidden;
   position: relative;
   display: grid;
+
 }
 
 .emailData {
@@ -68,81 +70,79 @@
   }
 }
 
-.toggleExpandButton {
-  display: flex;
 
-  justify-content: flex-end;
-  position: absolute;
-  bottom: 0px;
-  right: 0;
-}
-.stamp {
-  width: 36px;
-  min-width: 36px;
-  height: 43px;
-  display: inline-block;
-  padding: var(--spacing-xxxs);
-  background: white;
+
+.folderTab {
+  height: 17px;
+   width: 82px;
   position: relative;
-  -webkit-filter: drop-shadow(0px 0px 2px rgba(0, 0, 0, 0.5));
-  background: radial-gradient(
-    transparent 3px,
-    transparent 2px,
-    white 2px,
-    white
-  );
-  background-size: 7px 7px;
-  background-position: -10px -10px;
+  top: -2px;
+  background-color:white;
 
-  &:after {
-    content: '';
+  border-bottom: 1px solid #ccc;
+  border-top: 2px solid white;
+  left: 85px;
+  display: inline-block;
+  z-index: 2;
+  color: #A3B4C9;
+  cursor: pointer;
+
+
+
+  &:before {
+    border-bottom: 1px solid #ccc;
+    border-left: 2px solid #ccc;
+    border-top: 2px solid white;
+
+    height: 17px;
+    width: 30px;
+    border-radius: 4px 0px 0px 0px;
+    background-color: white;
+    content: "";
     position: absolute;
-    left: 5px;
-    top: 5px;
-    right: 5px;
-    bottom: 5px;
+    left: -20px;
+    top: -2px;
+    transform: skewX(-308deg);
     z-index: -1;
   }
-  /*Some text*/
-  &:before {
-    content: '';
+  &:after {
+    height: 17px;
+    width: 30px;
+    border-bottom: 1px solid #ccc;
+    border-right: 2px solid #ccc;
+    border-top: 2px solid white;
+    border-radius: 0px 2px 2px 0;
+    background-color: white;
+    content: "";
     position: absolute;
+    right: -20px;
+    top: -2px;
+    transform: skewX(308deg);
+    z-index: -1;
+  }
+
+  .toggleExpandButton {
+    padding: 0;
+    font-size: var(--font-size-xs);
     bottom: 0;
-    left: 0;
-    color: white;
-    opacity: 0.75;
-    line-height: 100%;
-    padding: 20px; // this should to to variable
+    position: absolute;
+    right: 50%;
+    left: 50%;
+    color: #5E7FD3;
   }
-
-  & div {
-    width: 100%;
-    height: 100%;
-    background: white;
-  }
-}
-
-.emailRecipients {
-  display: flex;
-  flex-wrap: wrap;
-
-  & span:not(:last-of-type) {
-    margin-right: 4px;
-
-    &:after {
-      content: ',';
-    }
-  }
-}
-
-.emailDataTable {
-  border: none;
 }
 
 .emailWrapper {
   border: var(--border-divider);
-  border-radius: var(--border-radius-sm);
-  padding: var(--spacing-xs);
+  border-top-left-radius: var(--border-radius-md);
+  border-top-right-radius: var(--border-radius-md);
+  padding: var(--spacing-md);
   display: flex;
   flex: 1;
+  height: min-content;
+  max-height: 200px;
+  transition: max-height 0.5s ease-in-out;
+  &.expanded {
+    max-height: 100%;
+  }
 }

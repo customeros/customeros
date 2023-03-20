@@ -1,8 +1,10 @@
 import React, { useRef, useState } from 'react';
 import sanitizeHtml from 'sanitize-html';
 import styles from './email-timeline-item.module.scss';
-import { Button } from '../../atoms';
+import { Button, IconButton, Reply, ReplyLeft, ReplyMany } from '../../atoms';
 import linkifyHtml from 'linkify-html';
+import { EmailParticipants } from './email-participants';
+import classNames from 'classnames';
 
 interface Props {
   content: string;
@@ -11,6 +13,9 @@ interface Props {
   sentTo: Array<any>;
   interactionSession: any;
 }
+
+// todo personal section
+// email Section
 
 export const EmailTimelineItem: React.FC<Props> = ({
   content,
@@ -75,7 +80,7 @@ export const EmailTimelineItem: React.FC<Props> = ({
   const handleToggleExpanded = () => {
     toggleExpanded(!expanded);
     if (timelineItemRef?.current && expanded) {
-      timelineItemRef?.current?.scrollIntoView();
+      timelineItemRef?.current?.scrollIntoView({ behavior: 'smooth' });
     }
   };
 
@@ -136,107 +141,86 @@ export const EmailTimelineItem: React.FC<Props> = ({
   //         toast.error('Something went wrong while sending email');
   //       });
   // };
-
   return (
-    <div className={styles.emailWrapper}>
-      <div ref={timelineItemRef} className={styles.scrollToView} />
-      <article className={`${styles.emailContainer}`}>
-        <div className={styles.emailData}>
-          <table className={styles.emailDataTable}>
-            <tr>
-              <th className={styles.emailParty}>From:</th>
-              <td>{from}</td>
-            </tr>
-            <tr>
-              <th className={styles.emailParty}>To:</th>
-              <td>
-                <span className={styles.emailRecipient}>{to}</span>
-              </td>
-            </tr>
-
-            {!!cc?.length && (
-              <tr>
-                <th className={styles.emailParty}>CC:</th>
-                <td>
-                  <span className={styles.emailRecipient}>{cc}</span>
-                </td>
-              </tr>
-            )}
-            {!!bcc?.length && (
-              <tr>
-                <th className={styles.emailParty}>BCC:</th>
-                <td>
-                  <span className={styles.emailRecipient}>{bcc}</span>
-                </td>
-              </tr>
-            )}
-            <tr>
-              <th className={styles.emailParty}>Subject:</th>
-              <td>{interactionSession.name}</td>
-            </tr>
-          </table>
-
-          <div className={styles.stamp}>
-            <div />
+    <div>
+      <div
+        className={classNames(styles.emailWrapper, {
+          [styles.expanded]: expanded,
+        })}
+      >
+        <div ref={timelineItemRef} className={styles.scrollToView} />
+        <article className={`${styles.emailContainer}`}>
+          <div>
+            <EmailParticipants
+              from={from}
+              to={to}
+              subject={interactionSession.name}
+              cc={cc}
+              bcc={bcc}
+            />
           </div>
-        </div>
-        <div
-          className={`${styles.emailContentContainer} ${
-            !expanded ? styles.eclipse : ''
-          }`}
-          style={{ height: expanded ? '100%' : '80px' }}
+
+          <div
+            className={`${styles.emailContentContainer} ${
+              !expanded ? styles.eclipse : ''
+            }`}
+          >
+            {contentType === 'text/html' && (
+              <div
+                className={`text-overflow-ellipsis ${styles.emailContent}`}
+                dangerouslySetInnerHTML={{
+                  __html: sanitizeHtml(
+                    linkifyHtml(content, {
+                      defaultProtocol: 'https',
+                      rel: 'noopener noreferrer',
+                    }),
+                  ),
+                }}
+              ></div>
+            )}
+            {contentType === 'text/plain' && (
+              <div className={`text-overflow-ellipsis ${styles.emailContent}`}>
+                {content}
+              </div>
+            )}
+
+            {!expanded && <div className={styles.eclipse} />}
+          </div>
+        </article>
+      </div>
+      <div className={styles.folderTab}>
+        <Button
+          onClick={() => handleToggleExpanded()}
+          mode='link'
+          className={styles.toggleExpandButton}
         >
-          {contentType === 'text/html' && (
-            <div
-              className={`text-overflow-ellipsis ${styles.emailContent}`}
-              dangerouslySetInnerHTML={{
-                __html: sanitizeHtml(
-                  linkifyHtml(content, {
-                    defaultProtocol: 'https',
-                    rel: 'noopener noreferrer',
-                  }),
-                ),
-              }}
-            ></div>
-          )}
-          {contentType === 'text/plain' && (
-            <div className={`text-overflow-ellipsis ${styles.emailContent}`}>
-              {content}
-            </div>
-          )}
+          {expanded ? 'Collapse' : 'Expand'}
+        </Button>
 
-          {!expanded && <div className={styles.eclipse} />}
-        </div>
-        <div className={styles.toggleExpandButton}>
-          <Button onClick={() => handleToggleExpanded()} mode='link'>
-            {expanded ? 'Collapse' : 'Expand'}
-          </Button>
+        {/*TODO enable after backend refactor*/}
+        {/*<Button*/}
+        {/*    mode='link'*/}
+        {/*    onClick={() => {*/}
+        {/*      // TODO add cc and bcc*/}
 
-          {/*TODO enable after backend refactor*/}
-          {/*<Button*/}
-          {/*    mode='link'*/}
-          {/*    onClick={() => {*/}
-          {/*      // TODO add cc and bcc*/}
-
-          {/*      setEmailEditorData({*/}
-          {/*        //@ts-expect-error fixme later*/}
-          {/*        handleSubmit: handleSendMessage,*/}
-          {/*        to: [emailData.from],*/}
-          {/*        subject: emailData.subject,*/}
-          {/*        respondTo:*/}
-          {/*        //@ts-expect-error fixme later*/}
-          {/*            msg?.messageId?.conversationEventId || null,*/}
-          {/*      });*/}
-          {/*      setEditorMode({*/}
-          {/*        mode: EditorMode.Email,*/}
-          {/*        submitButtonLabel: 'Send',*/}
-          {/*      });*/}
-          {/*    }}*/}
-          {/*>*/}
-          {/*  Respond*/}
-          {/*</Button>*/}
-        </div>
-      </article>
+        {/*      setEmailEditorData({*/}
+        {/*        //@ts-expect-error fixme later*/}
+        {/*        handleSubmit: handleSendMessage,*/}
+        {/*        to: [emailData.from],*/}
+        {/*        subject: emailData.subject,*/}
+        {/*        respondTo:*/}
+        {/*        //@ts-expect-error fixme later*/}
+        {/*            msg?.messageId?.conversationEventId || null,*/}
+        {/*      });*/}
+        {/*      setEditorMode({*/}
+        {/*        mode: EditorMode.Email,*/}
+        {/*        submitButtonLabel: 'Send',*/}
+        {/*      });*/}
+        {/*    }}*/}
+        {/*>*/}
+        {/*  Respond*/}
+        {/*</Button>*/}
+      </div>
     </div>
   );
 };

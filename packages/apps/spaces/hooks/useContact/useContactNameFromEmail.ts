@@ -1,18 +1,21 @@
 import { ApolloError } from 'apollo-client';
-import { GetContactNameQuery, useGetContactNameQuery } from './types';
+import {
+  GetContactNameByEmailQuery,
+  useGetContactNameByEmailQuery,
+} from './types';
 
 interface Props {
-  id: string;
+  email: string;
 }
 
 interface Result {
-  data: GetContactNameQuery['contact'] | undefined | null;
+  data: GetContactNameByEmailQuery['contact_ByEmail'] | undefined | null;
   loading: boolean;
   error: ApolloError | null;
 }
-export const useContactName = ({ id }: Props): Result => {
-  const { data, loading, error } = useGetContactNameQuery({
-    variables: { id },
+export const useContactNameFromEmail = ({ email }: Props): Result => {
+  const { data, loading, error } = useGetContactNameByEmailQuery({
+    variables: { email },
   });
 
   if (loading) {
@@ -32,7 +35,7 @@ export const useContactName = ({ id }: Props): Result => {
   }
 
   return {
-    data: data?.contact,
+    data: data?.contact_ByEmail,
     loading,
     error: null,
   };

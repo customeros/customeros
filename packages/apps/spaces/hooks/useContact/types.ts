@@ -11,7 +11,8 @@ export {
   useAddPhoneToContactMutation,
   useAddTagToContactMutation,
   useMergeContactsMutation,
-  useGetContactNameQuery,
+  useGetContactNameByIdQuery,
+  useGetContactNameByEmailQuery,
 } from '../../graphQL/__generated__/generated';
 export type {
   Contact,
@@ -25,5 +26,6 @@ export type {
   AddTagToContactMutation,
   ContactTagInput,
   MergeContactsMutation,
-  GetContactNameQuery,
+  GetContactNameByIdQuery,
+  GetContactNameByEmailQuery,
 } from '../../graphQL/__generated__/generated';
