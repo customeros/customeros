@@ -16,6 +16,7 @@ import { ChatTimelineItem } from '../../molecules/conversation-timeline-item/Cha
 import { useInfiniteScroll } from './useInfiniteScroll';
 import { Skeleton } from '../../atoms/skeleton';
 import Image from 'next/image';
+import { TimelineStatus } from './timeline-status';
 
 interface Props {
   loading: boolean;
@@ -166,21 +167,8 @@ export const Timeline = ({
   };
 
   return (
-    <article ref={timelineContainerRef} className={styles.timeline}>
-      {!loading && noActivity && (
-        <div>
-          <Image
-            alt=''
-            src={'/backgrounds/blueprint/timeline-error.webp'}
-            fill
-            priority={true}
-            style={{
-              objectFit: 'cover',
-            }}
-          />
-          <h1>No activity logged yet</h1>
-        </div>
-      )}
+    <div ref={timelineContainerRef} className={styles.timeline}>
+      {!loading && noActivity && <TimelineStatus status='no-activity' />}
       <div className={styles.timelineContent} ref={containerRef}>
         {!!loggedActivities.length && (
           <div
@@ -207,6 +195,6 @@ export const Timeline = ({
           </React.Fragment>
         ))}
       </div>
-    </article>
+    </div>
   );
 };

@@ -1,6 +1,6 @@
 .timeline {
-  grid-area: timeline;
   position: relative;
+  height: 100%;
 
   &::after {
     content: ' ';
@@ -11,12 +11,8 @@
     top: 0;
     right: 0;
   }
-
-  & h1 {
-    font-size: var(--heading-secondary);
-    margin-bottom: var(--spacing-xs);
-  }
 }
+
 .timelineContent {
   max-height: 65vh;
   overflow-y: auto;

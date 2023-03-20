@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Timeline } from '../../ui-kit/organisms';
 import { useContactTimeline } from '../../../hooks/useContactTimeline';
 import { uuid4 } from '@sentry/utils';
+import { TimelineStatus } from '../../ui-kit/organisms/timeline';
 
 export const ContactHistory = ({ id }: { id: string }) => {
   const { data, contactName, loading, error, fetchMore } = useContactTimeline({
@@ -16,7 +17,7 @@ export const ContactHistory = ({ id }: { id: string }) => {
   };
 
   if (error) {
-    return <div />;
+    return <TimelineStatus status='timeline-error' />;
   }
   return (
     <Timeline
