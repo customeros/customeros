@@ -55,7 +55,12 @@ export const EmailParticipants: React.FC<Props> = ({
                 From:
               </div>
               <div className={styles.data}>{from}</div>
-              <div className={styles.emailParticipantWrapper}>
+              <div
+                className={classNames(
+                  styles.emailParticipantWrapper,
+                  styles.nowrap,
+                )}
+              >
                 <div
                   className={classNames(styles.label, {
                     [styles.labelWithSpacing]: to?.split(';').length > 1,

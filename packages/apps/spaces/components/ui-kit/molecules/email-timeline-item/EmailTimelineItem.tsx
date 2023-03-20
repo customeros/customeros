@@ -1,10 +1,11 @@
 import React, { useRef, useState } from 'react';
 import sanitizeHtml from 'sanitize-html';
 import styles from './email-timeline-item.module.scss';
-import { Button, IconButton, Reply, ReplyLeft, ReplyMany } from '../../atoms';
+import { Button } from '../../atoms';
 import linkifyHtml from 'linkify-html';
 import { EmailParticipants } from './email-participants';
 import classNames from 'classnames';
+import { useContactCommunicationChannelsDetails } from '../../../../hooks/useContact';
 
 interface Props {
   content: string;
@@ -12,10 +13,8 @@ interface Props {
   sentBy: Array<any>;
   sentTo: Array<any>;
   interactionSession: any;
+  contactId?: string;
 }
-
-// todo personal section
-// email Section
 
 export const EmailTimelineItem: React.FC<Props> = ({
   content,
@@ -23,56 +22,56 @@ export const EmailTimelineItem: React.FC<Props> = ({
   sentBy,
   sentTo,
   interactionSession,
+  contactId,
   ...rest
 }) => {
-  let from = '';
-  if (
+  const { data, loading, error } = useContactCommunicationChannelsDetails({
+    id: contactId || '',
+  });
+  const sentByExist =
     sentBy &&
     sentBy.length > 0 &&
     sentBy[0].__typename === 'EmailParticipant' &&
-    sentBy[0].emailParticipant
-  ) {
-    from = sentBy[0].emailParticipant.email;
-  }
+    sentBy[0].emailParticipant;
+  const from = sentByExist ? sentBy[0].emailParticipant.email : '';
+  const to =
+    sentTo && sentTo.length > 0
+      ? sentTo
+          .filter((p: any) => p.type === 'TO')
+          .map((p: any) => {
+            if (p.__typename === 'EmailParticipant' && p.emailParticipant) {
+              return p.emailParticipant.email;
+            }
+            return '';
+          })
+          .join('; ')
+      : '';
 
-  let to = '';
-  if (sentTo && sentTo.length > 0) {
-    to = sentTo
-      .filter((p: any) => p.type === 'TO')
-      .map((p: any) => {
-        if (p.__typename === 'EmailParticipant' && p.emailParticipant) {
-          return p.emailParticipant.email;
-        }
-        return '';
-      })
-      .join('; ');
-  }
+  const cc =
+    sentTo && sentTo.length > 0
+      ? sentTo
+          .filter((p: any) => p.type === 'CC')
+          .map((p: any) => {
+            if (p.__typename === 'EmailParticipant' && p.emailParticipant) {
+              return p.emailParticipant.email;
+            }
+            return '';
+          })
+          .join('; ')
+      : '';
 
-  let cc = '';
-  if (sentTo && sentTo.length > 0) {
-    cc = sentTo
-      .filter((p: any) => p.type === 'CC')
-      .map((p: any) => {
-        if (p.__typename === 'EmailParticipant' && p.emailParticipant) {
-          return p.emailParticipant.email;
-        }
-        return '';
-      })
-      .join('; ');
-  }
-
-  let bcc = '';
-  if (sentTo && sentTo.length > 0) {
-    bcc = sentTo
-      .filter((p: any) => p.type === 'BCC')
-      .map((p: any) => {
-        if (p.__typename === 'EmailParticipant' && p.emailParticipant) {
-          return p.emailParticipant.email;
-        }
-        return '';
-      })
-      .join('; ');
-  }
+  const bcc =
+    sentTo && sentTo.length > 0
+      ? sentTo
+          .filter((p: any) => p.type === 'BCC')
+          .map((p: any) => {
+            if (p.__typename === 'EmailParticipant' && p.emailParticipant) {
+              return p.emailParticipant.email;
+            }
+            return '';
+          })
+          .join('; ')
+      : '';
 
   const [expanded, toggleExpanded] = useState(false);
   const timelineItemRef = useRef<HTMLDivElement>(null);
@@ -141,8 +140,20 @@ export const EmailTimelineItem: React.FC<Props> = ({
   //         toast.error('Something went wrong while sending email');
   //       });
   // };
+
+  const isSentByContact =
+    !!contactId &&
+    !error &&
+    !loading &&
+    data?.emails.findIndex(({ email }) => email === from) !== -1;
+
   return (
-    <div>
+    <div
+      className={classNames({
+        [styles.sendBy]: isSentByContact,
+        [styles.sendTo]: !isSentByContact,
+      })}
+    >
       <div
         className={classNames(styles.emailWrapper, {
           [styles.expanded]: expanded,

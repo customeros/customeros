@@ -21,6 +21,7 @@ export const ContactHistory = ({ id }: { id: string }) => {
   }
   return (
     <Timeline
+      mode='CONTACT'
       loading={loading}
       onLoadMore={(containerRef) => {
         const newFromDate = data[0]?.createdAt || data[0]?.startedAt;

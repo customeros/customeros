@@ -27,6 +27,11 @@
   margin: 0 var(--spacing-xxs);
   text-align: inherit;
 }
+
+.nowrap {
+  flex-wrap: nowrap;
+}
+
 .labelWithSpacing {
   min-width: 60px;
 }
