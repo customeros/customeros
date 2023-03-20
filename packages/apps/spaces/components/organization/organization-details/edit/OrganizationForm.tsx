@@ -22,7 +22,7 @@ export const OrganizationForm: React.FC<OrganizationFormProps> = ({
     defaultValues: {
       name: data?.name || '',
       description: data?.description || '',
-      domain: data?.domain || '',
+      website: data?.website || '',
       industry: data?.industry || '',
     },
   });
@@ -62,6 +62,15 @@ export const OrganizationForm: React.FC<OrganizationFormProps> = ({
           name='description'
           placeholder=''
           label='Description'
+        />
+
+        <ControlledInput
+          required={true}
+          inputSize='xxxs'
+          control={control}
+          name='website'
+          placeholder=''
+          label='Website'
         />
 
         <div

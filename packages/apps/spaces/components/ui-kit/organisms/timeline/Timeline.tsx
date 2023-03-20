@@ -15,7 +15,6 @@ import { InteractionTimelineItem } from '../../molecules/interaction-timeline-it
 import { ChatTimelineItem } from '../../molecules/conversation-timeline-item/ChatTimelineItem';
 import { useInfiniteScroll } from './useInfiniteScroll';
 import { Skeleton } from '../../atoms/skeleton';
-import Image from 'next/image';
 import { TimelineStatus } from './timeline-status';
 
 interface Props {

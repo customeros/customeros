@@ -8,6 +8,7 @@ fragment OrganizationDetails on Organization {
     ...LocationBaseDetails
   }
   website
+  domains
   updatedAt
   tags {
     ...Tag
