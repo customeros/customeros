@@ -11,6 +11,7 @@ type OrganizationData struct {
 	Website        string
 	Industry       string
 	IsPublic       bool
+	PhoneNumber    string
 	CreatedAt      time.Time
 	UpdatedAt      time.Time
 	ExternalId     string
@@ -23,7 +24,6 @@ type OrganizationData struct {
 	Address             string
 	Address2            string
 	Zip                 string
-	Phone               string
 
 	OrganizationTypeName string
 
@@ -44,4 +44,8 @@ func (o OrganizationData) HasNotes() bool {
 
 func (o OrganizationData) HasOrganizationType() bool {
 	return len(o.OrganizationTypeName) > 0
+}
+
+func (o OrganizationData) HasPhoneNumber() bool {
+	return len(o.PhoneNumber) > 0
 }

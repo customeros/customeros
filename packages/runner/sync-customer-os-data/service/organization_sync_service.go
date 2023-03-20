@@ -70,6 +70,13 @@ func (s *organizationSyncService) SyncOrganizations(ctx context.Context, dataSer
 				}
 			}
 
+			if v.HasPhoneNumber() && !failedSync {
+				if err = s.repositories.OrganizationRepository.MergePrimaryPhoneNumber(ctx, tenant, organizationId, v.PhoneNumber, v.ExternalSystem, v.CreatedAt); err != nil {
+					failedSync = true
+					logrus.Errorf("failed merge primary phone number for organization with external reference %v , tenant %v :%v", v.ExternalId, tenant, err)
+				}
+			}
+
 			if v.HasLocation() && !failedSync {
 				err = s.repositories.OrganizationRepository.MergeOrganizationDefaultPlace(ctx, tenant, organizationId, v)
 				if err != nil {

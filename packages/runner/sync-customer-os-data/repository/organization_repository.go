@@ -15,7 +15,8 @@ type OrganizationRepository interface {
 	MergeOrganization(ctx context.Context, tenant string, syncDate time.Time, organization entity.OrganizationData) error
 	MergeOrganizationType(ctx context.Context, tenant, organizationId, organizationTypeName string) error
 	MergeOrganizationDefaultPlace(ctx context.Context, tenant, organizationId string, organization entity.OrganizationData) error
-	MergeOrganizationDomain(ctx context.Context, tenant string, organizationId string, domain string, externalSystem string) error
+	MergeOrganizationDomain(ctx context.Context, tenant, organizationId, domain, externalSystem string) error
+	MergePrimaryPhoneNumber(ctx context.Context, tenant, organizationId, phoneNumber, externalSystem string, createdAt time.Time) error
 }
 
 type organizationRepository struct {
@@ -183,7 +184,6 @@ func (r *organizationRepository) MergeOrganizationDefaultPlace(ctx context.Conte
 		"	loc.address=$address, " +
 		"	loc.address2=$address2, " +
 		"	loc.zip=$zip, " +
-		"	loc.phone=$phone, " +
 		"	loc.id=randomUUID(), " +
 		"	loc.appSource=$appSource, " +
 		"	loc.sourceOfTruth=$sourceOfTruth, " +
@@ -197,7 +197,6 @@ func (r *organizationRepository) MergeOrganizationDefaultPlace(ctx context.Conte
 		"	loc.address = CASE WHEN loc.sourceOfTruth=$sourceOfTruth THEN $address ELSE loc.address END, " +
 		"	loc.address2 = CASE WHEN loc.sourceOfTruth=$sourceOfTruth THEN $address2 ELSE loc.address2 END, " +
 		"	loc.zip = CASE WHEN loc.sourceOfTruth=$sourceOfTruth THEN $zip ELSE loc.zip END, " +
-		"   loc.phone = CASE WHEN loc.sourceOfTruth=$sourceOfTruth THEN $phone ELSE loc.phone END, " +
 		"   loc.updatedAt = CASE WHEN loc.sourceOfTruth=$sourceOfTruth THEN $now ELSE loc.updatedAt END " +
 		" WITH loc, t " +
 		" MERGE (loc)-[:LOCATION_BELONGS_TO_TENANT]->(t) " +
@@ -205,7 +204,7 @@ func (r *organizationRepository) MergeOrganizationDefaultPlace(ctx context.Conte
 		" FOREACH (x in CASE WHEN loc.sourceOfTruth <> $sourceOfTruth THEN [loc] ELSE [] END | " +
 		"  MERGE (x)-[:ALTERNATE]->(alt:AlternateLocation {source:$source, id:x.id}) " +
 		"    SET alt.updatedAt=$now, alt.appSource=$appSource, " +
-		" alt.country=$country, alt.region=$region, alt.locality=$locality, alt.address=$address, alt.address2=$address2, alt.zip=$zip, alt.phone=$phone " +
+		" alt.country=$country, alt.region=$region, alt.locality=$locality, alt.address=$address, alt.address2=$address2, alt.zip=$zip " +
 		") "
 
 	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
@@ -219,7 +218,6 @@ func (r *organizationRepository) MergeOrganizationDefaultPlace(ctx context.Conte
 				"address":        organization.Address,
 				"address2":       organization.Address2,
 				"zip":            organization.Zip,
-				"phone":          organization.Phone,
 				"source":         organization.ExternalSystem,
 				"sourceOfTruth":  organization.ExternalSystem,
 				"appSource":      organization.ExternalSystem,
@@ -265,6 +263,45 @@ func (r *organizationRepository) MergeOrganizationDomain(ctx context.Context, te
 			return nil, err
 		}
 		return nil, nil
+	})
+	return err
+}
+
+func (r *organizationRepository) MergePrimaryPhoneNumber(ctx context.Context, tenant, organizationId, phoneNumber, externalSystem string, createdAt time.Time) error {
+	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
+	defer session.Close(ctx)
+
+	query := "MATCH (o:Organization {id:$organizationId})-[:ORGANIZATION_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant}) " +
+		" OPTIONAL MATCH (o)-[rel:HAS]->(p:PhoneNumber) " +
+		" SET rel.primary=false " +
+		" WITH DISTINCT o, t " +
+		" MERGE (p:PhoneNumber {rawPhoneNumber: $phoneNumber})-[:PHONE_NUMBER_BELONGS_TO_TENANT]->(t) " +
+		" ON CREATE SET " +
+		"				p.id=randomUUID(), " +
+		"				p.createdAt=$now, " +
+		"				p.updatedAt=$now, " +
+		"				p.source=$source, " +
+		"				p.sourceOfTruth=$sourceOfTruth, " +
+		"				p.appSource=$appSource, " +
+		"				p:%s " +
+		" WITH DISTINCT o, p " +
+		" MERGE (o)-[rel:HAS]->(p) " +
+		" ON CREATE SET rel.primary=true, p.updatedAt=$now, o.updatedAt=$now " +
+		" ON MATCH SET rel.primary=true, o.updatedAt=$now "
+
+	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		_, err := tx.Run(ctx, fmt.Sprintf(query, "PhoneNumber_"+tenant),
+			map[string]interface{}{
+				"tenant":         tenant,
+				"organizationId": organizationId,
+				"phoneNumber":    phoneNumber,
+				"createdAt":      createdAt,
+				"source":         externalSystem,
+				"sourceOfTruth":  externalSystem,
+				"appSource":      externalSystem,
+				"now":            time.Now().UTC(),
+			})
+		return nil, err
 	})
 	return err
 }
