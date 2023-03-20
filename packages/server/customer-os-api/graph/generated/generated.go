@@ -61,7 +61,6 @@ type DirectiveRoot struct {
 
 type ComplexityRoot struct {
 	Contact struct {
-		Actions                  func(childComplexity int, from time.Time, to time.Time, actionTypes []model.ActionType) int
 		AppSource                func(childComplexity int) int
 		Conversations            func(childComplexity int, pagination *model.Pagination, sort []*model.SortBy) int
 		CreatedAt                func(childComplexity int) int
@@ -444,18 +443,6 @@ type ComplexityRoot struct {
 		StartedAt      func(childComplexity int) int
 	}
 
-	PageViewAction struct {
-		Application    func(childComplexity int) int
-		EndedAt        func(childComplexity int) int
-		EngagedTime    func(childComplexity int) int
-		ID             func(childComplexity int) int
-		OrderInSession func(childComplexity int) int
-		PageTitle      func(childComplexity int) int
-		PageURL        func(childComplexity int) int
-		SessionID      func(childComplexity int) int
-		StartedAt      func(childComplexity int) int
-	}
-
 	PhoneNumber struct {
 		AppSource      func(childComplexity int) int
 		CreatedAt      func(childComplexity int) int
@@ -582,7 +569,6 @@ type ContactResolver interface {
 	Notes(ctx context.Context, obj *model.Contact, pagination *model.Pagination) (*model.NotePage, error)
 	NotesByTime(ctx context.Context, obj *model.Contact, pagination *model.TimeRange) ([]*model.Note, error)
 	Conversations(ctx context.Context, obj *model.Contact, pagination *model.Pagination, sort []*model.SortBy) (*model.ConversationPage, error)
-	Actions(ctx context.Context, obj *model.Contact, from time.Time, to time.Time, actionTypes []model.ActionType) ([]model.Action, error)
 	TimelineEvents(ctx context.Context, obj *model.Contact, from *time.Time, size int, timelineEventTypes []model.TimelineEventType) ([]model.TimelineEvent, error)
 	TimelineEventsTotalCount(ctx context.Context, obj *model.Contact, timelineEventTypes []model.TimelineEventType) (int64, error)
 	Tickets(ctx context.Context, obj *model.Contact) ([]*model.Ticket, error)
@@ -760,18 +746,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 	ec := executionContext{nil, e}
 	_ = ec
 	switch typeName + "." + field {
-
-	case "Contact.actions":
-		if e.complexity.Contact.Actions == nil {
-			break
-		}
-
-		args, err := ec.field_Contact_actions_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Contact.Actions(childComplexity, args["from"].(time.Time), args["to"].(time.Time), args["actionTypes"].([]model.ActionType)), true
 
 	case "Contact.appSource":
 		if e.complexity.Contact.AppSource == nil {
@@ -3307,69 +3281,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.PageView.StartedAt(childComplexity), true
 
-	case "PageViewAction.application":
-		if e.complexity.PageViewAction.Application == nil {
-			break
-		}
-
-		return e.complexity.PageViewAction.Application(childComplexity), true
-
-	case "PageViewAction.endedAt":
-		if e.complexity.PageViewAction.EndedAt == nil {
-			break
-		}
-
-		return e.complexity.PageViewAction.EndedAt(childComplexity), true
-
-	case "PageViewAction.engagedTime":
-		if e.complexity.PageViewAction.EngagedTime == nil {
-			break
-		}
-
-		return e.complexity.PageViewAction.EngagedTime(childComplexity), true
-
-	case "PageViewAction.id":
-		if e.complexity.PageViewAction.ID == nil {
-			break
-		}
-
-		return e.complexity.PageViewAction.ID(childComplexity), true
-
-	case "PageViewAction.orderInSession":
-		if e.complexity.PageViewAction.OrderInSession == nil {
-			break
-		}
-
-		return e.complexity.PageViewAction.OrderInSession(childComplexity), true
-
-	case "PageViewAction.pageTitle":
-		if e.complexity.PageViewAction.PageTitle == nil {
-			break
-		}
-
-		return e.complexity.PageViewAction.PageTitle(childComplexity), true
-
-	case "PageViewAction.pageUrl":
-		if e.complexity.PageViewAction.PageURL == nil {
-			break
-		}
-
-		return e.complexity.PageViewAction.PageURL(childComplexity), true
-
-	case "PageViewAction.sessionId":
-		if e.complexity.PageViewAction.SessionID == nil {
-			break
-		}
-
-		return e.complexity.PageViewAction.SessionID(childComplexity), true
-
-	case "PageViewAction.startedAt":
-		if e.complexity.PageViewAction.StartedAt == nil {
-			break
-		}
-
-		return e.complexity.PageViewAction.StartedAt(childComplexity), true
-
 	case "PhoneNumber.appSource":
 		if e.complexity.PhoneNumber.AppSource == nil {
 			break
@@ -4068,15 +3979,6 @@ func (ec *executionContext) introspectType(name string) (*introspection.Type, er
 }
 
 var sources = []*ast.Source{
-	{Name: "../schemas/action.graphqls", Input: `union Action = PageViewAction | InteractionSession | Ticket | Conversation | Note
-
-enum ActionType {
-    PAGE_VIEW
-    INTERACTION_SESSION
-    TICKET
-    CONVERSATION
-    NOTE
-}`, BuiltIn: false},
 	{Name: "../schemas/contact.graphqls", Input: `extend type Query {
     """
     Fetch a single contact from customerOS by contact ID.
@@ -4216,7 +4118,6 @@ type Contact implements ExtensibleEntity & Node {
 
     conversations(pagination: Pagination, sort: [SortBy!]): ConversationPage! @goField(forceResolver: true)
 
-    actions(from: Time!, to: Time!, actionTypes: [ActionType!]): [Action!]! @goField(forceResolver: true) @deprecated(reason: "Use ` + "`" + `timelineEvents` + "`" + ` instead")
     timelineEvents(from: Time, size: Int!, timelineEventTypes: [TimelineEventType!]): [TimelineEvent!]! @goField(forceResolver: true)
     timelineEventsTotalCount(timelineEventTypes: [TimelineEventType!]): Int64! @goField(forceResolver: true)
 
@@ -5301,19 +5202,6 @@ input OrganizationTypeUpdateInput {
     sessionId: ID!
     orderInSession: Int64!
     engagedTime: Int64!
-}
-
-#Deprecated: Use PageView instead. Delete once Actions are removed from graphql
-type PageViewAction implements Node {
-    id: ID!
-    startedAt: Time!
-    endedAt: Time!
-    pageTitle: String!
-    pageUrl: String!
-    application: String!
-    sessionId: ID!
-    orderInSession: Int64!
-    engagedTime: Int64!
 }`, BuiltIn: false},
 	{Name: "../schemas/phone.graphqls", Input: `extend type Mutation {
     phoneNumberMergeToContact(contactId : ID!, input: PhoneNumberInput!): PhoneNumber!
@@ -5691,39 +5579,6 @@ func (ec *executionContext) field_ContactGroup_contacts_args(ctx context.Context
 		}
 	}
 	args["sort"] = arg2
-	return args, nil
-}
-
-func (ec *executionContext) field_Contact_actions_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
-	var err error
-	args := map[string]interface{}{}
-	var arg0 time.Time
-	if tmp, ok := rawArgs["from"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("from"))
-		arg0, err = ec.unmarshalNTime2timeᚐTime(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["from"] = arg0
-	var arg1 time.Time
-	if tmp, ok := rawArgs["to"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("to"))
-		arg1, err = ec.unmarshalNTime2timeᚐTime(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["to"] = arg1
-	var arg2 []model.ActionType
-	if tmp, ok := rawArgs["actionTypes"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("actionTypes"))
-		arg2, err = ec.unmarshalOActionType2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐActionTypeᚄ(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["actionTypes"] = arg2
 	return args, nil
 }
 
@@ -9228,61 +9083,6 @@ func (ec *executionContext) fieldContext_Contact_conversations(ctx context.Conte
 	return fc, nil
 }
 
-func (ec *executionContext) _Contact_actions(ctx context.Context, field graphql.CollectedField, obj *model.Contact) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Contact_actions(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Contact().Actions(rctx, obj, fc.Args["from"].(time.Time), fc.Args["to"].(time.Time), fc.Args["actionTypes"].([]model.ActionType))
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.([]model.Action)
-	fc.Result = res
-	return ec.marshalNAction2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐActionᚄ(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Contact_actions(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Contact",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Action does not have child fields")
-		},
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			err = ec.Recover(ctx, r)
-			ec.Error(ctx, err)
-		}
-	}()
-	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Contact_actions_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
-		ec.Error(ctx, err)
-		return
-	}
-	return fc, nil
-}
-
 func (ec *executionContext) _Contact_timelineEvents(ctx context.Context, field graphql.CollectedField, obj *model.Contact) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Contact_timelineEvents(ctx, field)
 	if err != nil {
@@ -9979,8 +9779,6 @@ func (ec *executionContext) fieldContext_ContactParticipant_contactParticipant(c
 				return ec.fieldContext_Contact_notesByTime(ctx, field)
 			case "conversations":
 				return ec.fieldContext_Contact_conversations(ctx, field)
-			case "actions":
-				return ec.fieldContext_Contact_actions(ctx, field)
 			case "timelineEvents":
 				return ec.fieldContext_Contact_timelineEvents(ctx, field)
 			case "timelineEventsTotalCount":
@@ -10126,8 +9924,6 @@ func (ec *executionContext) fieldContext_ContactsPage_content(ctx context.Contex
 				return ec.fieldContext_Contact_notesByTime(ctx, field)
 			case "conversations":
 				return ec.fieldContext_Contact_conversations(ctx, field)
-			case "actions":
-				return ec.fieldContext_Contact_actions(ctx, field)
 			case "timelineEvents":
 				return ec.fieldContext_Contact_timelineEvents(ctx, field)
 			case "timelineEventsTotalCount":
@@ -10660,8 +10456,6 @@ func (ec *executionContext) fieldContext_Conversation_contacts(ctx context.Conte
 				return ec.fieldContext_Contact_notesByTime(ctx, field)
 			case "conversations":
 				return ec.fieldContext_Contact_conversations(ctx, field)
-			case "actions":
-				return ec.fieldContext_Contact_actions(ctx, field)
 			case "timelineEvents":
 				return ec.fieldContext_Contact_timelineEvents(ctx, field)
 			case "timelineEventsTotalCount":
@@ -12128,8 +11922,6 @@ func (ec *executionContext) fieldContext_DashboardViewItem_contact(ctx context.C
 				return ec.fieldContext_Contact_notesByTime(ctx, field)
 			case "conversations":
 				return ec.fieldContext_Contact_conversations(ctx, field)
-			case "actions":
-				return ec.fieldContext_Contact_actions(ctx, field)
 			case "timelineEvents":
 				return ec.fieldContext_Contact_timelineEvents(ctx, field)
 			case "timelineEventsTotalCount":
@@ -15304,8 +15096,6 @@ func (ec *executionContext) fieldContext_JobRole_contact(ctx context.Context, fi
 				return ec.fieldContext_Contact_notesByTime(ctx, field)
 			case "conversations":
 				return ec.fieldContext_Contact_conversations(ctx, field)
-			case "actions":
-				return ec.fieldContext_Contact_actions(ctx, field)
 			case "timelineEvents":
 				return ec.fieldContext_Contact_timelineEvents(ctx, field)
 			case "timelineEventsTotalCount":
@@ -16768,8 +16558,6 @@ func (ec *executionContext) fieldContext_Mutation_contact_Create(ctx context.Con
 				return ec.fieldContext_Contact_notesByTime(ctx, field)
 			case "conversations":
 				return ec.fieldContext_Contact_conversations(ctx, field)
-			case "actions":
-				return ec.fieldContext_Contact_actions(ctx, field)
 			case "timelineEvents":
 				return ec.fieldContext_Contact_timelineEvents(ctx, field)
 			case "timelineEventsTotalCount":
@@ -16885,8 +16673,6 @@ func (ec *executionContext) fieldContext_Mutation_contact_Update(ctx context.Con
 				return ec.fieldContext_Contact_notesByTime(ctx, field)
 			case "conversations":
 				return ec.fieldContext_Contact_conversations(ctx, field)
-			case "actions":
-				return ec.fieldContext_Contact_actions(ctx, field)
 			case "timelineEvents":
 				return ec.fieldContext_Contact_timelineEvents(ctx, field)
 			case "timelineEventsTotalCount":
@@ -17120,8 +16906,6 @@ func (ec *executionContext) fieldContext_Mutation_contact_Merge(ctx context.Cont
 				return ec.fieldContext_Contact_notesByTime(ctx, field)
 			case "conversations":
 				return ec.fieldContext_Contact_conversations(ctx, field)
-			case "actions":
-				return ec.fieldContext_Contact_actions(ctx, field)
 			case "timelineEvents":
 				return ec.fieldContext_Contact_timelineEvents(ctx, field)
 			case "timelineEventsTotalCount":
@@ -17237,8 +17021,6 @@ func (ec *executionContext) fieldContext_Mutation_contact_AddTagById(ctx context
 				return ec.fieldContext_Contact_notesByTime(ctx, field)
 			case "conversations":
 				return ec.fieldContext_Contact_conversations(ctx, field)
-			case "actions":
-				return ec.fieldContext_Contact_actions(ctx, field)
 			case "timelineEvents":
 				return ec.fieldContext_Contact_timelineEvents(ctx, field)
 			case "timelineEventsTotalCount":
@@ -17354,8 +17136,6 @@ func (ec *executionContext) fieldContext_Mutation_contact_RemoveTagById(ctx cont
 				return ec.fieldContext_Contact_notesByTime(ctx, field)
 			case "conversations":
 				return ec.fieldContext_Contact_conversations(ctx, field)
-			case "actions":
-				return ec.fieldContext_Contact_actions(ctx, field)
 			case "timelineEvents":
 				return ec.fieldContext_Contact_timelineEvents(ctx, field)
 			case "timelineEventsTotalCount":
@@ -17471,8 +17251,6 @@ func (ec *executionContext) fieldContext_Mutation_contact_AddOrganizationById(ct
 				return ec.fieldContext_Contact_notesByTime(ctx, field)
 			case "conversations":
 				return ec.fieldContext_Contact_conversations(ctx, field)
-			case "actions":
-				return ec.fieldContext_Contact_actions(ctx, field)
 			case "timelineEvents":
 				return ec.fieldContext_Contact_timelineEvents(ctx, field)
 			case "timelineEventsTotalCount":
@@ -17588,8 +17366,6 @@ func (ec *executionContext) fieldContext_Mutation_contact_RemoveOrganizationById
 				return ec.fieldContext_Contact_notesByTime(ctx, field)
 			case "conversations":
 				return ec.fieldContext_Contact_conversations(ctx, field)
-			case "actions":
-				return ec.fieldContext_Contact_actions(ctx, field)
 			case "timelineEvents":
 				return ec.fieldContext_Contact_timelineEvents(ctx, field)
 			case "timelineEventsTotalCount":
@@ -18295,8 +18071,6 @@ func (ec *executionContext) fieldContext_Mutation_customFieldsMergeAndUpdateInCo
 				return ec.fieldContext_Contact_notesByTime(ctx, field)
 			case "conversations":
 				return ec.fieldContext_Contact_conversations(ctx, field)
-			case "actions":
-				return ec.fieldContext_Contact_actions(ctx, field)
 			case "timelineEvents":
 				return ec.fieldContext_Contact_timelineEvents(ctx, field)
 			case "timelineEventsTotalCount":
@@ -24592,402 +24366,6 @@ func (ec *executionContext) fieldContext_PageView_engagedTime(ctx context.Contex
 	return fc, nil
 }
 
-func (ec *executionContext) _PageViewAction_id(ctx context.Context, field graphql.CollectedField, obj *model.PageViewAction) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_PageViewAction_id(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.ID, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNID2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_PageViewAction_id(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "PageViewAction",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type ID does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _PageViewAction_startedAt(ctx context.Context, field graphql.CollectedField, obj *model.PageViewAction) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_PageViewAction_startedAt(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.StartedAt, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(time.Time)
-	fc.Result = res
-	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_PageViewAction_startedAt(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "PageViewAction",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Time does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _PageViewAction_endedAt(ctx context.Context, field graphql.CollectedField, obj *model.PageViewAction) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_PageViewAction_endedAt(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.EndedAt, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(time.Time)
-	fc.Result = res
-	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_PageViewAction_endedAt(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "PageViewAction",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Time does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _PageViewAction_pageTitle(ctx context.Context, field graphql.CollectedField, obj *model.PageViewAction) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_PageViewAction_pageTitle(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.PageTitle, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_PageViewAction_pageTitle(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "PageViewAction",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _PageViewAction_pageUrl(ctx context.Context, field graphql.CollectedField, obj *model.PageViewAction) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_PageViewAction_pageUrl(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.PageURL, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_PageViewAction_pageUrl(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "PageViewAction",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _PageViewAction_application(ctx context.Context, field graphql.CollectedField, obj *model.PageViewAction) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_PageViewAction_application(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Application, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_PageViewAction_application(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "PageViewAction",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _PageViewAction_sessionId(ctx context.Context, field graphql.CollectedField, obj *model.PageViewAction) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_PageViewAction_sessionId(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.SessionID, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNID2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_PageViewAction_sessionId(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "PageViewAction",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type ID does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _PageViewAction_orderInSession(ctx context.Context, field graphql.CollectedField, obj *model.PageViewAction) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_PageViewAction_orderInSession(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.OrderInSession, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(int64)
-	fc.Result = res
-	return ec.marshalNInt642int64(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_PageViewAction_orderInSession(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "PageViewAction",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Int64 does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _PageViewAction_engagedTime(ctx context.Context, field graphql.CollectedField, obj *model.PageViewAction) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_PageViewAction_engagedTime(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.EngagedTime, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(int64)
-	fc.Result = res
-	return ec.marshalNInt642int64(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_PageViewAction_engagedTime(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "PageViewAction",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Int64 does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
 func (ec *executionContext) _PhoneNumber_id(ctx context.Context, field graphql.CollectedField, obj *model.PhoneNumber) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_PhoneNumber_id(ctx, field)
 	if err != nil {
@@ -26281,8 +25659,6 @@ func (ec *executionContext) fieldContext_Query_contact(ctx context.Context, fiel
 				return ec.fieldContext_Contact_notesByTime(ctx, field)
 			case "conversations":
 				return ec.fieldContext_Contact_conversations(ctx, field)
-			case "actions":
-				return ec.fieldContext_Contact_actions(ctx, field)
 			case "timelineEvents":
 				return ec.fieldContext_Contact_timelineEvents(ctx, field)
 			case "timelineEventsTotalCount":
@@ -26461,8 +25837,6 @@ func (ec *executionContext) fieldContext_Query_contact_ByEmail(ctx context.Conte
 				return ec.fieldContext_Contact_notesByTime(ctx, field)
 			case "conversations":
 				return ec.fieldContext_Contact_conversations(ctx, field)
-			case "actions":
-				return ec.fieldContext_Contact_actions(ctx, field)
 			case "timelineEvents":
 				return ec.fieldContext_Contact_timelineEvents(ctx, field)
 			case "timelineEventsTotalCount":
@@ -26578,8 +25952,6 @@ func (ec *executionContext) fieldContext_Query_contact_ByPhone(ctx context.Conte
 				return ec.fieldContext_Contact_notesByTime(ctx, field)
 			case "conversations":
 				return ec.fieldContext_Contact_conversations(ctx, field)
-			case "actions":
-				return ec.fieldContext_Contact_actions(ctx, field)
 			case "timelineEvents":
 				return ec.fieldContext_Contact_timelineEvents(ctx, field)
 			case "timelineEventsTotalCount":
@@ -32647,50 +32019,6 @@ func (ec *executionContext) unmarshalInputUserUpdateInput(ctx context.Context, o
 
 // region    ************************** interface.gotpl ***************************
 
-func (ec *executionContext) _Action(ctx context.Context, sel ast.SelectionSet, obj model.Action) graphql.Marshaler {
-	switch obj := (obj).(type) {
-	case nil:
-		return graphql.Null
-	case model.PageViewAction:
-		return ec._PageViewAction(ctx, sel, &obj)
-	case *model.PageViewAction:
-		if obj == nil {
-			return graphql.Null
-		}
-		return ec._PageViewAction(ctx, sel, obj)
-	case model.InteractionSession:
-		return ec._InteractionSession(ctx, sel, &obj)
-	case *model.InteractionSession:
-		if obj == nil {
-			return graphql.Null
-		}
-		return ec._InteractionSession(ctx, sel, obj)
-	case model.Ticket:
-		return ec._Ticket(ctx, sel, &obj)
-	case *model.Ticket:
-		if obj == nil {
-			return graphql.Null
-		}
-		return ec._Ticket(ctx, sel, obj)
-	case model.Conversation:
-		return ec._Conversation(ctx, sel, &obj)
-	case *model.Conversation:
-		if obj == nil {
-			return graphql.Null
-		}
-		return ec._Conversation(ctx, sel, obj)
-	case model.Note:
-		return ec._Note(ctx, sel, &obj)
-	case *model.Note:
-		if obj == nil {
-			return graphql.Null
-		}
-		return ec._Note(ctx, sel, obj)
-	default:
-		panic(fmt.Errorf("unexpected type %T", obj))
-	}
-}
-
 func (ec *executionContext) _ExtensibleEntity(ctx context.Context, sel ast.SelectionSet, obj model.ExtensibleEntity) graphql.Marshaler {
 	switch obj := (obj).(type) {
 	case nil:
@@ -32823,13 +32151,6 @@ func (ec *executionContext) _Node(ctx context.Context, sel ast.SelectionSet, obj
 			return graphql.Null
 		}
 		return ec._PageView(ctx, sel, obj)
-	case model.PageViewAction:
-		return ec._PageViewAction(ctx, sel, &obj)
-	case *model.PageViewAction:
-		if obj == nil {
-			return graphql.Null
-		}
-		return ec._PageViewAction(ctx, sel, obj)
 	case model.Ticket:
 		return ec._Ticket(ctx, sel, &obj)
 	case *model.Ticket:
@@ -33325,26 +32646,6 @@ func (ec *executionContext) _Contact(ctx context.Context, sel ast.SelectionSet, 
 				return innerFunc(ctx)
 
 			})
-		case "actions":
-			field := field
-
-			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._Contact_actions(ctx, field, obj)
-				if res == graphql.Null {
-					atomic.AddUint32(&invalids, 1)
-				}
-				return res
-			}
-
-			out.Concurrently(i, func() graphql.Marshaler {
-				return innerFunc(ctx)
-
-			})
 		case "timelineEvents":
 			field := field
 
@@ -33621,7 +32922,7 @@ func (ec *executionContext) _ContactsPage(ctx context.Context, sel ast.Selection
 	return out
 }
 
-var conversationImplementors = []string{"Conversation", "Action", "Node", "TimelineEvent"}
+var conversationImplementors = []string{"Conversation", "Node", "TimelineEvent"}
 
 func (ec *executionContext) _Conversation(ctx context.Context, sel ast.SelectionSet, obj *model.Conversation) graphql.Marshaler {
 	fields := graphql.CollectFields(ec.OperationContext, sel, conversationImplementors)
@@ -34559,7 +33860,7 @@ func (ec *executionContext) _InteractionEvent(ctx context.Context, sel ast.Selec
 	return out
 }
 
-var interactionSessionImplementors = []string{"InteractionSession", "Action", "Node", "TimelineEvent"}
+var interactionSessionImplementors = []string{"InteractionSession", "Node", "TimelineEvent"}
 
 func (ec *executionContext) _InteractionSession(ctx context.Context, sel ast.SelectionSet, obj *model.InteractionSession) graphql.Marshaler {
 	fields := graphql.CollectFields(ec.OperationContext, sel, interactionSessionImplementors)
@@ -35578,7 +34879,7 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 	return out
 }
 
-var noteImplementors = []string{"Note", "Action", "TimelineEvent"}
+var noteImplementors = []string{"Note", "TimelineEvent"}
 
 func (ec *executionContext) _Note(ctx context.Context, sel ast.SelectionSet, obj *model.Note) graphql.Marshaler {
 	fields := graphql.CollectFields(ec.OperationContext, sel, noteImplementors)
@@ -36191,90 +35492,6 @@ func (ec *executionContext) _PageView(ctx context.Context, sel ast.SelectionSet,
 		case "engagedTime":
 
 			out.Values[i] = ec._PageView_engagedTime(ctx, field, obj)
-
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
-		default:
-			panic("unknown field " + strconv.Quote(field.Name))
-		}
-	}
-	out.Dispatch()
-	if invalids > 0 {
-		return graphql.Null
-	}
-	return out
-}
-
-var pageViewActionImplementors = []string{"PageViewAction", "Action", "Node"}
-
-func (ec *executionContext) _PageViewAction(ctx context.Context, sel ast.SelectionSet, obj *model.PageViewAction) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.OperationContext, sel, pageViewActionImplementors)
-	out := graphql.NewFieldSet(fields)
-	var invalids uint32
-	for i, field := range fields {
-		switch field.Name {
-		case "__typename":
-			out.Values[i] = graphql.MarshalString("PageViewAction")
-		case "id":
-
-			out.Values[i] = ec._PageViewAction_id(ctx, field, obj)
-
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
-		case "startedAt":
-
-			out.Values[i] = ec._PageViewAction_startedAt(ctx, field, obj)
-
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
-		case "endedAt":
-
-			out.Values[i] = ec._PageViewAction_endedAt(ctx, field, obj)
-
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
-		case "pageTitle":
-
-			out.Values[i] = ec._PageViewAction_pageTitle(ctx, field, obj)
-
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
-		case "pageUrl":
-
-			out.Values[i] = ec._PageViewAction_pageUrl(ctx, field, obj)
-
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
-		case "application":
-
-			out.Values[i] = ec._PageViewAction_application(ctx, field, obj)
-
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
-		case "sessionId":
-
-			out.Values[i] = ec._PageViewAction_sessionId(ctx, field, obj)
-
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
-		case "orderInSession":
-
-			out.Values[i] = ec._PageViewAction_orderInSession(ctx, field, obj)
-
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
-		case "engagedTime":
-
-			out.Values[i] = ec._PageViewAction_engagedTime(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
 				invalids++
@@ -37004,7 +36221,7 @@ func (ec *executionContext) _Tag(ctx context.Context, sel ast.SelectionSet, obj 
 	return out
 }
 
-var ticketImplementors = []string{"Ticket", "Action", "Node", "TimelineEvent"}
+var ticketImplementors = []string{"Ticket", "Node", "TimelineEvent"}
 
 func (ec *executionContext) _Ticket(ctx context.Context, sel ast.SelectionSet, obj *model.Ticket) graphql.Marshaler {
 	fields := graphql.CollectFields(ec.OperationContext, sel, ticketImplementors)
@@ -37622,70 +36839,6 @@ func (ec *executionContext) ___Type(ctx context.Context, sel ast.SelectionSet, o
 // endregion **************************** object.gotpl ****************************
 
 // region    ***************************** type.gotpl *****************************
-
-func (ec *executionContext) marshalNAction2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐAction(ctx context.Context, sel ast.SelectionSet, v model.Action) graphql.Marshaler {
-	if v == nil {
-		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
-		}
-		return graphql.Null
-	}
-	return ec._Action(ctx, sel, v)
-}
-
-func (ec *executionContext) marshalNAction2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐActionᚄ(ctx context.Context, sel ast.SelectionSet, v []model.Action) graphql.Marshaler {
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalNAction2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐAction(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
-
-	for _, e := range ret {
-		if e == graphql.Null {
-			return graphql.Null
-		}
-	}
-
-	return ret
-}
-
-func (ec *executionContext) unmarshalNActionType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐActionType(ctx context.Context, v interface{}) (model.ActionType, error) {
-	var res model.ActionType
-	err := res.UnmarshalGQL(v)
-	return res, graphql.ErrorOnPath(ctx, err)
-}
-
-func (ec *executionContext) marshalNActionType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐActionType(ctx context.Context, sel ast.SelectionSet, v model.ActionType) graphql.Marshaler {
-	return v
-}
 
 func (ec *executionContext) unmarshalNAny2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐAnyTypeValue(ctx context.Context, v interface{}) (model.AnyTypeValue, error) {
 	res, err := model.UnmarshalAnyTypeValue(v)
@@ -39827,73 +38980,6 @@ func (ec *executionContext) marshalN__TypeKind2string(ctx context.Context, sel a
 		}
 	}
 	return res
-}
-
-func (ec *executionContext) unmarshalOActionType2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐActionTypeᚄ(ctx context.Context, v interface{}) ([]model.ActionType, error) {
-	if v == nil {
-		return nil, nil
-	}
-	var vSlice []interface{}
-	if v != nil {
-		vSlice = graphql.CoerceList(v)
-	}
-	var err error
-	res := make([]model.ActionType, len(vSlice))
-	for i := range vSlice {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
-		res[i], err = ec.unmarshalNActionType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐActionType(ctx, vSlice[i])
-		if err != nil {
-			return nil, err
-		}
-	}
-	return res, nil
-}
-
-func (ec *executionContext) marshalOActionType2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐActionTypeᚄ(ctx context.Context, sel ast.SelectionSet, v []model.ActionType) graphql.Marshaler {
-	if v == nil {
-		return graphql.Null
-	}
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalNActionType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐActionType(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
-
-	for _, e := range ret {
-		if e == graphql.Null {
-			return graphql.Null
-		}
-	}
-
-	return ret
 }
 
 func (ec *executionContext) unmarshalOBoolean2bool(ctx context.Context, v interface{}) (bool, error) {

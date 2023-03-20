@@ -229,20 +229,6 @@ func (r *contactResolver) Conversations(ctx context.Context, obj *model.Contact,
 	}, err
 }
 
-// Actions is the resolver for the actions field.
-func (r *contactResolver) Actions(ctx context.Context, obj *model.Contact, from time.Time, to time.Time, actionTypes []model.ActionType) ([]model.Action, error) {
-	defer func(start time.Time) {
-		utils.LogMethodExecution(start, utils.GetFunctionName())
-	}(time.Now())
-
-	actions, err := r.Services.ActionsService.GetContactActions(ctx, obj.ID, from, to, actionTypes)
-	if err != nil {
-		graphql.AddErrorf(ctx, "failed to get actions for contact %s", obj.ID)
-		return nil, err
-	}
-	return mapper.MapEntitiesToActions(actions), nil
-}
-
 // TimelineEvents is the resolver for the timelineEvents field.
 func (r *contactResolver) TimelineEvents(ctx context.Context, obj *model.Contact, from *time.Time, size int, timelineEventTypes []model.TimelineEventType) ([]model.TimelineEvent, error) {
 	defer func(start time.Time) {

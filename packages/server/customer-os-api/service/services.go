@@ -19,7 +19,6 @@ type Services struct {
 	CustomFieldTemplateService CustomFieldTemplateService
 	ConversationService        ConversationService
 	OrganizationTypeService    OrganizationTypeService
-	ActionsService             ActionsService
 	TimelineEventService       TimelineEventService
 	NoteService                NoteService
 	JobRoleService             JobRoleService
@@ -60,7 +59,6 @@ func InitServices(driver *neo4j.DriverWithContext) *Services {
 		InteractionSessionService:  NewInteractionSessionService(repositories),
 		PageViewService:            NewPageViewService(repositories),
 	}
-	services.ActionsService = NewActionsService(repositories, &services)
 	services.TimelineEventService = NewTimelineEventService(repositories, &services)
 	services.SearchService = NewSearchService(repositories, &services)
 	services.QueryService = NewQueryService(repositories, &services)

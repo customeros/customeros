@@ -9,10 +9,6 @@ import (
 	"time"
 )
 
-type Action interface {
-	IsAction()
-}
-
 type ExtensibleEntity interface {
 	IsNode()
 	IsExtensibleEntity()
@@ -100,7 +96,6 @@ type Contact struct {
 	Notes                    *NotePage                `json:"notes"`
 	NotesByTime              []*Note                  `json:"notesByTime"`
 	Conversations            *ConversationPage        `json:"conversations"`
-	Actions                  []Action                 `json:"actions"`
 	TimelineEvents           []TimelineEvent          `json:"timelineEvents"`
 	TimelineEventsTotalCount int64                    `json:"timelineEventsTotalCount"`
 	Tickets                  []*Ticket                `json:"tickets"`
@@ -277,8 +272,6 @@ type Conversation struct {
 	InitiatorType      *string            `json:"initiatorType"`
 	ThreadID           *string            `json:"threadId"`
 }
-
-func (Conversation) IsAction() {}
 
 func (Conversation) IsNode()            {}
 func (this Conversation) GetID() string { return this.ID }
@@ -600,8 +593,6 @@ type InteractionSession struct {
 	Events        []*InteractionEvent `json:"events"`
 }
 
-func (InteractionSession) IsAction() {}
-
 func (InteractionSession) IsNode()            {}
 func (this InteractionSession) GetID() string { return this.ID }
 
@@ -685,8 +676,6 @@ type Note struct {
 	SourceOfTruth DataSource `json:"sourceOfTruth"`
 	AppSource     string     `json:"appSource"`
 }
-
-func (Note) IsAction() {}
 
 func (Note) IsTimelineEvent() {}
 
@@ -825,23 +814,6 @@ func (this PageView) GetID() string { return this.ID }
 
 func (PageView) IsTimelineEvent() {}
 
-type PageViewAction struct {
-	ID             string    `json:"id"`
-	StartedAt      time.Time `json:"startedAt"`
-	EndedAt        time.Time `json:"endedAt"`
-	PageTitle      string    `json:"pageTitle"`
-	PageURL        string    `json:"pageUrl"`
-	Application    string    `json:"application"`
-	SessionID      string    `json:"sessionId"`
-	OrderInSession int64     `json:"orderInSession"`
-	EngagedTime    int64     `json:"engagedTime"`
-}
-
-func (PageViewAction) IsAction() {}
-
-func (PageViewAction) IsNode()            {}
-func (this PageViewAction) GetID() string { return this.ID }
-
 // If provided as part of the request, results will be filtered down to the `page` and `limit` specified.
 type Pagination struct {
 	// The results page to return in the response.
@@ -973,8 +945,6 @@ type Ticket struct {
 	Notes       []*Note   `json:"notes"`
 }
 
-func (Ticket) IsAction() {}
-
 func (Ticket) IsNode()            {}
 func (this Ticket) GetID() string { return this.ID }
 
@@ -1070,53 +1040,6 @@ type UserUpdateInput struct {
 	// The last name of the customerOS user.
 	// **Required**
 	LastName string `json:"lastName"`
-}
-
-type ActionType string
-
-const (
-	ActionTypePageView           ActionType = "PAGE_VIEW"
-	ActionTypeInteractionSession ActionType = "INTERACTION_SESSION"
-	ActionTypeTicket             ActionType = "TICKET"
-	ActionTypeConversation       ActionType = "CONVERSATION"
-	ActionTypeNote               ActionType = "NOTE"
-)
-
-var AllActionType = []ActionType{
-	ActionTypePageView,
-	ActionTypeInteractionSession,
-	ActionTypeTicket,
-	ActionTypeConversation,
-	ActionTypeNote,
-}
-
-func (e ActionType) IsValid() bool {
-	switch e {
-	case ActionTypePageView, ActionTypeInteractionSession, ActionTypeTicket, ActionTypeConversation, ActionTypeNote:
-		return true
-	}
-	return false
-}
-
-func (e ActionType) String() string {
-	return string(e)
-}
-
-func (e *ActionType) UnmarshalGQL(v interface{}) error {
-	str, ok := v.(string)
-	if !ok {
-		return fmt.Errorf("enums must be strings")
-	}
-
-	*e = ActionType(str)
-	if !e.IsValid() {
-		return fmt.Errorf("%s is not a valid ActionType", str)
-	}
-	return nil
-}
-
-func (e ActionType) MarshalGQL(w io.Writer) {
-	fmt.Fprint(w, strconv.Quote(e.String()))
 }
 
 type ComparisonOperator string

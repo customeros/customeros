@@ -30,13 +30,6 @@ func (conversation ConversationEntity) ToString() string {
 
 type ConversationEntities []ConversationEntity
 
-func (ConversationEntity) Action() {
-}
-
-func (ConversationEntity) ActionName() string {
-	return NodeLabel_Conversation
-}
-
 func (ConversationEntity) IsTimelineEvent() {
 }
 

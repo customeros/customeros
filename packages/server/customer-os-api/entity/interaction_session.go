@@ -26,13 +26,6 @@ func (interactionSession InteractionSessionEntity) ToString() string {
 
 type InteractionSessionEntities []InteractionSessionEntity
 
-func (InteractionSessionEntity) Action() {
-}
-
-func (InteractionSessionEntity) ActionName() string {
-	return NodeLabel_InteractionSession
-}
-
 func (InteractionSessionEntity) IsTimelineEvent() {
 }
 

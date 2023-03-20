@@ -88,11 +88,6 @@ func (r *contactResolver) Conversations(ctx context.Context, obj *model.Contact,
 	panic(fmt.Errorf("not implemented: Conversations - conversations"))
 }
 
-// Actions is the resolver for the actions field.
-func (r *contactResolver) Actions(ctx context.Context, obj *model.Contact, from time.Time, to time.Time, actionTypes []model.ActionType) ([]model.Action, error) {
-	panic(fmt.Errorf("not implemented: Actions - actions"))
-}
-
 // TimelineEvents is the resolver for the timelineEvents field.
 func (r *contactResolver) TimelineEvents(ctx context.Context, obj *model.Contact, from *time.Time, size int, timelineEventTypes []model.TimelineEventType) ([]model.TimelineEvent, error) {
 	panic(fmt.Errorf("not implemented: TimelineEvents - timelineEvents"))
@@ -195,13 +190,3 @@ func (r *queryResolver) ContactByPhone(ctx context.Context, e164 string) (*model
 func (r *Resolver) Contact() generated.ContactResolver { return &contactResolver{r} }
 
 type contactResolver struct{ *Resolver }
-
-// !!! WARNING !!!
-// The code below was going to be deleted when updating resolvers. It has been copied here so you have
-// one last chance to move it out of harms way if you want. There are two reasons this happens:
-//   - When renaming or deleting a resolver the old code will be put in here. You can safely delete
-//     it when you're done.
-//   - You have helper methods in this file. Move them out to keep these resolver files clean.
-func (r *contactResolver) Addresses(ctx context.Context, obj *model.Contact) ([]*model.Place, error) {
-	panic(fmt.Errorf("not implemented: Addresses - addresses"))
-}

@@ -1125,8 +1125,8 @@ func TestQueryResolver_Contact_WithTimelineEvents_FilterByType(t *testing.T) {
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Action"))
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "PageView"))
 
-	types := []model.ActionType{}
-	types = append(types, model.ActionTypePageView)
+	types := []model.TimelineEventType{}
+	types = append(types, model.TimelineEventTypePageView)
 
 	rawResponse, err := c.RawPost(getQuery("contact/get_contact_with_timeline_filter_by_timeline_event_type"),
 		client.Var("contactId", contactId),
