@@ -144,6 +144,8 @@ export { default as Question } from './Question';
 export { default as Reddit } from './Reddit';
 export { default as Refresh } from './Refresh';
 export { default as Replay } from './Replay';
+export { default as ReplyLeft } from './ReplyLeft';
+export { default as ReplyMany } from './ReplyMany';
 export { default as Reply } from './Reply';
 export { default as Save } from './Save';
 export { default as SearchMinus } from './SearchMinus';
