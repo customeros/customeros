@@ -5,12 +5,15 @@ extend type Mutation {
     note_Delete(id: ID!): Result!
 }
 
+union NotedEntity = Contact | Organization
+
 type Note {
     id: ID!
     html: String!
     createdAt: Time!
     updatedAt: Time!
     createdBy: User @goField(forceResolver: true)
+    noted: [NotedEntity!]! @goField(forceResolver: true)
     source: DataSource!
     sourceOfTruth: DataSource!
     appSource: String!

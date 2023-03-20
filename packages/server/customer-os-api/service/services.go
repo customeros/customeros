@@ -50,7 +50,6 @@ func InitServices(driver *neo4j.DriverWithContext) *Services {
 		CustomFieldTemplateService: NewCustomFieldTemplateService(repositories),
 		ConversationService:        NewConversationService(repositories),
 		OrganizationTypeService:    NewOrganizationTypeService(repositories),
-		NoteService:                NewNoteService(repositories),
 		JobRoleService:             NewJobRoleService(repositories),
 		LocationService:            NewLocationService(repositories),
 		TagService:                 NewTagService(repositories),
@@ -59,6 +58,7 @@ func InitServices(driver *neo4j.DriverWithContext) *Services {
 		InteractionSessionService:  NewInteractionSessionService(repositories),
 		PageViewService:            NewPageViewService(repositories),
 	}
+	services.NoteService = NewNoteService(repositories, &services)
 	services.TimelineEventService = NewTimelineEventService(repositories, &services)
 	services.SearchService = NewSearchService(repositories, &services)
 	services.QueryService = NewQueryService(repositories, &services)

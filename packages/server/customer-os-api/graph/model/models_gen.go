@@ -25,6 +25,10 @@ type Node interface {
 	GetID() string
 }
 
+type NotedEntity interface {
+	IsNotedEntity()
+}
+
 // Describes the number of pages and total elements included in a query response.
 // **A `response` object.**
 type Pages interface {
@@ -107,6 +111,8 @@ func (this Contact) GetID() string                { return this.ID }
 func (this Contact) GetTemplate() *EntityTemplate { return this.Template }
 
 func (Contact) IsNode() {}
+
+func (Contact) IsNotedEntity() {}
 
 func (Contact) IsSearchBasicResult() {}
 
@@ -667,14 +673,15 @@ type Location struct {
 }
 
 type Note struct {
-	ID            string     `json:"id"`
-	HTML          string     `json:"html"`
-	CreatedAt     time.Time  `json:"createdAt"`
-	UpdatedAt     time.Time  `json:"updatedAt"`
-	CreatedBy     *User      `json:"createdBy"`
-	Source        DataSource `json:"source"`
-	SourceOfTruth DataSource `json:"sourceOfTruth"`
-	AppSource     string     `json:"appSource"`
+	ID            string        `json:"id"`
+	HTML          string        `json:"html"`
+	CreatedAt     time.Time     `json:"createdAt"`
+	UpdatedAt     time.Time     `json:"updatedAt"`
+	CreatedBy     *User         `json:"createdBy"`
+	Noted         []NotedEntity `json:"noted"`
+	Source        DataSource    `json:"source"`
+	SourceOfTruth DataSource    `json:"sourceOfTruth"`
+	AppSource     string        `json:"appSource"`
 }
 
 func (Note) IsTimelineEvent() {}
@@ -733,6 +740,8 @@ type Organization struct {
 	TimelineEventsTotalCount int64                    `json:"timelineEventsTotalCount"`
 	TicketSummaryByStatus    []*TicketSummaryByStatus `json:"ticketSummaryByStatus"`
 }
+
+func (Organization) IsNotedEntity() {}
 
 func (Organization) IsNode()            {}
 func (this Organization) GetID() string { return this.ID }

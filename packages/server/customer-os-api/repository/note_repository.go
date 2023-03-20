@@ -34,6 +34,8 @@ type NoteRepository interface {
 
 	Delete(ctx context.Context, session neo4j.SessionWithContext, tenant, noteId string) error
 	SetNoteCreator(ctx context.Context, session neo4j.SessionWithContext, tenant, userId, noteId string) error
+
+	GetNotedEntitiesForNotes(ctx context.Context, tenant string, ids []string) ([]*utils.DbNodeAndId, error)
 }
 
 type noteRepository struct {
@@ -304,4 +306,28 @@ func (r *noteRepository) SetNoteCreator(ctx context.Context, session neo4j.Sessi
 		return nil, err
 	})
 	return err
+}
+
+func (r *noteRepository) GetNotedEntitiesForNotes(ctx context.Context, tenant string, ids []string) ([]*utils.DbNodeAndId, error) {
+	session := utils.NewNeo4jReadSession(ctx, *r.driver)
+	defer session.Close(ctx)
+
+	query := "MATCH (n:Note_%s)<-[rel:NOTED]-(e) " +
+		" WHERE n.id IN $ids " +
+		" RETURN e, n.id"
+
+	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		if queryResult, err := tx.Run(ctx, fmt.Sprintf(query, tenant),
+			map[string]any{
+				"ids": ids,
+			}); err != nil {
+			return nil, err
+		} else {
+			return utils.ExtractAllRecordsAsDbNodeAndId(ctx, queryResult, err)
+		}
+	})
+	if err != nil {
+		return nil, err
+	}
+	return result.([]*utils.DbNodeAndId), err
 }

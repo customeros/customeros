@@ -29,6 +29,7 @@ type Loaders struct {
 	PhoneNumbersForOrganization            *dataloader.Loader
 	PhoneNumbersForUser                    *dataloader.Loader
 	PhoneNumbersForContact                 *dataloader.Loader
+	NotedEntitiesForNote                   *dataloader.Loader
 }
 
 type tagBatcher struct {
@@ -60,6 +61,9 @@ type interactionEventParticipantBatcher struct {
 }
 type phoneNumberBatcher struct {
 	phoneNumberService service.PhoneNumberService
+}
+type notedEntityBatcher struct {
+	noteService service.NoteService
 }
 
 // NewDataLoader returns the instantiated Loaders struct for use in a request
@@ -94,6 +98,9 @@ func NewDataLoader(services *service.Services) *Loaders {
 	phoneNumberBatcher := &phoneNumberBatcher{
 		phoneNumberService: services.PhoneNumberService,
 	}
+	notedEntityBatcher := &notedEntityBatcher{
+		noteService: services.NoteService,
+	}
 	return &Loaders{
 		TagsForOrganization:                    dataloader.NewBatchedLoader(tagBatcher.getTagsForOrganizations, dataloader.WithClearCacheOnBatch()),
 		TagsForContact:                         dataloader.NewBatchedLoader(tagBatcher.getTagsForContacts, dataloader.WithClearCacheOnBatch()),
@@ -112,6 +119,7 @@ func NewDataLoader(services *service.Services) *Loaders {
 		PhoneNumbersForOrganization:            dataloader.NewBatchedLoader(phoneNumberBatcher.getPhoneNumbersForOrganizations, dataloader.WithClearCacheOnBatch()),
 		PhoneNumbersForUser:                    dataloader.NewBatchedLoader(phoneNumberBatcher.getPhoneNumbersForUsers, dataloader.WithClearCacheOnBatch()),
 		PhoneNumbersForContact:                 dataloader.NewBatchedLoader(phoneNumberBatcher.getPhoneNumbersForContacts, dataloader.WithClearCacheOnBatch()),
+		NotedEntitiesForNote:                   dataloader.NewBatchedLoader(notedEntityBatcher.getNotedEntitiesForNotes, dataloader.WithClearCacheOnBatch()),
 	}
 }
 

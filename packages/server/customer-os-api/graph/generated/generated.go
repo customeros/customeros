@@ -380,6 +380,7 @@ type ComplexityRoot struct {
 		CreatedBy     func(childComplexity int) int
 		HTML          func(childComplexity int) int
 		ID            func(childComplexity int) int
+		Noted         func(childComplexity int) int
 		Source        func(childComplexity int) int
 		SourceOfTruth func(childComplexity int) int
 		UpdatedAt     func(childComplexity int) int
@@ -688,6 +689,7 @@ type MutationResolver interface {
 }
 type NoteResolver interface {
 	CreatedBy(ctx context.Context, obj *model.Note) (*model.User, error)
+	Noted(ctx context.Context, obj *model.Note) ([]model.NotedEntity, error)
 }
 type OrganizationResolver interface {
 	Domains(ctx context.Context, obj *model.Organization) ([]string, error)
@@ -2941,6 +2943,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Note.ID(childComplexity), true
 
+	case "Note.noted":
+		if e.complexity.Note.Noted == nil {
+			break
+		}
+
+		return e.complexity.Note.Noted(childComplexity), true
+
 	case "Note.source":
 		if e.complexity.Note.Source == nil {
 			break
@@ -5071,12 +5080,15 @@ type Place {
     note_Delete(id: ID!): Result!
 }
 
+union NotedEntity = Contact | Organization
+
 type Note {
     id: ID!
     html: String!
     createdAt: Time!
     updatedAt: Time!
     createdBy: User @goField(forceResolver: true)
+    noted: [NotedEntity!]! @goField(forceResolver: true)
     source: DataSource!
     sourceOfTruth: DataSource!
     appSource: String!
@@ -9008,6 +9020,8 @@ func (ec *executionContext) fieldContext_Contact_notesByTime(ctx context.Context
 				return ec.fieldContext_Note_updatedAt(ctx, field)
 			case "createdBy":
 				return ec.fieldContext_Note_createdBy(ctx, field)
+			case "noted":
+				return ec.fieldContext_Note_noted(ctx, field)
 			case "source":
 				return ec.fieldContext_Note_source(ctx, field)
 			case "sourceOfTruth":
@@ -19928,6 +19942,8 @@ func (ec *executionContext) fieldContext_Mutation_note_CreateForContact(ctx cont
 				return ec.fieldContext_Note_updatedAt(ctx, field)
 			case "createdBy":
 				return ec.fieldContext_Note_createdBy(ctx, field)
+			case "noted":
+				return ec.fieldContext_Note_noted(ctx, field)
 			case "source":
 				return ec.fieldContext_Note_source(ctx, field)
 			case "sourceOfTruth":
@@ -20001,6 +20017,8 @@ func (ec *executionContext) fieldContext_Mutation_note_CreateForOrganization(ctx
 				return ec.fieldContext_Note_updatedAt(ctx, field)
 			case "createdBy":
 				return ec.fieldContext_Note_createdBy(ctx, field)
+			case "noted":
+				return ec.fieldContext_Note_noted(ctx, field)
 			case "source":
 				return ec.fieldContext_Note_source(ctx, field)
 			case "sourceOfTruth":
@@ -20074,6 +20092,8 @@ func (ec *executionContext) fieldContext_Mutation_note_Update(ctx context.Contex
 				return ec.fieldContext_Note_updatedAt(ctx, field)
 			case "createdBy":
 				return ec.fieldContext_Note_createdBy(ctx, field)
+			case "noted":
+				return ec.fieldContext_Note_noted(ctx, field)
 			case "source":
 				return ec.fieldContext_Note_source(ctx, field)
 			case "sourceOfTruth":
@@ -22105,6 +22125,50 @@ func (ec *executionContext) fieldContext_Note_createdBy(ctx context.Context, fie
 	return fc, nil
 }
 
+func (ec *executionContext) _Note_noted(ctx context.Context, field graphql.CollectedField, obj *model.Note) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Note_noted(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Note().Noted(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]model.NotedEntity)
+	fc.Result = res
+	return ec.marshalNNotedEntity2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐNotedEntityᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Note_noted(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Note",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type NotedEntity does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Note_source(ctx context.Context, field graphql.CollectedField, obj *model.Note) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Note_source(ctx, field)
 	if err != nil {
@@ -22286,6 +22350,8 @@ func (ec *executionContext) fieldContext_NotePage_content(ctx context.Context, f
 				return ec.fieldContext_Note_updatedAt(ctx, field)
 			case "createdBy":
 				return ec.fieldContext_Note_createdBy(ctx, field)
+			case "noted":
+				return ec.fieldContext_Note_noted(ctx, field)
 			case "source":
 				return ec.fieldContext_Note_source(ctx, field)
 			case "sourceOfTruth":
@@ -27598,6 +27664,8 @@ func (ec *executionContext) fieldContext_Ticket_notes(ctx context.Context, field
 				return ec.fieldContext_Note_updatedAt(ctx, field)
 			case "createdBy":
 				return ec.fieldContext_Note_createdBy(ctx, field)
+			case "noted":
+				return ec.fieldContext_Note_noted(ctx, field)
 			case "source":
 				return ec.fieldContext_Note_source(ctx, field)
 			case "sourceOfTruth":
@@ -32257,6 +32325,29 @@ func (ec *executionContext) _Node(ctx context.Context, sel ast.SelectionSet, obj
 	}
 }
 
+func (ec *executionContext) _NotedEntity(ctx context.Context, sel ast.SelectionSet, obj model.NotedEntity) graphql.Marshaler {
+	switch obj := (obj).(type) {
+	case nil:
+		return graphql.Null
+	case model.Contact:
+		return ec._Contact(ctx, sel, &obj)
+	case *model.Contact:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._Contact(ctx, sel, obj)
+	case model.Organization:
+		return ec._Organization(ctx, sel, &obj)
+	case *model.Organization:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._Organization(ctx, sel, obj)
+	default:
+		panic(fmt.Errorf("unexpected type %T", obj))
+	}
+}
+
 func (ec *executionContext) _Pages(ctx context.Context, sel ast.SelectionSet, obj model.Pages) graphql.Marshaler {
 	switch obj := (obj).(type) {
 	case nil:
@@ -32400,7 +32491,7 @@ func (ec *executionContext) _TimelineEvent(ctx context.Context, sel ast.Selectio
 
 // region    **************************** object.gotpl ****************************
 
-var contactImplementors = []string{"Contact", "ExtensibleEntity", "Node", "SearchBasicResult"}
+var contactImplementors = []string{"Contact", "ExtensibleEntity", "Node", "NotedEntity", "SearchBasicResult"}
 
 func (ec *executionContext) _Contact(ctx context.Context, sel ast.SelectionSet, obj *model.Contact) graphql.Marshaler {
 	fields := graphql.CollectFields(ec.OperationContext, sel, contactImplementors)
@@ -35028,6 +35119,26 @@ func (ec *executionContext) _Note(ctx context.Context, sel ast.SelectionSet, obj
 				return innerFunc(ctx)
 
 			})
+		case "noted":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Note_noted(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
 		case "source":
 
 			out.Values[i] = ec._Note_source(ctx, field, obj)
@@ -35102,7 +35213,7 @@ func (ec *executionContext) _NotePage(ctx context.Context, sel ast.SelectionSet,
 	return out
 }
 
-var organizationImplementors = []string{"Organization", "Node", "SearchBasicResult"}
+var organizationImplementors = []string{"Organization", "NotedEntity", "Node", "SearchBasicResult"}
 
 func (ec *executionContext) _Organization(ctx context.Context, sel ast.SelectionSet, obj *model.Organization) graphql.Marshaler {
 	fields := graphql.CollectFields(ec.OperationContext, sel, organizationImplementors)
@@ -38157,6 +38268,60 @@ func (ec *executionContext) marshalNNotePage2ᚖgithubᚗcomᚋopenlineᚑaiᚋo
 func (ec *executionContext) unmarshalNNoteUpdateInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐNoteUpdateInput(ctx context.Context, v interface{}) (model.NoteUpdateInput, error) {
 	res, err := ec.unmarshalInputNoteUpdateInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNNotedEntity2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐNotedEntity(ctx context.Context, sel ast.SelectionSet, v model.NotedEntity) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._NotedEntity(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNNotedEntity2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐNotedEntityᚄ(ctx context.Context, sel ast.SelectionSet, v []model.NotedEntity) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNNotedEntity2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐNotedEntity(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
 }
 
 func (ec *executionContext) marshalNOrganization2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOrganization(ctx context.Context, sel ast.SelectionSet, v model.Organization) graphql.Marshaler {
