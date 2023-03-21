@@ -811,13 +811,13 @@ func CreateInteractionEvent(ctx context.Context, driver *neo4j.DriverWithContext
 	return interactionEventId.String()
 }
 
-func CreateInteractionSession(ctx context.Context, driver *neo4j.DriverWithContext, tenant, identifier, name, sessionType, status, channel string, startedAt time.Time) string {
+func CreateInteractionSession(ctx context.Context, driver *neo4j.DriverWithContext, tenant, identifier, name, sessionType, status, channel string, createdAt time.Time) string {
 	var interactionSessionId, _ = uuid.NewRandom()
 
 	query := "MERGE (is:InteractionSession {id:$id})" +
 		" ON CREATE SET " +
-		"	is.startedAt=$startedAt, " +
-		"	is.endedAt=$endedAt, " +
+		"	is.createdAt=$createdAt, " +
+		"	is.updatedAt=$updatedAt, " +
 		"	is.name=$name, " +
 		"	is.type=$type, " +
 		"	is.channel=$channel, " +
@@ -833,8 +833,8 @@ func CreateInteractionSession(ctx context.Context, driver *neo4j.DriverWithConte
 		"type":          sessionType,
 		"channel":       channel,
 		"status":        status,
-		"startedAt":     startedAt,
-		"endedAt":       startedAt.Add(time.Duration(10) * time.Minute),
+		"createdAt":     createdAt,
+		"updatedAt":     createdAt.Add(time.Duration(10) * time.Minute),
 		"source":        "openline",
 		"sourceOfTruth": "openline",
 		"appSource":     "test",
