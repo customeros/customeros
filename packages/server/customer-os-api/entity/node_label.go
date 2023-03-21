@@ -1,8 +1,7 @@
 package entity
 
 const (
-	// TODO Action replace with TimelineEvent
-	NodeLabel_Action             = "Action"
+	NodeLabel_TimelineEvent      = "TimelineEvent"
 	NodeLabel_Contact            = "Contact"
 	NodeLabel_Conversation       = "Conversation"
 	NodeLabel_Email              = "Email"

@@ -223,8 +223,8 @@ func (r *noteRepository) CreateNoteForContact(ctx context.Context, session neo4j
 		"				n.sourceOfTruth=$sourceOfTruth, " +
 		"				n.appSource=$appSource, " +
 		"				n:Note_%s," +
-		"				n:Action," +
-		"				n:Action_%s " +
+		"				n:TimelineEvent," +
+		"				n:TimelineEvent_%s " +
 		" RETURN n"
 
 	result, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (interface{}, error) {
@@ -256,8 +256,8 @@ func (r *noteRepository) CreateNoteForOrganization(ctx context.Context, session 
 		"				n.sourceOfTruth=$sourceOfTruth, " +
 		"				n.appSource=$appSource, " +
 		"				n:Note_%s," +
-		"				n:Action," +
-		"				n:Action_%s " +
+		"				n:TimelineEvent," +
+		"				n:TimelineEvent_%s " +
 		" RETURN n"
 
 	result, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (interface{}, error) {

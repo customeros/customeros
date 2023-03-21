@@ -24,7 +24,7 @@ func (TicketEntity) Labels(tenant string) []string {
 	return []string{
 		NodeLabel_Ticket,
 		NodeLabel_Ticket + "_" + tenant,
-		NodeLabel_Action,
-		NodeLabel_Action + "_" + tenant,
+		NodeLabel_TimelineEvent,
+		NodeLabel_TimelineEvent + "_" + tenant,
 	}
 }

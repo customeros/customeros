@@ -47,7 +47,7 @@ func (r *actionRepository) CreatePageViewAction(ctx context.Context, contactId s
 	}
 
 	query := "MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant}) " +
-		" MERGE (c)-[:HAS_ACTION]->(a:Action:PageView {id:$pvId, trackerName:$trackerName})" +
+		" MERGE (c)-[:HAS_ACTION]->(a:TimelineEvent:PageView {id:$pvId, trackerName:$trackerName})" +
 		" ON CREATE SET " +
 		" 	a:%s, a:%s, " +
 		" 	a.startedAt=$start, " +
@@ -67,7 +67,7 @@ func (r *actionRepository) CreatePageViewAction(ctx context.Context, contactId s
 		" 	a.orderInSession=$orderInSession "
 
 	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (interface{}, error) {
-		_, err := tx.Run(ctx, fmt.Sprintf(query, "PageView_"+pv.Tenant, "Action_"+pv.Tenant), params)
+		_, err := tx.Run(ctx, fmt.Sprintf(query, "PageView_"+pv.Tenant, "TimelineEvent_"+pv.Tenant), params)
 		return nil, err
 	})
 

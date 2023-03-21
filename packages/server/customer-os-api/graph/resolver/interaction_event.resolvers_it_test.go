@@ -677,7 +677,7 @@ func TestQueryResolver_Contact_WithTimelineEvents_InteractionEvents_With_Interac
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Email"))
 	require.Equal(t, 4, neo4jt.GetCountOfNodes(ctx, driver, "InteractionEvent"))
 	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "InteractionSession"))
-	require.Equal(t, 6, neo4jt.GetCountOfNodes(ctx, driver, "Action"))
+	require.Equal(t, 6, neo4jt.GetCountOfNodes(ctx, driver, "TimelineEvent"))
 	require.Equal(t, 3, neo4jt.GetCountOfRelationships(ctx, driver, "PART_OF"))
 
 	rawResponse, err := c.RawPost(getQuery("interaction_event/get_interaction_events_with_session_in_timeline_event"),

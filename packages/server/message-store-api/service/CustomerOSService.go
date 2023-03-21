@@ -522,8 +522,8 @@ func (s *CustomerOSService) CreateConversation(ctx context.Context, tenant strin
 			"				o.lastContentPreview=$lastContentPreview, " +
 			" 				o.appSource=$appSource, " +
 			"				o:Conversation_%s," +
-			"				o:Action," +
-			"				o:Action_%s " +
+			"				o:TimelineEvent," +
+			"				o:TimelineEvent_%s " +
 			" %s %s " +
 			" RETURN DISTINCT o"
 		queryLinkWithContacts := ""

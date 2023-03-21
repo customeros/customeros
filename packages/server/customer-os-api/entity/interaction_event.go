@@ -36,7 +36,7 @@ func (InteractionEventEntity) Labels(tenant string) []string {
 	return []string{
 		NodeLabel_InteractionEvent,
 		NodeLabel_InteractionEvent + "_" + tenant,
-		NodeLabel_Action,
-		NodeLabel_Action + "_" + tenant,
+		NodeLabel_TimelineEvent,
+		NodeLabel_TimelineEvent + "_" + tenant,
 	}
 }

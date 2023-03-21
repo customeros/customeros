@@ -12,7 +12,7 @@ import (
 
 type TicketRepository interface {
 	GetMatchedTicketId(ctx context.Context, tenant string, ticket entity.TicketData) (string, error)
-	MergeTicket(ctx context.Context, tenant string, syncDate time.Time, user entity.TicketData) error
+	MergeTicket(ctx context.Context, tenant string, syncDate time.Time, ticket entity.TicketData) error
 	MergeTagForTicket(ctx context.Context, tenant, ticketId, tagName, externalSystem string) error
 	LinkTicketWithCollaboratorUserByExternalId(ctx context.Context, tenant, ticketId, userExternalId, externalSystem string) error
 	LinkTicketWithFollowerUserByExternalId(ctx context.Context, tenant, ticketId, userExternalId, externalSystem string) error
@@ -31,7 +31,7 @@ func NewTicketRepository(driver *neo4j.DriverWithContext) TicketRepository {
 	}
 }
 
-func (r *ticketRepository) GetMatchedTicketId(ctx context.Context, tenant string, user entity.TicketData) (string, error) {
+func (r *ticketRepository) GetMatchedTicketId(ctx context.Context, tenant string, ticket entity.TicketData) (string, error) {
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
@@ -44,8 +44,8 @@ func (r *ticketRepository) GetMatchedTicketId(ctx context.Context, tenant string
 		queryResult, err := tx.Run(ctx, query,
 			map[string]interface{}{
 				"tenant":           tenant,
-				"externalSystem":   user.ExternalSystem,
-				"ticketExternalId": user.ExternalId,
+				"externalSystem":   ticket.ExternalSystem,
+				"ticketExternalId": ticket.ExternalId,
 			})
 		if err != nil {
 			return nil, err
@@ -78,7 +78,7 @@ func (r *ticketRepository) MergeTicket(ctx context.Context, tenant string, syncD
 		"				tt.priority=$priority, " +
 		"				tt.description=$description, " +
 		"               tt:%s," +
-		"				tt:Action," +
+		"				tt:TimelineEvent," +
 		"				tt:%s" +
 		" ON MATCH SET " +
 		"				tt.subject = CASE WHEN tt.sourceOfTruth=$sourceOfTruth OR tt.subject is null OR tt.subject = '' THEN $subject ELSE tt.subject END, " +
@@ -97,7 +97,7 @@ func (r *ticketRepository) MergeTicket(ctx context.Context, tenant string, syncD
 		") RETURN tt.id"
 
 	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		queryResult, err := tx.Run(ctx, fmt.Sprintf(query, "Ticket_"+tenant, "Action_"+tenant),
+		queryResult, err := tx.Run(ctx, fmt.Sprintf(query, "Ticket_"+tenant, "TimelineEvent_"+tenant),
 			map[string]interface{}{
 				"tenant":         tenant,
 				"ticketId":       ticket.Id,
