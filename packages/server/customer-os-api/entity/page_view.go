@@ -32,5 +32,5 @@ func (PageViewEntity) TimelineEventLabel() string {
 }
 
 func (pageView PageViewEntity) Labels() []string {
-	return []string{"PageView", "Action"}
+	return []string{"PageView", "TimelineEvent"}
 }

@@ -36,5 +36,5 @@ func (InteractionSessionEntity) TimelineEventLabel() string {
 }
 
 func (interactionSession InteractionSessionEntity) Labels(tenant string) []string {
-	return []string{"InteractionSession", "Action", "InteractionSession_" + tenant, "Action_" + tenant}
+	return []string{"InteractionSession", "TimelineEvent", "InteractionSession_" + tenant, "TimelineEvent_" + tenant}
 }

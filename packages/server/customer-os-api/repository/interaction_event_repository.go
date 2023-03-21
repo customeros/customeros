@@ -230,8 +230,8 @@ func (r *interactionEventRepository) Create(ctx context.Context, tx neo4j.Manage
 
 	query := "MERGE (ie:InteractionEvent_%s {id:randomUUID()}) ON CREATE SET " +
 		"  ie:InteractionEvent, " +
-		"  ie:Action, " +
-		"  ie:Action_%s, " +
+		"  ie:TimelineEvent, " +
+		"  ie:TimelineEvent_%s, " +
 		" ie.source=$source, " +
 		" ie.channel=$channel, " +
 		" ie.createdAt=$createdAt, " +

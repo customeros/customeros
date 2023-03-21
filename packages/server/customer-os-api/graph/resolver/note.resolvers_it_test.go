@@ -53,7 +53,7 @@ func TestMutationResolver_NoteCreateForContact(t *testing.T) {
 
 	// Check the labels on the nodes in the Neo4j database
 	assertNeo4jLabels(ctx, t, driver, []string{"Tenant", "Contact", "Contact_" + tenantName, "User", "User_" + tenantName,
-		"Note", "Note_" + tenantName, "Action", "Action_" + tenantName})
+		"Note", "Note_" + tenantName, "TimelineEvent", "TimelineEvent_" + tenantName})
 }
 
 func TestMutationResolver_NoteCreateForOrganization(t *testing.T) {
@@ -96,7 +96,7 @@ func TestMutationResolver_NoteCreateForOrganization(t *testing.T) {
 
 	// Check the labels on the nodes in the Neo4j database
 	assertNeo4jLabels(ctx, t, driver, []string{"Tenant", "Organization", "Organization_" + tenantName, "User", "User_" + tenantName,
-		"Note", "Note_" + tenantName, "Action", "Action_" + tenantName})
+		"Note", "Note_" + tenantName, "TimelineEvent", "TimelineEvent_" + tenantName})
 }
 
 func TestMutationResolver_NoteUpdate(t *testing.T) {
@@ -134,7 +134,7 @@ func TestMutationResolver_NoteUpdate(t *testing.T) {
 
 	// Check the labels on the nodes in the Neo4j database
 	assertNeo4jLabels(ctx, t, driver, []string{"Tenant", "Contact", "Contact_" + tenantName,
-		"Note", "Note_" + tenantName, "Action", "Action_" + tenantName})
+		"Note", "Note_" + tenantName, "TimelineEvent", "TimelineEvent_" + tenantName})
 }
 
 func TestMutationResolver_NoteDelete(t *testing.T) {
@@ -229,5 +229,5 @@ func TestQueryResolver_GetNote(t *testing.T) {
 	// Check the labels on the nodes in the Neo4j database
 	assertNeo4jLabels(ctx, t, driver, []string{"Tenant", "Contact", "Contact_" + tenantName,
 		"Organization", "Organization_" + tenantName, "Note", "Note_" + tenantName,
-		"Action", "Action_" + tenantName})
+		"TimelineEvent", "TimelineEvent_" + tenantName})
 }

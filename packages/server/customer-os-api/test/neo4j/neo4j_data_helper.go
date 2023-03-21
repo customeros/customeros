@@ -401,9 +401,9 @@ func CreateTicket(ctx context.Context, driver *neo4j.DriverWithContext, tenant s
 				tt.description=$description,
 				tt.status=$status,
 				tt.priority=$priority,
-				tt:Action,
+				tt:TimelineEvent,
 				tt:Ticket_%s,
-				tt:Action_%s`
+				tt:TimelineEvent_%s`
 	ExecuteWriteQuery(ctx, driver, fmt.Sprintf(query, tenant, tenant), map[string]any{
 		"id":          ticketId.String(),
 		"tenant":      tenant,
@@ -571,7 +571,7 @@ func CreateConversation(ctx context.Context, driver *neo4j.DriverWithContext, te
 	var conversationId, _ = uuid.NewRandom()
 	query := `MATCH (c:Contact {id:$contactId}),
 			        (u:User {id:$userId})
-			MERGE (u)-[:PARTICIPATES]->(o:Conversation:Conversation_%s:Action:Action_%s {id:$conversationId})<-[:PARTICIPATES]-(c)
+			MERGE (u)-[:PARTICIPATES]->(o:Conversation:Conversation_%s:TimelineEvent:TimelineEvent_%s {id:$conversationId})<-[:PARTICIPATES]-(c)
 			ON CREATE SET 	o.startedAt=$startedAt, 
 							o.status="ACTIVE", 
 							o.channel="VOICE",
@@ -590,7 +590,7 @@ func CreateConversation(ctx context.Context, driver *neo4j.DriverWithContext, te
 func CreatePageView(ctx context.Context, driver *neo4j.DriverWithContext, contactId string, actionEntity entity.PageViewEntity) string {
 	var actionId, _ = uuid.NewRandom()
 	query := `MATCH (c:Contact {id:$contactId})
-			MERGE (c)-[:HAS_ACTION]->(a:Action:PageView {id:$actionId})
+			MERGE (c)-[:HAS_ACTION]->(a:TimelineEvent:PageView {id:$actionId})
 			ON CREATE SET
 				a.trackerName=$trackerName,
 				a.startedAt=$startedAt,
@@ -718,8 +718,8 @@ func CreateNoteForContact(ctx context.Context, driver *neo4j.DriverWithContext, 
 		"						n.sourceOfSource=$source, " +
 		"						n.appSource=$appSource, " +
 		"						n:Note_%s, " +
-		"						n:Action, " +
-		"						n:Action_%s"
+		"						n:TimelineEvent, " +
+		"						n:TimelineEvent_%s"
 	ExecuteWriteQuery(ctx, driver, fmt.Sprintf(query, tenant, tenant), map[string]any{
 		"id":        noteId.String(),
 		"contactId": contactId,
@@ -739,8 +739,8 @@ func CreateNoteForOrganization(ctx context.Context, driver *neo4j.DriverWithCont
 		"		ON CREATE SET 	n.html=$html, " +
 		"						n.createdAt=$createdAt, " +
 		"						n:Note_%s, " +
-		"						n:Action, " +
-		"						n:Action_%s"
+		"						n:TimelineEvent, " +
+		"						n:TimelineEvent_%s"
 	ExecuteWriteQuery(ctx, driver, fmt.Sprintf(query, tenant, tenant), map[string]any{
 		"id":             noteId.String(),
 		"organizationId": organizationId,
@@ -795,7 +795,7 @@ func CreateInteractionEvent(ctx context.Context, driver *neo4j.DriverWithContext
 		"	ie.source=$source, " +
 		"	ie.sourceOfTruth=$sourceOfTruth, " +
 		"	ie.appSource=$appSource," +
-		"	ie:InteractionEvent_%s, ie:Action, ie:Action_%s," +
+		"	ie:InteractionEvent_%s, ie:TimelineEvent, ie:TimelineEvent_%s," +
 		"   ie.identifier=$identifier"
 	ExecuteWriteQuery(ctx, driver, fmt.Sprintf(query, tenant, tenant), map[string]any{
 		"id":            interactionEventId.String(),
@@ -826,7 +826,7 @@ func CreateInteractionSession(ctx context.Context, driver *neo4j.DriverWithConte
 		"	is.sourceOfTruth=$sourceOfTruth, " +
 		"	is.appSource=$appSource," +
 		"   is.identifier=$identifier, " +
-		"	is:InteractionSession_%s, is:Action, is:Action_%s"
+		"	is:InteractionSession_%s, is:TimelineEvent, is:TimelineEvent_%s"
 	ExecuteWriteQuery(ctx, driver, fmt.Sprintf(query, tenant, tenant), map[string]any{
 		"id":            interactionSessionId.String(),
 		"name":          name,

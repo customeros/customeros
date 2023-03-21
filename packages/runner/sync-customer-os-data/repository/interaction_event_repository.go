@@ -86,10 +86,8 @@ func (r *interactionEventRepository) MergeInteractionEvent(ctx context.Context, 
 		" MERGE (ie:InteractionEvent_%s {source:$source, channel:$channel})-[rel:IS_LINKED_WITH {externalId:$externalId}]->(e) " +
 		" ON CREATE SET " +
 		"  ie:InteractionEvent, " +
-		"  ie:Action, " +
-		"  ie:Action_%s, " +
-		//"  ie:TimelineEvent, " +
-		//"  ie:TimelineEvent_%s, " +
+		"  ie:TimelineEvent, " +
+		"  ie:TimelineEvent_%s, " +
 		"  rel.syncDate=$syncDate, " +
 		"  ie.createdAt=$createdAt, " +
 		"  ie.id=randomUUID(), " +

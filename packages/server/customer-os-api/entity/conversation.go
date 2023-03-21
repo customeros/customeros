@@ -38,5 +38,5 @@ func (ConversationEntity) TimelineEventLabel() string {
 }
 
 func (conversation ConversationEntity) Labels(tenant string) []string {
-	return []string{"Conversation", "Action", "Conversation_" + tenant, "Action_" + tenant}
+	return []string{"Conversation", "TimelineEvent", "Conversation_" + tenant, "TimelineEvent_" + tenant}
 }

@@ -43,8 +43,8 @@ func (r *conversationRepository) Create(ctx context.Context, session neo4j.Sessi
 		query := "MATCH (t:Tenant {name:$tenant}) " +
 			" MERGE (o:Conversation {id:$conversationId}) " +
 			" ON CREATE SET o:Conversation_%s, " +
-			"				o:Action," +
-			"				o:Action_%s," +
+			"				o:TimelineEvent," +
+			"				o:TimelineEvent_%s," +
 			"				o.startedAt=$startedAt, " +
 			"				o.messageCount=0, " +
 			"				o.channel=$channel, " +

@@ -31,5 +31,5 @@ func (NoteEntity) TimelineEventLabel() string {
 }
 
 func (note NoteEntity) Labels(tenant string) []string {
-	return []string{"Note", "Action", "Note_" + tenant, "Action_" + tenant}
+	return []string{"Note", "TimelineEvent", "Note_" + tenant, "TimelineEvent_" + tenant}
 }

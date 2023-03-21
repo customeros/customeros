@@ -133,7 +133,7 @@ CALL {
  UNION
  MATCH (t:Tenant)--(:Contact)--(n:Note) WHERE NOT 'Note_'+t.name  in labels(n) return count(n) as x
  UNION
- MATCH (t:Tenant)--(:Contact)--(n:Action) WHERE NOT 'Action_'+t.name  in labels(n) return count(n) as x
+ MATCH (t:Tenant)--(:Contact)--(n:TimelineEvent) WHERE NOT 'TimelineEvent_'+t.name  in labels(n) return count(n) as x
 } return sum(x) as Problematic_nodes;
 
 #=========== CHECK 4 - Missing tenant links
