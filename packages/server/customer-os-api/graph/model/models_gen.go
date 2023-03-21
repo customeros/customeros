@@ -572,6 +572,7 @@ type InteractionEvent struct {
 	Content            *string                       `json:"content"`
 	ContentType        *string                       `json:"contentType"`
 	Channel            *string                       `json:"channel"`
+	ChannelData        *string                       `json:"channelData"`
 	InteractionSession *InteractionSession           `json:"interactionSession"`
 	SentBy             []InteractionEventParticipant `json:"sentBy"`
 	SentTo             []InteractionEventParticipant `json:"sentTo"`
@@ -591,6 +592,7 @@ type InteractionEventInput struct {
 	Content            *string                             `json:"content"`
 	ContentType        *string                             `json:"contentType"`
 	Channel            *string                             `json:"channel"`
+	ChannelData        *string                             `json:"channelData"`
 	InteractionSession *string                             `json:"interactionSession"`
 	SentBy             []*InteractionEventParticipantInput `json:"sentBy"`
 	SentTo             []*InteractionEventParticipantInput `json:"sentTo"`
@@ -617,6 +619,7 @@ type InteractionSession struct {
 	Status            string              `json:"status"`
 	Type              *string             `json:"type"`
 	Channel           *string             `json:"channel"`
+	ChannelData       *string             `json:"channelData"`
 	Source            DataSource          `json:"source"`
 	SourceOfTruth     DataSource          `json:"sourceOfTruth"`
 	AppSource         string              `json:"appSource"`
@@ -634,6 +637,7 @@ type InteractionSessionInput struct {
 	Status            string  `json:"status"`
 	Type              *string `json:"type"`
 	Channel           *string `json:"channel"`
+	ChannelData       *string `json:"channelData"`
 	AppSource         string  `json:"appSource"`
 }
 

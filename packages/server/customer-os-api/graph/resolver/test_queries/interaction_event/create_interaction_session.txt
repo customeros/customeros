@@ -1,4 +1,4 @@
-mutation CreateInteractionSession($sessionIdentifier: String, $name: String!, $status: String!, $type: String, $channel: String) {
+mutation CreateInteractionSession($sessionIdentifier: String, $name: String!, $status: String!, $type: String, $channel: String, $channelData: String) {
 interactionSession_Create(
     session: {
         sessionIdentifier: $sessionIdentifier
@@ -6,6 +6,7 @@ interactionSession_Create(
         status: $status
         type: $type
         channel: $channel
+        channelData: $channelData
         appSource: "Oasis"
     }
   ) {
@@ -17,6 +18,7 @@ interactionSession_Create(
        status
        type
        channel
+       channelData
        source
        sourceOfTruth
        appSource

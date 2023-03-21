@@ -8,7 +8,8 @@ import (
 type InteractionEventEntity struct {
 	Id              string
 	CreatedAt       *time.Time
-	Channel         string
+	Channel         *string
+	ChannelData     *string
 	EventIdentifier string
 	Content         string
 	ContentType     string

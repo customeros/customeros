@@ -2,6 +2,7 @@ mutation CreateInteractionEvent($sessionId: ID, $replyTo: ID, $content: String, 
 interactionEvent_Create(
     event: {
         channel: "EMAIL"
+        channelData: "{\"References\":[\"<CAJYQ2j8Q>\"],\"Replies-To\":\"<CAJYQ2j8Q>\"}"
         sentBy: [ {
               email: "sentBy@openline.ai"
         } ]
@@ -24,6 +25,7 @@ interactionEvent_Create(
     content
     contentType
     channel
+    channelData
     interactionSession {
        id
        startedAt

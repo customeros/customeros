@@ -234,6 +234,7 @@ func (r *interactionEventRepository) Create(ctx context.Context, tx neo4j.Manage
 		"  ie:TimelineEvent_%s, " +
 		" ie.source=$source, " +
 		" ie.channel=$channel, " +
+		" ie.channelData=$channelData, " +
 		" ie.createdAt=$createdAt, " +
 		" ie.identifier=$identifier, " +
 		" ie.content=$content, " +
@@ -247,6 +248,7 @@ func (r *interactionEventRepository) Create(ctx context.Context, tx neo4j.Manage
 			"tenant":        tenant,
 			"source":        source,
 			"channel":       newInteractionEvent.Channel,
+			"channelData":   newInteractionEvent.ChannelData,
 			"createdAt":     createdAt,
 			"identifier":    newInteractionEvent.EventIdentifier,
 			"content":       newInteractionEvent.Content,

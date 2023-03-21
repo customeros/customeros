@@ -231,6 +231,7 @@ type ComplexityRoot struct {
 	InteractionEvent struct {
 		AppSource          func(childComplexity int) int
 		Channel            func(childComplexity int) int
+		ChannelData        func(childComplexity int) int
 		Content            func(childComplexity int) int
 		ContentType        func(childComplexity int) int
 		CreatedAt          func(childComplexity int) int
@@ -247,6 +248,7 @@ type ComplexityRoot struct {
 	InteractionSession struct {
 		AppSource         func(childComplexity int) int
 		Channel           func(childComplexity int) int
+		ChannelData       func(childComplexity int) int
 		CreatedAt         func(childComplexity int) int
 		EndedAt           func(childComplexity int) int
 		Events            func(childComplexity int) int
@@ -1657,6 +1659,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.InteractionEvent.Channel(childComplexity), true
 
+	case "InteractionEvent.channelData":
+		if e.complexity.InteractionEvent.ChannelData == nil {
+			break
+		}
+
+		return e.complexity.InteractionEvent.ChannelData(childComplexity), true
+
 	case "InteractionEvent.content":
 		if e.complexity.InteractionEvent.Content == nil {
 			break
@@ -1747,6 +1756,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.InteractionSession.Channel(childComplexity), true
+
+	case "InteractionSession.channelData":
+		if e.complexity.InteractionSession.ChannelData == nil {
+			break
+		}
+
+		return e.complexity.InteractionSession.ChannelData(childComplexity), true
 
 	case "InteractionSession.createdAt":
 		if e.complexity.InteractionSession.CreatedAt == nil {
@@ -5015,6 +5031,7 @@ input InteractionSessionInput {
     status: String!
     type: String
     channel: String
+    channelData: String
     appSource: String!
 }
 
@@ -5023,6 +5040,7 @@ input InteractionEventInput {
     content: String
     contentType: String
     channel: String
+    channelData: String
     interactionSession: ID
     sentBy: [InteractionEventParticipantInput!]!
     sentTo: [InteractionEventParticipantInput!]!
@@ -5054,6 +5072,7 @@ type InteractionSession implements Node {
     status: String!
     type: String
     channel: String
+    channelData: String
     source: DataSource!
     sourceOfTruth: DataSource!
     appSource: String!
@@ -5068,6 +5087,7 @@ type InteractionEvent implements Node {
     content: String
     contentType: String
     channel: String
+    channelData: String
     interactionSession: InteractionSession @goField(forceResolver: true)
     sentBy: [InteractionEventParticipant!]! @goField(forceResolver: true)
     sentTo: [InteractionEventParticipant!]! @goField(forceResolver: true)
@@ -14295,6 +14315,47 @@ func (ec *executionContext) fieldContext_InteractionEvent_channel(ctx context.Co
 	return fc, nil
 }
 
+func (ec *executionContext) _InteractionEvent_channelData(ctx context.Context, field graphql.CollectedField, obj *model.InteractionEvent) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_InteractionEvent_channelData(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ChannelData, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_InteractionEvent_channelData(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "InteractionEvent",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _InteractionEvent_interactionSession(ctx context.Context, field graphql.CollectedField, obj *model.InteractionEvent) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_InteractionEvent_interactionSession(ctx, field)
 	if err != nil {
@@ -14351,6 +14412,8 @@ func (ec *executionContext) fieldContext_InteractionEvent_interactionSession(ctx
 				return ec.fieldContext_InteractionSession_type(ctx, field)
 			case "channel":
 				return ec.fieldContext_InteractionSession_channel(ctx, field)
+			case "channelData":
+				return ec.fieldContext_InteractionSession_channelData(ctx, field)
 			case "source":
 				return ec.fieldContext_InteractionSession_source(ctx, field)
 			case "sourceOfTruth":
@@ -14502,6 +14565,8 @@ func (ec *executionContext) fieldContext_InteractionEvent_repliesTo(ctx context.
 				return ec.fieldContext_InteractionEvent_contentType(ctx, field)
 			case "channel":
 				return ec.fieldContext_InteractionEvent_channel(ctx, field)
+			case "channelData":
+				return ec.fieldContext_InteractionEvent_channelData(ctx, field)
 			case "interactionSession":
 				return ec.fieldContext_InteractionEvent_interactionSession(ctx, field)
 			case "sentBy":
@@ -15083,6 +15148,47 @@ func (ec *executionContext) fieldContext_InteractionSession_channel(ctx context.
 	return fc, nil
 }
 
+func (ec *executionContext) _InteractionSession_channelData(ctx context.Context, field graphql.CollectedField, obj *model.InteractionSession) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_InteractionSession_channelData(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ChannelData, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_InteractionSession_channelData(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "InteractionSession",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _InteractionSession_source(ctx context.Context, field graphql.CollectedField, obj *model.InteractionSession) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_InteractionSession_source(ctx, field)
 	if err != nil {
@@ -15266,6 +15372,8 @@ func (ec *executionContext) fieldContext_InteractionSession_events(ctx context.C
 				return ec.fieldContext_InteractionEvent_contentType(ctx, field)
 			case "channel":
 				return ec.fieldContext_InteractionEvent_channel(ctx, field)
+			case "channelData":
+				return ec.fieldContext_InteractionEvent_channelData(ctx, field)
 			case "interactionSession":
 				return ec.fieldContext_InteractionEvent_interactionSession(ctx, field)
 			case "sentBy":
@@ -20207,6 +20315,8 @@ func (ec *executionContext) fieldContext_Mutation_interactionSession_Create(ctx 
 				return ec.fieldContext_InteractionSession_type(ctx, field)
 			case "channel":
 				return ec.fieldContext_InteractionSession_channel(ctx, field)
+			case "channelData":
+				return ec.fieldContext_InteractionSession_channelData(ctx, field)
 			case "source":
 				return ec.fieldContext_InteractionSession_source(ctx, field)
 			case "sourceOfTruth":
@@ -20284,6 +20394,8 @@ func (ec *executionContext) fieldContext_Mutation_interactionEvent_Create(ctx co
 				return ec.fieldContext_InteractionEvent_contentType(ctx, field)
 			case "channel":
 				return ec.fieldContext_InteractionEvent_channel(ctx, field)
+			case "channelData":
+				return ec.fieldContext_InteractionEvent_channelData(ctx, field)
 			case "interactionSession":
 				return ec.fieldContext_InteractionEvent_interactionSession(ctx, field)
 			case "sentBy":
@@ -26890,6 +27002,8 @@ func (ec *executionContext) fieldContext_Query_interactionSession(ctx context.Co
 				return ec.fieldContext_InteractionSession_type(ctx, field)
 			case "channel":
 				return ec.fieldContext_InteractionSession_channel(ctx, field)
+			case "channelData":
+				return ec.fieldContext_InteractionSession_channelData(ctx, field)
 			case "source":
 				return ec.fieldContext_InteractionSession_source(ctx, field)
 			case "sourceOfTruth":
@@ -26975,6 +27089,8 @@ func (ec *executionContext) fieldContext_Query_interactionSession_BySessionIdent
 				return ec.fieldContext_InteractionSession_type(ctx, field)
 			case "channel":
 				return ec.fieldContext_InteractionSession_channel(ctx, field)
+			case "channelData":
+				return ec.fieldContext_InteractionSession_channelData(ctx, field)
 			case "source":
 				return ec.fieldContext_InteractionSession_source(ctx, field)
 			case "sourceOfTruth":
@@ -27052,6 +27168,8 @@ func (ec *executionContext) fieldContext_Query_interactionEvent(ctx context.Cont
 				return ec.fieldContext_InteractionEvent_contentType(ctx, field)
 			case "channel":
 				return ec.fieldContext_InteractionEvent_channel(ctx, field)
+			case "channelData":
+				return ec.fieldContext_InteractionEvent_channelData(ctx, field)
 			case "interactionSession":
 				return ec.fieldContext_InteractionEvent_interactionSession(ctx, field)
 			case "sentBy":
@@ -27135,6 +27253,8 @@ func (ec *executionContext) fieldContext_Query_interactionEvent_ByEventIdentifie
 				return ec.fieldContext_InteractionEvent_contentType(ctx, field)
 			case "channel":
 				return ec.fieldContext_InteractionEvent_channel(ctx, field)
+			case "channelData":
+				return ec.fieldContext_InteractionEvent_channelData(ctx, field)
 			case "interactionSession":
 				return ec.fieldContext_InteractionEvent_interactionSession(ctx, field)
 			case "sentBy":
@@ -32341,7 +32461,7 @@ func (ec *executionContext) unmarshalInputInteractionEventInput(ctx context.Cont
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"eventIdentifier", "content", "contentType", "channel", "interactionSession", "sentBy", "sentTo", "repliesTo", "appSource"}
+	fieldsInOrder := [...]string{"eventIdentifier", "content", "contentType", "channel", "channelData", "interactionSession", "sentBy", "sentTo", "repliesTo", "appSource"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -32377,6 +32497,14 @@ func (ec *executionContext) unmarshalInputInteractionEventInput(ctx context.Cont
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("channel"))
 			it.Channel, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "channelData":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("channelData"))
+			it.ChannelData, err = ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -32493,7 +32621,7 @@ func (ec *executionContext) unmarshalInputInteractionSessionInput(ctx context.Co
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"sessionIdentifier", "name", "status", "type", "channel", "appSource"}
+	fieldsInOrder := [...]string{"sessionIdentifier", "name", "status", "type", "channel", "channelData", "appSource"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -32537,6 +32665,14 @@ func (ec *executionContext) unmarshalInputInteractionSessionInput(ctx context.Co
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("channel"))
 			it.Channel, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "channelData":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("channelData"))
+			it.ChannelData, err = ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -35152,6 +35288,10 @@ func (ec *executionContext) _InteractionEvent(ctx context.Context, sel ast.Selec
 
 			out.Values[i] = ec._InteractionEvent_channel(ctx, field, obj)
 
+		case "channelData":
+
+			out.Values[i] = ec._InteractionEvent_channelData(ctx, field, obj)
+
 		case "interactionSession":
 			field := field
 
@@ -35325,6 +35465,10 @@ func (ec *executionContext) _InteractionSession(ctx context.Context, sel ast.Sel
 		case "channel":
 
 			out.Values[i] = ec._InteractionSession_channel(ctx, field, obj)
+
+		case "channelData":
+
+			out.Values[i] = ec._InteractionSession_channelData(ctx, field, obj)
 
 		case "source":
 
