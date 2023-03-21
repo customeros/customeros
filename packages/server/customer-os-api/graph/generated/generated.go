@@ -5062,8 +5062,8 @@ union InteractionEventParticipant = EmailParticipant | PhoneNumberParticipant | 
 
 type InteractionSession implements Node {
     id: ID!
-    startedAt: Time!
-    endedAt: Time
+    startedAt: Time! @deprecated(reason: "Use createdAt instead")
+    endedAt: Time @deprecated(reason: "Use updatedAt instead")
     createdAt: Time!
     updatedAt: Time!
 

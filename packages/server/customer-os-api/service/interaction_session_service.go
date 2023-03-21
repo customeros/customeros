@@ -124,7 +124,6 @@ func (s *interactionSessionService) mapDbNodeToInteractionSessionEntity(node dbt
 		Id:                utils.GetStringPropOrEmpty(props, "id"),
 		CreatedAt:         s.migrateStartedAt(props),
 		UpdatedAt:         utils.GetTimePropOrNow(props, "updatedAt"),
-		EndedAt:           utils.GetTimePropOrNil(props, "endedAt"),
 		SessionIdentifier: utils.GetStringPropOrNil(props, "identifier"),
 		Name:              utils.GetStringPropOrEmpty(props, "name"),
 		Status:            utils.GetStringPropOrEmpty(props, "status"),

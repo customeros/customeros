@@ -9,7 +9,6 @@ type InteractionSessionEntity struct {
 	Id                string
 	CreatedAt         time.Time
 	UpdatedAt         time.Time
-	EndedAt           *time.Time
 	SessionIdentifier *string
 	Name              string
 	Status            string

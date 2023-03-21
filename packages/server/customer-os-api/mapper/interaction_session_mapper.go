@@ -15,7 +15,7 @@ func MapEntityToInteractionSession(entity *entity.InteractionSessionEntity) *mod
 		CreatedAt:         entity.CreatedAt,
 		UpdatedAt:         entity.UpdatedAt,
 		StartedAt:         entity.CreatedAt,
-		EndedAt:           entity.EndedAt,
+		EndedAt:           utils.TimePtr(entity.UpdatedAt),
 		SessionIdentifier: entity.SessionIdentifier,
 		Name:              entity.Name,
 		Status:            entity.Status,
