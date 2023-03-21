@@ -97,6 +97,7 @@ func TestMutationResolver_InteractionEventCreate_Min(t *testing.T) {
 					ID       string `json:"id"`
 					RawEmail string `json:"rawEmail"`
 				} `json:"emailParticipant"`
+				Type string `json:"type"`
 			} `json:"sentTo"`
 			SentBy []struct {
 				Typename         string `json:"__typename"`
@@ -104,6 +105,7 @@ func TestMutationResolver_InteractionEventCreate_Min(t *testing.T) {
 					ID       string `json:"id"`
 					RawEmail string `json:"rawEmail"`
 				} `json:"emailParticipant"`
+				Type string `json:"type"`
 			} `json:"sentBy"`
 			InteractionSession struct {
 				ID                string `json:"id"`
@@ -160,6 +162,7 @@ func TestMutationResolver_InteractionEventCreate_Email(t *testing.T) {
 					ID       string `json:"id"`
 					RawEmail string `json:"rawEmail"`
 				} `json:"emailParticipant"`
+				Type string `json:"type"`
 			} `json:"sentTo"`
 			SentBy []struct {
 				Typename         string `json:"__typename"`
@@ -167,6 +170,7 @@ func TestMutationResolver_InteractionEventCreate_Email(t *testing.T) {
 					ID       string `json:"id"`
 					RawEmail string `json:"rawEmail"`
 				} `json:"emailParticipant"`
+				Type string `json:"type"`
 			} `json:"sentBy"`
 			InteractionSession struct {
 				ID                string `json:"id"`
@@ -207,9 +211,11 @@ func TestMutationResolver_InteractionEventCreate_Email(t *testing.T) {
 	for _, sendTo := range firstEvent.InteractionEvent_Create.SentTo {
 		if sendTo.EmailParticipant.RawEmail == "dest1@openline.ai" {
 			dest1 = sendTo.EmailParticipant.ID
+			require.Equal(t, sendTo.Type, "TO")
 		}
 		if sendTo.EmailParticipant.RawEmail == "dest2@openline.ai" {
 			dest2 = sendTo.EmailParticipant.ID
+			require.Equal(t, sendTo.Type, "CC")
 		}
 	}
 

@@ -62,8 +62,9 @@ func (r *interactionEventRepository) LinkWithSentXXEmailInTx(ctx context.Context
 	}
 	queryResult, err := tx.Run(ctx, query,
 		map[string]any{
-			"email":   email,
-			"eventId": interactionEventId,
+			"email":    email,
+			"eventId":  interactionEventId,
+			"sentType": sentType,
 		})
 	if err != nil {
 		return err
