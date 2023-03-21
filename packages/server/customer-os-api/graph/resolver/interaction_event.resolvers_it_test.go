@@ -50,6 +50,7 @@ func TestMutationResolver_InteractionSessionCreate(t *testing.T) {
 		client.Var("name", "My Session Name"),
 		client.Var("type", "THREAD"),
 		client.Var("channel", "EMAIL"),
+		client.Var("channelData", "{\"threading-info\":\"test\"}"),
 		client.Var("status", "ACTIVE"),
 	)
 	assertRawResponseSuccess(t, rawResponse, err)
@@ -58,6 +59,7 @@ func TestMutationResolver_InteractionSessionCreate(t *testing.T) {
 		InteractionSession_Create struct {
 			ID                string `json:"id"`
 			Channel           string `json:"channel"`
+			ChannelData       string `json:"channelData"`
 			AppSource         string `json:"appSource"`
 			SessionIdentifier string `json:"sessionIdentifier"`
 			Type              string `json:"type"`
@@ -69,6 +71,7 @@ func TestMutationResolver_InteractionSessionCreate(t *testing.T) {
 	require.Nil(t, err)
 	require.Equal(t, "ACTIVE", interactionSession.InteractionSession_Create.Status)
 	require.Equal(t, "EMAIL", interactionSession.InteractionSession_Create.Channel)
+	require.Equal(t, "{\"threading-info\":\"test\"}", interactionSession.InteractionSession_Create.ChannelData)
 	require.Equal(t, "Oasis", interactionSession.InteractionSession_Create.AppSource)
 	require.Equal(t, "My Session Identifier", interactionSession.InteractionSession_Create.SessionIdentifier)
 	require.Equal(t, "My Session Name", interactionSession.InteractionSession_Create.Name)
@@ -147,6 +150,7 @@ func TestMutationResolver_InteractionEventCreate_Email(t *testing.T) {
 		InteractionEvent_Create struct {
 			ID          string  `json:"id"`
 			Channel     *string `json:"channel"`
+			ChannelData *string `json:"channelData"`
 			AppSource   string  `json:"appSource"`
 			Content     string  `json:"content"`
 			ContentType string  `json:"contentType"`
@@ -184,6 +188,7 @@ func TestMutationResolver_InteractionEventCreate_Email(t *testing.T) {
 	require.Nil(t, err)
 	require.NotNil(t, interactionEvent)
 	require.Equal(t, *interactionEvent.InteractionEvent_Create.Channel, "EMAIL")
+	require.Equal(t, *interactionEvent.InteractionEvent_Create.ChannelData, "{\"References\":[\"<CAJYQ2j8Q>\"],\"Replies-To\":\"<CAJYQ2j8Q>\"}")
 	require.Equal(t, interactionEvent.InteractionEvent_Create.AppSource, "Oasis")
 	require.Equal(t, interactionEvent.InteractionEvent_Create.Content, "Message 1")
 	require.Equal(t, interactionEvent.InteractionEvent_Create.ContentType, "text/plain")

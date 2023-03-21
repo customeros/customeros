@@ -30,6 +30,7 @@ func (r *interactionSessionRepository) Create(ctx context.Context, tx neo4j.Mana
 		"				is.identifier=$identifier, " +
 		"				is.source=$source, " +
 		"				is.channel=$channel, " +
+		"				is.channelData=$channelData, " +
 		"				is.createdAt=$now, " +
 		"				is.updatedAt=$now, " +
 		"				is.name=$name, " +
@@ -44,6 +45,7 @@ func (r *interactionSessionRepository) Create(ctx context.Context, tx neo4j.Mana
 			"identifier":    entity.SessionIdentifier,
 			"source":        entity.Source,
 			"channel":       entity.Channel,
+			"channelData":   entity.ChannelData,
 			"now":           entity.CreatedAt,
 			"name":          entity.Name,
 			"status":        entity.Status,

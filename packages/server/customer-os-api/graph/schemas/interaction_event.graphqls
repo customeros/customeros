@@ -20,6 +20,7 @@ input InteractionSessionInput {
     status: String!
     type: String
     channel: String
+    channelData: String
     appSource: String!
 }
 
@@ -28,6 +29,7 @@ input InteractionEventInput {
     content: String
     contentType: String
     channel: String
+    channelData: String
     interactionSession: ID
     sentBy: [InteractionEventParticipantInput!]!
     sentTo: [InteractionEventParticipantInput!]!
@@ -59,6 +61,7 @@ type InteractionSession implements Node {
     status: String!
     type: String
     channel: String
+    channelData: String
     source: DataSource!
     sourceOfTruth: DataSource!
     appSource: String!
@@ -73,6 +76,7 @@ type InteractionEvent implements Node {
     content: String
     contentType: String
     channel: String
+    channelData: String
     interactionSession: InteractionSession @goField(forceResolver: true)
     sentBy: [InteractionEventParticipant!]! @goField(forceResolver: true)
     sentTo: [InteractionEventParticipant!]! @goField(forceResolver: true)

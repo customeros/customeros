@@ -15,6 +15,7 @@ type InteractionSessionEntity struct {
 	Status            string
 	Type              *string
 	Channel           *string
+	ChannelData       *string
 	AppSource         string
 	Source            DataSource
 	SourceOfTruth     DataSource

@@ -130,6 +130,7 @@ func (s *interactionSessionService) mapDbNodeToInteractionSessionEntity(node dbt
 		Status:            utils.GetStringPropOrEmpty(props, "status"),
 		Type:              utils.GetStringPropOrNil(props, "type"),
 		Channel:           utils.GetStringPropOrNil(props, "channel"),
+		ChannelData:       utils.GetStringPropOrNil(props, "channelData"),
 		AppSource:         utils.GetStringPropOrEmpty(props, "appSource"),
 		Source:            entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
 		SourceOfTruth:     entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
