@@ -18,7 +18,7 @@ export const OrganizationForm: React.FC<OrganizationFormProps> = ({
   onSubmit,
   mode = 'EDIT',
 }) => {
-  const { control, reset, setValue, getValues, register } = useForm({
+  const { control, getValues } = useForm({
     defaultValues: {
       name: data?.name || '',
       description: data?.description || '',

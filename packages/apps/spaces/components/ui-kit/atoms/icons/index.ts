@@ -214,6 +214,7 @@ export { default as User } from './User';
 export { default as Users } from './Users';
 export { default as Video } from './Video';
 export { default as Vimeo } from './Vimeo';
+export { default as VoiceWave } from './VoiceWave';
 export { default as VolumeDown } from './VolumeDown';
 export { default as VolumeOff } from './VolumeOff';
 export { default as VolumeUp } from './VolumeUp';

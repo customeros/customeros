@@ -16,12 +16,12 @@ interface DialogContentProps {
 export const DialogContent: React.FC<DialogContentProps> = ({ dialog }) => {
   if (dialog.mimetype === 'text/plain') {
     return (
-      <>
+      <div>
         {linkifyHtml(dialog.body, {
           defaultProtocol: 'https',
           rel: 'noopener noreferrer',
         })}
-      </>
+      </div>
     );
   }
   return dialog.mimetype === 'text/html' ? (

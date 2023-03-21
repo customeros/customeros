@@ -1,16 +1,14 @@
-import React from 'react';
-import Image, { StaticImageData } from 'next/image';
+import React, { ReactNode,  } from 'react';
 import styles from './avatar.module.scss';
 import { getInitialsColor } from './utils';
 import classNames from 'classnames';
 import { Tooltip } from '../tooltip';
-import { uuidv4 } from '../../../../utils';
 
 interface AvatarProps {
   name: string;
   surname: string;
   size: number;
-  image?: StaticImageData;
+  image?: ReactNode;
   imageHeight?: number;
   imageWidth?: number;
   isSquare?: boolean;
@@ -26,20 +24,6 @@ export const Avatar: React.FC<AvatarProps> = ({
   isSquare = false,
   ...rest
 }) => {
-  if (image) {
-    return (
-      <>
-        <Image
-          {...rest}
-          src={image}
-          alt={`${name} ${surname}`}
-          height={imageHeight || 40}
-          width={imageWidth}
-        />
-      </>
-    );
-  }
-
   const initials = `${name?.charAt(0)}${surname?.charAt(0)}`;
   const color = getInitialsColor(initials);
 
