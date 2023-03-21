@@ -6,7 +6,9 @@ package resolver
 
 import (
 	"context"
-	"fmt"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/dataloader"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	"time"
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
@@ -17,17 +19,44 @@ import (
 
 // Users is the resolver for the users field.
 func (r *emailResolver) Users(ctx context.Context, obj *model.Email) ([]*model.User, error) {
-	panic(fmt.Errorf("not implemented: Users - users"))
+	defer func(start time.Time) {
+		utils.LogMethodExecution(start, utils.GetFunctionName())
+	}(time.Now())
+
+	userEntities, err := dataloader.For(ctx).GetUsersForEmail(ctx, obj.ID)
+	if err != nil {
+		graphql.AddErrorf(ctx, "Failed to get users for email %s", obj.ID)
+		return nil, err
+	}
+	return mapper.MapEntitiesToUsers(userEntities), nil
 }
 
 // Contacts is the resolver for the contacts field.
 func (r *emailResolver) Contacts(ctx context.Context, obj *model.Email) ([]*model.Contact, error) {
-	panic(fmt.Errorf("not implemented: Contacts - contacts"))
+	defer func(start time.Time) {
+		utils.LogMethodExecution(start, utils.GetFunctionName())
+	}(time.Now())
+
+	contactEntities, err := dataloader.For(ctx).GetContactsForEmail(ctx, obj.ID)
+	if err != nil {
+		graphql.AddErrorf(ctx, "Failed to get contacts for email %s", obj.ID)
+		return nil, err
+	}
+	return mapper.MapEntitiesToContacts(contactEntities), nil
 }
 
 // Organizations is the resolver for the organizations field.
 func (r *emailResolver) Organizations(ctx context.Context, obj *model.Email) ([]*model.Organization, error) {
-	panic(fmt.Errorf("not implemented: Organizations - organizations"))
+	defer func(start time.Time) {
+		utils.LogMethodExecution(start, utils.GetFunctionName())
+	}(time.Now())
+
+	organizationEntities, err := dataloader.For(ctx).GetOrganizationsForEmail(ctx, obj.ID)
+	if err != nil {
+		graphql.AddErrorf(ctx, "Failed to get organizations for email %s", obj.ID)
+		return nil, err
+	}
+	return mapper.MapEntitiesToOrganizations(organizationEntities), nil
 }
 
 // EmailMergeToContact is the resolver for the emailMergeToContact field.

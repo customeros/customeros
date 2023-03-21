@@ -64,7 +64,7 @@ func (r *noteResolver) CreatedBy(ctx context.Context, obj *model.Note) (*model.U
 		utils.LogMethodExecution(start, utils.GetFunctionName())
 	}(time.Now())
 
-	creator, err := r.Services.UserService.FindNoteCreator(ctx, obj.ID)
+	creator, err := r.Services.UserService.GetNoteCreator(ctx, obj.ID)
 	if err != nil {
 		graphql.AddErrorf(ctx, "Failed to get creator for note %s", obj.ID)
 		return nil, err

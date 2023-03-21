@@ -6,7 +6,9 @@ package resolver
 
 import (
 	"context"
-	"fmt"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/dataloader"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	"time"
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
@@ -149,17 +151,44 @@ func (r *mutationResolver) PhoneNumberRemoveFromUserByID(ctx context.Context, us
 
 // Users is the resolver for the users field.
 func (r *phoneNumberResolver) Users(ctx context.Context, obj *model.PhoneNumber) ([]*model.User, error) {
-	panic(fmt.Errorf("not implemented: Users - users"))
+	defer func(start time.Time) {
+		utils.LogMethodExecution(start, utils.GetFunctionName())
+	}(time.Now())
+
+	userEntities, err := dataloader.For(ctx).GetUsersForPhoneNumber(ctx, obj.ID)
+	if err != nil {
+		graphql.AddErrorf(ctx, "Failed to get users for phone number %s", obj.ID)
+		return nil, err
+	}
+	return mapper.MapEntitiesToUsers(userEntities), nil
 }
 
 // Contacts is the resolver for the contacts field.
 func (r *phoneNumberResolver) Contacts(ctx context.Context, obj *model.PhoneNumber) ([]*model.Contact, error) {
-	panic(fmt.Errorf("not implemented: Contacts - contacts"))
+	defer func(start time.Time) {
+		utils.LogMethodExecution(start, utils.GetFunctionName())
+	}(time.Now())
+
+	contactEntities, err := dataloader.For(ctx).GetContactsForPhoneNumber(ctx, obj.ID)
+	if err != nil {
+		graphql.AddErrorf(ctx, "Failed to get contacts for phone number %s", obj.ID)
+		return nil, err
+	}
+	return mapper.MapEntitiesToContacts(contactEntities), nil
 }
 
 // Organizations is the resolver for the organizations field.
 func (r *phoneNumberResolver) Organizations(ctx context.Context, obj *model.PhoneNumber) ([]*model.Organization, error) {
-	panic(fmt.Errorf("not implemented: Organizations - organizations"))
+	defer func(start time.Time) {
+		utils.LogMethodExecution(start, utils.GetFunctionName())
+	}(time.Now())
+
+	organizationEntities, err := dataloader.For(ctx).GetOrganizationsForPhoneNumber(ctx, obj.ID)
+	if err != nil {
+		graphql.AddErrorf(ctx, "Failed to get organizations for phone number %s", obj.ID)
+		return nil, err
+	}
+	return mapper.MapEntitiesToOrganizations(organizationEntities), nil
 }
 
 // PhoneNumber returns generated.PhoneNumberResolver implementation.

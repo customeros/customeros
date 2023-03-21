@@ -22,6 +22,8 @@ type OrganizationService interface {
 	GetOrganizationsForContact(ctx context.Context, contactId string, page, limit int, filter *model.Filter, sortBy []*model.SortBy) (*utils.Pagination, error)
 	PermanentDelete(ctx context.Context, organizationId string) (bool, error)
 	Merge(ctx context.Context, primaryOrganizationId, mergedOrganizationId string) error
+	GetOrganizationsForEmails(ctx context.Context, emailIds []string) (*entity.OrganizationEntities, error)
+	GetOrganizationsForPhoneNumbers(ctx context.Context, phoneNumberIds []string) (*entity.OrganizationEntities, error)
 
 	mapDbNodeToOrganizationEntity(node dbtype.Node) *entity.OrganizationEntity
 }
@@ -291,6 +293,34 @@ func (s *organizationService) Merge(ctx context.Context, primaryOrganizationId, 
 		return nil, nil
 	})
 	return err
+}
+
+func (s *organizationService) GetOrganizationsForEmails(ctx context.Context, emailIds []string) (*entity.OrganizationEntities, error) {
+	organizations, err := s.repositories.OrganizationRepository.GetAllForEmails(ctx, common.GetTenantFromContext(ctx), emailIds)
+	if err != nil {
+		return nil, err
+	}
+	organizationEntities := entity.OrganizationEntities{}
+	for _, v := range organizations {
+		organizationEntity := s.mapDbNodeToOrganizationEntity(*v.Node)
+		organizationEntity.DataloaderKey = v.LinkedNodeId
+		organizationEntities = append(organizationEntities, *organizationEntity)
+	}
+	return &organizationEntities, nil
+}
+
+func (s *organizationService) GetOrganizationsForPhoneNumbers(ctx context.Context, phoneNumberIds []string) (*entity.OrganizationEntities, error) {
+	organizations, err := s.repositories.OrganizationRepository.GetAllForPhoneNumbers(ctx, common.GetTenantFromContext(ctx), phoneNumberIds)
+	if err != nil {
+		return nil, err
+	}
+	organizationEntities := entity.OrganizationEntities{}
+	for _, v := range organizations {
+		organizationEntity := s.mapDbNodeToOrganizationEntity(*v.Node)
+		organizationEntity.DataloaderKey = v.LinkedNodeId
+		organizationEntities = append(organizationEntities, *organizationEntity)
+	}
+	return &organizationEntities, nil
 }
 
 func (s *organizationService) mapDbNodeToOrganizationEntity(node dbtype.Node) *entity.OrganizationEntity {

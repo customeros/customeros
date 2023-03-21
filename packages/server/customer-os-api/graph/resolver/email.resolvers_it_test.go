@@ -544,3 +544,65 @@ func TestMutationResolver_EmailRemoveFromOrganizationById(t *testing.T) {
 	require.Equal(t, 0, neo4jt.GetCountOfRelationships(ctx, driver, "HAS"))
 	assertNeo4jLabels(ctx, t, driver, []string{"Tenant", "Email", "Email_" + tenantName, "Organization", "Organization_" + tenantName})
 }
+
+func TestQueryResolver_GetEmail_WithParentOwners(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx)(t)
+
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+	contactId1 := neo4jt.CreateContact(ctx, driver, tenantName, entity.ContactEntity{
+		FirstName: "a",
+		LastName:  "b",
+	})
+	contactId2 := neo4jt.CreateContact(ctx, driver, tenantName, entity.ContactEntity{
+		FirstName: "c",
+		LastName:  "d",
+	})
+	organizationId1 := neo4jt.CreateOrganization(ctx, driver, tenantName, "test org1")
+	organizationId2 := neo4jt.CreateOrganization(ctx, driver, tenantName, "test org2")
+	userId1 := neo4jt.CreateUser(ctx, driver, tenantName, entity.UserEntity{
+		FirstName: "a",
+		LastName:  "b",
+	})
+	userId2 := neo4jt.CreateUser(ctx, driver, tenantName, entity.UserEntity{
+		FirstName: "c",
+		LastName:  "d",
+	})
+
+	emailId := neo4jt.AddEmailTo(ctx, driver, entity.USER, tenantName, userId1, "test@openline.com", false, "WORK")
+	neo4jt.AddEmailTo(ctx, driver, entity.USER, tenantName, userId2, "test@openline.com", false, "WORK")
+	neo4jt.AddEmailTo(ctx, driver, entity.CONTACT, tenantName, contactId1, "test@openline.com", false, "WORK")
+	neo4jt.AddEmailTo(ctx, driver, entity.CONTACT, tenantName, contactId2, "test@openline.com", false, "WORK")
+	neo4jt.AddEmailTo(ctx, driver, entity.ORGANIZATION, tenantName, organizationId1, "test@openline.com", false, "WORK")
+	neo4jt.AddEmailTo(ctx, driver, entity.ORGANIZATION, tenantName, organizationId2, "test@openline.com", false, "WORK")
+
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Email"))
+	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "Organization"))
+	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "User"))
+	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "Contact"))
+
+	rawResponse, err := c.RawPost(getQuery("email/get_email_with_parent_owners_via_organization_query"),
+		client.Var("organizationId", organizationId1))
+	assertRawResponseSuccess(t, rawResponse, err)
+
+	var organizationStruct struct {
+		Organization model.Organization
+	}
+
+	err = decode.Decode(rawResponse.Data.(map[string]any), &organizationStruct)
+	require.Nil(t, err)
+	require.Equal(t, 1, len(organizationStruct.Organization.Emails))
+
+	email := organizationStruct.Organization.Emails[0]
+
+	require.Equal(t, emailId, email.ID)
+	require.Equal(t, 2, len(email.Users))
+	require.Equal(t, 2, len(email.Contacts))
+	require.Equal(t, 2, len(email.Organizations))
+	require.Equal(t, userId1, email.Users[0].ID)
+	require.Equal(t, userId2, email.Users[1].ID)
+	require.Equal(t, contactId1, email.Contacts[0].ID)
+	require.Equal(t, contactId2, email.Contacts[1].ID)
+	require.Equal(t, organizationId1, email.Organizations[0].ID)
+	require.Equal(t, organizationId2, email.Organizations[1].ID)
+}

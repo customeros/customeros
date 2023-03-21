@@ -31,6 +31,12 @@ type Loaders struct {
 	PhoneNumbersForUser                        *dataloader.Loader
 	PhoneNumbersForContact                     *dataloader.Loader
 	NotedEntitiesForNote                       *dataloader.Loader
+	UsersForEmail                              *dataloader.Loader
+	UsersForPhoneNumber                        *dataloader.Loader
+	ContactsForEmail                           *dataloader.Loader
+	ContactsForPhoneNumber                     *dataloader.Loader
+	OrganizationsForEmail                      *dataloader.Loader
+	OrganizationsForPhoneNumber                *dataloader.Loader
 }
 
 type tagBatcher struct {
@@ -65,6 +71,15 @@ type phoneNumberBatcher struct {
 }
 type notedEntityBatcher struct {
 	noteService service.NoteService
+}
+type userBatcher struct {
+	userService service.UserService
+}
+type contactBatcher struct {
+	contactService service.ContactService
+}
+type organizationBatcher struct {
+	organizationService service.OrganizationService
 }
 
 // NewDataLoader returns the instantiated Loaders struct for use in a request
@@ -102,6 +117,15 @@ func NewDataLoader(services *service.Services) *Loaders {
 	notedEntityBatcher := &notedEntityBatcher{
 		noteService: services.NoteService,
 	}
+	userBatcher := &userBatcher{
+		userService: services.UserService,
+	}
+	contactBatcher := &contactBatcher{
+		contactService: services.ContactService,
+	}
+	organizationBatcher := &organizationBatcher{
+		organizationService: services.OrganizationService,
+	}
 	return &Loaders{
 		TagsForOrganization:                        dataloader.NewBatchedLoader(tagBatcher.getTagsForOrganizations, dataloader.WithClearCacheOnBatch()),
 		TagsForContact:                             dataloader.NewBatchedLoader(tagBatcher.getTagsForContacts, dataloader.WithClearCacheOnBatch()),
@@ -122,6 +146,12 @@ func NewDataLoader(services *service.Services) *Loaders {
 		PhoneNumbersForContact:                     dataloader.NewBatchedLoader(phoneNumberBatcher.getPhoneNumbersForContacts, dataloader.WithClearCacheOnBatch()),
 		ReplyToInteractionEventForInteractionEvent: dataloader.NewBatchedLoader(interactionEventBatcher.getReplyToInteractionEventsForInteractionEvents, dataloader.WithClearCacheOnBatch()),
 		NotedEntitiesForNote:                       dataloader.NewBatchedLoader(notedEntityBatcher.getNotedEntitiesForNotes, dataloader.WithClearCacheOnBatch()),
+		UsersForEmail:                              dataloader.NewBatchedLoader(userBatcher.getUsersForEmails, dataloader.WithClearCacheOnBatch()),
+		UsersForPhoneNumber:                        dataloader.NewBatchedLoader(userBatcher.getUsersForPhoneNumbers, dataloader.WithClearCacheOnBatch()),
+		ContactsForEmail:                           dataloader.NewBatchedLoader(contactBatcher.getContactsForEmails, dataloader.WithClearCacheOnBatch()),
+		ContactsForPhoneNumber:                     dataloader.NewBatchedLoader(contactBatcher.getContactsForPhoneNumbers, dataloader.WithClearCacheOnBatch()),
+		OrganizationsForEmail:                      dataloader.NewBatchedLoader(organizationBatcher.getOrganizationsForEmails, dataloader.WithClearCacheOnBatch()),
+		OrganizationsForPhoneNumber:                dataloader.NewBatchedLoader(organizationBatcher.getOrganizationsForPhoneNumbers, dataloader.WithClearCacheOnBatch()),
 	}
 }
 

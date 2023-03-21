@@ -15,14 +15,15 @@ import (
 type UserService interface {
 	Create(ctx context.Context, userCreateData *UserCreateData) (*entity.UserEntity, error)
 	Update(ctx context.Context, user *entity.UserEntity) (*entity.UserEntity, error)
-	FindAll(ctx context.Context, page, limit int, filter *model.Filter, sortBy []*model.SortBy) (*utils.Pagination, error)
+	GetAll(ctx context.Context, page, limit int, filter *model.Filter, sortBy []*model.SortBy) (*utils.Pagination, error)
 	FindUserById(ctx context.Context, userId string) (*entity.UserEntity, error)
 	FindUserByEmail(ctx context.Context, email string) (*entity.UserEntity, error)
-
-	FindContactOwner(ctx context.Context, contactId string) (*entity.UserEntity, error)
-	FindNoteCreator(ctx context.Context, noteId string) (*entity.UserEntity, error)
-
+	GetContactOwner(ctx context.Context, contactId string) (*entity.UserEntity, error)
+	GetNoteCreator(ctx context.Context, noteId string) (*entity.UserEntity, error)
 	GetAllForConversation(ctx context.Context, conversationId string) (*entity.UserEntities, error)
+
+	GetUsersForEmails(ctx context.Context, emailIds []string) (*entity.UserEntities, error)
+	GetUsersForPhoneNumbers(ctx context.Context, phoneNumberIds []string) (*entity.UserEntities, error)
 
 	mapDbNodeToUserEntity(dbNode dbtype.Node) *entity.UserEntity
 }
@@ -68,7 +69,7 @@ func (s *userService) Update(ctx context.Context, entity *entity.UserEntity) (*e
 	return s.mapDbNodeToUserEntity(*userDbNode), nil
 }
 
-func (s *userService) FindAll(ctx context.Context, page, limit int, filter *model.Filter, sortBy []*model.SortBy) (*utils.Pagination, error) {
+func (s *userService) GetAll(ctx context.Context, page, limit int, filter *model.Filter, sortBy []*model.SortBy) (*utils.Pagination, error) {
 	session := utils.NewNeo4jReadSession(ctx, s.getNeo4jDriver())
 	defer session.Close(ctx)
 
@@ -107,12 +108,12 @@ func (s *userService) FindAll(ctx context.Context, page, limit int, filter *mode
 	return &paginatedResult, nil
 }
 
-func (s *userService) FindContactOwner(ctx context.Context, contactId string) (*entity.UserEntity, error) {
+func (s *userService) GetContactOwner(ctx context.Context, contactId string) (*entity.UserEntity, error) {
 	session := utils.NewNeo4jReadSession(ctx, s.getNeo4jDriver())
 	defer session.Close(ctx)
 
 	ownerDbNode, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		return s.repositories.UserRepository.FindOwnerForContact(ctx, tx, common.GetContext(ctx).Tenant, contactId)
+		return s.repositories.UserRepository.GetOwnerForContact(ctx, tx, common.GetContext(ctx).Tenant, contactId)
 	})
 	if err != nil {
 		return nil, err
@@ -123,12 +124,12 @@ func (s *userService) FindContactOwner(ctx context.Context, contactId string) (*
 	}
 }
 
-func (s *userService) FindNoteCreator(ctx context.Context, noteId string) (*entity.UserEntity, error) {
+func (s *userService) GetNoteCreator(ctx context.Context, noteId string) (*entity.UserEntity, error) {
 	session := utils.NewNeo4jReadSession(ctx, s.getNeo4jDriver())
 	defer session.Close(ctx)
 
 	userDbNode, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		return s.repositories.UserRepository.FindCreatorForNote(ctx, tx, common.GetContext(ctx).Tenant, noteId)
+		return s.repositories.UserRepository.GetCreatorForNote(ctx, tx, common.GetContext(ctx).Tenant, noteId)
 	})
 	if err != nil {
 		return nil, err
@@ -194,6 +195,34 @@ func (s *userService) createUserInDBTxWork(ctx context.Context, newUser *UserCre
 		}
 		return userDbNode, nil
 	}
+}
+
+func (s *userService) GetUsersForEmails(ctx context.Context, emailIds []string) (*entity.UserEntities, error) {
+	users, err := s.repositories.UserRepository.GetAllForEmails(ctx, common.GetTenantFromContext(ctx), emailIds)
+	if err != nil {
+		return nil, err
+	}
+	userEntities := entity.UserEntities{}
+	for _, v := range users {
+		userEntity := s.mapDbNodeToUserEntity(*v.Node)
+		userEntity.DataloaderKey = v.LinkedNodeId
+		userEntities = append(userEntities, *userEntity)
+	}
+	return &userEntities, nil
+}
+
+func (s *userService) GetUsersForPhoneNumbers(ctx context.Context, phoneNumberIds []string) (*entity.UserEntities, error) {
+	users, err := s.repositories.UserRepository.GetAllForPhoneNumbers(ctx, common.GetTenantFromContext(ctx), phoneNumberIds)
+	if err != nil {
+		return nil, err
+	}
+	userEntities := entity.UserEntities{}
+	for _, v := range users {
+		userEntity := s.mapDbNodeToUserEntity(*v.Node)
+		userEntity.DataloaderKey = v.LinkedNodeId
+		userEntities = append(userEntities, *userEntity)
+	}
+	return &userEntities, nil
 }
 
 func (s *userService) mapDbNodeToUserEntity(dbNode dbtype.Node) *entity.UserEntity {
