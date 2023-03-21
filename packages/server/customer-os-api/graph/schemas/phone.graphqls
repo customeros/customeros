@@ -49,6 +49,10 @@ type PhoneNumber {
 
     source: DataSource!
     appSource: String
+
+    users: [User!]! @goField(forceResolver: true)
+    contacts: [Contact!]! @goField(forceResolver: true)
+    organizations: [Organization!]! @goField(forceResolver: true)
 }
 
 """
