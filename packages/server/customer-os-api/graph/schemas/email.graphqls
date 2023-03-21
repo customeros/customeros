@@ -48,14 +48,15 @@ type Email {
     primary: Boolean!
 
     source: DataSource!
-
     sourceOfTruth: DataSource!
-
     appSource: String!
 
     createdAt: Time!
-
     updatedAt: Time!
+
+    users: [User!]! @goField(forceResolver: true)
+    contacts: [Contact!]! @goField(forceResolver: true)
+    organizations: [Organization!]! @goField(forceResolver: true)
 }
 
 """

@@ -41,6 +41,7 @@ type ResolverRoot interface {
 	ContactGroup() ContactGroupResolver
 	Conversation() ConversationResolver
 	CustomField() CustomFieldResolver
+	Email() EmailResolver
 	EntityTemplate() EntityTemplateResolver
 	FieldSet() FieldSetResolver
 	FieldSetTemplate() FieldSetTemplateResolver
@@ -51,6 +52,7 @@ type ResolverRoot interface {
 	Mutation() MutationResolver
 	Note() NoteResolver
 	Organization() OrganizationResolver
+	PhoneNumber() PhoneNumberResolver
 	Query() QueryResolver
 	Ticket() TicketResolver
 	User() UserResolver
@@ -181,15 +183,18 @@ type ComplexityRoot struct {
 
 	Email struct {
 		AppSource     func(childComplexity int) int
+		Contacts      func(childComplexity int) int
 		CreatedAt     func(childComplexity int) int
 		Email         func(childComplexity int) int
 		ID            func(childComplexity int) int
 		Label         func(childComplexity int) int
+		Organizations func(childComplexity int) int
 		Primary       func(childComplexity int) int
 		RawEmail      func(childComplexity int) int
 		Source        func(childComplexity int) int
 		SourceOfTruth func(childComplexity int) int
 		UpdatedAt     func(childComplexity int) int
+		Users         func(childComplexity int) int
 		Validated     func(childComplexity int) int
 	}
 
@@ -454,14 +459,17 @@ type ComplexityRoot struct {
 
 	PhoneNumber struct {
 		AppSource      func(childComplexity int) int
+		Contacts       func(childComplexity int) int
 		CreatedAt      func(childComplexity int) int
 		E164           func(childComplexity int) int
 		ID             func(childComplexity int) int
 		Label          func(childComplexity int) int
+		Organizations  func(childComplexity int) int
 		Primary        func(childComplexity int) int
 		RawPhoneNumber func(childComplexity int) int
 		Source         func(childComplexity int) int
 		UpdatedAt      func(childComplexity int) int
+		Users          func(childComplexity int) int
 		Validated      func(childComplexity int) int
 	}
 
@@ -598,6 +606,11 @@ type ConversationResolver interface {
 type CustomFieldResolver interface {
 	Template(ctx context.Context, obj *model.CustomField) (*model.CustomFieldTemplate, error)
 }
+type EmailResolver interface {
+	Users(ctx context.Context, obj *model.Email) ([]*model.User, error)
+	Contacts(ctx context.Context, obj *model.Email) ([]*model.Contact, error)
+	Organizations(ctx context.Context, obj *model.Email) ([]*model.Organization, error)
+}
 type EntityTemplateResolver interface {
 	FieldSets(ctx context.Context, obj *model.EntityTemplate) ([]*model.FieldSetTemplate, error)
 	CustomFields(ctx context.Context, obj *model.EntityTemplate) ([]*model.CustomFieldTemplate, error)
@@ -721,6 +734,11 @@ type OrganizationResolver interface {
 	TimelineEvents(ctx context.Context, obj *model.Organization, from *time.Time, size int, timelineEventTypes []model.TimelineEventType) ([]model.TimelineEvent, error)
 	TimelineEventsTotalCount(ctx context.Context, obj *model.Organization, timelineEventTypes []model.TimelineEventType) (int64, error)
 	TicketSummaryByStatus(ctx context.Context, obj *model.Organization) ([]*model.TicketSummaryByStatus, error)
+}
+type PhoneNumberResolver interface {
+	Users(ctx context.Context, obj *model.PhoneNumber) ([]*model.User, error)
+	Contacts(ctx context.Context, obj *model.PhoneNumber) ([]*model.Contact, error)
+	Organizations(ctx context.Context, obj *model.PhoneNumber) ([]*model.Organization, error)
 }
 type QueryResolver interface {
 	EntityTemplates(ctx context.Context, extends *model.EntityTemplateExtension) ([]*model.EntityTemplate, error)
@@ -1414,6 +1432,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Email.AppSource(childComplexity), true
 
+	case "Email.contacts":
+		if e.complexity.Email.Contacts == nil {
+			break
+		}
+
+		return e.complexity.Email.Contacts(childComplexity), true
+
 	case "Email.createdAt":
 		if e.complexity.Email.CreatedAt == nil {
 			break
@@ -1441,6 +1466,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Email.Label(childComplexity), true
+
+	case "Email.organizations":
+		if e.complexity.Email.Organizations == nil {
+			break
+		}
+
+		return e.complexity.Email.Organizations(childComplexity), true
 
 	case "Email.primary":
 		if e.complexity.Email.Primary == nil {
@@ -1476,6 +1508,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Email.UpdatedAt(childComplexity), true
+
+	case "Email.users":
+		if e.complexity.Email.Users == nil {
+			break
+		}
+
+		return e.complexity.Email.Users(childComplexity), true
 
 	case "Email.validated":
 		if e.complexity.Email.Validated == nil {
@@ -3384,6 +3423,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.PhoneNumber.AppSource(childComplexity), true
 
+	case "PhoneNumber.contacts":
+		if e.complexity.PhoneNumber.Contacts == nil {
+			break
+		}
+
+		return e.complexity.PhoneNumber.Contacts(childComplexity), true
+
 	case "PhoneNumber.createdAt":
 		if e.complexity.PhoneNumber.CreatedAt == nil {
 			break
@@ -3412,6 +3458,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.PhoneNumber.Label(childComplexity), true
 
+	case "PhoneNumber.organizations":
+		if e.complexity.PhoneNumber.Organizations == nil {
+			break
+		}
+
+		return e.complexity.PhoneNumber.Organizations(childComplexity), true
+
 	case "PhoneNumber.primary":
 		if e.complexity.PhoneNumber.Primary == nil {
 			break
@@ -3439,6 +3492,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.PhoneNumber.UpdatedAt(childComplexity), true
+
+	case "PhoneNumber.users":
+		if e.complexity.PhoneNumber.Users == nil {
+			break
+		}
+
+		return e.complexity.PhoneNumber.Users(childComplexity), true
 
 	case "PhoneNumber.validated":
 		if e.complexity.PhoneNumber.Validated == nil {
@@ -4792,14 +4852,15 @@ type Email {
     primary: Boolean!
 
     source: DataSource!
-
     sourceOfTruth: DataSource!
-
     appSource: String!
 
     createdAt: Time!
-
     updatedAt: Time!
+
+    users: [User!]! @goField(forceResolver: true)
+    contacts: [Contact!]! @goField(forceResolver: true)
+    organizations: [Organization!]! @goField(forceResolver: true)
 }
 
 """
@@ -5465,6 +5526,10 @@ type PhoneNumber {
 
     source: DataSource!
     appSource: String
+
+    users: [User!]! @goField(forceResolver: true)
+    contacts: [Contact!]! @goField(forceResolver: true)
+    organizations: [Organization!]! @goField(forceResolver: true)
 }
 
 """
@@ -8777,6 +8842,12 @@ func (ec *executionContext) fieldContext_Contact_phoneNumbers(ctx context.Contex
 				return ec.fieldContext_PhoneNumber_source(ctx, field)
 			case "appSource":
 				return ec.fieldContext_PhoneNumber_appSource(ctx, field)
+			case "users":
+				return ec.fieldContext_PhoneNumber_users(ctx, field)
+			case "contacts":
+				return ec.fieldContext_PhoneNumber_contacts(ctx, field)
+			case "organizations":
+				return ec.fieldContext_PhoneNumber_organizations(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type PhoneNumber", field.Name)
 		},
@@ -8845,6 +8916,12 @@ func (ec *executionContext) fieldContext_Contact_emails(ctx context.Context, fie
 				return ec.fieldContext_Email_createdAt(ctx, field)
 			case "updatedAt":
 				return ec.fieldContext_Email_updatedAt(ctx, field)
+			case "users":
+				return ec.fieldContext_Email_users(ctx, field)
+			case "contacts":
+				return ec.fieldContext_Email_contacts(ctx, field)
+			case "organizations":
+				return ec.fieldContext_Email_organizations(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Email", field.Name)
 		},
@@ -12946,6 +13023,268 @@ func (ec *executionContext) fieldContext_Email_updatedAt(ctx context.Context, fi
 	return fc, nil
 }
 
+func (ec *executionContext) _Email_users(ctx context.Context, field graphql.CollectedField, obj *model.Email) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Email_users(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Email().Users(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.User)
+	fc.Result = res
+	return ec.marshalNUser2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐUserᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Email_users(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Email",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_User_id(ctx, field)
+			case "firstName":
+				return ec.fieldContext_User_firstName(ctx, field)
+			case "lastName":
+				return ec.fieldContext_User_lastName(ctx, field)
+			case "emails":
+				return ec.fieldContext_User_emails(ctx, field)
+			case "phoneNumbers":
+				return ec.fieldContext_User_phoneNumbers(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_User_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_User_updatedAt(ctx, field)
+			case "source":
+				return ec.fieldContext_User_source(ctx, field)
+			case "conversations":
+				return ec.fieldContext_User_conversations(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Email_contacts(ctx context.Context, field graphql.CollectedField, obj *model.Email) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Email_contacts(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Email().Contacts(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.Contact)
+	fc.Result = res
+	return ec.marshalNContact2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐContactᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Email_contacts(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Email",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Contact_id(ctx, field)
+			case "title":
+				return ec.fieldContext_Contact_title(ctx, field)
+			case "name":
+				return ec.fieldContext_Contact_name(ctx, field)
+			case "firstName":
+				return ec.fieldContext_Contact_firstName(ctx, field)
+			case "lastName":
+				return ec.fieldContext_Contact_lastName(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Contact_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_Contact_updatedAt(ctx, field)
+			case "label":
+				return ec.fieldContext_Contact_label(ctx, field)
+			case "source":
+				return ec.fieldContext_Contact_source(ctx, field)
+			case "sourceOfTruth":
+				return ec.fieldContext_Contact_sourceOfTruth(ctx, field)
+			case "appSource":
+				return ec.fieldContext_Contact_appSource(ctx, field)
+			case "tags":
+				return ec.fieldContext_Contact_tags(ctx, field)
+			case "jobRoles":
+				return ec.fieldContext_Contact_jobRoles(ctx, field)
+			case "organizations":
+				return ec.fieldContext_Contact_organizations(ctx, field)
+			case "groups":
+				return ec.fieldContext_Contact_groups(ctx, field)
+			case "phoneNumbers":
+				return ec.fieldContext_Contact_phoneNumbers(ctx, field)
+			case "emails":
+				return ec.fieldContext_Contact_emails(ctx, field)
+			case "locations":
+				return ec.fieldContext_Contact_locations(ctx, field)
+			case "customFields":
+				return ec.fieldContext_Contact_customFields(ctx, field)
+			case "fieldSets":
+				return ec.fieldContext_Contact_fieldSets(ctx, field)
+			case "template":
+				return ec.fieldContext_Contact_template(ctx, field)
+			case "owner":
+				return ec.fieldContext_Contact_owner(ctx, field)
+			case "notes":
+				return ec.fieldContext_Contact_notes(ctx, field)
+			case "notesByTime":
+				return ec.fieldContext_Contact_notesByTime(ctx, field)
+			case "conversations":
+				return ec.fieldContext_Contact_conversations(ctx, field)
+			case "timelineEvents":
+				return ec.fieldContext_Contact_timelineEvents(ctx, field)
+			case "timelineEventsTotalCount":
+				return ec.fieldContext_Contact_timelineEventsTotalCount(ctx, field)
+			case "tickets":
+				return ec.fieldContext_Contact_tickets(ctx, field)
+			case "ticketSummaryByStatus":
+				return ec.fieldContext_Contact_ticketSummaryByStatus(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Contact", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Email_organizations(ctx context.Context, field graphql.CollectedField, obj *model.Email) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Email_organizations(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Email().Organizations(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.Organization)
+	fc.Result = res
+	return ec.marshalNOrganization2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOrganizationᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Email_organizations(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Email",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Organization_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Organization_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_Organization_updatedAt(ctx, field)
+			case "name":
+				return ec.fieldContext_Organization_name(ctx, field)
+			case "description":
+				return ec.fieldContext_Organization_description(ctx, field)
+			case "domain":
+				return ec.fieldContext_Organization_domain(ctx, field)
+			case "domains":
+				return ec.fieldContext_Organization_domains(ctx, field)
+			case "website":
+				return ec.fieldContext_Organization_website(ctx, field)
+			case "industry":
+				return ec.fieldContext_Organization_industry(ctx, field)
+			case "isPublic":
+				return ec.fieldContext_Organization_isPublic(ctx, field)
+			case "organizationType":
+				return ec.fieldContext_Organization_organizationType(ctx, field)
+			case "source":
+				return ec.fieldContext_Organization_source(ctx, field)
+			case "sourceOfTruth":
+				return ec.fieldContext_Organization_sourceOfTruth(ctx, field)
+			case "appSource":
+				return ec.fieldContext_Organization_appSource(ctx, field)
+			case "locations":
+				return ec.fieldContext_Organization_locations(ctx, field)
+			case "contacts":
+				return ec.fieldContext_Organization_contacts(ctx, field)
+			case "jobRoles":
+				return ec.fieldContext_Organization_jobRoles(ctx, field)
+			case "notes":
+				return ec.fieldContext_Organization_notes(ctx, field)
+			case "tags":
+				return ec.fieldContext_Organization_tags(ctx, field)
+			case "emails":
+				return ec.fieldContext_Organization_emails(ctx, field)
+			case "phoneNumbers":
+				return ec.fieldContext_Organization_phoneNumbers(ctx, field)
+			case "timelineEvents":
+				return ec.fieldContext_Organization_timelineEvents(ctx, field)
+			case "timelineEventsTotalCount":
+				return ec.fieldContext_Organization_timelineEventsTotalCount(ctx, field)
+			case "ticketSummaryByStatus":
+				return ec.fieldContext_Organization_ticketSummaryByStatus(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Organization", field.Name)
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _EmailParticipant_emailParticipant(ctx context.Context, field graphql.CollectedField, obj *model.EmailParticipant) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_EmailParticipant_emailParticipant(ctx, field)
 	if err != nil {
@@ -13007,6 +13346,12 @@ func (ec *executionContext) fieldContext_EmailParticipant_emailParticipant(ctx c
 				return ec.fieldContext_Email_createdAt(ctx, field)
 			case "updatedAt":
 				return ec.fieldContext_Email_updatedAt(ctx, field)
+			case "users":
+				return ec.fieldContext_Email_users(ctx, field)
+			case "contacts":
+				return ec.fieldContext_Email_contacts(ctx, field)
+			case "organizations":
+				return ec.fieldContext_Email_organizations(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Email", field.Name)
 		},
@@ -19430,6 +19775,12 @@ func (ec *executionContext) fieldContext_Mutation_emailMergeToContact(ctx contex
 				return ec.fieldContext_Email_createdAt(ctx, field)
 			case "updatedAt":
 				return ec.fieldContext_Email_updatedAt(ctx, field)
+			case "users":
+				return ec.fieldContext_Email_users(ctx, field)
+			case "contacts":
+				return ec.fieldContext_Email_contacts(ctx, field)
+			case "organizations":
+				return ec.fieldContext_Email_organizations(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Email", field.Name)
 		},
@@ -19509,6 +19860,12 @@ func (ec *executionContext) fieldContext_Mutation_emailUpdateInContact(ctx conte
 				return ec.fieldContext_Email_createdAt(ctx, field)
 			case "updatedAt":
 				return ec.fieldContext_Email_updatedAt(ctx, field)
+			case "users":
+				return ec.fieldContext_Email_users(ctx, field)
+			case "contacts":
+				return ec.fieldContext_Email_contacts(ctx, field)
+			case "organizations":
+				return ec.fieldContext_Email_organizations(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Email", field.Name)
 		},
@@ -19706,6 +20063,12 @@ func (ec *executionContext) fieldContext_Mutation_emailMergeToUser(ctx context.C
 				return ec.fieldContext_Email_createdAt(ctx, field)
 			case "updatedAt":
 				return ec.fieldContext_Email_updatedAt(ctx, field)
+			case "users":
+				return ec.fieldContext_Email_users(ctx, field)
+			case "contacts":
+				return ec.fieldContext_Email_contacts(ctx, field)
+			case "organizations":
+				return ec.fieldContext_Email_organizations(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Email", field.Name)
 		},
@@ -19785,6 +20148,12 @@ func (ec *executionContext) fieldContext_Mutation_emailUpdateInUser(ctx context.
 				return ec.fieldContext_Email_createdAt(ctx, field)
 			case "updatedAt":
 				return ec.fieldContext_Email_updatedAt(ctx, field)
+			case "users":
+				return ec.fieldContext_Email_users(ctx, field)
+			case "contacts":
+				return ec.fieldContext_Email_contacts(ctx, field)
+			case "organizations":
+				return ec.fieldContext_Email_organizations(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Email", field.Name)
 		},
@@ -19982,6 +20351,12 @@ func (ec *executionContext) fieldContext_Mutation_emailMergeToOrganization(ctx c
 				return ec.fieldContext_Email_createdAt(ctx, field)
 			case "updatedAt":
 				return ec.fieldContext_Email_updatedAt(ctx, field)
+			case "users":
+				return ec.fieldContext_Email_users(ctx, field)
+			case "contacts":
+				return ec.fieldContext_Email_contacts(ctx, field)
+			case "organizations":
+				return ec.fieldContext_Email_organizations(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Email", field.Name)
 		},
@@ -20061,6 +20436,12 @@ func (ec *executionContext) fieldContext_Mutation_emailUpdateInOrganization(ctx 
 				return ec.fieldContext_Email_createdAt(ctx, field)
 			case "updatedAt":
 				return ec.fieldContext_Email_updatedAt(ctx, field)
+			case "users":
+				return ec.fieldContext_Email_users(ctx, field)
+			case "contacts":
+				return ec.fieldContext_Email_contacts(ctx, field)
+			case "organizations":
+				return ec.fieldContext_Email_organizations(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Email", field.Name)
 		},
@@ -21542,6 +21923,12 @@ func (ec *executionContext) fieldContext_Mutation_phoneNumberMergeToContact(ctx 
 				return ec.fieldContext_PhoneNumber_source(ctx, field)
 			case "appSource":
 				return ec.fieldContext_PhoneNumber_appSource(ctx, field)
+			case "users":
+				return ec.fieldContext_PhoneNumber_users(ctx, field)
+			case "contacts":
+				return ec.fieldContext_PhoneNumber_contacts(ctx, field)
+			case "organizations":
+				return ec.fieldContext_PhoneNumber_organizations(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type PhoneNumber", field.Name)
 		},
@@ -21619,6 +22006,12 @@ func (ec *executionContext) fieldContext_Mutation_phoneNumberUpdateInContact(ctx
 				return ec.fieldContext_PhoneNumber_source(ctx, field)
 			case "appSource":
 				return ec.fieldContext_PhoneNumber_appSource(ctx, field)
+			case "users":
+				return ec.fieldContext_PhoneNumber_users(ctx, field)
+			case "contacts":
+				return ec.fieldContext_PhoneNumber_contacts(ctx, field)
+			case "organizations":
+				return ec.fieldContext_PhoneNumber_organizations(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type PhoneNumber", field.Name)
 		},
@@ -21814,6 +22207,12 @@ func (ec *executionContext) fieldContext_Mutation_phoneNumberMergeToOrganization
 				return ec.fieldContext_PhoneNumber_source(ctx, field)
 			case "appSource":
 				return ec.fieldContext_PhoneNumber_appSource(ctx, field)
+			case "users":
+				return ec.fieldContext_PhoneNumber_users(ctx, field)
+			case "contacts":
+				return ec.fieldContext_PhoneNumber_contacts(ctx, field)
+			case "organizations":
+				return ec.fieldContext_PhoneNumber_organizations(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type PhoneNumber", field.Name)
 		},
@@ -21891,6 +22290,12 @@ func (ec *executionContext) fieldContext_Mutation_phoneNumberUpdateInOrganizatio
 				return ec.fieldContext_PhoneNumber_source(ctx, field)
 			case "appSource":
 				return ec.fieldContext_PhoneNumber_appSource(ctx, field)
+			case "users":
+				return ec.fieldContext_PhoneNumber_users(ctx, field)
+			case "contacts":
+				return ec.fieldContext_PhoneNumber_contacts(ctx, field)
+			case "organizations":
+				return ec.fieldContext_PhoneNumber_organizations(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type PhoneNumber", field.Name)
 		},
@@ -22086,6 +22491,12 @@ func (ec *executionContext) fieldContext_Mutation_phoneNumberMergeToUser(ctx con
 				return ec.fieldContext_PhoneNumber_source(ctx, field)
 			case "appSource":
 				return ec.fieldContext_PhoneNumber_appSource(ctx, field)
+			case "users":
+				return ec.fieldContext_PhoneNumber_users(ctx, field)
+			case "contacts":
+				return ec.fieldContext_PhoneNumber_contacts(ctx, field)
+			case "organizations":
+				return ec.fieldContext_PhoneNumber_organizations(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type PhoneNumber", field.Name)
 		},
@@ -22163,6 +22574,12 @@ func (ec *executionContext) fieldContext_Mutation_phoneNumberUpdateInUser(ctx co
 				return ec.fieldContext_PhoneNumber_source(ctx, field)
 			case "appSource":
 				return ec.fieldContext_PhoneNumber_appSource(ctx, field)
+			case "users":
+				return ec.fieldContext_PhoneNumber_users(ctx, field)
+			case "contacts":
+				return ec.fieldContext_PhoneNumber_contacts(ctx, field)
+			case "organizations":
+				return ec.fieldContext_PhoneNumber_organizations(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type PhoneNumber", field.Name)
 		},
@@ -24217,6 +24634,12 @@ func (ec *executionContext) fieldContext_Organization_emails(ctx context.Context
 				return ec.fieldContext_Email_createdAt(ctx, field)
 			case "updatedAt":
 				return ec.fieldContext_Email_updatedAt(ctx, field)
+			case "users":
+				return ec.fieldContext_Email_users(ctx, field)
+			case "contacts":
+				return ec.fieldContext_Email_contacts(ctx, field)
+			case "organizations":
+				return ec.fieldContext_Email_organizations(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Email", field.Name)
 		},
@@ -24283,6 +24706,12 @@ func (ec *executionContext) fieldContext_Organization_phoneNumbers(ctx context.C
 				return ec.fieldContext_PhoneNumber_source(ctx, field)
 			case "appSource":
 				return ec.fieldContext_PhoneNumber_appSource(ctx, field)
+			case "users":
+				return ec.fieldContext_PhoneNumber_users(ctx, field)
+			case "contacts":
+				return ec.fieldContext_PhoneNumber_contacts(ctx, field)
+			case "organizations":
+				return ec.fieldContext_PhoneNumber_organizations(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type PhoneNumber", field.Name)
 		},
@@ -25629,6 +26058,268 @@ func (ec *executionContext) fieldContext_PhoneNumber_appSource(ctx context.Conte
 	return fc, nil
 }
 
+func (ec *executionContext) _PhoneNumber_users(ctx context.Context, field graphql.CollectedField, obj *model.PhoneNumber) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_PhoneNumber_users(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.PhoneNumber().Users(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.User)
+	fc.Result = res
+	return ec.marshalNUser2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐUserᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_PhoneNumber_users(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PhoneNumber",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_User_id(ctx, field)
+			case "firstName":
+				return ec.fieldContext_User_firstName(ctx, field)
+			case "lastName":
+				return ec.fieldContext_User_lastName(ctx, field)
+			case "emails":
+				return ec.fieldContext_User_emails(ctx, field)
+			case "phoneNumbers":
+				return ec.fieldContext_User_phoneNumbers(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_User_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_User_updatedAt(ctx, field)
+			case "source":
+				return ec.fieldContext_User_source(ctx, field)
+			case "conversations":
+				return ec.fieldContext_User_conversations(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PhoneNumber_contacts(ctx context.Context, field graphql.CollectedField, obj *model.PhoneNumber) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_PhoneNumber_contacts(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.PhoneNumber().Contacts(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.Contact)
+	fc.Result = res
+	return ec.marshalNContact2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐContactᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_PhoneNumber_contacts(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PhoneNumber",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Contact_id(ctx, field)
+			case "title":
+				return ec.fieldContext_Contact_title(ctx, field)
+			case "name":
+				return ec.fieldContext_Contact_name(ctx, field)
+			case "firstName":
+				return ec.fieldContext_Contact_firstName(ctx, field)
+			case "lastName":
+				return ec.fieldContext_Contact_lastName(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Contact_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_Contact_updatedAt(ctx, field)
+			case "label":
+				return ec.fieldContext_Contact_label(ctx, field)
+			case "source":
+				return ec.fieldContext_Contact_source(ctx, field)
+			case "sourceOfTruth":
+				return ec.fieldContext_Contact_sourceOfTruth(ctx, field)
+			case "appSource":
+				return ec.fieldContext_Contact_appSource(ctx, field)
+			case "tags":
+				return ec.fieldContext_Contact_tags(ctx, field)
+			case "jobRoles":
+				return ec.fieldContext_Contact_jobRoles(ctx, field)
+			case "organizations":
+				return ec.fieldContext_Contact_organizations(ctx, field)
+			case "groups":
+				return ec.fieldContext_Contact_groups(ctx, field)
+			case "phoneNumbers":
+				return ec.fieldContext_Contact_phoneNumbers(ctx, field)
+			case "emails":
+				return ec.fieldContext_Contact_emails(ctx, field)
+			case "locations":
+				return ec.fieldContext_Contact_locations(ctx, field)
+			case "customFields":
+				return ec.fieldContext_Contact_customFields(ctx, field)
+			case "fieldSets":
+				return ec.fieldContext_Contact_fieldSets(ctx, field)
+			case "template":
+				return ec.fieldContext_Contact_template(ctx, field)
+			case "owner":
+				return ec.fieldContext_Contact_owner(ctx, field)
+			case "notes":
+				return ec.fieldContext_Contact_notes(ctx, field)
+			case "notesByTime":
+				return ec.fieldContext_Contact_notesByTime(ctx, field)
+			case "conversations":
+				return ec.fieldContext_Contact_conversations(ctx, field)
+			case "timelineEvents":
+				return ec.fieldContext_Contact_timelineEvents(ctx, field)
+			case "timelineEventsTotalCount":
+				return ec.fieldContext_Contact_timelineEventsTotalCount(ctx, field)
+			case "tickets":
+				return ec.fieldContext_Contact_tickets(ctx, field)
+			case "ticketSummaryByStatus":
+				return ec.fieldContext_Contact_ticketSummaryByStatus(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Contact", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PhoneNumber_organizations(ctx context.Context, field graphql.CollectedField, obj *model.PhoneNumber) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_PhoneNumber_organizations(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.PhoneNumber().Organizations(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.Organization)
+	fc.Result = res
+	return ec.marshalNOrganization2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOrganizationᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_PhoneNumber_organizations(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PhoneNumber",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Organization_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Organization_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_Organization_updatedAt(ctx, field)
+			case "name":
+				return ec.fieldContext_Organization_name(ctx, field)
+			case "description":
+				return ec.fieldContext_Organization_description(ctx, field)
+			case "domain":
+				return ec.fieldContext_Organization_domain(ctx, field)
+			case "domains":
+				return ec.fieldContext_Organization_domains(ctx, field)
+			case "website":
+				return ec.fieldContext_Organization_website(ctx, field)
+			case "industry":
+				return ec.fieldContext_Organization_industry(ctx, field)
+			case "isPublic":
+				return ec.fieldContext_Organization_isPublic(ctx, field)
+			case "organizationType":
+				return ec.fieldContext_Organization_organizationType(ctx, field)
+			case "source":
+				return ec.fieldContext_Organization_source(ctx, field)
+			case "sourceOfTruth":
+				return ec.fieldContext_Organization_sourceOfTruth(ctx, field)
+			case "appSource":
+				return ec.fieldContext_Organization_appSource(ctx, field)
+			case "locations":
+				return ec.fieldContext_Organization_locations(ctx, field)
+			case "contacts":
+				return ec.fieldContext_Organization_contacts(ctx, field)
+			case "jobRoles":
+				return ec.fieldContext_Organization_jobRoles(ctx, field)
+			case "notes":
+				return ec.fieldContext_Organization_notes(ctx, field)
+			case "tags":
+				return ec.fieldContext_Organization_tags(ctx, field)
+			case "emails":
+				return ec.fieldContext_Organization_emails(ctx, field)
+			case "phoneNumbers":
+				return ec.fieldContext_Organization_phoneNumbers(ctx, field)
+			case "timelineEvents":
+				return ec.fieldContext_Organization_timelineEvents(ctx, field)
+			case "timelineEventsTotalCount":
+				return ec.fieldContext_Organization_timelineEventsTotalCount(ctx, field)
+			case "ticketSummaryByStatus":
+				return ec.fieldContext_Organization_ticketSummaryByStatus(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Organization", field.Name)
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _PhoneNumberParticipant_phoneNumberParticipant(ctx context.Context, field graphql.CollectedField, obj *model.PhoneNumberParticipant) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_PhoneNumberParticipant_phoneNumberParticipant(ctx, field)
 	if err != nil {
@@ -25688,6 +26379,12 @@ func (ec *executionContext) fieldContext_PhoneNumberParticipant_phoneNumberParti
 				return ec.fieldContext_PhoneNumber_source(ctx, field)
 			case "appSource":
 				return ec.fieldContext_PhoneNumber_appSource(ctx, field)
+			case "users":
+				return ec.fieldContext_PhoneNumber_users(ctx, field)
+			case "contacts":
+				return ec.fieldContext_PhoneNumber_contacts(ctx, field)
+			case "organizations":
+				return ec.fieldContext_PhoneNumber_organizations(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type PhoneNumber", field.Name)
 		},
@@ -29053,6 +29750,12 @@ func (ec *executionContext) fieldContext_User_emails(ctx context.Context, field 
 				return ec.fieldContext_Email_createdAt(ctx, field)
 			case "updatedAt":
 				return ec.fieldContext_Email_updatedAt(ctx, field)
+			case "users":
+				return ec.fieldContext_Email_users(ctx, field)
+			case "contacts":
+				return ec.fieldContext_Email_contacts(ctx, field)
+			case "organizations":
+				return ec.fieldContext_Email_organizations(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Email", field.Name)
 		},
@@ -29119,6 +29822,12 @@ func (ec *executionContext) fieldContext_User_phoneNumbers(ctx context.Context, 
 				return ec.fieldContext_PhoneNumber_source(ctx, field)
 			case "appSource":
 				return ec.fieldContext_PhoneNumber_appSource(ctx, field)
+			case "users":
+				return ec.fieldContext_PhoneNumber_users(ctx, field)
+			case "contacts":
+				return ec.fieldContext_PhoneNumber_contacts(ctx, field)
+			case "organizations":
+				return ec.fieldContext_PhoneNumber_organizations(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type PhoneNumber", field.Name)
 		},
@@ -34876,7 +35585,7 @@ func (ec *executionContext) _Email(ctx context.Context, sel ast.SelectionSet, ob
 			out.Values[i] = ec._Email_id(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "email":
 
@@ -34899,43 +35608,103 @@ func (ec *executionContext) _Email(ctx context.Context, sel ast.SelectionSet, ob
 			out.Values[i] = ec._Email_primary(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "source":
 
 			out.Values[i] = ec._Email_source(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "sourceOfTruth":
 
 			out.Values[i] = ec._Email_sourceOfTruth(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "appSource":
 
 			out.Values[i] = ec._Email_appSource(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "createdAt":
 
 			out.Values[i] = ec._Email_createdAt(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "updatedAt":
 
 			out.Values[i] = ec._Email_updatedAt(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
+		case "users":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Email_users(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
+		case "contacts":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Email_contacts(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
+		case "organizations":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Email_organizations(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -37126,7 +37895,7 @@ func (ec *executionContext) _PhoneNumber(ctx context.Context, sel ast.SelectionS
 			out.Values[i] = ec._PhoneNumber_id(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "e164":
 
@@ -37149,33 +37918,93 @@ func (ec *executionContext) _PhoneNumber(ctx context.Context, sel ast.SelectionS
 			out.Values[i] = ec._PhoneNumber_primary(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "createdAt":
 
 			out.Values[i] = ec._PhoneNumber_createdAt(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "updatedAt":
 
 			out.Values[i] = ec._PhoneNumber_updatedAt(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "source":
 
 			out.Values[i] = ec._PhoneNumber_source(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "appSource":
 
 			out.Values[i] = ec._PhoneNumber_appSource(ctx, field, obj)
 
+		case "users":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._PhoneNumber_users(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
+		case "contacts":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._PhoneNumber_contacts(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
+		case "organizations":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._PhoneNumber_organizations(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
