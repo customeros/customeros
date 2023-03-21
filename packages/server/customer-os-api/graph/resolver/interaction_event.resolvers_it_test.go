@@ -183,7 +183,6 @@ func TestMutationResolver_InteractionEventCreate_Email(t *testing.T) {
 
 	var firstEvent interactionEventType
 	err = decode.Decode(rawResponse.Data.(map[string]interface{}), &firstEvent)
-	log.Printf("firstEvent: %v", rawResponse.Data)
 
 	require.Nil(t, err)
 	require.NotNil(t, firstEvent)
@@ -228,7 +227,6 @@ func TestMutationResolver_InteractionEventCreate_Email(t *testing.T) {
 		client.Var("replyTo", origMsgId))
 	assertRawResponseSuccess(t, rawResponse, err)
 	err = decode.Decode(rawResponse.Data.(map[string]interface{}), &secondEvent)
-	log.Printf("firstEvent: %v", rawResponse.Data)
 
 	// check the email addresses are re-used
 	require.Nil(t, err)
