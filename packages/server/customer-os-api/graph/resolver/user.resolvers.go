@@ -50,7 +50,7 @@ func (r *queryResolver) Users(ctx context.Context, pagination *model.Pagination,
 	if pagination == nil {
 		pagination = &model.Pagination{Page: 0, Limit: 0}
 	}
-	paginatedResult, err := r.Services.UserService.FindAll(ctx, pagination.Page, pagination.Limit, where, sort)
+	paginatedResult, err := r.Services.UserService.GetAll(ctx, pagination.Page, pagination.Limit, where, sort)
 	return &model.UserPage{
 		Content:       mapper.MapEntitiesToUsers(paginatedResult.Rows.(*entity.UserEntities)),
 		TotalPages:    paginatedResult.TotalPages,

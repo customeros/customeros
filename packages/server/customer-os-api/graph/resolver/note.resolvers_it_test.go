@@ -174,7 +174,7 @@ func TestMutationResolver_NoteDelete(t *testing.T) {
 	assertNeo4jLabels(ctx, t, driver, []string{"Tenant", "Contact", "Contact_" + tenantName})
 }
 
-func TestQueryResolver_GetNote(t *testing.T) {
+func TestQueryResolver_GetNote_WithNotedEntities(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx)(t)
 
@@ -184,7 +184,7 @@ func TestQueryResolver_GetNote(t *testing.T) {
 	noteId := neo4jt.CreateNoteForContact(ctx, driver, tenantName, contactId, "Note content", utils.Now())
 	neo4jt.LinkNoteWithOrganization(ctx, driver, noteId, organizationId)
 
-	rawResponse, err := c.RawPost(getQuery("note/get_note_from_organization_query"),
+	rawResponse, err := c.RawPost(getQuery("note/get_note_with_noted_entities_via_organization_query"),
 		client.Var("organizationId", organizationId))
 	assertRawResponseSuccess(t, rawResponse, err)
 

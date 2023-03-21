@@ -27,6 +27,8 @@ type ContactService interface {
 	GetContactForRole(ctx context.Context, roleId string) (*entity.ContactEntity, error)
 	GetContactsForOrganization(ctx context.Context, organizationId string, page, limit int, filter *model.Filter, sortBy []*model.SortBy) (*utils.Pagination, error)
 	Merge(ctx context.Context, primaryContactId, mergedContactId string) error
+	GetContactsForEmails(ctx context.Context, emailIds []string) (*entity.ContactEntities, error)
+	GetContactsForPhoneNumbers(ctx context.Context, phoneNumberIds []string) (*entity.ContactEntities, error)
 
 	AddTag(ctx context.Context, contactId, tagId string) (*entity.ContactEntity, error)
 	RemoveTag(ctx context.Context, contactId, tagId string) (*entity.ContactEntity, error)
@@ -497,6 +499,34 @@ func (s *contactService) RemoveOrganization(ctx context.Context, contactId, orga
 		return nil, err
 	}
 	return s.mapDbNodeToContactEntity(*contactNodePtr), nil
+}
+
+func (s *contactService) GetContactsForEmails(ctx context.Context, emailIds []string) (*entity.ContactEntities, error) {
+	contacts, err := s.repositories.ContactRepository.GetAllForEmails(ctx, common.GetTenantFromContext(ctx), emailIds)
+	if err != nil {
+		return nil, err
+	}
+	contactEntities := entity.ContactEntities{}
+	for _, v := range contacts {
+		contactEntity := s.mapDbNodeToContactEntity(*v.Node)
+		contactEntity.DataloaderKey = v.LinkedNodeId
+		contactEntities = append(contactEntities, *contactEntity)
+	}
+	return &contactEntities, nil
+}
+
+func (s *contactService) GetContactsForPhoneNumbers(ctx context.Context, phoneNumberIds []string) (*entity.ContactEntities, error) {
+	contacts, err := s.repositories.ContactRepository.GetAllForPhoneNumbers(ctx, common.GetTenantFromContext(ctx), phoneNumberIds)
+	if err != nil {
+		return nil, err
+	}
+	contactEntities := entity.ContactEntities{}
+	for _, v := range contacts {
+		contactEntity := s.mapDbNodeToContactEntity(*v.Node)
+		contactEntity.DataloaderKey = v.LinkedNodeId
+		contactEntities = append(contactEntities, *contactEntity)
+	}
+	return &contactEntities, nil
 }
 
 func (s *contactService) mapDbNodeToContactEntity(dbNode dbtype.Node) *entity.ContactEntity {

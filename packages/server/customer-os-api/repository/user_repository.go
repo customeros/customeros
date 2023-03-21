@@ -14,11 +14,13 @@ type UserRepository interface {
 	Create(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, entity entity.UserEntity) (*dbtype.Node, error)
 	Update(ctx context.Context, session neo4j.SessionWithContext, tenant string, entity entity.UserEntity) (*dbtype.Node, error)
 	FindUserByEmail(ctx context.Context, session neo4j.SessionWithContext, tenant string, email string) (*dbtype.Node, error)
-	FindOwnerForContact(ctx context.Context, tx neo4j.ManagedTransaction, tenant, contactId string) (*dbtype.Node, error)
-	FindCreatorForNote(ctx context.Context, tx neo4j.ManagedTransaction, tenant, noteId string) (*dbtype.Node, error)
+	GetOwnerForContact(ctx context.Context, tx neo4j.ManagedTransaction, tenant, contactId string) (*dbtype.Node, error)
+	GetCreatorForNote(ctx context.Context, tx neo4j.ManagedTransaction, tenant, noteId string) (*dbtype.Node, error)
 	GetPaginatedUsers(ctx context.Context, session neo4j.SessionWithContext, tenant string, skip, limit int, filter *utils.CypherFilter, sort *utils.CypherSort) (*utils.DbNodesWithTotalCount, error)
 	GetById(ctx context.Context, session neo4j.SessionWithContext, tenant, userId string) (*dbtype.Node, error)
 	GetAllForConversation(ctx context.Context, session neo4j.SessionWithContext, tenant, conversationId string) ([]*dbtype.Node, error)
+	GetAllForEmails(ctx context.Context, tenant string, emailIds []string) ([]*utils.DbNodeAndId, error)
+	GetAllForPhoneNumbers(ctx context.Context, tenant string, phoneNumberIds []string) ([]*utils.DbNodeAndId, error)
 }
 
 type userRepository struct {
@@ -98,7 +100,7 @@ func (r *userRepository) FindUserByEmail(ctx context.Context, session neo4j.Sess
 	return result.(*dbtype.Node), nil
 }
 
-func (r *userRepository) FindOwnerForContact(ctx context.Context, tx neo4j.ManagedTransaction, tenant, contactId string) (*dbtype.Node, error) {
+func (r *userRepository) GetOwnerForContact(ctx context.Context, tx neo4j.ManagedTransaction, tenant, contactId string) (*dbtype.Node, error) {
 	if queryResult, err := tx.Run(ctx, `
 			MATCH (t:Tenant {name:$tenant})<-[:CONTACT_BELONGS_TO_TENANT]-(c:Contact {id:$contactId})<-[:OWNS]-(u:User)
 			RETURN u`,
@@ -119,7 +121,7 @@ func (r *userRepository) FindOwnerForContact(ctx context.Context, tx neo4j.Manag
 	}
 }
 
-func (r *userRepository) FindCreatorForNote(ctx context.Context, tx neo4j.ManagedTransaction, tenant, noteId string) (*dbtype.Node, error) {
+func (r *userRepository) GetCreatorForNote(ctx context.Context, tx neo4j.ManagedTransaction, tenant, noteId string) (*dbtype.Node, error) {
 	if queryResult, err := tx.Run(ctx, `
 			MATCH (t:Tenant {name:$tenant})<-[:USER_BELONGS_TO_TENANT]-(u:User)-[:CREATED]->(n:Note {id:$noteId})
 			RETURN u`,
@@ -223,4 +225,52 @@ func (r *userRepository) GetAllForConversation(ctx context.Context, session neo4
 		}
 	}
 	return dbNodes, err
+}
+
+func (r *userRepository) GetAllForEmails(ctx context.Context, tenant string, emailIds []string) ([]*utils.DbNodeAndId, error) {
+	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
+	defer session.Close(ctx)
+
+	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		if queryResult, err := tx.Run(ctx, `
+			MATCH (t:Tenant {name:$tenant})<-[:USER_BELONGS_TO_TENANT]-(u:User)-[:HAS]->(e:Email)-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]->(t)
+			WHERE e.id IN $emailIds
+			RETURN u, e.id as emailId ORDER BY u.firstName, u.lastName`,
+			map[string]any{
+				"tenant":   tenant,
+				"emailIds": emailIds,
+			}); err != nil {
+			return nil, err
+		} else {
+			return utils.ExtractAllRecordsAsDbNodeAndId(ctx, queryResult, err)
+		}
+	})
+	if err != nil {
+		return nil, err
+	}
+	return result.([]*utils.DbNodeAndId), err
+}
+
+func (r *userRepository) GetAllForPhoneNumbers(ctx context.Context, tenant string, phoneNumberIds []string) ([]*utils.DbNodeAndId, error) {
+	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
+	defer session.Close(ctx)
+
+	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		if queryResult, err := tx.Run(ctx, `
+			MATCH (t:Tenant {name:$tenant})<-[:USER_BELONGS_TO_TENANT]-(u:User)-[:HAS]->(p:PhoneNumber)-[:PHONE_NUMBER_BELONGS_TO_TENANT]->(t)
+			WHERE p.id IN $phoneNumberIds
+			RETURN u, p.id as phoneNumberId ORDER BY u.firstName, u.lastName`,
+			map[string]any{
+				"tenant":         tenant,
+				"phoneNumberIds": phoneNumberIds,
+			}); err != nil {
+			return nil, err
+		} else {
+			return utils.ExtractAllRecordsAsDbNodeAndId(ctx, queryResult, err)
+		}
+	})
+	if err != nil {
+		return nil, err
+	}
+	return result.([]*utils.DbNodeAndId), err
 }

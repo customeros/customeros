@@ -166,7 +166,7 @@ func (r *contactResolver) Owner(ctx context.Context, obj *model.Contact) (*model
 		utils.LogMethodExecution(start, utils.GetFunctionName())
 	}(time.Now())
 
-	owner, err := r.Services.UserService.FindContactOwner(ctx, obj.ID)
+	owner, err := r.Services.UserService.GetContactOwner(ctx, obj.ID)
 	if err != nil {
 		graphql.AddErrorf(ctx, "Failed to get owner for contact %s", obj.ID)
 		return nil, err

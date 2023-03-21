@@ -1,0 +1,22 @@
+query GetOrganizationById($organizationId: ID!){
+  organization(id: $organizationId) {
+    id
+    emails {
+        id
+        users {
+            id
+            firstName
+            lastName
+        }
+        contacts {
+            id
+            firstName
+            lastName
+        }
+        organizations {
+            id
+            name
+        }
+    }
+  }
+}

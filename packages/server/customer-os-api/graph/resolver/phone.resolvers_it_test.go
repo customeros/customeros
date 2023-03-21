@@ -2,6 +2,7 @@ package resolver
 
 import (
 	"github.com/99designs/gqlgen/client"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils/decode"
@@ -492,4 +493,66 @@ func TestMutationResolver_PhoneNumberUpdateInUser_ReplacePhoneNumber(t *testing.
 
 	// Check the labels on the nodes in the Neo4j database
 	assertNeo4jLabels(ctx, t, driver, []string{"Tenant", "User", "User_" + tenantName, "PhoneNumber", "PhoneNumber_" + tenantName})
+}
+
+func TestQueryResolver_GetPhoneNumber_WithParentOwners(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx)(t)
+
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+	contactId1 := neo4jt.CreateContact(ctx, driver, tenantName, entity.ContactEntity{
+		FirstName: "a",
+		LastName:  "b",
+	})
+	contactId2 := neo4jt.CreateContact(ctx, driver, tenantName, entity.ContactEntity{
+		FirstName: "c",
+		LastName:  "d",
+	})
+	organizationId1 := neo4jt.CreateOrganization(ctx, driver, tenantName, "test org1")
+	organizationId2 := neo4jt.CreateOrganization(ctx, driver, tenantName, "test org2")
+	userId1 := neo4jt.CreateUser(ctx, driver, tenantName, entity.UserEntity{
+		FirstName: "a",
+		LastName:  "b",
+	})
+	userId2 := neo4jt.CreateUser(ctx, driver, tenantName, entity.UserEntity{
+		FirstName: "c",
+		LastName:  "d",
+	})
+
+	phoneNumberId := neo4jt.AddPhoneNumberTo(ctx, driver, tenantName, userId1, "+12345", false, "WORK")
+	neo4jt.AddPhoneNumberTo(ctx, driver, tenantName, userId2, "+12345", false, "WORK")
+	neo4jt.AddPhoneNumberTo(ctx, driver, tenantName, contactId1, "+12345", false, "WORK")
+	neo4jt.AddPhoneNumberTo(ctx, driver, tenantName, contactId2, "+12345", false, "WORK")
+	neo4jt.AddPhoneNumberTo(ctx, driver, tenantName, organizationId1, "+12345", false, "WORK")
+	neo4jt.AddPhoneNumberTo(ctx, driver, tenantName, organizationId2, "+12345", false, "WORK")
+
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "PhoneNumber"))
+	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "Organization"))
+	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "User"))
+	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "Contact"))
+
+	rawResponse, err := c.RawPost(getQuery("phone_number/get_phone_number_with_parent_owners_via_organization_query"),
+		client.Var("organizationId", organizationId1))
+	assertRawResponseSuccess(t, rawResponse, err)
+
+	var organizationStruct struct {
+		Organization model.Organization
+	}
+
+	err = decode.Decode(rawResponse.Data.(map[string]any), &organizationStruct)
+	require.Nil(t, err)
+	require.Equal(t, 1, len(organizationStruct.Organization.PhoneNumbers))
+
+	phoneNumber := organizationStruct.Organization.PhoneNumbers[0]
+
+	require.Equal(t, phoneNumberId, phoneNumber.ID)
+	require.Equal(t, 2, len(phoneNumber.Users))
+	require.Equal(t, 2, len(phoneNumber.Contacts))
+	require.Equal(t, 2, len(phoneNumber.Organizations))
+	require.Equal(t, userId1, phoneNumber.Users[0].ID)
+	require.Equal(t, userId2, phoneNumber.Users[1].ID)
+	require.Equal(t, contactId1, phoneNumber.Contacts[0].ID)
+	require.Equal(t, contactId2, phoneNumber.Contacts[1].ID)
+	require.Equal(t, organizationId1, phoneNumber.Organizations[0].ID)
+	require.Equal(t, organizationId2, phoneNumber.Organizations[1].ID)
 }
