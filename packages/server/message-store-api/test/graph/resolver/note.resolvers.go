@@ -36,6 +36,11 @@ func (r *noteResolver) CreatedBy(ctx context.Context, obj *model.Note) (*model.U
 	panic(fmt.Errorf("not implemented: CreatedBy - createdBy"))
 }
 
+// Noted is the resolver for the noted field.
+func (r *noteResolver) Noted(ctx context.Context, obj *model.Note) ([]model.NotedEntity, error) {
+	panic(fmt.Errorf("not implemented: Noted - noted"))
+}
+
 // Note returns generated.NoteResolver implementation.
 func (r *Resolver) Note() generated.NoteResolver { return &noteResolver{r} }
 
