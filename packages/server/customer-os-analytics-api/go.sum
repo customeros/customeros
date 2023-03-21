@@ -1,7 +1,7 @@
 cloud.google.com/go v0.26.0/go.mod h1:aQUYkXzVsufM+DwF1aE+0xfcU+56JwCaLick0ClmMTw=
 cloud.google.com/go v0.34.0/go.mod h1:aQUYkXzVsufM+DwF1aE+0xfcU+56JwCaLick0ClmMTw=
-github.com/99designs/gqlgen v0.17.26 h1:fxgSTbPf1G30uWAWSoHd+9gSNMagmP04k58ThJ1/ikQ=
-github.com/99designs/gqlgen v0.17.26/go.mod h1:i4rEatMrzzu6RXaHydq1nmEPZkb3bKQsnxNRHS4DQB4=
+github.com/99designs/gqlgen v0.17.27 h1:XPsaZiWY1lL2qqVYtBt37GzkyX7bBiVvda7k1buC/Ao=
+github.com/99designs/gqlgen v0.17.27/go.mod h1:i4rEatMrzzu6RXaHydq1nmEPZkb3bKQsnxNRHS4DQB4=
 github.com/Azure/go-ansiterm v0.0.0-20210617225240-d185dfc1b5a1 h1:UQHMgLO+TxOElx5B5HZ4hJQsoJ/PvUvKRhJHDQXO8P8=
 github.com/Azure/go-ansiterm v0.0.0-20210617225240-d185dfc1b5a1/go.mod h1:xomTg63KZ2rFqZQzSB4Vz2SUXa1BpHTVz9L5PTmPC4E=
 github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03qcyfWMU=
