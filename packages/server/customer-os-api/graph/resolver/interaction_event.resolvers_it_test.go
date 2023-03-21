@@ -181,33 +181,45 @@ func TestMutationResolver_InteractionEventCreate_Email(t *testing.T) {
 		}
 	}
 
-	var interactionEvent interactionEventType
-	err = decode.Decode(rawResponse.Data.(map[string]interface{}), &interactionEvent)
-	log.Printf("interactionEvent: %v", rawResponse.Data)
+	var firstEvent interactionEventType
+	err = decode.Decode(rawResponse.Data.(map[string]interface{}), &firstEvent)
+	log.Printf("firstEvent: %v", rawResponse.Data)
 
 	require.Nil(t, err)
-	require.NotNil(t, interactionEvent)
-	require.Equal(t, *interactionEvent.InteractionEvent_Create.Channel, "EMAIL")
-	require.Equal(t, *interactionEvent.InteractionEvent_Create.ChannelData, "{\"References\":[\"<CAJYQ2j8Q>\"],\"Replies-To\":\"<CAJYQ2j8Q>\"}")
-	require.Equal(t, interactionEvent.InteractionEvent_Create.AppSource, "Oasis")
-	require.Equal(t, interactionEvent.InteractionEvent_Create.Content, "Message 1")
-	require.Equal(t, interactionEvent.InteractionEvent_Create.ContentType, "text/plain")
-	require.Equal(t, len(interactionEvent.InteractionEvent_Create.SentBy), 1)
-	require.Equal(t, interactionEvent.InteractionEvent_Create.SentBy[0].EmailParticipant.RawEmail, "sentBy@openline.ai")
+	require.NotNil(t, firstEvent)
+	require.Equal(t, *firstEvent.InteractionEvent_Create.Channel, "EMAIL")
+	require.Equal(t, *firstEvent.InteractionEvent_Create.ChannelData, "{\"References\":[\"<CAJYQ2j8Q>\"],\"Replies-To\":\"<CAJYQ2j8Q>\"}")
+	require.Equal(t, firstEvent.InteractionEvent_Create.AppSource, "Oasis")
+	require.Equal(t, firstEvent.InteractionEvent_Create.Content, "Message 1")
+	require.Equal(t, firstEvent.InteractionEvent_Create.ContentType, "text/plain")
+	require.Equal(t, len(firstEvent.InteractionEvent_Create.SentBy), 1)
 
-	require.Equal(t, len(interactionEvent.InteractionEvent_Create.SentTo), 2)
-	require.Equal(t, interactionEvent.InteractionEvent_Create.SentTo[0].EmailParticipant.RawEmail, "dest1@openline.ai")
-	require.Equal(t, interactionEvent.InteractionEvent_Create.SentTo[1].EmailParticipant.RawEmail, "dest2@openline.ai")
+	require.Equal(t, firstEvent.InteractionEvent_Create.InteractionSession.ID, interactionSession1)
+	require.Equal(t, firstEvent.InteractionEvent_Create.InteractionSession.Name, "session1")
 
-	require.Equal(t, interactionEvent.InteractionEvent_Create.InteractionSession.ID, interactionSession1)
-	require.Equal(t, interactionEvent.InteractionEvent_Create.InteractionSession.Name, "session1")
+	sentById := firstEvent.InteractionEvent_Create.SentBy[0].EmailParticipant.ID
+	require.Equal(t, firstEvent.InteractionEvent_Create.SentBy[0].EmailParticipant.RawEmail, "sentBy@openline.ai")
 
-	sentById := interactionEvent.InteractionEvent_Create.SentBy[0].EmailParticipant.ID
-	dest1 := interactionEvent.InteractionEvent_Create.SentTo[0].EmailParticipant.ID
-	dest2 := interactionEvent.InteractionEvent_Create.SentTo[1].EmailParticipant.ID
-	origMsgId := interactionEvent.InteractionEvent_Create.ID
+	//send to 2 people
+	require.Equal(t, len(firstEvent.InteractionEvent_Create.SentTo), 2)
 
-	var interactionEvent2 interactionEventType
+	dest1 := ""
+	dest2 := ""
+	for _, sendTo := range firstEvent.InteractionEvent_Create.SentTo {
+		if sendTo.EmailParticipant.RawEmail == "dest1@openline.ai" {
+			dest1 = sendTo.EmailParticipant.ID
+		}
+		if sendTo.EmailParticipant.RawEmail == "dest2@openline.ai" {
+			dest2 = sendTo.EmailParticipant.ID
+		}
+	}
+
+	require.NotEmpty(t, dest1)
+	require.NotEmpty(t, dest2)
+
+	origMsgId := firstEvent.InteractionEvent_Create.ID
+
+	var secondEvent interactionEventType
 
 	rawResponse, err = c.RawPost(getQuery("interaction_event/create_interaction_event_email"),
 		client.Var("content", "Message 2"),
@@ -215,15 +227,22 @@ func TestMutationResolver_InteractionEventCreate_Email(t *testing.T) {
 		client.Var("sessionId", interactionSession1),
 		client.Var("replyTo", origMsgId))
 	assertRawResponseSuccess(t, rawResponse, err)
-	err = decode.Decode(rawResponse.Data.(map[string]interface{}), &interactionEvent2)
-	log.Printf("interactionEvent: %v", rawResponse.Data)
+	err = decode.Decode(rawResponse.Data.(map[string]interface{}), &secondEvent)
+	log.Printf("firstEvent: %v", rawResponse.Data)
 
 	// check the email addresses are re-used
 	require.Nil(t, err)
-	require.Equal(t, interactionEvent2.InteractionEvent_Create.RepliesTo.ID, origMsgId)
-	require.Equal(t, interactionEvent2.InteractionEvent_Create.SentBy[0].EmailParticipant.ID, sentById)
-	require.Equal(t, interactionEvent2.InteractionEvent_Create.SentTo[0].EmailParticipant.ID, dest1)
-	require.Equal(t, interactionEvent2.InteractionEvent_Create.SentTo[1].EmailParticipant.ID, dest2)
+	require.Equal(t, secondEvent.InteractionEvent_Create.RepliesTo.ID, origMsgId)
+	require.Equal(t, secondEvent.InteractionEvent_Create.SentBy[0].EmailParticipant.ID, sentById)
+
+	for _, sendTo := range secondEvent.InteractionEvent_Create.SentTo {
+		if sendTo.EmailParticipant.RawEmail == "dest1@openline.ai" {
+			require.Equal(t, dest1, sendTo.EmailParticipant.ID)
+		}
+		if sendTo.EmailParticipant.RawEmail == "dest2@openline.ai" {
+			require.Equal(t, dest2, sendTo.EmailParticipant.ID)
+		}
+	}
 }
 
 func TestMutationResolver_InteractionEventCreate_Voice(t *testing.T) {
