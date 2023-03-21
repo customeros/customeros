@@ -47,6 +47,11 @@ func (r *userResolver) Emails(ctx context.Context, obj *model.User) ([]*model.Em
 	panic(fmt.Errorf("not implemented: Emails - emails"))
 }
 
+// PhoneNumbers is the resolver for the phoneNumbers field.
+func (r *userResolver) PhoneNumbers(ctx context.Context, obj *model.User) ([]*model.PhoneNumber, error) {
+	panic(fmt.Errorf("not implemented: PhoneNumbers - phoneNumbers"))
+}
+
 // Conversations is the resolver for the conversations field.
 func (r *userResolver) Conversations(ctx context.Context, obj *model.User, pagination *model.Pagination, sort []*model.SortBy) (*model.ConversationPage, error) {
 	panic(fmt.Errorf("not implemented: Conversations - conversations"))
