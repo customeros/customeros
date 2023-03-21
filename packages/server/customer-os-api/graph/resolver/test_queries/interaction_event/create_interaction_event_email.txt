@@ -8,9 +8,11 @@ interactionEvent_Create(
         } ]
         sentTo: [ {
               email: "dest1@openline.ai"
+              type: "TO"
         },
         {
               email: "dest2@openline.ai"
+              type: "CC"
         }
         ]
         appSource: "Oasis"
