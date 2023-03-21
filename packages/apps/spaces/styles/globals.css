@@ -19,19 +19,24 @@
   font-weight: 200;
 }
 
+/*region webchat*/
 .openline_avatar_wrapper {
-  left: var(--web-chat-left) !important;
-  transition: left 0.25s ease;
-  z-index: 9999;
+  /*left: var(--web-chat-left) !important;*/
+  /*transition: left 0.25s ease;*/
+  /*z-index: 9999;*/
+  display: none;
 }
 
 .openline_webchat_button {
-  width: 45px !important;
-  height: 45px !important;
-  z-index: 9999;
-  box-shadow: 0 0 0 2px rgb(255 255 255) !important;
+  /*width: 45px !important;*/
+  /*height: 45px !important;*/
+  /*z-index: 9999;*/
+  /*box-shadow: 0 0 0 2px rgb(255 255 255) !important;*/
+  display: none;
 }
 .support_window {
-  z-index: 9999;
+  /*z-index: 9999;*/
+  display: none;
 }
+/*endregion*/
 
