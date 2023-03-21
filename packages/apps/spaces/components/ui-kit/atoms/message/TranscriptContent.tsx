@@ -53,7 +53,7 @@ export const TranscriptContent: React.FC<TranscriptContentProps> = ({
                   [styles.left]: transcriptElement.party.tel,
                   [styles.right]: !transcriptElement.party.tel,
                 })}
-                style={{ width: '100%' }}
+                style={{ width: '60%' }}
               >
                 {textWithLinks}
               </div>

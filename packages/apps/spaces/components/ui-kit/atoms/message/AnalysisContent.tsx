@@ -14,21 +14,16 @@ interface Content {
 interface AnalysisContentProps {
   analysis: Content;
   children?: ReactNode;
+  showIcon?: boolean;
 }
 
 export const AnalysisContent: React.FC<AnalysisContentProps> = ({
   analysis,
   children,
+  showIcon,
 }) => {
   if (analysis?.mimetype === 'text/plain') {
-    return (
-      <>
-        {linkifyHtml(analysis.body, {
-          defaultProtocol: 'https',
-          rel: 'noopener noreferrer',
-        })}
-      </>
-    );
+    return <>{analysis.body}</>;
   }
 
   if (analysis?.mimetype === 'text/html') {
@@ -50,7 +45,7 @@ export const AnalysisContent: React.FC<AnalysisContentProps> = ({
     try {
       const response = JSON.parse(analysis.body);
       return (
-        <TranscriptContent response={response}> {children}</TranscriptContent>
+        <TranscriptContent response={response}>{children}</TranscriptContent>
       );
     } catch (e) {
       console.error('Got an error: ' + e + ' when parsing: ' + analysis.body);

@@ -119,6 +119,7 @@ export { default as LockOpen } from './LockOpen';
 export { default as Lock } from './Lock';
 export { default as MapMarker } from './MapMarker';
 export { default as Map } from './Map';
+export { default as MessageIcon } from './MessageIcon';
 export { default as Microsoft } from './Microsoft';
 export { default as MinusCircle } from './MinusCircle';
 export { default as Minus } from './Minus';

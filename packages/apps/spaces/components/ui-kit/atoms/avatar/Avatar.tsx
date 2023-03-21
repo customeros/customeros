@@ -1,4 +1,4 @@
-import React, { ReactNode,  } from 'react';
+import React, { ReactNode, useMemo } from 'react';
 import styles from './avatar.module.scss';
 import { getInitialsColor } from './utils';
 import classNames from 'classnames';
@@ -25,8 +25,8 @@ export const Avatar: React.FC<AvatarProps> = ({
   ...rest
 }) => {
   const initials = `${name?.charAt(0)}${surname?.charAt(0)}`;
-  const color = getInitialsColor(initials);
 
+  const color = useMemo(() => getInitialsColor(initials || 'A'), [initials]);
   const avatarStyle = {
     width: `${size}px`,
     height: `${size}px`,

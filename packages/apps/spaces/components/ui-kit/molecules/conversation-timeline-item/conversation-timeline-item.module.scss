@@ -1,8 +1,6 @@
-.emailContainer {
-  padding-bottom: 19px; // match with theme
-  border-bottom: 1px solid gray;
-  margin-bottom: var(--spacing-xs);
-}
+@import "styles/mixins";
+
+
 .summary {
   display: flex;
   flex:1;
@@ -17,6 +15,11 @@
   & .right {
     padding: var(--spacing-xxs) var(--spacing-xxs);
     display: flex;
+
+    &.initiator {
+      background: #88D894;
+      width: 50%;
+    }
   }
 
   & .right {
@@ -27,12 +30,20 @@
   }
 
   & .left {
-    border-top-left-radius: var(--border-radius-md);
-    border-top-right-radius: var(--border-radius-md);
-    background: #88D894;
     width: 50%;
     position: relative;
+
+    &.initiator {
+      border-top-left-radius: var(--border-radius-md);
+      border-top-right-radius: var(--border-radius-md);
+    }
   }
+
+}
+.iconsWrapper {
+  @include flex-between;
+  justify-content: space-around;
+  flex:1;
 }
 
 .callPartyData {
@@ -54,22 +65,6 @@
   font-weight: 600;
   font-size: 13px;
   line-height: 16px;
-}
-
-.transcriptionContainer {
-  height: 0;
-  overflow: hidden;
-  border-left: 1px solid #88D894;
-  border-right: 1px solid #88D894;
-  border-bottom: 1px solid #88D894;
-  border-bottom-right-radius: var(--border-radius-md);
-
-  &.transcriptionContainerOpen {
-    transition: height 0.5s ease-in-out;
-    max-height: fit-content;
-    height: fit-content;
-    padding: var(--spacing-md);
-  }
 }
 
 .folderTab {
@@ -129,5 +124,31 @@
 .contentWrapper {
   width:100%;
   position:relative;
-}
+  height: 47px;
+  transition: height 0.5s ease-in-out;
 
+  &.expanded {
+    height: 100%;
+  }
+}
+.transcriptionContainer {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.5s ease-in-out;
+  border-left: 1px solid #c5eccb;
+  border-right: 1px solid #c5eccb;
+  border-bottom: 1px solid #c5eccb;
+  border-bottom-right-radius: var(--border-radius-md);
+
+  &.transcriptionContainerOpen {
+    border-left: 1px solid #88D894;
+    border-right: 1px solid #88D894;
+    border-bottom: 1px solid #88D894;
+    border-bottom-right-radius: var(--border-radius-md);
+
+  }
+}
+.messages {
+  padding: var(--spacing-md);
+
+}

@@ -11,6 +11,7 @@
   padding: var(--spacing-xxxs) var(--spacing-xxs) var(--spacing-xxxs);
   z-index: 2;
   min-width: 40%;
+  width: 60%;
   word-break: break-all;
   white-space: pre-line;
 }
@@ -36,9 +37,26 @@
   min-height: 23px;
   min-width: 23px;
   border-radius: var(--border-radius-xs);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 
   &.channelIconShown {
     background: #71D180;
+
+
+    &.chatIcon {
+      background: #3E6ADE;
+    }
+  }
+
+  &.chatIcon.channelIconRight,
+  &.phoneCall.channelIconRight {
+    margin-left: var(--spacing-md);
+  }
+
+  &.chatIcon.channelIconLeft {
+    margin-right: var(--spacing-md);
   }
 
   & svg {
@@ -67,8 +85,8 @@
 }
 
 .dialogMessageRight {
-  margin-right: calc(23px + var(--spacing-md));
+  //margin-right: calc(23px + var(--spacing-md));
 }
 .dialogMessageLeft {
-  margin-left: 23px;
+  //margin-left: 23px;
 }
