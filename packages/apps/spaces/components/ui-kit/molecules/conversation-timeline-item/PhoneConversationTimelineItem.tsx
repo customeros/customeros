@@ -5,6 +5,7 @@ import {
   ChevronDown,
   ChevronUp,
   Message,
+  Tooltip,
   VoiceWave,
 } from '../../atoms';
 import axios from 'axios';
@@ -177,7 +178,15 @@ export const PhoneConversationTimelineItem: React.FC<Props> = ({
                 </div>
               </div>
             </div>
+            <Tooltip
+              content={summary?.analysis?.body || ''}
+              target={`#phone-summary-${feedId}`}
+              position='bottom'
+              showDelay={300}
+              autoHide={false}
+            />
             <button
+              id={`phone-summary-${feedId}`}
               className={styles.folderTab}
               role='button'
               onClick={handleToggleExpanded}

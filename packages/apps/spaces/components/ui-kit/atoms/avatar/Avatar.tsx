@@ -55,7 +55,7 @@ export const Avatar: React.FC<AvatarProps> = ({
         })}
         style={avatarStyle}
       >
-        {initials}
+        {image || initials}
       </div>
     </>
   );
