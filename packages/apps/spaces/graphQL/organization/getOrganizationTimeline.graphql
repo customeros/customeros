@@ -142,6 +142,16 @@ query GetOrganizationTimeline($organizationId: ID!, $from: Time!, $size: Int!) {
         id
         html
         createdAt
+        noted {
+          ... on Organization {
+            id
+            organizationName: name
+
+          }
+          ... on Contact {
+            ...ContactNameFragment
+          }
+        }
         createdBy {
           id
           firstName

@@ -219,17 +219,17 @@ button::-moz-focus-inner {
 }
 
 .p-tooltip {
-  font-size: var(--font-size-sm);
+  font-size: var(--font-size-xs);
   background: rgba(98, 94, 94, 0.99);
   color: #ffffff;
   border-radius: var(--border-radius-sm);
-  padding: var(--spacing-xxxs) var(--spacing-xs);
+  padding: var(--spacing-xxxs) var(--spacing-xxxs);
 }
 .p-tooltip-arrow {
   //padding: var(--spacing-xxxs) var(--spacing-sm);
 }
 .p-tooltip-text {
-  padding: var(--spacing-xxxs) var(--spacing-xs);
+  padding: 0 var(--spacing-xxs);
 }
 
 // checkbox

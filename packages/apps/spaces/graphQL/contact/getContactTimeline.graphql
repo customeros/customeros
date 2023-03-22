@@ -143,6 +143,13 @@ query GetContactTimeline($contactId: ID!, $from: Time!, $size: Int!) {
         id
         html
         createdAt
+        noted {
+          ... on Contact {
+            __typename
+            ...ContactNameFragment
+          }
+
+        }
         createdBy {
           id
           firstName
