@@ -39,6 +39,9 @@ type InteractionEventCreateData struct {
 	InteractionEventEntity *entity.InteractionEventEntity
 	SessionIdentifier      *string
 	RepliesTo              *string
+	Content                *string
+	ContentType            *string
+	channel                *string
 	SentBy                 []ParticipantAddressData
 	SentTo                 []ParticipantAddressData
 	Source                 entity.DataSource

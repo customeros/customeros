@@ -107,8 +107,6 @@ func (r *mutationResolver) InteractionSessionCreate(ctx context.Context, session
 func (r *mutationResolver) InteractionEventCreate(ctx context.Context, event model.InteractionEventInput) (*model.InteractionEvent, error) {
 	interactionEventCreated, err := r.Services.InteractionEventService.Create(ctx, &service.InteractionEventCreateData{
 		InteractionEventEntity: mapper.MapInteractionEventInputToEntity(&event),
-		Content:                event.Content,
-		ContentType:            event.ContentType,
 		SessionIdentifier:      event.InteractionSession,
 		SentBy:                 service.MapInteractionEventParticipantInputToAddressData(event.SentBy),
 		SentTo:                 service.MapInteractionEventParticipantInputToAddressData(event.SentTo),
