@@ -30,6 +30,7 @@ export { default as Backward } from './Backward';
 export { default as Ban } from './Ban';
 export { default as Bars } from './Bars';
 export { default as Bell } from './Bell';
+export { default as Blockquote } from './Blockquote';
 export { default as Bolt } from './Bolt';
 export { default as Book } from './Book';
 export { default as Bookmark } from './Bookmark';
