@@ -8,6 +8,7 @@
   color: white;
   text-transform: uppercase;
   line-height: var(--font-size-xs);
+  cursor: pointer;
 
   &.square {
     border-radius: var(--border-radius-sm);

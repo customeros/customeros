@@ -9,7 +9,7 @@ interface Props {
 
 export const OrganizationAvatar: React.FC<Props> = ({
   organizationId,
-  size = 35,
+  size = 30,
 }) => {
   const { loading, error, data } = useOrganizationName({ id: organizationId });
   if (loading || error) {

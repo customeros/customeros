@@ -25,24 +25,27 @@ import { Controller, useForm } from 'react-hook-form';
 import { Editor } from '../editor';
 import { NoteEditorModes } from '../editor/Editor';
 import { ContactAvatar } from '../organization-avatar';
+import { NotedEntity } from '../../../../graphQL/__generated__/generated';
+import { OrganizationAvatar } from '../organization-avatar/OrganizationAvatar';
+import { getContactDisplayName } from '../../../../utils';
 
 interface Props {
   noteContent: string;
   createdAt: string;
-  contactId?: string;
   id: string;
   createdBy?: {
     firstName?: string;
     lastName?: string;
   };
   source?: string;
+  noted?: Array<NotedEntity>;
 }
 
 export const NoteTimelineItem: React.FC<Props> = ({
   noteContent,
   id,
   createdBy,
-  contactId,
+  noted,
 }) => {
   const [images, setImages] = useState({});
   const [deleteConfirmationModalVisible, setDeleteConfirmationModalVisible] =
@@ -160,7 +163,7 @@ export const NoteTimelineItem: React.FC<Props> = ({
       }
     }, 0);
   };
-
+  console.log('🏷️ ----- no: ', noted);
   return (
     <div
       className={styles.noteWrapper}
@@ -169,7 +172,39 @@ export const NoteTimelineItem: React.FC<Props> = ({
     >
       <div className={styles.noteContainer}>
         <div className={styles.actions}>
-          {contactId ? <ContactAvatar contactId={contactId} /> : <div />}
+          {noted?.map((data, index) => {
+            const isContact = data.__typename === 'Contact';
+            const isOrg = data.__typename === 'Organization';
+
+            if (isContact) {
+              const name = getContactDisplayName(data).split(' ');
+              const surname = name?.length === 2 ? name[1] : name[2];
+
+              return (
+                <Avatar
+                  key={`${data.id}-${index}`}
+                  name={name?.[0]}
+                  surname={surname}
+                  size={30}
+                />
+              );
+            }
+
+            if (isOrg) {
+              return (
+                <Avatar
+                  key={`${data.id}-${index}`}
+                  // @ts-expect-error this is correct, alias was added and ts does not recognize it
+                  name={data.organizationName}
+                  surname={''}
+                  isSquare={data.__typename === 'Organization'}
+                  size={30}
+                />
+              );
+            }
+
+            return <div key={`avatar-error-${data.id}-${index}`} />;
+          })}
 
           {editNote && (
             <IconButton

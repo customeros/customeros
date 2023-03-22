@@ -63,7 +63,7 @@ export const Timeline = ({
               createdBy={data?.createdBy}
               id={data.id}
               source={data?.source}
-              contactId={id}
+              noted={data?.noted}
             />
           </TimelineItem>
         );
@@ -194,7 +194,7 @@ export const Timeline = ({
         )}
 
         {loggedActivities.map((e: any, index) => (
-          <React.Fragment key={e.id}>
+          <React.Fragment key={`${e.__typename}-${e.id}`}>
             {getTimelineItemByType(e.__typename, e, index)}
           </React.Fragment>
         ))}
