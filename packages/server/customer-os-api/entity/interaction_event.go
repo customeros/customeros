@@ -33,6 +33,17 @@ func (InteractionEventEntity) TimelineEventLabel() string {
 	return NodeLabel_InteractionEvent
 }
 
+func (InteractionEventEntity) IsAnalysisDescribe() {
+}
+
+func (InteractionEventEntity) AnalysisDescribeLabel() string {
+	return NodeLabel_InteractionEvent
+}
+
+func (interactionEventEntity InteractionEventEntity) GetDataloaderKey() string {
+	return interactionEventEntity.DataloaderKey
+}
+
 func (InteractionEventEntity) Labels(tenant string) []string {
 	return []string{
 		NodeLabel_InteractionEvent,

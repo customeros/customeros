@@ -9,6 +9,10 @@ import (
 	"time"
 )
 
+type DescriptionNode interface {
+	IsDescriptionNode()
+}
+
 type ExtensibleEntity interface {
 	IsNode()
 	IsExtensibleEntity()
@@ -47,6 +51,36 @@ type SearchBasicResult interface {
 
 type TimelineEvent interface {
 	IsTimelineEvent()
+}
+
+type Analysis struct {
+	ID            string            `json:"id"`
+	CreatedAt     time.Time         `json:"createdAt"`
+	Content       *string           `json:"content,omitempty"`
+	ContentType   *string           `json:"contentType,omitempty"`
+	AnalysisType  *string           `json:"analysisType,omitempty"`
+	Describes     []DescriptionNode `json:"describes"`
+	Source        DataSource        `json:"source"`
+	SourceOfTruth DataSource        `json:"sourceOfTruth"`
+	AppSource     string            `json:"appSource"`
+}
+
+func (Analysis) IsNode()            {}
+func (this Analysis) GetID() string { return this.ID }
+
+type AnalysisDescriptionInput struct {
+	InteractionEventID   *string `json:"interactionEventId,omitempty"`
+	InteractionSessionID *string `json:"interactionSessionId,omitempty"`
+}
+
+type AnalysisInput struct {
+	Content      *string                     `json:"content,omitempty"`
+	ContentType  *string                     `json:"contentType,omitempty"`
+	Channel      *string                     `json:"channel,omitempty"`
+	ChannelData  *string                     `json:"channelData,omitempty"`
+	AnalysisType *string                     `json:"analysisType,omitempty"`
+	Describes    []*AnalysisDescriptionInput `json:"describes"`
+	AppSource    string                      `json:"appSource"`
 }
 
 // A contact represents an individual in customerOS.
@@ -585,6 +619,8 @@ type InteractionEvent struct {
 	AppSource          string                        `json:"appSource"`
 }
 
+func (InteractionEvent) IsDescriptionNode() {}
+
 func (InteractionEvent) IsNode()            {}
 func (this InteractionEvent) GetID() string { return this.ID }
 
@@ -628,6 +664,8 @@ type InteractionSession struct {
 	AppSource         string              `json:"appSource"`
 	Events            []*InteractionEvent `json:"events"`
 }
+
+func (InteractionSession) IsDescriptionNode() {}
 
 func (InteractionSession) IsNode()            {}
 func (this InteractionSession) GetID() string { return this.ID }

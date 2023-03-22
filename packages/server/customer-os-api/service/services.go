@@ -31,6 +31,7 @@ type Services struct {
 	InteractionSessionService  InteractionSessionService
 	InteractionEventService    InteractionEventService
 	PageViewService            PageViewService
+	AnalysisService            AnalysisService
 }
 
 func InitServices(driver *neo4j.DriverWithContext) *Services {
@@ -63,6 +64,7 @@ func InitServices(driver *neo4j.DriverWithContext) *Services {
 	services.SearchService = NewSearchService(repositories, &services)
 	services.QueryService = NewQueryService(repositories, &services)
 	services.InteractionEventService = NewInteractionEventService(repositories, &services)
+	services.AnalysisService = NewAnalysisService(repositories, &services)
 
 	return &services
 }

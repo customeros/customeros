@@ -37,6 +37,7 @@ type Loaders struct {
 	ContactsForPhoneNumber                     *dataloader.Loader
 	OrganizationsForEmail                      *dataloader.Loader
 	OrganizationsForPhoneNumber                *dataloader.Loader
+	DescribesForAnalysis                       *dataloader.Loader
 }
 
 type tagBatcher struct {
@@ -80,6 +81,10 @@ type contactBatcher struct {
 }
 type organizationBatcher struct {
 	organizationService service.OrganizationService
+}
+
+type analysisBatcher struct {
+	analysisService service.AnalysisService
 }
 
 // NewDataLoader returns the instantiated Loaders struct for use in a request
@@ -126,6 +131,9 @@ func NewDataLoader(services *service.Services) *Loaders {
 	organizationBatcher := &organizationBatcher{
 		organizationService: services.OrganizationService,
 	}
+	analysisBatcher := &analysisBatcher{
+		analysisService: services.AnalysisService,
+	}
 	return &Loaders{
 		TagsForOrganization:                        dataloader.NewBatchedLoader(tagBatcher.getTagsForOrganizations, dataloader.WithClearCacheOnBatch()),
 		TagsForContact:                             dataloader.NewBatchedLoader(tagBatcher.getTagsForContacts, dataloader.WithClearCacheOnBatch()),
@@ -152,6 +160,7 @@ func NewDataLoader(services *service.Services) *Loaders {
 		ContactsForPhoneNumber:                     dataloader.NewBatchedLoader(contactBatcher.getContactsForPhoneNumbers, dataloader.WithClearCacheOnBatch()),
 		OrganizationsForEmail:                      dataloader.NewBatchedLoader(organizationBatcher.getOrganizationsForEmails, dataloader.WithClearCacheOnBatch()),
 		OrganizationsForPhoneNumber:                dataloader.NewBatchedLoader(organizationBatcher.getOrganizationsForPhoneNumbers, dataloader.WithClearCacheOnBatch()),
+		DescribesForAnalysis:                       dataloader.NewBatchedLoader(analysisBatcher.getDescribesForAnalysis, dataloader.WithClearCacheOnBatch()),
 	}
 }
 

@@ -35,6 +35,17 @@ func (InteractionSessionEntity) TimelineEventLabel() string {
 	return NodeLabel_InteractionSession
 }
 
+func (InteractionSessionEntity) IsAnalysisDescribe() {
+}
+
+func (InteractionSessionEntity) AnalysisDescribeLabel() string {
+	return NodeLabel_InteractionSession
+}
+
+func (interactionSession InteractionSessionEntity) GetDataloaderKey() string {
+	return interactionSession.DataloaderKey
+}
+
 func (interactionSession InteractionSessionEntity) Labels(tenant string) []string {
 	return []string{"InteractionSession", "TimelineEvent", "InteractionSession_" + tenant, "TimelineEvent_" + tenant}
 }

@@ -1,107 +1,42 @@
 extend type Query {
-    interactionSession(id: ID!): InteractionSession!
-    interactionSession_BySessionIdentifier(sessionIdentifier: String!): InteractionSession!
-
-    interactionEvent(id: ID!): InteractionEvent!
-    interactionEvent_ByEventIdentifier(eventIdentifier: String!): InteractionEvent!
+    analysis(id: ID!): Analysis!
 }
 
-input InteractionEventParticipantInput  {
-    email: String
-    phoneNumber: String
-    contactID: ID
-    userID: ID
-    type: String
+input AnalysisDescriptionInput {
+    interactionEventId: ID
+    interactionSessionId: ID
 }
 
-input InteractionSessionInput {
-    sessionIdentifier: String
-    name: String!
-    status: String!
-    type: String
-    channel: String
-    channelData: String
-    appSource: String!
-}
 
-input InteractionEventInput {
-    eventIdentifier: String
+input AnalysisInput {
     content: String
     contentType: String
     channel: String
     channelData: String
-    interactionSession: ID
-    sentBy: [InteractionEventParticipantInput!]!
-    sentTo: [InteractionEventParticipantInput!]!
-    repliesTo: ID
+    analysisType: String
+    describes: [AnalysisDescriptionInput!]!
     appSource: String!
 }
 
 extend type Mutation {
-    interactionSession_Create(
-        session: InteractionSessionInput!
-    ): InteractionSession!
+    analysis_Create(
+        analysis: AnalysisInput!
+    ): Analysis!
 
-    interactionEvent_Create(
-        event: InteractionEventInput!
-    ): InteractionEvent!
 }
 
-union InteractionEventParticipant = EmailParticipant | PhoneNumberParticipant | ContactParticipant | UserParticipant
+union DescriptionNode = InteractionSession | InteractionEvent
 
-type InteractionSession implements Node {
-    id: ID!
-    startedAt: Time! @deprecated(reason: "Use createdAt instead")
-    endedAt: Time @deprecated(reason: "Use updatedAt instead")
-    createdAt: Time!
-    updatedAt: Time!
 
-    sessionIdentifier: String
-    name: String!
-    status: String!
-    type: String
-    channel: String
-    channelData: String
-    source: DataSource!
-    sourceOfTruth: DataSource!
-    appSource: String!
-    events: [InteractionEvent!]! @goField(forceResolver: true)
-}
-
-type InteractionEvent implements Node {
+type Analysis implements Node {
     id: ID!
     createdAt: Time!
 
-    eventIdentifier: String
     content: String
     contentType: String
-    channel: String
-    channelData: String
-    interactionSession: InteractionSession @goField(forceResolver: true)
-    sentBy: [InteractionEventParticipant!]! @goField(forceResolver: true)
-    sentTo: [InteractionEventParticipant!]! @goField(forceResolver: true)
-    repliesTo: InteractionEvent @goField(forceResolver: true)
+    analysisType: String
+    describes: [DescriptionNode!]! @goField(forceResolver: true)
     source: DataSource!
     sourceOfTruth: DataSource!
     appSource: String!
-}
-
-type EmailParticipant {
-    emailParticipant: Email!
-    type: String
-}
-
-type PhoneNumberParticipant {
-    phoneNumberParticipant: PhoneNumber!
-    type: String
-}
-
-type ContactParticipant {
-    contactParticipant: Contact!
-    type: String
-}
-
-type UserParticipant {
-    userParticipant: User!
-    type: String
 }

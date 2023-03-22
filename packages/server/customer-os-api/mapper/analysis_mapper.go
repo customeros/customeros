@@ -6,35 +6,31 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 )
 
-func MapEntityToInteractionEvent(entity *entity.InteractionEventEntity) *model.InteractionEvent {
-	return &model.InteractionEvent{
-		ID:              entity.Id,
-		CreatedAt:       *entity.CreatedAt,
-		EventIdentifier: utils.StringPtrNillable(entity.EventIdentifier),
-		Content:         utils.StringPtrNillable(entity.Content),
-		ContentType:     utils.StringPtrNillable(entity.ContentType),
-		Channel:         entity.Channel,
-		ChannelData:     entity.ChannelData,
-		Source:          MapDataSourceToModel(entity.Source),
-		SourceOfTruth:   MapDataSourceToModel(entity.SourceOfTruth),
-		AppSource:       entity.AppSource,
+func MapEntityToAnalysis(entity *entity.AnalysisEntity) *model.Analysis {
+	return &model.Analysis{
+		ID:            entity.Id,
+		CreatedAt:     *entity.CreatedAt,
+		Content:       utils.StringPtrNillable(entity.Content),
+		ContentType:   utils.StringPtrNillable(entity.ContentType),
+		AnalysisType:  utils.StringPtrNillable(entity.AnalysisType),
+		Source:        MapDataSourceToModel(entity.Source),
+		SourceOfTruth: MapDataSourceToModel(entity.SourceOfTruth),
+		AppSource:     entity.AppSource,
 	}
 }
 
-func MapEntitiesToInteractionEvents(entities *entity.InteractionEventEntities) []*model.InteractionEvent {
-	var interactionEvents []*model.InteractionEvent
+func MapEntitiesToAnalysis(entities *entity.AnalysisEntitys) []*model.Analysis {
+	var analyses []*model.Analysis
 	for _, interactionEventEntity := range *entities {
-		interactionEvents = append(interactionEvents, MapEntityToInteractionEvent(&interactionEventEntity))
+		analyses = append(analyses, MapEntityToAnalysis(&interactionEventEntity))
 	}
-	return interactionEvents
+	return analyses
 }
-func MapInteractionEventInputToEntity(input *model.InteractionEventInput) *entity.InteractionEventEntity {
-	return &entity.InteractionEventEntity{
-		EventIdentifier: utils.IfNotNilString(input.EventIdentifier),
-		Content:         utils.IfNotNilString(input.Content),
-		ContentType:     utils.IfNotNilString(input.ContentType),
-		Channel:         input.Channel,
-		ChannelData:     input.ChannelData,
-		AppSource:       input.AppSource,
+func MapAnalysisInputToEntity(input *model.AnalysisInput) *entity.AnalysisEntity {
+	return &entity.AnalysisEntity{
+		AnalysisType: utils.IfNotNilString(input.AnalysisType),
+		Content:      utils.IfNotNilString(input.Content),
+		ContentType:  utils.IfNotNilString(input.ContentType),
+		AppSource:    input.AppSource,
 	}
 }

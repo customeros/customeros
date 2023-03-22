@@ -5,38 +5,37 @@ import (
 	"time"
 )
 
-type InteractionEventEntity struct {
-	Id              string
-	CreatedAt       *time.Time
-	Channel         *string
-	ChannelData     *string
-	EventIdentifier string
-	Content         string
-	ContentType     string
-	Source          DataSource
-	SourceOfTruth   DataSource
-	AppSource       string
+type AnalysisEntity struct {
+	Id        string
+	CreatedAt *time.Time
+
+	Content       string
+	ContentType   string
+	AnalysisType  string
+	Source        DataSource
+	SourceOfTruth DataSource
+	AppSource     string
 
 	DataloaderKey string
 }
 
-func (interactionEventEntity InteractionEventEntity) ToString() string {
-	return fmt.Sprintf("id: %s", interactionEventEntity.Id)
+func (analysisEntity AnalysisEntity) ToString() string {
+	return fmt.Sprintf("id: %s", analysisEntity.Id)
 }
 
-type InteractionEventEntities []InteractionEventEntity
+type AnalysisEntitys []AnalysisEntity
 
-func (InteractionEventEntity) IsTimelineEvent() {
+func (AnalysisEntity) IsTimelineEvent() {
 }
 
-func (InteractionEventEntity) TimelineEventLabel() string {
-	return NodeLabel_InteractionEvent
+func (AnalysisEntity) TimelineEventLabel() string {
+	return NodeLabel_Analysis
 }
 
-func (InteractionEventEntity) Labels(tenant string) []string {
+func (AnalysisEntity) Labels(tenant string) []string {
 	return []string{
-		NodeLabel_InteractionEvent,
-		NodeLabel_InteractionEvent + "_" + tenant,
+		NodeLabel_Analysis,
+		NodeLabel_Analysis + "_" + tenant,
 		NodeLabel_TimelineEvent,
 		NodeLabel_TimelineEvent + "_" + tenant,
 	}
