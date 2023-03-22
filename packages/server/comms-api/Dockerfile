@@ -1,0 +1,20 @@
+# syntax=docker/dockerfile:1
+
+FROM golang:1.19-alpine as builder
+RUN apk add --update make protobuf protobuf-dev bash
+
+WORKDIR /app
+
+COPY comms-api ./comms-api
+
+WORKDIR /app/oasis-api
+RUN make clean install generate
+
+WORKDIR /app/comms-api
+RUN make clean all
+
+FROM alpine:3.14
+COPY --chown=65534:65534 --from=builder /app/comms-api/bin/comms-api .
+USER 65534
+
+ENTRYPOINT [ "./comms-api" ]
