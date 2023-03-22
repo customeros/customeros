@@ -325,5 +325,6 @@ button::-moz-focus-inner {
 .ql-tooltip.ql-editing,
 .ql-snow .ql-tooltip {
   position: absolute;
+  left: 0;
   width: fit-content;
 }
