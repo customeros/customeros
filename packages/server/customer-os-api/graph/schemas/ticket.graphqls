@@ -4,7 +4,7 @@ type Ticket implements Node {
     updatedAt: Time!
 
     subject: String
-    status: String
+    status: String!
     priority: String
     description: String
     tags: [Tag] @goField(forceResolver: true)
