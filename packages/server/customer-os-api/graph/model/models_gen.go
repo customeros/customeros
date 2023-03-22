@@ -990,7 +990,7 @@ type Ticket struct {
 	CreatedAt   time.Time `json:"createdAt"`
 	UpdatedAt   time.Time `json:"updatedAt"`
 	Subject     *string   `json:"subject,omitempty"`
-	Status      *string   `json:"status,omitempty"`
+	Status      string    `json:"status"`
 	Priority    *string   `json:"priority,omitempty"`
 	Description *string   `json:"description,omitempty"`
 	Tags        []*Tag    `json:"tags,omitempty"`

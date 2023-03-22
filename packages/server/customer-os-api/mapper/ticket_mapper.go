@@ -12,7 +12,7 @@ func MapEntityToTicket(entity *entity.TicketEntity) *model.Ticket {
 		CreatedAt:   entity.CreatedAt,
 		UpdatedAt:   entity.UpdatedAt,
 		Subject:     utils.StringPtr(entity.Subject),
-		Status:      utils.StringPtr(entity.Status),
+		Status:      entity.Status,
 		Priority:    utils.StringPtr(entity.Priority),
 		Description: utils.StringPtr(entity.Description),
 	}
