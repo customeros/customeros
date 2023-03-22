@@ -5,7 +5,6 @@
   overflow: hidden;
   position: relative;
   display: grid;
-
 }
 
 .emailData {
@@ -70,24 +69,20 @@
   }
 }
 
-
-
 .folderTab {
   height: 17px;
-   width: 82px;
+  width: 82px;
   position: relative;
   top: -2px;
-  background-color:white;
+  background-color: white;
 
   border-bottom: 1px solid #ccc;
   border-top: 2px solid white;
   left: 85px;
   display: inline-block;
   z-index: 2;
-  color: #A3B4C9;
+  color: #a3b4c9;
   cursor: pointer;
-
-
 
   &:before {
     border-bottom: 1px solid #ccc;
@@ -98,7 +93,7 @@
     width: 30px;
     border-radius: 4px 0px 0px 0px;
     background-color: white;
-    content: "";
+    content: '';
     position: absolute;
     left: -20px;
     top: -2px;
@@ -113,7 +108,7 @@
     border-top: 2px solid white;
     border-radius: 0px 2px 2px 0;
     background-color: white;
-    content: "";
+    content: '';
     position: absolute;
     right: -20px;
     top: -2px;
@@ -128,7 +123,7 @@
     position: absolute;
     right: 50%;
     left: 50%;
-    color: #5E7FD3;
+    color: #5e7fd3;
   }
 }
 
@@ -152,5 +147,4 @@
 }
 .sendTo {
   margin-left: var(--spacing-lg);
-
 }
