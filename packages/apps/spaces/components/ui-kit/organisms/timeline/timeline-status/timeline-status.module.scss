@@ -1,4 +1,4 @@
-@import "styles/mixins";
+@import 'styles/mixins';
 .contentWrapper {
   position: relative;
   height: 100%;
@@ -21,6 +21,9 @@
   @include frosted-glass;
   box-shadow: none;
   border-radius: 0;
-  background: radial-gradient(rgba(255, 255, 255, 0.6) 30%, rgba(255, 255, 255, 0.83));
+  background: radial-gradient(
+    rgba(255, 255, 255, 0.6) 30%,
+    rgba(255, 255, 255, 0.83)
+  );
   margin: var(--spacing-md);
 }
