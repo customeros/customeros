@@ -318,4 +318,6 @@ button::-moz-focus-inner {
 
 .ql-editor {
   min-height: 90px;
+  max-height: 160px;
+  overflow-y: auto !important;
 }
