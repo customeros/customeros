@@ -54,9 +54,9 @@ func (r *timelineEventRepository) GetTimelineEventsForContact(ctx context.Contex
 		" UNION "+
 		// get all timeline events for the contact's emails and phone numbers
 		" WITH c MATCH (c)-[:HAS]->(e),"+
-		" p = (e)-[*1]-(a:TimelineEvent) "+
+		" p = (e)-[*1..2]-(a:TimelineEvent) "+
 		" WHERE ('Email' in labels(e) OR 'PhoneNumber' in labels(e)) "+
-		" AND all(r IN relationships(p) WHERE type(r) in ['SENT_TO','SENT_BY'])"+
+		" AND all(r IN relationships(p) WHERE type(r) in ['SENT_TO','SENT_BY','PART_OF'])"+
 		" AND coalesce(a.startedAt, a.createdAt) < datetime($startingDate) "+
 		" %s "+
 		" return a as timelineEvent "+
@@ -107,9 +107,9 @@ func (r *timelineEventRepository) GetTimelineEventsTotalCountForContact(ctx cont
 		" UNION "+
 		// get all timeline events for the contact's emails and phone numbers
 		" WITH c MATCH (c)-[:HAS]->(e),"+
-		" p = (e)-[*1]-(a:TimelineEvent) "+
+		" p = (e)-[*1..2]-(a:TimelineEvent) "+
 		" WHERE ('Email' in labels(e) OR 'PhoneNumber' in labels(e)) "+
-		" AND all(r IN relationships(p) WHERE type(r) in ['SENT_TO','SENT_BY'])"+
+		" AND all(r IN relationships(p) WHERE type(r) in ['SENT_TO','SENT_BY','PART_OF'])"+
 		" %s "+
 		" return a as timelineEvent "+
 		" } "+
@@ -164,18 +164,18 @@ func (r *timelineEventRepository) GetTimelineEventsForOrganization(ctx context.C
 		" UNION "+
 		// get all timeline events for the organization contacts' emails and phone numbers
 		" WITH o MATCH (o)--(c:Contact)-[:HAS]->(e), "+
-		" p = (e)-[*1]-(a:TimelineEvent) "+
+		" p = (e)-[*1..2]-(a:TimelineEvent) "+
 		" WHERE ('Email' in labels(e) OR 'PhoneNumber' in labels(e)) "+
-		" AND all(r IN relationships(p) WHERE type(r) in ['SENT_TO','SENT_BY'])"+
+		" AND all(r IN relationships(p) WHERE type(r) in ['SENT_TO','SENT_BY','PART_OF'])"+
 		" AND coalesce(a.startedAt, a.createdAt) < datetime($startingDate) "+
 		" %s "+
 		" return a as timelineEvent "+
 		" UNION "+
 		// get all timeline events for the organization emails and phone numbers
 		" WITH o MATCH (o)-[:HAS]->(e), "+
-		" p = (e)-[*1]-(a:TimelineEvent) "+
+		" p = (e)-[*1..2]-(a:TimelineEvent) "+
 		" WHERE ('Email' in labels(e) OR 'PhoneNumber' in labels(e)) "+
-		" AND all(r IN relationships(p) WHERE type(r) in ['SENT_TO','SENT_BY'])"+
+		" AND all(r IN relationships(p) WHERE type(r) in ['SENT_TO','SENT_BY','PART_OF'])"+
 		" AND coalesce(a.startedAt, a.createdAt) < datetime($startingDate) "+
 		" %s "+
 		" return a as timelineEvent "+
@@ -233,17 +233,17 @@ func (r *timelineEventRepository) GetTimelineEventsTotalCountForOrganization(ctx
 		" UNION "+
 		// get all timeline events for the organization contacts' emails and phone numbers
 		" WITH o MATCH (o)--(c:Contact)-[:HAS]->(e), "+
-		" p = (e)-[*1]-(a:TimelineEvent) "+
+		" p = (e)-[*1..2]-(a:TimelineEvent) "+
 		" WHERE ('Email' in labels(e) OR 'PhoneNumber' in labels(e)) "+
-		" AND all(r IN relationships(p) WHERE type(r) in ['SENT_TO','SENT_BY'])"+
+		" AND all(r IN relationships(p) WHERE type(r) in ['SENT_TO','SENT_BY','PART_OF'])"+
 		" %s "+
 		" return a as timelineEvent "+
 		" UNION "+
 		// get all timeline events for the organization emails and phone numbers
 		" WITH o MATCH (o)-[:HAS]->(e), "+
-		" p = (e)-[*1]-(a:TimelineEvent) "+
+		" p = (e)-[*1..2]-(a:TimelineEvent) "+
 		" WHERE ('Email' in labels(e) OR 'PhoneNumber' in labels(e)) "+
-		" AND all(r IN relationships(p) WHERE type(r) in ['SENT_TO','SENT_BY'])"+
+		" AND all(r IN relationships(p) WHERE type(r) in ['SENT_TO','SENT_BY','PART_OF'])"+
 		" %s "+
 		" return a as timelineEvent "+
 		" } "+
