@@ -1,6 +1,6 @@
 import React, { ChangeEvent, useRef } from 'react';
 import Image from 'next/image';
-import { Button } from '../../atoms';
+import { Blockquote, Button } from '../../atoms';
 
 interface Props {
   onFileChange: (e: ChangeEvent<HTMLInputElement>) => void;
@@ -33,7 +33,9 @@ export const RichTextHeader = ({
 
         <button className='ql-link' aria-label='Link'></button>
         <button className='ql-code-block' aria-label='Code block'></button>
-        <button className='ql-blockquote' aria-label='Blockquote'></button>
+        <button aria-label='Blockquote'>
+          <Blockquote />
+        </button>
 
         <button
           id='custom-button'
