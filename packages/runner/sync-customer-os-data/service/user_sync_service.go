@@ -51,7 +51,7 @@ func (s *userSyncService) SyncUsers(ctx context.Context, dataService common.Sour
 			}
 			v.Id = userId
 
-			if failedSync == false {
+			if !failedSync {
 				err = s.repositories.UserRepository.MergeUser(ctx, tenant, syncDate, v)
 				if err != nil {
 					failedSync = true

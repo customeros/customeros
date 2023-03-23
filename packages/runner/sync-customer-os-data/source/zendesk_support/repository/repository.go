@@ -91,8 +91,8 @@ func MarkOrganizationProcessed(db *gorm.DB, organization entity.Organization, sy
 		}).Error
 }
 
-func GetContacts(db *gorm.DB, limit int, runId string) (entity.Contacts, error) {
-	var contacts entity.Contacts
+func GetUsersAsOrganizations(db *gorm.DB, limit int, runId string) (entity.UsersAsOrganizations, error) {
+	var usersAsOrganizations entity.UsersAsOrganizations
 
 	cte := `
 		WITH UpToDateData AS (
@@ -100,7 +100,7 @@ func GetContacts(db *gorm.DB, limit int, runId string) (entity.Contacts, error) 
    		FROM users
 		)`
 	err := db.
-		Raw(cte+" SELECT u.* FROM UpToDateData u left join openline_sync_status_contacts s "+
+		Raw(cte+" SELECT u.* FROM UpToDateData u left join openline_sync_status_users_as_organizations s "+
 			" on u.id = s.id and u._airbyte_ab_id = s._airbyte_ab_id and u._airbyte_users_hashid = s._airbyte_users_hashid "+
 			" WHERE u.row_num = ? "+
 			" and (u.role = ?) "+
@@ -108,28 +108,28 @@ func GetContacts(db *gorm.DB, limit int, runId string) (entity.Contacts, error) 
 			" and (s.synced_to_customer_os_attempt is null or s.synced_to_customer_os_attempt < ?) "+
 			" and (s.run_id is null or s.run_id <> ?) "+
 			" limit ?", 1, "end-user", false, 10, runId, limit).
-		Find(&contacts).Error
+		Find(&usersAsOrganizations).Error
 
 	if err != nil {
 		return nil, err
 	}
-	return contacts, nil
+	return usersAsOrganizations, nil
 }
 
-func MarkContactProcessed(db *gorm.DB, contact entity.Contact, synced bool, runId string) error {
-	syncStatusContact := entity.SyncStatusContact{
-		Id:                    contact.Id,
-		AirbyteAbId:           contact.AirbyteAbId,
-		AirbyteContactsHashid: contact.AirbyteUsersHashid,
+func MarkUserAsOrganizationProcessed(db *gorm.DB, userAsOrganization entity.UserAsOrganization, synced bool, runId string) error {
+	syncStatusUserAsOrganization := entity.SyncStatusUserAsOrganization{
+		Id:                 userAsOrganization.Id,
+		AirbyteAbId:        userAsOrganization.AirbyteAbId,
+		AirbyteUsersHashid: userAsOrganization.AirbyteUsersHashid,
 	}
-	db.FirstOrCreate(&syncStatusContact, syncStatusContact)
+	db.FirstOrCreate(&syncStatusUserAsOrganization, syncStatusUserAsOrganization)
 
-	return db.Model(&syncStatusContact).
-		Where(&entity.SyncStatusContact{Id: contact.Id, AirbyteAbId: contact.AirbyteAbId, AirbyteContactsHashid: contact.AirbyteUsersHashid}).
-		Updates(entity.SyncStatusContact{
+	return db.Model(&syncStatusUserAsOrganization).
+		Where(&entity.SyncStatusUserAsOrganization{Id: userAsOrganization.Id, AirbyteAbId: userAsOrganization.AirbyteAbId, AirbyteUsersHashid: userAsOrganization.AirbyteUsersHashid}).
+		Updates(entity.SyncStatusUserAsOrganization{
 			SyncedToCustomerOs: synced,
 			SyncedAt:           time.Now(),
-			SyncAttempt:        syncStatusContact.SyncAttempt + 1,
+			SyncAttempt:        syncStatusUserAsOrganization.SyncAttempt + 1,
 			RunId:              runId,
 		}).Error
 }

@@ -2,20 +2,27 @@ package entity
 
 import "time"
 
+type OrganizationNote struct {
+	FieldSource string
+	Note        string
+}
+
 type OrganizationData struct {
 	Id             string
 	Name           string
 	Description    string
 	Domains        []string
-	NoteContent    string
+	Notes          []OrganizationNote
 	Website        string
 	Industry       string
 	IsPublic       bool
 	PhoneNumber    string
+	Email          string
 	CreatedAt      time.Time
 	UpdatedAt      time.Time
 	ExternalId     string
 	ExternalSystem string
+	ExternalUrl    string
 
 	DefaultLocationName string
 	Country             string
@@ -39,7 +46,7 @@ func (o OrganizationData) HasLocation() bool {
 }
 
 func (o OrganizationData) HasNotes() bool {
-	return len(o.NoteContent) > 0
+	return len(o.Notes) > 0
 }
 
 func (o OrganizationData) HasOrganizationType() bool {
@@ -48,4 +55,10 @@ func (o OrganizationData) HasOrganizationType() bool {
 
 func (o OrganizationData) HasPhoneNumber() bool {
 	return len(o.PhoneNumber) > 0
+}
+
+// FIXME alexb implement emails
+// FIXME alexb implement notes for org like in contacts
+func (o OrganizationData) HasEmail() bool {
+	return len(o.Email) > 0
 }

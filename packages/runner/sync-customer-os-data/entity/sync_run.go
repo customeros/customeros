@@ -11,6 +11,8 @@ type SyncRun struct {
 	EndAt                  time.Time `gorm:"default:CURRENT_TIMESTAMP"`
 	TenantSyncSettingsId   uint
 	TenantSyncSettings     TenantSyncSettings
+	TotalCompletedEntities int `gorm:"column:total_synced_entities"`
+	TotalFailedEntities    int `gorm:"column:total_failed_entities"`
 	CompletedContacts      int `gorm:"column:synced_contacts"`
 	FailedContacts         int `gorm:"column:failed_contacts"`
 	CompletedUsers         int `gorm:"column:synced_users"`

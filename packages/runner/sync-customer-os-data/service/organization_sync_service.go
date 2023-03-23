@@ -8,6 +8,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/utils"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/net/context"
+	"strings"
 	"time"
 )
 
@@ -71,9 +72,17 @@ func (s *organizationSyncService) SyncOrganizations(ctx context.Context, dataSer
 			}
 
 			if v.HasPhoneNumber() && !failedSync {
-				if err = s.repositories.OrganizationRepository.MergePrimaryPhoneNumber(ctx, tenant, organizationId, v.PhoneNumber, v.ExternalSystem, v.CreatedAt); err != nil {
+				if err = s.repositories.OrganizationRepository.MergePhoneNumber(ctx, tenant, organizationId, v.PhoneNumber, v.ExternalSystem, v.CreatedAt); err != nil {
 					failedSync = true
-					logrus.Errorf("failed merge primary phone number for organization with external reference %v , tenant %v :%v", v.ExternalId, tenant, err)
+					logrus.Errorf("failed merge phone number for organization with external reference %v , tenant %v :%v", v.ExternalId, tenant, err)
+				}
+			}
+
+			if v.HasEmail() && !failedSync {
+				v.Email = strings.ToLower(v.Email)
+				if err = s.repositories.OrganizationRepository.MergeEmail(ctx, tenant, organizationId, v.Email, v.ExternalSystem, v.CreatedAt); err != nil {
+					failedSync = true
+					logrus.Errorf("failed merge email for organization with external reference %v , tenant %v :%v", v.ExternalId, tenant, err)
 				}
 			}
 
@@ -86,32 +95,34 @@ func (s *organizationSyncService) SyncOrganizations(ctx context.Context, dataSer
 			}
 
 			if v.HasNotes() && !failedSync {
-				note := entity.NoteData{
-					Html:           v.NoteContent,
-					CreatedAt:      v.CreatedAt,
-					ExternalId:     v.ExternalId,
-					ExternalSystem: v.ExternalSystem,
-				}
-				noteId, err := s.repositories.NoteRepository.GetMatchedNoteId(ctx, tenant, note)
-				if err != nil {
-					failedSync = true
-					logrus.Errorf("failed finding existing matched note with external reference id %v for tenant %v :%v", note.ExternalId, tenant, err)
-				}
-				// Create new note id if not found
-				if len(noteId) == 0 {
-					noteUuid, _ := uuid.NewRandom()
-					noteId = noteUuid.String()
-				}
-				note.Id = noteId
-				err = s.repositories.NoteRepository.MergeNote(ctx, tenant, syncDate, note)
-				if err != nil {
-					failedSync = true
-					logrus.Errorf("failed merge organization note for organization %v, tenant %v :%v", organizationId, tenant, err)
-				}
-				err = s.repositories.NoteRepository.NoteLinkWithOrganizationByExternalId(ctx, tenant, noteId, v.ExternalId, v.ExternalSystem)
-				if err != nil {
-					failedSync = true
-					logrus.Errorf("failed link note with organization %v, tenant %v :%v", organizationId, tenant, err)
+				for _, note := range v.Notes {
+					localNote := entity.NoteData{
+						Html:           note.Note,
+						CreatedAt:      v.CreatedAt,
+						ExternalId:     string(note.FieldSource) + "-" + v.ExternalId,
+						ExternalSystem: v.ExternalSystem,
+					}
+					noteId, err := s.repositories.NoteRepository.GetMatchedNoteId(ctx, tenant, localNote)
+					if err != nil {
+						failedSync = true
+						logrus.Errorf("failed finding existing matched note with external reference id %v for tenant %v :%v", localNote.ExternalId, tenant, err)
+					}
+					// Create new note id if not found
+					if len(noteId) == 0 {
+						noteUuid, _ := uuid.NewRandom()
+						noteId = noteUuid.String()
+					}
+					localNote.Id = noteId
+					err = s.repositories.NoteRepository.MergeNote(ctx, tenant, syncDate, localNote)
+					if err != nil {
+						failedSync = true
+						logrus.Errorf("failed merge organization note for organization %v, tenant %v :%v", organizationId, tenant, err)
+					}
+					err = s.repositories.NoteRepository.NoteLinkWithOrganizationByExternalId(ctx, tenant, noteId, v.ExternalId, v.ExternalSystem)
+					if err != nil {
+						failedSync = true
+						logrus.Errorf("failed link note with organization %v, tenant %v :%v", organizationId, tenant, err)
+					}
 				}
 			}
 
