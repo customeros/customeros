@@ -3,19 +3,19 @@ package entity
 import "time"
 
 type NoteData struct {
-	Id                             string
-	Html                           string
-	Text                           string
-	CreatedAt                      time.Time
-	CreatorUserExternalId          string
-	CreatorUserExternalOwnerId     string
-	CreatorUserOrContactExternalId string
-	NotedContactsExternalIds       []string
-	NotedOrganizationsExternalIds  []string
-	MentionedIssuesExternalIds     []string
-	ExternalId                     string
-	ExternalSyncId                 string
-	ExternalSystem                 string
+	Id                            string
+	Html                          string
+	Text                          string
+	CreatedAt                     time.Time
+	CreatorUserExternalId         string
+	CreatorUserExternalOwnerId    string
+	CreatorExternalId             string
+	NotedContactsExternalIds      []string
+	NotedOrganizationsExternalIds []string
+	MentionedTags                 []string
+	ExternalId                    string
+	ExternalSyncId                string
+	ExternalSystem                string
 }
 
 func (n NoteData) HasNotedContacts() bool {
@@ -26,8 +26,8 @@ func (n NoteData) HasNotedOrganizations() bool {
 	return len(n.NotedOrganizationsExternalIds) > 0
 }
 
-func (n NoteData) HasMentionedIssues() bool {
-	return len(n.MentionedIssuesExternalIds) > 0
+func (n NoteData) HasMentionedTags() bool {
+	return len(n.MentionedTags) > 0
 }
 
 func (n NoteData) HasCreatorUser() bool {
@@ -38,6 +38,6 @@ func (n NoteData) HasCreatorUserOwner() bool {
 	return len(n.CreatorUserExternalOwnerId) > 0
 }
 
-func (n NoteData) HasCreatorUserOrContact() bool {
-	return len(n.CreatorUserOrContactExternalId) > 0
+func (n NoteData) HasCreator() bool {
+	return len(n.CreatorExternalId) > 0
 }

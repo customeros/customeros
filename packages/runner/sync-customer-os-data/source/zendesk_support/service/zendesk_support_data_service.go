@@ -202,10 +202,14 @@ func (s *zendeskSupportDataService) GetNotesForSync(batchSize int, runId string)
 			Text:           v.Body,
 		}
 		if v.TicketId > 0 {
-			noteData.MentionedIssuesExternalIds = append(noteData.MentionedIssuesExternalIds, strconv.FormatInt(v.TicketId, 10))
+			ticket, err := repository.GetTicket(s.getDb(), v.TicketId)
+			if err == nil {
+				noteData.MentionedTags = append(noteData.MentionedTags, ticket.Subject+" - "+strconv.FormatInt(v.TicketId, 10))
+				noteData.NotedOrganizationsExternalIds = append(noteData.NotedOrganizationsExternalIds, strconv.FormatInt(ticket.RequesterId, 10))
+			}
 		}
 		if v.AuthorId > 0 {
-			noteData.CreatorUserOrContactExternalId = strconv.FormatInt(v.AuthorId, 10)
+			noteData.CreatorExternalId = strconv.FormatInt(v.AuthorId, 10)
 		}
 
 		notesToReturn = append(notesToReturn, noteData)
