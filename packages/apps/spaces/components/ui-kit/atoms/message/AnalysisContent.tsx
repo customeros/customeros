@@ -40,5 +40,24 @@ export const AnalysisContent: React.FC<AnalysisContentProps> = ({
     );
   }
 
+  if (analysis?.mimetype === 'application/x-openline-transcript') {
+    try {
+      const response = JSON.parse(analysis.body);
+      return (
+        <TranscriptContent
+          messages={response}
+          firstIndex={{
+            send: 0,
+            received: null,
+          }}
+        >
+          {children}
+        </TranscriptContent>
+      );
+    } catch (e) {
+      console.error('Got an error: ' + e + ' when parsing: ' + analysis.body);
+    }
+  }
+
   return null;
 };

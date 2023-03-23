@@ -17,6 +17,9 @@ import { useInfiniteScroll } from './useInfiniteScroll';
 import { Skeleton } from '../../atoms/skeleton';
 import { TimelineStatus } from './timeline-status';
 import classNames from 'classnames';
+import { PhoneConversationTimelineItem } from '../../molecules/conversation-timeline-item/PhoneConversationTimelineItem';
+import { EmailTimelineItemToDeprecate } from '../../molecules/email-timeline-item-to-deprecate';
+import { EmailTimelineItemTemp } from '../../molecules/conversation-timeline-item/EmailTimelineItemTemp';
 
 interface Props {
   loading: boolean;
@@ -87,7 +90,37 @@ export const Timeline = ({
         //   );
         // }
         if (data.channel === 'EMAIL') {
-          return '';
+          return (
+            <EmailTimelineItemTemp
+              first={index == 0}
+              feedId={data.id}
+              source={data.source}
+              createdAt={data?.startedAt}
+              feedInitiator={{
+                firstName: data.initiatorFirstName,
+                lastName: data.initiatorLastName,
+                phoneNumber: data.initiatorUsername.identifier,
+                lastTimestamp: data.lastTimestamp,
+              }}
+            />
+          );
+        }
+        // TODO move to interaction event once we have the data in backend
+        if (data.channel === 'VOICE') {
+          return (
+            <PhoneConversationTimelineItem
+              first={index == 0}
+              feedId={data.id}
+              source={data.source}
+              createdAt={data?.startedAt}
+              feedInitiator={{
+                firstName: data.initiatorFirstName,
+                lastName: data.initiatorLastName,
+                phoneNumber: data.initiatorUsername.identifier,
+                lastTimestamp: data.lastTimestamp,
+              }}
+            />
+          );
         }
         return null;
 
@@ -124,7 +157,7 @@ export const Timeline = ({
           <ConversationTimelineItem
             id={data.id}
             content={decodeContent(data.content)}
-            transcript={decodeContent(transcriptForSummary?.content) ?? []}
+            transcript={decodeContent(transcriptForSummary.content)}
             type={data.analysisType}
             createdAt={data?.createdAt}
             mode='PHONE_CALL' // fixme - mode will be assessed from data inside the component (on message base)
