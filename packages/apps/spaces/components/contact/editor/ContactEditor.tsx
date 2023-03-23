@@ -3,7 +3,7 @@ import { Editor } from '../../ui-kit/molecules';
 import { Controller, useForm } from 'react-hook-form';
 import { useCreateContactNote } from '../../../hooks/useNote';
 import { useRecoilState, useRecoilValue } from 'recoil';
-import { editorMode, editorEmail, EditorMode } from '../../../state';
+import { editorEmail, editorMode, EditorMode } from '../../../state';
 import { EmailFields } from './email-fields';
 import classNames from 'classnames';
 
@@ -11,6 +11,7 @@ export enum NoteEditorModes {
   'ADD' = 'ADD',
   'EDIT' = 'EDIT',
 }
+
 interface Props {
   mode: NoteEditorModes;
   contactId: string;
@@ -34,7 +35,6 @@ export const ContactEditor: FC<Props> = ({
     respondTo,
   } = useRecoilValue(editorEmail);
   const { onCreateContactNote, saving } = useCreateContactNote({ contactId });
-  const isEditMode = mode === NoteEditorModes.EDIT;
 
   const onSubmit = handleSubmit(async (d) => {
     //remove src attribute to not send the file bytes in here
@@ -91,7 +91,7 @@ export const ContactEditor: FC<Props> = ({
                   : undefined
               }
               label={editorModeState.submitButtonLabel}
-              onTextChange={(e) => setValue('htmlEnhanced', e.htmlValue)}
+              onHtmlChanged={(html: string) => setValue('htmlEnhanced', html)}
             />
           </div>
         )}

@@ -7,11 +7,12 @@ export enum NoteEditorModes {
   'ADD' = 'ADD',
   'EDIT' = 'EDIT',
 }
+
 interface Props extends ButtonHTMLAttributes<HTMLButtonElement> {
   value: string;
-  onGetFieldValue: (data: string, imagePreview: string) => string;
+  onGetFieldValue: (data: string) => string;
   mode: NoteEditorModes;
-  onTextChange: (e: any) => void;
+  onHtmlChanged: (html: string) => void;
   onSave: () => void;
   onCancel?: () => void;
   label: string;
@@ -25,7 +26,7 @@ interface Props extends ButtonHTMLAttributes<HTMLButtonElement> {
 
 export const Editor: FC<Props> = ({
   mode,
-  onTextChange,
+  onHtmlChanged,
   onSave,
   label,
   value,
@@ -36,7 +37,7 @@ export const Editor: FC<Props> = ({
 }) => {
   const isEditMode = mode === NoteEditorModes.EDIT;
   const handleAddFileToTextContent = (imagePreview: string) => {
-    onTextChange(onGetFieldValue('htmlEnhanced', imagePreview));
+    onHtmlChanged(onGetFieldValue('htmlEnhanced') + imagePreview);
   };
 
   const { onFileChange } = useFileData({
@@ -62,7 +63,9 @@ export const Editor: FC<Props> = ({
           />
         }
         value={value}
-        onTextChange={onTextChange}
+        onTextChange={(e: any) => {
+          onHtmlChanged(e.htmlValue);
+        }}
       />
     </>
   );

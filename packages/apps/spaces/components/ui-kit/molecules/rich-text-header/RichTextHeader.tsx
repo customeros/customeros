@@ -41,14 +41,14 @@ export const RichTextHeader = ({
           id='custom-button'
           type={'button'}
           aria-label='Insert picture'
+          style={{width:'24px', height:'24px', position: 'relative'}}
           onClick={() => handleUploadClick()}
         >
           <Image
             src='/icons/image.svg'
             alt='Insert image'
             color={'#6c757d'}
-            width={20}
-            height={20}
+            fill={true}
           />
         </button>
       </span>

@@ -116,7 +116,6 @@ export const NoteTimelineItem: React.FC<Props> = ({
               <img
                 src={imageSrc}
                 alt={domNode.attribs.alt}
-                style={{ width: '200px' }}
               />
             );
           }
@@ -127,7 +126,7 @@ export const NoteTimelineItem: React.FC<Props> = ({
 
       setNote({
         id,
-        html: noteContent,
+        html: html,
         htmlEnhanced: html,
       });
     }
@@ -236,7 +235,7 @@ export const NoteTimelineItem: React.FC<Props> = ({
                     value={field.value}
                     onSave={() => null} //not used
                     label='Save'
-                    onTextChange={(e) => setValue('htmlEnhanced', e.htmlValue)}
+                    onHtmlChanged={(newHtml: string) => setValue('htmlEnhanced', newHtml)}
                   />
                 )}
               />
@@ -265,7 +264,11 @@ export const NoteTimelineItem: React.FC<Props> = ({
                 linkifyHtml(note.htmlEnhanced, {
                   defaultProtocol: 'https',
                   rel: 'noopener noreferrer',
-                }),
+                }), {
+                    allowedTags: sanitizeHtml.defaults.allowedTags.concat([ 'img' ]),
+                    allowedAttributes: {'img': ['src', 'alt']},
+                    allowedSchemes: [ 'data', 'http', 'https']
+                  }
               ),
             }}
           />
