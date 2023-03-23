@@ -157,12 +157,12 @@ export const PhoneConversationTimelineItem: React.FC<Props> = ({
 
                 <div
                   className={classNames(styles.right, {
-                    [styles.initiator]: messages[0]?.direction === 1,
+                    [styles.initiator]: messages[0]?.direction !== 0,
                   })}
                 >
                   <div className={styles.callPartyData}>
                     <div className={styles.iconsWrapper}>
-                      {messages[0]?.direction === 1 && (
+                      {messages[0]?.direction !== 0 && (
                         <>
                           <ArrowLeft />
                           <VoiceWave />
