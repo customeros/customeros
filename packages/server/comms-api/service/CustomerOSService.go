@@ -254,6 +254,7 @@ func (s *CustomerOSService) CreateInteractionSession(ctx context.Context, option
 	graphqlRequest.Var("name", params.name)
 	graphqlRequest.Var("status", params.status)
 	graphqlRequest.Var("appSource", params.appSource)
+	graphqlRequest.Var("attendedBy", params.attendedBy)
 
 	err := s.addHeadersToGraphRequest(graphqlRequest, ctx, params.tenant, params.username)
 
@@ -360,6 +361,12 @@ func WithTenant(value string) EventOption {
 	}
 }
 
+func WithUsername(value string) EventOption {
+	return func(options *EventOptions) {
+		options.username = &value
+	}
+}
+
 func WithSessionId(value string) EventOption {
 	return func(options *EventOptions) {
 		options.sessionId = value
@@ -426,6 +433,12 @@ func WithSessionStatus(value string) SessionOption {
 	}
 }
 
+func WithSessionAttendedBy(value []InteractionSessionParticipantInput) SessionOption {
+	return func(options *SessionOptions) {
+		options.attendedBy = value
+	}
+}
+
 func WithSessionAppSource(value string) SessionOption {
 	return func(options *SessionOptions) {
 		options.appSource = value
@@ -434,6 +447,12 @@ func WithSessionAppSource(value string) SessionOption {
 func WithSessionTenant(value string) SessionOption {
 	return func(options *SessionOptions) {
 		options.tenant = &value
+	}
+}
+
+func WithSessionUsername(value string) SessionOption {
+	return func(options *SessionOptions) {
+		options.username = &value
 	}
 }
 
@@ -464,6 +483,12 @@ func WithAnalysisAppSource(value string) AnalysisOption {
 func WithAnalysisTenant(value string) AnalysisOption {
 	return func(options *AnalysisOptions) {
 		options.tenant = &value
+	}
+}
+
+func WithAnalysisUsername(value string) AnalysisOption {
+	return func(options *AnalysisOptions) {
+		options.username = &value
 	}
 }
 

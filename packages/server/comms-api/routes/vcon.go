@@ -2,67 +2,122 @@ package routes
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"github.com/gin-gonic/gin"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
-	ms "github.com/openline-ai/openline-customer-os/packages/server/message-store-api/proto/generated"
-	c "github.com/openline-ai/openline-oasis/packages/server/channels-api/config"
-	"github.com/openline-ai/openline-oasis/packages/server/channels-api/model"
-	"github.com/openline-ai/openline-oasis/packages/server/channels-api/util"
-	o "github.com/openline-ai/openline-oasis/packages/server/oasis-api/proto/generated"
-	"google.golang.org/grpc/metadata"
+	c "github.com/openline-ai/openline-customer-os/packages/server/comms-api/config"
+	"github.com/openline-ai/openline-customer-os/packages/server/comms-api/model"
+	s "github.com/openline-ai/openline-customer-os/packages/server/comms-api/service"
 	"google.golang.org/grpc/status"
 	"log"
 	"net/http"
 )
 
-func encodePartyToParticipantId(party *model.VConParty) *ms.ParticipantId {
-	if party.Mailto != nil {
-		return &ms.ParticipantId{
-			Type:       ms.ParticipantIdType_MAILTO,
-			Identifier: *party.Mailto,
-		}
-	} else if party.Tel != nil {
-		return &ms.ParticipantId{
-			Type:       ms.ParticipantIdType_TEL,
-			Identifier: *party.Tel,
+func vConPartyToEventParticipantInputArr(from []model.VConParty) []s.InteractionEventParticipantInput {
+	var to []s.InteractionEventParticipantInput
+	for _, a := range from {
+		if a.Mailto != nil {
+			participantInput := s.InteractionEventParticipantInput{
+				Email: a.Mailto,
+			}
+			to = append(to, participantInput)
+		} else if a.Tel != nil {
+			participantInput := s.InteractionEventParticipantInput{
+				PhoneNumber: a.Tel,
+			}
+			to = append(to, participantInput)
 		}
 	}
-	return nil
+	return to
 }
 
-func getInitator(req *model.VCon) *ms.ParticipantId {
+func vConPartyToSessionParticipantInputArr(from []model.VConParty) []s.InteractionSessionParticipantInput {
+	var to []s.InteractionSessionParticipantInput
+	for _, a := range from {
+		if a.Mailto != nil {
+			participantInput := s.InteractionSessionParticipantInput{
+				Email: a.Mailto,
+			}
+			to = append(to, participantInput)
+		} else if a.Tel != nil {
+			participantInput := s.InteractionSessionParticipantInput{
+				PhoneNumber: a.Tel,
+			}
+			to = append(to, participantInput)
+		}
+	}
+	return to
+}
+
+func getInitator(req *model.VCon) *model.VConParty {
 	if len(req.Parties) == 0 {
 		return nil
 	}
 
 	if len(req.Analysis) != 0 {
-		return encodePartyToParticipantId(&req.Parties[0])
+		return &req.Parties[0]
 	}
 
 	if len(req.Dialog) == 0 {
 		return nil
 	}
 	if len(req.Dialog[0].Parties) == 0 {
-		return encodePartyToParticipantId(&req.Parties[0])
+		return &req.Parties[0]
 	}
 	if req.Dialog[0].Parties[0] > int64(len(req.Parties)) {
-		return encodePartyToParticipantId(&req.Parties[0])
+		return &req.Parties[0]
 	}
-	return encodePartyToParticipantId(&req.Parties[req.Dialog[0].Parties[0]])
+	return &req.Parties[req.Dialog[0].Parties[0]]
 }
 
-func getDirection(req *model.VCon) ms.MessageDirection {
-	initator := getInitator(req)
-	if initator == nil {
-		return ms.MessageDirection_INBOUND
+func vConGetOrCreateSession(threadId string, name string, user string, attendants []s.InteractionSessionParticipantInput, cosService *s.CustomerOSService) (string, error) {
+	ctx := context.Background()
+	var err error
+	sessionId, err := cosService.GetInteractionSession(ctx, threadId, nil, &user)
+	if err != nil {
+		se, _ := status.FromError(err)
+		log.Printf("failed retriving interaction session: status=%s message=%s", se.Code(), se.Message())
 	}
 
-	if initator.Type == ms.ParticipantIdType_MAILTO {
-		return ms.MessageDirection_OUTBOUND
+	if sessionId == nil {
+		sessionId, err = cosService.CreateInteractionSession(ctx,
+			s.WithSessionIdentifier(threadId),
+			s.WithSessionChannel("VOICE"),
+			s.WithSessionName(name),
+			s.WithSessionAppSource("CHANNELS"),
+			s.WithSessionStatus("ACTIVE"),
+			s.WithSessionUsername(user),
+			s.WithSessionAttendedBy(attendants))
+		if err != nil {
+			se, _ := status.FromError(err)
+			log.Printf("failed creating interaction session: status=%s message=%s", se.Code(), se.Message())
+			return "", err
+		}
+		log.Printf("interaction session created: %s", *sessionId)
 	}
-	return ms.MessageDirection_INBOUND
+
+	return *sessionId, nil
+}
+
+func getDestination(req *model.VCon) *model.VConParty {
+	if len(req.Parties) == 0 {
+		return nil
+	}
+
+	if len(req.Parties) == 1 {
+		return &req.Parties[0]
+	}
+	if len(req.Analysis) != 0 {
+		return &req.Parties[1]
+	}
+
+	if len(req.Dialog) == 0 {
+		return nil
+	}
+	if len(req.Dialog[0].Parties) == 0 {
+		return &req.Parties[1]
+	}
+
+	return &req.Parties[0]
 }
 
 func getUser(req *model.VCon) string {
@@ -75,25 +130,76 @@ func getUser(req *model.VCon) string {
 	return ""
 }
 
+func getContactWithIndex(req *model.VCon) (string, int) {
+	for i, p := range req.Parties {
+		if p.Tel != nil {
+			return *p.Tel, i
+		}
+	}
+	return "", 0
+}
+
 type VConEvent struct {
 	Parties  []model.VConParty   `json:"parties,omitempty"`
 	Dialog   *model.VConDialog   `json:"dialog,omitempty"`
 	Analysis *model.VConAnalysis `json:"analysis,omitempty"`
 }
 
-func makeMessage(req *model.VCon) *VConEvent {
-	res := &VConEvent{}
-	if req.Dialog != nil && len(req.Dialog) > 0 {
-		res.Dialog = &req.Dialog[0]
+func submitAnalysis(sessionId string, req model.VCon, cosService *s.CustomerOSService) ([]string, error) {
+	ctx := context.Background()
+
+	user := getUser(&req)
+
+	var ids []string
+	for _, a := range req.Analysis {
+		response, err := cosService.CreateAnalysis(ctx,
+			s.WithAnalysisUsername(user),
+			s.WithAnalysisType(string(a.Type)),
+			s.WithAnalysisContent(a.Body),
+			s.WithAnalysisContentType(a.MimeType),
+			s.WithAnalysisDescribes(&s.AnalysisDescriptionInput{InteractionSessionId: &sessionId}),
+		)
+		if err != nil {
+			return nil, fmt.Errorf("submitDialog: failed creating interaction event: %v", err)
+		}
+		ids = append(ids, *response)
 	}
-	if req.Analysis != nil && len(req.Analysis) > 0 {
-		res.Analysis = &req.Analysis[0]
-	}
-	res.Parties = req.Parties
-	return res
+	return ids, nil
 }
 
-func AddVconRoutes(conf *c.Config, df util.DialFactory, rg *gin.RouterGroup) {
+func submitDialog(sessionId string, req model.VCon, cosService *s.CustomerOSService) ([]string, error) {
+	initator := getInitator(&req)
+	if initator == nil {
+		return nil, fmt.Errorf("submitDialog: unable to determine initator")
+	}
+	destination := getDestination(&req)
+	if destination == nil {
+		return nil, fmt.Errorf("submitDialog: unable to determine destination")
+	}
+	user := getUser(&req)
+
+	ctx := context.Background()
+
+	var ids []string
+	for _, d := range req.Dialog {
+		response, err := cosService.CreateInteractionEvent(ctx,
+			s.WithUsername(user),
+			s.WithSessionId(sessionId),
+			s.WithChannel("VOICE"),
+			s.WithContent(d.Body),
+			s.WithContentType(d.MimeType),
+			s.WithSentBy(vConPartyToEventParticipantInputArr([]model.VConParty{*initator})),
+			s.WithSentTo(vConPartyToEventParticipantInputArr([]model.VConParty{*destination})),
+		)
+		if err != nil {
+			return nil, fmt.Errorf("submitDialog: failed creating interaction event: %v", err)
+		}
+		ids = append(ids, response.InteractionEventCreate.Id)
+	}
+	return ids, nil
+}
+
+func AddVconRoutes(conf *c.Config, rg *gin.RouterGroup, cosService *s.CustomerOSService) {
 	rg.POST("/vcon", func(c *gin.Context) {
 		var req model.VCon
 		if err := c.BindJSON(&req); err != nil {
@@ -112,67 +218,50 @@ func AddVconRoutes(conf *c.Config, df util.DialFactory, rg *gin.RouterGroup) {
 		if req.Appended != nil {
 			threadId = req.Appended.UUID
 		}
-		participants := make([]*ms.ParticipantId, len(req.Parties))
-		for i, p := range req.Parties {
-			participants[i] = encodePartyToParticipantId(&p)
+
+		contact, index := getContactWithIndex(&req)
+		subject := ""
+		if index == 0 {
+			subject = fmt.Sprintf("Incoming call from %s", contact)
+		} else {
+			subject = fmt.Sprintf("Outgoing call to %s", contact)
 		}
-		initator := getInitator(&req)
-		if initator == nil {
-			c.JSON(http.StatusInternalServerError, gin.H{
-				"result": "malformed vCon document!",
-			})
-			return
-		}
-		contentObject := makeMessage(&req)
-		content, err := json.Marshal(contentObject)
+
+		sessionId, err := vConGetOrCreateSession(threadId, subject, getUser(&req), vConPartyToSessionParticipantInputArr(req.Parties), cosService)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{
-				"result": fmt.Sprintf("unable to marshal json: %v", err.Error()),
+				"result": fmt.Sprintf("Unable to create InteractionSession! reasion: %v", err),
 			})
 			return
 		}
-		contentStr := string(content)
-		message := &ms.InputMessage{
-			Type:                    ms.MessageType_VOICE,
-			Subtype:                 ms.MessageSubtype_MESSAGE,
-			Content:                 &contentStr,
-			Direction:               getDirection(&req),
-			InitiatorIdentifier:     initator,
-			ThreadId:                &threadId,
-			ParticipantsIdentifiers: participants,
-		}
-		//Store the message in message store
-		msConn := util.GetMessageStoreConnection(c, df)
-		defer util.CloseMessageStoreConnection(msConn)
-		msClient := ms.NewMessageStoreServiceClient(msConn)
 
-		ctx := context.Background()
-		ctx = metadata.AppendToOutgoingContext(ctx, service.ApiKeyHeader, conf.Service.MessageStoreApiKey)
-		ctx = metadata.AppendToOutgoingContext(ctx, service.UsernameHeader, getUser(&req))
-
-		savedMessage, err := msClient.SaveMessage(ctx, message)
-		if err != nil {
-			se, _ := status.FromError(err)
-			log.Printf("failed creating message item: status=%s message=%s", se.Code(), se.Message())
-			c.JSON(http.StatusInternalServerError, gin.H{
-				"result": fmt.Sprintf("failed creating message item: status=%s message=%s", se.Code(), se.Message()),
-			})
-			return
+		var ids []string
+		if req.Analysis != nil && len(req.Analysis) > 0 {
+			newIds, err := submitAnalysis(sessionId, req, cosService)
+			if err != nil {
+				c.JSON(http.StatusInternalServerError, gin.H{
+					"result": fmt.Sprintf("Unable to submit analysis! reasion: %v", err),
+				})
+				return
+			}
+			ids = append(ids, newIds...)
 		}
-		log.Printf("message item created with id: %s", savedMessage.GetConversationEventId())
 
-		//Set up a connection to the oasis-api server.
-		oasisConn := GetOasisClient(c, df)
-		defer closeOasisConnection(oasisConn)
-		oasisClient := o.NewOasisApiServiceClient(oasisConn)
-		_, mEventErr := oasisClient.NewMessageEvent(ctx, &o.NewMessage{ConversationId: savedMessage.ConversationId, ConversationItemId: savedMessage.GetConversationEventId()})
-		if mEventErr != nil {
-			se, _ := status.FromError(mEventErr)
-			log.Printf("failed new message event: status=%s message=%s", se.Code(), se.Message())
+		if req.Dialog != nil && len(req.Dialog) > 0 {
+			newIds, err := submitDialog(sessionId, req, cosService)
+			if err != nil {
+				c.JSON(http.StatusInternalServerError, gin.H{
+					"result": fmt.Sprintf("Unable to submit dialog! reasion: %v", err),
+				})
+				return
+			}
+			ids = append(ids, newIds...)
 		}
+
+		log.Printf("message item created with ids: %v", ids)
 
 		c.JSON(http.StatusOK, gin.H{
-			"result": fmt.Sprintf("message item created with id: %s", savedMessage.GetConversationEventId()),
+			"result": fmt.Sprintf("message item created with ids: %v", ids),
 		})
 	})
 }
