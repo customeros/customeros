@@ -1,21 +1,8 @@
 .timeline {
   position: relative;
-  height: 100%;
-
-  &::after {
-    content: ' ';
-    display: block;
-    border-right: var(--border-divider);
-    height: 100%;
-    position: absolute;
-    top: 0;
-    right: 0;
-  }
-}
-
-.timelineContent {
+  //height: 100%;
+  //height: calc(65vh + 4px); // make it immediately scrollable
   max-height: 65vh;
-  min-height: 100%;
   overflow-y: auto;
   overflow-x: hidden;
   padding: 0 var(--spacing-md) 0 0;
@@ -30,4 +17,36 @@
     border-radius: var(--border-radius-md);
     background-color: var(--secondary-color-active);
   }
+
+
+  &::after {
+    content: ' ';
+    display: block;
+    border-right: var(--border-divider);
+    height: 100%;
+    position: absolute;
+    top: 0;
+    right: 0;
+  }
+}
+
+.timelineContent {
+  max-height: 65vh;
+  padding: 0 var(--spacing-md) 0 0;
+
+
+  & * {
+    overflow-anchor: none;
+  }
+
+  &.scrollable {
+    //min-height: 100%;
+    max-height: calc(65vh + 4px); // make it immediately scrollable
+
+  }
+
+}
+#scrollAnchor {
+  overflow-anchor: auto;
+  height: 1px;
 }

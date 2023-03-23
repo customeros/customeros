@@ -16,7 +16,6 @@
   white-space: pre-line;
 }
 
-
 .right {
   margin-left: 50px;
   background: var(--gray-200);
@@ -25,11 +24,6 @@
 .left {
   margin-right: 50px;
 }
-
-
-.transcriptionContainer {
-}
-
 
 .channelIcon {
   height: 23px;
@@ -80,13 +74,9 @@
 
   &.isleft {
     justify-content: flex-start;
+    & .channelIcon {
+      margin-right: var(--spacing-md);
+    }
   }
 
-}
-
-.dialogMessageRight {
-  //margin-right: calc(23px + var(--spacing-md));
-}
-.dialogMessageLeft {
-  //margin-left: 23px;
 }

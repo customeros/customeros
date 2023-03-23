@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Message } from '../../atoms';
+import { MessageDeprecate } from '../../atoms';
 import axios from 'axios';
 // import { FeedItem } from '../../../models/feed-item';
 import { gql } from 'graphql-request';
@@ -102,7 +102,7 @@ export const LiveConversationTimelineItem: React.FC<Props> = ({
     });
   };
   return (
-    <div className='flex flex-column h-full w-full'>
+    <div className='flex flex-column w-full'>
       <div className='flex-grow-1 w-full'>
         <div className='flex flex-column mb-2'>
           <div className='mb-2 flex justify-content-end'>
@@ -164,7 +164,7 @@ export const LiveConversationTimelineItem: React.FC<Props> = ({
 
             return (
               <TimelineItem first={fl} createdAt={time} key={msg.id}>
-                <Message
+                <MessageDeprecate
                   key={msg.id}
                   message={msg}
                   date={time}
