@@ -71,28 +71,6 @@ func addMailRoutes(conf *c.Config, df util.DialFactory, rg *gin.RouterGroup, cos
 			return
 		}
 
-		//  fromAddress := email.From[0].Address
-		//  emailContent := EmailContent{
-		//	MessageId: ensureRfcId(email.MessageID),
-		//	Subject:   email.Subject,
-		//	Html:      firstNotEmpty(email.HTMLBody, email.TextBody),
-		//	From:      fromAddress,
-		//	To:        toStringArr(email.To),
-		//	Cc:        toStringArr(email.Cc),
-		//	Bcc:       toStringArr(email.Bcc),
-		//	InReplyTo: ensureRfcIds(email.InReplyTo),
-		//	Reference: ensureRfcIds(email.References),
-		//}
-		//jsonContent, err := json.Marshal(emailContent)
-		//if err != nil {
-		//	se, _ := status.FromError(err)
-		//	c.JSON(http.StatusInternalServerError, gin.H{
-		//		"result": fmt.Sprintf("failed creating message content: status=%s message=%s", se.Code(), se.Message()),
-		//	})
-		//	return
-		//}
-		//Contact the server and print out its response.
-		//jsonContentString := string(jsonContent)
 		refSize := len(email.References)
 		threadId := ""
 		if refSize > 0 {
@@ -105,8 +83,8 @@ func addMailRoutes(conf *c.Config, df util.DialFactory, rg *gin.RouterGroup, cos
 		if err != nil {
 			se, _ := status.FromError(err)
 			log.Printf("failed retriving interaction session: status=%s message=%s", se.Code(), se.Message())
-			return
 		}
+
 		if sessionId == nil {
 			sessionId, err = cosService.CreateInteractionSession(ctx,
 				s.WithSessionIdentifier(threadId),
@@ -120,7 +98,7 @@ func addMailRoutes(conf *c.Config, df util.DialFactory, rg *gin.RouterGroup, cos
 				log.Printf("failed creating interaction session: status=%s message=%s", se.Code(), se.Message())
 				return
 			}
-			log.Printf("interaction session created: %s", sessionId)
+			log.Printf("interaction session created: %s", *sessionId)
 		}
 
 		participantTypeTO, participantTypeCC := "TO", "CC"
@@ -141,16 +119,6 @@ func addMailRoutes(conf *c.Config, df util.DialFactory, rg *gin.RouterGroup, cos
 		}
 
 		log.Printf("interaction event created with id: %s", (*response).InteractionEventCreate.Id)
-
-		////Set up a connection to the oasis-api server.
-		//oasisConn := GetOasisClient(c, df)
-		//defer closeOasisConnection(oasisConn)
-		//oasisClient := o.NewOasisApiServiceClient(oasisConn)
-		//_, mEventErr := oasisClient.NewMessageEvent(ctx, &o.NewMessage{ConversationId: savedMessage.ConversationId, ConversationItemId: savedMessage.GetConversationEventId()})
-		//if mEventErr != nil {
-		//	se, _ := status.FromError(mEventErr)
-		//	log.Printf("failed new message event: status=%s message=%s", se.Code(), se.Message())
-		//}
 
 		c.JSON(http.StatusOK, gin.H{
 			"result": fmt.Sprintf("interaction event created with id: %s", "aaa"),

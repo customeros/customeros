@@ -14,7 +14,7 @@ type CustomerOSService struct {
 }
 
 type CustomerOSServiceInterface interface {
-	CreateInteractionEvent(ctx context.Context, options ...EventOption) (*string, error)
+	CreateInteractionEvent(ctx context.Context, options ...EventOption) (*InteractionEventCreateResponse, error)
 	CreateInteractionSession(ctx context.Context, options ...SessionOption) (*string, error)
 	GetInteractionSession(ctx context.Context, sessionIdentifier string, tenant string) (*string, error)
 }
@@ -187,19 +187,20 @@ func (s *CustomerOSService) GetInteractionSession(ctx context.Context, sessionId
 		`query GetInteractionSession($sessionIdentifier: String!) {
   					interactionSession_BySessionIdentifier(sessionIdentifier: $sessionIdentifier) {
        					id
-				}`)
+				}
+			}`)
 
-	graphqlRequest.Var("sessionId", sessionIdentifier)
+	graphqlRequest.Var("sessionIdentifier", sessionIdentifier)
 
 	err := s.addHeadersToGraphRequest(graphqlRequest, ctx, tenant)
 
 	if err != nil {
-		return nil, fmt.Errorf("CreateContactWithPhone: %w", err)
+		return nil, fmt.Errorf("GetInteractionSession: %w", err)
 	}
 
 	var graphqlResponse map[string]map[string]string
 	if err := s.graphqlClient.Run(context.Background(), graphqlRequest, &graphqlResponse); err != nil {
-		return nil, fmt.Errorf("CreateInteractionEvent: %w", err)
+		return nil, fmt.Errorf("GetInteractionSession: %w", err)
 	}
 	id := graphqlResponse["interactionSession_BySessionIdentifier"]["id"]
 	return &id, nil
