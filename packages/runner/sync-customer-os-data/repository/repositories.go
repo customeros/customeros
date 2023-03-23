@@ -25,7 +25,7 @@ type Repositories struct {
 	UserRepository             UserRepository
 	NoteRepository             NoteRepository
 	InteractionEventRepository InteractionEventRepository
-	TicketRepository           TicketRepository
+	IssueRepository            IssueRepository
 }
 
 func InitRepos(driver *neo4j.DriverWithContext, controlDb *gorm.DB, airbyteStoreDb *config.AirbyteStoreDB) *Repositories {
@@ -45,7 +45,7 @@ func InitRepos(driver *neo4j.DriverWithContext, controlDb *gorm.DB, airbyteStore
 		UserRepository:               NewUserRepository(driver),
 		NoteRepository:               NewNoteRepository(driver),
 		InteractionEventRepository:   NewInteractionEventRepository(driver),
-		TicketRepository:             NewTicketRepository(driver),
+		IssueRepository:              NewIssueRepository(driver),
 	}
 	return &repositories
 }

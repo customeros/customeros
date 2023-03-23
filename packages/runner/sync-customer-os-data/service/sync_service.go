@@ -73,10 +73,10 @@ func (s *syncService) Sync(ctx context.Context, runId string) {
 		syncRunDtls.CompletedContacts = completedContactCount
 		syncRunDtls.FailedContacts = failedContactCount
 
-		ticketSyncService, err := s.ticketSyncService(v)
-		completedTicketCount, failedTicketCount := ticketSyncService.SyncTickets(ctx, dataService, syncDate, v.Tenant, runId)
-		syncRunDtls.CompletedTickets = completedTicketCount
-		syncRunDtls.FailedTickets = failedTicketCount
+		issueSyncService, err := s.issueSyncService(v)
+		completedIssueCount, failedIssueCount := issueSyncService.SyncIssues(ctx, dataService, syncDate, v.Tenant, runId)
+		syncRunDtls.CompletedIssues = completedIssueCount
+		syncRunDtls.FailedIssues = failedIssueCount
 
 		noteSyncService, err := s.noteSyncService(v)
 		completedNoteCount, failedNoteCount := noteSyncService.SyncNotes(ctx, dataService, syncDate, v.Tenant, runId)
@@ -87,8 +87,8 @@ func (s *syncService) Sync(ctx context.Context, runId string) {
 		syncRunDtls.CompletedEmailMessages = completedEmailMessageCount
 		syncRunDtls.FailedEmailMessages = failedEmailMessageCount
 
-		syncRunDtls.TotalFailedEntities = failedUserCount + failedOrganizationCount + failedContactCount + failedTicketCount + failedNoteCount + failedEmailMessageCount
-		syncRunDtls.TotalCompletedEntities = completedUserCount + completedOrganizationCount + completedContactCount + completedTicketCount + completedNoteCount + completedEmailMessageCount
+		syncRunDtls.TotalFailedEntities = failedUserCount + failedOrganizationCount + failedContactCount + failedIssueCount + failedNoteCount + failedEmailMessageCount
+		syncRunDtls.TotalCompletedEntities = completedUserCount + completedOrganizationCount + completedContactCount + completedIssueCount + completedNoteCount + completedEmailMessageCount
 		syncRunDtls.EndAt = time.Now().UTC()
 
 		s.repositories.SyncRunRepository.Save(syncRunDtls)
@@ -327,26 +327,26 @@ func (s *syncService) contactSyncService(tenantToSync entity.TenantSyncSettings)
 	return contactSyncService, nil
 }
 
-func (s *syncService) ticketSyncService(tenantToSync entity.TenantSyncSettings) (TicketSyncService, error) {
-	ticketSyncServiceMap := map[string]func() TicketSyncService{
-		string(entity.AirbyteSourceHubspot): func() TicketSyncService {
-			return s.services.TicketSyncService
+func (s *syncService) issueSyncService(tenantToSync entity.TenantSyncSettings) (IssueSyncService, error) {
+	issueSyncServiceMap := map[string]func() IssueSyncService{
+		string(entity.AirbyteSourceHubspot): func() IssueSyncService {
+			return s.services.IssueSyncService
 		},
-		string(entity.AirbyteSourceZendeskSupport): func() TicketSyncService {
-			return s.services.TicketSyncService
+		string(entity.AirbyteSourceZendeskSupport): func() IssueSyncService {
+			return s.services.IssueSyncService
 		},
 	}
 
 	// Look up the corresponding implementation in the map using the tenantToSync.Source value.
-	createTicketSyncService, ok := ticketSyncServiceMap[tenantToSync.Source]
+	createIssueSyncService, ok := issueSyncServiceMap[tenantToSync.Source]
 	if !ok {
 		// Return an error if the tenantToSync.Source value is not recognized.
 		return nil, fmt.Errorf("unknown airbyte source %v, skipping sync for tenant %v", tenantToSync.Source, tenantToSync.Tenant)
 	}
 
-	ticketSyncService := createTicketSyncService()
+	issueSyncService := createIssueSyncService()
 
-	return ticketSyncService, nil
+	return issueSyncService, nil
 }
 
 func (s *syncService) noteSyncService(tenantToSync entity.TenantSyncSettings) (NoteSyncService, error) {

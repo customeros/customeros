@@ -2,7 +2,7 @@ package entity
 
 import "time"
 
-type TicketData struct {
+type IssueData struct {
 	Id        string
 	CreatedAt time.Time
 	UpdatedAt time.Time
@@ -12,38 +12,33 @@ type TicketData struct {
 	ExternalSyncId string
 	ExternalUrl    string
 
-	Subject                     string
-	Status                      string
-	Priority                    string
-	Description                 string
-	Tags                        []string
-	CollaboratorUserExternalIds []string
-	FollowerUserExternalIds     []string
-	SubmitterExternalId         string
-	RequesterExternalId         string
-	AssigneeUserExternalId      string
+	Subject                        string
+	Status                         string
+	Priority                       string
+	Description                    string
+	Tags                           []string
+	CollaboratorUserExternalIds    []string
+	FollowerUserExternalIds        []string
+	ReporterOrganizationExternalId string
+	AssigneeUserExternalId         string
 }
 
-func (t TicketData) HasCollaborators() bool {
+func (t IssueData) HasCollaboratorUsers() bool {
 	return len(t.CollaboratorUserExternalIds) > 0
 }
 
-func (t TicketData) HasSubmitter() bool {
-	return len(t.SubmitterExternalId) > 0
+func (t IssueData) HasReporterOrganization() bool {
+	return len(t.ReporterOrganizationExternalId) > 0
 }
 
-func (t TicketData) HasRequester() bool {
-	return len(t.RequesterExternalId) > 0
-}
-
-func (t TicketData) HasFollowers() bool {
+func (t IssueData) HasFollowerUsers() bool {
 	return len(t.FollowerUserExternalIds) > 0
 }
 
-func (t TicketData) HasAssignee() bool {
+func (t IssueData) HasAssignee() bool {
 	return len(t.AssigneeUserExternalId) > 0
 }
 
-func (t TicketData) HasTags() bool {
+func (t IssueData) HasTags() bool {
 	return len(t.Tags) > 0
 }

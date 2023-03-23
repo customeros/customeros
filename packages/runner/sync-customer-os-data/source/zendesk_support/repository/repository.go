@@ -145,11 +145,12 @@ func GetTickets(db *gorm.DB, limit int, runId string) (entity.Tickets, error) {
 	err := db.
 		Raw(cte+" SELECT u.* FROM UpToDateData u left join openline_sync_status_tickets s "+
 			" on u.id = s.id and u._airbyte_ab_id = s._airbyte_ab_id and u._airbyte_tickets_hashid = s._airbyte_tickets_hashid "+
+			" inner join users u2 on u2.id = u.requester_id and u2.role = ? "+
 			" WHERE u.row_num = ? "+
 			" and (s.synced_to_customer_os is null or s.synced_to_customer_os = ?) "+
 			" and (s.synced_to_customer_os_attempt is null or s.synced_to_customer_os_attempt < ?) "+
 			" and (s.run_id is null or s.run_id <> ?) "+
-			" limit ?", 1, false, 10, runId, limit).
+			" limit ?", "end-user", 1, false, 10, runId, limit).
 		Find(&tickets).Error
 
 	if err != nil {
