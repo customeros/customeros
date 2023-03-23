@@ -14,13 +14,11 @@ interface Content {
 interface AnalysisContentProps {
   analysis: Content;
   children?: ReactNode;
-  showIcon?: boolean;
 }
 
 export const AnalysisContent: React.FC<AnalysisContentProps> = ({
   analysis,
   children,
-  showIcon,
 }) => {
   if (analysis?.mimetype === 'text/plain') {
     return <>{analysis.body}</>;

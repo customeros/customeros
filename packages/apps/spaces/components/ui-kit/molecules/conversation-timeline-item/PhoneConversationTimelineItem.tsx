@@ -41,9 +41,9 @@ export const PhoneConversationTimelineItem: React.FC<Props> = ({
         setMessages(data ?? []);
         setLoadingMessages(false);
         (data ?? []).forEach((e) => {
-          const z = decodeContent(e.content);
-          if (z?.analysis?.type === 'summary') {
-            setSummary(z);
+          const decodedContent = decodeContent(e.content);
+          if (decodedContent?.analysis?.type === 'summary') {
+            setSummary(decodedContent);
           }
         });
       })
@@ -157,12 +157,12 @@ export const PhoneConversationTimelineItem: React.FC<Props> = ({
 
                 <div
                   className={classNames(styles.right, {
-                    [styles.initiator]: messages[0]?.direction === 1,
+                    [styles.initiator]: messages[0]?.direction !== 0,
                   })}
                 >
                   <div className={styles.callPartyData}>
                     <div className={styles.iconsWrapper}>
-                      {messages[0]?.direction === 1 && (
+                      {messages[0]?.direction !== 0 && (
                         <>
                           <ArrowLeft />
                           <VoiceWave />
