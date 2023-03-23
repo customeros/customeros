@@ -12,7 +12,7 @@ type NoteData struct {
 	CreatorUserOrContactExternalId string
 	NotedContactsExternalIds       []string
 	NotedOrganizationsExternalIds  []string
-	NotedTicketsExternalIds        []string
+	MentionedIssuesExternalIds     []string
 	ExternalId                     string
 	ExternalSyncId                 string
 	ExternalSystem                 string
@@ -26,8 +26,8 @@ func (n NoteData) HasNotedOrganizations() bool {
 	return len(n.NotedOrganizationsExternalIds) > 0
 }
 
-func (n NoteData) HasNotedTickets() bool {
-	return len(n.NotedTicketsExternalIds) > 0
+func (n NoteData) HasMentionedIssues() bool {
+	return len(n.MentionedIssuesExternalIds) > 0
 }
 
 func (n NoteData) HasCreatorUser() bool {

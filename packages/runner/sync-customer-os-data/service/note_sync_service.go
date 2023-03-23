@@ -24,6 +24,7 @@ func NewNoteSyncService(repositories *repository.Repositories) NoteSyncService {
 }
 
 func (s *noteSyncService) SyncNotes(ctx context.Context, dataService common.SourceDataService, syncDate time.Time, tenant, runId string) (int, int) {
+	return 0, 0
 	completed, failed := 0, 0
 	for {
 		notes := dataService.GetNotesForSync(batchSize, runId)
@@ -77,9 +78,9 @@ func (s *noteSyncService) SyncNotes(ctx context.Context, dataService common.Sour
 				}
 			}
 
-			if note.HasNotedTickets() && !failedSync {
-				for _, ticketExternalId := range note.NotedTicketsExternalIds {
-					err = s.repositories.NoteRepository.NoteLinkWithTicketByExternalId(ctx, tenant, noteId, ticketExternalId, dataService.SourceId())
+			if note.HasMentionedIssues() && !failedSync {
+				for _, issueExternalId := range note.MentionedIssuesExternalIds {
+					err = s.repositories.NoteRepository.NoteLinkWithTicketByExternalId(ctx, tenant, noteId, issueExternalId, dataService.SourceId())
 					if err != nil {
 						failedSync = true
 						logrus.Errorf("failed link note %v with contact for tenant %v :%v", noteId, tenant, err)

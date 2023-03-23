@@ -280,7 +280,7 @@ func emailsStringToArray(str string) []string {
 	return strings.Split(str, ";")
 }
 
-func (s *hubspotDataService) GetTicketsForSync(batchSize int, runId string) []entity.TicketData {
+func (s *hubspotDataService) GetIssuesForSync(batchSize int, runId string) []entity.IssueData {
 	// no need to implement
 	return nil
 }
@@ -333,7 +333,7 @@ func (s *hubspotDataService) MarkNoteProcessed(externalSyncId, runId string, syn
 	return nil
 }
 
-func (s *hubspotDataService) MarkTicketProcessed(externalSyncId, runId string, synced bool) error {
+func (s *hubspotDataService) MarkIssueProcessed(externalSyncId, runId string, synced bool) error {
 	// no need to implement
 	return nil
 }

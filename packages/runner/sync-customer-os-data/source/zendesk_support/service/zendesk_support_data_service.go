@@ -202,7 +202,7 @@ func (s *zendeskSupportDataService) GetNotesForSync(batchSize int, runId string)
 			Text:           v.Body,
 		}
 		if v.TicketId > 0 {
-			noteData.NotedTicketsExternalIds = append(noteData.NotedTicketsExternalIds, strconv.FormatInt(v.TicketId, 10))
+			noteData.MentionedIssuesExternalIds = append(noteData.MentionedIssuesExternalIds, strconv.FormatInt(v.TicketId, 10))
 		}
 		if v.AuthorId > 0 {
 			noteData.CreatorUserOrContactExternalId = strconv.FormatInt(v.AuthorId, 10)
@@ -215,7 +215,6 @@ func (s *zendeskSupportDataService) GetNotesForSync(batchSize int, runId string)
 }
 
 func (s *zendeskSupportDataService) GetEmailMessagesForSync(batchSize int, runId string) []entity.EmailMessageData {
-	//TODO implement me
 	return nil
 }
 
@@ -270,17 +269,17 @@ func (s *zendeskSupportDataService) MarkEmailMessageProcessed(externalSyncId, ru
 	return nil
 }
 
-func (s *zendeskSupportDataService) GetTicketsForSync(batchSize int, runId string) []entity.TicketData {
+func (s *zendeskSupportDataService) GetIssuesForSync(batchSize int, runId string) []entity.IssueData {
 	zendeskTickets, err := repository.GetTickets(s.getDb(), batchSize, runId)
 	if err != nil {
 		logrus.Error(err)
 		return nil
 	}
 
-	ticketsToReturn := make([]entity.TicketData, 0, len(zendeskTickets))
+	ticketsToReturn := make([]entity.IssueData, 0, len(zendeskTickets))
 
 	for _, v := range zendeskTickets {
-		ticketData := entity.TicketData{
+		ticketData := entity.IssueData{
 			ExternalId:     strconv.FormatInt(v.Id, 10),
 			ExternalSyncId: strconv.FormatInt(v.Id, 10),
 			ExternalSystem: s.SourceId(),
@@ -294,11 +293,8 @@ func (s *zendeskSupportDataService) GetTicketsForSync(batchSize int, runId strin
 		}
 		ticketData.CollaboratorUserExternalIds = utils.GetUniqueElements(utils.ConvertJsonbToStringSlice(v.CollaboratorIds))
 		ticketData.FollowerUserExternalIds = utils.GetUniqueElements(utils.ConvertJsonbToStringSlice(v.FollowerIds))
-		if v.SubmitterId > 0 {
-			ticketData.SubmitterExternalId = strconv.FormatInt(v.SubmitterId, 10)
-		}
 		if v.RequesterId > 0 {
-			ticketData.RequesterExternalId = strconv.FormatInt(v.RequesterId, 10)
+			ticketData.ReporterOrganizationExternalId = strconv.FormatInt(v.RequesterId, 10)
 		}
 		if v.AssigneeId > 0 {
 			ticketData.AssigneeUserExternalId = strconv.FormatInt(v.AssigneeId, 10)
@@ -314,7 +310,7 @@ func (s *zendeskSupportDataService) GetTicketsForSync(batchSize int, runId strin
 	return ticketsToReturn
 }
 
-func (s *zendeskSupportDataService) MarkTicketProcessed(externalSyncId, runId string, synced bool) error {
+func (s *zendeskSupportDataService) MarkIssueProcessed(externalSyncId, runId string, synced bool) error {
 	ticket, ok := s.tickets[externalSyncId]
 	if ok {
 		err := repository.MarkTicketProcessed(s.getDb(), ticket, synced, runId)
