@@ -82,7 +82,7 @@ func (s *CustomerOSService) addHeadersToGraphRequest(req *graphql.Request, ctx c
 		req.Header.Add("X-Openline-USERNAME", *user)
 	}
 	if tenant != nil {
-		req.Header.Add("X-Openline-TENANT", tenant)
+		req.Header.Add("X-Openline-TENANT", *tenant)
 	}
 
 	return nil
