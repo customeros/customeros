@@ -42,6 +42,10 @@ type InteractionEventParticipant struct {
 	FirstName      string `json:"firstName,omitempty"`
 	RawPhoneNumber string `json:"rawPhoneNumber,omitempty"`
 }
+type AnalysisDescriptionInput struct {
+	InteractionEventId   *string `json:"interactionEventId,omitempty"`
+	InteractionSessionId *string `json:"interactionSessionId,omitempty"`
+}
 
 type InteractionEventCreateResponse struct {
 	InteractionEventCreate struct {
@@ -266,6 +270,52 @@ func (s *CustomerOSService) CreateInteractionSession(ctx context.Context, option
 
 }
 
+func (s *CustomerOSService) CreateAnalysis(ctx context.Context, options ...AnalysisOption) (*string, error) {
+	graphqlRequest := graphql.NewRequest(
+		`mutation CreateAnalysis($content: String, $contentType: String, $analysisType: String, $appSource: String!, $describes: [AnalysisDescriptionInput!]) {
+				analysis_Create(
+					analysis: {
+						content: $content
+						contentType: $contentType
+						analysisType: $analysisType
+						describes: $describes
+						appSource: $appSource
+					}
+				  ) {
+					  id
+				}
+			}
+	`)
+
+	params := AnalysisOptions{}
+	for _, opt := range options {
+		opt(&params)
+	}
+
+	graphqlRequest.Var("content", params.content)
+	graphqlRequest.Var("contentType", params.contentType)
+	graphqlRequest.Var("analysisType", params.analysisType)
+	graphqlRequest.Var("appSource", params.appSource)
+
+	if params.describes != nil {
+		graphqlRequest.Var("describes", params.describes)
+	}
+
+	err := s.addHeadersToGraphRequest(graphqlRequest, ctx, params.tenant)
+
+	if err != nil {
+		return nil, fmt.Errorf("CreateAnalysis: %w", err)
+	}
+
+	var graphqlResponse map[string]map[string]string
+	if err := s.graphqlClient.Run(context.Background(), graphqlRequest, &graphqlResponse); err != nil {
+		return nil, fmt.Errorf("CreateAnalysis: %w", err)
+	}
+	id := graphqlResponse["analysis_Create"]["id"]
+	return &id, nil
+
+}
+
 type EventOptions struct {
 	tenant      string
 	sessionId   string
@@ -288,8 +338,18 @@ type SessionOptions struct {
 	attendedBy        []InteractionSessionParticipantInput
 }
 
+type AnalysisOptions struct {
+	analysisType string
+	content      string
+	contentType  string
+	appSource    string
+	tenant       string
+	describes    *AnalysisDescriptionInput
+}
+
 type EventOption func(*EventOptions)
 type SessionOption func(*SessionOptions)
+type AnalysisOption func(options *AnalysisOptions)
 
 func WithTenant(value string) EventOption {
 	return func(options *EventOptions) {
@@ -374,9 +434,39 @@ func WithSessionTenant(value string) SessionOption {
 	}
 }
 
-func WithAttendedBy(value []InteractionSessionParticipantInput) SessionOption {
-	return func(options *SessionOptions) {
-		options.attendedBy = value
+func WithAnalysisType(value string) AnalysisOption {
+	return func(options *AnalysisOptions) {
+		options.analysisType = value
+	}
+}
+
+func WithAnalysisContent(value string) AnalysisOption {
+	return func(options *AnalysisOptions) {
+		options.content = value
+	}
+}
+
+func WithAnalysisContentType(value string) AnalysisOption {
+	return func(options *AnalysisOptions) {
+		options.contentType = value
+	}
+}
+
+func WithAnalysisAppSource(value string) AnalysisOption {
+	return func(options *AnalysisOptions) {
+		options.appSource = value
+	}
+}
+
+func WithAnalysisTenant(value string) AnalysisOption {
+	return func(options *AnalysisOptions) {
+		options.tenant = value
+	}
+}
+
+func WithAnalysisDescribes(value *AnalysisDescriptionInput) AnalysisOption {
+	return func(options *AnalysisOptions) {
+		options.describes = value
 	}
 }
 
