@@ -167,10 +167,9 @@ export const LiveConversationTimelineItem: React.FC<Props> = ({
                 <Message
                   key={msg.id}
                   message={msg}
-                  sender={makeSender(msg)}
                   date={time}
-                  previousMessage={messages?.[index - 1]?.direction || null}
                   index={index}
+                  mode='LIVE_CONVERSATION'
                 />
                 <span className='text-sm '>
                   {' '}

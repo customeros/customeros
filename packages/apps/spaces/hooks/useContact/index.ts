@@ -12,4 +12,5 @@ export { useUpdateContactPersonalDetails } from './useUpdateContactPersonalDetai
 export { useMergeContacts } from './useMergeContacts';
 export { useContactNameFromId } from './useContactNameFromId';
 export { useContactNameFromEmail } from './useContactNameFromEmail';
+export { useContactNameFromPhoneNumber } from './useContactNameFromPhoneNumber';
 export type { ContactInput } from './types';

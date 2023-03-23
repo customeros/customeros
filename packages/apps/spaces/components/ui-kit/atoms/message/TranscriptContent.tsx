@@ -1,6 +1,8 @@
 import * as React from 'react';
 import styles from './message.module.scss';
 import linkifyHtml from 'linkify-html';
+import { ReactNode } from 'react';
+import classNames from 'classnames';
 
 interface Content {
   type?: string;
@@ -14,15 +16,16 @@ interface TranscriptElement {
 
 interface TranscriptContentProps {
   response: Array<Content>;
+  children?: ReactNode;
 }
 
 export const TranscriptContent: React.FC<TranscriptContentProps> = ({
   response,
+  children,
 }) => {
-  const reversed = [...response].reverse();
   return (
     <div className={styles.transcriptionContainer}>
-      {reversed?.map(
+      {response?.map(
         // @ts-expect-error fixme
         (transcriptElement: TranscriptElement, index: number) => {
           const textWithLinks = linkifyHtml(transcriptElement.text, {
@@ -30,22 +33,30 @@ export const TranscriptContent: React.FC<TranscriptContentProps> = ({
             rel: 'noopener noreferrer',
           });
           return (
-            <div key={index}>
-              {transcriptElement.party.tel && (
-                <div
-                  className={`${styles.message} ${styles.left} ${styles.test}`}
-                >
-                  {textWithLinks}
-                </div>
-              )}
-              {!transcriptElement.party.tel && (
-                <div
-                  className={`${styles.message} ${styles.right}`}
-                  style={{ background: '#C5EDCE', borderRadius: '5px' }}
-                >
-                  {textWithLinks}
-                </div>
-              )}
+            <div
+              key={index}
+              className={classNames(styles.singleMessage, {
+                [styles.isleft]: transcriptElement.party.tel,
+                [styles.isright]: !transcriptElement.party.tel,
+              })}
+            >
+              <div
+                className={classNames(styles.channelIcon, {
+                  [styles.channelIconShown]: index === 0,
+                })}
+              >
+                {index === 0 && children && children}
+              </div>
+
+              <div
+                className={classNames(styles.message, {
+                  [styles.left]: transcriptElement.party.tel,
+                  [styles.right]: !transcriptElement.party.tel,
+                })}
+                style={{ width: '60%' }}
+              >
+                {textWithLinks}
+              </div>
             </div>
           );
         },

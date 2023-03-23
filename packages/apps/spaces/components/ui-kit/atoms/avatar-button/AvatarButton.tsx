@@ -23,7 +23,6 @@ export const AvatarButton: FC<Props> = ({ image, onClick, ariaLabel }) => {
         <Avatar
           name={ariaLabel.split(' ')?.[0] || ''}
           surname={ariaLabel.split(' ')?.[1] || ''}
-          image={image}
           size={30}
         />
       ) : (

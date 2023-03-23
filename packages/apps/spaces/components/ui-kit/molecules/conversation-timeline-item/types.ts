@@ -54,3 +54,9 @@ export type FeedPostRequest = {
   destination: string[];
   replyTo?: string;
 };
+
+export interface Content {
+  type?: string;
+  mimetype: string;
+  body: string;
+}
