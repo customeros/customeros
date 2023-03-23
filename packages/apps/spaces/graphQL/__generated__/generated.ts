@@ -2143,6 +2143,13 @@ export type GetContactNameByIdQueryVariables = Exact<{
 
 export type GetContactNameByIdQuery = { __typename?: 'Query', contact?: { __typename?: 'Contact', id: string, firstName?: string | null, lastName?: string | null, name?: string | null } | null };
 
+export type GetContactNameByPhoneNumberQueryVariables = Exact<{
+  e164: Scalars['String'];
+}>;
+
+
+export type GetContactNameByPhoneNumberQuery = { __typename?: 'Query', contact_ByPhone: { __typename?: 'Contact', id: string, firstName?: string | null, lastName?: string | null, name?: string | null } };
+
 export type GetContactNotesQueryVariables = Exact<{
   id: Scalars['ID'];
   pagination?: InputMaybe<Pagination>;
@@ -3183,6 +3190,42 @@ export function useGetContactNameByIdLazyQuery(baseOptions?: Apollo.LazyQueryHoo
 export type GetContactNameByIdQueryHookResult = ReturnType<typeof useGetContactNameByIdQuery>;
 export type GetContactNameByIdLazyQueryHookResult = ReturnType<typeof useGetContactNameByIdLazyQuery>;
 export type GetContactNameByIdQueryResult = Apollo.QueryResult<GetContactNameByIdQuery, GetContactNameByIdQueryVariables>;
+export const GetContactNameByPhoneNumberDocument = gql`
+    query GetContactNameByPhoneNumber($e164: String!) {
+  contact_ByPhone(e164: $e164) {
+    id
+    ...ContactNameFragment
+  }
+}
+    ${ContactNameFragmentFragmentDoc}`;
+
+/**
+ * __useGetContactNameByPhoneNumberQuery__
+ *
+ * To run a query within a React component, call `useGetContactNameByPhoneNumberQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetContactNameByPhoneNumberQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetContactNameByPhoneNumberQuery({
+ *   variables: {
+ *      e164: // value for 'e164'
+ *   },
+ * });
+ */
+export function useGetContactNameByPhoneNumberQuery(baseOptions: Apollo.QueryHookOptions<GetContactNameByPhoneNumberQuery, GetContactNameByPhoneNumberQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<GetContactNameByPhoneNumberQuery, GetContactNameByPhoneNumberQueryVariables>(GetContactNameByPhoneNumberDocument, options);
+      }
+export function useGetContactNameByPhoneNumberLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetContactNameByPhoneNumberQuery, GetContactNameByPhoneNumberQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<GetContactNameByPhoneNumberQuery, GetContactNameByPhoneNumberQueryVariables>(GetContactNameByPhoneNumberDocument, options);
+        }
+export type GetContactNameByPhoneNumberQueryHookResult = ReturnType<typeof useGetContactNameByPhoneNumberQuery>;
+export type GetContactNameByPhoneNumberLazyQueryHookResult = ReturnType<typeof useGetContactNameByPhoneNumberLazyQuery>;
+export type GetContactNameByPhoneNumberQueryResult = Apollo.QueryResult<GetContactNameByPhoneNumberQuery, GetContactNameByPhoneNumberQueryVariables>;
 export const GetContactNotesDocument = gql`
     query GetContactNotes($id: ID!, $pagination: Pagination) {
   contact(id: $id) {
