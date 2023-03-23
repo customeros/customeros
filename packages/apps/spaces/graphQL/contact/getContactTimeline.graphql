@@ -58,86 +58,26 @@ query GetContactTimeline($contactId: ID!, $from: Time!, $size: Int!) {
         initiatorType
         threadId
       }
-      ... on InteractionSession {
-        id
-        startedAt
-        name
-        status
-        type
-        events {
-          content
-          contentType
-        }
-      }
-      ... on InteractionEvent {
+      ... on Analysis {
         id
         createdAt
-        channel
-        interactionSession {
-          name
-        }
         content
         contentType
-        sentBy {
+        analysisType
+        describes {
           __typename
-          ... on EmailParticipant {
-            __typename
-            emailParticipant {
-              email
-            }
-          }
-          ... on PhoneNumberParticipant {
-            __typename
-            phoneNumberParticipant {
-              e164
-            }
-          }
-          ... on ContactParticipant {
-            __typename
-            contactParticipant {
-              name
-            }
-          }
-          ... on UserParticipant {
-            __typename
-            userParticipant {
-              firstName
-              lastName
-            }
-          }
+          ...InteractionEventFragment
+          ...InteractionSessionFragment
         }
-        sentTo {
-          __typename
-          ... on EmailParticipant {
-            __typename
-            type
-            emailParticipant {
-              email
-            }
-          }
-          ... on PhoneNumberParticipant {
-            __typename
-            type
-            phoneNumberParticipant {
-              e164
-            }
-          }
-          ... on ContactParticipant {
-            __typename
-            type
-            contactParticipant {
-              name
-            }
-          }
-          ... on UserParticipant {
-            __typename
-            type
-            userParticipant {
-              firstName
-              lastName
-            }
-          }
-        }
+        source
+        sourceOfTruth
+      }
+
+      ... on InteractionSession {
+        ...InteractionSessionFragment
+      }
+      ... on InteractionEvent {
+        ...InteractionEventFragment
       }
       ... on Note {
         id

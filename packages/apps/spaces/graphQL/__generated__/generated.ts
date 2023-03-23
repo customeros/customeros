@@ -18,6 +18,32 @@ export type Scalars = {
   Time: any;
 };
 
+export type Analysis = Node & {
+  __typename?: 'Analysis';
+  analysisType?: Maybe<Scalars['String']>;
+  appSource: Scalars['String'];
+  content?: Maybe<Scalars['String']>;
+  contentType?: Maybe<Scalars['String']>;
+  createdAt: Scalars['Time'];
+  describes: Array<DescriptionNode>;
+  id: Scalars['ID'];
+  source: DataSource;
+  sourceOfTruth: DataSource;
+};
+
+export type AnalysisDescriptionInput = {
+  interactionEventId?: InputMaybe<Scalars['ID']>;
+  interactionSessionId?: InputMaybe<Scalars['ID']>;
+};
+
+export type AnalysisInput = {
+  analysisType?: InputMaybe<Scalars['String']>;
+  appSource: Scalars['String'];
+  content?: InputMaybe<Scalars['String']>;
+  contentType?: InputMaybe<Scalars['String']>;
+  describes: Array<AnalysisDescriptionInput>;
+};
+
 export enum ComparisonOperator {
   Contains = 'CONTAINS',
   Eq = 'EQ'
@@ -528,6 +554,8 @@ export enum DataSource {
   ZendeskSupport = 'ZENDESK_SUPPORT'
 }
 
+export type DescriptionNode = InteractionEvent | InteractionSession;
+
 /**
  * Describes an email address associated with a `Contact` in customerOS.
  * **A `return` object.**
@@ -753,6 +781,7 @@ export type InteractionEventParticipantInput = {
 export type InteractionSession = Node & {
   __typename?: 'InteractionSession';
   appSource: Scalars['String'];
+  attendedBy: Array<InteractionSessionParticipant>;
   channel?: Maybe<Scalars['String']>;
   channelData?: Maybe<Scalars['String']>;
   createdAt: Scalars['Time'];
@@ -773,12 +802,23 @@ export type InteractionSession = Node & {
 
 export type InteractionSessionInput = {
   appSource: Scalars['String'];
+  attendedBy?: InputMaybe<Array<InteractionSessionParticipantInput>>;
   channel?: InputMaybe<Scalars['String']>;
   channelData?: InputMaybe<Scalars['String']>;
   name: Scalars['String'];
   sessionIdentifier?: InputMaybe<Scalars['String']>;
   status: Scalars['String'];
   type?: InputMaybe<Scalars['String']>;
+};
+
+export type InteractionSessionParticipant = ContactParticipant | EmailParticipant | PhoneNumberParticipant | UserParticipant;
+
+export type InteractionSessionParticipantInput = {
+  contactID?: InputMaybe<Scalars['ID']>;
+  email?: InputMaybe<Scalars['String']>;
+  phoneNumber?: InputMaybe<Scalars['String']>;
+  type?: InputMaybe<Scalars['String']>;
+  userID?: InputMaybe<Scalars['ID']>;
 };
 
 /**
@@ -862,6 +902,7 @@ export type Location = {
 
 export type Mutation = {
   __typename?: 'Mutation';
+  analysis_Create: Analysis;
   contactGroupAddContact: Result;
   contactGroupCreate: ContactGroup;
   contactGroupDeleteAndUnlinkAllContacts: Result;
@@ -937,6 +978,11 @@ export type Mutation = {
   tag_Update?: Maybe<Tag>;
   user_Create: User;
   user_Update: User;
+};
+
+
+export type MutationAnalysis_CreateArgs = {
+  analysis: AnalysisInput;
 };
 
 
@@ -1675,6 +1721,7 @@ export type Place = {
 
 export type Query = {
   __typename?: 'Query';
+  analysis: Analysis;
   /** Fetch a single contact from customerOS by contact ID. */
   contact?: Maybe<Contact>;
   /** Fetch a specific contact group associated with a `Contact` in customerOS */
@@ -1710,6 +1757,11 @@ export type Query = {
   user: User;
   user_ByEmail: User;
   users: UserPage;
+};
+
+
+export type QueryAnalysisArgs = {
+  id: Scalars['ID'];
 };
 
 
@@ -1895,9 +1947,10 @@ export type TimeRange = {
   to: Scalars['Time'];
 };
 
-export type TimelineEvent = Conversation | InteractionEvent | InteractionSession | Note | PageView | Ticket;
+export type TimelineEvent = Analysis | Conversation | InteractionEvent | InteractionSession | Note | PageView | Ticket;
 
 export enum TimelineEventType {
+  Analysis = 'ANALYSIS',
   Conversation = 'CONVERSATION',
   InteractionEvent = 'INTERACTION_EVENT',
   InteractionSession = 'INTERACTION_SESSION',
@@ -2186,7 +2239,7 @@ export type GetContactTimelineQueryVariables = Exact<{
 }>;
 
 
-export type GetContactTimelineQuery = { __typename?: 'Query', contact?: { __typename?: 'Contact', id: string, firstName?: string | null, lastName?: string | null, name?: string | null, timelineEvents: Array<{ __typename?: 'Conversation', id: string, startedAt: any, subject?: string | null, channel?: string | null, updatedAt: any, messageCount: any, source: DataSource, appSource?: string | null, initiatorFirstName?: string | null, initiatorLastName?: string | null, initiatorUsername?: string | null, initiatorType?: string | null, threadId?: string | null, contacts?: Array<{ __typename?: 'Contact', id: string, lastName?: string | null, firstName?: string | null }> | null, users?: Array<{ __typename?: 'User', lastName: string, firstName: string, emails?: Array<{ __typename?: 'Email', email?: string | null }> | null }> | null } | { __typename?: 'InteractionEvent', id: string, createdAt: any, channel?: string | null, content?: string | null, contentType?: string | null, interactionSession?: { __typename?: 'InteractionSession', name: string } | null, sentBy: Array<{ __typename: 'ContactParticipant', contactParticipant: { __typename?: 'Contact', name?: string | null } } | { __typename: 'EmailParticipant', emailParticipant: { __typename?: 'Email', email?: string | null } } | { __typename: 'PhoneNumberParticipant', phoneNumberParticipant: { __typename?: 'PhoneNumber', e164?: string | null } } | { __typename: 'UserParticipant', userParticipant: { __typename?: 'User', firstName: string, lastName: string } }>, sentTo: Array<{ __typename: 'ContactParticipant', type?: string | null, contactParticipant: { __typename?: 'Contact', name?: string | null } } | { __typename: 'EmailParticipant', type?: string | null, emailParticipant: { __typename?: 'Email', email?: string | null } } | { __typename: 'PhoneNumberParticipant', type?: string | null, phoneNumberParticipant: { __typename?: 'PhoneNumber', e164?: string | null } } | { __typename: 'UserParticipant', type?: string | null, userParticipant: { __typename?: 'User', firstName: string, lastName: string } }> } | { __typename?: 'InteractionSession', id: string, startedAt: any, name: string, status: string, type?: string | null, events: Array<{ __typename?: 'InteractionEvent', content?: string | null, contentType?: string | null }> } | { __typename?: 'Note', id: string, html: string, createdAt: any, noted: Array<{ __typename: 'Contact', firstName?: string | null, lastName?: string | null, name?: string | null } | { __typename?: 'Organization' }>, createdBy?: { __typename?: 'User', id: string, firstName: string, lastName: string } | null } | { __typename?: 'PageView', id: string, application: string, startedAt: any, endedAt: any, engagedTime: any, pageUrl: string, pageTitle: string, orderInSession: any, sessionId: string } | { __typename?: 'Ticket', id: string, createdAt: any, updatedAt: any, subject?: string | null, status: string, priority?: string | null, description?: string | null, notes?: Array<{ __typename?: 'Note', id: string, html: string } | null> | null, tags?: Array<{ __typename?: 'Tag', id: string, name: string } | null> | null }> } | null };
+export type GetContactTimelineQuery = { __typename?: 'Query', contact?: { __typename?: 'Contact', id: string, firstName?: string | null, lastName?: string | null, name?: string | null, timelineEvents: Array<{ __typename?: 'Analysis', id: string, createdAt: any, content?: string | null, contentType?: string | null, analysisType?: string | null, source: DataSource, sourceOfTruth: DataSource, describes: Array<{ __typename: 'InteractionEvent', id: string, createdAt: any, channel?: string | null, content?: string | null, contentType?: string | null, interactionSession?: { __typename?: 'InteractionSession', name: string } | null, sentBy: Array<{ __typename: 'ContactParticipant', contactParticipant: { __typename?: 'Contact', name?: string | null } } | { __typename: 'EmailParticipant', emailParticipant: { __typename?: 'Email', email?: string | null } } | { __typename: 'PhoneNumberParticipant', phoneNumberParticipant: { __typename?: 'PhoneNumber', e164?: string | null } } | { __typename: 'UserParticipant', userParticipant: { __typename?: 'User', firstName: string, lastName: string } }>, sentTo: Array<{ __typename: 'ContactParticipant', type?: string | null, contactParticipant: { __typename?: 'Contact', name?: string | null } } | { __typename: 'EmailParticipant', type?: string | null, emailParticipant: { __typename?: 'Email', email?: string | null } } | { __typename: 'PhoneNumberParticipant', type?: string | null, phoneNumberParticipant: { __typename?: 'PhoneNumber', e164?: string | null } } | { __typename: 'UserParticipant', type?: string | null, userParticipant: { __typename?: 'User', firstName: string, lastName: string } }> } | { __typename: 'InteractionSession', id: string, startedAt: any, name: string, status: string, type?: string | null, events: Array<{ __typename?: 'InteractionEvent', content?: string | null, contentType?: string | null }> }> } | { __typename?: 'Conversation', id: string, startedAt: any, subject?: string | null, channel?: string | null, updatedAt: any, messageCount: any, source: DataSource, appSource?: string | null, initiatorFirstName?: string | null, initiatorLastName?: string | null, initiatorUsername?: string | null, initiatorType?: string | null, threadId?: string | null, contacts?: Array<{ __typename?: 'Contact', id: string, lastName?: string | null, firstName?: string | null }> | null, users?: Array<{ __typename?: 'User', lastName: string, firstName: string, emails?: Array<{ __typename?: 'Email', email?: string | null }> | null }> | null } | { __typename?: 'InteractionEvent', id: string, createdAt: any, channel?: string | null, content?: string | null, contentType?: string | null, interactionSession?: { __typename?: 'InteractionSession', name: string } | null, sentBy: Array<{ __typename: 'ContactParticipant', contactParticipant: { __typename?: 'Contact', name?: string | null } } | { __typename: 'EmailParticipant', emailParticipant: { __typename?: 'Email', email?: string | null } } | { __typename: 'PhoneNumberParticipant', phoneNumberParticipant: { __typename?: 'PhoneNumber', e164?: string | null } } | { __typename: 'UserParticipant', userParticipant: { __typename?: 'User', firstName: string, lastName: string } }>, sentTo: Array<{ __typename: 'ContactParticipant', type?: string | null, contactParticipant: { __typename?: 'Contact', name?: string | null } } | { __typename: 'EmailParticipant', type?: string | null, emailParticipant: { __typename?: 'Email', email?: string | null } } | { __typename: 'PhoneNumberParticipant', type?: string | null, phoneNumberParticipant: { __typename?: 'PhoneNumber', e164?: string | null } } | { __typename: 'UserParticipant', type?: string | null, userParticipant: { __typename?: 'User', firstName: string, lastName: string } }> } | { __typename?: 'InteractionSession', id: string, startedAt: any, name: string, status: string, type?: string | null, events: Array<{ __typename?: 'InteractionEvent', content?: string | null, contentType?: string | null }> } | { __typename?: 'Note', id: string, html: string, createdAt: any, noted: Array<{ __typename: 'Contact', firstName?: string | null, lastName?: string | null, name?: string | null } | { __typename?: 'Organization' }>, createdBy?: { __typename?: 'User', id: string, firstName: string, lastName: string } | null } | { __typename?: 'PageView', id: string, application: string, startedAt: any, endedAt: any, engagedTime: any, pageUrl: string, pageTitle: string, orderInSession: any, sessionId: string } | { __typename?: 'Ticket', id: string, createdAt: any, updatedAt: any, subject?: string | null, status: string, priority?: string | null, description?: string | null, notes?: Array<{ __typename?: 'Note', id: string, html: string } | null> | null, tags?: Array<{ __typename?: 'Tag', id: string, name: string } | null> | null }> } | null };
 
 export type MergeContactsMutationVariables = Exact<{
   primaryContactId: Scalars['ID'];
@@ -2283,6 +2336,10 @@ export type ConversationFragment = { __typename?: 'Conversation', id: string, st
 
 export type TicketFragment = { __typename?: 'Ticket', id: string, createdAt: any, updatedAt: any, subject?: string | null, status: string, priority?: string | null, description?: string | null, tags?: Array<{ __typename?: 'Tag', id: string, name: string, createdAt: any, source: DataSource } | null> | null, notes?: Array<{ __typename?: 'Note', id: string, html: string, createdAt: any, updatedAt: any, source: DataSource, sourceOfTruth: DataSource, appSource: string, createdBy?: { __typename?: 'User', id: string, firstName: string, lastName: string } | null } | null> | null };
 
+export type InteractionSessionFragmentFragment = { __typename?: 'InteractionSession', id: string, startedAt: any, name: string, status: string, type?: string | null, events: Array<{ __typename?: 'InteractionEvent', content?: string | null, contentType?: string | null }> };
+
+export type InteractionEventFragmentFragment = { __typename?: 'InteractionEvent', id: string, createdAt: any, channel?: string | null, content?: string | null, contentType?: string | null, interactionSession?: { __typename?: 'InteractionSession', name: string } | null, sentBy: Array<{ __typename: 'ContactParticipant', contactParticipant: { __typename?: 'Contact', name?: string | null } } | { __typename: 'EmailParticipant', emailParticipant: { __typename?: 'Email', email?: string | null } } | { __typename: 'PhoneNumberParticipant', phoneNumberParticipant: { __typename?: 'PhoneNumber', e164?: string | null } } | { __typename: 'UserParticipant', userParticipant: { __typename?: 'User', firstName: string, lastName: string } }>, sentTo: Array<{ __typename: 'ContactParticipant', type?: string | null, contactParticipant: { __typename?: 'Contact', name?: string | null } } | { __typename: 'EmailParticipant', type?: string | null, emailParticipant: { __typename?: 'Email', email?: string | null } } | { __typename: 'PhoneNumberParticipant', type?: string | null, phoneNumberParticipant: { __typename?: 'PhoneNumber', e164?: string | null } } | { __typename: 'UserParticipant', type?: string | null, userParticipant: { __typename?: 'User', firstName: string, lastName: string } }> };
+
 export type ContactNameFragmentFragment = { __typename?: 'Contact', firstName?: string | null, lastName?: string | null, name?: string | null };
 
 export type OrganizationBaseDetailsFragment = { __typename?: 'Organization', id: string, name: string, industry?: string | null };
@@ -2346,7 +2403,7 @@ export type GetOrganizationTimelineQueryVariables = Exact<{
 }>;
 
 
-export type GetOrganizationTimelineQuery = { __typename?: 'Query', organization?: { __typename?: 'Organization', id: string, timelineEvents: Array<{ __typename?: 'Conversation', id: string, startedAt: any, subject?: string | null, channel?: string | null, updatedAt: any, messageCount: any, source: DataSource, appSource?: string | null, initiatorFirstName?: string | null, initiatorLastName?: string | null, initiatorUsername?: string | null, initiatorType?: string | null, threadId?: string | null, contacts?: Array<{ __typename?: 'Contact', id: string, lastName?: string | null, firstName?: string | null }> | null, users?: Array<{ __typename?: 'User', lastName: string, firstName: string, emails?: Array<{ __typename?: 'Email', email?: string | null }> | null }> | null } | { __typename?: 'InteractionEvent', id: string, createdAt: any, channel?: string | null, content?: string | null, contentType?: string | null, interactionSession?: { __typename?: 'InteractionSession', name: string } | null, sentBy: Array<{ __typename: 'ContactParticipant', contactParticipant: { __typename?: 'Contact', name?: string | null } } | { __typename: 'EmailParticipant', emailParticipant: { __typename?: 'Email', email?: string | null } } | { __typename: 'PhoneNumberParticipant', phoneNumberParticipant: { __typename?: 'PhoneNumber', e164?: string | null } } | { __typename: 'UserParticipant', userParticipant: { __typename?: 'User', firstName: string, lastName: string } }>, sentTo: Array<{ __typename: 'ContactParticipant', type?: string | null, contactParticipant: { __typename?: 'Contact', name?: string | null } } | { __typename: 'EmailParticipant', type?: string | null, emailParticipant: { __typename?: 'Email', email?: string | null } } | { __typename: 'PhoneNumberParticipant', type?: string | null, phoneNumberParticipant: { __typename?: 'PhoneNumber', e164?: string | null } } | { __typename: 'UserParticipant', type?: string | null, userParticipant: { __typename?: 'User', firstName: string, lastName: string } }> } | { __typename?: 'InteractionSession', id: string, startedAt: any, name: string, status: string, type?: string | null, events: Array<{ __typename?: 'InteractionEvent', content?: string | null, contentType?: string | null }> } | { __typename?: 'Note', id: string, html: string, createdAt: any, noted: Array<{ __typename?: 'Contact', firstName?: string | null, lastName?: string | null, name?: string | null } | { __typename?: 'Organization', id: string, organizationName: string }>, createdBy?: { __typename?: 'User', id: string, firstName: string, lastName: string } | null } | { __typename?: 'PageView', id: string, application: string, startedAt: any, endedAt: any, engagedTime: any, pageUrl: string, pageTitle: string, orderInSession: any, sessionId: string } | { __typename?: 'Ticket', id: string, createdAt: any, updatedAt: any, subject?: string | null, status: string, priority?: string | null, description?: string | null, notes?: Array<{ __typename?: 'Note', id: string, html: string } | null> | null, tags?: Array<{ __typename?: 'Tag', id: string, name: string } | null> | null }> } | null };
+export type GetOrganizationTimelineQuery = { __typename?: 'Query', organization?: { __typename?: 'Organization', id: string, timelineEvents: Array<{ __typename?: 'Analysis', id: string, createdAt: any, content?: string | null, contentType?: string | null, analysisType?: string | null, source: DataSource, sourceOfTruth: DataSource, describes: Array<{ __typename: 'InteractionEvent', id: string, createdAt: any, channel?: string | null, content?: string | null, contentType?: string | null, interactionSession?: { __typename?: 'InteractionSession', name: string } | null, sentBy: Array<{ __typename: 'ContactParticipant', contactParticipant: { __typename?: 'Contact', name?: string | null } } | { __typename: 'EmailParticipant', emailParticipant: { __typename?: 'Email', email?: string | null } } | { __typename: 'PhoneNumberParticipant', phoneNumberParticipant: { __typename?: 'PhoneNumber', e164?: string | null } } | { __typename: 'UserParticipant', userParticipant: { __typename?: 'User', firstName: string, lastName: string } }>, sentTo: Array<{ __typename: 'ContactParticipant', type?: string | null, contactParticipant: { __typename?: 'Contact', name?: string | null } } | { __typename: 'EmailParticipant', type?: string | null, emailParticipant: { __typename?: 'Email', email?: string | null } } | { __typename: 'PhoneNumberParticipant', type?: string | null, phoneNumberParticipant: { __typename?: 'PhoneNumber', e164?: string | null } } | { __typename: 'UserParticipant', type?: string | null, userParticipant: { __typename?: 'User', firstName: string, lastName: string } }> } | { __typename: 'InteractionSession', id: string, startedAt: any, name: string, status: string, type?: string | null, events: Array<{ __typename?: 'InteractionEvent', content?: string | null, contentType?: string | null }> }> } | { __typename?: 'Conversation', id: string, startedAt: any, subject?: string | null, channel?: string | null, updatedAt: any, messageCount: any, source: DataSource, appSource?: string | null, initiatorFirstName?: string | null, initiatorLastName?: string | null, initiatorUsername?: string | null, initiatorType?: string | null, threadId?: string | null, contacts?: Array<{ __typename?: 'Contact', id: string, lastName?: string | null, firstName?: string | null }> | null, users?: Array<{ __typename?: 'User', lastName: string, firstName: string, emails?: Array<{ __typename?: 'Email', email?: string | null }> | null }> | null } | { __typename?: 'InteractionEvent', id: string, createdAt: any, channel?: string | null, content?: string | null, contentType?: string | null, interactionSession?: { __typename?: 'InteractionSession', name: string } | null, sentBy: Array<{ __typename: 'ContactParticipant', contactParticipant: { __typename?: 'Contact', name?: string | null } } | { __typename: 'EmailParticipant', emailParticipant: { __typename?: 'Email', email?: string | null } } | { __typename: 'PhoneNumberParticipant', phoneNumberParticipant: { __typename?: 'PhoneNumber', e164?: string | null } } | { __typename: 'UserParticipant', userParticipant: { __typename?: 'User', firstName: string, lastName: string } }>, sentTo: Array<{ __typename: 'ContactParticipant', type?: string | null, contactParticipant: { __typename?: 'Contact', name?: string | null } } | { __typename: 'EmailParticipant', type?: string | null, emailParticipant: { __typename?: 'Email', email?: string | null } } | { __typename: 'PhoneNumberParticipant', type?: string | null, phoneNumberParticipant: { __typename?: 'PhoneNumber', e164?: string | null } } | { __typename: 'UserParticipant', type?: string | null, userParticipant: { __typename?: 'User', firstName: string, lastName: string } }> } | { __typename?: 'InteractionSession', id: string, startedAt: any, name: string, status: string, type?: string | null, events: Array<{ __typename?: 'InteractionEvent', content?: string | null, contentType?: string | null }> } | { __typename?: 'Note', id: string, html: string, createdAt: any, noted: Array<{ __typename?: 'Contact', firstName?: string | null, lastName?: string | null, name?: string | null } | { __typename?: 'Organization', id: string, organizationName: string }>, createdBy?: { __typename?: 'User', id: string, firstName: string, lastName: string } | null } | { __typename?: 'PageView', id: string, application: string, startedAt: any, endedAt: any, engagedTime: any, pageUrl: string, pageTitle: string, orderInSession: any, sessionId: string } | { __typename?: 'Ticket', id: string, createdAt: any, updatedAt: any, subject?: string | null, status: string, priority?: string | null, description?: string | null, notes?: Array<{ __typename?: 'Note', id: string, html: string } | null> | null, tags?: Array<{ __typename?: 'Tag', id: string, name: string } | null> | null }> } | null };
 
 export type GetOrganizationsOptionsQueryVariables = Exact<{ [key: string]: never; }>;
 
@@ -2466,6 +2523,90 @@ export const TicketFragmentDoc = gql`
 }
     ${TagFragmentDoc}
 ${NoteContentFragmentDoc}`;
+export const InteractionSessionFragmentFragmentDoc = gql`
+    fragment InteractionSessionFragment on InteractionSession {
+  id
+  startedAt
+  name
+  status
+  type
+  events {
+    content
+    contentType
+  }
+}
+    `;
+export const InteractionEventFragmentFragmentDoc = gql`
+    fragment InteractionEventFragment on InteractionEvent {
+  id
+  createdAt
+  channel
+  interactionSession {
+    name
+  }
+  content
+  contentType
+  sentBy {
+    ... on EmailParticipant {
+      __typename
+      emailParticipant {
+        email
+      }
+    }
+    ... on PhoneNumberParticipant {
+      __typename
+      phoneNumberParticipant {
+        e164
+      }
+    }
+    ... on ContactParticipant {
+      __typename
+      contactParticipant {
+        name
+      }
+    }
+    ... on UserParticipant {
+      __typename
+      userParticipant {
+        firstName
+        lastName
+      }
+    }
+  }
+  sentTo {
+    __typename
+    ... on EmailParticipant {
+      __typename
+      type
+      emailParticipant {
+        email
+      }
+    }
+    ... on PhoneNumberParticipant {
+      __typename
+      type
+      phoneNumberParticipant {
+        e164
+      }
+    }
+    ... on ContactParticipant {
+      __typename
+      type
+      contactParticipant {
+        name
+      }
+    }
+    ... on UserParticipant {
+      __typename
+      type
+      userParticipant {
+        firstName
+        lastName
+      }
+    }
+  }
+}
+    `;
 export const OrganizationBaseDetailsFragmentDoc = gql`
     fragment organizationBaseDetails on Organization {
   id
@@ -3457,86 +3598,25 @@ export const GetContactTimelineDocument = gql`
         initiatorType
         threadId
       }
-      ... on InteractionSession {
-        id
-        startedAt
-        name
-        status
-        type
-        events {
-          content
-          contentType
-        }
-      }
-      ... on InteractionEvent {
+      ... on Analysis {
         id
         createdAt
-        channel
-        interactionSession {
-          name
-        }
         content
         contentType
-        sentBy {
+        analysisType
+        describes {
           __typename
-          ... on EmailParticipant {
-            __typename
-            emailParticipant {
-              email
-            }
-          }
-          ... on PhoneNumberParticipant {
-            __typename
-            phoneNumberParticipant {
-              e164
-            }
-          }
-          ... on ContactParticipant {
-            __typename
-            contactParticipant {
-              name
-            }
-          }
-          ... on UserParticipant {
-            __typename
-            userParticipant {
-              firstName
-              lastName
-            }
-          }
+          ...InteractionEventFragment
+          ...InteractionSessionFragment
         }
-        sentTo {
-          __typename
-          ... on EmailParticipant {
-            __typename
-            type
-            emailParticipant {
-              email
-            }
-          }
-          ... on PhoneNumberParticipant {
-            __typename
-            type
-            phoneNumberParticipant {
-              e164
-            }
-          }
-          ... on ContactParticipant {
-            __typename
-            type
-            contactParticipant {
-              name
-            }
-          }
-          ... on UserParticipant {
-            __typename
-            type
-            userParticipant {
-              firstName
-              lastName
-            }
-          }
-        }
+        source
+        sourceOfTruth
+      }
+      ... on InteractionSession {
+        ...InteractionSessionFragment
+      }
+      ... on InteractionEvent {
+        ...InteractionEventFragment
       }
       ... on Note {
         id
@@ -3557,7 +3637,9 @@ export const GetContactTimelineDocument = gql`
     }
   }
 }
-    ${ContactNameFragmentFragmentDoc}`;
+    ${ContactNameFragmentFragmentDoc}
+${InteractionEventFragmentFragmentDoc}
+${InteractionSessionFragmentFragmentDoc}`;
 
 /**
  * __useGetContactTimelineQuery__
@@ -4204,6 +4286,20 @@ export const GetOrganizationTimelineDocument = gql`
           name
         }
       }
+      ... on Analysis {
+        id
+        createdAt
+        content
+        contentType
+        analysisType
+        describes {
+          __typename
+          ...InteractionEventFragment
+          ...InteractionSessionFragment
+        }
+        source
+        sourceOfTruth
+      }
       ... on Conversation {
         id
         startedAt
@@ -4232,85 +4328,10 @@ export const GetOrganizationTimelineDocument = gql`
         threadId
       }
       ... on InteractionSession {
-        id
-        startedAt
-        name
-        status
-        type
-        events {
-          content
-          contentType
-        }
+        ...InteractionSessionFragment
       }
       ... on InteractionEvent {
-        id
-        createdAt
-        channel
-        interactionSession {
-          name
-        }
-        content
-        contentType
-        sentBy {
-          __typename
-          ... on EmailParticipant {
-            __typename
-            emailParticipant {
-              email
-            }
-          }
-          ... on PhoneNumberParticipant {
-            __typename
-            phoneNumberParticipant {
-              e164
-            }
-          }
-          ... on ContactParticipant {
-            __typename
-            contactParticipant {
-              name
-            }
-          }
-          ... on UserParticipant {
-            __typename
-            userParticipant {
-              firstName
-              lastName
-            }
-          }
-        }
-        sentTo {
-          __typename
-          ... on EmailParticipant {
-            __typename
-            type
-            emailParticipant {
-              email
-            }
-          }
-          ... on PhoneNumberParticipant {
-            __typename
-            type
-            phoneNumberParticipant {
-              e164
-            }
-          }
-          ... on ContactParticipant {
-            __typename
-            type
-            contactParticipant {
-              name
-            }
-          }
-          ... on UserParticipant {
-            __typename
-            type
-            userParticipant {
-              firstName
-              lastName
-            }
-          }
-        }
+        ...InteractionEventFragment
       }
       ... on Note {
         id
@@ -4334,7 +4355,9 @@ export const GetOrganizationTimelineDocument = gql`
     }
   }
 }
-    ${ContactNameFragmentFragmentDoc}`;
+    ${InteractionEventFragmentFragmentDoc}
+${InteractionSessionFragmentFragmentDoc}
+${ContactNameFragmentFragmentDoc}`;
 
 /**
  * __useGetOrganizationTimelineQuery__
