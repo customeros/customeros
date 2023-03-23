@@ -135,13 +135,11 @@ type Contact struct {
 	// Contact owner (user)
 	Owner *User `json:"owner,omitempty"`
 	// Contact notes
-	Notes                    *NotePage                `json:"notes"`
-	NotesByTime              []*Note                  `json:"notesByTime"`
-	Conversations            *ConversationPage        `json:"conversations"`
-	TimelineEvents           []TimelineEvent          `json:"timelineEvents"`
-	TimelineEventsTotalCount int64                    `json:"timelineEventsTotalCount"`
-	Tickets                  []*Ticket                `json:"tickets"`
-	TicketSummaryByStatus    []*TicketSummaryByStatus `json:"ticketSummaryByStatus"`
+	Notes                    *NotePage         `json:"notes"`
+	NotesByTime              []*Note           `json:"notesByTime"`
+	Conversations            *ConversationPage `json:"conversations"`
+	TimelineEvents           []TimelineEvent   `json:"timelineEvents"`
+	TimelineEventsTotalCount int64             `json:"timelineEventsTotalCount"`
 }
 
 func (Contact) IsExtensibleEntity()               {}
@@ -700,6 +698,27 @@ type InteractionSessionParticipantInput struct {
 	Type        *string `json:"type,omitempty"`
 }
 
+type Issue struct {
+	ID          string    `json:"id"`
+	CreatedAt   time.Time `json:"createdAt"`
+	UpdatedAt   time.Time `json:"updatedAt"`
+	Subject     *string   `json:"subject,omitempty"`
+	Status      string    `json:"status"`
+	Priority    *string   `json:"priority,omitempty"`
+	Description *string   `json:"description,omitempty"`
+	Tags        []*Tag    `json:"tags,omitempty"`
+}
+
+func (Issue) IsNode()            {}
+func (this Issue) GetID() string { return this.ID }
+
+func (Issue) IsTimelineEvent() {}
+
+type IssueSummaryByStatus struct {
+	Status string `json:"status"`
+	Count  int64  `json:"count"`
+}
+
 // Describes the relationship a Contact has with a Organization.
 // **A `return` object**
 type JobRole struct {
@@ -825,16 +844,16 @@ type Organization struct {
 	AppSource        string            `json:"appSource"`
 	// All addresses associated with an organization in customerOS.
 	// **Required.  If no values it returns an empty array.**
-	Locations                []*Location              `json:"locations"`
-	Contacts                 *ContactsPage            `json:"contacts"`
-	JobRoles                 []*JobRole               `json:"jobRoles"`
-	Notes                    *NotePage                `json:"notes"`
-	Tags                     []*Tag                   `json:"tags,omitempty"`
-	Emails                   []*Email                 `json:"emails"`
-	PhoneNumbers             []*PhoneNumber           `json:"phoneNumbers"`
-	TimelineEvents           []TimelineEvent          `json:"timelineEvents"`
-	TimelineEventsTotalCount int64                    `json:"timelineEventsTotalCount"`
-	TicketSummaryByStatus    []*TicketSummaryByStatus `json:"ticketSummaryByStatus"`
+	Locations                []*Location             `json:"locations"`
+	Contacts                 *ContactsPage           `json:"contacts"`
+	JobRoles                 []*JobRole              `json:"jobRoles"`
+	Notes                    *NotePage               `json:"notes"`
+	Tags                     []*Tag                  `json:"tags,omitempty"`
+	Emails                   []*Email                `json:"emails"`
+	PhoneNumbers             []*PhoneNumber          `json:"phoneNumbers"`
+	TimelineEvents           []TimelineEvent         `json:"timelineEvents"`
+	TimelineEventsTotalCount int64                   `json:"timelineEventsTotalCount"`
+	IssueSummaryByStatus     []*IssueSummaryByStatus `json:"issueSummaryByStatus"`
 }
 
 func (Organization) IsNotedEntity() {}
@@ -1059,11 +1078,6 @@ func (Ticket) IsNode()            {}
 func (this Ticket) GetID() string { return this.ID }
 
 func (Ticket) IsTimelineEvent() {}
-
-type TicketSummaryByStatus struct {
-	Status string `json:"status"`
-	Count  int64  `json:"count"`
-}
 
 type TimeRange struct {
 	// The start time of the time range.
@@ -1649,6 +1663,7 @@ const (
 	TimelineEventTypeNote               TimelineEventType = "NOTE"
 	TimelineEventTypeInteractionEvent   TimelineEventType = "INTERACTION_EVENT"
 	TimelineEventTypeAnalysis           TimelineEventType = "ANALYSIS"
+	TimelineEventTypeIssue              TimelineEventType = "ISSUE"
 )
 
 var AllTimelineEventType = []TimelineEventType{
@@ -1659,11 +1674,12 @@ var AllTimelineEventType = []TimelineEventType{
 	TimelineEventTypeNote,
 	TimelineEventTypeInteractionEvent,
 	TimelineEventTypeAnalysis,
+	TimelineEventTypeIssue,
 }
 
 func (e TimelineEventType) IsValid() bool {
 	switch e {
-	case TimelineEventTypePageView, TimelineEventTypeInteractionSession, TimelineEventTypeTicket, TimelineEventTypeConversation, TimelineEventTypeNote, TimelineEventTypeInteractionEvent, TimelineEventTypeAnalysis:
+	case TimelineEventTypePageView, TimelineEventTypeInteractionSession, TimelineEventTypeTicket, TimelineEventTypeConversation, TimelineEventTypeNote, TimelineEventTypeInteractionEvent, TimelineEventTypeAnalysis, TimelineEventTypeIssue:
 		return true
 	}
 	return false

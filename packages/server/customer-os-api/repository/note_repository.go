@@ -24,9 +24,6 @@ type NoteRepository interface {
 	GetPaginatedNotesForContact(ctx context.Context, session neo4j.SessionWithContext, tenant, contactId string, skip, limit int) (*NoteDbNodesWithTotalCount, error)
 	GetTimeRangeNotesForContact(ctx context.Context, session neo4j.SessionWithContext, tenant, contactId string, start, end time.Time) ([]*neo4j.Node, error)
 	GetPaginatedNotesForOrganization(ctx context.Context, session neo4j.SessionWithContext, tenant, organizationId string, skip, limit int) (*NoteDbNodesWithTotalCount, error)
-
-	GetForTickets(ctx context.Context, tenant string, ticketIds []string) ([]*utils.DbNodeAndId, error)
-
 	CreateNoteForContact(ctx context.Context, session neo4j.SessionWithContext, tenant, contactId string, entity entity.NoteEntity) (*dbtype.Node, error)
 	CreateNoteForOrganization(ctx context.Context, session neo4j.SessionWithContext, tenant, organization string, entity entity.NoteEntity) (*dbtype.Node, error)
 
@@ -164,30 +161,6 @@ func (r *noteRepository) GetPaginatedNotesForOrganization(ctx context.Context, s
 		result.Nodes = append(result.Nodes, noteDBNodeWithParentId)
 	}
 	return result, nil
-}
-
-func (r *noteRepository) GetForTickets(ctx context.Context, tenant string, ticketIds []string) ([]*utils.DbNodeAndId, error) {
-	session := utils.NewNeo4jReadSession(ctx, *r.driver)
-	defer session.Close(ctx)
-
-	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		if queryResult, err := tx.Run(ctx, `
-			MATCH (t:Tenant {name:$tenant})<-[:TICKET_BELONGS_TO_TENANT]-(tt:Ticket)-[:NOTED]->(n:Note)
-			WHERE tt.id IN $ticketIds
-			RETURN n, tt.id ORDER BY n.createdAt DESC`,
-			map[string]any{
-				"tenant":    tenant,
-				"ticketIds": ticketIds,
-			}); err != nil {
-			return nil, err
-		} else {
-			return utils.ExtractAllRecordsAsDbNodeAndId(ctx, queryResult, err)
-		}
-	})
-	if err != nil {
-		return nil, err
-	}
-	return result.([]*utils.DbNodeAndId), err
 }
 
 func (r *noteRepository) UpdateNote(ctx context.Context, session neo4j.SessionWithContext, tenant string, entity entity.NoteEntity) (*dbtype.Node, error) {

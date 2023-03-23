@@ -1,5 +1,4 @@
 # Customer OS Base Model
-![Model](CustomerOSBaseModel.png)
 
 # Env vars
 | Name                       | Meaning                                                                                                  |

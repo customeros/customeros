@@ -111,8 +111,8 @@ func (s *timelineEventService) convertDbNodesToTimelineEvents(dbNodes []*dbtype.
 			timelineEvents = append(timelineEvents, s.services.PageViewService.mapDbNodeToPageView(*v))
 		} else if slices.Contains(v.Labels, entity.NodeLabel_InteractionSession) {
 			timelineEvents = append(timelineEvents, s.services.InteractionSessionService.mapDbNodeToInteractionSessionEntity(*v))
-		} else if slices.Contains(v.Labels, entity.NodeLabel_Ticket) {
-			timelineEvents = append(timelineEvents, s.services.TicketService.mapDbNodeToTicket(*v))
+		} else if slices.Contains(v.Labels, entity.NodeLabel_Issue) {
+			timelineEvents = append(timelineEvents, s.services.IssueService.mapDbNodeToIssue(*v))
 		} else if slices.Contains(v.Labels, entity.NodeLabel_Conversation) {
 			timelineEvents = append(timelineEvents, s.services.ConversationService.mapDbNodeToConversationEntity(*v))
 		} else if slices.Contains(v.Labels, entity.NodeLabel_Note) {

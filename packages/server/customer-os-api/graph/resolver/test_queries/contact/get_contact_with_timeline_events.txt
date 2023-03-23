@@ -15,24 +15,6 @@ query GetContactById($contactId: ID!, $from: Time!, $size: Int!){
               sessionId
             }
             __typename
-            ... on Ticket {
-              id
-              createdAt
-              updatedAt
-              subject
-              status
-              priority
-              description
-              notes {
-                id
-                html
-              }
-              tags {
-                id
-                name
-              }
-            }
-            __typename
             ... on Conversation {
                 id
                 startedAt

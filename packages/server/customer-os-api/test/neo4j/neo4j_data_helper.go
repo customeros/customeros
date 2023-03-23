@@ -391,48 +391,48 @@ func CreateTag(ctx context.Context, driver *neo4j.DriverWithContext, tenant, tag
 	return tagId.String()
 }
 
-func CreateTicket(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, ticket entity.TicketEntity) string {
-	var ticketId, _ = uuid.NewRandom()
+func CreateIssue(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, issue entity.IssueEntity) string {
+	var issueId, _ = uuid.NewRandom()
 	query := `MATCH (t:Tenant {name:$tenant})
-			MERGE (t)<-[:TICKET_BELONGS_TO_TENANT]-(tt:Ticket {id:$id})
+			MERGE (t)<-[:ISSUE_BELONGS_TO_TENANT]-(i:Issue {id:$id})
 			ON CREATE SET 
-				tt.subject=$subject, 
-				tt.createdAt=$createdAt,  
-				tt.updatedAt=$createdAt,
-				tt.description=$description,
-				tt.status=$status,
-				tt.priority=$priority,
-				tt:TimelineEvent,
-				tt:Ticket_%s,
-				tt:TimelineEvent_%s`
+				i.subject=$subject, 
+				i.createdAt=$createdAt,  
+				i.updatedAt=$createdAt,
+				i.description=$description,
+				i.status=$status,
+				i.priority=$priority,
+				i:TimelineEvent,
+				i:Issue_%s,
+				i:TimelineEvent_%s`
 	ExecuteWriteQuery(ctx, driver, fmt.Sprintf(query, tenant, tenant), map[string]any{
-		"id":          ticketId.String(),
+		"id":          issueId.String(),
 		"tenant":      tenant,
-		"subject":     ticket.Subject,
-		"createdAt":   ticket.CreatedAt,
-		"description": ticket.Description,
-		"status":      ticket.Status,
-		"priority":    ticket.Priority,
+		"subject":     issue.Subject,
+		"createdAt":   issue.CreatedAt,
+		"description": issue.Description,
+		"status":      issue.Status,
+		"priority":    issue.Priority,
 	})
-	return ticketId.String()
+	return issueId.String()
 }
 
-func RequestTicket(ctx context.Context, driver *neo4j.DriverWithContext, contactId string, ticketId string) {
-	query := `MATCH (c:Contact {id:$contactId}), (t:Ticket {id:$ticketId})
-			MERGE (c)-[r:REQUESTED]->(t)`
+func IssueReportedByOrganization(ctx context.Context, driver *neo4j.DriverWithContext, organizationId string, issueId string) {
+	query := `MATCH (o:Organization {id:$organizationId}), (i:Issue {id:$issueId})
+			MERGE (o)<-[:REPORTED_BY]-(i)`
 	ExecuteWriteQuery(ctx, driver, query, map[string]any{
-		"ticketId":  ticketId,
-		"contactId": contactId,
+		"issueId":        issueId,
+		"organizationId": organizationId,
 	})
 }
 
-func TagTicket(ctx context.Context, driver *neo4j.DriverWithContext, ticketId, tagId string) {
-	query := `MATCH (t:Ticket {id:$ticketId}), (tag:Tag {id:$tagId})
-			MERGE (t)-[r:TAGGED]->(tag)
+func TagIssue(ctx context.Context, driver *neo4j.DriverWithContext, issueId, tagId string) {
+	query := `MATCH (i:Issue {id:$issueId}), (tag:Tag {id:$tagId})
+			MERGE (i)-[r:TAGGED]->(tag)
 			ON CREATE SET r.taggedAt=datetime({timezone: 'UTC'})`
 	ExecuteWriteQuery(ctx, driver, query, map[string]any{
-		"tagId":    tagId,
-		"ticketId": ticketId,
+		"tagId":   tagId,
+		"issueId": issueId,
 	})
 }
 
@@ -692,19 +692,6 @@ func OrganizationAssociatedWithLocation(ctx context.Context, driver *neo4j.Drive
 		"organizationId": organizationId,
 		"locationId":     locationId,
 	})
-}
-
-func CreateNoteForTicket(ctx context.Context, driver *neo4j.DriverWithContext, tenant, ticketId, html string) string {
-	var noteId, _ = uuid.NewRandom()
-	query := "MATCH (t:Ticket {id:$ticketId}) " +
-		"		MERGE (t)-[:NOTED]->(n:Note {id:$id}) " +
-		"		ON CREATE SET n.html=$html, n.createdAt=datetime({timezone: 'UTC'}), n:%s"
-	ExecuteWriteQuery(ctx, driver, fmt.Sprintf(query, "Note_"+tenant), map[string]any{
-		"id":       noteId.String(),
-		"ticketId": ticketId,
-		"html":     html,
-	})
-	return noteId.String()
 }
 
 func CreateNoteForContact(ctx context.Context, driver *neo4j.DriverWithContext, tenant, contactId, html string, createdAt time.Time) string {

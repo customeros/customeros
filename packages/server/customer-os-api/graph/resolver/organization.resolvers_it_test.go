@@ -496,6 +496,7 @@ func TestQueryResolver_Organization_WithTimelineEvents_DirectAndFromMultipleCont
 	secAgo50 := now.Add(time.Duration(-50) * time.Second)
 	secAgo60 := now.Add(time.Duration(-60) * time.Second)
 	secAgo70 := now.Add(time.Duration(-70) * time.Second)
+	secAgo80 := now.Add(time.Duration(-80) * time.Second)
 	secAgo1000 := now.Add(time.Duration(-1000) * time.Second)
 
 	// prepare contact and org notes
@@ -517,25 +518,41 @@ func TestQueryResolver_Organization_WithTimelineEvents_DirectAndFromMultipleCont
 	neo4jt.InteractionEventSentBy(ctx, driver, interactionEventId3, emailIdOrg, "")
 	neo4jt.InteractionEventSentTo(ctx, driver, interactionEventId3, phoneNumberId, "")
 
+	// prepare issue with tags
+	issueId1 := neo4jt.CreateIssue(ctx, driver, tenantName, entity.IssueEntity{
+		Subject:     "subject 1",
+		CreatedAt:   secAgo80,
+		Priority:    "P1",
+		Status:      "OPEN",
+		Description: "description 1",
+	})
+	tagId1 := neo4jt.CreateTag(ctx, driver, tenantName, "tag1")
+	tagId2 := neo4jt.CreateTag(ctx, driver, tenantName, "tag2")
+	neo4jt.TagIssue(ctx, driver, issueId1, tagId1)
+	neo4jt.TagIssue(ctx, driver, issueId1, tagId2)
+	neo4jt.IssueReportedByOrganization(ctx, driver, organizationId, issueId1)
+
 	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "Contact"))
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Organization"))
 	require.Equal(t, 5, neo4jt.GetCountOfNodes(ctx, driver, "Note"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Issue"))
+	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "Tag"))
 	require.Equal(t, 3, neo4jt.GetCountOfNodes(ctx, driver, "InteractionEvent"))
 	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "Email"))
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "PhoneNumber"))
-	require.Equal(t, 8, neo4jt.GetCountOfNodes(ctx, driver, "TimelineEvent"))
+	require.Equal(t, 9, neo4jt.GetCountOfNodes(ctx, driver, "TimelineEvent"))
 
 	rawResponse, err := c.RawPost(getQuery("organization/get_organization_with_timeline_events_direct_and_via_contacts"),
 		client.Var("organizationId", organizationId),
 		client.Var("from", now),
-		client.Var("size", 6))
+		client.Var("size", 7))
 	assertRawResponseSuccess(t, rawResponse, err)
 
 	organization := rawResponse.Data.(map[string]interface{})["organization"]
 	require.Equal(t, organizationId, organization.(map[string]interface{})["id"])
 
 	timelineEvents := organization.(map[string]interface{})["timelineEvents"].([]interface{})
-	require.Equal(t, 6, len(timelineEvents))
+	require.Equal(t, 7, len(timelineEvents))
 
 	timelineEvent1 := timelineEvents[0].(map[string]interface{})
 	require.Equal(t, "Note", timelineEvent1["__typename"].(string))
@@ -572,6 +589,23 @@ func TestQueryResolver_Organization_WithTimelineEvents_DirectAndFromMultipleCont
 	require.Equal(t, interactionEventId3, timelineEvent6["id"].(string))
 	require.NotNil(t, timelineEvent6["createdAt"].(string))
 	require.Equal(t, "IE text 3", timelineEvent6["content"].(string))
+
+	timelineEvent7 := timelineEvents[6].(map[string]interface{})
+	require.Equal(t, "Issue", timelineEvent7["__typename"].(string))
+	require.Equal(t, issueId1, timelineEvent7["id"].(string))
+	require.NotNil(t, timelineEvent7["createdAt"].(string))
+	require.Equal(t, "subject 1", timelineEvent7["subject"].(string))
+	require.Equal(t, "P1", timelineEvent7["priority"].(string))
+	require.Equal(t, "OPEN", timelineEvent7["status"].(string))
+	require.Equal(t, "description 1", timelineEvent7["description"].(string))
+	require.ElementsMatch(t, []string{tagId1, tagId2},
+		[]string{
+			timelineEvent7["tags"].([]interface{})[0].(map[string]interface{})["id"].(string),
+			timelineEvent7["tags"].([]interface{})[1].(map[string]interface{})["id"].(string)})
+	require.ElementsMatch(t, []string{"tag1", "tag2"},
+		[]string{
+			timelineEvent7["tags"].([]interface{})[0].(map[string]interface{})["name"].(string),
+			timelineEvent7["tags"].([]interface{})[1].(map[string]interface{})["name"].(string)})
 }
 
 func TestQueryResolver_Organization_WithTimelineEventsTotalCount(t *testing.T) {
@@ -604,13 +638,23 @@ func TestQueryResolver_Organization_WithTimelineEventsTotalCount(t *testing.T) {
 	neo4jt.InteractionEventSentBy(ctx, driver, interactionEventId3, emailIdOrg, "")
 	neo4jt.InteractionEventSentTo(ctx, driver, interactionEventId3, phoneNumberId, "")
 
+	issueId1 := neo4jt.CreateIssue(ctx, driver, tenantName, entity.IssueEntity{
+		Subject:     "subject 1",
+		CreatedAt:   now,
+		Priority:    "P1",
+		Status:      "OPEN",
+		Description: "description 1",
+	})
+	neo4jt.IssueReportedByOrganization(ctx, driver, organizationId, issueId1)
+
 	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "Contact"))
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Organization"))
 	require.Equal(t, 3, neo4jt.GetCountOfNodes(ctx, driver, "Note"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Issue"))
 	require.Equal(t, 3, neo4jt.GetCountOfNodes(ctx, driver, "InteractionEvent"))
 	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "Email"))
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "PhoneNumber"))
-	require.Equal(t, 6, neo4jt.GetCountOfNodes(ctx, driver, "TimelineEvent"))
+	require.Equal(t, 7, neo4jt.GetCountOfNodes(ctx, driver, "TimelineEvent"))
 
 	rawResponse, err := c.RawPost(getQuery("organization/get_organization_with_timeline_events_total_count"),
 		client.Var("organizationId", organizationId))
@@ -618,7 +662,7 @@ func TestQueryResolver_Organization_WithTimelineEventsTotalCount(t *testing.T) {
 
 	organization := rawResponse.Data.(map[string]interface{})["organization"]
 	require.Equal(t, organizationId, organization.(map[string]interface{})["id"])
-	require.Equal(t, float64(6), organization.(map[string]interface{})["timelineEventsTotalCount"].(float64))
+	require.Equal(t, float64(7), organization.(map[string]interface{})["timelineEventsTotalCount"].(float64))
 }
 
 func TestQueryResolver_Organization_WithEmails(t *testing.T) {

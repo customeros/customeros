@@ -15,9 +15,9 @@ func MapEntityToTimelineEvent(timelineEventEntity *entity.TimelineEvent) any {
 	case entity.NodeLabel_InteractionSession:
 		interactionSessionEntity := (*timelineEventEntity).(*entity.InteractionSessionEntity)
 		return MapEntityToInteractionSession(interactionSessionEntity)
-	case entity.NodeLabel_Ticket:
-		ticketEntity := (*timelineEventEntity).(*entity.TicketEntity)
-		return MapEntityToTicket(ticketEntity)
+	case entity.NodeLabel_Issue:
+		issueEntity := (*timelineEventEntity).(*entity.IssueEntity)
+		return MapEntityToIssue(issueEntity)
 	case entity.NodeLabel_Conversation:
 		conversationEntity := (*timelineEventEntity).(*entity.ConversationEntity)
 		return MapEntityToConversation(conversationEntity)

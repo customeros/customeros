@@ -11,7 +11,19 @@ type Ticket implements Node {
     notes: [Note] @goField(forceResolver: true)
 }
 
-type TicketSummaryByStatus {
+type Issue implements Node {
+    id: ID!
+    createdAt: Time!
+    updatedAt: Time!
+
+    subject: String
+    status: String!
+    priority: String
+    description: String
+    tags: [Tag] @goField(forceResolver: true)
+}
+
+type IssueSummaryByStatus {
     status: String!
     count: Int64!
 }

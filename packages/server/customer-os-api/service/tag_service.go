@@ -16,7 +16,7 @@ type TagService interface {
 	GetAll(ctx context.Context) (*entity.TagEntities, error)
 	GetTagsForContact(ctx context.Context, contactId string) (*entity.TagEntities, error)
 	GetTagsForContacts(ctx context.Context, contactIds []string) (*entity.TagEntities, error)
-	GetTagsForTickets(ctx context.Context, ticketIds []string) (*entity.TagEntities, error)
+	GetTagsForIssues(ctx context.Context, issueIds []string) (*entity.TagEntities, error)
 	GetTagsForOrganizations(ctx context.Context, organizationIds []string) (*entity.TagEntities, error)
 }
 
@@ -93,8 +93,8 @@ func (s *tagService) GetTagsForContacts(ctx context.Context, contactIds []string
 	return &tagEntities, nil
 }
 
-func (s *tagService) GetTagsForTickets(ctx context.Context, ticketIds []string) (*entity.TagEntities, error) {
-	tags, err := s.repositories.TagRepository.GetForTickets(ctx, common.GetTenantFromContext(ctx), ticketIds)
+func (s *tagService) GetTagsForIssues(ctx context.Context, issueIds []string) (*entity.TagEntities, error) {
+	tags, err := s.repositories.TagRepository.GetForIssues(ctx, common.GetTenantFromContext(ctx), issueIds)
 	if err != nil {
 		return nil, err
 	}
