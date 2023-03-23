@@ -33,20 +33,22 @@ export const Avatar: React.FC<AvatarProps> = ({
     backgroundColor: color,
     fontSize: size > 40 ? 'var(--font-size-lg)' : 'ar(--font-size-xxs)',
   };
-  const tooltipId = `avatar${name?.split(' ').join('')}-${surname
-    ?.split(' ')
-    .join()
-    .trim()}`;
+  const tooltipId =
+    (name || surname) &&
+    `avatar${name?.split(' ').join('')}-${surname?.split(' ').join().trim()}`;
 
   return (
     <>
-      <Tooltip
-        content={`${name} ${surname}`}
-        target={`#${tooltipId}`}
-        position='top'
-        showDelay={0}
-        autoHide={false}
-      />
+      {tooltipId && (
+        <Tooltip
+          content={`${name} ${surname}`}
+          target={`#${tooltipId}`}
+          position='top'
+          showDelay={0}
+          autoHide={false}
+        />
+      )}
+
       <div
         id={tooltipId}
         className={classNames(styles.avatar, {
