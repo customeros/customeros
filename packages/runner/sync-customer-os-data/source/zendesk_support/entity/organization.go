@@ -14,6 +14,7 @@ type Organization struct {
 	DomainNames                pgtype.JSONB `gorm:"column:domain_names;type:jsonb"`
 	Name                       string       `gorm:"column:name"`
 	Details                    string       `gorm:"column:details"`
+	Url                        string       `gorm:"column:url"`
 }
 
 type Organizations []Organization

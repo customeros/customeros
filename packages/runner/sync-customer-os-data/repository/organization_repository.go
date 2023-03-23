@@ -16,7 +16,8 @@ type OrganizationRepository interface {
 	MergeOrganizationType(ctx context.Context, tenant, organizationId, organizationTypeName string) error
 	MergeOrganizationDefaultPlace(ctx context.Context, tenant, organizationId string, organization entity.OrganizationData) error
 	MergeOrganizationDomain(ctx context.Context, tenant, organizationId, domain, externalSystem string) error
-	MergePrimaryPhoneNumber(ctx context.Context, tenant, organizationId, phoneNumber, externalSystem string, createdAt time.Time) error
+	MergePhoneNumber(ctx context.Context, tenant, organizationId, phoneNumber, externalSystem string, createdAt time.Time) error
+	MergeEmail(ctx context.Context, tenant, organizationId, email, externalSystem string, createdAt time.Time) error
 }
 
 type organizationRepository struct {
@@ -94,7 +95,7 @@ func (r *organizationRepository) MergeOrganization(ctx context.Context, tenant s
 		"				org.updatedAt = $now " +
 		" WITH org, ext " +
 		" MERGE (org)-[r:IS_LINKED_WITH {externalId:$externalId}]->(ext) " +
-		" ON CREATE SET r.syncDate=$syncDate " +
+		" ON CREATE SET r.syncDate=$syncDate, r.externalUrl=$externalUrl " +
 		" ON MATCH SET r.syncDate=$syncDate " +
 		" WITH org " +
 		" FOREACH (x in CASE WHEN org.sourceOfTruth <> $sourceOfTruth THEN [org] ELSE [] END | " +
@@ -111,6 +112,7 @@ func (r *organizationRepository) MergeOrganization(ctx context.Context, tenant s
 				"orgId":          organization.Id,
 				"externalSystem": organization.ExternalSystem,
 				"externalId":     organization.ExternalId,
+				"externalUrl":    organization.ExternalUrl,
 				"syncDate":       syncDate,
 				"name":           organization.Name,
 				"description":    organization.Description,
@@ -267,14 +269,11 @@ func (r *organizationRepository) MergeOrganizationDomain(ctx context.Context, te
 	return err
 }
 
-func (r *organizationRepository) MergePrimaryPhoneNumber(ctx context.Context, tenant, organizationId, phoneNumber, externalSystem string, createdAt time.Time) error {
+func (r *organizationRepository) MergePhoneNumber(ctx context.Context, tenant, organizationId, phoneNumber, externalSystem string, createdAt time.Time) error {
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
 	query := "MATCH (o:Organization {id:$organizationId})-[:ORGANIZATION_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant}) " +
-		" OPTIONAL MATCH (o)-[rel:HAS]->(p:PhoneNumber) " +
-		" SET rel.primary=false " +
-		" WITH DISTINCT o, t " +
 		" MERGE (p:PhoneNumber {rawPhoneNumber: $phoneNumber})-[:PHONE_NUMBER_BELONGS_TO_TENANT]->(t) " +
 		" ON CREATE SET " +
 		"				p.id=randomUUID(), " +
@@ -286,8 +285,7 @@ func (r *organizationRepository) MergePrimaryPhoneNumber(ctx context.Context, te
 		"				p:%s " +
 		" WITH DISTINCT o, p " +
 		" MERGE (o)-[rel:HAS]->(p) " +
-		" ON CREATE SET rel.primary=true, p.updatedAt=$now, o.updatedAt=$now " +
-		" ON MATCH SET rel.primary=true, o.updatedAt=$now "
+		" ON CREATE SET rel.primary=false, p.updatedAt=$now, o.updatedAt=$now "
 
 	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		_, err := tx.Run(ctx, fmt.Sprintf(query, "PhoneNumber_"+tenant),
@@ -295,6 +293,41 @@ func (r *organizationRepository) MergePrimaryPhoneNumber(ctx context.Context, te
 				"tenant":         tenant,
 				"organizationId": organizationId,
 				"phoneNumber":    phoneNumber,
+				"createdAt":      createdAt,
+				"source":         externalSystem,
+				"sourceOfTruth":  externalSystem,
+				"appSource":      externalSystem,
+				"now":            time.Now().UTC(),
+			})
+		return nil, err
+	})
+	return err
+}
+
+func (r *organizationRepository) MergeEmail(ctx context.Context, tenant, organizationId, email, externalSystem string, createdAt time.Time) error {
+	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
+	defer session.Close(ctx)
+
+	query := "MATCH (o:Organization {id:$organizationId})-[:ORGANIZATION_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant}) " +
+		" MERGE (e:Email {rawEmail: $email})-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]->(t) " +
+		" ON CREATE SET " +
+		"				e.id=randomUUID(), " +
+		"				e.createdAt=$now, " +
+		"				e.updatedAt=$now, " +
+		"				e.source=$source, " +
+		"				e.sourceOfTruth=$sourceOfTruth, " +
+		"				e.appSource=$appSource, " +
+		"				e:%s " +
+		" WITH DISTINCT o, e " +
+		" MERGE (o)-[rel:HAS]->(e) " +
+		" ON CREATE SET rel.primary=false, e.updatedAt=$now, o.updatedAt=$now "
+
+	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		_, err := tx.Run(ctx, fmt.Sprintf(query, "Email_"+tenant),
+			map[string]interface{}{
+				"tenant":         tenant,
+				"organizationId": organizationId,
+				"email":          email,
 				"createdAt":      createdAt,
 				"source":         externalSystem,
 				"sourceOfTruth":  externalSystem,

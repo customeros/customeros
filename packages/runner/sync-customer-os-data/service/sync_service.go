@@ -87,6 +87,8 @@ func (s *syncService) Sync(ctx context.Context, runId string) {
 		syncRunDtls.CompletedEmailMessages = completedEmailMessageCount
 		syncRunDtls.FailedEmailMessages = failedEmailMessageCount
 
+		syncRunDtls.TotalFailedEntities = failedUserCount + failedOrganizationCount + failedContactCount + failedTicketCount + failedNoteCount + failedEmailMessageCount
+		syncRunDtls.TotalCompletedEntities = completedUserCount + completedOrganizationCount + completedContactCount + completedTicketCount + completedNoteCount + completedEmailMessageCount
 		syncRunDtls.EndAt = time.Now().UTC()
 
 		s.repositories.SyncRunRepository.Save(syncRunDtls)
