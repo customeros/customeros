@@ -12,6 +12,11 @@ import (
 type InteractionSessionRepository interface {
 	GetAllForInteractionEvents(ctx context.Context, tenant string, ids []string) ([]*utils.DbNodeAndId, error)
 	Create(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, entity *entity.InteractionSessionEntity) (*dbtype.Node, error)
+	GetAttendedByParticipantsForInteractionSessions(ctx context.Context, tenant string, ids []string) ([]*utils.DbNodeWithRelationAndId, error)
+
+	LinkWithAttendedByEmailInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, interactionSessionId, email string, sentType *string) error
+	LinkWithAttendedByPhoneNumberInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, interactionSessionId, e164 string, sentType *string) error
+	LinkWithAttendedByParticipantInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, entityType entity.EntityType, interactionSessionId, participantId string, sentType *string) error
 }
 
 type interactionSessionRepository struct {
@@ -22,6 +27,105 @@ func NewInteractionSessionRepository(driver *neo4j.DriverWithContext) Interactio
 	return &interactionSessionRepository{
 		driver: driver,
 	}
+}
+
+func (r *interactionSessionRepository) LinkWithAttendedByEmailInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, interactionSessionId, email string, sentType *string) error {
+	query := fmt.Sprintf(`MATCH (e:Email_%s) `, tenant)
+	query += fmt.Sprintf(`MATCH (is:InteractionSession_%s {id:$sessionId}) `, tenant)
+	query += `WHERE e.email = $email OR e.rawEmail = $email `
+
+	if sentType != nil {
+		query += fmt.Sprintf(`MERGE (is)-[r:ATTENDED_BY {type:$sentType}]->(e) RETURN r`)
+	} else {
+		query += fmt.Sprintf(`MERGE (is)-[r:ATTENDED_BY]->(e) RETURN r`)
+	}
+	queryResult, err := tx.Run(ctx, query,
+		map[string]any{
+			"email":     email,
+			"sessionId": interactionSessionId,
+			"sentType":  sentType,
+		})
+	if err != nil {
+		return err
+	}
+	_, err = queryResult.Single(ctx)
+	return err
+}
+
+func (r *interactionSessionRepository) LinkWithAttendedByPhoneNumberInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, interactionSessionId, e164 string, sentType *string) error {
+	query := fmt.Sprintf(`MATCH (p:PhoneNumber_%s) `, tenant)
+	query += fmt.Sprintf(`MATCH (is:InteractionSession_%s {id:$sessionId}) `, tenant)
+	query += `WHERE p.e164 = $e164 OR p.rawPhoneNumber = $e164 `
+
+	if sentType != nil {
+		query += fmt.Sprintf(`MERGE (is)-[r:ATTENDED_BY {type:$sentType}]->(p) RETURN r`)
+	} else {
+		query += fmt.Sprintf(`MERGE (is)-[r:ATTENDED_BY]->(p) RETURN r`)
+	}
+
+	queryResult, err := tx.Run(ctx, query,
+		map[string]any{
+			"e164":      e164,
+			"sessionId": interactionSessionId,
+		})
+	if err != nil {
+		return err
+	}
+	_, err = queryResult.Single(ctx)
+	return err
+}
+
+func (r *interactionSessionRepository) LinkWithAttendedByParticipantInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, entityType entity.EntityType, interactionSessionId, participantId string, sentType *string) error {
+	query := ""
+	switch entityType {
+	case entity.CONTACT:
+		query = fmt.Sprintf(`MATCH (p:Contact_%s {id:$participantId}) `, tenant)
+	case entity.USER:
+		query = fmt.Sprintf(`MATCH (p:User_%s {id:$participantId}) `, tenant)
+	}
+	query += fmt.Sprintf(`MATCH (is:InteractionSession_%s {id:$sessionId}) `, tenant)
+
+	if sentType != nil {
+		query += fmt.Sprintf(`MERGE (is)<-[r:ATTENDED_BY {type:$sentType}]-(p) RETURN r`)
+	} else {
+		query += fmt.Sprintf(`MERGE (is)<-[r:ATTENDED_BY]-(p) RETURN r`)
+	}
+
+	queryResult, err := tx.Run(ctx, query,
+		map[string]any{
+			"participantId": participantId,
+			"sessionId":     interactionSessionId,
+		})
+	if err != nil {
+		return err
+	}
+	_, err = queryResult.Single(ctx)
+	return err
+}
+
+func (r *interactionSessionRepository) GetAttendedByParticipantsForInteractionSessions(ctx context.Context, tenant string, ids []string) ([]*utils.DbNodeWithRelationAndId, error) {
+	session := utils.NewNeo4jReadSession(ctx, *r.driver)
+	defer session.Close(ctx)
+
+	query := "MATCH (is:InteractionSession_%s)-[rel:ATTENDED_BY]->(p) " +
+		" WHERE is.id IN $ids " +
+		" RETURN p, rel, is.id"
+
+	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		if queryResult, err := tx.Run(ctx, fmt.Sprintf(query, tenant),
+			map[string]any{
+				"tenant": tenant,
+				"ids":    ids,
+			}); err != nil {
+			return nil, err
+		} else {
+			return utils.ExtractAllRecordsAsDbNodeWithRelationAndId(ctx, queryResult, err)
+		}
+	})
+	if err != nil {
+		return nil, err
+	}
+	return result.([]*utils.DbNodeWithRelationAndId), err
 }
 
 func (r *interactionSessionRepository) Create(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, entity *entity.InteractionSessionEntity) (*dbtype.Node, error) {

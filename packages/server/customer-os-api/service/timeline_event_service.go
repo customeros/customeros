@@ -119,6 +119,8 @@ func (s *timelineEventService) convertDbNodesToTimelineEvents(dbNodes []*dbtype.
 			timelineEvents = append(timelineEvents, s.services.NoteService.mapDbNodeToNoteEntity(*v))
 		} else if slices.Contains(v.Labels, entity.NodeLabel_InteractionEvent) {
 			timelineEvents = append(timelineEvents, s.services.InteractionEventService.mapDbNodeToInteractionEventEntity(*v))
+		} else if slices.Contains(v.Labels, entity.NodeLabel_Analysis) {
+			timelineEvents = append(timelineEvents, s.services.AnalysisService.mapDbNodeToAnalysisEntity(*v))
 		}
 	}
 	return timelineEvents

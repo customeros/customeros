@@ -92,9 +92,27 @@ func (r *interactionSessionResolver) Events(ctx context.Context, obj *model.Inte
 	return mapper.MapEntitiesToInteractionEvents(interactionEventEntities), nil
 }
 
+// AttendedBy is the resolver for the attendedBy field.
+func (r *interactionSessionResolver) AttendedBy(ctx context.Context, obj *model.InteractionSession) ([]model.InteractionSessionParticipant, error) {
+	defer func(start time.Time) {
+		utils.LogMethodExecution(start, utils.GetFunctionName())
+	}(time.Now())
+
+	participantEntities, err := dataloader.For(ctx).GetAttendedByParticipantsForInteractionSession(ctx, obj.ID)
+	if err != nil {
+		graphql.AddErrorf(ctx, "Failed to get participants for interaction event %s", obj.ID)
+		return nil, err
+	}
+	return mapper.MapEntitiesToInteractionSessionParticipants(participantEntities), nil
+}
+
 // InteractionSessionCreate is the resolver for the interactionSession_Create field.
 func (r *mutationResolver) InteractionSessionCreate(ctx context.Context, session model.InteractionSessionInput) (*model.InteractionSession, error) {
-	interactionSessionEntity, err := r.Services.InteractionSessionService.Create(ctx, mapper.MapInteractionSessionInputToEntity(&session))
+	interactionSessionEntity, err := r.Services.InteractionSessionService.Create(ctx,
+		&service.InteractionSessionCreateData{
+			InteractionSessionEntity: mapper.MapInteractionSessionInputToEntity(&session),
+			AttendedBy:               service.MapInteractionSessionParticipantInputToAddressData(session.AttendedBy),
+		})
 	if err != nil {
 		graphql.AddErrorf(ctx, "Failed to create InteractionEvent")
 		return nil, err
@@ -107,8 +125,6 @@ func (r *mutationResolver) InteractionSessionCreate(ctx context.Context, session
 func (r *mutationResolver) InteractionEventCreate(ctx context.Context, event model.InteractionEventInput) (*model.InteractionEvent, error) {
 	interactionEventCreated, err := r.Services.InteractionEventService.Create(ctx, &service.InteractionEventCreateData{
 		InteractionEventEntity: mapper.MapInteractionEventInputToEntity(&event),
-		Content:                event.Content,
-		ContentType:            event.ContentType,
 		SessionIdentifier:      event.InteractionSession,
 		SentBy:                 service.MapInteractionEventParticipantInputToAddressData(event.SentBy),
 		SentTo:                 service.MapInteractionEventParticipantInputToAddressData(event.SentTo),

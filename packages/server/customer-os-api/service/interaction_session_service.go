@@ -6,8 +6,11 @@ import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	"golang.org/x/exp/slices"
 	"golang.org/x/net/context"
 	"time"
 )
@@ -17,32 +20,116 @@ type InteractionSessionService interface {
 
 	mapDbNodeToInteractionSessionEntity(node dbtype.Node) *entity.InteractionSessionEntity
 	GetInteractionSessionById(ctx context.Context, id string) (*entity.InteractionSessionEntity, error)
-	Create(ctx context.Context, entity *entity.InteractionSessionEntity) (*entity.InteractionSessionEntity, error)
+	Create(ctx context.Context, newInteractionSession *InteractionSessionCreateData) (*entity.InteractionSessionEntity, error)
 	GetInteractionSessionBySessionIdentifier(ctx context.Context, sessionIdentifier string) (*entity.InteractionSessionEntity, error)
+	GetAttendedByParticipantsForInteractionSessions(ctx context.Context, ids []string) (*entity.InteractionSessionParticipants, error)
+}
+
+type InteractionSessionCreateData struct {
+	InteractionSessionEntity *entity.InteractionSessionEntity
+	AttendedBy               []ParticipantAddressData
 }
 
 type interactionSessionService struct {
 	repositories *repository.Repositories
+	services     *Services
 }
 
-func NewInteractionSessionService(repositories *repository.Repositories) InteractionSessionService {
+func NewInteractionSessionService(repositories *repository.Repositories, services *Services) InteractionSessionService {
 	return &interactionSessionService{
 		repositories: repositories,
+		services:     services,
 	}
 }
 
-func (s *interactionSessionService) Create(ctx context.Context, entity *entity.InteractionSessionEntity) (*entity.InteractionSessionEntity, error) {
+func (s *interactionSessionService) GetAttendedByParticipantsForInteractionSessions(ctx context.Context, ids []string) (*entity.InteractionSessionParticipants, error) {
+	records, err := s.repositories.InteractionSessionRepository.GetAttendedByParticipantsForInteractionSessions(ctx, common.GetTenantFromContext(ctx), ids)
+	if err != nil {
+		return nil, err
+	}
+
+	interactionEventParticipants := s.convertDbNodesToInteractionSessionParticipants(records)
+
+	return &interactionEventParticipants, nil
+}
+
+func (s *interactionSessionService) Create(ctx context.Context, newInteractionSession *InteractionSessionCreateData) (*entity.InteractionSessionEntity, error) {
 	session := utils.NewNeo4jWriteSession(ctx, s.getNeo4jDriver())
 	defer session.Close(ctx)
 
-	queryResult, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (interface{}, error) {
-		return s.repositories.InteractionSessionRepository.Create(ctx, tx, common.GetTenantFromContext(ctx), entity)
-	})
+	queryResult, err := session.ExecuteWrite(ctx, s.createInteractionSessionInDBTxWork(ctx, newInteractionSession))
 	if err != nil {
 		return nil, err
 	}
 
 	return s.mapDbNodeToInteractionSessionEntity(*queryResult.(*dbtype.Node)), nil
+}
+
+func (s *interactionSessionService) createInteractionSessionInDBTxWork(ctx context.Context, newInteractionSession *InteractionSessionCreateData) func(tx neo4j.ManagedTransaction) (any, error) {
+	return func(tx neo4j.ManagedTransaction) (any, error) {
+		tenant := common.GetContext(ctx).Tenant
+		interactionEventDbNode, err := s.repositories.InteractionSessionRepository.Create(ctx, tx, common.GetTenantFromContext(ctx), newInteractionSession.InteractionSessionEntity)
+		if err != nil {
+			return nil, err
+		}
+		var interactionSessionId = utils.GetPropsFromNode(*interactionEventDbNode)["id"].(string)
+
+		for _, attendedBy := range newInteractionSession.AttendedBy {
+			if attendedBy.ContactId != nil {
+				err := s.repositories.InteractionSessionRepository.LinkWithAttendedByParticipantInTx(ctx, tx, tenant, entity.CONTACT, interactionSessionId, *attendedBy.ContactId, attendedBy.Type)
+				if err != nil {
+					return nil, err
+				}
+			} else if attendedBy.UserId != nil {
+				err := s.repositories.InteractionSessionRepository.LinkWithAttendedByParticipantInTx(ctx, tx, tenant, entity.USER, interactionSessionId, *attendedBy.UserId, attendedBy.Type)
+				if err != nil {
+					return nil, err
+				}
+			} else if attendedBy.Email != nil {
+				exists, err := s.repositories.EmailRepository.Exists(ctx, tenant, *attendedBy.Email)
+				if err != nil {
+					return nil, err
+				}
+
+				curTime := utils.Now()
+				if !exists {
+					_, err = s.services.ContactService.Create(ctx, &ContactCreateData{
+						ContactEntity: &entity.ContactEntity{CreatedAt: &curTime, FirstName: "", LastName: ""},
+						EmailEntity:   mapper.MapEmailInputToEntity(&model.EmailInput{Email: *attendedBy.Email}),
+						Source:        entity.DataSourceOpenline,
+						SourceOfTruth: entity.DataSourceOpenline,
+					})
+				}
+				err = s.repositories.InteractionSessionRepository.LinkWithAttendedByEmailInTx(ctx, tx, tenant, interactionSessionId, *attendedBy.Email, attendedBy.Type)
+				if err != nil {
+					return nil, err
+				}
+
+			} else if attendedBy.PhoneNumber != nil {
+				exists, err := s.repositories.PhoneNumberRepository.Exists(ctx, tenant, *attendedBy.PhoneNumber)
+				if err != nil {
+					return nil, err
+				}
+
+				curTime := utils.Now()
+				if !exists {
+					_, err = s.services.ContactService.Create(ctx, &ContactCreateData{
+						ContactEntity:     &entity.ContactEntity{CreatedAt: &curTime, FirstName: "", LastName: ""},
+						PhoneNumberEntity: mapper.MapPhoneNumberInputToEntity(&model.PhoneNumberInput{PhoneNumber: *attendedBy.PhoneNumber}),
+						Source:            entity.DataSourceOpenline,
+						SourceOfTruth:     entity.DataSourceOpenline,
+					})
+				}
+				err = s.repositories.InteractionSessionRepository.LinkWithAttendedByPhoneNumberInTx(ctx, tx, tenant, interactionSessionId, *attendedBy.PhoneNumber, attendedBy.Type)
+				if err != nil {
+					return nil, err
+				}
+
+			}
+
+		}
+		return interactionEventDbNode, nil
+	}
 }
 
 func (s *interactionSessionService) GetInteractionSessionById(ctx context.Context, id string) (*entity.InteractionSessionEntity, error) {
@@ -135,6 +222,56 @@ func (s *interactionSessionService) mapDbNodeToInteractionSessionEntity(node dbt
 		SourceOfTruth:     entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
 	}
 	return &interactionSessionEntity
+}
+
+func (s *interactionSessionService) mapDbRelationshipToParticipantDetails(relationship dbtype.Relationship) entity.InteractionSessionParticipantDetails {
+	props := utils.GetPropsFromRelationship(relationship)
+	details := entity.InteractionSessionParticipantDetails{
+		Type: utils.GetStringPropOrEmpty(props, "type"),
+	}
+	return details
+}
+
+func (s *interactionSessionService) convertDbNodesToInteractionSessionParticipants(records []*utils.DbNodeWithRelationAndId) entity.InteractionSessionParticipants {
+	interactionEventParticipants := entity.InteractionSessionParticipants{}
+	for _, v := range records {
+		if slices.Contains(v.Node.Labels, entity.NodeLabel_Email) {
+			participant := s.services.EmailService.mapDbNodeToEmailEntity(*v.Node)
+			participant.InteractionSessionParticipantDetails = s.mapDbRelationshipToParticipantDetails(*v.Relationship)
+			participant.DataloaderKey = v.LinkedNodeId
+			interactionEventParticipants = append(interactionEventParticipants, participant)
+		} else if slices.Contains(v.Node.Labels, entity.NodeLabel_PhoneNumber) {
+			participant := s.services.PhoneNumberService.mapDbNodeToPhoneNumberEntity(*v.Node)
+			participant.InteractionSessionParticipantDetails = s.mapDbRelationshipToParticipantDetails(*v.Relationship)
+			participant.DataloaderKey = v.LinkedNodeId
+			interactionEventParticipants = append(interactionEventParticipants, participant)
+		} else if slices.Contains(v.Node.Labels, entity.NodeLabel_User) {
+			participant := s.services.UserService.mapDbNodeToUserEntity(*v.Node)
+			participant.InteractionSessionParticipantDetails = s.mapDbRelationshipToParticipantDetails(*v.Relationship)
+			participant.DataloaderKey = v.LinkedNodeId
+			interactionEventParticipants = append(interactionEventParticipants, participant)
+		} else if slices.Contains(v.Node.Labels, entity.NodeLabel_Contact) {
+			participant := s.services.ContactService.mapDbNodeToContactEntity(*v.Node)
+			participant.InteractionSessionParticipantDetails = s.mapDbRelationshipToParticipantDetails(*v.Relationship)
+			participant.DataloaderKey = v.LinkedNodeId
+			interactionEventParticipants = append(interactionEventParticipants, participant)
+		}
+	}
+	return interactionEventParticipants
+}
+
+func MapInteractionSessionParticipantInputToAddressData(input []*model.InteractionSessionParticipantInput) []ParticipantAddressData {
+	var inputData []ParticipantAddressData
+	for _, participant := range input {
+		inputData = append(inputData, ParticipantAddressData{
+			Email:       participant.Email,
+			PhoneNumber: participant.PhoneNumber,
+			UserId:      participant.UserID,
+			ContactId:   participant.ContactID,
+			Type:        participant.Type,
+		})
+	}
+	return inputData
 }
 
 func (s *interactionSessionService) getNeo4jDriver() neo4j.DriverWithContext {

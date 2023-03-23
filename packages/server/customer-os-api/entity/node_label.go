@@ -14,4 +14,5 @@ const (
 	NodeLabel_Tag                = "Tag"
 	NodeLabel_Ticket             = "Ticket"
 	NodeLabel_User               = "User"
+	NodeLabel_Analysis           = "Analysis"
 )

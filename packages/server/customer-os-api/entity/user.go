@@ -14,8 +14,9 @@ type UserEntity struct {
 	Source        DataSource `neo4jDb:"property:source;lookupName:SOURCE;supportCaseSensitive:false"`
 	SourceOfTruth DataSource
 
-	InteractionEventParticipantDetails InteractionEventParticipantDetails
-	DataloaderKey                      string
+	InteractionEventParticipantDetails   InteractionEventParticipantDetails
+	InteractionSessionParticipantDetails InteractionSessionParticipantDetails
+	DataloaderKey                        string
 }
 
 func (User UserEntity) ToString() string {
@@ -27,6 +28,12 @@ type UserEntities []UserEntity
 func (UserEntity) IsInteractionEventParticipant() {}
 
 func (UserEntity) InteractionEventParticipantLabel() string {
+	return NodeLabel_User
+}
+
+func (UserEntity) IsInteractionSessionParticipant() {}
+
+func (UserEntity) InteractionSessionParticipantLabel() string {
 	return NodeLabel_User
 }
 

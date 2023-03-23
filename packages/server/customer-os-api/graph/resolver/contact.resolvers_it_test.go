@@ -4,11 +4,13 @@ import (
 	"github.com/99designs/gqlgen/client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils/decode"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/net/context"
+	"log"
 	"testing"
 	"time"
 )
@@ -930,6 +932,7 @@ func TestQueryResolver_Contact_WithTimelineEvents(t *testing.T) {
 	secAgo50 := now.Add(time.Duration(-50) * time.Second)
 	secAgo60 := now.Add(time.Duration(-60) * time.Second)
 	secAgo70 := now.Add(time.Duration(-70) * time.Second)
+	secAgo75 := now.Add(time.Duration(-75) * time.Second)
 	minAgo5 := now.Add(time.Duration(-5) * time.Minute)
 
 	// prepare conversations
@@ -984,6 +987,11 @@ func TestQueryResolver_Contact_WithTimelineEvents(t *testing.T) {
 	neo4jt.RequestTicket(ctx, driver, contactId, ticketId1)
 	neo4jt.RequestTicket(ctx, driver, contactId, ticketId2)
 
+	voiceSession := neo4jt.CreateInteractionSession(ctx, driver, tenantName, "mySessionIdentifier", "session1", "CALL", "ACTIVE", "VOICE", now, false)
+
+	analysis1 := neo4jt.CreateAnalysis(ctx, driver, tenantName, "This is a summary of the conversation", "text/plain", "SUMMARY", secAgo75)
+	neo4jt.ActionDescribes(ctx, driver, tenantName, analysis1, voiceSession, repository.INTERACTION_SESSION)
+
 	// prepare contact notes
 	contactNoteId := neo4jt.CreateNoteForContact(ctx, driver, tenantName, contactId, "contact note 1", secAgo50)
 	neo4jt.CreateNoteForContact(ctx, driver, tenantName, contactId, "contact note 2", minAgo5)
@@ -996,6 +1004,7 @@ func TestQueryResolver_Contact_WithTimelineEvents(t *testing.T) {
 	neo4jt.InteractionEventSentBy(ctx, driver, interactionEventId1, emailId, "")
 	neo4jt.InteractionEventSentBy(ctx, driver, interactionEventId1, phoneNumberId, "")
 	neo4jt.InteractionEventSentTo(ctx, driver, interactionEventId2, phoneNumberId, "")
+	neo4jt.InteractionSessionAttendedBy(ctx, driver, tenantName, voiceSession, phoneNumberId, "")
 
 	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "Contact"))
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "User"))
@@ -1005,19 +1014,19 @@ func TestQueryResolver_Contact_WithTimelineEvents(t *testing.T) {
 	require.Equal(t, 4, neo4jt.GetCountOfNodes(ctx, driver, "Note"))
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Email"))
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "PhoneNumber"))
-	require.Equal(t, 10, neo4jt.GetCountOfNodes(ctx, driver, "TimelineEvent"))
+	require.Equal(t, 11, neo4jt.GetCountOfNodes(ctx, driver, "TimelineEvent"))
 
 	rawResponse, err := c.RawPost(getQuery("contact/get_contact_with_timeline_events"),
 		client.Var("contactId", contactId),
 		client.Var("from", now),
-		client.Var("size", 8))
+		client.Var("size", 9))
 	assertRawResponseSuccess(t, rawResponse, err)
 
 	contact := rawResponse.Data.(map[string]interface{})["contact"]
 	require.Equal(t, contactId, contact.(map[string]interface{})["id"])
 
 	timelineEvents := contact.(map[string]interface{})["timelineEvents"].([]interface{})
-	require.Equal(t, 8, len(timelineEvents))
+	require.Equal(t, 9, len(timelineEvents))
 
 	timelineEvent1 := timelineEvents[0].(map[string]interface{})
 	require.Equal(t, "PageView", timelineEvent1["__typename"].(string))
@@ -1097,6 +1106,15 @@ func TestQueryResolver_Contact_WithTimelineEvents(t *testing.T) {
 	require.Equal(t, "IE text 2", timelineEvent8["content"].(string))
 	require.Equal(t, "application/json", timelineEvent8["contentType"].(string))
 	require.Equal(t, "EMAIL", timelineEvent8["channel"].(string))
+
+	timelineEvent9 := timelineEvents[8].(map[string]interface{})
+	log.Println("timelineEvent9: ", timelineEvent9)
+	require.Equal(t, "Analysis", timelineEvent9["__typename"].(string))
+	require.Equal(t, analysis1, timelineEvent9["id"].(string))
+	require.NotNil(t, timelineEvent9["createdAt"].(string))
+	require.Equal(t, "This is a summary of the conversation", timelineEvent9["content"].(string))
+	require.Equal(t, "text/plain", timelineEvent9["contentType"].(string))
+	require.Equal(t, "SUMMARY", timelineEvent9["analysisType"].(string))
 }
 
 func TestQueryResolver_Contact_WithTimelineEvents_FilterByType(t *testing.T) {

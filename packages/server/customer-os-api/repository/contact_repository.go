@@ -700,6 +700,7 @@ func (r *contactRepository) MergeContactRelationsInTx(ctx context.Context, tx ne
 		" MERGE (primary)<-[newRel:SENT_BY]-(i) "+
 		" ON CREATE SET newRel.mergedFrom = $mergedContactId, "+
 		"				newRel.createdAt = $now "+
+		"				newRel.type = rel.type "+
 		"			SET	rel.merged=true", params); err != nil {
 		return err
 	}
@@ -710,6 +711,18 @@ func (r *contactRepository) MergeContactRelationsInTx(ctx context.Context, tx ne
 		" MERGE (primary)<-[newRel:SENT_TO]-(i) "+
 		" ON CREATE SET newRel.mergedFrom = $mergedContactId, "+
 		"				newRel.createdAt = $now "+
+		"				newRel.type = rel.type "+
+		"			SET	rel.merged=true", params); err != nil {
+		return err
+	}
+
+	if _, err := tx.Run(ctx, matchQuery+
+		" WITH primary, merged "+
+		" MATCH (merged)<-[rel:ATTENDED_BY]-(s:InteractionSession) "+
+		" MERGE (primary)<-[newRel:ATTENDED_BY]-(s) "+
+		" ON CREATE SET newRel.mergedFrom = $mergedContactId, "+
+		"				newRel.createdAt = $now "+
+		"				newRel.type = rel.type "+
 		"			SET	rel.merged=true", params); err != nil {
 		return err
 	}
