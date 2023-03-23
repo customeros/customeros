@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/machinebox/graphql"
 	c "github.com/openline-ai/openline-customer-os/packages/server/comms-api/config"
-	commonModuleService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 	"golang.org/x/net/context"
 )
 
@@ -77,14 +76,15 @@ type InteractionEventCreateResponse struct {
 	} `json:"interactionEvent_Create"`
 }
 
-func (s *CustomerOSService) addHeadersToGraphRequest(req *graphql.Request, ctx context.Context, tenant string) error {
+func (s *CustomerOSService) addHeadersToGraphRequest(req *graphql.Request, ctx context.Context, tenant *string, user *string) error {
 	req.Header.Add("X-Openline-API-KEY", s.conf.Service.CustomerOsAPIKey)
-	user, err := commonModuleService.GetUsernameMetadataForGRPC(ctx)
-	if err != nil && user != nil {
+	if user != nil {
 		req.Header.Add("X-Openline-USERNAME", *user)
 	}
+	if tenant != nil {
+		req.Header.Add("X-Openline-TENANT", tenant)
+	}
 
-	req.Header.Add("X-Openline-TENANT", tenant)
 	return nil
 }
 
@@ -188,7 +188,7 @@ func (s *CustomerOSService) CreateInteractionEvent(ctx context.Context, options 
 	graphqlRequest.Var("sentTo", params.sentTo)
 	graphqlRequest.Var("appSource", params.appSource)
 
-	err := s.addHeadersToGraphRequest(graphqlRequest, ctx, params.tenant)
+	err := s.addHeadersToGraphRequest(graphqlRequest, ctx, params.tenant, params.username)
 
 	if err != nil {
 		return nil, fmt.Errorf("CreateContactWithPhone: %w", err)
@@ -202,7 +202,7 @@ func (s *CustomerOSService) CreateInteractionEvent(ctx context.Context, options 
 	return &graphqlResponse, nil
 }
 
-func (s *CustomerOSService) GetInteractionSession(ctx context.Context, sessionIdentifier string, tenant string) (*string, error) {
+func (s *CustomerOSService) GetInteractionSession(ctx context.Context, sessionIdentifier string, tenant *string, user *string) (*string, error) {
 	graphqlRequest := graphql.NewRequest(
 		`query GetInteractionSession($sessionIdentifier: String!) {
   					interactionSession_BySessionIdentifier(sessionIdentifier: $sessionIdentifier) {
@@ -212,7 +212,7 @@ func (s *CustomerOSService) GetInteractionSession(ctx context.Context, sessionId
 
 	graphqlRequest.Var("sessionIdentifier", sessionIdentifier)
 
-	err := s.addHeadersToGraphRequest(graphqlRequest, ctx, tenant)
+	err := s.addHeadersToGraphRequest(graphqlRequest, ctx, tenant, user)
 
 	if err != nil {
 		return nil, fmt.Errorf("GetInteractionSession: %w", err)
@@ -255,7 +255,7 @@ func (s *CustomerOSService) CreateInteractionSession(ctx context.Context, option
 	graphqlRequest.Var("status", params.status)
 	graphqlRequest.Var("appSource", params.appSource)
 
-	err := s.addHeadersToGraphRequest(graphqlRequest, ctx, params.tenant)
+	err := s.addHeadersToGraphRequest(graphqlRequest, ctx, params.tenant, params.username)
 
 	if err != nil {
 		return nil, fmt.Errorf("CreateContactWithPhone: %w", err)
@@ -301,7 +301,7 @@ func (s *CustomerOSService) CreateAnalysis(ctx context.Context, options ...Analy
 		graphqlRequest.Var("describes", params.describes)
 	}
 
-	err := s.addHeadersToGraphRequest(graphqlRequest, ctx, params.tenant)
+	err := s.addHeadersToGraphRequest(graphqlRequest, ctx, params.tenant, params.username)
 
 	if err != nil {
 		return nil, fmt.Errorf("CreateAnalysis: %w", err)
@@ -317,7 +317,8 @@ func (s *CustomerOSService) CreateAnalysis(ctx context.Context, options ...Analy
 }
 
 type EventOptions struct {
-	tenant      string
+	tenant      *string
+	username    *string
 	sessionId   string
 	repliesTo   string
 	content     string
@@ -333,7 +334,8 @@ type SessionOptions struct {
 	name              string
 	status            string
 	appSource         string
-	tenant            string
+	tenant            *string
+	username          *string
 	sessionIdentifier string
 	attendedBy        []InteractionSessionParticipantInput
 }
@@ -343,7 +345,8 @@ type AnalysisOptions struct {
 	content      string
 	contentType  string
 	appSource    string
-	tenant       string
+	tenant       *string
+	username     *string
 	describes    *AnalysisDescriptionInput
 }
 
@@ -353,7 +356,7 @@ type AnalysisOption func(options *AnalysisOptions)
 
 func WithTenant(value string) EventOption {
 	return func(options *EventOptions) {
-		options.tenant = value
+		options.tenant = &value
 	}
 }
 
@@ -430,7 +433,7 @@ func WithSessionAppSource(value string) SessionOption {
 }
 func WithSessionTenant(value string) SessionOption {
 	return func(options *SessionOptions) {
-		options.tenant = value
+		options.tenant = &value
 	}
 }
 
@@ -460,7 +463,7 @@ func WithAnalysisAppSource(value string) AnalysisOption {
 
 func WithAnalysisTenant(value string) AnalysisOption {
 	return func(options *AnalysisOptions) {
-		options.tenant = value
+		options.tenant = &value
 	}
 }
 
