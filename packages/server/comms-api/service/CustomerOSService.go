@@ -27,6 +27,14 @@ type InteractionEventParticipantInput struct {
 	ParticipantType *string `json:"type,omitempty"`
 }
 
+type InteractionSessionParticipantInput struct {
+	Email           *string `json:"email,omitempty"`
+	PhoneNumber     *string `json:"phoneNumber,omitempty"`
+	ContactID       *string `json:"contactID,omitempty"`
+	UserID          *string `json:"userID,omitempty"`
+	ParticipantType *string `json:"type,omitempty"`
+}
+
 type InteractionEventParticipant struct {
 	ID             string `json:"id"`
 	Type           string `json:"type"`
@@ -44,7 +52,11 @@ type InteractionEventCreateResponse struct {
 				Id       string `json:"id"`
 				RawEmail string `json:"rawEmail"`
 			} `json:"emailParticipant"`
-			Type interface{} `json:"type"`
+			PhoneNumberParticipant struct {
+				ID             string `json:"id"`
+				RawPhoneNumber string `json:"rawPhoneNumber"`
+			} `json:"phoneNumberParticipant"`
+			Type string `json:"type"`
 		} `json:"sentBy"`
 		SentTo []struct {
 			Typename         string `json:"__typename"`
@@ -52,6 +64,10 @@ type InteractionEventCreateResponse struct {
 				Id       string `json:"id"`
 				RawEmail string `json:"rawEmail"`
 			} `json:"emailParticipant"`
+			PhoneNumberParticipant struct {
+				ID             string `json:"id"`
+				RawPhoneNumber string `json:"rawPhoneNumber"`
+			} `json:"phoneNumberParticipant"`
 			Type string `json:"type"`
 		} `json:"sentTo"`
 	} `json:"interactionEvent_Create"`
@@ -208,7 +224,7 @@ func (s *CustomerOSService) GetInteractionSession(ctx context.Context, sessionId
 
 func (s *CustomerOSService) CreateInteractionSession(ctx context.Context, options ...SessionOption) (*string, error) {
 	graphqlRequest := graphql.NewRequest(
-		`mutation CreateInteractionSession($sessionIdentifier: String, $channel: String, $name: String!, $status: String!, $appSource: String!) {
+		`mutation CreateInteractionSession($sessionIdentifier: String, $channel: String, $name: String!, $status: String!, $appSource: String!, $attendedBy: [InteractionSessionParticipantInput!]) {
 				interactionSession_Create(
 				session: {
 					sessionIdentifier: $sessionIdentifier
@@ -216,6 +232,7 @@ func (s *CustomerOSService) CreateInteractionSession(ctx context.Context, option
         			name: $name
         			status: $status
         			appSource: $appSource
+                    attendedBy: $attendedBy
     			}
   			) {
 				id
@@ -268,6 +285,7 @@ type SessionOptions struct {
 	appSource         string
 	tenant            string
 	sessionIdentifier string
+	attendedBy        []InteractionSessionParticipantInput
 }
 
 type EventOption func(*EventOptions)
@@ -353,6 +371,12 @@ func WithSessionAppSource(value string) SessionOption {
 func WithSessionTenant(value string) SessionOption {
 	return func(options *SessionOptions) {
 		options.tenant = value
+	}
+}
+
+func WithAttendedBy(value []InteractionSessionParticipantInput) SessionOption {
+	return func(options *SessionOptions) {
+		options.attendedBy = value
 	}
 }
 
