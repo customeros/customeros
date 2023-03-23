@@ -53,6 +53,14 @@ query GetContactById($contactId: ID!, $from: Time!, $size: Int!){
                 channel
                 createdAt
             }
+            __typename
+            ... on Analysis {
+                id
+                content
+                contentType
+                analysisType
+                createdAt
+            }
           }
   }
 }

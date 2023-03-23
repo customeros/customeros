@@ -38,6 +38,7 @@ func (r *analysisRepository) LinkWithDescribesXXInTx(ctx context.Context, tx neo
 	query := fmt.Sprintf(`MATCH (d:%s_%s {id:$describedId}) `, describesType, tenant)
 	query += fmt.Sprintf(`MATCH (a:Analysis_%s {id:$analysisId}) `, tenant)
 	query += `MERGE (a)-[r:DESCRIBES]->(d) `
+	query += `return r `
 
 	queryResult, err := tx.Run(ctx, query,
 		map[string]any{
@@ -57,7 +58,7 @@ func (r *analysisRepository) GetDescribesForAnalysis(ctx context.Context, tenant
 
 	query := "MATCH (a:Analysis_%s)-[DESCRIBES]->(d) " +
 		" WHERE a.id IN $ids " +
-		" RETURN d, ie.id"
+		" RETURN d, a.id"
 
 	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		if queryResult, err := tx.Run(ctx, fmt.Sprintf(query, tenant),

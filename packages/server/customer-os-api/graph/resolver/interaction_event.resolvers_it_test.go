@@ -39,6 +39,66 @@ func TestMutationResolver_InteractionSessionCreate_Min(t *testing.T) {
 	require.Equal(t, "Oasis", interactionSession.InteractionSession_Create.AppSource)
 }
 
+func TestMutationResolver_InteractionSessionCreateWithPhone(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx)(t)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
+
+	userId := neo4jt.CreateUser(ctx, driver, tenantName, entity.UserEntity{
+		FirstName: "Agent",
+		LastName:  "Smith",
+	})
+
+	emailId1 := neo4jt.AddEmailTo(ctx, driver, entity.USER, tenantName, userId, "user1@openline.ai", true, "WORK")
+
+	rawResponse, err := c.RawPost(getQuery("interaction_event/create_interaction_session_with_phone"),
+		client.Var("sessionIdentifier", "My Session Identifier"),
+		client.Var("name", "My Session Name"),
+		client.Var("type", "THREAD"),
+		client.Var("channel", "EMAIL"),
+		client.Var("channelData", "{\"threading-info\":\"test\"}"),
+		client.Var("status", "ACTIVE"),
+	)
+
+	assertRawResponseSuccess(t, rawResponse, err)
+	log.Printf("interactionSession: %v", rawResponse.Data)
+	var interactionSession struct {
+		InteractionSession_Create struct {
+			ID                string `json:"id"`
+			Channel           string `json:"channel"`
+			ChannelData       string `json:"channelData"`
+			AppSource         string `json:"appSource"`
+			SessionIdentifier string `json:"sessionIdentifier"`
+			Type              string `json:"type"`
+			Name              string `json:"name"`
+			Status            string `json:"status"`
+			AttendedBy        []map[string]interface{}
+		}
+	}
+	err = decode.Decode(rawResponse.Data.(map[string]interface{}), &interactionSession)
+	require.Nil(t, err)
+	require.Equal(t, "ACTIVE", interactionSession.InteractionSession_Create.Status)
+	require.Equal(t, "EMAIL", interactionSession.InteractionSession_Create.Channel)
+	require.Equal(t, "{\"threading-info\":\"test\"}", interactionSession.InteractionSession_Create.ChannelData)
+	require.Equal(t, "Oasis", interactionSession.InteractionSession_Create.AppSource)
+	require.Equal(t, "My Session Identifier", interactionSession.InteractionSession_Create.SessionIdentifier)
+	require.Equal(t, "My Session Name", interactionSession.InteractionSession_Create.Name)
+
+	for _, attendedBy := range interactionSession.InteractionSession_Create.AttendedBy {
+		if attendedBy["__typename"].(string) == "EmailParticipant" {
+			emailParticipant, _ := attendedBy["emailParticipant"].(map[string]interface{})
+			require.Equal(t, emailId1, emailParticipant["id"])
+			require.Equal(t, "user1@openline.ai", emailParticipant["rawEmail"])
+		} else if attendedBy["__typename"].(string) == "PhoneNumberParticipant" {
+			phoneNumberParticipant, _ := attendedBy["phoneNumberParticipant"].(map[string]interface{})
+			require.Equal(t, "+1234567890", phoneNumberParticipant["rawPhoneNumber"])
+		} else {
+			t.Error("Unexpected participant type: " + attendedBy["__typename"].(string))
+		}
+	}
+}
+
 func TestMutationResolver_InteractionSessionCreate(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx)(t)
@@ -140,7 +200,7 @@ func TestMutationResolver_InteractionEventCreate_Email(t *testing.T) {
 
 	now := time.Now().UTC()
 
-	interactionSession1 := neo4jt.CreateInteractionSession(ctx, driver, tenantName, "mySessionIdentifier", "session1", "THREAD", "ACTIVE", "EMAIL", now)
+	interactionSession1 := neo4jt.CreateInteractionSession(ctx, driver, tenantName, "mySessionIdentifier", "session1", "THREAD", "ACTIVE", "EMAIL", now, false)
 
 	rawResponse, err := c.RawPost(getQuery("interaction_event/create_interaction_event_email"),
 		client.Var("content", "Message 1"),
@@ -264,7 +324,7 @@ func TestMutationResolver_InteractionEventCreate_Voice(t *testing.T) {
 
 	now := time.Now().UTC()
 
-	interactionSession1 := neo4jt.CreateInteractionSession(ctx, driver, tenantName, "mySessionIdentifier", "session1", "THREAD", "ACTIVE", "VOICE", now)
+	interactionSession1 := neo4jt.CreateInteractionSession(ctx, driver, tenantName, "mySessionIdentifier", "session1", "THREAD", "ACTIVE", "VOICE", now, false)
 
 	rawResponse, err := c.RawPost(getQuery("interaction_event/create_interaction_event_call"),
 		client.Var("content", "Message 1"),
@@ -380,7 +440,7 @@ func TestQueryResolver_InteractionEvent(t *testing.T) {
 	neo4jt.InteractionEventSentBy(ctx, driver, interactionEventId1, emailId, "")
 	neo4jt.InteractionEventSentTo(ctx, driver, interactionEventId4_WithoutSession, emailId, "")
 
-	interactionSession1 := neo4jt.CreateInteractionSession(ctx, driver, tenantName, "mySessionIdentifier", "session1", "THREAD", "ACTIVE", "EMAIL", now)
+	interactionSession1 := neo4jt.CreateInteractionSession(ctx, driver, tenantName, "mySessionIdentifier", "session1", "THREAD", "ACTIVE", "EMAIL", now, false)
 
 	neo4jt.InteractionEventPartOfInteractionSession(ctx, driver, interactionEventId1, interactionSession1)
 	neo4jt.InteractionEventRepliesToInteractionEvent(ctx, driver, tenantName, interactionEventId1, interactionEventId4_WithoutSession)
@@ -466,7 +526,7 @@ func TestQueryResolver_InteractionEvent_ByEventIdentifier(t *testing.T) {
 	neo4jt.InteractionEventSentBy(ctx, driver, interactionEventId1, emailId, "")
 	neo4jt.InteractionEventSentTo(ctx, driver, interactionEventId4_WithoutSession, emailId, "")
 
-	interactionSession1 := neo4jt.CreateInteractionSession(ctx, driver, tenantName, "mySessionIdentifier", "session1", "THREAD", "ACTIVE", "EMAIL", now)
+	interactionSession1 := neo4jt.CreateInteractionSession(ctx, driver, tenantName, "mySessionIdentifier", "session1", "THREAD", "ACTIVE", "EMAIL", now, false)
 
 	neo4jt.InteractionEventPartOfInteractionSession(ctx, driver, interactionEventId1, interactionSession1)
 	neo4jt.InteractionEventRepliesToInteractionEvent(ctx, driver, tenantName, interactionEventId1, interactionEventId4_WithoutSession)
@@ -552,7 +612,7 @@ func TestQueryResolver_InteractionSession(t *testing.T) {
 	neo4jt.InteractionEventSentBy(ctx, driver, interactionEventId1, emailId, "")
 	neo4jt.InteractionEventSentTo(ctx, driver, interactionEventId4_WithoutSession, emailId, "")
 
-	interactionSession1 := neo4jt.CreateInteractionSession(ctx, driver, tenantName, "mySessionIdentifier", "session1", "THREAD", "ACTIVE", "EMAIL", now)
+	interactionSession1 := neo4jt.CreateInteractionSession(ctx, driver, tenantName, "mySessionIdentifier", "session1", "THREAD", "ACTIVE", "EMAIL", now, false)
 
 	neo4jt.InteractionEventPartOfInteractionSession(ctx, driver, interactionEventId1, interactionSession1)
 	neo4jt.InteractionEventRepliesToInteractionEvent(ctx, driver, tenantName, interactionEventId1, interactionEventId4_WithoutSession)
@@ -620,7 +680,7 @@ func TestQueryResolver_InteractionSession_BySessionIdentifier(t *testing.T) {
 	neo4jt.InteractionEventSentBy(ctx, driver, interactionEventId1, emailId, "")
 	neo4jt.InteractionEventSentTo(ctx, driver, interactionEventId4_WithoutSession, emailId, "")
 
-	interactionSession1 := neo4jt.CreateInteractionSession(ctx, driver, tenantName, "mySessionIdentifier", "session1", "THREAD", "ACTIVE", "EMAIL", now)
+	interactionSession1 := neo4jt.CreateInteractionSession(ctx, driver, tenantName, "mySessionIdentifier", "session1", "THREAD", "ACTIVE", "EMAIL", now, false)
 
 	neo4jt.InteractionEventPartOfInteractionSession(ctx, driver, interactionEventId1, interactionSession1)
 	neo4jt.InteractionEventRepliesToInteractionEvent(ctx, driver, tenantName, interactionEventId1, interactionEventId4_WithoutSession)
@@ -694,8 +754,8 @@ func TestQueryResolver_Contact_WithTimelineEvents_InteractionEvents_With_Interac
 	neo4jt.InteractionEventSentBy(ctx, driver, interactionEventId3, emailId, "")
 	neo4jt.InteractionEventSentTo(ctx, driver, interactionEventId4_WithoutSession, emailId, "")
 
-	interactionSession1 := neo4jt.CreateInteractionSession(ctx, driver, tenantName, "mySessionIdentifier", "session1", "THREAD", "ACTIVE", "EMAIL", now)
-	interactionSession2 := neo4jt.CreateInteractionSession(ctx, driver, tenantName, "mySessionIdentifier", "session2", "THREAD", "INACTIVE", "EMAIL", now)
+	interactionSession1 := neo4jt.CreateInteractionSession(ctx, driver, tenantName, "mySessionIdentifier", "session1", "THREAD", "ACTIVE", "EMAIL", now, true)
+	interactionSession2 := neo4jt.CreateInteractionSession(ctx, driver, tenantName, "mySessionIdentifier", "session2", "THREAD", "INACTIVE", "EMAIL", now, true)
 
 	neo4jt.InteractionEventPartOfInteractionSession(ctx, driver, interactionEventId1, interactionSession1)
 	neo4jt.InteractionEventPartOfInteractionSession(ctx, driver, interactionEventId2, interactionSession2)

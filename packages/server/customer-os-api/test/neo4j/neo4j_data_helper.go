@@ -7,6 +7,7 @@ import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/db"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"golang.org/x/net/context"
 	"time"
@@ -783,6 +784,42 @@ func LinkContactWithOrganization(ctx context.Context, driver *neo4j.DriverWithCo
 	})
 }
 
+func ActionDescribes(ctx context.Context, driver *neo4j.DriverWithContext, tenant, actionId, nodeId string, describesType repository.DescribesType) {
+	query := "MATCH (a:Analysis_%s {id:$actionId}), " +
+		"(n:%s_%s {id:$nodeId}) " +
+		" MERGE (a)-[:DESCRIBES]->(n) "
+	ExecuteWriteQuery(ctx, driver, fmt.Sprintf(query, tenant, describesType, tenant), map[string]any{
+		"actionId": actionId,
+		"nodeId":   nodeId,
+	})
+}
+
+func CreateAnalysis(ctx context.Context, driver *neo4j.DriverWithContext, tenant, content, contentType, analysisType string, createdAt time.Time) string {
+	var analysisId, _ = uuid.NewRandom()
+
+	query := "MERGE (a:Analysis {id:$id})" +
+		" ON CREATE SET " +
+		"	a.content=$content, " +
+		"	a.createdAt=$createdAt, " +
+		"	a.analysisType=$analysisType, " +
+		"	a.contentType=$contentType, " +
+		"	a.source=$source, " +
+		"	a.sourceOfTruth=$sourceOfTruth, " +
+		"	a.appSource=$appSource," +
+		"	a:Analysis_%s, a:TimelineEvent, a:TimelineEvent_%s"
+	ExecuteWriteQuery(ctx, driver, fmt.Sprintf(query, tenant, tenant), map[string]any{
+		"id":            analysisId.String(),
+		"content":       content,
+		"contentType":   contentType,
+		"analysisType":  analysisType,
+		"createdAt":     createdAt,
+		"source":        "openline",
+		"sourceOfTruth": "openline",
+		"appSource":     "test",
+	})
+	return analysisId.String()
+}
+
 func CreateInteractionEvent(ctx context.Context, driver *neo4j.DriverWithContext, tenant, identifier, content, contentType, channel string, createdAt time.Time) string {
 	var interactionEventId, _ = uuid.NewRandom()
 
@@ -811,7 +848,7 @@ func CreateInteractionEvent(ctx context.Context, driver *neo4j.DriverWithContext
 	return interactionEventId.String()
 }
 
-func CreateInteractionSession(ctx context.Context, driver *neo4j.DriverWithContext, tenant, identifier, name, sessionType, status, channel string, createdAt time.Time) string {
+func CreateInteractionSession(ctx context.Context, driver *neo4j.DriverWithContext, tenant, identifier, name, sessionType, status, channel string, createdAt time.Time, inTimeline bool) string {
 	var interactionSessionId, _ = uuid.NewRandom()
 
 	query := "MERGE (is:InteractionSession {id:$id})" +
@@ -826,8 +863,17 @@ func CreateInteractionSession(ctx context.Context, driver *neo4j.DriverWithConte
 		"	is.sourceOfTruth=$sourceOfTruth, " +
 		"	is.appSource=$appSource," +
 		"   is.identifier=$identifier, " +
-		"	is:InteractionSession_%s, is:TimelineEvent, is:TimelineEvent_%s"
-	ExecuteWriteQuery(ctx, driver, fmt.Sprintf(query, tenant, tenant), map[string]any{
+		"	is:InteractionSession_%s"
+
+	resolvedQuery := ""
+	if inTimeline {
+		query += ", is:TimelineEvent, is:TimelineEvent_%s"
+
+		resolvedQuery = fmt.Sprintf(query, tenant, tenant)
+	} else {
+		resolvedQuery = fmt.Sprintf(query, tenant)
+	}
+	ExecuteWriteQuery(ctx, driver, resolvedQuery, map[string]any{
 		"id":            interactionSessionId.String(),
 		"name":          name,
 		"type":          sessionType,
@@ -841,6 +887,17 @@ func CreateInteractionSession(ctx context.Context, driver *neo4j.DriverWithConte
 		"identifier":    identifier,
 	})
 	return interactionSessionId.String()
+}
+
+func InteractionSessionAttendedBy(ctx context.Context, driver *neo4j.DriverWithContext, tenant, interactionSessionId, nodeId, interactionType string) {
+	query := "MATCH (is:InteractionSession_%s {id:$interactionSessionId}), " +
+		"(n {id:$nodeId}) " +
+		" MERGE (is)-[:ATTENDED_BY {type:$interactionType}]->(n) "
+	ExecuteWriteQuery(ctx, driver, fmt.Sprintf(query, tenant), map[string]any{
+		"interactionSessionId": interactionSessionId,
+		"nodeId":               nodeId,
+		"interactionType":      interactionType,
+	})
 }
 
 func InteractionEventSentBy(ctx context.Context, driver *neo4j.DriverWithContext, interactionEventId, nodeId, interactionType string) {

@@ -129,10 +129,10 @@ func (s *interactionEventService) createInteractionEventInDBTxWork(ctx context.C
 				curTime := utils.Now()
 				if !exists {
 					_, err = s.services.ContactService.Create(ctx, &ContactCreateData{
-						ContactEntity: &entity.ContactEntity{CreatedAt: &curTime, FirstName: "", LastName: ""},
-						EmailEntity:   mapper.MapEmailInputToEntity(&model.EmailInput{Email: *sentTo.Email}),
-						Source:        entity.DataSourceOpenline,
-						SourceOfTruth: entity.DataSourceOpenline,
+						ContactEntity:     &entity.ContactEntity{CreatedAt: &curTime, FirstName: "", LastName: ""},
+						PhoneNumberEntity: mapper.MapPhoneNumberInputToEntity(&model.PhoneNumberInput{PhoneNumber: *sentTo.PhoneNumber}),
+						Source:            entity.DataSourceOpenline,
+						SourceOfTruth:     entity.DataSourceOpenline,
 					})
 				}
 				err = s.repositories.InteractionEventRepository.LinkWithSentXXPhoneNumberInTx(ctx, tx, tenant, interactionEventId, *sentTo.PhoneNumber, sentTo.Type, repository.SENT_TO)
@@ -376,6 +376,7 @@ func MapInteractionEventParticipantInputToAddressData(input []*model.Interaction
 	}
 	return inputData
 }
+
 func (s *interactionEventService) getNeo4jDriver() neo4j.DriverWithContext {
 	return *s.repositories.Drivers.Neo4jDriver
 }

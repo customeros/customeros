@@ -19,6 +19,7 @@ type AnalysisService interface {
 	Create(ctx context.Context, newAnalysis *AnalysisCreateData) (*entity.AnalysisEntity, error)
 	GetDescribesForAnalysis(ctx context.Context, ids []string) (*entity.AnalysisDescribes, error)
 	convertDbNodesAnalysisDescribes(records []*utils.DbNodeAndId) entity.AnalysisDescribes
+	mapDbNodeToAnalysisEntity(node dbtype.Node) *entity.AnalysisEntity
 }
 
 type AnalysisDescriptionData struct {
@@ -122,7 +123,7 @@ func (s *analysisService) GetAnalysisById(ctx context.Context, id string) (*enti
 func (s *analysisService) mapDbNodeToAnalysisEntity(node dbtype.Node) *entity.AnalysisEntity {
 	props := utils.GetPropsFromNode(node)
 	createdAt := utils.GetTimePropOrEpochStart(props, "createdAt")
-	interactionEventEntity := entity.AnalysisEntity{
+	analysisEntity := entity.AnalysisEntity{
 		Id:            utils.GetStringPropOrEmpty(props, "id"),
 		CreatedAt:     &createdAt,
 		AnalysisType:  utils.GetStringPropOrEmpty(props, "analysisType"),
@@ -132,7 +133,7 @@ func (s *analysisService) mapDbNodeToAnalysisEntity(node dbtype.Node) *entity.An
 		Source:        entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
 		SourceOfTruth: entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
 	}
-	return &interactionEventEntity
+	return &analysisEntity
 }
 
 func (s *analysisService) convertDbNodesToAnalysis(records []*utils.DbNodeAndId) entity.AnalysisEntitys {

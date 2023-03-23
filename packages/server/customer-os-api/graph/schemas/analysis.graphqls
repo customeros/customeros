@@ -11,8 +11,6 @@ input AnalysisDescriptionInput {
 input AnalysisInput {
     content: String
     contentType: String
-    channel: String
-    channelData: String
     analysisType: String
     describes: [AnalysisDescriptionInput!]!
     appSource: String!

@@ -47,7 +47,7 @@ func (r *timelineEventRepository) GetTimelineEventsForContact(ctx context.Contex
 		// get all timeline events for the contact
 		" WITH c MATCH (c), "+
 		" p = (c)-[*1..2]-(a:TimelineEvent) "+
-		" WHERE all(r IN relationships(p) WHERE type(r) in ['HAS_ACTION','PARTICIPATES','SENT_TO','SENT_BY','PART_OF','REQUESTED','NOTED'])"+
+		" WHERE all(r IN relationships(p) WHERE type(r) in ['HAS_ACTION','PARTICIPATES','SENT_TO','SENT_BY','PART_OF','REQUESTED','NOTED', 'DESCRIBES', 'ATTENDED_BY'])"+
 		" AND coalesce(a.startedAt, a.createdAt) < datetime($startingDate) "+
 		" %s "+
 		" return a as timelineEvent "+
@@ -56,7 +56,7 @@ func (r *timelineEventRepository) GetTimelineEventsForContact(ctx context.Contex
 		" WITH c MATCH (c)-[:HAS]->(e),"+
 		" p = (e)-[*1..2]-(a:TimelineEvent) "+
 		" WHERE ('Email' in labels(e) OR 'PhoneNumber' in labels(e)) "+
-		" AND all(r IN relationships(p) WHERE type(r) in ['SENT_TO','SENT_BY','PART_OF'])"+
+		" AND all(r IN relationships(p) WHERE type(r) in ['SENT_TO','SENT_BY', 'PART_OF', 'DESCRIBES', 'ATTENDED_BY'])"+
 		" AND coalesce(a.startedAt, a.createdAt) < datetime($startingDate) "+
 		" %s "+
 		" return a as timelineEvent "+
@@ -101,7 +101,7 @@ func (r *timelineEventRepository) GetTimelineEventsTotalCountForContact(ctx cont
 		// get all timeline events for the contact
 		" WITH c MATCH (c), "+
 		" p = (c)-[*1..2]-(a:TimelineEvent) "+
-		" WHERE all(r IN relationships(p) WHERE type(r) in ['HAS_ACTION','PARTICIPATES','SENT_TO','SENT_BY','PART_OF','REQUESTED','NOTED']) "+
+		" WHERE all(r IN relationships(p) WHERE type(r) in ['HAS_ACTION','PARTICIPATES','SENT_TO','SENT_BY','PART_OF','REQUESTED','NOTED', 'DESCRIBES', 'ATTENDED_BY']) "+
 		" %s "+
 		" return a as timelineEvent "+
 		" UNION "+
@@ -109,7 +109,7 @@ func (r *timelineEventRepository) GetTimelineEventsTotalCountForContact(ctx cont
 		" WITH c MATCH (c)-[:HAS]->(e),"+
 		" p = (e)-[*1..2]-(a:TimelineEvent) "+
 		" WHERE ('Email' in labels(e) OR 'PhoneNumber' in labels(e)) "+
-		" AND all(r IN relationships(p) WHERE type(r) in ['SENT_TO','SENT_BY','PART_OF'])"+
+		" AND all(r IN relationships(p) WHERE type(r) in ['SENT_TO','SENT_BY', 'PART_OF', 'DESCRIBES', 'ATTENDED_BY'])"+
 		" %s "+
 		" return a as timelineEvent "+
 		" } "+

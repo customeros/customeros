@@ -265,6 +265,7 @@ type ComplexityRoot struct {
 
 	InteractionSession struct {
 		AppSource         func(childComplexity int) int
+		AttendedBy        func(childComplexity int) int
 		Channel           func(childComplexity int) int
 		ChannelData       func(childComplexity int) int
 		CreatedAt         func(childComplexity int) int
@@ -648,6 +649,7 @@ type InteractionEventResolver interface {
 }
 type InteractionSessionResolver interface {
 	Events(ctx context.Context, obj *model.InteractionSession) ([]*model.InteractionEvent, error)
+	AttendedBy(ctx context.Context, obj *model.InteractionSession) ([]model.InteractionSessionParticipant, error)
 }
 type JobRoleResolver interface {
 	Organization(ctx context.Context, obj *model.JobRole) (*model.Organization, error)
@@ -1871,6 +1873,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.InteractionSession.AppSource(childComplexity), true
+
+	case "InteractionSession.attendedBy":
+		if e.complexity.InteractionSession.AttendedBy == nil {
+			break
+		}
+
+		return e.complexity.InteractionSession.AttendedBy(childComplexity), true
 
 	case "InteractionSession.channel":
 		if e.complexity.InteractionSession.Channel == nil {
@@ -4225,6 +4234,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputInteractionEventInput,
 		ec.unmarshalInputInteractionEventParticipantInput,
 		ec.unmarshalInputInteractionSessionInput,
+		ec.unmarshalInputInteractionSessionParticipantInput,
 		ec.unmarshalInputJobRoleInput,
 		ec.unmarshalInputJobRoleUpdateInput,
 		ec.unmarshalInputNoteInput,
@@ -4315,8 +4325,6 @@ input AnalysisDescriptionInput {
 input AnalysisInput {
     content: String
     contentType: String
-    channel: String
-    channelData: String
     analysisType: String
     describes: [AnalysisDescriptionInput!]!
     appSource: String!
@@ -5238,6 +5246,14 @@ input InteractionEventParticipantInput  {
     type: String
 }
 
+input InteractionSessionParticipantInput  {
+    email: String
+    phoneNumber: String
+    contactID: ID
+    userID: ID
+    type: String
+}
+
 input InteractionSessionInput {
     sessionIdentifier: String
     name: String!
@@ -5245,6 +5261,7 @@ input InteractionSessionInput {
     type: String
     channel: String
     channelData: String
+    attendedBy: [InteractionSessionParticipantInput!]
     appSource: String!
 }
 
@@ -5272,6 +5289,7 @@ extend type Mutation {
 }
 
 union InteractionEventParticipant = EmailParticipant | PhoneNumberParticipant | ContactParticipant | UserParticipant
+union InteractionSessionParticipant = EmailParticipant | PhoneNumberParticipant | ContactParticipant | UserParticipant
 
 type InteractionSession implements Node {
     id: ID!
@@ -5290,6 +5308,7 @@ type InteractionSession implements Node {
     sourceOfTruth: DataSource!
     appSource: String!
     events: [InteractionEvent!]! @goField(forceResolver: true)
+    attendedBy: [InteractionSessionParticipant!]! @goField(forceResolver: true)
 }
 
 type InteractionEvent implements Node {
@@ -5840,7 +5859,7 @@ type TicketSummaryByStatus {
     count: Int64!
 }
 `, BuiltIn: false},
-	{Name: "../schemas/timeline_event.graphqls", Input: `union TimelineEvent = PageView | InteractionSession | Ticket | Conversation | Note | InteractionEvent
+	{Name: "../schemas/timeline_event.graphqls", Input: `union TimelineEvent = PageView | InteractionSession | Ticket | Conversation | Note | InteractionEvent | Analysis
 
 enum TimelineEventType {
     PAGE_VIEW
@@ -5849,6 +5868,7 @@ enum TimelineEventType {
     CONVERSATION
     NOTE
     INTERACTION_EVENT
+    ANALYSIS
 }`, BuiltIn: false},
 	{Name: "../schemas/user.graphqls", Input: `extend type Query {
     users(pagination: Pagination, where: Filter, sort: [SortBy!]): UserPage!
@@ -15336,6 +15356,8 @@ func (ec *executionContext) fieldContext_InteractionEvent_interactionSession(ctx
 				return ec.fieldContext_InteractionSession_appSource(ctx, field)
 			case "events":
 				return ec.fieldContext_InteractionSession_events(ctx, field)
+			case "attendedBy":
+				return ec.fieldContext_InteractionSession_attendedBy(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type InteractionSession", field.Name)
 		},
@@ -16304,6 +16326,50 @@ func (ec *executionContext) fieldContext_InteractionSession_events(ctx context.C
 				return ec.fieldContext_InteractionEvent_appSource(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type InteractionEvent", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _InteractionSession_attendedBy(ctx context.Context, field graphql.CollectedField, obj *model.InteractionSession) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_InteractionSession_attendedBy(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.InteractionSession().AttendedBy(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]model.InteractionSessionParticipant)
+	fc.Result = res
+	return ec.marshalNInteractionSessionParticipant2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐInteractionSessionParticipantᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_InteractionSession_attendedBy(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "InteractionSession",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type InteractionSessionParticipant does not have child fields")
 		},
 	}
 	return fc, nil
@@ -21350,6 +21416,8 @@ func (ec *executionContext) fieldContext_Mutation_interactionSession_Create(ctx 
 				return ec.fieldContext_InteractionSession_appSource(ctx, field)
 			case "events":
 				return ec.fieldContext_InteractionSession_events(ctx, field)
+			case "attendedBy":
+				return ec.fieldContext_InteractionSession_attendedBy(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type InteractionSession", field.Name)
 		},
@@ -28428,6 +28496,8 @@ func (ec *executionContext) fieldContext_Query_interactionSession(ctx context.Co
 				return ec.fieldContext_InteractionSession_appSource(ctx, field)
 			case "events":
 				return ec.fieldContext_InteractionSession_events(ctx, field)
+			case "attendedBy":
+				return ec.fieldContext_InteractionSession_attendedBy(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type InteractionSession", field.Name)
 		},
@@ -28515,6 +28585,8 @@ func (ec *executionContext) fieldContext_Query_interactionSession_BySessionIdent
 				return ec.fieldContext_InteractionSession_appSource(ctx, field)
 			case "events":
 				return ec.fieldContext_InteractionSession_events(ctx, field)
+			case "attendedBy":
+				return ec.fieldContext_InteractionSession_attendedBy(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type InteractionSession", field.Name)
 		},
@@ -32825,7 +32897,7 @@ func (ec *executionContext) unmarshalInputAnalysisInput(ctx context.Context, obj
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"content", "contentType", "channel", "channelData", "analysisType", "describes", "appSource"}
+	fieldsInOrder := [...]string{"content", "contentType", "analysisType", "describes", "appSource"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -32845,22 +32917,6 @@ func (ec *executionContext) unmarshalInputAnalysisInput(ctx context.Context, obj
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("contentType"))
 			it.ContentType, err = ec.unmarshalOString2ᚖstring(ctx, v)
-			if err != nil {
-				return it, err
-			}
-		case "channel":
-			var err error
-
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("channel"))
-			it.Channel, err = ec.unmarshalOString2ᚖstring(ctx, v)
-			if err != nil {
-				return it, err
-			}
-		case "channelData":
-			var err error
-
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("channelData"))
-			it.ChannelData, err = ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -34164,7 +34220,7 @@ func (ec *executionContext) unmarshalInputInteractionSessionInput(ctx context.Co
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"sessionIdentifier", "name", "status", "type", "channel", "channelData", "appSource"}
+	fieldsInOrder := [...]string{"sessionIdentifier", "name", "status", "type", "channel", "channelData", "attendedBy", "appSource"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -34219,11 +34275,79 @@ func (ec *executionContext) unmarshalInputInteractionSessionInput(ctx context.Co
 			if err != nil {
 				return it, err
 			}
+		case "attendedBy":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("attendedBy"))
+			it.AttendedBy, err = ec.unmarshalOInteractionSessionParticipantInput2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐInteractionSessionParticipantInputᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
 		case "appSource":
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("appSource"))
 			it.AppSource, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputInteractionSessionParticipantInput(ctx context.Context, obj interface{}) (model.InteractionSessionParticipantInput, error) {
+	var it model.InteractionSessionParticipantInput
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"email", "phoneNumber", "contactID", "userID", "type"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "email":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("email"))
+			it.Email, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "phoneNumber":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("phoneNumber"))
+			it.PhoneNumber, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "contactID":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("contactID"))
+			it.ContactID, err = ec.unmarshalOID2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "userID":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("userID"))
+			it.UserID, err = ec.unmarshalOID2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "type":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("type"))
+			it.Type, err = ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -35132,6 +35256,43 @@ func (ec *executionContext) _InteractionEventParticipant(ctx context.Context, se
 	}
 }
 
+func (ec *executionContext) _InteractionSessionParticipant(ctx context.Context, sel ast.SelectionSet, obj model.InteractionSessionParticipant) graphql.Marshaler {
+	switch obj := (obj).(type) {
+	case nil:
+		return graphql.Null
+	case model.EmailParticipant:
+		return ec._EmailParticipant(ctx, sel, &obj)
+	case *model.EmailParticipant:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._EmailParticipant(ctx, sel, obj)
+	case model.PhoneNumberParticipant:
+		return ec._PhoneNumberParticipant(ctx, sel, &obj)
+	case *model.PhoneNumberParticipant:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._PhoneNumberParticipant(ctx, sel, obj)
+	case model.ContactParticipant:
+		return ec._ContactParticipant(ctx, sel, &obj)
+	case *model.ContactParticipant:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._ContactParticipant(ctx, sel, obj)
+	case model.UserParticipant:
+		return ec._UserParticipant(ctx, sel, &obj)
+	case *model.UserParticipant:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._UserParticipant(ctx, sel, obj)
+	default:
+		panic(fmt.Errorf("unexpected type %T", obj))
+	}
+}
+
 func (ec *executionContext) _Node(ctx context.Context, sel ast.SelectionSet, obj model.Node) graphql.Marshaler {
 	switch obj := (obj).(type) {
 	case nil:
@@ -35387,6 +35548,13 @@ func (ec *executionContext) _TimelineEvent(ctx context.Context, sel ast.Selectio
 			return graphql.Null
 		}
 		return ec._InteractionEvent(ctx, sel, obj)
+	case model.Analysis:
+		return ec._Analysis(ctx, sel, &obj)
+	case *model.Analysis:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._Analysis(ctx, sel, obj)
 	default:
 		panic(fmt.Errorf("unexpected type %T", obj))
 	}
@@ -35396,7 +35564,7 @@ func (ec *executionContext) _TimelineEvent(ctx context.Context, sel ast.Selectio
 
 // region    **************************** object.gotpl ****************************
 
-var analysisImplementors = []string{"Analysis", "Node"}
+var analysisImplementors = []string{"Analysis", "Node", "TimelineEvent"}
 
 func (ec *executionContext) _Analysis(ctx context.Context, sel ast.SelectionSet, obj *model.Analysis) graphql.Marshaler {
 	fields := graphql.CollectFields(ec.OperationContext, sel, analysisImplementors)
@@ -36026,7 +36194,7 @@ func (ec *executionContext) _ContactGroupPage(ctx context.Context, sel ast.Selec
 	return out
 }
 
-var contactParticipantImplementors = []string{"ContactParticipant", "InteractionEventParticipant"}
+var contactParticipantImplementors = []string{"ContactParticipant", "InteractionEventParticipant", "InteractionSessionParticipant"}
 
 func (ec *executionContext) _ContactParticipant(ctx context.Context, sel ast.SelectionSet, obj *model.ContactParticipant) graphql.Marshaler {
 	fields := graphql.CollectFields(ec.OperationContext, sel, contactParticipantImplementors)
@@ -36668,7 +36836,7 @@ func (ec *executionContext) _Email(ctx context.Context, sel ast.SelectionSet, ob
 	return out
 }
 
-var emailParticipantImplementors = []string{"EmailParticipant", "InteractionEventParticipant"}
+var emailParticipantImplementors = []string{"EmailParticipant", "InteractionEventParticipant", "InteractionSessionParticipant"}
 
 func (ec *executionContext) _EmailParticipant(ctx context.Context, sel ast.SelectionSet, obj *model.EmailParticipant) graphql.Marshaler {
 	fields := graphql.CollectFields(ec.OperationContext, sel, emailParticipantImplementors)
@@ -37222,6 +37390,26 @@ func (ec *executionContext) _InteractionSession(ctx context.Context, sel ast.Sel
 					}
 				}()
 				res = ec._InteractionSession_events(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
+		case "attendedBy":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._InteractionSession_attendedBy(ctx, field, obj)
 				if res == graphql.Null {
 					atomic.AddUint32(&invalids, 1)
 				}
@@ -38977,7 +39165,7 @@ func (ec *executionContext) _PhoneNumber(ctx context.Context, sel ast.SelectionS
 	return out
 }
 
-var phoneNumberParticipantImplementors = []string{"PhoneNumberParticipant", "InteractionEventParticipant"}
+var phoneNumberParticipantImplementors = []string{"PhoneNumberParticipant", "InteractionEventParticipant", "InteractionSessionParticipant"}
 
 func (ec *executionContext) _PhoneNumberParticipant(ctx context.Context, sel ast.SelectionSet, obj *model.PhoneNumberParticipant) graphql.Marshaler {
 	fields := graphql.CollectFields(ec.OperationContext, sel, phoneNumberParticipantImplementors)
@@ -40022,7 +40210,7 @@ func (ec *executionContext) _UserPage(ctx context.Context, sel ast.SelectionSet,
 	return out
 }
 
-var userParticipantImplementors = []string{"UserParticipant", "InteractionEventParticipant"}
+var userParticipantImplementors = []string{"UserParticipant", "InteractionEventParticipant", "InteractionSessionParticipant"}
 
 func (ec *executionContext) _UserParticipant(ctx context.Context, sel ast.SelectionSet, obj *model.UserParticipant) graphql.Marshaler {
 	fields := graphql.CollectFields(ec.OperationContext, sel, userParticipantImplementors)
@@ -41516,6 +41704,65 @@ func (ec *executionContext) marshalNInteractionSession2ᚖgithubᚗcomᚋopenlin
 func (ec *executionContext) unmarshalNInteractionSessionInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐInteractionSessionInput(ctx context.Context, v interface{}) (model.InteractionSessionInput, error) {
 	res, err := ec.unmarshalInputInteractionSessionInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNInteractionSessionParticipant2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐInteractionSessionParticipant(ctx context.Context, sel ast.SelectionSet, v model.InteractionSessionParticipant) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._InteractionSessionParticipant(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNInteractionSessionParticipant2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐInteractionSessionParticipantᚄ(ctx context.Context, sel ast.SelectionSet, v []model.InteractionSessionParticipant) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNInteractionSessionParticipant2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐInteractionSessionParticipant(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) unmarshalNInteractionSessionParticipantInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐInteractionSessionParticipantInput(ctx context.Context, v interface{}) (*model.InteractionSessionParticipantInput, error) {
+	res, err := ec.unmarshalInputInteractionSessionParticipantInput(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) marshalNJobRole2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐJobRole(ctx context.Context, sel ast.SelectionSet, v model.JobRole) graphql.Marshaler {
@@ -43192,6 +43439,26 @@ func (ec *executionContext) marshalOInteractionSession2ᚖgithubᚗcomᚋopenlin
 		return graphql.Null
 	}
 	return ec._InteractionSession(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalOInteractionSessionParticipantInput2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐInteractionSessionParticipantInputᚄ(ctx context.Context, v interface{}) ([]*model.InteractionSessionParticipantInput, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var vSlice []interface{}
+	if v != nil {
+		vSlice = graphql.CoerceList(v)
+	}
+	var err error
+	res := make([]*model.InteractionSessionParticipantInput, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalNInteractionSessionParticipantInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐInteractionSessionParticipantInput(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
 }
 
 func (ec *executionContext) marshalONote2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐNote(ctx context.Context, sel ast.SelectionSet, v []*model.Note) graphql.Marshaler {

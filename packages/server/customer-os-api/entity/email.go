@@ -18,8 +18,9 @@ type EmailEntity struct {
 	CreatedAt     time.Time
 	UpdatedAt     time.Time
 
-	InteractionEventParticipantDetails InteractionEventParticipantDetails
-	DataloaderKey                      string
+	InteractionEventParticipantDetails   InteractionEventParticipantDetails
+	InteractionSessionParticipantDetails InteractionSessionParticipantDetails
+	DataloaderKey                        string
 }
 
 func (email EmailEntity) ToString() string {
@@ -31,6 +32,12 @@ type EmailEntities []EmailEntity
 func (EmailEntity) IsInteractionEventParticipant() {}
 
 func (EmailEntity) InteractionEventParticipantLabel() string {
+	return NodeLabel_Email
+}
+
+func (EmailEntity) IsInteractionSessionParticipant() {}
+
+func (EmailEntity) InteractionSessionParticipantLabel() string {
 	return NodeLabel_Email
 }
 
