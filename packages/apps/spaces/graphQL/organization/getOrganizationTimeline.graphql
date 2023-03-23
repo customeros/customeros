@@ -30,6 +30,20 @@ query GetOrganizationTimeline($organizationId: ID!, $from: Time!, $size: Int!) {
           name
         }
       }
+      ... on Analysis {
+        id
+        createdAt
+        content
+        contentType
+        analysisType
+        describes {
+          __typename
+          ...InteractionEventFragment
+          ...InteractionSessionFragment
+        }
+        source
+        sourceOfTruth
+      }
       ... on Conversation {
         id
         startedAt
@@ -58,85 +72,10 @@ query GetOrganizationTimeline($organizationId: ID!, $from: Time!, $size: Int!) {
         threadId
       }
       ... on InteractionSession {
-        id
-        startedAt
-        name
-        status
-        type
-        events {
-          content
-          contentType
-        }
+        ...InteractionSessionFragment
       }
       ... on InteractionEvent {
-        id
-        createdAt
-        channel
-        interactionSession {
-          name
-        }
-        content
-        contentType
-        sentBy {
-          __typename
-          ... on EmailParticipant {
-            __typename
-            emailParticipant {
-              email
-            }
-          }
-          ... on PhoneNumberParticipant {
-            __typename
-            phoneNumberParticipant {
-              e164
-            }
-          }
-          ... on ContactParticipant {
-            __typename
-            contactParticipant {
-              name
-            }
-          }
-          ... on UserParticipant {
-            __typename
-            userParticipant {
-              firstName
-              lastName
-            }
-          }
-        }
-        sentTo {
-          __typename
-          ... on EmailParticipant {
-            __typename
-            type
-            emailParticipant {
-              email
-            }
-          }
-          ... on PhoneNumberParticipant {
-            __typename
-            type
-            phoneNumberParticipant {
-              e164
-            }
-          }
-          ... on ContactParticipant {
-            __typename
-            type
-            contactParticipant {
-              name
-            }
-          }
-          ... on UserParticipant {
-            __typename
-            type
-            userParticipant {
-              firstName
-              lastName
-            }
-          }
-        }
+        ...InteractionEventFragment
       }
       ... on Note {
         id
