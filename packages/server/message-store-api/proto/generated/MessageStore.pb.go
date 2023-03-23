@@ -75,7 +75,7 @@ type MessageListResponse struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Messages []*Message `protobuf:"bytes,1,rep,name=messages,proto3" json:"messages"`
+	Messages []*MessageDeprecate `protobuf:"bytes,1,rep,name=messages,proto3" json:"messages"`
 }
 
 func (x *MessageListResponse) Reset() {
@@ -93,7 +93,7 @@ func (x *MessageListResponse) String() string {
 
 func (*MessageListResponse) ProtoMessage() {}
 
-func (x *MessageListResponse) ProtoReflect() protoreflect.Message {
+func (x *MessageListResponse) ProtoReflect() protoreflect.MessageDeprecate {
 	mi := &file_MessageStore_proto_msgTypes[0]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -110,7 +110,7 @@ func (*MessageListResponse) Descriptor() ([]byte, []int) {
 	return file_MessageStore_proto_rawDescGZIP(), []int{0}
 }
 
-func (x *MessageListResponse) GetMessages() []*Message {
+func (x *MessageListResponse) GetMessages() []*MessageDeprecate {
 	if x != nil {
 		return x.Messages
 	}
@@ -140,7 +140,7 @@ func (x *ParticipantsListResponse) String() string {
 
 func (*ParticipantsListResponse) ProtoMessage() {}
 
-func (x *ParticipantsListResponse) ProtoReflect() protoreflect.Message {
+func (x *ParticipantsListResponse) ProtoReflect() protoreflect.MessageDeprecate {
 	mi := &file_MessageStore_proto_msgTypes[1]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -187,7 +187,7 @@ func (x *ParticipantObjectListResponse) String() string {
 
 func (*ParticipantObjectListResponse) ProtoMessage() {}
 
-func (x *ParticipantObjectListResponse) ProtoReflect() protoreflect.Message {
+func (x *ParticipantObjectListResponse) ProtoReflect() protoreflect.MessageDeprecate {
 	mi := &file_MessageStore_proto_msgTypes[2]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -234,7 +234,7 @@ func (x *FeedId) String() string {
 
 func (*FeedId) ProtoMessage() {}
 
-func (x *FeedId) ProtoReflect() protoreflect.Message {
+func (x *FeedId) ProtoReflect() protoreflect.MessageDeprecate {
 	mi := &file_MessageStore_proto_msgTypes[3]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -291,7 +291,7 @@ func (x *FeedItem) String() string {
 
 func (*FeedItem) ProtoMessage() {}
 
-func (x *FeedItem) ProtoReflect() protoreflect.Message {
+func (x *FeedItem) ProtoReflect() protoreflect.MessageDeprecate {
 	mi := &file_MessageStore_proto_msgTypes[4]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -395,7 +395,7 @@ func (x *FeedItemPagedResponse) String() string {
 
 func (*FeedItemPagedResponse) ProtoMessage() {}
 
-func (x *FeedItemPagedResponse) ProtoReflect() protoreflect.Message {
+func (x *FeedItemPagedResponse) ProtoReflect() protoreflect.MessageDeprecate {
 	mi := &file_MessageStore_proto_msgTypes[5]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -452,7 +452,7 @@ func (x *GetFeedsPagedRequest) String() string {
 
 func (*GetFeedsPagedRequest) ProtoMessage() {}
 
-func (x *GetFeedsPagedRequest) ProtoReflect() protoreflect.Message {
+func (x *GetFeedsPagedRequest) ProtoReflect() protoreflect.MessageDeprecate {
 	mi := &file_MessageStore_proto_msgTypes[6]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -521,7 +521,7 @@ func (x *PageInfo) String() string {
 
 func (*PageInfo) ProtoMessage() {}
 
-func (x *PageInfo) ProtoReflect() protoreflect.Message {
+func (x *PageInfo) ProtoReflect() protoreflect.MessageDeprecate {
 	mi := &file_MessageStore_proto_msgTypes[7]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -576,7 +576,7 @@ func (x *PagedMessages) String() string {
 
 func (*PagedMessages) ProtoMessage() {}
 
-func (x *PagedMessages) ProtoReflect() protoreflect.Message {
+func (x *PagedMessages) ProtoReflect() protoreflect.MessageDeprecate {
 	mi := &file_MessageStore_proto_msgTypes[8]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -754,7 +754,7 @@ var file_MessageStore_proto_goTypes = []interface{}{
 	(*GetFeedsPagedRequest)(nil),          // 7: proto.GetFeedsPagedRequest
 	(*PageInfo)(nil),                      // 8: proto.PageInfo
 	(*PagedMessages)(nil),                 // 9: proto.PagedMessages
-	(*Message)(nil),                       // 10: proto.Message
+	(*MessageDeprecate)(nil),                       // 10: proto.MessageDeprecate
 	(*Participant)(nil),                   // 11: proto.Participant
 	(*ParticipantId)(nil),                 // 12: proto.ParticipantId
 	(*timestamppb.Timestamp)(nil),         // 13: google.protobuf.Timestamp
@@ -762,7 +762,7 @@ var file_MessageStore_proto_goTypes = []interface{}{
 	(*InputMessage)(nil),                  // 15: proto.InputMessage
 }
 var file_MessageStore_proto_depIdxs = []int32{
-	10, // 0: proto.MessageListResponse.messages:type_name -> proto.Message
+	10, // 0: proto.MessageListResponse.messages:type_name -> proto.MessageDeprecate
 	11, // 1: proto.ParticipantObjectListResponse.participants:type_name -> proto.Participant
 	12, // 2: proto.FeedItem.initiatorUsername:type_name -> proto.ParticipantId
 	13, // 3: proto.FeedItem.lastTimestamp:type_name -> google.protobuf.Timestamp
@@ -781,7 +781,7 @@ var file_MessageStore_proto_depIdxs = []int32{
 	6,  // 16: proto.MessageStoreService.getFeeds:output_type -> proto.FeedItemPagedResponse
 	5,  // 17: proto.MessageStoreService.getFeed:output_type -> proto.FeedItem
 	1,  // 18: proto.MessageStoreService.getMessagesForFeed:output_type -> proto.MessageListResponse
-	10, // 19: proto.MessageStoreService.getMessage:output_type -> proto.Message
+	10, // 19: proto.MessageStoreService.getMessage:output_type -> proto.MessageDeprecate
 	14, // 20: proto.MessageStoreService.saveMessage:output_type -> proto.MessageId
 	2,  // 21: proto.MessageStoreService.getParticipants:output_type -> proto.ParticipantsListResponse
 	3,  // 22: proto.MessageStoreService.getParticipantIds:output_type -> proto.ParticipantObjectListResponse

@@ -44,7 +44,7 @@ message MessageId {
   string conversationId = 2;
 }
 
-message Message {
+message MessageDeprecate {
   MessageId messageId = 1;
   ParticipantId initiatorUsername = 2;
   MessageType type = 3;

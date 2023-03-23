@@ -24,9 +24,7 @@ import linkifyHtml from 'linkify-html';
 import { Controller, useForm } from 'react-hook-form';
 import { Editor } from '../editor';
 import { NoteEditorModes } from '../editor/Editor';
-import { ContactAvatar } from '../organization-avatar';
 import { NotedEntity } from '../../../../graphQL/__generated__/generated';
-import { OrganizationAvatar } from '../organization-avatar/OrganizationAvatar';
 import { getContactDisplayName } from '../../../../utils';
 
 interface Props {
@@ -112,12 +110,7 @@ export const NoteTimelineItem: React.FC<Props> = ({
             // eslint-disable-next-line @typescript-eslint/ban-ts-comment
             // @ts-ignore
             const imageSrc = images[domNode.attribs.alt] as string;
-            return (
-              <img
-                src={imageSrc}
-                alt={domNode.attribs.alt}
-              />
-            );
+            return <img src={imageSrc} alt={domNode.attribs.alt} />;
           }
         },
       });
@@ -162,7 +155,6 @@ export const NoteTimelineItem: React.FC<Props> = ({
       }
     }, 0);
   };
-  console.log('🏷️ ----- no: ', noted);
   return (
     <div
       className={styles.noteWrapper}
@@ -235,7 +227,9 @@ export const NoteTimelineItem: React.FC<Props> = ({
                     value={field.value}
                     onSave={() => null} //not used
                     label='Save'
-                    onHtmlChanged={(newHtml: string) => setValue('htmlEnhanced', newHtml)}
+                    onHtmlChanged={(newHtml: string) =>
+                      setValue('htmlEnhanced', newHtml)
+                    }
                   />
                 )}
               />
@@ -264,11 +258,14 @@ export const NoteTimelineItem: React.FC<Props> = ({
                 linkifyHtml(note.htmlEnhanced, {
                   defaultProtocol: 'https',
                   rel: 'noopener noreferrer',
-                }), {
-                    allowedTags: sanitizeHtml.defaults.allowedTags.concat([ 'img' ]),
-                    allowedAttributes: {'img': ['src', 'alt']},
-                    allowedSchemes: [ 'data', 'http', 'https']
-                  }
+                }),
+                {
+                  allowedTags: sanitizeHtml.defaults.allowedTags.concat([
+                    'img',
+                  ]),
+                  allowedAttributes: { img: ['src', 'alt'] },
+                  allowedSchemes: ['data', 'http', 'https'],
+                },
               ),
             }}
           />

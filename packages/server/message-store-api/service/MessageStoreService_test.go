@@ -65,7 +65,7 @@ func TestGetMessages(t *testing.T) {
 	if queryResult.Error != nil {
 		t.Fatal(queryResult.Error)
 	}
-	var messages []*msProto.Message
+	var messages []*msProto.MessageDeprecate
 	for _, event := range *queryResult.Result.(*[]entity.ConversationEvent) {
 		messages = append(messages, s.commonStoreService.EncodeConversationEventToMS(event))
 	}
@@ -77,7 +77,7 @@ func TestGetMessages(t *testing.T) {
 	if queryResult.Error != nil {
 		t.Fatal(queryResult.Error)
 	}
-	messages = make([]*msProto.Message, 0)
+	messages = make([]*msProto.MessageDeprecate, 0)
 	for _, event := range *queryResult.Result.(*[]entity.ConversationEvent) {
 		messages = append(messages, s.commonStoreService.EncodeConversationEventToMS(event))
 	}
@@ -90,7 +90,7 @@ func TestGetMessages(t *testing.T) {
 	if queryResult.Error != nil {
 		t.Fatal(queryResult.Error)
 	}
-	messages = make([]*msProto.Message, 0)
+	messages = make([]*msProto.MessageDeprecate, 0)
 	for _, event := range *queryResult.Result.(*[]entity.ConversationEvent) {
 		messages = append(messages, s.commonStoreService.EncodeConversationEventToMS(event))
 	}

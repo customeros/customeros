@@ -2,7 +2,7 @@ import React, { useRef } from 'react';
 import { useStickyScroll } from '../../../../hooks/useStickyScroll';
 
 import {
-  PhoneConversationTimelineItem,
+  ConversationTimelineItem,
   EmailTimelineItem,
   LiveConversationTimelineItem,
   NoteTimelineItem,
@@ -12,10 +12,10 @@ import { TimelineItem } from '../../atoms/timeline-item';
 import { TicketTimelineItem } from '../../molecules/ticket-timeline-item';
 import styles from './timeline.module.scss';
 import { InteractionTimelineItem } from '../../molecules/interaction-timeline-item';
-import { ChatTimelineItem } from '../../molecules/conversation-timeline-item/ChatTimelineItem';
 import { useInfiniteScroll } from './useInfiniteScroll';
 import { Skeleton } from '../../atoms/skeleton';
 import { TimelineStatus } from './timeline-status';
+import classNames from 'classnames';
 
 interface Props {
   loading: boolean;
@@ -69,43 +69,63 @@ export const Timeline = ({
         );
       case 'Conversation':
         // TODO move to interaction event once we have the data in backend
-        if (data.channel === 'WEB_CHAT') {
-          return (
-            <ChatTimelineItem
-              first={index == 0}
-              feedId={data.id}
-              source={data.source}
-              createdAt={data?.startedAt}
-              feedInitiator={{
-                firstName: data.initiatorFirstName,
-                lastName: data.initiatorLastName,
-                phoneNumber: data.initiatorUsername.identifier,
-                lastTimestamp: data.lastTimestamp,
-              }}
-            />
-          );
-        }
+        // if (data.channel === 'WEB_CHAT') {
+        //   return (
+        //     <ChatTimelineItem
+        //       first={index == 0}
+        //       feedId={data.id}
+        //       source={data.source}
+        //       createdAt={data?.startedAt}
+        //       feedInitiator={{
+        //         firstName: data.initiatorFirstName,
+        //         lastName: data.initiatorLastName,
+        //         phoneNumber: data.initiatorUsername.identifier,
+        //         lastTimestamp: data.lastTimestamp,
+        //       }}
+        //     />
+        //   );
+        // }
         if (data.channel === 'EMAIL') {
           return '';
         }
-        // TODO move to interaction event once we have the data in backend
-        if (data.channel === 'VOICE') {
-          return (
-            <PhoneConversationTimelineItem
-              first={index == 0}
-              feedId={data.id}
-              source={data.source}
-              createdAt={data?.startedAt}
-              feedInitiator={{
-                firstName: data.initiatorFirstName,
-                lastName: data.initiatorLastName,
-                phoneNumber: data.initiatorUsername.identifier,
-                lastTimestamp: data.lastTimestamp,
-              }}
-            />
-          );
-        }
         return null;
+
+      case 'Analysis': {
+        const decodeContent = (content: string) => {
+          let response;
+          try {
+            response = JSON.parse(content);
+          } catch (e) {
+            response = {
+              dialog: {
+                type: 'MESSAGE',
+                mimetype: 'text/plain',
+                body: content,
+              },
+            };
+          }
+          return response;
+        };
+        if (data.analysisType === 'transcript') {
+          return null;
+        }
+
+        const transcriptForSummary = loggedActivities
+          .filter((e) => e.__typename === 'Analysis')
+          .filter((e) => e.analysisType !== 'summary')
+          .find((e) => e.describes[0].id === data.describes[0].id);
+
+        return (
+          <ConversationTimelineItem
+            id={data.id}
+            content={decodeContent(data.content)}
+            transcript={decodeContent(transcriptForSummary.content)}
+            type={data.analysisType}
+            createdAt={data?.createdAt}
+            mode='PHONE_CALL' // fixme - mode will be assessed from data inside the component (on message base)
+          />
+        );
+      }
 
       case 'LiveConversation':
         return (
@@ -149,12 +169,7 @@ export const Timeline = ({
             </TimelineItem>
           );
         } else {
-          return (
-            <div>
-              Sorry, looks like &apos;{type}&apos; activity type is not
-              supported yet{' '}
-            </div>
-          );
+          return null;
         }
         return null;
 
@@ -173,7 +188,12 @@ export const Timeline = ({
   return (
     <div ref={timelineContainerRef} className={styles.timeline}>
       {!loading && noActivity && <TimelineStatus status='no-activity' />}
-      <div className={styles.timelineContent} ref={containerRef}>
+      <div
+        className={classNames(styles.timelineContent, {
+          [styles.scrollable]: !noActivity,
+        })}
+        ref={containerRef}
+      >
         {!!loggedActivities.length && (
           <div
             ref={infiniteScrollElementRef}
@@ -198,6 +218,7 @@ export const Timeline = ({
             {getTimelineItemByType(e.__typename, e, index)}
           </React.Fragment>
         ))}
+        <div id={styles.scrollAnchor} />
       </div>
     </div>
   );

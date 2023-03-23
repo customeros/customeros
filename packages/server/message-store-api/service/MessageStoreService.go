@@ -29,7 +29,7 @@ type Participant struct {
 	Type entity.SenderType
 }
 
-func (s *MessageService) GetMessage(ctx context.Context, msgId *msProto.MessageId) (*msProto.Message, error) {
+func (s *MessageService) GetMessage(ctx context.Context, msgId *msProto.MessageId) (*msProto.MessageDeprecate, error) {
 	apiKeyValid := commonModuleService.ApiKeyCheckerGRPC(ctx, s.postgresRepositories.CommonRepositories.AppKeyRepository, commonModuleService.MESSAGE_STORE_API)
 	if !apiKeyValid {
 		return nil, status.Errorf(codes.Unauthenticated, "Invalid API Key")
@@ -41,7 +41,7 @@ func (s *MessageService) GetMessage(ctx context.Context, msgId *msProto.MessageI
 	}
 
 	if msgId == nil || msgId.GetConversationEventId() == "" {
-		return nil, status.Errorf(codes.InvalidArgument, "Message ID must be specified")
+		return nil, status.Errorf(codes.InvalidArgument, "MessageDeprecate ID must be specified")
 	}
 
 	queryResult := s.postgresRepositories.ConversationEventRepository.GetEventById(msgId.GetConversationEventId())
@@ -161,7 +161,7 @@ func (s *MessageService) GetMessagesForFeed(ctx context.Context, feedRequest *ms
 		return nil, status.Errorf(codes.Internal, queryResult.Error.Error())
 	}
 
-	var messages []*msProto.Message
+	var messages []*msProto.MessageDeprecate
 
 	for _, event := range *queryResult.Result.(*[]entity.ConversationEvent) {
 		messages = append(messages, s.commonStoreService.EncodeConversationEventToMS(event))

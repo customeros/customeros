@@ -25,11 +25,11 @@ type CommonStoreService interface {
 
 	EncodeConversationToMS(conversation Conversation) *msProto.FeedItem
 	EncodeMessageIdToMS(conversation Conversation) *msProto.MessageId
-	EncodeConversationEventToMS(conversationEvent entity.ConversationEvent) *msProto.Message
+	EncodeConversationEventToMS(conversationEvent entity.ConversationEvent) *msProto.MessageDeprecate
 }
 
-func (s *commonStoreService) EncodeConversationEventToMS(conversationEvent entity.ConversationEvent) *msProto.Message {
-	return &msProto.Message{
+func (s *commonStoreService) EncodeConversationEventToMS(conversationEvent entity.ConversationEvent) *msProto.MessageDeprecate {
+	return &msProto.MessageDeprecate{
 		MessageId:         s.EncodeMessageIdToMs(conversationEvent),
 		InitiatorUsername: s.EncodeUsernameToMs(conversationEvent.InitiatorUsername),
 		Type:              s.ConvertEntityTypeToMSType(conversationEvent.Type),

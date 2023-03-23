@@ -30,7 +30,7 @@ type Hub struct {
 
 type MessageItem struct {
 	Username string `json:"username"`
-	Message  string `json:"message"`
+	MessageDeprecate  string `json:"message"`
 }
 
 func NewHub() *Hub {

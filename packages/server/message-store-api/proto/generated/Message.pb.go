@@ -2,7 +2,7 @@
 // versions:
 // 	protoc-gen-go v1.28.1
 // 	protoc        v3.21.12
-// source: Message.proto
+// source: MessageDeprecate.proto
 
 package generated
 
@@ -278,7 +278,7 @@ func (x *ParticipantId) String() string {
 
 func (*ParticipantId) ProtoMessage() {}
 
-func (x *ParticipantId) ProtoReflect() protoreflect.Message {
+func (x *ParticipantId) ProtoReflect() protoreflect.MessageDeprecate {
 	mi := &file_Message_proto_msgTypes[0]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -333,7 +333,7 @@ func (x *Participant) String() string {
 
 func (*Participant) ProtoMessage() {}
 
-func (x *Participant) ProtoReflect() protoreflect.Message {
+func (x *Participant) ProtoReflect() protoreflect.MessageDeprecate {
 	mi := &file_Message_proto_msgTypes[1]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -390,7 +390,7 @@ func (x *MessageId) String() string {
 
 func (*MessageId) ProtoMessage() {}
 
-func (x *MessageId) ProtoReflect() protoreflect.Message {
+func (x *MessageId) ProtoReflect() protoreflect.MessageDeprecate {
 	mi := &file_Message_proto_msgTypes[2]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -421,7 +421,7 @@ func (x *MessageId) GetConversationId() string {
 	return ""
 }
 
-type Message struct {
+type MessageDeprecate struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
@@ -438,8 +438,8 @@ type Message struct {
 	SenderUsername    *ParticipantId         `protobuf:"bytes,10,opt,name=senderUsername,proto3" json:"senderUsername"`
 }
 
-func (x *Message) Reset() {
-	*x = Message{}
+func (x *MessageDeprecate) Reset() {
+	*x = MessageDeprecate{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_Message_proto_msgTypes[3]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -447,13 +447,13 @@ func (x *Message) Reset() {
 	}
 }
 
-func (x *Message) String() string {
+func (x *MessageDeprecate) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*Message) ProtoMessage() {}
+func (*MessageDeprecate) ProtoMessage() {}
 
-func (x *Message) ProtoReflect() protoreflect.Message {
+func (x *MessageDeprecate) ProtoReflect() protoreflect.MessageDeprecate {
 	mi := &file_Message_proto_msgTypes[3]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -465,75 +465,75 @@ func (x *Message) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use Message.ProtoReflect.Descriptor instead.
-func (*Message) Descriptor() ([]byte, []int) {
+// Deprecated: Use MessageDeprecate.ProtoReflect.Descriptor instead.
+func (*MessageDeprecate) Descriptor() ([]byte, []int) {
 	return file_Message_proto_rawDescGZIP(), []int{3}
 }
 
-func (x *Message) GetMessageId() *MessageId {
+func (x *MessageDeprecate) GetMessageId() *MessageId {
 	if x != nil {
 		return x.MessageId
 	}
 	return nil
 }
 
-func (x *Message) GetInitiatorUsername() *ParticipantId {
+func (x *MessageDeprecate) GetInitiatorUsername() *ParticipantId {
 	if x != nil {
 		return x.InitiatorUsername
 	}
 	return nil
 }
 
-func (x *Message) GetType() MessageType {
+func (x *MessageDeprecate) GetType() MessageType {
 	if x != nil {
 		return x.Type
 	}
 	return MessageType_WEB_CHAT
 }
 
-func (x *Message) GetSubtype() MessageSubtype {
+func (x *MessageDeprecate) GetSubtype() MessageSubtype {
 	if x != nil {
 		return x.Subtype
 	}
 	return MessageSubtype_MESSAGE
 }
 
-func (x *Message) GetContent() string {
+func (x *MessageDeprecate) GetContent() string {
 	if x != nil {
 		return x.Content
 	}
 	return ""
 }
 
-func (x *Message) GetDirection() MessageDirection {
+func (x *MessageDeprecate) GetDirection() MessageDirection {
 	if x != nil {
 		return x.Direction
 	}
 	return MessageDirection_INBOUND
 }
 
-func (x *Message) GetTime() *timestamppb.Timestamp {
+func (x *MessageDeprecate) GetTime() *timestamppb.Timestamp {
 	if x != nil {
 		return x.Time
 	}
 	return nil
 }
 
-func (x *Message) GetSenderType() SenderType {
+func (x *MessageDeprecate) GetSenderType() SenderType {
 	if x != nil {
 		return x.SenderType
 	}
 	return SenderType_CONTACT
 }
 
-func (x *Message) GetSenderId() string {
+func (x *MessageDeprecate) GetSenderId() string {
 	if x != nil {
 		return x.SenderId
 	}
 	return ""
 }
 
-func (x *Message) GetSenderUsername() *ParticipantId {
+func (x *MessageDeprecate) GetSenderUsername() *ParticipantId {
 	if x != nil {
 		return x.SenderUsername
 	}
@@ -570,7 +570,7 @@ func (x *InputMessage) String() string {
 
 func (*InputMessage) ProtoMessage() {}
 
-func (x *InputMessage) ProtoReflect() protoreflect.Message {
+func (x *InputMessage) ProtoReflect() protoreflect.MessageDeprecate {
 	mi := &file_Message_proto_msgTypes[4]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -773,21 +773,21 @@ var file_Message_proto_goTypes = []interface{}{
 	(*ParticipantId)(nil),         // 5: proto.ParticipantId
 	(*Participant)(nil),           // 6: proto.Participant
 	(*MessageId)(nil),             // 7: proto.MessageId
-	(*Message)(nil),               // 8: proto.Message
+	(*MessageDeprecate)(nil),               // 8: proto.MessageDeprecate
 	(*InputMessage)(nil),          // 9: proto.InputMessage
 	(*timestamppb.Timestamp)(nil), // 10: google.protobuf.Timestamp
 }
 var file_Message_proto_depIdxs = []int32{
 	4,  // 0: proto.ParticipantId.type:type_name -> proto.ParticipantIdType
 	0,  // 1: proto.Participant.Type:type_name -> proto.SenderType
-	7,  // 2: proto.Message.messageId:type_name -> proto.MessageId
-	5,  // 3: proto.Message.initiatorUsername:type_name -> proto.ParticipantId
-	3,  // 4: proto.Message.type:type_name -> proto.MessageType
-	1,  // 5: proto.Message.subtype:type_name -> proto.MessageSubtype
-	2,  // 6: proto.Message.direction:type_name -> proto.MessageDirection
-	10, // 7: proto.Message.time:type_name -> google.protobuf.Timestamp
-	0,  // 8: proto.Message.senderType:type_name -> proto.SenderType
-	5,  // 9: proto.Message.senderUsername:type_name -> proto.ParticipantId
+	7,  // 2: proto.MessageDeprecate.messageId:type_name -> proto.MessageId
+	5,  // 3: proto.MessageDeprecate.initiatorUsername:type_name -> proto.ParticipantId
+	3,  // 4: proto.MessageDeprecate.type:type_name -> proto.MessageType
+	1,  // 5: proto.MessageDeprecate.subtype:type_name -> proto.MessageSubtype
+	2,  // 6: proto.MessageDeprecate.direction:type_name -> proto.MessageDirection
+	10, // 7: proto.MessageDeprecate.time:type_name -> google.protobuf.Timestamp
+	0,  // 8: proto.MessageDeprecate.senderType:type_name -> proto.SenderType
+	5,  // 9: proto.MessageDeprecate.senderUsername:type_name -> proto.ParticipantId
 	5,  // 10: proto.InputMessage.initiatorIdentifier:type_name -> proto.ParticipantId
 	3,  // 11: proto.InputMessage.type:type_name -> proto.MessageType
 	1,  // 12: proto.InputMessage.subtype:type_name -> proto.MessageSubtype
@@ -843,7 +843,7 @@ func file_Message_proto_init() {
 			}
 		}
 		file_Message_proto_msgTypes[3].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*Message); i {
+			switch v := v.(*MessageDeprecate); i {
 			case 0:
 				return &v.state
 			case 1:

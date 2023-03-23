@@ -39,15 +39,6 @@ export const AnalysisContent: React.FC<AnalysisContentProps> = ({
       ></div>
     );
   }
-  if (analysis?.mimetype === 'application/x-openline-transcript') {
-    try {
-      const response = JSON.parse(analysis.body);
-      return (
-        <TranscriptContent response={response}>{children}</TranscriptContent>
-      );
-    } catch (e) {
-      console.error('Got an error: ' + e + ' when parsing: ' + analysis.body);
-    }
-  }
+
   return null;
 };

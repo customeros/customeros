@@ -5,7 +5,7 @@ export {
   WorkspaceButton,
   WorkspaceElementButton,
   Button,
-  Message,
+  MessageDeprecate,
   Address,
   DeleteConfirmationDialog,
   DebouncedInput,

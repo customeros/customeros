@@ -40,7 +40,7 @@
 
 ## 👋 Overview
 
-Message store
+MessageDeprecate store
 
 ## 🚀 Installation
 

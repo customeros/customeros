@@ -82,7 +82,7 @@ func addMailRoutes(conf *c.Config, df util.DialFactory, rg *gin.RouterGroup, cos
 		sessionId, err := cosService.GetInteractionSession(ctx, threadId, req.Tenant)
 		if err != nil {
 			se, _ := status.FromError(err)
-			log.Printf("failed retriving interaction session: status=%s message=%s", se.Code(), se.Message())
+			log.Printf("failed retriving interaction session: status=%s message=%s", se.Code(), se.MessageDeprecate())
 		}
 
 		if sessionId == nil {
@@ -95,7 +95,7 @@ func addMailRoutes(conf *c.Config, df util.DialFactory, rg *gin.RouterGroup, cos
 				s.WithSessionTenant(req.Tenant))
 			if err != nil {
 				se, _ := status.FromError(err)
-				log.Printf("failed creating interaction session: status=%s message=%s", se.Code(), se.Message())
+				log.Printf("failed creating interaction session: status=%s message=%s", se.Code(), se.MessageDeprecate())
 				return
 			}
 			log.Printf("interaction session created: %s", *sessionId)
@@ -114,7 +114,7 @@ func addMailRoutes(conf *c.Config, df util.DialFactory, rg *gin.RouterGroup, cos
 
 		if err != nil {
 			se, _ := status.FromError(err)
-			log.Printf("failed creating interaction event: status=%s message=%s", se.Code(), se.Message())
+			log.Printf("failed creating interaction event: status=%s message=%s", se.Code(), se.MessageDeprecate())
 			return
 		}
 

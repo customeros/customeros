@@ -33,7 +33,7 @@ func main() {
 	// Create a new gRPC server (you can wire multiple services to a single server).
 	server := grpc.NewServer()
 
-	// Register the Message Item service with the server.
+	// Register the MessageDeprecate Item service with the server.
 	//proto.RegisterMessageEventServiceServer(server, svc)
 
 	// Open port for listening to traffic.

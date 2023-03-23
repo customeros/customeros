@@ -2,7 +2,7 @@ syntax = "proto3";
 package proto;
 
 import "google/protobuf/timestamp.proto";
-import "Message.proto";
+import "MessageDeprecate.proto";
 
 option go_package = "github.com/openline-ai/openline-customer-os/packages/server/message-store-api/proto/generated";
 
@@ -13,7 +13,7 @@ enum FeedItemState {
 }
 
 message MessageListResponse {
-  repeated Message messages = 1;
+  repeated MessageDeprecate messages = 1;
 }
 
 message ParticipantsListResponse {
@@ -69,7 +69,7 @@ service MessageStoreService {
   rpc getFeed(FeedId) returns (FeedItem) {};
 
   rpc getMessagesForFeed(PagedMessages) returns (MessageListResponse) {};
-  rpc getMessage(MessageId) returns (Message) {};
+  rpc getMessage(MessageId) returns (MessageDeprecate) {};
   rpc saveMessage(InputMessage) returns (MessageId) {};
   rpc getParticipants(FeedId) returns (ParticipantsListResponse) {};
   rpc getParticipantIds(FeedId) returns (ParticipantObjectListResponse) {};

@@ -1,1 +1,1 @@
-export { Message } from './Message';
+export { MessageDeprecate } from './MessageDeprecate';

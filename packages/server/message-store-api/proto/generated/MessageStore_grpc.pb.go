@@ -25,7 +25,7 @@ type MessageStoreServiceClient interface {
 	GetFeeds(ctx context.Context, in *GetFeedsPagedRequest, opts ...grpc.CallOption) (*FeedItemPagedResponse, error)
 	GetFeed(ctx context.Context, in *FeedId, opts ...grpc.CallOption) (*FeedItem, error)
 	GetMessagesForFeed(ctx context.Context, in *PagedMessages, opts ...grpc.CallOption) (*MessageListResponse, error)
-	GetMessage(ctx context.Context, in *MessageId, opts ...grpc.CallOption) (*Message, error)
+	GetMessage(ctx context.Context, in *MessageId, opts ...grpc.CallOption) (*MessageDeprecate, error)
 	SaveMessage(ctx context.Context, in *InputMessage, opts ...grpc.CallOption) (*MessageId, error)
 	GetParticipants(ctx context.Context, in *FeedId, opts ...grpc.CallOption) (*ParticipantsListResponse, error)
 	GetParticipantIds(ctx context.Context, in *FeedId, opts ...grpc.CallOption) (*ParticipantObjectListResponse, error)
@@ -66,8 +66,8 @@ func (c *messageStoreServiceClient) GetMessagesForFeed(ctx context.Context, in *
 	return out, nil
 }
 
-func (c *messageStoreServiceClient) GetMessage(ctx context.Context, in *MessageId, opts ...grpc.CallOption) (*Message, error) {
-	out := new(Message)
+func (c *messageStoreServiceClient) GetMessage(ctx context.Context, in *MessageId, opts ...grpc.CallOption) (*MessageDeprecate, error) {
+	out := new(MessageDeprecate)
 	err := c.cc.Invoke(ctx, "/proto.MessageStoreService/getMessage", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -109,7 +109,7 @@ type MessageStoreServiceServer interface {
 	GetFeeds(context.Context, *GetFeedsPagedRequest) (*FeedItemPagedResponse, error)
 	GetFeed(context.Context, *FeedId) (*FeedItem, error)
 	GetMessagesForFeed(context.Context, *PagedMessages) (*MessageListResponse, error)
-	GetMessage(context.Context, *MessageId) (*Message, error)
+	GetMessage(context.Context, *MessageId) (*MessageDeprecate, error)
 	SaveMessage(context.Context, *InputMessage) (*MessageId, error)
 	GetParticipants(context.Context, *FeedId) (*ParticipantsListResponse, error)
 	GetParticipantIds(context.Context, *FeedId) (*ParticipantObjectListResponse, error)
@@ -129,7 +129,7 @@ func (UnimplementedMessageStoreServiceServer) GetFeed(context.Context, *FeedId) 
 func (UnimplementedMessageStoreServiceServer) GetMessagesForFeed(context.Context, *PagedMessages) (*MessageListResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetMessagesForFeed not implemented")
 }
-func (UnimplementedMessageStoreServiceServer) GetMessage(context.Context, *MessageId) (*Message, error) {
+func (UnimplementedMessageStoreServiceServer) GetMessage(context.Context, *MessageId) (*MessageDeprecate, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetMessage not implemented")
 }
 func (UnimplementedMessageStoreServiceServer) SaveMessage(context.Context, *InputMessage) (*MessageId, error) {

@@ -4,63 +4,62 @@ import linkifyHtml from 'linkify-html';
 import { ReactNode } from 'react';
 import classNames from 'classnames';
 
-interface Content {
-  type?: string;
-  mimetype: string;
-  body: string;
-}
 interface TranscriptElement {
   party: any;
   text: string;
 }
 
 interface TranscriptContentProps {
-  response: Array<Content>;
+  messages: Array<TranscriptElement>;
   children?: ReactNode;
+  firstIndex: {
+    received: number;
+    send: number;
+  };
 }
 
 export const TranscriptContent: React.FC<TranscriptContentProps> = ({
-  response,
+  messages = [],
   children,
+  firstIndex,
 }) => {
   return (
-    <div className={styles.transcriptionContainer}>
-      {response?.map(
-        // @ts-expect-error fixme
-        (transcriptElement: TranscriptElement, index: number) => {
-          const textWithLinks = linkifyHtml(transcriptElement.text, {
-            defaultProtocol: 'https',
-            rel: 'noopener noreferrer',
-          });
-          return (
+    <>
+      {messages?.map((transcriptElement: TranscriptElement, index: number) => {
+        const showIcon =
+          index === firstIndex.send || index === firstIndex.received;
+        const textWithLinks = linkifyHtml(transcriptElement.text, {
+          defaultProtocol: 'https',
+          rel: 'noopener noreferrer',
+        });
+        return (
+          <div
+            key={index}
+            className={classNames(styles.singleMessage, {
+              [styles.isleft]: transcriptElement.party.tel,
+              [styles.isright]: !transcriptElement.party.tel,
+            })}
+          >
             <div
-              key={index}
-              className={classNames(styles.singleMessage, {
-                [styles.isleft]: transcriptElement.party.tel,
-                [styles.isright]: !transcriptElement.party.tel,
+              className={classNames(styles.channelIcon, {
+                [styles.channelIconShown]: showIcon,
               })}
             >
-              <div
-                className={classNames(styles.channelIcon, {
-                  [styles.channelIconShown]: index === 0,
-                })}
-              >
-                {index === 0 && children && children}
-              </div>
-
-              <div
-                className={classNames(styles.message, {
-                  [styles.left]: transcriptElement.party.tel,
-                  [styles.right]: !transcriptElement.party.tel,
-                })}
-                style={{ width: '60%' }}
-              >
-                {textWithLinks}
-              </div>
+              {showIcon && children}
             </div>
-          );
-        },
-      )}
-    </div>
+
+            <div
+              className={classNames(styles.message, {
+                [styles.left]: transcriptElement.party.tel,
+                [styles.right]: !transcriptElement.party.tel,
+              })}
+              style={{ width: '60%' }}
+            >
+              {textWithLinks}
+            </div>
+          </div>
+        );
+      })}
+    </>
   );
 };
