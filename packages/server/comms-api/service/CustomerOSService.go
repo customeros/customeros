@@ -1,7 +1,6 @@
 package service
 
 import (
-	"encoding/json"
 	"fmt"
 	"github.com/machinebox/graphql"
 	c "github.com/openline-ai/openline-customer-os/packages/server/comms-api/config"
@@ -28,6 +27,36 @@ type InteractionEventParticipantInput struct {
 	ParticipantType *string `json:"type,omitempty"`
 }
 
+type InteractionEventParticipant struct {
+	ID             string `json:"id"`
+	Type           string `json:"type"`
+	RawEmail       string `json:"rawEmail,omitempty"`
+	FirstName      string `json:"firstName,omitempty"`
+	RawPhoneNumber string `json:"rawPhoneNumber,omitempty"`
+}
+
+type InteractionEventCreateResponse struct {
+	InteractionEventCreate struct {
+		Id     string `json:"id"`
+		SentBy []struct {
+			Typename         string `json:"__typename"`
+			EmailParticipant struct {
+				Id       string `json:"id"`
+				RawEmail string `json:"rawEmail"`
+			} `json:"emailParticipant"`
+			Type interface{} `json:"type"`
+		} `json:"sentBy"`
+		SentTo []struct {
+			Typename         string `json:"__typename"`
+			EmailParticipant struct {
+				Id       string `json:"id"`
+				RawEmail string `json:"rawEmail"`
+			} `json:"emailParticipant"`
+			Type string `json:"type"`
+		} `json:"sentTo"`
+	} `json:"interactionEvent_Create"`
+}
+
 func (s *CustomerOSService) addHeadersToGraphRequest(req *graphql.Request, ctx context.Context, tenant string) error {
 	req.Header.Add("X-Openline-API-KEY", s.conf.Service.CustomerOsAPIKey)
 	user, err := commonModuleService.GetUsernameMetadataForGRPC(ctx)
@@ -39,105 +68,92 @@ func (s *CustomerOSService) addHeadersToGraphRequest(req *graphql.Request, ctx c
 	return nil
 }
 
-func (s *CustomerOSService) CreateInteractionEvent(ctx context.Context, options ...EventOption) (*string, error) {
+func (s *CustomerOSService) CreateInteractionEvent(ctx context.Context, options ...EventOption) (*InteractionEventCreateResponse, error) {
 	graphqlRequest := graphql.NewRequest(
 		`mutation CreateInteractionEvent(
-				$sessionId: ID!, $channel: String, $sentBy: [InteractionEventParticipantInput!]!, $sentTo: [InteractionEventParticipantInput!]!, $appSource: String!, $repliesTo: ID, $content: String, $contentType: String) {
-  				interactionEvent_Create(
-    				event: {interactionSession: $sessionId, channel: $channel, sentBy: $sentBy, sentTo: $sentTo, appSource: $appSource, repliesTo: $repliesTo, content: $content, contentType: $contentType}
-  				) {
-    			id
-    			createdAt
-    			content
-    			contentType
-    			channel
-    			interactionSession {
-      				id
-      				startedAt
-      				endedAt
-      				sessionIdentifier
-      				name
-      				status
-      				type
-      				channel
-      				source
-      				sourceOfTruth
-      				appSource
-    			}
-				sentBy {
-      				__typename
-      				... on EmailParticipant {
-        			emailParticipant {
-          				id
-          				rawEmail
-        			}
-        			type
-				}
-			    	... on UserParticipant {
-        			userParticipant {
-          				id
-          				firstName
-        			}
-        			type
-      			}
-      				... on PhoneNumberParticipant {
-        			phoneNumberParticipant {
-          				id
-          				rawPhoneNumber
-        		}
-        			type
-      			}
-      				... on ContactParticipant {
-        			contactParticipant {
-          				id
-          				firstName
-        		}
-        			type
-      			}
-    		}
-    		sentTo {
-      			__typename
-				... on EmailParticipant {
-        			emailParticipant {
-          				id
-          				rawEmail
-        			}
-        			type
-      			}
-      			... on UserParticipant {
-        			userParticipant {
-          				id
-          				firstName
-        			}
-        			type
-      			}
-      			... on PhoneNumberParticipant {
-        			phoneNumberParticipant {
-          				id
-          				rawPhoneNumber
-        			}
-        			type
-      			}
-      			... on ContactParticipant {
-        			contactParticipant {
-          				id
-          				firstName
-        			}
-        			type
-      			}
-    		}
-    		repliesTo {
-      			id
-      			eventIdentifier
-				content
-      			contentType
-      			channel
-    		}
-    		source
-    		sourceOfTruth
-    		appSource
-  		}
-	}`)
+				$sessionId: ID!, 
+				$channel: String,
+				$sentBy: [InteractionEventParticipantInput!]!, 
+				$sentTo: [InteractionEventParticipantInput!]!, 
+				$appSource: String!, 
+				$repliesTo: ID, 
+				$content: String, 
+				$contentType: String) {
+  					interactionEvent_Create(
+    					event: {interactionSession: $sessionId, 
+								channel: $channel, 
+								sentBy: $sentBy, 
+								sentTo: $sentTo, 
+								appSource: $appSource, 
+								repliesTo: $repliesTo, 
+								content: $content, 
+								contentType: $contentType}
+  					) {
+						id
+						sentBy {
+						  __typename
+						  ... on EmailParticipant {
+							emailParticipant {
+							  id
+							  rawEmail
+							}
+							type
+						  }
+						  ... on UserParticipant {
+							userParticipant {
+							  id
+							  firstName
+							}
+							type
+						  }
+						  ... on PhoneNumberParticipant {
+							phoneNumberParticipant {
+							  id
+							  rawPhoneNumber
+							}
+							type
+						  }
+						  ... on ContactParticipant {
+							contactParticipant {
+							  id
+							  firstName
+							}
+							type
+						  }
+						}
+						sentTo {
+						  __typename
+						  ... on EmailParticipant {
+							emailParticipant {
+							  id
+							  rawEmail
+							}
+							type
+						  }
+						  ... on UserParticipant {
+							userParticipant {
+							  id
+							  firstName
+							}
+							type
+						  }
+						  ... on PhoneNumberParticipant {
+							phoneNumberParticipant {
+							  id
+							  rawPhoneNumber
+							}
+							type
+						  }
+						  ... on ContactParticipant {
+							contactParticipant {
+							  id
+							  firstName
+							}
+							type
+						  }
+						}
+					  }
+					}`)
 
 	params := EventOptions{}
 	for _, opt := range options {
@@ -158,16 +174,12 @@ func (s *CustomerOSService) CreateInteractionEvent(ctx context.Context, options 
 		return nil, fmt.Errorf("CreateContactWithPhone: %w", err)
 	}
 
-	var graphqlResponse interface{}
+	var graphqlResponse InteractionEventCreateResponse
 	if err := s.graphqlClient.Run(context.Background(), graphqlRequest, &graphqlResponse); err != nil {
 		return nil, fmt.Errorf("CreateInteractionEvent: %w", err)
 	}
-	//id := graphqlResponse["contact_Create"]["id"]
-	bytes, _ := json.Marshal(graphqlResponse)
-	print(string(bytes))
-	//log.Printf("CreateContactWithPhone: phoneNumber=%s graphqlResponse = %s", phoneNumber, bytes)
-	//return s.GetContactById(ctx, id, tenant)
-	return nil, nil
+
+	return &graphqlResponse, nil
 }
 
 func (s *CustomerOSService) GetInteractionSession(ctx context.Context, sessionIdentifier string, tenant string) (*string, error) {
@@ -175,35 +187,6 @@ func (s *CustomerOSService) GetInteractionSession(ctx context.Context, sessionId
 		`query GetInteractionSession($sessionIdentifier: String!) {
   					interactionSession_BySessionIdentifier(sessionIdentifier: $sessionIdentifier) {
        					id
-       					startedAt
-       					endedAt
-       					sessionIdentifier
-       					name
-       					status
-       					type
-       					channel
-       					source
-       					sourceOfTruth
-       					appSource
-       					events {
-         					id
-         					createdAt
-         					eventIdentifier
-         					content
-         					contentType
-         					channel
-         					source
-         					sourceOfTruth
-         					appSource
-							repliesTo {
-           						id
-           						eventIdentifier
-           						content
-           						contentType
-           						channel
-         					}
-       					}
-  					}
 				}`)
 
 	graphqlRequest.Var("sessionId", sessionIdentifier)
@@ -218,7 +201,7 @@ func (s *CustomerOSService) GetInteractionSession(ctx context.Context, sessionId
 	if err := s.graphqlClient.Run(context.Background(), graphqlRequest, &graphqlResponse); err != nil {
 		return nil, fmt.Errorf("CreateInteractionEvent: %w", err)
 	}
-	id := graphqlResponse["contact_Create"]["id"]
+	id := graphqlResponse["interactionSession_BySessionIdentifier"]["id"]
 	return &id, nil
 }
 
@@ -235,16 +218,6 @@ func (s *CustomerOSService) CreateInteractionSession(ctx context.Context, option
     			}
   			) {
 				id
-       			createdAt
-       			updatedAt
-       			sessionIdentifier
-       			name
-       			status
-       			type
-       			channel
-       			source
-       			sourceOfTruth
-       			appSource
    			}
 		}
 	`)

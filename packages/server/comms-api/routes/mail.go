@@ -96,13 +96,13 @@ func addMailRoutes(conf *c.Config, df util.DialFactory, rg *gin.RouterGroup, cos
 		refSize := len(email.References)
 		threadId := ""
 		if refSize > 0 {
-			threadId = email.References[0]
+			threadId = ensureRfcId(email.References[0])
 		} else {
-			threadId = email.MessageID
+			threadId = ensureRfcId(email.MessageID)
 		}
 		ctx := context.Background()
 		sessionId, err := cosService.GetInteractionSession(ctx, threadId, req.Tenant)
-		if err == nil {
+		if err != nil {
 			se, _ := status.FromError(err)
 			log.Printf("failed retriving interaction session: status=%s message=%s", se.Code(), se.Message())
 			return
@@ -120,10 +120,11 @@ func addMailRoutes(conf *c.Config, df util.DialFactory, rg *gin.RouterGroup, cos
 				log.Printf("failed creating interaction session: status=%s message=%s", se.Code(), se.Message())
 				return
 			}
+			log.Printf("interaction session created: %s", sessionId)
 		}
 
 		participantTypeTO, participantTypeCC := "TO", "CC"
-		eventId, err := cosService.CreateInteractionEvent(ctx,
+		response, err := cosService.CreateInteractionEvent(ctx,
 			s.WithTenant(req.Tenant),
 			s.WithSessionId(*sessionId),
 			s.WithChannel("EMAIL"),
@@ -139,7 +140,7 @@ func addMailRoutes(conf *c.Config, df util.DialFactory, rg *gin.RouterGroup, cos
 			return
 		}
 
-		log.Printf("interaction event created with id: %s", *eventId)
+		log.Printf("interaction event created with id: %s", (*response).InteractionEventCreate.Id)
 
 		////Set up a connection to the oasis-api server.
 		//oasisConn := GetOasisClient(c, df)
@@ -152,7 +153,7 @@ func addMailRoutes(conf *c.Config, df util.DialFactory, rg *gin.RouterGroup, cos
 		//}
 
 		c.JSON(http.StatusOK, gin.H{
-			"result": fmt.Sprintf("interaction event created with id: %s", *eventId),
+			"result": fmt.Sprintf("interaction event created with id: %s", "aaa"),
 		})
 	})
 }
