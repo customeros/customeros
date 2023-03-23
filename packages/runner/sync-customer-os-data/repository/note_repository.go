@@ -15,10 +15,10 @@ type NoteRepository interface {
 	MergeNote(ctx context.Context, tenant string, syncDate time.Time, note entity.NoteData) error
 	NoteLinkWithContactByExternalId(ctx context.Context, tenant, noteId, contactExternalId, externalSystem string) error
 	NoteLinkWithOrganizationByExternalId(ctx context.Context, tenant, noteId, organizationExternalId, externalSystem string) error
-	NoteLinkWithTicketByExternalId(ctx context.Context, tenant, noteId, organizationExternalId, externalSystem string) error
+	NoteMentionedTag(ctx context.Context, tenant, noteId, tagName, externalSystem string) error
 	NoteLinkWithCreatorUserByExternalId(ctx context.Context, tenant, noteId, userExternalId, externalSystem string) error
 	NoteLinkWithCreatorUserByExternalOwnerId(ctx context.Context, tenant, noteId, userExternalOwnerId, externalSystem string) error
-	NoteLinkWithCreatorUserOrContactByExternalId(ctx context.Context, tenant, noteId, creatorExternalId, externalSystem string) error
+	NoteLinkWithCreatorByExternalId(ctx context.Context, tenant, noteId, creatorExternalId, externalSystem string) error
 }
 
 type noteRepository struct {
@@ -79,7 +79,9 @@ func (r *noteRepository) MergeNote(ctx context.Context, tenant string, syncDate 
 		"				n.appSource=$appSource, " +
 		"              	n.html=$html, " +
 		"              	n.text=$text, " +
-		"				n:%s " +
+		"				n:Note_%s, " +
+		" 				n:TimelineEvent, " +
+		"				n:TimelineEvent_%s " +
 		" ON MATCH SET 	n.html = CASE WHEN n.sourceOfTruth=$sourceOfTruth OR n.html is null or n.html = '' THEN $html ELSE n.html END, " +
 		"             	n.text = CASE WHEN n.sourceOfTruth=$sourceOfTruth OR n.text is null or n.text = '' THEN $text ELSE n.text END, " +
 		"				n.updatedAt = $now " +
@@ -95,7 +97,7 @@ func (r *noteRepository) MergeNote(ctx context.Context, tenant string, syncDate 
 		" RETURN n.id"
 
 	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		queryResult, err := tx.Run(ctx, fmt.Sprintf(query, "Note_"+tenant),
+		queryResult, err := tx.Run(ctx, fmt.Sprintf(query, tenant, tenant),
 			map[string]interface{}{
 				"tenant":         tenant,
 				"noteId":         note.Id,
@@ -128,11 +130,10 @@ func (r *noteRepository) NoteLinkWithContactByExternalId(ctx context.Context, te
 
 	query := `MATCH (t:Tenant {name:$tenant})<-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]-(e:ExternalSystem {id:$externalSystem})<-[:IS_LINKED_WITH {externalId:$contactExternalId}]-(c:Contact)
 				MATCH (n:Note {id:$noteId})-[:IS_LINKED_WITH]->(e)
-				MERGE (c)-[:NOTED]->(n)
-				SET n:TimelineEvent, n:TimelineEvent_%s`
+				MERGE (c)-[:NOTED]->(n)`
 
 	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		_, err := tx.Run(ctx, fmt.Sprintf(query, tenant),
+		_, err := tx.Run(ctx, query,
 			map[string]interface{}{
 				"tenant":            tenant,
 				"externalSystem":    externalSystem,
@@ -150,11 +151,10 @@ func (r *noteRepository) NoteLinkWithOrganizationByExternalId(ctx context.Contex
 
 	query := `MATCH (t:Tenant {name:$tenant})<-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]-(e:ExternalSystem {id:$externalSystem})<-[:IS_LINKED_WITH {externalId:$organizationExternalId}]-(org:Organization)
 				MATCH (n:Note {id:$noteId})-[:IS_LINKED_WITH]->(e)
-				MERGE (org)-[:NOTED]->(n)
-				SET n:TimelineEvent, n:TimelineEvent_%s`
+				MERGE (org)-[:NOTED]->(n)`
 
 	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		_, err := tx.Run(ctx, fmt.Sprintf(query, tenant),
+		_, err := tx.Run(ctx, query,
 			map[string]interface{}{
 				"tenant":                 tenant,
 				"externalSystem":         externalSystem,
@@ -166,23 +166,43 @@ func (r *noteRepository) NoteLinkWithOrganizationByExternalId(ctx context.Contex
 	return err
 }
 
-func (r *noteRepository) NoteLinkWithTicketByExternalId(ctx context.Context, tenant, noteId, ticketExternalId, externalSystem string) error {
+func (r *noteRepository) NoteMentionedTag(ctx context.Context, tenant, noteId, tagName, externalSystem string) error {
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
+	query := "MATCH (t:Tenant {name:$tenant}) " +
+		" MERGE (tag:Tag {name:$tagName})-[:TAG_BELONGS_TO_TENANT]->(t) " +
+		" ON CREATE SET tag.id=randomUUID(), " +
+		"				tag.createdAt=$now, " +
+		"				tag.updatedAt=$now, " +
+		"				tag.source=$source," +
+		"				tag.sourceOfTruth=$sourceOfTruth," +
+		"				tag.appSource=$appSource," +
+		"				tag:Tag_%s  " +
+		" WITH DISTINCT tag " +
+		" MATCH (n:Note_%s {id:$noteId}) " +
+		" MERGE (n)-[r:MENTIONED]->(tag) " +
+		" return r"
+
 	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		_, err := tx.Run(ctx, `
-				MATCH (t:Tenant {name:$tenant})<-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]-(e:ExternalSystem {id:$externalSystem})<-[:IS_LINKED_WITH {externalId:$ticketExternalId}]-(tt:Ticket)
-				MATCH (n:Note {id:$noteId})-[:IS_LINKED_WITH]->(e)
-				MERGE (tt)-[:NOTED]->(n)
-				`,
+		queryResult, err := tx.Run(ctx, fmt.Sprintf(query, tenant, tenant),
 			map[string]interface{}{
-				"tenant":           tenant,
-				"externalSystem":   externalSystem,
-				"noteId":           noteId,
-				"ticketExternalId": ticketExternalId,
+				"tenant":        tenant,
+				"noteId":        noteId,
+				"tagName":       tagName,
+				"source":        externalSystem,
+				"sourceOfTruth": externalSystem,
+				"appSource":     externalSystem,
+				"now":           time.Now().UTC(),
 			})
-		return nil, err
+		if err != nil {
+			return nil, err
+		}
+		_, err = queryResult.Single(ctx)
+		if err != nil {
+			return nil, err
+		}
+		return nil, nil
 	})
 	return err
 }
@@ -229,17 +249,16 @@ func (r *noteRepository) NoteLinkWithCreatorUserByExternalOwnerId(ctx context.Co
 	return err
 }
 
-func (r *noteRepository) NoteLinkWithCreatorUserOrContactByExternalId(ctx context.Context, tenant, noteId, creatorExternalId, externalSystem string) error {
+func (r *noteRepository) NoteLinkWithCreatorByExternalId(ctx context.Context, tenant, noteId, creatorExternalId, externalSystem string) error {
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
 	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		_, err := tx.Run(ctx, `
 				MATCH (t:Tenant {name:$tenant})<-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]-(e:ExternalSystem {id:$externalSystem})<-[:IS_LINKED_WITH {externalId:$creatorExternalId}]-(c)
-				WHERE c:User OR c:Contact
+				WHERE c:User OR c:Contact OR c:Organization
 				MATCH (n:Note {id:$noteId})-[:IS_LINKED_WITH]->(e)
-				MERGE (c)-[:CREATED]->(n)
-				`,
+				MERGE (c)-[:CREATED]->(n) `,
 			map[string]interface{}{
 				"tenant":            tenant,
 				"externalSystem":    externalSystem,

@@ -188,11 +188,13 @@ func GetTicketComments(db *gorm.DB, limit int, runId string) (entity.TicketComme
 	err := db.
 		Raw(cte+" SELECT u.* FROM UpToDateData u left join openline_sync_status_ticket_comments s "+
 			" on u.id = s.id and u._airbyte_ab_id = s._airbyte_ab_id and u._airbyte_ticket_comments_hashid = s._airbyte_ticket_comments_hashid "+
+			" inner join tickets t on t.id = u.ticket_id "+
+			" inner join users u2 on u2.id = t.requester_id and u2.role = ? "+
 			" WHERE u.row_num = ? "+
 			" and (s.synced_to_customer_os is null or s.synced_to_customer_os = ?) "+
 			" and (s.synced_to_customer_os_attempt is null or s.synced_to_customer_os_attempt < ?) "+
 			" and (s.run_id is null or s.run_id <> ?) "+
-			" limit ?", 1, false, 10, runId, limit).
+			" limit ?", "end-user", 1, false, 10, runId, limit).
 		Find(&ticketComments).Error
 
 	if err != nil {
@@ -217,4 +219,12 @@ func MarkTicketCommentProcessed(db *gorm.DB, ticketComment entity.TicketComment,
 			SyncAttempt:        syncStatusTicketComment.SyncAttempt + 1,
 			RunId:              runId,
 		}).Error
+}
+
+func GetTicket(db *gorm.DB, ticketId int64) (entity.Ticket, error) {
+	ticket := entity.Ticket{}
+	err := db.Table(entity.Ticket{}.TableName()).
+		Where(&entity.Ticket{Id: ticketId}).
+		First(&ticket).Error
+	return ticket, err
 }
