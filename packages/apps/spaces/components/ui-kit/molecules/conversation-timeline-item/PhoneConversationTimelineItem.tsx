@@ -41,9 +41,9 @@ export const PhoneConversationTimelineItem: React.FC<Props> = ({
         setMessages(data ?? []);
         setLoadingMessages(false);
         (data ?? []).forEach((e) => {
-          const z = decodeContent(e.content);
-          if (z?.analysis?.type === 'summary') {
-            setSummary(z);
+          const decodedContent = decodeContent(e.content);
+          if (decodedContent?.analysis?.type === 'summary') {
+            setSummary(decodedContent);
           }
         });
       })

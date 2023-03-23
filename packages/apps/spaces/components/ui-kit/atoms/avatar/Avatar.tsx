@@ -33,9 +33,8 @@ export const Avatar: React.FC<AvatarProps> = ({
     backgroundColor: color,
     fontSize: size > 40 ? 'var(--font-size-lg)' : 'ar(--font-size-xxs)',
   };
-
-  const tooltipId = `avatar${name.split(' ').join('')}-${surname
-    .split(' ')
+  const tooltipId = `avatar${name?.split(' ').join('')}-${surname
+    ?.split(' ')
     .join()
     .trim()}`;
 
