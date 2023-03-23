@@ -16,7 +16,7 @@ type TagRepository interface {
 	GetAll(ctx context.Context, tenant string) ([]*dbtype.Node, error)
 	GetForContact(ctx context.Context, tenant, contactId string) ([]*dbtype.Node, error)
 	GetForContacts(ctx context.Context, tenant string, contactIds []string) ([]*utils.DbNodeWithRelationAndId, error)
-	GetForTickets(ctx context.Context, tenant string, ticketIds []string) ([]*utils.DbNodeWithRelationAndId, error)
+	GetForIssues(ctx context.Context, tenant string, issueIds []string) ([]*utils.DbNodeWithRelationAndId, error)
 	GetForOrganizations(ctx context.Context, tenant string, organizationIds []string) ([]*utils.DbNodeWithRelationAndId, error)
 }
 
@@ -168,18 +168,18 @@ func (r *tagRepository) GetForContacts(ctx context.Context, tenant string, conta
 	return result.([]*utils.DbNodeWithRelationAndId), err
 }
 
-func (r *tagRepository) GetForTickets(ctx context.Context, tenant string, ticketIds []string) ([]*utils.DbNodeWithRelationAndId, error) {
+func (r *tagRepository) GetForIssues(ctx context.Context, tenant string, issueIds []string) ([]*utils.DbNodeWithRelationAndId, error) {
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
 	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		if queryResult, err := tx.Run(ctx, `
-			MATCH (t:Tenant {name:$tenant})<-[:TICKET_BELONGS_TO_TENANT]-(tt:Ticket)-[rel:TAGGED]->(tag:Tag)-[:TAG_BELONGS_TO_TENANT]->(t)
-			WHERE tt.id IN $ticketIds
-			RETURN tag, rel, tt.id ORDER BY tag.name`,
+			MATCH (t:Tenant {name:$tenant})<-[:ISSUE_BELONGS_TO_TENANT]-(i:Issue)-[rel:TAGGED]->(tag:Tag)-[:TAG_BELONGS_TO_TENANT]->(t)
+			WHERE i.id IN $issueIds
+			RETURN tag, rel, i.id ORDER BY tag.name`,
 			map[string]any{
-				"tenant":    tenant,
-				"ticketIds": ticketIds,
+				"tenant":   tenant,
+				"issueIds": issueIds,
 			}); err != nil {
 			return nil, err
 		} else {

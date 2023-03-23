@@ -2,7 +2,7 @@ package entity
 
 import "time"
 
-type TicketEntity struct {
+type IssueEntity struct {
 	Id        string
 	CreatedAt time.Time
 	UpdatedAt time.Time
@@ -13,17 +13,17 @@ type TicketEntity struct {
 	Description string
 }
 
-func (TicketEntity) IsTimelineEvent() {
+func (IssueEntity) IsTimelineEvent() {
 }
 
-func (TicketEntity) TimelineEventLabel() string {
-	return NodeLabel_Ticket
+func (IssueEntity) TimelineEventLabel() string {
+	return NodeLabel_Issue
 }
 
-func (TicketEntity) Labels(tenant string) []string {
+func (IssueEntity) Labels(tenant string) []string {
 	return []string{
-		NodeLabel_Ticket,
-		NodeLabel_Ticket + "_" + tenant,
+		NodeLabel_Issue,
+		NodeLabel_Issue + "_" + tenant,
 		NodeLabel_TimelineEvent,
 		NodeLabel_TimelineEvent + "_" + tenant,
 	}

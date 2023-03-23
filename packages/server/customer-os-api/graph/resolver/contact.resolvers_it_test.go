@@ -10,7 +10,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/net/context"
-	"log"
 	"testing"
 	"time"
 )
@@ -930,13 +929,11 @@ func TestQueryResolver_Contact_WithTimelineEvents(t *testing.T) {
 	secAgo30 := now.Add(time.Duration(-30) * time.Second)
 	secAgo40 := now.Add(time.Duration(-40) * time.Second)
 	secAgo50 := now.Add(time.Duration(-50) * time.Second)
-	secAgo60 := now.Add(time.Duration(-60) * time.Second)
-	secAgo70 := now.Add(time.Duration(-70) * time.Second)
-	secAgo75 := now.Add(time.Duration(-75) * time.Second)
+	secAgo55 := now.Add(time.Duration(-55) * time.Second)
 	minAgo5 := now.Add(time.Duration(-5) * time.Minute)
 
 	// prepare conversations
-	conversationId := neo4jt.CreateConversation(ctx, driver, tenantName, userId, contactId, "subject", secAgo40)
+	conversationId := neo4jt.CreateConversation(ctx, driver, tenantName, userId, contactId, "subject", secAgo20)
 
 	// prepare page views
 	pageViewId1 := neo4jt.CreatePageView(ctx, driver, contactId, entity.PageViewEntity{
@@ -951,7 +948,7 @@ func TestQueryResolver_Contact_WithTimelineEvents(t *testing.T) {
 		EngagedTime:    10,
 	})
 	pageViewId2 := neo4jt.CreatePageView(ctx, driver, contactId, entity.PageViewEntity{
-		StartedAt:      secAgo30,
+		StartedAt:      secAgo10,
 		EndedAt:        now,
 		TrackerName:    "tracker2",
 		SessionId:      "session2",
@@ -963,42 +960,18 @@ func TestQueryResolver_Contact_WithTimelineEvents(t *testing.T) {
 	})
 	neo4jt.CreatePageView(ctx, driver, contactId2, entity.PageViewEntity{})
 
-	// prepare tickets with tags and notes
-	ticketId1 := neo4jt.CreateTicket(ctx, driver, tenantName, entity.TicketEntity{
-		Subject:     "subject 1",
-		CreatedAt:   secAgo20,
-		Priority:    "P1",
-		Status:      "OPEN",
-		Description: "description 1",
-	})
-	ticketId2 := neo4jt.CreateTicket(ctx, driver, tenantName, entity.TicketEntity{
-		Subject:     "subject 2",
-		CreatedAt:   secAgo10,
-		Priority:    "P2",
-		Status:      "CLOSED",
-		Description: "description 2",
-	})
-	tagId1 := neo4jt.CreateTag(ctx, driver, tenantName, "tag1")
-	tagId2 := neo4jt.CreateTag(ctx, driver, tenantName, "tag2")
-	noteId1 := neo4jt.CreateNoteForTicket(ctx, driver, tenantName, ticketId1, "note 1")
-	noteId2 := neo4jt.CreateNoteForTicket(ctx, driver, tenantName, ticketId2, "note 2")
-	neo4jt.TagTicket(ctx, driver, ticketId1, tagId1)
-	neo4jt.TagTicket(ctx, driver, ticketId2, tagId2)
-	neo4jt.RequestTicket(ctx, driver, contactId, ticketId1)
-	neo4jt.RequestTicket(ctx, driver, contactId, ticketId2)
-
 	voiceSession := neo4jt.CreateInteractionSession(ctx, driver, tenantName, "mySessionIdentifier", "session1", "CALL", "ACTIVE", "VOICE", now, false)
 
-	analysis1 := neo4jt.CreateAnalysis(ctx, driver, tenantName, "This is a summary of the conversation", "text/plain", "SUMMARY", secAgo75)
+	analysis1 := neo4jt.CreateAnalysis(ctx, driver, tenantName, "This is a summary of the conversation", "text/plain", "SUMMARY", secAgo55)
 	neo4jt.ActionDescribes(ctx, driver, tenantName, analysis1, voiceSession, repository.INTERACTION_SESSION)
 
 	// prepare contact notes
-	contactNoteId := neo4jt.CreateNoteForContact(ctx, driver, tenantName, contactId, "contact note 1", secAgo50)
+	contactNoteId := neo4jt.CreateNoteForContact(ctx, driver, tenantName, contactId, "contact note 1", secAgo30)
 	neo4jt.CreateNoteForContact(ctx, driver, tenantName, contactId, "contact note 2", minAgo5)
 
 	// prepare interaction events
-	interactionEventId1 := neo4jt.CreateInteractionEvent(ctx, driver, tenantName, "myExternalId", "IE text 1", "application/json", "EMAIL", secAgo60)
-	interactionEventId2 := neo4jt.CreateInteractionEvent(ctx, driver, tenantName, "myExternalId", "IE text 2", "application/json", "EMAIL", secAgo70)
+	interactionEventId1 := neo4jt.CreateInteractionEvent(ctx, driver, tenantName, "myExternalId", "IE text 1", "application/json", "EMAIL", secAgo40)
+	interactionEventId2 := neo4jt.CreateInteractionEvent(ctx, driver, tenantName, "myExternalId", "IE text 2", "application/json", "EMAIL", secAgo50)
 	emailId := neo4jt.AddEmailTo(ctx, driver, entity.CONTACT, tenantName, contactId, "email1", false, "WORK")
 	phoneNumberId := neo4jt.AddPhoneNumberTo(ctx, driver, tenantName, contactId, "+1234", false, "WORK")
 	neo4jt.InteractionEventSentBy(ctx, driver, interactionEventId1, emailId, "")
@@ -1009,24 +982,23 @@ func TestQueryResolver_Contact_WithTimelineEvents(t *testing.T) {
 	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "Contact"))
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "User"))
 	require.Equal(t, 3, neo4jt.GetCountOfNodes(ctx, driver, "PageView"))
-	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "Ticket"))
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Conversation"))
-	require.Equal(t, 4, neo4jt.GetCountOfNodes(ctx, driver, "Note"))
+	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "Note"))
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Email"))
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "PhoneNumber"))
-	require.Equal(t, 11, neo4jt.GetCountOfNodes(ctx, driver, "TimelineEvent"))
+	require.Equal(t, 9, neo4jt.GetCountOfNodes(ctx, driver, "TimelineEvent"))
 
 	rawResponse, err := c.RawPost(getQuery("contact/get_contact_with_timeline_events"),
 		client.Var("contactId", contactId),
 		client.Var("from", now),
-		client.Var("size", 9))
+		client.Var("size", 7))
 	assertRawResponseSuccess(t, rawResponse, err)
 
 	contact := rawResponse.Data.(map[string]interface{})["contact"]
 	require.Equal(t, contactId, contact.(map[string]interface{})["id"])
 
 	timelineEvents := contact.(map[string]interface{})["timelineEvents"].([]interface{})
-	require.Equal(t, 9, len(timelineEvents))
+	require.Equal(t, 7, len(timelineEvents))
 
 	timelineEvent1 := timelineEvents[0].(map[string]interface{})
 	require.Equal(t, "PageView", timelineEvent1["__typename"].(string))
@@ -1041,80 +1013,53 @@ func TestQueryResolver_Contact_WithTimelineEvents(t *testing.T) {
 	require.Equal(t, float64(10), timelineEvent1["engagedTime"].(float64))
 
 	timelineEvent2 := timelineEvents[1].(map[string]interface{})
-	require.Equal(t, "Ticket", timelineEvent2["__typename"].(string))
-	require.Equal(t, ticketId2, timelineEvent2["id"].(string))
-	require.NotNil(t, timelineEvent2["createdAt"].(string))
-	require.Equal(t, "subject 2", timelineEvent2["subject"].(string))
-	require.Equal(t, "P2", timelineEvent2["priority"].(string))
-	require.Equal(t, "CLOSED", timelineEvent2["status"].(string))
-	require.Equal(t, "description 2", timelineEvent2["description"].(string))
-	require.Equal(t, tagId2, timelineEvent2["tags"].([]interface{})[0].(map[string]interface{})["id"].(string))
-	require.Equal(t, "tag2", timelineEvent2["tags"].([]interface{})[0].(map[string]interface{})["name"].(string))
-	require.Equal(t, noteId2, timelineEvent2["notes"].([]interface{})[0].(map[string]interface{})["id"].(string))
-	require.Equal(t, "note 2", timelineEvent2["notes"].([]interface{})[0].(map[string]interface{})["html"].(string))
+	require.Equal(t, "PageView", timelineEvent2["__typename"].(string))
+	require.Equal(t, pageViewId2, timelineEvent2["id"].(string))
+	require.NotNil(t, timelineEvent2["startedAt"].(string))
+	require.NotNil(t, timelineEvent2["endedAt"].(string))
+	require.Equal(t, "session2", timelineEvent2["sessionId"].(string))
+	require.Equal(t, "application2", timelineEvent2["application"].(string))
+	require.Equal(t, "page2", timelineEvent2["pageTitle"].(string))
+	require.Equal(t, "http://app-2.ai", timelineEvent2["pageUrl"].(string))
+	require.Equal(t, float64(2), timelineEvent2["orderInSession"].(float64))
+	require.Equal(t, float64(20), timelineEvent2["engagedTime"].(float64))
 
 	timelineEvent3 := timelineEvents[2].(map[string]interface{})
-	require.Equal(t, "Ticket", timelineEvent3["__typename"].(string))
-	require.Equal(t, ticketId1, timelineEvent3["id"].(string))
-	require.NotNil(t, timelineEvent3["createdAt"].(string))
-	require.Equal(t, "subject 1", timelineEvent3["subject"].(string))
-	require.Equal(t, "P1", timelineEvent3["priority"].(string))
-	require.Equal(t, "OPEN", timelineEvent3["status"].(string))
-	require.Equal(t, "description 1", timelineEvent3["description"].(string))
-	require.Equal(t, tagId1, timelineEvent3["tags"].([]interface{})[0].(map[string]interface{})["id"].(string))
-	require.Equal(t, "tag1", timelineEvent3["tags"].([]interface{})[0].(map[string]interface{})["name"].(string))
-	require.Equal(t, noteId1, timelineEvent3["notes"].([]interface{})[0].(map[string]interface{})["id"].(string))
-	require.Equal(t, "note 1", timelineEvent3["notes"].([]interface{})[0].(map[string]interface{})["html"].(string))
+	require.Equal(t, "Conversation", timelineEvent3["__typename"].(string))
+	require.Equal(t, conversationId, timelineEvent3["id"].(string))
+	require.NotNil(t, timelineEvent3["startedAt"].(string))
+	require.Equal(t, "subject", timelineEvent3["subject"].(string))
+	require.Equal(t, "VOICE", timelineEvent3["channel"].(string))
 
 	timelineEvent4 := timelineEvents[3].(map[string]interface{})
-	require.Equal(t, "PageView", timelineEvent4["__typename"].(string))
-	require.Equal(t, pageViewId2, timelineEvent4["id"].(string))
-	require.NotNil(t, timelineEvent4["startedAt"].(string))
-	require.NotNil(t, timelineEvent4["endedAt"].(string))
-	require.Equal(t, "session2", timelineEvent4["sessionId"].(string))
-	require.Equal(t, "application2", timelineEvent4["application"].(string))
-	require.Equal(t, "page2", timelineEvent4["pageTitle"].(string))
-	require.Equal(t, "http://app-2.ai", timelineEvent4["pageUrl"].(string))
-	require.Equal(t, float64(2), timelineEvent4["orderInSession"].(float64))
-	require.Equal(t, float64(20), timelineEvent4["engagedTime"].(float64))
+	require.Equal(t, "Note", timelineEvent4["__typename"].(string))
+	require.Equal(t, contactNoteId, timelineEvent4["id"].(string))
+	require.NotNil(t, timelineEvent4["createdAt"].(string))
+	require.Equal(t, "contact note 1", timelineEvent4["html"].(string))
 
 	timelineEvent5 := timelineEvents[4].(map[string]interface{})
-	require.Equal(t, "Conversation", timelineEvent5["__typename"].(string))
-	require.Equal(t, conversationId, timelineEvent5["id"].(string))
-	require.NotNil(t, timelineEvent5["startedAt"].(string))
-	require.Equal(t, "subject", timelineEvent5["subject"].(string))
-	require.Equal(t, "VOICE", timelineEvent5["channel"].(string))
+	require.Equal(t, "InteractionEvent", timelineEvent5["__typename"].(string))
+	require.Equal(t, interactionEventId1, timelineEvent5["id"].(string))
+	require.NotNil(t, timelineEvent5["createdAt"].(string))
+	require.Equal(t, "IE text 1", timelineEvent5["content"].(string))
+	require.Equal(t, "application/json", timelineEvent5["contentType"].(string))
+	require.Equal(t, "EMAIL", timelineEvent5["channel"].(string))
 
 	timelineEvent6 := timelineEvents[5].(map[string]interface{})
-	require.Equal(t, "Note", timelineEvent6["__typename"].(string))
-	require.Equal(t, contactNoteId, timelineEvent6["id"].(string))
+	require.Equal(t, "InteractionEvent", timelineEvent6["__typename"].(string))
+	require.Equal(t, interactionEventId2, timelineEvent6["id"].(string))
 	require.NotNil(t, timelineEvent6["createdAt"].(string))
-	require.Equal(t, "contact note 1", timelineEvent6["html"].(string))
+	require.Equal(t, "IE text 2", timelineEvent6["content"].(string))
+	require.Equal(t, "application/json", timelineEvent6["contentType"].(string))
+	require.Equal(t, "EMAIL", timelineEvent6["channel"].(string))
 
 	timelineEvent7 := timelineEvents[6].(map[string]interface{})
-	require.Equal(t, "InteractionEvent", timelineEvent7["__typename"].(string))
-	require.Equal(t, interactionEventId1, timelineEvent7["id"].(string))
+	require.Equal(t, "Analysis", timelineEvent7["__typename"].(string))
+	require.Equal(t, analysis1, timelineEvent7["id"].(string))
 	require.NotNil(t, timelineEvent7["createdAt"].(string))
-	require.Equal(t, "IE text 1", timelineEvent7["content"].(string))
-	require.Equal(t, "application/json", timelineEvent7["contentType"].(string))
-	require.Equal(t, "EMAIL", timelineEvent7["channel"].(string))
-
-	timelineEvent8 := timelineEvents[7].(map[string]interface{})
-	require.Equal(t, "InteractionEvent", timelineEvent8["__typename"].(string))
-	require.Equal(t, interactionEventId2, timelineEvent8["id"].(string))
-	require.NotNil(t, timelineEvent8["createdAt"].(string))
-	require.Equal(t, "IE text 2", timelineEvent8["content"].(string))
-	require.Equal(t, "application/json", timelineEvent8["contentType"].(string))
-	require.Equal(t, "EMAIL", timelineEvent8["channel"].(string))
-
-	timelineEvent9 := timelineEvents[8].(map[string]interface{})
-	log.Println("timelineEvent9: ", timelineEvent9)
-	require.Equal(t, "Analysis", timelineEvent9["__typename"].(string))
-	require.Equal(t, analysis1, timelineEvent9["id"].(string))
-	require.NotNil(t, timelineEvent9["createdAt"].(string))
-	require.Equal(t, "This is a summary of the conversation", timelineEvent9["content"].(string))
-	require.Equal(t, "text/plain", timelineEvent9["contentType"].(string))
-	require.Equal(t, "SUMMARY", timelineEvent9["analysisType"].(string))
+	require.Equal(t, "This is a summary of the conversation", timelineEvent7["content"].(string))
+	require.Equal(t, "text/plain", timelineEvent7["contentType"].(string))
+	require.Equal(t, "SUMMARY", timelineEvent7["analysisType"].(string))
 }
 
 func TestQueryResolver_Contact_WithTimelineEvents_FilterByType(t *testing.T) {
@@ -1183,16 +1128,6 @@ func TestQueryResolver_Contact_WithTimelineEventsTotalCount(t *testing.T) {
 		StartedAt: now,
 	})
 
-	// prepare tickets with tags and notes
-	ticketId1 := neo4jt.CreateTicket(ctx, driver, tenantName, entity.TicketEntity{
-		CreatedAt: now,
-	})
-	ticketId2 := neo4jt.CreateTicket(ctx, driver, tenantName, entity.TicketEntity{
-		CreatedAt: now,
-	})
-	neo4jt.RequestTicket(ctx, driver, contactId, ticketId1)
-	neo4jt.RequestTicket(ctx, driver, contactId, ticketId2)
-
 	// prepare contact notes
 	neo4jt.CreateNoteForContact(ctx, driver, tenantName, contactId, "contact note 1", now)
 	neo4jt.CreateNoteForContact(ctx, driver, tenantName, contactId, "contact note 2", now)
@@ -1212,13 +1147,12 @@ func TestQueryResolver_Contact_WithTimelineEventsTotalCount(t *testing.T) {
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Contact"))
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "User"))
 	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "PageView"))
-	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "Ticket"))
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Conversation"))
 	require.Equal(t, 5, neo4jt.GetCountOfNodes(ctx, driver, "Note"))
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Email"))
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "PhoneNumber"))
 	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "InteractionEvent"))
-	require.Equal(t, 12, neo4jt.GetCountOfNodes(ctx, driver, "TimelineEvent"))
+	require.Equal(t, 10, neo4jt.GetCountOfNodes(ctx, driver, "TimelineEvent"))
 
 	rawResponse, err := c.RawPost(getQuery("contact/get_contact_with_timeline_events_total_count"),
 		client.Var("contactId", contactId))
@@ -1226,7 +1160,7 @@ func TestQueryResolver_Contact_WithTimelineEventsTotalCount(t *testing.T) {
 
 	contact := rawResponse.Data.(map[string]interface{})["contact"]
 	require.Equal(t, contactId, contact.(map[string]interface{})["id"])
-	require.Equal(t, float64(12), contact.(map[string]interface{})["timelineEventsTotalCount"].(float64))
+	require.Equal(t, float64(10), contact.(map[string]interface{})["timelineEventsTotalCount"].(float64))
 }
 
 func TestQueryResolver_Contact_WithOrganizations_ById(t *testing.T) {
@@ -1417,77 +1351,4 @@ func TestMutationResolver_ContactRemoveOrganizationByID(t *testing.T) {
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Contact"))
 	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "Organization"))
 	require.Equal(t, 1, neo4jt.GetCountOfRelationships(ctx, driver, "CONTACT_OF"))
-}
-
-func TestQueryResolver_Contact_WithTickets_ById(t *testing.T) {
-	ctx := context.TODO()
-	defer tearDownTestCase(ctx)(t)
-
-	neo4jt.CreateTenant(ctx, driver, tenantName)
-
-	contactId := neo4jt.CreateDefaultContact(ctx, driver, tenantName)
-	contactId2 := neo4jt.CreateDefaultContact(ctx, driver, tenantName)
-
-	ticketId1 := neo4jt.CreateTicket(ctx, driver, tenantName, entity.TicketEntity{
-		Subject:   "subject 1",
-		CreatedAt: utils.Now(),
-	})
-	ticketId2 := neo4jt.CreateTicket(ctx, driver, tenantName, entity.TicketEntity{
-		Subject:   "subject 2",
-		CreatedAt: utils.Now(),
-	})
-	ticketId3 := neo4jt.CreateTicket(ctx, driver, tenantName, entity.TicketEntity{
-		Subject:   "subject 3",
-		CreatedAt: utils.Now(),
-	})
-
-	tagId1 := neo4jt.CreateTag(ctx, driver, tenantName, "tag1")
-	tagId2 := neo4jt.CreateTag(ctx, driver, tenantName, "tag2")
-
-	neo4jt.CreateNoteForTicket(ctx, driver, tenantName, ticketId1, "note 1")
-	neo4jt.CreateNoteForTicket(ctx, driver, tenantName, ticketId2, "note 2")
-	neo4jt.CreateNoteForTicket(ctx, driver, tenantName, ticketId3, "note 3")
-
-	neo4jt.TagTicket(ctx, driver, ticketId1, tagId1)
-	neo4jt.TagTicket(ctx, driver, ticketId2, tagId2)
-
-	neo4jt.RequestTicket(ctx, driver, contactId, ticketId1)
-	neo4jt.RequestTicket(ctx, driver, contactId, ticketId2)
-	neo4jt.RequestTicket(ctx, driver, contactId2, ticketId3)
-
-	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "Contact"))
-	require.Equal(t, 3, neo4jt.GetCountOfNodes(ctx, driver, "Ticket"))
-	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "Tag"))
-	require.Equal(t, 3, neo4jt.GetCountOfNodes(ctx, driver, "Note"))
-	require.Equal(t, 3, neo4jt.GetCountOfRelationships(ctx, driver, "REQUESTED"))
-	require.Equal(t, 2, neo4jt.GetCountOfRelationships(ctx, driver, "TAGGED"))
-	require.Equal(t, 3, neo4jt.GetCountOfRelationships(ctx, driver, "NOTED"))
-
-	rawResponse, err := c.RawPost(getQuery("contact/get_contact_with_tickets_by_id"), client.Var("contactId", contactId))
-	assertRawResponseSuccess(t, rawResponse, err)
-
-	var contactStruct struct {
-		Contact model.Contact
-	}
-
-	err = decode.Decode(rawResponse.Data.(map[string]any), &contactStruct)
-	contact := contactStruct.Contact
-
-	require.Nil(t, err)
-	require.Equal(t, contactId, contact.ID)
-
-	tickets := contact.Tickets
-	require.Equal(t, 2, len(tickets))
-	require.Equal(t, ticketId2, tickets[0].ID)
-	require.Equal(t, 1, len(tickets[0].Tags))
-	require.Equal(t, 1, len(tickets[0].Notes))
-	require.Equal(t, "subject 2", *tickets[0].Subject)
-	require.Equal(t, "tag2", tickets[0].Tags[0].Name)
-	require.Equal(t, "note 2", tickets[0].Notes[0].HTML)
-	require.Equal(t, ticketId1, tickets[1].ID)
-	require.Equal(t, 1, len(tickets[1].Tags))
-	require.Equal(t, 1, len(tickets[1].Notes))
-	require.Equal(t, "subject 1", *tickets[1].Subject)
-	require.Equal(t, "tag1", tickets[1].Tags[0].Name)
-	require.Equal(t, "note 1", tickets[1].Notes[0].HTML)
 }

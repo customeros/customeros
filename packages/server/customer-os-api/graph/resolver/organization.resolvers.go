@@ -255,25 +255,25 @@ func (r *organizationResolver) TimelineEventsTotalCount(ctx context.Context, obj
 	return count, nil
 }
 
-// TicketSummaryByStatus is the resolver for the ticketSummaryByStatus field.
-func (r *organizationResolver) TicketSummaryByStatus(ctx context.Context, obj *model.Organization) ([]*model.TicketSummaryByStatus, error) {
+// IssueSummaryByStatus is the resolver for the issueSummaryByStatus field.
+func (r *organizationResolver) IssueSummaryByStatus(ctx context.Context, obj *model.Organization) ([]*model.IssueSummaryByStatus, error) {
 	defer func(start time.Time) {
 		utils.LogMethodExecution(start, utils.GetFunctionName())
 	}(time.Now())
 
-	ticketCountByStatus, err := r.Services.TicketService.GetTicketSummaryByStatusForOrganization(ctx, obj.ID)
+	issueCountByStatus, err := r.Services.IssueService.GetIssueSummaryByStatusForOrganization(ctx, obj.ID)
 	if err != nil {
-		graphql.AddErrorf(ctx, "Failed to get ticket summary by status for organization %s", obj.ID)
+		graphql.AddErrorf(ctx, "Failed to get issue summary by status for organization %s", obj.ID)
 		return nil, err
 	}
-	ticketSummaryByStatus := make([]*model.TicketSummaryByStatus, 0)
-	for key, value := range ticketCountByStatus {
-		ticketSummaryByStatus = append(ticketSummaryByStatus, &model.TicketSummaryByStatus{
+	issueSummaryByStatus := make([]*model.IssueSummaryByStatus, 0)
+	for key, value := range issueCountByStatus {
+		issueSummaryByStatus = append(issueSummaryByStatus, &model.IssueSummaryByStatus{
 			Status: key,
 			Count:  value,
 		})
 	}
-	return ticketSummaryByStatus, nil
+	return issueSummaryByStatus, nil
 }
 
 // Organizations is the resolver for the organizations field.

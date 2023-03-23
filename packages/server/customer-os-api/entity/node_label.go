@@ -12,7 +12,7 @@ const (
 	NodeLabel_PageView           = "PageView"
 	NodeLabel_PhoneNumber        = "PhoneNumber"
 	NodeLabel_Tag                = "Tag"
-	NodeLabel_Ticket             = "Ticket"
+	NodeLabel_Issue              = "Issue"
 	NodeLabel_User               = "User"
 	NodeLabel_Analysis           = "Analysis"
 )

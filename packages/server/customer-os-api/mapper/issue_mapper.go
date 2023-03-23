@@ -6,8 +6,8 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 )
 
-func MapEntityToTicket(entity *entity.TicketEntity) *model.Ticket {
-	return &model.Ticket{
+func MapEntityToIssue(entity *entity.IssueEntity) *model.Issue {
+	return &model.Issue{
 		ID:          entity.Id,
 		CreatedAt:   entity.CreatedAt,
 		UpdatedAt:   entity.UpdatedAt,
@@ -18,10 +18,10 @@ func MapEntityToTicket(entity *entity.TicketEntity) *model.Ticket {
 	}
 }
 
-func MapEntitiesToTickets(entities []*entity.TicketEntity) []*model.Ticket {
-	var tags []*model.Ticket
-	for _, ticketEntity := range entities {
-		tags = append(tags, MapEntityToTicket(ticketEntity))
+func MapEntitiesToIssues(entities []*entity.IssueEntity) []*model.Issue {
+	var issues []*model.Issue
+	for _, issueEntity := range entities {
+		issues = append(issues, MapEntityToIssue(issueEntity))
 	}
-	return tags
+	return issues
 }

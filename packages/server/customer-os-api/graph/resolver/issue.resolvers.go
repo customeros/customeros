@@ -17,12 +17,12 @@ import (
 )
 
 // Tags is the resolver for the tags field.
-func (r *ticketResolver) Tags(ctx context.Context, obj *model.Ticket) ([]*model.Tag, error) {
+func (r *issueResolver) Tags(ctx context.Context, obj *model.Issue) ([]*model.Tag, error) {
 	defer func(start time.Time) {
 		utils.LogMethodExecution(start, utils.GetFunctionName())
 	}(time.Now())
 
-	tagEntities, err := dataloader.For(ctx).GetTagsForTicket(ctx, obj.ID)
+	tagEntities, err := dataloader.For(ctx).GetTagsForIssue(ctx, obj.ID)
 	if err != nil {
 		graphql.AddErrorf(ctx, "Failed to get tags for contact %s", obj.ID)
 		return nil, err
@@ -30,21 +30,21 @@ func (r *ticketResolver) Tags(ctx context.Context, obj *model.Ticket) ([]*model.
 	return mapper.MapEntitiesToTags(tagEntities), nil
 }
 
+// Tags is the resolver for the tags field.
+func (r *ticketResolver) Tags(ctx context.Context, obj *model.Ticket) ([]*model.Tag, error) {
+	return nil, nil
+}
+
 // Notes is the resolver for the notes field.
 func (r *ticketResolver) Notes(ctx context.Context, obj *model.Ticket) ([]*model.Note, error) {
-	defer func(start time.Time) {
-		utils.LogMethodExecution(start, utils.GetFunctionName())
-	}(time.Now())
-
-	noteEntities, err := dataloader.For(ctx).GetNotesForTicket(ctx, obj.ID)
-	if err != nil {
-		graphql.AddErrorf(ctx, "Failed to get notes for ticket %s", obj.ID)
-		return nil, err
-	}
-	return mapper.MapEntitiesToNotes(noteEntities), nil
+	return nil, nil
 }
+
+// Issue returns generated.IssueResolver implementation.
+func (r *Resolver) Issue() generated.IssueResolver { return &issueResolver{r} }
 
 // Ticket returns generated.TicketResolver implementation.
 func (r *Resolver) Ticket() generated.TicketResolver { return &ticketResolver{r} }
 
+type issueResolver struct{ *Resolver }
 type ticketResolver struct{ *Resolver }

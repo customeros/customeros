@@ -48,6 +48,7 @@ type ResolverRoot interface {
 	FieldSetTemplate() FieldSetTemplateResolver
 	InteractionEvent() InteractionEventResolver
 	InteractionSession() InteractionSessionResolver
+	Issue() IssueResolver
 	JobRole() JobRoleResolver
 	Location() LocationResolver
 	Mutation() MutationResolver
@@ -99,8 +100,6 @@ type ComplexityRoot struct {
 		SourceOfTruth            func(childComplexity int) int
 		Tags                     func(childComplexity int) int
 		Template                 func(childComplexity int) int
-		TicketSummaryByStatus    func(childComplexity int) int
-		Tickets                  func(childComplexity int) int
 		TimelineEvents           func(childComplexity int, from *time.Time, size int, timelineEventTypes []model.TimelineEventType) int
 		TimelineEventsTotalCount func(childComplexity int, timelineEventTypes []model.TimelineEventType) int
 		Title                    func(childComplexity int) int
@@ -282,6 +281,22 @@ type ComplexityRoot struct {
 		UpdatedAt         func(childComplexity int) int
 	}
 
+	Issue struct {
+		CreatedAt   func(childComplexity int) int
+		Description func(childComplexity int) int
+		ID          func(childComplexity int) int
+		Priority    func(childComplexity int) int
+		Status      func(childComplexity int) int
+		Subject     func(childComplexity int) int
+		Tags        func(childComplexity int) int
+		UpdatedAt   func(childComplexity int) int
+	}
+
+	IssueSummaryByStatus struct {
+		Count  func(childComplexity int) int
+		Status func(childComplexity int) int
+	}
+
 	JobRole struct {
 		AppSource           func(childComplexity int) int
 		Contact             func(childComplexity int) int
@@ -431,6 +446,7 @@ type ComplexityRoot struct {
 		ID                       func(childComplexity int) int
 		Industry                 func(childComplexity int) int
 		IsPublic                 func(childComplexity int) int
+		IssueSummaryByStatus     func(childComplexity int) int
 		JobRoles                 func(childComplexity int) int
 		Locations                func(childComplexity int) int
 		Name                     func(childComplexity int) int
@@ -440,7 +456,6 @@ type ComplexityRoot struct {
 		Source                   func(childComplexity int) int
 		SourceOfTruth            func(childComplexity int) int
 		Tags                     func(childComplexity int) int
-		TicketSummaryByStatus    func(childComplexity int) int
 		TimelineEvents           func(childComplexity int, from *time.Time, size int, timelineEventTypes []model.TimelineEventType) int
 		TimelineEventsTotalCount func(childComplexity int, timelineEventTypes []model.TimelineEventType) int
 		UpdatedAt                func(childComplexity int) int
@@ -563,11 +578,6 @@ type ComplexityRoot struct {
 		UpdatedAt   func(childComplexity int) int
 	}
 
-	TicketSummaryByStatus struct {
-		Count  func(childComplexity int) int
-		Status func(childComplexity int) int
-	}
-
 	User struct {
 		Conversations func(childComplexity int, pagination *model.Pagination, sort []*model.SortBy) int
 		CreatedAt     func(childComplexity int) int
@@ -612,8 +622,6 @@ type ContactResolver interface {
 	Conversations(ctx context.Context, obj *model.Contact, pagination *model.Pagination, sort []*model.SortBy) (*model.ConversationPage, error)
 	TimelineEvents(ctx context.Context, obj *model.Contact, from *time.Time, size int, timelineEventTypes []model.TimelineEventType) ([]model.TimelineEvent, error)
 	TimelineEventsTotalCount(ctx context.Context, obj *model.Contact, timelineEventTypes []model.TimelineEventType) (int64, error)
-	Tickets(ctx context.Context, obj *model.Contact) ([]*model.Ticket, error)
-	TicketSummaryByStatus(ctx context.Context, obj *model.Contact) ([]*model.TicketSummaryByStatus, error)
 }
 type ContactGroupResolver interface {
 	Contacts(ctx context.Context, obj *model.ContactGroup, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) (*model.ContactsPage, error)
@@ -650,6 +658,9 @@ type InteractionEventResolver interface {
 type InteractionSessionResolver interface {
 	Events(ctx context.Context, obj *model.InteractionSession) ([]*model.InteractionEvent, error)
 	AttendedBy(ctx context.Context, obj *model.InteractionSession) ([]model.InteractionSessionParticipant, error)
+}
+type IssueResolver interface {
+	Tags(ctx context.Context, obj *model.Issue) ([]*model.Tag, error)
 }
 type JobRoleResolver interface {
 	Organization(ctx context.Context, obj *model.JobRole) (*model.Organization, error)
@@ -754,7 +765,7 @@ type OrganizationResolver interface {
 	PhoneNumbers(ctx context.Context, obj *model.Organization) ([]*model.PhoneNumber, error)
 	TimelineEvents(ctx context.Context, obj *model.Organization, from *time.Time, size int, timelineEventTypes []model.TimelineEventType) ([]model.TimelineEvent, error)
 	TimelineEventsTotalCount(ctx context.Context, obj *model.Organization, timelineEventTypes []model.TimelineEventType) (int64, error)
-	TicketSummaryByStatus(ctx context.Context, obj *model.Organization) ([]*model.TicketSummaryByStatus, error)
+	IssueSummaryByStatus(ctx context.Context, obj *model.Organization) ([]*model.IssueSummaryByStatus, error)
 }
 type PhoneNumberResolver interface {
 	Users(ctx context.Context, obj *model.PhoneNumber) ([]*model.User, error)
@@ -1053,20 +1064,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Contact.Template(childComplexity), true
-
-	case "Contact.ticketSummaryByStatus":
-		if e.complexity.Contact.TicketSummaryByStatus == nil {
-			break
-		}
-
-		return e.complexity.Contact.TicketSummaryByStatus(childComplexity), true
-
-	case "Contact.tickets":
-		if e.complexity.Contact.Tickets == nil {
-			break
-		}
-
-		return e.complexity.Contact.Tickets(childComplexity), true
 
 	case "Contact.timelineEvents":
 		if e.complexity.Contact.TimelineEvents == nil {
@@ -1978,6 +1975,76 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.InteractionSession.UpdatedAt(childComplexity), true
+
+	case "Issue.createdAt":
+		if e.complexity.Issue.CreatedAt == nil {
+			break
+		}
+
+		return e.complexity.Issue.CreatedAt(childComplexity), true
+
+	case "Issue.description":
+		if e.complexity.Issue.Description == nil {
+			break
+		}
+
+		return e.complexity.Issue.Description(childComplexity), true
+
+	case "Issue.id":
+		if e.complexity.Issue.ID == nil {
+			break
+		}
+
+		return e.complexity.Issue.ID(childComplexity), true
+
+	case "Issue.priority":
+		if e.complexity.Issue.Priority == nil {
+			break
+		}
+
+		return e.complexity.Issue.Priority(childComplexity), true
+
+	case "Issue.status":
+		if e.complexity.Issue.Status == nil {
+			break
+		}
+
+		return e.complexity.Issue.Status(childComplexity), true
+
+	case "Issue.subject":
+		if e.complexity.Issue.Subject == nil {
+			break
+		}
+
+		return e.complexity.Issue.Subject(childComplexity), true
+
+	case "Issue.tags":
+		if e.complexity.Issue.Tags == nil {
+			break
+		}
+
+		return e.complexity.Issue.Tags(childComplexity), true
+
+	case "Issue.updatedAt":
+		if e.complexity.Issue.UpdatedAt == nil {
+			break
+		}
+
+		return e.complexity.Issue.UpdatedAt(childComplexity), true
+
+	case "IssueSummaryByStatus.count":
+		if e.complexity.IssueSummaryByStatus.Count == nil {
+			break
+		}
+
+		return e.complexity.IssueSummaryByStatus.Count(childComplexity), true
+
+	case "IssueSummaryByStatus.status":
+		if e.complexity.IssueSummaryByStatus.Status == nil {
+			break
+		}
+
+		return e.complexity.IssueSummaryByStatus.Status(childComplexity), true
 
 	case "JobRole.appSource":
 		if e.complexity.JobRole.AppSource == nil {
@@ -3295,6 +3362,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Organization.IsPublic(childComplexity), true
 
+	case "Organization.issueSummaryByStatus":
+		if e.complexity.Organization.IssueSummaryByStatus == nil {
+			break
+		}
+
+		return e.complexity.Organization.IssueSummaryByStatus(childComplexity), true
+
 	case "Organization.jobRoles":
 		if e.complexity.Organization.JobRoles == nil {
 			break
@@ -3362,13 +3436,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Organization.Tags(childComplexity), true
-
-	case "Organization.ticketSummaryByStatus":
-		if e.complexity.Organization.TicketSummaryByStatus == nil {
-			break
-		}
-
-		return e.complexity.Organization.TicketSummaryByStatus(childComplexity), true
 
 	case "Organization.timelineEvents":
 		if e.complexity.Organization.TimelineEvents == nil {
@@ -4084,20 +4151,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Ticket.UpdatedAt(childComplexity), true
 
-	case "TicketSummaryByStatus.count":
-		if e.complexity.TicketSummaryByStatus.Count == nil {
-			break
-		}
-
-		return e.complexity.TicketSummaryByStatus.Count(childComplexity), true
-
-	case "TicketSummaryByStatus.status":
-		if e.complexity.TicketSummaryByStatus.Status == nil {
-			break
-		}
-
-		return e.complexity.TicketSummaryByStatus.Status(childComplexity), true
-
 	case "User.conversations":
 		if e.complexity.User.Conversations == nil {
 			break
@@ -4494,10 +4547,6 @@ type Contact implements ExtensibleEntity & Node {
 
     timelineEvents(from: Time, size: Int!, timelineEventTypes: [TimelineEventType!]): [TimelineEvent!]! @goField(forceResolver: true)
     timelineEventsTotalCount(timelineEventTypes: [TimelineEventType!]): Int64! @goField(forceResolver: true)
-
-    tickets: [Ticket]! @goField(forceResolver: true)
-
-    ticketSummaryByStatus: [TicketSummaryByStatus!]! @goField(forceResolver: true)
 }
 
 """
@@ -5375,6 +5424,36 @@ interface ExtensibleEntity implements Node {
     id: ID!
     template: EntityTemplate
 }`, BuiltIn: false},
+	{Name: "../schemas/issue.graphqls", Input: `type Ticket implements Node {
+    id: ID!
+    createdAt: Time!
+    updatedAt: Time!
+
+    subject: String
+    status: String!
+    priority: String
+    description: String
+    tags: [Tag] @goField(forceResolver: true)
+    notes: [Note] @goField(forceResolver: true)
+}
+
+type Issue implements Node {
+    id: ID!
+    createdAt: Time!
+    updatedAt: Time!
+
+    subject: String
+    status: String!
+    priority: String
+    description: String
+    tags: [Tag] @goField(forceResolver: true)
+}
+
+type IssueSummaryByStatus {
+    status: String!
+    count: Int64!
+}
+`, BuiltIn: false},
 	{Name: "../schemas/job_role.graphqls", Input: `extend type Mutation {
     jobRole_Delete(contactId : ID!, roleId: ID!): Result!
     jobRole_Create(contactId : ID!, input: JobRoleInput!): JobRole!
@@ -5574,7 +5653,7 @@ type Organization implements Node {
     timelineEvents(from: Time, size: Int!, timelineEventTypes: [TimelineEventType!]): [TimelineEvent!]! @goField(forceResolver: true)
     timelineEventsTotalCount(timelineEventTypes: [TimelineEventType!]): Int64! @goField(forceResolver: true)
 
-    ticketSummaryByStatus: [TicketSummaryByStatus!]! @goField(forceResolver: true)
+    issueSummaryByStatus: [IssueSummaryByStatus!]! @goField(forceResolver: true)
 }
 
 type OrganizationPage implements Pages {
@@ -5841,34 +5920,17 @@ input TagUpdateInput {
     id: ID!
     name: String!
 }`, BuiltIn: false},
-	{Name: "../schemas/ticket.graphqls", Input: `type Ticket implements Node {
-    id: ID!
-    createdAt: Time!
-    updatedAt: Time!
-
-    subject: String
-    status: String!
-    priority: String
-    description: String
-    tags: [Tag] @goField(forceResolver: true)
-    notes: [Note] @goField(forceResolver: true)
-}
-
-type TicketSummaryByStatus {
-    status: String!
-    count: Int64!
-}
-`, BuiltIn: false},
-	{Name: "../schemas/timeline_event.graphqls", Input: `union TimelineEvent = PageView | InteractionSession | Ticket | Conversation | Note | InteractionEvent | Analysis
+	{Name: "../schemas/timeline_event.graphqls", Input: `union TimelineEvent = PageView | InteractionSession | Ticket | Conversation | Note | InteractionEvent | Analysis | Issue
 
 enum TimelineEventType {
     PAGE_VIEW
     INTERACTION_SESSION
-    TICKET
+    TICKET @deprecated(reason: "Use Issue instead")
     CONVERSATION
     NOTE
     INTERACTION_EVENT
     ANALYSIS
+    ISSUE
 }`, BuiltIn: false},
 	{Name: "../schemas/user.graphqls", Input: `extend type Query {
     users(pagination: Pagination, where: Filter, sort: [SortBy!]): UserPage!
@@ -10165,120 +10227,6 @@ func (ec *executionContext) fieldContext_Contact_timelineEventsTotalCount(ctx co
 	return fc, nil
 }
 
-func (ec *executionContext) _Contact_tickets(ctx context.Context, field graphql.CollectedField, obj *model.Contact) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Contact_tickets(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Contact().Tickets(rctx, obj)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.([]*model.Ticket)
-	fc.Result = res
-	return ec.marshalNTicket2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐTicket(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Contact_tickets(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Contact",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_Ticket_id(ctx, field)
-			case "createdAt":
-				return ec.fieldContext_Ticket_createdAt(ctx, field)
-			case "updatedAt":
-				return ec.fieldContext_Ticket_updatedAt(ctx, field)
-			case "subject":
-				return ec.fieldContext_Ticket_subject(ctx, field)
-			case "status":
-				return ec.fieldContext_Ticket_status(ctx, field)
-			case "priority":
-				return ec.fieldContext_Ticket_priority(ctx, field)
-			case "description":
-				return ec.fieldContext_Ticket_description(ctx, field)
-			case "tags":
-				return ec.fieldContext_Ticket_tags(ctx, field)
-			case "notes":
-				return ec.fieldContext_Ticket_notes(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type Ticket", field.Name)
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Contact_ticketSummaryByStatus(ctx context.Context, field graphql.CollectedField, obj *model.Contact) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Contact_ticketSummaryByStatus(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Contact().TicketSummaryByStatus(rctx, obj)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.([]*model.TicketSummaryByStatus)
-	fc.Result = res
-	return ec.marshalNTicketSummaryByStatus2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐTicketSummaryByStatusᚄ(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Contact_ticketSummaryByStatus(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Contact",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "status":
-				return ec.fieldContext_TicketSummaryByStatus_status(ctx, field)
-			case "count":
-				return ec.fieldContext_TicketSummaryByStatus_count(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type TicketSummaryByStatus", field.Name)
-		},
-	}
-	return fc, nil
-}
-
 func (ec *executionContext) _ContactGroup_id(ctx context.Context, field graphql.CollectedField, obj *model.ContactGroup) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_ContactGroup_id(ctx, field)
 	if err != nil {
@@ -10755,10 +10703,6 @@ func (ec *executionContext) fieldContext_ContactParticipant_contactParticipant(c
 				return ec.fieldContext_Contact_timelineEvents(ctx, field)
 			case "timelineEventsTotalCount":
 				return ec.fieldContext_Contact_timelineEventsTotalCount(ctx, field)
-			case "tickets":
-				return ec.fieldContext_Contact_tickets(ctx, field)
-			case "ticketSummaryByStatus":
-				return ec.fieldContext_Contact_ticketSummaryByStatus(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Contact", field.Name)
 		},
@@ -10900,10 +10844,6 @@ func (ec *executionContext) fieldContext_ContactsPage_content(ctx context.Contex
 				return ec.fieldContext_Contact_timelineEvents(ctx, field)
 			case "timelineEventsTotalCount":
 				return ec.fieldContext_Contact_timelineEventsTotalCount(ctx, field)
-			case "tickets":
-				return ec.fieldContext_Contact_tickets(ctx, field)
-			case "ticketSummaryByStatus":
-				return ec.fieldContext_Contact_ticketSummaryByStatus(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Contact", field.Name)
 		},
@@ -11432,10 +11372,6 @@ func (ec *executionContext) fieldContext_Conversation_contacts(ctx context.Conte
 				return ec.fieldContext_Contact_timelineEvents(ctx, field)
 			case "timelineEventsTotalCount":
 				return ec.fieldContext_Contact_timelineEventsTotalCount(ctx, field)
-			case "tickets":
-				return ec.fieldContext_Contact_tickets(ctx, field)
-			case "ticketSummaryByStatus":
-				return ec.fieldContext_Contact_ticketSummaryByStatus(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Contact", field.Name)
 		},
@@ -12900,10 +12836,6 @@ func (ec *executionContext) fieldContext_DashboardViewItem_contact(ctx context.C
 				return ec.fieldContext_Contact_timelineEvents(ctx, field)
 			case "timelineEventsTotalCount":
 				return ec.fieldContext_Contact_timelineEventsTotalCount(ctx, field)
-			case "tickets":
-				return ec.fieldContext_Contact_tickets(ctx, field)
-			case "ticketSummaryByStatus":
-				return ec.fieldContext_Contact_ticketSummaryByStatus(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Contact", field.Name)
 		},
@@ -12993,8 +12925,8 @@ func (ec *executionContext) fieldContext_DashboardViewItem_organization(ctx cont
 				return ec.fieldContext_Organization_timelineEvents(ctx, field)
 			case "timelineEventsTotalCount":
 				return ec.fieldContext_Organization_timelineEventsTotalCount(ctx, field)
-			case "ticketSummaryByStatus":
-				return ec.fieldContext_Organization_ticketSummaryByStatus(ctx, field)
+			case "issueSummaryByStatus":
+				return ec.fieldContext_Organization_issueSummaryByStatus(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Organization", field.Name)
 		},
@@ -13769,10 +13701,6 @@ func (ec *executionContext) fieldContext_Email_contacts(ctx context.Context, fie
 				return ec.fieldContext_Contact_timelineEvents(ctx, field)
 			case "timelineEventsTotalCount":
 				return ec.fieldContext_Contact_timelineEventsTotalCount(ctx, field)
-			case "tickets":
-				return ec.fieldContext_Contact_tickets(ctx, field)
-			case "ticketSummaryByStatus":
-				return ec.fieldContext_Contact_ticketSummaryByStatus(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Contact", field.Name)
 		},
@@ -13865,8 +13793,8 @@ func (ec *executionContext) fieldContext_Email_organizations(ctx context.Context
 				return ec.fieldContext_Organization_timelineEvents(ctx, field)
 			case "timelineEventsTotalCount":
 				return ec.fieldContext_Organization_timelineEventsTotalCount(ctx, field)
-			case "ticketSummaryByStatus":
-				return ec.fieldContext_Organization_ticketSummaryByStatus(ctx, field)
+			case "issueSummaryByStatus":
+				return ec.fieldContext_Organization_issueSummaryByStatus(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Organization", field.Name)
 		},
@@ -16375,6 +16303,448 @@ func (ec *executionContext) fieldContext_InteractionSession_attendedBy(ctx conte
 	return fc, nil
 }
 
+func (ec *executionContext) _Issue_id(ctx context.Context, field graphql.CollectedField, obj *model.Issue) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Issue_id(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNID2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Issue_id(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Issue",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Issue_createdAt(ctx context.Context, field graphql.CollectedField, obj *model.Issue) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Issue_createdAt(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.CreatedAt, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(time.Time)
+	fc.Result = res
+	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Issue_createdAt(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Issue",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Issue_updatedAt(ctx context.Context, field graphql.CollectedField, obj *model.Issue) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Issue_updatedAt(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.UpdatedAt, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(time.Time)
+	fc.Result = res
+	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Issue_updatedAt(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Issue",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Issue_subject(ctx context.Context, field graphql.CollectedField, obj *model.Issue) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Issue_subject(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Subject, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Issue_subject(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Issue",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Issue_status(ctx context.Context, field graphql.CollectedField, obj *model.Issue) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Issue_status(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Status, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Issue_status(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Issue",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Issue_priority(ctx context.Context, field graphql.CollectedField, obj *model.Issue) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Issue_priority(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Priority, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Issue_priority(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Issue",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Issue_description(ctx context.Context, field graphql.CollectedField, obj *model.Issue) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Issue_description(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Description, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Issue_description(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Issue",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Issue_tags(ctx context.Context, field graphql.CollectedField, obj *model.Issue) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Issue_tags(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Issue().Tags(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.([]*model.Tag)
+	fc.Result = res
+	return ec.marshalOTag2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐTag(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Issue_tags(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Issue",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Tag_id(ctx, field)
+			case "name":
+				return ec.fieldContext_Tag_name(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Tag_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_Tag_updatedAt(ctx, field)
+			case "source":
+				return ec.fieldContext_Tag_source(ctx, field)
+			case "appSource":
+				return ec.fieldContext_Tag_appSource(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Tag", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _IssueSummaryByStatus_status(ctx context.Context, field graphql.CollectedField, obj *model.IssueSummaryByStatus) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_IssueSummaryByStatus_status(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Status, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_IssueSummaryByStatus_status(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "IssueSummaryByStatus",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _IssueSummaryByStatus_count(ctx context.Context, field graphql.CollectedField, obj *model.IssueSummaryByStatus) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_IssueSummaryByStatus_count(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Count, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int64)
+	fc.Result = res
+	return ec.marshalNInt642int64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_IssueSummaryByStatus_count(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "IssueSummaryByStatus",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int64 does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _JobRole_id(ctx context.Context, field graphql.CollectedField, obj *model.JobRole) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_JobRole_id(ctx, field)
 	if err != nil {
@@ -16589,8 +16959,8 @@ func (ec *executionContext) fieldContext_JobRole_organization(ctx context.Contex
 				return ec.fieldContext_Organization_timelineEvents(ctx, field)
 			case "timelineEventsTotalCount":
 				return ec.fieldContext_Organization_timelineEventsTotalCount(ctx, field)
-			case "ticketSummaryByStatus":
-				return ec.fieldContext_Organization_ticketSummaryByStatus(ctx, field)
+			case "issueSummaryByStatus":
+				return ec.fieldContext_Organization_issueSummaryByStatus(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Organization", field.Name)
 		},
@@ -16688,10 +17058,6 @@ func (ec *executionContext) fieldContext_JobRole_contact(ctx context.Context, fi
 				return ec.fieldContext_Contact_timelineEvents(ctx, field)
 			case "timelineEventsTotalCount":
 				return ec.fieldContext_Contact_timelineEventsTotalCount(ctx, field)
-			case "tickets":
-				return ec.fieldContext_Contact_tickets(ctx, field)
-			case "ticketSummaryByStatus":
-				return ec.fieldContext_Contact_ticketSummaryByStatus(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Contact", field.Name)
 		},
@@ -18225,10 +18591,6 @@ func (ec *executionContext) fieldContext_Mutation_contact_Create(ctx context.Con
 				return ec.fieldContext_Contact_timelineEvents(ctx, field)
 			case "timelineEventsTotalCount":
 				return ec.fieldContext_Contact_timelineEventsTotalCount(ctx, field)
-			case "tickets":
-				return ec.fieldContext_Contact_tickets(ctx, field)
-			case "ticketSummaryByStatus":
-				return ec.fieldContext_Contact_ticketSummaryByStatus(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Contact", field.Name)
 		},
@@ -18340,10 +18702,6 @@ func (ec *executionContext) fieldContext_Mutation_contact_Update(ctx context.Con
 				return ec.fieldContext_Contact_timelineEvents(ctx, field)
 			case "timelineEventsTotalCount":
 				return ec.fieldContext_Contact_timelineEventsTotalCount(ctx, field)
-			case "tickets":
-				return ec.fieldContext_Contact_tickets(ctx, field)
-			case "ticketSummaryByStatus":
-				return ec.fieldContext_Contact_ticketSummaryByStatus(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Contact", field.Name)
 		},
@@ -18573,10 +18931,6 @@ func (ec *executionContext) fieldContext_Mutation_contact_Merge(ctx context.Cont
 				return ec.fieldContext_Contact_timelineEvents(ctx, field)
 			case "timelineEventsTotalCount":
 				return ec.fieldContext_Contact_timelineEventsTotalCount(ctx, field)
-			case "tickets":
-				return ec.fieldContext_Contact_tickets(ctx, field)
-			case "ticketSummaryByStatus":
-				return ec.fieldContext_Contact_ticketSummaryByStatus(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Contact", field.Name)
 		},
@@ -18688,10 +19042,6 @@ func (ec *executionContext) fieldContext_Mutation_contact_AddTagById(ctx context
 				return ec.fieldContext_Contact_timelineEvents(ctx, field)
 			case "timelineEventsTotalCount":
 				return ec.fieldContext_Contact_timelineEventsTotalCount(ctx, field)
-			case "tickets":
-				return ec.fieldContext_Contact_tickets(ctx, field)
-			case "ticketSummaryByStatus":
-				return ec.fieldContext_Contact_ticketSummaryByStatus(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Contact", field.Name)
 		},
@@ -18803,10 +19153,6 @@ func (ec *executionContext) fieldContext_Mutation_contact_RemoveTagById(ctx cont
 				return ec.fieldContext_Contact_timelineEvents(ctx, field)
 			case "timelineEventsTotalCount":
 				return ec.fieldContext_Contact_timelineEventsTotalCount(ctx, field)
-			case "tickets":
-				return ec.fieldContext_Contact_tickets(ctx, field)
-			case "ticketSummaryByStatus":
-				return ec.fieldContext_Contact_ticketSummaryByStatus(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Contact", field.Name)
 		},
@@ -18918,10 +19264,6 @@ func (ec *executionContext) fieldContext_Mutation_contact_AddOrganizationById(ct
 				return ec.fieldContext_Contact_timelineEvents(ctx, field)
 			case "timelineEventsTotalCount":
 				return ec.fieldContext_Contact_timelineEventsTotalCount(ctx, field)
-			case "tickets":
-				return ec.fieldContext_Contact_tickets(ctx, field)
-			case "ticketSummaryByStatus":
-				return ec.fieldContext_Contact_ticketSummaryByStatus(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Contact", field.Name)
 		},
@@ -19033,10 +19375,6 @@ func (ec *executionContext) fieldContext_Mutation_contact_RemoveOrganizationById
 				return ec.fieldContext_Contact_timelineEvents(ctx, field)
 			case "timelineEventsTotalCount":
 				return ec.fieldContext_Contact_timelineEventsTotalCount(ctx, field)
-			case "tickets":
-				return ec.fieldContext_Contact_tickets(ctx, field)
-			case "ticketSummaryByStatus":
-				return ec.fieldContext_Contact_ticketSummaryByStatus(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Contact", field.Name)
 		},
@@ -19738,10 +20076,6 @@ func (ec *executionContext) fieldContext_Mutation_customFieldsMergeAndUpdateInCo
 				return ec.fieldContext_Contact_timelineEvents(ctx, field)
 			case "timelineEventsTotalCount":
 				return ec.fieldContext_Contact_timelineEventsTotalCount(ctx, field)
-			case "tickets":
-				return ec.fieldContext_Contact_tickets(ctx, field)
-			case "ticketSummaryByStatus":
-				return ec.fieldContext_Contact_ticketSummaryByStatus(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Contact", field.Name)
 		},
@@ -22107,8 +22441,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_Create(ctx contex
 				return ec.fieldContext_Organization_timelineEvents(ctx, field)
 			case "timelineEventsTotalCount":
 				return ec.fieldContext_Organization_timelineEventsTotalCount(ctx, field)
-			case "ticketSummaryByStatus":
-				return ec.fieldContext_Organization_ticketSummaryByStatus(ctx, field)
+			case "issueSummaryByStatus":
+				return ec.fieldContext_Organization_issueSummaryByStatus(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Organization", field.Name)
 		},
@@ -22212,8 +22546,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_Update(ctx contex
 				return ec.fieldContext_Organization_timelineEvents(ctx, field)
 			case "timelineEventsTotalCount":
 				return ec.fieldContext_Organization_timelineEventsTotalCount(ctx, field)
-			case "ticketSummaryByStatus":
-				return ec.fieldContext_Organization_ticketSummaryByStatus(ctx, field)
+			case "issueSummaryByStatus":
+				return ec.fieldContext_Organization_issueSummaryByStatus(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Organization", field.Name)
 		},
@@ -22373,8 +22707,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_Merge(ctx context
 				return ec.fieldContext_Organization_timelineEvents(ctx, field)
 			case "timelineEventsTotalCount":
 				return ec.fieldContext_Organization_timelineEventsTotalCount(ctx, field)
-			case "ticketSummaryByStatus":
-				return ec.fieldContext_Organization_ticketSummaryByStatus(ctx, field)
+			case "issueSummaryByStatus":
+				return ec.fieldContext_Organization_issueSummaryByStatus(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Organization", field.Name)
 		},
@@ -25541,8 +25875,8 @@ func (ec *executionContext) fieldContext_Organization_timelineEventsTotalCount(c
 	return fc, nil
 }
 
-func (ec *executionContext) _Organization_ticketSummaryByStatus(ctx context.Context, field graphql.CollectedField, obj *model.Organization) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Organization_ticketSummaryByStatus(ctx, field)
+func (ec *executionContext) _Organization_issueSummaryByStatus(ctx context.Context, field graphql.CollectedField, obj *model.Organization) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Organization_issueSummaryByStatus(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -25555,7 +25889,7 @@ func (ec *executionContext) _Organization_ticketSummaryByStatus(ctx context.Cont
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Organization().TicketSummaryByStatus(rctx, obj)
+		return ec.resolvers.Organization().IssueSummaryByStatus(rctx, obj)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -25567,12 +25901,12 @@ func (ec *executionContext) _Organization_ticketSummaryByStatus(ctx context.Cont
 		}
 		return graphql.Null
 	}
-	res := resTmp.([]*model.TicketSummaryByStatus)
+	res := resTmp.([]*model.IssueSummaryByStatus)
 	fc.Result = res
-	return ec.marshalNTicketSummaryByStatus2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐTicketSummaryByStatusᚄ(ctx, field.Selections, res)
+	return ec.marshalNIssueSummaryByStatus2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐIssueSummaryByStatusᚄ(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Organization_ticketSummaryByStatus(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Organization_issueSummaryByStatus(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Organization",
 		Field:      field,
@@ -25581,11 +25915,11 @@ func (ec *executionContext) fieldContext_Organization_ticketSummaryByStatus(ctx 
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
 			case "status":
-				return ec.fieldContext_TicketSummaryByStatus_status(ctx, field)
+				return ec.fieldContext_IssueSummaryByStatus_status(ctx, field)
 			case "count":
-				return ec.fieldContext_TicketSummaryByStatus_count(ctx, field)
+				return ec.fieldContext_IssueSummaryByStatus_count(ctx, field)
 			}
-			return nil, fmt.Errorf("no field named %q was found under type TicketSummaryByStatus", field.Name)
+			return nil, fmt.Errorf("no field named %q was found under type IssueSummaryByStatus", field.Name)
 		},
 	}
 	return fc, nil
@@ -25676,8 +26010,8 @@ func (ec *executionContext) fieldContext_OrganizationPage_content(ctx context.Co
 				return ec.fieldContext_Organization_timelineEvents(ctx, field)
 			case "timelineEventsTotalCount":
 				return ec.fieldContext_Organization_timelineEventsTotalCount(ctx, field)
-			case "ticketSummaryByStatus":
-				return ec.fieldContext_Organization_ticketSummaryByStatus(ctx, field)
+			case "issueSummaryByStatus":
+				return ec.fieldContext_Organization_issueSummaryByStatus(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Organization", field.Name)
 		},
@@ -26927,10 +27261,6 @@ func (ec *executionContext) fieldContext_PhoneNumber_contacts(ctx context.Contex
 				return ec.fieldContext_Contact_timelineEvents(ctx, field)
 			case "timelineEventsTotalCount":
 				return ec.fieldContext_Contact_timelineEventsTotalCount(ctx, field)
-			case "tickets":
-				return ec.fieldContext_Contact_tickets(ctx, field)
-			case "ticketSummaryByStatus":
-				return ec.fieldContext_Contact_ticketSummaryByStatus(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Contact", field.Name)
 		},
@@ -27023,8 +27353,8 @@ func (ec *executionContext) fieldContext_PhoneNumber_organizations(ctx context.C
 				return ec.fieldContext_Organization_timelineEvents(ctx, field)
 			case "timelineEventsTotalCount":
 				return ec.fieldContext_Organization_timelineEventsTotalCount(ctx, field)
-			case "ticketSummaryByStatus":
-				return ec.fieldContext_Organization_ticketSummaryByStatus(ctx, field)
+			case "issueSummaryByStatus":
+				return ec.fieldContext_Organization_issueSummaryByStatus(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Organization", field.Name)
 		},
@@ -27985,10 +28315,6 @@ func (ec *executionContext) fieldContext_Query_contact(ctx context.Context, fiel
 				return ec.fieldContext_Contact_timelineEvents(ctx, field)
 			case "timelineEventsTotalCount":
 				return ec.fieldContext_Contact_timelineEventsTotalCount(ctx, field)
-			case "tickets":
-				return ec.fieldContext_Contact_tickets(ctx, field)
-			case "ticketSummaryByStatus":
-				return ec.fieldContext_Contact_ticketSummaryByStatus(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Contact", field.Name)
 		},
@@ -28163,10 +28489,6 @@ func (ec *executionContext) fieldContext_Query_contact_ByEmail(ctx context.Conte
 				return ec.fieldContext_Contact_timelineEvents(ctx, field)
 			case "timelineEventsTotalCount":
 				return ec.fieldContext_Contact_timelineEventsTotalCount(ctx, field)
-			case "tickets":
-				return ec.fieldContext_Contact_tickets(ctx, field)
-			case "ticketSummaryByStatus":
-				return ec.fieldContext_Contact_ticketSummaryByStatus(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Contact", field.Name)
 		},
@@ -28278,10 +28600,6 @@ func (ec *executionContext) fieldContext_Query_contact_ByPhone(ctx context.Conte
 				return ec.fieldContext_Contact_timelineEvents(ctx, field)
 			case "timelineEventsTotalCount":
 				return ec.fieldContext_Contact_timelineEventsTotalCount(ctx, field)
-			case "tickets":
-				return ec.fieldContext_Contact_tickets(ctx, field)
-			case "ticketSummaryByStatus":
-				return ec.fieldContext_Contact_ticketSummaryByStatus(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Contact", field.Name)
 		},
@@ -28920,8 +29238,8 @@ func (ec *executionContext) fieldContext_Query_organization(ctx context.Context,
 				return ec.fieldContext_Organization_timelineEvents(ctx, field)
 			case "timelineEventsTotalCount":
 				return ec.fieldContext_Organization_timelineEventsTotalCount(ctx, field)
-			case "ticketSummaryByStatus":
-				return ec.fieldContext_Organization_ticketSummaryByStatus(ctx, field)
+			case "issueSummaryByStatus":
+				return ec.fieldContext_Organization_issueSummaryByStatus(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Organization", field.Name)
 		},
@@ -30261,94 +30579,6 @@ func (ec *executionContext) fieldContext_Ticket_notes(ctx context.Context, field
 				return ec.fieldContext_Note_appSource(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Note", field.Name)
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _TicketSummaryByStatus_status(ctx context.Context, field graphql.CollectedField, obj *model.TicketSummaryByStatus) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_TicketSummaryByStatus_status(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Status, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_TicketSummaryByStatus_status(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "TicketSummaryByStatus",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _TicketSummaryByStatus_count(ctx context.Context, field graphql.CollectedField, obj *model.TicketSummaryByStatus) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_TicketSummaryByStatus_count(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Count, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(int64)
-	fc.Result = res
-	return ec.marshalNInt642int64(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_TicketSummaryByStatus_count(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "TicketSummaryByStatus",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Int64 does not have child fields")
 		},
 	}
 	return fc, nil
@@ -35365,6 +35595,20 @@ func (ec *executionContext) _Node(ctx context.Context, sel ast.SelectionSet, obj
 			return graphql.Null
 		}
 		return ec._ExtensibleEntity(ctx, sel, obj)
+	case model.Ticket:
+		return ec._Ticket(ctx, sel, &obj)
+	case *model.Ticket:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._Ticket(ctx, sel, obj)
+	case model.Issue:
+		return ec._Issue(ctx, sel, &obj)
+	case *model.Issue:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._Issue(ctx, sel, obj)
 	case model.Organization:
 		return ec._Organization(ctx, sel, &obj)
 	case *model.Organization:
@@ -35379,13 +35623,6 @@ func (ec *executionContext) _Node(ctx context.Context, sel ast.SelectionSet, obj
 			return graphql.Null
 		}
 		return ec._PageView(ctx, sel, obj)
-	case model.Ticket:
-		return ec._Ticket(ctx, sel, &obj)
-	case *model.Ticket:
-		if obj == nil {
-			return graphql.Null
-		}
-		return ec._Ticket(ctx, sel, obj)
 	default:
 		panic(fmt.Errorf("unexpected type %T", obj))
 	}
@@ -35555,6 +35792,13 @@ func (ec *executionContext) _TimelineEvent(ctx context.Context, sel ast.Selectio
 			return graphql.Null
 		}
 		return ec._Analysis(ctx, sel, obj)
+	case model.Issue:
+		return ec._Issue(ctx, sel, &obj)
+	case *model.Issue:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._Issue(ctx, sel, obj)
 	default:
 		panic(fmt.Errorf("unexpected type %T", obj))
 	}
@@ -36022,46 +36266,6 @@ func (ec *executionContext) _Contact(ctx context.Context, sel ast.SelectionSet, 
 					}
 				}()
 				res = ec._Contact_timelineEventsTotalCount(ctx, field, obj)
-				if res == graphql.Null {
-					atomic.AddUint32(&invalids, 1)
-				}
-				return res
-			}
-
-			out.Concurrently(i, func() graphql.Marshaler {
-				return innerFunc(ctx)
-
-			})
-		case "tickets":
-			field := field
-
-			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._Contact_tickets(ctx, field, obj)
-				if res == graphql.Null {
-					atomic.AddUint32(&invalids, 1)
-				}
-				return res
-			}
-
-			out.Concurrently(i, func() graphql.Marshaler {
-				return innerFunc(ctx)
-
-			})
-		case "ticketSummaryByStatus":
-			field := field
-
-			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._Contact_ticketSummaryByStatus(ctx, field, obj)
 				if res == graphql.Null {
 					atomic.AddUint32(&invalids, 1)
 				}
@@ -37420,6 +37624,119 @@ func (ec *executionContext) _InteractionSession(ctx context.Context, sel ast.Sel
 				return innerFunc(ctx)
 
 			})
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var issueImplementors = []string{"Issue", "Node", "TimelineEvent"}
+
+func (ec *executionContext) _Issue(ctx context.Context, sel ast.SelectionSet, obj *model.Issue) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, issueImplementors)
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("Issue")
+		case "id":
+
+			out.Values[i] = ec._Issue_id(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "createdAt":
+
+			out.Values[i] = ec._Issue_createdAt(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "updatedAt":
+
+			out.Values[i] = ec._Issue_updatedAt(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "subject":
+
+			out.Values[i] = ec._Issue_subject(ctx, field, obj)
+
+		case "status":
+
+			out.Values[i] = ec._Issue_status(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "priority":
+
+			out.Values[i] = ec._Issue_priority(ctx, field, obj)
+
+		case "description":
+
+			out.Values[i] = ec._Issue_description(ctx, field, obj)
+
+		case "tags":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Issue_tags(ctx, field, obj)
+				return res
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var issueSummaryByStatusImplementors = []string{"IssueSummaryByStatus"}
+
+func (ec *executionContext) _IssueSummaryByStatus(ctx context.Context, sel ast.SelectionSet, obj *model.IssueSummaryByStatus) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, issueSummaryByStatusImplementors)
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("IssueSummaryByStatus")
+		case "status":
+
+			out.Values[i] = ec._IssueSummaryByStatus_status(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "count":
+
+			out.Values[i] = ec._IssueSummaryByStatus_count(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -38823,7 +39140,7 @@ func (ec *executionContext) _Organization(ctx context.Context, sel ast.Selection
 				return innerFunc(ctx)
 
 			})
-		case "ticketSummaryByStatus":
+		case "issueSummaryByStatus":
 			field := field
 
 			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
@@ -38832,7 +39149,7 @@ func (ec *executionContext) _Organization(ctx context.Context, sel ast.Selection
 						ec.Error(ctx, ec.Recover(ctx, r))
 					}
 				}()
-				res = ec._Organization_ticketSummaryByStatus(ctx, field, obj)
+				res = ec._Organization_issueSummaryByStatus(ctx, field, obj)
 				if res == graphql.Null {
 					atomic.AddUint32(&invalids, 1)
 				}
@@ -40002,41 +40319,6 @@ func (ec *executionContext) _Ticket(ctx context.Context, sel ast.SelectionSet, o
 				return innerFunc(ctx)
 
 			})
-		default:
-			panic("unknown field " + strconv.Quote(field.Name))
-		}
-	}
-	out.Dispatch()
-	if invalids > 0 {
-		return graphql.Null
-	}
-	return out
-}
-
-var ticketSummaryByStatusImplementors = []string{"TicketSummaryByStatus"}
-
-func (ec *executionContext) _TicketSummaryByStatus(ctx context.Context, sel ast.SelectionSet, obj *model.TicketSummaryByStatus) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.OperationContext, sel, ticketSummaryByStatusImplementors)
-	out := graphql.NewFieldSet(fields)
-	var invalids uint32
-	for i, field := range fields {
-		switch field.Name {
-		case "__typename":
-			out.Values[i] = graphql.MarshalString("TicketSummaryByStatus")
-		case "status":
-
-			out.Values[i] = ec._TicketSummaryByStatus_status(ctx, field, obj)
-
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
-		case "count":
-
-			out.Values[i] = ec._TicketSummaryByStatus_count(ctx, field, obj)
-
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -41765,6 +42047,60 @@ func (ec *executionContext) unmarshalNInteractionSessionParticipantInput2ᚖgith
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
+func (ec *executionContext) marshalNIssueSummaryByStatus2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐIssueSummaryByStatusᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.IssueSummaryByStatus) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNIssueSummaryByStatus2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐIssueSummaryByStatus(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNIssueSummaryByStatus2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐIssueSummaryByStatus(ctx context.Context, sel ast.SelectionSet, v *model.IssueSummaryByStatus) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._IssueSummaryByStatus(ctx, sel, v)
+}
+
 func (ec *executionContext) marshalNJobRole2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐJobRole(ctx context.Context, sel ast.SelectionSet, v model.JobRole) graphql.Marshaler {
 	return ec._JobRole(ctx, sel, &v)
 }
@@ -42452,98 +42788,6 @@ func (ec *executionContext) unmarshalNTagInput2githubᚗcomᚋopenlineᚑaiᚋop
 func (ec *executionContext) unmarshalNTagUpdateInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐTagUpdateInput(ctx context.Context, v interface{}) (model.TagUpdateInput, error) {
 	res, err := ec.unmarshalInputTagUpdateInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
-}
-
-func (ec *executionContext) marshalNTicket2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐTicket(ctx context.Context, sel ast.SelectionSet, v []*model.Ticket) graphql.Marshaler {
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalOTicket2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐTicket(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
-
-	return ret
-}
-
-func (ec *executionContext) marshalNTicketSummaryByStatus2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐTicketSummaryByStatusᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.TicketSummaryByStatus) graphql.Marshaler {
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalNTicketSummaryByStatus2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐTicketSummaryByStatus(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
-
-	for _, e := range ret {
-		if e == graphql.Null {
-			return graphql.Null
-		}
-	}
-
-	return ret
-}
-
-func (ec *executionContext) marshalNTicketSummaryByStatus2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐTicketSummaryByStatus(ctx context.Context, sel ast.SelectionSet, v *model.TicketSummaryByStatus) graphql.Marshaler {
-	if v == nil {
-		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
-		}
-		return graphql.Null
-	}
-	return ec._TicketSummaryByStatus(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalNTime2timeᚐTime(ctx context.Context, v interface{}) (time.Time, error) {
@@ -43752,13 +43996,6 @@ func (ec *executionContext) marshalOTag2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenli
 		return graphql.Null
 	}
 	return ec._Tag(ctx, sel, v)
-}
-
-func (ec *executionContext) marshalOTicket2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐTicket(ctx context.Context, sel ast.SelectionSet, v *model.Ticket) graphql.Marshaler {
-	if v == nil {
-		return graphql.Null
-	}
-	return ec._Ticket(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalOTime2ᚖtimeᚐTime(ctx context.Context, v interface{}) (*time.Time, error) {
