@@ -213,6 +213,8 @@ input ContactInput {
     ownerId: ID
 
     externalReference: ExternalSystemReferenceInput
+
+    appSource: String
 }
 
 """

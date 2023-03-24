@@ -1,6 +1,7 @@
 package mapper
 
 import (
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
@@ -8,20 +9,24 @@ import (
 
 func MapContactInputToEntity(input model.ContactInput) *entity.ContactEntity {
 	contactEntity := entity.ContactEntity{
-		CreatedAt: input.CreatedAt,
-		FirstName: utils.IfNotNilString(input.FirstName),
-		LastName:  utils.IfNotNilString(input.LastName),
-		Title:     utils.IfNotNilString(input.Title, func() string { return input.Title.String() }),
+		CreatedAt:     input.CreatedAt,
+		FirstName:     utils.IfNotNilString(input.FirstName),
+		LastName:      utils.IfNotNilString(input.LastName),
+		Title:         utils.IfNotNilString(input.Title, func() string { return input.Title.String() }),
+		Source:        entity.DataSourceOpenline,
+		SourceOfTruth: entity.DataSourceOpenline,
+		AppSource:     utils.IfNotNilStringWithDefault(input.AppSource, common.AppSourceCustomerOsApi),
 	}
 	return &contactEntity
 }
 
 func MapContactUpdateInputToEntity(input model.ContactUpdateInput) *entity.ContactEntity {
 	contactEntity := entity.ContactEntity{
-		Id:        input.ID,
-		FirstName: utils.IfNotNilString(input.FirstName),
-		LastName:  utils.IfNotNilString(input.LastName),
-		Title:     utils.IfNotNilString(input.Title, func() string { return input.Title.String() }),
+		Id:            input.ID,
+		FirstName:     utils.IfNotNilString(input.FirstName),
+		LastName:      utils.IfNotNilString(input.LastName),
+		Title:         utils.IfNotNilString(input.Title, func() string { return input.Title.String() }),
+		SourceOfTruth: entity.DataSourceOpenline,
 	}
 	return &contactEntity
 }
@@ -37,7 +42,7 @@ func MapEntityToContact(contact *entity.ContactEntity) *model.Contact {
 		CreatedAt:     *contact.CreatedAt,
 		UpdatedAt:     contact.UpdatedAt,
 		Source:        MapDataSourceToModel(contact.Source),
-		SourceOfTruth: MapDataSourceToModel(contact.Source),
+		SourceOfTruth: MapDataSourceToModel(contact.SourceOfTruth),
 		AppSource:     utils.StringPtr(contact.AppSource),
 	}
 }
