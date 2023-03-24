@@ -12,6 +12,11 @@ import (
 )
 
 // Tags is the resolver for the tags field.
+func (r *issueResolver) Tags(ctx context.Context, obj *model.Issue) ([]*model.Tag, error) {
+	panic(fmt.Errorf("not implemented: Tags - tags"))
+}
+
+// Tags is the resolver for the tags field.
 func (r *ticketResolver) Tags(ctx context.Context, obj *model.Ticket) ([]*model.Tag, error) {
 	panic(fmt.Errorf("not implemented: Tags - tags"))
 }
@@ -21,7 +26,11 @@ func (r *ticketResolver) Notes(ctx context.Context, obj *model.Ticket) ([]*model
 	panic(fmt.Errorf("not implemented: Notes - notes"))
 }
 
+// Issue returns generated.IssueResolver implementation.
+func (r *Resolver) Issue() generated.IssueResolver { return &issueResolver{r} }
+
 // Ticket returns generated.TicketResolver implementation.
 func (r *Resolver) Ticket() generated.TicketResolver { return &ticketResolver{r} }
 
+type issueResolver struct{ *Resolver }
 type ticketResolver struct{ *Resolver }

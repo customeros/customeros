@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/openline-ai/openline-customer-os/packages/server/message-store-api/test/graph/generated"
 	"github.com/openline-ai/openline-customer-os/packages/server/message-store-api/test/graph/model"
 )
 
@@ -69,3 +70,23 @@ func (r *mutationResolver) PhoneNumberRemoveFromUserByE164(ctx context.Context, 
 func (r *mutationResolver) PhoneNumberRemoveFromUserByID(ctx context.Context, userID string, id string) (*model.Result, error) {
 	panic(fmt.Errorf("not implemented: PhoneNumberRemoveFromUserByID - phoneNumberRemoveFromUserById"))
 }
+
+// Users is the resolver for the users field.
+func (r *phoneNumberResolver) Users(ctx context.Context, obj *model.PhoneNumber) ([]*model.User, error) {
+	panic(fmt.Errorf("not implemented: Users - users"))
+}
+
+// Contacts is the resolver for the contacts field.
+func (r *phoneNumberResolver) Contacts(ctx context.Context, obj *model.PhoneNumber) ([]*model.Contact, error) {
+	panic(fmt.Errorf("not implemented: Contacts - contacts"))
+}
+
+// Organizations is the resolver for the organizations field.
+func (r *phoneNumberResolver) Organizations(ctx context.Context, obj *model.PhoneNumber) ([]*model.Organization, error) {
+	panic(fmt.Errorf("not implemented: Organizations - organizations"))
+}
+
+// PhoneNumber returns generated.PhoneNumberResolver implementation.
+func (r *Resolver) PhoneNumber() generated.PhoneNumberResolver { return &phoneNumberResolver{r} }
+
+type phoneNumberResolver struct{ *Resolver }
