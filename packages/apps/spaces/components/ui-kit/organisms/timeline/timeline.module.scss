@@ -18,7 +18,6 @@
     background-color: var(--secondary-color-active);
   }
 
-
   &::after {
     content: ' ';
     display: block;
@@ -34,7 +33,6 @@
   max-height: 65vh;
   padding: 0 var(--spacing-md) 0 0;
 
-
   & * {
     overflow-anchor: none;
   }
@@ -42,9 +40,7 @@
   &.scrollable {
     //min-height: 100%;
     max-height: calc(65vh + 4px); // make it immediately scrollable
-
   }
-
 }
 #scrollAnchor {
   overflow-anchor: auto;

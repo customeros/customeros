@@ -14,6 +14,7 @@ interface Props extends ButtonHTMLAttributes<HTMLButtonElement> {
   mode: NoteEditorModes;
   onHtmlChanged: (html: string) => void;
   onSave: () => void;
+  onPhoneCallSave?: () => void;
   onCancel?: () => void;
   label: string;
   possibleActions?: Array<{
@@ -28,6 +29,7 @@ export const Editor: FC<Props> = ({
   mode,
   onHtmlChanged,
   onSave,
+  onPhoneCallSave,
   label,
   value,
   onGetFieldValue,
@@ -60,6 +62,7 @@ export const Editor: FC<Props> = ({
             onCancel={onCancel}
             label={label}
             saving={saving}
+            onSavePhoneCall={onPhoneCallSave}
           />
         }
         value={value}

@@ -6,6 +6,7 @@ import {
   EmailTimelineItem,
   LiveConversationTimelineItem,
   NoteTimelineItem,
+  PhoneCallTimelineItem,
   WebActionTimelineItem,
 } from '../../molecules';
 import { TimelineItem } from '../../atoms/timeline-item';
@@ -168,10 +169,76 @@ export const Timeline = ({
               />
             </TimelineItem>
           );
+        }
+        if (data.channel === 'VOICE') {
+          const from =
+            data.sentBy && data.sentBy.length > 0
+              ? data.sentBy
+                  .map((p: any) => {
+                    if (
+                      p.__typename === 'EmailParticipant' &&
+                      p.emailParticipant
+                    ) {
+                      return p.emailParticipant.email;
+                    }
+                    return '';
+                  })
+                  .join('; ')
+              : '';
+
+          const to =
+            data.sentTo && data.sentTo.length > 0
+              ? data.sentTo
+                  .map((p: any) => {
+                    if (
+                      p.__typename === 'EmailParticipant' &&
+                      p.emailParticipant
+                    ) {
+                      return p.emailParticipant.email;
+                    } else if (
+                      p.__typename === 'ContactParticipant' &&
+                      p.contactParticipant
+                    ) {
+                      if (
+                        p.contactParticipant.name &&
+                        p.contactParticipant.name !== ''
+                      ) {
+                        return p.contactParticipant.name;
+                      } else {
+                        return (
+                          p.contactParticipant.firstName +
+                          ' ' +
+                          p.contactParticipant.lastName
+                        );
+                      }
+                    }
+                    return '';
+                  })
+                  .join('; ')
+              : '';
+
+          //we are using this to render the phone calls manually created by the user
+          return (
+            <ConversationTimelineItem
+              id={data.id}
+              content={undefined}
+              transcript={[
+                {
+                  text: data.content,
+                  party: {
+                    tel: from,
+                    mailto: to,
+                  },
+                },
+              ]}
+              type={'summary'} //fixme: this is used to get the same style as the summary of  phone call
+              createdAt={data?.createdAt}
+              mode='PHONE_CALL' // fixme - mode will be assessed from data inside the component (on message base)
+            />
+          );
         } else {
           return null;
         }
-        return null;
 
       default:
         return type ? (

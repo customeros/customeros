@@ -85,7 +85,6 @@ query GetOrganizationTimeline($organizationId: ID!, $from: Time!, $size: Int!) {
           ... on Organization {
             id
             organizationName: name
-
           }
           ... on Contact {
             ...ContactNameFragment

@@ -146,6 +146,8 @@ fragment InteractionEventFragment on InteractionEvent {
       __typename
       contactParticipant {
         name
+        firstName
+        lastName
       }
     }
     ... on UserParticipant {
@@ -177,6 +179,8 @@ fragment InteractionEventFragment on InteractionEvent {
       type
       contactParticipant {
         name
+        firstName
+        lastName
       }
     }
     ... on UserParticipant {

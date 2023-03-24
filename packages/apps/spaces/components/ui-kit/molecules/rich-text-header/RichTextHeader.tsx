@@ -9,7 +9,9 @@ interface Props {
   label: string;
   saving: boolean;
   hideButtons?: boolean;
+  onSavePhoneCall?: any;
 }
+
 export const RichTextHeader = ({
   onFileChange,
   onSubmit,
@@ -17,6 +19,7 @@ export const RichTextHeader = ({
   onCancel,
   saving,
   hideButtons = false,
+  onSavePhoneCall,
 }: Props) => {
   const inputRef = useRef<HTMLInputElement | null>(null);
   const handleUploadClick = () => {
@@ -41,7 +44,7 @@ export const RichTextHeader = ({
           id='custom-button'
           type={'button'}
           aria-label='Insert picture'
-          style={{width:'24px', height:'24px', position: 'relative'}}
+          style={{ width: '24px', height: '24px', position: 'relative' }}
           onClick={() => handleUploadClick()}
         >
           <Image
@@ -68,6 +71,17 @@ export const RichTextHeader = ({
           >
             {saving ? 'Saving...' : label}
           </Button>
+
+          {onSavePhoneCall !== undefined && (
+            <Button
+              onClick={onSavePhoneCall}
+              disabled={saving}
+              mode='primary'
+              className='primary'
+            >
+              {saving ? 'Saving...' : 'Log as phone call'}
+            </Button>
+          )}
         </div>
       )}
 
