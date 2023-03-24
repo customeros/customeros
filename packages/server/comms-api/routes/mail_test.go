@@ -36,7 +36,7 @@ const rawEmail = "To: agent@agent.secretcorp.com\r\n" +
 	//		Subject:    "Help Please",
 	//		RawMessage: rawEmail,
 	//	}
-	//	test_utils.SetMessageStoreCallbacks(&test_utils.MockMessageServiceCallbacks{SaveMessage: func(ctx context.Context, message *msProto.Message) (*msProto.Message, error) {
+	//	test_utils.SetMessageStoreCallbacks(&test_utils.MockMessageServiceCallbacks{SaveMessage: func(ctx context.Context, message *msProto.Content) (*msProto.Content, error) {
 	//		log.Printf("Inside SaveMessage")
 	//		var tm *time.Time = nil
 	//		if message.GetTime() != nil {
@@ -62,7 +62,7 @@ const rawEmail = "To: agent@agent.secretcorp.com\r\n" +
 	//			}
 	//		}
 	//
-	//		message = &msProto.Message{
+	//		message = &msProto.Content{
 	//			Id:        &messageId,
 	//			ContactId: &contactId,
 	//		}
@@ -102,7 +102,7 @@ const rawEmail = "To: agent@agent.secretcorp.com\r\n" +
 	//		Subject:    "Help Please",
 	//		RawMessage: rawEmail,
 	//	}
-	//	test_utils.SetMessageStoreCallbacks(&test_utils.MockMessageServiceCallbacks{SaveMessage: func(ctx context.Context, message *msProto.Message) (*msProto.Message, error) {
+	//	test_utils.SetMessageStoreCallbacks(&test_utils.MockMessageServiceCallbacks{SaveMessage: func(ctx context.Context, message *msProto.Content) (*msProto.Content, error) {
 	//		log.Printf("Inside SaveMessage")
 	//		sentSaveMessage = true
 	//

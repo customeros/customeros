@@ -754,7 +754,7 @@ var file_MessageStore_proto_goTypes = []interface{}{
 	(*GetFeedsPagedRequest)(nil),          // 7: proto.GetFeedsPagedRequest
 	(*PageInfo)(nil),                      // 8: proto.PageInfo
 	(*PagedMessages)(nil),                 // 9: proto.PagedMessages
-	(*Message)(nil),                       // 10: proto.Message
+	(*Message)(nil),                       // 10: proto.Content
 	(*Participant)(nil),                   // 11: proto.Participant
 	(*ParticipantId)(nil),                 // 12: proto.ParticipantId
 	(*timestamppb.Timestamp)(nil),         // 13: google.protobuf.Timestamp
@@ -762,7 +762,7 @@ var file_MessageStore_proto_goTypes = []interface{}{
 	(*InputMessage)(nil),                  // 15: proto.InputMessage
 }
 var file_MessageStore_proto_depIdxs = []int32{
-	10, // 0: proto.MessageListResponse.messages:type_name -> proto.Message
+	10, // 0: proto.MessageListResponse.messages:type_name -> proto.Content
 	11, // 1: proto.ParticipantObjectListResponse.participants:type_name -> proto.Participant
 	12, // 2: proto.FeedItem.initiatorUsername:type_name -> proto.ParticipantId
 	13, // 3: proto.FeedItem.lastTimestamp:type_name -> google.protobuf.Timestamp
@@ -781,7 +781,7 @@ var file_MessageStore_proto_depIdxs = []int32{
 	6,  // 16: proto.MessageStoreService.getFeeds:output_type -> proto.FeedItemPagedResponse
 	5,  // 17: proto.MessageStoreService.getFeed:output_type -> proto.FeedItem
 	1,  // 18: proto.MessageStoreService.getMessagesForFeed:output_type -> proto.MessageListResponse
-	10, // 19: proto.MessageStoreService.getMessage:output_type -> proto.Message
+	10, // 19: proto.MessageStoreService.getMessage:output_type -> proto.Content
 	14, // 20: proto.MessageStoreService.saveMessage:output_type -> proto.MessageId
 	2,  // 21: proto.MessageStoreService.getParticipants:output_type -> proto.ParticipantsListResponse
 	3,  // 22: proto.MessageStoreService.getParticipantIds:output_type -> proto.ParticipantObjectListResponse

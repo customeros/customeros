@@ -2,7 +2,7 @@
 // versions:
 // 	protoc-gen-go v1.28.1
 // 	protoc        v3.21.12
-// source: Message.proto
+// source: Content.proto
 
 package generated
 
@@ -465,7 +465,7 @@ func (x *Message) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use Message.ProtoReflect.Descriptor instead.
+// Deprecated: Use Content.ProtoReflect.Descriptor instead.
 func (*Message) Descriptor() ([]byte, []int) {
 	return file_Message_proto_rawDescGZIP(), []int{3}
 }
@@ -773,21 +773,21 @@ var file_Message_proto_goTypes = []interface{}{
 	(*ParticipantId)(nil),         // 5: proto.ParticipantId
 	(*Participant)(nil),           // 6: proto.Participant
 	(*MessageId)(nil),             // 7: proto.MessageId
-	(*Message)(nil),               // 8: proto.Message
+	(*Message)(nil),               // 8: proto.Content
 	(*InputMessage)(nil),          // 9: proto.InputMessage
 	(*timestamppb.Timestamp)(nil), // 10: google.protobuf.Timestamp
 }
 var file_Message_proto_depIdxs = []int32{
 	4,  // 0: proto.ParticipantId.type:type_name -> proto.ParticipantIdType
 	0,  // 1: proto.Participant.Type:type_name -> proto.SenderType
-	7,  // 2: proto.Message.messageId:type_name -> proto.MessageId
-	5,  // 3: proto.Message.initiatorUsername:type_name -> proto.ParticipantId
-	3,  // 4: proto.Message.type:type_name -> proto.MessageType
-	1,  // 5: proto.Message.subtype:type_name -> proto.MessageSubtype
-	2,  // 6: proto.Message.direction:type_name -> proto.MessageDirection
-	10, // 7: proto.Message.time:type_name -> google.protobuf.Timestamp
-	0,  // 8: proto.Message.senderType:type_name -> proto.SenderType
-	5,  // 9: proto.Message.senderUsername:type_name -> proto.ParticipantId
+	7,  // 2: proto.Content.messageId:type_name -> proto.MessageId
+	5,  // 3: proto.Content.initiatorUsername:type_name -> proto.ParticipantId
+	3,  // 4: proto.Content.type:type_name -> proto.MessageType
+	1,  // 5: proto.Content.subtype:type_name -> proto.MessageSubtype
+	2,  // 6: proto.Content.direction:type_name -> proto.MessageDirection
+	10, // 7: proto.Content.time:type_name -> google.protobuf.Timestamp
+	0,  // 8: proto.Content.senderType:type_name -> proto.SenderType
+	5,  // 9: proto.Content.senderUsername:type_name -> proto.ParticipantId
 	5,  // 10: proto.InputMessage.initiatorIdentifier:type_name -> proto.ParticipantId
 	3,  // 11: proto.InputMessage.type:type_name -> proto.MessageType
 	1,  // 12: proto.InputMessage.subtype:type_name -> proto.MessageSubtype
