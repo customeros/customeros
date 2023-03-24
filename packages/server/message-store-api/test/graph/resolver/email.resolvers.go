@@ -7,8 +7,24 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/openline-ai/openline-customer-os/packages/server/message-store-api/test/graph/generated"
 	"github.com/openline-ai/openline-customer-os/packages/server/message-store-api/test/graph/model"
 )
+
+// Users is the resolver for the users field.
+func (r *emailResolver) Users(ctx context.Context, obj *model.Email) ([]*model.User, error) {
+	panic(fmt.Errorf("not implemented: Users - users"))
+}
+
+// Contacts is the resolver for the contacts field.
+func (r *emailResolver) Contacts(ctx context.Context, obj *model.Email) ([]*model.Contact, error) {
+	panic(fmt.Errorf("not implemented: Contacts - contacts"))
+}
+
+// Organizations is the resolver for the organizations field.
+func (r *emailResolver) Organizations(ctx context.Context, obj *model.Email) ([]*model.Organization, error) {
+	panic(fmt.Errorf("not implemented: Organizations - organizations"))
+}
 
 // EmailMergeToContact is the resolver for the emailMergeToContact field.
 func (r *mutationResolver) EmailMergeToContact(ctx context.Context, contactID string, input model.EmailInput) (*model.Email, error) {
@@ -74,3 +90,8 @@ func (r *mutationResolver) EmailRemoveFromOrganizationByID(ctx context.Context, 
 func (r *mutationResolver) EmailDelete(ctx context.Context, id string) (*model.Result, error) {
 	panic(fmt.Errorf("not implemented: EmailDelete - emailDelete"))
 }
+
+// Email returns generated.EmailResolver implementation.
+func (r *Resolver) Email() generated.EmailResolver { return &emailResolver{r} }
+
+type emailResolver struct{ *Resolver }

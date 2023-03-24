@@ -98,16 +98,6 @@ func (r *contactResolver) TimelineEventsTotalCount(ctx context.Context, obj *mod
 	panic(fmt.Errorf("not implemented: TimelineEventsTotalCount - timelineEventsTotalCount"))
 }
 
-// Tickets is the resolver for the tickets field.
-func (r *contactResolver) Tickets(ctx context.Context, obj *model.Contact) ([]*model.Ticket, error) {
-	panic(fmt.Errorf("not implemented: Tickets - tickets"))
-}
-
-// TicketSummaryByStatus is the resolver for the ticketSummaryByStatus field.
-func (r *contactResolver) TicketSummaryByStatus(ctx context.Context, obj *model.Contact) ([]*model.TicketSummaryByStatus, error) {
-	panic(fmt.Errorf("not implemented: TicketSummaryByStatus - ticketSummaryByStatus"))
-}
-
 // ContactCreate is the resolver for the contact_Create field.
 func (r *mutationResolver) ContactCreate(ctx context.Context, input model.ContactInput) (*model.Contact, error) {
 	if r.Resolver.ContactCreate != nil {

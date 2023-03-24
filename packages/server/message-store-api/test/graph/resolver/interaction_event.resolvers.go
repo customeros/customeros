@@ -36,6 +36,11 @@ func (r *interactionSessionResolver) Events(ctx context.Context, obj *model.Inte
 	panic(fmt.Errorf("not implemented: Events - events"))
 }
 
+// AttendedBy is the resolver for the attendedBy field.
+func (r *interactionSessionResolver) AttendedBy(ctx context.Context, obj *model.InteractionSession) ([]model.InteractionSessionParticipant, error) {
+	panic(fmt.Errorf("not implemented: AttendedBy - attendedBy"))
+}
+
 // InteractionSessionCreate is the resolver for the interactionSession_Create field.
 func (r *mutationResolver) InteractionSessionCreate(ctx context.Context, session model.InteractionSessionInput) (*model.InteractionSession, error) {
 	panic(fmt.Errorf("not implemented: InteractionSessionCreate - interactionSession_Create"))

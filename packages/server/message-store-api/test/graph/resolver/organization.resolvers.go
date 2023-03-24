@@ -87,9 +87,9 @@ func (r *organizationResolver) TimelineEventsTotalCount(ctx context.Context, obj
 	panic(fmt.Errorf("not implemented: TimelineEventsTotalCount - timelineEventsTotalCount"))
 }
 
-// TicketSummaryByStatus is the resolver for the ticketSummaryByStatus field.
-func (r *organizationResolver) TicketSummaryByStatus(ctx context.Context, obj *model.Organization) ([]*model.TicketSummaryByStatus, error) {
-	panic(fmt.Errorf("not implemented: TicketSummaryByStatus - ticketSummaryByStatus"))
+// IssueSummaryByStatus is the resolver for the issueSummaryByStatus field.
+func (r *organizationResolver) IssueSummaryByStatus(ctx context.Context, obj *model.Organization) ([]*model.IssueSummaryByStatus, error) {
+	panic(fmt.Errorf("not implemented: IssueSummaryByStatus - issueSummaryByStatus"))
 }
 
 // Organizations is the resolver for the organizations field.
@@ -106,13 +106,3 @@ func (r *queryResolver) Organization(ctx context.Context, id string) (*model.Org
 func (r *Resolver) Organization() generated.OrganizationResolver { return &organizationResolver{r} }
 
 type organizationResolver struct{ *Resolver }
-
-// !!! WARNING !!!
-// The code below was going to be deleted when updating resolvers. It has been copied here so you have
-// one last chance to move it out of harms way if you want. There are two reasons this happens:
-//   - When renaming or deleting a resolver the old code will be put in here. You can safely delete
-//     it when you're done.
-//   - You have helper methods in this file. Move them out to keep these resolver files clean.
-func (r *organizationResolver) Addresses(ctx context.Context, obj *model.Organization) ([]*model.Place, error) {
-	panic(fmt.Errorf("not implemented: Addresses - addresses"))
-}
