@@ -36,6 +36,8 @@ func getRouter(config *c.Config, fh *chatHub.Hub, cosService *service.CustomerOS
 
 	df := util.MakeDialFactory(config)
 	addMailRoutes(config, df, route, cosService)
+	AddVconRoutes(config, route, cosService)
+
 	//AddWebSocketRoutes(route, fh, config.WebChat.PingInterval)
 	//AddWebChatRoutes(config, df, route)
 	//AddVconRoutes(config, df, route)

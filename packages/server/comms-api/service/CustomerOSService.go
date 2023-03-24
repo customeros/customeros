@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/machinebox/graphql"
 	c "github.com/openline-ai/openline-customer-os/packages/server/comms-api/config"
-	commonModuleService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 	"golang.org/x/net/context"
 )
 
@@ -27,12 +26,24 @@ type InteractionEventParticipantInput struct {
 	ParticipantType *string `json:"type,omitempty"`
 }
 
+type InteractionSessionParticipantInput struct {
+	Email           *string `json:"email,omitempty"`
+	PhoneNumber     *string `json:"phoneNumber,omitempty"`
+	ContactID       *string `json:"contactID,omitempty"`
+	UserID          *string `json:"userID,omitempty"`
+	ParticipantType *string `json:"type,omitempty"`
+}
+
 type InteractionEventParticipant struct {
 	ID             string `json:"id"`
 	Type           string `json:"type"`
 	RawEmail       string `json:"rawEmail,omitempty"`
 	FirstName      string `json:"firstName,omitempty"`
 	RawPhoneNumber string `json:"rawPhoneNumber,omitempty"`
+}
+type AnalysisDescriptionInput struct {
+	InteractionEventId   *string `json:"interactionEventId,omitempty"`
+	InteractionSessionId *string `json:"interactionSessionId,omitempty"`
 }
 
 type InteractionEventCreateResponse struct {
@@ -44,7 +55,11 @@ type InteractionEventCreateResponse struct {
 				Id       string `json:"id"`
 				RawEmail string `json:"rawEmail"`
 			} `json:"emailParticipant"`
-			Type interface{} `json:"type"`
+			PhoneNumberParticipant struct {
+				ID             string `json:"id"`
+				RawPhoneNumber string `json:"rawPhoneNumber"`
+			} `json:"phoneNumberParticipant"`
+			Type string `json:"type"`
 		} `json:"sentBy"`
 		SentTo []struct {
 			Typename         string `json:"__typename"`
@@ -52,19 +67,24 @@ type InteractionEventCreateResponse struct {
 				Id       string `json:"id"`
 				RawEmail string `json:"rawEmail"`
 			} `json:"emailParticipant"`
+			PhoneNumberParticipant struct {
+				ID             string `json:"id"`
+				RawPhoneNumber string `json:"rawPhoneNumber"`
+			} `json:"phoneNumberParticipant"`
 			Type string `json:"type"`
 		} `json:"sentTo"`
 	} `json:"interactionEvent_Create"`
 }
 
-func (s *CustomerOSService) addHeadersToGraphRequest(req *graphql.Request, ctx context.Context, tenant string) error {
+func (s *CustomerOSService) addHeadersToGraphRequest(req *graphql.Request, ctx context.Context, tenant *string, user *string) error {
 	req.Header.Add("X-Openline-API-KEY", s.conf.Service.CustomerOsAPIKey)
-	user, err := commonModuleService.GetUsernameMetadataForGRPC(ctx)
-	if err != nil && user != nil {
+	if user != nil {
 		req.Header.Add("X-Openline-USERNAME", *user)
 	}
+	if tenant != nil {
+		req.Header.Add("X-Openline-TENANT", *tenant)
+	}
 
-	req.Header.Add("X-Openline-TENANT", tenant)
 	return nil
 }
 
@@ -168,7 +188,7 @@ func (s *CustomerOSService) CreateInteractionEvent(ctx context.Context, options 
 	graphqlRequest.Var("sentTo", params.sentTo)
 	graphqlRequest.Var("appSource", params.appSource)
 
-	err := s.addHeadersToGraphRequest(graphqlRequest, ctx, params.tenant)
+	err := s.addHeadersToGraphRequest(graphqlRequest, ctx, params.tenant, params.username)
 
 	if err != nil {
 		return nil, fmt.Errorf("CreateContactWithPhone: %w", err)
@@ -182,7 +202,7 @@ func (s *CustomerOSService) CreateInteractionEvent(ctx context.Context, options 
 	return &graphqlResponse, nil
 }
 
-func (s *CustomerOSService) GetInteractionSession(ctx context.Context, sessionIdentifier string, tenant string) (*string, error) {
+func (s *CustomerOSService) GetInteractionSession(ctx context.Context, sessionIdentifier string, tenant *string, user *string) (*string, error) {
 	graphqlRequest := graphql.NewRequest(
 		`query GetInteractionSession($sessionIdentifier: String!) {
   					interactionSession_BySessionIdentifier(sessionIdentifier: $sessionIdentifier) {
@@ -192,7 +212,7 @@ func (s *CustomerOSService) GetInteractionSession(ctx context.Context, sessionId
 
 	graphqlRequest.Var("sessionIdentifier", sessionIdentifier)
 
-	err := s.addHeadersToGraphRequest(graphqlRequest, ctx, tenant)
+	err := s.addHeadersToGraphRequest(graphqlRequest, ctx, tenant, user)
 
 	if err != nil {
 		return nil, fmt.Errorf("GetInteractionSession: %w", err)
@@ -208,7 +228,7 @@ func (s *CustomerOSService) GetInteractionSession(ctx context.Context, sessionId
 
 func (s *CustomerOSService) CreateInteractionSession(ctx context.Context, options ...SessionOption) (*string, error) {
 	graphqlRequest := graphql.NewRequest(
-		`mutation CreateInteractionSession($sessionIdentifier: String, $channel: String, $name: String!, $status: String!, $appSource: String!) {
+		`mutation CreateInteractionSession($sessionIdentifier: String, $channel: String, $name: String!, $status: String!, $appSource: String!, $attendedBy: [InteractionSessionParticipantInput!]) {
 				interactionSession_Create(
 				session: {
 					sessionIdentifier: $sessionIdentifier
@@ -216,6 +236,7 @@ func (s *CustomerOSService) CreateInteractionSession(ctx context.Context, option
         			name: $name
         			status: $status
         			appSource: $appSource
+                    attendedBy: $attendedBy
     			}
   			) {
 				id
@@ -233,8 +254,9 @@ func (s *CustomerOSService) CreateInteractionSession(ctx context.Context, option
 	graphqlRequest.Var("name", params.name)
 	graphqlRequest.Var("status", params.status)
 	graphqlRequest.Var("appSource", params.appSource)
+	graphqlRequest.Var("attendedBy", params.attendedBy)
 
-	err := s.addHeadersToGraphRequest(graphqlRequest, ctx, params.tenant)
+	err := s.addHeadersToGraphRequest(graphqlRequest, ctx, params.tenant, params.username)
 
 	if err != nil {
 		return nil, fmt.Errorf("CreateContactWithPhone: %w", err)
@@ -249,8 +271,55 @@ func (s *CustomerOSService) CreateInteractionSession(ctx context.Context, option
 
 }
 
+func (s *CustomerOSService) CreateAnalysis(ctx context.Context, options ...AnalysisOption) (*string, error) {
+	graphqlRequest := graphql.NewRequest(
+		`mutation CreateAnalysis($content: String, $contentType: String, $analysisType: String, $appSource: String!, $describes: [AnalysisDescriptionInput!]) {
+				analysis_Create(
+					analysis: {
+						content: $content
+						contentType: $contentType
+						analysisType: $analysisType
+						describes: $describes
+						appSource: $appSource
+					}
+				  ) {
+					  id
+				}
+			}
+	`)
+
+	params := AnalysisOptions{}
+	for _, opt := range options {
+		opt(&params)
+	}
+
+	graphqlRequest.Var("content", params.content)
+	graphqlRequest.Var("contentType", params.contentType)
+	graphqlRequest.Var("analysisType", params.analysisType)
+	graphqlRequest.Var("appSource", params.appSource)
+
+	if params.describes != nil {
+		graphqlRequest.Var("describes", params.describes)
+	}
+
+	err := s.addHeadersToGraphRequest(graphqlRequest, ctx, params.tenant, params.username)
+
+	if err != nil {
+		return nil, fmt.Errorf("CreateAnalysis: %w", err)
+	}
+
+	var graphqlResponse map[string]map[string]string
+	if err := s.graphqlClient.Run(context.Background(), graphqlRequest, &graphqlResponse); err != nil {
+		return nil, fmt.Errorf("CreateAnalysis: %w", err)
+	}
+	id := graphqlResponse["analysis_Create"]["id"]
+	return &id, nil
+
+}
+
 type EventOptions struct {
-	tenant      string
+	tenant      *string
+	username    *string
 	sessionId   string
 	repliesTo   string
 	content     string
@@ -266,16 +335,35 @@ type SessionOptions struct {
 	name              string
 	status            string
 	appSource         string
-	tenant            string
+	tenant            *string
+	username          *string
 	sessionIdentifier string
+	attendedBy        []InteractionSessionParticipantInput
+}
+
+type AnalysisOptions struct {
+	analysisType string
+	content      string
+	contentType  string
+	appSource    string
+	tenant       *string
+	username     *string
+	describes    *AnalysisDescriptionInput
 }
 
 type EventOption func(*EventOptions)
 type SessionOption func(*SessionOptions)
+type AnalysisOption func(options *AnalysisOptions)
 
 func WithTenant(value string) EventOption {
 	return func(options *EventOptions) {
-		options.tenant = value
+		options.tenant = &value
+	}
+}
+
+func WithUsername(value string) EventOption {
+	return func(options *EventOptions) {
+		options.username = &value
 	}
 }
 
@@ -345,6 +433,12 @@ func WithSessionStatus(value string) SessionOption {
 	}
 }
 
+func WithSessionAttendedBy(value []InteractionSessionParticipantInput) SessionOption {
+	return func(options *SessionOptions) {
+		options.attendedBy = value
+	}
+}
+
 func WithSessionAppSource(value string) SessionOption {
 	return func(options *SessionOptions) {
 		options.appSource = value
@@ -352,7 +446,55 @@ func WithSessionAppSource(value string) SessionOption {
 }
 func WithSessionTenant(value string) SessionOption {
 	return func(options *SessionOptions) {
-		options.tenant = value
+		options.tenant = &value
+	}
+}
+
+func WithSessionUsername(value string) SessionOption {
+	return func(options *SessionOptions) {
+		options.username = &value
+	}
+}
+
+func WithAnalysisType(value string) AnalysisOption {
+	return func(options *AnalysisOptions) {
+		options.analysisType = value
+	}
+}
+
+func WithAnalysisContent(value string) AnalysisOption {
+	return func(options *AnalysisOptions) {
+		options.content = value
+	}
+}
+
+func WithAnalysisContentType(value string) AnalysisOption {
+	return func(options *AnalysisOptions) {
+		options.contentType = value
+	}
+}
+
+func WithAnalysisAppSource(value string) AnalysisOption {
+	return func(options *AnalysisOptions) {
+		options.appSource = value
+	}
+}
+
+func WithAnalysisTenant(value string) AnalysisOption {
+	return func(options *AnalysisOptions) {
+		options.tenant = &value
+	}
+}
+
+func WithAnalysisUsername(value string) AnalysisOption {
+	return func(options *AnalysisOptions) {
+		options.username = &value
+	}
+}
+
+func WithAnalysisDescribes(value *AnalysisDescriptionInput) AnalysisOption {
+	return func(options *AnalysisOptions) {
+		options.describes = value
 	}
 }
 

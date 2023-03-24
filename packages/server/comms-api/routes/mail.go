@@ -79,7 +79,7 @@ func addMailRoutes(conf *c.Config, df util.DialFactory, rg *gin.RouterGroup, cos
 			threadId = ensureRfcId(email.MessageID)
 		}
 		ctx := context.Background()
-		sessionId, err := cosService.GetInteractionSession(ctx, threadId, req.Tenant)
+		sessionId, err := cosService.GetInteractionSession(ctx, threadId, &req.Tenant, nil)
 		if err != nil {
 			se, _ := status.FromError(err)
 			log.Printf("failed retriving interaction session: status=%s message=%s", se.Code(), se.Message())
