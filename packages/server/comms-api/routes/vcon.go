@@ -174,7 +174,7 @@ func submitDialog(sessionId string, req model.VCon, cosService *s.CustomerOSServ
 		if initator == nil {
 			return nil, fmt.Errorf("submitDialog: unable to determine initator")
 		}
-		destination := getDestination(req.Parties, &d))
+		destination := getDestination(req.Parties, &d)
 		if destination == nil {
 			return nil, fmt.Errorf("submitDialog: unable to determine destination")
 		}
