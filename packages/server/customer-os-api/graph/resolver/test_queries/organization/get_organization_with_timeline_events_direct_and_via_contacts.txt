@@ -49,6 +49,14 @@ query GetOrganizationById($organizationId: ID!, $from: Time!, $size: Int!){
                 channel
                 createdAt
             }
+            __typename
+            ... on Analysis {
+                id
+                content
+                contentType
+                analysisType
+                createdAt
+            }
           }
   }
 }

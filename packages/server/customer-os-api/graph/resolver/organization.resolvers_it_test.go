@@ -4,6 +4,7 @@ import (
 	"github.com/99designs/gqlgen/client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils/decode"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
@@ -497,6 +498,7 @@ func TestQueryResolver_Organization_WithTimelineEvents_DirectAndFromMultipleCont
 	secAgo60 := now.Add(time.Duration(-60) * time.Second)
 	secAgo70 := now.Add(time.Duration(-70) * time.Second)
 	secAgo80 := now.Add(time.Duration(-80) * time.Second)
+	secAgo90 := now.Add(time.Duration(-90) * time.Second)
 	secAgo1000 := now.Add(time.Duration(-1000) * time.Second)
 
 	// prepare contact and org notes
@@ -505,6 +507,11 @@ func TestQueryResolver_Organization_WithTimelineEvents_DirectAndFromMultipleCont
 	orgNoteId3 := neo4jt.CreateNoteForOrganization(ctx, driver, tenantName, organizationId, "org note 1", secAgo30)
 	neo4jt.CreateNoteForOrganization(ctx, driver, tenantName, organizationId, "org note 2", secAgo1000)
 	neo4jt.CreateNoteForOrganization(ctx, driver, tenantName, organizationId, "org note 3", secInFuture10)
+
+	voiceSession := neo4jt.CreateInteractionSession(ctx, driver, tenantName, "mySessionIdentifier", "session1", "CALL", "ACTIVE", "VOICE", now, false)
+
+	analysis1 := neo4jt.CreateAnalysis(ctx, driver, tenantName, "This is a summary of the conversation", "text/plain", "SUMMARY", secAgo90)
+	neo4jt.ActionDescribes(ctx, driver, tenantName, analysis1, voiceSession, repository.INTERACTION_SESSION)
 
 	// prepare contact and org interaction events
 	interactionEventId1 := neo4jt.CreateInteractionEvent(ctx, driver, tenantName, "myExternalId", "IE text 1", "application/json", "EMAIL", secAgo50)
@@ -517,6 +524,7 @@ func TestQueryResolver_Organization_WithTimelineEvents_DirectAndFromMultipleCont
 	neo4jt.InteractionEventSentTo(ctx, driver, interactionEventId2, phoneNumberId, "")
 	neo4jt.InteractionEventSentBy(ctx, driver, interactionEventId3, emailIdOrg, "")
 	neo4jt.InteractionEventSentTo(ctx, driver, interactionEventId3, phoneNumberId, "")
+	neo4jt.InteractionSessionAttendedBy(ctx, driver, tenantName, voiceSession, phoneNumberId, "")
 
 	// prepare issue with tags
 	issueId1 := neo4jt.CreateIssue(ctx, driver, tenantName, entity.IssueEntity{
@@ -540,19 +548,19 @@ func TestQueryResolver_Organization_WithTimelineEvents_DirectAndFromMultipleCont
 	require.Equal(t, 3, neo4jt.GetCountOfNodes(ctx, driver, "InteractionEvent"))
 	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "Email"))
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "PhoneNumber"))
-	require.Equal(t, 9, neo4jt.GetCountOfNodes(ctx, driver, "TimelineEvent"))
+	require.Equal(t, 10, neo4jt.GetCountOfNodes(ctx, driver, "TimelineEvent"))
 
 	rawResponse, err := c.RawPost(getQuery("organization/get_organization_with_timeline_events_direct_and_via_contacts"),
 		client.Var("organizationId", organizationId),
 		client.Var("from", now),
-		client.Var("size", 7))
+		client.Var("size", 8))
 	assertRawResponseSuccess(t, rawResponse, err)
 
 	organization := rawResponse.Data.(map[string]interface{})["organization"]
 	require.Equal(t, organizationId, organization.(map[string]interface{})["id"])
 
 	timelineEvents := organization.(map[string]interface{})["timelineEvents"].([]interface{})
-	require.Equal(t, 7, len(timelineEvents))
+	require.Equal(t, 8, len(timelineEvents))
 
 	timelineEvent1 := timelineEvents[0].(map[string]interface{})
 	require.Equal(t, "Note", timelineEvent1["__typename"].(string))
@@ -606,6 +614,15 @@ func TestQueryResolver_Organization_WithTimelineEvents_DirectAndFromMultipleCont
 		[]string{
 			timelineEvent7["tags"].([]interface{})[0].(map[string]interface{})["name"].(string),
 			timelineEvent7["tags"].([]interface{})[1].(map[string]interface{})["name"].(string)})
+
+	timelineEvent8 := timelineEvents[7].(map[string]interface{})
+	require.Equal(t, "Analysis", timelineEvent8["__typename"].(string))
+	require.Equal(t, "Analysis", timelineEvent8["__typename"].(string))
+	require.Equal(t, analysis1, timelineEvent8["id"].(string))
+	require.NotNil(t, timelineEvent8["createdAt"].(string))
+	require.Equal(t, "This is a summary of the conversation", timelineEvent8["content"].(string))
+	require.Equal(t, "text/plain", timelineEvent8["contentType"].(string))
+	require.Equal(t, "SUMMARY", timelineEvent8["analysisType"].(string))
 }
 
 func TestQueryResolver_Organization_WithTimelineEventsTotalCount(t *testing.T) {
