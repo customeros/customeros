@@ -2,7 +2,7 @@ name: Build and Publish Comms API
 
 on:
   push:
-    branches: [ "otter", "1435-comms-api-add-deployment-files-for-local" ]
+    branches: [ "otter" ]
     paths:
       - 'packages/server/comms-api/**'
       - '.github/workflows/build-publish-comms-api.yml'
@@ -59,7 +59,7 @@ jobs:
     needs:
       - build
 
-    if: github.ref_name == 'otter' || github.event_name == 'release' || github.ref_name == '1435-comms-api-add-deployment-files-for-local'
+    if: github.ref_name == 'otter' || github.event_name == 'release'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
