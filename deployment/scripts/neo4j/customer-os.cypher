@@ -326,10 +326,6 @@ ON CREATE SET
             rel.primary=true,
             rel.label="MAIN";
 
-MATCH (t:Tenant {name:"openline"})
-MERGE (o:Conversation{id:"echotest"}) ON CREATE SET  o:Conversation_openline, o.messageCount=1, o.updatedAt=datetime({timezone: 'UTC'}), o.startedAt=datetime({timezone: 'UTC'}), o.initiatorFirstName="", o.initiatorLastName="", o.initiatorUsername="echo@oasis.openline.ai", o.initiatorType="CONTACT", o.lastSenderId="echo@oasis.openline.ai", o.lastSenderType="", o.lastSenderFirstName="", o.lastSenderLastName="", o.lastContentPreview="Hello world!", o.status="ACTIVE", o.channel="WEB_CHAT",  o:Conversation_openline WITH DISTINCT t, o
-OPTIONAL MATCH (c:Contact)-[:CONTACT_BELONGS_TO_TENANT]->(t) WHERE c.id ="echotest"  MERGE (c)-[:PARTICIPATES]->(o)  RETURN o;
-
 MATCH (t:Tenant {name:"openline"})<-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]-(e:ExternalSystem) SET e:ExternalSystem_openline;
 MATCH (t:Tenant {name:"openline"})<-[:TAG_BELONGS_TO_TENANT]-(tag:Tag) SET tag:Tag_openline;
 MATCH (t:Tenant {name:"openline"})<-[:ORGANIZATION_TYPE_BELONGS_TO_TENANT]-(ot:OrganizationType) SET ot:OrganizationType_openline;
@@ -379,6 +375,5 @@ CREATE INDEX email_id_idx IF NOT EXISTS FOR (n:Email) ON (n.id);
 CREATE INDEX email_email_idx IF NOT EXISTS FOR (n:Email) ON (n.email);
 CREATE INDEX phone_id_idx IF NOT EXISTS FOR (n:PhoneNumber) ON (n.id);
 CREATE INDEX phone_e164_idx IF NOT EXISTS FOR (n:PhoneNumber) ON (n.e164);
-CREATE INDEX conversation_id_idx IF NOT EXISTS FOR (n:Conversation) ON (n.id);
 
 :exit;
