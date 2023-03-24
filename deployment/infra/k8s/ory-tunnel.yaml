@@ -7,6 +7,7 @@ spec:
   selector:
     matchLabels:
       app: ory-tunnel        # This deployment applies to any Pods matching the specified label
+  serviceName: ory-tunnel
   template:                      # This deployment will create a set of pods using the configurations in this template
     metadata:
       labels:                    # The labels that will be applied to all of the pods in this deployment
