@@ -48,25 +48,42 @@ func vConPartyToSessionParticipantInputArr(from []model.VConParty) []s.Interacti
 	return to
 }
 
-func getInitator(req *model.VCon) *model.VConParty {
-	if len(req.Parties) == 0 {
+func getDestination(parties []model.VConParty, dialog *model.VConDialog) *model.VConParty {
+	if len(parties) == 0 {
 		return nil
 	}
 
-	if len(req.Analysis) != 0 {
-		return &req.Parties[0]
+	if len(parties) == 1 {
+		return &parties[0]
 	}
 
-	if len(req.Dialog) == 0 {
+	if len(dialog.Parties) == 0 {
+		return &parties[1]
+	}
+	if dialog.Parties[0] == 0 {
+		return &parties[1]
+	}
+
+	return &parties[0]
+}
+
+func getInitator(parties []model.VConParty, dialog *model.VConDialog) *model.VConParty {
+	if len(parties) == 0 {
 		return nil
 	}
-	if len(req.Dialog[0].Parties) == 0 {
-		return &req.Parties[0]
+
+	if len(parties) == 1 {
+		return &parties[0]
 	}
-	if req.Dialog[0].Parties[0] > int64(len(req.Parties)) {
-		return &req.Parties[0]
+
+	if len(dialog.Parties) == 0 {
+		return &parties[0]
 	}
-	return &req.Parties[req.Dialog[0].Parties[0]]
+
+	if dialog.Parties[0] == 0 {
+		return &parties[0]
+	}
+	return &parties[1]
 }
 
 func vConGetOrCreateSession(threadId string, name string, user string, attendants []s.InteractionSessionParticipantInput, cosService *s.CustomerOSService) (string, error) {
@@ -96,28 +113,6 @@ func vConGetOrCreateSession(threadId string, name string, user string, attendant
 	}
 
 	return *sessionId, nil
-}
-
-func getDestination(req *model.VCon) *model.VConParty {
-	if len(req.Parties) == 0 {
-		return nil
-	}
-
-	if len(req.Parties) == 1 {
-		return &req.Parties[0]
-	}
-	if len(req.Analysis) != 0 {
-		return &req.Parties[1]
-	}
-
-	if len(req.Dialog) == 0 {
-		return nil
-	}
-	if len(req.Dialog[0].Parties) == 0 {
-		return &req.Parties[1]
-	}
-
-	return &req.Parties[0]
 }
 
 func getUser(req *model.VCon) string {
@@ -168,20 +163,22 @@ func submitAnalysis(sessionId string, req model.VCon, cosService *s.CustomerOSSe
 }
 
 func submitDialog(sessionId string, req model.VCon, cosService *s.CustomerOSService) ([]string, error) {
-	initator := getInitator(&req)
-	if initator == nil {
-		return nil, fmt.Errorf("submitDialog: unable to determine initator")
-	}
-	destination := getDestination(&req)
-	if destination == nil {
-		return nil, fmt.Errorf("submitDialog: unable to determine destination")
-	}
+
 	user := getUser(&req)
 
 	ctx := context.Background()
 
 	var ids []string
 	for _, d := range req.Dialog {
+		initator := getInitator(req.Parties, &d)
+		if initator == nil {
+			return nil, fmt.Errorf("submitDialog: unable to determine initator")
+		}
+		destination := getDestination(req.Parties, &d))
+		if destination == nil {
+			return nil, fmt.Errorf("submitDialog: unable to determine destination")
+		}
+
 		response, err := cosService.CreateInteractionEvent(ctx,
 			s.WithUsername(user),
 			s.WithSessionId(sessionId),
