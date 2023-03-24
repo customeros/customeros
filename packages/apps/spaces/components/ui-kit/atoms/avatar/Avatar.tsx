@@ -3,6 +3,7 @@ import styles from './avatar.module.scss';
 import { getInitialsColor } from './utils';
 import classNames from 'classnames';
 import { Tooltip } from '../tooltip';
+import { uuidv4 } from '../../../../utils';
 
 interface AvatarProps {
   name: string;
@@ -12,6 +13,7 @@ interface AvatarProps {
   imageHeight?: number;
   imageWidth?: number;
   isSquare?: boolean;
+  id?: string;
 }
 
 export const Avatar: React.FC<AvatarProps> = ({
@@ -22,6 +24,7 @@ export const Avatar: React.FC<AvatarProps> = ({
   imageWidth,
   imageHeight,
   isSquare = false,
+  id,
   ...rest
 }) => {
   const initials = `${name?.charAt(0)}${surname?.charAt(0)}`;
@@ -34,14 +37,14 @@ export const Avatar: React.FC<AvatarProps> = ({
     fontSize: size > 40 ? 'var(--font-size-lg)' : 'ar(--font-size-xxs)',
   };
   const tooltipId =
-    (name || surname) &&
-    `avatar${name?.split(' ').join('')}-${surname?.split(' ').join().trim()}`;
+    (isSquare && name) ||
+    (name && surname && `avatar${uuidv4().split('-').join('')}`);
 
   return (
     <>
       {tooltipId && (
         <Tooltip
-          content={`${name} ${surname}`}
+          content={`${name || ''} ${surname || ''}`}
           target={`#${tooltipId}`}
           position='top'
           showDelay={0}
@@ -50,7 +53,7 @@ export const Avatar: React.FC<AvatarProps> = ({
       )}
 
       <div
-        id={tooltipId}
+        id={tooltipId || ''}
         className={classNames(styles.avatar, {
           [styles.square]: isSquare,
         })}

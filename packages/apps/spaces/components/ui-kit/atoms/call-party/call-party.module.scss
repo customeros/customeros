@@ -1,0 +1,14 @@
+.avatarSection {
+  display:flex;
+  align-items: center;
+}
+.directionRight {
+  flex-direction: row-reverse;
+}
+
+.contactName {
+  margin: 0  var(--spacing-xxs);
+  font-weight: 600;
+  font-size: 13px;
+  line-height: 16px;
+}

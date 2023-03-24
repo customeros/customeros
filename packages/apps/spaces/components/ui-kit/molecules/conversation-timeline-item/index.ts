@@ -1,1 +1,1 @@
-export { PhoneConversationTimelineItem } from './PhoneConversationTimelineItem';
+export { ConversationTimelineItem } from './ConversationTimelineItem';
