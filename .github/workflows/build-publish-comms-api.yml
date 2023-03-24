@@ -1,4 +1,4 @@
-name: Build and Publish Channels API
+name: Build and Publish Comms API
 
 on:
   push:
