@@ -6,7 +6,6 @@ import (
 	"github.com/gin-gonic/gin"
 	c "github.com/openline-ai/openline-customer-os/packages/server/comms-api/config"
 	s "github.com/openline-ai/openline-customer-os/packages/server/comms-api/service"
-	"github.com/openline-ai/openline-customer-os/packages/server/comms-api/util"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc/status"
 	"log"
@@ -37,7 +36,7 @@ type EmailContent struct {
 	Reference []string `json:"Reference"`
 }
 
-func addMailRoutes(conf *c.Config, df util.DialFactory, rg *gin.RouterGroup, cosService *s.CustomerOSService) {
+func addMailRoutes(conf *c.Config, rg *gin.RouterGroup, cosService *s.CustomerOSService) {
 	mailGroup := rg.Group("/mail")
 	mailGroup.POST("/fwd/", func(c *gin.Context) {
 		var req MailPostRequest
