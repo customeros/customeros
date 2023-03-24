@@ -6,7 +6,6 @@ import (
 	c "github.com/openline-ai/openline-customer-os/packages/server/comms-api/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/comms-api/routes/chatHub"
 	"github.com/openline-ai/openline-customer-os/packages/server/comms-api/service"
-	"github.com/openline-ai/openline-customer-os/packages/server/comms-api/util"
 	"log"
 	"strings"
 )
@@ -34,8 +33,7 @@ func getRouter(config *c.Config, fh *chatHub.Hub, cosService *service.CustomerOS
 	router.Use(cors.New(corsConfig))
 	route := router.Group("/api/v1/")
 
-	df := util.MakeDialFactory(config)
-	addMailRoutes(config, df, route, cosService)
+	addMailRoutes(config, route, cosService)
 	AddVconRoutes(config, route, cosService)
 
 	//AddWebSocketRoutes(route, fh, config.WebChat.PingInterval)

@@ -5,8 +5,6 @@ type Config struct {
 		CustomerOsAPI    string `env:"CUSTOMER_OS_API,required"`
 		CustomerOsAPIKey string `env:"CUSTOMER_OS_API_KEY,required"`
 		ServerAddress    string `env:"COMMS_API_SERVER_ADDRESS,required"`
-		GRPCPort         int    `env:"CHANNELS_GRPC_PORT,required"`
-		OasisApiUrl      string `env:"OASIS_API_URL,required"`
 		CorsUrl          string `env:"COMMS_API_CORS_URL,required"`
 	}
 	Mail struct {
