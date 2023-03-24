@@ -1,13 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { MessageDeprecate } from '../../atoms';
-import axios from 'axios';
-// import { FeedItem } from '../../../models/feed-item';
-import { gql } from 'graphql-request';
-import { toast } from 'react-toastify';
-// import { ConversationItem } from '../../../models/conversation-item';
 import { Skeleton } from 'primereact/skeleton';
-// import { useGraphQLClient } from '../../../utils/graphQLClient';
-import { EmailTimelineItem } from '../email-timeline-item';
 import { TimelineItem } from '../../atoms/timeline-item';
 import useWebSocket from 'react-use-websocket';
 import { EmailTimelineItemToDeprecate } from '../email-timeline-item-to-deprecate';
