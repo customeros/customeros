@@ -36,11 +36,10 @@
   justify-content: center;
 
   &.channelIconShown {
-    background: #71D180;
-
+    background: #71d180;
 
     &.chatIcon {
-      background: #3E6ADE;
+      background: #3e6ade;
     }
   }
 
@@ -63,7 +62,6 @@
   display: flex;
   margin-bottom: var(--spacing-xxxs);
 
-
   &.isright {
     flex-direction: row-reverse;
 
@@ -78,5 +76,4 @@
       margin-right: var(--spacing-md);
     }
   }
-
 }
