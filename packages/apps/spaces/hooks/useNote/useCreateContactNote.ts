@@ -4,13 +4,10 @@ import {
   useCreateContactNoteMutation,
   GetContactTimelineQuery,
   GetContactTimelineDocument,
-  DataSource,
 } from './types';
 import { toast } from 'react-toastify';
 import { ApolloCache } from 'apollo-cache';
 import client from '../../apollo-client';
-import { useRecoilValue } from 'recoil';
-import { userData } from '../../state';
 import { gql } from '@apollo/client';
 
 interface Props {
@@ -29,7 +26,6 @@ const NOW_DATE = new Date().toISOString();
 export const useCreateContactNote = ({ contactId }: Props): Result => {
   const [createContactNoteMutation, { loading }] =
     useCreateContactNoteMutation();
-  const { id: userId } = useRecoilValue(userData);
 
   const handleUpdateCacheAfterAddingNote = (
     cache: ApolloCache<any>,
@@ -108,24 +104,6 @@ export const useCreateContactNote = ({ contactId }: Props): Result => {
     try {
       const response = await createContactNoteMutation({
         variables: { contactId, input: note },
-        optimisticResponse: {
-          __typename: 'Mutation',
-          note_CreateForContact: {
-            __typename: 'Note',
-            id: 'temp-id',
-            appSource: note.appSource || DataSource.Openline,
-            html: note.html,
-            createdAt: new Date().toISOString(),
-            createdBy: {
-              id: userId,
-              firstName: '',
-              lastName: '',
-            },
-            updatedAt: '',
-            source: DataSource.Openline,
-            sourceOfTruth: DataSource.Openline,
-          },
-        },
         // @ts-expect-error this should not result in error, debug later
         update: handleUpdateCacheAfterAddingNote,
       });

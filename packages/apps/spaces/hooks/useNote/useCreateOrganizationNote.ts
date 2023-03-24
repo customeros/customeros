@@ -2,16 +2,13 @@ import {
   NoteInput,
   CreateOrganizationNoteMutation,
   useCreateOrganizationNoteMutation,
-  DataSource,
   GetOrganizationTimelineQuery,
   GetOrganizationTimelineDocument,
-  Note,
 } from './types';
 import { toast } from 'react-toastify';
 import client from '../../apollo-client';
-import { useRecoilValue } from 'recoil';
-import { userData } from '../../state';
 import { gql } from '@apollo/client';
+import { ApolloCache } from 'apollo-cache';
 
 interface Props {
   organizationId: string;
@@ -30,12 +27,11 @@ const NOW_DATE = new Date().toISOString();
 export const useCreateOrganizationNote = ({
   organizationId,
 }: Props): Result => {
-  const [createOrganizationNoteMutation, { loading, error, data }] =
+  const [createOrganizationNoteMutation, { loading }] =
     useCreateOrganizationNoteMutation();
-  const { id: userId } = useRecoilValue(userData);
 
   const handleUpdateCacheAfterAddingNote = (
-    cache: any,
+    cache: ApolloCache<any>,
     { data: { note_CreateForOrganization } }: any,
   ) => {
     const data: GetOrganizationTimelineQuery | null = client.readQuery({
@@ -47,6 +43,7 @@ export const useCreateOrganizationNote = ({
       },
     });
 
+    // @ts-expect-error fix function type
     const normalizedId = cache.identify({
       id: organizationId,
       __typename: 'Organization',
@@ -107,25 +104,7 @@ export const useCreateOrganizationNote = ({
       try {
         const response = await createOrganizationNoteMutation({
           variables: { organizationId, input: note },
-
-          optimisticResponse: {
-            __typename: 'Mutation',
-            note_CreateForOrganization: {
-              __typename: 'Note',
-              id: 'temp-id',
-              appSource: note.appSource || DataSource.Openline,
-              html: note.html,
-              createdAt: new Date().toISOString(),
-              createdBy: {
-                id: userId,
-                firstName: '',
-                lastName: '',
-              },
-              updatedAt: '',
-              source: DataSource.Openline,
-              sourceOfTruth: DataSource.Openline,
-            },
-          },
+          // @ts-expect-error fix function type
           update: handleUpdateCacheAfterAddingNote,
         });
         if (response.data) {
