@@ -9,9 +9,9 @@ import {
 } from './types';
 import { toast } from 'react-toastify';
 import client from '../../apollo-client';
-import { ApolloCache } from 'apollo-cache';
 import { useRecoilValue } from 'recoil';
 import { userData } from '../../state';
+import { gql } from '@apollo/client';
 
 interface Props {
   organizationId: string;
@@ -35,7 +35,7 @@ export const useCreateOrganizationNote = ({
   const { id: userId } = useRecoilValue(userData);
 
   const handleUpdateCacheAfterAddingNote = (
-    cache: ApolloCache<any>,
+    cache: any,
     { data: { note_CreateForOrganization } }: any,
   ) => {
     const data: GetOrganizationTimelineQuery | null = client.readQuery({
@@ -47,13 +47,34 @@ export const useCreateOrganizationNote = ({
       },
     });
 
+    const normalizedId = cache.identify({
+      id: organizationId,
+      __typename: 'Organization',
+    });
+    const organizationData = client.readFragment({
+      id: normalizedId,
+      fragment: gql`
+        fragment organizationName on Organization {
+          id
+          name
+        }
+      `,
+    });
+    const newNoteWithNoted = {
+      ...note_CreateForOrganization,
+      noted: [
+        {
+          ...organizationData,
+        },
+      ],
+    };
     if (data === null) {
       client.writeQuery({
         query: GetOrganizationTimelineDocument,
         data: {
           organization: {
             id: organizationId,
-            timelineEvents: [note_CreateForOrganization],
+            timelineEvents: [newNoteWithNoted],
           },
           variables: { organizationId, from: NOW_DATE, size: 10 },
         },
@@ -66,7 +87,7 @@ export const useCreateOrganizationNote = ({
         ...data.organization,
         timelineEvents: [
           ...(data?.organization?.timelineEvents ?? []),
-          note_CreateForOrganization,
+          newNoteWithNoted,
         ],
       },
     };
@@ -105,7 +126,6 @@ export const useCreateOrganizationNote = ({
               sourceOfTruth: DataSource.Openline,
             },
           },
-          // @ts-expect-error this should not result in error, debug later
           update: handleUpdateCacheAfterAddingNote,
         });
         if (response.data) {

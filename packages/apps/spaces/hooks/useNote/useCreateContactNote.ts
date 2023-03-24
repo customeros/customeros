@@ -11,6 +11,7 @@ import { ApolloCache } from 'apollo-cache';
 import client from '../../apollo-client';
 import { useRecoilValue } from 'recoil';
 import { userData } from '../../state';
+import { gql } from '@apollo/client';
 
 interface Props {
   contactId: string;
@@ -26,7 +27,7 @@ interface Result {
 const NOW_DATE = new Date().toISOString();
 
 export const useCreateContactNote = ({ contactId }: Props): Result => {
-  const [createContactNoteMutation, { loading, error, data }] =
+  const [createContactNoteMutation, { loading }] =
     useCreateContactNoteMutation();
   const { id: userId } = useRecoilValue(userData);
 
@@ -42,13 +43,37 @@ export const useCreateContactNote = ({ contactId }: Props): Result => {
         size: 10,
       },
     });
+    // @ts-expect-error fix function type
+    const normalizedId = cache.identify({
+      id: contactId,
+      __typename: 'Contact',
+    });
+    const contactData = client.readFragment({
+      id: normalizedId,
+      fragment: gql`
+        fragment ContactName on Contact {
+          id
+          name
+          firstName
+          lastName
+        }
+      `,
+    });
+    const newNoteWithNoted = {
+      ...note_CreateForContact,
+      noted: [
+        {
+          ...contactData,
+        },
+      ],
+    };
     if (data === null) {
       client.writeQuery({
         query: GetContactTimelineDocument,
         data: {
           contact: {
             contactId,
-            timelineEvents: [note_CreateForContact],
+            timelineEvents: [newNoteWithNoted],
           },
           variables: { contactId, from: NOW_DATE, size: 10 },
         },
@@ -61,7 +86,7 @@ export const useCreateContactNote = ({ contactId }: Props): Result => {
         ...data.contact,
         timelineEvents: [
           ...(data?.contact?.timelineEvents ?? []),
-          note_CreateForContact,
+          newNoteWithNoted,
         ],
       },
     };
