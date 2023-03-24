@@ -19,8 +19,9 @@ func main() {
 
 	graphqlClient := graphql.NewClient(config.Service.CustomerOsAPI)
 	customerOSService := service.NewCustomerOSService(graphqlClient, &config)
+	mailService := service.NewMailService(&config, customerOSService)
 	// Our server will live in the routes package
-	routes.Run(&config, mh, customerOSService) // run this as a background goroutine
+	routes.Run(&config, mh, customerOSService, mailService) // run this as a background goroutine
 
 }
 

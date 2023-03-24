@@ -41,7 +41,7 @@ func (s *MessageService) GetMessage(ctx context.Context, msgId *msProto.MessageI
 	}
 
 	if msgId == nil || msgId.GetConversationEventId() == "" {
-		return nil, status.Errorf(codes.InvalidArgument, "Message ID must be specified")
+		return nil, status.Errorf(codes.InvalidArgument, "Content ID must be specified")
 	}
 
 	queryResult := s.postgresRepositories.ConversationEventRepository.GetEventById(msgId.GetConversationEventId())
