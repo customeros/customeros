@@ -4621,6 +4621,8 @@ input ContactInput {
     ownerId: ID
 
     externalReference: ExternalSystemReferenceInput
+
+    appSource: String
 }
 
 """
@@ -5626,7 +5628,7 @@ type Organization implements Node {
     id: ID!
     createdAt:   Time!
     updatedAt:   Time!
-    name: String!
+    name:        String!
     description: String
     domain:      String @deprecated(reason: "Deprecated in favor of domains")
     domains:     [String!]! @goField(forceResolver: true)
@@ -33251,7 +33253,7 @@ func (ec *executionContext) unmarshalInputContactInput(ctx context.Context, obj 
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"templateId", "title", "firstName", "lastName", "label", "createdAt", "customFields", "fieldSets", "email", "phoneNumber", "ownerId", "externalReference"}
+	fieldsInOrder := [...]string{"templateId", "title", "firstName", "lastName", "label", "createdAt", "customFields", "fieldSets", "email", "phoneNumber", "ownerId", "externalReference", "appSource"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -33351,6 +33353,14 @@ func (ec *executionContext) unmarshalInputContactInput(ctx context.Context, obj 
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("externalReference"))
 			it.ExternalReference, err = ec.unmarshalOExternalSystemReferenceInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐExternalSystemReferenceInput(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "appSource":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("appSource"))
+			it.AppSource, err = ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
 				return it, err
 			}

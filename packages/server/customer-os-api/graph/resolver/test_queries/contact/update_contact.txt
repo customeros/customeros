@@ -17,5 +17,8 @@ mutation UpdateContact($contactId: ID!, $ownerId: ID){
         owner {
             id
         }
+        source
+        sourceOfTruth
+        appSource
     }
 }

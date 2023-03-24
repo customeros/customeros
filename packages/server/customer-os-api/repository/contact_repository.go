@@ -117,14 +117,17 @@ func (r *contactRepository) Update(ctx context.Context, tx neo4j.ManagedTransact
 			SET c.firstName=$firstName,
 				c.lastName=$lastName,
 				c.title=$title,
-				c.updatedAt=datetime({timezone: 'UTC'})
+				c.updatedAt=$now,
+				c.sourceOfTruth=$sourceOfTruth
 			RETURN c`,
 		map[string]interface{}{
-			"tenant":    tenant,
-			"contactId": contactId,
-			"firstName": contactDtls.FirstName,
-			"lastName":  contactDtls.LastName,
-			"title":     contactDtls.Title,
+			"tenant":        tenant,
+			"contactId":     contactId,
+			"firstName":     contactDtls.FirstName,
+			"lastName":      contactDtls.LastName,
+			"title":         contactDtls.Title,
+			"sourceOfTruth": string(contactDtls.SourceOfTruth),
+			"now":           utils.Now(),
 		}); err != nil {
 		return nil, err
 	} else {
