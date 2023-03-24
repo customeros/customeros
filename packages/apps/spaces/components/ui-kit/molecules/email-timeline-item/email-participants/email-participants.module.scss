@@ -18,6 +18,7 @@
 .emailDataRow {
   margin-bottom: var(--spacing-xxxs);
   display: flex;
+  text-transform: lowercase;
 }
 
 .label {

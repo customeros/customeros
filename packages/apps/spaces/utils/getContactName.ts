@@ -1,9 +1,11 @@
-import { Contact } from '../graphQL/__generated__/generated';
+import { Contact, User } from '../graphQL/__generated__/generated';
 
-export const getContactDisplayName = (contact?: Partial<Contact> | null) => {
+export const getContactDisplayName = (
+  contact?: Partial<Contact | User> | null,
+) => {
   if (!contact) return 'Unnamed';
 
-  if (contact?.name) {
+  if (contact.__typename === 'Contact' && contact?.name) {
     return contact.name;
   }
 

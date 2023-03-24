@@ -8,6 +8,7 @@ import {
   Reply,
   ReplyLeft,
   ReplyMany,
+  User,
 } from '../../../atoms';
 import { getContactDisplayName } from '../../../../../utils';
 import classNames from 'classnames';
@@ -37,15 +38,22 @@ export const EmailParticipants: React.FC<Props> = ({
   return (
     <div className={styles.wrapper}>
       <section className={styles.emailDataContainer}>
-        {!loading && !error && (
-          <div className={styles.avatar}>
+        <div className={styles.avatar}>
+          {!loading && !error ? (
             <Avatar
               name={name?.[0] || ''}
               surname={name.length === 2 ? name[1] : name[2]}
               size={30}
             />
-          </div>
-        )}
+          ) : (
+            <Avatar
+              name={from.toLowerCase()}
+              surname={''}
+              size={30}
+              image={<User style={{ transform: 'scale(0.8)' }} />}
+            />
+          )}
+        </div>
         <div className='flex w-full flex-column'>
           <div className={classNames(styles.emailDataRow, styles.participants)}>
             <div className={styles.emailParticipantWrapper}>
@@ -63,7 +71,8 @@ export const EmailParticipants: React.FC<Props> = ({
               >
                 <div
                   className={classNames(styles.label, {
-                    [styles.labelWithSpacing]: to && to?.split(';').length > 1,
+                    [styles.labelWithSpacing]:
+                      to?.split(';').length > 1 || to.length > 10,
                   })}
                 >
                   To:

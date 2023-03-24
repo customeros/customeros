@@ -136,7 +136,9 @@ export const ConversationTimelineItem: React.FC<Props> = ({
                           </>
                         )}
                       </div>
-                      <ConversationPartyEmail email={right?.party.mailto} />
+                      <ConversationPartyEmail
+                        email={(right?.party.mailto || '').toLowerCase()}
+                      />
                     </div>
                   </div>
                 </div>

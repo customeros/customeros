@@ -37,9 +37,7 @@ export const Avatar: React.FC<AvatarProps> = ({
     fontSize: size > 40 ? 'var(--font-size-lg)' : 'ar(--font-size-xxs)',
   };
   const tooltipId =
-    (isSquare && name) ||
-    (name && surname && `avatar${uuidv4().split('-').join('')}`);
-
+    (name || surname) && `avatar${uuidv4().split('-').join('')}`;
   return (
     <>
       {tooltipId && (
