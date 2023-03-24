@@ -16,11 +16,10 @@ func main() {
 
 	mh := chatHub.NewHub()
 	go mh.Run()
-
 	graphqlClient := graphql.NewClient(config.Service.CustomerOsAPI)
-	customerOSService := service.NewCustomerOSService(graphqlClient, &config)
+	services := service.InitServices(graphqlClient, &config)
 	// Our server will live in the routes package
-	routes.Run(&config, mh, customerOSService) // run this as a background goroutine
+	routes.Run(&config, mh, services) // run this as a background goroutine
 
 }
 

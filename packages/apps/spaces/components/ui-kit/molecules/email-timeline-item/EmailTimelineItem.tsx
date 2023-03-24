@@ -89,64 +89,6 @@ export const EmailTimelineItem: React.FC<Props> = ({
     }
   };
 
-  // const setEditorMode = useSetRecoilState(editorMode);
-  // const [emailEditorData, setEmailEditorData] = useRecoilState(editorEmail);
-  // const loggedInUserData = useRecoilValue(userData);
-  //
-  // useEffect(() => {
-  //   return () => {
-  //     setEmailEditorData({
-  //       //@ts-expect-error fixme later
-  //       handleSubmit: () => null,
-  //       to: [],
-  //       subject: '',
-  //       respondTo: '',
-  //     });
-  //     setEditorMode({
-  //       mode: EditorMode.Note,
-  //       submitButtonLabel: 'Log into timeline',
-  //     });
-  //   };
-  // }, []);
-
-  // const handleSendMessage = (
-  //     text: string,
-  //     onSuccess: () => void,
-  //     destination = [],
-  //     replyTo: null | string,
-  // ) => {
-  //   if (!text) return;
-  //   const message: FeedPostRequest = {
-  //     channel: 'EMAIL',
-  //     username: loggedInUserData.identity,
-  //     message: text,
-  //     direction: 'OUTBOUND',
-  //     destination: destination,
-  //   };
-  //   if (replyTo) {
-  //     message.replyTo = replyTo;
-  //   }
-
-  //   axios
-  //       .post(`/oasis-api/feed/${feedId}/item`, message)
-  //       .then((res) => {
-  //         console.log(res);
-  //         if (res.data) {
-  //           setMessages((messageList: any) => [...messageList, res.data]);
-  //           onSuccess();
-  //           setEditorMode({
-  //             submitButtonLabel: 'Log into timeline',
-  //             mode: EditorMode.Note,
-  //           });
-  //           setEmailEditorData({ ...emailEditorData, to: [], subject: '' });
-  //           toast.success('Email sent!');
-  //         }
-  //       })
-  //       .catch(() => {
-  //         toast.error('Something went wrong while sending email');
-  //       });
-  // };
-
   const isSentByContact =
     !!contactId &&
     !error &&
@@ -170,7 +112,7 @@ export const EmailTimelineItem: React.FC<Props> = ({
           <div>
             <EmailParticipants
               from={isToDeprecate ? sentBy : from}
-              to={isToDeprecate ? sentTo?.[0] : to}
+              to={isToDeprecate ? sentTo : new Array(to)}
               subject={interactionSession?.name}
               cc={isToDeprecate ? deprecatedCC : cc}
               bcc={isToDeprecate ? deprecatedBCC : bcc}
@@ -213,30 +155,6 @@ export const EmailTimelineItem: React.FC<Props> = ({
         >
           {expanded ? 'Collapse' : 'Expand'}
         </Button>
-
-        {/*TODO enable after backend refactor*/}
-        {/*<Button*/}
-        {/*    mode='link'*/}
-        {/*    onClick={() => {*/}
-        {/*      // TODO add cc and bcc*/}
-
-        {/*      setEmailEditorData({*/}
-        {/*        //@ts-expect-error fixme later*/}
-        {/*        handleSubmit: handleSendMessage,*/}
-        {/*        to: [emailData.from],*/}
-        {/*        subject: emailData.subject,*/}
-        {/*        respondTo:*/}
-        {/*        //@ts-expect-error fixme later*/}
-        {/*            msg?.messageId?.conversationEventId || null,*/}
-        {/*      });*/}
-        {/*      setEditorMode({*/}
-        {/*        mode: EditorMode.Email,*/}
-        {/*        submitButtonLabel: 'Send',*/}
-        {/*      });*/}
-        {/*    }}*/}
-        {/*>*/}
-        {/*  Respond*/}
-        {/*</Button>*/}
       </div>
     </div>
   );
