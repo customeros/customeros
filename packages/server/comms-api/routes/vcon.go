@@ -93,6 +93,8 @@ func vConGetOrCreateSession(threadId string, name string, user string, attendant
 	if err != nil {
 		se, _ := status.FromError(err)
 		log.Printf("failed retriving interaction session: status=%s message=%s", se.Code(), se.Message())
+	} else {
+		return *sessionId, nil
 	}
 
 	if sessionId == nil {
@@ -107,7 +109,7 @@ func vConGetOrCreateSession(threadId string, name string, user string, attendant
 		if err != nil {
 			se, _ := status.FromError(err)
 			log.Printf("failed creating interaction session: status=%s message=%s", se.Code(), se.Message())
-			return "", err
+			return "", fmt.Errorf("vConGetOrCreateSession: failed creating interaction session: %v", err)
 		}
 		log.Printf("interaction session created: %s", *sessionId)
 	}
