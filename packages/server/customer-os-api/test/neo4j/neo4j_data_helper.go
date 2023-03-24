@@ -114,16 +114,23 @@ func CreateContact(ctx context.Context, driver *neo4j.DriverWithContext, tenant 
 		"				c.firstName=$firstName, " +
 		"				c.lastName=$lastName, " +
 		"				c.name=$name, " +
-		"				c.createdAt=datetime({timezone: 'UTC'}), " +
-		" 				c:%s"
+		"				c.appSource=$appSource, " +
+		"				c.source=$source, " +
+		"				c.sourceOfTruth=$sourceOfTruth, " +
+		"				c.createdAt=$now, " +
+		" 				c:Contact_%s"
 
-	ExecuteWriteQuery(ctx, driver, fmt.Sprintf(query, "Contact_"+tenant), map[string]any{
-		"tenant":    tenant,
-		"contactId": contactId.String(),
-		"title":     contact.Title,
-		"firstName": contact.FirstName,
-		"lastName":  contact.LastName,
-		"name":      contact.Name,
+	ExecuteWriteQuery(ctx, driver, fmt.Sprintf(query, tenant), map[string]any{
+		"tenant":        tenant,
+		"contactId":     contactId.String(),
+		"title":         contact.Title,
+		"firstName":     contact.FirstName,
+		"lastName":      contact.LastName,
+		"name":          contact.Name,
+		"now":           time.Now().UTC(),
+		"source":        contact.Source,
+		"sourceOfTruth": contact.SourceOfTruth,
+		"appSource":     utils.StringFirstNonEmpty(contact.AppSource, "test"),
 	})
 	return contactId.String()
 }
