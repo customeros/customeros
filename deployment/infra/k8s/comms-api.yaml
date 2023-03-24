@@ -22,6 +22,10 @@ spec:
             - containerPort: 9013  # Should match the port number that the Go application listens on
               name: grpc-port
           env:
+            - name: CUSTOMER_OS_API
+              value: "http://customer-os-api-service.openline.svc.cluster.local:10000/query"
+            - name: CUSTOMER_OS_API_KEY
+              value: "dd9d2474-b4a9-4799-b96f-73cd0a2917e4"
             - name: POSTGRES_USER
               value: "openline"
             - name: POSTGRES_PASSWORD
