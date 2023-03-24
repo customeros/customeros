@@ -21,7 +21,7 @@ export const editorMode = atom({
   key: 'editor', // unique ID (with respect to other atoms/selectors)
   default: {
     mode: EditorMode.Note,
-    submitButtonLabel: 'Log into timeline',
+    submitButtonLabel: 'Log as note',
   }, // default value (aka initial value)
 });
 export const editorEmail = atom<EmailMode>({
