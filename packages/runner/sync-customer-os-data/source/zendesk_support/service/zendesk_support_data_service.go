@@ -151,6 +151,13 @@ func (s *zendeskSupportDataService) GetOrganizationsForSync(batchSize int, runId
 				FieldSource: "details",
 			})
 		}
+		if v.ParentOrganizationId > 0 {
+			organizationData.ParentOrganization = &entity.ParentOrganization{
+				ExternalId:           strconv.FormatInt(v.ParentOrganizationId, 10),
+				OrganizationRelation: entity.Subsidiary,
+				Type:                 "store",
+			}
+		}
 
 		customerOsOrganizations = append(customerOsOrganizations, organizationData)
 		s.usersAsOrganizations[organizationData.ExternalSyncId] = v
