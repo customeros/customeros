@@ -52,7 +52,7 @@ export const Timeline = ({
       }
     },
   });
-
+  console.log('🏷️ ----- loggedActivities: ', loggedActivities);
   const getTimelineItemByType = (type: string, data: any, index: number) => {
     switch (type) {
       case 'Note':
@@ -86,94 +86,6 @@ export const Timeline = ({
         //     />
         //   );
         // }
-        if (data.channel === 'EMAIL') {
-          return '';
-        }
-        return null;
-
-      case 'Analysis': {
-        const decodeContent = (content: string) => {
-          let response;
-          try {
-            response = JSON.parse(content);
-          } catch (e) {
-            response = {
-              dialog: {
-                type: 'MESSAGE',
-                mimetype: 'text/plain',
-                body: content,
-              },
-            };
-          }
-          return response;
-        };
-        if (data.analysisType === 'transcript') {
-          return null;
-        }
-
-        const transcriptForSummary = loggedActivities
-          .filter((e) => e.__typename === 'Analysis')
-          .filter((e) => e.analysisType !== 'summary')
-          .find((e) => e.describes[0].id === data.describes[0].id);
-
-        if (!transcriptForSummary?.content) {
-          return;
-        }
-
-        return (
-          <ConversationTimelineItem
-            id={data.id}
-            content={decodeContent(data.content)}
-            transcript={decodeContent(transcriptForSummary?.content) ?? []}
-            type={data.analysisType}
-            createdAt={data?.createdAt}
-            mode='PHONE_CALL' // fixme - mode will be assessed from data inside the component (on message base)
-          />
-        );
-      }
-
-      case 'LiveConversation':
-        return (
-          <LiveConversationTimelineItem
-            first={index == 0}
-            contactId={id}
-            source={data.source}
-          />
-        );
-      case 'PageView':
-        return (
-          <TimelineItem first={index == 0} createdAt={data?.startedAt}>
-            <WebActionTimelineItem {...data} contactName={contactName} />
-          </TimelineItem>
-        );
-      case 'InteractionSession':
-        return (
-          <TimelineItem first={index == 0} createdAt={data?.startedAt}>
-            <InteractionTimelineItem
-              {...data}
-              contactId={contactName && id}
-              organizationId={!contactName && id}
-            />
-          </TimelineItem>
-        );
-      case 'Ticket':
-        return (
-          <TimelineItem first={index == 0} createdAt={data?.createdAt}>
-            <TicketTimelineItem {...data} />
-          </TimelineItem>
-        );
-
-      case 'InteractionEvent':
-        if (data.channel === 'EMAIL') {
-          return (
-            <TimelineItem first={index == 0} createdAt={data?.createdAt}>
-              <EmailTimelineItem
-                {...data}
-                contactId={mode === 'CONTACT' && id}
-              />
-            </TimelineItem>
-          );
-        }
         if (data.channel === 'VOICE') {
           const from =
             data.sentBy && data.sentBy.length > 0
@@ -240,9 +152,103 @@ export const Timeline = ({
               mode='PHONE_CALL' // fixme - mode will be assessed from data inside the component (on message base)
             />
           );
-        } else {
+        }
+        if (data.channel === 'EMAIL') {
+          return '';
+        }
+        return null;
+
+      case 'Analysis': {
+        const decodeContent = (content: string) => {
+          let response;
+          try {
+            response = JSON.parse(content);
+          } catch (e) {
+            response = {
+              dialog: {
+                type: 'MESSAGE',
+                mimetype: 'text/plain',
+                body: content,
+              },
+            };
+          }
+          return response;
+        };
+        if (data.analysisType === 'transcript') {
           return null;
         }
+
+        const transcriptForSummary = loggedActivities
+          .filter((e) => e.__typename === 'Analysis')
+          .filter((e) => e.analysisType !== 'summary')
+          .find((e) => e.describes[0].id === data.describes[0].id);
+        // console.log('🏷️ ----- transcriptForSummary: ', transcriptForSummary);
+        if (!transcriptForSummary?.content) {
+          return;
+        }
+        console.count('🏷️ ----- : ANC');
+        // console.log(
+        //   '🏷️ ----- decodeContent(transcriptForSummary?.content) ?? []: ',
+        //   decodeContent(transcriptForSummary?.content) ?? [],
+        // );
+
+        return (
+          <ConversationTimelineItem
+            id={data.id}
+            content={decodeContent(data.content)}
+            transcript={decodeContent(transcriptForSummary?.content) ?? []}
+            type={data.analysisType}
+            createdAt={data?.createdAt}
+            mode='PHONE_CALL' // fixme - mode will be assessed from data inside the component (on message base)
+          />
+        );
+      }
+
+      case 'LiveConversation':
+        console.log('🏷️ ----- : LIVE', data);
+        return null;
+      // return (
+      //   <LiveConversationTimelineItem
+      //     first={index == 0}
+      //     contactId={id}
+      //     source={data.source}
+      //   />
+      // );
+      case 'PageView':
+        return (
+          <TimelineItem first={index == 0} createdAt={data?.startedAt}>
+            <WebActionTimelineItem {...data} contactName={contactName} />
+          </TimelineItem>
+        );
+      case 'InteractionSession':
+        return (
+          <TimelineItem first={index == 0} createdAt={data?.startedAt}>
+            <InteractionTimelineItem
+              {...data}
+              contactId={contactName && id}
+              organizationId={!contactName && id}
+            />
+          </TimelineItem>
+        );
+      case 'Ticket':
+        return (
+          <TimelineItem first={index == 0} createdAt={data?.createdAt}>
+            <TicketTimelineItem {...data} />
+          </TimelineItem>
+        );
+
+      case 'InteractionEvent':
+        if (data.channel === 'EMAIL') {
+          return (
+            <TimelineItem first={index == 0} createdAt={data?.createdAt}>
+              <EmailTimelineItem
+                {...data}
+                contactId={mode === 'CONTACT' && id}
+              />
+            </TimelineItem>
+          );
+        }
+        return null;
 
       default:
         return type ? (
