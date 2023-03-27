@@ -246,19 +246,19 @@ func (s *MailService) getMailAuthToken(identityId *string) (*oauth2.Token, error
 	log.Printf("Got providers of %T", providers[0])
 
 	if !ok {
-		log.Printf("unable to get provider list %s", identityId)
+		log.Printf("unable to get provider list %s", *identityId)
 		return nil, err
 	}
 
 	provider, ok := providers[0].(map[string]interface{})
 	if !ok {
-		log.Printf("unable to get provider list %s", identityId)
+		log.Printf("unable to get provider list %s", *identityId)
 		return nil, err
 	}
 	token, ok := provider["initial_access_token"].(string)
 
 	if !ok {
-		log.Printf("unable to get access token %s", identityId)
+		log.Printf("unable to get access token %s", *identityId)
 		return nil, err
 	}
 	tok := &oauth2.Token{AccessToken: token, TokenType: "Bearer"}
@@ -266,7 +266,7 @@ func (s *MailService) getMailAuthToken(identityId *string) (*oauth2.Token, error
 	refreshToken, ok := provider["initial_refresh_token"].(string)
 
 	if !ok {
-		log.Printf("unable to get refresh token`` %s", identityId)
+		log.Printf("unable to get refresh token`` %s", *identityId)
 	} else {
 		log.Printf("Setting refresh token to %s", refreshToken)
 		tok.RefreshToken = refreshToken
