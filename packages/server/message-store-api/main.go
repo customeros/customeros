@@ -54,7 +54,7 @@ func main() {
 	commonStoreService := service.NewCommonStoreService()
 	customerOSService := service.NewCustomerOSService(neo4jDriver, graphqlClient, repositories, commonStoreService, conf)
 
-	// Register the Content Item service with the server.
+	// Register the Message Item service with the server.
 	msProto.RegisterMessageStoreServiceServer(server, service.NewMessageService(neo4jDriver, repositories, customerOSService, commonStoreService))
 
 	// Open port for listening to traffic.
