@@ -50,7 +50,7 @@ interface DataStateI {
 export const ConversationTimelineItem: React.FC<Props> = ({
   createdAt,
   content,
-  transcript,
+  transcript = [],
   type,
   mode = 'PHONE_CALL',
   id,

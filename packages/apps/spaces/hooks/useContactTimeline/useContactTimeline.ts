@@ -24,7 +24,7 @@ export const useContactTimeline = ({ contactId }: Props): Result => {
       variables: {
         contactId,
         from: DATE_NOW,
-        size: 10,
+        size: 15,
       },
       fetchPolicy: 'cache-first',
       notifyOnNetworkStatusChange: true,
