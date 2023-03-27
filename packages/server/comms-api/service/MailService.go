@@ -236,7 +236,7 @@ func (s *MailService) getMailAuthToken(identityId *string) (*oauth2.Token, error
 	ctx = context.WithValue(ctx, oryClient.ContextAccessToken, s.config.GMail.OryApiKey)
 	identity, _, err := ory.IdentityApi.GetIdentity(ctx, *identityId).IncludeCredential([]string{"oidc"}).Execute()
 	if err != nil {
-		log.Printf("Unable to get gmail auth token for %s, (%s)", identityId, err.Error())
+		log.Printf("Unable to get gmail auth token for %s, (%s)", *identityId, err.Error())
 		return nil, err
 	}
 	credentials := identity.GetCredentials()["oidc"]
