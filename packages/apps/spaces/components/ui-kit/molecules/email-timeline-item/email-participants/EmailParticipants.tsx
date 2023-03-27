@@ -33,7 +33,7 @@ export const EmailParticipants: React.FC<Props> = ({
   const { loading, error, data } = useContactNameFromEmail({ email: from });
   const name = getContactDisplayName(data)?.split(' ');
   const [showMore, setShowMore] = useState(false);
-
+  console.log('🏷️ ----- from: ', from);
   return (
     <div className={styles.wrapper}>
       <section className={styles.emailDataContainer}>
@@ -63,12 +63,14 @@ export const EmailParticipants: React.FC<Props> = ({
               >
                 <div
                   className={classNames(styles.label, {
-                    [styles.labelWithSpacing]: to?.split(';').length > 1,
+                    [styles.labelWithSpacing]: to && to?.split(';').length > 1,
                   })}
                 >
                   To:
                 </div>
-                <div className={styles.data}>{to.split(';').join(',')}</div>
+                <div className={styles.data}>
+                  {to && to.split(';').join(',')}
+                </div>
               </div>
             </div>
           </div>

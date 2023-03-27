@@ -14,6 +14,9 @@ interface Props {
   sentTo: Array<any>;
   interactionSession: any;
   contactId?: string;
+  isToDeprecate?: boolean; //remove
+  deprecatedCC?: any; //remove
+  deprecatedBCC?: any; //remove
 }
 
 export const EmailTimelineItem: React.FC<Props> = ({
@@ -22,7 +25,10 @@ export const EmailTimelineItem: React.FC<Props> = ({
   sentBy,
   sentTo,
   interactionSession,
+  isToDeprecate = false,
   contactId,
+  deprecatedCC,
+  deprecatedBCC,
   ...rest
 }) => {
   const { data, loading, error } = useContactCommunicationChannelsDetails({
@@ -163,11 +169,11 @@ export const EmailTimelineItem: React.FC<Props> = ({
         <article className={`${styles.emailContainer}`}>
           <div>
             <EmailParticipants
-              from={from}
-              to={to}
-              subject={interactionSession.name}
-              cc={cc}
-              bcc={bcc}
+              from={isToDeprecate ? sentBy : from}
+              to={isToDeprecate ? sentTo?.[0] : to}
+              subject={interactionSession?.name}
+              cc={isToDeprecate ? deprecatedCC : cc}
+              bcc={isToDeprecate ? deprecatedBCC : bcc}
             />
           </div>
 
