@@ -33,7 +33,7 @@ CALL {
  RETURN count(e) as x
     UNION
 
-
+// TODO refactor interaction events
  MATCH (t1:Tenant)--(:Contact)-[rel]-(:Conversation)--(c2:Contact)--(t2:Tenant)
  WHERE t1.name <> t2.name
  return count(rel) as x

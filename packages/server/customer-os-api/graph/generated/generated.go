@@ -311,6 +311,11 @@ type ComplexityRoot struct {
 		UpdatedAt           func(childComplexity int) int
 	}
 
+	LinkedOrganization struct {
+		Organization func(childComplexity int) int
+		Type         func(childComplexity int) int
+	}
+
 	Location struct {
 		Address      func(childComplexity int) int
 		Address2     func(childComplexity int) int
@@ -455,6 +460,8 @@ type ComplexityRoot struct {
 		PhoneNumbers             func(childComplexity int) int
 		Source                   func(childComplexity int) int
 		SourceOfTruth            func(childComplexity int) int
+		Subsidiaries             func(childComplexity int) int
+		SubsidiaryOf             func(childComplexity int) int
 		Tags                     func(childComplexity int) int
 		TimelineEvents           func(childComplexity int, from *time.Time, size int, timelineEventTypes []model.TimelineEventType) int
 		TimelineEventsTotalCount func(childComplexity int, timelineEventTypes []model.TimelineEventType) int
@@ -763,6 +770,8 @@ type OrganizationResolver interface {
 	Tags(ctx context.Context, obj *model.Organization) ([]*model.Tag, error)
 	Emails(ctx context.Context, obj *model.Organization) ([]*model.Email, error)
 	PhoneNumbers(ctx context.Context, obj *model.Organization) ([]*model.PhoneNumber, error)
+	Subsidiaries(ctx context.Context, obj *model.Organization) ([]*model.LinkedOrganization, error)
+	SubsidiaryOf(ctx context.Context, obj *model.Organization) ([]*model.LinkedOrganization, error)
 	TimelineEvents(ctx context.Context, obj *model.Organization, from *time.Time, size int, timelineEventTypes []model.TimelineEventType) ([]model.TimelineEvent, error)
 	TimelineEventsTotalCount(ctx context.Context, obj *model.Organization, timelineEventTypes []model.TimelineEventType) (int64, error)
 	IssueSummaryByStatus(ctx context.Context, obj *model.Organization) ([]*model.IssueSummaryByStatus, error)
@@ -2123,6 +2132,20 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.JobRole.UpdatedAt(childComplexity), true
 
+	case "LinkedOrganization.organization":
+		if e.complexity.LinkedOrganization.Organization == nil {
+			break
+		}
+
+		return e.complexity.LinkedOrganization.Organization(childComplexity), true
+
+	case "LinkedOrganization.type":
+		if e.complexity.LinkedOrganization.Type == nil {
+			break
+		}
+
+		return e.complexity.LinkedOrganization.Type(childComplexity), true
+
 	case "Location.address":
 		if e.complexity.Location.Address == nil {
 			break
@@ -3429,6 +3452,20 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Organization.SourceOfTruth(childComplexity), true
+
+	case "Organization.subsidiaries":
+		if e.complexity.Organization.Subsidiaries == nil {
+			break
+		}
+
+		return e.complexity.Organization.Subsidiaries(childComplexity), true
+
+	case "Organization.subsidiaryOf":
+		if e.complexity.Organization.SubsidiaryOf == nil {
+			break
+		}
+
+		return e.complexity.Organization.SubsidiaryOf(childComplexity), true
 
 	case "Organization.tags":
 		if e.complexity.Organization.Tags == nil {
@@ -5624,6 +5661,11 @@ extend type Mutation {
     organization_Merge(primaryOrganizationId: ID!, mergedOrganizationIds: [ID!]!): Organization!
 }
 
+type LinkedOrganization {
+    organization: Organization!
+    type: String
+}
+
 type Organization implements Node {
     id: ID!
     createdAt:   Time!
@@ -5651,6 +5693,8 @@ type Organization implements Node {
     tags: [Tag!] @goField(forceResolver: true)
     emails: [Email!]! @goField(forceResolver: true)
     phoneNumbers: [PhoneNumber!]! @goField(forceResolver: true)
+    subsidiaries: [LinkedOrganization!]! @goField(forceResolver: true)
+    subsidiaryOf: [LinkedOrganization!]! @goField(forceResolver: true)
 
     timelineEvents(from: Time, size: Int!, timelineEventTypes: [TimelineEventType!]): [TimelineEvent!]! @goField(forceResolver: true)
     timelineEventsTotalCount(timelineEventTypes: [TimelineEventType!]): Int64! @goField(forceResolver: true)
@@ -12923,6 +12967,10 @@ func (ec *executionContext) fieldContext_DashboardViewItem_organization(ctx cont
 				return ec.fieldContext_Organization_emails(ctx, field)
 			case "phoneNumbers":
 				return ec.fieldContext_Organization_phoneNumbers(ctx, field)
+			case "subsidiaries":
+				return ec.fieldContext_Organization_subsidiaries(ctx, field)
+			case "subsidiaryOf":
+				return ec.fieldContext_Organization_subsidiaryOf(ctx, field)
 			case "timelineEvents":
 				return ec.fieldContext_Organization_timelineEvents(ctx, field)
 			case "timelineEventsTotalCount":
@@ -13791,6 +13839,10 @@ func (ec *executionContext) fieldContext_Email_organizations(ctx context.Context
 				return ec.fieldContext_Organization_emails(ctx, field)
 			case "phoneNumbers":
 				return ec.fieldContext_Organization_phoneNumbers(ctx, field)
+			case "subsidiaries":
+				return ec.fieldContext_Organization_subsidiaries(ctx, field)
+			case "subsidiaryOf":
+				return ec.fieldContext_Organization_subsidiaryOf(ctx, field)
 			case "timelineEvents":
 				return ec.fieldContext_Organization_timelineEvents(ctx, field)
 			case "timelineEventsTotalCount":
@@ -16957,6 +17009,10 @@ func (ec *executionContext) fieldContext_JobRole_organization(ctx context.Contex
 				return ec.fieldContext_Organization_emails(ctx, field)
 			case "phoneNumbers":
 				return ec.fieldContext_Organization_phoneNumbers(ctx, field)
+			case "subsidiaries":
+				return ec.fieldContext_Organization_subsidiaries(ctx, field)
+			case "subsidiaryOf":
+				return ec.fieldContext_Organization_subsidiaryOf(ctx, field)
 			case "timelineEvents":
 				return ec.fieldContext_Organization_timelineEvents(ctx, field)
 			case "timelineEventsTotalCount":
@@ -17318,6 +17374,145 @@ func (ec *executionContext) _JobRole_appSource(ctx context.Context, field graphq
 func (ec *executionContext) fieldContext_JobRole_appSource(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "JobRole",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _LinkedOrganization_organization(ctx context.Context, field graphql.CollectedField, obj *model.LinkedOrganization) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_LinkedOrganization_organization(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Organization, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.Organization)
+	fc.Result = res
+	return ec.marshalNOrganization2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOrganization(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_LinkedOrganization_organization(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "LinkedOrganization",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Organization_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Organization_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_Organization_updatedAt(ctx, field)
+			case "name":
+				return ec.fieldContext_Organization_name(ctx, field)
+			case "description":
+				return ec.fieldContext_Organization_description(ctx, field)
+			case "domain":
+				return ec.fieldContext_Organization_domain(ctx, field)
+			case "domains":
+				return ec.fieldContext_Organization_domains(ctx, field)
+			case "website":
+				return ec.fieldContext_Organization_website(ctx, field)
+			case "industry":
+				return ec.fieldContext_Organization_industry(ctx, field)
+			case "isPublic":
+				return ec.fieldContext_Organization_isPublic(ctx, field)
+			case "organizationType":
+				return ec.fieldContext_Organization_organizationType(ctx, field)
+			case "source":
+				return ec.fieldContext_Organization_source(ctx, field)
+			case "sourceOfTruth":
+				return ec.fieldContext_Organization_sourceOfTruth(ctx, field)
+			case "appSource":
+				return ec.fieldContext_Organization_appSource(ctx, field)
+			case "locations":
+				return ec.fieldContext_Organization_locations(ctx, field)
+			case "contacts":
+				return ec.fieldContext_Organization_contacts(ctx, field)
+			case "jobRoles":
+				return ec.fieldContext_Organization_jobRoles(ctx, field)
+			case "notes":
+				return ec.fieldContext_Organization_notes(ctx, field)
+			case "tags":
+				return ec.fieldContext_Organization_tags(ctx, field)
+			case "emails":
+				return ec.fieldContext_Organization_emails(ctx, field)
+			case "phoneNumbers":
+				return ec.fieldContext_Organization_phoneNumbers(ctx, field)
+			case "subsidiaries":
+				return ec.fieldContext_Organization_subsidiaries(ctx, field)
+			case "subsidiaryOf":
+				return ec.fieldContext_Organization_subsidiaryOf(ctx, field)
+			case "timelineEvents":
+				return ec.fieldContext_Organization_timelineEvents(ctx, field)
+			case "timelineEventsTotalCount":
+				return ec.fieldContext_Organization_timelineEventsTotalCount(ctx, field)
+			case "issueSummaryByStatus":
+				return ec.fieldContext_Organization_issueSummaryByStatus(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Organization", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _LinkedOrganization_type(ctx context.Context, field graphql.CollectedField, obj *model.LinkedOrganization) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_LinkedOrganization_type(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Type, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_LinkedOrganization_type(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "LinkedOrganization",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -22439,6 +22634,10 @@ func (ec *executionContext) fieldContext_Mutation_organization_Create(ctx contex
 				return ec.fieldContext_Organization_emails(ctx, field)
 			case "phoneNumbers":
 				return ec.fieldContext_Organization_phoneNumbers(ctx, field)
+			case "subsidiaries":
+				return ec.fieldContext_Organization_subsidiaries(ctx, field)
+			case "subsidiaryOf":
+				return ec.fieldContext_Organization_subsidiaryOf(ctx, field)
 			case "timelineEvents":
 				return ec.fieldContext_Organization_timelineEvents(ctx, field)
 			case "timelineEventsTotalCount":
@@ -22544,6 +22743,10 @@ func (ec *executionContext) fieldContext_Mutation_organization_Update(ctx contex
 				return ec.fieldContext_Organization_emails(ctx, field)
 			case "phoneNumbers":
 				return ec.fieldContext_Organization_phoneNumbers(ctx, field)
+			case "subsidiaries":
+				return ec.fieldContext_Organization_subsidiaries(ctx, field)
+			case "subsidiaryOf":
+				return ec.fieldContext_Organization_subsidiaryOf(ctx, field)
 			case "timelineEvents":
 				return ec.fieldContext_Organization_timelineEvents(ctx, field)
 			case "timelineEventsTotalCount":
@@ -22705,6 +22908,10 @@ func (ec *executionContext) fieldContext_Mutation_organization_Merge(ctx context
 				return ec.fieldContext_Organization_emails(ctx, field)
 			case "phoneNumbers":
 				return ec.fieldContext_Organization_phoneNumbers(ctx, field)
+			case "subsidiaries":
+				return ec.fieldContext_Organization_subsidiaries(ctx, field)
+			case "subsidiaryOf":
+				return ec.fieldContext_Organization_subsidiaryOf(ctx, field)
 			case "timelineEvents":
 				return ec.fieldContext_Organization_timelineEvents(ctx, field)
 			case "timelineEventsTotalCount":
@@ -25767,6 +25974,106 @@ func (ec *executionContext) fieldContext_Organization_phoneNumbers(ctx context.C
 	return fc, nil
 }
 
+func (ec *executionContext) _Organization_subsidiaries(ctx context.Context, field graphql.CollectedField, obj *model.Organization) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Organization_subsidiaries(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Organization().Subsidiaries(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.LinkedOrganization)
+	fc.Result = res
+	return ec.marshalNLinkedOrganization2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐLinkedOrganizationᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Organization_subsidiaries(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Organization",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "organization":
+				return ec.fieldContext_LinkedOrganization_organization(ctx, field)
+			case "type":
+				return ec.fieldContext_LinkedOrganization_type(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type LinkedOrganization", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Organization_subsidiaryOf(ctx context.Context, field graphql.CollectedField, obj *model.Organization) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Organization_subsidiaryOf(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Organization().SubsidiaryOf(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.LinkedOrganization)
+	fc.Result = res
+	return ec.marshalNLinkedOrganization2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐLinkedOrganizationᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Organization_subsidiaryOf(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Organization",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "organization":
+				return ec.fieldContext_LinkedOrganization_organization(ctx, field)
+			case "type":
+				return ec.fieldContext_LinkedOrganization_type(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type LinkedOrganization", field.Name)
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Organization_timelineEvents(ctx context.Context, field graphql.CollectedField, obj *model.Organization) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Organization_timelineEvents(ctx, field)
 	if err != nil {
@@ -26008,6 +26315,10 @@ func (ec *executionContext) fieldContext_OrganizationPage_content(ctx context.Co
 				return ec.fieldContext_Organization_emails(ctx, field)
 			case "phoneNumbers":
 				return ec.fieldContext_Organization_phoneNumbers(ctx, field)
+			case "subsidiaries":
+				return ec.fieldContext_Organization_subsidiaries(ctx, field)
+			case "subsidiaryOf":
+				return ec.fieldContext_Organization_subsidiaryOf(ctx, field)
 			case "timelineEvents":
 				return ec.fieldContext_Organization_timelineEvents(ctx, field)
 			case "timelineEventsTotalCount":
@@ -27351,6 +27662,10 @@ func (ec *executionContext) fieldContext_PhoneNumber_organizations(ctx context.C
 				return ec.fieldContext_Organization_emails(ctx, field)
 			case "phoneNumbers":
 				return ec.fieldContext_Organization_phoneNumbers(ctx, field)
+			case "subsidiaries":
+				return ec.fieldContext_Organization_subsidiaries(ctx, field)
+			case "subsidiaryOf":
+				return ec.fieldContext_Organization_subsidiaryOf(ctx, field)
 			case "timelineEvents":
 				return ec.fieldContext_Organization_timelineEvents(ctx, field)
 			case "timelineEventsTotalCount":
@@ -29236,6 +29551,10 @@ func (ec *executionContext) fieldContext_Query_organization(ctx context.Context,
 				return ec.fieldContext_Organization_emails(ctx, field)
 			case "phoneNumbers":
 				return ec.fieldContext_Organization_phoneNumbers(ctx, field)
+			case "subsidiaries":
+				return ec.fieldContext_Organization_subsidiaries(ctx, field)
+			case "subsidiaryOf":
+				return ec.fieldContext_Organization_subsidiaryOf(ctx, field)
 			case "timelineEvents":
 				return ec.fieldContext_Organization_timelineEvents(ctx, field)
 			case "timelineEventsTotalCount":
@@ -37873,6 +38192,38 @@ func (ec *executionContext) _JobRole(ctx context.Context, sel ast.SelectionSet, 
 	return out
 }
 
+var linkedOrganizationImplementors = []string{"LinkedOrganization"}
+
+func (ec *executionContext) _LinkedOrganization(ctx context.Context, sel ast.SelectionSet, obj *model.LinkedOrganization) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, linkedOrganizationImplementors)
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("LinkedOrganization")
+		case "organization":
+
+			out.Values[i] = ec._LinkedOrganization_organization(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "type":
+
+			out.Values[i] = ec._LinkedOrganization_type(ctx, field, obj)
+
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
 var locationImplementors = []string{"Location"}
 
 func (ec *executionContext) _Location(ctx context.Context, sel ast.SelectionSet, obj *model.Location) graphql.Marshaler {
@@ -39100,6 +39451,46 @@ func (ec *executionContext) _Organization(ctx context.Context, sel ast.Selection
 					}
 				}()
 				res = ec._Organization_phoneNumbers(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
+		case "subsidiaries":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Organization_subsidiaries(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
+		case "subsidiaryOf":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Organization_subsidiaryOf(ctx, field, obj)
 				if res == graphql.Null {
 					atomic.AddUint32(&invalids, 1)
 				}
@@ -42177,6 +42568,60 @@ func (ec *executionContext) unmarshalNJobRoleInput2githubᚗcomᚋopenlineᚑai�
 func (ec *executionContext) unmarshalNJobRoleUpdateInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐJobRoleUpdateInput(ctx context.Context, v interface{}) (model.JobRoleUpdateInput, error) {
 	res, err := ec.unmarshalInputJobRoleUpdateInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNLinkedOrganization2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐLinkedOrganizationᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.LinkedOrganization) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNLinkedOrganization2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐLinkedOrganization(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNLinkedOrganization2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐLinkedOrganization(ctx context.Context, sel ast.SelectionSet, v *model.LinkedOrganization) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._LinkedOrganization(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalNLocation2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐLocationᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Location) graphql.Marshaler {

@@ -10,6 +10,11 @@ extend type Mutation {
     organization_Merge(primaryOrganizationId: ID!, mergedOrganizationIds: [ID!]!): Organization!
 }
 
+type LinkedOrganization {
+    organization: Organization!
+    type: String
+}
+
 type Organization implements Node {
     id: ID!
     createdAt:   Time!
@@ -37,6 +42,8 @@ type Organization implements Node {
     tags: [Tag!] @goField(forceResolver: true)
     emails: [Email!]! @goField(forceResolver: true)
     phoneNumbers: [PhoneNumber!]! @goField(forceResolver: true)
+    subsidiaries: [LinkedOrganization!]! @goField(forceResolver: true)
+    subsidiaryOf: [LinkedOrganization!]! @goField(forceResolver: true)
 
     timelineEvents(from: Time, size: Int!, timelineEventTypes: [TimelineEventType!]): [TimelineEvent!]! @goField(forceResolver: true)
     timelineEventsTotalCount(timelineEventTypes: [TimelineEventType!]): Int64! @goField(forceResolver: true)

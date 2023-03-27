@@ -6,6 +6,7 @@ package resolver
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/99designs/gqlgen/graphql"
@@ -225,6 +226,16 @@ func (r *organizationResolver) PhoneNumbers(ctx context.Context, obj *model.Orga
 		return nil, err
 	}
 	return mapper.MapEntitiesToPhoneNumbers(phoneNumberEntities), nil
+}
+
+// Subsidiaries is the resolver for the subsidiaries field.
+func (r *organizationResolver) Subsidiaries(ctx context.Context, obj *model.Organization) ([]*model.LinkedOrganization, error) {
+	panic(fmt.Errorf("not implemented: Subsidiaries - subsidiaries"))
+}
+
+// SubsidiaryOf is the resolver for the subsidiaryOf field.
+func (r *organizationResolver) SubsidiaryOf(ctx context.Context, obj *model.Organization) ([]*model.LinkedOrganization, error) {
+	panic(fmt.Errorf("not implemented: SubsidiaryOf - subsidiaryOf"))
 }
 
 // TimelineEvents is the resolver for the timelineEvents field.
