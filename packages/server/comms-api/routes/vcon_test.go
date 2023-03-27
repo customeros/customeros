@@ -18,7 +18,6 @@ import (
 	"time"
 )
 
-var vconRouter *gin.Engine
 var myVconConfig = &config.Config{
 	Service: struct {
 		CustomerOsAPI    string `env:"CUSTOMER_OS_API,required"`
@@ -36,7 +35,6 @@ var myVconConfig = &config.Config{
 }
 
 func init() {
-	vconRouter = gin.Default()
 }
 
 const LIVE_TRANSCRIPTION = `{"vcon":"","uuid":"e061697f-673d-4756-a5f7-4f114e66a191","subject":"","parties":[{"mailto":"torrey@openline.ai"},{"tel":"+32485112970"}],"dialog":[{"type":"text","start":"2023-03-27T07:11:45.872099866Z","duration":0,"parties":[0,1],"mimetype":"text/plain","body":"Alors?","encoding":"None"}]}`
@@ -45,6 +43,8 @@ const POST_TRANSCRIBE = `{"vcon":"","uuid":"6a50a92a-7322-4988-a85c-437e1d25ea45
 const POST_TRANSCRIBE_AS_FIRST_EVENT = `{"vcon":"","uuid":"6a50a92a-7322-4988-a85c-437e1d25ea45","subject":"","parties":[{"mailto":"torrey@openline.ai"},{"tel":"+32485112970"}],"analysis":[{"type":"transcript","dialog":null,"mimetype":"application/x-openline-transcript","body":"[{\"party\":{\"tel\":\"+32485112970\"},\"text\":\"Hello? Give me some real time\"},{\"party\":{\"mailto\":\"torrey@openline.ai\"},\"text\":\"Hello?\"},{\"party\":{\"mailto\":\"torrey@openline.ai\"},\"text\":\"Give me some real-\"},{\"party\":{\"tel\":\"+32485112970\"},\"text\":\"Excellent\"},{\"party\":{\"mailto\":\"torrey@openline.ai\"},\"text\":\"Excellent\"},{\"party\":{\"mailto\":\"torrey@openline.ai\"},\"text\":\"Now I'll hang up\"},{\"party\":{\"tel\":\"+32485112970\"},\"text\":\"Now I'll hang up\"},{\"party\":{\"mailto\":\"torrey@openline.ai\"},\"text\":\"Bye\"}]","encoding":""}]}`
 
 func Test_invalidApiKey(t *testing.T) {
+	vconRouter := gin.Default()
+
 	_, client, resolver := utils.NewWebServer(t)
 	customerOs := service.NewCustomerOSService(client, myVconConfig)
 	route := vconRouter.Group("/")
@@ -107,6 +107,8 @@ func Test_invalidApiKey(t *testing.T) {
 }
 
 func Test_vConDialogEvent(t *testing.T) {
+	vconRouter := gin.Default()
+
 	_, client, resolver := utils.NewWebServer(t)
 	customerOs := service.NewCustomerOSService(client, myVconConfig)
 	route := vconRouter.Group("/")
@@ -215,6 +217,8 @@ func Test_vConDialogEvent(t *testing.T) {
 }
 
 func Test_vConDialogEventInExistingSession(t *testing.T) {
+	vconRouter := gin.Default()
+
 	_, client, resolver := utils.NewWebServer(t)
 	customerOs := service.NewCustomerOSService(client, myVconConfig)
 	route := vconRouter.Group("/")
@@ -313,6 +317,8 @@ func Test_vConDialogEventInExistingSession(t *testing.T) {
 }
 
 func Test_vConAnalysisEventInExistingSession(t *testing.T) {
+	vconRouter := gin.Default()
+
 	_, client, resolver := utils.NewWebServer(t)
 	customerOs := service.NewCustomerOSService(client, myVconConfig)
 	route := vconRouter.Group("/")
@@ -383,6 +389,8 @@ func Test_vConAnalysisEventInExistingSession(t *testing.T) {
 }
 
 func Test_vConAnalysisAsFirstEvent(t *testing.T) {
+	vconRouter := gin.Default()
+
 	_, client, resolver := utils.NewWebServer(t)
 	customerOs := service.NewCustomerOSService(client, myVconConfig)
 	route := vconRouter.Group("/")
