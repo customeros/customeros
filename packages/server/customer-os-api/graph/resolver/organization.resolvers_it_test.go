@@ -783,3 +783,68 @@ func TestQueryResolver_Organization_WithPhoneNumbers(t *testing.T) {
 	require.Equal(t, "+2222", *phoneNumber2.E164)
 	require.Equal(t, model.PhoneNumberLabelWork, *phoneNumber2.Label)
 }
+
+func TestQueryResolver_Organization_WithSubsidiaries(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx)(t)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+
+	parentOrganizationId := neo4jt.CreateOrganization(ctx, driver, tenantName, "parent org")
+	subsidiaryOrganizationId1 := neo4jt.CreateOrganization(ctx, driver, tenantName, "sub org 1")
+	subsidiaryOrganizationId2 := neo4jt.CreateOrganization(ctx, driver, tenantName, "sub org 2")
+	neo4jt.LinkOrganizationAsSubsidiary(ctx, driver, parentOrganizationId, subsidiaryOrganizationId1, "shop")
+	neo4jt.LinkOrganizationAsSubsidiary(ctx, driver, parentOrganizationId, subsidiaryOrganizationId2, "station")
+
+	require.Equal(t, 3, neo4jt.GetCountOfNodes(ctx, driver, "Organization"))
+	require.Equal(t, 2, neo4jt.GetCountOfRelationships(ctx, driver, "SUBSIDIARY_OF"))
+
+	rawResponse, err := c.RawPost(getQuery("organization/get_organization_with_subsidiaries"),
+		client.Var("organizationId", parentOrganizationId))
+	assertRawResponseSuccess(t, rawResponse, err)
+
+	var organizationStruct struct {
+		Organization model.Organization
+	}
+
+	err = decode.Decode(rawResponse.Data.(map[string]any), &organizationStruct)
+	require.Nil(t, err)
+	parentOrganization := organizationStruct.Organization
+
+	require.Equal(t, parentOrganizationId, parentOrganization.ID)
+	subsidiaries := parentOrganization.Subsidiaries
+	require.Equal(t, 2, len(subsidiaries))
+	require.Equal(t, subsidiaryOrganizationId1, subsidiaries[0].Organization.ID)
+	require.Equal(t, "shop", *subsidiaries[0].Type)
+	require.Equal(t, subsidiaryOrganizationId2, subsidiaries[1].Organization.ID)
+	require.Equal(t, "station", *subsidiaries[1].Type)
+}
+
+func TestQueryResolver_Organization_WithParentForSubsidiary(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx)(t)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+
+	parentOrganizationId := neo4jt.CreateOrganization(ctx, driver, tenantName, "parent org")
+	subsidiaryOrganizationId1 := neo4jt.CreateOrganization(ctx, driver, tenantName, "sub org")
+	neo4jt.LinkOrganizationAsSubsidiary(ctx, driver, parentOrganizationId, subsidiaryOrganizationId1, "shop")
+
+	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "Organization"))
+	require.Equal(t, 1, neo4jt.GetCountOfRelationships(ctx, driver, "SUBSIDIARY_OF"))
+
+	rawResponse, err := c.RawPost(getQuery("organization/get_organization_with_parent_for_subsidiary"),
+		client.Var("organizationId", subsidiaryOrganizationId1))
+	assertRawResponseSuccess(t, rawResponse, err)
+
+	var organizationStruct struct {
+		Organization model.Organization
+	}
+
+	err = decode.Decode(rawResponse.Data.(map[string]any), &organizationStruct)
+	require.Nil(t, err)
+	organization := organizationStruct.Organization
+
+	require.Equal(t, subsidiaryOrganizationId1, organization.ID)
+	require.Equal(t, 1, len(organization.SubsidiaryOf))
+	require.Equal(t, parentOrganizationId, organization.SubsidiaryOf[0].Organization.ID)
+	require.Equal(t, "shop", *organization.SubsidiaryOf[0].Type)
+}

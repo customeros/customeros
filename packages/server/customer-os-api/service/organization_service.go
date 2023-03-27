@@ -24,6 +24,8 @@ type OrganizationService interface {
 	Merge(ctx context.Context, primaryOrganizationId, mergedOrganizationId string) error
 	GetOrganizationsForEmails(ctx context.Context, emailIds []string) (*entity.OrganizationEntities, error)
 	GetOrganizationsForPhoneNumbers(ctx context.Context, phoneNumberIds []string) (*entity.OrganizationEntities, error)
+	GetSubsidiaries(ctx context.Context, parentOrganizationId string) (*entity.OrganizationEntities, error)
+	GetSubsidiaryOf(ctx context.Context, organizationId string) (*entity.OrganizationEntities, error)
 
 	mapDbNodeToOrganizationEntity(node dbtype.Node) *entity.OrganizationEntity
 }
@@ -323,6 +325,34 @@ func (s *organizationService) GetOrganizationsForPhoneNumbers(ctx context.Contex
 	return &organizationEntities, nil
 }
 
+func (s *organizationService) GetSubsidiaries(ctx context.Context, parentOrganizationId string) (*entity.OrganizationEntities, error) {
+	dbEntries, err := s.repositories.OrganizationRepository.GetLinkedSubOrganizations(ctx, common.GetTenantFromContext(ctx), parentOrganizationId, repository.Relationship_Subsidiary)
+	if err != nil {
+		return nil, err
+	}
+	organizationEntities := entity.OrganizationEntities{}
+	for _, v := range dbEntries {
+		organizationEntity := s.mapDbNodeToOrganizationEntity(*v.Node)
+		s.addOrganizationRelationshipToOrganizationEntity(*v.Relationship, organizationEntity)
+		organizationEntities = append(organizationEntities, *organizationEntity)
+	}
+	return &organizationEntities, nil
+}
+
+func (s *organizationService) GetSubsidiaryOf(ctx context.Context, organizationId string) (*entity.OrganizationEntities, error) {
+	dbEntries, err := s.repositories.OrganizationRepository.GetLinkedParentOrganizations(ctx, common.GetTenantFromContext(ctx), organizationId, repository.Relationship_Subsidiary)
+	if err != nil {
+		return nil, err
+	}
+	organizationEntities := entity.OrganizationEntities{}
+	for _, v := range dbEntries {
+		organizationEntity := s.mapDbNodeToOrganizationEntity(*v.Node)
+		s.addOrganizationRelationshipToOrganizationEntity(*v.Relationship, organizationEntity)
+		organizationEntities = append(organizationEntities, *organizationEntity)
+	}
+	return &organizationEntities, nil
+}
+
 func (s *organizationService) mapDbNodeToOrganizationEntity(node dbtype.Node) *entity.OrganizationEntity {
 	organizationEntityPtr := new(entity.OrganizationEntity)
 	props := utils.GetPropsFromNode(node)
@@ -338,4 +368,9 @@ func (s *organizationService) mapDbNodeToOrganizationEntity(node dbtype.Node) *e
 	organizationEntityPtr.SourceOfTruth = entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth"))
 	organizationEntityPtr.AppSource = utils.GetStringPropOrEmpty(props, "appSource")
 	return organizationEntityPtr
+}
+
+func (s *organizationService) addOrganizationRelationshipToOrganizationEntity(relationship dbtype.Relationship, organizationEntity *entity.OrganizationEntity) {
+	props := utils.GetPropsFromRelationship(relationship)
+	organizationEntity.LinkedOrganizationType = utils.GetStringPropOrNil(props, "type")
 }
