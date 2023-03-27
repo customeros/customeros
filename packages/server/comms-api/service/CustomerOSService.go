@@ -75,6 +75,7 @@ func (s *CustomerOSService) CreateInteractionEvent(options ...EventOption) (*mod
 				$contentType: String) {
   					interactionEvent_Create(
     					event: {interactionSession: $sessionId, 
+								eventIdentifier: $eventIdentifier,
 								channel: $channel, 
 								sentBy: $sentBy, 
 								sentTo: $sentTo, 
