@@ -134,6 +134,13 @@ func (s *organizationSyncService) SyncOrganizations(ctx context.Context, dataSer
 				}
 			}
 
+			if v.IsSubsidiary() && !failedSync {
+				if err = s.repositories.OrganizationRepository.LinkToParentOrganizationAsSubsidiary(ctx, tenant, organizationId, v.ExternalSystem, v.ParentOrganization); err != nil {
+					failedSync = true
+					logrus.Errorf("failed link current organization as subsidiary %v to parent organization by external id %v, tenant %v :%v", v.Id, v.ParentOrganization.ExternalId, tenant, err)
+				}
+			}
+
 			logrus.Debugf("successfully merged organization with id %v for tenant %v from %v", organizationId, tenant, dataService.SourceId())
 			if err := dataService.MarkOrganizationProcessed(v.ExternalId, runId, failedSync == false); err != nil {
 				failed++

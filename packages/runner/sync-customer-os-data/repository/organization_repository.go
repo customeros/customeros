@@ -18,6 +18,7 @@ type OrganizationRepository interface {
 	MergeOrganizationDomain(ctx context.Context, tenant, organizationId, domain, externalSystem string) error
 	MergePhoneNumber(ctx context.Context, tenant, organizationId, phoneNumber, externalSystem string, createdAt time.Time) error
 	MergeEmail(ctx context.Context, tenant, organizationId, email, externalSystem string, createdAt time.Time) error
+	LinkToParentOrganizationAsSubsidiary(ctx context.Context, tenant, organizationId, externalSystem string, parentOrganizationDtls *entity.ParentOrganization) error
 }
 
 type organizationRepository struct {
@@ -333,6 +334,29 @@ func (r *organizationRepository) MergeEmail(ctx context.Context, tenant, organiz
 				"sourceOfTruth":  externalSystem,
 				"appSource":      externalSystem,
 				"now":            time.Now().UTC(),
+			})
+		return nil, err
+	})
+	return err
+}
+
+func (r *organizationRepository) LinkToParentOrganizationAsSubsidiary(ctx context.Context, tenant, organizationId, externalSystem string, parentOrganizationDtls *entity.ParentOrganization) error {
+	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
+	defer session.Close(ctx)
+
+	query := `MATCH (t:Tenant {name:$tenant})<-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]-(e:ExternalSystem {id:$externalSystem})<-[:IS_LINKED_WITH {externalId:$parentExternalId}]-(parent:Organization),
+				(t)<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {id:$organizationId})
+				MERGE (org)-[rel:SUBSIDIARY_OF]->(parent)
+				ON CREATE SET rel.type=$type`
+
+	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		_, err := tx.Run(ctx, query,
+			map[string]interface{}{
+				"tenant":           tenant,
+				"externalSystem":   externalSystem,
+				"parentExternalId": parentOrganizationDtls.ExternalId,
+				"organizationId":   organizationId,
+				"type":             parentOrganizationDtls.Type,
 			})
 		return nil, err
 	})

@@ -2,9 +2,21 @@ package entity
 
 import "time"
 
+type OrganizationRelation string
+
+const (
+	Subsidiary OrganizationRelation = "subsidiary"
+)
+
 type OrganizationNote struct {
 	FieldSource string
 	Note        string
+}
+
+type ParentOrganization struct {
+	ExternalId           string
+	OrganizationRelation OrganizationRelation
+	Type                 string
 }
 
 type OrganizationData struct {
@@ -23,6 +35,7 @@ type OrganizationData struct {
 	ExternalId     string
 	ExternalSystem string
 	ExternalUrl    string
+	ExternalSyncId string
 
 	DefaultLocationName string
 	Country             string
@@ -34,7 +47,7 @@ type OrganizationData struct {
 
 	OrganizationTypeName string
 
-	ExternalSyncId string
+	ParentOrganization *ParentOrganization
 }
 
 func (o OrganizationData) HasDomains() bool {
@@ -57,8 +70,10 @@ func (o OrganizationData) HasPhoneNumber() bool {
 	return len(o.PhoneNumber) > 0
 }
 
-// FIXME alexb implement emails
-// FIXME alexb implement notes for org like in contacts
 func (o OrganizationData) HasEmail() bool {
 	return len(o.Email) > 0
+}
+
+func (o OrganizationData) IsSubsidiary() bool {
+	return o.ParentOrganization != nil && o.ParentOrganization.OrganizationRelation == Subsidiary
 }

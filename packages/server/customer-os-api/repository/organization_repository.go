@@ -474,6 +474,30 @@ func (r *organizationRepository) MergeOrganizationRelationsInTx(ctx context.Cont
 
 	if _, err := tx.Run(ctx, matchQuery+
 		" WITH primary, merged "+
+		" MATCH (merged)-[rel:SUBSIDIARY_OF]->(org:Organization) "+
+		" WHERE org.id <> primary.id "+
+		" MERGE (primary)-[newRel:SUBSIDIARY_OF]->(org) "+
+		" ON CREATE SET newRel.type = rel.type, "+
+		"				newRel.mergedFrom = $mergedOrganizationId, "+
+		"				newRel.createdAt = $now "+
+		"			SET	rel.merged=true", params); err != nil {
+		return err
+	}
+
+	if _, err := tx.Run(ctx, matchQuery+
+		" WITH primary, merged "+
+		" MATCH (merged)<-[rel:SUBSIDIARY_OF]-(org:Organization) "+
+		" WHERE org.id <> primary.id "+
+		" MERGE (primary)<-[newRel:SUBSIDIARY_OF]-(org) "+
+		" ON CREATE SET newRel.type = rel.type, "+
+		"				newRel.mergedFrom = $mergedOrganizationId, "+
+		"				newRel.createdAt = $now "+
+		"			SET	rel.merged=true", params); err != nil {
+		return err
+	}
+
+	if _, err := tx.Run(ctx, matchQuery+
+		" WITH primary, merged "+
 		" MERGE (merged)-[:IS_MERGED_INTO]->(primary)", params); err != nil {
 		return err
 	}
