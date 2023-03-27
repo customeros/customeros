@@ -116,11 +116,15 @@ export const Timeline = ({
           .filter((e) => e.analysisType !== 'summary')
           .find((e) => e.describes[0].id === data.describes[0].id);
 
+        if (!transcriptForSummary?.content) {
+          return;
+        }
+
         return (
           <ConversationTimelineItem
             id={data.id}
             content={decodeContent(data.content)}
-            transcript={decodeContent(transcriptForSummary.content)}
+            transcript={decodeContent(transcriptForSummary?.content) ?? []}
             type={data.analysisType}
             createdAt={data?.createdAt}
             mode='PHONE_CALL' // fixme - mode will be assessed from data inside the component (on message base)
