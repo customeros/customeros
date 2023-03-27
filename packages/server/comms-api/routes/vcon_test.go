@@ -44,6 +44,68 @@ const LIVE_TRANSCRIPTON_APPENDED = `{"vcon":"","uuid":"54235d4f-f566-4d41-86a3-9
 const POST_TRANSCRIBE = `{"vcon":"","uuid":"6a50a92a-7322-4988-a85c-437e1d25ea45","subject":"","appended":{"uuid":"e061697f-673d-4756-a5f7-4f114e66a191"},"parties":[{"mailto":"torrey@openline.ai"},{"tel":"+32485112970"}],"analysis":[{"type":"transcript","dialog":null,"mimetype":"application/x-openline-transcript","body":"[{\"party\":{\"tel\":\"+32485112970\"},\"text\":\"Hello? Give me some real time\"},{\"party\":{\"mailto\":\"torrey@openline.ai\"},\"text\":\"Hello?\"},{\"party\":{\"mailto\":\"torrey@openline.ai\"},\"text\":\"Give me some real-\"},{\"party\":{\"tel\":\"+32485112970\"},\"text\":\"Excellent\"},{\"party\":{\"mailto\":\"torrey@openline.ai\"},\"text\":\"Excellent\"},{\"party\":{\"mailto\":\"torrey@openline.ai\"},\"text\":\"Now I'll hang up\"},{\"party\":{\"tel\":\"+32485112970\"},\"text\":\"Now I'll hang up\"},{\"party\":{\"mailto\":\"torrey@openline.ai\"},\"text\":\"Bye\"}]","encoding":""}]}`
 const POST_TRANSCRIBE_AS_FIRST_EVENT = `{"vcon":"","uuid":"6a50a92a-7322-4988-a85c-437e1d25ea45","subject":"","parties":[{"mailto":"torrey@openline.ai"},{"tel":"+32485112970"}],"analysis":[{"type":"transcript","dialog":null,"mimetype":"application/x-openline-transcript","body":"[{\"party\":{\"tel\":\"+32485112970\"},\"text\":\"Hello? Give me some real time\"},{\"party\":{\"mailto\":\"torrey@openline.ai\"},\"text\":\"Hello?\"},{\"party\":{\"mailto\":\"torrey@openline.ai\"},\"text\":\"Give me some real-\"},{\"party\":{\"tel\":\"+32485112970\"},\"text\":\"Excellent\"},{\"party\":{\"mailto\":\"torrey@openline.ai\"},\"text\":\"Excellent\"},{\"party\":{\"mailto\":\"torrey@openline.ai\"},\"text\":\"Now I'll hang up\"},{\"party\":{\"tel\":\"+32485112970\"},\"text\":\"Now I'll hang up\"},{\"party\":{\"mailto\":\"torrey@openline.ai\"},\"text\":\"Bye\"}]","encoding":""}]}`
 
+func Test_invalidApiKey(t *testing.T) {
+	_, client, resolver := utils.NewWebServer(t)
+	customerOs := service.NewCustomerOSService(client, myVconConfig)
+	route := vconRouter.Group("/")
+
+	AddVconRoutes(myVconConfig, route, customerOs)
+
+	resolver.InteractionEventCreate = func(ctx context.Context, event model.InteractionEventInput) (*model.InteractionEvent, error) {
+		log.Printf("InteractionEventCreate: Got Event %v", event)
+		require.Fail(t, "Should not have reached InteractionEventCreate")
+		return nil, nil
+	}
+
+	resolver.InteractionSessionBySessionIdentifier = func(ctx context.Context, sessionIdentifier string) (*model.InteractionSession, error) {
+		log.Printf("InteractionSessionBySessionIdentifier: Got Session Identifier %s", sessionIdentifier)
+		assert.Fail(t, "Should not have reached InteractionSessionBySessionIdentifier")
+		return nil, nil
+	}
+
+	resolver.InteractionSessionCreate = func(ctx context.Context, session model.InteractionSessionInput) (*model.InteractionSession, error) {
+		log.Printf("InteractionSessionCreate: Got Session %v", session)
+
+		assert.Fail(t, "Should not have reached InteractionSessionCreate")
+
+		return nil, nil
+	}
+
+	resolver.SentBy = func(ctx context.Context, obj *model.InteractionEvent) ([]model.InteractionEventParticipant, error) {
+		log.Printf("SentBy: Got Event %v", obj)
+		assert.Fail(t, "Should not have reached SentBy")
+		return []model.InteractionEventParticipant{}, nil
+	}
+
+	resolver.SentTo = func(ctx context.Context, obj *model.InteractionEvent) ([]model.InteractionEventParticipant, error) {
+		log.Printf("SentTo: Got Event %v", obj)
+		assert.Fail(t, "Should not have reached SentTo")
+		return []model.InteractionEventParticipant{}, nil
+	}
+
+	resolver.RepliesTo = func(ctx context.Context, obj *model.InteractionEvent) (*model.InteractionEvent, error) {
+		log.Printf("RepliesTo: Got Event %v", obj)
+		assert.Fail(t, "Should not have reached RepliesTo")
+		return &model.InteractionEvent{}, nil
+	}
+
+	resolver.AttendedBy = func(ctx context.Context, obj *model.InteractionSession) ([]model.InteractionSessionParticipant, error) {
+		log.Printf("AttendedBy: Got Session %v", obj)
+		assert.Fail(t, "Should not have reached AttendedBy")
+		return []model.InteractionSessionParticipant{}, nil
+	}
+
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("POST", "/vcon", strings.NewReader(LIVE_TRANSCRIPTION))
+	req.Header.Add("X-Openline-VCon-Api-Key", "invalid")
+	vconRouter.ServeHTTP(w, req)
+	log.Printf("Got Body %s", w.Body)
+	if !assert.Equal(t, w.Code, 403) {
+		return
+	}
+
+}
+
 func Test_vConDialogEvent(t *testing.T) {
 	_, client, resolver := utils.NewWebServer(t)
 	customerOs := service.NewCustomerOSService(client, myVconConfig)
@@ -56,7 +118,28 @@ func Test_vConDialogEvent(t *testing.T) {
 
 	resolver.InteractionEventCreate = func(ctx context.Context, event model.InteractionEventInput) (*model.InteractionEvent, error) {
 		log.Printf("InteractionEventCreate: Got Event %v", event)
-		return &model.InteractionEvent{}, nil
+		assert.Equal(t, "Alors?", *event.Content)
+		assert.Equal(t, "text/plain", *event.ContentType)
+		assert.Equal(t, "VOICE", *event.Channel)
+		assert.Equal(t, "torrey@openline.ai", *event.SentBy[0].Email)
+		assert.Equal(t, "+32485112970", *event.SentTo[0].PhoneNumber)
+
+		return &model.InteractionEvent{
+			ID:                 "my-event-id",
+			CreatedAt:          time.Now().UTC(),
+			EventIdentifier:    event.EventIdentifier,
+			Content:            event.Content,
+			ContentType:        event.ContentType,
+			Channel:            event.Channel,
+			ChannelData:        event.ChannelData,
+			InteractionSession: nil,
+			SentBy:             nil,
+			SentTo:             nil,
+			RepliesTo:          nil,
+			Source:             "TEST",
+			SourceOfTruth:      "TEST",
+			AppSource:          event.AppSource,
+		}, nil
 	}
 
 	resolver.InteractionSessionBySessionIdentifier = func(ctx context.Context, sessionIdentifier string) (*model.InteractionSession, error) {
@@ -75,8 +158,8 @@ func Test_vConDialogEvent(t *testing.T) {
 		require.Equal(t, "ACTIVE", session.Status)
 		require.Equal(t, "CALL", *session.Type)
 		require.Equal(t, "VOICE", *session.Channel)
-		//require.Equal(t, "torrey@openline.ai", *session.AttendedBy[0].Email)
-		//require.Equal(t, "+32485112970", *session.AttendedBy[1].PhoneNumber)
+		require.Equal(t, "torrey@openline.ai", *session.AttendedBy[0].Email)
+		require.Equal(t, "+32485112970", *session.AttendedBy[1].PhoneNumber)
 
 		return &model.InteractionSession{
 			ID:                "my-new-session-id",
@@ -119,6 +202,254 @@ func Test_vConDialogEvent(t *testing.T) {
 
 	w := httptest.NewRecorder()
 	req, _ := http.NewRequest("POST", "/vcon", strings.NewReader(LIVE_TRANSCRIPTION))
+	req.Header.Add("X-Openline-VCon-Api-Key", myVconConfig.VCon.ApiKey)
+	vconRouter.ServeHTTP(w, req)
+	log.Printf("Got Body %s", w.Body)
+	if !assert.Equal(t, w.Code, 200) {
+		return
+	}
+
+	assert.True(t, reachedSessionCreate)
+	assert.True(t, reachedSessionBySessionIdentifier)
+	assert.Len(t, attendedBy, 2)
+}
+
+func Test_vConDialogEventInExistingSession(t *testing.T) {
+	_, client, resolver := utils.NewWebServer(t)
+	customerOs := service.NewCustomerOSService(client, myVconConfig)
+	route := vconRouter.Group("/")
+	reachedSessionCreate := false
+	reachedSessionBySessionIdentifier := false
+
+	AddVconRoutes(myVconConfig, route, customerOs)
+
+	resolver.InteractionEventCreate = func(ctx context.Context, event model.InteractionEventInput) (*model.InteractionEvent, error) {
+		log.Printf("InteractionEventCreate: Got Event %v", event)
+		assert.Equal(t, "some real time. Exit", *event.Content)
+		assert.Equal(t, "text/plain", *event.ContentType)
+		assert.Equal(t, "VOICE", *event.Channel)
+		assert.Equal(t, "torrey@openline.ai", *event.SentTo[0].Email)
+		assert.Equal(t, "+32485112970", *event.SentBy[0].PhoneNumber)
+
+		return &model.InteractionEvent{
+			ID:                 "my-event-id",
+			CreatedAt:          time.Now().UTC(),
+			EventIdentifier:    event.EventIdentifier,
+			Content:            event.Content,
+			ContentType:        event.ContentType,
+			Channel:            event.Channel,
+			ChannelData:        event.ChannelData,
+			InteractionSession: nil,
+			SentBy:             nil,
+			SentTo:             nil,
+			RepliesTo:          nil,
+			Source:             "TEST",
+			SourceOfTruth:      "TEST",
+			AppSource:          event.AppSource,
+		}, nil
+	}
+
+	resolver.InteractionSessionBySessionIdentifier = func(ctx context.Context, sessionIdentifier string) (*model.InteractionSession, error) {
+		log.Printf("InteractionSessionBySessionIdentifier: Got Session Identifier %s", sessionIdentifier)
+		require.Equal(t, "e061697f-673d-4756-a5f7-4f114e66a191", sessionIdentifier)
+		reachedSessionBySessionIdentifier = true
+		SESSION_TYPE := "CALL"
+		SESSION_CHANNEL := "VOICE"
+		return &model.InteractionSession{
+			ID:                "my-new-session-id",
+			StartedAt:         time.Now().UTC(),
+			CreatedAt:         time.Now().UTC(),
+			UpdatedAt:         time.Now().UTC(),
+			SessionIdentifier: &sessionIdentifier,
+			Name:              "Outgoing call to +32485112970",
+			Status:            "ACTIVE",
+			Type:              &SESSION_TYPE,
+			Channel:           &SESSION_CHANNEL,
+			ChannelData:       nil,
+			Source:            "TEST",
+			SourceOfTruth:     "TEST",
+			AppSource:         "COMMS-API",
+		}, nil
+	}
+
+	resolver.InteractionSessionCreate = func(ctx context.Context, session model.InteractionSessionInput) (*model.InteractionSession, error) {
+		log.Printf("InteractionSessionCreate: Got Session %v", session)
+		reachedSessionCreate = true
+		require.Fail(t, "Interaction Session Create should not be called!")
+		return nil, fmt.Errorf("interaction Session Create should not be called")
+	}
+
+	resolver.SentBy = func(ctx context.Context, obj *model.InteractionEvent) ([]model.InteractionEventParticipant, error) {
+		log.Printf("SentBy: Got Event %v", obj)
+		return []model.InteractionEventParticipant{}, nil
+	}
+
+	resolver.SentTo = func(ctx context.Context, obj *model.InteractionEvent) ([]model.InteractionEventParticipant, error) {
+		log.Printf("SentTo: Got Event %v", obj)
+		return []model.InteractionEventParticipant{}, nil
+	}
+
+	resolver.RepliesTo = func(ctx context.Context, obj *model.InteractionEvent) (*model.InteractionEvent, error) {
+		log.Printf("RepliesTo: Got Event %v", obj)
+		return &model.InteractionEvent{}, nil
+	}
+
+	resolver.AttendedBy = func(ctx context.Context, obj *model.InteractionSession) ([]model.InteractionSessionParticipant, error) {
+		log.Printf("AttendedBy: Got Session %v", obj)
+		return []model.InteractionSessionParticipant{}, nil
+	}
+
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("POST", "/vcon", strings.NewReader(LIVE_TRANSCRIPTON_APPENDED))
+	req.Header.Add("X-Openline-VCon-Api-Key", myVconConfig.VCon.ApiKey)
+	vconRouter.ServeHTTP(w, req)
+	log.Printf("Got Body %s", w.Body)
+	if !assert.Equal(t, w.Code, 200) {
+		return
+	}
+
+	assert.False(t, reachedSessionCreate)
+	assert.True(t, reachedSessionBySessionIdentifier)
+}
+
+func Test_vConAnalysisEventInExistingSession(t *testing.T) {
+	_, client, resolver := utils.NewWebServer(t)
+	customerOs := service.NewCustomerOSService(client, myVconConfig)
+	route := vconRouter.Group("/")
+	reachedSessionCreate := false
+	reachedSessionBySessionIdentifier := false
+
+	AddVconRoutes(myVconConfig, route, customerOs)
+
+	resolver.AnalysisCreate = func(ctx context.Context, analysis model.AnalysisInput) (*model.Analysis, error) {
+		log.Printf("InteractionEventCreate: Got Event %v", analysis)
+		assert.Equal(t, "[{\"party\":{\"tel\":\"+32485112970\"},\"text\":\"Hello? Give me some real time\"},{\"party\":{\"mailto\":\"torrey@openline.ai\"},\"text\":\"Hello?\"},{\"party\":{\"mailto\":\"torrey@openline.ai\"},\"text\":\"Give me some real-\"},{\"party\":{\"tel\":\"+32485112970\"},\"text\":\"Excellent\"},{\"party\":{\"mailto\":\"torrey@openline.ai\"},\"text\":\"Excellent\"},{\"party\":{\"mailto\":\"torrey@openline.ai\"},\"text\":\"Now I'll hang up\"},{\"party\":{\"tel\":\"+32485112970\"},\"text\":\"Now I'll hang up\"},{\"party\":{\"mailto\":\"torrey@openline.ai\"},\"text\":\"Bye\"}]", *analysis.Content)
+		assert.Equal(t, "application/x-openline-transcript", *analysis.ContentType)
+		assert.Equal(t, "transcript", *analysis.AnalysisType)
+
+		return &model.Analysis{
+			ID:            "my-analysis-id",
+			CreatedAt:     time.Now().UTC(),
+			Content:       analysis.Content,
+			ContentType:   analysis.ContentType,
+			AnalysisType:  analysis.AnalysisType,
+			Source:        "TEST",
+			SourceOfTruth: "TEST",
+			AppSource:     analysis.AppSource,
+		}, nil
+	}
+
+	resolver.InteractionSessionBySessionIdentifier = func(ctx context.Context, sessionIdentifier string) (*model.InteractionSession, error) {
+		log.Printf("InteractionSessionBySessionIdentifier: Got Session Identifier %s", sessionIdentifier)
+		require.Equal(t, "e061697f-673d-4756-a5f7-4f114e66a191", sessionIdentifier)
+		reachedSessionBySessionIdentifier = true
+		SESSION_TYPE := "CALL"
+		SESSION_CHANNEL := "VOICE"
+		return &model.InteractionSession{
+			ID:                "my-new-session-id",
+			StartedAt:         time.Now().UTC(),
+			CreatedAt:         time.Now().UTC(),
+			UpdatedAt:         time.Now().UTC(),
+			SessionIdentifier: &sessionIdentifier,
+			Name:              "Outgoing call to +32485112970",
+			Status:            "ACTIVE",
+			Type:              &SESSION_TYPE,
+			Channel:           &SESSION_CHANNEL,
+			ChannelData:       nil,
+			Source:            "TEST",
+			SourceOfTruth:     "TEST",
+			AppSource:         "COMMS-API",
+		}, nil
+	}
+
+	resolver.InteractionSessionCreate = func(ctx context.Context, session model.InteractionSessionInput) (*model.InteractionSession, error) {
+		log.Printf("InteractionSessionCreate: Got Session %v", session)
+		reachedSessionCreate = true
+		require.Fail(t, "Interaction Session Create should not be called!")
+		return nil, fmt.Errorf("interaction Session Create should not be called")
+	}
+
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("POST", "/vcon", strings.NewReader(POST_TRANSCRIBE))
+	req.Header.Add("X-Openline-VCon-Api-Key", myVconConfig.VCon.ApiKey)
+	vconRouter.ServeHTTP(w, req)
+	log.Printf("Got Body %s", w.Body)
+	if !assert.Equal(t, w.Code, 200) {
+		return
+	}
+
+	assert.False(t, reachedSessionCreate)
+	assert.True(t, reachedSessionBySessionIdentifier)
+}
+
+func Test_vConAnalysisAsFirstEvent(t *testing.T) {
+	_, client, resolver := utils.NewWebServer(t)
+	customerOs := service.NewCustomerOSService(client, myVconConfig)
+	route := vconRouter.Group("/")
+	reachedSessionCreate := false
+	reachedSessionBySessionIdentifier := false
+	var attendedBy []*model.InteractionSessionParticipantInput
+
+	AddVconRoutes(myVconConfig, route, customerOs)
+
+	resolver.AnalysisCreate = func(ctx context.Context, analysis model.AnalysisInput) (*model.Analysis, error) {
+		log.Printf("InteractionEventCreate: Got Event %v", analysis)
+		assert.Equal(t, "[{\"party\":{\"tel\":\"+32485112970\"},\"text\":\"Hello? Give me some real time\"},{\"party\":{\"mailto\":\"torrey@openline.ai\"},\"text\":\"Hello?\"},{\"party\":{\"mailto\":\"torrey@openline.ai\"},\"text\":\"Give me some real-\"},{\"party\":{\"tel\":\"+32485112970\"},\"text\":\"Excellent\"},{\"party\":{\"mailto\":\"torrey@openline.ai\"},\"text\":\"Excellent\"},{\"party\":{\"mailto\":\"torrey@openline.ai\"},\"text\":\"Now I'll hang up\"},{\"party\":{\"tel\":\"+32485112970\"},\"text\":\"Now I'll hang up\"},{\"party\":{\"mailto\":\"torrey@openline.ai\"},\"text\":\"Bye\"}]", *analysis.Content)
+		assert.Equal(t, "application/x-openline-transcript", *analysis.ContentType)
+		assert.Equal(t, "transcript", *analysis.AnalysisType)
+
+		return &model.Analysis{
+			ID:            "my-analysis-id",
+			CreatedAt:     time.Now().UTC(),
+			Content:       analysis.Content,
+			ContentType:   analysis.ContentType,
+			AnalysisType:  analysis.AnalysisType,
+			Source:        "TEST",
+			SourceOfTruth: "TEST",
+			AppSource:     analysis.AppSource,
+		}, nil
+	}
+
+	resolver.InteractionSessionCreate = func(ctx context.Context, session model.InteractionSessionInput) (*model.InteractionSession, error) {
+		log.Printf("InteractionSessionCreate: Got Session %v", session)
+		reachedSessionCreate = true
+		attendedBy = session.AttendedBy
+		require.Equal(t, "6a50a92a-7322-4988-a85c-437e1d25ea45", *session.SessionIdentifier)
+		require.Equal(t, "Outgoing call to +32485112970", session.Name)
+		require.Equal(t, "ACTIVE", session.Status)
+		require.Equal(t, "CALL", *session.Type)
+		require.Equal(t, "VOICE", *session.Channel)
+		require.Equal(t, "torrey@openline.ai", *session.AttendedBy[0].Email)
+		require.Equal(t, "+32485112970", *session.AttendedBy[1].PhoneNumber)
+
+		return &model.InteractionSession{
+			ID:                "my-new-session-id",
+			StartedAt:         time.Now().UTC(),
+			CreatedAt:         time.Now().UTC(),
+			UpdatedAt:         time.Now().UTC(),
+			SessionIdentifier: session.SessionIdentifier,
+			Name:              session.Name,
+			Status:            session.Status,
+			Type:              session.Type,
+			Channel:           session.Channel,
+			ChannelData:       session.ChannelData,
+			Source:            "TEST",
+			SourceOfTruth:     "TEST",
+			AppSource:         session.AppSource,
+			Events:            nil,
+			AttendedBy:        nil,
+		}, nil
+	}
+
+	resolver.InteractionSessionBySessionIdentifier = func(ctx context.Context, sessionIdentifier string) (*model.InteractionSession, error) {
+		log.Printf("InteractionSessionBySessionIdentifier: Got Session Identifier %s", sessionIdentifier)
+		require.Equal(t, "6a50a92a-7322-4988-a85c-437e1d25ea45", sessionIdentifier)
+		reachedSessionBySessionIdentifier = true
+		return nil, fmt.Errorf("Session not found: %s", sessionIdentifier)
+	}
+
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("POST", "/vcon", strings.NewReader(POST_TRANSCRIBE_AS_FIRST_EVENT))
 	req.Header.Add("X-Openline-VCon-Api-Key", myVconConfig.VCon.ApiKey)
 	vconRouter.ServeHTTP(w, req)
 	log.Printf("Got Body %s", w.Body)

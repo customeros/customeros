@@ -99,6 +99,7 @@ func vConGetOrCreateSession(threadId string, name string, user string, attendant
 		sessionChannel := "VOICE"
 		sessionAppSource := "COMMS_API"
 		sessionStatus := "ACTIVE"
+		sessionType := "CALL"
 		sessionId, err = cosService.CreateInteractionSession(
 			cosService.WithSessionIdentifier(&threadId),
 			cosService.WithSessionChannel(&sessionChannel),
@@ -106,7 +107,9 @@ func vConGetOrCreateSession(threadId string, name string, user string, attendant
 			cosService.WithSessionAppSource(&sessionAppSource),
 			cosService.WithSessionStatus(&sessionStatus),
 			cosService.WithSessionUsername(&user),
-			cosService.WithSessionAttendedBy(attendants))
+			cosService.WithSessionAttendedBy(attendants),
+			cosService.WithSessionType(&sessionType))
+
 		if err != nil {
 			se, _ := status.FromError(err)
 			log.Printf("failed creating interaction session: status=%s message=%s", se.Code(), se.Message())
@@ -149,12 +152,14 @@ func submitAnalysis(sessionId string, req model.VCon, cosService *s.CustomerOSSe
 	var ids []string
 	for _, a := range req.Analysis {
 		analysisType := string(a.Type)
+		appSource := "COMMS_API"
 		response, err := cosService.CreateAnalysis(
 			cosService.WithAnalysisUsername(&user),
 			cosService.WithAnalysisType(&analysisType),
 			cosService.WithAnalysisContent(&a.Body),
 			cosService.WithAnalysisContentType(&a.MimeType),
 			cosService.WithAnalysisDescribes(&model.AnalysisDescriptionInput{InteractionSessionId: &sessionId}),
+			cosService.WithAnalysisAppSource(&appSource),
 		)
 		if err != nil {
 			return nil, fmt.Errorf("submitDialog: failed creating interaction event: %v", err)

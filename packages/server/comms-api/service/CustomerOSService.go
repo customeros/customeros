@@ -206,13 +206,14 @@ func (s *CustomerOSService) GetInteractionSession(sessionIdentifier *string, ten
 
 func (s *CustomerOSService) CreateInteractionSession(options ...SessionOption) (*string, error) {
 	graphqlRequest := graphql.NewRequest(
-		`mutation CreateInteractionSession($sessionIdentifier: String, $channel: String, $name: String!, $status: String!, $appSource: String!, $attendedBy: [InteractionSessionParticipantInput!]) {
+		`mutation CreateInteractionSession($sessionIdentifier: String, $channel: String, $name: String!, $type: String, $status: String!, $appSource: String!, $attendedBy: [InteractionSessionParticipantInput!]) {
 				interactionSession_Create(
 				session: {
 					sessionIdentifier: $sessionIdentifier
         			channel: $channel
         			name: $name
         			status: $status
+					type: $type
         			appSource: $appSource
                     attendedBy: $attendedBy
     			}
@@ -233,6 +234,7 @@ func (s *CustomerOSService) CreateInteractionSession(options ...SessionOption) (
 	graphqlRequest.Var("status", params.status)
 	graphqlRequest.Var("appSource", params.appSource)
 	graphqlRequest.Var("attendedBy", params.attendedBy)
+	graphqlRequest.Var("type", params.sessionType)
 
 	err := s.addHeadersToGraphRequest(graphqlRequest, params.tenant, params.username)
 
@@ -318,6 +320,7 @@ type SessionOptions struct {
 	tenant            *string
 	username          *string
 	sessionIdentifier *string
+	sessionType       *string
 	attendedBy        []model.InteractionSessionParticipantInput
 }
 
@@ -440,6 +443,12 @@ func (s *CustomerOSService) WithSessionTenant(value *string) SessionOption {
 func (s *CustomerOSService) WithSessionUsername(value *string) SessionOption {
 	return func(options *SessionOptions) {
 		options.username = value
+	}
+}
+
+func (s *CustomerOSService) WithSessionType(value *string) SessionOption {
+	return func(options *SessionOptions) {
+		options.sessionType = value
 	}
 }
 

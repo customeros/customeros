@@ -53,6 +53,7 @@ func (s *MailService) SaveMail(email *parsemail.Email, tenant *string, user *str
 	channelValue := "EMAIL"
 	appSource := "COMMS_API"
 	sessionStatus := "ACTIVE"
+	sessionType := "THREAD"
 	if sessionId == nil {
 		sessionId, err = cosService.CreateInteractionSession(
 			cosService.WithSessionIdentifier(&threadId),
@@ -60,7 +61,8 @@ func (s *MailService) SaveMail(email *parsemail.Email, tenant *string, user *str
 			cosService.WithSessionName(&email.Subject),
 			cosService.WithSessionAppSource(&appSource),
 			cosService.WithSessionStatus(&sessionStatus),
-			cosService.WithSessionTenant(tenant))
+			cosService.WithSessionTenant(tenant),
+			cosService.WithSessionType(&sessionType))
 		if err != nil {
 			return nil, fmt.Errorf("failed to create interaction session: %v", err)
 		}
