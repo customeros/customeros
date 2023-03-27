@@ -273,7 +273,7 @@ func (s *CustomerOSService) CreateInteractionSession(ctx context.Context, option
 
 func (s *CustomerOSService) CreateAnalysis(ctx context.Context, options ...AnalysisOption) (*string, error) {
 	graphqlRequest := graphql.NewRequest(
-		`mutation CreateAnalysis($content: String, $contentType: String, $analysisType: String, $appSource: String!, $describes: [AnalysisDescriptionInput!]) {
+		`mutation CreateAnalysis($content: String, $contentType: String, $analysisType: String, $appSource: String!, $describes: [AnalysisDescriptionInput!]!) {
 				analysis_Create(
 					analysis: {
 						content: $content

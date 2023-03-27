@@ -18,6 +18,7 @@ import {
   ConversationPartyEmail,
   ConversationPartyPhone,
 } from './ConversationParty';
+
 interface Content {
   dialog: {
     type?: string;
@@ -25,6 +26,7 @@ interface Content {
     body: string;
   };
 }
+
 interface TranscriptElement {
   party: any;
   text: string;
@@ -32,7 +34,7 @@ interface TranscriptElement {
 
 interface Props {
   createdAt: string;
-  content: Content;
+  content: Content | undefined;
   transcript: Array<TranscriptElement>;
   type: string;
   mode: 'PHONE_CALL' | 'CHAT';
@@ -44,10 +46,11 @@ interface DataStateI {
   firstReceivedIndex: null | number;
   initiator: 'left' | 'right';
 }
+
 export const ConversationTimelineItem: React.FC<Props> = ({
   createdAt,
   content,
-  transcript,
+  transcript = [],
   type,
   mode = 'PHONE_CALL',
   id,
@@ -138,13 +141,17 @@ export const ConversationTimelineItem: React.FC<Props> = ({
                   </div>
                 </div>
               </div>
-              <Tooltip
-                content={content.dialog?.body || ''}
-                target={`#phone-summary-${id}`}
-                position='bottom'
-                showDelay={300}
-                autoHide={false}
-              />
+
+              {content && (
+                <Tooltip
+                  content={content.dialog?.body || ''}
+                  target={`#phone-summary-${id}`}
+                  position='bottom'
+                  showDelay={300}
+                  autoHide={false}
+                />
+              )}
+
               <button
                 id={`phone-summary-${id}`}
                 className={styles.folderTab}
@@ -168,9 +175,12 @@ export const ConversationTimelineItem: React.FC<Props> = ({
                     }}
                   />
                 )}
-                <span>
-                  Summary: <AnalysisContent analysis={content.dialog} />
-                </span>
+
+                {content && (
+                  <span>
+                    Summary: <AnalysisContent analysis={content.dialog} />
+                  </span>
+                )}
               </button>
             </>
           )}

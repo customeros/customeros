@@ -2,16 +2,13 @@ import {
   NoteInput,
   CreateOrganizationNoteMutation,
   useCreateOrganizationNoteMutation,
-  DataSource,
   GetOrganizationTimelineQuery,
   GetOrganizationTimelineDocument,
-  Note,
 } from './types';
 import { toast } from 'react-toastify';
 import client from '../../apollo-client';
+import { gql } from '@apollo/client';
 import { ApolloCache } from 'apollo-cache';
-import { useRecoilValue } from 'recoil';
-import { userData } from '../../state';
 
 interface Props {
   organizationId: string;
@@ -30,9 +27,8 @@ const NOW_DATE = new Date().toISOString();
 export const useCreateOrganizationNote = ({
   organizationId,
 }: Props): Result => {
-  const [createOrganizationNoteMutation, { loading, error, data }] =
+  const [createOrganizationNoteMutation, { loading }] =
     useCreateOrganizationNoteMutation();
-  const { id: userId } = useRecoilValue(userData);
 
   const handleUpdateCacheAfterAddingNote = (
     cache: ApolloCache<any>,
@@ -47,13 +43,35 @@ export const useCreateOrganizationNote = ({
       },
     });
 
+    // @ts-expect-error fix function type
+    const normalizedId = cache.identify({
+      id: organizationId,
+      __typename: 'Organization',
+    });
+    const organizationData = client.readFragment({
+      id: normalizedId,
+      fragment: gql`
+        fragment organizationName on Organization {
+          id
+          name
+        }
+      `,
+    });
+    const newNoteWithNoted = {
+      ...note_CreateForOrganization,
+      noted: [
+        {
+          ...organizationData,
+        },
+      ],
+    };
     if (data === null) {
       client.writeQuery({
         query: GetOrganizationTimelineDocument,
         data: {
           organization: {
             id: organizationId,
-            timelineEvents: [note_CreateForOrganization],
+            timelineEvents: [newNoteWithNoted],
           },
           variables: { organizationId, from: NOW_DATE, size: 10 },
         },
@@ -66,7 +84,7 @@ export const useCreateOrganizationNote = ({
         ...data.organization,
         timelineEvents: [
           ...(data?.organization?.timelineEvents ?? []),
-          note_CreateForOrganization,
+          newNoteWithNoted,
         ],
       },
     };
@@ -86,26 +104,7 @@ export const useCreateOrganizationNote = ({
       try {
         const response = await createOrganizationNoteMutation({
           variables: { organizationId, input: note },
-
-          optimisticResponse: {
-            __typename: 'Mutation',
-            note_CreateForOrganization: {
-              __typename: 'Note',
-              id: 'temp-id',
-              appSource: note.appSource || DataSource.Openline,
-              html: note.html,
-              createdAt: new Date().toISOString(),
-              createdBy: {
-                id: userId,
-                firstName: '',
-                lastName: '',
-              },
-              updatedAt: '',
-              source: DataSource.Openline,
-              sourceOfTruth: DataSource.Openline,
-            },
-          },
-          // @ts-expect-error this should not result in error, debug later
+          // @ts-expect-error fix function type
           update: handleUpdateCacheAfterAddingNote,
         });
         if (response.data) {

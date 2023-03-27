@@ -14,7 +14,7 @@ type Organization implements Node {
     id: ID!
     createdAt:   Time!
     updatedAt:   Time!
-    name: String!
+    name:        String!
     description: String
     domain:      String @deprecated(reason: "Deprecated in favor of domains")
     domains:     [String!]! @goField(forceResolver: true)

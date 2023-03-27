@@ -234,6 +234,7 @@ type ContactInput struct {
 	// Id of the contact owner (user)
 	OwnerID           *string                       `json:"ownerId,omitempty"`
 	ExternalReference *ExternalSystemReferenceInput `json:"externalReference,omitempty"`
+	AppSource         *string                       `json:"appSource,omitempty"`
 }
 
 type ContactOrganizationInput struct {

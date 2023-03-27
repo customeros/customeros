@@ -41,7 +41,7 @@ function ContactDetailsPage() {
         <ContactHistory id={id as string} />
       </section>
       <section className={styles.notes}>
-        <ContactEditor contactId={id as string} mode={NoteEditorModes.ADD} />
+        <ContactEditor contactId={id as string} />
       </section>
     </DetailsPageLayout>
   );

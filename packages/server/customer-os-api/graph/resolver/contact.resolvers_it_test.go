@@ -359,9 +359,11 @@ func TestMutationResolver_UpdateContact(t *testing.T) {
 	origOwnerId := neo4jt.CreateDefaultUser(ctx, driver, tenantName)
 	newOwnerId := neo4jt.CreateDefaultUser(ctx, driver, tenantName)
 	contactId := neo4jt.CreateContact(ctx, driver, tenantName, entity.ContactEntity{
-		Title:     model.PersonTitleMr.String(),
-		FirstName: "first",
-		LastName:  "last",
+		Title:         model.PersonTitleMr.String(),
+		FirstName:     "first",
+		LastName:      "last",
+		Source:        entity.DataSourceHubspot,
+		SourceOfTruth: entity.DataSourceHubspot,
 	})
 
 	neo4jt.UserOwnsContact(ctx, driver, origOwnerId, contactId)
@@ -371,17 +373,20 @@ func TestMutationResolver_UpdateContact(t *testing.T) {
 		client.Var("ownerId", newOwnerId))
 	assertRawResponseSuccess(t, rawResponse, err)
 
-	var contact struct {
+	var contactStruct struct {
 		Contact_Update model.Contact
 	}
-
-	err = decode.Decode(rawResponse.Data.(map[string]any), &contact)
+	err = decode.Decode(rawResponse.Data.(map[string]any), &contactStruct)
 	require.Nil(t, err)
-	require.NotNil(t, contact)
-	require.Equal(t, "DR", contact.Contact_Update.Title.String())
-	require.Equal(t, "updated first", *contact.Contact_Update.FirstName)
-	require.Equal(t, "updated last", *contact.Contact_Update.LastName)
-	require.Equal(t, newOwnerId, contact.Contact_Update.Owner.ID)
+
+	updatedContact := contactStruct.Contact_Update
+
+	require.Equal(t, "DR", updatedContact.Title.String())
+	require.Equal(t, "updated first", *updatedContact.FirstName)
+	require.Equal(t, "updated last", *updatedContact.LastName)
+	require.Equal(t, "test", *updatedContact.AppSource)
+	require.Equal(t, model.DataSourceOpenline, updatedContact.SourceOfTruth)
+	require.Equal(t, newOwnerId, updatedContact.Owner.ID)
 
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Contact"))
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Contact_"+tenantName))

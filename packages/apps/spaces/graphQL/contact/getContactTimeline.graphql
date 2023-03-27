@@ -88,7 +88,6 @@ query GetContactTimeline($contactId: ID!, $from: Time!, $size: Int!) {
             __typename
             ...ContactNameFragment
           }
-
         }
         createdBy {
           id

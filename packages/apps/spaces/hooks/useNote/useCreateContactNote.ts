@@ -4,13 +4,11 @@ import {
   useCreateContactNoteMutation,
   GetContactTimelineQuery,
   GetContactTimelineDocument,
-  DataSource,
 } from './types';
 import { toast } from 'react-toastify';
 import { ApolloCache } from 'apollo-cache';
 import client from '../../apollo-client';
-import { useRecoilValue } from 'recoil';
-import { userData } from '../../state';
+import { gql } from '@apollo/client';
 
 interface Props {
   contactId: string;
@@ -26,9 +24,8 @@ interface Result {
 const NOW_DATE = new Date().toISOString();
 
 export const useCreateContactNote = ({ contactId }: Props): Result => {
-  const [createContactNoteMutation, { loading, error, data }] =
+  const [createContactNoteMutation, { loading }] =
     useCreateContactNoteMutation();
-  const { id: userId } = useRecoilValue(userData);
 
   const handleUpdateCacheAfterAddingNote = (
     cache: ApolloCache<any>,
@@ -42,13 +39,37 @@ export const useCreateContactNote = ({ contactId }: Props): Result => {
         size: 10,
       },
     });
+    // @ts-expect-error fix function type
+    const normalizedId = cache.identify({
+      id: contactId,
+      __typename: 'Contact',
+    });
+    const contactData = client.readFragment({
+      id: normalizedId,
+      fragment: gql`
+        fragment ContactName on Contact {
+          id
+          name
+          firstName
+          lastName
+        }
+      `,
+    });
+    const newNoteWithNoted = {
+      ...note_CreateForContact,
+      noted: [
+        {
+          ...contactData,
+        },
+      ],
+    };
     if (data === null) {
       client.writeQuery({
         query: GetContactTimelineDocument,
         data: {
           contact: {
             contactId,
-            timelineEvents: [note_CreateForContact],
+            timelineEvents: [newNoteWithNoted],
           },
           variables: { contactId, from: NOW_DATE, size: 10 },
         },
@@ -60,8 +81,7 @@ export const useCreateContactNote = ({ contactId }: Props): Result => {
       contact: {
         ...data.contact,
         timelineEvents: [
-          ...(data?.contact?.timelineEvents ?? []),
-          note_CreateForContact,
+          newNoteWithNoted,
         ],
       },
     };
@@ -83,24 +103,6 @@ export const useCreateContactNote = ({ contactId }: Props): Result => {
     try {
       const response = await createContactNoteMutation({
         variables: { contactId, input: note },
-        optimisticResponse: {
-          __typename: 'Mutation',
-          note_CreateForContact: {
-            __typename: 'Note',
-            id: 'temp-id',
-            appSource: note.appSource || DataSource.Openline,
-            html: note.html,
-            createdAt: new Date().toISOString(),
-            createdBy: {
-              id: userId,
-              firstName: '',
-              lastName: '',
-            },
-            updatedAt: '',
-            source: DataSource.Openline,
-            sourceOfTruth: DataSource.Openline,
-          },
-        },
         // @ts-expect-error this should not result in error, debug later
         update: handleUpdateCacheAfterAddingNote,
       });

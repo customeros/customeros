@@ -85,7 +85,9 @@ export const OrganizationEditor: FC<Props> = ({
               saving={saving}
               onSave={onSubmit}
               label={editorModeState.submitButtonLabel}
-              onHtmlChanged={(newHtml: string) => setValue('htmlEnhanced', newHtml)}
+              onHtmlChanged={(newHtml: string) =>
+                setValue('htmlEnhanced', newHtml)
+              }
             />
           </div>
         )}
