@@ -1,0 +1,11 @@
+query GetOrganizationById($organizationId: ID!){
+  organization(id: $organizationId) {
+    id
+    subsidiaryOf {
+        organization {
+            id
+        }
+        type
+    }
+  }
+}

@@ -19,6 +19,8 @@ type OrganizationEntity struct {
 	SourceOfTruth      DataSource
 	AppSource          string
 
+	LinkedOrganizationType *string
+
 	DataloaderKey string
 }
 

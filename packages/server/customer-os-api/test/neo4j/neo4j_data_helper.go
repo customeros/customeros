@@ -485,6 +485,18 @@ func CreateTenantOrganization(ctx context.Context, driver *neo4j.DriverWithConte
 	return CreateOrg(ctx, driver, tenant, organizationName, true)
 }
 
+func LinkOrganizationAsSubsidiary(ctx context.Context, driver *neo4j.DriverWithContext, parentOrganizationId, subOrganizationId, relationType string) {
+	query := `MATCH (parent:Organization {id:$parentOrganizationId}),
+			(org:Organization {id:$subOrganizationId})
+			MERGE (org)-[rel:SUBSIDIARY_OF]->(parent)
+			ON CREATE SET rel.type=$type`
+	ExecuteWriteQuery(ctx, driver, query, map[string]any{
+		"parentOrganizationId": parentOrganizationId,
+		"subOrganizationId":    subOrganizationId,
+		"type":                 relationType,
+	})
+}
+
 func CreateOrganizationType(ctx context.Context, driver *neo4j.DriverWithContext, tenant, organizationTypeName string) string {
 	var organizationTypeId, _ = uuid.NewRandom()
 	query := `MATCH (t:Tenant {name:$tenant})

@@ -29,6 +29,11 @@ type DbNodeWithRelationAndId struct {
 	LinkedNodeId string
 }
 
+type DbNodeAndRelation struct {
+	Node         *dbtype.Node
+	Relationship *dbtype.Relationship
+}
+
 type DbNodeAndId struct {
 	Node         *dbtype.Node
 	LinkedNodeId string
@@ -110,6 +115,24 @@ func ExtractAllRecordsAsDbNodeAndId(ctx context.Context, result neo4j.ResultWith
 		element := new(DbNodeAndId)
 		element.Node = NodePtr(v.Values[0].(neo4j.Node))
 		element.LinkedNodeId = v.Values[1].(string)
+		output = append(output, element)
+	}
+	return output, nil
+}
+
+func ExtractAllRecordsAsDbNodeAndRelation(ctx context.Context, result neo4j.ResultWithContext, err error) ([]*DbNodeAndRelation, error) {
+	if err != nil {
+		return nil, err
+	}
+	records, err := result.Collect(ctx)
+	if err != nil {
+		return nil, err
+	}
+	output := make([]*DbNodeAndRelation, 0)
+	for _, v := range records {
+		element := new(DbNodeAndRelation)
+		element.Node = NodePtr(v.Values[0].(neo4j.Node))
+		element.Relationship = RelationshipPtr(v.Values[1].(neo4j.Relationship))
 		output = append(output, element)
 	}
 	return output, nil
