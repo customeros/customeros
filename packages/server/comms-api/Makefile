@@ -4,7 +4,7 @@ generate:
 clean:
 	rm -rf bin
 	rm -rf test/graph/generated
-	rm test/graph/model/models_gen.go
+	rm -rf test/graph/model/models_gen.go
 
 test:
 	go test -v ./... -cover
