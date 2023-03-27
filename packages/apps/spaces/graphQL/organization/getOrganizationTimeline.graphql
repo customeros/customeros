@@ -13,7 +13,7 @@ query GetOrganizationTimeline($organizationId: ID!, $from: Time!, $size: Int!) {
         orderInSession
         sessionId
       }
-      ... on Ticket {
+      ... on Issue {
         id
         createdAt
         updatedAt
@@ -21,10 +21,6 @@ query GetOrganizationTimeline($organizationId: ID!, $from: Time!, $size: Int!) {
         status
         priority
         description
-        notes {
-          id
-          html
-        }
         tags {
           id
           name

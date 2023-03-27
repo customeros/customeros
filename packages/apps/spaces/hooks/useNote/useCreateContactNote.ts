@@ -80,9 +80,7 @@ export const useCreateContactNote = ({ contactId }: Props): Result => {
     const newData = {
       contact: {
         ...data.contact,
-        timelineEvents: [
-          newNoteWithNoted,
-        ],
+        timelineEvents: [newNoteWithNoted],
       },
     };
 
