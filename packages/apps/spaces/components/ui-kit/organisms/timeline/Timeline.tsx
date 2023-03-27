@@ -52,7 +52,6 @@ export const Timeline = ({
       }
     },
   });
-  console.log('🏷️ ----- loggedActivities: ', loggedActivities);
   const getTimelineItemByType = (type: string, data: any, index: number) => {
     switch (type) {
       case 'Note':
@@ -182,15 +181,9 @@ export const Timeline = ({
           .filter((e) => e.__typename === 'Analysis')
           .filter((e) => e.analysisType !== 'summary')
           .find((e) => e.describes[0].id === data.describes[0].id);
-        // console.log('🏷️ ----- transcriptForSummary: ', transcriptForSummary);
         if (!transcriptForSummary?.content) {
           return;
         }
-        console.count('🏷️ ----- : ANC');
-        // console.log(
-        //   '🏷️ ----- decodeContent(transcriptForSummary?.content) ?? []: ',
-        //   decodeContent(transcriptForSummary?.content) ?? [],
-        // );
 
         return (
           <ConversationTimelineItem
@@ -205,15 +198,13 @@ export const Timeline = ({
       }
 
       case 'LiveConversation':
-        console.log('🏷️ ----- : LIVE', data);
-        return null;
-      // return (
-      //   <LiveConversationTimelineItem
-      //     first={index == 0}
-      //     contactId={id}
-      //     source={data.source}
-      //   />
-      // );
+        return (
+          <LiveConversationTimelineItem
+            first={index == 0}
+            contactId={id}
+            source={data.source}
+          />
+        );
       case 'PageView':
         return (
           <TimelineItem first={index == 0} createdAt={data?.startedAt}>
