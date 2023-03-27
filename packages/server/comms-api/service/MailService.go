@@ -88,6 +88,7 @@ func (s *MailService) SaveMail(email *parsemail.Email, tenant *string, user *str
 		cosService.WithContentType(&email.ContentType),
 		cosService.WithSentBy(sentBy),
 		cosService.WithSentTo(sentTo),
+		cosService.WithAppSource(&appSource),
 	)
 
 	if err != nil {

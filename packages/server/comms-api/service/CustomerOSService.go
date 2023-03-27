@@ -389,6 +389,12 @@ func (s *CustomerOSService) WithSentTo(value []model.InteractionEventParticipant
 	}
 }
 
+func (s *CustomerOSService) WithAppSource(value *string) EventOption {
+	return func(options *EventOptions) {
+		options.appSource = value
+	}
+}
+
 func (s *CustomerOSService) WithSessionIdentifier(value *string) SessionOption {
 	return func(options *SessionOptions) {
 		options.sessionIdentifier = value

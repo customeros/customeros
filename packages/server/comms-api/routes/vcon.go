@@ -180,6 +180,7 @@ func submitDialog(sessionId string, req model.VCon, cosService *s.CustomerOSServ
 		}
 
 		channel := "VOICE"
+		appSource := "COMMS_API"
 		response, err := cosService.CreateInteractionEvent(
 			cosService.WithUsername(&user),
 			cosService.WithSessionId(&sessionId),
@@ -188,6 +189,7 @@ func submitDialog(sessionId string, req model.VCon, cosService *s.CustomerOSServ
 			cosService.WithContentType(&d.MimeType),
 			cosService.WithSentBy(vConPartyToEventParticipantInputArr([]model.VConParty{*initator})),
 			cosService.WithSentTo(vConPartyToEventParticipantInputArr([]model.VConParty{*destination})),
+			cosService.WithAppSource(&appSource),
 		)
 		if err != nil {
 			return nil, fmt.Errorf("submitDialog: failed creating interaction event: %v", err)
