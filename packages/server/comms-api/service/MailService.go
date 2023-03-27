@@ -80,10 +80,10 @@ func (s *MailService) SaveMail(email *parsemail.Email, tenant *string, user *str
 
 	response, err := cosService.CreateInteractionEvent(
 		cosService.WithTenant(tenant),
-		cosService.WithEventIdentifier(email.MessageID),
-		cosService.WithChannelData(emailChannelData),
 		cosService.WithSessionId(sessionId),
+		cosService.WithEventIdentifier(email.MessageID),
 		cosService.WithChannel(&channelValue),
+		cosService.WithChannelData(emailChannelData),
 		cosService.WithContent(util.FirstNotEmpty(email.HTMLBody, email.TextBody)),
 		cosService.WithContentType(&email.ContentType),
 		cosService.WithSentBy(sentBy),
