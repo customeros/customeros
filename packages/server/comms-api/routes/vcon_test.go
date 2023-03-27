@@ -2,17 +2,20 @@ package routes
 
 import (
 	"context"
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/openline-ai/openline-customer-os/packages/server/comms-api/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/comms-api/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/comms-api/test/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/comms-api/test/utils"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"log"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
+	"time"
 )
 
 var vconRouter *gin.Engine
@@ -45,6 +48,9 @@ func Test_vConDialogEvent(t *testing.T) {
 	_, client, resolver := utils.NewWebServer(t)
 	customerOs := service.NewCustomerOSService(client, myVconConfig)
 	route := vconRouter.Group("/")
+	reachedSessionCreate := false
+	reachedSessionBySessionIdentifier := false
+	var attendedBy []*model.InteractionSessionParticipantInput
 
 	AddVconRoutes(myVconConfig, route, customerOs)
 
@@ -55,12 +61,40 @@ func Test_vConDialogEvent(t *testing.T) {
 
 	resolver.InteractionSessionBySessionIdentifier = func(ctx context.Context, sessionIdentifier string) (*model.InteractionSession, error) {
 		log.Printf("InteractionSessionBySessionIdentifier: Got Session Identifier %s", sessionIdentifier)
-		return &model.InteractionSession{}, nil
+		require.Equal(t, "e061697f-673d-4756-a5f7-4f114e66a191", sessionIdentifier)
+		reachedSessionBySessionIdentifier = true
+		return nil, fmt.Errorf("Session not found: %s", sessionIdentifier)
 	}
 
 	resolver.InteractionSessionCreate = func(ctx context.Context, session model.InteractionSessionInput) (*model.InteractionSession, error) {
 		log.Printf("InteractionSessionCreate: Got Session %v", session)
-		return &model.InteractionSession{}, nil
+		reachedSessionCreate = true
+		attendedBy = session.AttendedBy
+		require.Equal(t, "e061697f-673d-4756-a5f7-4f114e66a191", *session.SessionIdentifier)
+		require.Equal(t, "Outgoing call to +32485112970", session.Name)
+		require.Equal(t, "ACTIVE", session.Status)
+		require.Equal(t, "CALL", *session.Type)
+		require.Equal(t, "VOICE", *session.Channel)
+		//require.Equal(t, "torrey@openline.ai", *session.AttendedBy[0].Email)
+		//require.Equal(t, "+32485112970", *session.AttendedBy[1].PhoneNumber)
+
+		return &model.InteractionSession{
+			ID:                "my-new-session-id",
+			StartedAt:         time.Now().UTC(),
+			CreatedAt:         time.Now().UTC(),
+			UpdatedAt:         time.Now().UTC(),
+			SessionIdentifier: session.SessionIdentifier,
+			Name:              session.Name,
+			Status:            session.Status,
+			Type:              session.Type,
+			Channel:           session.Channel,
+			ChannelData:       session.ChannelData,
+			Source:            "TEST",
+			SourceOfTruth:     "TEST",
+			AppSource:         session.AppSource,
+			Events:            nil,
+			AttendedBy:        nil,
+		}, nil
 	}
 
 	resolver.SentBy = func(ctx context.Context, obj *model.InteractionEvent) ([]model.InteractionEventParticipant, error) {
@@ -78,6 +112,11 @@ func Test_vConDialogEvent(t *testing.T) {
 		return &model.InteractionEvent{}, nil
 	}
 
+	resolver.AttendedBy = func(ctx context.Context, obj *model.InteractionSession) ([]model.InteractionSessionParticipant, error) {
+		log.Printf("AttendedBy: Got Session %v", obj)
+		return []model.InteractionSessionParticipant{}, nil
+	}
+
 	w := httptest.NewRecorder()
 	req, _ := http.NewRequest("POST", "/vcon", strings.NewReader(LIVE_TRANSCRIPTION))
 	req.Header.Add("X-Openline-VCon-Api-Key", myVconConfig.VCon.ApiKey)
@@ -86,4 +125,8 @@ func Test_vConDialogEvent(t *testing.T) {
 	if !assert.Equal(t, w.Code, 200) {
 		return
 	}
+
+	assert.True(t, reachedSessionCreate)
+	assert.True(t, reachedSessionBySessionIdentifier)
+	assert.Len(t, attendedBy, 2)
 }
