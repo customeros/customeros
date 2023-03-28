@@ -761,6 +761,12 @@ type JobRoleUpdateInput struct {
 	ResponsibilityLevel *int64  `json:"responsibilityLevel,omitempty"`
 }
 
+type LinkOrganizationsInput struct {
+	OrganizationID    string  `json:"organizationId"`
+	SubOrganizationID string  `json:"subOrganizationId"`
+	Type              *string `json:"type,omitempty"`
+}
+
 type LinkedOrganization struct {
 	Organization *Organization `json:"organization"`
 	Type         *string       `json:"type,omitempty"`

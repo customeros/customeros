@@ -263,6 +263,10 @@ func (r *contactResolver) TimelineEventsTotalCount(ctx context.Context, obj *mod
 
 // ContactCreate is the resolver for the contact_Create field.
 func (r *mutationResolver) ContactCreate(ctx context.Context, input model.ContactInput) (*model.Contact, error) {
+	defer func(start time.Time) {
+		utils.LogMethodExecution(start, utils.GetFunctionName())
+	}(time.Now())
+
 	contactNodeCreated, err := r.Services.ContactService.Create(ctx, &service.ContactCreateData{
 		ContactEntity:     mapper.MapContactInputToEntity(input),
 		CustomFields:      mapper.MapCustomFieldInputsToEntities(input.CustomFields),
@@ -284,6 +288,10 @@ func (r *mutationResolver) ContactCreate(ctx context.Context, input model.Contac
 
 // ContactUpdate is the resolver for the contact_Update field.
 func (r *mutationResolver) ContactUpdate(ctx context.Context, input model.ContactUpdateInput) (*model.Contact, error) {
+	defer func(start time.Time) {
+		utils.LogMethodExecution(start, utils.GetFunctionName())
+	}(time.Now())
+
 	updatedContact, err := r.Services.ContactService.Update(ctx, &service.ContactUpdateData{
 		ContactEntity: mapper.MapContactUpdateInputToEntity(input),
 		OwnerUserId:   input.OwnerID,
@@ -297,6 +305,10 @@ func (r *mutationResolver) ContactUpdate(ctx context.Context, input model.Contac
 
 // ContactHardDelete is the resolver for the contact_HardDelete field.
 func (r *mutationResolver) ContactHardDelete(ctx context.Context, contactID string) (*model.Result, error) {
+	defer func(start time.Time) {
+		utils.LogMethodExecution(start, utils.GetFunctionName())
+	}(time.Now())
+
 	result, err := r.Services.ContactService.PermanentDelete(ctx, contactID)
 	if err != nil {
 		graphql.AddErrorf(ctx, "Could not hard delete contact %s", contactID)
@@ -309,6 +321,10 @@ func (r *mutationResolver) ContactHardDelete(ctx context.Context, contactID stri
 
 // ContactSoftDelete is the resolver for the contact_SoftDelete field.
 func (r *mutationResolver) ContactSoftDelete(ctx context.Context, contactID string) (*model.Result, error) {
+	defer func(start time.Time) {
+		utils.LogMethodExecution(start, utils.GetFunctionName())
+	}(time.Now())
+
 	result, err := r.Services.ContactService.SoftDelete(ctx, contactID)
 	if err != nil {
 		graphql.AddErrorf(ctx, "Could not soft delete contact %s", contactID)
@@ -343,6 +359,10 @@ func (r *mutationResolver) ContactMerge(ctx context.Context, primaryContactID st
 
 // ContactAddTagByID is the resolver for the contact_AddTagById field.
 func (r *mutationResolver) ContactAddTagByID(ctx context.Context, input model.ContactTagInput) (*model.Contact, error) {
+	defer func(start time.Time) {
+		utils.LogMethodExecution(start, utils.GetFunctionName())
+	}(time.Now())
+
 	updatedContact, err := r.Services.ContactService.AddTag(ctx, input.ContactID, input.TagID)
 	if err != nil {
 		graphql.AddErrorf(ctx, "Failed to add tag %s to contact %s", input.TagID, input.ContactID)
@@ -353,6 +373,10 @@ func (r *mutationResolver) ContactAddTagByID(ctx context.Context, input model.Co
 
 // ContactRemoveTagByID is the resolver for the contact_RemoveTagById field.
 func (r *mutationResolver) ContactRemoveTagByID(ctx context.Context, input model.ContactTagInput) (*model.Contact, error) {
+	defer func(start time.Time) {
+		utils.LogMethodExecution(start, utils.GetFunctionName())
+	}(time.Now())
+
 	updatedContact, err := r.Services.ContactService.RemoveTag(ctx, input.ContactID, input.TagID)
 	if err != nil {
 		graphql.AddErrorf(ctx, "Failed to remove tag %s from contact %s", input.TagID, input.ContactID)
@@ -363,6 +387,10 @@ func (r *mutationResolver) ContactRemoveTagByID(ctx context.Context, input model
 
 // ContactAddOrganizationByID is the resolver for the contact_AddOrganizationById field.
 func (r *mutationResolver) ContactAddOrganizationByID(ctx context.Context, input model.ContactOrganizationInput) (*model.Contact, error) {
+	defer func(start time.Time) {
+		utils.LogMethodExecution(start, utils.GetFunctionName())
+	}(time.Now())
+
 	updatedContact, err := r.Services.ContactService.AddOrganization(ctx, input.ContactID, input.OrganizationID)
 	if err != nil {
 		graphql.AddErrorf(ctx, "Failed to add organization %s to contact %s", input.OrganizationID, input.ContactID)
@@ -373,6 +401,10 @@ func (r *mutationResolver) ContactAddOrganizationByID(ctx context.Context, input
 
 // ContactRemoveOrganizationByID is the resolver for the contact_RemoveOrganizationById field.
 func (r *mutationResolver) ContactRemoveOrganizationByID(ctx context.Context, input model.ContactOrganizationInput) (*model.Contact, error) {
+	defer func(start time.Time) {
+		utils.LogMethodExecution(start, utils.GetFunctionName())
+	}(time.Now())
+
 	updatedContact, err := r.Services.ContactService.RemoveOrganization(ctx, input.ContactID, input.OrganizationID)
 	if err != nil {
 		graphql.AddErrorf(ctx, "Failed to remove organization %s from contact %s", input.OrganizationID, input.ContactID)

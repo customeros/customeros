@@ -26,6 +26,8 @@ type OrganizationService interface {
 	GetOrganizationsForPhoneNumbers(ctx context.Context, phoneNumberIds []string) (*entity.OrganizationEntities, error)
 	GetSubsidiaries(ctx context.Context, parentOrganizationId string) (*entity.OrganizationEntities, error)
 	GetSubsidiaryOf(ctx context.Context, organizationId string) (*entity.OrganizationEntities, error)
+	AddSubsidiary(ctx context.Context, organizationId, subsidiaryId, subsidiaryType string) error
+	RemoveSubsidiary(ctx context.Context, organizationId, subsidiaryId string) error
 
 	mapDbNodeToOrganizationEntity(node dbtype.Node) *entity.OrganizationEntity
 }
@@ -337,6 +339,16 @@ func (s *organizationService) GetSubsidiaries(ctx context.Context, parentOrganiz
 		organizationEntities = append(organizationEntities, *organizationEntity)
 	}
 	return &organizationEntities, nil
+}
+
+func (s *organizationService) AddSubsidiary(ctx context.Context, organizationId, subsidiaryId, subsidiaryType string) error {
+	err := s.repositories.OrganizationRepository.LinkSubOrganization(ctx, common.GetTenantFromContext(ctx), organizationId, subsidiaryId, subsidiaryType, repository.Relationship_Subsidiary)
+	return err
+}
+
+func (s *organizationService) RemoveSubsidiary(ctx context.Context, organizationId, subsidiaryId string) error {
+	err := s.repositories.OrganizationRepository.UnlinkSubOrganization(ctx, common.GetTenantFromContext(ctx), organizationId, subsidiaryId, repository.Relationship_Subsidiary)
+	return err
 }
 
 func (s *organizationService) GetSubsidiaryOf(ctx context.Context, organizationId string) (*entity.OrganizationEntities, error) {

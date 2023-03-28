@@ -8,6 +8,8 @@ extend type Mutation {
     organization_Update(input: OrganizationUpdateInput!): Organization!
     organization_Delete(id: ID!): Result
     organization_Merge(primaryOrganizationId: ID!, mergedOrganizationIds: [ID!]!): Organization!
+    organization_AddSubsidiary(input: LinkOrganizationsInput!): Organization!
+    organization_RemoveSubsidiary(organizationId: ID!, subsidiaryId: ID!): Organization!
 }
 
 type LinkedOrganization {
@@ -83,4 +85,10 @@ input OrganizationUpdateInput {
     industry:    String
     isPublic:    Boolean
     organizationTypeId: ID
+}
+
+input LinkOrganizationsInput {
+    organizationId: ID!
+    subOrganizationId: ID!
+    type: String
 }
