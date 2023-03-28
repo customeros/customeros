@@ -6,6 +6,7 @@ package resolver
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/99designs/gqlgen/graphql"
@@ -82,6 +83,30 @@ func (r *mutationResolver) OrganizationMerge(ctx context.Context, primaryOrganiz
 		return nil, err
 	}
 	return mapper.MapEntityToOrganization(organizationEntityPtr), nil
+}
+
+// OrganizationAddSubsidiary is the resolver for the organization_AddSubsidiary field.
+func (r *mutationResolver) OrganizationAddSubsidiary(ctx context.Context, input model.LinkOrganizationsInput) (*model.Organization, error) {
+	defer func(start time.Time) {
+		utils.LogMethodExecution(start, utils.GetFunctionName())
+	}(time.Now())
+
+	err := r.Services.OrganizationService.AddSubsidiary(ctx, input.OrganizationID, input.SubOrganizationID, utils.IfNotNilString(input.Type))
+	if err != nil {
+		graphql.AddErrorf(ctx, "Failed to add subsidiary %s to organization %s", input.SubOrganizationID, input.OrganizationID)
+		return nil, err
+	}
+	organizationEntity, err := r.Services.OrganizationService.GetOrganizationById(ctx, input.OrganizationID)
+	if err != nil {
+		graphql.AddErrorf(ctx, "Failed to fetch organization %s", input.OrganizationID)
+		return nil, err
+	}
+	return mapper.MapEntityToOrganization(organizationEntity), nil
+}
+
+// OrganizationRemoveSubsidiary is the resolver for the organization_RemoveSubsidiary field.
+func (r *mutationResolver) OrganizationRemoveSubsidiary(ctx context.Context, organizationID string, subsidiaryID string) (*model.Organization, error) {
+	panic(fmt.Errorf("not implemented: OrganizationRemoveSubsidiary - organization_RemoveSubsidiary"))
 }
 
 // Domains is the resolver for the domains field.
