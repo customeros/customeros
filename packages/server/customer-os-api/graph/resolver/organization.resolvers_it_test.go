@@ -848,3 +848,131 @@ func TestQueryResolver_Organization_WithParentForSubsidiary(t *testing.T) {
 	require.Equal(t, parentOrganizationId, organization.SubsidiaryOf[0].Organization.ID)
 	require.Equal(t, "shop", *organization.SubsidiaryOf[0].Type)
 }
+
+func TestMutationResolver_OrganizationMerge_Properties(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx)(t)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+
+	parentOrgId := neo4jt.CreateOrganization(ctx, driver, tenantName, "main organization")
+	mergedOrgId1 := neo4jt.CreateOrganization(ctx, driver, tenantName, "to merge 1")
+	mergedOrgId2 := neo4jt.CreateOrganization(ctx, driver, tenantName, "to merge 2")
+	organizationTypeId := neo4jt.CreateOrganizationType(ctx, driver, tenantName, "ABC")
+	neo4jt.SetOrganizationTypeForOrganization(ctx, driver, mergedOrgId1, organizationTypeId)
+
+	require.Equal(t, 3, neo4jt.GetCountOfNodes(ctx, driver, "Organization"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "OrganizationType"))
+	require.Equal(t, 1, neo4jt.GetCountOfRelationships(ctx, driver, "IS_OF_TYPE"))
+
+	rawResponse, err := c.RawPost(getQuery("organization/merge_organizations"),
+		client.Var("parentOrganizationId", parentOrgId),
+		client.Var("mergedOrganizationId1", mergedOrgId1),
+		client.Var("mergedOrganizationId2", mergedOrgId2),
+	)
+	assertRawResponseSuccess(t, rawResponse, err)
+
+	var organizationStruct struct {
+		Organization_Merge model.Organization
+	}
+	err = decode.Decode(rawResponse.Data.(map[string]any), &organizationStruct)
+	organization := organizationStruct.Organization_Merge
+	require.NotNil(t, organization)
+
+	require.Equal(t, parentOrgId, organization.ID)
+	require.Equal(t, "main organization", organization.Name)
+	require.Equal(t, organizationTypeId, organization.OrganizationType.ID)
+
+	// Check only 1 organization remains after merge
+	// other 2 converted into MergedOrganization
+	// Other notes not impacted
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Organization"))
+	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "MergedOrganization"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "OrganizationType"))
+
+	require.Equal(t, 2, neo4jt.GetCountOfRelationships(ctx, driver, "IS_OF_TYPE"))
+}
+
+func TestMutationResolver_OrganizationMerge_CheckSubsidiariesMerge(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx)(t)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+
+	parentOrgId := neo4jt.CreateOrganization(ctx, driver, tenantName, "main organization")
+	mergedOrgId1 := neo4jt.CreateOrganization(ctx, driver, tenantName, "to merge 1")
+	mergedOrgId2 := neo4jt.CreateOrganization(ctx, driver, tenantName, "to merge 2")
+
+	subsidiaryOrgId := neo4jt.CreateOrganization(ctx, driver, tenantName, "")
+	neo4jt.LinkOrganizationAsSubsidiary(ctx, driver, mergedOrgId1, subsidiaryOrgId, "shop")
+
+	parentForSubsidiaryOrgId := neo4jt.CreateOrganization(ctx, driver, tenantName, "")
+	neo4jt.LinkOrganizationAsSubsidiary(ctx, driver, parentForSubsidiaryOrgId, mergedOrgId2, "factory")
+
+	require.Equal(t, 5, neo4jt.GetCountOfNodes(ctx, driver, "Organization"))
+	require.Equal(t, 2, neo4jt.GetCountOfRelationships(ctx, driver, "SUBSIDIARY_OF"))
+
+	rawResponse, err := c.RawPost(getQuery("organization/merge_organizations"),
+		client.Var("parentOrganizationId", parentOrgId),
+		client.Var("mergedOrganizationId1", mergedOrgId1),
+		client.Var("mergedOrganizationId2", mergedOrgId2),
+	)
+	assertRawResponseSuccess(t, rawResponse, err)
+
+	var organizationStruct struct {
+		Organization_Merge model.Organization
+	}
+	err = decode.Decode(rawResponse.Data.(map[string]any), &organizationStruct)
+	organization := organizationStruct.Organization_Merge
+	require.NotNil(t, organization)
+
+	require.Equal(t, parentOrgId, organization.ID)
+	require.Equal(t, 1, len(organization.Subsidiaries))
+	require.Equal(t, subsidiaryOrgId, organization.Subsidiaries[0].Organization.ID)
+	require.Equal(t, "shop", *organization.Subsidiaries[0].Type)
+	require.Equal(t, 1, len(organization.SubsidiaryOf))
+	require.Equal(t, parentForSubsidiaryOrgId, organization.SubsidiaryOf[0].Organization.ID)
+	require.Equal(t, "factory", *organization.SubsidiaryOf[0].Type)
+
+	require.Equal(t, 3, neo4jt.GetCountOfNodes(ctx, driver, "Organization"))
+	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "MergedOrganization"))
+
+	require.Equal(t, 4, neo4jt.GetCountOfRelationships(ctx, driver, "SUBSIDIARY_OF"))
+}
+
+func TestMutationResolver_OrganizationMerge_MergeBetweenParentAndSubsidiaryOrg(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx)(t)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+
+	parentOrgId := neo4jt.CreateOrganization(ctx, driver, tenantName, "main")
+	mergedOrgId1 := neo4jt.CreateOrganization(ctx, driver, tenantName, "to merge 1")
+	mergedOrgId2 := neo4jt.CreateOrganization(ctx, driver, tenantName, "to merge 2")
+
+	neo4jt.LinkOrganizationAsSubsidiary(ctx, driver, parentOrgId, mergedOrgId1, "A")
+	neo4jt.LinkOrganizationAsSubsidiary(ctx, driver, mergedOrgId2, parentOrgId, "B")
+
+	require.Equal(t, 3, neo4jt.GetCountOfNodes(ctx, driver, "Organization"))
+	require.Equal(t, 2, neo4jt.GetCountOfRelationships(ctx, driver, "SUBSIDIARY_OF"))
+
+	rawResponse, err := c.RawPost(getQuery("organization/merge_organizations"),
+		client.Var("parentOrganizationId", parentOrgId),
+		client.Var("mergedOrganizationId1", mergedOrgId1),
+		client.Var("mergedOrganizationId2", mergedOrgId2),
+	)
+	assertRawResponseSuccess(t, rawResponse, err)
+
+	var organizationStruct struct {
+		Organization_Merge model.Organization
+	}
+	err = decode.Decode(rawResponse.Data.(map[string]any), &organizationStruct)
+	organization := organizationStruct.Organization_Merge
+	require.NotNil(t, organization)
+
+	require.Equal(t, parentOrgId, organization.ID)
+	require.Equal(t, 0, len(organization.Subsidiaries))
+	require.Equal(t, 0, len(organization.SubsidiaryOf))
+
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Organization"))
+	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "MergedOrganization"))
+
+	require.Equal(t, 2, neo4jt.GetCountOfRelationships(ctx, driver, "SUBSIDIARY_OF"))
+}

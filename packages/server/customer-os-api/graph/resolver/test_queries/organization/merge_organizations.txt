@@ -1,0 +1,24 @@
+mutation MergeOrganization($parentOrganizationId: ID!, $mergedOrganizationId1: ID!, $mergedOrganizationId2: ID!) {
+  organization_Merge(
+    primaryOrganizationId: $parentOrganizationId,
+    mergedOrganizationIds: [$mergedOrganizationId1, $mergedOrganizationId2])
+    {
+      id
+      name
+      organizationType {
+        id
+      }
+      subsidiaries {
+        organization {
+          id
+        }
+        type
+      }
+      subsidiaryOf {
+        organization {
+          id
+        }
+        type
+      }
+    }
+}
