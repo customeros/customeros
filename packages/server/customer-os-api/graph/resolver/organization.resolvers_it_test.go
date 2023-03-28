@@ -976,3 +976,70 @@ func TestMutationResolver_OrganizationMerge_MergeBetweenParentAndSubsidiaryOrg(t
 
 	require.Equal(t, 2, neo4jt.GetCountOfRelationships(ctx, driver, "SUBSIDIARY_OF"))
 }
+
+func TestMutationResolver_OrganizationAddSubsidiary(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx)(t)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+
+	parentOrgId := neo4jt.CreateOrganization(ctx, driver, tenantName, "main")
+	subOrgId := neo4jt.CreateOrganization(ctx, driver, tenantName, "sub")
+
+	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "Organization"))
+	require.Equal(t, 0, neo4jt.GetCountOfRelationships(ctx, driver, "SUBSIDIARY_OF"))
+
+	rawResponse, err := c.RawPost(getQuery("organization/add_subsidiary"),
+		client.Var("organizationId", parentOrgId),
+		client.Var("subsidiaryId", subOrgId),
+		client.Var("type", "shop"),
+	)
+	assertRawResponseSuccess(t, rawResponse, err)
+
+	var organizationStruct struct {
+		Organization_AddSubsidiary model.Organization
+	}
+	err = decode.Decode(rawResponse.Data.(map[string]any), &organizationStruct)
+	organization := organizationStruct.Organization_AddSubsidiary
+	require.NotNil(t, organization)
+
+	require.Equal(t, parentOrgId, organization.ID)
+	require.Equal(t, 1, len(organization.Subsidiaries))
+	require.Equal(t, subOrgId, organization.Subsidiaries[0].Organization.ID)
+	require.Equal(t, "shop", *organization.Subsidiaries[0].Type)
+
+	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "Organization"))
+	require.Equal(t, 1, neo4jt.GetCountOfRelationships(ctx, driver, "SUBSIDIARY_OF"))
+}
+
+func TestMutationResolver_OrganizationRemoveSubsidiary(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx)(t)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+
+	parentOrgId := neo4jt.CreateOrganization(ctx, driver, tenantName, "main")
+	subOrgId := neo4jt.CreateOrganization(ctx, driver, tenantName, "sub")
+
+	neo4jt.LinkOrganizationAsSubsidiary(ctx, driver, parentOrgId, subOrgId, "shop")
+
+	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "Organization"))
+	require.Equal(t, 1, neo4jt.GetCountOfRelationships(ctx, driver, "SUBSIDIARY_OF"))
+
+	rawResponse, err := c.RawPost(getQuery("organization/remove_subsidiary"),
+		client.Var("organizationId", parentOrgId),
+		client.Var("subsidiaryId", subOrgId),
+	)
+	assertRawResponseSuccess(t, rawResponse, err)
+
+	var organizationStruct struct {
+		Organization_RemoveSubsidiary model.Organization
+	}
+	err = decode.Decode(rawResponse.Data.(map[string]any), &organizationStruct)
+	organization := organizationStruct.Organization_RemoveSubsidiary
+	require.NotNil(t, organization)
+
+	require.Equal(t, parentOrgId, organization.ID)
+	require.Equal(t, 0, len(organization.Subsidiaries))
+
+	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "Organization"))
+	require.Equal(t, 0, neo4jt.GetCountOfRelationships(ctx, driver, "SUBSIDIARY_OF"))
+}

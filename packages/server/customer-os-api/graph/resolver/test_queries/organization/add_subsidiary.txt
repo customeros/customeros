@@ -1,0 +1,17 @@
+mutation AddSubsidiary($organizationId: ID!, $subsidiaryId: ID!, $type: String) {
+  organization_AddSubsidiary(
+    input: {
+        organizationId: $organizationId
+        subOrganizationId: $subsidiaryId
+        type: $type
+    })
+    {
+      id
+      subsidiaries {
+        organization {
+          id
+        }
+        type
+      }
+    }
+}
