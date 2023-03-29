@@ -37,30 +37,31 @@ export const Avatar: React.FC<AvatarProps> = ({
     fontSize: size > 40 ? 'var(--font-size-lg)' : 'ar(--font-size-xxs)',
   };
   const tooltipId =
-    (isSquare && name) ||
-    (name && surname && `avatar${uuidv4().split('-').join('')}`);
-
+    ((isSquare && name) || (name && surname)) &&
+    `avatar${uuidv4().split('-').join('')}`;
   return (
     <>
       {tooltipId && (
-        <Tooltip
-          content={`${name || ''} ${surname || ''}`}
-          target={`#${tooltipId}`}
-          position='top'
-          showDelay={0}
-          autoHide={false}
-        />
-      )}
+        <>
+          <div
+            id={tooltipId}
+            className={classNames(styles.avatar, {
+              [styles.square]: isSquare,
+            })}
+            style={avatarStyle}
+          >
+            {image || initials}
+          </div>
 
-      <div
-        id={tooltipId || ''}
-        className={classNames(styles.avatar, {
-          [styles.square]: isSquare,
-        })}
-        style={avatarStyle}
-      >
-        {image || initials}
-      </div>
+          <Tooltip
+            content={`${name ?? ''} ${surname ?? ''}`}
+            target={tooltipId}
+            position='top'
+            showDelay={0}
+            autoHide={false}
+          />
+        </>
+      )}
     </>
   );
 };

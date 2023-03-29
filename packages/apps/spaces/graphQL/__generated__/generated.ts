@@ -896,6 +896,18 @@ export type JobRoleUpdateInput = {
   responsibilityLevel?: InputMaybe<Scalars['Int64']>;
 };
 
+export type LinkOrganizationsInput = {
+  organizationId: Scalars['ID'];
+  subOrganizationId: Scalars['ID'];
+  type?: InputMaybe<Scalars['String']>;
+};
+
+export type LinkedOrganization = {
+  __typename?: 'LinkedOrganization';
+  organization: Organization;
+  type?: Maybe<Scalars['String']>;
+};
+
 export type Location = {
   __typename?: 'Location';
   address?: Maybe<Scalars['String']>;
@@ -982,9 +994,11 @@ export type Mutation = {
   organizationType_Create: OrganizationType;
   organizationType_Delete?: Maybe<Result>;
   organizationType_Update?: Maybe<OrganizationType>;
+  organization_AddSubsidiary: Organization;
   organization_Create: Organization;
   organization_Delete?: Maybe<Result>;
   organization_Merge: Organization;
+  organization_RemoveSubsidiary: Organization;
   organization_Update: Organization;
   phoneNumberMergeToContact: PhoneNumber;
   phoneNumberMergeToOrganization: PhoneNumber;
@@ -1260,6 +1274,10 @@ export type MutationOrganizationType_UpdateArgs = {
   input: OrganizationTypeUpdateInput;
 };
 
+export type MutationOrganization_AddSubsidiaryArgs = {
+  input: LinkOrganizationsInput;
+};
+
 export type MutationOrganization_CreateArgs = {
   input: OrganizationInput;
 };
@@ -1271,6 +1289,11 @@ export type MutationOrganization_DeleteArgs = {
 export type MutationOrganization_MergeArgs = {
   mergedOrganizationIds: Array<Scalars['ID']>;
   primaryOrganizationId: Scalars['ID'];
+};
+
+export type MutationOrganization_RemoveSubsidiaryArgs = {
+  organizationId: Scalars['ID'];
+  subsidiaryId: Scalars['ID'];
 };
 
 export type MutationOrganization_UpdateArgs = {
@@ -1419,6 +1442,8 @@ export type Organization = Node & {
   phoneNumbers: Array<PhoneNumber>;
   source: DataSource;
   sourceOfTruth: DataSource;
+  subsidiaries: Array<LinkedOrganization>;
+  subsidiaryOf: Array<LinkedOrganization>;
   tags?: Maybe<Array<Tag>>;
   timelineEvents: Array<TimelineEvent>;
   timelineEventsTotalCount: Scalars['Int64'];

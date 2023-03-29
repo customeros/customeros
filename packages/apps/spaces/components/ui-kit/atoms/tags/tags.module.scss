@@ -34,10 +34,6 @@
   padding: 0;
   margin: var(--spacing-xxxs) var(--spacing-xxxs) 0 0;
 
-  li {
-    margin: 0;
-  }
-
   &.tagListPresentation {
     margin: 0;
   }
@@ -49,6 +45,7 @@
   justify-content: space-between;
   align-content: center;
   font-size: var(--font-size-xs);
+  margin-right: var(--spacing-xxxs);
 
   &:hover,
   &:focus,
