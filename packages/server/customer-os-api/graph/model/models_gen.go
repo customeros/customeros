@@ -1076,23 +1076,6 @@ type TagUpdateInput struct {
 	Name string `json:"name"`
 }
 
-type Ticket struct {
-	ID          string    `json:"id"`
-	CreatedAt   time.Time `json:"createdAt"`
-	UpdatedAt   time.Time `json:"updatedAt"`
-	Subject     *string   `json:"subject,omitempty"`
-	Status      string    `json:"status"`
-	Priority    *string   `json:"priority,omitempty"`
-	Description *string   `json:"description,omitempty"`
-	Tags        []*Tag    `json:"tags,omitempty"`
-	Notes       []*Note   `json:"notes,omitempty"`
-}
-
-func (Ticket) IsNode()            {}
-func (this Ticket) GetID() string { return this.ID }
-
-func (Ticket) IsTimelineEvent() {}
-
 type TimeRange struct {
 	// The start time of the time range.
 	// **Required.**
@@ -1672,7 +1655,6 @@ type TimelineEventType string
 const (
 	TimelineEventTypePageView           TimelineEventType = "PAGE_VIEW"
 	TimelineEventTypeInteractionSession TimelineEventType = "INTERACTION_SESSION"
-	TimelineEventTypeTicket             TimelineEventType = "TICKET"
 	TimelineEventTypeConversation       TimelineEventType = "CONVERSATION"
 	TimelineEventTypeNote               TimelineEventType = "NOTE"
 	TimelineEventTypeInteractionEvent   TimelineEventType = "INTERACTION_EVENT"
@@ -1683,7 +1665,6 @@ const (
 var AllTimelineEventType = []TimelineEventType{
 	TimelineEventTypePageView,
 	TimelineEventTypeInteractionSession,
-	TimelineEventTypeTicket,
 	TimelineEventTypeConversation,
 	TimelineEventTypeNote,
 	TimelineEventTypeInteractionEvent,
@@ -1693,7 +1674,7 @@ var AllTimelineEventType = []TimelineEventType{
 
 func (e TimelineEventType) IsValid() bool {
 	switch e {
-	case TimelineEventTypePageView, TimelineEventTypeInteractionSession, TimelineEventTypeTicket, TimelineEventTypeConversation, TimelineEventTypeNote, TimelineEventTypeInteractionEvent, TimelineEventTypeAnalysis, TimelineEventTypeIssue:
+	case TimelineEventTypePageView, TimelineEventTypeInteractionSession, TimelineEventTypeConversation, TimelineEventTypeNote, TimelineEventTypeInteractionEvent, TimelineEventTypeAnalysis, TimelineEventTypeIssue:
 		return true
 	}
 	return false

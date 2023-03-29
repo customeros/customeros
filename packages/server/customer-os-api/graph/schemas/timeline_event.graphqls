@@ -1,9 +1,8 @@
-union TimelineEvent = PageView | InteractionSession | Ticket | Conversation | Note | InteractionEvent | Analysis | Issue
+union TimelineEvent = PageView | InteractionSession | Conversation | Note | InteractionEvent | Analysis | Issue
 
 enum TimelineEventType {
     PAGE_VIEW
     INTERACTION_SESSION
-    TICKET @deprecated(reason: "Use Issue instead")
     CONVERSATION
     NOTE
     INTERACTION_EVENT
