@@ -14,7 +14,7 @@ query GetContactTimeline($contactId: ID!, $from: Time!, $size: Int!) {
         orderInSession
         sessionId
       }
-      ... on Ticket {
+      ... on Issue {
         id
         createdAt
         updatedAt
@@ -22,10 +22,6 @@ query GetContactTimeline($contactId: ID!, $from: Time!, $size: Int!) {
         status
         priority
         description
-        notes {
-          id
-          html
-        }
         tags {
           id
           name

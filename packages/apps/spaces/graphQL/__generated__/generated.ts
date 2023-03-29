@@ -124,8 +124,6 @@ export type Contact = ExtensibleEntity &
     tags?: Maybe<Array<Tag>>;
     /** Template of the contact in customerOS. */
     template?: Maybe<EntityTemplate>;
-    ticketSummaryByStatus: Array<TicketSummaryByStatus>;
-    tickets: Array<Maybe<Ticket>>;
     timelineEvents: Array<TimelineEvent>;
     timelineEventsTotalCount: Scalars['Int64'];
     /** The title associate with the contact in customerOS. */
@@ -274,6 +272,7 @@ export type ContactGroupUpdateInput = {
  * **A `create` object.**
  */
 export type ContactInput = {
+  appSource?: InputMaybe<Scalars['String']>;
   /** An ISO8601 timestamp recording when the contact was created in customerOS. */
   createdAt?: InputMaybe<Scalars['Time']>;
   /**
@@ -827,6 +826,24 @@ export type InteractionSessionParticipantInput = {
   phoneNumber?: InputMaybe<Scalars['String']>;
   type?: InputMaybe<Scalars['String']>;
   userID?: InputMaybe<Scalars['ID']>;
+};
+
+export type Issue = Node & {
+  __typename?: 'Issue';
+  createdAt: Scalars['Time'];
+  description?: Maybe<Scalars['String']>;
+  id: Scalars['ID'];
+  priority?: Maybe<Scalars['String']>;
+  status: Scalars['String'];
+  subject?: Maybe<Scalars['String']>;
+  tags?: Maybe<Array<Maybe<Tag>>>;
+  updatedAt: Scalars['Time'];
+};
+
+export type IssueSummaryByStatus = {
+  __typename?: 'IssueSummaryByStatus';
+  count: Scalars['Int64'];
+  status: Scalars['String'];
 };
 
 /**
@@ -1389,6 +1406,7 @@ export type Organization = Node & {
   id: Scalars['ID'];
   industry?: Maybe<Scalars['String']>;
   isPublic?: Maybe<Scalars['Boolean']>;
+  issueSummaryByStatus: Array<IssueSummaryByStatus>;
   jobRoles: Array<JobRole>;
   /**
    * All addresses associated with an organization in customerOS.
@@ -1402,7 +1420,6 @@ export type Organization = Node & {
   source: DataSource;
   sourceOfTruth: DataSource;
   tags?: Maybe<Array<Tag>>;
-  ticketSummaryByStatus: Array<TicketSummaryByStatus>;
   timelineEvents: Array<TimelineEvent>;
   timelineEventsTotalCount: Scalars['Int64'];
   updatedAt: Scalars['Time'];
@@ -1837,12 +1854,6 @@ export type Ticket = Node & {
   updatedAt: Scalars['Time'];
 };
 
-export type TicketSummaryByStatus = {
-  __typename?: 'TicketSummaryByStatus';
-  count: Scalars['Int64'];
-  status: Scalars['String'];
-};
-
 export type TimeRange = {
   /**
    * The start time of the time range.
@@ -1861,6 +1872,7 @@ export type TimelineEvent =
   | Conversation
   | InteractionEvent
   | InteractionSession
+  | Issue
   | Note
   | PageView
   | Ticket;
@@ -1870,8 +1882,10 @@ export enum TimelineEventType {
   Conversation = 'CONVERSATION',
   InteractionEvent = 'INTERACTION_EVENT',
   InteractionSession = 'INTERACTION_SESSION',
+  Issue = 'ISSUE',
   Note = 'NOTE',
   PageView = 'PAGE_VIEW',
+  /** @deprecated Use Issue instead */
   Ticket = 'TICKET',
 }
 
@@ -2508,38 +2522,6 @@ export type GetContactTagsQuery = {
   } | null;
 };
 
-export type GetContactTicketsQueryVariables = Exact<{
-  id: Scalars['ID'];
-}>;
-
-export type GetContactTicketsQuery = {
-  __typename?: 'Query';
-  contact?: {
-    __typename?: 'Contact';
-    tickets: Array<{
-      __typename?: 'Ticket';
-      id: string;
-      createdAt: any;
-      updatedAt: any;
-      subject?: string | null;
-      status: string;
-      priority?: string | null;
-      description?: string | null;
-      tags?: Array<{
-        __typename?: 'Tag';
-        id: string;
-        name: string;
-      } | null> | null;
-      notes?: Array<{
-        __typename?: 'Note';
-        id: string;
-        createdAt: any;
-        html: string;
-      } | null> | null;
-    } | null>;
-  } | null;
-};
-
 export type GetContactTimelineQueryVariables = Exact<{
   contactId: Scalars['ID'];
   from: Scalars['Time'];
@@ -2789,6 +2771,21 @@ export type GetContactTimelineQuery = {
           }>;
         }
       | {
+          __typename?: 'Issue';
+          id: string;
+          createdAt: any;
+          updatedAt: any;
+          subject?: string | null;
+          status: string;
+          priority?: string | null;
+          description?: string | null;
+          tags?: Array<{
+            __typename?: 'Tag';
+            id: string;
+            name: string;
+          } | null> | null;
+        }
+      | {
           __typename?: 'Note';
           id: string;
           html: string;
@@ -2821,26 +2818,7 @@ export type GetContactTimelineQuery = {
           orderInSession: any;
           sessionId: string;
         }
-      | {
-          __typename?: 'Ticket';
-          id: string;
-          createdAt: any;
-          updatedAt: any;
-          subject?: string | null;
-          status: string;
-          priority?: string | null;
-          description?: string | null;
-          notes?: Array<{
-            __typename?: 'Note';
-            id: string;
-            html: string;
-          } | null> | null;
-          tags?: Array<{
-            __typename?: 'Tag';
-            id: string;
-            name: string;
-          } | null> | null;
-        }
+      | { __typename?: 'Ticket' }
     >;
   } | null;
 };
@@ -3791,6 +3769,21 @@ export type GetOrganizationTimelineQuery = {
           }>;
         }
       | {
+          __typename?: 'Issue';
+          id: string;
+          createdAt: any;
+          updatedAt: any;
+          subject?: string | null;
+          status: string;
+          priority?: string | null;
+          description?: string | null;
+          tags?: Array<{
+            __typename?: 'Tag';
+            id: string;
+            name: string;
+          } | null> | null;
+        }
+      | {
           __typename?: 'Note';
           id: string;
           html: string;
@@ -3827,26 +3820,7 @@ export type GetOrganizationTimelineQuery = {
           orderInSession: any;
           sessionId: string;
         }
-      | {
-          __typename?: 'Ticket';
-          id: string;
-          createdAt: any;
-          updatedAt: any;
-          subject?: string | null;
-          status: string;
-          priority?: string | null;
-          description?: string | null;
-          notes?: Array<{
-            __typename?: 'Note';
-            id: string;
-            html: string;
-          } | null> | null;
-          tags?: Array<{
-            __typename?: 'Tag';
-            id: string;
-            name: string;
-          } | null> | null;
-        }
+      | { __typename?: 'Ticket' }
     >;
   } | null;
 };
@@ -5502,81 +5476,6 @@ export type GetContactTagsQueryResult = Apollo.QueryResult<
   GetContactTagsQuery,
   GetContactTagsQueryVariables
 >;
-export const GetContactTicketsDocument = gql`
-  query GetContactTickets($id: ID!) {
-    contact(id: $id) {
-      tickets {
-        id
-        createdAt
-        updatedAt
-        subject
-        status
-        priority
-        description
-        tags {
-          id
-          name
-        }
-        notes {
-          id
-          createdAt
-          html
-        }
-      }
-    }
-  }
-`;
-
-/**
- * __useGetContactTicketsQuery__
- *
- * To run a query within a React component, call `useGetContactTicketsQuery` and pass it any options that fit your needs.
- * When your component renders, `useGetContactTicketsQuery` returns an object from Apollo Client that contains loading, error, and data properties
- * you can use to render your UI.
- *
- * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
- *
- * @example
- * const { data, loading, error } = useGetContactTicketsQuery({
- *   variables: {
- *      id: // value for 'id'
- *   },
- * });
- */
-export function useGetContactTicketsQuery(
-  baseOptions: Apollo.QueryHookOptions<
-    GetContactTicketsQuery,
-    GetContactTicketsQueryVariables
-  >,
-) {
-  const options = { ...defaultOptions, ...baseOptions };
-  return Apollo.useQuery<
-    GetContactTicketsQuery,
-    GetContactTicketsQueryVariables
-  >(GetContactTicketsDocument, options);
-}
-export function useGetContactTicketsLazyQuery(
-  baseOptions?: Apollo.LazyQueryHookOptions<
-    GetContactTicketsQuery,
-    GetContactTicketsQueryVariables
-  >,
-) {
-  const options = { ...defaultOptions, ...baseOptions };
-  return Apollo.useLazyQuery<
-    GetContactTicketsQuery,
-    GetContactTicketsQueryVariables
-  >(GetContactTicketsDocument, options);
-}
-export type GetContactTicketsQueryHookResult = ReturnType<
-  typeof useGetContactTicketsQuery
->;
-export type GetContactTicketsLazyQueryHookResult = ReturnType<
-  typeof useGetContactTicketsLazyQuery
->;
-export type GetContactTicketsQueryResult = Apollo.QueryResult<
-  GetContactTicketsQuery,
-  GetContactTicketsQueryVariables
->;
 export const GetContactTimelineDocument = gql`
   query GetContactTimeline($contactId: ID!, $from: Time!, $size: Int!) {
     contact(id: $contactId) {
@@ -5594,7 +5493,7 @@ export const GetContactTimelineDocument = gql`
           orderInSession
           sessionId
         }
-        ... on Ticket {
+        ... on Issue {
           id
           createdAt
           updatedAt
@@ -5602,10 +5501,6 @@ export const GetContactTimelineDocument = gql`
           status
           priority
           description
-          notes {
-            id
-            html
-          }
           tags {
             id
             name
@@ -6655,7 +6550,7 @@ export const GetOrganizationTimelineDocument = gql`
           orderInSession
           sessionId
         }
-        ... on Ticket {
+        ... on Issue {
           id
           createdAt
           updatedAt
@@ -6663,10 +6558,6 @@ export const GetOrganizationTimelineDocument = gql`
           status
           priority
           description
-          notes {
-            id
-            html
-          }
           tags {
             id
             name

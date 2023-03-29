@@ -1,6 +1,6 @@
 import React from 'react';
 
-import styles from './ticket-timeline-item.module.scss';
+import styles from './issue-timeline-item.module.scss';
 import Ticket from '../../atoms/icons/Ticket';
 import { TagsList } from '../../atoms';
 import sanitizeHtml from 'sanitize-html';
@@ -12,7 +12,7 @@ import linkifyHtml from 'linkify-html';
 //     contactName?: string
 // }
 
-export const TicketTimelineItem = ({
+export const IssueTimelineItem = ({
   createdAt,
   updatedAt,
   subject,
@@ -20,7 +20,6 @@ export const TicketTimelineItem = ({
   priority,
   description,
   tags,
-  notes,
   ...rest
 }: any): JSX.Element => {
   return (
@@ -41,32 +40,6 @@ export const TicketTimelineItem = ({
         )}
 
         <div>{description}</div>
-
-        {description && notes && notes.length > 0 && (
-          <div className={`${styles.contentNotesSeparator}`}></div>
-        )}
-
-        {notes &&
-          notes.length > 0 &&
-          notes.map((note: any) => {
-            return (
-              <div key={note.id}>
-                <div className={`${styles.noteActivity}`}>
-                  Activity on {DateTimeUtils.format(note.createdAt)}
-                </div>
-                <div
-                  dangerouslySetInnerHTML={{
-                    __html: sanitizeHtml(
-                      linkifyHtml(note.html, {
-                        defaultProtocol: 'https',
-                        rel: 'noopener noreferrer',
-                      }),
-                    ),
-                  }}
-                ></div>
-              </div>
-            );
-          })}
       </article>
     </div>
   );

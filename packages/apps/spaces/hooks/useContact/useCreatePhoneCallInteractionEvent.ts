@@ -1,11 +1,13 @@
 import {
-  CreatePhoneCallInteractionEventMutation, GetContactTimelineDocument, GetContactTimelineQuery,
+  CreatePhoneCallInteractionEventMutation,
+  GetContactTimelineDocument,
+  GetContactTimelineQuery,
   useCreatePhoneCallInteractionEventMutation,
 } from '../../graphQL/__generated__/generated';
-import {ApolloCache} from "apollo-cache";
-import client from "../../apollo-client";
-import {gql} from "@apollo/client";
-import {toast} from "react-toastify";
+import { ApolloCache } from 'apollo-cache';
+import client from '../../apollo-client';
+import { gql } from '@apollo/client';
+import { toast } from 'react-toastify';
 
 interface Props {
   contactId: string;
@@ -28,8 +30,8 @@ export const useCreatePhoneCallInteractionEvent = ({
     useCreatePhoneCallInteractionEventMutation();
 
   const handleUpdateCacheAfterAddingPhoneCall = (
-      cache: ApolloCache<any>,
-      { data: { interactionEvent_Create } }: any,
+    cache: ApolloCache<any>,
+    { data: { interactionEvent_Create } }: any,
   ) => {
     const data: GetContactTimelineQuery | null = client.readQuery({
       query: GetContactTimelineDocument,
@@ -57,9 +59,7 @@ export const useCreatePhoneCallInteractionEvent = ({
     const newData = {
       contact: {
         ...data.contact,
-        timelineEvents: [
-          interactionEvent_Create,
-        ],
+        timelineEvents: [interactionEvent_Create],
       },
     };
 
@@ -74,33 +74,32 @@ export const useCreatePhoneCallInteractionEvent = ({
     });
   };
 
-  const handleCreatePhoneCallInteractionEvent: Result['onCreatePhoneCallInteractionEvent'] = async (
-      input,
-  ) => {
-    try {
-      const response = await createPhoneCallInteractionEvent({
-        variables: {
-          contactId: contactId,
-          content: input.content,
-          contentType: input.contentType,
-          sentBy: input.sentBy,
-        },
-        // @ts-expect-error this should not result in error, debug later
-        update: handleUpdateCacheAfterAddingPhoneCall,
-      });
-      if (response.data) {
-        toast.success('Phone call log added!', {
-          toastId: `phone-call-added-${response.data?.interactionEvent_Create.id}`,
+  const handleCreatePhoneCallInteractionEvent: Result['onCreatePhoneCallInteractionEvent'] =
+    async (input) => {
+      try {
+        const response = await createPhoneCallInteractionEvent({
+          variables: {
+            contactId: contactId,
+            content: input.content,
+            contentType: input.contentType,
+            sentBy: input.sentBy,
+          },
+          // @ts-expect-error this should not result in error, debug later
+          update: handleUpdateCacheAfterAddingPhoneCall,
         });
+        if (response.data) {
+          toast.success('Phone call log added!', {
+            toastId: `phone-call-added-${response.data?.interactionEvent_Create.id}`,
+          });
+        }
+        return response.data?.interactionEvent_Create ?? null;
+      } catch (err) {
+        toast.error('Something went wrong while adding a phone call', {
+          toastId: `phone-call-add-error-${contactId}`,
+        });
+        return null;
       }
-      return response.data?.interactionEvent_Create ?? null;
-    } catch (err) {
-      toast.error('Something went wrong while adding a phone call', {
-        toastId: `phone-call-add-error-${contactId}`,
-      });
-      return null;
-    }
-  };
+    };
 
   return {
     onCreatePhoneCallInteractionEvent: handleCreatePhoneCallInteractionEvent,

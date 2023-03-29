@@ -10,7 +10,7 @@ import {
   WebActionTimelineItem,
 } from '../../molecules';
 import { TimelineItem } from '../../atoms/timeline-item';
-import { TicketTimelineItem } from '../../molecules/ticket-timeline-item';
+import { IssueTimelineItem } from '../../molecules/issue-timeline-item';
 import styles from './timeline.module.scss';
 import { InteractionTimelineItem } from '../../molecules/interaction-timeline-item';
 import { useInfiniteScroll } from './useInfiniteScroll';
@@ -189,10 +189,10 @@ export const Timeline = ({
             />
           </TimelineItem>
         );
-      case 'Ticket':
+      case 'Issue':
         return (
           <TimelineItem first={index == 0} createdAt={data?.createdAt}>
-            <TicketTimelineItem {...data} />
+            <IssueTimelineItem {...data} />
           </TimelineItem>
         );
 
