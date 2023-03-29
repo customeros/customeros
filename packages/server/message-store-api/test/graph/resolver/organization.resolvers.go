@@ -32,6 +32,16 @@ func (r *mutationResolver) OrganizationMerge(ctx context.Context, primaryOrganiz
 	panic(fmt.Errorf("not implemented: OrganizationMerge - organization_Merge"))
 }
 
+// OrganizationAddSubsidiary is the resolver for the organization_AddSubsidiary field.
+func (r *mutationResolver) OrganizationAddSubsidiary(ctx context.Context, input model.LinkOrganizationsInput) (*model.Organization, error) {
+	panic(fmt.Errorf("not implemented: OrganizationAddSubsidiary - organization_AddSubsidiary"))
+}
+
+// OrganizationRemoveSubsidiary is the resolver for the organization_RemoveSubsidiary field.
+func (r *mutationResolver) OrganizationRemoveSubsidiary(ctx context.Context, organizationID string, subsidiaryID string) (*model.Organization, error) {
+	panic(fmt.Errorf("not implemented: OrganizationRemoveSubsidiary - organization_RemoveSubsidiary"))
+}
+
 // Domains is the resolver for the domains field.
 func (r *organizationResolver) Domains(ctx context.Context, obj *model.Organization) ([]string, error) {
 	panic(fmt.Errorf("not implemented: Domains - domains"))
@@ -75,6 +85,16 @@ func (r *organizationResolver) Emails(ctx context.Context, obj *model.Organizati
 // PhoneNumbers is the resolver for the phoneNumbers field.
 func (r *organizationResolver) PhoneNumbers(ctx context.Context, obj *model.Organization) ([]*model.PhoneNumber, error) {
 	panic(fmt.Errorf("not implemented: PhoneNumbers - phoneNumbers"))
+}
+
+// Subsidiaries is the resolver for the subsidiaries field.
+func (r *organizationResolver) Subsidiaries(ctx context.Context, obj *model.Organization) ([]*model.LinkedOrganization, error) {
+	panic(fmt.Errorf("not implemented: Subsidiaries - subsidiaries"))
+}
+
+// SubsidiaryOf is the resolver for the subsidiaryOf field.
+func (r *organizationResolver) SubsidiaryOf(ctx context.Context, obj *model.Organization) ([]*model.LinkedOrganization, error) {
+	panic(fmt.Errorf("not implemented: SubsidiaryOf - subsidiaryOf"))
 }
 
 // TimelineEvents is the resolver for the timelineEvents field.
