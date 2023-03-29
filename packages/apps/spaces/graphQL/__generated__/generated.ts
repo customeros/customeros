@@ -896,6 +896,18 @@ export type JobRoleUpdateInput = {
   responsibilityLevel?: InputMaybe<Scalars['Int64']>;
 };
 
+export type LinkOrganizationsInput = {
+  organizationId: Scalars['ID'];
+  subOrganizationId: Scalars['ID'];
+  type?: InputMaybe<Scalars['String']>;
+};
+
+export type LinkedOrganization = {
+  __typename?: 'LinkedOrganization';
+  organization: Organization;
+  type?: Maybe<Scalars['String']>;
+};
+
 export type Location = {
   __typename?: 'Location';
   address?: Maybe<Scalars['String']>;
@@ -982,9 +994,11 @@ export type Mutation = {
   organizationType_Create: OrganizationType;
   organizationType_Delete?: Maybe<Result>;
   organizationType_Update?: Maybe<OrganizationType>;
+  organization_AddSubsidiary: Organization;
   organization_Create: Organization;
   organization_Delete?: Maybe<Result>;
   organization_Merge: Organization;
+  organization_RemoveSubsidiary: Organization;
   organization_Update: Organization;
   phoneNumberMergeToContact: PhoneNumber;
   phoneNumberMergeToOrganization: PhoneNumber;
@@ -1260,6 +1274,10 @@ export type MutationOrganizationType_UpdateArgs = {
   input: OrganizationTypeUpdateInput;
 };
 
+export type MutationOrganization_AddSubsidiaryArgs = {
+  input: LinkOrganizationsInput;
+};
+
 export type MutationOrganization_CreateArgs = {
   input: OrganizationInput;
 };
@@ -1271,6 +1289,11 @@ export type MutationOrganization_DeleteArgs = {
 export type MutationOrganization_MergeArgs = {
   mergedOrganizationIds: Array<Scalars['ID']>;
   primaryOrganizationId: Scalars['ID'];
+};
+
+export type MutationOrganization_RemoveSubsidiaryArgs = {
+  organizationId: Scalars['ID'];
+  subsidiaryId: Scalars['ID'];
 };
 
 export type MutationOrganization_UpdateArgs = {
@@ -1419,6 +1442,8 @@ export type Organization = Node & {
   phoneNumbers: Array<PhoneNumber>;
   source: DataSource;
   sourceOfTruth: DataSource;
+  subsidiaries: Array<LinkedOrganization>;
+  subsidiaryOf: Array<LinkedOrganization>;
   tags?: Maybe<Array<Tag>>;
   timelineEvents: Array<TimelineEvent>;
   timelineEventsTotalCount: Scalars['Int64'];
@@ -1841,19 +1866,6 @@ export type TagUpdateInput = {
   name: Scalars['String'];
 };
 
-export type Ticket = Node & {
-  __typename?: 'Ticket';
-  createdAt: Scalars['Time'];
-  description?: Maybe<Scalars['String']>;
-  id: Scalars['ID'];
-  notes?: Maybe<Array<Maybe<Note>>>;
-  priority?: Maybe<Scalars['String']>;
-  status: Scalars['String'];
-  subject?: Maybe<Scalars['String']>;
-  tags?: Maybe<Array<Maybe<Tag>>>;
-  updatedAt: Scalars['Time'];
-};
-
 export type TimeRange = {
   /**
    * The start time of the time range.
@@ -1874,8 +1886,7 @@ export type TimelineEvent =
   | InteractionSession
   | Issue
   | Note
-  | PageView
-  | Ticket;
+  | PageView;
 
 export enum TimelineEventType {
   Analysis = 'ANALYSIS',
@@ -1885,8 +1896,6 @@ export enum TimelineEventType {
   Issue = 'ISSUE',
   Note = 'NOTE',
   PageView = 'PAGE_VIEW',
-  /** @deprecated Use Issue instead */
-  Ticket = 'TICKET',
 }
 
 /**
@@ -2818,7 +2827,6 @@ export type GetContactTimelineQuery = {
           orderInSession: any;
           sessionId: string;
         }
-      | { __typename?: 'Ticket' }
     >;
   } | null;
 };
@@ -3119,40 +3127,6 @@ export type ConversationFragment = {
   id: string;
   startedAt: any;
   updatedAt: any;
-};
-
-export type TicketFragment = {
-  __typename?: 'Ticket';
-  id: string;
-  createdAt: any;
-  updatedAt: any;
-  subject?: string | null;
-  status: string;
-  priority?: string | null;
-  description?: string | null;
-  tags?: Array<{
-    __typename?: 'Tag';
-    id: string;
-    name: string;
-    createdAt: any;
-    source: DataSource;
-  } | null> | null;
-  notes?: Array<{
-    __typename?: 'Note';
-    id: string;
-    html: string;
-    createdAt: any;
-    updatedAt: any;
-    source: DataSource;
-    sourceOfTruth: DataSource;
-    appSource: string;
-    createdBy?: {
-      __typename?: 'User';
-      id: string;
-      firstName: string;
-      lastName: string;
-    } | null;
-  } | null> | null;
 };
 
 export type InteractionSessionFragmentFragment = {
@@ -3820,7 +3794,6 @@ export type GetOrganizationTimelineQuery = {
           orderInSession: any;
           sessionId: string;
         }
-      | { __typename?: 'Ticket' }
     >;
   } | null;
 };
@@ -3914,6 +3887,20 @@ export type UpdateNoteMutation = {
   };
 };
 
+export type GetUserByEmailQueryVariables = Exact<{
+  email: Scalars['String'];
+}>;
+
+export type GetUserByEmailQuery = {
+  __typename?: 'Query';
+  user_ByEmail: {
+    __typename?: 'User';
+    id: string;
+    firstName: string;
+    lastName: string;
+  };
+};
+
 export type GetUsersQueryVariables = Exact<{
   pagination: Pagination;
   where?: InputMaybe<Filter>;
@@ -3960,21 +3947,6 @@ export const LocationTotalFragmentDoc = gql`
     longitude
   }
 `;
-export const ConversationFragmentDoc = gql`
-  fragment Conversation on Conversation {
-    id
-    startedAt
-    updatedAt
-  }
-`;
-export const TagFragmentDoc = gql`
-  fragment Tag on Tag {
-    id
-    name
-    createdAt
-    source
-  }
-`;
 export const NoteContentFragmentDoc = gql`
   fragment NoteContent on Note {
     id
@@ -3991,24 +3963,12 @@ export const NoteContentFragmentDoc = gql`
     appSource
   }
 `;
-export const TicketFragmentDoc = gql`
-  fragment Ticket on Ticket {
+export const ConversationFragmentDoc = gql`
+  fragment Conversation on Conversation {
     id
-    createdAt
+    startedAt
     updatedAt
-    subject
-    status
-    priority
-    description
-    tags {
-      ...Tag
-    }
-    notes {
-      ...NoteContent
-    }
   }
-  ${TagFragmentDoc}
-  ${NoteContentFragmentDoc}
 `;
 export const InteractionSessionFragmentFragmentDoc = gql`
   fragment InteractionSessionFragment on InteractionSession {
@@ -4117,6 +4077,14 @@ export const JobRoleFragmentDoc = gql`
     jobTitle
     primary
     id
+  }
+`;
+export const TagFragmentDoc = gql`
+  fragment Tag on Tag {
+    id
+    name
+    createdAt
+    source
   }
 `;
 export const ContactPersonalDetailsFragmentDoc = gql`
@@ -6958,6 +6926,66 @@ export type UpdateNoteMutationResult =
 export type UpdateNoteMutationOptions = Apollo.BaseMutationOptions<
   UpdateNoteMutation,
   UpdateNoteMutationVariables
+>;
+export const GetUserByEmailDocument = gql`
+  query getUserByEmail($email: String!) {
+    user_ByEmail(email: $email) {
+      id
+      firstName
+      lastName
+    }
+  }
+`;
+
+/**
+ * __useGetUserByEmailQuery__
+ *
+ * To run a query within a React component, call `useGetUserByEmailQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetUserByEmailQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetUserByEmailQuery({
+ *   variables: {
+ *      email: // value for 'email'
+ *   },
+ * });
+ */
+export function useGetUserByEmailQuery(
+  baseOptions: Apollo.QueryHookOptions<
+    GetUserByEmailQuery,
+    GetUserByEmailQueryVariables
+  >,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useQuery<GetUserByEmailQuery, GetUserByEmailQueryVariables>(
+    GetUserByEmailDocument,
+    options,
+  );
+}
+export function useGetUserByEmailLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<
+    GetUserByEmailQuery,
+    GetUserByEmailQueryVariables
+  >,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useLazyQuery<GetUserByEmailQuery, GetUserByEmailQueryVariables>(
+    GetUserByEmailDocument,
+    options,
+  );
+}
+export type GetUserByEmailQueryHookResult = ReturnType<
+  typeof useGetUserByEmailQuery
+>;
+export type GetUserByEmailLazyQueryHookResult = ReturnType<
+  typeof useGetUserByEmailLazyQuery
+>;
+export type GetUserByEmailQueryResult = Apollo.QueryResult<
+  GetUserByEmailQuery,
+  GetUserByEmailQueryVariables
 >;
 export const GetUsersDocument = gql`
   query getUsers($pagination: Pagination!, $where: Filter) {

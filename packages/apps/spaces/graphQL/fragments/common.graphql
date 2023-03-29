@@ -93,22 +93,6 @@ fragment Conversation on Conversation {
   updatedAt
 }
 
-fragment Ticket on Ticket {
-  id
-  createdAt
-  updatedAt
-  subject
-  status
-  priority
-  description
-  tags {
-    ...Tag
-  }
-  notes {
-    ...NoteContent
-  }
-}
-
 fragment InteractionSessionFragment on InteractionSession {
   id
   startedAt
