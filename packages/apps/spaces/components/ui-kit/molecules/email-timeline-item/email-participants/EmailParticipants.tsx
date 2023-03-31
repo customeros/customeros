@@ -34,7 +34,7 @@ export const EmailParticipants: React.FC<Props> = ({
   const { loading, error, data } = useContactNameFromEmail({ email: from });
   const name = getContactDisplayName(data)?.split(' ');
   const [showMore, setShowMore] = useState(false);
-  console.log('🏷️ ----- from: ', from);
+
   return (
     <div className={styles.wrapper}>
       <section className={styles.emailDataContainer}>

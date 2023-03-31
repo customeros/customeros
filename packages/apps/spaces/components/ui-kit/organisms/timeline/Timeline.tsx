@@ -1,12 +1,10 @@
-import React, { useRef } from 'react';
-import { useStickyScroll } from '../../../../hooks/useStickyScroll';
+import React, { useEffect, useRef } from 'react';
 
 import {
   ConversationTimelineItem,
   EmailTimelineItem,
   LiveConversationTimelineItem,
   NoteTimelineItem,
-  PhoneCallTimelineItem,
   WebActionTimelineItem,
 } from '../../molecules';
 import { TimelineItem } from '../../atoms/timeline-item';
@@ -18,7 +16,6 @@ import { Skeleton } from '../../atoms/skeleton';
 import { TimelineStatus } from './timeline-status';
 import classNames from 'classnames';
 import { PhoneConversationTimelineItem } from '../../molecules/conversation-timeline-item/PhoneConversationTimelineItem';
-import { EmailTimelineItemToDeprecate } from '../../molecules/email-timeline-item-to-deprecate';
 import { EmailTimelineItemTemp } from '../../molecules/conversation-timeline-item/EmailTimelineItemTemp';
 
 interface Props {
@@ -41,11 +38,11 @@ export const Timeline = ({
   contactName = '',
   mode,
 }: Props) => {
-  const timelineContainerRef = useRef(null);
+  const timelineContainerRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef(null);
+  const lastItemRef = useRef<Array<HTMLDivElement>>([]);
+
   const infiniteScrollElementRef = useRef(null);
-  // @ts-expect-error revisit later
-  useStickyScroll(containerRef, loggedActivities || []);
   useInfiniteScroll({
     element: infiniteScrollElementRef,
     isFetching: loading,
@@ -55,6 +52,22 @@ export const Timeline = ({
       }
     },
   });
+  useEffect(() => {
+    if (timelineContainerRef?.current) {
+      timelineContainerRef.current.scrollTop =
+        timelineContainerRef.current.scrollHeight;
+    }
+  }, []);
+
+  useEffect(() => {
+    if (
+      loading &&
+      lastItemRef.current.length > 0 &&
+      timelineContainerRef.current
+    ) {
+      timelineContainerRef.current.scrollTop = 400;
+    }
+  }, [loading]);
 
   const getTimelineItemByType = (type: string, data: any, index: number) => {
     switch (type) {
@@ -293,7 +306,7 @@ export const Timeline = ({
     <div ref={timelineContainerRef} className={styles.timeline}>
       {!loading && noActivity && <TimelineStatus status='no-activity' />}
       <div
-        className={classNames(styles.timelineContent, {
+        className={classNames(styles.timelineContent, styles.scrollable, {
           [styles.scrollable]: !noActivity,
         })}
         ref={containerRef}
@@ -302,8 +315,8 @@ export const Timeline = ({
           <div
             ref={infiniteScrollElementRef}
             style={{
-              height: '6px',
-              width: '6px',
+              height: '1px',
+              width: '1px',
             }}
           />
         )}
@@ -311,17 +324,20 @@ export const Timeline = ({
           <div className='flex flex-column mt-4'>
             <Skeleton height={'40px'} className='mb-3' />
             <Skeleton height={'40px'} className='mb-3' />
-            <Skeleton height={'40px'} className='mb-3' />
-            <Skeleton height={'40px'} className='mb-3' />
-            <Skeleton height={'40px'} className='mb-3' />
           </div>
         )}
 
-        {loggedActivities.map((e: any, index) => (
-          <React.Fragment key={`${e.__typename}-${e.id}`}>
-            {getTimelineItemByType(e.__typename, e, index)}
-          </React.Fragment>
-        ))}
+        {loggedActivities.map((e: any, index) => {
+          return (
+            <div
+              key={`${e.__typename}-${e.id}`}
+              //@ts-expect-error ts issue fix later
+              ref={(el) => (lastItemRef.current[index] = el)}
+            >
+              {getTimelineItemByType(e.__typename, e, index)}
+            </div>
+          );
+        })}
         <div id={styles.scrollAnchor} />
       </div>
     </div>
