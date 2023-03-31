@@ -16,11 +16,13 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/dataloader"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/generated"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/resolver"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
 	commonRepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/repository"
 	commonService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 	"github.com/sirupsen/logrus"
 	"github.com/vektah/gqlparser/v2/gqlerror"
+	"google.golang.org/grpc"
 )
 
 const customerOSApiPort = "10000"
@@ -32,10 +34,13 @@ func InitDB(cfg *config.Config) (db *config.StorageDB, err error) {
 	return
 }
 
-func graphqlHandler(cfg *config.Config, driver neo4j.DriverWithContext, repositoryContainer *commonRepository.Repositories) gin.HandlerFunc {
+func graphqlHandler(cfg *config.Config, driver neo4j.DriverWithContext,
+	repositoryContainer *commonRepository.Repositories, gRPCconn *grpc.ClientConn) gin.HandlerFunc {
+
+	grpcContainer := grpc_client.InitClients(gRPCconn)
 	serviceContainer := service.InitServices(&driver)
 	// instantiate graph resolver
-	graphResolver := resolver.NewResolver(serviceContainer, repositoryContainer)
+	graphResolver := resolver.NewResolver(serviceContainer, repositoryContainer, grpcContainer)
 	// make a data loader
 	loader := dataloader.NewDataLoader(serviceContainer)
 	schemaConfig := generated.Config{Resolvers: graphResolver}
@@ -85,6 +90,7 @@ func main() {
 	db, _ := InitDB(cfg)
 	defer db.SqlDB.Close()
 
+	// Setting up Neo4j
 	neo4jDriver, err := config.NewDriver(cfg)
 	if err != nil {
 		logrus.Fatalf("Could not establish connection with neo4j at: %v, error: %v", cfg.Neo4j.Target, err.Error())
@@ -92,7 +98,19 @@ func main() {
 	ctx := context.Background()
 	defer neo4jDriver.Close(ctx)
 
+	// Setting up Postgres repositories
 	commonRepositoryContainer := commonRepository.InitRepositories(db.GormDB, &neo4jDriver)
+
+	// Setting up gRPC client
+	var gRPCconn *grpc.ClientConn
+	if cfg.Service.EventsProcessingPlatformEnabled {
+		df := grpc_client.NewDialFactory(cfg)
+		gRPCconn, err = df.GetEventsProcessingPlatformConn()
+		if err != nil {
+			logrus.Fatalf("Failed to connect: %v", err)
+		}
+		defer df.Close(gRPCconn)
+	}
 
 	// Setting up Gin
 	r := gin.Default()
@@ -104,7 +122,7 @@ func main() {
 	r.POST("/query",
 		commonService.TenantUserContextEnhancer(ctx, commonService.USERNAME_OR_TENANT, commonRepositoryContainer),
 		commonService.ApiKeyCheckerHTTP(commonRepositoryContainer.AppKeyRepository, commonService.CUSTOMER_OS_API),
-		graphqlHandler(cfg, neo4jDriver, commonRepositoryContainer))
+		graphqlHandler(cfg, neo4jDriver, commonRepositoryContainer, gRPCconn))
 	if cfg.GraphQL.PlaygroundEnabled {
 		r.GET("/", playgroundHandler())
 	}

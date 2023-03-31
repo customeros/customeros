@@ -1,7 +1,0 @@
-mutation {
-  organizationType_Create(input: {name:"the organization type"}) {
-      id
-      name
-      createdAt
-    }
-}

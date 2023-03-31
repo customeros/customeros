@@ -25,6 +25,7 @@ extend type Query {
 }
 
 extend type Mutation {
+    contact_CreateWithEventStore(input: ContactInput!): String!
     contact_Create(input: ContactInput!): Contact!
     contact_Update(input: ContactUpdateInput!): Contact!
     contact_HardDelete(contactId: ID!): Result!

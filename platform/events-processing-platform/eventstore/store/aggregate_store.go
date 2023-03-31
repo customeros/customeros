@@ -5,6 +5,9 @@ import (
 	"github.com/EventStore/EventStore-Client-Go/esdb"
 	es "github.com/openline-ai/openline-customer-os/platform/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/platform/events-processing-platform/logger"
+	"github.com/openline-ai/openline-customer-os/platform/events-processing-platform/tracing"
+	"github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go/log"
 
 	"github.com/pkg/errors"
 	"io"
@@ -67,9 +70,9 @@ func (aggregateStore *aggregateStore) Load(ctx context.Context, aggregate es.Agg
 }
 
 func (aggregateStore *aggregateStore) Save(ctx context.Context, aggregate es.Aggregate) error {
-	//span, ctx := opentracing.StartSpanFromContext(ctx, "aggregateStore.Save")
-	//defer span.Finish()
-	//span.LogFields(log.String("aggregate", aggregate.String()))
+	span, ctx := opentracing.StartSpanFromContext(ctx, "aggregateStore.Save")
+	defer span.Finish()
+	span.LogFields(log.String("aggregate", aggregate.String()))
 
 	if len(aggregate.GetUncommittedEvents()) == 0 {
 		aggregateStore.log.Debugf("(Save) [no uncommittedEvents] len: {%d}", len(aggregate.GetUncommittedEvents()))
@@ -94,7 +97,7 @@ func (aggregateStore *aggregateStore) Save(ctx context.Context, aggregate es.Agg
 			eventsData...,
 		)
 		if err != nil {
-			//tracing.TraceErr(span, err)
+			tracing.TraceErr(span, err)
 			aggregateStore.log.Errorf("(Save) esdbClient.AppendToStream: {%+v}", err)
 			return errors.Wrap(err, "esdbClient.AppendToStream")
 		}

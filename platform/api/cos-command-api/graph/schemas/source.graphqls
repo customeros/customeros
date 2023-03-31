@@ -1,6 +1,0 @@
-enum DataSource {
-    NA,
-    OPENLINE
-    HUBSPOT
-    ZENDESK
-}

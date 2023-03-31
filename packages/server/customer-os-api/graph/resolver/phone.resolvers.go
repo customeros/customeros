@@ -6,6 +6,9 @@ package resolver
 
 import (
 	"context"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
+	events_processing_phone_number "github.com/openline-ai/openline-customer-os/platform/events-processing-common/proto/phone_number"
+	"github.com/sirupsen/logrus"
 	"time"
 
 	"github.com/99designs/gqlgen/graphql"
@@ -147,6 +150,24 @@ func (r *mutationResolver) PhoneNumberRemoveFromUserByID(ctx context.Context, us
 	return &model.Result{
 		Result: result,
 	}, nil
+}
+
+// PhoneNumberCreateWithEventStore is the resolver for the phoneNumberCreateWithEventStore field.
+func (r *mutationResolver) PhoneNumberCreateWithEventStore(ctx context.Context, rawPhoneNumber string) (string, error) {
+	defer func(start time.Time) {
+		utils.LogMethodExecution(start, utils.GetFunctionName())
+	}(time.Now())
+
+	response, err := r.Clients.PhoneNumberClient.CreatePhoneNumber(context.Background(), &events_processing_phone_number.CreatePhoneNumberGrpcRequest{
+		Tenant:      common.GetTenantFromContext(ctx),
+		PhoneNumber: rawPhoneNumber,
+	})
+	if err != nil {
+		logrus.Errorf("Failed to call method: %v", err)
+		graphql.AddErrorf(ctx, "Failed to create phone number %s", rawPhoneNumber)
+	}
+
+	return response.UUID, nil
 }
 
 // Users is the resolver for the users field.

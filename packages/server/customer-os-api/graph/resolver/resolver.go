@@ -1,6 +1,7 @@
 package resolver
 
 import (
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
 	commonRepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/repository"
 )
@@ -13,8 +14,16 @@ import (
 type Resolver struct {
 	Services                    *service.Services
 	PostgresRepositoryContainer *commonRepository.Repositories
+	Clients                     *grpc_client.Clients
 }
 
-func NewResolver(serviceContainer *service.Services, postgresRepositoryContainer *commonRepository.Repositories) *Resolver {
-	return &Resolver{Services: serviceContainer, PostgresRepositoryContainer: postgresRepositoryContainer}
+func NewResolver(
+	serviceContainer *service.Services,
+	postgresRepositoryContainer *commonRepository.Repositories,
+	grpcContainer *grpc_client.Clients) *Resolver {
+	return &Resolver{
+		Services:                    serviceContainer,
+		PostgresRepositoryContainer: postgresRepositoryContainer,
+		Clients:                     grpcContainer,
+	}
 }

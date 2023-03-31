@@ -1,5 +1,0 @@
-scalar Time
-
-scalar Int64
-
-scalar Any @goModel(model:"model.AnyTypeValue")
