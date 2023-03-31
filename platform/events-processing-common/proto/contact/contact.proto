@@ -4,17 +4,18 @@ package contactGrpcService;
 
 option go_package = "./;contactGrpcService";
 
-
 message Contact {
-  string UUID = 1;
-  string firstName = 2;
-  string lastName = 3;
+  string tenantID = 1;
+  string UUID = 2;
+  string firstName = 3;
+  string lastName = 4;
 }
 
 message CreateContactGrpcRequest {
   string UUID = 1;
-  string firstName = 2;
-  string lastName = 3;
+  string tenantID = 2;
+  string firstName = 3;
+  string lastName = 4;
 }
 
 message CreateContactGrpcResponse {

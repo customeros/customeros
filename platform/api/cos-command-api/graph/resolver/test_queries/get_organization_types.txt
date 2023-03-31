@@ -1,6 +1,0 @@
-query {
-  organizationTypes {
-    id
-    name
-  }
-}

@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+package phoneNumberGrpcService;
+
+option go_package = "./;phoneNumberGrpcService";
+
+message CreatePhoneNumberGrpcRequest {
+  string tenant = 1;
+  string phoneNumber = 2;
+}
+
+message CreatePhoneNumberGrpcResponse {
+  string UUID = 1;
+}
+
+service phoneNumberGrpcService {
+  rpc CreatePhoneNumber(CreatePhoneNumberGrpcRequest) returns (CreatePhoneNumberGrpcResponse);
+}

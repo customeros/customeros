@@ -1,7 +1,0 @@
-mutation {
-  contactGroupCreate(input: {name:"the contact group"}) {
-      id
-      name
-      createdAt
-    }
-}

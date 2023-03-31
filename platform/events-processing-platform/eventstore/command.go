@@ -6,7 +6,7 @@ type Command interface {
 }
 
 type BaseCommand struct {
-	AggregateID string `json:"aggregateID" validate:"required,gte=0"`
+	AggregateID string `json:"aggregateID" validate:"required"`
 }
 
 func NewBaseCommand(aggregateID string) BaseCommand {

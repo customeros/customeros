@@ -3,7 +3,9 @@ package server
 import (
 	"github.com/openline-ai/openline-customer-os/platform/events-processing-common/constants"
 	contactGrpcService "github.com/openline-ai/openline-customer-os/platform/events-processing-common/proto/contact"
-	"github.com/openline-ai/openline-customer-os/platform/events-processing-platform/domain/contacts/service"
+	phoneNumberGrpcService "github.com/openline-ai/openline-customer-os/platform/events-processing-common/proto/phone_number"
+	contactService "github.com/openline-ai/openline-customer-os/platform/events-processing-platform/domain/contact/service"
+	phoneNumberService "github.com/openline-ai/openline-customer-os/platform/events-processing-platform/domain/phone_number/service"
 	"github.com/pkg/errors"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/keepalive"
@@ -44,11 +46,14 @@ func (server *server) newEventProcessorGrpcServer() (func() error, *grpc.Server,
 		),
 	)
 
-	contactService := service.NewContactService(server.log, server.contactCommandService)
+	contactService := contactService.NewContactService(server.log, server.commands.ContactCommandService)
 	contactGrpcService.RegisterContactGrpcServiceServer(grpcServer, contactService)
 
+	phoneNumberService := phoneNumberService.NewPhoneNumberService(server.log, server.repositories, server.commands.PhoneNumberCommandService)
+	phoneNumberGrpcService.RegisterPhoneNumberGrpcServiceServer(grpcServer, phoneNumberService)
+
 	go func() {
-		server.log.Infof("%server gRPC server is listening on port: {%server}", GetMicroserviceName(server.cfg), server.cfg.GRPC.Port)
+		server.log.Infof("%s gRPC server is listening on port: {%s}", GetMicroserviceName(server.cfg), server.cfg.GRPC.Port)
 		server.log.Error(grpcServer.Serve(l))
 	}()
 

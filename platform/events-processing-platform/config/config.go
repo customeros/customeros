@@ -19,14 +19,13 @@ func init() {
 }
 
 type Config struct {
-	ServiceName      string           `mapstructure:"serviceName"`
-	Logger           *logger.Config   `mapstructure:"logger"`
-	GRPC             GRPC             `mapstructure:"grpc"`
-	MongoCollections MongoCollections `mapstructure:"mongoCollections"`
-	/*Jaeger           *tracing.Config                `mapstructure:"jaeger"`*/
+	ServiceName      string                         `mapstructure:"serviceName"`
+	Logger           *logger.Config                 `mapstructure:"logger"`
+	GRPC             GRPC                           `mapstructure:"grpc"`
 	EventStoreConfig eventstroredb.EventStoreConfig `mapstructure:"eventStoreConfig"`
 	Subscriptions    Subscriptions                  `mapstructure:"subscriptions"`
-	Http             Http                           `mapstructure:"http"`
+	Neo4j            Neo4j                          `mapstructure:"neo4j"`
+	/*Jaeger           *tracing.Config                `mapstructure:"jaeger"`*/
 }
 
 type GRPC struct {
@@ -34,24 +33,21 @@ type GRPC struct {
 	Development bool   `mapstructure:"development"`
 }
 
-type MongoCollections struct {
-	Orders string `mapstructure:"orders" validate:"required"`
-}
-
 type Subscriptions struct {
-	PoolSize                   int    `mapstructure:"poolSize" validate:"required,gte=0"`
-	OrderPrefix                string `mapstructure:"orderPrefix" validate:"required,gte=0"`
-	MongoProjectionGroupName   string `mapstructure:"mongoProjectionGroupName" validate:"required,gte=0"`
-	ElasticProjectionGroupName string `mapstructure:"elasticProjectionGroupName" validate:"required,gte=0"`
+	PoolSize                        int    `mapstructure:"poolSize" validate:"required,gte=0"`
+	PhoneNumberPrefix               string `mapstructure:"phoneNumberPrefix" validate:"required,gte=0"`
+	GraphProjectionGroupName        string `mapstructure:"graphProjectionGroupName" validate:"required,gte=0"`
+	DataEnricherProjectionGroupName string `mapstructure:"dataEnricherProjectionGroupName" validate:"required,gte=0"`
 }
 
-type Http struct {
-	Port                string   `mapstructure:"port" validate:"required"`
-	Development         bool     `mapstructure:"development"`
-	BasePath            string   `mapstructure:"basePath" validate:"required"`
-	OrdersPath          string   `mapstructure:"ordersPath" validate:"required"`
-	DebugErrorsResponse bool     `mapstructure:"debugErrorsResponse"`
-	IgnoreLogUrls       []string `mapstructure:"ignoreLogUrls"`
+type Neo4j struct {
+	Target                          string `mapstructure:"target" validate:"required"`
+	User                            string `mapstructure:"user" validate:"required"`
+	Pwd                             string `mapstructure:"password" validate:"required"` // FIXME alexb implement unset
+	Realm                           string `mapstructure:"realm"`
+	MaxConnectionPoolSize           int    `mapstructure:"maxConnectionPoolSize" validate:"required"`
+	ConnectionAcquisitionTimeoutSec int    `mapstructure:"connectionAcquisitionTimeoutSec" validate:"required"`
+	LogLevel                        string `mapstructure:"logLevel"`
 }
 
 func InitConfig() (*Config, error) {

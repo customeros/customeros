@@ -64,7 +64,6 @@ func InitServices(driver *neo4j.DriverWithContext) *Services {
 	services.QueryService = NewQueryService(repositories, &services)
 	services.InteractionEventService = NewInteractionEventService(repositories, &services)
 	services.InteractionSessionService = NewInteractionSessionService(repositories, &services)
-
 	services.AnalysisService = NewAnalysisService(repositories, &services)
 
 	return &services

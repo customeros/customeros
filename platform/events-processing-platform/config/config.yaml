@@ -30,6 +30,13 @@ eventStoreConfig:
   connectionString: "esdb://localhost:2113?tls=false"
 subscriptions:
   poolSize: 60
-  orderPrefix: "order-"
-  mongoProjectionGroupName: "order1"
-  elasticProjectionGroupName: "order-elastic"
+  phoneNumberPrefix: "phone_number-"
+  graphProjectionGroupName: "graph1"
+  dataEnricherProjectionGroupName: "dataEnricher1"
+neo4j:
+  target: neo4j://127.0.0.1:7687
+  user: neo4j
+  password: StrongLocalPa$$
+  maxConnectionPoolSize: 100
+  connectionAcquisitionTimeoutSec: 60
+  logLevel: INFO

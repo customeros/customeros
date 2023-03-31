@@ -2,7 +2,6 @@ package main
 
 import (
 	"flag"
-	"fmt"
 	"github.com/openline-ai/openline-customer-os/platform/events-processing-platform/config"
 	server "github.com/openline-ai/openline-customer-os/platform/events-processing-platform/event-processor-server"
 	"github.com/openline-ai/openline-customer-os/platform/events-processing-platform/logger"
@@ -10,8 +9,6 @@ import (
 )
 
 func main() {
-
-	fmt.Println("Hello, World!")
 
 	flag.Parse()
 
@@ -23,5 +20,5 @@ func main() {
 	appLogger := logger.NewAppLogger(cfg.Logger)
 	appLogger.InitLogger()
 	appLogger.WithName(server.GetMicroserviceName(cfg))
-	appLogger.Fatal(server.Ne	wServer(cfg, appLogger).Run())
+	appLogger.Fatal(server.NewServer(cfg, appLogger).Run())
 }

@@ -1,5 +1,0 @@
-query GetContactByEmail($email: String!){
-  contact_ByEmail(email: $email) {
-    id
-  }
-}
