@@ -1,6 +1,6 @@
 .timeline {
   position: relative;
-  //height: 100%;
+  height: 100%;
   //height: calc(65vh + 4px); // make it immediately scrollable
   max-height: 65vh;
   overflow-y: auto;
@@ -30,7 +30,8 @@
 }
 
 .timelineContent {
-  max-height: 65vh;
+  max-height: 66vh;
+  height: 100%;
   padding: 0 var(--spacing-md) 0 0;
 
   & * {
@@ -39,7 +40,7 @@
 
   &.scrollable {
     //min-height: 100%;
-    max-height: calc(65vh + 4px); // make it immediately scrollable
+    min-height: calc(65vh + 4px); // make it immediately scrollable
   }
 }
 #scrollAnchor {
