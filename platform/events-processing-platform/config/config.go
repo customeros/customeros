@@ -3,9 +3,12 @@ package config
 import (
 	"flag"
 	"fmt"
+	"github.com/go-playground/validator/v10"
+	"github.com/joho/godotenv"
 	"github.com/openline-ai/openline-customer-os/platform/events-processing-common/constants"
 	"github.com/openline-ai/openline-customer-os/platform/events-processing-platform/eventstroredb"
 	"github.com/openline-ai/openline-customer-os/platform/events-processing-platform/logger"
+	"github.com/openline-ai/openline-customer-os/platform/events-processing-platform/tracing"
 	"os"
 
 	"github.com/pkg/errors"
@@ -18,14 +21,26 @@ func init() {
 	flag.StringVar(&configPath, "config", "", "ES microservice config path")
 }
 
-type Config struct {
+type rawConfig struct {
 	ServiceName      string                         `mapstructure:"serviceName"`
 	Logger           *logger.Config                 `mapstructure:"logger"`
 	GRPC             GRPC                           `mapstructure:"grpc"`
 	EventStoreConfig eventstroredb.EventStoreConfig `mapstructure:"eventStoreConfig"`
 	Subscriptions    Subscriptions                  `mapstructure:"subscriptions"`
 	Neo4j            Neo4j                          `mapstructure:"neo4j"`
-	/*Jaeger           *tracing.Config                `mapstructure:"jaeger"`*/
+	Jaeger           *tracing.Config                `mapstructure:"jaeger"`
+}
+
+// Validate the configuration file
+func validate(cfg rawConfig) error {
+	v := validator.New()
+
+	if err := v.Struct(cfg); err != nil {
+		return fmt.Errorf("invalid configuration file: %w", err)
+	}
+
+	// Perform additional validation here, if needed
+	return nil
 }
 
 type GRPC struct {
@@ -50,7 +65,23 @@ type Neo4j struct {
 	LogLevel                        string `mapstructure:"logLevel"`
 }
 
+type Config struct {
+	ServiceName      string
+	Logger           *logger.Config
+	GRPC             GRPC
+	EventStoreConfig eventstroredb.EventStoreConfig
+	Subscriptions    Subscriptions
+	Neo4j            Neo4j
+	Jaeger           *tracing.Config
+}
+
 func InitConfig() (*Config, error) {
+	// Load values from a .env file
+	err := godotenv.Load()
+	if err != nil {
+		return nil, err
+	}
+
 	if configPath == "" {
 		configPathFromEnv := os.Getenv(constants.ConfigPath)
 		if configPathFromEnv != "" {
@@ -64,33 +95,48 @@ func InitConfig() (*Config, error) {
 		}
 	}
 
-	cfg := &Config{}
-
 	viper.SetConfigType(constants.Yaml)
 	viper.SetConfigFile(configPath)
 
-	if err := viper.ReadInConfig(); err != nil {
+	if err = viper.ReadInConfig(); err != nil {
 		return nil, errors.Wrap(err, "viper.ReadInConfig")
 	}
 
-	if err := viper.Unmarshal(cfg); err != nil {
+	rawCfg := &rawConfig{}
+	if err = viper.Unmarshal(&rawCfg); err != nil {
 		return nil, errors.Wrap(err, "viper.Unmarshal")
 	}
-
-	grpcPort := os.Getenv(constants.GrpcPort)
-	if grpcPort != "" {
-		cfg.GRPC.Port = grpcPort
+	if err = validate(*rawCfg); err != nil {
+		return nil, err
 	}
 
-	/*	jaegerAddr := os.Getenv(constants.JaegerHostPort)
-		if jaegerAddr != "" {
-			cfg.Jaeger.HostPort = jaegerAddr
-		}
-	*/
-	eventStoreConnectionString := os.Getenv(constants.EventStoreConnectionString)
-	if eventStoreConnectionString != "" {
-		cfg.EventStoreConfig.ConnectionString = eventStoreConnectionString
+	cfg := &Config{
+		ServiceName:      rawCfg.ServiceName,
+		Logger:           rawCfg.Logger,
+		GRPC:             rawCfg.GRPC,
+		EventStoreConfig: rawCfg.EventStoreConfig,
+		Subscriptions:    rawCfg.Subscriptions,
+		Neo4j:            rawCfg.Neo4j,
+		Jaeger:           rawCfg.Jaeger,
+	}
+
+	if err := OverrideConfigWithEnvVars(cfg); err != nil {
+		return nil, errors.Wrap(err, "OverrideConfigWithEnvVars")
 	}
 
 	return cfg, nil
+}
+
+// OverrideConfigWithEnvVars overrides the Config with environment variables
+func OverrideConfigWithEnvVars(cfg *Config) error {
+	if v, ok := os.LookupEnv(constants.GrpcPort); ok {
+		cfg.GRPC.Port = v
+	}
+	if v, ok := os.LookupEnv(constants.EventStoreConnectionString); ok {
+		cfg.EventStoreConfig.ConnectionString = v
+	}
+	if v, ok := os.LookupEnv(constants.JaegerHostPort); ok {
+		cfg.Jaeger.HostPort = v
+	}
+	return nil
 }
