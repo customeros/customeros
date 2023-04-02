@@ -33,8 +33,8 @@ func NewServer(cfg *config.Config, log logger.Logger) *server {
 	return &server{cfg: cfg, log: log, echo: echo.New(), doneCh: make(chan struct{})}
 }
 
-func (server *server) Run() error {
-	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM, syscall.SIGINT)
+func (server *server) Run(parentCtx context.Context) error {
+	ctx, cancel := signal.NotifyContext(parentCtx, os.Interrupt, syscall.SIGTERM, syscall.SIGINT)
 	defer cancel()
 
 	//if err := server.validate.StructCtx(ctx, server.cfg); err != nil {

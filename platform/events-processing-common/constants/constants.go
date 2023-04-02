@@ -4,6 +4,7 @@ const (
 	GrpcPort                   = "GRPC_PORT"
 	ConfigPath                 = "CONFIG_PATH"
 	EventStoreConnectionString = "EVENT_STORE_CONNECTION_STRING"
+	JaegerHostPort             = "JAEGER_HOST_PORT"
 
 	Yaml = "yaml"
 	Tcp  = "tcp"
