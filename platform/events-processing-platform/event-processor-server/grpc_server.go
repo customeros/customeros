@@ -1,9 +1,9 @@
 package server
 
 import (
-	"github.com/openline-ai/openline-customer-os/platform/events-processing-common/constants"
 	contactGrpcService "github.com/openline-ai/openline-customer-os/platform/events-processing-common/proto/contact"
 	phoneNumberGrpcService "github.com/openline-ai/openline-customer-os/platform/events-processing-common/proto/phone_number"
+	"github.com/openline-ai/openline-customer-os/platform/events-processing-platform/constants"
 	contactService "github.com/openline-ai/openline-customer-os/platform/events-processing-platform/domain/contact/service"
 	phoneNumberService "github.com/openline-ai/openline-customer-os/platform/events-processing-platform/domain/phone_number/service"
 	"github.com/pkg/errors"

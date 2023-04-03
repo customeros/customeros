@@ -5,7 +5,7 @@ import (
 	phoneNumberService "github.com/openline-ai/openline-customer-os/platform/events-processing-platform/domain/phone_number/service"
 )
 
-type Commands struct {
+type CommandServices struct {
 	ContactCommandService     *contactService.ContactCommandsService
 	PhoneNumberCommandService *phoneNumberService.PhoneNumberCommandsService
 }

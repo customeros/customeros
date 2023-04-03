@@ -7,6 +7,9 @@ option go_package = "./;phoneNumberGrpcService";
 message CreatePhoneNumberGrpcRequest {
   string tenant = 1;
   string phoneNumber = 2;
+  string appSource = 3;
+  string source = 4;
+  string sourceOfTruth = 5;
 }
 
 message CreatePhoneNumberGrpcResponse {

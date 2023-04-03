@@ -7,6 +7,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/platform/events-processing-platform/domain/phone_number/aggregate"
 	"github.com/openline-ai/openline-customer-os/platform/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/platform/events-processing-platform/logger"
+	"github.com/openline-ai/openline-customer-os/platform/events-processing-platform/repository"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
@@ -17,9 +18,10 @@ type CreatePhoneNumberCommandHandler interface {
 }
 
 type createPhoneNumberHandler struct {
-	log logger.Logger
-	cfg *config.Config
-	es  eventstore.AggregateStore
+	log          logger.Logger
+	cfg          *config.Config
+	es           eventstore.AggregateStore
+	repositories *repository.Repositories
 }
 
 func NewCreatePhoneNumberHandler(log logger.Logger, cfg *config.Config, es eventstore.AggregateStore) *createPhoneNumberHandler {

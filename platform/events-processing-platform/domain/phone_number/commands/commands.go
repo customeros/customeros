@@ -8,7 +8,6 @@ type CreatePhoneNumberCommand struct {
 	eventstore.BaseCommand
 	Tenant      string `json:"tenant" validate:"required"`
 	PhoneNumber string `json:"rawPhoneNumber" validate:"required"`
-	E164        string `json:"e164"`
 }
 
 func NewCreatePhoneNumberCommand(aggregateID, tenant, rawPhoneNumber string) *CreatePhoneNumberCommand {

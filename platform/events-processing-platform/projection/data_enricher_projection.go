@@ -21,11 +21,11 @@ type DataEnricherProjection struct {
 	log                     logger.Logger
 	db                      *esdb.Client
 	cfg                     *config.Config
-	commands                *domain.Commands
+	commands                *domain.CommandServices
 	phoneNumberEventHandler *event_handler.DataEnricherPhoneNumberEventHandler
 }
 
-func NewDataEnricherProjection(log logger.Logger, db *esdb.Client, cfg *config.Config, commands *domain.Commands) *DataEnricherProjection {
+func NewDataEnricherProjection(log logger.Logger, db *esdb.Client, cfg *config.Config, commands *domain.CommandServices) *DataEnricherProjection {
 	return &DataEnricherProjection{
 		log:                     log,
 		db:                      db,

@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"github.com/go-playground/validator/v10"
 	"github.com/joho/godotenv"
-	"github.com/openline-ai/openline-customer-os/platform/events-processing-common/constants"
+	"github.com/openline-ai/openline-customer-os/platform/events-processing-platform/constants"
 	"github.com/openline-ai/openline-customer-os/platform/events-processing-platform/eventstroredb"
 	"github.com/openline-ai/openline-customer-os/platform/events-processing-platform/logger"
 	"github.com/openline-ai/openline-customer-os/platform/events-processing-platform/tracing"
