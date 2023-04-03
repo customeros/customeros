@@ -1,8 +1,8 @@
 package grpc_client
 
 import (
-	events_processing_contact "github.com/openline-ai/openline-customer-os/platform/events-processing-common/proto/contact"
-	events_processing_phone_number "github.com/openline-ai/openline-customer-os/platform/events-processing-common/proto/phone_number"
+	events_processing_contact "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/proto/contact"
+	events_processing_phone_number "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/proto/phone_number"
 	"google.golang.org/grpc"
 )
 

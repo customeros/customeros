@@ -4,7 +4,7 @@ go 1.20
 
 replace github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module => ../customer-os-common-module
 
-replace github.com/openline-ai/openline-customer-os/platform/events-processing-common => ../../../platform/events-processing-common
+replace github.com/openline-ai/openline-customer-os/packages/server/events-processing-common => ../events-processing-common
 
 require (
 	github.com/99designs/gqlgen v0.17.27
@@ -17,7 +17,7 @@ require (
 	github.com/mitchellh/mapstructure v1.5.0
 	github.com/neo4j/neo4j-go-driver/v5 v5.6.0
 	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20230301174918-5985fe463f74
-	github.com/openline-ai/openline-customer-os/platform/events-processing-common v0.0.0-20230329165010-b650d0174f46
+	github.com/openline-ai/openline-customer-os/packages/server/events-processing-common v0.0.0-20230329165010-b650d0174f46
 	github.com/sirupsen/logrus v1.9.0
 	github.com/stretchr/testify v1.8.2
 	github.com/testcontainers/testcontainers-go v0.19.0

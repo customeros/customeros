@@ -1,19 +1,16 @@
-name: Publish customer-os-api
+name: Build events-processing-platform
 
 on:
   push:
-    branches: [ "otter" ]
     paths:
       - packages/server/customer-os-common-module/**
-      - packages/server/customer-os-api/**
       - packages/server/events-processing-common/**
-      - .github/workflows/build-customer-os-api.yml
-  release:
-    types: [ created, edited ]
+      - packages/server/events-processing-platform/**
+      - .github/workflows/build-events-processing-platform.yml
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}/customer-os-api
+  IMAGE_NAME: ${{ github.repository }}/events-processing-platform
 
 permissions:
   contents: read
@@ -22,7 +19,7 @@ permissions:
 
 defaults:
   run:
-    working-directory: ./packages/server/customer-os-api
+    working-directory: ./packages/server/events-processing-platform
 
 jobs:
   build:
@@ -45,7 +42,7 @@ jobs:
         uses: mikepenz/action-junit-report@v3
         if: always()    # run this step even if previous step failed
         with:
-          report_paths: ./packages/server/customer-os-api/unit-tests.xml    # Path to test results
+          report_paths: ./packages/server/events-processing-platform/unit-tests.xml    # Path to test results
           include_passed: true
           annotate_only: true
           detailed_summary: true
@@ -57,26 +54,15 @@ jobs:
           echo "|--------|--------|--------|" >> $GITHUB_STEP_SUMMARY
           go tool cover -func=cover.out |sed -r  's/[[:space:]]+/|/g'|sed -r 's/$/|/g'|sed -r 's/^/|/g' >> $GITHUB_STEP_SUMMARY
 
-  publish:
-    name: publish image
-    needs:
-      - build
-
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-
       - name: Prepare sources for docker build
         run: |
           mkdir tmp-sources
           mkdir tmp-sources/customer-os-common-module
-          mkdir tmp-sources/customer-os-api
           mkdir tmp-sources/events-processing-common
+          mkdir tmp-sources/events-processing-platform
           
-          rsync -av --progress --exclude="tmp-sources" * tmp-sources/customer-os-api
-          cp .env tmp-sources/customer-os-api/.env
+          rsync -av --progress --exclude="tmp-sources" * tmp-sources/events-processing-platform
+          cp .env tmp-sources/events-processing-platform/.env
           cp -r ../customer-os-common-module/* tmp-sources/customer-os-common-module
           cp -r ../events-processing-common/* tmp-sources/events-processing-common
           
@@ -95,10 +81,10 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
 
-      - name: Push Docker image
+      - name: Build docker image ( no push )
         uses: docker/build-push-action@v4
         with:
-          context: packages/server/customer-os-api/tmp-sources/.
-          push: true
+          context: packages/server/events-processing-platform/tmp-sources/.
+          push: false
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
