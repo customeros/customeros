@@ -2,7 +2,7 @@ package resolver
 
 import (
 	"github.com/99designs/gqlgen/client"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils/decode"
@@ -39,7 +39,7 @@ func TestMutationResolver_NoteCreateForContact(t *testing.T) {
 	require.Equal(t, "Note content", createdNote.HTML)
 	require.Equal(t, model.DataSourceOpenline, createdNote.Source)
 	require.Equal(t, model.DataSourceOpenline, createdNote.SourceOfTruth)
-	require.Equal(t, common.AppSourceCustomerOsApi, createdNote.AppSource)
+	require.Equal(t, constants.AppSourceCustomerOsApi, createdNote.AppSource)
 	require.Equal(t, testUserId, createdNote.CreatedBy.ID)
 
 	// Check the number of nodes and relationships in the Neo4j database

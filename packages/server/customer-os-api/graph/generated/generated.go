@@ -347,7 +347,6 @@ type ComplexityRoot struct {
 		ContactAddOrganizationByID              func(childComplexity int, input model.ContactOrganizationInput) int
 		ContactAddTagByID                       func(childComplexity int, input model.ContactTagInput) int
 		ContactCreate                           func(childComplexity int, input model.ContactInput) int
-		ContactCreateWithEventStore             func(childComplexity int, input model.ContactInput) int
 		ContactGroupAddContact                  func(childComplexity int, contactID string, groupID string) int
 		ContactGroupCreate                      func(childComplexity int, input model.ContactGroupInput) int
 		ContactGroupDeleteAndUnlinkAllContacts  func(childComplexity int, id string) int
@@ -670,7 +669,6 @@ type LocationResolver interface {
 type MutationResolver interface {
 	EntityTemplateCreate(ctx context.Context, input model.EntityTemplateInput) (*model.EntityTemplate, error)
 	AnalysisCreate(ctx context.Context, analysis model.AnalysisInput) (*model.Analysis, error)
-	ContactCreateWithEventStore(ctx context.Context, input model.ContactInput) (string, error)
 	ContactCreate(ctx context.Context, input model.ContactInput) (*model.Contact, error)
 	ContactUpdate(ctx context.Context, input model.ContactUpdateInput) (*model.Contact, error)
 	ContactHardDelete(ctx context.Context, contactID string) (*model.Result, error)
@@ -2352,18 +2350,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.ContactCreate(childComplexity, args["input"].(model.ContactInput)), true
-
-	case "Mutation.contact_CreateWithEventStore":
-		if e.complexity.Mutation.ContactCreateWithEventStore == nil {
-			break
-		}
-
-		args, err := ec.field_Mutation_contact_CreateWithEventStore_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Mutation.ContactCreateWithEventStore(childComplexity, args["input"].(model.ContactInput)), true
 
 	case "Mutation.contactGroupAddContact":
 		if e.complexity.Mutation.ContactGroupAddContact == nil {
@@ -4447,7 +4433,6 @@ type Analysis implements Node {
 }
 
 extend type Mutation {
-    contact_CreateWithEventStore(input: ContactInput!): String!
     contact_Create(input: ContactInput!): Contact!
     contact_Update(input: ContactUpdateInput!): Contact!
     contact_HardDelete(contactId: ID!): Result!
@@ -6378,21 +6363,6 @@ func (ec *executionContext) field_Mutation_contact_AddTagById_args(ctx context.C
 	if tmp, ok := rawArgs["input"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
 		arg0, err = ec.unmarshalNContactTagInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐContactTagInput(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["input"] = arg0
-	return args, nil
-}
-
-func (ec *executionContext) field_Mutation_contact_CreateWithEventStore_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
-	var err error
-	args := map[string]interface{}{}
-	var arg0 model.ContactInput
-	if tmp, ok := rawArgs["input"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-		arg0, err = ec.unmarshalNContactInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐContactInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -18732,61 +18702,6 @@ func (ec *executionContext) fieldContext_Mutation_analysis_Create(ctx context.Co
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Mutation_analysis_Create_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
-		ec.Error(ctx, err)
-		return
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Mutation_contact_CreateWithEventStore(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_contact_CreateWithEventStore(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().ContactCreateWithEventStore(rctx, fc.Args["input"].(model.ContactInput))
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Mutation_contact_CreateWithEventStore(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Mutation",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			err = ec.Recover(ctx, r)
-			ec.Error(ctx, err)
-		}
-	}()
-	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_contact_CreateWithEventStore_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return
 	}
@@ -38384,15 +38299,6 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_analysis_Create(ctx, field)
-			})
-
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
-		case "contact_CreateWithEventStore":
-
-			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_contact_CreateWithEventStore(ctx, field)
 			})
 
 			if out.Values[i] == graphql.Null {

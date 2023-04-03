@@ -1,7 +1,7 @@
 package mapper
 
 import (
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
@@ -11,7 +11,7 @@ func MapTagInputToEntity(input model.TagInput) *entity.TagEntity {
 	tagEntity := entity.TagEntity{
 		Name:      input.Name,
 		Source:    entity.DataSourceOpenline,
-		AppSource: utils.IfNotNilStringWithDefault(input.AppSource, common.AppSourceCustomerOsApi),
+		AppSource: utils.IfNotNilStringWithDefault(input.AppSource, constants.AppSourceCustomerOsApi),
 	}
 	return &tagEntity
 }

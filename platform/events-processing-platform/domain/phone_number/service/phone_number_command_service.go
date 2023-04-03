@@ -12,7 +12,6 @@ type PhoneNumberCommandsService struct {
 }
 
 func NewPhoneNumberCommandsService(log logger.Logger, cfg *config.Config, es eventstore.AggregateStore) *PhoneNumberCommandsService {
-
 	createPhoneNumberHandler := commands.NewCreatePhoneNumberHandler(log, cfg, es)
 
 	contactCommands := commands.NewPhoneNumberCommands(

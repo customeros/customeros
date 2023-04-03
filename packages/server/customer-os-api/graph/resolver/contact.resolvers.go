@@ -6,7 +6,6 @@ package resolver
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"github.com/99designs/gqlgen/graphql"
@@ -17,8 +16,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	events_processing_contact "github.com/openline-ai/openline-customer-os/platform/events-processing-common/proto/contact"
-	"github.com/sirupsen/logrus"
 )
 
 // Tags is the resolver for the tags field.
@@ -262,22 +259,6 @@ func (r *contactResolver) TimelineEventsTotalCount(ctx context.Context, obj *mod
 		return int64(0), err
 	}
 	return count, nil
-}
-
-// ContactCreateWithEventStore is the resolver for the contact_CreateWithEventStore field.
-func (r *mutationResolver) ContactCreateWithEventStore(ctx context.Context, input model.ContactInput) (string, error) {
-	response, err := r.Clients.ContactClient.CreateContact(context.Background(), &events_processing_contact.CreateContactGrpcRequest{
-		FirstName: *input.FirstName,
-		LastName:  *input.LastName,
-	})
-	if err != nil {
-		logrus.Errorf("Failed to call method: %v", err)
-	}
-
-	// Print the response from the server
-	fmt.Println(response)
-
-	return "COMPLETED", err
 }
 
 // ContactCreate is the resolver for the contact_Create field.

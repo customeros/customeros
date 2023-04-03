@@ -1,7 +1,7 @@
 package mapper
 
 import (
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
@@ -20,7 +20,7 @@ func MapEmailInputToEntity(input *model.EmailInput) *entity.EmailEntity {
 		AppSource:     utils.IfNotNilString(input.AppSource),
 	}
 	if len(emailEntity.AppSource) == 0 {
-		emailEntity.AppSource = common.AppSourceCustomerOsApi
+		emailEntity.AppSource = constants.AppSourceCustomerOsApi
 	}
 	return &emailEntity
 }

@@ -2,24 +2,12 @@ package constants
 
 const (
 	GrpcPort                   = "GRPC_PORT"
-	HttpPort                   = "HTTP_PORT"
 	ConfigPath                 = "CONFIG_PATH"
-	KafkaBrokers               = "KAFKA_BROKERS"
-	JaegerHostPort             = "JAEGER_HOST"
-	RedisAddr                  = "REDIS_ADDR"
-	MongoDbURI                 = "MONGO_URI"
 	EventStoreConnectionString = "EVENT_STORE_CONNECTION_STRING"
-	ElasticUrl                 = "ELASTIC_URL"
+	JaegerHostPort             = "JAEGER_HOST_PORT"
 
-	ReaderServicePort = "READER_SERVICE"
-
-	Yaml          = "yaml"
-	Tcp           = "tcp"
-	Redis         = "redis"
-	Kafka         = "kafka"
-	Postgres      = "postgres"
-	MongoDB       = "mongo"
-	ElasticSearch = "elasticSearch"
+	Yaml = "yaml"
+	Tcp  = "tcp"
 
 	GRPC     = "GRPC"
 	SIZE     = "SIZE"
@@ -47,12 +35,8 @@ const (
 	CreatedDate  = "CreatedDate"
 	UserMetadata = "UserMetadata"
 
-	Page   = "page"
-	Size   = "size"
-	Search = "search"
-	ID     = "id"
-
-	EsAll = "$all"
+	GraphProjection        = "(Graph Projection)"
+	DataEnricherProjection = "(Data Enricher Projection)"
 
 	Validate        = "validate"
 	FieldValidation = "field validation"
@@ -63,19 +47,7 @@ const (
 	Cookie          = "cookie"
 	Token           = "token"
 	Bcrypt          = "bcrypt"
-	SQLState        = "sqlstate"
+	Redis           = "redis"
 
-	GraphProjection        = "(Graph Projection)"
-	DataEnricherProjection = "(Data Enricher Projection)"
-
-	OrderIdIndex    = "orderId"
-	OrderId         = "orderId"
-	DeliveryAddress = "deliveryAddress"
-	Submitted       = "submitted"
-	Completed       = "completed"
-	DeliveredTime   = "deliveredTime"
-	Payment         = "payment"
-	Paid            = "paid"
-	Canceled        = "canceled"
-	CancelReason    = "cancelReason"
+	EsAll = "$all"
 )

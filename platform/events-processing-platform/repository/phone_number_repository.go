@@ -52,9 +52,11 @@ func (r *phoneNumberRepository) CreatePhoneNumber(ctx context.Context, tenant, i
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
-	query := "MATCH (t:Tenant {name:$tenant}) " +
-		" MERGE (t)<-[:PHONE_NUMBER_BELONGS_TO_TENANT]-(p:PhoneNumber:PhoneNumber_%s {id:$id}) " +
-		" ON CREATE SET p.rawPhoneNumber = $rawPhoneNumber"
+	query := `MATCH (t:Tenant {name:$tenant}) 
+		 MERGE (t)<-[:PHONE_NUMBER_BELONGS_TO_TENANT]-(p:PhoneNumber:PhoneNumber_%s {id:$id}) 
+		 ON CREATE SET p.rawPhoneNumber = $rawPhoneNumber, 
+						p.syncedWithEventStore = true 
+		 ON MATCH SET 	p.syncedWithEventStore = true`
 
 	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		_, err := tx.Run(ctx, fmt.Sprintf(query, tenant),

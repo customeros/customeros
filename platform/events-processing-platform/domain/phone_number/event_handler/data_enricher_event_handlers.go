@@ -12,7 +12,7 @@ import (
 )
 
 type DataEnricherPhoneNumberEventHandler struct {
-	commands *domain.Commands
+	commands *domain.CommandServices
 }
 
 func (e *DataEnricherPhoneNumberEventHandler) OnPhoneNumberCreate(ctx context.Context, evt eventstore.Event) error {

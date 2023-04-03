@@ -22,7 +22,7 @@ type server struct {
 	cfg          *config.Config
 	log          logger.Logger
 	repositories *repository.Repositories
-	commands     *domain.Commands
+	commands     *domain.CommandServices
 	//validate           *validator.Validate
 	echo *echo.Echo
 	//	metrics            *metrics.ESMicroserviceMetrics
@@ -69,7 +69,7 @@ func (server *server) Run(parentCtx context.Context) error {
 	server.repositories = repository.InitRepos(&neo4jDriver)
 
 	aggregateStore := store.NewAggregateStore(server.log, db)
-	server.commands = &domain.Commands{
+	server.commands = &domain.CommandServices{
 		ContactCommandService:     contactService.NewContactCommandsService(server.log, server.cfg, aggregateStore),
 		PhoneNumberCommandService: phoneNumberService.NewPhoneNumberCommandsService(server.log, server.cfg, aggregateStore),
 	}
