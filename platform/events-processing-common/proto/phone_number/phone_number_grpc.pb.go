@@ -22,7 +22,8 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type PhoneNumberGrpcServiceClient interface {
-	CreatePhoneNumber(ctx context.Context, in *CreatePhoneNumberGrpcRequest, opts ...grpc.CallOption) (*CreatePhoneNumberGrpcResponse, error)
+	CreatePhoneNumber(ctx context.Context, in *CreatePhoneNumberGrpcRequest, opts ...grpc.CallOption) (*PhoneNumberGrpcResponse, error)
+	UpsertPhoneNumber(ctx context.Context, in *UpsertPhoneNumberGrpcRequest, opts ...grpc.CallOption) (*PhoneNumberGrpcResponse, error)
 }
 
 type phoneNumberGrpcServiceClient struct {
@@ -33,9 +34,18 @@ func NewPhoneNumberGrpcServiceClient(cc grpc.ClientConnInterface) PhoneNumberGrp
 	return &phoneNumberGrpcServiceClient{cc}
 }
 
-func (c *phoneNumberGrpcServiceClient) CreatePhoneNumber(ctx context.Context, in *CreatePhoneNumberGrpcRequest, opts ...grpc.CallOption) (*CreatePhoneNumberGrpcResponse, error) {
-	out := new(CreatePhoneNumberGrpcResponse)
+func (c *phoneNumberGrpcServiceClient) CreatePhoneNumber(ctx context.Context, in *CreatePhoneNumberGrpcRequest, opts ...grpc.CallOption) (*PhoneNumberGrpcResponse, error) {
+	out := new(PhoneNumberGrpcResponse)
 	err := c.cc.Invoke(ctx, "/phoneNumberGrpcService.phoneNumberGrpcService/CreatePhoneNumber", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *phoneNumberGrpcServiceClient) UpsertPhoneNumber(ctx context.Context, in *UpsertPhoneNumberGrpcRequest, opts ...grpc.CallOption) (*PhoneNumberGrpcResponse, error) {
+	out := new(PhoneNumberGrpcResponse)
+	err := c.cc.Invoke(ctx, "/phoneNumberGrpcService.phoneNumberGrpcService/UpsertPhoneNumber", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -46,7 +56,8 @@ func (c *phoneNumberGrpcServiceClient) CreatePhoneNumber(ctx context.Context, in
 // All implementations must embed UnimplementedPhoneNumberGrpcServiceServer
 // for forward compatibility
 type PhoneNumberGrpcServiceServer interface {
-	CreatePhoneNumber(context.Context, *CreatePhoneNumberGrpcRequest) (*CreatePhoneNumberGrpcResponse, error)
+	CreatePhoneNumber(context.Context, *CreatePhoneNumberGrpcRequest) (*PhoneNumberGrpcResponse, error)
+	UpsertPhoneNumber(context.Context, *UpsertPhoneNumberGrpcRequest) (*PhoneNumberGrpcResponse, error)
 	mustEmbedUnimplementedPhoneNumberGrpcServiceServer()
 }
 
@@ -54,8 +65,11 @@ type PhoneNumberGrpcServiceServer interface {
 type UnimplementedPhoneNumberGrpcServiceServer struct {
 }
 
-func (UnimplementedPhoneNumberGrpcServiceServer) CreatePhoneNumber(context.Context, *CreatePhoneNumberGrpcRequest) (*CreatePhoneNumberGrpcResponse, error) {
+func (UnimplementedPhoneNumberGrpcServiceServer) CreatePhoneNumber(context.Context, *CreatePhoneNumberGrpcRequest) (*PhoneNumberGrpcResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreatePhoneNumber not implemented")
+}
+func (UnimplementedPhoneNumberGrpcServiceServer) UpsertPhoneNumber(context.Context, *UpsertPhoneNumberGrpcRequest) (*PhoneNumberGrpcResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpsertPhoneNumber not implemented")
 }
 func (UnimplementedPhoneNumberGrpcServiceServer) mustEmbedUnimplementedPhoneNumberGrpcServiceServer() {
 }
@@ -89,6 +103,24 @@ func _PhoneNumberGrpcService_CreatePhoneNumber_Handler(srv interface{}, ctx cont
 	return interceptor(ctx, in, info, handler)
 }
 
+func _PhoneNumberGrpcService_UpsertPhoneNumber_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpsertPhoneNumberGrpcRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PhoneNumberGrpcServiceServer).UpsertPhoneNumber(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/phoneNumberGrpcService.phoneNumberGrpcService/UpsertPhoneNumber",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PhoneNumberGrpcServiceServer).UpsertPhoneNumber(ctx, req.(*UpsertPhoneNumberGrpcRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // PhoneNumberGrpcService_ServiceDesc is the grpc.ServiceDesc for PhoneNumberGrpcService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -99,6 +131,10 @@ var PhoneNumberGrpcService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "CreatePhoneNumber",
 			Handler:    _PhoneNumberGrpcService_CreatePhoneNumber_Handler,
+		},
+		{
+			MethodName: "UpsertPhoneNumber",
+			Handler:    _PhoneNumberGrpcService_UpsertPhoneNumber_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

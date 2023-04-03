@@ -6,7 +6,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/platform/events-processing-platform/config"
 	"github.com/openline-ai/openline-customer-os/platform/events-processing-platform/domain"
 	contactService "github.com/openline-ai/openline-customer-os/platform/events-processing-platform/domain/contact/service"
-	phoneNumberService "github.com/openline-ai/openline-customer-os/platform/events-processing-platform/domain/phone_number/service"
+	phoneNumberCommands "github.com/openline-ai/openline-customer-os/platform/events-processing-platform/domain/phone_number/commands"
 	"github.com/openline-ai/openline-customer-os/platform/events-processing-platform/eventstore/store"
 	"github.com/openline-ai/openline-customer-os/platform/events-processing-platform/eventstroredb"
 	"github.com/openline-ai/openline-customer-os/platform/events-processing-platform/logger"
@@ -22,11 +22,11 @@ type server struct {
 	cfg          *config.Config
 	log          logger.Logger
 	repositories *repository.Repositories
-	commands     *domain.CommandServices
+	commands     *domain.Commands
+	echo         *echo.Echo
+	doneCh       chan struct{}
 	//validate           *validator.Validate
-	echo *echo.Echo
 	//	metrics            *metrics.ESMicroserviceMetrics
-	doneCh chan struct{}
 }
 
 func NewServer(cfg *config.Config, log logger.Logger) *server {
@@ -69,9 +69,9 @@ func (server *server) Run(parentCtx context.Context) error {
 	server.repositories = repository.InitRepos(&neo4jDriver)
 
 	aggregateStore := store.NewAggregateStore(server.log, db)
-	server.commands = &domain.CommandServices{
-		ContactCommandService:     contactService.NewContactCommandsService(server.log, server.cfg, aggregateStore),
-		PhoneNumberCommandService: phoneNumberService.NewPhoneNumberCommandsService(server.log, server.cfg, aggregateStore),
+	server.commands = &domain.Commands{
+		ContactCommandsService: contactService.NewContactCommandsService(server.log, server.cfg, aggregateStore),
+		PhoneNumberCommands:    phoneNumberCommands.NewPhoneNumberCommands(server.log, server.cfg, aggregateStore),
 	}
 
 	graphProjection := projection.NewGraphProjection(server.log, db, server.repositories, server.cfg)

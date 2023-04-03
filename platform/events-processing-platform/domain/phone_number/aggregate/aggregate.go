@@ -20,7 +20,6 @@ func NewPhoneNumberAggregateWithTenantAndID(tenant, id string) *PhoneNumberAggre
 	if id == "" {
 		return nil
 	}
-
 	aggregate := NewPhoneNumberAggregate()
 	aggregate.SetID(tenant + "-" + id)
 	return aggregate
@@ -40,6 +39,8 @@ func (a *PhoneNumberAggregate) When(event eventstore.Event) error {
 
 	case events.PhoneNumberCreated:
 		return a.onPhoneNumberCreated(event)
+	case events.PhoneNumberUpdated:
+		return a.onPhoneNumberUpdated(event)
 
 	default:
 		return eventstore.ErrInvalidEventType
@@ -52,5 +53,20 @@ func (a *PhoneNumberAggregate) onPhoneNumberCreated(event eventstore.Event) erro
 		return errors.Wrap(err, "GetJsonData")
 	}
 	a.PhoneNumber.RawPhoneNumber = eventData.RawPhoneNumber
+	a.PhoneNumber.Source = eventData.Source
+	a.PhoneNumber.SourceOfTruth = eventData.SourceOfTruth
+	a.PhoneNumber.AppSource = eventData.AppSource
+	a.PhoneNumber.CreatedAt = eventData.CreatedAt
+	a.PhoneNumber.UpdatedAt = eventData.UpdatedAt
+	return nil
+}
+
+func (a *PhoneNumberAggregate) onPhoneNumberUpdated(event eventstore.Event) error {
+	var eventData events.PhoneNumberUpdatedEvent
+	if err := event.GetJsonData(&eventData); err != nil {
+		return errors.Wrap(err, "GetJsonData")
+	}
+	a.PhoneNumber.SourceOfTruth = eventData.SourceOfTruth
+	a.PhoneNumber.UpdatedAt = eventData.UpdatedAt
 	return nil
 }

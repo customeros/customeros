@@ -46,10 +46,10 @@ func (server *server) newEventProcessorGrpcServer() (func() error, *grpc.Server,
 		),
 	)
 
-	contactService := contactService.NewContactService(server.log, server.commands.ContactCommandService)
+	contactService := contactService.NewContactService(server.log, server.commands.ContactCommandsService)
 	contactGrpcService.RegisterContactGrpcServiceServer(grpcServer, contactService)
 
-	phoneNumberService := phoneNumberService.NewPhoneNumberService(server.log, server.repositories, server.commands.PhoneNumberCommandService)
+	phoneNumberService := phoneNumberService.NewPhoneNumberService(server.log, server.repositories, server.commands.PhoneNumberCommands)
 	phoneNumberGrpcService.RegisterPhoneNumberGrpcServiceServer(grpcServer, phoneNumberService)
 
 	go func() {
