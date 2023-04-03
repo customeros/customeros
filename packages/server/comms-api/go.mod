@@ -5,7 +5,7 @@ go 1.19
 //replace github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module => ./../customer-os-common-module
 //replace github.com/openline-ai/openline-customer-os/packages/server/customer-os-api => ../customer-os-api
 require (
-	github.com/99designs/gqlgen v0.17.20
+	github.com/99designs/gqlgen v0.17.27
 	github.com/DusanKasan/parsemail v1.2.0
 	github.com/caarlos0/env/v6 v6.10.1
 	github.com/emersion/go-message v0.16.0
@@ -14,7 +14,7 @@ require (
 	github.com/gorilla/websocket v1.5.0
 	github.com/joho/godotenv v1.5.1
 	github.com/machinebox/graphql v0.2.2
-	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20230403112554-3f3945709e31
+	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20230404091122-3efa62d40472
 	github.com/ory/client-go v1.1.23
 	github.com/sirupsen/logrus v1.9.0
 	github.com/stretchr/testify v1.8.2
@@ -43,7 +43,7 @@ require (
 	github.com/google/uuid v1.3.0 // indirect
 	github.com/googleapis/enterprise-certificate-proxy v0.2.0 // indirect
 	github.com/googleapis/gax-go/v2 v2.7.0 // indirect
-	github.com/hashicorp/golang-lru v0.5.4 // indirect
+	github.com/hashicorp/golang-lru/v2 v2.0.1 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/klauspost/cpuid/v2 v2.2.4 // indirect
 	github.com/leodido/go-urn v1.2.2 // indirect

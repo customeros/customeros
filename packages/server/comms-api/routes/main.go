@@ -4,21 +4,21 @@ import (
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	c "github.com/openline-ai/openline-customer-os/packages/server/comms-api/config"
-	"github.com/openline-ai/openline-customer-os/packages/server/comms-api/routes/chatHub"
+	"github.com/openline-ai/openline-customer-os/packages/server/comms-api/routes/ContactHub"
 	"github.com/openline-ai/openline-customer-os/packages/server/comms-api/service"
 	"log"
 	"strings"
 )
 
 // Run will start the server
-func Run(config *c.Config, fh *chatHub.Hub, services *service.Services) {
-	router := getRouter(config, fh, services)
+func Run(config *c.Config, hub *ContactHub.ContactHub, services *service.Services) {
+	router := getRouter(config, hub, services)
 	if err := router.Run(config.Service.ServerAddress); err != nil {
 		log.Fatalf("could not run server: %v", err)
 	}
 }
 
-func getRouter(config *c.Config, fh *chatHub.Hub, services *service.Services) *gin.Engine {
+func getRouter(config *c.Config, hub *ContactHub.ContactHub, services *service.Services) *gin.Engine {
 	router := gin.New()
 	corsConfig := cors.DefaultConfig()
 
@@ -33,12 +33,11 @@ func getRouter(config *c.Config, fh *chatHub.Hub, services *service.Services) *g
 	router.Use(cors.New(corsConfig))
 	route := router.Group("/")
 
-	addMailRoutes(config, route, services.MailService)
-	AddVconRoutes(config, route, services.CustomerOsService)
+	addMailRoutes(config, route, services.MailService, hub)
+	addVconRoutes(config, route, services.CustomerOsService, hub)
 
-	//AddWebSocketRoutes(route, fh, config.WebChat.PingInterval)
-	//AddWebChatRoutes(config, df, route)
-	//AddVconRoutes(config, df, route)
+	addWebSocketRoutes(route, config.WebChat.PingInterval, hub)
+	addCallCredentialRoutes(route, config)
 	route2 := router.Group("/")
 
 	addHealthRoutes(route2)

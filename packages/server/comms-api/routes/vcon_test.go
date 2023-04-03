@@ -49,7 +49,7 @@ func Test_invalidApiKey(t *testing.T) {
 	customerOs := service.NewCustomerOSService(client, myVconConfig)
 	route := vconRouter.Group("/")
 
-	AddVconRoutes(myVconConfig, route, customerOs)
+	addVconRoutes(myVconConfig, route, customerOs, nil)
 
 	resolver.InteractionEventCreate = func(ctx context.Context, event model.InteractionEventInput) (*model.InteractionEvent, error) {
 		log.Printf("InteractionEventCreate: Got Event %v", event)
@@ -116,7 +116,7 @@ func Test_vConDialogEvent(t *testing.T) {
 	reachedSessionBySessionIdentifier := false
 	var attendedBy []*model.InteractionSessionParticipantInput
 
-	AddVconRoutes(myVconConfig, route, customerOs)
+	addVconRoutes(myVconConfig, route, customerOs, nil)
 
 	resolver.InteractionEventCreate = func(ctx context.Context, event model.InteractionEventInput) (*model.InteractionEvent, error) {
 		log.Printf("InteractionEventCreate: Got Event %v", event)
@@ -225,7 +225,7 @@ func Test_vConDialogEventInExistingSession(t *testing.T) {
 	reachedSessionCreate := false
 	reachedSessionBySessionIdentifier := false
 
-	AddVconRoutes(myVconConfig, route, customerOs)
+	addVconRoutes(myVconConfig, route, customerOs, nil)
 
 	resolver.InteractionEventCreate = func(ctx context.Context, event model.InteractionEventInput) (*model.InteractionEvent, error) {
 		log.Printf("InteractionEventCreate: Got Event %v", event)
@@ -325,7 +325,7 @@ func Test_vConAnalysisEventInExistingSession(t *testing.T) {
 	reachedSessionCreate := false
 	reachedSessionBySessionIdentifier := false
 
-	AddVconRoutes(myVconConfig, route, customerOs)
+	addVconRoutes(myVconConfig, route, customerOs, nil)
 
 	resolver.AnalysisCreate = func(ctx context.Context, analysis model.AnalysisInput) (*model.Analysis, error) {
 		log.Printf("InteractionEventCreate: Got Event %v", analysis)
@@ -398,7 +398,7 @@ func Test_vConAnalysisAsFirstEvent(t *testing.T) {
 	reachedSessionBySessionIdentifier := false
 	var attendedBy []*model.InteractionSessionParticipantInput
 
-	AddVconRoutes(myVconConfig, route, customerOs)
+	addVconRoutes(myVconConfig, route, customerOs, nil)
 
 	resolver.AnalysisCreate = func(ctx context.Context, analysis model.AnalysisInput) (*model.Analysis, error) {
 		log.Printf("InteractionEventCreate: Got Event %v", analysis)

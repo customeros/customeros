@@ -1,14 +1,3 @@
-export type FeedItem = {
-  id: string;
-  initiatorFirstName: string;
-  initiatorLastName: string;
-  initiatorUsername: Participant;
-  initiatorType: string;
-  lastSenderFirstName: string;
-  lastSenderLastName: string;
-  lastContentPreview: string;
-  lastTimestamp: Time;
-};
 export interface Props {
   feedId: string;
   source: string;

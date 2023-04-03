@@ -6,6 +6,7 @@ import linkifyHtml from 'linkify-html';
 import { EmailParticipants } from './email-participants';
 import classNames from 'classnames';
 import { useContactCommunicationChannelsDetails } from '../../../../hooks/useContact';
+import { parse } from 'content-type';
 
 interface Props {
   content: string;
@@ -96,7 +97,13 @@ export const EmailTimelineItem: React.FC<Props> = ({
 
   const [expanded, toggleExpanded] = useState(false);
   const timelineItemRef = useRef<HTMLDivElement>(null);
-
+  const { type, parameters } = parse(contentType);
+  let parsedContentType;
+  if (type === 'multipart/alternative') {
+    parsedContentType = type;
+  } else {
+    parsedContentType = contentType;
+  }
   const handleToggleExpanded = () => {
     toggleExpanded(!expanded);
     if (timelineItemRef?.current && expanded) {
@@ -139,7 +146,8 @@ export const EmailTimelineItem: React.FC<Props> = ({
               !expanded ? styles.eclipse : ''
             }`}
           >
-            {contentType === 'text/html' && (
+            {(parsedContentType === 'text/html' ||
+              parsedContentType === 'multipart/alternative') && (
               <div
                 className={`text-overflow-ellipsis ${styles.emailContent}`}
                 dangerouslySetInnerHTML={{
@@ -147,7 +155,7 @@ export const EmailTimelineItem: React.FC<Props> = ({
                 }}
               ></div>
             )}
-            {contentType === 'text/plain' && (
+            {parsedContentType === 'text/plain' && (
               <div className={`text-overflow-ellipsis ${styles.emailContent}`}>
                 {linkifyHtml(content, {
                   defaultProtocol: 'https',

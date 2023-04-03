@@ -46,7 +46,6 @@ export const EmailParticipants: React.FC<Props> = ({
   const [showMore, setShowMore] = useState(false);
   const setEditorMode = useSetRecoilState(editorMode);
   const [emailEditorData, setEmailEditorData] = useRecoilState(editorEmail);
-  console.log('🏷️ ----- from: ', from);
   const loggedInUserData = useRecoilValue(userData);
   const SendMail = (
     text: string,

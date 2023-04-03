@@ -9,8 +9,8 @@ export const ContactHistory = ({ id }: { id: string }) => {
     contactId: id,
   });
   const [prevDate, setPrevDate] = useState(null);
-  const liveConversations = {
-    __typename: 'LiveConversation',
+  const liveInteractions = {
+    __typename: 'LiveEventTimelineItem',
     source: 'LiveStream',
     createdAt: Date.now(),
     id: uuid4(),
@@ -42,7 +42,7 @@ export const ContactHistory = ({ id }: { id: string }) => {
       noActivity={!data.length}
       id={id}
       contactName={contactName}
-      loggedActivities={[liveConversations, ...(data || [])]}
+      loggedActivities={[...(data || []), liveInteractions]}
     />
   );
 };

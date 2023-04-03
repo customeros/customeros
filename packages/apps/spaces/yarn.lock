@@ -2851,6 +2851,11 @@
   resolved "https://registry.yarnpkg.com/@types/aria-query/-/aria-query-5.0.1.tgz#3286741fb8f1e1580ac28784add4c7a1d49bdfbc"
   integrity sha512-XTIieEY+gvJ39ChLcB4If5zHtPxt3Syj5rgZR+e1ctpmK8NjPf0zFqsz4JpLJT0xla9GFDKjy8Cpu331nrmE1Q==
 
+"@types/content-type@^1.1.5":
+  version "1.1.5"
+  resolved "https://registry.yarnpkg.com/@types/content-type/-/content-type-1.1.5.tgz#aa02dca40864749a9e2bf0161a6216da57e3ede5"
+  integrity sha512-dgMN+syt1xb7Hk8LU6AODOfPlvz5z1CbXpPuJE5ZrX9STfBOIXF09pEB8N7a97WT9dbngt3ksDCm6GW6yMrxfQ==
+
 "@types/cookie@^0.4.1":
   version "0.4.1"
   resolved "https://registry.yarnpkg.com/@types/cookie/-/cookie-0.4.1.tgz#bfd02c1f2224567676c1545199f87c3a861d878d"
