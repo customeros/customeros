@@ -7,25 +7,40 @@ import (
 	"github.com/openline-ai/openline-customer-os/platform/events-processing-platform/domain/phone_number/commands"
 	"github.com/openline-ai/openline-customer-os/platform/events-processing-platform/logger"
 	"github.com/openline-ai/openline-customer-os/platform/events-processing-platform/repository"
+	"github.com/openline-ai/openline-customer-os/platform/events-processing-platform/utils"
 	"golang.org/x/net/context"
 )
 
 type phoneNumberService struct {
 	phoneNumberGrpcService.UnimplementedPhoneNumberGrpcServiceServer
-	log                        logger.Logger
-	repositories               *repository.Repositories
-	phoneNumberCommandsService *PhoneNumberCommandsService
+	log                 logger.Logger
+	repositories        *repository.Repositories
+	phoneNumberCommands *commands.PhoneNumberCommands
 }
 
-func NewPhoneNumberService(log logger.Logger, repositories *repository.Repositories, phoneNumberCommandsService *PhoneNumberCommandsService) *phoneNumberService {
+func NewPhoneNumberService(log logger.Logger, repositories *repository.Repositories, phoneNumberCommands *commands.PhoneNumberCommands) *phoneNumberService {
 	return &phoneNumberService{
-		log:                        log,
-		repositories:               repositories,
-		phoneNumberCommandsService: phoneNumberCommandsService,
+		log:                 log,
+		repositories:        repositories,
+		phoneNumberCommands: phoneNumberCommands,
 	}
 }
 
-func (s *phoneNumberService) CreatePhoneNumber(ctx context.Context, request *phoneNumberGrpcService.CreatePhoneNumberGrpcRequest) (*phoneNumberGrpcService.CreatePhoneNumberGrpcResponse, error) {
+func (s *phoneNumberService) UpsertPhoneNumber(ctx context.Context, request *phoneNumberGrpcService.UpsertPhoneNumberGrpcRequest) (*phoneNumberGrpcService.PhoneNumberGrpcResponse, error) {
+	aggregateID := request.Id
+
+	command := commands.NewUpsertPhoneNumberCommand(aggregateID, request.Tenant, request.PhoneNumber, request.Source, request.SourceOfTruth, request.AppSource, utils.TimestampProtoToTime(request.CreatedAt), utils.TimestampProtoToTime(request.UpdatedAt))
+	if err := s.phoneNumberCommands.UpsertPhoneNumber.Handle(ctx, command); err != nil {
+		s.log.Errorf("(UpsertSyncPhoneNumber.Handle) phoneNumber ID: {%s}, err: {%v}", aggregateID, err)
+		return nil, s.errResponse(err)
+	}
+
+	s.log.Infof("(created existing PhoneNumber): {%s}", aggregateID)
+
+	return &phoneNumberGrpcService.PhoneNumberGrpcResponse{Id: aggregateID}, nil
+}
+
+func (s *phoneNumberService) CreatePhoneNumber(ctx context.Context, request *phoneNumberGrpcService.CreatePhoneNumberGrpcRequest) (*phoneNumberGrpcService.PhoneNumberGrpcResponse, error) {
 	id, err := s.repositories.PhoneNumberRepository.GetIdIfExists(ctx, request.Tenant, request.PhoneNumber)
 	if err != nil {
 		return nil, s.errResponse(err)
@@ -40,14 +55,15 @@ func (s *phoneNumberService) CreatePhoneNumber(ctx context.Context, request *pho
 
 	// FIXME alexb if phoneNumber exists proceed with creation but return error if aggregate already exists
 
-	command := commands.NewCreatePhoneNumberCommand(aggregateID, request.GetTenant(), request.GetPhoneNumber())
-	if err := s.phoneNumberCommandsService.Commands.CreatePhoneNumber.Handle(ctx, command); err != nil {
-		//phoneNumberService.log.Errorf("(CreatePhoneNumber.Handle) phoneNumber ID: {%s}, err: {%v}", aggregateID, err)
-		return nil, s.errResponse(err)
-	}
+	// FIXME alexb re-implement
+	//command := commands.NewCreatePhoneNumberCommand(aggregateID, request.GetTenant(), request.GetPhoneNumber())
+	//if err := s.phoneNumberCommandsService.Commands.CreatePhoneNumber.Handle(ctx, command); err != nil {
+	//	s.log.Errorf("(CreatePhoneNumber.Handle) phoneNumber ID: {%s}, err: {%v}", aggregateID, err)
+	//	return nil, s.errResponse(err)
+	//}
 
 	s.log.Infof("(created PhoneNumber): {%s}", aggregateID)
-	return &phoneNumberGrpcService.CreatePhoneNumberGrpcResponse{UUID: aggregateID}, nil
+	return &phoneNumberGrpcService.PhoneNumberGrpcResponse{Id: aggregateID}, nil
 }
 
 func (s *phoneNumberService) errResponse(err error) error {

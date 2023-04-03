@@ -2,7 +2,20 @@ syntax = "proto3";
 
 package phoneNumberGrpcService;
 
+import "google/protobuf/timestamp.proto";
+
 option go_package = "./;phoneNumberGrpcService";
+
+message UpsertPhoneNumberGrpcRequest {
+  string tenant = 1;
+  string phoneNumber = 2;
+  string appSource = 3;
+  string source = 4;
+  string sourceOfTruth = 5;
+  google.protobuf.Timestamp  createdAt = 6;
+  google.protobuf.Timestamp  updatedAt = 7;
+  string id = 8;
+}
 
 message CreatePhoneNumberGrpcRequest {
   string tenant = 1;
@@ -10,12 +23,14 @@ message CreatePhoneNumberGrpcRequest {
   string appSource = 3;
   string source = 4;
   string sourceOfTruth = 5;
+  google.protobuf.Timestamp  createdAt = 6;
 }
 
-message CreatePhoneNumberGrpcResponse {
-  string UUID = 1;
+message PhoneNumberGrpcResponse {
+  string id = 1;
 }
 
 service phoneNumberGrpcService {
-  rpc CreatePhoneNumber(CreatePhoneNumberGrpcRequest) returns (CreatePhoneNumberGrpcResponse);
+  rpc CreatePhoneNumber(CreatePhoneNumberGrpcRequest) returns (PhoneNumberGrpcResponse);
+  rpc UpsertPhoneNumber(UpsertPhoneNumberGrpcRequest) returns (PhoneNumberGrpcResponse);
 }

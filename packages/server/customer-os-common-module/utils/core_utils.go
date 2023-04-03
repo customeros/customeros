@@ -158,6 +158,20 @@ func IfNotNilBool(check any, valueExtractor ...func() bool) bool {
 	return *out
 }
 
+func IfNotNilTime(check any, valueExtractor ...func() time.Time) time.Time {
+	if reflect.ValueOf(check).Kind() == reflect.Bool { // FIXME alexb debug
+		return check.(time.Time)
+	}
+	if reflect.ValueOf(check).Kind() == reflect.Pointer && reflect.ValueOf(check).IsNil() {
+		return GetEpochStart()
+	}
+	if len(valueExtractor) > 0 {
+		return valueExtractor[0]()
+	}
+	out := check.(*time.Time)
+	return *out
+}
+
 func ReverseMap[K comparable, V comparable](in map[K]V) map[V]K {
 	out := map[V]K{}
 	for k, v := range in {

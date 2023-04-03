@@ -1,12 +1,19 @@
 package commands
 
+import (
+	"github.com/openline-ai/openline-customer-os/platform/events-processing-platform/config"
+	"github.com/openline-ai/openline-customer-os/platform/events-processing-platform/eventstore"
+	"github.com/openline-ai/openline-customer-os/platform/events-processing-platform/logger"
+)
+
 type PhoneNumberCommands struct {
 	CreatePhoneNumber CreatePhoneNumberCommandHandler
-	//DeletePhoneNumber DeletePhoneNumberCommandHandler
+	UpsertPhoneNumber UpsertPhoneNumberCommandHandler
 }
 
-func NewPhoneNumberCommands(createPhoneNumber CreatePhoneNumberCommandHandler) *PhoneNumberCommands {
+func NewPhoneNumberCommands(log logger.Logger, cfg *config.Config, es eventstore.AggregateStore) *PhoneNumberCommands {
 	return &PhoneNumberCommands{
-		CreatePhoneNumber: createPhoneNumber,
+		CreatePhoneNumber: NewCreatePhoneNumberHandler(log, cfg, es),
+		UpsertPhoneNumber: NewUpsertPhoneNumberHandler(log, cfg, es),
 	}
 }

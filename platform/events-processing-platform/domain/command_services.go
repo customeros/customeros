@@ -2,10 +2,11 @@ package domain
 
 import (
 	contactService "github.com/openline-ai/openline-customer-os/platform/events-processing-platform/domain/contact/service"
-	phoneNumberService "github.com/openline-ai/openline-customer-os/platform/events-processing-platform/domain/phone_number/service"
+	"github.com/openline-ai/openline-customer-os/platform/events-processing-platform/domain/phone_number/commands"
 )
 
-type CommandServices struct {
-	ContactCommandService     *contactService.ContactCommandsService
-	PhoneNumberCommandService *phoneNumberService.PhoneNumberCommandsService
+type Commands struct {
+	// FIXME alexb replace with Commands, no need for intermediary service
+	ContactCommandsService *contactService.ContactCommandsService
+	PhoneNumberCommands    *commands.PhoneNumberCommands
 }
