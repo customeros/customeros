@@ -5,6 +5,7 @@ on:
     paths:
       - packages/server/customer-os-common-module/**
       - packages/server/customer-os-api/**
+      - packages/server/events-processing-common/**
       - .github/workflows/build-customer-os-api.yml
 
 env:
@@ -57,11 +58,13 @@ jobs:
         run: |
           mkdir tmp-sources
           mkdir tmp-sources/customer-os-common-module
+          mkdir tmp-sources/events-processing-common
           mkdir tmp-sources/customer-os-api
           
           rsync -av --progress --exclude="tmp-sources" * tmp-sources/customer-os-api
           cp .env tmp-sources/customer-os-api/.env
           cp -r ../customer-os-common-module/* tmp-sources/customer-os-common-module
+          cp -r ../events-processing-common/* tmp-sources/events-processing-common
           
           cp Dockerfile tmp-sources/Dockerfile
 

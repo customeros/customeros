@@ -17,7 +17,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	events_processing_phone_number "github.com/openline-ai/openline-customer-os/platform/events-processing-common/proto/phone_number"
+	events_processing_phone_number "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/proto/phone_number"
 	"github.com/sirupsen/logrus"
 )
 
@@ -171,7 +171,7 @@ func (r *mutationResolver) PhoneNumberCreateWithEventStore(ctx context.Context, 
 		graphql.AddErrorf(ctx, "Failed to create phone number %s", rawPhoneNumber)
 	}
 
-	return response.UUID, nil
+	return response.Id, nil
 }
 
 // Users is the resolver for the users field.

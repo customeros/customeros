@@ -23,20 +23,17 @@ COPY events-processing-common/go.mod /workspace/build/events-processing-common/g
 COPY events-processing-common/go.sum /workspace/build/events-processing-common/go.sum
 COPY events-processing-common/. /workspace/build/events-processing-common/
 
-#copy and build customer-os-api
-COPY customer-os-api/go.mod /workspace/build/customer-os-api/go.mod
-COPY customer-os-api/go.sum /workspace/build/customer-os-api/go.sum
+#copy and build events-processing-platform
+COPY events-processing-platform/go.mod /workspace/build/events-processing-platform/go.mod
+COPY events-processing-platform/go.sum /workspace/build/events-processing-platform/go.sum
+RUN cd /workspace/build/events-processing-platform && go mod download && go mod verify
 
-RUN cd /workspace/build/customer-os-api && go mod download && go mod verify
-
-COPY customer-os-api/. /workspace/build/customer-os-api/
-
-RUN cd /workspace/build/customer-os-api && go build -v -o /go/bin/app
+COPY events-processing-platform/. /workspace/build/events-processing-platform/
+RUN cd /workspace/build/events-processing-platform && go build -v -o /go/bin/app
 
 FROM alpine:3.14
 COPY --chown=65534:65534 --from=builder /go/bin/app .
-COPY --chown=65534:65534 --from=builder /workspace/build/customer-os-api/.env .env
+COPY --chown=65534:65534 --from=builder /workspace/build/events-processing-platform/.env .env
 USER 65534
 
-EXPOSE 10000
 ENTRYPOINT [ "./app" ]

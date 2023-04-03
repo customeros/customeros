@@ -70,7 +70,7 @@ func tearDownTestCase(ctx context.Context) func(tb testing.TB) {
 func prepareClient() {
 	repositoryContainer := commonRepository.InitRepositories(postgresGormDB, driver)
 	serviceContainer := service.InitServices(driver)
-	graphResolver := NewResolver(serviceContainer, repositoryContainer)
+	graphResolver := NewResolver(serviceContainer, repositoryContainer, nil)
 	loader := dataloader.NewDataLoader(serviceContainer)
 	customCtx := &common.CustomContext{
 		Tenant: tenantName,

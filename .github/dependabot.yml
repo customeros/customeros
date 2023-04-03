@@ -53,6 +53,34 @@ updates:
     rebase-strategy: "auto"
 
   - package-ecosystem: "gomod"
+    directory: "/packages/server/events-processing-common"
+    schedule:
+      interval: "daily"
+      time: "07:00"
+    open-pull-requests-limit: 3
+    labels:
+      - "gomod"
+      - "dependencies"
+      - "events-processing-common"
+    pull-request-branch-name:
+      separator: "-"
+    rebase-strategy: "auto"
+
+  - package-ecosystem: "gomod"
+    directory: "/packages/server/events-processing-platform"
+    schedule:
+      interval: "daily"
+      time: "07:00"
+    open-pull-requests-limit: 3
+    labels:
+      - "gomod"
+      - "dependencies"
+      - "events-processing-platform"
+    pull-request-branch-name:
+      separator: "-"
+    rebase-strategy: "auto"
+
+  - package-ecosystem: "gomod"
     directory: "/packages/server/message-store-api"
     schedule:
       interval: "daily"
