@@ -12,10 +12,20 @@ import {
 } from '../../../atoms';
 import { getContactDisplayName } from '../../../../../utils';
 import classNames from 'classnames';
+import { SendMailRequest } from '../../conversation-timeline-item/types';
+import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil';
+import {
+  editorEmail,
+  editorMode,
+  EditorMode,
+  userData,
+} from '../../../../../state';
+import axios from 'axios';
+import { toast } from 'react-toastify';
 
 interface Props {
   from: string;
-  to: string;
+  to: Array<string>;
   subject: string;
   cc: string;
   bcc: string;
@@ -34,7 +44,53 @@ export const EmailParticipants: React.FC<Props> = ({
   const { loading, error, data } = useContactNameFromEmail({ email: from });
   const name = getContactDisplayName(data)?.split(' ');
   const [showMore, setShowMore] = useState(false);
+  const setEditorMode = useSetRecoilState(editorMode);
+  const [emailEditorData, setEmailEditorData] = useRecoilState(editorEmail);
+  console.log('🏷️ ----- from: ', from);
+  const loggedInUserData = useRecoilValue(userData);
+  const SendMail = (
+    text: string,
+    onSuccess: () => void,
+    destination: Array<string> = [],
+    replyTo: null | string,
+    subject: null | string,
+  ) => {
+    if (!text) return;
+    const request: SendMailRequest = {
+      channel: 'EMAIL',
+      username: loggedInUserData.identity,
+      content: text,
+      direction: 'OUTBOUND',
+      destination: destination,
+    };
+    if (replyTo) {
+      request.replyTo = replyTo;
+    }
+    if (subject) {
+      request.subject = subject;
+    }
 
+    axios
+      .post(`/comms-api/mail/send`, {
+        headers: {
+          'X-Openline-Mail-Api-Key': process.env.COMMS_MAIL_API_KEY as string,
+        },
+        request,
+      })
+      .then((res) => {
+        if (res.data) {
+          onSuccess();
+          setEditorMode({
+            submitButtonLabel: 'Log into timeline',
+            mode: EditorMode.Note,
+          });
+          setEmailEditorData({ ...emailEditorData, to: [], subject: '' });
+        }
+      })
+      .catch(() => {
+        toast.error('Something went wrong while sending request');
+      });
+  };
   return (
     <div className={styles.wrapper}>
       <section className={styles.emailDataContainer}>
@@ -71,15 +127,12 @@ export const EmailParticipants: React.FC<Props> = ({
               >
                 <div
                   className={classNames(styles.label, {
-                    [styles.labelWithSpacing]:
-                      to?.split(';').length > 1 || to.length > 10,
+                    [styles.labelWithSpacing]: to?.length > 1 || to.length > 10,
                   })}
                 >
                   To:
                 </div>
-                <div className={styles.data}>
-                  {to && to.split(';').join(',')}
-                </div>
+                <div className={styles.data}>{to && to.join(',')}</div>
               </div>
             </div>
           </div>
@@ -138,7 +191,21 @@ export const EmailParticipants: React.FC<Props> = ({
           className={styles.emailActionButton}
           isSquare
           size='xxxs'
-          onClick={() => null}
+          onClick={() => {
+            setEmailEditorData({
+              //@ts-expect-error fixme later
+              handleSubmit: (data) => {
+                SendMail(data, () => null, [`${from}`], null, `${subject}`);
+              },
+              to: `${from}`.split(';'),
+              subject: `${subject}`,
+              respondTo: `${from}`,
+            });
+            setEditorMode({
+              mode: EditorMode.Email,
+              submitButtonLabel: 'Reply',
+            });
+          }}
           disabled
           icon={<ReplyLeft />}
         />

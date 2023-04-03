@@ -203,7 +203,7 @@ func TestMutationResolver_InteractionEventCreate_Email(t *testing.T) {
 	interactionSession1 := neo4jt.CreateInteractionSession(ctx, driver, tenantName, "mySessionIdentifier", "session1", "THREAD", "ACTIVE", "EMAIL", now, false)
 
 	rawResponse, err := c.RawPost(getQuery("interaction_event/create_interaction_event_email"),
-		client.Var("content", "Message 1"),
+		client.Var("content", "Content 1"),
 		client.Var("contentType", "text/plain"),
 		client.Var("sessionId", interactionSession1))
 	assertRawResponseSuccess(t, rawResponse, err)
@@ -253,7 +253,7 @@ func TestMutationResolver_InteractionEventCreate_Email(t *testing.T) {
 	require.Equal(t, *firstEvent.InteractionEvent_Create.Channel, "EMAIL")
 	require.Equal(t, *firstEvent.InteractionEvent_Create.ChannelData, "{\"References\":[\"<CAJYQ2j8Q>\"],\"Replies-To\":\"<CAJYQ2j8Q>\"}")
 	require.Equal(t, firstEvent.InteractionEvent_Create.AppSource, "Oasis")
-	require.Equal(t, firstEvent.InteractionEvent_Create.Content, "Message 1")
+	require.Equal(t, firstEvent.InteractionEvent_Create.Content, "Content 1")
 	require.Equal(t, firstEvent.InteractionEvent_Create.ContentType, "text/plain")
 	require.Equal(t, len(firstEvent.InteractionEvent_Create.SentBy), 1)
 
@@ -287,7 +287,7 @@ func TestMutationResolver_InteractionEventCreate_Email(t *testing.T) {
 	var secondEvent interactionEventType
 
 	rawResponse, err = c.RawPost(getQuery("interaction_event/create_interaction_event_email"),
-		client.Var("content", "Message 2"),
+		client.Var("content", "Content 2"),
 		client.Var("contentType", "text/plain"),
 		client.Var("sessionId", interactionSession1),
 		client.Var("replyTo", origMsgId))
@@ -327,7 +327,7 @@ func TestMutationResolver_InteractionEventCreate_Voice(t *testing.T) {
 	interactionSession1 := neo4jt.CreateInteractionSession(ctx, driver, tenantName, "mySessionIdentifier", "session1", "THREAD", "ACTIVE", "VOICE", now, false)
 
 	rawResponse, err := c.RawPost(getQuery("interaction_event/create_interaction_event_call"),
-		client.Var("content", "Message 1"),
+		client.Var("content", "Content 1"),
 		client.Var("contentType", "text/plain"),
 		client.Var("sessionId", interactionSession1))
 	assertRawResponseSuccess(t, rawResponse, err)
@@ -382,7 +382,7 @@ func TestMutationResolver_InteractionEventCreate_Voice(t *testing.T) {
 	require.NotNil(t, interactionEvent)
 	require.Equal(t, interactionEvent.InteractionEvent_Create.Channel, "VOICE")
 	require.Equal(t, interactionEvent.InteractionEvent_Create.AppSource, "Oasis")
-	require.Equal(t, interactionEvent.InteractionEvent_Create.Content, "Message 1")
+	require.Equal(t, interactionEvent.InteractionEvent_Create.Content, "Content 1")
 	require.Equal(t, interactionEvent.InteractionEvent_Create.ContentType, "text/plain")
 	require.Equal(t, len(interactionEvent.InteractionEvent_Create.SentBy), 1)
 	require.Equal(t, interactionEvent.InteractionEvent_Create.SentBy[0].PhoneNumberParticipant.RawPhoneNumber, "+1234567890")
@@ -397,7 +397,7 @@ func TestMutationResolver_InteractionEventCreate_Voice(t *testing.T) {
 	require.Equal(t, interactionEvent.InteractionEvent_Create.InteractionSession.Name, "session1")
 
 	rawResponse, err = c.RawPost(getQuery("interaction_event/create_interaction_event_call2"),
-		client.Var("content", "Message 2"),
+		client.Var("content", "Content 2"),
 		client.Var("contentType", "text/plain"),
 		client.Var("sessionId", interactionSession1))
 	assertRawResponseSuccess(t, rawResponse, err)
@@ -409,7 +409,7 @@ func TestMutationResolver_InteractionEventCreate_Voice(t *testing.T) {
 	require.Nil(t, err)
 	require.Equal(t, interactionEvent2.InteractionEvent_Create.Channel, "VOICE")
 	require.Equal(t, interactionEvent2.InteractionEvent_Create.AppSource, "Oasis")
-	require.Equal(t, interactionEvent2.InteractionEvent_Create.Content, "Message 2")
+	require.Equal(t, interactionEvent2.InteractionEvent_Create.Content, "Content 2")
 	require.Equal(t, interactionEvent2.InteractionEvent_Create.ContentType, "text/plain")
 	require.Equal(t, len(interactionEvent2.InteractionEvent_Create.SentBy), 1)
 	require.Equal(t, interactionEvent2.InteractionEvent_Create.SentBy[0].EmailParticipant.RawEmail, "user1@openline.ai")

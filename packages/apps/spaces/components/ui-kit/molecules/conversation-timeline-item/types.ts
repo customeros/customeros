@@ -46,12 +46,13 @@ export type ConversationItem = {
   senderUsername: Participant;
 };
 
-export type FeedPostRequest = {
+export type SendMailRequest = {
   username: string;
-  message: string;
+  content: string;
   channel: string;
   direction: string;
   destination: string[];
+  subject?: string;
   replyTo?: string;
 };
 

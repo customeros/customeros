@@ -1,170 +1,118 @@
 package routes
 
 import (
+	"errors"
 	"fmt"
 	"github.com/DusanKasan/parsemail"
 	"github.com/gin-gonic/gin"
 	c "github.com/openline-ai/openline-customer-os/packages/server/comms-api/config"
+	"github.com/openline-ai/openline-customer-os/packages/server/comms-api/model"
 	s "github.com/openline-ai/openline-customer-os/packages/server/comms-api/service"
-	"golang.org/x/net/context"
-	"google.golang.org/grpc/status"
 	"log"
 	"net/http"
-	"net/mail"
 	"strings"
-	//pbOasis "openline-ai/oasis-api/proto"
-	//"strings"
 )
 
-type MailPostRequest struct {
-	Sender     string `json:"sender"`
-	RawMessage string `json:"rawMessage"`
-	Subject    string `json:"subject"`
-	ApiKey     string `json:"api-key"`
-	Tenant     string `json:"X-Openline-TENANT"`
-}
+func addMailRoutes(conf *c.Config, rg *gin.RouterGroup, mailService s.MailService) {
+	rg.POST("/mail/send", func(c *gin.Context) {
+		var request model.MailReplyRequest
 
-type EmailContent struct {
-	MessageId string   `json:"messageId"`
-	Html      string   `json:"html"`
-	Subject   string   `json:"subject"`
-	From      string   `json:"from"`
-	To        []string `json:"to"`
-	Cc        []string `json:"cc"`
-	Bcc       []string `json:"bcc"`
-	InReplyTo []string `json:"InReplyTo"`
-	Reference []string `json:"Reference"`
-}
+		if err := c.BindJSON(&request); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"msg": err.Error()})
+			return
+		}
 
-func addMailRoutes(conf *c.Config, rg *gin.RouterGroup, cosService *s.CustomerOSService) {
-	mailGroup := rg.Group("/mail")
-	mailGroup.POST("/fwd/", func(c *gin.Context) {
-		var req MailPostRequest
+		if conf.Mail.ApiKey != c.GetHeader("X-Openline-Mail-Api-Key") {
+			errorMsg := "invalid mail API Key!"
+			log.Printf(errorMsg)
+			c.JSON(http.StatusForbidden, gin.H{"error": errorMsg})
+			return
+		}
+
+		username := c.GetHeader("X-Openline-USERNAME")
+		if username == "" {
+			c.JSON(http.StatusBadRequest, gin.H{"msg": "username header not found"})
+			return
+		}
+
+		identityId := c.GetHeader("X-Openline-IDENTITY-ID")
+		if identityId == "" {
+			c.JSON(http.StatusBadRequest, gin.H{"msg": "identity header not found"})
+			return
+		}
+		replyMail, err := mailService.SendMail(&request, &username, &identityId)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"msg": err.Error()})
+			return
+		}
+
+		mail, err := mailService.SaveMail(replyMail, nil, &request.Username)
+		if err != nil {
+			errorMsg := fmt.Sprintf("unable to save email: %v", err.Error())
+			log.Printf(errorMsg)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": errorMsg})
+			return
+		}
+
+		c.JSON(http.StatusOK, gin.H{
+			"result": fmt.Sprintf("interaction event created with id: %s", (*mail).InteractionEventCreate.Id),
+		})
+
+	})
+
+	rg.POST("/mail/fwd/", func(c *gin.Context) {
+		var req model.MailFwdRequest
 		if err := c.BindJSON(&req); err != nil {
-			log.Printf("unable to parse json: %v", err.Error())
-			c.JSON(http.StatusInternalServerError, gin.H{
-				"result": fmt.Sprintf("unable to parse json: %v", err.Error()),
+			errorMsg := fmt.Sprintf("unable to parse json: %v", err.Error())
+			log.Printf(errorMsg)
+			c.JSON(http.StatusBadRequest, gin.H{
+				"error": errorMsg,
 			})
 			return
 		}
 
 		if conf.Mail.ApiKey != req.ApiKey {
-			c.JSON(http.StatusForbidden, gin.H{"result": "Invalid API Key"})
+			errorMsg := "invalid mail API Key!"
+			log.Printf(errorMsg)
+			c.JSON(http.StatusForbidden, gin.H{"error": errorMsg})
 			return
 		}
 
-		mailReader := strings.NewReader(req.RawMessage)
-		email, err := parsemail.Parse(mailReader) // returns Email struct and error
+		if err := validateMailPostRequest(req); err != nil {
+			log.Printf("Invalid request: %v", err.Error())
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+
+		email, err := parsemail.Parse(strings.NewReader(req.RawMessage))
 		if err != nil {
-			log.Printf("Unable to parse Email: %v", err.Error())
-			c.JSON(http.StatusInternalServerError, gin.H{
-				"result": fmt.Sprintf("Unable to parse Email: %v", err.Error()),
-			})
+			errorMsg := fmt.Sprintf("unable to parse email: %v", err.Error())
+			log.Printf(errorMsg)
+			c.JSON(http.StatusBadRequest, gin.H{"error": errorMsg})
 			return
 		}
 
-		if len(email.From) != 1 {
-			c.JSON(http.StatusInternalServerError, gin.H{
-				"result": fmt.Sprintf("Email has more than one From: %v", email.From),
-			})
-			return
-		}
-
-		refSize := len(email.References)
-		threadId := ""
-		if refSize > 0 {
-			threadId = ensureRfcId(email.References[0])
-		} else {
-			threadId = ensureRfcId(email.MessageID)
-		}
-		ctx := context.Background()
-		sessionId, err := cosService.GetInteractionSession(ctx, threadId, &req.Tenant, nil)
+		mail, err := mailService.SaveMail(&email, &req.Tenant, nil)
 		if err != nil {
-			se, _ := status.FromError(err)
-			log.Printf("failed retriving interaction session: status=%s message=%s", se.Code(), se.Message())
-		}
-
-		if sessionId == nil {
-			sessionId, err = cosService.CreateInteractionSession(ctx,
-				s.WithSessionIdentifier(threadId),
-				s.WithSessionChannel("EMAIL"),
-				s.WithSessionName(email.Subject),
-				s.WithSessionAppSource("CHANNELS"),
-				s.WithSessionStatus("ACTIVE"),
-				s.WithSessionTenant(req.Tenant))
-			if err != nil {
-				se, _ := status.FromError(err)
-				log.Printf("failed creating interaction session: status=%s message=%s", se.Code(), se.Message())
-				return
-			}
-			log.Printf("interaction session created: %s", *sessionId)
-		}
-
-		participantTypeTO, participantTypeCC := "TO", "CC"
-		response, err := cosService.CreateInteractionEvent(ctx,
-			s.WithTenant(req.Tenant),
-			s.WithSessionId(*sessionId),
-			s.WithChannel("EMAIL"),
-			s.WithContent(firstNotEmpty(email.HTMLBody, email.TextBody)),
-			s.WithContentType(email.ContentType),
-			s.WithSentBy(toParticipantInputArr(email.From, nil)),
-			s.WithSentTo(append(toParticipantInputArr(email.To, &participantTypeTO), toParticipantInputArr(email.Cc, &participantTypeCC)...)),
-		)
-
-		if err != nil {
-			se, _ := status.FromError(err)
-			log.Printf("failed creating interaction event: status=%s message=%s", se.Code(), se.Message())
+			errorMsg := fmt.Sprintf("unable to save forwarded email: %v", err.Error())
+			log.Printf(errorMsg)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": errorMsg})
 			return
 		}
-
-		log.Printf("interaction event created with id: %s", (*response).InteractionEventCreate.Id)
 
 		c.JSON(http.StatusOK, gin.H{
-			"result": fmt.Sprintf("interaction event created with id: %s", "aaa"),
+			"result": fmt.Sprintf("interaction event created with id: %s", (*mail).InteractionEventCreate.Id),
 		})
 	})
 }
 
-func ensureRfcId(id string) string {
-	if !strings.HasPrefix(id, "<") {
-		id = fmt.Sprintf("<%s>", id)
+func validateMailPostRequest(req model.MailFwdRequest) error {
+	// Add validation checks for other fields in the MailPostRequest struct
+	if req.Tenant == "" {
+		return errors.New("missing tenant field")
 	}
-	return id
-}
-
-func ensureRfcIds(to []string) []string {
-	var result []string
-	for _, id := range to {
-		result = append(result, ensureRfcId(id))
+	if req.RawMessage == "" {
+		return errors.New("missing raw message field")
 	}
-	return result
-}
-
-func toStringArr(from []*mail.Address) []string {
-	var to []string
-	for _, a := range from {
-		to = append(to, a.Address)
-	}
-	return to
-}
-
-func toParticipantInputArr(from []*mail.Address, participantType *string) []s.InteractionEventParticipantInput {
-	var to []s.InteractionEventParticipantInput
-	for _, a := range from {
-		participantInput := s.InteractionEventParticipantInput{
-			Email:           &a.Address,
-			ParticipantType: participantType,
-		}
-		to = append(to, participantInput)
-	}
-	return to
-}
-
-func firstNotEmpty(input ...string) string {
-	for _, item := range input {
-		if item != "" {
-			return item
-		}
-	}
-	return ""
+	return nil
 }

@@ -11,14 +11,14 @@ import (
 )
 
 // Run will start the server
-func Run(config *c.Config, fh *chatHub.Hub, cosService *service.CustomerOSService) {
-	router := getRouter(config, fh, cosService)
+func Run(config *c.Config, fh *chatHub.Hub, services *service.Services) {
+	router := getRouter(config, fh, services)
 	if err := router.Run(config.Service.ServerAddress); err != nil {
 		log.Fatalf("could not run server: %v", err)
 	}
 }
 
-func getRouter(config *c.Config, fh *chatHub.Hub, cosService *service.CustomerOSService) *gin.Engine {
+func getRouter(config *c.Config, fh *chatHub.Hub, services *service.Services) *gin.Engine {
 	router := gin.New()
 	corsConfig := cors.DefaultConfig()
 
@@ -31,10 +31,10 @@ func getRouter(config *c.Config, fh *chatHub.Hub, cosService *service.CustomerOS
 	corsConfig.AddAllowHeaders("WebChatApiKey")
 
 	router.Use(cors.New(corsConfig))
-	route := router.Group("/api/v1/")
+	route := router.Group("/")
 
-	addMailRoutes(config, route, cosService)
-	AddVconRoutes(config, route, cosService)
+	addMailRoutes(config, route, services.MailService)
+	AddVconRoutes(config, route, services.CustomerOsService)
 
 	//AddWebSocketRoutes(route, fh, config.WebChat.PingInterval)
 	//AddWebChatRoutes(config, df, route)

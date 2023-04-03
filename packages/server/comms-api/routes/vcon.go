@@ -1,7 +1,6 @@
 package routes
 
 import (
-	"context"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	c "github.com/openline-ai/openline-customer-os/packages/server/comms-api/config"
@@ -12,16 +11,16 @@ import (
 	"net/http"
 )
 
-func vConPartyToEventParticipantInputArr(from []model.VConParty) []s.InteractionEventParticipantInput {
-	var to []s.InteractionEventParticipantInput
+func vConPartyToEventParticipantInputArr(from []model.VConParty) []model.InteractionEventParticipantInput {
+	var to []model.InteractionEventParticipantInput
 	for _, a := range from {
 		if a.Mailto != nil {
-			participantInput := s.InteractionEventParticipantInput{
+			participantInput := model.InteractionEventParticipantInput{
 				Email: a.Mailto,
 			}
 			to = append(to, participantInput)
 		} else if a.Tel != nil {
-			participantInput := s.InteractionEventParticipantInput{
+			participantInput := model.InteractionEventParticipantInput{
 				PhoneNumber: a.Tel,
 			}
 			to = append(to, participantInput)
@@ -30,16 +29,16 @@ func vConPartyToEventParticipantInputArr(from []model.VConParty) []s.Interaction
 	return to
 }
 
-func vConPartyToSessionParticipantInputArr(from []model.VConParty) []s.InteractionSessionParticipantInput {
-	var to []s.InteractionSessionParticipantInput
+func vConPartyToSessionParticipantInputArr(from []model.VConParty) []model.InteractionSessionParticipantInput {
+	var to []model.InteractionSessionParticipantInput
 	for _, a := range from {
 		if a.Mailto != nil {
-			participantInput := s.InteractionSessionParticipantInput{
+			participantInput := model.InteractionSessionParticipantInput{
 				Email: a.Mailto,
 			}
 			to = append(to, participantInput)
 		} else if a.Tel != nil {
-			participantInput := s.InteractionSessionParticipantInput{
+			participantInput := model.InteractionSessionParticipantInput{
 				PhoneNumber: a.Tel,
 			}
 			to = append(to, participantInput)
@@ -86,10 +85,10 @@ func getInitator(parties []model.VConParty, dialog *model.VConDialog) *model.VCo
 	return &parties[1]
 }
 
-func vConGetOrCreateSession(threadId string, name string, user string, attendants []s.InteractionSessionParticipantInput, cosService *s.CustomerOSService) (string, error) {
-	ctx := context.Background()
+func vConGetOrCreateSession(threadId string, name string, user string, attendants []model.InteractionSessionParticipantInput, cosService s.CustomerOSService) (string, error) {
 	var err error
-	sessionId, err := cosService.GetInteractionSession(ctx, threadId, nil, &user)
+
+	sessionId, err := cosService.GetInteractionSession(&threadId, nil, &user)
 	if err != nil {
 		se, _ := status.FromError(err)
 		log.Printf("failed retriving interaction session: status=%s message=%s", se.Code(), se.Message())
@@ -98,14 +97,22 @@ func vConGetOrCreateSession(threadId string, name string, user string, attendant
 	}
 
 	if sessionId == nil {
-		sessionId, err = cosService.CreateInteractionSession(ctx,
-			s.WithSessionIdentifier(threadId),
-			s.WithSessionChannel("VOICE"),
-			s.WithSessionName(name),
-			s.WithSessionAppSource("CHANNELS"),
-			s.WithSessionStatus("ACTIVE"),
-			s.WithSessionUsername(user),
-			s.WithSessionAttendedBy(attendants))
+		sessionChannel := "VOICE"
+		sessionAppSource := "COMMS_API"
+		sessionStatus := "ACTIVE"
+		sessionType := "CALL"
+		sessionOpts := []s.SessionOption{
+			s.WithSessionIdentifier(&threadId),
+			s.WithSessionChannel(&sessionChannel),
+			s.WithSessionName(&name),
+			s.WithSessionAppSource(&sessionAppSource),
+			s.WithSessionStatus(&sessionStatus),
+			s.WithSessionUsername(&user),
+			s.WithSessionAttendedBy(attendants),
+			s.WithSessionType(&sessionType),
+		}
+		sessionId, err = cosService.CreateInteractionSession(sessionOpts...)
+
 		if err != nil {
 			se, _ := status.FromError(err)
 			log.Printf("failed creating interaction session: status=%s message=%s", se.Code(), se.Message())
@@ -142,20 +149,22 @@ type VConEvent struct {
 	Analysis *model.VConAnalysis `json:"analysis,omitempty"`
 }
 
-func submitAnalysis(sessionId string, req model.VCon, cosService *s.CustomerOSService) ([]string, error) {
-	ctx := context.Background()
-
+func submitAnalysis(sessionId string, req model.VCon, cosService s.CustomerOSService) ([]string, error) {
 	user := getUser(&req)
 
 	var ids []string
 	for _, a := range req.Analysis {
-		response, err := cosService.CreateAnalysis(ctx,
-			s.WithAnalysisUsername(user),
-			s.WithAnalysisType(string(a.Type)),
-			s.WithAnalysisContent(a.Body),
-			s.WithAnalysisContentType(a.MimeType),
-			s.WithAnalysisDescribes(&s.AnalysisDescriptionInput{InteractionSessionId: &sessionId}),
-		)
+		analysisType := string(a.Type)
+		appSource := "COMMS_API"
+		analysisOpts := []s.AnalysisOption{
+			s.WithAnalysisUsername(&user),
+			s.WithAnalysisType(&analysisType),
+			s.WithAnalysisContent(&a.Body),
+			s.WithAnalysisContentType(&a.MimeType),
+			s.WithAnalysisDescribes(&model.AnalysisDescriptionInput{InteractionSessionId: &sessionId}),
+			s.WithAnalysisAppSource(&appSource),
+		}
+		response, err := cosService.CreateAnalysis(analysisOpts...)
 		if err != nil {
 			return nil, fmt.Errorf("submitDialog: failed creating interaction event: %v", err)
 		}
@@ -164,11 +173,9 @@ func submitAnalysis(sessionId string, req model.VCon, cosService *s.CustomerOSSe
 	return ids, nil
 }
 
-func submitDialog(sessionId string, req model.VCon, cosService *s.CustomerOSService) ([]string, error) {
+func submitDialog(sessionId string, req model.VCon, cosService s.CustomerOSService) ([]string, error) {
 
 	user := getUser(&req)
-
-	ctx := context.Background()
 
 	var ids []string
 	for _, d := range req.Dialog {
@@ -181,15 +188,19 @@ func submitDialog(sessionId string, req model.VCon, cosService *s.CustomerOSServ
 			return nil, fmt.Errorf("submitDialog: unable to determine destination")
 		}
 
-		response, err := cosService.CreateInteractionEvent(ctx,
-			s.WithUsername(user),
-			s.WithSessionId(sessionId),
-			s.WithChannel("VOICE"),
-			s.WithContent(d.Body),
-			s.WithContentType(d.MimeType),
+		channel := "VOICE"
+		appSource := "COMMS_API"
+		eventOpts := []s.EventOption{
+			s.WithUsername(&user),
+			s.WithSessionId(&sessionId),
+			s.WithChannel(&channel),
+			s.WithContent(&d.Body),
+			s.WithContentType(&d.MimeType),
 			s.WithSentBy(vConPartyToEventParticipantInputArr([]model.VConParty{*initator})),
 			s.WithSentTo(vConPartyToEventParticipantInputArr([]model.VConParty{*destination})),
-		)
+			s.WithAppSource(&appSource),
+		}
+		response, err := cosService.CreateInteractionEvent(eventOpts...)
 		if err != nil {
 			return nil, fmt.Errorf("submitDialog: failed creating interaction event: %v", err)
 		}
@@ -198,7 +209,7 @@ func submitDialog(sessionId string, req model.VCon, cosService *s.CustomerOSServ
 	return ids, nil
 }
 
-func AddVconRoutes(conf *c.Config, rg *gin.RouterGroup, cosService *s.CustomerOSService) {
+func AddVconRoutes(conf *c.Config, rg *gin.RouterGroup, cosService s.CustomerOSService) {
 	rg.POST("/vcon", func(c *gin.Context) {
 		var req model.VCon
 		if err := c.BindJSON(&req); err != nil {

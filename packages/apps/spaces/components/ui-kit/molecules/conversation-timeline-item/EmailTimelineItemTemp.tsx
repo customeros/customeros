@@ -11,7 +11,7 @@ import {
   EditorMode,
   userData,
 } from '../../../../state';
-import { ConversationItem, FeedPostRequest, Props } from './types';
+import { ConversationItem, Props } from './types';
 
 export const EmailTimelineItemTemp: React.FC<Props> = ({
   feedId,
@@ -20,7 +20,6 @@ export const EmailTimelineItemTemp: React.FC<Props> = ({
 }) => {
   const setEditorMode = useSetRecoilState(editorMode);
   const [emailEditorData, setEmailEditorData] = useRecoilState(editorEmail);
-  const loggedInUserData = useRecoilValue(userData);
   const [messages, setMessages] = useState([] as ConversationItem[]);
 
   const [loadingMessages, setLoadingMessages] = useState(false);
@@ -56,45 +55,6 @@ export const EmailTimelineItemTemp: React.FC<Props> = ({
         });
       });
   }, []);
-
-  const handleSendMessage = (
-    text: string,
-    onSuccess: () => void,
-    destination = [],
-    replyTo: null | string,
-  ) => {
-    if (!text) return;
-    const message: FeedPostRequest = {
-      channel: 'EMAIL',
-      username: loggedInUserData.identity,
-      message: text,
-      direction: 'OUTBOUND',
-      destination: destination,
-    };
-    console.log('🏷️ ----- replyTo: ', replyTo);
-    if (replyTo) {
-      message.replyTo = replyTo;
-    }
-
-    axios
-      .post(`/oasis-api/feed/${feedId}/item`, message)
-      .then((res) => {
-        console.log(res);
-        if (res.data) {
-          setMessages((messageList: any) => [...messageList, res.data]);
-          onSuccess();
-          setEditorMode({
-            submitButtonLabel: 'Log into timeline',
-            mode: EditorMode.Note,
-          });
-          setEmailEditorData({ ...emailEditorData, to: [], subject: '' });
-          toast.success('Email sent!');
-        }
-      })
-      .catch(() => {
-        toast.error('Something went wrong while sending email');
-      });
-  };
 
   //when a new message appears, scroll to the end of container
   useEffect(() => {
