@@ -1,5 +1,5 @@
 import type { NextPage } from 'next';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { toast } from 'react-toastify';
 import {
   DeleteHubspotSettings,
@@ -8,255 +8,222 @@ import {
   DeleteTrelloSettings,
   DeleteZendeskSettings,
   GetSettings,
+  Settings,
   UpdateHubspotSettings,
   UpdateJiraSettings,
   UpdateSmartsheetSettings,
   UpdateTrelloSettings,
   UpdateZendeskSettings,
-  HubspotSettings,
-  Settings,
 } from '../../services';
 import { Button } from '../../components';
 import styles from './settings.module.scss';
 import { ArrowLeft } from '../../components/ui-kit/atoms';
 import { useRouter } from 'next/router';
+import { Skeleton } from '../../components/ui-kit/atoms/skeleton';
+import { SettingsIntegrationItem } from '../../components/ui-kit/molecules/settings-integration-item';
 
 const Settings: NextPage = () => {
   const router = useRouter();
-  const [settings, setSettingsExist] = useState<Settings>({
-    zendeskExists: false,
-    smartSheetExists: false,
-    hubspotExists: false,
-    jiraExists: false,
-    trelloExists: false,
-  });
 
-  const [hubspotPrivateAppKey, setHubspotPrivateAppKey] = useState<string>('');
+  const [reload, setReload] = useState<boolean>(false);
+  const reloadRef = useRef<boolean>(reload);
 
-  const [zendeskAPIKey, setZendeskApiKey] = useState<string>('');
-  const [zendeskSubdomain, setZendeskSubdomain] = useState<string>('');
-  const [zendeskAdminEmail, setZendeskAdminEmail] = useState<string>('');
+  const [loading, setLoading] = useState<boolean>(true);
 
-  const [smartSheetId, setSmartsheetId] = useState<string>('');
-  const [smartSheetAccessToken, setSmartsheetAccessToken] =
-    useState<string>('');
-
-  const [jiraAPIToken, setJiraAPIToken] = useState<string>('');
-  const [jiraDomain, setJiraDomain] = useState<string>('');
-  const [jiraEmail, setJiraEmail] = useState<string>('');
-
-  const [trelloAPIToken, setTrelloAPIToken] = useState<string>('');
-  const [trelloAPIKey, setTrelloAPIKey] = useState<string>('');
+  //states: ACTIVE OR INACTIVE
+  //TODO: switch to a different state when the integration is being configured to fetch running and error states
+  const [integrations, setIntegrations] = useState([
+    {
+      key: 'hubspot',
+      state: 'INACTIVE',
+      template: (data: any) => (
+        <SettingsIntegrationItem
+          icon={'/logos/hubspot.png'}
+          name={'Hubspot'}
+          state={data.state}
+          onSave={UpdateHubspotSettings}
+          onRevoke={DeleteHubspotSettings}
+          settingsChanged={() => {
+            reloadRef.current = !reloadRef.current;
+            setReload(reloadRef.current);
+          }}
+          fields={[
+            {
+              name: 'hubspotPrivateAppKey',
+              label: 'API key',
+            },
+          ]}
+        />
+      ),
+    },
+    {
+      key: 'zendesk',
+      state: 'INACTIVE',
+      template: (data: any) => (
+        <SettingsIntegrationItem
+          icon={'/logos/zendesk.png'}
+          name={'Zendesk'}
+          state={data.state}
+          onSave={UpdateZendeskSettings}
+          onRevoke={DeleteZendeskSettings}
+          settingsChanged={() => {
+            reloadRef.current = !reloadRef.current;
+            setReload(reloadRef.current);
+          }}
+          fields={[
+            {
+              name: 'zendeskAPIKey',
+              label: 'API key',
+            },
+            {
+              name: 'zendeskSubdomain',
+              label: 'Subdomain',
+            },
+            {
+              name: 'zendeskAdminEmail',
+              label: 'Admin email',
+            },
+          ]}
+        />
+      ),
+    },
+    {
+      key: 'smartsheet',
+      state: 'INACTIVE',
+      template: (data: any) => (
+        <SettingsIntegrationItem
+          icon={'/logos/smartsheet.png'}
+          name={'Smartsheet'}
+          state={data.state}
+          onSave={UpdateSmartsheetSettings}
+          onRevoke={DeleteSmartsheetSettings}
+          settingsChanged={() => {
+            reloadRef.current = !reloadRef.current;
+            setReload(reloadRef.current);
+          }}
+          fields={[
+            {
+              name: 'smartSheetId',
+              label: 'ID',
+            },
+            {
+              name: 'smartSheetAccessToken',
+              label: 'API key',
+            },
+          ]}
+        />
+      ),
+    },
+    {
+      key: 'jira',
+      state: 'INACTIVE',
+      template: (data: any) => (
+        <SettingsIntegrationItem
+          icon={'/logos/jira.png'}
+          name={'Jira'}
+          state={data.state}
+          onSave={UpdateJiraSettings}
+          onRevoke={DeleteJiraSettings}
+          settingsChanged={() => {
+            reloadRef.current = !reloadRef.current;
+            setReload(reloadRef.current);
+          }}
+          fields={[
+            {
+              name: 'jiraAPIToken',
+              label: 'API Token',
+            },
+            {
+              name: 'jiraDomain',
+              label: 'Domain',
+            },
+            {
+              name: 'jiraEmail',
+              label: 'Email',
+            },
+          ]}
+        />
+      ),
+    },
+    {
+      key: 'trello',
+      state: 'INACTIVE',
+      template: (data: any) => (
+        <SettingsIntegrationItem
+          icon={'/logos/trello.png'}
+          name={'Trello'}
+          state={data.state}
+          onSave={UpdateTrelloSettings}
+          onRevoke={DeleteTrelloSettings}
+          settingsChanged={() => {
+            reloadRef.current = !reloadRef.current;
+            setReload(reloadRef.current);
+          }}
+          fields={[
+            {
+              name: 'trelloAPIToken',
+              label: 'API Token',
+            },
+            {
+              name: 'trelloAPIKey',
+              label: 'API key',
+            },
+          ]}
+        />
+      ),
+    },
+  ]);
 
   useEffect(() => {
+    setLoading(true);
     GetSettings()
       .then((data: Settings) => {
-        setSettingsExist(data);
+        console.log(data);
+        setIntegrations(
+          integrations.map((integration) => {
+            //todo switch to the generic solution one BE is done
+            if (integration.key === 'hubspot') {
+              return {
+                ...integration,
+                state: data.hubspotExists ? 'ACTIVE' : 'INACTIVE',
+              };
+            }
+            if (integration.key === 'zendesk') {
+              return {
+                ...integration,
+                state: data.zendeskExists ? 'ACTIVE' : 'INACTIVE',
+              };
+            }
+            if (integration.key === 'smartsheet') {
+              return {
+                ...integration,
+                state: data.smartSheetExists ? 'ACTIVE' : 'INACTIVE',
+              };
+            }
+            if (integration.key === 'jira') {
+              return {
+                ...integration,
+                state: data.jiraExists ? 'ACTIVE' : 'INACTIVE',
+              };
+            }
+            if (integration.key === 'trello') {
+              return {
+                ...integration,
+                state: data.trelloExists ? 'ACTIVE' : 'INACTIVE',
+              };
+            }
+            return integration;
+          }),
+        );
+
+        setLoading(false);
       })
       .catch((reason: any) => {
         toast.error(
           'There was a problem on our side and we cannot load settings data at the moment,  we are doing our best to solve it! ',
         );
       });
-  }, []);
-
-  const resetZendesk = () => {
-    setZendeskApiKey('');
-    setZendeskSubdomain('');
-    setZendeskAdminEmail('');
-  };
-
-  const resetHubspot = () => {
-    setHubspotPrivateAppKey('');
-  };
-
-  const resetSmartsheet = () => {
-    setSmartsheetId('');
-    setSmartsheetAccessToken('');
-  };
-
-  const resetJira = () => {
-    setJiraAPIToken('');
-    setJiraDomain('');
-    setJiraEmail('');
-  };
-
-  const resetTrello = () => {
-    setTrelloAPIToken('');
-    setTrelloAPIKey('');
-  };
-
-  const handleSubmitHubspotSettings = () => {
-    UpdateHubspotSettings({ hubspotPrivateAppKey })
-      .then(() => {
-        toast.success('Settings updated successfully!');
-        setSettingsExist({
-          ...settings,
-          hubspotExists: true,
-        });
-        resetHubspot();
-      })
-      .catch(() => {
-        toast.error(
-          'There was a problem on our side and we are doing our best to solve it!',
-        );
-      });
-  };
-
-  const handleSubmitZendeskSettings = () => {
-    UpdateZendeskSettings({
-      zendeskSubdomain,
-      zendeskAdminEmail,
-      zendeskAPIKey,
-    })
-      .then(() => {
-        toast.success('Settings updated successfully!');
-        setSettingsExist({
-          ...settings,
-          zendeskExists: true,
-        });
-        resetZendesk();
-      })
-      .catch(() => {
-        toast.error(
-          'There was a problem on our side and we are doing our best to solve it!',
-        );
-      });
-  };
-  const handleSubmitSmartsheetSettings = () => {
-    UpdateSmartsheetSettings({
-      smartSheetAccessToken,
-      smartSheetId,
-    })
-      .then(() => {
-        toast.success('Settings updated successfully!');
-        setSettingsExist({
-          ...settings,
-          smartSheetExists: true,
-        });
-        resetSmartsheet();
-      })
-      .catch(() => {
-        toast.error(
-          'There was a problem on our side and we are doing our best to solve it!',
-        );
-      });
-  };
-  const handleSubmitJiraSettings = () => {
-    UpdateJiraSettings({
-      jiraAPIToken,
-      jiraDomain,
-      jiraEmail,
-    })
-      .then(() => {
-        toast.success('Settings updated successfully!');
-        setSettingsExist({
-          ...settings,
-          jiraExists: true,
-        });
-        resetJira();
-      })
-      .catch(() => {
-        toast.error(
-          'There was a problem on our side and we are doing our best to solve it!',
-        );
-      });
-  };
-  const handleSubmitTrelloSettings = () => {
-    UpdateTrelloSettings({
-      trelloAPIToken,
-      trelloAPIKey,
-    })
-      .then(() => {
-        toast.success('Settings updated successfully!');
-        setSettingsExist({
-          ...settings,
-          trelloExists: true,
-        });
-        resetJira();
-      })
-      .catch(() => {
-        toast.error(
-          'There was a problem on our side and we are doing our best to solve it!',
-        );
-      });
-  };
-
-  const handleDeleteHubspot = () => {
-    DeleteHubspotSettings()
-      .then(() => {
-        setSettingsExist({
-          ...settings,
-          hubspotExists: false,
-        });
-        resetHubspot();
-      })
-      .catch(() => {
-        toast.error(
-          'There was a problem on our side and we are doing our best to solve it!',
-        );
-      });
-  };
-  const handleDeleteZendesk = () => {
-    DeleteZendeskSettings()
-      .then(() => {
-        setSettingsExist({
-          ...settings,
-          zendeskExists: false,
-        });
-        resetZendesk();
-      })
-      .catch(() => {
-        toast.error(
-          'There was a problem on our side and we are doing our best to solve it!',
-        );
-      });
-  };
-  const handleDeleteSmartsheetSettings = () => {
-    DeleteSmartsheetSettings()
-      .then(() => {
-        setSettingsExist({
-          ...settings,
-          smartSheetExists: false,
-        });
-        resetSmartsheet();
-      })
-      .catch(() => {
-        toast.error(
-          'There was a problem on our side and we are doing our best to solve it!',
-        );
-      });
-  };
-  const handleDeleteJiraSettings = () => {
-    DeleteJiraSettings()
-      .then(() => {
-        setSettingsExist({
-          ...settings,
-          jiraExists: false,
-        });
-        resetJira();
-      })
-      .catch(() => {
-        toast.error(
-          'There was a problem on our side and we are doing our best to solve it!',
-        );
-      });
-  };
-  const handleDeleteTrelloSettings = () => {
-    DeleteTrelloSettings()
-      .then(() => {
-        setSettingsExist({
-          ...settings,
-          trelloExists: false,
-        });
-        resetTrello();
-      })
-      .catch(() => {
-        toast.error(
-          'There was a problem on our side and we are doing our best to solve it!',
-        );
-      });
-  };
+  }, [reload]);
 
   return (
     <div className={styles.pageContainer}>
@@ -268,199 +235,67 @@ const Settings: NextPage = () => {
         >
           Back
         </Button>
-        <h1 className={styles.mainHeading}>Settings</h1>
       </div>
 
       <div className={styles.settingsContainer}>
-        <article className={styles.gridItem}>
-          <h2 className={styles.heading}>Hubspot</h2>
+        {loading && (
+          <>
+            <div style={{ marginTop: '20px' }}>
+              <div>
+                <Skeleton height='30px' width='100%' />
+              </div>
+              <div>
+                <Skeleton height='20px' width='90%' />
+              </div>
+            </div>
+            <div style={{ marginTop: '20px' }}>
+              <div>
+                <Skeleton height='30px' width='100%' />
+              </div>
+              <div>
+                <Skeleton height='20px' width='90%' />
+              </div>
+            </div>
+            <div style={{ marginTop: '20px' }}>
+              <div>
+                <Skeleton height='30px' width='100%' />
+              </div>
+              <div>
+                <Skeleton height='20px' width='90%' />
+              </div>
+            </div>
+            <div style={{ marginTop: '20px' }}>
+              <div>
+                <Skeleton height='30px' width='100%' />
+              </div>
+              <div>
+                <Skeleton height='20px' width='90%' />
+              </div>
+            </div>
+          </>
+        )}
 
-          <label htmlFor='openline-hubspot-api-key' className={styles.label}>
-            API key
-          </label>
-          <input
-            value={
-              settings.hubspotExists ? '************' : hubspotPrivateAppKey
-            }
-            disabled={settings.hubspotExists}
-            className={styles.input}
-            onChange={({ target: { value } }) => setHubspotPrivateAppKey(value)}
-          />
-          <div className={styles.buttonSection}>
-            {settings.hubspotExists ? (
-              <Button onClick={handleDeleteHubspot} mode='danger'>
-                Revoke
-              </Button>
-            ) : (
-              <Button onClick={handleSubmitHubspotSettings} mode='primary'>
-                Save
-              </Button>
-            )}
-          </div>
-        </article>
+        {!loading && (
+          <>
+            <h2 style={{ marginTop: '20px' }}>Active integrations</h2>
+            {integrations
+              .filter((integration) => integration.state === 'ACTIVE')
+              .map((integration) => {
+                return integration.template(integration);
+              })}
+          </>
+        )}
 
-        <article className={styles.gridItem}>
-          <h2 className={styles.heading}>Zendesk</h2>
-          <label htmlFor='openline-zendesk-api-key' className={styles.label}>
-            API key
-          </label>
-          <input
-            value={settings.zendeskExists ? '*************' : zendeskAPIKey}
-            id='openline-zendesk-api-key'
-            disabled={settings.zendeskExists}
-            className={styles.input}
-            onChange={({ target: { value } }) => setZendeskApiKey(value)}
-          />
-          <label htmlFor='openline-zendesk-subdomain' className={styles.label}>
-            Subdomain
-          </label>
-          <input
-            value={settings.zendeskExists ? '*************' : zendeskSubdomain}
-            id='openline-zendesk-subdomain'
-            disabled={settings.zendeskExists}
-            className={styles.input}
-            onChange={({ target: { value } }) => setZendeskSubdomain(value)}
-          />
-          <label
-            htmlFor='openline-zendesk-admin-email'
-            className={styles.label}
-          >
-            Admin Email
-          </label>
-          <input
-            value={settings.zendeskExists ? '*************' : zendeskAdminEmail}
-            id='openline-zendesk-admin-email'
-            disabled={settings.zendeskExists}
-            className={styles.input}
-            onChange={({ target: { value } }) => setZendeskAdminEmail(value)}
-          />
-          <div className={styles.buttonSection}>
-            {settings.zendeskExists ? (
-              <Button onClick={handleDeleteZendesk} mode='danger'>
-                Revoke
-              </Button>
-            ) : (
-              <Button onClick={handleSubmitZendeskSettings} mode='primary'>
-                Save
-              </Button>
-            )}
-          </div>
-        </article>
-
-        <article className={styles.gridItem}>
-          <h2 className={styles.heading}>Smartsheet</h2>
-          <label htmlFor='openline-smartsheet-id' className={styles.label}>
-            ID
-          </label>
-          <input
-            value={
-              settings.smartSheetExists ? '******************' : smartSheetId
-            }
-            id='openline-zendesk-api-key'
-            disabled={settings.smartSheetExists}
-            className={styles.input}
-            onChange={({ target: { value } }) => setSmartsheetId(value)}
-          />
-          <label htmlFor='openline-smartsheet-api-key' className={styles.label}>
-            API key
-          </label>
-          <input
-            value={
-              settings.smartSheetExists
-                ? '******************'
-                : smartSheetAccessToken
-            }
-            id='openline-zendesk-api-key'
-            className={styles.input}
-            disabled={settings.smartSheetExists}
-            onChange={({ target: { value } }) =>
-              setSmartsheetAccessToken(value)
-            }
-          />
-          <div className={styles.buttonSection}>
-            {settings.smartSheetExists ? (
-              <Button onClick={handleDeleteSmartsheetSettings} mode='danger'>
-                Revoke
-              </Button>
-            ) : (
-              <Button onClick={handleSubmitSmartsheetSettings} mode='primary'>
-                Save
-              </Button>
-            )}
-          </div>
-        </article>
-
-        <article className={styles.gridItem}>
-          <h2 className={styles.heading}>Jira</h2>
-          <label className={styles.label}>API Token</label>
-          <input
-            value={settings.jiraExists ? '******************' : jiraAPIToken}
-            disabled={settings.jiraExists}
-            className={styles.input}
-            onChange={({ target: { value } }) => setJiraAPIToken(value)}
-          />
-
-          <label className={styles.label}>Domain</label>
-          <input
-            value={settings.jiraExists ? '******************' : jiraDomain}
-            className={styles.input}
-            disabled={settings.jiraExists}
-            onChange={({ target: { value } }) => setJiraDomain(value)}
-          />
-
-          <label className={styles.label}>Email</label>
-          <input
-            value={settings.jiraExists ? '******************' : jiraEmail}
-            className={styles.input}
-            disabled={settings.jiraExists}
-            onChange={({ target: { value } }) => setJiraEmail(value)}
-          />
-
-          <div className={styles.buttonSection}>
-            {settings.jiraExists ? (
-              <Button onClick={handleDeleteJiraSettings} mode='danger'>
-                Revoke
-              </Button>
-            ) : (
-              <Button onClick={handleSubmitJiraSettings} mode='primary'>
-                Save
-              </Button>
-            )}
-          </div>
-        </article>
-
-        <article className={styles.gridItem}>
-          <h2 className={styles.heading}>Trello</h2>
-          <label className={styles.label}>API Token</label>
-          <input
-            value={
-              settings.trelloExists ? '******************' : trelloAPIToken
-            }
-            disabled={settings.trelloExists}
-            className={styles.input}
-            onChange={({ target: { value } }) => setTrelloAPIToken(value)}
-          />
-
-          <label className={styles.label}>API key</label>
-          <input
-            value={settings.trelloExists ? '******************' : trelloAPIKey}
-            className={styles.input}
-            disabled={settings.trelloExists}
-            onChange={({ target: { value } }) => setTrelloAPIKey(value)}
-          />
-
-          <div className={styles.buttonSection}>
-            {settings.trelloExists ? (
-              <Button onClick={handleDeleteTrelloSettings} mode='danger'>
-                Revoke
-              </Button>
-            ) : (
-              <Button onClick={handleSubmitTrelloSettings} mode='primary'>
-                Save
-              </Button>
-            )}
-          </div>
-        </article>
+        {!loading && (
+          <>
+            <h2 style={{ marginTop: '20px' }}>Inactive integrations</h2>
+            {integrations
+              .filter((integration) => integration.state === 'INACTIVE')
+              .map((integration) => {
+                return integration.template(integration);
+              })}
+          </>
+        )}
       </div>
     </div>
   );

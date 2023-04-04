@@ -1,0 +1,1784 @@
+ [
+   {
+     key: 'activecampaign',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/activecampaign.svg' name='activecampaign' />),
+   },
+   {
+     key: 'adjust',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/adjust.svg' name='adjust' />),
+   },
+   {
+     key: 'aha',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/aha.svg' name='aha' />),
+   },
+   {
+     key: 'airtable',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/airtable.svg' name='airtable' />),
+   },
+   {
+     key: 'alloydb',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/alloydb.svg' name='alloydb' />),
+   },
+   {
+     key: 'alphaVantage',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/alphaVantage.svg' name='alphaVantage' />),
+   },
+   {
+     key: 'amazonAds',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/amazonAds.svg' name='amazonAds' />),
+   },
+   {
+     key: 'amazonSellerPartner',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/amazonSellerPartner.svg' name='amazonSellerPartner' />),
+   },
+   {
+     key: 'amazonSqs',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/amazonSqs.svg' name='amazonSqs' />),
+   },
+   {
+     key: 'amplitude',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/amplitude.svg' name='amplitude' />),
+   },
+   {
+     key: 'apifyDataset',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/apifyDataset.svg' name='apifyDataset' />),
+   },
+   {
+     key: 'appfollow',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/appfollow.svg' name='appfollow' />),
+   },
+   {
+     key: 'appsflyer',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/appsflyer.svg' name='appsflyer' />),
+   },
+   {
+     key: 'appstoreSinger',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/appstoreSinger.svg' name='appstoreSinger' />),
+   },
+   {
+     key: 'asana',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/asana.svg' name='asana' />),
+   },
+   {
+     key: 'ashby',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/ashby.svg' name='ashby' />),
+   },
+   {
+     key: 'auth0',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/auth0.svg' name='auth0' />),
+   },
+   {
+     key: 'awsCloudtrail',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/awsCloudtrail.svg' name='awsCloudtrail' />),
+   },
+   {
+     key: 'azureBlobStorage',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/azureBlobStorage.svg' name='azureBlobStorage' />),
+   },
+   {
+     key: 'azureTable',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/azureTable.svg' name='azureTable' />),
+   },
+   {
+     key: 'babelforce',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/babelforce.svg' name='babelforce' />),
+   },
+   {
+     key: 'bambooHr',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/bambooHr.svg' name='bambooHr' />),
+   },
+   {
+     key: 'baton',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/baton.svg' name='baton' />),
+   },
+   {
+     key: 'bigcommerce',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/bigcommerce.svg' name='bigcommerce' />),
+   },
+   {
+     key: 'bigquery',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/bigquery.svg' name='bigquery' />),
+   },
+   {
+     key: 'bingAds',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/bingAds.svg' name='bingAds' />),
+   },
+   {
+     key: 'braintree',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/braintree.svg' name='braintree' />),
+   },
+   {
+     key: 'braze',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/braze.svg' name='braze' />),
+   },
+   {
+     key: 'breezometer',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/breezometer.svg' name='breezometer' />),
+   },
+   {
+     key: 'callrail',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/callrail.svg' name='callrail' />),
+   },
+   {
+     key: 'cart',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/cart.svg' name='cart' />),
+   },
+   {
+     key: 'chargebee',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/chargebee.svg' name='chargebee' />),
+   },
+   {
+     key: 'chargify',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/chargify.svg' name='chargify' />),
+   },
+   {
+     key: 'chartmogul',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/chartmogul.svg' name='chartmogul' />),
+   },
+   {
+     key: 'clickhouse',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/clickhouse.svg' name='clickhouse' />),
+   },
+   {
+     key: 'clickupApi',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/clickupApi.svg' name='clickupApi' />),
+   },
+   {
+     key: 'clockify',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/clockify.svg' name='clockify' />),
+   },
+   {
+     key: 'closeCom',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/closeCom.svg' name='closeCom' />),
+   },
+   {
+     key: 'cockroachdb',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/cockroachdb.svg' name='cockroachdb' />),
+   },
+   {
+     key: 'coda',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/coda.svg' name='coda' />),
+   },
+   {
+     key: 'coinApi',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/coinApi.svg' name='coinApi' />),
+   },
+   {
+     key: 'coingeckoCoins',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/coingeckoCoins.svg' name='coingeckoCoins' />),
+   },
+   {
+     key: 'coinmarketcap',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/coinmarketcap.svg' name='coinmarketcap' />),
+   },
+   {
+     key: 'commcare',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/commcare.svg' name='commcare' />),
+   },
+   {
+     key: 'commercetools',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/commercetools.svg' name='commercetools' />),
+   },
+   {
+     key: 'configcat',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/configcat.svg' name='configcat' />),
+   },
+   {
+     key: 'confluence',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/confluence.svg' name='confluence' />),
+   },
+   {
+     key: 'convertkit',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/convertkit.svg' name='convertkit' />),
+   },
+   {
+     key: 'convex',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/convex.svg' name='convex' />),
+   },
+   {
+     key: 'copper',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/copper.svg' name='copper' />),
+   },
+   {
+     key: 'courier',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/courier.svg' name='courier' />),
+   },
+   {
+     key: 'customerIo',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/customerIo.svg' name='customerIo' />),
+   },
+   {
+     key: 'datadog',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/datadog.svg' name='datadog' />),
+   },
+   {
+     key: 'datascope',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/datascope.svg' name='datascope' />),
+   },
+   {
+     key: 'db2',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/db2.svg' name='db2' />),
+   },
+   {
+     key: 'delighted',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/delighted.svg' name='delighted' />),
+   },
+   {
+     key: 'dixa',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/dixa.svg' name='dixa' />),
+   },
+   {
+     key: 'dockerhub',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/dockerhub.svg' name='dockerhub' />),
+   },
+   {
+     key: 'dremio',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/dremio.svg' name='dremio' />),
+   },
+   {
+     key: 'drift',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/drift.svg' name='drift' />),
+   },
+   {
+     key: 'drupal',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/drupal.svg' name='drupal' />),
+   },
+   {
+     key: 'dv360',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/dv360.svg' name='dv360' />),
+   },
+   {
+     key: 'dynamodb',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/dynamodb.svg' name='dynamodb' />),
+   },
+   {
+     key: 'elasticsearch',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/elasticsearch.svg' name='elasticsearch' />),
+   },
+   {
+     key: 'emailoctopus',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/emailoctopus.svg' name='emailoctopus' />),
+   },
+   {
+     key: 'everhour',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/everhour.svg' name='everhour' />),
+   },
+   {
+     key: 'exchangeRates',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/exchangeRates.svg' name='exchangeRates' />),
+   },
+   {
+     key: 'facebookMarketing',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/facebookMarketing.svg' name='facebookMarketing' />),
+   },
+   {
+     key: 'Marketing',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/Marketing.svg' name='Marketing' />),
+   },
+   {
+     key: 'facebookPages',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/facebookPages.svg' name='facebookPages' />),
+   },
+   {
+     key: 'faker',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/faker.svg' name='faker' />),
+   },
+   {
+     key: 'fastbill',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/fastbill.svg' name='fastbill' />),
+   },
+   {
+     key: 'fauna',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/fauna.svg' name='fauna' />),
+   },
+   {
+     key: 'file',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/file.svg' name='file' />),
+   },
+   {
+     key: 'firebaseRealtimeDatabase',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/firebaseRealtimeDatabase.svg' name='firebaseRealtimeDatabase' />),
+   },
+   {
+     key: 'Realtime Database',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/Realtime Database.svg' name='Realtime Database' />),
+   },
+   {
+     key: 'firebolt',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/firebolt.svg' name='firebolt' />),
+   },
+   {
+     key: 'flexport',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/flexport.svg' name='flexport' />),
+   },
+   {
+     key: 'freshcaller',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/freshcaller.svg' name='freshcaller' />),
+   },
+   {
+     key: 'freshdesk',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/freshdesk.svg' name='freshdesk' />),
+   },
+   {
+     key: 'freshsales',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/freshsales.svg' name='freshsales' />),
+   },
+   {
+     key: 'freshservice',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/freshservice.svg' name='freshservice' />),
+   },
+   {
+     key: 'gcs',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/gcs.svg' name='gcs' />),
+   },
+   {
+     key: 'genesys',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/genesys.svg' name='genesys' />),
+   },
+   {
+     key: 'getlago',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/getlago.svg' name='getlago' />),
+   },
+   {
+     key: 'github',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/github.svg' name='github' />),
+   },
+   {
+     key: 'gitlab',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/gitlab.svg' name='gitlab' />),
+   },
+   {
+     key: 'glassfrog',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/glassfrog.svg' name='glassfrog' />),
+   },
+   {
+     key: 'gnews',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/gnews.svg' name='gnews' />),
+   },
+   {
+     key: 'gocardless',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/gocardless.svg' name='gocardless' />),
+   },
+   {
+     key: 'gong',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/gong.svg' name='gong' />),
+   },
+   {
+     key: 'googleAds',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/googleAds.svg' name='googleAds' />),
+   },
+   {
+     key: 'googleAnalyticsDataApi',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/googleAnalyticsDataApi.svg' name='googleAnalyticsDataApi' />),
+   },
+   {
+     key: 'googleAnalyticsV4',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/googleAnalyticsV4.svg' name='googleAnalyticsV4' />),
+   },
+   {
+     key: 'googleDirectory',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/googleDirectory.svg' name='googleDirectory' />),
+   },
+   {
+     key: 'googlePagespeedInsights',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/googlePagespeedInsights.svg' name='googlePagespeedInsights' />),
+   },
+   {
+     key: 'googleSearchConsole',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/googleSearchConsole.svg' name='googleSearchConsole' />),
+   },
+   {
+     key: 'googleSheets',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/googleSheets.svg' name='googleSheets' />),
+   },
+   {
+     key: 'googleWebfonts',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/googleWebfonts.svg' name='googleWebfonts' />),
+   },
+   {
+     key: 'googleWorkspaceAdminReports',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/googleWorkspaceAdminReports.svg' name='googleWorkspaceAdminReports' />),
+   },
+   {
+     key: 'greenhouse',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/greenhouse.svg' name='greenhouse' />),
+   },
+   {
+     key: 'gridly',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/gridly.svg' name='gridly' />),
+   },
+   {
+     key: 'gutendex',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/gutendex.svg' name='gutendex' />),
+   },
+   {
+     key: 'harness',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/harness.svg' name='harness' />),
+   },
+   {
+     key: 'harvest',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/harvest.svg' name='harvest' />),
+   },
+   {
+     key: 'httpRequest',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/httpRequest.svg' name='httpRequest' />),
+   },
+   {
+     key: 'hubplanner',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/hubplanner.svg' name='hubplanner' />),
+   },
+   {
+     key: 'hubspot',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/hubspot.svg' name='hubspot' />),
+   },
+   {
+     key: 'insightly',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/insightly.svg' name='insightly' />),
+   },
+   {
+     key: 'instagram',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/instagram.svg' name='instagram' />),
+   },
+   {
+     key: 'instatus',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/instatus.svg' name='instatus' />),
+   },
+   {
+     key: 'intercom',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/intercom.svg' name='intercom' />),
+   },
+   {
+     key: 'intruder',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/intruder.svg' name='intruder' />),
+   },
+   {
+     key: 'ip2whois',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/ip2whois.svg' name='ip2whois' />),
+   },
+   {
+     key: 'iterable',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/iterable.svg' name='iterable' />),
+   },
+   {
+     key: 'jenkins',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/jenkins.svg' name='jenkins' />),
+   },
+   {
+     key: 'jira',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/jira.svg' name='jira' />),
+   },
+   {
+     key: 'k6Cloud',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/k6Cloud.svg' name='k6Cloud' />),
+   },
+   {
+     key: 'kafka',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/kafka.svg' name='kafka' />),
+   },
+   {
+     key: 'klarna',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/klarna.svg' name='klarna' />),
+   },
+   {
+     key: 'klaviyo',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/klaviyo.svg' name='klaviyo' />),
+   },
+   {
+     key: 'kustomerSinger',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/kustomerSinger.svg' name='kustomerSinger' />),
+   },
+   {
+     key: 'kyriba',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/kyriba.svg' name='kyriba' />),
+   },
+   {
+     key: 'launchdarkly',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/launchdarkly.svg' name='launchdarkly' />),
+   },
+   {
+     key: 'lemlist',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/lemlist.svg' name='lemlist' />),
+   },
+   {
+     key: 'leverHiring',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/leverHiring.svg' name='leverHiring' />),
+   },
+   {
+     key: 'linkedinAds',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/linkedinAds.svg' name='linkedinAds' />),
+   },
+   {
+     key: 'linkedinPages',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/linkedinPages.svg' name='linkedinPages' />),
+   },
+   {
+     key: 'linnworks',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/linnworks.svg' name='linnworks' />),
+   },
+   {
+     key: 'lokalise',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/lokalise.svg' name='lokalise' />),
+   },
+   {
+     key: 'looker',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/looker.svg' name='looker' />),
+   },
+   {
+     key: 'magento',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/magento.svg' name='magento' />),
+   },
+   {
+     key: 'mailchimp',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/mailchimp.svg' name='mailchimp' />),
+   },
+   {
+     key: 'mailerlite',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/mailerlite.svg' name='mailerlite' />),
+   },
+   {
+     key: 'mailersend',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/mailersend.svg' name='mailersend' />),
+   },
+   {
+     key: 'mailgun',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/mailgun.svg' name='mailgun' />),
+   },
+   {
+     key: 'mailjetMail',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/mailjetMail.svg' name='mailjetMail' />),
+   },
+   {
+     key: 'mailjetSms',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/mailjetSms.svg' name='mailjetSms' />),
+   },
+   {
+     key: 'marketo',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/marketo.svg' name='marketo' />),
+   },
+   {
+     key: 'metabase',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/metabase.svg' name='metabase' />),
+   },
+   {
+     key: 'microsoftDataverse',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/microsoftDataverse.svg' name='microsoftDataverse' />),
+   },
+   {
+     key: 'microsoftDynamicsAx',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/microsoftDynamicsAx.svg' name='microsoftDynamicsAx' />),
+   },
+   {
+     key: 'microsoftDynamicsCustomerEngageft',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/microsoftDynamicsCustomerEngageft.svg' name='microsoftDynamicsCustomerEngageft' />),
+   },
+   {
+     key: 'microsoftDynamicsGp',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/microsoftDynamicsGp.svg' name='microsoftDynamicsGp' />),
+   },
+   {
+     key: 'microsoftDynamicsNav',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/microsoftDynamicsNav.svg' name='microsoftDynamicsNav' />),
+   },
+   {
+     key: 'microsoftTeams',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/microsoftTeams.svg' name='microsoftTeams' />),
+   },
+   {
+     key: 'mixpanel',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/mixpanel.svg' name='mixpanel' />),
+   },
+   {
+     key: 'monday',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/monday.svg' name='monday' />),
+   },
+   {
+     key: 'mongodbV2',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/mongodbV2.svg' name='mongodbV2' />),
+   },
+   {
+     key: 'mssql',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/mssql.svg' name='mssql' />),
+   },
+   {
+     key: 'myHours',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/myHours.svg' name='myHours' />),
+   },
+   {
+     key: 'mysql',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/mysql.svg' name='mysql' />),
+   },
+   {
+     key: 'n8n',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/n8n.svg' name='n8n' />),
+   },
+   {
+     key: 'nasa',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/nasa.svg' name='nasa' />),
+   },
+   {
+     key: 'netsuite',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/netsuite.svg' name='netsuite' />),
+   },
+   {
+     key: 'newsApi',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/newsApi.svg' name='newsApi' />),
+   },
+   {
+     key: 'newsdata',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/newsdata.svg' name='newsdata' />),
+   },
+   {
+     key: 'notion',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/notion.svg' name='notion' />),
+   },
+   {
+     key: 'nytimes',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/nytimes.svg' name='nytimes' />),
+   },
+   {
+     key: 'okta',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/okta.svg' name='okta' />),
+   },
+   {
+     key: 'omnisend',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/omnisend.svg' name='omnisend' />),
+   },
+   {
+     key: 'onesignal',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/onesignal.svg' name='onesignal' />),
+   },
+   {
+     key: 'openExchangeRates',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/openExchangeRates.svg' name='openExchangeRates' />),
+   },
+   {
+     key: 'openweather',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/openweather.svg' name='openweather' />),
+   },
+   {
+     key: 'opsgenie',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/opsgenie.svg' name='opsgenie' />),
+   },
+   {
+     key: 'oraclePeoplesoft',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/oraclePeoplesoft.svg' name='oraclePeoplesoft' />),
+   },
+   {
+     key: 'oracleSiebelCrm',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/oracleSiebelCrm.svg' name='oracleSiebelCrm' />),
+   },
+   {
+     key: 'oracle',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/oracle.svg' name='oracle' />),
+   },
+   {
+     key: 'orb',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/orb.svg' name='orb' />),
+   },
+   {
+     key: 'orbit',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/orbit.svg' name='orbit' />),
+   },
+   {
+     key: 'oura',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/oura.svg' name='oura' />),
+   },
+   {
+     key: 'outreach',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/outreach.svg' name='outreach' />),
+   },
+   {
+     key: 'pagerduty',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/pagerduty.svg' name='pagerduty' />),
+   },
+   {
+     key: 'pardot',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/pardot.svg' name='pardot' />),
+   },
+   {
+     key: 'partnerstack',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/partnerstack.svg' name='partnerstack' />),
+   },
+   {
+     key: 'paypalTransaction',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/paypalTransaction.svg' name='paypalTransaction' />),
+   },
+   {
+     key: 'Transaction',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/Transaction.svg' name='Transaction' />),
+   },
+   {
+     key: 'paystack',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/paystack.svg' name='paystack' />),
+   },
+   {
+     key: 'pendo',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/pendo.svg' name='pendo' />),
+   },
+   {
+     key: 'persistiq',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/persistiq.svg' name='persistiq' />),
+   },
+   {
+     key: 'pexelsApi',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/pexelsApi.svg' name='pexelsApi' />),
+   },
+   {
+     key: 'pinterest',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/pinterest.svg' name='pinterest' />),
+   },
+   {
+     key: 'pipedrive',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/pipedrive.svg' name='pipedrive' />),
+   },
+   {
+     key: 'pivotalTracker',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/pivotalTracker.svg' name='pivotalTracker' />),
+   },
+   {
+     key: 'plaid',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/plaid.svg' name='plaid' />),
+   },
+   {
+     key: 'plausible',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/plausible.svg' name='plausible' />),
+   },
+   {
+     key: 'pocket',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/pocket.svg' name='pocket' />),
+   },
+   {
+     key: 'pokeapi',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/pokeapi.svg' name='pokeapi' />),
+   },
+   {
+     key: 'polygonStockApi',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/polygonStockApi.svg' name='polygonStockApi' />),
+   },
+   {
+     key: 'postgres',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/postgres.svg' name='postgres' />),
+   },
+   {
+     key: 'posthog',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/posthog.svg' name='posthog' />),
+   },
+   {
+     key: 'postmarkapp',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/postmarkapp.svg' name='postmarkapp' />),
+   },
+   {
+     key: 'prestashop',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/prestashop.svg' name='prestashop' />),
+   },
+   {
+     key: 'primetric',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/primetric.svg' name='primetric' />),
+   },
+   {
+     key: 'publicApis',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/publicApis.svg' name='publicApis' />),
+   },
+   {
+     key: 'punkApi',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/punkApi.svg' name='punkApi' />),
+   },
+   {
+     key: 'pypi',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/pypi.svg' name='pypi' />),
+   },
+   {
+     key: 'qonto',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/qonto.svg' name='qonto' />),
+   },
+   {
+     key: 'qualaroo',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/qualaroo.svg' name='qualaroo' />),
+   },
+   {
+     key: 'quickbooksSinger',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/quickbooksSinger.svg' name='quickbooksSinger' />),
+   },
+   {
+     key: 'railz',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/railz.svg' name='railz' />),
+   },
+   {
+     key: 'rdStationMarketing',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/rdStationMarketing.svg' name='rdStationMarketing' />),
+   },
+   {
+     key: 'Marketing',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/Marketing.svg' name='Marketing' />),
+   },
+   {
+     key: 'recharge',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/recharge.svg' name='recharge' />),
+   },
+   {
+     key: 'recreation',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/recreation.svg' name='recreation' />),
+   },
+   {
+     key: 'recruitee',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/recruitee.svg' name='recruitee' />),
+   },
+   {
+     key: 'recurly',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/recurly.svg' name='recurly' />),
+   },
+   {
+     key: 'redshift',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/redshift.svg' name='redshift' />),
+   },
+   {
+     key: 'replyIo',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/replyIo.svg' name='replyIo' />),
+   },
+   {
+     key: 'retently',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/retently.svg' name='retently' />),
+   },
+   {
+     key: 'rkiCovid',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/rkiCovid.svg' name='rkiCovid' />),
+   },
+   {
+     key: 'rocketChat',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/rocketChat.svg' name='rocketChat' />),
+   },
+   {
+     key: 'rss',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/rss.svg' name='rss' />),
+   },
+   {
+     key: 's3',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/s3.svg' name='s3' />),
+   },
+   {
+     key: 'salesforce',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/salesforce.svg' name='salesforce' />),
+   },
+   {
+     key: 'salesloft',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/salesloft.svg' name='salesloft' />),
+   },
+   {
+     key: 'sapBusinessOne',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/sapBusinessOne.svg' name='sapBusinessOne' />),
+   },
+   {
+     key: 'sapFieldglass',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/sapFieldglass.svg' name='sapFieldglass' />),
+   },
+   {
+     key: 'searchMetrics',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/searchMetrics.svg' name='searchMetrics' />),
+   },
+   {
+     key: 'secoda',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/secoda.svg' name='secoda' />),
+   },
+   {
+     key: 'sendgrid',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/sendgrid.svg' name='sendgrid' />),
+   },
+   {
+     key: 'sendinblue',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/sendinblue.svg' name='sendinblue' />),
+   },
+   {
+     key: 'senseforce',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/senseforce.svg' name='senseforce' />),
+   },
+   {
+     key: 'sentry',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/sentry.svg' name='sentry' />),
+   },
+   {
+     key: 'sftpBulk',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/sftpBulk.svg' name='sftpBulk' />),
+   },
+   {
+     key: 'sftp',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/sftp.svg' name='sftp' />),
+   },
+   {
+     key: 'shopify',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/shopify.svg' name='shopify' />),
+   },
+   {
+     key: 'shortio',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/shortio.svg' name='shortio' />),
+   },
+   {
+     key: 'slack',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/slack.svg' name='slack' />),
+   },
+   {
+     key: 'smaily',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/smaily.svg' name='smaily' />),
+   },
+   {
+     key: 'smartengage',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/smartengage.svg' name='smartengage' />),
+   },
+   {
+     key: 'smartsheets',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/smartsheets.svg' name='smartsheets' />),
+   },
+   {
+     key: 'snapchatMarketing',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/snapchatMarketing.svg' name='snapchatMarketing' />),
+   },
+   {
+     key: 'snowflake',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/snowflake.svg' name='snowflake' />),
+   },
+   {
+     key: 'sonarCloud',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/sonarCloud.svg' name='sonarCloud' />),
+   },
+   {
+     key: 'spacexApi',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/spacexApi.svg' name='spacexApi' />),
+   },
+   {
+     key: 'spreeCommerce',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/spreeCommerce.svg' name='spreeCommerce' />),
+   },
+   {
+     key: 'square',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/square.svg' name='square' />),
+   },
+   {
+     key: 'statuspage',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/statuspage.svg' name='statuspage' />),
+   },
+   {
+     key: 'strava',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/strava.svg' name='strava' />),
+   },
+   {
+     key: 'stripe',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/stripe.svg' name='stripe' />),
+   },
+   {
+     key: 'sugarCrm',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/sugarCrm.svg' name='sugarCrm' />),
+   },
+   {
+     key: 'surveySparrow',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/surveySparrow.svg' name='surveySparrow' />),
+   },
+   {
+     key: 'surveycto',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/surveycto.svg' name='surveycto' />),
+   },
+   {
+     key: 'surveymonkey',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/surveymonkey.svg' name='surveymonkey' />),
+   },
+   {
+     key: 'talkdeskExplore',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/talkdeskExplore.svg' name='talkdeskExplore' />),
+   },
+   {
+     key: 'tempo',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/tempo.svg' name='tempo' />),
+   },
+   {
+     key: 'theGuardianApi',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/theGuardianApi.svg' name='theGuardianApi' />),
+   },
+   {
+     key: 'tidb',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/tidb.svg' name='tidb' />),
+   },
+   {
+     key: 'tiktokMarketing',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/tiktokMarketing.svg' name='tiktokMarketing' />),
+   },
+   {
+     key: 'timely',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/timely.svg' name='timely' />),
+   },
+   {
+     key: 'tmdb',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/tmdb.svg' name='tmdb' />),
+   },
+   {
+     key: 'todoist',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/todoist.svg' name='todoist' />),
+   },
+   {
+     key: 'toggl',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/toggl.svg' name='toggl' />),
+   },
+   {
+     key: 'tplcentral',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/tplcentral.svg' name='tplcentral' />),
+   },
+   {
+     key: 'trello',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/trello.svg' name='trello' />),
+   },
+   {
+     key: 'trustpilot',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/trustpilot.svg' name='trustpilot' />),
+   },
+   {
+     key: 'tvmazeSchedule',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/tvmazeSchedule.svg' name='tvmazeSchedule' />),
+   },
+   {
+     key: 'twilioTaskrouter',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/twilioTaskrouter.svg' name='twilioTaskrouter' />),
+   },
+   {
+     key: 'twilio',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/twilio.svg' name='twilio' />),
+   },
+   {
+     key: 'twitter',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/twitter.svg' name='twitter' />),
+   },
+   {
+     key: 'tyntecSms',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/tyntecSms.svg' name='tyntecSms' />),
+   },
+   {
+     key: 'typeform',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/typeform.svg' name='typeform' />),
+   },
+   {
+     key: 'unleash',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/unleash.svg' name='unleash' />),
+   },
+   {
+     key: 'usCensus',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/usCensus.svg' name='usCensus' />),
+   },
+   {
+     key: 'vantage',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/vantage.svg' name='vantage' />),
+   },
+   {
+     key: 'victorops',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/victorops.svg' name='victorops' />),
+   },
+   {
+     key: 'vismaEconomic',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/vismaEconomic.svg' name='vismaEconomic' />),
+   },
+   {
+     key: 'vitally',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/vitally.svg' name='vitally' />),
+   },
+   {
+     key: 'waiteraid',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/waiteraid.svg' name='waiteraid' />),
+   },
+   {
+     key: 'weatherstack',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/weatherstack.svg' name='weatherstack' />),
+   },
+   {
+     key: 'webflow',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/webflow.svg' name='webflow' />),
+   },
+   {
+     key: 'whiskyHunter',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/whiskyHunter.svg' name='whiskyHunter' />),
+   },
+   {
+     key: 'wikipediaPageviews',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/wikipediaPageviews.svg' name='wikipediaPageviews' />),
+   },
+   {
+     key: 'woocommerce',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/woocommerce.svg' name='woocommerce' />),
+   },
+   {
+     key: 'wordpress',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/wordpress.svg' name='wordpress' />),
+   },
+   {
+     key: 'workable',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/workable.svg' name='workable' />),
+   },
+   {
+     key: 'workramp',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/workramp.svg' name='workramp' />),
+   },
+   {
+     key: 'wrike',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/wrike.svg' name='wrike' />),
+   },
+   {
+     key: 'xero',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/xero.svg' name='xero' />),
+   },
+   {
+     key: 'xkcd',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/xkcd.svg' name='xkcd' />),
+   },
+   {
+     key: 'yahooFinancePrice',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/yahooFinancePrice.svg' name='yahooFinancePrice' />),
+   },
+   {
+     key: 'yandexMetrica',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/yandexMetrica.svg' name='yandexMetrica' />),
+   },
+   {
+     key: 'younium',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/younium.svg' name='younium' />),
+   },
+   {
+     key: 'youtubeAnalytics',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/youtubeAnalytics.svg' name='youtubeAnalytics' />),
+   },
+   {
+     key: 'zapierSupportedStorage',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/zapierSupportedStorage.svg' name='zapierSupportedStorage' />),
+   },
+   {
+     key: 'zencart',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/zencart.svg' name='zencart' />),
+   },
+   {
+     key: 'zendeskChat',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/zendeskChat.svg' name='zendeskChat' />),
+   },
+   {
+     key: 'zendeskSell',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/zendeskSell.svg' name='zendeskSell' />),
+   },
+   {
+     key: 'zendeskSunshine',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/zendeskSunshine.svg' name='zendeskSunshine' />),
+   },
+   {
+     key: 'zendeskSupport',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/zendeskSupport.svg' name='zendeskSupport' />),
+   },
+   {
+     key: 'zendeskTalk',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/zendeskTalk.svg' name='zendeskTalk' />),
+   },
+   {
+     key: 'zenefits',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/zenefits.svg' name='zenefits' />),
+   },
+   {
+     key: 'zenloop',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/zenloop.svg' name='zenloop' />),
+   },
+   {
+     key: 'zohoCrm',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/zohoCrm.svg' name='zohoCrm' />),
+   },
+   {
+     key: 'zoom',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/zoom.svg' name='zoom' />),
+   },
+   {
+     key: 'zuora',
+     state: 'INACTIVE',
+     template:
+       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/zuora.svg' name='zuora' />),
+   },
+ ];
