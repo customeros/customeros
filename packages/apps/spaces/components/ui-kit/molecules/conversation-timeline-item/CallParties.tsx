@@ -24,7 +24,6 @@ export const CallParties: React.FC<Props> = ({ direction, sender, mode }) => {
   const { data: dataFromId } = useContactNameFromId({
     id: mode !== 'CHAT' ? sender?.senderId : sender?.senderUsername?.identifier,
   });
-  console.log('🏷️ ----- sender?.direction: ', sender?.direction);
   const [initials, setInitials] = useState<Array<string>>([]);
   const [name, setName] = useState('');
 

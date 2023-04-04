@@ -17,7 +17,7 @@ export const useFileData = ({ addFileToTextContent }: Props): Result => {
 
           if (dataUrl) {
             addFileToTextContent(
-              `<img width="400" src='${dataUrl}' alt='${id}'>`,
+              `<img width="400" src='${dataUrl}' alt="" id='${id}'>`,
             );
           } else {
             toast.error('');
