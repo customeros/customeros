@@ -1,6 +1,7 @@
 package aggregate
 
 import (
+	commonModels "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/models"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/phone_number/events"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/phone_number/models"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
@@ -53,9 +54,11 @@ func (a *PhoneNumberAggregate) onPhoneNumberCreated(event eventstore.Event) erro
 		return errors.Wrap(err, "GetJsonData")
 	}
 	a.PhoneNumber.RawPhoneNumber = eventData.RawPhoneNumber
-	a.PhoneNumber.Source = eventData.Source
-	a.PhoneNumber.SourceOfTruth = eventData.SourceOfTruth
-	a.PhoneNumber.AppSource = eventData.AppSource
+	a.PhoneNumber.Source = commonModels.Source{
+		Source:        eventData.Source,
+		SourceOfTruth: eventData.SourceOfTruth,
+		AppSource:     eventData.AppSource,
+	}
 	a.PhoneNumber.CreatedAt = eventData.CreatedAt
 	a.PhoneNumber.UpdatedAt = eventData.UpdatedAt
 	return nil
@@ -66,7 +69,7 @@ func (a *PhoneNumberAggregate) onPhoneNumberUpdated(event eventstore.Event) erro
 	if err := event.GetJsonData(&eventData); err != nil {
 		return errors.Wrap(err, "GetJsonData")
 	}
-	a.PhoneNumber.SourceOfTruth = eventData.SourceOfTruth
+	a.PhoneNumber.Source.SourceOfTruth = eventData.SourceOfTruth
 	a.PhoneNumber.UpdatedAt = eventData.UpdatedAt
 	return nil
 }

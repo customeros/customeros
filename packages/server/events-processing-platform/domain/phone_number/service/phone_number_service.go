@@ -31,7 +31,7 @@ func (s *phoneNumberService) UpsertPhoneNumber(ctx context.Context, request *pho
 
 	command := commands.NewUpsertPhoneNumberCommand(aggregateID, request.Tenant, request.PhoneNumber, request.Source, request.SourceOfTruth, request.AppSource, utils.TimestampProtoToTime(request.CreatedAt), utils.TimestampProtoToTime(request.UpdatedAt))
 	if err := s.phoneNumberCommands.UpsertPhoneNumber.Handle(ctx, command); err != nil {
-		s.log.Errorf("(UpsertSyncPhoneNumber.Handle) phoneNumber ID: {%s}, err: {%v}", aggregateID, err)
+		s.log.Errorf("(UpsertSyncPhoneNumber.Handle) tenant:{%s}, phoneNumber ID: {%s}, err: {%v}", request.Tenant, aggregateID, err)
 		return nil, s.errResponse(err)
 	}
 

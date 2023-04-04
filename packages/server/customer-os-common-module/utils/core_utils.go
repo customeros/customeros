@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/sirupsen/logrus"
+	"google.golang.org/protobuf/types/known/timestamppb"
 	"reflect"
 	"runtime"
 	"time"
@@ -158,15 +159,12 @@ func IfNotNilBool(check any, valueExtractor ...func() bool) bool {
 	return *out
 }
 
-func IfNotNilTime(check any, valueExtractor ...func() time.Time) time.Time {
-	if reflect.ValueOf(check).Kind() == reflect.Bool { // FIXME alexb debug
+func IfNotNilTimeWithDefault(check any, defaultValue time.Time) time.Time {
+	if reflect.ValueOf(check).Kind() != reflect.Pointer {
 		return check.(time.Time)
 	}
 	if reflect.ValueOf(check).Kind() == reflect.Pointer && reflect.ValueOf(check).IsNil() {
-		return GetEpochStart()
-	}
-	if len(valueExtractor) > 0 {
-		return valueExtractor[0]()
+		return defaultValue
 	}
 	out := check.(*time.Time)
 	return *out
@@ -229,4 +227,11 @@ func GetFunctionName() string {
 func LogMethodExecution(start time.Time, methodName string) {
 	duration := time.Since(start).Milliseconds()
 	logrus.Infof("Method %s execution time: %d ms", methodName, duration)
+}
+
+func ConvertTimeToTimestampPtr(input *time.Time) *timestamppb.Timestamp {
+	if input == nil {
+		return nil
+	}
+	return timestamppb.New(*input)
 }

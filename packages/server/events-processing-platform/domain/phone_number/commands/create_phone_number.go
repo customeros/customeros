@@ -39,12 +39,10 @@ func (c *createPhoneNumberHandler) Handle(ctx context.Context, command *CreatePh
 		return err
 	}
 
-	// FIXME alexb
-	//if err := phoneNumberAggregate.CreatePhoneNumber(ctx, command.Tenant, command.PhoneNumber); err != nil {
-	//	return err
-	//}
+	if err = phoneNumberAggregate.CreatePhoneNumber(ctx, command.Tenant, command.PhoneNumber, command.Source.Source, command.Source.SourceOfTruth, command.Source.AppSource, command.CreatedAt, command.UpdatedAt); err != nil {
+		return err
+	}
 
-	// FIXME alexb
-	//span.LogFields(log.String("order", order.String()))
+	span.LogFields(log.String("PhoneNumber", phoneNumberAggregate.PhoneNumber.String()))
 	return c.es.Save(ctx, phoneNumberAggregate)
 }

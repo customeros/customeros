@@ -404,7 +404,6 @@ type ComplexityRoot struct {
 		OrganizationTypeDelete                  func(childComplexity int, id string) int
 		OrganizationTypeUpdate                  func(childComplexity int, input model.OrganizationTypeUpdateInput) int
 		OrganizationUpdate                      func(childComplexity int, input model.OrganizationUpdateInput) int
-		PhoneNumberCreateWithEventStore         func(childComplexity int, rawPhoneNumber string) int
 		PhoneNumberMergeToContact               func(childComplexity int, contactID string, input model.PhoneNumberInput) int
 		PhoneNumberMergeToOrganization          func(childComplexity int, organizationID string, input model.PhoneNumberInput) int
 		PhoneNumberMergeToUser                  func(childComplexity int, userID string, input model.PhoneNumberInput) int
@@ -417,6 +416,7 @@ type ComplexityRoot struct {
 		PhoneNumberUpdateInContact              func(childComplexity int, contactID string, input model.PhoneNumberUpdateInput) int
 		PhoneNumberUpdateInOrganization         func(childComplexity int, organizationID string, input model.PhoneNumberUpdateInput) int
 		PhoneNumberUpdateInUser                 func(childComplexity int, userID string, input model.PhoneNumberUpdateInput) int
+		PhoneNumberUpsertInEventStore           func(childComplexity int, size int) int
 		TagCreate                               func(childComplexity int, input model.TagInput) int
 		TagDelete                               func(childComplexity int, id string) int
 		TagUpdate                               func(childComplexity int, input model.TagUpdateInput) int
@@ -740,7 +740,7 @@ type MutationResolver interface {
 	PhoneNumberUpdateInUser(ctx context.Context, userID string, input model.PhoneNumberUpdateInput) (*model.PhoneNumber, error)
 	PhoneNumberRemoveFromUserByE164(ctx context.Context, userID string, e164 string) (*model.Result, error)
 	PhoneNumberRemoveFromUserByID(ctx context.Context, userID string, id string) (*model.Result, error)
-	PhoneNumberCreateWithEventStore(ctx context.Context, rawPhoneNumber string) (string, error)
+	PhoneNumberUpsertInEventStore(ctx context.Context, size int) (int, error)
 	TagCreate(ctx context.Context, input model.TagInput) (*model.Tag, error)
 	TagUpdate(ctx context.Context, input model.TagUpdateInput) (*model.Tag, error)
 	TagDelete(ctx context.Context, id string) (*model.Result, error)
@@ -3035,18 +3035,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.OrganizationUpdate(childComplexity, args["input"].(model.OrganizationUpdateInput)), true
 
-	case "Mutation.phoneNumberCreateWithEventStore":
-		if e.complexity.Mutation.PhoneNumberCreateWithEventStore == nil {
-			break
-		}
-
-		args, err := ec.field_Mutation_phoneNumberCreateWithEventStore_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Mutation.PhoneNumberCreateWithEventStore(childComplexity, args["rawPhoneNumber"].(string)), true
-
 	case "Mutation.phoneNumberMergeToContact":
 		if e.complexity.Mutation.PhoneNumberMergeToContact == nil {
 			break
@@ -3190,6 +3178,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.PhoneNumberUpdateInUser(childComplexity, args["userId"].(string), args["input"].(model.PhoneNumberUpdateInput)), true
+
+	case "Mutation.phoneNumberUpsertInEventStore":
+		if e.complexity.Mutation.PhoneNumberUpsertInEventStore == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_phoneNumberUpsertInEventStore_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.PhoneNumberUpsertInEventStore(childComplexity, args["size"].(int)), true
 
 	case "Mutation.tag_Create":
 		if e.complexity.Mutation.TagCreate == nil {
@@ -5745,7 +5745,7 @@ input OrganizationTypeUpdateInput {
     phoneNumberRemoveFromUserByE164(userId : ID!, e164: String!): Result!
     phoneNumberRemoveFromUserById(userId : ID!, id: ID!): Result!
 
-    phoneNumberCreateWithEventStore(rawPhoneNumber: String!): ID!
+    phoneNumberUpsertInEventStore(size: Int!): Int!
 }
 
 """
@@ -7481,21 +7481,6 @@ func (ec *executionContext) field_Mutation_organization_Update_args(ctx context.
 	return args, nil
 }
 
-func (ec *executionContext) field_Mutation_phoneNumberCreateWithEventStore_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
-	var err error
-	args := map[string]interface{}{}
-	var arg0 string
-	if tmp, ok := rawArgs["rawPhoneNumber"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("rawPhoneNumber"))
-		arg0, err = ec.unmarshalNString2string(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["rawPhoneNumber"] = arg0
-	return args, nil
-}
-
 func (ec *executionContext) field_Mutation_phoneNumberMergeToContact_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
@@ -7781,6 +7766,21 @@ func (ec *executionContext) field_Mutation_phoneNumberUpdateInUser_args(ctx cont
 		}
 	}
 	args["input"] = arg1
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_phoneNumberUpsertInEventStore_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 int
+	if tmp, ok := rawArgs["size"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("size"))
+		arg0, err = ec.unmarshalNInt2int(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["size"] = arg0
 	return args, nil
 }
 
@@ -24202,8 +24202,8 @@ func (ec *executionContext) fieldContext_Mutation_phoneNumberRemoveFromUserById(
 	return fc, nil
 }
 
-func (ec *executionContext) _Mutation_phoneNumberCreateWithEventStore(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_phoneNumberCreateWithEventStore(ctx, field)
+func (ec *executionContext) _Mutation_phoneNumberUpsertInEventStore(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_phoneNumberUpsertInEventStore(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -24216,7 +24216,7 @@ func (ec *executionContext) _Mutation_phoneNumberCreateWithEventStore(ctx contex
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().PhoneNumberCreateWithEventStore(rctx, fc.Args["rawPhoneNumber"].(string))
+		return ec.resolvers.Mutation().PhoneNumberUpsertInEventStore(rctx, fc.Args["size"].(int))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -24228,19 +24228,19 @@ func (ec *executionContext) _Mutation_phoneNumberCreateWithEventStore(ctx contex
 		}
 		return graphql.Null
 	}
-	res := resTmp.(string)
+	res := resTmp.(int)
 	fc.Result = res
-	return ec.marshalNID2string(ctx, field.Selections, res)
+	return ec.marshalNInt2int(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Mutation_phoneNumberCreateWithEventStore(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Mutation_phoneNumberUpsertInEventStore(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Mutation",
 		Field:      field,
 		IsMethod:   true,
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type ID does not have child fields")
+			return nil, errors.New("field of type Int does not have child fields")
 		},
 	}
 	defer func() {
@@ -24250,7 +24250,7 @@ func (ec *executionContext) fieldContext_Mutation_phoneNumberCreateWithEventStor
 		}
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_phoneNumberCreateWithEventStore_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+	if fc.Args, err = ec.field_Mutation_phoneNumberUpsertInEventStore_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return
 	}
@@ -38928,10 +38928,10 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
-		case "phoneNumberCreateWithEventStore":
+		case "phoneNumberUpsertInEventStore":
 
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_phoneNumberCreateWithEventStore(ctx, field)
+				return ec._Mutation_phoneNumberUpsertInEventStore(ctx, field)
 			})
 
 			if out.Values[i] == graphql.Null {

@@ -14,7 +14,7 @@ extend type Mutation {
     phoneNumberRemoveFromUserByE164(userId : ID!, e164: String!): Result!
     phoneNumberRemoveFromUserById(userId : ID!, id: ID!): Result!
 
-    phoneNumberCreateWithEventStore(rawPhoneNumber: String!): ID!
+    phoneNumberUpsertInEventStore(size: Int!): Int!
 }
 
 """

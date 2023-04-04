@@ -16,8 +16,8 @@ func (a *PhoneNumberAggregate) CreatePhoneNumber(ctx context.Context, tenant, ra
 	defer span.Finish()
 	span.LogFields(log.String("Tenant", tenant), log.String("AggregateID", a.GetID()))
 
-	createdAtNotNil := utils.IfNotNilTime(createdAt, func() time.Time { return utils.Now() })
-	updatedAtNotNil := utils.IfNotNilTime(updatedAt, func() time.Time { return createdAtNotNil })
+	createdAtNotNil := utils.IfNotNilTimeWithDefault(createdAt, utils.Now())
+	updatedAtNotNil := utils.IfNotNilTimeWithDefault(updatedAt, createdAtNotNil)
 	event, err := events.NewPhoneNumberCreatedEvent(a, tenant, rawPhoneNumber, source, sourceOfTruth, appSource, createdAtNotNil, updatedAtNotNil)
 	if err != nil {
 		tracing.TraceErr(span, err)
@@ -37,7 +37,10 @@ func (a *PhoneNumberAggregate) UpdatePhoneNumber(ctx context.Context, tenant, so
 	defer span.Finish()
 	span.LogFields(log.String("Tenant", tenant), log.String("AggregateID", a.GetID()))
 
-	updatedAtNotNil := utils.IfNotNilTime(updatedAt, func() time.Time { return utils.Now() })
+	updatedAtNotNil := utils.IfNotNilTimeWithDefault(updatedAt, utils.Now())
+	if sourceOfTruth == "" {
+		sourceOfTruth = a.PhoneNumber.Source.SourceOfTruth
+	}
 
 	event, err := events.NewPhoneNumberUpdatedEvent(a, tenant, sourceOfTruth, updatedAtNotNil)
 	if err != nil {

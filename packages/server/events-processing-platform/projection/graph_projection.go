@@ -120,6 +120,8 @@ func (gp *GraphProjection) When(ctx context.Context, evt eventstore.Event) error
 
 	case events.PhoneNumberCreated:
 		return gp.phoneNumberEventHandler.OnPhoneNumberCreate(ctx, evt)
+	case events.PhoneNumberUpdated:
+		return gp.phoneNumberEventHandler.OnPhoneNumberUpdate(ctx, evt)
 
 	default:
 		gp.log.Warnf("(GraphProjection) [When unknown EventType] eventType: {%s}", evt.EventType)

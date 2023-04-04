@@ -38,7 +38,7 @@ func graphqlHandler(cfg *config.Config, driver neo4j.DriverWithContext,
 	repositoryContainer *commonRepository.Repositories, gRPCconn *grpc.ClientConn) gin.HandlerFunc {
 
 	grpcContainer := grpc_client.InitClients(gRPCconn)
-	serviceContainer := service.InitServices(&driver)
+	serviceContainer := service.InitServices(&driver, grpcContainer)
 	// instantiate graph resolver
 	graphResolver := resolver.NewResolver(serviceContainer, repositoryContainer, grpcContainer)
 	// make a data loader
