@@ -28,9 +28,9 @@ func NewAggregateStore(log logger.Logger, esdbClient *esdb.Client) *aggregateSto
 }
 
 func (aggregateStore *aggregateStore) Load(ctx context.Context, aggregate es.Aggregate) error {
-	//span, ctx := opentracing.StartSpanFromContext(ctx, "aggregateStore.Load")
-	//defer span.Finish()
-	//span.LogFields(log.String("AggregateID", aggregate.GetID()))
+	span, ctx := opentracing.StartSpanFromContext(ctx, "aggregateStore.Load")
+	defer span.Finish()
+	span.LogFields(log.String("AggregateID", aggregate.GetID()))
 
 	stream, err := aggregateStore.esdbClient.ReadStream(ctx, aggregate.GetID(), esdb.ReadStreamOptions{}, count)
 	if err != nil {
@@ -43,7 +43,7 @@ func (aggregateStore *aggregateStore) Load(ctx context.Context, aggregate es.Agg
 	for {
 		event, err := stream.Recv()
 		if errors.Is(err, esdb.ErrStreamNotFound) {
-			//tracing.TraceErr(span, err)
+			tracing.TraceErr(span, err)
 			aggregateStore.log.Errorf("(Load) esdbClient.ReadStream: {%+v}", err)
 			return errors.Wrap(err, "stream.Recv")
 		}
@@ -51,7 +51,7 @@ func (aggregateStore *aggregateStore) Load(ctx context.Context, aggregate es.Agg
 			break
 		}
 		if err != nil {
-			//tracing.TraceErr(span, err)
+			tracing.TraceErr(span, err)
 			aggregateStore.log.Errorf("(Load) esdbClient.ReadStream: {%+v}", err)
 			return errors.Wrap(err, "stream.Recv")
 		}
@@ -143,9 +143,9 @@ func (aggregateStore *aggregateStore) Save(ctx context.Context, aggregate es.Agg
 }
 
 func (aggregateStore *aggregateStore) Exists(ctx context.Context, streamID string) error {
-	//span, ctx := opentracing.StartSpanFromContext(ctx, "aggregateStore.Exists")
-	//defer span.Finish()
-	//span.LogFields(log.String("AggregateID", streamID))
+	span, ctx := opentracing.StartSpanFromContext(ctx, "aggregateStore.Exists")
+	defer span.Finish()
+	span.LogFields(log.String("AggregateID", streamID))
 
 	readStreamOptions := esdb.ReadStreamOptions{Direction: esdb.Backwards, From: esdb.Revision(1)}
 
@@ -158,7 +158,7 @@ func (aggregateStore *aggregateStore) Exists(ctx context.Context, streamID strin
 	for {
 		_, err := stream.Recv()
 		if errors.Is(err, esdb.ErrStreamNotFound) {
-			//tracing.TraceErr(span, err)
+			tracing.TraceErr(span, err)
 			aggregateStore.log.Errorf("(Exists) esdbClient.ReadStream: {%+v}", err)
 			return errors.Wrap(esdb.ErrStreamNotFound, "stream.Recv")
 		}
@@ -166,7 +166,7 @@ func (aggregateStore *aggregateStore) Exists(ctx context.Context, streamID strin
 			break
 		}
 		if err != nil {
-			//tracing.TraceErr(span, err)
+			tracing.TraceErr(span, err)
 			aggregateStore.log.Errorf("(Exists) esdbClient.ReadStream: {%+v}", err)
 			return errors.Wrap(err, "stream.Recv")
 		}

@@ -41,16 +41,16 @@ func (c *upsertPhoneNumberHandler) Handle(ctx context.Context, command *UpsertPh
 	if err != nil && !errors.Is(err, esdb.ErrStreamNotFound) {
 		return err
 	} else if err != nil && errors.Is(err, esdb.ErrStreamNotFound) {
-		if err = phoneNumberAggregate.CreatePhoneNumber(ctx, command.Tenant, command.RawPhoneNumber, command.Source, command.SourceOfTruth, command.AppSource, command.CreatedAt, command.UpdatedAt); err != nil {
+		if err = phoneNumberAggregate.CreatePhoneNumber(ctx, command.Tenant, command.RawPhoneNumber, command.Source.Source, command.Source.SourceOfTruth, command.Source.AppSource, command.CreatedAt, command.UpdatedAt); err != nil {
 			return err
 		}
 	} else {
-		if err = phoneNumberAggregate.UpdatePhoneNumber(ctx, command.Tenant, command.SourceOfTruth, command.UpdatedAt); err != nil {
+		phoneNumberAggregate, _ = aggregate.LoadPhoneNumberAggregate(ctx, c.es, command.Tenant, command.AggregateID)
+		if err = phoneNumberAggregate.UpdatePhoneNumber(ctx, command.Tenant, command.Source.SourceOfTruth, command.UpdatedAt); err != nil {
 			return err
 		}
 	}
 
-	// FIXME alexb
-	//span.LogFields(log.String("order", order.String()))
+	span.LogFields(log.String("PhoneNumber", phoneNumberAggregate.PhoneNumber.String()))
 	return c.es.Save(ctx, phoneNumberAggregate)
 }

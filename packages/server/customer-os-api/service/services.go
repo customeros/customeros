@@ -2,6 +2,7 @@ package service
 
 import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
 )
 
@@ -34,7 +35,7 @@ type Services struct {
 	AnalysisService            AnalysisService
 }
 
-func InitServices(driver *neo4j.DriverWithContext) *Services {
+func InitServices(driver *neo4j.DriverWithContext, grpcClients *grpc_client.Clients) *Services {
 	repositories := repository.InitRepos(driver)
 
 	services := Services{
@@ -42,7 +43,7 @@ func InitServices(driver *neo4j.DriverWithContext) *Services {
 		OrganizationService:        NewOrganizationService(repositories),
 		ContactGroupService:        NewContactGroupService(repositories),
 		CustomFieldService:         NewCustomFieldService(repositories),
-		PhoneNumberService:         NewPhoneNumberService(repositories),
+		PhoneNumberService:         NewPhoneNumberService(repositories, grpcClients),
 		EmailService:               NewEmailService(repositories),
 		UserService:                NewUserService(repositories),
 		FieldSetService:            NewFieldSetService(repositories),

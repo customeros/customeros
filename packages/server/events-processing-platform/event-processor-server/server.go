@@ -84,15 +84,16 @@ func (server *server) Run(parentCtx context.Context) error {
 		}
 	}()
 
-	dataEnricherProjection := projection.NewDataEnricherProjection(server.log, db, server.cfg, server.commands)
-	go func() {
-		prefixes := []string{server.cfg.Subscriptions.PhoneNumberPrefix}
-		err := dataEnricherProjection.Subscribe(ctx, prefixes, server.cfg.Subscriptions.PoolSize, dataEnricherProjection.ProcessEvents)
-		if err != nil {
-			server.log.Errorf("(dataEnricherProjection.Subscribe) err: {%v}", err)
-			cancel()
-		}
-	}()
+	// FIXME alexb enable data enricher
+	//dataEnricherProjection := projection.NewDataEnricherProjection(server.log, db, server.cfg, server.commands)
+	//go func() {
+	//	prefixes := []string{server.cfg.Subscriptions.PhoneNumberPrefix}
+	//	err := dataEnricherProjection.Subscribe(ctx, prefixes, server.cfg.Subscriptions.PoolSize, dataEnricherProjection.ProcessEvents)
+	//	if err != nil {
+	//		server.log.Errorf("(dataEnricherProjection.Subscribe) err: {%v}", err)
+	//		cancel()
+	//	}
+	//}()
 
 	//server.runMetrics(cancel)
 	//server.runHealthCheck(ctx)

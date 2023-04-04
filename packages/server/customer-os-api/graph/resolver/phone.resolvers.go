@@ -6,19 +6,16 @@ package resolver
 
 import (
 	"context"
+	"github.com/sirupsen/logrus"
 	"time"
 
 	"github.com/99designs/gqlgen/graphql"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/dataloader"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/generated"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	events_processing_phone_number "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/proto/phone_number"
-	"github.com/sirupsen/logrus"
 )
 
 // PhoneNumberMergeToContact is the resolver for the phoneNumberMergeToContact field.
@@ -153,25 +150,19 @@ func (r *mutationResolver) PhoneNumberRemoveFromUserByID(ctx context.Context, us
 	}, nil
 }
 
-// PhoneNumberCreateWithEventStore is the resolver for the phoneNumberCreateWithEventStore field.
-func (r *mutationResolver) PhoneNumberCreateWithEventStore(ctx context.Context, rawPhoneNumber string) (string, error) {
+// PhoneNumberUpsertInEventStore is the resolver for the phoneNumberUpsertInEventStore field.
+func (r *mutationResolver) PhoneNumberUpsertInEventStore(ctx context.Context, size int) (int, error) {
 	defer func(start time.Time) {
 		utils.LogMethodExecution(start, utils.GetFunctionName())
 	}(time.Now())
 
-	response, err := r.Clients.PhoneNumberClient.CreatePhoneNumber(context.Background(), &events_processing_phone_number.CreatePhoneNumberGrpcRequest{
-		Tenant:        common.GetTenantFromContext(ctx),
-		PhoneNumber:   rawPhoneNumber,
-		AppSource:     constants.AppSourceCustomerOsApi,
-		Source:        string(entity.DataSourceOpenline),
-		SourceOfTruth: string(entity.DataSourceOpenline),
-	})
+	result, err := r.Services.PhoneNumberService.UpsertInEventStore(ctx, size)
 	if err != nil {
 		logrus.Errorf("Failed to call method: %v", err)
-		graphql.AddErrorf(ctx, "Failed to create phone number %s", rawPhoneNumber)
+		graphql.AddErrorf(ctx, "Failed to upsert phone numbers to evengt store")
 	}
 
-	return response.Id, nil
+	return result, nil
 }
 
 // Users is the resolver for the users field.

@@ -5,12 +5,14 @@ import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/db"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/phone_number/events"
 	"golang.org/x/net/context"
 )
 
 type PhoneNumberRepository interface {
 	GetIdIfExists(ctx context.Context, tenant, phoneNumber string) (string, error)
-	CreatePhoneNumber(ctx context.Context, tenant, id, rawPhoneNumber string) error
+	CreatePhoneNumber(ctx context.Context, aggregateId string, event events.PhoneNumberCreatedEvent) error
+	UpdatePhoneNumber(ctx context.Context, aggregateId string, event events.PhoneNumberUpdatedEvent) error
 }
 
 type phoneNumberRepository struct {
@@ -48,22 +50,56 @@ func (r *phoneNumberRepository) GetIdIfExists(ctx context.Context, tenant string
 	return result.([]*db.Record)[0].Values[0].(string), err
 }
 
-func (r *phoneNumberRepository) CreatePhoneNumber(ctx context.Context, tenant, id, rawPhoneNumber string) error {
+func (r *phoneNumberRepository) CreatePhoneNumber(ctx context.Context, aggregateId string, event events.PhoneNumberCreatedEvent) error {
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
 	query := `MATCH (t:Tenant {name:$tenant}) 
 		 MERGE (t)<-[:PHONE_NUMBER_BELONGS_TO_TENANT]-(p:PhoneNumber:PhoneNumber_%s {id:$id}) 
 		 ON CREATE SET p.rawPhoneNumber = $rawPhoneNumber, 
+						p.validated = null,
+						p.source = $source,
+						p.sourceOfTruth = $sourceOfTruth,
+						p.appSource = $appSource,
+						p.createdAt = $createdAt,
+						p.updatedAt = $updatedAt,
 						p.syncedWithEventStore = true 
-		 ON MATCH SET 	p.syncedWithEventStore = true`
+		 ON MATCH SET 	p.syncedWithEventStore = true
+`
 
 	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		_, err := tx.Run(ctx, fmt.Sprintf(query, tenant),
+		_, err := tx.Run(ctx, fmt.Sprintf(query, event.Tenant),
 			map[string]any{
-				"rawPhoneNumber": rawPhoneNumber,
-				"id":             id,
-				"tenant":         tenant,
+				"id":             aggregateId,
+				"rawPhoneNumber": event.RawPhoneNumber,
+				"tenant":         event.Tenant,
+				"source":         event.Source,
+				"sourceOfTruth":  event.SourceOfTruth,
+				"appSource":      event.AppSource,
+				"createdAt":      event.CreatedAt,
+				"updatedAt":      event.UpdatedAt,
+			})
+		return nil, err
+	})
+	return err
+}
+
+func (r *phoneNumberRepository) UpdatePhoneNumber(ctx context.Context, aggregateId string, event events.PhoneNumberUpdatedEvent) error {
+	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
+	defer session.Close(ctx)
+
+	query := `MATCH (t:Tenant {name:$tenant})<-[:PHONE_NUMBER_BELONGS_TO_TENANT]-(p:PhoneNumber:PhoneNumber_%s {id:$id})
+		 SET p.sourceOfTruth = $sourceOfTruth,
+			p.updatedAt = $updatedAt,
+			p.syncedWithEventStore = true`
+
+	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		_, err := tx.Run(ctx, fmt.Sprintf(query, event.Tenant),
+			map[string]any{
+				"id":            aggregateId,
+				"tenant":        event.Tenant,
+				"sourceOfTruth": event.SourceOfTruth,
+				"updatedAt":     event.UpdatedAt,
 			})
 		return nil, err
 	})
