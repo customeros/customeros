@@ -71,6 +71,11 @@ func (r *mutationResolver) PhoneNumberRemoveFromUserByID(ctx context.Context, us
 	panic(fmt.Errorf("not implemented: PhoneNumberRemoveFromUserByID - phoneNumberRemoveFromUserById"))
 }
 
+// PhoneNumberCreateWithEventStore is the resolver for the phoneNumberCreateWithEventStore field.
+func (r *mutationResolver) PhoneNumberCreateWithEventStore(ctx context.Context, rawPhoneNumber string) (string, error) {
+	panic(fmt.Errorf("not implemented: PhoneNumberCreateWithEventStore - phoneNumberCreateWithEventStore"))
+}
+
 // Users is the resolver for the users field.
 func (r *phoneNumberResolver) Users(ctx context.Context, obj *model.PhoneNumber) ([]*model.User, error) {
 	panic(fmt.Errorf("not implemented: Users - users"))
