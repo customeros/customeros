@@ -52,11 +52,12 @@ export const NoteTimelineItem: React.FC<Props> = ({
   const { onRemoveNote } = useDeleteNote();
   const [editNote, setEditNote] = useState(false);
   const elementRef = useRef<MutableRefObject<Ref<HTMLDivElement>>>(null);
-
-  const [note, setNote] = useState({
-    id,
-    html: noteContent,
-    htmlEnhanced: noteContent,
+  const { handleSubmit, setValue, getValues, control, reset } = useForm({
+    defaultValues: {
+      id: '',
+      html: '',
+      htmlEnhanced: '',
+    },
   });
 
   useEffect(() => {
@@ -84,7 +85,7 @@ export const NoteTimelineItem: React.FC<Props> = ({
                   };
                 });
               })
-              .catch((reason: any) => {
+              .catch(() => {
                 toast.error(
                   'There was a problem on our side and we are doing our best to solve it!',
                 );
@@ -93,7 +94,7 @@ export const NoteTimelineItem: React.FC<Props> = ({
         },
       });
     } else {
-      setNote({ id, html: noteContent, htmlEnhanced: noteContent });
+      reset({ id, html: noteContent, htmlEnhanced: noteContent });
     }
   }, [id, noteContent]);
 
@@ -107,8 +108,7 @@ export const NoteTimelineItem: React.FC<Props> = ({
             domNode.attribs &&
             domNode.attribs.alt
           ) {
-            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-            // @ts-ignore
+            // @ts-expect-error fixme
             const imageSrc = images[domNode.attribs.alt] as string;
             return <img src={imageSrc} alt={domNode.attribs.alt} />;
           }
@@ -116,22 +116,13 @@ export const NoteTimelineItem: React.FC<Props> = ({
       });
 
       const html = ReactDOMServer.renderToString(htmlParsed as any);
-
-      setNote({
+      reset({
         id,
         html: html,
         htmlEnhanced: html,
       });
     }
   }, [id, images, noteContent]);
-
-  const { handleSubmit, setValue, getValues, control, reset } = useForm({
-    defaultValues: {
-      id: note?.id || '',
-      html: note?.html || '',
-      htmlEnhanced: note.htmlEnhanced || '',
-    },
-  });
 
   const onSubmit = handleSubmit(({ htmlEnhanced, ...data }) => {
     const dataToSubmit = {
@@ -142,7 +133,6 @@ export const NoteTimelineItem: React.FC<Props> = ({
       setEditNote(false);
     });
   });
-
   const handleToggleEditMode = (state: boolean) => {
     setEditNote(state);
     setTimeout(() => {
@@ -255,7 +245,7 @@ export const NoteTimelineItem: React.FC<Props> = ({
             className={styles.noteContent}
             dangerouslySetInnerHTML={{
               __html: sanitizeHtml(
-                linkifyHtml(note.htmlEnhanced, {
+                linkifyHtml(getValues('htmlEnhanced'), {
                   defaultProtocol: 'https',
                   rel: 'noopener noreferrer',
                 }),

@@ -25,7 +25,7 @@ export const useFileData = ({ addFileToTextContent }: Props): Result => {
         };
         reader.readAsDataURL(blob);
       })
-      .catch((reason: any) => {
+      .catch(() => {
         toast.error('Oops! We could not load provided file');
       });
   };
@@ -43,7 +43,7 @@ export const useFileData = ({ addFileToTextContent }: Props): Result => {
         },
       })
       .then((r: any) => handleFetchFile(r.data.id))
-      .catch((reason: any) => {
+      .catch(() => {
         toast.error(
           'Oops! We could add this file. Check if file type is supported and can try again or contact our support team',
         );
