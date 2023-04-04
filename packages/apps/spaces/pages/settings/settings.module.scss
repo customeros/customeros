@@ -1,44 +1,8 @@
-@import 'styles/mixins';
-
 .pageContainer {
   padding: var(--spacing-lg);
 }
-.input {
-  @include input-style;
-  margin-top: 0;
-  margin-bottom: var(--spacing-xs);
-}
-.label {
-  font-size: var(--font-size-sm);
-}
 
 .settingsContainer {
-  display: grid;
-  grid-gap: 38px;
-
-  @include min-tablet {
-    grid-template-columns: 1fr 1fr 1fr;
-    grid-auto-rows: min-content;
-  }
-}
-
-.heading {
-  font-weight: normal;
-  font-size: var(--font-size-lg);
-}
-.mainHeading {
-  font-weight: normal;
-  font-size: var(--font-size-lg);
-}
-
-.buttonSection {
-  justify-content: flex-end;
-}
-
-.headingSection {
   display: flex;
-  margin-bottom: var(--spacing-lg);
-  & button {
-    margin-right: var(--spacing-sm);
-  }
+  flex-direction: column;
 }
