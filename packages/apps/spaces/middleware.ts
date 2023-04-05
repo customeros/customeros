@@ -171,8 +171,17 @@ function getRedirectUrl(
       'X-Openline-API-KEY',
       process.env.COMMS_API_KEY as string,
     );
+  } else if (request.nextUrl.pathname.startsWith('/oasis-api/')) {
+    newURL =
+      process.env.OASIS_API_PATH +
+      '/' +
+      request.nextUrl.pathname.substring('/oasis-api/'.length);
+    requestHeaders.set(
+      'X-Openline-API-KEY',
+      process.env.OASIS_API_KEY as string,
+    );
   }
-  console.log('newURL: ' + newURL)
+  console.log('newURL: ' + newURL);
   if (request.nextUrl.searchParams) {
     newURL = newURL + '?' + request.nextUrl.searchParams.toString();
   }
@@ -185,5 +194,5 @@ function getRedirectUrl(
 }
 
 export const config = {
-  matcher: ['/customer-os-api/(.*)', '/fs/(.*)', '/sa/(.*)', '/comms-api/(.*)'],
+  matcher: ['/customer-os-api/(.*)', '/fs/(.*)', '/sa/(.*)', '/comms-api/(.*)', '/oasis-api/(.*)'],
 };
