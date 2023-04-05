@@ -40,12 +40,12 @@ func (c *upsertContactHandler) Handle(ctx context.Context, command *UpsertContac
 	if err != nil && !errors.Is(err, esdb.ErrStreamNotFound) {
 		return err
 	} else if err != nil && errors.Is(err, esdb.ErrStreamNotFound) {
-		if err = contactAggregate.CreateContact(ctx, command.Tenant, command.FirstName, command.LastName, command.Name, command.Prefix, command.Source.Source, command.Source.SourceOfTruth, command.Source.AppSource, command.CreatedAt, command.UpdatedAt); err != nil {
+		if err = contactAggregate.CreateContact(ctx, UpsertContactCommandToContactDto(command)); err != nil {
 			return err
 		}
 	} else {
 		contactAggregate, _ = aggregate.LoadContactAggregate(ctx, c.es, command.Tenant, command.AggregateID)
-		if err = contactAggregate.UpdateContact(ctx, command.Tenant, command.FirstName, command.LastName, command.Name, command.Prefix, command.Source.SourceOfTruth, command.UpdatedAt); err != nil {
+		if err = contactAggregate.UpdateContact(ctx, UpsertContactCommandToContactDto(command)); err != nil {
 			return err
 		}
 	}

@@ -4,21 +4,21 @@ import (
 	"context"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/events"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/models"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
-	"time"
 )
 
-func (a *ContactAggregate) CreateContact(ctx context.Context, tenant, firstName, lastName, name, prefix, source, sourceOfTruth, appSource string, createdAt, updatedAt *time.Time) error {
+func (a *ContactAggregate) CreateContact(ctx context.Context, contactDto *models.ContactDto) error {
 	span, _ := opentracing.StartSpanFromContext(ctx, "ContactAggregate.CreateContact")
 	defer span.Finish()
-	span.LogFields(log.String("Tenant", tenant), log.String("AggregateID", a.GetID()))
+	span.LogFields(log.String("Tenant", contactDto.Tenant), log.String("AggregateID", a.GetID()))
 
-	createdAtNotNil := utils.IfNotNilTimeWithDefault(createdAt, utils.Now())
-	updatedAtNotNil := utils.IfNotNilTimeWithDefault(updatedAt, createdAtNotNil)
-	event, err := events.NewContactCreatedEvent(a, tenant, firstName, lastName, name, prefix, source, sourceOfTruth, appSource, createdAtNotNil, updatedAtNotNil)
+	createdAtNotNil := utils.IfNotNilTimeWithDefault(contactDto.CreatedAt, utils.Now())
+	updatedAtNotNil := utils.IfNotNilTimeWithDefault(contactDto.UpdatedAt, createdAtNotNil)
+	event, err := events.NewContactCreatedEvent(a, contactDto, createdAtNotNil, updatedAtNotNil)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "NewContactCreatedEvent")
@@ -32,17 +32,17 @@ func (a *ContactAggregate) CreateContact(ctx context.Context, tenant, firstName,
 	return a.Apply(event)
 }
 
-func (a *ContactAggregate) UpdateContact(ctx context.Context, tenant, sourceOfTruth, firstName, lastName, name, prefix string, updatedAt *time.Time) error {
+func (a *ContactAggregate) UpdateContact(ctx context.Context, contactDto *models.ContactDto) error {
 	span, _ := opentracing.StartSpanFromContext(ctx, "ContactAggregate.UpdateContact")
 	defer span.Finish()
-	span.LogFields(log.String("Tenant", tenant), log.String("AggregateID", a.GetID()))
+	span.LogFields(log.String("Tenant", contactDto.Tenant), log.String("AggregateID", a.GetID()))
 
-	updatedAtNotNil := utils.IfNotNilTimeWithDefault(updatedAt, utils.Now())
-	if sourceOfTruth == "" {
-		sourceOfTruth = a.Contact.Source.SourceOfTruth
+	updatedAtNotNil := utils.IfNotNilTimeWithDefault(contactDto.UpdatedAt, utils.Now())
+	if contactDto.Source.SourceOfTruth == "" {
+		contactDto.Source.SourceOfTruth = a.Contact.Source.SourceOfTruth
 	}
 
-	event, err := events.NewContactUpdatedEvent(a, tenant, firstName, lastName, name, prefix, sourceOfTruth, updatedAtNotNil)
+	event, err := events.NewContactUpdatedEvent(a, contactDto, updatedAtNotNil)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "NewContactUpdatedEvent")
