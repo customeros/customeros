@@ -5,7 +5,7 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain"
-	contactService "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/service"
+	contactCommands "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/commands"
 	phoneNumberCommands "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/phone_number/commands"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore/store"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstroredb"
@@ -70,13 +70,13 @@ func (server *server) Run(parentCtx context.Context) error {
 
 	aggregateStore := store.NewAggregateStore(server.log, db)
 	server.commands = &domain.Commands{
-		ContactCommandsService: contactService.NewContactCommandsService(server.log, server.cfg, aggregateStore),
-		PhoneNumberCommands:    phoneNumberCommands.NewPhoneNumberCommands(server.log, server.cfg, aggregateStore),
+		ContactCommands:     contactCommands.NewContactCommands(server.log, server.cfg, aggregateStore),
+		PhoneNumberCommands: phoneNumberCommands.NewPhoneNumberCommands(server.log, server.cfg, aggregateStore),
 	}
 
 	graphProjection := projection.NewGraphProjection(server.log, db, server.repositories, server.cfg)
 	go func() {
-		prefixes := []string{server.cfg.Subscriptions.PhoneNumberPrefix}
+		prefixes := []string{server.cfg.Subscriptions.ContactPrefix, server.cfg.Subscriptions.PhoneNumberPrefix}
 		err := graphProjection.Subscribe(ctx, prefixes, server.cfg.Subscriptions.PoolSize, graphProjection.ProcessEvents)
 		if err != nil {
 			server.log.Errorf("(graphProjection.Subscribe) err: {%v}", err)

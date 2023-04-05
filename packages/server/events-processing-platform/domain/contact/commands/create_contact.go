@@ -2,12 +2,9 @@ package commands
 
 import (
 	"context"
-	"github.com/EventStore/EventStore-Client-Go/esdb"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
-	"github.com/pkg/errors"
 )
 
 type CreateContactCommandHandler interface {
@@ -29,16 +26,17 @@ func (c *createContactHandler) Handle(ctx context.Context, command *CreateContac
 	//defer span.Finish()
 	//span.LogFields(log.String("AggregateID", command.GetAggregateID()))
 
-	contactAggregate := aggregate.NewContactAggregateWithID(command.AggregateID)
-	err := c.eventStore.Exists(ctx, contactAggregate.GetID())
-	if err != nil && !errors.Is(err, esdb.ErrStreamNotFound) {
-		return err
-	}
-
-	if err := contactAggregate.CreateContact(ctx, command.UUID, command.FirstName, command.LastName); err != nil {
-		return err
-	}
-
-	//span.LogFields(log.String("contactAggregate", contactAggregate.String()))
-	return c.eventStore.Save(ctx, contactAggregate)
+	//contactAggregate := aggregate.NewContactAggregateWithID(command.AggregateID)
+	//err := c.eventStore.Exists(ctx, contactAggregate.GetID())
+	//if err != nil && !errors.Is(err, esdb.ErrStreamNotFound) {
+	//	return err
+	//}
+	//
+	//if err := contactAggregate.CreateContact(ctx, command.UUID, command.FirstName, command.LastName); err != nil {
+	//	return err
+	//}
+	//
+	////span.LogFields(log.String("contactAggregate", contactAggregate.String()))
+	//return c.eventStore.Save(ctx, contactAggregate)
+	return nil
 }

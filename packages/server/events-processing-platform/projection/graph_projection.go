@@ -4,8 +4,10 @@ import (
 	"context"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/phone_number/event_handler"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/phone_number/events"
+	contactEventHandlers "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/event_handlers"
+	contactEvents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/events"
+	phoneNumberEventHandlers "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/phone_number/event_handlers"
+	phoneNumberEvents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/phone_number/events"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/repository"
@@ -22,7 +24,8 @@ type GraphProjection struct {
 	db                      *esdb.Client
 	cfg                     *config.Config
 	repositories            *repository.Repositories
-	phoneNumberEventHandler *event_handler.GraphPhoneNumberEventHandler
+	phoneNumberEventHandler *phoneNumberEventHandlers.GraphPhoneNumberEventHandler
+	contactEventHandler     *contactEventHandlers.GraphContactEventHandler
 }
 
 func NewGraphProjection(log logger.Logger, db *esdb.Client, repositories *repository.Repositories, cfg *config.Config) *GraphProjection {
@@ -31,7 +34,8 @@ func NewGraphProjection(log logger.Logger, db *esdb.Client, repositories *reposi
 		db:                      db,
 		repositories:            repositories,
 		cfg:                     cfg,
-		phoneNumberEventHandler: &event_handler.GraphPhoneNumberEventHandler{Repositories: repositories},
+		phoneNumberEventHandler: &phoneNumberEventHandlers.GraphPhoneNumberEventHandler{Repositories: repositories},
+		contactEventHandler:     &contactEventHandlers.GraphContactEventHandler{Repositories: repositories},
 	}
 }
 
@@ -46,6 +50,17 @@ func (gp *GraphProjection) Subscribe(ctx context.Context, prefixes []string, poo
 	if err != nil {
 		if subscriptionError, ok := err.(*esdb.PersistentSubscriptionError); !ok || ok && (subscriptionError.Code != 6) {
 			gp.log.Errorf("(CreatePersistentSubscriptionAll) err: {%v}", subscriptionError.Error())
+		} else if ok && (subscriptionError.Code == 6) {
+			settings := esdb.SubscriptionSettingsDefault()
+			err = gp.db.UpdatePersistentSubscriptionAll(ctx, gp.cfg.Subscriptions.GraphProjectionGroupName, esdb.PersistentAllSubscriptionOptions{
+				Settings: &settings,
+				Filter:   &esdb.SubscriptionFilter{Type: esdb.StreamFilterType, Prefixes: prefixes},
+			})
+			if err != nil {
+				if subscriptionError, ok = err.(*esdb.PersistentSubscriptionError); !ok || ok && (subscriptionError.Code != 6) {
+					gp.log.Errorf("(UpdatePersistentSubscriptionAll) err: {%v}", subscriptionError.Error())
+				}
+			}
 		}
 	}
 
@@ -118,10 +133,15 @@ func (gp *GraphProjection) When(ctx context.Context, evt eventstore.Event) error
 
 	switch evt.GetEventType() {
 
-	case events.PhoneNumberCreated:
+	case phoneNumberEvents.PhoneNumberCreated:
 		return gp.phoneNumberEventHandler.OnPhoneNumberCreate(ctx, evt)
-	case events.PhoneNumberUpdated:
+	case phoneNumberEvents.PhoneNumberUpdated:
 		return gp.phoneNumberEventHandler.OnPhoneNumberUpdate(ctx, evt)
+
+	case contactEvents.ContactCreated:
+		return gp.contactEventHandler.OnContactCreate(ctx, evt)
+	case contactEvents.ContactUpdated:
+		return gp.contactEventHandler.OnContactUpdate(ctx, evt)
 
 	default:
 		gp.log.Warnf("(GraphProjection) [When unknown EventType] eventType: {%s}", evt.EventType)

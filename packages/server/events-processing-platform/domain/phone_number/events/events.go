@@ -38,7 +38,7 @@ func NewPhoneNumberCreatedEvent(aggregate eventstore.Aggregate, tenant, rawPhone
 }
 
 type PhoneNumberUpdatedEvent struct {
-	Tenant        string    `json:"tenant" validate:"required"`
+	Tenant        string    `json:"tenant"`
 	SourceOfTruth string    `json:"sourceOfTruth"`
 	UpdatedAt     time.Time `json:"updatedAt"`
 }

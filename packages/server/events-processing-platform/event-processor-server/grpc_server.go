@@ -46,7 +46,7 @@ func (server *server) newEventProcessorGrpcServer() (func() error, *grpc.Server,
 		),
 	)
 
-	contactService := contactService.NewContactService(server.log, server.commands.ContactCommandsService)
+	contactService := contactService.NewContactService(server.log, server.repositories, server.commands.ContactCommands)
 	contactGrpcService.RegisterContactGrpcServiceServer(grpcServer, contactService)
 
 	phoneNumberService := phoneNumberService.NewPhoneNumberService(server.log, server.repositories, server.commands.PhoneNumberCommands)

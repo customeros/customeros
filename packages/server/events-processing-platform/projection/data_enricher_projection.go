@@ -5,7 +5,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/phone_number/event_handler"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/phone_number/event_handlers"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/phone_number/events"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
@@ -22,7 +22,7 @@ type DataEnricherProjection struct {
 	db                      *esdb.Client
 	cfg                     *config.Config
 	commands                *domain.Commands
-	phoneNumberEventHandler *event_handler.DataEnricherPhoneNumberEventHandler
+	phoneNumberEventHandler *event_handlers.DataEnricherPhoneNumberEventHandler
 }
 
 func NewDataEnricherProjection(log logger.Logger, db *esdb.Client, cfg *config.Config, commands *domain.Commands) *DataEnricherProjection {
@@ -31,7 +31,7 @@ func NewDataEnricherProjection(log logger.Logger, db *esdb.Client, cfg *config.C
 		db:                      db,
 		cfg:                     cfg,
 		commands:                commands,
-		phoneNumberEventHandler: &event_handler.DataEnricherPhoneNumberEventHandler{},
+		phoneNumberEventHandler: &event_handlers.DataEnricherPhoneNumberEventHandler{},
 	}
 }
 

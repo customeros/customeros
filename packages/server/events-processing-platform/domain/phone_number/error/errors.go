@@ -1,8 +1,7 @@
-package phone_number
+package error
 
 import "github.com/pkg/errors"
 
 var (
-	ErrMissingTenant            = errors.New("missing tenant")
 	ErrPhoneNumberAlreadyExists = errors.New("phone number already created")
 )

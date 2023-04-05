@@ -26,7 +26,7 @@ func NewPhoneNumberService(log logger.Logger, repositories *repository.Repositor
 	}
 }
 
-func (s *phoneNumberService) UpsertPhoneNumber(ctx context.Context, request *phoneNumberGrpcService.UpsertPhoneNumberGrpcRequest) (*phoneNumberGrpcService.PhoneNumberGrpcResponse, error) {
+func (s *phoneNumberService) UpsertPhoneNumber(ctx context.Context, request *phoneNumberGrpcService.UpsertPhoneNumberGrpcRequest) (*phoneNumberGrpcService.PhoneNumberIdGrpcResponse, error) {
 	aggregateID := request.Id
 
 	command := commands.NewUpsertPhoneNumberCommand(aggregateID, request.Tenant, request.PhoneNumber, request.Source, request.SourceOfTruth, request.AppSource, utils.TimestampProtoToTime(request.CreatedAt), utils.TimestampProtoToTime(request.UpdatedAt))
@@ -37,10 +37,11 @@ func (s *phoneNumberService) UpsertPhoneNumber(ctx context.Context, request *pho
 
 	s.log.Infof("(created existing PhoneNumber): {%s}", aggregateID)
 
-	return &phoneNumberGrpcService.PhoneNumberGrpcResponse{Id: aggregateID}, nil
+	return &phoneNumberGrpcService.PhoneNumberIdGrpcResponse{Id: aggregateID}, nil
 }
 
-func (s *phoneNumberService) CreatePhoneNumber(ctx context.Context, request *phoneNumberGrpcService.CreatePhoneNumberGrpcRequest) (*phoneNumberGrpcService.PhoneNumberGrpcResponse, error) {
+// FIXME alexb finish implementation
+func (s *phoneNumberService) CreatePhoneNumber(ctx context.Context, request *phoneNumberGrpcService.CreatePhoneNumberGrpcRequest) (*phoneNumberGrpcService.PhoneNumberIdGrpcResponse, error) {
 	id, err := s.repositories.PhoneNumberRepository.GetIdIfExists(ctx, request.Tenant, request.PhoneNumber)
 	if err != nil {
 		return nil, s.errResponse(err)
@@ -63,7 +64,7 @@ func (s *phoneNumberService) CreatePhoneNumber(ctx context.Context, request *pho
 	//}
 
 	s.log.Infof("(created PhoneNumber): {%s}", aggregateID)
-	return &phoneNumberGrpcService.PhoneNumberGrpcResponse{Id: aggregateID}, nil
+	return &phoneNumberGrpcService.PhoneNumberIdGrpcResponse{Id: aggregateID}, nil
 }
 
 func (s *phoneNumberService) errResponse(err error) error {

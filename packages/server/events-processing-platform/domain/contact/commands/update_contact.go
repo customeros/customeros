@@ -3,7 +3,6 @@ package commands
 import (
 	"context"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 )
@@ -27,14 +26,15 @@ func (cmdHandler *updateContactCmdHandler) Handle(ctx context.Context, command *
 	//defer span.Finish()
 	//span.LogFields(log.String("AggregateID", command.GetAggregateID()))
 
-	contact, err := aggregate.LoadContactAggregate(ctx, cmdHandler.aggregateStore, command.GetAggregateID())
-	if err != nil {
-		return err
-	}
-
-	if err := contact.UpdateContact(ctx, command.UUID, command.FirstName, command.LastName); err != nil {
-		return err
-	}
-
-	return cmdHandler.aggregateStore.Save(ctx, contact)
+	//contact, err := aggregate.LoadContactAggregate(ctx, cmdHandler.aggregateStore, command.GetAggregateID())
+	//if err != nil {
+	//	return err
+	//}
+	//
+	//if err := contact.UpdateContact(ctx, command.UUID, command.FirstName, command.LastName); err != nil {
+	//	return err
+	//}
+	//
+	//return cmdHandler.aggregateStore.Save(ctx, contact)
+	return nil
 }

@@ -17,19 +17,19 @@ type CreatePhoneNumberCommandHandler interface {
 	Handle(ctx context.Context, command *CreatePhoneNumberCommand) error
 }
 
-type createPhoneNumberHandler struct {
+type createPhoneNumberCommandHandler struct {
 	log          logger.Logger
 	cfg          *config.Config
 	es           eventstore.AggregateStore
 	repositories *repository.Repositories
 }
 
-func NewCreatePhoneNumberHandler(log logger.Logger, cfg *config.Config, es eventstore.AggregateStore) *createPhoneNumberHandler {
-	return &createPhoneNumberHandler{log: log, cfg: cfg, es: es}
+func NewCreatePhoneNumberCommandHandler(log logger.Logger, cfg *config.Config, es eventstore.AggregateStore) *createPhoneNumberCommandHandler {
+	return &createPhoneNumberCommandHandler{log: log, cfg: cfg, es: es}
 }
 
-func (c *createPhoneNumberHandler) Handle(ctx context.Context, command *CreatePhoneNumberCommand) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "createPhoneNumberHandler.Handle")
+func (c *createPhoneNumberCommandHandler) Handle(ctx context.Context, command *CreatePhoneNumberCommand) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "createPhoneNumberCommandHandler.Handle")
 	defer span.Finish()
 	span.LogFields(log.String("Tenant", command.Tenant), log.String("AggregateID", command.GetAggregateID()))
 

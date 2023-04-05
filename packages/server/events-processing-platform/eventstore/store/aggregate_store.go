@@ -34,7 +34,7 @@ func (aggregateStore *aggregateStore) Load(ctx context.Context, aggregate es.Agg
 
 	stream, err := aggregateStore.esdbClient.ReadStream(ctx, aggregate.GetID(), esdb.ReadStreamOptions{}, count)
 	if err != nil {
-		//tracing.TraceErr(span, err)
+		tracing.TraceErr(span, err)
 		aggregateStore.log.Errorf("(Load) esdbClient.ReadStream: {%+v}", err)
 		return errors.Wrap(err, "esdbClient.ReadStream")
 	}
@@ -58,7 +58,7 @@ func (aggregateStore *aggregateStore) Load(ctx context.Context, aggregate es.Agg
 
 		esEvent := es.NewEventFromRecorded(event.Event)
 		if err := aggregate.RaiseEvent(esEvent); err != nil {
-			//tracing.TraceErr(span, err)
+			tracing.TraceErr(span, err)
 			aggregateStore.log.Errorf("(Load) aggregate.RaiseEvent: {%+v}", err)
 			return errors.Wrap(err, "RaiseEvent")
 		}
@@ -109,7 +109,7 @@ func (aggregateStore *aggregateStore) Save(ctx context.Context, aggregate es.Agg
 	readOps := esdb.ReadStreamOptions{Direction: esdb.Backwards, From: esdb.End{}}
 	stream, err := aggregateStore.esdbClient.ReadStream(context.Background(), aggregate.GetID(), readOps, 1)
 	if err != nil {
-		//tracing.TraceErr(span, err)
+		tracing.TraceErr(span, err)
 		aggregateStore.log.Errorf("(Save) esdbClient.ReadStream: {%+v}", err)
 		return errors.Wrap(err, "esdbClient.ReadStream")
 	}
@@ -117,7 +117,7 @@ func (aggregateStore *aggregateStore) Save(ctx context.Context, aggregate es.Agg
 
 	lastEvent, err := stream.Recv()
 	if err != nil {
-		//tracing.TraceErr(span, err)
+		tracing.TraceErr(span, err)
 		aggregateStore.log.Errorf("(Save) stream.Recv: {%+v}", err)
 		return errors.Wrap(err, "stream.Recv")
 	}
@@ -132,7 +132,7 @@ func (aggregateStore *aggregateStore) Save(ctx context.Context, aggregate es.Agg
 		eventsData...,
 	)
 	if err != nil {
-		//tracing.TraceErr(span, err)
+		tracing.TraceErr(span, err)
 		aggregateStore.log.Errorf("(Save) esdbClient.AppendToStream: {%+v}", err)
 		return errors.Wrap(err, "esdbClient.AppendToStream")
 	}

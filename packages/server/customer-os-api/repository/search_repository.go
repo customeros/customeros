@@ -28,7 +28,8 @@ func (r *searchRepository) SearchBasic(ctx context.Context, tenant, keyword stri
 
 	params := map[string]any{
 		"tenant":        tenant,
-		"keyword":       fmt.Sprintf("%s~", keyword),
+		"fuzzyKeyword":  fmt.Sprintf("%s~", keyword),
+		"keyword":       keyword,
 		"indexStandard": fmt.Sprintf("basicSearchStandard_%s", tenant),
 		"indexSimple":   fmt.Sprintf("basicSearchSimple_%s", tenant),
 		"limit":         50,
@@ -37,6 +38,10 @@ func (r *searchRepository) SearchBasic(ctx context.Context, tenant, keyword stri
 		" CALL db.index.fulltext.queryNodes($indexStandard, $keyword) YIELD node, score RETURN score, node, labels(node) as labels limit $limit " +
 		" union" +
 		" CALL db.index.fulltext.queryNodes($indexSimple, $keyword) YIELD node, score RETURN score, node, labels(node) as labels limit $limit " +
+		" union" +
+		" CALL db.index.fulltext.queryNodes($indexStandard, $fuzzyKeyword) YIELD node, score RETURN score, node, labels(node) as labels limit $limit " +
+		" union" +
+		" CALL db.index.fulltext.queryNodes($indexSimple, $fuzzyKeyword) YIELD node, score RETURN score, node, labels(node) as labels limit $limit " +
 		"} " +
 		" with labels, node, score order by score desc " +
 		" with labels, node, collect(score) as scores " +

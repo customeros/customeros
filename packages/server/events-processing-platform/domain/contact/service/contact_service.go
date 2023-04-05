@@ -1,43 +1,64 @@
 package service
 
 import (
-	"context"
 	contactGrpcService "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/proto/contact"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/commands"
 	grpcErrors "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/grpc_errors"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
-	uuid "github.com/satori/go.uuid"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/repository"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/utils"
+	"golang.org/x/net/context"
 )
 
 type contactService struct {
 	contactGrpcService.UnimplementedContactGrpcServiceServer
-	log                    logger.Logger
-	contactCommandsService *ContactCommandsService
+	log             logger.Logger
+	repositories    *repository.Repositories
+	contactCommands *commands.ContactCommands
 }
 
-func NewContactService(log logger.Logger, contactCommandsService *ContactCommandsService) *contactService {
-	return &contactService{log: log, contactCommandsService: contactCommandsService}
+func NewContactService(log logger.Logger, repositories *repository.Repositories, contactCommands *commands.ContactCommands) *contactService {
+	return &contactService{
+		log:             log,
+		repositories:    repositories,
+		contactCommands: contactCommands,
+	}
 }
 
-func (contactService *contactService) CreateContact(ctx context.Context, request *contactGrpcService.CreateContactGrpcRequest) (*contactGrpcService.CreateContactGrpcResponse, error) {
-	/*ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "contactService.CreateContact")
-	defer span.Finish()
-	span.LogFields(log.String("request", request.String()))
-	*/
+func (s *contactService) UpsertContact(ctx context.Context, request *contactGrpcService.UpsertContactGrpcRequest) (*contactGrpcService.ContactIdGrpcResponse, error) {
+	aggregateID := request.Id
 
-	aggregateID := uuid.NewV4().String()
-	command := commands.NewCreateContactCommand(aggregateID, request.GetUUID(), request.GetFirstName(), request.GetLastName())
-
-	// add validation
-
-	if err := contactService.contactCommandsService.Commands.CreateContact.Handle(ctx, command); err != nil {
-		contactService.log.Errorf("(CreateContact.Handle) contact ID: {%s}, err: {%v}", aggregateID, err)
-		return nil, contactService.errResponse(err)
+	command := commands.NewUpsertContactCommand(aggregateID, request.Tenant, request.FirstName, request.LastName, request.Name, request.Prefix, request.Source, request.SourceOfTruth, request.AppSource, utils.TimestampProtoToTime(request.CreatedAt), utils.TimestampProtoToTime(request.UpdatedAt))
+	if err := s.contactCommands.UpsertContact.Handle(ctx, command); err != nil {
+		s.log.Errorf("(UpsertSyncContact.Handle) tenant:{%s}, contact ID: {%s}, err: {%v}", request.Tenant, aggregateID, err)
+		return nil, s.errResponse(err)
 	}
 
-	contactService.log.Infof("(created contact): contact: {%s}", aggregateID)
-	return &contactGrpcService.CreateContactGrpcResponse{AggregateID: aggregateID}, nil
+	s.log.Infof("(created existing Contact): {%s}", aggregateID)
+
+	return &contactGrpcService.ContactIdGrpcResponse{Id: aggregateID}, nil
 }
+
+// FIXME alexb implement correctly
+//func (contactService *contactService) CreateContact(ctx context.Context, request *contactGrpcService.CreateContactGrpcRequest) (*contactGrpcService.CreateContactGrpcResponse, error) {
+//	/*ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "contactService.CreateContact")
+//	defer span.Finish()
+//	span.LogFields(log.String("request", request.String()))
+//	*/
+//
+//	aggregateID := uuid.NewV4().String()
+//	command := commands.NewCreateContactCommand(aggregateID, request.GetUUID(), request.GetFirstName(), request.GetLastName())
+//
+//	// add validation
+//
+//	if err := contactService.contactCommandsService.Commands.CreateContact.Handle(ctx, command); err != nil {
+//		contactService.log.Errorf("(CreateContact.Handle) contact ID: {%s}, err: {%v}", aggregateID, err)
+//		return nil, contactService.errResponse(err)
+//	}
+//
+//	contactService.log.Infof("(created contact): contact: {%s}", aggregateID)
+//	return &contactGrpcService.CreateContactGrpcResponse{AggregateID: aggregateID}, nil
+//}
 
 func (contactService *contactService) errResponse(err error) error {
 	return grpcErrors.ErrResponse(err)

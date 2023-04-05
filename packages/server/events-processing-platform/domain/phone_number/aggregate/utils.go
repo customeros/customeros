@@ -12,7 +12,7 @@ import (
 
 // GetPhoneNumberAggregateID get phone_number aggregate id for eventstoredb
 func GetPhoneNumberAggregateID(eventAggregateID string, tenant string) string {
-	return strings.ReplaceAll(eventAggregateID, "phone_number-"+tenant+"-", "")
+	return strings.ReplaceAll(eventAggregateID, string(PhoneNumberAggregateType)+"-"+tenant+"-", "")
 }
 
 func IsAggregateNotFound(aggregate es.Aggregate) bool {
