@@ -51,6 +51,7 @@ func (gp *GraphProjection) Subscribe(ctx context.Context, prefixes []string, poo
 		if subscriptionError, ok := err.(*esdb.PersistentSubscriptionError); !ok || ok && (subscriptionError.Code != 6) {
 			gp.log.Errorf("(CreatePersistentSubscriptionAll) err: {%v}", subscriptionError.Error())
 		} else if ok && (subscriptionError.Code == 6) {
+			// FIXME alexb refactor: call update only if current and new prefixes are different
 			settings := esdb.SubscriptionSettingsDefault()
 			err = gp.db.UpdatePersistentSubscriptionAll(ctx, gp.cfg.Subscriptions.GraphProjectionGroupName, esdb.PersistentAllSubscriptionOptions{
 				Settings: &settings,

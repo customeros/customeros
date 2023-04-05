@@ -1,32 +1,48 @@
 package commands
 
 import (
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/models"
+	commonModels "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/models"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/models"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"time"
 )
 
-type UpsertContactCommand struct {
-	eventstore.BaseCommand
-	Tenant    string
+type ContactCoreFields struct {
 	FirstName string
 	LastName  string
 	Name      string
 	Prefix    string
-	Source    models.Source
-	CreatedAt *time.Time
-	UpdatedAt *time.Time
 }
 
-func NewUpsertContactCommand(aggregateID, tenant, firstName, lastName, name, prefix, source, sourceOfTruth, appSource string, createdAt, updatedAt *time.Time) *UpsertContactCommand {
+type UpsertContactCommand struct {
+	eventstore.BaseCommand
+	Tenant     string
+	CoreFields ContactCoreFields
+	Source     commonModels.Source
+	CreatedAt  *time.Time
+	UpdatedAt  *time.Time
+}
+
+func UpsertContactCommandToContactDto(command *UpsertContactCommand) *models.ContactDto {
+	return &models.ContactDto{
+		ID:        command.AggregateID,
+		Tenant:    command.Tenant,
+		FirstName: command.CoreFields.FirstName,
+		LastName:  command.CoreFields.LastName,
+		Name:      command.CoreFields.Name,
+		Prefix:    command.CoreFields.Prefix,
+		Source:    command.Source,
+		CreatedAt: command.CreatedAt,
+		UpdatedAt: command.UpdatedAt,
+	}
+}
+
+func NewUpsertContactCommand(aggregateID, tenant, source, sourceOfTruth, appSource string, coreFields ContactCoreFields, createdAt, updatedAt *time.Time) *UpsertContactCommand {
 	return &UpsertContactCommand{
 		BaseCommand: eventstore.NewBaseCommand(aggregateID),
 		Tenant:      tenant,
-		FirstName:   firstName,
-		LastName:    lastName,
-		Name:        name,
-		Prefix:      prefix,
-		Source: models.Source{
+		CoreFields:  coreFields,
+		Source: commonModels.Source{
 			Source:        source,
 			SourceOfTruth: sourceOfTruth,
 			AppSource:     appSource,

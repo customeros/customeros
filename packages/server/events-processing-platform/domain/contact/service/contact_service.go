@@ -28,7 +28,14 @@ func NewContactService(log logger.Logger, repositories *repository.Repositories,
 func (s *contactService) UpsertContact(ctx context.Context, request *contactGrpcService.UpsertContactGrpcRequest) (*contactGrpcService.ContactIdGrpcResponse, error) {
 	aggregateID := request.Id
 
-	command := commands.NewUpsertContactCommand(aggregateID, request.Tenant, request.FirstName, request.LastName, request.Name, request.Prefix, request.Source, request.SourceOfTruth, request.AppSource, utils.TimestampProtoToTime(request.CreatedAt), utils.TimestampProtoToTime(request.UpdatedAt))
+	coreFields := commands.ContactCoreFields{
+		FirstName: request.FirstName,
+		LastName:  request.LastName,
+		Name:      request.Name,
+		Prefix:    request.Prefix,
+	}
+	command := commands.NewUpsertContactCommand(aggregateID, request.Tenant, request.Source, request.SourceOfTruth, request.AppSource,
+		coreFields, utils.TimestampProtoToTime(request.CreatedAt), utils.TimestampProtoToTime(request.UpdatedAt))
 	if err := s.contactCommands.UpsertContact.Handle(ctx, command); err != nil {
 		s.log.Errorf("(UpsertSyncContact.Handle) tenant:{%s}, contact ID: {%s}, err: {%v}", request.Tenant, aggregateID, err)
 		return nil, s.errResponse(err)

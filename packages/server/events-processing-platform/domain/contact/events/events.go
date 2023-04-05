@@ -1,6 +1,7 @@
 package events
 
 import (
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/models"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"time"
 )
@@ -24,16 +25,16 @@ type ContactCreatedEvent struct {
 	UpdatedAt     time.Time `json:"updatedAt"`
 }
 
-func NewContactCreatedEvent(aggregate eventstore.Aggregate, tenant, firstName, lastName, name, prefix, source, sourceOfTruth, appSource string, createdAt, updatedAt time.Time) (eventstore.Event, error) {
+func NewContactCreatedEvent(aggregate eventstore.Aggregate, contactDto *models.ContactDto, createdAt, updatedAt time.Time) (eventstore.Event, error) {
 	eventData := ContactCreatedEvent{
-		Tenant:        tenant,
-		FirstName:     firstName,
-		LastName:      lastName,
-		Name:          name,
-		Prefix:        prefix,
-		Source:        source,
-		SourceOfTruth: sourceOfTruth,
-		AppSource:     appSource,
+		Tenant:        contactDto.Tenant,
+		FirstName:     contactDto.FirstName,
+		LastName:      contactDto.LastName,
+		Name:          contactDto.Name,
+		Prefix:        contactDto.Prefix,
+		Source:        contactDto.Source.Source,
+		SourceOfTruth: contactDto.Source.SourceOfTruth,
+		AppSource:     contactDto.Source.AppSource,
 		CreatedAt:     createdAt,
 		UpdatedAt:     updatedAt,
 	}
@@ -54,15 +55,15 @@ type ContactUpdatedEvent struct {
 	Prefix        string    `json:"prefix"`
 }
 
-func NewContactUpdatedEvent(aggregate eventstore.Aggregate, tenant, firstName, lastName, name, prefix, sourceOfTruth string, updatedAt time.Time) (eventstore.Event, error) {
+func NewContactUpdatedEvent(aggregate eventstore.Aggregate, contactDto *models.ContactDto, updatedAt time.Time) (eventstore.Event, error) {
 	eventData := ContactUpdatedEvent{
-		FirstName:     firstName,
-		LastName:      lastName,
-		Name:          name,
-		Prefix:        prefix,
-		Tenant:        tenant,
+		FirstName:     contactDto.FirstName,
+		LastName:      contactDto.LastName,
+		Name:          contactDto.Name,
+		Prefix:        contactDto.Prefix,
+		Tenant:        contactDto.Tenant,
 		UpdatedAt:     updatedAt,
-		SourceOfTruth: sourceOfTruth,
+		SourceOfTruth: contactDto.Source.SourceOfTruth,
 	}
 	event := eventstore.NewBaseEvent(aggregate, ContactUpdated)
 	if err := event.SetJsonData(&eventData); err != nil {
