@@ -11,7 +11,8 @@ export async function middleware(request: NextRequest) {
     !request.nextUrl.pathname.startsWith('/customer-os-api/') &&
     !request.nextUrl.pathname.startsWith('/sa/') &&
     !request.nextUrl.pathname.startsWith('/fs/') &&
-    !request.nextUrl.pathname.startsWith('/comms-api/')
+    !request.nextUrl.pathname.startsWith('/comms-api/') &&
+    !request.nextUrl.pathname.startsWith('/oasis-api/')
   ) {
     return NextResponse.next();
   }
