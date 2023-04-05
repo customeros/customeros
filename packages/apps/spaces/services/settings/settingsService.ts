@@ -1,9 +1,9 @@
-import { HubspotSettings, SmartsheetSettings, ZendeskSettings } from './types';
 import axios from 'axios';
+
 export function GetSettings(): Promise<any> {
   return new Promise((resolve, reject) =>
     axios
-      .get('/sa/settings/')
+      .get('/sa/integrations')
       .then(({ data, error }: any) => {
         if (data) {
           resolve(data);
@@ -16,30 +16,13 @@ export function GetSettings(): Promise<any> {
       }),
   );
 }
-export function UpdateHubspotSettings(
-  data: HubspotSettings,
-): Promise<HubspotSettings> {
+
+export function UpdateIntegrationSettings(identifier: string, data: any): Promise<any> {
   return new Promise((resolve, reject) =>
     axios
-      .post(`/sa/settings/hubspot`, data)
-      .then((response: any) => {
-        if (response.data) {
-          resolve(response.data);
-        } else {
-          reject(response.error);
-        }
+      .post(`/sa/integration`, {
+          [identifier]: data
       })
-      .catch((reason) => {
-        reject(reason);
-      }),
-  );
-}
-export function UpdateZendeskSettings(
-  data: ZendeskSettings,
-): Promise<ZendeskSettings> {
-  return new Promise((resolve, reject) =>
-    axios
-      .post(`/sa/settings/zendesk`, data)
       .then((response: any) => {
         if (response.data) {
           resolve(response.data);
@@ -53,130 +36,10 @@ export function UpdateZendeskSettings(
   );
 }
 
-export function UpdateSmartsheetSettings(
-  data: SmartsheetSettings,
-): Promise<SmartsheetSettings> {
+export function DeleteIntegrationSettings(identifier: string): Promise<any> {
   return new Promise((resolve, reject) =>
     axios
-      .post(`/sa/settings/smartSheet`, data)
-      .then((response: any) => {
-        if (response.data) {
-          resolve(response.data);
-        } else {
-          reject(response.error);
-        }
-      })
-      .catch((reason) => {
-        reject(reason);
-      }),
-  );
-}
-
-export function UpdateJiraSettings(data: any): Promise<any> {
-  return new Promise((resolve, reject) =>
-    axios
-      .post(`/sa/settings/jira`, data)
-      .then((response: any) => {
-        if (response.data) {
-          resolve(response.data);
-        } else {
-          reject(response.error);
-        }
-      })
-      .catch((reason) => {
-        reject(reason);
-      }),
-  );
-}
-
-export function UpdateTrelloSettings(data: any): Promise<any> {
-  return new Promise((resolve, reject) =>
-    axios
-      .post(`/sa/settings/trello`, data)
-      .then((response: any) => {
-        if (response.data) {
-          resolve(response.data);
-        } else {
-          reject(response.error);
-        }
-      })
-      .catch((reason) => {
-        reject(reason);
-      }),
-  );
-}
-
-export function DeleteSmartsheetSettings(): Promise<SmartsheetSettings> {
-  return new Promise((resolve, reject) =>
-    axios
-      .delete(`/sa/settings/smartSheet`)
-      .then((response: any) => {
-        if (response.data) {
-          resolve(response.data);
-        } else {
-          reject(response.error);
-        }
-      })
-      .catch((reason) => {
-        reject(reason);
-      }),
-  );
-}
-export function DeleteHubspotSettings(): Promise<SmartsheetSettings> {
-  return new Promise((resolve, reject) =>
-    axios
-      .delete(`/sa/settings/hubspot`)
-      .then((response: any) => {
-        if (response.data) {
-          resolve(response.data);
-        } else {
-          reject(response.error);
-        }
-      })
-      .catch((reason) => {
-        reject(reason);
-      }),
-  );
-}
-
-export function DeleteZendeskSettings(): Promise<SmartsheetSettings> {
-  return new Promise((resolve, reject) =>
-    axios
-      .delete(`/sa/settings/zendesk`)
-      .then((response: any) => {
-        if (response.data) {
-          resolve(response.data);
-        } else {
-          reject(response.error);
-        }
-      })
-      .catch((reason) => {
-        reject(reason);
-      }),
-  );
-}
-
-export function DeleteJiraSettings(): Promise<SmartsheetSettings> {
-  return new Promise((resolve, reject) =>
-    axios
-      .delete(`/sa/settings/jira`)
-      .then((response: any) => {
-        if (response.data) {
-          resolve(response.data);
-        } else {
-          reject(response.error);
-        }
-      })
-      .catch((reason) => {
-        reject(reason);
-      }),
-  );
-}
-
-export function DeleteTrelloSettings(): Promise<SmartsheetSettings> {
-  return new Promise((resolve, reject) =>
-    axios
-      .delete(`/sa/settings/trello`)
+      .delete(`/sa/integration/${identifier}`)
       .then((response: any) => {
         if (response.data) {
           resolve(response.data);

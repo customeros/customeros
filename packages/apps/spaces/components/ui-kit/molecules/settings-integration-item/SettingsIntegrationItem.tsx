@@ -2,9 +2,13 @@ import React from 'react';
 import Image from 'next/image';
 import styles from './settings-integration-item.module.scss';
 import classNames from 'classnames';
-import { Button, DebouncedInput } from '../../atoms';
+import { Button } from '../../atoms';
 import { Controller, useForm } from 'react-hook-form';
 import { toast } from 'react-toastify';
+import {
+  DeleteIntegrationSettings,
+  UpdateIntegrationSettings,
+} from '../../../../services/settings/settingsService';
 
 interface FieldDefinition {
   name: string;
@@ -13,6 +17,7 @@ interface FieldDefinition {
 
 interface Props {
   icon: string;
+  identifier: string;
   name: string;
   state: string;
 
@@ -20,19 +25,16 @@ interface Props {
 
   onCancel?: () => void;
   settingsChanged?: () => void;
-  onRevoke?: () => Promise<any>;
-  onSave?: (data: any) => Promise<any>;
 }
 
 export const SettingsIntegrationItem = ({
   icon,
+  identifier,
   name,
   state,
   fields,
   onCancel,
   settingsChanged,
-  onRevoke,
-  onSave,
 }: Props) => {
   const [collapsed, setCollapsed] = React.useState(true);
 
@@ -55,34 +57,32 @@ export const SettingsIntegrationItem = ({
       break;
   }
 
-  const onRewokeSettings = () => {
-    onRevoke &&
-      onRevoke()
-        .then(() => {
-          setCollapsed(true);
-          toast.success('Settings updated successfully!');
-          settingsChanged && settingsChanged();
-        })
-        .catch(() => {
-          toast.error(
-            'There was a problem on our side and we are doing our best to solve it!',
-          );
-        });
+  const onRevoke = () => {
+    DeleteIntegrationSettings(identifier)
+      .then(() => {
+        setCollapsed(true);
+        toast.success('Settings updated successfully!');
+        settingsChanged && settingsChanged();
+      })
+      .catch(() => {
+        toast.error(
+          'There was a problem on our side and we are doing our best to solve it!',
+        );
+      });
   };
 
-  const onSubmit = () => {
-    onSave &&
-      onSave(getValues())
-        .then(() => {
-          setCollapsed(true);
-          toast.success('Settings updated successfully!');
-          settingsChanged && settingsChanged();
-        })
-        .catch(() => {
-          toast.error(
-            'There was a problem on our side and we are doing our best to solve it!',
-          );
-        });
+  const onSave = () => {
+    UpdateIntegrationSettings(identifier, getValues())
+      .then(() => {
+        setCollapsed(true);
+        toast.success('Settings updated successfully!');
+        settingsChanged && settingsChanged();
+      })
+      .catch(() => {
+        toast.error(
+          'There was a problem on our side and we are doing our best to solve it!',
+        );
+      });
   };
 
   return (
@@ -155,20 +155,13 @@ export const SettingsIntegrationItem = ({
                     Cancel
                   </Button>
                   <Button
-                    onClick={() => {
-                      onRewokeSettings();
-                    }}
+                    onClick={onRevoke}
                     mode='danger'
                     style={{ marginRight: '10px' }}
                   >
                     Revoke
                   </Button>
-                  <Button
-                    onClick={() => {
-                      onSubmit();
-                    }}
-                    mode='primary'
-                  >
+                  <Button onClick={onSave} mode='primary'>
                     Done
                   </Button>
                 </>
@@ -187,12 +180,7 @@ export const SettingsIntegrationItem = ({
                   >
                     Cancel
                   </Button>
-                  <Button
-                    onClick={() => {
-                      onSubmit();
-                    }}
-                    mode='primary'
-                  >
+                  <Button onClick={onSave} mode='primary'>
                     Done
                   </Button>
                 </>
@@ -240,7 +228,7 @@ export const SettingsIntegrationItem = ({
                             value={
                               state === 'ACTIVE'
                                 ? '******************'
-                                : field.value as any
+                                : (field.value as any)
                             }
                             disabled={state === 'ACTIVE'}
                             className={styles.input}
