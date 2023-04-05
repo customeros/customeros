@@ -20,7 +20,7 @@ const authLink = setContext((_, { headers }) => {
 // todo implement ssr
 
 const client = new ApolloClient({
-  ssrMode: true,
+  ssrMode: typeof window === 'undefined',
   cache: new InMemoryCache({
     typePolicies: {
       Contact: {

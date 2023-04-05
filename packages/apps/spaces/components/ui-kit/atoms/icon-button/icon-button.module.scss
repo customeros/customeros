@@ -19,6 +19,10 @@
 
   /* SIZES */
 
+  &.xxxxs {
+    padding: 0;
+  }
+
   &.xxxs {
     padding: var(--spacing-xxxs);
   }

@@ -39,7 +39,6 @@ export const TagInput = ({
   options,
   onSetTags,
   onTagSelect,
-  onTagDelete,
 }: TagProps) => {
   const [filteredOptions, setFilteredOptions] = useState(options);
   const inputRef = useRef(null);

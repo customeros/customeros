@@ -1,10 +1,13 @@
 @import 'styles/mixins';
 
 .jobAndOrganizationInputs {
-  @include flex-center;
+  display: flex;
   align-items: flex-end;
   margin-bottom: var(--spacing-xxxs);
-  margin-top: -8px;
+
+  & div {
+    margin-right: var(--spacing-xxxs);
+  }
 }
 
 .jobRoleInput {
@@ -42,5 +45,4 @@
   @include input-style;
   padding: 0 var(--spacing-xxxs);
   margin-top: 0;
-  //margin-bottom: var(--spacing-xxs);
 }

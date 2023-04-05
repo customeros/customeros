@@ -3,6 +3,7 @@ import {
   CreateContactMutation,
   useCreateContactMutation,
 } from './types';
+import { useRouter } from 'next/router';
 
 interface Props {
   contact?: ContactInput;
@@ -17,7 +18,7 @@ interface Result {
 export const useCreateContact = (): Result => {
   const [createContactMutation, { loading, error, data }] =
     useCreateContactMutation();
-
+  const { push } = useRouter();
   const handleCreateContact: Result['onCreateContact'] = async (contact) => {
     try {
       const optimisticItem = { id: 'optimistic-id', ...contact };
@@ -25,6 +26,10 @@ export const useCreateContact = (): Result => {
         variables: { input: contact },
         refetchQueries: ['GetDashboardData'],
       });
+      console.log('🏷️ ----- response: ', response);
+      if (response.data?.contact_Create) {
+        push(`/contact/${response.data?.contact_Create.id}`);
+      }
       return response.data?.contact_Create ?? null;
     } catch (err) {
       console.error(err);

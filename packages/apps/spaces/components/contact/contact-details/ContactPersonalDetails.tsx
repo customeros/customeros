@@ -1,26 +1,32 @@
-import React, { useEffect, useState } from 'react';
-import { Button } from '../../ui-kit';
+import React, { useState } from 'react';
+import {
+  Avatar,
+  Button,
+  DebouncedInput,
+  EditableContentInput,
+} from '../../ui-kit';
 import styles from './contact-details.module.scss';
-import { useContactPersonalDetails } from '../../../hooks/useContact';
+import {
+  useContactPersonalDetails,
+  useCreateContact,
+  useUpdateContactPersonalDetails,
+} from '../../../hooks/useContact';
 import { ContactDetailsSkeleton } from './skeletons';
-import { useRouter } from 'next/router';
 import { ContactTags } from '../contact-tags';
-import { useForm } from 'react-hook-form';
-import { ContactPersonalDetailsEdit } from './edit';
-import { getContactDisplayName } from '../../../utils';
 import { ContactAvatar } from '../../ui-kit/molecules/organization-avatar';
+import { useRecoilState } from 'recoil';
+import { contactDetailsEdit, editorMode } from '../../../state';
+import { JobRoleInput } from './edit/JobRoleInput';
+import { User } from '../../ui-kit/atoms';
 
 export const ContactPersonalDetails = ({ id }: { id: string }) => {
-  const router = useRouter();
   const { data, loading, error } = useContactPersonalDetails({ id });
-  const [mode, setMode] = useState('PREVIEW');
-  const { control, reset, setValue } = useForm();
+  const [{ isEditMode }, setContactDetailsEdit] =
+    useRecoilState(contactDetailsEdit);
 
-  useEffect(() => {
-    reset({
-      ...data,
-    });
-  }, [data?.id]);
+  const { onUpdateContactPersonalDetails } = useUpdateContactPersonalDetails({
+    contactId: id,
+  });
 
   if (loading) {
     return <ContactDetailsSkeleton />;
@@ -28,11 +34,6 @@ export const ContactPersonalDetails = ({ id }: { id: string }) => {
   if (error) {
     return <>ERROR</>;
   }
-
-  if (mode === 'EDIT') {
-    return <ContactPersonalDetailsEdit data={data} onSetMode={setMode} />;
-  }
-
   return (
     <div className={styles.header}>
       <div className={styles.photo}>
@@ -40,46 +41,63 @@ export const ContactPersonalDetails = ({ id }: { id: string }) => {
       </div>
       <div className={styles.name}>
         <div className={styles.nameAndEditButton}>
-          {
-            //@ts-expect-error fixme later
-            getContactDisplayName(data)
-          }
+          <div className={styles.nameContainer}>
+            <EditableContentInput
+              isEditMode={isEditMode}
+              value={data?.firstName || data?.name || ''}
+              placeholder='First name'
+              onChange={(value: string) =>
+                onUpdateContactPersonalDetails({
+                  firstName: value,
+                  lastName: data?.lastName || '',
+                })
+              }
+            />
+            <EditableContentInput
+              isEditMode={isEditMode}
+              value={data?.lastName || ''}
+              placeholder='Last name'
+              onChange={(value: string) => {
+                return onUpdateContactPersonalDetails({
+                  lastName: value,
+                  firstName: data?.firstName || '',
+                });
+              }}
+            />
+          </div>
+
           <div style={{ marginLeft: '4px' }}>
-            <Button mode='secondary' onClick={() => setMode('EDIT')}>
-              Edit
+            <Button
+              className={styles.editButton}
+              mode='secondary'
+              onClick={() => setContactDetailsEdit({ isEditMode: !isEditMode })}
+            >
+              {isEditMode ? 'Done' : 'Edit'}
             </Button>
           </div>
         </div>
 
-        {data?.jobRoles?.map((jobRole: any) => {
+        {(
+          data?.jobRoles || [
+            { organization: { id: '', name: '' }, jobTitle: '' },
+          ]
+        )?.map((jobRole: any) => {
           return (
-            <div
-              className={styles.jobRole}
-              key={`contact-job-role-${jobRole?.id}-${jobRole?.label}`}
-              onClick={() =>
-                router.push(`/organization/${jobRole?.organization.id}`)
-              }
-            >
-              {jobRole?.jobTitle}
-              {jobRole?.jobTitle &&
-              jobRole?.organization &&
-              jobRole?.organization?.name
-                ? ' at'
-                : ''}{' '}
-              {jobRole?.organization?.name}
-            </div>
+            <JobRoleInput
+              key={jobRole.id}
+              contactId={id}
+              organization={jobRole.organization}
+              jobRole={jobRole.jobTitle}
+              roleId={jobRole.id}
+            />
           );
         })}
+
+        <ContactTags id={id} mode={isEditMode ? 'EDIT' : 'PREVIEW'} />
         <div className={styles.source}>
           <span>Source:</span>
-          {data?.source || ''}
+          {data?.source || 'OPENLINE'}
         </div>
-        {/*<div className={styles.source}>*/}
-        {/*  <span>Owner:</span>*/}
-        {/*  {`${data?.owner?.firstName || ''} ${data?.owner?.lastName || ''}` ||*/}
-        {/*    ''}*/}
-        {/*</div>*/}
-        <ContactTags id={id} mode='PREVIEW' />
       </div>
     </div>
   );

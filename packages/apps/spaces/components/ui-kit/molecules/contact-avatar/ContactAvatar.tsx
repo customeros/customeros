@@ -1,5 +1,5 @@
 import React, { memo } from 'react';
-import { Avatar } from '../../atoms';
+import { Avatar, User } from '../../atoms';
 import { useContactNameFromId } from '../../../../hooks/useContact';
 import { getContactDisplayName } from '../../../../utils';
 
@@ -20,6 +20,7 @@ export const ContactAvatar: React.FC<Props> = memo(
         name={name?.[0] || ''}
         surname={name.length === 2 ? name[1] : name[2]}
         size={size}
+        image={name.length === 1 && <User />}
       />
     );
   },

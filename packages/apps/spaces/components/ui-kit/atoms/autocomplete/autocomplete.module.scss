@@ -1,0 +1,45 @@
+@import "styles/mixins";
+.autocompleteContainer {
+  position: relative;
+}
+
+.autocompleteInput {
+  @include input-style;
+  margin-top: 0;
+  padding: 0 var(--spacing-xxxs);
+  font-size: inherit;
+  font-weight: lighter;
+
+  &.disabled {
+    border-color: transparent;
+  }
+  &.notEditable {
+    background-color: white;
+    border-color: transparent;
+  }
+}
+
+.createItemButton {
+  position: absolute;
+  background: white;
+  z-index: 1;
+  width: 100%;
+  border-radius: var(--border-radius-xs);
+  padding: 0 var(--spacing-xxxs);
+  border: var(--border-divider);
+  box-shadow: var(--box-shadow-xs);
+  cursor: pointer;
+
+  &:focus-within {
+    background: var(--gray-100);
+  }
+
+
+  & button {
+    cursor: pointer;
+
+    &:focus {
+      outline: none;
+    }
+  }
+}
