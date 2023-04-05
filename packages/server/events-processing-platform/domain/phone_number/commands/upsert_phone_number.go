@@ -4,7 +4,6 @@ import (
 	"context"
 	"github.com/EventStore/EventStore-Client-Go/esdb"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/phone_number"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/phone_number/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
@@ -33,7 +32,7 @@ func (c *upsertPhoneNumberHandler) Handle(ctx context.Context, command *UpsertPh
 	span.LogFields(log.String("Tenant", command.Tenant), log.String("AggregateID", command.GetAggregateID()))
 
 	if len(command.Tenant) == 0 {
-		return phone_number.ErrMissingTenant
+		return eventstore.ErrMissingTenant
 	}
 
 	phoneNumberAggregate := aggregate.NewPhoneNumberAggregateWithTenantAndID(command.Tenant, command.AggregateID)

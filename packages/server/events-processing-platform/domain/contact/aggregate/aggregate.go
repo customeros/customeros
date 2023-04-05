@@ -1,6 +1,7 @@
 package aggregate
 
 import (
+	commonModels "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/models"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/events"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/models"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
@@ -8,7 +9,7 @@ import (
 )
 
 const (
-	ContactAggregateType eventstore.AggregateType = "CONTACT"
+	ContactAggregateType eventstore.AggregateType = "contact"
 )
 
 type ContactAggregate struct {
@@ -16,14 +17,12 @@ type ContactAggregate struct {
 	Contact *models.Contact
 }
 
-func NewContactAggregateWithID(id string) *ContactAggregate {
+func NewContactAggregateWithTenantAndID(tenant, id string) *ContactAggregate {
 	if id == "" {
 		return nil
 	}
-
 	aggregate := NewContactAggregate()
-	aggregate.SetID(id)
-	aggregate.Contact.ID = id
+	aggregate.SetID(tenant + "-" + id)
 	return aggregate
 }
 
@@ -41,46 +40,42 @@ func (contactAggregate *ContactAggregate) When(event eventstore.Event) error {
 
 	case events.ContactCreated:
 		return contactAggregate.onContactCreated(event)
-	case events.ContactDeleted:
-		return contactAggregate.onContactDeleted(event)
 	case events.ContactUpdated:
-		return contactAggregate.onShoppingCartUpdated(event)
+		return contactAggregate.onContactUpdated(event)
 	default:
 		return eventstore.ErrInvalidEventType
 	}
 }
 
-func (contactAggregate *ContactAggregate) onContactCreated(event eventstore.Event) error {
+func (a *ContactAggregate) onContactCreated(event eventstore.Event) error {
 	var eventData events.ContactCreatedEvent
 	if err := event.GetJsonData(&eventData); err != nil {
 		return errors.Wrap(err, "GetJsonData")
 	}
-
-	contactAggregate.Contact.Uuid = eventData.Uuid
-	contactAggregate.Contact.FirstName = eventData.FirstName
-	contactAggregate.Contact.LastName = eventData.LastName
-	return nil
-}
-
-func (contactAggregate *ContactAggregate) onContactDeleted(event eventstore.Event) error {
-	var eventData events.ContactDeletedEvent
-	if err := event.GetJsonData(&eventData); err != nil {
-		return errors.Wrap(err, "GetJsonData")
+	a.Contact.FirstName = eventData.FirstName
+	a.Contact.LastName = eventData.LastName
+	a.Contact.Name = eventData.Name
+	a.Contact.Prefix = eventData.Prefix
+	a.Contact.Source = commonModels.Source{
+		Source:        eventData.Source,
+		SourceOfTruth: eventData.SourceOfTruth,
+		AppSource:     eventData.AppSource,
 	}
-
-	contactAggregate.Contact.Uuid = eventData.Uuid
+	a.Contact.CreatedAt = eventData.CreatedAt
+	a.Contact.UpdatedAt = eventData.UpdatedAt
 	return nil
 }
 
-func (contactAggregate *ContactAggregate) onShoppingCartUpdated(event eventstore.Event) error {
+func (a *ContactAggregate) onContactUpdated(event eventstore.Event) error {
 	var eventData events.ContactUpdatedEvent
 	if err := event.GetJsonData(&eventData); err != nil {
 		return errors.Wrap(err, "GetJsonData")
 	}
-
-	contactAggregate.Contact.Uuid = eventData.Uuid
-	contactAggregate.Contact.FirstName = eventData.FirstName
-	contactAggregate.Contact.LastName = eventData.LastName
-
+	a.Contact.Source.SourceOfTruth = eventData.SourceOfTruth
+	a.Contact.UpdatedAt = eventData.UpdatedAt
+	a.Contact.FirstName = eventData.FirstName
+	a.Contact.LastName = eventData.LastName
+	a.Contact.Name = eventData.Name
+	a.Contact.Prefix = eventData.Prefix
 	return nil
 }

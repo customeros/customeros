@@ -7,13 +7,13 @@ import (
 )
 
 type PhoneNumberCommands struct {
-	CreatePhoneNumber CreatePhoneNumberCommandHandler
 	UpsertPhoneNumber UpsertPhoneNumberCommandHandler
+	CreatePhoneNumber CreatePhoneNumberCommandHandler
 }
 
 func NewPhoneNumberCommands(log logger.Logger, cfg *config.Config, es eventstore.AggregateStore) *PhoneNumberCommands {
 	return &PhoneNumberCommands{
-		CreatePhoneNumber: NewCreatePhoneNumberHandler(log, cfg, es),
+		CreatePhoneNumber: NewCreatePhoneNumberCommandHandler(log, cfg, es),
 		UpsertPhoneNumber: NewUpsertPhoneNumberHandler(log, cfg, es),
 	}
 }

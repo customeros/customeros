@@ -23,7 +23,9 @@ eventStoreConfig:
   connectionString: "esdb://localhost:2113?tls=false"
 subscriptions:
   poolSize: 60
+  allPrefixes: ""
   phoneNumberPrefix: "phone_number-"
+  contactPrefix: "contact-"
   graphProjectionGroupName: "graph1"
   dataEnricherProjectionGroupName: "dataEnricher1"
 neo4j:
