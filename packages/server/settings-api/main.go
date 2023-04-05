@@ -9,12 +9,10 @@ import (
 	commonService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/settings-api/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/settings-api/config/logger"
-	"github.com/openline-ai/openline-customer-os/packages/server/settings-api/dto"
 	"github.com/openline-ai/openline-customer-os/packages/server/settings-api/mapper"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/net/context"
 
-	//"github.com/openline-ai/openline-customer-os/packages/server/settings-api/repository/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/settings-api/service"
 	"log"
 )
@@ -64,27 +62,27 @@ func main() {
 	corsConfig.AllowOrigins = []string{"*"}
 	r.Use(cors.New(corsConfig))
 
-	r.GET("/settings",
+	r.GET("/integrations",
 		commonService.TenantUserContextEnhancer(ctx, commonService.USERNAME, commonRepositoryContainer),
 		commonService.ApiKeyCheckerHTTP(commonRepositoryContainer.AppKeyRepository, commonService.SETTINGS_API),
 		func(c *gin.Context) {
 			tenantName := c.Keys["TenantName"].(string)
 
-			tenant, err := services.TenantSettingsService.GetForTenant(tenantName)
+			tenantIntegrationSettings, err := services.TenantSettingsService.GetForTenant(tenantName)
 
 			if err != nil {
 				c.JSON(500, gin.H{"error": err.Error()})
 				return
 			}
 
-			c.JSON(200, mapper.MapTenantSettingsEntityToDTO(tenant))
+			c.JSON(200, mapper.MapTenantSettingsEntityToDTO(tenantIntegrationSettings))
 		})
 
-	r.POST("/settings/hubspot",
+	r.POST("/integration",
 		commonService.TenantUserContextEnhancer(ctx, commonService.USERNAME, commonRepositoryContainer),
 		commonService.ApiKeyCheckerHTTP(commonRepositoryContainer.AppKeyRepository, commonService.SETTINGS_API),
 		func(c *gin.Context) {
-			var request dto.TenantSettingsHubspotDTO
+			var request map[string]interface{}
 
 			if err := c.BindJSON(&request); err != nil {
 				println(err.Error())
@@ -94,174 +92,27 @@ func main() {
 
 			tenantName := c.Keys["TenantName"].(string)
 
-			data, err := services.TenantSettingsService.SaveHubspotData(tenantName, request)
+			tenantIntegrationSettings, err := services.TenantSettingsService.SaveIntegrationData(tenantName, request)
 			if err != nil {
 				c.JSON(500, gin.H{"error": err.Error()})
 				return
 			}
 
-			c.JSON(200, mapper.MapTenantSettingsEntityToDTO(data))
+			c.JSON(200, mapper.MapTenantSettingsEntityToDTO(tenantIntegrationSettings))
 		})
 
-	r.DELETE("/settings/hubspot",
+	r.DELETE("/integration/:identifier",
 		commonService.TenantUserContextEnhancer(ctx, commonService.USERNAME, commonRepositoryContainer),
 		commonService.ApiKeyCheckerHTTP(commonRepositoryContainer.AppKeyRepository, commonService.SETTINGS_API),
 		func(c *gin.Context) {
+			identifier := c.Param("identifier")
+			if identifier == "" {
+				c.JSON(500, gin.H{"error": "integration identifier is empty"})
+				return
+			}
 			tenantName := c.Keys["TenantName"].(string)
 
-			data, err := services.TenantSettingsService.ClearHubspotData(tenantName)
-			if err != nil {
-				c.JSON(500, gin.H{"error": err.Error()})
-				return
-			}
-
-			c.JSON(200, mapper.MapTenantSettingsEntityToDTO(data))
-		})
-
-	r.POST("/settings/zendesk",
-		commonService.TenantUserContextEnhancer(ctx, commonService.USERNAME, commonRepositoryContainer),
-		commonService.ApiKeyCheckerHTTP(commonRepositoryContainer.AppKeyRepository, commonService.SETTINGS_API),
-		func(c *gin.Context) {
-			var request dto.TenantSettingsZendeskDTO
-
-			if err := c.BindJSON(&request); err != nil {
-				println(err.Error())
-				c.AbortWithStatus(500) //todo
-				return
-			}
-
-			tenantName := c.Keys["TenantName"].(string)
-
-			data, err := services.TenantSettingsService.SaveZendeskData(tenantName, request)
-			if err != nil {
-				c.JSON(500, gin.H{"error": err.Error()})
-				return
-			}
-
-			c.JSON(200, mapper.MapTenantSettingsEntityToDTO(data))
-		})
-
-	r.DELETE("/settings/zendesk",
-		commonService.TenantUserContextEnhancer(ctx, commonService.USERNAME, commonRepositoryContainer),
-		commonService.ApiKeyCheckerHTTP(commonRepositoryContainer.AppKeyRepository, commonService.SETTINGS_API),
-		func(c *gin.Context) {
-			tenantName := c.Keys["TenantName"].(string)
-
-			data, err := services.TenantSettingsService.ClearZendeskData(tenantName)
-			if err != nil {
-				c.JSON(500, gin.H{"error": err.Error()})
-				return
-			}
-
-			c.JSON(200, mapper.MapTenantSettingsEntityToDTO(data))
-		})
-
-	r.POST("/settings/smartSheet",
-		commonService.TenantUserContextEnhancer(ctx, commonService.USERNAME, commonRepositoryContainer),
-		commonService.ApiKeyCheckerHTTP(commonRepositoryContainer.AppKeyRepository, commonService.SETTINGS_API),
-		func(c *gin.Context) {
-			var request dto.TenantSettingsSmartSheetDTO
-
-			if err := c.BindJSON(&request); err != nil {
-				println(err.Error())
-				c.AbortWithStatus(500) //todo
-				return
-			}
-
-			tenantName := c.Keys["TenantName"].(string)
-
-			data, err := services.TenantSettingsService.SaveSmartSheetData(tenantName, request)
-			if err != nil {
-				c.JSON(500, gin.H{"error": err.Error()})
-				return
-			}
-
-			c.JSON(200, mapper.MapTenantSettingsEntityToDTO(data))
-		})
-
-	r.DELETE("/settings/smartSheet",
-		commonService.TenantUserContextEnhancer(ctx, commonService.USERNAME, commonRepositoryContainer),
-		commonService.ApiKeyCheckerHTTP(commonRepositoryContainer.AppKeyRepository, commonService.SETTINGS_API),
-		func(c *gin.Context) {
-			tenantName := c.Keys["TenantName"].(string)
-
-			data, err := services.TenantSettingsService.ClearSmartSheetData(tenantName)
-			if err != nil {
-				c.JSON(500, gin.H{"error": err.Error()})
-				return
-			}
-
-			c.JSON(200, mapper.MapTenantSettingsEntityToDTO(data))
-		})
-
-	r.POST("/settings/jira",
-		commonService.TenantUserContextEnhancer(ctx, commonService.USERNAME, commonRepositoryContainer),
-		commonService.ApiKeyCheckerHTTP(commonRepositoryContainer.AppKeyRepository, commonService.SETTINGS_API),
-		func(c *gin.Context) {
-			var request dto.TenantSettingsJiraDTO
-
-			if err := c.BindJSON(&request); err != nil {
-				println(err.Error())
-				c.AbortWithStatus(500) //todo
-				return
-			}
-
-			tenantName := c.Keys["TenantName"].(string)
-
-			data, err := services.TenantSettingsService.SaveJiraData(tenantName, request)
-			if err != nil {
-				c.JSON(500, gin.H{"error": err.Error()})
-				return
-			}
-
-			c.JSON(200, mapper.MapTenantSettingsEntityToDTO(data))
-		})
-
-	r.DELETE("/settings/jira",
-		commonService.TenantUserContextEnhancer(ctx, commonService.USERNAME, commonRepositoryContainer),
-		commonService.ApiKeyCheckerHTTP(commonRepositoryContainer.AppKeyRepository, commonService.SETTINGS_API),
-		func(c *gin.Context) {
-			tenantName := c.Keys["TenantName"].(string)
-
-			data, err := services.TenantSettingsService.ClearJiraData(tenantName)
-			if err != nil {
-				c.JSON(500, gin.H{"error": err.Error()})
-				return
-			}
-
-			c.JSON(200, mapper.MapTenantSettingsEntityToDTO(data))
-		})
-
-	r.POST("/settings/trello",
-		commonService.TenantUserContextEnhancer(ctx, commonService.USERNAME, commonRepositoryContainer),
-		commonService.ApiKeyCheckerHTTP(commonRepositoryContainer.AppKeyRepository, commonService.SETTINGS_API),
-		func(c *gin.Context) {
-			var request dto.TenantSettingsTrelloDTO
-
-			if err := c.BindJSON(&request); err != nil {
-				println(err.Error())
-				c.AbortWithStatus(500) //todo
-				return
-			}
-
-			tenantName := c.Keys["TenantName"].(string)
-
-			data, err := services.TenantSettingsService.SaveTrelloData(tenantName, request)
-			if err != nil {
-				c.JSON(500, gin.H{"error": err.Error()})
-				return
-			}
-
-			c.JSON(200, mapper.MapTenantSettingsEntityToDTO(data))
-		})
-
-	r.DELETE("/settings/trello",
-		commonService.TenantUserContextEnhancer(ctx, commonService.USERNAME, commonRepositoryContainer),
-		commonService.ApiKeyCheckerHTTP(commonRepositoryContainer.AppKeyRepository, commonService.SETTINGS_API),
-		func(c *gin.Context) {
-			tenantName := c.Keys["TenantName"].(string)
-
-			data, err := services.TenantSettingsService.ClearTrelloData(tenantName)
+			data, err := services.TenantSettingsService.ClearIntegrationData(tenantName, identifier)
 			if err != nil {
 				c.JSON(500, gin.H{"error": err.Error()})
 				return
