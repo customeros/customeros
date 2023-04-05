@@ -1,32 +1,41 @@
 package mapper
 
 import (
-	"github.com/openline-ai/openline-customer-os/packages/server/settings-api/dto"
 	"github.com/openline-ai/openline-customer-os/packages/server/settings-api/repository/entity"
 )
 
-func MapTenantSettingsEntityToDTO(input *entity.TenantSettings) *dto.TenantSettingsResponseDTO {
-	responseDTO := dto.TenantSettingsResponseDTO{}
+// TODO the state should come from the actual running service
+func MapTenantSettingsEntityToDTO(tenantSettings *entity.TenantSettings) *map[string]interface{} {
+	responseMap := make(map[string]interface{})
 
-	if input != nil && input.HubspotPrivateAppKey != nil {
-		responseDTO.HubspotExists = true
+	if tenantSettings == nil {
+		return &responseMap
 	}
 
-	if input != nil && input.ZendeskAPIKey != nil && input.ZendeskSubdomain != nil && input.ZendeskAdminEmail != nil {
-		responseDTO.ZendeskExists = true
+	if tenantSettings.HubspotPrivateAppKey != nil {
+		responseMap["hubspot"] = make(map[string]interface{})
+		responseMap["hubspot"].(map[string]interface{})["state"] = "ACTIVE"
 	}
 
-	if input != nil && input.SmartSheetId != nil && input.SmartSheetAccessToken != nil {
-		responseDTO.SmartSheetExists = true
+	if tenantSettings != nil && tenantSettings.ZendeskAPIKey != nil && tenantSettings.ZendeskSubdomain != nil && tenantSettings.ZendeskAdminEmail != nil {
+		responseMap["zendesk"] = make(map[string]interface{})
+		responseMap["zendesk"].(map[string]interface{})["state"] = "ACTIVE"
 	}
 
-	if input != nil && input.JiraAPIToken != nil && input.JiraDomain != nil && input.JiraEmail != nil {
-		responseDTO.JiraExists = true
+	if tenantSettings != nil && tenantSettings.SmartSheetId != nil && tenantSettings.SmartSheetAccessToken != nil {
+		responseMap["smartsheet"] = make(map[string]interface{})
+		responseMap["smartsheet"].(map[string]interface{})["state"] = "ACTIVE"
 	}
 
-	if input != nil && input.TrelloAPIToken != nil && input.TrelloAPIKey != nil {
-		responseDTO.TrelloExists = true
+	if tenantSettings != nil && tenantSettings.JiraAPIToken != nil && tenantSettings.JiraDomain != nil && tenantSettings.JiraEmail != nil {
+		responseMap["jira"] = make(map[string]interface{})
+		responseMap["jira"].(map[string]interface{})["state"] = "ACTIVE"
 	}
 
-	return &responseDTO
+	if tenantSettings != nil && tenantSettings.TrelloAPIToken != nil && tenantSettings.TrelloAPIKey != nil {
+		responseMap["trello"] = make(map[string]interface{})
+		responseMap["trello"].(map[string]interface{})["state"] = "ACTIVE"
+	}
+
+	return &responseMap
 }

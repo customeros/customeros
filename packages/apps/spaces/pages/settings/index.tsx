@@ -1,20 +1,7 @@
 import type { NextPage } from 'next';
 import React, { useEffect, useRef, useState } from 'react';
 import { toast } from 'react-toastify';
-import {
-  DeleteHubspotSettings,
-  DeleteJiraSettings,
-  DeleteSmartsheetSettings,
-  DeleteTrelloSettings,
-  DeleteZendeskSettings,
-  GetSettings,
-  Settings,
-  UpdateHubspotSettings,
-  UpdateJiraSettings,
-  UpdateSmartsheetSettings,
-  UpdateTrelloSettings,
-  UpdateZendeskSettings,
-} from '../../services';
+import { GetSettings } from '../../services';
 import { Button } from '../../components';
 import styles from './settings.module.scss';
 import { ArrowLeft } from '../../components/ui-kit/atoms';
@@ -39,17 +26,16 @@ const Settings: NextPage = () => {
       template: (data: any) => (
         <SettingsIntegrationItem
           icon={'/logos/hubspot.png'}
+          identifier={'hubspot'}
           name={'Hubspot'}
           state={data.state}
-          onSave={UpdateHubspotSettings}
-          onRevoke={DeleteHubspotSettings}
           settingsChanged={() => {
             reloadRef.current = !reloadRef.current;
             setReload(reloadRef.current);
           }}
           fields={[
             {
-              name: 'hubspotPrivateAppKey',
+              name: 'privateAppKey',
               label: 'API key',
             },
           ]}
@@ -62,25 +48,24 @@ const Settings: NextPage = () => {
       template: (data: any) => (
         <SettingsIntegrationItem
           icon={'/logos/zendesk.png'}
+          identifier={'zendesk'}
           name={'Zendesk'}
           state={data.state}
-          onSave={UpdateZendeskSettings}
-          onRevoke={DeleteZendeskSettings}
           settingsChanged={() => {
             reloadRef.current = !reloadRef.current;
             setReload(reloadRef.current);
           }}
           fields={[
             {
-              name: 'zendeskAPIKey',
+              name: 'apiKey',
               label: 'API key',
             },
             {
-              name: 'zendeskSubdomain',
+              name: 'subdomain',
               label: 'Subdomain',
             },
             {
-              name: 'zendeskAdminEmail',
+              name: 'adminEmail',
               label: 'Admin email',
             },
           ]}
@@ -93,21 +78,20 @@ const Settings: NextPage = () => {
       template: (data: any) => (
         <SettingsIntegrationItem
           icon={'/logos/smartsheet.png'}
+          identifier={'smartsheet'}
           name={'Smartsheet'}
           state={data.state}
-          onSave={UpdateSmartsheetSettings}
-          onRevoke={DeleteSmartsheetSettings}
           settingsChanged={() => {
             reloadRef.current = !reloadRef.current;
             setReload(reloadRef.current);
           }}
           fields={[
             {
-              name: 'smartSheetId',
+              name: 'id',
               label: 'ID',
             },
             {
-              name: 'smartSheetAccessToken',
+              name: 'accessToken',
               label: 'API key',
             },
           ]}
@@ -120,25 +104,24 @@ const Settings: NextPage = () => {
       template: (data: any) => (
         <SettingsIntegrationItem
           icon={'/logos/jira.png'}
+          identifier={'jira'}
           name={'Jira'}
           state={data.state}
-          onSave={UpdateJiraSettings}
-          onRevoke={DeleteJiraSettings}
           settingsChanged={() => {
             reloadRef.current = !reloadRef.current;
             setReload(reloadRef.current);
           }}
           fields={[
             {
-              name: 'jiraAPIToken',
+              name: 'apiToken',
               label: 'API Token',
             },
             {
-              name: 'jiraDomain',
+              name: 'domain',
               label: 'Domain',
             },
             {
-              name: 'jiraEmail',
+              name: 'email',
               label: 'Email',
             },
           ]}
@@ -151,21 +134,20 @@ const Settings: NextPage = () => {
       template: (data: any) => (
         <SettingsIntegrationItem
           icon={'/logos/trello.png'}
+          identifier={'trello'}
           name={'Trello'}
           state={data.state}
-          onSave={UpdateTrelloSettings}
-          onRevoke={DeleteTrelloSettings}
           settingsChanged={() => {
             reloadRef.current = !reloadRef.current;
             setReload(reloadRef.current);
           }}
           fields={[
             {
-              name: 'trelloAPIToken',
+              name: 'apiToken',
               label: 'API Token',
             },
             {
-              name: 'trelloAPIKey',
+              name: 'apiKey',
               label: 'API key',
             },
           ]}
@@ -177,41 +159,13 @@ const Settings: NextPage = () => {
   useEffect(() => {
     setLoading(true);
     GetSettings()
-      .then((data: Settings) => {
-        console.log(data);
+      .then((data: any) => {
         setIntegrations(
           integrations.map((integration) => {
-            //todo switch to the generic solution one BE is done
-            if (integration.key === 'hubspot') {
-              return {
-                ...integration,
-                state: data.hubspotExists ? 'ACTIVE' : 'INACTIVE',
-              };
-            }
-            if (integration.key === 'zendesk') {
-              return {
-                ...integration,
-                state: data.zendeskExists ? 'ACTIVE' : 'INACTIVE',
-              };
-            }
-            if (integration.key === 'smartsheet') {
-              return {
-                ...integration,
-                state: data.smartSheetExists ? 'ACTIVE' : 'INACTIVE',
-              };
-            }
-            if (integration.key === 'jira') {
-              return {
-                ...integration,
-                state: data.jiraExists ? 'ACTIVE' : 'INACTIVE',
-              };
-            }
-            if (integration.key === 'trello') {
-              return {
-                ...integration,
-                state: data.trelloExists ? 'ACTIVE' : 'INACTIVE',
-              };
-            }
+            return {
+              ...integration,
+              state: data[integration.key]?.state ?? 'INACTIVE'
+            };
             return integration;
           }),
         );

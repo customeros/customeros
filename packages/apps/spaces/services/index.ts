@@ -1,15 +1,5 @@
 export {
-  DeleteHubspotSettings,
-  DeleteJiraSettings,
-  DeleteSmartsheetSettings,
-  DeleteTrelloSettings,
-  DeleteZendeskSettings,
   GetSettings,
-  UpdateHubspotSettings,
-  UpdateJiraSettings,
-  UpdateSmartsheetSettings,
-  UpdateTrelloSettings,
-  UpdateZendeskSettings,
+  UpdateIntegrationSettings,
+  DeleteIntegrationSettings,
 } from './settings';
-
-export type { HubspotSettings, Settings } from './settings';
