@@ -2,13 +2,13 @@ mutation UpdateContact($contactId: ID!){
     contact_Update(
         input: {
             id: $contactId,
-            title: null,
+            prefix: null,
             firstName: "updated first",
             lastName: "updated last",
         }
     ) {
         id
-        title
+        prefix
         firstName
         lastName
     }

@@ -85,7 +85,7 @@ func (r *contactRepository) Create(ctx context.Context, tx neo4j.ManagedTransact
 
 	query := "MATCH (t:Tenant {name:$tenant}) " +
 		" MERGE (c:Contact {id:randomUUID()})-[:CONTACT_BELONGS_TO_TENANT]->(t) ON CREATE SET " +
-		" c.title=$title, " +
+		" c.prefix=$prefix, " +
 		" c.firstName=$firstName, " +
 		" c.lastName=$lastName, " +
 		" c.createdAt=$createdAt, " +
@@ -98,7 +98,7 @@ func (r *contactRepository) Create(ctx context.Context, tx neo4j.ManagedTransact
 	if queryResult, err := tx.Run(ctx, fmt.Sprintf(query, tenant),
 		map[string]interface{}{
 			"tenant":        tenant,
-			"title":         newContact.Title,
+			"prefix":        newContact.Prefix,
 			"firstName":     newContact.FirstName,
 			"lastName":      newContact.LastName,
 			"source":        source,
@@ -116,7 +116,7 @@ func (r *contactRepository) Update(ctx context.Context, tx neo4j.ManagedTransact
 			MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant})
 			SET c.firstName=$firstName,
 				c.lastName=$lastName,
-				c.title=$title,
+				c.prefix=$prefix,
 				c.updatedAt=$now,
 				c.sourceOfTruth=$sourceOfTruth
 			RETURN c`,
@@ -125,7 +125,7 @@ func (r *contactRepository) Update(ctx context.Context, tx neo4j.ManagedTransact
 			"contactId":     contactId,
 			"firstName":     contactDtls.FirstName,
 			"lastName":      contactDtls.LastName,
-			"title":         contactDtls.Title,
+			"prefix":        contactDtls.Prefix,
 			"sourceOfTruth": string(contactDtls.SourceOfTruth),
 			"now":           utils.Now(),
 		}); err != nil {
@@ -517,7 +517,7 @@ func (r *contactRepository) MergeContactPropertiesInTx(ctx context.Context, tx n
 			SET primary.firstName = CASE WHEN primary.firstName is null OR primary.firstName = '' THEN merged.firstName ELSE primary.firstName END, 
 				primary.lastName = CASE WHEN primary.lastName is null OR primary.lastName = '' THEN merged.lastName ELSE primary.lastName END, 
 				primary.name = CASE WHEN primary.name is null OR primary.name = '' THEN merged.name ELSE primary.name END, 
-				primary.title = CASE WHEN primary.title is null OR primary.title = '' THEN merged.title ELSE primary.title END, 
+				primary.prefix = CASE WHEN primary.prefix is null OR primary.prefix = '' THEN merged.prefix ELSE primary.prefix END, 
 				primary.sourceOfTruth=$sourceOfTruth,
 				primary.updatedAt = $now
 			`,

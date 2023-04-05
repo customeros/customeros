@@ -114,12 +114,12 @@ func TestMutationResolver_FieldSetMergeToContact_AllowMultipleFieldSetWithSameNa
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 	contactId1 := neo4jt.CreateContact(ctx, driver, tenantName, entity.ContactEntity{
-		Title:     model.PersonTitleMr.String(),
+		Prefix:    "MR",
 		FirstName: "first",
 		LastName:  "last",
 	})
 	contactId2 := neo4jt.CreateContact(ctx, driver, tenantName, entity.ContactEntity{
-		Title:     model.PersonTitleMr.String(),
+		Prefix:    "MR",
 		FirstName: "first",
 		LastName:  "last",
 	})

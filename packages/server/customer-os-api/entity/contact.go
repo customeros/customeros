@@ -7,7 +7,7 @@ import (
 
 type ContactEntity struct {
 	Id        string
-	Title     string `neo4jDb:"property:title;lookupName:TITLE;supportCaseSensitive:false"`
+	Prefix    string `neo4jDb:"property:prefix;lookupName:PREFIX;supportCaseSensitive:true"`
 	Name      string `neo4jDb:"property:name;lookupName:NAME;supportCaseSensitive:true"`
 	FirstName string `neo4jDb:"property:firstName;lookupName:FIRST_NAME;supportCaseSensitive:true"`
 	LastName  string `neo4jDb:"property:lastName;lookupName:LAST_NAME;supportCaseSensitive:true"`

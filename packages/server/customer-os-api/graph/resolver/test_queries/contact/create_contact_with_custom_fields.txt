@@ -1,6 +1,6 @@
 mutation ($entityTemplateId: ID!, $fieldTemplateId: ID!, $setTemplateId: ID!, $fieldInSetTemplateId: ID!) {
     contact_Create(input: {
-        title: MR
+        prefix: "Mister"
         firstName: "first"
         lastName: "last"
         customFields: [
@@ -21,7 +21,7 @@ mutation ($entityTemplateId: ID!, $fieldTemplateId: ID!, $setTemplateId: ID!, $f
         templateId: $entityTemplateId
     }) {
         id
-        title
+        prefix
         firstName
         lastName
         createdAt

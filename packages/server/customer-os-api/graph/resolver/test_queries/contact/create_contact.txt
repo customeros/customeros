@@ -1,7 +1,7 @@
 mutation CreateContact() {
 contact_Create(
     input: {
-      title: MR,
+      prefix: "MR",
       firstName: "first",
       lastName: "last",
       label: "Some label"
@@ -25,7 +25,7 @@ contact_Create(
     }
   ) {
     id
-    title
+    prefix
     firstName
     lastName
     label
