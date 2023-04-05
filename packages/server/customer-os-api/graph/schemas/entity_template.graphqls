@@ -1,3 +1,7 @@
+extend type Mutation {
+    entityTemplateCreate(input: EntityTemplateInput!): EntityTemplate!
+}
+
 enum EntityTemplateExtension {
     CONTACT
 }

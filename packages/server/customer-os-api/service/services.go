@@ -39,7 +39,7 @@ func InitServices(driver *neo4j.DriverWithContext, grpcClients *grpc_client.Clie
 	repositories := repository.InitRepos(driver)
 
 	services := Services{
-		ContactService:             NewContactService(repositories),
+		ContactService:             NewContactService(repositories, grpcClients),
 		OrganizationService:        NewOrganizationService(repositories),
 		ContactGroupService:        NewContactGroupService(repositories),
 		CustomFieldService:         NewCustomFieldService(repositories),

@@ -6,21 +6,42 @@ package resolver
 
 import (
 	"context"
+	"time"
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/generated"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	"github.com/sirupsen/logrus"
 )
 
-// EntityTemplateCreate is the resolver for the entityTemplateCreate field.
-func (r *mutationResolver) EntityTemplateCreate(ctx context.Context, input model.EntityTemplateInput) (*model.EntityTemplate, error) {
-	entityTemplateEntity, err := r.Services.EntityTemplateService.Create(ctx, mapper.MapEntityTemplateInputToEntity(input))
+// PhoneNumberUpsertInEventStore is the resolver for the phoneNumberUpsertInEventStore field.
+func (r *mutationResolver) PhoneNumberUpsertInEventStore(ctx context.Context, size int) (int, error) {
+	defer func(start time.Time) {
+		utils.LogMethodExecution(start, utils.GetFunctionName())
+	}(time.Now())
+
+	result, err := r.Services.PhoneNumberService.UpsertInEventStore(ctx, size)
 	if err != nil {
-		graphql.AddErrorf(ctx, "Failed to create entity template: %s", input.Name)
-		return nil, err
+		logrus.Errorf("Failed to call method: %v", err)
+		graphql.AddErrorf(ctx, "Failed to upsert phone numbers to event store")
 	}
-	return mapper.MapEntityToEntityTemplate(entityTemplateEntity), nil
+
+	return result, nil
+}
+
+// ContactUpsertInEventStore is the resolver for the contactUpsertInEventStore field.
+func (r *mutationResolver) ContactUpsertInEventStore(ctx context.Context, size int) (int, error) {
+	defer func(start time.Time) {
+		utils.LogMethodExecution(start, utils.GetFunctionName())
+	}(time.Now())
+
+	result, err := r.Services.ContactService.UpsertInEventStore(ctx, size)
+	if err != nil {
+		logrus.Errorf("Failed to call method: %v", err)
+		graphql.AddErrorf(ctx, "Failed to upsert contacts to event store")
+	}
+
+	return result, nil
 }
 
 // Mutation returns generated.MutationResolver implementation.

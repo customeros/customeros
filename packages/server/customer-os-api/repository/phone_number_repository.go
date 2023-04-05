@@ -19,7 +19,7 @@ type PhoneNumberRepository interface {
 	RemoveRelationshipById(ctx context.Context, entityType entity.EntityType, tenant, entityId, phoneNumberId string) error
 	Exists(ctx context.Context, tenant string, e164 string) (bool, error)
 
-	GetAll(ctx context.Context, size int) ([]*utils.DbNodeAndId, error)
+	GetAllCrossTenants(ctx context.Context, size int) ([]*utils.DbNodeAndId, error)
 }
 
 type phoneNumberRepository struct {
@@ -283,7 +283,7 @@ func (r *phoneNumberRepository) Exists(ctx context.Context, tenant string, e164 
 	return result.(bool), err
 }
 
-func (r *phoneNumberRepository) GetAll(ctx context.Context, size int) ([]*utils.DbNodeAndId, error) {
+func (r *phoneNumberRepository) GetAllCrossTenants(ctx context.Context, size int) ([]*utils.DbNodeAndId, error) {
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
 

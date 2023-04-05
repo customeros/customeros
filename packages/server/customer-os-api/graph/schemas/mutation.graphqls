@@ -1,5 +1,6 @@
 type Mutation {
-    entityTemplateCreate(input: EntityTemplateInput!): EntityTemplate!
+    phoneNumberUpsertInEventStore(size: Int!): Int!
+    contactUpsertInEventStore(size: Int!): Int!
 }
 
 
