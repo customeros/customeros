@@ -10,14 +10,29 @@ import {
 import ContactHistory from '../../components/contact/contact-history/ContactHistory';
 import { useSetRecoilState } from 'recoil';
 import { contactDetailsEdit } from '../../state';
-// import { authLink, httpLinkSSR } from '../../apollo-client';
-import { ApolloClient, from, gql, InMemoryCache } from '@apollo/client';
+import { authLink } from '../../apollo-client';
+import {
+  ApolloClient,
+  from,
+  gql,
+  HttpLink,
+  InMemoryCache,
+} from '@apollo/client';
+import { NextPageContext } from 'next';
 
-export async function getServerSideProps(context) {
+export async function getServerSideProps(context: NextPageContext) {
   const ssrClient = new ApolloClient({
     ssrMode: true,
     cache: new InMemoryCache(),
-    // link: from([authLink, httpLinkSSR]),
+    link: from([
+      authLink,
+      new HttpLink({
+        uri: `${process.env.SSR_PUBLIC_PATH}/customer-os-api/query`,
+        fetchOptions: {
+          credentials: 'include',
+        },
+      }),
+    ]),
     queryDeduplication: true,
     assumeImmutableResults: true,
     connectToDevTools: true,
@@ -40,7 +55,7 @@ export async function getServerSideProps(context) {
       `,
       context: {
         headers: {
-          ...context.req.headers,
+          ...context?.req?.headers,
         },
       },
     });
@@ -73,7 +88,7 @@ export async function getServerSideProps(context) {
       },
       context: {
         headers: {
-          ...context.req.headers,
+          ...context?.req?.headers,
         },
       },
     });
