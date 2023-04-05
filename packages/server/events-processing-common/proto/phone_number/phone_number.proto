@@ -26,11 +26,11 @@ message CreatePhoneNumberGrpcRequest {
   google.protobuf.Timestamp  createdAt = 6;
 }
 
-message PhoneNumberGrpcResponse {
+message PhoneNumberIdGrpcResponse {
   string id = 1;
 }
 
 service phoneNumberGrpcService {
-  rpc CreatePhoneNumber(CreatePhoneNumberGrpcRequest) returns (PhoneNumberGrpcResponse);
-  rpc UpsertPhoneNumber(UpsertPhoneNumberGrpcRequest) returns (PhoneNumberGrpcResponse);
+  rpc CreatePhoneNumber(CreatePhoneNumberGrpcRequest) returns (PhoneNumberIdGrpcResponse);
+  rpc UpsertPhoneNumber(UpsertPhoneNumberGrpcRequest) returns (PhoneNumberIdGrpcResponse);
 }

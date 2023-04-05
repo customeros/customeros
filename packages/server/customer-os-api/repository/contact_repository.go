@@ -34,6 +34,8 @@ type ContactRepository interface {
 	UpdateMergedContactLabelsInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, mergedContactId string) error
 	GetAllForEmails(ctx context.Context, tenant string, emailIds []string) ([]*utils.DbNodeAndId, error)
 	GetAllForPhoneNumbers(ctx context.Context, tenant string, phoneNumberIds []string) ([]*utils.DbNodeAndId, error)
+
+	GetAllCrossTenants(ctx context.Context, size int) ([]*utils.DbNodeAndId, error)
 }
 
 type contactRepository struct {
@@ -780,6 +782,29 @@ func (r *contactRepository) GetAllForPhoneNumbers(ctx context.Context, tenant st
 			map[string]any{
 				"tenant":         tenant,
 				"phoneNumberIds": phoneNumberIds,
+			}); err != nil {
+			return nil, err
+		} else {
+			return utils.ExtractAllRecordsAsDbNodeAndId(ctx, queryResult, err)
+		}
+	})
+	if err != nil {
+		return nil, err
+	}
+	return result.([]*utils.DbNodeAndId), err
+}
+
+func (r *contactRepository) GetAllCrossTenants(ctx context.Context, size int) ([]*utils.DbNodeAndId, error) {
+	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
+	defer session.Close(ctx)
+
+	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		if queryResult, err := tx.Run(ctx, `
+			MATCH (c:Contact)--(t:Tenant)
+ 			WHERE (c.syncedWithEventStore is null or c.syncedWithEventStore=false)
+			RETURN c, t.name limit $size`,
+			map[string]any{
+				"size": size,
 			}); err != nil {
 			return nil, err
 		} else {

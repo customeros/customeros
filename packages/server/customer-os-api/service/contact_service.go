@@ -5,10 +5,13 @@ import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	events_processing_contact "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/proto/contact"
 	"github.com/sirupsen/logrus"
 	"reflect"
 )
@@ -37,6 +40,7 @@ type ContactService interface {
 	RemoveOrganization(ctx context.Context, contactId, organizationId string) (*entity.ContactEntity, error)
 
 	mapDbNodeToContactEntity(dbNode dbtype.Node) *entity.ContactEntity
+	UpsertInEventStore(ctx context.Context, size int) (int, error)
 }
 
 type ContactCreateData struct {
@@ -59,11 +63,13 @@ type ContactUpdateData struct {
 
 type contactService struct {
 	repositories *repository.Repositories
+	grpcClients  *grpc_client.Clients
 }
 
-func NewContactService(repositories *repository.Repositories) ContactService {
+func NewContactService(repositories *repository.Repositories, grpcClients *grpc_client.Clients) ContactService {
 	return &contactService{
 		repositories: repositories,
+		grpcClients:  grpcClients,
 	}
 }
 
@@ -527,6 +533,44 @@ func (s *contactService) GetContactsForPhoneNumbers(ctx context.Context, phoneNu
 		contactEntities = append(contactEntities, *contactEntity)
 	}
 	return &contactEntities, nil
+}
+
+func (s *contactService) UpsertInEventStore(ctx context.Context, size int) (int, error) {
+	processedRecords := 0
+	for size > 0 {
+		batchSize := constants.Neo4jBatchSize
+		if size < constants.Neo4jBatchSize {
+			batchSize = size
+		}
+		records, err := s.repositories.ContactRepository.GetAllCrossTenants(ctx, batchSize)
+		if err != nil {
+			return 0, err
+		}
+		for _, v := range records {
+			_, err := s.grpcClients.ContactClient.UpsertContact(context.Background(), &events_processing_contact.UpsertContactGrpcRequest{
+				Id:            utils.GetStringPropOrEmpty(v.Node.Props, "id"),
+				Tenant:        v.LinkedNodeId,
+				FirstName:     utils.GetStringPropOrEmpty(v.Node.Props, "firstName"),
+				LastName:      utils.GetStringPropOrEmpty(v.Node.Props, "lastName"),
+				Name:          utils.GetStringPropOrEmpty(v.Node.Props, "name"),
+				Prefix:        utils.GetStringPropOrEmpty(v.Node.Props, "prefix"),
+				Source:        utils.GetStringPropOrEmpty(v.Node.Props, "source"),
+				SourceOfTruth: utils.GetStringPropOrEmpty(v.Node.Props, "sourceOfTruth"),
+				AppSource:     utils.GetStringPropOrEmpty(v.Node.Props, "appSource"),
+				CreatedAt:     utils.ConvertTimeToTimestampPtr(utils.GetTimePropOrNil(v.Node.Props, "createdAt")),
+				UpdatedAt:     utils.ConvertTimeToTimestampPtr(utils.GetTimePropOrNil(v.Node.Props, "updatedAt")),
+			})
+			if err != nil {
+				logrus.Errorf("Failed to call method: %v", err)
+			} else {
+				processedRecords++
+			}
+		}
+
+		size -= batchSize
+	}
+
+	return processedRecords, nil
 }
 
 func (s *contactService) mapDbNodeToContactEntity(dbNode dbtype.Node) *entity.ContactEntity {

@@ -164,7 +164,7 @@ func (s *phoneNumberService) UpsertInEventStore(ctx context.Context, size int) (
 		if size < constants.Neo4jBatchSize {
 			batchSize = size
 		}
-		records, err := s.repositories.PhoneNumberRepository.GetAll(ctx, batchSize)
+		records, err := s.repositories.PhoneNumberRepository.GetAllCrossTenants(ctx, batchSize)
 		if err != nil {
 			return 0, err
 		}

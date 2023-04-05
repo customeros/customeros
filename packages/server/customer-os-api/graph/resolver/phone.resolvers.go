@@ -15,7 +15,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	"github.com/sirupsen/logrus"
 )
 
 // PhoneNumberMergeToContact is the resolver for the phoneNumberMergeToContact field.
@@ -148,21 +147,6 @@ func (r *mutationResolver) PhoneNumberRemoveFromUserByID(ctx context.Context, us
 	return &model.Result{
 		Result: result,
 	}, nil
-}
-
-// PhoneNumberUpsertInEventStore is the resolver for the phoneNumberUpsertInEventStore field.
-func (r *mutationResolver) PhoneNumberUpsertInEventStore(ctx context.Context, size int) (int, error) {
-	defer func(start time.Time) {
-		utils.LogMethodExecution(start, utils.GetFunctionName())
-	}(time.Now())
-
-	result, err := r.Services.PhoneNumberService.UpsertInEventStore(ctx, size)
-	if err != nil {
-		logrus.Errorf("Failed to call method: %v", err)
-		graphql.AddErrorf(ctx, "Failed to upsert phone numbers to evengt store")
-	}
-
-	return result, nil
 }
 
 // Users is the resolver for the users field.

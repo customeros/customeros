@@ -359,6 +359,7 @@ type ComplexityRoot struct {
 		ContactRemoveTagByID                    func(childComplexity int, input model.ContactTagInput) int
 		ContactSoftDelete                       func(childComplexity int, contactID string) int
 		ContactUpdate                           func(childComplexity int, input model.ContactUpdateInput) int
+		ContactUpsertInEventStore               func(childComplexity int, size int) int
 		ConversationClose                       func(childComplexity int, conversationID string) int
 		ConversationCreate                      func(childComplexity int, input model.ConversationInput) int
 		ConversationUpdate                      func(childComplexity int, input model.ConversationUpdateInput) int
@@ -668,7 +669,8 @@ type LocationResolver interface {
 	Place(ctx context.Context, obj *model.Location) (*model.Place, error)
 }
 type MutationResolver interface {
-	EntityTemplateCreate(ctx context.Context, input model.EntityTemplateInput) (*model.EntityTemplate, error)
+	PhoneNumberUpsertInEventStore(ctx context.Context, size int) (int, error)
+	ContactUpsertInEventStore(ctx context.Context, size int) (int, error)
 	AnalysisCreate(ctx context.Context, analysis model.AnalysisInput) (*model.Analysis, error)
 	ContactCreate(ctx context.Context, input model.ContactInput) (*model.Contact, error)
 	ContactUpdate(ctx context.Context, input model.ContactUpdateInput) (*model.Contact, error)
@@ -711,6 +713,7 @@ type MutationResolver interface {
 	EmailRemoveFromOrganization(ctx context.Context, organizationID string, email string) (*model.Result, error)
 	EmailRemoveFromOrganizationByID(ctx context.Context, organizationID string, id string) (*model.Result, error)
 	EmailDelete(ctx context.Context, id string) (*model.Result, error)
+	EntityTemplateCreate(ctx context.Context, input model.EntityTemplateInput) (*model.EntityTemplate, error)
 	InteractionSessionCreate(ctx context.Context, session model.InteractionSessionInput) (*model.InteractionSession, error)
 	InteractionEventCreate(ctx context.Context, event model.InteractionEventInput) (*model.InteractionEvent, error)
 	JobRoleDelete(ctx context.Context, contactID string, roleID string) (*model.Result, error)
@@ -741,7 +744,6 @@ type MutationResolver interface {
 	PhoneNumberUpdateInUser(ctx context.Context, userID string, input model.PhoneNumberUpdateInput) (*model.PhoneNumber, error)
 	PhoneNumberRemoveFromUserByE164(ctx context.Context, userID string, e164 string) (*model.Result, error)
 	PhoneNumberRemoveFromUserByID(ctx context.Context, userID string, id string) (*model.Result, error)
-	PhoneNumberUpsertInEventStore(ctx context.Context, size int) (int, error)
 	TagCreate(ctx context.Context, input model.TagInput) (*model.Tag, error)
 	TagUpdate(ctx context.Context, input model.TagUpdateInput) (*model.Tag, error)
 	TagDelete(ctx context.Context, id string) (*model.Result, error)
@@ -2490,6 +2492,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.ContactUpdate(childComplexity, args["input"].(model.ContactUpdateInput)), true
+
+	case "Mutation.contactUpsertInEventStore":
+		if e.complexity.Mutation.ContactUpsertInEventStore == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_contactUpsertInEventStore_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.ContactUpsertInEventStore(childComplexity, args["size"].(int)), true
 
 	case "Mutation.conversation_Close":
 		if e.complexity.Mutation.ConversationClose == nil {
@@ -5149,7 +5163,11 @@ enum EmailLabel {
     OTHER
 }
 `, BuiltIn: false},
-	{Name: "../schemas/entity_template.graphqls", Input: `enum EntityTemplateExtension {
+	{Name: "../schemas/entity_template.graphqls", Input: `extend type Mutation {
+    entityTemplateCreate(input: EntityTemplateInput!): EntityTemplate!
+}
+
+enum EntityTemplateExtension {
     CONTACT
 }
 
@@ -5569,7 +5587,8 @@ type Place {
     appSource: String
 }`, BuiltIn: false},
 	{Name: "../schemas/mutation.graphqls", Input: `type Mutation {
-    entityTemplateCreate(input: EntityTemplateInput!): EntityTemplate!
+    phoneNumberUpsertInEventStore(size: Int!): Int!
+    contactUpsertInEventStore(size: Int!): Int!
 }
 
 
@@ -5755,8 +5774,6 @@ input OrganizationTypeUpdateInput {
     phoneNumberUpdateInUser(userId : ID!, input: PhoneNumberUpdateInput!): PhoneNumber!
     phoneNumberRemoveFromUserByE164(userId : ID!, e164: String!): Result!
     phoneNumberRemoveFromUserById(userId : ID!, id: ID!): Result!
-
-    phoneNumberUpsertInEventStore(size: Int!): Int!
 }
 
 """
@@ -6349,6 +6366,21 @@ func (ec *executionContext) field_Mutation_contactGroupUpdate_args(ctx context.C
 		}
 	}
 	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_contactUpsertInEventStore_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 int
+	if tmp, ok := rawArgs["size"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("size"))
+		arg0, err = ec.unmarshalNInt2int(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["size"] = arg0
 	return args, nil
 }
 
@@ -18624,8 +18656,8 @@ func (ec *executionContext) fieldContext_Location_place(ctx context.Context, fie
 	return fc, nil
 }
 
-func (ec *executionContext) _Mutation_entityTemplateCreate(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_entityTemplateCreate(ctx, field)
+func (ec *executionContext) _Mutation_phoneNumberUpsertInEventStore(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_phoneNumberUpsertInEventStore(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -18638,7 +18670,7 @@ func (ec *executionContext) _Mutation_entityTemplateCreate(ctx context.Context, 
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().EntityTemplateCreate(rctx, fc.Args["input"].(model.EntityTemplateInput))
+		return ec.resolvers.Mutation().PhoneNumberUpsertInEventStore(rctx, fc.Args["size"].(int))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -18650,37 +18682,19 @@ func (ec *executionContext) _Mutation_entityTemplateCreate(ctx context.Context, 
 		}
 		return graphql.Null
 	}
-	res := resTmp.(*model.EntityTemplate)
+	res := resTmp.(int)
 	fc.Result = res
-	return ec.marshalNEntityTemplate2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐEntityTemplate(ctx, field.Selections, res)
+	return ec.marshalNInt2int(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Mutation_entityTemplateCreate(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Mutation_phoneNumberUpsertInEventStore(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Mutation",
 		Field:      field,
 		IsMethod:   true,
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_EntityTemplate_id(ctx, field)
-			case "version":
-				return ec.fieldContext_EntityTemplate_version(ctx, field)
-			case "name":
-				return ec.fieldContext_EntityTemplate_name(ctx, field)
-			case "extends":
-				return ec.fieldContext_EntityTemplate_extends(ctx, field)
-			case "fieldSets":
-				return ec.fieldContext_EntityTemplate_fieldSets(ctx, field)
-			case "customFields":
-				return ec.fieldContext_EntityTemplate_customFields(ctx, field)
-			case "createdAt":
-				return ec.fieldContext_EntityTemplate_createdAt(ctx, field)
-			case "updatedAt":
-				return ec.fieldContext_EntityTemplate_updatedAt(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type EntityTemplate", field.Name)
+			return nil, errors.New("field of type Int does not have child fields")
 		},
 	}
 	defer func() {
@@ -18690,7 +18704,62 @@ func (ec *executionContext) fieldContext_Mutation_entityTemplateCreate(ctx conte
 		}
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_entityTemplateCreate_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+	if fc.Args, err = ec.field_Mutation_phoneNumberUpsertInEventStore_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_contactUpsertInEventStore(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_contactUpsertInEventStore(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().ContactUpsertInEventStore(rctx, fc.Args["size"].(int))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_contactUpsertInEventStore(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_contactUpsertInEventStore_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return
 	}
@@ -21971,6 +22040,79 @@ func (ec *executionContext) fieldContext_Mutation_emailDelete(ctx context.Contex
 	return fc, nil
 }
 
+func (ec *executionContext) _Mutation_entityTemplateCreate(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_entityTemplateCreate(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().EntityTemplateCreate(rctx, fc.Args["input"].(model.EntityTemplateInput))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.EntityTemplate)
+	fc.Result = res
+	return ec.marshalNEntityTemplate2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐEntityTemplate(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_entityTemplateCreate(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_EntityTemplate_id(ctx, field)
+			case "version":
+				return ec.fieldContext_EntityTemplate_version(ctx, field)
+			case "name":
+				return ec.fieldContext_EntityTemplate_name(ctx, field)
+			case "extends":
+				return ec.fieldContext_EntityTemplate_extends(ctx, field)
+			case "fieldSets":
+				return ec.fieldContext_EntityTemplate_fieldSets(ctx, field)
+			case "customFields":
+				return ec.fieldContext_EntityTemplate_customFields(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_EntityTemplate_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_EntityTemplate_updatedAt(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type EntityTemplate", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_entityTemplateCreate_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Mutation_interactionSession_Create(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Mutation_interactionSession_Create(ctx, field)
 	if err != nil {
@@ -24276,61 +24418,6 @@ func (ec *executionContext) fieldContext_Mutation_phoneNumberRemoveFromUserById(
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Mutation_phoneNumberRemoveFromUserById_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
-		ec.Error(ctx, err)
-		return
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Mutation_phoneNumberUpsertInEventStore(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_phoneNumberUpsertInEventStore(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().PhoneNumberUpsertInEventStore(rctx, fc.Args["size"].(int))
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(int)
-	fc.Result = res
-	return ec.marshalNInt2int(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Mutation_phoneNumberUpsertInEventStore(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Mutation",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Int does not have child fields")
-		},
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			err = ec.Recover(ctx, r)
-			ec.Error(ctx, err)
-		}
-	}()
-	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_phoneNumberUpsertInEventStore_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return
 	}
@@ -38378,10 +38465,19 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("Mutation")
-		case "entityTemplateCreate":
+		case "phoneNumberUpsertInEventStore":
 
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_entityTemplateCreate(ctx, field)
+				return ec._Mutation_phoneNumberUpsertInEventStore(ctx, field)
+			})
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "contactUpsertInEventStore":
+
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_contactUpsertInEventStore(ctx, field)
 			})
 
 			if out.Values[i] == graphql.Null {
@@ -38759,6 +38855,15 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
+		case "entityTemplateCreate":
+
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_entityTemplateCreate(ctx, field)
+			})
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		case "interactionSession_Create":
 
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
@@ -39015,15 +39120,6 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_phoneNumberRemoveFromUserById(ctx, field)
-			})
-
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
-		case "phoneNumberUpsertInEventStore":
-
-			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_phoneNumberUpsertInEventStore(ctx, field)
 			})
 
 			if out.Values[i] == graphql.Null {

@@ -8,6 +8,7 @@ import (
 	"context"
 	"time"
 
+	"github.com/99designs/gqlgen/graphql"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/generated"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper"
@@ -42,6 +43,16 @@ func (r *fieldSetTemplateResolver) CustomFields(ctx context.Context, obj *model.
 
 	result, err := r.Services.CustomFieldTemplateService.FindAllForFieldSetTemplate(ctx, obj.ID)
 	return mapper.MapEntitiesToCustomFieldTemplates(result), err
+}
+
+// EntityTemplateCreate is the resolver for the entityTemplateCreate field.
+func (r *mutationResolver) EntityTemplateCreate(ctx context.Context, input model.EntityTemplateInput) (*model.EntityTemplate, error) {
+	entityTemplateEntity, err := r.Services.EntityTemplateService.Create(ctx, mapper.MapEntityTemplateInputToEntity(input))
+	if err != nil {
+		graphql.AddErrorf(ctx, "Failed to create entity template: %s", input.Name)
+		return nil, err
+	}
+	return mapper.MapEntityToEntityTemplate(entityTemplateEntity), nil
 }
 
 // EntityTemplate returns generated.EntityTemplateResolver implementation.

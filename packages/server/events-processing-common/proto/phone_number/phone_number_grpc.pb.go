@@ -22,8 +22,8 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type PhoneNumberGrpcServiceClient interface {
-	CreatePhoneNumber(ctx context.Context, in *CreatePhoneNumberGrpcRequest, opts ...grpc.CallOption) (*PhoneNumberGrpcResponse, error)
-	UpsertPhoneNumber(ctx context.Context, in *UpsertPhoneNumberGrpcRequest, opts ...grpc.CallOption) (*PhoneNumberGrpcResponse, error)
+	CreatePhoneNumber(ctx context.Context, in *CreatePhoneNumberGrpcRequest, opts ...grpc.CallOption) (*PhoneNumberIdGrpcResponse, error)
+	UpsertPhoneNumber(ctx context.Context, in *UpsertPhoneNumberGrpcRequest, opts ...grpc.CallOption) (*PhoneNumberIdGrpcResponse, error)
 }
 
 type phoneNumberGrpcServiceClient struct {
@@ -34,8 +34,8 @@ func NewPhoneNumberGrpcServiceClient(cc grpc.ClientConnInterface) PhoneNumberGrp
 	return &phoneNumberGrpcServiceClient{cc}
 }
 
-func (c *phoneNumberGrpcServiceClient) CreatePhoneNumber(ctx context.Context, in *CreatePhoneNumberGrpcRequest, opts ...grpc.CallOption) (*PhoneNumberGrpcResponse, error) {
-	out := new(PhoneNumberGrpcResponse)
+func (c *phoneNumberGrpcServiceClient) CreatePhoneNumber(ctx context.Context, in *CreatePhoneNumberGrpcRequest, opts ...grpc.CallOption) (*PhoneNumberIdGrpcResponse, error) {
+	out := new(PhoneNumberIdGrpcResponse)
 	err := c.cc.Invoke(ctx, "/phoneNumberGrpcService.phoneNumberGrpcService/CreatePhoneNumber", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -43,8 +43,8 @@ func (c *phoneNumberGrpcServiceClient) CreatePhoneNumber(ctx context.Context, in
 	return out, nil
 }
 
-func (c *phoneNumberGrpcServiceClient) UpsertPhoneNumber(ctx context.Context, in *UpsertPhoneNumberGrpcRequest, opts ...grpc.CallOption) (*PhoneNumberGrpcResponse, error) {
-	out := new(PhoneNumberGrpcResponse)
+func (c *phoneNumberGrpcServiceClient) UpsertPhoneNumber(ctx context.Context, in *UpsertPhoneNumberGrpcRequest, opts ...grpc.CallOption) (*PhoneNumberIdGrpcResponse, error) {
+	out := new(PhoneNumberIdGrpcResponse)
 	err := c.cc.Invoke(ctx, "/phoneNumberGrpcService.phoneNumberGrpcService/UpsertPhoneNumber", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -56,8 +56,8 @@ func (c *phoneNumberGrpcServiceClient) UpsertPhoneNumber(ctx context.Context, in
 // All implementations must embed UnimplementedPhoneNumberGrpcServiceServer
 // for forward compatibility
 type PhoneNumberGrpcServiceServer interface {
-	CreatePhoneNumber(context.Context, *CreatePhoneNumberGrpcRequest) (*PhoneNumberGrpcResponse, error)
-	UpsertPhoneNumber(context.Context, *UpsertPhoneNumberGrpcRequest) (*PhoneNumberGrpcResponse, error)
+	CreatePhoneNumber(context.Context, *CreatePhoneNumberGrpcRequest) (*PhoneNumberIdGrpcResponse, error)
+	UpsertPhoneNumber(context.Context, *UpsertPhoneNumberGrpcRequest) (*PhoneNumberIdGrpcResponse, error)
 	mustEmbedUnimplementedPhoneNumberGrpcServiceServer()
 }
 
@@ -65,10 +65,10 @@ type PhoneNumberGrpcServiceServer interface {
 type UnimplementedPhoneNumberGrpcServiceServer struct {
 }
 
-func (UnimplementedPhoneNumberGrpcServiceServer) CreatePhoneNumber(context.Context, *CreatePhoneNumberGrpcRequest) (*PhoneNumberGrpcResponse, error) {
+func (UnimplementedPhoneNumberGrpcServiceServer) CreatePhoneNumber(context.Context, *CreatePhoneNumberGrpcRequest) (*PhoneNumberIdGrpcResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreatePhoneNumber not implemented")
 }
-func (UnimplementedPhoneNumberGrpcServiceServer) UpsertPhoneNumber(context.Context, *UpsertPhoneNumberGrpcRequest) (*PhoneNumberGrpcResponse, error) {
+func (UnimplementedPhoneNumberGrpcServiceServer) UpsertPhoneNumber(context.Context, *UpsertPhoneNumberGrpcRequest) (*PhoneNumberIdGrpcResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpsertPhoneNumber not implemented")
 }
 func (UnimplementedPhoneNumberGrpcServiceServer) mustEmbedUnimplementedPhoneNumberGrpcServiceServer() {
