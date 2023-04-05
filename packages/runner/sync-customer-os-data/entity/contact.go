@@ -9,7 +9,7 @@ type ContactNote struct {
 
 type ContactData struct {
 	Id        string
-	Title     string
+	Prefix    string
 	FirstName string
 	LastName  string
 	Label     string

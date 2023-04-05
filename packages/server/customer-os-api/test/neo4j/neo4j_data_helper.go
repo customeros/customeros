@@ -99,18 +99,18 @@ func CreateUserWithId(ctx context.Context, driver *neo4j.DriverWithContext, tena
 }
 
 func CreateDefaultContact(ctx context.Context, driver *neo4j.DriverWithContext, tenant string) string {
-	return CreateContact(ctx, driver, tenant, entity.ContactEntity{Title: "MR", FirstName: "first", LastName: "last"})
+	return CreateContact(ctx, driver, tenant, entity.ContactEntity{Prefix: "MR", FirstName: "first", LastName: "last"})
 }
 
 func CreateContactWith(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, firstName string, lastName string) string {
-	return CreateContact(ctx, driver, tenant, entity.ContactEntity{Title: "MR", FirstName: firstName, LastName: lastName})
+	return CreateContact(ctx, driver, tenant, entity.ContactEntity{Prefix: "MR", FirstName: firstName, LastName: lastName})
 }
 
 func CreateContact(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, contact entity.ContactEntity) string {
 	var contactId, _ = uuid.NewRandom()
 	query := "MATCH (t:Tenant {name:$tenant}) " +
 		" MERGE (c:Contact {id: $contactId})-[:CONTACT_BELONGS_TO_TENANT]->(t) " +
-		" ON CREATE SET c.title=$title, " +
+		" ON CREATE SET c.prefix=$prefix, " +
 		"				c.firstName=$firstName, " +
 		"				c.lastName=$lastName, " +
 		"				c.name=$name, " +
@@ -123,7 +123,7 @@ func CreateContact(ctx context.Context, driver *neo4j.DriverWithContext, tenant 
 	ExecuteWriteQuery(ctx, driver, fmt.Sprintf(query, tenant), map[string]any{
 		"tenant":        tenant,
 		"contactId":     contactId.String(),
-		"title":         contact.Title,
+		"prefix":        contact.Prefix,
 		"firstName":     contact.FirstName,
 		"lastName":      contact.LastName,
 		"name":          contact.Name,

@@ -14,7 +14,7 @@ extend type Query {
     """
     Fetch paginated list of contacts
     Possible values for sort:
-    - TITLE
+    - PREFIX
     - FIRST_NAME
     - LAST_NAME
     - CREATED_AT
@@ -50,7 +50,9 @@ type Contact implements ExtensibleEntity & Node {
     id: ID!
 
     "The title associate with the contact in customerOS."
-    title: PersonTitle
+    title: String @deprecated(reason: "Use `prefix` instead")
+
+    prefix: String
 
     """
     The name of the contact in customerOS, alternative for firstName + lastName.
@@ -175,8 +177,8 @@ input ContactInput {
     "The unique ID associated with the template of the contact in customerOS."
     templateId: ID
 
-    "The title of the contact."
-    title: PersonTitle
+    "The prefix of the contact."
+    prefix: String
 
     """
     The first name of the contact.
@@ -229,8 +231,8 @@ input ContactUpdateInput {
     """
     id: ID!
 
-    "The title associate with the contact in customerOS."
-    title: PersonTitle
+    "The prefix associate with the contact in customerOS."
+    prefix: String
 
     """
     The first name of the contact in customerOS.
@@ -262,6 +264,7 @@ input ContactOrganizationInput {
 The honorific title of an individual.
 **A `response` object.**
 """
+# Deprecated, This is a list of titles that are not enforced by the system. Client can use any title they want.
 enum PersonTitle {
 
     "For men, regardless of marital status."

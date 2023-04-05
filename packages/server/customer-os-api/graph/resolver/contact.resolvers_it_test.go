@@ -78,7 +78,7 @@ func TestMutationResolver_ContactCreate_Min(t *testing.T) {
 	err = decode.Decode(rawResponse.Data.(map[string]any), &contact)
 	require.Nil(t, err)
 	require.NotNil(t, contact)
-	require.Equal(t, "", contact.Contact_Create.Title.String())
+	require.Equal(t, "", *contact.Contact_Create.Prefix)
 	require.Equal(t, "", *contact.Contact_Create.Name)
 	require.Equal(t, "", *contact.Contact_Create.FirstName)
 	require.Equal(t, "", *contact.Contact_Create.LastName)
@@ -109,7 +109,7 @@ func TestMutationResolver_ContactCreate(t *testing.T) {
 	err = decode.Decode(rawResponse.Data.(map[string]any), &contact)
 	require.Nil(t, err)
 	require.NotNil(t, contact)
-	require.Equal(t, "MR", contact.Contact_Create.Title.String())
+	require.Equal(t, "MR", *contact.Contact_Create.Prefix)
 	require.Equal(t, "first", *contact.Contact_Create.FirstName)
 	require.Equal(t, "last", *contact.Contact_Create.LastName)
 	require.Equal(t, model.DataSourceOpenline, contact.Contact_Create.Source)
@@ -303,7 +303,7 @@ func TestMutationResolver_ContactCreate_WithOwner(t *testing.T) {
 	require.Nil(t, err)
 	require.NotNil(t, contact)
 	createdContact := contact.Contact_Create
-	require.Equal(t, "", createdContact.Title.String())
+	require.Equal(t, "", *createdContact.Prefix)
 	require.Equal(t, "first", *createdContact.FirstName)
 	require.Equal(t, "last", *createdContact.LastName)
 	require.Equal(t, userId, createdContact.Owner.ID)
@@ -359,7 +359,7 @@ func TestMutationResolver_UpdateContact(t *testing.T) {
 	origOwnerId := neo4jt.CreateDefaultUser(ctx, driver, tenantName)
 	newOwnerId := neo4jt.CreateDefaultUser(ctx, driver, tenantName)
 	contactId := neo4jt.CreateContact(ctx, driver, tenantName, entity.ContactEntity{
-		Title:         model.PersonTitleMr.String(),
+		Prefix:        "MR",
 		FirstName:     "first",
 		LastName:      "last",
 		Source:        entity.DataSourceHubspot,
@@ -381,7 +381,7 @@ func TestMutationResolver_UpdateContact(t *testing.T) {
 
 	updatedContact := contactStruct.Contact_Update
 
-	require.Equal(t, "DR", updatedContact.Title.String())
+	require.Equal(t, "DR", *updatedContact.Prefix)
 	require.Equal(t, "updated first", *updatedContact.FirstName)
 	require.Equal(t, "updated last", *updatedContact.LastName)
 	require.Equal(t, "test", *updatedContact.AppSource)
@@ -401,7 +401,7 @@ func TestMutationResolver_UpdateContact_ClearTitle(t *testing.T) {
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 	contactId := neo4jt.CreateContact(ctx, driver, tenantName, entity.ContactEntity{
-		Title:     model.PersonTitleMr.String(),
+		Prefix:    "MR",
 		FirstName: "first",
 		LastName:  "last",
 	})
@@ -418,7 +418,7 @@ func TestMutationResolver_UpdateContact_ClearTitle(t *testing.T) {
 	require.Nil(t, err)
 	require.NotNil(t, contact)
 	updatedContact := contact.Contact_Update
-	require.Equal(t, "", updatedContact.Title.String())
+	require.Equal(t, "", *updatedContact.Prefix)
 	require.Equal(t, "updated first", *updatedContact.FirstName)
 	require.Equal(t, "updated last", *updatedContact.LastName)
 }
@@ -784,22 +784,22 @@ func TestQueryResolver_Contacts_SortByTitleAscFirstNameAscLastNameDesc(t *testin
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 
 	contact1 := neo4jt.CreateContact(ctx, driver, tenantName, entity.ContactEntity{
-		Title:     "MR",
+		Prefix:    "MR",
 		FirstName: "contact",
 		LastName:  "1",
 	})
 	contact2 := neo4jt.CreateContact(ctx, driver, tenantName, entity.ContactEntity{
-		Title:     "DR",
+		Prefix:    "DR",
 		FirstName: "contact",
 		LastName:  "9",
 	})
 	contact3 := neo4jt.CreateContact(ctx, driver, tenantName, entity.ContactEntity{
-		Title:     "",
+		Prefix:    "",
 		FirstName: "contact",
 		LastName:  "222",
 	})
 	contact4 := neo4jt.CreateContact(ctx, driver, tenantName, entity.ContactEntity{
-		Title:     "MR",
+		Prefix:    "MR",
 		FirstName: "other contact",
 		LastName:  "A",
 	})
@@ -829,18 +829,18 @@ func TestQueryResolver_Contact_BasicFilters_FindContactWithLetterAInName(t *test
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 
 	contactFoundByFirstName := neo4jt.CreateContact(ctx, driver, tenantName, entity.ContactEntity{
-		Title:     "MR",
+		Prefix:    "MR",
 		Name:      "contact1",
 		FirstName: "aa",
 		LastName:  "bb",
 	})
 	contactFoundByLastName := neo4jt.CreateContact(ctx, driver, tenantName, entity.ContactEntity{
-		Title:     "MR",
+		Prefix:    "MR",
 		FirstName: "bb",
 		LastName:  "AA",
 	})
 	contactFilteredOut := neo4jt.CreateContact(ctx, driver, tenantName, entity.ContactEntity{
-		Title:     "MR",
+		Prefix:    "MR",
 		FirstName: "bb",
 		LastName:  "BB",
 	})

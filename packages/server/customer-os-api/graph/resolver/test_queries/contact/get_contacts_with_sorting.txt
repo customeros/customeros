@@ -1,5 +1,5 @@
 query GetContacts{
-  contacts(sort:[   {by:"TITLE"}
+  contacts(sort:[   {by:"PREFIX"}
                     {by:"FIRST_NAME"}
                     {by:"LAST_NAME" direction:DESC }
                 ])

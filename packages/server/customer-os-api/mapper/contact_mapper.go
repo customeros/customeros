@@ -12,7 +12,7 @@ func MapContactInputToEntity(input model.ContactInput) *entity.ContactEntity {
 		CreatedAt:     input.CreatedAt,
 		FirstName:     utils.IfNotNilString(input.FirstName),
 		LastName:      utils.IfNotNilString(input.LastName),
-		Title:         utils.IfNotNilString(input.Title, func() string { return input.Title.String() }),
+		Prefix:        utils.IfNotNilString(input.Prefix),
 		Source:        entity.DataSourceOpenline,
 		SourceOfTruth: entity.DataSourceOpenline,
 		AppSource:     utils.IfNotNilStringWithDefault(input.AppSource, constants.AppSourceCustomerOsApi),
@@ -25,17 +25,16 @@ func MapContactUpdateInputToEntity(input model.ContactUpdateInput) *entity.Conta
 		Id:            input.ID,
 		FirstName:     utils.IfNotNilString(input.FirstName),
 		LastName:      utils.IfNotNilString(input.LastName),
-		Title:         utils.IfNotNilString(input.Title, func() string { return input.Title.String() }),
+		Prefix:        utils.IfNotNilString(input.Prefix),
 		SourceOfTruth: entity.DataSourceOpenline,
 	}
 	return &contactEntity
 }
 
 func MapEntityToContact(contact *entity.ContactEntity) *model.Contact {
-	var title = model.PersonTitle(contact.Title)
 	return &model.Contact{
 		ID:            contact.Id,
-		Title:         &title,
+		Prefix:        utils.StringPtr(contact.Prefix),
 		Name:          utils.StringPtr(contact.Name),
 		FirstName:     utils.StringPtr(contact.FirstName),
 		LastName:      utils.StringPtr(contact.LastName),

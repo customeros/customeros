@@ -4,7 +4,7 @@ contact_Create(
     }
   ) {
     id
-    title
+    prefix
     name
     firstName
     lastName

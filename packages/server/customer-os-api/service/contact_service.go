@@ -536,7 +536,7 @@ func (s *contactService) mapDbNodeToContactEntity(dbNode dbtype.Node) *entity.Co
 		FirstName:     utils.GetStringPropOrEmpty(props, "firstName"),
 		LastName:      utils.GetStringPropOrEmpty(props, "lastName"),
 		Name:          utils.GetStringPropOrEmpty(props, "name"),
-		Title:         utils.GetStringPropOrEmpty(props, "title"),
+		Prefix:        utils.GetStringPropOrEmpty(props, "prefix"),
 		CreatedAt:     utils.ToPtr(utils.GetTimePropOrEpochStart(props, "createdAt")),
 		UpdatedAt:     utils.GetTimePropOrEpochStart(props, "updatedAt"),
 		Source:        entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),

@@ -94,7 +94,8 @@ type Contact struct {
 	// **Required**
 	ID string `json:"id"`
 	// The title associate with the contact in customerOS.
-	Title *PersonTitle `json:"title,omitempty"`
+	Title  *string `json:"title,omitempty"`
+	Prefix *string `json:"prefix,omitempty"`
 	// The name of the contact in customerOS, alternative for firstName + lastName.
 	Name *string `json:"name,omitempty"`
 	// The first name of the contact in customerOS.
@@ -214,8 +215,8 @@ type ContactGroupUpdateInput struct {
 type ContactInput struct {
 	// The unique ID associated with the template of the contact in customerOS.
 	TemplateID *string `json:"templateId,omitempty"`
-	// The title of the contact.
-	Title *PersonTitle `json:"title,omitempty"`
+	// The prefix of the contact.
+	Prefix *string `json:"prefix,omitempty"`
 	// The first name of the contact.
 	FirstName *string `json:"firstName,omitempty"`
 	// The last name of the contact.
@@ -262,8 +263,8 @@ type ContactUpdateInput struct {
 	// The unique ID associated with the contact in customerOS.
 	// **Required.**
 	ID string `json:"id"`
-	// The title associate with the contact in customerOS.
-	Title *PersonTitle `json:"title,omitempty"`
+	// The prefix associate with the contact in customerOS.
+	Prefix *string `json:"prefix,omitempty"`
 	// The first name of the contact in customerOS.
 	FirstName *string `json:"firstName,omitempty"`
 	// The last name of the contact in customerOS.

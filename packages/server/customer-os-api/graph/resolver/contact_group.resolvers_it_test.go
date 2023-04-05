@@ -137,22 +137,22 @@ func TestQueryResolver_Contacts_ForContactGroup(t *testing.T) {
 	group3 := neo4jt.CreateContactGroup(ctx, driver, tenantName, "Group3")
 
 	contact1InGroup1 := neo4jt.CreateContact(ctx, driver, tenantName, entity.ContactEntity{
-		Title:     "MR",
+		Prefix:    "MR",
 		FirstName: "first",
 		LastName:  "contact",
 	})
 	contact2InGroup1 := neo4jt.CreateContact(ctx, driver, tenantName, entity.ContactEntity{
-		Title:     "MR",
+		Prefix:    "MR",
 		FirstName: "second",
 		LastName:  "contact",
 	})
 	contact3InGroup2 := neo4jt.CreateContact(ctx, driver, tenantName, entity.ContactEntity{
-		Title:     "MR",
+		Prefix:    "MR",
 		FirstName: "third",
 		LastName:  "contact",
 	})
 	contact4InGroups1And2 := neo4jt.CreateContact(ctx, driver, tenantName, entity.ContactEntity{
-		Title:     "MR",
+		Prefix:    "MR",
 		FirstName: "forth",
 		LastName:  "contact",
 	})

@@ -95,6 +95,7 @@ type ComplexityRoot struct {
 		Organizations            func(childComplexity int, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) int
 		Owner                    func(childComplexity int) int
 		PhoneNumbers             func(childComplexity int) int
+		Prefix                   func(childComplexity int) int
 		Source                   func(childComplexity int) int
 		SourceOfTruth            func(childComplexity int) int
 		Tags                     func(childComplexity int) int
@@ -1034,6 +1035,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Contact.PhoneNumbers(childComplexity), true
+
+	case "Contact.prefix":
+		if e.complexity.Contact.Prefix == nil {
+			break
+		}
+
+		return e.complexity.Contact.Prefix(childComplexity), true
 
 	case "Contact.source":
 		if e.complexity.Contact.Source == nil {
@@ -4422,7 +4430,7 @@ type Analysis implements Node {
     """
     Fetch paginated list of contacts
     Possible values for sort:
-    - TITLE
+    - PREFIX
     - FIRST_NAME
     - LAST_NAME
     - CREATED_AT
@@ -4458,7 +4466,9 @@ type Contact implements ExtensibleEntity & Node {
     id: ID!
 
     "The title associate with the contact in customerOS."
-    title: PersonTitle
+    title: String @deprecated(reason: "Use ` + "`" + `prefix` + "`" + ` instead")
+
+    prefix: String
 
     """
     The name of the contact in customerOS, alternative for firstName + lastName.
@@ -4583,8 +4593,8 @@ input ContactInput {
     "The unique ID associated with the template of the contact in customerOS."
     templateId: ID
 
-    "The title of the contact."
-    title: PersonTitle
+    "The prefix of the contact."
+    prefix: String
 
     """
     The first name of the contact.
@@ -4637,8 +4647,8 @@ input ContactUpdateInput {
     """
     id: ID!
 
-    "The title associate with the contact in customerOS."
-    title: PersonTitle
+    "The prefix associate with the contact in customerOS."
+    prefix: String
 
     """
     The first name of the contact in customerOS.
@@ -4670,6 +4680,7 @@ input ContactOrganizationInput {
 The honorific title of an individual.
 **A ` + "`" + `response` + "`" + ` object.**
 """
+# Deprecated, This is a list of titles that are not enforced by the system. Client can use any title they want.
 enum PersonTitle {
 
     "For men, regardless of marital status."
@@ -8852,9 +8863,9 @@ func (ec *executionContext) _Contact_title(ctx context.Context, field graphql.Co
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.(*model.PersonTitle)
+	res := resTmp.(*string)
 	fc.Result = res
-	return ec.marshalOPersonTitle2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐPersonTitle(ctx, field.Selections, res)
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Contact_title(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -8864,7 +8875,48 @@ func (ec *executionContext) fieldContext_Contact_title(ctx context.Context, fiel
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type PersonTitle does not have child fields")
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Contact_prefix(ctx context.Context, field graphql.CollectedField, obj *model.Contact) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Contact_prefix(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Prefix, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Contact_prefix(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Contact",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
 		},
 	}
 	return fc, nil
@@ -10712,6 +10764,8 @@ func (ec *executionContext) fieldContext_ContactParticipant_contactParticipant(c
 				return ec.fieldContext_Contact_id(ctx, field)
 			case "title":
 				return ec.fieldContext_Contact_title(ctx, field)
+			case "prefix":
+				return ec.fieldContext_Contact_prefix(ctx, field)
 			case "name":
 				return ec.fieldContext_Contact_name(ctx, field)
 			case "firstName":
@@ -10853,6 +10907,8 @@ func (ec *executionContext) fieldContext_ContactsPage_content(ctx context.Contex
 				return ec.fieldContext_Contact_id(ctx, field)
 			case "title":
 				return ec.fieldContext_Contact_title(ctx, field)
+			case "prefix":
+				return ec.fieldContext_Contact_prefix(ctx, field)
 			case "name":
 				return ec.fieldContext_Contact_name(ctx, field)
 			case "firstName":
@@ -11381,6 +11437,8 @@ func (ec *executionContext) fieldContext_Conversation_contacts(ctx context.Conte
 				return ec.fieldContext_Contact_id(ctx, field)
 			case "title":
 				return ec.fieldContext_Contact_title(ctx, field)
+			case "prefix":
+				return ec.fieldContext_Contact_prefix(ctx, field)
 			case "name":
 				return ec.fieldContext_Contact_name(ctx, field)
 			case "firstName":
@@ -12845,6 +12903,8 @@ func (ec *executionContext) fieldContext_DashboardViewItem_contact(ctx context.C
 				return ec.fieldContext_Contact_id(ctx, field)
 			case "title":
 				return ec.fieldContext_Contact_title(ctx, field)
+			case "prefix":
+				return ec.fieldContext_Contact_prefix(ctx, field)
 			case "name":
 				return ec.fieldContext_Contact_name(ctx, field)
 			case "firstName":
@@ -13714,6 +13774,8 @@ func (ec *executionContext) fieldContext_Email_contacts(ctx context.Context, fie
 				return ec.fieldContext_Contact_id(ctx, field)
 			case "title":
 				return ec.fieldContext_Contact_title(ctx, field)
+			case "prefix":
+				return ec.fieldContext_Contact_prefix(ctx, field)
 			case "name":
 				return ec.fieldContext_Contact_name(ctx, field)
 			case "firstName":
@@ -17079,6 +17141,8 @@ func (ec *executionContext) fieldContext_JobRole_contact(ctx context.Context, fi
 				return ec.fieldContext_Contact_id(ctx, field)
 			case "title":
 				return ec.fieldContext_Contact_title(ctx, field)
+			case "prefix":
+				return ec.fieldContext_Contact_prefix(ctx, field)
 			case "name":
 				return ec.fieldContext_Contact_name(ctx, field)
 			case "firstName":
@@ -18751,6 +18815,8 @@ func (ec *executionContext) fieldContext_Mutation_contact_Create(ctx context.Con
 				return ec.fieldContext_Contact_id(ctx, field)
 			case "title":
 				return ec.fieldContext_Contact_title(ctx, field)
+			case "prefix":
+				return ec.fieldContext_Contact_prefix(ctx, field)
 			case "name":
 				return ec.fieldContext_Contact_name(ctx, field)
 			case "firstName":
@@ -18862,6 +18928,8 @@ func (ec *executionContext) fieldContext_Mutation_contact_Update(ctx context.Con
 				return ec.fieldContext_Contact_id(ctx, field)
 			case "title":
 				return ec.fieldContext_Contact_title(ctx, field)
+			case "prefix":
+				return ec.fieldContext_Contact_prefix(ctx, field)
 			case "name":
 				return ec.fieldContext_Contact_name(ctx, field)
 			case "firstName":
@@ -19091,6 +19159,8 @@ func (ec *executionContext) fieldContext_Mutation_contact_Merge(ctx context.Cont
 				return ec.fieldContext_Contact_id(ctx, field)
 			case "title":
 				return ec.fieldContext_Contact_title(ctx, field)
+			case "prefix":
+				return ec.fieldContext_Contact_prefix(ctx, field)
 			case "name":
 				return ec.fieldContext_Contact_name(ctx, field)
 			case "firstName":
@@ -19202,6 +19272,8 @@ func (ec *executionContext) fieldContext_Mutation_contact_AddTagById(ctx context
 				return ec.fieldContext_Contact_id(ctx, field)
 			case "title":
 				return ec.fieldContext_Contact_title(ctx, field)
+			case "prefix":
+				return ec.fieldContext_Contact_prefix(ctx, field)
 			case "name":
 				return ec.fieldContext_Contact_name(ctx, field)
 			case "firstName":
@@ -19313,6 +19385,8 @@ func (ec *executionContext) fieldContext_Mutation_contact_RemoveTagById(ctx cont
 				return ec.fieldContext_Contact_id(ctx, field)
 			case "title":
 				return ec.fieldContext_Contact_title(ctx, field)
+			case "prefix":
+				return ec.fieldContext_Contact_prefix(ctx, field)
 			case "name":
 				return ec.fieldContext_Contact_name(ctx, field)
 			case "firstName":
@@ -19424,6 +19498,8 @@ func (ec *executionContext) fieldContext_Mutation_contact_AddOrganizationById(ct
 				return ec.fieldContext_Contact_id(ctx, field)
 			case "title":
 				return ec.fieldContext_Contact_title(ctx, field)
+			case "prefix":
+				return ec.fieldContext_Contact_prefix(ctx, field)
 			case "name":
 				return ec.fieldContext_Contact_name(ctx, field)
 			case "firstName":
@@ -19535,6 +19611,8 @@ func (ec *executionContext) fieldContext_Mutation_contact_RemoveOrganizationById
 				return ec.fieldContext_Contact_id(ctx, field)
 			case "title":
 				return ec.fieldContext_Contact_title(ctx, field)
+			case "prefix":
+				return ec.fieldContext_Contact_prefix(ctx, field)
 			case "name":
 				return ec.fieldContext_Contact_name(ctx, field)
 			case "firstName":
@@ -20236,6 +20314,8 @@ func (ec *executionContext) fieldContext_Mutation_customFieldsMergeAndUpdateInCo
 				return ec.fieldContext_Contact_id(ctx, field)
 			case "title":
 				return ec.fieldContext_Contact_title(ctx, field)
+			case "prefix":
+				return ec.fieldContext_Contact_prefix(ctx, field)
 			case "name":
 				return ec.fieldContext_Contact_name(ctx, field)
 			case "firstName":
@@ -27810,6 +27890,8 @@ func (ec *executionContext) fieldContext_PhoneNumber_contacts(ctx context.Contex
 				return ec.fieldContext_Contact_id(ctx, field)
 			case "title":
 				return ec.fieldContext_Contact_title(ctx, field)
+			case "prefix":
+				return ec.fieldContext_Contact_prefix(ctx, field)
 			case "name":
 				return ec.fieldContext_Contact_name(ctx, field)
 			case "firstName":
@@ -28868,6 +28950,8 @@ func (ec *executionContext) fieldContext_Query_contact(ctx context.Context, fiel
 				return ec.fieldContext_Contact_id(ctx, field)
 			case "title":
 				return ec.fieldContext_Contact_title(ctx, field)
+			case "prefix":
+				return ec.fieldContext_Contact_prefix(ctx, field)
 			case "name":
 				return ec.fieldContext_Contact_name(ctx, field)
 			case "firstName":
@@ -29042,6 +29126,8 @@ func (ec *executionContext) fieldContext_Query_contact_ByEmail(ctx context.Conte
 				return ec.fieldContext_Contact_id(ctx, field)
 			case "title":
 				return ec.fieldContext_Contact_title(ctx, field)
+			case "prefix":
+				return ec.fieldContext_Contact_prefix(ctx, field)
 			case "name":
 				return ec.fieldContext_Contact_name(ctx, field)
 			case "firstName":
@@ -29153,6 +29239,8 @@ func (ec *executionContext) fieldContext_Query_contact_ByPhone(ctx context.Conte
 				return ec.fieldContext_Contact_id(ctx, field)
 			case "title":
 				return ec.fieldContext_Contact_title(ctx, field)
+			case "prefix":
+				return ec.fieldContext_Contact_prefix(ctx, field)
 			case "name":
 				return ec.fieldContext_Contact_name(ctx, field)
 			case "firstName":
@@ -33443,7 +33531,7 @@ func (ec *executionContext) unmarshalInputContactInput(ctx context.Context, obj 
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"templateId", "title", "firstName", "lastName", "label", "createdAt", "customFields", "fieldSets", "email", "phoneNumber", "ownerId", "externalReference", "appSource"}
+	fieldsInOrder := [...]string{"templateId", "prefix", "firstName", "lastName", "label", "createdAt", "customFields", "fieldSets", "email", "phoneNumber", "ownerId", "externalReference", "appSource"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -33458,11 +33546,11 @@ func (ec *executionContext) unmarshalInputContactInput(ctx context.Context, obj 
 			if err != nil {
 				return it, err
 			}
-		case "title":
+		case "prefix":
 			var err error
 
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("title"))
-			it.Title, err = ec.unmarshalOPersonTitle2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐPersonTitle(ctx, v)
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("prefix"))
+			it.Prefix, err = ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -33639,7 +33727,7 @@ func (ec *executionContext) unmarshalInputContactUpdateInput(ctx context.Context
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"id", "title", "firstName", "lastName", "label", "ownerId"}
+	fieldsInOrder := [...]string{"id", "prefix", "firstName", "lastName", "label", "ownerId"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -33654,11 +33742,11 @@ func (ec *executionContext) unmarshalInputContactUpdateInput(ctx context.Context
 			if err != nil {
 				return it, err
 			}
-		case "title":
+		case "prefix":
 			var err error
 
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("title"))
-			it.Title, err = ec.unmarshalOPersonTitle2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐPersonTitle(ctx, v)
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("prefix"))
+			it.Prefix, err = ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -36146,6 +36234,10 @@ func (ec *executionContext) _Contact(ctx context.Context, sel ast.SelectionSet, 
 		case "title":
 
 			out.Values[i] = ec._Contact_title(ctx, field, obj)
+
+		case "prefix":
+
+			out.Values[i] = ec._Contact_prefix(ctx, field, obj)
 
 		case "name":
 
@@ -44018,22 +44110,6 @@ func (ec *executionContext) unmarshalOPagination2ᚖgithubᚗcomᚋopenlineᚑai
 	}
 	res, err := ec.unmarshalInputPagination(ctx, v)
 	return &res, graphql.ErrorOnPath(ctx, err)
-}
-
-func (ec *executionContext) unmarshalOPersonTitle2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐPersonTitle(ctx context.Context, v interface{}) (*model.PersonTitle, error) {
-	if v == nil {
-		return nil, nil
-	}
-	var res = new(model.PersonTitle)
-	err := res.UnmarshalGQL(v)
-	return res, graphql.ErrorOnPath(ctx, err)
-}
-
-func (ec *executionContext) marshalOPersonTitle2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐPersonTitle(ctx context.Context, sel ast.SelectionSet, v *model.PersonTitle) graphql.Marshaler {
-	if v == nil {
-		return graphql.Null
-	}
-	return v
 }
 
 func (ec *executionContext) unmarshalOPhoneNumberInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐPhoneNumberInput(ctx context.Context, v interface{}) (*model.PhoneNumberInput, error) {
