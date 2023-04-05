@@ -110,9 +110,8 @@ func (r *jobRoleRepository) GetAllForOrganization(ctx context.Context, session n
 
 func (r *jobRoleRepository) CreateJobRole(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, contactId string, input entity.JobRoleEntity) (*dbtype.Node, error) {
 	query := "MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) " +
-		" MERGE (c)-[:WORKS_AS]->(r:JobRole) " +
-		" ON CREATE SET r.id=randomUUID(), " +
-		"				r.jobTitle=$jobTitle, " +
+		" MERGE (c)-[:WORKS_AS]->(r:JobRole {id:randomUUID()}) " +
+		" ON CREATE SET r.jobTitle=$jobTitle, " +
 		"				r.primary=$primary, " +
 		"				r.responsibilityLevel=$responsibilityLevel, " +
 		"				r.source=$source, " +
