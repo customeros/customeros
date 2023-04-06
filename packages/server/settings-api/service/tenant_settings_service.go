@@ -195,6 +195,29 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 			}
 
 			tenantSettings.BigQueryServiceAccountKey = &serviceAccountKey
+
+		case "braintree":
+			publicKey, ok := data["publicKey"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing public key for Braintree integration")
+			}
+			privateKey, ok := data["privateKey"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing private key for Braintree integration")
+			}
+			environment, ok := data["environment"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing environment for Braintree integration")
+			}
+			merchantId, ok := data["merchantId"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing merchant id for Braintree integration")
+			}
+
+			tenantSettings.BraintreePublicKey = &publicKey
+			tenantSettings.BraintreePrivateKey = &privateKey
+			tenantSettings.BraintreeEnvironment = &environment
+			tenantSettings.BraintreeMerchantId = &merchantId
 		}
 
 	}
@@ -251,6 +274,11 @@ func (s *tenantSettingsService) ClearIntegrationData(tenantName, identifier stri
 			tenantSettings.BabelforceAccessToken = nil
 		case "bigquery":
 			tenantSettings.BigQueryServiceAccountKey = nil
+		case "braintree":
+			tenantSettings.BraintreePublicKey = nil
+			tenantSettings.BraintreePrivateKey = nil
+			tenantSettings.BraintreeEnvironment = nil
+			tenantSettings.BraintreeMerchantId = nil
 
 		}
 

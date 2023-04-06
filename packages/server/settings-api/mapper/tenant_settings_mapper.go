@@ -72,5 +72,10 @@ func MapTenantSettingsEntityToDTO(tenantSettings *entity.TenantSettings) *map[st
 		responseMap["bigquery"].(map[string]interface{})["state"] = "ACTIVE"
 	}
 
+	if tenantSettings != nil && tenantSettings.BraintreeEnvironment != nil && tenantSettings.BraintreeMerchantId != nil && tenantSettings.BraintreePublicKey != nil && tenantSettings.BraintreePrivateKey != nil {
+		responseMap["braintree"] = make(map[string]interface{})
+		responseMap["braintree"].(map[string]interface{})["state"] = "ACTIVE"
+	}
+
 	return &responseMap
 }

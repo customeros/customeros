@@ -324,6 +324,40 @@ const Settings: NextPage = () => {
         />
       ),
     },
+    {
+      key: 'braintree',
+      state: 'INACTIVE',
+      template: (data: any) => (
+        <SettingsIntegrationItem
+          icon={'logos/braintree.svg'}
+          identifier={'braintree'}
+          name={'Braintree'}
+          state={data.state}
+          settingsChanged={() => {
+            reloadRef.current = !reloadRef.current;
+            setReload(reloadRef.current);
+          }}
+          fields={[
+              {
+                  name: 'publicKey',
+                  label: 'Public Key',
+              },
+              {
+                  name: 'privateKey',
+                  label: 'Private Key',
+              },
+              {
+                  name: 'environment',
+                  label: 'Environment',
+              },
+              {
+                  name: 'merchantId',
+                  label: 'Merchant Id',
+              }
+          ]}
+        />
+      ),
+    },
   ]);
 
   useEffect(() => {

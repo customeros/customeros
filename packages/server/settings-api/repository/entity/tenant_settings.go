@@ -37,6 +37,11 @@ type TenantSettings struct {
 	BabelforceAccessToken       *string `gorm:"column:babelforce_access_token;type:varchar(255);" json:"babelforceAccessToken" binding:"required"`
 
 	BigQueryServiceAccountKey *string `gorm:"column:bigquery_service_account_key;type:varchar(255);" json:"bigQueryServiceAccountKey" binding:"required"`
+
+	BraintreePublicKey   *string `gorm:"column:braintree_public_key;type:varchar(255);" json:"braintreePublicKey" binding:"required"`
+	BraintreePrivateKey  *string `gorm:"column:braintree_private_key;type:varchar(255);" json:"braintreePrivateKey" binding:"required"`
+	BraintreeEnvironment *string `gorm:"column:braintree_environment;type:varchar(255);" json:"braintreeEnvironment" binding:"required"`
+	BraintreeMerchantId  *string `gorm:"column:braintree_merchant_id;type:varchar(255);" json:"braintreeMerchantId" binding:"required"`
 }
 
 func (TenantSettings) TableName() string {
