@@ -4,8 +4,10 @@
   display: flex;
   align-items: flex-end;
   margin-bottom: var(--spacing-xxxs);
+  font-size: var(--font-size-sm);
+  font-family: var(--font-secondary);
 
-  & div {
+  & input {
     margin-right: var(--spacing-xxxs);
   }
 }
