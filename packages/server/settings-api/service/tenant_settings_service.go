@@ -135,6 +135,25 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 			}
 			tenantSettings.AhaAPIUrl = &apiUrl
 			tenantSettings.AhaAPIKey = &apiKey
+
+		case "airtable":
+			personalAccessToken, ok := data["personalAccessToken"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing personal access token for Airtable integration")
+			}
+			tenantSettings.AirtablePersonalAccessToken = &personalAccessToken
+
+		case "amplitude":
+			apiKey, ok := data["apiKey"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing API key for Amplitude integration")
+			}
+			secretKey, ok := data["secretKey"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing secret key for Amplitude integration")
+			}
+			tenantSettings.AmplitudeSecretKey = &secretKey
+			tenantSettings.AmplitudeAPIKey = &apiKey
 		}
 
 	}
@@ -176,6 +195,11 @@ func (s *tenantSettingsService) ClearIntegrationData(tenantName, identifier stri
 		case "aha":
 			tenantSettings.AhaAPIUrl = nil
 			tenantSettings.AhaAPIKey = nil
+		case "airtable":
+			tenantSettings.AirtablePersonalAccessToken = nil
+		case "amplitude":
+			tenantSettings.AmplitudeSecretKey = nil
+			tenantSettings.AmplitudeAPIKey = nil
 		}
 
 		qr := s.repositories.TenantSettingsRepository.Save(tenantSettings)

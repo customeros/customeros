@@ -180,6 +180,54 @@ const Settings: NextPage = () => {
         />
       ),
     },
+    {
+      key: 'airtable',
+      state: 'INACTIVE',
+      template: (data: any) => (
+        <SettingsIntegrationItem
+          icon={'logos/airtable.svg'}
+          identifier={'airtable'}
+          name={'Airtable'}
+          state={data.state}
+          settingsChanged={() => {
+            reloadRef.current = !reloadRef.current;
+            setReload(reloadRef.current);
+          }}
+          fields={[
+            {
+              name: 'personalAccessToken',
+              label: 'Personal access token',
+            },
+          ]}
+        />
+      ),
+    },
+    {
+      key: 'amplitude',
+      state: 'INACTIVE',
+      template: (data: any) => (
+        <SettingsIntegrationItem
+          icon={'logos/amplitude.svg'}
+          identifier={'amplitude'}
+          name={'Amplitude'}
+          state={data.state}
+          settingsChanged={() => {
+            reloadRef.current = !reloadRef.current;
+            setReload(reloadRef.current);
+          }}
+          fields={[
+              {
+                  name: 'apiKey',
+                  label: 'API key',
+              },
+              {
+                  name: 'secretKey',
+                  label: 'Secret key',
+              },
+          ]}
+        />
+      ),
+    },
   ]);
 
   useEffect(() => {

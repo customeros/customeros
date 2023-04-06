@@ -22,6 +22,11 @@ type TenantSettings struct {
 
 	AhaAPIUrl *string `gorm:"column:aha_api_url;type:varchar(255);" json:"ahaAPIUrl" binding:"required"`
 	AhaAPIKey *string `gorm:"column:aha_api_key;type:varchar(255);" json:"ahaAPIKey" binding:"required"`
+
+	AirtablePersonalAccessToken *string `gorm:"column:airtable_personal_access_token;type:varchar(255);" json:"airtablePersonalAccessToken" binding:"required"`
+
+	AmplitudeAPIKey    *string `gorm:"column:amplitude_api_key;type:varchar(255);" json:"amplitudeAPIKey" binding:"required"`
+	AmplitudeSecretKey *string `gorm:"column:amplitude_secret_key;type:varchar(255);" json:"amplitudeSecretKey" binding:"required"`
 }
 
 func (TenantSettings) TableName() string {

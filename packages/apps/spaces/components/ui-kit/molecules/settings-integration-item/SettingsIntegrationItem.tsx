@@ -85,11 +85,6 @@ export const SettingsIntegrationItem = ({
       });
   };
 
-  const bunica = "logos/aha.svg"
-
-  console.log(bunica)
-  console.log(icon)
-
   return (
     <div className={styles.settingsItem}>
       <div className={styles.settingsInfo}>
