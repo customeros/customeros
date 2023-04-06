@@ -71,6 +71,8 @@ type TenantSettings struct {
 	DatadogApplicationKey *string `gorm:"column:datadog_application_key;type:varchar(255);" binding:"required"`
 
 	DelightedApiKey *string `gorm:"column:delighted_api_key;type:varchar(255);" binding:"required"`
+
+	DixaApiToken *string `gorm:"column:dixa_api_token;type:varchar(255);" binding:"required"`
 }
 
 func (TenantSettings) TableName() string {

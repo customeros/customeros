@@ -342,6 +342,14 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 
 			tenantSettings.DelightedApiKey = &apiKey
 
+		case "dixa":
+			apiToken, ok := data["apiToken"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing API token for Dixa integration")
+			}
+
+			tenantSettings.DixaApiToken = &apiToken
+
 		}
 
 	}
@@ -432,6 +440,8 @@ func (s *tenantSettingsService) ClearIntegrationData(tenantName, identifier stri
 			tenantSettings.DatadogApplicationKey = nil
 		case "delighted":
 			tenantSettings.DelightedApiKey = nil
+		case "dixa":
+			tenantSettings.DixaApiToken = nil
 
 		}
 

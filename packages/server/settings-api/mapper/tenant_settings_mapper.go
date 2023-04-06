@@ -132,5 +132,10 @@ func MapTenantSettingsEntityToDTO(tenantSettings *entity.TenantSettings) *map[st
 		responseMap["delighted"].(map[string]interface{})["state"] = "ACTIVE"
 	}
 
+	if tenantSettings != nil && tenantSettings.DixaApiToken != nil {
+		responseMap["dixa"] = make(map[string]interface{})
+		responseMap["dixa"].(map[string]interface{})["state"] = "ACTIVE"
+	}
+
 	return &responseMap
 }

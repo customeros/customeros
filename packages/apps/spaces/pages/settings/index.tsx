@@ -628,6 +628,28 @@ const Settings: NextPage = () => {
         />
       ),
     },
+    {
+      key: 'dixa',
+      state: 'INACTIVE',
+      template: (data: any) => (
+        <SettingsIntegrationItem
+          icon={'logos/dixa.svg'}
+          identifier={'dixa'}
+          name={'Dixa'}
+          state={data.state}
+          settingsChanged={() => {
+            reloadRef.current = !reloadRef.current;
+            setReload(reloadRef.current);
+          }}
+          fields={[
+              {
+                  name: 'apiToken',
+                  label: 'API Token',
+              }
+          ]}
+        />
+      ),
+    },
   ]);
 
   useEffect(() => {
