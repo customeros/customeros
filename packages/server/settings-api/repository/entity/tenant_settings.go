@@ -48,6 +48,9 @@ type TenantSettings struct {
 
 	ChargebeeApiKey         *string `gorm:"column:chargebee_api_key;type:varchar(255);" binding:"required"`
 	ChargebeeProductCatalog *string `gorm:"column:chargebee_product_catalog;type:varchar(255);" binding:"required"`
+
+	ChargifyApiKey *string `gorm:"column:chargify_api_key;type:varchar(255);" binding:"required"`
+	ChargifyDomain *string `gorm:"column:chargify_domain;type:varchar(255);" binding:"required"`
 }
 
 func (TenantSettings) TableName() string {

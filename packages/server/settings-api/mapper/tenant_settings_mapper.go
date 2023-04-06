@@ -87,5 +87,10 @@ func MapTenantSettingsEntityToDTO(tenantSettings *entity.TenantSettings) *map[st
 		responseMap["chargebee"].(map[string]interface{})["state"] = "ACTIVE"
 	}
 
+	if tenantSettings != nil && tenantSettings.ChargifyApiKey != nil && tenantSettings.ChargifyDomain != nil {
+		responseMap["chargify"] = make(map[string]interface{})
+		responseMap["chargify"].(map[string]interface{})["state"] = "ACTIVE"
+	}
+
 	return &responseMap
 }

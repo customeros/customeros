@@ -12,6 +12,7 @@ type Config struct {
 		MaxConn         int    `env:"POSTGRES_DB_MAX_CONN"`
 		MaxIdleConn     int    `env:"POSTGRES_DB_MAX_IDLE_CONN"`
 		ConnMaxLifetime int    `env:"POSTGRES_DB_CONN_MAX_LIFETIME"`
+		LogLevel        string `env:"POSTGRES_LOG_LEVEL" envDefault:"WARN"`
 	}
 
 	Neo4j struct {

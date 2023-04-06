@@ -244,6 +244,19 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 
 			tenantSettings.ChargebeeApiKey = &apiKey
 			tenantSettings.ChargebeeProductCatalog = &productCatalog
+
+		case "chargify":
+			apiKey, ok := data["apiKey"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing API key for Chargify integration")
+			}
+			domain, ok := data["domain"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing domain for Chargify integration")
+			}
+
+			tenantSettings.ChargifyApiKey = &apiKey
+			tenantSettings.ChargifyDomain = &domain
 		}
 
 	}
@@ -311,6 +324,9 @@ func (s *tenantSettingsService) ClearIntegrationData(tenantName, identifier stri
 		case "chargebee":
 			tenantSettings.ChargebeeApiKey = nil
 			tenantSettings.ChargebeeProductCatalog = nil
+		case "chargify":
+			tenantSettings.ChargifyApiKey = nil
+			tenantSettings.ChargifyDomain = nil
 
 		}
 
