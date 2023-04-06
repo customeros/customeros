@@ -161,6 +161,24 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 				return nil, fmt.Errorf("missing API key for Baton integration")
 			}
 			tenantSettings.BatonAPIKey = &apiKey
+
+		case "babelforce":
+			regionEnvironment, ok := data["regionEnvironment"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing region / environment for Babelforce integration")
+			}
+			accessKeyId, ok := data["accessKeyId"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing access key id for Babelforce integration")
+			}
+			accessToken, ok := data["accessToken"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing access token for Babelforce integration")
+			}
+
+			tenantSettings.BabelforceRegionEnvironment = &regionEnvironment
+			tenantSettings.BabelforceAccessKeyId = &accessKeyId
+			tenantSettings.BabelforceAccessToken = &accessToken
 		}
 
 	}
@@ -209,6 +227,10 @@ func (s *tenantSettingsService) ClearIntegrationData(tenantName, identifier stri
 			tenantSettings.AmplitudeAPIKey = nil
 		case "baton":
 			tenantSettings.BatonAPIKey = nil
+		case "babelforce":
+			tenantSettings.BabelforceRegionEnvironment = nil
+			tenantSettings.BabelforceAccessKeyId = nil
+			tenantSettings.BabelforceAccessToken = nil
 		}
 
 		qr := s.repositories.TenantSettingsRepository.Save(tenantSettings)
