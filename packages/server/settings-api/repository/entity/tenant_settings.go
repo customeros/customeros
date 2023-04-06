@@ -29,6 +29,10 @@ type TenantSettings struct {
 	AmplitudeSecretKey *string `gorm:"column:amplitude_secret_key;type:varchar(255);" json:"amplitudeSecretKey" binding:"required"`
 
 	BatonAPIKey *string `gorm:"column:baton_api_key;type:varchar(255);" json:"batonAPIKey" binding:"required"`
+
+	BabelforceRegionEnvironment *string `gorm:"column:babelforce_region_environment;type:varchar(255);" json:"babelforceRegionEnvironment" binding:"required"`
+	BabelforceAccessKeyId       *string `gorm:"column:babelforce_access_key_id;type:varchar(255);" json:"babelforceAccessKeyId" binding:"required"`
+	BabelforceAccessToken       *string `gorm:"column:babelforce_access_token;type:varchar(255);" json:"babelforceAccessToken" binding:"required"`
 }
 
 func (TenantSettings) TableName() string {

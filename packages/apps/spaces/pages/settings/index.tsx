@@ -250,6 +250,36 @@ const Settings: NextPage = () => {
         />
       ),
     },
+    {
+      key: 'babelforce',
+      state: 'INACTIVE',
+      template: (data: any) => (
+        <SettingsIntegrationItem
+          icon={'logos/openline_small.svg'}
+          identifier={'babelforce'}
+          name={'Babelforce'}
+          state={data.state}
+          settingsChanged={() => {
+            reloadRef.current = !reloadRef.current;
+            setReload(reloadRef.current);
+          }}
+          fields={[
+              {
+                  name: 'regionEnvironment',
+                  label: 'Region / Environment',
+              },
+              {
+                  name: 'accessKeyId',
+                  label: 'Access Key Id',
+              },
+              {
+                  name: 'accessToken',
+                  label: 'Access Token',
+              },
+          ]}
+        />
+      ),
+    },
   ]);
 
   useEffect(() => {

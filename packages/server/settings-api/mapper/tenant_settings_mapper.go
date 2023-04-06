@@ -57,5 +57,10 @@ func MapTenantSettingsEntityToDTO(tenantSettings *entity.TenantSettings) *map[st
 		responseMap["baton"].(map[string]interface{})["state"] = "ACTIVE"
 	}
 
+	if tenantSettings != nil && tenantSettings.BabelforceRegionEnvironment != nil && tenantSettings.BabelforceAccessKeyId != nil && tenantSettings.BabelforceAccessToken != nil {
+		responseMap["babelforce"] = make(map[string]interface{})
+		responseMap["babelforce"].(map[string]interface{})["state"] = "ACTIVE"
+	}
+
 	return &responseMap
 }
