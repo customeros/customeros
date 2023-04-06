@@ -458,6 +458,28 @@ const Settings: NextPage = () => {
         />
       ),
     },
+    {
+      key: 'closecom',
+      state: 'INACTIVE',
+      template: (data: any) => (
+        <SettingsIntegrationItem
+          icon={'logos/close.com.svg'}
+          identifier={'closecom'}
+          name={'Close.com'}
+          state={data.state}
+          settingsChanged={() => {
+            reloadRef.current = !reloadRef.current;
+            setReload(reloadRef.current);
+          }}
+          fields={[
+              {
+                  name: 'apiKey',
+                  label: 'API Key',
+              }
+          ]}
+        />
+      ),
+    },
   ]);
 
   useEffect(() => {

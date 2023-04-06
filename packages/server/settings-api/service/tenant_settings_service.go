@@ -266,6 +266,14 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 
 			tenantSettings.ClickUpApiKey = &apiKey
 
+		case "closecom":
+			apiKey, ok := data["apiKey"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing API key for Close.com integration")
+			}
+
+			tenantSettings.CloseComApiKey = &apiKey
+
 		}
 
 	}
@@ -338,6 +346,8 @@ func (s *tenantSettingsService) ClearIntegrationData(tenantName, identifier stri
 			tenantSettings.ChargifyDomain = nil
 		case "clickup":
 			tenantSettings.ClickUpApiKey = nil
+		case "closecom":
+			tenantSettings.CloseComApiKey = nil
 
 		}
 

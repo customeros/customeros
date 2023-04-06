@@ -97,5 +97,10 @@ func MapTenantSettingsEntityToDTO(tenantSettings *entity.TenantSettings) *map[st
 		responseMap["clickup"].(map[string]interface{})["state"] = "ACTIVE"
 	}
 
+	if tenantSettings != nil && tenantSettings.CloseComApiKey != nil {
+		responseMap["closecom"] = make(map[string]interface{})
+		responseMap["closecom"].(map[string]interface{})["state"] = "ACTIVE"
+	}
+
 	return &responseMap
 }
