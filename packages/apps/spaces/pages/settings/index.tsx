@@ -506,6 +506,36 @@ const Settings: NextPage = () => {
         />
       ),
     },
+    {
+      key: 'confluence',
+      state: 'INACTIVE',
+      template: (data: any) => (
+        <SettingsIntegrationItem
+          icon={'logos/confluence.svg'}
+          identifier={'confluence'}
+          name={'Confluence'}
+          state={data.state}
+          settingsChanged={() => {
+            reloadRef.current = !reloadRef.current;
+            setReload(reloadRef.current);
+          }}
+          fields={[
+              {
+                  name: 'apiToken',
+                  label: 'API Token',
+              },
+              {
+                  name: 'domain',
+                  label: 'Domain',
+              },
+              {
+                  name: 'loginEmail',
+                  label: 'Login Email',
+              }
+          ]}
+        />
+      ),
+    },
   ]);
 
   useEffect(() => {

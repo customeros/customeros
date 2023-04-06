@@ -107,5 +107,10 @@ func MapTenantSettingsEntityToDTO(tenantSettings *entity.TenantSettings) *map[st
 		responseMap["coda"].(map[string]interface{})["state"] = "ACTIVE"
 	}
 
+	if tenantSettings != nil && tenantSettings.ConfluenceApiToken != nil && tenantSettings.ConfluenceDomain != nil && tenantSettings.ConfluenceLoginEmail != nil {
+		responseMap["confluence"] = make(map[string]interface{})
+		responseMap["confluence"].(map[string]interface{})["state"] = "ACTIVE"
+	}
+
 	return &responseMap
 }

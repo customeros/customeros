@@ -287,6 +287,24 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 			tenantSettings.CodaAuthToken = &authToken
 			tenantSettings.CodaDocumentId = &documentId
 
+		case "confluence":
+			apiToken, ok := data["apiToken"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing API token for Confluence integration")
+			}
+			domain, ok := data["domain"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing domain for Confluence integration")
+			}
+			loginEmail, ok := data["loginEmail"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing login email for Confluence integration")
+			}
+
+			tenantSettings.ConfluenceApiToken = &apiToken
+			tenantSettings.ConfluenceDomain = &domain
+			tenantSettings.ConfluenceLoginEmail = &loginEmail
+
 		}
 
 	}
@@ -364,6 +382,10 @@ func (s *tenantSettingsService) ClearIntegrationData(tenantName, identifier stri
 		case "coda":
 			tenantSettings.CodaAuthToken = nil
 			tenantSettings.CodaDocumentId = nil
+		case "confluence":
+			tenantSettings.ConfluenceApiToken = nil
+			tenantSettings.ConfluenceDomain = nil
+			tenantSettings.ConfluenceLoginEmail = nil
 
 		}
 

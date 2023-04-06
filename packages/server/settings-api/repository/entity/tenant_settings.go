@@ -58,6 +58,10 @@ type TenantSettings struct {
 
 	CodaAuthToken  *string `gorm:"column:coda_auth_token;type:varchar(255);" binding:"required"`
 	CodaDocumentId *string `gorm:"column:coda_document_id;type:varchar(255);" binding:"required"`
+
+	ConfluenceApiToken   *string `gorm:"column:confluence_api_token;type:varchar(255);" binding:"required"`
+	ConfluenceDomain     *string `gorm:"column:confluence_domain;type:varchar(255);" binding:"required"`
+	ConfluenceLoginEmail *string `gorm:"column:confluence_login_email;type:varchar(255);" binding:"required"`
 }
 
 func (TenantSettings) TableName() string {
