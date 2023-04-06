@@ -16,18 +16,18 @@ type UpsertContactCommandHandler interface {
 	Handle(ctx context.Context, command *UpsertContactCommand) error
 }
 
-type upsertContactHandler struct {
+type upsertContactCommandHandler struct {
 	log logger.Logger
 	cfg *config.Config
 	es  eventstore.AggregateStore
 }
 
-func NewUpsertContactHandler(log logger.Logger, cfg *config.Config, es eventstore.AggregateStore) *upsertContactHandler {
-	return &upsertContactHandler{log: log, cfg: cfg, es: es}
+func NewUpsertContactCommandHandler(log logger.Logger, cfg *config.Config, es eventstore.AggregateStore) *upsertContactCommandHandler {
+	return &upsertContactCommandHandler{log: log, cfg: cfg, es: es}
 }
 
-func (c *upsertContactHandler) Handle(ctx context.Context, command *UpsertContactCommand) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "upsertContactHandler.Handle")
+func (c *upsertContactCommandHandler) Handle(ctx context.Context, command *UpsertContactCommand) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "upsertContactCommandHandler.Handle")
 	defer span.Finish()
 	span.LogFields(log.String("Tenant", command.Tenant), log.String("AggregateID", command.GetAggregateID()))
 

@@ -46,6 +46,20 @@ func (s *contactService) UpsertContact(ctx context.Context, request *contactGrpc
 	return &contactGrpcService.ContactIdGrpcResponse{Id: aggregateID}, nil
 }
 
+func (s *contactService) AddPhoneNumberToContact(ctx context.Context, request *contactGrpcService.AddPhoneNumberToContactGrpcRequest) (*contactGrpcService.ContactIdGrpcResponse, error) {
+	aggregateID := request.ContactId
+
+	command := commands.NewAddPhoneNumberCommand(aggregateID, request.Tenant, request.PhoneNumberId, request.Label, request.Primary)
+	if err := s.contactCommands.AddPhoneNumberCommand.Handle(ctx, command); err != nil {
+		s.log.Errorf("(AddPhoneNumberToContact.Handle) tenant:{%s}, contact ID: {%s}, err: {%v}", request.Tenant, aggregateID, err)
+		return nil, s.errResponse(err)
+	}
+
+	s.log.Infof("Added phone number {%s} to contact {%s}", request.PhoneNumberId, aggregateID)
+
+	return &contactGrpcService.ContactIdGrpcResponse{Id: aggregateID}, nil
+}
+
 // FIXME alexb implement correctly
 //func (contactService *contactService) CreateContact(ctx context.Context, request *contactGrpcService.CreateContactGrpcRequest) (*contactGrpcService.CreateContactGrpcResponse, error) {
 //	/*ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "contactService.CreateContact")

@@ -52,6 +52,24 @@ func NewUpsertContactCommand(aggregateID, tenant, source, sourceOfTruth, appSour
 	}
 }
 
+type AddPhoneNumberCommand struct {
+	eventstore.BaseCommand
+	Tenant        string
+	PhoneNumberId string
+	Primary       bool
+	Label         string
+}
+
+func NewAddPhoneNumberCommand(aggregateID, tenant, phoneNumberId, label string, primary bool) *AddPhoneNumberCommand {
+	return &AddPhoneNumberCommand{
+		BaseCommand:   eventstore.NewBaseCommand(aggregateID),
+		Tenant:        tenant,
+		PhoneNumberId: phoneNumberId,
+		Primary:       primary,
+		Label:         label,
+	}
+}
+
 // FIXME alexb re-implement all below
 type CreateContactCommand struct {
 	eventstore.BaseCommand

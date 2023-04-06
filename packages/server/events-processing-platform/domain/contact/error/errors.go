@@ -1,5 +1,0 @@
-package error
-
-var (
-// TBD
-)

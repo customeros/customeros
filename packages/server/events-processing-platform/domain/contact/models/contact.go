@@ -7,21 +7,20 @@ import (
 )
 
 type Contact struct {
-	ID           string                `json:"id"`
-	FirstName    string                `json:"firstName"`
-	LastName     string                `json:"lastName"`
-	Name         string                `json:"name"`
-	Prefix       string                `json:"prefix"`
-	Source       commonModels.Source   `json:"source"`
-	CreatedAt    time.Time             `json:"createdAt"`
-	UpdatedAt    time.Time             `json:"updatedAt"`
-	PhoneNumbers []ContactPhoneNumbers `json:"phoneNumbers"`
+	ID           string                         `json:"id"`
+	FirstName    string                         `json:"firstName"`
+	LastName     string                         `json:"lastName"`
+	Name         string                         `json:"name"`
+	Prefix       string                         `json:"prefix"`
+	Source       commonModels.Source            `json:"source"`
+	CreatedAt    time.Time                      `json:"createdAt"`
+	UpdatedAt    time.Time                      `json:"updatedAt"`
+	PhoneNumbers map[string]ContactPhoneNumbers `json:"phoneNumbers"`
 }
 
 type ContactPhoneNumbers struct {
-	PhoneNumberID string `json:"id"`
-	Primary       bool   `json:"primary"`
-	Label         string `json:"label"`
+	Primary bool   `json:"primary"`
+	Label   string `json:"label"`
 }
 
 func (contact *Contact) String() string {
