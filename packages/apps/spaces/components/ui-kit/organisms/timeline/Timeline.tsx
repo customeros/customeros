@@ -3,7 +3,7 @@ import React, { useEffect, useRef } from 'react';
 import {
   ConversationTimelineItem,
   EmailTimelineItem,
-  LiveConversationTimelineItem,
+  LiveEventTimelineItem,
   NoteTimelineItem,
   WebActionTimelineItem,
 } from '../../molecules';
@@ -15,8 +15,8 @@ import { useInfiniteScroll } from './useInfiniteScroll';
 import { Skeleton } from '../../atoms/skeleton';
 import { TimelineStatus } from './timeline-status';
 import classNames from 'classnames';
-import { PhoneConversationTimelineItem } from '../../molecules/conversation-timeline-item/PhoneConversationTimelineItem';
 import { EmailTimelineItemTemp } from '../../molecules/conversation-timeline-item/EmailTimelineItemTemp';
+import { PhoneConversationTimelineItem } from '../../molecules/conversation-timeline-item/PhoneConversationTimelineItem';
 
 interface Props {
   loading: boolean;
@@ -177,15 +177,6 @@ export const Timeline = ({
           />
         );
       }
-
-      case 'LiveConversation':
-        return (
-          <LiveConversationTimelineItem
-            first={index == 0}
-            contactId={id}
-            source={data.source}
-          />
-        );
       case 'PageView':
         return (
           <TimelineItem first={index == 0} createdAt={data?.startedAt}>
@@ -289,7 +280,14 @@ export const Timeline = ({
         } else {
           return null;
         }
-
+      case 'LiveEventTimelineItem':
+        return (
+          <LiveEventTimelineItem
+            first={index == 0}
+            contactId={id}
+            source={data.source}
+          />
+        );
       default:
         return type ? (
           <div>

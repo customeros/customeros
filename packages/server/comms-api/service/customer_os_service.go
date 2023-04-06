@@ -96,12 +96,22 @@ func (s *customerOSService) CreateInteractionEvent(options ...EventOption) (*mod
 								contentType: $contentType}
   					) {
 						id
+						content
+						contentType
+						createdAt
+						channel
+						interactionSession {
+							name
+						}
 						sentBy {
 						  __typename
 						  ... on EmailParticipant {
 							emailParticipant {
 							  id
-							  rawEmail
+							  email
+							  contacts {
+								id
+	                          }
 							}
 							type
 						  }
@@ -116,6 +126,9 @@ func (s *customerOSService) CreateInteractionEvent(options ...EventOption) (*mod
 							phoneNumberParticipant {
 							  id
 							  rawPhoneNumber
+							  contacts {
+								id
+	                          }
 							}
 							type
 						  }
@@ -132,7 +145,10 @@ func (s *customerOSService) CreateInteractionEvent(options ...EventOption) (*mod
 						  ... on EmailParticipant {
 							emailParticipant {
 							  id
-							  rawEmail
+							  email
+							  contacts {
+								id
+	                          }
 							}
 							type
 						  }
@@ -147,6 +163,9 @@ func (s *customerOSService) CreateInteractionEvent(options ...EventOption) (*mod
 							phoneNumberParticipant {
 							  id
 							  rawPhoneNumber
+							  contacts {
+								id
+	                          }
 							}
 							type
 						  }

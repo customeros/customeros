@@ -5,6 +5,7 @@ import (
 	"github.com/gin-gonic/gin"
 	c "github.com/openline-ai/openline-customer-os/packages/server/comms-api/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/comms-api/model"
+	"github.com/openline-ai/openline-customer-os/packages/server/comms-api/routes/ContactHub"
 	s "github.com/openline-ai/openline-customer-os/packages/server/comms-api/service"
 	"google.golang.org/grpc/status"
 	"log"
@@ -209,7 +210,7 @@ func submitDialog(sessionId string, req model.VCon, cosService s.CustomerOSServi
 	return ids, nil
 }
 
-func AddVconRoutes(conf *c.Config, rg *gin.RouterGroup, cosService s.CustomerOSService) {
+func addVconRoutes(conf *c.Config, rg *gin.RouterGroup, cosService s.CustomerOSService, hub *ContactHub.ContactHub) {
 	rg.POST("/vcon", func(c *gin.Context) {
 		var req model.VCon
 		if err := c.BindJSON(&req); err != nil {

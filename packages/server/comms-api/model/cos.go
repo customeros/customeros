@@ -1,5 +1,7 @@
 package model
 
+import "time"
+
 type MailReplyRequest struct {
 	Username    string   `json:"username"`
 	Content     string   `json:"content"`
@@ -35,47 +37,44 @@ type InteractionSessionParticipantInput struct {
 	ParticipantType *string `json:"type,omitempty"`
 }
 
-type InteractionEventParticipant struct {
-	ID             string `json:"id"`
-	Type           string `json:"type"`
-	RawEmail       string `json:"rawEmail,omitempty"`
-	FirstName      string `json:"firstName,omitempty"`
-	RawPhoneNumber string `json:"rawPhoneNumber,omitempty"`
-}
-
 type AnalysisDescriptionInput struct {
 	InteractionEventId   *string `json:"interactionEventId,omitempty"`
 	InteractionSessionId *string `json:"interactionSessionId,omitempty"`
 }
 
+type InteractionEventCreate struct {
+	Channel            string    `json:"channel"`
+	Content            string    `json:"content"`
+	ContentType        string    `json:"contentType"`
+	CreatedAt          time.Time `json:"createdAt"`
+	Id                 string    `json:"id"`
+	InteractionSession struct {
+		Name string `json:"name"`
+	} `json:"interactionSession"`
+	SentBy []struct {
+		Typename         string `json:"__typename"`
+		EmailParticipant struct {
+			Contacts []interface{} `json:"contacts"`
+			Id       string        `json:"id"`
+			Email    string        `json:"email"`
+		} `json:"emailParticipant"`
+		Type interface{} `json:"type"`
+	} `json:"sentBy"`
+	SentTo []struct {
+		Typename         string `json:"__typename"`
+		EmailParticipant struct {
+			Contacts []struct {
+				Id string `json:"id"`
+			} `json:"contacts"`
+			Id    string `json:"id"`
+			Email string `json:"email"`
+		} `json:"emailParticipant"`
+		Type string `json:"type"`
+	} `json:"sentTo"`
+}
+
 type InteractionEventCreateResponse struct {
-	InteractionEventCreate struct {
-		Id     string `json:"id"`
-		SentBy []struct {
-			Typename         string `json:"__typename"`
-			EmailParticipant struct {
-				Id       string `json:"id"`
-				RawEmail string `json:"rawEmail"`
-			} `json:"emailParticipant"`
-			PhoneNumberParticipant struct {
-				ID             string `json:"id"`
-				RawPhoneNumber string `json:"rawPhoneNumber"`
-			} `json:"phoneNumberParticipant"`
-			Type string `json:"type"`
-		} `json:"sentBy"`
-		SentTo []struct {
-			Typename         string `json:"__typename"`
-			EmailParticipant struct {
-				Id       string `json:"id"`
-				RawEmail string `json:"rawEmail"`
-			} `json:"emailParticipant"`
-			PhoneNumberParticipant struct {
-				ID             string `json:"id"`
-				RawPhoneNumber string `json:"rawPhoneNumber"`
-			} `json:"phoneNumberParticipant"`
-			Type string `json:"type"`
-		} `json:"sentTo"`
-	} `json:"interactionEvent_Create"`
+	InteractionEventCreate `json:"interactionEvent_Create"`
 }
 
 type InteractionEventGetResponse struct {

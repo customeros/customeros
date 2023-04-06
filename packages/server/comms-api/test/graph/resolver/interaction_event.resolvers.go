@@ -13,6 +13,9 @@ import (
 
 // InteractionSession is the resolver for the interactionSession field.
 func (r *interactionEventResolver) InteractionSession(ctx context.Context, obj *model.InteractionEvent) (*model.InteractionSession, error) {
+	if r.InteractionSessionResolver != nil {
+		return r.InteractionSessionResolver(ctx, obj)
+	}
 	panic(fmt.Errorf("not implemented: InteractionSession - interactionSession"))
 }
 

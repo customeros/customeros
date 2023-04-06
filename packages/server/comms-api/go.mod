@@ -14,7 +14,7 @@ require (
 	github.com/gorilla/websocket v1.5.0
 	github.com/joho/godotenv v1.5.1
 	github.com/machinebox/graphql v0.2.2
-	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20230403112554-3f3945709e31
+	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20230404091122-3efa62d40472
 	github.com/ory/client-go v1.1.23
 	github.com/sirupsen/logrus v1.9.0
 	github.com/stretchr/testify v1.8.2

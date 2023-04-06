@@ -7,13 +7,14 @@ import (
 	"github.com/gin-gonic/gin"
 	c "github.com/openline-ai/openline-customer-os/packages/server/comms-api/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/comms-api/model"
+	"github.com/openline-ai/openline-customer-os/packages/server/comms-api/routes/ContactHub"
 	s "github.com/openline-ai/openline-customer-os/packages/server/comms-api/service"
 	"log"
 	"net/http"
 	"strings"
 )
 
-func addMailRoutes(conf *c.Config, rg *gin.RouterGroup, mailService s.MailService) {
+func addMailRoutes(conf *c.Config, rg *gin.RouterGroup, mailService s.MailService, hub *ContactHub.ContactHub) {
 	rg.POST("/mail/send", func(c *gin.Context) {
 		var request model.MailReplyRequest
 
@@ -92,7 +93,7 @@ func addMailRoutes(conf *c.Config, rg *gin.RouterGroup, mailService s.MailServic
 			return
 		}
 
-		mail, err := mailService.SaveMail(&email, &req.Tenant, nil)
+		saveResponse, err := mailService.SaveMail(&email, &req.Tenant, nil)
 		if err != nil {
 			errorMsg := fmt.Sprintf("unable to save forwarded email: %v", err.Error())
 			log.Printf(errorMsg)
@@ -100,8 +101,21 @@ func addMailRoutes(conf *c.Config, rg *gin.RouterGroup, mailService s.MailServic
 			return
 		}
 
+		for _, participant := range saveResponse.InteractionEventCreate.SentTo {
+			contacts := participant.EmailParticipant.Contacts
+			for _, contact := range contacts {
+				log.Printf("Broadcasting to participant %s", contact.Id)
+				contactItem := ContactHub.ContactEvent{
+					ContactId:        contact.Id,
+					InteractionEvent: saveResponse.InteractionEventCreate,
+				}
+
+				hub.Broadcast <- contactItem
+			}
+		}
+
 		c.JSON(http.StatusOK, gin.H{
-			"result": fmt.Sprintf("interaction event created with id: %s", (*mail).InteractionEventCreate.Id),
+			"result": fmt.Sprintf("interaction event created with id: %s", (*saveResponse).InteractionEventCreate.Id),
 		})
 	})
 }

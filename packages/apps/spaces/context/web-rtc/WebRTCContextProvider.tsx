@@ -41,7 +41,7 @@ export const WebRTCContextProvider = (props: any) => {
     const refreshCredentials = () => {
       axios
         .get(
-          `/oasis-api/call_credentials?service=sip&username=` + from.identity,
+          `/comms-api/call_credentials?service=sip&username=` + from.identity,
         )
         .then((res) => {
           console.error('Got a key: ' + JSON.stringify(res.data));

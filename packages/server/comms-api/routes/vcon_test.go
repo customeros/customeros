@@ -49,7 +49,7 @@ func Test_invalidApiKey(t *testing.T) {
 	customerOs := service.NewCustomerOSService(client, myVconConfig)
 	route := vconRouter.Group("/")
 
-	AddVconRoutes(myVconConfig, route, customerOs)
+	addVconRoutes(myVconConfig, route, customerOs, nil)
 
 	resolver.InteractionEventCreate = func(ctx context.Context, event model.InteractionEventInput) (*model.InteractionEvent, error) {
 		log.Printf("InteractionEventCreate: Got Event %v", event)
@@ -116,7 +116,7 @@ func Test_vConDialogEvent(t *testing.T) {
 	reachedSessionBySessionIdentifier := false
 	var attendedBy []*model.InteractionSessionParticipantInput
 
-	AddVconRoutes(myVconConfig, route, customerOs)
+	addVconRoutes(myVconConfig, route, customerOs, nil)
 
 	resolver.InteractionEventCreate = func(ctx context.Context, event model.InteractionEventInput) (*model.InteractionEvent, error) {
 		log.Printf("InteractionEventCreate: Got Event %v", event)
@@ -181,7 +181,12 @@ func Test_vConDialogEvent(t *testing.T) {
 			AttendedBy:        nil,
 		}, nil
 	}
-
+	resolver.InteractionSessionResolver = func(ctx context.Context, obj *model.InteractionEvent) (*model.InteractionSession, error) {
+		log.Printf("InteractionSessionResolver: Got Event %v", obj)
+		return &model.InteractionSession{
+			Name: "my-session",
+		}, nil
+	}
 	resolver.SentBy = func(ctx context.Context, obj *model.InteractionEvent) ([]model.InteractionEventParticipant, error) {
 		log.Printf("SentBy: Got Event %v", obj)
 		return []model.InteractionEventParticipant{}, nil
@@ -207,7 +212,7 @@ func Test_vConDialogEvent(t *testing.T) {
 	req.Header.Add("X-Openline-VCon-Api-Key", myVconConfig.VCon.ApiKey)
 	vconRouter.ServeHTTP(w, req)
 	log.Printf("Got Body %s", w.Body)
-	if !assert.Equal(t, w.Code, 200) {
+	if !assert.Equal(t, 200, w.Code) {
 		return
 	}
 
@@ -225,7 +230,7 @@ func Test_vConDialogEventInExistingSession(t *testing.T) {
 	reachedSessionCreate := false
 	reachedSessionBySessionIdentifier := false
 
-	AddVconRoutes(myVconConfig, route, customerOs)
+	addVconRoutes(myVconConfig, route, customerOs, nil)
 
 	resolver.InteractionEventCreate = func(ctx context.Context, event model.InteractionEventInput) (*model.InteractionEvent, error) {
 		log.Printf("InteractionEventCreate: Got Event %v", event)
@@ -303,6 +308,13 @@ func Test_vConDialogEventInExistingSession(t *testing.T) {
 		return []model.InteractionSessionParticipant{}, nil
 	}
 
+	resolver.InteractionSessionResolver = func(ctx context.Context, obj *model.InteractionEvent) (*model.InteractionSession, error) {
+		log.Printf("InteractionSessionResolver: Got Event %v", obj)
+		return &model.InteractionSession{
+			Name: "my-session-name",
+		}, nil
+	}
+
 	w := httptest.NewRecorder()
 	req, _ := http.NewRequest("POST", "/vcon", strings.NewReader(LIVE_TRANSCRIPTON_APPENDED))
 	req.Header.Add("X-Openline-VCon-Api-Key", myVconConfig.VCon.ApiKey)
@@ -325,7 +337,7 @@ func Test_vConAnalysisEventInExistingSession(t *testing.T) {
 	reachedSessionCreate := false
 	reachedSessionBySessionIdentifier := false
 
-	AddVconRoutes(myVconConfig, route, customerOs)
+	addVconRoutes(myVconConfig, route, customerOs, nil)
 
 	resolver.AnalysisCreate = func(ctx context.Context, analysis model.AnalysisInput) (*model.Analysis, error) {
 		log.Printf("InteractionEventCreate: Got Event %v", analysis)
@@ -398,7 +410,7 @@ func Test_vConAnalysisAsFirstEvent(t *testing.T) {
 	reachedSessionBySessionIdentifier := false
 	var attendedBy []*model.InteractionSessionParticipantInput
 
-	AddVconRoutes(myVconConfig, route, customerOs)
+	addVconRoutes(myVconConfig, route, customerOs, nil)
 
 	resolver.AnalysisCreate = func(ctx context.Context, analysis model.AnalysisInput) (*model.Analysis, error) {
 		log.Printf("InteractionEventCreate: Got Event %v", analysis)

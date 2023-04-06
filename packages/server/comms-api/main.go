@@ -6,7 +6,7 @@ import (
 	"github.com/machinebox/graphql"
 	commsApiConfig "github.com/openline-ai/openline-customer-os/packages/server/comms-api/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/comms-api/routes"
-	"github.com/openline-ai/openline-customer-os/packages/server/comms-api/routes/chatHub"
+	"github.com/openline-ai/openline-customer-os/packages/server/comms-api/routes/ContactHub"
 	"github.com/openline-ai/openline-customer-os/packages/server/comms-api/service"
 	"log"
 )
@@ -14,12 +14,11 @@ import (
 func main() {
 	config := loadConfiguration()
 
-	mh := chatHub.NewHub()
-	go mh.Run()
 	graphqlClient := graphql.NewClient(config.Service.CustomerOsAPI)
 	services := service.InitServices(graphqlClient, &config)
-	// Our server will live in the routes package
-	routes.Run(&config, mh, services) // run this as a background goroutine
+	hub := ContactHub.NewContactHub()
+	go hub.Run()
+	routes.Run(&config, hub, services) // run this as a background goroutine
 
 }
 
