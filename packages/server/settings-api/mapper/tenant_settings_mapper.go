@@ -37,5 +37,10 @@ func MapTenantSettingsEntityToDTO(tenantSettings *entity.TenantSettings) *map[st
 		responseMap["trello"].(map[string]interface{})["state"] = "ACTIVE"
 	}
 
+	if tenantSettings != nil && tenantSettings.AhaAPIUrl != nil && tenantSettings.AhaAPIKey != nil {
+		responseMap["aha"] = make(map[string]interface{})
+		responseMap["aha"].(map[string]interface{})["state"] = "ACTIVE"
+	}
+
 	return &responseMap
 }

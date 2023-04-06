@@ -25,7 +25,7 @@ const Settings: NextPage = () => {
       state: 'INACTIVE',
       template: (data: any) => (
         <SettingsIntegrationItem
-          icon={'/logos/hubspot.png'}
+          icon={'/logos/hubspot.svg'}
           identifier={'hubspot'}
           name={'Hubspot'}
           state={data.state}
@@ -47,7 +47,7 @@ const Settings: NextPage = () => {
       state: 'INACTIVE',
       template: (data: any) => (
         <SettingsIntegrationItem
-          icon={'/logos/zendesk.png'}
+          icon={'/logos/zendesk.svg'}
           identifier={'zendesk'}
           name={'Zendesk'}
           state={data.state}
@@ -77,7 +77,7 @@ const Settings: NextPage = () => {
       state: 'INACTIVE',
       template: (data: any) => (
         <SettingsIntegrationItem
-          icon={'/logos/smartsheet.png'}
+          icon={'/logos/smartsheet.svg'}
           identifier={'smartsheet'}
           name={'Smartsheet'}
           state={data.state}
@@ -103,7 +103,7 @@ const Settings: NextPage = () => {
       state: 'INACTIVE',
       template: (data: any) => (
         <SettingsIntegrationItem
-          icon={'/logos/jira.png'}
+          icon={'/logos/jira.svg'}
           identifier={'jira'}
           name={'Jira'}
           state={data.state}
@@ -133,7 +133,7 @@ const Settings: NextPage = () => {
       state: 'INACTIVE',
       template: (data: any) => (
         <SettingsIntegrationItem
-          icon={'/logos/trello.png'}
+          icon={'/logos/trello.svg'}
           identifier={'trello'}
           name={'Trello'}
           state={data.state}
@@ -145,6 +145,32 @@ const Settings: NextPage = () => {
             {
               name: 'apiToken',
               label: 'API Token',
+            },
+            {
+              name: 'apiKey',
+              label: 'API key',
+            },
+          ]}
+        />
+      ),
+    },
+    {
+      key: 'aha',
+      state: 'INACTIVE',
+      template: (data: any) => (
+        <SettingsIntegrationItem
+          icon={'logos/aha.svg'}
+          identifier={'aha'}
+          name={'Aha'}
+          state={data.state}
+          settingsChanged={() => {
+            reloadRef.current = !reloadRef.current;
+            setReload(reloadRef.current);
+          }}
+          fields={[
+            {
+              name: 'apiUrl',
+              label: 'API Url',
             },
             {
               name: 'apiKey',
