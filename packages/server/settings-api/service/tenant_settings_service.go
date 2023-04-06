@@ -334,6 +334,14 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 			tenantSettings.DatadogApiKey = &apiKey
 			tenantSettings.DatadogApplicationKey = &applicationKey
 
+		case "delighted":
+			apiKey, ok := data["apiKey"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing API key for Delighted integration")
+			}
+
+			tenantSettings.DelightedApiKey = &apiKey
+
 		}
 
 	}
@@ -422,6 +430,8 @@ func (s *tenantSettingsService) ClearIntegrationData(tenantName, identifier stri
 		case "datadog":
 			tenantSettings.DatadogApiKey = nil
 			tenantSettings.DatadogApplicationKey = nil
+		case "delighted":
+			tenantSettings.DelightedApiKey = nil
 
 		}
 

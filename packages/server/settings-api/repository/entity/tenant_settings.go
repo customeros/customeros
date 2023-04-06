@@ -69,6 +69,8 @@ type TenantSettings struct {
 
 	DatadogApiKey         *string `gorm:"column:datadog_api_key;type:varchar(255);" binding:"required"`
 	DatadogApplicationKey *string `gorm:"column:datadog_application_key;type:varchar(255);" binding:"required"`
+
+	DelightedApiKey *string `gorm:"column:delighted_api_key;type:varchar(255);" binding:"required"`
 }
 
 func (TenantSettings) TableName() string {

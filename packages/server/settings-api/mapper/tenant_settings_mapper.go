@@ -127,5 +127,10 @@ func MapTenantSettingsEntityToDTO(tenantSettings *entity.TenantSettings) *map[st
 		responseMap["datadog"].(map[string]interface{})["state"] = "ACTIVE"
 	}
 
+	if tenantSettings != nil && tenantSettings.DelightedApiKey != nil {
+		responseMap["delighted"] = make(map[string]interface{})
+		responseMap["delighted"].(map[string]interface{})["state"] = "ACTIVE"
+	}
+
 	return &responseMap
 }
