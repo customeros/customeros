@@ -154,6 +154,13 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 			}
 			tenantSettings.AmplitudeSecretKey = &secretKey
 			tenantSettings.AmplitudeAPIKey = &apiKey
+
+		case "baton":
+			apiKey, ok := data["apiKey"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing API key for Baton integration")
+			}
+			tenantSettings.BatonAPIKey = &apiKey
 		}
 
 	}
@@ -200,6 +207,8 @@ func (s *tenantSettingsService) ClearIntegrationData(tenantName, identifier stri
 		case "amplitude":
 			tenantSettings.AmplitudeSecretKey = nil
 			tenantSettings.AmplitudeAPIKey = nil
+		case "baton":
+			tenantSettings.BatonAPIKey = nil
 		}
 
 		qr := s.repositories.TenantSettingsRepository.Save(tenantSettings)
