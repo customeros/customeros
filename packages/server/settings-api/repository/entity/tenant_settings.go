@@ -19,6 +19,9 @@ type TenantSettings struct {
 
 	TrelloAPIToken *string `gorm:"column:trello_api_token;type:varchar(255);" json:"trelloAPIToken" binding:"required"`
 	TrelloAPIKey   *string `gorm:"column:trello_api_key;type:varchar(255);" json:"trelloAPIKey" binding:"required"`
+
+	AhaAPIUrl *string `gorm:"column:aha_api_url;type:varchar(255);" json:"ahaAPIUrl" binding:"required"`
+	AhaAPIKey *string `gorm:"column:aha_api_key;type:varchar(255);" json:"ahaAPIKey" binding:"required"`
 }
 
 func (TenantSettings) TableName() string {

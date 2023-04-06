@@ -12,12 +12,6 @@
        (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/adjust.svg' name='adjust' />),
    },
    {
-     key: 'aha',
-     state: 'INACTIVE',
-     template:
-       (data: any) => (<SettingsIntegrationItem state='INACTIVE' icon='/logos/aha.svg' name='aha' />),
-   },
-   {
      key: 'airtable',
      state: 'INACTIVE',
      template:

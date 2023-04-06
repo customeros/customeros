@@ -123,7 +123,20 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 			}
 			tenantSettings.TrelloAPIToken = &apiToken
 			tenantSettings.TrelloAPIKey = &apiKey
+
+		case "aha":
+			apiUrl, ok := data["apiUrl"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing API Url for Aha integration")
+			}
+			apiKey, ok := data["apiKey"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing API key for Aha integration")
+			}
+			tenantSettings.AhaAPIUrl = &apiUrl
+			tenantSettings.AhaAPIKey = &apiKey
 		}
+
 	}
 
 	qr := s.repositories.TenantSettingsRepository.Save(tenantSettings)
@@ -160,6 +173,9 @@ func (s *tenantSettingsService) ClearIntegrationData(tenantName, identifier stri
 		case "trello":
 			tenantSettings.TrelloAPIToken = nil
 			tenantSettings.TrelloAPIKey = nil
+		case "aha":
+			tenantSettings.AhaAPIUrl = nil
+			tenantSettings.AhaAPIKey = nil
 		}
 
 		qr := s.repositories.TenantSettingsRepository.Save(tenantSettings)
