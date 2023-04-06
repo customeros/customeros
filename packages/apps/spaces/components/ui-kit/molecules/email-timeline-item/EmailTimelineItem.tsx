@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useMemo, useRef, useState } from 'react';
 import sanitizeHtml from 'sanitize-html';
 import styles from './email-timeline-item.module.scss';
 import { Button } from '../../atoms';
@@ -34,6 +34,21 @@ export const EmailTimelineItem: React.FC<Props> = ({
   const { data, loading, error } = useContactCommunicationChannelsDetails({
     id: contactId || '',
   });
+
+  const memoizedContent = useMemo(() => {
+    try {
+      const linkified = sanitizeHtml(
+        linkifyHtml(content, {
+          defaultProtocol: 'https',
+          rel: 'noopener noreferrer',
+        }),
+      );
+      return linkified;
+    } catch (e) {
+      return sanitizeHtml(content);
+    }
+  }, [content]);
+
   const sentByExist =
     sentBy &&
     sentBy.length > 0 &&
@@ -128,18 +143,16 @@ export const EmailTimelineItem: React.FC<Props> = ({
               <div
                 className={`text-overflow-ellipsis ${styles.emailContent}`}
                 dangerouslySetInnerHTML={{
-                  __html: sanitizeHtml(
-                    linkifyHtml(content, {
-                      defaultProtocol: 'https',
-                      rel: 'noopener noreferrer',
-                    }),
-                  ),
+                  __html: memoizedContent,
                 }}
               ></div>
             )}
             {contentType === 'text/plain' && (
               <div className={`text-overflow-ellipsis ${styles.emailContent}`}>
-                {content}
+                {linkifyHtml(content, {
+                  defaultProtocol: 'https',
+                  rel: 'noopener noreferrer',
+                })}
               </div>
             )}
 
