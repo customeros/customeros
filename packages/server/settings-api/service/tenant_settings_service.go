@@ -321,6 +321,19 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 
 			tenantSettings.CustomerIoApiKey = &apiKey
 
+		case "datadog":
+			apiKey, ok := data["apiKey"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing API key for Customer.io integration")
+			}
+			applicationKey, ok := data["applicationKey"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing application key for Customer.io integration")
+			}
+
+			tenantSettings.DatadogApiKey = &apiKey
+			tenantSettings.DatadogApplicationKey = &applicationKey
+
 		}
 
 	}
@@ -406,6 +419,9 @@ func (s *tenantSettingsService) ClearIntegrationData(tenantName, identifier stri
 			tenantSettings.CourierApiKey = nil
 		case "customerio":
 			tenantSettings.CustomerIoApiKey = nil
+		case "datadog":
+			tenantSettings.DatadogApiKey = nil
+			tenantSettings.DatadogApplicationKey = nil
 
 		}
 

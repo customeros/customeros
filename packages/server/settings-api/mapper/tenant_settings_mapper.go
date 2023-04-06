@@ -122,5 +122,10 @@ func MapTenantSettingsEntityToDTO(tenantSettings *entity.TenantSettings) *map[st
 		responseMap["customerio"].(map[string]interface{})["state"] = "ACTIVE"
 	}
 
+	if tenantSettings != nil && tenantSettings.DatadogApiKey != nil && tenantSettings.DatadogApplicationKey != nil {
+		responseMap["datadog"] = make(map[string]interface{})
+		responseMap["datadog"].(map[string]interface{})["state"] = "ACTIVE"
+	}
+
 	return &responseMap
 }

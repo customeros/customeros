@@ -580,6 +580,32 @@ const Settings: NextPage = () => {
         />
       ),
     },
+    {
+      key: 'datadog',
+      state: 'INACTIVE',
+      template: (data: any) => (
+        <SettingsIntegrationItem
+          icon={'logos/datadog.svg'}
+          identifier={'datadog'}
+          name={'Datadog'}
+          state={data.state}
+          settingsChanged={() => {
+            reloadRef.current = !reloadRef.current;
+            setReload(reloadRef.current);
+          }}
+          fields={[
+              {
+                  name: 'apiKey',
+                  label: 'API Key',
+              },
+              {
+                  name: 'applicationKey',
+                  label: 'Application Key',
+              }
+          ]}
+        />
+      ),
+    },
   ]);
 
   useEffect(() => {
