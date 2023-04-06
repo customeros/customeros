@@ -29,6 +29,6 @@ type Config struct {
 	}
 	Service struct {
 		EventsProcessingPlatformEnabled bool   `env:"EVENTS_PROCESSING_PLATFORM_ENABLED" envDefault:"false"`
-		EventsProcessingPlatformUrl     string `env:"EVENTS_PROCESSING_PLATFORM_URL,required"`
+		EventsProcessingPlatformUrl     string `env:"EVENTS_PROCESSING_PLATFORM_URL"`
 	}
 }
