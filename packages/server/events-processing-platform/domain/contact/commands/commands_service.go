@@ -7,13 +7,15 @@ import (
 )
 
 type ContactCommands struct {
-	UpsertContact UpsertContactCommandHandler
+	UpsertContact         UpsertContactCommandHandler
+	AddPhoneNumberCommand LinkPhoneNumberCommandHandler
 	//CreateContact CreateContactCommandHandler
 }
 
 func NewContactCommands(log logger.Logger, cfg *config.Config, es eventstore.AggregateStore) *ContactCommands {
 	return &ContactCommands{
-		UpsertContact: NewUpsertContactHandler(log, cfg, es),
+		UpsertContact:         NewUpsertContactCommandHandler(log, cfg, es),
+		AddPhoneNumberCommand: NewLinkPhoneNumberCommandHandler(log, cfg, es),
 		//CreateContact: NewCreateContactHandler(log, cfg, es),
 	}
 }

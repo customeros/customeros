@@ -3,6 +3,7 @@ package aggregate
 import (
 	"context"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	localErrors "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/errors"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/events"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/models"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
@@ -55,4 +56,53 @@ func (a *ContactAggregate) UpdateContact(ctx context.Context, contactDto *models
 	}
 
 	return a.Apply(event)
+}
+
+func (a *ContactAggregate) LinkPhoneNumber(ctx context.Context, tenant, phoneNumberId, label string, primary bool) error {
+	span, _ := opentracing.StartSpanFromContext(ctx, "ContactAggregate.LinkPhoneNumber")
+	defer span.Finish()
+	span.LogFields(log.String("Tenant", tenant), log.String("AggregateID", a.GetID()))
+
+	updatedAtNotNil := utils.Now()
+
+	event, err := events.NewContactLinkPhoneNumberEvent(a, tenant, phoneNumberId, label, primary, updatedAtNotNil)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "NewContactLinkPhoneNumberEvent")
+	}
+
+	if err = event.SetMetadata(tracing.ExtractTextMapCarrier(span.Context())); err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "SetMetadata")
+	}
+
+	return a.Apply(event)
+}
+
+func (a *ContactAggregate) SetPhoneNumberNonPrimary(ctx context.Context, tenant, phoneNumberId string) error {
+	span, _ := opentracing.StartSpanFromContext(ctx, "ContactAggregate.SetPhoneNumberNonPrimary")
+	defer span.Finish()
+	span.LogFields(log.String("Tenant", tenant), log.String("AggregateID", a.GetID()))
+
+	updatedAtNotNil := utils.Now()
+
+	phoneNumber, ok := a.Contact.PhoneNumbers[phoneNumberId]
+	if !ok {
+		return localErrors.ErrPhoneNumberNotFound
+	}
+
+	if phoneNumber.Primary {
+		event, err := events.NewContactLinkPhoneNumberEvent(a, tenant, phoneNumberId, phoneNumber.Label, false, updatedAtNotNil)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return errors.Wrap(err, "NewContactLinkPhoneNumberEvent")
+		}
+
+		if err = event.SetMetadata(tracing.ExtractTextMapCarrier(span.Context())); err != nil {
+			tracing.TraceErr(span, err)
+			return errors.Wrap(err, "SetMetadata")
+		}
+		return a.Apply(event)
+	}
+	return nil
 }

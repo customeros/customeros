@@ -42,6 +42,9 @@ func (contactAggregate *ContactAggregate) When(event eventstore.Event) error {
 		return contactAggregate.onContactCreated(event)
 	case events.ContactUpdated:
 		return contactAggregate.onContactUpdated(event)
+	case events.ContactPhoneNumberLinked:
+		return contactAggregate.onPhoneNumberLinked(event)
+
 	default:
 		return eventstore.ErrInvalidEventType
 	}
@@ -77,5 +80,21 @@ func (a *ContactAggregate) onContactUpdated(event eventstore.Event) error {
 	a.Contact.LastName = eventData.LastName
 	a.Contact.Name = eventData.Name
 	a.Contact.Prefix = eventData.Prefix
+	return nil
+}
+
+func (a *ContactAggregate) onPhoneNumberLinked(event eventstore.Event) error {
+	var eventData events.ContactLinkPhoneNumberEvent
+	if err := event.GetJsonData(&eventData); err != nil {
+		return errors.Wrap(err, "GetJsonData")
+	}
+	if a.Contact.PhoneNumbers == nil {
+		a.Contact.PhoneNumbers = make(map[string]models.ContactPhoneNumbers)
+	}
+	a.Contact.PhoneNumbers[eventData.PhoneNumberId] = models.ContactPhoneNumbers{
+		Label:   eventData.Label,
+		Primary: eventData.Primary,
+	}
+	a.Contact.UpdatedAt = eventData.UpdatedAt
 	return nil
 }

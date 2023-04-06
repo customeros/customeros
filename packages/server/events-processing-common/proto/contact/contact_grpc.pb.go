@@ -24,6 +24,7 @@ const _ = grpc.SupportPackageIsVersion7
 type ContactGrpcServiceClient interface {
 	CreateContact(ctx context.Context, in *CreateContactGrpcRequest, opts ...grpc.CallOption) (*CreateContactGrpcResponse, error)
 	UpsertContact(ctx context.Context, in *UpsertContactGrpcRequest, opts ...grpc.CallOption) (*ContactIdGrpcResponse, error)
+	AddPhoneNumberToContact(ctx context.Context, in *AddPhoneNumberToContactGrpcRequest, opts ...grpc.CallOption) (*ContactIdGrpcResponse, error)
 }
 
 type contactGrpcServiceClient struct {
@@ -52,12 +53,22 @@ func (c *contactGrpcServiceClient) UpsertContact(ctx context.Context, in *Upsert
 	return out, nil
 }
 
+func (c *contactGrpcServiceClient) AddPhoneNumberToContact(ctx context.Context, in *AddPhoneNumberToContactGrpcRequest, opts ...grpc.CallOption) (*ContactIdGrpcResponse, error) {
+	out := new(ContactIdGrpcResponse)
+	err := c.cc.Invoke(ctx, "/contactGrpcService.contactGrpcService/AddPhoneNumberToContact", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // ContactGrpcServiceServer is the server API for ContactGrpcService service.
 // All implementations must embed UnimplementedContactGrpcServiceServer
 // for forward compatibility
 type ContactGrpcServiceServer interface {
 	CreateContact(context.Context, *CreateContactGrpcRequest) (*CreateContactGrpcResponse, error)
 	UpsertContact(context.Context, *UpsertContactGrpcRequest) (*ContactIdGrpcResponse, error)
+	AddPhoneNumberToContact(context.Context, *AddPhoneNumberToContactGrpcRequest) (*ContactIdGrpcResponse, error)
 	mustEmbedUnimplementedContactGrpcServiceServer()
 }
 
@@ -70,6 +81,9 @@ func (UnimplementedContactGrpcServiceServer) CreateContact(context.Context, *Cre
 }
 func (UnimplementedContactGrpcServiceServer) UpsertContact(context.Context, *UpsertContactGrpcRequest) (*ContactIdGrpcResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpsertContact not implemented")
+}
+func (UnimplementedContactGrpcServiceServer) AddPhoneNumberToContact(context.Context, *AddPhoneNumberToContactGrpcRequest) (*ContactIdGrpcResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method AddPhoneNumberToContact not implemented")
 }
 func (UnimplementedContactGrpcServiceServer) mustEmbedUnimplementedContactGrpcServiceServer() {}
 
@@ -120,6 +134,24 @@ func _ContactGrpcService_UpsertContact_Handler(srv interface{}, ctx context.Cont
 	return interceptor(ctx, in, info, handler)
 }
 
+func _ContactGrpcService_AddPhoneNumberToContact_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AddPhoneNumberToContactGrpcRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ContactGrpcServiceServer).AddPhoneNumberToContact(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/contactGrpcService.contactGrpcService/AddPhoneNumberToContact",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ContactGrpcServiceServer).AddPhoneNumberToContact(ctx, req.(*AddPhoneNumberToContactGrpcRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // ContactGrpcService_ServiceDesc is the grpc.ServiceDesc for ContactGrpcService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -134,6 +166,10 @@ var ContactGrpcService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "UpsertContact",
 			Handler:    _ContactGrpcService_UpsertContact_Handler,
+		},
+		{
+			MethodName: "AddPhoneNumberToContact",
+			Handler:    _ContactGrpcService_AddPhoneNumberToContact_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

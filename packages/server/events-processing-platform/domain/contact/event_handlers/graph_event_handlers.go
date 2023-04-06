@@ -49,3 +49,20 @@ func (e *GraphContactEventHandler) OnContactUpdate(ctx context.Context, evt even
 
 	return err
 }
+
+func (e *GraphContactEventHandler) OnPhoneNumberLinkedToContact(ctx context.Context, evt eventstore.Event) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "GraphContactEventHandler.OnPhoneNumberLinkedToContact")
+	defer span.Finish()
+	span.LogFields(log.String("AggregateID", evt.GetAggregateID()))
+
+	var eventData events.ContactLinkPhoneNumberEvent
+	if err := evt.GetJsonData(&eventData); err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "evt.GetJsonData")
+	}
+
+	contactId := aggregate.GetContactAggregateID(evt.AggregateID, eventData.Tenant)
+	err := e.Repositories.PhoneNumberRepository.LinkWithContact(ctx, eventData.Tenant, contactId, eventData.PhoneNumberId, eventData.Label, eventData.Primary, eventData.UpdatedAt)
+
+	return err
+}

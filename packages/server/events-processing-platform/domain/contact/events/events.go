@@ -7,9 +7,9 @@ import (
 )
 
 const (
-	ContactCreated = "CONTACT_CREATED"
-	ContactUpdated = "CONTACT_UPDATED"
-	//ContactDeleted = "CONTACT_DELETED"
+	ContactCreated           = "CONTACT_CREATED"
+	ContactUpdated           = "CONTACT_UPDATED"
+	ContactPhoneNumberLinked = "CONTACT_PHONE_NUMBER_LINKED"
 )
 
 type ContactCreatedEvent struct {
@@ -66,6 +66,29 @@ func NewContactUpdatedEvent(aggregate eventstore.Aggregate, contactDto *models.C
 		SourceOfTruth: contactDto.Source.SourceOfTruth,
 	}
 	event := eventstore.NewBaseEvent(aggregate, ContactUpdated)
+	if err := event.SetJsonData(&eventData); err != nil {
+		return eventstore.Event{}, err
+	}
+	return event, nil
+}
+
+type ContactLinkPhoneNumberEvent struct {
+	Tenant        string    `json:"tenant"`
+	UpdatedAt     time.Time `json:"updatedAt"`
+	PhoneNumberId string    `json:"phoneNumberId"`
+	Label         string    `json:"label"`
+	Primary       bool      `json:"primary"`
+}
+
+func NewContactLinkPhoneNumberEvent(aggregate eventstore.Aggregate, tenant, phoneNumberId, label string, primary bool, updatedAt time.Time) (eventstore.Event, error) {
+	eventData := ContactLinkPhoneNumberEvent{
+		Tenant:        tenant,
+		UpdatedAt:     updatedAt,
+		PhoneNumberId: phoneNumberId,
+		Label:         label,
+		Primary:       primary,
+	}
+	event := eventstore.NewBaseEvent(aggregate, ContactPhoneNumberLinked)
 	if err := event.SetJsonData(&eventData); err != nil {
 		return eventstore.Event{}, err
 	}

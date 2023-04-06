@@ -1,6 +1,7 @@
 type Mutation {
     phoneNumberUpsertInEventStore(size: Int!): Int!
     contactUpsertInEventStore(size: Int!): Int!
+    contactPhoneNumberRelationUpsertInEventStore(size: Int!): Int!
 }
 
 
