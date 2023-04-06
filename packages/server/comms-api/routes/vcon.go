@@ -43,6 +43,16 @@ func vConPartyToSessionParticipantInputArr(from []model.VConParty) []model.Inter
 				PhoneNumber: a.Tel,
 			}
 			to = append(to, participantInput)
+		} else if a.ContactId != nil {
+			participantInput := model.InteractionSessionParticipantInput{
+				ContactID: a.ContactId,
+			}
+			to = append(to, participantInput)
+		} else if a.UserId != nil {
+			participantInput := model.InteractionSessionParticipantInput{
+				UserID: a.UserId,
+			}
+			to = append(to, participantInput)
 		}
 	}
 	return to
@@ -125,7 +135,13 @@ func vConGetOrCreateSession(threadId string, name string, user string, attendant
 	return *sessionId, nil
 }
 
-func getUser(req *model.VCon) string {
+func getUser(c *gin.Context, req *model.VCon) string {
+
+	usernameHeader := c.GetHeader("X-Openline-USERNAME")
+
+	if usernameHeader != "" {
+		return usernameHeader
+	}
 
 	for _, p := range req.Parties {
 		if p.Mailto != nil {
@@ -150,8 +166,8 @@ type VConEvent struct {
 	Analysis *model.VConAnalysis `json:"analysis,omitempty"`
 }
 
-func submitAnalysis(sessionId string, req model.VCon, cosService s.CustomerOSService) ([]string, error) {
-	user := getUser(&req)
+func submitAnalysis(sessionId string, req model.VCon, cosService s.CustomerOSService, c *gin.Context) ([]string, error) {
+	user := getUser(c, &req)
 
 	var ids []string
 	for _, a := range req.Analysis {
@@ -174,9 +190,8 @@ func submitAnalysis(sessionId string, req model.VCon, cosService s.CustomerOSSer
 	return ids, nil
 }
 
-func submitDialog(sessionId string, req model.VCon, cosService s.CustomerOSService) ([]string, error) {
-
-	user := getUser(&req)
+func submitDialog(sessionId string, req model.VCon, cosService s.CustomerOSService, c *gin.Context) ([]string, error) {
+	user := getUser(c, &req)
 
 	var ids []string
 	for _, d := range req.Dialog {
@@ -238,7 +253,7 @@ func addVconRoutes(conf *c.Config, rg *gin.RouterGroup, cosService s.CustomerOSS
 			subject = fmt.Sprintf("Outgoing call to %s", contact)
 		}
 
-		sessionId, err := vConGetOrCreateSession(threadId, subject, getUser(&req), vConPartyToSessionParticipantInputArr(req.Parties), cosService)
+		sessionId, err := vConGetOrCreateSession(threadId, subject, getUser(c, &req), vConPartyToSessionParticipantInputArr(req.Parties), cosService)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{
 				"result": fmt.Sprintf("Unable to create InteractionSession! reasion: %v", err),
@@ -248,7 +263,7 @@ func addVconRoutes(conf *c.Config, rg *gin.RouterGroup, cosService s.CustomerOSS
 
 		var ids []string
 		if req.Analysis != nil && len(req.Analysis) > 0 {
-			newIds, err := submitAnalysis(sessionId, req, cosService)
+			newIds, err := submitAnalysis(sessionId, req, cosService, c)
 			if err != nil {
 				c.JSON(http.StatusInternalServerError, gin.H{
 					"result": fmt.Sprintf("Unable to submit analysis! reasion: %v", err),
@@ -259,7 +274,7 @@ func addVconRoutes(conf *c.Config, rg *gin.RouterGroup, cosService s.CustomerOSS
 		}
 
 		if req.Dialog != nil && len(req.Dialog) > 0 {
-			newIds, err := submitDialog(sessionId, req, cosService)
+			newIds, err := submitDialog(sessionId, req, cosService, c)
 			if err != nil {
 				c.JSON(http.StatusInternalServerError, gin.H{
 					"result": fmt.Sprintf("Unable to submit dialog! reasion: %v", err),

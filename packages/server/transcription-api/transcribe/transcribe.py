@@ -1,12 +1,8 @@
-#!/usr/bin/env python3
-import time
-
 import replicate
 import requests
 import json
 import os
 import numpy
-from pydub import AudioSegment
 from pydub.utils import make_chunks
 import datetime
 from sklearn.metrics.pairwise import cosine_similarity
@@ -161,24 +157,77 @@ def get_milliseconds(timestamp_str):
     milliseconds = (timestamp_obj - datetime.datetime(1900, 1, 1)).total_seconds() * 1000.0
     return milliseconds
 
+def build_transcribe_prompt(participants, topic):
+    prompt = "Your Job is to transcribe an audio conversation into text.\n"
+    prompt += "(Only if Needed) Extra context is provided below.\n"
+    prompt += "------------\n"
+
+    prompt = "Description:\nThis is an audio conversation between " + " and ".join(participants) + "\n"
+    if topic:
+             prompt += "\nThe following is the topic of the discussion:\n" + topic + "\n"
+    prompt += "------------\n"
+
+    prompt += "\nIf the context isn't useful return the original transcription\n"
+
+    return prompt
+
 def transcribe_segment(segment):
     start = segment['start']
     stop = segment['stop']
     speaker = segment['speaker']
     audio_segment = segment['audio']
+    prompt = segment['prompt']
     print(f"Transcribing segment {start} to {stop} for speaker {speaker}...")
     buffer = BytesIO()
     audio_segment.export(buffer, format="mp3")
     buffer.seek(0)
 
-    segment_output = replicate.run(
-        "openai/whisper:e39e354773466b955265e969568deb7da217804d8e771ea8c9cd0cef6591f8bc",
-        input={"audio": buffer}
-    )
+    temperature = 0.0
+    while True:
+        errors = 0
+        segment_output = replicate.run(
+            "openai/whisper:e39e354773466b955265e969568deb7da217804d8e771ea8c9cd0cef6591f8bc",
+            input={"audio": buffer, "initial_prompt": prompt,
+                   "condition_on_previous_text": False,
+                   "compression_ratio_threshold": 2.4,
+                   "logprob_threshold": -1,
+                   "temperature": temperature,}
+        )
+        for chunk in segment_output['segments']:
+            if chunk['avg_logprob'] < -1:
+                errors += 1
+                continue
+            if chunk['compression_ratio'] > 2.4:
+                print("Skipping chunk with high compression ratio: " + chunk['text'])
+                errors += 1
+                continue
+
+        if len(segment_output['segments']) == 0:
+            break
+
+        error_rate = float(errors) / float(len(segment_output['segments']))
+        print("*** Error rate: " + str(error_rate) + " ***")
+        if error_rate < 0.25:
+            break
+        temperature += 0.2
+        print("Error rate too high, retrying with higher temperature: " + str(temperature))
+        if temperature > 0.5:
+            print("Error rate too high, giving up")
+            break
+
+    if temperature > 0:
+        print("*******Final temperature: " + str(temperature))
+
     text = ""
     for chunk in segment_output['segments']:
+        if chunk['avg_logprob'] < -1:
+            print("Skipping chunk with low logprob: " + chunk['text'])
+            continue
+        if chunk['compression_ratio'] > 2.4:
+            print("Skipping chunk with high compression ratio: " + chunk['text'])
+            continue
         text += chunk['text']
-        print(chunk['text'])
+        print(chunk)
     segment_info = {'speaker': speaker, 'text': text, 'start': start}
 
     return segment_info
@@ -204,32 +253,20 @@ def run_transcription_tasks(tasks):
     return results
 
 
-def transcribe(mp3_file, diarisation):
+def transcribe(mp3_file, diarisation, participants=[], topic=""):
     tasks = []
+
+    prompt = build_transcribe_prompt(participants, topic)
+    print("Transcription prompt: " + prompt)
 
     for segment in diarisation['segments']:
         start = segment['start']
         stop = segment['stop']
         speaker = segment['speaker']
-        tasks.append({'speaker': speaker, 'audio': mp3_file[start:stop], 'start': start, 'stop': stop})
+        tasks.append({'speaker': speaker, 'audio': mp3_file[start:stop], 'start': start, 'stop': stop,'prompt': prompt})
 
     result_transcript = run_transcription_tasks(tasks)
     sorted_transcript = sorted(result_transcript, key=lambda k: k['start'])
     return sorted_transcript
 
-def process_file(filename):
-    print("Processing file " + filename)
-    current_time = time.time()
-
-    mp3_file = AudioSegment.from_file(filename, format="mp3")
-    print("File loaded in " + str(time.time() - current_time) + " seconds")
-    diarisation = diarise(mp3_file)
-
-    print(diarisation)
-    transcript = transcribe(mp3_file, diarisation)
-    print(transcript)
-    with open("result.json", "w") as file:
-        json.dump(transcript, file)
-    print("Time taken: " + str(time.time() - current_time))
-    os.unlink(filename)
 

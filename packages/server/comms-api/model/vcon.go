@@ -7,10 +7,12 @@ type VConAppended struct {
 }
 
 type VConParty struct {
-	Tel    *string `json:"tel,omitempty"`
-	Stir   *string `json:"stir,omitempty"`
-	Mailto *string `json:"mailto,omitempty"`
-	Name   *string `json:"name,omitempty"`
+	Tel       *string `json:"tel,omitempty"`
+	Stir      *string `json:"stir,omitempty"`
+	Mailto    *string `json:"mailto,omitempty"`
+	Name      *string `json:"name,omitempty"`
+	ContactId *string `json:"contact_id,omitempty"`
+	UserId    *string `json:"user_id,omitempty"`
 }
 
 type VConAnalysisType string
