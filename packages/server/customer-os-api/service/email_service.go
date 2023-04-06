@@ -118,8 +118,9 @@ func (s *emailService) UpdateEmailFor(ctx context.Context, entityType entity.Ent
 		if err != nil {
 			return nil, err
 		}
-		currentEmail := utils.GetPropsFromNode(*currentEmailNode)["email"].(string)
-		currentRawEmail := utils.GetPropsFromNode(*currentEmailNode)["rawEmail"].(string)
+
+		currentEmail := utils.GetStringPropOrEmpty(utils.GetPropsFromNode(*currentEmailNode), "email")
+		currentRawEmail := utils.GetStringPropOrEmpty(utils.GetPropsFromNode(*currentEmailNode), "rawEmail")
 
 		if len(inputEntity.RawEmail) == 0 || inputEntity.RawEmail == currentEmail || inputEntity.RawEmail == currentRawEmail {
 			// email address replace not requested, proceed with update

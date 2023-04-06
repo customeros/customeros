@@ -103,8 +103,8 @@ func (s *phoneNumberService) UpdatePhoneNumberFor(ctx context.Context, entityTyp
 		if err != nil {
 			return nil, err
 		}
-		currentE164 := utils.GetPropsFromNode(*currentPhoneNumberNode)["e164"].(string)
-		currentRawPhoneNumber := utils.GetPropsFromNode(*currentPhoneNumberNode)["rawPhoneNumber"].(string)
+		currentE164 := utils.GetStringPropOrEmpty(utils.GetPropsFromNode(*currentPhoneNumberNode), "e164")
+		currentRawPhoneNumber := utils.GetStringPropOrEmpty(utils.GetPropsFromNode(*currentPhoneNumberNode), "rawPhoneNumber")
 
 		if len(inputEntity.RawPhoneNumber) == 0 || inputEntity.RawPhoneNumber == currentE164 || inputEntity.RawPhoneNumber == currentRawPhoneNumber {
 			phoneNumberNode, phoneNumberRelationship, err = s.repositories.PhoneNumberRepository.UpdatePhoneNumberForInTx(ctx, tx, common.GetTenantFromContext(ctx), entityType, entityId, *inputEntity)
