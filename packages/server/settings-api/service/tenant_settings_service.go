@@ -218,6 +218,19 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 			tenantSettings.BraintreePrivateKey = &privateKey
 			tenantSettings.BraintreeEnvironment = &environment
 			tenantSettings.BraintreeMerchantId = &merchantId
+
+		case "callrail":
+			account, ok := data["account"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing account for CallRail integration")
+			}
+			apiToken, ok := data["apiToken"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing API token for CallRail integration")
+			}
+
+			tenantSettings.CallRailAccount = &account
+			tenantSettings.CallRailApiToken = &apiToken
 		}
 
 	}
@@ -279,6 +292,9 @@ func (s *tenantSettingsService) ClearIntegrationData(tenantName, identifier stri
 			tenantSettings.BraintreePrivateKey = nil
 			tenantSettings.BraintreeEnvironment = nil
 			tenantSettings.BraintreeMerchantId = nil
+		case "callrail":
+			tenantSettings.CallRailAccount = nil
+			tenantSettings.CallRailApiToken = nil
 
 		}
 

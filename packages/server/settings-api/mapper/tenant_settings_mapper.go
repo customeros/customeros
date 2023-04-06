@@ -77,5 +77,10 @@ func MapTenantSettingsEntityToDTO(tenantSettings *entity.TenantSettings) *map[st
 		responseMap["braintree"].(map[string]interface{})["state"] = "ACTIVE"
 	}
 
+	if tenantSettings != nil && tenantSettings.CallRailAccount != nil && tenantSettings.CallRailApiToken != nil {
+		responseMap["callrail"] = make(map[string]interface{})
+		responseMap["callrail"].(map[string]interface{})["state"] = "ACTIVE"
+	}
+
 	return &responseMap
 }

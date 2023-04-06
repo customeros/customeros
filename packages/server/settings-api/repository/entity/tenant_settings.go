@@ -42,6 +42,9 @@ type TenantSettings struct {
 	BraintreePrivateKey  *string `gorm:"column:braintree_private_key;type:varchar(255);" json:"braintreePrivateKey" binding:"required"`
 	BraintreeEnvironment *string `gorm:"column:braintree_environment;type:varchar(255);" json:"braintreeEnvironment" binding:"required"`
 	BraintreeMerchantId  *string `gorm:"column:braintree_merchant_id;type:varchar(255);" json:"braintreeMerchantId" binding:"required"`
+
+	CallRailAccount  *string `gorm:"column:callrail_account;type:varchar(255);" json:"callRailAccount" binding:"required"`
+	CallRailApiToken *string `gorm:"column:callrail_api_token;type:varchar(255);" json:"callRailApiToken" binding:"required"`
 }
 
 func (TenantSettings) TableName() string {

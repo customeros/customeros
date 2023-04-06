@@ -358,6 +358,32 @@ const Settings: NextPage = () => {
         />
       ),
     },
+    {
+      key: 'callrail',
+      state: 'INACTIVE',
+      template: (data: any) => (
+        <SettingsIntegrationItem
+          icon={'logos/openline_small.svg'}
+          identifier={'callrail'}
+          name={'CallRail'}
+          state={data.state}
+          settingsChanged={() => {
+            reloadRef.current = !reloadRef.current;
+            setReload(reloadRef.current);
+          }}
+          fields={[
+              {
+                  name: 'account',
+                  label: 'Account',
+              },
+              {
+                  name: 'apiToken',
+                  label: 'API Token',
+              }
+          ]}
+        />
+      ),
+    },
   ]);
 
   useEffect(() => {
