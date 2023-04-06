@@ -3,7 +3,7 @@ package test_utils
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
-	"github.com/openline-ai/openline-customer-os/packages/server/comms-api/routes"
+	"github.com/openline-ai/openline-customer-os/packages/server/comms-api/routes/ContactHub"
 	"net/http/httptest"
 	"net/url"
 	"testing"
@@ -45,9 +45,9 @@ func NewWSServer(t *testing.T) *httptest.Server {
 	return server
 }
 
-func SetupWebSocketServer(socketRoutes func(*gin.RouterGroup, *routes.WSHubs, int)) {
-	hubs := routes.InitHubs()
+func SetupWebSocketServer(socketRoutes func(*gin.RouterGroup, *ContactHub.ContactHub, int)) {
 	wsRouter = gin.Default()
+	hub := ContactHub.NewContactHub()
 	route := wsRouter.Group("/")
-	socketRoutes(route, hubs, 30)
+	socketRoutes(route, hub, 30)
 }
