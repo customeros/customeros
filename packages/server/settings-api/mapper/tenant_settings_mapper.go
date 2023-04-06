@@ -42,5 +42,10 @@ func MapTenantSettingsEntityToDTO(tenantSettings *entity.TenantSettings) *map[st
 		responseMap["aha"].(map[string]interface{})["state"] = "ACTIVE"
 	}
 
+	if tenantSettings != nil && tenantSettings.AirtablePersonalAccessToken != nil {
+		responseMap["airtable"] = make(map[string]interface{})
+		responseMap["airtable"].(map[string]interface{})["state"] = "ACTIVE"
+	}
+
 	return &responseMap
 }

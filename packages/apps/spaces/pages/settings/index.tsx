@@ -180,6 +180,28 @@ const Settings: NextPage = () => {
         />
       ),
     },
+    {
+      key: 'airtable',
+      state: 'INACTIVE',
+      template: (data: any) => (
+        <SettingsIntegrationItem
+          icon={'logos/airtable.svg'}
+          identifier={'airtable'}
+          name={'Airtable'}
+          state={data.state}
+          settingsChanged={() => {
+            reloadRef.current = !reloadRef.current;
+            setReload(reloadRef.current);
+          }}
+          fields={[
+            {
+              name: 'personalAccessToken',
+              label: 'Personal access token',
+            },
+          ]}
+        />
+      ),
+    },
   ]);
 
   useEffect(() => {

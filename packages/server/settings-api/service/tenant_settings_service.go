@@ -135,6 +135,13 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 			}
 			tenantSettings.AhaAPIUrl = &apiUrl
 			tenantSettings.AhaAPIKey = &apiKey
+
+		case "airtable":
+			personalAccessToken, ok := data["personalAccessToken"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing personal access token for Airtable integration")
+			}
+			tenantSettings.AirtablePersonalAccessToken = &personalAccessToken
 		}
 
 	}
@@ -176,6 +183,8 @@ func (s *tenantSettingsService) ClearIntegrationData(tenantName, identifier stri
 		case "aha":
 			tenantSettings.AhaAPIUrl = nil
 			tenantSettings.AhaAPIKey = nil
+		case "airtable":
+			tenantSettings.AirtablePersonalAccessToken = nil
 		}
 
 		qr := s.repositories.TenantSettingsRepository.Save(tenantSettings)
