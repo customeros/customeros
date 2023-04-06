@@ -305,6 +305,14 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 			tenantSettings.ConfluenceDomain = &domain
 			tenantSettings.ConfluenceLoginEmail = &loginEmail
 
+		case "courier":
+			apiKey, ok := data["apiKey"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing API key for Courier integration")
+			}
+
+			tenantSettings.CourierApiKey = &apiKey
+
 		}
 
 	}
@@ -386,6 +394,8 @@ func (s *tenantSettingsService) ClearIntegrationData(tenantName, identifier stri
 			tenantSettings.ConfluenceApiToken = nil
 			tenantSettings.ConfluenceDomain = nil
 			tenantSettings.ConfluenceLoginEmail = nil
+		case "courier":
+			tenantSettings.CourierApiKey = nil
 
 		}
 

@@ -112,5 +112,10 @@ func MapTenantSettingsEntityToDTO(tenantSettings *entity.TenantSettings) *map[st
 		responseMap["confluence"].(map[string]interface{})["state"] = "ACTIVE"
 	}
 
+	if tenantSettings != nil && tenantSettings.CourierApiKey != nil {
+		responseMap["courier"] = make(map[string]interface{})
+		responseMap["courier"].(map[string]interface{})["state"] = "ACTIVE"
+	}
+
 	return &responseMap
 }
