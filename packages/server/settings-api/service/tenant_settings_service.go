@@ -179,6 +179,14 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 			tenantSettings.BabelforceRegionEnvironment = &regionEnvironment
 			tenantSettings.BabelforceAccessKeyId = &accessKeyId
 			tenantSettings.BabelforceAccessToken = &accessToken
+
+		case "bigquery":
+			serviceAccountKey, ok := data["serviceAccountKey"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing service account key for BigQuery integration")
+			}
+
+			tenantSettings.BigQueryServiceAccountKey = &serviceAccountKey
 		}
 
 	}
@@ -231,6 +239,9 @@ func (s *tenantSettingsService) ClearIntegrationData(tenantName, identifier stri
 			tenantSettings.BabelforceRegionEnvironment = nil
 			tenantSettings.BabelforceAccessKeyId = nil
 			tenantSettings.BabelforceAccessToken = nil
+		case "bigquery":
+			tenantSettings.BigQueryServiceAccountKey = nil
+
 		}
 
 		qr := s.repositories.TenantSettingsRepository.Save(tenantSettings)

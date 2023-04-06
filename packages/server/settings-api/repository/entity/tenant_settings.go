@@ -33,6 +33,8 @@ type TenantSettings struct {
 	BabelforceRegionEnvironment *string `gorm:"column:babelforce_region_environment;type:varchar(255);" json:"babelforceRegionEnvironment" binding:"required"`
 	BabelforceAccessKeyId       *string `gorm:"column:babelforce_access_key_id;type:varchar(255);" json:"babelforceAccessKeyId" binding:"required"`
 	BabelforceAccessToken       *string `gorm:"column:babelforce_access_token;type:varchar(255);" json:"babelforceAccessToken" binding:"required"`
+
+	BigQueryServiceAccountKey *string `gorm:"column:bigquery_service_account_key;type:varchar(255);" json:"bigQueryServiceAccountKey" binding:"required"`
 }
 
 func (TenantSettings) TableName() string {

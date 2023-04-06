@@ -62,5 +62,10 @@ func MapTenantSettingsEntityToDTO(tenantSettings *entity.TenantSettings) *map[st
 		responseMap["babelforce"].(map[string]interface{})["state"] = "ACTIVE"
 	}
 
+	if tenantSettings != nil && tenantSettings.BigQueryServiceAccountKey != nil {
+		responseMap["bigquery"] = make(map[string]interface{})
+		responseMap["bigquery"].(map[string]interface{})["state"] = "ACTIVE"
+	}
+
 	return &responseMap
 }
