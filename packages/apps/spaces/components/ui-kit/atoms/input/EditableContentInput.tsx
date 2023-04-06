@@ -23,6 +23,9 @@ export const EditableContentInput = ({
     // delay in ms
     debounceTimeout,
   );
+  useEffect(() => {
+    setWidth((inputRef?.current?.scrollWidth || 0) + 2);
+  }, [inner]);
 
   useEffect(() => {
     return () => {
@@ -44,9 +47,6 @@ export const EditableContentInput = ({
         disabled={!isEditMode}
         onChange={(event) => {
           setInner(event.target.value);
-          setTimeout(() => {
-            setWidth((inputRef?.current?.scrollWidth || 0) + 2);
-          }, 0);
           debounced(event.target.value);
         }}
         placeholder={placeholder}
