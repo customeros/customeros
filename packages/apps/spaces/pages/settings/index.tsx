@@ -280,6 +280,28 @@ const Settings: NextPage = () => {
         />
       ),
     },
+    {
+      key: 'bigquery',
+      state: 'INACTIVE',
+      template: (data: any) => (
+        <SettingsIntegrationItem
+          icon={'logos/bigquery.svg'}
+          identifier={'bigquery'}
+          name={'BigQuery'}
+          state={data.state}
+          settingsChanged={() => {
+            reloadRef.current = !reloadRef.current;
+            setReload(reloadRef.current);
+          }}
+          fields={[
+              {
+                  name: 'serviceAccountKey',
+                  label: 'Service account key',
+              }
+          ]}
+        />
+      ),
+    },
   ]);
 
   useEffect(() => {
