@@ -384,6 +384,32 @@ const Settings: NextPage = () => {
         />
       ),
     },
+    {
+      key: 'chargebee',
+      state: 'INACTIVE',
+      template: (data: any) => (
+        <SettingsIntegrationItem
+          icon={'logos/chargebee.svg'}
+          identifier={'chargebee'}
+          name={'Chargebee'}
+          state={data.state}
+          settingsChanged={() => {
+            reloadRef.current = !reloadRef.current;
+            setReload(reloadRef.current);
+          }}
+          fields={[
+              {
+                  name: 'apiKey',
+                  label: 'API Key',
+              },
+              {
+                  name: 'productCatalog',
+                  label: 'Product Catalog',
+              }
+          ]}
+        />
+      ),
+    },
   ]);
 
   useEffect(() => {

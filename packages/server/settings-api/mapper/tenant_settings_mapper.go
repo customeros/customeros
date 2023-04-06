@@ -82,5 +82,10 @@ func MapTenantSettingsEntityToDTO(tenantSettings *entity.TenantSettings) *map[st
 		responseMap["callrail"].(map[string]interface{})["state"] = "ACTIVE"
 	}
 
+	if tenantSettings != nil && tenantSettings.ChargebeeProductCatalog != nil && tenantSettings.ChargebeeApiKey != nil {
+		responseMap["chargebee"] = make(map[string]interface{})
+		responseMap["chargebee"].(map[string]interface{})["state"] = "ACTIVE"
+	}
+
 	return &responseMap
 }

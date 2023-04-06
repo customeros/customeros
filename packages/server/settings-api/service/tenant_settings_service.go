@@ -231,6 +231,19 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 
 			tenantSettings.CallRailAccount = &account
 			tenantSettings.CallRailApiToken = &apiToken
+
+		case "chargebee":
+			apiKey, ok := data["apiKey"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing API key for Chargebee integration")
+			}
+			productCatalog, ok := data["productCatalog"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing product catalog for CallRail integration")
+			}
+
+			tenantSettings.ChargebeeApiKey = &apiKey
+			tenantSettings.ChargebeeProductCatalog = &productCatalog
 		}
 
 	}
@@ -295,6 +308,9 @@ func (s *tenantSettingsService) ClearIntegrationData(tenantName, identifier stri
 		case "callrail":
 			tenantSettings.CallRailAccount = nil
 			tenantSettings.CallRailApiToken = nil
+		case "chargebee":
+			tenantSettings.ChargebeeApiKey = nil
+			tenantSettings.ChargebeeProductCatalog = nil
 
 		}
 
