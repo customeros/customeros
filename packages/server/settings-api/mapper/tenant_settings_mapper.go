@@ -47,5 +47,10 @@ func MapTenantSettingsEntityToDTO(tenantSettings *entity.TenantSettings) *map[st
 		responseMap["airtable"].(map[string]interface{})["state"] = "ACTIVE"
 	}
 
+	if tenantSettings != nil && tenantSettings.AmplitudeSecretKey != nil && tenantSettings.AmplitudeAPIKey != nil {
+		responseMap["amplitude"] = make(map[string]interface{})
+		responseMap["amplitude"].(map[string]interface{})["state"] = "ACTIVE"
+	}
+
 	return &responseMap
 }

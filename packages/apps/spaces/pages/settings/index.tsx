@@ -202,6 +202,32 @@ const Settings: NextPage = () => {
         />
       ),
     },
+    {
+      key: 'amplitude',
+      state: 'INACTIVE',
+      template: (data: any) => (
+        <SettingsIntegrationItem
+          icon={'logos/amplitude.svg'}
+          identifier={'amplitude'}
+          name={'Amplitude'}
+          state={data.state}
+          settingsChanged={() => {
+            reloadRef.current = !reloadRef.current;
+            setReload(reloadRef.current);
+          }}
+          fields={[
+              {
+                  name: 'apiKey',
+                  label: 'API key',
+              },
+              {
+                  name: 'secretKey',
+                  label: 'Secret key',
+              },
+          ]}
+        />
+      ),
+    },
   ]);
 
   useEffect(() => {
