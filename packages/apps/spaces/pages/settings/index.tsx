@@ -650,6 +650,28 @@ const Settings: NextPage = () => {
         />
       ),
     },
+    {
+      key: 'drift',
+      state: 'INACTIVE',
+      template: (data: any) => (
+        <SettingsIntegrationItem
+          icon={'logos/drift.svg'}
+          identifier={'drift'}
+          name={'Drift'}
+          state={data.state}
+          settingsChanged={() => {
+            reloadRef.current = !reloadRef.current;
+            setReload(reloadRef.current);
+          }}
+          fields={[
+              {
+                  name: 'apiToken',
+                  label: 'API Token',
+              }
+          ]}
+        />
+      ),
+    },
   ]);
 
   useEffect(() => {

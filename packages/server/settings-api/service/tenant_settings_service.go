@@ -350,6 +350,14 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 
 			tenantSettings.DixaApiToken = &apiToken
 
+		case "drift":
+			apiToken, ok := data["apiToken"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing API token for Drift integration")
+			}
+
+			tenantSettings.DriftApiToken = &apiToken
+
 		}
 
 	}
@@ -442,6 +450,8 @@ func (s *tenantSettingsService) ClearIntegrationData(tenantName, identifier stri
 			tenantSettings.DelightedApiKey = nil
 		case "dixa":
 			tenantSettings.DixaApiToken = nil
+		case "drift":
+			tenantSettings.DriftApiToken = nil
 
 		}
 

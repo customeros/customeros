@@ -73,6 +73,8 @@ type TenantSettings struct {
 	DelightedApiKey *string `gorm:"column:delighted_api_key;type:varchar(255);" binding:"required"`
 
 	DixaApiToken *string `gorm:"column:dixa_api_token;type:varchar(255);" binding:"required"`
+
+	DriftApiToken *string `gorm:"column:drift_api_token;type:varchar(255);" binding:"required"`
 }
 
 func (TenantSettings) TableName() string {
