@@ -27,6 +27,8 @@ type TenantSettings struct {
 
 	AmplitudeAPIKey    *string `gorm:"column:amplitude_api_key;type:varchar(255);" json:"amplitudeAPIKey" binding:"required"`
 	AmplitudeSecretKey *string `gorm:"column:amplitude_secret_key;type:varchar(255);" json:"amplitudeSecretKey" binding:"required"`
+
+	BatonAPIKey *string `gorm:"column:baton_api_key;type:varchar(255);" json:"batonAPIKey" binding:"required"`
 }
 
 func (TenantSettings) TableName() string {
