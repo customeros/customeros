@@ -14,6 +14,7 @@ type Resolver struct {
 	InteractionEventCreate                func(ctx context.Context, event model.InteractionEventInput) (*model.InteractionEvent, error)
 	InteractionSessionBySessionIdentifier func(ctx context.Context, sessionIdentifier string) (*model.InteractionSession, error)
 	InteractionSessionCreate              func(ctx context.Context, session model.InteractionSessionInput) (*model.InteractionSession, error)
+	InteractionSessionResolver            func(ctx context.Context, obj *model.InteractionEvent) (*model.InteractionSession, error)
 	AnalysisCreate                        func(ctx context.Context, analysis model.AnalysisInput) (*model.Analysis, error)
 	SentBy                                func(ctx context.Context, obj *model.InteractionEvent) ([]model.InteractionEventParticipant, error)
 	SentTo                                func(ctx context.Context, obj *model.InteractionEvent) ([]model.InteractionEventParticipant, error)

@@ -181,7 +181,12 @@ func Test_vConDialogEvent(t *testing.T) {
 			AttendedBy:        nil,
 		}, nil
 	}
-
+	resolver.InteractionSessionResolver = func(ctx context.Context, obj *model.InteractionEvent) (*model.InteractionSession, error) {
+		log.Printf("InteractionSessionResolver: Got Event %v", obj)
+		return &model.InteractionSession{
+			Name: "my-session",
+		}, nil
+	}
 	resolver.SentBy = func(ctx context.Context, obj *model.InteractionEvent) ([]model.InteractionEventParticipant, error) {
 		log.Printf("SentBy: Got Event %v", obj)
 		return []model.InteractionEventParticipant{}, nil
@@ -207,7 +212,7 @@ func Test_vConDialogEvent(t *testing.T) {
 	req.Header.Add("X-Openline-VCon-Api-Key", myVconConfig.VCon.ApiKey)
 	vconRouter.ServeHTTP(w, req)
 	log.Printf("Got Body %s", w.Body)
-	if !assert.Equal(t, w.Code, 200) {
+	if !assert.Equal(t, 200, w.Code) {
 		return
 	}
 
@@ -301,6 +306,13 @@ func Test_vConDialogEventInExistingSession(t *testing.T) {
 	resolver.AttendedBy = func(ctx context.Context, obj *model.InteractionSession) ([]model.InteractionSessionParticipant, error) {
 		log.Printf("AttendedBy: Got Session %v", obj)
 		return []model.InteractionSessionParticipant{}, nil
+	}
+
+	resolver.InteractionSessionResolver = func(ctx context.Context, obj *model.InteractionEvent) (*model.InteractionSession, error) {
+		log.Printf("InteractionSessionResolver: Got Event %v", obj)
+		return &model.InteractionSession{
+			Name: "my-session-name",
+		}, nil
 	}
 
 	w := httptest.NewRecorder()
