@@ -480,6 +480,32 @@ const Settings: NextPage = () => {
         />
       ),
     },
+    {
+      key: 'coda',
+      state: 'INACTIVE',
+      template: (data: any) => (
+        <SettingsIntegrationItem
+          icon={'logos/coda.svg'}
+          identifier={'coda'}
+          name={'Coda'}
+          state={data.state}
+          settingsChanged={() => {
+            reloadRef.current = !reloadRef.current;
+            setReload(reloadRef.current);
+          }}
+          fields={[
+              {
+                  name: 'authToken',
+                  label: 'Auth Token',
+              },
+              {
+                  name: 'documentId',
+                  label: 'Document Id',
+              }
+          ]}
+        />
+      ),
+    },
   ]);
 
   useEffect(() => {

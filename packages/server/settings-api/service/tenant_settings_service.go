@@ -274,6 +274,19 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 
 			tenantSettings.CloseComApiKey = &apiKey
 
+		case "coda":
+			authToken, ok := data["authToken"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing auth token for Coda integration")
+			}
+			documentId, ok := data["documentId"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing document id for Coda integration")
+			}
+
+			tenantSettings.CodaAuthToken = &authToken
+			tenantSettings.CodaDocumentId = &documentId
+
 		}
 
 	}
@@ -348,6 +361,9 @@ func (s *tenantSettingsService) ClearIntegrationData(tenantName, identifier stri
 			tenantSettings.ClickUpApiKey = nil
 		case "closecom":
 			tenantSettings.CloseComApiKey = nil
+		case "coda":
+			tenantSettings.CodaAuthToken = nil
+			tenantSettings.CodaDocumentId = nil
 
 		}
 

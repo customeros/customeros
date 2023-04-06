@@ -102,5 +102,10 @@ func MapTenantSettingsEntityToDTO(tenantSettings *entity.TenantSettings) *map[st
 		responseMap["closecom"].(map[string]interface{})["state"] = "ACTIVE"
 	}
 
+	if tenantSettings != nil && tenantSettings.CodaAuthToken != nil && tenantSettings.CodaDocumentId != nil {
+		responseMap["coda"] = make(map[string]interface{})
+		responseMap["coda"].(map[string]interface{})["state"] = "ACTIVE"
+	}
+
 	return &responseMap
 }

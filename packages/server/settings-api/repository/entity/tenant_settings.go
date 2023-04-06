@@ -55,6 +55,9 @@ type TenantSettings struct {
 	ClickUpApiKey *string `gorm:"column:clickup_api_key;type:varchar(255);" binding:"required"`
 
 	CloseComApiKey *string `gorm:"column:closecom_api_key;type:varchar(255);" binding:"required"`
+
+	CodaAuthToken  *string `gorm:"column:coda_auth_token;type:varchar(255);" binding:"required"`
+	CodaDocumentId *string `gorm:"column:coda_document_id;type:varchar(255);" binding:"required"`
 }
 
 func (TenantSettings) TableName() string {
