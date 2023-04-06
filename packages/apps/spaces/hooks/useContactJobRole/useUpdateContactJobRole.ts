@@ -20,7 +20,6 @@ export const useUpdateContactJobRole = ({
   const handleUpdateContactJobRole: Result['onUpdateContactJobRole'] = async (
     input,
   ) => {
-    console.log('🏷️ ----- input: ', input);
     try {
       const response = await updateContactJobRoleMutation({
         variables: { input, contactId },

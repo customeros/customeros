@@ -44,7 +44,6 @@ export const EditableContentInput = ({
           [styles.editable]: isEditMode,
         })}
         style={{ width: `${width}px` }}
-        disabled={!isEditMode}
         onChange={(event) => {
           setInner(event.target.value);
           debounced(event.target.value);

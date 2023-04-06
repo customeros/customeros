@@ -46,7 +46,6 @@ export const useUpdateContactPersonalDetails = ({
         }
       `,
     });
-    console.log('🏷️ ----- contactData: ', contactData);
     // const newNoteWithNoted = {
     //   ...note_CreateForContact,
     //   noted: [

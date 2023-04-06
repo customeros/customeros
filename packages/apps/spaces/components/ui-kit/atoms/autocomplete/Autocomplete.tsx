@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect, useLayoutEffect } from 'react';
 import {
   AutoComplete as PrimereactAutocomplete,
   AutoCompleteChangeParams,
@@ -21,6 +21,7 @@ interface CustomAutoCompleteProps {
   editable?: boolean;
   disabled?: boolean;
   placeholder?: string;
+  mode?: 'default' | 'fit-content';
 }
 
 export const Autocomplete = ({
@@ -33,21 +34,24 @@ export const Autocomplete = ({
   editable,
   disabled,
   placeholder = '',
+  mode = 'default',
 }: CustomAutoCompleteProps) => {
   const [inputValue, setInputValue] = useState<string>(value);
+  const [width, setWidth] = useState<number>();
   const [filteredSuggestions, setFilteredSuggestions] =
     useState<SuggestionItem[]>(suggestions);
   const inputRef = useRef<HTMLInputElement>(null);
+  const measureRef = useRef<HTMLSpanElement>(null);
   const handleInputChange = (event: AutoCompleteChangeParams) => {
     const newInputValue = event.value;
     setInputValue(newInputValue);
-
-    // // Filter the suggestions based on the entered value
-    // const filteredItems = suggestions.filter((item) =>
-    //   item.label.toLowerCase().includes(newInputValue.toLowerCase()),
-    // );
-    // setFilteredSuggestions(filteredItems);
   };
+
+  useLayoutEffect(() => {
+    if (mode === 'fit-content') {
+      setWidth((measureRef?.current?.scrollWidth || 0) + 2);
+    }
+  }, [inputValue]);
 
   const handleSelectItem = (event: { value: SuggestionItem }) => {
     const selectedValue = event.value;
@@ -76,10 +80,11 @@ export const Autocomplete = ({
       const newItem = await onAddNew({ value: inputValue, label: inputValue });
 
       if (newItem) {
+        // @ts-expect-error fixme
         handleSelectItem({ label: newItem[newItemLabel], value: newItem.id });
       }
     } catch (e) {
-      console.log('🏷️ ----- : ERRROR', e);
+      // this is handled in mutation hook
     }
   };
 
@@ -90,7 +95,9 @@ export const Autocomplete = ({
           inputClassName={classNames(styles.autocompleteInput, {
             [styles.notEditable]: !editable,
             [styles.disabled]: disabled,
+            [styles.fitContent]: mode === 'fit-content',
           })}
+          style={{ width: width ? `${width}px` : 'auto' }}
           disabled={!editable || disabled}
           value={inputValue}
           delay={300}
@@ -121,6 +128,13 @@ export const Autocomplete = ({
           </button>
         </div>
       )}
+      <span
+        ref={measureRef}
+        className={classNames(styles.autocompleteInput)}
+        style={{ top: -999999, position: 'absolute', width: 'auto' }}
+      >
+        {inputValue || placeholder}
+      </span>
     </div>
   );
 };

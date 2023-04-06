@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import styles from './contact-details-edit.module.scss';
+import styles from './job-roles-input.module.scss';
 import {
   Autocomplete,
   EditableContentInput,
@@ -26,6 +26,7 @@ interface JobRoleInputProps {
   jobRole: string;
   roleId: string;
   isEditMode?: boolean;
+  showAddButton?: boolean;
 }
 
 export const JobRoleInput: React.FC<JobRoleInputProps> = ({
@@ -34,6 +35,7 @@ export const JobRoleInput: React.FC<JobRoleInputProps> = ({
   organization,
   jobRole,
   isEditMode,
+  showAddButton = false,
 }) => {
   const [organizationOptions, setOrganizationOptions] = useState<
     Array<{ value: string; label: string }>
@@ -63,64 +65,74 @@ export const JobRoleInput: React.FC<JobRoleInputProps> = ({
   return (
     <div>
       <div className={styles.jobAndOrganizationInputs}>
-        <EditableContentInput
-          isEditMode={isEditMode}
-          value={jobRole || ''}
-          placeholder='Job title'
-          onChange={(value: string) => {
-            roleId
-              ? onUpdateContactJobRole({
-                  id: roleId,
-                  jobTitle: value,
-                })
-              : onCreateContactJobRole({
-                  jobTitle: value,
-                });
-          }}
-        />
-        <Autocomplete
-          editable={isEditMode}
-          value={organization.name}
-          suggestions={organizationOptions}
-          onChange={(e) =>
-            roleId
-              ? onUpdateContactJobRole({
-                  id: roleId,
-                  organizationId: e.value,
-                })
-              : onCreateContactJobRole({ organizationId: e.value })
-          }
-          onAddNew={(e) => onCreateOrganization({ name: e.value })}
-          newItemLabel='name'
-          placeholder='Organization'
-        />
+        {isEditMode && (
+          <IconButton
+            onClick={(e) => {
+              e.stopPropagation();
+              e.preventDefault();
+              onRemoveContactJobRole(roleId);
+            }}
+            icon={<Trash style={{ transform: 'scale(0.7)' }} />}
+            size='xxxxs'
+            role='button'
+            mode='text'
+          />
+        )}
+        {(isEditMode || !!jobRole.length) && (
+          <EditableContentInput
+            isEditMode={isEditMode}
+            value={jobRole || ''}
+            placeholder='Job title'
+            onChange={(value: string) => {
+              roleId
+                ? onUpdateContactJobRole({
+                    id: roleId,
+                    jobTitle: value,
+                  })
+                : onCreateContactJobRole({
+                    jobTitle: value,
+                  });
+            }}
+          />
+        )}
 
-        <IconButton
-          onClick={(e) => {
-            e.stopPropagation();
-            e.preventDefault();
-            onRemoveContactJobRole(roleId);
-          }}
-          icon={<Trash style={{ transform: 'scale(0.8)' }} />}
-          size='xxxxs'
-          role='button'
-          mode='text'
-        />
-        <IconButton
-          onClick={(e) => {
-            e.stopPropagation();
-            e.preventDefault();
-            onCreateContactJobRole({
-              jobTitle: 'CEO',
-              primary: false,
-              organizationId: organization.id,
-            });
-          }}
-          icon={<Plus style={{ transform: 'scale(0.8)' }} />}
-          size='xxxxs'
-          role='button'
-          mode='text'
-        />
+        {(isEditMode || !!organization?.name?.length) && (
+          <Autocomplete
+            mode='fit-content'
+            editable={isEditMode}
+            value={organization?.name || ''}
+            suggestions={organizationOptions}
+            onChange={(e) =>
+              roleId
+                ? onUpdateContactJobRole({
+                    id: roleId,
+                    organizationId: e.value,
+                  })
+                : onCreateContactJobRole({ organizationId: e.value })
+            }
+            onAddNew={(e) => onCreateOrganization({ name: e.value })}
+            newItemLabel='name'
+            placeholder='Organization'
+          />
+        )}
+
+        {showAddButton && isEditMode && (
+          <IconButton
+            onClick={(e) => {
+              e.stopPropagation();
+              e.preventDefault();
+              onCreateContactJobRole({
+                jobTitle: '',
+                primary: false,
+                organizationId: organization.id,
+              });
+            }}
+            icon={<Plus style={{ transform: 'scale(0.8)' }} />}
+            size='xxxxs'
+            role='button'
+            mode='text'
+          />
+        )}
       </div>
     </div>
   );

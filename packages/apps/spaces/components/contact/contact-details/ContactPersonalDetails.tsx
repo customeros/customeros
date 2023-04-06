@@ -1,7 +1,15 @@
-import React from 'react';
-import { Button, EditableContentInput } from '../../ui-kit';
+import React, { useEffect, useState } from 'react';
+import {
+  Button,
+  DeleteConfirmationDialog,
+  EditableContentInput,
+  Folder,
+  Inbox,
+  Trash,
+} from '../../ui-kit';
 import styles from './contact-details.module.scss';
 import {
+  useArchiveContact,
   useContactPersonalDetails,
   useUpdateContactPersonalDetails,
 } from '../../../hooks/useContact';
@@ -11,6 +19,8 @@ import { ContactAvatar } from '../../ui-kit/molecules/organization-avatar';
 import { useRecoilState } from 'recoil';
 import { contactDetailsEdit } from '../../../state';
 import { JobRoleInput } from './edit/JobRoleInput';
+import { IconButton } from '../../ui-kit/atoms';
+import classNames from 'classnames';
 
 export const ContactPersonalDetails = ({ id }: { id: string }) => {
   const { data, loading, error } = useContactPersonalDetails({ id });
@@ -20,6 +30,9 @@ export const ContactPersonalDetails = ({ id }: { id: string }) => {
   const { onUpdateContactPersonalDetails } = useUpdateContactPersonalDetails({
     contactId: id,
   });
+  const [deleteConfirmationModalVisible, setDeleteConfirmationModalVisible] =
+    useState(false);
+  const { onArchiveContact } = useArchiveContact({ id });
 
   if (loading) {
     return <ContactDetailsSkeleton />;
@@ -29,9 +42,37 @@ export const ContactPersonalDetails = ({ id }: { id: string }) => {
   }
   return (
     <div className={styles.header}>
-      <div className={styles.photo}>
-        <ContactAvatar contactId={id} size={50} />
+      <div className={styles.avatarWrapper}>
+        <div className={styles.photo}>
+          <ContactAvatar contactId={id} size={50} />
+        </div>
+        {isEditMode && (
+          <>
+            <IconButton
+              className={styles.archiveContactButton}
+              size='xxxxs'
+              mode='text'
+              onClick={() => setDeleteConfirmationModalVisible(true)}
+              icon={<Inbox />}
+            />
+            <DeleteConfirmationDialog
+              deleteConfirmationModalVisible={deleteConfirmationModalVisible}
+              setDeleteConfirmationModalVisible={
+                setDeleteConfirmationModalVisible
+              }
+              deleteAction={() =>
+                onArchiveContact().then(() =>
+                  setDeleteConfirmationModalVisible(false),
+                )
+              }
+              header='Confirm archive'
+              confirmationButtonLabel='Archive contact'
+              explanationText='Are you sure you want to archive this contact?'
+            />
+          </>
+        )}
       </div>
+
       <div className={styles.name}>
         <div className={styles.nameAndEditButton}>
           <div className={styles.nameContainer}>
@@ -70,11 +111,10 @@ export const ContactPersonalDetails = ({ id }: { id: string }) => {
           </div>
         </div>
 
-        {(
-          data?.jobRoles || [
-            { organization: { id: '', name: '' }, jobTitle: '' },
-          ]
-        )?.map((jobRole: any) => {
+        {(!data?.jobRoles.length
+          ? [{ organization: { id: '', name: '' }, jobTitle: '' }]
+          : data?.jobRoles
+        )?.map((jobRole: any, index) => {
           return (
             <JobRoleInput
               key={jobRole.id}
@@ -82,12 +122,22 @@ export const ContactPersonalDetails = ({ id }: { id: string }) => {
               organization={jobRole.organization}
               jobRole={jobRole.jobTitle}
               roleId={jobRole.id}
+              isEditMode={isEditMode}
+              showAddButton={
+                data?.jobRoles.length
+                  ? data.jobRoles.length - 1 === index
+                  : true
+              }
             />
           );
         })}
 
         <ContactTags id={id} mode={isEditMode ? 'EDIT' : 'PREVIEW'} />
-        <div className={styles.source}>
+        <div
+          className={classNames(styles.source, {
+            [styles.sourceEditMode]: isEditMode,
+          })}
+        >
           <span>Source:</span>
           {data?.source || 'OPENLINE'}
         </div>

@@ -31,12 +31,18 @@
   justify-content: center;
   border-radius: 50%;
   overflow: hidden;
-  margin-right: var(--spacing-md);
+  margin-bottom: var(--spacing-md);
   background: var(--gradient-base);
   font-weight: bold;
   color: white;
 }
+.avatarWrapper{
+  display:flex;
+  flex-direction: column;
+  align-items: center;
+  margin-right: var(--spacing-md);
 
+}
 .photo img {
   width: 100%;
   height: 100%;
@@ -106,11 +112,14 @@
   color: var(--text-faded);
   font-weight: lighter;
   margin-left: var(--spacing-xxxs);
-  margin-top: var(--spacing-xxs);
 
   & span {
     font-weight: bold;
     margin-right: var(--spacing-xxxs);
+  }
+
+  &.sourceEditMode {
+    margin-top: var(--spacing-xxs);
   }
 }
 

@@ -26,7 +26,6 @@ export const useCreateContact = (): Result => {
         variables: { input: contact },
         refetchQueries: ['GetDashboardData'],
       });
-      console.log('🏷️ ----- response: ', response);
       if (response.data?.contact_Create) {
         push(`/contact/${response.data?.contact_Create.id}`);
       }

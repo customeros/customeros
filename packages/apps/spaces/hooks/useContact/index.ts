@@ -13,4 +13,5 @@ export { useMergeContacts } from './useMergeContacts';
 export { useContactNameFromId } from './useContactNameFromId';
 export { useContactNameFromEmail } from './useContactNameFromEmail';
 export { useContactNameFromPhoneNumber } from './useContactNameFromPhoneNumber';
+export { useArchiveContact } from './useArchiveContact';
 export type { ContactInput } from './types';

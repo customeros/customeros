@@ -17,11 +17,28 @@
     background-color: white;
     border-color: transparent;
   }
+
+  &.fitContent {
+    padding: 0;
+    border-color: transparent;
+
+    &:hover {
+      border: var(--border-divider)
+    }
+
+    &:focus,
+    &:active,
+    &:focus-visible {
+      border-color: var(--royal-blue-500);
+    }
+
+  }
 }
 
 .createItemButton {
   position: absolute;
   background: white;
+  min-width: 80px;
   z-index: 1;
   width: 100%;
   border-radius: var(--border-radius-xs);
