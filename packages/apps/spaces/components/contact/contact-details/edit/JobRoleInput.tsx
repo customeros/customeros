@@ -78,7 +78,7 @@ export const JobRoleInput: React.FC<JobRoleInputProps> = ({
             mode='text'
           />
         )}
-        {(isEditMode || !!jobRole.length) && (
+        {(isEditMode || !!jobRole?.length) && (
           <EditableContentInput
             isEditMode={isEditMode}
             value={jobRole || ''}
@@ -124,7 +124,7 @@ export const JobRoleInput: React.FC<JobRoleInputProps> = ({
               onCreateContactJobRole({
                 jobTitle: '',
                 primary: false,
-                organizationId: organization.id,
+                organizationId: organization?.id,
               });
             }}
             icon={<Plus style={{ transform: 'scale(0.8)' }} />}

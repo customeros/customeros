@@ -21,11 +21,13 @@ import { contactDetailsEdit } from '../../../state';
 import { JobRoleInput } from './edit/JobRoleInput';
 import { IconButton } from '../../ui-kit/atoms';
 import classNames from 'classnames';
+import { useCreateContactJobRole } from '../../../hooks/useContactJobRole';
 
 export const ContactPersonalDetails = ({ id }: { id: string }) => {
   const { data, loading, error } = useContactPersonalDetails({ id });
   const [{ isEditMode }, setContactDetailsEdit] =
     useRecoilState(contactDetailsEdit);
+  const { onCreateContactJobRole } = useCreateContactJobRole({ contactId: id });
 
   const { onUpdateContactPersonalDetails } = useUpdateContactPersonalDetails({
     contactId: id,
@@ -33,6 +35,11 @@ export const ContactPersonalDetails = ({ id }: { id: string }) => {
   const [deleteConfirmationModalVisible, setDeleteConfirmationModalVisible] =
     useState(false);
   const { onArchiveContact } = useArchiveContact({ id });
+  useEffect(() => {
+    if (!loading && !data?.jobRoles?.length && isEditMode) {
+      onCreateContactJobRole({ jobTitle: '' });
+    }
+  }, [loading, isEditMode]);
 
   if (loading) {
     return <ContactDetailsSkeleton />;
@@ -111,10 +118,7 @@ export const ContactPersonalDetails = ({ id }: { id: string }) => {
           </div>
         </div>
 
-        {(!data?.jobRoles.length
-          ? [{ organization: { id: '', name: '' }, jobTitle: '' }]
-          : data?.jobRoles
-        )?.map((jobRole: any, index) => {
+        {data?.jobRoles?.map((jobRole: any, index) => {
           return (
             <JobRoleInput
               key={jobRole.id}
