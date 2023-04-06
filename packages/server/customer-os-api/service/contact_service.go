@@ -41,6 +41,7 @@ type ContactService interface {
 
 	mapDbNodeToContactEntity(dbNode dbtype.Node) *entity.ContactEntity
 	UpsertInEventStore(ctx context.Context, size int) (int, error)
+	UpsertPhoneNumberRelationInEventStore(ctx context.Context, size int) (int, error)
 }
 
 type ContactCreateData struct {
@@ -559,6 +560,38 @@ func (s *contactService) UpsertInEventStore(ctx context.Context, size int) (int,
 				AppSource:     utils.GetStringPropOrEmpty(v.Node.Props, "appSource"),
 				CreatedAt:     utils.ConvertTimeToTimestampPtr(utils.GetTimePropOrNil(v.Node.Props, "createdAt")),
 				UpdatedAt:     utils.ConvertTimeToTimestampPtr(utils.GetTimePropOrNil(v.Node.Props, "updatedAt")),
+			})
+			if err != nil {
+				logrus.Errorf("Failed to call method: %v", err)
+			} else {
+				processedRecords++
+			}
+		}
+
+		size -= batchSize
+	}
+
+	return processedRecords, nil
+}
+
+func (s *contactService) UpsertPhoneNumberRelationInEventStore(ctx context.Context, size int) (int, error) {
+	processedRecords := 0
+	for size > 0 {
+		batchSize := constants.Neo4jBatchSize
+		if size < constants.Neo4jBatchSize {
+			batchSize = size
+		}
+		records, err := s.repositories.ContactRepository.GetAllContactPhoneNumberRelationships(ctx, batchSize)
+		if err != nil {
+			return 0, err
+		}
+		for _, v := range records {
+			_, err := s.grpcClients.ContactClient.AddPhoneNumberToContact(context.Background(), &events_processing_contact.AddPhoneNumberToContactGrpcRequest{
+				Primary:       utils.GetBoolPropOrFalse(v.Values[0].(neo4j.Relationship).Props, "primary"),
+				Label:         utils.GetStringPropOrEmpty(v.Values[0].(neo4j.Relationship).Props, "label"),
+				ContactId:     v.Values[1].(string),
+				PhoneNumberId: v.Values[2].(string),
+				Tenant:        v.Values[3].(string),
 			})
 			if err != nil {
 				logrus.Errorf("Failed to call method: %v", err)

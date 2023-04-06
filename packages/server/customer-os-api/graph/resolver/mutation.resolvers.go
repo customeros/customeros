@@ -44,6 +44,21 @@ func (r *mutationResolver) ContactUpsertInEventStore(ctx context.Context, size i
 	return result, nil
 }
 
+// ContactPhoneNumberRelationUpsertInEventStore is the resolver for the contactPhoneNumberRelationUpsertInEventStore field.
+func (r *mutationResolver) ContactPhoneNumberRelationUpsertInEventStore(ctx context.Context, size int) (int, error) {
+	defer func(start time.Time) {
+		utils.LogMethodExecution(start, utils.GetFunctionName())
+	}(time.Now())
+
+	result, err := r.Services.ContactService.UpsertPhoneNumberRelationInEventStore(ctx, size)
+	if err != nil {
+		logrus.Errorf("Failed to call method: %v", err)
+		graphql.AddErrorf(ctx, "Failed: {%s}", err)
+	}
+
+	return result, nil
+}
+
 // Mutation returns generated.MutationResolver implementation.
 func (r *Resolver) Mutation() generated.MutationResolver { return &mutationResolver{r} }
 
