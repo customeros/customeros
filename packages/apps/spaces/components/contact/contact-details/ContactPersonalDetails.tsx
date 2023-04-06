@@ -1,23 +1,16 @@
-import React, { useState } from 'react';
-import {
-  Avatar,
-  Button,
-  DebouncedInput,
-  EditableContentInput,
-} from '../../ui-kit';
+import React from 'react';
+import { Button, EditableContentInput } from '../../ui-kit';
 import styles from './contact-details.module.scss';
 import {
   useContactPersonalDetails,
-  useCreateContact,
   useUpdateContactPersonalDetails,
 } from '../../../hooks/useContact';
 import { ContactDetailsSkeleton } from './skeletons';
 import { ContactTags } from '../contact-tags';
 import { ContactAvatar } from '../../ui-kit/molecules/organization-avatar';
 import { useRecoilState } from 'recoil';
-import { contactDetailsEdit, editorMode } from '../../../state';
+import { contactDetailsEdit } from '../../../state';
 import { JobRoleInput } from './edit/JobRoleInput';
-import { User } from '../../ui-kit/atoms';
 
 export const ContactPersonalDetails = ({ id }: { id: string }) => {
   const { data, loading, error } = useContactPersonalDetails({ id });
@@ -32,7 +25,7 @@ export const ContactPersonalDetails = ({ id }: { id: string }) => {
     return <ContactDetailsSkeleton />;
   }
   if (error) {
-    return <>ERROR</>;
+    return null;
   }
   return (
     <div className={styles.header}>

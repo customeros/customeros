@@ -11,8 +11,9 @@ export const EditableContentInput = ({
   isEditMode,
   ...rest
 }: any) => {
-  const inputRef = useRef<Node>(null);
+  const inputRef = useRef<HTMLSpanElement>(null);
   const [inner, setInner] = useState(value);
+  const [width, setWidth] = useState<number>();
 
   const debounced = useDebouncedCallback(
     // function
@@ -30,22 +31,36 @@ export const EditableContentInput = ({
   }, []);
 
   return (
-    <input
-      {...rest}
-      value={inner}
-      size={inner.length || placeholder.length}
-      ref={inputRef}
-      className={classNames(styles.contentEditable, {
-        [styles?.[inputSize]]: inputSize,
-        [styles.editable]: isEditMode,
-      })}
-      disabled={!isEditMode}
-      style={{ textAlign: inner.length ? 'center' : 'initial' }}
-      onChange={(event) => {
-        setInner(event.target.value);
-        debounced(event.target.value);
-      }}
-      placeholder={placeholder}
-    />
+    <>
+      <input
+        {...rest}
+        value={inner}
+        size={inner.length || placeholder.length}
+        className={classNames(styles.contentEditable, {
+          [styles?.[inputSize]]: inputSize,
+          [styles.editable]: isEditMode,
+        })}
+        style={{ width: `${width}px` }}
+        disabled={!isEditMode}
+        onChange={(event) => {
+          setInner(event.target.value);
+          setTimeout(() => {
+            setWidth((inputRef?.current?.scrollWidth || 0) + 2);
+          }, 0);
+          debounced(event.target.value);
+        }}
+        placeholder={placeholder}
+      />
+      <span
+        ref={inputRef}
+        className={classNames(styles.contentEditable, {
+          [styles?.[inputSize]]: inputSize,
+          [styles.editable]: isEditMode,
+        })}
+        style={{ visibility: 'hidden', position: 'absolute' }}
+      >
+        {inner || placeholder}
+      </span>
+    </>
   );
 };
