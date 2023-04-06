@@ -51,6 +51,8 @@ type TenantSettings struct {
 
 	ChargifyApiKey *string `gorm:"column:chargify_api_key;type:varchar(255);" binding:"required"`
 	ChargifyDomain *string `gorm:"column:chargify_domain;type:varchar(255);" binding:"required"`
+
+	ClickUpApiKey *string `gorm:"column:clickup_api_key;type:varchar(255);" binding:"required"`
 }
 
 func (TenantSettings) TableName() string {

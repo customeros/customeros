@@ -436,6 +436,28 @@ const Settings: NextPage = () => {
         />
       ),
     },
+    {
+      key: 'clickup',
+      state: 'INACTIVE',
+      template: (data: any) => (
+        <SettingsIntegrationItem
+          icon={'logos/clickup.svg'}
+          identifier={'clickup'}
+          name={'ClickUp'}
+          state={data.state}
+          settingsChanged={() => {
+            reloadRef.current = !reloadRef.current;
+            setReload(reloadRef.current);
+          }}
+          fields={[
+              {
+                  name: 'apiKey',
+                  label: 'API Key',
+              }
+          ]}
+        />
+      ),
+    },
   ]);
 
   useEffect(() => {

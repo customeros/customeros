@@ -257,6 +257,15 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 
 			tenantSettings.ChargifyApiKey = &apiKey
 			tenantSettings.ChargifyDomain = &domain
+
+		case "clickup":
+			apiKey, ok := data["apiKey"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing API key for ClickUp integration")
+			}
+
+			tenantSettings.ClickUpApiKey = &apiKey
+
 		}
 
 	}
@@ -327,6 +336,8 @@ func (s *tenantSettingsService) ClearIntegrationData(tenantName, identifier stri
 		case "chargify":
 			tenantSettings.ChargifyApiKey = nil
 			tenantSettings.ChargifyDomain = nil
+		case "clickup":
+			tenantSettings.ClickUpApiKey = nil
 
 		}
 
