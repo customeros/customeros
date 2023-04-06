@@ -155,6 +155,14 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 			tenantSettings.AmplitudeSecretKey = &secretKey
 			tenantSettings.AmplitudeAPIKey = &apiKey
 
+		case "asana":
+			accessToken, ok := data["accessToken"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing access token for Asana integration")
+			}
+
+			tenantSettings.AsanaAccessToken = &accessToken
+
 		case "baton":
 			apiKey, ok := data["apiKey"].(string)
 			if !ok {
@@ -233,6 +241,8 @@ func (s *tenantSettingsService) ClearIntegrationData(tenantName, identifier stri
 		case "amplitude":
 			tenantSettings.AmplitudeSecretKey = nil
 			tenantSettings.AmplitudeAPIKey = nil
+		case "asana":
+			tenantSettings.AsanaAccessToken = nil
 		case "baton":
 			tenantSettings.BatonAPIKey = nil
 		case "babelforce":

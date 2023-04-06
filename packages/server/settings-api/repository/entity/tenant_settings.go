@@ -28,6 +28,8 @@ type TenantSettings struct {
 	AmplitudeAPIKey    *string `gorm:"column:amplitude_api_key;type:varchar(255);" json:"amplitudeAPIKey" binding:"required"`
 	AmplitudeSecretKey *string `gorm:"column:amplitude_secret_key;type:varchar(255);" json:"amplitudeSecretKey" binding:"required"`
 
+	AsanaAccessToken *string `gorm:"column:asana_access_token;type:varchar(255);" json:"asanaAccessToken" binding:"required"`
+
 	BatonAPIKey *string `gorm:"column:baton_api_key;type:varchar(255);" json:"batonAPIKey" binding:"required"`
 
 	BabelforceRegionEnvironment *string `gorm:"column:babelforce_region_environment;type:varchar(255);" json:"babelforceRegionEnvironment" binding:"required"`

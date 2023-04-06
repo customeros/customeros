@@ -52,6 +52,11 @@ func MapTenantSettingsEntityToDTO(tenantSettings *entity.TenantSettings) *map[st
 		responseMap["amplitude"].(map[string]interface{})["state"] = "ACTIVE"
 	}
 
+	if tenantSettings != nil && tenantSettings.AsanaAccessToken != nil {
+		responseMap["asana"] = make(map[string]interface{})
+		responseMap["asana"].(map[string]interface{})["state"] = "ACTIVE"
+	}
+
 	if tenantSettings != nil && tenantSettings.BatonAPIKey != nil {
 		responseMap["baton"] = make(map[string]interface{})
 		responseMap["baton"].(map[string]interface{})["state"] = "ACTIVE"
