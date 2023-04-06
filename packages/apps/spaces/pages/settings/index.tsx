@@ -558,6 +558,28 @@ const Settings: NextPage = () => {
         />
       ),
     },
+    {
+      key: 'customerio',
+      state: 'INACTIVE',
+      template: (data: any) => (
+        <SettingsIntegrationItem
+          icon={'logos/customer-io.svg'}
+          identifier={'customerio'}
+          name={'Customer.io'}
+          state={data.state}
+          settingsChanged={() => {
+            reloadRef.current = !reloadRef.current;
+            setReload(reloadRef.current);
+          }}
+          fields={[
+              {
+                  name: 'apiKey',
+                  label: 'API Key',
+              }
+          ]}
+        />
+      ),
+    },
   ]);
 
   useEffect(() => {

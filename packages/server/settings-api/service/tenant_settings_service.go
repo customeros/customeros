@@ -313,6 +313,14 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 
 			tenantSettings.CourierApiKey = &apiKey
 
+		case "customerio":
+			apiKey, ok := data["apiKey"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing API key for Customer.io integration")
+			}
+
+			tenantSettings.CustomerIoApiKey = &apiKey
+
 		}
 
 	}
@@ -396,6 +404,8 @@ func (s *tenantSettingsService) ClearIntegrationData(tenantName, identifier stri
 			tenantSettings.ConfluenceLoginEmail = nil
 		case "courier":
 			tenantSettings.CourierApiKey = nil
+		case "customerio":
+			tenantSettings.CustomerIoApiKey = nil
 
 		}
 

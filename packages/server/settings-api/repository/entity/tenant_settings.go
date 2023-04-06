@@ -64,6 +64,8 @@ type TenantSettings struct {
 	ConfluenceLoginEmail *string `gorm:"column:confluence_login_email;type:varchar(255);" binding:"required"`
 
 	CourierApiKey *string `gorm:"column:courier_api_key;type:varchar(255);" binding:"required"`
+
+	CustomerIoApiKey *string `gorm:"column:customerio_api_key;type:varchar(255);" binding:"required"`
 }
 
 func (TenantSettings) TableName() string {
