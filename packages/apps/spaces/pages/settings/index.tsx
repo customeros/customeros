@@ -672,6 +672,28 @@ const Settings: NextPage = () => {
         />
       ),
     },
+    {
+      key: 'emailoctopus',
+      state: 'INACTIVE',
+      template: (data: any) => (
+        <SettingsIntegrationItem
+          icon={'logos/emailoctopus.svg'}
+          identifier={'emailoctopus'}
+          name={'EmailOctopus'}
+          state={data.state}
+          settingsChanged={() => {
+            reloadRef.current = !reloadRef.current;
+            setReload(reloadRef.current);
+          }}
+          fields={[
+              {
+                  name: 'apiKey',
+                  label: 'API Key',
+              }
+          ]}
+        />
+      ),
+    },
   ]);
 
   useEffect(() => {

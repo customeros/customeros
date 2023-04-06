@@ -358,6 +358,14 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 
 			tenantSettings.DriftApiToken = &apiToken
 
+		case "emailoctopus":
+			apiKey, ok := data["apiKey"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing API key for EmailOctopus integration")
+			}
+
+			tenantSettings.EmailOctopusApiKey = &apiKey
+
 		}
 
 	}
@@ -452,6 +460,8 @@ func (s *tenantSettingsService) ClearIntegrationData(tenantName, identifier stri
 			tenantSettings.DixaApiToken = nil
 		case "drift":
 			tenantSettings.DriftApiToken = nil
+		case "emailoctopus":
+			tenantSettings.EmailOctopusApiKey = nil
 
 		}
 

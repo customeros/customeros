@@ -142,5 +142,10 @@ func MapTenantSettingsEntityToDTO(tenantSettings *entity.TenantSettings) *map[st
 		responseMap["drift"].(map[string]interface{})["state"] = "ACTIVE"
 	}
 
+	if tenantSettings != nil && tenantSettings.EmailOctopusApiKey != nil {
+		responseMap["emailoctopus"] = make(map[string]interface{})
+		responseMap["emailoctopus"].(map[string]interface{})["state"] = "ACTIVE"
+	}
+
 	return &responseMap
 }
