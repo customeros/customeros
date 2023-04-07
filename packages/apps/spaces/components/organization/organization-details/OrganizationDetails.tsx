@@ -26,7 +26,7 @@ export const OrganizationDetails = ({ id }: { id: string }) => {
                 setOrganizationDetailsEdit({ isEditMode: !isEditMode })
               }
             >
-              Edit
+              {isEditMode ? 'Done' : 'Edit'}
             </Button>
           </div>
         </div>
@@ -59,21 +59,18 @@ export const OrganizationDetails = ({ id }: { id: string }) => {
         )}
       </div>
 
-      {(isEditMode || !!data?.description?.length) && (
-        <DebouncedTextArea
-          isEditMode={isEditMode}
-          value={data?.description || ''}
-          placeholder={isEditMode ? 'Description' : ''}
-          onChange={(value: string) =>
-            onUpdateOrganization({
-              name: data?.name || '',
-              description: value,
-              industry: data?.industry || '',
-            })
-          }
-        />
-      )}
-
+      <DebouncedTextArea
+        isEditMode={isEditMode}
+        value={data?.description || ''}
+        placeholder={isEditMode ? 'Description' : ''}
+        onChange={(value: string) =>
+          onUpdateOrganization({
+            name: data?.name || '',
+            description: value,
+            industry: data?.industry || '',
+          })
+        }
+      />
       <div>
         {isEditMode && (
           <EditableContentInput
