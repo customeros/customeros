@@ -20,6 +20,8 @@ type EmailRepository interface {
 	DeleteById(ctx context.Context, tenant, emailId string) error
 	GetByIdAndRelatedEntity(ctx context.Context, entityType entity.EntityType, tenant, emailId, entityId string) (*dbtype.Node, error)
 	Exists(ctx context.Context, tenant string, email string) (bool, error)
+
+	GetAllCrossTenants(ctx context.Context, size int) ([]*utils.DbNodeAndId, error)
 }
 
 type emailRepository struct {
@@ -327,4 +329,27 @@ func (r *emailRepository) Exists(ctx context.Context, tenant string, email strin
 		return false, err
 	}
 	return result.(bool), err
+}
+
+func (r *emailRepository) GetAllCrossTenants(ctx context.Context, size int) ([]*utils.DbNodeAndId, error) {
+	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
+	defer session.Close(ctx)
+
+	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		if queryResult, err := tx.Run(ctx, `
+			MATCH (e:Email)--(t:Tenant)
+ 			WHERE (e.syncedWithEventStore is null or e.syncedWithEventStore=false)
+			RETURN e, t.name limit $size`,
+			map[string]any{
+				"size": size,
+			}); err != nil {
+			return nil, err
+		} else {
+			return utils.ExtractAllRecordsAsDbNodeAndId(ctx, queryResult, err)
+		}
+	})
+	if err != nil {
+		return nil, err
+	}
+	return result.([]*utils.DbNodeAndId), err
 }

@@ -1,11 +1,13 @@
 package server
 
 import (
-	contactGrpcService "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/proto/contact"
-	phoneNumberGrpcService "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/proto/phone_number"
+	contact_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/proto/contact"
+	email_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/proto/email"
+	phone_number_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/proto/phone_number"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	contactService "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/service"
-	phoneNumberService "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/phone_number/service"
+	email_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/email/service"
+	phone_number_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/phone_number/service"
 	"github.com/pkg/errors"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/keepalive"
@@ -47,10 +49,13 @@ func (server *server) newEventProcessorGrpcServer() (func() error, *grpc.Server,
 	)
 
 	contactService := contactService.NewContactService(server.log, server.repositories, server.commands.ContactCommands)
-	contactGrpcService.RegisterContactGrpcServiceServer(grpcServer, contactService)
+	contact_grpc_service.RegisterContactGrpcServiceServer(grpcServer, contactService)
 
-	phoneNumberService := phoneNumberService.NewPhoneNumberService(server.log, server.repositories, server.commands.PhoneNumberCommands)
-	phoneNumberGrpcService.RegisterPhoneNumberGrpcServiceServer(grpcServer, phoneNumberService)
+	phoneNumberService := phone_number_service.NewPhoneNumberService(server.log, server.repositories, server.commands.PhoneNumberCommands)
+	phone_number_grpc_service.RegisterPhoneNumberGrpcServiceServer(grpcServer, phoneNumberService)
+
+	emailService := email_service.NewEmailService(server.log, server.repositories, server.commands.EmailCommands)
+	email_grpc_service.RegisterEmailGrpcServiceServer(grpcServer, emailService)
 
 	go func() {
 		server.log.Infof("%s gRPC server is listening on port: {%s}", GetMicroserviceName(server.cfg), server.cfg.GRPC.Port)

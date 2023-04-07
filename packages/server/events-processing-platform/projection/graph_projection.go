@@ -4,10 +4,12 @@ import (
 	"context"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
-	contactEventHandlers "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/event_handlers"
-	contactEvents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/events"
-	phoneNumberEventHandlers "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/phone_number/event_handlers"
-	phoneNumberEvents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/phone_number/events"
+	contact_event_handlers "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/event_handlers"
+	contact_events "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/events"
+	email_event_handlers "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/email/event_handlers"
+	email_events "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/email/events"
+	phone_number_event_handlers "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/phone_number/event_handlers"
+	phone_number_events "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/phone_number/events"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/repository"
@@ -24,8 +26,9 @@ type GraphProjection struct {
 	db                      *esdb.Client
 	cfg                     *config.Config
 	repositories            *repository.Repositories
-	phoneNumberEventHandler *phoneNumberEventHandlers.GraphPhoneNumberEventHandler
-	contactEventHandler     *contactEventHandlers.GraphContactEventHandler
+	phoneNumberEventHandler *phone_number_event_handlers.GraphPhoneNumberEventHandler
+	contactEventHandler     *contact_event_handlers.GraphContactEventHandler
+	emailEventHandler       *email_event_handlers.GraphEmailEventHandler
 }
 
 func NewGraphProjection(log logger.Logger, db *esdb.Client, repositories *repository.Repositories, cfg *config.Config) *GraphProjection {
@@ -34,8 +37,9 @@ func NewGraphProjection(log logger.Logger, db *esdb.Client, repositories *reposi
 		db:                      db,
 		repositories:            repositories,
 		cfg:                     cfg,
-		phoneNumberEventHandler: &phoneNumberEventHandlers.GraphPhoneNumberEventHandler{Repositories: repositories},
-		contactEventHandler:     &contactEventHandlers.GraphContactEventHandler{Repositories: repositories},
+		phoneNumberEventHandler: &phone_number_event_handlers.GraphPhoneNumberEventHandler{Repositories: repositories},
+		contactEventHandler:     &contact_event_handlers.GraphContactEventHandler{Repositories: repositories},
+		emailEventHandler:       &email_event_handlers.GraphEmailEventHandler{Repositories: repositories},
 	}
 }
 
@@ -134,16 +138,21 @@ func (gp *GraphProjection) When(ctx context.Context, evt eventstore.Event) error
 
 	switch evt.GetEventType() {
 
-	case phoneNumberEvents.PhoneNumberCreated:
+	case phone_number_events.PhoneNumberCreated:
 		return gp.phoneNumberEventHandler.OnPhoneNumberCreate(ctx, evt)
-	case phoneNumberEvents.PhoneNumberUpdated:
+	case phone_number_events.PhoneNumberUpdated:
 		return gp.phoneNumberEventHandler.OnPhoneNumberUpdate(ctx, evt)
 
-	case contactEvents.ContactCreated:
+	case email_events.EmailCreated:
+		return gp.emailEventHandler.OnEmailCreate(ctx, evt)
+	case email_events.EmailUpdated:
+		return gp.emailEventHandler.OnEmailUpdate(ctx, evt)
+
+	case contact_events.ContactCreated:
 		return gp.contactEventHandler.OnContactCreate(ctx, evt)
-	case contactEvents.ContactUpdated:
+	case contact_events.ContactUpdated:
 		return gp.contactEventHandler.OnContactUpdate(ctx, evt)
-	case contactEvents.ContactPhoneNumberLinked:
+	case contact_events.ContactPhoneNumberLinked:
 		return gp.contactEventHandler.OnPhoneNumberLinkedToContact(ctx, evt)
 
 	default:

@@ -197,7 +197,7 @@ func (s *emailService) UpsertInEventStore(ctx context.Context, size int) (int, i
 		if size < constants.Neo4jBatchSize {
 			batchSize = size
 		}
-		records, err := s.repositories.PhoneNumberRepository.GetAllCrossTenants(ctx, batchSize)
+		records, err := s.repositories.EmailRepository.GetAllCrossTenants(ctx, batchSize)
 		if err != nil {
 			return 0, 0, err
 		}

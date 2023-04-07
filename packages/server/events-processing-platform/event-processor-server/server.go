@@ -5,8 +5,9 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain"
-	contactCommands "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/commands"
-	phoneNumberCommands "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/phone_number/commands"
+	contact_commands "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/commands"
+	email_commands "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/email/commands"
+	phone_number_commands "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/phone_number/commands"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore/store"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstroredb"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
@@ -70,13 +71,18 @@ func (server *server) Run(parentCtx context.Context) error {
 
 	aggregateStore := store.NewAggregateStore(server.log, db)
 	server.commands = &domain.Commands{
-		ContactCommands:     contactCommands.NewContactCommands(server.log, server.cfg, aggregateStore),
-		PhoneNumberCommands: phoneNumberCommands.NewPhoneNumberCommands(server.log, server.cfg, aggregateStore),
+		ContactCommands:     contact_commands.NewContactCommands(server.log, server.cfg, aggregateStore),
+		PhoneNumberCommands: phone_number_commands.NewPhoneNumberCommands(server.log, server.cfg, aggregateStore),
+		EmailCommands:       email_commands.NewEmailCommands(server.log, server.cfg, aggregateStore),
 	}
 
 	graphProjection := projection.NewGraphProjection(server.log, db, server.repositories, server.cfg)
 	go func() {
-		prefixes := []string{server.cfg.Subscriptions.ContactPrefix, server.cfg.Subscriptions.PhoneNumberPrefix}
+		prefixes := []string{
+			server.cfg.Subscriptions.ContactPrefix,
+			server.cfg.Subscriptions.PhoneNumberPrefix,
+			server.cfg.Subscriptions.EmailPrefix,
+		}
 		err := graphProjection.Subscribe(ctx, prefixes, server.cfg.Subscriptions.PoolSize, graphProjection.ProcessEvents)
 		if err != nil {
 			server.log.Errorf("(graphProjection.Subscribe) err: {%v}", err)
