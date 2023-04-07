@@ -366,6 +366,19 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 
 			tenantSettings.EmailOctopusApiKey = &apiKey
 
+		case "fastbill":
+			apiKey, ok := data["apiKey"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing API key for Fastbill integration")
+			}
+			projectId, ok := data["projectId"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing project id for Fastbill integration")
+			}
+
+			tenantSettings.FastbillApiKey = &apiKey
+			tenantSettings.FastbillProjectId = &projectId
+
 		}
 
 	}
@@ -462,6 +475,9 @@ func (s *tenantSettingsService) ClearIntegrationData(tenantName, identifier stri
 			tenantSettings.DriftApiToken = nil
 		case "emailoctopus":
 			tenantSettings.EmailOctopusApiKey = nil
+		case "fastbill":
+			tenantSettings.FastbillApiKey = nil
+			tenantSettings.FastbillProjectId = nil
 
 		}
 

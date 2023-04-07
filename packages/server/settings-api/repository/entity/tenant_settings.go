@@ -77,6 +77,9 @@ type TenantSettings struct {
 	DriftApiToken *string `gorm:"column:drift_api_token;type:varchar(255);" binding:"required"`
 
 	EmailOctopusApiKey *string `gorm:"column:emailoctopus_api_key;type:varchar(255);" binding:"required"`
+
+	FastbillApiKey    *string `gorm:"column:fastbill_api_key;type:varchar(255);" binding:"required"`
+	FastbillProjectId *string `gorm:"column:fastbill_project_id;type:varchar(255);" binding:"required"`
 }
 
 func (TenantSettings) TableName() string {

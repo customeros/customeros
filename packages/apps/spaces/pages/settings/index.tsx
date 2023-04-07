@@ -694,6 +694,32 @@ const Settings: NextPage = () => {
         />
       ),
     },
+    {
+      key: 'fastbill',
+      state: 'INACTIVE',
+      template: (data: any) => (
+        <SettingsIntegrationItem
+          icon={'logos/fastbill.svg'}
+          identifier={'fastbill'}
+          name={'Fastbill'}
+          state={data.state}
+          settingsChanged={() => {
+            reloadRef.current = !reloadRef.current;
+            setReload(reloadRef.current);
+          }}
+          fields={[
+              {
+                  name: 'apiKey',
+                  label: 'API Key',
+              },
+              {
+                  name: 'projectId',
+                  label: 'Project Id',
+              }
+          ]}
+        />
+      ),
+    },
   ]);
 
   useEffect(() => {
