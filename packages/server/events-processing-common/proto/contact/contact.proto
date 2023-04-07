@@ -27,10 +27,18 @@ message UpsertContactGrpcRequest {
   google.protobuf.Timestamp  updatedAt = 11;
 }
 
-message AddPhoneNumberToContactGrpcRequest {
+message LinkPhoneNumberToContactGrpcRequest {
   string tenant = 1;
   string contactId = 2;
   string phoneNumberId = 3;
+  bool primary = 4;
+  string label = 5;
+}
+
+message LinkEmailToContactGrpcRequest {
+  string tenant = 1;
+  string contactId = 2;
+  string emailId = 3;
   bool primary = 4;
   string label = 5;
 }
@@ -54,5 +62,6 @@ message ContactIdGrpcResponse {
 service contactGrpcService {
   rpc CreateContact(CreateContactGrpcRequest) returns (CreateContactGrpcResponse);
   rpc UpsertContact(UpsertContactGrpcRequest) returns (ContactIdGrpcResponse);
-  rpc AddPhoneNumberToContact(AddPhoneNumberToContactGrpcRequest) returns (ContactIdGrpcResponse);
+  rpc LinkPhoneNumberToContact(LinkPhoneNumberToContactGrpcRequest) returns (ContactIdGrpcResponse);
+  rpc LinkEmailToContact(LinkEmailToContactGrpcRequest) returns (ContactIdGrpcResponse);
 }

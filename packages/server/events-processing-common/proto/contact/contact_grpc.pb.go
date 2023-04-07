@@ -2,7 +2,7 @@
 // versions:
 // - protoc-gen-go-grpc v1.2.0
 // - protoc             v3.20.1
-// source: proto/contact/contact.proto
+// source: contact/contact.proto
 
 package contactGrpcService
 
@@ -24,7 +24,8 @@ const _ = grpc.SupportPackageIsVersion7
 type ContactGrpcServiceClient interface {
 	CreateContact(ctx context.Context, in *CreateContactGrpcRequest, opts ...grpc.CallOption) (*CreateContactGrpcResponse, error)
 	UpsertContact(ctx context.Context, in *UpsertContactGrpcRequest, opts ...grpc.CallOption) (*ContactIdGrpcResponse, error)
-	AddPhoneNumberToContact(ctx context.Context, in *AddPhoneNumberToContactGrpcRequest, opts ...grpc.CallOption) (*ContactIdGrpcResponse, error)
+	LinkPhoneNumberToContact(ctx context.Context, in *LinkPhoneNumberToContactGrpcRequest, opts ...grpc.CallOption) (*ContactIdGrpcResponse, error)
+	LinkEmailToContact(ctx context.Context, in *LinkEmailToContactGrpcRequest, opts ...grpc.CallOption) (*ContactIdGrpcResponse, error)
 }
 
 type contactGrpcServiceClient struct {
@@ -53,9 +54,18 @@ func (c *contactGrpcServiceClient) UpsertContact(ctx context.Context, in *Upsert
 	return out, nil
 }
 
-func (c *contactGrpcServiceClient) AddPhoneNumberToContact(ctx context.Context, in *AddPhoneNumberToContactGrpcRequest, opts ...grpc.CallOption) (*ContactIdGrpcResponse, error) {
+func (c *contactGrpcServiceClient) LinkPhoneNumberToContact(ctx context.Context, in *LinkPhoneNumberToContactGrpcRequest, opts ...grpc.CallOption) (*ContactIdGrpcResponse, error) {
 	out := new(ContactIdGrpcResponse)
-	err := c.cc.Invoke(ctx, "/contactGrpcService.contactGrpcService/AddPhoneNumberToContact", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/contactGrpcService.contactGrpcService/LinkPhoneNumberToContact", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *contactGrpcServiceClient) LinkEmailToContact(ctx context.Context, in *LinkEmailToContactGrpcRequest, opts ...grpc.CallOption) (*ContactIdGrpcResponse, error) {
+	out := new(ContactIdGrpcResponse)
+	err := c.cc.Invoke(ctx, "/contactGrpcService.contactGrpcService/LinkEmailToContact", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -68,7 +78,8 @@ func (c *contactGrpcServiceClient) AddPhoneNumberToContact(ctx context.Context, 
 type ContactGrpcServiceServer interface {
 	CreateContact(context.Context, *CreateContactGrpcRequest) (*CreateContactGrpcResponse, error)
 	UpsertContact(context.Context, *UpsertContactGrpcRequest) (*ContactIdGrpcResponse, error)
-	AddPhoneNumberToContact(context.Context, *AddPhoneNumberToContactGrpcRequest) (*ContactIdGrpcResponse, error)
+	LinkPhoneNumberToContact(context.Context, *LinkPhoneNumberToContactGrpcRequest) (*ContactIdGrpcResponse, error)
+	LinkEmailToContact(context.Context, *LinkEmailToContactGrpcRequest) (*ContactIdGrpcResponse, error)
 	mustEmbedUnimplementedContactGrpcServiceServer()
 }
 
@@ -82,8 +93,11 @@ func (UnimplementedContactGrpcServiceServer) CreateContact(context.Context, *Cre
 func (UnimplementedContactGrpcServiceServer) UpsertContact(context.Context, *UpsertContactGrpcRequest) (*ContactIdGrpcResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpsertContact not implemented")
 }
-func (UnimplementedContactGrpcServiceServer) AddPhoneNumberToContact(context.Context, *AddPhoneNumberToContactGrpcRequest) (*ContactIdGrpcResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method AddPhoneNumberToContact not implemented")
+func (UnimplementedContactGrpcServiceServer) LinkPhoneNumberToContact(context.Context, *LinkPhoneNumberToContactGrpcRequest) (*ContactIdGrpcResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method LinkPhoneNumberToContact not implemented")
+}
+func (UnimplementedContactGrpcServiceServer) LinkEmailToContact(context.Context, *LinkEmailToContactGrpcRequest) (*ContactIdGrpcResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method LinkEmailToContact not implemented")
 }
 func (UnimplementedContactGrpcServiceServer) mustEmbedUnimplementedContactGrpcServiceServer() {}
 
@@ -134,20 +148,38 @@ func _ContactGrpcService_UpsertContact_Handler(srv interface{}, ctx context.Cont
 	return interceptor(ctx, in, info, handler)
 }
 
-func _ContactGrpcService_AddPhoneNumberToContact_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(AddPhoneNumberToContactGrpcRequest)
+func _ContactGrpcService_LinkPhoneNumberToContact_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(LinkPhoneNumberToContactGrpcRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(ContactGrpcServiceServer).AddPhoneNumberToContact(ctx, in)
+		return srv.(ContactGrpcServiceServer).LinkPhoneNumberToContact(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/contactGrpcService.contactGrpcService/AddPhoneNumberToContact",
+		FullMethod: "/contactGrpcService.contactGrpcService/LinkPhoneNumberToContact",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ContactGrpcServiceServer).AddPhoneNumberToContact(ctx, req.(*AddPhoneNumberToContactGrpcRequest))
+		return srv.(ContactGrpcServiceServer).LinkPhoneNumberToContact(ctx, req.(*LinkPhoneNumberToContactGrpcRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ContactGrpcService_LinkEmailToContact_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(LinkEmailToContactGrpcRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ContactGrpcServiceServer).LinkEmailToContact(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/contactGrpcService.contactGrpcService/LinkEmailToContact",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ContactGrpcServiceServer).LinkEmailToContact(ctx, req.(*LinkEmailToContactGrpcRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -168,10 +200,14 @@ var ContactGrpcService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _ContactGrpcService_UpsertContact_Handler,
 		},
 		{
-			MethodName: "AddPhoneNumberToContact",
-			Handler:    _ContactGrpcService_AddPhoneNumberToContact_Handler,
+			MethodName: "LinkPhoneNumberToContact",
+			Handler:    _ContactGrpcService_LinkPhoneNumberToContact_Handler,
+		},
+		{
+			MethodName: "LinkEmailToContact",
+			Handler:    _ContactGrpcService_LinkEmailToContact_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "proto/contact/contact.proto",
+	Metadata: "contact/contact.proto",
 }

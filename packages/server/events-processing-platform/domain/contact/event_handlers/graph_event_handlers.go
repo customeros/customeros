@@ -66,3 +66,20 @@ func (e *GraphContactEventHandler) OnPhoneNumberLinkedToContact(ctx context.Cont
 
 	return err
 }
+
+func (e *GraphContactEventHandler) OnEmailLinkedToContact(ctx context.Context, evt eventstore.Event) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "GraphContactEventHandler.OnEmailLinkedToContact")
+	defer span.Finish()
+	span.LogFields(log.String("AggregateID", evt.GetAggregateID()))
+
+	var eventData events.ContactLinkEmailEvent
+	if err := evt.GetJsonData(&eventData); err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "evt.GetJsonData")
+	}
+
+	contactId := aggregate.GetContactAggregateID(evt.AggregateID, eventData.Tenant)
+	err := e.Repositories.EmailRepository.LinkWithContact(ctx, eventData.Tenant, contactId, eventData.EmailId, eventData.Label, eventData.Primary, eventData.UpdatedAt)
+
+	return err
+}

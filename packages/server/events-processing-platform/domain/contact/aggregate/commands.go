@@ -106,3 +106,52 @@ func (a *ContactAggregate) SetPhoneNumberNonPrimary(ctx context.Context, tenant,
 	}
 	return nil
 }
+
+func (a *ContactAggregate) LinkEmail(ctx context.Context, tenant, emailId, label string, primary bool) error {
+	span, _ := opentracing.StartSpanFromContext(ctx, "ContactAggregate.LinkEmail")
+	defer span.Finish()
+	span.LogFields(log.String("Tenant", tenant), log.String("AggregateID", a.GetID()))
+
+	updatedAtNotNil := utils.Now()
+
+	event, err := events.NewContactLinkEmailEvent(a, tenant, emailId, label, primary, updatedAtNotNil)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "NewContactLinkEmailEvent")
+	}
+
+	if err = event.SetMetadata(tracing.ExtractTextMapCarrier(span.Context())); err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "SetMetadata")
+	}
+
+	return a.Apply(event)
+}
+
+func (a *ContactAggregate) SetEmailNonPrimary(ctx context.Context, tenant, emailId string) error {
+	span, _ := opentracing.StartSpanFromContext(ctx, "ContactAggregate.SetEmailNonPrimary")
+	defer span.Finish()
+	span.LogFields(log.String("Tenant", tenant), log.String("AggregateID", a.GetID()))
+
+	updatedAtNotNil := utils.Now()
+
+	email, ok := a.Contact.Emails[emailId]
+	if !ok {
+		return localErrors.ErrEmailNotFound
+	}
+
+	if email.Primary {
+		event, err := events.NewContactLinkEmailEvent(a, tenant, emailId, email.Label, false, updatedAtNotNil)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return errors.Wrap(err, "NewContactLinkEmailEvent")
+		}
+
+		if err = event.SetMetadata(tracing.ExtractTextMapCarrier(span.Context())); err != nil {
+			tracing.TraceErr(span, err)
+			return errors.Wrap(err, "SetMetadata")
+		}
+		return a.Apply(event)
+	}
+	return nil
+}

@@ -1095,6 +1095,8 @@ type UpsertToEventStoreResult struct {
 	ContactCountFailed                    int `json:"contactCountFailed"`
 	ContactPhoneNumberRelationCount       int `json:"contactPhoneNumberRelationCount"`
 	ContactPhoneNumberRelationCountFailed int `json:"contactPhoneNumberRelationCountFailed"`
+	ContactEmailRelationCount             int `json:"contactEmailRelationCount"`
+	ContactEmailRelationCountFailed       int `json:"contactEmailRelationCountFailed"`
 }
 
 // Describes the User of customerOS.  A user is the person who logs into the Openline platform.

@@ -115,7 +115,7 @@ func (r *emailRepository) LinkWithContact(ctx context.Context, tenant, contactId
 	query := `
 		MATCH (t:Tenant {name:$tenant})<-[:CONTACT_BELONGS_TO_TENANT]-(c:Contact {id:$contactId}),
 				(t)<-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]-(e:Email {id:$emailId})
-		MERGE (c)-[rel:HAS]->(p)
+		MERGE (c)-[rel:HAS]->(e)
 		SET	rel.primary = $primary,
 			rel.label = $label,	
 			c.updatedAt = $updatedAt,

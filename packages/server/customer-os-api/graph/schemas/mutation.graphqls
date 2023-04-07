@@ -14,5 +14,7 @@ type UpsertToEventStoreResult {
     contactCountFailed: Int!
     contactPhoneNumberRelationCount: Int!
     contactPhoneNumberRelationCountFailed: Int!
+    contactEmailRelationCount: Int!
+    contactEmailRelationCountFailed: Int!
 }
 

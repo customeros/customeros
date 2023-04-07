@@ -39,6 +39,7 @@ type ContactRepository interface {
 
 	GetAllCrossTenants(ctx context.Context, size int) ([]*utils.DbNodeAndId, error)
 	GetAllContactPhoneNumberRelationships(ctx context.Context, size int) ([]*neo4j.Record, error)
+	GetAllContactEmailRelationships(ctx context.Context, size int) ([]*neo4j.Record, error)
 }
 
 type contactRepository struct {
@@ -829,6 +830,29 @@ func (r *contactRepository) GetAllContactPhoneNumberRelationships(ctx context.Co
 			MATCH (t:Tenant)--(c:Contact)-[rel:HAS]->(p:PhoneNumber)
  			WHERE (rel.syncedWithEventStore is null or rel.syncedWithEventStore=false)
 			RETURN rel, c.id, p.id, t.name limit $size`,
+			map[string]any{
+				"size": size,
+			}); err != nil {
+			return nil, err
+		} else {
+			return queryResult.Collect(ctx)
+		}
+	})
+	if err != nil {
+		return nil, err
+	}
+	return dbRecords.([]*neo4j.Record), err
+}
+
+func (r *contactRepository) GetAllContactEmailRelationships(ctx context.Context, size int) ([]*neo4j.Record, error) {
+	session := utils.NewNeo4jReadSession(ctx, *r.driver)
+	defer session.Close(ctx)
+
+	dbRecords, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		if queryResult, err := tx.Run(ctx, `
+			MATCH (t:Tenant)--(c:Contact)-[rel:HAS]->(e:Email)
+ 			WHERE (rel.syncedWithEventStore is null or rel.syncedWithEventStore=false)
+			RETURN rel, c.id, e.id, t.name limit $size`,
 			map[string]any{
 				"size": size,
 			}); err != nil {
