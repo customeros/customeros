@@ -20,7 +20,7 @@ const config = {
   },
   env: {
     ORY_SDK_URL: process.env.ORY_SDK_URL,
-
+    SSR_PUBLIC_PATH: process.env.SSR_PUBLIC_PATH,
     WEB_CHAT_API_KEY: process.env.WEB_CHAT_API_KEY,
     WEB_CHAT_HTTP_PATH: process.env.WEB_CHAT_HTTP_PATH,
     WEB_CHAT_WS_PATH: process.env.WEB_CHAT_WS_PATH,
