@@ -1,0 +1,27 @@
+syntax = "proto3";
+
+package emailGrpcService;
+
+import "google/protobuf/timestamp.proto";
+
+option go_package = "./;emailGrpcService";
+
+message UpsertEmailGrpcRequest {
+  string tenant = 1;
+  string rawEmail = 2;
+  string appSource = 3;
+  string source = 4;
+  string sourceOfTruth = 5;
+  google.protobuf.Timestamp  createdAt = 6;
+  google.protobuf.Timestamp  updatedAt = 7;
+  string id = 8;
+}
+
+
+message EmailIdGrpcResponse {
+  string id = 1;
+}
+
+service emailGrpcService {
+  rpc UpsertEmail(UpsertEmailGrpcRequest) returns (EmailIdGrpcResponse);
+}
