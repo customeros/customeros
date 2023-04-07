@@ -51,10 +51,13 @@ export const useUpdateContactEmail = ({
       return;
     }
 
+    const newEmailData = (data.contact?.emails || []).map((oldEmail) =>
+      oldEmail.id === emailUpdateInContact.id ? emailUpdateInContact : oldEmail,
+    );
     const newData = {
       contact: {
         ...data.contact,
-        emails: [...(data.contact?.emails || []), { ...emailUpdateInContact }],
+        emails: newEmailData,
       },
     };
     client.writeQuery({
@@ -72,7 +75,6 @@ export const useUpdateContactEmail = ({
     try {
       const response = await updateContactNoteMutation({
         variables: { input, contactId },
-        refetchQueries: ['GetContactCommunicationChannels'],
         optimisticResponse: {
           emailUpdateInContact: {
             __typename: 'Email',

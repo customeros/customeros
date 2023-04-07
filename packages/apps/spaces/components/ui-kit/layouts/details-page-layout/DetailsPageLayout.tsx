@@ -2,7 +2,7 @@ import '@openline-ai/openline-web-chat/dist/esm/index.css';
 import React, { FC, ReactNode } from 'react';
 import classNames from 'classnames';
 import styles from './details-page-layout.module.scss';
-import { ArrowLeft, Button, IconButton } from '../../atoms';
+import { ArrowLeft, IconButton } from '../../atoms';
 
 interface DetailsPageLayout {
   children: ReactNode;

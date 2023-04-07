@@ -7,6 +7,7 @@ export {
   EditableContentInput,
   WorkspaceElementButton,
   Button,
+  DeleteIconButton,
   MessageDeprecate,
   Address,
   DeleteConfirmationDialog,

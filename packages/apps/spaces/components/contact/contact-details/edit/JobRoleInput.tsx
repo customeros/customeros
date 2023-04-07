@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import styles from './job-roles-input.module.scss';
 import {
   Autocomplete,
+  DeleteIconButton,
   EditableContentInput,
   IconButton,
   Plus,
@@ -66,16 +67,9 @@ export const JobRoleInput: React.FC<JobRoleInputProps> = ({
     <div>
       <div className={styles.jobAndOrganizationInputs}>
         {isEditMode && (
-          <IconButton
-            onClick={(e) => {
-              e.stopPropagation();
-              e.preventDefault();
-              onRemoveContactJobRole(roleId);
-            }}
-            icon={<Trash style={{ transform: 'scale(0.7)' }} />}
-            size='xxxxs'
-            role='button'
-            mode='text'
+          <DeleteIconButton
+            style={{ position: 'absolute', left: -16, top: 6 }}
+            onDelete={() => onRemoveContactJobRole(roleId)}
           />
         )}
         {(isEditMode || !!jobRole?.length) && (

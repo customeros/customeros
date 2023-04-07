@@ -1,4 +1,4 @@
-import React, { MutableRefObject, useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef } from 'react';
 import styles from './contact-communication-details.module.scss';
 import Image from 'next/image';
 import { OverlayPanelEventType } from 'primereact';
@@ -17,9 +17,13 @@ import {
   EmailLabel,
   PhoneNumberLabel,
 } from '../../../graphQL/__generated__/generated';
-import { Button, EditableContentInput, Stop, Trash } from '../../ui-kit';
+import {
+  Button,
+  DeleteIconButton,
+  EditableContentInput,
+  Stop,
+} from '../../ui-kit';
 import { OverlayPanel } from '../../ui-kit/atoms/overlay-panel';
-import { ContactCommunicationDetailsSkeleton } from './skeletons';
 import classNames from 'classnames';
 import { CheckSquare, IconButton, Plus } from '../../ui-kit/atoms';
 import { useRecoilValue } from 'recoil';
@@ -58,9 +62,9 @@ export const ContactCommunicationDetails = ({ id }: { id: string }) => {
     if (!loading && isEditMode) {
       if (!data?.emails?.length) {
         onAddEmailToContact({
-          email: '',
           label: EmailLabel.Work,
           primary: true,
+          email: '',
         });
       }
       if (!data?.phoneNumbers?.length) {
@@ -85,13 +89,6 @@ export const ContactCommunicationDetails = ({ id }: { id: string }) => {
       },
     }));
 
-  if (!data && !error) {
-    return <ContactCommunicationDetailsSkeleton />;
-  }
-  if (error) {
-    return null;
-  }
-
   const hideEmailInReadOnlyIfNoData =
     (!data?.emails.length ||
       (data?.emails.length === 1 && !data.emails[0].email)) &&
@@ -112,44 +109,25 @@ export const ContactCommunicationDetails = ({ id }: { id: string }) => {
               {!hideEmailInReadOnlyIfNoData &&
                 data?.emails.map(({ label, ...rest }, index) => (
                   <tr
-                    key={`detail-item-${label}-${index}`}
+                    key={`detail-item-email-label-${rest.id}`}
                     className={classNames(styles.communicationItem)}
                   >
-                    <th
-                      className={classNames(
-                        styles.listContent,
-                        styles.tableHeader,
-                      )}
-                      colSpan={1}
-                    >
+                    <th className={classNames(styles.tableHeader)} colSpan={1}>
                       {isEditMode && (
                         <>
-                          <IconButton
-                            size={'xxxxs'}
-                            mode='dangerLink'
+                          <DeleteIconButton
+                            onDelete={() => onRemoveEmailFromContact(rest.id)}
                             style={{
-                              width: '24px',
-                              height: '16px',
                               position: 'absolute',
                               left: -20,
                             }}
-                            onClick={() => onRemoveEmailFromContact(rest.id)}
-                            icon={
-                              <Trash
-                                style={{
-                                  transform: 'scale(0.6)',
-                                  position: 'absolute',
-                                }}
-                              />
-                            }
                           />
+
                           <Button
                             mode='link'
                             style={{
                               display: 'inline-flex',
-                              paddingTop: 0,
-                              paddingBottom: 0,
-                              paddingRight: 0,
+                              padding: 0,
                             }}
                             onClick={(e: OverlayPanelEventType) =>
                               //@ts-expect-error revisit later
@@ -157,13 +135,13 @@ export const ContactCommunicationDetails = ({ id }: { id: string }) => {
                             }
                           >
                             <div className={styles.editLabelIcon}>
+                              {label?.toLowerCase()}
                               <Image
                                 src='/icons/code.svg'
                                 alt={'Change label'}
                                 height={12}
                                 width={12}
                               />
-                              {label}
                             </div>
                           </Button>
                           <OverlayPanel
@@ -171,7 +149,6 @@ export const ContactCommunicationDetails = ({ id }: { id: string }) => {
                             model={getLabelOptions(
                               EmailLabel,
                               (newLabel: EmailLabel) => {
-                                console.log('🏷️ ----- newLabel : ', newLabel);
                                 onUpdateContactEmail({
                                   label: newLabel,
                                   id: rest.id,
@@ -185,7 +162,7 @@ export const ContactCommunicationDetails = ({ id }: { id: string }) => {
                         </>
                       )}
 
-                      {!isEditMode && label}
+                      {!isEditMode && label?.toLowerCase()}
                     </th>
                   </tr>
                 ))}
@@ -194,45 +171,28 @@ export const ContactCommunicationDetails = ({ id }: { id: string }) => {
                 <tr className={styles.divider} />
               )}
               {!hidePhoneNumberInReadOnlyIfNoData &&
-                data?.phoneNumbers.map(({ label, ...rest }, index) => (
+                data?.phoneNumbers.map(({ label, ...rest }) => (
                   <tr
-                    key={`detail-item-${label}-${index}`}
+                    key={`detail-item-phone-number-label-${rest.id}`}
                     className={classNames(styles.communicationItem)}
                   >
-                    <th
-                      className={classNames(
-                        styles.listContent,
-                        styles.tableHeader,
-                      )}
-                      colSpan={1}
-                    >
+                    <th className={classNames(styles.tableHeader)} colSpan={1}>
                       {isEditMode && (
                         <>
-                          <IconButton
-                            size={'xxxxs'}
-                            mode='dangerLink'
+                          <DeleteIconButton
+                            onDelete={() =>
+                              onRemovePhoneNumberFromContact(rest.id)
+                            }
                             style={{
-                              width: '24px',
-                              height: '16px',
                               position: 'absolute',
                               left: -20,
                             }}
-                            onClick={() => onRemoveEmailFromContact(rest.id)}
-                            icon={
-                              <Trash
-                                style={{
-                                  transform: 'scale(0.6)',
-                                }}
-                              />
-                            }
                           />
                           <Button
                             mode='link'
                             style={{
                               display: 'inline-flex',
-                              paddingTop: 0,
-                              paddingBottom: 0,
-                              paddingRight: 0,
+                              padding: 0,
                             }}
                             onClick={(e: OverlayPanelEventType) =>
                               //@ts-expect-error revisit later
@@ -240,13 +200,13 @@ export const ContactCommunicationDetails = ({ id }: { id: string }) => {
                             }
                           >
                             <div className={styles.editLabelIcon}>
+                              {label?.toLowerCase()}
                               <Image
                                 src='/icons/code.svg'
                                 alt={'Change label'}
                                 height={12}
                                 width={12}
                               />
-                              {label}
                             </div>
                           </Button>
                           <OverlayPanel
@@ -267,7 +227,7 @@ export const ContactCommunicationDetails = ({ id }: { id: string }) => {
                         </>
                       )}
 
-                      {!isEditMode && label}
+                      {!isEditMode && label?.toLowerCase()}
                     </th>
                   </tr>
                 ))}
@@ -278,7 +238,7 @@ export const ContactCommunicationDetails = ({ id }: { id: string }) => {
                   ({ label, email, primary, id: emailId }, index) => {
                     return (
                       <tr
-                        key={`detail-item-${label}-${emailId}`}
+                        key={`detail-item-email-content-${emailId}`}
                         className={classNames(styles.communicationItem, {})}
                       >
                         <td
@@ -293,45 +253,48 @@ export const ContactCommunicationDetails = ({ id }: { id: string }) => {
                                 email: value,
                               })
                             }
-                            inlineMode
                             inputSize='xxxxs'
                             value={email || ''}
                             placeholder='email'
                             isEditMode={isEditMode}
                           />
                         </td>
-                        <td>
-                          <Button
-                            mode='text'
-                            className={styles.primaryButton}
-                            style={{
-                              display: 'inline-flex',
-                              padding: 0,
-                              fontWeight: 'normal',
-                            }}
-                            onClick={() =>
-                              onUpdateContactEmail({
-                                id: emailId,
-                                label,
-                                email,
-                                primary: !primary,
-                              })
-                            }
-                          >
-                            <div className={styles.editLabelIcon}>
-                              {primary ? (
-                                <CheckSquare
-                                  style={{ transform: 'scale(0.6)' }}
-                                />
-                              ) : (
-                                <Stop style={{ transform: 'scale(0.6)' }} />
-                              )}
 
-                              <span>Primary</span>
-                            </div>
-                          </Button>
-                        </td>
-                        {index === data?.emails.length - 1 && (
+                        {isEditMode && (
+                          <td>
+                            <Button
+                              mode='text'
+                              className={styles.primaryButton}
+                              style={{
+                                display: 'inline-flex',
+                                padding: 0,
+                                fontWeight: 'normal',
+                              }}
+                              onClick={() =>
+                                onUpdateContactEmail({
+                                  id: emailId,
+                                  label,
+                                  email,
+                                  primary: !primary,
+                                })
+                              }
+                            >
+                              <div className={styles.editLabelIcon}>
+                                {primary ? (
+                                  <CheckSquare
+                                    style={{ transform: 'scale(0.6)' }}
+                                  />
+                                ) : (
+                                  <Stop style={{ transform: 'scale(0.6)' }} />
+                                )}
+
+                                <span>Primary</span>
+                              </div>
+                            </Button>
+                          </td>
+                        )}
+
+                        {index === data?.emails.length - 1 && isEditMode && (
                           <td>
                             <IconButton
                               size={'xxxxs'}
@@ -341,7 +304,13 @@ export const ContactCommunicationDetails = ({ id }: { id: string }) => {
                                 height: '16px',
                                 position: 'relative',
                               }}
-                              onClick={() => onAddEmailToContact({ email: '' })}
+                              onClick={() =>
+                                onAddEmailToContact({
+                                  label: EmailLabel.Work,
+                                  primary: false,
+                                  email: '',
+                                })
+                              }
                               icon={
                                 <Plus style={{ transform: 'scale(0.6)' }} />
                               }
@@ -364,7 +333,7 @@ export const ContactCommunicationDetails = ({ id }: { id: string }) => {
                   ) => {
                     return (
                       <tr
-                        key={`detail-item-${label}-${rawPhoneNumber || e164}`}
+                        key={`detail-item-phone-number-content-${phoneNumberId}`}
                         className={classNames(styles.communicationItem, {})}
                       >
                         <td
@@ -384,56 +353,63 @@ export const ContactCommunicationDetails = ({ id }: { id: string }) => {
                             placeholder='phone'
                           />
                         </td>
-                        <td>
-                          <Button
-                            mode='text'
-                            className={styles.primaryButton}
-                            style={{
-                              display: 'inline-flex',
-                              padding: 0,
-                              fontWeight: 'normal',
-                            }}
-                            onClick={() =>
-                              onUpdateContactPhoneNumber({
-                                id: phoneNumberId,
-                                label,
-                                phoneNumber: rawPhoneNumber || e164 || '',
-                                primary: !primary,
-                              })
-                            }
-                          >
-                            <div className={styles.editLabelIcon}>
-                              {primary ? (
-                                <CheckSquare
-                                  style={{ transform: 'scale(0.6)' }}
-                                />
-                              ) : (
-                                <Stop style={{ transform: 'scale(0.6)' }} />
-                              )}
-
-                              <span>Primary</span>
-                            </div>
-                          </Button>
-                        </td>
-                        {index === data?.phoneNumbers.length - 1 && (
+                        {isEditMode && (
                           <td>
-                            <IconButton
-                              size={'xxxxs'}
-                              mode='dangerLink'
+                            <Button
+                              mode='text'
+                              className={styles.primaryButton}
                               style={{
-                                width: '24px',
-                                height: '16px',
-                                position: 'relative',
+                                display: 'inline-flex',
+                                padding: 0,
+                                fontWeight: 'normal',
                               }}
                               onClick={() =>
-                                onCreateContactPhoneNumber({ phoneNumber: '' })
+                                onUpdateContactPhoneNumber({
+                                  id: phoneNumberId,
+                                  label,
+                                  phoneNumber: rawPhoneNumber || e164 || '',
+                                  primary: !primary,
+                                })
                               }
-                              icon={
-                                <Plus style={{ transform: 'scale(0.6)' }} />
-                              }
-                            />
+                            >
+                              <div className={styles.editLabelIcon}>
+                                {primary ? (
+                                  <CheckSquare
+                                    style={{ transform: 'scale(0.6)' }}
+                                  />
+                                ) : (
+                                  <Stop style={{ transform: 'scale(0.6)' }} />
+                                )}
+
+                                <span>Primary</span>
+                              </div>
+                            </Button>
                           </td>
                         )}
+                        {index === data?.phoneNumbers.length - 1 &&
+                          isEditMode && (
+                            <td>
+                              <IconButton
+                                size={'xxxxs'}
+                                mode='dangerLink'
+                                style={{
+                                  width: '24px',
+                                  height: '16px',
+                                  position: 'relative',
+                                }}
+                                onClick={() =>
+                                  onCreateContactPhoneNumber({
+                                    phoneNumber: '',
+                                    label: PhoneNumberLabel.Work,
+                                    primary: false,
+                                  })
+                                }
+                                icon={
+                                  <Plus style={{ transform: 'scale(0.6)' }} />
+                                }
+                              />
+                            </td>
+                          )}
                       </tr>
                     );
                   },
