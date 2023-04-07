@@ -35,7 +35,7 @@
   margin: var(--spacing-xxxs) var(--spacing-xxxs) 0 0;
 
   li {
-    margin: 0;
+    margin: 0 var(--spacing-xxxs) 0 0;
   }
 
   &.tagListPresentation {

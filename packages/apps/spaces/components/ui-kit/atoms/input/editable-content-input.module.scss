@@ -1,0 +1,31 @@
+.contentEditable {
+  width: max-content;
+  padding: 0 2px;
+  border: 1px solid transparent;
+  font-size: inherit;
+  border-radius: var(--border-radius-sm);
+  max-width: 300px;
+  text-align: start;
+  background: white;
+
+  &:focus-visible {
+    outline: none;
+  }
+
+  &.empty:after {
+    content: attr(data-placeholder);
+    color: gray;
+  }
+
+  &.editable {
+
+    &:hover {
+      border: var(--border-input);
+    }
+
+    &:focus-visible {
+      border-color: var(--royal-blue-500);
+    }
+  }
+}
+
