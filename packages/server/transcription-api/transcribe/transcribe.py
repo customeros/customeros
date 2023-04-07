@@ -8,6 +8,7 @@ import datetime
 from sklearn.metrics.pairwise import cosine_similarity
 import multiprocessing
 from io import BytesIO
+import traceback
 
 
 AUDIO_SEGMENT_LENGTH = 5 * 60 * 1000  # 5 minutes in milliseconds
@@ -108,11 +109,13 @@ def merge_diarisations(diarisations):
 
     speakers =  sorted_diariastions[0]['diariastion']['speakers']['embeddings']
 
+    print(sorted_diariastions[0])
     for segment in sorted_diariastions[0]['diariastion']['segments']:
         s = {}
         s['start'] = get_milliseconds(segment['start'])
         s['stop'] = get_milliseconds(segment['stop'])
         s['speaker'] = segment['speaker']
+        print("Adding segment " + str(s['start']) + " to " + str(s['stop']))
         result['segments'].append(s)
 
     for diariastion in sorted_diariastions[1:]:
@@ -157,19 +160,44 @@ def get_milliseconds(timestamp_str):
     milliseconds = (timestamp_obj - datetime.datetime(1900, 1, 1)).total_seconds() * 1000.0
     return milliseconds
 
-def build_transcribe_prompt(participants, topic):
-    prompt = "Your Job is to transcribe an audio conversation into text.\n"
-    prompt += "(Only if Needed) Extra context is provided below.\n"
-    prompt += "------------\n"
+def build_transcribe_prompt(participants, industries, descriptions, topic):
+#    prompt = "Your Job is to transcribe an audio conversation into text.\n"
+#    prompt += "(Only if Needed) Extra context is provided below.\n"
+    prompt = "------------\n"
 
-    prompt = "Description:\nThis is an audio conversation between " + " and ".join(participants) + "\n"
+    prompt += "Description:\nThis is an audio conversation between " + " and ".join(participants) + "\n"
+
+    if len(industries)  > 0:
+        prompt += "The participants are from the following industries: " + ", ".join(industries) + "\n"
+
+
+    if len(descriptions) > 0:
+        prompt += "The participants are described as follows:\n"
+        for description in descriptions:
+            prompt += description + "\n"
+
     if topic:
-             prompt += "\nThe following is the topic of the discussion:\n" + topic + "\n"
+             prompt += "The following is the topic of the discussion:\n" + topic + "\n"
     prompt += "------------\n"
 
-    prompt += "\nIf the context isn't useful return the original transcription\n"
+    #prompt += "\nIf the context isn't useful return the original transcription\n"
 
     return prompt
+
+
+def transcribe_audio_buffer(audio_segment, prompt, temperature):
+    buffer = BytesIO()
+    audio_segment.export(buffer, format="mp3")
+    buffer.seek(0)
+    segment_output = replicate.run(
+        "openai/whisper:e39e354773466b955265e969568deb7da217804d8e771ea8c9cd0cef6591f8bc",
+        input={"audio": buffer, "initial_prompt": prompt,
+               "condition_on_previous_text": True,
+               "compression_ratio_threshold": 2.4,
+               "logprob_threshold": -1,
+               "temperature": temperature, }
+    )
+    return segment_output
 
 def transcribe_segment(segment):
     start = segment['start']
@@ -178,59 +206,88 @@ def transcribe_segment(segment):
     audio_segment = segment['audio']
     prompt = segment['prompt']
     print(f"Transcribing segment {start} to {stop} for speaker {speaker}...")
-    buffer = BytesIO()
-    audio_segment.export(buffer, format="mp3")
-    buffer.seek(0)
 
-    temperature = 0.0
-    while True:
-        errors = 0
-        segment_output = replicate.run(
-            "openai/whisper:e39e354773466b955265e969568deb7da217804d8e771ea8c9cd0cef6591f8bc",
-            input={"audio": buffer, "initial_prompt": prompt,
-                   "condition_on_previous_text": False,
-                   "compression_ratio_threshold": 2.4,
-                   "logprob_threshold": -1,
-                   "temperature": temperature,}
-        )
+    try:
+        temperature = 0.0
+        error_rate = 0.0
+        while True:
+            segment_output = transcribe_audio_buffer(audio_segment, prompt, temperature)
+
+            errors = 0
+            for chunk in segment_output['segments']:
+                if chunk['avg_logprob'] < -1:
+                    errors += 1
+                    continue
+                if chunk['compression_ratio'] > 2.4:
+                    errors += 1
+                    continue
+
+            if len(segment_output['segments']) == 0:
+                if prompt != "":
+                    print(f"{start}: No output, retrying without prompt")
+                    prompt = ""
+                    continue
+                else:
+                    print(f"{start}: No output even without prompt, giving up")
+                    break
+
+
+            error_rate = float(errors) / float(len(segment_output['segments']))
+            if error_rate < 0.25:
+                break
+
+            if prompt != "":
+                print(f"{start}: Error rate too high {str(error_rate)}, retrying without prompt")
+                prompt = ""
+                continue
+            else:
+                print(f"{start}: Error rate too high {str(error_rate)} even without prompt, giving up")
+                break
+
+
+
+        if prompt == "" and error_rate < 0.25 and len(segment_output['segments']) > 0:
+            print(f"*******{start}: Success by removing prompt: {str(temperature)}" )
+
+        text = ""
+        last_end = 0
+        total_new_segment_outputs = []
+        for chunk in segment_output['segments']:
+            new_start = chunk['start'] * 1000
+            new_end = chunk['end'] * 1000
+            print( f"{start}: Chunk {new_start} to {new_end}: Gap: {new_start - last_end}")
+            if new_start - last_end > 5000:
+                print(f"{start}:**** gap detected")
+                new_segment_output = transcribe_audio_buffer(audio_segment[last_end:new_start], "", temperature)
+                for new_chunk in new_segment_output['segments']:
+                    new_chunk['start'] = new_chunk['start'] + last_end / 1000
+                    print( f"{start}: New chunk {new_chunk['start']} to {new_chunk['end']}: {new_chunk['text']}")
+                    total_new_segment_outputs.append(new_chunk)
+            last_end = new_end
+
+        if len(total_new_segment_outputs) > 0:
+            print(f"{start}: Merging {len(total_new_segment_outputs)} new chunks")
+            segment_output['segments'] = segment_output['segments'] + total_new_segment_outputs
+            segment_output['segments'] = sorted(segment_output['segments'], key=lambda k: k['start'])
+
         for chunk in segment_output['segments']:
             if chunk['avg_logprob'] < -1:
-                errors += 1
+                print(f"{start}: Skipping chunk with low logprob: " + chunk['text'])
                 continue
             if chunk['compression_ratio'] > 2.4:
-                print("Skipping chunk with high compression ratio: " + chunk['text'])
-                errors += 1
+                print(f"{start}: Skipping chunk with high compression ratio: " + chunk['text'])
                 continue
+            text += chunk['text']
+            print(f"{start}: Chunk{chunk}")
+    except Exception as e:
+        print(f"Error transcribing segment {start} to {stop} for speaker {speaker}: error {e}")
+        return None
 
-        if len(segment_output['segments']) == 0:
-            break
-
-        error_rate = float(errors) / float(len(segment_output['segments']))
-        print("*** Error rate: " + str(error_rate) + " ***")
-        if error_rate < 0.25:
-            break
-        temperature += 0.2
-        print("Error rate too high, retrying with higher temperature: " + str(temperature))
-        if temperature > 0.5:
-            print("Error rate too high, giving up")
-            break
-
-    if temperature > 0:
-        print("*******Final temperature: " + str(temperature))
-
-    text = ""
-    for chunk in segment_output['segments']:
-        if chunk['avg_logprob'] < -1:
-            print("Skipping chunk with low logprob: " + chunk['text'])
-            continue
-        if chunk['compression_ratio'] > 2.4:
-            print("Skipping chunk with high compression ratio: " + chunk['text'])
-            continue
-        text += chunk['text']
-        print(chunk)
     segment_info = {'speaker': speaker, 'text': text, 'start': start}
-
     return segment_info
+
+
+
 
 def run_transcription_tasks(tasks):
 
@@ -239,13 +296,15 @@ def run_transcription_tasks(tasks):
 
     # Start the processes
     result_iterator = pool.imap_unordered(transcribe_segment, tasks, chunksize=1)
+    results = []
 
+    #for task in tasks:
+    #    results.append(transcribe_segment(task))
     # Wait for the processes to complete
     pool.close()
     pool.join()
 
     # Collect the results
-    results = []
     for result in result_iterator:
         results.append(result)
 
@@ -253,10 +312,10 @@ def run_transcription_tasks(tasks):
     return results
 
 
-def transcribe(mp3_file, diarisation, participants=[], topic=""):
+def transcribe(mp3_file, diarisation, participants=[], industries=[], descriptions=[], topic=""):
     tasks = []
 
-    prompt = build_transcribe_prompt(participants, topic)
+    prompt = build_transcribe_prompt(participants, industries, descriptions, topic)
     print("Transcription prompt: " + prompt)
 
     for segment in diarisation['segments']:
@@ -265,7 +324,7 @@ def transcribe(mp3_file, diarisation, participants=[], topic=""):
         speaker = segment['speaker']
         tasks.append({'speaker': speaker, 'audio': mp3_file[start:stop], 'start': start, 'stop': stop,'prompt': prompt})
 
-    result_transcript = run_transcription_tasks(tasks)
+    result_transcript = list(filter(lambda x: isinstance(x, dict), run_transcription_tasks(tasks)))
     sorted_transcript = sorted(result_transcript, key=lambda k: k['start'])
     return sorted_transcript
 

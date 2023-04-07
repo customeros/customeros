@@ -49,7 +49,16 @@ class CustomerOsApi:
                     organizations{
                         content {
                             id
-                            domains
+                            name
+                            industry
+                            description
+                        }
+                    }
+                    jobRoles {
+                        organization {
+                            id
+                            name
+                            industry
                             description
                         }
                     }
@@ -70,7 +79,13 @@ class CustomerOsApi:
             return {'firstName': '', 'lastName': ''}
         response_obj =  {'firstName': result['data']['contact']['firstName'], 'lastName': result['data']['contact']['lastName']}
 
+        response_obj['organizations'] = []
         if len(result['data']['contact']['organizations']['content']) > 0:
-            response_obj['organizations'] = result['data']['contact']['organizations']['content'][0]
+            response_obj['organizations'] = result['data']['contact']['organizations']['content']
+
+        if len(result['data']['contact']['jobRoles']) > 0:
+            for job_role in result['data']['contact']['jobRoles']:
+                response_obj['organizations'].append(job_role['organization'])
+
 
         return response_obj
