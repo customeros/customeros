@@ -816,6 +816,32 @@ const Settings: NextPage = () => {
         />
       ),
     },
+    {
+      key: 'freshservice',
+      state: 'INACTIVE',
+      template: (data: any) => (
+        <SettingsIntegrationItem
+          icon={'logos/freshservice.svg'}
+          identifier={'freshservice'}
+          name={'Freshservice'}
+          state={data.state}
+          settingsChanged={() => {
+            reloadRef.current = !reloadRef.current;
+            setReload(reloadRef.current);
+          }}
+          fields={[
+              {
+                  name: 'apiKey',
+                  label: 'API Key',
+              },
+              {
+                  name: 'domain',
+                  label: 'Domain',
+              }
+          ]}
+        />
+      ),
+    },
   ]);
 
   useEffect(() => {

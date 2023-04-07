@@ -90,6 +90,9 @@ type TenantSettings struct {
 
 	FreshsalesApiKey *string `gorm:"column:freshsales_api_key;type:varchar(255);" binding:"required"`
 	FreshsalesDomain *string `gorm:"column:freshsales_domain;type:varchar(255);" binding:"required"`
+
+	FreshserviceApiKey *string `gorm:"column:freshservice_api_key;type:varchar(255);" binding:"required"`
+	FreshserviceDomain *string `gorm:"column:freshservice_domain;type:varchar(255);" binding:"required"`
 }
 
 func (TenantSettings) TableName() string {
