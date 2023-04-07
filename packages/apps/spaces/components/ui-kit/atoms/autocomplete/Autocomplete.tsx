@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useLayoutEffect } from 'react';
+import React, { useState, useRef, useLayoutEffect } from 'react';
 import {
   AutoComplete as PrimereactAutocomplete,
   AutoCompleteChangeParams,

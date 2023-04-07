@@ -12,23 +12,20 @@
   position: relative;
   backdrop-filter: blur(10px);
   aspect-ratio: 3/2;
+  min-height: available;
+  padding: var(--spacing-md) var(--spacing-lg);
+  font-size: var(--font-size-sm);
+  color: var(--text-default-color);
 }
 
-.bg {
-  @include frosted-glass;
-  background: radial-gradient(
-    rgba(255, 255, 255, 0.7) 30%,
-    rgba(255, 255, 255, 0.9)
-  );
-  min-height: available;
-  backdrop-filter: blur(5px);
-  box-shadow: none;
-  padding: var(--spacing-md) var(--spacing-lg);
+.editButton {
+  position: absolute;
+  right: var(--spacing-lg);
 }
 
 .name {
   font-size: var(--heading-main);
-  font-weight: bold;
+  font-weight: normal;
 }
 
 .industry {

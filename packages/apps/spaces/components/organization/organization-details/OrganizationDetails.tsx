@@ -1,45 +1,97 @@
-import React, { useState } from 'react';
+import React from 'react';
 import styles from './organization-details.module.scss';
-import { OrganizationDetailsSkeleton } from './skeletons';
 import { useOrganizationDetails } from '../../../hooks/useOrganization';
-import { Button, Link } from '../../ui-kit';
-import { OrganizationEdit } from './edit';
+import { Button, EditableContentInput, Link } from '../../ui-kit';
+import { useUpdateOrganization } from '../../../hooks/useOrganization/useUpdateOrganization';
+import { useRecoilState } from 'recoil';
+import { organizationDetailsEdit } from '../../../state';
+import { DebouncedTextArea } from '../../ui-kit/atoms/input/DebouncedTextArea';
 export const OrganizationDetails = ({ id }: { id: string }) => {
-  const { data, loading, error } = useOrganizationDetails({ id });
-  const [mode, setMode] = useState('PREVIEW');
-
-  if (loading) {
-    return <OrganizationDetailsSkeleton />;
-  }
-  if (error) {
-    return <>ERROR</>;
-  }
-
-  if (mode === 'EDIT') {
-    return <OrganizationEdit data={data} onSetMode={setMode} />;
-  }
+  const { data } = useOrganizationDetails({ id });
+  const [{ isEditMode }, setOrganizationDetailsEdit] = useRecoilState(
+    organizationDetailsEdit,
+  );
+  const { onUpdateOrganization } = useUpdateOrganization({
+    organizationId: id,
+  });
 
   return (
     <div className={styles.organizationDetails}>
       <div className={styles.bg}>
         <div>
-          <div className={styles.header}>
-            <h1 className={styles.name}>{data?.name}</h1>
+          <div className={styles.editButton}>
             <div style={{ marginLeft: '4px' }}>
-              <Button mode='secondary' onClick={() => setMode('EDIT')}>
+              <Button
+                mode='secondary'
+                onClick={() =>
+                  setOrganizationDetailsEdit({ isEditMode: !isEditMode })
+                }
+              >
                 Edit
               </Button>
             </div>
           </div>
+          <h1 className={styles.name}>
+            <EditableContentInput
+              isEditMode={isEditMode}
+              value={data?.name || ''}
+              placeholder={isEditMode ? 'Organization' : 'Unnamed'}
+              onChange={(value: string) =>
+                onUpdateOrganization({
+                  name: value,
+                })
+              }
+            />
+          </h1>
 
-          <span className={styles.industry}>
-            {(data?.industry ?? '')?.split('_').join(' ')}
-          </span>
+          <EditableContentInput
+            isEditMode={isEditMode}
+            value={data?.industry || ''}
+            placeholder={isEditMode ? 'Industry' : ''}
+            onChange={(value: string) =>
+              onUpdateOrganization({
+                name: data?.name || '',
+                description: data?.description,
+                industry: value,
+              })
+            }
+          />
         </div>
 
-        <p className={styles.description}>{data?.description}</p>
+        <DebouncedTextArea
+          isEditMode={isEditMode}
+          value={data?.description || ''}
+          placeholder={isEditMode ? 'Description' : ''}
+          onChange={(value: string) =>
+            onUpdateOrganization({
+              name: data?.name || '',
+              description: value,
+              industry: data?.industry || '',
+            })
+          }
+        />
 
-        {data?.website && <Link href={data.website}> {data.website} </Link>}
+        <div>
+          {isEditMode && (
+            <EditableContentInput
+              isEditMode={isEditMode}
+              value={data?.website || ''}
+              placeholder={isEditMode ? 'Website' : ''}
+              onChange={(value: string) =>
+                onUpdateOrganization({
+                  name: data?.name || '',
+                  description: data?.description,
+                  industry: data?.industry,
+                  website: value,
+                })
+              }
+            />
+          )}
+
+          {data?.website && !isEditMode && (
+            <Link href={data.website}> {data.website} </Link>
+          )}
+        </div>
       </div>
     </div>
   );
