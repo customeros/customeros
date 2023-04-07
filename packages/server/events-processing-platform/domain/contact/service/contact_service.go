@@ -1,9 +1,9 @@
 package service
 
 import (
-	contactGrpcService "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/proto/contact"
+	contact_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/proto/contact"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/commands"
-	grpcErrors "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/grpc_errors"
+	grpc_errors "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/grpc_errors"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/utils"
@@ -11,7 +11,7 @@ import (
 )
 
 type contactService struct {
-	contactGrpcService.UnimplementedContactGrpcServiceServer
+	contact_grpc_service.UnimplementedContactGrpcServiceServer
 	log             logger.Logger
 	repositories    *repository.Repositories
 	contactCommands *commands.ContactCommands
@@ -25,7 +25,7 @@ func NewContactService(log logger.Logger, repositories *repository.Repositories,
 	}
 }
 
-func (s *contactService) UpsertContact(ctx context.Context, request *contactGrpcService.UpsertContactGrpcRequest) (*contactGrpcService.ContactIdGrpcResponse, error) {
+func (s *contactService) UpsertContact(ctx context.Context, request *contact_grpc_service.UpsertContactGrpcRequest) (*contact_grpc_service.ContactIdGrpcResponse, error) {
 	aggregateID := request.Id
 
 	coreFields := commands.ContactCoreFields{
@@ -43,25 +43,39 @@ func (s *contactService) UpsertContact(ctx context.Context, request *contactGrpc
 
 	s.log.Infof("(created existing Contact): {%s}", aggregateID)
 
-	return &contactGrpcService.ContactIdGrpcResponse{Id: aggregateID}, nil
+	return &contact_grpc_service.ContactIdGrpcResponse{Id: aggregateID}, nil
 }
 
-func (s *contactService) AddPhoneNumberToContact(ctx context.Context, request *contactGrpcService.AddPhoneNumberToContactGrpcRequest) (*contactGrpcService.ContactIdGrpcResponse, error) {
+func (s *contactService) LinkPhoneNumberToContact(ctx context.Context, request *contact_grpc_service.LinkPhoneNumberToContactGrpcRequest) (*contact_grpc_service.ContactIdGrpcResponse, error) {
 	aggregateID := request.ContactId
 
-	command := commands.NewAddPhoneNumberCommand(aggregateID, request.Tenant, request.PhoneNumberId, request.Label, request.Primary)
-	if err := s.contactCommands.AddPhoneNumberCommand.Handle(ctx, command); err != nil {
-		s.log.Errorf("(AddPhoneNumberToContact.Handle) tenant:{%s}, contact ID: {%s}, err: {%v}", request.Tenant, aggregateID, err)
+	command := commands.NewLinkPhoneNumberCommand(aggregateID, request.Tenant, request.PhoneNumberId, request.Label, request.Primary)
+	if err := s.contactCommands.LinkPhoneNumberCommand.Handle(ctx, command); err != nil {
+		s.log.Errorf("(LinkPhoneNumberToContact.Handle) tenant:{%s}, contact ID: {%s}, err: {%v}", request.Tenant, aggregateID, err)
 		return nil, s.errResponse(err)
 	}
 
-	s.log.Infof("Added phone number {%s} to contact {%s}", request.PhoneNumberId, aggregateID)
+	s.log.Infof("Linked phone number {%s} to contact {%s}", request.PhoneNumberId, aggregateID)
 
-	return &contactGrpcService.ContactIdGrpcResponse{Id: aggregateID}, nil
+	return &contact_grpc_service.ContactIdGrpcResponse{Id: aggregateID}, nil
+}
+
+func (s *contactService) LinkEmailToContact(ctx context.Context, request *contact_grpc_service.LinkEmailToContactGrpcRequest) (*contact_grpc_service.ContactIdGrpcResponse, error) {
+	aggregateID := request.ContactId
+
+	command := commands.NewLinkEmailCommand(aggregateID, request.Tenant, request.EmailId, request.Label, request.Primary)
+	if err := s.contactCommands.LinkEmailCommand.Handle(ctx, command); err != nil {
+		s.log.Errorf("(LinkEmailToContact.Handle) tenant:{%s}, contact ID: {%s}, err: {%v}", request.Tenant, aggregateID, err)
+		return nil, s.errResponse(err)
+	}
+
+	s.log.Infof("Linked email {%s} to contact {%s}", request.EmailId, aggregateID)
+
+	return &contact_grpc_service.ContactIdGrpcResponse{Id: aggregateID}, nil
 }
 
 // FIXME alexb implement correctly
-//func (contactService *contactService) CreateContact(ctx context.Context, request *contactGrpcService.CreateContactGrpcRequest) (*contactGrpcService.CreateContactGrpcResponse, error) {
+//func (contactService *contactService) CreateContact(ctx context.Context, request *contact_grpc_service.CreateContactGrpcRequest) (*contact_grpc_service.CreateContactGrpcResponse, error) {
 //	/*ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "contactService.CreateContact")
 //	defer span.Finish()
 //	span.LogFields(log.String("request", request.String()))
@@ -78,9 +92,9 @@ func (s *contactService) AddPhoneNumberToContact(ctx context.Context, request *c
 //	}
 //
 //	contactService.log.Infof("(created contact): contact: {%s}", aggregateID)
-//	return &contactGrpcService.CreateContactGrpcResponse{AggregateID: aggregateID}, nil
+//	return &contact_grpc_service.CreateContactGrpcResponse{AggregateID: aggregateID}, nil
 //}
 
 func (contactService *contactService) errResponse(err error) error {
-	return grpcErrors.ErrResponse(err)
+	return grpc_errors.ErrResponse(err)
 }

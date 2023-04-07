@@ -10,6 +10,7 @@ const (
 	ContactCreated           = "CONTACT_CREATED"
 	ContactUpdated           = "CONTACT_UPDATED"
 	ContactPhoneNumberLinked = "CONTACT_PHONE_NUMBER_LINKED"
+	ContactEmailLinked       = "CONTACT_EMAIL_LINKED"
 )
 
 type ContactCreatedEvent struct {
@@ -89,6 +90,29 @@ func NewContactLinkPhoneNumberEvent(aggregate eventstore.Aggregate, tenant, phon
 		Primary:       primary,
 	}
 	event := eventstore.NewBaseEvent(aggregate, ContactPhoneNumberLinked)
+	if err := event.SetJsonData(&eventData); err != nil {
+		return eventstore.Event{}, err
+	}
+	return event, nil
+}
+
+type ContactLinkEmailEvent struct {
+	Tenant    string    `json:"tenant"`
+	UpdatedAt time.Time `json:"updatedAt"`
+	EmailId   string    `json:"emailId"`
+	Label     string    `json:"label"`
+	Primary   bool      `json:"primary"`
+}
+
+func NewContactLinkEmailEvent(aggregate eventstore.Aggregate, tenant, emailId, label string, primary bool, updatedAt time.Time) (eventstore.Event, error) {
+	eventData := ContactLinkEmailEvent{
+		Tenant:    tenant,
+		UpdatedAt: updatedAt,
+		EmailId:   emailId,
+		Label:     label,
+		Primary:   primary,
+	}
+	event := eventstore.NewBaseEvent(aggregate, ContactEmailLinked)
 	if err := event.SetJsonData(&eventData); err != nil {
 		return eventstore.Event{}, err
 	}

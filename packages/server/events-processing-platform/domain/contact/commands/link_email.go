@@ -11,30 +11,30 @@ import (
 	"github.com/opentracing/opentracing-go/log"
 )
 
-type LinkPhoneNumberCommandHandler interface {
-	Handle(ctx context.Context, command *LinkPhoneNumberCommand) error
+type LinkEmailCommandHandler interface {
+	Handle(ctx context.Context, command *LinkEmailCommand) error
 }
 
-type linkPhoneNumberCommandHandler struct {
+type linkEmailCommandHandler struct {
 	log logger.Logger
 	cfg *config.Config
 	es  eventstore.AggregateStore
 }
 
-func NewLinkPhoneNumberCommandHandler(log logger.Logger, cfg *config.Config, es eventstore.AggregateStore) *linkPhoneNumberCommandHandler {
-	return &linkPhoneNumberCommandHandler{log: log, cfg: cfg, es: es}
+func NewLinkEmailCommandHandler(log logger.Logger, cfg *config.Config, es eventstore.AggregateStore) *linkEmailCommandHandler {
+	return &linkEmailCommandHandler{log: log, cfg: cfg, es: es}
 }
 
-func (c *linkPhoneNumberCommandHandler) Handle(ctx context.Context, command *LinkPhoneNumberCommand) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "linkPhoneNumberCommandHandler.Handle")
+func (c *linkEmailCommandHandler) Handle(ctx context.Context, command *LinkEmailCommand) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "linkEmailCommandHandler.Handle")
 	defer span.Finish()
 	span.LogFields(log.String("Tenant", command.Tenant), log.String("AggregateID", command.GetAggregateID()))
 
 	if len(command.Tenant) == 0 {
 		return eventstore.ErrMissingTenant
 	}
-	if len(command.PhoneNumberId) == 0 {
-		return errors.ErrMissingPhoneNumberId
+	if len(command.EmailId) == 0 {
+		return errors.ErrMissingEmailId
 	}
 
 	contactAggregate := aggregate.NewContactAggregateWithTenantAndID(command.Tenant, command.AggregateID)
@@ -43,13 +43,13 @@ func (c *linkPhoneNumberCommandHandler) Handle(ctx context.Context, command *Lin
 		return eventstore.ErrInvalidAggregate
 	} else {
 		contactAggregate, _ = aggregate.LoadContactAggregate(ctx, c.es, command.Tenant, command.AggregateID)
-		if err = contactAggregate.LinkPhoneNumber(ctx, command.Tenant, command.PhoneNumberId, command.Label, command.Primary); err != nil {
+		if err = contactAggregate.LinkEmail(ctx, command.Tenant, command.EmailId, command.Label, command.Primary); err != nil {
 			return err
 		}
 		if command.Primary {
-			for k, v := range contactAggregate.Contact.PhoneNumbers {
-				if k != command.PhoneNumberId && v.Primary {
-					if err = contactAggregate.SetPhoneNumberNonPrimary(ctx, command.Tenant, command.PhoneNumberId); err != nil {
+			for k, v := range contactAggregate.Contact.Emails {
+				if k != command.EmailId && v.Primary {
+					if err = contactAggregate.SetEmailNonPrimary(ctx, command.Tenant, command.EmailId); err != nil {
 						return err
 					}
 				}

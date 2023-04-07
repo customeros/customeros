@@ -3,6 +3,7 @@ package service
 import (
 	email_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/proto/email"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/email/commands"
+	email_errors "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/email/errors"
 	grpc_errors "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/grpc_errors"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/repository"
@@ -27,6 +28,10 @@ func NewEmailService(log logger.Logger, repositories *repository.Repositories, e
 
 func (s *emailService) UpsertEmail(ctx context.Context, request *email_grpc_service.UpsertEmailGrpcRequest) (*email_grpc_service.EmailIdGrpcResponse, error) {
 	aggregateID := request.Id
+
+	if len(aggregateID) == 0 {
+		return &email_grpc_service.EmailIdGrpcResponse{}, email_errors.ErrEmailMissingId
+	}
 
 	command := commands.NewUpsertEmailCommand(aggregateID, request.Tenant, request.RawEmail, request.Source, request.SourceOfTruth, request.AppSource, utils.TimestampProtoToTime(request.CreatedAt), utils.TimestampProtoToTime(request.UpdatedAt))
 	if err := s.emailCommands.UpsertEmail.Handle(ctx, command); err != nil {

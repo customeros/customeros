@@ -7,18 +7,24 @@ import (
 )
 
 type Contact struct {
-	ID           string                         `json:"id"`
-	FirstName    string                         `json:"firstName"`
-	LastName     string                         `json:"lastName"`
-	Name         string                         `json:"name"`
-	Prefix       string                         `json:"prefix"`
-	Source       commonModels.Source            `json:"source"`
-	CreatedAt    time.Time                      `json:"createdAt"`
-	UpdatedAt    time.Time                      `json:"updatedAt"`
-	PhoneNumbers map[string]ContactPhoneNumbers `json:"phoneNumbers"`
+	ID           string                        `json:"id"`
+	FirstName    string                        `json:"firstName"`
+	LastName     string                        `json:"lastName"`
+	Name         string                        `json:"name"`
+	Prefix       string                        `json:"prefix"`
+	Source       commonModels.Source           `json:"source"`
+	CreatedAt    time.Time                     `json:"createdAt"`
+	UpdatedAt    time.Time                     `json:"updatedAt"`
+	PhoneNumbers map[string]ContactPhoneNumber `json:"phoneNumbers"`
+	Emails       map[string]ContactEmail       `json:"emails"`
 }
 
-type ContactPhoneNumbers struct {
+type ContactPhoneNumber struct {
+	Primary bool   `json:"primary"`
+	Label   string `json:"label"`
+}
+
+type ContactEmail struct {
 	Primary bool   `json:"primary"`
 	Label   string `json:"label"`
 }

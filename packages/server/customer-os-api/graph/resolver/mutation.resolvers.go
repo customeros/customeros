@@ -71,7 +71,7 @@ func (r *mutationResolver) UpsertInEventStore(ctx context.Context, size int) (*m
 	processedPhoneNumbers, failedPhoneNumbers, err := r.Services.PhoneNumberService.UpsertInEventStore(ctx, size)
 	output.PhoneNumberCount = processedPhoneNumbers
 	output.PhoneNumberCountFailed = failedPhoneNumbers
-	if err != nil {
+	if err != nil || failedPhoneNumbers > 0 {
 		graphql.AddErrorf(ctx, "Failed: {%s}", err)
 		return &output, err
 	}
@@ -79,7 +79,7 @@ func (r *mutationResolver) UpsertInEventStore(ctx context.Context, size int) (*m
 	processedContacts, failedContacts, err := r.Services.ContactService.UpsertInEventStore(ctx, size)
 	output.ContactCount = processedContacts
 	output.ContactCountFailed = failedContacts
-	if err != nil {
+	if err != nil || failedContacts > 0 {
 		graphql.AddErrorf(ctx, "Failed: {%s}", err)
 		return &output, err
 	}
@@ -87,21 +87,30 @@ func (r *mutationResolver) UpsertInEventStore(ctx context.Context, size int) (*m
 	processedEmails, failedEmails, err := r.Services.EmailService.UpsertInEventStore(ctx, size)
 	output.EmailCount = processedEmails
 	output.EmailCountFailed = failedEmails
-	if err != nil {
+	if err != nil || failedEmails > 0 {
 		graphql.AddErrorf(ctx, "Failed: {%s}", err)
 		return &output, err
 	}
 
 	if processedPhoneNumbers < size && processedContacts < size {
-		processedContactPhoneNumberRelations, failedCount, err := r.Services.ContactService.UpsertPhoneNumberRelationInEventStore(ctx, size)
-		output.ContactPhoneNumberRelationCount = processedContactPhoneNumberRelations
+		processedCount, failedCount, err := r.Services.ContactService.UpsertPhoneNumberRelationInEventStore(ctx, size)
+		output.ContactPhoneNumberRelationCount = processedCount
 		output.ContactPhoneNumberRelationCountFailed = failedCount
-		if err != nil {
+		if err != nil || failedCount > 0 {
 			graphql.AddErrorf(ctx, "Failed: {%s}", err)
 			return &output, err
 		}
 	}
-	// TODO alexb add email contact relation
+
+	if processedEmails < size && processedContacts < size {
+		processedCount, failedCount, err := r.Services.ContactService.UpsertEmailRelationInEventStore(ctx, size)
+		output.ContactEmailRelationCount = processedCount
+		output.ContactEmailRelationCountFailed = failedCount
+		if err != nil || failedCount > 0 {
+			graphql.AddErrorf(ctx, "Failed: {%s}", err)
+			return &output, err
+		}
+	}
 
 	return &output, nil
 }

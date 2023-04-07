@@ -52,7 +52,7 @@ func NewUpsertContactCommand(aggregateID, tenant, source, sourceOfTruth, appSour
 	}
 }
 
-type AddPhoneNumberCommand struct {
+type LinkPhoneNumberCommand struct {
 	eventstore.BaseCommand
 	Tenant        string
 	PhoneNumberId string
@@ -60,13 +60,31 @@ type AddPhoneNumberCommand struct {
 	Label         string
 }
 
-func NewAddPhoneNumberCommand(aggregateID, tenant, phoneNumberId, label string, primary bool) *AddPhoneNumberCommand {
-	return &AddPhoneNumberCommand{
+func NewLinkPhoneNumberCommand(aggregateID, tenant, phoneNumberId, label string, primary bool) *LinkPhoneNumberCommand {
+	return &LinkPhoneNumberCommand{
 		BaseCommand:   eventstore.NewBaseCommand(aggregateID),
 		Tenant:        tenant,
 		PhoneNumberId: phoneNumberId,
 		Primary:       primary,
 		Label:         label,
+	}
+}
+
+type LinkEmailCommand struct {
+	eventstore.BaseCommand
+	Tenant  string
+	EmailId string
+	Primary bool
+	Label   string
+}
+
+func NewLinkEmailCommand(aggregateID, tenant, emailId, label string, primary bool) *LinkEmailCommand {
+	return &LinkEmailCommand{
+		BaseCommand: eventstore.NewBaseCommand(aggregateID),
+		Tenant:      tenant,
+		EmailId:     emailId,
+		Primary:     primary,
+		Label:       label,
 	}
 }
 

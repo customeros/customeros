@@ -583,6 +583,8 @@ type ComplexityRoot struct {
 	UpsertToEventStoreResult struct {
 		ContactCount                          func(childComplexity int) int
 		ContactCountFailed                    func(childComplexity int) int
+		ContactEmailRelationCount             func(childComplexity int) int
+		ContactEmailRelationCountFailed       func(childComplexity int) int
 		ContactPhoneNumberRelationCount       func(childComplexity int) int
 		ContactPhoneNumberRelationCountFailed func(childComplexity int) int
 		EmailCount                            func(childComplexity int) int
@@ -4239,6 +4241,20 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.UpsertToEventStoreResult.ContactCountFailed(childComplexity), true
 
+	case "UpsertToEventStoreResult.contactEmailRelationCount":
+		if e.complexity.UpsertToEventStoreResult.ContactEmailRelationCount == nil {
+			break
+		}
+
+		return e.complexity.UpsertToEventStoreResult.ContactEmailRelationCount(childComplexity), true
+
+	case "UpsertToEventStoreResult.contactEmailRelationCountFailed":
+		if e.complexity.UpsertToEventStoreResult.ContactEmailRelationCountFailed == nil {
+			break
+		}
+
+		return e.complexity.UpsertToEventStoreResult.ContactEmailRelationCountFailed(childComplexity), true
+
 	case "UpsertToEventStoreResult.contactPhoneNumberRelationCount":
 		if e.complexity.UpsertToEventStoreResult.ContactPhoneNumberRelationCount == nil {
 			break
@@ -5712,6 +5728,8 @@ type UpsertToEventStoreResult {
     contactCountFailed: Int!
     contactPhoneNumberRelationCount: Int!
     contactPhoneNumberRelationCountFailed: Int!
+    contactEmailRelationCount: Int!
+    contactEmailRelationCountFailed: Int!
 }
 
 `, BuiltIn: false},
@@ -19043,6 +19061,10 @@ func (ec *executionContext) fieldContext_Mutation_UpsertInEventStore(ctx context
 				return ec.fieldContext_UpsertToEventStoreResult_contactPhoneNumberRelationCount(ctx, field)
 			case "contactPhoneNumberRelationCountFailed":
 				return ec.fieldContext_UpsertToEventStoreResult_contactPhoneNumberRelationCountFailed(ctx, field)
+			case "contactEmailRelationCount":
+				return ec.fieldContext_UpsertToEventStoreResult_contactEmailRelationCount(ctx, field)
+			case "contactEmailRelationCountFailed":
+				return ec.fieldContext_UpsertToEventStoreResult_contactEmailRelationCountFailed(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type UpsertToEventStoreResult", field.Name)
 		},
@@ -31657,6 +31679,94 @@ func (ec *executionContext) fieldContext_UpsertToEventStoreResult_contactPhoneNu
 	return fc, nil
 }
 
+func (ec *executionContext) _UpsertToEventStoreResult_contactEmailRelationCount(ctx context.Context, field graphql.CollectedField, obj *model.UpsertToEventStoreResult) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_UpsertToEventStoreResult_contactEmailRelationCount(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ContactEmailRelationCount, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_UpsertToEventStoreResult_contactEmailRelationCount(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UpsertToEventStoreResult",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _UpsertToEventStoreResult_contactEmailRelationCountFailed(ctx context.Context, field graphql.CollectedField, obj *model.UpsertToEventStoreResult) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_UpsertToEventStoreResult_contactEmailRelationCountFailed(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ContactEmailRelationCountFailed, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_UpsertToEventStoreResult_contactEmailRelationCountFailed(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UpsertToEventStoreResult",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _User_id(ctx context.Context, field graphql.CollectedField, obj *model.User) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_User_id(ctx, field)
 	if err != nil {
@@ -41547,6 +41657,20 @@ func (ec *executionContext) _UpsertToEventStoreResult(ctx context.Context, sel a
 		case "contactPhoneNumberRelationCountFailed":
 
 			out.Values[i] = ec._UpsertToEventStoreResult_contactPhoneNumberRelationCountFailed(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "contactEmailRelationCount":
+
+			out.Values[i] = ec._UpsertToEventStoreResult_contactEmailRelationCount(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "contactEmailRelationCountFailed":
+
+			out.Values[i] = ec._UpsertToEventStoreResult_contactEmailRelationCountFailed(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
 				invalids++

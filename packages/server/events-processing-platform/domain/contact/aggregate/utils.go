@@ -10,7 +10,7 @@ import (
 	"strings"
 )
 
-// GetContactAggregateID get phone_number aggregate id for eventstoredb
+// GetContactAggregateID get contact aggregate id for eventstoredb
 func GetContactAggregateID(eventAggregateID string, tenant string) string {
 	return strings.ReplaceAll(eventAggregateID, string(ContactAggregateType)+"-"+tenant+"-", "")
 }
