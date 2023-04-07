@@ -434,6 +434,14 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 			tenantSettings.FreshserviceApiKey = &apiKey
 			tenantSettings.FreshserviceDomain = &domain
 
+		case "facebookMarketing":
+			accessToken, ok := data["accessToken"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing access token for Facebook integration")
+			}
+
+			tenantSettings.FacebookMarketingAccessToken = &accessToken
+
 		}
 
 	}
@@ -546,6 +554,8 @@ func (s *tenantSettingsService) ClearIntegrationData(tenantName, identifier stri
 		case "freshservice":
 			tenantSettings.FreshserviceApiKey = nil
 			tenantSettings.FreshserviceDomain = nil
+		case "facebookMarketing":
+			tenantSettings.FacebookMarketingAccessToken = nil
 
 		}
 

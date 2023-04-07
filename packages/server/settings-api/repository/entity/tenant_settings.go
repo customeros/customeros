@@ -93,6 +93,8 @@ type TenantSettings struct {
 
 	FreshserviceApiKey *string `gorm:"column:freshservice_api_key;type:varchar(255);" binding:"required"`
 	FreshserviceDomain *string `gorm:"column:freshservice_domain;type:varchar(255);" binding:"required"`
+
+	FacebookMarketingAccessToken *string `gorm:"column:facebook_marketing_access_token;type:varchar(255);"  binding:"required"`
 }
 
 func (TenantSettings) TableName() string {

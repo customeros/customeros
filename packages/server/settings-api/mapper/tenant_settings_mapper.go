@@ -177,5 +177,10 @@ func MapTenantSettingsEntityToDTO(tenantSettings *entity.TenantSettings) *map[st
 		responseMap["freshservice"].(map[string]interface{})["state"] = "ACTIVE"
 	}
 
+	if tenantSettings != nil && tenantSettings.FacebookMarketingAccessToken != nil {
+		responseMap["facebookMarketing"] = make(map[string]interface{})
+		responseMap["facebookMarketing"].(map[string]interface{})["state"] = "ACTIVE"
+	}
+
 	return &responseMap
 }
