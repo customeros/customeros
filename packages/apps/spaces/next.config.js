@@ -34,6 +34,8 @@ const config = {
       process.env.WEB_CHAT_TRACKER_MINIMUM_VISIT_LENGTH,
     WEB_CHAT_TRACKER_HEARTBEAT_DELAY:
       process.env.WEB_CHAT_TRACKER_HEARTBEAT_DELAY,
+    COMMS_MAIL_API_KEY:
+      process.env.COMMS_MAIL_API_KEY,
   },
   output: 'standalone',
 };
