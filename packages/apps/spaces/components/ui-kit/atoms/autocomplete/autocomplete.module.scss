@@ -1,4 +1,5 @@
 @import "styles/mixins";
+@import "styles/mixins";
 .autocompleteContainer {
   position: relative;
 }
@@ -8,7 +9,7 @@
   margin-top: 0;
   padding: 0 var(--spacing-xxxs);
   font-size: inherit;
-  font-weight: lighter;
+  font-family: inherit;
 
   &.disabled {
     border-color: transparent;

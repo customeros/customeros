@@ -55,6 +55,7 @@ export const Autocomplete = ({
 
   const handleSelectItem = (event: { value: SuggestionItem }) => {
     const selectedValue = event.value;
+    console.log('🏷️ ----- selectedValue: ', selectedValue);
     setInputValue(selectedValue.label);
     onChange(selectedValue);
   };
@@ -78,10 +79,13 @@ export const Autocomplete = ({
   const handleCreateItem = async () => {
     try {
       const newItem = await onAddNew({ value: inputValue, label: inputValue });
-
       if (newItem) {
-        // @ts-expect-error fixme
-        handleSelectItem({ label: newItem[newItemLabel], value: newItem.id });
+        handleSelectItem({
+          value: {
+            label: newItem[newItemLabel],
+            value: newItem.id,
+          },
+        });
       }
     } catch (e) {
       // this is handled in mutation hook
