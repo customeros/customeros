@@ -379,6 +379,14 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 			tenantSettings.FastbillApiKey = &apiKey
 			tenantSettings.FastbillProjectId = &projectId
 
+		case "flexport":
+			apiKey, ok := data["apiKey"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing API key for Flexport integration")
+			}
+
+			tenantSettings.FlexportApiKey = &apiKey
+
 		}
 
 	}
@@ -478,6 +486,8 @@ func (s *tenantSettingsService) ClearIntegrationData(tenantName, identifier stri
 		case "fastbill":
 			tenantSettings.FastbillApiKey = nil
 			tenantSettings.FastbillProjectId = nil
+		case "flexport":
+			tenantSettings.FlexportApiKey = nil
 
 		}
 

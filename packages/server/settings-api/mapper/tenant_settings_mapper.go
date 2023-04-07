@@ -152,5 +152,10 @@ func MapTenantSettingsEntityToDTO(tenantSettings *entity.TenantSettings) *map[st
 		responseMap["fastbill"].(map[string]interface{})["state"] = "ACTIVE"
 	}
 
+	if tenantSettings != nil && tenantSettings.FlexportApiKey != nil {
+		responseMap["flexport"] = make(map[string]interface{})
+		responseMap["flexport"].(map[string]interface{})["state"] = "ACTIVE"
+	}
+
 	return &responseMap
 }
