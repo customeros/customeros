@@ -26,7 +26,8 @@ type ContactService interface {
 	FindAllForContactGroup(ctx context.Context, page, limit int, filter *model.Filter, sortBy []*model.SortBy, contactGroupId string) (*utils.Pagination, error)
 	GetAllForConversation(ctx context.Context, conversationId string) (*entity.ContactEntities, error)
 	PermanentDelete(ctx context.Context, id string) (bool, error)
-	SoftDelete(ctx context.Context, id string) (bool, error)
+	Archive(ctx context.Context, contactId string) (bool, error)
+	RestoreFromArchive(ctx context.Context, contactId string) (bool, error)
 	GetContactForRole(ctx context.Context, roleId string) (*entity.ContactEntity, error)
 	GetContactsForOrganization(ctx context.Context, organizationId string, page, limit int, filter *model.Filter, sortBy []*model.SortBy) (*utils.Pagination, error)
 	Merge(ctx context.Context, primaryContactId, mergedContactId string) error
@@ -231,29 +232,20 @@ func (s *contactService) PermanentDelete(ctx context.Context, contactId string) 
 	return true, nil
 }
 
-func (s *contactService) SoftDelete(ctx context.Context, contactId string) (bool, error) {
-	session := utils.NewNeo4jWriteSession(ctx, s.getNeo4jDriver())
-	defer session.Close(ctx)
-
-	queryResult, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (interface{}, error) {
-		_, err := tx.Run(ctx, `
-			MATCH (c:Contact {id:$contactId})-[r:CONTACT_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant})
-			MERGE (c)-[:CONTACT_REMOVED_FROM_TENANT {removedAt:datetime({timezone: 'UTC'})}]->(t)
-			SET c.removed=true
-            DELETE r
-			`,
-			map[string]interface{}{
-				"contactId": contactId,
-				"tenant":    common.GetContext(ctx).Tenant,
-			})
-
-		return true, err
-	})
+func (s *contactService) Archive(ctx context.Context, contactId string) (bool, error) {
+	err := s.repositories.ContactRepository.Archive(ctx, common.GetTenantFromContext(ctx), contactId)
 	if err != nil {
 		return false, err
 	}
+	return true, nil
+}
 
-	return queryResult.(bool), nil
+func (s *contactService) RestoreFromArchive(ctx context.Context, contactId string) (bool, error) {
+	err := s.repositories.ContactRepository.RestoreFromArchive(ctx, common.GetTenantFromContext(ctx), contactId)
+	if err != nil {
+		return false, err
+	}
+	return true, nil
 }
 
 func (s *contactService) GetContactById(ctx context.Context, id string) (*entity.ContactEntity, error) {

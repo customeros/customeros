@@ -347,6 +347,7 @@ type ComplexityRoot struct {
 		AnalysisCreate                               func(childComplexity int, analysis model.AnalysisInput) int
 		ContactAddOrganizationByID                   func(childComplexity int, input model.ContactOrganizationInput) int
 		ContactAddTagByID                            func(childComplexity int, input model.ContactTagInput) int
+		ContactArchive                               func(childComplexity int, contactID string) int
 		ContactCreate                                func(childComplexity int, input model.ContactInput) int
 		ContactGroupAddContact                       func(childComplexity int, contactID string, groupID string) int
 		ContactGroupCreate                           func(childComplexity int, input model.ContactGroupInput) int
@@ -358,7 +359,7 @@ type ComplexityRoot struct {
 		ContactPhoneNumberRelationUpsertInEventStore func(childComplexity int, size int) int
 		ContactRemoveOrganizationByID                func(childComplexity int, input model.ContactOrganizationInput) int
 		ContactRemoveTagByID                         func(childComplexity int, input model.ContactTagInput) int
-		ContactSoftDelete                            func(childComplexity int, contactID string) int
+		ContactRestoreFromArchive                    func(childComplexity int, contactID string) int
 		ContactUpdate                                func(childComplexity int, input model.ContactUpdateInput) int
 		ContactUpsertInEventStore                    func(childComplexity int, size int) int
 		ConversationClose                            func(childComplexity int, conversationID string) int
@@ -685,7 +686,8 @@ type MutationResolver interface {
 	ContactCreate(ctx context.Context, input model.ContactInput) (*model.Contact, error)
 	ContactUpdate(ctx context.Context, input model.ContactUpdateInput) (*model.Contact, error)
 	ContactHardDelete(ctx context.Context, contactID string) (*model.Result, error)
-	ContactSoftDelete(ctx context.Context, contactID string) (*model.Result, error)
+	ContactArchive(ctx context.Context, contactID string) (*model.Result, error)
+	ContactRestoreFromArchive(ctx context.Context, contactID string) (*model.Result, error)
 	ContactMerge(ctx context.Context, primaryContactID string, mergedContactIds []string) (*model.Contact, error)
 	ContactAddTagByID(ctx context.Context, input model.ContactTagInput) (*model.Contact, error)
 	ContactRemoveTagByID(ctx context.Context, input model.ContactTagInput) (*model.Contact, error)
@@ -2359,6 +2361,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.ContactAddTagByID(childComplexity, args["input"].(model.ContactTagInput)), true
 
+	case "Mutation.contact_Archive":
+		if e.complexity.Mutation.ContactArchive == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_contact_Archive_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.ContactArchive(childComplexity, args["contactId"].(string)), true
+
 	case "Mutation.contact_Create":
 		if e.complexity.Mutation.ContactCreate == nil {
 			break
@@ -2491,17 +2505,17 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.ContactRemoveTagByID(childComplexity, args["input"].(model.ContactTagInput)), true
 
-	case "Mutation.contact_SoftDelete":
-		if e.complexity.Mutation.ContactSoftDelete == nil {
+	case "Mutation.contact_RestoreFromArchive":
+		if e.complexity.Mutation.ContactRestoreFromArchive == nil {
 			break
 		}
 
-		args, err := ec.field_Mutation_contact_SoftDelete_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_contact_RestoreFromArchive_args(context.TODO(), rawArgs)
 		if err != nil {
 			return 0, false
 		}
 
-		return e.complexity.Mutation.ContactSoftDelete(childComplexity, args["contactId"].(string)), true
+		return e.complexity.Mutation.ContactRestoreFromArchive(childComplexity, args["contactId"].(string)), true
 
 	case "Mutation.contact_Update":
 		if e.complexity.Mutation.ContactUpdate == nil {
@@ -4513,7 +4527,8 @@ extend type Mutation {
     contact_Create(input: ContactInput!): Contact!
     contact_Update(input: ContactUpdateInput!): Contact!
     contact_HardDelete(contactId: ID!): Result!
-    contact_SoftDelete(contactId: ID!): Result!
+    contact_Archive(contactId: ID!): Result!
+    contact_RestoreFromArchive(contactId: ID!): Result!
     contact_Merge(primaryContactId: ID!, mergedContactIds: [ID!]!): Contact!
 
     contact_AddTagById(input: ContactTagInput!): Contact!
@@ -6507,6 +6522,21 @@ func (ec *executionContext) field_Mutation_contact_AddTagById_args(ctx context.C
 	return args, nil
 }
 
+func (ec *executionContext) field_Mutation_contact_Archive_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["contactId"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("contactId"))
+		arg0, err = ec.unmarshalNID2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["contactId"] = arg0
+	return args, nil
+}
+
 func (ec *executionContext) field_Mutation_contact_Create_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
@@ -6591,7 +6621,7 @@ func (ec *executionContext) field_Mutation_contact_RemoveTagById_args(ctx contex
 	return args, nil
 }
 
-func (ec *executionContext) field_Mutation_contact_SoftDelete_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+func (ec *executionContext) field_Mutation_contact_RestoreFromArchive_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
 	var arg0 string
@@ -19337,8 +19367,8 @@ func (ec *executionContext) fieldContext_Mutation_contact_HardDelete(ctx context
 	return fc, nil
 }
 
-func (ec *executionContext) _Mutation_contact_SoftDelete(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_contact_SoftDelete(ctx, field)
+func (ec *executionContext) _Mutation_contact_Archive(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_contact_Archive(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -19351,7 +19381,7 @@ func (ec *executionContext) _Mutation_contact_SoftDelete(ctx context.Context, fi
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().ContactSoftDelete(rctx, fc.Args["contactId"].(string))
+		return ec.resolvers.Mutation().ContactArchive(rctx, fc.Args["contactId"].(string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -19368,7 +19398,7 @@ func (ec *executionContext) _Mutation_contact_SoftDelete(ctx context.Context, fi
 	return ec.marshalNResult2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐResult(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Mutation_contact_SoftDelete(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Mutation_contact_Archive(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Mutation",
 		Field:      field,
@@ -19389,7 +19419,66 @@ func (ec *executionContext) fieldContext_Mutation_contact_SoftDelete(ctx context
 		}
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_contact_SoftDelete_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+	if fc.Args, err = ec.field_Mutation_contact_Archive_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_contact_RestoreFromArchive(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_contact_RestoreFromArchive(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().ContactRestoreFromArchive(rctx, fc.Args["contactId"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.Result)
+	fc.Result = res
+	return ec.marshalNResult2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐResult(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_contact_RestoreFromArchive(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "result":
+				return ec.fieldContext_Result_result(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Result", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_contact_RestoreFromArchive_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return
 	}
@@ -38880,10 +38969,19 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
-		case "contact_SoftDelete":
+		case "contact_Archive":
 
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_contact_SoftDelete(ctx, field)
+				return ec._Mutation_contact_Archive(ctx, field)
+			})
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "contact_RestoreFromArchive":
+
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_contact_RestoreFromArchive(ctx, field)
 			})
 
 			if out.Values[i] == graphql.Null {

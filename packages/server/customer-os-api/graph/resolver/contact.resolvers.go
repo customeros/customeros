@@ -319,15 +319,31 @@ func (r *mutationResolver) ContactHardDelete(ctx context.Context, contactID stri
 	}, nil
 }
 
-// ContactSoftDelete is the resolver for the contact_SoftDelete field.
-func (r *mutationResolver) ContactSoftDelete(ctx context.Context, contactID string) (*model.Result, error) {
+// ContactArchive is the resolver for the contact_Archive field.
+func (r *mutationResolver) ContactArchive(ctx context.Context, contactID string) (*model.Result, error) {
 	defer func(start time.Time) {
 		utils.LogMethodExecution(start, utils.GetFunctionName())
 	}(time.Now())
 
-	result, err := r.Services.ContactService.SoftDelete(ctx, contactID)
+	result, err := r.Services.ContactService.Archive(ctx, contactID)
 	if err != nil {
-		graphql.AddErrorf(ctx, "Could not soft delete contact %s", contactID)
+		graphql.AddErrorf(ctx, "Failed to archive contact %s", contactID)
+		return nil, err
+	}
+	return &model.Result{
+		Result: result,
+	}, nil
+}
+
+// ContactRestoreFromArchive is the resolver for the contact_RestoreFromArchive field.
+func (r *mutationResolver) ContactRestoreFromArchive(ctx context.Context, contactID string) (*model.Result, error) {
+	defer func(start time.Time) {
+		utils.LogMethodExecution(start, utils.GetFunctionName())
+	}(time.Now())
+
+	result, err := r.Services.ContactService.RestoreFromArchive(ctx, contactID)
+	if err != nil {
+		graphql.AddErrorf(ctx, "Failed to restore from archive contact %s", contactID)
 		return nil, err
 	}
 	return &model.Result{
