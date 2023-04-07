@@ -1087,9 +1087,14 @@ type TimeRange struct {
 }
 
 type UpsertToEventStoreResult struct {
-	PhoneNumberCount                int `json:"phoneNumberCount"`
-	ContactCount                    int `json:"contactCount"`
-	ContactPhoneNumberRelationCount int `json:"contactPhoneNumberRelationCount"`
+	PhoneNumberCount                      int `json:"phoneNumberCount"`
+	PhoneNumberCountFailed                int `json:"phoneNumberCountFailed"`
+	EmailCount                            int `json:"emailCount"`
+	EmailCountFailed                      int `json:"emailCountFailed"`
+	ContactCount                          int `json:"contactCount"`
+	ContactCountFailed                    int `json:"contactCountFailed"`
+	ContactPhoneNumberRelationCount       int `json:"contactPhoneNumberRelationCount"`
+	ContactPhoneNumberRelationCountFailed int `json:"contactPhoneNumberRelationCountFailed"`
 }
 
 // Describes the User of customerOS.  A user is the person who logs into the Openline platform.
