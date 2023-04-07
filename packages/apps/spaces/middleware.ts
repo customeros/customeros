@@ -7,6 +7,7 @@ const ORY_SIGN_SECRET = new TextEncoder().encode(
 );
 
 export async function middleware(request: NextRequest) {
+  console.log('🏷️ ----- request in middleware: ', request);
   if (
     !request.nextUrl.pathname.startsWith('/customer-os-api/') &&
     !request.nextUrl.pathname.startsWith('/sa/') &&
@@ -69,7 +70,7 @@ export async function middleware(request: NextRequest) {
           data.identity.id,
           request,
         );
-
+        console.log('🏷️ ----- DEBUG nextResponse: ', nextResponse);
         const alg = 'HS256';
         const jwt = await new jose.SignJWT({
           id: data.identity.id,
@@ -194,5 +195,11 @@ function getRedirectUrl(
 }
 
 export const config = {
-  matcher: ['/customer-os-api/(.*)', '/fs/(.*)', '/sa/(.*)', '/comms-api/(.*)', '/oasis-api/(.*)'],
+  matcher: [
+    '/customer-os-api/(.*)',
+    '/fs/(.*)',
+    '/sa/(.*)',
+    '/comms-api/(.*)',
+    '/oasis-api/(.*)',
+  ],
 };
