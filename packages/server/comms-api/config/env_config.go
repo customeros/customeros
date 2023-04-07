@@ -8,7 +8,7 @@ type Config struct {
 		CorsUrl          string `env:"COMMS_API_CORS_URL,required"`
 	}
 	Mail struct {
-		ApiKey string `env:"MAIL_API_KEY,required"`
+		ApiKey string `env:"COMMS_API_MAIL_API_KEY,required"`
 	}
 	GMail struct {
 		ClientId     string `env:"GMAIL_CLIENT_ID,unset"`
@@ -18,12 +18,10 @@ type Config struct {
 		OryServerUrl string `env:"ORY_SERVER_URL"`
 	}
 	WebChat struct {
-		ApiKey          string `env:"WEBCHAT_API_KEY,required"`
-		SlackWebhookUrl string `env:"SLACK_WEBHOOK_URL"`
-		PingInterval    int    `env:"WEBSOCKET_PING_INTERVAL"`
+		PingInterval int `env:"WEBSOCKET_PING_INTERVAL"`
 	}
 	VCon struct {
-		ApiKey          string `env:"VCON_API_KEY,required"`
+		ApiKey          string `env:"COMMS_API_VCON_API_KEY,required"`
 		AwsAccessKey    string `env:"AWS_ACCESS_KEY"`
 		AwsAccessSecret string `env:"AWS_ACCESS_SECRET"`
 		AwsRegion       string `env:"AWS_REGION"`

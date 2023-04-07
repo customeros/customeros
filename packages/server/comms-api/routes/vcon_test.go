@@ -26,7 +26,7 @@ var myVconConfig = &config.Config{
 		CorsUrl          string `env:"COMMS_API_CORS_URL,required"`
 	}{CustomerOsAPIKey: "my-key"},
 	VCon: struct {
-		ApiKey          string `env:"VCON_API_KEY,required"`
+		ApiKey          string `env:"COMMS_API_VCON_API_KEY,required"`
 		AwsAccessKey    string `env:"AWS_ACCESS_KEY"`
 		AwsAccessSecret string `env:"AWS_ACCESS_SECRET"`
 		AwsRegion       string `env:"AWS_REGION"`
