@@ -59,6 +59,7 @@ export const useAddEmailToContactEmail = ({
         ],
       },
     };
+
     client.writeQuery({
       query: GetContactCommunicationChannelsDocument,
       data: newData,
@@ -72,7 +73,9 @@ export const useAddEmailToContactEmail = ({
     email,
   ) => {
     try {
+      console.log('🏷️ ----- email: ', email);
       const optimisticItem = { id: 'optimistic-id', ...email };
+      console.log('🏷️ ----- email: ', email);
       const response = await addEmailToContactMutation({
         variables: { contactId, input: email },
         optimisticResponse: {

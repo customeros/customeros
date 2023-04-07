@@ -33,26 +33,27 @@
   overflow: hidden;
   margin-bottom: var(--spacing-md);
   background: var(--gradient-base);
-  font-weight: bold;
   color: white;
+
+  & img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
 }
-.avatarWrapper{
+.avatarWrapper {
   display:flex;
   flex-direction: column;
   align-items: center;
   margin-right: var(--spacing-md);
 
 }
-.photo img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
+
 .nameContainer {
   display: flex;
   flex-wrap: wrap;
   font-size: 1.2rem;
-  font-weight: 600;
+  font-weight: normal;
 
   & input:nth-of-type(2) {
     margin-left: var(--spacing-xxxs);
@@ -75,8 +76,13 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  cursor: not-allowed;
-  opacity: 0.5;
+
+
+  &.disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+  }
+
 }
 
 .icon {
@@ -89,15 +95,10 @@
 
 .label {
   font-size: var(--font-size-xs);
-  font-weight: 600;
   margin-top: var(--spacing-xxxs);
   color: var(--text-secondary-color);
 }
 
-.value {
-  font-size: 16px;
-  color: #666;
-}
 
 .jobRole {
   font-size: var(--font-size-xs);
@@ -110,12 +111,18 @@
 .source {
   font-size: var(--font-size-xs);
   color: var(--text-faded);
-  font-weight: lighter;
+  font-weight: normal;
   margin-left: var(--spacing-xxxs);
+  display: flex;
+  align-items: flex-end;
 
-  & span {
-    font-weight: bold;
-    margin-right: var(--spacing-xxxs);
+  & div {
+    margin-left: var(--spacing-xxxs);
+    text-transform: lowercase;
+
+    &:first-letter {
+      text-transform: uppercase;
+    }
   }
 
   &.sourceEditMode {
@@ -126,30 +133,6 @@
 .searchWrapper {
   display: flex;
   flex-direction: column;
-  font-size: var(--font-size-xs);
-}
-
-.titleSelectorLabel {
-  display: flex;
-  align-items: baseline;
-  font-size: var(--font-size-sm);
-  font-weight: normal;
-  color: var(--text-faded);
-}
-
-.titleSelector {
-  @include input-style;
-  padding: 0 var(--spacing-xxxs);
-  margin-top: 0;
-  margin-bottom: var(--spacing-xxs);
-}
-
-.formFields input {
-  margin-bottom: var(--spacing-xxs);
-}
-
-.editButton {
-  padding: 2px 16px;
   font-size: var(--font-size-xs);
 }
 

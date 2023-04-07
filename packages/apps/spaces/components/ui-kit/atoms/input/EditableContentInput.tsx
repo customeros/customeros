@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import styles from './editable-content-input.module.scss';
 import classNames from 'classnames';
 import { useDebouncedCallback } from 'use-debounce';
@@ -23,9 +23,9 @@ export const EditableContentInput = ({
     // delay in ms
     debounceTimeout,
   );
-  useEffect(() => {
+  useLayoutEffect(() => {
     setWidth((inputRef?.current?.scrollWidth || 0) + 2);
-  }, [inner]);
+  }, [inner, isEditMode]);
 
   useEffect(() => {
     return () => {
@@ -43,6 +43,7 @@ export const EditableContentInput = ({
           [styles?.[inputSize]]: inputSize,
           [styles.editable]: isEditMode,
         })}
+        disabled={!isEditMode}
         style={{ width: `${width}px` }}
         onChange={(event) => {
           setInner(event.target.value);
