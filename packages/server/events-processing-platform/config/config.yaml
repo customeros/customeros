@@ -26,6 +26,7 @@ subscriptions:
   allPrefixes: ""
   phoneNumberPrefix: "phone_number-"
   contactPrefix: "contact-"
+  emailPrefix: "email-"
   graphProjectionGroupName: "graph1"
   dataEnricherProjectionGroupName: "dataEnricher1"
 neo4j:
