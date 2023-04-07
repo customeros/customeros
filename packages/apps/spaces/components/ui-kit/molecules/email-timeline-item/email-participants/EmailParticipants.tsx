@@ -68,13 +68,11 @@ export const EmailParticipants: React.FC<Props> = ({
     if (subject) {
       request.subject = subject;
     }
-
     axios
-      .post(`/comms-api/mail/send`, {
+      .post(`/comms-api/mail/send`, request, {
         headers: {
-          'X-Openline-Mail-Api-Key': process.env.COMMS_MAIL_API_KEY as string,
+          'X-Openline-Mail-Api-Key': `${process.env.COMMS_MAIL_API_KEY}`,
         },
-        request,
       })
       .then((res) => {
         if (res.data) {
@@ -194,18 +192,17 @@ export const EmailParticipants: React.FC<Props> = ({
             setEmailEditorData({
               //@ts-expect-error fixme later
               handleSubmit: (data) => {
-                SendMail(data, () => null, [`${from}`], null, `${subject}`);
+                SendMail(data, () => null, [from], null, subject);
               },
-              to: `${from}`.split(';'),
-              subject: `${subject}`,
-              respondTo: `${from}`,
+              to: [from],
+              subject: subject,
+              respondTo: from,
             });
             setEditorMode({
               mode: EditorMode.Email,
               submitButtonLabel: 'Reply',
             });
           }}
-          disabled
           icon={<ReplyLeft />}
         />
         <IconButton

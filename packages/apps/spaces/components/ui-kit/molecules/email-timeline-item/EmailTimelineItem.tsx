@@ -97,12 +97,14 @@ export const EmailTimelineItem: React.FC<Props> = ({
 
   const [expanded, toggleExpanded] = useState(false);
   const timelineItemRef = useRef<HTMLDivElement>(null);
-  const { type, parameters } = parse(contentType);
-  let parsedContentType;
-  if (type === 'multipart/alternative') {
-    parsedContentType = type;
-  } else {
-    parsedContentType = contentType;
+  let parsedContentType = 'text/html';
+  if (contentType) {
+    const { type, parameters } = parse(contentType);
+    if (type === 'multipart/alternative') {
+      parsedContentType = type;
+    } else {
+      parsedContentType = contentType;
+    }
   }
   const handleToggleExpanded = () => {
     toggleExpanded(!expanded);
