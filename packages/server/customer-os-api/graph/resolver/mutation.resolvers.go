@@ -21,7 +21,7 @@ func (r *mutationResolver) PhoneNumberUpsertInEventStore(ctx context.Context, si
 		utils.LogMethodExecution(start, utils.GetFunctionName())
 	}(time.Now())
 
-	result, err := r.Services.PhoneNumberService.UpsertInEventStore(ctx, size)
+	result, _, err := r.Services.PhoneNumberService.UpsertInEventStore(ctx, size)
 	if err != nil {
 		logrus.Errorf("Failed to call method: %v", err)
 		graphql.AddErrorf(ctx, "Failed to upsert phone numbers to event store")
@@ -36,7 +36,7 @@ func (r *mutationResolver) ContactUpsertInEventStore(ctx context.Context, size i
 		utils.LogMethodExecution(start, utils.GetFunctionName())
 	}(time.Now())
 
-	result, err := r.Services.ContactService.UpsertInEventStore(ctx, size)
+	result, _, err := r.Services.ContactService.UpsertInEventStore(ctx, size)
 	if err != nil {
 		logrus.Errorf("Failed to call method: %v", err)
 		graphql.AddErrorf(ctx, "Failed to upsert contacts to event store")
@@ -51,7 +51,7 @@ func (r *mutationResolver) ContactPhoneNumberRelationUpsertInEventStore(ctx cont
 		utils.LogMethodExecution(start, utils.GetFunctionName())
 	}(time.Now())
 
-	result, err := r.Services.ContactService.UpsertPhoneNumberRelationInEventStore(ctx, size)
+	result, _, err := r.Services.ContactService.UpsertPhoneNumberRelationInEventStore(ctx, size)
 	if err != nil {
 		logrus.Errorf("Failed to call method: %v", err)
 		graphql.AddErrorf(ctx, "Failed: {%s}", err)
@@ -67,14 +67,41 @@ func (r *mutationResolver) UpsertInEventStore(ctx context.Context, size int) (*m
 	}(time.Now())
 
 	output := model.UpsertToEventStoreResult{}
-	processedPhoneNumbers, _ := r.Services.PhoneNumberService.UpsertInEventStore(ctx, size)
+
+	processedPhoneNumbers, failedPhoneNumbers, err := r.Services.PhoneNumberService.UpsertInEventStore(ctx, size)
 	output.PhoneNumberCount = processedPhoneNumbers
-	processedContacts, _ := r.Services.ContactService.UpsertInEventStore(ctx, size)
-	output.ContactCount = processedContacts
-	if processedPhoneNumbers < size && processedContacts < size {
-		processedContactPhoneNumberRelations, _ := r.Services.ContactService.UpsertPhoneNumberRelationInEventStore(ctx, size)
-		output.ContactPhoneNumberRelationCount = processedContactPhoneNumberRelations
+	output.PhoneNumberCountFailed = failedPhoneNumbers
+	if err != nil {
+		graphql.AddErrorf(ctx, "Failed: {%s}", err)
+		return &output, err
 	}
+
+	processedContacts, failedContacts, err := r.Services.ContactService.UpsertInEventStore(ctx, size)
+	output.ContactCount = processedContacts
+	output.ContactCountFailed = failedContacts
+	if err != nil {
+		graphql.AddErrorf(ctx, "Failed: {%s}", err)
+		return &output, err
+	}
+
+	processedEmails, failedEmails, err := r.Services.EmailService.UpsertInEventStore(ctx, size)
+	output.EmailCount = processedEmails
+	output.EmailCountFailed = failedEmails
+	if err != nil {
+		graphql.AddErrorf(ctx, "Failed: {%s}", err)
+		return &output, err
+	}
+
+	if processedPhoneNumbers < size && processedContacts < size {
+		processedContactPhoneNumberRelations, failedCount, err := r.Services.ContactService.UpsertPhoneNumberRelationInEventStore(ctx, size)
+		output.ContactPhoneNumberRelationCount = processedContactPhoneNumberRelations
+		output.ContactPhoneNumberRelationCountFailed = failedCount
+		if err != nil {
+			graphql.AddErrorf(ctx, "Failed: {%s}", err)
+			return &output, err
+		}
+	}
+	// TODO alexb add email contact relation
 
 	return &output, nil
 }

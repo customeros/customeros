@@ -23,7 +23,7 @@ type PhoneNumberService interface {
 
 	mapDbNodeToPhoneNumberEntity(node dbtype.Node) *entity.PhoneNumberEntity
 
-	UpsertInEventStore(ctx context.Context, size int) (int, error)
+	UpsertInEventStore(ctx context.Context, size int) (int, int, error)
 }
 
 type phoneNumberService struct {
@@ -157,8 +157,9 @@ func (s *phoneNumberService) DetachFromEntityById(ctx context.Context, entityTyp
 	return err == nil, err
 }
 
-func (s *phoneNumberService) UpsertInEventStore(ctx context.Context, size int) (int, error) {
+func (s *phoneNumberService) UpsertInEventStore(ctx context.Context, size int) (int, int, error) {
 	processedRecords := 0
+	failedRecords := 0
 	for size > 0 {
 		batchSize := constants.Neo4jBatchSize
 		if size < constants.Neo4jBatchSize {
@@ -166,7 +167,7 @@ func (s *phoneNumberService) UpsertInEventStore(ctx context.Context, size int) (
 		}
 		records, err := s.repositories.PhoneNumberRepository.GetAllCrossTenants(ctx, batchSize)
 		if err != nil {
-			return 0, err
+			return 0, 0, err
 		}
 		for _, v := range records {
 			_, err := s.grpcClients.PhoneNumberClient.UpsertPhoneNumber(context.Background(), &events_processing_phone_number.UpsertPhoneNumberGrpcRequest{
@@ -180,6 +181,7 @@ func (s *phoneNumberService) UpsertInEventStore(ctx context.Context, size int) (
 				UpdatedAt:     utils.ConvertTimeToTimestampPtr(utils.GetTimePropOrNil(v.Node.Props, "updatedAt")),
 			})
 			if err != nil {
+				failedRecords++
 				logrus.Errorf("Failed to call method: %v", err)
 			} else {
 				processedRecords++
@@ -189,7 +191,7 @@ func (s *phoneNumberService) UpsertInEventStore(ctx context.Context, size int) (
 		size -= batchSize
 	}
 
-	return processedRecords, nil
+	return processedRecords, failedRecords, nil
 }
 
 func (s *phoneNumberService) mapDbNodeToPhoneNumberEntity(node dbtype.Node) *entity.PhoneNumberEntity {

@@ -41,8 +41,8 @@ type ContactService interface {
 	RemoveOrganization(ctx context.Context, contactId, organizationId string) (*entity.ContactEntity, error)
 
 	mapDbNodeToContactEntity(dbNode dbtype.Node) *entity.ContactEntity
-	UpsertInEventStore(ctx context.Context, size int) (int, error)
-	UpsertPhoneNumberRelationInEventStore(ctx context.Context, size int) (int, error)
+	UpsertInEventStore(ctx context.Context, size int) (int, int, error)
+	UpsertPhoneNumberRelationInEventStore(ctx context.Context, size int) (int, int, error)
 }
 
 type ContactCreateData struct {
@@ -528,8 +528,9 @@ func (s *contactService) GetContactsForPhoneNumbers(ctx context.Context, phoneNu
 	return &contactEntities, nil
 }
 
-func (s *contactService) UpsertInEventStore(ctx context.Context, size int) (int, error) {
+func (s *contactService) UpsertInEventStore(ctx context.Context, size int) (int, int, error) {
 	processedRecords := 0
+	failedRecords := 0
 	for size > 0 {
 		batchSize := constants.Neo4jBatchSize
 		if size < constants.Neo4jBatchSize {
@@ -537,7 +538,7 @@ func (s *contactService) UpsertInEventStore(ctx context.Context, size int) (int,
 		}
 		records, err := s.repositories.ContactRepository.GetAllCrossTenants(ctx, batchSize)
 		if err != nil {
-			return 0, err
+			return 0, 0, err
 		}
 		for _, v := range records {
 			_, err := s.grpcClients.ContactClient.UpsertContact(context.Background(), &events_processing_contact.UpsertContactGrpcRequest{
@@ -554,6 +555,7 @@ func (s *contactService) UpsertInEventStore(ctx context.Context, size int) (int,
 				UpdatedAt:     utils.ConvertTimeToTimestampPtr(utils.GetTimePropOrNil(v.Node.Props, "updatedAt")),
 			})
 			if err != nil {
+				failedRecords++
 				logrus.Errorf("Failed to call method: %v", err)
 			} else {
 				processedRecords++
@@ -563,11 +565,12 @@ func (s *contactService) UpsertInEventStore(ctx context.Context, size int) (int,
 		size -= batchSize
 	}
 
-	return processedRecords, nil
+	return processedRecords, failedRecords, nil
 }
 
-func (s *contactService) UpsertPhoneNumberRelationInEventStore(ctx context.Context, size int) (int, error) {
+func (s *contactService) UpsertPhoneNumberRelationInEventStore(ctx context.Context, size int) (int, int, error) {
 	processedRecords := 0
+	failedRecords := 0
 	for size > 0 {
 		batchSize := constants.Neo4jBatchSize
 		if size < constants.Neo4jBatchSize {
@@ -575,7 +578,7 @@ func (s *contactService) UpsertPhoneNumberRelationInEventStore(ctx context.Conte
 		}
 		records, err := s.repositories.ContactRepository.GetAllContactPhoneNumberRelationships(ctx, batchSize)
 		if err != nil {
-			return 0, err
+			return 0, 0, err
 		}
 		for _, v := range records {
 			_, err := s.grpcClients.ContactClient.AddPhoneNumberToContact(context.Background(), &events_processing_contact.AddPhoneNumberToContactGrpcRequest{
@@ -586,6 +589,7 @@ func (s *contactService) UpsertPhoneNumberRelationInEventStore(ctx context.Conte
 				Tenant:        v.Values[3].(string),
 			})
 			if err != nil {
+				failedRecords++
 				logrus.Errorf("Failed to call method: %v", err)
 			} else {
 				processedRecords++
@@ -595,7 +599,7 @@ func (s *contactService) UpsertPhoneNumberRelationInEventStore(ctx context.Conte
 		size -= batchSize
 	}
 
-	return processedRecords, nil
+	return processedRecords, failedRecords, nil
 }
 
 func (s *contactService) mapDbNodeToContactEntity(dbNode dbtype.Node) *entity.ContactEntity {

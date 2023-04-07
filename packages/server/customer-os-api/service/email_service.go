@@ -6,9 +6,13 @@ import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/db"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	events_processing_email "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/proto/email"
+	"github.com/sirupsen/logrus"
 )
 
 type EmailService interface {
@@ -21,15 +25,19 @@ type EmailService interface {
 	DeleteById(ctx context.Context, emailId string) (bool, error)
 
 	mapDbNodeToEmailEntity(node dbtype.Node) *entity.EmailEntity
+
+	UpsertInEventStore(ctx context.Context, size int) (int, int, error)
 }
 
 type emailService struct {
 	repositories *repository.Repositories
+	grpcClients  *grpc_client.Clients
 }
 
-func NewEmailService(repository *repository.Repositories) EmailService {
+func NewEmailService(repository *repository.Repositories, grpcClients *grpc_client.Clients) EmailService {
 	return &emailService{
 		repositories: repository,
+		grpcClients:  grpcClients,
 	}
 }
 
@@ -179,6 +187,43 @@ func (s *emailService) DetachFromEntityById(ctx context.Context, entityType enti
 func (s *emailService) DeleteById(ctx context.Context, emailId string) (bool, error) {
 	err := s.repositories.EmailRepository.DeleteById(ctx, common.GetTenantFromContext(ctx), emailId)
 	return err == nil, err
+}
+
+func (s *emailService) UpsertInEventStore(ctx context.Context, size int) (int, int, error) {
+	processedRecords := 0
+	failedRecords := 0
+	for size > 0 {
+		batchSize := constants.Neo4jBatchSize
+		if size < constants.Neo4jBatchSize {
+			batchSize = size
+		}
+		records, err := s.repositories.PhoneNumberRepository.GetAllCrossTenants(ctx, batchSize)
+		if err != nil {
+			return 0, 0, err
+		}
+		for _, v := range records {
+			_, err := s.grpcClients.EmailClient.UpsertEmail(context.Background(), &events_processing_email.UpsertEmailGrpcRequest{
+				Id:            utils.GetStringPropOrEmpty(v.Node.Props, "id"),
+				Tenant:        v.LinkedNodeId,
+				RawEmail:      utils.GetStringPropOrEmpty(v.Node.Props, "rawEmail"),
+				Source:        utils.GetStringPropOrEmpty(v.Node.Props, "source"),
+				SourceOfTruth: utils.GetStringPropOrEmpty(v.Node.Props, "sourceOfTruth"),
+				AppSource:     utils.GetStringPropOrEmpty(v.Node.Props, "appSource"),
+				CreatedAt:     utils.ConvertTimeToTimestampPtr(utils.GetTimePropOrNil(v.Node.Props, "createdAt")),
+				UpdatedAt:     utils.ConvertTimeToTimestampPtr(utils.GetTimePropOrNil(v.Node.Props, "updatedAt")),
+			})
+			if err != nil {
+				failedRecords++
+				logrus.Errorf("Failed to call method: %v", err)
+			} else {
+				processedRecords++
+			}
+		}
+
+		size -= batchSize
+	}
+
+	return processedRecords, failedRecords, nil
 }
 
 func (s *emailService) mapDbNodeToEmailEntity(node dbtype.Node) *entity.EmailEntity {
