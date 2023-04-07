@@ -28,20 +28,6 @@ export const DebouncedTextArea = ({
     };
   }, []);
 
-  if (!isEditMode) {
-    return (
-      <div
-        {...rest}
-        className={classNames(styles.contentEditable, styles.textArea, {
-          [styles?.[inputSize]]: inputSize,
-          [styles.editable]: isEditMode,
-        })}
-      >
-        {value}
-      </div>
-    );
-  }
-
   return (
     <>
       <textarea
