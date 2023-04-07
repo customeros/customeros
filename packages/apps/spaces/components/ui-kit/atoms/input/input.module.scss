@@ -1,10 +1,16 @@
 @import '../../../../styles/mixins';
 
 .wrapper {
+  --input-width: '2ch';
   position: relative;
-  width: 100%;
+  //width: 100%;
   max-width: 400px;
   display: block;
+  font-family: monospace;
+
+  &.inlineMode {
+    margin: 0;
+  }
 }
 
 .w-full {
@@ -14,19 +20,20 @@
 
 .input {
   @include input-style;
-
+  width: fit-content;
+  overflow-x: visible;
   /* SIZES */
 
   &.xxxs {
     margin-top: 0;
     padding: 0 var(--spacing-xxxs);
-    font-size: var(--font-size-sm);
+    font-size: inherit;
     font-weight: lighter;
   }
   &.xxs {
     margin-top: 0;
     padding: var(--spacing-xxxs) var(--spacing-xxs);
-    font-size: var(--font-size-sm);
+    font-size: inherit;
     font-weight: lighter;
   }
 }

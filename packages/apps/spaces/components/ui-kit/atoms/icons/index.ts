@@ -11,6 +11,7 @@ export { default as AngleDown } from './AngleDown';
 export { default as AngleLeft } from './AngleLeft';
 export { default as AngleRight } from './AngleRight';
 export { default as AngleUp } from './AngleUp';
+export { default as Archive } from './Archive';
 export { default as ArrowCircleDown } from './ArrowCircleDown';
 export { default as ArrowCircleLeft } from './ArrowCircleLeft';
 export { default as ArrowCircleRight } from './ArrowCircleRight';

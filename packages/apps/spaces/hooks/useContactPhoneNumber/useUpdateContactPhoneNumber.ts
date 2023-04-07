@@ -9,8 +9,7 @@ import {
 
 interface Result {
   onUpdateContactPhoneNumber: (
-    input: Omit<PhoneNumberUpdateInput, 'id'>,
-    oldValue: PhoneNumber,
+    input: PhoneNumberUpdateInput,
   ) => Promise<
     UpdateContactPhoneNumberMutation['phoneNumberUpdateInContact'] | null
   >;
@@ -24,11 +23,8 @@ export const useUpdateContactPhoneNumber = ({
     useUpdateContactPhoneNumberMutation();
 
   const handleUpdateContactPhoneNumber: Result['onUpdateContactPhoneNumber'] =
-    async (input, { label, primary = false, id, ...rest }) => {
+    async (input) => {
       const payload = {
-        primary,
-        label,
-        id,
         ...input,
       };
       try {
@@ -38,9 +34,8 @@ export const useUpdateContactPhoneNumber = ({
           optimisticResponse: {
             phoneNumberUpdateInContact: {
               __typename: 'PhoneNumber',
-              ...rest,
               ...payload,
-              primary: input.primary || primary || false,
+              primary: input.primary || false,
             },
           },
         });
