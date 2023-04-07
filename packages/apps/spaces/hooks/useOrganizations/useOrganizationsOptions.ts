@@ -35,8 +35,6 @@ export const useOrganizationsOptions = (): Result => {
     };
   }
 
-  console.log('🏷️ ----- data: ', data);
-
   return {
     data: data?.organizations.content,
     loading,

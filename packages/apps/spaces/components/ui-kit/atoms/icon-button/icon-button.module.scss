@@ -19,6 +19,11 @@
 
   /* SIZES */
 
+  &.xxxxs {
+    padding: 0;
+    width: 24px;
+  }
+
   &.xxxs {
     padding: var(--spacing-xxxs);
   }

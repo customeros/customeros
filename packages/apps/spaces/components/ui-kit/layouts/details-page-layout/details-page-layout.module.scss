@@ -20,7 +20,7 @@
 
   @include min-tablet {
     display: grid;
-    grid-template-columns: 50px 1fr 2fr;
+    grid-template-columns: 50px minmax(1fr, 500px) 3fr;
     grid-template-rows: min-content 1fr 200px;
     grid-template-areas:
       'backButton idCard timeline'

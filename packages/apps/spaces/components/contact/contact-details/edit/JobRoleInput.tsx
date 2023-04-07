@@ -1,10 +1,10 @@
-import React, { useEffect, useRef, useState } from 'react';
-
-import styles from './contact-details-edit.module.scss';
+import React, { useEffect, useState } from 'react';
+import styles from './job-roles-input.module.scss';
 import {
-  DebouncedInput,
+  Autocomplete,
+  EditableContentInput,
   IconButton,
-  Input,
+  Plus,
   Trash,
 } from '../../../ui-kit/atoms';
 import {
@@ -12,41 +12,40 @@ import {
   useRemoveJobRoleFromContactJobRole,
   useUpdateContactJobRole,
 } from '../../../../hooks/useContactJobRole';
-import { Controller } from 'react-hook-form';
-import { Dropdown } from 'primereact/dropdown';
-import { OverlayPanel } from '../../../ui-kit/atoms/overlay-panel';
 import { capitalizeFirstLetter } from '../../../../utils';
 import { useOrganizationsOptions } from '../../../../hooks/useOrganizations';
+import { useCreateOrganization } from '../../../../hooks/useOrganization';
+import { useRouter } from 'next/router';
 
 interface JobRoleInputProps {
   contactId: string;
-  roleId?: string;
-  field: any;
-  fields: any;
-  index: number;
-  register: any;
-  control: any;
-  append: any;
-  remove: any;
+  organization: {
+    id: string;
+    name: string;
+  };
+  jobRole: string;
+  roleId: string;
+  isEditMode?: boolean;
+  showAddButton?: boolean;
 }
 
 export const JobRoleInput: React.FC<JobRoleInputProps> = ({
   contactId,
   roleId,
-  index,
-  register,
-  fields,
-  control,
-  append,
-  remove,
+  organization,
+  jobRole,
+  isEditMode,
+  showAddButton = false,
 }) => {
-  const organizationSelectorRef = useRef(null);
-
   const [organizationOptions, setOrganizationOptions] = useState<
     Array<{ value: string; label: string }>
   >([]);
   const { onCreateContactJobRole } = useCreateContactJobRole({ contactId });
   const { data, loading, error } = useOrganizationsOptions();
+  const { onCreateOrganization } = useCreateOrganization();
+  const {
+    query: { id },
+  } = useRouter();
   const { onUpdateContactJobRole } = useUpdateContactJobRole({ contactId });
   const { onRemoveContactJobRole } = useRemoveJobRoleFromContactJobRole({
     contactId,
@@ -66,71 +65,74 @@ export const JobRoleInput: React.FC<JobRoleInputProps> = ({
   return (
     <div>
       <div className={styles.jobAndOrganizationInputs}>
-        <Controller
-          control={control}
-          render={({ field }) => (
-            <DebouncedInput
-              id={`contact-${contactId}-job-title`}
-              // hideLabel={true}
-              // label={'role'}
-              className={styles.jobRoleInput}
-              placeholder='Job title'
-              inputSize='xxxs'
-              onChange={(e) => {
-                console.log('🏷️ ----- e: ', e, roleId);
+        {isEditMode && (
+          <IconButton
+            onClick={(e) => {
+              e.stopPropagation();
+              e.preventDefault();
+              onRemoveContactJobRole(roleId);
+            }}
+            icon={<Trash style={{ transform: 'scale(0.7)' }} />}
+            size='xxxxs'
+            role='button'
+            mode='text'
+          />
+        )}
+        {(isEditMode || !!jobRole?.length) && (
+          <EditableContentInput
+            isEditMode={isEditMode}
+            value={jobRole || ''}
+            placeholder='Job title'
+            onChange={(value: string) => {
+              roleId
+                ? onUpdateContactJobRole({
+                    id: roleId,
+                    jobTitle: value,
+                  })
+                : onCreateContactJobRole({
+                    jobTitle: value,
+                  });
+            }}
+          />
+        )}
 
-                roleId
-                  ? onUpdateContactJobRole({
-                      id: roleId,
-                      jobTitle: e.target.value,
-                    })
-                  : field.onChange(e.target.value);
-              }}
-            />
-          )}
-          name={`jobRoles.${index}.jobTitle`}
-        />
+        {(isEditMode || !!organization?.name?.length) && (
+          <Autocomplete
+            mode='fit-content'
+            editable={isEditMode}
+            value={organization?.name || ''}
+            suggestions={organizationOptions}
+            onChange={(e) =>
+              roleId
+                ? onUpdateContactJobRole({
+                    id: roleId,
+                    organizationId: e.value,
+                  })
+                : onCreateContactJobRole({ organizationId: e.value })
+            }
+            onAddNew={(e) => onCreateOrganization({ name: e.value })}
+            newItemLabel='name'
+            placeholder='Organization'
+          />
+        )}
 
-        <span className={styles.copy}>at</span>
-
-        <Controller
-          control={control}
-          name={`jobRoles.${index}.organizationId`}
-          render={({ field }) => (
-            <Dropdown
-              id={field.name}
-              value={field.value}
-              onChange={(e) =>
-                roleId
-                  ? onUpdateContactJobRole({
-                      id: roleId,
-                      organizationId: e.value,
-                    })
-                  : field.onChange(e.value)
-              }
-              options={organizationOptions}
-              optionValue='value'
-              optionLabel='label'
-              placeholder='Organization'
-              className={styles.titleSelector}
-            />
-          )}
-        />
-        <OverlayPanel
-          ref={organizationSelectorRef}
-          model={organizationOptions}
-        />
-        <IconButton
-          onClick={(e) => {
-            e.stopPropagation();
-            e.preventDefault();
-            roleId ? onRemoveContactJobRole(roleId) : remove(index);
-          }}
-          icon={<Trash style={{ transform: 'scale(0.8)' }} />}
-          size='xxxs'
-          role='button'
-          mode='text'
-        />
+        {showAddButton && isEditMode && (
+          <IconButton
+            onClick={(e) => {
+              e.stopPropagation();
+              e.preventDefault();
+              onCreateContactJobRole({
+                jobTitle: '',
+                primary: false,
+                organizationId: organization?.id,
+              });
+            }}
+            icon={<Plus style={{ transform: 'scale(0.8)' }} />}
+            size='xxxxs'
+            role='button'
+            mode='text'
+          />
+        )}
       </div>
     </div>
   );
