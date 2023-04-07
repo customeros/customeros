@@ -34,6 +34,8 @@ type ContactRepository interface {
 	UpdateMergedContactLabelsInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, mergedContactId string) error
 	GetAllForEmails(ctx context.Context, tenant string, emailIds []string) ([]*utils.DbNodeAndId, error)
 	GetAllForPhoneNumbers(ctx context.Context, tenant string, phoneNumberIds []string) ([]*utils.DbNodeAndId, error)
+	Archive(ctx context.Context, tenant, contactId string) error
+	RestoreFromArchive(ctx context.Context, tenant, contactId string) error
 
 	GetAllCrossTenants(ctx context.Context, size int) ([]*utils.DbNodeAndId, error)
 	GetAllContactPhoneNumberRelationships(ctx context.Context, size int) ([]*neo4j.Record, error)
@@ -796,7 +798,7 @@ func (r *contactRepository) GetAllForPhoneNumbers(ctx context.Context, tenant st
 }
 
 func (r *contactRepository) GetAllCrossTenants(ctx context.Context, size int) ([]*utils.DbNodeAndId, error) {
-	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
+	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
 	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
@@ -819,7 +821,7 @@ func (r *contactRepository) GetAllCrossTenants(ctx context.Context, size int) ([
 }
 
 func (r *contactRepository) GetAllContactPhoneNumberRelationships(ctx context.Context, size int) ([]*neo4j.Record, error) {
-	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
+	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
 	dbRecords, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
@@ -839,4 +841,55 @@ func (r *contactRepository) GetAllContactPhoneNumberRelationships(ctx context.Co
 		return nil, err
 	}
 	return dbRecords.([]*neo4j.Record), err
+}
+
+func (r *contactRepository) Archive(ctx context.Context, tenant, contactId string) error {
+	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
+	defer session.Close(ctx)
+
+	query := `
+			MATCH (c:Contact {id:$contactId})-[r:CONTACT_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant})
+			MERGE (c)-[newRel:ARCHIVED]->(t)
+			SET c.archived=true, newRel.archivedAt=$now, c:ArchivedContact_%s
+            DELETE r
+			REMOVE c:Contact_%s
+			`
+
+	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (interface{}, error) {
+		_, err := tx.Run(ctx, fmt.Sprintf(query, tenant, tenant),
+			map[string]interface{}{
+				"contactId": contactId,
+				"tenant":    tenant,
+				"now":       utils.Now(),
+			})
+
+		return nil, err
+	})
+	return err
+}
+
+func (r *contactRepository) RestoreFromArchive(ctx context.Context, tenant, contactId string) error {
+	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
+	defer session.Close(ctx)
+
+	query := `
+			MATCH (c:Contact {id:$contactId})-[r:ARCHIVED]->(t:Tenant {name:$tenant})
+			MERGE (c)-[newRel:CONTACT_BELONGS_TO_TENANT]->(t)
+			SET c.archived=true, c.updatedAt=$now, c:Contact_%s
+            DELETE r
+			REMOVE c.archived
+			REMOVE c:ArchivedContact_%s
+			`
+
+	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (interface{}, error) {
+		_, err := tx.Run(ctx, fmt.Sprintf(query, tenant, tenant),
+			map[string]interface{}{
+				"contactId": contactId,
+				"tenant":    tenant,
+				"now":       utils.Now(),
+			})
+
+		return nil, err
+	})
+	return err
 }

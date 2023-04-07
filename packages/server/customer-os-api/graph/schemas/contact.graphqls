@@ -28,7 +28,8 @@ extend type Mutation {
     contact_Create(input: ContactInput!): Contact!
     contact_Update(input: ContactUpdateInput!): Contact!
     contact_HardDelete(contactId: ID!): Result!
-    contact_SoftDelete(contactId: ID!): Result!
+    contact_Archive(contactId: ID!): Result!
+    contact_RestoreFromArchive(contactId: ID!): Result!
     contact_Merge(primaryContactId: ID!, mergedContactIds: [ID!]!): Contact!
 
     contact_AddTagById(input: ContactTagInput!): Contact!
