@@ -2,49 +2,14 @@
 
 .jobAndOrganizationInputs {
   display: flex;
-  align-items: flex-end;
+  align-items: center;
+  flex-wrap: wrap;
   margin-bottom: var(--spacing-xxxs);
-  font-size: var(--font-size-sm);
+  font-size: var(--font-size-xs);
   font-family: var(--font-secondary);
+  position: relative;
 
   & input {
     margin-right: var(--spacing-xxxs);
   }
-}
-
-.jobRoleInput {
-  margin: 0;
-}
-
-.copy {
-  font-weight: normal;
-  font-size: var(--font-size-sm);
-  margin: 0 var(--spacing-xxxs);
-}
-
-.buttonWrapper {
-  @include justify-end;
-}
-
-.addNewJobRoleButton {
-  padding: 0;
-  margin-top: var(--spacing-xxxs);
-  font-size: var(--font-size-xs);
-
-  span {
-    margin-right: var(--spacing-xxxs);
-  }
-}
-.titleSelectorLabel {
-  display: flex;
-  align-items: baseline;
-  font-size: var(--font-size-sm);
-  font-weight: normal;
-  color: var(--text-faded);
-}
-
-.titleSelector {
-  @include input-style;
-  padding: 0 var(--spacing-xxxs);
-  margin-top: 0;
 }

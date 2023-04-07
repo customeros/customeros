@@ -8,7 +8,7 @@ export { Button } from './button';
 export { MessageDeprecate } from './message';
 export { Address } from './address';
 export { DeleteConfirmationDialog } from './delete-confirmation-dialog';
-export { IconButton } from './icon-button';
+export { IconButton, DeleteIconButton } from './icon-button';
 export { Table } from './table';
 export { DebouncedInput, Input, EditableContentInput } from './input';
 export { Link } from './link';

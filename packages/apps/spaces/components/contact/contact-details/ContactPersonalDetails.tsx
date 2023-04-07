@@ -1,11 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import {
-  Button,
   DeleteConfirmationDialog,
   EditableContentInput,
-  Folder,
   Inbox,
-  Trash,
 } from '../../ui-kit';
 import styles from './contact-details.module.scss';
 import {
@@ -16,17 +13,16 @@ import {
 import { ContactDetailsSkeleton } from './skeletons';
 import { ContactTags } from '../contact-tags';
 import { ContactAvatar } from '../../ui-kit/molecules/organization-avatar';
-import { useRecoilState } from 'recoil';
+import { useRecoilValue } from 'recoil';
 import { contactDetailsEdit } from '../../../state';
-import { JobRoleInput } from './edit/JobRoleInput';
+import { JobRoleInput } from './edit';
 import { IconButton } from '../../ui-kit/atoms';
 import classNames from 'classnames';
 import { useCreateContactJobRole } from '../../../hooks/useContactJobRole';
 
 export const ContactPersonalDetails = ({ id }: { id: string }) => {
   const { data, loading, error } = useContactPersonalDetails({ id });
-  const [{ isEditMode }, setContactDetailsEdit] =
-    useRecoilState(contactDetailsEdit);
+  const { isEditMode } = useRecoilValue(contactDetailsEdit);
   const { onCreateContactJobRole } = useCreateContactJobRole({ contactId: id });
 
   const { onUpdateContactPersonalDetails } = useUpdateContactPersonalDetails({
@@ -57,10 +53,10 @@ export const ContactPersonalDetails = ({ id }: { id: string }) => {
           <>
             <IconButton
               className={styles.archiveContactButton}
-              size='xxxxs'
-              mode='text'
+              size='xxxs'
+              mode='danger'
               onClick={() => setDeleteConfirmationModalVisible(true)}
-              icon={<Inbox />}
+              icon={<Inbox style={{ transform: 'scale(0.8)' }} />}
             />
             <DeleteConfirmationDialog
               deleteConfirmationModalVisible={deleteConfirmationModalVisible}
@@ -79,14 +75,13 @@ export const ContactPersonalDetails = ({ id }: { id: string }) => {
           </>
         )}
       </div>
-
       <div className={styles.name}>
         <div className={styles.nameAndEditButton}>
           <div className={styles.nameContainer}>
             <EditableContentInput
               isEditMode={isEditMode}
               value={data?.firstName || data?.name || ''}
-              placeholder='First name'
+              placeholder={isEditMode ? 'First name' : 'Unnamed'}
               onChange={(value: string) =>
                 onUpdateContactPersonalDetails({
                   firstName: value,
@@ -97,7 +92,7 @@ export const ContactPersonalDetails = ({ id }: { id: string }) => {
             <EditableContentInput
               isEditMode={isEditMode}
               value={data?.lastName || ''}
-              placeholder='Last name'
+              placeholder={isEditMode ? 'Last name' : ''}
               onChange={(value: string) => {
                 return onUpdateContactPersonalDetails({
                   lastName: value,
@@ -105,16 +100,6 @@ export const ContactPersonalDetails = ({ id }: { id: string }) => {
                 });
               }}
             />
-          </div>
-
-          <div style={{ marginLeft: '4px' }}>
-            <Button
-              className={styles.editButton}
-              mode='secondary'
-              onClick={() => setContactDetailsEdit({ isEditMode: !isEditMode })}
-            >
-              {isEditMode ? 'Done' : 'Edit'}
-            </Button>
           </div>
         </div>
 
@@ -142,8 +127,8 @@ export const ContactPersonalDetails = ({ id }: { id: string }) => {
             [styles.sourceEditMode]: isEditMode,
           })}
         >
-          <span>Source:</span>
-          {data?.source || 'OPENLINE'}
+          Source:
+          <div>{data?.source || 'OPENLINE'}</div>
         </div>
       </div>
     </div>
