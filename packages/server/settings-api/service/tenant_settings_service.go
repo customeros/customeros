@@ -408,6 +408,19 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 			tenantSettings.FreshdeskApiKey = &apiKey
 			tenantSettings.FreshdeskDomain = &domain
 
+		case "freshsales":
+			apiKey, ok := data["apiKey"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing API key for Freshsales integration")
+			}
+			domain, ok := data["domain"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing domain for Freshsales integration")
+			}
+
+			tenantSettings.FreshsalesApiKey = &apiKey
+			tenantSettings.FreshsalesDomain = &domain
+
 		}
 
 	}
@@ -512,8 +525,11 @@ func (s *tenantSettingsService) ClearIntegrationData(tenantName, identifier stri
 		case "freshcaller":
 			tenantSettings.FreshcallerApiKey = nil
 		case "freshdesk":
-			tenantSettings.FreshdeskDomain = nil
 			tenantSettings.FreshdeskApiKey = nil
+			tenantSettings.FreshdeskDomain = nil
+		case "freshsales":
+			tenantSettings.FreshsalesApiKey = nil
+			tenantSettings.FreshsalesDomain = nil
 
 		}
 

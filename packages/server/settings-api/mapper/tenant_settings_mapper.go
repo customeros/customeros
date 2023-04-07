@@ -167,5 +167,10 @@ func MapTenantSettingsEntityToDTO(tenantSettings *entity.TenantSettings) *map[st
 		responseMap["freshdesk"].(map[string]interface{})["state"] = "ACTIVE"
 	}
 
+	if tenantSettings != nil && tenantSettings.FreshsalesApiKey != nil && tenantSettings.FreshsalesDomain != nil {
+		responseMap["freshsales"] = make(map[string]interface{})
+		responseMap["freshsales"].(map[string]interface{})["state"] = "ACTIVE"
+	}
+
 	return &responseMap
 }
