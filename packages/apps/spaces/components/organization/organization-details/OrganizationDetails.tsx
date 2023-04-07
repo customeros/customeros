@@ -17,33 +17,33 @@ export const OrganizationDetails = ({ id }: { id: string }) => {
 
   return (
     <div className={styles.organizationDetails}>
-      <div className={styles.bg}>
-        <div>
-          <div className={styles.editButton}>
-            <div style={{ marginLeft: '4px' }}>
-              <Button
-                mode='secondary'
-                onClick={() =>
-                  setOrganizationDetailsEdit({ isEditMode: !isEditMode })
-                }
-              >
-                Edit
-              </Button>
-            </div>
-          </div>
-          <h1 className={styles.name}>
-            <EditableContentInput
-              isEditMode={isEditMode}
-              value={data?.name || ''}
-              placeholder={isEditMode ? 'Organization' : 'Unnamed'}
-              onChange={(value: string) =>
-                onUpdateOrganization({
-                  name: value,
-                })
+      <div>
+        <div className={styles.editButton}>
+          <div style={{ marginLeft: '4px' }}>
+            <Button
+              mode='secondary'
+              onClick={() =>
+                setOrganizationDetailsEdit({ isEditMode: !isEditMode })
               }
-            />
-          </h1>
+            >
+              Edit
+            </Button>
+          </div>
+        </div>
+        <h1 className={styles.name}>
+          <EditableContentInput
+            isEditMode={isEditMode}
+            value={data?.name || ''}
+            placeholder={isEditMode ? 'Organization' : 'Unnamed'}
+            onChange={(value: string) =>
+              onUpdateOrganization({
+                name: value,
+              })
+            }
+          />
+        </h1>
 
+        {(isEditMode || data?.industry?.length) && (
           <EditableContentInput
             isEditMode={isEditMode}
             value={data?.industry || ''}
@@ -56,8 +56,10 @@ export const OrganizationDetails = ({ id }: { id: string }) => {
               })
             }
           />
-        </div>
+        )}
+      </div>
 
+      {(isEditMode || !!data?.description?.length) && (
         <DebouncedTextArea
           isEditMode={isEditMode}
           value={data?.description || ''}
@@ -70,28 +72,28 @@ export const OrganizationDetails = ({ id }: { id: string }) => {
             })
           }
         />
+      )}
 
-        <div>
-          {isEditMode && (
-            <EditableContentInput
-              isEditMode={isEditMode}
-              value={data?.website || ''}
-              placeholder={isEditMode ? 'Website' : ''}
-              onChange={(value: string) =>
-                onUpdateOrganization({
-                  name: data?.name || '',
-                  description: data?.description,
-                  industry: data?.industry,
-                  website: value,
-                })
-              }
-            />
-          )}
+      <div>
+        {isEditMode && (
+          <EditableContentInput
+            isEditMode={isEditMode}
+            value={data?.website || ''}
+            placeholder={isEditMode ? 'Website' : ''}
+            onChange={(value: string) =>
+              onUpdateOrganization({
+                name: data?.name || '',
+                description: data?.description,
+                industry: data?.industry,
+                website: value,
+              })
+            }
+          />
+        )}
 
-          {data?.website && !isEditMode && (
-            <Link href={data.website}> {data.website} </Link>
-          )}
-        </div>
+        {data?.website && !isEditMode && (
+          <Link href={data.website}> {data.website} </Link>
+        )}
       </div>
     </div>
   );

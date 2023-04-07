@@ -40,16 +40,6 @@
   margin: var(--spacing-xxs) 0;
 }
 
-.source {
-  font-size: var(--font-size-xs);
-  color: var(--text-faded);
-  font-weight: lighter;
-
-  & span {
-    font-weight: bold;
-    margin-right: var(--spacing-xxxs);
-  }
-}
 .header {
   display: flex;
   justify-content: space-between;
