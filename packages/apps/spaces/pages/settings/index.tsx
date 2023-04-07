@@ -229,6 +229,28 @@ const Settings: NextPage = () => {
       ),
     },
     {
+      key: 'asana',
+      state: 'INACTIVE',
+      template: (data: any) => (
+        <SettingsIntegrationItem
+          icon={'logos/asana.svg'}
+          identifier={'asana'}
+          name={'Asana'}
+          state={data.state}
+          settingsChanged={() => {
+            reloadRef.current = !reloadRef.current;
+            setReload(reloadRef.current);
+          }}
+          fields={[
+              {
+                  name: 'accessToken',
+                  label: 'Access Token',
+              },
+          ]}
+        />
+      ),
+    },
+    {
       key: 'baton',
       state: 'INACTIVE',
       template: (data: any) => (
@@ -297,6 +319,424 @@ const Settings: NextPage = () => {
               {
                   name: 'serviceAccountKey',
                   label: 'Service account key',
+              }
+          ]}
+        />
+      ),
+    },
+    {
+      key: 'braintree',
+      state: 'INACTIVE',
+      template: (data: any) => (
+        <SettingsIntegrationItem
+          icon={'logos/braintree.svg'}
+          identifier={'braintree'}
+          name={'Braintree'}
+          state={data.state}
+          settingsChanged={() => {
+            reloadRef.current = !reloadRef.current;
+            setReload(reloadRef.current);
+          }}
+          fields={[
+              {
+                  name: 'publicKey',
+                  label: 'Public Key',
+              },
+              {
+                  name: 'privateKey',
+                  label: 'Private Key',
+              },
+              {
+                  name: 'environment',
+                  label: 'Environment',
+              },
+              {
+                  name: 'merchantId',
+                  label: 'Merchant Id',
+              }
+          ]}
+        />
+      ),
+    },
+    {
+      key: 'callrail',
+      state: 'INACTIVE',
+      template: (data: any) => (
+        <SettingsIntegrationItem
+          icon={'logos/openline_small.svg'}
+          identifier={'callrail'}
+          name={'CallRail'}
+          state={data.state}
+          settingsChanged={() => {
+            reloadRef.current = !reloadRef.current;
+            setReload(reloadRef.current);
+          }}
+          fields={[
+              {
+                  name: 'account',
+                  label: 'Account',
+              },
+              {
+                  name: 'apiToken',
+                  label: 'API Token',
+              }
+          ]}
+        />
+      ),
+    },
+    {
+      key: 'chargebee',
+      state: 'INACTIVE',
+      template: (data: any) => (
+        <SettingsIntegrationItem
+          icon={'logos/chargebee.svg'}
+          identifier={'chargebee'}
+          name={'Chargebee'}
+          state={data.state}
+          settingsChanged={() => {
+            reloadRef.current = !reloadRef.current;
+            setReload(reloadRef.current);
+          }}
+          fields={[
+              {
+                  name: 'apiKey',
+                  label: 'API Key',
+              },
+              {
+                  name: 'productCatalog',
+                  label: 'Product Catalog',
+              }
+          ]}
+        />
+      ),
+    },
+    {
+      key: 'chargify',
+      state: 'INACTIVE',
+      template: (data: any) => (
+        <SettingsIntegrationItem
+          icon={'logos/chargify.svg'}
+          identifier={'chargify'}
+          name={'Chargify'}
+          state={data.state}
+          settingsChanged={() => {
+            reloadRef.current = !reloadRef.current;
+            setReload(reloadRef.current);
+          }}
+          fields={[
+              {
+                  name: 'apiKey',
+                  label: 'API Key',
+              },
+              {
+                  name: 'domain',
+                  label: 'Domain',
+              }
+          ]}
+        />
+      ),
+    },
+    {
+      key: 'clickup',
+      state: 'INACTIVE',
+      template: (data: any) => (
+        <SettingsIntegrationItem
+          icon={'logos/clickup.svg'}
+          identifier={'clickup'}
+          name={'ClickUp'}
+          state={data.state}
+          settingsChanged={() => {
+            reloadRef.current = !reloadRef.current;
+            setReload(reloadRef.current);
+          }}
+          fields={[
+              {
+                  name: 'apiKey',
+                  label: 'API Key',
+              }
+          ]}
+        />
+      ),
+    },
+    {
+      key: 'closecom',
+      state: 'INACTIVE',
+      template: (data: any) => (
+        <SettingsIntegrationItem
+          icon={'logos/close.com.svg'}
+          identifier={'closecom'}
+          name={'Close.com'}
+          state={data.state}
+          settingsChanged={() => {
+            reloadRef.current = !reloadRef.current;
+            setReload(reloadRef.current);
+          }}
+          fields={[
+              {
+                  name: 'apiKey',
+                  label: 'API Key',
+              }
+          ]}
+        />
+      ),
+    },
+    {
+      key: 'coda',
+      state: 'INACTIVE',
+      template: (data: any) => (
+        <SettingsIntegrationItem
+          icon={'logos/coda.svg'}
+          identifier={'coda'}
+          name={'Coda'}
+          state={data.state}
+          settingsChanged={() => {
+            reloadRef.current = !reloadRef.current;
+            setReload(reloadRef.current);
+          }}
+          fields={[
+              {
+                  name: 'authToken',
+                  label: 'Auth Token',
+              },
+              {
+                  name: 'documentId',
+                  label: 'Document Id',
+              }
+          ]}
+        />
+      ),
+    },
+    {
+      key: 'confluence',
+      state: 'INACTIVE',
+      template: (data: any) => (
+        <SettingsIntegrationItem
+          icon={'logos/confluence.svg'}
+          identifier={'confluence'}
+          name={'Confluence'}
+          state={data.state}
+          settingsChanged={() => {
+            reloadRef.current = !reloadRef.current;
+            setReload(reloadRef.current);
+          }}
+          fields={[
+              {
+                  name: 'apiToken',
+                  label: 'API Token',
+              },
+              {
+                  name: 'domain',
+                  label: 'Domain',
+              },
+              {
+                  name: 'loginEmail',
+                  label: 'Login Email',
+              }
+          ]}
+        />
+      ),
+    },
+    {
+      key: 'courier',
+      state: 'INACTIVE',
+      template: (data: any) => (
+        <SettingsIntegrationItem
+          icon={'logos/courier.svg'}
+          identifier={'courier'}
+          name={'Courier'}
+          state={data.state}
+          settingsChanged={() => {
+            reloadRef.current = !reloadRef.current;
+            setReload(reloadRef.current);
+          }}
+          fields={[
+              {
+                  name: 'apiKey',
+                  label: 'API Key',
+              }
+          ]}
+        />
+      ),
+    },
+    {
+      key: 'customerio',
+      state: 'INACTIVE',
+      template: (data: any) => (
+        <SettingsIntegrationItem
+          icon={'logos/customer-io.svg'}
+          identifier={'customerio'}
+          name={'Customer.io'}
+          state={data.state}
+          settingsChanged={() => {
+            reloadRef.current = !reloadRef.current;
+            setReload(reloadRef.current);
+          }}
+          fields={[
+              {
+                  name: 'apiKey',
+                  label: 'API Key',
+              }
+          ]}
+        />
+      ),
+    },
+    {
+      key: 'datadog',
+      state: 'INACTIVE',
+      template: (data: any) => (
+        <SettingsIntegrationItem
+          icon={'logos/datadog.svg'}
+          identifier={'datadog'}
+          name={'Datadog'}
+          state={data.state}
+          settingsChanged={() => {
+            reloadRef.current = !reloadRef.current;
+            setReload(reloadRef.current);
+          }}
+          fields={[
+              {
+                  name: 'apiKey',
+                  label: 'API Key',
+              },
+              {
+                  name: 'applicationKey',
+                  label: 'Application Key',
+              }
+          ]}
+        />
+      ),
+    },
+    {
+      key: 'delighted',
+      state: 'INACTIVE',
+      template: (data: any) => (
+        <SettingsIntegrationItem
+          icon={'logos/delighted.svg'}
+          identifier={'delighted'}
+          name={'Delighted'}
+          state={data.state}
+          settingsChanged={() => {
+            reloadRef.current = !reloadRef.current;
+            setReload(reloadRef.current);
+          }}
+          fields={[
+              {
+                  name: 'apiKey',
+                  label: 'API Key',
+              }
+          ]}
+        />
+      ),
+    },
+    {
+      key: 'dixa',
+      state: 'INACTIVE',
+      template: (data: any) => (
+        <SettingsIntegrationItem
+          icon={'logos/dixa.svg'}
+          identifier={'dixa'}
+          name={'Dixa'}
+          state={data.state}
+          settingsChanged={() => {
+            reloadRef.current = !reloadRef.current;
+            setReload(reloadRef.current);
+          }}
+          fields={[
+              {
+                  name: 'apiToken',
+                  label: 'API Token',
+              }
+          ]}
+        />
+      ),
+    },
+    {
+      key: 'drift',
+      state: 'INACTIVE',
+      template: (data: any) => (
+        <SettingsIntegrationItem
+          icon={'logos/drift.svg'}
+          identifier={'drift'}
+          name={'Drift'}
+          state={data.state}
+          settingsChanged={() => {
+            reloadRef.current = !reloadRef.current;
+            setReload(reloadRef.current);
+          }}
+          fields={[
+              {
+                  name: 'apiToken',
+                  label: 'API Token',
+              }
+          ]}
+        />
+      ),
+    },
+    {
+      key: 'emailoctopus',
+      state: 'INACTIVE',
+      template: (data: any) => (
+        <SettingsIntegrationItem
+          icon={'logos/emailoctopus.svg'}
+          identifier={'emailoctopus'}
+          name={'EmailOctopus'}
+          state={data.state}
+          settingsChanged={() => {
+            reloadRef.current = !reloadRef.current;
+            setReload(reloadRef.current);
+          }}
+          fields={[
+              {
+                  name: 'apiKey',
+                  label: 'API Key',
+              }
+          ]}
+        />
+      ),
+    },
+    {
+      key: 'fastbill',
+      state: 'INACTIVE',
+      template: (data: any) => (
+        <SettingsIntegrationItem
+          icon={'logos/fastbill.svg'}
+          identifier={'fastbill'}
+          name={'Fastbill'}
+          state={data.state}
+          settingsChanged={() => {
+            reloadRef.current = !reloadRef.current;
+            setReload(reloadRef.current);
+          }}
+          fields={[
+              {
+                  name: 'apiKey',
+                  label: 'API Key',
+              },
+              {
+                  name: 'projectId',
+                  label: 'Project Id',
+              }
+          ]}
+        />
+      ),
+    },
+    {
+      key: 'flexport',
+      state: 'INACTIVE',
+      template: (data: any) => (
+        <SettingsIntegrationItem
+          icon={'logos/flexport.svg'}
+          identifier={'flexport'}
+          name={'Flexport'}
+          state={data.state}
+          settingsChanged={() => {
+            reloadRef.current = !reloadRef.current;
+            setReload(reloadRef.current);
+          }}
+          fields={[
+              {
+                  name: 'apiKey',
+                  label: 'API Key',
               }
           ]}
         />

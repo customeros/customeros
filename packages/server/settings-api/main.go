@@ -18,15 +18,7 @@ import (
 )
 
 func InitDB(cfg *config.Config) (db *config.StorageDB, err error) {
-	if db, err = config.NewDBConn(
-		cfg.Postgres.Host,
-		cfg.Postgres.Port,
-		cfg.Postgres.Db,
-		cfg.Postgres.User,
-		cfg.Postgres.Password,
-		cfg.Postgres.MaxConn,
-		cfg.Postgres.MaxIdleConn,
-		cfg.Postgres.ConnMaxLifetime); err != nil {
+	if db, err = config.NewDBConn(cfg); err != nil {
 		log.Fatalf("Coud not open db connection: %s", err.Error())
 	}
 	return

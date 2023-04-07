@@ -155,6 +155,14 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 			tenantSettings.AmplitudeSecretKey = &secretKey
 			tenantSettings.AmplitudeAPIKey = &apiKey
 
+		case "asana":
+			accessToken, ok := data["accessToken"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing access token for Asana integration")
+			}
+
+			tenantSettings.AsanaAccessToken = &accessToken
+
 		case "baton":
 			apiKey, ok := data["apiKey"].(string)
 			if !ok {
@@ -187,6 +195,198 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 			}
 
 			tenantSettings.BigQueryServiceAccountKey = &serviceAccountKey
+
+		case "braintree":
+			publicKey, ok := data["publicKey"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing public key for Braintree integration")
+			}
+			privateKey, ok := data["privateKey"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing private key for Braintree integration")
+			}
+			environment, ok := data["environment"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing environment for Braintree integration")
+			}
+			merchantId, ok := data["merchantId"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing merchant id for Braintree integration")
+			}
+
+			tenantSettings.BraintreePublicKey = &publicKey
+			tenantSettings.BraintreePrivateKey = &privateKey
+			tenantSettings.BraintreeEnvironment = &environment
+			tenantSettings.BraintreeMerchantId = &merchantId
+
+		case "callrail":
+			account, ok := data["account"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing account for CallRail integration")
+			}
+			apiToken, ok := data["apiToken"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing API token for CallRail integration")
+			}
+
+			tenantSettings.CallRailAccount = &account
+			tenantSettings.CallRailApiToken = &apiToken
+
+		case "chargebee":
+			apiKey, ok := data["apiKey"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing API key for Chargebee integration")
+			}
+			productCatalog, ok := data["productCatalog"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing product catalog for CallRail integration")
+			}
+
+			tenantSettings.ChargebeeApiKey = &apiKey
+			tenantSettings.ChargebeeProductCatalog = &productCatalog
+
+		case "chargify":
+			apiKey, ok := data["apiKey"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing API key for Chargify integration")
+			}
+			domain, ok := data["domain"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing domain for Chargify integration")
+			}
+
+			tenantSettings.ChargifyApiKey = &apiKey
+			tenantSettings.ChargifyDomain = &domain
+
+		case "clickup":
+			apiKey, ok := data["apiKey"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing API key for ClickUp integration")
+			}
+
+			tenantSettings.ClickUpApiKey = &apiKey
+
+		case "closecom":
+			apiKey, ok := data["apiKey"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing API key for Close.com integration")
+			}
+
+			tenantSettings.CloseComApiKey = &apiKey
+
+		case "coda":
+			authToken, ok := data["authToken"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing auth token for Coda integration")
+			}
+			documentId, ok := data["documentId"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing document id for Coda integration")
+			}
+
+			tenantSettings.CodaAuthToken = &authToken
+			tenantSettings.CodaDocumentId = &documentId
+
+		case "confluence":
+			apiToken, ok := data["apiToken"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing API token for Confluence integration")
+			}
+			domain, ok := data["domain"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing domain for Confluence integration")
+			}
+			loginEmail, ok := data["loginEmail"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing login email for Confluence integration")
+			}
+
+			tenantSettings.ConfluenceApiToken = &apiToken
+			tenantSettings.ConfluenceDomain = &domain
+			tenantSettings.ConfluenceLoginEmail = &loginEmail
+
+		case "courier":
+			apiKey, ok := data["apiKey"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing API key for Courier integration")
+			}
+
+			tenantSettings.CourierApiKey = &apiKey
+
+		case "customerio":
+			apiKey, ok := data["apiKey"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing API key for Customer.io integration")
+			}
+
+			tenantSettings.CustomerIoApiKey = &apiKey
+
+		case "datadog":
+			apiKey, ok := data["apiKey"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing API key for Customer.io integration")
+			}
+			applicationKey, ok := data["applicationKey"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing application key for Customer.io integration")
+			}
+
+			tenantSettings.DatadogApiKey = &apiKey
+			tenantSettings.DatadogApplicationKey = &applicationKey
+
+		case "delighted":
+			apiKey, ok := data["apiKey"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing API key for Delighted integration")
+			}
+
+			tenantSettings.DelightedApiKey = &apiKey
+
+		case "dixa":
+			apiToken, ok := data["apiToken"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing API token for Dixa integration")
+			}
+
+			tenantSettings.DixaApiToken = &apiToken
+
+		case "drift":
+			apiToken, ok := data["apiToken"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing API token for Drift integration")
+			}
+
+			tenantSettings.DriftApiToken = &apiToken
+
+		case "emailoctopus":
+			apiKey, ok := data["apiKey"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing API key for EmailOctopus integration")
+			}
+
+			tenantSettings.EmailOctopusApiKey = &apiKey
+
+		case "fastbill":
+			apiKey, ok := data["apiKey"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing API key for Fastbill integration")
+			}
+			projectId, ok := data["projectId"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing project id for Fastbill integration")
+			}
+
+			tenantSettings.FastbillApiKey = &apiKey
+			tenantSettings.FastbillProjectId = &projectId
+
+		case "flexport":
+			apiKey, ok := data["apiKey"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing API key for Flexport integration")
+			}
+
+			tenantSettings.FlexportApiKey = &apiKey
+
 		}
 
 	}
@@ -233,6 +433,8 @@ func (s *tenantSettingsService) ClearIntegrationData(tenantName, identifier stri
 		case "amplitude":
 			tenantSettings.AmplitudeSecretKey = nil
 			tenantSettings.AmplitudeAPIKey = nil
+		case "asana":
+			tenantSettings.AsanaAccessToken = nil
 		case "baton":
 			tenantSettings.BatonAPIKey = nil
 		case "babelforce":
@@ -241,6 +443,51 @@ func (s *tenantSettingsService) ClearIntegrationData(tenantName, identifier stri
 			tenantSettings.BabelforceAccessToken = nil
 		case "bigquery":
 			tenantSettings.BigQueryServiceAccountKey = nil
+		case "braintree":
+			tenantSettings.BraintreePublicKey = nil
+			tenantSettings.BraintreePrivateKey = nil
+			tenantSettings.BraintreeEnvironment = nil
+			tenantSettings.BraintreeMerchantId = nil
+		case "callrail":
+			tenantSettings.CallRailAccount = nil
+			tenantSettings.CallRailApiToken = nil
+		case "chargebee":
+			tenantSettings.ChargebeeApiKey = nil
+			tenantSettings.ChargebeeProductCatalog = nil
+		case "chargify":
+			tenantSettings.ChargifyApiKey = nil
+			tenantSettings.ChargifyDomain = nil
+		case "clickup":
+			tenantSettings.ClickUpApiKey = nil
+		case "closecom":
+			tenantSettings.CloseComApiKey = nil
+		case "coda":
+			tenantSettings.CodaAuthToken = nil
+			tenantSettings.CodaDocumentId = nil
+		case "confluence":
+			tenantSettings.ConfluenceApiToken = nil
+			tenantSettings.ConfluenceDomain = nil
+			tenantSettings.ConfluenceLoginEmail = nil
+		case "courier":
+			tenantSettings.CourierApiKey = nil
+		case "customerio":
+			tenantSettings.CustomerIoApiKey = nil
+		case "datadog":
+			tenantSettings.DatadogApiKey = nil
+			tenantSettings.DatadogApplicationKey = nil
+		case "delighted":
+			tenantSettings.DelightedApiKey = nil
+		case "dixa":
+			tenantSettings.DixaApiToken = nil
+		case "drift":
+			tenantSettings.DriftApiToken = nil
+		case "emailoctopus":
+			tenantSettings.EmailOctopusApiKey = nil
+		case "fastbill":
+			tenantSettings.FastbillApiKey = nil
+			tenantSettings.FastbillProjectId = nil
+		case "flexport":
+			tenantSettings.FlexportApiKey = nil
 
 		}
 

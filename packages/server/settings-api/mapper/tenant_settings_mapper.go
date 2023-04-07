@@ -52,6 +52,11 @@ func MapTenantSettingsEntityToDTO(tenantSettings *entity.TenantSettings) *map[st
 		responseMap["amplitude"].(map[string]interface{})["state"] = "ACTIVE"
 	}
 
+	if tenantSettings != nil && tenantSettings.AsanaAccessToken != nil {
+		responseMap["asana"] = make(map[string]interface{})
+		responseMap["asana"].(map[string]interface{})["state"] = "ACTIVE"
+	}
+
 	if tenantSettings != nil && tenantSettings.BatonAPIKey != nil {
 		responseMap["baton"] = make(map[string]interface{})
 		responseMap["baton"].(map[string]interface{})["state"] = "ACTIVE"
@@ -65,6 +70,91 @@ func MapTenantSettingsEntityToDTO(tenantSettings *entity.TenantSettings) *map[st
 	if tenantSettings != nil && tenantSettings.BigQueryServiceAccountKey != nil {
 		responseMap["bigquery"] = make(map[string]interface{})
 		responseMap["bigquery"].(map[string]interface{})["state"] = "ACTIVE"
+	}
+
+	if tenantSettings != nil && tenantSettings.BraintreeEnvironment != nil && tenantSettings.BraintreeMerchantId != nil && tenantSettings.BraintreePublicKey != nil && tenantSettings.BraintreePrivateKey != nil {
+		responseMap["braintree"] = make(map[string]interface{})
+		responseMap["braintree"].(map[string]interface{})["state"] = "ACTIVE"
+	}
+
+	if tenantSettings != nil && tenantSettings.CallRailAccount != nil && tenantSettings.CallRailApiToken != nil {
+		responseMap["callrail"] = make(map[string]interface{})
+		responseMap["callrail"].(map[string]interface{})["state"] = "ACTIVE"
+	}
+
+	if tenantSettings != nil && tenantSettings.ChargebeeProductCatalog != nil && tenantSettings.ChargebeeApiKey != nil {
+		responseMap["chargebee"] = make(map[string]interface{})
+		responseMap["chargebee"].(map[string]interface{})["state"] = "ACTIVE"
+	}
+
+	if tenantSettings != nil && tenantSettings.ChargifyApiKey != nil && tenantSettings.ChargifyDomain != nil {
+		responseMap["chargify"] = make(map[string]interface{})
+		responseMap["chargify"].(map[string]interface{})["state"] = "ACTIVE"
+	}
+
+	if tenantSettings != nil && tenantSettings.ClickUpApiKey != nil {
+		responseMap["clickup"] = make(map[string]interface{})
+		responseMap["clickup"].(map[string]interface{})["state"] = "ACTIVE"
+	}
+
+	if tenantSettings != nil && tenantSettings.CloseComApiKey != nil {
+		responseMap["closecom"] = make(map[string]interface{})
+		responseMap["closecom"].(map[string]interface{})["state"] = "ACTIVE"
+	}
+
+	if tenantSettings != nil && tenantSettings.CodaAuthToken != nil && tenantSettings.CodaDocumentId != nil {
+		responseMap["coda"] = make(map[string]interface{})
+		responseMap["coda"].(map[string]interface{})["state"] = "ACTIVE"
+	}
+
+	if tenantSettings != nil && tenantSettings.ConfluenceApiToken != nil && tenantSettings.ConfluenceDomain != nil && tenantSettings.ConfluenceLoginEmail != nil {
+		responseMap["confluence"] = make(map[string]interface{})
+		responseMap["confluence"].(map[string]interface{})["state"] = "ACTIVE"
+	}
+
+	if tenantSettings != nil && tenantSettings.CourierApiKey != nil {
+		responseMap["courier"] = make(map[string]interface{})
+		responseMap["courier"].(map[string]interface{})["state"] = "ACTIVE"
+	}
+
+	if tenantSettings != nil && tenantSettings.CustomerIoApiKey != nil {
+		responseMap["customerio"] = make(map[string]interface{})
+		responseMap["customerio"].(map[string]interface{})["state"] = "ACTIVE"
+	}
+
+	if tenantSettings != nil && tenantSettings.DatadogApiKey != nil && tenantSettings.DatadogApplicationKey != nil {
+		responseMap["datadog"] = make(map[string]interface{})
+		responseMap["datadog"].(map[string]interface{})["state"] = "ACTIVE"
+	}
+
+	if tenantSettings != nil && tenantSettings.DelightedApiKey != nil {
+		responseMap["delighted"] = make(map[string]interface{})
+		responseMap["delighted"].(map[string]interface{})["state"] = "ACTIVE"
+	}
+
+	if tenantSettings != nil && tenantSettings.DixaApiToken != nil {
+		responseMap["dixa"] = make(map[string]interface{})
+		responseMap["dixa"].(map[string]interface{})["state"] = "ACTIVE"
+	}
+
+	if tenantSettings != nil && tenantSettings.DriftApiToken != nil {
+		responseMap["drift"] = make(map[string]interface{})
+		responseMap["drift"].(map[string]interface{})["state"] = "ACTIVE"
+	}
+
+	if tenantSettings != nil && tenantSettings.EmailOctopusApiKey != nil {
+		responseMap["emailoctopus"] = make(map[string]interface{})
+		responseMap["emailoctopus"].(map[string]interface{})["state"] = "ACTIVE"
+	}
+
+	if tenantSettings != nil && tenantSettings.FastbillApiKey != nil && tenantSettings.FastbillProjectId != nil {
+		responseMap["fastbill"] = make(map[string]interface{})
+		responseMap["fastbill"].(map[string]interface{})["state"] = "ACTIVE"
+	}
+
+	if tenantSettings != nil && tenantSettings.FlexportApiKey != nil {
+		responseMap["flexport"] = make(map[string]interface{})
+		responseMap["flexport"].(map[string]interface{})["state"] = "ACTIVE"
 	}
 
 	return &responseMap
