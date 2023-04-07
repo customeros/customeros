@@ -764,6 +764,32 @@ const Settings: NextPage = () => {
         />
       ),
     },
+    {
+      key: 'freshdesk',
+      state: 'INACTIVE',
+      template: (data: any) => (
+        <SettingsIntegrationItem
+          icon={'logos/freshdesk.svg'}
+          identifier={'freshdesk'}
+          name={'Freshdesk'}
+          state={data.state}
+          settingsChanged={() => {
+            reloadRef.current = !reloadRef.current;
+            setReload(reloadRef.current);
+          }}
+          fields={[
+              {
+                  name: 'apiKey',
+                  label: 'API Key',
+              },
+              {
+                  name: 'domain',
+                  label: 'Domain',
+              }
+          ]}
+        />
+      ),
+    },
   ]);
 
   useEffect(() => {
