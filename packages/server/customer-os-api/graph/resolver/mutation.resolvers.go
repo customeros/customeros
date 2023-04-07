@@ -10,6 +10,7 @@ import (
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/generated"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/sirupsen/logrus"
 )
@@ -57,6 +58,25 @@ func (r *mutationResolver) ContactPhoneNumberRelationUpsertInEventStore(ctx cont
 	}
 
 	return result, nil
+}
+
+// UpsertInEventStore is the resolver for the UpsertInEventStore field.
+func (r *mutationResolver) UpsertInEventStore(ctx context.Context, size int) (*model.UpsertToEventStoreResult, error) {
+	defer func(start time.Time) {
+		utils.LogMethodExecution(start, utils.GetFunctionName())
+	}(time.Now())
+
+	output := model.UpsertToEventStoreResult{}
+	processedPhoneNumbers, _ := r.Services.PhoneNumberService.UpsertInEventStore(ctx, size)
+	output.PhoneNumberCount = processedPhoneNumbers
+	processedContacts, _ := r.Services.ContactService.UpsertInEventStore(ctx, size)
+	output.ContactCount = processedContacts
+	if processedPhoneNumbers < size && processedContacts < size {
+		processedContactPhoneNumberRelations, _ := r.Services.ContactService.UpsertPhoneNumberRelationInEventStore(ctx, size)
+		output.ContactPhoneNumberRelationCount = processedContactPhoneNumberRelations
+	}
+
+	return &output, nil
 }
 
 // Mutation returns generated.MutationResolver implementation.

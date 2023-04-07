@@ -1086,6 +1086,12 @@ type TimeRange struct {
 	To time.Time `json:"to"`
 }
 
+type UpsertToEventStoreResult struct {
+	PhoneNumberCount                int `json:"phoneNumberCount"`
+	ContactCount                    int `json:"contactCount"`
+	ContactPhoneNumberRelationCount int `json:"contactPhoneNumberRelationCount"`
+}
+
 // Describes the User of customerOS.  A user is the person who logs into the Openline platform.
 // **A `return` object**
 type User struct {
