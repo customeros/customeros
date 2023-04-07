@@ -12,7 +12,6 @@ export { useMergeContacts } from './useMergeContacts';
 export { useContactNameFromId } from './useContactNameFromId';
 export { useContactNameFromEmail } from './useContactNameFromEmail';
 export { useContactNameFromPhoneNumber } from './useContactNameFromPhoneNumber';
-export { useAttachOrganizationToContact } from './useAttachOrganizationToContact';
 export { useArchiveContact } from './useArchiveContact';
 export { useContactPersonalDetailsWithOrganizations } from './useContactPersonalDetailsWithOrganizations';
 export type { ContactInput } from './types';
