@@ -387,6 +387,14 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 
 			tenantSettings.FlexportApiKey = &apiKey
 
+		case "freshcaller":
+			apiKey, ok := data["apiKey"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing API key for Freshcaller integration")
+			}
+
+			tenantSettings.FreshcallerApiKey = &apiKey
+
 		}
 
 	}
@@ -488,6 +496,8 @@ func (s *tenantSettingsService) ClearIntegrationData(tenantName, identifier stri
 			tenantSettings.FastbillProjectId = nil
 		case "flexport":
 			tenantSettings.FlexportApiKey = nil
+		case "freshcaller":
+			tenantSettings.FreshcallerApiKey = nil
 
 		}
 

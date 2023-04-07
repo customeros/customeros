@@ -742,6 +742,28 @@ const Settings: NextPage = () => {
         />
       ),
     },
+    {
+      key: 'freshcaller',
+      state: 'INACTIVE',
+      template: (data: any) => (
+        <SettingsIntegrationItem
+          icon={'logos/freshcaller.svg'}
+          identifier={'freshcaller'}
+          name={'Freshcaller'}
+          state={data.state}
+          settingsChanged={() => {
+            reloadRef.current = !reloadRef.current;
+            setReload(reloadRef.current);
+          }}
+          fields={[
+              {
+                  name: 'apiKey',
+                  label: 'API Key',
+              }
+          ]}
+        />
+      ),
+    },
   ]);
 
   useEffect(() => {
