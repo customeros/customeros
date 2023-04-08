@@ -1016,6 +1016,28 @@ const Settings: NextPage = () => {
                 />
             ),
         },
+        {
+            key: 'insightly',
+            state: 'INACTIVE',
+            template: (data: any) => (
+                <SettingsIntegrationItem
+                    icon={'logos/openline_small.svg'}
+                    identifier={'insightly'}
+                    name={'Insightly'}
+                    state={data.state}
+                    settingsChanged={() => {
+                        reloadRef.current = !reloadRef.current;
+                        setReload(reloadRef.current);
+                    }}
+                    fields={[
+                        {
+                            name: 'apiToken',
+                            label: 'API Token',
+                        },
+                    ]}
+                />
+            ),
+        },
     ]);
 
     useEffect(() => {

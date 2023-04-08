@@ -212,5 +212,10 @@ func MapTenantSettingsEntityToDTO(tenantSettings *entity.TenantSettings) *map[st
 		responseMap["harvest"].(map[string]interface{})["state"] = "ACTIVE"
 	}
 
+	if tenantSettings != nil && tenantSettings.InsightlyApiToken != nil {
+		responseMap["insightly"] = make(map[string]interface{})
+		responseMap["insightly"].(map[string]interface{})["state"] = "ACTIVE"
+	}
+
 	return &responseMap
 }

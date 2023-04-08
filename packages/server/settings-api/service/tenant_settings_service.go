@@ -515,6 +515,14 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 			tenantSettings.HarvestAccountId = &accountId
 			tenantSettings.HarvestAccessToken = &accessToken
 
+		case "insightly":
+			apiToken, ok := data["apiToken"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing API token for Insightly integration")
+			}
+
+			tenantSettings.InsightlyApiToken = &apiToken
+
 		}
 
 	}
@@ -646,6 +654,8 @@ func (s *tenantSettingsService) ClearIntegrationData(tenantName, identifier stri
 		case "harvest":
 			tenantSettings.HarvestAccountId = nil
 			tenantSettings.HarvestAccessToken = nil
+		case "insightly":
+			tenantSettings.InsightlyApiToken = nil
 
 		}
 
