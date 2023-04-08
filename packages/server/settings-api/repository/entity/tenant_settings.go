@@ -120,6 +120,8 @@ type TenantSettings struct {
 	InstatusApiKey *string `gorm:"column:instatus_api_key;type:varchar(255);" binding:"required"`
 
 	IntercomAccessToken *string `gorm:"column:intercom_access_token;type:varchar(255);" binding:"required"`
+
+	KlaviyoApiKey *string `gorm:"column:klaviyo_api_key;type:varchar(255);" binding:"required"`
 }
 
 func (TenantSettings) TableName() string {

@@ -1082,6 +1082,28 @@ const Settings: NextPage = () => {
                 />
             ),
         },
+        {
+            key: 'klaviyo',
+            state: 'INACTIVE',
+            template: (data: any) => (
+                <SettingsIntegrationItem
+                    icon={'logos/openline_small.svg'}
+                    identifier={'klaviyo'}
+                    name={'Klaviyo'}
+                    state={data.state}
+                    settingsChanged={() => {
+                        reloadRef.current = !reloadRef.current;
+                        setReload(reloadRef.current);
+                    }}
+                    fields={[
+                        {
+                            name: 'apiKey',
+                            label: 'API Key',
+                        },
+                    ]}
+                />
+            ),
+        },
     ]);
 
     useEffect(() => {
