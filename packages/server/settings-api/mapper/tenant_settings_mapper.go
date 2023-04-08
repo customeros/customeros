@@ -267,5 +267,10 @@ func MapTenantSettingsEntityToDTO(tenantSettings *entity.TenantSettings) *map[st
 		responseMap["microsoftteams"].(map[string]interface{})["state"] = "ACTIVE"
 	}
 
+	if tenantSettings != nil && tenantSettings.MondayApiToken != nil {
+		responseMap["monday"] = make(map[string]interface{})
+		responseMap["monday"].(map[string]interface{})["state"] = "ACTIVE"
+	}
+
 	return &responseMap
 }

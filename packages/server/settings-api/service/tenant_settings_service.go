@@ -638,6 +638,14 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 			tenantSettings.MicrosoftTeamsClientId = &clientId
 			tenantSettings.MicrosoftTeamsClientSecret = &clientSecret
 
+		case "monday":
+			apiToken, ok := data["apiToken"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing API token for Monday integration")
+			}
+
+			tenantSettings.MondayApiToken = &apiToken
+
 		}
 
 	}
@@ -798,6 +806,8 @@ func (s *tenantSettingsService) ClearIntegrationData(tenantName, identifier stri
 			tenantSettings.MicrosoftTeamsTenantId = nil
 			tenantSettings.MicrosoftTeamsClientId = nil
 			tenantSettings.MicrosoftTeamsClientSecret = nil
+		case "monday":
+			tenantSettings.MondayApiToken = nil
 
 		}
 

@@ -141,6 +141,8 @@ type TenantSettings struct {
 	MicrosoftTeamsTenantId     *string `gorm:"column:microsoft_teams_tenant_id;type:varchar(255);" binding:"required"`
 	MicrosoftTeamsClientId     *string `gorm:"column:microsoft_teams_client_id;type:varchar(255);" binding:"required"`
 	MicrosoftTeamsClientSecret *string `gorm:"column:microsoft_teams_client_secret;type:varchar(255);" binding:"required"`
+
+	MondayApiToken *string `gorm:"column:monday_api_token;type:varchar(255);" binding:"required"`
 }
 
 func (TenantSettings) TableName() string {
