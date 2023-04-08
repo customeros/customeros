@@ -589,6 +589,19 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 
 			tenantSettings.MailchimpApiKey = &apiKey
 
+		case "mailjetemail":
+			apiKey, ok := data["apiKey"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing API key for Mailjet Email integration")
+			}
+			apiSecret, ok := data["apiSecret"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing API secret for Mailjet Email integration")
+			}
+
+			tenantSettings.MailjetEmailApiKey = &apiKey
+			tenantSettings.MailjetEmailApiSecret = &apiSecret
+
 		}
 
 	}
@@ -738,6 +751,9 @@ func (s *tenantSettingsService) ClearIntegrationData(tenantName, identifier stri
 			tenantSettings.LookerDomain = nil
 		case "mailchimp":
 			tenantSettings.MailchimpApiKey = nil
+		case "mailjetemail":
+			tenantSettings.MailjetEmailApiKey = nil
+			tenantSettings.MailjetEmailApiSecret = nil
 
 		}
 

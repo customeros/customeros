@@ -252,5 +252,10 @@ func MapTenantSettingsEntityToDTO(tenantSettings *entity.TenantSettings) *map[st
 		responseMap["mailchimp"].(map[string]interface{})["state"] = "ACTIVE"
 	}
 
+	if tenantSettings != nil && tenantSettings.MailjetEmailApiKey != nil && tenantSettings.MailjetEmailApiSecret != nil {
+		responseMap["mailjetemail"] = make(map[string]interface{})
+		responseMap["mailjetemail"].(map[string]interface{})["state"] = "ACTIVE"
+	}
+
 	return &responseMap
 }

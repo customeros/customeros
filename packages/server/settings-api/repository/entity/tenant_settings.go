@@ -130,6 +130,9 @@ type TenantSettings struct {
 	LookerDomain       *string `gorm:"column:looker_domain;type:varchar(255);" binding:"required"`
 
 	MailchimpApiKey *string `gorm:"column:mailchimp_api_key;type:varchar(255);" binding:"required"`
+
+	MailjetEmailApiKey    *string `gorm:"column:mailjet_email_api_key;type:varchar(255);" binding:"required"`
+	MailjetEmailApiSecret *string `gorm:"column:mailjet_email_api_secret;type:varchar(255);" binding:"required"`
 }
 
 func (TenantSettings) TableName() string {

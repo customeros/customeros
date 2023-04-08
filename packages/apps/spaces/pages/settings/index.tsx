@@ -1178,6 +1178,32 @@ const Settings: NextPage = () => {
                 />
             ),
         },
+        {
+            key: 'mailjetemail',
+            state: 'INACTIVE',
+            template: (data: any) => (
+                <SettingsIntegrationItem
+                    icon={'logos/mailjetemail.svg'}
+                    identifier={'mailjetemail'}
+                    name={'Mailjet Email'}
+                    state={data.state}
+                    settingsChanged={() => {
+                        reloadRef.current = !reloadRef.current;
+                        setReload(reloadRef.current);
+                    }}
+                    fields={[
+                        {
+                            name: 'apiKey',
+                            label: 'API Key',
+                        },
+                        {
+                            name: 'apiSecret',
+                            label: 'API Secret',
+                        },
+                    ]}
+                />
+            ),
+        },
     ]);
 
     useEffect(() => {
