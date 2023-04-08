@@ -103,6 +103,10 @@ type TenantSettings struct {
 	GitHubAccessToken *string `gorm:"column:github_access_token;type:varchar(255);" binding:"required"`
 
 	GitLabAccessToken *string `gorm:"column:gitlab_access_token;type:varchar(255);" binding:"required"`
+
+	GoCardlessAccessToken *string `gorm:"column:gocardless_access_token;type:varchar(255);" binding:"required"`
+	GoCardlessEnvironment *string `gorm:"column:gocardless_environment;type:varchar(255);" binding:"required"`
+	GoCardlessVersion     *string `gorm:"column:gocardless_version;type:varchar(255);" binding:"required"`
 }
 
 func (TenantSettings) TableName() string {

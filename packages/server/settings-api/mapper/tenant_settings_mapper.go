@@ -197,5 +197,10 @@ func MapTenantSettingsEntityToDTO(tenantSettings *entity.TenantSettings) *map[st
 		responseMap["gitlab"].(map[string]interface{})["state"] = "ACTIVE"
 	}
 
+	if tenantSettings != nil && tenantSettings.GoCardlessAccessToken != nil && tenantSettings.GoCardlessEnvironment != nil && tenantSettings.GoCardlessVersion != nil {
+		responseMap["gocardless"] = make(map[string]interface{})
+		responseMap["gocardless"].(map[string]interface{})["state"] = "ACTIVE"
+	}
+
 	return &responseMap
 }

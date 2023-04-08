@@ -476,6 +476,24 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 
 			tenantSettings.GitLabAccessToken = &accessToken
 
+		case "gocardless":
+			accessToken, ok := data["accessToken"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing access token for GoCardless integration")
+			}
+			environment, ok := data["environment"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing environment for GoCardless integration")
+			}
+			version, ok := data["version"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing version for GoCardless integration")
+			}
+
+			tenantSettings.GoCardlessAccessToken = &accessToken
+			tenantSettings.GoCardlessEnvironment = &environment
+			tenantSettings.GoCardlessVersion = &version
+
 		}
 
 	}
@@ -598,6 +616,10 @@ func (s *tenantSettingsService) ClearIntegrationData(tenantName, identifier stri
 			tenantSettings.GitHubAccessToken = nil
 		case "gitlab":
 			tenantSettings.GitLabAccessToken = nil
+		case "gocardless":
+			tenantSettings.GoCardlessAccessToken = nil
+			tenantSettings.GoCardlessEnvironment = nil
+			tenantSettings.GoCardlessVersion = nil
 
 		}
 

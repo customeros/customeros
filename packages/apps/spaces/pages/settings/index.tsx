@@ -911,7 +911,7 @@ const Settings: NextPage = () => {
                         {
                             name: 'accessToken',
                             label: 'Access Token',
-                        }
+                        },
                     ]}
                 />
             ),
@@ -933,7 +933,37 @@ const Settings: NextPage = () => {
                         {
                             name: 'accessToken',
                             label: 'Access Token',
-                        }
+                        },
+                    ]}
+                />
+            ),
+        },
+        {
+            key: 'gocardless',
+            state: 'INACTIVE',
+            template: (data: any) => (
+                <SettingsIntegrationItem
+                    icon={'logos/openline_small.svg'}
+                    identifier={'gocardless'}
+                    name={'GoCardless'}
+                    state={data.state}
+                    settingsChanged={() => {
+                        reloadRef.current = !reloadRef.current;
+                        setReload(reloadRef.current);
+                    }}
+                    fields={[
+                        {
+                            name: 'accessToken',
+                            label: 'Access Token',
+                        },
+                        {
+                            name: 'environment',
+                            label: 'Environment',
+                        },
+                        {
+                            name: 'version',
+                            label: 'Version',
+                        },
                     ]}
                 />
             ),
