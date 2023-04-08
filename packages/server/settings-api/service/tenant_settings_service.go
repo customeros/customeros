@@ -580,6 +580,15 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 			tenantSettings.LookerClientId = &clientId
 			tenantSettings.LookerClientSecret = &clientSecret
 			tenantSettings.LookerDomain = &domain
+
+		case "mailchimp":
+			apiKey, ok := data["apiKey"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing API key for Mailchimp integration")
+			}
+
+			tenantSettings.MailchimpApiKey = &apiKey
+
 		}
 
 	}
@@ -727,6 +736,8 @@ func (s *tenantSettingsService) ClearIntegrationData(tenantName, identifier stri
 			tenantSettings.LookerClientId = nil
 			tenantSettings.LookerClientSecret = nil
 			tenantSettings.LookerDomain = nil
+		case "mailchimp":
+			tenantSettings.MailchimpApiKey = nil
 
 		}
 

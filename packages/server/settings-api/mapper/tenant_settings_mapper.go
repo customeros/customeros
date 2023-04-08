@@ -247,5 +247,10 @@ func MapTenantSettingsEntityToDTO(tenantSettings *entity.TenantSettings) *map[st
 		responseMap["looker"].(map[string]interface{})["state"] = "ACTIVE"
 	}
 
+	if tenantSettings != nil && tenantSettings.MailchimpApiKey != nil {
+		responseMap["mailchimp"] = make(map[string]interface{})
+		responseMap["mailchimp"].(map[string]interface{})["state"] = "ACTIVE"
+	}
+
 	return &responseMap
 }

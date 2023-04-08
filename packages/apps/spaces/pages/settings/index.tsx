@@ -1156,6 +1156,28 @@ const Settings: NextPage = () => {
                 />
             ),
         },
+        {
+            key: 'mailchimp',
+            state: 'INACTIVE',
+            template: (data: any) => (
+                <SettingsIntegrationItem
+                    icon={'logos/mailchimp.svg'}
+                    identifier={'mailchimp'}
+                    name={'Mailchimp'}
+                    state={data.state}
+                    settingsChanged={() => {
+                        reloadRef.current = !reloadRef.current;
+                        setReload(reloadRef.current);
+                    }}
+                    fields={[
+                        {
+                            name: 'apiKey',
+                            label: 'API Key',
+                        },
+                    ]}
+                />
+            ),
+        },
     ]);
 
     useEffect(() => {
