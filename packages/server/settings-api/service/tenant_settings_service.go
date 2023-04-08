@@ -562,6 +562,24 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 			}
 
 			tenantSettings.KustomerApiToken = &apiToken
+
+		case "looker":
+			clientId, ok := data["clientId"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing client id for Looker integration")
+			}
+			clientSecret, ok := data["clientSecret"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing client secret for Looker integration")
+			}
+			domain, ok := data["domain"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing domain for Looker integration")
+			}
+
+			tenantSettings.LookerClientId = &clientId
+			tenantSettings.LookerClientSecret = &clientSecret
+			tenantSettings.LookerDomain = &domain
 		}
 
 	}
@@ -705,6 +723,10 @@ func (s *tenantSettingsService) ClearIntegrationData(tenantName, identifier stri
 			tenantSettings.KlaviyoApiKey = nil
 		case "kustomer":
 			tenantSettings.KustomerApiToken = nil
+		case "looker":
+			tenantSettings.LookerClientId = nil
+			tenantSettings.LookerClientSecret = nil
+			tenantSettings.LookerDomain = nil
 
 		}
 

@@ -242,5 +242,10 @@ func MapTenantSettingsEntityToDTO(tenantSettings *entity.TenantSettings) *map[st
 		responseMap["kustomer"].(map[string]interface{})["state"] = "ACTIVE"
 	}
 
+	if tenantSettings != nil && tenantSettings.LookerClientId != nil && tenantSettings.LookerClientSecret != nil && tenantSettings.LookerDomain != nil {
+		responseMap["looker"] = make(map[string]interface{})
+		responseMap["looker"].(map[string]interface{})["state"] = "ACTIVE"
+	}
+
 	return &responseMap
 }

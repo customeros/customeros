@@ -1126,6 +1126,36 @@ const Settings: NextPage = () => {
                 />
             ),
         },
+        {
+            key: 'looker',
+            state: 'INACTIVE',
+            template: (data: any) => (
+                <SettingsIntegrationItem
+                    icon={'logos/looker.svg'}
+                    identifier={'looker'}
+                    name={'Looker'}
+                    state={data.state}
+                    settingsChanged={() => {
+                        reloadRef.current = !reloadRef.current;
+                        setReload(reloadRef.current);
+                    }}
+                    fields={[
+                        {
+                            name: 'clientId',
+                            label: 'Client Id',
+                        },
+                        {
+                            name: 'clientSecret',
+                            label: 'Client Secret',
+                        },
+                        {
+                            name: 'domain',
+                            label: 'Domain',
+                        },
+                    ]}
+                />
+            ),
+        },
     ]);
 
     useEffect(() => {

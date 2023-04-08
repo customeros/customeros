@@ -124,6 +124,10 @@ type TenantSettings struct {
 	KlaviyoApiKey *string `gorm:"column:klaviyo_api_key;type:varchar(255);" binding:"required"`
 
 	KustomerApiToken *string `gorm:"column:kustomer_api_token;type:varchar(255);" binding:"required"`
+
+	LookerClientId     *string `gorm:"column:looker_client_id;type:varchar(255);" binding:"required"`
+	LookerClientSecret *string `gorm:"column:looker_client_secret;type:varchar(255);" binding:"required"`
+	LookerDomain       *string `gorm:"column:looker_domain;type:varchar(255);" binding:"required"`
 }
 
 func (TenantSettings) TableName() string {
