@@ -1321,6 +1321,28 @@ const Settings: NextPage = () => {
             ),
         },
         {
+            key: 'pendo',
+            state: 'INACTIVE',
+            template: (data: any) => (
+                <SettingsIntegrationItem
+                    icon={'logos/openline_small.svg'}
+                    identifier={'pendo'}
+                    name={'Pendo'}
+                    state={data.state}
+                    settingsChanged={() => {
+                        reloadRef.current = !reloadRef.current;
+                        setReload(reloadRef.current);
+                    }}
+                    fields={[
+                        {
+                            name: 'apiToken',
+                            label: 'API Token',
+                        },
+                    ]}
+                />
+            ),
+        },
+        {
             key: 'pipedrive',
             state: 'INACTIVE',
             template: (data: any) => (

@@ -685,6 +685,14 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 				tenantSettings.NotionPublicAccessToken = &publicAccessToken
 			}
 
+		case "pendo":
+			apiToken, ok := data["apiToken"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing API token for Pendo integration")
+			}
+
+			tenantSettings.PendoApiToken = &apiToken
+
 		case "pipedrive":
 			apiToken, ok := data["apiToken"].(string)
 			if !ok {
@@ -860,6 +868,8 @@ func (s *tenantSettingsService) ClearIntegrationData(tenantName, identifier stri
 			tenantSettings.NotionPublicClientId = nil
 			tenantSettings.NotionPublicClientSecret = nil
 			tenantSettings.NotionPublicAccessToken = nil
+		case "pendo":
+			tenantSettings.PendoApiToken = nil
 		case "pipedrive":
 			tenantSettings.PipedriveApiToken = nil
 
