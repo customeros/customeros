@@ -1390,6 +1390,28 @@ const Settings: NextPage = () => {
                 />
             ),
         },
+        {
+            key: 'plaid',
+            state: 'INACTIVE',
+            template: (data: any) => (
+                <SettingsIntegrationItem
+                    icon={'logos/plaid.svg'}
+                    identifier={'plaid'}
+                    name={'Plaid'}
+                    state={data.state}
+                    settingsChanged={() => {
+                        reloadRef.current = !reloadRef.current;
+                        setReload(reloadRef.current);
+                    }}
+                    fields={[
+                        {
+                            name: 'accessToken',
+                            label: 'Access Token',
+                        },
+                    ]}
+                />
+            ),
+        },
     ]);
 
     useEffect(() => {

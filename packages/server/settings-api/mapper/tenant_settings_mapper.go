@@ -292,5 +292,10 @@ func MapTenantSettingsEntityToDTO(tenantSettings *entity.TenantSettings) *map[st
 		responseMap["pipedrive"].(map[string]interface{})["state"] = "ACTIVE"
 	}
 
+	if tenantSettings != nil && tenantSettings.PlaidAccessToken != nil {
+		responseMap["plaid"] = make(map[string]interface{})
+		responseMap["plaid"].(map[string]interface{})["state"] = "ACTIVE"
+	}
+
 	return &responseMap
 }

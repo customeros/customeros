@@ -717,6 +717,14 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 
 			tenantSettings.PipedriveApiToken = &apiToken
 
+		case "plaid":
+			accessToken, ok := data["accessToken"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing access token for Plaid integration")
+			}
+
+			tenantSettings.PlaidAccessToken = &accessToken
+
 		}
 
 	}
@@ -891,6 +899,8 @@ func (s *tenantSettingsService) ClearIntegrationData(tenantName, identifier stri
 			tenantSettings.PendoApiToken = nil
 		case "pipedrive":
 			tenantSettings.PipedriveApiToken = nil
+		case "plaid":
+			tenantSettings.PlaidAccessToken = nil
 
 		}
 
