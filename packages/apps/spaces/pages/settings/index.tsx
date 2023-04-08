@@ -1412,6 +1412,32 @@ const Settings: NextPage = () => {
                 />
             ),
         },
+        {
+            key: 'plausible',
+            state: 'INACTIVE',
+            template: (data: any) => (
+                <SettingsIntegrationItem
+                    icon={'logos/plausible.svg'}
+                    identifier={'plausible'}
+                    name={'Plausible'}
+                    state={data.state}
+                    settingsChanged={() => {
+                        reloadRef.current = !reloadRef.current;
+                        setReload(reloadRef.current);
+                    }}
+                    fields={[
+                        {
+                            name: 'apiKey',
+                            label: 'API Key',
+                        },
+                        {
+                            name: 'siteId',
+                            label: 'Site Id',
+                        },
+                    ]}
+                />
+            ),
+        },
     ]);
 
     useEffect(() => {

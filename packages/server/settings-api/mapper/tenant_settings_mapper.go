@@ -297,5 +297,10 @@ func MapTenantSettingsEntityToDTO(tenantSettings *entity.TenantSettings) *map[st
 		responseMap["plaid"].(map[string]interface{})["state"] = "ACTIVE"
 	}
 
+	if tenantSettings != nil && tenantSettings.PlausibleSiteId != nil && tenantSettings.PlausibleApiKey != nil {
+		responseMap["plausible"] = make(map[string]interface{})
+		responseMap["plausible"].(map[string]interface{})["state"] = "ACTIVE"
+	}
+
 	return &responseMap
 }

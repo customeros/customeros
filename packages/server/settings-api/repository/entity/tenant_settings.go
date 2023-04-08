@@ -157,6 +157,9 @@ type TenantSettings struct {
 	PipedriveApiToken *string `gorm:"column:pipedrive_api_token;type:varchar(255);" binding:"required"`
 
 	PlaidAccessToken *string `gorm:"column:plaid_access_token;type:varchar(255);" binding:"required"`
+
+	PlausibleApiKey *string `gorm:"column:plausible_api_key;type:varchar(255);" binding:"required"`
+	PlausibleSiteId *string `gorm:"column:plausible_site_id;type:varchar(255);" binding:"required"`
 }
 
 func (TenantSettings) TableName() string {

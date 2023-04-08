@@ -725,6 +725,19 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 
 			tenantSettings.PlaidAccessToken = &accessToken
 
+		case "plausible":
+			apiKey, ok := data["apiKey"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing API key for Plausible integration")
+			}
+			siteId, ok := data["siteId"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing site id for Plausible integration")
+			}
+
+			tenantSettings.PlausibleApiKey = &apiKey
+			tenantSettings.PlausibleSiteId = &siteId
+
 		}
 
 	}
@@ -901,6 +914,9 @@ func (s *tenantSettingsService) ClearIntegrationData(tenantName, identifier stri
 			tenantSettings.PipedriveApiToken = nil
 		case "plaid":
 			tenantSettings.PlaidAccessToken = nil
+		case "plausible":
+			tenantSettings.PlausibleApiKey = nil
+			tenantSettings.PlausibleSiteId = nil
 
 		}
 
