@@ -366,6 +366,14 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 
 			tenantSettings.EmailOctopusApiKey = &apiKey
 
+		case "facebookMarketing":
+			accessToken, ok := data["accessToken"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing access token for Facebook integration")
+			}
+
+			tenantSettings.FacebookMarketingAccessToken = &accessToken
+
 		case "fastbill":
 			apiKey, ok := data["apiKey"].(string)
 			if !ok {
@@ -434,13 +442,23 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 			tenantSettings.FreshserviceApiKey = &apiKey
 			tenantSettings.FreshserviceDomain = &domain
 
-		case "facebookMarketing":
-			accessToken, ok := data["accessToken"].(string)
+		case "genesys":
+			region, ok := data["region"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing access token for Facebook integration")
+				return nil, fmt.Errorf("missing region for Genesys integration")
+			}
+			clientId, ok := data["clientId"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing client id for Genesys integration")
+			}
+			clientSecret, ok := data["clientSecret"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing client secret for Genesys integration")
 			}
 
-			tenantSettings.FacebookMarketingAccessToken = &accessToken
+			tenantSettings.GenesysRegion = &region
+			tenantSettings.GenesysClientId = &clientId
+			tenantSettings.GenesysClientSecret = &clientSecret
 
 		}
 
@@ -538,6 +556,8 @@ func (s *tenantSettingsService) ClearIntegrationData(tenantName, identifier stri
 			tenantSettings.DriftApiToken = nil
 		case "emailoctopus":
 			tenantSettings.EmailOctopusApiKey = nil
+		case "facebookMarketing":
+			tenantSettings.FacebookMarketingAccessToken = nil
 		case "fastbill":
 			tenantSettings.FastbillApiKey = nil
 			tenantSettings.FastbillProjectId = nil
@@ -554,8 +574,10 @@ func (s *tenantSettingsService) ClearIntegrationData(tenantName, identifier stri
 		case "freshservice":
 			tenantSettings.FreshserviceApiKey = nil
 			tenantSettings.FreshserviceDomain = nil
-		case "facebookMarketing":
-			tenantSettings.FacebookMarketingAccessToken = nil
+		case "genesys":
+			tenantSettings.GenesysRegion = nil
+			tenantSettings.GenesysClientId = nil
+			tenantSettings.GenesysClientSecret = nil
 
 		}
 

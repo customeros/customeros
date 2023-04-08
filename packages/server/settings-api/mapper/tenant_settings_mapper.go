@@ -147,6 +147,11 @@ func MapTenantSettingsEntityToDTO(tenantSettings *entity.TenantSettings) *map[st
 		responseMap["emailoctopus"].(map[string]interface{})["state"] = "ACTIVE"
 	}
 
+	if tenantSettings != nil && tenantSettings.FacebookMarketingAccessToken != nil {
+		responseMap["facebookMarketing"] = make(map[string]interface{})
+		responseMap["facebookMarketing"].(map[string]interface{})["state"] = "ACTIVE"
+	}
+
 	if tenantSettings != nil && tenantSettings.FastbillApiKey != nil && tenantSettings.FastbillProjectId != nil {
 		responseMap["fastbill"] = make(map[string]interface{})
 		responseMap["fastbill"].(map[string]interface{})["state"] = "ACTIVE"
@@ -177,9 +182,9 @@ func MapTenantSettingsEntityToDTO(tenantSettings *entity.TenantSettings) *map[st
 		responseMap["freshservice"].(map[string]interface{})["state"] = "ACTIVE"
 	}
 
-	if tenantSettings != nil && tenantSettings.FacebookMarketingAccessToken != nil {
-		responseMap["facebookMarketing"] = make(map[string]interface{})
-		responseMap["facebookMarketing"].(map[string]interface{})["state"] = "ACTIVE"
+	if tenantSettings != nil && tenantSettings.GenesysRegion != nil && tenantSettings.GenesysClientId != nil && tenantSettings.GenesysClientSecret != nil {
+		responseMap["genesys"] = make(map[string]interface{})
+		responseMap["genesys"].(map[string]interface{})["state"] = "ACTIVE"
 	}
 
 	return &responseMap

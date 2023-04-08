@@ -78,6 +78,8 @@ type TenantSettings struct {
 
 	EmailOctopusApiKey *string `gorm:"column:emailoctopus_api_key;type:varchar(255);" binding:"required"`
 
+	FacebookMarketingAccessToken *string `gorm:"column:facebook_marketing_access_token;type:varchar(255);"  binding:"required"`
+
 	FastbillApiKey    *string `gorm:"column:fastbill_api_key;type:varchar(255);" binding:"required"`
 	FastbillProjectId *string `gorm:"column:fastbill_project_id;type:varchar(255);" binding:"required"`
 
@@ -94,7 +96,9 @@ type TenantSettings struct {
 	FreshserviceApiKey *string `gorm:"column:freshservice_api_key;type:varchar(255);" binding:"required"`
 	FreshserviceDomain *string `gorm:"column:freshservice_domain;type:varchar(255);" binding:"required"`
 
-	FacebookMarketingAccessToken *string `gorm:"column:facebook_marketing_access_token;type:varchar(255);"  binding:"required"`
+	GenesysRegion       *string `gorm:"column:genesys_region;type:varchar(255);" binding:"required"`
+	GenesysClientId     *string `gorm:"column:genesys_client_id;type:varchar(255);" binding:"required"`
+	GenesysClientSecret *string `gorm:"column:genesys_client_secret;type:varchar(255);" binding:"required"`
 }
 
 func (TenantSettings) TableName() string {
