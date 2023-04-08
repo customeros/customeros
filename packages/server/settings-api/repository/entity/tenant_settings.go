@@ -101,6 +101,8 @@ type TenantSettings struct {
 	GenesysClientSecret *string `gorm:"column:genesys_client_secret;type:varchar(255);" binding:"required"`
 
 	GitHubAccessToken *string `gorm:"column:github_access_token;type:varchar(255);" binding:"required"`
+
+	GitLabAccessToken *string `gorm:"column:gitlab_access_token;type:varchar(255);" binding:"required"`
 }
 
 func (TenantSettings) TableName() string {

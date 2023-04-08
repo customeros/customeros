@@ -463,10 +463,18 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 		case "github":
 			accessToken, ok := data["accessToken"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing access token for Github integration")
+				return nil, fmt.Errorf("missing access token for GitHub integration")
 			}
 
 			tenantSettings.GitHubAccessToken = &accessToken
+
+		case "gitlab":
+			accessToken, ok := data["accessToken"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing access token for GitLab integration")
+			}
+
+			tenantSettings.GitLabAccessToken = &accessToken
 
 		}
 
@@ -588,6 +596,8 @@ func (s *tenantSettingsService) ClearIntegrationData(tenantName, identifier stri
 			tenantSettings.GenesysClientSecret = nil
 		case "github":
 			tenantSettings.GitHubAccessToken = nil
+		case "gitlab":
+			tenantSettings.GitLabAccessToken = nil
 
 		}
 

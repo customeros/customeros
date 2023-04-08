@@ -916,6 +916,28 @@ const Settings: NextPage = () => {
                 />
             ),
         },
+        {
+            key: 'gitlab',
+            state: 'INACTIVE',
+            template: (data: any) => (
+                <SettingsIntegrationItem
+                    icon={'logos/gitlab.svg'}
+                    identifier={'gitlab'}
+                    name={'GitLab'}
+                    state={data.state}
+                    settingsChanged={() => {
+                        reloadRef.current = !reloadRef.current;
+                        setReload(reloadRef.current);
+                    }}
+                    fields={[
+                        {
+                            name: 'accessToken',
+                            label: 'Access Token',
+                        }
+                    ]}
+                />
+            ),
+        },
     ]);
 
     useEffect(() => {
