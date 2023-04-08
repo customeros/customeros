@@ -277,5 +277,10 @@ func MapTenantSettingsEntityToDTO(tenantSettings *entity.TenantSettings) *map[st
 		responseMap["notion"].(map[string]interface{})["state"] = "ACTIVE"
 	}
 
+	if tenantSettings != nil && tenantSettings.PipedriveApiToken != nil {
+		responseMap["pipedrive"] = make(map[string]interface{})
+		responseMap["pipedrive"].(map[string]interface{})["state"] = "ACTIVE"
+	}
+
 	return &responseMap
 }

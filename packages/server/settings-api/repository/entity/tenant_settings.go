@@ -148,6 +148,8 @@ type TenantSettings struct {
 	NotionPublicAccessToken   *string `gorm:"column:notion_public_access_token;type:varchar(255);" binding:"required"`
 	NotionPublicClientId      *string `gorm:"column:notion_public_client_id;type:varchar(255);" binding:"required"`
 	NotionPublicClientSecret  *string `gorm:"column:notion_public_client_secret;type:varchar(255);" binding:"required"`
+
+	PipedriveApiToken *string `gorm:"column:pipedrive_api_token;type:varchar(255);" binding:"required"`
 }
 
 func (TenantSettings) TableName() string {

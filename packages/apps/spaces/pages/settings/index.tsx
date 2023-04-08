@@ -1320,6 +1320,28 @@ const Settings: NextPage = () => {
                 />
             ),
         },
+        {
+            key: 'pipedrive',
+            state: 'INACTIVE',
+            template: (data: any) => (
+                <SettingsIntegrationItem
+                    icon={'logos/pipedrive.svg'}
+                    identifier={'pipedrive'}
+                    name={'Pipedrive'}
+                    state={data.state}
+                    settingsChanged={() => {
+                        reloadRef.current = !reloadRef.current;
+                        setReload(reloadRef.current);
+                    }}
+                    fields={[
+                        {
+                            name: 'apiToken',
+                            label: 'API Token',
+                        },
+                    ]}
+                />
+            ),
+        },
     ]);
 
     useEffect(() => {
