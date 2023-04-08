@@ -554,6 +554,14 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 			}
 
 			tenantSettings.KlaviyoApiKey = &apiKey
+
+		case "kustomer":
+			apiToken, ok := data["apiToken"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing API token for Kustomer integration")
+			}
+
+			tenantSettings.KustomerApiToken = &apiToken
 		}
 
 	}
@@ -695,6 +703,8 @@ func (s *tenantSettingsService) ClearIntegrationData(tenantName, identifier stri
 			tenantSettings.IntercomAccessToken = nil
 		case "klaviyo":
 			tenantSettings.KlaviyoApiKey = nil
+		case "kustomer":
+			tenantSettings.KustomerApiToken = nil
 
 		}
 

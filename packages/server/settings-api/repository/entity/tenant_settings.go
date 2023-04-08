@@ -122,6 +122,8 @@ type TenantSettings struct {
 	IntercomAccessToken *string `gorm:"column:intercom_access_token;type:varchar(255);" binding:"required"`
 
 	KlaviyoApiKey *string `gorm:"column:klaviyo_api_key;type:varchar(255);" binding:"required"`
+
+	KustomerApiToken *string `gorm:"column:kustomer_api_token;type:varchar(255);" binding:"required"`
 }
 
 func (TenantSettings) TableName() string {

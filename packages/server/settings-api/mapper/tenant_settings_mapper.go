@@ -237,5 +237,10 @@ func MapTenantSettingsEntityToDTO(tenantSettings *entity.TenantSettings) *map[st
 		responseMap["klaviyo"].(map[string]interface{})["state"] = "ACTIVE"
 	}
 
+	if tenantSettings != nil && tenantSettings.KustomerApiToken != nil {
+		responseMap["kustomer"] = make(map[string]interface{})
+		responseMap["kustomer"].(map[string]interface{})["state"] = "ACTIVE"
+	}
+
 	return &responseMap
 }

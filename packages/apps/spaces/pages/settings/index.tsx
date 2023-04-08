@@ -1104,6 +1104,28 @@ const Settings: NextPage = () => {
                 />
             ),
         },
+        {
+            key: 'kustomer',
+            state: 'INACTIVE',
+            template: (data: any) => (
+                <SettingsIntegrationItem
+                    icon={'logos/kustomer.svg'}
+                    identifier={'kustomer'}
+                    name={'Kustomer'}
+                    state={data.state}
+                    settingsChanged={() => {
+                        reloadRef.current = !reloadRef.current;
+                        setReload(reloadRef.current);
+                    }}
+                    fields={[
+                        {
+                            name: 'apiToken',
+                            label: 'API Token',
+                        },
+                    ]}
+                />
+            ),
+        },
     ]);
 
     useEffect(() => {
