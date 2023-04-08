@@ -502,6 +502,19 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 
 			tenantSettings.GongApiKey = &apiKey
 
+		case "harvest":
+			accountId, ok := data["accountId"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing account id for Harvest integration")
+			}
+			accessToken, ok := data["accessToken"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing access token for Harvest integration")
+			}
+
+			tenantSettings.HarvestAccountId = &accountId
+			tenantSettings.HarvestAccessToken = &accessToken
+
 		}
 
 	}
@@ -630,6 +643,9 @@ func (s *tenantSettingsService) ClearIntegrationData(tenantName, identifier stri
 			tenantSettings.GoCardlessVersion = nil
 		case "gong":
 			tenantSettings.GongApiKey = nil
+		case "harvest":
+			tenantSettings.HarvestAccountId = nil
+			tenantSettings.HarvestAccessToken = nil
 
 		}
 

@@ -207,5 +207,10 @@ func MapTenantSettingsEntityToDTO(tenantSettings *entity.TenantSettings) *map[st
 		responseMap["gong"].(map[string]interface{})["state"] = "ACTIVE"
 	}
 
+	if tenantSettings != nil && tenantSettings.HarvestAccountId != nil && tenantSettings.HarvestAccessToken != nil {
+		responseMap["harvest"] = make(map[string]interface{})
+		responseMap["harvest"].(map[string]interface{})["state"] = "ACTIVE"
+	}
+
 	return &responseMap
 }

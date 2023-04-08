@@ -109,6 +109,9 @@ type TenantSettings struct {
 	GoCardlessVersion     *string `gorm:"column:gocardless_version;type:varchar(255);" binding:"required"`
 
 	GongApiKey *string `gorm:"column:gong_api_key;type:varchar(255);" binding:"required"`
+
+	HarvestAccountId   *string `gorm:"column:harvest_account_id;type:varchar(255);" binding:"required"`
+	HarvestAccessToken *string `gorm:"column:harvest_access_token;type:varchar(255);" binding:"required"`
 }
 
 func (TenantSettings) TableName() string {

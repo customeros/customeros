@@ -990,6 +990,32 @@ const Settings: NextPage = () => {
                 />
             ),
         },
+        {
+            key: 'harvest',
+            state: 'INACTIVE',
+            template: (data: any) => (
+                <SettingsIntegrationItem
+                    icon={'logos/harvest.svg'}
+                    identifier={'harvest'}
+                    name={'Harvest'}
+                    state={data.state}
+                    settingsChanged={() => {
+                        reloadRef.current = !reloadRef.current;
+                        setReload(reloadRef.current);
+                    }}
+                    fields={[
+                        {
+                            name: 'accountId',
+                            label: 'Account Id',
+                        },
+                        {
+                            name: 'accessToken',
+                            label: 'Access Token',
+                        },
+                    ]}
+                />
+            ),
+        },
     ]);
 
     useEffect(() => {
