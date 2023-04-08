@@ -1234,6 +1234,36 @@ const Settings: NextPage = () => {
                 />
             ),
         },
+        {
+            key: 'microsoftteams',
+            state: 'INACTIVE',
+            template: (data: any) => (
+                <SettingsIntegrationItem
+                    icon={'logos/microsoftteams.svg'}
+                    identifier={'microsoftteams'}
+                    name={'Microsoft Teams'}
+                    state={data.state}
+                    settingsChanged={() => {
+                        reloadRef.current = !reloadRef.current;
+                        setReload(reloadRef.current);
+                    }}
+                    fields={[
+                        {
+                            name: 'tenantId',
+                            label: 'Tenant Id',
+                        },
+                        {
+                            name: 'clientId',
+                            label: 'Client Id',
+                        },
+                        {
+                            name: 'clientSecret',
+                            label: 'Client Secret',
+                        },
+                    ]}
+                />
+            ),
+        },
     ]);
 
     useEffect(() => {

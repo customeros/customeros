@@ -620,6 +620,24 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 			tenantSettings.MarketoClientSecret = &clientSecret
 			tenantSettings.MarketoDomainUrl = &domainUrl
 
+		case "microsoftteams":
+			tenantId, ok := data["tenantId"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing tenant id for Microsoft Teams integration")
+			}
+			clientId, ok := data["clientId"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing client id for Microsoft Teams integration")
+			}
+			clientSecret, ok := data["clientSecret"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing client secret for Microsoft Teams integration")
+			}
+
+			tenantSettings.MicrosoftTeamsTenantId = &tenantId
+			tenantSettings.MicrosoftTeamsClientId = &clientId
+			tenantSettings.MicrosoftTeamsClientSecret = &clientSecret
+
 		}
 
 	}
@@ -776,6 +794,10 @@ func (s *tenantSettingsService) ClearIntegrationData(tenantName, identifier stri
 			tenantSettings.MarketoClientId = nil
 			tenantSettings.MarketoClientSecret = nil
 			tenantSettings.MarketoDomainUrl = nil
+		case "microsoftteams":
+			tenantSettings.MicrosoftTeamsTenantId = nil
+			tenantSettings.MicrosoftTeamsClientId = nil
+			tenantSettings.MicrosoftTeamsClientSecret = nil
 
 		}
 

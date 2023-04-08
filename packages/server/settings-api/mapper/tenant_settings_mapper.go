@@ -262,5 +262,10 @@ func MapTenantSettingsEntityToDTO(tenantSettings *entity.TenantSettings) *map[st
 		responseMap["marketo"].(map[string]interface{})["state"] = "ACTIVE"
 	}
 
+	if tenantSettings != nil && tenantSettings.MicrosoftTeamsTenantId != nil && tenantSettings.MicrosoftTeamsClientId != nil && tenantSettings.MicrosoftTeamsClientSecret != nil {
+		responseMap["microsoftteams"] = make(map[string]interface{})
+		responseMap["microsoftteams"].(map[string]interface{})["state"] = "ACTIVE"
+	}
+
 	return &responseMap
 }

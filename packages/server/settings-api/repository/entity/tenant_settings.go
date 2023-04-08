@@ -137,6 +137,10 @@ type TenantSettings struct {
 	MarketoClientId     *string `gorm:"column:marketo_client_id;type:varchar(255);" binding:"required"`
 	MarketoClientSecret *string `gorm:"column:marketo_client_secret;type:varchar(255);" binding:"required"`
 	MarketoDomainUrl    *string `gorm:"column:marketo_domain_url;type:varchar(255);" binding:"required"`
+
+	MicrosoftTeamsTenantId     *string `gorm:"column:microsoft_teams_tenant_id;type:varchar(255);" binding:"required"`
+	MicrosoftTeamsClientId     *string `gorm:"column:microsoft_teams_client_id;type:varchar(255);" binding:"required"`
+	MicrosoftTeamsClientSecret *string `gorm:"column:microsoft_teams_client_secret;type:varchar(255);" binding:"required"`
 }
 
 func (TenantSettings) TableName() string {
