@@ -494,6 +494,14 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 			tenantSettings.GoCardlessEnvironment = &environment
 			tenantSettings.GoCardlessVersion = &version
 
+		case "gong":
+			apiKey, ok := data["apiKey"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing API key for Gong integration")
+			}
+
+			tenantSettings.GongApiKey = &apiKey
+
 		}
 
 	}
@@ -620,6 +628,8 @@ func (s *tenantSettingsService) ClearIntegrationData(tenantName, identifier stri
 			tenantSettings.GoCardlessAccessToken = nil
 			tenantSettings.GoCardlessEnvironment = nil
 			tenantSettings.GoCardlessVersion = nil
+		case "gong":
+			tenantSettings.GongApiKey = nil
 
 		}
 

@@ -107,6 +107,8 @@ type TenantSettings struct {
 	GoCardlessAccessToken *string `gorm:"column:gocardless_access_token;type:varchar(255);" binding:"required"`
 	GoCardlessEnvironment *string `gorm:"column:gocardless_environment;type:varchar(255);" binding:"required"`
 	GoCardlessVersion     *string `gorm:"column:gocardless_version;type:varchar(255);" binding:"required"`
+
+	GongApiKey *string `gorm:"column:gong_api_key;type:varchar(255);" binding:"required"`
 }
 
 func (TenantSettings) TableName() string {

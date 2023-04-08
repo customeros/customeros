@@ -202,5 +202,10 @@ func MapTenantSettingsEntityToDTO(tenantSettings *entity.TenantSettings) *map[st
 		responseMap["gocardless"].(map[string]interface{})["state"] = "ACTIVE"
 	}
 
+	if tenantSettings != nil && tenantSettings.GongApiKey != nil {
+		responseMap["gong"] = make(map[string]interface{})
+		responseMap["gong"].(map[string]interface{})["state"] = "ACTIVE"
+	}
+
 	return &responseMap
 }
