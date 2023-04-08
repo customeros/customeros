@@ -366,6 +366,14 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 
 			tenantSettings.EmailOctopusApiKey = &apiKey
 
+		case "facebookMarketing":
+			accessToken, ok := data["accessToken"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing access token for Facebook integration")
+			}
+
+			tenantSettings.FacebookMarketingAccessToken = &accessToken
+
 		case "fastbill":
 			apiKey, ok := data["apiKey"].(string)
 			if !ok {
@@ -386,6 +394,257 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 			}
 
 			tenantSettings.FlexportApiKey = &apiKey
+
+		case "freshcaller":
+			apiKey, ok := data["apiKey"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing API key for Freshcaller integration")
+			}
+
+			tenantSettings.FreshcallerApiKey = &apiKey
+
+		case "freshdesk":
+			apiKey, ok := data["apiKey"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing API key for Freshdesk integration")
+			}
+			domain, ok := data["domain"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing domain for Freshdesk integration")
+			}
+
+			tenantSettings.FreshdeskApiKey = &apiKey
+			tenantSettings.FreshdeskDomain = &domain
+
+		case "freshsales":
+			apiKey, ok := data["apiKey"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing API key for Freshsales integration")
+			}
+			domain, ok := data["domain"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing domain for Freshsales integration")
+			}
+
+			tenantSettings.FreshsalesApiKey = &apiKey
+			tenantSettings.FreshsalesDomain = &domain
+
+		case "freshservice":
+			apiKey, ok := data["apiKey"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing API key for Freshservice integration")
+			}
+			domain, ok := data["domain"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing domain for Freshservice integration")
+			}
+
+			tenantSettings.FreshserviceApiKey = &apiKey
+			tenantSettings.FreshserviceDomain = &domain
+
+		case "genesys":
+			region, ok := data["region"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing region for Genesys integration")
+			}
+			clientId, ok := data["clientId"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing client id for Genesys integration")
+			}
+			clientSecret, ok := data["clientSecret"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing client secret for Genesys integration")
+			}
+
+			tenantSettings.GenesysRegion = &region
+			tenantSettings.GenesysClientId = &clientId
+			tenantSettings.GenesysClientSecret = &clientSecret
+
+		case "github":
+			accessToken, ok := data["accessToken"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing access token for GitHub integration")
+			}
+
+			tenantSettings.GitHubAccessToken = &accessToken
+
+		case "gitlab":
+			accessToken, ok := data["accessToken"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing access token for GitLab integration")
+			}
+
+			tenantSettings.GitLabAccessToken = &accessToken
+
+		case "gocardless":
+			accessToken, ok := data["accessToken"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing access token for GoCardless integration")
+			}
+			environment, ok := data["environment"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing environment for GoCardless integration")
+			}
+			version, ok := data["version"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing version for GoCardless integration")
+			}
+
+			tenantSettings.GoCardlessAccessToken = &accessToken
+			tenantSettings.GoCardlessEnvironment = &environment
+			tenantSettings.GoCardlessVersion = &version
+
+		case "gong":
+			apiKey, ok := data["apiKey"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing API key for Gong integration")
+			}
+
+			tenantSettings.GongApiKey = &apiKey
+
+		case "harvest":
+			accountId, ok := data["accountId"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing account id for Harvest integration")
+			}
+			accessToken, ok := data["accessToken"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing access token for Harvest integration")
+			}
+
+			tenantSettings.HarvestAccountId = &accountId
+			tenantSettings.HarvestAccessToken = &accessToken
+
+		case "insightly":
+			apiToken, ok := data["apiToken"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing API token for Insightly integration")
+			}
+
+			tenantSettings.InsightlyApiToken = &apiToken
+
+		case "instagram":
+			accessToken, ok := data["accessToken"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing access token for Harvest integration")
+			}
+
+			tenantSettings.InstagramAccessToken = &accessToken
+
+		case "instatus":
+			apiKey, ok := data["apiKey"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing API key for Instatus integration")
+			}
+
+			tenantSettings.InstatusApiKey = &apiKey
+
+		case "intercom":
+			accessToken, ok := data["accessToken"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing access token for Intercom integration")
+			}
+
+			tenantSettings.IntercomAccessToken = &accessToken
+
+		case "klaviyo":
+			apiKey, ok := data["apiKey"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing API key for Klaviyo integration")
+			}
+
+			tenantSettings.KlaviyoApiKey = &apiKey
+
+		case "kustomer":
+			apiToken, ok := data["apiToken"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing API token for Kustomer integration")
+			}
+
+			tenantSettings.KustomerApiToken = &apiToken
+
+		case "looker":
+			clientId, ok := data["clientId"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing client id for Looker integration")
+			}
+			clientSecret, ok := data["clientSecret"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing client secret for Looker integration")
+			}
+			domain, ok := data["domain"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing domain for Looker integration")
+			}
+
+			tenantSettings.LookerClientId = &clientId
+			tenantSettings.LookerClientSecret = &clientSecret
+			tenantSettings.LookerDomain = &domain
+
+		case "mailchimp":
+			apiKey, ok := data["apiKey"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing API key for Mailchimp integration")
+			}
+
+			tenantSettings.MailchimpApiKey = &apiKey
+
+		case "mailjetemail":
+			apiKey, ok := data["apiKey"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing API key for Mailjet Email integration")
+			}
+			apiSecret, ok := data["apiSecret"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing API secret for Mailjet Email integration")
+			}
+
+			tenantSettings.MailjetEmailApiKey = &apiKey
+			tenantSettings.MailjetEmailApiSecret = &apiSecret
+
+		case "marketo":
+			clientId, ok := data["clientId"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing client id for Marketo integration")
+			}
+			clientSecret, ok := data["clientSecret"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing client secret for Marketo integration")
+			}
+			domainUrl, ok := data["domainUrl"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing domain URL for Marketo integration")
+			}
+
+			tenantSettings.MarketoClientId = &clientId
+			tenantSettings.MarketoClientSecret = &clientSecret
+			tenantSettings.MarketoDomainUrl = &domainUrl
+
+		case "microsoftteams":
+			tenantId, ok := data["tenantId"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing tenant id for Microsoft Teams integration")
+			}
+			clientId, ok := data["clientId"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing client id for Microsoft Teams integration")
+			}
+			clientSecret, ok := data["clientSecret"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing client secret for Microsoft Teams integration")
+			}
+
+			tenantSettings.MicrosoftTeamsTenantId = &tenantId
+			tenantSettings.MicrosoftTeamsClientId = &clientId
+			tenantSettings.MicrosoftTeamsClientSecret = &clientSecret
+
+		case "monday":
+			apiToken, ok := data["apiToken"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing API token for Monday integration")
+			}
+
+			tenantSettings.MondayApiToken = &apiToken
 
 		}
 
@@ -483,11 +742,72 @@ func (s *tenantSettingsService) ClearIntegrationData(tenantName, identifier stri
 			tenantSettings.DriftApiToken = nil
 		case "emailoctopus":
 			tenantSettings.EmailOctopusApiKey = nil
+		case "facebookMarketing":
+			tenantSettings.FacebookMarketingAccessToken = nil
 		case "fastbill":
 			tenantSettings.FastbillApiKey = nil
 			tenantSettings.FastbillProjectId = nil
 		case "flexport":
 			tenantSettings.FlexportApiKey = nil
+		case "freshcaller":
+			tenantSettings.FreshcallerApiKey = nil
+		case "freshdesk":
+			tenantSettings.FreshdeskApiKey = nil
+			tenantSettings.FreshdeskDomain = nil
+		case "freshsales":
+			tenantSettings.FreshsalesApiKey = nil
+			tenantSettings.FreshsalesDomain = nil
+		case "freshservice":
+			tenantSettings.FreshserviceApiKey = nil
+			tenantSettings.FreshserviceDomain = nil
+		case "genesys":
+			tenantSettings.GenesysRegion = nil
+			tenantSettings.GenesysClientId = nil
+			tenantSettings.GenesysClientSecret = nil
+		case "github":
+			tenantSettings.GitHubAccessToken = nil
+		case "gitlab":
+			tenantSettings.GitLabAccessToken = nil
+		case "gocardless":
+			tenantSettings.GoCardlessAccessToken = nil
+			tenantSettings.GoCardlessEnvironment = nil
+			tenantSettings.GoCardlessVersion = nil
+		case "gong":
+			tenantSettings.GongApiKey = nil
+		case "harvest":
+			tenantSettings.HarvestAccountId = nil
+			tenantSettings.HarvestAccessToken = nil
+		case "insightly":
+			tenantSettings.InsightlyApiToken = nil
+		case "instagram":
+			tenantSettings.InstagramAccessToken = nil
+		case "instatus":
+			tenantSettings.InstatusApiKey = nil
+		case "intercom":
+			tenantSettings.IntercomAccessToken = nil
+		case "klaviyo":
+			tenantSettings.KlaviyoApiKey = nil
+		case "kustomer":
+			tenantSettings.KustomerApiToken = nil
+		case "looker":
+			tenantSettings.LookerClientId = nil
+			tenantSettings.LookerClientSecret = nil
+			tenantSettings.LookerDomain = nil
+		case "mailchimp":
+			tenantSettings.MailchimpApiKey = nil
+		case "mailjetemail":
+			tenantSettings.MailjetEmailApiKey = nil
+			tenantSettings.MailjetEmailApiSecret = nil
+		case "marketo":
+			tenantSettings.MarketoClientId = nil
+			tenantSettings.MarketoClientSecret = nil
+			tenantSettings.MarketoDomainUrl = nil
+		case "microsoftteams":
+			tenantSettings.MicrosoftTeamsTenantId = nil
+			tenantSettings.MicrosoftTeamsClientId = nil
+			tenantSettings.MicrosoftTeamsClientSecret = nil
+		case "monday":
+			tenantSettings.MondayApiToken = nil
 
 		}
 

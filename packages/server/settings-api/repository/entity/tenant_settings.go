@@ -78,10 +78,71 @@ type TenantSettings struct {
 
 	EmailOctopusApiKey *string `gorm:"column:emailoctopus_api_key;type:varchar(255);" binding:"required"`
 
+	FacebookMarketingAccessToken *string `gorm:"column:facebook_marketing_access_token;type:varchar(255);"  binding:"required"`
+
 	FastbillApiKey    *string `gorm:"column:fastbill_api_key;type:varchar(255);" binding:"required"`
 	FastbillProjectId *string `gorm:"column:fastbill_project_id;type:varchar(255);" binding:"required"`
 
 	FlexportApiKey *string `gorm:"column:flexport_api_key;type:varchar(255);" binding:"required"`
+
+	FreshcallerApiKey *string `gorm:"column:freshcaller_api_key;type:varchar(255);" binding:"required"`
+
+	FreshdeskApiKey *string `gorm:"column:freshdesk_api_key;type:varchar(255);" binding:"required"`
+	FreshdeskDomain *string `gorm:"column:freshdesk_domain;type:varchar(255);" binding:"required"`
+
+	FreshsalesApiKey *string `gorm:"column:freshsales_api_key;type:varchar(255);" binding:"required"`
+	FreshsalesDomain *string `gorm:"column:freshsales_domain;type:varchar(255);" binding:"required"`
+
+	FreshserviceApiKey *string `gorm:"column:freshservice_api_key;type:varchar(255);" binding:"required"`
+	FreshserviceDomain *string `gorm:"column:freshservice_domain;type:varchar(255);" binding:"required"`
+
+	GenesysRegion       *string `gorm:"column:genesys_region;type:varchar(255);" binding:"required"`
+	GenesysClientId     *string `gorm:"column:genesys_client_id;type:varchar(255);" binding:"required"`
+	GenesysClientSecret *string `gorm:"column:genesys_client_secret;type:varchar(255);" binding:"required"`
+
+	GitHubAccessToken *string `gorm:"column:github_access_token;type:varchar(255);" binding:"required"`
+
+	GitLabAccessToken *string `gorm:"column:gitlab_access_token;type:varchar(255);" binding:"required"`
+
+	GoCardlessAccessToken *string `gorm:"column:gocardless_access_token;type:varchar(255);" binding:"required"`
+	GoCardlessEnvironment *string `gorm:"column:gocardless_environment;type:varchar(255);" binding:"required"`
+	GoCardlessVersion     *string `gorm:"column:gocardless_version;type:varchar(255);" binding:"required"`
+
+	GongApiKey *string `gorm:"column:gong_api_key;type:varchar(255);" binding:"required"`
+
+	HarvestAccountId   *string `gorm:"column:harvest_account_id;type:varchar(255);" binding:"required"`
+	HarvestAccessToken *string `gorm:"column:harvest_access_token;type:varchar(255);" binding:"required"`
+
+	InsightlyApiToken *string `gorm:"column:insightly_api_token;type:varchar(255);" binding:"required"`
+
+	InstagramAccessToken *string `gorm:"column:instagram_access_token;type:varchar(255);" binding:"required"`
+
+	InstatusApiKey *string `gorm:"column:instatus_api_key;type:varchar(255);" binding:"required"`
+
+	IntercomAccessToken *string `gorm:"column:intercom_access_token;type:varchar(255);" binding:"required"`
+
+	KlaviyoApiKey *string `gorm:"column:klaviyo_api_key;type:varchar(255);" binding:"required"`
+
+	KustomerApiToken *string `gorm:"column:kustomer_api_token;type:varchar(255);" binding:"required"`
+
+	LookerClientId     *string `gorm:"column:looker_client_id;type:varchar(255);" binding:"required"`
+	LookerClientSecret *string `gorm:"column:looker_client_secret;type:varchar(255);" binding:"required"`
+	LookerDomain       *string `gorm:"column:looker_domain;type:varchar(255);" binding:"required"`
+
+	MailchimpApiKey *string `gorm:"column:mailchimp_api_key;type:varchar(255);" binding:"required"`
+
+	MailjetEmailApiKey    *string `gorm:"column:mailjet_email_api_key;type:varchar(255);" binding:"required"`
+	MailjetEmailApiSecret *string `gorm:"column:mailjet_email_api_secret;type:varchar(255);" binding:"required"`
+
+	MarketoClientId     *string `gorm:"column:marketo_client_id;type:varchar(255);" binding:"required"`
+	MarketoClientSecret *string `gorm:"column:marketo_client_secret;type:varchar(255);" binding:"required"`
+	MarketoDomainUrl    *string `gorm:"column:marketo_domain_url;type:varchar(255);" binding:"required"`
+
+	MicrosoftTeamsTenantId     *string `gorm:"column:microsoft_teams_tenant_id;type:varchar(255);" binding:"required"`
+	MicrosoftTeamsClientId     *string `gorm:"column:microsoft_teams_client_id;type:varchar(255);" binding:"required"`
+	MicrosoftTeamsClientSecret *string `gorm:"column:microsoft_teams_client_secret;type:varchar(255);" binding:"required"`
+
+	MondayApiToken *string `gorm:"column:monday_api_token;type:varchar(255);" binding:"required"`
 }
 
 func (TenantSettings) TableName() string {

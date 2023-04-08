@@ -147,6 +147,11 @@ func MapTenantSettingsEntityToDTO(tenantSettings *entity.TenantSettings) *map[st
 		responseMap["emailoctopus"].(map[string]interface{})["state"] = "ACTIVE"
 	}
 
+	if tenantSettings != nil && tenantSettings.FacebookMarketingAccessToken != nil {
+		responseMap["facebookMarketing"] = make(map[string]interface{})
+		responseMap["facebookMarketing"].(map[string]interface{})["state"] = "ACTIVE"
+	}
+
 	if tenantSettings != nil && tenantSettings.FastbillApiKey != nil && tenantSettings.FastbillProjectId != nil {
 		responseMap["fastbill"] = make(map[string]interface{})
 		responseMap["fastbill"].(map[string]interface{})["state"] = "ACTIVE"
@@ -155,6 +160,116 @@ func MapTenantSettingsEntityToDTO(tenantSettings *entity.TenantSettings) *map[st
 	if tenantSettings != nil && tenantSettings.FlexportApiKey != nil {
 		responseMap["flexport"] = make(map[string]interface{})
 		responseMap["flexport"].(map[string]interface{})["state"] = "ACTIVE"
+	}
+
+	if tenantSettings != nil && tenantSettings.FreshcallerApiKey != nil {
+		responseMap["freshcaller"] = make(map[string]interface{})
+		responseMap["freshcaller"].(map[string]interface{})["state"] = "ACTIVE"
+	}
+
+	if tenantSettings != nil && tenantSettings.FreshdeskApiKey != nil && tenantSettings.FreshdeskDomain != nil {
+		responseMap["freshdesk"] = make(map[string]interface{})
+		responseMap["freshdesk"].(map[string]interface{})["state"] = "ACTIVE"
+	}
+
+	if tenantSettings != nil && tenantSettings.FreshsalesApiKey != nil && tenantSettings.FreshsalesDomain != nil {
+		responseMap["freshsales"] = make(map[string]interface{})
+		responseMap["freshsales"].(map[string]interface{})["state"] = "ACTIVE"
+	}
+
+	if tenantSettings != nil && tenantSettings.FreshserviceApiKey != nil && tenantSettings.FreshserviceDomain != nil {
+		responseMap["freshservice"] = make(map[string]interface{})
+		responseMap["freshservice"].(map[string]interface{})["state"] = "ACTIVE"
+	}
+
+	if tenantSettings != nil && tenantSettings.GenesysRegion != nil && tenantSettings.GenesysClientId != nil && tenantSettings.GenesysClientSecret != nil {
+		responseMap["genesys"] = make(map[string]interface{})
+		responseMap["genesys"].(map[string]interface{})["state"] = "ACTIVE"
+	}
+
+	if tenantSettings != nil && tenantSettings.GitHubAccessToken != nil {
+		responseMap["github"] = make(map[string]interface{})
+		responseMap["github"].(map[string]interface{})["state"] = "ACTIVE"
+	}
+
+	if tenantSettings != nil && tenantSettings.GitLabAccessToken != nil {
+		responseMap["gitlab"] = make(map[string]interface{})
+		responseMap["gitlab"].(map[string]interface{})["state"] = "ACTIVE"
+	}
+
+	if tenantSettings != nil && tenantSettings.GoCardlessAccessToken != nil && tenantSettings.GoCardlessEnvironment != nil && tenantSettings.GoCardlessVersion != nil {
+		responseMap["gocardless"] = make(map[string]interface{})
+		responseMap["gocardless"].(map[string]interface{})["state"] = "ACTIVE"
+	}
+
+	if tenantSettings != nil && tenantSettings.GongApiKey != nil {
+		responseMap["gong"] = make(map[string]interface{})
+		responseMap["gong"].(map[string]interface{})["state"] = "ACTIVE"
+	}
+
+	if tenantSettings != nil && tenantSettings.HarvestAccountId != nil && tenantSettings.HarvestAccessToken != nil {
+		responseMap["harvest"] = make(map[string]interface{})
+		responseMap["harvest"].(map[string]interface{})["state"] = "ACTIVE"
+	}
+
+	if tenantSettings != nil && tenantSettings.InsightlyApiToken != nil {
+		responseMap["insightly"] = make(map[string]interface{})
+		responseMap["insightly"].(map[string]interface{})["state"] = "ACTIVE"
+	}
+
+	if tenantSettings != nil && tenantSettings.InstagramAccessToken != nil {
+		responseMap["instagram"] = make(map[string]interface{})
+		responseMap["instagram"].(map[string]interface{})["state"] = "ACTIVE"
+	}
+
+	if tenantSettings != nil && tenantSettings.InstatusApiKey != nil {
+		responseMap["instatus"] = make(map[string]interface{})
+		responseMap["instatus"].(map[string]interface{})["state"] = "ACTIVE"
+	}
+
+	if tenantSettings != nil && tenantSettings.IntercomAccessToken != nil {
+		responseMap["intercom"] = make(map[string]interface{})
+		responseMap["intercom"].(map[string]interface{})["state"] = "ACTIVE"
+	}
+
+	if tenantSettings != nil && tenantSettings.KlaviyoApiKey != nil {
+		responseMap["klaviyo"] = make(map[string]interface{})
+		responseMap["klaviyo"].(map[string]interface{})["state"] = "ACTIVE"
+	}
+
+	if tenantSettings != nil && tenantSettings.KustomerApiToken != nil {
+		responseMap["kustomer"] = make(map[string]interface{})
+		responseMap["kustomer"].(map[string]interface{})["state"] = "ACTIVE"
+	}
+
+	if tenantSettings != nil && tenantSettings.LookerClientId != nil && tenantSettings.LookerClientSecret != nil && tenantSettings.LookerDomain != nil {
+		responseMap["looker"] = make(map[string]interface{})
+		responseMap["looker"].(map[string]interface{})["state"] = "ACTIVE"
+	}
+
+	if tenantSettings != nil && tenantSettings.MailchimpApiKey != nil {
+		responseMap["mailchimp"] = make(map[string]interface{})
+		responseMap["mailchimp"].(map[string]interface{})["state"] = "ACTIVE"
+	}
+
+	if tenantSettings != nil && tenantSettings.MailjetEmailApiKey != nil && tenantSettings.MailjetEmailApiSecret != nil {
+		responseMap["mailjetemail"] = make(map[string]interface{})
+		responseMap["mailjetemail"].(map[string]interface{})["state"] = "ACTIVE"
+	}
+
+	if tenantSettings != nil && tenantSettings.MarketoClientId != nil && tenantSettings.MarketoClientSecret != nil && tenantSettings.MarketoDomainUrl != nil {
+		responseMap["marketo"] = make(map[string]interface{})
+		responseMap["marketo"].(map[string]interface{})["state"] = "ACTIVE"
+	}
+
+	if tenantSettings != nil && tenantSettings.MicrosoftTeamsTenantId != nil && tenantSettings.MicrosoftTeamsClientId != nil && tenantSettings.MicrosoftTeamsClientSecret != nil {
+		responseMap["microsoftteams"] = make(map[string]interface{})
+		responseMap["microsoftteams"].(map[string]interface{})["state"] = "ACTIVE"
+	}
+
+	if tenantSettings != nil && tenantSettings.MondayApiToken != nil {
+		responseMap["monday"] = make(map[string]interface{})
+		responseMap["monday"].(map[string]interface{})["state"] = "ACTIVE"
 	}
 
 	return &responseMap
