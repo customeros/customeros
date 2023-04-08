@@ -530,6 +530,14 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 			}
 
 			tenantSettings.InstagramAccessToken = &accessToken
+
+		case "instatus":
+			apiKey, ok := data["apiKey"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing API key for Instatus integration")
+			}
+
+			tenantSettings.InstatusApiKey = &apiKey
 		}
 
 	}
@@ -665,6 +673,8 @@ func (s *tenantSettingsService) ClearIntegrationData(tenantName, identifier stri
 			tenantSettings.InsightlyApiToken = nil
 		case "instagram":
 			tenantSettings.InstagramAccessToken = nil
+		case "instatus":
+			tenantSettings.InstatusApiKey = nil
 
 		}
 

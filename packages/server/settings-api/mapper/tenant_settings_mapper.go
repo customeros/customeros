@@ -222,5 +222,10 @@ func MapTenantSettingsEntityToDTO(tenantSettings *entity.TenantSettings) *map[st
 		responseMap["instagram"].(map[string]interface{})["state"] = "ACTIVE"
 	}
 
+	if tenantSettings != nil && tenantSettings.InstatusApiKey != nil {
+		responseMap["instatus"] = make(map[string]interface{})
+		responseMap["instatus"].(map[string]interface{})["state"] = "ACTIVE"
+	}
+
 	return &responseMap
 }
