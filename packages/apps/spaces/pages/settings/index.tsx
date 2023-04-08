@@ -1321,6 +1321,32 @@ const Settings: NextPage = () => {
             ),
         },
         {
+            key: 'paystack',
+            state: 'INACTIVE',
+            template: (data: any) => (
+                <SettingsIntegrationItem
+                    icon={'logos/openline_small.svg'}
+                    identifier={'paystack'}
+                    name={'Paystack'}
+                    state={data.state}
+                    settingsChanged={() => {
+                        reloadRef.current = !reloadRef.current;
+                        setReload(reloadRef.current);
+                    }}
+                    fields={[
+                        {
+                            name: 'secretKey',
+                            label: 'Secret Key (mandatory)',
+                        },
+                        {
+                            name: 'lookbackWindow',
+                            label: 'Lookback Window (in days)',
+                        },
+                    ]}
+                />
+            ),
+        },
+        {
             key: 'pendo',
             state: 'INACTIVE',
             template: (data: any) => (

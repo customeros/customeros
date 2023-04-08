@@ -685,6 +685,22 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 				tenantSettings.NotionPublicAccessToken = &publicAccessToken
 			}
 
+		case "paystack":
+			secretKey, ok := data["secretKey"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing secret key for Paystack integration")
+			}
+
+			tenantSettings.PaystackSecretKey = &secretKey
+
+			lookbackWindow, ok := data["lookbackWindow"].(string)
+
+			if ok && lookbackWindow != "" {
+				tenantSettings.PaystackLookbackWindow = &lookbackWindow
+			} else {
+				tenantSettings.PaystackLookbackWindow = nil
+			}
+
 		case "pendo":
 			apiToken, ok := data["apiToken"].(string)
 			if !ok {
@@ -868,6 +884,9 @@ func (s *tenantSettingsService) ClearIntegrationData(tenantName, identifier stri
 			tenantSettings.NotionPublicClientId = nil
 			tenantSettings.NotionPublicClientSecret = nil
 			tenantSettings.NotionPublicAccessToken = nil
+		case "paystack":
+			tenantSettings.PaystackSecretKey = nil
+			tenantSettings.PaystackLookbackWindow = nil
 		case "pendo":
 			tenantSettings.PendoApiToken = nil
 		case "pipedrive":
