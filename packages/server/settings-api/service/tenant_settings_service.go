@@ -523,6 +523,13 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 
 			tenantSettings.InsightlyApiToken = &apiToken
 
+		case "instagram":
+			accessToken, ok := data["accessToken"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing access token for Harvest integration")
+			}
+
+			tenantSettings.InstagramAccessToken = &accessToken
 		}
 
 	}
@@ -656,6 +663,8 @@ func (s *tenantSettingsService) ClearIntegrationData(tenantName, identifier stri
 			tenantSettings.HarvestAccessToken = nil
 		case "insightly":
 			tenantSettings.InsightlyApiToken = nil
+		case "instagram":
+			tenantSettings.InstagramAccessToken = nil
 
 		}
 

@@ -1017,13 +1017,13 @@ const Settings: NextPage = () => {
             ),
         },
         {
-            key: 'insightly',
+            key: 'instagram',
             state: 'INACTIVE',
             template: (data: any) => (
                 <SettingsIntegrationItem
-                    icon={'logos/openline_small.svg'}
-                    identifier={'insightly'}
-                    name={'Insightly'}
+                    icon={'logos/instagram.svg'}
+                    identifier={'instagram'}
+                    name={'Instagram'}
                     state={data.state}
                     settingsChanged={() => {
                         reloadRef.current = !reloadRef.current;
@@ -1031,8 +1031,8 @@ const Settings: NextPage = () => {
                     }}
                     fields={[
                         {
-                            name: 'apiToken',
-                            label: 'API Token',
+                            name: 'accessToken',
+                            label: 'Access Token',
                         },
                     ]}
                 />

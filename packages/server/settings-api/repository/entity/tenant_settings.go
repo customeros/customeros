@@ -114,6 +114,8 @@ type TenantSettings struct {
 	HarvestAccessToken *string `gorm:"column:harvest_access_token;type:varchar(255);" binding:"required"`
 
 	InsightlyApiToken *string `gorm:"column:insightly_api_token;type:varchar(255);" binding:"required"`
+
+	InstagramAccessToken *string `gorm:"column:instagram_access_token;type:varchar(255);" binding:"required"`
 }
 
 func (TenantSettings) TableName() string {

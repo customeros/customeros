@@ -217,5 +217,10 @@ func MapTenantSettingsEntityToDTO(tenantSettings *entity.TenantSettings) *map[st
 		responseMap["insightly"].(map[string]interface{})["state"] = "ACTIVE"
 	}
 
+	if tenantSettings != nil && tenantSettings.InstagramAccessToken != nil {
+		responseMap["instagram"] = make(map[string]interface{})
+		responseMap["instagram"].(map[string]interface{})["state"] = "ACTIVE"
+	}
+
 	return &responseMap
 }
