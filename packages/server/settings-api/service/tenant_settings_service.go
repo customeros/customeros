@@ -646,6 +646,45 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 
 			tenantSettings.MondayApiToken = &apiToken
 
+		case "notion":
+			internalAccessToken, _ := data["internalAccessToken"].(string)
+
+			publicClientId, _ := data["publicClientId"].(string)
+			publicClientSecret, _ := data["publicClientSecret"].(string)
+			publicAccessToken, _ := data["publicAccessToken"].(string)
+
+			if internalAccessToken == "" && publicClientId == "" && publicClientSecret == "" && publicAccessToken == "" {
+				return nil, fmt.Errorf("missing Notion integration data")
+			}
+
+			if internalAccessToken == "" && (publicClientId == "" || publicClientSecret == "" || publicAccessToken == "") {
+				return nil, fmt.Errorf("missing public Notion integration data")
+			}
+
+			if internalAccessToken == "" {
+				tenantSettings.NotionInternalAccessToken = nil
+			} else {
+				tenantSettings.NotionInternalAccessToken = &internalAccessToken
+			}
+
+			if publicClientId == "" {
+				tenantSettings.NotionPublicClientId = nil
+			} else {
+				tenantSettings.NotionPublicClientId = &publicClientId
+			}
+
+			if publicClientSecret == "" {
+				tenantSettings.NotionPublicClientSecret = nil
+			} else {
+				tenantSettings.NotionPublicClientSecret = &publicClientSecret
+			}
+
+			if publicAccessToken == "" {
+				tenantSettings.NotionPublicAccessToken = nil
+			} else {
+				tenantSettings.NotionPublicAccessToken = &publicAccessToken
+			}
+
 		}
 
 	}
@@ -808,6 +847,11 @@ func (s *tenantSettingsService) ClearIntegrationData(tenantName, identifier stri
 			tenantSettings.MicrosoftTeamsClientSecret = nil
 		case "monday":
 			tenantSettings.MondayApiToken = nil
+		case "notion":
+			tenantSettings.NotionInternalAccessToken = nil
+			tenantSettings.NotionPublicClientId = nil
+			tenantSettings.NotionPublicClientSecret = nil
+			tenantSettings.NotionPublicAccessToken = nil
 
 		}
 

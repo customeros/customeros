@@ -1286,6 +1286,40 @@ const Settings: NextPage = () => {
                 />
             ),
         },
+        {
+            key: 'notion',
+            state: 'INACTIVE',
+            template: (data: any) => (
+                <SettingsIntegrationItem
+                    icon={'logos/notion.svg'}
+                    identifier={'notion'}
+                    name={'Notion'}
+                    state={data.state}
+                    settingsChanged={() => {
+                        reloadRef.current = !reloadRef.current;
+                        setReload(reloadRef.current);
+                    }}
+                    fields={[
+                        {
+                            name: 'internalAccessToken',
+                            label: 'Internal Access Token',
+                        },
+                        {
+                            name: 'publicClientId',
+                            label: 'Public Client Id',
+                        },
+                        {
+                            name: 'publicClientSecret',
+                            label: 'Public Client Secret',
+                        },
+                        {
+                            name: 'publicAccessToken',
+                            label: 'Public Access Token',
+                        },
+                    ]}
+                />
+            ),
+        },
     ]);
 
     useEffect(() => {

@@ -272,5 +272,10 @@ func MapTenantSettingsEntityToDTO(tenantSettings *entity.TenantSettings) *map[st
 		responseMap["monday"].(map[string]interface{})["state"] = "ACTIVE"
 	}
 
+	if tenantSettings != nil && tenantSettings.NotionInternalAccessToken != nil || (tenantSettings.NotionPublicClientId != nil && tenantSettings.NotionPublicClientSecret != nil && tenantSettings.NotionPublicAccessToken != nil) {
+		responseMap["notion"] = make(map[string]interface{})
+		responseMap["notion"].(map[string]interface{})["state"] = "ACTIVE"
+	}
+
 	return &responseMap
 }
