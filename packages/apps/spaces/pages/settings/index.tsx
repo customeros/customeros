@@ -1060,6 +1060,28 @@ const Settings: NextPage = () => {
                 />
             ),
         },
+        {
+            key: 'intercom',
+            state: 'INACTIVE',
+            template: (data: any) => (
+                <SettingsIntegrationItem
+                    icon={'logos/intercom.svg'}
+                    identifier={'intercom'}
+                    name={'Intercom'}
+                    state={data.state}
+                    settingsChanged={() => {
+                        reloadRef.current = !reloadRef.current;
+                        setReload(reloadRef.current);
+                    }}
+                    fields={[
+                        {
+                            name: 'accessToken',
+                            label: 'Access Token',
+                        },
+                    ]}
+                />
+            ),
+        },
     ]);
 
     useEffect(() => {

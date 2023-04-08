@@ -538,6 +538,14 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 			}
 
 			tenantSettings.InstatusApiKey = &apiKey
+
+		case "intercom":
+			accessToken, ok := data["accessToken"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing access token for Intercom integration")
+			}
+
+			tenantSettings.IntercomAccessToken = &accessToken
 		}
 
 	}
@@ -675,6 +683,8 @@ func (s *tenantSettingsService) ClearIntegrationData(tenantName, identifier stri
 			tenantSettings.InstagramAccessToken = nil
 		case "instatus":
 			tenantSettings.InstatusApiKey = nil
+		case "intercom":
+			tenantSettings.IntercomAccessToken = nil
 
 		}
 

@@ -118,6 +118,8 @@ type TenantSettings struct {
 	InstagramAccessToken *string `gorm:"column:instagram_access_token;type:varchar(255);" binding:"required"`
 
 	InstatusApiKey *string `gorm:"column:instatus_api_key;type:varchar(255);" binding:"required"`
+
+	IntercomAccessToken *string `gorm:"column:intercom_access_token;type:varchar(255);" binding:"required"`
 }
 
 func (TenantSettings) TableName() string {

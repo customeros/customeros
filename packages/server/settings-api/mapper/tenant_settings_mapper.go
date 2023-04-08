@@ -227,5 +227,10 @@ func MapTenantSettingsEntityToDTO(tenantSettings *entity.TenantSettings) *map[st
 		responseMap["instatus"].(map[string]interface{})["state"] = "ACTIVE"
 	}
 
+	if tenantSettings != nil && tenantSettings.IntercomAccessToken != nil {
+		responseMap["intercom"] = make(map[string]interface{})
+		responseMap["intercom"].(map[string]interface{})["state"] = "ACTIVE"
+	}
+
 	return &responseMap
 }
