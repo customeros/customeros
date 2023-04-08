@@ -257,5 +257,10 @@ func MapTenantSettingsEntityToDTO(tenantSettings *entity.TenantSettings) *map[st
 		responseMap["mailjetemail"].(map[string]interface{})["state"] = "ACTIVE"
 	}
 
+	if tenantSettings != nil && tenantSettings.MarketoClientId != nil && tenantSettings.MarketoClientSecret != nil && tenantSettings.MarketoDomainUrl != nil {
+		responseMap["marketo"] = make(map[string]interface{})
+		responseMap["marketo"].(map[string]interface{})["state"] = "ACTIVE"
+	}
+
 	return &responseMap
 }

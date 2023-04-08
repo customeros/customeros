@@ -602,6 +602,24 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 			tenantSettings.MailjetEmailApiKey = &apiKey
 			tenantSettings.MailjetEmailApiSecret = &apiSecret
 
+		case "marketo":
+			clientId, ok := data["clientId"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing client id for Marketo integration")
+			}
+			clientSecret, ok := data["clientSecret"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing client secret for Marketo integration")
+			}
+			domainUrl, ok := data["domainUrl"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing domain URL for Marketo integration")
+			}
+
+			tenantSettings.MarketoClientId = &clientId
+			tenantSettings.MarketoClientSecret = &clientSecret
+			tenantSettings.MarketoDomainUrl = &domainUrl
+
 		}
 
 	}
@@ -754,6 +772,10 @@ func (s *tenantSettingsService) ClearIntegrationData(tenantName, identifier stri
 		case "mailjetemail":
 			tenantSettings.MailjetEmailApiKey = nil
 			tenantSettings.MailjetEmailApiSecret = nil
+		case "marketo":
+			tenantSettings.MarketoClientId = nil
+			tenantSettings.MarketoClientSecret = nil
+			tenantSettings.MarketoDomainUrl = nil
 
 		}
 

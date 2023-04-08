@@ -133,6 +133,10 @@ type TenantSettings struct {
 
 	MailjetEmailApiKey    *string `gorm:"column:mailjet_email_api_key;type:varchar(255);" binding:"required"`
 	MailjetEmailApiSecret *string `gorm:"column:mailjet_email_api_secret;type:varchar(255);" binding:"required"`
+
+	MarketoClientId     *string `gorm:"column:marketo_client_id;type:varchar(255);" binding:"required"`
+	MarketoClientSecret *string `gorm:"column:marketo_client_secret;type:varchar(255);" binding:"required"`
+	MarketoDomainUrl    *string `gorm:"column:marketo_domain_url;type:varchar(255);" binding:"required"`
 }
 
 func (TenantSettings) TableName() string {

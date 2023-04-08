@@ -1204,6 +1204,36 @@ const Settings: NextPage = () => {
                 />
             ),
         },
+        {
+            key: 'marketo',
+            state: 'INACTIVE',
+            template: (data: any) => (
+                <SettingsIntegrationItem
+                    icon={'logos/marketo.svg'}
+                    identifier={'marketo'}
+                    name={'Marketo'}
+                    state={data.state}
+                    settingsChanged={() => {
+                        reloadRef.current = !reloadRef.current;
+                        setReload(reloadRef.current);
+                    }}
+                    fields={[
+                        {
+                            name: 'clientId',
+                            label: 'Client Id',
+                        },
+                        {
+                            name: 'clientSecret',
+                            label: 'Client Secret',
+                        },
+                        {
+                            name: 'domainUrl',
+                            label: 'Domain Url',
+                        },
+                    ]}
+                />
+            ),
+        },
     ]);
 
     useEffect(() => {
