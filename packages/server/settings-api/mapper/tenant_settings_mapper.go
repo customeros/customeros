@@ -187,5 +187,10 @@ func MapTenantSettingsEntityToDTO(tenantSettings *entity.TenantSettings) *map[st
 		responseMap["genesys"].(map[string]interface{})["state"] = "ACTIVE"
 	}
 
+	if tenantSettings != nil && tenantSettings.GitHubAccessToken != nil {
+		responseMap["github"] = make(map[string]interface{})
+		responseMap["github"].(map[string]interface{})["state"] = "ACTIVE"
+	}
+
 	return &responseMap
 }

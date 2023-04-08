@@ -460,6 +460,14 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 			tenantSettings.GenesysClientId = &clientId
 			tenantSettings.GenesysClientSecret = &clientSecret
 
+		case "github":
+			accessToken, ok := data["accessToken"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing access token for Github integration")
+			}
+
+			tenantSettings.GitHubAccessToken = &accessToken
+
 		}
 
 	}
@@ -578,6 +586,8 @@ func (s *tenantSettingsService) ClearIntegrationData(tenantName, identifier stri
 			tenantSettings.GenesysRegion = nil
 			tenantSettings.GenesysClientId = nil
 			tenantSettings.GenesysClientSecret = nil
+		case "github":
+			tenantSettings.GitHubAccessToken = nil
 
 		}
 

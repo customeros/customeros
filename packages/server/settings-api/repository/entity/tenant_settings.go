@@ -99,6 +99,8 @@ type TenantSettings struct {
 	GenesysRegion       *string `gorm:"column:genesys_region;type:varchar(255);" binding:"required"`
 	GenesysClientId     *string `gorm:"column:genesys_client_id;type:varchar(255);" binding:"required"`
 	GenesysClientSecret *string `gorm:"column:genesys_client_secret;type:varchar(255);" binding:"required"`
+
+	GitHubAccessToken *string `gorm:"column:github_access_token;type:varchar(255);" binding:"required"`
 }
 
 func (TenantSettings) TableName() string {

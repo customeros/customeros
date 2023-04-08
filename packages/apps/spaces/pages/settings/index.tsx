@@ -894,6 +894,28 @@ const Settings: NextPage = () => {
                 />
             ),
         },
+        {
+            key: 'github',
+            state: 'INACTIVE',
+            template: (data: any) => (
+                <SettingsIntegrationItem
+                    icon={'logos/github.svg'}
+                    identifier={'github'}
+                    name={'Github'}
+                    state={data.state}
+                    settingsChanged={() => {
+                        reloadRef.current = !reloadRef.current;
+                        setReload(reloadRef.current);
+                    }}
+                    fields={[
+                        {
+                            name: 'accessToken',
+                            label: 'Access Token',
+                        }
+                    ]}
+                />
+            ),
+        },
     ]);
 
     useEffect(() => {
