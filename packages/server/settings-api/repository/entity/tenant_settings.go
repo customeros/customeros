@@ -210,6 +210,8 @@ type TenantSettings struct {
 	TikTokAccessToken *string `gorm:"column:tik_tok_access_token;type:varchar(255);" binding:"required"`
 
 	TodoistApiToken *string `gorm:"column:todoist_api_token;type:varchar(255);" binding:"required"`
+
+	TypeformApiToken *string `gorm:"column:typeform_api_token;type:varchar(255);" binding:"required"`
 }
 
 func (TenantSettings) TableName() string {

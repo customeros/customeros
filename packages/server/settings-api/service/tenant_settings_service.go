@@ -962,6 +962,14 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 
 			tenantSettings.TodoistApiToken = &apiToken
 
+		case "typeform":
+			apiToken, ok := data["apiToken"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing API token for Typeform integration")
+			}
+
+			tenantSettings.TypeformApiToken = &apiToken
+
 		}
 
 	}
@@ -1191,6 +1199,8 @@ func (s *tenantSettingsService) ClearIntegrationData(tenantName, identifier stri
 			tenantSettings.TikTokAccessToken = nil
 		case "todoist":
 			tenantSettings.TodoistApiToken = nil
+		case "typeform":
+			tenantSettings.TypeformApiToken = nil
 
 		}
 

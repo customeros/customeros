@@ -402,5 +402,10 @@ func MapTenantSettingsEntityToDTO(tenantSettings *entity.TenantSettings) *map[st
 		responseMap["todoist"].(map[string]interface{})["state"] = "ACTIVE"
 	}
 
+	if tenantSettings != nil && tenantSettings.TypeformApiToken != nil {
+		responseMap["typeform"] = make(map[string]interface{})
+		responseMap["typeform"].(map[string]interface{})["state"] = "ACTIVE"
+	}
+
 	return &responseMap
 }
