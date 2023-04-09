@@ -322,5 +322,10 @@ func MapTenantSettingsEntityToDTO(tenantSettings *entity.TenantSettings) *map[st
 		responseMap["plausible"].(map[string]interface{})["state"] = "ACTIVE"
 	}
 
+	if tenantSettings != nil && tenantSettings.PostHogApiKey != nil {
+		responseMap["posthog"] = make(map[string]interface{})
+		responseMap["posthog"].(map[string]interface{})["state"] = "ACTIVE"
+	}
+
 	return &responseMap
 }

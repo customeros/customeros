@@ -169,6 +169,9 @@ type TenantSettings struct {
 
 	PlausibleApiKey *string `gorm:"column:plausible_api_key;type:varchar(255);" binding:"required"`
 	PlausibleSiteId *string `gorm:"column:plausible_site_id;type:varchar(255);" binding:"required"`
+
+	PostHogApiKey  *string `gorm:"column:post_hog_api_key;type:varchar(255);" binding:"required"`
+	PostHogBaseUrl *string `gorm:"column:post_hog_base_url;type:varchar(255);" binding:"required"`
 }
 
 func (TenantSettings) TableName() string {

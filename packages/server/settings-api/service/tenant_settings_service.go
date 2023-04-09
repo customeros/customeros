@@ -783,6 +783,22 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 			tenantSettings.PlausibleApiKey = &apiKey
 			tenantSettings.PlausibleSiteId = &siteId
 
+		case "posthog":
+			apiKey, ok := data["apiKey"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing API key for PostHog integration")
+			}
+
+			tenantSettings.PostHogApiKey = &apiKey
+
+			baseUrl, ok := data["baseUrl"].(string)
+
+			if ok && baseUrl != "" {
+				tenantSettings.PostHogBaseUrl = &baseUrl
+			} else {
+				tenantSettings.PostHogBaseUrl = nil
+			}
+
 		}
 
 	}
@@ -971,6 +987,9 @@ func (s *tenantSettingsService) ClearIntegrationData(tenantName, identifier stri
 		case "plausible":
 			tenantSettings.PlausibleApiKey = nil
 			tenantSettings.PlausibleSiteId = nil
+		case "posthog":
+			tenantSettings.PostHogApiKey = nil
+			tenantSettings.PostHogBaseUrl = nil
 
 		}
 

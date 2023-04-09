@@ -1530,6 +1530,32 @@ const Settings: NextPage = () => {
                 />
             ),
         },
+        {
+            key: 'posthog',
+            state: 'INACTIVE',
+            template: (data: any) => (
+                <SettingsIntegrationItem
+                    icon={'logos/posthog.svg'}
+                    identifier={'posthog'}
+                    name={'PostHog'}
+                    state={data.state}
+                    settingsChanged={() => {
+                        reloadRef.current = !reloadRef.current;
+                        setReload(reloadRef.current);
+                    }}
+                    fields={[
+                        {
+                            name: 'apiKey',
+                            label: 'API Key (mandatory)',
+                        },
+                        {
+                            name: 'baseUrl',
+                            label: 'Base URL (optional)',
+                        },
+                    ]}
+                />
+            ),
+        },
     ]);
 
     useEffect(() => {
