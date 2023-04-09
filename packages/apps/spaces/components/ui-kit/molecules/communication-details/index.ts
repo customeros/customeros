@@ -1,0 +1,1 @@
+export { CommunicationDetails } from './CommunicationDetails';

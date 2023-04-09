@@ -1,12 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import styles from './job-roles-input.module.scss';
 import {
+  AddIconButton,
   Autocomplete,
   DeleteIconButton,
   EditableContentInput,
-  IconButton,
-  Plus,
-  Trash,
 } from '../../../ui-kit/atoms';
 import {
   useCreateContactJobRole,
@@ -111,20 +109,19 @@ export const JobRoleInput: React.FC<JobRoleInputProps> = ({
         )}
 
         {showAddButton && isEditMode && (
-          <IconButton
-            onClick={(e) => {
-              e.stopPropagation();
-              e.preventDefault();
+          <AddIconButton
+            style={{
+              width: '24px',
+              height: '16px',
+              position: 'relative',
+            }}
+            onAdd={() => {
               onCreateContactJobRole({
                 jobTitle: '',
                 primary: false,
                 organizationId: organization?.id,
               });
             }}
-            icon={<Plus style={{ transform: 'scale(0.8)' }} />}
-            size='xxxxs'
-            role='button'
-            mode='text'
           />
         )}
       </div>

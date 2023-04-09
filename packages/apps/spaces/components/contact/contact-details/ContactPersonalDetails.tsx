@@ -8,6 +8,7 @@ import styles from './contact-details.module.scss';
 import {
   useArchiveContact,
   useContactPersonalDetails,
+  useContactPersonalDetailsWithOrganizations,
   useUpdateContactPersonalDetails,
 } from '../../../hooks/useContact';
 import { ContactDetailsSkeleton } from './skeletons';
@@ -19,9 +20,12 @@ import { JobRoleInput } from './edit';
 import { IconButton } from '../../ui-kit/atoms';
 import classNames from 'classnames';
 import { useCreateContactJobRole } from '../../../hooks/useContactJobRole';
+import { AttachOrganizationInput } from './edit/AttachOrganizationInput';
 
 export const ContactPersonalDetails = ({ id }: { id: string }) => {
-  const { data, loading, error } = useContactPersonalDetails({ id });
+  const { data, loading, error } = useContactPersonalDetailsWithOrganizations({
+    id,
+  });
   const { isEditMode } = useRecoilValue(contactDetailsEdit);
   const { onCreateContactJobRole } = useCreateContactJobRole({ contactId: id });
 
@@ -109,7 +113,7 @@ export const ContactPersonalDetails = ({ id }: { id: string }) => {
               key={jobRole.id}
               contactId={id}
               organization={jobRole.organization}
-              jobRole={jobRole.jobTitle}
+              jobRole={jobRole?.jobTitle || ''}
               roleId={jobRole.id}
               isEditMode={isEditMode}
               showAddButton={
@@ -120,6 +124,25 @@ export const ContactPersonalDetails = ({ id }: { id: string }) => {
             />
           );
         })}
+
+        {[...(data?.organizations?.content || [])].map(
+          (organization: any, index) => {
+            return (
+              <AttachOrganizationInput
+                index={index}
+                key={organization.id}
+                contactId={id}
+                organization={organization}
+                isEditMode={isEditMode}
+                showAddNew={
+                  !data?.organizations?.content?.length ||
+                  index === data?.organizations?.content?.length - 1
+                }
+              />
+            );
+          },
+        )}
+        <AttachOrganizationInput contactId={id} isEditMode={isEditMode} />
 
         <ContactTags id={id} mode={isEditMode ? 'EDIT' : 'PREVIEW'} />
         <div
