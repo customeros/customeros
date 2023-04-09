@@ -1,4 +1,4 @@
-mutation addOrganizationToContact($input: ContactOrganizationInput!) {
+mutation attachOrganizationToContact($input: ContactOrganizationInput!) {
   contact_AddOrganizationById(input: $input) {
     ...ContactPersonalDetails
   }
