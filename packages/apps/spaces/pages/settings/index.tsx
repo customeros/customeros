@@ -1582,6 +1582,40 @@ const Settings: NextPage = () => {
                 />
             ),
         },
+        {
+            key: 'quickbooks',
+            state: 'INACTIVE',
+            template: (data: any) => (
+                <SettingsIntegrationItem
+                    icon={'logos/quickbooks.svg'}
+                    identifier={'quickbooks'}
+                    name={'QuickBooks'}
+                    state={data.state}
+                    settingsChanged={() => {
+                        reloadRef.current = !reloadRef.current;
+                        setReload(reloadRef.current);
+                    }}
+                    fields={[
+                        {
+                            name: 'clientId',
+                            label: 'Client Id',
+                        },
+                        {
+                            name: 'clientSecret',
+                            label: 'Client Secret',
+                        },
+                        {
+                            name: 'realmId',
+                            label: 'Realm Id',
+                        },
+                        {
+                            name: 'refreshToken',
+                            label: 'Refresh Token',
+                        },
+                    ]}
+                />
+            ),
+        },
     ]);
 
     useEffect(() => {

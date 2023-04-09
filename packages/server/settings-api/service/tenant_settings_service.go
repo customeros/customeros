@@ -812,6 +812,29 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 			tenantSettings.QualarooApiKey = &apiKey
 			tenantSettings.QualarooApiToken = &apiToken
 
+		case "quickbooks":
+			clientId, ok := data["clientId"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing client id for QuickBooks integration")
+			}
+			clientSecret, ok := data["clientSecret"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing client secret for QuickBooks integration")
+			}
+			realmId, ok := data["realmId"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing realm id for QuickBooks integration")
+			}
+			refreshToken, ok := data["refreshToken"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing refresh token for QuickBooks integration")
+			}
+
+			tenantSettings.QuickBooksClientId = &clientId
+			tenantSettings.QuickBooksClientSecret = &clientSecret
+			tenantSettings.QuickBooksRealmId = &realmId
+			tenantSettings.QuickBooksRefreshToken = &refreshToken
+
 		}
 
 	}
@@ -1006,6 +1029,11 @@ func (s *tenantSettingsService) ClearIntegrationData(tenantName, identifier stri
 		case "qualaroo":
 			tenantSettings.QualarooApiKey = nil
 			tenantSettings.QualarooApiToken = nil
+		case "quickbooks":
+			tenantSettings.QuickBooksClientId = nil
+			tenantSettings.QuickBooksClientSecret = nil
+			tenantSettings.QuickBooksRealmId = nil
+			tenantSettings.QuickBooksRefreshToken = nil
 
 		}
 

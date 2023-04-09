@@ -332,5 +332,10 @@ func MapTenantSettingsEntityToDTO(tenantSettings *entity.TenantSettings) *map[st
 		responseMap["qualaroo"].(map[string]interface{})["state"] = "ACTIVE"
 	}
 
+	if tenantSettings != nil && tenantSettings.QuickBooksClientId != nil && tenantSettings.QuickBooksClientSecret != nil && tenantSettings.QuickBooksRealmId != nil && tenantSettings.QuickBooksRefreshToken != nil {
+		responseMap["quickbooks"] = make(map[string]interface{})
+		responseMap["quickbooks"].(map[string]interface{})["state"] = "ACTIVE"
+	}
+
 	return &responseMap
 }
