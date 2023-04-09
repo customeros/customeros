@@ -872,6 +872,14 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 
 			tenantSettings.RetentlyApiToken = &apiToken
 
+		case "salesloft":
+			apiKey, ok := data["apiKey"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing API key for SalesLoft integration")
+			}
+
+			tenantSettings.SalesloftApiKey = &apiKey
+
 		}
 
 	}
@@ -1080,6 +1088,8 @@ func (s *tenantSettingsService) ClearIntegrationData(tenantName, identifier stri
 			tenantSettings.RecurlyApiKey = nil
 		case "retently":
 			tenantSettings.RetentlyApiToken = nil
+		case "salesloft":
+			tenantSettings.SalesloftApiKey = nil
 
 		}
 
