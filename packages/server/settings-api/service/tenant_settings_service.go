@@ -685,6 +685,14 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 				tenantSettings.NotionPublicAccessToken = &publicAccessToken
 			}
 
+		case "pagerduty":
+			apiKey, ok := data["apiKey"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing API key for PagerDuty integration")
+			}
+
+			tenantSettings.PagerDutyApikey = &apiKey
+
 		case "paypaltransaction":
 			clientId, ok := data["clientId"].(string)
 			if !ok {
@@ -926,6 +934,8 @@ func (s *tenantSettingsService) ClearIntegrationData(tenantName, identifier stri
 			tenantSettings.NotionPublicClientId = nil
 			tenantSettings.NotionPublicClientSecret = nil
 			tenantSettings.NotionPublicAccessToken = nil
+		case "pagerduty":
+			tenantSettings.PagerDutyApikey = nil
 		case "paypaltransaction":
 			tenantSettings.PaypalTransactionClientId = nil
 			tenantSettings.PaypalTransactionSecret = nil
