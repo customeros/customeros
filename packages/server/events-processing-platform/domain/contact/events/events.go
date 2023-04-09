@@ -3,18 +3,19 @@ package events
 import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/models"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/validator"
 	"time"
 )
 
 const (
-	ContactCreated           = "CONTACT_CREATED"
-	ContactUpdated           = "CONTACT_UPDATED"
-	ContactPhoneNumberLinked = "CONTACT_PHONE_NUMBER_LINKED"
-	ContactEmailLinked       = "CONTACT_EMAIL_LINKED"
+	ContactCreated           = "V1_CONTACT_CREATED"
+	ContactUpdated           = "V1_CONTACT_UPDATED"
+	ContactPhoneNumberLinked = "V1_CONTACT_PHONE_NUMBER_LINKED"
+	ContactEmailLinked       = "V1_CONTACT_EMAIL_LINKED"
 )
 
 type ContactCreatedEvent struct {
-	Tenant        string    `json:"tenant"`
+	Tenant        string    `json:"tenant" validate:"required"`
 	FirstName     string    `json:"firstName"`
 	LastName      string    `json:"lastName"`
 	Name          string    `json:"name"`
@@ -39,6 +40,11 @@ func NewContactCreatedEvent(aggregate eventstore.Aggregate, contactDto *models.C
 		CreatedAt:     createdAt,
 		UpdatedAt:     updatedAt,
 	}
+
+	if err := validator.GetValidator().Struct(eventData); err != nil {
+		return eventstore.Event{}, err
+	}
+
 	event := eventstore.NewBaseEvent(aggregate, ContactCreated)
 	if err := event.SetJsonData(&eventData); err != nil {
 		return eventstore.Event{}, err
@@ -47,7 +53,7 @@ func NewContactCreatedEvent(aggregate eventstore.Aggregate, contactDto *models.C
 }
 
 type ContactUpdatedEvent struct {
-	Tenant        string    `json:"tenant"`
+	Tenant        string    `json:"tenant" validate:"required"`
 	SourceOfTruth string    `json:"sourceOfTruth"`
 	UpdatedAt     time.Time `json:"updatedAt"`
 	FirstName     string    `json:"firstName"`
@@ -66,6 +72,11 @@ func NewContactUpdatedEvent(aggregate eventstore.Aggregate, contactDto *models.C
 		UpdatedAt:     updatedAt,
 		SourceOfTruth: contactDto.Source.SourceOfTruth,
 	}
+
+	if err := validator.GetValidator().Struct(eventData); err != nil {
+		return eventstore.Event{}, err
+	}
+
 	event := eventstore.NewBaseEvent(aggregate, ContactUpdated)
 	if err := event.SetJsonData(&eventData); err != nil {
 		return eventstore.Event{}, err
@@ -74,9 +85,9 @@ func NewContactUpdatedEvent(aggregate eventstore.Aggregate, contactDto *models.C
 }
 
 type ContactLinkPhoneNumberEvent struct {
-	Tenant        string    `json:"tenant"`
+	Tenant        string    `json:"tenant" validate:"required"`
 	UpdatedAt     time.Time `json:"updatedAt"`
-	PhoneNumberId string    `json:"phoneNumberId"`
+	PhoneNumberId string    `json:"phoneNumberId" validate:"required"`
 	Label         string    `json:"label"`
 	Primary       bool      `json:"primary"`
 }
@@ -89,6 +100,11 @@ func NewContactLinkPhoneNumberEvent(aggregate eventstore.Aggregate, tenant, phon
 		Label:         label,
 		Primary:       primary,
 	}
+
+	if err := validator.GetValidator().Struct(eventData); err != nil {
+		return eventstore.Event{}, err
+	}
+
 	event := eventstore.NewBaseEvent(aggregate, ContactPhoneNumberLinked)
 	if err := event.SetJsonData(&eventData); err != nil {
 		return eventstore.Event{}, err
@@ -97,9 +113,9 @@ func NewContactLinkPhoneNumberEvent(aggregate eventstore.Aggregate, tenant, phon
 }
 
 type ContactLinkEmailEvent struct {
-	Tenant    string    `json:"tenant"`
+	Tenant    string    `json:"tenant" validate:"required"`
 	UpdatedAt time.Time `json:"updatedAt"`
-	EmailId   string    `json:"emailId"`
+	EmailId   string    `json:"emailId" validate:"required"`
 	Label     string    `json:"label"`
 	Primary   bool      `json:"primary"`
 }
@@ -112,26 +128,14 @@ func NewContactLinkEmailEvent(aggregate eventstore.Aggregate, tenant, emailId, l
 		Label:     label,
 		Primary:   primary,
 	}
+
+	if err := validator.GetValidator().Struct(eventData); err != nil {
+		return eventstore.Event{}, err
+	}
+
 	event := eventstore.NewBaseEvent(aggregate, ContactEmailLinked)
 	if err := event.SetJsonData(&eventData); err != nil {
 		return eventstore.Event{}, err
 	}
 	return event, nil
 }
-
-// FIXME alexb implement
-//type ContactDeletedEvent struct {
-//	Uuid string `json:"uuid" bson:"uuid,omitempty" validate:"required"`
-//}
-//
-//func NewContactDeletedEvent(aggregate eventstore.Aggregate, uuid string) (eventstore.Event, error) {
-//	eventData := ContactDeletedEvent{
-//		Uuid: uuid,
-//	}
-//	event := eventstore.NewBaseEvent(aggregate, ContactDeleted)
-//	err := event.SetJsonData(&eventData)
-//	if err != nil {
-//		return eventstore.Event{}, err
-//	}
-//	return event, nil
-//}

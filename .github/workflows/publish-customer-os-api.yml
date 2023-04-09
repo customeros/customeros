@@ -5,9 +5,9 @@ on:
     branches: [ "otter" ]
     paths:
       - packages/server/customer-os-common-module/**
-      - packages/server/customer-os-api/**
       - packages/server/events-processing-common/**
-      - .github/workflows/build-customer-os-api.yml
+      - packages/server/customer-os-api/**
+      - .github/workflows/publish-customer-os-api.yml
   release:
     types: [ created, edited ]
 

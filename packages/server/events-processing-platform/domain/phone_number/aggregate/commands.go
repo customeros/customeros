@@ -48,7 +48,6 @@ func (a *PhoneNumberAggregate) UpdatePhoneNumber(ctx context.Context, tenant, so
 		return errors.Wrap(err, "NewPhoneNumberUpdatedEvent")
 	}
 
-	// FIXME alexb check what type of metadata should be set into event and apply it to all aggregation commands
 	if err = event.SetMetadata(tracing.ExtractTextMapCarrier(span.Context())); err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "SetMetadata")

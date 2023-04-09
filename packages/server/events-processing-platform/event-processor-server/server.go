@@ -13,6 +13,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/projection"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/repository"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/validator"
 	"github.com/sirupsen/logrus"
 	"os"
 	"os/signal"
@@ -37,6 +38,8 @@ func NewServer(cfg *config.Config, log logger.Logger) *server {
 func (server *server) Run(parentCtx context.Context) error {
 	ctx, cancel := signal.NotifyContext(parentCtx, os.Interrupt, syscall.SIGTERM, syscall.SIGINT)
 	defer cancel()
+
+	validator.InitValidator()
 
 	//if err := server.validate.StructCtx(ctx, server.cfg); err != nil {
 	//	return errors.Wrap(err, "cfg validate")

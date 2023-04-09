@@ -48,7 +48,6 @@ func (a *EmailAggregate) UpdateEmail(ctx context.Context, tenant, sourceOfTruth 
 		return errors.Wrap(err, "NewEmailUpdatedEvent")
 	}
 
-	// FIXME alexb check what type of metadata should be set into event and apply it to all aggregation commands
 	if err = event.SetMetadata(tracing.ExtractTextMapCarrier(span.Context())); err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "SetMetadata")
