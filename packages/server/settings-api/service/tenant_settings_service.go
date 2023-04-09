@@ -799,6 +799,19 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 				tenantSettings.PostHogBaseUrl = nil
 			}
 
+		case "qualaroo":
+			apiKey, ok := data["apiKey"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing API key for Qualaroo integration")
+			}
+			apiToken, ok := data["apiToken"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing API token for Qualaroo integration")
+			}
+
+			tenantSettings.QualarooApiKey = &apiKey
+			tenantSettings.QualarooApiToken = &apiToken
+
 		}
 
 	}
@@ -990,6 +1003,9 @@ func (s *tenantSettingsService) ClearIntegrationData(tenantName, identifier stri
 		case "posthog":
 			tenantSettings.PostHogApiKey = nil
 			tenantSettings.PostHogBaseUrl = nil
+		case "qualaroo":
+			tenantSettings.QualarooApiKey = nil
+			tenantSettings.QualarooApiToken = nil
 
 		}
 

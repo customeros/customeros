@@ -1556,6 +1556,32 @@ const Settings: NextPage = () => {
                 />
             ),
         },
+        {
+            key: 'qualaroo',
+            state: 'INACTIVE',
+            template: (data: any) => (
+                <SettingsIntegrationItem
+                    icon={'logos/qualaroo.svg'}
+                    identifier={'qualaroo'}
+                    name={'Qualaroo'}
+                    state={data.state}
+                    settingsChanged={() => {
+                        reloadRef.current = !reloadRef.current;
+                        setReload(reloadRef.current);
+                    }}
+                    fields={[
+                        {
+                            name: 'apiKey',
+                            label: 'API Key',
+                        },
+                        {
+                            name: 'apiToken',
+                            label: 'API Token',
+                        },
+                    ]}
+                />
+            ),
+        },
     ]);
 
     useEffect(() => {

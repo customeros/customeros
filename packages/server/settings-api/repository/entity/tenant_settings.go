@@ -172,6 +172,9 @@ type TenantSettings struct {
 
 	PostHogApiKey  *string `gorm:"column:post_hog_api_key;type:varchar(255);" binding:"required"`
 	PostHogBaseUrl *string `gorm:"column:post_hog_base_url;type:varchar(255);" binding:"required"`
+
+	QualarooApiKey   *string `gorm:"column:qualaroo_api_key;type:varchar(255);" binding:"required"`
+	QualarooApiToken *string `gorm:"column:qualaroo_api_token;type:varchar(255);" binding:"required"`
 }
 
 func (TenantSettings) TableName() string {
