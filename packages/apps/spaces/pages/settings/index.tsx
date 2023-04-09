@@ -1808,6 +1808,28 @@ const Settings: NextPage = () => {
                 />
             ),
         },
+        {
+            key: 'surveysparrow',
+            state: 'INACTIVE',
+            template: (data: any) => (
+                <SettingsIntegrationItem
+                    icon={'logos/surveysparrow.svg'}
+                    identifier={'surveysparrow'}
+                    name={'SurveySparrow'}
+                    state={data.state}
+                    settingsChanged={() => {
+                        reloadRef.current = !reloadRef.current;
+                        setReload(reloadRef.current);
+                    }}
+                    fields={[
+                        {
+                            name: 'accessToken',
+                            label: 'Access Token',
+                        },
+                    ]}
+                />
+            ),
+        },
     ]);
 
     useEffect(() => {

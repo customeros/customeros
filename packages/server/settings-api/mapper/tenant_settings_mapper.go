@@ -377,5 +377,10 @@ func MapTenantSettingsEntityToDTO(tenantSettings *entity.TenantSettings) *map[st
 		responseMap["stripe"].(map[string]interface{})["state"] = "ACTIVE"
 	}
 
+	if tenantSettings != nil && tenantSettings.SurveySparrowAccessToken != nil {
+		responseMap["surveysparrow"] = make(map[string]interface{})
+		responseMap["surveysparrow"].(map[string]interface{})["state"] = "ACTIVE"
+	}
+
 	return &responseMap
 }

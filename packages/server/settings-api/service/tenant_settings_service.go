@@ -922,6 +922,14 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 			tenantSettings.StripeAccountId = &accountId
 			tenantSettings.StripeSecretKey = &secretKey
 
+		case "surveysparrow":
+			accessToken, ok := data["accessToken"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing access token for SurveySparrow integration")
+			}
+
+			tenantSettings.SurveySparrowAccessToken = &accessToken
+
 		}
 
 	}
@@ -1141,6 +1149,8 @@ func (s *tenantSettingsService) ClearIntegrationData(tenantName, identifier stri
 		case "stripe":
 			tenantSettings.StripeAccountId = nil
 			tenantSettings.StripeSecretKey = nil
+		case "surveysparrow":
+			tenantSettings.SurveySparrowAccessToken = nil
 
 		}
 

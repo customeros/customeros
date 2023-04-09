@@ -200,6 +200,8 @@ type TenantSettings struct {
 
 	StripeAccountId *string `gorm:"column:stripe_account_id;type:varchar(255);" binding:"required"`
 	StripeSecretKey *string `gorm:"column:stripe_secret_key;type:varchar(255);" binding:"required"`
+
+	SurveySparrowAccessToken *string `gorm:"column:survey_sparrow_access_token;type:varchar(255);" binding:"required"`
 }
 
 func (TenantSettings) TableName() string {
