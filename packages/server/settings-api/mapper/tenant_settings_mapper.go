@@ -397,5 +397,10 @@ func MapTenantSettingsEntityToDTO(tenantSettings *entity.TenantSettings) *map[st
 		responseMap["tiktok"].(map[string]interface{})["state"] = "ACTIVE"
 	}
 
+	if tenantSettings != nil && tenantSettings.TodoistApiToken != nil {
+		responseMap["todoist"] = make(map[string]interface{})
+		responseMap["todoist"].(map[string]interface{})["state"] = "ACTIVE"
+	}
+
 	return &responseMap
 }

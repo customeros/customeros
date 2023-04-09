@@ -954,6 +954,14 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 
 			tenantSettings.TikTokAccessToken = &accessToken
 
+		case "todoist":
+			apiToken, ok := data["apiToken"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing API token for Todoist integration")
+			}
+
+			tenantSettings.TodoistApiToken = &apiToken
+
 		}
 
 	}
@@ -1181,6 +1189,8 @@ func (s *tenantSettingsService) ClearIntegrationData(tenantName, identifier stri
 			tenantSettings.TalkdeskApiKey = nil
 		case "tiktok":
 			tenantSettings.TikTokAccessToken = nil
+		case "todoist":
+			tenantSettings.TodoistApiToken = nil
 
 		}
 
