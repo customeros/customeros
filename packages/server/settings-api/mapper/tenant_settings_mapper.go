@@ -417,5 +417,10 @@ func MapTenantSettingsEntityToDTO(tenantSettings *entity.TenantSettings) *map[st
 		responseMap["wrike"].(map[string]interface{})["state"] = "ACTIVE"
 	}
 
+	if tenantSettings != nil && tenantSettings.XeroClientId != nil && tenantSettings.XeroClientSecret != nil && tenantSettings.XeroTenantId != nil && tenantSettings.XeroScopes != nil {
+		responseMap["xero"] = make(map[string]interface{})
+		responseMap["xero"].(map[string]interface{})["state"] = "ACTIVE"
+	}
+
 	return &responseMap
 }

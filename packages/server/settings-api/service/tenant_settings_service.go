@@ -991,6 +991,29 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 			tenantSettings.WrikeAccessToken = &accessToken
 			tenantSettings.WrikeHostUrl = &hostUrl
 
+		case "xero":
+			clientId, ok := data["clientId"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing client id for Xero integration")
+			}
+			clientSecret, ok := data["clientSecret"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing client secret for Xero integration")
+			}
+			tenantId, ok := data["tenantId"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing tenant id for Xero integration")
+			}
+			scopes, ok := data["scopes"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing scopes for Xero integration")
+			}
+
+			tenantSettings.XeroClientId = &clientId
+			tenantSettings.XeroClientSecret = &clientSecret
+			tenantSettings.XeroTenantId = &tenantId
+			tenantSettings.XeroScopes = &scopes
+
 		}
 
 	}
@@ -1226,6 +1249,11 @@ func (s *tenantSettingsService) ClearIntegrationData(tenantName, identifier stri
 			tenantSettings.VittallyApiKey = nil
 		case "wrike":
 			tenantSettings.WrikeAccessToken = nil
+		case "xero":
+			tenantSettings.XeroClientId = nil
+			tenantSettings.XeroClientSecret = nil
+			tenantSettings.XeroTenantId = nil
+			tenantSettings.XeroScopes = nil
 
 		}
 

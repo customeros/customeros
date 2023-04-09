@@ -217,6 +217,11 @@ type TenantSettings struct {
 
 	WrikeAccessToken *string `gorm:"column:wrike_access_token;type:varchar(255);" binding:"required"`
 	WrikeHostUrl     *string `gorm:"column:wrike_host_url;type:varchar(255);" binding:"required"`
+
+	XeroClientId     *string `gorm:"column:xero_client_id;type:varchar(255);" binding:"required"`
+	XeroClientSecret *string `gorm:"column:xero_client_secret;type:varchar(255);" binding:"required"`
+	XeroTenantId     *string `gorm:"column:xero_tenant_id;type:varchar(255);" binding:"required"`
+	XeroScopes       *string `gorm:"column:xero_scopes;type:varchar(255);" binding:"required"`
 }
 
 func (TenantSettings) TableName() string {

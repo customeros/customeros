@@ -1988,6 +1988,40 @@ const Settings: NextPage = () => {
                 />
             ),
         },
+        {
+            key: 'xero',
+            state: 'INACTIVE',
+            template: (data: any) => (
+                <SettingsIntegrationItem
+                    icon={'logos/openline_small.svg'}
+                    identifier={'xero'}
+                    name={'Xero'}
+                    state={data.state}
+                    settingsChanged={() => {
+                        reloadRef.current = !reloadRef.current;
+                        setReload(reloadRef.current);
+                    }}
+                    fields={[
+                        {
+                            name: 'clientId',
+                            label: 'Client ID',
+                        },
+                        {
+                            name: 'clientSecret',
+                            label: 'Client Secret',
+                        },
+                        {
+                            name: 'tenantId',
+                            label: 'Tenant ID',
+                        },
+                        {
+                            name: 'scopes',
+                            label: 'Scopes',
+                        },
+                    ]}
+                />
+            ),
+        },
     ]);
 
     useEffect(() => {
