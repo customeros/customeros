@@ -302,7 +302,6 @@ export const Timeline = ({
 
   return (
     <div ref={timelineContainerRef} className={styles.timeline}>
-      {!loading && noActivity && <TimelineStatus status='no-activity' />}
       <div
         className={classNames(styles.timelineContent, styles.scrollable, {
           [styles.scrollable]: !noActivity,
@@ -324,6 +323,7 @@ export const Timeline = ({
             <Skeleton height={'40px'} className='mb-3' />
           </div>
         )}
+        {!loading && noActivity && <TimelineStatus status='no-activity' />}
 
         {loggedActivities.map((e: any, index) => {
           return (
