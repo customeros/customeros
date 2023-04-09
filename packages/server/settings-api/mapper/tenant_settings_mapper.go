@@ -422,5 +422,10 @@ func MapTenantSettingsEntityToDTO(tenantSettings *entity.TenantSettings) *map[st
 		responseMap["xero"].(map[string]interface{})["state"] = "ACTIVE"
 	}
 
+	if tenantSettings != nil && tenantSettings.ZenefitsToken != nil {
+		responseMap["zenefits"] = make(map[string]interface{})
+		responseMap["zenefits"].(map[string]interface{})["state"] = "ACTIVE"
+	}
+
 	return &responseMap
 }

@@ -1014,6 +1014,14 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 			tenantSettings.XeroTenantId = &tenantId
 			tenantSettings.XeroScopes = &scopes
 
+		case "zenefits":
+			token, ok := data["token"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing client id for Xero integration")
+			}
+
+			tenantSettings.ZenefitsToken = &token
+
 		}
 
 	}
@@ -1254,6 +1262,8 @@ func (s *tenantSettingsService) ClearIntegrationData(tenantName, identifier stri
 			tenantSettings.XeroClientSecret = nil
 			tenantSettings.XeroTenantId = nil
 			tenantSettings.XeroScopes = nil
+		case "zenefits":
+			tenantSettings.ZenefitsToken = nil
 
 		}
 

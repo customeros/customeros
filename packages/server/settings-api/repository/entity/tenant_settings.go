@@ -222,6 +222,8 @@ type TenantSettings struct {
 	XeroClientSecret *string `gorm:"column:xero_client_secret;type:varchar(255);" binding:"required"`
 	XeroTenantId     *string `gorm:"column:xero_tenant_id;type:varchar(255);" binding:"required"`
 	XeroScopes       *string `gorm:"column:xero_scopes;type:varchar(255);" binding:"required"`
+
+	ZenefitsToken *string `gorm:"column:zenefits_token;type:varchar(255);" binding:"required"`
 }
 
 func (TenantSettings) TableName() string {
