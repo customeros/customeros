@@ -946,6 +946,14 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 
 			tenantSettings.TalkdeskApiKey = &apiKey
 
+		case "tiktok":
+			accessToken, ok := data["accessToken"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing access token for TikTok integration")
+			}
+
+			tenantSettings.TikTokAccessToken = &accessToken
+
 		}
 
 	}
@@ -1171,6 +1179,8 @@ func (s *tenantSettingsService) ClearIntegrationData(tenantName, identifier stri
 			tenantSettings.SurveyMonkeyAccessToken = nil
 		case "talkdesk":
 			tenantSettings.TalkdeskApiKey = nil
+		case "tiktok":
+			tenantSettings.TikTokAccessToken = nil
 
 		}
 

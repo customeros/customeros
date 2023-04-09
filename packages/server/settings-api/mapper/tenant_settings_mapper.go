@@ -392,5 +392,10 @@ func MapTenantSettingsEntityToDTO(tenantSettings *entity.TenantSettings) *map[st
 		responseMap["talkdesk"].(map[string]interface{})["state"] = "ACTIVE"
 	}
 
+	if tenantSettings != nil && tenantSettings.TikTokAccessToken != nil {
+		responseMap["tiktok"] = make(map[string]interface{})
+		responseMap["tiktok"].(map[string]interface{})["state"] = "ACTIVE"
+	}
+
 	return &responseMap
 }

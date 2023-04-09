@@ -1874,6 +1874,28 @@ const Settings: NextPage = () => {
                 />
             ),
         },
+        {
+            key: 'tiktok',
+            state: 'INACTIVE',
+            template: (data: any) => (
+                <SettingsIntegrationItem
+                    icon={'logos/tiktok.svg'}
+                    identifier={'tiktok'}
+                    name={'TikTok'}
+                    state={data.state}
+                    settingsChanged={() => {
+                        reloadRef.current = !reloadRef.current;
+                        setReload(reloadRef.current);
+                    }}
+                    fields={[
+                        {
+                            name: 'accessToken',
+                            label: 'Access Token',
+                        },
+                    ]}
+                />
+            ),
+        },
     ]);
 
     useEffect(() => {
