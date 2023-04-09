@@ -1,0 +1,11 @@
+query getContactPersonalDetailsWithOrganizations($id: ID!) {
+  contact(id: $id) {
+    ...ContactPersonalDetails
+    organizations (pagination: {limit: 99999, page: 1}) {
+      content {
+        id
+        name
+      }
+    }
+  }
+}
