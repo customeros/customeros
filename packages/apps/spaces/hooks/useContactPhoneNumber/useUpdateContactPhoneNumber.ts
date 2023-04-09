@@ -30,11 +30,12 @@ export const useUpdateContactPhoneNumber = ({
       try {
         const response = await updateContactNoteMutation({
           variables: { input: payload, contactId },
-          refetchQueries: ['GetContactCommunicationChannels'],
           optimisticResponse: {
             phoneNumberUpdateInContact: {
               __typename: 'PhoneNumber',
               ...payload,
+              e164: payload.phoneNumber,
+              rawPhoneNumber: payload.phoneNumber,
               primary: input.primary || false,
             },
           },
