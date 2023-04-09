@@ -880,6 +880,14 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 
 			tenantSettings.SalesloftApiKey = &apiKey
 
+		case "sendgrid":
+			apiKey, ok := data["apiKey"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing API key for Sendgrid integration")
+			}
+
+			tenantSettings.SendgridApiKey = &apiKey
+
 		}
 
 	}
@@ -1090,6 +1098,8 @@ func (s *tenantSettingsService) ClearIntegrationData(tenantName, identifier stri
 			tenantSettings.RetentlyApiToken = nil
 		case "salesloft":
 			tenantSettings.SalesloftApiKey = nil
+		case "sendgrid":
+			tenantSettings.SendgridApiKey = nil
 
 		}
 

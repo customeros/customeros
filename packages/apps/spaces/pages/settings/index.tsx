@@ -1730,6 +1730,28 @@ const Settings: NextPage = () => {
                 />
             ),
         },
+        {
+            key: 'sendgrid',
+            state: 'INACTIVE',
+            template: (data: any) => (
+                <SettingsIntegrationItem
+                    icon={'logos/sendgrid.svg'}
+                    identifier={'sendgrid'}
+                    name={'SendGrid'}
+                    state={data.state}
+                    settingsChanged={() => {
+                        reloadRef.current = !reloadRef.current;
+                        setReload(reloadRef.current);
+                    }}
+                    fields={[
+                        {
+                            name: 'apiKey',
+                            label: 'API Key',
+                        },
+                    ]}
+                />
+            ),
+        },
     ]);
 
     useEffect(() => {

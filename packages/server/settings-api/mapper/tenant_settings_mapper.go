@@ -362,5 +362,10 @@ func MapTenantSettingsEntityToDTO(tenantSettings *entity.TenantSettings) *map[st
 		responseMap["salesloft"].(map[string]interface{})["state"] = "ACTIVE"
 	}
 
+	if tenantSettings != nil && tenantSettings.SendgridApiKey != nil {
+		responseMap["sendgrid"] = make(map[string]interface{})
+		responseMap["sendgrid"].(map[string]interface{})["state"] = "ACTIVE"
+	}
+
 	return &responseMap
 }
