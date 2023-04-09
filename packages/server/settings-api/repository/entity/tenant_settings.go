@@ -197,6 +197,9 @@ type TenantSettings struct {
 	SlackApiToken       *string `gorm:"column:slack_api_token;type:varchar(255);" binding:"required"`
 	SlackChannelFilter  *string `gorm:"column:slack_channel_filter;type:varchar(255);" binding:"required"`
 	SlackLookbackWindow *string `gorm:"column:slack_lookback_window;type:varchar(255);" binding:"required"`
+
+	StripeAccountId *string `gorm:"column:stripe_account_id;type:varchar(255);" binding:"required"`
+	StripeSecretKey *string `gorm:"column:stripe_secret_key;type:varchar(255);" binding:"required"`
 }
 
 func (TenantSettings) TableName() string {

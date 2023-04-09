@@ -372,5 +372,10 @@ func MapTenantSettingsEntityToDTO(tenantSettings *entity.TenantSettings) *map[st
 		responseMap["slack"].(map[string]interface{})["state"] = "ACTIVE"
 	}
 
+	if tenantSettings != nil && tenantSettings.StripeAccountId != nil && tenantSettings.StripeSecretKey != nil {
+		responseMap["stripe"] = make(map[string]interface{})
+		responseMap["stripe"].(map[string]interface{})["state"] = "ACTIVE"
+	}
+
 	return &responseMap
 }

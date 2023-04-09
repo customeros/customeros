@@ -909,6 +909,19 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 				tenantSettings.SlackLookbackWindow = nil
 			}
 
+		case "stripe":
+			accountId, ok := data["accountId"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing account id for Stripe integration")
+			}
+			secretKey, ok := data["secretKey"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing secret key for Stripe integration")
+			}
+
+			tenantSettings.StripeAccountId = &accountId
+			tenantSettings.StripeSecretKey = &secretKey
+
 		}
 
 	}
@@ -1125,6 +1138,9 @@ func (s *tenantSettingsService) ClearIntegrationData(tenantName, identifier stri
 			tenantSettings.SlackApiToken = nil
 			tenantSettings.SlackChannelFilter = nil
 			tenantSettings.SlackLookbackWindow = nil
+		case "stripe":
+			tenantSettings.StripeAccountId = nil
+			tenantSettings.StripeSecretKey = nil
 
 		}
 

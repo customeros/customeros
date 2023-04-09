@@ -1782,6 +1782,32 @@ const Settings: NextPage = () => {
                 />
             ),
         },
+        {
+            key: 'stripe',
+            state: 'INACTIVE',
+            template: (data: any) => (
+                <SettingsIntegrationItem
+                    icon={'logos/stripe.svg'}
+                    identifier={'stripe'}
+                    name={'Stripe'}
+                    state={data.state}
+                    settingsChanged={() => {
+                        reloadRef.current = !reloadRef.current;
+                        setReload(reloadRef.current);
+                    }}
+                    fields={[
+                        {
+                            name: 'accountId',
+                            label: 'Account Id',
+                        },
+                        {
+                            name: 'secretKey',
+                            label: 'Secret Key',
+                        },
+                    ]}
+                />
+            ),
+        },
     ]);
 
     useEffect(() => {
