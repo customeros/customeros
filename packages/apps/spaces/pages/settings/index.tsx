@@ -1709,6 +1709,36 @@ const Settings: NextPage = () => {
             ),
         },
         {
+            key: 'salesforce',
+            state: 'INACTIVE',
+            template: (data: any) => (
+                <SettingsIntegrationItem
+                    icon={'logos/salesforce.svg'}
+                    identifier={'salesforce'}
+                    name={'Salesforce'}
+                    state={data.state}
+                    settingsChanged={() => {
+                        reloadRef.current = !reloadRef.current;
+                        setReload(reloadRef.current);
+                    }}
+                    fields={[
+                        {
+                            name: 'clientId',
+                            label: 'Client Id',
+                        },
+                        {
+                            name: 'clientSecret',
+                            label: 'Client Secret',
+                        },
+                        {
+                            name: 'refreshToken',
+                            label: 'Refresh Token',
+                        },
+                    ]}
+                />
+            ),
+        },
+        {
             key: 'salesloft',
             state: 'INACTIVE',
             template: (data: any) => (

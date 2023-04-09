@@ -357,6 +357,11 @@ func MapTenantSettingsEntityToDTO(tenantSettings *entity.TenantSettings) *map[st
 		responseMap["retently"].(map[string]interface{})["state"] = "ACTIVE"
 	}
 
+	if tenantSettings != nil && tenantSettings.SalesforceClientId != nil && tenantSettings.SalesforceClientSecret != nil && tenantSettings.SalesforceRefreshToken != nil {
+		responseMap["salesforce"] = make(map[string]interface{})
+		responseMap["salesforce"].(map[string]interface{})["state"] = "ACTIVE"
+	}
+
 	if tenantSettings != nil && tenantSettings.SalesloftApiKey != nil {
 		responseMap["salesloft"] = make(map[string]interface{})
 		responseMap["salesloft"].(map[string]interface{})["state"] = "ACTIVE"

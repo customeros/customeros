@@ -190,6 +190,10 @@ type TenantSettings struct {
 
 	RetentlyApiToken *string `gorm:"column:retently_api_token;type:varchar(255);" binding:"required"`
 
+	SalesforceClientId     *string `gorm:"column:salesforce_client_id;type:varchar(255);" binding:"required"`
+	SalesforceClientSecret *string `gorm:"column:salesforce_client_secret;type:varchar(255);" binding:"required"`
+	SalesforceRefreshToken *string `gorm:"column:salesforce_refresh_token;type:varchar(255);" binding:"required"`
+
 	SalesloftApiKey *string `gorm:"column:salesloft_api_key;type:varchar(255);" binding:"required"`
 
 	SendgridApiKey *string `gorm:"column:sendgrid_api_key;type:varchar(255);" binding:"required"`

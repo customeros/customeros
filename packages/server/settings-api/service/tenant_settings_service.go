@@ -872,6 +872,24 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 
 			tenantSettings.RetentlyApiToken = &apiToken
 
+		case "salesforce":
+			clientId, ok := data["clientId"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing client id for Salesforce integration")
+			}
+			clientSecret, ok := data["clientSecret"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing client secret for Salesforce integration")
+			}
+			refreshToken, ok := data["refreshToken"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing refresh token for Salesforce integration")
+			}
+
+			tenantSettings.SalesforceClientId = &clientId
+			tenantSettings.SalesforceClientSecret = &clientSecret
+			tenantSettings.SalesforceRefreshToken = &refreshToken
+
 		case "salesloft":
 			apiKey, ok := data["apiKey"].(string)
 			if !ok {
@@ -1230,6 +1248,10 @@ func (s *tenantSettingsService) ClearIntegrationData(tenantName, identifier stri
 			tenantSettings.RecurlyApiKey = nil
 		case "retently":
 			tenantSettings.RetentlyApiToken = nil
+		case "salesforce":
+			tenantSettings.SalesforceClientId = nil
+			tenantSettings.SalesforceClientSecret = nil
+			tenantSettings.SalesforceRefreshToken = nil
 		case "salesloft":
 			tenantSettings.SalesloftApiKey = nil
 		case "sendgrid":
