@@ -941,6 +941,7 @@ export type Mutation = {
   contactGroupDeleteAndUnlinkAllContacts: Result;
   contactGroupRemoveContact: Result;
   contactGroupUpdate: ContactGroup;
+  contactUpsertInEventStore: Scalars['Int'];
   contact_AddOrganizationById: Contact;
   contact_AddTagById: Contact;
   contact_Create: Contact;
@@ -1046,6 +1047,11 @@ export type MutationContactGroupRemoveContactArgs = {
 
 export type MutationContactGroupUpdateArgs = {
   input: ContactGroupUpdateInput;
+};
+
+
+export type MutationContactUpsertInEventStoreArgs = {
+  size: Scalars['Int'];
 };
 
 
@@ -2141,13 +2147,6 @@ export type AddEmailToContactMutationVariables = Exact<{
 
 export type AddEmailToContactMutation = { __typename?: 'Mutation', emailMergeToContact: { __typename?: 'Email', label?: EmailLabel | null, id: string, primary: boolean, email?: string | null } };
 
-export type AddOrganizationToContactMutationVariables = Exact<{
-  input: ContactOrganizationInput;
-}>;
-
-
-export type AddOrganizationToContactMutation = { __typename?: 'Mutation', contact_AddOrganizationById: { __typename?: 'Contact', id: string, source: DataSource, firstName?: string | null, lastName?: string | null, name?: string | null, jobRoles: Array<{ __typename?: 'JobRole', jobTitle?: string | null, primary: boolean, id: string, organization?: { __typename?: 'Organization', id: string, name: string } | null }>, tags?: Array<{ __typename?: 'Tag', id: string, name: string, createdAt: any, source: DataSource }> | null } };
-
 export type AddPhoneToContactMutationVariables = Exact<{
   contactId: Scalars['ID'];
   input: PhoneNumberInput;
@@ -2162,6 +2161,13 @@ export type AddTagToContactMutationVariables = Exact<{
 
 
 export type AddTagToContactMutation = { __typename?: 'Mutation', contact_AddTagById: { __typename?: 'Contact', id: string, tags?: Array<{ __typename?: 'Tag', id: string, name: string, createdAt: any, source: DataSource }> | null } };
+
+export type AttachOrganizationToContactMutationVariables = Exact<{
+  input: ContactOrganizationInput;
+}>;
+
+
+export type AttachOrganizationToContactMutation = { __typename?: 'Mutation', contact_AddOrganizationById: { __typename?: 'Contact', id: string, source: DataSource, firstName?: string | null, lastName?: string | null, name?: string | null, jobRoles: Array<{ __typename?: 'JobRole', jobTitle?: string | null, primary: boolean, id: string, organization?: { __typename?: 'Organization', id: string, name: string } | null }>, tags?: Array<{ __typename?: 'Tag', id: string, name: string, createdAt: any, source: DataSource }> | null } };
 
 export type CreateContactMutationVariables = Exact<{
   input: ContactInput;
@@ -2269,6 +2275,13 @@ export type GetContactPersonalDetailsQueryVariables = Exact<{
 
 
 export type GetContactPersonalDetailsQuery = { __typename?: 'Query', contact?: { __typename?: 'Contact', id: string, source: DataSource, firstName?: string | null, lastName?: string | null, name?: string | null, owner?: { __typename?: 'User', id: string, firstName: string, lastName: string } | null, jobRoles: Array<{ __typename?: 'JobRole', jobTitle?: string | null, primary: boolean, id: string, organization?: { __typename?: 'Organization', id: string, name: string } | null }>, tags?: Array<{ __typename?: 'Tag', id: string, name: string, createdAt: any, source: DataSource }> | null } | null };
+
+export type GetContactPersonalDetailsWithOrganizationsQueryVariables = Exact<{
+  id: Scalars['ID'];
+}>;
+
+
+export type GetContactPersonalDetailsWithOrganizationsQuery = { __typename?: 'Query', contact?: { __typename?: 'Contact', id: string, source: DataSource, firstName?: string | null, lastName?: string | null, name?: string | null, organizations: { __typename?: 'OrganizationPage', content: Array<{ __typename?: 'Organization', id: string, name: string }> }, jobRoles: Array<{ __typename?: 'JobRole', jobTitle?: string | null, primary: boolean, id: string, organization?: { __typename?: 'Organization', id: string, name: string } | null }>, tags?: Array<{ __typename?: 'Tag', id: string, name: string, createdAt: any, source: DataSource }> | null } | null };
 
 export type GetContactTagsQueryVariables = Exact<{
   id: Scalars['ID'];
@@ -2931,39 +2944,6 @@ export function useAddEmailToContactMutation(baseOptions?: Apollo.MutationHookOp
 export type AddEmailToContactMutationHookResult = ReturnType<typeof useAddEmailToContactMutation>;
 export type AddEmailToContactMutationResult = Apollo.MutationResult<AddEmailToContactMutation>;
 export type AddEmailToContactMutationOptions = Apollo.BaseMutationOptions<AddEmailToContactMutation, AddEmailToContactMutationVariables>;
-export const AddOrganizationToContactDocument = gql`
-    mutation addOrganizationToContact($input: ContactOrganizationInput!) {
-  contact_AddOrganizationById(input: $input) {
-    ...ContactPersonalDetails
-  }
-}
-    ${ContactPersonalDetailsFragmentDoc}`;
-export type AddOrganizationToContactMutationFn = Apollo.MutationFunction<AddOrganizationToContactMutation, AddOrganizationToContactMutationVariables>;
-
-/**
- * __useAddOrganizationToContactMutation__
- *
- * To run a mutation, you first call `useAddOrganizationToContactMutation` within a React component and pass it any options that fit your needs.
- * When your component renders, `useAddOrganizationToContactMutation` returns a tuple that includes:
- * - A mutate function that you can call at any time to execute the mutation
- * - An object with fields that represent the current status of the mutation's execution
- *
- * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
- *
- * @example
- * const [addOrganizationToContactMutation, { data, loading, error }] = useAddOrganizationToContactMutation({
- *   variables: {
- *      input: // value for 'input'
- *   },
- * });
- */
-export function useAddOrganizationToContactMutation(baseOptions?: Apollo.MutationHookOptions<AddOrganizationToContactMutation, AddOrganizationToContactMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<AddOrganizationToContactMutation, AddOrganizationToContactMutationVariables>(AddOrganizationToContactDocument, options);
-      }
-export type AddOrganizationToContactMutationHookResult = ReturnType<typeof useAddOrganizationToContactMutation>;
-export type AddOrganizationToContactMutationResult = Apollo.MutationResult<AddOrganizationToContactMutation>;
-export type AddOrganizationToContactMutationOptions = Apollo.BaseMutationOptions<AddOrganizationToContactMutation, AddOrganizationToContactMutationVariables>;
 export const AddPhoneToContactDocument = gql`
     mutation addPhoneToContact($contactId: ID!, $input: PhoneNumberInput!) {
   phoneNumberMergeToContact(contactId: $contactId, input: $input) {
@@ -3035,6 +3015,39 @@ export function useAddTagToContactMutation(baseOptions?: Apollo.MutationHookOpti
 export type AddTagToContactMutationHookResult = ReturnType<typeof useAddTagToContactMutation>;
 export type AddTagToContactMutationResult = Apollo.MutationResult<AddTagToContactMutation>;
 export type AddTagToContactMutationOptions = Apollo.BaseMutationOptions<AddTagToContactMutation, AddTagToContactMutationVariables>;
+export const AttachOrganizationToContactDocument = gql`
+    mutation attachOrganizationToContact($input: ContactOrganizationInput!) {
+  contact_AddOrganizationById(input: $input) {
+    ...ContactPersonalDetails
+  }
+}
+    ${ContactPersonalDetailsFragmentDoc}`;
+export type AttachOrganizationToContactMutationFn = Apollo.MutationFunction<AttachOrganizationToContactMutation, AttachOrganizationToContactMutationVariables>;
+
+/**
+ * __useAttachOrganizationToContactMutation__
+ *
+ * To run a mutation, you first call `useAttachOrganizationToContactMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useAttachOrganizationToContactMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [attachOrganizationToContactMutation, { data, loading, error }] = useAttachOrganizationToContactMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useAttachOrganizationToContactMutation(baseOptions?: Apollo.MutationHookOptions<AttachOrganizationToContactMutation, AttachOrganizationToContactMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<AttachOrganizationToContactMutation, AttachOrganizationToContactMutationVariables>(AttachOrganizationToContactDocument, options);
+      }
+export type AttachOrganizationToContactMutationHookResult = ReturnType<typeof useAttachOrganizationToContactMutation>;
+export type AttachOrganizationToContactMutationResult = Apollo.MutationResult<AttachOrganizationToContactMutation>;
+export type AttachOrganizationToContactMutationOptions = Apollo.BaseMutationOptions<AttachOrganizationToContactMutation, AttachOrganizationToContactMutationVariables>;
 export const CreateContactDocument = gql`
     mutation createContact($input: ContactInput!) {
   contact_Create(input: $input) {
@@ -3554,6 +3567,47 @@ export function useGetContactPersonalDetailsLazyQuery(baseOptions?: Apollo.LazyQ
 export type GetContactPersonalDetailsQueryHookResult = ReturnType<typeof useGetContactPersonalDetailsQuery>;
 export type GetContactPersonalDetailsLazyQueryHookResult = ReturnType<typeof useGetContactPersonalDetailsLazyQuery>;
 export type GetContactPersonalDetailsQueryResult = Apollo.QueryResult<GetContactPersonalDetailsQuery, GetContactPersonalDetailsQueryVariables>;
+export const GetContactPersonalDetailsWithOrganizationsDocument = gql`
+    query getContactPersonalDetailsWithOrganizations($id: ID!) {
+  contact(id: $id) {
+    ...ContactPersonalDetails
+    organizations(pagination: {limit: 99999, page: 1}) {
+      content {
+        id
+        name
+      }
+    }
+  }
+}
+    ${ContactPersonalDetailsFragmentDoc}`;
+
+/**
+ * __useGetContactPersonalDetailsWithOrganizationsQuery__
+ *
+ * To run a query within a React component, call `useGetContactPersonalDetailsWithOrganizationsQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetContactPersonalDetailsWithOrganizationsQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetContactPersonalDetailsWithOrganizationsQuery({
+ *   variables: {
+ *      id: // value for 'id'
+ *   },
+ * });
+ */
+export function useGetContactPersonalDetailsWithOrganizationsQuery(baseOptions: Apollo.QueryHookOptions<GetContactPersonalDetailsWithOrganizationsQuery, GetContactPersonalDetailsWithOrganizationsQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<GetContactPersonalDetailsWithOrganizationsQuery, GetContactPersonalDetailsWithOrganizationsQueryVariables>(GetContactPersonalDetailsWithOrganizationsDocument, options);
+      }
+export function useGetContactPersonalDetailsWithOrganizationsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetContactPersonalDetailsWithOrganizationsQuery, GetContactPersonalDetailsWithOrganizationsQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<GetContactPersonalDetailsWithOrganizationsQuery, GetContactPersonalDetailsWithOrganizationsQueryVariables>(GetContactPersonalDetailsWithOrganizationsDocument, options);
+        }
+export type GetContactPersonalDetailsWithOrganizationsQueryHookResult = ReturnType<typeof useGetContactPersonalDetailsWithOrganizationsQuery>;
+export type GetContactPersonalDetailsWithOrganizationsLazyQueryHookResult = ReturnType<typeof useGetContactPersonalDetailsWithOrganizationsLazyQuery>;
+export type GetContactPersonalDetailsWithOrganizationsQueryResult = Apollo.QueryResult<GetContactPersonalDetailsWithOrganizationsQuery, GetContactPersonalDetailsWithOrganizationsQueryVariables>;
 export const GetContactTagsDocument = gql`
     query GetContactTags($id: ID!) {
   contact(id: $id) {
