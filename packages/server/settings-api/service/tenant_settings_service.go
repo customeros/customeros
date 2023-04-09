@@ -856,6 +856,14 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 			tenantSettings.RecruiteeCompanyId = &companyId
 			tenantSettings.RecruiteeApiKey = &apiKey
 
+		case "recurly":
+			apiKey, ok := data["apiKey"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing API key for Recurly integration")
+			}
+
+			tenantSettings.RecurlyApiKey = &apiKey
+
 		}
 
 	}
@@ -1060,6 +1068,8 @@ func (s *tenantSettingsService) ClearIntegrationData(tenantName, identifier stri
 		case "recruitee":
 			tenantSettings.RecruiteeCompanyId = nil
 			tenantSettings.RecruiteeApiKey = nil
+		case "recurly":
+			tenantSettings.RecurlyApiKey = nil
 
 		}
 

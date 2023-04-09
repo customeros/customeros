@@ -347,5 +347,10 @@ func MapTenantSettingsEntityToDTO(tenantSettings *entity.TenantSettings) *map[st
 		responseMap["recruitee"].(map[string]interface{})["state"] = "ACTIVE"
 	}
 
+	if tenantSettings != nil && tenantSettings.RecurlyApiKey != nil {
+		responseMap["recurly"] = make(map[string]interface{})
+		responseMap["recurly"].(map[string]interface{})["state"] = "ACTIVE"
+	}
+
 	return &responseMap
 }

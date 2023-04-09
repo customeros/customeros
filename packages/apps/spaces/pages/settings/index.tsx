@@ -1664,6 +1664,28 @@ const Settings: NextPage = () => {
                 />
             ),
         },
+        {
+            key: 'recurly',
+            state: 'INACTIVE',
+            template: (data: any) => (
+                <SettingsIntegrationItem
+                    icon={'logos/recurly.svg'}
+                    identifier={'recurly'}
+                    name={'Recurly'}
+                    state={data.state}
+                    settingsChanged={() => {
+                        reloadRef.current = !reloadRef.current;
+                        setReload(reloadRef.current);
+                    }}
+                    fields={[
+                        {
+                            name: 'apiKey',
+                            label: 'API Key',
+                        },
+                    ]}
+                />
+            ),
+        },
     ]);
 
     useEffect(() => {
