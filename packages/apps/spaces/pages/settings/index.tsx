@@ -1616,6 +1616,28 @@ const Settings: NextPage = () => {
                 />
             ),
         },
+        {
+            key: 'recharge',
+            state: 'INACTIVE',
+            template: (data: any) => (
+                <SettingsIntegrationItem
+                    icon={'logos/recharge.svg'}
+                    identifier={'recharge'}
+                    name={'Recharge'}
+                    state={data.state}
+                    settingsChanged={() => {
+                        reloadRef.current = !reloadRef.current;
+                        setReload(reloadRef.current);
+                    }}
+                    fields={[
+                        {
+                            name: 'apiToken',
+                            label: 'API Token',
+                        },
+                    ]}
+                />
+            ),
+        },
     ]);
 
     useEffect(() => {

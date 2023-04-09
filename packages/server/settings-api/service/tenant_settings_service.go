@@ -835,6 +835,14 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 			tenantSettings.QuickBooksRealmId = &realmId
 			tenantSettings.QuickBooksRefreshToken = &refreshToken
 
+		case "recharge":
+			apiToken, ok := data["apiToken"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing API token for Recharge integration")
+			}
+
+			tenantSettings.RechargeApiToken = &apiToken
+
 		}
 
 	}
@@ -1034,6 +1042,8 @@ func (s *tenantSettingsService) ClearIntegrationData(tenantName, identifier stri
 			tenantSettings.QuickBooksClientSecret = nil
 			tenantSettings.QuickBooksRealmId = nil
 			tenantSettings.QuickBooksRefreshToken = nil
+		case "recharge":
+			tenantSettings.RechargeApiToken = nil
 
 		}
 

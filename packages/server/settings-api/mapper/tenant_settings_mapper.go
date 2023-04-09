@@ -337,5 +337,10 @@ func MapTenantSettingsEntityToDTO(tenantSettings *entity.TenantSettings) *map[st
 		responseMap["quickbooks"].(map[string]interface{})["state"] = "ACTIVE"
 	}
 
+	if tenantSettings != nil && tenantSettings.RechargeApiToken != nil {
+		responseMap["recharge"] = make(map[string]interface{})
+		responseMap["recharge"].(map[string]interface{})["state"] = "ACTIVE"
+	}
+
 	return &responseMap
 }

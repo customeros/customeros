@@ -180,6 +180,8 @@ type TenantSettings struct {
 	QuickBooksClientSecret *string `gorm:"column:quick_books_client_secret;type:varchar(255);" binding:"required"`
 	QuickBooksRealmId      *string `gorm:"column:quick_books_realm_id;type:varchar(255);" binding:"required"`
 	QuickBooksRefreshToken *string `gorm:"column:quick_books_refresh_token;type:varchar(255);" binding:"required"`
+
+	RechargeApiToken *string `gorm:"column:recharge_api_token;type:varchar(255);" binding:"required"`
 }
 
 func (TenantSettings) TableName() string {
