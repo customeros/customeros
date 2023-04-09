@@ -352,5 +352,10 @@ func MapTenantSettingsEntityToDTO(tenantSettings *entity.TenantSettings) *map[st
 		responseMap["recurly"].(map[string]interface{})["state"] = "ACTIVE"
 	}
 
+	if tenantSettings != nil && tenantSettings.RetentlyApiToken != nil {
+		responseMap["retently"] = make(map[string]interface{})
+		responseMap["retently"].(map[string]interface{})["state"] = "ACTIVE"
+	}
+
 	return &responseMap
 }

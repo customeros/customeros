@@ -864,6 +864,14 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 
 			tenantSettings.RecurlyApiKey = &apiKey
 
+		case "retently":
+			apiToken, ok := data["apiToken"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing API token for Retently integration")
+			}
+
+			tenantSettings.RetentlyApiToken = &apiToken
+
 		}
 
 	}
@@ -1070,6 +1078,8 @@ func (s *tenantSettingsService) ClearIntegrationData(tenantName, identifier stri
 			tenantSettings.RecruiteeApiKey = nil
 		case "recurly":
 			tenantSettings.RecurlyApiKey = nil
+		case "retently":
+			tenantSettings.RetentlyApiToken = nil
 
 		}
 

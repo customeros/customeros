@@ -187,6 +187,8 @@ type TenantSettings struct {
 	RecruiteeApiKey    *string `gorm:"column:recruitee_api_key;type:varchar(255);" binding:"required"`
 
 	RecurlyApiKey *string `gorm:"column:recurly_api_key;type:varchar(255);" binding:"required"`
+
+	RetentlyApiToken *string `gorm:"column:retently_api_token;type:varchar(255);" binding:"required"`
 }
 
 func (TenantSettings) TableName() string {
