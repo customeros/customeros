@@ -28,13 +28,13 @@ func NewCreatePhoneNumberCommandHandler(log logger.Logger, cfg *config.Config, e
 	return &createPhoneNumberCommandHandler{log: log, cfg: cfg, es: es}
 }
 
-func (c *createPhoneNumberCommandHandler) Handle(ctx context.Context, command *CreatePhoneNumberCommand) error {
+func (h *createPhoneNumberCommandHandler) Handle(ctx context.Context, command *CreatePhoneNumberCommand) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "createPhoneNumberCommandHandler.Handle")
 	defer span.Finish()
 	span.LogFields(log.String("Tenant", command.Tenant), log.String("AggregateID", command.GetAggregateID()))
 
 	phoneNumberAggregate := aggregate.NewPhoneNumberAggregateWithTenantAndID(command.Tenant, command.AggregateID)
-	err := c.es.Exists(ctx, phoneNumberAggregate.GetID())
+	err := h.es.Exists(ctx, phoneNumberAggregate.GetID())
 	if err != nil && !errors.Is(err, esdb.ErrStreamNotFound) {
 		return err
 	}
@@ -44,5 +44,5 @@ func (c *createPhoneNumberCommandHandler) Handle(ctx context.Context, command *C
 	}
 
 	span.LogFields(log.String("PhoneNumber", phoneNumberAggregate.PhoneNumber.String()))
-	return c.es.Save(ctx, phoneNumberAggregate)
+	return h.es.Save(ctx, phoneNumberAggregate)
 }

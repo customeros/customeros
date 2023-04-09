@@ -2,12 +2,13 @@ package events
 
 import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/validator"
 	"time"
 )
 
 const (
-	PhoneNumberCreated = "PHONE_NUMBER_CREATED"
-	PhoneNumberUpdated = "PHONE_NUMBER_UPDATED"
+	PhoneNumberCreated = "V1_PHONE_NUMBER_CREATED"
+	PhoneNumberUpdated = "V1_PHONE_NUMBER_UPDATED"
 )
 
 type PhoneNumberCreatedEvent struct {
@@ -30,6 +31,11 @@ func NewPhoneNumberCreatedEvent(aggregate eventstore.Aggregate, tenant, rawPhone
 		CreatedAt:      createdAt,
 		UpdatedAt:      updatedAt,
 	}
+
+	if err := validator.GetValidator().Struct(eventData); err != nil {
+		return eventstore.Event{}, err
+	}
+
 	event := eventstore.NewBaseEvent(aggregate, PhoneNumberCreated)
 	if err := event.SetJsonData(&eventData); err != nil {
 		return eventstore.Event{}, err
@@ -49,6 +55,11 @@ func NewPhoneNumberUpdatedEvent(aggregate eventstore.Aggregate, tenant, sourceOf
 		SourceOfTruth: sourceOfTruth,
 		UpdatedAt:     updatedAt,
 	}
+
+	if err := validator.GetValidator().Struct(eventData); err != nil {
+		return eventstore.Event{}, err
+	}
+
 	event := eventstore.NewBaseEvent(aggregate, PhoneNumberUpdated)
 	if err := event.SetJsonData(&eventData); err != nil {
 		return eventstore.Event{}, err

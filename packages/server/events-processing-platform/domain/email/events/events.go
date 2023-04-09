@@ -2,12 +2,13 @@ package events
 
 import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/validator"
 	"time"
 )
 
 const (
-	EmailCreated = "EMAIL_CREATED"
-	EmailUpdated = "EMAIL_UPDATED"
+	EmailCreated = "V1_EMAIL_CREATED"
+	EmailUpdated = "V1_EMAIL_UPDATED"
 )
 
 type EmailCreatedEvent struct {
@@ -30,6 +31,11 @@ func NewEmailCreatedEvent(aggregate eventstore.Aggregate, tenant, rawEmail, sour
 		CreatedAt:     createdAt,
 		UpdatedAt:     updatedAt,
 	}
+
+	if err := validator.GetValidator().Struct(eventData); err != nil {
+		return eventstore.Event{}, err
+	}
+
 	event := eventstore.NewBaseEvent(aggregate, EmailCreated)
 	if err := event.SetJsonData(&eventData); err != nil {
 		return eventstore.Event{}, err
@@ -38,7 +44,7 @@ func NewEmailCreatedEvent(aggregate eventstore.Aggregate, tenant, rawEmail, sour
 }
 
 type EmailUpdatedEvent struct {
-	Tenant        string    `json:"tenant"`
+	Tenant        string    `json:"tenant" validate:"required"`
 	SourceOfTruth string    `json:"sourceOfTruth"`
 	UpdatedAt     time.Time `json:"updatedAt"`
 }
@@ -49,6 +55,11 @@ func NewEmailUpdatedEvent(aggregate eventstore.Aggregate, tenant, sourceOfTruth 
 		SourceOfTruth: sourceOfTruth,
 		UpdatedAt:     updatedAt,
 	}
+
+	if err := validator.GetValidator().Struct(eventData); err != nil {
+		return eventstore.Event{}, err
+	}
+
 	event := eventstore.NewBaseEvent(aggregate, EmailUpdated)
 	if err := event.SetJsonData(&eventData); err != nil {
 		return eventstore.Event{}, err
