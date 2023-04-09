@@ -212,6 +212,8 @@ type TenantSettings struct {
 	TodoistApiToken *string `gorm:"column:todoist_api_token;type:varchar(255);" binding:"required"`
 
 	TypeformApiToken *string `gorm:"column:typeform_api_token;type:varchar(255);" binding:"required"`
+
+	VittallyApiKey *string `gorm:"column:vittally_api_key;type:varchar(255);" binding:"required"`
 }
 
 func (TenantSettings) TableName() string {

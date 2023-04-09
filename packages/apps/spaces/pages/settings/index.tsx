@@ -1940,6 +1940,28 @@ const Settings: NextPage = () => {
                 />
             ),
         },
+        {
+            key: 'vittally',
+            state: 'INACTIVE',
+            template: (data: any) => (
+                <SettingsIntegrationItem
+                    icon={'logos/openline_small.svg'}
+                    identifier={'vittally'}
+                    name={'Vittally'}
+                    state={data.state}
+                    settingsChanged={() => {
+                        reloadRef.current = !reloadRef.current;
+                        setReload(reloadRef.current);
+                    }}
+                    fields={[
+                        {
+                            name: 'apiKey',
+                            label: 'API Key',
+                        },
+                    ]}
+                />
+            ),
+        },
     ]);
 
     useEffect(() => {

@@ -970,6 +970,14 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 
 			tenantSettings.TypeformApiToken = &apiToken
 
+		case "vittally":
+			apiKey, ok := data["apiKey"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing API key for Vittally integration")
+			}
+
+			tenantSettings.VittallyApiKey = &apiKey
+
 		}
 
 	}
@@ -1201,6 +1209,8 @@ func (s *tenantSettingsService) ClearIntegrationData(tenantName, identifier stri
 			tenantSettings.TodoistApiToken = nil
 		case "typeform":
 			tenantSettings.TypeformApiToken = nil
+		case "vittally":
+			tenantSettings.VittallyApiKey = nil
 
 		}
 
