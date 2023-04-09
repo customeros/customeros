@@ -1,29 +1,28 @@
 import React from 'react';
 import { IconButton } from './IconButton';
+import { Plus } from '../icons';
 
 interface DeleteIconButtonProps {
-  onDelete: () => void;
+  onAdd: () => void;
   style?: any;
 }
 
-export const DeleteIconButton: React.FC<DeleteIconButtonProps> = ({
-  onDelete,
+export const AddIconButton: React.FC<DeleteIconButtonProps> = ({
+  onAdd,
   style,
 }) => {
   return (
     <IconButton
       size={'xxxxs'}
-      mode='danger'
+      mode='text'
       style={{
-        width: '12px',
-        height: '12px',
         display: 'flex',
         justifyContent: 'center',
         alignItems: 'center',
         ...style,
       }}
-      onClick={onDelete}
-      icon={<span>-</span>}
+      onClick={onAdd}
+      icon={<Plus style={{ transform: 'scale(0.6)' }} />}
     />
   );
 };
