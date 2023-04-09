@@ -277,6 +277,26 @@ func MapTenantSettingsEntityToDTO(tenantSettings *entity.TenantSettings) *map[st
 		responseMap["notion"].(map[string]interface{})["state"] = "ACTIVE"
 	}
 
+	if tenantSettings != nil && tenantSettings.OrbApiKey != nil {
+		responseMap["orb"] = make(map[string]interface{})
+		responseMap["orb"].(map[string]interface{})["state"] = "ACTIVE"
+	}
+
+	if tenantSettings != nil && tenantSettings.OrbitApiKey != nil {
+		responseMap["orbit"] = make(map[string]interface{})
+		responseMap["orbit"].(map[string]interface{})["state"] = "ACTIVE"
+	}
+
+	if tenantSettings != nil && tenantSettings.PagerDutyApikey != nil {
+		responseMap["pagerduty"] = make(map[string]interface{})
+		responseMap["pagerduty"].(map[string]interface{})["state"] = "ACTIVE"
+	}
+
+	if tenantSettings != nil && tenantSettings.PaypalTransactionClientId != nil && tenantSettings.PaypalTransactionSecret != nil {
+		responseMap["paypaltransaction"] = make(map[string]interface{})
+		responseMap["paypaltransaction"].(map[string]interface{})["state"] = "ACTIVE"
+	}
+
 	if tenantSettings != nil && tenantSettings.PaystackSecretKey != nil {
 		responseMap["paystack"] = make(map[string]interface{})
 		responseMap["paystack"].(map[string]interface{})["state"] = "ACTIVE"
@@ -300,6 +320,116 @@ func MapTenantSettingsEntityToDTO(tenantSettings *entity.TenantSettings) *map[st
 	if tenantSettings != nil && tenantSettings.PlausibleSiteId != nil && tenantSettings.PlausibleApiKey != nil {
 		responseMap["plausible"] = make(map[string]interface{})
 		responseMap["plausible"].(map[string]interface{})["state"] = "ACTIVE"
+	}
+
+	if tenantSettings != nil && tenantSettings.PostHogApiKey != nil {
+		responseMap["posthog"] = make(map[string]interface{})
+		responseMap["posthog"].(map[string]interface{})["state"] = "ACTIVE"
+	}
+
+	if tenantSettings != nil && tenantSettings.QualarooApiKey != nil && tenantSettings.QualarooApiToken != nil {
+		responseMap["qualaroo"] = make(map[string]interface{})
+		responseMap["qualaroo"].(map[string]interface{})["state"] = "ACTIVE"
+	}
+
+	if tenantSettings != nil && tenantSettings.QuickBooksClientId != nil && tenantSettings.QuickBooksClientSecret != nil && tenantSettings.QuickBooksRealmId != nil && tenantSettings.QuickBooksRefreshToken != nil {
+		responseMap["quickbooks"] = make(map[string]interface{})
+		responseMap["quickbooks"].(map[string]interface{})["state"] = "ACTIVE"
+	}
+
+	if tenantSettings != nil && tenantSettings.RechargeApiToken != nil {
+		responseMap["recharge"] = make(map[string]interface{})
+		responseMap["recharge"].(map[string]interface{})["state"] = "ACTIVE"
+	}
+
+	if tenantSettings != nil && tenantSettings.RecruiteeCompanyId != nil && tenantSettings.RecruiteeApiKey != nil {
+		responseMap["recruitee"] = make(map[string]interface{})
+		responseMap["recruitee"].(map[string]interface{})["state"] = "ACTIVE"
+	}
+
+	if tenantSettings != nil && tenantSettings.RecurlyApiKey != nil {
+		responseMap["recurly"] = make(map[string]interface{})
+		responseMap["recurly"].(map[string]interface{})["state"] = "ACTIVE"
+	}
+
+	if tenantSettings != nil && tenantSettings.RetentlyApiToken != nil {
+		responseMap["retently"] = make(map[string]interface{})
+		responseMap["retently"].(map[string]interface{})["state"] = "ACTIVE"
+	}
+
+	if tenantSettings != nil && tenantSettings.SalesforceClientId != nil && tenantSettings.SalesforceClientSecret != nil && tenantSettings.SalesforceRefreshToken != nil {
+		responseMap["salesforce"] = make(map[string]interface{})
+		responseMap["salesforce"].(map[string]interface{})["state"] = "ACTIVE"
+	}
+
+	if tenantSettings != nil && tenantSettings.SalesloftApiKey != nil {
+		responseMap["salesloft"] = make(map[string]interface{})
+		responseMap["salesloft"].(map[string]interface{})["state"] = "ACTIVE"
+	}
+
+	if tenantSettings != nil && tenantSettings.SendgridApiKey != nil {
+		responseMap["sendgrid"] = make(map[string]interface{})
+		responseMap["sendgrid"].(map[string]interface{})["state"] = "ACTIVE"
+	}
+
+	if tenantSettings != nil && tenantSettings.SlackApiToken != nil && tenantSettings.SlackChannelFilter != nil {
+		responseMap["slack"] = make(map[string]interface{})
+		responseMap["slack"].(map[string]interface{})["state"] = "ACTIVE"
+	}
+
+	if tenantSettings != nil && tenantSettings.StripeAccountId != nil && tenantSettings.StripeSecretKey != nil {
+		responseMap["stripe"] = make(map[string]interface{})
+		responseMap["stripe"].(map[string]interface{})["state"] = "ACTIVE"
+	}
+
+	if tenantSettings != nil && tenantSettings.SurveySparrowAccessToken != nil {
+		responseMap["surveysparrow"] = make(map[string]interface{})
+		responseMap["surveysparrow"].(map[string]interface{})["state"] = "ACTIVE"
+	}
+
+	if tenantSettings != nil && tenantSettings.SurveyMonkeyAccessToken != nil {
+		responseMap["surveymonkey"] = make(map[string]interface{})
+		responseMap["surveymonkey"].(map[string]interface{})["state"] = "ACTIVE"
+	}
+
+	if tenantSettings != nil && tenantSettings.TalkdeskApiKey != nil {
+		responseMap["talkdesk"] = make(map[string]interface{})
+		responseMap["talkdesk"].(map[string]interface{})["state"] = "ACTIVE"
+	}
+
+	if tenantSettings != nil && tenantSettings.TikTokAccessToken != nil {
+		responseMap["tiktok"] = make(map[string]interface{})
+		responseMap["tiktok"].(map[string]interface{})["state"] = "ACTIVE"
+	}
+
+	if tenantSettings != nil && tenantSettings.TodoistApiToken != nil {
+		responseMap["todoist"] = make(map[string]interface{})
+		responseMap["todoist"].(map[string]interface{})["state"] = "ACTIVE"
+	}
+
+	if tenantSettings != nil && tenantSettings.TypeformApiToken != nil {
+		responseMap["typeform"] = make(map[string]interface{})
+		responseMap["typeform"].(map[string]interface{})["state"] = "ACTIVE"
+	}
+
+	if tenantSettings != nil && tenantSettings.VittallyApiKey != nil {
+		responseMap["vittally"] = make(map[string]interface{})
+		responseMap["vittally"].(map[string]interface{})["state"] = "ACTIVE"
+	}
+
+	if tenantSettings != nil && tenantSettings.WrikeAccessToken != nil && tenantSettings.WrikeHostUrl != nil {
+		responseMap["wrike"] = make(map[string]interface{})
+		responseMap["wrike"].(map[string]interface{})["state"] = "ACTIVE"
+	}
+
+	if tenantSettings != nil && tenantSettings.XeroClientId != nil && tenantSettings.XeroClientSecret != nil && tenantSettings.XeroTenantId != nil && tenantSettings.XeroScopes != nil {
+		responseMap["xero"] = make(map[string]interface{})
+		responseMap["xero"].(map[string]interface{})["state"] = "ACTIVE"
+	}
+
+	if tenantSettings != nil && tenantSettings.ZenefitsToken != nil {
+		responseMap["zenefits"] = make(map[string]interface{})
+		responseMap["zenefits"].(map[string]interface{})["state"] = "ACTIVE"
 	}
 
 	return &responseMap

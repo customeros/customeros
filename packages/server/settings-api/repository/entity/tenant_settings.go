@@ -149,6 +149,15 @@ type TenantSettings struct {
 	NotionPublicClientId      *string `gorm:"column:notion_public_client_id;type:varchar(255);" binding:"required"`
 	NotionPublicClientSecret  *string `gorm:"column:notion_public_client_secret;type:varchar(255);" binding:"required"`
 
+	OrbApiKey *string `gorm:"column:orb_api_key;type:varchar(255);" binding:"required"`
+
+	OrbitApiKey *string `gorm:"column:orbit_api_key;type:varchar(255);" binding:"required"`
+
+	PagerDutyApikey *string `gorm:"column:pager_duty_apikey;type:varchar(255);" binding:"required"`
+
+	PaypalTransactionClientId *string `gorm:"column:paypal_transaction_client_id;type:varchar(255);" binding:"required"`
+	PaypalTransactionSecret   *string `gorm:"column:paypal_transaction_secret;type:varchar(255);" binding:"required"`
+
 	PaystackSecretKey      *string `gorm:"column:paystack_secret_key;type:varchar(255);" binding:"required"`
 	PaystackLookbackWindow *string `gorm:"column:paystack_lookback_window;type:varchar(255);" binding:"required"`
 
@@ -160,6 +169,65 @@ type TenantSettings struct {
 
 	PlausibleApiKey *string `gorm:"column:plausible_api_key;type:varchar(255);" binding:"required"`
 	PlausibleSiteId *string `gorm:"column:plausible_site_id;type:varchar(255);" binding:"required"`
+
+	PostHogApiKey  *string `gorm:"column:post_hog_api_key;type:varchar(255);" binding:"required"`
+	PostHogBaseUrl *string `gorm:"column:post_hog_base_url;type:varchar(255);" binding:"required"`
+
+	QualarooApiKey   *string `gorm:"column:qualaroo_api_key;type:varchar(255);" binding:"required"`
+	QualarooApiToken *string `gorm:"column:qualaroo_api_token;type:varchar(255);" binding:"required"`
+
+	QuickBooksClientId     *string `gorm:"column:quick_books_client_id;type:varchar(255);" binding:"required"`
+	QuickBooksClientSecret *string `gorm:"column:quick_books_client_secret;type:varchar(255);" binding:"required"`
+	QuickBooksRealmId      *string `gorm:"column:quick_books_realm_id;type:varchar(255);" binding:"required"`
+	QuickBooksRefreshToken *string `gorm:"column:quick_books_refresh_token;type:varchar(255);" binding:"required"`
+
+	RechargeApiToken *string `gorm:"column:recharge_api_token;type:varchar(255);" binding:"required"`
+
+	RecruiteeCompanyId *string `gorm:"column:recruitee_company_id;type:varchar(255);" binding:"required"`
+	RecruiteeApiKey    *string `gorm:"column:recruitee_api_key;type:varchar(255);" binding:"required"`
+
+	RecurlyApiKey *string `gorm:"column:recurly_api_key;type:varchar(255);" binding:"required"`
+
+	RetentlyApiToken *string `gorm:"column:retently_api_token;type:varchar(255);" binding:"required"`
+
+	SalesforceClientId     *string `gorm:"column:salesforce_client_id;type:varchar(255);" binding:"required"`
+	SalesforceClientSecret *string `gorm:"column:salesforce_client_secret;type:varchar(255);" binding:"required"`
+	SalesforceRefreshToken *string `gorm:"column:salesforce_refresh_token;type:varchar(255);" binding:"required"`
+
+	SalesloftApiKey *string `gorm:"column:salesloft_api_key;type:varchar(255);" binding:"required"`
+
+	SendgridApiKey *string `gorm:"column:sendgrid_api_key;type:varchar(255);" binding:"required"`
+
+	SlackApiToken       *string `gorm:"column:slack_api_token;type:varchar(255);" binding:"required"`
+	SlackChannelFilter  *string `gorm:"column:slack_channel_filter;type:varchar(255);" binding:"required"`
+	SlackLookbackWindow *string `gorm:"column:slack_lookback_window;type:varchar(255);" binding:"required"`
+
+	StripeAccountId *string `gorm:"column:stripe_account_id;type:varchar(255);" binding:"required"`
+	StripeSecretKey *string `gorm:"column:stripe_secret_key;type:varchar(255);" binding:"required"`
+
+	SurveySparrowAccessToken *string `gorm:"column:survey_sparrow_access_token;type:varchar(255);" binding:"required"`
+
+	SurveyMonkeyAccessToken *string `gorm:"column:survey_monkey_access_token;type:varchar(255);" binding:"required"`
+
+	TalkdeskApiKey *string `gorm:"column:talkdesk_api_key;type:varchar(255);" binding:"required"`
+
+	TikTokAccessToken *string `gorm:"column:tik_tok_access_token;type:varchar(255);" binding:"required"`
+
+	TodoistApiToken *string `gorm:"column:todoist_api_token;type:varchar(255);" binding:"required"`
+
+	TypeformApiToken *string `gorm:"column:typeform_api_token;type:varchar(255);" binding:"required"`
+
+	VittallyApiKey *string `gorm:"column:vittally_api_key;type:varchar(255);" binding:"required"`
+
+	WrikeAccessToken *string `gorm:"column:wrike_access_token;type:varchar(255);" binding:"required"`
+	WrikeHostUrl     *string `gorm:"column:wrike_host_url;type:varchar(255);" binding:"required"`
+
+	XeroClientId     *string `gorm:"column:xero_client_id;type:varchar(255);" binding:"required"`
+	XeroClientSecret *string `gorm:"column:xero_client_secret;type:varchar(255);" binding:"required"`
+	XeroTenantId     *string `gorm:"column:xero_tenant_id;type:varchar(255);" binding:"required"`
+	XeroScopes       *string `gorm:"column:xero_scopes;type:varchar(255);" binding:"required"`
+
+	ZenefitsToken *string `gorm:"column:zenefits_token;type:varchar(255);" binding:"required"`
 }
 
 func (TenantSettings) TableName() string {

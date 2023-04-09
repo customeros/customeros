@@ -685,6 +685,51 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 				tenantSettings.NotionPublicAccessToken = &publicAccessToken
 			}
 
+		case "orb":
+			apiKey, ok := data["apiKey"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing API key for Orb integration")
+			}
+
+			tenantSettings.OrbApiKey = &apiKey
+
+		case "orbit":
+			apiKey, ok := data["apiKey"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing API key for Orbit integration")
+			}
+
+			tenantSettings.OrbitApiKey = &apiKey
+
+		case "pagerduty":
+			apiKey, ok := data["apiKey"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing API key for PagerDuty integration")
+			}
+
+			tenantSettings.PagerDutyApikey = &apiKey
+
+		case "paypaltransaction":
+			clientId, ok := data["clientId"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing client id for PayPal transaction integration")
+			}
+			secret, ok := data["secret"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing secret for PayPal transaction integration")
+			}
+
+			tenantSettings.PaypalTransactionClientId = &clientId
+			tenantSettings.PaypalTransactionSecret = &secret
+
+			lookbackWindow, ok := data["lookbackWindow"].(string)
+
+			if ok && lookbackWindow != "" {
+				tenantSettings.PaystackLookbackWindow = &lookbackWindow
+			} else {
+				tenantSettings.PaystackLookbackWindow = nil
+			}
+
 		case "paystack":
 			secretKey, ok := data["secretKey"].(string)
 			if !ok {
@@ -737,6 +782,263 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 
 			tenantSettings.PlausibleApiKey = &apiKey
 			tenantSettings.PlausibleSiteId = &siteId
+
+		case "posthog":
+			apiKey, ok := data["apiKey"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing API key for PostHog integration")
+			}
+
+			tenantSettings.PostHogApiKey = &apiKey
+
+			baseUrl, ok := data["baseUrl"].(string)
+
+			if ok && baseUrl != "" {
+				tenantSettings.PostHogBaseUrl = &baseUrl
+			} else {
+				tenantSettings.PostHogBaseUrl = nil
+			}
+
+		case "qualaroo":
+			apiKey, ok := data["apiKey"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing API key for Qualaroo integration")
+			}
+			apiToken, ok := data["apiToken"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing API token for Qualaroo integration")
+			}
+
+			tenantSettings.QualarooApiKey = &apiKey
+			tenantSettings.QualarooApiToken = &apiToken
+
+		case "quickbooks":
+			clientId, ok := data["clientId"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing client id for QuickBooks integration")
+			}
+			clientSecret, ok := data["clientSecret"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing client secret for QuickBooks integration")
+			}
+			realmId, ok := data["realmId"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing realm id for QuickBooks integration")
+			}
+			refreshToken, ok := data["refreshToken"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing refresh token for QuickBooks integration")
+			}
+
+			tenantSettings.QuickBooksClientId = &clientId
+			tenantSettings.QuickBooksClientSecret = &clientSecret
+			tenantSettings.QuickBooksRealmId = &realmId
+			tenantSettings.QuickBooksRefreshToken = &refreshToken
+
+		case "recharge":
+			apiToken, ok := data["apiToken"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing API token for Recharge integration")
+			}
+
+			tenantSettings.RechargeApiToken = &apiToken
+
+		case "recruitee":
+			companyId, ok := data["companyId"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing company id for Recruitee integration")
+			}
+			apiKey, ok := data["apiKey"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing API key for Recruitee integration")
+			}
+
+			tenantSettings.RecruiteeCompanyId = &companyId
+			tenantSettings.RecruiteeApiKey = &apiKey
+
+		case "recurly":
+			apiKey, ok := data["apiKey"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing API key for Recurly integration")
+			}
+
+			tenantSettings.RecurlyApiKey = &apiKey
+
+		case "retently":
+			apiToken, ok := data["apiToken"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing API token for Retently integration")
+			}
+
+			tenantSettings.RetentlyApiToken = &apiToken
+
+		case "salesforce":
+			clientId, ok := data["clientId"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing client id for Salesforce integration")
+			}
+			clientSecret, ok := data["clientSecret"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing client secret for Salesforce integration")
+			}
+			refreshToken, ok := data["refreshToken"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing refresh token for Salesforce integration")
+			}
+
+			tenantSettings.SalesforceClientId = &clientId
+			tenantSettings.SalesforceClientSecret = &clientSecret
+			tenantSettings.SalesforceRefreshToken = &refreshToken
+
+		case "salesloft":
+			apiKey, ok := data["apiKey"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing API key for SalesLoft integration")
+			}
+
+			tenantSettings.SalesloftApiKey = &apiKey
+
+		case "sendgrid":
+			apiKey, ok := data["apiKey"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing API key for Sendgrid integration")
+			}
+
+			tenantSettings.SendgridApiKey = &apiKey
+
+		case "slack":
+			apiToken, ok := data["apiToken"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing API token for Slack integration")
+			}
+			channelFilter, ok := data["channelFilter"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing channel filter for Slack integration")
+			}
+
+			tenantSettings.SlackApiToken = &apiToken
+			tenantSettings.SlackChannelFilter = &channelFilter
+
+			lookbackWindow, ok := data["lookbackWindow"].(string)
+
+			if ok && lookbackWindow != "" {
+				tenantSettings.SlackLookbackWindow = &lookbackWindow
+			} else {
+				tenantSettings.SlackLookbackWindow = nil
+			}
+
+		case "stripe":
+			accountId, ok := data["accountId"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing account id for Stripe integration")
+			}
+			secretKey, ok := data["secretKey"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing secret key for Stripe integration")
+			}
+
+			tenantSettings.StripeAccountId = &accountId
+			tenantSettings.StripeSecretKey = &secretKey
+
+		case "surveysparrow":
+			accessToken, ok := data["accessToken"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing access token for SurveySparrow integration")
+			}
+
+			tenantSettings.SurveySparrowAccessToken = &accessToken
+
+		case "surveymonkey":
+			accessToken, ok := data["accessToken"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing access token for SurveyMonkey integration")
+			}
+
+			tenantSettings.SurveyMonkeyAccessToken = &accessToken
+
+		case "talkdesk":
+			apiKey, ok := data["apiKey"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing API key for Talkdesk integration")
+			}
+
+			tenantSettings.TalkdeskApiKey = &apiKey
+
+		case "tiktok":
+			accessToken, ok := data["accessToken"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing access token for TikTok integration")
+			}
+
+			tenantSettings.TikTokAccessToken = &accessToken
+
+		case "todoist":
+			apiToken, ok := data["apiToken"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing API token for Todoist integration")
+			}
+
+			tenantSettings.TodoistApiToken = &apiToken
+
+		case "typeform":
+			apiToken, ok := data["apiToken"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing API token for Typeform integration")
+			}
+
+			tenantSettings.TypeformApiToken = &apiToken
+
+		case "vittally":
+			apiKey, ok := data["apiKey"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing API key for Vittally integration")
+			}
+
+			tenantSettings.VittallyApiKey = &apiKey
+
+		case "wrike":
+			accessToken, ok := data["accessToken"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing access token for Wrike integration")
+			}
+			hostUrl, ok := data["hostUrl"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing host url for Wrike integration")
+			}
+
+			tenantSettings.WrikeAccessToken = &accessToken
+			tenantSettings.WrikeHostUrl = &hostUrl
+
+		case "xero":
+			clientId, ok := data["clientId"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing client id for Xero integration")
+			}
+			clientSecret, ok := data["clientSecret"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing client secret for Xero integration")
+			}
+			tenantId, ok := data["tenantId"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing tenant id for Xero integration")
+			}
+			scopes, ok := data["scopes"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing scopes for Xero integration")
+			}
+
+			tenantSettings.XeroClientId = &clientId
+			tenantSettings.XeroClientSecret = &clientSecret
+			tenantSettings.XeroTenantId = &tenantId
+			tenantSettings.XeroScopes = &scopes
+
+		case "zenefits":
+			token, ok := data["token"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing client id for Xero integration")
+			}
+
+			tenantSettings.ZenefitsToken = &token
 
 		}
 
@@ -905,6 +1207,15 @@ func (s *tenantSettingsService) ClearIntegrationData(tenantName, identifier stri
 			tenantSettings.NotionPublicClientId = nil
 			tenantSettings.NotionPublicClientSecret = nil
 			tenantSettings.NotionPublicAccessToken = nil
+		case "orb":
+			tenantSettings.OrbApiKey = nil
+		case "orbit":
+			tenantSettings.OrbitApiKey = nil
+		case "pagerduty":
+			tenantSettings.PagerDutyApikey = nil
+		case "paypaltransaction":
+			tenantSettings.PaypalTransactionClientId = nil
+			tenantSettings.PaypalTransactionSecret = nil
 		case "paystack":
 			tenantSettings.PaystackSecretKey = nil
 			tenantSettings.PaystackLookbackWindow = nil
@@ -917,6 +1228,64 @@ func (s *tenantSettingsService) ClearIntegrationData(tenantName, identifier stri
 		case "plausible":
 			tenantSettings.PlausibleApiKey = nil
 			tenantSettings.PlausibleSiteId = nil
+		case "posthog":
+			tenantSettings.PostHogApiKey = nil
+			tenantSettings.PostHogBaseUrl = nil
+		case "qualaroo":
+			tenantSettings.QualarooApiKey = nil
+			tenantSettings.QualarooApiToken = nil
+		case "quickbooks":
+			tenantSettings.QuickBooksClientId = nil
+			tenantSettings.QuickBooksClientSecret = nil
+			tenantSettings.QuickBooksRealmId = nil
+			tenantSettings.QuickBooksRefreshToken = nil
+		case "recharge":
+			tenantSettings.RechargeApiToken = nil
+		case "recruitee":
+			tenantSettings.RecruiteeCompanyId = nil
+			tenantSettings.RecruiteeApiKey = nil
+		case "recurly":
+			tenantSettings.RecurlyApiKey = nil
+		case "retently":
+			tenantSettings.RetentlyApiToken = nil
+		case "salesforce":
+			tenantSettings.SalesforceClientId = nil
+			tenantSettings.SalesforceClientSecret = nil
+			tenantSettings.SalesforceRefreshToken = nil
+		case "salesloft":
+			tenantSettings.SalesloftApiKey = nil
+		case "sendgrid":
+			tenantSettings.SendgridApiKey = nil
+		case "slack":
+			tenantSettings.SlackApiToken = nil
+			tenantSettings.SlackChannelFilter = nil
+			tenantSettings.SlackLookbackWindow = nil
+		case "stripe":
+			tenantSettings.StripeAccountId = nil
+			tenantSettings.StripeSecretKey = nil
+		case "surveysparrow":
+			tenantSettings.SurveySparrowAccessToken = nil
+		case "surveymonkey":
+			tenantSettings.SurveyMonkeyAccessToken = nil
+		case "talkdesk":
+			tenantSettings.TalkdeskApiKey = nil
+		case "tiktok":
+			tenantSettings.TikTokAccessToken = nil
+		case "todoist":
+			tenantSettings.TodoistApiToken = nil
+		case "typeform":
+			tenantSettings.TypeformApiToken = nil
+		case "vittally":
+			tenantSettings.VittallyApiKey = nil
+		case "wrike":
+			tenantSettings.WrikeAccessToken = nil
+		case "xero":
+			tenantSettings.XeroClientId = nil
+			tenantSettings.XeroClientSecret = nil
+			tenantSettings.XeroTenantId = nil
+			tenantSettings.XeroScopes = nil
+		case "zenefits":
+			tenantSettings.ZenefitsToken = nil
 
 		}
 

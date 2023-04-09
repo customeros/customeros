@@ -1287,6 +1287,32 @@ const Settings: NextPage = () => {
             ),
         },
         {
+            key: 'paypaltransaction',
+            state: 'INACTIVE',
+            template: (data: any) => (
+                <SettingsIntegrationItem
+                    icon={'logos/paypal.svg'}
+                    identifier={'paypaltransaction'}
+                    name={'Paypal Transaction'}
+                    state={data.state}
+                    settingsChanged={() => {
+                        reloadRef.current = !reloadRef.current;
+                        setReload(reloadRef.current);
+                    }}
+                    fields={[
+                        {
+                            name: 'clientId',
+                            label: 'Client Id',
+                        },
+                        {
+                            name: 'secret',
+                            label: 'Secret',
+                        },
+                    ]}
+                />
+            ),
+        },
+        {
             key: 'notion',
             state: 'INACTIVE',
             template: (data: any) => (
@@ -1315,6 +1341,72 @@ const Settings: NextPage = () => {
                         {
                             name: 'publicAccessToken',
                             label: 'Public Access Token',
+                        },
+                    ]}
+                />
+            ),
+        },
+        {
+            key: 'orb',
+            state: 'INACTIVE',
+            template: (data: any) => (
+                <SettingsIntegrationItem
+                    icon={'logos/orb.svg'}
+                    identifier={'orb'}
+                    name={'Orb'}
+                    state={data.state}
+                    settingsChanged={() => {
+                        reloadRef.current = !reloadRef.current;
+                        setReload(reloadRef.current);
+                    }}
+                    fields={[
+                        {
+                            name: 'apiKey',
+                            label: 'API Key',
+                        },
+                    ]}
+                />
+            ),
+        },
+        {
+            key: 'orbit',
+            state: 'INACTIVE',
+            template: (data: any) => (
+                <SettingsIntegrationItem
+                    icon={'logos/orbit.svg'}
+                    identifier={'orbit'}
+                    name={'Orbit'}
+                    state={data.state}
+                    settingsChanged={() => {
+                        reloadRef.current = !reloadRef.current;
+                        setReload(reloadRef.current);
+                    }}
+                    fields={[
+                        {
+                            name: 'apiKey',
+                            label: 'API Key',
+                        },
+                    ]}
+                />
+            ),
+        },
+        {
+            key: 'pagerduty',
+            state: 'INACTIVE',
+            template: (data: any) => (
+                <SettingsIntegrationItem
+                    icon={'logos/pagerduty.svg'}
+                    identifier={'pagerduty'}
+                    name={'PagerDuty'}
+                    state={data.state}
+                    settingsChanged={() => {
+                        reloadRef.current = !reloadRef.current;
+                        setReload(reloadRef.current);
+                    }}
+                    fields={[
+                        {
+                            name: 'apiKey',
+                            label: 'API Key',
                         },
                     ]}
                 />
@@ -1433,6 +1525,550 @@ const Settings: NextPage = () => {
                         {
                             name: 'siteId',
                             label: 'Site Id',
+                        },
+                    ]}
+                />
+            ),
+        },
+        {
+            key: 'posthog',
+            state: 'INACTIVE',
+            template: (data: any) => (
+                <SettingsIntegrationItem
+                    icon={'logos/posthog.svg'}
+                    identifier={'posthog'}
+                    name={'PostHog'}
+                    state={data.state}
+                    settingsChanged={() => {
+                        reloadRef.current = !reloadRef.current;
+                        setReload(reloadRef.current);
+                    }}
+                    fields={[
+                        {
+                            name: 'apiKey',
+                            label: 'API Key (mandatory)',
+                        },
+                        {
+                            name: 'baseUrl',
+                            label: 'Base URL (optional)',
+                        },
+                    ]}
+                />
+            ),
+        },
+        {
+            key: 'qualaroo',
+            state: 'INACTIVE',
+            template: (data: any) => (
+                <SettingsIntegrationItem
+                    icon={'logos/qualaroo.svg'}
+                    identifier={'qualaroo'}
+                    name={'Qualaroo'}
+                    state={data.state}
+                    settingsChanged={() => {
+                        reloadRef.current = !reloadRef.current;
+                        setReload(reloadRef.current);
+                    }}
+                    fields={[
+                        {
+                            name: 'apiKey',
+                            label: 'API Key',
+                        },
+                        {
+                            name: 'apiToken',
+                            label: 'API Token',
+                        },
+                    ]}
+                />
+            ),
+        },
+        {
+            key: 'quickbooks',
+            state: 'INACTIVE',
+            template: (data: any) => (
+                <SettingsIntegrationItem
+                    icon={'logos/quickbooks.svg'}
+                    identifier={'quickbooks'}
+                    name={'QuickBooks'}
+                    state={data.state}
+                    settingsChanged={() => {
+                        reloadRef.current = !reloadRef.current;
+                        setReload(reloadRef.current);
+                    }}
+                    fields={[
+                        {
+                            name: 'clientId',
+                            label: 'Client Id',
+                        },
+                        {
+                            name: 'clientSecret',
+                            label: 'Client Secret',
+                        },
+                        {
+                            name: 'realmId',
+                            label: 'Realm Id',
+                        },
+                        {
+                            name: 'refreshToken',
+                            label: 'Refresh Token',
+                        },
+                    ]}
+                />
+            ),
+        },
+        {
+            key: 'recharge',
+            state: 'INACTIVE',
+            template: (data: any) => (
+                <SettingsIntegrationItem
+                    icon={'logos/recharge.svg'}
+                    identifier={'recharge'}
+                    name={'Recharge'}
+                    state={data.state}
+                    settingsChanged={() => {
+                        reloadRef.current = !reloadRef.current;
+                        setReload(reloadRef.current);
+                    }}
+                    fields={[
+                        {
+                            name: 'apiToken',
+                            label: 'API Token',
+                        },
+                    ]}
+                />
+            ),
+        },
+        {
+            key: 'recruitee',
+            state: 'INACTIVE',
+            template: (data: any) => (
+                <SettingsIntegrationItem
+                    icon={'logos/recruitee.svg'}
+                    identifier={'recruitee'}
+                    name={'Recruitee'}
+                    state={data.state}
+                    settingsChanged={() => {
+                        reloadRef.current = !reloadRef.current;
+                        setReload(reloadRef.current);
+                    }}
+                    fields={[
+                        {
+                            name: 'companyId',
+                            label: 'Company Id',
+                        },
+                        {
+                            name: 'apiKey',
+                            label: 'API Key',
+                        },
+                    ]}
+                />
+            ),
+        },
+        {
+            key: 'recurly',
+            state: 'INACTIVE',
+            template: (data: any) => (
+                <SettingsIntegrationItem
+                    icon={'logos/recurly.svg'}
+                    identifier={'recurly'}
+                    name={'Recurly'}
+                    state={data.state}
+                    settingsChanged={() => {
+                        reloadRef.current = !reloadRef.current;
+                        setReload(reloadRef.current);
+                    }}
+                    fields={[
+                        {
+                            name: 'apiKey',
+                            label: 'API Key',
+                        },
+                    ]}
+                />
+            ),
+        },
+        {
+            key: 'retently',
+            state: 'INACTIVE',
+            template: (data: any) => (
+                <SettingsIntegrationItem
+                    icon={'logos/retently.svg'}
+                    identifier={'retently'}
+                    name={'Retently'}
+                    state={data.state}
+                    settingsChanged={() => {
+                        reloadRef.current = !reloadRef.current;
+                        setReload(reloadRef.current);
+                    }}
+                    fields={[
+                        {
+                            name: 'apiToken',
+                            label: 'API Token',
+                        },
+                    ]}
+                />
+            ),
+        },
+        {
+            key: 'salesforce',
+            state: 'INACTIVE',
+            template: (data: any) => (
+                <SettingsIntegrationItem
+                    icon={'logos/salesforce.svg'}
+                    identifier={'salesforce'}
+                    name={'Salesforce'}
+                    state={data.state}
+                    settingsChanged={() => {
+                        reloadRef.current = !reloadRef.current;
+                        setReload(reloadRef.current);
+                    }}
+                    fields={[
+                        {
+                            name: 'clientId',
+                            label: 'Client Id',
+                        },
+                        {
+                            name: 'clientSecret',
+                            label: 'Client Secret',
+                        },
+                        {
+                            name: 'refreshToken',
+                            label: 'Refresh Token',
+                        },
+                    ]}
+                />
+            ),
+        },
+        {
+            key: 'salesloft',
+            state: 'INACTIVE',
+            template: (data: any) => (
+                <SettingsIntegrationItem
+                    icon={'logos/salesloft.svg'}
+                    identifier={'salesloft'}
+                    name={'SalesLoft'}
+                    state={data.state}
+                    settingsChanged={() => {
+                        reloadRef.current = !reloadRef.current;
+                        setReload(reloadRef.current);
+                    }}
+                    fields={[
+                        {
+                            name: 'apiKey',
+                            label: 'API Key',
+                        },
+                    ]}
+                />
+            ),
+        },
+        {
+            key: 'sendgrid',
+            state: 'INACTIVE',
+            template: (data: any) => (
+                <SettingsIntegrationItem
+                    icon={'logos/sendgrid.svg'}
+                    identifier={'sendgrid'}
+                    name={'SendGrid'}
+                    state={data.state}
+                    settingsChanged={() => {
+                        reloadRef.current = !reloadRef.current;
+                        setReload(reloadRef.current);
+                    }}
+                    fields={[
+                        {
+                            name: 'apiKey',
+                            label: 'API Key',
+                        },
+                    ]}
+                />
+            ),
+        },
+        {
+            key: 'slack',
+            state: 'INACTIVE',
+            template: (data: any) => (
+                <SettingsIntegrationItem
+                    icon={'logos/slack.svg'}
+                    identifier={'slack'}
+                    name={'Slack'}
+                    state={data.state}
+                    settingsChanged={() => {
+                        reloadRef.current = !reloadRef.current;
+                        setReload(reloadRef.current);
+                    }}
+                    fields={[
+                        {
+                            name: 'apiToken',
+                            label: 'API Token',
+                        },
+                        {
+                            name: 'channelFilter',
+                            label: 'Channel Filter',
+                        },
+                        {
+                            name: 'lookbackWindow',
+                            label: 'lookback Window (in days, optional)',
+                        },
+                    ]}
+                />
+            ),
+        },
+        {
+            key: 'stripe',
+            state: 'INACTIVE',
+            template: (data: any) => (
+                <SettingsIntegrationItem
+                    icon={'logos/stripe.svg'}
+                    identifier={'stripe'}
+                    name={'Stripe'}
+                    state={data.state}
+                    settingsChanged={() => {
+                        reloadRef.current = !reloadRef.current;
+                        setReload(reloadRef.current);
+                    }}
+                    fields={[
+                        {
+                            name: 'accountId',
+                            label: 'Account Id',
+                        },
+                        {
+                            name: 'secretKey',
+                            label: 'Secret Key',
+                        },
+                    ]}
+                />
+            ),
+        },
+        {
+            key: 'surveysparrow',
+            state: 'INACTIVE',
+            template: (data: any) => (
+                <SettingsIntegrationItem
+                    icon={'logos/surveysparrow.svg'}
+                    identifier={'surveysparrow'}
+                    name={'SurveySparrow'}
+                    state={data.state}
+                    settingsChanged={() => {
+                        reloadRef.current = !reloadRef.current;
+                        setReload(reloadRef.current);
+                    }}
+                    fields={[
+                        {
+                            name: 'accessToken',
+                            label: 'Access Token',
+                        },
+                    ]}
+                />
+            ),
+        },
+        {
+            key: 'surveymonkey',
+            state: 'INACTIVE',
+            template: (data: any) => (
+                <SettingsIntegrationItem
+                    icon={'logos/surveymonkey.svg'}
+                    identifier={'surveymonkey'}
+                    name={'SurveyMonkey'}
+                    state={data.state}
+                    settingsChanged={() => {
+                        reloadRef.current = !reloadRef.current;
+                        setReload(reloadRef.current);
+                    }}
+                    fields={[
+                        {
+                            name: 'accessToken',
+                            label: 'Access Token',
+                        },
+                    ]}
+                />
+            ),
+        },
+        {
+            key: 'talkdesk',
+            state: 'INACTIVE',
+            template: (data: any) => (
+                <SettingsIntegrationItem
+                    icon={'logos/talkdesk.svg'}
+                    identifier={'talkdesk'}
+                    name={'TalkDesk'}
+                    state={data.state}
+                    settingsChanged={() => {
+                        reloadRef.current = !reloadRef.current;
+                        setReload(reloadRef.current);
+                    }}
+                    fields={[
+                        {
+                            name: 'apiKey',
+                            label: 'API Key',
+                        },
+                    ]}
+                />
+            ),
+        },
+        {
+            key: 'tiktok',
+            state: 'INACTIVE',
+            template: (data: any) => (
+                <SettingsIntegrationItem
+                    icon={'logos/tiktok.svg'}
+                    identifier={'tiktok'}
+                    name={'TikTok'}
+                    state={data.state}
+                    settingsChanged={() => {
+                        reloadRef.current = !reloadRef.current;
+                        setReload(reloadRef.current);
+                    }}
+                    fields={[
+                        {
+                            name: 'accessToken',
+                            label: 'Access Token',
+                        },
+                    ]}
+                />
+            ),
+        },
+        {
+            key: 'todoist',
+            state: 'INACTIVE',
+            template: (data: any) => (
+                <SettingsIntegrationItem
+                    icon={'logos/openline_small.svg'}
+                    identifier={'todoist'}
+                    name={'Todoist'}
+                    state={data.state}
+                    settingsChanged={() => {
+                        reloadRef.current = !reloadRef.current;
+                        setReload(reloadRef.current);
+                    }}
+                    fields={[
+                        {
+                            name: 'apiToken',
+                            label: 'API Token',
+                        },
+                    ]}
+                />
+            ),
+        },
+        {
+            key: 'typeform',
+            state: 'INACTIVE',
+            template: (data: any) => (
+                <SettingsIntegrationItem
+                    icon={'logos/openline_small.svg'}
+                    identifier={'typeform'}
+                    name={'Typeform'}
+                    state={data.state}
+                    settingsChanged={() => {
+                        reloadRef.current = !reloadRef.current;
+                        setReload(reloadRef.current);
+                    }}
+                    fields={[
+                        {
+                            name: 'apiToken',
+                            label: 'API Token',
+                        },
+                    ]}
+                />
+            ),
+        },
+        {
+            key: 'vittally',
+            state: 'INACTIVE',
+            template: (data: any) => (
+                <SettingsIntegrationItem
+                    icon={'logos/openline_small.svg'}
+                    identifier={'vittally'}
+                    name={'Vittally'}
+                    state={data.state}
+                    settingsChanged={() => {
+                        reloadRef.current = !reloadRef.current;
+                        setReload(reloadRef.current);
+                    }}
+                    fields={[
+                        {
+                            name: 'apiKey',
+                            label: 'API Key',
+                        },
+                    ]}
+                />
+            ),
+        },
+        {
+            key: 'wrike',
+            state: 'INACTIVE',
+            template: (data: any) => (
+                <SettingsIntegrationItem
+                    icon={'logos/wrike.svg'}
+                    identifier={'wrike'}
+                    name={'Wrike'}
+                    state={data.state}
+                    settingsChanged={() => {
+                        reloadRef.current = !reloadRef.current;
+                        setReload(reloadRef.current);
+                    }}
+                    fields={[
+                        {
+                            name: 'accessToken',
+                            label: 'Access Token',
+                        },
+                        {
+                            name: 'hostUrl',
+                            label: 'Host URL',
+                        },
+                    ]}
+                />
+            ),
+        },
+        {
+            key: 'xero',
+            state: 'INACTIVE',
+            template: (data: any) => (
+                <SettingsIntegrationItem
+                    icon={'logos/openline_small.svg'}
+                    identifier={'xero'}
+                    name={'Xero'}
+                    state={data.state}
+                    settingsChanged={() => {
+                        reloadRef.current = !reloadRef.current;
+                        setReload(reloadRef.current);
+                    }}
+                    fields={[
+                        {
+                            name: 'clientId',
+                            label: 'Client ID',
+                        },
+                        {
+                            name: 'clientSecret',
+                            label: 'Client Secret',
+                        },
+                        {
+                            name: 'tenantId',
+                            label: 'Tenant ID',
+                        },
+                        {
+                            name: 'scopes',
+                            label: 'Scopes',
+                        },
+                    ]}
+                />
+            ),
+        },
+        {
+            key: 'zenefits',
+            state: 'INACTIVE',
+            template: (data: any) => (
+                <SettingsIntegrationItem
+                    icon={'logos/zenefits.svg'}
+                    identifier={'zenefits'}
+                    name={'Zenefits'}
+                    state={data.state}
+                    settingsChanged={() => {
+                        reloadRef.current = !reloadRef.current;
+                        setReload(reloadRef.current);
+                    }}
+                    fields={[
+                        {
+                            name: 'token',
+                            label: 'Token',
                         },
                     ]}
                 />
