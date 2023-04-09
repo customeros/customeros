@@ -685,6 +685,27 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 				tenantSettings.NotionPublicAccessToken = &publicAccessToken
 			}
 
+		case "paypaltransaction":
+			clientId, ok := data["clientId"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing client id for PayPal transaction integration")
+			}
+			secret, ok := data["secret"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing secret for PayPal transaction integration")
+			}
+
+			tenantSettings.PaypalTransactionClientId = &clientId
+			tenantSettings.PaypalTransactionSecret = &secret
+
+			lookbackWindow, ok := data["lookbackWindow"].(string)
+
+			if ok && lookbackWindow != "" {
+				tenantSettings.PaystackLookbackWindow = &lookbackWindow
+			} else {
+				tenantSettings.PaystackLookbackWindow = nil
+			}
+
 		case "paystack":
 			secretKey, ok := data["secretKey"].(string)
 			if !ok {
@@ -905,6 +926,9 @@ func (s *tenantSettingsService) ClearIntegrationData(tenantName, identifier stri
 			tenantSettings.NotionPublicClientId = nil
 			tenantSettings.NotionPublicClientSecret = nil
 			tenantSettings.NotionPublicAccessToken = nil
+		case "paypaltransaction":
+			tenantSettings.PaypalTransactionClientId = nil
+			tenantSettings.PaypalTransactionSecret = nil
 		case "paystack":
 			tenantSettings.PaystackSecretKey = nil
 			tenantSettings.PaystackLookbackWindow = nil

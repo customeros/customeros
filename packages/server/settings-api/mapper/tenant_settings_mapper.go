@@ -277,6 +277,11 @@ func MapTenantSettingsEntityToDTO(tenantSettings *entity.TenantSettings) *map[st
 		responseMap["notion"].(map[string]interface{})["state"] = "ACTIVE"
 	}
 
+	if tenantSettings != nil && tenantSettings.PaypalTransactionClientId != nil && tenantSettings.PaypalTransactionSecret != nil {
+		responseMap["paypaltransaction"] = make(map[string]interface{})
+		responseMap["paypaltransaction"].(map[string]interface{})["state"] = "ACTIVE"
+	}
+
 	if tenantSettings != nil && tenantSettings.PaystackSecretKey != nil {
 		responseMap["paystack"] = make(map[string]interface{})
 		responseMap["paystack"].(map[string]interface{})["state"] = "ACTIVE"

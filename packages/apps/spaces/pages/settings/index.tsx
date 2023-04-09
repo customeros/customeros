@@ -1287,6 +1287,32 @@ const Settings: NextPage = () => {
             ),
         },
         {
+            key: 'paypaltransaction',
+            state: 'INACTIVE',
+            template: (data: any) => (
+                <SettingsIntegrationItem
+                    icon={'logos/paypal.svg'}
+                    identifier={'paypaltransaction'}
+                    name={'Paypal Transaction'}
+                    state={data.state}
+                    settingsChanged={() => {
+                        reloadRef.current = !reloadRef.current;
+                        setReload(reloadRef.current);
+                    }}
+                    fields={[
+                        {
+                            name: 'clientId',
+                            label: 'Client Id',
+                        },
+                        {
+                            name: 'secret',
+                            label: 'Secret',
+                        },
+                    ]}
+                />
+            ),
+        },
+        {
             key: 'notion',
             state: 'INACTIVE',
             template: (data: any) => (
