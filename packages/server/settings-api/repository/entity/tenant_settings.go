@@ -214,6 +214,9 @@ type TenantSettings struct {
 	TypeformApiToken *string `gorm:"column:typeform_api_token;type:varchar(255);" binding:"required"`
 
 	VittallyApiKey *string `gorm:"column:vittally_api_key;type:varchar(255);" binding:"required"`
+
+	WrikeAccessToken *string `gorm:"column:wrike_access_token;type:varchar(255);" binding:"required"`
+	WrikeHostUrl     *string `gorm:"column:wrike_host_url;type:varchar(255);" binding:"required"`
 }
 
 func (TenantSettings) TableName() string {

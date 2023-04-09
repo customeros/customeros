@@ -978,6 +978,19 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 
 			tenantSettings.VittallyApiKey = &apiKey
 
+		case "wrike":
+			accessToken, ok := data["accessToken"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing access token for Wrike integration")
+			}
+			hostUrl, ok := data["hostUrl"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing host url for Wrike integration")
+			}
+
+			tenantSettings.WrikeAccessToken = &accessToken
+			tenantSettings.WrikeHostUrl = &hostUrl
+
 		}
 
 	}
@@ -1211,6 +1224,8 @@ func (s *tenantSettingsService) ClearIntegrationData(tenantName, identifier stri
 			tenantSettings.TypeformApiToken = nil
 		case "vittally":
 			tenantSettings.VittallyApiKey = nil
+		case "wrike":
+			tenantSettings.WrikeAccessToken = nil
 
 		}
 

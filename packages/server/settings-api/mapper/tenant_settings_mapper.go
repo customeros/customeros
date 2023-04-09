@@ -412,5 +412,10 @@ func MapTenantSettingsEntityToDTO(tenantSettings *entity.TenantSettings) *map[st
 		responseMap["vittally"].(map[string]interface{})["state"] = "ACTIVE"
 	}
 
+	if tenantSettings != nil && tenantSettings.WrikeAccessToken != nil && tenantSettings.WrikeHostUrl != nil {
+		responseMap["wrike"] = make(map[string]interface{})
+		responseMap["wrike"].(map[string]interface{})["state"] = "ACTIVE"
+	}
+
 	return &responseMap
 }

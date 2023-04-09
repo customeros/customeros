@@ -1962,6 +1962,32 @@ const Settings: NextPage = () => {
                 />
             ),
         },
+        {
+            key: 'wrike',
+            state: 'INACTIVE',
+            template: (data: any) => (
+                <SettingsIntegrationItem
+                    icon={'logos/wrike.svg'}
+                    identifier={'wrike'}
+                    name={'Wrike'}
+                    state={data.state}
+                    settingsChanged={() => {
+                        reloadRef.current = !reloadRef.current;
+                        setReload(reloadRef.current);
+                    }}
+                    fields={[
+                        {
+                            name: 'accessToken',
+                            label: 'Access Token',
+                        },
+                        {
+                            name: 'hostUrl',
+                            label: 'Host URL',
+                        },
+                    ]}
+                />
+            ),
+        },
     ]);
 
     useEffect(() => {
