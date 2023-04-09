@@ -83,7 +83,6 @@ export const useUpdateContactEmail = ({
           },
         },
         // @ts-expect-error fixme
-
         update: handleUpdateCacheAfterMutation,
       });
 
