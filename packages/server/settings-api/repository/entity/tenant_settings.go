@@ -193,6 +193,10 @@ type TenantSettings struct {
 	SalesloftApiKey *string `gorm:"column:salesloft_api_key;type:varchar(255);" binding:"required"`
 
 	SendgridApiKey *string `gorm:"column:sendgrid_api_key;type:varchar(255);" binding:"required"`
+
+	SlackApiToken       *string `gorm:"column:slack_api_token;type:varchar(255);" binding:"required"`
+	SlackChannelFilter  *string `gorm:"column:slack_channel_filter;type:varchar(255);" binding:"required"`
+	SlackLookbackWindow *string `gorm:"column:slack_lookback_window;type:varchar(255);" binding:"required"`
 }
 
 func (TenantSettings) TableName() string {

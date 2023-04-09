@@ -888,6 +888,27 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 
 			tenantSettings.SendgridApiKey = &apiKey
 
+		case "slack":
+			apiToken, ok := data["apiToken"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing API token for Slack integration")
+			}
+			channelFilter, ok := data["channelFilter"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing channel filter for Slack integration")
+			}
+
+			tenantSettings.SlackApiToken = &apiToken
+			tenantSettings.SlackChannelFilter = &channelFilter
+
+			lookbackWindow, ok := data["lookbackWindow"].(string)
+
+			if ok && lookbackWindow != "" {
+				tenantSettings.SlackLookbackWindow = &lookbackWindow
+			} else {
+				tenantSettings.SlackLookbackWindow = nil
+			}
+
 		}
 
 	}
@@ -1100,6 +1121,10 @@ func (s *tenantSettingsService) ClearIntegrationData(tenantName, identifier stri
 			tenantSettings.SalesloftApiKey = nil
 		case "sendgrid":
 			tenantSettings.SendgridApiKey = nil
+		case "slack":
+			tenantSettings.SlackApiToken = nil
+			tenantSettings.SlackChannelFilter = nil
+			tenantSettings.SlackLookbackWindow = nil
 
 		}
 

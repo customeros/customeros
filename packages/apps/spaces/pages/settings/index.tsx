@@ -1752,6 +1752,36 @@ const Settings: NextPage = () => {
                 />
             ),
         },
+        {
+            key: 'slack',
+            state: 'INACTIVE',
+            template: (data: any) => (
+                <SettingsIntegrationItem
+                    icon={'logos/slack.svg'}
+                    identifier={'slack'}
+                    name={'Slack'}
+                    state={data.state}
+                    settingsChanged={() => {
+                        reloadRef.current = !reloadRef.current;
+                        setReload(reloadRef.current);
+                    }}
+                    fields={[
+                        {
+                            name: 'apiToken',
+                            label: 'API Token',
+                        },
+                        {
+                            name: 'channelFilter',
+                            label: 'Channel Filter',
+                        },
+                        {
+                            name: 'lookbackWindow',
+                            label: 'lookback Window (in days, optional)',
+                        },
+                    ]}
+                />
+            ),
+        },
     ]);
 
     useEffect(() => {
