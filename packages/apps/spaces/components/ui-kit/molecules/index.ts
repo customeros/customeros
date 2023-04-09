@@ -6,4 +6,5 @@ export { LiveEventTimelineItem } from './live-event-timeline-item';
 export { WebActionTimelineItem } from './web-action-timeline-item';
 export { RichTextHeader } from './rich-text-header';
 export { Editor } from './editor';
+export { CommunicationDetails } from './communication-details';
 export { WebRTCInboundNotification, WebRTCCallProgress } from './webRTC';
