@@ -646,6 +646,98 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 
 			tenantSettings.MondayApiToken = &apiToken
 
+		case "notion":
+			internalAccessToken, _ := data["internalAccessToken"].(string)
+
+			publicClientId, _ := data["publicClientId"].(string)
+			publicClientSecret, _ := data["publicClientSecret"].(string)
+			publicAccessToken, _ := data["publicAccessToken"].(string)
+
+			if internalAccessToken == "" && publicClientId == "" && publicClientSecret == "" && publicAccessToken == "" {
+				return nil, fmt.Errorf("missing Notion integration data")
+			}
+
+			if internalAccessToken == "" && (publicClientId == "" || publicClientSecret == "" || publicAccessToken == "") {
+				return nil, fmt.Errorf("missing public Notion integration data")
+			}
+
+			if internalAccessToken == "" {
+				tenantSettings.NotionInternalAccessToken = nil
+			} else {
+				tenantSettings.NotionInternalAccessToken = &internalAccessToken
+			}
+
+			if publicClientId == "" {
+				tenantSettings.NotionPublicClientId = nil
+			} else {
+				tenantSettings.NotionPublicClientId = &publicClientId
+			}
+
+			if publicClientSecret == "" {
+				tenantSettings.NotionPublicClientSecret = nil
+			} else {
+				tenantSettings.NotionPublicClientSecret = &publicClientSecret
+			}
+
+			if publicAccessToken == "" {
+				tenantSettings.NotionPublicAccessToken = nil
+			} else {
+				tenantSettings.NotionPublicAccessToken = &publicAccessToken
+			}
+
+		case "paystack":
+			secretKey, ok := data["secretKey"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing secret key for Paystack integration")
+			}
+
+			tenantSettings.PaystackSecretKey = &secretKey
+
+			lookbackWindow, ok := data["lookbackWindow"].(string)
+
+			if ok && lookbackWindow != "" {
+				tenantSettings.PaystackLookbackWindow = &lookbackWindow
+			} else {
+				tenantSettings.PaystackLookbackWindow = nil
+			}
+
+		case "pendo":
+			apiToken, ok := data["apiToken"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing API token for Pendo integration")
+			}
+
+			tenantSettings.PendoApiToken = &apiToken
+
+		case "pipedrive":
+			apiToken, ok := data["apiToken"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing API token for Pipedrive integration")
+			}
+
+			tenantSettings.PipedriveApiToken = &apiToken
+
+		case "plaid":
+			accessToken, ok := data["accessToken"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing access token for Plaid integration")
+			}
+
+			tenantSettings.PlaidAccessToken = &accessToken
+
+		case "plausible":
+			apiKey, ok := data["apiKey"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing API key for Plausible integration")
+			}
+			siteId, ok := data["siteId"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing site id for Plausible integration")
+			}
+
+			tenantSettings.PlausibleApiKey = &apiKey
+			tenantSettings.PlausibleSiteId = &siteId
+
 		}
 
 	}
@@ -808,6 +900,23 @@ func (s *tenantSettingsService) ClearIntegrationData(tenantName, identifier stri
 			tenantSettings.MicrosoftTeamsClientSecret = nil
 		case "monday":
 			tenantSettings.MondayApiToken = nil
+		case "notion":
+			tenantSettings.NotionInternalAccessToken = nil
+			tenantSettings.NotionPublicClientId = nil
+			tenantSettings.NotionPublicClientSecret = nil
+			tenantSettings.NotionPublicAccessToken = nil
+		case "paystack":
+			tenantSettings.PaystackSecretKey = nil
+			tenantSettings.PaystackLookbackWindow = nil
+		case "pendo":
+			tenantSettings.PendoApiToken = nil
+		case "pipedrive":
+			tenantSettings.PipedriveApiToken = nil
+		case "plaid":
+			tenantSettings.PlaidAccessToken = nil
+		case "plausible":
+			tenantSettings.PlausibleApiKey = nil
+			tenantSettings.PlausibleSiteId = nil
 
 		}
 

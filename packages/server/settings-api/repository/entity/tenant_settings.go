@@ -143,6 +143,23 @@ type TenantSettings struct {
 	MicrosoftTeamsClientSecret *string `gorm:"column:microsoft_teams_client_secret;type:varchar(255);" binding:"required"`
 
 	MondayApiToken *string `gorm:"column:monday_api_token;type:varchar(255);" binding:"required"`
+
+	NotionInternalAccessToken *string `gorm:"column:notion_internal_access_token;type:varchar(255);" binding:"required"`
+	NotionPublicAccessToken   *string `gorm:"column:notion_public_access_token;type:varchar(255);" binding:"required"`
+	NotionPublicClientId      *string `gorm:"column:notion_public_client_id;type:varchar(255);" binding:"required"`
+	NotionPublicClientSecret  *string `gorm:"column:notion_public_client_secret;type:varchar(255);" binding:"required"`
+
+	PaystackSecretKey      *string `gorm:"column:paystack_secret_key;type:varchar(255);" binding:"required"`
+	PaystackLookbackWindow *string `gorm:"column:paystack_lookback_window;type:varchar(255);" binding:"required"`
+
+	PendoApiToken *string `gorm:"column:pendo_api_token;type:varchar(255);" binding:"required"`
+
+	PipedriveApiToken *string `gorm:"column:pipedrive_api_token;type:varchar(255);" binding:"required"`
+
+	PlaidAccessToken *string `gorm:"column:plaid_access_token;type:varchar(255);" binding:"required"`
+
+	PlausibleApiKey *string `gorm:"column:plausible_api_key;type:varchar(255);" binding:"required"`
+	PlausibleSiteId *string `gorm:"column:plausible_site_id;type:varchar(255);" binding:"required"`
 }
 
 func (TenantSettings) TableName() string {

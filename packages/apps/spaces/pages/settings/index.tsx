@@ -1286,6 +1286,158 @@ const Settings: NextPage = () => {
                 />
             ),
         },
+        {
+            key: 'notion',
+            state: 'INACTIVE',
+            template: (data: any) => (
+                <SettingsIntegrationItem
+                    icon={'logos/notion.svg'}
+                    identifier={'notion'}
+                    name={'Notion'}
+                    state={data.state}
+                    settingsChanged={() => {
+                        reloadRef.current = !reloadRef.current;
+                        setReload(reloadRef.current);
+                    }}
+                    fields={[
+                        {
+                            name: 'internalAccessToken',
+                            label: 'Internal Access Token',
+                        },
+                        {
+                            name: 'publicClientId',
+                            label: 'Public Client Id',
+                        },
+                        {
+                            name: 'publicClientSecret',
+                            label: 'Public Client Secret',
+                        },
+                        {
+                            name: 'publicAccessToken',
+                            label: 'Public Access Token',
+                        },
+                    ]}
+                />
+            ),
+        },
+        {
+            key: 'paystack',
+            state: 'INACTIVE',
+            template: (data: any) => (
+                <SettingsIntegrationItem
+                    icon={'logos/openline_small.svg'}
+                    identifier={'paystack'}
+                    name={'Paystack'}
+                    state={data.state}
+                    settingsChanged={() => {
+                        reloadRef.current = !reloadRef.current;
+                        setReload(reloadRef.current);
+                    }}
+                    fields={[
+                        {
+                            name: 'secretKey',
+                            label: 'Secret Key (mandatory)',
+                        },
+                        {
+                            name: 'lookbackWindow',
+                            label: 'Lookback Window (in days)',
+                        },
+                    ]}
+                />
+            ),
+        },
+        {
+            key: 'pendo',
+            state: 'INACTIVE',
+            template: (data: any) => (
+                <SettingsIntegrationItem
+                    icon={'logos/openline_small.svg'}
+                    identifier={'pendo'}
+                    name={'Pendo'}
+                    state={data.state}
+                    settingsChanged={() => {
+                        reloadRef.current = !reloadRef.current;
+                        setReload(reloadRef.current);
+                    }}
+                    fields={[
+                        {
+                            name: 'apiToken',
+                            label: 'API Token',
+                        },
+                    ]}
+                />
+            ),
+        },
+        {
+            key: 'pipedrive',
+            state: 'INACTIVE',
+            template: (data: any) => (
+                <SettingsIntegrationItem
+                    icon={'logos/pipedrive.svg'}
+                    identifier={'pipedrive'}
+                    name={'Pipedrive'}
+                    state={data.state}
+                    settingsChanged={() => {
+                        reloadRef.current = !reloadRef.current;
+                        setReload(reloadRef.current);
+                    }}
+                    fields={[
+                        {
+                            name: 'apiToken',
+                            label: 'API Token',
+                        },
+                    ]}
+                />
+            ),
+        },
+        {
+            key: 'plaid',
+            state: 'INACTIVE',
+            template: (data: any) => (
+                <SettingsIntegrationItem
+                    icon={'logos/plaid.svg'}
+                    identifier={'plaid'}
+                    name={'Plaid'}
+                    state={data.state}
+                    settingsChanged={() => {
+                        reloadRef.current = !reloadRef.current;
+                        setReload(reloadRef.current);
+                    }}
+                    fields={[
+                        {
+                            name: 'accessToken',
+                            label: 'Access Token',
+                        },
+                    ]}
+                />
+            ),
+        },
+        {
+            key: 'plausible',
+            state: 'INACTIVE',
+            template: (data: any) => (
+                <SettingsIntegrationItem
+                    icon={'logos/plausible.svg'}
+                    identifier={'plausible'}
+                    name={'Plausible'}
+                    state={data.state}
+                    settingsChanged={() => {
+                        reloadRef.current = !reloadRef.current;
+                        setReload(reloadRef.current);
+                    }}
+                    fields={[
+                        {
+                            name: 'apiKey',
+                            label: 'API Key',
+                        },
+                        {
+                            name: 'siteId',
+                            label: 'Site Id',
+                        },
+                    ]}
+                />
+            ),
+        },
     ]);
 
     useEffect(() => {

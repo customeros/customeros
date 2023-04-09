@@ -272,5 +272,35 @@ func MapTenantSettingsEntityToDTO(tenantSettings *entity.TenantSettings) *map[st
 		responseMap["monday"].(map[string]interface{})["state"] = "ACTIVE"
 	}
 
+	if tenantSettings != nil && tenantSettings.NotionInternalAccessToken != nil || (tenantSettings.NotionPublicClientId != nil && tenantSettings.NotionPublicClientSecret != nil && tenantSettings.NotionPublicAccessToken != nil) {
+		responseMap["notion"] = make(map[string]interface{})
+		responseMap["notion"].(map[string]interface{})["state"] = "ACTIVE"
+	}
+
+	if tenantSettings != nil && tenantSettings.PaystackSecretKey != nil {
+		responseMap["paystack"] = make(map[string]interface{})
+		responseMap["paystack"].(map[string]interface{})["state"] = "ACTIVE"
+	}
+
+	if tenantSettings != nil && tenantSettings.PendoApiToken != nil {
+		responseMap["pendo"] = make(map[string]interface{})
+		responseMap["pendo"].(map[string]interface{})["state"] = "ACTIVE"
+	}
+
+	if tenantSettings != nil && tenantSettings.PipedriveApiToken != nil {
+		responseMap["pipedrive"] = make(map[string]interface{})
+		responseMap["pipedrive"].(map[string]interface{})["state"] = "ACTIVE"
+	}
+
+	if tenantSettings != nil && tenantSettings.PlaidAccessToken != nil {
+		responseMap["plaid"] = make(map[string]interface{})
+		responseMap["plaid"].(map[string]interface{})["state"] = "ACTIVE"
+	}
+
+	if tenantSettings != nil && tenantSettings.PlausibleSiteId != nil && tenantSettings.PlausibleApiKey != nil {
+		responseMap["plausible"] = make(map[string]interface{})
+		responseMap["plausible"].(map[string]interface{})["state"] = "ACTIVE"
+	}
+
 	return &responseMap
 }
