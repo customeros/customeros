@@ -277,6 +277,11 @@ func MapTenantSettingsEntityToDTO(tenantSettings *entity.TenantSettings) *map[st
 		responseMap["notion"].(map[string]interface{})["state"] = "ACTIVE"
 	}
 
+	if tenantSettings != nil && tenantSettings.OrbApiKey != nil {
+		responseMap["orb"] = make(map[string]interface{})
+		responseMap["orb"].(map[string]interface{})["state"] = "ACTIVE"
+	}
+
 	if tenantSettings != nil && tenantSettings.OrbitApiKey != nil {
 		responseMap["orbit"] = make(map[string]interface{})
 		responseMap["orbit"].(map[string]interface{})["state"] = "ACTIVE"

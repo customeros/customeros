@@ -1347,6 +1347,28 @@ const Settings: NextPage = () => {
             ),
         },
         {
+            key: 'orb',
+            state: 'INACTIVE',
+            template: (data: any) => (
+                <SettingsIntegrationItem
+                    icon={'logos/orb.svg'}
+                    identifier={'orb'}
+                    name={'Orb'}
+                    state={data.state}
+                    settingsChanged={() => {
+                        reloadRef.current = !reloadRef.current;
+                        setReload(reloadRef.current);
+                    }}
+                    fields={[
+                        {
+                            name: 'apiKey',
+                            label: 'API Key',
+                        },
+                    ]}
+                />
+            ),
+        },
+        {
             key: 'orbit',
             state: 'INACTIVE',
             template: (data: any) => (
