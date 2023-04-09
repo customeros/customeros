@@ -1830,6 +1830,28 @@ const Settings: NextPage = () => {
                 />
             ),
         },
+        {
+            key: 'surveymonkey',
+            state: 'INACTIVE',
+            template: (data: any) => (
+                <SettingsIntegrationItem
+                    icon={'logos/surveymonkey.svg'}
+                    identifier={'surveymonkey'}
+                    name={'SurveyMonkey'}
+                    state={data.state}
+                    settingsChanged={() => {
+                        reloadRef.current = !reloadRef.current;
+                        setReload(reloadRef.current);
+                    }}
+                    fields={[
+                        {
+                            name: 'accessToken',
+                            label: 'Access Token',
+                        },
+                    ]}
+                />
+            ),
+        },
     ]);
 
     useEffect(() => {
