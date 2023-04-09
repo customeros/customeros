@@ -938,6 +938,14 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 
 			tenantSettings.SurveyMonkeyAccessToken = &accessToken
 
+		case "talkdesk":
+			apiKey, ok := data["apiKey"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing API key for Talkdesk integration")
+			}
+
+			tenantSettings.TalkdeskApiKey = &apiKey
+
 		}
 
 	}
@@ -1161,6 +1169,8 @@ func (s *tenantSettingsService) ClearIntegrationData(tenantName, identifier stri
 			tenantSettings.SurveySparrowAccessToken = nil
 		case "surveymonkey":
 			tenantSettings.SurveyMonkeyAccessToken = nil
+		case "talkdesk":
+			tenantSettings.TalkdeskApiKey = nil
 
 		}
 

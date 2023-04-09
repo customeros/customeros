@@ -387,5 +387,10 @@ func MapTenantSettingsEntityToDTO(tenantSettings *entity.TenantSettings) *map[st
 		responseMap["surveymonkey"].(map[string]interface{})["state"] = "ACTIVE"
 	}
 
+	if tenantSettings != nil && tenantSettings.TalkdeskApiKey != nil {
+		responseMap["talkdesk"] = make(map[string]interface{})
+		responseMap["talkdesk"].(map[string]interface{})["state"] = "ACTIVE"
+	}
+
 	return &responseMap
 }

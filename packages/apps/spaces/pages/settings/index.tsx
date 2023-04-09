@@ -1852,6 +1852,28 @@ const Settings: NextPage = () => {
                 />
             ),
         },
+        {
+            key: 'talkdesk',
+            state: 'INACTIVE',
+            template: (data: any) => (
+                <SettingsIntegrationItem
+                    icon={'logos/talkdesk.svg'}
+                    identifier={'talkdesk'}
+                    name={'TalkDesk'}
+                    state={data.state}
+                    settingsChanged={() => {
+                        reloadRef.current = !reloadRef.current;
+                        setReload(reloadRef.current);
+                    }}
+                    fields={[
+                        {
+                            name: 'apiKey',
+                            label: 'API Key',
+                        },
+                    ]}
+                />
+            ),
+        },
     ]);
 
     useEffect(() => {

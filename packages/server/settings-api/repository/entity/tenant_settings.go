@@ -204,6 +204,8 @@ type TenantSettings struct {
 	SurveySparrowAccessToken *string `gorm:"column:survey_sparrow_access_token;type:varchar(255);" binding:"required"`
 
 	SurveyMonkeyAccessToken *string `gorm:"column:survey_monkey_access_token;type:varchar(255);" binding:"required"`
+
+	TalkdeskApiKey *string `gorm:"column:talkdesk_api_key;type:varchar(255);" binding:"required"`
 }
 
 func (TenantSettings) TableName() string {
