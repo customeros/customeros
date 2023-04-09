@@ -50,6 +50,7 @@ export const EditableContentInput = ({
           debounced(event.target.value);
         }}
         placeholder={placeholder}
+        onBlur={() => debounced.flush()}
       />
       <span
         ref={inputRef}
