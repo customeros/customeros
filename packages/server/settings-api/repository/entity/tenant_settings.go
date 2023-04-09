@@ -149,6 +149,8 @@ type TenantSettings struct {
 	NotionPublicClientId      *string `gorm:"column:notion_public_client_id;type:varchar(255);" binding:"required"`
 	NotionPublicClientSecret  *string `gorm:"column:notion_public_client_secret;type:varchar(255);" binding:"required"`
 
+	OrbitApiKey *string `gorm:"column:orbit_api_key;type:varchar(255);" binding:"required"`
+
 	PagerDutyApikey *string `gorm:"column:pager_duty_apikey;type:varchar(255);" binding:"required"`
 
 	PaypalTransactionClientId *string `gorm:"column:paypal_transaction_client_id;type:varchar(255);" binding:"required"`

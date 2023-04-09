@@ -1347,6 +1347,28 @@ const Settings: NextPage = () => {
             ),
         },
         {
+            key: 'orbit',
+            state: 'INACTIVE',
+            template: (data: any) => (
+                <SettingsIntegrationItem
+                    icon={'logos/orbit.svg'}
+                    identifier={'orbit'}
+                    name={'Orbit'}
+                    state={data.state}
+                    settingsChanged={() => {
+                        reloadRef.current = !reloadRef.current;
+                        setReload(reloadRef.current);
+                    }}
+                    fields={[
+                        {
+                            name: 'apiKey',
+                            label: 'API Key',
+                        },
+                    ]}
+                />
+            ),
+        },
+        {
             key: 'pagerduty',
             state: 'INACTIVE',
             template: (data: any) => (

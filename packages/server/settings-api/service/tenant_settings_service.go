@@ -685,6 +685,14 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 				tenantSettings.NotionPublicAccessToken = &publicAccessToken
 			}
 
+		case "orbit":
+			apiKey, ok := data["apiKey"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing API key for Orbit integration")
+			}
+
+			tenantSettings.OrbitApiKey = &apiKey
+
 		case "pagerduty":
 			apiKey, ok := data["apiKey"].(string)
 			if !ok {
@@ -934,6 +942,8 @@ func (s *tenantSettingsService) ClearIntegrationData(tenantName, identifier stri
 			tenantSettings.NotionPublicClientId = nil
 			tenantSettings.NotionPublicClientSecret = nil
 			tenantSettings.NotionPublicAccessToken = nil
+		case "orbit":
+			tenantSettings.OrbitApiKey = nil
 		case "pagerduty":
 			tenantSettings.PagerDutyApikey = nil
 		case "paypaltransaction":
