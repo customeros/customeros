@@ -1638,6 +1638,32 @@ const Settings: NextPage = () => {
                 />
             ),
         },
+        {
+            key: 'recruitee',
+            state: 'INACTIVE',
+            template: (data: any) => (
+                <SettingsIntegrationItem
+                    icon={'logos/recruitee.svg'}
+                    identifier={'recruitee'}
+                    name={'Recruitee'}
+                    state={data.state}
+                    settingsChanged={() => {
+                        reloadRef.current = !reloadRef.current;
+                        setReload(reloadRef.current);
+                    }}
+                    fields={[
+                        {
+                            name: 'companyId',
+                            label: 'Company Id',
+                        },
+                        {
+                            name: 'apiKey',
+                            label: 'API Key',
+                        },
+                    ]}
+                />
+            ),
+        },
     ]);
 
     useEffect(() => {

@@ -182,6 +182,9 @@ type TenantSettings struct {
 	QuickBooksRefreshToken *string `gorm:"column:quick_books_refresh_token;type:varchar(255);" binding:"required"`
 
 	RechargeApiToken *string `gorm:"column:recharge_api_token;type:varchar(255);" binding:"required"`
+
+	RecruiteeCompanyId *string `gorm:"column:recruitee_company_id;type:varchar(255);" binding:"required"`
+	RecruiteeApiKey    *string `gorm:"column:recruitee_api_key;type:varchar(255);" binding:"required"`
 }
 
 func (TenantSettings) TableName() string {

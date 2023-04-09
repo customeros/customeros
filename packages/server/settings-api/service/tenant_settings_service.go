@@ -843,6 +843,19 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 
 			tenantSettings.RechargeApiToken = &apiToken
 
+		case "recruitee":
+			companyId, ok := data["companyId"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing company id for Recruitee integration")
+			}
+			apiKey, ok := data["apiKey"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing API key for Recruitee integration")
+			}
+
+			tenantSettings.RecruiteeCompanyId = &companyId
+			tenantSettings.RecruiteeApiKey = &apiKey
+
 		}
 
 	}
@@ -1044,6 +1057,9 @@ func (s *tenantSettingsService) ClearIntegrationData(tenantName, identifier stri
 			tenantSettings.QuickBooksRefreshToken = nil
 		case "recharge":
 			tenantSettings.RechargeApiToken = nil
+		case "recruitee":
+			tenantSettings.RecruiteeCompanyId = nil
+			tenantSettings.RecruiteeApiKey = nil
 
 		}
 
