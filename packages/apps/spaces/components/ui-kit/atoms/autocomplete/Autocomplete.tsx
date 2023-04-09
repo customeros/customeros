@@ -1,4 +1,4 @@
-import React, { useState, useRef, useLayoutEffect } from 'react';
+import React, { useState, useRef, useLayoutEffect, useEffect } from 'react';
 import {
   AutoComplete as PrimereactAutocomplete,
   AutoCompleteChangeParams,
@@ -38,6 +38,7 @@ export const Autocomplete = ({
 }: CustomAutoCompleteProps) => {
   const [inputValue, setInputValue] = useState<string>(value);
   const [width, setWidth] = useState<number>();
+  const [showCreateButton, setShowCreateButton] = useState<boolean>(false);
   const [filteredSuggestions, setFilteredSuggestions] =
     useState<SuggestionItem[]>(suggestions);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -52,6 +53,11 @@ export const Autocomplete = ({
       setWidth((measureRef?.current?.scrollWidth || 0) + 2);
     }
   }, [inputValue]);
+  useEffect(() => {
+    if (inputValue && inputValue !== value && !filteredSuggestions.length) {
+      setShowCreateButton(true);
+    }
+  }, [filteredSuggestions.length, inputValue, value]);
 
   const handleSelectItem = (event: { value: SuggestionItem }) => {
     const selectedValue = event.value;
@@ -85,6 +91,7 @@ export const Autocomplete = ({
             value: newItem.id,
           },
         });
+        setShowCreateButton(false);
       }
     } catch (e) {
       // this is handled in mutation hook
@@ -124,7 +131,7 @@ export const Autocomplete = ({
         />
       </div>
 
-      {inputValue && inputValue !== value && !filteredSuggestions.length && (
+      {showCreateButton && (
         <div className={styles.createItemButton}>
           <button onClick={handleCreateItem}>
             Create {createItemType} &apos;{inputValue}&apos;
