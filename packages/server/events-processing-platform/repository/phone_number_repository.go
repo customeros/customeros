@@ -16,6 +16,7 @@ type PhoneNumberRepository interface {
 	UpdatePhoneNumber(ctx context.Context, aggregateId string, event events.PhoneNumberUpdatedEvent) error
 	LinkWithContact(ctx context.Context, tenant, contactId, phoneNumberId, label string, primary bool, updatedAt time.Time) error
 	LinkWithOrganization(ctx context.Context, tenant, organizationId, phoneNumberId, label string, primary bool, updatedAt time.Time) error
+	LinkWithUser(ctx context.Context, tenant, userId, phoneNumberId, label string, primary bool, updatedAt time.Time) error
 }
 
 type phoneNumberRepository struct {
@@ -162,6 +163,37 @@ func (r *phoneNumberRepository) LinkWithOrganization(ctx context.Context, tenant
 				"label":          label,
 				"primary":        primary,
 				"updatedAt":      updatedAt,
+			})
+		if err != nil {
+			return nil, err
+		}
+		return nil, err
+	})
+	return err
+}
+
+func (r *phoneNumberRepository) LinkWithUser(ctx context.Context, tenant, userId, phoneNumberId, label string, primary bool, updatedAt time.Time) error {
+	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
+	defer session.Close(ctx)
+
+	query := `
+		MATCH (t:Tenant {name:$tenant})<-[:USER_BELONGS_TO_TENANT]-(u:User {id:$userId}),
+				(t)<-[:PHONE_NUMBER_BELONGS_TO_TENANT]-(p:PhoneNumber {id:$phoneNumberId})
+		MERGE (u)-[rel:HAS]->(p)
+		SET	rel.primary = $primary,
+			rel.label = $label,	
+			u.updatedAt = $updatedAt,
+			rel.syncedWithEventStore = true`
+
+	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		_, err := tx.Run(ctx, query,
+			map[string]any{
+				"tenant":        tenant,
+				"userId":        userId,
+				"phoneNumberId": phoneNumberId,
+				"label":         label,
+				"primary":       primary,
+				"updatedAt":     updatedAt,
 			})
 		if err != nil {
 			return nil, err

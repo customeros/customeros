@@ -1,0 +1,46 @@
+syntax = "proto3";
+
+package userGrpcService;
+
+import "google/protobuf/timestamp.proto";
+
+option go_package = "./;userGrpcService";
+
+message UpsertUserGrpcRequest {
+  string id = 1;
+  string tenant = 2;
+  string firstName = 3;
+  string lastName = 4;
+  string name = 5;
+  string appSource = 6;
+  string source = 7;
+  string sourceOfTruth = 8;
+  google.protobuf.Timestamp  createdAt = 9;
+  google.protobuf.Timestamp  updatedAt = 10;
+}
+
+message LinkPhoneNumberToUserGrpcRequest {
+  string tenant = 1;
+  string userId = 2;
+  string phoneNumberId = 3;
+  bool primary = 4;
+  string label = 5;
+}
+
+message LinkEmailToUserGrpcRequest {
+  string tenant = 1;
+  string userId = 2;
+  string emailId = 3;
+  bool primary = 4;
+  string label = 5;
+}
+
+message UserIdGrpcResponse {
+  string id = 1;
+}
+
+service userGrpcService {
+  rpc UpsertUser(UpsertUserGrpcRequest) returns (UserIdGrpcResponse);
+  rpc LinkPhoneNumberToUser(LinkPhoneNumberToUserGrpcRequest) returns (UserIdGrpcResponse);
+  rpc LinkEmailToUser(LinkEmailToUserGrpcRequest) returns (UserIdGrpcResponse);
+}

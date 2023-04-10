@@ -21,6 +21,10 @@ type UserRepository interface {
 	GetAllForConversation(ctx context.Context, session neo4j.SessionWithContext, tenant, conversationId string) ([]*dbtype.Node, error)
 	GetAllForEmails(ctx context.Context, tenant string, emailIds []string) ([]*utils.DbNodeAndId, error)
 	GetAllForPhoneNumbers(ctx context.Context, tenant string, phoneNumberIds []string) ([]*utils.DbNodeAndId, error)
+
+	GetAllCrossTenants(ctx context.Context, size int) ([]*utils.DbNodeAndId, error)
+	GetAllUserPhoneNumberRelationships(ctx context.Context, size int) ([]*neo4j.Record, error)
+	GetAllUserEmailRelationships(ctx context.Context, size int) ([]*neo4j.Record, error)
 }
 
 type userRepository struct {
@@ -273,4 +277,73 @@ func (r *userRepository) GetAllForPhoneNumbers(ctx context.Context, tenant strin
 		return nil, err
 	}
 	return result.([]*utils.DbNodeAndId), err
+}
+
+func (r *userRepository) GetAllCrossTenants(ctx context.Context, size int) ([]*utils.DbNodeAndId, error) {
+	session := utils.NewNeo4jReadSession(ctx, *r.driver)
+	defer session.Close(ctx)
+
+	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		if queryResult, err := tx.Run(ctx, `
+			MATCH (u:User)-[:USER_BELONGS_TO_TENANT]->(t:Tenant)
+ 			WHERE (u.syncedWithEventStore is null or u.syncedWithEventStore=false)
+			RETURN u, t.name limit $size`,
+			map[string]any{
+				"size": size,
+			}); err != nil {
+			return nil, err
+		} else {
+			return utils.ExtractAllRecordsAsDbNodeAndId(ctx, queryResult, err)
+		}
+	})
+	if err != nil {
+		return nil, err
+	}
+	return result.([]*utils.DbNodeAndId), err
+}
+
+func (r *userRepository) GetAllUserPhoneNumberRelationships(ctx context.Context, size int) ([]*neo4j.Record, error) {
+	session := utils.NewNeo4jReadSession(ctx, *r.driver)
+	defer session.Close(ctx)
+
+	dbRecords, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		if queryResult, err := tx.Run(ctx, `
+			MATCH (t:Tenant)<-[:USER_BELONGS_TO_TENANT]-(u:User)-[rel:HAS]->(p:PhoneNumber)
+ 			WHERE (rel.syncedWithEventStore is null or rel.syncedWithEventStore=false)
+			RETURN rel, u.id, p.id, t.name limit $size`,
+			map[string]any{
+				"size": size,
+			}); err != nil {
+			return nil, err
+		} else {
+			return queryResult.Collect(ctx)
+		}
+	})
+	if err != nil {
+		return nil, err
+	}
+	return dbRecords.([]*neo4j.Record), err
+}
+
+func (r *userRepository) GetAllUserEmailRelationships(ctx context.Context, size int) ([]*neo4j.Record, error) {
+	session := utils.NewNeo4jReadSession(ctx, *r.driver)
+	defer session.Close(ctx)
+
+	dbRecords, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		if queryResult, err := tx.Run(ctx, `
+			MATCH (t:Tenant)<-[:USER_BELONGS_TO_TENANT]-(u:User)-[rel:HAS]->(e:Email)
+ 			WHERE (rel.syncedWithEventStore is null or rel.syncedWithEventStore=false)
+			RETURN rel, u.id, e.id, t.name limit $size`,
+			map[string]any{
+				"size": size,
+			}); err != nil {
+			return nil, err
+		} else {
+			return queryResult.Collect(ctx)
+		}
+	})
+	if err != nil {
+		return nil, err
+	}
+	return dbRecords.([]*neo4j.Record), err
 }

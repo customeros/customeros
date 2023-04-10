@@ -5,11 +5,13 @@ import (
 	email_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/proto/email"
 	organization_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/proto/organization"
 	phone_number_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/proto/phone_number"
+	user_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/proto/user"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	contact_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/service"
 	email_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/email/service"
 	organization_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/service"
 	phone_number_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/phone_number/service"
+	user_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/user/service"
 	"github.com/pkg/errors"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/keepalive"
@@ -50,6 +52,20 @@ func (server *server) newEventProcessorGrpcServer() (func() error, *grpc.Server,
 		),
 	)
 
+	registerGrpcServices(server, grpcServer)
+
+	//userService := organization_service.NewOrganizationService(server.log, server.repositories, server.commands.OrganizationCommands)
+	//organization_grpc_service.RegisterOrganizationGrpcServiceServer(grpcServer, organizationService)
+
+	go func() {
+		server.log.Infof("%s gRPC server is listening on port: {%s}", GetMicroserviceName(server.cfg), server.cfg.GRPC.Port)
+		server.log.Error(grpcServer.Serve(l))
+	}()
+
+	return l.Close, grpcServer, nil
+}
+
+func registerGrpcServices(server *server, grpcServer *grpc.Server) {
 	contactService := contact_service.NewContactService(server.log, server.repositories, server.commands.ContactCommands)
 	contact_grpc_service.RegisterContactGrpcServiceServer(grpcServer, contactService)
 
@@ -62,10 +78,6 @@ func (server *server) newEventProcessorGrpcServer() (func() error, *grpc.Server,
 	emailService := email_service.NewEmailService(server.log, server.repositories, server.commands.EmailCommands)
 	email_grpc_service.RegisterEmailGrpcServiceServer(grpcServer, emailService)
 
-	go func() {
-		server.log.Infof("%s gRPC server is listening on port: {%s}", GetMicroserviceName(server.cfg), server.cfg.GRPC.Port)
-		server.log.Error(grpcServer.Serve(l))
-	}()
-
-	return l.Close, grpcServer, nil
+	userService := user_service.NewUserService(server.log, server.repositories, server.commands.UserCommands)
+	user_grpc_service.RegisterUserGrpcServiceServer(grpcServer, userService)
 }

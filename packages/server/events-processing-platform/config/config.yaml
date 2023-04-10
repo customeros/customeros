@@ -28,6 +28,7 @@ subscriptions:
   contactPrefix: "contact-"
   organizationPrefix: "organization-"
   emailPrefix: "email-"
+  userPrefix: "user-"
   graphProjectionGroupName: "graph1"
   dataEnricherProjectionGroupName: "dataEnricher1"
 neo4j:
