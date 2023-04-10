@@ -7,8 +7,8 @@ import (
 )
 
 const (
-	PhoneNumberCreated = "V1_PHONE_NUMBER_CREATED"
-	PhoneNumberUpdated = "V1_PHONE_NUMBER_UPDATED"
+	PhoneNumberCreatedV1 = "V1_PHONE_NUMBER_CREATED"
+	PhoneNumberUpdatedV1 = "V1_PHONE_NUMBER_UPDATED"
 )
 
 type PhoneNumberCreatedEvent struct {
@@ -36,7 +36,7 @@ func NewPhoneNumberCreatedEvent(aggregate eventstore.Aggregate, tenant, rawPhone
 		return eventstore.Event{}, err
 	}
 
-	event := eventstore.NewBaseEvent(aggregate, PhoneNumberCreated)
+	event := eventstore.NewBaseEvent(aggregate, PhoneNumberCreatedV1)
 	if err := event.SetJsonData(&eventData); err != nil {
 		return eventstore.Event{}, err
 	}
@@ -60,7 +60,7 @@ func NewPhoneNumberUpdatedEvent(aggregate eventstore.Aggregate, tenant, sourceOf
 		return eventstore.Event{}, err
 	}
 
-	event := eventstore.NewBaseEvent(aggregate, PhoneNumberUpdated)
+	event := eventstore.NewBaseEvent(aggregate, PhoneNumberUpdatedV1)
 	if err := event.SetJsonData(&eventData); err != nil {
 		return eventstore.Event{}, err
 	}

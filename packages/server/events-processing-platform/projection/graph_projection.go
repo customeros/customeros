@@ -138,23 +138,23 @@ func (gp *GraphProjection) When(ctx context.Context, evt eventstore.Event) error
 
 	switch evt.GetEventType() {
 
-	case phone_number_events.PhoneNumberCreated:
+	case phone_number_events.PhoneNumberCreatedV1:
 		return gp.phoneNumberEventHandler.OnPhoneNumberCreate(ctx, evt)
-	case phone_number_events.PhoneNumberUpdated:
+	case phone_number_events.PhoneNumberUpdatedV1:
 		return gp.phoneNumberEventHandler.OnPhoneNumberUpdate(ctx, evt)
 
-	case email_events.EmailCreated:
+	case email_events.EmailCreatedV1:
 		return gp.emailEventHandler.OnEmailCreate(ctx, evt)
-	case email_events.EmailUpdated:
+	case email_events.EmailUpdatedV1:
 		return gp.emailEventHandler.OnEmailUpdate(ctx, evt)
 
-	case contact_events.ContactCreated:
+	case contact_events.ContactCreatedV1:
 		return gp.contactEventHandler.OnContactCreate(ctx, evt)
-	case contact_events.ContactUpdated:
+	case contact_events.ContactUpdatedV1:
 		return gp.contactEventHandler.OnContactUpdate(ctx, evt)
-	case contact_events.ContactPhoneNumberLinked:
+	case contact_events.ContactPhoneNumberLinkedV1:
 		return gp.contactEventHandler.OnPhoneNumberLinkedToContact(ctx, evt)
-	case contact_events.ContactEmailLinked:
+	case contact_events.ContactEmailLinkedV1:
 		return gp.contactEventHandler.OnEmailLinkedToContact(ctx, evt)
 
 	default:

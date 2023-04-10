@@ -38,13 +38,13 @@ func (contactAggregate *ContactAggregate) When(event eventstore.Event) error {
 
 	switch event.GetEventType() {
 
-	case events.ContactCreated:
+	case events.ContactCreatedV1:
 		return contactAggregate.onContactCreated(event)
-	case events.ContactUpdated:
+	case events.ContactUpdatedV1:
 		return contactAggregate.onContactUpdated(event)
-	case events.ContactPhoneNumberLinked:
+	case events.ContactPhoneNumberLinkedV1:
 		return contactAggregate.onPhoneNumberLinked(event)
-	case events.ContactEmailLinked:
+	case events.ContactEmailLinkedV1:
 		return contactAggregate.onEmailLinked(event)
 
 	default:
