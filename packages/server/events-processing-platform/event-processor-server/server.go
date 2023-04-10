@@ -9,6 +9,7 @@ import (
 	email_commands "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/email/commands"
 	organization_commands "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/commands"
 	phone_number_commands "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/phone_number/commands"
+	user_commands "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/user/commands"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore/store"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstroredb"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
@@ -79,6 +80,7 @@ func (server *server) Run(parentCtx context.Context) error {
 		OrganizationCommands: organization_commands.NewOrganizationCommands(server.log, server.cfg, aggregateStore),
 		PhoneNumberCommands:  phone_number_commands.NewPhoneNumberCommands(server.log, server.cfg, aggregateStore),
 		EmailCommands:        email_commands.NewEmailCommands(server.log, server.cfg, aggregateStore),
+		UserCommands:         user_commands.NewUserCommands(server.log, server.cfg, aggregateStore),
 	}
 
 	graphProjection := projection.NewGraphProjection(server.log, db, server.repositories, server.cfg)
@@ -88,6 +90,7 @@ func (server *server) Run(parentCtx context.Context) error {
 			server.cfg.Subscriptions.OrganizationPrefix,
 			server.cfg.Subscriptions.PhoneNumberPrefix,
 			server.cfg.Subscriptions.EmailPrefix,
+			server.cfg.Subscriptions.UserPrefix,
 		}
 		err := graphProjection.Subscribe(ctx, prefixes, server.cfg.Subscriptions.PoolSize, graphProjection.ProcessEvents)
 		if err != nil {

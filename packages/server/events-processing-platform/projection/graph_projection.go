@@ -12,6 +12,8 @@ import (
 	organization_events "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/events"
 	phone_number_event_handlers "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/phone_number/event_handlers"
 	phone_number_events "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/phone_number/events"
+	user_event_handlers "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/user/event_handlers"
+	user_events "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/user/events"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/repository"
@@ -32,6 +34,7 @@ type GraphProjection struct {
 	contactEventHandler      *contact_event_handlers.GraphContactEventHandler
 	organizationEventHandler *organization_event_handlers.GraphOrganizationEventHandler
 	emailEventHandler        *email_event_handlers.GraphEmailEventHandler
+	userEventHandler         *user_event_handlers.GraphUserEventHandler
 }
 
 func NewGraphProjection(log logger.Logger, db *esdb.Client, repositories *repository.Repositories, cfg *config.Config) *GraphProjection {
@@ -44,6 +47,7 @@ func NewGraphProjection(log logger.Logger, db *esdb.Client, repositories *reposi
 		organizationEventHandler: &organization_event_handlers.GraphOrganizationEventHandler{Repositories: repositories},
 		phoneNumberEventHandler:  &phone_number_event_handlers.GraphPhoneNumberEventHandler{Repositories: repositories},
 		emailEventHandler:        &email_event_handlers.GraphEmailEventHandler{Repositories: repositories},
+		userEventHandler:         &user_event_handlers.GraphUserEventHandler{Repositories: repositories},
 	}
 }
 
@@ -169,6 +173,15 @@ func (gp *GraphProjection) When(ctx context.Context, evt eventstore.Event) error
 		return gp.organizationEventHandler.OnPhoneNumberLinkedToOrganization(ctx, evt)
 	case organization_events.OrganizationEmailLinkedV1:
 		return gp.organizationEventHandler.OnEmailLinkedToOrganization(ctx, evt)
+
+	case user_events.UserCreatedV1:
+		return gp.userEventHandler.OnUserCreate(ctx, evt)
+	case user_events.UserUpdatedV1:
+		return gp.userEventHandler.OnUserUpdate(ctx, evt)
+	case user_events.UserPhoneNumberLinkedV1:
+		return gp.userEventHandler.OnPhoneNumberLinkedToUser(ctx, evt)
+	case user_events.UserEmailLinkedV1:
+		return gp.userEventHandler.OnEmailLinkedToUser(ctx, evt)
 
 	default:
 		gp.log.Warnf("(GraphProjection) [When unknown EventType] eventType: {%s}", evt.EventType)

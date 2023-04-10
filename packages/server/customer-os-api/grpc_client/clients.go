@@ -5,6 +5,7 @@ import (
 	events_processing_email "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/proto/email"
 	events_processing_organization "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/proto/organization"
 	events_processing_phone_number "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/proto/phone_number"
+	events_processing_user "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/proto/user"
 	"google.golang.org/grpc"
 )
 
@@ -13,6 +14,7 @@ type Clients struct {
 	OrganizationClient events_processing_organization.OrganizationGrpcServiceClient
 	PhoneNumberClient  events_processing_phone_number.PhoneNumberGrpcServiceClient
 	EmailClient        events_processing_email.EmailGrpcServiceClient
+	UserClient         events_processing_user.UserGrpcServiceClient
 }
 
 func InitClients(conn *grpc.ClientConn) *Clients {
@@ -24,6 +26,7 @@ func InitClients(conn *grpc.ClientConn) *Clients {
 		OrganizationClient: events_processing_organization.NewOrganizationGrpcServiceClient(conn),
 		PhoneNumberClient:  events_processing_phone_number.NewPhoneNumberGrpcServiceClient(conn),
 		EmailClient:        events_processing_email.NewEmailGrpcServiceClient(conn),
+		UserClient:         events_processing_user.NewUserGrpcServiceClient(conn),
 	}
 	return &clients
 }
