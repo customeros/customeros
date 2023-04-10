@@ -1,0 +1,50 @@
+syntax = "proto3";
+
+package organizationGrpcService;
+
+import "google/protobuf/timestamp.proto";
+
+option go_package = "./;organizationGrpcService";
+
+
+message UpsertOrganizationGrpcRequest {
+  string id = 1;
+  string tenant = 2;
+  string name = 3;
+  string description = 4;
+  string website = 5;
+  string industry = 6;
+  bool isPublic = 7;
+  string prefix = 8;
+  string appSource = 9;
+  string source = 10;
+  string sourceOfTruth = 11;
+  google.protobuf.Timestamp  createdAt = 12;
+  google.protobuf.Timestamp  updatedAt = 13;
+}
+
+message LinkPhoneNumberToOrganizationGrpcRequest {
+  string tenant = 1;
+  string organizationId = 2;
+  string phoneNumberId = 3;
+  bool primary = 4;
+  string label = 5;
+}
+
+message LinkEmailToOrganizationGrpcRequest {
+  string tenant = 1;
+  string organizationId = 2;
+  string emailId = 3;
+  bool primary = 4;
+  string label = 5;
+}
+
+message OrganizationIdGrpcResponse {
+  string id = 1;
+}
+
+service organizationGrpcService {
+  rpc UpsertOrganization(UpsertOrganizationGrpcRequest) returns (OrganizationIdGrpcResponse);
+  rpc LinkPhoneNumberToOrganization(LinkPhoneNumberToOrganizationGrpcRequest) returns (OrganizationIdGrpcResponse);
+  rpc LinkEmailToOrganization(LinkEmailToOrganizationGrpcRequest) returns (OrganizationIdGrpcResponse);
+}
