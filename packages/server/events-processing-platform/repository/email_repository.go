@@ -15,6 +15,7 @@ type EmailRepository interface {
 	CreateEmail(ctx context.Context, aggregateId string, event events.EmailCreatedEvent) error
 	UpdateEmail(ctx context.Context, aggregateId string, event events.EmailUpdatedEvent) error
 	LinkWithContact(ctx context.Context, tenant, contactId, emailId, label string, primary bool, updatedAt time.Time) error
+	LinkWithOrganization(ctx context.Context, tenant, organizationId, emailId, label string, primary bool, updatedAt time.Time) error
 }
 
 type emailRepository struct {
@@ -130,6 +131,37 @@ func (r *emailRepository) LinkWithContact(ctx context.Context, tenant, contactId
 				"label":     label,
 				"primary":   primary,
 				"updatedAt": updatedAt,
+			})
+		if err != nil {
+			return nil, err
+		}
+		return nil, err
+	})
+	return err
+}
+
+func (r *emailRepository) LinkWithOrganization(ctx context.Context, tenant, organizationId, emailId, label string, primary bool, updatedAt time.Time) error {
+	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
+	defer session.Close(ctx)
+
+	query := `
+		MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {id:$organizationId}),
+				(t)<-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]-(e:Email {id:$emailId})
+		MERGE (org)-[rel:HAS]->(e)
+		SET	rel.primary = $primary,
+			rel.label = $label,	
+			org.updatedAt = $updatedAt,
+			rel.syncedWithEventStore = true`
+
+	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		_, err := tx.Run(ctx, query,
+			map[string]any{
+				"tenant":         tenant,
+				"organizationId": organizationId,
+				"emailId":        emailId,
+				"label":          label,
+				"primary":        primary,
+				"updatedAt":      updatedAt,
 			})
 		if err != nil {
 			return nil, err

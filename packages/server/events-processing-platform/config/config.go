@@ -53,6 +53,7 @@ type Subscriptions struct {
 	PhoneNumberPrefix               string `mapstructure:"phoneNumberPrefix" validate:"required,gte=0"`
 	EmailPrefix                     string `mapstructure:"emailPrefix" validate:"required,gte=0"`
 	ContactPrefix                   string `mapstructure:"contactPrefix" validate:"required,gte=0"`
+	OrganizationPrefix              string `mapstructure:"organizationPrefix" validate:"required,gte=0"`
 	GraphProjectionGroupName        string `mapstructure:"graphProjectionGroupName" validate:"required,gte=0"`
 	DataEnricherProjectionGroupName string `mapstructure:"dataEnricherProjectionGroupName" validate:"required,gte=0"`
 }

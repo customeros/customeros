@@ -3,10 +3,12 @@ package server
 import (
 	contact_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/proto/contact"
 	email_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/proto/email"
+	organization_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/proto/organization"
 	phone_number_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/proto/phone_number"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
-	contactService "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/service"
+	contact_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/service"
 	email_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/email/service"
+	organization_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/service"
 	phone_number_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/phone_number/service"
 	"github.com/pkg/errors"
 	"google.golang.org/grpc"
@@ -48,8 +50,11 @@ func (server *server) newEventProcessorGrpcServer() (func() error, *grpc.Server,
 		),
 	)
 
-	contactService := contactService.NewContactService(server.log, server.repositories, server.commands.ContactCommands)
+	contactService := contact_service.NewContactService(server.log, server.repositories, server.commands.ContactCommands)
 	contact_grpc_service.RegisterContactGrpcServiceServer(grpcServer, contactService)
+
+	organizationService := organization_service.NewOrganizationService(server.log, server.repositories, server.commands.OrganizationCommands)
+	organization_grpc_service.RegisterOrganizationGrpcServiceServer(grpcServer, organizationService)
 
 	phoneNumberService := phone_number_service.NewPhoneNumberService(server.log, server.repositories, server.commands.PhoneNumberCommands)
 	phone_number_grpc_service.RegisterPhoneNumberGrpcServiceServer(grpcServer, phoneNumberService)

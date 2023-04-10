@@ -804,7 +804,7 @@ func (r *contactRepository) GetAllCrossTenants(ctx context.Context, size int) ([
 
 	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		if queryResult, err := tx.Run(ctx, `
-			MATCH (c:Contact)--(t:Tenant)
+			MATCH (c:Contact)-[:CONTACT_BELONGS_TO_TENANT]->(t:Tenant)
  			WHERE (c.syncedWithEventStore is null or c.syncedWithEventStore=false)
 			RETURN c, t.name limit $size`,
 			map[string]any{
@@ -827,7 +827,7 @@ func (r *contactRepository) GetAllContactPhoneNumberRelationships(ctx context.Co
 
 	dbRecords, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		if queryResult, err := tx.Run(ctx, `
-			MATCH (t:Tenant)--(c:Contact)-[rel:HAS]->(p:PhoneNumber)
+			MATCH (t:Tenant)<-[:CONTACT_BELONGS_TO_TENANT]-(c:Contact)-[rel:HAS]->(p:PhoneNumber)
  			WHERE (rel.syncedWithEventStore is null or rel.syncedWithEventStore=false)
 			RETURN rel, c.id, p.id, t.name limit $size`,
 			map[string]any{
@@ -850,7 +850,7 @@ func (r *contactRepository) GetAllContactEmailRelationships(ctx context.Context,
 
 	dbRecords, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		if queryResult, err := tx.Run(ctx, `
-			MATCH (t:Tenant)--(c:Contact)-[rel:HAS]->(e:Email)
+			MATCH (t:Tenant)<-[:CONTACT_BELONGS_TO_TENANT]-(c:Contact)-[rel:HAS]->(e:Email)
  			WHERE (rel.syncedWithEventStore is null or rel.syncedWithEventStore=false)
 			RETURN rel, c.id, e.id, t.name limit $size`,
 			map[string]any{

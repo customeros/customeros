@@ -7,6 +7,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain"
 	contact_commands "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/commands"
 	email_commands "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/email/commands"
+	organization_commands "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/commands"
 	phone_number_commands "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/phone_number/commands"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore/store"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstroredb"
@@ -74,15 +75,17 @@ func (server *server) Run(parentCtx context.Context) error {
 
 	aggregateStore := store.NewAggregateStore(server.log, db)
 	server.commands = &domain.Commands{
-		ContactCommands:     contact_commands.NewContactCommands(server.log, server.cfg, aggregateStore),
-		PhoneNumberCommands: phone_number_commands.NewPhoneNumberCommands(server.log, server.cfg, aggregateStore),
-		EmailCommands:       email_commands.NewEmailCommands(server.log, server.cfg, aggregateStore),
+		ContactCommands:      contact_commands.NewContactCommands(server.log, server.cfg, aggregateStore),
+		OrganizationCommands: organization_commands.NewOrganizationCommands(server.log, server.cfg, aggregateStore),
+		PhoneNumberCommands:  phone_number_commands.NewPhoneNumberCommands(server.log, server.cfg, aggregateStore),
+		EmailCommands:        email_commands.NewEmailCommands(server.log, server.cfg, aggregateStore),
 	}
 
 	graphProjection := projection.NewGraphProjection(server.log, db, server.repositories, server.cfg)
 	go func() {
 		prefixes := []string{
 			server.cfg.Subscriptions.ContactPrefix,
+			server.cfg.Subscriptions.OrganizationPrefix,
 			server.cfg.Subscriptions.PhoneNumberPrefix,
 			server.cfg.Subscriptions.EmailPrefix,
 		}
