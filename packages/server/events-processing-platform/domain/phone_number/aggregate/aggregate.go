@@ -38,9 +38,9 @@ func (a *PhoneNumberAggregate) When(event eventstore.Event) error {
 
 	switch event.GetEventType() {
 
-	case events.PhoneNumberCreated:
+	case events.PhoneNumberCreatedV1:
 		return a.onPhoneNumberCreated(event)
-	case events.PhoneNumberUpdated:
+	case events.PhoneNumberUpdatedV1:
 		return a.onPhoneNumberUpdated(event)
 
 	default:

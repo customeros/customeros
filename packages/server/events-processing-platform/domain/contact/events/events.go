@@ -8,10 +8,10 @@ import (
 )
 
 const (
-	ContactCreated           = "V1_CONTACT_CREATED"
-	ContactUpdated           = "V1_CONTACT_UPDATED"
-	ContactPhoneNumberLinked = "V1_CONTACT_PHONE_NUMBER_LINKED"
-	ContactEmailLinked       = "V1_CONTACT_EMAIL_LINKED"
+	ContactCreatedV1           = "V1_CONTACT_CREATED"
+	ContactUpdatedV1           = "V1_CONTACT_UPDATED"
+	ContactPhoneNumberLinkedV1 = "V1_CONTACT_PHONE_NUMBER_LINKED"
+	ContactEmailLinkedV1       = "V1_CONTACT_EMAIL_LINKED"
 )
 
 type ContactCreatedEvent struct {
@@ -45,7 +45,7 @@ func NewContactCreatedEvent(aggregate eventstore.Aggregate, contactDto *models.C
 		return eventstore.Event{}, err
 	}
 
-	event := eventstore.NewBaseEvent(aggregate, ContactCreated)
+	event := eventstore.NewBaseEvent(aggregate, ContactCreatedV1)
 	if err := event.SetJsonData(&eventData); err != nil {
 		return eventstore.Event{}, err
 	}
@@ -77,7 +77,7 @@ func NewContactUpdatedEvent(aggregate eventstore.Aggregate, contactDto *models.C
 		return eventstore.Event{}, err
 	}
 
-	event := eventstore.NewBaseEvent(aggregate, ContactUpdated)
+	event := eventstore.NewBaseEvent(aggregate, ContactUpdatedV1)
 	if err := event.SetJsonData(&eventData); err != nil {
 		return eventstore.Event{}, err
 	}
@@ -105,7 +105,7 @@ func NewContactLinkPhoneNumberEvent(aggregate eventstore.Aggregate, tenant, phon
 		return eventstore.Event{}, err
 	}
 
-	event := eventstore.NewBaseEvent(aggregate, ContactPhoneNumberLinked)
+	event := eventstore.NewBaseEvent(aggregate, ContactPhoneNumberLinkedV1)
 	if err := event.SetJsonData(&eventData); err != nil {
 		return eventstore.Event{}, err
 	}
@@ -133,7 +133,7 @@ func NewContactLinkEmailEvent(aggregate eventstore.Aggregate, tenant, emailId, l
 		return eventstore.Event{}, err
 	}
 
-	event := eventstore.NewBaseEvent(aggregate, ContactEmailLinked)
+	event := eventstore.NewBaseEvent(aggregate, ContactEmailLinkedV1)
 	if err := event.SetJsonData(&eventData); err != nil {
 		return eventstore.Event{}, err
 	}

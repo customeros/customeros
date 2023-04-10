@@ -7,8 +7,8 @@ import (
 )
 
 const (
-	EmailCreated = "V1_EMAIL_CREATED"
-	EmailUpdated = "V1_EMAIL_UPDATED"
+	EmailCreatedV1 = "V1_EMAIL_CREATED"
+	EmailUpdatedV1 = "V1_EMAIL_UPDATED"
 )
 
 type EmailCreatedEvent struct {
@@ -36,7 +36,7 @@ func NewEmailCreatedEvent(aggregate eventstore.Aggregate, tenant, rawEmail, sour
 		return eventstore.Event{}, err
 	}
 
-	event := eventstore.NewBaseEvent(aggregate, EmailCreated)
+	event := eventstore.NewBaseEvent(aggregate, EmailCreatedV1)
 	if err := event.SetJsonData(&eventData); err != nil {
 		return eventstore.Event{}, err
 	}
@@ -60,7 +60,7 @@ func NewEmailUpdatedEvent(aggregate eventstore.Aggregate, tenant, sourceOfTruth 
 		return eventstore.Event{}, err
 	}
 
-	event := eventstore.NewBaseEvent(aggregate, EmailUpdated)
+	event := eventstore.NewBaseEvent(aggregate, EmailUpdatedV1)
 	if err := event.SetJsonData(&eventData); err != nil {
 		return eventstore.Event{}, err
 	}

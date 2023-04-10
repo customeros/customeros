@@ -116,7 +116,7 @@ func (gp *DataEnricherProjection) When(ctx context.Context, evt eventstore.Event
 
 	switch evt.GetEventType() {
 
-	case events.PhoneNumberCreated:
+	case events.PhoneNumberCreatedV1:
 		return gp.phoneNumberEventHandler.OnPhoneNumberCreate(ctx, evt)
 
 	default:
