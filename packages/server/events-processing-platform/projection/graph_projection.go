@@ -8,6 +8,8 @@ import (
 	contact_events "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/events"
 	email_event_handlers "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/email/event_handlers"
 	email_events "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/email/events"
+	organization_event_handlers "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/event_handlers"
+	organization_events "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/events"
 	phone_number_event_handlers "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/phone_number/event_handlers"
 	phone_number_events "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/phone_number/events"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
@@ -22,24 +24,26 @@ import (
 )
 
 type GraphProjection struct {
-	log                     logger.Logger
-	db                      *esdb.Client
-	cfg                     *config.Config
-	repositories            *repository.Repositories
-	phoneNumberEventHandler *phone_number_event_handlers.GraphPhoneNumberEventHandler
-	contactEventHandler     *contact_event_handlers.GraphContactEventHandler
-	emailEventHandler       *email_event_handlers.GraphEmailEventHandler
+	log                      logger.Logger
+	db                       *esdb.Client
+	cfg                      *config.Config
+	repositories             *repository.Repositories
+	phoneNumberEventHandler  *phone_number_event_handlers.GraphPhoneNumberEventHandler
+	contactEventHandler      *contact_event_handlers.GraphContactEventHandler
+	organizationEventHandler *organization_event_handlers.GraphOrganizationEventHandler
+	emailEventHandler        *email_event_handlers.GraphEmailEventHandler
 }
 
 func NewGraphProjection(log logger.Logger, db *esdb.Client, repositories *repository.Repositories, cfg *config.Config) *GraphProjection {
 	return &GraphProjection{
-		log:                     log,
-		db:                      db,
-		repositories:            repositories,
-		cfg:                     cfg,
-		phoneNumberEventHandler: &phone_number_event_handlers.GraphPhoneNumberEventHandler{Repositories: repositories},
-		contactEventHandler:     &contact_event_handlers.GraphContactEventHandler{Repositories: repositories},
-		emailEventHandler:       &email_event_handlers.GraphEmailEventHandler{Repositories: repositories},
+		log:                      log,
+		db:                       db,
+		repositories:             repositories,
+		cfg:                      cfg,
+		contactEventHandler:      &contact_event_handlers.GraphContactEventHandler{Repositories: repositories},
+		organizationEventHandler: &organization_event_handlers.GraphOrganizationEventHandler{Repositories: repositories},
+		phoneNumberEventHandler:  &phone_number_event_handlers.GraphPhoneNumberEventHandler{Repositories: repositories},
+		emailEventHandler:        &email_event_handlers.GraphEmailEventHandler{Repositories: repositories},
 	}
 }
 
@@ -156,6 +160,15 @@ func (gp *GraphProjection) When(ctx context.Context, evt eventstore.Event) error
 		return gp.contactEventHandler.OnPhoneNumberLinkedToContact(ctx, evt)
 	case contact_events.ContactEmailLinkedV1:
 		return gp.contactEventHandler.OnEmailLinkedToContact(ctx, evt)
+
+	case organization_events.OrganizationCreatedV1:
+		return gp.organizationEventHandler.OnOrganizationCreate(ctx, evt)
+	case organization_events.OrganizationUpdatedV1:
+		return gp.organizationEventHandler.OnOrganizationUpdate(ctx, evt)
+	case organization_events.OrganizationPhoneNumberLinkedV1:
+		return gp.organizationEventHandler.OnPhoneNumberLinkedToOrganization(ctx, evt)
+	case organization_events.OrganizationEmailLinkedV1:
+		return gp.organizationEventHandler.OnEmailLinkedToOrganization(ctx, evt)
 
 	default:
 		gp.log.Warnf("(GraphProjection) [When unknown EventType] eventType: {%s}", evt.EventType)

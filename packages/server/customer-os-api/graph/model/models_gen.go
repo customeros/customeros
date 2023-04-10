@@ -1087,16 +1087,22 @@ type TimeRange struct {
 }
 
 type UpsertToEventStoreResult struct {
-	PhoneNumberCount                      int `json:"phoneNumberCount"`
-	PhoneNumberCountFailed                int `json:"phoneNumberCountFailed"`
-	EmailCount                            int `json:"emailCount"`
-	EmailCountFailed                      int `json:"emailCountFailed"`
-	ContactCount                          int `json:"contactCount"`
-	ContactCountFailed                    int `json:"contactCountFailed"`
-	ContactPhoneNumberRelationCount       int `json:"contactPhoneNumberRelationCount"`
-	ContactPhoneNumberRelationCountFailed int `json:"contactPhoneNumberRelationCountFailed"`
-	ContactEmailRelationCount             int `json:"contactEmailRelationCount"`
-	ContactEmailRelationCountFailed       int `json:"contactEmailRelationCountFailed"`
+	PhoneNumberCount                           int `json:"phoneNumberCount"`
+	PhoneNumberCountFailed                     int `json:"phoneNumberCountFailed"`
+	EmailCount                                 int `json:"emailCount"`
+	EmailCountFailed                           int `json:"emailCountFailed"`
+	ContactCount                               int `json:"contactCount"`
+	ContactCountFailed                         int `json:"contactCountFailed"`
+	OrganizationCount                          int `json:"organizationCount"`
+	OrganizationCountFailed                    int `json:"organizationCountFailed"`
+	ContactPhoneNumberRelationCount            int `json:"contactPhoneNumberRelationCount"`
+	ContactPhoneNumberRelationCountFailed      int `json:"contactPhoneNumberRelationCountFailed"`
+	ContactEmailRelationCount                  int `json:"contactEmailRelationCount"`
+	ContactEmailRelationCountFailed            int `json:"contactEmailRelationCountFailed"`
+	OrganizationPhoneNumberRelationCount       int `json:"organizationPhoneNumberRelationCount"`
+	OrganizationPhoneNumberRelationCountFailed int `json:"organizationPhoneNumberRelationCountFailed"`
+	OrganizationEmailRelationCount             int `json:"organizationEmailRelationCount"`
+	OrganizationEmailRelationCountFailed       int `json:"organizationEmailRelationCountFailed"`
 }
 
 // Describes the User of customerOS.  A user is the person who logs into the Openline platform.

@@ -533,6 +533,7 @@ func (s *contactService) GetContactsForPhoneNumbers(ctx context.Context, phoneNu
 func (s *contactService) UpsertInEventStore(ctx context.Context, size int) (int, int, error) {
 	processedRecords := 0
 	failedRecords := 0
+	outputErr := error(nil)
 	for size > 0 {
 		batchSize := constants.Neo4jBatchSize
 		if size < constants.Neo4jBatchSize {
@@ -558,6 +559,9 @@ func (s *contactService) UpsertInEventStore(ctx context.Context, size int) (int,
 			})
 			if err != nil {
 				failedRecords++
+				if outputErr != nil {
+					outputErr = err
+				}
 				logrus.Errorf("Failed to call method: %v", err)
 			} else {
 				processedRecords++
@@ -567,12 +571,13 @@ func (s *contactService) UpsertInEventStore(ctx context.Context, size int) (int,
 		size -= batchSize
 	}
 
-	return processedRecords, failedRecords, nil
+	return processedRecords, failedRecords, outputErr
 }
 
 func (s *contactService) UpsertPhoneNumberRelationInEventStore(ctx context.Context, size int) (int, int, error) {
 	processedRecords := 0
 	failedRecords := 0
+	outputErr := error(nil)
 	for size > 0 {
 		batchSize := constants.Neo4jBatchSize
 		if size < constants.Neo4jBatchSize {
@@ -592,6 +597,9 @@ func (s *contactService) UpsertPhoneNumberRelationInEventStore(ctx context.Conte
 			})
 			if err != nil {
 				failedRecords++
+				if outputErr != nil {
+					outputErr = err
+				}
 				logrus.Errorf("Failed to call method: %v", err)
 			} else {
 				processedRecords++
@@ -601,12 +609,13 @@ func (s *contactService) UpsertPhoneNumberRelationInEventStore(ctx context.Conte
 		size -= batchSize
 	}
 
-	return processedRecords, failedRecords, nil
+	return processedRecords, failedRecords, outputErr
 }
 
 func (s *contactService) UpsertEmailRelationInEventStore(ctx context.Context, size int) (int, int, error) {
 	processedRecords := 0
 	failedRecords := 0
+	outputErr := error(nil)
 	for size > 0 {
 		batchSize := constants.Neo4jBatchSize
 		if size < constants.Neo4jBatchSize {
@@ -626,6 +635,9 @@ func (s *contactService) UpsertEmailRelationInEventStore(ctx context.Context, si
 			})
 			if err != nil {
 				failedRecords++
+				if outputErr != nil {
+					outputErr = err
+				}
 				logrus.Errorf("Failed to call method: %v", err)
 			} else {
 				processedRecords++
@@ -635,7 +647,7 @@ func (s *contactService) UpsertEmailRelationInEventStore(ctx context.Context, si
 		size -= batchSize
 	}
 
-	return processedRecords, failedRecords, nil
+	return processedRecords, failedRecords, outputErr
 }
 
 func (s *contactService) mapDbNodeToContactEntity(dbNode dbtype.Node) *entity.ContactEntity {

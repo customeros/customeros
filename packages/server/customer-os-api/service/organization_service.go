@@ -5,10 +5,13 @@ import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	events_processing_organization "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/proto/organization"
 	"github.com/sirupsen/logrus"
 	"reflect"
 )
@@ -30,6 +33,10 @@ type OrganizationService interface {
 	RemoveSubsidiary(ctx context.Context, organizationId, subsidiaryId string) error
 
 	mapDbNodeToOrganizationEntity(node dbtype.Node) *entity.OrganizationEntity
+
+	UpsertInEventStore(ctx context.Context, size int) (int, int, error)
+	UpsertPhoneNumberRelationInEventStore(ctx context.Context, size int) (int, int, error)
+	UpsertEmailRelationInEventStore(ctx context.Context, size int) (int, int, error)
 }
 
 type OrganizationCreateData struct {
@@ -46,11 +53,13 @@ type OrganizationUpdateData struct {
 
 type organizationService struct {
 	repositories *repository.Repositories
+	grpcClients  *grpc_client.Clients
 }
 
-func NewOrganizationService(repositories *repository.Repositories) OrganizationService {
+func NewOrganizationService(repositories *repository.Repositories, grpcClients *grpc_client.Clients) OrganizationService {
 	return &organizationService{
 		repositories: repositories,
+		grpcClients:  grpcClients,
 	}
 }
 
@@ -363,6 +372,127 @@ func (s *organizationService) GetSubsidiaryOf(ctx context.Context, organizationI
 		organizationEntities = append(organizationEntities, *organizationEntity)
 	}
 	return &organizationEntities, nil
+}
+
+func (s *organizationService) UpsertInEventStore(ctx context.Context, size int) (int, int, error) {
+	processedRecords := 0
+	failedRecords := 0
+	outputErr := error(nil)
+	for size > 0 {
+		batchSize := constants.Neo4jBatchSize
+		if size < constants.Neo4jBatchSize {
+			batchSize = size
+		}
+		records, err := s.repositories.OrganizationRepository.GetAllCrossTenants(ctx, batchSize)
+		if err != nil {
+			return 0, 0, err
+		}
+		for _, v := range records {
+			_, err := s.grpcClients.OrganizationClient.UpsertOrganization(context.Background(), &events_processing_organization.UpsertOrganizationGrpcRequest{
+				Id:            utils.GetStringPropOrEmpty(v.Node.Props, "id"),
+				Tenant:        v.LinkedNodeId,
+				Name:          utils.GetStringPropOrEmpty(v.Node.Props, "name"),
+				Description:   utils.GetStringPropOrEmpty(v.Node.Props, "description"),
+				Website:       utils.GetStringPropOrEmpty(v.Node.Props, "website"),
+				Industry:      utils.GetStringPropOrEmpty(v.Node.Props, "industry"),
+				IsPublic:      utils.GetBoolPropOrFalse(v.Node.Props, "isPublic"),
+				Source:        utils.GetStringPropOrEmpty(v.Node.Props, "source"),
+				SourceOfTruth: utils.GetStringPropOrEmpty(v.Node.Props, "sourceOfTruth"),
+				AppSource:     utils.GetStringPropOrEmpty(v.Node.Props, "appSource"),
+				CreatedAt:     utils.ConvertTimeToTimestampPtr(utils.GetTimePropOrNil(v.Node.Props, "createdAt")),
+				UpdatedAt:     utils.ConvertTimeToTimestampPtr(utils.GetTimePropOrNil(v.Node.Props, "updatedAt")),
+			})
+			if err != nil {
+				failedRecords++
+				if outputErr != nil {
+					outputErr = err
+				}
+				logrus.Errorf("Failed to call method: %v", err)
+			} else {
+				processedRecords++
+			}
+		}
+
+		size -= batchSize
+	}
+
+	return processedRecords, failedRecords, outputErr
+}
+
+func (s *organizationService) UpsertPhoneNumberRelationInEventStore(ctx context.Context, size int) (int, int, error) {
+	processedRecords := 0
+	failedRecords := 0
+	outputErr := error(nil)
+	for size > 0 {
+		batchSize := constants.Neo4jBatchSize
+		if size < constants.Neo4jBatchSize {
+			batchSize = size
+		}
+		records, err := s.repositories.OrganizationRepository.GetAllOrganizationPhoneNumberRelationships(ctx, batchSize)
+		if err != nil {
+			return 0, 0, err
+		}
+		for _, v := range records {
+			_, err := s.grpcClients.OrganizationClient.LinkPhoneNumberToOrganization(context.Background(), &events_processing_organization.LinkPhoneNumberToOrganizationGrpcRequest{
+				Primary:        utils.GetBoolPropOrFalse(v.Values[0].(neo4j.Relationship).Props, "primary"),
+				Label:          utils.GetStringPropOrEmpty(v.Values[0].(neo4j.Relationship).Props, "label"),
+				OrganizationId: v.Values[1].(string),
+				PhoneNumberId:  v.Values[2].(string),
+				Tenant:         v.Values[3].(string),
+			})
+			if err != nil {
+				failedRecords++
+				if outputErr != nil {
+					outputErr = err
+				}
+				logrus.Errorf("Failed to call method: %v", err)
+			} else {
+				processedRecords++
+			}
+		}
+
+		size -= batchSize
+	}
+
+	return processedRecords, failedRecords, outputErr
+}
+
+func (s *organizationService) UpsertEmailRelationInEventStore(ctx context.Context, size int) (int, int, error) {
+	processedRecords := 0
+	failedRecords := 0
+	outputErr := error(nil)
+	for size > 0 {
+		batchSize := constants.Neo4jBatchSize
+		if size < constants.Neo4jBatchSize {
+			batchSize = size
+		}
+		records, err := s.repositories.OrganizationRepository.GetAllOrganizationEmailRelationships(ctx, batchSize)
+		if err != nil {
+			return 0, 0, err
+		}
+		for _, v := range records {
+			_, err := s.grpcClients.OrganizationClient.LinkEmailToOrganization(context.Background(), &events_processing_organization.LinkEmailToOrganizationGrpcRequest{
+				Primary:        utils.GetBoolPropOrFalse(v.Values[0].(neo4j.Relationship).Props, "primary"),
+				Label:          utils.GetStringPropOrEmpty(v.Values[0].(neo4j.Relationship).Props, "label"),
+				OrganizationId: v.Values[1].(string),
+				EmailId:        v.Values[2].(string),
+				Tenant:         v.Values[3].(string),
+			})
+			if err != nil {
+				failedRecords++
+				if outputErr != nil {
+					outputErr = err
+				}
+				logrus.Errorf("Failed to call method: %v", err)
+			} else {
+				processedRecords++
+			}
+		}
+
+		size -= batchSize
+	}
+
+	return processedRecords, failedRecords, outputErr
 }
 
 func (s *organizationService) mapDbNodeToOrganizationEntity(node dbtype.Node) *entity.OrganizationEntity {

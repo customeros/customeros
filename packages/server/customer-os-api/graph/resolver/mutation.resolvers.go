@@ -112,6 +112,34 @@ func (r *mutationResolver) UpsertInEventStore(ctx context.Context, size int) (*m
 		}
 	}
 
+	processedOrgs, failedOrgs, err := r.Services.OrganizationService.UpsertInEventStore(ctx, size)
+	output.OrganizationCount = processedOrgs
+	output.OrganizationCountFailed = failedOrgs
+	if err != nil || failedOrgs > 0 {
+		graphql.AddErrorf(ctx, "Failed: {%s}", err)
+		return &output, err
+	}
+
+	if processedPhoneNumbers < size && processedOrgs < size {
+		processedCount, failedCount, err := r.Services.OrganizationService.UpsertPhoneNumberRelationInEventStore(ctx, size)
+		output.OrganizationPhoneNumberRelationCount = processedCount
+		output.OrganizationPhoneNumberRelationCountFailed = failedCount
+		if err != nil || failedCount > 0 {
+			graphql.AddErrorf(ctx, "Failed: {%s}", err)
+			return &output, err
+		}
+	}
+
+	if processedEmails < size && processedOrgs < size {
+		processedCount, failedCount, err := r.Services.OrganizationService.UpsertEmailRelationInEventStore(ctx, size)
+		output.OrganizationEmailRelationCount = processedCount
+		output.OrganizationEmailRelationCountFailed = failedCount
+		if err != nil || failedCount > 0 {
+			graphql.AddErrorf(ctx, "Failed: {%s}", err)
+			return &output, err
+		}
+	}
+
 	return &output, nil
 }
 

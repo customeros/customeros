@@ -1,7 +1,7 @@
 package commands
 
 import (
-	commonModels "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/models"
+	common_models "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/models"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/models"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"time"
@@ -18,7 +18,7 @@ type UpsertContactCommand struct {
 	eventstore.BaseCommand
 	Tenant     string
 	CoreFields ContactCoreFields
-	Source     commonModels.Source
+	Source     common_models.Source
 	CreatedAt  *time.Time
 	UpdatedAt  *time.Time
 }
@@ -42,7 +42,7 @@ func NewUpsertContactCommand(aggregateID, tenant, source, sourceOfTruth, appSour
 		BaseCommand: eventstore.NewBaseCommand(aggregateID),
 		Tenant:      tenant,
 		CoreFields:  coreFields,
-		Source: commonModels.Source{
+		Source: common_models.Source{
 			Source:        source,
 			SourceOfTruth: sourceOfTruth,
 			AppSource:     appSource,
