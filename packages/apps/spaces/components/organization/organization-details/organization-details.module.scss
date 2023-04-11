@@ -1,5 +1,9 @@
 @import '../../../styles/mixins';
 
+.detailsAndCommunicationChannel {
+
+}
+
 .organizationDetails {
   display: flex;
   flex-direction: column;
@@ -26,6 +30,7 @@
 .name {
   font-size: var(--heading-main);
   font-weight: normal;
+  margin-bottom: var(--spacing-xs);
 }
 
 .industry {

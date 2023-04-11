@@ -19,7 +19,7 @@ import {
 } from '@apollo/client';
 import { authLink } from '../../apollo-client';
 import { useSetRecoilState } from 'recoil';
-import { contactDetailsEdit, organizationDetailsEdit } from '../../state';
+import { organizationDetailsEdit } from '../../state';
 
 export async function getServerSideProps(context: NextPageContext) {
   const ssrClient = new ApolloClient({
@@ -39,6 +39,7 @@ export async function getServerSideProps(context: NextPageContext) {
     connectToDevTools: true,
     credentials: 'include',
   });
+
   const organizationId = context.query.id;
   if (organizationId == 'new') {
     // mutation
@@ -58,8 +59,6 @@ export async function getServerSideProps(context: NextPageContext) {
         },
       },
     });
-
-    console.log('🏷️ ----- organization_Create: ', organization_Create);
 
     return {
       redirect: {
