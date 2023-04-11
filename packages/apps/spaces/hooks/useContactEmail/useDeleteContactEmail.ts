@@ -24,11 +24,13 @@ export const useRemoveEmailFromContactEmail = ({
         const response = await removeEmailFromContactMutation({
           variables: { contactId, id: emailId },
           refetchQueries: ['GetContactCommunicationChannels'],
-          optimisticResponse: {
-            emailRemoveFromContactById: {
-              __typename: 'Result',
-              result: true,
-            },
+          update(cache) {
+            const normalizedId = cache.identify({
+              id: emailId,
+              __typename: 'Email',
+            });
+            cache.evict({ id: normalizedId });
+            cache.gc();
           },
         });
         return response.data?.emailRemoveFromContactById ?? null;

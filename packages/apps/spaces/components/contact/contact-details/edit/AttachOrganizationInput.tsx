@@ -1,23 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import styles from './job-roles-input.module.scss';
-import {
-  Autocomplete,
-  DeleteIconButton,
-  EditableContentInput,
-  IconButton,
-  Plus,
-  Trash,
-} from '../../../ui-kit/atoms';
-import {
-  useCreateContactJobRole,
-  useRemoveJobRoleFromContactJobRole,
-  useUpdateContactJobRole,
-} from '../../../../hooks/useContactJobRole';
+import { Autocomplete, DeleteIconButton } from '../../../ui-kit';
 import { capitalizeFirstLetter } from '../../../../utils';
 import { useOrganizationsOptions } from '../../../../hooks/useOrganizations';
 import { useCreateOrganization } from '../../../../hooks/useOrganization';
-import { useRouter } from 'next/router';
 import { useAttachOrganizationToContact } from '../../../../hooks/useContact';
+import { useRemoveOrganizationFromContact } from '../../../../hooks/useContact/useRemoveOrganizationFromContact';
 
 interface JobRoleInputProps {
   contactId: string;
@@ -27,7 +15,6 @@ interface JobRoleInputProps {
   };
   isEditMode?: boolean;
   showAddNew?: boolean;
-  index?: number;
 }
 
 export const AttachOrganizationInput: React.FC<JobRoleInputProps> = ({
@@ -35,12 +22,14 @@ export const AttachOrganizationInput: React.FC<JobRoleInputProps> = ({
   organization,
   isEditMode,
   showAddNew = false,
-  index,
 }) => {
   const [organizationOptions, setOrganizationOptions] = useState<
     Array<{ value: string; label: string }>
   >([]);
   const { onAttachOrganizationToContact } = useAttachOrganizationToContact({
+    contactId,
+  });
+  const { onRemoveOrganizationFromContact } = useRemoveOrganizationFromContact({
     contactId,
   });
   const { data } = useOrganizationsOptions();
@@ -87,7 +76,12 @@ export const AttachOrganizationInput: React.FC<JobRoleInputProps> = ({
       {isEditMode && (
         <DeleteIconButton
           style={{ position: 'absolute', left: -16, top: 6 }}
-          onDelete={() => null}
+          onDelete={() =>
+            onRemoveOrganizationFromContact({
+              contactId,
+              organizationId: organization?.id,
+            })
+          }
         />
       )}
 

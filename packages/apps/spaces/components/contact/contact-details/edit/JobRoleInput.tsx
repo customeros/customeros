@@ -3,6 +3,7 @@ import styles from './job-roles-input.module.scss';
 import {
   AddIconButton,
   Autocomplete,
+  Checkbox,
   DeleteIconButton,
   EditableContentInput,
 } from '../../../ui-kit/atoms';
@@ -14,7 +15,6 @@ import {
 import { capitalizeFirstLetter } from '../../../../utils';
 import { useOrganizationsOptions } from '../../../../hooks/useOrganizations';
 import { useCreateOrganization } from '../../../../hooks/useOrganization';
-import { useRouter } from 'next/router';
 
 interface JobRoleInputProps {
   contactId: string;
@@ -26,6 +26,7 @@ interface JobRoleInputProps {
   roleId: string;
   isEditMode?: boolean;
   showAddButton?: boolean;
+  primary: boolean;
 }
 
 export const JobRoleInput: React.FC<JobRoleInputProps> = ({
@@ -33,6 +34,7 @@ export const JobRoleInput: React.FC<JobRoleInputProps> = ({
   roleId,
   organization,
   jobRole,
+  primary,
   isEditMode,
   showAddButton = false,
 }) => {
@@ -42,9 +44,6 @@ export const JobRoleInput: React.FC<JobRoleInputProps> = ({
   const { onCreateContactJobRole } = useCreateContactJobRole({ contactId });
   const { data, loading, error } = useOrganizationsOptions();
   const { onCreateOrganization } = useCreateOrganization();
-  const {
-    query: { id },
-  } = useRouter();
   const { onUpdateContactJobRole } = useUpdateContactJobRole({ contactId });
   const { onRemoveContactJobRole } = useRemoveJobRoleFromContactJobRole({
     contactId,
@@ -72,6 +71,8 @@ export const JobRoleInput: React.FC<JobRoleInputProps> = ({
         )}
         {(isEditMode || !!jobRole?.length) && (
           <EditableContentInput
+            id={`conatct-personal-details-last-name-job-role-${contactId}=${roleId}`}
+            label='Job title'
             isEditMode={isEditMode}
             value={jobRole || ''}
             placeholder='Job title'
@@ -107,6 +108,20 @@ export const JobRoleInput: React.FC<JobRoleInputProps> = ({
             placeholder='Organization'
           />
         )}
+
+        <Checkbox
+          type='checkbox'
+          label='Primary'
+          // @ts-expect-error revisit
+          onChange={(e) => {
+            roleId
+              ? onUpdateContactJobRole({
+                  id: roleId,
+                  primary: !primary,
+                })
+              : onCreateContactJobRole({ primary: !primary });
+          }}
+        />
 
         {showAddButton && isEditMode && (
           <AddIconButton
