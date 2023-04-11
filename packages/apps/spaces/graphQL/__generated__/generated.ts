@@ -2520,12 +2520,12 @@ export type RemovePhoneNumberFromOrganizationMutationVariables = Exact<{
 
 export type RemovePhoneNumberFromOrganizationMutation = { __typename?: 'Mutation', phoneNumberRemoveFromOrganizationById: { __typename?: 'Result', result: boolean } };
 
-export type UpdateOrganizationMutationVariables = Exact<{
+export type UpdateOrganizationDescriptionMutationVariables = Exact<{
   input: OrganizationUpdateInput;
 }>;
 
 
-export type UpdateOrganizationMutation = { __typename?: 'Mutation', organization_Update: { __typename?: 'Organization', id: string } };
+export type UpdateOrganizationDescriptionMutation = { __typename?: 'Mutation', organization_Update: { __typename?: 'Organization', id: string, description?: string | null } };
 
 export type UpdateOrganizationEmailMutationVariables = Exact<{
   organizationId: Scalars['ID'];
@@ -2535,6 +2535,20 @@ export type UpdateOrganizationEmailMutationVariables = Exact<{
 
 export type UpdateOrganizationEmailMutation = { __typename?: 'Mutation', emailUpdateInOrganization: { __typename?: 'Email', primary: boolean, label?: EmailLabel | null } };
 
+export type UpdateOrganizationIndustryMutationVariables = Exact<{
+  input: OrganizationUpdateInput;
+}>;
+
+
+export type UpdateOrganizationIndustryMutation = { __typename?: 'Mutation', organization_Update: { __typename?: 'Organization', id: string, industry?: string | null } };
+
+export type UpdateOrganizationNameMutationVariables = Exact<{
+  input: OrganizationUpdateInput;
+}>;
+
+
+export type UpdateOrganizationNameMutation = { __typename?: 'Mutation', organization_Update: { __typename?: 'Organization', id: string, name: string } };
+
 export type UpdateOrganizationPhoneNumberMutationVariables = Exact<{
   organizationId: Scalars['ID'];
   input: PhoneNumberUpdateInput;
@@ -2542,6 +2556,13 @@ export type UpdateOrganizationPhoneNumberMutationVariables = Exact<{
 
 
 export type UpdateOrganizationPhoneNumberMutation = { __typename?: 'Mutation', phoneNumberUpdateInOrganization: { __typename?: 'PhoneNumber', label?: PhoneNumberLabel | null, id: string, primary: boolean, e164?: string | null, rawPhoneNumber?: string | null } };
+
+export type UpdateOrganizationWebsiteMutationVariables = Exact<{
+  input: OrganizationUpdateInput;
+}>;
+
+
+export type UpdateOrganizationWebsiteMutation = { __typename?: 'Mutation', organization_Update: { __typename?: 'Organization', id: string, website?: string | null } };
 
 export type RemoveNoteMutationVariables = Exact<{
   id: Scalars['ID'];
@@ -4854,39 +4875,40 @@ export function useRemovePhoneNumberFromOrganizationMutation(baseOptions?: Apoll
 export type RemovePhoneNumberFromOrganizationMutationHookResult = ReturnType<typeof useRemovePhoneNumberFromOrganizationMutation>;
 export type RemovePhoneNumberFromOrganizationMutationResult = Apollo.MutationResult<RemovePhoneNumberFromOrganizationMutation>;
 export type RemovePhoneNumberFromOrganizationMutationOptions = Apollo.BaseMutationOptions<RemovePhoneNumberFromOrganizationMutation, RemovePhoneNumberFromOrganizationMutationVariables>;
-export const UpdateOrganizationDocument = gql`
-    mutation updateOrganization($input: OrganizationUpdateInput!) {
+export const UpdateOrganizationDescriptionDocument = gql`
+    mutation updateOrganizationDescription($input: OrganizationUpdateInput!) {
   organization_Update(input: $input) {
     id
+    description
   }
 }
     `;
-export type UpdateOrganizationMutationFn = Apollo.MutationFunction<UpdateOrganizationMutation, UpdateOrganizationMutationVariables>;
+export type UpdateOrganizationDescriptionMutationFn = Apollo.MutationFunction<UpdateOrganizationDescriptionMutation, UpdateOrganizationDescriptionMutationVariables>;
 
 /**
- * __useUpdateOrganizationMutation__
+ * __useUpdateOrganizationDescriptionMutation__
  *
- * To run a mutation, you first call `useUpdateOrganizationMutation` within a React component and pass it any options that fit your needs.
- * When your component renders, `useUpdateOrganizationMutation` returns a tuple that includes:
+ * To run a mutation, you first call `useUpdateOrganizationDescriptionMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useUpdateOrganizationDescriptionMutation` returns a tuple that includes:
  * - A mutate function that you can call at any time to execute the mutation
  * - An object with fields that represent the current status of the mutation's execution
  *
  * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
  *
  * @example
- * const [updateOrganizationMutation, { data, loading, error }] = useUpdateOrganizationMutation({
+ * const [updateOrganizationDescriptionMutation, { data, loading, error }] = useUpdateOrganizationDescriptionMutation({
  *   variables: {
  *      input: // value for 'input'
  *   },
  * });
  */
-export function useUpdateOrganizationMutation(baseOptions?: Apollo.MutationHookOptions<UpdateOrganizationMutation, UpdateOrganizationMutationVariables>) {
+export function useUpdateOrganizationDescriptionMutation(baseOptions?: Apollo.MutationHookOptions<UpdateOrganizationDescriptionMutation, UpdateOrganizationDescriptionMutationVariables>) {
         const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<UpdateOrganizationMutation, UpdateOrganizationMutationVariables>(UpdateOrganizationDocument, options);
+        return Apollo.useMutation<UpdateOrganizationDescriptionMutation, UpdateOrganizationDescriptionMutationVariables>(UpdateOrganizationDescriptionDocument, options);
       }
-export type UpdateOrganizationMutationHookResult = ReturnType<typeof useUpdateOrganizationMutation>;
-export type UpdateOrganizationMutationResult = Apollo.MutationResult<UpdateOrganizationMutation>;
-export type UpdateOrganizationMutationOptions = Apollo.BaseMutationOptions<UpdateOrganizationMutation, UpdateOrganizationMutationVariables>;
+export type UpdateOrganizationDescriptionMutationHookResult = ReturnType<typeof useUpdateOrganizationDescriptionMutation>;
+export type UpdateOrganizationDescriptionMutationResult = Apollo.MutationResult<UpdateOrganizationDescriptionMutation>;
+export type UpdateOrganizationDescriptionMutationOptions = Apollo.BaseMutationOptions<UpdateOrganizationDescriptionMutation, UpdateOrganizationDescriptionMutationVariables>;
 export const UpdateOrganizationEmailDocument = gql`
     mutation updateOrganizationEmail($organizationId: ID!, $input: EmailUpdateInput!) {
   emailUpdateInOrganization(organizationId: $organizationId, input: $input) {
@@ -4922,6 +4944,74 @@ export function useUpdateOrganizationEmailMutation(baseOptions?: Apollo.Mutation
 export type UpdateOrganizationEmailMutationHookResult = ReturnType<typeof useUpdateOrganizationEmailMutation>;
 export type UpdateOrganizationEmailMutationResult = Apollo.MutationResult<UpdateOrganizationEmailMutation>;
 export type UpdateOrganizationEmailMutationOptions = Apollo.BaseMutationOptions<UpdateOrganizationEmailMutation, UpdateOrganizationEmailMutationVariables>;
+export const UpdateOrganizationIndustryDocument = gql`
+    mutation updateOrganizationIndustry($input: OrganizationUpdateInput!) {
+  organization_Update(input: $input) {
+    id
+    industry
+  }
+}
+    `;
+export type UpdateOrganizationIndustryMutationFn = Apollo.MutationFunction<UpdateOrganizationIndustryMutation, UpdateOrganizationIndustryMutationVariables>;
+
+/**
+ * __useUpdateOrganizationIndustryMutation__
+ *
+ * To run a mutation, you first call `useUpdateOrganizationIndustryMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useUpdateOrganizationIndustryMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [updateOrganizationIndustryMutation, { data, loading, error }] = useUpdateOrganizationIndustryMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useUpdateOrganizationIndustryMutation(baseOptions?: Apollo.MutationHookOptions<UpdateOrganizationIndustryMutation, UpdateOrganizationIndustryMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<UpdateOrganizationIndustryMutation, UpdateOrganizationIndustryMutationVariables>(UpdateOrganizationIndustryDocument, options);
+      }
+export type UpdateOrganizationIndustryMutationHookResult = ReturnType<typeof useUpdateOrganizationIndustryMutation>;
+export type UpdateOrganizationIndustryMutationResult = Apollo.MutationResult<UpdateOrganizationIndustryMutation>;
+export type UpdateOrganizationIndustryMutationOptions = Apollo.BaseMutationOptions<UpdateOrganizationIndustryMutation, UpdateOrganizationIndustryMutationVariables>;
+export const UpdateOrganizationNameDocument = gql`
+    mutation updateOrganizationName($input: OrganizationUpdateInput!) {
+  organization_Update(input: $input) {
+    id
+    name
+  }
+}
+    `;
+export type UpdateOrganizationNameMutationFn = Apollo.MutationFunction<UpdateOrganizationNameMutation, UpdateOrganizationNameMutationVariables>;
+
+/**
+ * __useUpdateOrganizationNameMutation__
+ *
+ * To run a mutation, you first call `useUpdateOrganizationNameMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useUpdateOrganizationNameMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [updateOrganizationNameMutation, { data, loading, error }] = useUpdateOrganizationNameMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useUpdateOrganizationNameMutation(baseOptions?: Apollo.MutationHookOptions<UpdateOrganizationNameMutation, UpdateOrganizationNameMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<UpdateOrganizationNameMutation, UpdateOrganizationNameMutationVariables>(UpdateOrganizationNameDocument, options);
+      }
+export type UpdateOrganizationNameMutationHookResult = ReturnType<typeof useUpdateOrganizationNameMutation>;
+export type UpdateOrganizationNameMutationResult = Apollo.MutationResult<UpdateOrganizationNameMutation>;
+export type UpdateOrganizationNameMutationOptions = Apollo.BaseMutationOptions<UpdateOrganizationNameMutation, UpdateOrganizationNameMutationVariables>;
 export const UpdateOrganizationPhoneNumberDocument = gql`
     mutation updateOrganizationPhoneNumber($organizationId: ID!, $input: PhoneNumberUpdateInput!) {
   phoneNumberUpdateInOrganization(organizationId: $organizationId, input: $input) {
@@ -4957,6 +5047,40 @@ export function useUpdateOrganizationPhoneNumberMutation(baseOptions?: Apollo.Mu
 export type UpdateOrganizationPhoneNumberMutationHookResult = ReturnType<typeof useUpdateOrganizationPhoneNumberMutation>;
 export type UpdateOrganizationPhoneNumberMutationResult = Apollo.MutationResult<UpdateOrganizationPhoneNumberMutation>;
 export type UpdateOrganizationPhoneNumberMutationOptions = Apollo.BaseMutationOptions<UpdateOrganizationPhoneNumberMutation, UpdateOrganizationPhoneNumberMutationVariables>;
+export const UpdateOrganizationWebsiteDocument = gql`
+    mutation updateOrganizationWebsite($input: OrganizationUpdateInput!) {
+  organization_Update(input: $input) {
+    id
+    website
+  }
+}
+    `;
+export type UpdateOrganizationWebsiteMutationFn = Apollo.MutationFunction<UpdateOrganizationWebsiteMutation, UpdateOrganizationWebsiteMutationVariables>;
+
+/**
+ * __useUpdateOrganizationWebsiteMutation__
+ *
+ * To run a mutation, you first call `useUpdateOrganizationWebsiteMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useUpdateOrganizationWebsiteMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [updateOrganizationWebsiteMutation, { data, loading, error }] = useUpdateOrganizationWebsiteMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useUpdateOrganizationWebsiteMutation(baseOptions?: Apollo.MutationHookOptions<UpdateOrganizationWebsiteMutation, UpdateOrganizationWebsiteMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<UpdateOrganizationWebsiteMutation, UpdateOrganizationWebsiteMutationVariables>(UpdateOrganizationWebsiteDocument, options);
+      }
+export type UpdateOrganizationWebsiteMutationHookResult = ReturnType<typeof useUpdateOrganizationWebsiteMutation>;
+export type UpdateOrganizationWebsiteMutationResult = Apollo.MutationResult<UpdateOrganizationWebsiteMutation>;
+export type UpdateOrganizationWebsiteMutationOptions = Apollo.BaseMutationOptions<UpdateOrganizationWebsiteMutation, UpdateOrganizationWebsiteMutationVariables>;
 export const RemoveNoteDocument = gql`
     mutation removeNote($id: ID!) {
   note_Delete(id: $id) {

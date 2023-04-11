@@ -9,15 +9,19 @@ import {
   DeleteConfirmationDialog,
   EditableContentInput,
   Link,
-  Pencil,
   Trash,
 } from '../../ui-kit';
-import { useUpdateOrganization } from '../../../hooks/useOrganization/useUpdateOrganization';
 import { useRecoilState } from 'recoil';
 import { organizationDetailsEdit } from '../../../state';
 import { DebouncedTextArea } from '../../ui-kit/atoms/input/DebouncedTextArea';
 import { OrganizationCommunicationDetails } from './OrganizationCommunicationDetails';
-import { Check, IconButton } from '../../ui-kit/atoms';
+import { IconButton } from '../../ui-kit/atoms';
+import {
+  useUpdateOrganizationDescription,
+  useUpdateOrganizationIndustry,
+  useUpdateOrganizationName,
+  useUpdateOrganizationWebsite,
+} from '../../../hooks/useOrganizationDetails';
 export const OrganizationDetails = ({ id }: { id: string }) => {
   const { data } = useOrganizationDetails({ id });
   const [{ isEditMode }, setOrganizationDetailsEdit] = useRecoilState(
@@ -25,13 +29,22 @@ export const OrganizationDetails = ({ id }: { id: string }) => {
   );
   const [deleteConfirmationModalVisible, setDeleteConfirmationModalVisible] =
     useState(false);
-  const { onUpdateOrganization } = useUpdateOrganization({
+  const { onUpdateOrganizationName } = useUpdateOrganizationName({
     organizationId: id,
   });
+  const { onUpdateOrganizationIndustry } = useUpdateOrganizationIndustry({
+    organizationId: id,
+  });
+  const { onUpdateOrganizationDescription } = useUpdateOrganizationDescription({
+    organizationId: id,
+  });
+  const { onUpdateOrganizationWebsite } = useUpdateOrganizationWebsite({
+    organizationId: id,
+  });
+
   const { onDeleteOrganization } = useDeleteOrganization({
     id,
   });
-
   return (
     <div className={styles.detailsAndCommunicationChannel}>
       <div className={styles.organizationDetails}>
@@ -56,8 +69,11 @@ export const OrganizationDetails = ({ id }: { id: string }) => {
               value={data?.name || ''}
               placeholder={isEditMode ? 'Organization' : 'Unnamed'}
               onChange={(value: string) =>
-                onUpdateOrganization({
+                onUpdateOrganizationName({
                   name: value,
+                  industry: value,
+                  description: data?.description,
+                  website: data?.website,
                 })
               }
             />
@@ -71,10 +87,11 @@ export const OrganizationDetails = ({ id }: { id: string }) => {
               value={data?.industry || ''}
               placeholder={isEditMode ? 'Industry' : ''}
               onChange={(value: string) =>
-                onUpdateOrganization({
+                onUpdateOrganizationIndustry({
+                  industry: value,
                   name: data?.name || '',
                   description: data?.description,
-                  industry: value,
+                  website: data?.website,
                 })
               }
             />
@@ -88,10 +105,11 @@ export const OrganizationDetails = ({ id }: { id: string }) => {
           value={data?.description || ''}
           placeholder={isEditMode ? 'Description' : ''}
           onChange={(value: string) =>
-            onUpdateOrganization({
-              name: data?.name || '',
+            onUpdateOrganizationDescription({
               description: value,
-              industry: data?.industry || '',
+              industry: data?.industry,
+              name: data?.name || '',
+              website: data?.website,
             })
           }
         />
@@ -104,7 +122,7 @@ export const OrganizationDetails = ({ id }: { id: string }) => {
               value={data?.website || ''}
               placeholder={isEditMode ? 'Website' : ''}
               onChange={(value: string) =>
-                onUpdateOrganization({
+                onUpdateOrganizationWebsite({
                   name: data?.name || '',
                   description: data?.description,
                   industry: data?.industry,

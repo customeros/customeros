@@ -1,0 +1,6 @@
+mutation updateOrganizationIndustry($input: OrganizationUpdateInput!) {
+  organization_Update(input: $input) {
+    id
+    industry
+  }
+}

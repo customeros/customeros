@@ -2,6 +2,7 @@ import {
   useRemoveContactJobRoleMutation,
   RemoveContactJobRoleMutation,
 } from './types';
+import { toast } from 'react-toastify';
 
 interface Props {
   contactId: string;
@@ -22,7 +23,6 @@ export const useRemoveJobRoleFromContactJobRole = ({
       try {
         const response = await removeJobRoleFromContactMutation({
           variables: { contactId, roleId },
-          refetchQueries: ['useGetContactPersonalDetailsWithOrganizations'],
           update(cache) {
             const normalizedId = cache.identify({
               id: roleId,
@@ -34,7 +34,12 @@ export const useRemoveJobRoleFromContactJobRole = ({
         });
         return response.data?.jobRole_Delete ?? null;
       } catch (err) {
-        console.error(err);
+        toast.error(
+          'Something went wrong while deleting job role. Please contact us or try again later',
+          {
+            toastId: `contact-${roleId}-delete-error`,
+          },
+        );
         return null;
       }
     };

@@ -81,7 +81,6 @@ export const useCreateContactJobRole = ({ contactId }: Props): Result => {
       ...contactData,
       jobRoles: [...contactData.jobRoles, newrole],
     };
-    console.log('🏷️ ----- data: ', data);
     if (data === null) {
       client.writeQuery({
         query: GetContactPersonalDetailsWithOrganizationsDocument,
