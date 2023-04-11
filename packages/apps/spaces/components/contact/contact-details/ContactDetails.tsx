@@ -1,6 +1,6 @@
 import React, { useContext } from 'react';
 import Image from 'next/image';
-import { IconButton } from '../../ui-kit/atoms';
+import { Check, IconButton, Pencil } from '../../ui-kit/atoms';
 import styles from './contact-details.module.scss';
 import { ContactPersonalDetails } from './ContactPersonalDetails';
 import { WebRTCContext } from '../../../context/web-rtc';
@@ -122,12 +122,10 @@ export const ContactDetails = ({ id }: { id: string }) => {
           <div className={classNames(styles.section)}>
             <IconButton
               aria-describedby='message-icon-label'
-              mode='secondary'
+              mode='success'
               className={styles.icon}
               onClick={() => setContactDetailsEdit({ isEditMode: !isEditMode })}
-              icon={
-                <Image alt={''} src='/icons/check.svg' width={20} height={20} />
-              }
+              icon={<Check style={{ transform: 'scale(0.9)' }} />}
             />
             <div className={styles.label} id='message-icon-label'>
               Done
@@ -137,17 +135,10 @@ export const ContactDetails = ({ id }: { id: string }) => {
           <div className={styles.section}>
             <IconButton
               aria-describedby='message-icon-label'
-              mode='secondary'
+              mode='primary'
               className={styles.icon}
               onClick={() => setContactDetailsEdit({ isEditMode: !isEditMode })}
-              icon={
-                <Image
-                  alt={''}
-                  src='/icons/pencil.svg'
-                  width={20}
-                  height={20}
-                />
-              }
+              icon={<Pencil style={{ transform: 'scale(0.9)' }} />}
             />
             <div className={styles.label} id='message-icon-label'>
               Edit
