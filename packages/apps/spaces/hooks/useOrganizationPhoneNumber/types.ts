@@ -1,0 +1,28 @@
+export {
+  useGetContactCommunicationChannelsQuery,
+  useGetContactPersonalDetailsQuery,
+  useCreateContactMutation,
+  useUpdateContactEmailMutation,
+  useAddEmailToContactMutation,
+  useRemoveEmailFromContactMutation,
+  useUpdateContactPhoneNumberMutation,
+  useRemovePhoneNumberFromContactMutation,
+  useAddPhoneToContactMutation,
+  useAddPhoneToOrganizationMutation,
+  useRemovePhoneNumberFromOrganizationMutation,
+  useUpdateOrganizationPhoneNumberMutation,
+} from '../../graphQL/__generated__/generated';
+export type {
+  Contact,
+  GetContactCommunicationChannelsQuery,
+  GetContactPersonalDetailsQuery,
+  ContactInput,
+  CreateContactMutation,
+  Email,
+  UpdateContactEmailMutation,
+  AddPhoneToOrganizationMutation,
+  RemovePhoneNumberFromOrganizationMutation,
+  UpdateOrganizationPhoneNumberMutation,
+  PhoneNumber,
+  PhoneNumberUpdateInput,
+} from '../../graphQL/__generated__/generated';

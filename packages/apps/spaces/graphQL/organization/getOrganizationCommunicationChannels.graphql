@@ -1,0 +1,18 @@
+query GetOrganizationCommunicationChannels($id: ID!) {
+  organization(id: $id) {
+    id
+    name
+    emails {
+      id
+      email
+      primary
+      label
+    }
+    phoneNumbers {
+      id
+      e164
+      rawPhoneNumber
+      label
+    }
+  }
+}
