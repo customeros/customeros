@@ -147,7 +147,7 @@ export const JobRoleInput: React.FC<JobRoleInputProps> = ({
               onCreateContactJobRole({
                 jobTitle: '',
                 primary: false,
-                organizationId: organization?.id,
+                organizationId: '',
               });
             }}
           />
