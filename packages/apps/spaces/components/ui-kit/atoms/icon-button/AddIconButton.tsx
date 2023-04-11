@@ -22,7 +22,7 @@ export const AddIconButton: React.FC<DeleteIconButtonProps> = ({
         ...style,
       }}
       onClick={onAdd}
-      icon={<Plus style={{ transform: 'scale(0.6)' }} />}
+      icon={<span>+</span>}
     />
   );
 };

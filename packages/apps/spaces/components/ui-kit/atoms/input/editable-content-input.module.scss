@@ -41,3 +41,7 @@
   margin: var(--spacing-xxxs) 0;
 }
 
+.invisibleLabel {
+  position: absolute;
+  top: -9999px;
+}
