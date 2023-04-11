@@ -157,6 +157,21 @@
     }
   }
 
+  &.success {
+    background: var(--success-color);
+    color: var(--text-on-accent);
+
+    &:hover {
+      background: var(--success-color-hover);
+    }
+    &:focus {
+      background: var(--success-color-focus);
+    }
+    &:focus {
+      background: var(--success-color-active);
+    }
+  }
+
   &.text {
     background: transparent;
 
