@@ -1,6 +1,5 @@
 export { useContactPersonalDetails } from './useContactPersonalDetails';
 export { useContactCommunicationChannelsDetails } from './useContactCommunicationChannelsDetails';
-export { useCreateContact } from './useCreateContact';
 
 export { useAddEmailToContactEmail } from '../useContactEmail/useAddContactEmail';
 export { useRemoveEmailFromContactEmail } from '../useContactEmail/useDeleteContactEmail';
