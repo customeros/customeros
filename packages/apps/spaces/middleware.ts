@@ -70,7 +70,6 @@ export async function middleware(request: NextRequest) {
           data.identity.id,
           request,
         );
-        console.log('🏷️ ----- DEBUG nextResponse: ', nextResponse);
         const alg = 'HS256';
         const jwt = await new jose.SignJWT({
           id: data.identity.id,

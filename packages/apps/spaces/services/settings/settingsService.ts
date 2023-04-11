@@ -17,11 +17,14 @@ export function GetSettings(): Promise<any> {
   );
 }
 
-export function UpdateIntegrationSettings(identifier: string, data: any): Promise<any> {
+export function UpdateIntegrationSettings(
+  identifier: string,
+  data: any,
+): Promise<any> {
   return new Promise((resolve, reject) =>
     axios
       .post(`/sa/integration`, {
-          [identifier]: data
+        [identifier]: data,
       })
       .then((response: any) => {
         if (response.data) {
