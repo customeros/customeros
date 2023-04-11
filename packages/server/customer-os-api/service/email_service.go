@@ -130,8 +130,17 @@ func (s *emailService) UpdateEmailFor(ctx context.Context, entityType entity.Ent
 		currentEmail := utils.GetStringPropOrEmpty(utils.GetPropsFromNode(*currentEmailNode), "email")
 		currentRawEmail := utils.GetStringPropOrEmpty(utils.GetPropsFromNode(*currentEmailNode), "rawEmail")
 
-		if len(inputEntity.RawEmail) == 0 || inputEntity.RawEmail == currentEmail || inputEntity.RawEmail == currentRawEmail {
-			// email address replace not requested, proceed with update
+		var emailExists = false
+		if currentRawEmail == "" {
+			emailExists, err = s.repositories.EmailRepository.Exists(ctx, common.GetContext(ctx).Tenant, inputEntity.RawEmail)
+			if err != nil {
+				return nil, err
+			}
+		}
+
+		if len(inputEntity.RawEmail) == 0 || inputEntity.RawEmail == currentEmail || inputEntity.RawEmail == currentRawEmail ||
+			(currentRawEmail == "" && !emailExists) {
+			// proceed with update
 			emailNode, emailRelationship, err = s.repositories.EmailRepository.UpdateEmailForInTx(ctx, tx, common.GetContext(ctx).Tenant, entityType, entityId, *inputEntity)
 			if err != nil {
 				return nil, err
