@@ -46,9 +46,15 @@ func (r *emailRepository) MergeEmailToInTx(ctx context.Context, tx neo4j.Managed
 		query = `MATCH (entity:Organization {id:$entityId})-[:ORGANIZATION_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant}) `
 	}
 
+	var operation, onCreate = "MERGE", ""
+	if emailEntity.RawEmail == "" {
+		operation = "CREATE"
+		onCreate = ""
+	}
+
 	query = query +
-		" MERGE (t)<-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]-(e:Email {rawEmail: $email}) " +
-		" ON CREATE SET e.id=randomUUID(), " +
+		" %s (t)<-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]-(e:Email {rawEmail: $email}) " +
+		" %s SET e.id=randomUUID(), " +
 		"				e.source=$source, " +
 		"				e.sourceOfTruth=$sourceOfTruth, " +
 		" 				e.appSource=$appSource, " +
@@ -63,7 +69,7 @@ func (r *emailRepository) MergeEmailToInTx(ctx context.Context, tx neo4j.Managed
 		"		e.updatedAt=$now " +
 		" RETURN e, rel"
 
-	queryResult, err := tx.Run(ctx, fmt.Sprintf(query, "Email_"+tenant),
+	queryResult, err := tx.Run(ctx, fmt.Sprintf(query, operation, onCreate, "Email_"+tenant),
 		map[string]interface{}{
 			"tenant":        tenant,
 			"entityId":      entityId,
@@ -90,15 +96,24 @@ func (r *emailRepository) UpdateEmailForInTx(ctx context.Context, tx neo4j.Manag
 		query = `MATCH (entity:Organization {id:$entityId})-[:ORGANIZATION_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant}) `
 	}
 
-	queryResult, err := tx.Run(ctx, query+`, (entity)-[rel:HAS]->(e:Email {id:$emailId}) 
+	updatedRawEmailQuery := ""
+	if emailEntity.RawEmail != "" {
+		updatedRawEmailQuery = ", e.rawEmail=$email "
+	}
+
+	query = query + `, (entity)-[rel:HAS]->(e:Email {id:$emailId}) 
 			SET rel.label=$label,
 				rel.primary=$primary,
 				e.sourceOfTruth=$sourceOfTruth,
 				e.updatedAt=$now
-			RETURN e, rel`,
+				%s
+			RETURN e, rel`
+
+	queryResult, err := tx.Run(ctx, fmt.Sprintf(query, updatedRawEmailQuery),
 		map[string]interface{}{
 			"tenant":        tenant,
 			"entityId":      entityId,
+			"email":         emailEntity.RawEmail,
 			"emailId":       emailEntity.Id,
 			"label":         emailEntity.Label,
 			"primary":       emailEntity.Primary,
@@ -150,7 +165,7 @@ func (r *emailRepository) GetAllForIds(ctx context.Context, tenant string, entit
 	}
 	query = query + `, (entity)-[rel:HAS]->(e:Email)-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]->(t)
 					WHERE entity.id IN $entityIds
-					RETURN e, rel, entity.id ORDER BY e.email`
+					RETURN e, rel, entity.id ORDER BY e.email, e.rawEmail`
 
 	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		if queryResult, err := tx.Run(ctx, query,
