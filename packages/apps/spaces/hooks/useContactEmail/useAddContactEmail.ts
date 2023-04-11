@@ -1,7 +1,7 @@
 import {
   GetContactCommunicationChannelsQuery,
   useAddEmailToContactMutation,
-} from './types';
+} from '../useContact/types';
 import {
   EmailInput,
   GetContactCommunicationChannelsDocument,

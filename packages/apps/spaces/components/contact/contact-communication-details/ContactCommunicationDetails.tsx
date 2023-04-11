@@ -1,15 +1,15 @@
 import React from 'react';
+import { useContactCommunicationChannelsDetails } from '../../../hooks/useContact';
 import {
   useAddEmailToContactEmail,
-  useContactCommunicationChannelsDetails,
   useRemoveEmailFromContactEmail,
-} from '../../../hooks/useContact';
+  useUpdateContactEmail,
+} from '../../../hooks/useContactEmail';
 import {
   useCreateContactPhoneNumber,
   useRemovePhoneNumberFromContact,
   useUpdateContactPhoneNumber,
 } from '../../../hooks/useContactPhoneNumber';
-import { useUpdateContactEmail } from '../../../hooks/useContactEmail';
 
 import { useRecoilValue } from 'recoil';
 import { contactDetailsEdit } from '../../../state';

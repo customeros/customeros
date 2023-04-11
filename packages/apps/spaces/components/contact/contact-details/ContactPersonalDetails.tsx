@@ -7,7 +7,6 @@ import {
 import styles from './contact-details.module.scss';
 import {
   useArchiveContact,
-  useContactPersonalDetails,
   useContactPersonalDetailsWithOrganizations,
   useUpdateContactPersonalDetails,
 } from '../../../hooks/useContact';
@@ -37,9 +36,9 @@ export const ContactPersonalDetails = ({ id }: { id: string }) => {
   const { onArchiveContact } = useArchiveContact({ id });
   useEffect(() => {
     if (!loading && !data?.jobRoles?.length && isEditMode) {
-      onCreateContactJobRole({ jobTitle: '' });
+      onCreateContactJobRole({ jobTitle: '', primary: true });
     }
-  }, [loading, isEditMode]);
+  }, [loading, data?.jobRoles.length, isEditMode]);
 
   if (loading) {
     return <ContactDetailsSkeleton />;
@@ -83,6 +82,8 @@ export const ContactPersonalDetails = ({ id }: { id: string }) => {
         <div className={styles.nameAndEditButton}>
           <div className={styles.nameContainer}>
             <EditableContentInput
+              id={`conatct-personal-details-first-name-${id}`}
+              label='First name'
               isEditMode={isEditMode}
               value={data?.firstName || data?.name || ''}
               placeholder={isEditMode ? 'First name' : 'Unnamed'}
@@ -94,6 +95,8 @@ export const ContactPersonalDetails = ({ id }: { id: string }) => {
               }
             />
             <EditableContentInput
+              id={`conatct-personal-details-last-name-${id}`}
+              label='Last name'
               isEditMode={isEditMode}
               value={data?.lastName || ''}
               placeholder={isEditMode ? 'Last name' : ''}
@@ -113,6 +116,7 @@ export const ContactPersonalDetails = ({ id }: { id: string }) => {
               key={jobRole.id}
               contactId={id}
               organization={jobRole.organization}
+              primary={jobRole.primary}
               jobRole={jobRole?.jobTitle || ''}
               roleId={jobRole.id}
               isEditMode={isEditMode}
@@ -129,7 +133,6 @@ export const ContactPersonalDetails = ({ id }: { id: string }) => {
           (organization: any, index) => {
             return (
               <AttachOrganizationInput
-                index={index}
                 key={organization.id}
                 contactId={id}
                 organization={organization}
