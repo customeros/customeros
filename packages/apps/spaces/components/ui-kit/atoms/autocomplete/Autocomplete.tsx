@@ -50,11 +50,6 @@ export const Autocomplete = ({
 
   useLayoutEffect(() => {
     if (mode === 'fit-content') {
-      console.log(
-        '🏷️ ----- mode: ',
-        inputValue,
-        measureRef?.current?.scrollWidth,
-      );
       setWidth((measureRef?.current?.scrollWidth || 0) + 2);
     }
   }, [inputValue]);
