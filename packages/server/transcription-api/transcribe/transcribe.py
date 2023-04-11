@@ -6,7 +6,7 @@ import numpy
 from pydub.utils import make_chunks
 import datetime
 from sklearn.metrics.pairwise import cosine_similarity
-import multiprocessing
+import concurrent.futures
 from io import BytesIO
 import traceback
 
@@ -56,20 +56,20 @@ def diarise_chunk(chunk):
 
     return {'offset': chunk['offset'], 'diariastion': output_json}
 def diarise_chunks(chunks):
-    # Run tasks asynchronously, with up to NUM_SEGMENTS_PARALLEL tasks running in parallel
-    pool = multiprocessing.Pool(processes=NUM_SEGMENTS_PARALLEL)
 
-    # Start the processes
-    result_iterator = pool.imap_unordered(diarise_chunk, chunks, chunksize=1)
-
-    # Wait for the processes to complete
-    pool.close()
-    pool.join()
-
-    # Collect the results
     results = []
-    for result in result_iterator:
-        results.append(result)
+
+    # Run tasks asynchronously, with up to NUM_SEGMENTS_PARALLEL tasks running in parallel
+    with concurrent.futures.ThreadPoolExecutor(max_workers=NUM_SEGMENTS_PARALLEL) as executor:
+        future_to_result = {executor.submit(diarise_chunk, chunk): chunk for chunk in chunks}
+        for future in concurrent.futures.as_completed(future_to_result):
+            chunk = future_to_result[future]
+            try:
+                result = future.result()
+                results.append(result)
+            except Exception as exc:
+                print('%r generated an exception: %s' % (chunk, exc))
+                traceback.print_exc()
 
     return results
 
@@ -290,23 +290,18 @@ def transcribe_segment(segment):
 
 
 def run_transcription_tasks(tasks):
-
-    # Run tasks asynchronously, with up to NUM_SEGMENTS_PARALLEL tasks running in parallel
-    pool = multiprocessing.Pool(processes=NUM_SEGMENTS_PARALLEL)
-
-    # Start the processes
-    result_iterator = pool.imap_unordered(transcribe_segment, tasks, chunksize=1)
     results = []
-
-    #for task in tasks:
-    #    results.append(transcribe_segment(task))
-    # Wait for the processes to complete
-    pool.close()
-    pool.join()
-
-    # Collect the results
-    for result in result_iterator:
-        results.append(result)
+    # Run tasks asynchronously, with up to NUM_SEGMENTS_PARALLEL tasks running in parallel
+    with concurrent.futures.ThreadPoolExecutor(max_workers=NUM_SEGMENTS_PARALLEL) as executor:
+        future_to_task = {executor.submit(transcribe_segment, task): task for task in tasks}
+        for future in concurrent.futures.as_completed(future_to_task):
+            task = future_to_task[future]
+            try:
+                data = future.result()
+            except Exception as exc:
+                print('%r generated an exception: %s' % (task, exc))
+            else:
+                results.append(data)
 
 
     return results

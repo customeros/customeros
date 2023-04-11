@@ -31,7 +31,8 @@ def process_file(filename, participants, topic, vcon_api:VConPublisher):
     current_time = time.time()
 
     try:
-        mp3_file = AudioSegment.from_file(filename, format="mp3")
+        readahead_buffer_size = 1000 * 60 * 5
+        mp3_file = AudioSegment.from_file(filename, read_ahead_limit=readahead_buffer_size, format="mp3")
         print("File loaded in " + str(time.time() - current_time) + " seconds")
         diarisation = transcribe.diarise(mp3_file)
 

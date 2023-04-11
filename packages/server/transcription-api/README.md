@@ -1,3 +1,7 @@
+# Transcription-api
+
+
+## api
 An example http request to send to the server:
 
 ```
@@ -11,3 +15,24 @@ curl -X 'POST' \
 -F 'contacts=["echotest"]' \
 -F 'file=@vuy-wxso-sik (2022-06-27 02_12 GMT-7).mp3'
 ```
+
+## packer ami
+to an aws ami image
+
+to build the api image you must have AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY AWS_REGION properly set with your AWS credentials
+
+then you can run the following commands to build the image
+
+```
+packer init aws-ubuntu.pkr.hcl
+packer validate aws-ubuntu.pkr.hcl
+packer build -var 'environment=openline-dev' aws-ubuntu.pkr.hcl
+```
+
+for production builds you also need to specify the region
+
+```
+export AWS_REGION=eu-west-1
+packer init aws-ubuntu.pkr.hcl
+packer validate aws-ubuntu.pkr.hcl
+packer build -var 'region=eu-west-1' -var 'environment=openline-production' aws-ubuntu.pkr.hcl
