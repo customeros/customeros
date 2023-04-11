@@ -1,10 +1,8 @@
 syntax = "proto3";
 
-package emailGrpcService;
-
 import "google/protobuf/timestamp.proto";
 
-option go_package = "./;emailGrpcService";
+option go_package = "api/grpc/v1/email;email_grpc_service";
 
 message UpsertEmailGrpcRequest {
   string tenant = 1;

@@ -11,7 +11,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	events_processing_user "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/proto/user"
+	user_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/user"
 	"github.com/sirupsen/logrus"
 	"reflect"
 )
@@ -248,7 +248,7 @@ func (s *userService) UpsertInEventStore(ctx context.Context, size int) (int, in
 			return 0, 0, err
 		}
 		for _, v := range records {
-			_, err := s.grpcClients.UserClient.UpsertUser(context.Background(), &events_processing_user.UpsertUserGrpcRequest{
+			_, err := s.grpcClients.UserClient.UpsertUser(context.Background(), &user_grpc_service.UpsertUserGrpcRequest{
 				Id:            utils.GetStringPropOrEmpty(v.Node.Props, "id"),
 				Tenant:        v.LinkedNodeId,
 				Name:          utils.GetStringPropOrEmpty(v.Node.Props, "name"),
@@ -291,7 +291,7 @@ func (s *userService) UpsertPhoneNumberRelationInEventStore(ctx context.Context,
 			return 0, 0, err
 		}
 		for _, v := range records {
-			_, err := s.grpcClients.UserClient.LinkPhoneNumberToUser(context.Background(), &events_processing_user.LinkPhoneNumberToUserGrpcRequest{
+			_, err := s.grpcClients.UserClient.LinkPhoneNumberToUser(context.Background(), &user_grpc_service.LinkPhoneNumberToUserGrpcRequest{
 				Primary:       utils.GetBoolPropOrFalse(v.Values[0].(neo4j.Relationship).Props, "primary"),
 				Label:         utils.GetStringPropOrEmpty(v.Values[0].(neo4j.Relationship).Props, "label"),
 				UserId:        v.Values[1].(string),
@@ -329,7 +329,7 @@ func (s *userService) UpsertEmailRelationInEventStore(ctx context.Context, size 
 			return 0, 0, err
 		}
 		for _, v := range records {
-			_, err := s.grpcClients.UserClient.LinkEmailToUser(context.Background(), &events_processing_user.LinkEmailToUserGrpcRequest{
+			_, err := s.grpcClients.UserClient.LinkEmailToUser(context.Background(), &user_grpc_service.LinkEmailToUserGrpcRequest{
 				Primary: utils.GetBoolPropOrFalse(v.Values[0].(neo4j.Relationship).Props, "primary"),
 				Label:   utils.GetStringPropOrEmpty(v.Values[0].(neo4j.Relationship).Props, "label"),
 				UserId:  v.Values[1].(string),

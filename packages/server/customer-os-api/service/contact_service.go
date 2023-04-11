@@ -11,7 +11,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	events_processing_contact "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/proto/contact"
+	contact_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/contact"
 	"github.com/sirupsen/logrus"
 	"reflect"
 )
@@ -544,7 +544,7 @@ func (s *contactService) UpsertInEventStore(ctx context.Context, size int) (int,
 			return 0, 0, err
 		}
 		for _, v := range records {
-			_, err := s.grpcClients.ContactClient.UpsertContact(context.Background(), &events_processing_contact.UpsertContactGrpcRequest{
+			_, err := s.grpcClients.ContactClient.UpsertContact(context.Background(), &contact_grpc_service.UpsertContactGrpcRequest{
 				Id:            utils.GetStringPropOrEmpty(v.Node.Props, "id"),
 				Tenant:        v.LinkedNodeId,
 				FirstName:     utils.GetStringPropOrEmpty(v.Node.Props, "firstName"),
@@ -588,7 +588,7 @@ func (s *contactService) UpsertPhoneNumberRelationInEventStore(ctx context.Conte
 			return 0, 0, err
 		}
 		for _, v := range records {
-			_, err := s.grpcClients.ContactClient.LinkPhoneNumberToContact(context.Background(), &events_processing_contact.LinkPhoneNumberToContactGrpcRequest{
+			_, err := s.grpcClients.ContactClient.LinkPhoneNumberToContact(context.Background(), &contact_grpc_service.LinkPhoneNumberToContactGrpcRequest{
 				Primary:       utils.GetBoolPropOrFalse(v.Values[0].(neo4j.Relationship).Props, "primary"),
 				Label:         utils.GetStringPropOrEmpty(v.Values[0].(neo4j.Relationship).Props, "label"),
 				ContactId:     v.Values[1].(string),
@@ -626,7 +626,7 @@ func (s *contactService) UpsertEmailRelationInEventStore(ctx context.Context, si
 			return 0, 0, err
 		}
 		for _, v := range records {
-			_, err := s.grpcClients.ContactClient.LinkEmailToContact(context.Background(), &events_processing_contact.LinkEmailToContactGrpcRequest{
+			_, err := s.grpcClients.ContactClient.LinkEmailToContact(context.Background(), &contact_grpc_service.LinkEmailToContactGrpcRequest{
 				Primary:   utils.GetBoolPropOrFalse(v.Values[0].(neo4j.Relationship).Props, "primary"),
 				Label:     utils.GetStringPropOrEmpty(v.Values[0].(neo4j.Relationship).Props, "label"),
 				ContactId: v.Values[1].(string),

@@ -1,7 +1,7 @@
 package service
 
 import (
-	email_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/proto/email"
+	email_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/email"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/email/commands"
 	email_errors "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/email/errors"
 	grpc_errors "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/grpc_errors"

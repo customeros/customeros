@@ -11,7 +11,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	events_processing_organization "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/proto/organization"
+	organization_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/organization"
 	"github.com/sirupsen/logrus"
 	"reflect"
 )
@@ -388,7 +388,7 @@ func (s *organizationService) UpsertInEventStore(ctx context.Context, size int) 
 			return 0, 0, err
 		}
 		for _, v := range records {
-			_, err := s.grpcClients.OrganizationClient.UpsertOrganization(context.Background(), &events_processing_organization.UpsertOrganizationGrpcRequest{
+			_, err := s.grpcClients.OrganizationClient.UpsertOrganization(context.Background(), &organization_grpc_service.UpsertOrganizationGrpcRequest{
 				Id:            utils.GetStringPropOrEmpty(v.Node.Props, "id"),
 				Tenant:        v.LinkedNodeId,
 				Name:          utils.GetStringPropOrEmpty(v.Node.Props, "name"),
@@ -433,7 +433,7 @@ func (s *organizationService) UpsertPhoneNumberRelationInEventStore(ctx context.
 			return 0, 0, err
 		}
 		for _, v := range records {
-			_, err := s.grpcClients.OrganizationClient.LinkPhoneNumberToOrganization(context.Background(), &events_processing_organization.LinkPhoneNumberToOrganizationGrpcRequest{
+			_, err := s.grpcClients.OrganizationClient.LinkPhoneNumberToOrganization(context.Background(), &organization_grpc_service.LinkPhoneNumberToOrganizationGrpcRequest{
 				Primary:        utils.GetBoolPropOrFalse(v.Values[0].(neo4j.Relationship).Props, "primary"),
 				Label:          utils.GetStringPropOrEmpty(v.Values[0].(neo4j.Relationship).Props, "label"),
 				OrganizationId: v.Values[1].(string),
@@ -471,7 +471,7 @@ func (s *organizationService) UpsertEmailRelationInEventStore(ctx context.Contex
 			return 0, 0, err
 		}
 		for _, v := range records {
-			_, err := s.grpcClients.OrganizationClient.LinkEmailToOrganization(context.Background(), &events_processing_organization.LinkEmailToOrganizationGrpcRequest{
+			_, err := s.grpcClients.OrganizationClient.LinkEmailToOrganization(context.Background(), &organization_grpc_service.LinkEmailToOrganizationGrpcRequest{
 				Primary:        utils.GetBoolPropOrFalse(v.Values[0].(neo4j.Relationship).Props, "primary"),
 				Label:          utils.GetStringPropOrEmpty(v.Values[0].(neo4j.Relationship).Props, "label"),
 				OrganizationId: v.Values[1].(string),

@@ -1,20 +1,20 @@
 package grpc_client
 
 import (
-	events_processing_contact "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/proto/contact"
-	events_processing_email "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/proto/email"
-	events_processing_organization "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/proto/organization"
-	events_processing_phone_number "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/proto/phone_number"
-	events_processing_user "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/proto/user"
+	contact_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/contact"
+	email_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/email"
+	organization_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/organization"
+	phone_number_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/phone_number"
+	user_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/user"
 	"google.golang.org/grpc"
 )
 
 type Clients struct {
-	ContactClient      events_processing_contact.ContactGrpcServiceClient
-	OrganizationClient events_processing_organization.OrganizationGrpcServiceClient
-	PhoneNumberClient  events_processing_phone_number.PhoneNumberGrpcServiceClient
-	EmailClient        events_processing_email.EmailGrpcServiceClient
-	UserClient         events_processing_user.UserGrpcServiceClient
+	ContactClient      contact_grpc_service.ContactGrpcServiceClient
+	OrganizationClient organization_grpc_service.OrganizationGrpcServiceClient
+	PhoneNumberClient  phone_number_grpc_service.PhoneNumberGrpcServiceClient
+	EmailClient        email_grpc_service.EmailGrpcServiceClient
+	UserClient         user_grpc_service.UserGrpcServiceClient
 }
 
 func InitClients(conn *grpc.ClientConn) *Clients {
@@ -22,11 +22,11 @@ func InitClients(conn *grpc.ClientConn) *Clients {
 		return &Clients{}
 	}
 	clients := Clients{
-		ContactClient:      events_processing_contact.NewContactGrpcServiceClient(conn),
-		OrganizationClient: events_processing_organization.NewOrganizationGrpcServiceClient(conn),
-		PhoneNumberClient:  events_processing_phone_number.NewPhoneNumberGrpcServiceClient(conn),
-		EmailClient:        events_processing_email.NewEmailGrpcServiceClient(conn),
-		UserClient:         events_processing_user.NewUserGrpcServiceClient(conn),
+		ContactClient:      contact_grpc_service.NewContactGrpcServiceClient(conn),
+		OrganizationClient: organization_grpc_service.NewOrganizationGrpcServiceClient(conn),
+		PhoneNumberClient:  phone_number_grpc_service.NewPhoneNumberGrpcServiceClient(conn),
+		EmailClient:        email_grpc_service.NewEmailGrpcServiceClient(conn),
+		UserClient:         user_grpc_service.NewUserGrpcServiceClient(conn),
 	}
 	return &clients
 }

@@ -2,7 +2,7 @@ package service
 
 import (
 	"github.com/google/uuid"
-	phoneNumberGrpcService "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/proto/phone_number"
+	phone_number_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/phone_number"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/phone_number/commands"
 	grpcErrors "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/grpc_errors"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
@@ -12,7 +12,7 @@ import (
 )
 
 type phoneNumberService struct {
-	phoneNumberGrpcService.UnimplementedPhoneNumberGrpcServiceServer
+	phone_number_grpc_service.UnimplementedPhoneNumberGrpcServiceServer
 	log                 logger.Logger
 	repositories        *repository.Repositories
 	phoneNumberCommands *commands.PhoneNumberCommands
@@ -26,7 +26,7 @@ func NewPhoneNumberService(log logger.Logger, repositories *repository.Repositor
 	}
 }
 
-func (s *phoneNumberService) UpsertPhoneNumber(ctx context.Context, request *phoneNumberGrpcService.UpsertPhoneNumberGrpcRequest) (*phoneNumberGrpcService.PhoneNumberIdGrpcResponse, error) {
+func (s *phoneNumberService) UpsertPhoneNumber(ctx context.Context, request *phone_number_grpc_service.UpsertPhoneNumberGrpcRequest) (*phone_number_grpc_service.PhoneNumberIdGrpcResponse, error) {
 	aggregateID := request.Id
 
 	command := commands.NewUpsertPhoneNumberCommand(aggregateID, request.Tenant, request.PhoneNumber, request.Source, request.SourceOfTruth, request.AppSource, utils.TimestampProtoToTime(request.CreatedAt), utils.TimestampProtoToTime(request.UpdatedAt))
@@ -37,11 +37,11 @@ func (s *phoneNumberService) UpsertPhoneNumber(ctx context.Context, request *pho
 
 	s.log.Infof("(created existing PhoneNumber): {%s}", aggregateID)
 
-	return &phoneNumberGrpcService.PhoneNumberIdGrpcResponse{Id: aggregateID}, nil
+	return &phone_number_grpc_service.PhoneNumberIdGrpcResponse{Id: aggregateID}, nil
 }
 
 // FIXME alexb finish implementation
-func (s *phoneNumberService) CreatePhoneNumber(ctx context.Context, request *phoneNumberGrpcService.CreatePhoneNumberGrpcRequest) (*phoneNumberGrpcService.PhoneNumberIdGrpcResponse, error) {
+func (s *phoneNumberService) CreatePhoneNumber(ctx context.Context, request *phone_number_grpc_service.CreatePhoneNumberGrpcRequest) (*phone_number_grpc_service.PhoneNumberIdGrpcResponse, error) {
 	id, err := s.repositories.PhoneNumberRepository.GetIdIfExists(ctx, request.Tenant, request.PhoneNumber)
 	if err != nil {
 		return nil, s.errResponse(err)
@@ -64,7 +64,7 @@ func (s *phoneNumberService) CreatePhoneNumber(ctx context.Context, request *pho
 	//}
 
 	s.log.Infof("(created PhoneNumber): {%s}", aggregateID)
-	return &phoneNumberGrpcService.PhoneNumberIdGrpcResponse{Id: aggregateID}, nil
+	return &phone_number_grpc_service.PhoneNumberIdGrpcResponse{Id: aggregateID}, nil
 }
 
 func (s *phoneNumberService) errResponse(err error) error {

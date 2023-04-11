@@ -1,0 +1,15 @@
+version: v1
+managed:
+  enabled: true
+  optimize_for:
+    default: SPEED
+  go_package_prefix:
+    default: ""
+plugins:
+  - plugin: go
+    out: gen/proto/go
+    opt:
+  - plugin: buf.build/grpc/go:v1.2.0
+    out: gen/proto/go
+    opt:
+      - require_unimplemented_servers=false

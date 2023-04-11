@@ -10,7 +10,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	events_processing_phone_number "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/proto/phone_number"
+	phone_number_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/phone_number"
 	"github.com/sirupsen/logrus"
 )
 
@@ -170,7 +170,7 @@ func (s *phoneNumberService) UpsertInEventStore(ctx context.Context, size int) (
 			return 0, 0, err
 		}
 		for _, v := range records {
-			_, err := s.grpcClients.PhoneNumberClient.UpsertPhoneNumber(context.Background(), &events_processing_phone_number.UpsertPhoneNumberGrpcRequest{
+			_, err := s.grpcClients.PhoneNumberClient.UpsertPhoneNumber(context.Background(), &phone_number_grpc_service.UpsertPhoneNumberGrpcRequest{
 				Id:            utils.GetStringPropOrEmpty(v.Node.Props, "id"),
 				Tenant:        v.LinkedNodeId,
 				PhoneNumber:   utils.GetStringPropOrEmpty(v.Node.Props, "rawPhoneNumber"),

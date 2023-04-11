@@ -1,11 +1,11 @@
 package server
 
 import (
-	contact_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/proto/contact"
-	email_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/proto/email"
-	organization_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/proto/organization"
-	phone_number_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/proto/phone_number"
-	user_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/proto/user"
+	contact_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/contact"
+	email_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/email"
+	organization_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/organization"
+	phone_number_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/phone_number"
+	user_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/user"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	contact_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/service"
 	email_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/email/service"
