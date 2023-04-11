@@ -6,8 +6,14 @@ import { OverlayPanel } from '../../atoms/overlay-panel';
 import classNames from 'classnames';
 import { MenuItemCommandParams } from 'primereact/menuitem';
 import {
+  EmailInput,
+  PhoneNumber,
+  Email,
   EmailLabel,
+  PhoneNumberInput,
   PhoneNumberLabel,
+  EmailUpdateInput,
+  PhoneNumberUpdateInput,
 } from '../../../../graphQL/__generated__/generated';
 import {
   Button,
@@ -16,6 +22,21 @@ import {
   AddIconButton,
   Checkbox,
 } from '../../atoms';
+
+interface Props {
+  onAddEmail: (input: EmailInput) => void;
+  onAddPhoneNumber: (input: PhoneNumberInput) => void;
+  onRemoveEmail: (id: string) => void;
+  onRemovePhoneNumber: (id: string) => void;
+  onUpdateEmail: (input: EmailUpdateInput) => Promise<any>;
+  onUpdatePhoneNumber: (input: PhoneNumberUpdateInput) => Promise<any>;
+  data: {
+    emails: Array<Email>;
+    phoneNumbers: Array<PhoneNumber>;
+  };
+  loading: boolean;
+  isEditMode: boolean;
+}
 
 export const CommunicationDetails = ({
   onAddEmail,
@@ -27,7 +48,7 @@ export const CommunicationDetails = ({
   data,
   loading,
   isEditMode,
-}: any) => {
+}: Props) => {
   const addEmailContainerRef = useRef([]);
   const addPhoneNumberContainerRef = useRef([]);
 
@@ -93,7 +114,6 @@ export const CommunicationDetails = ({
           <table className={styles.table}>
             <thead>
               {!hideEmailInReadOnlyIfNoData &&
-                //@ts-expect-error fixme later
                 data?.emails.map(({ label, ...rest }, index) => (
                   <tr
                     key={`detail-item-email-label-${rest.id}`}
@@ -167,7 +187,6 @@ export const CommunicationDetails = ({
                 <tr className={styles.divider} />
               )}
               {!hidePhoneNumberInReadOnlyIfNoData &&
-                //@ts-expect-error fixme later
                 data?.phoneNumbers.map(({ label, ...rest }, index) => (
                   <tr
                     key={`detail-item-phone-number-label-${rest.id}`}
@@ -237,7 +256,6 @@ export const CommunicationDetails = ({
             <tbody>
               {!hideEmailInReadOnlyIfNoData &&
                 data?.emails.map(
-                  //@ts-expect-error fixme later
                   ({ label, email, primary, id: emailId }, index) => {
                     return (
                       <tr
@@ -306,9 +324,7 @@ export const CommunicationDetails = ({
               {!hidePhoneNumberInReadOnlyIfNoData &&
                 data?.phoneNumbers.map(
                   (
-                    //@ts-expect-error fixme later
                     { label, rawPhoneNumber, e164, primary, id: phoneNumberId },
-                    //@ts-expect-error fixme later
                     index,
                   ) => {
                     return (

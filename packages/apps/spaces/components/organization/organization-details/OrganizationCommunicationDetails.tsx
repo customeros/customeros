@@ -3,9 +3,11 @@ import { useRecoilValue } from 'recoil';
 import { organizationDetailsEdit } from '../../../state';
 import { CommunicationDetails } from '../../ui-kit/molecules';
 import { useOrganizationCommunicationChannelsDetails } from '../../../hooks/useOrganization/useOrganizationCommunicationChannelsDetails';
-import { useAddEmailToOrganizationEmail } from '../../../hooks/useOrganizationEmail/useAddOrganizationEmail';
-import { useRemoveEmailFromOrganizationEmail } from '../../../hooks/useOrganizationEmail/useDeleteOrganizationEmail';
-import { useUpdateOrganizationEmail } from '../../../hooks/useOrganizationEmail/useUpdateOrganizationEmail';
+import {
+  useAddEmailToOrganizationEmail,
+  useRemoveEmailFromOrganizationEmail,
+  useUpdateOrganizationEmail,
+} from '../../../hooks/useOrganizationEmail';
 import {
   useCreateOrganizationPhoneNumber,
   useRemovePhoneNumberFromOrganization,
@@ -47,18 +49,15 @@ export const OrganizationCommunicationDetails = ({ id }: { id: string }) => {
     <div style={{ marginLeft: isEditMode ? 24 : 0, marginTop: 24 }}>
       <CommunicationDetails
         id={id}
-        onAddEmail={(input: any) => onAddEmailToOrganization(input)}
-        onAddPhoneNumber={(input: any) =>
-          onCreateOrganizationPhoneNumber(input)
+        onAddEmail={(input) => onAddEmailToOrganization(input)}
+        onAddPhoneNumber={(input) => onCreateOrganizationPhoneNumber(input)}
+        onRemoveEmail={(id: string) => onRemoveEmailFromOrganization(id)}
+        onRemovePhoneNumber={(id: string) =>
+          onRemovePhoneNumberFromOrganization(id)
         }
-        onRemoveEmail={(input: any) => onRemoveEmailFromOrganization(input)}
-        onRemovePhoneNumber={(input: any) =>
-          onRemovePhoneNumberFromOrganization(input)
-        }
-        onUpdateEmail={(input: any) => onUpdateOrganizationEmail(input)}
-        onUpdatePhoneNumber={(input: any) =>
-          onUpdateOrganizationPhoneNumber(input)
-        }
+        onUpdateEmail={(input) => onUpdateOrganizationEmail(input)}
+        onUpdatePhoneNumber={(input) => onUpdateOrganizationPhoneNumber(input)}
+        // @ts-expect-error fixme
         data={data}
         loading={loading}
         isEditMode={isEditMode}
