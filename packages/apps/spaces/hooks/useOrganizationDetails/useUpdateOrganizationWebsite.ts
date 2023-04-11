@@ -70,7 +70,6 @@ export const useUpdateOrganizationWebsite = ({
       try {
         const response = await updateOrganizationMutation({
           variables: { input: { ...input, id: organizationId } },
-          //@ts-expect-error fixme
           update: handleUpdateCacheAfterUpdatingOrganization,
         });
         return response.data?.organization_Update ?? null;
