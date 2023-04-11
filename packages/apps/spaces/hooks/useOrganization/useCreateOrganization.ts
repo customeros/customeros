@@ -22,11 +22,23 @@ export const useCreateOrganization = (): Result => {
   ) => {
     const data: any | null = client.readQuery({
       query: GetOrganizationsOptionsDocument,
+      variables: {
+        pagination: {
+          limit: 9999,
+          page: 1,
+        },
+      },
     });
 
     if (data === null) {
       client.writeQuery({
         query: GetOrganizationsOptionsDocument,
+        variables: {
+          pagination: {
+            limit: 9999,
+            page: 1,
+          },
+        },
         data: {
           organizations: {
             content: [organization_Create],
@@ -38,6 +50,12 @@ export const useCreateOrganization = (): Result => {
 
     client.writeQuery({
       query: GetOrganizationsOptionsDocument,
+      variables: {
+        pagination: {
+          limit: 9999,
+          page: 1,
+        },
+      },
       data: {
         organizations: {
           content: {
