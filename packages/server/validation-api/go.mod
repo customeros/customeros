@@ -16,7 +16,7 @@ require (
 	github.com/sirupsen/logrus v1.9.0
 	github.com/smartystreets/smartystreets-go-sdk v1.15.4
 	gorm.io/driver/postgres v1.4.5
-	gorm.io/gorm v1.24.6
+	gorm.io/gorm v1.25.0
 )
 
 require (
