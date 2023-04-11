@@ -1,19 +1,35 @@
-import React from 'react';
+import React, { useState } from 'react';
 import styles from './organization-details.module.scss';
-import { useOrganizationDetails } from '../../../hooks/useOrganization';
-import { Button, EditableContentInput, Link } from '../../ui-kit';
+import {
+  useDeleteOrganization,
+  useOrganizationDetails,
+} from '../../../hooks/useOrganization';
+import {
+  Button,
+  DeleteConfirmationDialog,
+  EditableContentInput,
+  Link,
+  Pencil,
+  Trash,
+} from '../../ui-kit';
 import { useUpdateOrganization } from '../../../hooks/useOrganization/useUpdateOrganization';
 import { useRecoilState } from 'recoil';
 import { organizationDetailsEdit } from '../../../state';
 import { DebouncedTextArea } from '../../ui-kit/atoms/input/DebouncedTextArea';
 import { OrganizationCommunicationDetails } from './OrganizationCommunicationDetails';
+import { Check, IconButton } from '../../ui-kit/atoms';
 export const OrganizationDetails = ({ id }: { id: string }) => {
   const { data } = useOrganizationDetails({ id });
   const [{ isEditMode }, setOrganizationDetailsEdit] = useRecoilState(
     organizationDetailsEdit,
   );
+  const [deleteConfirmationModalVisible, setDeleteConfirmationModalVisible] =
+    useState(false);
   const { onUpdateOrganization } = useUpdateOrganization({
     organizationId: id,
+  });
+  const { onDeleteOrganization } = useDeleteOrganization({
+    id,
   });
 
   return (
@@ -102,6 +118,29 @@ export const OrganizationDetails = ({ id }: { id: string }) => {
             <Link href={data.website}> {data.website} </Link>
           )}
         </div>
+        {isEditMode && (
+          <div className={styles.deleteButton}>
+            <IconButton
+              size='sm'
+              mode='danger'
+              onClick={() => setDeleteConfirmationModalVisible(true)}
+              icon={<Trash style={{ transform: 'scale(0.6)' }} />}
+            />
+            <DeleteConfirmationDialog
+              deleteConfirmationModalVisible={deleteConfirmationModalVisible}
+              setDeleteConfirmationModalVisible={
+                setDeleteConfirmationModalVisible
+              }
+              deleteAction={() => {
+                setDeleteConfirmationModalVisible(false);
+                onDeleteOrganization();
+              }}
+              header='Confirm delete'
+              confirmationButtonLabel='Delete organization'
+              explanationText='Are you sure you want to delete this organization?'
+            />
+          </div>
+        )}
       </div>
       <OrganizationCommunicationDetails id={id} />
     </div>

@@ -2182,7 +2182,7 @@ export type CreateContactJobRoleMutationVariables = Exact<{
 }>;
 
 
-export type CreateContactJobRoleMutation = { __typename?: 'Mutation', jobRole_Create: { __typename?: 'JobRole', jobTitle?: string | null, primary: boolean, id: string } };
+export type CreateContactJobRoleMutation = { __typename?: 'Mutation', jobRole_Create: { __typename?: 'JobRole', jobTitle?: string | null, primary: boolean, id: string, organization?: { __typename?: 'Organization', id: string, name: string } | null } };
 
 export type CreateContactNoteMutationVariables = Exact<{
   contactId: Scalars['ID'];
@@ -2351,7 +2351,7 @@ export type UpdateJobRoleMutationVariables = Exact<{
 }>;
 
 
-export type UpdateJobRoleMutation = { __typename?: 'Mutation', jobRole_Update: { __typename?: 'JobRole', jobTitle?: string | null, primary: boolean, id: string } };
+export type UpdateJobRoleMutation = { __typename?: 'Mutation', jobRole_Update: { __typename?: 'JobRole', jobTitle?: string | null, primary: boolean, id: string, organization?: { __typename?: 'Organization', id: string, name: string } | null } };
 
 export type UpdateContactPersonalDetailsMutationVariables = Exact<{
   input: ContactUpdateInput;
@@ -2438,6 +2438,13 @@ export type CreateOrganizationNoteMutationVariables = Exact<{
 
 
 export type CreateOrganizationNoteMutation = { __typename?: 'Mutation', note_CreateForOrganization: { __typename?: 'Note', id: string, html: string, createdAt: any, updatedAt: any, source: DataSource, sourceOfTruth: DataSource, appSource: string, createdBy?: { __typename?: 'User', id: string, firstName: string, lastName: string } | null } };
+
+export type DeleteOrganizationMutationVariables = Exact<{
+  id: Scalars['ID'];
+}>;
+
+
+export type DeleteOrganizationMutation = { __typename?: 'Mutation', organization_Delete?: { __typename?: 'Result', result: boolean } | null };
 
 export type GetOrganizationCommunicationChannelsQueryVariables = Exact<{
   id: Scalars['ID'];
@@ -3142,6 +3149,10 @@ export const CreateContactJobRoleDocument = gql`
     mutation createContactJobRole($contactId: ID!, $input: JobRoleInput!) {
   jobRole_Create(contactId: $contactId, input: $input) {
     ...JobRole
+    organization {
+      id
+      name
+    }
   }
 }
     ${JobRoleFragmentDoc}`;
@@ -4041,6 +4052,10 @@ export const UpdateJobRoleDocument = gql`
     mutation updateJobRole($contactId: ID!, $input: JobRoleUpdateInput!) {
   jobRole_Update(contactId: $contactId, input: $input) {
     ...JobRole
+    organization {
+      id
+      name
+    }
   }
 }
     ${JobRoleFragmentDoc}`;
@@ -4338,6 +4353,39 @@ export function useCreateOrganizationNoteMutation(baseOptions?: Apollo.MutationH
 export type CreateOrganizationNoteMutationHookResult = ReturnType<typeof useCreateOrganizationNoteMutation>;
 export type CreateOrganizationNoteMutationResult = Apollo.MutationResult<CreateOrganizationNoteMutation>;
 export type CreateOrganizationNoteMutationOptions = Apollo.BaseMutationOptions<CreateOrganizationNoteMutation, CreateOrganizationNoteMutationVariables>;
+export const DeleteOrganizationDocument = gql`
+    mutation deleteOrganization($id: ID!) {
+  organization_Delete(id: $id) {
+    result
+  }
+}
+    `;
+export type DeleteOrganizationMutationFn = Apollo.MutationFunction<DeleteOrganizationMutation, DeleteOrganizationMutationVariables>;
+
+/**
+ * __useDeleteOrganizationMutation__
+ *
+ * To run a mutation, you first call `useDeleteOrganizationMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useDeleteOrganizationMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [deleteOrganizationMutation, { data, loading, error }] = useDeleteOrganizationMutation({
+ *   variables: {
+ *      id: // value for 'id'
+ *   },
+ * });
+ */
+export function useDeleteOrganizationMutation(baseOptions?: Apollo.MutationHookOptions<DeleteOrganizationMutation, DeleteOrganizationMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<DeleteOrganizationMutation, DeleteOrganizationMutationVariables>(DeleteOrganizationDocument, options);
+      }
+export type DeleteOrganizationMutationHookResult = ReturnType<typeof useDeleteOrganizationMutation>;
+export type DeleteOrganizationMutationResult = Apollo.MutationResult<DeleteOrganizationMutation>;
+export type DeleteOrganizationMutationOptions = Apollo.BaseMutationOptions<DeleteOrganizationMutation, DeleteOrganizationMutationVariables>;
 export const GetOrganizationCommunicationChannelsDocument = gql`
     query GetOrganizationCommunicationChannels($id: ID!) {
   organization(id: $id) {

@@ -62,3 +62,11 @@
     }
   }
 }
+
+.measureInput {
+  top: -99999px;
+  position: absolute;
+  width: fit-content;
+  white-space: nowrap;
+  word-break: keep-all;
+}
