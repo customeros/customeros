@@ -15,7 +15,7 @@ COPY . .
 
 # Set environment variables for Flask and gunicorn
 ENV FLASK_APP=main.py
-ENV GUNICORN_CMD_ARGS="--bind=0.0.0.0:8014 --workers=2 --threads=4"
+ENV GUNICORN_CMD_ARGS="--bind=0.0.0.0:8014 --workers=2 --threads=4 --capture-output --access-logfile - --error-logfile -"
 
 # Expose port 8014 for the container
 EXPOSE 8014
