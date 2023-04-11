@@ -2,7 +2,7 @@ name: Build and Publish Transcription API
 
 on:
   push:
-    branches: [ "otter" ]
+    branches: [ "otter", "1517-create-a-service-for-meeting-transcription-and-summarisation"]
     paths:
       - 'packages/server/transcription-api/**'
       - '.github/workflows/build-publish-transcription-api.yml'
