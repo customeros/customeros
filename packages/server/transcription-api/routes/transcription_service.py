@@ -1,6 +1,6 @@
 import time
 
-from flask import Flask, request, jsonify
+from flask import request, jsonify
 import threading
 import tempfile
 import json
@@ -14,7 +14,6 @@ import transcribe.transcribe as transcribe
 import transcribe.summary as summary
 from model.vcon import VConParty, VConEncoder
 
-app = Flask(__name__)
 
 def make_transcript(raw_transcript):
     result = []
@@ -69,8 +68,8 @@ def check_api_key():
             'message': 'Invalid API key'
         }), 401
     return None
-@app.route('/transcribe', methods=['POST'])
-def handle_post_request():
+
+def handle_transcribe_post_request():
     # Check the API key
     error = check_api_key()
     if error:

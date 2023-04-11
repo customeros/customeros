@@ -21,4 +21,4 @@ ENV GUNICORN_CMD_ARGS="--bind=0.0.0.0:8014 --workers=2 --threads=4"
 EXPOSE 8014
 
 # Start the application using gunicorn
-CMD ["gunicorn", "service.transcription_service:app"]
+CMD ["gunicorn", "routes.routes:app"]
