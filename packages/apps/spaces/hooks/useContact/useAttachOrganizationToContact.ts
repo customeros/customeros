@@ -33,37 +33,15 @@ export const useAttachOrganizationToContact = ({
     async (contactOrg) => {
       try {
         const response = await attachOrganizationToContactMutation({
-          variables: { input: contactOrg },
+          variables: {
+            input: {
+              contactId,
+              organizationId: contactOrg.organizationId,
+            },
+          },
+          refetchQueries: ['useGetContactPersonalDetailsWithOrganizations'],
         });
-        // const data = client.cache.readQuery({
-        //   query: GetContactPersonalDetailsWithOrganizationsDocument,
-        //   variables: { id: contactOrg.contactId },
-        // });
-        //
-        // const newData = data?.contact?.organizations?.content?.map(
-        //   (data, i) => i === index,
-        // );
-        // console.log('🏷️ ----- data: ', data);
-        //
-        // client.cache.writeFragment({
-        //   id: `Contact:${contactId}`,
-        //   fragment: gql`
-        //     fragment organizationsInContact on Contact {
-        //       id
-        //       organizations
-        //     }
-        //   `,
-        //   data: {
-        //     // @ts-expect-error revisit
-        //     ...data.contact,
-        //     organizations: [
-        //       // @ts-expect-error revisit
-        //       ...data.contact.organizations,
-        //       { ...response.data?.contact_AddOrganizationById },
-        //     ],
-        //   },
-        // });
-        // Update the cache with the new object
+
         return response.data?.contact_AddOrganizationById ?? null;
       } catch (err) {
         console.error(err);

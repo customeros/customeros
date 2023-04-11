@@ -22,7 +22,15 @@ export const useRemoveJobRoleFromContactJobRole = ({
       try {
         const response = await removeJobRoleFromContactMutation({
           variables: { contactId, roleId },
-          refetchQueries: ['GetContactPersonalDetails'],
+          refetchQueries: ['useGetContactPersonalDetailsWithOrganizations'],
+          update(cache) {
+            const normalizedId = cache.identify({
+              id: roleId,
+              __typename: 'JobRole',
+            });
+            cache.evict({ id: normalizedId });
+            cache.gc();
+          },
         });
         return response.data?.jobRole_Delete ?? null;
       } catch (err) {

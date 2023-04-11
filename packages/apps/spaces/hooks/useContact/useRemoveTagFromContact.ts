@@ -1,4 +1,4 @@
-import { AddTagToContactMutation, ContactTagInput } from './types';
+import { ContactTagInput } from './types';
 import {
   RemoveTagFromContactMutation,
   useRemoveTagFromContactMutation,

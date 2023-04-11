@@ -2,9 +2,9 @@ export { useContactPersonalDetails } from './useContactPersonalDetails';
 export { useContactCommunicationChannelsDetails } from './useContactCommunicationChannelsDetails';
 export { useCreateContact } from './useCreateContact';
 
-export { useAddEmailToContactEmail } from './useAddContactEmail';
+export { useAddEmailToContactEmail } from '../useContactEmail/useAddContactEmail';
 export { useRemoveEmailFromContactEmail } from '../useContactEmail/useDeleteContactEmail';
-export { useUpdateContactEmail } from './useUpdateContactEmail';
+export { useUpdateContactEmail } from '../useContactEmail/useUpdateContactEmail';
 export { useContactTags } from './useContactTags';
 export { useAddTagToContact } from './useAddContactTag';
 export { useRemoveTagFromContact } from './useRemoveTagFromContact';
