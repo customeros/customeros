@@ -259,7 +259,7 @@ export const CommunicationDetails = ({
                   ({ label, email, primary, id: emailId }, index) => {
                     return (
                       <tr
-                        key={`detail-item-email-content-${emailId}`}
+                        key={`detail-item-email-content-${index}`}
                         className={classNames(styles.communicationItem, {})}
                       >
                         <td

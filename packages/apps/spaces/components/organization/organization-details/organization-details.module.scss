@@ -1,7 +1,16 @@
 @import '../../../styles/mixins';
 
 .detailsAndCommunicationChannel {
+  position: relative;
+}
 
+.nameAndButtons {
+  display: flex;
+}
+.deleteButton {
+  position: absolute;
+  bottom: var(--spacing-md);
+  left: var(--spacing-lg);
 }
 
 .organizationDetails {
@@ -17,14 +26,21 @@
   backdrop-filter: blur(10px);
   aspect-ratio: 3/2;
   min-height: available;
-  padding: var(--spacing-md) var(--spacing-lg);
+  padding: var(--spacing-md) var(--spacing-lg) var(--spacing-xxl);
   font-size: var(--font-size-sm);
   color: var(--text-default-color);
 }
 
 .editButton {
   position: absolute;
+  display: flex;
+  flex-direction: column;
+  max-width: 50px;
   right: var(--spacing-lg);
+
+  & .icon {
+    margin-bottom: 12px;
+  }
 }
 
 .name {
@@ -49,3 +65,5 @@
   display: flex;
   justify-content: space-between;
 }
+
+

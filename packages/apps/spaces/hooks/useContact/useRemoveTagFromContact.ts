@@ -23,7 +23,14 @@ export const useRemoveTagFromContact = ({
     try {
       const response = await removeTagFromContactMutation({
         variables: { input: { ...contactTagInput, contactId } },
-        refetchQueries: ['GetContactTags'],
+        update(cache) {
+          const normalizedId = cache.identify({
+            id: contactTagInput.tagId,
+            __typename: 'Tag',
+          });
+          cache.evict({ id: normalizedId });
+          cache.gc();
+        },
       });
       return response.data?.contact_RemoveTagById ?? null;
     } catch (err) {

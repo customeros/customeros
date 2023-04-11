@@ -26,7 +26,6 @@ export const useAddTagToContact = ({
     try {
       const response = await addTagToContactMutation({
         variables: { input: contactTagInput },
-        refetchQueries: ['GetContactTags'],
       });
       const data = client.cache.readQuery({
         query: GetContactTagsDocument,
