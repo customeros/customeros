@@ -52,6 +52,7 @@ export const ContactCommunicationDetails = ({ id }: { id: string }) => {
       }
       onUpdateEmail={(input: any) => onUpdateContactEmail(input)}
       onUpdatePhoneNumber={(input: any) => onUpdateContactPhoneNumber(input)}
+      // @ts-expect-error fixme
       data={data}
       loading={loading}
       isEditMode={isEditMode}

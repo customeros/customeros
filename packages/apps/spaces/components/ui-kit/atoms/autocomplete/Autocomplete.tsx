@@ -42,7 +42,7 @@ export const Autocomplete = ({
   const [filteredSuggestions, setFilteredSuggestions] =
     useState<SuggestionItem[]>(suggestions);
   const inputRef = useRef<HTMLInputElement>(null);
-  const measureRef = useRef<HTMLSpanElement>(null);
+  const measureRef = useRef<HTMLDivElement>(null);
   const handleInputChange = (event: AutoCompleteChangeParams) => {
     const newInputValue = event.value;
     setInputValue(newInputValue);
@@ -50,6 +50,11 @@ export const Autocomplete = ({
 
   useLayoutEffect(() => {
     if (mode === 'fit-content') {
+      console.log(
+        '🏷️ ----- mode: ',
+        inputValue,
+        measureRef?.current?.scrollWidth,
+      );
       setWidth((measureRef?.current?.scrollWidth || 0) + 2);
     }
   }, [inputValue]);
@@ -58,14 +63,21 @@ export const Autocomplete = ({
     if (
       inputValue &&
       inputValue !== value &&
+      editable &&
       filteredSuggestions.length === 0
     ) {
       setShowCreateButton(true);
     }
-    if (filteredSuggestions.length) {
+    if (filteredSuggestions.length || !editable) {
       setShowCreateButton(false);
     }
-  }, [filteredSuggestions, inputValue, value]);
+  }, [filteredSuggestions, inputValue, value, editable]);
+
+  useEffect(() => {
+    if (inputValue !== value && !editable) {
+      setInputValue(value);
+    }
+  }, [inputValue, value, editable]);
 
   const handleSelectItem = (event: { value: SuggestionItem }) => {
     const selectedValue = event.value;
@@ -99,6 +111,7 @@ export const Autocomplete = ({
             value: newItem.id,
           },
         });
+        setInputValue(newItem[newItemLabel]);
         setShowCreateButton(false);
       }
     } catch (e) {
@@ -146,13 +159,12 @@ export const Autocomplete = ({
           </button>
         </div>
       )}
-      <span
+      <div
         ref={measureRef}
-        className={classNames(styles.autocompleteInput)}
-        style={{ top: -999999, position: 'absolute', width: 'auto' }}
+        className={classNames(styles.autocompleteInput, styles.measureInput)}
       >
         {inputValue || placeholder}
-      </span>
+      </div>
     </div>
   );
 };

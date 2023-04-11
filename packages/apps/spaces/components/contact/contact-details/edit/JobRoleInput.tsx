@@ -15,6 +15,7 @@ import {
 import { capitalizeFirstLetter } from '../../../../utils';
 import { useOrganizationsOptions } from '../../../../hooks/useOrganizations';
 import { useCreateOrganization } from '../../../../hooks/useOrganization';
+import classNames from 'classnames';
 
 interface JobRoleInputProps {
   contactId: string;
@@ -59,10 +60,14 @@ export const JobRoleInput: React.FC<JobRoleInputProps> = ({
       setOrganizationOptions(options);
     }
   }, [data]);
-
+  console.log('🏷️ ----- primary: ', primary);
   return (
     <div>
-      <div className={styles.jobAndOrganizationInputs}>
+      <div
+        className={classNames(styles.jobAndOrganizationInputs, {
+          [styles.primary]: primary && !isEditMode,
+        })}
+      >
         {isEditMode && (
           <DeleteIconButton
             style={{ position: 'absolute', left: -16, top: 6 }}
@@ -81,6 +86,8 @@ export const JobRoleInput: React.FC<JobRoleInputProps> = ({
                 ? onUpdateContactJobRole({
                     id: roleId,
                     jobTitle: value,
+                    organizationId: organization?.id,
+                    primary,
                   })
                 : onCreateContactJobRole({
                     jobTitle: value,
@@ -99,7 +106,9 @@ export const JobRoleInput: React.FC<JobRoleInputProps> = ({
               roleId
                 ? onUpdateContactJobRole({
                     id: roleId,
+                    jobTitle: jobRole,
                     organizationId: e.value,
+                    primary,
                   })
                 : onCreateContactJobRole({ organizationId: e.value })
             }
@@ -109,19 +118,24 @@ export const JobRoleInput: React.FC<JobRoleInputProps> = ({
           />
         )}
 
-        <Checkbox
-          type='checkbox'
-          label='Primary'
-          // @ts-expect-error revisit
-          onChange={(e) => {
-            roleId
-              ? onUpdateContactJobRole({
-                  id: roleId,
-                  primary: !primary,
-                })
-              : onCreateContactJobRole({ primary: !primary });
-          }}
-        />
+        {isEditMode && (
+          <Checkbox
+            value={primary ? 1 : 0}
+            type='checkbox'
+            label='Primary'
+            // @ts-expect-error revisit
+            onChange={(e) => {
+              roleId
+                ? onUpdateContactJobRole({
+                    id: roleId,
+                    jobTitle: jobRole,
+                    organizationId: organization?.id,
+                    primary: !primary,
+                  })
+                : onCreateContactJobRole({ primary: !primary });
+            }}
+          />
+        )}
 
         {showAddButton && isEditMode && (
           <AddIconButton
