@@ -9,6 +9,8 @@ export const EditableContentInput = ({
   value = '',
   onChange,
   isEditMode,
+  label,
+  id,
   ...rest
 }: any) => {
   const inputRef = useRef<HTMLSpanElement>(null);
@@ -35,8 +37,15 @@ export const EditableContentInput = ({
 
   return (
     <>
+      <label
+        htmlFor={`editable-content-input-${id}`}
+        className={styles.invisibleLabel}
+      >
+        {label}
+      </label>
       <input
         {...rest}
+        id={`editable-content-input-${id}`}
         value={inner}
         size={inner.length || placeholder.length}
         className={classNames(styles.contentEditable, {

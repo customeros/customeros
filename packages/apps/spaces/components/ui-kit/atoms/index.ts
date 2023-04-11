@@ -11,6 +11,7 @@ export { DeleteConfirmationDialog } from './delete-confirmation-dialog';
 export { IconButton, DeleteIconButton, AddIconButton } from './icon-button';
 export { Table } from './table';
 export { DebouncedInput, Input, EditableContentInput } from './input';
+export { Checkbox } from './checkbox';
 export { Link } from './link';
 export { Highlight } from './highlight';
 export { TagsList, TagListSkeleton, TagInput } from './tags';

@@ -23,10 +23,24 @@ export const DebouncedTextArea = ({
   );
 
   useEffect(() => {
-    return () => {
+    if (!isEditMode) {
       debounced.flush();
-    };
-  }, []);
+    }
+  }, [isEditMode]);
+
+  if (!isEditMode) {
+    return (
+      <div
+        {...rest}
+        className={classNames(styles.contentEditable, styles.textArea, {
+          [styles?.[inputSize]]: inputSize,
+          [styles.editable]: isEditMode,
+        })}
+      >
+        {value}
+      </div>
+    );
+  }
 
   return (
     <>
@@ -43,6 +57,7 @@ export const DebouncedTextArea = ({
           debounced(event.target.value);
         }}
         placeholder={placeholder}
+        onBlur={debounced.flush}
       />
     </>
   );
