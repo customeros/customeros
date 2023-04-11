@@ -5,7 +5,7 @@ on:
     branches: [ "otter", "1517-create-a-service-for-meeting-transcription-and-summarisation"]
     paths:
       - 'packages/server/transcription-api/**'
-      - '.github/workflows/build-publish-transcription-api.yml'
+      - '.github/workflows/build-push-transcription-api.yml'
   pull_request:
   release:
     types: [created, edited]
