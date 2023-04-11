@@ -11,7 +11,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	events_processing_email "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/proto/email"
+	email_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/email"
 	"github.com/sirupsen/logrus"
 )
 
@@ -202,7 +202,7 @@ func (s *emailService) UpsertInEventStore(ctx context.Context, size int) (int, i
 			return 0, 0, err
 		}
 		for _, v := range records {
-			_, err := s.grpcClients.EmailClient.UpsertEmail(context.Background(), &events_processing_email.UpsertEmailGrpcRequest{
+			_, err := s.grpcClients.EmailClient.UpsertEmail(context.Background(), &email_grpc_service.UpsertEmailGrpcRequest{
 				Id:            utils.GetStringPropOrEmpty(v.Node.Props, "id"),
 				Tenant:        v.LinkedNodeId,
 				RawEmail:      utils.GetStringPropOrEmpty(v.Node.Props, "rawEmail"),
