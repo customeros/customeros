@@ -10,7 +10,7 @@ export const OrganizationTimeline = ({ id }: { id: string }) => {
   });
   const [prevDate, setPrevDate] = useState(null);
   const liveConversations = {
-    __typename: 'LiveConversation',
+    __typename: 'LiveEventTimelineItem',
     source: 'LiveStream',
     createdAt: Date.now(),
     id: uuid4(),
