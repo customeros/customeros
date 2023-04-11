@@ -53,11 +53,19 @@ export const Autocomplete = ({
       setWidth((measureRef?.current?.scrollWidth || 0) + 2);
     }
   }, [inputValue]);
+
   useEffect(() => {
-    if (inputValue && inputValue !== value && !filteredSuggestions.length) {
+    if (
+      inputValue &&
+      inputValue !== value &&
+      filteredSuggestions.length === 0
+    ) {
       setShowCreateButton(true);
     }
-  }, [filteredSuggestions.length, inputValue, value]);
+    if (filteredSuggestions.length) {
+      setShowCreateButton(false);
+    }
+  }, [filteredSuggestions, inputValue, value]);
 
   const handleSelectItem = (event: { value: SuggestionItem }) => {
     const selectedValue = event.value;

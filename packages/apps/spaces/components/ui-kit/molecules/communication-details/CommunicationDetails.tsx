@@ -13,9 +13,8 @@ import {
   Button,
   DeleteIconButton,
   EditableContentInput,
-  Stop,
-  CheckSquare,
   AddIconButton,
+  Checkbox,
 } from '../../atoms';
 
 export const CommunicationDetails = ({
@@ -49,7 +48,7 @@ export const CommunicationDetails = ({
         });
       }
     }
-  }, [loading, isEditMode]);
+  }, [loading, isEditMode, data]);
 
   const getLabelOptions = (
     label: any,
@@ -100,7 +99,12 @@ export const CommunicationDetails = ({
                     key={`detail-item-email-label-${rest.id}`}
                     className={classNames(styles.communicationItem)}
                   >
-                    <th className={classNames(styles.tableHeader)} colSpan={1}>
+                    <th
+                      className={classNames(styles.tableHeader, {
+                        [styles.primary]: rest.primary,
+                      })}
+                      colSpan={1}
+                    >
                       {isEditMode && (
                         <>
                           <DeleteIconButton
@@ -244,6 +248,8 @@ export const CommunicationDetails = ({
                           className={classNames(styles.communicationItem, {})}
                         >
                           <EditableContentInput
+                            id={`communication-details-email-${emailId}`}
+                            label='Email'
                             onChange={(value: string) =>
                               onUpdateEmail({
                                 id: emailId,
@@ -260,16 +266,11 @@ export const CommunicationDetails = ({
                         </td>
 
                         {isEditMode && (
-                          <td>
-                            <Button
-                              mode='text'
-                              className={styles.primaryButton}
-                              style={{
-                                display: 'inline-flex',
-                                padding: 0,
-                                fontWeight: 'normal',
-                              }}
-                              onClick={() =>
+                          <td className={styles.checkboxContainer}>
+                            <Checkbox
+                              type='checkbox'
+                              label='Primary'
+                              onChange={() =>
                                 onUpdateEmail({
                                   id: emailId,
                                   label,
@@ -277,19 +278,7 @@ export const CommunicationDetails = ({
                                   primary: !primary,
                                 })
                               }
-                            >
-                              <div className={styles.editLabelIcon}>
-                                {primary ? (
-                                  <CheckSquare
-                                    style={{ transform: 'scale(0.6)' }}
-                                  />
-                                ) : (
-                                  <Stop style={{ transform: 'scale(0.6)' }} />
-                                )}
-
-                                <span>Primary</span>
-                              </div>
-                            </Button>
+                            />
                           </td>
                         )}
 
@@ -331,6 +320,8 @@ export const CommunicationDetails = ({
                           className={classNames(styles.communicationItem, {})}
                         >
                           <EditableContentInput
+                            id={`communication-details-phone-number-${phoneNumberId}`}
+                            label='Phone number'
                             isEditMode={isEditMode}
                             onChange={(value: string) =>
                               onUpdatePhoneNumber({
@@ -345,16 +336,11 @@ export const CommunicationDetails = ({
                           />
                         </td>
                         {isEditMode && (
-                          <td>
-                            <Button
-                              mode='text'
-                              className={styles.primaryButton}
-                              style={{
-                                display: 'inline-flex',
-                                padding: 0,
-                                fontWeight: 'normal',
-                              }}
-                              onClick={() =>
+                          <td className={styles.checkboxContainer}>
+                            <Checkbox
+                              type='checkbox'
+                              label='Primary'
+                              onChange={() =>
                                 onUpdatePhoneNumber({
                                   id: phoneNumberId,
                                   label,
@@ -362,19 +348,7 @@ export const CommunicationDetails = ({
                                   primary: !primary,
                                 })
                               }
-                            >
-                              <div className={styles.editLabelIcon}>
-                                {primary ? (
-                                  <CheckSquare
-                                    style={{ transform: 'scale(0.6)' }}
-                                  />
-                                ) : (
-                                  <Stop style={{ transform: 'scale(0.6)' }} />
-                                )}
-
-                                <span>Primary</span>
-                              </div>
-                            </Button>
+                            />
                           </td>
                         )}
                         {index === data?.phoneNumbers.length - 1 &&
