@@ -43,36 +43,6 @@ const Settings: NextPage = () => {
             ),
         },
         {
-            key: 'zendesk',
-            state: 'INACTIVE',
-            template: (data: any) => (
-                <SettingsIntegrationItem
-                    icon={'/logos/zendesk.svg'}
-                    identifier={'zendesk'}
-                    name={'Zendesk'}
-                    state={data.state}
-                    settingsChanged={() => {
-                        reloadRef.current = !reloadRef.current;
-                        setReload(reloadRef.current);
-                    }}
-                    fields={[
-                        {
-                            name: 'apiKey',
-                            label: 'API key',
-                        },
-                        {
-                            name: 'subdomain',
-                            label: 'Subdomain',
-                        },
-                        {
-                            name: 'adminEmail',
-                            label: 'Admin email',
-                        },
-                    ]}
-                />
-            ),
-        },
-        {
             key: 'smartsheet',
             state: 'INACTIVE',
             template: (data: any) => (
@@ -2119,6 +2089,62 @@ const Settings: NextPage = () => {
                         {
                             name: 'scopes',
                             label: 'Scopes',
+                        },
+                    ]}
+                />
+            ),
+        },
+        {
+            key: 'zendesksupport',
+            state: 'INACTIVE',
+            template: (data: any) => (
+                <SettingsIntegrationItem
+                    icon={'/logos/zendesksupport.svg'}
+                    identifier={'zendesksupport'}
+                    name={'Zendesk Support'}
+                    state={data.state}
+                    settingsChanged={() => {
+                        reloadRef.current = !reloadRef.current;
+                        setReload(reloadRef.current);
+                    }}
+                    fields={[
+                        {
+                            name: 'apiKey',
+                            label: 'API key',
+                        },
+                        {
+                            name: 'subdomain',
+                            label: 'Subdomain',
+                        },
+                        {
+                            name: 'adminEmail',
+                            label: 'Admin email',
+                        },
+                    ]}
+                />
+            ),
+        },
+        {
+            key: 'zendesktalk',
+            state: 'INACTIVE',
+            template: (data: any) => (
+                <SettingsIntegrationItem
+                    icon={'logos/zendesktalk.svg'}
+                    identifier={'zendesktalk'}
+                    name={'Zendesk Talk'}
+                    state={data.state}
+                    settingsChanged={() => {
+                        reloadRef.current = !reloadRef.current;
+                        setReload(reloadRef.current);
+                    }}
+                    fields={[
+                        {
+                            name: 'subdomain',
+                            label: 'Subdomain',
+                        },
+                        {
+                            name: 'accessKey',
+                            label: 'Access Key',
                         },
                     ]}
                 />

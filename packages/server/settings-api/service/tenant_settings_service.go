@@ -66,23 +66,6 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 			}
 			tenantSettings.HubspotPrivateAppKey = &privateAppKey
 
-		case "zendesk":
-			apiKey, ok := data["apiKey"].(string)
-			if !ok {
-				return nil, fmt.Errorf("missing API key for Zendesk integration")
-			}
-			subdomain, ok := data["subdomain"].(string)
-			if !ok {
-				return nil, fmt.Errorf("missing subdomain for Zendesk integration")
-			}
-			adminEmail, ok := data["adminEmail"].(string)
-			if !ok {
-				return nil, fmt.Errorf("missing admin email for Zendesk integration")
-			}
-			tenantSettings.ZendeskAPIKey = &apiKey
-			tenantSettings.ZendeskSubdomain = &subdomain
-			tenantSettings.ZendeskAdminEmail = &adminEmail
-
 		case "smartsheet":
 			id, ok := data["id"].(string)
 			if !ok {
@@ -1086,6 +1069,36 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 			tenantSettings.XeroTenantId = &tenantId
 			tenantSettings.XeroScopes = &scopes
 
+		case "zendesksupport":
+			apiKey, ok := data["apiKey"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing API key for Zendesk integration")
+			}
+			subdomain, ok := data["subdomain"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing subdomain for Zendesk integration")
+			}
+			adminEmail, ok := data["adminEmail"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing admin email for Zendesk integration")
+			}
+			tenantSettings.ZendeskAPIKey = &apiKey
+			tenantSettings.ZendeskSubdomain = &subdomain
+			tenantSettings.ZendeskAdminEmail = &adminEmail
+
+		case "zendesktalk":
+			subdomain, ok := data["subdomain"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing subdomain for Zendesk Talk integration")
+			}
+			accessKey, ok := data["accessKey"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing access key for Zendesk Talk integration")
+			}
+
+			tenantSettings.ZendeskTalkSubdomain = &subdomain
+			tenantSettings.ZendeskTalkAccessKey = &accessKey
+
 		case "zenefits":
 			token, ok := data["token"].(string)
 			if !ok {
@@ -1118,10 +1131,6 @@ func (s *tenantSettingsService) ClearIntegrationData(tenantName, identifier stri
 		switch identifier {
 		case "hubspot":
 			tenantSettings.HubspotPrivateAppKey = nil
-		case "zendesk":
-			tenantSettings.ZendeskAPIKey = nil
-			tenantSettings.ZendeskSubdomain = nil
-			tenantSettings.ZendeskAdminEmail = nil
 		case "smartsheet":
 			tenantSettings.SmartSheetId = nil
 			tenantSettings.SmartSheetAccessToken = nil
@@ -1349,6 +1358,13 @@ func (s *tenantSettingsService) ClearIntegrationData(tenantName, identifier stri
 			tenantSettings.XeroClientSecret = nil
 			tenantSettings.XeroTenantId = nil
 			tenantSettings.XeroScopes = nil
+		case "zendesksupport":
+			tenantSettings.ZendeskAPIKey = nil
+			tenantSettings.ZendeskSubdomain = nil
+			tenantSettings.ZendeskAdminEmail = nil
+		case "zendesktalk":
+			tenantSettings.ZendeskTalkSubdomain = nil
+			tenantSettings.ZendeskTalkAccessKey = nil
 		case "zenefits":
 			tenantSettings.ZenefitsToken = nil
 

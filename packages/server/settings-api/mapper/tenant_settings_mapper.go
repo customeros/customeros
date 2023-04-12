@@ -17,11 +17,6 @@ func MapTenantSettingsEntityToDTO(tenantSettings *entity.TenantSettings) *map[st
 		responseMap["hubspot"].(map[string]interface{})["state"] = "ACTIVE"
 	}
 
-	if tenantSettings != nil && tenantSettings.ZendeskAPIKey != nil && tenantSettings.ZendeskSubdomain != nil && tenantSettings.ZendeskAdminEmail != nil {
-		responseMap["zendesk"] = make(map[string]interface{})
-		responseMap["zendesk"].(map[string]interface{})["state"] = "ACTIVE"
-	}
-
 	if tenantSettings != nil && tenantSettings.SmartSheetId != nil && tenantSettings.SmartSheetAccessToken != nil {
 		responseMap["smartsheet"] = make(map[string]interface{})
 		responseMap["smartsheet"].(map[string]interface{})["state"] = "ACTIVE"
@@ -435,6 +430,16 @@ func MapTenantSettingsEntityToDTO(tenantSettings *entity.TenantSettings) *map[st
 	if tenantSettings != nil && tenantSettings.XeroClientId != nil && tenantSettings.XeroClientSecret != nil && tenantSettings.XeroTenantId != nil && tenantSettings.XeroScopes != nil {
 		responseMap["xero"] = make(map[string]interface{})
 		responseMap["xero"].(map[string]interface{})["state"] = "ACTIVE"
+	}
+
+	if tenantSettings != nil && tenantSettings.ZendeskAPIKey != nil && tenantSettings.ZendeskSubdomain != nil && tenantSettings.ZendeskAdminEmail != nil {
+		responseMap["zendesksupport"] = make(map[string]interface{})
+		responseMap["zendesksupport"].(map[string]interface{})["state"] = "ACTIVE"
+	}
+
+	if tenantSettings != nil && tenantSettings.ZendeskTalkSubdomain != nil && tenantSettings.ZendeskTalkAccessKey != nil {
+		responseMap["zendesktalk"] = make(map[string]interface{})
+		responseMap["zendesktalk"].(map[string]interface{})["state"] = "ACTIVE"
 	}
 
 	if tenantSettings != nil && tenantSettings.ZenefitsToken != nil {
