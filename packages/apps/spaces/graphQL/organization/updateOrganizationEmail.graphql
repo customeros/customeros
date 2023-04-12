@@ -5,5 +5,7 @@ mutation updateOrganizationEmail(
   emailUpdateInOrganization(organizationId: $organizationId, input: $input) {
     primary
     label
+    id
+    email
   }
 }

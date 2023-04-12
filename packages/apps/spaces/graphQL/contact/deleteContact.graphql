@@ -1,5 +1,0 @@
-mutation deleteContact($id: ID!) {
-  contact_SoftDelete(contactId: $id) {
-    result
-  }
-}

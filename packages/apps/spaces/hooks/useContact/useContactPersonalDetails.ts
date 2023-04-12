@@ -3,6 +3,7 @@ import {
   useGetContactPersonalDetailsQuery,
 } from './types';
 import { ApolloError } from 'apollo-client';
+import { toast } from 'react-toastify';
 
 interface Props {
   id: string;
@@ -27,6 +28,9 @@ export const useContactPersonalDetails = ({ id }: Props): Result => {
   }
 
   if (error) {
+    toast.error('Something went wrong while loading contact personal details', {
+      toastId: `get-contact-personal-details-query-error`,
+    });
     return {
       error,
       loading: false,

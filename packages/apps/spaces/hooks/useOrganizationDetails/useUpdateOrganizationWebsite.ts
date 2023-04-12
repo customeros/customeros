@@ -10,6 +10,7 @@ import {
 } from '../../graphQL/__generated__/generated';
 import { ApolloCache } from 'apollo-cache';
 import client from '../../apollo-client';
+import { toast } from 'react-toastify';
 
 interface Props {
   organizationId: string;
@@ -75,6 +76,12 @@ export const useUpdateOrganizationWebsite = ({
         });
         return response.data?.organization_Update ?? null;
       } catch (err) {
+        toast.error(
+          'Something went wrong while updating organization website. Please contact us or try again later',
+          {
+            toastId: `org-website-${organizationId}-update-error`,
+          },
+        );
         console.error(err);
         return null;
       }

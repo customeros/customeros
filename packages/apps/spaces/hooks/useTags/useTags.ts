@@ -1,5 +1,6 @@
 import { ApolloError } from 'apollo-client';
 import { GetTagsQuery, useGetTagsQuery } from './types';
+import { toast } from 'react-toastify';
 
 interface Result {
   tags: GetTagsQuery['tags'] | undefined | null;
@@ -18,6 +19,9 @@ export const useTags = (): Result => {
   }
 
   if (error) {
+    toast.error('Something went wrong while loading tags', {
+      toastId: `tags-loading-error`,
+    });
     return {
       error,
       loading: false,

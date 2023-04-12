@@ -23,7 +23,7 @@ export const useAddEmailToContactEmail = ({
 }): Result => {
   const [addEmailToContactMutation, { loading, error, data }] =
     useAddEmailToContactMutation();
-  const handleUpdateCacheAfterAddingPhoneCall = (
+  const handleUpdateCacheAfterAddingEmail = (
     cache: ApolloCache<any>,
     { data: { emailMergeToContact } }: any,
   ) => {
@@ -53,13 +53,9 @@ export const useAddEmailToContactEmail = ({
     const newData = {
       contact: {
         ...data.contact,
-        emails: [
-          ...(data.contact?.emails || []),
-          { ...emailMergeToContact, email: emailMergeToContact.email || '' },
-        ],
+        emails: [...(data.contact?.emails || []), emailMergeToContact],
       },
     };
-
     client.writeQuery({
       query: GetContactCommunicationChannelsDocument,
       data: newData,
@@ -84,7 +80,7 @@ export const useAddEmailToContactEmail = ({
           },
         },
         // @ts-expect-error fixme
-        update: handleUpdateCacheAfterAddingPhoneCall,
+        update: handleUpdateCacheAfterAddingEmail,
       });
       return response.data?.emailMergeToContact ?? null;
     } catch (err) {

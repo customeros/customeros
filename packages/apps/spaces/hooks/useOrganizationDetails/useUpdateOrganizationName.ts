@@ -11,6 +11,7 @@ import {
 import { ApolloCache } from 'apollo-cache';
 import client from '../../apollo-client';
 import { gql } from '@apollo/client';
+import { toast } from 'react-toastify';
 
 interface Props {
   organizationId: string;
@@ -76,6 +77,12 @@ export const useUpdateOrganizationName = ({
         });
         return response.data?.organization_Update ?? null;
       } catch (err) {
+        toast.error(
+          'Something went wrong while updating organization name. Please contact us or try again later',
+          {
+            toastId: `org-name-${organizationId}-update-error`,
+          },
+        );
         console.error(err);
         return null;
       }

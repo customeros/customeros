@@ -8,6 +8,7 @@ import {
 import { ApolloCache } from 'apollo-cache';
 import client from '../../apollo-client';
 import { gql } from '@apollo/client';
+import { toast } from 'react-toastify';
 
 interface Props {
   contactId: string;
@@ -122,6 +123,12 @@ export const useCreateContactJobRole = ({ contactId }: Props): Result => {
       });
       return response.data?.jobRole_Create ?? null;
     } catch (err) {
+      toast.error(
+        'Something went wrong while adding new job role! Please contact us or try again later',
+        {
+          toastId: `create-contact-job-role-error--${contactId}`,
+        },
+      );
       return null;
     }
   };

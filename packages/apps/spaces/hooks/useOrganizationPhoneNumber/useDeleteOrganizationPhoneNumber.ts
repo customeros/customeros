@@ -2,6 +2,7 @@ import {
   RemovePhoneNumberFromOrganizationMutation,
   useRemovePhoneNumberFromOrganizationMutation,
 } from './types';
+import { toast } from 'react-toastify';
 
 interface Result {
   onRemovePhoneNumberFromOrganization: (
@@ -24,9 +25,21 @@ export const useRemovePhoneNumberFromOrganization = ({
       const response = await removePhoneNumberFromOrganizationMutation({
         variables: { id: id, organizationId },
         refetchQueries: ['GetOrganizationCommunicationChannels'],
+        update(cache) {
+          const normalizedId = cache.identify({
+            id,
+            __typename: 'PhoneNumber',
+          });
+          cache.evict({ id: normalizedId });
+          cache.gc();
+        },
       });
       return response.data?.phoneNumberRemoveFromOrganizationById ?? null;
     } catch (err) {
+      toast.error(
+        'Something went wrong while deleting phone number! Please contact us or try again later',
+      );
+
       console.error(err);
       return null;
     }

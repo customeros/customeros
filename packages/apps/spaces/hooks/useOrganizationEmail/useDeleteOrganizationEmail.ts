@@ -2,6 +2,7 @@ import {
   useRemoveEmailFromOrganizationMutation,
   RemoveEmailFromOrganizationMutation,
 } from './types';
+import { toast } from 'react-toastify';
 
 interface Props {
   organizationId: string;
@@ -39,6 +40,12 @@ export const useRemoveEmailFromOrganizationEmail = ({
         });
         return response.data?.emailRemoveFromOrganizationById ?? null;
       } catch (err) {
+        toast.error(
+          'Something went wrong while deleting email! Please contact us or try again later',
+          {
+            toastId: `email-${emailId}-delete-error`,
+          },
+        );
         console.error(err);
         return null;
       }

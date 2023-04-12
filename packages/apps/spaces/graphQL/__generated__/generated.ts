@@ -935,21 +935,24 @@ export type Location = {
 
 export type Mutation = {
   __typename?: 'Mutation';
+  UpsertInEventStore: UpsertToEventStoreResult;
   analysis_Create: Analysis;
   contactGroupAddContact: Result;
   contactGroupCreate: ContactGroup;
   contactGroupDeleteAndUnlinkAllContacts: Result;
   contactGroupRemoveContact: Result;
   contactGroupUpdate: ContactGroup;
+  contactPhoneNumberRelationUpsertInEventStore: Scalars['Int'];
   contactUpsertInEventStore: Scalars['Int'];
   contact_AddOrganizationById: Contact;
   contact_AddTagById: Contact;
+  contact_Archive: Result;
   contact_Create: Contact;
   contact_HardDelete: Result;
   contact_Merge: Contact;
   contact_RemoveOrganizationById: Contact;
   contact_RemoveTagById: Contact;
-  contact_SoftDelete: Result;
+  contact_RestoreFromArchive: Result;
   contact_Update: Contact;
   conversation_Close: Conversation;
   conversation_Create: Conversation;
@@ -1018,6 +1021,11 @@ export type Mutation = {
 };
 
 
+export type MutationUpsertInEventStoreArgs = {
+  size: Scalars['Int'];
+};
+
+
 export type MutationAnalysis_CreateArgs = {
   analysis: AnalysisInput;
 };
@@ -1050,6 +1058,11 @@ export type MutationContactGroupUpdateArgs = {
 };
 
 
+export type MutationContactPhoneNumberRelationUpsertInEventStoreArgs = {
+  size: Scalars['Int'];
+};
+
+
 export type MutationContactUpsertInEventStoreArgs = {
   size: Scalars['Int'];
 };
@@ -1062,6 +1075,11 @@ export type MutationContact_AddOrganizationByIdArgs = {
 
 export type MutationContact_AddTagByIdArgs = {
   input: ContactTagInput;
+};
+
+
+export type MutationContact_ArchiveArgs = {
+  contactId: Scalars['ID'];
 };
 
 
@@ -1091,7 +1109,7 @@ export type MutationContact_RemoveTagByIdArgs = {
 };
 
 
-export type MutationContact_SoftDeleteArgs = {
+export type MutationContact_RestoreFromArchiveArgs = {
   contactId: Scalars['ID'];
 };
 
@@ -2000,6 +2018,20 @@ export enum TimelineEventType {
   PageView = 'PAGE_VIEW'
 }
 
+export type UpsertToEventStoreResult = {
+  __typename?: 'UpsertToEventStoreResult';
+  contactCount: Scalars['Int'];
+  contactCountFailed: Scalars['Int'];
+  contactEmailRelationCount: Scalars['Int'];
+  contactEmailRelationCountFailed: Scalars['Int'];
+  contactPhoneNumberRelationCount: Scalars['Int'];
+  contactPhoneNumberRelationCountFailed: Scalars['Int'];
+  emailCount: Scalars['Int'];
+  emailCountFailed: Scalars['Int'];
+  phoneNumberCount: Scalars['Int'];
+  phoneNumberCountFailed: Scalars['Int'];
+};
+
 /**
  * Describes the User of customerOS.  A user is the person who logs into the Openline platform.
  * **A `return` object**
@@ -2162,6 +2194,13 @@ export type AddTagToContactMutationVariables = Exact<{
 
 export type AddTagToContactMutation = { __typename?: 'Mutation', contact_AddTagById: { __typename?: 'Contact', id: string, tags?: Array<{ __typename?: 'Tag', id: string, name: string, createdAt: any, source: DataSource }> | null } };
 
+export type ArchiveContactMutationVariables = Exact<{
+  id: Scalars['ID'];
+}>;
+
+
+export type ArchiveContactMutation = { __typename?: 'Mutation', contact_Archive: { __typename?: 'Result', result: boolean } };
+
 export type AttachOrganizationToContactMutationVariables = Exact<{
   input: ContactOrganizationInput;
 }>;
@@ -2201,13 +2240,6 @@ export type CreatePhoneCallInteractionEventMutationVariables = Exact<{
 
 
 export type CreatePhoneCallInteractionEventMutation = { __typename?: 'Mutation', interactionEvent_Create: { __typename?: 'InteractionEvent', id: string, createdAt: any, channel?: string | null, content?: string | null, contentType?: string | null, interactionSession?: { __typename?: 'InteractionSession', name: string } | null, sentBy: Array<{ __typename: 'ContactParticipant', contactParticipant: { __typename?: 'Contact', name?: string | null, firstName?: string | null, lastName?: string | null } } | { __typename: 'EmailParticipant', emailParticipant: { __typename?: 'Email', email?: string | null } } | { __typename: 'PhoneNumberParticipant', phoneNumberParticipant: { __typename?: 'PhoneNumber', e164?: string | null } } | { __typename: 'UserParticipant', userParticipant: { __typename?: 'User', firstName: string, lastName: string } }>, sentTo: Array<{ __typename: 'ContactParticipant', type?: string | null, contactParticipant: { __typename?: 'Contact', name?: string | null, firstName?: string | null, lastName?: string | null } } | { __typename: 'EmailParticipant', type?: string | null, emailParticipant: { __typename?: 'Email', email?: string | null } } | { __typename: 'PhoneNumberParticipant', type?: string | null, phoneNumberParticipant: { __typename?: 'PhoneNumber', e164?: string | null } } | { __typename: 'UserParticipant', type?: string | null, userParticipant: { __typename?: 'User', firstName: string, lastName: string } }> } };
-
-export type DeleteContactMutationVariables = Exact<{
-  id: Scalars['ID'];
-}>;
-
-
-export type DeleteContactMutation = { __typename?: 'Mutation', contact_SoftDelete: { __typename?: 'Result', result: boolean } };
 
 export type RemoveContactJobRoleMutationVariables = Exact<{
   contactId: Scalars['ID'];
@@ -2343,7 +2375,7 @@ export type UpdateContactEmailMutationVariables = Exact<{
 }>;
 
 
-export type UpdateContactEmailMutation = { __typename?: 'Mutation', emailUpdateInContact: { __typename?: 'Email', primary: boolean, label?: EmailLabel | null } };
+export type UpdateContactEmailMutation = { __typename?: 'Mutation', emailUpdateInContact: { __typename?: 'Email', primary: boolean, label?: EmailLabel | null, email?: string | null, id: string } };
 
 export type UpdateJobRoleMutationVariables = Exact<{
   contactId: Scalars['ID'];
@@ -2535,7 +2567,7 @@ export type UpdateOrganizationEmailMutationVariables = Exact<{
 }>;
 
 
-export type UpdateOrganizationEmailMutation = { __typename?: 'Mutation', emailUpdateInOrganization: { __typename?: 'Email', primary: boolean, label?: EmailLabel | null } };
+export type UpdateOrganizationEmailMutation = { __typename?: 'Mutation', emailUpdateInOrganization: { __typename?: 'Email', primary: boolean, label?: EmailLabel | null, id: string, email?: string | null } };
 
 export type UpdateOrganizationIndustryMutationVariables = Exact<{
   input: OrganizationUpdateInput;
@@ -2557,7 +2589,7 @@ export type UpdateOrganizationPhoneNumberMutationVariables = Exact<{
 }>;
 
 
-export type UpdateOrganizationPhoneNumberMutation = { __typename?: 'Mutation', phoneNumberUpdateInOrganization: { __typename?: 'PhoneNumber', label?: PhoneNumberLabel | null, id: string, primary: boolean, e164?: string | null, rawPhoneNumber?: string | null } };
+export type UpdateOrganizationPhoneNumberMutation = { __typename?: 'Mutation', phoneNumberUpdateInOrganization: { __typename?: 'PhoneNumber', label?: PhoneNumberLabel | null, primary: boolean, id: string, e164?: string | null, rawPhoneNumber?: string | null } };
 
 export type UpdateOrganizationWebsiteMutationVariables = Exact<{
   input: OrganizationUpdateInput;
@@ -3100,6 +3132,39 @@ export function useAddTagToContactMutation(baseOptions?: Apollo.MutationHookOpti
 export type AddTagToContactMutationHookResult = ReturnType<typeof useAddTagToContactMutation>;
 export type AddTagToContactMutationResult = Apollo.MutationResult<AddTagToContactMutation>;
 export type AddTagToContactMutationOptions = Apollo.BaseMutationOptions<AddTagToContactMutation, AddTagToContactMutationVariables>;
+export const ArchiveContactDocument = gql`
+    mutation archiveContact($id: ID!) {
+  contact_Archive(contactId: $id) {
+    result
+  }
+}
+    `;
+export type ArchiveContactMutationFn = Apollo.MutationFunction<ArchiveContactMutation, ArchiveContactMutationVariables>;
+
+/**
+ * __useArchiveContactMutation__
+ *
+ * To run a mutation, you first call `useArchiveContactMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useArchiveContactMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [archiveContactMutation, { data, loading, error }] = useArchiveContactMutation({
+ *   variables: {
+ *      id: // value for 'id'
+ *   },
+ * });
+ */
+export function useArchiveContactMutation(baseOptions?: Apollo.MutationHookOptions<ArchiveContactMutation, ArchiveContactMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<ArchiveContactMutation, ArchiveContactMutationVariables>(ArchiveContactDocument, options);
+      }
+export type ArchiveContactMutationHookResult = ReturnType<typeof useArchiveContactMutation>;
+export type ArchiveContactMutationResult = Apollo.MutationResult<ArchiveContactMutation>;
+export type ArchiveContactMutationOptions = Apollo.BaseMutationOptions<ArchiveContactMutation, ArchiveContactMutationVariables>;
 export const AttachOrganizationToContactDocument = gql`
     mutation attachOrganizationToContact($input: ContactOrganizationInput!) {
   contact_AddOrganizationById(input: $input) {
@@ -3278,39 +3343,6 @@ export function useCreatePhoneCallInteractionEventMutation(baseOptions?: Apollo.
 export type CreatePhoneCallInteractionEventMutationHookResult = ReturnType<typeof useCreatePhoneCallInteractionEventMutation>;
 export type CreatePhoneCallInteractionEventMutationResult = Apollo.MutationResult<CreatePhoneCallInteractionEventMutation>;
 export type CreatePhoneCallInteractionEventMutationOptions = Apollo.BaseMutationOptions<CreatePhoneCallInteractionEventMutation, CreatePhoneCallInteractionEventMutationVariables>;
-export const DeleteContactDocument = gql`
-    mutation deleteContact($id: ID!) {
-  contact_SoftDelete(contactId: $id) {
-    result
-  }
-}
-    `;
-export type DeleteContactMutationFn = Apollo.MutationFunction<DeleteContactMutation, DeleteContactMutationVariables>;
-
-/**
- * __useDeleteContactMutation__
- *
- * To run a mutation, you first call `useDeleteContactMutation` within a React component and pass it any options that fit your needs.
- * When your component renders, `useDeleteContactMutation` returns a tuple that includes:
- * - A mutate function that you can call at any time to execute the mutation
- * - An object with fields that represent the current status of the mutation's execution
- *
- * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
- *
- * @example
- * const [deleteContactMutation, { data, loading, error }] = useDeleteContactMutation({
- *   variables: {
- *      id: // value for 'id'
- *   },
- * });
- */
-export function useDeleteContactMutation(baseOptions?: Apollo.MutationHookOptions<DeleteContactMutation, DeleteContactMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<DeleteContactMutation, DeleteContactMutationVariables>(DeleteContactDocument, options);
-      }
-export type DeleteContactMutationHookResult = ReturnType<typeof useDeleteContactMutation>;
-export type DeleteContactMutationResult = Apollo.MutationResult<DeleteContactMutation>;
-export type DeleteContactMutationOptions = Apollo.BaseMutationOptions<DeleteContactMutation, DeleteContactMutationVariables>;
 export const RemoveContactJobRoleDocument = gql`
     mutation removeContactJobRole($contactId: ID!, $roleId: ID!) {
   jobRole_Delete(contactId: $contactId, roleId: $roleId) {
@@ -4041,6 +4073,8 @@ export const UpdateContactEmailDocument = gql`
   emailUpdateInContact(contactId: $contactId, input: $input) {
     primary
     label
+    email
+    id
   }
 }
     `;
@@ -4917,6 +4951,8 @@ export const UpdateOrganizationEmailDocument = gql`
   emailUpdateInOrganization(organizationId: $organizationId, input: $input) {
     primary
     label
+    id
+    email
   }
 }
     `;
@@ -5020,6 +5056,7 @@ export const UpdateOrganizationPhoneNumberDocument = gql`
   phoneNumberUpdateInOrganization(organizationId: $organizationId, input: $input) {
     ...PhoneNumber
     label
+    primary
   }
 }
     ${PhoneNumberFragmentDoc}`;

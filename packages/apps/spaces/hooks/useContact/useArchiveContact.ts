@@ -1,4 +1,4 @@
-import { DeleteContactMutation, useDeleteContactMutation } from './types';
+import { ArchiveContactMutation, useArchiveContactMutation } from './types';
 import { useRouter } from 'next/router';
 import { toast } from 'react-toastify';
 
@@ -8,13 +8,13 @@ interface Props {
 
 interface Result {
   onArchiveContact: () => Promise<
-    DeleteContactMutation['contact_SoftDelete'] | null
+    ArchiveContactMutation['contact_Archive'] | null
   >;
 }
 export const useArchiveContact = ({ id }: Props): Result => {
   const { push } = useRouter();
   const [archiveContactMutation, { loading, error, data }] =
-    useDeleteContactMutation({
+    useArchiveContactMutation({
       variables: {
         id,
       },
@@ -37,7 +37,7 @@ export const useArchiveContact = ({ id }: Props): Result => {
         );
       }
 
-      return response.data?.contact_SoftDelete ?? null;
+      return response.data?.contact_Archive ?? null;
     } catch (err) {
       toast.error('Something went wrong while archiving contact!', {
         toastId: `archive-contact-error-${id}`,

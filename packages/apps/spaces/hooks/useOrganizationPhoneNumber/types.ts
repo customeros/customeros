@@ -11,6 +11,7 @@ export {
   useAddPhoneToOrganizationMutation,
   useRemovePhoneNumberFromOrganizationMutation,
   useUpdateOrganizationPhoneNumberMutation,
+  GetOrganizationCommunicationChannelsDocument,
 } from '../../graphQL/__generated__/generated';
 export type {
   Contact,
@@ -25,4 +26,5 @@ export type {
   UpdateOrganizationPhoneNumberMutation,
   PhoneNumber,
   PhoneNumberUpdateInput,
+  GetOrganizationCommunicationChannelsQuery,
 } from '../../graphQL/__generated__/generated';

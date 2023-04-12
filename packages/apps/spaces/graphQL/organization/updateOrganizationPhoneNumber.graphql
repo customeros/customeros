@@ -8,5 +8,6 @@ mutation updateOrganizationPhoneNumber(
   ) {
     ...PhoneNumber
     label
+    primary
   }
 }

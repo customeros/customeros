@@ -3,6 +3,7 @@ import {
   RemoveTagFromContactMutation,
   useRemoveTagFromContactMutation,
 } from '../../graphQL/__generated__/generated';
+import { toast } from 'react-toastify';
 
 interface Result {
   onRemoveTagFromContact: (
@@ -35,6 +36,12 @@ export const useRemoveTagFromContact = ({
       return response.data?.contact_RemoveTagById ?? null;
     } catch (err) {
       console.error(err);
+      toast.error(
+        'Something went wrong while deleting tag. Please contact us or try again later',
+        {
+          toastId: `contact-tag-${contactId}-${contactTagInput.tagId}-delete-error`,
+        },
+      );
       return null;
     }
   };
