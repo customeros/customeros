@@ -631,16 +631,6 @@ func (r *contactRepository) MergeContactRelationsInTx(ctx context.Context, tx ne
 
 	if _, err := tx.Run(ctx, matchQuery+
 		" WITH primary, merged "+
-		" MATCH (merged)-[rel:CONTACT_OF]->(o:Organization) "+
-		" MERGE (primary)-[newRel:CONTACT_OF]->(o) "+
-		" ON CREATE SET newRel.mergedFrom = $mergedContactId, "+
-		"				newRel.createdAt = $now "+
-		"			SET	rel.merged=true", params); err != nil {
-		return err
-	}
-
-	if _, err := tx.Run(ctx, matchQuery+
-		" WITH primary, merged "+
 		" MATCH (merged)-[rel:HAS]->(e:Email) "+
 		" MERGE (primary)-[newRel:HAS]->(e) "+
 		" ON CREATE SET newRel.primary=rel.primary, "+
