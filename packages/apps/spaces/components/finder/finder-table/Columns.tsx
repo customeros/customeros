@@ -19,7 +19,9 @@ export const columns: Array<Column> = [
       />
     ),
 
-    template: (c: any) => <ContactTableCell contact={c?.contact} />,
+    template: (c: any) => (
+      <ContactTableCell contact={c?.contact} organization={c?.organization} />
+    ),
   },
   {
     id: 'finder-table-column-email',

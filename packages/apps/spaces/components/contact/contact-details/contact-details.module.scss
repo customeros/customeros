@@ -42,11 +42,10 @@
   }
 }
 .avatarWrapper {
-  display:flex;
+  display: flex;
   flex-direction: column;
   align-items: center;
   margin-right: var(--spacing-md);
-
 }
 
 .nameContainer {
@@ -68,8 +67,7 @@
 .details {
   display: flex;
   justify-content: space-between;
-  max-width: 300px
-
+  max-width: 300px;
 }
 
 .section {
@@ -77,12 +75,10 @@
   flex-direction: column;
   align-items: center;
 
-
   &.disabled {
     cursor: not-allowed;
     opacity: 0.5;
   }
-
 }
 
 .icon {
@@ -98,7 +94,6 @@
   margin-top: var(--spacing-xxxs);
   color: var(--text-secondary-color);
 }
-
 
 .jobRole {
   font-size: var(--font-size-xs);
@@ -135,4 +130,3 @@
   flex-direction: column;
   font-size: var(--font-size-xs);
 }
-

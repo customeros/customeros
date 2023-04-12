@@ -1,0 +1,104 @@
+import {
+  GetOrganizationDetailsQuery,
+  UpdateOrganizationNameMutation,
+  useUpdateOrganizationNameMutation,
+} from './types';
+import {
+  GetContactPersonalDetailsWithOrganizationsDocument,
+  GetOrganizationDetailsDocument,
+  OrganizationUpdateInput,
+} from '../../graphQL/__generated__/generated';
+import { ApolloCache } from 'apollo-cache';
+import client from '../../apollo-client';
+import { gql } from '@apollo/client';
+
+interface Props {
+  organizationId: string;
+}
+
+interface Result {
+  onUpdateOrganizationName: (
+    input: Omit<OrganizationUpdateInput, 'id'>,
+  ) => Promise<UpdateOrganizationNameMutation['organization_Update'] | null>;
+}
+export const useUpdateOrganizationName = ({
+  organizationId,
+}: Props): Result => {
+  const [updateOrganizationMutation, { loading, error, data }] =
+    useUpdateOrganizationNameMutation();
+
+  const handleUpdateCacheAfterUpdatingOrganization = (
+    cache: ApolloCache<any>,
+    { data: { organization_Update } }: any,
+  ) => {
+    const data: GetOrganizationDetailsQuery | null = client.readQuery({
+      query: GetOrganizationDetailsDocument,
+      variables: {
+        id: organizationId,
+      },
+    });
+    // @ts-expect-error fix function type
+    const normalizedId = cache.identify({
+      id: organizationId,
+      __typename: 'Organization',
+    });
+    const organizationData = client.readFragment({
+      id: normalizedId,
+      fragment: gql`
+        fragment OrganizationDetails on Organization {
+          id
+          name
+          description
+          website
+          industry
+        }
+      `,
+    });
+
+    if (data === null) {
+      client.writeQuery({
+        query: GetOrganizationDetailsDocument,
+        data: {
+          organization: {
+            id: organizationId,
+            ...organization_Update,
+          },
+          variables: { id: organizationId },
+        },
+      });
+    }
+
+    client.writeQuery({
+      query: GetContactPersonalDetailsWithOrganizationsDocument,
+      data: {
+        organization: {
+          id: organizationId,
+          ...data?.organization,
+          name: organization_Update.name,
+        },
+      },
+      variables: {
+        id: organizationId,
+      },
+    });
+  };
+
+  const handleUpdateOrganizationName: Result['onUpdateOrganizationName'] =
+    async (input) => {
+      try {
+        const response = await updateOrganizationMutation({
+          variables: { input: { ...input, id: organizationId } },
+          //@ts-expect-error fixme
+          update: handleUpdateCacheAfterUpdatingOrganization,
+        });
+        return response.data?.organization_Update ?? null;
+      } catch (err) {
+        console.error(err);
+        return null;
+      }
+    };
+
+  return {
+    onUpdateOrganizationName: handleUpdateOrganizationName,
+  };
+};
