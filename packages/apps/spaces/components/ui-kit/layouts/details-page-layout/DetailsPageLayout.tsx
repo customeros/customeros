@@ -2,7 +2,8 @@ import '@openline-ai/openline-web-chat/dist/esm/index.css';
 import React, { FC, ReactNode } from 'react';
 import classNames from 'classnames';
 import styles from './details-page-layout.module.scss';
-import { ArrowLeft, Button, IconButton } from '../../atoms';
+import { ArrowLeft, IconButton, Ribbon } from '../../atoms';
+import { useTenantName } from '../../../../hooks/useTenant';
 
 interface DetailsPageLayout {
   children: ReactNode;
@@ -12,8 +13,17 @@ export const DetailsPageLayout: FC<DetailsPageLayout> = ({
   children,
   onNavigateBack,
 }) => {
+  const { data: tenant } = useTenantName();
+
   return (
     <div className={classNames(styles.layout)}>
+      {tenant && (
+        <Ribbon top={0}>
+          When sending the email, please include {tenant}@getopenline.com so
+          that the email can be viewed in our timeline.
+        </Ribbon>
+      )}
+
       <div className={styles.backButton}>
         <IconButton
           mode='secondary'
