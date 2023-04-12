@@ -417,14 +417,25 @@ func (r *contactRepository) LinkContactWithOrganization(ctx context.Context, ten
 
 	query := "MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant}) " +
 		" MATCH (t)<-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]-(e:ExternalSystem {id:$externalSystemId})<-[:IS_LINKED_WITH {externalId:$organizationExternalId}]-(org:Organization) " +
-		" MERGE (c)-[:CONTACT_OF]->(org)"
+		" MERGE (c)-[:WORKS_AS]->(j:JobRole)-[:ROLE_IN]->(org)" +
+		" ON CREATE SET j.id=randomUUID(), " +
+		"				j.source=$source, " +
+		"				j.sourceOfTruth=$sourceOfTruth, " +
+		"				j.appSource=$appSource, " +
+		"				j.createdAt=$now, " +
+		"				j.updatedAt=$now, " +
+		"				j:%s "
 	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		_, err := tx.Run(ctx, query,
+		_, err := tx.Run(ctx, fmt.Sprintf(query, "JobRole_"+tenant),
 			map[string]interface{}{
 				"tenant":                 tenant,
 				"contactId":              contactId,
 				"externalSystemId":       source,
 				"organizationExternalId": organizationExternalId,
+				"now":                    time.Now().UTC(),
+				"source":                 source,
+				"sourceOfTruth":          source,
+				"appSource":              source,
 			})
 		if err != nil {
 			return nil, err

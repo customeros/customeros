@@ -89,9 +89,11 @@ func (s *contactSyncService) SyncContacts(ctx context.Context, dataService commo
 
 			if v.HasOrganizations() && !failedSync {
 				for _, organizationExternalId := range v.OrganizationsExternalIds {
-					if err = s.repositories.ContactRepository.LinkContactWithOrganization(ctx, tenant, contactId, organizationExternalId, dataService.SourceId()); err != nil {
-						failedSync = true
-						logrus.Errorf("failed link contact %v to organization with external id %v, tenant %v :%v", contactId, organizationExternalId, tenant, err)
+					if organizationExternalId != "" {
+						if err = s.repositories.ContactRepository.LinkContactWithOrganization(ctx, tenant, contactId, organizationExternalId, dataService.SourceId()); err != nil {
+							failedSync = true
+							logrus.Errorf("failed link contact %v to organization with external id %v, tenant %v :%v", contactId, organizationExternalId, tenant, err)
+						}
 					}
 				}
 			}
